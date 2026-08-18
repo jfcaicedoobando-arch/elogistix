@@ -12,7 +12,7 @@ import { PageHeader } from "@/components/shared/PageHeader";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { KpiStrip } from "@/components/shared/KpiStrip";
 import { CargaGuard } from "@/components/shared/states/CargaGuard";
-import { formatCurrency, formatCurrencyCompact } from "@/lib/formatters";
+import { formatCurrency, formatCurrencyCompact, porcentajeEntero } from "@/lib/formatters";
 import { useCrmInicioVM, useForecast, useReportesCRM } from "@/features/crm/hooks";
 import LeaderboardVendedores from "@/features/crm/components/LeaderboardVendedores";
 import { useDocumentTitle } from "@/hooks/shared";
@@ -64,7 +64,7 @@ function EmbudoCard() {
         ) : (
           <ul className="space-y-2">
             {embudo.map((e) => {
-              const pct = Math.max(2, Math.round((e.cantidad / max) * 100));
+              const pct = porcentajeEntero(e.cantidad, max, { minimo: 2 }) ?? 2;
               return (
                 <li key={e.etapa} className="space-y-1">
                   <div className="flex justify-between text-sm">

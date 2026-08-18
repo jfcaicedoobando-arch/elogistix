@@ -1,5 +1,5 @@
 /** Dialog "Registrar anticipo" (QW6). FormDialogShell + RHF + Zod. */
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useForm, type FieldErrors } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { notifyError } from "@/lib/ui/appFeedback";
@@ -7,9 +7,9 @@ import { HandCoins } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { useRegistrarAnticipo } from "@/features/anticipos-proveedor/hooks/useAnticipoProveedorMutations";
+import { useRegistrarAnticipoDefaults } from "@/features/anticipos-proveedor/hooks/useRegistrarAnticipoDefaults";
+import { equivalenteMxnAnticipo } from "@/features/anticipos-proveedor/domain/registrarAnticipoPolicy";
 import { todayLocalISO } from "@/lib/date/today";
-import { useCuentasBancarias } from "@/features/tesoreria/hooks";
-import { useTcInicial } from "@/features/catalogos/hooks";
 import { RegistrarAnticipoFields } from "./RegistrarAnticipoFields";
 import { registrarAnticipoSchema, type RegistrarAnticipoFormValues } from "./registrarAnticipo.schema";
 
@@ -26,8 +26,6 @@ export function RegistrarAnticipoDialog({
 }: Props) {
   const registrar = useRegistrarAnticipo();
   const [proveedorNombre, setProveedorNombre] = useState(proveedorNombreInicial ?? "");
-  const { data: cuentas = [] } = useCuentasBancarias(true);
-  const { data: tc } = useTcInicial();
 
   const { control, register, handleSubmit, reset, watch, setValue, formState: { errors } } =
     useForm<RegistrarAnticipoFormValues>({
@@ -40,7 +38,6 @@ export function RegistrarAnticipoDialog({
         tipoCambioUsd: undefined,
         referencia: "", notas: "",
         embarqueId: null, embarqueExpediente: null,
-
       },
     });
 
@@ -58,45 +55,20 @@ export function RegistrarAnticipoDialog({
     setValue("embarqueExpediente", exp, { shouldValidate: true, shouldDirty: true });
   };
 
-
-  const cuentasDeMoneda = useMemo(
-    () => cuentas.filter((c) => c.moneda === moneda),
-    [cuentas, moneda],
+  const onProveedorFijo = useCallback(
+    () => setProveedorNombre(proveedorNombreInicial ?? ""),
+    [proveedorNombreInicial],
   );
 
-  // Al abrir con proveedor fijo, sincroniza el valor del formulario.
-  useEffect(() => {
-    if (open && proveedorIdInicial) {
-      setValue("proveedorId", proveedorIdInicial, { shouldValidate: true, shouldDirty: true });
-      setProveedorNombre(proveedorNombreInicial ?? "");
-    }
-  }, [open, proveedorIdInicial, proveedorNombreInicial, setValue]);
-
-  // Precarga el TC del DOF cuando la moneda deja de ser MXN.
-  useEffect(() => {
-    if (!open || moneda === "MXN" || !tc) return;
-    // EF-04: si el TC de la moneda es fallback estimado, NO sugerirlo — el
-    // usuario debe capturar el TC real (DOF/Banxico) manualmente.
-    if (moneda === "EUR" && tc.eurEsFallback) return;
-    if (moneda !== "EUR" && tc.esFallback) return;
-    const sugerido = moneda === "EUR" ? tc.eurMxn : tc.usdMxn;
-    if (sugerido && !(Number(tipoCambioUsd) > 0)) {
-      setValue("tipoCambioUsd", sugerido, { shouldValidate: true, shouldDirty: true });
-    }
-  }, [open, moneda, tc, tipoCambioUsd, setValue]);
-
-  // Preselección: primera cuenta de la moneda del anticipo. Si la cuenta
-  // elegida deja de coincidir con la moneda, se limpia.
-  useEffect(() => {
-    if (!open) return;
-    if (cuentaBancariaId && !cuentasDeMoneda.some((c) => c.id === cuentaBancariaId)) {
-      setValue("cuentaBancariaId", "", { shouldValidate: true, shouldDirty: true });
-      return;
-    }
-    if (!cuentaBancariaId && cuentasDeMoneda.length > 0) {
-      setValue("cuentaBancariaId", cuentasDeMoneda[0].id, { shouldValidate: true, shouldDirty: true });
-    }
-  }, [open, cuentaBancariaId, cuentasDeMoneda, setValue]);
+  const { cuentasDeMoneda = [], tcHint } = useRegistrarAnticipoDefaults({
+    open,
+    moneda,
+    cuentaBancariaId,
+    tipoCambioUsd,
+    proveedorIdInicial,
+    setValue,
+    onProveedorFijo,
+  });
 
   const handleOpenChange = (o: boolean) => {
     if (!o) { reset(); setProveedorNombre(proveedorNombreInicial ?? ""); }
@@ -126,24 +98,14 @@ export function RegistrarAnticipoDialog({
       referencia: values.referencia || undefined,
       notas: values.notas || undefined,
       embarqueId: values.embarqueId ?? null,
-
     });
     handleOpenChange(false);
   }, onInvalid);
 
-  const equivalenteMxn = useMemo(() => {
-    const m = Number(monto);
-    if (!(m > 0)) return null;
-    if (moneda === "MXN") return m;
-    const t = Number(tipoCambioUsd);
-    return t > 0 ? m * t : null;
-  }, [monto, moneda, tipoCambioUsd]);
-
-  const tcHint = tc
-    ? tc.fuente === "DOF"
-      ? `Sugerido por el DOF${tc.fecha ? ` del ${tc.fecha}` : ""}. Puedes editarlo.`
-      : "Sugerido por el servicio de tipos de cambio. Puedes editarlo."
-    : undefined;
+  const equivalenteMxn = useMemo(
+    () => equivalenteMxnAnticipo(monto, moneda, tipoCambioUsd),
+    [monto, moneda, tipoCambioUsd],
+  );
 
   const footer = (
     <>
@@ -181,7 +143,6 @@ export function RegistrarAnticipoDialog({
         embarqueExpediente={embarqueExpediente ?? null}
         onEmbarqueChange={handleEmbarqueChange}
       />
-
     </FormDialogShell>
   );
 }

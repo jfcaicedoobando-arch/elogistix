@@ -6,11 +6,11 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { CargaXmlNcSection } from "./CargaXmlNcSection";
-import type { Tables } from "@/integrations/supabase/types";
+import type {
+  MotivoNotaCreditoProveedor as MotivoNC,
+  MonedaNotaCreditoProveedor as MonedaNC,
+} from "@/features/cxp/types";
 import type { CfdiParsedResponse } from "@/features/cxp/services";
-
-type MotivoNC = Tables<"proveedor_notas_credito">["motivo"];
-type MonedaNC = Tables<"proveedor_notas_credito">["moneda"];
 
 const MOTIVOS: { value: MotivoNC; label: string }[] = [
   { value: "Devolucion", label: "Devolución" },

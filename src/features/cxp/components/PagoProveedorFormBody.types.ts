@@ -3,11 +3,11 @@
  * bajo el límite de 200 líneas (Power of 10).
  */
 import type { FacturaCxP } from "@/features/cxp/services";
-import type { Database } from "@/integrations/supabase/types";
+import type { Moneda } from "@/types/db";
 import type { CuentaBancaria } from "@/features/tesoreria";
 import type { ImpactoPago } from "@/features/cxp/services/pagoImpactoPreview";
 
-export type Moneda = Database["public"]["Enums"]["moneda"];
+export type { Moneda };
 
 export interface PagoProveedorFormBodyProps {
   factura: FacturaCxP | null;

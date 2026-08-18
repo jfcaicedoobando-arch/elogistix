@@ -17,14 +17,9 @@ import {
   guardarDefaultsCcCliente,
   guardarDefaultsDestinatariosCliente,
 } from "@/features/facturacion/services";
-import type { Tables } from "@/integrations/supabase/types";
+import type { FacturaLite } from "@/features/facturacion/types";
 import { logger } from "@/lib/observability/logger";
 import { notifyWarning } from "@/lib/ui/appFeedback";
-
-type FacturaLite = Pick<
-  Tables<"facturas">,
-  "id" | "numero" | "cliente_id" | "total" | "moneda"
->;
 
 interface Props {
   open: boolean;

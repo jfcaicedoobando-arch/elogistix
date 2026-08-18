@@ -10,9 +10,7 @@ import { ToneBadge } from "@/components/shared/ToneBadge";
 import type { ChipTone } from "@/lib/ui/badgeTone";
 import { formatCurrency, formatFechaDia } from "@/lib/formatters";
 import { NcSatBadge } from "./NcSatBadge";
-import type { Tables } from "@/integrations/supabase/types";
-
-type NotaCredito = Tables<"proveedor_notas_credito">;
+import type { NotaCreditoProveedor as NotaCredito } from "@/features/cxp/types";
 
 const NC_TONES: Record<string, { tone: ChipTone; label: string }> = {
   Aplicada: { tone: "success", label: "Aplicada" },

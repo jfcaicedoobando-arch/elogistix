@@ -12,9 +12,7 @@ import type { ConceptoNotaCredito } from "@/features/facturacion/services/notasC
 import { NotaCreditoCamposFiscales } from "./detalle/NotaCreditoCamposFiscales";
 import { NotaCreditoConceptosEditor } from "./detalle/NotaCreditoConceptosEditor";
 import { useNotaCreditoDraft, makeConcepto } from "../hooks/useNotaCreditoDraft";
-import type { Tables } from "@/integrations/supabase/types";
-
-type Moneda = Tables<"factura_notas_credito">["moneda"];
+import type { MonedaNotaCredito as Moneda } from "@/features/facturacion/types";
 
 interface Props {
   open: boolean;

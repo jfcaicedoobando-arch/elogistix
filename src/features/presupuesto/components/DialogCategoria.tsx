@@ -14,12 +14,12 @@ import {
   useCrearCategoriaPresupuesto, useActualizarCategoriaPresupuesto,
 } from "@/features/presupuesto/hooks";
 import type { CategoriaPresupuesto } from "@/features/presupuesto/services";
-import type { Enums } from "@/integrations/supabase/types";
+
 
 import { notifyError } from "@/lib/ui/appFeedback";
 import { getErrorMessage } from "@/lib/errors";
 
-type TipoContable = Enums<"tipo_contable_categoria">;
+import type { TipoContable } from "@/features/presupuesto/types";
 
 const TIPO_CONTABLE_OPCIONES: { value: TipoContable; label: string; descripcion: string }[] = [
   { value: "CostoDirectoEmbarque", label: "Costos directos de embarque (COGS)", descripcion: "COGS: flete, maniobras, demoras, comisiones. Va directo al costo del embarque, no cuenta como gasto fijo." },

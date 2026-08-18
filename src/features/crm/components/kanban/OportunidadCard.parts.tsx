@@ -4,7 +4,7 @@
  */
 import { Calendar, CheckCircle2, Target } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
-import { formatCurrencyCompact } from "@/lib/formatters";
+import { formatCurrencyCompact, fraccionAPorcentaje } from "@/lib/formatters";
 import { formatFechaEs } from "@/lib/formatters/dates";
 import { porcentajeCriterios, type AvanceCriterios } from "@/features/crm/domain/criterios";
 
@@ -43,7 +43,7 @@ export function MetaRow({
 }) {
   const etiquetaFecha = fechaMeta ? `Meta ${formatFechaEs(fechaMeta)}` : "Meta";
   const etiquetaAvance =
-    avance != null ? ` · ${Math.round(avance * 100)}% de ${fmtMxn(montoMeta)}` : "";
+    avance != null ? ` · ${fraccionAPorcentaje(avance)}% de ${fmtMxn(montoMeta)}` : "";
   return (
     <div
       className={`text-2xs flex items-center gap-1 ${

@@ -9,12 +9,11 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { NumericInput } from "@/components/shared/NumericInput";
-import type { Database } from "@/integrations/supabase/types";
+
 import { FormSection, FieldError, RequiredMark } from "./facturaFormPrimitives";
 import type { FacturaFormValues, TcOrigen } from "@/features/cxp/types";
+import type { Moneda } from "@/types/db";
 import { TcOrigenHint } from "./FacturaProveedorFormFields.hint";
-
-type Moneda = Database["public"]["Enums"]["moneda"];
 
 const toNum = (s: string) => (s === "" ? 0 : Number(s) || 0);
 const fromNum = (n: number) => (n === 0 ? "" : String(n));

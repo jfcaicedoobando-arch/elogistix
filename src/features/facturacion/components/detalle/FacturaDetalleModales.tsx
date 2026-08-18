@@ -8,9 +8,7 @@ import { DialogEnviarFacturaBranded } from "@/features/facturacion/components/Di
 import { DialogSustituirFactura } from "@/features/facturacion/components/DialogSustituirFactura";
 import { DialogCancelarFactura } from "@/features/facturacion/components/DialogCancelarFactura";
 import { DialogRefacturarReceptor } from "@/features/facturacion/components/refacturacion/DialogRefacturarReceptor";
-import type { Tables } from "@/integrations/supabase/types";
-
-type Factura = Tables<"facturas">;
+import type { Factura } from "@/features/facturacion/types";
 
 interface Props {
   factura: Pick<Factura, "id" | "numero" | "total" | "moneda" | "metodo_pago" | "uuid_fiscal" | "cliente_id" | "fecha_emision" | "rfc_cliente">;

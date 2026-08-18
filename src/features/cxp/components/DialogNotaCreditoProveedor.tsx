@@ -16,11 +16,11 @@ import { subirArchivosNcProveedor } from "@/features/cxp/services";
 import { NuevaNotaCreditoFormFields } from "./NuevaNotaCreditoFormFields";
 import { buildNcPrefillFromCfdi } from "./ncFromCfdi";
 import { notifyError } from "@/lib/ui/appFeedback";
-import type { Tables } from "@/integrations/supabase/types";
+import type {
+  MotivoNotaCreditoProveedor as MotivoNC,
+  MonedaNotaCreditoProveedor as MonedaNC,
+} from "@/features/cxp/types";
 import type { CfdiParsedResponse } from "@/features/cxp/services";
-
-type MotivoNC = Tables<"proveedor_notas_credito">["motivo"];
-type MonedaNC = Tables<"proveedor_notas_credito">["moneda"];
 
 interface Props {
   open: boolean;

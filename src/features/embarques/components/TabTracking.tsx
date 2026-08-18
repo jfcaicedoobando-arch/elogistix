@@ -12,14 +12,10 @@ import { TrackingNuevoEventoForm } from "./tracking/TrackingNuevoEventoForm";
 import { TrackingNavieraActions } from "./tracking/TrackingNavieraActions";
 import { formatDate } from "@/lib/formatters";
 import { esEmbarqueArribado, esEtaVencida } from "@/features/embarques/domain/embarqueFases";
-import type { Tables } from "@/integrations/supabase/types";
+import type { EmbarqueTracking } from "@/features/embarques/types/tracking";
 
 
-type EmbarqueTrackingProps = Pick<Tables<"embarques">,
-  | "modo" | "tipo" | "estado" | "etd" | "eta" | "fecha_llegada_real"
-  | "fecha_creacion" | "cotizacion_id" | "updated_at" | "naviera" | "aerolinea"
-  | "bl_master" | "mawb" | "expediente" | "puerto_destino" | "aeropuerto_destino"
-  | "ciudad_destino">;
+type EmbarqueTrackingProps = EmbarqueTracking;
 
 interface Props {
   embarqueId: string;

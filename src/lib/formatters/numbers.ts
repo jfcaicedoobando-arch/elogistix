@@ -135,3 +135,28 @@ export const formatDiasCredito = (
   if (n === 0) return "Contado";
   return `${n} días`;
 };
+
+/**
+ * Porcentaje entero de `parte` sobre `total` (0-∞), redondeado.
+ * Devuelve `null` cuando el total no es positivo (no hay base de comparación).
+ * `minimo` sirve para barras de progreso que deben verse aunque el valor sea ~0.
+ */
+export const porcentajeEntero = (
+  parte: number | null | undefined,
+  total: number | null | undefined,
+  options: { minimo?: number } = {},
+): number | null => {
+  const p = Number(parte);
+  const t = Number(total);
+  if (!Number.isFinite(p) || !Number.isFinite(t) || t <= 0) return null;
+  const pct = Math.round((p / t) * 100);
+  return options.minimo === undefined ? pct : Math.max(options.minimo, pct);
+};
+
+/** Porcentaje entero a partir de una fracción ya calculada (0.35 → 35). */
+export const fraccionAPorcentaje = (fraccion: number | null | undefined): number | null =>
+  Number.isFinite(Number(fraccion)) ? Math.round(Number(fraccion) * 100) : null;
+
+/** Moneda sin centavos, para tarjetas y resúmenes con poco espacio. */
+export const formatCurrencyEntero = (amount: number, currency: string = "MXN"): string =>
+  formatCurrency(Math.round(Number.isFinite(amount) ? amount : 0), currency).replace(/\.00$/, "");
