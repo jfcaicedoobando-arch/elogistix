@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.647.1] - 2026-08-18
+
+### Validación de Olas A y B
+- Suite completa en verde (1092 archivos / 7342 pruebas): se corrigieron los 2 archivos rojos que dejó la Ola B.
+- Añadidos los mensajes amigables faltantes de la Ola A: `LC_CONCEPTOS_YA_ASIGNADOS`, `LC_CXP_CANCELAR_FORBIDDEN`, `LC_NC_MONEDA_SIN_TC`, `LC_NC_TRANSICION_INVALIDA`, `LC_NC_UUID_REQUERIDO`.
+- El test de tokens de badges de notas de crédito ahora apunta a `NotaCreditoFila.tsx` (archivo extraído).
+
 ## [13.647.0] - 2026-08-18
 
 ### Auditoría v1 — Ola B (UX)
