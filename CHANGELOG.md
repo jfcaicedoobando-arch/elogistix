@@ -1,5 +1,15 @@
 # Changelog
 
+## [13.652.6] - 2026-08-18
+
+### Power of 10 — catálogo LC_* operativo dividido
+- `src/lib/errors/lcCodeMessages.operativo.ts` (202 → 16 líneas): dividido en 4 subcatálogos por dominio para respetar el límite de 200 líneas:
+  - `lcCodeMessages.operativo.auth.ts` — autenticación, tenancy y permisos.
+  - `lcCodeMessages.operativo.operaciones.ts` — embarques, cotizaciones y concurrencia.
+  - `lcCodeMessages.operativo.garantias.ts` — garantías, demoras y proformas.
+  - `lcCodeMessages.operativo.genericos.ts` — genéricos, buzón de facturas entrantes, tipo de cambio DOF y RPCs transaccionales.
+- El índice sigue exportando `LC_CODE_MESSAGES_OPERATIVO`, por lo que los consumidores no requieren cambios.
+
 ## [13.652.5] - 2026-08-18
 
 ### CI verde — cobertura de códigos LC_* y exports limpios
