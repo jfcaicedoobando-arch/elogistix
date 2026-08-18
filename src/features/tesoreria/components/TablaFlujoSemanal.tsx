@@ -6,6 +6,7 @@ import { ChevronDown, ChevronRight } from "lucide-react";
 import { formatCurrency } from "@/lib/formatters/numbers";
 import { Card, CardContent } from "@/components/ui/card";
 import type { SemanaFlujo } from "@/features/tesoreria/services";
+import { SectionHeading } from "@/components/shared/SectionHeading";
 
 interface Props { semanas: SemanaFlujo[] }
 
@@ -94,7 +95,9 @@ function DetalleListas({ s }: { s: SemanaFlujo }) {
   return (
     <div className="grid md:grid-cols-2 gap-4 py-2">
       <div>
-        <h4 className="font-semibold mb-1 text-success">Entradas ({s.detalle_entradas.length})</h4>
+        <SectionHeading as="h3" variant="subsection" count={s.detalle_entradas.length} className="mb-1 text-success">
+          Entradas
+        </SectionHeading>
         {s.detalle_entradas.length === 0 ? (
           <p className="text-muted-foreground italic">Sin movimientos.</p>
         ) : (
@@ -109,7 +112,9 @@ function DetalleListas({ s }: { s: SemanaFlujo }) {
         )}
       </div>
       <div>
-        <h4 className="font-semibold mb-1 text-destructive">Salidas ({s.detalle_salidas.length})</h4>
+        <SectionHeading as="h3" variant="subsection" count={s.detalle_salidas.length} className="mb-1 text-destructive">
+          Salidas
+        </SectionHeading>
         {s.detalle_salidas.length === 0 ? (
           <p className="text-muted-foreground italic">Sin movimientos.</p>
         ) : (

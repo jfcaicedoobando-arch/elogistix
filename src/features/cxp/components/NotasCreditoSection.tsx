@@ -7,6 +7,7 @@ import { useState } from "react";
 import { Plus, FileMinus2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ListSkeleton } from "@/components/shared/states/ListSkeleton";
+import { SectionHeading } from "@/components/shared/SectionHeading";
 import {
   useNotasCreditoFactura, useAplicarNotaCredito, useAprobarNotaCredito, useCancelarNotaCredito,
 } from "@/features/cxp/hooks/useNotasCreditoProveedor";
@@ -47,13 +48,20 @@ export function NotasCreditoSection({ facturaId, monedaFactura, saldoFactura, ca
 
   return (
     <div className="border rounded-md">
-      <div className="flex items-center justify-between px-4 py-3 border-b bg-muted/30">
-        <h3 className="text-sm font-semibold">Notas de crédito</h3>
-        {canEdit && (
-          <Button size="sm" variant="outline" onClick={() => setOpenNueva(true)}>
-            <Plus className="h-3.5 w-3.5 mr-1" /> Registrar NC
-          </Button>
-        )}
+      <div className="px-4 py-3 border-b bg-muted/30">
+        <SectionHeading
+          as="h3"
+          variant="subsection"
+          actions={
+            canEdit && (
+              <Button size="sm" variant="outline" onClick={() => setOpenNueva(true)}>
+                <Plus className="h-3.5 w-3.5 mr-1" /> Registrar NC
+              </Button>
+            )
+          }
+        >
+          Notas de crédito
+        </SectionHeading>
       </div>
 
       {isLoading ? (
