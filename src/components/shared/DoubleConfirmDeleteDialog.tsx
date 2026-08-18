@@ -105,8 +105,14 @@ function DoubleConfirmInner({
               onKeyDown={async (e) => {
                 if (e.key === "Enter" && canDelete && !isPending) {
                   e.preventDefault();
-                  await onConfirm();
-                  close();
+                  // N-EC-02: si `onConfirm` falla, NO cerramos (el usuario
+                  // puede reintentar o cancelar) y no dejamos rejection suelto.
+                  try {
+                    await onConfirm();
+                    close();
+                  } catch (err) {
+                    console.error("[DoubleConfirmDeleteDialog] onConfirm rechazó:", err);
+                  }
                 }
               }}
               placeholder="ELIMINAR"
@@ -120,8 +126,13 @@ function DoubleConfirmInner({
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               onClick={async (e) => {
                 e.preventDefault();
-                await onConfirm();
-                close();
+                // N-EC-02: mismo criterio que el Enter del input.
+                try {
+                  await onConfirm();
+                  close();
+                } catch (err) {
+                  console.error("[DoubleConfirmDeleteDialog] onConfirm rechazó:", err);
+                }
               }}
               disabled={isPending || !canDelete}
             >

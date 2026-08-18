@@ -24,6 +24,8 @@ const SEGMENT_LABELS: Record<string, string> = {
   cartera: "Cobranza",
   cobranza: "Cobranza",
   "por-capturar": "Por capturar",
+  "por-aprobar": "Por aprobar",
+  "por-pagar": "Por pagar",
   "notas-credito": "Notas de crédito",
   aging: "Antigüedad",
   anticipos: "Anticipos",

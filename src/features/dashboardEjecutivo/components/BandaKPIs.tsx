@@ -111,7 +111,7 @@ export function BandaKPIs({ kpis, topDeudores, topAcreedores, presupuesto }: Pro
           onClick={() => nav("/tesoreria")}
         />
         <KpiCard
-          label="Cartera vencida (>30d)"
+          label="Cobranza vencida (>30d)"
           value={formatCurrency(kpis.cartera_vencida_mxn, "MXN")}
           delta={`${kpis.cartera_vencida_count} cliente(s)`}
           deltaVariant={kpis.cartera_vencida_mxn > 0 ? "negative" : "neutral"}
@@ -138,7 +138,7 @@ export function BandaKPIs({ kpis, topDeudores, topAcreedores, presupuesto }: Pro
         <KpiDrilldownSheet
           open={drill === "deudores"}
           onOpenChange={(v) => setDrill(v ? "deudores" : null)}
-          title="Cartera vencida"
+          title="Cobranza vencida"
           description="Clientes con facturas vencidas hace más de 30 días."
           items={topDeudores ?? []}
           emptyText="Sin cartera vencida."
