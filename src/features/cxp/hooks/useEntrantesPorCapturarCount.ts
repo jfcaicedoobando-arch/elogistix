@@ -15,13 +15,15 @@ export function useEntrantesPorCapturarCount() {
   const { organizationId } = useOrgActiva();
 
   useEffect(() => {
+    // EC-09: el canal se filtra por organización; sin org activa no se suscribe.
+    if (!organizationId) return;
     // Realtime: cualquier alta/captura/retiro del buzón invalida el conteo.
-    return subscribeEntrantesBuzon(() => {
+    return subscribeEntrantesBuzon(organizationId, () => {
       void queryClient.invalidateQueries({
         queryKey: cxp.facturasEntrantesPorCapturarCount,
       });
     });
-  }, [queryClient]);
+  }, [queryClient, organizationId]);
 
   return useQuery({
     // La org va en la key: al cambiar de tenant (OrgSwitcher del super admin)

@@ -28,12 +28,18 @@ describe("subscribeEntrantesBuzon", () => {
 
   it("se suscribe a la tabla del buzón y limpia el canal", () => {
     const onChange = vi.fn();
-    const cleanup = subscribeEntrantesBuzon(onChange);
+    const cleanup = subscribeEntrantesBuzon("org-1", onChange);
 
-    expect(channel).toHaveBeenCalledWith("cxp-entrantes-buzon");
+    // EC-09: canal por organización + filtro server-side (sin cross-tenant).
+    expect(channel).toHaveBeenCalledWith("cxp-entrantes-buzon-org-1");
     expect(on).toHaveBeenCalledWith(
       "postgres_changes",
-      { event: "*", schema: "public", table: "embarque_facturas_entrantes" },
+      {
+        event: "*",
+        schema: "public",
+        table: "embarque_facturas_entrantes",
+        filter: "organization_id=eq.org-1",
+      },
       expect.any(Function),
     );
     expect(subscribe).toHaveBeenCalled();
