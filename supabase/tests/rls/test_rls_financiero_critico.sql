@@ -339,7 +339,7 @@ BEGIN
     format(
       'INSERT INTO public.factura_notas_credito(organization_id, factura_id, folio, motivo, descripcion, monto, moneda, tipo_cambio, estado, fecha_emision)
        VALUES (%L, %L, %L, %L, %L, 1, %L, 1, %L, CURRENT_DATE)',
-      org_a, fac_a, 'NC-HACK', 'Descuento', 'HACK', 'MXN', 'Aplicada'
+      org_a, fac_a, 'NC-HACK', 'Descuento', 'HACK', 'MXN', 'Borrador'
     ),
     'factura_notas_credito acepta INSERT con organization_id ajeno'
   );
