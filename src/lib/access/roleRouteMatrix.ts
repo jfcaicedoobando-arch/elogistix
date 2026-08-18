@@ -46,7 +46,7 @@ export const ROLE_ROUTE_MATRIX: Readonly<Record<string, AppRole[]>> = Object.fre
   "/compras/aging": COMPRAS_AGING_ROLES,
   "/compras/reportes": FINANCE_READ_ROLES,
   "/compras/conciliacion": COMPRAS_READ_ROLES,
-  "/cartera": CARTERA_ROLES,
+  "/cobranza": CARTERA_ROLES,
   "/cobranza/aging": CARTERA_ROLES,
   "/tesoreria": TESORERIA_READ_ROLES,
   "/tesoreria/cuentas": TESORERIA_READ_ROLES,

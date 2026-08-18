@@ -43,7 +43,7 @@ export function CobranzaBlock({ aging, facturasVencidas, loading, agingSinTc = 0
       <CardHeader className="flex flex-row items-center justify-between space-y-0">
         <CardTitle>Cobranza — Aging</CardTitle>
         <Button variant="link" size="sm" asChild className="h-auto p-0 text-xs">
-            <Link to="/cartera" className="flex items-center gap-1">
+            <Link to="/cobranza" className="flex items-center gap-1">
               Ver cartera <ArrowRight className="h-3 w-3" />
             </Link>
           </Button>

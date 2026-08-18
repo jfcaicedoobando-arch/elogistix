@@ -44,7 +44,7 @@ export const ROUTES = {
   // Facturación / proformas / cobranza
   FACTURACION: "/facturacion",
   PROFORMAS: "/proformas",
-  CARTERA: "/cartera",
+  CARTERA: "/cobranza",
 
   // Clientes
   CLIENTES: "/clientes",
