@@ -134,8 +134,17 @@ async function cargarBaseContexto(supabase: SupabaseClient, facturaId: string, f
   const { data: conceptos, error: conErr } = await supabase
     .from("conceptos_factura")
     .select("descripcion, cantidad, precio_unitario, clave_sat, clave_unidad, tipo_iva, tasa_iva_aplicada, tasa_ret_isr, tasa_ret_iva")
-    .eq("factura_id", facturaId);
+    .eq("factura_id", facturaId)
+    // BUG-01 (auditoría 2026-08-18): los conceptos en papelera NO se timbran.
+    .is("deleted_at", null);
   if (conErr) return jsonResponse({ error: "conceptos_query_failed", detail: conErr.message }, 500);
+
+  if ((conceptos ?? []).length === 0) {
+    return jsonResponse({ error: "sin_conceptos", message: "La factura no tiene conceptos vigentes; no se puede timbrar." }, 422);
+  }
+
+  const cuadre = validarCuadreSubtotal(conceptos ?? [], factura);
+  if (cuadre) return cuadre;
 
   const conceptosSinClave = (conceptos ?? []).filter((c) => !c.clave_sat || String(c.clave_sat).trim() === "");
   if (conceptosSinClave.length > 0) {
