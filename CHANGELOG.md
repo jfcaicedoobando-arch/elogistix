@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.652.2] - 2026-08-18
+
+### Fixtures de prueba alineados con BUG-05 (NC exige folio fiscal)
+- `supabase/tests/rls/test_rls_financiero_critico.sql`: la nota de crédito de cliente del TEST 6 nace con `uuid_fiscal`, evitando `LC_NC_UUID_REQUERIDO` al insertarla como `Aplicada`.
+- `supabase/tests/ola4_n41_n44_n45.sql`: mismo ajuste en la NC en moneda distinta del caso N44.
+
 ## [13.652.1] - 2026-08-18
 
 ### CI verde — manifest, espejos y límite de líneas
