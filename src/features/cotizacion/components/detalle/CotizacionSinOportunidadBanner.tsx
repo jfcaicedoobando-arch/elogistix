@@ -44,7 +44,7 @@ export function CotizacionSinOportunidadBanner({
         },
         user: null,
       });
-      notifySuccess("Cotización vinculada a una oportunidad del CRM");
+      notifySuccess(undefined, { title: "Cotización vinculada a una oportunidad del CRM" });
       await queryClient.invalidateQueries({ queryKey: ["cotizacion", cotizacionId] });
     } catch (err) {
       notifyError(undefined, {
