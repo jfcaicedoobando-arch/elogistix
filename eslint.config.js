@@ -922,4 +922,32 @@ export default tseslint.config(
       }],
     },
   },
+  {
+    // ── OLA 5 · a11y: <Input> sin etiqueta accesible ─────────────────────
+    // `<Input>` (shadcn) no asocia <label> por sí solo: exigimos `id`
+    // (para emparejar con <Label htmlFor>) o `aria-label`. El patrón
+    // recomendado es `<FormField label="...">` (@/components/shared/FormField),
+    // que genera el id con useId y lo inyecta en el primer hijo.
+    //
+    // `eslint-plugin-jsx-a11y` NO está instalado; cuando se instale, sustituir
+    // este guardrail por `jsx-a11y/control-has-associated-label` (más completo:
+    // cubre textarea/select y roles). Mientras tanto se usa
+    // `no-restricted-syntax` con selector esquery.
+    //
+    // Nivel "warn" + scoped a src/features: existe deuda legacy (cientos de
+    // `<Input>` sin id/aria-label) y subir a "error" rompería `bun run lint`.
+    // Burn-down: cuando el conteo llegue a 0, subir a "error" y ampliar a src/**.
+    name: "a11y-input-label",
+    files: ["src/features/**/*.{ts,tsx}"],
+    rules: {
+      "no-restricted-syntax": ["warn",
+        {
+          selector:
+            "JSXOpeningElement[name.name='Input']:not(:has(JSXAttribute[name.name='id'])):not(:has(JSXAttribute[name.name='aria-label']))",
+          message:
+            "a11y: <Input> requiere `id` (con <Label htmlFor={id}>) o `aria-label`; lo más simple es envolverlo en <FormField label=\"...\">. Ver bloque `a11y-input-label` en eslint.config.js.",
+        },
+      ],
+    },
+  },
 );
