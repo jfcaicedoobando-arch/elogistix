@@ -446,6 +446,10 @@ jobs:
       - name: Guard de estados - guard_estado_factura
         run: $PSQL -f supabase/tests/guard_estado_factura.sql
 
+      - name: Barrido de vencidas - marcar_facturas_vencidas (BUG-12)
+        run: $PSQL -f supabase/tests/bug12_marcar_facturas_vencidas.sql
+
+
       - name: Guard de estados - guard_estado_cotizacion (C5 + A3)
         run: $PSQL -f supabase/tests/guard_estado_cotizacion.sql
 
