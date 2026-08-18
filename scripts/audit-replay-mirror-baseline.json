@@ -17,11 +17,6 @@
       "migracion_vigente": "20260808204754_d5747ba4-5098-4e9c-af3a-c8ecc3809a03.sql"
     },
     {
-      "espejo": "supabase/schema/embarques/avanzar_estado_embarque.sql",
-      "funcion": "avanzar_estado_embarque",
-      "migracion_vigente": "20260803214601_7236fed7-966a-498d-bda5-e71497866a69.sql"
-    },
-    {
       "espejo": "supabase/schema/embarques/crear_embarque_borrador_core.sql",
       "funcion": "crear_embarque_borrador_core",
       "migracion_vigente": "20260727175258_295ae563-e224-4072-9e4a-133355024b9c.sql"
