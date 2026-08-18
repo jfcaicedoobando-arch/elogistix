@@ -81,6 +81,13 @@ export async function fetchComisionesDevengadas(
   if (filtros.estado && filtros.estado !== "todos") {
     q = q.eq("estado", filtros.estado);
   }
+  // EC-01 (auditoría 2026-08-18): el periodo se filtra en la base ANTES del
+  // límite de 500 filas; antes se recortaba en memoria y meses viejos salían
+  // vacíos porque el tope ya se había consumido con comisiones recientes.
+  const rango = rangoMesMx(filtros.periodo);
+  if (rango) {
+    q = q.gte("created_at", rango.desde).lt("created_at", rango.hasta);
+  }
 
   const { data, error } = await q;
   if (error) throw error;
