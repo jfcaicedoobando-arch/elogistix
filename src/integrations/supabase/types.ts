@@ -3038,11 +3038,13 @@ export type Database = {
           cliente_convertido_id: string | null
           consecuencia: string | null
           contacto: string
+          cp: string
           created_at: string
           created_by: string | null
           deleted_at: string | null
           deleted_by: string | null
           destino: string | null
+          direccion: string
           dolor_explicito: string | null
           email: string
           empresa: string
@@ -3062,6 +3064,7 @@ export type Database = {
           origen: string | null
           pais: string
           proveedor_actual: string | null
+          rfc: string
           rutas: string | null
           score: number
           sector: string | null
@@ -3080,11 +3083,13 @@ export type Database = {
           cliente_convertido_id?: string | null
           consecuencia?: string | null
           contacto?: string
+          cp?: string
           created_at?: string
           created_by?: string | null
           deleted_at?: string | null
           deleted_by?: string | null
           destino?: string | null
+          direccion?: string
           dolor_explicito?: string | null
           email?: string
           empresa: string
@@ -3104,6 +3109,7 @@ export type Database = {
           origen?: string | null
           pais?: string
           proveedor_actual?: string | null
+          rfc?: string
           rutas?: string | null
           score?: number
           sector?: string | null
@@ -3122,11 +3128,13 @@ export type Database = {
           cliente_convertido_id?: string | null
           consecuencia?: string | null
           contacto?: string
+          cp?: string
           created_at?: string
           created_by?: string | null
           deleted_at?: string | null
           deleted_by?: string | null
           destino?: string | null
+          direccion?: string
           dolor_explicito?: string | null
           email?: string
           empresa?: string
@@ -3146,6 +3154,7 @@ export type Database = {
           origen?: string | null
           pais?: string
           proveedor_actual?: string | null
+          rfc?: string
           rutas?: string | null
           score?: number
           sector?: string | null
@@ -8249,6 +8258,17 @@ export type Database = {
         }
         Returns: undefined
       }
+      _crm_vincular_cotizacion_core: {
+        Args: {
+          p_actor_email?: string
+          p_actor_id?: string
+          p_cotizacion_id: string
+          p_lead_id?: string
+          p_oportunidad_id?: string
+          p_prospecto?: Json
+        }
+        Returns: Json
+      }
       _cxp_anchor_fase_o: { Args: never; Returns: undefined }
       _cxp_desvincular_por_rechazo: {
         Args: { p_id: string; p_motivo: string }
@@ -9175,6 +9195,7 @@ export type Database = {
           vendedor_email: string
         }[]
       }
+      crm_backfill_cotizaciones_sin_oportunidad: { Args: never; Returns: Json }
       crm_criterios_avance: {
         Args: { p_oportunidad_ids: string[] }
         Returns: {
@@ -9249,6 +9270,15 @@ export type Database = {
           telefono: string
           telefono_norm: string
         }[]
+      }
+      crm_vincular_cotizacion: {
+        Args: {
+          p_cotizacion_id: string
+          p_lead_id?: string
+          p_oportunidad_id?: string
+          p_prospecto?: Json
+        }
+        Returns: Json
       }
       current_agente_id: { Args: never; Returns: string }
       current_agente_org: { Args: never; Returns: string }
