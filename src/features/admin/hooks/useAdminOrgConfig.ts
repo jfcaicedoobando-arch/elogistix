@@ -1,8 +1,7 @@
 /**
  * Lectura y agrupación de configuración por categoría para una organización.
  */
-import { useConfiguracionByOrg } from "@/features/configuracion";
-import { agruparConfigPorCategoria } from "@/features/configuracion";
+import { useConfiguracionByOrg, agruparConfigPorCategoria } from "@/features/configuracion";
 
 export function useAdminOrgConfig(id: string | undefined) {
   const { data: configItems = [], isLoading: loadingConfig } = useConfiguracionByOrg(id ?? null);
