@@ -44,7 +44,8 @@ BEGIN
   -- Seed defensivo
   INSERT INTO public.organizations(id, nombre) VALUES (org_x, 'RLS ANON');
   INSERT INTO public.organization_members(organization_id, user_id, role) VALUES (org_x, admin_x, 'admin_org');
-  INSERT INTO public.user_roles(user_id, role) VALUES (admin_x, 'admin_org');
+  INSERT INTO public.user_roles(user_id, role) VALUES (admin_x, 'admin_org')
+    ON CONFLICT (user_id) DO UPDATE SET role = EXCLUDED.role;
   INSERT INTO public.clientes(id, nombre, rfc, email, organization_id) VALUES
     (cli_x, 'Cli Anon', 'XAXX010101000', 'x@test.local', org_x);
   INSERT INTO public.embarques(id, expediente, cliente_id, cliente_nombre, organization_id, modo, tipo, estado, incoterm) VALUES

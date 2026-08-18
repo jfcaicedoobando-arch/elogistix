@@ -40,7 +40,8 @@ BEGIN
     VALUES (org_a, pricing_a, 'ejecutivo_pricing');
 
   INSERT INTO public.user_roles(user_id, role)
-    VALUES (pricing_a, 'ejecutivo_pricing');
+    VALUES (pricing_a, 'ejecutivo_pricing')
+    ON CONFLICT (user_id) DO UPDATE SET role = EXCLUDED.role;
 
   INSERT INTO public.clientes(id, nombre, rfc, email, organization_id)
     VALUES (cli_a, 'Cli R4 Pricing A', 'XAXX010101000', 'r4pricing@example.com', org_a);

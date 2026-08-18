@@ -42,7 +42,8 @@ BEGIN
   -- ----------------------------------------------------------------------
   INSERT INTO public.organizations(id, nombre) VALUES (org_a, 'RLS C5 A');
   INSERT INTO public.organization_members(organization_id, user_id, role) VALUES (org_a, user_a, 'admin_org');
-  INSERT INTO public.user_roles(user_id, role) VALUES (user_a, 'admin_org');
+  INSERT INTO public.user_roles(user_id, role) VALUES (user_a, 'admin_org')
+    ON CONFLICT (user_id) DO UPDATE SET role = EXCLUDED.role;
 
   INSERT INTO public.clientes(id, nombre, rfc, email, organization_id)
   VALUES (cli_a, 'Cli C5 A', 'XAXX010101000', 'c5@test.local', org_a);

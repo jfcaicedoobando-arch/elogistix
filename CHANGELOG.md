@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.666.1] - 2026-08-18
+
+### Suite RLS · Fixtures idempotentes en `user_roles`
+- Los fixtures de las 31 suites `supabase/tests/rls/test_rls_*.sql` insertaban en `public.user_roles` con `INSERT` plano; desde el trigger `_sync_user_roles_desde_membership` (v13.665.0) la fila ya existe al crear la membresía y 27 suites fallaban con `user_roles_user_id_unique`.
+- Se añadió `ON CONFLICT (user_id) DO UPDATE SET role = EXCLUDED.role` a los inserts de fixture (sin tocar las aserciones negativas de escalada de privilegios).
+- Verificado en Postgres local con las 1012 migraciones aplicadas: bootstrap, drift, post-migrate, verify_rls y las 31 suites RLS en verde.
+
 ## [13.666.0] - 2026-08-18
 
 ### N-BL-01 · Cierre de embarque con CxP multi-moneda (fail-open)
