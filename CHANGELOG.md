@@ -6,6 +6,12 @@
 - `public._cotizaciones_bloquear_envio_sin_oportunidad()` se creó sin revocar EXECUTE, rompiendo la whitelist `fix45_anon_execute_whitelist.sql`.
 - Migración: `REVOKE ALL ... FROM PUBLIC, anon, authenticated` + `GRANT EXECUTE ... TO service_role` (el trigger corre como dueño, no necesita grants de usuario).
 
+### Replay · `validar_cierre_embarque` (R4BD-01)
+- `audit:replay-mirror` fallaba: la migración BUG-13 `20260826000200` tiene timestamp posterior a la de N-BL-01 (`20260818214910`), así que en un replay limpio pisaba la conversión de pagos CxP a la moneda de la factura.
+- Nueva migración `20260826001000_nbl01_replay_validar_cierre_embarque.sql` re-emite el cuerpo vigente (idéntico al espejo, sin cambio funcional en la BD) + manifiesto actualizado a 1014 migraciones.
+
+
+
 
 ## [13.666.1] - 2026-08-18
 
