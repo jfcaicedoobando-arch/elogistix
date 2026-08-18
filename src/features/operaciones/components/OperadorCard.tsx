@@ -1,5 +1,6 @@
 import { memo, useMemo, useState } from "react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { User, ChevronRight, Users } from "lucide-react";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 import type { OperadorData, EstadoUiKey } from "@/features/operaciones/hooks";
