@@ -2,7 +2,9 @@
  * Subcomponente de resultados (loading / error / vacío / grid) para
  * `SugerenciasTarifaInline`. Extraído para bajar la complejidad ciclomática.
  */
+import { FileSearch } from "lucide-react";
 import { CardSkeleton } from "@/components/shared/skeletons";
+import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 import { ErrorStateInline } from "@/components/empty/ErrorStateInline";
 import { TarifaResultCard } from "@/features/costeo/components/TarifaResultCard";
 import type { TopTarifaRow } from "@/features/costeo/types";
@@ -40,10 +42,12 @@ export function SugerenciasTarifaResultados({ isFetching, error, isRefetching, t
 
   if (tarifas.length === 0) {
     return (
-      <p className="text-sm text-muted-foreground rounded-md border border-dashed p-3">
-        No hay tarifas vigentes para esta combinación. Cotiza manualmente o
-        captura una nueva en "Tarifas marítimas".
-      </p>
+      <EmptyStateInline
+        icon={FileSearch}
+        message="No hay tarifas vigentes para esta combinación."
+        hint='Cotiza manualmente o captura una nueva en "Tarifas marítimas".'
+        className="rounded-md border border-dashed"
+      />
     );
   }
 
