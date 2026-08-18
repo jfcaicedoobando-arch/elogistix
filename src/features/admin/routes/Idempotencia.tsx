@@ -35,17 +35,11 @@ const FN_OPTIONS: { value: FnFilter; label: string }[] = [
   { value: "marcar_proforma_facturada", label: FN_LABEL.marcar_proforma_facturada },
 ];
 
-import { formatFechaHora } from "@/lib/formatters";
+// EC-07: `formatFechaSegura` valida la fecha antes de formatear (el adaptador
+// previo llamaba `d.toISOString()`, que lanza RangeError con Invalid Date).
+import { formatFechaSegura } from "@/lib/formatters";
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 import { ErrorState } from "@/components/shared/states/ErrorState";
-const dtf = {
-  format(d: Date): string {
-    return formatFechaHora(d.toISOString(), {
-      day: "2-digit", month: "2-digit", year: "numeric",
-      hour: "2-digit", minute: "2-digit", second: "2-digit",
-    });
-  },
-};
 
 export default function Idempotencia() {
   useDocumentTitle('Idempotencia');
@@ -69,7 +63,7 @@ export default function Idempotencia() {
     {
       id: "created_at",
       header: "Fecha",
-      cell: ({ row }) => <span className="text-sm tabular-nums">{dtf.format(new Date(row.original.created_at))}</span>,
+      cell: ({ row }) => <span className="text-sm tabular-nums">{formatFechaSegura(row.original.created_at, "dd/MM/yyyy HH:mm:ss")}</span>,
     },
     {
       id: "fn",

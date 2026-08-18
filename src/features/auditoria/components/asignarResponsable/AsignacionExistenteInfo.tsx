@@ -1,5 +1,4 @@
-import { formatFechaDia } from "@/lib/formatters";
-import { format } from "date-fns";
+import { formatFechaDia, formatFechaSegura } from "@/lib/formatters";
 import { Badge } from "@/components/ui/badge";
 import type { AuditoriaRevision } from "@/features/auditoria/types";
 
@@ -27,7 +26,7 @@ export function AsignacionExistenteInfo({ revisionExistente }: Props) {
           {revisionExistente.asignado_at && (
             <span className="text-muted-foreground tabular-nums">
               {" "}
-              · {format(new Date(revisionExistente.asignado_at), "dd/MM/yyyy HH:mm")}
+              · {formatFechaSegura(revisionExistente.asignado_at, "dd/MM/yyyy HH:mm")}
             </span>
           )}
         </div>
