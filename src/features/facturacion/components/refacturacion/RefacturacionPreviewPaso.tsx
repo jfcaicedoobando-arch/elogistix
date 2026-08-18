@@ -8,6 +8,7 @@ import { useRefacturacionSimulacion } from "@/features/facturacion/hooks/useRefa
 import type { AccionSimulada } from "@/features/facturacion/services/refacturacionSimulacion";
 import { RefacturacionPreviewCodigos } from "./RefacturacionPreviewCodigos";
 import { RefacturacionPreviewSaldos } from "./RefacturacionPreviewSaldos";
+import { SectionHeading } from "@/components/shared/SectionHeading";
 
 interface Props {
   casoId: string | null;
@@ -37,10 +38,14 @@ function BloqueAcciones({
 
   return (
     <div className={`rounded-md border ${borde} p-3`}>
-      <p className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide">
-        <Icono className={`h-3.5 w-3.5 ${color}`} aria-hidden="true" />
+      <SectionHeading
+        as="h3"
+        variant="overline"
+        className="mb-2"
+        icon={<Icono className={`h-3.5 w-3.5 ${color}`} aria-hidden="true" />}
+      >
         {titulo}
-      </p>
+      </SectionHeading>
       <ul className="space-y-1.5">
         {acciones.map((a) => (
           <li key={`${a.tipo}-${a.etiqueta}`} className="text-xs">
@@ -82,12 +87,13 @@ export function RefacturacionPreviewPaso({ casoId, paso, activo }: Props) {
 
   return (
     <section className="mt-5 space-y-3 rounded-lg border bg-muted/30 p-4">
-      <header>
-        <h3 className="text-sm font-semibold">Vista previa del resultado</h3>
-        <p className="text-xs text-muted-foreground">
-          Así queda la operación si confirmas esta etapa. Nada se guarda hasta que confirmes.
-        </p>
-      </header>
+      <SectionHeading
+        as="h3"
+        variant="subsection"
+        description="Así queda la operación si confirmas esta etapa. Nada se guarda hasta que confirmes."
+      >
+        Vista previa del resultado
+      </SectionHeading>
 
       <div className="grid gap-3 md:grid-cols-2">
         <BloqueAcciones titulo="Se cancela" acciones={data.cancela} icono={Ban} tono="destructive" />
@@ -96,10 +102,14 @@ export function RefacturacionPreviewPaso({ casoId, paso, activo }: Props) {
 
       {reasigna && (
         <div className="rounded-md border p-3 text-xs">
-          <p className="mb-1 flex items-center gap-2 font-semibold uppercase tracking-wide">
-            <Repeat2 className="h-3.5 w-3.5 text-primary" aria-hidden="true" />
+          <SectionHeading
+            as="h3"
+            variant="overline"
+            className="mb-1"
+            icon={<Repeat2 className="h-3.5 w-3.5 text-primary" aria-hidden="true" />}
+          >
             Se reasigna el pago
-          </p>
+          </SectionHeading>
           <p>
             {formatCurrency(Number(reasigna.monto ?? 0), reasigna.moneda ?? "MXN")} pasa de{" "}
             <span className="font-medium">{reasigna.de}</span> a{" "}
