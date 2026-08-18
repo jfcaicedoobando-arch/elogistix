@@ -23,12 +23,17 @@ import { TesoreriaKpis } from "./_sections/TesoreriaKpis";
 import { TesoreriaFlujoMonedas } from "./_sections/TesoreriaFlujoMonedas";
 import { TesoreriaFlujoChart } from "./_sections/TesoreriaFlujoChart";
 import { TesoreriaTopCartera } from "./_sections/TesoreriaTopCartera";
+import { TipoCambioFallbackBanner } from "@/features/dashboard/direccion/components/TipoCambioFallbackBanner";
+import { useExchangeRates } from "@/features/catalogos/hooks";
 
 export default function Tesoreria() {
   const { data, isLoading, isError, refetch } = useResumenTesoreria();
   const pendientesQ = useMovimientosPendientes();
   const pendientes = pendientesQ.data ?? 0;
   const hoy = todayLocalISO();
+  // EC-10: `esFallback` es la única señal que distingue TC oficial de respaldo.
+  const { data: rates } = useExchangeRates();
+  const tcEstimado = rates?.esFallback === true;
 
   const handlePdf = async () => {
     if (!data) return;
@@ -78,13 +83,18 @@ export default function Tesoreria() {
       >
         {data ? (
           <>
+            {/* EC-10: el respaldo operativo (17.25) NO es TC oficial; el badge
+                no debe decir "TC DOF" ni verse informativo cuando lo estamos usando. */}
+            <TipoCambioFallbackBanner />
             <div className="flex flex-wrap items-center justify-end gap-2">
-              <Badge variant={data.tipo_cambio_usd ? "info" : "secondary"}>
-                {data.tipo_cambio_usd
-                  ? `TC DOF $${data.tipo_cambio_usd.toFixed(4)}${
-                      data.tipo_cambio_fecha ? ` · ${formatFechaEs(data.tipo_cambio_fecha)}` : ""
-                    }`
-                  : "TC DOF no disponible"}
+              <Badge variant={tcEstimado ? "warning" : data.tipo_cambio_usd ? "info" : "secondary"}>
+                {tcEstimado
+                  ? `T/C estimado $${(data.tipo_cambio_usd ?? 0).toFixed(4)} · no oficial`
+                  : data.tipo_cambio_usd
+                    ? `TC DOF $${data.tipo_cambio_usd.toFixed(4)}${
+                        data.tipo_cambio_fecha ? ` · ${formatFechaEs(data.tipo_cambio_fecha)}` : ""
+                      }`
+                    : "TC DOF no disponible"}
               </Badge>
             </div>
 

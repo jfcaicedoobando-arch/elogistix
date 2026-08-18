@@ -10,6 +10,8 @@ import { Receipt, CheckCircle2, Clock } from "lucide-react";
 import { KpiStrip } from "@/components/shared/KpiStrip";
 import { KpiCard } from "@/components/shared/KpiCard";
 import { formatCurrency } from "@/lib/formatters";
+import { useExchangeRates } from "@/features/catalogos/hooks";
+import { TipoCambioFallbackBanner } from "@/features/dashboard/direccion/components/TipoCambioFallbackBanner";
 
 interface Props {
   totalFacturado: number;
@@ -39,9 +41,13 @@ export function ProveedorResumenCards({
       : 0;
   const monedasNativas = Object.entries(porMoneda).filter(([, monto]) => monto !== 0);
   const variasMonedas = monedasNativas.length > 1;
+  // EC-10: los totales se convierten a MXN; avisar si el T/C es de respaldo.
+  const { data: rates } = useExchangeRates();
+  const tcEstimado = rates?.esFallback === true && variasMonedas;
 
   return (
     <div className="space-y-3">
+      {variasMonedas ? <TipoCambioFallbackBanner /> : null}
       <KpiStrip desktopCols={3}>
         <KpiCard
           label="Total costeado"
@@ -70,6 +76,11 @@ export function ProveedorResumenCards({
 
       {(variasMonedas || monedasSinTc.length > 0) && (
         <div className="text-xs text-muted-foreground">
+          {tcEstimado && (
+            <span className="text-warning">
+              Equivalente calculado con T/C estimado (no oficial) ·{" "}
+            </span>
+          )}
           {variasMonedas && (
             <span>
               Desglose nativo:{" "}
