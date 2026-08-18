@@ -34,7 +34,11 @@ export function useCxcAging(fecha?: string): UseCxcAgingResult {
   const q = useQuery({
     queryKey: [...queryKeys.cxc.aging(fecha), organizationId],
     queryFn: () => fetchCxcAging(fecha, organizationId),
-    staleTime: 60_000,
+    // PERF (auditoría 2026-08-18, hallazgo #3): `cxc_aging_clientes` agrega toda
+    // la cartera en cada corrida (~200 ms). El aging es un reporte a fecha de
+    // corte, no un dato de segundo a segundo: 5 min de frescura basta y evita
+    // recalcularlo cada vez que el usuario vuelve a la pestaña.
+    staleTime: 5 * 60_000,
   });
 
   const rows = useMemo(() => q.data ?? [], [q.data]);

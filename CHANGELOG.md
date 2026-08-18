@@ -1,5 +1,15 @@
 # Changelog
 
+## [13.660.0] - 2026-08-18
+
+### PERF — Ejecución del plan de rendimiento (hallazgos #1 a #4)
+- **PERF-01 (RLS por fila)**: las 90 políticas `RESTRICTIVE` de tenant ahora evalúan primero `NOT (SELECT has_role(auth.uid(),'super_admin'))` — una expresión no correlacionada que Postgres resuelve como InitPlan una vez por consulta — y sólo llaman a `rls_tenant_scope_ok(organization_id)` cuando el usuario sí es super admin. Mismo aislamiento, sin peaje por fila (`cxp_por_pagar` medía 93 ms sobre 176 filas).
+- **PERF-02 (consultas duplicadas)**: `useCxpPorPagarCount` reutiliza la query key `bandejas.cxpPorPagar` y deriva el conteo con `select`; se eliminó el servicio duplicado `cxpPorPagarCount.ts`.
+- **PERF-03 (ritmo de refetch)**: badges del sidebar a 30 min y buzón CxP a 15 min (el realtime ya invalida al instante).
+- **PERF-04 (reportes)**: `useCxcAging` sube su `staleTime` a 5 min (reporte a fecha de corte, no dato en vivo).
+- **Assets**: `favicon-48.png` (3 KB en lugar de 126 KB), logo en WebP (10 KB vs 120 KB) en los 4 componentes que lo usan y carga de Inter reducida de 6 a 4 pesos.
+
+
 ## [13.659.0] - 2026-08-18
 
 ### UI-15 — Moneda explícita en importes y pipeline del CRM en pesos reales

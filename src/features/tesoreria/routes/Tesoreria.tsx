@@ -9,7 +9,6 @@ import { Wallet, ArrowRight, FileText, TrendingUp, AlertTriangle } from "lucide-
 import { PageHeader } from "@/components/shared/PageHeader";
 import { Button } from "@/components/ui/button";
 import { useMovimientosPendientes, useResumenTesoreria } from "@/features/tesoreria/hooks";
-import { formatCurrency } from "@/lib/formatters";
 import { descargarPdf } from "@/pdf/render/descargarPdf";
 // P12: ReporteTesoreriaDocument se carga dinámicamente en el handler.
 import { PageContainer } from "@/components/shared/PageContainer";
@@ -23,6 +22,7 @@ import { TesoreriaKpis } from "./_sections/TesoreriaKpis";
 import { TesoreriaFlujoMonedas } from "./_sections/TesoreriaFlujoMonedas";
 import { TesoreriaFlujoChart } from "./_sections/TesoreriaFlujoChart";
 import { TesoreriaTopCartera } from "./_sections/TesoreriaTopCartera";
+import { TesoreriaTcAvisos } from "./_sections/TesoreriaTcAvisos";
 import { TipoCambioFallbackBanner } from "@/features/dashboard/direccion/components/TipoCambioFallbackBanner";
 import { useExchangeRates } from "@/features/catalogos/hooks";
 
@@ -86,31 +86,14 @@ export default function Tesoreria() {
             {/* EC-10: el respaldo operativo (17.25) NO es TC oficial; el badge
                 no debe decir "TC DOF" ni verse informativo cuando lo estamos usando. */}
             <TipoCambioFallbackBanner />
-            <div className="flex flex-wrap items-center justify-end gap-2">
-              <Badge variant={tcEstimado ? "warning" : data.tipo_cambio_usd ? "info" : "secondary"}>
-                {tcEstimado
-                  ? `T/C estimado $${(data.tipo_cambio_usd ?? 0).toFixed(4)} · no oficial`
-                  : data.tipo_cambio_usd
-                    ? `TC DOF $${data.tipo_cambio_usd.toFixed(4)}${
-                        data.tipo_cambio_fecha ? ` · ${formatFechaEs(data.tipo_cambio_fecha)}` : ""
-                      }`
-                    : "TC DOF no disponible"}
-              </Badge>
-            </div>
+            <TesoreriaTcAvisos
+              tipoCambioUsd={data.tipo_cambio_usd ?? null}
+              tipoCambioFecha={data.tipo_cambio_fecha ?? null}
+              tcEstimado={tcEstimado}
+              saldoIncompleto={data.saldo_bancos_incompleto === true}
+              saldosPorMoneda={data.saldos_por_moneda}
+            />
 
-            {data.saldo_bancos_incompleto && (
-              <Alert variant="warning">
-                <AlertTriangle className="h-4 w-4" />
-                <AlertDescription>
-                  No hay tipo de cambio confiable: el saldo bancario total excluye{" "}
-                  {Object.entries(data.saldos_por_moneda)
-                    .filter(([moneda]) => moneda !== "MXN")
-                    .map(([moneda, monto]) => formatCurrency(monto, moneda))
-                    .join(", ")}
-                  .
-                </AlertDescription>
-              </Alert>
-            )}
 
             {pendientes > 0 && (
               <Alert>

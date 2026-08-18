@@ -11,7 +11,6 @@ export * from "./conceptosCfdiFactura";
 export * from "./crearAjustesFacturaProveedor";
 export * from "./sugerirEmbarques";
 export * from "./cxpAprobacionCount";
-export * from "./cxpPorPagarCount";
 export * from "./historialFactura";
 export * from "./validarCuadreCfdi";
 export * from "./cerrarFacturaSinPago";

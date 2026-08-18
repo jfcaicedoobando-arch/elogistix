@@ -11,6 +11,7 @@ import { KpiStrip } from "@/components/shared/KpiStrip";
 import { KpiCard } from "@/components/shared/KpiCard";
 import { formatCurrency } from "@/lib/formatters";
 import { useExchangeRates } from "@/features/catalogos/hooks";
+import { ProveedorNotaMonedas } from "@/features/proveedor/components/ProveedorNotaMonedas";
 import { TipoCambioFallbackBanner } from "@/features/dashboard/direccion/components/TipoCambioFallbackBanner";
 
 interface Props {
@@ -74,29 +75,12 @@ export function ProveedorResumenCards({
         />
       </KpiStrip>
 
-      {(variasMonedas || monedasSinTc.length > 0) && (
-        <div className="text-xs text-muted-foreground">
-          {tcEstimado && (
-            <span className="text-warning">
-              Equivalente calculado con T/C estimado (no oficial) ·{" "}
-            </span>
-          )}
-          {variasMonedas && (
-            <span>
-              Desglose nativo:{" "}
-              {monedasNativas
-                .map(([mon, monto]) => formatCurrency(monto, mon))
-                .join(" · ")}
-            </span>
-          )}
-          {monedasSinTc.length > 0 && (
-            <span className="text-warning">
-              {variasMonedas ? " · " : ""}
-              {monedasSinTc.join(", ")} sin tipo de cambio: no se incluye en el equivalente
-            </span>
-          )}
-        </div>
-      )}
+      <ProveedorNotaMonedas
+        monedasNativas={monedasNativas}
+        monedasSinTc={monedasSinTc}
+        tcEstimado={tcEstimado}
+      />
+
 
       {totalFacturado > 0 && (
         <div className="space-y-1.5">
