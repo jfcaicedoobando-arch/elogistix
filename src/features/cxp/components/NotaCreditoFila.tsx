@@ -4,12 +4,11 @@
  * UX-06/UX-08 — los botones de icono llevan `aria-label` y la cancelación
  * delega en el confirmador del contenedor.
  */
-import { format } from "date-fns";
 import { Check, X, ShieldCheck, FileText, FileDigit } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ToneBadge } from "@/components/shared/ToneBadge";
 import type { ChipTone } from "@/lib/ui/badgeTone";
-import { formatCurrency } from "@/lib/formatters";
+import { formatCurrency, formatFechaDia } from "@/lib/formatters";
 import { NcSatBadge } from "./NcSatBadge";
 import type { Tables } from "@/integrations/supabase/types";
 
@@ -56,7 +55,7 @@ export function NotaCreditoFila({
   return (
     <tr className="hover:bg-muted/30">
       <td className="px-3 py-2 font-mono text-xs">{n.folio_nc}</td>
-      <td className="px-3 py-2">{format(new Date(n.fecha + "T00:00:00"), "dd/MM/yyyy")}</td>
+      <td className="px-3 py-2">{formatFechaDia(n.fecha)}</td>
       <td className="px-3 py-2 text-muted-foreground">{n.motivo}</td>
       <td className="px-3 py-2 text-right tabular-nums">{formatCurrency(Number(n.monto), n.moneda)}</td>
       <td className="px-3 py-2 text-center"><NcEstadoBadge estado={n.estado} /></td>

@@ -1,3 +1,4 @@
+import { formatFechaDia } from "@/lib/formatters";
 import { useMemo } from "react";
 import type { UseFormReturn } from "react-hook-form";
 import { Input } from "@/components/ui/input";
@@ -6,7 +7,6 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { format } from "date-fns";
 import { CalendarIcon } from "lucide-react";
 import { FormField } from "@/components/shared/FormField";
 import { TransitoField, FclLclFields } from "./TarifaFields";
@@ -59,7 +59,7 @@ export default function NoMaritimoFields({ ctx, tarifaCtx, tarifaHasta }: Props)
             <Button variant="outline" className={cn("w-full justify-start text-left font-normal", !validezPropuesta && "text-muted-foreground")}>
               <CalendarIcon className="mr-2 h-4 w-4" />
               {/* VF-18: es botón-calendario (no acepta tecleo); el placeholder "DD/MM/AAAA" sugería lo contrario. */}
-              {validezPropuesta ? format(validezPropuesta, "dd/MM/yyyy") : "Selecciona una fecha"}
+              {validezPropuesta ? formatFechaDia(validezPropuesta) : "Selecciona una fecha"}
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-auto p-0" align="start">

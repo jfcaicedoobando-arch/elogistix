@@ -2,8 +2,8 @@
  * Sub-componentes de `HallazgosFiltros` extraídos para mantener el archivo
  * principal ≤200 LOC (Power of 10).
  */
-import { format } from "date-fns";
 import { es } from "date-fns/locale";
+import { formatFechaDia } from "@/lib/formatters";
 import { CalendarIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -105,7 +105,7 @@ export function HallazgosFiltrosFechas({ etaDesde, etaHasta, setEtaDesde, setEta
           <Button variant="outline" size="sm"
             className={cn("h-8 text-xs justify-start font-normal", !etaDesde && "text-muted-foreground")}>
             <CalendarIcon className="mr-1.5 h-3.5 w-3.5" />
-            {etaDesde ? format(etaDesde, "dd/MM/yyyy") : "ETA desde"}
+            {etaDesde ? formatFechaDia(etaDesde) : "ETA desde"}
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-auto p-0" align="start">
@@ -119,7 +119,7 @@ export function HallazgosFiltrosFechas({ etaDesde, etaHasta, setEtaDesde, setEta
           <Button variant="outline" size="sm"
             className={cn("h-8 text-xs justify-start font-normal", !etaHasta && "text-muted-foreground")}>
             <CalendarIcon className="mr-1.5 h-3.5 w-3.5" />
-            {etaHasta ? format(etaHasta, "dd/MM/yyyy") : "ETA hasta"}
+            {etaHasta ? formatFechaDia(etaHasta) : "ETA hasta"}
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-auto p-0" align="start">

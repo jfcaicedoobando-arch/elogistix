@@ -3,10 +3,9 @@
  * Extraída para mantener el archivo de sections ≤ 200 líneas.
  * v13.190.0 · Ola 2 · Item 3 — muestra el estado de conciliación bancaria.
  */
-import { format } from "date-fns";
 import { Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { formatCurrency } from "@/lib/formatters";
+import { formatCurrency, formatFechaDia } from "@/lib/formatters";
 import { ConciliacionPagoCell } from "./ConciliacionPagoCell";
 
 export interface PagoRow {
@@ -47,7 +46,7 @@ export function PagoFila({ pago: p, canEdit, onEliminar, onEditar }: Props) {
   return (
     <tr className="hover:bg-muted/30 transition-colors">
       <td className="px-4 py-3 whitespace-nowrap text-foreground">
-        {format(new Date(p.fecha_pago + "T00:00:00"), "dd/MM/yyyy")}
+        {formatFechaDia(p.fecha_pago)}
       </td>
       <td className="px-4 py-3">
         <div className="flex flex-col">

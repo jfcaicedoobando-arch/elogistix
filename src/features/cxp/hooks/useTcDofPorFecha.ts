@@ -12,6 +12,7 @@ import { useMutation } from "@tanstack/react-query";
 import { fetchExchangeRates } from "@/features/catalogos/services";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { todayLocalISO } from "@/lib/date/today";
+import { formatFechaDia } from "@/lib/formatters";
 
 export type MonedaTc = "USD" | "EUR";
 
@@ -37,11 +38,14 @@ export function isFechaEmisionValida(fecha: string): boolean {
   return true;
 }
 
-/** Formatea `YYYY-MM-DD` como `DD/MM/YYYY` para mensajes en UI. */
-export function formatFechaEs(iso?: string): string {
+/**
+ * Ola C · UI-04: se eliminó el formateador local (colisionaba de nombre con el
+ * de `@/lib/formatters`). Este wrapper sólo añade la validación ISO estricta
+ * que los mensajes del hook necesitan (cadena vacía si no es `YYYY-MM-DD`).
+ */
+export function formatFechaIsoEstricta(iso?: string): string {
   if (!iso || !ISO_RE.test(iso)) return "";
-  const [y, m, d] = iso.split("-");
-  return `${d}/${m}/${y}`;
+  return formatFechaDia(iso, "");
 }
 
 /**
@@ -72,8 +76,8 @@ export function useTcDofPorFecha(onTc: (r: TcDofResult) => void) {
         notifySuccess(undefined, {
           title: `TC DOF ${r.moneda}: ${r.tipoCambio}`,
           description: r.fechaAplicada
-            ? `Publicación DOF vigente al ${formatFechaEs(args.fecha)} (FIX ${formatFechaEs(r.fechaAplicada)}).`
-            : `Consulta para emisión ${formatFechaEs(args.fecha)}.`,
+            ? `Publicación DOF vigente al ${formatFechaIsoEstricta(args.fecha)} (FIX ${formatFechaIsoEstricta(r.fechaAplicada)}).`
+            : `Consulta para emisión ${formatFechaIsoEstricta(args.fecha)}.`,
         });
       }
     },

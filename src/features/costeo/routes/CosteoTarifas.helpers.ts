@@ -1,5 +1,5 @@
 import type { TarifaInput } from "@/features/costeo/services/tarifas";
-import { formatUSD, formatFechaEs } from "@/lib/formatters";
+import { formatUSD, formatFechaDia } from "@/lib/formatters";
 import { diasHastaFecha } from "@/lib/date/dateOnly";
 
 /** Re-export para call-sites históricos (`usd(n)`). Delega en el canónico `formatUSD`. */
@@ -13,12 +13,8 @@ export type AprobacionFiltro = "todas" | "borrador" | "vigente" | "rechazada";
  * año, mientras /costeo/rutas mostraba "15/12/2026" para el mismo dato).
  */
 export function formatVigencia(desde: string, hasta: string): string {
-  const fmt = (iso: string) => {
-    // ISO inválido → devolver el valor crudo (comportamiento previo).
-    const [y, m, d] = iso.split("-").map(Number);
-    if (!y || !m || !d) return iso;
-    return formatFechaEs(iso, { day: "2-digit", month: "2-digit", year: "numeric" });
-  };
+  // ISO inválido → devolver el valor crudo (comportamiento previo).
+  const fmt = (iso: string) => formatFechaDia(iso, iso);
   return `${fmt(desde)} → ${fmt(hasta)}`;
 }
 

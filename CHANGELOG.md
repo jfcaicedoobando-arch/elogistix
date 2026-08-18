@@ -1,5 +1,14 @@
 # Changelog
 
+## [13.648.0] - 2026-08-18
+
+### Ola C · UI-04 — un solo formateador de fechas en toda la app
+- Nuevo canónico `formatFechaDia(valor, fallback)` en `src/lib/formatters/dates.ts`: acepta ISO date-only (anclado a mediodía UTC), ISO con hora y objetos `Date` de los date pickers; siempre `dd/MM/yyyy` en zona `America/Mexico_City` y con fallback explícito ("—" por defecto). Devuelve el fallback ante fechas no parseables (antes Node mostraba "Invalid Date").
+- Eliminados los formateadores locales duplicados: `CosteoRutasTable`, `CosteoTarifas.helpers` (`formatVigencia`), `TrackingPublico`, `lib/date/relativo`, `grupoCostosProveedorHelpers.fmtFecha` (conserva "s/f") y el `formatFechaEs` de `useTcDofPorFecha`, que colisionaba de nombre con el de `@/lib/formatters` y ahora se llama `formatFechaIsoEstricta`.
+- Reemplazados los `format(new Date(...), "dd/MM/yyyy")` crudos de `date-fns` en Auditoría (3 archivos), CxP (3) y Cotización (2): ya respetan TZ y fallback comunes.
+- Guardrail nuevo `src/__tests__/architecture/fechas-formateador-canonico.test.ts`: falla el CI si un módulo define su propio formateador de fecha o llama `toLocaleDateString` / `format(..., "dd/MM/yyyy")` fuera de `src/lib`.
+- Tests nuevos de contrato para `formatFechaDia`.
+
 ## [13.647.5] - 2026-08-18
 
 ### Fix — suites RLS `financiero_critico` y `soft_delete_reportes`

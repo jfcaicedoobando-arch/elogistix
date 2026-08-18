@@ -6,7 +6,7 @@
  * que calculaban "hace X min/h/días" cada una a su manera.
  */
 
-import { formatFechaEs } from "@/lib/formatters";
+import { formatFechaDia } from "@/lib/formatters";
 
 const MINUTO_MS = 60_000;
 const HORA_MS = 60 * MINUTO_MS;
@@ -44,5 +44,5 @@ export function formatRelativo(fecha: string | Date, ahora: Date = new Date()): 
   const dias = Math.floor(diffMs / DIA_MS);
   if (dias < 7) return `hace ${dias} días`;
 
-  return formatFechaEs(fechaObj.toISOString(), { day: "2-digit", month: "2-digit", year: "numeric" });
+  return formatFechaDia(fechaObj.toISOString());
 }

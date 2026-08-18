@@ -5,12 +5,11 @@
  *
  * v13.190.0 · Ola 2 · Item 3
  */
-import { format } from "date-fns";
 import { CheckCircle2, Link2, Link2Off, Loader2 } from "lucide-react";
 import { ToneBadge } from "@/components/shared/ToneBadge";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { formatCurrency } from "@/lib/formatters";
+import { formatCurrency, formatFechaDia } from "@/lib/formatters";
 import { useConciliacionPagoCellController } from "@/features/cxp/hooks/useConciliacionPagoCellController";
 
 interface MovimientoVinculado {
@@ -47,7 +46,7 @@ export function ConciliacionPagoCell({
         </ToneBadge>
 
         <div className="flex flex-col text-label text-muted-foreground min-w-0">
-          <span className="tabular-nums">{format(new Date(movimiento.fecha + "T00:00:00"), "dd/MM/yyyy")} · {formatCurrency(Number(movimiento.cargo), "MXN")}</span>
+          <span className="tabular-nums">{formatFechaDia(movimiento.fecha)} · {formatCurrency(Number(movimiento.cargo), "MXN")}</span>
           {movimiento.referencia && <span className="truncate">Ref: {movimiento.referencia}</span>}
         </div>
         {!disabled && (
@@ -102,7 +101,7 @@ export function ConciliacionPagoCell({
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0 flex-1">
                       <p className="text-xs font-medium tabular-nums">
-                        {format(new Date(m.fecha + "T00:00:00"), "dd/MM/yyyy")} · {formatCurrency(m.cargo, "MXN")}
+                        {formatFechaDia(m.fecha)} · {formatCurrency(m.cargo, "MXN")}
                       </p>
                       {m.concepto && (
                         <p className="text-label text-muted-foreground truncate">{m.concepto}</p>

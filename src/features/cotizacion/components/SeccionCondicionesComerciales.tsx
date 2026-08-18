@@ -10,6 +10,7 @@
  *
  * Sin tarifa vinculada, los campos quedan deshabilitados con un hint.
  */
+import { formatFechaDia } from "@/lib/formatters";
 import { useEffect, useMemo, useState } from "react";
 import { useFormContext } from "react-hook-form";
 import { Input } from "@/components/ui/input";
@@ -17,7 +18,6 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { format } from "date-fns";
 import { CalendarIcon, Lock } from "lucide-react";
 import { WizardSection } from "@/components/shared/WizardSection";
 import { FormField } from "@/components/shared/FormField";
@@ -113,7 +113,7 @@ export default function SeccionCondicionesComerciales({ complete }: { complete?:
               >
                 <CalendarIcon className="mr-2 h-4 w-4" />
                 {/* VF-18: es botón-calendario (no acepta tecleo); el placeholder "DD/MM/AAAA" sugería lo contrario. */}
-                {validezPropuesta ? format(validezPropuesta, "dd/MM/yyyy") : "Selecciona una fecha"}
+                {validezPropuesta ? formatFechaDia(validezPropuesta) : "Selecciona una fecha"}
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0" align="start">
@@ -132,7 +132,7 @@ export default function SeccionCondicionesComerciales({ complete }: { complete?:
           </Popover>
           {tarifaHasta && (
             <p className="text-xs text-muted-foreground mt-1">
-              Máximo {format(tarifaHasta, "dd/MM/yyyy")} según la tarifa vinculada.
+              Máximo {formatFechaDia(tarifaHasta)} según la tarifa vinculada.
             </p>
           )}
         </FormField>
