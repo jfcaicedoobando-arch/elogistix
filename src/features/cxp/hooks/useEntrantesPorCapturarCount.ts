@@ -7,6 +7,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { fetchEntrantesPorCapturarCount } from "@/features/cxp/services/facturasEntrantesCount";
 import { subscribeEntrantesBuzon } from "@/features/cxp/services/facturasEntrantesRealtime";
 import { cxp } from "@/features/cxp/queryKeys";
+import { staleTimes } from "@/lib/query/staleTimes";
 import { useOrgActiva } from "@/hooks/shared/useOrgActiva";
 
 export function useEntrantesPorCapturarCount() {
