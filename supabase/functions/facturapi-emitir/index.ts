@@ -18,7 +18,9 @@ import { resolveFacturapiKey } from "../_shared/facturapiAuth.ts";
 import { authorizeOrgRole, ROLES_EMISOR_FISCAL } from "../_shared/auth.ts";
 import { getFacturapiClient } from "../_shared/facturapiClient.ts";
 import { jsonResponse, makeJson } from "../_shared/response.ts";
-import { loadFactura, validarTipoCambio, claimFactura, resolverSustitucion, cargarContexto, emitirYActualizar, type FacturaRow } from "./emitir.ts";
+import { loadFactura, validarTipoCambio, claimFactura, resolverSustitucion, emitirYActualizar } from "./emitir.ts";
+import { cargarContexto } from "./contexto.ts";
+import type { FacturaRow } from "./types.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
