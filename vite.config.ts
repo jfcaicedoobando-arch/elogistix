@@ -5,7 +5,7 @@ import fs from "fs";
 import { componentTagger } from "lovable-tagger";
 import { visualizer } from "rollup-plugin-visualizer";
 import { sentryVitePlugin } from "@sentry/vite-plugin";
-import { APP_VERSION } from "./src/constants/appVersion";
+import { readAppVersion } from "./scripts/lib/readAppVersion";
 
 /**
  * Verifica que `dist/index.html` contenga el bundle JS antes de terminar el
@@ -76,7 +76,7 @@ export default defineConfig(({ mode }) => {
       project: "javascript-react",
       authToken: process.env.SENTRY_AUTH_TOKEN,
       // Empata con `release` runtime en src/lib/observability/sentry/core.ts.
-      release: { name: `libre-carga@${APP_VERSION}` },
+      release: { name: `libre-carga@${readAppVersion(__dirname)}` },
       sourcemaps: {
         // Borrar .map del dist tras subirlos: nunca queremos servir sourcemaps
         // al cliente en producción (filtración de código fuente).
