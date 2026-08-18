@@ -1,7 +1,7 @@
+import { StatusBadge } from "@/components/shared/StatusBadge";
 import { TrendingUp } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { getEstadoColor, getEstadoBarColor } from "@/lib/ui/uiMappings";
+import { getEstadoBarColor } from "@/lib/ui/uiMappings";
 import { pluralS } from "@/lib/formatters";
 import { useDrilldownRow } from "@/components/shared/dataTable/useDrilldownRow";
 import { cn } from "@/lib/utils";
@@ -56,7 +56,7 @@ function EstadoLegendRow({ estado, count }: { estado: string; count: number }) {
       className={cn(nav.className, "flex items-center justify-between text-sm rounded-md px-1 -mx-1 py-0.5 hover:bg-muted/50 transition-colors")}
     >
       <div className="flex items-center gap-2">
-        <Badge className={`${getEstadoColor(estado)} text-xs`}>{estado}</Badge>
+        <StatusBadge domain="embarque" status={estado} />
       </div>
       <span className="text-muted-foreground font-medium tabular-nums">{count}</span>
     </div>

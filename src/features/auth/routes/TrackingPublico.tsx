@@ -1,7 +1,6 @@
+import { StatusBadge } from "@/components/shared/StatusBadge";
 import { useParams } from "react-router-dom";
-import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { getEstadoColor } from "@/lib/ui/uiMappings";
 import { ModoIcon } from "@/components/shared/ModoIcon";
 import { getOrigen, getDestino, formatFechaDia } from "@/lib/formatters";
 import { labelNaviera } from "@/lib/formatters/carrierLabels";
@@ -65,7 +64,7 @@ export default function TrackingPublico() {
           icon={<ModoIcon modo={e.modo} size={18} circle />}
           title={e.expediente}
           subtitle={`${getOrigen(e)} → ${getDestino(e)}`}
-          badge={<Badge className={getEstadoColor(e.estado)}>{e.estado}</Badge>}
+          badge={<StatusBadge domain="embarque" status={e.estado} showIcon />}
         />
 
 

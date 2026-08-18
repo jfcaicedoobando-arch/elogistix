@@ -1,9 +1,8 @@
-import { Badge } from "@/components/ui/badge";
+import { StatusBadge } from "@/components/shared/StatusBadge";
 import { Card, CardContent } from "@/components/ui/card";
 import { PageSkeleton } from "@/components/shared/skeletons";
 import { usePortalFacturas, usePortalClientUsers } from "@/features/portal/hooks";
 import { formatCurrency, formatDate } from "@/lib/formatters";
-import { getEstadoColor } from "@/lib/ui/uiMappings";
 import { resolverEstadoFacturaCliente } from "@/lib/domain/estadosFactura";
 import { Receipt, AlertTriangle, ChevronRight } from "lucide-react";
 import EmptyState from "@/components/empty/EmptyState";
@@ -114,9 +113,7 @@ export default function PortalFacturas() {
               >
                 <CardContent className="flex items-center justify-between gap-3 px-4 py-3">
                   <div className="flex items-center gap-3 min-w-0 flex-1">
-                    <Badge className={`${getEstadoColor(estadoVisible)} text-xs shrink-0`}>
-                      {estadoVisible}
-                    </Badge>
+                    <StatusBadge domain="factura" status={estadoVisible} className="shrink-0" />
                     <div className="min-w-0">
                       <div className="flex items-center gap-2">
                         <p className="font-semibold text-sm font-mono tabular-nums">{f.numero}</p>

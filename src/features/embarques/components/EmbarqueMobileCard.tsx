@@ -2,10 +2,9 @@
  * Tarjeta móvil de una fila del listado de embarques.
  * Extraída de `Embarques.tsx` (límite Power-of-10 de 200 líneas).
  */
-import { Badge } from "@/components/ui/badge";
+import { StatusBadge } from "@/components/shared/StatusBadge";
 import { ModoIcon } from "@/components/shared/ModoIcon";
 import { formatDate, getOrigen, getDestino, shortName, toTitleCase } from "@/lib/formatters";
-import { getEstadoColor } from "@/lib/ui/uiMappings";
 import { calcularEstadoEmbarque } from "@/features/embarques/hooks";
 
 export interface EmbarqueMobileCardData {
@@ -42,7 +41,7 @@ export function EmbarqueMobileCard({ embarque: e }: { embarque: EmbarqueMobileCa
           {e.eta ? ` · ETA ${formatDate(e.eta)}` : ""}
         </div>
       </div>
-      <Badge variant="secondary" className={`text-2xs whitespace-nowrap ${getEstadoColor(estado)}`}>{estado}</Badge>
+      <StatusBadge domain="embarque" status={estado} className="text-2xs" />
     </div>
   );
 }

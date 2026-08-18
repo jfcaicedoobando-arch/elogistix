@@ -1,8 +1,9 @@
+import { StatusBadge } from "@/components/shared/StatusBadge";
 import { memo } from "react";
 import { useDrilldownRow } from "@/components/shared/dataTable/useDrilldownRow";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { getEstadoColor, getEstadoBorderColor, getModoCircleStyle, getModoLucideIcon } from "@/lib/ui/uiMappings";
+import { getEstadoBorderColor, getModoCircleStyle, getModoLucideIcon } from "@/lib/ui/uiMappings";
 import { calcularEstadoEmbarque } from "@/features/embarques/domain/embarque";
 import { labelExpediente } from "@/lib/domain/labelExpediente";
 import { formatDate, getOrigen, getDestino } from "@/lib/formatters";
@@ -76,9 +77,11 @@ function EmbarqueCardInner({ e }: { e: EmbarqueCardData }) {
                 {labelExpediente(e.expediente, e.id)}{e.contenedor ? ` — ${e.contenedor}` : ""}
               </p>
             </div>
-            <Badge className={`${getEstadoColor(estadoVisual)} flex-shrink-0 text-xs px-2.5 py-0.5`}>
-              {estadoVisual}
-            </Badge>
+            <StatusBadge
+              domain="embarque"
+              status={estadoVisual}
+              className="flex-shrink-0 px-2.5 py-0.5"
+            />
           </div>
 
           <div className="flex items-center justify-between gap-2 sm:pl-12">

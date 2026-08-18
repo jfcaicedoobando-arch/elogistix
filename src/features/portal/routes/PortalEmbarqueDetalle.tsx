@@ -1,13 +1,12 @@
+import { StatusBadge } from "@/components/shared/StatusBadge";
 import { useParams } from "react-router-dom";
 import { ROUTES } from "@/constants/routes";
 import { Ship } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import EmptyState from "@/components/empty/EmptyState";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DetailSkeleton } from "@/components/shared/skeletons";
 import { DetailHeader } from "@/components/shared/DetailHeader";
-import { getEstadoColor } from "@/lib/ui/uiMappings";
 import { ModoIcon } from "@/components/shared/ModoIcon";
 import { formatDate, getOrigen, getDestino } from "@/lib/formatters";
 import { PortalEmbarqueTimeline } from "@/features/portal/components/PortalEmbarqueTimeline";
@@ -80,7 +79,7 @@ export default function PortalEmbarqueDetalle() {
         subtitle={`${embarque.tipo} • ${embarque.modo} • ${embarque.incoterm}`}
         badge={
           <>
-            <Badge className={getEstadoColor(estadoVisual ?? "")}>{estadoVisual}</Badge>
+            <StatusBadge domain="embarque" status={estadoVisual} showIcon />
             <ModoIcon modo={embarque.modo} size={16} circle />
           </>
         }

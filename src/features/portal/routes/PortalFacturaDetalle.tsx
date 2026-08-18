@@ -1,6 +1,6 @@
+import { StatusBadge } from "@/components/shared/StatusBadge";
 import { useParams, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { DetailSkeleton } from "@/components/shared/skeletons";
 import { DetailHeader } from "@/components/shared/DetailHeader";
 import { FileText, FileCode2, Ship, AlertTriangle, Receipt } from "lucide-react";
@@ -10,7 +10,6 @@ import { usePortalFactura } from "@/features/portal/hooks";
 import { useRegisterBreadcrumbLabel } from "@/lib/contexts/BreadcrumbContext";
 import { formatCurrency } from "@/lib/formatters";
 import { ROUTES } from "@/constants/routes";
-import { getEstadoColor } from "@/lib/ui/uiMappings";
 import { resolverEstadoFacturaCliente } from "@/lib/domain/estadosFactura";
 import { useDescargarCfdi } from "@/features/facturacion/hooks/useDescargarCfdi";
 import PortalFacturaResumenCard from "@/features/portal/components/factura/PortalFacturaResumenCard";
@@ -73,7 +72,7 @@ export default function PortalFacturaDetalle() {
         }
         badge={
           <>
-            <Badge className={`${getEstadoColor(estadoVisible)} text-xs`}>{estadoVisible}</Badge>
+            <StatusBadge domain="factura" status={estadoVisible} showIcon />
             {vencida && <AlertTriangle className="h-4 w-4 text-destructive" />}
           </>
         }
