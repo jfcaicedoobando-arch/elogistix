@@ -9,4 +9,14 @@ export const LC_CODE_MESSAGES_CRM: Record<string, string> = {
     "Sólo gerencia comercial o administración pueden autorizar el margen de una oportunidad.",
   LC_MOTIVO_PERDIDA_REQUERIDO:
     "Indica el motivo de pérdida para cerrar la oportunidad como perdida.",
+  LC_CRM_OPORTUNIDAD_AJENA:
+    "La oportunidad pertenece a otra organización, no puedes vincularla aquí.",
+  LC_CRM_LEAD_AJENO:
+    "El prospecto pertenece a otra organización, no puedes usarlo aquí.",
+  LC_CRM_SIN_ETAPA_ABIERTA:
+    "Configura al menos una etapa abierta en el pipeline antes de crear oportunidades.",
+  LC_CRM_PROSPECTO_SIN_EMPRESA:
+    "Captura el nombre de la empresa del prospecto para poder guardarlo.",
+  LC_COTIZACION_SIN_PERMISO_ESCRITURA:
+    "Tu rol no puede crear ni modificar cotizaciones. Solicita acceso a ventas o gerencia comercial.",
 };

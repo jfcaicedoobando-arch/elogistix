@@ -15,7 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { WizardSection } from "@/components/shared/WizardSection";
 import { BuscarTarifaDialog } from "@/features/costeo/components/BuscarTarifaDialog";
 import { useTiposContenedor } from "@/features/catalogos/hooks";
-import { CartaGarantiaBadge } from "./CartaGarantiaBadge";
+import { CartaGarantiaBadge } from "@/components/shared/CartaGarantiaBadge";
 import TarifaResumenHeredado from "./TarifaResumenHeredado";
 import { formatNumber } from "@/lib/formatters/numbers";
 import { useTarifaVinculada } from "@/features/cotizacion/hooks/useTarifaVinculada";

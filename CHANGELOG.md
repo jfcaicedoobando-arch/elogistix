@@ -1,5 +1,14 @@
 # Changelog
 
+## [13.672.0] - 2026-08-18
+
+### Auditoría de arquitectura — punto 3 (duplicados) y mensajes LC_* del CRM
+- **Badge de carta garantía compartido:** vivía duplicado en `cotizacion` y `costeo` (uno re-exportando al otro). Se movió a `src/components/shared/CartaGarantiaBadge.tsx` y los 5 call-sites (cotización, costeo, portal-agente) apuntan ahí. Como tener dos llaves de la misma puerta: ahora hay una sola.
+- **Nombres que engañaban:** `OrgInfoCard` de admin (editable, datos generales del tenant) → `OrgDatosGeneralesCard`; `TabFacturacion` de embarques → `TabFacturacionEmbarque`; `ActividadTimeline` de embarques (feed read-only) → `ActividadFeedTimeline`. Los de `configuracion` y `crm` conservan su nombre.
+- **Guardrail:** nuevo `src/__tests__/architecture/no-duplicate-component-names.test.ts` — dos `.tsx` PascalCase con el mismo nombre en features distintos fallan la suite (única excepción documentada: `Configuracion.tsx` de admin y crm, que son rutas homónimas).
+- **Falsos duplicados descartados:** `estadoCuenta.ts` (×4) y `embarque.ts` (×4) sólo comparten nombre: son dominios distintos (bancario, cliente, proveedor / tipos vs mappers). No se tocaron.
+- **Mensajes de error:** se agregaron los textos amigables de `LC_CRM_OPORTUNIDAD_AJENA`, `LC_CRM_LEAD_AJENO`, `LC_CRM_SIN_ETAPA_ABIERTA`, `LC_CRM_PROSPECTO_SIN_EMPRESA` y `LC_COTIZACION_SIN_PERMISO_ESCRITURA`, que aparecían al usuario como códigos crudos.
+
 ## [13.671.0] - 2026-08-18
 
 ### Auditoría de arquitectura — puntos 2, 4 y 9 aplicados

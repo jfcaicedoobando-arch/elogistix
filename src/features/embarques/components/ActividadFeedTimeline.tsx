@@ -10,7 +10,7 @@ interface Props {
   grupos: ActividadGrupo[];
 }
 
-export function ActividadTimeline({ grupos }: Props) {
+export function ActividadFeedTimeline({ grupos }: Props) {
   return (
     <div className="space-y-6">
       {grupos.map((grupo) => (

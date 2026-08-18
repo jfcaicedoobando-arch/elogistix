@@ -8,7 +8,7 @@ import { TabResumen } from "@/features/embarques/components/TabResumen";
 import { TabDocumentos } from "@/features/embarques/components/TabDocumentos";
 import { TabFacturasEntrantes } from "@/features/embarques/components/TabFacturasEntrantes";
 import { TabCostos } from "@/features/embarques/components/TabCostos";
-import { TabFacturacion } from "@/features/embarques/components/TabFacturacion";
+import { TabFacturacionEmbarque } from "@/features/embarques/components/TabFacturacionEmbarque";
 import { TabNotas } from "@/features/embarques/components/TabNotas";
 import { TabTracking } from "@/features/embarques/components/TabTracking";
 import { TabGarantias } from "@/features/embarques/components/TabGarantias";
@@ -126,7 +126,7 @@ export function EmbarqueDetalleTabs({
       </TabsContent>
 
       <TabsContent value="facturacion">
-        <TabFacturacion facturas={facturas} canEdit={canEdit} embarque={embarque} />
+        <TabFacturacionEmbarque facturas={facturas} canEdit={canEdit} embarque={embarque} />
       </TabsContent>
 
       <TabsContent value="conciliacion" className="space-y-6">

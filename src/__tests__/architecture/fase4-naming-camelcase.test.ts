@@ -20,8 +20,8 @@ describe("Fase 4 — Naming camelCase para orgDetalle", () => {
     const archivos = glob("*.tsx", { cwd: join(ROOT, ORG_DETALLE_DIR) }).sort();
     expect(archivos).toEqual([
       "OrgConfigCard.tsx",
+      "OrgDatosGeneralesCard.tsx",
       "OrgHeader.tsx",
-      "OrgInfoCard.tsx",
       "OrgMembersCard.tsx",
     ]);
   });

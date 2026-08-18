@@ -20,7 +20,7 @@ import {
 } from "@/features/costeo/hooks/useNavieraCondiciones";
 import { NavieraCondicionForm } from "@/features/costeo/components/NavieraCondicionForm";
 import { DemorasTarifaEditor } from "@/features/costeo/components/DemorasTarifaEditor";
-import { CartaGarantiaBadge } from "@/features/costeo/components/CartaGarantiaBadge";
+import { CartaGarantiaBadge } from "@/components/shared/CartaGarantiaBadge";
 import type { CosteoNavieraCondicion } from "@/features/costeo/types/navieraCondicion";
 import { useDocumentTitle } from "@/hooks/shared";
 import { COL_W } from "@/components/shared/dataTable/columnWidths";
