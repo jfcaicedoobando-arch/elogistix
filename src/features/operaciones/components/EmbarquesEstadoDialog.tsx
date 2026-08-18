@@ -3,7 +3,9 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Search, AlertTriangle } from "lucide-react";
+import { Search, AlertTriangle, Ship } from "lucide-react";
+import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
+
 import { nombreDesdeEmail } from "@/lib/formatters";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import type { EmbarquesPorEstadoBucket, EstadoUiKey } from "@/features/operaciones/hooks";
