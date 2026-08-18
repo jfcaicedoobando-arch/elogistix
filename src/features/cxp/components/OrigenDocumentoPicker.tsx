@@ -8,6 +8,7 @@
 import { Keyboard, FileCode2, Sparkles, Check } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { SectionHeading } from "@/components/shared/SectionHeading";
 import { cn } from "@/lib/utils";
 
 export type CargaMode = "manual" | "cfdi" | "pdf_ia";
