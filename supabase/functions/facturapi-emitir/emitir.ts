@@ -47,7 +47,7 @@ interface EmitirInput { supabase: SupabaseClient; facturapi: FacturapiClient; ap
 export async function loadFactura(supabase: SupabaseClient, facturaId: string): Promise<FacturaRow | Response> {
   const { data: factura, error: fErr } = await supabase
     .from("facturas")
-    .select("id, numero, serie, estado, moneda, tipo_cambio, uso_cfdi, forma_pago, metodo_pago, cliente_id, rfc_cliente, organization_id, facturapi_id, sustituye_a, embarque_id, expediente, referencia_bl")
+    .select("id, numero, serie, estado, moneda, tipo_cambio, uso_cfdi, forma_pago, metodo_pago, cliente_id, rfc_cliente, organization_id, facturapi_id, sustituye_a, embarque_id, expediente, referencia_bl, subtotal, total")
     .eq("id", facturaId)
     .maybeSingle();
   if (fErr || !factura) return jsonResponse({ error: "factura_not_found", detail: fErr?.message }, 404);
