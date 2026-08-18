@@ -30,10 +30,11 @@ const SIDEBAR_QUERY_TUNING = {
   refetchOnMount: false,
   // A12 (Ola 7): red de seguridad. Las mutaciones relevantes invalidan estos
   // contadores, pero un cambio hecho por otro usuario (o por un cron) dejaba
-  // el badge congelado hasta 30 min. Un refetch cada 5 min con la pestaña
-  // activa mantiene el número vivo sin volver al problema de las ~11k llamadas
-  // (antes se disparaba en CADA navegación).
-  refetchInterval: 5 * 60_000,
+  // el badge congelado. PERF (auditoría 2026-08-18, hallazgo #2): 5 min seguía
+  // costando 775 llamadas / 16.6 s acumulados sobre datos de granularidad
+  // DIARIA (demoras, vencidas, garantías). 30 min alinea el intervalo con el
+  // `staleTime` y con la naturaleza del dato.
+  refetchInterval: 30 * 60_000,
   refetchIntervalInBackground: false,
 } as const;
 

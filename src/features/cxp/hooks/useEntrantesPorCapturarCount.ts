@@ -28,9 +28,12 @@ export function useEntrantesPorCapturarCount() {
     // invalidación por realtime sigue matcheando por prefijo.
     queryKey: [...cxp.facturasEntrantesPorCapturarCount, organizationId ?? "sin-org"],
     queryFn: () => fetchEntrantesPorCapturarCount(organizationId),
-    staleTime: 60_000,
-    // Red de seguridad si el canal realtime se cae o el navegador dormía.
-    refetchInterval: 60_000,
+    staleTime: staleTimes.LONG,
+    // PERF (auditoría 2026-08-18, hallazgo #2): antes 60 s → 2,385 llamadas
+    // registradas. El canal realtime ya invalida el conteo al instante, así que
+    // este intervalo es sólo red de seguridad si el canal se cae o el navegador
+    // dormía: 15 min es suficiente y quita ruido constante de red.
+    refetchInterval: 15 * 60_000,
     refetchIntervalInBackground: false,
     refetchOnWindowFocus: true,
   });
