@@ -1,5 +1,15 @@
 # Changelog
 
+## [13.652.1] - 2026-08-18
+
+### CI verde — manifest, espejos y límite de líneas
+- `migration-manifest.json` regenerado: incluye las 6 migraciones aplicadas el 2026-08-18 (1,001 migraciones en disco == manifest).
+- `audit:replay-mirror` en verde: la entrada muerta de `saldo_factura` ya no está en el baseline (8 divergencias toleradas restantes).
+- `facturapi-emitir` dividida para cumplir `max-lines`: la carga del contexto fiscal (cliente, conceptos vigentes, referencias del embarque y el cuadre BUG-01) vive ahora en `contexto.ts`, y los tipos compartidos en `types.ts`; `emitir.ts` bajó de 329 a 191 líneas. Lint estricto sin warnings.
+- Nueva cobertura `contexto_test.ts` (BUG-01): asegura el filtro `deleted_at IS NULL` en conceptos, el 422 `sin_conceptos`, el 422 `subtotal_descuadrado` y que el cuadre se evalúe ANTES de llamar al SAT. 28 pruebas Deno de la función en verde.
+
+
+
 ## [13.652.0] - 2026-08-18
 
 ### Ola D · Bloque P2 — bugs de dinero (BUG-10, 11, 13, 15, 17, 18)
