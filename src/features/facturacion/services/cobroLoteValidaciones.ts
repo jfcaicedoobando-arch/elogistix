@@ -14,7 +14,7 @@ import { todayLocalISO } from "@/lib/date/today";
  * flotante). Ola 11 · RNF-02: el CUADRE importe/reparto ya no usa
  * tolerancia — es exacto tras round2, igual que la RPC.
  */
-export const TOLERANCIA_CENTAVOS = 0.009;
+export const TOLERANCIA_CENTAVOS = 0.005;
 
 /**
  * Ola 11 · RFE-02/RNF-03: misma regla de fecha que el cobro individual

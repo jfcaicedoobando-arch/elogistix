@@ -26,7 +26,7 @@ export function DialogPagoLoteRenglones({ facturas, renglones, moneda, onMontoCh
           {facturas.map((f, i) => {
             const monto = montoDe(f.factura_id);
             const queda = Math.max(0, Math.round((f.saldo - monto) * 100) / 100);
-            const liquidada = monto > 0 && queda <= 0.009;
+            const liquidada = monto > 0 && queda <= 0.005;
             const parcial = monto > 0 && !liquidada;
             return (
               <tr key={f.factura_id} className={cn("border-t", i % 2 === 1 && "bg-muted/20")}>
