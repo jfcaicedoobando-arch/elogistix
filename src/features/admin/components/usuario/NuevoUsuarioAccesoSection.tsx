@@ -18,6 +18,7 @@ import {
   ROLE_LABELS,
 } from "@/features/admin/domain/roles/roleCatalog";
 import type { AppRole } from "@/types/appRole";
+import { SectionHeading } from "@/components/shared/SectionHeading";
 
 interface OrgOption {
   id: string;
@@ -51,9 +52,9 @@ export function NuevoUsuarioAccesoSection({
 }: AccesoSectionProps) {
   return (
     <section className="space-y-3">
-      <h4 className="text-overline font-semibold">
+      <SectionHeading as="h3" variant="overline">
         Acceso
-      </h4>
+      </SectionHeading>
 
       {showOrgSelector && (
         <div className="space-y-1.5">

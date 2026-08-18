@@ -7,6 +7,7 @@ import { Sparkles, Loader2 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { SectionHeading } from "@/components/shared/SectionHeading";
 import { useExplicarHallazgo, type ExplicacionHallazgo } from "@/features/auditoria/hooks/useExplicarHallazgo";
 import type { HallazgoAuditoria } from "@/features/auditoria/types";
 
@@ -51,9 +52,10 @@ export function ExplicarHallazgoButton({ hallazgo }: Props) {
         className="w-[420px] max-h-[480px] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center gap-2 mb-2 pb-2 border-b">
-          <Sparkles className="h-4 w-4 text-primary" />
-          <span className="text-sm font-semibold">Análisis IA del hallazgo</span>
+        <div className="mb-2 pb-2 border-b">
+          <SectionHeading as="h3" variant="subsection" icon={<Sparkles className="h-4 w-4 text-primary" />}>
+            Análisis IA del hallazgo
+          </SectionHeading>
         </div>
         {explicar.isPending && (
           <div className="flex items-center gap-2 py-6 justify-center text-sm text-muted-foreground">

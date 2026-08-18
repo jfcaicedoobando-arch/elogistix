@@ -30,7 +30,7 @@ function ListaTop({
   return (
     <Card>
       <CardContent className="p-4">
-        <p className="text-sm font-semibold mb-3">{titulo}</p>
+        <SectionHeading as="h3" variant="subsection" className="mb-3">{titulo}</SectionHeading>
         {filas.length === 0 ? (
           <p className="text-sm text-muted-foreground text-center py-4">Sin información en el período.</p>
         ) : (
