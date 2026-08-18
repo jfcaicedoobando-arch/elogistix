@@ -108,7 +108,7 @@ export function CotizacionDetalleContenido({
         <CotizacionSinOportunidadBanner
           cotizacionId={cotizacion.id}
           folio={cotizacion.folio}
-          modoTransporte={cotizacion.modo_transporte}
+          modoTransporte={(cotizacion as { modo?: string | null }).modo ?? null}
           empresa={cotizacion.prospecto_empresa}
           contacto={cotizacion.prospecto_contacto}
           email={cotizacion.prospecto_email}
