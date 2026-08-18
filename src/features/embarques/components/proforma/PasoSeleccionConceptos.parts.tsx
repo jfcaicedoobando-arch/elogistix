@@ -3,6 +3,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
+import { SectionHeading } from "@/components/shared/SectionHeading";
 import { formatCurrency } from "@/lib/formatters";
 import type { Tables } from "@/types/db";
 import type { TotalesProforma } from "./PasoSeleccionConceptos";
@@ -82,7 +83,7 @@ interface TotalesProps {
 export function TotalesProformaBox({ totales, tasaIva, seleccionadosVisibles }: TotalesProps) {
   return (
     <div className="rounded-md border-2 border-primary/30 bg-primary/5 p-4 space-y-2">
-      <h4 className="font-semibold text-sm mb-2">Totales de la Proforma</h4>
+      <SectionHeading as="h3" variant="subsection" className="mb-2">Totales de la Proforma</SectionHeading>
       {totales.subtotal_usd > 0 && (
         <div className="space-y-1 text-sm">
           <div className="flex justify-between"><span>Subtotal USD:</span><span>{formatCurrency(totales.subtotal_usd, "USD")}</span></div>

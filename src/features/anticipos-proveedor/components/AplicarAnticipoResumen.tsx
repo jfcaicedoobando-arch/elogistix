@@ -6,6 +6,7 @@
 import { formatCurrency } from "@/lib/formatters";
 import { calcularSaldoDespuesDeAplicar } from "@/features/anticipos-proveedor/domain/saldoDespuesDeAplicar";
 import type { AnticipoProveedorRow } from "@/features/anticipos-proveedor/hooks/useAnticiposProveedor";
+import { SectionHeading } from "@/components/shared/SectionHeading";
 
 export interface ImportesFactura {
   subtotal: number;
@@ -58,9 +59,9 @@ export function AplicarAnticipoResumen({ factura, anticipo, montoAplicar }: Prop
   return (
     <div className="md:col-span-2 grid gap-4 md:grid-cols-2">
       <section className="rounded-md border border-border bg-muted/30 p-3 space-y-1.5">
-        <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+        <SectionHeading as="h3" variant="overline">
           Esta factura
-        </h4>
+        </SectionHeading>
         <Renglon label="Subtotal" valor={factura.subtotal} moneda={m} />
         <Renglon label="IVA" valor={factura.iva} moneda={m} />
         {factura.ieps > 0 && <Renglon label="IEPS" valor={factura.ieps} moneda={m} />}
@@ -79,9 +80,9 @@ export function AplicarAnticipoResumen({ factura, anticipo, montoAplicar }: Prop
       </section>
 
       <section className="rounded-md border border-border bg-muted/30 p-3 space-y-1.5">
-        <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+        <SectionHeading as="h3" variant="overline">
           Anticipo seleccionado
-        </h4>
+        </SectionHeading>
         {anticipo ? (
           <>
             <Renglon label="Monto del anticipo" valor={Number(anticipo.monto)} moneda={anticipo.moneda} />

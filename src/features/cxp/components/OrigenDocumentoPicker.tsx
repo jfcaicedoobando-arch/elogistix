@@ -8,6 +8,7 @@
 import { Keyboard, FileCode2, Sparkles, Check } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { SectionHeading } from "@/components/shared/SectionHeading";
 import { cn } from "@/lib/utils";
 
 export type CargaMode = "manual" | "cfdi" | "pdf_ia";
@@ -51,12 +52,10 @@ interface Props {
 export function OrigenDocumentoPicker({ mode, onModeChange }: Props) {
   return (
     <section className="space-y-2" aria-labelledby="origen-documento-titulo">
-      <h3
-        id="origen-documento-titulo"
-        className="text-overline font-semibold"
-      >
+      <SectionHeading as="h3" variant="overline" id="origen-documento-titulo">
         ¿Cómo vas a capturar esta factura?
-      </h3>
+      </SectionHeading>
+
       <div
         role="radiogroup"
         aria-labelledby="origen-documento-titulo"

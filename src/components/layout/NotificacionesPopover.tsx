@@ -1,4 +1,5 @@
 import { Bell, Check } from "lucide-react";
+import { SectionHeading } from "@/components/shared/SectionHeading";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -54,18 +55,25 @@ export function NotificacionesPopover() {
       </Tooltip>
 
       <PopoverContent align="end" className="w-80 p-0">
-        <div className="flex items-center justify-between border-b px-3 py-2">
-          <div className="text-sm font-semibold">Notificaciones</div>
-          {noLeidas > 0 && (
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-6 px-2 text-xs"
-              onClick={() => marcarTodasLeidas()}
-            >
-              <Check className="mr-1 h-3 w-3" /> Marcar todas
-            </Button>
-          )}
+        <div className="border-b px-3 py-2">
+          <SectionHeading
+            as="h3"
+            variant="subsection"
+            actions={
+              noLeidas > 0 ? (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 px-2 text-xs"
+                  onClick={() => marcarTodasLeidas()}
+                >
+                  <Check className="mr-1 h-3 w-3" /> Marcar todas
+                </Button>
+              ) : undefined
+            }
+          >
+            Notificaciones
+          </SectionHeading>
         </div>
         <div className="max-h-96 overflow-y-auto">
           {notificaciones.length === 0 ? (

@@ -7,6 +7,7 @@
 import { Link } from "react-router-dom";
 import { Landmark, TriangleAlert } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { SectionHeading } from "@/components/shared/SectionHeading";
 import { formatCurrency, formatDate } from "@/lib/formatters";
 import {
   TIPO_PAGO_DETALLE_LABELS,
@@ -80,7 +81,7 @@ export function BloqueMovimiento({
   if (!movimiento) {
     return (
       <section className="space-y-2">
-        <h3 className="text-sm font-semibold">Movimiento bancario</h3>
+        <SectionHeading as="h3" variant="subsection">Movimiento bancario</SectionHeading>
         <div className="flex items-start gap-2 rounded-md border border-warning/30 bg-warning/5 p-3 text-sm">
           <TriangleAlert className="mt-0.5 h-4 w-4 text-warning" />
           <div className="space-y-1">
@@ -104,12 +105,17 @@ export function BloqueMovimiento({
   const monedaMovimiento = mismaCuenta && monedaCuentaPago ? monedaCuentaPago : "MXN";
   return (
     <section className="space-y-2">
-      <div className="flex items-center justify-between">
-        <h3 className="text-sm font-semibold">Movimiento bancario</h3>
-        <Badge variant="outline" className="bg-success/10 text-success border-success/20">
-          Conciliado
-        </Badge>
-      </div>
+      <SectionHeading
+        as="h3"
+        variant="subsection"
+        actions={
+          <Badge variant="outline" className="bg-success/10 text-success border-success/20">
+            Conciliado
+          </Badge>
+        }
+      >
+        Movimiento bancario
+      </SectionHeading>
       <div className="space-y-2 rounded-md border p-3">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">

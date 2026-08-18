@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { formatCurrency } from "@/lib/formatters";
 import { cn } from "@/lib/utils";
+import { SectionHeading } from "@/components/shared/SectionHeading";
 import {
   clasificarComparativo,
   MIN_OPS_COMPARATIVO,
@@ -36,11 +37,19 @@ export function ProveedorComparativoCard({ comparativo, tipoProveedor }: Props) 
   return (
     <Card>
       <CardContent className="p-4">
-        <p className="text-sm font-semibold">Comparativo con otros proveedores</p>
-        <p className="text-xs text-muted-foreground mb-3">
-          Costo promedio por concepto en los últimos 12 meses frente a otros proveedores de tipo {tipoLabel}.
-          Se muestran solo conceptos con al menos {MIN_OPS_COMPARATIVO} operaciones de cada lado.
-        </p>
+        <SectionHeading
+          as="h3"
+          variant="subsection"
+          className="mb-3"
+          description={
+            <>
+              Costo promedio por concepto en los últimos 12 meses frente a otros proveedores de tipo {tipoLabel}.
+              Se muestran solo conceptos con al menos {MIN_OPS_COMPARATIVO} operaciones de cada lado.
+            </>
+          }
+        >
+          Comparativo con otros proveedores
+        </SectionHeading>
 
         {filas.length === 0 ? (
           <p className="text-sm text-muted-foreground text-center py-4">

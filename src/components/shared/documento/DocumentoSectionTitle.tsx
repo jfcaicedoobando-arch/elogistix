@@ -5,6 +5,7 @@
  */
 import { type ReactNode } from "react";
 import { cn } from "@/lib/utils";
+import { SectionHeading } from "@/components/shared/SectionHeading";
 
 interface Props {
   title: string;
@@ -18,15 +19,14 @@ interface Props {
 
 export function DocumentoSectionTitle({ title, icon, count, actions, className }: Props) {
   return (
-    <div className={cn("flex items-center justify-between gap-2 border-b pb-2", className)}>
-      <h3 className="flex min-w-0 items-center gap-2 text-base font-semibold">
-        {icon ? <span className="shrink-0 text-muted-foreground">{icon}</span> : null}
-        <span className="truncate">{title}</span>
-        {typeof count === "number" && count > 0 ? (
-          <span className="font-normal text-muted-foreground">({count})</span>
-        ) : null}
-      </h3>
-      {actions}
-    </div>
+    <SectionHeading
+      as="h3"
+      icon={icon}
+      count={count}
+      actions={actions}
+      className={cn("border-b pb-2", className)}
+    >
+      {title}
+    </SectionHeading>
   );
 }

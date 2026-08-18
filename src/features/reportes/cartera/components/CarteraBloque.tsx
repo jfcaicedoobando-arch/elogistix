@@ -3,6 +3,7 @@
  */
 import { Card, CardContent } from "@/components/ui/card";
 import { DataTable } from "@/components/shared/DataTable";
+import { SectionHeading } from "@/components/shared/SectionHeading";
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 import { formatCurrency } from "@/lib/formatters";
 import { cn } from "@/lib/utils";
@@ -30,13 +31,16 @@ export function CarteraBloque({
 }: Props) {
   return (
     <section className="space-y-3">
-      <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <h2 className="text-base font-semibold">{titulo}</h2>
-        <p className="text-xs text-muted-foreground">
-          {total.conteo} factura(s) · {formatCurrency(total.mxnCorte, "MXN")} al corte ·
-          {" "}dif. cambiaria {formatCurrency(total.diferencia, "MXN")}
-        </p>
-      </div>
+      <SectionHeading
+        actions={
+          <p className="text-xs text-muted-foreground">
+            {total.conteo} factura(s) · {formatCurrency(total.mxnCorte, "MXN")} al corte ·
+            {" "}dif. cambiaria {formatCurrency(total.diferencia, "MXN")}
+          </p>
+        }
+      >
+        {titulo}
+      </SectionHeading>
 
       <div className="grid grid-cols-2 gap-2 md:grid-cols-5">
         {buckets.map((b) => (

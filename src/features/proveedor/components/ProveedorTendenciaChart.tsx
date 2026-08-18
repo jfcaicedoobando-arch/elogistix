@@ -8,6 +8,7 @@ import {
 import { formatCurrency, formatCompactNumber } from "@/lib/formatters";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 import { LineChart as LineChartIcon } from "lucide-react";
+import { SectionHeading } from "@/components/shared/SectionHeading";
 import { CHART } from "@/lib/chartTokens";
 import type { PuntoTendencia } from "@/features/proveedor/domain/inteligenciaProveedor";
 
@@ -30,10 +31,14 @@ export function ProveedorTendenciaChart({ tendencia }: { tendencia: PuntoTendenc
   return (
     <Card>
       <CardContent className="p-4">
-        <p className="text-sm font-semibold">Comprometido vs facturado vs pagado</p>
-        <p className="text-xs text-muted-foreground mb-3">
-          Últimos 12 meses, en pesos. El rezago entre las barras muestra qué tanto tarda el proveedor en facturar y qué tanto tardamos en pagarle.
-        </p>
+        <SectionHeading
+          as="h3"
+          variant="subsection"
+          className="mb-3"
+          description="Últimos 12 meses, en pesos. El rezago entre las barras muestra qué tanto tarda el proveedor en facturar y qué tanto tardamos en pagarle."
+        >
+          Comprometido vs facturado vs pagado
+        </SectionHeading>
         {!hayDatos ? (
           <EmptyStateInline icon={LineChartIcon} message="No hay suficientes datos para graficar la tendencia." hint="Se necesitan al menos 2 meses con movimientos." />
         ) : (

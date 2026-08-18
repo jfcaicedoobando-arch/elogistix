@@ -4,6 +4,7 @@
  * factura a partir de los pagos y movimientos bancarios registrados.
  */
 import { AlertTriangle, CheckCircle2, RefreshCw } from "lucide-react";
+import { SectionHeading } from "@/components/shared/SectionHeading";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { formatCurrency, formatDateTimeShort } from "@/lib/formatters";
@@ -31,36 +32,38 @@ export function ConciliacionTesoreriaSection({ facturaId, monedaFactura }: Props
   if (!puedeConciliar) {
     return (
       <section className="space-y-3">
-        <header className="space-y-0.5">
-          <h3 className="text-sm font-semibold">Conciliación de tesorería</h3>
-          <p className="text-xs text-muted-foreground">
-            Tu rol no puede ejecutar la conciliación. Solicítala a Contabilidad o a un
-            administrador para actualizar el saldo y el estatus de la factura.
-          </p>
-        </header>
+        <SectionHeading
+          as="h3"
+          variant="subsection"
+          description="Tu rol no puede ejecutar la conciliación. Solicítala a Contabilidad o a un administrador para actualizar el saldo y el estatus de la factura."
+        >
+          Conciliación de tesorería
+        </SectionHeading>
       </section>
     );
   }
 
   return (
     <section className="space-y-3">
-      <header className="flex flex-wrap items-start justify-between gap-2">
-        <div className="space-y-0.5">
-          <h3 className="text-sm font-semibold">Conciliación de tesorería</h3>
-          <p className="text-xs text-muted-foreground">
-            Saldo y estatus recalculados a partir de los pagos y movimientos bancarios registrados.
-          </p>
-        </div>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => conciliar.mutate({ facturaId })}
-          disabled={conciliar.isPending}
-        >
-          <RefreshCw className={conciliar.isPending ? "h-4 w-4 animate-spin" : "h-4 w-4"} />
-          {conciliar.isPending ? "Conciliando…" : "Volver a conciliar"}
-        </Button>
-      </header>
+      <SectionHeading
+        as="h3"
+        variant="subsection"
+        className="flex-wrap"
+        description="Saldo y estatus recalculados a partir de los pagos y movimientos bancarios registrados."
+        actions={
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => conciliar.mutate({ facturaId })}
+            disabled={conciliar.isPending}
+          >
+            <RefreshCw className={conciliar.isPending ? "h-4 w-4 animate-spin" : "h-4 w-4"} />
+            {conciliar.isPending ? "Conciliando…" : "Volver a conciliar"}
+          </Button>
+        }
+      >
+        Conciliación de tesorería
+      </SectionHeading>
 
 
       <div className="rounded-md border divide-y">

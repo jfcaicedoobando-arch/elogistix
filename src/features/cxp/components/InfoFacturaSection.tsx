@@ -5,6 +5,7 @@
  */
 import { Building2 } from "lucide-react";
 import { DocumentoSectionTitle } from "@/components/shared/documento/DocumentoSectionTitle";
+import { SectionHeading } from "@/components/shared/SectionHeading";
 import { useVerificarUuidSat } from "@/features/cxp/hooks/useVerificarUuidSat";
 import { ProgramacionPagoRow } from "@/features/cxp/components/ProgramacionPagoRow";
 import { CanceladaBanner } from "./InfoFacturaSection.parts";
@@ -49,7 +50,7 @@ export function InfoFacturaSection({ factura: f }: Props) {
       />
 
       <div className="space-y-2 pt-2">
-        <h4 className="text-sm font-semibold">Programación de pago</h4>
+        <SectionHeading as="h3" variant="subsection">Programación de pago</SectionHeading>
         <ProgramacionPagoRow
           facturaId={f.id}
           fechaProgramada={f.fecha_programada_pago}
@@ -59,7 +60,7 @@ export function InfoFacturaSection({ factura: f }: Props) {
 
       {f.notas && (
         <div className="space-y-2">
-          <h4 className="text-sm font-semibold">Notas</h4>
+          <SectionHeading as="h3" variant="subsection">Notas</SectionHeading>
           <p className="text-sm text-foreground whitespace-pre-wrap rounded-md border bg-muted/30 p-3">
             {f.notas}
           </p>

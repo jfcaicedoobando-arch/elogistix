@@ -6,6 +6,7 @@
  * con el botón "Regenerar movimiento" (RPC `regenerar_movimiento_pago_proveedor`).
  */
 import { RefreshCw } from "lucide-react";
+import { SectionHeading } from "@/components/shared/SectionHeading";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { formatCurrency, formatDateTimeShort } from "@/lib/formatters";
@@ -30,10 +31,10 @@ export function ConciliacionIncidencias({ incidencias, monedaFactura }: Props) {
 
   return (
     <div className="space-y-2">
-      <h4 className="text-xs font-semibold text-muted-foreground">
-        Pagos por revisar ({incidencias.length})
+      <SectionHeading as="h3" variant="overline" count={incidencias.length}>
+        Pagos por revisar
         {faltantes > 0 && ` · ${faltantes} sin movimiento en banco`}
-      </h4>
+      </SectionHeading>
       <ul className="divide-y rounded-md border">
         {incidencias.map((i) => (
           <li key={i.pagoId} className="flex flex-wrap items-center gap-x-3 gap-y-1 px-3 py-2">

@@ -7,6 +7,7 @@ import { generarPassword } from "@/lib/passwords/generator";
 // Ola 8 · B2: política y medidor compartidos con registro/reset/cambio propio.
 import { PASSWORD_MIN, PASSWORD_MAX, PASSWORD_SUGERIDA } from "@/lib/passwords/policy";
 import { PasswordStrengthMeter } from "@/components/shared/PasswordStrengthMeter";
+import { SectionHeading } from "@/components/shared/SectionHeading";
 
 interface CredencialesProps {
   /** U-04: en alta por invitación no se pide contraseña. */
@@ -45,9 +46,9 @@ export function NuevoUsuarioCredencialesSection(props: CredencialesProps) {
 
   return (
     <section className="space-y-3">
-      <h4 className="text-overline font-semibold">
+      <SectionHeading as="h3" variant="overline">
         Credenciales
-      </h4>
+      </SectionHeading>
 
       <div className="space-y-1.5">
         <Label htmlFor="nu-email" className="flex items-center gap-1.5">

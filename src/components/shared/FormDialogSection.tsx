@@ -5,6 +5,7 @@
  */
 import { cn } from "@/lib/utils";
 import type { ReactNode } from "react";
+import { SectionHeading } from "@/components/shared/SectionHeading";
 
 interface Props {
   title?: string;
@@ -23,9 +24,9 @@ export function FormDialogSection({ title, description, flat, cols = 2, children
       {(title || description) && (
         <header className="space-y-0.5">
           {title && (
-            <h3 className="text-overline font-semibold">
+            <SectionHeading as="h3" variant="overline">
               {title}
-            </h3>
+            </SectionHeading>
           )}
           {description && <p className="text-xs text-muted-foreground/80">{description}</p>}
         </header>
