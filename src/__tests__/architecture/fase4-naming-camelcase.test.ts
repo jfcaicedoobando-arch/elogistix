@@ -21,7 +21,7 @@ describe("Fase 4 — Naming camelCase para orgDetalle", () => {
     expect(archivos).toEqual([
       "OrgConfigCard.tsx",
       "OrgHeader.tsx",
-      "OrgInfoCard.tsx",
+      "OrgDatosGeneralesCard.tsx",
       "OrgMembersCard.tsx",
     ]);
   });
