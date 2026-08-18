@@ -7,6 +7,7 @@ import { unwrap, unwrapOr, run } from "@/lib/supabase/response";
 import type { TablesInsert } from "@/integrations/supabase/types";
 import { registrarActividad } from "@/services/bitacora/registrar";
 import { normalizarUuidFiscal } from "@/lib/domain/uuidFiscal";
+import { escapeIlike } from "@/lib/search/ilike";
 
 
 // folio_interno se asigna en el trigger BEFORE INSERT de la BD; el caller no lo manda.
@@ -115,7 +116,7 @@ export async function buscarFacturaPorUuidFiscalResultado(
   const { data, error } = await supabase
     .from("proveedor_facturas")
     .select(cols)
-    .ilike("uuid_fiscal", uuid)
+    .ilike("uuid_fiscal", escapeIlike(uuid))
     .is("deleted_at", null)
     .limit(1);
   if (!error) {

@@ -97,7 +97,9 @@ export const appRoutes = (
 
     {/* v13.145.10 — bandeja eliminada; se redirige a /proformas con filtro Aceptada. */}
     <Route path="/facturacion/por-emitir" element={<Navigate to="/proformas?estado=aceptada" replace />} />
-    <Route path="/cartera" element={guarded(CARTERA_ROLES, <Cartera />)} />
+    {/* UX-02: /cobranza es la ruta canónica; /cartera queda como alias legacy. */}
+    <Route path="/cobranza" element={guarded(CARTERA_ROLES, <Cartera />)} />
+    <Route path="/cartera" element={<RedirectPreserveSearch to="/cobranza" />} />
     <Route path="/cobranza/aging" element={guarded(CARTERA_ROLES, <CxcAging />)} />
 
     <Route path="/tesoreria" element={guarded(TESORERIA_READ_ROLES, <Tesoreria />)} />

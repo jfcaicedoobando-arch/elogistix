@@ -90,7 +90,7 @@ const buildEjecutivoPricing: Builder = ({ sistemaItems }) => [
 const buildContador: Builder = ({ sistemaItems }) => [
   { label: "Inicio", items: SIDEBAR_DASHBOARD_ITEMS },
   { label: "Compras (CxP)", items: filterCompras(COMPRAS_CONTADOR) },
-  { label: "Ventas (CxC)", items: filterVentas(["/facturacion", "/proformas?estado=aceptada", "/proformas", "/cartera", "/comisiones", "/cobranza/aging", "/clientes"]) },
+  { label: "Ventas (CxC)", items: filterVentas(["/facturacion", "/proformas?estado=aceptada", "/proformas", "/cobranza", "/comisiones", "/cobranza/aging", "/clientes"]) },
   { label: "Dinero", items: filterDinero(DINERO_FULL) },
   { label: "Operación", items: filterOperacion(["/embarques"]) },
   { label: "Análisis", items: SIDEBAR_ANALISIS_ITEMS },
@@ -101,7 +101,7 @@ const buildTesorero: Builder = ({ sistemaItems }) => [
   { label: "Inicio", items: SIDEBAR_DASHBOARD_ITEMS },
   { label: "Compras (CxP)", items: filterCompras(COMPRAS_TESORERO) },
   { label: "Dinero", items: filterDinero(DINERO_FULL) },
-  { label: "Ventas (CxC)", items: filterVentas(["/cartera", "/comisiones", "/cobranza/aging"]) },
+  { label: "Ventas (CxC)", items: filterVentas(["/cobranza", "/comisiones", "/cobranza/aging"]) },
   { label: "Análisis", items: SIDEBAR_ANALISIS_ITEMS },
   { label: "Sistema", items: filterSistema(sistemaItems, ["/ayuda", "/bitacora"]) },
 ];
@@ -112,7 +112,7 @@ const buildAuxiliarContable: Builder = ({ sistemaItems }) => [
 ];
 
 const buildEjecutivoCobranza: Builder = ({ sistemaItems }) => [
-  { label: "Ventas (CxC)", items: filterVentas(["/cartera", "/facturacion", "/proformas?estado=aceptada", "/proformas", "/cobranza/aging", "/clientes"]) },
+  { label: "Ventas (CxC)", items: filterVentas(["/cobranza", "/facturacion", "/proformas?estado=aceptada", "/proformas", "/cobranza/aging", "/clientes"]) },
   { label: "Sistema", items: filterSistema(sistemaItems, ["/ayuda"]) },
 ];
 
@@ -120,7 +120,7 @@ const buildGerenteComercial: Builder = ({ crmItems, sistemaItems }) => [
   { label: "Inicio", items: SIDEBAR_DASHBOARD_ITEMS },
   { label: "Operación", items: [...filterOperacion(["/cotizaciones", "/embarques"]), ...crmItems] },
   // v13.369.1 — Estado de cuenta de clientes (cartera + antigüedad de saldos).
-  { label: "Ventas (CxC)", items: filterVentas(["/cartera", "/cobranza/aging", "/comisiones", "/clientes"]) },
+  { label: "Ventas (CxC)", items: filterVentas(["/cobranza", "/cobranza/aging", "/comisiones", "/clientes"]) },
   { label: "Costeo", items: SIDEBAR_COSTEO_ITEMS },
   { label: "Análisis", items: SIDEBAR_ANALISIS_ITEMS },
   { label: "Sistema", items: filterSistema(sistemaItems, ["/ayuda", "/bitacora"]) },
@@ -130,7 +130,7 @@ const buildGerenteComercial: Builder = ({ crmItems, sistemaItems }) => [
 const buildGerenteOperaciones: Builder = ({ crmItems, sistemaItems }) => [
   { label: "Inicio", items: SIDEBAR_DASHBOARD_ITEMS },
   { label: "Operación", items: [...filterOperacion(["/cotizaciones", "/embarques"]), ...crmItems] },
-  { label: "Ventas (CxC)", items: filterVentas(["/facturacion", "/proformas?estado=aceptada", "/proformas", "/cartera", "/comisiones", "/cobranza/aging", "/clientes"]) },
+  { label: "Ventas (CxC)", items: filterVentas(["/facturacion", "/proformas?estado=aceptada", "/proformas", "/cobranza", "/comisiones", "/cobranza/aging", "/clientes"]) },
   { label: "Compras (CxP)", items: filterCompras(COMPRAS_READ_ONLY) },
   { label: "Dinero", items: SIDEBAR_DINERO_ITEMS },
   { label: "Análisis", items: SIDEBAR_ANALISIS_ITEMS },
@@ -140,7 +140,7 @@ const buildGerenteOperaciones: Builder = ({ crmItems, sistemaItems }) => [
 export const buildAdmin: Builder = ({ crmItems, sistemaItems }) => [
   { label: "Inicio", items: SIDEBAR_DASHBOARD_ITEMS },
   { label: "Operación", items: [...filterOperacion(["/cotizaciones", "/embarques"]), ...crmItems] },
-  { label: "Ventas (CxC)", items: filterVentas(["/facturacion", "/proformas?estado=aceptada", "/proformas", "/cartera", "/comisiones", "/cobranza/aging", "/clientes"]) },
+  { label: "Ventas (CxC)", items: filterVentas(["/facturacion", "/proformas?estado=aceptada", "/proformas", "/cobranza", "/comisiones", "/cobranza/aging", "/clientes"]) },
   { label: "Compras (CxP)", items: filterCompras(COMPRAS_FULL) },
   { label: "Dinero", items: SIDEBAR_DINERO_ITEMS },
   { label: "Costeo", items: SIDEBAR_COSTEO_ITEMS },
@@ -169,7 +169,7 @@ export function buildDefaultSections(deps: BuilderDeps): SidebarSection[] {
   return [
     { label: "Inicio", items: SIDEBAR_DASHBOARD_ITEMS },
     { label: "Operación", items: [...filterOperacion(["/cotizaciones", "/embarques"]), ...deps.crmItems] },
-    { label: "Ventas (CxC)", items: filterVentas(["/facturacion", "/proformas?estado=aceptada", "/proformas", "/cartera", "/comisiones", "/cobranza/aging", "/clientes"]) },
+    { label: "Ventas (CxC)", items: filterVentas(["/facturacion", "/proformas?estado=aceptada", "/proformas", "/cobranza", "/comisiones", "/cobranza/aging", "/clientes"]) },
     { label: "Compras (CxP)", items: filterCompras(COMPRAS_READ_ONLY) },
     { label: "Dinero", items: SIDEBAR_DINERO_ITEMS },
     { label: "Costeo", items: SIDEBAR_COSTEO_ITEMS },

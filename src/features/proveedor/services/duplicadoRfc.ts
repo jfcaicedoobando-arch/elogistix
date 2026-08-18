@@ -3,6 +3,7 @@
  * Separado de index.ts para mantener archivos ≤200 líneas (Power-of-10 #4).
  */
 import { supabase } from "@/integrations/supabase/client";
+import { escapeIlike } from "@/lib/search/ilike";
 
 /** RFCs genéricos del SAT que pueden repetirse legítimamente entre proveedores. */
 export const RFC_GENERICOS_SAT = ["XEXX010101000", "XAXX010101000"] as const;
@@ -38,7 +39,7 @@ export async function findProveedorByRfcEnOrg(
     .select("id, nombre")
     .eq("organization_id", organizationId)
     .is("deleted_at", null)
-    .ilike("rfc", norm)
+    .ilike("rfc", escapeIlike(norm))
     .limit(1)
     .maybeSingle();
   if (error) throw error;

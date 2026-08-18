@@ -28,7 +28,7 @@ import { usePermissions, useDocumentTitle } from "@/hooks/shared";
 import { buildFacturaColumns } from "./facturacionColumns";
 
 const LEGACY_TAB_REDIRECTS: Record<string, string> = {
-  cobranza: "/cartera",
+  cobranza: "/cobranza",
   liquidacion: "/compras/por-pagar",
   proyeccion: "/reportes/cierre-mensual",
   pendientes: "/proformas?estado=aceptada",

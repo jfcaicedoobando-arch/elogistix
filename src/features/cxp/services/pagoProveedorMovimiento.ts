@@ -66,12 +66,18 @@ export function cargoEnMonedaCuenta(
   return monto;
 }
 
+/**
+ * EC-02 — Fail-closed: un error de lectura se propaga en lugar de devolver
+ * `null`. Con `null` el cargo se registraba en la moneda del pago aunque la
+ * cuenta fuera de otra divisa, descuadrando el saldo bancario.
+ */
 async function monedaDeCuenta(cuentaId: string): Promise<string | null> {
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("cuentas_bancarias")
     .select("moneda")
     .eq("id", cuentaId)
     .maybeSingle();
+  if (error) throw error;
   return data?.moneda ?? null;
 }
 
@@ -98,10 +104,17 @@ async function describirFactura(facturaId: string): Promise<string> {
 export async function crearMovimientoBancarioPago(
   input: MovimientoPagoInput,
 ): Promise<ResultadoMovimientoPago> {
-  const [concepto, monedaCuenta] = await Promise.all([
-    describirFactura(input.facturaId),
-    monedaDeCuenta(input.cuentaBancariaId),
-  ]);
+  let concepto: string;
+  let monedaCuenta: string | null;
+  try {
+    [concepto, monedaCuenta] = await Promise.all([
+      describirFactura(input.facturaId),
+      monedaDeCuenta(input.cuentaBancariaId),
+    ]);
+  } catch (e) {
+    // EC-02: sin la moneda de la cuenta no se registra nada (fail-closed).
+    return { ok: false, error: e instanceof Error ? e.message : String(e) };
+  }
   const payload: TablesInsert<"bbva_movimientos"> = {
     organization_id: input.organizationId,
     cuenta_bancaria_id: input.cuentaBancariaId,
