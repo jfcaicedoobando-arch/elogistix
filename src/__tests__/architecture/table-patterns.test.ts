@@ -44,8 +44,13 @@ describe("Densidad de tablas — un solo token", () => {
         const m = line.match(/density="(compact|comfortable)"/);
         if (!m) return;
         // `<CardContent density="compact">` y los estados inline son otra escala.
-        const tag = /<[A-Za-z]/.test(line) ? (line.match(/<([A-Za-z][A-Za-z0-9]*)\b/)?.[1] ?? "") : tagDeLaProp(lines, i);
+        const antes = line.slice(0, m.index ?? 0);
+        const tagsEnLinea = [...antes.matchAll(/<([A-Za-z][A-Za-z0-9]*)\b/g)];
+        const tag = tagsEnLinea.length
+          ? tagsEnLinea[tagsEnLinea.length - 1][1]
+          : tagDeLaProp(lines, i);
         if (NO_TABLA.test(tag) && CARD_DENSITIES.has(m[1])) return;
+
         violaciones.push(`  ${rel}:${i + 1} → ${m[0]}`);
       });
     }
