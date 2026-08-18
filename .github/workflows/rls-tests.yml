@@ -449,6 +449,10 @@ jobs:
       - name: Barrido de vencidas - marcar_facturas_vencidas (BUG-12)
         run: $PSQL -f supabase/tests/bug12_marcar_facturas_vencidas.sql
 
+      - name: Espejo de roles - organization_members -> user_roles
+        run: $PSQL -f supabase/tests/roles_membership_mirror.sql
+
+
 
       - name: Guard de estados - guard_estado_cotizacion (C5 + A3)
         run: $PSQL -f supabase/tests/guard_estado_cotizacion.sql
