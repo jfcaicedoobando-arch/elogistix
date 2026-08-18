@@ -29,6 +29,8 @@ export const LC_CODE_MESSAGES_OPERATIVO_OPERACIONES: Record<string, string> = {
     "La cotización cambió de estado en otra sesión. Recarga para continuar.",
   LC_COT_NO_RESPONDIBLE: "Esta cotización ya no admite respuesta del cliente.",
   LC_COT_VENCIDA: "La cotización venció y ya no puede responderse.",
+  LC_COT_SIN_OPORTUNIDAD:
+    "Vincula la cotización a una oportunidad del CRM antes de enviarla al prospecto.",
   LC_COT_SIN_CLIENTE: "La cotización no tiene cliente asociado.",
   LC_COTIZACION_VENCIDA: "La cotización venció y no puede convertirse en embarque.",
   LC_COTIZACION_ESTADO_INVALIDO:
