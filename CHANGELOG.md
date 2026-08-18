@@ -1,5 +1,13 @@
 # Changelog
 
+## [13.663.1] - 2026-08-18
+
+### Auditoría de embarques vacía por "permission denied" (42501)
+- Causa raíz: el wrapper `public.auditoria_embarques_org(uuid)` de `costos_repetidos.sql` perdió el marcador `SECURITY DEFINER`, así que corría como invocador y chocaba con el `REVOKE` de los helpers internos (`_audit_embarques_agregar`, `_audit_embarques_umbrales`). El cliente traducía el 42501 a reporte vacío → "0 hallazgos" falsos.
+- Restaurado `SECURITY DEFINER` + `SET search_path`, con guard explícito `_assert_internal_reader(p_organization_id)` y `REVOKE`/`GRANT` (sólo `authenticated` y `service_role`).
+- Actualizada la fuente canónica `supabase/schema/auditoria/costos_repetidos.sql`.
+
+
 ## [13.663.0] - 2026-08-18
 
 ### BUG-12 — El barrido de facturas vencidas por fin marca facturas

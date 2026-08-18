@@ -49,16 +49,28 @@ AS $$
 $$;
 
 -- Wrapper público: delega en la función base y suma la nueva regla.
+-- SECURITY DEFINER es obligatorio: los helpers internos
+-- (`_audit_embarques_agregar`, `_audit_embarques_umbrales`) tienen EXECUTE
+-- revocado a `authenticated` (FIX-45/H6). Sin el marcador, el RPC fallaba con
+-- 42501 y la pantalla de Auditoría se veía vacía.
 CREATE OR REPLACE FUNCTION public.auditoria_embarques_org(p_organization_id uuid)
 RETURNS jsonb
 LANGUAGE plpgsql
 STABLE
+SECURITY DEFINER
 SET search_path TO 'public'
 AS $function$
 DECLARE
   v_base jsonb;
   v_extras jsonb;
 BEGIN
+  IF p_organization_id IS NULL THEN
+    RAISE EXCEPTION 'p_organization_id es obligatorio';
+  END IF;
+
+  -- Guard explícito: al ser SECURITY DEFINER validamos al invocador aquí.
+  PERFORM public._assert_internal_reader(p_organization_id);
+
   v_base := public._auditoria_embarques_org_base(p_organization_id);
   v_extras := public._audit_costos_repetidos(p_organization_id);
 
@@ -72,3 +84,8 @@ BEGIN
   );
 END;
 $function$;
+
+REVOKE ALL ON FUNCTION public.auditoria_embarques_org(uuid) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.auditoria_embarques_org(uuid) FROM anon;
+GRANT EXECUTE ON FUNCTION public.auditoria_embarques_org(uuid) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.auditoria_embarques_org(uuid) TO service_role;
