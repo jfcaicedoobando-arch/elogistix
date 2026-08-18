@@ -3,6 +3,8 @@
  * Se muestran sin convertir para no mezclar divisas con tipos de cambio dudosos.
  */
 import { Card } from "@/components/ui/card";
+import { Wallet } from "lucide-react";
+import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatCurrency } from "@/lib/formatters/numbers";
 import { formatDate } from "@/lib/formatters/dates";
@@ -18,7 +20,7 @@ const BLOQUES: Array<{ key: keyof Pick<DireccionTotales, "ventas" | "costos" | "
 function MonedasList({ montos }: { montos: Record<string, number> }) {
   const entradas = Object.entries(montos ?? {}).filter(([, v]) => Number(v) !== 0);
   if (entradas.length === 0) {
-    return <p className="mt-1 text-sm text-muted-foreground tabular-nums">Sin movimientos</p>;
+    return <EmptyStateInline icon={Wallet} message="Sin movimientos" className="py-2" />;
   }
   return (
     <ul className="mt-1 space-y-0.5">

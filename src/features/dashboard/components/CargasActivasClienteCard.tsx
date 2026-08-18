@@ -2,6 +2,7 @@ import { StatusBadge } from "@/components/shared/StatusBadge";
 import { memo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Ship } from "lucide-react";
+import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ListSkeleton } from "@/components/shared/states/ListSkeleton";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -139,9 +140,7 @@ export const CargasActivasClienteCard = memo(function CargasActivasClienteCard({
     }
     if (filas.length === 0) {
       return (
-        <p className="text-sm text-muted-foreground text-center py-6">
-          Sin embarques activos
-        </p>
+        <EmptyStateInline icon={Ship} message="Sin embarques activos" className="py-6" />
       );
     }
     return filas.map((c) => (

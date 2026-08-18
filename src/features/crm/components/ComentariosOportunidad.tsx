@@ -65,7 +65,7 @@ export default function ComentariosOportunidad({ oportunidadId, canEdit }: Props
         {isLoading ? (
           <EmptyStateInline loading message="Cargando…" />
         ) : comentarios.length === 0 ? (
-          <p className="text-sm text-muted-foreground">Sin comentarios todavía.</p>
+          <EmptyStateInline icon={MessageSquare} message="Sin comentarios todavía." />
         ) : (
           <ul className="space-y-2">
             {comentarios.map((c) => (

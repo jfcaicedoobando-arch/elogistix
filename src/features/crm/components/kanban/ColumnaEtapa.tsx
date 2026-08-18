@@ -3,6 +3,8 @@
  * y lista de tarjetas de la etapa.
  */
 import { useDroppable } from "@dnd-kit/core";
+import { Briefcase } from "lucide-react";
+import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 import { formatCurrencyCompact } from "@/lib/formatters";
 import { totalesEtapa, type AvanceCriterios } from "@/features/crm/domain/criterios";
 import OportunidadCard from "./OportunidadCard";
@@ -57,7 +59,7 @@ export default function ColumnaEtapa({ etapa, ops, onClickCard, proximasMap, ava
           />
         ))}
         {ops.length === 0 && (
-          <div className="text-center text-xs text-muted-foreground py-8">Sin oportunidades</div>
+          <EmptyStateInline icon={Briefcase} message="Sin oportunidades" className="py-8" />
         )}
       </div>
     </div>

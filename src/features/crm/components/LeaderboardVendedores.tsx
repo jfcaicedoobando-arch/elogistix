@@ -23,7 +23,7 @@ export default function LeaderboardVendedores() {
         {isLoading ? (
           <EmptyStateInline loading message="Cargando…" />
         ) : data.length === 0 ? (
-          <p className="text-sm text-muted-foreground">Sin actividad de cierre este mes.</p>
+          <EmptyStateInline icon={Trophy} message="Sin actividad de cierre este mes." />
         ) : (
           <ul className="space-y-3">
             {data.map((f) => (

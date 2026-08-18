@@ -15,6 +15,8 @@ import { PageHeader } from "@/components/shared/PageHeader";
 import { KpiCard } from "@/components/shared/KpiCard";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { ErrorState } from "@/components/shared/states/ErrorState";
+import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
+import { Filter, ThumbsDown } from "lucide-react";
 
 const fmt = (n: number) => formatCurrencyCompact(n, "MXN");
 
@@ -97,7 +99,7 @@ function EmbudoYPerdidas() {
               <span>{e.etapa}</span><span className="font-semibold tabular-nums">{e.cantidad}</span>
             </div>
           ))}
-          {!isLoading && r.embudo.length === 0 && <p className="text-sm text-muted-foreground">Sin datos</p>}
+          {!isLoading && r.embudo.length === 0 && <EmptyStateInline icon={Filter} message="Sin datos" />}
         </CardContent>
       </Card>
       <Card>
@@ -131,7 +133,7 @@ function EmbudoYPerdidas() {
               <span>{m.motivo}</span><span className="font-semibold tabular-nums">{m.cantidad}</span>
             </div>
           ))}
-          {r.motivosPerdida.length === 0 && <p className="text-sm text-muted-foreground">Sin oportunidades perdidas</p>}
+          {r.motivosPerdida.length === 0 && <EmptyStateInline icon={ThumbsDown} message="Sin oportunidades perdidas" />}
         </CardContent>
       </Card>
     </div>

@@ -1,5 +1,5 @@
 import { memo } from "react";
-import { AlertTriangle, ArrowRight } from "lucide-react";
+import { AlertTriangle, ArrowRight, ShieldCheck } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -7,6 +7,7 @@ import { ListSkeleton } from "@/components/shared/states/ListSkeleton";
 import type { AlertaDemora } from "@/features/dashboard/hooks";
 import { toTitleCase } from "@/lib/formatters";
 import { activableConTeclado, FOCUS_RING } from "@/lib/ui/keyboardActivation";
+import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 
 interface Props {
   alertas: AlertaDemora[];
@@ -32,9 +33,7 @@ export const AlertasDemoraCard = memo(function AlertasDemoraCard({ alertas, isLo
     }
     if (alertas.length === 0) {
       return (
-        <p className="text-sm text-muted-foreground text-center py-6">
-          Sin alertas de demora
-        </p>
+        <EmptyStateInline icon={ShieldCheck} message="Sin alertas de demora" className="py-6" />
       );
     }
     return alertas.map((e) => (

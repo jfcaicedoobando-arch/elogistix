@@ -2,6 +2,8 @@
  * Sección Rentabilidad: margen 6m + margen por modo.
  */
 import { Card } from "@/components/ui/card";
+import { BarChart3 } from "lucide-react";
+import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 import {
   Bar, BarChart, Cell, ResponsiveContainer, XAxis, YAxis, Tooltip,
 } from "recharts";
@@ -23,7 +25,7 @@ export function RentabilidadSection({ margen6m, porModo }: { margen6m: MargenMes
       <Card className="p-5 rounded-xl border border-border">
         <p className="text-sm font-medium">Margen bruto — últimos 6 meses</p>
         {data.length === 0 ? (
-          <p className="mt-6 text-sm text-muted-foreground">Sin datos de margen en los últimos 6 meses.</p>
+          <EmptyStateInline icon={BarChart3} message="Sin datos de margen en los últimos 6 meses." className="py-6" />
         ) : (
         <div className="h-56 mt-4">
           <ResponsiveContainer width="100%" height="100%">
@@ -45,7 +47,7 @@ export function RentabilidadSection({ margen6m, porModo }: { margen6m: MargenMes
       <Card className="p-5 rounded-xl border border-border">
         <p className="text-sm font-medium">Margen por modo de transporte (mes actual)</p>
         {porModo.length === 0 ? (
-          <p className="mt-6 text-sm text-muted-foreground">Sin datos del mes.</p>
+          <EmptyStateInline icon={BarChart3} message="Sin datos del mes." className="py-6" />
         ) : (
           <ul className="mt-4 space-y-3">
             {porModo.map((m) => {
