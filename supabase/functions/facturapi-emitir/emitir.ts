@@ -30,6 +30,8 @@ export interface FacturaRow {
   embarque_id?: string | null;
   expediente?: string | null;
   referencia_bl?: string | null;
+  subtotal?: number | string | null;
+  total?: number | string | null;
 }
 
 interface ClienteRow { id: string; nombre: string; rfc?: string | null; codigo_postal?: string | null; regimen_fiscal?: string | null; uso_cfdi_default?: string | null }
@@ -45,7 +47,7 @@ interface EmitirInput { supabase: SupabaseClient; facturapi: FacturapiClient; ap
 export async function loadFactura(supabase: SupabaseClient, facturaId: string): Promise<FacturaRow | Response> {
   const { data: factura, error: fErr } = await supabase
     .from("facturas")
-    .select("id, numero, serie, estado, moneda, tipo_cambio, uso_cfdi, forma_pago, metodo_pago, cliente_id, rfc_cliente, organization_id, facturapi_id, sustituye_a, embarque_id, expediente, referencia_bl")
+    .select("id, numero, serie, estado, moneda, tipo_cambio, uso_cfdi, forma_pago, metodo_pago, cliente_id, rfc_cliente, organization_id, facturapi_id, sustituye_a, embarque_id, expediente, referencia_bl, subtotal, total")
     .eq("id", facturaId)
     .maybeSingle();
   if (fErr || !factura) return jsonResponse({ error: "factura_not_found", detail: fErr?.message }, 404);
@@ -121,6 +123,23 @@ interface BaseContexto {
   conceptos: FacturaContext["conceptos"];
 }
 
+/**
+ * BUG-01: el payload que se manda al SAT debe cuadrar con la cabecera guardada.
+ * Si la suma de los conceptos vigentes se separa más de $1 del subtotal de la
+ * factura, algo quedó desincronizado (conceptos borrados, edición a medias) y
+ * preferimos NO timbrar.
+ */
+function validarCuadreSubtotal(conceptos: ConceptoRow[], factura: FacturaRow): Response | null {
+  const subtotalHeader = factura.subtotal != null ? Number(factura.subtotal) : null;
+  if (subtotalHeader == null || !Number.isFinite(subtotalHeader)) return null;
+  const suma = conceptos.reduce((acc, c) => acc + Number(c.cantidad) * Number(c.precio_unitario), 0);
+  if (Math.abs(suma - subtotalHeader) <= 1) return null;
+  return jsonResponse({
+    error: "subtotal_descuadrado",
+    message: `Los conceptos vigentes suman ${suma.toFixed(2)} pero la factura tiene un subtotal de ${subtotalHeader.toFixed(2)}. Revisa los conceptos antes de timbrar.`,
+  }, 422);
+}
+
 async function cargarBaseContexto(supabase: SupabaseClient, facturaId: string, factura: FacturaRow): Promise<BaseContexto | Response> {
   const { data: cliente, error: cErr } = await supabase
     .from("clientes")
@@ -132,8 +151,17 @@ async function cargarBaseContexto(supabase: SupabaseClient, facturaId: string, f
   const { data: conceptos, error: conErr } = await supabase
     .from("conceptos_factura")
     .select("descripcion, cantidad, precio_unitario, clave_sat, clave_unidad, tipo_iva, tasa_iva_aplicada, tasa_ret_isr, tasa_ret_iva")
-    .eq("factura_id", facturaId);
+    .eq("factura_id", facturaId)
+    // BUG-01 (auditoría 2026-08-18): los conceptos en papelera NO se timbran.
+    .is("deleted_at", null);
   if (conErr) return jsonResponse({ error: "conceptos_query_failed", detail: conErr.message }, 500);
+
+  if ((conceptos ?? []).length === 0) {
+    return jsonResponse({ error: "sin_conceptos", message: "La factura no tiene conceptos vigentes; no se puede timbrar." }, 422);
+  }
+
+  const cuadre = validarCuadreSubtotal(conceptos ?? [], factura);
+  if (cuadre) return cuadre;
 
   const conceptosSinClave = (conceptos ?? []).filter((c) => !c.clave_sat || String(c.clave_sat).trim() === "");
   if (conceptosSinClave.length > 0) {

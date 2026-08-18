@@ -1,9 +1,5 @@
--- Fuente canónica de public.cancelar_factura_proveedor.
--- v13.646.0 (BUG-06, auditoría 2026-08-18): el permiso ya NO vive dentro de la
--- RPC sino en el trigger trg_cxp_cancelacion_rol_financiero sobre
--- public.proveedor_facturas, para que sea independiente del orden de migraciones
--- y aplique a cualquier ruta que intente dejar la factura en 'Cancelada'.
-
+-- Restaura la versión canónica de BL-03 (sin el guard inline): el permiso ahora
+-- vive en un trigger para que sea independiente del orden de migraciones.
 CREATE OR REPLACE FUNCTION public.cancelar_factura_proveedor(p_factura_id uuid, p_motivo text)
  RETURNS void
  LANGUAGE plpgsql
@@ -148,3 +144,4 @@ DROP TRIGGER IF EXISTS trg_cxp_cancelacion_rol_financiero ON public.proveedor_fa
 CREATE TRIGGER trg_cxp_cancelacion_rol_financiero
   BEFORE UPDATE OF estado ON public.proveedor_facturas
   FOR EACH ROW
+  EXECUTE FUNCTION public.guard_cxp_cancelacion_rol_financiero();

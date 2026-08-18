@@ -1,9 +1,6 @@
--- Fuente canónica de public.cancelar_factura_proveedor.
--- v13.646.0 (BUG-06, auditoría 2026-08-18): el permiso ya NO vive dentro de la
--- RPC sino en el trigger trg_cxp_cancelacion_rol_financiero sobre
--- public.proveedor_facturas, para que sea independiente del orden de migraciones
--- y aplique a cualquier ruta que intente dejar la factura en 'Cancelada'.
-
+-- ============================================================
+-- Etapa 3 · BUG-06: cancelar CxP exige rol financiero
+-- ============================================================
 CREATE OR REPLACE FUNCTION public.cancelar_factura_proveedor(p_factura_id uuid, p_motivo text)
  RETURNS void
  LANGUAGE plpgsql
@@ -40,8 +37,21 @@ BEGIN
     RAISE EXCEPTION 'La factura ya está cancelada.' USING ERRCODE = '22023';
   END IF;
 
-  IF NOT public.is_org_member(v_org) THEN
+  IF NOT public.is_org_member(v_org)
+     AND NOT public.has_role(v_uid, 'super_admin'::app_role) THEN
     RAISE EXCEPTION 'No tienes permiso para cancelar esta factura.' USING ERRCODE = '42501';
+  END IF;
+
+  -- BUG-06 (auditoría 2026-08-18): cancelar una CxP es un acto contable; sólo
+  -- perfiles financieros. Antes bastaba ser miembro de la organización.
+  IF NOT (public.has_role(v_uid, 'admin'::app_role)
+          OR public.has_role(v_uid, 'super_admin'::app_role)
+          OR public.has_role(v_uid, 'admin_org'::app_role)
+          OR public.has_role(v_uid, 'contador'::app_role)
+          OR public.has_role(v_uid, 'auxiliar_contable'::app_role)
+          OR public.has_role(v_uid, 'tesorero'::app_role)) THEN
+    RAISE EXCEPTION 'LC_CXP_CANCELAR_FORBIDDEN: tu rol no puede cancelar facturas de proveedor.'
+      USING ERRCODE = '42501';
   END IF;
 
   SELECT COALESCE(SUM(monto), 0) INTO v_pagado
@@ -61,14 +71,10 @@ BEGIN
      AND estado <> 'Cancelada'::public.estado_nota_credito_proveedor;
   GET DIAGNOSTICS v_ncs_canceladas = ROW_COUNT;
 
-  -- v13.508.2 — capturamos los documentos del buzón ANTES de cancelar: el
-  -- trigger _reabrir_entrantes_factura los devuelve a "por_capturar" y borra
-  -- el vínculo, así que después ya no se pueden ubicar por factura.
   SELECT array_agg(id) INTO v_ent
   FROM public.embarque_facturas_entrantes
   WHERE proveedor_factura_id = p_factura_id AND deleted_at IS NULL;
 
-  -- Marca de sesión para permitir la transición a Cancelada.
   PERFORM set_config('app.cancelando_cxp','1', true);
 
   UPDATE public.proveedor_facturas
@@ -76,20 +82,14 @@ BEGIN
          fecha_cancelacion = now(),
          motivo_cancelacion = btrim(p_motivo),
          cancelada_por = v_uid,
-         -- BL-03: una factura cancelada no puede conservar la aprobación;
-         -- sin este reset quedaba 'aprobada' y admitía pagos/anticipos en
-         -- cualquier path que sólo valide estado_aprobacion.
          estado_aprobacion = 'pendiente'::public.estado_aprobacion_factura_proveedor,
          updated_at = now()
    WHERE id = p_factura_id;
 
   PERFORM set_config('app.cancelando_cxp','0', true);
 
-  -- v13.505.0 — cancelar también desvincula: los conceptos de costo del
-  -- embarque vuelven a "sin factura" y el expediente se suelta.
   v_desvinculo := public._cxp_desvincular_por_rechazo(p_factura_id, btrim(p_motivo));
 
-  -- El documento del buzón queda Rechazado (no "por capturar") y sin vínculo.
   IF v_ent IS NOT NULL THEN
     UPDATE public.embarque_facturas_entrantes
        SET estado = 'rechazada',
@@ -114,37 +114,44 @@ $function$;
 REVOKE ALL ON FUNCTION public.cancelar_factura_proveedor(uuid, text) FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.cancelar_factura_proveedor(uuid, text) TO authenticated, service_role;
 
--- BUG-06 (auditoría 2026-08-18): el permiso vive en la tabla, no en la RPC.
-CREATE OR REPLACE FUNCTION public.guard_cxp_cancelacion_rol_financiero()
-RETURNS TRIGGER
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path = public
-AS $$
-DECLARE v_uid uuid := auth.uid();
+-- ============================================================
+-- Etapa 3 · BUG-09: un embarque Cerrado no se cancela directo
+-- ============================================================
+CREATE OR REPLACE FUNCTION public.transicion_embarque_valida(p_actual estado_embarque, p_nuevo estado_embarque)
+ RETURNS boolean
+ LANGUAGE plpgsql
+ IMMUTABLE
+ SET search_path TO 'public'
+AS $function$
 BEGIN
-  IF NEW.estado IS NOT DISTINCT FROM OLD.estado THEN RETURN NEW; END IF;
-  IF NEW.estado <> 'Cancelada'::public.estado_proveedor_factura THEN RETURN NEW; END IF;
-  -- Procesos del sistema (crons, edge functions) siguen operando.
-  IF v_uid IS NULL OR auth.role() = 'service_role' THEN RETURN NEW; END IF;
+  IF p_actual = p_nuevo THEN RETURN true; END IF;
 
-  IF NOT (public.has_role(v_uid, 'admin'::app_role)
-          OR public.has_role(v_uid, 'super_admin'::app_role)
-          OR public.has_role(v_uid, 'admin_org'::app_role)
-          OR public.has_role(v_uid, 'contador'::app_role)
-          OR public.has_role(v_uid, 'auxiliar_contable'::app_role)
-          OR public.has_role(v_uid, 'tesorero'::app_role)) THEN
-    RAISE EXCEPTION 'LC_CXP_CANCELAR_FORBIDDEN: tu rol no puede cancelar facturas de proveedor.'
-      USING ERRCODE = '42501';
+  -- BUG-09 (auditoría 2026-08-18): la regla blanket de cancelación se evaluaba
+  -- antes del CASE y permitía 'Cerrado' -> 'Cancelado' con comisiones
+  -- definitivas y CxC/CxP liquidadas. Un embarque cerrado debe reabrirse
+  -- primero ('Por liquidar' o 'EIR') y cancelarse desde ahí.
+  IF p_nuevo = 'Cancelado' AND p_actual NOT IN ('Cancelado', 'Cerrado') THEN
+    RETURN true;
   END IF;
-  RETURN NEW;
+
+  RETURN CASE p_actual
+    WHEN 'Borrador'     THEN p_nuevo IN ('Confirmado')
+    WHEN 'Cotización'   THEN p_nuevo IN ('Confirmado','Borrador')
+    WHEN 'Confirmado'   THEN p_nuevo IN ('En Tránsito','Borrador')
+    WHEN 'En Tránsito'  THEN p_nuevo IN ('Arribo','En Proceso')
+    WHEN 'Arribo'       THEN p_nuevo IN ('En Aduana','En Tránsito')
+    WHEN 'En Aduana'    THEN p_nuevo IN ('Entregado','Arribo')
+    WHEN 'Llegada'      THEN p_nuevo IN ('Arribo','En Aduana')
+    WHEN 'Entregado'    THEN p_nuevo IN ('EIR','En Aduana','Cerrado')
+    WHEN 'EIR'          THEN p_nuevo IN ('Por liquidar','Cerrado','Entregado')
+    WHEN 'Por liquidar' THEN p_nuevo IN ('Cerrado','EIR')
+    WHEN 'Cerrado'      THEN p_nuevo IN ('Por liquidar','EIR')
+    WHEN 'En Proceso'   THEN p_nuevo IN ('En Tránsito','Arribo','En Aduana')
+    WHEN 'Cancelado'    THEN false
+    ELSE false
+  END;
 END;
-$$;
+$function$;
 
-REVOKE ALL ON FUNCTION public.guard_cxp_cancelacion_rol_financiero() FROM PUBLIC, anon;
-GRANT EXECUTE ON FUNCTION public.guard_cxp_cancelacion_rol_financiero() TO authenticated, service_role;
-
-DROP TRIGGER IF EXISTS trg_cxp_cancelacion_rol_financiero ON public.proveedor_facturas;
-CREATE TRIGGER trg_cxp_cancelacion_rol_financiero
-  BEFORE UPDATE OF estado ON public.proveedor_facturas
-  FOR EACH ROW
+REVOKE ALL ON FUNCTION public.transicion_embarque_valida(estado_embarque, estado_embarque) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.transicion_embarque_valida(estado_embarque, estado_embarque) TO authenticated, service_role;

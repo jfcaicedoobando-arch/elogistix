@@ -1,5 +1,8 @@
 -- v13.628.0 — Edición de conceptos en facturas de proveedor capturadas a mano.
--- Espejo canónico de la migración aplicada; la validación completa vive aquí.
+-- v13.646.0 (BUG-02, auditoría 2026-08-18): recalcula la cabecera (subtotal,
+-- IVA, retenciones, total) a partir de los conceptos reemplazados.
+-- Espejo canónico; actualizar en el mismo PR que la migración.
+
 CREATE OR REPLACE FUNCTION public.reemplazar_conceptos_factura_proveedor(
   p_factura_id uuid,
   p_conceptos jsonb
@@ -12,6 +15,9 @@ DECLARE
   v_f public.proveedor_facturas%ROWTYPE;
   v_pagado numeric := 0;
   v_insertados int := 0;
+  v_subtotal numeric := 0;
+  v_iva numeric := 0;
+  v_ieps numeric := 0;
 BEGIN
   SELECT * INTO v_f FROM public.proveedor_facturas
    WHERE id = p_factura_id
@@ -74,21 +80,33 @@ BEGIN
     FROM jsonb_array_elements(COALESCE(p_conceptos, '[]'::jsonb)) AS x;
   GET DIAGNOSTICS v_insertados = ROW_COUNT;
 
-  IF v_f.estado_aprobacion = 'aprobada'::public.estado_aprobacion_factura_proveedor THEN
-    UPDATE public.proveedor_facturas
-       SET estado_aprobacion = 'pendiente'::public.estado_aprobacion_factura_proveedor,
-           aprobada_por = NULL,
-           aprobada_at = NULL,
-           updated_at = now()
-     WHERE id = p_factura_id;
-  ELSE
-    UPDATE public.proveedor_facturas SET updated_at = now() WHERE id = p_factura_id;
-  END IF;
+  -- BUG-02 (auditoría 2026-08-18): la cabecera debe cuadrar con sus renglones.
+  -- `guard_proveedor_factura_total` recalcula `total` a partir de estos campos.
+  SELECT COALESCE(SUM(monto), 0), COALESCE(SUM(iva), 0), COALESCE(SUM(ieps), 0)
+    INTO v_subtotal, v_iva, v_ieps
+    FROM public.proveedor_facturas_conceptos
+   WHERE proveedor_factura_id = p_factura_id;
+
+  UPDATE public.proveedor_facturas
+     SET subtotal = ROUND(v_subtotal, 2),
+         iva      = ROUND(v_iva, 2),
+         ieps     = ROUND(v_ieps, 2),
+         estado_aprobacion = CASE
+           WHEN estado_aprobacion = 'aprobada'::public.estado_aprobacion_factura_proveedor
+             THEN 'pendiente'::public.estado_aprobacion_factura_proveedor
+           ELSE estado_aprobacion END,
+         aprobada_por = CASE
+           WHEN estado_aprobacion = 'aprobada'::public.estado_aprobacion_factura_proveedor
+             THEN NULL ELSE aprobada_por END,
+         aprobada_at = CASE
+           WHEN estado_aprobacion = 'aprobada'::public.estado_aprobacion_factura_proveedor
+             THEN NULL ELSE aprobada_at END,
+         updated_at = now()
+   WHERE id = p_factura_id;
 
   RETURN v_insertados;
 END;
 $$;
 
-REVOKE ALL ON FUNCTION public.reemplazar_conceptos_factura_proveedor(uuid, jsonb) FROM PUBLIC;
-REVOKE ALL ON FUNCTION public.reemplazar_conceptos_factura_proveedor(uuid, jsonb) FROM anon;
-GRANT EXECUTE ON FUNCTION public.reemplazar_conceptos_factura_proveedor(uuid, jsonb) TO authenticated;
+REVOKE ALL ON FUNCTION public.reemplazar_conceptos_factura_proveedor(uuid, jsonb) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.reemplazar_conceptos_factura_proveedor(uuid, jsonb) TO authenticated, service_role;

@@ -1,3 +1,7 @@
+-- Fuente canónica de public.duplicar_factura_para_refacturacion.
+-- v13.646.0 (BUG-08): la factura sustituta toma el TC DOF vigente a su fecha de
+-- emisión en lugar de heredar el TC de la factura original.
+
 CREATE OR REPLACE FUNCTION public.duplicar_factura_para_refacturacion(p_caso_id uuid)
 RETURNS uuid
 LANGUAGE plpgsql
@@ -11,6 +15,8 @@ DECLARE
   v_new_id uuid := gen_random_uuid();
   v_new_numero text;
   v_estado_nueva text;
+  v_tc_nuevo numeric;
+  v_factor numeric;
 BEGIN
   SELECT * INTO v_c FROM public.refacturaciones WHERE id = p_caso_id;
   IF NOT FOUND THEN
@@ -42,6 +48,21 @@ BEGIN
       USING ERRCODE = 'P0001';
   END IF;
 
+  -- BUG-08 (auditoría 2026-08-18): el CFDI de sustitución se timbra HOY, así
+  -- que el tipo de cambio debe ser el DOF vigente a la nueva fecha de emisión,
+  -- no el heredado de la factura original.
+  IF v_old.moneda::text = 'MXN' THEN
+    v_tc_nuevo := v_old.tipo_cambio;
+  ELSE
+    SELECT CASE WHEN v_old.moneda::text = 'USD' THEN d.usd_mxn
+                WHEN v_old.moneda::text = 'EUR' THEN d.eur_mxn END
+      INTO v_tc_nuevo
+    FROM public.tc_dof_vigente(CURRENT_DATE) d;
+    IF v_tc_nuevo IS NULL OR v_tc_nuevo <= 1 THEN
+      v_tc_nuevo := NULL;  -- sin DOF: el timbrado exige capturarlo a mano.
+    END IF;
+  END IF;
+
   v_new_numero := v_old.numero || '-RF';
   WHILE EXISTS (
     SELECT 1 FROM public.facturas
@@ -65,7 +86,7 @@ BEGIN
     CURRENT_DATE,
     CURRENT_DATE + COALESCE(v_cli.dias_credito, v_old.dias_credito, 0),
     COALESCE(v_cli.dias_credito, v_old.dias_credito, 0),
-    v_old.moneda, v_old.tipo_cambio, v_old.subtotal, v_old.iva,
+    v_old.moneda, v_tc_nuevo, v_old.subtotal, v_old.iva,
     COALESCE(v_old.ret_isr, 0), COALESCE(v_old.ret_iva, 0), v_old.total,
     COALESCE(v_cli.metodo_pago_default, v_old.metodo_pago),
     COALESCE(v_cli.forma_pago_default, v_old.forma_pago),
@@ -106,6 +127,9 @@ BEGIN
      SET factura_nueva_id = v_new_id, paso_actual = GREATEST(paso_actual, 3)
    WHERE id = p_caso_id;
 
+  v_factor := CASE WHEN COALESCE(v_old.tipo_cambio, 0) > 0 AND v_tc_nuevo IS NOT NULL
+                   THEN ROUND(v_tc_nuevo / v_old.tipo_cambio, 6) ELSE NULL END;
+
   INSERT INTO public.bitacora_actividad (
     organization_id, usuario_id, usuario_email, accion, modulo, entidad_id, entidad_nombre, detalles
   ) VALUES (
@@ -114,14 +138,14 @@ BEGIN
     'refacturacion_borrador_creado', 'facturacion', v_new_id, COALESCE(v_new_numero, ''),
     jsonb_build_object('caso_id', p_caso_id, 'factura_original_id', v_old.id,
                        'cliente_destino_id', v_cli.id, 'rfc_destino', v_cli.rfc,
-                       'ruta_fiscal', v_c.ruta_fiscal, 'proforma_origen_id', v_old.proforma_id)
+                       'ruta_fiscal', v_c.ruta_fiscal, 'proforma_origen_id', v_old.proforma_id,
+                       'tc_original', v_old.tipo_cambio, 'tc_nuevo_dof', v_tc_nuevo,
+                       'tc_factor', v_factor)
   );
 
   RETURN v_new_id;
 END;
 $function$;
 
-REVOKE ALL ON FUNCTION public.duplicar_factura_para_refacturacion(uuid) FROM PUBLIC;
-REVOKE ALL ON FUNCTION public.duplicar_factura_para_refacturacion(uuid) FROM anon;
-GRANT EXECUTE ON FUNCTION public.duplicar_factura_para_refacturacion(uuid) TO authenticated;
-GRANT EXECUTE ON FUNCTION public.duplicar_factura_para_refacturacion(uuid) TO service_role;
+REVOKE ALL ON FUNCTION public.duplicar_factura_para_refacturacion(uuid) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.duplicar_factura_para_refacturacion(uuid) TO authenticated, service_role;

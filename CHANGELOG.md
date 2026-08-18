@@ -1,5 +1,18 @@
 # Changelog
 
+## [13.646.0] - 2026-08-18
+
+### Auditoría v1 — Etapas 1 a 4 (P0/P1 financieros)
+- BUG-01 (P0) timbrado: `facturapi-emitir` ya no manda conceptos en papelera (`deleted_at IS NULL`), rechaza facturas sin conceptos vigentes y valida que la suma de conceptos cuadre (±$1) con el subtotal de la cabecera antes de timbrar.
+- BUG-02 CxP: `reemplazar_conceptos_factura_proveedor` recalcula subtotal/IVA/retenciones/total de la cabecera.
+- BUG-04 CxC: `saldo_factura` convierte las notas de crédito a la moneda de la factura con la cascada CFDI > DOF > TC del embarque + guard `trg_nc_cliente_moneda_convertible`.
+- BUG-05 embarques: un embarque `Cerrado` no puede pasar directo a `Cancelado` (`transicion_embarque_valida`).
+- BUG-06 CxP: cancelar una factura de proveedor exige rol financiero (admin, admin_org, contador, auxiliar_contable, tesorero o super_admin). El candado vive en el trigger `trg_cxp_cancelacion_rol_financiero` sobre `proveedor_facturas`, no dentro de la RPC, para ser independiente del orden de migraciones y cubrir cualquier ruta de actualización.
+- BUG-07 tesorería: `eliminar_pago_proveedor` revierte también las aplicaciones de anticipo, liberando el saldo del anticipo.
+- BUG-08 refacturación: `duplicar_factura_para_refacturacion` toma el TC DOF vigente a la fecha de emisión en vez de heredar el TC original.
+- EC-01 comisiones: el filtro de periodo se resuelve en la base (rango CDMX) antes del tope de 500 filas; los meses anteriores ya no aparecían vacíos.
+- Espejos de esquema actualizados en `supabase/schema/` (cxp, facturacion, embarques y nuevo `tesoreria/eliminar_pago_proveedor.sql`).
+
 ## [13.645.3] - 2026-08-17
 
 ### Corrección CI

@@ -60,6 +60,18 @@ async function buildNombreVendedoraMap(ids: string[]): Promise<Record<string, st
   }
 }
 
+/**
+ * Convierte un periodo "YYYY-MM" al rango de instantes UTC que cubre ese mes en
+ * zona CDMX (UTC-06:00 fijo, México ya no aplica horario de verano).
+ */
+function rangoMesMx(periodo?: string): { desde: string; hasta: string } | null {
+  if (!periodo || !/^\d{4}-\d{2}$/.test(periodo)) return null;
+  const [anio, mes] = periodo.split("-").map(Number);
+  const desde = new Date(Date.UTC(anio, mes - 1, 1, 6, 0, 0));
+  const hasta = new Date(Date.UTC(anio, mes, 1, 6, 0, 0));
+  return { desde: desde.toISOString(), hasta: hasta.toISOString() };
+}
+
 export async function fetchComisionesDevengadas(
   filtros: FetchComisionesFiltros = {},
 ): Promise<ComisionDevengada[]> {
@@ -80,6 +92,13 @@ export async function fetchComisionesDevengadas(
   }
   if (filtros.estado && filtros.estado !== "todos") {
     q = q.eq("estado", filtros.estado);
+  }
+  // EC-01 (auditoría 2026-08-18): el periodo se filtra en la base ANTES del
+  // límite de 500 filas; antes se recortaba en memoria y meses viejos salían
+  // vacíos porque el tope ya se había consumido con comisiones recientes.
+  const rango = rangoMesMx(filtros.periodo);
+  if (rango) {
+    q = q.gte("created_at", rango.desde).lt("created_at", rango.hasta);
   }
 
   const { data, error } = await q;
