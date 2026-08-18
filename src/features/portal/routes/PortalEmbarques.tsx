@@ -1,7 +1,6 @@
-import { Badge } from "@/components/ui/badge";
+import { StatusBadge } from "@/components/shared/StatusBadge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
-import { getEstadoColor } from "@/lib/ui/uiMappings";
 import { calcularEstadoEmbarque } from "@/features/embarques/domain/embarque";
 import { getOrigen, getDestino } from "@/lib/formatters";
 import EmbarqueCard from "@/features/portal/components/EmbarqueCard";
@@ -134,9 +133,13 @@ export default function PortalEmbarques() {
                       </div>
                       <div className="flex items-center gap-1.5 flex-shrink-0">
                         {Object.entries(statusCounts).map(([estado, count]) => (
-                          <Badge key={estado} variant="outline" className={`${getEstadoColor(estado)} text-2xs px-1.5 py-0`}>
-                            {count} {estado}
-                          </Badge>
+                          <StatusBadge
+                            key={estado}
+                            domain="embarque"
+                            status={estado}
+                            label={`${count} ${estado}`}
+                            className="text-2xs px-1.5 py-0"
+                          />
                         ))}
                       </div>
                     </CardContent>

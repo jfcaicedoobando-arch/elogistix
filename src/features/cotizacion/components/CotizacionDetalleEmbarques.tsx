@@ -1,7 +1,6 @@
+import { StatusBadge } from "@/components/shared/StatusBadge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { useNavigate } from "react-router-dom";
-import { getEstadoColor } from "@/lib/ui/uiMappings";
 import { formatDate } from "@/lib/formatters";
 
 interface EmbarqueVinculado {
@@ -43,7 +42,7 @@ export function CotizacionDetalleEmbarques({ embarques, cotizacionEstado }: Prop
               >
                 <span className="font-medium text-primary">{emb.expediente}</span>
                 <div className="flex items-center gap-3">
-                  <Badge className={getEstadoColor(emb.estado)}>{emb.estado}</Badge>
+                  <StatusBadge domain="embarque" status={emb.estado} />
                   <span className="text-sm text-muted-foreground">{formatDate(emb.created_at)}</span>
                 </div>
               </div>

@@ -2,11 +2,10 @@
  * Tarjeta de estatus del embarque en el tracking público: etapa actual,
  * ETD/ETA y avance de documentos (recibidos vs. faltantes).
  */
-import { Badge } from "@/components/ui/badge";
+import { StatusBadge } from "@/components/shared/StatusBadge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { CalendarClock, CalendarCheck2 } from "lucide-react";
-import { getEstadoColor } from "@/lib/ui/uiMappings";
 import { formatFechaEs } from "@/lib/formatters";
 
 interface Props {
@@ -36,7 +35,7 @@ export function TrackingPublicoEstatus({
     <Card>
       <CardHeader className="pb-2 flex-row items-center justify-between space-y-0">
         <CardTitle>Estatus del embarque</CardTitle>
-        <Badge className={getEstadoColor(estado)}>{estado}</Badge>
+        <StatusBadge domain="embarque" status={estado} showIcon />
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">

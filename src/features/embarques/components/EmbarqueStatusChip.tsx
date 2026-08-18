@@ -6,7 +6,7 @@
 import { CheckCircle2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { ModoIcon } from "@/components/shared/ModoIcon";
-import { getEstadoColor } from "@/lib/ui/uiMappings";
+import { getStatusVisual } from "@/lib/status/statusRegistry";
 import { cn } from "@/lib/utils";
 import { labelEstadoEmbarque } from "@/features/embarques/constants/estadoEmbarqueLabels";
 import { resolveFinancieroInfo, type CobroStatus } from "./embarqueStatusChip.helpers";
@@ -37,7 +37,7 @@ export function EmbarqueStatusChip({
     <Badge
       className={cn(
         "gap-1.5 px-2.5 py-1 text-xs font-medium",
-        getEstadoColor(estado),
+        getStatusVisual("embarque", estado).badgeClass,
         className,
       )}
       aria-label={`Estado ${estadoLabel}, modo ${modo}, ${fin.label}`}

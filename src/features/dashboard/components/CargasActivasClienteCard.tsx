@@ -1,11 +1,10 @@
+import { StatusBadge } from "@/components/shared/StatusBadge";
 import { memo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Ship } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { ListSkeleton } from "@/components/shared/states/ListSkeleton";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { getEstadoColor } from "@/lib/ui/uiMappings";
 import type { EstadoFiltro } from "@/features/dashboard/hooks";
 import { activableConTeclado, FOCUS_RING } from "@/lib/ui/keyboardActivation";
 
@@ -73,13 +72,13 @@ function FilaCliente({ cliente: c, totalActivosGlobal, onClick }: FilaProps) {
                 const count = c.desglose?.[est];
                 if (!count) return null;
                 return (
-                  <Badge
+                  <StatusBadge
                     key={est}
-                    variant="outline"
-                    className={`text-2xs px-1.5 py-0 leading-4 ${getEstadoColor(est)}`}
-                  >
-                    {count} {est}
-                  </Badge>
+                    domain="embarque"
+                    status={est}
+                    label={`${count} ${est}`}
+                    className="text-2xs px-1.5 py-0 leading-4"
+                  />
                 );
               })}
             </div>

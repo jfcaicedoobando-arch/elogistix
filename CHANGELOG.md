@@ -1,5 +1,14 @@
 # Changelog
 
+## [13.649.0] - 2026-08-18
+
+### Ola C · UI-01 — `StatusBadge` como único badge de estado en embarques y facturas
+- Migradas 15 pantallas del wrapper deprecado `getEstadoColor` a `<StatusBadge domain="embarque" | "factura" />`, que toma color, etiqueta e icono del `statusRegistry`: tracking público (vista y tarjeta de estatus), tarjeta móvil de embarques, embarques del BL Master, historial de facturas del embarque, cargas activas por cliente del dashboard, embarques ligados a la cotización y todo el Portal del cliente (listados y detalles de embarques y facturas, tarjeta de embarque, dashboard de recientes y por estado).
+- `EmbarqueStatusChip` (chip compuesto del header de embarque) ya consume `getStatusVisual("embarque", estado).badgeClass` en lugar del wrapper legacy.
+- Los contadores por estado ("3 En Tránsito") ahora usan la prop `label` del badge, así que conservan el texto pero heredan el color canónico.
+- Allowlist `no-legacy-estado-color` de ESLint reducida de 18 a 3 archivos (sólo quedan pantallas del dominio cotización); cualquier import nuevo de `getEstadoColor` en embarques/facturas ahora rompe el lint.
+
+
 ## [13.648.0] - 2026-08-18
 
 ### Ola C · UI-04 — un solo formateador de fechas en toda la app

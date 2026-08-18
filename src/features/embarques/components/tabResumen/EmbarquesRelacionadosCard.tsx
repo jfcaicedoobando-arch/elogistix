@@ -1,9 +1,9 @@
+import { StatusBadge } from "@/components/shared/StatusBadge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "lucide-react";
 
 import { formatNumber } from "@/lib/formatters";
-import { getEstadoColor } from "@/lib/ui/uiMappings";
 import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 // Exenta de no-restricted-imports vía eslint.config.js allowlist: render row custom para sub-tabla de embarques relacionados.
 import { TableRow, TableCell } from "@/components/ui/table";
@@ -61,7 +61,7 @@ export function EmbarquesRelacionadosCard({ embarqueId, blMaster, relacionados }
             { id: "piezas", header: "Piezas", meta: { className: "text-right text-xs tabular-nums", headerClassName: "text-right" },
               cell: ({ row }) => formatNumber(row.original.piezas) },
             { id: "estado", header: "Estado", cell: ({ row }) => (
-              <Badge variant="secondary" className={`text-xs ${getEstadoColor(row.original.estado)}`}>{row.original.estado}</Badge>
+              <StatusBadge domain="embarque" status={row.original.estado} />
             ) },
           ]) as ColumnDef<RelacionadoRow, unknown>[]}
 

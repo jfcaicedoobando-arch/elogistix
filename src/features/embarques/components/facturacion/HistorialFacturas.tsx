@@ -1,12 +1,11 @@
+import { StatusBadge } from "@/components/shared/StatusBadge";
 import { ChevronRight, Receipt } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { formatCurrency, formatDate } from "@/lib/formatters";
-import { getEstadoColor } from "@/lib/ui/uiMappings";
 import type { ProformaConFactura } from "@/features/proformas/services";
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 
@@ -62,7 +61,7 @@ export function HistorialFacturas({ facturas, proformas }: Props) {
     {
       id: "estado",
       header: "Estado",
-      cell: ({ row }) => <Badge className={getEstadoColor(row.original.estado)}>{row.original.estado}</Badge>,
+      cell: ({ row }) => <StatusBadge domain="factura" status={row.original.estado} />,
     },
     {
       id: "chevron",

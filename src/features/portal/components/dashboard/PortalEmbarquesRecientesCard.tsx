@@ -1,11 +1,10 @@
+import { StatusBadge } from "@/components/shared/StatusBadge";
 import { Ship, ArrowRight, Clock } from "lucide-react";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { ROUTES } from "@/constants/routes";
-import { getEstadoColor } from "@/lib/ui/uiMappings";
 import { ModoIcon } from "@/components/shared/ModoIcon";
 import { calcularEstadoEmbarque } from "@/features/embarques/domain/embarque";
 import { labelExpediente } from "@/lib/domain/labelExpediente";
@@ -96,7 +95,7 @@ function EmbarqueRecienteRow({ e, estadoVisual }: { e: EmbarqueItem; estadoVisua
             ETA {formatDate(e.eta, "dd/MM")}
           </span>
         )}
-        <Badge className={getEstadoColor(estadoVisual)}>{estadoVisual}</Badge>
+        <StatusBadge domain="embarque" status={estadoVisual} />
       </div>
     </div>
   );
