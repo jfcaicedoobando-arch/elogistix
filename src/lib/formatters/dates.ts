@@ -173,8 +173,12 @@ export function formatFechaDia(
       : formatFechaDia(valor.toISOString(), fallback);
   }
   const iso = valor;
+  // Node no lanza con fechas inválidas (devuelve "Invalid Date"): se valida antes.
+  const soloDia = /^\d{4}-\d{2}-\d{2}$/.test(iso);
+  if (Number.isNaN(new Date(soloDia ? `${iso}T12:00:00Z` : iso).getTime())) {
+    return fallback;
+  }
   const s = formatFechaEs(iso, { day: "2-digit", month: "2-digit", year: "numeric" });
-  // `formatFechaEs` devuelve el ISO crudo cuando no pudo parsearlo.
   if (!s || s === "-" || s === iso) return fallback;
   return s;
 }
