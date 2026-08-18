@@ -7,7 +7,4 @@
  * TODO(shared): mover el componente a `src/components/shared` y apuntar ambos
  * features ahí cuando el ownership de ese directorio lo permita.
  */
-export {
-  CartaGarantiaBadge,
-  default,
-} from "@/features/cotizacion/components/CartaGarantiaBadge";
+export { CartaGarantiaBadge } from "@/features/cotizacion/components/CartaGarantiaBadge";

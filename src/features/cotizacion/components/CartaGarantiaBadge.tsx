@@ -98,5 +98,3 @@ export function CartaGarantiaBadge(props: CartaGarantiaBadgeProps) {
     </Badge>
   );
 }
-
-export default CartaGarantiaBadge;
