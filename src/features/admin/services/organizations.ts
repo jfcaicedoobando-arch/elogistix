@@ -4,6 +4,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { fromDb } from "@/lib/supabase/cast";
 import { unwrap, unwrapOr, run } from "@/lib/supabase/response";
+import { assertNotTruncated } from "@/lib/supabase/assertNotTruncated";
 import { registrarActividad } from "@/services/bitacora/registrar";
 
 export interface OrgRow {
@@ -17,8 +18,10 @@ export interface OrgRow {
 
 export async function fetchAdminOrganizations(): Promise<OrgRow[]> {
   const data = await unwrap(
-    supabase.from("organizations").select("*").order("nombre"),
+    // EC-05: límite defensivo sobre el catálogo de organizaciones.
+    supabase.from("organizations").select("*").order("nombre").limit(500),
   );
+  assertNotTruncated(data, 500, "admin.organizations");
   return fromDb<OrgRow[]>(data);
 }
 

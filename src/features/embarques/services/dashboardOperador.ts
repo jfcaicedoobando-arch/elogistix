@@ -93,8 +93,11 @@ export async function fetchSinTrackingOperador(email: string): Promise<SinTracki
     .from("eventos_embarque")
     .select("embarque_id, fecha")
     .in("embarque_id", ids)
-    .order("fecha", { ascending: false });
+    .order("fecha", { ascending: false })
+    // EC-05: límite defensivo (200 embarques x ~10 eventos esperados).
+    .limit(2000);
   if (eErr) throw eErr;
+  assertNotTruncated(eventos, 2000, "operador.eventosTracking");
   const ultimo = new Map<string, string>();
   for (const ev of eventos ?? []) {
     if (!ultimo.has(ev.embarque_id)) ultimo.set(ev.embarque_id, ev.fecha);

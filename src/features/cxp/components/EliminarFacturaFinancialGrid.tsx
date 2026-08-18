@@ -3,7 +3,7 @@
  * Moneda/TC. Extraído en v13.307.23 para mantener el diálogo bajo 200 líneas.
  */
 import { cn } from "@/lib/utils";
-import { formatNumber } from "@/lib/formatters";
+import { formatNumber, formatTipoCambio } from "@/lib/formatters";
 import type { FacturaCxP } from "@/features/cxp/services";
 
 function formatMonto(moneda: string, monto: number) {
@@ -35,7 +35,7 @@ export function EliminarFacturaFinancialGrid({ factura }: { factura: FacturaCxP 
           <div className="leading-tight">
             <div className="text-sm font-bold text-foreground">{factura.moneda}</div>
             <div className="text-label font-medium text-muted-foreground tabular-nums">
-              TC {factura.tipo_cambio_usd?.toFixed(2) ?? "—"}
+              TC {formatTipoCambio(factura.tipo_cambio_usd)}
             </div>
           </div>
         </div>

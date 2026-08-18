@@ -110,7 +110,7 @@ export function ConciliacionPagoCell({
                         <p className="text-label text-muted-foreground">Ref: {m.referencia}</p>
                       )}
                       <p className="text-2xs text-muted-foreground/70 mt-0.5">
-                        Δ ${m.delta_monto.toFixed(2)} · {m.delta_dias}d
+                        Δ {formatCurrency(m.delta_monto, "MXN")} · {m.delta_dias}d
                       </p>
                     </div>
                     <Button

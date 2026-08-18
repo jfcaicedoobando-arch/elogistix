@@ -76,7 +76,9 @@ function partesRuta(d: CotizacionInitialData) {
     tiempoTransitoDias: d.tiempo_transito_dias ?? undefined,
     frecuencia: d.frecuencia ?? "",
     rutaTexto: d.ruta_texto ?? "",
-    validezPropuesta: d.validez_propuesta ? new Date(d.validez_propuesta) : undefined,
+    // EC-06: `validez_propuesta` es date-only; "T00:00:00" lo ancla a
+    // medianoche LOCAL (sin sufijo sería medianoche UTC = día anterior CDMX).
+    validezPropuesta: d.validez_propuesta ? new Date(`${d.validez_propuesta}T00:00:00`) : undefined,
     tipoMovimiento: d.tipo_movimiento ?? "",
   };
 }

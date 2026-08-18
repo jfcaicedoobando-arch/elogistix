@@ -36,7 +36,7 @@ export function FooterAcciones({
 
 
 export function NotasPago({
-  esPpdTimbrada, monedaPago, monedaFactura, montoNum, montoAplicado, tipoCambio, excede, saldo, tcBloqueado, errorFecha,
+  esPpdTimbrada, monedaPago, monedaFactura, montoNum, montoAplicado, tipoCambio, excede, saldo, tcBloqueado, tcRespaldo, errorFecha,
 }: {
   esPpdTimbrada: boolean;
   monedaPago: string;
@@ -48,6 +48,8 @@ export function NotasPago({
   saldo: number;
   /** FE-01 / UIA-01: cross-moneda sin tipo de cambio confiable. */
   tcBloqueado?: boolean;
+  /** EC-10: la conversión usaría el TC de respaldo (no Banxico/DOF). */
+  tcRespaldo?: boolean;
   /** FE-03 / UIA-06: fecha de pago inválida (futura o previa a la emisión). */
   errorFecha?: string | null;
 }) {
@@ -70,9 +72,20 @@ export function NotasPago({
       {mostrarConversion && tcBloqueado && (
         <Alert className="border-warning/40 bg-warning/5">
           <AlertDescription className="text-xs">
-            Esperando tipo de cambio… No se puede registrar un cobro en {monedaPago} para una
-            factura en {monedaFactura} sin un tipo de cambio disponible. Intenta de nuevo en unos
-            segundos; si el problema persiste, contacta a soporte.
+            {tcRespaldo ? (
+              <>
+                <strong>Tipo de cambio de respaldo.</strong> No pudimos obtener el TC oficial de
+                Banxico; registrar un cobro en {monedaPago} para una factura en {monedaFactura} con
+                un TC estimado distorsionaría el REP y la diferencia cambiaria. Reintenta más tarde
+                o cobra en la moneda de la factura.
+              </>
+            ) : (
+              <>
+                Esperando tipo de cambio… No se puede registrar un cobro en {monedaPago} para una
+                factura en {monedaFactura} sin un tipo de cambio disponible. Intenta de nuevo en unos
+                segundos; si el problema persiste, contacta a soporte.
+              </>
+            )}
           </AlertDescription>
         </Alert>
       )}

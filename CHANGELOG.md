@@ -1,5 +1,22 @@
 # Changelog
 
+## [13.657.0] - 2026-08-18
+
+### EC-10 — El tipo de cambio de respaldo ya no se usa como oficial
+- CxP: el auto-llenado de T/C DOF rechaza el valor de respaldo (17.25/18.5) y pide captura manual.
+- Facturación · Registrar pago: `derivarEstadoPago` expone `tcRespaldo` y bloquea el envío del REP cuando hay conversión cross-moneda con T/C de respaldo.
+- Profit · Estado de Resultados: se agregó `TipoCambioFallbackBanner`.
+- Embarques · Costos y Precios: `StepCostosTcAviso` avisa "Tipo de cambio de respaldo".
+
+### EC-06 — Fechas date-only sin desfase de un día en México
+- Corregidos 5 casos (tarifa vinculada, `diasHasta` de rutas de costeo, celda de vigencia, `validez_propuesta`, `vigenciaPlus30` de proformas) usando `hoyMx`/`parseLocalMx` o comparación ISO.
+
+### UX-12 — Moneda y T/C canónicos en CxP
+- Delta de conciliación con `formatCurrency`; nuevo `formatTipoCambio` (4 decimales, como el DOF) en eliminar factura, banda de contexto y pago a proveedor; la gráfica de antigüedad usa el formateador compartido.
+
+### EC-05 — Límites defensivos en consultas
+- `.limit()` + `assertNotTruncated` en eventos de tracking del operador, expedientes por cliente, organizaciones (admin), comentarios de auditoría y costos de cotización.
+
 ## [13.656.0] - 2026-08-18
 
 ### UI-12 — Botones nativos de acción migrados a `ui/Button`

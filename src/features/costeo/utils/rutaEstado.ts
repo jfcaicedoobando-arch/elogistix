@@ -4,6 +4,7 @@
  * El flag `activa` en BD es manual; el estado mostrado al usuario combina
  * ese flag con la presencia de tarifas vigentes y la proximidad de expiración.
  */
+import { hoyMx, parseLocalMx } from "@/lib/date/mx";
 import type { CosteoRuta } from "@/features/costeo/types";
 
 export type RutaEstadoTone = "success" | "warning" | "destructive" | "muted";
@@ -22,11 +23,13 @@ export const DIAS_POR_VENCER = 7;
 
 function diasHasta(fechaIso: string | null | undefined): number | null {
   if (!fechaIso) return null;
-  const hoy = new Date();
-  hoy.setUTCHours(0, 0, 0, 0);
-  const fin = new Date(`${fechaIso}T00:00:00Z`);
+  // EC-06: el "hoy" de negocio es CDMX (`hoyMx`), no UTC; ambas fechas se
+  // anclan con `parseLocalMx` (mediodía UTC) para que la resta no se corra
+  // un día entre las 18:00–23:59 CDMX ni en runners con TZ != CDMX.
+  const hoy = parseLocalMx(hoyMx());
+  const fin = parseLocalMx(fechaIso);
   if (Number.isNaN(fin.getTime())) return null;
-  return Math.floor((fin.getTime() - hoy.getTime()) / (24 * 60 * 60 * 1000));
+  return Math.round((fin.getTime() - hoy.getTime()) / (24 * 60 * 60 * 1000));
 }
 
 export function computeRutaEstado(ruta: CosteoRuta): RutaEstadoMeta {

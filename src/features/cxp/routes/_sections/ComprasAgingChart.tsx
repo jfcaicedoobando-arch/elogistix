@@ -7,7 +7,7 @@ import { Link } from "react-router-dom";
 import { Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip as RTooltip, XAxis, YAxis } from "recharts";
 import { ArrowUpRight } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { formatCurrencyCompact, formatCurrency } from "@/lib/formatters";
+import { formatCurrencyCompact, formatCurrency, formatCompactNumber } from "@/lib/formatters";
 import { CHART } from "@/lib/chartTokens";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 import { BarChart3 } from "lucide-react";
@@ -23,12 +23,6 @@ const TONE_HEX: Record<Bucket["tone"], string> = {
   danger: CHART.destructiveSoft,
   critical: CHART.destructive,
 };
-
-/** Número compacto sin moneda para los ticks del eje Y (misma escala que formatCurrencyCompact). */
-const fmtTickCompacto = new Intl.NumberFormat("es-MX", {
-  notation: "compact",
-  maximumFractionDigits: 1,
-});
 
 
 export function ComprasAgingChart({ totales, moneda = "MXN" }: { totales: CxpAgingTotals; moneda?: string }) {
@@ -75,7 +69,7 @@ export function ComprasAgingChart({ totales, moneda = "MXN" }: { totales: CxpAgi
                 tickLine={false}
                 // VF-05: la moneda ya va en el título ("Antigüedad de saldos ·
                 // MXN"); repetirla en cada tick del eje Y ensuciaba la gráfica.
-                tickFormatter={(v) => fmtTickCompacto.format(Number(v))}
+                tickFormatter={(v) => formatCompactNumber(Number(v))}
                 width={48}
               />
               <RTooltip

@@ -10,7 +10,7 @@
  *   - `full`     → chip + banda + 4 KPIs (Total, Pagado, Saldo, Moneda).
  *   - `compact`  → chip + banda + 3 KPIs (sin Pagado). Ideal para confirmaciones.
  */
-import { formatCurrency } from "@/lib/formatters";
+import { formatCurrency, formatTipoCambio } from "@/lib/formatters";
 import type { FacturaCxP } from "@/features/cxp/services";
 import { Kpi } from "./DialogDetallePagosProveedor.parts";
 import { EstadoAprobacionDot } from "./EstadoAprobacionDot";
@@ -29,7 +29,7 @@ export function FacturaContextoBand({ factura, variant = "full", emphasis = "sal
   const cancelada = factura.estado === "Cancelada";
   const moneda = factura.moneda;
   const tcInfo = factura.tipo_cambio_usd > 0 && moneda !== "MXN"
-    ? `${moneda} · TC ${factura.tipo_cambio_usd.toFixed(2)}`
+    ? `${moneda} · TC ${formatTipoCambio(factura.tipo_cambio_usd)}`
     : moneda;
 
   return (
