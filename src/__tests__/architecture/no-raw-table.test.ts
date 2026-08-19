@@ -59,10 +59,7 @@ const RAW_TABLE_JSX_DEBT: readonly string[] = [
   "src/features/facturacion/components/detalle/FacturaPagosTabla.tsx",
   "src/features/facturacion/estadoCuenta/components/EstadoCuentaRowExpanded.tsx",
   "src/features/marketing/routes/GuiaPuertosMexicoArticle.tsx",
-  "src/features/presupuesto/components/TabCaptura.tsx",
   "src/features/presupuesto/components/TabCategorias.tsx",
-  "src/features/presupuesto/components/TabVsReal.tsx",
-  "src/features/profit/components/EstadoResultadosTable.tsx",
   "src/features/proformas/components/portal/PortalProformaResumen.tsx",
   "src/features/tesoreria/components/TablaFlujoSemanal.tsx",
   "src/pdf/components/DataTable.tsx",
@@ -118,6 +115,13 @@ const ALLOWLIST: readonly string[] = [
   "src/features/crm/components/MetasActividadEditor.tsx",
   "src/features/crm/components/PresupuestoCrmEditor.tsx",
   "src/features/crm/components/higiene/HigieneTabla.tsx",
+  // Estado de resultados: subtotales con colSpan y fila de margen con fondo
+  // propio — patrón no soportado por <DataTable />.
+  "src/features/profit/components/EstadoResultadosTable.tsx",
+  // Presupuesto: grid editable (inputs por celda) y comparativo con
+  // encabezado ordenable + barra de cumplimiento por fila.
+  "src/features/presupuesto/components/TabCaptura.tsx",
+  "src/features/presupuesto/components/TabVsReal.tsx",
 ];
 
 describe("architecture — no raw @/components/ui/table imports", () => {
