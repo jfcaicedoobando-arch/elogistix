@@ -7,7 +7,7 @@ import { resolverEstadoFacturaCliente } from "@/lib/domain/estadosFactura";
 import { Receipt, AlertTriangle, ChevronRight } from "lucide-react";
 import EmptyState from "@/components/empty/EmptyState";
 import { PageHeader } from "@/components/shared/PageHeader";
-import { PortalFiltersBar } from "@/components/shared/PortalFiltersBar";
+import { PortalFiltersBar } from "@/features/portal/components/filtros/PortalFiltersBar";
 import { PortalFacturasMobileFilters } from "@/features/portal/components/facturas/PortalFacturasMobileFilters";
 import { useState, useMemo } from "react";
 import { Link } from "react-router-dom";

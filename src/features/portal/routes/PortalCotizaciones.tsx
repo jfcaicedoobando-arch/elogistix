@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { SolicitarCotizacionDialog } from "@/features/portal/components/SolicitarCotizacionDialog";
 import EmptyState from "@/components/empty/EmptyState";
 import { PageHeader } from "@/components/shared/PageHeader";
-import { PortalFiltersBar } from "@/components/shared/PortalFiltersBar";
+import { PortalFiltersBar } from "@/features/portal/components/filtros/PortalFiltersBar";
 import { PortalCotizacionesMobileFilters } from "@/features/portal/components/PortalCotizacionesMobileFilters";
 import {
   PortalCotizacionCard,

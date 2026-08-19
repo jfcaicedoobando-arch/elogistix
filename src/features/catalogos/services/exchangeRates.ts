@@ -4,7 +4,7 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import { reportCaughtError } from "@/lib/observability/reportCaughtError";
-import type { ExchangeRates } from "./index";
+import type { ExchangeRates } from "./catalogosTypes";
 
 /**
  * Fallback operativo (NO fiscal) cuando la edge `exchange-rates` no responde.

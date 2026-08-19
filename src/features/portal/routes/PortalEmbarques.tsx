@@ -6,7 +6,7 @@ import { getOrigen, getDestino } from "@/lib/formatters";
 import EmbarqueCard from "@/features/portal/components/EmbarqueCard";
 import EmptyState from "@/components/empty/EmptyState";
 import { PageHeader } from "@/components/shared/PageHeader";
-import { PortalFiltersBar } from "@/components/shared/PortalFiltersBar";
+import { PortalFiltersBar } from "@/features/portal/components/filtros/PortalFiltersBar";
 import { PortalEmbarquesMobileFilters } from "@/features/portal/components/PortalEmbarquesMobileFilters";
 import { Ship, Package, ChevronDown } from "lucide-react";
 import { usePortalEmbarquesController } from "@/features/portal/hooks";

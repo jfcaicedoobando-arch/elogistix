@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { formatCurrency } from "@/lib/formatters";
-import { ProfitBadge } from "@/components/shared/ProfitBadge";
+import { ProfitBadge } from "@/features/cotizacion/components/ProfitBadge";
 import type { FilaCostoLocal } from "./SeccionCostosInternosPLUnificado";
 import type { TotalesPL } from "@/lib/financial/profitUtils";
 import { FilaCostoLocalRow } from "./costosLocal/FilaCostoLocalRow";

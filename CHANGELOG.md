@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.679.0] - 2026-08-19
+### Ola 20 · arquitectura (auditoría, pasos 4, 8 y 9)
+- Paso 4 · barriles limpios: `catalogos`, `configuracion`, `auth`, `reportes`, `operaciones`, `dashboard`, `notificaciones`, `search` y `portal-agente` extrajeron su lógica a módulos con nombre; los `index.ts` sólo re-exportan (importar un tipo ya no arrastra el cliente de base de datos).
+- Guardrail `src/__tests__/architecture/barril-sin-logica.test.ts`: ningún barril de feature puede tocar la base de datos ni declarar funciones.
+- Paso 8 · componentes con un solo dueño salen de `components/shared`: `PortalFilterSheet` y `PortalFiltersBar` → `features/portal/components/filtros`, `ProfitBadge` → `features/cotizacion/components`.
+- Paso 9 · el despacho de descripciones de bitácora es una tabla (`Record<accion, ...>`) en lugar de escaleras de `if`; se eliminaron los `eslint-disable complexity` de `bitacoraDescripcion.ts` y `bitacoraDescripcionModulos.ts`.
+
 ## [13.678.0] - 2026-08-19
 ### Crítico · un solo cálculo de días
 - Los "días vencidos / días de demora" ya no se calculan a mano en cada pantalla: 20 sitios (cartera, CxP, CRM, tracking, expediente, PDF de estado de cuenta, auditoría, tarifas, seguros) usan `diffDiasCalendario` / `diasVencidos` de `src/lib/date/dateOnly.ts`, anclados a medianoche local y con `Math.round` (inmune al cambio de horario).
