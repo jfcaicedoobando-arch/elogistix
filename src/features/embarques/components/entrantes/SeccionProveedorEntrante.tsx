@@ -8,7 +8,7 @@ import {
   SelectorProveedorEntrante,
   type ProveedorOpcion,
 } from "@/features/embarques/components/entrantes/SelectorProveedorEntrante";
-import { avisoProveedorEntrante } from "@/lib/domain/proveedorEntrante";
+import { avisoProveedorEntrante } from "@/features/embarques/domain/proveedorEntrante";
 
 interface Props {
   embarqueId: string;

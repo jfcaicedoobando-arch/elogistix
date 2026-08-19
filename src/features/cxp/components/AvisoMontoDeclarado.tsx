@@ -4,7 +4,7 @@
  */
 import { CheckCircle2, AlertTriangle, Info } from "lucide-react";
 import { formatCurrency } from "@/lib/formatters/numbers";
-import { cotejarMontoDeclarado } from "@/lib/domain/montoDeclarado";
+import { cotejarMontoDeclarado } from "@/features/cxp/domain/montoDeclarado";
 
 interface Props {
   montoDeclarado: number | null | undefined;

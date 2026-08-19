@@ -5,7 +5,7 @@
  */
 import { Clock, FileCode2, Inbox } from "lucide-react";
 import { KpiCard } from "@/components/shared/KpiCard";
-import { DIAS_ATRASO_BUZON, type ChipBuzon } from "@/lib/domain/facturasEntrantesBuzon";
+import { DIAS_ATRASO_BUZON, type ChipBuzon } from "@/features/bandejas/domain/facturasEntrantesBuzon";
 
 interface Props {
   total: number;

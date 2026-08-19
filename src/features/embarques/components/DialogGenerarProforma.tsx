@@ -6,7 +6,7 @@ import { PasoSeleccionConceptos } from "./proforma/PasoSeleccionConceptos";
 import { PasoConfirmacionProforma } from "./proforma/PasoConfirmacionProforma";
 import { AvisoTcRequerido } from "./proforma/AvisoTcRequerido";
 import type { Tables } from "@/types/db";
-import type { FiltroContenedor } from "@/lib/domain/conceptosPorContenedor";
+import type { FiltroContenedor } from "@/features/embarques/domain/conceptosPorContenedor";
 
 type ConceptoVenta = Tables<'conceptos_venta'>;
 type EmbarqueRow = Tables<'embarques'>;

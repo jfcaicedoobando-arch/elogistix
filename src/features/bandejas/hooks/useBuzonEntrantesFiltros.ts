@@ -8,7 +8,7 @@ import {
   resumirBuzon,
   type ChipBuzon,
   type OrdenBuzon,
-} from "@/lib/domain/facturasEntrantesBuzon";
+} from "@/features/bandejas/domain/facturasEntrantesBuzon";
 import type { FacturaEntranteRow } from "@/features/cxp/services";
 
 export function useBuzonEntrantesFiltros(pendientes: FacturaEntranteRow[]) {

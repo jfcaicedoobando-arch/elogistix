@@ -18,7 +18,7 @@ import { useTabsParam } from "@/hooks/shared/useTabsParam";
 const BUZON_TABS = ["pendientes", "capturadas", "rechazadas"] as const;
 import { notifyError } from "@/lib/ui/appFeedback";
 import { usePermissions } from "@/hooks/shared/usePermissions";
-import { type ChipBuzon } from "@/lib/domain/facturasEntrantesBuzon";
+import { type ChipBuzon } from "@/features/bandejas/domain/facturasEntrantesBuzon";
 import { BuzonEntrantesKpis } from "@/features/bandejas/components/BuzonEntrantesKpis";
 
 import {

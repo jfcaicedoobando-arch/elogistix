@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { formatCurrency } from "@/lib/formatters";
 import { formatDate } from "@/lib/formatters/dates";
-import { importeEntrante } from "@/lib/domain/facturasEntrantesBuzon";
+import { importeEntrante } from "@/features/bandejas/domain/facturasEntrantesBuzon";
 import { nombreDesdeEmail } from "@/lib/formatters/text";
 import type { FacturaEntranteRow as Fila } from "@/features/cxp/services";
 

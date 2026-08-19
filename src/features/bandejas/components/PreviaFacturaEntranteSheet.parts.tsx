@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PdfObjectViewer } from "@/components/shared/PdfObjectViewer";
 import { formatDate } from "@/lib/formatters/dates";
-import { antiguedadEntrante, entranteSinXml } from "@/lib/domain/facturasEntrantesBuzon";
+import { antiguedadEntrante, entranteSinXml } from "@/features/bandejas/domain/facturasEntrantesBuzon";
 import { etiquetaEstadoEntrante, varianteEstadoEntrante } from "@/lib/domain/facturasEntrantes";
 import type { FacturaEntranteRow } from "@/features/cxp/services";
 

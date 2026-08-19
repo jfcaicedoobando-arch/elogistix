@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { avisoProveedorEntrante } from "@/lib/domain/proveedorEntrante";
+import { avisoProveedorEntrante } from "@/features/embarques/domain/proveedorEntrante";
 import { dedupeProveedores } from "@/features/embarques/services/queries/proveedores";
 
 describe("avisoProveedorEntrante", () => {

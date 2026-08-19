@@ -1,9 +1,6 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Anchor, Ship, Package, Coins } from "lucide-react";
-import TabPuertos from "@/features/configuracion/components/TabPuertos";
-import TabNavieras from "@/features/configuracion/components/TabNavieras";
-import TabTiposContenedor from "@/features/configuracion/components/TabTiposContenedor";
-import TabTipoCambioDof from "@/features/configuracion/components/TabTipoCambioDof";
+import { TabPuertos, TabNavieras, TabTiposContenedor, TabTipoCambioDof } from "@/features/configuracion";
 
 export default function TabCatalogosGlobales() {
   return (

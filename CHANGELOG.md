@@ -1,5 +1,13 @@
 # Changelog
 
+## [13.674.0] - 2026-08-18
+
+### Auditoría de arquitectura — puntos 5 y 6
+- **Dueño claro admin / configuración (punto 5):** `configuracion` es el dueño de los ajustes del tenant y ahora publica un barril `src/features/configuracion/index.ts`. La consola de plataforma (`admin`) dejó de entrar a sus carpetas internas (14 deep imports en 4 archivos) y consume sólo esa superficie; `configuracion` sigue sin importar nada de `admin`.
+- **`lib/domain` sólo para lo compartido (punto 6):** se movieron 7 módulos que en realidad pertenecían a un único feature: `auth` → `features/auth/domain`, `conceptosPorContenedor` / `montoEntranteCotejo` / `proveedorEntrante` → `embarques/domain`, `facturasEntrantesBuzon` → `bandejas/domain`, `montoDeclarado` → `cxp/domain`, `tiposContenedorDefault` → `cotizacion/domain` (con sus pruebas).
+- **Guardrail nuevo:** `lib-domain-es-cross-cutting.test.ts` falla si un módulo de `src/lib/domain` queda con un solo feature consumidor, más `src/lib/domain/README.md` con el criterio. Analogía: `lib/domain` es la bodega común del edificio; lo que sólo usa un departamento se guarda dentro de ese departamento.
+- Se corrigieron 2 pruebas cuyos mocks apuntaban a rutas internas de `configuracion`.
+
 ## [13.673.0] - 2026-08-18
 
 ### Auditoría de arquitectura — punto 1: frontera pública del feature CxP

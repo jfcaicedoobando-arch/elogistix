@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { resolveLandingRoute } from "@/lib/domain/auth";
+import { resolveLandingRoute } from "@/features/auth/domain/auth";
 
 describe("resolveLandingRoute", () => {
   it("super_admin → /admin", () => {

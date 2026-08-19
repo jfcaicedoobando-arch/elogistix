@@ -9,12 +9,12 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { Save } from "lucide-react";
-import { useConfigGlobalCategoria, useUpdateConfiguracionGlobal } from "@/features/configuracion/hooks";
+import { useConfigGlobalCategoria, useUpdateConfiguracionGlobal } from "@/features/configuracion";
 import {
   parseConfigSafe,
   plataformaConfigSchema,
   seguridadConfigSchema,
-} from "@/features/configuracion/hooks";
+} from "@/features/configuracion";
 
 /**
  * v13.56.1 — Inicialización movida a `useEffect` para evitar mutar estado

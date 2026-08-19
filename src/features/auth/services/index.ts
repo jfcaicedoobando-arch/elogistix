@@ -1,11 +1,11 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { User } from "@supabase/supabase-js";
 import { AUTH_ERROR_MESSAGES } from "@/constants/authMessages";
-import type { PostLoginRole } from "@/lib/domain/auth";
+import type { PostLoginRole } from "@/features/auth/domain/auth";
 import { registrarActividad } from "@/services/bitacora/registrar";
 
-export { resolveLandingRoute } from "@/lib/domain/auth";
-export type { PostLoginRole } from "@/lib/domain/auth";
+export { resolveLandingRoute } from "@/features/auth/domain/auth";
+export type { PostLoginRole } from "@/features/auth/domain/auth";
 export * from "./session";
 export * from "./loginAudit";
 

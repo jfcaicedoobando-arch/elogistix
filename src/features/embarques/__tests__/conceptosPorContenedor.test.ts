@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   agruparPorContenedor,
   filtrarPorContenedor,
-} from "../conceptosPorContenedor";
+} from "../domain/conceptosPorContenedor";
 
 const mkC = (id: string, contenedor_id: string | null) => ({ id, contenedor_id });
 

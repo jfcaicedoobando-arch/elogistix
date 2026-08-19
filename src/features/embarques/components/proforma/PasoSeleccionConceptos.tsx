@@ -7,7 +7,7 @@ import {
 import { buildContenedorLabelMap } from "./PasoSeleccionConceptos.helpers";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 import { ListFilter } from "lucide-react";
-import type { FiltroContenedor } from "@/lib/domain/conceptosPorContenedor";
+import type { FiltroContenedor } from "@/features/embarques/domain/conceptosPorContenedor";
 import type { Tables } from "@/types/db";
 
 type ConceptoVenta = Tables<"conceptos_venta">;
