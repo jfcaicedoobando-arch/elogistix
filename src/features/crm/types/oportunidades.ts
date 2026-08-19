@@ -4,10 +4,11 @@
  * crear ciclos ni violar la regla `domain → services` prohibida.
  */
 import type { Database } from "@/integrations/supabase/types";
+import type { Moneda } from "@/types/db";
 
 export type CrmOportunidadRow = Database["public"]["Tables"]["crm_oportunidades"]["Row"];
 // Ola 19 · paso 5: alias central, no se redeclara la unión.
-export type { Moneda } from "@/types/db";
+export type { Moneda };
 
 export type OportunidadInput = {
   nombre: string;
