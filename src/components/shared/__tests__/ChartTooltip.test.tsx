@@ -22,7 +22,7 @@ describe("ChartTooltip (Ola D · #18)", () => {
       />,
     );
     expect(screen.getByText("ago")).toBeInTheDocument();
-    expect(screen.getByText("1,234.5")).toBeInTheDocument();
+    expect(screen.getByText("1,234.50")).toBeInTheDocument();
     expect(screen.getByText("-900")).toBeInTheDocument();
   });
 
