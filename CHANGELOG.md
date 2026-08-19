@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.678.0] - 2026-08-19
+### Crítico · un solo cálculo de días
+- Los "días vencidos / días de demora" ya no se calculan a mano en cada pantalla: 20 sitios (cartera, CxP, CRM, tracking, expediente, PDF de estado de cuenta, auditoría, tarifas, seguros) usan `diffDiasCalendario` / `diasVencidos` de `src/lib/date/dateOnly.ts`, anclados a medianoche local y con `Math.round` (inmune al cambio de horario).
+- Guardrail `src/__tests__/architecture/dias-calendario-central.test.ts`: prohíbe volver a dividir entre un día en milisegundos; sólo quedan excepciones documentadas (semana ISO, serial de Excel, vigencia anclada a CDMX y texto "hace N días").
+- Corrección de prueba: `rankingLabels.test.ts` armaba las fechas con `toISOString()` (UTC), lo que corría un día en CDMX por la tarde.
+
 ## [13.677.0] - 2026-08-19
 - Ola 19 · paso 6: catálogo único de cubetas de antigüedad. Estado de cuenta, CxC, CxP y proveedores usan `src/lib/aging/buckets.ts` (rangos, etiquetas y colores); los encabezados de los CSV se derivan del catálogo.
 - Ola 19 · paso 7: los topes de consulta (500/1000/2000/5000) ahora son constantes con nombre en `src/constants/queryCaps.ts`, migrados en 33 servicios, con guardrail que prohíbe `.limit(>=500)` literal.
