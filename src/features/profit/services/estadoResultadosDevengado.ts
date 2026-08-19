@@ -139,7 +139,11 @@ async function modoPorFacturaDeNotas(
   const faltantes = idsNc.filter((id) => !expPorFactura.has(id));
   if (faltantes.length > 0) {
     const data = await unwrapOr(
-      supabase.from("facturas").select("id, expediente").in("id", faltantes),
+      supabase
+        .from("facturas")
+        .select("id, expediente")
+        .in("id", faltantes)
+        .is("deleted_at", null),
       [],
     );
     for (const row of data as { id: string; expediente: string | null }[]) {

@@ -8,7 +8,7 @@
 import type { Tables, Database } from "@/integrations/supabase/types";
 import { calcularSaldoFactura } from "@/lib/financial/saldoFactura";
 import { diasVencidos } from "@/lib/date/dateOnly";
-import { estaPorVencer } from "@/lib/domain/porVencer";
+import { estaPorVencer } from "@/features/facturacion/domain/porVencer";
 
 export type FacturaRow = Tables<"facturas">;
 export type Moneda = Database["public"]["Enums"]["moneda"];

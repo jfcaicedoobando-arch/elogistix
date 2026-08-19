@@ -17,7 +17,7 @@ import { orIlike } from "@/lib/search/ilike";
 import { calcularSaldoFactura } from "@/lib/financial/saldoFactura";
 import { assertNotTruncated } from "@/lib/supabase/assertNotTruncated";
 import { diasVencidos } from "@/lib/date/dateOnly";
-import { estaPorVencer } from "@/lib/domain/porVencer";
+import { estaPorVencer } from "@/features/facturacion/domain/porVencer";
 
 // Re-export de agregados puros (extraídos a `cobranzaAggregates.ts` en 12.61.18).
 export {
