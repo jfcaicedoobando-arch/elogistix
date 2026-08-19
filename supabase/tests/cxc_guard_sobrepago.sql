@@ -40,6 +40,18 @@ BEGIN
   VALUES
     (v_fac, v_org, v_cli, 'Test Cli', 'F-CXC-GUARD-01',
      CURRENT_DATE, CURRENT_DATE + 30, 'MXN', 3000, 0, 3000, 'Emitida');
+
+  -- Factura auxiliar SIN pagos, exclusiva del CASO 7 (tenant mismatch).
+  -- La factura principal queda saldada tras el CASO 5 y en ese estado el guard
+  -- `zz_pago_factura_viva` dispara LC_PAGO_SOBREPAGO antes de que el guard de
+  -- tenant (`zz_pagos_factura_no_sobrepago`) alcance a evaluarse.
+  INSERT INTO public.facturas
+    (id, organization_id, cliente_id, cliente_nombre, numero,
+     fecha_emision, fecha_vencimiento, moneda, subtotal, iva, total, estado)
+  VALUES
+    ('33333333-3333-3333-3333-333333333307', v_org, v_cli, 'Test Cli', 'F-CXC-GUARD-07',
+     CURRENT_DATE, CURRENT_DATE + 30, 'MXN', 3000, 0, 3000, 'Emitida');
+
 END
 $fixture$ LANGUAGE plpgsql;
 
