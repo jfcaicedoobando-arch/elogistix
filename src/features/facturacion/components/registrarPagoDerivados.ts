@@ -106,6 +106,7 @@ export function derivarEstadoPago(a: {
     excede,
     tcBloqueado,
     tcRespaldo,
+    cruceNoSoportado,
     errorFecha,
     invalido: montoNum <= 0 || excede || tcBloqueado || errorFecha !== null,
   };
