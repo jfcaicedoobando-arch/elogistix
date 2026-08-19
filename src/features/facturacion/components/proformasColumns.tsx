@@ -7,7 +7,6 @@
  * Fase 3 (Proforma → Factura): añadida columna de selección (`_select`) que
  * permite escoger varias proformas para fusionarlas en una sola factura.
  */
-import { Badge } from "@/components/ui/badge";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { defineColumns, type ColumnDef } from "@/components/shared/DataTable";
