@@ -1,6 +1,6 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, it, expect, vi } from "vitest";
-import { PortalFiltersBar } from "@/components/shared/PortalFiltersBar";
+import { PortalFiltersBar } from "@/features/portal/components/filtros/PortalFiltersBar";
 
 describe("<PortalFiltersBar />", () => {
   it("renderiza search y llama onSearchChange", async () => {

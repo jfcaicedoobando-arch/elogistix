@@ -8,7 +8,7 @@ import {
 import { DetailTableHead, DetailTableRow } from "@/components/shared/DetailTable";
 import { formatCurrency } from "@/lib/formatters";
 import { calcularUtilidad, calcularMargen } from "@/lib/financial/financialUtils";
-import { ProfitBadge } from "@/components/shared/ProfitBadge";
+import { ProfitBadge } from "@/features/cotizacion/components/ProfitBadge";
 import type { TotalesPL } from "@/lib/financial/profitUtils";
 
 interface FilaCostoDetalle {

@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Trash2, PenLine } from "lucide-react";
 import { formatCurrency, formatNumber } from "@/lib/formatters";
 import { calcularUtilidad, calcularMargen } from "@/lib/financial/financialUtils";
-import { ProfitBadge } from "@/components/shared/ProfitBadge";
+import { ProfitBadge } from "@/features/cotizacion/components/ProfitBadge";
 import { ProductoServicioSelect } from "@/features/cotizacion/components/conceptos/ProductoServicioSelect";
 import { UnidadMedidaSelect } from "@/features/cotizacion/components/conceptos/UnidadMedidaSelect";
 import { tasaDesdeTipoIva } from "@/features/cotizacion/hooks/useProductosCatalogo";

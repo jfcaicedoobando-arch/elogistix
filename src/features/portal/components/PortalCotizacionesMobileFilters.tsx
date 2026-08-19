@@ -3,7 +3,7 @@
  * DRY Lote 8b: shell compartido en `PortalFilterSheet`.
  */
 import { Filter } from "lucide-react";
-import { PortalFilterSheet } from "@/components/shared/PortalFilterSheet";
+import { PortalFilterSheet } from "@/features/portal/components/filtros/PortalFilterSheet";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
