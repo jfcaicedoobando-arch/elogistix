@@ -2,7 +2,7 @@ import { useMemo, useCallback } from "react";
 import { useListPageState, useDebounce } from "@/hooks/shared";
 import { exportToCsv } from "@/generators/exportCsv";
 import { exportarLayoutContable } from "@/generators/layoutContable";
-import { useFacturasListado, useGastosPendientes, useMarcarCostoPagado } from "@/features/facturacion/hooks/useFacturas";
+import { useFacturasListado } from "@/features/facturacion/hooks/useFacturas";
 import { useRegistrarActividad } from "@/hooks/shared";
 import { usePermissions } from "@/hooks/shared";
 
@@ -51,9 +51,6 @@ export function useFacturacionPageController(opts?: {
   });
   const facturas = useMemo(() => listado?.data ?? [], [listado]);
   const totalCount = listado?.count ?? 0;
-  const { data: gastosPendientes = [], isLoading: loadingGastos } = useGastosPendientes();
-
-  const marcarPagado = useMarcarCostoPagado();
   const { canEdit } = usePermissions();
   const registrarActividad = useRegistrarActividad();
 
@@ -80,29 +77,9 @@ export function useFacturacionPageController(opts?: {
     });
   }, [filterCliente, facturas, isInRange]);
 
-  const gastosFiltrados = useMemo(
-    () => gastosPendientes.filter((g) => isInRange(g.fecha_vencimiento)),
-    [gastosPendientes, isInRange],
-  );
-
   const paginatedFacturas = filtered;
   const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
 
-
-
-  // 13.85.10 — Toasts viven en `useMarcarCostoPagado`. Aquí sólo registramos actividad.
-  const handleMarcarPagado = useCallback((id: string) => {
-    marcarPagado.mutate({ id }, {
-      onSuccess: () => {
-        registrarActividad.mutate({
-          accion: 'editar',
-          modulo: 'facturas',
-          entidad_id: id,
-          entidad_nombre: 'Gasto marcado como pagado',
-        });
-      },
-    });
-  }, [marcarPagado, registrarActividad]);
 
 
   const exportarFacturasCsv = useCallback(() => {
@@ -158,18 +135,14 @@ export function useFacturacionPageController(opts?: {
     paginatedFacturas,
     totalPages,
     totalCount,
-    gastosPendientes: gastosFiltrados,
     clientesDisponibles,
 
     loadingFacturas,
     // P1-1: la tabla debe pintar error + retry, no un empty-state engañoso.
     errorFacturas,
     refetchFacturas: () => void refetchFacturas(),
-    loadingGastos,
     // permisos / mutaciones
     canEdit,
-    marcarPagadoPending: marcarPagado.isPending,
-    handleMarcarPagado,
     exportarFacturasCsv,
     exportarLayoutContable: exportarLayoutContableHandler,
   };

@@ -100,28 +100,18 @@ export default function CotizacionDetalle() {
               cotizacion={cotizacion}
               id={id!}
               canEdit={canEdit}
-              tasaIva={tasaIva}
-              embarquesVinculados={embarquesVinculados}
-              conceptosVentaUSD={conceptosVentaUSD}
-              conceptosVentaMXN={conceptosVentaMXN}
-              totalUSD={totalUSD}
-              subtotalMXN={subtotalMXN}
-              ivaMXN={ivaMXN}
-              totalMXN={totalMXN}
-              conceptosDescartados={conceptosDescartados}
-              showConvertir={showConvertir}
-              setShowConvertir={setShowConvertir}
-              clienteForm={clienteForm}
-              setClienteForm={setClienteForm}
-              handleCambiarEstado={handleCambiarEstado}
-              abrirDialogConvertir={abrirDialogConvertir}
-              handleConvertir={handleConvertir}
-              convertirProspecto={convertirProspecto}
-              navigate={navigate}
               effectiveRole={effectiveRole as AppRole | null}
+              embarquesVinculados={embarquesVinculados}
               envios={envios}
-              enviarOpen={enviarOpen}
-              setEnviarOpen={setEnviarOpen}
+              totales={{
+                tasaIva, conceptosVentaUSD, conceptosVentaMXN,
+                totalUSD, subtotalMXN, ivaMXN, totalMXN, conceptosDescartados,
+              }}
+              dialogos={{ showConvertir, setShowConvertir, enviarOpen, setEnviarOpen }}
+              acciones={{
+                clienteForm, setClienteForm, handleCambiarEstado,
+                abrirDialogConvertir, handleConvertir, convertirProspecto, navigate,
+              }}
             />
           </>
         )}

@@ -6,7 +6,7 @@ const mock = await vi.hoisted(async () => {
 });
 vi.mock("@/integrations/supabase/client", () => ({ supabase: mock.supabase }));
 
-import { fetchFacturasListado, fetchFacturas, marcarCostoPagado, fetchGastosPendientes } from "../facturasCrud";
+import { fetchFacturasListado, fetchFacturas } from "../facturasCrud";
 
 describe("facturasCrud service", () => {
   beforeEach(() => { mock.tableCalls.length = 0; mock.rpcCalls.length = 0; });
@@ -65,37 +65,8 @@ describe("facturasCrud service", () => {
     expect((mock.rpcCalls[0].args as Record<string, unknown>).p_organization_id).toBeUndefined();
   });
 
-  it("marcarCostoPagado update con estado Pagado + fecha hoy + referencia", async () => {
-    mock.setTableResult("conceptos_costo", { data: null, error: null });
-    await marcarCostoPagado({ id: "c1", referenciaPago: "REF" });
-    const call = mock.tableCalls[0];
-    const upd = call.opArgs[call.ops.indexOf("update")]?.[0] as Record<string, string | null>;
-    expect(upd.estado_liquidacion).toBe("Pagado");
-    expect(upd.referencia_pago).toBe("REF");
-    expect(upd.fecha_pago).toMatch(/^\d{4}-\d{2}-\d{2}$/);
-  });
 
-  it("marcarCostoPagado deja referencia_pago=null cuando no se pasa", async () => {
-    mock.setTableResult("conceptos_costo", { data: null, error: null });
-    await marcarCostoPagado({ id: "c1" });
-    const call = mock.tableCalls[0];
-    const upd = call.opArgs[call.ops.indexOf("update")]?.[0] as Record<string, string | null>;
-    expect(upd.referencia_pago).toBeNull();
-  });
 
-  it("marcarCostoPagado propaga error del update", async () => {
-    mock.setTableResult("conceptos_costo", { data: null, error: new Error("perm") });
-    await expect(marcarCostoPagado({ id: "c1" })).rejects.toThrow("perm");
-  });
 
-  it("fetchGastosPendientes devuelve la data", async () => {
-    mock.setTableResult("conceptos_costo", { data: [{ id: "1" }], error: null });
-    const r = await fetchGastosPendientes();
-    expect(r).toEqual([{ id: "1" }]);
-  });
 
-  it("fetchGastosPendientes propaga error de Supabase", async () => {
-    mock.setTableResult("conceptos_costo", { data: null, error: new Error("x") });
-    await expect(fetchGastosPendientes()).rejects.toThrow("x");
-  });
 });

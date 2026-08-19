@@ -27,12 +27,9 @@ import { useClienteAutorizacion } from "@/features/cliente/hooks/useClienteAutor
 
 type DetalleState = ReturnType<typeof useCotizacionDetalleState>;
 
-interface Props {
-  cotizacion: NonNullable<DetalleState["cotizacion"]>;
-  id: string;
-  canEdit: boolean;
+/** Importes ya calculados de la cotización (auditoría 2026-08-18, punto 7). */
+export interface CotizacionDetalleTotales {
   tasaIva: number;
-  embarquesVinculados: DetalleState["embarquesVinculados"];
   conceptosVentaUSD: DetalleState["conceptosVentaUSD"];
   conceptosVentaMXN: DetalleState["conceptosVentaMXN"];
   totalUSD: number;
@@ -40,8 +37,18 @@ interface Props {
   ivaMXN: number;
   totalMXN: number;
   conceptosDescartados: number;
+}
+
+/** Apertura/cierre de los diálogos de la pantalla. */
+export interface CotizacionDetalleDialogos {
   showConvertir: boolean;
   setShowConvertir: (v: boolean) => void;
+  enviarOpen: boolean;
+  setEnviarOpen: (v: boolean) => void;
+}
+
+/** Acciones y estado de formulario que expone el controlador de la pantalla. */
+interface CotizacionDetalleAcciones {
   clienteForm: DetalleState["clienteForm"];
   setClienteForm: DetalleState["setClienteForm"];
   handleCambiarEstado: DetalleState["handleCambiarEstado"];
@@ -49,20 +56,34 @@ interface Props {
   handleConvertir: DetalleState["handleConvertir"];
   convertirProspecto: DetalleState["convertirProspecto"];
   navigate: DetalleState["navigate"];
+}
+
+interface Props {
+  cotizacion: NonNullable<DetalleState["cotizacion"]>;
+  id: string;
+  canEdit: boolean;
   effectiveRole: AppRole | null;
+  embarquesVinculados: DetalleState["embarquesVinculados"];
   envios: EnvioRow[];
-  enviarOpen: boolean;
-  setEnviarOpen: (v: boolean) => void;
+  totales: CotizacionDetalleTotales;
+  dialogos: CotizacionDetalleDialogos;
+  acciones: CotizacionDetalleAcciones;
 }
 
 /** Renderiza el cuerpo de la vista de detalle (todo lo que va bajo el header). */
 export function CotizacionDetalleContenido({
-  cotizacion, id, canEdit, tasaIva, embarquesVinculados,
-  conceptosVentaUSD, conceptosVentaMXN, totalUSD, subtotalMXN, ivaMXN, totalMXN, conceptosDescartados,
-  showConvertir, setShowConvertir, clienteForm, setClienteForm,
-  handleCambiarEstado, abrirDialogConvertir, handleConvertir, convertirProspecto,
-  navigate, effectiveRole, envios, enviarOpen, setEnviarOpen,
+  cotizacion, id, canEdit, effectiveRole, embarquesVinculados, envios,
+  totales, dialogos, acciones,
 }: Props) {
+  const {
+    tasaIva, conceptosVentaUSD, conceptosVentaMXN,
+    totalUSD, subtotalMXN, ivaMXN, totalMXN, conceptosDescartados,
+  } = totales;
+  const { showConvertir, setShowConvertir, enviarOpen, setEnviarOpen } = dialogos;
+  const {
+    clienteForm, setClienteForm, handleCambiarEstado,
+    abrirDialogConvertir, handleConvertir, convertirProspecto, navigate,
+  } = acciones;
   const { user } = useAuth();
   const { autorizacion } = useClienteAutorizacion(
     (cotizacion as { cliente_id?: string | null }).cliente_id ?? null,

@@ -64,27 +64,8 @@ export function HallazgosTablaPaginada({
         </div>
       )}
       <HallazgosFiltros
-        search={state.search}
-        filtroRegla={state.filtroRegla}
-        filtroSev={state.filtroSev}
-        filtroCliente={state.filtroCliente}
-        filtroRevision={state.filtroRevision}
-        filtroResponsable={state.filtroResponsable}
-        etaDesde={state.etaDesde}
-        etaHasta={state.etaHasta}
-        clientes={state.clientes}
-        hayFiltros={state.hayFiltros}
-        filtrados={state.filtrados.length}
-        total={state.totalHallazgos}
-        setSearch={state.setSearch}
-        setFiltroRegla={state.setFiltroRegla}
-        setFiltroSev={state.setFiltroSev}
-        setFiltroCliente={state.setFiltroCliente}
-        setFiltroRevision={state.setFiltroRevision}
-        setFiltroResponsable={state.setFiltroResponsable}
-        setEtaDesde={state.setEtaDesde}
-        setEtaHasta={state.setEtaHasta}
-        limpiar={state.limpiar}
+        filtros={state}
+        conteo={{ filtrados: state.filtrados.length, total: state.totalHallazgos }}
       />
 
       <HallazgosBulkBar

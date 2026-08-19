@@ -106,31 +106,31 @@ export function EmbarqueDetalleHeader({
         }
         trailing={
           <EmbarqueDetalleHeaderActions
-        expediente={labelExpediente(embarque.expediente, embarque.id)}
-        estadoVisual={estadoVisual}
-        siguienteEstado={siguienteEstado}
-        canEdit={canEdit}
-        avanzandoEstado={avanzarEstado.isPending}
-        trackingPending={trackingPending}
-        embarqueId={embarqueId}
-        puedeReabrir={puedeReabrir}
-        reabriendoEstado={reabrirEmbarque.isPending}
-        docsFaltantes={docsFaltantes}
-        bloqueadoPorDocs={bloqueadoPorDocs}
-        onAvanzarEstado={handleAvanzarEstado}
-        onCompartirTracking={onCompartirTracking}
-        onAbrirEliminar={onAbrirEliminar}
-        onAbrirDuplicar={onAbrirDuplicar}
-        onReabrir={handleReabrir}
-        cierreEsSiguiente={cierreEsSiguiente}
-        rolPuedeCerrar={rolPuedeCerrar}
-        cierrePuedeAvanzar={cierrePuedeAvanzar}
-        cierreMotivoBloqueo={cierreMotivoBloqueo}
-        onIrACierre={onIrACierre}
-        onIrADocumentos={onIrADocumentos}
-        onCancelar={handleCancelar}
-        cancelandoEmbarque={avanzarEstado.isPending}
-        tieneDeudaPendiente={tieneDeudaPendiente}
+            contexto={{
+              expediente: labelExpediente(embarque.expediente, embarque.id),
+              estadoVisual, siguienteEstado, canEdit, embarqueId,
+            }}
+            estado={{
+              avanzandoEstado: avanzarEstado.isPending,
+              trackingPending,
+              puedeReabrir,
+              reabriendoEstado: reabrirEmbarque.isPending,
+              docsFaltantes,
+              bloqueadoPorDocs,
+              cancelandoEmbarque: avanzarEstado.isPending,
+              tieneDeudaPendiente,
+            }}
+            cierre={{ cierreEsSiguiente, rolPuedeCerrar, cierrePuedeAvanzar, cierreMotivoBloqueo }}
+            acciones={{
+              onAvanzarEstado: handleAvanzarEstado,
+              onCompartirTracking,
+              onAbrirEliminar,
+              onAbrirDuplicar,
+              onReabrir: handleReabrir,
+              onIrACierre,
+              onIrADocumentos,
+              onCancelar: handleCancelar,
+            }}
           />
         }
       />

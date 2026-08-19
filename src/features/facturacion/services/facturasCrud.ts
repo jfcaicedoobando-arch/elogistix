@@ -1,11 +1,9 @@
 /**
- * Servicio de facturas: listado paginado y operaciones sobre conceptos de costo.
+ * Servicio de facturas: listado paginado de la bandeja de Facturación.
  * Extraído de `index.ts` (Auditoría Paso 2: purga de barrels).
  */
 import { supabase } from "@/integrations/supabase/client";
-import { unwrap, unwrapOr, run } from "@/lib/supabase/response";
-import { assertNotTruncated } from "@/lib/supabase/assertNotTruncated";
-import { hoyMx } from "@/lib/date/mx";
+import { unwrap } from "@/lib/supabase/response";
 import type { Tables } from "@/integrations/supabase/types";
 
 
@@ -98,33 +96,4 @@ export async function fetchFacturas(organizationId: string | null): Promise<Fact
   return data;
 }
 
-export async function marcarCostoPagado(input: { id: string; referenciaPago?: string }): Promise<void> {
-  await run(
-    supabase
-      .from("conceptos_costo")
-      .update({
-        estado_liquidacion: "Pagado",
-        fecha_pago: hoyMx(),
-        referencia_pago: input.referenciaPago || null,
-      })
-      .eq("id", input.id),
-  );
-}
-
-// FIX C3 (S6-09): cap explícito verificado por assertNotTruncated.
-const LIMITE_GASTOS_PENDIENTES = 2000;
-
-export async function fetchGastosPendientes() {
-  const filas = await unwrapOr(
-    supabase
-      .from("conceptos_costo")
-      .select("*, embarques!conceptos_costo_embarque_id_fkey(expediente)")
-      .eq("estado_liquidacion", "Pendiente")
-      .is("deleted_at", null)
-      .order("fecha_vencimiento", { ascending: true })
-      .limit(LIMITE_GASTOS_PENDIENTES),
-    [],
-  );
-  return assertNotTruncated(filas, LIMITE_GASTOS_PENDIENTES, "facturacion.fetchGastosPendientes");
-}
 
