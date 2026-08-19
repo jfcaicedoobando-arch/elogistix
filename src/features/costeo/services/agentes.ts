@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { CosteoAgente } from "@/features/costeo/types";
 import { unwrap, unwrapOr, run } from "@/lib/supabase/response";
 import { registrarActividad } from "@/services/bitacora/registrar";
+import { CAP_LISTA } from "@/constants/queryCaps";
 
 export async function fetchCosteoAgentes(organizationId: string): Promise<CosteoAgente[]> {
   return unwrapOr(
@@ -100,7 +101,7 @@ export async function fetchProveedoresPorTipo(
       .eq("tipo", tipo)
       .is("deleted_at", null)
       .order("nombre", { ascending: true })
-      .limit(500),
+      .limit(CAP_LISTA),
     [],
   ) as Promise<ProveedorOpcion[]>;
 }

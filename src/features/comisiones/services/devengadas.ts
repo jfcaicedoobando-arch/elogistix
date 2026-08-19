@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
 import { ymMx } from "@/lib/date/mx";
 import { fetchAvailableUsers } from "@/features/admin/services/usuario/availableUsers";
+import { CAP_LISTA } from "@/constants/queryCaps";
 
 export type ComisionDevengadaRow = Tables<"comisiones_devengadas">;
 export type EstadoComision = ComisionDevengadaRow["estado"];
@@ -85,7 +86,7 @@ export async function fetchComisionesDevengadas(
     `)
     .is("deleted_at", null)
     .order("created_at", { ascending: false })
-    .limit(500);
+    .limit(CAP_LISTA);
 
   if (filtros.vendedora_id && filtros.vendedora_id !== "todas") {
     q = q.eq("vendedora_id", filtros.vendedora_id);

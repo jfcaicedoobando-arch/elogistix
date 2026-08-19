@@ -16,6 +16,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { assertNotTruncated } from "@/lib/supabase/assertNotTruncated";
 import { ESTADOS_ACTIVOS } from "@/features/embarques/constants/embarqueConstants";
+import { CAP_REPORTE } from "@/constants/queryCaps";
 
 export interface OperadorEmbarqueLite {
   id: string;
@@ -95,7 +96,7 @@ export async function fetchSinTrackingOperador(email: string): Promise<SinTracki
     .in("embarque_id", ids)
     .order("fecha", { ascending: false })
     // EC-05: límite defensivo (200 embarques x ~10 eventos esperados).
-    .limit(2000);
+    .limit(CAP_REPORTE);
   if (eErr) throw eErr;
   assertNotTruncated(eventos, 2000, "operador.eventosTracking");
   const ultimo = new Map<string, string>();

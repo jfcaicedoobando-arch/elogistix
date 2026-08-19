@@ -3,6 +3,7 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import type { CosteoTarifa, CosteoTarifaRecargo, CosteoTarifaRow } from "@/features/costeo/types";
+import { CAP_LISTA } from "@/constants/queryCaps";
 
 // O8 (auditoría 2026-07-29): `*` → columnas explícitas. La lista cubre el
 // listado agrupado/tabla, KPIs, filtros y `buildInitialFromTarifa`
@@ -69,7 +70,7 @@ export async function fetchCosteoTarifas(
     .select(SELECT)
     .eq("organization_id", organizationId)
     .order("vigente_desde", { ascending: false })
-    .limit(500);
+    .limit(CAP_LISTA);
   if (filters.estado && filters.estado !== "todas") q = q.eq("estado", filters.estado);
   if (filters.agenteId) q = q.eq("agente_id", filters.agenteId);
   if (filters.tipoContenedorId) q = q.eq("tipo_contenedor_id", filters.tipoContenedorId);

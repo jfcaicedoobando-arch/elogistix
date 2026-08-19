@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { unwrapOr } from "@/lib/supabase/response";
 import type { FacturaProgramable } from "@/features/tesoreria/domain/pagosProgramados";
 import { sumarPagosEnMonedaFactura, type PagoCxpParcial } from "@/features/cxp/services";
+import { CAP_POSTGREST } from "@/constants/queryCaps";
 
 export interface FacturaProgramableRow extends FacturaProgramable {
   estado: string;
@@ -37,7 +38,7 @@ export async function fetchPagosProgramables(): Promise<FacturaProgramableRow[]>
       .is("deleted_at", null)
       .neq("estado", "Cancelada")
       .order("fecha_vencimiento", { ascending: true, nullsFirst: false })
-      .limit(1000),
+      .limit(CAP_POSTGREST),
     [] as RowCruda[],
     // SAFE-CAST: el select con join anidado `pagos_proveedor(...)` produce un
     // shape sintetizado por PostgREST que el tipo generado de Supabase no

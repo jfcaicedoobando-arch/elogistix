@@ -8,6 +8,7 @@
  * filtro funcional equivalente es `fecha_pago IS NULL` (pendientes).
  */
 import { supabase } from "@/integrations/supabase/client";
+import { CAP_LISTA } from "@/constants/queryCaps";
 import {
   calcularFlujoProyectado,
   type CobranzaRow,
@@ -30,7 +31,7 @@ export async function fetchLiquidacionesPendientes(
     .from("liquidaciones_comision")
     .select("id, vendedora_id, periodo, total_mxn, fecha_pago, created_at")
     .is("fecha_pago", null)
-    .limit(500);
+    .limit(CAP_LISTA);
   if (organizationId) q = q.eq("organization_id", organizationId);
   const { data, error } = await q;
   if (error) throw error;

@@ -4,6 +4,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
 import { registrarActividad } from "@/services/bitacora/registrar";
+import { CAP_LISTA } from "@/constants/queryCaps";
 
 export type PresupuestoMensualRow = Tables<"presupuesto_mensual">;
 
@@ -19,7 +20,7 @@ export async function fetchPresupuestoMensualAnio(
     .select("*")
     .gte("periodo", desde)
     .lte("periodo", hasta)
-    .limit(500);
+    .limit(CAP_LISTA);
   // Filtro explícito por organización — consistente con el resto del módulo
   // y defensa en profundidad además de RLS.
   if (organizationId) q = q.eq("organization_id", organizationId);

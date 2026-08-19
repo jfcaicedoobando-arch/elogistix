@@ -16,6 +16,7 @@
  * Sólo I/O — la orquestación vive en `hooks/useProformasListas.ts`.
  */
 import { supabase } from "@/integrations/supabase/client";
+import { CAP_LISTA } from "@/constants/queryCaps";
 
 export interface FilaProformaLista {
   id: string;
@@ -37,7 +38,7 @@ export async function fetchProformasListas(orgId: string): Promise<FilaProformaL
     .is("factura_id", null)
     .is("deleted_at", null)
     .order("created_at", { ascending: false })
-    .limit(500);
+    .limit(CAP_LISTA);
   if (error) throw error;
   return (data ?? []) as FilaProformaLista[];
 }

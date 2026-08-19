@@ -4,15 +4,16 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import { fetchCostosConFactura } from "@/features/embarques/services/costosConFactura";
+import { CAP_LISTA } from "@/constants/queryCaps";
 
 export async function fetchProveedoresForSelect(organizationId: string | null) {
-  // 12.34.0: .limit(500) defensivo (evita cap silencioso de 1000 PostgREST).
+  // 12.34.0: .limit(CAP_LISTA) defensivo (evita cap silencioso de 1000 PostgREST).
   let query = supabase
     .from("proveedores")
     .select("id, nombre")
     .is("deleted_at", null)
     .order("nombre")
-    .limit(500);
+    .limit(CAP_LISTA);
   if (organizationId) query = query.eq("organization_id", organizationId);
   const { data, error } = await query;
   if (error) throw error;
@@ -36,7 +37,7 @@ export async function fetchProveedoresDelEmbarque(
     .select("proveedor_id, proveedor_nombre")
     .eq("embarque_id", embarqueId)
     .is("deleted_at", null)
-    .limit(500);
+    .limit(CAP_LISTA);
   if (error) throw error;
   return dedupeProveedores(data ?? []);
 }
@@ -72,7 +73,7 @@ export async function fetchCostosProveedorEmbarque(
     .eq("embarque_id", embarqueId)
     .eq("proveedor_id", proveedorId)
     .is("deleted_at", null)
-    .limit(500);
+    .limit(CAP_LISTA);
   if (error) throw error;
   return sumarPorMoneda(data ?? []);
 }

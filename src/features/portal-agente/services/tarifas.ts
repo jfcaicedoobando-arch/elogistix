@@ -4,6 +4,7 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import { unwrapOr } from "@/lib/supabase/response";
+import { CAP_LISTA } from "@/constants/queryCaps";
 
 export interface AgenteTarifaRow {
   id: string;
@@ -76,7 +77,7 @@ export async function fetchAgenteTarifas(): Promise<AgenteTarifaRow[]> {
       )
     `)
       .order("vigente_desde", { ascending: false })
-      .limit(500),
+      .limit(CAP_LISTA),
     [],
   );
   // SAFE-CAST: alias de relaciones — el cliente generado infiere never en joins anidados.

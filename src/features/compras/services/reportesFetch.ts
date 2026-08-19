@@ -2,6 +2,7 @@
  * Fetch + tipos para el reporte de compras — extraídos en v13.182.0 (Wave 2).
  */
 import { supabase } from "@/integrations/supabase/client";
+import { CAP_REPORTE } from "@/constants/queryCaps";
 
 export interface FacturaLite {
   id: string;
@@ -21,7 +22,7 @@ export async function fetchFacturasReporte(desde: string, hasta: string): Promis
     .gte("fecha_emision", desde)
     .lte("fecha_emision", hasta)
     .order("fecha_emision", { ascending: true })
-    .limit(2000);
+    .limit(CAP_REPORTE);
   if (error) throw error;
   // SAFE-CAST: PostgREST devuelve `proveedores` como relación anidada.
   const raw = (data ?? []) as unknown as Array<{

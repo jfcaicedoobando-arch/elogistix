@@ -5,6 +5,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { FECHA_INICIO_TIMBRADO_SISTEMA } from "@/features/facturacion/domain/facturaFlags";
 import { warnIfTruncated } from "@/lib/supabase/assertNotTruncated";
+import { CAP_LISTA } from "@/constants/queryCaps";
 
 const LIMITE_POR_TIMBRAR = 500;
 const LIMITE_TIMBRADAS = 1000;
@@ -114,7 +115,7 @@ export async function fetchPagosRepPendientes(orgId: string): Promise<FilaRepPen
     // A6: los pagos eliminados no deben aparecer en la bandeja de REP.
     .is("deleted_at", null)
     .order("fecha_pago", { ascending: false })
-    .limit(500);
+    .limit(CAP_LISTA);
   if (error) throw error;
   type Row = {
     id: string; factura_id: string; fecha_pago: string;

@@ -15,6 +15,7 @@ import {
   type Joined,
 } from "./proveedorFacturas.helpers";
 import type { FacturaCxP, FetchCxPFiltros } from "./proveedorFacturas.types";
+import { CAP_REPORTE } from "@/constants/queryCaps";
 
 export type {
   ProveedorFacturaRow,
@@ -78,7 +79,7 @@ function aplicarFiltrosServidor<Q extends QueryFiltrable<Q>>(q: Q, filtros: Fetc
 }
 
 export async function fetchFacturasCxP(filtros: FetchCxPFiltros = {}): Promise<FacturaCxP[]> {
-  // α.1 — Antes había .limit(2000) hardcoded → con 30 facturas/día se llenaba
+  // α.1 — Antes había .limit(CAP_REPORTE) hardcoded → con 30 facturas/día se llenaba
   // en ~67 días y las nuevas dejaban de aparecer. Ahora paginado con .range().
   const [from, to] = rangoCxP(filtros);
 

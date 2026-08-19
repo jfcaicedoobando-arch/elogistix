@@ -7,6 +7,7 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import { registrarActividad } from "@/services/bitacora/registrar";
+import { CAP_LISTA } from "@/constants/queryCaps";
 
 export interface ProveedorMatch {
   id: string;
@@ -90,7 +91,7 @@ export async function buscarProveedorPorNombreEnOrg(
     .select("id, nombre")
     .eq("organization_id", organizationId)
     .is("deleted_at", null)
-    .limit(500);
+    .limit(CAP_LISTA);
   if (error) throw error;
 
   const candidatos = (data ?? []).map((p) => ({

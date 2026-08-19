@@ -3,6 +3,7 @@
  * Extraído de `AdminDemoLeads.tsx` (Block 1.6 de la refactor arquitectónica).
  */
 import { supabase } from "@/integrations/supabase/client";
+import { CAP_LISTA } from "@/constants/queryCaps";
 
 export interface DemoLead {
   id: string;
@@ -25,7 +26,7 @@ export async function fetchDemoLeads(): Promise<DemoLead[]> {
     .from("demo_leads")
     .select(COLUMNS)
     .order("created_at", { ascending: false })
-    .limit(500);
+    .limit(CAP_LISTA);
   if (error) throw new Error(error.message);
   return (data ?? []) as DemoLead[];
 }
