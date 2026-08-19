@@ -60,6 +60,65 @@ export const CUBETA_TONE: Record<CubetaAging, ChipTone> = {
   mas_90: "destructive",
 };
 
+/**
+ * v13.682.0 · UI-2 — ESCALA ÚNICA DE COLOR de antigüedad.
+ *
+ * Antes cada módulo pintaba la misma deuda distinta (Cobranza usaba
+ * `text-aging-*` con cortes en 15 días, Facturación usaba `bg-warning/60`).
+ * Ahora todas las vistas derivan el color de la misma cubeta y de los tokens
+ * `--aging-1..5` definidos en `index.css` (light/dark automáticos).
+ */
+export type NivelAging = 1 | 2 | 3 | 4 | 5;
+
+export const CUBETA_NIVEL: Record<CubetaAging, NivelAging> = {
+  vigente: 1,
+  d_1_30: 2,
+  d_31_60: 3,
+  d_61_90: 4,
+  mas_90: 5,
+};
+
+/** Nivel de severidad (1..5) a partir de los días vencidos. */
+export function nivelAgingDeDias(dias: number): NivelAging {
+  return CUBETA_NIVEL[bucketDeDias(dias)];
+}
+
+/** Color de texto por nivel (listas y celdas de días vencidos). */
+export const AGING_TEXT_CLASS: Record<NivelAging, string> = {
+  1: "text-aging-1",
+  2: "text-aging-2",
+  3: "text-aging-3",
+  4: "text-aging-4",
+  5: "text-aging-5",
+};
+
+/** Chip sólido por nivel (bandejas de cobranza y tarjetas de factura). */
+export const AGING_SOLID_CLASS: Record<NivelAging, string> = {
+  1: "bg-aging-1/15 text-aging-1 border border-aging-1/30",
+  2: "bg-aging-2/15 text-aging-2 border border-aging-2/30",
+  3: "bg-aging-3/15 text-aging-3 border border-aging-3/30",
+  4: "bg-aging-4/15 text-aging-4 border border-aging-4/30",
+  5: "bg-aging-5/20 text-aging-5 border border-aging-5/40",
+};
+
+/** Relleno suave por nivel (chips de KPI y barras de dashboard). */
+export const AGING_SOFT_CLASS: Record<NivelAging, string> = {
+  1: "bg-aging-1/20 text-foreground",
+  2: "bg-aging-2/25 text-foreground",
+  3: "bg-aging-3/30 text-foreground",
+  4: "bg-aging-4/35 text-foreground",
+  5: "bg-aging-5/40 text-foreground",
+};
+
+/** Relleno sólido por nivel (segmentos de barra apilada). */
+export const AGING_FILL_CLASS: Record<NivelAging, string> = {
+  1: "bg-aging-1",
+  2: "bg-aging-2",
+  3: "bg-aging-3",
+  4: "bg-aging-4",
+  5: "bg-aging-5",
+};
+
 /** Tono para tarjetas KPI (`KpiCard` / `AgingKpiBucket`). */
 export type TonoKpiAging = "default" | "warn" | "danger";
 

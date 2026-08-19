@@ -9,6 +9,7 @@ import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 import { formatCurrency, formatCurrencyCompact } from "@/lib/formatters";
 import { DrilldownRow } from "@/components/shared/dataTable/DrilldownRow";
 import type { AgingBuckets } from "@/features/dashboard/finance/hooks/useFinanceDashboard";
+import { AGING_SOFT_CLASS } from "@/lib/aging/buckets";
 
 interface FacturaVencida {
   id: string;
@@ -27,12 +28,13 @@ interface Props {
   agingSinTc?: number;
 }
 
+// v13.682.0 · UI-2: el color sale de la escala única (`AGING_SOFT_CLASS`).
 const AGING_LABELS: Array<{ key: keyof AgingBuckets; label: string; tone: string }> = [
-  { key: "b0_15", label: "0-15 d", tone: "bg-aging-1/20 text-foreground" },
-  { key: "b16_30", label: "16-30 d", tone: "bg-aging-2/25 text-foreground" },
-  { key: "b31_60", label: "31-60 d", tone: "bg-aging-3/30 text-foreground" },
-  { key: "b61_90", label: "61-90 d", tone: "bg-aging-4/35 text-foreground" },
-  { key: "b90plus", label: "90+ d", tone: "bg-aging-5/40 text-foreground" },
+  { key: "b0_15", label: "0-15 d", tone: AGING_SOFT_CLASS[1] },
+  { key: "b16_30", label: "16-30 d", tone: AGING_SOFT_CLASS[2] },
+  { key: "b31_60", label: "31-60 d", tone: AGING_SOFT_CLASS[3] },
+  { key: "b61_90", label: "61-90 d", tone: AGING_SOFT_CLASS[4] },
+  { key: "b90plus", label: "90+ d", tone: AGING_SOFT_CLASS[5] },
 ];
 
 export function CobranzaBlock({ aging, facturasVencidas, loading, agingSinTc = 0 }: Props) {

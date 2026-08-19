@@ -6,12 +6,14 @@ import { Users } from "lucide-react";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 import { formatCurrency } from "@/lib/formatters/numbers";
 import type { BucketAntiguedad, TopCliente } from "@/features/dashboard/direccion/services/tipos";
+import { AGING_FILL_CLASS } from "@/lib/aging/buckets";
 
+// v13.682.0 · UI-2: relleno derivado de la escala única de antigüedad.
 const COLOR_BUCKET: Record<BucketAntiguedad["bucket"], string> = {
-  "Corriente": "bg-aging-1",
-  "1-30": "bg-aging-2",
-  "31-60": "bg-aging-3",
-  "+60": "bg-aging-5",
+  "Corriente": AGING_FILL_CLASS[1],
+  "1-30": AGING_FILL_CLASS[2],
+  "31-60": AGING_FILL_CLASS[3],
+  "+60": AGING_FILL_CLASS[5],
 };
 
 function fmt(n: number): string { return formatCurrency(n, "MXN"); }
