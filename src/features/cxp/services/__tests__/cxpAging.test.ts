@@ -9,6 +9,7 @@ import {
   calcularTotalesPorMoneda,
   monedasPresentes,
   type CxpAgingRow,
+  type MonedaAging,
 } from "../cxpAging";
 
 function row(over: Partial<CxpAgingRow> = {}): CxpAgingRow {
