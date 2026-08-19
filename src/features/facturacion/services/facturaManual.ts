@@ -41,10 +41,16 @@ export interface CrearFacturaManualInput {
   tasaIva: number;               // 0.16 por default
 }
 
-function addDays(yyyyMmDd: string, days: number): string {
-  const d = new Date(yyyyMmDd + "T00:00:00");
-  d.setDate(d.getDate() + days);
-  return hoyMx(d);
+/**
+ * BL-2 — el vencimiento se calcula con el canon `addDaysIso` (espejo exacto de
+ * `fecha_emision + dias_credito` en Postgres). El `addDays` local anterior
+ * mezclaba medianoche del navegador con formateo en America/Mexico_City y en
+ * navegadores fuera de CDMX devolvía el día anterior.
+ */
+function vencimiento(yyyyMmDd: string, days: number): string {
+  const iso = addDaysIso(yyyyMmDd, days);
+  if (!iso) throw new Error(`Fecha de emisión inválida (${yyyyMmDd}) o días de crédito inválidos (${days}).`);
+  return iso;
 }
 
 function tasaAplicada(tipo: TipoIvaConcepto | undefined, tasaGlobal: number): number | null {
