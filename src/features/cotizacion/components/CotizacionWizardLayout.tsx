@@ -8,6 +8,7 @@ import { ConfirmSinDesgloseDialog } from "@/features/cotizacion/components/Confi
 import { WizardTotalsBar } from "@/features/cotizacion/components/wizard/WizardTotalsBar";
 import { useCotizacionKeyboardShortcuts } from "@/features/cotizacion/hooks/wizard/useCotizacionKeyboardShortcuts";
 import { usePermissions } from "@/hooks/shared";
+import { useDirtyGuard } from "@/hooks/shared/useDirtyGuard";
 
 import { notifyError } from "@/lib/ui/appFeedback";
 const WIZARD_STEPS = [
@@ -81,6 +82,10 @@ export default function CotizacionWizardLayout({
 
   const mostrarTotales = w.currentStep === 2 || w.currentStep === 3;
 
+  // Ola C · #13: guarda de salida. Antes se podía navegar (sidebar, migas) con
+  // el wizard a medio capturar y se perdía todo sin aviso.
+  const { guardDialog } = useDirtyGuard(form.formState.isDirty && !isBusy);
+
   // P1 (v13.294.0) — atajos de teclado del wizard.
   const handleFlushDraft = useCallback(() => {
     if (!onFlushDraft) return;
@@ -142,6 +147,7 @@ export default function CotizacionWizardLayout({
         onConfirm={handleConfirmSinDesglose}
         isPending={isBusy}
       />
+      {guardDialog}
     </FormProvider>
   );
 }

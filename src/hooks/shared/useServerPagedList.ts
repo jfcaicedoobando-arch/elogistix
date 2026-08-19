@@ -20,6 +20,7 @@ import { useCallback, useMemo } from "react";
 import { useQuery, type QueryKey } from "@tanstack/react-query";
 import { useQueryState, parseAsString, parseAsStringLiteral } from "nuqs";
 import { useTableFilters, type UseTableFiltersOpts } from "@/hooks/shared/useTableFilters";
+import { useDebouncedValue } from "@/lib/hooks/useDebouncedValue";
 import type { SortDir, DataTablePagination } from "@/components/shared/dataTable/types";
 
 export interface ServerPagedFetcherArgs<TFilters extends Record<string, string>> {
@@ -97,11 +98,16 @@ export function useServerPagedList<
 
   const { sortKey, sortDir, setSort } = useUrlSort(sortableKeys, defaultSort);
 
+  // Ola C · #14: la búsqueda dispara una consulta al servidor por cada tecla.
+  // Analogía: en vez de preguntar al almacén con cada letra, esperamos a que
+  // el usuario termine de teclear (350 ms).
+  const searchDebounced = useDebouncedValue(filtersState.search, 350);
+
   const from = filtersState.page * filtersState.pageSize;
   const to = from + filtersState.pageSize - 1;
 
   const fetchArgs: ServerPagedFetcherArgs<TFilters> = {
-    search: filtersState.search,
+    search: searchDebounced,
     filters: filtersState.filters,
     dateFrom: filtersState.dateFrom,
     dateTo: filtersState.dateTo,
@@ -118,7 +124,7 @@ export function useServerPagedList<
   // ArrayExpression inline (guardrail `no-restricted-syntax`).
   const fullQueryKey: QueryKey = [
     ...queryKey,
-    filtersState.search,
+    searchDebounced,
     filtersState.filters,
     filtersState.dateFrom,
     filtersState.dateTo,
