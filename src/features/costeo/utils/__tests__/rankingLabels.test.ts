@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { computeRankingMeta } from "../rankingLabels";
 import type { TopTarifaRow } from "@/features/costeo/types";
+import { formatDateOnlyLocal } from "@/lib/date/dateOnly";
 
 /** Builder mínimo: rellena solo lo que consume `computeRankingMeta`. */
 const row = (over: Partial<TopTarifaRow>): TopTarifaRow =>
@@ -99,10 +100,17 @@ describe("costeo/utils/rankingLabels.computeRankingMeta", () => {
   });
 
   it("'vencePronto' es true cuando vigente_hasta cae dentro de 7 días", () => {
-    const ms = 86_400_000;
-    const enCincoDias = new Date(Date.now() + 5 * ms).toISOString().split("T")[0];
-    const enTreintaDias = new Date(Date.now() + 30 * ms).toISOString().split("T")[0];
-    const ayer = new Date(Date.now() - ms).toISOString().split("T")[0];
+    // Fechas date-only en día LOCAL: `toISOString()` usa UTC y en CDMX (UTC-6)
+    // por la tarde devolvía el día siguiente, corriendo el resultado un día.
+    const diaLocal = (delta: number) => {
+      const d = new Date();
+      d.setHours(12, 0, 0, 0);
+      d.setDate(d.getDate() + delta);
+      return formatDateOnlyLocal(d);
+    };
+    const enCincoDias = diaLocal(5);
+    const enTreintaDias = diaLocal(30);
+    const ayer = diaLocal(-1);
 
     const rows = [
       row({ id: "1", total_comparable: 100, vigente_hasta: enCincoDias }),
