@@ -68,6 +68,7 @@ export function FilaCostoPrecio({
       <div className="flex items-center gap-1">
         <Input
           readOnly
+          aria-label="Total en USD del costo"
           value={formatCurrency(totalUSD, 'USD')}
           className={`text-sm bg-muted font-semibold ${esMixta ? 'text-warning border-warning/60' : ''}`}
           data-testid={esMixta ? 'fila-mixta-costo' : undefined}

@@ -73,6 +73,7 @@ export function buildDemorasColumns(deps: DemorasColumnsDeps): ColumnDef<Editabl
       meta: { align: "right" },
       cell: ({ row }) => (
         <Input
+          aria-label="Días libres (override)"
           type="number"
           min={0}
           disabled={!canEdit}

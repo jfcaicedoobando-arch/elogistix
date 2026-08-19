@@ -87,8 +87,8 @@ export function DialogCategoria({ open, onOpenChange, categoria }: Props) {
     >
       <div className="space-y-3">
         <div>
-          <Label>Nombre *</Label>
-          <Input value={nombre} onChange={(e) => setNombre(e.target.value)} placeholder="Ej. Servicios profesionales" />
+          <Label htmlFor="categoria-nombre">Nombre *</Label>
+          <Input id="categoria-nombre" value={nombre} onChange={(e) => setNombre(e.target.value)} placeholder="Ej. Servicios profesionales" />
         </div>
         <div>
           <Label>Tipo contable *</Label>
@@ -103,8 +103,8 @@ export function DialogCategoria({ open, onOpenChange, categoria }: Props) {
           {tipoActual && <p className="text-label text-muted-foreground mt-1">{tipoActual.descripcion}</p>}
         </div>
         <div>
-          <Label>Orden</Label>
-          <Input type="number" value={orden} onChange={(e) => setOrden(Number(e.target.value))} />
+          <Label htmlFor="categoria-orden">Orden</Label>
+          <Input id="categoria-orden" type="number" value={orden} onChange={(e) => setOrden(Number(e.target.value))} />
         </div>
         <label className="flex items-center gap-2 text-sm">
           <Checkbox checked={activa} onCheckedChange={(v) => setActiva(!!v)} /> Activa

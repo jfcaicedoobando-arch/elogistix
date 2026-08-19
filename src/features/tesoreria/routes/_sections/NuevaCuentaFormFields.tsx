@@ -30,20 +30,21 @@ export function NuevaCuentaFormFields({ form, setField, monedaBloqueada = false 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
       <div>
-        <Label>Banco</Label>
-        <Input value={form.banco} onChange={(e) => setField("banco", e.target.value)} />
+        <Label htmlFor="cuenta-banco">Banco</Label>
+        <Input id="cuenta-banco" value={form.banco} onChange={(e) => setField("banco", e.target.value)} />
       </div>
       <div>
-        <Label>Alias *</Label>
-        <Input value={form.alias} onChange={(e) => setField("alias", e.target.value)} placeholder="BBVA Cheques MXN" />
+        <Label htmlFor="cuenta-alias">Alias *</Label>
+        <Input id="cuenta-alias" value={form.alias} onChange={(e) => setField("alias", e.target.value)} placeholder="BBVA Cheques MXN" />
       </div>
       <div>
-        <Label>Número de cuenta</Label>
-        <Input value={form.numero} onChange={(e) => setField("numero", e.target.value)} />
+        <Label htmlFor="cuenta-numero">Número de cuenta</Label>
+        <Input id="cuenta-numero" value={form.numero} onChange={(e) => setField("numero", e.target.value)} />
       </div>
       <div>
-        <Label>CLABE</Label>
+        <Label htmlFor="cuenta-clabe">CLABE</Label>
         <Input
+          id="cuenta-clabe"
           value={form.clabe}
           onChange={(e) => setField("clabe", e.target.value.replace(/\D/g, "").slice(0, 18))}
           inputMode="numeric"

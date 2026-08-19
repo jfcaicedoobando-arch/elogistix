@@ -39,23 +39,24 @@ export function PasoDiagnostico(props: Props) {
     <div className="space-y-5">
       <FormDialogSection title="Factura a corregir" cols={2}>
         <div className="space-y-1">
-          <Label className="text-label">Folio</Label>
-          <Input value={props.numeroOriginal} readOnly />
+          <Label className="text-label" htmlFor="refact-folio">Folio</Label>
+          <Input id="refact-folio" value={props.numeroOriginal} readOnly />
         </div>
         <div className="space-y-1">
-          <Label className="text-label">Importe</Label>
+          <Label className="text-label" htmlFor="refact-importe">Importe</Label>
           <Input
+            id="refact-importe"
             value={props.total !== null ? formatCurrency(props.total, props.moneda) : "—"}
             readOnly
           />
         </div>
         <div className="space-y-1">
-          <Label className="text-label">Receptor actual</Label>
-          <Input value={props.clienteOriginal || "—"} readOnly />
+          <Label className="text-label" htmlFor="refact-receptor-actual">Receptor actual</Label>
+          <Input id="refact-receptor-actual" value={props.clienteOriginal || "—"} readOnly />
         </div>
         <div className="space-y-1">
-          <Label className="text-label">RFC actual</Label>
-          <Input value={props.rfcOriginal ?? "—"} readOnly />
+          <Label className="text-label" htmlFor="refact-rfc-actual">RFC actual</Label>
+          <Input id="refact-rfc-actual" value={props.rfcOriginal ?? "—"} readOnly />
         </div>
       </FormDialogSection>
 

@@ -77,6 +77,7 @@ export function useGarantiasColumns({ embarqueId, canEdit, fechaLlegadaReal }: P
           const value = draft !== undefined ? draft : String(r.monto_deposito_usd ?? 0);
           return (
             <Input
+              aria-label="Monto de depósito en USD"
               type="number"
               min={0}
               step="0.01"
@@ -98,6 +99,7 @@ export function useGarantiasColumns({ embarqueId, canEdit, fechaLlegadaReal }: P
         const value = draft !== undefined ? draft : (r.referencia_deposito ?? '');
         return (
           <Input
+            aria-label="Referencia o folio del depósito"
             type="text"
             value={value}
             placeholder="Banco / folio"
