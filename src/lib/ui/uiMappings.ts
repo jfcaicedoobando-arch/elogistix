@@ -4,27 +4,15 @@
  * Los mapeos de estado están centralizados en `estadoConfig.ts` (fuente única de verdad).
  * Este archivo expone wrappers ligeros para mantener la API pública estable.
  *
- * ⚠️ UX-03 (design system): `getEstadoColor` está DEPRECADO. El componente
- * canónico para badges de estado es `StatusBadge`
- * (`src/components/shared/StatusBadge.tsx`), que consume `statusRegistry`/
- * `estadoConfig`. Para casos sin componente, usa `getEstadoVisual(estado).badge`
- * de `./estadoConfig`. ESLint (`no-legacy-estado-color`) bloquea imports nuevos
- * de `getEstadoColor`; los consumidores legacy están en la allowlist del bloque
- * y se migrarán en olas (NO agregar entradas nuevas).
+ * UI-3 (v13.683.0): `getEstadoColor` fue ELIMINADO. El único componente para
+ * badges de estado es `StatusBadge` (`src/components/shared/StatusBadge.tsx`),
+ * que consume `statusRegistry`/`estadoConfig`. Para casos sin componente, usa
+ * `getEstadoVisual(estado).badge` de `./estadoConfig`.
  */
 
 import type { LucideIcon } from "lucide-react";
 import { Anchor, Plane, Truck, Ship } from "lucide-react";
 import { getEstadoVisual } from "./estadoConfig";
-
-/**
- * @deprecated UX-03: usa `<StatusBadge estado={...} />`
- * (`@/components/shared/StatusBadge`) o `getEstadoVisual(estado).badge` de
- * `@/lib/ui/estadoConfig`. Este wrapper se mantiene sólo por los consumidores
- * legacy de la allowlist `no-legacy-estado-color` en eslint.config.js.
- */
-export const getEstadoColor = (estado: string): string =>
-  getEstadoVisual(estado).badge;
 
 /** Borde izquierdo de color por estado (para tarjetas de embarque) */
 export const getEstadoBorderColor = (estado: string): string =>

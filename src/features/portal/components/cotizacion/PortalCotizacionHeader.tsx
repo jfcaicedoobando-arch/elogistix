@@ -1,4 +1,3 @@
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2, XCircle, ClipboardList } from "lucide-react";
 import { DetailHeader } from "@/components/shared/DetailHeader";
