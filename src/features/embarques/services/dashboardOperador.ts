@@ -17,6 +17,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { assertNotTruncated } from "@/lib/supabase/assertNotTruncated";
 import { ESTADOS_ACTIVOS } from "@/features/embarques/constants/embarqueConstants";
 import { CAP_REPORTE } from "@/constants/queryCaps";
+import { diffDiasCalendario } from "@/lib/date/dateOnly";
 
 export interface OperadorEmbarqueLite {
   id: string;
@@ -103,14 +104,12 @@ export async function fetchSinTrackingOperador(email: string): Promise<SinTracki
   for (const ev of eventos ?? []) {
     if (!ultimo.has(ev.embarque_id)) ultimo.set(ev.embarque_id, ev.fecha);
   }
-  const ahora = Date.now();
+  const ahoraDate = new Date();
   return embarques
     .map((e): SinTrackingItem => {
       const last = ultimo.get(e.id) ?? null;
-      const dias = last ? Math.floor((ahora - new Date(last).getTime()) / DAY_MS) : null;
-      const diasHastaEta = e.eta
-        ? Math.ceil((new Date(e.eta).getTime() - ahora) / DAY_MS)
-        : null;
+      const dias = last ? diffDiasCalendario(last, ahoraDate) : null;
+      const diasHastaEta = e.eta ? diffDiasCalendario(ahoraDate, e.eta) : null;
       const lastBeforePreArrival = last && e.eta
         ? new Date(last).getTime() < new Date(e.eta).getTime() - DIAS_PRE_ARRIBO * DAY_MS
         : true;

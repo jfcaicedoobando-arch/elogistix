@@ -11,6 +11,7 @@ import { escapeHtml as esc } from "@/lib/utils";
 import { COLORS } from "@/pdf/theme/tokens";
 
 import { cargarEmisorEmpresa } from "@/pdf/emisor";
+import { diasVencidos } from "@/lib/date/dateOnly";
 
 
 interface ClienteHeader {
@@ -54,9 +55,7 @@ export async function generarEstadoCuentaPdf(
 
   const rows = facturas
     .map((f) => {
-      const venc = new Date(f.fecha_vencimiento);
-      venc.setHours(0, 0, 0, 0);
-      const dias = Math.floor((hoy.getTime() - venc.getTime()) / 86_400_000);
+      const dias = diasVencidos(f.fecha_vencimiento, hoy);
       return { ...f, diasVencido: dias, bucket: bucketFor(dias) };
     });
 

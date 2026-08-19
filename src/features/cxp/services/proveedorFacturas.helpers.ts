@@ -5,6 +5,7 @@
  */
 import type { Tables } from "@/integrations/supabase/types";
 import type { FacturaCxP, EstatusCxP, FetchCxPFiltros } from "./proveedorFacturas";
+import { diasVencidos } from "@/lib/date/dateOnly";
 
 type ProveedorFacturaRow = Tables<"proveedor_facturas">;
 type EstadoProveedorFactura = ProveedorFacturaRow["estado"];
@@ -65,9 +66,7 @@ export type Joined = Pick<
 
 export function diasVencido(fechaVenc: string | null): number {
   if (!fechaVenc) return 0;
-  const venc = new Date(fechaVenc + "T00:00:00");
-  const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
-  return Math.floor((hoy.getTime() - venc.getTime()) / 86_400_000);
+  return diasVencidos(fechaVenc.slice(0, 10));
 }
 
 /**

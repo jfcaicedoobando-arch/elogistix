@@ -19,6 +19,7 @@ import { queryKeys } from "@/lib/query";
 import { useMutationWithFeedback } from "@/hooks/shared";
 import { todayLocalISO } from "@/lib/date/today";
 import { useOrgActiva } from "@/hooks/shared/useOrgActiva";
+import { diffDiasCalendario } from "@/lib/date/dateOnly";
 
 export function useSnoozeHallazgo() {
   const { user } = useAuth();
@@ -40,9 +41,7 @@ export function useSnoozeHallazgo() {
       if (snoozedUntil < hoyIso) {
         throw new Error("No se puede silenciar un hallazgo en el pasado");
       }
-      const dias = Math.round(
-        (Date.parse(`${snoozedUntil}T00:00:00Z`) - Date.parse(`${hoyIso}T00:00:00Z`)) / 86_400_000,
-      );
+      const dias = diffDiasCalendario(hoyIso, snoozedUntil);
       const motivoLen = (motivo ?? "").trim().length;
       if (dias > 30 && motivoLen < 20) {
         throw new Error(

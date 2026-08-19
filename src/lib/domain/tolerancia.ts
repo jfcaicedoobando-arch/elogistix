@@ -8,6 +8,7 @@
 
 import { isoUtcDay } from "@/lib/date/mx";
 import { roundMoney } from "@/lib/financial/financialUtils";
+import { diffDiasCalendario } from "@/lib/date/dateOnly";
 
 export const TOLERANCIA_MONTO_MXN = 1;
 export const TOLERANCIA_DIAS = 5;
@@ -24,10 +25,11 @@ export function dentroDeTolerancia(montoA: number, montoB: number, tolerancia = 
 
 /** Días absolutos entre dos fechas ISO `YYYY-MM-DD` (UTC, redondeado). */
 export function deltaDiasIso(fechaA: string, fechaB: string): number {
-  const a = new Date(fechaA + "T00:00:00Z").getTime();
-  const b = new Date(fechaB + "T00:00:00Z").getTime();
-  if (!Number.isFinite(a) || !Number.isFinite(b)) return Number.POSITIVE_INFINITY;
-  return Math.abs(Math.round((a - b) / 86_400_000));
+  if (!Number.isFinite(Date.parse(fechaA)) || !Number.isFinite(Date.parse(fechaB))) {
+    return Number.POSITIVE_INFINITY;
+  }
+  // Ola 19 · paso 1: helper único de días naturales (inmune a DST).
+  return Math.abs(diffDiasCalendario(fechaB, fechaA));
 }
 
 /** Rango [desde, hasta] en ISO sumando ±N días a una fecha ISO. */

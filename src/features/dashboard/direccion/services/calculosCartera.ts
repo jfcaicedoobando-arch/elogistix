@@ -8,6 +8,7 @@ import { mxnFactura } from "./mxn";
 import type { EmbarqueEstadoRow, FacturaRow, PagoRow } from "./loaders";
 import type { BucketAntiguedad, HeroKpis, PulsoKpis } from "./tipos";
 import type { EmbarqueAgg } from "./calculos";
+import { diasVencidos } from "@/lib/date/dateOnly";
 
 export function calcularAntiguedad(facturas: FacturaRow[], pagos: PagoRow[], fallbackUsd: number, hoy: Date): BucketAntiguedad[] {
   const saldo = new Map<string, number>();
@@ -28,8 +29,7 @@ export function calcularAntiguedad(facturas: FacturaRow[], pagos: PagoRow[], fal
   for (const f of facturas) {
     const s = saldo.get(f.id) ?? 0;
     if (s <= 0.5) continue;
-    const venc = f.fecha_vencimiento ? new Date(`${f.fecha_vencimiento}T00:00:00Z`).getTime() : hoy.getTime();
-    const dias = Math.floor((hoy.getTime() - venc) / 86_400_000);
+    const dias = f.fecha_vencimiento ? diasVencidos(f.fecha_vencimiento, hoy) : 0;
     const key: BucketAntiguedad["bucket"] = dias <= 0 ? "Corriente" : dias <= 30 ? "1-30" : dias <= 60 ? "31-60" : "+60";
     buckets[key].monto_mxn += s; buckets[key].facturas += 1;
   }
@@ -89,9 +89,7 @@ export function calcularPulso(
       const hoyDia = format(hoy, "yyyy-MM-dd");
       const en7dDia = format(en7d, "yyyy-MM-dd");
       if (etaDia >= hoyDia && etaDia <= en7dDia) arribos_7d += 1;
-      const diasRetraso = Math.floor(
-        (Date.parse(`${hoyDia}T00:00:00Z`) - Date.parse(`${etaDia}T00:00:00Z`)) / 86_400_000,
-      );
+      const diasRetraso = diasVencidos(etaDia, hoyDia);
       // Ola 4 · N21: sólo demora tras los días libres del canon (>7), no
       // cualquier ETA pasada (antes marcaba demora desde el día siguiente).
       if (est === "En Aduana" && diasRetraso > DIAS_LIBRES_DEMORA) demoras += 1;

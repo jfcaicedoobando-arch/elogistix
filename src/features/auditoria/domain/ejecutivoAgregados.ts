@@ -9,6 +9,7 @@ import type {
 } from "@/features/auditoria/types";
 import { hoyMx } from "@/lib/date/mx";
 import { TOP_N } from "./ejecutivoRankingCore";
+import { diasVencidos } from "@/lib/date/dateOnly";
 
 // `OperadorRanking` / `calcularRanking` viven en `./ejecutivoRanking` (split Power-of-10 #4).
 export { calcularRanking, type OperadorRanking,  } from "./ejecutivoRanking";
@@ -160,7 +161,7 @@ export function calcularVencimientos(pendientes: HallazgoAuditoria[]) {
     if (REGLAS_CON_VENCIMIENTO_PROPIO.includes(h.regla)) continue;
     if (esHallazgoEtaVencida(h, hoyIso)) {
       pendientesVencidos++;
-      const dias = Math.floor((Date.parse(hoyIso) - Date.parse(h.eta)) / 86_400_000);
+      const dias = diasVencidos(h.eta, hoyIso);
       sumaDias += dias;
       countDias++;
     } else if (h.eta <= en3DiasIso) {

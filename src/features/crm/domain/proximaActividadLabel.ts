@@ -4,12 +4,12 @@
  */
 import { formatFechaEs } from "@/lib/formatters/dates";
 import type { ProximaActividad } from "@/features/crm/hooks";
+import { diffDiasCalendario } from "@/lib/date/dateOnly";
 
 export function formatProx(prox: ProximaActividad | undefined): string {
   if (!prox) return "Sin próxima acción";
   if (!prox.fecha_programada) return prox.asunto;
-  const d = new Date(prox.fecha_programada);
-  const diff = Math.floor((d.getTime() - Date.now()) / 86_400_000);
+  const diff = diffDiasCalendario(new Date(), prox.fecha_programada);
   if (diff < 0) return `Vencida · ${prox.asunto}`;
   if (diff === 0) return `Hoy · ${prox.asunto}`;
   if (diff === 1) return `Mañana · ${prox.asunto}`;

@@ -13,6 +13,7 @@ import { TrackingNavieraActions } from "./tracking/TrackingNavieraActions";
 import { formatDate } from "@/lib/formatters";
 import { esEmbarqueArribado, esEtaVencida } from "@/features/embarques/domain/embarqueFases";
 import type { EmbarqueTracking } from "@/features/embarques/types/tracking";
+import { diffDiasCalendario } from "@/lib/date/dateOnly";
 
 
 type EmbarqueTrackingProps = EmbarqueTracking;
@@ -22,7 +23,6 @@ interface Props {
   embarque?: EmbarqueTrackingProps | null;
 }
 
-const DAY_MS = 86_400_000;
 
 interface Freshness {
   label: string;
@@ -40,7 +40,7 @@ function computeFreshness(
     return { label: "Sin eventos registrados", critical: !arribado, etaProxima: false, dias: 0 };
   }
   const ultimo = eventos[0];
-  const dias = Math.floor((Date.now() - new Date(ultimo.fecha).getTime()) / DAY_MS);
+  const dias = diffDiasCalendario(ultimo.fecha, new Date());
   const ubicacion = ultimo.ubicacion ? ` en ${ultimo.ubicacion}` : "";
 
   if (arribado) {
@@ -52,7 +52,7 @@ function computeFreshness(
     };
   }
 
-  const diasParaEta = eta != null ? Math.ceil((new Date(eta).getTime() - Date.now()) / DAY_MS) : null;
+  const diasParaEta = eta != null ? diffDiasCalendario(new Date(), eta) : null;
   const etaProxima = diasParaEta != null && diasParaEta >= 0 && diasParaEta <= 2;
   const label = dias === 0
     ? `Último evento hoy — ${ultimo.tipo}`
