@@ -73,7 +73,7 @@ describe("exportarCxcAgingCsv", () => {
 
     const lineas = csvGenerado.split("\n");
     expect(lineas[0]).toBe(
-      "Cliente,Moneda,Facturas,Vigente,1-30,31-60,61-90,+90,Total",
+      "Cliente,Moneda,Facturas,Vigente,1-30 d,31-60 d,61-90 d,+90 d,Total",
     );
     expect(lineas[1]).toContain('"Cliente ""Dos"""');
     expect(lineas[1]).toContain("MXN");
