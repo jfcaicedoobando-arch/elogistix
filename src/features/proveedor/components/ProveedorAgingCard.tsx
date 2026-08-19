@@ -10,17 +10,17 @@ import {
   ETIQUETAS_BUCKET_PROVEEDOR,
   type AgingMonedaProveedor,
 } from "@/features/proveedor/domain/movimientosProveedor";
+import { CUBETA_WIRE_TONO_KPI_PROVEEDOR } from "@/lib/aging/buckets";
 
 interface Props {
   aging: AgingMonedaProveedor[];
 }
 
-const TONO_BUCKET: Record<string, string> = {
-  Vigente: "text-muted-foreground",
-  "1-30": "text-warning",
-  "31-60": "text-warning",
-  "61-90": "text-destructive",
-  "90+": "text-destructive",
+/** Clase de color por tono KPI del catálogo central de cubetas. */
+const CLASE_TONO: Record<string, string> = {
+  default: "text-muted-foreground",
+  warn: "text-warning",
+  danger: "text-destructive",
 };
 
 export function ProveedorAgingCard({ aging }: Props) {
@@ -49,7 +49,7 @@ export function ProveedorAgingCard({ aging }: Props) {
             <dl className="mt-3 space-y-1">
               {BUCKETS_AGING_PROVEEDOR.map((b) => (
                 <div key={b} className="flex items-center justify-between text-xs">
-                  <dt className={TONO_BUCKET[b]}>{ETIQUETAS_BUCKET_PROVEEDOR[b]}</dt>
+                  <dt className={CLASE_TONO[CUBETA_WIRE_TONO_KPI_PROVEEDOR[b]]}>{ETIQUETAS_BUCKET_PROVEEDOR[b]}</dt>
                   <dd className="tabular-nums">{formatCurrency(a.buckets[b] ?? 0, a.moneda)}</dd>
                 </div>
               ))}

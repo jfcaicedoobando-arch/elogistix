@@ -9,6 +9,12 @@
  * La RPC `public.proveedor_estado_cuenta_movimientos` alimenta estos tipos.
  */
 import { roundMoney } from "@/lib/financial/financialUtils";
+import {
+  CUBETAS_WIRE_PROVEEDOR,
+  CUBETA_WIRE_LABELS_PROVEEDOR,
+  CUBETA_WIRE_PROVEEDOR,
+  type CubetaWireProveedor,
+} from "@/lib/aging/buckets";
 
 export type TipoMovimientoProveedor =
   | "Factura"
@@ -36,23 +42,17 @@ export interface MovimientoConSaldo extends MovimientoProveedor {
   saldo: number;
 }
 
-export type BucketAgingProveedor = "Vigente" | "1-30" | "31-60" | "61-90" | "90+";
+/**
+ * Paso 6 de la auditoría: las cubetas ya NO se declaran aquí. Se derivan del
+ * catálogo único `src/lib/aging/buckets.ts`, igual que las de cartera (CxC),
+ * para que un cambio de rangos o etiquetas se aplique en un solo lugar.
+ */
+export type BucketAgingProveedor = CubetaWireProveedor;
 
-export const BUCKETS_AGING_PROVEEDOR: readonly BucketAgingProveedor[] = [
-  "Vigente",
-  "1-30",
-  "31-60",
-  "61-90",
-  "90+",
-] as const;
+export const BUCKETS_AGING_PROVEEDOR: readonly BucketAgingProveedor[] = CUBETAS_WIRE_PROVEEDOR;
 
-export const ETIQUETAS_BUCKET_PROVEEDOR: Record<BucketAgingProveedor, string> = {
-  Vigente: "Por vencer",
-  "1-30": "1 a 30 días",
-  "31-60": "31 a 60 días",
-  "61-90": "61 a 90 días",
-  "90+": "Más de 90 días",
-};
+export const ETIQUETAS_BUCKET_PROVEEDOR: Record<BucketAgingProveedor, string> =
+  CUBETA_WIRE_LABELS_PROVEEDOR;
 
 export interface AgingFilaProveedor {
   moneda: string;
@@ -94,13 +94,11 @@ export interface AgingMonedaProveedor {
   vencido: number;
 }
 
-const vacio = (): Record<BucketAgingProveedor, number> => ({
-  Vigente: 0,
-  "1-30": 0,
-  "31-60": 0,
-  "61-90": 0,
-  "90+": 0,
-});
+const vacio = (): Record<BucketAgingProveedor, number> =>
+  Object.fromEntries(BUCKETS_AGING_PROVEEDOR.map((b) => [b, 0])) as Record<
+    BucketAgingProveedor,
+    number
+  >;
 
 /**
  * Saldo corrido por moneda, respetando el orden cronológico recibido.
@@ -138,7 +136,7 @@ export function agingPorMoneda(
     actual.buckets[f.bucket] = roundMoney((actual.buckets[f.bucket] ?? 0) + saldo);
     actual.conteo += Number(f.conteo) || 0;
     actual.total = roundMoney(actual.total + saldo);
-    if (f.bucket !== "Vigente") actual.vencido = roundMoney(actual.vencido + saldo);
+    if (f.bucket !== CUBETA_WIRE_PROVEEDOR.vigente) actual.vencido = roundMoney(actual.vencido + saldo);
     mapa.set(moneda, actual);
   }
   return [...mapa.values()].sort((a, b) => a.moneda.localeCompare(b.moneda));

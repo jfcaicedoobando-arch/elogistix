@@ -88,3 +88,37 @@ export function monedasPresentes(rows: readonly { moneda: string }[]): string[] 
   });
   return arr;
 }
+
+/**
+ * Claves de cubeta que devuelve la RPC de antigüedad de proveedores
+ * (`proveedor_estado_cuenta`). Son un **contrato de base de datos**, por eso se
+ * conservan tal cual; lo que se centraliza aquí es el orden, las etiquetas y
+ * los tonos, para que CxC y CxP nunca se desincronicen (paso 6 de la auditoría).
+ */
+export const CUBETAS_WIRE_PROVEEDOR = ["Vigente", "1-30", "31-60", "61-90", "90+"] as const;
+
+export type CubetaWireProveedor = (typeof CUBETAS_WIRE_PROVEEDOR)[number];
+
+/** Cubeta canónica ↔ clave de la RPC, en el mismo orden que `CUBETAS_AGING`. */
+export const CUBETA_WIRE_PROVEEDOR = {
+  vigente: "Vigente",
+  d_1_30: "1-30",
+  d_31_60: "31-60",
+  d_61_90: "61-90",
+  mas_90: "90+",
+} as const satisfies Record<CubetaAging, CubetaWireProveedor>;
+
+/** Inverso: clave de la RPC → cubeta canónica. */
+export const WIRE_A_CUBETA_PROVEEDOR = Object.fromEntries(
+  CUBETAS_AGING.map((c) => [CUBETA_WIRE_PROVEEDOR[c], c]),
+) as Record<CubetaWireProveedor, CubetaAging>;
+
+/** Etiqueta larga por clave de la RPC (derivada del catálogo central). */
+export const CUBETA_WIRE_LABELS_PROVEEDOR = Object.fromEntries(
+  CUBETAS_AGING.map((c) => [CUBETA_WIRE_PROVEEDOR[c], CUBETA_LABELS_LARGAS[c]]),
+) as Record<CubetaWireProveedor, string>;
+
+/** Tono KPI por clave de la RPC (derivado del catálogo central). */
+export const CUBETA_WIRE_TONO_KPI_PROVEEDOR = Object.fromEntries(
+  CUBETAS_AGING.map((c) => [CUBETA_WIRE_PROVEEDOR[c], CUBETA_TONO_KPI[c]]),
+) as Record<CubetaWireProveedor, TonoKpiAging>;
