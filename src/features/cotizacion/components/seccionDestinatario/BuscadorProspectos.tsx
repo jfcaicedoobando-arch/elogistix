@@ -30,6 +30,7 @@ export function BuscadorProspectos({ onSelect }: Props) {
           placeholder="Buscar por empresa, contacto, email…"
           className="pl-8"
           autoFocus
+          aria-label="Buscar prospecto por empresa, contacto o email"
         />
       </div>
       {debounced.length < 2 ? (

@@ -65,17 +65,17 @@ export default function SeccionTarifasInformativas({ tarifas, onChange }: Props)
                 )}
                 <div className="col-span-12 md:col-span-3">
                   <label className="text-xs text-muted-foreground">Origen</label>
-                  <Input value={t.origen} onChange={(e) => update(idx, { origen: e.target.value })} className="h-9" />
+                  <Input value={t.origen} onChange={(e) => update(idx, { origen: e.target.value })} className="h-9" aria-label={`Origen de la tarifa ${idx + 1}`} />
                 </div>
                 {esPortaCont && (
                   <div className="col-span-12 md:col-span-2">
                     <label className="text-xs text-muted-foreground">Carga/Descarga</label>
-                    <Input value={t.punto_intermedio || ""} onChange={(e) => update(idx, { punto_intermedio: e.target.value })} className="h-9" />
+                    <Input value={t.punto_intermedio || ""} onChange={(e) => update(idx, { punto_intermedio: e.target.value })} className="h-9" aria-label={`Carga/Descarga de la tarifa ${idx + 1}`} />
                   </div>
                 )}
                 <div className="col-span-12 md:col-span-3">
                   <label className="text-xs text-muted-foreground">Destino</label>
-                  <Input value={t.destino} onChange={(e) => update(idx, { destino: e.target.value })} className="h-9" />
+                  <Input value={t.destino} onChange={(e) => update(idx, { destino: e.target.value })} className="h-9" aria-label={`Destino de la tarifa ${idx + 1}`} />
                 </div>
                 <div className="col-span-6 md:col-span-2">
                   <label className="text-xs text-muted-foreground">Unidad</label>
@@ -88,7 +88,7 @@ export default function SeccionTarifasInformativas({ tarifas, onChange }: Props)
                 </div>
                 <div className="col-span-6 md:col-span-2">
                   <label className="text-xs text-muted-foreground">Precio</label>
-                  <Input type="number" min={0} step="0.01" value={t.precio} onChange={(e) => update(idx, { precio: parseFloat(e.target.value) || 0 })} className="h-9" />
+                  <Input type="number" min={0} step="0.01" value={t.precio} onChange={(e) => update(idx, { precio: parseFloat(e.target.value) || 0 })} className="h-9" aria-label={`Precio de la tarifa ${idx + 1}`} />
                 </div>
                 <div className="col-span-6 md:col-span-2">
                   <label className="text-xs text-muted-foreground">Moneda</label>
@@ -101,7 +101,7 @@ export default function SeccionTarifasInformativas({ tarifas, onChange }: Props)
                 </div>
                 <div className="col-span-12 md:col-span-5">
                   <label className="text-xs text-muted-foreground">Notas</label>
-                  <Input value={t.notas || ""} onChange={(e) => update(idx, { notas: e.target.value })} className="h-9" placeholder="Observaciones de esta tarifa" />
+                  <Input value={t.notas || ""} onChange={(e) => update(idx, { notas: e.target.value })} className="h-9" placeholder="Observaciones de esta tarifa" aria-label={`Notas de la tarifa ${idx + 1}`} />
                 </div>
                 <div className="col-span-12 md:col-span-1 flex md:items-end justify-end">
                   <Button type="button" size="icon" variant="ghost" onClick={() => remove(idx)} disabled={tarifas.length <= 1} aria-label="Eliminar fila">

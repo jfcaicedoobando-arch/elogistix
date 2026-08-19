@@ -113,8 +113,9 @@ export function InvitarAgentePortalDialog({ agente, onOpenChange }: Props) {
 
         <TabsContent value="email" className="space-y-3 pt-4">
           <div className="space-y-2">
-            <Label>Email del agente</Label>
+            <Label htmlFor="invitar-agente-email-tab">Email del agente</Label>
             <Input
+              id="invitar-agente-email-tab"
               type="email"
               placeholder="contacto@agente.com"
               value={email}

@@ -86,7 +86,7 @@ export function FilaCostoLocalRow({ fila, gi, moneda, onUpdate, onRemove }: Prop
             </p>
           )}
         </div>
-        <Input value={fila.proveedor} onChange={e => onUpdate(gi, "proveedor", e.target.value)} className="h-9 text-sm w-[120px]" placeholder="Proveedor" />
+        <Input value={fila.proveedor} onChange={e => onUpdate(gi, "proveedor", e.target.value)} className="h-9 text-sm w-[120px]" placeholder="Proveedor" aria-label="Proveedor" />
         <div className="w-[130px]">
           <UnidadMedidaSelect
             value={fila.unidad_medida}

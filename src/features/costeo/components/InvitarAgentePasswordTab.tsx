@@ -33,8 +33,9 @@ export function InvitarAgentePasswordTab({
   return (
     <TabsContent value="password" className="space-y-3 pt-4">
       <div className="space-y-2">
-        <Label>Email del agente</Label>
+        <Label htmlFor="invitar-agente-password-email">Email del agente</Label>
         <Input
+          id="invitar-agente-password-email"
           type="email"
           placeholder="contacto@agente.com"
           value={email}
@@ -42,9 +43,10 @@ export function InvitarAgentePasswordTab({
         />
       </div>
       <div className="space-y-2">
-        <Label>Contraseña (mínimo 8 caracteres)</Label>
+        <Label htmlFor="invitar-agente-password">Contraseña (mínimo 8 caracteres)</Label>
         <div className="flex gap-2">
           <Input
+            id="invitar-agente-password"
             type={showPassword ? "text" : "password"}
             value={password}
             onChange={(e) => onPasswordChange(e.target.value)}
