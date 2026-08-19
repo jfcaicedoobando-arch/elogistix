@@ -62,6 +62,18 @@ Deno.serve(async (req) => {
       { auth: { persistSession: false } },
     );
 
+    // EC-3: el endpoint es público y sin auth; sin tope se puede enumerar tokens
+    // por fuerza bruta. 30/min por IP cubre recargas legítimas del cliente.
+    const cortado = await limitarPeticionesPublicas(supabase, req, {
+      fn: "tracking-public",
+      porIp: { windowSeconds: 60, max: 30 },
+      global: { windowSeconds: 60, max: 600 },
+    });
+    if (cortado) {
+      log.finish(cortado.status, "rate_limited");
+      return cortado;
+    }
+
     const { data, error } = await supabase.rpc("get_tracking_public", { p_token: token });
     if (error) {
       log.finish(500, "rpc_error", { payload: { error: error.message } });
