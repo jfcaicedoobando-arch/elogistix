@@ -13,6 +13,7 @@ import { TASA_IVA, subtotalLinea, sumarMontos } from "@/lib/financial/financialU
 import type { TipoIvaConcepto } from "@/features/facturacion/services/conceptosFacturaCrud";
 import { hoyMx } from "@/lib/date/mx";
 import { registrarActividad } from "@/services/bitacora/registrar";
+import type { Moneda } from "@/types/db";
 
 export interface ConceptoManualInput {
   descripcion: string;
@@ -33,7 +34,7 @@ export interface CrearFacturaManualInput {
   metodoPago: string;
   diasCredito: number;
   fechaEmision: string;          // YYYY-MM-DD
-  moneda: "MXN" | "USD" | "EUR";
+  moneda: Moneda;
   tipoCambio: number;
   notas?: string;
   conceptos: ConceptoManualInput[];

@@ -13,6 +13,7 @@ import type { TablesInsert } from "@/integrations/supabase/types";
 import { cargoEnMonedaCuenta } from "@/features/cxp/services";
 import { registrarActividad } from "@/services/bitacora/registrar";
 import { logger } from "@/lib/observability/logger";
+import type { Moneda } from "@/types/db";
 
 export interface MovimientoCobroInput {
   pagoId: string;
@@ -20,7 +21,7 @@ export interface MovimientoCobroInput {
   cuentaBancariaId: string;
   fechaPago: string;
   monto: number;
-  moneda: "MXN" | "USD" | "EUR";
+  moneda: Moneda;
   /** TC MXN por 1 USD, para convertir cuando la cuenta usa otra moneda. */
   tipoCambioUsd: number | null;
   referencia?: string;

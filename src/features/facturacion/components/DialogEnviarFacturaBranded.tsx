@@ -20,6 +20,7 @@ import {
 import type { FacturaLite } from "@/features/facturacion/types";
 import { logger } from "@/lib/observability/logger";
 import { notifyWarning } from "@/lib/ui/appFeedback";
+import type { Moneda } from "@/types/db";
 
 interface Props {
   open: boolean;
@@ -36,7 +37,7 @@ export function DialogEnviarFacturaBranded({ open, onOpenChange, factura, esReen
 
   const totalFormateado = factura.total != null && factura.moneda
     // SAFE-CAST: factura.moneda es enum moneda validado en BD.
-    ? formatCurrency(Number(factura.total), factura.moneda as "MXN" | "USD" | "EUR")
+    ? formatCurrency(Number(factura.total), factura.moneda as Moneda)
     : undefined;
 
   return (

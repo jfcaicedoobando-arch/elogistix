@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/select";
 import type { EstatusCxP } from "@/features/cxp/services";
 import { rangoLabel } from "@/lib/ui/rangoFechasCopy";
+import type { Moneda } from "@/types/db";
 
 // v13.307.16 — "Rechazada" y "Por aprobar" viven ahora en el estatus
 // primario (celda `<EstadoFacturaCxPCell />`), por lo que el sheet expone
@@ -33,8 +34,8 @@ interface Props {
   includePrimary: boolean;
   estatus: EstatusCxP | "todos";
   onEstatusChange: (v: EstatusCxP | "todos") => void;
-  moneda: "todas" | "MXN" | "USD" | "EUR";
-  onMonedaChange: (v: "todas" | "MXN" | "USD" | "EUR") => void;
+  moneda: "todas" | Moneda;
+  onMonedaChange: (v: "todas" | Moneda) => void;
   aprobacion: "todos" | "pendiente" | "aprobada" | "rechazada";
   onAprobacionChange: (v: "todos" | "pendiente" | "aprobada" | "rechazada") => void;
   proveedorId: string;

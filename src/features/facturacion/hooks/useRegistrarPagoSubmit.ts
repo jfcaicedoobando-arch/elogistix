@@ -14,7 +14,7 @@ import { useRegistrarPagoFactura } from "@/features/facturacion/hooks";
 import { useRegistrarActividad } from "@/hooks/shared";
 import { formatCurrency } from "@/lib/formatters";
 
-type Moneda = "MXN" | "USD" | "EUR";
+import type { Moneda } from "@/types/db";
 
 interface SubmitArgs {
   facturaId: string;

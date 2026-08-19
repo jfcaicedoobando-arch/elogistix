@@ -16,10 +16,11 @@ import {
 import { formatCurrency } from "@/lib/formatters";
 import type { ConceptoManualInput } from "@/features/facturacion/services/facturaManual";
 import type { TipoIvaConcepto } from "@/features/facturacion/services/conceptosFacturaCrud";
+import type { Moneda } from "@/types/db";
 
 interface Props {
   conceptos: ConceptoManualInput[];
-  moneda: "MXN" | "USD" | "EUR";
+  moneda: Moneda;
   onChange: (next: ConceptoManualInput[]) => void;
 }
 

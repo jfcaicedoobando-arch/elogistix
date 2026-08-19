@@ -6,7 +6,8 @@
 import type { Database } from "@/integrations/supabase/types";
 
 export type CrmOportunidadRow = Database["public"]["Tables"]["crm_oportunidades"]["Row"];
-export type Moneda = "MXN" | "USD" | "EUR";
+// Ola 19 · paso 5: alias central, no se redeclara la unión.
+export type { Moneda } from "@/types/db";
 
 export type OportunidadInput = {
   nombre: string;
