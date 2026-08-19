@@ -3,7 +3,7 @@
  * Muestra tipo, contraparte, documento, método, monto original y su
  * equivalente en pesos, más el estado de conciliación y del complemento.
  */
-import { Badge } from "@/components/ui/badge";
+import { StatusBadge } from "@/components/shared/StatusBadge";
 import { formatCurrency, formatDate } from "@/lib/formatters";
 import { FORMAS_PAGO_SAT, labelDeCatalogo } from "@/constants/catalogosSAT";
 import { defineColumns, type ColumnDef } from "@/components/shared/DataTable";
@@ -11,17 +11,6 @@ import {
   TIPO_PAGO_LABELS, esEntrada,
   type PagoLibro,
 } from "@/features/tesoreria/domain/libroPagos";
-
-const TIPO_CLASE: Record<PagoLibro["tipo"], string> = {
-  cobro: "bg-success/10 text-success border-success/20",
-  pago: "bg-primary/10 text-primary border-primary/20",
-  anticipo: "bg-warning/10 text-warning border-warning/20",
-};
-const TIPO_CORTO: Record<PagoLibro["tipo"], string> = {
-  cobro: "Cobro",
-  pago: "Pago",
-  anticipo: "Anticipo",
-};
 
 /**
  * VT-28: el libro de pagos mostraba la clave SAT cruda ("03") en la columna
@@ -49,16 +38,17 @@ function etiquetaMetodoPago(metodo: string | null): string {
   return metodo;
 }
 
+/** Normaliza el estado crudo del REP al vocabulario del dominio `rep`. */
+function estadoRepCanonico(crudo: string | null | undefined): string {
+  const estado = (crudo ?? "").toLowerCase();
+  if (estado === "timbrado") return "Timbrado";
+  if (estado === "cancelado") return "Cancelado";
+  return "Pendiente";
+}
+
 function EstadoRep({ pago }: { pago: PagoLibro }) {
   if (pago.tipo !== "cobro") return <span className="text-2xs text-muted-foreground">N/A</span>;
-  const estado = (pago.estado_rep ?? "").toLowerCase();
-  if (estado === "timbrado") {
-    return <Badge variant="outline" className="bg-success/10 text-success border-success/20">Timbrado</Badge>;
-  }
-  if (estado === "cancelado") {
-    return <Badge variant="outline" className="bg-destructive/10 text-destructive border-destructive/20">Cancelado</Badge>;
-  }
-  return <Badge variant="outline" className="bg-warning/10 text-warning border-warning/20">Pendiente</Badge>;
+  return <StatusBadge domain="rep" status={estadoRepCanonico(pago.estado_rep)} />;
 }
 
 export function libroPagosColumns(): ColumnDef<PagoLibro, unknown>[] {
@@ -78,13 +68,7 @@ export function libroPagosColumns(): ColumnDef<PagoLibro, unknown>[] {
       accessorFn: (p) => TIPO_PAGO_LABELS[p.tipo],
       meta: { width: "w-28" },
       cell: ({ row }) => (
-        <Badge
-          variant="outline"
-          className={TIPO_CLASE[row.original.tipo]}
-          title={TIPO_PAGO_LABELS[row.original.tipo]}
-        >
-          {TIPO_CORTO[row.original.tipo]}
-        </Badge>
+        <StatusBadge domain="pago_tipo" status={row.original.tipo} />
       ),
     },
     {
@@ -182,10 +166,11 @@ export function libroPagosColumns(): ColumnDef<PagoLibro, unknown>[] {
       accessorFn: (p) => (p.conciliado ? "Conciliado" : "Pendiente"),
       meta: { width: "w-32" },
       cell: ({ row }) =>
-        row.original.conciliado ? (
-          <Badge variant="outline" className="bg-success/10 text-success border-success/20">Conciliado</Badge>
-        ) : (
-          <Badge variant="outline" className="bg-warning/10 text-warning border-warning/20">Pendiente</Badge>
+        (
+          <StatusBadge
+            domain="conciliacion"
+            status={row.original.conciliado ? "Conciliado" : "Pendiente"}
+          />
         ),
     },
     {
