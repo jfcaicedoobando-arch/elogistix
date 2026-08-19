@@ -16,6 +16,7 @@ import type { Tables } from "@/integrations/supabase/types";
 import { orIlike } from "@/lib/search/ilike";
 import { calcularSaldoFactura } from "@/lib/financial/saldoFactura";
 import { assertNotTruncated } from "@/lib/supabase/assertNotTruncated";
+import { diasVencidos } from "@/lib/date/dateOnly";
 
 // Re-export de agregados puros (extraídos a `cobranzaAggregates.ts` en 12.61.18).
 export {
@@ -98,10 +99,7 @@ type RawFactura = Pick<
 };
 
 function calcularDiasVencido(fechaVencimiento: string): number {
-  const venc = new Date(fechaVencimiento + "T00:00:00");
-  const hoy = new Date();
-  hoy.setHours(0, 0, 0, 0);
-  return Math.floor((hoy.getTime() - venc.getTime()) / (1000 * 60 * 60 * 24));
+  return diasVencidos(fechaVencimiento);
 }
 
 function calcularEstatus(saldo: number, diasVencido: number): EstatusCobranza {

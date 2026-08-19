@@ -10,6 +10,7 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import { registrarActividad } from "@/services/bitacora/registrar";
+import type { Moneda } from "@/types/db";
 
 /**
  * Estados de embarque que NO pueden recibir costos nuevos desde una factura
@@ -113,7 +114,7 @@ export async function crearConceptoCostoYVincular(
       proveedor_nombre: input.proveedorNombre,
       concepto: input.concepto,
       monto: input.monto,
-      moneda: input.moneda as "MXN" | "USD" | "EUR",
+      moneda: input.moneda as Moneda,
       estado_liquidacion: "Pagado",
       fecha_pago: input.fechaEmision,
       referencia_pago: input.folio,

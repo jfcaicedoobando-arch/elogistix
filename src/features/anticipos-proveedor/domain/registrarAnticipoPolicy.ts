@@ -5,8 +5,9 @@
  * eran reglas de negocio (sugerir T/C, autoseleccionar cuenta, convertir a MXN)
  * escondidas en la capa de UI y por lo tanto no testeables de forma aislada.
  */
+import type { Moneda } from "@/types/db";
 
-export type MonedaAnticipo = "MXN" | "USD" | "EUR";
+export type MonedaAnticipo = Moneda;
 
 /** Subconjunto de `TcInicial` que estas reglas necesitan (dominio sin acoplarse al hook). */
 export interface TcSugeridoInput {

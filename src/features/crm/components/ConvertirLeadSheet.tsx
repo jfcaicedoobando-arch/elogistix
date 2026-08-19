@@ -23,6 +23,7 @@ import { notifySuccess } from "@/lib/ui/appFeedback";
 import { useConvertirLead, type CrmLeadRow } from "@/features/crm/hooks";
 import { crmToast } from "@/features/crm/lib/crmToast";
 import { formSheet } from "@/components/shared/utils/dialogTokens";
+import type { Moneda } from "@/types/db";
 
 interface Props {
   open: boolean;
@@ -35,7 +36,7 @@ export default function ConvertirLeadSheet({ open, onOpenChange, lead, onAbrirAv
   const navigate = useNavigate();
   const [nombre, setNombre] = useState(`Oportunidad — ${lead.empresa}`);
   const [monto, setMonto] = useState("0");
-  const [moneda, setMoneda] = useState<"MXN" | "USD" | "EUR">("MXN");
+  const [moneda, setMoneda] = useState<Moneda>("MXN");
   const [crearCliente, setCrearCliente] = useState(true);
   const convertir = useConvertirLead();
 

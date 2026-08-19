@@ -1,6 +1,10 @@
 /**
  * Dashboard Ejecutivo Financiero — vista consolidada.
  * Periodo persistente en URL via `?mes=YYYY-MM`.
+ *
+ * Ola 19 · paso 2: vive en `dashboardEjecutivo` (antes en `profit/routes`),
+ * para romper el ciclo de dependencias entre ambos features. Ahora la
+ * dirección es única: dashboardEjecutivo → profit.
  */
 import { useState, useMemo } from "react";
 import { PageHeader } from "@/components/shared/PageHeader";
@@ -9,15 +13,15 @@ import { KpiGridSkeleton } from "@/components/shared/skeletons";
 import { ChartSkeleton } from "@/components/shared/ChartSkeleton";
 import { Download, AlertTriangle } from "lucide-react";
 import { reportCaughtError } from "@/lib/observability/reportCaughtError";
-import { useDashboardEjecutivo } from "@/features/dashboardEjecutivo/hooks/useDashboardEjecutivo";
-import { BandaKPIs } from "@/features/dashboardEjecutivo/components/BandaKPIs";
-import { BandaKPIsEficiencia } from "@/features/dashboardEjecutivo/components/BandaKPIsEficiencia";
-import { GraficoEERR12m } from "@/features/dashboardEjecutivo/components/GraficoEERR12m";
-import { ForecastMultiMesChart } from "@/features/dashboardEjecutivo/components/ForecastMultiMesChart";
-import { SaldosBancosCard } from "@/features/dashboardEjecutivo/components/SaldosBancosCard";
-import { TopListaCard } from "@/features/dashboardEjecutivo/components/TopListaCard";
-import { MiniFlujoCard } from "@/features/dashboardEjecutivo/components/MiniFlujoCard";
-import { AlertasPanel } from "@/features/dashboardEjecutivo/components/AlertasPanel";
+import { useDashboardEjecutivo } from "../hooks/useDashboardEjecutivo";
+import { BandaKPIs } from "../components/BandaKPIs";
+import { BandaKPIsEficiencia } from "../components/BandaKPIsEficiencia";
+import { GraficoEERR12m } from "../components/GraficoEERR12m";
+import { ForecastMultiMesChart } from "../components/ForecastMultiMesChart";
+import { SaldosBancosCard } from "../components/SaldosBancosCard";
+import { TopListaCard } from "../components/TopListaCard";
+import { MiniFlujoCard } from "../components/MiniFlujoCard";
+import { AlertasPanel } from "../components/AlertasPanel";
 import { descargarBlob } from "@/lib/downloadBlob";
 import { notifyError } from "@/lib/ui/appFeedback";
 import { PageContainer } from "@/components/shared/PageContainer";
@@ -31,7 +35,7 @@ import { ProfitSubNav } from "@/features/profit/components/ProfitSubNav";
 
 const MES_MINIMO = "2026-04";
 
-export default function ProfitDashboardEjecutivo() {
+export default function DashboardEjecutivoPage() {
   const periodoCtl = usePeriodoMesUrl("mes", MES_MINIMO);
   const periodo = periodoCtl.mesActual.key;
   const [generandoPdf, setGenerandoPdf] = useState(false);

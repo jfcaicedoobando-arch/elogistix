@@ -12,6 +12,7 @@ import { useState } from "react";
 import { useDebounce } from "@/hooks/shared";
 import { useTableFilters } from "@/hooks/shared/useTableFilters";
 import type { FacturaCxP, EstatusCxP } from "@/features/cxp/services";
+import type { Moneda } from "@/types/db";
 
 export type AprobacionFiltro = "todos" | "pendiente" | "aprobada" | "rechazada";
 
@@ -52,7 +53,7 @@ export function useCxpPageState() {
   const page = tf.page;
   const pageSize = 100;
   const estatus = tf.filters.estatus as EstatusCxP | "todos";
-  const moneda = tf.filters.moneda as "todas" | "MXN" | "USD" | "EUR";
+  const moneda = tf.filters.moneda as "todas" | Moneda;
   const origen = tf.filters.origen as "Nacional" | "Extranjero" | "todos";
   const aprobacion = tf.filters.aprobacion as AprobacionFiltro;
   const proveedorId = tf.filters.proveedorId;
@@ -103,7 +104,7 @@ export function useCxpPageState() {
     estatus,
     setEstatus: (v: EstatusCxP | "todos") => tf.setFilter("estatus", v),
     moneda,
-    setMoneda: (v: "todas" | "MXN" | "USD" | "EUR") => tf.setFilter("moneda", v),
+    setMoneda: (v: "todas" | Moneda) => tf.setFilter("moneda", v),
     origen,
     setOrigen: (v: "Nacional" | "Extranjero" | "todos") => tf.setFilter("origen", v),
     aprobacion,

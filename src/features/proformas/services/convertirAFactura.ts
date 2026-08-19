@@ -9,6 +9,7 @@
  *   dos borradores (uno por moneda) porque el SAT no permite CFDI multi-moneda.
  */
 import { supabase } from "@/integrations/supabase/client";
+import type { Moneda } from "@/types/db";
 
 export interface ConvertirProformaParams {
   proformaIds: string[];
@@ -29,7 +30,7 @@ export interface ConvertirProformaParams {
 export interface FacturaBorrador {
   facturaId: string;
   facturaNumero: string;
-  moneda: "MXN" | "USD" | "EUR";
+  moneda: Moneda;
 }
 
 export type ConvertirProformaResult = FacturaBorrador[];
@@ -52,7 +53,7 @@ export async function convertirProformaAFactura(
   });
   if (error) throw error;
   // SAFE-CAST: el RPC devuelve SETOF facturas; extraemos id, numero y moneda.
-  const rows = (data ?? []) as unknown as Array<{ id: string; numero: string; moneda: "MXN" | "USD" | "EUR" }>;
+  const rows = (data ?? []) as unknown as Array<{ id: string; numero: string; moneda: Moneda }>;
   if (!rows.length) throw new Error("No se pudo generar la factura");
   return rows.map((r) => ({
     facturaId: r.id,

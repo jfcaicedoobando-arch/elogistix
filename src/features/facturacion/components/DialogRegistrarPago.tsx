@@ -20,6 +20,7 @@ import { useCuentasBancarias } from "@/features/tesoreria/hooks";
 import { ResumenSaldo, FooterAcciones, NotasPago } from "./DialogRegistrarPagoParts";
 import { todayLocalISO } from "@/lib/date/today";
 import { derivarEstadoPago } from "./registrarPagoDerivados";
+import type { Moneda } from "@/types/db";
 
 interface Factura {
   id: string;
@@ -126,7 +127,7 @@ export function DialogRegistrarPago({ open, onOpenChange, factura }: Props) {
       facturaNumero: factura.numero,
       fecha: values.fecha,
       monto: montoNum,
-      moneda: values.moneda as "MXN" | "USD" | "EUR",
+      moneda: values.moneda as Moneda,
       tipoCambio,
       montoAplicado,
       formaPago: values.formaPago,

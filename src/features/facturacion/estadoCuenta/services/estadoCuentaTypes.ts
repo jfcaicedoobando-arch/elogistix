@@ -7,6 +7,7 @@
  */
 import type { Tables, Database } from "@/integrations/supabase/types";
 import { calcularSaldoFactura } from "@/lib/financial/saldoFactura";
+import { diasVencidos } from "@/lib/date/dateOnly";
 
 export type FacturaRow = Tables<"facturas">;
 export type Moneda = Database["public"]["Enums"]["moneda"];
@@ -108,10 +109,7 @@ export type RawFactura = Pick<
 };
 
 export function diasVencido(fechaVencimiento: string): number {
-  const venc = new Date(fechaVencimiento + "T00:00:00");
-  const hoy = new Date();
-  hoy.setHours(0, 0, 0, 0);
-  return Math.floor((hoy.getTime() - venc.getTime()) / (1000 * 60 * 60 * 24));
+  return diasVencidos(fechaVencimiento);
 }
 
 export function calcularEstatus(

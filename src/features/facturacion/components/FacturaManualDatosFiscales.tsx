@@ -15,8 +15,9 @@ import { Button } from "@/components/ui/button";
 import { RefreshCcw, Loader2 } from "lucide-react";
 import { USOS_CFDI_SAT, FORMAS_PAGO_SAT, METODOS_PAGO_SAT } from "@/constants/catalogosSAT";
 import { useBanxicoTipoCambio } from "@/features/facturacion/hooks/useBanxicoTipoCambio";
+import type { Moneda } from "@/types/db";
 
-export type MonedaManual = "MXN" | "USD" | "EUR";
+export type MonedaManual = Moneda;
 
 export interface DatosFiscalesValue {
   serie: string;

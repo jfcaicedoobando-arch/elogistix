@@ -9,11 +9,12 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
 import { AnticipoError, assertUuid, mapApiError } from "./anticiposErrors";
+import type { Moneda } from "@/types/db";
 
 export { AnticipoError } from "./anticiposErrors";
 export type Anticipo = Tables<"anticipos_proveedor">;
 export type AnticipoAplicacion = Tables<"anticipos_aplicaciones">;
-export type MonedaAnticipo = "MXN" | "USD" | "EUR";
+export type MonedaAnticipo = Moneda;
 
 export interface RegistrarAnticipoInput {
   proveedorId: string;

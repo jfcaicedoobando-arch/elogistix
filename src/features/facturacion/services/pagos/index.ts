@@ -3,6 +3,7 @@ import { unwrap, unwrapOr } from "@/lib/supabase/response";
 import type { Tables } from "@/integrations/supabase/types";
 import { registrarActividad } from "@/services/bitacora/registrar";
 import { crearMovimientoBancarioCobro } from "@/features/facturacion/services/cobroFacturaMovimiento";
+import type { Moneda } from "@/types/db";
 
 
 export type PagoFactura = Tables<"pagos_factura">;
@@ -104,7 +105,7 @@ export async function registrarPagoFactura(
       cuentaBancariaId: input.cuenta_bancaria_id,
       fechaPago: input.fecha_pago,
       monto: input.monto,
-      moneda: input.moneda as "MXN" | "USD" | "EUR",
+      moneda: input.moneda as Moneda,
       // C4: `tipo_cambio` aquí es el ratio pago→factura, NO el TC MXN/USD del
       // DOF. Pasarlo al movimiento bancario descuadraba el saldo; el abono se
       // registra sólo si la cuenta es de la misma moneda que el cobro.

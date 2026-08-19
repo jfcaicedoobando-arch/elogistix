@@ -67,3 +67,38 @@ export function formatDateOnlyLocal(d: Date): string {
   const day = String(d.getDate()).padStart(2, "0");
   return `${y}-${m}-${day}`;
 }
+
+/**
+ * Ola 19 · paso 1: ÚNICA fuente de verdad para "días entre dos fechas".
+ *
+ * Antes cada pantalla reescribía `(a - b) / (1000*60*60*24)` con redondeo
+ * distinto (`floor`/`round`/`ceil`), así que la misma factura podía mostrar
+ * 30 o 31 días vencidos según dónde se viera, y el cambio de horario (DST)
+ * movía el resultado un día. Aquí se ancla cada extremo a la MEDIANOCHE
+ * LOCAL y se usa `Math.round`, que es inmune a la hora ganada/perdida.
+ *
+ * Acepta date-only (`YYYY-MM-DD`), ISO con hora o `Date`.
+ * Resultado positivo = `hasta` es posterior a `desde`.
+ */
+export function diffDiasCalendario(
+  desde: Date | string,
+  hasta: Date | string,
+): number {
+  const a = aMedianocheLocal(desde);
+  const b = aMedianocheLocal(hasta);
+  return Math.round((b - a) / 86_400_000);
+}
+
+/**
+ * Días que lleva vencida una fecha respecto a `hoy` (positivo = ya venció).
+ * Espejo exacto de `diffDiasCalendario(vencimiento, hoy)`.
+ */
+export function diasVencidos(vencimiento: Date | string, hoy: Date | string = new Date()): number {
+  return diffDiasCalendario(vencimiento, hoy);
+}
+
+function aMedianocheLocal(v: Date | string): number {
+  const d = typeof v === "string" ? parseDateOnlyLocal(v) : new Date(v);
+  d.setHours(0, 0, 0, 0);
+  return d.getTime();
+}

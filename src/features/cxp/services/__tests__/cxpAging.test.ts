@@ -9,6 +9,7 @@ import {
   calcularTotalesPorMoneda,
   monedasPresentes,
   type CxpAgingRow,
+  type MonedaAging,
 } from "../cxpAging";
 
 function row(over: Partial<CxpAgingRow> = {}): CxpAgingRow {
@@ -89,7 +90,9 @@ describe("QW3 · segmentación por moneda", () => {
   it("monedasPresentes ordena MXN → USD → EUR primero y luego alfabético", () => {
     const monedas = monedasPresentes([
       row({ moneda: "EUR" }),
-      row({ moneda: "GBP" }),
+      // SAFE-CAST: `MonedaAging` ya es el enum de la base; aquí se prueba a
+      // propósito la tolerancia en runtime ante una moneda desconocida.
+      row({ moneda: "GBP" as MonedaAging }),
       row({ moneda: "USD" }),
       row({ moneda: "MXN" }),
     ]);

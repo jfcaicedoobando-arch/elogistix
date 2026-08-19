@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.676.0] - 2026-08-19
+- Ola 19 · paso 2: el Dashboard Ejecutivo se movió a `features/dashboardEjecutivo/routes`, rompiendo el ciclo de dependencias con `profit`.
+- Ola 19 · paso 5: el tipo `Moneda` ya no se redeclara por módulo; `financialUtils`, tesorería, seguros, anticipos, aging CxP y pagos usan el alias central de `@/types/db`.
+
 ## [13.675.2] - 2026-08-19
 
 ### CI verde

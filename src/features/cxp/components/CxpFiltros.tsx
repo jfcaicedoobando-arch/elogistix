@@ -15,14 +15,15 @@ import type { EstatusCxP } from "@/features/cxp/services";
 import { CxpFiltrosChips } from "./CxpFiltrosChips";
 import { CxpFiltrosSheetFields } from "./CxpFiltrosSheetFields";
 import { mobileFilterSheet } from "@/components/shared/utils/dialogTokens";
+import type { Moneda } from "@/types/db";
 
 interface Props {
   search: string;
   onSearchChange: (v: string) => void;
   estatus: EstatusCxP | "todos";
   onEstatusChange: (v: EstatusCxP | "todos") => void;
-  moneda: "todas" | "MXN" | "USD" | "EUR";
-  onMonedaChange: (v: "todas" | "MXN" | "USD" | "EUR") => void;
+  moneda: "todas" | Moneda;
+  onMonedaChange: (v: "todas" | Moneda) => void;
   origen: "Nacional" | "Extranjero" | "todos";
   onOrigenChange: (v: "Nacional" | "Extranjero" | "todos") => void;
   aprobacion: "todos" | "pendiente" | "aprobada" | "rechazada";

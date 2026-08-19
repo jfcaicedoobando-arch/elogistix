@@ -3,6 +3,7 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import { unwrap, run } from "@/lib/supabase/response";
+import type { Moneda } from "@/types/db";
 
 export type PeriodoMeta = "semanal" | "dia_30" | "dia_60" | "dia_90" | "trimestre";
 
@@ -19,7 +20,7 @@ export interface PresupuestoMes {
   anio: number;
   mes: number;
   monto: number;
-  moneda: "MXN" | "USD" | "EUR";
+  moneda: Moneda;
 }
 
 export interface MetaActividad {
@@ -47,7 +48,7 @@ export async function upsertPresupuestoMes(params: {
   anio: number;
   mes: number;
   monto: number;
-  moneda: "MXN" | "USD" | "EUR";
+  moneda: Moneda;
 }): Promise<void> {
   await run(
     supabase.from("crm_presupuesto_mensual").upsert(

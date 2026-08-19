@@ -1,5 +1,6 @@
 import { format } from "date-fns";
 import { hoyMx, parseLocalMx } from "@/lib/date/mx";
+import { diffDiasCalendario } from "@/lib/date/dateOnly";
 import type { ConceptoVentaCotizacion, DimensionLCL, DimensionAerea } from '@/features/cotizacion/types';
 import type { CotizacionFormValues } from '@/features/cotizacion/types';
 
@@ -61,8 +62,7 @@ function coerceDate(v: unknown): Date | null {
 function vigenciaDias(validez?: Date): number {
   const d = coerceDate(validez);
   if (!d) return 15;
-  const hoy = parseLocalMx(hoyMx()).getTime();
-  return Math.max(1, Math.round((d.getTime() - hoy) / (1000 * 60 * 60 * 24)));
+  return Math.max(1, diffDiasCalendario(parseLocalMx(hoyMx()), d));
 }
 
 

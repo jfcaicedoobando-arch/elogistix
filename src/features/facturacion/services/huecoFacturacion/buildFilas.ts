@@ -5,6 +5,7 @@
  */
 import { sumarConceptosEnMxn, sumarConceptosEnUsd } from "@/features/facturacion/domain/proyeccionFacturacion";
 import type { EmbarqueHuecoRow } from "./fetchSources";
+import { diffDiasCalendario } from "@/lib/date/dateOnly";
 
 export interface FilaHueco {
   embarque_id: string;
@@ -24,8 +25,7 @@ export interface FilaHueco {
 
 
 export function diasDesde(fechaIso: string, hoy: Date): number {
-  const d = new Date(fechaIso + "T00:00:00");
-  return Math.floor((hoy.getTime() - d.getTime()) / (1000 * 60 * 60 * 24));
+  return diffDiasCalendario(fechaIso, hoy);
 }
 
 export function indexarVentas(

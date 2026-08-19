@@ -18,6 +18,7 @@ import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { notifyError } from "@/lib/ui/appFeedback";
 import { crmToast } from "@/features/crm/lib/crmToast";
 import { useConvertirLead, type CrmLeadRow } from "@/features/crm/hooks";
+import type { Moneda } from "@/types/db";
 
 interface Props {
   open: boolean;
@@ -29,7 +30,7 @@ export default function ConvertirLeadDialog({ open, onOpenChange, lead }: Props)
   const [crearCliente, setCrearCliente] = useState(true);
   const [nombre, setNombre] = useState(`Oportunidad — ${lead.empresa}`);
   const [monto, setMonto] = useState<string>("0");
-  const [moneda, setMoneda] = useState<"MXN" | "USD" | "EUR">("MXN");
+  const [moneda, setMoneda] = useState<Moneda>("MXN");
   const [fecha, setFecha] = useState<string>("");
   const convertir = useConvertirLead();
   const navigate = useNavigate();
