@@ -225,10 +225,16 @@ export function buildRepPayload(ctx: PagoContext): FacturapiRepPayload {
   const rdoc = payload.complements[0].data[0].related_documents[0];
   if (dr.folio) rdoc.folio_number = dr.folio;
   if (dr.serie) rdoc.series = dr.serie;
-  // exchange en el documento relacionado: relación moneda_dr → moneda del pago
-  if (!sameCurrency && dr.tipo_cambio_dr > 0) {
-    rdoc.exchange = dr.tipo_cambio_dr;
+  // TipoCambioDR (SAT/CFDI 4.0): cuántas unidades de la moneda del documento
+  // equivale UNA unidad de la moneda del pago. Nuestras tablas guardan el T/C
+  // en la convención "pesos por divisa" (17.06 MXN/USD), así que aquí se
+  // invierte cuando corresponde: pago MXN + factura USD → 1/17.06 = 0.0586170
+  // (Facturapi rechaza con `exchange_rate_too_large` cualquier valor > 1).
+  if (!sameCurrency) {
+    const factor = tipoCambioDocRelacionado(ctx.moneda, ctx.tipo_cambio, dr.moneda_dr, dr.tipo_cambio_dr);
+    if (factor !== null) rdoc.exchange = factor;
   }
+
 
   // v13.208.0 — Bloque "Referencias del embarque" al pie del PDF.
   const pdfSection = buildPdfCustomSection(ctx.referencias);
