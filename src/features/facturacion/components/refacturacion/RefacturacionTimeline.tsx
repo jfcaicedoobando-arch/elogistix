@@ -41,8 +41,8 @@ export function RefacturacionTimeline({ eventos }: { eventos: EventoRefacturacio
             <span className="absolute -left-[1.6rem] top-0.5 bg-background">
               <Icono className={`h-4 w-4 ${COLOR[e.severidad]}`} aria-hidden />
             </span>
-            <p className="text-sm font-medium leading-tight">{e.titulo}</p>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-body font-medium leading-tight">{e.titulo}</p>
+            <p className="text-body-sm text-muted-foreground">
               {formatFechaHoraTexto(e.ts)}
               {" · "}
               {nombreDesdeEmail(e.usuarioEmail) || e.usuarioEmail}

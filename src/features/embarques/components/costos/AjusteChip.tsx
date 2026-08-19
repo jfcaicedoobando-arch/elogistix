@@ -22,7 +22,7 @@ export function AjusteChip({ descripcion }: Props) {
             </ToneBadge>
           </span>
         </TooltipTrigger>
-        <TooltipContent className="max-w-xs text-xs">{descripcion.detalle}</TooltipContent>
+        <TooltipContent className="max-w-xs text-body-sm">{descripcion.detalle}</TooltipContent>
       </Tooltip>
     </TooltipProvider>
   );

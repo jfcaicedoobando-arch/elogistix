@@ -45,7 +45,7 @@ export function TabResumen({ embarque }: Props) {
 
       <Card>
         <CardHeader className="pb-3"><CardTitle>Partes</CardTitle></CardHeader>
-        <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
+        <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6 text-body">
           <ParteCampo label="Shipper" valor={embarque.shipper} embarqueId={embarque.id} />
           <ParteCampo label="Consignatario" valor={embarque.consignatario} embarqueId={embarque.id} />
         </CardContent>
@@ -83,13 +83,13 @@ function ParteCampo({ label, valor, embarqueId }: { label: string; valor?: strin
   const texto = toTitleCase(valor ?? "");
   return (
     <div className="space-y-1">
-      <div className="text-xs uppercase tracking-wide text-muted-foreground">{label}</div>
+      <div className="text-body-sm uppercase tracking-wide text-muted-foreground">{label}</div>
       {texto ? (
         <div className="text-foreground">{texto}</div>
       ) : (
         <div className="flex items-center gap-2">
           <span className="text-muted-foreground italic">Sin capturar</span>
-          <Button variant="link" size="sm" asChild className="h-auto p-0 text-xs font-medium">
+          <Button variant="link" size="sm" asChild className="h-auto p-0 text-body-sm font-medium">
             <Link to={`/embarques/${embarqueId}/editar`} className="inline-flex items-center gap-1">
               <Pencil className="h-3 w-3" />
               Capturar

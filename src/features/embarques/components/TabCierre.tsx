@@ -111,13 +111,13 @@ export function TabCierre({ embarqueId, estatus, modo, expediente }: Props) {
             <TooltipProvider delayDuration={150}>
               <Tooltip>
                 <TooltipTrigger asChild><span tabIndex={0}>{btn}</span></TooltipTrigger>
-                <TooltipContent side="top" className="max-w-xs text-xs">{motivo}</TooltipContent>
+                <TooltipContent side="top" className="max-w-xs text-body-sm">{motivo}</TooltipContent>
               </Tooltip>
             </TooltipProvider>
           );
         })()}
         {!esCerrado && !canCerrarEmbarque && (
-          <p className="text-xs text-muted-foreground">
+          <p className="text-body-sm text-muted-foreground">
             El cierre del embarque es responsabilidad del <strong>coordinador logístico</strong>.
           </p>
         )}

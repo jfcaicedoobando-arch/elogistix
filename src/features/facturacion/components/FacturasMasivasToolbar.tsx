@@ -152,7 +152,7 @@ export function FacturasMasivasToolbar({ selectedIds, onClear }: Props) {
 
   return (
     <div className="flex items-center gap-2 px-4 py-2 bg-muted/50 border rounded-md">
-      <span className="text-sm font-medium">
+      <span className="text-body font-medium">
         {ids.length} seleccionada{ids.length === 1 ? "" : "s"}
       </span>
       <div className="flex-1" />

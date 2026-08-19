@@ -59,7 +59,7 @@ export function EstadoCuentaFilters({
             onChange={(e) => onBusquedaChange(e.target.value)}
             placeholder="Folio o expediente"
             aria-label="Buscar por folio o expediente"
-            className="h-8 w-48 pl-7 text-sm"
+            className="h-8 w-48 pl-7 text-body"
           />
         </div>
 

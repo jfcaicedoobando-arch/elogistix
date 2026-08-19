@@ -16,7 +16,7 @@ export function BloqueAplicaciones({ aplicaciones }: { aplicaciones: AplicacionP
     return (
       <section className="space-y-2">
         <SectionHeading as="h3" variant="subsection">Aplicado a</SectionHeading>
-        <p className="rounded-md border border-dashed p-3 text-sm text-muted-foreground">
+        <p className="rounded-md border border-dashed p-3 text-body text-muted-foreground">
           Todavía no se aplica a ninguna factura. Aplícalo desde el detalle de la factura del proveedor.
         </p>
       </section>
@@ -29,7 +29,7 @@ export function BloqueAplicaciones({ aplicaciones }: { aplicaciones: AplicacionP
         as="h3"
         variant="subsection"
         actions={
-          <span className="text-xs text-muted-foreground tabular-nums">
+          <span className="text-body-sm text-muted-foreground tabular-nums">
             Total aplicado {formatCurrency(totalAplicado(aplicaciones), aplicaciones[0].moneda)}
           </span>
         }
@@ -51,7 +51,7 @@ export function BloqueAplicaciones({ aplicaciones }: { aplicaciones: AplicacionP
                 <TableCell className="align-top">
                   <Link
                     to={rutaAplicacion(a)}
-                    className="text-sm font-medium text-primary hover:underline"
+                    className="text-body font-medium text-primary hover:underline"
                   >
                     {a.folio ?? "Sin folio"}
                   </Link>

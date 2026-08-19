@@ -159,7 +159,7 @@ export function ResumenConceptosVenta({
                         <>
                           {c.descripcion}
                           {c.moneda === "USD" && c.aplica_iva && (
-                            <Badge variant="warning" className="ml-2 text-xs">+IVA</Badge>
+                            <Badge variant="warning" className="ml-2 text-body-sm">+IVA</Badge>
                           )}
                         </>
                       );

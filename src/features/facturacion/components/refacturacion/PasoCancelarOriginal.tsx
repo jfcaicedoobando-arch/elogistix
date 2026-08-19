@@ -38,7 +38,7 @@ export function PasoCancelarOriginal(props: Props) {
     >
       <div className="rounded-md border p-3 space-y-1">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <p className="text-sm font-medium">{props.original?.numero ?? "—"}</p>
+          <p className="text-body font-medium">{props.original?.numero ?? "—"}</p>
           <div className="flex items-center gap-2">
             <Badge variant={cancelada ? "secondary" : "outline"}>
               {props.original?.estado ?? "—"}
@@ -47,7 +47,7 @@ export function PasoCancelarOriginal(props: Props) {
             {rechazada ? <Badge variant="destructive">Cancelación rechazada</Badge> : null}
           </div>
         </div>
-        <p className="text-xs text-muted-foreground">
+        <p className="text-body-sm text-muted-foreground">
           Motivo SAT a usar: <strong>{props.rutaFiscal}</strong>
           {props.rutaFiscal === "01"
             ? " · sustitución (se referencia el UUID de la nueva factura)"
@@ -56,13 +56,13 @@ export function PasoCancelarOriginal(props: Props) {
       </div>
 
       {cancelada ? (
-        <div className="rounded-md border border-success/30 bg-success/5 p-3 text-sm flex items-start gap-2">
+        <div className="rounded-md border border-success/30 bg-success/5 p-3 text-body flex items-start gap-2">
           <CheckCircle2 className="h-4 w-4 text-success mt-0.5" />
           <span>La factura original ya está fuera de circulación. Puedes continuar.</span>
         </div>
       ) : enTramite ? (
         <div className="space-y-3">
-          <div className="rounded-md border border-warning/30 bg-warning/5 p-3 text-sm flex items-start gap-2">
+          <div className="rounded-md border border-warning/30 bg-warning/5 p-3 text-body flex items-start gap-2">
             <Clock className="h-4 w-4 text-warning mt-0.5" />
             <span>{AVISO_ORIGINAL_EN_VERIFICACION}</span>
           </div>
@@ -70,7 +70,7 @@ export function PasoCancelarOriginal(props: Props) {
         </div>
       ) : (
         <div className="space-y-3">
-          <div className="rounded-md border border-warning/30 bg-warning/5 p-3 text-xs flex items-start gap-2">
+          <div className="rounded-md border border-warning/30 bg-warning/5 p-3 text-body-sm flex items-start gap-2">
             <TriangleAlert className="h-4 w-4 text-warning mt-0.5 shrink-0" />
             <span>
               {rechazada

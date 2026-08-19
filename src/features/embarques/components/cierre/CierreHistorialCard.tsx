@@ -35,7 +35,7 @@ export function CierreHistorialCard({ log }: { log: CierreLogEntry[] }) {
         ) : (
           <ul className="space-y-2">
             {log.map((entry) => (
-              <li key={entry.id} className="rounded-md border p-3 text-sm">
+              <li key={entry.id} className="rounded-md border p-3 text-body">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div className="flex items-center gap-2">
                     <Badge variant={entry.accion === "cerrar" ? "default" : "outline"}>
@@ -47,17 +47,17 @@ export function CierreHistorialCard({ log }: { log: CierreLogEntry[] }) {
                       </Badge>
                     )}
                   </div>
-                  <span className="text-xs text-muted-foreground">
+                  <span className="text-body-sm text-muted-foreground">
                     {formatFechaHora(entry.created_at)}
                   </span>
                 </div>
-                <p className="mt-1 text-xs text-muted-foreground">
+                <p className="mt-1 text-body-sm text-muted-foreground">
                   Por <span className="font-medium text-foreground">
                     {entry.usuario_email ?? "Usuario desconocido"}
                   </span>
                 </p>
                 {entry.motivo && (
-                  <p className="mt-1 text-sm text-muted-foreground">{entry.motivo}</p>
+                  <p className="mt-1 text-body text-muted-foreground">{entry.motivo}</p>
                 )}
               </li>
             ))}

@@ -17,7 +17,7 @@ interface Props {
 function Fila({ doc }: { doc: TrackingPublicoDocumento }) {
   return (
     <li className="flex items-center justify-between gap-3 py-2 border-b last:border-b-0">
-      <span className="flex items-center gap-2 text-sm text-foreground">
+      <span className="flex items-center gap-2 text-body text-foreground">
         {doc.recibido ? (
           <CheckCircle2 className="h-4 w-4 text-success" />
         ) : (
@@ -56,7 +56,7 @@ export function TrackingPublicoDocumentos({ documentos }: Props) {
         ) : (
           <>
             <div>
-              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground mb-1">
+              <p className="text-body-sm font-medium uppercase tracking-wide text-muted-foreground mb-1">
                 Recibidos ({recibidos.length})
               </p>
               {recibidos.length === 0 ? (
@@ -67,7 +67,7 @@ export function TrackingPublicoDocumentos({ documentos }: Props) {
             </div>
 
             <div>
-              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground mb-1">
+              <p className="text-body-sm font-medium uppercase tracking-wide text-muted-foreground mb-1">
                 Faltantes ({faltantes.length})
               </p>
               {faltantes.length === 0 ? (
@@ -79,7 +79,7 @@ export function TrackingPublicoDocumentos({ documentos }: Props) {
               ) : (
                 <>
                   <ul>{faltantes.map((d) => <Fila key={d.nombre} doc={d} />)}</ul>
-                  <p className="text-xs text-muted-foreground pt-2">
+                  <p className="text-body-sm text-muted-foreground pt-2">
                     Envía los documentos faltantes a tu ejecutivo de cuenta para no retrasar el
                     despacho de tu carga.
                   </p>

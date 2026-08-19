@@ -32,7 +32,7 @@ export function EstadoConciliado({
           Ver detalle del pago
         </Button>
       ) : (
-        <p className="text-xs text-muted-foreground">
+        <p className="text-body-sm text-muted-foreground">
           Este movimiento está conciliado, pero no guarda el pago con el que se amarró.
         </p>
       )}
@@ -53,7 +53,7 @@ export function EstadoIgnorado({
   return (
     <>
       <StatusBadge domain="conciliacion" status="Ignorado" />
-      {motivo ? <p className="text-xs text-muted-foreground">Motivo: {motivo}</p> : null}
+      {motivo ? <p className="text-body-sm text-muted-foreground">Motivo: {motivo}</p> : null}
       <Button variant="outline" size="sm" onClick={onReactivar} className="w-full">
         Reactivar (volver a Pendiente)
       </Button>
@@ -84,14 +84,14 @@ export function ListaCandidatos({
         </SectionHeading>
         {isLoading ? <CardSkeleton lines={2} showHeader={false} /> : null}
         {!isLoading && candidatos.length === 0 ? (
-          <p className="text-xs text-muted-foreground">
+          <p className="text-body-sm text-muted-foreground">
             Sin candidatos. Crea el pago manualmente desde CxC/CxP o ignora este movimiento.
           </p>
         ) : null}
         {!isLoading && candidatos.length > 0 ? (
           <ul className="space-y-2">
             {candidatos.map((c) => (
-              <li key={`${c.tipo}-${c.pago_id}`} className="border rounded p-2 text-xs space-y-1">
+              <li key={`${c.tipo}-${c.pago_id}`} className="border rounded p-2 text-body-sm space-y-1">
                 <div className="flex justify-between">
                   <span className="font-medium">{c.contraparte}</span>
                   <Badge variant="outline" className="text-2xs">{c.tipo.toUpperCase()}</Badge>

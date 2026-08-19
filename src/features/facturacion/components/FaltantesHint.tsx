@@ -20,7 +20,7 @@ export function FaltantesHint({ items, className }: Props) {
   return (
     <p
       className={
-        "flex items-start gap-1.5 text-xs text-warning-foreground/90 " +
+        "flex items-start gap-1.5 text-body-sm text-warning-foreground/90 " +
         (className ?? "")
       }
       role="status"

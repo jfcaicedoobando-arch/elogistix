@@ -63,7 +63,7 @@ export function TabProyeccion() {
 
           <div className="flex-1" />
 
-          <div className="text-xs text-muted-foreground hidden md:block">
+          <div className="text-body-sm text-muted-foreground hidden md:block">
             {c.kpisGlobales.totalExpedientes} expedientes con ETA en {c.mesActual.label}
           </div>
 
@@ -85,7 +85,7 @@ export function TabProyeccion() {
       <ProyeccionCierreSection k={k} mesLabel={c.mesActual.label} />
 
       {/* Nota de moneda */}
-      <p className="text-xs text-muted-foreground flex items-center gap-1.5 px-1">
+      <p className="text-body-sm text-muted-foreground flex items-center gap-1.5 px-1">
         <Info className="h-3 w-3" />
         Montos en USD y MXN calculados con el tipo de cambio del propio embarque. Los conceptos en otra moneda se convierten automáticamente.
       </p>

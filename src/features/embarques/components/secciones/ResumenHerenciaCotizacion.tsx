@@ -19,7 +19,7 @@ import { formatCurrency } from "@/lib/formatters/numbers";
 
 function Row({ label, value }: { label: string; value: ReactNode }) {
   return (
-    <div className="flex items-center justify-between gap-3 text-sm py-1.5 border-b border-border last:border-0">
+    <div className="flex items-center justify-between gap-3 text-body py-1.5 border-b border-border last:border-0">
       <span className="text-muted-foreground">{label}</span>
       <span className="font-medium text-right">{value}</span>
     </div>
@@ -65,7 +65,7 @@ function computeResumenRows(cot: CotizacionRow): RowData[] {
   if (cot.notas) {
     rows.push({
       label: "Notas",
-      value: <span className="text-xs italic max-w-[60%]">{cot.notas}</span>,
+      value: <span className="text-body-sm italic max-w-[60%]">{cot.notas}</span>,
     });
   }
 

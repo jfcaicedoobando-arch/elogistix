@@ -29,7 +29,7 @@ export function FiltroContenedorChips({ contenedores, value, onChange }: Props) 
 
   return (
     <div className="flex flex-wrap gap-1.5 pb-1">
-      <span className="text-xs text-muted-foreground self-center mr-1">Filtrar por contenedor:</span>
+      <span className="text-body-sm text-muted-foreground self-center mr-1">Filtrar por contenedor:</span>
       {opciones.map((op) => {
         const active = value === op.id;
         return (
@@ -37,7 +37,7 @@ export function FiltroContenedorChips({ contenedores, value, onChange }: Props) 
             key={op.id}
             variant={active ? "default" : "outline"}
             className={cn(
-              "cursor-pointer text-xs",
+              "cursor-pointer text-body-sm",
               active ? "" : "hover:bg-muted",
             )}
             onClick={() => onChange(op.id)}

@@ -28,7 +28,7 @@ function DocumentoRow({ label, icon, disponible, onAbrir }: FilaProps) {
           {icon}
           {label}
         </span>
-        <span className="truncate text-xs text-muted-foreground">
+        <span className="truncate text-body-sm text-muted-foreground">
           {disponible ? "Disponible" : "No disponible"}
         </span>
       </div>
@@ -65,7 +65,7 @@ export function FacturaDocumentosSection({ factura }: Props) {
     <Card>
       <CardContent className="space-y-3 pt-6">
         <div className="border-b pb-2">
-          <h3 className="text-xs font-bold uppercase tracking-wide text-primary">
+          <h3 className="text-body-sm font-bold uppercase tracking-wide text-primary">
             Documentos del CFDI
           </h3>
         </div>
@@ -92,7 +92,7 @@ export function FacturaDocumentosSection({ factura }: Props) {
           ) : null}
         </div>
         {!timbrada && (
-          <p className="text-xs text-muted-foreground">
+          <p className="text-body-sm text-muted-foreground">
             Los archivos fiscales se generan al timbrar la factura.
           </p>
         )}

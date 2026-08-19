@@ -13,7 +13,7 @@ import { crearContenedorVacio } from "@/features/embarques/types/contenedor";
 import type { StepValidationErrors } from "@/features/embarques/domain/embarqueWizardSchemas";
 import type { EmbarqueFormValues } from "@/features/embarques/hooks";
 
-const errClass = "text-xs text-destructive mt-1";
+const errClass = "text-body-sm text-destructive mt-1";
 
 interface Props {
   errors: StepValidationErrors;

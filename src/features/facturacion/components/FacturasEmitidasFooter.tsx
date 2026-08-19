@@ -25,7 +25,7 @@ export function FacturasEmitidasFooter({ facturas }: Props) {
   return (
     <TooltipProvider delayDuration={150}>
       <Card>
-        <CardContent className="p-3 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm">
+        <CardContent className="p-3 flex flex-wrap items-center gap-x-6 gap-y-2 text-body">
           <div className="flex items-center gap-1 text-muted-foreground">
             <span className="font-medium">Totales del filtro</span>
             <Tooltip>
@@ -34,7 +34,7 @@ export function FacturasEmitidasFooter({ facturas }: Props) {
                   <Info className="h-3.5 w-3.5 opacity-60 hover:opacity-100" />
                 </span>
               </TooltipTrigger>
-              <TooltipContent side="top" className="max-w-[300px] text-xs">
+              <TooltipContent side="top" className="max-w-[300px] text-body-sm">
                 Suma de TODAS las facturas que cumplen los filtros actuales
                 (no sólo la página visible), separadas por moneda y excluyendo
                 las canceladas. El <strong>MXN equivalente</strong> usa el tipo
@@ -78,7 +78,7 @@ export function FacturasEmitidasFooter({ facturas }: Props) {
                   <span className="font-semibold tabular-nums text-warning">{r.facturasSinTc}</span>
                 </div>
               </TooltipTrigger>
-              <TooltipContent side="top" className="max-w-[280px] text-xs">
+              <TooltipContent side="top" className="max-w-[280px] text-body-sm">
                 {r.facturasSinTc} factura(s) USD sin tipo de cambio capturado
                 y sin TC del día disponible. No se incluyen en el MXN equivalente.
               </TooltipContent>

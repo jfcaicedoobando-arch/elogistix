@@ -37,10 +37,10 @@ export function PasoCancelarRep({
       description="El SAT exige cancelar el REP antes de cancelar la factura que lo originó."
       flat
     >
-      {cargando && <p className="text-sm text-muted-foreground">Consultando pagos…</p>}
+      {cargando && <p className="text-body text-muted-foreground">Consultando pagos…</p>}
 
       {!cargando && conRep.length === 0 && (
-        <div className="rounded-md border border-success/30 bg-success/5 p-3 text-sm flex items-start gap-2">
+        <div className="rounded-md border border-success/30 bg-success/5 p-3 text-body flex items-start gap-2">
           <CheckCircle2 className="h-4 w-4 text-success mt-0.5" />
           <span>
             El pago recibido no tiene complemento de pago timbrado. Puedes continuar.
@@ -49,7 +49,7 @@ export function PasoCancelarRep({
       )}
 
       {enVerificacion && (
-        <div className="rounded-md border border-warning/30 bg-warning/5 p-3 text-sm flex items-start gap-2">
+        <div className="rounded-md border border-warning/30 bg-warning/5 p-3 text-body flex items-start gap-2">
           <Clock3 className="h-4 w-4 text-warning mt-0.5 shrink-0" />
           <span>{AVISO_REP_EN_VERIFICACION}</span>
         </div>
@@ -67,11 +67,11 @@ export function PasoCancelarRep({
               className="rounded-md border p-3 flex flex-wrap items-center justify-between gap-3"
             >
               <div className="min-w-0 space-y-0.5">
-                <p className="text-sm font-medium">
+                <p className="text-body font-medium">
                   {formatCurrency(Number(p.monto), p.moneda)} ·{" "}
                   <span className="text-muted-foreground">{formatFechaEs(p.fecha_pago)}</span>
                 </p>
-                <p className="text-xs text-muted-foreground break-all">
+                <p className="text-body-sm text-muted-foreground break-all">
                   REP {p.uuid_rep}
                 </p>
               </div>
@@ -108,13 +108,13 @@ export function PasoCancelarRep({
                 )}
               </div>
               {verificando && (
-                <p className="basis-full flex items-start gap-2 text-xs text-muted-foreground">
+                <p className="basis-full flex items-start gap-2 text-body-sm text-muted-foreground">
                   <Clock3 className="h-4 w-4 shrink-0" />
                   El SAT está verificando la solicitud. El estado se actualizará automáticamente.
                 </p>
               )}
               {noAceptada && (
-                <p className="basis-full flex items-start gap-2 text-xs text-destructive">
+                <p className="basis-full flex items-start gap-2 text-body-sm text-destructive">
                   <TriangleAlert className="h-4 w-4 shrink-0" />
                   La solicitud fue rechazada o expiró. Puedes enviarla nuevamente.
                 </p>
@@ -124,7 +124,7 @@ export function PasoCancelarRep({
         })}
       </ul>
 
-      <p className="text-xs text-muted-foreground">
+      <p className="text-body-sm text-muted-foreground">
         La cancelación del REP usa el motivo SAT 02 (comprobante emitido con errores sin
         relación). El dinero permanece en el banco: sólo se retira el comprobante fiscal.
       </p>

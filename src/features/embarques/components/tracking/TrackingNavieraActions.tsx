@@ -141,9 +141,9 @@ export function TrackingNavieraActions(props: Props) {
     <Card>
       <CardContent className="pt-4 space-y-3">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-          <div className="text-sm">
+          <div className="text-body">
             <div className="font-medium">Consultar tracking en {carrierLabel}</div>
-            <div className="text-xs text-muted-foreground">
+            <div className="text-body-sm text-muted-foreground">
               {refLabel}: <span className="font-mono">{referenciaDisplay}</span>
             </div>
           </div>
@@ -180,7 +180,7 @@ export function TrackingNavieraActions(props: Props) {
             </TooltipProvider>
           </div>
         </div>
-        <p className="flex items-start gap-1.5 text-xs text-muted-foreground">
+        <p className="flex items-start gap-1.5 text-body-sm text-muted-foreground">
           <Lightbulb className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
           <span>
             Pega el {refLabel} en la página de la naviera, copia el último evento, regresa y regístralo

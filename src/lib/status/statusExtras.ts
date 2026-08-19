@@ -80,4 +80,10 @@ export const EXTRA_STATUS_BADGES: Record<string, EstadoVisual["badge"]> = {
   // v13.681.0 · UI-1 — Conciliación bancaria (Tesorería).
   Conciliado: "bg-success/15 text-success border border-success/30",
   Ignorado: "bg-muted text-muted-foreground border border-border",
+  // Ola E · V-2 — Libro de pagos (dominio `pago_tipo`) y REP (dominio `rep`).
+  cobro: "bg-success/15 text-success border border-success/30",
+  pago: "bg-primary/15 text-primary border border-primary/30",
+  anticipo: "bg-warning/15 text-warning border border-warning/30",
+  Timbrado: "bg-info/15 text-info border border-info/30",
+  Cancelado: "bg-destructive/15 text-destructive border border-destructive/30",
 };

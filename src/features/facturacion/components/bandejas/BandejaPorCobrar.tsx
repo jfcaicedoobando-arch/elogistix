@@ -38,7 +38,7 @@ const columns = defineColumns<FilaCobranza>([
   },
   clientColumn<FilaCobranza>({ accessor: (r) => r.cliente_nombre }),
   { ...dateColumn<FilaCobranza>({ id: "vencimiento", header: "Vence", accessor: (r) => r.fecha_vencimiento }),
-    meta: { width: COL_W.fecha, className: "text-xs whitespace-nowrap" } },
+    meta: { width: COL_W.fecha, className: "text-body-sm whitespace-nowrap" } },
   {
     id: "faltan",
     header: "Vence en",
@@ -49,7 +49,7 @@ const columns = defineColumns<FilaCobranza>([
       const b = agingPorCobrarBucket(row.original.dias_vencido);
       return (
         <span
-          className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold tabular-nums whitespace-nowrap ${b.className}`}
+          className={`inline-flex items-center rounded-full px-2 py-0.5 text-body-sm font-semibold tabular-nums whitespace-nowrap ${b.className}`}
           aria-label={b.ariaLabel}
           data-testid="col-vence-en"
           data-dias={row.original.dias_vencido}

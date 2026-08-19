@@ -20,7 +20,7 @@ export function ReceptorFiscalSemaforo({ clienteId, receptor }: Props) {
 
   if (faltan.length === 0) {
     return (
-      <div className="rounded-md border border-success/30 bg-success/5 p-3 text-sm flex items-start gap-2">
+      <div className="rounded-md border border-success/30 bg-success/5 p-3 text-body flex items-start gap-2">
         <CheckCircle2 className="h-4 w-4 text-success mt-0.5" />
         <span>El receptor tiene RFC, régimen fiscal y código postal: listo para facturar.</span>
       </div>
@@ -29,7 +29,7 @@ export function ReceptorFiscalSemaforo({ clienteId, receptor }: Props) {
 
   return (
     <div className="rounded-md border border-warning/30 bg-warning/5 p-3 space-y-2">
-      <div className="flex items-start gap-2 text-sm">
+      <div className="flex items-start gap-2 text-body">
         <AlertTriangle className="h-4 w-4 text-warning mt-0.5" />
         <span>
           Faltan datos fiscales del receptor: <strong>{faltan.join(", ")}</strong>. Corrígelos en

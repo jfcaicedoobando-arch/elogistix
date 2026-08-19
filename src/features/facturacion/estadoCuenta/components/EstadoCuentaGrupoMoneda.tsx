@@ -29,7 +29,7 @@ export function EstadoCuentaGrupoMoneda({
     <Fragment>
       {mostrarEncabezado && (
         <DetailTableRow hoverable={false}>
-          <TableCell colSpan={11} className="bg-muted/60 py-1.5 text-xs font-semibold uppercase tracking-wide">
+          <TableCell colSpan={11} className="bg-muted/60 py-1.5 text-body-sm font-semibold uppercase tracking-wide">
             Movimientos en {grupo.moneda} · {grupo.filas.length} factura(s)
           </TableCell>
         </DetailTableRow>
@@ -54,7 +54,7 @@ export function EstadoCuentaGrupoMoneda({
       ))}
 
       <DetailTableRow hoverable={false} className="border-t-2 bg-muted/30">
-        <TableCell colSpan={6} className="text-xs font-semibold uppercase tracking-wide">
+        <TableCell colSpan={6} className="text-body-sm font-semibold uppercase tracking-wide">
           Subtotal {grupo.moneda}
         </TableCell>
         <TableCell className="text-right tabular-nums font-semibold whitespace-nowrap">

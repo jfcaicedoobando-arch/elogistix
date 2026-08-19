@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label";
 import type { StepValidationErrors } from "@/features/embarques/domain/embarqueWizardSchemas";
 import type { EmbarqueFormValues } from "@/features/embarques/hooks";
 
-const errClass = "text-xs text-destructive mt-1";
+const errClass = "text-body-sm text-destructive mt-1";
 
 export function StepDatosRutaTerrestre({ errors }: { errors: StepValidationErrors }) {
   const { register } = useFormContext<EmbarqueFormValues>();

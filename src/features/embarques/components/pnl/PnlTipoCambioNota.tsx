@@ -44,7 +44,7 @@ function BadgeDof({ ctx }: { ctx: EmbarqueTcContexto }) {
 function ComparativoDof({ ctx, puedeAlinear }: { ctx: EmbarqueTcContexto; puedeAlinear: boolean }) {
   const fechaDof = ctx.dof?.fecha ?? ctx.fechaReferencia;
   return (
-    <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+    <div className="flex flex-wrap items-center gap-2 text-body-sm text-muted-foreground">
       <span>
         DOF del {formatFechaEs(fechaDof)}: {(ctx.dof?.usdMxn ?? 0).toFixed(4)}
       </span>
@@ -73,7 +73,7 @@ export function PnlTipoCambioNota({ embarqueId, tcUsd, tcEur }: Props) {
 
   return (
     <div className="space-y-2">
-      <p className="text-xs text-muted-foreground">
+      <p className="text-body-sm text-muted-foreground">
         Tipos de cambio del embarque: USD {tc(tcUsd)} · EUR {tc(tcEur)}
         {ctx ? ` · congelados al capturarlo el ${formatFechaEs(ctx.fechaReferencia)}` : ""}
       </p>

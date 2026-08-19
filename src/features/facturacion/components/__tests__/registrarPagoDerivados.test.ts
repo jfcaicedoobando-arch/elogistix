@@ -14,7 +14,7 @@ import {
 const RATES = { usdMxn: 17.06, eurMxn: 19.75 };
 
 describe("tcParaPago", () => {
-  it("misma moneda → 1", () => {
+  it("misma moneda → 1 (derivados de registrar pago)", () => {
     expect(tcParaPago("USD", "USD", RATES)).toBe(1);
   });
 

@@ -58,7 +58,7 @@ export function ActualizarEtaForm({ etaActual, isPending, onSubmit, onCancel }: 
           className="grid grid-cols-1 md:grid-cols-2 gap-4"
         >
           <div className="space-y-2">
-            <label className="text-sm font-medium">Nuevo ETA *</label>
+            <label className="text-body font-medium">Nuevo ETA *</label>
             <Controller
               control={control}
               name="fecha"
@@ -72,12 +72,12 @@ export function ActualizarEtaForm({ etaActual, isPending, onSubmit, onCancel }: 
                 />
               )}
             />
-            <p className="text-xs text-muted-foreground">
+            <p className="text-body-sm text-muted-foreground">
               ETA anterior: {etaActualIso ? formatDate(etaActualIso, "dd/MM/yyyy") : "—"}
             </p>
           </div>
           <div className="space-y-2">
-            <label htmlFor="actualizar-eta-fuente" className="text-sm font-medium">Fuente / Motivo</label>
+            <label htmlFor="actualizar-eta-fuente" className="text-body font-medium">Fuente / Motivo</label>
             <Controller
               control={control}
               name="fuente"
@@ -90,7 +90,7 @@ export function ActualizarEtaForm({ etaActual, isPending, onSubmit, onCancel }: 
                 />
               )}
             />
-            {errors.fuente && <p className="text-xs text-destructive">{errors.fuente.message}</p>}
+            {errors.fuente && <p className="text-body-sm text-destructive">{errors.fuente.message}</p>}
           </div>
           <div className="md:col-span-2 flex gap-2 justify-end">
             <Button type="button" variant="outline" size="sm" onClick={onCancel} disabled={isPending}>

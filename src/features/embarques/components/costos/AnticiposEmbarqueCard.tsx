@@ -40,21 +40,21 @@ export function AnticiposEmbarqueCard({ embarqueId }: { embarqueId?: string }) {
               className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-border bg-muted/30 px-3 py-2"
             >
               <div className="min-w-0">
-                <p className="truncate text-sm font-medium">{a.proveedor_nombre ?? "Proveedor"}</p>
-                <p className="text-xs text-muted-foreground">
+                <p className="truncate text-body font-medium">{a.proveedor_nombre ?? "Proveedor"}</p>
+                <p className="text-body-sm text-muted-foreground">
                   {formatDate(a.fecha_anticipo)}
                   {a.referencia ? ` · Ref. ${a.referencia}` : ""}
                 </p>
               </div>
               <div className="flex items-center gap-3">
                 <div className="text-right">
-                  <p className="text-sm font-semibold tabular-nums">
+                  <p className="text-body font-semibold tabular-nums">
                     {formatCurrency(Number(a.monto), a.moneda)}
                   </p>
-                  <p className="text-xs text-muted-foreground tabular-nums">
+                  <p className="text-body-sm text-muted-foreground tabular-nums">
                     Sin aplicar: {formatCurrency(Number(a.saldo_disponible), a.moneda)}
                   </p>
-                  <p className="text-xs text-muted-foreground tabular-nums">
+                  <p className="text-body-sm text-muted-foreground tabular-nums">
                     Cruzado con facturas de este embarque:{" "}
                     {formatCurrency(Number(aplicadoAqui[a.id] ?? 0), a.moneda)}
                   </p>

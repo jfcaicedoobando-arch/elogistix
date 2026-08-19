@@ -20,7 +20,7 @@ export function TrackingPublicoErrorCard({ message }: { message?: string }) {
             descripcion={descripcion}
             pasos={esEnlace ? COPY_PASOS.enlaceInvalido : COPY_PASOS.servicioNoDisponible}
             accion={
-              <Link to="/" className="text-sm font-medium text-accent hover:underline">
+              <Link to="/" className="text-body font-medium text-accent hover:underline">
                 Volver al inicio
               </Link>
             }

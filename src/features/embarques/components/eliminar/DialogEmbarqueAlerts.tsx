@@ -65,7 +65,7 @@ export function DialogEmbarqueVerificandoAlert({
         <AlertDialogHeader>
           <AlertDialogTitle>Verificando dependencias…</AlertDialogTitle>
           <AlertDialogDescription asChild>
-            <div className="space-y-2 text-sm">
+            <div className="space-y-2 text-body">
               {isLoading && (
                 <p className="flex items-center gap-2 text-muted-foreground">
                   <Loader2 className="h-4 w-4 animate-spin" aria-hidden />

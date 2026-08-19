@@ -91,7 +91,7 @@ export function BandejaTabs() {
                     <TabsTrigger
                       key={d.id}
                       value={d.id}
-                      className="rounded-none border-b-2 border-transparent bg-transparent px-3 py-2 text-sm font-medium text-muted-foreground shadow-none data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=active]:shadow-none -mb-px"
+                      className="rounded-none border-b-2 border-transparent bg-transparent px-3 py-2 text-body font-medium text-muted-foreground shadow-none data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=active]:shadow-none -mb-px"
                     >
                       <span className="flex items-center gap-1.5">
                         {d.label}
@@ -117,7 +117,7 @@ export function BandejaTabs() {
                             <TooltipContent
                               side="bottom"
                               collisionPadding={12}
-                              className="max-w-sm text-xs leading-relaxed whitespace-normal"
+                              className="max-w-sm text-body-sm leading-relaxed whitespace-normal"
                             >
                               {d.hint}
                             </TooltipContent>

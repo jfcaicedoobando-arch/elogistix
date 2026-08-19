@@ -14,7 +14,7 @@ export function ActividadDetalles({ detalles }: Props) {
 
   if (cambios && cambios.length > 0) {
     return (
-      <ul className="mt-1 space-y-0.5 text-xs text-muted-foreground">
+      <ul className="mt-1 space-y-0.5 text-body-sm text-muted-foreground">
         {cambios.slice(0, 6).map((c, i) => (
           <li key={`${c.campo}-${i}`}>
             <span className="font-medium">{c.campo}:</span>{" "}
@@ -34,7 +34,7 @@ export function ActividadDetalles({ detalles }: Props) {
   if (entries.length === 0) return null;
 
   return (
-    <p className="mt-1 text-xs text-muted-foreground break-words">
+    <p className="mt-1 text-body-sm text-muted-foreground break-words">
       {entries
         .slice(0, 4)
         .map(([k, v]) => `${k}: ${typeof v === "object" ? JSON.stringify(v) : String(v)}`)

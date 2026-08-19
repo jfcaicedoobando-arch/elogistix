@@ -45,8 +45,8 @@ export function ArchivosEntranteDropZone({
         )}
       >
         <Upload className="h-5 w-5 text-muted-foreground" />
-        <span className="text-sm font-medium">Arrastra el PDF y el XML, o haz clic para elegirlos</span>
-        <span className="text-xs text-muted-foreground">
+        <span className="text-body font-medium">Arrastra el PDF y el XML, o haz clic para elegirlos</span>
+        <span className="text-body-sm text-muted-foreground">
           Puedes seleccionar los dos a la vez · máx. {TAMANO_MAX_ENTRANTE_MB} MB por archivo
         </span>
       </button>

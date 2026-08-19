@@ -6,7 +6,7 @@ import type { EmbarqueFormValues } from "@/features/embarques/hooks";
 
 export function FieldError({ msg }: { msg?: string }) {
   if (!msg) return null;
-  return <p className="text-xs text-destructive">{msg}</p>;
+  return <p className="text-body-sm text-destructive">{msg}</p>;
 }
 
 interface MsdsProps {
@@ -33,7 +33,7 @@ export function MsdsUploadSection({ onMsdsUpload }: MsdsProps) {
     <div className="space-y-2">
       <Label htmlFor="msds-file-input">Hoja de Seguridad (MSDS)</Label>
       {msdsNombreArchivo ? (
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+        <div className="flex items-center gap-2 text-body text-muted-foreground">
           <FileText className="h-4 w-4" aria-hidden />
           <span className="truncate">{msdsNombreArchivo}</span>
           <Button type="button" variant="outline" size="sm" onClick={openPicker}>

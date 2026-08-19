@@ -34,15 +34,15 @@ export function GrupoConceptosContenedor({
     <div className="border-t">
       <div className="flex items-center justify-between gap-2 px-4 py-2 bg-muted/40 border-b">
         <div className="flex items-center gap-2 min-w-0">
-          <span className="text-sm font-semibold truncate">{titulo}</span>
+          <span className="text-body font-semibold truncate">{titulo}</span>
           {subtitulo && (
-            <span className="text-xs text-muted-foreground truncate">· {subtitulo}</span>
+            <span className="text-body-sm text-muted-foreground truncate">· {subtitulo}</span>
           )}
           <Badge variant="secondary" className="ml-1">{conceptos.length}</Badge>
         </div>
         <div className="flex items-center gap-3 shrink-0">
           {(totales.mxn > 0 || totales.usd > 0) && (
-            <span className="text-xs text-muted-foreground tabular-nums">
+            <span className="text-body-sm text-muted-foreground tabular-nums">
               {totales.mxn > 0 && <>{formatCurrency(totales.mxn, "MXN")}</>}
               {totales.mxn > 0 && totales.usd > 0 && <> · </>}
               {totales.usd > 0 && <>{formatCurrency(totales.usd, "USD")}</>}
@@ -66,7 +66,7 @@ export function GrupoConceptosContenedor({
                 <>
                   {c.descripcion}
                   {c.moneda === "USD" && c.aplica_iva && (
-                    <Badge variant="warning" className="ml-2 text-xs">+IVA</Badge>
+                    <Badge variant="warning" className="ml-2 text-body-sm">+IVA</Badge>
                   )}
                 </>
               );

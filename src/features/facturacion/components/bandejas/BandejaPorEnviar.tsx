@@ -28,7 +28,7 @@ function EnviarButton({ onClick }: EnviarButtonProps) {
     <Button
       variant="outline"
       size="sm"
-      className="h-7 px-2 text-xs"
+      className="h-7 px-2 text-body-sm"
       onClick={(e) => {
         e.stopPropagation();
         e.preventDefault();
@@ -62,7 +62,7 @@ export function BandejaPorEnviar() {
     },
     clientColumn<FilaPorEnviar>({ accessor: (r) => r.cliente_nombre }),
     { ...dateColumn<FilaPorEnviar>({ id: "emision", header: "Emisión", accessor: (r) => r.fecha_emision }),
-      meta: { width: COL_W.fecha, className: "text-xs whitespace-nowrap" } },
+      meta: { width: COL_W.fecha, className: "text-body-sm whitespace-nowrap" } },
     { ...moneyColumn<FilaPorEnviar>({ id: "total", header: "Total",
         accessor: (r) => r.total, currencyAccessor: (r) => r.moneda }),
       meta: { width: COL_W.monto, align: "right", className: "tabular-nums whitespace-nowrap font-medium" } },

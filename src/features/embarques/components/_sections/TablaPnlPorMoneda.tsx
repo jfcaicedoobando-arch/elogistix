@@ -30,7 +30,7 @@ export function TablaPorMoneda({ moneda, filas }: TablaProps) {
         id: "sub",
         header: "Sub-expediente",
         accessorFn: (f) => f.subexpediente,
-        meta: { sticky: true, className: "font-mono text-xs" },
+        meta: { sticky: true, className: "font-mono text-body-sm" },
         cell: ({ row }) => {
           const f = row.original;
           if (f.esTotal || f.esGenerales) return f.subexpediente;

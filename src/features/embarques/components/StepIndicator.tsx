@@ -26,8 +26,8 @@ export function StepIndicator({ steps, currentStep, onStepClick }: Props) {
         const isCompleted = currentStep > step.num;
         const isCurrent = currentStep === step.num;
         const canJump = !!onStepClick && step.num < currentStep;
-        const circleClass = `h-7 w-7 sm:h-8 sm:w-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${getStepIndicatorCircleClass(currentStep, step.num)}`;
-        const labelClass = `text-xs sm:text-sm hidden md:inline whitespace-nowrap ${isCurrent ? 'font-medium' : 'text-muted-foreground'}`;
+        const circleClass = `h-7 w-7 sm:h-8 sm:w-8 rounded-full flex items-center justify-center text-body-sm font-bold shrink-0 ${getStepIndicatorCircleClass(currentStep, step.num)}`;
+        const labelClass = `text-body-sm sm:text-body hidden md:inline whitespace-nowrap ${isCurrent ? 'font-medium' : 'text-muted-foreground'}`;
 
         const content = (
           <>

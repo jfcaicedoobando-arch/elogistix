@@ -10,9 +10,9 @@ import { ConsultaSatBadge } from "./ConsultaSatBadge";
 
 function Row({ label, value, mono }: { label: string; value: string; mono?: boolean }) {
   return (
-    <div className="flex justify-between gap-2 text-sm">
+    <div className="flex justify-between gap-2 text-body">
       <span className="text-muted-foreground">{label}</span>
-      <span className={mono ? "font-mono text-xs truncate max-w-[60%]" : "font-medium"}>{value}</span>
+      <span className={mono ? "font-mono text-body-sm truncate max-w-[60%]" : "font-medium"}>{value}</span>
     </div>
   );
 }
@@ -33,7 +33,7 @@ export function ConsultaXmlCard({ xml }: { xml: ConsultarFacturapiXml | null | u
   return (
     <div className="rounded-lg border p-3 space-y-2">
       <div className="flex items-center justify-between gap-2">
-        <div className="text-xs font-semibold text-muted-foreground uppercase">XML de la factura</div>
+        <div className="text-body-sm font-semibold text-muted-foreground uppercase">XML de la factura</div>
         <ConsultaSatBadge estatus={xml.estatus_sat} />
       </div>
       <Row label="UUID" value={xml.uuid ?? "—"} mono />
@@ -46,7 +46,7 @@ export function ConsultaXmlCard({ xml }: { xml: ConsultarFacturapiXml | null | u
       <Row label="Fecha de timbrado" value={xml.fecha ?? "—"} />
       <Row label="Folio" value={xml.folio ? `${xml.serie ?? ""}${xml.folio}` : "—"} />
       {xml.sat_detalle && (
-        <p className="text-xs text-muted-foreground pt-1 border-t">{xml.sat_detalle}</p>
+        <p className="text-body-sm text-muted-foreground pt-1 border-t">{xml.sat_detalle}</p>
       )}
     </div>
   );

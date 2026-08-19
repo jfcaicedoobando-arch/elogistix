@@ -15,7 +15,7 @@ export function DatosGeneralesCard({ embarque }: { embarque: EmbarqueRow }) {
   return (
     <Card>
       <CardHeader className="pb-3"><CardTitle>Datos generales</CardTitle></CardHeader>
-      <CardContent className="space-y-2 text-sm">
+      <CardContent className="space-y-2 text-body">
         <DetailRow label="Tipo" value={embarque.tipo} />
         <DetailRow
           label="Incoterm"
@@ -70,7 +70,7 @@ function BotonCapturarFecha({
       type="button"
       variant="link"
       size="sm"
-      className="h-auto p-0 text-xs font-normal text-primary hover:no-underline"
+      className="h-auto p-0 text-body-sm font-normal text-primary hover:no-underline"
       onClick={() => navigate(`/embarques/${embarqueId}/editar`)}
     >
       <Plus className="h-3 w-3 mr-1" /> Capturar {campo}
@@ -81,7 +81,7 @@ function BotonCapturarFecha({
 function BannerCaptureFechas({ embarqueId }: { embarqueId: string }) {
   const navigate = useNavigate();
   return (
-    <div className="flex items-center justify-between gap-2 rounded-md border border-dashed border-primary/40 bg-primary/5 px-3 py-2 text-xs">
+    <div className="flex items-center justify-between gap-2 rounded-md border border-dashed border-primary/40 bg-primary/5 px-3 py-2 text-body-sm">
       <span className="text-muted-foreground">
         ETD y ETA sin capturar
       </span>
@@ -89,7 +89,7 @@ function BannerCaptureFechas({ embarqueId }: { embarqueId: string }) {
         type="button"
         variant="link"
         size="sm"
-        className="h-auto p-0 text-xs font-medium text-primary hover:no-underline"
+        className="h-auto p-0 text-body-sm font-medium text-primary hover:no-underline"
         onClick={() => navigate(`/embarques/${embarqueId}/editar`)}
       >
         Capturar fechas
@@ -108,7 +108,7 @@ export function RutaTransporteCard({ embarque }: { embarque: EmbarqueRow }) {
   return (
     <Card>
       <CardHeader className="pb-3"><CardTitle>Ruta y transporte</CardTitle></CardHeader>
-      <CardContent className="space-y-2 text-sm">
+      <CardContent className="space-y-2 text-body">
         {embarque.modo === 'Marítimo' && <RutaMaritimo e={embarque} />}
         {embarque.modo === 'Aéreo' && <RutaAereo e={embarque} />}
         {embarque.modo === 'Terrestre' && <RutaTerrestre e={embarque} />}

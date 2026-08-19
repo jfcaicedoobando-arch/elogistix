@@ -47,7 +47,7 @@ export function DesvincularCotizacionDialog({
           <RadioGroupItem value="conservar" id="op-conservar" className="mt-1" />
           <div className="space-y-1">
             <Label htmlFor="op-conservar" className="font-medium cursor-pointer">Conservar datos</Label>
-            <p className="text-sm text-muted-foreground">Mantiene cliente, ruta, mercancía y conceptos. Sólo se rompe el vínculo con la cotización.</p>
+            <p className="text-body text-muted-foreground">Mantiene cliente, ruta, mercancía y conceptos. Sólo se rompe el vínculo con la cotización.</p>
           </div>
         </label>
 
@@ -55,7 +55,7 @@ export function DesvincularCotizacionDialog({
           <RadioGroupItem value="solo-conceptos" id="op-solo-conceptos" className="mt-1" />
           <div className="space-y-1">
             <Label htmlFor="op-solo-conceptos" className="font-medium cursor-pointer">Limpiar sólo conceptos</Label>
-            <p className="text-sm text-muted-foreground">Conserva datos generales y ruta, pero quita los conceptos de venta y costo heredados.</p>
+            <p className="text-body text-muted-foreground">Conserva datos generales y ruta, pero quita los conceptos de venta y costo heredados.</p>
           </div>
         </label>
 
@@ -63,7 +63,7 @@ export function DesvincularCotizacionDialog({
           <RadioGroupItem value="limpiar" id="op-limpiar" className="mt-1" />
           <div className="space-y-1">
             <Label htmlFor="op-limpiar" className="font-medium cursor-pointer">Limpiar todo lo heredado</Label>
-            <p className="text-sm text-muted-foreground">Borra cliente, ruta, mercancía y conceptos pre-llenados. El embarque queda en blanco.</p>
+            <p className="text-body text-muted-foreground">Borra cliente, ruta, mercancía y conceptos pre-llenados. El embarque queda en blanco.</p>
           </div>
         </label>
       </RadioGroup>

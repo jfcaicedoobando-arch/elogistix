@@ -85,7 +85,7 @@ export function TabFacturasEmitidas({ filtros: f, tabla: t, acciones: a }: Props
   );
   const rangoFecha = (etiqueta: "desde" | "hasta", value: string, onChange: (v: string) => void) => (
     <div className="space-y-1.5">
-      <label className="text-xs font-medium text-muted-foreground">{rangoLabel("Emisión", etiqueta)}</label>
+      <label className="text-body-sm font-medium text-muted-foreground">{rangoLabel("Emisión", etiqueta)}</label>
       <DatePickerMx value={value} onChange={onChange} className="w-full" />
     </div>
   );
@@ -129,7 +129,7 @@ export function TabFacturasEmitidas({ filtros: f, tabla: t, acciones: a }: Props
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
-          <div className="text-xs text-muted-foreground">
+          <div className="text-body-sm text-muted-foreground">
             Mostrando <strong className="text-foreground">{t.facturasFiltradas.length}</strong> de {t.totalFacturas} facturas
           </div>
         </CardContent>

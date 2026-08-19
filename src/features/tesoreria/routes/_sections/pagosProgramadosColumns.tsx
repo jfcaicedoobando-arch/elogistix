@@ -45,12 +45,12 @@ export function buildPagosProgramadosColumns(abrirDialogoPago: (f: FacturaProgra
       header: "Folio",
       accessorFn: (r) => r.folio_proveedor ?? "",
       // VT-30: nowrap — el folio "AAV-2026-1188" se rompía en dos líneas.
-      meta: { width: COL_W.folio, className: "font-mono text-xs whitespace-nowrap" },
+      meta: { width: COL_W.folio, className: "font-mono text-body-sm whitespace-nowrap" },
     },
     {
       id: "fecha",
       header: "Fecha (Venc/Prog)",
-      meta: { width: COL_W.monto, className: "text-xs" },
+      meta: { width: COL_W.monto, className: "text-body-sm" },
       cell: ({ row }) => {
         const r = row.original;
         const fecha = r.fecha_programada_pago ?? r.fecha_vencimiento;

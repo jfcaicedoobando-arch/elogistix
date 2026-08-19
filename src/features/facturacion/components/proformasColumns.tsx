@@ -99,7 +99,7 @@ export function buildProformasColumns({
       enableSorting: true,
       sortingFn: sortByString<ProformaConFactura>((p) => p.operador),
       // Oculto en tableta (<xl) para eliminar scroll horizontal en /proformas.
-      meta: { width: COL_W.monto, className: "text-xs whitespace-nowrap hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
+      meta: { width: COL_W.monto, className: "text-body-sm whitespace-nowrap hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
       cell: ({ row }) => row.original.operador ? nombreDesdeEmail(row.original.operador) : <span className="text-muted-foreground">—</span>,
     },
     {
@@ -108,7 +108,7 @@ export function buildProformasColumns({
       accessorFn: (p) => p.fecha_emision,
       enableSorting: true,
       sortingFn: sortByDate<ProformaConFactura>((p) => p.fecha_emision),
-      meta: { width: COL_W.fecha, className: "text-xs hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
+      meta: { width: COL_W.fecha, className: "text-body-sm hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
       cell: ({ row }) => formatDate(row.original.fecha_emision),
     },
     {

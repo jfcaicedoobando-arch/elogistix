@@ -75,7 +75,7 @@ export function CierreCheckItem({
         <Icon className={`mt-0.5 h-5 w-5 shrink-0 ${color}`} />
         <div className="space-y-1">
           <div className="flex flex-wrap items-center gap-2">
-            <p className={`text-sm font-medium ${noAplica ? "text-muted-foreground" : ""}`}>
+            <p className={`text-body font-medium ${noAplica ? "text-muted-foreground" : ""}`}>
               {meta.label}
             </p>
             <Badge variant="outline" className="text-2xs font-normal">
@@ -83,14 +83,14 @@ export function CierreCheckItem({
             </Badge>
           </div>
           {meta.descripcion && (
-            <p className="text-xs leading-snug text-muted-foreground">{meta.descripcion}</p>
+            <p className="text-body-sm leading-snug text-muted-foreground">{meta.descripcion}</p>
           )}
           {noAplica && (
-            <p className="text-xs text-muted-foreground">{motivoNoAplica}</p>
+            <p className="text-body-sm text-muted-foreground">{motivoNoAplica}</p>
           )}
 
           {detalleTxt && (
-            <p className="text-xs font-medium text-foreground/80">{detalleTxt}</p>
+            <p className="text-body-sm font-medium text-foreground/80">{detalleTxt}</p>
           )}
 
         </div>

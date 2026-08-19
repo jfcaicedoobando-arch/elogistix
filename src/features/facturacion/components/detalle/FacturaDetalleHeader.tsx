@@ -67,7 +67,7 @@ export function FacturaDetalleHeader(props: Props) {
       badge={
         <>
           <StatusBadge domain="factura" status={estadoVisual} />
-          {sinTimbrar && <Badge variant="outline" className="text-xs">Sin timbrar</Badge>}
+          {sinTimbrar && <Badge variant="outline" className="text-body-sm">Sin timbrar</Badge>}
           <AmbienteBadge ambiente={ambiente} size="md" />
           {vencida && <AlertTriangle className="h-4 w-4 text-destructive" />}
         </>

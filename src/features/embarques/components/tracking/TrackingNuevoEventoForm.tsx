@@ -67,8 +67,8 @@ export function TrackingNuevoEventoForm({
           >
             <CalendarClock className="h-5 w-5 text-primary shrink-0 mt-0.5" />
             <div>
-              <div className="font-medium text-sm">Actualizar ETA</div>
-              <div className="text-xs text-muted-foreground mt-1">
+              <div className="font-medium text-body">Actualizar ETA</div>
+              <div className="text-body-sm text-muted-foreground mt-1">
                 Nueva fecha publicada por la naviera. Se propaga a toda la app.
               </div>
             </div>
@@ -80,8 +80,8 @@ export function TrackingNuevoEventoForm({
           >
             <Anchor className="h-5 w-5 text-primary shrink-0 mt-0.5" />
             <div>
-              <div className="font-medium text-sm">Marcar Llegada real</div>
-              <div className="text-xs text-muted-foreground mt-1">
+              <div className="font-medium text-body">Marcar Llegada real</div>
+              <div className="text-body-sm text-muted-foreground mt-1">
                 Fecha en que llegó el contenedor. Avanza el embarque a "Llegada".
               </div>
             </div>

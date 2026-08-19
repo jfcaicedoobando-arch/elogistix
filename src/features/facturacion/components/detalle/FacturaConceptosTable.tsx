@@ -116,8 +116,8 @@ export function FacturaConceptosTable({ snapshot, moneda, conceptos: propConcept
         <CardContent>
           <div className="flex flex-col items-center justify-center py-8 text-center text-muted-foreground">
             <Receipt className="h-8 w-8 mb-2 opacity-50" />
-            <p className="text-sm">Esta factura no incluye un desglose detallado.</p>
-            <p className="text-xs mt-1">Consulta el PDF para más información.</p>
+            <p className="text-body">Esta factura no incluye un desglose detallado.</p>
+            <p className="text-body-sm mt-1">Consulta el PDF para más información.</p>
           </div>
           {mostrarTotales && (
             <TotalesFooter subtotal={subtotal!} iva={iva!} total={total!} moneda={moneda} />

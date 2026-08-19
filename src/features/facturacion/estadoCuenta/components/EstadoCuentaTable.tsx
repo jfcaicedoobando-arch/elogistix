@@ -101,7 +101,7 @@ export function EstadoCuentaTable({
 
       {!isLoading && restantes > 0 && (
         <div className="flex items-center justify-center gap-3 border-t px-3 py-2">
-          <span className="text-xs text-muted-foreground">
+          <span className="text-body-sm text-muted-foreground">
             {restantes} movimiento(s) más
           </span>
           <Button variant="outline" size="sm" onClick={onVerMas}>

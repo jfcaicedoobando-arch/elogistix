@@ -86,7 +86,7 @@ export function FacturaManualConceptosTable({ conceptos, moneda, onChange }: Pro
                     value={c.clave_sat ?? ""}
                     onChange={(e) => update(idx, { clave_sat: e.target.value })}
                     placeholder="78101800"
-                    className="h-9 font-mono text-xs"
+                    className="h-9 font-mono text-body-sm"
                     aria-label={`Clave SAT del concepto ${idx + 1}`}
                   />
                 </div>
@@ -121,7 +121,7 @@ export function FacturaManualConceptosTable({ conceptos, moneda, onChange }: Pro
                   </Select>
                 </div>
                 <div className="col-span-1 flex items-center justify-end gap-1">
-                  <span className="text-xs tabular-nums text-muted-foreground truncate">
+                  <span className="text-body-sm tabular-nums text-muted-foreground truncate">
                     {formatCurrency(importe, moneda)}
                   </span>
                   <Button

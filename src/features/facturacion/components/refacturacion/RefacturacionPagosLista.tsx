@@ -14,10 +14,10 @@ export function RefacturacionPagosLista({ pagos }: { pagos: RefacturacionPagoRes
 
   return (
     <div className="space-y-2">
-      <p className="text-xs text-muted-foreground">Pagos involucrados</p>
+      <p className="text-body-sm text-muted-foreground">Pagos involucrados</p>
       <ul className="space-y-1">
         {pagos.map((p) => (
-          <li key={p.id} className="rounded-md border p-2 text-xs">
+          <li key={p.id} className="rounded-md border p-2 text-body-sm">
             <span className="font-medium">{formatCurrency(Number(p.monto), p.moneda)}</span>
             {" · "}{formatFechaEs(p.fecha_pago)}
             {" · "}{p.es_nuevo ? "aplicado a la factura nueva" : "pago original"}

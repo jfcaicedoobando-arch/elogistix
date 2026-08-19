@@ -70,7 +70,7 @@ export function EmbarqueBadgeAdmin({ embarqueId, estado, onIrACierre }: Props) {
         </button>
       </TooltipTrigger>
       <TooltipContent className="max-w-xs">
-        <div className="space-y-0.5 text-xs">
+        <div className="space-y-0.5 text-body-sm">
           {detalles.map((d) => <div key={d}>• {d}</div>)}
         </div>
       </TooltipContent>

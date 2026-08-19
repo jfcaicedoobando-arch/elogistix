@@ -40,7 +40,7 @@ export function LibroPagosToolbar({
     <Card>
       <CardContent density="compact" className="flex flex-wrap items-end gap-3">
         <div>
-          <p className="text-xs text-muted-foreground mb-1">Desde</p>
+          <p className="text-body-sm text-muted-foreground mb-1">Desde</p>
           <DatePickerMx
             value={rango.desde}
             onChange={(iso) => onRangoChange({ ...rango, desde: iso })}
@@ -48,7 +48,7 @@ export function LibroPagosToolbar({
           />
         </div>
         <div>
-          <p className="text-xs text-muted-foreground mb-1">Hasta</p>
+          <p className="text-body-sm text-muted-foreground mb-1">Hasta</p>
           <DatePickerMx
             value={rango.hasta}
             onChange={(iso) => onRangoChange({ ...rango, hasta: iso })}
@@ -69,7 +69,7 @@ export function LibroPagosToolbar({
         </div>
 
         <div className="min-w-[170px]">
-          <p className="text-xs text-muted-foreground mb-1">Cuenta bancaria</p>
+          <p className="text-body-sm text-muted-foreground mb-1">Cuenta bancaria</p>
           <Select
             value={filtros.cuentaId}
             onValueChange={(v) => onFiltrosChange({ cuentaId: v })}
@@ -85,7 +85,7 @@ export function LibroPagosToolbar({
         </div>
 
         <div className="min-w-[120px]">
-          <p className="text-xs text-muted-foreground mb-1">Moneda</p>
+          <p className="text-body-sm text-muted-foreground mb-1">Moneda</p>
           <Select value={filtros.moneda} onValueChange={(v) => onFiltrosChange({ moneda: v })}>
             <SelectTrigger><SelectValue /></SelectTrigger>
             <SelectContent>
@@ -96,7 +96,7 @@ export function LibroPagosToolbar({
         </div>
 
         <div className="min-w-[150px]">
-          <p className="text-xs text-muted-foreground mb-1">Método de pago</p>
+          <p className="text-body-sm text-muted-foreground mb-1">Método de pago</p>
           <Select value={filtros.metodo} onValueChange={(v) => onFiltrosChange({ metodo: v })}>
             <SelectTrigger><SelectValue /></SelectTrigger>
             <SelectContent>
@@ -107,7 +107,7 @@ export function LibroPagosToolbar({
         </div>
 
         <div className="min-w-[150px]">
-          <p className="text-xs text-muted-foreground mb-1">Conciliación</p>
+          <p className="text-body-sm text-muted-foreground mb-1">Conciliación</p>
           <Select
             value={filtros.conciliacion}
             onValueChange={(v) => onFiltrosChange({ conciliacion: v as FiltroConciliacion })}
@@ -122,7 +122,7 @@ export function LibroPagosToolbar({
         </div>
 
         <div className="min-w-[170px]">
-          <p className="text-xs text-muted-foreground mb-1">Complemento de pago</p>
+          <p className="text-body-sm text-muted-foreground mb-1">Complemento de pago</p>
           <Select
             value={filtros.rep}
             onValueChange={(v) => onFiltrosChange({ rep: v as FiltroRep })}
@@ -138,7 +138,7 @@ export function LibroPagosToolbar({
         </div>
 
         <div className="min-w-[200px] flex-1">
-          <p className="text-xs text-muted-foreground mb-1">Buscar</p>
+          <p className="text-body-sm text-muted-foreground mb-1">Buscar</p>
           <div className="relative">
             <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" aria-hidden />
             <Input

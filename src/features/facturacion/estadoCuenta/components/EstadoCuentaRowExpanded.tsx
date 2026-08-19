@@ -22,13 +22,13 @@ export function EstadoCuentaRowExpanded({ factura }: Props) {
     <div className="p-4 bg-muted/30 space-y-4">
       {pagos.length > 0 && (
         <div>
-          <div className="flex items-center gap-2 text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
+          <div className="flex items-center gap-2 text-body-sm font-semibold text-muted-foreground uppercase tracking-wide mb-2">
             <ArrowDownCircle className="h-3.5 w-3.5 text-success" />
             Pagos aplicados ({pagos.length})
           </div>
           <div className="rounded border bg-background overflow-hidden">
-            <table className="w-full text-sm">
-              <thead className="bg-muted/50 text-xs">
+            <table className="w-full text-body">
+              <thead className="bg-muted/50 text-body-sm">
                 <tr>
                   <th className="text-left px-3 py-1.5 font-medium">Fecha</th>
                   <th className="text-left px-3 py-1.5 font-medium">Forma de pago</th>
@@ -55,13 +55,13 @@ export function EstadoCuentaRowExpanded({ factura }: Props) {
 
       {notas_credito.length > 0 && (
         <div>
-          <div className="flex items-center gap-2 text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
+          <div className="flex items-center gap-2 text-body-sm font-semibold text-muted-foreground uppercase tracking-wide mb-2">
             <FileMinus2 className="h-3.5 w-3.5 text-info" />
             Notas de crédito aplicadas ({notas_credito.length})
           </div>
           <div className="rounded border bg-background overflow-hidden">
-            <table className="w-full text-sm">
-              <thead className="bg-muted/50 text-xs">
+            <table className="w-full text-body">
+              <thead className="bg-muted/50 text-body-sm">
                 <tr>
                   <th className="text-left px-3 py-1.5 font-medium">Fecha</th>
                   <th className="text-left px-3 py-1.5 font-medium">Folio</th>

@@ -53,7 +53,7 @@ function Aviso({
   return (
     <div
       className={cn(
-        "flex items-start gap-2 rounded-md border p-2.5 text-xs",
+        "flex items-start gap-2 rounded-md border p-2.5 text-body-sm",
         tono === "ok" && "border-success/40 bg-success/10",
         tono === "alerta" && "border-warning/40 bg-warning/10",
         tono === "neutro" && "border-border bg-muted/40 text-muted-foreground",
@@ -144,7 +144,7 @@ export function VerificacionMontoEntrante(props: Props) {
       </div>
       {falta && (
         <div className="flex flex-wrap items-center gap-2">
-          <p className="text-xs text-destructive">
+          <p className="text-body-sm text-destructive">
             Captura el importe: sin él contabilidad no puede priorizar ni cotejar el documento.
           </p>
           {puedeCopiarSuma && (
@@ -152,7 +152,7 @@ export function VerificacionMontoEntrante(props: Props) {
               type="button"
               size="sm"
               variant="outline"
-              className="h-7 text-xs"
+              className="h-7 text-body-sm"
               onClick={onUsarSumaSugerida}
             >
               Usar la suma de lo marcado ({formatCurrency(sumaSugerida ?? 0, moneda)})
@@ -161,7 +161,7 @@ export function VerificacionMontoEntrante(props: Props) {
         </div>
       )}
       {totalCfdi != null && !difiereCfdi && (
-        <p className="text-xs text-muted-foreground">Leído del CFDI; puedes ajustarlo si hace falta.</p>
+        <p className="text-body-sm text-muted-foreground">Leído del CFDI; puedes ajustarlo si hace falta.</p>
       )}
       {difiereCfdi && (
         <Aviso tono="alerta" icono={AlertTriangle}>

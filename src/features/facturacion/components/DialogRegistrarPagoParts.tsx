@@ -8,7 +8,7 @@ export function ResumenSaldo({
   total, pagado, saldo, moneda,
 }: { total: number; pagado: number; saldo: number; moneda: string }) {
   return (
-    <div className="text-xs text-muted-foreground space-y-0.5">
+    <div className="text-body-sm text-muted-foreground space-y-0.5">
       <div>Total: <strong className="text-foreground">{formatCurrency(total, moneda)}</strong></div>
       <div>Pagado: <strong className="text-foreground">{formatCurrency(pagado, moneda)}</strong></div>
       <div>Saldo: <strong className={saldo > 0 ? "text-warning" : "text-success"}>{formatCurrency(saldo, moneda)}</strong></div>
@@ -60,20 +60,20 @@ export function NotasPago({
     <>
       {esPpdTimbrada && (
         <Alert>
-          <AlertDescription className="text-xs">
+          <AlertDescription className="text-body-sm">
             Esta factura es <strong>PPD</strong>. Al guardar, se intentará timbrar
             automáticamente el <strong>REP (Complemento de Pagos)</strong> ante el SAT.
           </AlertDescription>
         </Alert>
       )}
       {mostrarConversion && !tcBloqueado && (
-        <p className="text-xs text-muted-foreground">
+        <p className="text-body-sm text-muted-foreground">
           Equivalente: {formatCurrency(montoAplicado, monedaFactura)} (TC: {tipoCambio.toFixed(4)})
         </p>
       )}
       {mostrarConversion && tcBloqueado && (
         <Alert className="border-warning/40 bg-warning/5">
-          <AlertDescription className="text-xs">
+          <AlertDescription className="text-body-sm">
             {cruceNoSoportado ? (
               <>
                 <strong>Cruce de divisas no soportado.</strong> No se puede registrar un cobro en{" "}
@@ -98,10 +98,10 @@ export function NotasPago({
         </Alert>
       )}
       {errorFecha && (
-        <p className="text-xs text-destructive" role="alert">{errorFecha}</p>
+        <p className="text-body-sm text-destructive" role="alert">{errorFecha}</p>
       )}
       {excede && (
-        <p className="text-xs text-destructive">
+        <p className="text-body-sm text-destructive">
           El monto excede el saldo pendiente ({formatCurrency(saldo, monedaFactura)}).
         </p>
       )}

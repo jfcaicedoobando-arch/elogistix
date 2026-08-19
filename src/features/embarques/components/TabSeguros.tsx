@@ -59,7 +59,7 @@ export function TabSeguros({ embarqueId, canEdit }: Props) {
       id: "vigencia", header: "Vigencia",
       cell: ({ row }) => (
         <div className="flex flex-col gap-1">
-          <span className="text-xs">{formatDate(row.original.vigencia_desde)} → {formatDate(row.original.vigencia_hasta)}</span>
+          <span className="text-body-sm">{formatDate(row.original.vigencia_desde)} → {formatDate(row.original.vigencia_hasta)}</span>
           <VigenciaBadge hasta={row.original.vigencia_hasta} />
         </div>
       ),

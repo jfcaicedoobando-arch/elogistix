@@ -64,8 +64,8 @@ export function FacturaNotasCreditoTable(props: Props) {
   const [previewNc, setPreviewNc] = useState<NotaCreditoRow | null>(null);
   return (
     <div className="overflow-x-auto">
-      <table className="w-full text-sm">
-        <thead className="text-xs text-muted-foreground border-b">
+      <table className="w-full text-body">
+        <thead className="text-body-sm text-muted-foreground border-b">
           <tr>
             <th className="text-left py-2 px-2">Folio</th>
             <th className="text-left py-2 px-2">Fecha</th>
@@ -83,7 +83,7 @@ export function FacturaNotasCreditoTable(props: Props) {
             const folioRender = renderFolio(n);
             return (
               <tr key={n.id} className="border-b last:border-0 hover:bg-muted/30">
-                <td className="py-2 px-2 font-mono text-xs">
+                <td className="py-2 px-2 font-mono text-body-sm">
                   <span className="inline-flex items-center gap-1.5">
                     {folioRender.esBorrador ? (
                       <CfdiEstadoBadge tono="borrador">{folioRender.texto}</CfdiEstadoBadge>
@@ -93,8 +93,8 @@ export function FacturaNotasCreditoTable(props: Props) {
                     <AmbienteBadge ambiente={n.ambiente} />
                   </span>
                 </td>
-                <td className="py-2 px-2 text-xs">{formatDate(n.fecha_emision)}</td>
-                <td className="py-2 px-2 text-xs">{n.motivo}</td>
+                <td className="py-2 px-2 text-body-sm">{formatDate(n.fecha_emision)}</td>
+                <td className="py-2 px-2 text-body-sm">{n.motivo}</td>
                 <td className="py-2 px-2">
                   <CfdiEstadoBadge tono={ESTADO_TONO[n.estado]}>{n.estado}</CfdiEstadoBadge>
                 </td>

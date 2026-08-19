@@ -31,7 +31,7 @@ export function DialogCobroLoteResumen(p: Props) {
 
   return (
     <div className="space-y-1">
-      <div className="flex flex-wrap items-center gap-x-6 gap-y-1 text-sm">
+      <div className="flex flex-wrap items-center gap-x-6 gap-y-1 text-body">
         <span className="text-muted-foreground">
           Recibido:{" "}
           <strong className="tabular-nums text-foreground">
@@ -58,19 +58,19 @@ export function DialogCobroLoteResumen(p: Props) {
         )}
       </div>
       {sobrante && (
-        <p className="text-xs text-warning">
+        <p className="text-body-sm text-warning">
           Faltan {formatCurrency(p.sinAsignar, p.moneda)} por repartir: usa “Asignar sobrante” o
           ajusta los importes por factura.
         </p>
       )}
       {!!p.repRequeridos && p.repRequeridos > 0 && (
-        <p className="text-xs text-muted-foreground">
+        <p className="text-body-sm text-muted-foreground">
           {p.repRequeridos === 1
             ? "1 factura requiere complemento de pago (REP): se timbrará automáticamente al aplicar el cobro."
             : `${p.repRequeridos} facturas requieren complemento de pago (REP): se timbrarán automáticamente al aplicar el cobro.`}
         </p>
       )}
-      {p.error && <p className="text-xs text-destructive">{p.error}</p>}
+      {p.error && <p className="text-body-sm text-destructive">{p.error}</p>}
     </div>
   );
 }

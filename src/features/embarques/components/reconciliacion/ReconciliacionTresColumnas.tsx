@@ -101,7 +101,7 @@ export function ReconciliacionTresColumnas({ embarqueId }: Props) {
   }
   if (error) {
     return (
-      <p className="text-sm text-destructive">
+      <p className="text-body text-destructive">
         Error al cargar reconciliación: {(error as Error).message}
       </p>
     );
@@ -110,7 +110,7 @@ export function ReconciliacionTresColumnas({ embarqueId }: Props) {
 
   if (!data.tiene_cotizacion) {
     return (
-      <p className="text-sm text-muted-foreground">
+      <p className="text-body text-muted-foreground">
         Este embarque no proviene de una cotización; no hay base "cotizado" para reconciliar.
       </p>
     );
@@ -142,7 +142,7 @@ export function ReconciliacionTresColumnas({ embarqueId }: Props) {
             />
             <Label htmlFor="solo-varianza">Sólo con varianza</Label>
             <Tooltip>
-              <TooltipTrigger className="text-xs text-muted-foreground ml-2">¿qué significan las columnas?</TooltipTrigger>
+              <TooltipTrigger className="text-body-sm text-muted-foreground ml-2">¿qué significan las columnas?</TooltipTrigger>
               <TooltipContent>
                 Cotizado: versión aceptada. Refrescado: al crear el embarque. Real: costos registrados.
               </TooltipContent>

@@ -36,7 +36,7 @@ export function EmbarqueStatusChip({
   return (
     <Badge
       className={cn(
-        "gap-1.5 px-2.5 py-1 text-xs font-medium",
+        "gap-1.5 px-2.5 py-1 text-body-sm font-medium",
         getStatusVisual("embarque", estado).badgeClass,
         className,
       )}

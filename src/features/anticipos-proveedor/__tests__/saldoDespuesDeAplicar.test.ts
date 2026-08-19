@@ -3,7 +3,7 @@ import { calcularSaldoDespuesDeAplicar } from "@/features/anticipos-proveedor/do
 
 const base = { monedaFactura: "MXN", monedaAnticipo: "MXN" };
 
-describe("calcularSaldoDespuesDeAplicar", () => {
+describe("calcularSaldoDespuesDeAplicar (anticipos-proveedor · UI)", () => {
   it("cubre la factura cuando el monto iguala el saldo", () => {
     const r = calcularSaldoDespuesDeAplicar({ ...base, saldoFactura: 1160, montoAplicar: 1160 });
     expect(r.saldoRestante).toBe(0);

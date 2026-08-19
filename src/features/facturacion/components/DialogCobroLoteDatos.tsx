@@ -53,7 +53,7 @@ export function DialogCobroLoteDatos(p: Props) {
     <FormDialogSection flat title="Datos del depósito">
       {tcFaltante && (
         <Alert className="border-warning/40 bg-warning/5 mb-3">
-          <AlertDescription className="text-xs">
+          <AlertDescription className="text-body-sm">
             Esperando tipo de cambio… No se puede registrar un cobro en {p.moneda} sin un tipo de
             cambio disponible. Intenta de nuevo en unos segundos; si el problema persiste, contacta
             a soporte.
@@ -75,7 +75,7 @@ export function DialogCobroLoteDatos(p: Props) {
             onChange={(n: number) => p.onTotal(round2(n))}
           />
 
-          <p className="truncate text-xs text-muted-foreground">
+          <p className="truncate text-body-sm text-muted-foreground">
             Saldo {formatCurrency(p.saldoTotal, p.moneda)}
             {hintTc}
           </p>
@@ -90,7 +90,7 @@ export function DialogCobroLoteDatos(p: Props) {
               ))}
             </SelectContent>
           </Select>
-          <p className="text-xs text-muted-foreground">Catálogo SAT</p>
+          <p className="text-body-sm text-muted-foreground">Catálogo SAT</p>
         </div>
         <div className="space-y-1.5">
           <Label>Cuenta bancaria</Label>
@@ -104,7 +104,7 @@ export function DialogCobroLoteDatos(p: Props) {
               ))}
             </SelectContent>
           </Select>
-          <p className="text-xs text-muted-foreground">Opcional</p>
+          <p className="text-body-sm text-muted-foreground">Opcional</p>
         </div>
         <div className="space-y-1.5 sm:col-span-2">
           <Label htmlFor="cobro-lote-ref">Referencia bancaria</Label>

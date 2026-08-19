@@ -32,13 +32,13 @@ export function LibroPagosKpis({ totales, isLoading }: Props) {
             ? Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-10 w-full" />)
             : items.map((it) => (
                 <div key={it.label}>
-                  <p className="text-xs uppercase tracking-wide text-muted-foreground">{it.label}</p>
+                  <p className="text-body-sm uppercase tracking-wide text-muted-foreground">{it.label}</p>
                   <p className={`mt-1 text-lg font-semibold tabular-nums ${it.tone ?? ""}`}>{it.valor}</p>
                 </div>
               ))}
         </CardContent>
       </Card>
-      <p className="text-xs text-muted-foreground">
+      <p className="text-body-sm text-muted-foreground">
         Los equivalentes en pesos usan el tipo de cambio guardado en cada pago, no el del día de hoy.
       </p>
     </div>

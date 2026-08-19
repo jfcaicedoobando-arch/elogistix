@@ -63,7 +63,7 @@ export function AgenteEmbarqueSelector({ cotizacionAgenteId }: { cotizacionAgent
             type="button"
             variant="ghost"
             size="sm"
-            className="h-6 gap-1 px-2 text-xs"
+            className="h-6 gap-1 px-2 text-body-sm"
             onClick={() => {
               const original = agentes.find((a) => a.id === cotizacionAgenteId);
               setValue("agenteId", cotizacionAgenteId, { shouldValidate: true, shouldDirty: true });
@@ -143,7 +143,7 @@ export function NavieraEmbarqueSelector({
             type="button"
             variant="ghost"
             size="sm"
-            className="h-6 gap-1 px-2 text-xs"
+            className="h-6 gap-1 px-2 text-body-sm"
             onClick={() => {
               const original = navieras.find((n) => n.id === cotizacionNavieraId);
               setValue("navieraId", cotizacionNavieraId, { shouldValidate: true, shouldDirty: true });

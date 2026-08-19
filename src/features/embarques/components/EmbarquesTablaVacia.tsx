@@ -13,7 +13,7 @@ interface Props {
 export function EmbarquesTablaVacia({ onLimpiar }: Props) {
   return (
     <div className="flex flex-col items-center gap-3 py-10 text-center">
-      <p className="text-sm text-muted-foreground">
+      <p className="text-body text-muted-foreground">
         No encontramos embarques con la búsqueda o los filtros actuales.
       </p>
       <Button variant="outline" size="sm" onClick={onLimpiar}>

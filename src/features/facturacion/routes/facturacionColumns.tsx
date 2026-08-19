@@ -68,7 +68,7 @@ export function buildFacturaColumns(): ColumnDef<Factura, unknown>[] {
     {
       id: "proforma", header: "Proforma",
       // Oculto en tableta (<xl).
-      meta: { width: COL_W.monto, className: "text-xs whitespace-nowrap hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
+      meta: { width: COL_W.monto, className: "text-body-sm whitespace-nowrap hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
       cell: ({ row }) => row.original.proformas?.numero
         ? <span className="font-mono">{row.original.proformas.numero}</span>
         : <span className="text-muted-foreground">—</span>,
@@ -93,7 +93,7 @@ export function buildFacturaColumns(): ColumnDef<Factura, unknown>[] {
       accessorFn: (f) => f.fecha_vencimiento, enableSorting: true,
       sortingFn: sortByDate<Factura>((f) => f.fecha_vencimiento),
       // Oculto en tableta (<xl).
-      meta: { width: COL_W.fecha, className: "text-xs whitespace-nowrap hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
+      meta: { width: COL_W.fecha, className: "text-body-sm whitespace-nowrap hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
       cell: ({ row }) => formatDate(row.original.fecha_vencimiento),
     },
     statusColumn<Factura>({
@@ -114,7 +114,7 @@ export function buildFacturaColumns(): ColumnDef<Factura, unknown>[] {
         const f = row.original;
         const timbrada = !!(f as { uuid_fiscal?: string | null }).uuid_fiscal;
         if (!f.factura_pdf_url && !f.factura_xml_url && !timbrada) {
-          return <span className="text-muted-foreground text-xs">—</span>;
+          return <span className="text-muted-foreground text-body-sm">—</span>;
         }
         return (
           <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>

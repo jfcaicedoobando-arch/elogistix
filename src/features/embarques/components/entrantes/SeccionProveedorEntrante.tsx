@@ -48,11 +48,11 @@ export function SeccionProveedorEntrante({
           onSeleccionar={onSeleccionar}
         />
         {!seleccionado && (
-          <p className="text-xs text-muted-foreground">
+          <p className="text-body-sm text-muted-foreground">
             Elige el proveedor para poder enviar el documento al buzón.
           </p>
         )}
-        {aviso && <p className="text-xs text-warning">{aviso}</p>}
+        {aviso && <p className="text-body-sm text-warning">{aviso}</p>}
       </div>
     </FormDialogSection>
   );

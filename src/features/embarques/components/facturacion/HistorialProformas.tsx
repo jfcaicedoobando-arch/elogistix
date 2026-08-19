@@ -63,7 +63,7 @@ function totalUnico(p: ProformaConFactura) {
     return (
       <div className="flex flex-col items-end leading-tight">
         <span>{formatCurrency(usd, "USD")}</span>
-        <span className="text-xs text-muted-foreground">{formatCurrency(mxn, "MXN")}</span>
+        <span className="text-body-sm text-muted-foreground">{formatCurrency(mxn, "MXN")}</span>
       </div>
     );
   }
@@ -81,7 +81,7 @@ export function HistorialProformas({
     {
       id: "operador",
       header: "Operador",
-      meta: { className: "text-sm max-w-[180px]" },
+      meta: { className: "text-body max-w-[180px]" },
       cell: ({ row }) => {
         const email = row.original.operador;
         if (!email) return <span className="text-muted-foreground">—</span>;
@@ -95,7 +95,7 @@ export function HistorialProformas({
     {
       id: "credito",
       header: "Días Crédito",
-      meta: { align: "right", className: "text-sm" },
+      meta: { align: "right", className: "text-body" },
       cell: ({ row }) => formatDiasCredito(row.original.dias_credito),
     },
     {
@@ -150,7 +150,7 @@ export function HistorialProformas({
       <CardHeader className="pb-2 flex flex-row items-center justify-between gap-2">
         <CardTitle>Proformas Generadas</CardTitle>
         {proformas.length > 0 && (
-          <span className="text-xs text-muted-foreground">
+          <span className="text-body-sm text-muted-foreground">
             {proformas.length} proforma{proformas.length === 1 ? "" : "s"}
             {facturadasCount > 0 && <> · {facturadasCount} facturada{facturadasCount === 1 ? "" : "s"}</>}
           </span>

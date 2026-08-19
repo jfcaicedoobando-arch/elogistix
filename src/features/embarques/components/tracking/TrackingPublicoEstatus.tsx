@@ -40,22 +40,22 @@ export function TrackingPublicoEstatus({
       <CardContent className="space-y-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div className="rounded-md border p-3">
-            <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <p className="flex items-center gap-1.5 text-body-sm text-muted-foreground">
               <CalendarClock className="h-3.5 w-3.5" /> Salida estimada (ETD)
             </p>
-            <p className="text-sm font-medium text-foreground">{fecha(etd)}</p>
+            <p className="text-body font-medium text-foreground">{fecha(etd)}</p>
           </div>
           <div className="rounded-md border p-3">
-            <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <p className="flex items-center gap-1.5 text-body-sm text-muted-foreground">
               <CalendarCheck2 className="h-3.5 w-3.5" /> Llegada estimada (ETA)
             </p>
-            <p className="text-sm font-medium text-foreground">{fecha(eta)}</p>
+            <p className="text-body font-medium text-foreground">{fecha(eta)}</p>
           </div>
         </div>
 
         {documentosTotales > 0 && (
           <div className="space-y-1.5">
-            <div className="flex items-center justify-between text-xs text-muted-foreground">
+            <div className="flex items-center justify-between text-body-sm text-muted-foreground">
               <span>Documentos recibidos</span>
               <span>
                 {documentosRecibidos} de {documentosTotales}

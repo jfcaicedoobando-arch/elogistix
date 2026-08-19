@@ -38,7 +38,7 @@ export function FilaCostoPrecio({
     <div className={`grid ${cols} gap-2 items-center`}>
       <Select value={costo.proveedorId} onValueChange={v => update(costo.id, 'proveedorId', v)}>
         <SelectTrigger
-          className={`text-sm ${!costo.proveedorId && costo.proveedorNombre ? 'border-warning/60' : ''}`}
+          className={`text-body ${!costo.proveedorId && costo.proveedorNombre ? 'border-warning/60' : ''}`}
           title={proveedoresDb.find(p => p.id === costo.proveedorId)?.nombre ?? costo.proveedorNombre ?? undefined}
         >
           {/* v13.509.0 — Si el costo viene de cotización sólo con nombre, lo
@@ -52,9 +52,9 @@ export function FilaCostoPrecio({
         value={costo.concepto}
         onChange={v => update(costo.id, 'concepto', v)}
       />
-      <NumericInput decimals value={costo.monto} onChange={n => update(costo.id, 'monto', n)} className="text-sm h-10" aria-label="Subtotal costo" />
+      <NumericInput decimals value={costo.monto} onChange={n => update(costo.id, 'monto', n)} className="text-body h-10" aria-label="Subtotal costo" />
       <Select value={costo.moneda} onValueChange={v => update(costo.id, 'moneda', v)}>
-        <SelectTrigger className="text-sm"><SelectValue /></SelectTrigger>
+        <SelectTrigger className="text-body"><SelectValue /></SelectTrigger>
         <SelectContent><SelectItem value="MXN">MXN</SelectItem><SelectItem value="USD">USD</SelectItem><SelectItem value="EUR">EUR</SelectItem></SelectContent>
       </Select>
       {showContenedorCol && embarqueId && (
@@ -62,7 +62,7 @@ export function FilaCostoPrecio({
           embarqueId={embarqueId}
           value={costo.contenedorId ?? null}
           onChange={v => update(costo.id, 'contenedorId', v)}
-          className="text-sm"
+          className="text-body"
         />
       )}
       <div className="flex items-center gap-1">
@@ -70,7 +70,7 @@ export function FilaCostoPrecio({
           readOnly
           aria-label="Total en USD del costo"
           value={formatCurrency(totalUSD, 'USD')}
-          className={`text-sm bg-muted font-semibold ${esMixta ? 'text-warning border-warning/60' : ''}`}
+          className={`text-body bg-muted font-semibold ${esMixta ? 'text-warning border-warning/60' : ''}`}
           data-testid={esMixta ? 'fila-mixta-costo' : undefined}
         />
         {esMixta && (

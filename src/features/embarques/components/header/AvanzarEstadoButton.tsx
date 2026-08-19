@@ -44,7 +44,7 @@ export function AvanzarEstadoButton({
               </Button>
             </TooltipTrigger>
             <TooltipContent>
-              <p className="text-xs">Faltan documentos para pasar a {siguienteLabel}</p>
+              <p className="text-body-sm">Faltan documentos para pasar a {siguienteLabel}</p>
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
@@ -60,7 +60,7 @@ export function AvanzarEstadoButton({
           description={
             <div className="space-y-2">
               <p>Para pasar a <strong>{siguienteLabel}</strong> es obligatorio tener cargados (o marcados como "No aplica") estos documentos:</p>
-              <ul className="list-disc list-inside text-sm">
+              <ul className="list-disc list-inside text-body">
                 {docsFaltantes.map((d) => <li key={d}>{d}</li>)}
               </ul>
             </div>
@@ -81,8 +81,8 @@ export function AvanzarEstadoButton({
             </Button>
           </TooltipTrigger>
           <TooltipContent>
-            <p className="text-xs">Hay pendientes administrativos.</p>
-            <p className="text-xs font-medium">Ir al tab Cierre.</p>
+            <p className="text-body-sm">Hay pendientes administrativos.</p>
+            <p className="text-body-sm font-medium">Ir al tab Cierre.</p>
           </TooltipContent>
         </Tooltip>
       </TooltipProvider>

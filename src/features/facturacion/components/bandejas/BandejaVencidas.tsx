@@ -38,7 +38,7 @@ const columns = defineColumns<FilaVencida>([
   },
   clientColumn<FilaVencida>({ accessor: (r) => r.cliente_nombre }),
   { ...dateColumn<FilaVencida>({ id: "vencimiento", header: "Venció", accessor: (r) => r.fecha_vencimiento }),
-    meta: { width: COL_W.fecha, className: "text-xs whitespace-nowrap" } },
+    meta: { width: COL_W.fecha, className: "text-body-sm whitespace-nowrap" } },
   {
     id: "dias",
     header: "Antigüedad",
@@ -49,7 +49,7 @@ const columns = defineColumns<FilaVencida>([
       const b = agingVencidoBucket(row.original.dias_vencido);
       return (
         <span
-          className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold tabular-nums whitespace-nowrap ${b.className}`}
+          className={`inline-flex items-center rounded-full px-2 py-0.5 text-body-sm font-semibold tabular-nums whitespace-nowrap ${b.className}`}
           aria-label={b.ariaLabel}
         >
           {b.label}

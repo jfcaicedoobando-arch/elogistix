@@ -68,11 +68,11 @@ function Paso({ numero, titulo, detalle, estado, icon: Icon }: PasoProps) {
         {estado === "completo" ? <Check className="h-4 w-4" /> : <Icon className="h-4 w-4" />}
       </div>
       <div className="min-w-0">
-        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+        <div className="flex items-center gap-1.5 text-body-sm text-muted-foreground">
           <span className="font-mono">{numero}.</span>
           <span className={cn("font-semibold", styles.title)}>{titulo}</span>
         </div>
-        <div className={cn("text-xs truncate", styles.detail)}>{detalle}</div>
+        <div className={cn("text-body-sm truncate", styles.detail)}>{detalle}</div>
       </div>
     </div>
   );

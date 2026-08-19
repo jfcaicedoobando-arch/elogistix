@@ -90,7 +90,7 @@ export function PeriodoFiscalSelector({ desdeIso, hastaIso, onChange }: Props) {
     <div className="flex items-center gap-2">
       <Calendar className="h-4 w-4 text-muted-foreground" aria-hidden />
       <Select value={preset} onValueChange={handleChange}>
-        <SelectTrigger className="h-8 w-[190px] text-sm">
+        <SelectTrigger className="h-8 w-[190px] text-body">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>

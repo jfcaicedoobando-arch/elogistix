@@ -37,8 +37,8 @@ export function FacturaPagosTabla({
 }: Props) {
   return (
     <div className="overflow-x-auto">
-      <table className="w-full text-sm">
-        <thead className="text-xs text-muted-foreground border-b">
+      <table className="w-full text-body">
+        <thead className="text-body-sm text-muted-foreground border-b">
           <tr>
             <th className="text-left py-2 px-2">Fecha</th>
             <th className="text-right py-2 px-2">Monto</th>

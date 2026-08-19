@@ -2,18 +2,12 @@
  * Columnas del estado de cuenta bancario (v13.450.0).
  * Formato tipo extracto bancario: salida, entrada y saldo corrido.
  */
-import { Badge } from "@/components/ui/badge";
+import { StatusBadge } from "@/components/shared/StatusBadge";
 import { BotonVerPago } from "@/features/tesoreria/components/BotonVerPago";
 import type { RefPago } from "@/features/tesoreria/domain/pagoDetalle";
 import { formatCurrency, formatDate } from "@/lib/formatters";
 import { defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import type { MovimientoEstadoCuenta } from "@/features/tesoreria/domain/estadoCuenta";
-
-const ESTADO_COLOR: Record<string, string> = {
-  Pendiente: "bg-warning/10 text-warning border-warning/20",
-  Conciliado: "bg-success/10 text-success border-success/20",
-  Ignorado: "bg-muted text-muted-foreground border-border",
-};
 
 export function estadoCuentaColumns(
   moneda: string,
@@ -26,7 +20,7 @@ export function estadoCuentaColumns(
       accessorFn: (m) => m.fecha,
       meta: { width: "w-28" },
       cell: ({ row }) => (
-        <span className="whitespace-nowrap text-xs">{formatDate(row.original.fecha)}</span>
+        <span className="whitespace-nowrap text-body-sm">{formatDate(row.original.fecha)}</span>
       ),
     },
     {
@@ -85,12 +79,11 @@ export function estadoCuentaColumns(
       accessorFn: (m) => m.estado_conciliacion,
       meta: { width: "w-24" },
       cell: ({ row }) => (
-        <Badge
-          variant="outline"
-          className={`text-2xs ${ESTADO_COLOR[row.original.estado_conciliacion] ?? ""}`}
-        >
-          {row.original.estado_conciliacion}
-        </Badge>
+        <StatusBadge
+          domain="conciliacion"
+          status={row.original.estado_conciliacion}
+          className="text-2xs"
+        />
       ),
     },
     {

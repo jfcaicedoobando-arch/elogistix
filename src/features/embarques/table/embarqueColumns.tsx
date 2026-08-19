@@ -64,7 +64,7 @@ export function buildEmbarqueColumns({
                     <AlertTriangle className="h-3.5 w-3.5 text-warning flex-shrink-0" />
                   </TooltipTrigger>
                   <TooltipContent>
-                    <p className="text-xs">{docInfo.pendientes} doc(s) pendientes</p>
+                    <p className="text-body-sm">{docInfo.pendientes} doc(s) pendientes</p>
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
@@ -77,14 +77,14 @@ export function buildEmbarqueColumns({
       id: "bl",
       header: "BL Master",
       // Oculto en tableta (<xl) — el detalle del embarque muestra el BL.
-      meta: { width: COL_W.folio, className: "text-xs hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
+      meta: { width: COL_W.folio, className: "text-body-sm hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
       // VB-30: placeholder vacío unificado (em dash), como el detalle.
       cell: ({ row }) => row.original.bl_master || PLACEHOLDER_VACIO,
     },
     {
       id: "contenedor",
       header: "Contenedores",
-      meta: { width: COL_W.ruta, className: "text-xs font-mono" },
+      meta: { width: COL_W.ruta, className: "text-body-sm font-mono" },
       cell: ({ row }) => (
         <ContenedorCell
           embarque={row.original}
@@ -106,14 +106,14 @@ export function buildEmbarqueColumns({
       cell: ({ row }) => (
         <span className="flex items-center gap-1.5">
           <ModoIcon modo={row.original.modo} size={14} />
-          <span className="text-xs">{row.original.modo}</span>
+          <span className="text-body-sm">{row.original.modo}</span>
         </span>
       ),
     },
     {
       id: "origen",
       header: "Origen",
-      meta: { width: COL_W.monto, className: "text-xs truncate hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
+      meta: { width: COL_W.monto, className: "text-body-sm truncate hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
       cell: ({ row }) => {
         const v = shortName(getOrigen(row.original));
         return <span title={v} className="block truncate">{v}</span>;
@@ -122,7 +122,7 @@ export function buildEmbarqueColumns({
     {
       id: "destino",
       header: "Destino",
-      meta: { width: COL_W.monto, className: "text-xs truncate hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
+      meta: { width: COL_W.monto, className: "text-body-sm truncate hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
       cell: ({ row }) => {
         const v = shortName(getDestino(row.original));
         return <span title={v} className="block truncate">{v}</span>;

@@ -104,7 +104,7 @@ export function DialogPreviewCfdiPdf({
     >
       <div className="h-[70vh] w-full rounded-md border bg-muted/20 overflow-hidden flex items-center justify-center">
         {loading || !blobUrl ? (
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <div className="flex items-center gap-2 text-body text-muted-foreground">
             <Loader2 className="h-4 w-4 animate-spin" /> Generando vista previa…
           </div>
         ) : (

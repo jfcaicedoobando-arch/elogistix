@@ -60,7 +60,7 @@ export function BloqueVinculacion({
 
         {cotizacionVinculada ? (
           <div className="flex items-center gap-2">
-            <Badge variant="success" className="px-3 py-1.5 text-sm inline-flex items-center gap-1.5">
+            <Badge variant="success" className="px-3 py-1.5 text-body inline-flex items-center gap-1.5">
               <Check className="h-3.5 w-3.5" aria-hidden /> Vinculada a {cotizacionVinculada.folio} — {cotizacionVinculada.cliente_nombre}
             </Badge>
             <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={() => setDesvincularOpen(true)} aria-label="Desvincular cotización">
@@ -106,7 +106,7 @@ export function BloqueVinculacion({
 
       {permiteExpediente && clienteId && tieneExpedientes && (
         <div className="space-y-3 p-4 border rounded-lg bg-muted/30">
-          <Label className="text-sm font-medium">Expediente</Label>
+          <Label className="text-body font-medium">Expediente</Label>
           <RadioGroup
             value={modoExpediente}
             onValueChange={(v) => onModoExpedienteChange?.(v as 'nuevo' | 'existente')}
@@ -126,7 +126,7 @@ export function BloqueVinculacion({
             <div className="space-y-2">
               {expedienteSeleccionado ? (
                 <div className="flex items-center gap-2">
-                  <Badge variant="info" className="px-3 py-1.5 text-sm inline-flex items-center gap-1.5">
+                  <Badge variant="info" className="px-3 py-1.5 text-body inline-flex items-center gap-1.5">
                     <Package className="h-3.5 w-3.5" aria-hidden /> {expedienteSeleccionado.expediente}
                     {expedienteSeleccionado.bl_master && ` | BL: ${expedienteSeleccionado.bl_master}`}
                     {` (${expedienteSeleccionado.total_embarques} embarque${expedienteSeleccionado.total_embarques > 1 ? 's' : ''})`}

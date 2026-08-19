@@ -43,11 +43,11 @@ export function CierreCard({ tone, icon, titulo, embarques, lineas, footer }: Pr
       <div className="mt-2 space-y-1">
         {lineas.map((l) => (
           <div key={l.label} className="flex items-baseline justify-between gap-3">
-            <span className="text-xs text-muted-foreground whitespace-nowrap">{l.label}</span>
+            <span className="text-body-sm text-muted-foreground whitespace-nowrap">{l.label}</span>
             <span
               className={cn(
                 "tabular-nums whitespace-nowrap",
-                l.emphasis ? "text-lg font-semibold" : "text-sm font-medium",
+                l.emphasis ? "text-lg font-semibold" : "text-body font-medium",
                 l.className,
               )}
               title={l.value}

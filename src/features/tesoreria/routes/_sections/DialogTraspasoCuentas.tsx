@@ -120,20 +120,20 @@ export function DialogTraspasoCuentas({ open, onOpenChange, cuentas }: DialogTra
               placeholder="1.00"
             />
             {state.tipoCambio > 0 ? (
-              <p className="text-xs text-muted-foreground">
+              <p className="text-body-sm text-muted-foreground">
                 {`Estimado con el TC capturado: ${origen.moneda} → ${destino.moneda}: ${formatCurrency(montoDestino, destino.moneda)}`}
               </p>
             ) : (
-              <p className="text-xs text-destructive" role="alert">
+              <p className="text-body-sm text-destructive" role="alert">
                 Captura el tipo de cambio: es obligatorio porque las cuentas son de distinta moneda.
               </p>
             )}
             {fechaTcDof && (
-              <p className="text-xs text-muted-foreground">
+              <p className="text-body-sm text-muted-foreground">
                 Sugerido con el TC DOF publicado el {fechaTcDof}. Puedes editarlo si tu banco usó otro.
               </p>
             )}
-            <p className="text-xs text-muted-foreground">
+            <p className="text-body-sm text-muted-foreground">
               El tipo de cambio multiplica: 1 {origen.moneda} = {state.tipoCambio || "?"} {destino.moneda}.
               Si tu referencia viene expresada al revés, divídela antes de capturarla.
             </p>
@@ -170,7 +170,7 @@ export function DialogTraspasoCuentas({ open, onOpenChange, cuentas }: DialogTra
           />
         </div>
         {error && (
-          <p className="text-xs text-destructive" role="alert">
+          <p className="text-body-sm text-destructive" role="alert">
             {error}
           </p>
         )}

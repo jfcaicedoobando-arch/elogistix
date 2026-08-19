@@ -55,9 +55,9 @@ export function PagosProgramadosTablas({ semanas, sinFecha, columns }: Props) {
                   <TableRow className="bg-muted/30 hover:bg-muted/30">
                     <TableCell colSpan={columns.length}>
                       <div className="flex flex-wrap gap-x-6 gap-y-1 py-2">
-                        <span className="text-xs font-bold uppercase text-muted-foreground">Totales:</span>
+                        <span className="text-body-sm font-bold uppercase text-muted-foreground">Totales:</span>
                         {Object.entries(s.totalesPorMoneda).map(([moneda, total]) => (
-                          <span key={moneda} className="text-sm font-semibold tabular-nums">
+                          <span key={moneda} className="text-body font-semibold tabular-nums">
                             {formatCurrency(total, moneda)}
                           </span>
                         ))}

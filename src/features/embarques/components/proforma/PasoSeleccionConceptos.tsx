@@ -63,7 +63,7 @@ export function PasoSeleccionConceptos({
         <div className="flex items-center justify-between p-3 bg-muted/50 border-b">
           <div className="flex items-center gap-2">
             <Checkbox checked={allSelected} onCheckedChange={onToggleAll} id="all" />
-            <Label htmlFor="all" className="text-sm font-medium cursor-pointer">
+            <Label htmlFor="all" className="text-body font-medium cursor-pointer">
               Seleccionar todos ({seleccionadosVisibles}/{conceptosVisibles.length})
               {filtroContenedor !== 'todos' && (
                 <span className="text-muted-foreground font-normal ml-1">
@@ -72,7 +72,7 @@ export function PasoSeleccionConceptos({
               )}
             </Label>
           </div>
-          <span className="text-xs text-muted-foreground">IVA por concepto</span>
+          <span className="text-body-sm text-muted-foreground">IVA por concepto</span>
         </div>
         <div className="divide-y max-h-[300px] overflow-y-auto">
           {conceptosVisibles.map((c) => {

@@ -38,7 +38,7 @@ export function TabPnl({ embarqueId }: Props) {
   if (error || !data) {
     return (
       <Card>
-        <CardContent className="pt-6 text-sm text-destructive">
+        <CardContent className="pt-6 text-body text-destructive">
           No se pudo cargar el P&L del embarque. {(error as Error | null)?.message ?? ""}
         </CardContent>
       </Card>
@@ -150,7 +150,7 @@ export function TabPnl({ embarqueId }: Props) {
         rows={data.por_concepto_costo}
         invertirAlerta
       />
-      <p className="text-xs text-muted-foreground">
+      <p className="text-body-sm text-muted-foreground">
         {/* v13.552.0: el KPI "Costo real" ya usa la base gravable (sin IVA) y
             descuenta notas de crédito prorrateadas, igual que el desglose. La
             diferencia restante viene de facturas sin conceptos capturados. */}

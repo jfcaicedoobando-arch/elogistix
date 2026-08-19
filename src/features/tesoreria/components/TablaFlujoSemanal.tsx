@@ -26,8 +26,8 @@ export default function TablaFlujoSemanal({ semanas }: Props) {
     <Card>
       <CardContent className="p-0">
         <div className="overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead className="bg-muted/50 text-xs text-muted-foreground">
+        <table className="w-full text-body">
+          <thead className="bg-muted/50 text-body-sm text-muted-foreground">
             <tr>
               <th className="px-3 py-2 text-left w-8"></th>
               <th className="px-3 py-2 text-left">Semana</th>
@@ -76,7 +76,7 @@ export default function TablaFlujoSemanal({ semanas }: Props) {
                   {isOpen && (
                     <tr className={rowBg}>
                       <td></td>
-                      <td colSpan={6} className="px-3 py-2 text-xs">
+                      <td colSpan={6} className="px-3 py-2 text-body-sm">
                         <DetalleListas s={s} />
                       </td>
                     </tr>

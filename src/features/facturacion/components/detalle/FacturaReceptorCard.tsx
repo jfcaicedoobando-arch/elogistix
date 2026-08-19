@@ -48,7 +48,7 @@ function Row({ label, ok, value, missingLabel }: { label: string; ok: boolean; v
       <p className="text-overline font-medium">
         {label}
       </p>
-      <p className={`text-sm font-medium truncate flex items-center gap-1 ${ok ? "" : "text-destructive italic"}`}>
+      <p className={`text-body font-medium truncate flex items-center gap-1 ${ok ? "" : "text-destructive italic"}`}>
         {ok ? <Check className="h-3 w-3 text-success shrink-0" /> : <X className="h-3 w-3 text-destructive shrink-0" />}
         <span className="truncate">{ok ? value : missingLabel}</span>
       </p>
@@ -84,7 +84,7 @@ export function FacturaReceptorCard({ clienteId, clienteNombre, rfcFactura }: Pr
           </CardTitle>
           <Link
             to={`/clientes/${clienteId}`}
-            className="text-sm font-medium text-accent hover:underline block truncate mt-1"
+            className="text-body font-medium text-accent hover:underline block truncate mt-1"
           >
             {toTitleCase(clienteNombre)}
           </Link>

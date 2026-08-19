@@ -25,7 +25,7 @@ export function StepCostosTcAviso({ tcInicial, tcUsdCapturado }: Props) {
   // Aviso no bloqueante: el operador puede corregir el TC a mano.
   if (tcInicial?.esFallback) {
     return (
-      <div className="rounded-md border border-warning/40 bg-warning/5 p-3 text-xs">
+      <div className="rounded-md border border-warning/40 bg-warning/5 p-3 text-body-sm">
         <span className="text-warning-foreground">
           <strong>Tipo de cambio de respaldo.</strong> No se pudo obtener el TC oficial
           (Banxico/DOF); el valor precargado (USD ≈ {tcInicial.usdMxn.toFixed(4)}) es una
@@ -46,7 +46,7 @@ export function StepCostosTcAviso({ tcInicial, tcUsdCapturado }: Props) {
   };
 
   return (
-    <div className="rounded-md border border-warning/40 bg-warning/5 p-3 text-xs flex flex-wrap items-center gap-2">
+    <div className="rounded-md border border-warning/40 bg-warning/5 p-3 text-body-sm flex flex-wrap items-center gap-2">
       <span className="text-warning-foreground">
         Capturaste {tcUsdCapturado.toFixed(4)}; el DOF del {formatFechaEs(tcInicial.fecha)} publicó{" "}
         {tcInicial.usdMxn.toFixed(4)} ({pct > 0 ? "+" : ""}

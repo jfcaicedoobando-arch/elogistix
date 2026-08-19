@@ -52,7 +52,7 @@ export function FacturaNotasCreditoSeccion(props: Props) {
       <CardHeader className="flex flex-row items-center justify-between space-y-0">
         <CardTitle className="flex items-center gap-2">
           <FileMinus className="h-4 w-4 text-muted-foreground" /> Notas de crédito
-          <span className="text-xs text-muted-foreground font-normal">({notas.length})</span>
+          <span className="text-body-sm text-muted-foreground font-normal">({notas.length})</span>
         </CardTitle>
         {canEdit && (
           facturaLiquidada ? (
@@ -79,7 +79,7 @@ export function FacturaNotasCreditoSeccion(props: Props) {
         {isLoading ? (
           <EmptyStateInline loading message="Cargando…" className="py-2" />
         ) : notas.length === 0 ? (
-          <p className="text-sm text-muted-foreground">Esta factura no tiene notas de crédito.</p>
+          <p className="text-body text-muted-foreground">Esta factura no tiene notas de crédito.</p>
         ) : (
           <>
             {/* Ola 5 · RG4-4: una NC con claim PENDING atascado se recupera

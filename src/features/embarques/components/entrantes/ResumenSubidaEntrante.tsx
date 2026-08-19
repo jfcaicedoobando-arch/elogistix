@@ -28,7 +28,7 @@ export function ResumenSubidaEntrante({
   partes.push(adjuntos.length > 0 ? adjuntos.join(" + ") : "Sin archivos");
 
   return (
-    <p className="rounded-md border bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
+    <p className="rounded-md border bg-muted/40 px-3 py-2 text-body-sm text-muted-foreground">
       {partes.join(" · ")}
     </p>
   );

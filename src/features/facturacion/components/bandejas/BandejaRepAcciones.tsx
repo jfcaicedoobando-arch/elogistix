@@ -18,7 +18,7 @@ export function BandejaRepAcciones(p: Props) {
 
   return (
     <div className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-border bg-muted/40 px-3 py-2">
-      <p className="text-sm text-muted-foreground">
+      <p className="text-body text-muted-foreground">
         <strong className="text-foreground">{p.seleccionados}</strong> pago(s) seleccionado(s)
         {p.progreso ? ` · timbrando ${p.progreso.hechos} de ${p.progreso.total}…` : ""}
       </p>

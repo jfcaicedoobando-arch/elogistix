@@ -60,7 +60,7 @@ export function SeccionContenedoresReadonly({ embarqueId }: Props) {
           <CardTitle>
             Contenedores ({lista.length})
           </CardTitle>
-          <p className="text-xs text-muted-foreground mt-1">
+          <p className="text-body-sm text-muted-foreground mt-1">
             Para agregar, editar o eliminar contenedores usa el botón
             <span className="font-medium"> Editar embarque</span>.
           </p>
@@ -72,11 +72,11 @@ export function SeccionContenedoresReadonly({ embarqueId }: Props) {
       </CardHeader>
       <CardContent>
         {isLoading ? (
-          <div className="flex items-center justify-center py-6 text-sm text-muted-foreground">
+          <div className="flex items-center justify-center py-6 text-body text-muted-foreground">
             <EmptyStateInline loading message="Cargando contenedores…" />
           </div>
         ) : error ? (
-          <p className="text-sm text-destructive">
+          <p className="text-body text-destructive">
             Error al cargar: {getErrorMessage(error)}
           </p>
         ) : lista.length === 0 ? (
@@ -90,7 +90,7 @@ export function SeccionContenedoresReadonly({ embarqueId }: Props) {
         ) : (
           <div className="space-y-3">
             {hayResumenUniforme && (
-              <div className="flex flex-wrap items-center gap-2 rounded-md border bg-muted/30 px-3 py-2 text-xs">
+              <div className="flex flex-wrap items-center gap-2 rounded-md border bg-muted/30 px-3 py-2 text-body-sm">
                 <span className="font-medium text-muted-foreground">Todos los contenedores:</span>
                 {pesoUniforme && (
                   <Badge variant="outline" className="font-normal">
@@ -110,8 +110,8 @@ export function SeccionContenedoresReadonly({ embarqueId }: Props) {
               </div>
             )}
             <div className="overflow-x-auto">
-              <table className="w-full max-w-3xl text-sm">
-                <thead className="text-xs text-muted-foreground">
+              <table className="w-full max-w-3xl text-body">
+                <thead className="text-body-sm text-muted-foreground">
                   <tr className="border-b">
                     <th className="text-left font-medium py-1.5 px-2 w-auto">Número</th>
                     <th className="text-left font-medium py-1.5 px-2 w-[140px]">Tipo</th>

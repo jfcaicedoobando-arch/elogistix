@@ -21,7 +21,7 @@ export function NotaContabilidadCampo({ nota, onNota }: Props) {
         type="button"
         variant="ghost"
         size="sm"
-        className="h-8 px-2 text-xs"
+        className="h-8 px-2 text-body-sm"
         onClick={() => setAbierto(true)}
       >
         <MessageSquarePlus className="mr-2 h-3.5 w-3.5" />

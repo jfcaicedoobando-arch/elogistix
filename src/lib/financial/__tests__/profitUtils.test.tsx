@@ -35,17 +35,17 @@ describe("calcularTotalesPL", () => {
 describe("ProfitBadge", () => {
   it("muestra badge verde para > 15%", () => {
     render(<ProfitBadge porcentaje={20} />);
-    expect(screen.getByText("20.0%")).toBeInTheDocument();
+    expect(screen.getByText("20.0 %")).toBeInTheDocument();
   });
 
   it("muestra badge rojo para negativo", () => {
     render(<ProfitBadge porcentaje={-5} />);
-    expect(screen.getByText("-5.0%")).toBeInTheDocument();
+    expect(screen.getByText("-5.0 %")).toBeInTheDocument();
   });
 
   it("muestra 0% para cero", () => {
     render(<ProfitBadge porcentaje={0} />);
-    expect(screen.getByText("0%")).toBeInTheDocument();
+    expect(screen.getByText("0.0 %")).toBeInTheDocument();
   });
 });
 

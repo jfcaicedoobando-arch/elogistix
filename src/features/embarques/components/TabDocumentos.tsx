@@ -56,7 +56,7 @@ export function TabDocumentos({
                 <Badge variant="outline" className="border-primary text-primary">
                   Filtrando: documentos faltantes
                 </Badge>
-                <Button size="sm" variant="ghost" className="h-7 px-2 text-xs" onClick={clearFocus}>
+                <Button size="sm" variant="ghost" className="h-7 px-2 text-body-sm" onClick={clearFocus}>
                   <X className="mr-1 h-3 w-3" /> Limpiar
                 </Button>
               </>

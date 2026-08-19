@@ -35,7 +35,7 @@ function FilaConcepto({
 }) {
   const marcado = Boolean(sel);
   return (
-    <div className="flex items-center gap-3 px-3 py-2 text-sm">
+    <div className="flex items-center gap-3 px-3 py-2 text-body">
       <Checkbox
         id={`concepto-${concepto.id}`}
         checked={marcado}
@@ -51,7 +51,7 @@ function FilaConcepto({
         >
           {concepto.concepto}
         </Label>
-        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+        <div className="flex items-center gap-2 text-body-sm text-muted-foreground">
           <span>Costeado: {formatCurrency(concepto.monto, concepto.moneda)}</span>
           {concepto.yaFacturado && (
             <Badge variant="secondary" className="h-4 px-1.5 text-2xs">ya facturado</Badge>
@@ -60,7 +60,7 @@ function FilaConcepto({
       </div>
       {marcado && (
         <div className="flex items-center gap-1.5">
-          <span className="text-xs text-muted-foreground">{concepto.moneda}</span>
+          <span className="text-body-sm text-muted-foreground">{concepto.moneda}</span>
           <MoneyInput
             value={sel?.monto ?? 0}
             currency={concepto.moneda}
@@ -80,13 +80,13 @@ export function ConceptosSugeridosEntrante({
 }: Props) {
   if (!proveedorElegido) {
     return (
-      <p className="text-xs text-muted-foreground">
+      <p className="text-body-sm text-muted-foreground">
         Elige el proveedor para ver sus conceptos de costo en este embarque.
       </p>
     );
   }
   if (cargando) {
-    return <p className="text-xs text-muted-foreground">Consultando los conceptos del embarque…</p>;
+    return <p className="text-body-sm text-muted-foreground">Consultando los conceptos del embarque…</p>;
   }
 
   const lista = conceptos ?? [];
@@ -95,7 +95,7 @@ export function ConceptosSugeridosEntrante({
   return (
     <div className="space-y-2">
       {lista.length === 0 ? (
-        <p className="text-xs text-muted-foreground">
+        <p className="text-body-sm text-muted-foreground">
           Este proveedor no tiene conceptos de costo pendientes en el embarque.
         </p>
       ) : (

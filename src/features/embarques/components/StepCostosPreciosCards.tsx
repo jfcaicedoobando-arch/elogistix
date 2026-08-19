@@ -34,7 +34,7 @@ export function CostosCard(p: CostosCardProps) {
       <CardHeader><CardTitle>Costos directos del embarque</CardTitle></CardHeader>
       <CardContent>
         <div className="space-y-3">
-          <div className={`grid ${p.cols} gap-2 text-xs font-medium text-muted-foreground`}>
+          <div className={`grid ${p.cols} gap-2 text-body-sm font-medium text-muted-foreground`}>
             <span>Proveedor</span><span>Concepto</span><span>Subtotal (sin IVA)</span><span>Moneda</span>
             {p.showContenedorCol && <span>Contenedor</span>}
             <span>Total USD</span><span></span>
@@ -57,10 +57,10 @@ export function CostosCard(p: CostosCardProps) {
             />
           ))}
           <Button variant="outline" size="sm" onClick={p.onAdd}>+ Agregar costo</Button>
-          <div className="border-t pt-3 mt-3 text-sm text-right">
+          <div className="border-t pt-3 mt-3 text-body text-right">
             <div className="flex justify-end gap-4"><span className="font-semibold">Total USD:</span><span className="font-bold w-28 text-right">{formatCurrency(p.totalUSD, 'USD')}</span></div>
             {p.filasMixtasCount > 0 && (
-              <p className="text-xs text-warning mt-1">
+              <p className="text-body-sm text-warning mt-1">
                 {p.filasMixtasCount} fila(s) convertida(s) a USD con TC vigente.
               </p>
             )}
@@ -93,7 +93,7 @@ export function VentasCard(p: VentasCardProps) {
       <CardHeader><CardTitle>Conceptos de Venta</CardTitle></CardHeader>
       <CardContent>
         <div className="space-y-3">
-          <div className={`grid ${p.cols} gap-2 text-xs font-medium text-muted-foreground`}>
+          <div className={`grid ${p.cols} gap-2 text-body-sm font-medium text-muted-foreground`}>
             <span>Concepto</span><span>Cantidad</span><span>Subtotal (sin IVA)</span><span>Moneda</span>
             {p.showContenedorCol && <span>Contenedor</span>}
             <span>Total USD</span><span></span>
@@ -115,10 +115,10 @@ export function VentasCard(p: VentasCardProps) {
             />
           ))}
           <Button variant="outline" size="sm" onClick={p.onAdd}>+ Agregar concepto</Button>
-          <div className="border-t pt-3 mt-3 text-sm text-right">
+          <div className="border-t pt-3 mt-3 text-body text-right">
             <div className="flex justify-end gap-4"><span className="font-semibold">Total USD:</span><span className="font-bold w-28 text-right">{formatCurrency(p.totalUSD, 'USD')}</span></div>
             {p.filasMixtasCount > 0 && (
-              <p className="text-xs text-warning mt-1">
+              <p className="text-body-sm text-warning mt-1">
                 {p.filasMixtasCount} fila(s) convertida(s) a USD con TC vigente.
               </p>
             )}

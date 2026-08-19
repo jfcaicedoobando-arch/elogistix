@@ -59,7 +59,7 @@ function Tile({
   return (
     <div className="min-w-0" title={title}>
       <p className="text-2xs uppercase tracking-wide text-muted-foreground truncate">{label}</p>
-      <p className={cn("text-sm tabular-nums truncate", valueClassName ?? "font-medium")}>{value}</p>
+      <p className={cn("text-body tabular-nums truncate", valueClassName ?? "font-medium")}>{value}</p>
     </div>
   );
 }

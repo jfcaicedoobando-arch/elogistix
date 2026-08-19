@@ -29,11 +29,11 @@ export function EmbarquesRelacionadosCard({ embarqueId, blMaster, relacionados }
   return (
     <Card>
       <CardHeader className="pb-3">
-        <CardTitle className="text-sm flex items-center gap-2">
+        <CardTitle className="text-body flex items-center gap-2">
           <Link className="h-4 w-4" />
           Embarques del BL Master: {blMaster}
         </CardTitle>
-        <p className="text-xs text-muted-foreground">
+        <p className="text-body-sm text-muted-foreground">
           {relacionados.length} contenedores · {formatNumber(totalPeso, { suffix: "kg" })} · {formatNumber(totalVol, { decimals: 2, suffix: "m³" })} · {formatNumber(totalPiezas)} piezas
         </p>
       </CardHeader>
@@ -49,16 +49,16 @@ export function EmbarquesRelacionadosCard({ embarqueId, blMaster, relacionados }
                 </span>
               );
             } },
-            { id: "bl_house", header: "BL House", meta: { className: "text-xs" }, cell: ({ row }) => row.original.bl_house || '-' },
-            { id: "contenedor", header: "Contenedor", meta: { className: "text-xs" }, cell: ({ row }) => {
+            { id: "bl_house", header: "BL House", meta: { className: "text-body-sm" }, cell: ({ row }) => row.original.bl_house || '-' },
+            { id: "contenedor", header: "Contenedor", meta: { className: "text-body-sm" }, cell: ({ row }) => {
               const r = row.original;
               return r.contenedor ? `${r.contenedor}${r.tipo_contenedor ? ` (${r.tipo_contenedor})` : ''}` : '-';
             } },
-            { id: "peso", header: "Peso", meta: { className: "text-right text-xs tabular-nums", headerClassName: "text-right" },
+            { id: "peso", header: "Peso", meta: { className: "text-right text-body-sm tabular-nums", headerClassName: "text-right" },
               cell: ({ row }) => formatNumber(Number(row.original.peso_kg), { suffix: "kg" }) },
-            { id: "volumen", header: "Volumen", meta: { className: "text-right text-xs tabular-nums", headerClassName: "text-right" },
+            { id: "volumen", header: "Volumen", meta: { className: "text-right text-body-sm tabular-nums", headerClassName: "text-right" },
               cell: ({ row }) => formatNumber(Number(row.original.volumen_m3), { decimals: 2, suffix: "m³" }) },
-            { id: "piezas", header: "Piezas", meta: { className: "text-right text-xs tabular-nums", headerClassName: "text-right" },
+            { id: "piezas", header: "Piezas", meta: { className: "text-right text-body-sm tabular-nums", headerClassName: "text-right" },
               cell: ({ row }) => formatNumber(row.original.piezas) },
             { id: "estado", header: "Estado", cell: ({ row }) => (
               <StatusBadge domain="embarque" status={row.original.estado} />
@@ -72,10 +72,10 @@ export function EmbarquesRelacionadosCard({ embarqueId, blMaster, relacionados }
           getRowHref={(r) => r.id !== embarqueId ? `/embarques/${r.id}` : null}
           footer={
             <TableRow className="hover:bg-transparent even:bg-transparent font-semibold">
-              <TableCell colSpan={3} className="text-xs text-right">Totales:</TableCell>
-              <TableCell className="text-xs text-right tabular-nums">{formatNumber(totalPeso, { suffix: "kg" })}</TableCell>
-              <TableCell className="text-xs text-right tabular-nums">{formatNumber(totalVol, { decimals: 2, suffix: "m³" })}</TableCell>
-              <TableCell className="text-xs text-right tabular-nums">{formatNumber(totalPiezas)}</TableCell>
+              <TableCell colSpan={3} className="text-body-sm text-right">Totales:</TableCell>
+              <TableCell className="text-body-sm text-right tabular-nums">{formatNumber(totalPeso, { suffix: "kg" })}</TableCell>
+              <TableCell className="text-body-sm text-right tabular-nums">{formatNumber(totalVol, { decimals: 2, suffix: "m³" })}</TableCell>
+              <TableCell className="text-body-sm text-right tabular-nums">{formatNumber(totalPiezas)}</TableCell>
               <TableCell />
             </TableRow>
           }

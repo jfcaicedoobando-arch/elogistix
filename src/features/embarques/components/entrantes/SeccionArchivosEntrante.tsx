@@ -27,10 +27,10 @@ export function SeccionArchivosEntrante({
         onQuitarPdf={onQuitarPdf}
         onQuitarXml={onQuitarXml}
       />
-      {leyendoXml && <p className="text-xs text-muted-foreground">Leyendo el XML…</p>}
-      {error && <p className="text-sm text-destructive">{error}</p>}
+      {leyendoXml && <p className="text-body-sm text-muted-foreground">Leyendo el XML…</p>}
+      {error && <p className="text-body text-destructive">{error}</p>}
       {!xml && pdf && (
-        <p className="text-xs text-warning">
+        <p className="text-body-sm text-warning">
           Sin XML sólo puede capturarse como factura extranjera. Si el proveedor es mexicano, pídele el CFDI.
         </p>
       )}

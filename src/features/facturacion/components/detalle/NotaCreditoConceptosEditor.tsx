@@ -81,14 +81,14 @@ export function NotaCreditoConceptosEditor(props: Props) {
           </div>
         ))}
       </div>
-      <div className="flex justify-end text-sm pt-1">
+      <div className="flex justify-end text-body pt-1">
         <span className="text-muted-foreground mr-2">Total:</span>
         <strong className={`tabular-nums ${excedeSaldo ? "text-destructive" : ""}`}>
           {monto.toFixed(2)} {monedaFactura}
         </strong>
       </div>
       {excedeSaldo && (
-        <p className="text-xs text-destructive">El monto excede el saldo de la factura.</p>
+        <p className="text-body-sm text-destructive">El monto excede el saldo de la factura.</p>
       )}
     </div>
   );

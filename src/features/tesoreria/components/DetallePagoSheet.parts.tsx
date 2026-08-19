@@ -18,7 +18,7 @@ function Dato({ label, children }: { label: string; children: React.ReactNode })
   return (
     <div className="space-y-0.5">
       <p className="text-2xs uppercase tracking-wide text-muted-foreground">{label}</p>
-      <p className="text-sm">{children}</p>
+      <p className="text-body">{children}</p>
     </div>
   );
 }
@@ -40,7 +40,7 @@ export function BloquePago({ pago }: { pago: PagoDetalleEncabezado }) {
           {formatCurrency(pago.monto, pago.moneda)}
         </p>
         {pago.moneda !== "MXN" ? (
-          <p className="text-xs text-muted-foreground">
+          <p className="text-body-sm text-muted-foreground">
             Equivale a {formatCurrency(pago.monto_mxn, "MXN")} (TC {pago.tipo_cambio.toFixed(4)})
           </p>
         ) : null}
@@ -82,11 +82,11 @@ export function BloqueMovimiento({
     return (
       <section className="space-y-2">
         <SectionHeading as="h3" variant="subsection">Movimiento bancario</SectionHeading>
-        <div className="flex items-start gap-2 rounded-md border border-warning/30 bg-warning/5 p-3 text-sm">
+        <div className="flex items-start gap-2 rounded-md border border-warning/30 bg-warning/5 p-3 text-body">
           <TriangleAlert className="mt-0.5 h-4 w-4 text-warning" />
           <div className="space-y-1">
             <p>Este pago todavía no está conciliado con un movimiento del banco.</p>
-            <Link to="/tesoreria/conciliacion" className="text-xs font-medium text-primary hover:underline">
+            <Link to="/tesoreria/conciliacion" className="text-body-sm font-medium text-primary hover:underline">
               Ir a Conciliación bancaria
             </Link>
           </div>
@@ -119,16 +119,16 @@ export function BloqueMovimiento({
       <div className="space-y-2 rounded-md border p-3">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <p className="truncate text-sm font-medium">{movimiento.concepto ?? "Movimiento del banco"}</p>
-            <p className="text-xs text-muted-foreground">
+            <p className="truncate text-body font-medium">{movimiento.concepto ?? "Movimiento del banco"}</p>
+            <p className="text-body-sm text-muted-foreground">
               {formatDate(movimiento.fecha)} · {movimiento.cuenta_alias ?? "Cuenta"} ·{" "}
               {esCargo ? "Cargo" : "Abono"}
             </p>
             {movimiento.referencia ? (
-              <p className="text-xs text-muted-foreground">Ref. {movimiento.referencia}</p>
+              <p className="text-body-sm text-muted-foreground">Ref. {movimiento.referencia}</p>
             ) : null}
           </div>
-          <span className={`whitespace-nowrap tabular-nums text-sm font-semibold ${esCargo ? "text-destructive" : "text-success"}`}>
+          <span className={`whitespace-nowrap tabular-nums text-body font-semibold ${esCargo ? "text-destructive" : "text-success"}`}>
             {esCargo ? "−" : "+"} {formatCurrency(monto, monedaMovimiento)}
           </span>
         </div>
@@ -140,7 +140,7 @@ export function BloqueMovimiento({
         {cuentaId ? (
           <Link
             to={`/tesoreria/estado-cuenta?cuenta=${cuentaId}`}
-            className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
+            className="inline-flex items-center gap-1 text-body-sm font-medium text-primary hover:underline"
           >
             <Landmark className="h-3.5 w-3.5" />
             Ver en el estado de cuenta

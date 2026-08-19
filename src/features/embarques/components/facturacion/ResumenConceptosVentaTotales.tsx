@@ -39,17 +39,17 @@ function ColumnaTotal({ titulo, count, total, cardClass, badgeClass, icon, empty
     <div className={`rounded-md border p-3 ${cardClass}`}>
       <div className="flex items-center gap-2 mb-2">
         {icon}
-        <span className="text-sm font-semibold">{titulo}</span>
+        <span className="text-body font-semibold">{titulo}</span>
         <Badge className={`ml-auto ${badgeClass}`}>{count}</Badge>
       </div>
-      <div className="text-sm space-y-0.5">
+      <div className="text-body space-y-0.5">
         {total.totalMxn > 0 && (
           <div className="flex justify-between"><span className="text-muted-foreground">MXN:</span><span className="font-semibold">{formatCurrency(total.totalMxn, "MXN")}</span></div>
         )}
         {total.totalUsd > 0 && (
           <div className="flex justify-between"><span className="text-muted-foreground">USD:</span><span className="font-semibold">{formatCurrency(total.totalUsd, "USD")}</span></div>
         )}
-        {vacio && <span className="text-muted-foreground text-xs">{emptyText}</span>}
+        {vacio && <span className="text-muted-foreground text-body-sm">{emptyText}</span>}
       </div>
     </div>
   );

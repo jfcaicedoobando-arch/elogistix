@@ -20,14 +20,14 @@ interface CompactoProps {
 export function TimbrarCompacto({ usoCfdi, formaPago, metodoPago, enviarEmail, setEnviarEmail }: CompactoProps) {
   return (
     <>
-      <div className="text-sm text-muted-foreground">
+      <div className="text-body text-muted-foreground">
         <span className="font-medium text-foreground">Uso CFDI:</span> {usoCfdi}
         {" · "}
         <span className="font-medium text-foreground">Forma:</span> {formaPago}
         {" · "}
         <span className="font-medium text-foreground">Método:</span> {metodoPago}
       </div>
-      <label className="flex items-center gap-2 text-sm cursor-pointer">
+      <label className="flex items-center gap-2 text-body cursor-pointer">
         <Checkbox checked={enviarEmail} onCheckedChange={(c) => setEnviarEmail(c === true)} />
         <span>Enviar el CFDI por email al cliente tras timbrar</span>
       </label>
@@ -59,7 +59,7 @@ export function TimbrarCompleto(props: CompletoProps) {
   } = props;
   return (
     <>
-      <ul className="text-sm space-y-1">
+      <ul className="text-body space-y-1">
         {checks.map((c, i) => (
           <li key={i} className={`flex items-center gap-1.5 ${c.ok ? "text-success" : "text-destructive"}`}>
             {c.ok ? <Check className="h-3.5 w-3.5" aria-hidden /> : <X className="h-3.5 w-3.5" aria-hidden />}
@@ -98,7 +98,7 @@ export function TimbrarCompleto(props: CompletoProps) {
         </div>
       </div>
 
-      <label className="flex items-center gap-2 text-sm cursor-pointer">
+      <label className="flex items-center gap-2 text-body cursor-pointer">
         <Checkbox checked={enviarEmail} onCheckedChange={(c) => setEnviarEmail(c === true)} />
         <span>Enviar el CFDI por email al cliente tras timbrar</span>
       </label>

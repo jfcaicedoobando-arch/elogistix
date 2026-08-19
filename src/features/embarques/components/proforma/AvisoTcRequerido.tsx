@@ -33,7 +33,7 @@ export function AvisoTcRequerido({ tcSugerido, guardando, onGuardarYReintentar }
       <AlertTriangle className="h-4 w-4" />
       <AlertTitle>Falta el tipo de cambio USD del embarque</AlertTitle>
       <AlertDescription className="space-y-3">
-        <p className="text-sm">
+        <p className="text-body">
           Hay conceptos en dólares y el embarque no tiene tipo de cambio capturado.
           Captúralo aquí y volvemos a generar la proforma automáticamente.
         </p>

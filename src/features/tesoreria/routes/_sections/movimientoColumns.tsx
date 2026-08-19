@@ -2,18 +2,12 @@
  * Columnas de la tabla de movimientos bancarios en /tesoreria/conciliacion.
  * Extraído de `TesoreriaConciliacion.tsx` (v13.317.9).
  */
-import { Badge } from "@/components/ui/badge";
+import { StatusBadge } from "@/components/shared/StatusBadge";
 import { BotonVerPago } from "@/features/tesoreria/components/BotonVerPago";
 import type { RefPago } from "@/features/tesoreria/domain/pagoDetalle";
 import { formatCurrency, formatDate } from "@/lib/formatters";
 import { defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import type { MovimientoBBVA } from "@/features/tesoreria/services";
-
-const ESTADO_COLOR: Record<string, string> = {
-  Pendiente: "bg-warning/10 text-warning border-warning/20",
-  Conciliado: "bg-success/10 text-success border-success/20",
-  Ignorado: "bg-muted text-muted-foreground border-border",
-};
 
 /**
  * Factory de columnas: recibe el callback que abre el detalle del pago para
@@ -29,7 +23,7 @@ export function crearMovimientoColumns(
     header: "Fecha",
     accessorFn: (m) => m.fecha,
     cell: ({ row }) => (
-      <span className="whitespace-nowrap text-xs">{formatDate(row.original.fecha)}</span>
+      <span className="whitespace-nowrap text-body-sm">{formatDate(row.original.fecha)}</span>
     ),
   },
   {
@@ -70,9 +64,11 @@ export function crearMovimientoColumns(
     accessorFn: (m) => m.estado_conciliacion,
     meta: { width: "w-24" },
     cell: ({ row }) => (
-      <Badge variant="outline" className={`text-2xs ${ESTADO_COLOR[row.original.estado_conciliacion]}`}>
-        {row.original.estado_conciliacion}
-      </Badge>
+      <StatusBadge
+        domain="conciliacion"
+        status={row.original.estado_conciliacion}
+        className="text-2xs"
+      />
     ),
   },
     {

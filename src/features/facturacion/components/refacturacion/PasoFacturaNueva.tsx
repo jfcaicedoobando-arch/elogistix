@@ -36,7 +36,7 @@ export function PasoFacturaNueva(props: Props) {
     >
       {!nueva && (
         <div className="space-y-3">
-          <p className="text-sm">
+          <p className="text-body">
             Se creará un borrador a nombre de <strong>{props.clienteDestinoNombre}</strong> con
             los mismos conceptos e importes de la factura original.
           </p>
@@ -54,27 +54,27 @@ export function PasoFacturaNueva(props: Props) {
         <div className="space-y-3">
           <div className="rounded-md border p-3 space-y-1">
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <p className="text-sm font-medium">{nueva.numero}</p>
+              <p className="text-body font-medium">{nueva.numero}</p>
               <Badge variant={lista ? "secondary" : "outline"}>
                 {lista ? "Timbrada" : nueva.estado}
               </Badge>
             </div>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-body-sm text-muted-foreground">
               {nueva.cliente_nombre ?? "—"}
               {nueva.rfc_cliente ? ` · ${nueva.rfc_cliente}` : ""}
             </p>
             {nueva.uuid_fiscal && (
-              <p className="text-xs text-muted-foreground break-all">UUID {nueva.uuid_fiscal}</p>
+              <p className="text-body-sm text-muted-foreground break-all">UUID {nueva.uuid_fiscal}</p>
             )}
           </div>
 
           {lista ? (
-            <div className="rounded-md border border-success/30 bg-success/5 p-3 text-sm flex items-start gap-2">
+            <div className="rounded-md border border-success/30 bg-success/5 p-3 text-body flex items-start gap-2">
               <CheckCircle2 className="h-4 w-4 text-success mt-0.5" />
               <span>La nueva factura está timbrada. Puedes continuar.</span>
             </div>
           ) : (
-            <div className="rounded-md border border-warning/30 bg-warning/5 p-3 text-sm">
+            <div className="rounded-md border border-warning/30 bg-warning/5 p-3 text-body">
               Abre el borrador, revisa los datos fiscales y tímbralo. Al volver, este
               asistente retoma en este mismo paso.
             </div>
@@ -82,7 +82,7 @@ export function PasoFacturaNueva(props: Props) {
 
           {props.consistencia && <ComparativoConsistencia data={props.consistencia} />}
           {!props.consistencia && props.consistenciaCargando && (
-            <p className="text-xs text-muted-foreground">Validando consistencia fiscal…</p>
+            <p className="text-body-sm text-muted-foreground">Validando consistencia fiscal…</p>
           )}
 
           <div className="flex flex-wrap gap-2">

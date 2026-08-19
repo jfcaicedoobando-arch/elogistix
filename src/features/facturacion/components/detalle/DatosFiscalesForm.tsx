@@ -60,7 +60,7 @@ export function DatosFiscalesForm(p: DatosFiscalesFormProps) {
             type="number" min={0} value={p.diasCredito}
             onChange={(e) => p.setDiasCredito(Number(e.target.value) || 0)}
           />
-          <p className="mt-1 text-xs text-muted-foreground">
+          <p className="mt-1 text-body-sm text-muted-foreground">
             {vencimiento
               ? `Vence el ${formatDate(vencimiento)}`
               : "Vencimiento: se calcula al guardar la fecha de emisión"}

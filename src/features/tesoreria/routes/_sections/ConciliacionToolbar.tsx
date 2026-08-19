@@ -91,7 +91,7 @@ export function ConciliacionToolbar({
             </Button>
           </>
         ) : (
-          <span className="text-xs text-muted-foreground">
+          <span className="text-body-sm text-muted-foreground">
             Sólo tesorería puede capturar o importar movimientos bancarios.
           </span>
         )}

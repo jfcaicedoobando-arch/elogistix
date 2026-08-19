@@ -35,7 +35,7 @@ function NotaOrigenOrdenante({ auto }: { auto: OrdenanteSugerido | null }) {
       ? `la factura viva ${auto.numeroFactura ?? ""}`.trim()
       : "el cliente destino elegido";
   return (
-    <p className="md:col-span-2 text-xs text-muted-foreground">
+    <p className="md:col-span-2 text-body-sm text-muted-foreground">
       Tomado de {fuente}: <strong>{auto.nombre}</strong>
       {auto.rfc ? ` · ${auto.rfc}` : ""}. Edítalo sólo si el depósito llegó de otra empresa.
     </p>
@@ -46,7 +46,7 @@ export function PasoReasignarPago(props: Props) {
   if (props.yaReasignado) {
     return (
       <FormDialogSection title="Pago reasignado" flat>
-        <div className="rounded-md border border-success/30 bg-success/5 p-3 text-sm flex items-start gap-2">
+        <div className="rounded-md border border-success/30 bg-success/5 p-3 text-body flex items-start gap-2">
           <CheckCircle2 className="h-4 w-4 text-success mt-0.5" />
           <span>
             El pago ya quedó aplicado a <strong>{props.facturaNueva?.numero ?? "la nueva factura"}</strong>{" "}
@@ -81,12 +81,12 @@ export function PasoReasignarPago(props: Props) {
                   }`}
                 >
                   <div className="flex flex-wrap items-center justify-between gap-2">
-                    <span className="text-sm font-medium">
+                    <span className="text-body font-medium">
                       {formatCurrency(Number(p.monto), p.moneda)}
                     </span>
                     <Badge variant="outline">{formatFechaEs(p.fecha_pago)}</Badge>
                   </div>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-body-sm text-muted-foreground">
                     Aplicado a la factura: {formatCurrency(Number(p.monto_aplicado_factura ?? 0), p.moneda)}
                     {p.uuid_rep ? " · REP cancelado" : ""}
                   </p>
@@ -122,13 +122,13 @@ export function PasoReasignarPago(props: Props) {
         </div>
         <NotaOrigenOrdenante auto={props.ordenanteAuto} />
         {props.bloqueoOrdenante && (
-          <p className="md:col-span-2 text-xs text-destructive" role="alert">
+          <p className="md:col-span-2 text-body-sm text-destructive" role="alert">
             {props.bloqueoOrdenante}
           </p>
         )}
       </FormDialogSection>
 
-      <div className="rounded-md border border-info/30 bg-info/5 p-3 text-xs">
+      <div className="rounded-md border border-info/30 bg-info/5 p-3 text-body-sm">
         Destino: <strong>{props.facturaNueva?.numero ?? "—"}</strong>. Se valida que la moneda
         coincida y que el pago no exceda el saldo de la nueva factura.
       </div>

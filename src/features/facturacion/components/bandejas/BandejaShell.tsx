@@ -65,7 +65,7 @@ export function BandejaShell({
         activeCount={activeCount}
         onClearAll={onClearAll}
       />
-      <div className="text-xs text-muted-foreground">{counter}</div>
+      <div className="text-body-sm text-muted-foreground">{counter}</div>
       {isError ? (
         <Card>
           <CardContent className="p-0">
