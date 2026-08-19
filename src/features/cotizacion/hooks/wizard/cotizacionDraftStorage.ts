@@ -64,8 +64,8 @@ interface RawDraftShape {
 /** El archivo MSDS nunca sobrevive a `JSON.stringify`; siempre se avisa. */
 const AVISO_MSDS = "El archivo MSDS adjunto (si lo había) — vuelve a adjuntarlo";
 
-export function loadDraft(userId: string): StoredDraft | null {
-  const raw = safeLocalStorage.getItem(draftKey(userId));
+export function loadDraft(userId: string, organizationId?: string | null): StoredDraft | null {
+  const raw = safeLocalStorage.getItem(draftKey(userId, organizationId));
   if (!raw) return null;
   try {
     const parsedUnknown: unknown = JSON.parse(raw);
@@ -83,7 +83,7 @@ export function loadDraft(userId: string): StoredDraft | null {
     // sesión nueva). La clave ya es por usuario (`draftKey(userId)`).
     const ahora = Date.now();
     if (ahora - savedAtNum > DRAFT_TTL_MS || savedAtNum > ahora + CLOCK_SKEW_MS) {
-      safeLocalStorage.removeItem(draftKey(userId));
+      safeLocalStorage.removeItem(draftKey(userId, organizationId));
       return null;
     }
 
@@ -110,6 +110,6 @@ export function loadDraft(userId: string): StoredDraft | null {
   }
 }
 
-export function clearDraft(userId: string): void {
-  safeLocalStorage.removeItem(draftKey(userId));
+export function clearDraft(userId: string, organizationId?: string | null): void {
+  safeLocalStorage.removeItem(draftKey(userId, organizationId));
 }
