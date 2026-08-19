@@ -57,6 +57,17 @@ function isExpectedFacturapiMessage(message: string): boolean {
 }
 
 /**
+ * JAVASCRIPT-REACT-5D: `validation_failed` es el pre-flight de nuestras propias
+ * edge functions de timbrado (RFC, código postal, saldo del documento). Siempre
+ * es un dato que el usuario debe corregir, nunca un bug de código, así que se
+ * marca como esperado en bloque y se excluye de Sentry.
+ */
+function isExpectedValidationBody(body: EdgeErrorBody): boolean {
+  return body.error === "validation_failed";
+}
+
+
+/**
  * `supabase.functions.invoke()` levanta `FunctionsHttpError` en cualquier
  * status ≠ 2xx y NO expone el JSON del body en `data` — sólo deja
  * `error.message = "Edge Function returned a non-2xx status code"` y el
