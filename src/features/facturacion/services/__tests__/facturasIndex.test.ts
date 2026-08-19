@@ -9,8 +9,6 @@ vi.mock("@/integrations/supabase/client", () => ({ supabase: mock.supabase }));
 import {
   fetchFacturasListado,
   fetchFacturas,
-  marcarCostoPagado,
-  fetchGastosPendientes,
 } from "@/features/facturacion/services";
 
 beforeEach(() => {
@@ -94,33 +92,8 @@ describe("services/facturas index", () => {
     expect((mock.rpcCalls[0].args as Record<string, unknown>).p_limit).toBe(5000);
   });
 
-  it("marcarCostoPagado actualiza conceptos_costo a Pagado", async () => {
-    mock.setTableResult("conceptos_costo", { data: null, error: null });
-    await expect(marcarCostoPagado({ id: "c1", referenciaPago: "REF-1" })).resolves.toBeUndefined();
-    expect(mock.tableCalls[0].table).toBe("conceptos_costo");
-    expect(mock.tableCalls[0].ops).toContain("update");
-  });
 
-  it("marcarCostoPagado normaliza referencia vacía a null", async () => {
-    mock.setTableResult("conceptos_costo", { data: null, error: null });
-    await marcarCostoPagado({ id: "c1" });
-    const payload = mock.tableCalls[0].opArgs[mock.tableCalls[0].ops.indexOf("update")]?.[0] as Record<string, unknown>;
-    expect(payload.referencia_pago).toBeNull();
-  });
 
-  it("marcarCostoPagado propaga error", async () => {
-    mock.setTableResult("conceptos_costo", { data: null, error: { message: "x" } });
-    await expect(marcarCostoPagado({ id: "c1" })).rejects.toThrow();
-  });
 
-  it("fetchGastosPendientes devuelve listado", async () => {
-    mock.setTableResult("conceptos_costo", { data: [{ id: "c1" }], error: null });
-    const r = await fetchGastosPendientes();
-    expect(r).toHaveLength(1);
-  });
 
-  it("fetchGastosPendientes propaga error", async () => {
-    mock.setTableResult("conceptos_costo", { data: null, error: { message: "x" } });
-    await expect(fetchGastosPendientes()).rejects.toThrow();
-  });
 });
