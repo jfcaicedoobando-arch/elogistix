@@ -1,6 +1,9 @@
-/** Diferencia en días entre dos fechas ISO (YYYY-MM-DD). */
+import { diffDiasCalendario } from "@/lib/date/dateOnly";
+
+/**
+ * Diferencia en días entre dos fechas ISO (YYYY-MM-DD).
+ * Delega en el helper único de calendario (Ola 19 · paso 1).
+ */
 export function diffDias(desdeIso: string, hastaIso: string): number {
-  const a = new Date(desdeIso + "T00:00:00").getTime();
-  const b = new Date(hastaIso + "T00:00:00").getTime();
-  return Math.round((b - a) / (1000 * 60 * 60 * 24));
+  return diffDiasCalendario(desdeIso, hastaIso);
 }

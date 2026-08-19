@@ -10,6 +10,7 @@ import { KpiCard } from "@/components/shared/KpiCard";
 import { useAgenteContext, useAgenteTarifas, useAgenteEmbarques } from "@/features/portal-agente/hooks";
 import { ESTADOS_ACTIVOS } from "@/features/embarques/constants/embarqueConstants";
 import { ROUTES } from "@/constants/routes";
+import { diffDiasCalendario } from "@/lib/date/dateOnly";
 import { todayLocalISO } from "@/lib/date/today";
 import { useDocumentTitle } from "@/hooks/shared";
 
@@ -30,8 +31,7 @@ export default function AgenteInicio() {
   const rechazadas = tarifas.filter((t) => t.estado_aprobacion === "rechazada").length;
   const en30 = tarifas.filter((t) => {
     if (!esVigenteReal(t, hoy)) return false;
-    const dHasta = new Date(t.vigente_hasta);
-    const diff = (dHasta.getTime() - new Date(hoy).getTime()) / (1000 * 60 * 60 * 24);
+    const diff = diffDiasCalendario(hoy, t.vigente_hasta);
     return diff >= 0 && diff <= 30;
   }).length;
   // B-094: "activos" excluye Cerrado/Cancelado/Borrador — constante canónica.

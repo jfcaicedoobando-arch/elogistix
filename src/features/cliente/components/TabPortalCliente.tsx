@@ -14,6 +14,7 @@ import PortalInviteDialog from "./PortalInviteDialog";
 import { useState } from "react";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
+import { diffDiasCalendario } from "@/lib/date/dateOnly";
 
 interface Props {
   clienteId: string;
@@ -23,8 +24,7 @@ interface Props {
 
 function diasDesde(fecha: string | null): number | null {
   if (!fecha) return null;
-  const ms = Date.now() - new Date(fecha).getTime();
-  return Math.floor(ms / (1000 * 60 * 60 * 24));
+  return diffDiasCalendario(fecha, new Date());
 }
 
 function renderUltimoAcceso(last: string | null): { text: string; muted: boolean } {

@@ -8,14 +8,14 @@ import { formatDate } from "@/lib/formatters";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import type { CotizacionListItem } from "@/features/cotizacion/hooks";
 import { todayLocalISO } from "@/lib/date/today";
+import { diffDiasCalendario } from "@/lib/date/dateOnly";
 
 function buildVigenciaNode(fechaVigencia: string, estado: string): ReactNode {
   const fechaStr = formatDate(fechaVigencia);
   const esEnviada = estado.toLowerCase() === "enviada";
-  // FE-04: un date-only ("YYYY-MM-DD") se parsea como medianoche UTC; con
-  // "T00:00:00" es medianoche LOCAL y el badge deja de adelantarse medio día.
-  const fecha = new Date(`${fechaVigencia}T00:00:00`);
-  const diffDias = Math.ceil((fecha.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+  // FE-04: el date-only se ancla a medianoche LOCAL (helper único), así el
+  // badge deja de adelantarse medio día y es inmune al cambio de horario.
+  const diffDias = diffDiasCalendario(new Date(), fechaVigencia);
 
   // v13.223.0 · Capa 3 Tranche A · 3.3: la fila de "Vence" ya no aparece
   // siempre. Sólo se muestra si la cotización está en proceso ("enviada")
