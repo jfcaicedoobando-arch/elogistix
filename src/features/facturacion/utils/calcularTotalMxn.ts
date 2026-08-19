@@ -1,6 +1,7 @@
 import { aMxn } from "@/lib/financial/convertir";
 import { sumarSubtotales, subtotalLinea, calcularIVA, roundMoney } from "@/lib/financial/financialUtils";
 import type { ConceptoManualInput } from "@/features/facturacion/services/facturaManual";
+import type { Moneda } from "@/types/db";
 
 export interface TotalFacturaMxn {
   /** Total convertido a MXN; 0 cuando falta un tipo de cambio confiable. */
@@ -16,7 +17,7 @@ export interface TotalFacturaMxn {
  */
 export function calcularTotalMxn(
   conceptos: ConceptoManualInput[],
-  moneda: "MXN" | "USD" | "EUR",
+  moneda: Moneda,
   tipoCambio: number,
   tasaIva: number,
 ): TotalFacturaMxn {
