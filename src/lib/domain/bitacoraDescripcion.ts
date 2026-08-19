@@ -109,42 +109,52 @@ function describirGenerica(accion: string, modulo: string): DescripcionBitacora 
   return { titulo: `Eliminó ${singular}` };
 }
 
-// eslint-disable-next-line complexity -- despacho por (accion, modulo); ramas lineales sin lógica anidada.
+/** Acciones que se describen igual sin importar el módulo. */
+const POR_ACCION: Record<
+  string,
+  (accion: string, detalles: Record<string, unknown>) => DescripcionBitacora
+> = {
+  login: () => ({ titulo: "Inició sesión" }),
+  cambiar_estado: (_a, d) => describirCambioEstado(d),
+  cambio_estado: (_a, d) => describirCambioEstado(d),
+  subir_documento: describirDocumento,
+  eliminar_documento: describirDocumento,
+  agregar_nota: (_a, d) => describirNota(d),
+  factura: (_a, d) => describirFactura(d),
+};
+
+/** Despacho por módulo: el primero que reconozca la acción gana. */
+const POR_MODULO: Record<
+  string,
+  (entrada: EntradaBitacora, detalles: Record<string, unknown>) => DescripcionBitacora | null
+> = {
+  facturacion: (e, d) => describirFacturacion(e.accion, d),
+  cxp: (e, d) => describirCxp(e.accion, d),
+  costeo: (e) => describirCosteo(e.accion, e.entidad_nombre),
+  embarques: (e, d) => {
+    if (e.accion === "crear") return describirEmbarqueCreado(d);
+    if (e.accion === "editar" || e.accion === "editar_cliente") return describirEmbarqueEditado(d);
+    return null;
+  },
+};
+
+const ACCIONES_CRUD = new Set(["crear", "editar", "editar_cliente", "eliminar"]);
+
 export function describirEntrada(entrada: EntradaBitacora): DescripcionBitacora {
   const detalles = (entrada.detalles ?? {}) as Record<string, unknown>;
   const { accion, modulo } = entrada;
 
-  if (accion === "login") return { titulo: "Inició sesión" };
-  if (accion === "cambiar_estado" || accion === "cambio_estado") return describirCambioEstado(detalles);
-  if (accion === "subir_documento" || accion === "eliminar_documento") {
-    return describirDocumento(accion, detalles);
-  }
-  if (accion === "agregar_nota") return describirNota(detalles);
-  if (accion === "factura") return describirFactura(detalles);
+  const porAccion = POR_ACCION[accion];
+  if (porAccion) return porAccion(accion, detalles);
 
-  if (modulo === "facturacion") {
-    const r = describirFacturacion(accion, detalles);
-    if (r) return r;
-  }
-  if (modulo === "cxp") {
-    const r = describirCxp(accion, detalles);
-    if (r) return r;
-  }
-  if (modulo === "costeo") {
-    const r = describirCosteo(accion, entrada.entidad_nombre);
-    if (r) return r;
-  }
+  const porModulo = POR_MODULO[modulo]?.(entrada, detalles);
+  if (porModulo) return porModulo;
 
-  if (accion === "crear" && modulo === "embarques") return describirEmbarqueCreado(detalles);
-  if ((accion === "editar" || accion === "editar_cliente") && modulo === "embarques") {
-    return describirEmbarqueEditado(detalles);
-  }
-  if (accion === "crear" || accion === "editar" || accion === "editar_cliente" || accion === "eliminar") {
-    return describirGenerica(accion, modulo);
-  }
+  if (ACCIONES_CRUD.has(accion)) return describirGenerica(accion, modulo);
 
   // FIX 6 (P3): fallback humanizado (nunca un slug crudo tipo "importacion").
   return { titulo: humanizarEnum(accion) };
 }
+
 
 export { GRUPOS_ACCION } from "./bitacoraGrupos";
