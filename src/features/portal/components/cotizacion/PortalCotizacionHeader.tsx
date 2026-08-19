@@ -4,7 +4,7 @@ import { CheckCircle2, XCircle, ClipboardList } from "lucide-react";
 import { DetailHeader } from "@/components/shared/DetailHeader";
 import { useVolver } from "@/hooks/shared/useVolver";
 import { ROUTES } from "@/constants/routes";
-import { getEstadoColor } from "@/lib/ui/uiMappings";
+import { StatusBadge } from "@/components/shared/StatusBadge";
 import { toTitleCase } from "@/lib/formatters";
 
 interface PortalCotizacionHeaderProps {
@@ -39,7 +39,7 @@ export default function PortalCotizacionHeader({
         icon={<ClipboardList className="h-6 w-6 text-accent shrink-0" />}
         title={<span className="font-mono tabular-nums">{folio}</span>}
         subtitle={toTitleCase(clienteNombre)}
-        badge={<Badge className={getEstadoColor(estado)}>{estado}</Badge>}
+        badge={<StatusBadge domain="cotizacion" status={estado} />}
         trailing={
           showActions ? (
             <div className="hidden md:flex gap-2">

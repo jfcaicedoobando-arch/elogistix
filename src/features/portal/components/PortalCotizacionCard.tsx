@@ -1,7 +1,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { formatCurrency, formatDate } from "@/lib/formatters";
-import { getEstadoColor } from "@/lib/ui/uiMappings";
+import { StatusBadge } from "@/components/shared/StatusBadge";
 import { Ship } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { calcularDesgloseMoneda, parseConceptos } from "@/lib/domain/cotizacionDetalle";
@@ -105,7 +105,7 @@ export function PortalCotizacionCard({ cotizacion: c, tasaIva }: Props) {
       >
         <CardContent className="flex items-center justify-between gap-3 px-4 py-3">
           <div className="flex items-center gap-3 min-w-0 flex-1">
-            <Badge className={`${getEstadoColor(c.estado)} text-xs shrink-0`}>{c.estado}</Badge>
+            <StatusBadge domain="cotizacion" status={c.estado} className="shrink-0" />
             <div className="min-w-0">
               <p className="font-semibold text-sm font-mono tabular-nums">{c.folio}</p>
               <p className="text-xs text-muted-foreground truncate">
