@@ -1,5 +1,13 @@
 # Changelog
 
+## [13.683.0] - 2026-08-19
+### Ola B · auditoría externa (BL-4, EC-6/7/8 y cierre de badges legacy)
+- BL-4: los totales de factura se recalculan sólo en la base de datos (RPC `recalc_factura_totales`); el cliente ya no puede pisar el total correcto al editar conceptos en paralelo.
+- EC-6: el borrador del wizard de cotización se guarda por organización activa, así que cambiar de tenant ya no ofrece restaurar datos de otra empresa.
+- EC-7: el buscador de cotizaciones tolera folios y mercancías nulas sin crashear.
+- EC-8: subir factura al buzón muestra error visible si falla la red o el storage.
+- UI-3: eliminado el helper legacy `getEstadoColor`; los últimos tres headers/tarjetas de cotización usan `StatusBadge` y el guardarraíl queda en cero.
+
 ## [13.682.0] - 2026-08-19
 ### Ola B · auditoría externa (UI-2 · escala única de antigüedad)
 - La antigüedad de cartera se pinta con una sola escala (`--aging-1..5`) desde `src/lib/aging/buckets.ts`: Cobranza, Tesorería, CxC/CxP y los dashboards ya no colorean la misma deuda de forma distinta.
