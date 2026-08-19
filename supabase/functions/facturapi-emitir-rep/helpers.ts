@@ -161,8 +161,17 @@ export function validateRepContext(ctx: PagoContext): RepValidationIssue[] {
   if (!(ctx.documento_relacionado.num_parcialidad >= 1)) issues.push({ field: "documento.num_parcialidad", message: "Número de parcialidad inválido" });
   if (!(ctx.documento_relacionado.imp_pagado > 0)) issues.push({ field: "documento.imp_pagado", message: "Importe pagado inválido" });
   if (ctx.documento_relacionado.imp_saldo_ant < ctx.documento_relacionado.imp_pagado - 0.01) {
-    issues.push({ field: "documento.imp_saldo_ant", message: "Saldo anterior menor al importe pagado" });
+    // JAVASCRIPT-REACT-5D: el pago excede el saldo pendiente de la factura
+    // (sobrepago o pago duplicado). El mensaje debe decirle al usuario qué
+    // corregir, no sólo nombrar el campo del SAT.
+    issues.push({
+      field: "documento.imp_saldo_ant",
+      message:
+        `El pago (${ctx.documento_relacionado.imp_pagado.toFixed(2)}) es mayor al saldo pendiente de la factura ` +
+        `(${ctx.documento_relacionado.imp_saldo_ant.toFixed(2)}). Ajusta el monto del pago o revisa si ya se aplicó otro pago a esta factura.`,
+    });
   }
+
   return issues;
 }
 
