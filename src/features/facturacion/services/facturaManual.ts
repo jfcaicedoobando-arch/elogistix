@@ -90,8 +90,10 @@ export async function crearFacturaManual(input: CrearFacturaManualInput): Promis
     if (!Number.isFinite(precio) || precio < 0) {
       throw new Error(`Concepto #${idx + 1} ("${c.descripcion || "sin descripción"}"): precio_unitario inválido (${c.precio_unitario}). Debe ser un número finito ≥ 0.`);
     }
-    const cantidadEntera = Math.max(1, Math.round(cantidad));
-    const totalLinea = subtotalLinea(cantidadEntera, precio);
+    // BL-1 — se conservan decimales (1.5 ton se timbra como 1.5, no como 2).
+    // Misma normalización fiscal que la ruta de `conceptosFacturaCrud`.
+    const cantidadFiscal = parseCantidadFiscal(cantidad);
+    const totalLinea = subtotalLinea(cantidadFiscal, precio);
     const tipo_iva: TipoIvaConcepto = c.tipo_iva ?? "gravado_16";
     const tasaFila = tasaAplicada(tipo_iva, tasa);
     const ivaLinea = tasaFila != null ? subtotalLinea(totalLinea, tasaFila) : 0;
