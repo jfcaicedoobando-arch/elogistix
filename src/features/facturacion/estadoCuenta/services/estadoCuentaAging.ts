@@ -8,8 +8,18 @@
 import { sumarMontos } from "@/lib/financial/financialUtils";
 import type { FacturaEstadoCuenta } from "./estadoCuenta";
 import type { Moneda } from "./estadoCuentaTypes";
+import {
+  bucketDeDias,
+  CUBETAS_AGING,
+  CUBETA_LABELS_LARGAS,
+  type CubetaAging,
+} from "@/lib/aging/buckets";
 
-export type BucketAging = "corriente" | "1-30" | "31-60" | "61-90" | "90+";
+/**
+ * Paso 6 de la auditoría: era un tercer catálogo de cubetas con rangos propios.
+ * Ahora es un alias del catálogo único `src/lib/aging/buckets.ts`.
+ */
+export type BucketAging = CubetaAging;
 
 export interface AgingBucket {
   id: BucketAging;
@@ -38,24 +48,12 @@ export interface SortEstadoCuenta {
   dir: "asc" | "desc";
 }
 
-const LABELS: Record<BucketAging, string> = {
-  corriente: "Corriente",
-  "1-30": "1 – 30 días",
-  "31-60": "31 – 60 días",
-  "61-90": "61 – 90 días",
-  "90+": "Más de 90 días",
-};
+const LABELS: Record<BucketAging, string> = CUBETA_LABELS_LARGAS;
 
-export const BUCKETS_ORDEN: BucketAging[] = ["corriente", "1-30", "31-60", "61-90", "90+"];
+export const BUCKETS_ORDEN: BucketAging[] = [...CUBETAS_AGING];
 
 /** Bucket de antigüedad según días vencidos (0 = aún no vence). */
-export function bucketDeFactura(diasVencido: number): BucketAging {
-  if (diasVencido <= 0) return "corriente";
-  if (diasVencido <= 30) return "1-30";
-  if (diasVencido <= 60) return "31-60";
-  if (diasVencido <= 90) return "61-90";
-  return "90+";
-}
+export const bucketDeFactura = bucketDeDias;
 
 /** Aging por bucket y moneda, considerando sólo facturas con saldo vivo. */
 export function calcularAging(rows: ReadonlyArray<FacturaEstadoCuenta>): AgingBucket[] {
