@@ -3,6 +3,7 @@
  * Señal de "necesita seguimiento ya".
  */
 import { supabase } from "@/integrations/supabase/client";
+import { diffDiasCalendario } from "@/lib/date/dateOnly";
 
 export interface CotizacionSinRespuestaRow {
   id: string;
@@ -38,6 +39,6 @@ export async function fetchCotizacionesSinRespuesta(
     moneda: c.moneda,
     created_at: c.created_at,
     oportunidad_id: c.oportunidad_id,
-    dias: Math.floor((ahora - new Date(c.created_at).getTime()) / 86_400_000),
+    dias: diffDiasCalendario(c.created_at, new Date(ahora)),
   }));
 }

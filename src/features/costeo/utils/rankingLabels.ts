@@ -3,6 +3,7 @@
  * y deltas vs el ganador (#1) para un set de Top tarifas.
  */
 import type { TopTarifaRow } from "@/features/costeo/types";
+import { diffDiasCalendario } from "@/lib/date/dateOnly";
 
 export interface RankingMeta {
   esGanador: boolean;
@@ -11,13 +12,12 @@ export interface RankingMeta {
   vencePronto: boolean; // vigente_hasta dentro de 7 días
 }
 
-const MS_DIA = 86_400_000;
-
 function diasHasta(iso: string | null | undefined): number | null {
   if (!iso) return null;
-  const t = new Date(String(iso).split("T")[0]).getTime();
-  if (Number.isNaN(t)) return null;
-  return Math.ceil((t - Date.now()) / MS_DIA);
+  const soloFecha = String(iso).split("T")[0];
+  if (Number.isNaN(Date.parse(soloFecha))) return null;
+  // Ola 19 · paso 1: días naturales desde el helper central (inmune a DST).
+  return diffDiasCalendario(new Date(), soloFecha);
 }
 
 export function computeRankingMeta(rows: ReadonlyArray<TopTarifaRow>): RankingMeta[] {

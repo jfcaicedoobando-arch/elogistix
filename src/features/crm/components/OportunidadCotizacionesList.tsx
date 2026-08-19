@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { formatCurrencyCompact } from "@/lib/formatters";
 import { useOportunidadCotizaciones } from "@/features/crm/hooks";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
+import { diffDiasCalendario } from "@/lib/date/dateOnly";
 
 interface Props {
   oportunidadId: string;
@@ -50,7 +51,7 @@ export default function OportunidadCotizacionesList({ oportunidadId }: Props) {
               {data.map((c) => {
                 const diasEnviada =
                   c.estado === "Enviada"
-                    ? Math.floor((Date.now() - new Date(c.created_at).getTime()) / 86_400_000)
+                    ? diffDiasCalendario(c.created_at, new Date())
                     : 0;
                 return (
                   <tr

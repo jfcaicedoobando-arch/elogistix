@@ -11,6 +11,7 @@
  */
 import { z } from "zod";
 import type { FacturaFormValues } from "@/features/cxp/types";
+import { diffDiasCalendario } from "@/lib/date/dateOnly";
 
 export interface FacturaFormValidationContext {
   total: number;
@@ -111,13 +112,8 @@ function validarFechas(values: Valores, refCtx: RefCtx): void {
       message: "La fecha de vencimiento no puede ser anterior a la fecha de emisión",
     });
   }
-  const emisionMs = Date.parse(`${values.emision}T00:00:00Z`);
-  const vencimientoMs = Date.parse(`${values.vencimiento}T00:00:00Z`);
-  const DIA_MS = 24 * 60 * 60 * 1000;
-  if (
-    Number.isFinite(emisionMs) && Number.isFinite(vencimientoMs) &&
-    (vencimientoMs - emisionMs) / DIA_MS > 366
-  ) {
+  // Ola 19 · paso 1: un solo cálculo de días naturales (helper central).
+  if (diffDiasCalendario(values.emision, values.vencimiento) > 366) {
     refCtx.addIssue({
       code: "custom",
       path: ["vencimiento"],

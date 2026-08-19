@@ -4,6 +4,7 @@
  */
 import type { FacturaCxP } from "./proveedorFacturas";
 import { esFacturaPorPagar } from "./cxpPorPagarFiltro";
+import { diasVencidos } from "@/lib/date/dateOnly";
 
 export interface KPIsCxP {
   por_pagar_mxn: number;
@@ -17,9 +18,7 @@ export interface KPIsCxP {
 
 function diasVencido(fechaVenc: string | null): number {
   if (!fechaVenc) return 0;
-  const venc = new Date(fechaVenc + "T00:00:00");
-  const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
-  return Math.floor((hoy.getTime() - venc.getTime()) / 86_400_000);
+  return diasVencidos(fechaVenc.slice(0, 10));
 }
 
 export function calcularKPIsCxP(filas: FacturaCxP[]): KPIsCxP {

@@ -81,10 +81,9 @@ export function puedeReactivarEntrante(params: {
 
 /** Días naturales que lleva esperando captura (0 si se subió hoy). */
 export function diasEnEspera(createdAt: string, ahora: Date = new Date()): number {
-  const inicio = new Date(createdAt).getTime();
-  if (Number.isNaN(inicio)) return 0;
-  const dif = ahora.getTime() - inicio;
-  return dif <= 0 ? 0 : Math.floor(dif / 86_400_000);
+  if (Number.isNaN(Date.parse(createdAt))) return 0;
+  const dias = diffDiasCalendario(createdAt, ahora);
+  return dias <= 0 ? 0 : dias;
 }
 
 export interface ResumenEntrantes {
@@ -108,6 +107,7 @@ export function resumirEntrantes(
 }
 
 import type { TipoArchivoEntrante } from "@/lib/domain/facturasEntrantesArchivos";
+import { diffDiasCalendario } from "@/lib/date/dateOnly";
 
 // v13.494.0 — Validación y emparejado de archivos vive en
 // `facturasEntrantesArchivos.ts`; se re-exporta para no romper importadores.

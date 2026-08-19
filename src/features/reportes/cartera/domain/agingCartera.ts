@@ -15,6 +15,7 @@ import {
   CUBETA_LABELS_LARGAS,
   type CubetaAging,
 } from "@/lib/aging/buckets";
+import { diasVencidos } from "@/lib/date/dateOnly";
 
 /** Cubetas y etiquetas compartidas con `/cobranza/aging` y `/compras/aging`. */
 export { bucketDeDias };
@@ -76,10 +77,8 @@ export function diasVencidoAlCorte(
   fechaCorte: string,
 ): number {
   if (!fechaVencimiento) return 0;
-  const venc = Date.parse(`${fechaVencimiento}T00:00:00Z`);
-  const corte = Date.parse(`${fechaCorte}T00:00:00Z`);
-  if (Number.isNaN(venc) || Number.isNaN(corte)) return 0;
-  return Math.round((corte - venc) / 86_400_000);
+  if (Number.isNaN(Date.parse(fechaVencimiento)) || Number.isNaN(Date.parse(fechaCorte))) return 0;
+  return diasVencidos(fechaVencimiento, fechaCorte);
 }
 
 /** TC del corte aplicable a una moneda (1 para MXN, null si no hay dato). */

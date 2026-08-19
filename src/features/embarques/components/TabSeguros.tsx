@@ -18,15 +18,16 @@ import { useDeleteSeguro, useSegurosEmbarque } from "@/features/embarques/hooks/
 import type { SeguroEmbarque } from "@/features/embarques/services/seguros";
 import { DialogSeguroForm } from "./DialogSeguroForm";
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
+import { diffDiasCalendario } from "@/lib/date/dateOnly";
 
 interface Props {
   embarqueId: string;
   canEdit: boolean;
 }
 
+/** Ola 19 · paso 1: días naturales vía el helper único (inmune a DST). */
 function diasRestantes(hasta: string): number {
-  const end = new Date(hasta + "T23:59:59").getTime();
-  return Math.ceil((end - Date.now()) / (24 * 60 * 60 * 1000));
+  return diffDiasCalendario(new Date(), hasta);
 }
 
 function VigenciaBadge({ hasta }: { hasta: string }) {
