@@ -241,7 +241,7 @@ BEGIN
        monto_aplicado_factura, forma_pago, referencia, notas, diferencia_cambiaria_mxn)
     VALUES
       ('44444444-4444-4444-4444-444444444407',
-       '33333333-3333-3333-3333-333333333333',
+       '33333333-3333-3333-3333-333333333307',
        '99999999-9999-9999-9999-999999999999',
        CURRENT_DATE, 100, 'MXN', 1, 100, 'Transferencia', 'CXC-C7', '', 0);
     v_sqlstate := '00000';
