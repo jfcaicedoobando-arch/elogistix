@@ -48,7 +48,12 @@ describe("UI-3 · sin emojis de modo de transporte", () => {
     })) {
       if (!/\.(ts|tsx)$/.test(f)) continue;
       const src = readFileSync(f, "utf8");
-      if (EMOJIS_MODO.some((e) => src.includes(e))) ofensores.push(relPath(ROOT, f));
+      // Se ignoran comentarios: documentar el emoji retirado es válido.
+      const codigo = src
+        .split("\n")
+        .filter((l) => !/^\s*(\/\/|\*|\/\*)/.test(l))
+        .join("\n");
+      if (EMOJIS_MODO.some((e) => codigo.includes(e))) ofensores.push(relPath(ROOT, f));
     }
     expect(ofensores).toEqual([]);
   });
