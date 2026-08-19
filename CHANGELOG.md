@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.684.1] - 2026-08-19
+### REP de factura en divisa pagada en pesos
+- El complemento de pago ahora envía el tipo de cambio del documento relacionado en la convención del SAT (unidades de la moneda de la factura por una unidad de la moneda del pago). Antes se mandaba 17.06 en lugar de 0.0586 y el PAC rechazaba el REP con `exchange_rate_too_large`.
+- Si falta el tipo de cambio en un pago cross-moneda, el aviso previo pide capturarlo en español en vez de dejar que el PAC responda un error técnico.
+
+
 ## [13.684.0] - 2026-08-19
 ### Pago en otra moneda: tipo de cambio y orden de validaciones
 - El pago cross-moneda ahora guarda el tipo de cambio en **pesos por divisa** (17.06 MXN/USD), la misma convención que usa la base de datos; antes se enviaba la razón invertida (0.0586) y el importe aplicado quedaba inflado ~291 veces.
