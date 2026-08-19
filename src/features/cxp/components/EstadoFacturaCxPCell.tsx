@@ -6,7 +6,7 @@
  * "Prog. pago" — la información se consolida aquí sin perder señal:
  *
  *   Estado primario (uno)   → StatusBadge (registry)
- *   Chips secundarios (0..N) → Parcial · +N d · NC · SAT ✓ · Prog. DD/MM
+ *   Chips secundarios (0..N) → Parcial · +N d · NC · SAT validado · Prog. DD/MM
  *
  * Un único Tooltip agrupa el detalle: motivo de rechazo, sub-tipo de
  * cancelación (SAT vs manual), saldo, días vencido y NC aplicadas.
@@ -90,7 +90,7 @@ export function EstadoFacturaCxPCell({ factura: f, variant = "tabla" }: Props) {
     chips.push({ key: "nc", label: "NC", tone: "neutral" });
   }
   if (f.flags.satVerificada) {
-    chips.push({ key: "sat", label: "SAT ✓", tone: "success" });
+    chips.push({ key: "sat", label: "SAT validado", tone: "success" });
   }
   if (f.fecha_programada_pago && f.estatus !== "Pagada" && f.estatus !== "Cancelada") {
     chips.push({
@@ -100,7 +100,7 @@ export function EstadoFacturaCxPCell({ factura: f, variant = "tabla" }: Props) {
     });
   }
 
-  // v13.308.2 — Hasta 5 chips visibles (Parcial · +N d · NC · SAT ✓ · Prog.),
+  // v13.308.2 — Hasta 5 chips visibles (Parcial · +N d · NC · SAT validado · Prog.),
   // el resto colapsa en un chip "+N". Antes eran 3 y se ocultaban SAT/Prog.
   const VISIBLE = 5;
   const overflow = Math.max(0, chips.length - VISIBLE);

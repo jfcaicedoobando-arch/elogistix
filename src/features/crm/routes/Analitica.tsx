@@ -7,7 +7,7 @@
  */
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CrmSubheader } from "@/features/crm/components/CrmSubheader";
-import { formatCurrencyCompact } from "@/lib/formatters";
+import { formatCurrencyCompact, formatPercent } from "@/lib/formatters";
 import { useForecast, useReportesCRM } from "@/features/crm/hooks";
 import LeaderboardVendedores from "@/features/crm/components/LeaderboardVendedores";
 import { usePermissions, useDocumentTitle } from "@/hooks/shared";
@@ -116,7 +116,7 @@ function EmbudoYPerdidas() {
                   <td className="py-1">{f.fuente}</td>
                   <td className="text-right tabular-nums">{f.total}</td>
                   <td className="text-right tabular-nums">{f.convertidos}</td>
-                  <td className="text-right tabular-nums">{f.tasa.toFixed(1)}%</td>
+                  <td className="text-right tabular-nums">{formatPercent(f.tasa)}</td>
                 </tr>
               ))}
               {r.porFuente.length === 0 && <tr><td colSpan={4}><EmptyStateInline icon={BarChart3} message="Sin datos" density="compact" /></td></tr>}

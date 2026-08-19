@@ -1,4 +1,4 @@
-import { Receipt, ArrowRight } from "lucide-react";
+import { Receipt, ArrowRight, AlertTriangle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ROUTES } from "@/constants/routes";
 import { Button } from "@/components/ui/button";
@@ -31,7 +31,7 @@ export function PortalFacturacionPendienteCard({ montos, total, vencidas, classN
         <CardContent>
           {total === 0 ? (
             <p className="text-xs text-muted-foreground text-center py-6">
-              Sin facturas pendientes. 🎉
+              Sin facturas pendientes.
             </p>
           ) : (
             <>
@@ -50,7 +50,7 @@ export function PortalFacturacionPendienteCard({ montos, total, vencidas, classN
               <div className="mt-4 space-y-2">
                 {vencidas > 0 && (
                   <div className="flex items-center gap-2 text-xs p-2 rounded bg-destructive/10 text-destructive">
-                    <span className="font-medium">⚠️ {vencidas} vencida(s)</span>
+                    <span className="font-medium inline-flex items-center gap-1.5"><AlertTriangle className="h-3.5 w-3.5" aria-hidden /> {vencidas} vencida(s)</span>
                   </div>
                 )}
               </div>

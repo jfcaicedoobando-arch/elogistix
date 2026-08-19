@@ -1,3 +1,5 @@
+import { ChartTooltip } from "@/components/shared/ChartTooltip";
+import { CHART_TICK, CHART_LEGEND_STYLE } from "@/lib/chartTokens";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import {
   ResponsiveContainer, ComposedChart, Bar, Line, XAxis, YAxis,
@@ -27,13 +29,10 @@ export function GraficoEERR12m({ data }: Props) {
           <ResponsiveContainer width="100%" height="100%">
             <ComposedChart data={data}>
               <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-              <XAxis dataKey="periodo" tick={{ fontSize: 11 }} />
-              <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => formatCompactNumber(v)} />
-              <Tooltip
-                formatter={(v: number) => formatCompactNumber(v)}
-                contentStyle={{ fontSize: 12 }}
-              />
-              <Legend wrapperStyle={{ fontSize: 12 }} />
+              <XAxis dataKey="periodo" tick={CHART_TICK} />
+              <YAxis tick={CHART_TICK} tickFormatter={(v) => formatCompactNumber(v)} />
+              <Tooltip content={<ChartTooltip formatValue={(v) => formatCompactNumber(v)} />} />
+              <Legend wrapperStyle={CHART_LEGEND_STYLE} />
               <Bar dataKey="ingresos" name="Ingresos" fill="hsl(var(--primary))" />
               <Bar dataKey="costos" name="Costos" fill="hsl(var(--destructive))" />
               <Line

@@ -3,7 +3,7 @@
  * Extraído de `ConciliacionDetalleSections.tsx` (v13.342.0) para respetar el
  * techo Power of 10 (<200 líneas por archivo).
  */
-import { formatCurrency } from "@/lib/formatters";
+import { formatCurrency, formatPercent } from "@/lib/formatters";
 import type {
   calcularResumenPorMoneda,
   fetchReconciliacionEmbarque,
@@ -65,7 +65,7 @@ export function TotalesMonedaFooter({ totalesPorMoneda }: { totalesPorMoneda: To
               {formatCurrency(t.diferencia, t.moneda)}
             </div>
             <div className={`text-right ${classFromNumber(t.desviacion_pct)}`}>
-              {t.desviacion_pct.toFixed(1)}%
+              {formatPercent(t.desviacion_pct)}
             </div>
           </div>
         ))}

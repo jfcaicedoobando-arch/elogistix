@@ -1,3 +1,5 @@
+import { ChartTooltip } from "@/components/shared/ChartTooltip";
+import { CHART_TICK } from "@/lib/chartTokens";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import {
   ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid,
@@ -32,12 +34,9 @@ export function MiniFlujoCard({ flujo }: Props) {
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={data}>
               <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-              <XAxis dataKey="semana" tick={{ fontSize: 11 }} />
-              <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => formatCompactNumber(v)} />
-              <Tooltip
-                formatter={(v: number) => formatCompactNumber(v)}
-                contentStyle={{ fontSize: 12 }}
-              />
+              <XAxis dataKey="semana" tick={CHART_TICK} />
+              <YAxis tick={CHART_TICK} tickFormatter={(v) => formatCompactNumber(v)} />
+              <Tooltip content={<ChartTooltip formatValue={(v) => formatCompactNumber(v)} />} />
               <ReferenceLine y={0} stroke="hsl(var(--destructive))" strokeDasharray="3 3" />
               <Line
                 type="monotone"

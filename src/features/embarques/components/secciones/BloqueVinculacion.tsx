@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Check, ChevronsUpDown, X } from "lucide-react";
+import { Check, ChevronsUpDown, X, Package } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -60,8 +60,8 @@ export function BloqueVinculacion({
 
         {cotizacionVinculada ? (
           <div className="flex items-center gap-2">
-            <Badge variant="success" className="px-3 py-1.5 text-sm">
-              ✓ Vinculada a {cotizacionVinculada.folio} — {cotizacionVinculada.cliente_nombre}
+            <Badge variant="success" className="px-3 py-1.5 text-sm inline-flex items-center gap-1.5">
+              <Check className="h-3.5 w-3.5" aria-hidden /> Vinculada a {cotizacionVinculada.folio} — {cotizacionVinculada.cliente_nombre}
             </Badge>
             <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={() => setDesvincularOpen(true)} aria-label="Desvincular cotización">
               <X className="h-4 w-4" />
@@ -126,8 +126,8 @@ export function BloqueVinculacion({
             <div className="space-y-2">
               {expedienteSeleccionado ? (
                 <div className="flex items-center gap-2">
-                  <Badge variant="info" className="px-3 py-1.5 text-sm">
-                    📦 {expedienteSeleccionado.expediente}
+                  <Badge variant="info" className="px-3 py-1.5 text-sm inline-flex items-center gap-1.5">
+                    <Package className="h-3.5 w-3.5" aria-hidden /> {expedienteSeleccionado.expediente}
                     {expedienteSeleccionado.bl_master && ` | BL: ${expedienteSeleccionado.bl_master}`}
                     {` (${expedienteSeleccionado.total_embarques} embarque${expedienteSeleccionado.total_embarques > 1 ? 's' : ''})`}
                   </Badge>

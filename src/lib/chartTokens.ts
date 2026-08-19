@@ -44,3 +44,13 @@ export const CHART_SERIES: readonly string[] = [
 
 /** Color por omisión para datos de color capturados por el usuario (CRM). */
 export const COLOR_ETAPA_DEFAULT = "hsl(var(--muted-foreground))";
+
+/**
+ * Ola E · V-4 — geometría común de los ejes, leyenda y barras.
+ * Antes cada gráfica elegía su propio `fontSize` (10/11/12) y su propio radio
+ * de barra ([3,3,0,0] vs [4,4,0,0]); esto lo vuelve un solo contrato.
+ */
+export const CHART_TICK = { fontSize: 11, fill: "hsl(var(--muted-foreground))" } as const;
+export const CHART_AXIS_STROKE = "hsl(var(--border))";
+export const CHART_LEGEND_STYLE = { fontSize: 11 } as const;
+export const CHART_BAR_RADIUS: [number, number, number, number] = [4, 4, 0, 0];

@@ -2,6 +2,7 @@
  * v13.507.0 — Coteja el importe capturado contra el monto que operaciones
  * declaró al subir el documento al buzón. Informa, nunca bloquea.
  */
+import { formatPercent } from "@/lib/formatters";
 import { CheckCircle2, AlertTriangle, Info } from "lucide-react";
 import { formatCurrency } from "@/lib/formatters/numbers";
 import { cotejarMontoDeclarado } from "@/features/cxp/domain/montoDeclarado";
@@ -44,12 +45,12 @@ export function AvisoMontoDeclarado({
   }
 
   const signo = cotejo.diferencia > 0 ? "+" : "−";
-  const pct = (cotejo.porcentaje * 100).toFixed(1);
+  const pct = formatPercent(cotejo.porcentaje * 100);
   return (
     <p className="flex items-start gap-2 rounded-md border border-warning/40 bg-warning/5 px-3 py-2 text-xs text-warning">
       <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden />
       Operaciones declaró {declarado} y la factura suma {capturado} ({signo}
-      {formatCurrency(Math.abs(cotejo.diferencia), monedaCapturada)} · {pct}%). Verifica antes de
+      {formatCurrency(Math.abs(cotejo.diferencia), monedaCapturada)} · {pct}). Verifica antes de
       guardar.
     </p>
   );

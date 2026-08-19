@@ -65,12 +65,12 @@ const base: FacturaCxP = {
 };
 
 describe("EstadoFacturaCxPCell", () => {
-  it("pinta los chips Parcial · +N d · NC · SAT ✓ · Prog.", () => {
+  it("pinta los chips Parcial · +N d · NC · SAT validado · Prog.", () => {
     renderWithTooltip(<EstadoFacturaCxPCell factura={base} />);
     expect(screen.getByText(/Parcial · 50%/)).toBeInTheDocument();
     expect(screen.getByText("+12 d")).toBeInTheDocument();
     expect(screen.getByText("NC")).toBeInTheDocument();
-    expect(screen.getByText("SAT ✓")).toBeInTheDocument();
+    expect(screen.getByText("SAT validado")).toBeInTheDocument();
     expect(screen.getByText(/Prog\./)).toBeInTheDocument();
   });
 

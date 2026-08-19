@@ -1,6 +1,7 @@
 /**
  * Tarjetas KPI del tablero de Higiene del pipeline.
  */
+import { formatPercent } from "@/lib/formatters";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { formatCurrency } from "@/lib/formatters/numbers";
@@ -61,7 +62,7 @@ export default function HigieneKpis({ resumen, cobertura, presupuestoMes }: Prop
       />
       <Kpi
         label="Cobertura vs presupuesto"
-        value={cobertura === null ? "Sin presupuesto" : `${(cobertura * 100).toFixed(0)}%`}
+        value={cobertura === null ? "Sin presupuesto" : formatPercent(cobertura * 100, 0)}
         hint={
           presupuestoMes > 0
             ? `Meta del mes ${formatCurrency(presupuestoMes, "MXN")}`

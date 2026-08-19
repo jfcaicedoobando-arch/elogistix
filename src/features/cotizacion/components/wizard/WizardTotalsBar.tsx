@@ -9,6 +9,7 @@
  *  - Ámbar  5-15%
  *  - Rojo   <5%
  */
+import { formatPercent } from "@/lib/formatters";
 import { TrendingUp, TrendingDown, Minus } from "lucide-react";
 import { formatCurrency } from "@/lib/formatters/numbers";
 import type { TotalesPL } from "@/lib/financial/profitUtils";
@@ -49,7 +50,7 @@ export function WizardTotalsBar({ plUSD, plMXN, totalVentaMXN }: Props) {
             {formatCurrency(consolidado.profit, monedaConsolidada)}
           </span>
           <span className="rounded-md px-2 py-0.5 bg-current/10 text-xs">
-            {consolidado.porcentaje.toFixed(1)}%
+            {formatPercent(consolidado.porcentaje)}
           </span>
         </div>
       </div>
