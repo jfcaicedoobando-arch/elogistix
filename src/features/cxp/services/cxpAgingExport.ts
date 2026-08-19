@@ -3,13 +3,15 @@
  */
 import { downloadCsvWithFeedback } from "@/lib/ui/notifyCsvExport";
 import type { CxpAgingRow } from "@/features/cxp/services/cxpAging";
+import { CUBETAS_AGING, CUBETA_LABELS } from "@/lib/aging/buckets";
 
 export function exportarCxpAgingCsv(
   rows: readonly CxpAgingRow[],
   moneda: string,
   fecha: string,
 ) {
-  const headers = ["Proveedor", "Moneda", "Facturas", "Vigente", "1-30", "31-60", "61-90", "+90", "Total"];
+  // Encabezados de cubeta derivados del catálogo único (paso 6 de la auditoría).
+  const headers = ["Proveedor", "Moneda", "Facturas", ...CUBETAS_AGING.map((c) => CUBETA_LABELS[c]), "Total"];
   const lines = (rows ?? []).map((r) =>
     [
       `"${r.proveedor_nombre.replace(/"/g, '""')}"`,
