@@ -7,6 +7,7 @@ import {
 } from "recharts";
 import type { SemanaFlujo } from "@/features/tesoreria/services";
 import { formatCurrency, formatCompactNumber } from "@/lib/formatters/numbers";
+import { ChartTooltip } from "@/components/shared/ChartTooltip";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 import { LineChart as LineChartIcon } from "lucide-react";
 
@@ -34,7 +35,7 @@ export default function GraficoFlujoProyectado({ semanas }: Props) {
           <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
           <XAxis dataKey="semana" tick={{ fontSize: 11 }} />
           <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => formatCompactNumber(Number(v))} />
-          <RTooltip formatter={(v: number) => formatCurrency(Math.abs(v), "MXN")} />
+          <RTooltip content={<ChartTooltip formatValue={(v) => formatCurrency(Math.abs(v), "MXN")} />} />
           <Legend wrapperStyle={{ fontSize: 12 }} />
           <Bar dataKey="Entradas" fill="hsl(var(--kpi-success))" />
           <Bar dataKey="Salidas" fill="hsl(var(--destructive))" />
