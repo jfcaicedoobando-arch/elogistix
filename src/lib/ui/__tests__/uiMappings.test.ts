@@ -1,5 +1,8 @@
 import { describe, it, expect } from "vitest";
-import { getEstadoColor } from "@/lib/ui/uiMappings";
+import { getEstadoVisual } from "@/lib/ui/estadoConfig";
+
+/** UI-3: `getEstadoColor` fue eliminado; la fuente única es `getEstadoVisual`. */
+const getEstadoColor = (estado: string) => getEstadoVisual(estado).badge;
 
 // Nota: tests de formatDate viven en src/lib/formatters/__tests__/formatters.test.ts
 // (eliminados de aquí en v11.39.0 — eran duplicado textual).
