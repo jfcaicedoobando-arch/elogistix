@@ -41,8 +41,9 @@ export function NuevoProveedorStep1({ c }: { c: Controller }) {
       >
         {!c.isGasto && <OrigenSelect c={c} />}
         <div className="space-y-2">
-          <Label>Nombre *</Label>
+          <Label htmlFor="nuevo-proveedor-nombre">Nombre *</Label>
           <Input
+            id="nuevo-proveedor-nombre"
             value={c.form.nombre}
             onChange={(e) => c.setField("nombre", e.target.value.toLocaleUpperCase("es-MX"))}
           />
