@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.675.1] - 2026-08-18
+
+### Sentry
+- **JAVASCRIPT-REACT-5C (`Error: /logo-preview`) resuelto:** la página 404 reportaba cada ruta inexistente como error a Sentry. Ahora se registra como `warn` (breadcrumb), así los enlaces viejos y las rutas sólo-dev (`/logo-preview`) dejan de crear issues. Analogía: dejamos de sonar la alarma de incendio cuando alguien nomás toca el timbre equivocado.
+
+
 ## [13.675.0] - 2026-08-18
 
 ### Auditoría de arquitectura — punto 8 (dispersión de lecturas)
