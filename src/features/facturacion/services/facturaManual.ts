@@ -11,7 +11,8 @@
 import { supabase } from "@/integrations/supabase/client";
 import { TASA_IVA, subtotalLinea, sumarMontos } from "@/lib/financial/financialUtils";
 import type { TipoIvaConcepto } from "@/features/facturacion/services/conceptosFacturaCrud";
-import { hoyMx } from "@/lib/date/mx";
+import { addDaysIso } from "@/lib/date/dateOnly";
+import { parseCantidadFiscal } from "@/lib/domain/facturaConceptos";
 import { registrarActividad } from "@/services/bitacora/registrar";
 import type { Moneda } from "@/types/db";
 
