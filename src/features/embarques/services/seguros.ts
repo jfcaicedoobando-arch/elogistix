@@ -5,8 +5,9 @@
 import { supabase } from "@/integrations/supabase/client";
 import { run, unwrap, unwrapOr } from "@/lib/supabase/response";
 import { registrarBitacoraEmbarque } from "./bitacoraEmbarques";
+import type { Moneda } from "@/types/db";
 
-export type MonedaSeguro = "MXN" | "USD" | "EUR";
+export type MonedaSeguro = Moneda;
 
 export interface SeguroEmbarque {
   id: string;

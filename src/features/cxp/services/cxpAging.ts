@@ -5,8 +5,13 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import { todayLocalISO } from "@/lib/date/today";
+import type { Moneda } from "@/types/db";
 
-export type MonedaAging = "MXN" | "USD" | "EUR" | string;
+/**
+ * Ola 19 · paso 5: antes era `... | string`, lo que anulaba la validación de
+ * tipos (cualquier cadena pasaba). Ahora es el alias central del enum de la base.
+ */
+export type MonedaAging = Moneda;
 
 export interface CxpAgingRow {
   proveedor_id: string;

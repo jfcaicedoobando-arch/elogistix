@@ -11,6 +11,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { registrarActividad } from "@/services/bitacora/registrar";
 import type { TablesInsert } from "@/integrations/supabase/types";
+import type { Moneda } from "@/types/db";
 
 /** Resultado del intento de crear el movimiento bancario espejo del pago. */
 export interface ResultadoMovimientoPago {
@@ -26,7 +27,7 @@ export interface MovimientoPagoInput {
   facturaId: string;
   fechaPago: string;
   monto: number;
-  moneda: "MXN" | "USD" | "EUR";
+  moneda: Moneda;
   tipoCambioUsd: number | null;
   referencia?: string;
   userId: string | null;

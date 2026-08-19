@@ -1,12 +1,12 @@
 import currency from "currency.js";
+import type { Moneda } from "@/types/db";
 
 /**
  * Tipo estricto de moneda soportada. Ola 19 · paso 5: ya no se redeclara la
  * unión literal; es el alias central derivado del enum `moneda` de la base
  * (`src/types/db.ts`), así agregar una moneda es un solo cambio.
  */
-export type { Moneda } from "@/types/db";
-import type { Moneda } from "@/types/db";
+export type { Moneda };
 
 /**
  * Tasa de IVA estándar en México. Se usa SOLO como semilla de UI para nuevas

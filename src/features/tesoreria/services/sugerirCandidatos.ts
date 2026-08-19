@@ -10,6 +10,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { MovimientoBBVA } from "./conciliacion";
 import { TOLERANCIA_MONTO_MXN, TOLERANCIA_DIAS, rangoFechasIso, deltaDiasIso } from "../domain/tolerancia";
+import type { Moneda } from "@/types/db";
 
 export interface Candidato {
   tipo: "cxc" | "cxp";
@@ -23,8 +24,8 @@ export interface Candidato {
   delta_monto: number;
 }
 
-/** Monedas soportadas por el enum `moneda` de la base. */
-export type MonedaSoportada = "MXN" | "USD" | "EUR";
+/** Monedas soportadas por el enum `moneda` de la base (alias central). */
+export type MonedaSoportada = Moneda;
 
 function normalizaMoneda(v: unknown): MonedaSoportada {
   const m = String(v ?? "MXN").toUpperCase();
