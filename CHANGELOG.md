@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.684.0] - 2026-08-19
+### Pago en otra moneda: tipo de cambio y orden de validaciones
+- El pago cross-moneda ahora guarda el tipo de cambio en **pesos por divisa** (17.06 MXN/USD), la misma convención que usa la base de datos; antes se enviaba la razón invertida (0.0586) y el importe aplicado quedaba inflado ~291 veces.
+- La conversión del pago corre **antes** de los candados de sobrepago y del cálculo de retenciones (triggers reordenados), así que un pago en pesos de una factura en dólares ya no se rechaza ni deja datos inconsistentes.
+- Se bloquean en la UI los cruces USD↔EUR (la base de datos no los convierte) con un mensaje claro.
+- Reparado el pago de la factura **F1034**: quedó saldada correctamente.
+
 ## [13.683.1] - 2026-08-19
 ### Sentry (JAVASCRIPT-REACT-5D)
 - Timbrado de REP: cuando el pago excede el saldo pendiente de la factura, el mensaje explica los montos y qué corregir en lugar de mostrar "validation_failed: Saldo anterior menor al importe pagado".
