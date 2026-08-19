@@ -9,6 +9,7 @@
  * con un resumen antes de enviar.
  */
 import { Inbox } from "lucide-react";
+import { notifyError } from "@/lib/ui/appFeedback";
 import { Button } from "@/components/ui/button";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { FormDialogSection } from "@/components/shared/FormDialogSection";
