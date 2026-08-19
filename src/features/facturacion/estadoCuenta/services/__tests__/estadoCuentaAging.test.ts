@@ -50,9 +50,9 @@ describe("calcularAging", () => {
     ]);
     const porId = Object.fromEntries(buckets.map((b) => [b.id, b]));
     expect(porId.vigente.usd).toBe(100);
-    expect(porId["31-60"].mxn).toBe(200);
-    expect(porId["31-60"].usd).toBe(50);
-    expect(porId["31-60"].conteo).toBe(2);
+    expect(porId.d_31_60.mxn).toBe(200);
+    expect(porId.d_31_60.usd).toBe(50);
+    expect(porId.d_31_60.conteo).toBe(2);
     expect(porId.mas_90.conteo).toBe(0);
   });
 });
