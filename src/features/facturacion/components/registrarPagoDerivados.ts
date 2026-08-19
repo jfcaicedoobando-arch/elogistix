@@ -28,6 +28,27 @@ export function convertirAMonedaFactura(
   return factor === null ? 0 : monto * factor;
 }
 
+/**
+ * TC que espera la BD en `pagos_factura.tipo_cambio`: **pesos por unidad de
+ * divisa** (p. ej. 17.0627 MXN/USD), la misma convención de
+ * `public.convertir_monto_pago_a_factura`. Antes aquí se mandaba la razón
+ * pago→factura (0.0586 USD/MXN) y el trigger `trg_pagos_factura_monto_convertido`
+ * dividía entre ella, inflando el monto aplicado (~×291).
+ * `null` = cruce no soportado por la BD (USD↔EUR) o sin TC confiable.
+ */
+export function tcParaPago(
+  monedaPago: string,
+  monedaFactura: string,
+  rates: RatesTc | undefined,
+): number | null {
+  if (monedaPago === monedaFactura) return 1;
+  const extranjera = monedaPago === "MXN" ? monedaFactura : monedaPago;
+  // La BD sólo convierte cruces con MXN en una de las patas.
+  if (monedaPago !== "MXN" && monedaFactura !== "MXN") return null;
+  const tc = extranjera === "USD" ? rates?.usdMxn : extranjera === "EUR" ? rates?.eurMxn : null;
+  return tc && tc > 1 ? tc : null;
+}
+
 export interface DerivadosPago {
   montoNum: number;
   montoAplicado: number;
