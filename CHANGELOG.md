@@ -1,5 +1,13 @@
 # Changelog
 
+## [13.675.0] - 2026-08-18
+
+### Auditoría de arquitectura — punto 8 (dispersión de lecturas)
+- **Query muerta eliminada:** la bandeja de Facturación pedía hasta 2,000 conceptos de costo con `select("*")` (`fetchGastosPendientes`) que ninguna pantalla mostraba; se retiraron esa lectura, `marcarCostoPagado`, sus hooks (`useGastosPendientes`, `useMarcarCostoPagado`) y su query key. Analogía: dejamos de cargar cada día una caja de expedientes que nadie abría.
+- **Guardrail nuevo:** `select-star-ratchet.test.ts` congela en 50 los usos de `select("*")` en código de producción, así ningún archivo nuevo agrega lecturas comodín; al migrar uno a columnas explícitas se baja el tope.
+- Limpieza: `props-drilling-cap.test.ts` usa `fast-glob` (dependencia ya listada) y se cerró un tipo exportado sin consumidores en `CotizacionDetalleContenido`.
+
+
 ## [13.674.0] - 2026-08-18
 
 ### Auditoría de arquitectura — puntos 5 y 6
