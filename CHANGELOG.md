@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.683.1] - 2026-08-19
+### Sentry (JAVASCRIPT-REACT-5D)
+- Timbrado de REP: cuando el pago excede el saldo pendiente de la factura, el mensaje explica los montos y qué corregir en lugar de mostrar "validation_failed: Saldo anterior menor al importe pagado".
+- Las validaciones `validation_failed` de las edge functions de timbrado se clasifican como esperadas y dejan de reportarse a Sentry.
+
 ## [13.683.0] - 2026-08-19
 ### Ola B · auditoría externa (BL-4, EC-6/7/8 y cierre de badges legacy)
 - BL-4: los totales de factura se recalculan sólo en la base de datos (RPC `recalc_factura_totales`); el cliente ya no puede pisar el total correcto al editar conceptos en paralelo.
