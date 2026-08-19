@@ -1,4 +1,5 @@
-import { memo } from "react";
+import { memo, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { useOrganization } from "@/lib/contexts/OrganizationContext";
 import { Building2, ChevronDown, ShieldCheck } from "lucide-react";
 import {
@@ -13,12 +14,30 @@ function OrgSwitcherBase({ collapsed }: { collapsed?: boolean }) {
   const { organization, organizations, setActiveOrganization, clearActiveOrganization, isSuperAdmin } =
     useOrganization();
 
+  const navigate = useNavigate();
+
+  // Ola C · #17: al cambiar de tenant, la ruta actual puede apuntar al detalle
+  // de un registro de la organización anterior (404 o error de permisos).
+  // Analogía: cambias de archivero, así que volvemos al índice, no a la gaveta
+  // que ya no existe.
+  const cambiarA = useCallback(
+    (id: string) => {
+      setActiveOrganization(id);
+      navigate("/", { replace: true });
+    },
+    [setActiveOrganization, navigate],
+  );
+  const salirATablero = useCallback(() => {
+    clearActiveOrganization();
+    navigate("/", { replace: true });
+  }, [clearActiveOrganization, navigate]);
+
   if (!isSuperAdmin || organizations.length === 0) return null;
 
   const items = (
     <>
       <DropdownMenuItem
-        onClick={clearActiveOrganization}
+        onClick={salirATablero}
         className={!organization ? "bg-accent font-medium" : ""}
       >
         <ShieldCheck className="h-4 w-4 mr-2" />
@@ -27,7 +46,7 @@ function OrgSwitcherBase({ collapsed }: { collapsed?: boolean }) {
       {organizations.map((org) => (
         <DropdownMenuItem
           key={org.id}
-          onClick={() => setActiveOrganization(org.id)}
+          onClick={() => cambiarA(org.id)}
           className={org.id === organization?.id ? "bg-accent font-medium" : ""}
         >
           <Building2 className="h-4 w-4 mr-2" />
