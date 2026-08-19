@@ -1,69 +1,43 @@
 /**
- * Recalcula `subtotal`, `iva`, `ret_isr`, `ret_iva` y `total` en `facturas`
- * a partir de los renglones vigentes de `conceptos_factura`. El trigger BD
- * ya hace lo mismo; esta función mantiene la reconciliación inmediata en el
- * cliente sin depender del round-trip.
+ * BL-4: el recálculo de `subtotal`, `iva`, `ret_isr`, `ret_iva` y `total` de una
+ * factura vive EXCLUSIVAMENTE en la base de datos (`public.recalc_factura_totales`).
+ *
+ * Antes esta función replicaba la fórmula en el cliente y escribía `facturas`
+ * por su cuenta, mientras el trigger de BD hacía lo mismo. Con dos sesiones
+ * editando conceptos de la misma factura, la última escritura del cliente podía
+ * pisar el total correcto del trigger y descuadrar `facturas.total`.
+ *
+ * Ahora se delega a la RPC (una sola transacción, una sola fórmula) y se relee
+ * el resultado para que la UI muestre lo mismo que quedó persistido.
  */
 import { supabase } from "@/integrations/supabase/client";
-import { registrarActividad } from "@/services/bitacora/registrar";
-import { run, unwrapOr } from "@/lib/supabase/response";
-import { resolverTasa, type TipoIvaConcepto } from "./conceptosFacturaShared";
-import { roundMoney, subtotalLinea, calcularIVA } from "@/lib/financial/financialUtils";
+import { unwrap } from "@/lib/supabase/response";
 
-export async function recalcularTotalesFactura(facturaId: string): Promise<void> {
-  const data = await unwrapOr(
-    supabase
-      .from("conceptos_factura")
-      .select("cantidad, precio_unitario, tasa_iva_aplicada, tipo_iva, tasa_ret_isr, tasa_ret_iva")
-      .eq("factura_id", facturaId)
-      .is("deleted_at", null),
-    [],
-  );
+export interface TotalesFactura {
+  subtotal: number;
+  iva: number;
+  retIsr: number;
+  retIva: number;
+  total: number;
+}
 
-  let subtotal = 0;
-  let iva = 0;
-  let retIsr = 0;
-  let retIva = 0;
-  for (const c of data) {
-    const importe = subtotalLinea(Number(c.cantidad), Number(c.precio_unitario));
-    subtotal += importe;
-    let tasa: number;
-    if (c.tasa_iva_aplicada != null) {
-      tasa = Number(c.tasa_iva_aplicada);
-    } else {
-      const tipo = c.tipo_iva as TipoIvaConcepto | null | undefined;
-      tasa = tipo ? (resolverTasa(tipo) ?? 0) : 0;
-    }
-    iva += calcularIVA(importe, tasa);
-    // BUG-16: las retenciones se redondean por línea (como el IVA); acumular
-    // el float crudo y redondear al final podía dejar la factura 1 centavo
-    // descuadrada contra el trigger de la BD.
-    retIsr += roundMoney(importe * Number(c.tasa_ret_isr ?? 0));
-    retIva += roundMoney(importe * Number(c.tasa_ret_iva ?? 0));
-  }
-  const r = roundMoney;
-  const subtotalR = r(subtotal);
-  const ivaR = r(iva);
-  const retIsrR = r(retIsr);
-  const retIvaR = r(retIva);
-  const totalR = r(subtotalR + ivaR - retIsrR - retIvaR);
+export async function recalcularTotalesFactura(facturaId: string): Promise<TotalesFactura> {
+  const { error } = await supabase.rpc("recalc_factura_totales", { p_factura_id: facturaId });
+  if (error) throw error;
 
-  await run(
+  const row = await unwrap(
     supabase
       .from("facturas")
-      .update({
-        subtotal: subtotalR,
-        iva: ivaR,
-        ret_isr: retIsrR,
-        ret_iva: retIvaR,
-        total: totalR,
-      })
-      .eq("id", facturaId),
+      .select("subtotal, iva, ret_isr, ret_iva, total")
+      .eq("id", facturaId)
+      .maybeSingle(),
   );
-  await registrarActividad({
-    modulo: "facturacion",
-    accion: "recalcular_totales_factura",
-    entidadId: facturaId,
-    detalles: { subtotal: subtotalR, iva: ivaR, retIsr: retIsrR, retIva: retIvaR, total: totalR },
-  });
+
+  return {
+    subtotal: Number(row?.subtotal ?? 0),
+    iva: Number(row?.iva ?? 0),
+    retIsr: Number(row?.ret_isr ?? 0),
+    retIva: Number(row?.ret_iva ?? 0),
+    total: Number(row?.total ?? 0),
+  };
 }
