@@ -40,8 +40,8 @@ export default function NuevaCotizacion() {
   const [savedId, setSavedId] = useState<string | null>(null);
   const handleFinalized = useCallback((id: string) => {
     setSavedId(id);
-    clearDraft(userId);
-  }, [userId]);
+    clearDraft(userId, organizationId);
+  }, [userId, organizationId]);
 
   const w = useCotizacionWizardForm({
     navigate,
@@ -66,6 +66,7 @@ export default function NuevaCotizacion() {
   const { flush: flushDraft } = useCotizacionDraftAutosave({
     form: w.form,
     userId,
+    organizationId,
     enabled: true,
     cotizacionId: w.cotizacionId,
     currentStep: w.currentStep,
@@ -77,10 +78,10 @@ export default function NuevaCotizacion() {
   // Sólo se ofrece restaurar si el borrador realmente tiene algo capturado:
   // sin esto, un draft "vacío" (valores por defecto) disparaba el banner igual.
   const draftDetectado = useMemo(() => {
-    const draft = userId ? loadDraft(userId) : null;
+    const draft = userId ? loadDraft(userId, organizationId) : null;
     if (!draft) return null;
     return draftTieneContenido(draft.values, draft.costosInternos) ? draft : null;
-  }, [userId]);
+  }, [userId, organizationId]);
   const [banderaBorrador, setBanderaBorrador] = useState(false);
   useEffect(() => {
     if (draftDetectado) setBanderaBorrador(true);
@@ -112,9 +113,9 @@ export default function NuevaCotizacion() {
   }, [draftDetectado, w]);
 
   const handleDiscard = useCallback(() => {
-    clearDraft(userId);
+    clearDraft(userId, organizationId);
     setBanderaBorrador(false);
-  }, [userId]);
+  }, [userId, organizationId]);
 
   const closeSuccessAndGoTo = useCallback((to: string) => {
     setSavedId(null);
