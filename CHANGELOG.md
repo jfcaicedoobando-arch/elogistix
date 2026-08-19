@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.690.1] - 2026-08-19
+### Corrección de validación de esquema
+- El inventario de validación del esquema esperaba nombres antiguos de tres reglas automáticas de pagos de factura; ya reconoce los nombres vigentes (se renombraron para asegurar que la conversión de moneda ocurra antes de las validaciones de saldo).
+
+
 ## [13.689.0] - 2026-08-19
 ### Ola E (cierre) — tipografía y badges de estado unificados
 - Embarques, Facturación y Tesorería usan la escala tipográfica del sistema (`text-body` / `text-body-sm`) en lugar de los tamaños crudos de Tailwind, así el mismo tipo de texto se ve igual en todas las pantallas.
