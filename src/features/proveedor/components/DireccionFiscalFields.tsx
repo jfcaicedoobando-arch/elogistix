@@ -28,8 +28,9 @@ export function DireccionFiscalFields<F extends FormShape>({ form, setField, reg
     <>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div className="space-y-2">
-          <Label>Código Postal</Label>
+          <Label htmlFor="proveedor-cp">Código Postal</Label>
           <Input
+            id="proveedor-cp"
             value={form.cp ?? ""}
             maxLength={5}
             inputMode="numeric"
@@ -38,12 +39,12 @@ export function DireccionFiscalFields<F extends FormShape>({ form, setField, reg
           />
         </div>
         <div className="space-y-2">
-          <Label>Régimen Fiscal{regimenRequired ? " *" : ""}</Label>
+          <Label htmlFor="proveedor-regimen-fiscal">Régimen Fiscal{regimenRequired ? " *" : ""}</Label>
           <Select
             value={form.regimen_fiscal ?? ""}
             onValueChange={(v) => setField("regimen_fiscal" as keyof F, v as F[keyof F])}
           >
-            <SelectTrigger><SelectValue placeholder="Selecciona régimen" /></SelectTrigger>
+            <SelectTrigger id="proveedor-regimen-fiscal"><SelectValue placeholder="Selecciona régimen" /></SelectTrigger>
             <SelectContent>
               {REGIMENES_FISCALES_SAT.map((r) => (
                 <SelectItem key={r.clave} value={r.clave}>
@@ -55,8 +56,9 @@ export function DireccionFiscalFields<F extends FormShape>({ form, setField, reg
         </div>
       </div>
       <div className="space-y-2">
-        <Label>Dirección</Label>
+        <Label htmlFor="proveedor-direccion">Dirección</Label>
         <Input
+          id="proveedor-direccion"
           value={form.direccion ?? ""}
           onChange={(e) => setField("direccion" as keyof F, e.target.value as F[keyof F])}
           placeholder="Calle, número, colonia"
@@ -64,15 +66,17 @@ export function DireccionFiscalFields<F extends FormShape>({ form, setField, reg
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div className="space-y-2">
-          <Label>Ciudad / Municipio</Label>
+          <Label htmlFor="proveedor-ciudad">Ciudad / Municipio</Label>
           <Input
+            id="proveedor-ciudad"
             value={form.ciudad ?? ""}
             onChange={(e) => setField("ciudad" as keyof F, e.target.value as F[keyof F])}
           />
         </div>
         <div className="space-y-2">
-          <Label>Estado</Label>
+          <Label htmlFor="proveedor-estado">Estado</Label>
           <Input
+            id="proveedor-estado"
             value={form.estado ?? ""}
             onChange={(e) => setField("estado" as keyof F, e.target.value as F[keyof F])}
           />
