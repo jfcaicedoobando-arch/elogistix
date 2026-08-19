@@ -55,8 +55,10 @@ describe("cubetas de antigüedad · catálogo único", () => {
         ignore: ["src/lib/aging/**", "src/**/__tests__/**", "src/**/*.test.{ts,tsx}"],
       })
       .filter((f) => {
+        // Sólo se prohíbe volver a *listar* las cubetas (las claves sueltas
+        // como `d_31_60` son legítimas al leer una fila de la RPC).
         const src = readFileSync(f, "utf8");
-        return src.includes('"31-60"') || src.includes('"d_31_60"');
+        return /"31-60"\s*,\s*"61-90"/.test(src) || /"d_31_60"\s*,\s*"d_61_90"/.test(src);
       });
     expect(ofensores).toEqual([]);
   });
