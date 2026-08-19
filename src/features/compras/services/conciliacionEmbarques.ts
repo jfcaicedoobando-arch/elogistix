@@ -14,6 +14,7 @@
  *  - Ordena por mayor pendiente descendente.
  */
 import { supabase } from "@/integrations/supabase/client";
+import { CAP_REPORTE_AMPLIO } from "@/constants/queryCaps";
 
 export type EstadoConciliacion = "sin_facturar" | "parcial" | "completa";
 
@@ -123,7 +124,7 @@ export async function listarConciliacionEmbarques(
       "embarque_id, monto, moneda, estado_liquidacion, embarques!inner(expediente, cliente_nombre, estado)",
     )
     .is("deleted_at", null)
-    .limit(5000);
+    .limit(CAP_REPORTE_AMPLIO);
 
   if (filtros.organizationId) q = q.eq("organization_id", filtros.organizationId);
   if (filtros.moneda) q = q.eq("moneda", filtros.moneda);

@@ -4,6 +4,7 @@ import type { Tables } from "@/integrations/supabase/types";
 import { registrarActividad } from "@/services/bitacora/registrar";
 import { crearMovimientoBancarioCobro } from "@/features/facturacion/services/cobroFacturaMovimiento";
 import type { Moneda } from "@/types/db";
+import { CAP_LISTA } from "@/constants/queryCaps";
 
 
 export type PagoFactura = Tables<"pagos_factura">;
@@ -47,7 +48,7 @@ export async function listarPagosFactura(facturaId: string): Promise<PagoFactura
       // A6: los pagos eliminados (borrado lógico) no deben listarse ni sumar.
       .is("deleted_at", null)
       .order("fecha_pago", { ascending: false })
-      .limit(500),
+      .limit(CAP_LISTA),
     [],
   );
 }

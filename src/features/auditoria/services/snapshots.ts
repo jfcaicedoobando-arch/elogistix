@@ -1,6 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { AuditoriaSnapshot } from "@/features/auditoria/types";
 import { registrarActividad } from "@/services/bitacora/registrar";
+import { CAP_REPORTE } from "@/constants/queryCaps";
 
 export interface FetchSnapshotsOpts {
   dias?: number;
@@ -27,7 +28,7 @@ export async function fetchAuditoriaSnapshots(
     .select("*")
     .gte("fecha", desdeIso)
     .order("fecha", { ascending: true })
-    .limit(2000); // defensivo: cap por org (snapshots diarios → años de margen)
+    .limit(CAP_REPORTE); // defensivo: cap por org (snapshots diarios → años de margen)
   if (opts.organizationId) q = q.eq("organization_id", opts.organizationId);
   const { data, error } = await q;
   if (error) throw error;

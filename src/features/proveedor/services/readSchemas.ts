@@ -8,6 +8,7 @@
  * en vez de propagar `undefined` a los totales de la pantalla.
  */
 import { z } from "zod";
+import { CUBETAS_WIRE_PROVEEDOR } from "@/lib/aging/buckets";
 
 /** Monto que puede llegar como number o como string numérico (numeric de PG). */
 const monto = z.coerce.number().finite();
@@ -88,7 +89,7 @@ const movimientoSchema = z.object({
 
 const agingFilaSchema = z.object({
   moneda: z.string(),
-  bucket: z.enum(["Vigente", "1-30", "31-60", "61-90", "90+"]),
+  bucket: z.enum(CUBETAS_WIRE_PROVEEDOR),
   saldo: monto,
   conteo: z.coerce.number().int(),
 });

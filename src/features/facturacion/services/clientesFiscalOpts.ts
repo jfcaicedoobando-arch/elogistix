@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { CAP_REPORTE } from "@/constants/queryCaps";
 
 export interface ClienteFiscalOpt {
   id: string;
@@ -17,7 +18,7 @@ export async function fetchClientesFiscalOpts(): Promise<ClienteFiscalOpt[]> {
     .from("clientes")
     .select("id, nombre, rfc, codigo_postal, regimen_fiscal, uso_cfdi_default, dias_credito, limite_credito_mxn")
     .order("nombre")
-    .limit(2000);
+    .limit(CAP_REPORTE);
   if (error) throw error;
   return (data ?? []) as ClienteFiscalOpt[];
 }

@@ -3,6 +3,7 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
+import { CAP_POSTGREST } from "@/constants/queryCaps";
 
 export interface NotaCreditoRow {
   id: string;
@@ -46,7 +47,7 @@ export async function listarNotasCreditoGlobal(
     )
     .is("deleted_at", null)
     .order("fecha", { ascending: false })
-    .limit(1000);
+    .limit(CAP_POSTGREST);
 
   if (filtros.desde) q = q.gte("fecha", filtros.desde);
   if (filtros.hasta) q = q.lte("fecha", filtros.hasta);

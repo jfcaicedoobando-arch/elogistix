@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.677.0] - 2026-08-19
+- Ola 19 · paso 6: catálogo único de cubetas de antigüedad. Estado de cuenta, CxC, CxP y proveedores usan `src/lib/aging/buckets.ts` (rangos, etiquetas y colores); los encabezados de los CSV se derivan del catálogo.
+- Ola 19 · paso 7: los topes de consulta (500/1000/2000/5000) ahora son constantes con nombre en `src/constants/queryCaps.ts`, migrados en 33 servicios, con guardrail que prohíbe `.limit(>=500)` literal.
+
 ## [13.676.0] - 2026-08-19
 - Ola 19 · paso 2: el Dashboard Ejecutivo se movió a `features/dashboardEjecutivo/routes`, rompiendo el ciclo de dependencias con `profit`.
 - Ola 19 · paso 5: el tipo `Moneda` ya no se redeclara por módulo; `financialUtils`, tesorería, seguros, anticipos, aging CxP y pagos usan el alias central de `@/types/db`.

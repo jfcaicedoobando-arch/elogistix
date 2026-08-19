@@ -49,7 +49,7 @@ describe("filasAgingExport", () => {
     ];
     const filas = filasAgingExport(aging);
     expect(filas).toHaveLength(5);
-    expect(filas[0]).toEqual({ moneda: "MXN", etiqueta: "Por vencer", saldo: "100.00" });
+    expect(filas[0]).toEqual({ moneda: "MXN", etiqueta: "Vigente", saldo: "100.00" });
   });
 });
 

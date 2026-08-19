@@ -17,6 +17,7 @@ export interface ProximaActividad {
 }
 
 import { CRM_ACTIVIDADES_COLUMNS_MIN as COLS } from "./crmActividadesColumns";
+import { CAP_LISTA } from "@/constants/queryCaps";
 
 export async function fetchProximasActividades(
   entidadTipo: CrmEntidadTipo,
@@ -30,7 +31,7 @@ export async function fetchProximasActividades(
     .is("fecha_completada", null)
     .is("deleted_at", null)
     .order("fecha_programada", { ascending: true, nullsFirst: false })
-    .limit(500);
+    .limit(CAP_LISTA);
   if (error) throw error;
   return buildProximasMap((data ?? []) as ProximaActividad[]);
 }

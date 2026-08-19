@@ -9,6 +9,7 @@ import { unwrap, unwrapOr, run } from "@/lib/supabase/response";
 import { normalizarRazonSocial } from "@/lib/text/razonSocial";
 import { ProveedorDuplicadoError, findProveedorByRfcEnOrg } from "./duplicadoRfc";
 import { bitacoraProveedor } from "./proveedoresBitacora";
+import { CAP_LISTA } from "@/constants/queryCaps";
 
 type TipoProveedor = Enums<"tipo_proveedor">;
 type CategoriaProveedor = Enums<"categoria_proveedor">;
@@ -106,7 +107,7 @@ export async function fetchProveedoresLite(organizationId?: string | null): Prom
   let query = supabase.from("proveedores").select("id, nombre, dias_credito");
   if (organizationId) query = query.eq("organization_id", organizationId);
   query = query.is("deleted_at", null);
-  return unwrapOr(query.order("nombre", { ascending: true }).limit(500), []) as Promise<ProveedorLite[]>;
+  return unwrapOr(query.order("nombre", { ascending: true }).limit(CAP_LISTA), []) as Promise<ProveedorLite[]>;
 }
 
 export async function findProveedorByRfc(rfc: string): Promise<{ id: string; nombre: string } | null> {

@@ -1,6 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { fromDb } from "@/lib/supabase/cast";
 import type { ProveedorOperacion } from "./proveedoresCrud";
+import { CAP_POSTGREST } from "@/constants/queryCaps";
 
 export async function fetchProveedorOperaciones(
   proveedorId: string,
@@ -14,7 +15,7 @@ export async function fetchProveedorOperaciones(
     .eq("proveedor_id", proveedorId)
     .is("deleted_at", null)
     .order("fecha_vencimiento", { ascending: false, nullsFirst: false })
-    .limit(1000);
+    .limit(CAP_POSTGREST);
   if (error) throw error;
 
   return (data ?? []).map((row) => {

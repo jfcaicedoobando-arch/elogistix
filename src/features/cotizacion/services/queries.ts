@@ -7,6 +7,7 @@ import { fromDbChecked } from "@/lib/supabase/cast";
 import { cotizacionRowDbSchema, cotizacionRowsDbSchema } from "./readSchemas";
 
 import { unwrap, unwrapOr } from "@/lib/supabase/response";
+import { CAP_POSTGREST } from "@/constants/queryCaps";
 
 // ─── Columnas reutilizables ─────────────────────────────────────────────────
 // `cotizacion_costos(count)` agrega el conteo de filas relacionadas, que
@@ -47,7 +48,7 @@ export async function fetchCotizaciones(organizationId: string | null) {
     // FE-05: límite explícito defensivo — PostgREST capa en ~1000 filas sin
     // avisar y las cotizaciones más viejas desaparecían del listado.
     // TODO post-freeze: paginación server-side (`embarques/services/paginados.ts`).
-    .limit(1000);
+    .limit(CAP_POSTGREST);
   if (organizationId) query = query.eq("organization_id", organizationId);
   const data = await unwrap(query);
   // Aplanamos `cotizacion_costos: [{count: N}]` → `cotizacion_costos_count: N`
@@ -80,7 +81,7 @@ export async function fetchCotizacionesAceptadas(organizationId: string | null) 
     .select(COTIZACION_ACEPTADA_COLUMNS)
     .in("estado", ["Aceptada", "En operación"])
     .order("created_at", { ascending: false })
-    .limit(1000); // FE-05: mismo cap defensivo que `fetchCotizaciones`
+    .limit(CAP_POSTGREST); // FE-05: mismo cap defensivo que `fetchCotizaciones`
   if (organizationId) query = query.eq("organization_id", organizationId);
   const data = await unwrap(query);
   return fromDbChecked<CotizacionRow[]>(data, cotizacionRowsDbSchema);

@@ -3,6 +3,7 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import { fromDb } from "@/lib/supabase/cast";
+import { CAP_LISTA } from "@/constants/queryCaps";
 
 export interface OrganizationRow {
   id: string;
@@ -19,7 +20,7 @@ export async function listActiveOrganizations<T = OrganizationRow>(): Promise<T[
     .select("*")
     .eq("activo", true)
     .order("nombre")
-    .limit(500);
+    .limit(CAP_LISTA);
   if (error) throw error;
   return fromDb<T[]>(data ?? []);
 }

@@ -57,7 +57,7 @@ export interface ExchangeRates {
 // ─── Navieras ────────────────────────────────────────────────────────────────
 
 export async function fetchNavieras(includeInactive = false): Promise<Naviera[]> {
-  // 12.34.0: .limit(500) defensivo (evita el cap silencioso de 1000 de PostgREST).
+  // 12.34.0: .limit(CAP_LISTA) defensivo (evita el cap silencioso de 1000 de PostgREST).
   let query = supabase.from("navieras").select("*").order("name").limit(LIMITE_CATALOGOS);
   if (!includeInactive) query = query.eq("activo", true);
   const rows = fromDb<Naviera[]>(await unwrapOr(query, []));

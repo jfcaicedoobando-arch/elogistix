@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import { formatCurrency } from "@/lib/formatters";
 import type { AgingBucket, BucketAging } from "../services/estadoCuentaAging";
 import { SectionHeading } from "@/components/shared/SectionHeading";
+import { CUBETAS_AGING, CUBETA_TONO_KPI } from "@/lib/aging/buckets";
 
 interface Props {
   buckets: AgingBucket[];
@@ -14,13 +15,15 @@ interface Props {
   onToggle: (b: BucketAging) => void;
 }
 
-const TONO: Record<BucketAging, string> = {
-  corriente: "text-muted-foreground",
-  "1-30": "text-warning",
-  "31-60": "text-warning",
-  "61-90": "text-destructive",
-  "90+": "text-destructive",
+/** Clase de color derivada del tono KPI del catálogo único de cubetas. */
+const CLASE_TONO: Record<string, string> = {
+  default: "text-muted-foreground",
+  warn: "text-warning",
+  danger: "text-destructive",
 };
+const TONO: Record<BucketAging, string> = Object.fromEntries(
+  CUBETAS_AGING.map((c) => [c, CLASE_TONO[CUBETA_TONO_KPI[c]]]),
+) as Record<BucketAging, string>;
 
 function importes(b: AgingBucket): string[] {
   const out: string[] = [];

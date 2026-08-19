@@ -11,6 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { MovimientoBBVA } from "./conciliacion";
 import { TOLERANCIA_MONTO_MXN, TOLERANCIA_DIAS, rangoFechasIso, deltaDiasIso } from "../domain/tolerancia";
 import type { Moneda } from "@/types/db";
+import { CAP_LISTA } from "@/constants/queryCaps";
 
 export interface Candidato {
   tipo: "cxc" | "cxp";
@@ -63,7 +64,7 @@ async function pagosYaVinculados(pagoIds: string[], tipo: "cxc" | "cxp"): Promis
     .select("pago_factura_id, pago_proveedor_id")
     .in(columna, pagoIds)
     .is("deleted_at", null)
-    .limit(500);
+    .limit(CAP_LISTA);
   const set = new Set<string>();
   // SAFE-CAST: supabase-js tipa ambas columnas como string | null.
   for (const row of (data ?? []) as Array<Record<string, string | null>>) {

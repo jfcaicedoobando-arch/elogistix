@@ -6,6 +6,7 @@ import { fromDb } from "@/lib/supabase/cast";
 import { unwrap, unwrapOr, run } from "@/lib/supabase/response";
 import { assertNotTruncated } from "@/lib/supabase/assertNotTruncated";
 import { registrarActividad } from "@/services/bitacora/registrar";
+import { CAP_LISTA } from "@/constants/queryCaps";
 
 export interface OrgRow {
   id: string;
@@ -19,7 +20,7 @@ export interface OrgRow {
 export async function fetchAdminOrganizations(): Promise<OrgRow[]> {
   const data = await unwrap(
     // EC-05: límite defensivo sobre el catálogo de organizaciones.
-    supabase.from("organizations").select("*").order("nombre").limit(500),
+    supabase.from("organizations").select("*").order("nombre").limit(CAP_LISTA),
   );
   assertNotTruncated(data, 500, "admin.organizations");
   return fromDb<OrgRow[]>(data);

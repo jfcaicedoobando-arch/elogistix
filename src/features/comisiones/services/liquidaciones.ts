@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { unwrap, unwrapOr, run } from "@/lib/supabase/response";
 import type { Tables, TablesUpdate } from "@/integrations/supabase/types";
 import { registrarActividad } from "@/services/bitacora/registrar";
+import { CAP_LISTA } from "@/constants/queryCaps";
 
 export type LiquidacionRow = Tables<"liquidaciones_comision">;
 
@@ -19,7 +20,7 @@ export async function fetchLiquidaciones(): Promise<LiquidacionRow[]> {
       .select(LIQUIDACION_COLUMNS)
       .order("periodo", { ascending: false })
       .order("created_at", { ascending: false })
-      .limit(500),
+      .limit(CAP_LISTA),
     [],
   ) as Promise<LiquidacionRow[]>;
 }

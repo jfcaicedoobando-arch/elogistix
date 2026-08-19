@@ -5,6 +5,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { ilikePattern } from "@/lib/search/ilike";
 import type { Database } from "@/integrations/supabase/types";
+import { CAP_POSTGREST } from "@/constants/queryCaps";
 
 export interface AlertaSistema {
   id: string;
@@ -89,7 +90,7 @@ export async function fetchAppLogsFnList(): Promise<string[]> {
     .from("app_logs")
     .select("fn")
     .order("fn", { ascending: true })
-    .limit(1000);
+    .limit(CAP_POSTGREST);
   if (error) throw new Error(error.message);
   const set = new Set<string>();
   (data ?? []).forEach((r) => set.add(r.fn));

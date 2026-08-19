@@ -6,6 +6,7 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
+import { CAP_POSTGREST } from "@/constants/queryCaps";
 
 export interface PagoProveedorRow {
   id: string;
@@ -50,7 +51,7 @@ export async function listarPagosProveedorGlobal(
     )
     .is("deleted_at", null)
     .order("fecha_pago", { ascending: false })
-    .limit(1000);
+    .limit(CAP_POSTGREST);
 
   if (filtros.desde) q = q.gte("fecha_pago", filtros.desde);
   if (filtros.hasta) q = q.lte("fecha_pago", filtros.hasta);
