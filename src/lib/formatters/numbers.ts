@@ -160,3 +160,24 @@ export const fraccionAPorcentaje = (fraccion: number | null | undefined): number
 /** Moneda sin centavos, para tarjetas y resúmenes con poco espacio. */
 export const formatCurrencyEntero = (amount: number, currency: string = "MXN"): string =>
   formatCurrency(Math.round(Number.isFinite(amount) ? amount : 0), currency).replace(/\.00$/, "");
+
+/**
+ * Ola E · V-14 — porcentaje ya calculado (12.5 → "12.5 %").
+ *
+ * Antes cada pantalla escribía `${n.toFixed(1)}%` a mano, así que el número de
+ * decimales y el espacio antes del `%` variaban de módulo en módulo. Este es el
+ * único formateador de porcentajes de la UI.
+ *
+ * @param valor porcentaje en escala 0-100 (no fracción).
+ * @param decimales dígitos después del punto (1 por omisión).
+ * @param fallback texto cuando el valor no es un número finito.
+ */
+export const formatPercent = (
+  valor: number | null | undefined,
+  decimales = 1,
+  fallback = "—",
+): string => {
+  const n = Number(valor);
+  if (!Number.isFinite(n)) return fallback;
+  return `${formatNumber(n, { decimals: decimales })} %`;
+};

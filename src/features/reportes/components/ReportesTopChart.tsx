@@ -1,3 +1,4 @@
+import { formatCurrencyCompact } from "@/lib/formatters";
 import { ChartTooltip } from "@/components/shared/ChartTooltip";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
 import { BarChart3 } from "lucide-react";
@@ -32,12 +33,7 @@ export default function ReportesTopChart({ data, isLoading }: Props) {
                 tickCount={5}
                 domain={[0, "dataMax"]}
                 allowDecimals={false}
-                tickFormatter={(v) => {
-                  const n = Number(v) || 0;
-                  if (n >= 1_000_000) return `$${(n / 1_000_000).toFixed(1)}M`;
-                  if (n >= 1_000) return `$${(n / 1_000).toFixed(1)}k`;
-                  return `$${n}`;
-                }}
+                tickFormatter={(v) => formatCurrencyCompact(Number(v) || 0, "USD")}
                 tick={{ fontSize: 11 }}
               />
               <YAxis

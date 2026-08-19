@@ -1,5 +1,13 @@
 # Changelog
 
+## [13.688.0] - 2026-08-19
+### Ola E — un solo lenguaje visual (porcentajes, moneda e iconos)
+- Los porcentajes de toda la app se muestran igual (un decimal y espacio antes del `%`) usando un único formateador; antes cada pantalla lo escribía a mano.
+- Los importes en el badge administrativo de embarques y en el eje de la gráfica de reportes usan el formateador de moneda oficial (miles y decimales en es-MX).
+- Se retiraron los emojis y glifos decorativos (🎉 📦 ⚠ ✓ ✗) de la interfaz y se reemplazaron por iconos que sí heredan el color del tema.
+- Los badges de rentabilidad usan las variantes semánticas del componente `Badge` en lugar de clases de color escritas a mano.
+- Nuevo guardarraíl de arquitectura que impide reintroducir emojis o glifos decorativos en `src`.
+
 ## [13.687.0] - 2026-08-19
 ### Ola D — pulido visual de gráficas y alertas
 - Todas las gráficas usan un mismo recuadro de información (tooltip) que respeta el tema claro/oscuro, alinea las cifras y las formatea en es-MX.

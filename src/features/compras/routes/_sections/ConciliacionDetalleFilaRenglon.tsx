@@ -6,7 +6,7 @@
 import { ChevronDown, ChevronRight, Link2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { formatCurrency } from "@/lib/formatters";
+import { formatCurrency, formatPercent } from "@/lib/formatters";
 import type { FilaReconciliacion } from "@/features/embarques/services/reconciliacionCostos";
 import { ESTATUS_META, classFromNumber } from "./ConciliacionDetalleHelpers";
 
@@ -56,7 +56,7 @@ export function FilaRenglon({ fila, expandido, onToggle, onVincular }: Props) {
           {formatCurrency(fila.diferencia, fila.moneda)}
         </td>
         <td className={`p-2 text-right tabular-nums align-top ${pCls}`}>
-          {fila.desviacion_pct.toFixed(1)}%
+          {formatPercent(fila.desviacion_pct)}
         </td>
         <td className="p-2 align-top">
           <Badge variant={meta.variant} className="gap-1 text-2xs">
@@ -114,7 +114,7 @@ function SubTablaPartidas({ fila }: { fila: FilaReconciliacion }) {
                     {formatCurrency(p.monto, fila.moneda)}
                   </td>
                   <td className="py-1 text-right tabular-nums text-muted-foreground">
-                    {pct.toFixed(1)}%
+                    {formatPercent(pct)}
                   </td>
                 </tr>
               );

@@ -6,6 +6,7 @@
  *
  * Reutiliza `embarque_admin_pendientes_resumen` (BD) para no duplicar lógica.
  */
+import { formatCurrency } from "@/lib/formatters";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { CircleAlert, CheckCircle2 } from "lucide-react";
@@ -48,9 +49,9 @@ export function EmbarqueBadgeAdmin({ embarqueId, estado, onIrACierre }: Props) {
   }
 
   const detalles: string[] = [];
-  if (data.cxc_pendiente > 0.01) detalles.push(`CxC: $${data.cxc_pendiente.toFixed(2)}`);
-  if (data.cxp_pendiente > 0.01) detalles.push(`CxP: $${data.cxp_pendiente.toFixed(2)}`);
-  if (data.venta_no_facturada > 0.01) detalles.push(`Por facturar: $${data.venta_no_facturada.toFixed(2)}`);
+  if (data.cxc_pendiente > 0.01) detalles.push(`CxC: ${formatCurrency(data.cxc_pendiente, "MXN")}`);
+  if (data.cxp_pendiente > 0.01) detalles.push(`CxP: ${formatCurrency(data.cxp_pendiente, "MXN")}`);
+  if (data.venta_no_facturada > 0.01) detalles.push(`Por facturar: ${formatCurrency(data.venta_no_facturada, "MXN")}`);
   if (data.docs_faltantes > 0) detalles.push(`${data.docs_faltantes} doc(s) faltantes`);
 
   return (

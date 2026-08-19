@@ -5,7 +5,7 @@ import {
   dateColumn,
 } from "@/components/shared/dataTable/columnBuilders";
 import { sortByString } from "@/components/shared/dataTable/sortingFns";
-import { toTitleCase } from "@/lib/formatters";
+import { toTitleCase, formatPercent } from "@/lib/formatters";
 import type { ComisionDevengada } from "@/features/comisiones/services";
 import { COL_W } from "@/components/shared/dataTable/columnWidths";
 
@@ -57,7 +57,7 @@ export function buildComisionesColumns(): ColumnDef<ComisionDevengada, unknown>[
     {
       id: "pct", header: "%",
       meta: { width: COL_W.tiny, className: "text-right tabular-nums hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
-      cell: ({ row }) => `${row.original.porcentaje_aplicado.toFixed(1)}%`,
+      cell: ({ row }) => formatPercent(row.original.porcentaje_aplicado),
     },
     {
       ...moneyColumn<ComisionDevengada>({

@@ -4,12 +4,12 @@
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { ArrowDown, ArrowRight, ArrowUp, AlertTriangle } from "lucide-react";
-import { formatCurrency } from "@/lib/formatters/numbers";
+import { formatCurrency, formatPercent } from "@/lib/formatters/numbers";
 import { META_FACTURACION_MENSUAL_MXN } from "@/features/dashboard/direccion/constants";
 import type { HeroKpis } from "@/features/dashboard/direccion/services/tipos";
 
 function fmt(n: number): string { return formatCurrency(n, "MXN"); }
-function pct(n: number): string { return `${n.toFixed(1)}%`; }
+
 
 function DeltaMargen({ actual, previo }: { actual: number; previo: number }) {
   const delta = actual - previo;
@@ -29,14 +29,14 @@ export function HeroCards({ hero }: { hero: HeroKpis }) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
       <Card className="p-5 rounded-xl border border-border bg-card">
-        <p className="text-xs uppercase tracking-wide text-muted-foreground">Utilidad bruta del mes</p>
+        <p className="text-xs text-muted-foreground">Utilidad bruta del mes</p>
         <p className="mt-2 text-kpi tabular-nums">{fmt(hero.utilidad_mxn)}</p>
-        <p className="mt-1 text-sm text-muted-foreground tabular-nums">Margen {pct(hero.margen_pct)}</p>
+        <p className="mt-1 text-sm text-muted-foreground tabular-nums">Margen {formatPercent(hero.margen_pct)}</p>
         <div className="mt-2"><DeltaMargen actual={hero.margen_pct} previo={hero.margen_pct_prev} /></div>
       </Card>
 
       <Card className="p-5 rounded-xl border border-destructive/40 bg-destructive/5">
-        <p className="text-xs uppercase tracking-wide text-destructive flex items-center gap-1.5">
+        <p className="text-xs text-destructive flex items-center gap-1.5">
           <AlertTriangle className="h-3.5 w-3.5" aria-hidden /> Cartera vencida
         </p>
         <p className="mt-2 text-kpi tabular-nums text-destructive">{fmt(hero.cartera_vencida_mxn)}</p>
@@ -46,10 +46,10 @@ export function HeroCards({ hero }: { hero: HeroKpis }) {
       </Card>
 
       <Card className="p-5 rounded-xl border border-border bg-card">
-        <p className="text-xs uppercase tracking-wide text-muted-foreground">Facturación del mes</p>
+        <p className="text-xs text-muted-foreground">Facturación del mes</p>
         <p className="mt-2 text-kpi tabular-nums">{fmt(hero.facturado_mes_mxn)}</p>
         <p className="mt-1 text-sm text-muted-foreground tabular-nums">
-          {avance.toFixed(1)}% de la meta ({fmt(meta)})
+          {formatPercent(avance)} de la meta ({fmt(meta)})
         </p>
         <Progress value={avance} className="mt-3 h-2" />
       </Card>

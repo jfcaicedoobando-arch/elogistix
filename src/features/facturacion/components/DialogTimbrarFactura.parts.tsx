@@ -1,3 +1,4 @@
+import { Check, X } from "lucide-react";
 /**
  * Sub-vistas del modal de timbrado. Extraídas para respetar la regla
  * Power of 10 (≤200 líneas por archivo productivo).
@@ -60,8 +61,9 @@ export function TimbrarCompleto(props: CompletoProps) {
     <>
       <ul className="text-sm space-y-1">
         {checks.map((c, i) => (
-          <li key={i} className={c.ok ? "text-success" : "text-destructive"}>
-            {c.ok ? "✓" : "✗"} {c.label}
+          <li key={i} className={`flex items-center gap-1.5 ${c.ok ? "text-success" : "text-destructive"}`}>
+            {c.ok ? <Check className="h-3.5 w-3.5" aria-hidden /> : <X className="h-3.5 w-3.5" aria-hidden />}
+            {c.label}
           </li>
         ))}
       </ul>

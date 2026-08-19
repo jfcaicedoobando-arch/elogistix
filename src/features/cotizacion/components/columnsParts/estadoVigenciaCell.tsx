@@ -1,3 +1,4 @@
+import { AlertTriangle } from "lucide-react";
 /**
  * @deprecated Usar `<StatusBadge domain="cotizacion" />` directamente.
  * Conservado para la celda compuesta (estado + vigencia + badges extra).
@@ -78,15 +79,15 @@ export function renderEstadoVigencia(r: CotizacionListItem): ReactNode {
           <Badge variant="warning" className="w-fit text-2xs whitespace-nowrap">Sin costos</Badge>
         )}
         {requiereReaprobacion && (
-          <Badge variant="warning" className="w-fit text-2xs whitespace-nowrap"
+          <Badge variant="warning" className="w-fit text-2xs whitespace-nowrap inline-flex items-center gap-1"
             title="Tarifa cambió: requiere re-aprobación de ventas">
-            ⚠ Re-aprobación pendiente
+            <AlertTriangle className="h-3 w-3" aria-hidden /> Re-aprobación pendiente
           </Badge>
         )}
         {tarifaVencida && (
-          <Badge variant="destructive" className="w-fit text-2xs whitespace-nowrap"
+          <Badge variant="destructive" className="w-fit text-2xs whitespace-nowrap inline-flex items-center gap-1"
             title={`La tarifa vinculada venció el ${formatDate(vigHasta!)}`}>
-            ⚠ Tarifa vencida
+            <AlertTriangle className="h-3 w-3" aria-hidden /> Tarifa vencida
           </Badge>
         )}
       </div>

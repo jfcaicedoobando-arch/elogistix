@@ -3,7 +3,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ListSkeleton } from "@/components/shared/states/ListSkeleton";
-import { ArrowRight, Wallet, TrendingUp, TrendingDown, ChevronRight } from "lucide-react";
+import { ArrowRight, Wallet, TrendingUp, TrendingDown, ChevronRight, PartyPopper } from "lucide-react";
+import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 import { formatCurrency, formatFechaEs } from "@/lib/formatters";
 import { DrilldownRow } from "@/components/shared/dataTable/DrilldownRow";
 import type { ResumenTesoreria } from "@/features/tesoreria/domain";
@@ -74,9 +75,7 @@ export function PagosCajaBlock({ tesoreria, cxpPorPagar, loading }: Props) {
           {loading ? (
             <ListSkeleton rows={4} />
           ) : cxpPorPagar.length === 0 ? (
-            <p className="text-sm text-muted-foreground py-4 text-center">
-              Nada por pagar 🎉
-            </p>
+            <EmptyStateInline icon={PartyPopper} message="Nada por pagar" className="py-4" />
           ) : (
               <ul className="divide-y rounded-md border">
                 {cxpPorPagar.map((f) => {

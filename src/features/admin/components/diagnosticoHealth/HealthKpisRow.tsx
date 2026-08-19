@@ -7,7 +7,7 @@
  */
 import { Activity, AlertTriangle, Bug, Clock } from "lucide-react";
 import { KpiCard } from "@/components/shared/KpiCard";
-import { formatNumber } from "@/lib/formatters";
+import { formatNumber, formatPercent } from "@/lib/formatters";
 
 interface Props {
   totalEvents: number;
@@ -34,7 +34,7 @@ export default function HealthKpisRow({
         icon={Bug}
         label="Errores"
         value={formatNumber(totalErrors)}
-        sublabel={`${errorRatePct.toFixed(2)}% del total`}
+        sublabel={`${formatPercent(errorRatePct, 2)} del total`}
         variant={totalErrors > 0 ? "destructive" : "default"}
       />
       <KpiCard

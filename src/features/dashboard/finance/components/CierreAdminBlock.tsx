@@ -35,7 +35,7 @@ export function CierreAdminBlock({ huecoTotal, huecoUsd, huecoMxn, loading }: Pr
           {loading ? (
             <Skeleton className="h-24 w-full" />
           ) : huecoTotal === 0 ? (
-            <EmptyStateInline icon={PartyPopper} message="Sin huecos de facturación 🎉" className="py-6" />
+            <EmptyStateInline icon={PartyPopper} message="Sin huecos de facturación" className="py-6" />
           ) : (
             <div className="space-y-3">
               <div className="grid grid-cols-3 gap-2 text-center">

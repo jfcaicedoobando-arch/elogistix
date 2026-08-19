@@ -10,7 +10,7 @@ import { ListSkeleton } from "@/components/shared/states/ListSkeleton";
 import EmptyState from "@/components/empty/EmptyState";
 import { ErrorStateInline } from "@/components/empty/ErrorStateInline";
 import { getErrorMessage } from "@/lib/errors";
-import { formatCurrency } from "@/lib/formatters";
+import { formatCurrency, formatPercent } from "@/lib/formatters";
 import {
   calcularResumen,
   calcularResumenPorEstatus,
@@ -80,7 +80,7 @@ export function ResumenGrid({
         />
         <ResumenTile
           label="Desviación %"
-          value={`${resumen.desviacion_pct_total.toFixed(1)}%`}
+          value={formatPercent(resumen.desviacion_pct_total)}
           tone={toneFromNumber(resumen.desviacion_pct_total)}
         />
       </div>

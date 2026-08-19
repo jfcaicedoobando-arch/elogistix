@@ -55,7 +55,7 @@ export function CobranzaBlock({ aging, facturasVencidas, loading, agingSinTc = 0
         {loading ? (
           <Skeleton className="h-20 w-full" />
         ) : totalAging === 0 ? (
-          <EmptyStateInline icon={PartyPopper} message="Sin saldo vencido 🎉" className="py-4" />
+          <EmptyStateInline icon={PartyPopper} message="Sin saldo vencido" className="py-4" />
         ) : (
           <div className="grid grid-cols-5 gap-2">
             {AGING_LABELS.map(({ key, label, tone }) => {

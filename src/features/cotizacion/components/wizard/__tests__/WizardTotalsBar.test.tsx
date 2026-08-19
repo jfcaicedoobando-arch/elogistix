@@ -18,7 +18,7 @@ describe("WizardTotalsBar", () => {
     );
     expect(screen.getByRole("status", { name: /Totales/i })).toBeInTheDocument();
     // Verde: margen ≥15%.
-    expect(screen.getByText(/33\.3%/)).toBeInTheDocument();
+    expect(screen.getByText(/33\.3 %/)).toBeInTheDocument();
   });
 
   it("prioriza USD cuando existe venta en USD", () => {
@@ -40,7 +40,7 @@ describe("WizardTotalsBar", () => {
         totalVentaMXN={1100}
       />,
     );
-    expect(screen.getByText(/9\.1%/)).toBeInTheDocument();
+    expect(screen.getByText(/9\.1 %/)).toBeInTheDocument();
   });
 
   it("aplica color destructivo cuando el margen es <5%", () => {
@@ -51,6 +51,6 @@ describe("WizardTotalsBar", () => {
         totalVentaMXN={1020}
       />,
     );
-    expect(screen.getByText(/2\.0%/)).toBeInTheDocument();
+    expect(screen.getByText(/2\.0 %/)).toBeInTheDocument();
   });
 });
