@@ -66,4 +66,18 @@ export const EXTRA_STATUS_BADGES: Record<string, EstadoVisual["badge"]> = {
   // Factura — estados derivados del ciclo SAT
   "En cancelación": "bg-warning/15 text-warning border border-warning/30",
   Sustituida: "bg-destructive/10 text-destructive border border-destructive/30",
+  // v13.681.0 · UI-1 — Dominio `cfdi` (factura / nota de crédito / REP).
+  borrador: "bg-muted text-muted-foreground border border-border",
+  aprobada: "bg-warning/15 text-warning border border-warning/30",
+  timbrada: "bg-info/15 text-info border border-info/30",
+  aplicada: "bg-success/15 text-success border border-success/30",
+  cancelada: "bg-destructive/15 text-destructive border border-destructive/30",
+  // v13.681.0 · UI-1 — Estado unificado de proformas (claves en minúsculas).
+  pendiente: "bg-warning/15 text-warning border border-warning/30",
+  aceptada: "bg-info/15 text-info border border-info/30",
+  rechazada: "bg-destructive/15 text-destructive border border-destructive/30",
+  facturada: "bg-success/15 text-success border border-success/30",
+  // v13.681.0 · UI-1 — Conciliación bancaria (Tesorería).
+  Conciliado: "bg-success/15 text-success border border-success/30",
+  Ignorado: "bg-muted text-muted-foreground border border-border",
 };
