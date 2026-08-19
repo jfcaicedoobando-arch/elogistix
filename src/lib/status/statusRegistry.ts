@@ -38,9 +38,8 @@ export type StatusDomain =
   | "cfdi"                // v13.681.0 — CFDI (factura/NC/REP): borrador→cancelada
   | "conciliacion"         // v13.681.0 — Conciliación bancaria en Tesorería
   | "conciliacion_costo"  // v13.571.0 — Costeado vs facturado por el proveedor
-  // Ola E · V-2 — dominios que aún pintaban clases a mano en Tesorería.
-  | "pago_tipo"           // Libro de pagos: cobro / pago / anticipo
-  | "rep";                // Complemento de pago (REP): Timbrado / Cancelado / Pendiente
+  | "pago_tipo"           // Ola E · V-2 — libro de pagos: cobro/pago/anticipo
+  | "rep";                // Ola E · V-2 — REP: Timbrado/Cancelado/Pendiente
 
 export interface StatusVisual {
   label: string;
@@ -156,11 +155,7 @@ const LABEL_OVERRIDES: Partial<Record<StatusDomain, Record<string, string>>> = {
     rechazada: "Rechazada",
     facturada: "Facturada",
   },
-  pago_tipo: {
-    cobro: "Cobro",
-    pago: "Pago",
-    anticipo: "Anticipo",
-  },
+  pago_tipo: { cobro: "Cobro", pago: "Pago", anticipo: "Anticipo" },
   lead: {
     Nuevo: "Nuevo",
     Contactado: "Contactado",
