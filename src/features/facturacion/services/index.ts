@@ -5,8 +5,6 @@
 export {
   fetchFacturasListado,
   fetchFacturas,
-  marcarCostoPagado,
-  fetchGastosPendientes,
 } from "./facturasCrud";
 export type { FacturaListItem } from "./facturasCrud";
 export {

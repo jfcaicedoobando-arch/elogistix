@@ -98,33 +98,4 @@ export async function fetchFacturas(organizationId: string | null): Promise<Fact
   return data;
 }
 
-export async function marcarCostoPagado(input: { id: string; referenciaPago?: string }): Promise<void> {
-  await run(
-    supabase
-      .from("conceptos_costo")
-      .update({
-        estado_liquidacion: "Pagado",
-        fecha_pago: hoyMx(),
-        referencia_pago: input.referenciaPago || null,
-      })
-      .eq("id", input.id),
-  );
-}
-
-// FIX C3 (S6-09): cap explícito verificado por assertNotTruncated.
-const LIMITE_GASTOS_PENDIENTES = 2000;
-
-export async function fetchGastosPendientes() {
-  const filas = await unwrapOr(
-    supabase
-      .from("conceptos_costo")
-      .select("*, embarques!conceptos_costo_embarque_id_fkey(expediente)")
-      .eq("estado_liquidacion", "Pendiente")
-      .is("deleted_at", null)
-      .order("fecha_vencimiento", { ascending: true })
-      .limit(LIMITE_GASTOS_PENDIENTES),
-    [],
-  );
-  return assertNotTruncated(filas, LIMITE_GASTOS_PENDIENTES, "facturacion.fetchGastosPendientes");
-}
 
