@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.687.0] - 2026-08-19
+### Ola D — pulido visual de gráficas y alertas
+- Todas las gráficas usan un mismo recuadro de información (tooltip) que respeta el tema claro/oscuro, alinea las cifras y las formatea en es-MX.
+- El panel de alertas de embarques usa un fondo ámbar más suave y su contador se muestra como etiqueta de advertencia.
+
 ## [13.686.0] - 2026-08-19
 ### Ola C — robustez de captura y navegación
 - El wizard de cotización avisa antes de salir o recargar cuando hay captura sin guardar.
