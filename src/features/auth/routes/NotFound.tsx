@@ -9,7 +9,10 @@ const NotFound = () => {
   const location = useLocation();
 
   useEffect(() => {
-    logger.error("404: Ruta inexistente solicitada:", location.pathname);
+    // Sentry JAVASCRIPT-REACT-5C: un 404 es navegación esperada (enlaces viejos,
+    // rutas sólo-dev como /logo-preview). Se registra como `warn` (breadcrumb en
+    // Sentry) para no crear issues de error por cada ruta inexistente.
+    logger.warn("404: Ruta inexistente solicitada:", location.pathname);
   }, [location.pathname]);
 
   return (
