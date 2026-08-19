@@ -41,9 +41,13 @@ export async function savePaso1(opts: {
 
 
   const data = buildPaso1Data();
-  data.msds_archivo = msdsArchivo;
+  if (msdsArchivo) data.msds_archivo = msdsArchivo;
 
   if (cotizacionId) {
+    // BL-3: en UPDATE nunca se escribe `msds_archivo` si no hubo archivo nuevo.
+    // Antes se mandaba `null` y cualquier edición de una cotización de mercancía
+    // peligrosa borraba el documento de seguridad ya cargado.
+    if (!msdsArchivo) delete data.msds_archivo;
     // B-074: buildPaso1Data siempre trae `conceptos_venta: []` y `subtotal: 0`
     // (las ventas viven en el estado del paso 3, no en el form). En UPDATE hay
     // que excluirlos para no pisar lo ya guardado — el caso típico es volver
@@ -53,6 +57,7 @@ export async function savePaso1(opts: {
     await mutations.updateCotizacion.mutateAsync({ id: cotizacionId, data });
     return cotizacionId;
   } else {
+    data.msds_archivo = msdsArchivo;
     const cotizacion = await mutations.crearCotizacion.mutateAsync(fromDb<CreateCotizacionInput>(data));
     return cotizacion.id;
   }
