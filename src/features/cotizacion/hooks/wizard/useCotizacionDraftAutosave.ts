@@ -30,6 +30,9 @@ export { clearDraft, draftKey, loadDraft };
 interface Params {
   form: UseFormReturn<CotizacionFormValues>;
   userId: string;
+  /** EC-6: organización activa; forma parte de la clave del borrador para que
+   *  cambiar de tenant no ofrezca restaurar datos de otra organización. */
+  organizationId?: string | null;
   /** B-003: se sigue guardando aún después del paso 1 para persistir el
    *  `cotizacionId` en el draft y evitar duplicados al recargar. Sólo se
    *  desactiva en modo edición (initialData presente en el wizard). */
