@@ -105,7 +105,7 @@ export async function crearFacturaManual(input: CrearFacturaManualInput): Promis
     return {
       idx,
       descripcion: c.descripcion,
-      cantidad: cantidadEntera,
+      cantidad: cantidadFiscal,
       precio,
       totalLinea,
       ivaLinea,
@@ -137,7 +137,7 @@ export async function crearFacturaManual(input: CrearFacturaManualInput): Promis
       moneda: input.moneda,
       tipo_cambio: input.tipoCambio,
       fecha_emision: input.fechaEmision,
-      fecha_vencimiento: addDays(input.fechaEmision, input.diasCredito),
+      fecha_vencimiento: vencimiento(input.fechaEmision, input.diasCredito),
       estado: "Borrador",
       origen: "manual",
       serie: input.serie,
