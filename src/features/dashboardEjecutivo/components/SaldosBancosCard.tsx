@@ -1,6 +1,11 @@
+/**
+ * Tabla migrada a `DataTable` (Ola F, punto 8), con footer de totales.
+ */
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Landmark } from "lucide-react";
-import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
+import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
+import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
+import { COL_W } from "@/components/shared/dataTable/columnWidths";
 import { formatCurrency } from "@/lib/formatters/numbers";
 import type { ResumenCuenta } from "@/features/tesoreria/services";
 
@@ -12,51 +17,50 @@ export function SaldosBancosCard({ cuentas }: Props) {
   const totalMxn = cuentas.filter((c) => c.moneda === "MXN").reduce((a, c) => a + c.saldo, 0);
   const totalUsd = cuentas.filter((c) => c.moneda === "USD").reduce((a, c) => a + c.saldo, 0);
 
+  const columns: ColumnDef<ResumenCuenta, unknown>[] = defineColumns<ResumenCuenta>([
+    {
+      id: "cuenta", header: "Cuenta", meta: { width: COL_W.texto },
+      cell: ({ row }) => (
+        <div>
+          <div className="truncate">{row.original.alias}</div>
+          <div className="text-body-sm text-muted-foreground">{row.original.banco}</div>
+        </div>
+      ),
+    },
+    {
+      id: "saldo", header: "Saldo", meta: { width: COL_W.monto, align: "right" },
+      cell: ({ row }) => formatCurrency(row.original.saldo, row.original.moneda),
+    },
+  ]);
+
   return (
     <Card>
       <CardHeader className="pb-2">
         <CardTitle>Saldos bancarios</CardTitle>
       </CardHeader>
       <CardContent className="space-y-2">
-        {cuentas.length === 0 ? (
-          <EmptyStateInline icon={Landmark} message="Sin cuentas activas." className="py-4" />
-        ) : (
-          <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b">
-                <th className="text-left py-1 font-medium text-muted-foreground">Cuenta</th>
-                <th className="text-right py-1 font-medium text-muted-foreground">Saldo</th>
-              </tr>
-            </thead>
-            <tbody>
-              {cuentas.map((c) => (
-                <tr key={c.id} className="border-b last:border-0">
-                  <td className="py-1.5">
-                    <div className="truncate">{c.alias}</div>
-                    <div className="text-xs text-muted-foreground">{c.banco}</div>
-                  </td>
-                  <td className="py-1.5 text-right tabular-nums">
-                    {formatCurrency(c.saldo, c.moneda)}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-            <tfoot>
+        <DataTable
+          columns={columns}
+          data={cuentas}
+          rowKey={(c) => c.id}
+          density={TABLE_DENSITY.embebida}
+          emptyIcon={Landmark}
+          emptyMessage="Sin cuentas activas."
+          footer={() => (
+            <>
               <tr className="font-semibold">
-                <td className="py-2">Total MXN</td>
-                <td className="py-2 text-right tabular-nums">{formatCurrency(totalMxn, "MXN")}</td>
+                <td className="py-2 px-3">Total MXN</td>
+                <td className="py-2 px-3 text-right tabular-nums">{formatCurrency(totalMxn, "MXN")}</td>
               </tr>
               {totalUsd > 0 && (
                 <tr className="font-semibold">
-                  <td className="py-1">Total USD</td>
-                  <td className="py-1 text-right tabular-nums">{formatCurrency(totalUsd, "USD")}</td>
+                  <td className="py-1 px-3">Total USD</td>
+                  <td className="py-1 px-3 text-right tabular-nums">{formatCurrency(totalUsd, "USD")}</td>
                 </tr>
               )}
-            </tfoot>
-          </table>
-          </div>
-        )}
+            </>
+          )}
+        />
       </CardContent>
     </Card>
   );
