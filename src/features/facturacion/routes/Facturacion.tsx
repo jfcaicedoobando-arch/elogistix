@@ -128,24 +128,32 @@ export default function Facturacion() {
         <FacturacionBandejasTabs
             activeBandeja={activeBandeja}
             setActiveBandeja={setActiveBandeja}
-            search={search} setSearch={setSearch}
-            filterEstado={filterEstado} filterCliente={filterCliente} setFilter={setFilter}
-            desdeIso={desdeIso} setFechaDesde={setFechaDesde}
-            hastaIso={hastaIso} setFechaHasta={setFechaHasta}
-            clientesDisponibles={clientesDisponibles}
-            clearFiltros={clearFiltros}
-            exportarFacturasCsv={exportarFacturasCsv}
-            exportarLayoutContable={exportarLayoutContable}
-            facturaColumns={facturaColumns}
-            onCreateNew={() => setOpenFacturaManual(true)}
-            paginatedFacturas={paginatedFacturas}
-            facturasFiltradas={facturasFiltradas}
-            totalFacturas={facturas.length}
-            loadingFacturas={loadingFacturas}
-            errorFacturas={errorFacturas}
-            refetchFacturas={refetchFacturas}
-            page={page} totalPages={totalPages} setPage={setPage}
-            pageSize={pageSize} setPageSize={setPageSize}
+            emitidas={{
+              filtros: {
+                search, setSearch,
+                filterEstado, filterCliente, setFilter,
+                fechaDesde: desdeIso ?? "", setFechaDesde,
+                fechaHasta: hastaIso ?? "", setFechaHasta,
+                clientes: clientesDisponibles,
+                onClear: clearFiltros,
+              },
+              tabla: {
+                columns: facturaColumns,
+                data: paginatedFacturas,
+                facturasFiltradas,
+                totalFacturas: facturas.length,
+                isLoading: loadingFacturas,
+                isError: errorFacturas,
+                onRetry: refetchFacturas,
+                page, totalPages, setPage,
+                pageSize, setPageSize,
+              },
+              acciones: {
+                exportarFacturasCsv,
+                exportarLayoutContable,
+                onCreateNew: () => setOpenFacturaManual(true),
+              },
+            }}
         />
 
 

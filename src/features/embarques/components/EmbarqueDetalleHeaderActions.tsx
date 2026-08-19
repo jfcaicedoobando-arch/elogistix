@@ -10,34 +10,52 @@ import { CancelarEmbarqueDialog } from "./header/CancelarEmbarqueDialog";
 import { MenuMasAccionesEmbarque } from "./header/MenuMasAccionesEmbarque";
 import { usePermissions } from "@/hooks/shared/usePermissions";
 
-interface Props {
+/** Identidad y permisos del embarque (auditoría 2026-08-18, punto 7). */
+export interface AccionesEmbarqueContexto {
   expediente: string;
   estadoVisual: string;
   siguienteEstado: string | null;
   canEdit: boolean;
+  embarqueId: string;
+}
+
+/** Estado en vivo: banderas de carga y bloqueos. */
+export interface AccionesEmbarqueEstado {
   avanzandoEstado: boolean;
   trackingPending: boolean;
-  embarqueId: string;
   puedeReabrir: boolean;
   reabriendoEstado: boolean;
   docsFaltantes: string[];
   bloqueadoPorDocs: boolean;
+  cancelandoEmbarque: boolean;
+  tieneDeudaPendiente: boolean;
+}
+
+/** Gate de cierre (v13.89.1). */
+export interface AccionesEmbarqueCierre {
+  cierreEsSiguiente: boolean;
+  rolPuedeCerrar: boolean;
+  cierrePuedeAvanzar: boolean;
+  cierreMotivoBloqueo: "rol" | "checklist" | null;
+}
+
+/** Callbacks disparados por el usuario. */
+export interface AccionesEmbarqueCallbacks {
   onAvanzarEstado: () => void;
   onCompartirTracking: () => void;
   onAbrirEliminar: () => void;
   onAbrirDuplicar: () => void;
   onReabrir: (motivo: string) => void;
-  // v13.89.1 — Cierre gateado
-  cierreEsSiguiente: boolean;
-  rolPuedeCerrar: boolean;
-  cierrePuedeAvanzar: boolean;
-  cierreMotivoBloqueo: "rol" | "checklist" | null;
   onIrACierre: () => void;
   onIrADocumentos: () => void;
-  // B-058: cancelar y bloqueo de eliminar por deuda pendiente.
   onCancelar: (motivo: string) => Promise<void> | void;
-  cancelandoEmbarque: boolean;
-  tieneDeudaPendiente: boolean;
+}
+
+interface Props {
+  contexto: AccionesEmbarqueContexto;
+  estado: AccionesEmbarqueEstado;
+  cierre: AccionesEmbarqueCierre;
+  acciones: AccionesEmbarqueCallbacks;
 }
 
 const ESTADOS_TERMINALES = ["Entregado", "EIR", "Por liquidar", "Cerrado", "Cancelado"];
@@ -52,12 +70,18 @@ function derivarEstadoAcciones(estadoVisual: string) {
 }
 
 export function EmbarqueDetalleHeaderActions({
-  expediente, estadoVisual, siguienteEstado, canEdit, avanzandoEstado, trackingPending,
-  embarqueId, puedeReabrir, reabriendoEstado, docsFaltantes, bloqueadoPorDocs,
-  onAvanzarEstado, onCompartirTracking, onAbrirEliminar, onAbrirDuplicar, onReabrir,
-  cierreEsSiguiente, rolPuedeCerrar, cierrePuedeAvanzar, cierreMotivoBloqueo, onIrACierre, onIrADocumentos,
-  onCancelar, cancelandoEmbarque, tieneDeudaPendiente,
+  contexto, estado, cierre, acciones,
 }: Props) {
+  const { expediente, estadoVisual, siguienteEstado, canEdit, embarqueId } = contexto;
+  const {
+    avanzandoEstado, trackingPending, puedeReabrir, reabriendoEstado,
+    docsFaltantes, bloqueadoPorDocs, cancelandoEmbarque, tieneDeudaPendiente,
+  } = estado;
+  const { cierreEsSiguiente, rolPuedeCerrar, cierrePuedeAvanzar, cierreMotivoBloqueo } = cierre;
+  const {
+    onAvanzarEstado, onCompartirTracking, onAbrirEliminar, onAbrirDuplicar,
+    onReabrir, onIrACierre, onIrADocumentos, onCancelar,
+  } = acciones;
   // B-058 (v13.320.39): en estados terminales/cerrados el borrado ya no aplica.
   const { esTerminal, puedeCancelar } = derivarEstadoAcciones(estadoVisual);
   // FIX C1 (S5-01): el borrado exige rol admin/operador, igual que el guard del RPC.

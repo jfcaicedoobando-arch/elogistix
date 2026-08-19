@@ -15,7 +15,11 @@ import {
   HallazgosFiltrosFechas,
 } from "./HallazgosFiltros.parts";
 
-interface Props {
+/**
+ * Estado de filtros de hallazgos (auditoría 2026-08-18, punto 7):
+ * la pantalla pasa un solo objeto en vez de 19 props sueltas.
+ */
+export interface HallazgosFiltrosValores {
   search: string;
   filtroRegla: ReglaAuditoria | "todas";
   filtroSev: SeveridadAuditoria | "todas";
@@ -26,8 +30,6 @@ interface Props {
   etaHasta: Date | undefined;
   clientes: string[];
   hayFiltros: boolean;
-  filtrados: number;
-  total: number;
   setSearch: (v: string) => void;
   setFiltroRegla: (v: ReglaAuditoria | "todas") => void;
   setFiltroSev: (v: SeveridadAuditoria | "todas") => void;
@@ -39,7 +41,13 @@ interface Props {
   limpiar: () => void;
 }
 
-export function HallazgosFiltros(props: Props) {
+interface Props {
+  filtros: HallazgosFiltrosValores;
+  /** Conteo mostrado a la derecha: filtrados de total. */
+  conteo: { filtrados: number; total: number };
+}
+
+export function HallazgosFiltros({ filtros: props, conteo }: Props) {
   const [open, setOpen] = useState(false);
 
   const activeCount = useMemo(() => {
@@ -101,7 +109,7 @@ export function HallazgosFiltros(props: Props) {
           </div>
         </MobileFiltersSheet>
         <div className="ml-auto text-xs text-muted-foreground tabular-nums">
-          <span className="font-semibold text-foreground">{props.filtrados}</span>/{props.total}
+          <span className="font-semibold text-foreground">{conteo.filtrados}</span>/{conteo.total}
         </div>
       </div>
 
@@ -137,7 +145,7 @@ export function HallazgosFiltros(props: Props) {
         )}
 
         <div className="ml-auto text-xs text-muted-foreground tabular-nums">
-          <span className="font-semibold text-foreground">{props.filtrados}</span> de {props.total}
+          <span className="font-semibold text-foreground">{conteo.filtrados}</span> de {conteo.total}
         </div>
       </div>
     </div>

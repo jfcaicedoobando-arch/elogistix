@@ -13,40 +13,20 @@ import { BandejaVencidas } from "@/features/facturacion/components/bandejas/Band
 import { BandejaRepPendientes } from "@/features/facturacion/components/bandejas/BandejaRepPendientes";
 import { TabFacturasEmitidas } from "@/features/facturacion/components/TabFacturasEmitidas";
 import { NotasCreditoRecientes } from "@/features/facturacion/components/NotasCreditoRecientes";
-import type { ColumnDef } from "@/components/shared/DataTable";
-import type { Factura } from "@/features/facturacion/routes/facturacionColumns";
 
-interface ClienteOption { id: string; nombre: string }
+import type {
+  FacturasEmitidasAcciones, FacturasEmitidasFiltros, FacturasEmitidasTabla,
+} from "@/features/facturacion/components/facturasEmitidasProps";
 
 interface Props {
   activeBandeja: BandejaId;
   setActiveBandeja: (next: string) => void;
-  search: string;
-  setSearch: (v: string) => void;
-  filterEstado: string;
-  filterCliente: string;
-  setFilter: <K extends "estado" | "cliente">(k: K, v: string) => void;
-  desdeIso: string | null;
-  setFechaDesde: (v: string) => void;
-  hastaIso: string | null;
-  setFechaHasta: (v: string) => void;
-  clientesDisponibles: ClienteOption[];
-  clearFiltros: () => void;
-  exportarFacturasCsv: () => void;
-  exportarLayoutContable: () => void;
-  facturaColumns: ColumnDef<Factura, unknown>[];
-  onCreateNew: () => void;
-  paginatedFacturas: Factura[];
-  facturasFiltradas: Factura[];
-  totalFacturas: number;
-  loadingFacturas: boolean;
-  errorFacturas: boolean;
-  refetchFacturas: () => void;
-  page: number;
-  totalPages: number;
-  setPage: (n: number) => void;
-  pageSize: number;
-  setPageSize: (n: number) => void;
+  /** Props agrupadas de la bandeja "Emitidas" (auditoría punto 7). */
+  emitidas: {
+    filtros: FacturasEmitidasFiltros;
+    tabla: FacturasEmitidasTabla;
+    acciones: FacturasEmitidasAcciones;
+  };
 }
 
 export function FacturacionBandejasTabs(p: Props) {
@@ -78,26 +58,7 @@ export function FacturacionBandejasTabs(p: Props) {
         <BandejaRepPendientes />
       </TabsContent>
       <TabsContent value="emitidas" className="space-y-4">
-        <TabFacturasEmitidas
-          search={p.search} setSearch={p.setSearch}
-          filterEstado={p.filterEstado} filterCliente={p.filterCliente} setFilter={p.setFilter}
-          fechaDesde={p.desdeIso ?? ""} setFechaDesde={p.setFechaDesde}
-          fechaHasta={p.hastaIso ?? ""} setFechaHasta={p.setFechaHasta}
-          clientes={p.clientesDisponibles}
-          onClearFiltros={p.clearFiltros}
-          exportarFacturasCsv={p.exportarFacturasCsv}
-          exportarLayoutContable={p.exportarLayoutContable}
-          columns={p.facturaColumns}
-          onCreateNew={p.onCreateNew}
-          data={p.paginatedFacturas}
-          facturasFiltradas={p.facturasFiltradas}
-          totalFacturas={p.totalFacturas}
-          isLoading={p.loadingFacturas}
-          isError={p.errorFacturas}
-          onRetry={p.refetchFacturas}
-          page={p.page} totalPages={p.totalPages} setPage={p.setPage}
-          pageSize={p.pageSize} setPageSize={p.setPageSize}
-        />
+        <TabFacturasEmitidas {...p.emitidas} />
       </TabsContent>
       <TabsContent value="notas" className="space-y-4">
         <NotasCreditoRecientes />
