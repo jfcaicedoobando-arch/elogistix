@@ -62,8 +62,9 @@ export default function OportunidadesFiltersBar({ etapas, vendedores, value, onC
         <DatePickerMx value={value.cierreHasta} onChange={(v) => set("cierreHasta", v)} className="w-full" />
       </div>
       <div className="space-y-1">
-        <Label>Monto mínimo</Label>
+        <Label htmlFor="filtro-monto-minimo">Monto mínimo</Label>
         <Input
+          id="filtro-monto-minimo"
           type="number" min={0} inputMode="numeric"
           value={value.montoMin}
           onChange={(e) => set("montoMin", e.target.value)}

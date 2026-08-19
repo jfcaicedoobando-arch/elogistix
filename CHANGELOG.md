@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.675.2] - 2026-08-19
+
+### CI verde
+- **Accesibilidad de formularios (167 advertencias):** cada `<Input>` de `src/features/**` ya tiene etiqueta: `id` + `<Label htmlFor>` cuando hay etiqueta visible, o `aria-label` descriptivo en buscadores, celdas de tabla y filas repetidas. Analogía: le pusimos nombre a cada casilla del formulario, para que un lector de pantalla sepa qué está llenando.
+- **Power of 10:** `CotizacionDetalleContenido.tsx` (204 líneas) volvió a 162 al mover sus tipos de props a `cotizacionDetalleContenido.types.ts`.
+
 ## [13.675.1] - 2026-08-18
 
 ### Sentry

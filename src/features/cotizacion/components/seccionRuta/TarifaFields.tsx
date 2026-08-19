@@ -20,6 +20,7 @@ export function TransitoField({ ctx, tarifaCtx }: { ctx: Ctx; tarifaCtx: TarifaC
           placeholder="Ej. 25"
           readOnly={locked}
           className={locked ? "bg-muted/40" : undefined}
+          aria-label="Tiempo de tránsito en días"
         />
         {tarifaCtx.tieneTarifa && tarifaCtx.hasTransito && (
           <HeredadoBadge tipoOrigen="tarifa" origen="vinculada" className="shrink-0" />
@@ -70,6 +71,7 @@ export function FclLclFields({ ctx, tipoEmbarque, tarifaCtx }: { ctx: Ctx; tipoE
               placeholder="Ej. 7"
               readOnly={tarifaCtx.hasDiasLibres}
               className={tarifaCtx.hasDiasLibres ? "bg-muted/40" : undefined}
+              aria-label="Días libres en destino"
             />
             {tarifaCtx.tieneTarifa && tarifaCtx.hasDiasLibres && (
               <HeredadoBadge tipoOrigen="tarifa" origen="vinculada" className="shrink-0" />
@@ -83,7 +85,7 @@ export function FclLclFields({ ctx, tipoEmbarque, tarifaCtx }: { ctx: Ctx; tipoE
   if (tipoEmbarque === 'LCL') {
     return (
       <FormField label="Días libres de almacenaje">
-        <Input type="number" min={0} value={watch("diasAlmacenaje")} onChange={e => setValue("diasAlmacenaje", Number(e.target.value), OPTS)} placeholder="Ej. 5" />
+        <Input type="number" min={0} value={watch("diasAlmacenaje")} onChange={e => setValue("diasAlmacenaje", Number(e.target.value), OPTS)} placeholder="Ej. 5" aria-label="Días libres de almacenaje" />
       </FormField>
     );
   }

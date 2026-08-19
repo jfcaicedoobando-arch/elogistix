@@ -66,10 +66,10 @@ export function PagoProveedorFormBody(p: Props) {
       <FormSection title="Monto">
         <div className={cn("grid grid-cols-1 gap-3", p.showTc ? "sm:grid-cols-3" : "sm:grid-cols-2")}>
           <div className="space-y-1">
-            <Label>Monto</Label>
+            <Label htmlFor="pago-prov-monto">Monto</Label>
             <div className="relative">
               <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">$</span>
-              <Input type="number" step="0.01" inputMode="decimal" placeholder="0.00"
+              <Input id="pago-prov-monto" type="number" step="0.01" inputMode="decimal" placeholder="0.00"
                 className="pl-7 text-right tabular-nums"
                 value={p.monto} onChange={(e) => p.setMonto(e.target.value)} />
             </div>
@@ -123,10 +123,10 @@ export function PagoProveedorFormBody(p: Props) {
       {p.esUsdPagadoEnMxn && (
         <FormSection title="Diferencia cambiaria">
           <div className="space-y-1">
-            <Label>Diferencia cambiaria MXN (opcional)</Label>
+            <Label htmlFor="pago-prov-diff-mxn">Diferencia cambiaria MXN (opcional)</Label>
             <div className="relative">
               <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">$</span>
-              <Input type="number" step="0.01" inputMode="decimal" placeholder="0.00"
+              <Input id="pago-prov-diff-mxn" type="number" step="0.01" inputMode="decimal" placeholder="0.00"
                 className="pl-7 text-right tabular-nums"
                 value={p.diffMxn} onChange={(e) => p.setDiffMxn(e.target.value)} />
             </div>
@@ -139,8 +139,8 @@ export function PagoProveedorFormBody(p: Props) {
 
       <FormSection title="Referencia y notas">
         <div className="space-y-1">
-          <Label>Referencia</Label>
-          <Input value={p.referencia} onChange={(e) => p.setReferencia(e.target.value)}
+          <Label htmlFor="pago-prov-referencia">Referencia</Label>
+          <Input id="pago-prov-referencia" value={p.referencia} onChange={(e) => p.setReferencia(e.target.value)}
             placeholder={referenciaHint(p.metodo)} />
           <p className="text-label text-muted-foreground">{referenciaHint(p.metodo)}</p>
         </div>

@@ -86,7 +86,7 @@ export default function SeccionMercanciaAerea({ msdsFile, setMsdsFile }: Props) 
                       <NumericInput value={dim.ancho_cm} onChange={n => actualizarDimension(i, 'ancho_cm', n)} decimals aria-label="Ancho en centímetros" />
                     </TableCell>
                     <TableCell>
-                      <Input value={dim.peso_volumetrico_kg.toFixed(2)} readOnly className="h-8 bg-muted text-right tabular-nums" />
+                      <Input value={dim.peso_volumetrico_kg.toFixed(2)} readOnly aria-label="Peso volumétrico en kilogramos" className="h-8 bg-muted text-right tabular-nums" />
                     </TableCell>
                     <TableCell>
                       <Button variant="ghost" size="icon" onClick={() => eliminarFila(i)} disabled={dimensiones.length <= 1} className="h-8 w-8" aria-label="Eliminar fila">

@@ -26,8 +26,9 @@ export function PaisAgenteSelect({ c }: { c: Controller }) {
 export function RfcField({ c }: { c: Controller }) {
   return (
     <div className="space-y-2">
-      <Label>{c.rfcLabel} *</Label>
+      <Label htmlFor="nuevo-proveedor-rfc">{c.rfcLabel} *</Label>
       <Input
+        id="nuevo-proveedor-rfc"
         value={c.form.rfc}
         onChange={(e) => c.setField("rfc", e.target.value)}
         placeholder={c.form.origen_proveedor === "Extranjero" ? "Ingresa el Tax ID" : "Ingresa el RFC"}

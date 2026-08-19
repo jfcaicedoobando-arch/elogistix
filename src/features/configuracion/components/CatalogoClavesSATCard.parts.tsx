@@ -25,8 +25,8 @@ export function EditRow({ draft, setDraft, onCancel, onSave, busy, valid }: Edit
   const p = (patch: Partial<Draft>) => setDraft({ ...draft, ...patch });
   return (
     <DetailTableRow className="bg-muted/30" hoverable={false}>
-      <TableCell><Input value={draft.patron} onChange={(e) => p({ patron: e.target.value })} placeholder="Flete Marítimo" /></TableCell>
-      <TableCell><Input value={draft.clave_sat} onChange={(e) => p({ clave_sat: e.target.value })} placeholder="78101800" /></TableCell>
+      <TableCell><Input aria-label="Patrón de descripción" value={draft.patron} onChange={(e) => p({ patron: e.target.value })} placeholder="Flete Marítimo" /></TableCell>
+      <TableCell><Input aria-label="Clave SAT" value={draft.clave_sat} onChange={(e) => p({ clave_sat: e.target.value })} placeholder="78101800" /></TableCell>
       <TableCell>
         <Select value={draft.tipo_iva} onValueChange={(v) => p({ tipo_iva: v as TipoIva })}>
           <SelectTrigger><SelectValue /></SelectTrigger>

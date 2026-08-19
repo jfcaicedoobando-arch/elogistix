@@ -22,8 +22,9 @@ export default function LeadIcpFields({ form, set, canEdit }: Props) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
       <div className="space-y-1">
-        <Label>Sector / giro</Label>
+        <Label htmlFor="lead-icp-sector">Sector / giro</Label>
         <Input
+          id="lead-icp-sector"
           placeholder="Automotriz, agroindustria…"
           value={form.sector}
           onChange={(e) => set("sector", e.target.value)}
@@ -31,8 +32,9 @@ export default function LeadIcpFields({ form, set, canEdit }: Props) {
         />
       </div>
       <div className="space-y-1">
-        <Label>Sitio web</Label>
+        <Label htmlFor="lead-icp-sitio-web">Sitio web</Label>
         <Input
+          id="lead-icp-sitio-web"
           placeholder="https://"
           value={form.sitio_web}
           onChange={(e) => set("sitio_web", e.target.value)}
@@ -40,8 +42,9 @@ export default function LeadIcpFields({ form, set, canEdit }: Props) {
         />
       </div>
       <div className="space-y-1">
-        <Label>Años establecida</Label>
+        <Label htmlFor="lead-icp-anios-establecida">Años establecida</Label>
         <Input
+          id="lead-icp-anios-establecida"
           type="number"
           min={0}
           value={form.anios_establecida}
@@ -50,8 +53,9 @@ export default function LeadIcpFields({ form, set, canEdit }: Props) {
         />
       </div>
       <div className="space-y-1">
-        <Label>Proveedor actual</Label>
+        <Label htmlFor="lead-icp-proveedor-actual">Proveedor actual</Label>
         <Input
+          id="lead-icp-proveedor-actual"
           placeholder="Forwarder o naviera que usa hoy"
           value={form.proveedor_actual}
           onChange={(e) => set("proveedor_actual", e.target.value)}
@@ -59,8 +63,9 @@ export default function LeadIcpFields({ form, set, canEdit }: Props) {
         />
       </div>
       <div className="space-y-1">
-        <Label>Mercancía</Label>
+        <Label htmlFor="lead-icp-mercancia">Mercancía</Label>
         <Input
+          id="lead-icp-mercancia"
           placeholder="Autopartes, resinas…"
           value={form.mercancia}
           onChange={(e) => set("mercancia", e.target.value)}
@@ -68,8 +73,9 @@ export default function LeadIcpFields({ form, set, canEdit }: Props) {
         />
       </div>
       <div className="space-y-1">
-        <Label>Rutas</Label>
+        <Label htmlFor="lead-icp-rutas">Rutas</Label>
         <Input
+          id="lead-icp-rutas"
           placeholder="Shanghái → Manzanillo"
           value={form.rutas}
           onChange={(e) => set("rutas", e.target.value)}
@@ -77,8 +83,9 @@ export default function LeadIcpFields({ form, set, canEdit }: Props) {
         />
       </div>
       <div className="space-y-1">
-        <Label>Aduana / puerto</Label>
+        <Label htmlFor="lead-icp-aduana-puerto">Aduana / puerto</Label>
         <Input
+          id="lead-icp-aduana-puerto"
           value={form.aduana_puerto}
           onChange={(e) => set("aduana_puerto", e.target.value)}
           disabled={!canEdit}
@@ -99,8 +106,9 @@ export default function LeadIcpFields({ form, set, canEdit }: Props) {
         </Select>
       </div>
       <div className="space-y-1">
-        <Label>Volumen</Label>
+        <Label htmlFor="lead-icp-volumen">Volumen</Label>
         <Input
+          id="lead-icp-volumen"
           placeholder="4 contenedores 40' HC"
           value={form.volumen}
           onChange={(e) => set("volumen", e.target.value)}
@@ -155,8 +163,9 @@ export default function LeadIcpFields({ form, set, canEdit }: Props) {
         </Select>
       </div>
       <div className="space-y-1">
-        <Label>Fecha de nutrición</Label>
+        <Label htmlFor="lead-icp-fecha-nutricion">Fecha de nutrición</Label>
         <Input
+          id="lead-icp-fecha-nutricion"
           type="date"
           value={form.fecha_nutricion}
           onChange={(e) => set("fecha_nutricion", e.target.value)}
@@ -164,8 +173,9 @@ export default function LeadIcpFields({ form, set, canEdit }: Props) {
         />
       </div>
       <div className="sm:col-span-2 space-y-1">
-        <Label>Motivo de nutrición</Label>
+        <Label htmlFor="lead-icp-motivo-nutricion">Motivo de nutrición</Label>
         <Input
+          id="lead-icp-motivo-nutricion"
           placeholder="Por qué no avanza ahora"
           value={form.motivo_nutricion}
           onChange={(e) => set("motivo_nutricion", e.target.value)}

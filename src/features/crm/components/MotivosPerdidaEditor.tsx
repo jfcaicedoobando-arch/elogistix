@@ -41,7 +41,7 @@ export default function MotivosPerdidaEditor() {
       <CardHeader><CardTitle>Motivos de pérdida</CardTitle></CardHeader>
       <CardContent className="space-y-3">
         <div className="flex gap-2">
-          <Input placeholder="Nuevo motivo..." value={nuevo} onChange={(e) => setNuevo(e.target.value)} />
+          <Input aria-label="Nuevo motivo" placeholder="Nuevo motivo..." value={nuevo} onChange={(e) => setNuevo(e.target.value)} />
           <Button onClick={handleCrear} disabled={!nuevo.trim() || crear.isPending}>
             <Plus className="h-4 w-4 mr-1" /> Agregar
           </Button>

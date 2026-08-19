@@ -69,6 +69,7 @@ export default function PlantillasMensajeEditor() {
         <div className="border rounded-md p-3 space-y-2 bg-muted/30">
           <div className="grid grid-cols-1 md:grid-cols-[1fr_140px] gap-2">
             <Input
+              aria-label="Nombre de la plantilla"
               placeholder="Nombre de la plantilla"
               value={nuevo.nombre}
               onChange={(e) => setNuevo((n) => ({ ...n, nombre: e.target.value }))}
@@ -83,6 +84,7 @@ export default function PlantillasMensajeEditor() {
           </div>
           {nuevo.canal === "email" && (
             <Input
+              aria-label="Asunto (sólo email)"
               placeholder="Asunto (sólo email)"
               value={nuevo.asunto}
               onChange={(e) => setNuevo((n) => ({ ...n, asunto: e.target.value }))}
@@ -116,6 +118,7 @@ export default function PlantillasMensajeEditor() {
                     {p.canal === "email" ? <Mail className="h-3.5 w-3.5 text-muted-foreground" /> : <MessageSquare className="h-3.5 w-3.5 text-muted-foreground" />}
                     <Input
                       defaultValue={p.nombre}
+                      aria-label={`Nombre de la plantilla ${p.nombre}`}
                       className="h-8 font-medium"
                       onBlur={(e) => {
                         if (e.target.value !== p.nombre) actualizar.mutate({ id: p.id, patch: { nombre: e.target.value } });
@@ -142,6 +145,7 @@ export default function PlantillasMensajeEditor() {
                 {p.canal === "email" && (
                   <Input
                     defaultValue={p.asunto}
+                    aria-label={`Asunto de la plantilla ${p.nombre}`}
                     placeholder="Asunto"
                     className="h-8 text-xs"
                     onBlur={(e) => {

@@ -51,12 +51,12 @@ export default function QuickCreateLeadPopover({ onCreated, onMore, onClose }: P
     <div className="space-y-3 w-72">
       <SectionHeading as="h3">Nuevo lead</SectionHeading>
       <div className="space-y-1">
-        <Label>Empresa *</Label>
-        <Input autoFocus value={empresa} onChange={(e) => setEmpresa(e.target.value)} placeholder="Acme Logistics" onKeyDown={(e) => { if (e.key === "Enter") submit(); }} />
+        <Label htmlFor="qc-lead-empresa">Empresa *</Label>
+        <Input id="qc-lead-empresa" autoFocus value={empresa} onChange={(e) => setEmpresa(e.target.value)} placeholder="Acme Logistics" onKeyDown={(e) => { if (e.key === "Enter") submit(); }} />
       </div>
       <div className="space-y-1">
-        <Label>Email o teléfono</Label>
-        <Input value={contacto} onChange={(e) => setContacto(e.target.value)} placeholder="ana@acme.com o 555..." onKeyDown={(e) => { if (e.key === "Enter") submit(); }} />
+        <Label htmlFor="qc-lead-contacto">Email o teléfono</Label>
+        <Input id="qc-lead-contacto" value={contacto} onChange={(e) => setContacto(e.target.value)} placeholder="ana@acme.com o 555..." onKeyDown={(e) => { if (e.key === "Enter") submit(); }} />
       </div>
       <div className="flex items-center justify-between pt-1">
         <Button variant="ghost" size="sm" onClick={onMore} className="text-xs">Más campos →</Button>

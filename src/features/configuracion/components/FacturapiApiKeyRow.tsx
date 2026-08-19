@@ -82,6 +82,8 @@ export function FacturapiApiKeyRow({ orgId, ambiente, last4, label, prefijo }: A
       </div>
       <div className="flex gap-2">
         <Input
+          id={`facturapi-apikey-${ambiente}`}
+          aria-label={`API key — ${label}`}
           type="password"
           autoComplete="off"
           placeholder={cargada ? "Pega una nueva key para reemplazar" : `${prefijo}…`}

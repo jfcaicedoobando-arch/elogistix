@@ -38,6 +38,7 @@ export function NotaCreditoConceptosEditor(props: Props) {
                 value={c.descripcion}
                 onChange={(e) => onUpdate(i, { descripcion: e.target.value })}
                 placeholder="Descripción del concepto"
+                aria-label={`Descripción del concepto ${i + 1}`}
               />
             </div>
             <div className="col-span-3 sm:col-span-2 space-y-1">
@@ -65,6 +66,7 @@ export function NotaCreditoConceptosEditor(props: Props) {
               <Input
                 value={c.clave_sat ?? ""}
                 onChange={(e) => onUpdate(i, { clave_sat: e.target.value })}
+                aria-label={`Clave SAT del concepto ${i + 1}`}
               />
             </div>
             <div className="col-span-1 flex justify-end">

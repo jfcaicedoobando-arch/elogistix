@@ -66,8 +66,9 @@ export function SugerirEmbarqueBlock({
           </Button>
         </div>
         <div className="space-y-1">
-          <Label>Descripción del concepto a crear</Label>
+          <Label htmlFor="sugerir-embarque-concepto">Descripción del concepto a crear</Label>
           <Input
+            id="sugerir-embarque-concepto"
             value={seleccionado.concepto}
             onChange={(e) => onSeleccionar({ ...seleccionado, concepto: e.target.value })}
             placeholder="Ej. Flete marítimo, Maniobras, Demoras…"
@@ -99,6 +100,7 @@ export function SugerirEmbarqueBlock({
           onChange={(e) => setTerm(e.target.value)}
           placeholder="Buscar por expediente, BL o cliente…"
           className="pl-8 h-9"
+          aria-label="Buscar embarque por expediente, BL o cliente"
         />
       </div>
 

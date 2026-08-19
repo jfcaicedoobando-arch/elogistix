@@ -90,7 +90,7 @@ export default function SeccionMercanciaMaritimaLCL({ msdsFile, setMsdsFile }: P
                       <NumericInput value={dim.ancho_cm} onChange={n => actualizarDimension(i, 'ancho_cm', n)} decimals aria-label="Ancho en centímetros" />
                     </TableCell>
                     <TableCell>
-                      <Input value={dim.volumen_m3.toFixed(4)} readOnly className="h-8 bg-muted text-right tabular-nums" />
+                      <Input value={dim.volumen_m3.toFixed(4)} readOnly aria-label="Volumen en metros cúbicos" className="h-8 bg-muted text-right tabular-nums" />
                     </TableCell>
                     <TableCell>
                       <Button variant="ghost" size="icon" onClick={() => eliminarFila(i)} disabled={dimensiones.length <= 1} className="h-8 w-8" aria-label="Eliminar fila">

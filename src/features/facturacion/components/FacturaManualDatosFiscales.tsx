@@ -46,8 +46,9 @@ export function FacturaManualDatosFiscales({ value, onChange, diasReadonly, dias
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
       <div className="space-y-1.5">
-        <Label>Días crédito</Label>
+        <Label htmlFor="factura-manual-dias-credito">Días crédito</Label>
         <Input
+          id="factura-manual-dias-credito"
           type="number" min={0} max={365} value={value.diasCredito}
           onChange={(e) => onChange({ diasCredito: Math.max(0, Number(e.target.value) || 0) })}
           readOnly={diasReadonly}
@@ -112,9 +113,10 @@ export function FacturaManualDatosFiscales({ value, onChange, diasReadonly, dias
         </Select>
       </div>
       <div className="space-y-1.5">
-        <Label>Tipo de cambio</Label>
+        <Label htmlFor="factura-manual-tipo-cambio">Tipo de cambio</Label>
         <div className="flex gap-1">
           <Input
+            id="factura-manual-tipo-cambio"
             type="number" step="0.0001" min={0.0001}
             value={value.tipoCambio}
             onChange={(e) => onChange({ tipoCambio: Number(e.target.value) || 1 })}

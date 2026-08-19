@@ -39,12 +39,14 @@ interface TextFieldProps {
 }
 
 export function TextField({ label, field, form, setForm, full, required }: TextFieldProps) {
+  const inputId = `editar-cliente-${field}`;
   return (
     <div className={full ? "md:col-span-2" : undefined}>
-      <Label>
+      <Label htmlFor={inputId}>
         {label}{required && <span className="text-destructive ml-0.5">*</span>}
       </Label>
       <Input
+        id={inputId}
         value={form[field]}
         onChange={(e) =>
           setForm((p) => ({

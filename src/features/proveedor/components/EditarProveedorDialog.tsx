@@ -74,8 +74,9 @@ export default function EditarProveedorDialog({ proveedor, open, onOpenChange, o
         </div>
 
         <div className="space-y-2">
-          <Label>Nombre *</Label>
+          <Label htmlFor="editar-proveedor-nombre">Nombre *</Label>
           <Input
+            id="editar-proveedor-nombre"
             value={c.form.nombre}
             onChange={(e) => c.setField("nombre", e.target.value.toLocaleUpperCase("es-MX"))}
             onBlur={() => c.markTouched("nombre")}
@@ -131,8 +132,9 @@ export default function EditarProveedorDialog({ proveedor, open, onOpenChange, o
 
         {(!c.isAgenteCarga || c.form.pais) && (
           <div className="space-y-2">
-            <Label>{c.rfcLabel} *</Label>
+            <Label htmlFor="editar-proveedor-rfc">{c.rfcLabel} *</Label>
             <Input
+              id="editar-proveedor-rfc"
               value={c.form.rfc}
               onChange={(e) => c.setField("rfc", e.target.value)}
               onBlur={() => c.markTouched("rfc")}
@@ -145,12 +147,13 @@ export default function EditarProveedorDialog({ proveedor, open, onOpenChange, o
         {c.isGasto && <EditarProveedorGastoFiscalFields c={c} />}
 
         <div className="space-y-2">
-          <Label>Contacto</Label>
-          <Input value={c.form.contacto} onChange={(e) => c.setField("contacto", e.target.value)} />
+          <Label htmlFor="editar-proveedor-contacto">Contacto</Label>
+          <Input id="editar-proveedor-contacto" value={c.form.contacto} onChange={(e) => c.setField("contacto", e.target.value)} />
         </div>
         <div className="space-y-2">
-          <Label>Email</Label>
+          <Label htmlFor="editar-proveedor-email">Email</Label>
           <Input
+            id="editar-proveedor-email"
             type="email"
             value={c.form.email}
             onChange={(e) => c.setField("email", e.target.value)}
@@ -159,8 +162,8 @@ export default function EditarProveedorDialog({ proveedor, open, onOpenChange, o
           <FieldError message={c.fieldErrorMessage("email")} />
         </div>
         <div className="space-y-2">
-          <Label>Teléfono</Label>
-          <Input value={c.form.telefono} onChange={(e) => c.setField("telefono", e.target.value)} />
+          <Label htmlFor="editar-proveedor-telefono">Teléfono</Label>
+          <Input id="editar-proveedor-telefono" value={c.form.telefono} onChange={(e) => c.setField("telefono", e.target.value)} />
         </div>
         <div className="space-y-2">
           <Label>Moneda Preferida</Label>
@@ -173,8 +176,9 @@ export default function EditarProveedorDialog({ proveedor, open, onOpenChange, o
         </div>
         {/* v13.315.8 (QW2) — días de crédito por defecto para facturas de este proveedor. */}
         <div className="space-y-2">
-          <Label>Días de crédito</Label>
+          <Label htmlFor="editar-proveedor-dias-credito">Días de crédito</Label>
           <Input
+            id="editar-proveedor-dias-credito"
             type="number"
             min={0}
             value={c.form.dias_credito ?? 0}

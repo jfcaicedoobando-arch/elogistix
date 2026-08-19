@@ -56,13 +56,13 @@ export function OrgDatosGeneralesCard({
           <div>
             <p className="text-muted-foreground mb-1">Nombre</p>
             {editing
-              ? <Input value={editNombre} onChange={(e) => setEditNombre(e.target.value)} maxLength={100} />
+              ? <Input id="org-edit-nombre" aria-label="Nombre de la organización" value={editNombre} onChange={(e) => setEditNombre(e.target.value)} maxLength={100} />
               : <p className="font-medium">{org.nombre}</p>}
           </div>
           <div>
             <p className="text-muted-foreground mb-1">RFC</p>
             {editing
-              ? <Input value={editRfc} onChange={(e) => setEditRfc(e.target.value.toUpperCase())} maxLength={13} />
+              ? <Input id="org-edit-rfc" aria-label="RFC de la organización" value={editRfc} onChange={(e) => setEditRfc(e.target.value.toUpperCase())} maxLength={13} />
               : <p className="font-medium">{org.rfc || "—"}</p>}
           </div>
           <div>

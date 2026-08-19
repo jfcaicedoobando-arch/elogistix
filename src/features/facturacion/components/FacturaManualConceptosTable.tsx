@@ -77,6 +77,7 @@ export function FacturaManualConceptosTable({ conceptos, moneda, onChange }: Pro
                     onChange={(e) => update(idx, { descripcion: e.target.value })}
                     placeholder="Ej. Anticipo servicios logísticos"
                     className="h-9"
+                    aria-label={`Descripción del concepto ${idx + 1}`}
                   />
                 </div>
                 <div className="col-span-2">
@@ -85,6 +86,7 @@ export function FacturaManualConceptosTable({ conceptos, moneda, onChange }: Pro
                     onChange={(e) => update(idx, { clave_sat: e.target.value })}
                     placeholder="78101800"
                     className="h-9 font-mono text-xs"
+                    aria-label={`Clave SAT del concepto ${idx + 1}`}
                   />
                 </div>
                 <div className="col-span-1">

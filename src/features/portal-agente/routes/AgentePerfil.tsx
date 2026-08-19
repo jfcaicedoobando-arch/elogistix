@@ -63,8 +63,9 @@ export default function AgentePerfil() {
       <Card className="p-4 space-y-3">
         <SectionHeading>Cambiar contraseña</SectionHeading>
         <div className="space-y-2">
-          <Label>Nueva contraseña</Label>
+          <Label htmlFor="agente-nueva-password">Nueva contraseña</Label>
           <Input
+            id="agente-nueva-password"
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}

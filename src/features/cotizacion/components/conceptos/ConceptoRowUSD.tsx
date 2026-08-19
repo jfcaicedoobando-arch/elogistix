@@ -45,6 +45,7 @@ export function ConceptoRowUSD({ concepto: c, index: i, total, actualizar, elimi
           }}
           onBlur={e => { if (e.target.value === '') actualizar(i, 'cantidad', 1); }}
           placeholder="1"
+          aria-label="Cantidad"
         />
       </div>
       <div className="col-span-2">
@@ -59,6 +60,7 @@ export function ConceptoRowUSD({ concepto: c, index: i, total, actualizar, elimi
           }}
           onBlur={e => { if (e.target.value === '') actualizar(i, 'precio_unitario', 0); }}
           placeholder="0.00"
+          aria-label="Precio unitario en dólares"
         />
       </div>
       <div className="col-span-1">
@@ -83,7 +85,7 @@ export function ConceptoRowUSD({ concepto: c, index: i, total, actualizar, elimi
       </div>
       <div className="col-span-2">
         {i === 0 && <Label size="sm">Total (USD)</Label>}
-        <Input value={formatCurrency(c.total, 'USD')} readOnly className="bg-muted" />
+        <Input value={formatCurrency(c.total, 'USD')} readOnly aria-label="Total en dólares" className="bg-muted" />
       </div>
       <div className="col-span-1">
         {i === 0 && <Label size="sm">&nbsp;</Label>}

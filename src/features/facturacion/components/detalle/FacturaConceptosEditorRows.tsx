@@ -105,12 +105,12 @@ export function FormRow({ draft, setDraft, onCancel, onSave, busy }: FormProps) 
   return (
     <div className="grid grid-cols-12 gap-2 items-end border rounded-md p-2 bg-muted/30">
       <div className="col-span-6">
-        <Label size="sm">Descripción</Label>
-        <Input value={draft.descripcion} onChange={(e) => patch({ descripcion: e.target.value })} />
+        <Label size="sm" htmlFor="concepto-descripcion">Descripción</Label>
+        <Input id="concepto-descripcion" value={draft.descripcion} onChange={(e) => patch({ descripcion: e.target.value })} />
       </div>
       <div className="col-span-2">
-        <Label size="sm">Clave SAT</Label>
-        <Input value={draft.clave_sat ?? ""} onChange={(e) => patch({ clave_sat: e.target.value })} />
+        <Label size="sm" htmlFor="concepto-clave-sat">Clave SAT</Label>
+        <Input id="concepto-clave-sat" value={draft.clave_sat ?? ""} onChange={(e) => patch({ clave_sat: e.target.value })} />
       </div>
       <div className="col-span-1">
         <Label size="sm">Cant.</Label>

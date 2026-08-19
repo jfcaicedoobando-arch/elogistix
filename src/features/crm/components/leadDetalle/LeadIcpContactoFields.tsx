@@ -16,8 +16,9 @@ export default function LeadIcpContactoFields({ form, set, canEdit }: Props) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
       <div className="space-y-1">
-        <Label>Cargo del contacto</Label>
+        <Label htmlFor="lead-icp-cargo-contacto">Cargo del contacto</Label>
         <Input
+          id="lead-icp-cargo-contacto"
           placeholder="Compras, Tráfico, Dirección…"
           value={form.cargo_contacto}
           onChange={(e) => set("cargo_contacto", e.target.value)}
@@ -25,8 +26,9 @@ export default function LeadIcpContactoFields({ form, set, canEdit }: Props) {
         />
       </div>
       <div className="space-y-1">
-        <Label>Origen</Label>
+        <Label htmlFor="lead-icp-origen">Origen</Label>
         <Input
+          id="lead-icp-origen"
           placeholder="Shanghái, CN"
           value={form.origen}
           onChange={(e) => set("origen", e.target.value)}
@@ -34,8 +36,9 @@ export default function LeadIcpContactoFields({ form, set, canEdit }: Props) {
         />
       </div>
       <div className="space-y-1">
-        <Label>Destino / entrega</Label>
+        <Label htmlFor="lead-icp-destino">Destino / entrega</Label>
         <Input
+          id="lead-icp-destino"
           placeholder="Toluca, MX"
           value={form.destino}
           onChange={(e) => set("destino", e.target.value)}

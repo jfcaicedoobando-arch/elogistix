@@ -149,8 +149,8 @@ export default function NuevaActividadDialog({ open, onOpenChange, defaultEntida
         </div>
       </div>
       <div className="space-y-1">
-        <Label>Asunto</Label>
-        <Input value={asunto} onChange={(e) => setAsunto(e.target.value)} placeholder="Llamar a cliente, enviar cotización…" />
+        <Label htmlFor="nueva-actividad-asunto">Asunto</Label>
+        <Input id="nueva-actividad-asunto" value={asunto} onChange={(e) => setAsunto(e.target.value)} placeholder="Llamar a cliente, enviar cotización…" />
       </div>
       <div className="space-y-1">
         <Label>Descripción</Label>

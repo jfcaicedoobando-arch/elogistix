@@ -98,7 +98,7 @@ export function StepDatosRutaMaritimo({ errors, cotizacionAgenteId, cotizacionNa
       <div className="space-y-2 md:col-span-2">
         <Label>Contenedores *</Label>
         {tipoServicio === 'LCL' ? (
-          <Input value="LCL (Carga Consolidada) — se asigna automáticamente" disabled />
+          <Input aria-label="Contenedores" value="LCL (Carga Consolidada) — se asigna automáticamente" disabled />
         ) : (
           <>
             <Controller

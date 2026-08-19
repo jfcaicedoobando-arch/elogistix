@@ -95,16 +95,16 @@ export function ContactoFields({ c }: { c: Controller }) {
   return (
     <>
       <div className="space-y-2">
-        <Label>Contacto</Label>
-        <Input value={c.form.contacto} onChange={(e) => c.setField("contacto", e.target.value)} />
+        <Label htmlFor="nuevo-proveedor-contacto">Contacto</Label>
+        <Input id="nuevo-proveedor-contacto" value={c.form.contacto} onChange={(e) => c.setField("contacto", e.target.value)} />
       </div>
       <div className="space-y-2">
-        <Label>Email</Label>
-        <Input type="email" value={c.form.email} onChange={(e) => c.setField("email", e.target.value)} />
+        <Label htmlFor="nuevo-proveedor-email">Email</Label>
+        <Input id="nuevo-proveedor-email" type="email" value={c.form.email} onChange={(e) => c.setField("email", e.target.value)} />
       </div>
       <div className="space-y-2">
-        <Label>Teléfono</Label>
-        <Input value={c.form.telefono} onChange={(e) => c.setField("telefono", e.target.value)} />
+        <Label htmlFor="nuevo-proveedor-telefono">Teléfono</Label>
+        <Input id="nuevo-proveedor-telefono" value={c.form.telefono} onChange={(e) => c.setField("telefono", e.target.value)} />
       </div>
       {!c.isGasto && (
         <div className="space-y-2">
@@ -119,8 +119,9 @@ export function ContactoFields({ c }: { c: Controller }) {
       )}
       {/* v13.315.8 (QW2) — días de crédito por defecto que se heredarán a las facturas. */}
       <div className="space-y-2">
-        <Label>Días de crédito</Label>
+        <Label htmlFor="nuevo-proveedor-dias-credito">Días de crédito</Label>
         <Input
+          id="nuevo-proveedor-dias-credito"
           type="number"
           min={0}
           value={c.form.dias_credito ?? 0}

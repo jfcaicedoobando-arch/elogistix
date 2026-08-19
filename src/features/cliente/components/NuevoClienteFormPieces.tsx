@@ -128,14 +128,16 @@ export function ClienteField({
 }: FieldProps) {
   const value = form[field] ?? "";
   const errorMsg = value && validate ? validate(value) : null;
+  const inputId = `nuevo-cliente-${String(field)}`;
   return (
     <div className={className}>
-      <Label size="sm" className="flex items-center">
+      <Label size="sm" className="flex items-center" htmlFor={inputId}>
         {label}
         {required && <span className="text-destructive ml-0.5">*</span>}
         {prefilledFromCsf && value && <PrellenadoBadge />}
       </Label>
       <Input
+        id={inputId}
         value={value}
         placeholder={placeholder}
         onChange={(e) => onChange(field, e.target.value)}
