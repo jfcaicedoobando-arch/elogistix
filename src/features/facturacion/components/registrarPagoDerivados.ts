@@ -60,6 +60,8 @@ export interface DerivadosPago {
   tcBloqueado: boolean;
   /** EC-10: conversión cross-moneda apoyada en el TC de respaldo. */
   tcRespaldo: boolean;
+  /** Cruce USD↔EUR: la BD no lo convierte (LC_PAGO_CRUCE_NO_SOPORTADO). */
+  cruceNoSoportado: boolean;
   errorFecha: string | null;
   invalido: boolean;
 }
