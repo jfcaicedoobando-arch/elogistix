@@ -9,6 +9,7 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import { roundMoney } from "@/lib/financial/financialUtils";
+import { ordenarFifo } from "@/lib/domain/fifoVencimiento";
 import { errorFechaLote } from "@/features/facturacion/services/cobroLoteValidaciones";
 
 
@@ -16,6 +17,8 @@ export interface FacturaLoteCandidata {
   factura_id: string;
   folio_proveedor: string | null;
   fecha_vencimiento: string | null;
+  /** Desempata el FIFO cuando dos facturas vencen el mismo día. */
+  fecha_emision?: string | null;
   saldo: number;
 }
 
@@ -57,9 +60,7 @@ export function repartirFifo(
   facturas: FacturaLoteCandidata[],
   total: number,
 ): { renglones: RenglonLote[]; sobrante: number } {
-  const orden = [...facturas].sort((a, b) =>
-    (a.fecha_vencimiento ?? "9999-12-31").localeCompare(b.fecha_vencimiento ?? "9999-12-31"),
-  );
+  const orden = ordenarFifo(facturas);
   let restante = round2(total);
   const renglones: RenglonLote[] = [];
 

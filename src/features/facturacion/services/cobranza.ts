@@ -17,6 +17,7 @@ import { orIlike } from "@/lib/search/ilike";
 import { calcularSaldoFactura } from "@/lib/financial/saldoFactura";
 import { assertNotTruncated } from "@/lib/supabase/assertNotTruncated";
 import { diasVencidos } from "@/lib/date/dateOnly";
+import { estaPorVencer } from "@/lib/domain/porVencer";
 
 // Re-export de agregados puros (extraídos a `cobranzaAggregates.ts` en 12.61.18).
 export {
@@ -105,7 +106,8 @@ function calcularDiasVencido(fechaVencimiento: string): number {
 function calcularEstatus(saldo: number, diasVencido: number): EstatusCobranza {
   if (saldo <= 0.01) return "Sin saldo";
   if (diasVencido > 0) return "Vencida";
-  if (diasVencido >= -3) return "Por vencer";
+  // BL-9: ventana única de 7 días (antes 3) — ver `lib/domain/porVencer`.
+  if (estaPorVencer(diasVencido)) return "Por vencer";
   return "Vigente";
 }
 

@@ -6,6 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query";
 import {
   fetchComisionesDevengadas,
+  fetchLiquidadoMxnPorMes,
   calcularKPIsComisiones,
   type FetchComisionesFiltros,
 } from "@/features/comisiones/services";
@@ -22,8 +23,20 @@ export function useComisionesDevengadas(filtros: FetchComisionesFiltros = {}) {
     queryFn: () => fetchComisionesDevengadas(filtros),
     staleTime: 30_000,
   });
-  const kpis = useMemo(() => calcularKPIsComisiones(q.data ?? []), [q.data]);
+
+  // BL-7: el KPI "liquidado del mes" se lee de las liquidaciones pagadas en el
+  // mes (`fecha_pago`), no del devengo de las comisiones.
+  const periodo = filtros.periodo;
+  const liquidado = useQuery({
+    queryKey: queryKeys.comisiones.liquidaciones({ liquidadoMes: periodo ?? "actual" }),
+    queryFn: () => fetchLiquidadoMxnPorMes(periodo),
+    staleTime: 30_000,
+  });
+
+  const base = useMemo(() => calcularKPIsComisiones(q.data ?? []), [q.data]);
+  const kpis = useMemo(
+    () => ({ ...base, liquidado_mes_mxn: liquidado.data ?? 0 }),
+    [base, liquidado.data],
+  );
   return { ...q, kpis };
 }
-
-;

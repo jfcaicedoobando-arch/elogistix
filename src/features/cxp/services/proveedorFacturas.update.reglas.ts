@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { ProveedorFacturaRow } from "./proveedorFacturas";
 import type { ActualizarFacturaPayload } from "./proveedorFacturas.update.types";
 import { sumarPagosEnMonedaFactura } from "./proveedorFacturas.helpers";
+import { roundMoney } from "@/lib/financial/financialUtils";
 
 export class SaldoNegativoError extends Error {
   code = "SALDO_NEGATIVO" as const;
@@ -37,18 +38,26 @@ export function detectarCambioSensible(
     const a = (actual as unknown as Record<string, unknown>)[k];
     // SAFE-CAST: lectura indexada por key tipada de objetos planos.
     const b = (payload as unknown as Record<string, unknown>)[k];
-    if (typeof a === "number" || typeof b === "number") return Number(a) !== Number(b);
-    return a !== b;
+    if (typeof a === "number" || typeof b === "number") {
+      // BL-12: `null`/`undefined`/"" son el mismo "sin capturar"; sin esto
+      // `Number(null)=0` vs `Number(undefined)=NaN` disparaba re-aprobaciones
+      // espurias al guardar sin cambiar nada.
+      const na = a == null || a === "" ? null : Number(a);
+      const nb = b == null || b === "" ? null : Number(b);
+      if (na === null || nb === null) return na !== nb;
+      return roundMoney(na) !== roundMoney(nb);
+    }
+    return (a ?? null) !== (b ?? null);
   });
 }
 
-/** Total = Subtotal + IVA + IEPS − Retenciones. */
+/** Total = Subtotal + IVA + IEPS − Retenciones (BL-11: redondeado a centavos). */
 export function calcularTotal(payload: ActualizarFacturaPayload): number {
-  return (
+  return roundMoney(
     (Number(payload.subtotal) || 0) +
-    (Number(payload.iva) || 0) +
-    (Number(payload.ieps) || 0) -
-    (Number(payload.retenciones) || 0)
+      (Number(payload.iva) || 0) +
+      (Number(payload.ieps) || 0) -
+      (Number(payload.retenciones) || 0),
   );
 }
 

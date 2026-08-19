@@ -8,6 +8,7 @@ import type { FacturaFormValues } from "@/features/cxp/types";
 import { todayLocalISO } from "@/lib/date/today";
 import { isoUtcDay } from "@/lib/date/mx";
 import { facturaFormErrorsFromZod } from "./useNuevaFacturaProveedorForm.schema";
+import { roundMoney } from "@/lib/financial/financialUtils";
 
 export type Moneda = Database["public"]["Enums"]["moneda"];
 
@@ -66,7 +67,9 @@ export function calcularTotal(values: FacturaFormValues): number {
   const i = Number(values.iva) || 0;
   const e = Number(values.ieps) || 0;
   const r = Number(values.retenciones) || 0;
-  return s + i + e - r;
+  // BL-11: redondeo a centavos para que el total capturado coincida con el que
+  // recalcula la base (evita descuadres de 0.004 al comparar contra pagos).
+  return roundMoney(s + i + e - r);
 }
 
 /**

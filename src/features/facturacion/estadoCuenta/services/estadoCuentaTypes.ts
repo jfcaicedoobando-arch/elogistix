@@ -8,6 +8,7 @@
 import type { Tables, Database } from "@/integrations/supabase/types";
 import { calcularSaldoFactura } from "@/lib/financial/saldoFactura";
 import { diasVencidos } from "@/lib/date/dateOnly";
+import { estaPorVencer } from "@/lib/domain/porVencer";
 
 export type FacturaRow = Tables<"facturas">;
 export type Moneda = Database["public"]["Enums"]["moneda"];
@@ -123,7 +124,7 @@ export function calcularEstatus(
   // B-105 (decisión de diseño): "Por vencer" = vence en 7 días naturales o
   // menos, alineado con la convención del ERP (tarifas "≤7 días", aging CxC).
   // Antes eran 3 días: una factura a 17 días se veía "Vigente".
-  if (dias >= -7) return "Por vencer";
+  if (estaPorVencer(dias)) return "Por vencer";
   return "Vigente";
 }
 
