@@ -16,6 +16,8 @@ export interface StatusBadgeProps {
   showIcon?: boolean;
   /** Etiqueta forzada (por defecto usa la del registry). */
   label?: string;
+  /** Contenido libre (tiene prioridad sobre `label`). */
+  children?: React.ReactNode;
   className?: string;
 }
 
@@ -24,6 +26,7 @@ export function StatusBadge({
   status,
   showIcon = false,
   label,
+  children,
   className,
 }: StatusBadgeProps) {
   const visual = getStatusVisual(domain, status);
@@ -39,7 +42,8 @@ export function StatusBadge({
       data-status={status ?? ""}
     >
       {showIcon && Icon ? <Icon className="h-3 w-3" aria-hidden /> : null}
-      <span>{label ?? visual.label}</span>
+      <span>{children ?? label ?? visual.label}</span>
     </span>
   );
 }
+
