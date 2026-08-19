@@ -101,6 +101,24 @@ export const AGING_SOLID_CLASS: Record<NivelAging, string> = {
   5: "bg-aging-5/20 text-aging-5 border border-aging-5/40",
 };
 
+/** Relleno suave por nivel (chips de KPI y barras de dashboard). */
+export const AGING_SOFT_CLASS: Record<NivelAging, string> = {
+  1: "bg-aging-1/20 text-foreground",
+  2: "bg-aging-2/25 text-foreground",
+  3: "bg-aging-3/30 text-foreground",
+  4: "bg-aging-4/35 text-foreground",
+  5: "bg-aging-5/40 text-foreground",
+};
+
+/** Relleno sólido por nivel (segmentos de barra apilada). */
+export const AGING_FILL_CLASS: Record<NivelAging, string> = {
+  1: "bg-aging-1",
+  2: "bg-aging-2",
+  3: "bg-aging-3",
+  4: "bg-aging-4",
+  5: "bg-aging-5",
+};
+
 /** Tono para tarjetas KPI (`KpiCard` / `AgingKpiBucket`). */
 export type TonoKpiAging = "default" | "warn" | "danger";
 
