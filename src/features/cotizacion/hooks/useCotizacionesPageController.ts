@@ -25,12 +25,13 @@ export type CotizacionListItem = NonNullable<ReturnType<typeof useCotizaciones>[
 // ── Pure filter helpers ──────────────────────────────────────────────────────
 
 export function matchesSearch(c: CotizacionListItem, search: string): boolean {
-  return (
-    !search ||
-    c.folio.toLowerCase().includes(search.toLowerCase()) ||
-    c.cliente_nombre.toLowerCase().includes(search.toLowerCase()) ||
-    c.descripcion_mercancia.toLowerCase().includes(search.toLowerCase())
-  );
+  // EC-7: `folio`, `cliente_nombre` y `descripcion_mercancia` pueden llegar
+  // NULL desde la BD (cotizaciones legacy o borradores sin mercancía); antes
+  // el listado crasheaba con "Cannot read properties of null".
+  if (!search) return true;
+  const q = search.toLowerCase();
+  const campos = [c.folio, c.cliente_nombre, c.descripcion_mercancia];
+  return campos.some((campo) => (campo ?? "").toLowerCase().includes(q));
 }
 
 export function esCotizacionInactivaOculta(

@@ -1,10 +1,9 @@
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { FileDown, Mail, FileSpreadsheet } from "lucide-react";
 import { DetailHeader } from "@/components/shared/DetailHeader";
 import { useVolver } from "@/hooks/shared/useVolver";
-import { getEstadoColor } from "@/lib/ui/uiMappings";
+import { StatusBadge } from "@/components/shared/StatusBadge";
 import { toTitleCase, formatDate } from "@/lib/formatters";
 import type { CotizacionRow } from "@/features/cotizacion/types";
 
@@ -36,7 +35,7 @@ export function CotizacionDetalleHeader({ cotizacion, nombreDestinatario, onExpo
       icon={<FileSpreadsheet className="h-6 w-6 text-accent shrink-0" />}
       title={cotizacion.folio}
       subtitle={toTitleCase(nombreDestinatario)}
-      badge={<Badge className={getEstadoColor(cotizacion.estado)}>{cotizacion.estado}</Badge>}
+      badge={<StatusBadge domain="cotizacion" status={cotizacion.estado} />}
       meta={metaFecha ? <span className="text-xs text-muted-foreground">{metaFecha}</span> : undefined}
       trailing={
         <>

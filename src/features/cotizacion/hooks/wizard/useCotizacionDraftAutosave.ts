@@ -30,6 +30,9 @@ export { clearDraft, draftKey, loadDraft };
 interface Params {
   form: UseFormReturn<CotizacionFormValues>;
   userId: string;
+  /** EC-6: organización activa; forma parte de la clave del borrador para que
+   *  cambiar de tenant no ofrezca restaurar datos de otra organización. */
+  organizationId?: string | null;
   /** B-003: se sigue guardando aún después del paso 1 para persistir el
    *  `cotizacionId` en el draft y evitar duplicados al recargar. Sólo se
    *  desactiva en modo edición (initialData presente en el wizard). */
@@ -74,7 +77,7 @@ export function draftTieneContenido(values: CotizacionFormValues, costos: FilaCo
   });
 }
 
-export function useCotizacionDraftAutosave({ form, userId, enabled, cotizacionId, currentStep, costosInternos, paused = false }: Params): {
+export function useCotizacionDraftAutosave({ form, userId, organizationId = null, enabled, cotizacionId, currentStep, costosInternos, paused = false }: Params): {
   clear: () => void;
   flush: () => void;
 } {
@@ -89,8 +92,8 @@ export function useCotizacionDraftAutosave({ form, userId, enabled, cotizacionId
   pausedRef.current = paused;
 
   const clear = useCallback(() => {
-    clearDraft(userId);
-  }, [userId]);
+    clearDraft(userId, organizationId);
+  }, [userId, organizationId]);
 
   const buildPayload = useCallback((values: CotizacionFormValues): StoredDraft => ({
     version: 3,
@@ -106,11 +109,11 @@ export function useCotizacionDraftAutosave({ form, userId, enabled, cotizacionId
     if (pausedRef.current) return;
     if (!draftTieneContenido(values, costosRef.current)) return;
     try {
-      safeLocalStorage.setItem(draftKey(userId), JSON.stringify(buildPayload(values)));
+      safeLocalStorage.setItem(draftKey(userId, organizationId), JSON.stringify(buildPayload(values)));
     } catch {
       // safeLocalStorage ya loguea.
     }
-  }, [buildPayload, userId]);
+  }, [buildPayload, userId, organizationId]);
 
   const flush = useCallback(() => {
     if (!enabled) return;

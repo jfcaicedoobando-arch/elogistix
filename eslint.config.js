@@ -887,13 +887,12 @@ export default tseslint.config(
     // ─────────────────────────────────────────────────────────────────────
     // Guardrail `no-legacy-estado-color` — UX-03 (design system).
     //
-    // `getEstadoColor` (de `@/lib/ui/uiMappings`) es un wrapper LEGACY del
-    // patrón de badges de estado. El componente canónico es `StatusBadge`
-    // (src/components/shared/StatusBadge.tsx) sobre statusRegistry/estadoConfig.
-    // Baseline LEGACY abajo (3 archivos, Ola C · UI-01) en burn-down: al migrar un archivo
-    // a StatusBadge/getEstadoVisual, quítalo de la lista. NO agregar entradas
-    // nuevas. Este bloque va al final para que el override de
-    // `src/features/**` (que apaga `no-restricted-imports`) no lo neutralice.
+    // `getEstadoColor` fue ELIMINADO de `@/lib/ui/uiMappings` (UI-3,
+    // v13.683.0): baseline legacy en cero. El componente canónico es
+    // `StatusBadge` (src/components/shared/StatusBadge.tsx) sobre
+    // statusRegistry/estadoConfig. La regla se mantiene como lápida para que
+    // nadie reintroduzca el helper. Este bloque va al final para que el
+    // override de `src/features/**` no lo neutralice.
     // ─────────────────────────────────────────────────────────────────────
     name: "no-legacy-estado-color",
     files: ["src/**/*.{ts,tsx}"],
@@ -901,10 +900,6 @@ export default tseslint.config(
       // Implementación del wrapper legacy y su spec.
       "src/lib/ui/uiMappings.ts",
       "src/lib/ui/__tests__/**",
-      // ── ESTADO-COLOR-LEGACY (baseline UX-03 · burn-down) ────────────────
-      "src/features/cotizacion/components/detalle/CotizacionDetalleHeader.tsx",
-      "src/features/portal/components/PortalCotizacionCard.tsx",
-      "src/features/portal/components/cotizacion/PortalCotizacionHeader.tsx",
       // Tests pueden importar el helper para renders aislados.
       "**/__tests__/**",
       "**/*.test.ts",
@@ -916,7 +911,7 @@ export default tseslint.config(
           {
             name: "@/lib/ui/uiMappings",
             importNames: ["getEstadoColor"],
-            message: "UX-03: `getEstadoColor` está deprecado. Usa <StatusBadge estado={...} /> ('@/components/shared/StatusBadge') o `getEstadoVisual(estado).badge` de '@/lib/ui/estadoConfig'. Baseline legacy: bloque `no-legacy-estado-color` en eslint.config.js (burn-down, NO agregar entradas).",
+            message: "UI-3: `getEstadoColor` fue eliminado. Usa <StatusBadge estado={...} /> ('@/components/shared/StatusBadge') o `getEstadoVisual(estado).badge` de '@/lib/ui/estadoConfig'. El helper fue eliminado en v13.683.0: no lo reintroduzcas.",
           },
         ],
       }],

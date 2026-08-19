@@ -3,7 +3,7 @@
  * Consolida color de badge, borde, barra apilada, icono y gradiente.
  *
  * Consumido por:
- * - uiMappings.ts (wrappers legacy: getEstadoColor, getEstadoBorderColor, getEstadoBarColor)
+ * - uiMappings.ts (wrappers: getEstadoBorderColor, getEstadoBarColor)
  * - DashboardStatusCards (icon + gradient + glow)
  *
  * Para agregar un nuevo estado de embarque, editar `estadoConfigEmbarques.ts`;
