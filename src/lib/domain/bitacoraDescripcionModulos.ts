@@ -1,6 +1,10 @@
 /**
  * Descripciones por módulo (facturación, cxp, costeo) — extraídas de
  * `bitacoraDescripcion.ts` para respetar Power of 10 (≤ 200 líneas).
+ *
+ * Ola 20 · paso 9: el despacho es una TABLA, no una escalera de `if`. Cada
+ * acción es una fila del directorio; añadir una acción nueva es agregar un
+ * renglón, no otra rama que el linter tenga que perdonar.
  */
 import { formatCurrency } from "@/lib/formatters";
 import type { DescripcionBitacora } from "./bitacoraDescripcion.types";
@@ -12,62 +16,81 @@ function asNumber(v: unknown): number | undefined {
   return typeof v === "number" && Number.isFinite(v) ? v : undefined;
 }
 
-// eslint-disable-next-line complexity -- despacho lineal por accion.
-export function describirFacturacion(
-  accion: string,
-  detalles: Record<string, unknown>,
-): DescripcionBitacora | null {
-  if (accion === "facturapi_emitida") {
-    const uuid = asString(detalles.uuid);
-    return { titulo: "Timbró factura", contexto: uuid ? `UUID ${uuid.slice(0, 8)}…` : undefined };
-  }
-  if (accion === "factura.borrador_generado") return { titulo: "Generó borrador de factura" };
-  if (accion === "factura.borrador_eliminado") return { titulo: "Eliminó borrador de factura" };
-  if (accion === "factura_duplicada_para_sustitucion") return { titulo: "Generó borrador de sustitución" };
-  if (accion === "facturapi_cancelacion_solicitada") {
-    return { titulo: "Solicitó cancelación de factura", contexto: asString(detalles.motivo) };
-  }
-  if (accion === "facturapi_consulta_reconciliada") return { titulo: "Reconciliación con FacturApi" };
-  if (accion === "facturapi_cancelada") return { titulo: "Canceló factura" };
-  if (accion === "facturapi_cancelar_failed") return { titulo: "Falló cancelación de factura" };
-  if (accion === "facturapi_sustituida") return { titulo: "Sustituyó factura" };
-  if (accion === "facturapi_nc_emitida") return { titulo: "Emitió nota de crédito" };
-  if (accion === "facturapi_nc_cancelada") return { titulo: "Canceló nota de crédito" };
-  if (accion === "facturapi_rep_emitido") return { titulo: "Timbró complemento de pago" };
-  if (accion === "facturapi_rep_cancelado") return { titulo: "Canceló complemento de pago" };
-  if (accion === "cfdi_enviado") return { titulo: "Envió CFDI por email", contexto: asString(detalles.email) };
-  if (accion === "cfdi_envio_failed") return { titulo: "Falló envío de CFDI" };
-  if (accion === "facturapi_emitir_failed") return { titulo: "Falló timbrado de factura" };
-  return null;
+type Detalles = Record<string, unknown>;
+/** Título fijo, o título + cómo derivar el contexto desde `detalles`. */
+type Fila = string | { titulo: string; contexto: (d: Detalles) => string | undefined };
+
+function resolver(tabla: Record<string, Fila>, accion: string, detalles: Detalles) {
+  const fila = tabla[accion];
+  if (fila === undefined) return null;
+  if (typeof fila === "string") return { titulo: fila };
+  return { titulo: fila.titulo, contexto: fila.contexto(detalles) };
 }
 
-export function describirCxp(
+const FACTURACION: Record<string, Fila> = {
+  facturapi_emitida: {
+    titulo: "Timbró factura",
+    contexto: (d) => {
+      const uuid = asString(d.uuid);
+      return uuid ? `UUID ${uuid.slice(0, 8)}…` : undefined;
+    },
+  },
+  facturapi_cancelacion_solicitada: {
+    titulo: "Solicitó cancelación de factura",
+    contexto: (d) => asString(d.motivo),
+  },
+  cfdi_enviado: { titulo: "Envió CFDI por email", contexto: (d) => asString(d.email) },
+  "factura.borrador_generado": "Generó borrador de factura",
+  "factura.borrador_eliminado": "Eliminó borrador de factura",
+  factura_duplicada_para_sustitucion: "Generó borrador de sustitución",
+  facturapi_consulta_reconciliada: "Reconciliación con FacturApi",
+  facturapi_cancelada: "Canceló factura",
+  facturapi_cancelar_failed: "Falló cancelación de factura",
+  facturapi_sustituida: "Sustituyó factura",
+  facturapi_nc_emitida: "Emitió nota de crédito",
+  facturapi_nc_cancelada: "Canceló nota de crédito",
+  facturapi_rep_emitido: "Timbró complemento de pago",
+  facturapi_rep_cancelado: "Canceló complemento de pago",
+  cfdi_envio_failed: "Falló envío de CFDI",
+  facturapi_emitir_failed: "Falló timbrado de factura",
+};
+
+const CXP: Record<string, Fila> = {
+  pagar: {
+    titulo: "Registró pago a proveedor",
+    contexto: (d) => {
+      const monto = asNumber(d.monto);
+      return monto === undefined ? undefined : formatCurrency(monto, asString(d.moneda) ?? "MXN");
+    },
+  },
+  cancelar: { titulo: "Canceló factura de proveedor", contexto: (d) => asString(d.motivo) },
+  eliminar_pago: "Eliminó pago a proveedor",
+  crear_nota_credito: "Registró nota de crédito de proveedor",
+  aplicar_nota_credito: "Aplicó nota de crédito",
+  cancelar_nota_credito: "Canceló nota de crédito",
+};
+
+const COSTEO: Record<string, Fila> = {
+  crear: { titulo: "Creó tarifa", contexto: (d) => asString(d.entidad_nombre) },
+  editar: "Editó tarifa",
+  eliminar: "Eliminó tarifa",
+  reemplazar: "Marcó tarifa como reemplazada",
+};
+
+export function describirFacturacion(
   accion: string,
-  detalles: Record<string, unknown>,
+  detalles: Detalles,
 ): DescripcionBitacora | null {
-  if (accion === "pagar") {
-    const monto = asNumber(detalles.monto);
-    const moneda = asString(detalles.moneda) ?? "MXN";
-    return {
-      titulo: "Registró pago a proveedor",
-      contexto: monto !== undefined ? formatCurrency(monto, moneda) : undefined,
-    };
-  }
-  if (accion === "cancelar") return { titulo: "Canceló factura de proveedor", contexto: asString(detalles.motivo) };
-  if (accion === "eliminar_pago") return { titulo: "Eliminó pago a proveedor" };
-  if (accion === "crear_nota_credito") return { titulo: "Registró nota de crédito de proveedor" };
-  if (accion === "aplicar_nota_credito") return { titulo: "Aplicó nota de crédito" };
-  if (accion === "cancelar_nota_credito") return { titulo: "Canceló nota de crédito" };
-  return null;
+  return resolver(FACTURACION, accion, detalles);
+}
+
+export function describirCxp(accion: string, detalles: Detalles): DescripcionBitacora | null {
+  return resolver(CXP, accion, detalles);
 }
 
 export function describirCosteo(
   accion: string,
   entidad_nombre?: string | null,
 ): DescripcionBitacora | null {
-  if (accion === "crear") return { titulo: "Creó tarifa", contexto: entidad_nombre || undefined };
-  if (accion === "editar") return { titulo: "Editó tarifa" };
-  if (accion === "eliminar") return { titulo: "Eliminó tarifa" };
-  if (accion === "reemplazar") return { titulo: "Marcó tarifa como reemplazada" };
-  return null;
+  return resolver(COSTEO, accion, { entidad_nombre: entidad_nombre ?? undefined });
 }
