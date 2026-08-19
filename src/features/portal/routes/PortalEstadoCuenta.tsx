@@ -1,4 +1,4 @@
-import { PageHeader } from "@/components/shared/PageHeader";
+import { PortalPageShell } from "@/features/portal/components/layout/PortalPageShell";
 import { PageSkeleton } from "@/components/shared/skeletons";
 import { Wallet } from "lucide-react";
 import { usePortalClientUsers } from "@/features/portal/hooks";
@@ -22,17 +22,16 @@ export default function PortalEstadoCuenta() {
   }
 
   return (
-    <div className="space-y-6">
-      <PageHeader
-        icon={<Wallet className="h-6 w-6 text-accent" />}
-        title="Estado de cuenta"
-        description="Consulta tus saldos, pagos y anticipos."
-      />
+    <PortalPageShell
+      icon={<Wallet className="h-6 w-6 text-accent" />}
+      title="Estado de cuenta"
+      description="Consulta tus saldos, pagos y anticipos."
+    >
       <EstadoCuentaModule
         clienteIds={clienteIds}
         facturaHrefBase="/portal/facturas"
         defaultSoloConSaldo
       />
-    </div>
+    </PortalPageShell>
   );
 }

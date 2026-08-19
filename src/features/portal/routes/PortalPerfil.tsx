@@ -5,7 +5,7 @@ import { Pencil, KeyRound, User as UserIcon, Building2 } from "lucide-react";
 import { usePortalPerfil } from "@/features/portal/hooks";
 import { EditarContactoDialog } from "@/features/portal/components/perfil/EditarContactoDialog";
 import { CambiarPasswordDialog } from "@/features/portal/components/perfil/CambiarPasswordDialog";
-import { PageHeader } from "@/components/shared/PageHeader";
+import { PortalPageShell } from "@/features/portal/components/layout/PortalPageShell";
 import { PerfilAsyncFallback } from "@/features/portal/components/perfil/PerfilAsyncFallback";
 import { useDocumentTitle } from "@/hooks/shared";
 
@@ -34,15 +34,12 @@ export default function PortalPerfil() {
   const { email, cliente } = data;
 
   return (
-    <div className="max-w-3xl mx-auto space-y-6">
-      <PageHeader
-        icon={<UserIcon className="h-6 w-6 text-accent" />}
-        title="Mi Perfil"
-        description="Datos de tu cuenta y empresa."
-      />
-
-
-
+    <PortalPageShell
+      className="max-w-3xl mx-auto"
+      icon={<UserIcon className="h-6 w-6 text-accent" />}
+      title="Mi Perfil"
+      description="Datos de tu cuenta y empresa."
+    >
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -105,6 +102,6 @@ export default function PortalPerfil() {
         />
       )}
       <CambiarPasswordDialog open={cambiarPass} onOpenChange={setCambiarPass} />
-    </div>
+    </PortalPageShell>
   );
 }
