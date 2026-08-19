@@ -82,8 +82,6 @@ export async function fetchAgenteRutas(): Promise<AgenteRutaRow[]> {
   }));
 }
 
-export { fetchAgenteTarifas, type AgenteTarifaRow } from "./tarifas";
-
 export interface AgenteEmbarqueRow {
   id: string;
   expediente: string;
