@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.680.0] - 2026-08-19
+### Ola A · auditoría externa (dinero y seguridad)
+- BL-1 · factura manual: la cantidad ya no se redondea a entero (`Math.round`); usa `parseCantidadFiscal`, así 1.5 toneladas se timbran como 1.5 y el subtotal cuadra con el CFDI.
+- BL-2 · factura manual: la fecha de vencimiento se calcula con `addDaysIso` (canon `dateOnly`), eliminando el desfase de un día en navegadores fuera de America/Mexico_City.
+- BL-3 · cotizaciones: editar una cotización de mercancía peligrosa sin volver a subir el MSDS ya no borra el archivo guardado (`msds_archivo` sólo se escribe si hay archivo nuevo).
+- EC-3 · `tracking-public` tiene rate limit fail-closed (30/min por IP, 600/min global) vía el nuevo helper compartido `supabase/functions/_shared/ratelimit.ts`.
+
 ## [13.679.0] - 2026-08-19
 ### Ola 20 · arquitectura (auditoría, pasos 4, 8 y 9)
 - Paso 4 · barriles limpios: `catalogos`, `configuracion`, `auth`, `reportes`, `operaciones`, `dashboard`, `notificaciones`, `search` y `portal-agente` extrajeron su lógica a módulos con nombre; los `index.ts` sólo re-exportan (importar un tipo ya no arrastra el cliente de base de datos).

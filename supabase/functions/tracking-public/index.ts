@@ -3,6 +3,7 @@ import { handlePreflight } from "../_shared/cors.ts";
 import { jsonResponse, errorResponse } from "../_shared/response.ts";
 import { createLogger } from "../_shared/logger.ts";
 import { initSentryEdge, captureEdgeException } from "../_shared/sentry.ts";
+import { limitarPeticionesPublicas } from "../_shared/ratelimit.ts";
 
 initSentryEdge("tracking-public");
 
@@ -61,6 +62,18 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_ANON_KEY")!,
       { auth: { persistSession: false } },
     );
+
+    // EC-3: el endpoint es público y sin auth; sin tope se puede enumerar tokens
+    // por fuerza bruta. 30/min por IP cubre recargas legítimas del cliente.
+    const cortado = await limitarPeticionesPublicas(supabase, req, {
+      fn: "tracking-public",
+      porIp: { windowSeconds: 60, max: 30 },
+      global: { windowSeconds: 60, max: 600 },
+    });
+    if (cortado) {
+      log.finish(cortado.status, "rate_limited");
+      return cortado;
+    }
 
     const { data, error } = await supabase.rpc("get_tracking_public", { p_token: token });
     if (error) {

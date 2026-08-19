@@ -52,9 +52,21 @@ describe("savePaso1", () => {
     expect(id).toBe("existente");
     expect(muts.updateCotizacion.mutateAsync).toHaveBeenCalledWith({
       id: "existente",
-      data: expect.objectContaining({ folio: "F2", msds_archivo: null }),
+      data: expect.objectContaining({ folio: "F2" }),
     });
   });
+
+  // BL-3: editar sin volver a subir el MSDS NO debe borrar el ya guardado.
+  it("no toca msds_archivo en UPDATE cuando no hay archivo nuevo", async () => {
+    await savePaso1({
+      form: makeForm({ tipoCarga: "Mercancía Peligrosa" }), msdsFile: null, cotizacionId: "existente",
+      buildPaso1Data: () => ({ folio: "F2" }),
+      mutations: muts,
+    });
+    const arg = muts.updateCotizacion.mutateAsync.mock.calls[0] as unknown as [{ data: Record<string, unknown> }];
+    expect("msds_archivo" in arg[0].data).toBe(false);
+  });
+
 
   it("sube MSDS sólo cuando tipoCarga es 'Mercancía Peligrosa' y hay archivo", async () => {
     const file = new File(["x"], "ficha.pdf", { type: "application/pdf" });
