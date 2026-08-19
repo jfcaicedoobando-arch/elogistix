@@ -29,7 +29,6 @@ export function CfdiEstadoBadge({ tono, children, className, mono }: Props) {
     <StatusBadge
       domain="cfdi"
       status={tono}
-      label={typeof children === "string" ? children : undefined}
       className={cn(
         tono === "borrador" && "font-normal",
         mono && "font-mono",

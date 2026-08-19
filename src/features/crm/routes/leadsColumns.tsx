@@ -1,4 +1,4 @@
-import { Badge } from "@/components/ui/badge";
+import { StatusBadge } from "@/components/shared/StatusBadge";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
@@ -11,18 +11,11 @@ import { LEAD_ESTADOS, useActualizarLead, type CrmLeadEstado, type CrmLeadRow } 
 import { COL_W } from "@/components/shared/dataTable/columnWidths";
 import { getErrorMessage } from "@/lib/errors";
 
-const ESTADO_VARIANT: Record<CrmLeadEstado, "default" | "secondary" | "outline" | "destructive"> = {
-  Nuevo: "default",
-  Contactado: "secondary",
-  Calificado: "default",
-  Descalificado: "destructive",
-  Convertido: "outline",
-};
-
 function EstadoCell({ lead }: { lead: CrmLeadRow }) {
   const actualizar = useActualizarLead();
   if (lead.estado === "Convertido") {
-    return <Badge variant={ESTADO_VARIANT[lead.estado]}>{lead.estado}</Badge>;
+    // v13.681.0 · UI-1: color unificado por el statusRegistry (dominio lead).
+    return <StatusBadge domain="lead" status={lead.estado} />;
   }
   return (
     <div onClick={(e) => e.stopPropagation()}>

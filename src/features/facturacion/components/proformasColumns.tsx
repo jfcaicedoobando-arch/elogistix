@@ -8,6 +8,7 @@
  * permite escoger varias proformas para fusionarlas en una sola factura.
  */
 import { Badge } from "@/components/ui/badge";
+import { StatusBadge } from "@/components/shared/StatusBadge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { formatDate, toTitleCase, nombreDesdeEmail } from "@/lib/formatters";
@@ -123,10 +124,8 @@ export function buildProformasColumns({
       cell: ({ row }) => {
         const estado = getEstadoUnificado(row.original);
         const label = LABEL_ESTADO_UNIFICADO[estado];
-        if (estado === "facturada") return <Badge variant="success">{label}</Badge>;
-        if (estado === "rechazada") return <Badge variant="destructive">{label}</Badge>;
-        if (estado === "aceptada") return <Badge variant="info">{label}</Badge>;
-        return <Badge variant="warning">{label}</Badge>;
+        // v13.681.0 · UI-1: colores desde el statusRegistry (dominio proforma).
+        return <StatusBadge domain="proforma" status={estado} label={label} />;
       },
     },
 

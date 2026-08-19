@@ -7,6 +7,7 @@
  */
 import { Eye } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { StatusBadge } from "@/components/shared/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { CardSkeleton } from "@/components/shared/skeletons";
 import { formatCurrency, formatDate } from "@/lib/formatters";
@@ -24,7 +25,7 @@ export function EstadoConciliado({
 }) {
   return (
     <>
-      <Badge className="bg-success/10 text-success border-success/20">Conciliado</Badge>
+      <StatusBadge domain="conciliacion" status="Conciliado" />
       {tienePago ? (
         <Button variant="outline" size="sm" onClick={onVerPago} className="w-full">
           <Eye className="h-4 w-4 mr-2" />
@@ -51,7 +52,7 @@ export function EstadoIgnorado({
 }) {
   return (
     <>
-      <Badge variant="outline">Ignorado</Badge>
+      <StatusBadge domain="conciliacion" status="Ignorado" />
       {motivo ? <p className="text-xs text-muted-foreground">Motivo: {motivo}</p> : null}
       <Button variant="outline" size="sm" onClick={onReactivar} className="w-full">
         Reactivar (volver a Pendiente)
