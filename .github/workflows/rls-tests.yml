@@ -431,6 +431,10 @@ jobs:
       - name: CxC guard - tests conductuales de sobrepago
         run: $PSQL -f supabase/tests/cxc_guard_sobrepago.sql
 
+      - name: CxC guard - NC multimoneda vs saldo (Ola G1)
+        run: $PSQL -f supabase/tests/cxc_guard_nc_multimoneda.sql
+
+
       - name: CxC guard - factura con cancelacion en tramite no admite cobros
         run: $PSQL -f supabase/tests/cxc_guard_factura_en_cancelacion.sql
 
