@@ -18,11 +18,16 @@ beforeEach(() => {
 
 describe("draftKey", () => {
   it("usa el userId cuando se proporciona", () => {
-    expect(draftKey("abc")).toBe("lc:cotizacion:draft:abc");
+    expect(draftKey("abc")).toBe("lc:cotizacion:draft:sin-org:abc");
   });
 
   it("usa 'anon' cuando el userId está vacío", () => {
-    expect(draftKey("")).toBe("lc:cotizacion:draft:anon");
+    expect(draftKey("")).toBe("lc:cotizacion:draft:sin-org:anon");
+  });
+
+  it("EC-6: la clave cambia con la organización activa (sin fuga cross-tenant)", () => {
+    expect(draftKey("abc", "org-1")).toBe("lc:cotizacion:draft:org-1:abc");
+    expect(draftKey("abc", "org-1")).not.toBe(draftKey("abc", "org-2"));
   });
 });
 
