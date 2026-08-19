@@ -2,6 +2,7 @@
  * Tendencia de 30 días del score y los hallazgos críticos basada en
  * `auditoria_snapshots`. Usa recharts (ya en el bundle del dashboard).
  */
+import { ChartTooltip } from "@/components/shared/ChartTooltip";
 import {
   CartesianGrid,
   Line,
@@ -51,13 +52,7 @@ export function AuditoriaTendenciaChart() {
                 className="text-2xs"
                 allowDecimals={false}
               />
-              <Tooltip
-                contentStyle={{
-                  background: "hsl(var(--card))",
-                  border: "1px solid hsl(var(--border))",
-                  fontSize: "12px",
-                }}
-              />
+              <Tooltip content={<ChartTooltip />} />
               <Line
                 yAxisId="left"
                 type="monotone"

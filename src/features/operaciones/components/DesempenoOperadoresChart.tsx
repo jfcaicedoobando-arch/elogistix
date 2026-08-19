@@ -2,6 +2,7 @@
  * Gráfico apilado de carga de trabajo por operador (Desempeño).
  * Extraído para permitir lazy-load de `recharts` (sub-loop 5.3).
  */
+import { ChartTooltip } from "@/components/shared/ChartTooltip";
 import {
   ResponsiveContainer,
   BarChart,
@@ -26,14 +27,7 @@ export default function DesempenoOperadoresChart({ data }: Props) {
         <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
         <XAxis dataKey="nombre" tick={{ fontSize: 11 }} interval={0} height={40} />
         <YAxis allowDecimals={false} tick={{ fontSize: 11 }} />
-        <RechartsTooltip
-          contentStyle={{
-            background: "hsl(var(--card))",
-            border: "1px solid hsl(var(--border))",
-            borderRadius: 8,
-            fontSize: 12,
-          }}
-        />
+        <RechartsTooltip content={<ChartTooltip />} />
         <Legend
           verticalAlign="top"
           align="right"
