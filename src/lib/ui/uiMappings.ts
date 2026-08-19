@@ -34,16 +34,6 @@ export const getEstadoBorderColor = (estado: string): string =>
 export const getEstadoBarColor = (estado: string): string =>
   getEstadoVisual(estado).bar;
 
-export const getModoIcon = (modo: string): string => {
-  const icons: Record<string, string> = {
-    'Marítimo': '🚢',
-    'Aéreo': '✈️',
-    'Terrestre': '🚛',
-    'Multimodal': '🔄',
-  };
-  return icons[modo] || '📦';
-};
-
 /** Estilo de círculo por modo de transporte */
 export const getModoCircleStyle = (modo: string): string => {
   const map: Record<string, string> = {

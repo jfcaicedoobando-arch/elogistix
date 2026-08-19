@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { getEstadoColor, getModoIcon } from "@/lib/ui/uiMappings";
+import { getEstadoColor } from "@/lib/ui/uiMappings";
 
 // Nota: tests de formatDate viven en src/lib/formatters/__tests__/formatters.test.ts
 // (eliminados de aquí en v11.39.0 — eran duplicado textual).
@@ -24,14 +24,3 @@ describe("getEstadoColor", () => {
   });
 });
 
-describe("getModoIcon", () => {
-  it("retorna emoji correcto por modo", () => {
-    expect(getModoIcon("Marítimo")).toBe("🚢");
-    expect(getModoIcon("Aéreo")).toBe("✈️");
-    expect(getModoIcon("Terrestre")).toBe("🚛");
-    expect(getModoIcon("Multimodal")).toBe("🔄");
-  });
-  it("retorna 📦 para modo desconocido", () => {
-    expect(getModoIcon("Otro")).toBe("📦");
-  });
-});
