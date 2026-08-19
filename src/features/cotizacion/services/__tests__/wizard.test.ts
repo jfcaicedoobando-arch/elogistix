@@ -63,8 +63,8 @@ describe("savePaso1", () => {
       buildPaso1Data: () => ({ folio: "F2" }),
       mutations: muts,
     });
-    const arg = muts.updateCotizacion.mutateAsync.mock.calls[0][0] as { data: Record<string, unknown> };
-    expect("msds_archivo" in arg.data).toBe(false);
+    const arg = muts.updateCotizacion.mutateAsync.mock.calls[0] as unknown as [{ data: Record<string, unknown> }];
+    expect("msds_archivo" in arg[0].data).toBe(false);
   });
 
 
