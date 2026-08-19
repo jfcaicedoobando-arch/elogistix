@@ -2,7 +2,6 @@
  * Cálculos derivados del formulario de "Registrar pago" (extraído de
  * `DialogRegistrarPago` para mantener el componente ≤200 líneas).
  */
-import { factorEntreMonedas } from "@/lib/financial/convertir";
 import { TOLERANCIA_SOBREPAGO } from "@/lib/financial/toleranciaPago";
 import { validarFechaPago } from "@/features/facturacion/domain/validarFechaPago";
 
@@ -13,20 +12,24 @@ export interface RatesTc {
   esFallback?: boolean;
 }
 
-export function convertirAMonedaFactura(
+/**
+ * Aplica el TC pesos-por-divisa igual que `public.convertir_monto_pago_a_factura`:
+ * pago en MXN sobre factura extranjera divide; pago extranjero sobre factura en
+ * MXN multiplica. Sin TC devuelve 0 (nunca paridad 1:1).
+ */
+export function aplicarTcPago(
   monto: number,
   monedaPago: string,
   monedaFactura: string,
-  rates: RatesTc | undefined,
+  tcPago: number | null,
 ): number {
-  // FIX C6: el factor sale del canon único (MXN como puente). Sin TC confiable
-  // devuelve null y aquí se traduce a 0: nunca se trata USD/EUR como MXN.
-  const factor = factorEntreMonedas(monedaPago, monedaFactura, {
-    usd: rates?.usdMxn,
-    eur: rates?.eurMxn,
-  });
-  return factor === null ? 0 : monto * factor;
+  if (monedaPago === monedaFactura) return monto;
+  if (tcPago === null || !(tcPago > 0)) return 0;
+  return monedaPago === "MXN"
+    ? Math.round((monto / tcPago) * 10000) / 10000
+    : Math.round(monto * tcPago * 10000) / 10000;
 }
+
 
 /**
  * TC que espera la BD en `pagos_factura.tipo_cambio`: **pesos por unidad de
