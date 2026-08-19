@@ -1,13 +1,10 @@
-import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
+import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query";
 import { useOrgFilter } from "@/hooks/shared";
 import {
   fetchFacturas,
   fetchFacturasListado,
 } from "@/features/facturacion/services";
-import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
-import { invalidateSidebarAlerts } from "@/hooks/layout/useSidebarAlerts";
-import { getErrorMessage } from "@/lib/errors";
 
 ;
 
@@ -17,6 +14,7 @@ export function useFacturas(opts: { enabled?: boolean } = {}) {
     queryKey: queryKeys.facturas.byOrg(organizationId),
     queryFn: () => fetchFacturas(organizationId ?? null),
     enabled: opts.enabled ?? true,
+    placeholderData: keepPreviousData,
   });
 }
 
