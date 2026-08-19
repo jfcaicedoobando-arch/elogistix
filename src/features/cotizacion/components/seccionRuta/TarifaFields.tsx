@@ -71,6 +71,7 @@ export function FclLclFields({ ctx, tipoEmbarque, tarifaCtx }: { ctx: Ctx; tipoE
               placeholder="Ej. 7"
               readOnly={tarifaCtx.hasDiasLibres}
               className={tarifaCtx.hasDiasLibres ? "bg-muted/40" : undefined}
+              aria-label="Días libres en destino"
             />
             {tarifaCtx.tieneTarifa && tarifaCtx.hasDiasLibres && (
               <HeredadoBadge tipoOrigen="tarifa" origen="vinculada" className="shrink-0" />
