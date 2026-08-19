@@ -3,6 +3,7 @@ import { handlePreflight } from "../_shared/cors.ts";
 import { jsonResponse, errorResponse } from "../_shared/response.ts";
 import { createLogger } from "../_shared/logger.ts";
 import { initSentryEdge, captureEdgeException } from "../_shared/sentry.ts";
+import { limitarPeticionesPublicas } from "../_shared/ratelimit.ts";
 
 initSentryEdge("tracking-public");
 
