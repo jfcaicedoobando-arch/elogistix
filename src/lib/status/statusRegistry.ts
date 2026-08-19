@@ -37,7 +37,10 @@ export type StatusDomain =
   | "anticipo_proveedor"  // QW6 — Anticipos a proveedores
   | "cfdi"                // v13.681.0 — CFDI (factura/NC/REP): borrador→cancelada
   | "conciliacion"         // v13.681.0 — Conciliación bancaria en Tesorería
-  | "conciliacion_costo"; // v13.571.0 — Costeado vs facturado por el proveedor
+  | "conciliacion_costo"  // v13.571.0 — Costeado vs facturado por el proveedor
+  // Ola E · V-2 — dominios que aún pintaban clases a mano en Tesorería.
+  | "pago_tipo"           // Libro de pagos: cobro / pago / anticipo
+  | "rep";                // Complemento de pago (REP): Timbrado / Cancelado / Pendiente
 
 export interface StatusVisual {
   label: string;
@@ -128,6 +131,8 @@ export const DOMAIN_STATUSES: Record<StatusDomain, readonly string[]> = {
   cfdi: ["borrador", "aprobada", "timbrada", "aplicada", "cancelada"],
   conciliacion: ["Pendiente", "Conciliado", "Ignorado"],
   conciliacion_costo: ["Pendiente", "Facturado parcial", "Facturado", "Sobrefacturado", "Pagado", "Moneda mixta"],
+  pago_tipo: ["cobro", "pago", "anticipo"],
+  rep: ["Timbrado", "Cancelado", "Pendiente"],
 };
 
 /** Overrides por dominio cuando el mismo string necesita otro label. */
@@ -150,6 +155,11 @@ const LABEL_OVERRIDES: Partial<Record<StatusDomain, Record<string, string>>> = {
     aceptada: "Aceptada",
     rechazada: "Rechazada",
     facturada: "Facturada",
+  },
+  pago_tipo: {
+    cobro: "Cobro",
+    pago: "Pago",
+    anticipo: "Anticipo",
   },
   lead: {
     Nuevo: "Nuevo",
