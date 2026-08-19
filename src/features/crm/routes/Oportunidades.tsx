@@ -76,7 +76,7 @@ export default function Oportunidades() {
   );
 
   return (
-    <PageContainer>
+    <PageContainer width="wide">
       <PageHeader
         title="Oportunidades"
         description="Pipeline de ventas por etapa con vista Kanban y tabla"

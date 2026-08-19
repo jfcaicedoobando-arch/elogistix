@@ -84,7 +84,7 @@ export default function Cotizaciones() {
   );
 
   return (
-    <PageContainer>
+    <PageContainer width="wide">
       <Seo
         title="Cotizaciones · Libre Carga"
         description="Consulta, filtra y da seguimiento a tus cotizaciones."

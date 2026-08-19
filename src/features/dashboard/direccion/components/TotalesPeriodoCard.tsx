@@ -5,7 +5,7 @@
 import { Card } from "@/components/ui/card";
 import { Wallet } from "lucide-react";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
-import { Skeleton } from "@/components/ui/skeleton";
+import { KpiGridSkeleton } from "@/components/shared/skeletons";
 import { formatCurrency } from "@/lib/formatters/numbers";
 import { formatDate } from "@/lib/formatters/dates";
 import type { DireccionTotales } from "@/features/dashboard/direccion/services/loaders";
@@ -53,9 +53,7 @@ export function TotalesPeriodoCard({ totales, desdeIso, isLoading }: Props) {
         </p>
       </div>
       {isLoading || !totales ? (
-        <div className="mt-3 grid grid-cols-2 md:grid-cols-4 gap-4">
-          {BLOQUES.map((b) => <Skeleton key={b.key} className="h-14 w-full" />)}
-        </div>
+        <KpiGridSkeleton count={BLOQUES.length} heightClass="h-14" className="mt-3" />
       ) : (
         <div className="mt-3 grid grid-cols-2 md:grid-cols-4 gap-4">
           {BLOQUES.map((b) => (

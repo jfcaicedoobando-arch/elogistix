@@ -78,7 +78,7 @@ export default function CxpAging() {
   });
 
   return (
-    <PageContainer>
+    <PageContainer width="wide">
       <PageHeader
         icon={<LayoutList className="h-6 w-6 text-accent" />}
         title="Antigüedad de Saldos"

@@ -52,7 +52,7 @@ export default function Cxp() {
   );
 
   return (
-    <PageContainer>
+    <PageContainer width="wide">
       <PageHeader
         title="Facturas de proveedor"
         description="Cuentas por Pagar — facturas recibidas y su saldo pendiente"

@@ -8,6 +8,7 @@ import { useCrmHotkeys } from "@/features/crm/hooks";
 import { usePermissions } from "@/hooks/shared";
 import QuickAddMenu from "@/features/crm/components/QuickAddMenu";
 import CrmCommandPalette from "@/features/crm/components/CrmCommandPalette";
+import { tabsUnderlineTriggerClass } from "@/components/ui/tabs";
 
 const TABS = [
   { to: "/crm/mi-dia", label: "Mi día", icon: Sun, end: false },
@@ -56,10 +57,9 @@ export default function CrmLayout() {
                   end={t.end}
                   className={({ isActive }) =>
                     cn(
-                      "inline-flex items-center gap-2 px-3 h-11 text-sm font-medium border-b-2 whitespace-nowrap transition-colors shrink-0",
-                      isActive
-                        ? "border-primary text-primary"
-                        : "border-transparent text-muted-foreground hover:text-foreground hover:border-muted",
+                      tabsUnderlineTriggerClass,
+                      "h-11 pb-0 gap-2 shrink-0",
+                      isActive ? "text-foreground" : "text-muted-foreground",
                     )
                   }
                 >

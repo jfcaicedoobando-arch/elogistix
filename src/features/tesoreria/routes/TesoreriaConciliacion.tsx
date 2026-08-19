@@ -106,7 +106,7 @@ export default function TesoreriaConciliacion() {
   const pendientesCount = movs.filter((m) => m.estado_conciliacion === "Pendiente").length;
 
   return (
-    <PageContainer>
+    <PageContainer width="wide">
       <PageHeader
         title="Conciliación bancaria"
         description="Importa el estado de cuenta y empareja con CxC/CxP"
