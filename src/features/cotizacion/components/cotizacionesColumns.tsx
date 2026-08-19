@@ -14,6 +14,7 @@ import {
   actionsColumn,
 } from "@/components/shared/dataTable/columnBuilders";
 import { Trash2, Copy } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { normalizarSubtotalMxn } from "@/features/cotizacion/domain/ordenSubtotalMxn";
 import { COL_W } from "@/components/shared/dataTable/columnWidths";
 
@@ -47,9 +48,9 @@ export function buildCotizacionesColumns(params: BuildParams): ColumnDef<Cotizac
       cell: ({ row }) => {
         const esInfo = row.original.tipo_documento === "informativa";
         return (
-          <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-2xs font-medium ${esInfo ? "bg-info/15 text-info" : "bg-muted text-muted-foreground"}`}>
+          <Badge variant={esInfo ? "info" : "neutral"} size="sm">
             {esInfo ? "Tarifario" : "Transaccional"}
-          </span>
+          </Badge>
         );
       },
     },
