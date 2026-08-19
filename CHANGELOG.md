@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.690.2] - 2026-08-19
+### Correcciones desde Sentry
+- Los correos de autenticación (confirmación de cuenta y recuperación de contraseña) volvían un error 500 y no se enviaban: la regla de "no registrar dos veces el mismo correo" estaba definida de forma parcial y el registro fallaba. Ahora la regla es total y el envío se encola correctamente (Sentry JAVASCRIPT-REACT-5G).
+- El aviso "por seguridad debes esperar unos segundos" al reenviar correos ya no se reporta como error a Sentry: sigue mostrándose al usuario, pero deja de ensuciar el tablero (Sentry JAVASCRIPT-REACT-5H).
+
+
 ## [13.690.1] - 2026-08-19
 ### Corrección de validación de esquema
 - El inventario de validación del esquema esperaba nombres antiguos de tres reglas automáticas de pagos de factura; ya reconoce los nombres vigentes (se renombraron para asegurar que la conversión de moneda ocurra antes de las validaciones de saldo).

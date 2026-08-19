@@ -5,10 +5,27 @@ export function shouldReportToSentry(error: unknown): boolean {
   if (error === undefined || error === null) return false;
   if (isExpectedValidation(error)) return false;
   if (isAuthorizationError(error)) return false;
+  if (isAuthRateLimit(error)) return false;
   if (isExpectedFacturapiValidation(error)) return false;
   if (isTransientFacturapiNetwork(error)) return false;
   return true;
 }
+
+/**
+ * Límite de reenvío de Supabase Auth ("For security purposes, you can only
+ * request this after N seconds", `over_email_send_rate_limit`). Es un aviso
+ * esperado al usuario, no una falla de la app: no debe llegar a Sentry.
+ */
+export function isAuthRateLimit(err: unknown): boolean {
+  if (typeof err !== "object" || err === null) return false;
+  const e = err as { code?: unknown; message?: unknown; status?: unknown };
+  if (e.code === "over_email_send_rate_limit") return true;
+  if (e.status === 429) return true;
+  const msg = typeof e.message === "string" ? e.message : "";
+  return /for security purposes, you can only request this after|email rate limit exceeded/i
+    .test(msg);
+}
+
 
 /**
  * Validaciones de negocio esperadas (marcadas con `expected = true` en el
