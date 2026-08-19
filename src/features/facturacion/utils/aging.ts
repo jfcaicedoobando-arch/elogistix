@@ -5,16 +5,16 @@
  * `@/lib/aging/buckets` (tokens `--aging-1..5`), así la misma deuda se ve
  * igual en Cobranza, Tesorería, CxC y CxP.
  *
- * Buckets vencido:
- *  - 1-30 d   → warning suave
- *  - 31-60 d  → warning fuerte
- *  - 61-90 d  → destructive suave
- *  - 90+ d    → destructive fuerte
+ * Buckets vencido (nivel de la escala):
+ *  - 1-30 d   → aging-2
+ *  - 31-60 d  → aging-3
+ *  - 61-90 d  → aging-4
+ *  - 90+ d    → aging-5
  *
  * Buckets por cobrar (días para vencer, valor NEGATIVO en dias_vencido):
- *  - <= -8 d   → info (holgado)
- *  - -7 a -1   → warning suave (próximo a vencer)
- *  - 0         → warning fuerte (vence hoy)
+ *  - <= -8 d   → muted (holgado)
+ *  - -7 a -1   → aging-1 (próximo a vencer)
+ *  - 0         → aging-2 (vence hoy)
  */
 
 import { AGING_SOLID_CLASS, nivelAgingDeDias } from "@/lib/aging/buckets";
