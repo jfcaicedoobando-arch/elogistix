@@ -36,7 +36,7 @@ export function CreditoExcesoConfirmDialog({ alerta, clienteNombre, onOpenChange
       size="md"
       onConfirm={onConfirm}
       description={alerta ? (
-        <div className="space-y-1 text-sm">
+        <div className="space-y-1 text-body">
           <p>
             <strong>{clienteNombre ?? "El cliente"}</strong> excederá su límite en{" "}
             <strong>{fmtMxn(exceso)}</strong>.
@@ -44,7 +44,7 @@ export function CreditoExcesoConfirmDialog({ alerta, clienteNombre, onOpenChange
           <p className="text-muted-foreground">
             Límite: {fmtMxn(limite)} · En uso: {fmtMxn(enUso)} · Nueva: {fmtMxn(nueva)}
           </p>
-          <p className="text-xs text-muted-foreground pt-2">
+          <p className="text-body-sm text-muted-foreground pt-2">
             Se registrará en bitácora que continuaste a pesar del exceso.
           </p>
         </div>

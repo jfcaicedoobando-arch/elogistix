@@ -25,21 +25,21 @@ export function AutoSaveIndicator({ estado, ultimoGuardado }: Props) {
 
   if (estado === "saving") {
     return (
-      <span className="flex items-center gap-1 text-xs text-muted-foreground">
+      <span className="flex items-center gap-1 text-body-sm text-muted-foreground">
         <Loader2 className="h-4 w-4 animate-spin" /> Guardando…
       </span>
     );
   }
   if (estado === "error") {
     return (
-      <span className="flex items-center gap-1 text-xs text-destructive">
+      <span className="flex items-center gap-1 text-body-sm text-destructive">
         <AlertCircle className="h-3 w-3" /> No se guardó
       </span>
     );
   }
   if (estado === "saved" || ultimoGuardado) {
     return (
-      <span className={cn("flex items-center gap-1 text-xs text-success")}>
+      <span className={cn("flex items-center gap-1 text-body-sm text-success")}>
         <Check className="h-3 w-3" />
         Guardado{ultimoGuardado ? ` ${formatRelativo(new Date(ultimoGuardado))}` : ""}
       </span>

@@ -39,7 +39,7 @@ export function PanelConciliacionMovimiento({ movimiento, onClose, moneda = "MXN
 
   if (!movimiento) {
     return (
-      <Card><CardContent className="p-6 text-center text-sm text-muted-foreground">
+      <Card><CardContent className="p-6 text-center text-body text-muted-foreground">
         Selecciona un movimiento de la izquierda para ver candidatos a conciliar.
       </CardContent></Card>
     );
@@ -91,7 +91,7 @@ export function PanelConciliacionMovimiento({ movimiento, onClose, moneda = "MXN
           className="border-none shadow-none"
         >
           {movimiento.referencia && (
-            <p className="text-xs text-muted-foreground">Ref: {movimiento.referencia}</p>
+            <p className="text-body-sm text-muted-foreground">Ref: {movimiento.referencia}</p>
           )}
         </KpiCard>
 
@@ -167,7 +167,7 @@ export function PanelConciliacionMovimiento({ movimiento, onClose, moneda = "MXN
           </>
         }
       >
-        <div className="rounded-md border border-destructive/20 bg-destructive/5 p-3 text-sm space-y-1">
+        <div className="rounded-md border border-destructive/20 bg-destructive/5 p-3 text-body space-y-1">
           <p className="font-medium">{movimiento.concepto}</p>
           <p className="text-muted-foreground">
             {formatDate(movimiento.fecha)} · {esCargo ? "Cargo" : "Abono"} de {formatCurrency(monto, moneda)}

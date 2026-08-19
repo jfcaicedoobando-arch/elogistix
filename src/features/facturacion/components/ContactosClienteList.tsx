@@ -23,7 +23,7 @@ function ContactoItem({ contacto: c, seleccionado, onPick }: ContactoItemProps) 
       aria-label={`Usar contacto ${c.nombre ?? c.email}`}
       aria-pressed={seleccionado}
       onClick={() => onPick(c.email)}
-      className={`flex h-auto w-full flex-col items-stretch justify-start whitespace-normal text-left rounded-md border px-3 py-2 text-xs font-normal transition-colors ${
+      className={`flex h-auto w-full flex-col items-stretch justify-start whitespace-normal text-left rounded-md border px-3 py-2 text-body-sm font-normal transition-colors ${
         seleccionado ? "border-primary bg-primary/5" : "border-border hover:bg-muted"
       }`}
     >
@@ -61,14 +61,14 @@ export function ContactosClienteList({
 }: ContactosListProps) {
   if (cargando) {
     return (
-      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+      <div className="flex items-center gap-2 text-body-sm text-muted-foreground">
         <EmptyStateInline loading message="Cargando contactos…" className="py-2" />
       </div>
     );
   }
   if (contactos.length === 0) {
     return (
-      <p className="text-xs text-muted-foreground">
+      <p className="text-body-sm text-muted-foreground">
         Este cliente no tiene contactos con email registrados.
         {emailCliente && " Se usará el email de la ficha del cliente."}
       </p>

@@ -22,7 +22,7 @@ function Dato({ label, value }: { label: string; value: string }) {
   return (
     <div className="min-w-0">
       <div className="text-overline">{label}</div>
-      <div className="text-sm font-medium tabular-nums whitespace-nowrap">{value}</div>
+      <div className="text-body font-medium tabular-nums whitespace-nowrap">{value}</div>
     </div>
   );
 }
@@ -59,7 +59,7 @@ export function EstadoCuentaHeaderCard({
                 toTitleCase(nombre ?? "") || "Cliente"
               )}
             </div>
-            <div className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+            <div className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-body-sm text-muted-foreground">
               <span className="font-mono uppercase">{rfc || "Sin RFC"}</span>
               <span>·</span>
               <span>

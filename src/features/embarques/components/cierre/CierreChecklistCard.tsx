@@ -44,12 +44,12 @@ export function CierreChecklistCard({ isLoading, checks, embarqueId, expediente,
       </CardHeader>
       <CardContent className="space-y-3">
         {informativo && (
-          <p className="text-xs text-muted-foreground">
+          <p className="text-body-sm text-muted-foreground">
             Este embarque se cerró antes de que existieran algunas de estas reglas.
             La lista es solo referencial; no requiere acción.
           </p>
         )}
-        {isLoading && <p className="text-sm text-muted-foreground">Validando…</p>}
+        {isLoading && <p className="text-body text-muted-foreground">Validando…</p>}
         {!isLoading && checks.length === 0 && (
           <EmptyStateInline icon={ClipboardList} message="Sin datos." className="py-4" />
         )}

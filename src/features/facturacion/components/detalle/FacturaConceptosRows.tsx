@@ -48,18 +48,18 @@ export function ConceptosMobileList({ conceptos, moneda, inferirTipoIva }: ViewP
         return (
           <div key={i} className="rounded-lg border p-3">
             <div className="flex items-start justify-between gap-2">
-              <p className="text-sm font-medium">{descripcion}</p>
+              <p className="text-body font-medium">{descripcion}</p>
               <IvaCell tipo={tipoIva} />
             </div>
             {c.embarque_expediente && c.embarque_id && (
               <Link
                 to={`/embarques/${c.embarque_id}`}
-                className="mt-1 inline-block text-xs text-accent hover:underline"
+                className="mt-1 inline-block text-body-sm text-accent hover:underline"
               >
                 {c.embarque_expediente}
               </Link>
             )}
-            <div className="flex justify-between mt-2 text-xs text-muted-foreground">
+            <div className="flex justify-between mt-2 text-body-sm text-muted-foreground">
               <span>Cant: {c.cantidad ?? 1}</span>
               <span className="font-bold text-foreground tabular-nums">
                 {formatCurrency(Number(importe), moneda)}
@@ -96,7 +96,7 @@ export function ConceptosDesktopTable({ conceptos, moneda, mostrarEmbarque, infe
               <TableRow key={i}>
                 <TableCell>{descripcion}</TableCell>
                 {mostrarEmbarque && (
-                  <TableCell className="text-xs">
+                  <TableCell className="text-body-sm">
                     {c.embarque_expediente && c.embarque_id ? (
                       <Link
                         to={`/embarques/${c.embarque_id}`}

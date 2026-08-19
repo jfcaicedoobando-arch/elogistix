@@ -12,7 +12,7 @@ interface Props {
 
 export function ResumenReconciliacion({ resumen, versionAceptada }: Props) {
   return (
-    <div className="rounded-md border p-3 text-sm">
+    <div className="rounded-md border p-3 text-body">
       <div className="flex justify-between">
         <span>Total cotizado:</span>
         <span>{fmt(resumen.total_cotizado, "USD")}</span>
@@ -35,7 +35,7 @@ export function ResumenReconciliacion({ resumen, versionAceptada }: Props) {
         </span>
       </div>
       {versionAceptada != null && (
-        <div className="text-xs text-muted-foreground mt-2">
+        <div className="text-body-sm text-muted-foreground mt-2">
           Versión cotizada aceptada: v{versionAceptada}
         </div>
       )}

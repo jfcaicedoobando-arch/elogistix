@@ -34,7 +34,7 @@ interface Props {
 
 function IntroBody({ numero, uuidOriginal }: { numero?: string; uuidOriginal?: string | null }) {
   return (
-    <div className="space-y-3 text-sm">
+    <div className="space-y-3 text-body">
       <p>
         Se clonará la factura <strong>{numero}</strong> como un nuevo borrador. Al confirmar,
         te llevaremos directamente al detalle del borrador para que lo edites y timbres.
@@ -46,7 +46,7 @@ function IntroBody({ numero, uuidOriginal }: { numero?: string; uuidOriginal?: s
         <li>Volver a esta factura y confirmar cancelación (motivo 01).</li>
       </ol>
       {!uuidOriginal && (
-        <p className="text-destructive text-xs">
+        <p className="text-destructive text-body-sm">
           Esta factura no tiene UUID fiscal; no se puede sustituir.
         </p>
       )}
@@ -58,13 +58,13 @@ function ConfirmarBody({
   numero, isLoading, timbrada, estadoLabel,
 }: { numero?: string; isLoading: boolean; timbrada: boolean; estadoLabel: string }) {
   return (
-    <div className="space-y-3 text-sm">
+    <div className="space-y-3 text-body">
       <p>
         Ya existe un borrador sustituto para esta factura. Cuando esté timbrado,
         cancelaremos el CFDI <strong>{numero}</strong> con motivo SAT 01 referenciando
         al UUID de la sustituta.
       </p>
-      <div className={`rounded-md border p-3 text-xs ${timbrada ? "border-success/30 bg-success/5" : "border-warning/30 bg-warning/5"}`}>
+      <div className={`rounded-md border p-3 text-body-sm ${timbrada ? "border-success/30 bg-success/5" : "border-warning/30 bg-warning/5"}`}>
         <strong>Estado de la sustituta:</strong>{" "}
         {isLoading ? "Consultando…" : estadoLabel}
         {!timbrada && !isLoading && (
@@ -73,7 +73,7 @@ function ConfirmarBody({
           </div>
         )}
       </div>
-      <div className="rounded-md border border-warning/30 bg-warning/5 p-3 text-xs">
+      <div className="rounded-md border border-warning/30 bg-warning/5 p-3 text-body-sm">
         <strong>Nota:</strong> el SAT puede tardar hasta 72 h en aceptar la cancelación si el
         CFDI supera $1,000 MXN (regla 2.7.1.34). El sistema hará seguimiento automático.
       </div>

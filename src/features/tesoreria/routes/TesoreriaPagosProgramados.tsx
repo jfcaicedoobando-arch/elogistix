@@ -106,7 +106,7 @@ export default function TesoreriaPagosProgramados() {
       {/* B-030: filtro explícito y visible. Default: "Todas" para no ocultar
           facturas silenciosamente como hacía la RPC anterior. */}
       <div className="flex items-center gap-2">
-        <span className="text-sm text-muted-foreground">Mostrar:</span>
+        <span className="text-body text-muted-foreground">Mostrar:</span>
         <Select value={filtro} onValueChange={(v) => setFiltro(v as FiltroBandeja)}>
           <SelectTrigger className="w-[220px]"><SelectValue /></SelectTrigger>
           <SelectContent>

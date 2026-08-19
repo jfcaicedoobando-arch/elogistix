@@ -96,11 +96,11 @@ export function ConceptosCostoCard({
       <CardHeader className="pb-2 flex flex-row items-center justify-between gap-2">
         <CardTitle>Costos directos del embarque</CardTitle>
         {costoFocus && (
-          <div className="flex items-center gap-2 text-xs">
+          <div className="flex items-center gap-2 text-body-sm">
             <Badge variant="outline" className="border-primary text-primary">
               Filtrando: {FOCUS_LABEL[costoFocus]}
             </Badge>
-            <Button size="sm" variant="ghost" className="h-7 px-2 text-xs" onClick={clearFocus}>
+            <Button size="sm" variant="ghost" className="h-7 px-2 text-body-sm" onClick={clearFocus}>
               <X className="mr-1 h-3 w-3" /> Limpiar
             </Button>
           </div>

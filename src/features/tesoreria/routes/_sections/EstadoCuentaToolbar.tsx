@@ -42,7 +42,7 @@ export function EstadoCuentaToolbar({
     <Card>
       <CardContent density="compact" className="flex flex-wrap items-end gap-3">
         <div className="min-w-[220px]">
-          <p className="text-xs text-muted-foreground mb-1">Cuenta</p>
+          <p className="text-body-sm text-muted-foreground mb-1">Cuenta</p>
           <Select value={cuentaId} onValueChange={onCuentaChange}>
             <SelectTrigger><SelectValue placeholder="Selecciona una cuenta" /></SelectTrigger>
             <SelectContent>
@@ -56,7 +56,7 @@ export function EstadoCuentaToolbar({
         </div>
 
         <div>
-          <p className="text-xs text-muted-foreground mb-1">Desde</p>
+          <p className="text-body-sm text-muted-foreground mb-1">Desde</p>
           <DatePickerMx
             value={rango.desde}
             onChange={(iso) => onRangoChange({ ...rango, desde: iso })}
@@ -64,7 +64,7 @@ export function EstadoCuentaToolbar({
           />
         </div>
         <div>
-          <p className="text-xs text-muted-foreground mb-1">Hasta</p>
+          <p className="text-body-sm text-muted-foreground mb-1">Hasta</p>
           <DatePickerMx
             value={rango.hasta}
             onChange={(iso) => onRangoChange({ ...rango, hasta: iso })}
@@ -85,7 +85,7 @@ export function EstadoCuentaToolbar({
         </div>
 
         <div className="min-w-[200px] flex-1">
-          <p className="text-xs text-muted-foreground mb-1">Buscar</p>
+          <p className="text-body-sm text-muted-foreground mb-1">Buscar</p>
           <div className="relative">
             <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" aria-hidden />
             <Input
@@ -99,7 +99,7 @@ export function EstadoCuentaToolbar({
         </div>
 
         <div className="min-w-[150px]">
-          <p className="text-xs text-muted-foreground mb-1">Tipo</p>
+          <p className="text-body-sm text-muted-foreground mb-1">Tipo</p>
           <Select value={tipo} onValueChange={(v) => onTipoChange(v as TipoMovimientoEstadoCuenta)}>
             <SelectTrigger><SelectValue /></SelectTrigger>
             <SelectContent>

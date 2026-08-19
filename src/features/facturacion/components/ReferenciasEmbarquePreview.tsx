@@ -33,7 +33,7 @@ export function ReferenciasEmbarquePreview({ factura, primeraDescripcion }: Prop
     : prefijo.trim();
 
   return (
-    <div className="rounded-md border border-primary/20 bg-primary/5 p-3 text-xs space-y-2">
+    <div className="rounded-md border border-primary/20 bg-primary/5 p-3 text-body-sm space-y-2">
       <div className="flex items-center gap-2 font-medium text-foreground">
         <FileBadge2 className="h-3.5 w-3.5" />
         Referencias que se incluirán en la factura

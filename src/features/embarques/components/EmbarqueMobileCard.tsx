@@ -29,11 +29,11 @@ export function EmbarqueMobileCard({ embarque: e }: { embarque: EmbarqueMobileCa
   return (
     <div className="flex items-start justify-between gap-2">
       <div className="min-w-0 flex-1">
-        <div className="flex items-center gap-1.5 font-semibold text-sm">
+        <div className="flex items-center gap-1.5 font-semibold text-body">
           <ModoIcon modo={e.modo} size={14} />
           <span className="truncate">{e.expediente}</span>
         </div>
-        <div className="text-xs text-muted-foreground truncate mt-0.5">
+        <div className="text-body-sm text-muted-foreground truncate mt-0.5">
           {toTitleCase(e.cliente_nombre)}
         </div>
         <div className="text-label text-muted-foreground truncate mt-0.5">

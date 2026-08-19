@@ -55,7 +55,7 @@ export function FacturaConceptosEditor({ facturaId, organizationId, moneda, conc
       </CardHeader>
       <CardContent className="space-y-2">
         {conceptos.length === 0 && !showNew && (
-          <p className="text-sm text-muted-foreground py-4 text-center">
+          <p className="text-body text-muted-foreground py-4 text-center">
             Este borrador aún no tiene conceptos. Agrega al menos uno antes de timbrar.
           </p>
         )}

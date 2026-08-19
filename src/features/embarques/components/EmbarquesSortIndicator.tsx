@@ -26,14 +26,14 @@ export function EmbarquesSortIndicator({ sortKey, sortDir, onClear }: Props) {
   if (!sortKey) return null;
   const label = `Ordenado por ${SORT_LABEL_MAP[sortKey] ?? sortKey} ${sortDir === "asc" ? "↑" : "↓"} · global`;
   return (
-    <div className="flex items-center justify-between px-3 py-1.5 text-xs text-muted-foreground border-b bg-muted/20">
+    <div className="flex items-center justify-between px-3 py-1.5 text-body-sm text-muted-foreground border-b bg-muted/20">
       <span>{label}</span>
       <Button
         type="button"
         variant="ghost"
         size="sm"
         onClick={onClear}
-        className="h-6 gap-1 text-xs px-2"
+        className="h-6 gap-1 text-body-sm px-2"
       >
         <X className="h-3 w-3" />
         Quitar orden

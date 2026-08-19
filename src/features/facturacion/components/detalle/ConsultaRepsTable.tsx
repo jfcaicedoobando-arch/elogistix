@@ -72,7 +72,7 @@ export function ConsultaRepsTable({ reps }: { reps: ConsultarFacturapiRep[] | un
   if (!reps || reps.length === 0) return null;
   return (
     <div className="rounded-lg border">
-      <div className="px-3 py-2 text-xs font-semibold text-muted-foreground uppercase border-b">
+      <div className="px-3 py-2 text-body-sm font-semibold text-muted-foreground uppercase border-b">
         XML de los REP timbrados ({reps.length})
       </div>
       <DataTable

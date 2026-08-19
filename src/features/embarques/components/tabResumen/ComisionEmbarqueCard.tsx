@@ -47,7 +47,7 @@ export function ComisionEmbarqueCard({ embarqueId }: { embarqueId: string }) {
           Comisión de venta
         </CardTitle>
       </CardHeader>
-      <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start text-sm">
+      <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start text-body">
         <div className="space-y-1">
           <Label>Regla de este embarque</Label>
           <Select
@@ -68,11 +68,11 @@ export function ComisionEmbarqueCard({ embarqueId }: { embarqueId: string }) {
           </Select>
         </div>
         <div className="space-y-1">
-          <div className="text-xs uppercase tracking-wide text-muted-foreground">Resultado</div>
+          <div className="text-body-sm uppercase tracking-wide text-muted-foreground">Resultado</div>
           <Badge variant={efectivo ? "outline" : "secondary"}>
             {efectivo ? "No genera comisión" : "Genera comisión"}
           </Badge>
-          <p className="text-xs text-muted-foreground">
+          <p className="text-body-sm text-muted-foreground">
             {efectivo
               ? "Los cobros de este embarque no devengan comisión."
               : "Cada cobro de factura devenga comisión para la vendedora asignada."}

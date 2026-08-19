@@ -63,7 +63,7 @@ export function FacturaDatosFiscalesCard({ factura }: Props) {
       </CardHeader>
       <CardContent className="space-y-4">
         {factura.moneda !== "MXN" && (tipoCambio == null || tipoCambio <= 0) && (
-          <div className="flex items-start gap-2 rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+          <div className="flex items-start gap-2 rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-body text-destructive">
             <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
             <span>Falta capturar el tipo de cambio del día. Pulsa
             <span className="font-semibold"> “Obtener TC DOF de hoy”</span> o

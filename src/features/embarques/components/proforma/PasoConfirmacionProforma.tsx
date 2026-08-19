@@ -22,7 +22,7 @@ export function PasoConfirmacionProforma({
 }: Props) {
   return (
     <div className="space-y-4">
-      <div className="rounded-md border bg-warning/10 border-warning/30 p-3 text-sm">
+      <div className="rounded-md border bg-warning/10 border-warning/30 p-3 text-body">
         <p className="[color:hsl(var(--warning))]">
           <strong>Importante:</strong> Aún no se ha guardado nada. Revisa el resumen y confirma para generar la proforma y descargar el PDF.
         </p>
@@ -45,8 +45,8 @@ export function PasoConfirmacionProforma({
                 const c = row.original;
                 const aplica = c.moneda === "MXN" ? true : !!ivaPorConcepto[c.id];
                 return aplica
-                  ? <Badge variant="success" className="text-xs"><CheckCircle2 className="h-3 w-3 mr-0.5" /> Sí</Badge>
-                  : <Badge variant="secondary" className="text-xs">No</Badge>;
+                  ? <Badge variant="success" className="text-body-sm"><CheckCircle2 className="h-3 w-3 mr-0.5" /> Sí</Badge>
+                  : <Badge variant="secondary" className="text-body-sm">No</Badge>;
               } },
           ]) as ColumnDef<ConceptoVenta, unknown>[]}
           data={conceptosSeleccionados}
@@ -61,14 +61,14 @@ export function PasoConfirmacionProforma({
       <div className="rounded-md border-2 border-primary/30 bg-primary/5 p-4 space-y-2">
         <SectionHeading as="h3" className="mb-2">Totales finales</SectionHeading>
         {totales.subtotal_usd > 0 && (
-          <div className="space-y-1 text-sm">
+          <div className="space-y-1 text-body">
             <div className="flex justify-between"><span>Subtotal USD:</span><span>{formatCurrency(totales.subtotal_usd, "USD")}</span></div>
             <div className="flex justify-between text-muted-foreground"><span>IVA USD:</span><span>{formatCurrency(totales.iva_usd, "USD")}</span></div>
             <div className="flex justify-between font-bold text-base pt-1 border-t"><span>Total USD:</span><span>{formatCurrency(totales.total_usd, "USD")}</span></div>
           </div>
         )}
         {totales.subtotal_mxn > 0 && (
-          <div className={`space-y-1 text-sm ${totales.subtotal_usd > 0 ? "mt-3 pt-3 border-t" : ""}`}>
+          <div className={`space-y-1 text-body ${totales.subtotal_usd > 0 ? "mt-3 pt-3 border-t" : ""}`}>
             <div className="flex justify-between"><span>Subtotal MXN:</span><span>{formatCurrency(totales.subtotal_mxn, "MXN")}</span></div>
             <div className="flex justify-between text-muted-foreground"><span>IVA ({(tasaIva * 100).toFixed(0)}%) MXN:</span><span>{formatCurrency(totales.iva_mxn, "MXN")}</span></div>
             <div className="flex justify-between font-bold text-base pt-1 border-t"><span>Total MXN:</span><span>{formatCurrency(totales.total_mxn, "MXN")}</span></div>
@@ -78,8 +78,8 @@ export function PasoConfirmacionProforma({
 
       {notas.trim() && (
         <div className="rounded-md border p-3 bg-muted/20">
-          <p className="text-xs font-semibold text-muted-foreground mb-1">Notas:</p>
-          <p className="text-sm whitespace-pre-wrap">{notas}</p>
+          <p className="text-body-sm font-semibold text-muted-foreground mb-1">Notas:</p>
+          <p className="text-body whitespace-pre-wrap">{notas}</p>
         </div>
       )}
     </div>

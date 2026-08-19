@@ -101,7 +101,7 @@ export function TabNotas({ embarqueId, expediente }: Props) {
           <EmptyStateInline loading message="Cargando actividad…" className="py-6" />
         ) : isError ? (
           <div className="py-6 text-center">
-            <p className="text-sm text-muted-foreground">No se pudo cargar la actividad.</p>
+            <p className="text-body text-muted-foreground">No se pudo cargar la actividad.</p>
             <Button variant="outline" size="sm" className="mt-2" onClick={refetch}>
               Reintentar
             </Button>

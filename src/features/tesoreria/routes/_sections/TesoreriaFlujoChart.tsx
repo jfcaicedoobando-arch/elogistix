@@ -27,7 +27,7 @@ export function TesoreriaFlujoChart() {
           <SectionHeading as="h3">Flujo de caja proyectado</SectionHeading>
           <Link
             to={ROUTES.TESORERIA_FLUJO}
-            className="inline-flex items-center gap-1 text-xs text-accent hover:underline"
+            className="inline-flex items-center gap-1 text-body-sm text-accent hover:underline"
           >
             Ver 90 días <ArrowRight className="h-3 w-3" />
           </Link>

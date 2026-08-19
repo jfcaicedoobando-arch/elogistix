@@ -19,7 +19,7 @@ interface Props {
  */
 export function SelectorSustituta({ isLoading, sustitutasTimbradas, value, onChange, onAbrirSustituir }: Props) {
   if (isLoading) {
-    return <p className="text-sm text-muted-foreground">Buscando sustitutas…</p>;
+    return <p className="text-body text-muted-foreground">Buscando sustitutas…</p>;
   }
   if (sustitutasTimbradas.length === 0) {
     return (
@@ -57,7 +57,7 @@ export function SelectorSustituta({ isLoading, sustitutasTimbradas, value, onCha
           })}
         </SelectContent>
       </Select>
-      <p className="text-xs text-muted-foreground">
+      <p className="text-body-sm text-muted-foreground">
         Se enviará a FacturAPI el <code>facturapi_id</code> interno de la sustituta seleccionada
         (parámetro <code>substitution</code>). El UUID SAT queda en bitácora para auditoría.
       </p>

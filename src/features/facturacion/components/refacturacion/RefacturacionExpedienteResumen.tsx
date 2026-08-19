@@ -15,8 +15,8 @@ const ESTADO_VARIANT: Record<string, "default" | "secondary" | "destructive"> = 
 function Dato({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="space-y-0.5">
-      <p className="text-xs text-muted-foreground">{label}</p>
-      <p className="text-sm font-medium break-words">{children}</p>
+      <p className="text-body-sm text-muted-foreground">{label}</p>
+      <p className="text-body font-medium break-words">{children}</p>
     </div>
   );
 }
@@ -51,7 +51,7 @@ export function RefacturacionExpedienteResumen({ exp }: { exp: RefacturacionExpe
         <Badge variant="outline">
           Ruta {caso.ruta_fiscal} · {caso.ruta_fiscal === "01" ? "sustitución" : "factura nueva sin relación"}
         </Badge>
-        <span className="text-xs text-muted-foreground">
+        <span className="text-body-sm text-muted-foreground">
           Abierto el {formatFechaHoraTexto(caso.created_at)}{abiertoPor}
         </span>
       </div>

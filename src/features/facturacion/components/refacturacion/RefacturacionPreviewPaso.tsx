@@ -48,7 +48,7 @@ function BloqueAcciones({
       </SectionHeading>
       <ul className="space-y-1.5">
         {acciones.map((a) => (
-          <li key={`${a.tipo}-${a.etiqueta}`} className="text-xs">
+          <li key={`${a.tipo}-${a.etiqueta}`} className="text-body-sm">
             <div className="flex items-baseline justify-between gap-3">
               <span className="font-medium">{a.etiqueta}</span>
               {importe(a) && <span className="tabular-nums">{importe(a)}</span>}
@@ -68,7 +68,7 @@ export function RefacturacionPreviewPaso({ casoId, paso, activo }: Props) {
 
   if (isFetching && !data) {
     return (
-      <p className="flex items-center gap-2 text-xs text-muted-foreground">
+      <p className="flex items-center gap-2 text-body-sm text-muted-foreground">
         <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
         Calculando la vista previa del resultado…
       </p>
@@ -77,7 +77,7 @@ export function RefacturacionPreviewPaso({ casoId, paso, activo }: Props) {
 
   if (isError || !data) {
     return (
-      <p className="text-xs text-muted-foreground">
+      <p className="text-body-sm text-muted-foreground">
         No fue posible calcular la vista previa de esta etapa.
       </p>
     );
@@ -101,7 +101,7 @@ export function RefacturacionPreviewPaso({ casoId, paso, activo }: Props) {
       </div>
 
       {reasigna && (
-        <div className="rounded-md border p-3 text-xs">
+        <div className="rounded-md border p-3 text-body-sm">
           <SectionHeading
             as="h3"
             variant="overline"

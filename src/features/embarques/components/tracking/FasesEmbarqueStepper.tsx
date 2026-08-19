@@ -40,7 +40,7 @@ function tituloNodo(fase: FaseEmbarque): string {
 
 function AvisoFechasFueraDeOrden() {
   return (
-    <div className="mt-2 flex items-center gap-1.5 text-xs text-warning">
+    <div className="mt-2 flex items-center gap-1.5 text-body-sm text-warning">
       <TriangleAlert className="size-3.5 shrink-0" />
       Fechas de etapas fuera de orden — revisar bitácora
     </div>
@@ -71,13 +71,13 @@ function StepperCompacto({ fases, enRiesgo }: { fases: FaseEmbarque[]; enRiesgo:
     <div data-testid="fases-stepper" data-variant="compacta">
       <div className="flex items-center justify-between gap-4">
         <div className="flex items-baseline gap-2 min-w-0">
-          <span className="text-xs uppercase tracking-wide text-muted-foreground">
+          <span className="text-body-sm uppercase tracking-wide text-muted-foreground">
             Paso {idxActual + 1} de {fases.length}
           </span>
-          <span className="text-sm font-semibold truncate">{actual?.label}</span>
+          <span className="text-body font-semibold truncate">{actual?.label}</span>
         </div>
         {siguiente && (
-          <span className="text-xs text-muted-foreground hidden sm:inline">
+          <span className="text-body-sm text-muted-foreground hidden sm:inline">
             Siguiente: <span className="text-foreground/80">{siguiente.label}</span>
           </span>
         )}
@@ -133,7 +133,7 @@ function StepperCompleto({ fases, enRiesgo }: { fases: FaseEmbarque[]; enRiesgo:
                 />
                 <div className="text-center mt-2 px-1">
                   <p className={cn(
-                    "text-xs",
+                    "text-body-sm",
                     fase.estado === "pendiente" ? "text-muted-foreground" : "text-foreground font-medium",
                   )}>
                     {fase.label}
@@ -164,12 +164,12 @@ function StepperCompleto({ fases, enRiesgo }: { fases: FaseEmbarque[]; enRiesgo:
                 />
               </div>
               <p className={cn(
-                "text-sm",
+                "text-body",
                 fase.estado === "pendiente" ? "text-muted-foreground" : "text-foreground font-medium",
               )}>
                 {fase.label}
               </p>
-              <p className="text-xs text-muted-foreground">{textoFecha(fase)}</p>
+              <p className="text-body-sm text-muted-foreground">{textoFecha(fase)}</p>
             </div>
           ))}
         </div>

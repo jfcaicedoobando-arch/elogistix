@@ -40,7 +40,7 @@ export function DetallePagoSheet({ ref_pago, onOpenChange }: Props) {
           {isLoading ? <CardSkeleton lines={5} /> : null}
 
           {isError ? (
-            <div className="space-y-2 rounded-md border border-destructive/30 bg-destructive/5 p-3 text-sm">
+            <div className="space-y-2 rounded-md border border-destructive/30 bg-destructive/5 p-3 text-body">
               <p>{getErrorMessage(error)}</p>
               <Button size="sm" variant="outline" onClick={() => void refetch()}>
                 Reintentar

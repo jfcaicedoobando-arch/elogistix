@@ -52,7 +52,7 @@ export function NuevaCuentaFormFields({ form, setField, monedaBloqueada = false 
           placeholder="18 dígitos"
         />
         {errorClabe && (
-          <p className="text-xs text-destructive pt-1" role="alert">{errorClabe}</p>
+          <p className="text-body-sm text-destructive pt-1" role="alert">{errorClabe}</p>
         )}
       </div>
       <div>
@@ -66,7 +66,7 @@ export function NuevaCuentaFormFields({ form, setField, monedaBloqueada = false 
           </SelectContent>
         </Select>
         {monedaBloqueada && (
-          <p className="text-xs text-muted-foreground pt-1">
+          <p className="text-body-sm text-muted-foreground pt-1">
             La cuenta ya tiene movimientos: la moneda no se puede cambiar.
           </p>
         )}
@@ -90,7 +90,7 @@ export function NuevaCuentaFormFields({ form, setField, monedaBloqueada = false 
           className="w-full"
         />
       </div>
-      <p className="sm:col-span-2 text-xs text-muted-foreground">
+      <p className="sm:col-span-2 text-body-sm text-muted-foreground">
         Los movimientos con fecha anterior a este día se guardan como historial, pero no
         afectan el saldo: ya vienen incluidos en el saldo inicial.
       </p>

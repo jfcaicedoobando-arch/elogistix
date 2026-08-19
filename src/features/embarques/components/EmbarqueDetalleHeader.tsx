@@ -90,15 +90,15 @@ export function EmbarqueDetalleHeader({
               cotizacionFolio ? (
                 <Link
                   to={`/cotizaciones/${embarque.cotizacion_id}`}
-                  className="text-xs hover:text-foreground hover:underline"
+                  className="text-body-sm hover:text-foreground hover:underline"
                 >
                   Cotización origen: {cotizacionFolio}
                 </Link>
               ) : (
-                <span className="text-xs">Cotización origen no disponible</span>
+                <span className="text-body-sm">Cotización origen no disponible</span>
               )
             ) : (
-              <span className="text-xs text-warning" title="Embarque legacy sin cotización vinculada (creado antes de la política tarifa-first)">
+              <span className="text-body-sm text-warning" title="Embarque legacy sin cotización vinculada (creado antes de la política tarifa-first)">
                 Sin cotización vinculada
               </span>
             )}

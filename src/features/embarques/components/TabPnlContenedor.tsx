@@ -50,7 +50,7 @@ export function TabPnlContenedor({ embarqueId, expediente }: Props) {
   if (contenedores.length === 0 && monedas.length === 0) {
     return (
       <Card>
-        <CardContent className="pt-6 text-sm text-muted-foreground">
+        <CardContent className="pt-6 text-body text-muted-foreground">
           Este embarque no tiene contenedores registrados.
         </CardContent>
       </Card>
@@ -60,7 +60,7 @@ export function TabPnlContenedor({ embarqueId, expediente }: Props) {
   return (
     <div className="space-y-6">
       <Card className="border-info/30 bg-info/5">
-        <CardContent className="pt-4 text-xs text-muted-foreground">
+        <CardContent className="pt-4 text-body-sm text-muted-foreground">
           Modelo CargoWise: 1 embarque = 1 expediente. El sub-expediente
           (ej. <span className="font-mono">{expediente}-01</span>) es sólo
           referencia operativa del contenedor. Los conceptos sin contenedor
@@ -70,7 +70,7 @@ export function TabPnlContenedor({ embarqueId, expediente }: Props) {
 
       {monedas.length === 0 ? (
         <Card>
-          <CardContent className="pt-6 text-sm text-muted-foreground">
+          <CardContent className="pt-6 text-body text-muted-foreground">
             No hay conceptos de venta ni costo registrados.
           </CardContent>
         </Card>

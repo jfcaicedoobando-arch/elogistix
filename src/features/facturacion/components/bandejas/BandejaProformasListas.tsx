@@ -27,7 +27,7 @@ const columns = defineColumns<FilaProformaLista>([
     header: "Expediente",
     accessorFn: (r) => r.expediente ?? "",
     enableSorting: true,
-    meta: { width: COL_W.folio, className: "font-mono text-xs whitespace-nowrap hidden md:table-cell", headerClassName: "hidden md:table-cell" },
+    meta: { width: COL_W.folio, className: "font-mono text-body-sm whitespace-nowrap hidden md:table-cell", headerClassName: "hidden md:table-cell" },
     cell: ({ row }) => row.original.expediente ?? "—",
   },
   {
@@ -44,7 +44,7 @@ const columns = defineColumns<FilaProformaLista>([
     },
   },
   { ...dateColumn<FilaProformaLista>({ id: "aprobada", header: "Aprobada", accessor: (r) => r.created_at }),
-    meta: { width: COL_W.fecha, className: "text-xs whitespace-nowrap" } },
+    meta: { width: COL_W.fecha, className: "text-body-sm whitespace-nowrap" } },
 ]);
 
 export function BandejaProformasListas() {

@@ -102,7 +102,7 @@ export function ReabrirEmbarqueDialog({
             onChange={(e) => onMotivoChange(e.target.value)}
             rows={4}
           />
-          <p className="text-xs text-muted-foreground">
+          <p className="text-body-sm text-muted-foreground">
             {motivo.trim().length}/{CIERRE_MOTIVO_MIN} caracteres
           </p>
         </div>

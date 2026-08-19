@@ -27,14 +27,14 @@ interface Props {
 
 /** Chip de vencimiento: justifica el orden FIFO del reparto. */
 function ChipVencimiento({ iso }: { iso: string | null }) {
-  if (!iso) return <span className="text-xs text-muted-foreground">Sin fecha</span>;
+  if (!iso) return <span className="text-body-sm text-muted-foreground">Sin fecha</span>;
   const dias = diasHastaFecha(iso);
   const vencida = dias < 0;
   const texto =
     dias === 0 ? "Vence hoy" : vencida ? `Vencida ${Math.abs(dias)} d` : `Vence en ${dias} d`;
   return (
     <div className="leading-tight">
-      <p className="text-xs text-muted-foreground">{formatDate(iso)}</p>
+      <p className="text-body-sm text-muted-foreground">{formatDate(iso)}</p>
       <p className={cn("text-label", vencida ? "text-destructive" : "text-muted-foreground")}>
         {texto}
       </p>
@@ -52,7 +52,7 @@ export function CobroLoteRenglon(p: Props) {
     <tr className={cn("border-t align-top", p.impar && "bg-muted/20", p.error && "bg-destructive/5")}>
       <td className="px-3 py-2">
         <div className="flex items-center gap-1.5">
-          <span className="font-mono text-xs">{p.factura.numero ?? "—"}</span>
+          <span className="font-mono text-body-sm">{p.factura.numero ?? "—"}</span>
           {p.requiereRep && (
             <Tooltip>
               <TooltipTrigger asChild>
@@ -85,7 +85,7 @@ export function CobroLoteRenglon(p: Props) {
             type="button"
             variant="ghost"
             size="sm"
-            className="h-9 px-2 text-xs"
+            className="h-9 px-2 text-body-sm"
             onClick={p.onAsignarSaldo}
             title="Asignar el saldo de esta factura"
           >

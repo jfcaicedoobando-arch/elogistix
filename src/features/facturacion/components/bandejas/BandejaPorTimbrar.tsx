@@ -25,7 +25,7 @@ const columns = defineColumns<FilaPorTimbrar>([
   },
   clientColumn<FilaPorTimbrar>({ accessor: (r) => r.cliente_nombre }),
   { ...dateColumn<FilaPorTimbrar>({ id: "emision", header: "Emisión", accessor: (r) => r.fecha_emision }),
-    meta: { width: COL_W.fecha, className: "text-xs whitespace-nowrap" } },
+    meta: { width: COL_W.fecha, className: "text-body-sm whitespace-nowrap" } },
   { ...moneyColumn<FilaPorTimbrar>({ id: "total", header: "Total",
       accessor: (r) => r.total, currencyAccessor: (r) => r.moneda }),
     meta: { width: COL_W.monto, align: "right", className: "tabular-nums whitespace-nowrap font-medium" } },

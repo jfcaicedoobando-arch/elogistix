@@ -74,7 +74,7 @@ export function TabGarantias({ embarqueId, canEdit, fechaLlegadaReal }: Props) {
         <CardHeader className="pb-2 flex flex-row items-start justify-between gap-2">
           <div>
             <CardTitle>Garantías por contenedor</CardTitle>
-            <p className="text-xs text-muted-foreground mt-1">
+            <p className="text-body-sm text-muted-foreground mt-1">
               Los depósitos no son gasto: regresan al devolver el vacío. Si la naviera tiene carta
               de garantía vigente el monto esperado es 0; si no, captura aquí el monto USD y la
               referencia bancaria del depósito.

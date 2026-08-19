@@ -69,7 +69,7 @@ export function libroPagosColumns(): ColumnDef<PagoLibro, unknown>[] {
       accessorFn: (p) => p.fecha,
       meta: { width: "w-28" },
       cell: ({ row }) => (
-        <span className="whitespace-nowrap text-xs">{formatDate(row.original.fecha)}</span>
+        <span className="whitespace-nowrap text-body-sm">{formatDate(row.original.fecha)}</span>
       ),
     },
     {
@@ -113,7 +113,7 @@ export function libroPagosColumns(): ColumnDef<PagoLibro, unknown>[] {
         const enLote = row.original.tipo === "pago" && !!row.original.lote_id;
         return (
           <div className="space-y-0.5">
-            <span className="block text-xs font-medium">{folio}</span>
+            <span className="block text-body-sm font-medium">{folio}</span>
             {enLote ? (
               <span className="block text-2xs text-muted-foreground">Parte de un pago en lote</span>
             ) : null}
@@ -128,7 +128,7 @@ export function libroPagosColumns(): ColumnDef<PagoLibro, unknown>[] {
       cell: ({ row }) => (
         <div className="max-w-[160px]">
           <span
-            className="block truncate text-xs"
+            className="block truncate text-body-sm"
             title={labelDeCatalogo(FORMAS_PAGO_SAT, row.original.metodo_pago, row.original.metodo_pago ?? undefined)}
           >
             {etiquetaMetodoPago(row.original.metodo_pago)}
@@ -146,7 +146,7 @@ export function libroPagosColumns(): ColumnDef<PagoLibro, unknown>[] {
       header: "Cuenta",
       accessorFn: (p) => p.cuenta_alias ?? "",
       cell: ({ row }) => (
-        <span className="block max-w-[140px] truncate text-xs" title={row.original.cuenta_alias ?? ""}>
+        <span className="block max-w-[140px] truncate text-body-sm" title={row.original.cuenta_alias ?? ""}>
           {row.original.cuenta_alias ?? "—"}
         </span>
       ),
@@ -171,7 +171,7 @@ export function libroPagosColumns(): ColumnDef<PagoLibro, unknown>[] {
       accessorFn: (p) => p.monto_mxn,
       meta: { align: "right" },
       cell: ({ row }) => (
-        <span className="tabular-nums text-xs text-muted-foreground">
+        <span className="tabular-nums text-body-sm text-muted-foreground">
           {formatCurrency(row.original.monto_mxn, "MXN")}
         </span>
       ),

@@ -29,7 +29,7 @@ export function crearMovimientoColumns(
     header: "Fecha",
     accessorFn: (m) => m.fecha,
     cell: ({ row }) => (
-      <span className="whitespace-nowrap text-xs">{formatDate(row.original.fecha)}</span>
+      <span className="whitespace-nowrap text-body-sm">{formatDate(row.original.fecha)}</span>
     ),
   },
   {

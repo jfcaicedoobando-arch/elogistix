@@ -26,7 +26,7 @@ export function estadoCuentaColumns(
       accessorFn: (m) => m.fecha,
       meta: { width: "w-28" },
       cell: ({ row }) => (
-        <span className="whitespace-nowrap text-xs">{formatDate(row.original.fecha)}</span>
+        <span className="whitespace-nowrap text-body-sm">{formatDate(row.original.fecha)}</span>
       ),
     },
     {

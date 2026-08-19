@@ -37,10 +37,10 @@ export function FilaVentaPrecio({
         value={venta.concepto}
         onChange={v => update(venta.id, 'concepto', v)}
       />
-      <NumericInput value={venta.cantidad} onChange={n => update(venta.id, 'cantidad', n)} className="text-sm h-10" aria-label="Cantidad venta" />
-      <NumericInput decimals value={venta.precioUnitario} onChange={n => update(venta.id, 'precioUnitario', n)} className="text-sm h-10" aria-label="Subtotal venta" />
+      <NumericInput value={venta.cantidad} onChange={n => update(venta.id, 'cantidad', n)} className="text-body h-10" aria-label="Cantidad venta" />
+      <NumericInput decimals value={venta.precioUnitario} onChange={n => update(venta.id, 'precioUnitario', n)} className="text-body h-10" aria-label="Subtotal venta" />
       <Select value={venta.moneda} onValueChange={v => update(venta.id, 'moneda', v)}>
-        <SelectTrigger className="text-sm"><SelectValue /></SelectTrigger>
+        <SelectTrigger className="text-body"><SelectValue /></SelectTrigger>
         <SelectContent><SelectItem value="MXN">MXN</SelectItem><SelectItem value="USD">USD</SelectItem><SelectItem value="EUR">EUR</SelectItem></SelectContent>
       </Select>
       {showContenedorCol && embarqueId && (
@@ -48,7 +48,7 @@ export function FilaVentaPrecio({
           embarqueId={embarqueId}
           value={venta.contenedorId ?? null}
           onChange={v => update(venta.id, 'contenedorId', v)}
-          className="text-sm"
+          className="text-body"
         />
       )}
       <div className="flex items-center gap-1">
@@ -56,7 +56,7 @@ export function FilaVentaPrecio({
           readOnly
           aria-label="Total en USD de la venta"
           value={formatCurrency(totalUSD, 'USD')}
-          className={`text-sm bg-muted font-semibold ${esMixta ? 'text-warning border-warning/60' : ''}`}
+          className={`text-body bg-muted font-semibold ${esMixta ? 'text-warning border-warning/60' : ''}`}
           data-testid={esMixta ? 'fila-mixta-venta' : undefined}
         />
         {esMixta && (

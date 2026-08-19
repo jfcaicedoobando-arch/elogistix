@@ -86,7 +86,7 @@ export default function TesoreriaFlujo() {
 
           {data.alertas_negativas > 0 && (
             <Card className="border-destructive/40 bg-destructive/5">
-              <CardContent density="tight" className="flex items-center gap-2 text-sm">
+              <CardContent density="tight" className="flex items-center gap-2 text-body">
                 <AlertTriangle className="h-4 w-4 text-destructive" />
                 <span>
                   <strong>{data.alertas_negativas}</strong> semana{data.alertas_negativas === 1 ? "" : "s"} con saldo proyectado negativo.

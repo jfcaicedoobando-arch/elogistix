@@ -38,7 +38,7 @@ export const huecoFacturacionColumns: ColumnDef<FilaHueco, unknown>[] = defineCo
     accessorFn: (f) => f.operador,
     enableSorting: true,
     sortingFn: sortByString<FilaHueco>((f) => f.operador),
-    meta: { width: COL_W.monto, className: "truncate text-sm" },
+    meta: { width: COL_W.monto, className: "truncate text-body" },
     cell: ({ row }) => row.original.operador || <span className="text-muted-foreground">—</span>,
   },
   {
@@ -47,7 +47,7 @@ export const huecoFacturacionColumns: ColumnDef<FilaHueco, unknown>[] = defineCo
     accessorFn: (f) => f.eta,
     enableSorting: true,
     sortingFn: sortByDate<FilaHueco>((f) => f.eta),
-    meta: { width: COL_W.fecha, className: "text-xs whitespace-nowrap" },
+    meta: { width: COL_W.fecha, className: "text-body-sm whitespace-nowrap" },
     cell: ({ row }) => formatDate(row.original.eta),
   },
   {
@@ -56,7 +56,7 @@ export const huecoFacturacionColumns: ColumnDef<FilaHueco, unknown>[] = defineCo
     accessorFn: (f) => f.bl_master ?? f.bl_house ?? "",
     enableSorting: true,
     sortingFn: sortByString<FilaHueco>((f) => f.bl_master ?? f.bl_house ?? ""),
-    meta: { width: COL_W.nombre, className: "font-mono text-xs whitespace-nowrap" },
+    meta: { width: COL_W.nombre, className: "font-mono text-body-sm whitespace-nowrap" },
     cell: ({ row }) => {
       const m = row.original.bl_master?.trim();
       const h = row.original.bl_house?.trim();

@@ -34,7 +34,7 @@ export function BannersCondicionesSAT({ mismoDia, montoBajo, rfcGenerico, requie
             Por regla SAT 2.7.1.34, esta factura requiere que el cliente <strong>acepte la cancelación
             en su Buzón Tributario</strong>. Timbrar la sustituta (relación 04) no exenta este paso.
           </p>
-          <p className="text-xs">Si no responde en 72 horas hábiles aplica cancelación por silencio positivo.</p>
+          <p className="text-body-sm">Si no responde en 72 horas hábiles aplica cancelación por silencio positivo.</p>
         </AlertDescription>
       </Alert>
     );

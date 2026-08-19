@@ -52,7 +52,7 @@ export function MarcarLlegadaForm({
           className="grid grid-cols-1 md:grid-cols-2 gap-4"
         >
           <div className="space-y-2">
-            <label className="text-sm font-medium">Fecha de llegada real *</label>
+            <label className="text-body font-medium">Fecha de llegada real *</label>
             <Controller
               control={control}
               name="fecha"
@@ -67,12 +67,12 @@ export function MarcarLlegadaForm({
                 />
               )}
             />
-            <p className="text-xs text-muted-foreground">
+            <p className="text-body-sm text-muted-foreground">
               Al guardar, el embarque avanza a "Llegada".
             </p>
           </div>
           <div className="space-y-2">
-            <label htmlFor="marcar-llegada-ubicacion" className="text-sm font-medium">Ubicación / Puerto</label>
+            <label htmlFor="marcar-llegada-ubicacion" className="text-body font-medium">Ubicación / Puerto</label>
             <Controller
               control={control}
               name="ubicacion"
@@ -80,7 +80,7 @@ export function MarcarLlegadaForm({
                 <Input id="marcar-llegada-ubicacion" {...field} placeholder="Puerto o punto de arribo" maxLength={120} disabled={isPending} />
               )}
             />
-            {errors.ubicacion && <p className="text-xs text-destructive">{errors.ubicacion.message}</p>}
+            {errors.ubicacion && <p className="text-body-sm text-destructive">{errors.ubicacion.message}</p>}
           </div>
           <div className="md:col-span-2 flex gap-2 justify-end">
             <Button type="button" variant="outline" size="sm" onClick={onCancel} disabled={isPending}>

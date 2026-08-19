@@ -25,7 +25,7 @@ export function RefacturacionPreviewCodigos({ codigos, tono }: Props) {
       {codigos.map((codigo) => (
         <li
           key={codigo}
-          className={`flex items-start gap-2 rounded-md border p-2 text-xs ${clases}`}
+          className={`flex items-start gap-2 rounded-md border p-2 text-body-sm ${clases}`}
         >
           <Icono className={`mt-0.5 h-3.5 w-3.5 ${colorIcono}`} aria-hidden="true" />
           <span>{LC_CODE_MESSAGES_REFACTURACION[codigo] ?? codigo}</span>

@@ -30,7 +30,7 @@ export function AvisoProformasRechazadas({ proformas }: Props) {
           : `El cliente rechazó ${rechazadas.length} proformas`}
       </AlertTitle>
       <AlertDescription className="space-y-2">
-        <p className="text-sm">
+        <p className="text-body">
           Los conceptos asociados se liberaron automáticamente. Puedes generar
           una nueva proforma para los conceptos pendientes.
         </p>
@@ -38,17 +38,17 @@ export function AvisoProformasRechazadas({ proformas }: Props) {
           {rechazadas.map((p) => (
             <li
               key={p.id}
-              className="flex flex-wrap items-center gap-2 text-sm"
+              className="flex flex-wrap items-center gap-2 text-body"
             >
               <span className="font-mono font-medium">{p.numero}</span>
               {p.rechazada_at && (
-                <span className="text-xs text-muted-foreground">
+                <span className="text-body-sm text-muted-foreground">
                   · {formatDate(p.rechazada_at)}
                 </span>
               )}
               {p.motivo_rechazo && (
                 <span
-                  className="text-xs italic text-muted-foreground truncate max-w-md"
+                  className="text-body-sm italic text-muted-foreground truncate max-w-md"
                   title={p.motivo_rechazo}
                 >
                   «{p.motivo_rechazo}»

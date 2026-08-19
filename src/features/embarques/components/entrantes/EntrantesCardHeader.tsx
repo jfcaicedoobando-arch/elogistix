@@ -44,7 +44,7 @@ export function EntrantesCardHeader({ resumen, sinXml, puedeSubir, canEdit, onSu
         </Button>
       )}
       {!puedeSubir && canEdit && (
-        <p className="max-w-[14rem] text-right text-xs text-muted-foreground">
+        <p className="max-w-[14rem] text-right text-body-sm text-muted-foreground">
           La entrega de archivos la hace operaciones; tú capturas la factura en Cuentas por pagar.
         </p>
       )}

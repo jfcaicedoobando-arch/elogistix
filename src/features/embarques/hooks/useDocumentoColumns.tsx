@@ -37,11 +37,11 @@ export function useDocumentoColumns(opts: Options): ColumnDef<DocumentoEmbarqueR
       cell: ({ row }) => (
         <div className="flex items-center gap-2">
           <div className={`h-3 w-3 rounded-full ${getDocEstadoColorClass(row.original.estado)}`} />
-          <span className="text-sm">{row.original.estado}</span>
+          <span className="text-body">{row.original.estado}</span>
         </div>
       ),
     },
-    { id: "notas", header: "Notas", meta: { className: "text-sm text-muted-foreground" }, cell: ({ row }) => row.original.notas || '-' },
+    { id: "notas", header: "Notas", meta: { className: "text-body text-muted-foreground" }, cell: ({ row }) => row.original.notas || '-' },
     {
       id: "acciones",
       header: "Acciones",

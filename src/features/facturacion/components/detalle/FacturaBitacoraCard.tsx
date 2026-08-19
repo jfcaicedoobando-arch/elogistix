@@ -48,7 +48,7 @@ export function FacturaBitacoraCard({ facturaId }: Props) {
       {isLoading ? (
         <ListSkeleton rows={3} />
       ) : isError ? (
-        <p className="py-4 text-center text-sm text-muted-foreground">
+        <p className="py-4 text-center text-body text-muted-foreground">
           No se pudo cargar el historial de esta factura.
         </p>
       ) : entradas.length === 0 ? (
@@ -59,20 +59,20 @@ export function FacturaBitacoraCard({ facturaId }: Props) {
             const descripcion = describirEntrada(e);
             const detalle = [e.entidad_nombre, e.usuario_email].filter(Boolean).join(" • ");
             return (
-              <li key={e.id} className="py-2 text-sm">
+              <li key={e.id} className="py-2 text-body">
                 <div className="flex items-baseline justify-between gap-2">
                   <span className="font-medium">{descripcion.titulo || etiquetaAccion(e.accion)}</span>
-                  <span className="whitespace-nowrap text-xs text-muted-foreground">
+                  <span className="whitespace-nowrap text-body-sm text-muted-foreground">
                     {formatDate(e.created_at)}
                   </span>
                 </div>
                 {descripcion.contexto && (
-                  <p className="truncate text-xs text-muted-foreground">
+                  <p className="truncate text-body-sm text-muted-foreground">
                     {descripcion.contexto}
                   </p>
                 )}
                 {detalle && (
-                  <p className="truncate text-xs text-muted-foreground">{detalle}</p>
+                  <p className="truncate text-body-sm text-muted-foreground">{detalle}</p>
                 )}
               </li>
             );

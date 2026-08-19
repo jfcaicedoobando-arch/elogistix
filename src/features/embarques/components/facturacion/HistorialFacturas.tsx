@@ -34,7 +34,7 @@ export function HistorialFacturas({ facturas, proformas }: Props) {
     {
       id: "proforma",
       header: "Proforma",
-      meta: { className: "text-xs" },
+      meta: { className: "text-body-sm" },
       cell: ({ row }) => {
         const f = row.original;
         if (!f.proforma_id) return <span className="text-muted-foreground">—</span>;
@@ -78,7 +78,7 @@ export function HistorialFacturas({ facturas, proformas }: Props) {
       <CardHeader className="pb-2 flex flex-row items-center justify-between gap-2">
         <CardTitle>Facturas del Embarque</CardTitle>
         {facturas.length > 0 && (
-          <span className="text-xs text-muted-foreground tabular-nums">
+          <span className="text-body-sm text-muted-foreground tabular-nums">
             {facturas.length} factura{facturas.length === 1 ? "" : "s"}
             {totalEmitido > 0 && facturas[0]?.moneda && (
               <> · {formatCurrency(totalEmitido, facturas[0].moneda)}</>

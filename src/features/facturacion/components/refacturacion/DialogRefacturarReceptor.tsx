@@ -53,15 +53,15 @@ export function DialogRefacturarReceptor({ facturaId, open, onOpenChange }: Prop
       stepLabels={[...PASOS_REFACTURACION]}
       stickyBottom={
         w.bloqueo ? (
-          <p className="text-xs text-destructive" role="alert">
+          <p className="text-body-sm text-destructive" role="alert">
             {w.bloqueo}
           </p>
         ) : w.aviso ? (
-          <p className="text-xs text-warning" role="status" aria-live="polite">
+          <p className="text-body-sm text-warning" role="status" aria-live="polite">
             {w.aviso}
           </p>
         ) : (
-          <p className="text-xs text-muted-foreground">
+          <p className="text-body-sm text-muted-foreground">
             Paso {s.paso} de {TOTAL_PASOS_REFACTURACION} validado. Puedes continuar.
           </p>
         )
@@ -102,7 +102,7 @@ export function DialogRefacturarReceptor({ facturaId, open, onOpenChange }: Prop
 
       {s.caso && (
         <details className="mt-6 rounded-md border p-3">
-          <summary className="cursor-pointer text-sm font-medium">
+          <summary className="cursor-pointer text-body font-medium">
             Trazabilidad del caso (expediente y movimientos)
           </summary>
           <div className="pt-3">

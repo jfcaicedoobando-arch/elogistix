@@ -119,7 +119,7 @@ export function PasoDiagnostico(props: Props) {
               </SelectContent>
             </Select>
           )}
-          <p className="text-xs text-muted-foreground">
+          <p className="text-body-sm text-muted-foreground">
             Con la ruta 01 la nueva factura queda relacionada como sustituta; con la ruta 02
             se cancela la original por error y la nueva se emite de forma independiente.
           </p>

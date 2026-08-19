@@ -70,10 +70,10 @@ export function NotasCreditoRecientes() {
           className="h-auto w-full flex items-center justify-between whitespace-normal rounded-none p-3 font-normal hover:bg-muted/30"
         >
           <div className="flex items-center gap-3">
-            <span className="font-medium text-sm">Notas de crédito recientes</span>
-            <span className="text-xs text-muted-foreground">({data.length})</span>
+            <span className="font-medium text-body">Notas de crédito recientes</span>
+            <span className="text-body-sm text-muted-foreground">({data.length})</span>
             {Object.entries(totales).map(([mon, total]) => (
-              <Badge key={mon} variant="outline" className="font-mono text-xs">
+              <Badge key={mon} variant="outline" className="font-mono text-body-sm">
                 {formatCurrency(total, mon)}
               </Badge>
             ))}
@@ -85,13 +85,13 @@ export function NotasCreditoRecientes() {
           <div className="border-t">
             <div className="p-3 flex flex-wrap gap-2 items-center">
               <Select value={estado} onValueChange={(v) => setEstado(v as EstadoNotaCredito | "todos")}>
-                <SelectTrigger className="w-[150px] h-8 text-xs"><SelectValue /></SelectTrigger>
+                <SelectTrigger className="w-[150px] h-8 text-body-sm"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {ESTADOS.map((e) => <SelectItem key={e} value={e}>{e === "todos" ? "Todos los estados" : e}</SelectItem>)}
                 </SelectContent>
               </Select>
               <Select value={cliente} onValueChange={setCliente}>
-                <SelectTrigger className="w-[220px] h-8 text-xs"><SelectValue /></SelectTrigger>
+                <SelectTrigger className="w-[220px] h-8 text-body-sm"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="todos">Todos los clientes</SelectItem>
                   {clientes.map((c) => <SelectItem key={c.id} value={c.id}>{toTitleCase(c.nombre)}</SelectItem>)}
@@ -105,8 +105,8 @@ export function NotasCreditoRecientes() {
               <EmptyStateInline icon={Receipt} message="No hay notas de crédito que coincidan." className="py-4" />
             ) : (
               <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead className="text-xs text-muted-foreground border-y bg-muted/20">
+                <table className="w-full text-body">
+                  <thead className="text-body-sm text-muted-foreground border-y bg-muted/20">
                     <tr>
                       <th className="text-left py-2 px-3">Folio</th>
                       <th className="text-left py-2 px-3">Factura</th>
@@ -133,15 +133,15 @@ export function NotasCreditoRecientes() {
                         }}
                         className="border-b last:border-0 hover:bg-muted/30 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60"
                       >
-                        <td className="py-2 px-3 font-mono text-xs whitespace-nowrap">{n.folio}</td>
-                        <td className="py-2 px-3 whitespace-nowrap font-mono text-xs">
+                        <td className="py-2 px-3 font-mono text-body-sm whitespace-nowrap">{n.folio}</td>
+                        <td className="py-2 px-3 whitespace-nowrap font-mono text-body-sm">
                           {n.factura_numero}
                         </td>
                         <td className="py-2 px-3 max-w-[200px] truncate" title={toTitleCase(n.cliente_nombre)}>
                           {toTitleCase(n.cliente_nombre)}
                         </td>
-                        <td className="py-2 px-3 text-xs whitespace-nowrap">{formatDate(n.fecha_emision)}</td>
-                        <td className="py-2 px-3 text-xs">{n.motivo}</td>
+                        <td className="py-2 px-3 text-body-sm whitespace-nowrap">{formatDate(n.fecha_emision)}</td>
+                        <td className="py-2 px-3 text-body-sm">{n.motivo}</td>
                         <td className="py-2 px-3">
                           <Badge variant="outline" className={ESTADO_COLOR[n.estado]}>{n.estado}</Badge>
                         </td>

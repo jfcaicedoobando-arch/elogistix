@@ -100,11 +100,11 @@ export function DialogNuevaFacturaManual({ open, onOpenChange }: Props) {
             />
           </FormDialogSection>
           <div className="rounded-lg bg-primary text-primary-foreground p-6 shadow-raised flex flex-col justify-center gap-3">
-            <div className="flex justify-between text-sm opacity-80">
+            <div className="flex justify-between text-body opacity-80">
               <span>Subtotal</span>
               <span className="tabular-nums">{formatCurrency(totales.subtotal, fiscal.moneda)}</span>
             </div>
-            <div className="flex justify-between text-sm opacity-80">
+            <div className="flex justify-between text-body opacity-80">
               <span>IVA ({Math.round(tasaIva * 100)}%)</span>
               <span className="tabular-nums">{formatCurrency(totales.iva, fiscal.moneda)}</span>
             </div>
@@ -112,7 +112,7 @@ export function DialogNuevaFacturaManual({ open, onOpenChange }: Props) {
               <span className="text-base font-medium">Total</span>
               <span className="text-2xl font-bold tabular-nums">
                 {formatCurrency(totales.total, fiscal.moneda)}
-                <span className="text-xs font-normal opacity-70 ml-1">{fiscal.moneda}</span>
+                <span className="text-body-sm font-normal opacity-70 ml-1">{fiscal.moneda}</span>
               </span>
             </div>
           </div>

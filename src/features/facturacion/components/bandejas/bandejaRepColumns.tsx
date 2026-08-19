@@ -33,7 +33,7 @@ export function buildRepPendientesColumns(o: Opts) {
     clientColumn<FilaRepPendiente>({ accessor: (r) => r.cliente_nombre }),
     {
       ...dateColumn<FilaRepPendiente>({ id: "fecha_pago", header: "Fecha pago", accessor: (r) => r.fecha_pago }),
-      meta: { width: COL_W.fecha, className: "text-xs whitespace-nowrap" },
+      meta: { width: COL_W.fecha, className: "text-body-sm whitespace-nowrap" },
     },
     {
       ...moneyColumn<FilaRepPendiente>({

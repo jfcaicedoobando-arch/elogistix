@@ -33,7 +33,7 @@ export function TabConciliacion({ embarqueId }: Props) {
   return (
     <div className="space-y-6">
       {decisionLabel && (
-        <div className="rounded-md border border-info/30 bg-info/10 px-3 py-2 text-xs text-info-foreground flex items-center gap-2">
+        <div className="rounded-md border border-info/30 bg-info/10 px-3 py-2 text-body-sm text-info-foreground flex items-center gap-2">
           <span className="font-medium">Decisión aplicada:</span>
           <span>{decisionLabel}</span>
           <span className="text-muted-foreground">— ver pestaña Resumen → Origen de costos para el detalle.</span>
@@ -49,7 +49,7 @@ export function TabConciliacion({ embarqueId }: Props) {
         </CardContent>
       </Card>
 
-      <p className="text-xs text-muted-foreground">
+      <p className="text-body-sm text-muted-foreground">
         El detalle por proveedor y las facturas ligadas ahora viven en la pestaña <span className="font-medium">Costos</span>.
       </p>
     </div>

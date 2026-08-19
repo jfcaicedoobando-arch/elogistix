@@ -34,7 +34,7 @@ function Field({ label, value, mono }: { label: string; value: React.ReactNode; 
   return (
     <div className="min-w-0">
       <p className="text-overline font-medium">{label}</p>
-      <div className={`text-sm font-medium truncate ${mono ? "font-mono" : ""}`}>{value}</div>
+      <div className={`text-body font-medium truncate ${mono ? "font-mono" : ""}`}>{value}</div>
     </div>
   );
 }
@@ -60,7 +60,7 @@ export function FacturaTimbradoCard(props: Props) {
       </CardHeader>
       <CardContent className="space-y-4">
         {emisor && (
-          <div className="flex items-center gap-2 text-sm text-muted-foreground border-b pb-3">
+          <div className="flex items-center gap-2 text-body text-muted-foreground border-b pb-3">
             <Building2 className="h-4 w-4 shrink-0" />
             <span className="truncate">
               Emitido por{" "}
@@ -78,7 +78,7 @@ export function FacturaTimbradoCard(props: Props) {
           <div className="md:col-span-2 min-w-0">
             <p className="text-overline font-medium">Folio fiscal (UUID)</p>
             <div className="flex items-center gap-1">
-              <p className="font-mono text-sm truncate">{uuidFiscal}</p>
+              <p className="font-mono text-body truncate">{uuidFiscal}</p>
               <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0" onClick={copiarUuid} aria-label="Copiar folio fiscal (UUID)">
                 <Copy className="h-3 w-3" />
               </Button>

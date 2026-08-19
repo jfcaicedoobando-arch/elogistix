@@ -65,7 +65,7 @@ export function StepDatosRuta({ errors = {}, diasTransitoSugerencia }: Props) {
             <CardTitle>
               Contenedores ({contenedores.length})
             </CardTitle>
-            <p className="text-xs text-muted-foreground mt-1">
+            <p className="text-body-sm text-muted-foreground mt-1">
               Un embarque marítimo puede tener uno o varios contenedores. Cada uno requiere número y tipo.
             </p>
           </CardHeader>

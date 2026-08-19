@@ -57,7 +57,7 @@ export function ComparativoConsistencia({ data }: { data: ConsistenciaRefacturac
       )}
 
       {data.ok ? (
-        <div className="rounded-md border border-success/30 bg-success/5 p-3 text-sm flex items-start gap-2">
+        <div className="rounded-md border border-success/30 bg-success/5 p-3 text-body flex items-start gap-2">
           <CheckCircle2 className="h-4 w-4 text-success mt-0.5" />
           <span>Los importes, impuestos y la moneda coinciden con la factura original.</span>
         </div>
@@ -66,7 +66,7 @@ export function ComparativoConsistencia({ data }: { data: ConsistenciaRefacturac
           {data.hallazgos.map((h) => (
             <li
               key={`${h.codigo}-${h.mensaje}`}
-              className="rounded-md border border-destructive/30 bg-destructive/5 p-2 text-xs flex items-start gap-2"
+              className="rounded-md border border-destructive/30 bg-destructive/5 p-2 text-body-sm flex items-start gap-2"
             >
               <AlertTriangle className="h-3.5 w-3.5 text-destructive mt-0.5" />
               <span>{h.mensaje}</span>

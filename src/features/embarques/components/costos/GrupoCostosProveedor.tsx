@@ -70,16 +70,16 @@ export function GrupoCostosProveedor({
       >
         <div className="flex items-center gap-2 min-w-0">
           {abierto ? <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0" /> : <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />}
-          <span className="font-medium text-sm truncate" title={proveedorNombre}>{toTitleCase(proveedorNombre)}</span>
-          <Badge variant="outline" className="text-xs">{filas.length}</Badge>
+          <span className="font-medium text-body truncate" title={proveedorNombre}>{toTitleCase(proveedorNombre)}</span>
+          <Badge variant="outline" className="text-body-sm">{filas.length}</Badge>
           {/* v13.509.0 — Avisamos los costos sin proveedor: bloquean el cotejo
               con la factura del proveedor y deben completarse antes de facturar. */}
           {proveedorNombre === "Sin proveedor" && (
-            <Badge variant="destructive" className="text-xs shrink-0">Asignar proveedor</Badge>
+            <Badge variant="destructive" className="text-body-sm shrink-0">Asignar proveedor</Badge>
           )}
         </div>
         <TooltipProvider delayDuration={200}>
-          <div className="flex items-center gap-3 text-xs tabular-nums shrink-0">
+          <div className="flex items-center gap-3 text-body-sm tabular-nums shrink-0">
             {resumenNarrativo.map(({ moneda, d }) => (
               <Tooltip key={moneda}>
                 <TooltipTrigger asChild>
@@ -90,7 +90,7 @@ export function GrupoCostosProveedor({
                     <span className="text-muted-foreground">{moneda}</span>
                   </span>
                 </TooltipTrigger>
-                <TooltipContent className="text-xs">
+                <TooltipContent className="text-body-sm">
                   <div>Cotizado: {formatCurrency(subtotales.find(x=>x.moneda===moneda)?.cotizado ?? 0, moneda)}</div>
                   <div>Facturado: {formatCurrency(subtotales.find(x=>x.moneda===moneda)?.facturado ?? 0, moneda)}</div>
                   <div className="mt-1">{d.detalle}</div>
@@ -106,9 +106,9 @@ export function GrupoCostosProveedor({
 
       {abierto && (
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className="w-full text-body">
             <thead className="bg-background border-b">
-              <tr className="text-xs text-muted-foreground">
+              <tr className="text-body-sm text-muted-foreground">
                 <th className="text-left px-3 py-2 font-medium">Concepto</th>
                 <th className="text-right px-3 py-2 font-medium">Cotizado</th>
                 <th className="text-right px-3 py-2 font-medium">Facturado</th>
@@ -137,19 +137,19 @@ export function GrupoCostosProveedor({
                     </td>
                     <td className="px-3 py-2">
                       {f.facturas.length === 0 ? (
-                        <span className="text-muted-foreground text-xs">Sin factura</span>
+                        <span className="text-muted-foreground text-body-sm">Sin factura</span>
                       ) : (
                         <TooltipProvider delayDuration={200}>
                           <div className="flex flex-col gap-1">
                             {f.facturas.map(fa => (
                               <Tooltip key={fa.proveedor_factura_id}>
                                 <TooltipTrigger asChild>
-                                  <Badge variant="outline" className="w-fit gap-1 font-normal text-xs cursor-help">
+                                  <Badge variant="outline" className="w-fit gap-1 font-normal text-body-sm cursor-help">
                                     <FileText className="h-3 w-3" />
                                     {fa.folio_proveedor} · {fmtFecha(fa.fecha_emision)}
                                   </Badge>
                                 </TooltipTrigger>
-                                <TooltipContent className="text-xs">
+                                <TooltipContent className="text-body-sm">
                                   <div className="font-medium">{fa.folio_proveedor}</div>
                                   <div>Monto: {formatCurrency(fa.monto, f.moneda)}</div>
                                   <div>Emisión: {fmtFecha(fa.fecha_emision)}</div>
@@ -164,17 +164,17 @@ export function GrupoCostosProveedor({
                       )}
                     </td>
                     <td className="px-3 py-2">
-                      <Badge variant="outline" className={`${estatusBadgeClass(f.estatus_renglon)} text-xs`}>
+                      <Badge variant="outline" className={`${estatusBadgeClass(f.estatus_renglon)} text-body-sm`}>
                         {estatusLabel(f.estatus_renglon)}
                       </Badge>
                     </td>
                     <td className="px-3 py-2">
                       {pago ? (
-                        <Badge variant="outline" className={`${pagoBadgeClass(pago)} text-xs`}>{pago}</Badge>
-                      ) : <span className="text-muted-foreground text-xs">—</span>}
+                        <Badge variant="outline" className={`${pagoBadgeClass(pago)} text-body-sm`}>{pago}</Badge>
+                      ) : <span className="text-muted-foreground text-body-sm">—</span>}
                     </td>
                     {showContenedorCol && (
-                      <td className="px-3 py-2 text-xs">
+                      <td className="px-3 py-2 text-body-sm">
                         {renderContenedor && filaContenedorId ? renderContenedor(filaContenedorId(f)) : "—"}
                       </td>
                     )}

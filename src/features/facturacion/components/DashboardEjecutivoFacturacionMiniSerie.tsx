@@ -29,7 +29,7 @@ export function MiniSerie({ titulo, data, meses, colorClass }: Props) {
                   <TooltipTrigger asChild>
                     <div className={`w-2.5 rounded-sm ${colorClass}`} style={{ height: `${h}px` }} />
                   </TooltipTrigger>
-                  <TooltipContent side="top" className="text-xs">
+                  <TooltipContent side="top" className="text-body-sm">
                     {meses[i]}: {formatCurrency(v, "MXN")}
                   </TooltipContent>
                 </Tooltip>

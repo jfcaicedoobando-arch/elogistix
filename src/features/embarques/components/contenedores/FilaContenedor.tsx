@@ -60,7 +60,7 @@ export function FilaContenedor({
   return (
     <div className="rounded-md border border-border bg-card p-3 space-y-3">
       <div className="flex items-center justify-between">
-        <span className="text-xs font-medium text-muted-foreground">
+        <span className="text-body-sm font-medium text-muted-foreground">
           Contenedor #{index + 1}
         </span>
         {canDelete && (
@@ -116,7 +116,7 @@ export function FilaContenedor({
             )}
           />
           {!esNumeroContenedorValido(value.numero_contenedor) && (
-            <p id={`${uid}-num-err`} className="text-xs text-destructive">
+            <p id={`${uid}-num-err`} className="text-body-sm text-destructive">
               {ISO6346_MENSAJE}
             </p>
           )}

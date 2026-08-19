@@ -37,7 +37,7 @@ function FolioInternoChip({ row }: { row: FacturaEntranteRow }) {
   return (
     <Link
       to={`/compras/facturas/${row.proveedor_factura_id}`}
-      className="inline-flex items-center gap-1 rounded-md border border-primary/30 bg-primary/5 px-2 py-0.5 font-mono text-xs tabular-nums text-primary hover:bg-primary/10"
+      className="inline-flex items-center gap-1 rounded-md border border-primary/30 bg-primary/5 px-2 py-0.5 font-mono text-body-sm tabular-nums text-primary hover:bg-primary/10"
       title="Ver la factura de proveedor en Libre Carga"
     >
       <LinkIcon className="h-3 w-3" />
@@ -62,7 +62,7 @@ export function FacturaEntranteItem({
     <div className="flex flex-col gap-2 rounded-md border p-3 sm:flex-row sm:items-center sm:justify-between">
       <div className="min-w-0 space-y-1">
         <div className="flex flex-wrap items-center gap-2">
-          <span className="truncate text-sm font-medium">{row.nombre_archivo}</span>
+          <span className="truncate text-body font-medium">{row.nombre_archivo}</span>
           <Badge variant={varianteEstadoEntrante(row.estado)} size="sm">
             {etiquetaEstadoEntrante(row.estado)}
           </Badge>

@@ -17,7 +17,7 @@ function formatoFolio(f: FacturaLigada): string {
 
 export default function DialogEliminarEmbarqueBloqueado({ expediente, deps }: Props) {
   return (
-    <div className="space-y-3 text-sm">
+    <div className="space-y-3 text-body">
       <p>
         El embarque <strong>{expediente}</strong> tiene documentos financieros asociados.
         Cancela primero los siguientes documentos antes de eliminarlo:
@@ -73,7 +73,7 @@ export default function DialogEliminarEmbarqueBloqueado({ expediente, deps }: Pr
       )}
 
 
-      <p className="text-xs text-muted-foreground">
+      <p className="text-body-sm text-muted-foreground">
         Una vez que canceles o desliges estos documentos del embarque, podrás intentar la eliminación nuevamente.
       </p>
     </div>

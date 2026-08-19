@@ -36,15 +36,15 @@ export function TimelineEventoItem({ evento, ultimo }: ItemProps) {
       </div>
       <div className="space-y-1">
         <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-sm font-medium text-foreground">{evento.tipo}</span>
+          <span className="text-body font-medium text-foreground">{evento.tipo}</span>
           {ultimo && <Badge variant="secondary" className="text-2xs">Último</Badge>}
-          <span className="text-xs text-muted-foreground flex items-center gap-1">
+          <span className="text-body-sm text-muted-foreground flex items-center gap-1">
             <Clock className="h-3 w-3" />
             {formatDate(evento.fecha, "HH:mm")}
           </span>
         </div>
-        {evento.descripcion && <p className="text-sm text-foreground">{evento.descripcion}</p>}
-        <div className="flex items-center gap-3 text-xs text-muted-foreground">
+        {evento.descripcion && <p className="text-body text-foreground">{evento.descripcion}</p>}
+        <div className="flex items-center gap-3 text-body-sm text-muted-foreground">
           {evento.ubicacion && (
             <span className="flex items-center gap-1">
               <MapPin className="h-3 w-3" /> {evento.ubicacion}

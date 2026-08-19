@@ -22,7 +22,7 @@ export function SeguroFormCamposAdicionales({ form, setField }: Props) {
         <Input id="seguro-suma" type="number" min={0} step={0.01} value={form.suma_asegurada}
           onChange={(e) => setField("suma_asegurada", Number(e.target.value))} />
         {form.suma_asegurada < 0 && (
-          <p className="text-xs text-destructive mt-1">La suma asegurada no puede ser negativa.</p>
+          <p className="text-body-sm text-destructive mt-1">La suma asegurada no puede ser negativa.</p>
         )}
       </div>
       <div>
@@ -30,7 +30,7 @@ export function SeguroFormCamposAdicionales({ form, setField }: Props) {
         <Input id="seguro-deducible" type="number" min={0} step={0.01} value={form.deducible}
           onChange={(e) => setField("deducible", Number(e.target.value))} />
         {form.deducible < 0 && (
-          <p className="text-xs text-destructive mt-1">El deducible no puede ser negativo.</p>
+          <p className="text-body-sm text-destructive mt-1">El deducible no puede ser negativo.</p>
         )}
       </div>
 

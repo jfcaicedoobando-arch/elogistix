@@ -40,7 +40,7 @@ export function EmbarquesAlertasPanel({ resumen, activeAlerta, onSelect }: Props
           <Button
             variant="ghost"
             size="sm"
-            className="h-7 text-xs"
+            className="h-7 text-body-sm"
             onClick={() => onSelect("todos")}
           >
             Ver todas
@@ -72,10 +72,10 @@ export function EmbarquesAlertasPanel({ resumen, activeAlerta, onSelect }: Props
               </span>
               <div className="min-w-0 flex-1">
                 <div className="flex items-center justify-between gap-2">
-                  <span className="text-sm font-medium truncate">{titulo}</span>
+                  <span className="text-body font-medium truncate">{titulo}</span>
                   <span className="text-base font-semibold tabular-nums">{count}</span>
                 </div>
-                <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{descripcion}</p>
+                <p className="text-body-sm text-muted-foreground mt-0.5 line-clamp-2">{descripcion}</p>
               </div>
             </button>
           );

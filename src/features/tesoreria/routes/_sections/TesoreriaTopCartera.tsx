@@ -32,9 +32,9 @@ export function TesoreriaTopCartera({
       <CardContent density="compact" className="flex flex-1 flex-col">
         <SectionHeading as="h3" className="mb-3">{titulo}</SectionHeading>
         {items.length === 0 ? (
-          <p className="text-sm text-muted-foreground">{vacio}</p>
+          <p className="text-body text-muted-foreground">{vacio}</p>
         ) : (
-          <ul className="space-y-1.5 text-sm">
+          <ul className="space-y-1.5 text-body">
             {items.map((d) => (
               <li
                 key={`${d.nombre}-${d.moneda}`}
@@ -44,14 +44,14 @@ export function TesoreriaTopCartera({
                 <span className={cn("ml-2 font-medium tabular-nums", montoClass)}>
                   {formatCurrency(d.saldo, d.moneda)}
                 </span>
-                <span className={cn("ml-2 w-14 text-right text-xs font-medium tabular-nums", agingTextClass(d.dias))}>
+                <span className={cn("ml-2 w-14 text-right text-body-sm font-medium tabular-nums", agingTextClass(d.dias))}>
                   {d.dias != null ? `${d.dias}d` : "—"}
                 </span>
               </li>
             ))}
           </ul>
         )}
-        <div className="mt-auto flex flex-wrap items-center justify-between gap-2 pt-3 text-xs text-muted-foreground">
+        <div className="mt-auto flex flex-wrap items-center justify-between gap-2 pt-3 text-body-sm text-muted-foreground">
           <span>
             Total vencido: <span className="font-medium text-foreground tabular-nums">
               {formatCurrency(totalVencido, "MXN")}

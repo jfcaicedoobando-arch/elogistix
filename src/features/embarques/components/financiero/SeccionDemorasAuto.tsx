@@ -36,7 +36,7 @@ export function SeccionDemorasAuto({ embarqueId, canEdit }: Props) {
           <CardTitle className="flex items-center gap-2">
             <Calculator className="size-4" /> Demoras automáticas
           </CardTitle>
-          <p className="text-xs text-muted-foreground mt-1">
+          <p className="text-body-sm text-muted-foreground mt-1">
             Calcula días excedidos = días en puerto (timeline) − días libres de la naviera, y aplica los tabuladores de costo y venta.
           </p>
         </div>
@@ -66,14 +66,14 @@ export function SeccionDemorasAuto({ embarqueId, canEdit }: Props) {
       </CardHeader>
       <CardContent>
         {!last && (
-          <p className="text-sm text-muted-foreground">Pulsa <strong>Recalcular</strong> para obtener el desglose actual.</p>
+          <p className="text-body text-muted-foreground">Pulsa <strong>Recalcular</strong> para obtener el desglose actual.</p>
         )}
         {last?.sin_eventos && (
-          <div className="flex items-start gap-2 rounded-md border border-warning/30 bg-warning/10 p-3 text-sm">
+          <div className="flex items-start gap-2 rounded-md border border-warning/30 bg-warning/10 p-3 text-body">
             <AlertTriangle className="size-4 mt-0.5 text-warning" />
             <div>
               <p className="font-medium text-warning">Faltan eventos en el timeline</p>
-              <p className="text-xs text-muted-foreground">Captura los eventos de <strong>Descarga</strong> y <strong>Entrega</strong> para poder calcular demoras.</p>
+              <p className="text-body-sm text-muted-foreground">Captura los eventos de <strong>Descarga</strong> y <strong>Entrega</strong> para poder calcular demoras.</p>
             </div>
           </div>
         )}
@@ -88,7 +88,7 @@ function DemorasResumen({ data }: { data: DemoraDesglose }) {
   const moneda = (data.moneda_costo ?? 'USD') as 'USD';
   return (
     <div className="space-y-3">
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-3 text-sm">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-3 text-body">
         <Stat label="Descarga" value={data.fecha_descarga ? formatDate(data.fecha_descarga) : '—'} />
         <Stat label="Devolución" value={data.fecha_devolucion ? formatDate(data.fecha_devolucion) : '—'} />
         <Stat label="Días puerto" value={(data.dias_en_puerto ?? 0).toString()} />
@@ -101,18 +101,18 @@ function DemorasResumen({ data }: { data: DemoraDesglose }) {
       </div>
       <div className="grid grid-cols-2 gap-3">
         <div className="rounded-md border p-3">
-          <p className="text-xs text-muted-foreground uppercase">Costo total (naviera, {moneda})</p>
+          <p className="text-body-sm text-muted-foreground uppercase">Costo total (naviera, {moneda})</p>
           <p className="text-lg font-bold tabular-nums">{formatCurrency(data.total_costo_usd, moneda)}</p>
         </div>
         <div className="rounded-md border p-3">
-          <p className="text-xs text-muted-foreground uppercase">Venta total (cliente)</p>
+          <p className="text-body-sm text-muted-foreground uppercase">Venta total (cliente)</p>
           <p className="text-lg font-bold tabular-nums text-success">{formatCurrency(data.total_venta_usd, 'USD')}</p>
         </div>
       </div>
       {data.contenedores.length > 0 && (
-        <div className="text-xs text-muted-foreground">
+        <div className="text-body-sm text-muted-foreground">
           <Badge variant="outline" className="mr-2">{data.contenedores.length} contenedor(es)</Badge>
-          Generados con origen <code className="text-xs">demoras_auto</code>; aparecen en las tablas de Venta y Costo de abajo.
+          Generados con origen <code className="text-body-sm">demoras_auto</code>; aparecen en las tablas de Venta y Costo de abajo.
         </div>
       )}
     </div>
@@ -122,7 +122,7 @@ function DemorasResumen({ data }: { data: DemoraDesglose }) {
 function Stat({ label, value, className = '' }: { label: string; value: string; className?: string }) {
   return (
     <div>
-      <p className="text-xs text-muted-foreground uppercase">{label}</p>
+      <p className="text-body-sm text-muted-foreground uppercase">{label}</p>
       <p className={`tabular-nums ${className}`}>{value}</p>
     </div>
   );

@@ -9,7 +9,7 @@ import { diasEnEspera } from "@/lib/domain/facturasEntrantes";
 import type { FacturaEntranteRow } from "@/features/cxp/services";
 
 const Linea = ({ children }: { children: React.ReactNode }) => (
-  <p className="text-xs text-muted-foreground">{children}</p>
+  <p className="text-body-sm text-muted-foreground">{children}</p>
 );
 
 function LineaOrigen({ row }: { row: FacturaEntranteRow }) {
@@ -50,7 +50,7 @@ function LineasNotas({ row }: { row: FacturaEntranteRow }) {
       )}
       {row.nota && <Linea>Nota: {row.nota}</Linea>}
       {row.rechazo_motivo && (
-        <p className="text-xs text-destructive">Rechazada: {row.rechazo_motivo}</p>
+        <p className="text-body-sm text-destructive">Rechazada: {row.rechazo_motivo}</p>
       )}
     </>
   );

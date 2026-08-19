@@ -55,7 +55,7 @@ export function BloqueClienteContactos({ clientes, clienteNombre, contactos, err
               <SelectContent>{MODOS.map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}</SelectContent>
             </Select>
           )} />
-          {errors.modo && <p className="text-xs text-destructive">{errors.modo}</p>}
+          {errors.modo && <p className="text-body-sm text-destructive">{errors.modo}</p>}
         </div>
         <div className="space-y-2">
           <LabelHeredable field="tipo" getter={(c) => c.tipo}>Tipo de Operación *</LabelHeredable>
@@ -70,7 +70,7 @@ export function BloqueClienteContactos({ clientes, clienteNombre, contactos, err
               <SelectContent>{TIPOS.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
             </Select>
           )} />
-          {errors.tipo && <p className="text-xs text-destructive">{errors.tipo}</p>}
+          {errors.tipo && <p className="text-body-sm text-destructive">{errors.tipo}</p>}
         </div>
         <div className="space-y-2">
           <LabelHeredable field="clienteId" getter={(c) => c.cliente_id}>Cliente *</LabelHeredable>
@@ -85,7 +85,7 @@ export function BloqueClienteContactos({ clientes, clienteNombre, contactos, err
               <SelectContent>{clientes.map(c => <SelectItem key={c.id} value={c.id}>{c.nombre}</SelectItem>)}</SelectContent>
             </Select>
           )} />
-          {errors.clienteId && <p className="text-xs text-destructive">{errors.clienteId}</p>}
+          {errors.clienteId && <p className="text-body-sm text-destructive">{errors.clienteId}</p>}
         </div>
         <div className="space-y-2">
           <LabelHeredable field="incoterm" getter={(c) => c.incoterm}>Incoterm *</LabelHeredable>
@@ -100,7 +100,7 @@ export function BloqueClienteContactos({ clientes, clienteNombre, contactos, err
               <SelectContent>{INCOTERMS.map(i => <SelectItem key={i} value={i}>{i}</SelectItem>)}</SelectContent>
             </Select>
           )} />
-          {errors.incoterm && <p className="text-xs text-destructive">{errors.incoterm}</p>}
+          {errors.incoterm && <p className="text-body-sm text-destructive">{errors.incoterm}</p>}
         </div>
       </div>
 
@@ -125,7 +125,7 @@ export function BloqueClienteContactos({ clientes, clienteNombre, contactos, err
           </Select>
         )} />
 
-        {errors.shipper && <p className="text-xs text-destructive">{errors.shipper}</p>}
+        {errors.shipper && <p className="text-body-sm text-destructive">{errors.shipper}</p>}
         {shipper === '__otro__' && <Input aria-label="Nombre del exportador" placeholder="Nombre del exportador" {...register('shipperManual')} className="mt-2" />}
       </div>
       <div className="space-y-2">
@@ -150,7 +150,7 @@ export function BloqueClienteContactos({ clientes, clienteNombre, contactos, err
 
           </Select>
         )} />
-        {errors.consignatario && <p className="text-xs text-destructive">{errors.consignatario}</p>}
+        {errors.consignatario && <p className="text-body-sm text-destructive">{errors.consignatario}</p>}
         {consignatario === '__otro__' && <Input aria-label="Nombre del consignatario" placeholder="Nombre del consignatario" {...register('consignatarioManual')} className="mt-2" />}
       </div>
     </>

@@ -65,7 +65,7 @@ export function EmbarqueHeaderDialogs({
         description={
           <div className="space-y-2">
             <p>Aún no se han cargado los siguientes documentos para pasar a <strong>{siguienteEstado}</strong>:</p>
-            <ul className="list-disc list-inside text-sm">
+            <ul className="list-disc list-inside text-body">
               {docsFaltantes.map((d) => <li key={d}>{d}</li>)}
             </ul>
             <p>Puedes continuar y subirlos más tarde. ¿Avanzar de todos modos?</p>
@@ -85,7 +85,7 @@ export function EmbarqueHeaderDialogs({
         description={
           <div className="space-y-2">
             <p>Para pasar a <strong>{siguienteEstado}</strong> es obligatorio tener cargados (o marcados como "No aplica") estos documentos:</p>
-            <ul className="list-disc list-inside text-sm">
+            <ul className="list-disc list-inside text-body">
               {docsFaltantes.map((d) => <li key={d}>{d}</li>)}
             </ul>
           </div>

@@ -126,7 +126,7 @@ export function MovimientoManualDialog({
           aria-describedby={erroresManual.monto ? "mov-importe-error" : undefined}
         />
         {erroresManual.monto && (
-          <p id="mov-importe-error" className="mt-1 text-xs text-destructive">
+          <p id="mov-importe-error" className="mt-1 text-body-sm text-destructive">
             {erroresManual.monto}
           </p>
         )}

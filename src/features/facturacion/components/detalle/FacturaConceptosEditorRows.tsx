@@ -40,7 +40,7 @@ function IvaBadge({ tipo }: { tipo: TipoIvaConcepto }) {
 }
 
 function RetBadges({ isr, iva }: { isr: number; iva: number }) {
-  if (!isr && !iva) return <span className="text-xs text-muted-foreground">—</span>;
+  if (!isr && !iva) return <span className="text-body-sm text-muted-foreground">—</span>;
   return (
     <div className="flex flex-wrap gap-1 justify-center">
       {isr > 0 && <Badge variant="outline" className="text-2xs">ISR {(isr * 100).toFixed(isr === 0.1 ? 0 : 2)}%</Badge>}
@@ -71,14 +71,14 @@ export function ConceptoRow({
   return (
     <div className="grid grid-cols-12 gap-2 items-center border rounded-md p-2">
       <div className="col-span-3 truncate">
-        <p className="text-sm font-medium truncate">{row.descripcion}</p>
-        <p className="text-xs text-muted-foreground font-mono">SAT {row.clave_sat}</p>
+        <p className="text-body font-medium truncate">{row.descripcion}</p>
+        <p className="text-body-sm text-muted-foreground font-mono">SAT {row.clave_sat}</p>
       </div>
-      <div className="col-span-1 text-right text-sm">{row.cantidad}</div>
-      <div className="col-span-2 text-right text-sm tabular-nums">{formatCurrency(row.precio_unitario, moneda)}</div>
+      <div className="col-span-1 text-right text-body">{row.cantidad}</div>
+      <div className="col-span-2 text-right text-body tabular-nums">{formatCurrency(row.precio_unitario, moneda)}</div>
       <div className="col-span-1 flex justify-center"><IvaBadge tipo={row.tipo_iva} /></div>
       <div className="col-span-2 flex justify-center"><RetBadges isr={row.tasa_ret_isr} iva={row.tasa_ret_iva} /></div>
-      <div className="col-span-2 text-right text-sm tabular-nums font-medium">{formatCurrency(row.total, moneda)}</div>
+      <div className="col-span-2 text-right text-body tabular-nums font-medium">{formatCurrency(row.total, moneda)}</div>
       <div className="col-span-1 flex justify-end gap-1">
         <Button size="icon" variant="ghost" onClick={onStartEdit} disabled={busy} aria-label="Editar">
           <Pencil className="h-4 w-4" />

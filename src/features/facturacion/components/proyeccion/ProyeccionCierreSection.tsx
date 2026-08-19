@@ -38,7 +38,7 @@ export function ProyeccionCierreSection({ k, mesLabel }: Props) {
           variant="overline"
           className="mb-4"
           actions={
-            <Badge variant="outline" className="font-mono text-xs">
+            <Badge variant="outline" className="font-mono text-body-sm">
               {k.facturados}/{k.totalExpedientes} facturados · {k.avancePct.toFixed(0)}%
             </Badge>
           }
@@ -87,7 +87,7 @@ export function ProyeccionCierreSection({ k, mesLabel }: Props) {
         </div>
 
         <div className="mt-4">
-          <div className="flex items-center justify-between text-xs text-muted-foreground mb-1.5">
+          <div className="flex items-center justify-between text-body-sm text-muted-foreground mb-1.5">
             <span>Avance de facturación</span>
             <span className="tabular-nums font-medium">{k.avancePct.toFixed(0)}%</span>
           </div>

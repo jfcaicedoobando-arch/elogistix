@@ -21,7 +21,7 @@ export function ActividadItem({ item }: Props) {
     typeof item.monto === "number" ? formatCurrency(item.monto, item.moneda ?? "MXN") : null;
 
   return (
-    <li className="relative text-sm">
+    <li className="relative text-body">
       <span
         aria-hidden
         className="absolute -left-[21px] top-2 h-2 w-2 rounded-full bg-border ring-4 ring-background"
@@ -31,18 +31,18 @@ export function ActividadItem({ item }: Props) {
           {CATEGORIA_LABEL[item.categoria]}
         </Badge>
         <span className="font-medium">{item.accion}</span>
-        <span className="text-xs text-muted-foreground">
+        <span className="text-body-sm text-muted-foreground">
           <span title={item.usuario || undefined} className="font-medium text-foreground">
             {usuario}
           </span>
           {" · "}
           {formatDate(item.fecha, "HH:mm")}
         </span>
-        {monto && <span className="ml-auto text-xs font-semibold tabular-nums">{monto}</span>}
+        {monto && <span className="ml-auto text-body-sm font-semibold tabular-nums">{monto}</span>}
       </div>
       <p className="mt-1 break-words whitespace-pre-wrap">{item.titulo}</p>
       {item.descripcion && (
-        <p className="mt-0.5 text-xs text-muted-foreground break-words">{item.descripcion}</p>
+        <p className="mt-0.5 text-body-sm text-muted-foreground break-words">{item.descripcion}</p>
       )}
       {item.detalles && <ActividadDetalles detalles={item.detalles} />}
     </li>

@@ -72,7 +72,7 @@ export function FacturaManualDatosFiscales({ value, onChange, diasReadonly, dias
                 type="button"
                 onClick={() => onChange({ moneda: m })}
                 className={
-                  "h-11 md:h-10 px-3 rounded-md text-xs font-semibold border transition-colors " +
+                  "h-11 md:h-10 px-3 rounded-md text-body-sm font-semibold border transition-colors " +
                   (active
                     ? "bg-primary text-primary-foreground border-primary"
                     : "bg-background text-muted-foreground border-border hover:bg-muted")

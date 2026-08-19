@@ -39,7 +39,7 @@ export function BandejaPorFacturar() {
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between flex-wrap gap-2">
-        <div className="text-sm text-muted-foreground">
+        <div className="text-body text-muted-foreground">
           <span className="font-semibold text-foreground tabular-nums">{totalEmbarques}</span>{" "}
           embarque(s) sin CFDI (ETA vencida o dentro de 3 días) ·{" "}
           <span className="tabular-nums">{formatCurrency(totalUsd, "USD")}</span> ·{" "}

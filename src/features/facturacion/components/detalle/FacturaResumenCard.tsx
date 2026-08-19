@@ -64,7 +64,7 @@ export function FacturaResumenCard({
         {factura.notas && (
           <div className="border-t pt-4">
             <p className="text-overline font-medium mb-1">Notas</p>
-            <p className="text-sm whitespace-pre-wrap">{factura.notas}</p>
+            <p className="text-body whitespace-pre-wrap">{factura.notas}</p>
           </div>
         )}
       </CardContent>
@@ -76,7 +76,7 @@ function Field({ label, value, mono }: { label: string; value: React.ReactNode; 
   return (
     <div className="min-w-0">
       <p className="text-overline font-medium">{label}</p>
-      <div className={`text-sm font-medium truncate ${mono ? "font-mono" : ""}`}>{value}</div>
+      <div className={`text-body font-medium truncate ${mono ? "font-mono" : ""}`}>{value}</div>
     </div>
   );
 }
@@ -86,7 +86,7 @@ function BadgeMora({ dias }: { dias: number }) {
   const bucket = agingVencidoBucket(dias);
   return (
     <span
-      className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold tabular-nums whitespace-nowrap ${bucket.className}`}
+      className={`inline-flex items-center rounded-full px-2 py-0.5 text-body-sm font-semibold tabular-nums whitespace-nowrap ${bucket.className}`}
       aria-label={bucket.ariaLabel}
     >
       {bucket.label}

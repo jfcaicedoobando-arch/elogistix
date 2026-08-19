@@ -64,7 +64,7 @@ function EtaVencidaBanner({ eta }: { eta: string }) {
   return (
     <div className="flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/5 p-3">
       <AlertTriangle className="h-4 w-4 text-destructive mt-0.5 shrink-0" />
-      <div className="text-sm">
+      <div className="text-body">
         <div className="font-medium text-destructive">ETA vencida</div>
         <div className="text-muted-foreground">
           La ETA era {formatDate(eta, "dd/MM/yyyy")}. Consulta la web de la naviera y
@@ -81,7 +81,7 @@ function FreshnessHeader({
   const badgeLabel = freshness.etaProxima ? "Actualiza antes del arribo" : "Requiere actualización";
   return (
     <div className="flex items-center justify-between flex-wrap gap-2">
-      <div className="flex items-center gap-2 text-sm">
+      <div className="flex items-center gap-2 text-body">
         <Clock className="h-4 w-4 text-muted-foreground" />
         <span className="text-muted-foreground">{freshness.label}</span>
         {freshness.critical && <Badge variant="warning">{badgeLabel}</Badge>}

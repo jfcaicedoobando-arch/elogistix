@@ -23,7 +23,7 @@ export function EstadoDivergenteHint({ estadoVisual, estadoGuardado }: Props) {
     <Tooltip>
       <TooltipTrigger asChild>
         <span
-          className="inline-flex items-center gap-1 rounded-full border border-border bg-muted/60 px-2 py-0.5 text-xs text-muted-foreground"
+          className="inline-flex items-center gap-1 rounded-full border border-border bg-muted/60 px-2 py-0.5 text-body-sm text-muted-foreground"
           aria-label="El estado mostrado se calculó con las fechas del embarque"
         >
           <Info className="h-3 w-3" aria-hidden />

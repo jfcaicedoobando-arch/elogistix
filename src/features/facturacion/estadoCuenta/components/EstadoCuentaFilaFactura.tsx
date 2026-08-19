@@ -54,7 +54,7 @@ export function EstadoCuentaFilaFactura({ fila, abierta, onToggle, facturaHref }
         </Button>
       </TableCell>
       <TableCell>
-        <div className="flex items-center gap-2 text-sm">
+        <div className="flex items-center gap-2 text-body">
           <FileText className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
           <span className="truncate" title={`Factura · Exp. ${fila.expediente}`}>
             Exp. {fila.expediente}

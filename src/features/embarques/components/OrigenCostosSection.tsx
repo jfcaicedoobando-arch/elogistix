@@ -57,7 +57,7 @@ function DeltaTable({ cambios }: { cambios: DeltaConcepto[] }) {
       <p className="px-3 py-1.5 text-label uppercase bg-muted/50 text-muted-foreground">
         Snapshot del delta al convertir ({cambios.length} concepto{sufijo})
       </p>
-      <table className="w-full text-xs">
+      <table className="w-full text-body-sm">
         <thead className="bg-muted/30">
           <tr className="text-left">
             <th className="px-3 py-1.5">Concepto</th>
@@ -102,16 +102,16 @@ export function OrigenCostosSection({
           <GitBranch className="h-4 w-4 text-muted-foreground" />
           Origen de costos
         </CardTitle>
-        <CardDescription className="text-xs">
+        <CardDescription className="text-body-sm">
           Decisión aplicada al convertir la cotización en este embarque.
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-3 text-sm">
+      <CardContent className="space-y-3 text-body">
         <div className="flex flex-wrap items-center gap-2">
           <span className="text-muted-foreground">Decisión:</span>
           {meta ? <Badge variant={meta.variant}>{meta.label}</Badge> : <span className="text-muted-foreground">—</span>}
           {revalidadaEn && (
-            <span className="text-xs text-muted-foreground">· {formatDate(revalidadaEn, "dd/MM/yyyy HH:mm")}</span>
+            <span className="text-body-sm text-muted-foreground">· {formatDate(revalidadaEn, "dd/MM/yyyy HH:mm")}</span>
           )}
         </div>
 
@@ -153,10 +153,10 @@ function TarifaChip({
     <div className="p-2 rounded border bg-muted/30" title={id ?? undefined}>
       <p className="text-label uppercase text-muted-foreground">{label}</p>
       {!id ? (
-        <p className="text-xs text-muted-foreground">—</p>
+        <p className="text-body-sm text-muted-foreground">—</p>
       ) : resumen ? (
         <>
-          <p className="text-sm font-medium">
+          <p className="text-body font-medium">
             {resumen.naviera_nombre} · {resumen.puerto_origen_nombre} → {resumen.puerto_destino_nombre}
             {suffix && <span className="ml-2 text-label font-normal text-muted-foreground">{suffix}</span>}
           </p>
@@ -171,7 +171,7 @@ function TarifaChip({
           </p>
         </>
       ) : (
-        <p className="text-xs text-muted-foreground">
+        <p className="text-body-sm text-muted-foreground">
           Tarifa no encontrada <span className="font-mono">…{id.slice(-8)}</span>
         </p>
       )}

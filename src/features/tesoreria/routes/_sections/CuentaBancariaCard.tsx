@@ -58,7 +58,7 @@ export function CuentaBancariaCard({
         <div className="flex items-start justify-between">
           <div>
             <p className="font-semibold">{c.alias}</p>
-            <p className="text-xs text-muted-foreground">{c.banco} · {c.moneda}</p>
+            <p className="text-body-sm text-muted-foreground">{c.banco} · {c.moneda}</p>
           </div>
           {canAdmin && (
             <div className="flex items-center gap-1">
@@ -81,21 +81,21 @@ export function CuentaBancariaCard({
             </div>
           )}
         </div>
-        {c.numero_cuenta && <p className="text-xs">Cuenta: <span className="font-mono">{c.numero_cuenta}</span></p>}
-        {c.clabe && <p className="text-xs">CLABE: <span className="font-mono">{c.clabe}</span></p>}
+        {c.numero_cuenta && <p className="text-body-sm">Cuenta: <span className="font-mono">{c.numero_cuenta}</span></p>}
+        {c.clabe && <p className="text-body-sm">CLABE: <span className="font-mono">{c.clabe}</span></p>}
         {saldoActual !== undefined ? (
-          <p className="text-sm pt-2">Saldo actual: <span className="tabular-nums font-medium">{formatCurrency(saldoActual, c.moneda)}</span></p>
+          <p className="text-body pt-2">Saldo actual: <span className="tabular-nums font-medium">{formatCurrency(saldoActual, c.moneda)}</span></p>
         ) : (
-          <p className="text-sm pt-2">Saldo inicial: <span className="tabular-nums font-medium">{formatCurrency(Number(c.saldo_inicial), c.moneda)}</span></p>
+          <p className="text-body pt-2">Saldo inicial: <span className="tabular-nums font-medium">{formatCurrency(Number(c.saldo_inicial), c.moneda)}</span></p>
         )}
         <p className="text-label text-muted-foreground">
           Saldo inicial {formatCurrency(Number(c.saldo_inicial), c.moneda)} al{" "}
           {formatDate(c.fecha_saldo_inicial)}
         </p>
-        {!c.activa && <p className="text-xs text-muted-foreground italic">Cuenta inactiva</p>}
+        {!c.activa && <p className="text-body-sm text-muted-foreground italic">Cuenta inactiva</p>}
         <div className="pt-2">
           <Button
-            variant="link" size="sm" className="h-auto p-0 text-xs"
+            variant="link" size="sm" className="h-auto p-0 text-body-sm"
             onClick={(e) => {
               e.stopPropagation();
               navigate(`${ROUTES.TESORERIA_ESTADO_CUENTA}?cuenta=${c.id}`);

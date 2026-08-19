@@ -88,7 +88,7 @@ export default function TesoreriaEstadoCuenta() {
           <EstadoCuentaResumen estado={estado} isLoading={isLoading} />
 
           <div className="space-y-1">
-            <div className="flex flex-wrap justify-between gap-2 px-1 text-xs text-muted-foreground">
+            <div className="flex flex-wrap justify-between gap-2 px-1 text-body-sm text-muted-foreground">
               <span>
                 {visibles.length} de {estado?.movimientos.length ?? 0} movimientos
                 {estado ? ` · ${estado.alias}` : ""}

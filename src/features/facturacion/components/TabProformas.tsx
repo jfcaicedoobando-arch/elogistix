@@ -82,7 +82,7 @@ export function TabProformas({ isInRange, estadoInicial }: {
               <Download className="h-4 w-4 mr-2" /> Exportar CSV
             </Button>
           </div>
-          <div className="mt-3 text-xs text-muted-foreground">
+          <div className="mt-3 text-body-sm text-muted-foreground">
             Mostrando <strong className="text-foreground">{c.filtered.length}</strong> de {c.counts.todas} proformas
           </div>
         </CardContent>
@@ -92,13 +92,13 @@ export function TabProformas({ isInRange, estadoInicial }: {
       {seleccionados > 0 && (
         <Card className="border-primary/30 bg-primary/5">
           <CardContent className="p-3 flex flex-wrap items-center gap-3">
-            <div className="text-sm flex-1 min-w-[240px]">
+            <div className="text-body flex-1 min-w-[240px]">
               <strong>{seleccionados}</strong> proforma{seleccionados === 1 ? "" : "s"} seleccionada{seleccionados === 1 ? "" : "s"}
               {c.fusionInfo.clienteNombre && <> · {c.fusionInfo.clienteNombre}</>}
             </div>
             {!c.fusionInfo.sameCliente && (
               <Alert variant="destructive" className="py-2 px-3 m-0 w-full md:w-auto">
-                <AlertDescription className="text-xs">
+                <AlertDescription className="text-body-sm">
                   Sólo puedes fusionar proformas del mismo cliente.
                 </AlertDescription>
               </Alert>

@@ -19,9 +19,9 @@ function fmt(v: string | null | undefined): string {
 
 function Row({ label, value, mono }: { label: string; value: string; mono?: boolean }) {
   return (
-    <div className="flex justify-between gap-2 text-sm">
+    <div className="flex justify-between gap-2 text-body">
       <span className="text-muted-foreground">{label}</span>
-      <span className={mono ? "font-mono text-xs truncate max-w-[60%]" : "font-medium"}>{value}</span>
+      <span className={mono ? "font-mono text-body-sm truncate max-w-[60%]" : "font-medium"}>{value}</span>
     </div>
   );
 }
@@ -29,7 +29,7 @@ function Row({ label, value, mono }: { label: string; value: string; mono?: bool
 function RemotoCard({ r }: { r: ConsultarFacturapiResult["remoto"] }) {
   return (
     <div className="rounded-lg border p-3 space-y-2">
-      <div className="text-xs font-semibold text-muted-foreground uppercase">En FacturApi</div>
+      <div className="text-body-sm font-semibold text-muted-foreground uppercase">En FacturApi</div>
       <Row label="status" value={fmt(r.status)} />
       <Row label="cancellation_status" value={fmt(r.cancellation_status)} />
       <Row label="canceled_at" value={r.canceled_at ?? "—"} />
@@ -42,7 +42,7 @@ function RemotoCard({ r }: { r: ConsultarFacturapiResult["remoto"] }) {
 function LocalCard({ l }: { l: ConsultarFacturapiResult["local"] }) {
   return (
     <div className="rounded-lg border p-3 space-y-2">
-      <div className="text-xs font-semibold text-muted-foreground uppercase">En Libre Carga</div>
+      <div className="text-body-sm font-semibold text-muted-foreground uppercase">En Libre Carga</div>
       <Row label="estado" value={fmt(l.estado)} />
       <Row label="cancellation_status" value={fmt(l.cancellation_status)} />
       <Row label="UUID" value={l.uuid_fiscal ?? "—"} mono />
@@ -57,7 +57,7 @@ function DivergenciasAlert({ items }: { items: string[] }) {
       <AlertCircle className="h-4 w-4" />
       <AlertDescription>
         <div className="font-semibold mb-1">Divergencias detectadas:</div>
-        <ul className="list-disc ml-4 text-sm space-y-1">
+        <ul className="list-disc ml-4 text-body space-y-1">
           {items.map((d) => <li key={d}>{d}</li>)}
         </ul>
       </AlertDescription>
@@ -69,18 +69,18 @@ function RelacionadosList({ docs }: { docs: ConsultarFacturapiResult["remoto"]["
   if (docs.length === 0) return null;
   return (
     <div className="rounded-lg border p-3">
-      <div className="text-xs font-semibold text-muted-foreground uppercase mb-2">
+      <div className="text-body-sm font-semibold text-muted-foreground uppercase mb-2">
         Documentos relacionados ({docs.length})
       </div>
-      <p className="text-xs text-muted-foreground mb-2">
+      <p className="text-body-sm text-muted-foreground mb-2">
         Si el SAT rechaza la cancelación, revisa que estos documentos ya estén cancelados también.
       </p>
-      <ul className="text-sm space-y-1">
+      <ul className="text-body space-y-1">
         {docs.map((doc, idx) => (
           <li key={idx} className="flex items-center gap-2 flex-wrap">
             {doc.relationship && <Badge variant="outline">{doc.relationship}</Badge>}
             {doc.folio && <span>{doc.serie ?? ""}{doc.folio}</span>}
-            {doc.uuid && <span className="text-xs font-mono text-muted-foreground">{doc.uuid}</span>}
+            {doc.uuid && <span className="text-body-sm font-mono text-muted-foreground">{doc.uuid}</span>}
           </li>
         ))}
       </ul>

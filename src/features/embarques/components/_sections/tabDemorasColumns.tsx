@@ -38,10 +38,10 @@ export function buildDemorasColumns(deps: DemorasColumnsDeps): ColumnDef<Editabl
       header: "Contenedor",
       cell: ({ row }) => (
         <div className="flex flex-col">
-          <span className="font-mono text-sm">
+          <span className="font-mono text-body">
             {row.original.numero_contenedor || `#${row.original.orden}`}
           </span>
-          <span className="text-xs text-muted-foreground">{row.original.tipo_contenedor}</span>
+          <span className="text-body-sm text-muted-foreground">{row.original.tipo_contenedor}</span>
         </div>
       ),
     },

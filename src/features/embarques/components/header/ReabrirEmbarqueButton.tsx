@@ -63,7 +63,7 @@ export function ReabrirEmbarqueButton({ expediente, reabriendoEstado, onReabrir 
             rows={3}
             placeholder="Ej. Se detectó un concepto de venta faltante y hay que emitir la proforma correcta."
           />
-          <p className="text-xs text-muted-foreground">
+          <p className="text-body-sm text-muted-foreground">
             Mínimo {MOTIVO_MIN} caracteres ({motivoLimpio.length}/{MOTIVO_MIN}).
           </p>
         </div>

@@ -55,12 +55,12 @@ export function EstadoCuentaAgingBar({ buckets, activo, onToggle }: Props) {
               )}
             >
               <div className="flex items-center justify-between gap-2">
-                <span className="text-xs font-medium text-muted-foreground">{b.label}</span>
+                <span className="text-body-sm font-medium text-muted-foreground">{b.label}</span>
                 <span className="text-label tabular-nums text-muted-foreground">{b.conteo}</span>
               </div>
               <div className={cn("mt-1 space-y-0.5", TONO[b.id])}>
                 {importes(b).map((txt) => (
-                  <div key={txt} className="text-sm font-semibold tabular-nums whitespace-nowrap">
+                  <div key={txt} className="text-body font-semibold tabular-nums whitespace-nowrap">
                     {txt}
                   </div>
                 ))}

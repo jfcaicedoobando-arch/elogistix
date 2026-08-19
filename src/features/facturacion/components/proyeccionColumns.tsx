@@ -52,7 +52,7 @@ export const proyeccionColumns: ColumnDef<GrupoProyeccion, unknown>[] = defineCo
     accessorFn: (g) => g.operador,
     enableSorting: true,
     sortingFn: sortByString<GrupoProyeccion>((g) => g.operador),
-    meta: { width: COL_W.monto, className: "truncate text-sm" },
+    meta: { width: COL_W.monto, className: "truncate text-body" },
     cell: ({ row }) => row.original.operador || <span className="text-muted-foreground">—</span>,
   },
   {
@@ -61,7 +61,7 @@ export const proyeccionColumns: ColumnDef<GrupoProyeccion, unknown>[] = defineCo
     accessorFn: (g) => g.eta ?? "",
     enableSorting: true,
     sortingFn: sortByDate<GrupoProyeccion>((g) => g.eta),
-    meta: { width: COL_W.fecha, className: "text-xs whitespace-nowrap" },
+    meta: { width: COL_W.fecha, className: "text-body-sm whitespace-nowrap" },
     cell: ({ row }) => (row.original.eta ? formatDate(row.original.eta) : "—"),
   },
   {
@@ -69,7 +69,7 @@ export const proyeccionColumns: ColumnDef<GrupoProyeccion, unknown>[] = defineCo
     header: "Cont.",
     meta: { width: COL_W.tiny, align: "center" },
     cell: ({ row }) => (
-      <span className="inline-flex items-center gap-1 text-xs" title={row.original.contenedores.join(", ")}>
+      <span className="inline-flex items-center gap-1 text-body-sm" title={row.original.contenedores.join(", ")}>
         <Package className="h-3 w-3 opacity-60" />
         <span className="tabular-nums font-medium">{row.original.totalContenedores || 0}</span>
       </span>
@@ -121,7 +121,7 @@ export const proyeccionColumns: ColumnDef<GrupoProyeccion, unknown>[] = defineCo
     accessorFn: (g) => g.margenPct,
     enableSorting: true,
     sortingFn: sortByNumber<GrupoProyeccion>((g) => g.margenPct),
-    meta: { width: COL_W.tiny, align: "right", className: "tabular-nums text-xs" },
+    meta: { width: COL_W.tiny, align: "right", className: "tabular-nums text-body-sm" },
     cell: ({ row }) => {
       const m = row.original.margenPct;
       return (

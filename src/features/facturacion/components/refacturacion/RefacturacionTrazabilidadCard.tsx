@@ -27,7 +27,7 @@ export function RefacturacionTrazabilidadCard({ casoId, embebido = false }: Prop
     <ListSkeleton rows={4} />
   ) : isError || !expediente ? (
     <div className="space-y-2">
-      <p className="text-sm text-muted-foreground">
+      <p className="text-body text-muted-foreground">
         No se pudo cargar la trazabilidad de este caso.
       </p>
       <Button variant="outline" size="sm" onClick={() => refetch()}>Reintentar</Button>
@@ -36,7 +36,7 @@ export function RefacturacionTrazabilidadCard({ casoId, embebido = false }: Prop
     <div className="space-y-5">
       <RefacturacionExpedienteResumen exp={expediente} />
       <div className="space-y-2">
-        <p className="text-sm font-medium">Movimientos del caso</p>
+        <p className="text-body font-medium">Movimientos del caso</p>
         <RefacturacionTimeline eventos={eventos} />
       </div>
     </div>

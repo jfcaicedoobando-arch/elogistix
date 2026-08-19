@@ -41,7 +41,7 @@ export function ContenedorCell({ embarque: e, info, legacyCount }: ContenedorCel
               <Badge variant="outline" className="text-2xs px-1.5 py-0 h-4 border-warning text-warning">Datos pendientes</Badge>
             </TooltipTrigger>
             <TooltipContent>
-              <p className="text-xs">{pendientesTitle}</p>
+              <p className="text-body-sm">{pendientesTitle}</p>
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
