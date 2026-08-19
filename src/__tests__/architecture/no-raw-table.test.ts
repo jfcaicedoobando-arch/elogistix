@@ -23,6 +23,11 @@ const RAW_TABLE_IMPORT = /from\s+["']@\/components\/ui\/table["']/;
 /** JSX de tabla cruda: `<table ...>` fuera de DataTable/DetailTable. */
 const RAW_TABLE_JSX = /<\s*table[\s>]/;
 
+/** Quita comentarios: un `<table>` citado en la documentación no es una tabla. */
+function sinComentarios(src: string): string {
+  return src.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/[^\n]*/g, "");
+}
+
 /**
  * Deuda congelada (UX-03): archivos que hoy renderizan `<table>` crudo.
  * NO agregar entradas nuevas; quitar al migrar a DataTable/DetailTable.
@@ -122,6 +127,11 @@ const ALLOWLIST: readonly string[] = [
   // encabezado ordenable + barra de cumplimiento por fila.
   "src/features/presupuesto/components/TabCaptura.tsx",
   "src/features/presupuesto/components/TabVsReal.tsx",
+  // Sub-vistas de TabVsReal extraídas por el límite de 200 líneas.
+  "src/features/presupuesto/components/VsRealCuerpo.tsx",
+  "src/features/presupuesto/components/VsRealFila.tsx",
+  // Flujo semanal de tesorería: filas expandibles con colSpan por semana.
+  "src/features/tesoreria/components/TablaFlujoSemanal.tsx",
 ];
 
 describe("architecture — no raw @/components/ui/table imports", () => {
@@ -171,7 +181,7 @@ describe("architecture — no raw @/components/ui/table imports", () => {
       // Sólo componentes: los generadores de HTML/PDF (.ts) no son JSX.
       if (!f.endsWith(".tsx")) continue;
       const src = readFileSync(f, "utf8");
-      if (!RAW_TABLE_JSX.test(src)) continue;
+      if (!RAW_TABLE_JSX.test(sinComentarios(src))) continue;
       const rel = relPath(ROOT, f);
       if (!RAW_TABLE_JSX_DEBT.includes(rel)) violations.push(rel);
     }
