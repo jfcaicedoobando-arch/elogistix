@@ -71,15 +71,56 @@ Deno.test("buildRepPayload incluye exchange cuando moneda USD", () => {
   assertEquals(p.complements[0].data[0].exchange, 18.5);
 });
 
-Deno.test("buildRepPayload incluye exchange en doc relacionado si difiere de la moneda del pago", () => {
+Deno.test("buildRepPayload invierte el T/C del doc relacionado: pago MXN, factura USD", () => {
   const p = buildRepPayload({
     ...validCtx,
     moneda: "MXN",
     tipo_cambio: 1,
-    documento_relacionado: { ...validCtx.documento_relacionado, moneda_dr: "USD", tipo_cambio_dr: 18.5 },
+    monto: 23141.03,
+    documento_relacionado: {
+      ...validCtx.documento_relacionado,
+      moneda_dr: "USD",
+      tipo_cambio_dr: 17.06,
+      imp_saldo_ant: 1356.45,
+      imp_pagado: 1356.45,
+    },
   });
-  assertEquals(p.complements[0].data[0].related_documents[0].exchange, 18.5);
+  const exchange = p.complements[0].data[0].related_documents[0].exchange!;
+  // Facturapi exige ≤ 1 cuando el pago es MXN y el documento USD.
+  assert(exchange <= 1, `exchange debe ser ≤ 1, fue ${exchange}`);
+  assertEquals(exchange, 0.0586166471);
+  // Coherencia: monto del pago × factor ≈ importe pagado en la moneda del CFDI.
+  assert(Math.abs(23141.03 * exchange - 1356.45) < 0.5);
 });
+
+Deno.test("buildRepPayload conserva el T/C cuando el pago es USD y la factura MXN", () => {
+  const p = buildRepPayload({
+    ...validCtx,
+    moneda: "USD",
+    tipo_cambio: 17.06,
+    documento_relacionado: { ...validCtx.documento_relacionado, moneda_dr: "MXN", tipo_cambio_dr: 1 },
+  });
+  assertEquals(p.complements[0].data[0].related_documents[0].exchange, 17.06);
+});
+
+Deno.test("buildRepPayload omite exchange del doc relacionado si falta el T/C", () => {
+  const p = buildRepPayload({
+    ...validCtx,
+    moneda: "MXN",
+    tipo_cambio: 1,
+    documento_relacionado: { ...validCtx.documento_relacionado, moneda_dr: "USD", tipo_cambio_dr: 0 },
+  });
+  assertEquals(p.complements[0].data[0].related_documents[0].exchange, undefined);
+});
+
+Deno.test("validateRepContext exige T/C del documento cuando las monedas difieren", () => {
+  const issues = validateRepContext({
+    ...validCtx,
+    documento_relacionado: { ...validCtx.documento_relacionado, moneda_dr: "USD", tipo_cambio_dr: 0 },
+  });
+  assert(issues.some((i) => i.field === "documento.tipo_cambio_dr"));
+});
+
 
 Deno.test("buildRepPayload incluye numOperacion cuando hay referencia", () => {
   const p = buildRepPayload(validCtx);
