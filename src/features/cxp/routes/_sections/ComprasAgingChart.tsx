@@ -3,6 +3,7 @@
  * "Vencidas" / "Vencido >30" / "Por vencer 7d" con una vista ejecutiva única.
  * v13.307.22 — Wave "dashboard-compras-visual".
  */
+import { ChartTooltip } from "@/components/shared/ChartTooltip";
 import { Link } from "react-router-dom";
 import { Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip as RTooltip, XAxis, YAxis } from "recharts";
 import { ArrowUpRight } from "lucide-react";
@@ -74,14 +75,7 @@ export function ComprasAgingChart({ totales, moneda = "MXN" }: { totales: CxpAgi
               />
               <RTooltip
                 cursor={{ fill: "hsl(var(--muted) / 0.4)" }}
-                contentStyle={{
-                  background: "hsl(var(--popover))",
-                  border: "1px solid hsl(var(--border))",
-                  borderRadius: 6,
-                  fontSize: 12,
-                }}
-                labelStyle={{ color: "hsl(var(--foreground))", fontWeight: 500 }}
-                formatter={(v: number) => [formatCurrency(Number(v), moneda), "Saldo"]}
+                content={<ChartTooltip formatValue={(v) => formatCurrency(v, moneda)} />}
               />
               <Bar dataKey="monto" radius={[4, 4, 0, 0]}>
                 {data.map((d) => <Cell key={d.label} fill={TONE_HEX[d.tone]} />)}

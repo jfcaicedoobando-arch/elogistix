@@ -3,6 +3,7 @@
  * v13.307.22 — reutiliza el listado ya cargado por `useFacturasCxP` para evitar
  * un query extra. Muestra ritmo de captura del equipo contable.
  */
+import { ChartTooltip } from "@/components/shared/ChartTooltip";
 import { useMemo } from "react";
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip as RTooltip, XAxis, YAxis } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -55,13 +56,7 @@ export function ComprasCapturaTrend({ rows }: { rows: CapturaTrendRow[] }) {
               <XAxis dataKey="label" tick={{ fontSize: 10 }} stroke="hsl(var(--muted-foreground))" axisLine={false} tickLine={false} interval={1} />
               <YAxis tick={{ fontSize: 10 }} stroke="hsl(var(--muted-foreground))" axisLine={false} tickLine={false} width={24} allowDecimals={false} />
               <RTooltip
-                contentStyle={{
-                  background: "hsl(var(--popover))",
-                  border: "1px solid hsl(var(--border))",
-                  borderRadius: 6,
-                  fontSize: 12,
-                }}
-                formatter={(v: number) => [v, "Facturas"]}
+                content={<ChartTooltip />}
               />
               <Area type="monotone" dataKey="capturadas" stroke="hsl(var(--primary))" strokeWidth={2} fill="url(#cxp-captura-fill)" />
             </AreaChart>

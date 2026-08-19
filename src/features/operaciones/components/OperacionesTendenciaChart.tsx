@@ -13,6 +13,7 @@ import {
   Tooltip as RechartsTooltip,
   ResponsiveContainer,
 } from "recharts";
+import { ChartTooltip } from "@/components/shared/ChartTooltip";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 import { LineChart as LineChartIcon } from "lucide-react";
 
@@ -33,7 +34,7 @@ export default function OperacionesTendenciaChart({ data }: Props) {
         <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
         <XAxis dataKey="mes" tick={{ fontSize: 12 }} />
         <YAxis allowDecimals={false} tick={{ fontSize: 12 }} />
-        <RechartsTooltip />
+        <RechartsTooltip content={<ChartTooltip />} />
         <Line
           type="monotone"
           dataKey="creadas"

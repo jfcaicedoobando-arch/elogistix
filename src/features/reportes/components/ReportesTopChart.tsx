@@ -1,3 +1,4 @@
+import { ChartTooltip } from "@/components/shared/ChartTooltip";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
 import { BarChart3 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -47,7 +48,7 @@ export default function ReportesTopChart({ data, isLoading }: Props) {
                 // VT-19/VF-24: no truncar antes de ~30 chars; hay ancho de sobra.
                 tickFormatter={(v: string) => (v && v.length > 30 ? v.slice(0, 29) + "…" : v)}
               />
-              <Tooltip formatter={(v: number) => formatCurrency(v, "USD")} />
+              <Tooltip content={<ChartTooltip formatValue={(v) => formatCurrency(v, "USD")} />} />
               <Bar dataKey="profit" radius={[0, 4, 4, 0]}>
                 {data.map((_, i) => (
                   <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />

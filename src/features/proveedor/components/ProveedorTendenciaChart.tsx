@@ -1,6 +1,7 @@
 /**
  * Tendencia 12 meses (Ola 4): comprometido vs facturado vs pagado, en MXN.
  */
+import { ChartTooltip } from "@/components/shared/ChartTooltip";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, Legend,
@@ -54,7 +55,7 @@ export function ProveedorTendenciaChart({ tendencia }: { tendencia: PuntoTendenc
                 <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
                 <XAxis dataKey="etiqueta" tick={{ fontSize: 11 }} />
                 <YAxis tick={{ fontSize: 11 }} tickFormatter={(v: number) => formatCompactNumber(v)} />
-                <Tooltip formatter={(v: number) => formatCurrency(v, "MXN")} />
+                <Tooltip content={<ChartTooltip formatValue={(v) => formatCurrency(v, "MXN")} />} />
                 <Legend wrapperStyle={{ fontSize: 12 }} />
                 <Bar name="Comprometido" dataKey="comprometido" fill={CHART.neutral} radius={[3, 3, 0, 0]} />
                 <Bar name="Facturado" dataKey="facturado" fill={CHART.primary} radius={[3, 3, 0, 0]} />

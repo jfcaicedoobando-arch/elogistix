@@ -27,12 +27,12 @@ export function EmbarquesAlertasPanel({ resumen, activeAlerta, onSelect }: Props
   if (resumen.total === 0) return null;
 
   return (
-    <Card className="p-4 border-warning/70 bg-warning/40 dark:bg-warning/10">
+    <Card className="p-4 border-warning/40 bg-warning/10 dark:bg-warning/5">
       <div className="flex items-center justify-between gap-2 mb-3">
         <div className="flex items-center gap-2">
           <AlertTriangle className="h-4 w-4 text-warning" aria-hidden />
           <SectionHeading>Alertas activas</SectionHeading>
-          <Badge variant="secondary" className="text-2xs">
+          <Badge variant="warning" size="xs">
             {resumen.total}
           </Badge>
         </div>
