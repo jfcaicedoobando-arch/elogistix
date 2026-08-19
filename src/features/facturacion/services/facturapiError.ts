@@ -96,21 +96,27 @@ export function toReadableError(
   const issues = body.issues?.length
     ? `: ${body.issues.map((i) => i.message).join("; ")}`
     : "";
-  const message = body.message
-    ?? body.error
-    ?? (error as { message?: string } | null)?.message
-    ?? fallback;
+  const esValidacion = isExpectedValidationBody(body);
+  const message = esValidacion
+    // JAVASCRIPT-REACT-5D: antes el usuario leía el código interno
+    // "validation_failed" antes del detalle real.
+    ? "Revisa estos datos antes de timbrar"
+    : (body.message
+      ?? body.error
+      ?? (error as { message?: string } | null)?.message
+      ?? fallback);
   const finalMessage = message + issues;
   // Ola 17 · si el backend mandó un rechazo estructurado del SAT/FacturApi,
   // preferimos el mensaje de negocio traducido (ej. 402 → "RFC no inscrito en
   // el padrón del SAT") y guardamos los datos técnicos para "Ver detalles".
   const sat = interpretarErrorFacturapi(body);
-  const usarSat = sat?.codigo != null;
+  const usarSat = !esValidacion && sat?.codigo != null;
   const err = new FacturapiError(
     usarSat ? `${sat!.titulo}. ${sat!.descripcion}` : finalMessage,
     !!body.transient,
-    isExpectedFacturapiMessage(finalMessage),
+    esValidacion || isExpectedFacturapiMessage(finalMessage),
   );
+
   if (sat) {
     err.codigoSat = sat.codigo;
     err.detallesSat = sat.detalles;
