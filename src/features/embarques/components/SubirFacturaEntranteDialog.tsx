@@ -44,23 +44,34 @@ export function SubirFacturaEntranteDialog({ open, onOpenChange, embarqueId, org
   };
 
   const onSubmit = async () => {
-    await subir.mutateAsync({
-      pdf: form.pdf,
-      xml: form.xml,
-      meta: form.meta,
-      proveedorId: form.proveedor?.id ?? null,
-      embarqueId,
-      organizationId,
-      nota: form.nota,
-      montoDeclarado: form.montoDeclarado,
-      monedaDeclarada: form.monedaDeclarada,
-      conceptosSugeridos: form.conceptosSeleccionados.map((c) => ({
-        conceptoId: c.conceptoId,
-        monto: c.monto,
-      })),
-      sinCostoCapturado: form.sinCostoCapturado,
-    });
-    cerrar();
+    // EC-8: sin try/catch, un fallo de storage o de red dejaba una promesa
+    // rechazada sin manejar y el usuario no veía nada (el diálogo se quedaba
+    // "pensando").
+    try {
+      await subir.mutateAsync({
+        pdf: form.pdf,
+        xml: form.xml,
+        meta: form.meta,
+        proveedorId: form.proveedor?.id ?? null,
+        embarqueId,
+        organizationId,
+        nota: form.nota,
+        montoDeclarado: form.montoDeclarado,
+        monedaDeclarada: form.monedaDeclarada,
+        conceptosSugeridos: form.conceptosSeleccionados.map((c) => ({
+          conceptoId: c.conceptoId,
+          monto: c.monto,
+        })),
+        sinCostoCapturado: form.sinCostoCapturado,
+      });
+      cerrar();
+    } catch (error) {
+      notifyError(undefined, {
+        title: "No se pudo subir la factura al buzón",
+        error,
+        context: { embarqueId, proveedorId: form.proveedor?.id ?? null },
+      });
+    }
   };
 
   return (

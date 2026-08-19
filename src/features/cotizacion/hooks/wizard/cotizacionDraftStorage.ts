@@ -13,7 +13,13 @@ const DRAFT_TTL_MS = 24 * 60 * 60 * 1000; // 24 h
 const CLOCK_SKEW_MS = 5 * 60 * 1000; // 5 min
 export const DEBOUNCE_MS = 800;
 
-export const draftKey = (userId: string): string => `lc:cotizacion:draft:${userId || "anon"}`;
+/**
+ * EC-6: la clave incluye la organización activa. Un super admin o un usuario
+ * con varias membresías cambiaba de tenant y el wizard le ofrecía restaurar el
+ * borrador capturado en la organización anterior (fuga cross-tenant).
+ */
+export const draftKey = (userId: string, organizationId?: string | null): string =>
+  `lc:cotizacion:draft:${organizationId || "sin-org"}:${userId || "anon"}`;
 
 export interface StoredDraft {
   version: 3;
