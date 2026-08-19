@@ -31,12 +31,12 @@ function factura(over: Partial<FacturaEstadoCuenta>): FacturaEstadoCuenta {
 
 describe("bucketDeFactura", () => {
   it("clasifica por días vencidos", () => {
-    expect(bucketDeFactura(0)).toBe("corriente");
-    expect(bucketDeFactura(1)).toBe("1-30");
-    expect(bucketDeFactura(30)).toBe("1-30");
-    expect(bucketDeFactura(31)).toBe("31-60");
-    expect(bucketDeFactura(61)).toBe("61-90");
-    expect(bucketDeFactura(91)).toBe("90+");
+    expect(bucketDeFactura(0)).toBe("vigente");
+    expect(bucketDeFactura(1)).toBe("d_1_30");
+    expect(bucketDeFactura(30)).toBe("d_1_30");
+    expect(bucketDeFactura(31)).toBe("d_31_60");
+    expect(bucketDeFactura(61)).toBe("d_61_90");
+    expect(bucketDeFactura(91)).toBe("mas_90");
   });
 });
 
@@ -49,11 +49,11 @@ describe("calcularAging", () => {
       factura({ id: "d", dias_vencido: 120, saldo: 0, moneda: "USD" }),
     ]);
     const porId = Object.fromEntries(buckets.map((b) => [b.id, b]));
-    expect(porId.corriente.usd).toBe(100);
+    expect(porId.vigente.usd).toBe(100);
     expect(porId["31-60"].mxn).toBe(200);
     expect(porId["31-60"].usd).toBe(50);
     expect(porId["31-60"].conteo).toBe(2);
-    expect(porId["90+"].conteo).toBe(0);
+    expect(porId.mas_90.conteo).toBe(0);
   });
 });
 
