@@ -96,7 +96,7 @@ export function DialogRegistrarPago({ open, onOpenChange, factura }: Props) {
   if (!factura) return null;
 
   const {
-    montoNum, montoAplicado, tipoCambio, excede, tcBloqueado, tcRespaldo, errorFecha, invalido,
+    montoNum, montoAplicado, tipoCambio, excede, tcBloqueado, tcRespaldo, cruceNoSoportado, errorFecha, invalido,
   } = derivarEstadoPago({
       monto: values.monto,
       monedaPago: values.moneda,
@@ -180,6 +180,7 @@ export function DialogRegistrarPago({ open, onOpenChange, factura }: Props) {
           saldo={saldo}
           tcBloqueado={tcBloqueado}
           tcRespaldo={tcRespaldo}
+          cruceNoSoportado={cruceNoSoportado}
           errorFecha={errorFecha}
         />
       </form>

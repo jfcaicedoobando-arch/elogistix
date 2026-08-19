@@ -36,7 +36,7 @@ export function FooterAcciones({
 
 
 export function NotasPago({
-  esPpdTimbrada, monedaPago, monedaFactura, montoNum, montoAplicado, tipoCambio, excede, saldo, tcBloqueado, tcRespaldo, errorFecha,
+  esPpdTimbrada, monedaPago, monedaFactura, montoNum, montoAplicado, tipoCambio, excede, saldo, tcBloqueado, tcRespaldo, cruceNoSoportado, errorFecha,
 }: {
   esPpdTimbrada: boolean;
   monedaPago: string;
@@ -50,6 +50,8 @@ export function NotasPago({
   tcBloqueado?: boolean;
   /** EC-10: la conversión usaría el TC de respaldo (no Banxico/DOF). */
   tcRespaldo?: boolean;
+  /** Cruce USD↔EUR: no soportado por la conversión de la base de datos. */
+  cruceNoSoportado?: boolean;
   /** FE-03 / UIA-06: fecha de pago inválida (futura o previa a la emisión). */
   errorFecha?: string | null;
 }) {
@@ -72,7 +74,13 @@ export function NotasPago({
       {mostrarConversion && tcBloqueado && (
         <Alert className="border-warning/40 bg-warning/5">
           <AlertDescription className="text-xs">
-            {tcRespaldo ? (
+            {cruceNoSoportado ? (
+              <>
+                <strong>Cruce de divisas no soportado.</strong> No se puede registrar un cobro en{" "}
+                {monedaPago} para una factura en {monedaFactura}. Cobra en {monedaFactura} o en pesos
+                (MXN).
+              </>
+            ) : tcRespaldo ? (
               <>
                 <strong>Tipo de cambio de respaldo.</strong> No pudimos obtener el TC oficial de
                 Banxico; registrar un cobro en {monedaPago} para una factura en {monedaFactura} con
