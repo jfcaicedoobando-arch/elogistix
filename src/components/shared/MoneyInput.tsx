@@ -37,6 +37,11 @@ export interface MoneyInputProps {
   onBlur?: () => void;
   /** Foco inicial (p. ej. el importe recibido al abrir un diálogo). */
   autoFocus?: boolean;
+  /**
+   * Ola C · #16: tope superior del importe. Sin él se podían teclear montos
+   * absurdos (un cero extra) que sólo reventaban al guardar en la base.
+   */
+  max?: number;
 
 }
 
@@ -51,6 +56,7 @@ const MoneyInput = forwardRef<HTMLInputElement, MoneyInputProps>(
       disabled,
       placeholder,
       onBlur,
+      max,
       ...rest
     },
     ref,
@@ -84,8 +90,10 @@ const MoneyInput = forwardRef<HTMLInputElement, MoneyInputProps>(
 
     const handleBlur = () => {
       const clean = sanitizeMoneyText(text, allowNegative);
-      setText(normalizeMoneyText(clean));
-      onChange(parseMoneyText(clean) ?? 0);
+      const parsed = parseMoneyText(clean) ?? 0;
+      const acotado = typeof max === "number" && parsed > max ? max : parsed;
+      setText(acotado === parsed ? normalizeMoneyText(clean) : valorANumeroTexto(acotado));
+      onChange(acotado);
       onBlur?.();
     };
 
