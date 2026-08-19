@@ -42,8 +42,8 @@ export function ProveedorYFolioSection({
             </div>
           </div>
           <div className="space-y-1">
-            <Label>Folio del proveedor<RequiredMark /></Label>
-            <Input value={values.folio} onChange={(e) => onChange("folio", e.target.value)} placeholder="A-12345" />
+            <Label htmlFor="factura-prov-folio-readonly">Folio del proveedor<RequiredMark /></Label>
+            <Input id="factura-prov-folio-readonly" value={values.folio} onChange={(e) => onChange("folio", e.target.value)} placeholder="A-12345" />
             <FieldError msg={errors.folio} />
           </div>
         </div>
@@ -55,8 +55,8 @@ export function ProveedorYFolioSection({
             <FieldError msg={errors.provId} />
           </div>
           <div className="space-y-1">
-            <Label>Folio del proveedor<RequiredMark /></Label>
-            <Input value={values.folio} onChange={(e) => onChange("folio", e.target.value)} placeholder="A-12345" />
+            <Label htmlFor="factura-prov-folio">Folio del proveedor<RequiredMark /></Label>
+            <Input id="factura-prov-folio" value={values.folio} onChange={(e) => onChange("folio", e.target.value)} placeholder="A-12345" />
             <FieldError msg={errors.folio} />
           </div>
         </div>

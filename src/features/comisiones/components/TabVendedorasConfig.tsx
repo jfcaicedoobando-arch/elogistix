@@ -88,8 +88,8 @@ function SeccionConfig({ vendedoras }: { vendedoras: VendedoraOpt[] }) {
             </Select>
           </div>
           <div className="space-y-1 w-24">
-            <Label>%</Label>
-            <Input type="number" step="0.1" min="0" max="100" value={nuevoPct} onChange={(e) => setNuevoPct(e.target.value)} />
+            <Label htmlFor="vendedora-nuevo-pct">%</Label>
+            <Input id="vendedora-nuevo-pct" type="number" step="0.1" min="0" max="100" value={nuevoPct} onChange={(e) => setNuevoPct(e.target.value)} />
           </div>
           <Button onClick={agregar} disabled={!nuevaVendedora || upsert.isPending}>
             <Plus className="h-4 w-4 mr-1" /> Agregar
@@ -116,6 +116,7 @@ function SeccionConfig({ vendedoras }: { vendedoras: VendedoraOpt[] }) {
                     value={pct}
                     onChange={(e) => setPcts((p) => ({ ...p, [c.id]: e.target.value }))}
                     className="w-24"
+                    aria-label={`Porcentaje de comisión de ${v?.nombre ?? "vendedora"}`}
                   />
                   <Button size="sm" variant="outline" onClick={() => guardarPct(c.id)}>
                     <Save className="h-4 w-4" />

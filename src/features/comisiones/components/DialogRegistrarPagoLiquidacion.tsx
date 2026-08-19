@@ -73,8 +73,8 @@ export function DialogRegistrarPagoLiquidacion({
         </div>
       </div>
       <div className="space-y-1">
-        <Label>Referencia</Label>
-        <Input value={referencia} onChange={(e) => setReferencia(e.target.value)} placeholder="No. operación o cheque" />
+        <Label htmlFor="pago-liq-referencia">Referencia</Label>
+        <Input id="pago-liq-referencia" value={referencia} onChange={(e) => setReferencia(e.target.value)} placeholder="No. operación o cheque" />
       </div>
     </FormDialogShell>
   );

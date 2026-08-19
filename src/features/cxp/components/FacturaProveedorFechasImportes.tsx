@@ -53,8 +53,9 @@ export function FechasEImportesBlock({
             />
           </div>
           <div className="space-y-1">
-            <Label>Vencimiento</Label>
+            <Label htmlFor="factura-prov-vencimiento">Vencimiento</Label>
             <Input
+              id="factura-prov-vencimiento"
               value={values.vencimiento ? values.vencimiento.split("-").reverse().join("/") : ""}
               readOnly
               className="bg-muted"

@@ -77,9 +77,10 @@ export default function SeccionMercanciaWrapper({
 
       {tipoCarga === 'Mercancía Peligrosa' && (
         <div>
-          <Label>Hoja de Seguridad (MSDS)</Label>
+          <Label htmlFor="msds-file-input">Hoja de Seguridad (MSDS)</Label>
           <div className="flex items-center gap-2 mt-1">
             <Input
+              id="msds-file-input"
               type="file"
               accept=".pdf,.doc,.docx,.jpg,.png"
               onChange={e => setMsdsFile(e.target.files?.[0] || null)}
