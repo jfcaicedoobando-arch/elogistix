@@ -15,7 +15,6 @@ import {
   type Joined,
 } from "./proveedorFacturas.helpers";
 import type { FacturaCxP, FetchCxPFiltros } from "./proveedorFacturas.types";
-import { CAP_REPORTE } from "@/constants/queryCaps";
 
 export type {
   ProveedorFacturaRow,

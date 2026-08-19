@@ -8,7 +8,6 @@ import { fromDb } from "@/lib/supabase/cast";
 import { unwrapOr, run } from "@/lib/supabase/response";
 import { warnIfTruncated } from "@/lib/supabase/assertNotTruncated";
 import { registrarActividad } from "@/services/bitacora/registrar";
-import { CAP_LISTA } from "@/constants/queryCaps";
 
 /** Límite defensivo de catálogos (PostgREST corta a max-rows sin avisar). */
 const LIMITE_CATALOGOS = 500;
