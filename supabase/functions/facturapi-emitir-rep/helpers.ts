@@ -157,7 +157,24 @@ export function validateRepContext(ctx: PagoContext): RepValidationIssue[] {
   if (ctx.moneda !== "MXN" && !(ctx.tipo_cambio > 0)) {
     issues.push({ field: "tipo_cambio", message: "Tipo de cambio requerido cuando moneda ≠ MXN" });
   }
+  if (
+    ctx.moneda !== ctx.documento_relacionado.moneda_dr &&
+    tipoCambioDocRelacionado(
+      ctx.moneda,
+      ctx.tipo_cambio,
+      ctx.documento_relacionado.moneda_dr,
+      ctx.documento_relacionado.tipo_cambio_dr,
+    ) === null
+  ) {
+    issues.push({
+      field: "documento.tipo_cambio_dr",
+      message:
+        `El pago está en ${ctx.moneda} y la factura en ${ctx.documento_relacionado.moneda_dr}: ` +
+        "captura el tipo de cambio (pesos por divisa) para poder timbrar el complemento de pago.",
+    });
+  }
   if (!ctx.documento_relacionado.uuid) issues.push({ field: "documento.uuid", message: "La factura original debe estar timbrada (UUID requerido)" });
+
   if (!(ctx.documento_relacionado.num_parcialidad >= 1)) issues.push({ field: "documento.num_parcialidad", message: "Número de parcialidad inválido" });
   if (!(ctx.documento_relacionado.imp_pagado > 0)) issues.push({ field: "documento.imp_pagado", message: "Importe pagado inválido" });
   if (ctx.documento_relacionado.imp_saldo_ant < ctx.documento_relacionado.imp_pagado - 0.01) {
