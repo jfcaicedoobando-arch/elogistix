@@ -1,5 +1,6 @@
 import type { LucideIcon } from "lucide-react";
 import { Loader2 } from "lucide-react";
+import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -36,6 +37,8 @@ interface Props {
   density?: "compact" | "default";
   /** Clases extra (por defecto py-8) */
   className?: string;
+  /** Contenido extra bajo la acción (p. ej. un CTA compuesto que no encaja en `action`) */
+  children?: ReactNode;
 }
 
 export function EmptyStateInline({
@@ -46,6 +49,7 @@ export function EmptyStateInline({
   action,
   density = "default",
   className,
+  children,
 }: Props) {
   const compact = density === "compact";
   return (
@@ -79,6 +83,7 @@ export function EmptyStateInline({
           {action.to ? <Link to={action.to}>{action.label}</Link> : action.label}
         </Button>
       )}
+      {children}
     </div>
   );
 }

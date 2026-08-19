@@ -1,14 +1,19 @@
+/**
+ * Tabla migrada a `DataTable` (Ola F, punto 8).
+ */
 import { useState } from "react";
 import { Plus, CheckCircle2, Receipt } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
+import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
+import { COL_W } from "@/components/shared/dataTable/columnWidths";
 import { formatCurrency, formatDate } from "@/lib/formatters";
 import { useLiquidaciones } from "@/features/comisiones/hooks";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { DialogGenerarLiquidacion } from "./DialogGenerarLiquidacion";
 import { DialogRegistrarPagoLiquidacion } from "./DialogRegistrarPagoLiquidacion";
 import type { LiquidacionRow } from "@/features/comisiones/services";
-import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 
 interface VendedoraOpt { id: string; nombre: string }
 
@@ -22,6 +27,40 @@ export function TabLiquidaciones({ vendedoras }: { vendedoras: VendedoraOpt[] })
     effectiveRole != null &&
     ["admin", "admin_org", "super_admin", "contador", "tesorero"].includes(effectiveRole);
 
+  const columns: ColumnDef<LiquidacionRow, unknown>[] = defineColumns<LiquidacionRow>([
+    { id: "periodo", header: "Periodo", meta: { width: COL_W.folio, className: "font-mono text-body-sm" }, cell: ({ row }) => row.original.periodo },
+    {
+      id: "vendedora", header: "Vendedora", meta: { width: COL_W.nombre },
+      cell: ({ row }) => vendedoras.find((x) => x.id === row.original.vendedora_id)?.nombre ?? row.original.vendedora_id,
+    },
+    {
+      id: "total", header: "Total MXN", meta: { width: COL_W.monto, align: "right", className: "font-semibold" },
+      cell: ({ row }) => formatCurrency(Number(row.original.total_mxn), "MXN"),
+    },
+    {
+      id: "fecha_pago", header: "Fecha pago", meta: { width: COL_W.fecha },
+      cell: ({ row }) => row.original.fecha_pago
+        ? formatDate(row.original.fecha_pago)
+        : <span className="text-muted-foreground italic">pendiente</span>,
+    },
+    {
+      id: "referencia", header: "Referencia", meta: { width: COL_W.texto, className: "text-muted-foreground text-body-sm" },
+      cell: ({ row }) => row.original.referencia ?? "—",
+    },
+    {
+      id: "acciones", header: "", meta: { width: COL_W.ruta, align: "right" },
+      cell: ({ row }) => {
+        const l = row.original;
+        if (l.fecha_pago || !puedeGestionar) return null;
+        return (
+          <Button size="sm" variant="outline" onClick={() => setPagoOpen(l)}>
+            <CheckCircle2 className="h-4 w-4 mr-1" /> Registrar pago
+          </Button>
+        );
+      },
+    },
+  ]);
+
   return (
     <div className="space-y-4">
       {puedeGestionar && (
@@ -34,55 +73,15 @@ export function TabLiquidaciones({ vendedoras }: { vendedoras: VendedoraOpt[] })
 
       <Card>
         <CardContent className="p-0">
-          {isLoading ? (
-            <div className="p-6 text-center text-muted-foreground">
-              <EmptyStateInline loading message="Cargando…" />
-            </div>
-          ) : liquidaciones.length === 0 ? (
-            <EmptyStateInline icon={Receipt} message="Sin liquidaciones registradas." />
-          ) : (
-            <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="bg-muted/50">
-                <tr className="text-left">
-                  <th className="p-2">Periodo</th>
-                  <th className="p-2">Vendedora</th>
-                  <th className="p-2 text-right">Total MXN</th>
-                  <th className="p-2">Fecha pago</th>
-                  <th className="p-2">Referencia</th>
-                  <th className="p-2"></th>
-                </tr>
-              </thead>
-              <tbody>
-                {liquidaciones.map((l, i) => {
-                  const v = vendedoras.find((x) => x.id === l.vendedora_id);
-                  return (
-                    <tr key={l.id} className={i % 2 ? "bg-muted/20" : ""}>
-                      <td className="p-2 font-mono text-xs">{l.periodo}</td>
-                      <td className="p-2">{v?.nombre ?? l.vendedora_id}</td>
-                      <td className="p-2 text-right tabular-nums font-semibold">
-                        {formatCurrency(Number(l.total_mxn), "MXN")}
-                      </td>
-                      <td className="p-2">
-                        {l.fecha_pago
-                          ? formatDate(l.fecha_pago)
-                          : <span className="text-muted-foreground italic">pendiente</span>}
-                      </td>
-                      <td className="p-2 text-xs text-muted-foreground">{l.referencia ?? "—"}</td>
-                      <td className="p-2 text-right">
-                        {!l.fecha_pago && puedeGestionar && (
-                          <Button size="sm" variant="outline" onClick={() => setPagoOpen(l)}>
-                            <CheckCircle2 className="h-4 w-4 mr-1" /> Registrar pago
-                          </Button>
-                        )}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-            </div>
-          )}
+          <DataTable
+            columns={columns}
+            data={liquidaciones}
+            isLoading={isLoading}
+            rowKey={(l) => l.id}
+            density={TABLE_DENSITY.embebida}
+            emptyIcon={Receipt}
+            emptyMessage="Sin liquidaciones registradas."
+          />
         </CardContent>
       </Card>
 

@@ -85,7 +85,7 @@ export default function Leads() {
   );
 
   return (
-    <PageContainer>
+    <PageContainer width="wide">
       <PageHeader
         title="Leads"
         description="Prospectos y empresas en seguimiento comercial"

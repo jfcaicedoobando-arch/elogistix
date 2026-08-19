@@ -94,7 +94,7 @@ export default function Actividades() {
   };
 
   return (
-    <PageContainer>
+    <PageContainer width="wide">
       <PageHeader
         title="Actividades"
         description="Registro de llamadas, reuniones y tareas de seguimiento CRM"

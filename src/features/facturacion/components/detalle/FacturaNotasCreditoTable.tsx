@@ -1,10 +1,14 @@
 /**
  * Tabla de notas de crédito ligadas a una factura. Extraída de
  * FacturaNotasCreditoSeccion para mantener el archivo ≤ 200 líneas.
+ * Migrada a `DataTable` (Ola F, punto 8) con `TABLE_DENSITY.embebida`.
  */
 import { useState } from "react";
 import { Mail, XCircle, Stamp, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
+import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
+import { COL_W } from "@/components/shared/dataTable/columnWidths";
 import { formatCurrency, formatDate } from "@/lib/formatters";
 import { FacturaDownloadButton } from "@/features/facturacion/components/FacturaDownloadButton";
 import { AmbienteBadge } from "@/features/facturacion/components/AmbienteBadge";
@@ -62,98 +66,103 @@ interface Props {
 export function FacturaNotasCreditoTable(props: Props) {
   const { notas, canEdit, uuidFacturaOriginal, timbrando, onTimbrar, onEmail, onCancelar } = props;
   const [previewNc, setPreviewNc] = useState<NotaCreditoRow | null>(null);
+
+  const columns: ColumnDef<NotaCreditoRow, unknown>[] = defineColumns<NotaCreditoRow>([
+    {
+      id: "folio", header: "Folio", meta: { width: COL_W.folio, className: "font-mono text-body-sm" },
+      cell: ({ row }) => {
+        const n = row.original;
+        const folioRender = renderFolio(n);
+        return (
+          <span className="inline-flex items-center gap-1.5">
+            {folioRender.esBorrador ? (
+              <CfdiEstadoBadge tono="borrador">{folioRender.texto}</CfdiEstadoBadge>
+            ) : (
+              folioRender.texto
+            )}
+            <AmbienteBadge ambiente={n.ambiente} />
+          </span>
+        );
+      },
+    },
+    { id: "fecha", header: "Fecha", meta: { width: COL_W.fecha }, cell: ({ row }) => formatDate(row.original.fecha_emision) },
+    { id: "motivo", header: "Motivo", meta: { width: COL_W.texto }, cell: ({ row }) => row.original.motivo },
+    {
+      id: "estado", header: "Estado", meta: { width: COL_W.estado },
+      cell: ({ row }) => <CfdiEstadoBadge tono={ESTADO_TONO[row.original.estado]}>{row.original.estado}</CfdiEstadoBadge>,
+    },
+    {
+      id: "monto", header: "Monto", meta: { width: COL_W.monto, align: "right" },
+      cell: ({ row }) => formatCurrency(Number(row.original.monto), row.original.moneda),
+    },
+    {
+      id: "acciones", header: "Acciones", meta: { width: "w-44", align: "right" },
+      cell: ({ row }) => {
+        const n = row.original;
+        const timbrada = n.estado === "Timbrada" || n.estado === "Aplicada";
+        const cancelable = n.estado === "Timbrada";
+        const puedeTimbrar = n.estado === "Borrador" && !!uuidFacturaOriginal;
+        return (
+          <div className="flex justify-end items-center gap-1">
+            {timbrada && (
+              <>
+                <Button
+                  variant="outline" size="icon" className="h-7 w-7"
+                  title="Previsualizar PDF" aria-label="Previsualizar PDF"
+                  onClick={() => setPreviewNc(n)}
+                >
+                  <Eye className="h-3.5 w-3.5" />
+                </Button>
+                <FacturaDownloadButton stored={n.pdf_url} kind="pdf" notaCreditoId={n.id} />
+                <FacturaDownloadButton stored={n.xml_url} kind="xml" notaCreditoId={n.id} />
+                <Button
+                  variant="outline" size="icon" className="h-7 w-7"
+                  title="Reenviar por email" aria-label="Reenviar por email"
+                  onClick={() => onEmail(n.id)}
+                >
+                  <Mail className="h-3.5 w-3.5" />
+                </Button>
+              </>
+            )}
+            {canEdit && puedeTimbrar && (
+              <Button
+                variant="outline" size="sm" className="h-7"
+                onClick={() => onTimbrar(n.id)}
+                disabled={timbrando}
+              >
+                <Stamp className="h-3.5 w-3.5 mr-1" /> Timbrar
+              </Button>
+            )}
+            {canEdit && cancelable && (
+              <Button
+                variant="ghost" size="icon" className="h-7 w-7"
+                title="Cancelar NC" aria-label="Cancelar NC"
+                onClick={() => onCancelar(n.id)}
+              >
+                <XCircle className="h-3.5 w-3.5 text-destructive" />
+              </Button>
+            )}
+          </div>
+        );
+      },
+    },
+  ]);
+
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full text-body">
-        <thead className="text-body-sm text-muted-foreground border-b">
-          <tr>
-            <th className="text-left py-2 px-2">Folio</th>
-            <th className="text-left py-2 px-2">Fecha</th>
-            <th className="text-left py-2 px-2">Motivo</th>
-            <th className="text-left py-2 px-2">Estado</th>
-            <th className="text-right py-2 px-2">Monto</th>
-            <th className="text-right py-2 px-2 w-44">Acciones</th>
-          </tr>
-        </thead>
-        <tbody>
-          {notas.map((n) => {
-            const timbrada = n.estado === "Timbrada" || n.estado === "Aplicada";
-            const cancelable = n.estado === "Timbrada";
-            const puedeTimbrar = n.estado === "Borrador" && !!uuidFacturaOriginal;
-            const folioRender = renderFolio(n);
-            return (
-              <tr key={n.id} className="border-b last:border-0 hover:bg-muted/30">
-                <td className="py-2 px-2 font-mono text-body-sm">
-                  <span className="inline-flex items-center gap-1.5">
-                    {folioRender.esBorrador ? (
-                      <CfdiEstadoBadge tono="borrador">{folioRender.texto}</CfdiEstadoBadge>
-                    ) : (
-                      folioRender.texto
-                    )}
-                    <AmbienteBadge ambiente={n.ambiente} />
-                  </span>
-                </td>
-                <td className="py-2 px-2 text-body-sm">{formatDate(n.fecha_emision)}</td>
-                <td className="py-2 px-2 text-body-sm">{n.motivo}</td>
-                <td className="py-2 px-2">
-                  <CfdiEstadoBadge tono={ESTADO_TONO[n.estado]}>{n.estado}</CfdiEstadoBadge>
-                </td>
-                <td className="py-2 px-2 text-right tabular-nums">
-                  {formatCurrency(Number(n.monto), n.moneda)}
-                </td>
-                <td className="py-2 px-2">
-                  <div className="flex justify-end items-center gap-1">
-                    {timbrada && (
-                      <>
-                        <Button
-                          variant="outline" size="icon" className="h-7 w-7"
-                          title="Previsualizar PDF" aria-label="Previsualizar PDF"
-                          onClick={() => setPreviewNc(n)}
-                        >
-                          <Eye className="h-3.5 w-3.5" />
-                        </Button>
-                        <FacturaDownloadButton stored={n.pdf_url} kind="pdf" notaCreditoId={n.id} />
-                        <FacturaDownloadButton stored={n.xml_url} kind="xml" notaCreditoId={n.id} />
-                        <Button
-                          variant="outline" size="icon" className="h-7 w-7"
-                          title="Reenviar por email" aria-label="Reenviar por email"
-                          onClick={() => onEmail(n.id)}
-                        >
-                          <Mail className="h-3.5 w-3.5" />
-                        </Button>
-                      </>
-                    )}
-                    {canEdit && puedeTimbrar && (
-                      <Button
-                        variant="outline" size="sm" className="h-7"
-                        onClick={() => onTimbrar(n.id)}
-                        disabled={timbrando}
-                      >
-                        <Stamp className="h-3.5 w-3.5 mr-1" /> Timbrar
-                      </Button>
-                    )}
-                    {canEdit && cancelable && (
-                      <Button
-                        variant="ghost" size="icon" className="h-7 w-7"
-                        title="Cancelar NC" aria-label="Cancelar NC"
-                        onClick={() => onCancelar(n.id)}
-                      >
-                        <XCircle className="h-3.5 w-3.5 text-destructive" />
-                      </Button>
-                    )}
-                  </div>
-                </td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
+    <>
+      <DataTable
+        columns={columns}
+        data={notas}
+        rowKey={(n) => n.id}
+        density={TABLE_DENSITY.embebida}
+        emptyMessage="Sin notas de crédito."
+      />
       <DialogPreviewCfdiPdf
         open={!!previewNc}
         onOpenChange={(o) => !o && setPreviewNc(null)}
         notaCreditoId={previewNc?.id}
         title={previewNc ? `Nota de crédito ${previewNc.serie ?? ""}${previewNc.folio_fiscal ?? previewNc.folio}` : "Nota de crédito"}
       />
-    </div>
+    </>
   );
 }

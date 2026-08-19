@@ -97,7 +97,7 @@ export default function TesoreriaPagosProgramados() {
   }
 
   return (
-    <PageContainer>
+    <PageContainer width="wide">
       <PageHeader
         title="Pagos programados"
         description="Bandeja semanal de Tesorería. Agrupación por fecha programada (o vencimiento)."

@@ -1,14 +1,19 @@
 /**
  * Tab Configuración de categorías presupuestales.
  * v13.232.0 · Confirmación migrada a `ConfirmActionDialog` (Lote 7d.2).
+ * Tabla migrada a `DataTable` (Ola F, punto 8).
  */
 import { useState } from "react";
 import { notifySuccess } from "@/lib/ui/appFeedback";
 import { Plus, Pencil, Trash2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { CardSkeleton } from "@/components/shared/skeletons";
 import { ConfirmActionDialog } from "@/components/shared/dialogs/ConfirmActionDialog";
+import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
+import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
+import { COL_W } from "@/components/shared/dataTable/columnWidths";
 import { useOrganization } from "@/lib/contexts/OrganizationContext";
 import {
   usePresupuestoCategorias, useEliminarCategoriaPresupuesto,
@@ -20,6 +25,13 @@ import { SectionHeading } from "@/components/shared/SectionHeading";
 
 import { notifyError } from "@/lib/ui/appFeedback";
 import { getErrorMessage } from "@/lib/errors";
+
+function tipoLabelDe(c: CategoriaPresupuesto): string {
+  if (c.tipo_contable === "CostoDirectoEmbarque") return "Costos directos de embarque (COGS)";
+  if (c.tipo_contable === "Venta") return "Gastos de venta";
+  return "Gastos de administración";
+}
+
 export function TabCategorias() {
   const { organizationId } = useOrganization();
   const cats = usePresupuestoCategorias(false);
@@ -53,6 +65,38 @@ export function TabCategorias() {
   if (cats.isLoading) return <CardSkeleton lines={6} />;
   const sinDatos = (cats.data ?? []).length === 0;
 
+  const columns: ColumnDef<CategoriaPresupuesto, unknown>[] = defineColumns<CategoriaPresupuesto>([
+    { id: "nombre", header: "Nombre", meta: { width: COL_W.texto, className: "font-medium" }, cell: ({ row }) => row.original.nombre },
+    {
+      id: "tipo", header: "Tipo contable", meta: { width: COL_W.ruta },
+      cell: ({ row }) => {
+        const esGastoFijo = row.original.tipo_contable !== "CostoDirectoEmbarque";
+        return <Badge variant={esGastoFijo ? "secondary" : "outline"}>{tipoLabelDe(row.original)}</Badge>;
+      },
+    },
+    { id: "orden", header: "Orden", meta: { width: COL_W.tiny, align: "right" }, cell: ({ row }) => row.original.orden },
+    {
+      id: "activa", header: "Activa", meta: { width: COL_W.short, align: "center" },
+      cell: ({ row }) => (row.original.activa ? "Sí" : "No"),
+    },
+    {
+      id: "acciones", header: "Acciones", meta: { width: COL_W.short, align: "right" },
+      cell: ({ row }) => {
+        const c = row.original;
+        return (
+          <div className="flex justify-end gap-1">
+            <Button variant="ghost" size="sm" onClick={() => { setEditar(c); setOpen(true); }}>
+              <Pencil className="h-3.5 w-3.5" />
+            </Button>
+            <Button variant="ghost" size="sm" onClick={() => setBorrarId(c.id)}>
+              <Trash2 className="h-3.5 w-3.5 text-destructive" />
+            </Button>
+          </div>
+        );
+      },
+    },
+  ]);
+
   return (
     <div className="space-y-3">
       <div className="flex justify-between items-center">
@@ -72,51 +116,16 @@ export function TabCategorias() {
       <Card>
         <CardContent className="p-0">
           {sinDatos ? (
-            <p className="p-4 text-sm text-muted-foreground">
+            <p className="p-4 text-body-sm text-muted-foreground">
               Sin categorías. Crea las 6 por defecto (Nómina, Renta, Servicios, Marketing, Comisiones, Otros) o agrega manualmente.
             </p>
           ) : (
-            <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="bg-muted/50 text-xs text-muted-foreground">
-                <tr>
-                  <th className="px-3 py-2 text-left">Nombre</th>
-                  <th className="px-3 py-2 text-left">Tipo contable</th>
-                  <th className="px-3 py-2 text-right">Orden</th>
-                  <th className="px-3 py-2">Activa</th>
-                  <th className="px-3 py-2 text-right">Acciones</th>
-                </tr>
-              </thead>
-              <tbody>
-                {(cats.data ?? []).map((c, i) => {
-                  const tipoLabel = c.tipo_contable === "CostoDirectoEmbarque" ? "Costos directos de embarque (COGS)"
-                    : c.tipo_contable === "Venta" ? "Gastos de venta"
-                    : "Gastos de administración";
-                  const esGastoFijo = c.tipo_contable !== "CostoDirectoEmbarque";
-                  return (
-                    <tr key={c.id} className={`border-t ${i % 2 === 1 ? "bg-muted/20" : ""}`}>
-                      <td className="px-3 py-2 font-medium">{c.nombre}</td>
-                      <td className="px-3 py-2">
-                        <span className={`inline-block text-xs px-2 py-0.5 rounded ${esGastoFijo ? "bg-warning/10 text-warning-foreground" : "bg-muted text-muted-foreground"}`}>
-                          {tipoLabel}
-                        </span>
-                      </td>
-                      <td className="px-3 py-2 text-right tabular-nums">{c.orden}</td>
-                      <td className="px-3 py-2 text-center">{c.activa ? "Sí" : "No"}</td>
-                      <td className="px-3 py-2 text-right space-x-1">
-                        <Button variant="ghost" size="sm" onClick={() => { setEditar(c); setOpen(true); }}>
-                          <Pencil className="h-3.5 w-3.5" />
-                        </Button>
-                        <Button variant="ghost" size="sm" onClick={() => setBorrarId(c.id)}>
-                          <Trash2 className="h-3.5 w-3.5 text-destructive" />
-                        </Button>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-            </div>
+            <DataTable
+              columns={columns}
+              data={cats.data ?? []}
+              rowKey={(c) => c.id}
+              density={TABLE_DENSITY.embebida}
+            />
           )}
         </CardContent>
       </Card>

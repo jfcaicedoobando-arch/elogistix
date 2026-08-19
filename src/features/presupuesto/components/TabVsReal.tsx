@@ -2,6 +2,12 @@
  * Tab Vs Real: comparativo presupuesto vs real del periodo seleccionado.
  * Periodo persistente en URL vía `?periodo_vs_real=YYYY-MM` (via `usePeriodoMesUrl`).
  * Fase J: sort por columna, filtro "solo excesos", barra + badge por fila.
+ *
+ * Excepción documentada al guardrail `no-raw-table` (Ola F, punto 8): el
+ * encabezado ordenable (`ThSort`) y las filas con barra de cumplimiento
+ * (`VsRealFila`) no encajan en el contrato de columnas de `<DataTable />`.
+ * Se homologa usando `Table`/`TableHeader`/`TableBody` (de `ui/table`) en
+ * vez de un `<table>` crudo, para compartir estilos base con el resto del ERP.
  */
 import { useMemo, useState } from "react";
 import { FileText, Loader2 } from "lucide-react";
@@ -20,6 +26,8 @@ import { withOrgPrefix } from "@/lib/filenames";
 import { usePeriodoMesUrl } from "@/features/profit/hooks/usePeriodoMesUrl";
 import { ErrorStateInline } from "@/components/empty/ErrorStateInline";
 import { usePdfExport } from "@/hooks/shared";
+import { Table, TableHeader, TableBody } from "@/components/ui/table";
+import { DetailTableRow } from "@/components/shared/DetailTable";
 import { ThSort } from "./VsRealSort";
 import { ordenarFilas, type SortKey, type SortDir } from "./vsRealSort";
 import { AvisoGastosSinTc, VsRealCuerpo } from "./VsRealCuerpo";
@@ -133,24 +141,24 @@ export function TabVsReal() {
           <Card>
             <CardContent className="p-0">
               <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead className="bg-muted/50 text-xs text-muted-foreground">
-                  <tr>
+              <Table>
+                <TableHeader>
+                  <DetailTableRow hoverable={false}>
                     <ThSort label="Categoría" active={sortKey === "categoria"} dir={sortDir} onClick={() => toggleSort("categoria")} />
                     <ThSort label="Presupuesto" active={sortKey === "presupuesto"} dir={sortDir} onClick={() => toggleSort("presupuesto")} align="right" />
                     <ThSort label="Real" active={sortKey === "real"} dir={sortDir} onClick={() => toggleSort("real")} align="right" />
                     <ThSort label="Variación" active={sortKey === "variacion"} dir={sortDir} onClick={() => toggleSort("variacion")} align="right" />
                     <ThSort label="% cumplimiento" active={sortKey === "cumplimiento"} dir={sortDir} onClick={() => toggleSort("cumplimiento")} align="right" />
-                  </tr>
-                </thead>
-                <tbody>
+                  </DetailTableRow>
+                </TableHeader>
+                <TableBody>
                   <VsRealCuerpo
                     filas={filasVisibles}
                     soloExcesos={soloExcesos}
                     onQuitarFiltro={() => setSoloExcesos(false)}
                   />
-                </tbody>
-              </table>
+                </TableBody>
+              </Table>
               </div>
             </CardContent>
           </Card>

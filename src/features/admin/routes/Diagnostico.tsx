@@ -49,8 +49,11 @@ export default function Diagnostico() {
   const handleSetFrom = (v: string | null) => { setFrom(v); setPage(1); };
   const handleSetTo = (v: string | null) => { setTo(v); setPage(1); };
 
+  // El guard de carga vive en `VirtualDataTable` (skeleton de filas); aquí
+  // sólo describimos el total una vez resuelto, sin duplicar el estado de
+  // carga en texto plano.
   const description = useMemo(() => {
-    if (isLoading) return "Cargando registros…";
+    if (isLoading) return undefined;
     return `${formatNumber(total)} registros — página ${page} de ${totalPages}${
       isFetching ? " (actualizando…)" : ""
     }`;

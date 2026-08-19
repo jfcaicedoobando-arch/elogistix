@@ -76,7 +76,7 @@ export default function Embarques() {
 
   return (
     // pb-24 md:pb-0: evita que el FAB tape la última fila en mobile.
-    <PageContainer className="pb-24 md:pb-0">
+    <PageContainer width="wide" className="pb-24 md:pb-0">
 
 
       <PageHeader

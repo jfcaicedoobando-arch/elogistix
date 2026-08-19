@@ -8,7 +8,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { KpiCard } from "@/components/shared/KpiCard";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
+import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
+import { COL_W } from "@/components/shared/dataTable/columnWidths";
 import { useCliente360 } from "@/features/crm/hooks";
+import type { Cliente360Oportunidad } from "@/features/crm/services/cliente360";
 import { formatCurrencyCompact } from "@/lib/formatters";
 import ActividadTimeline from "@/features/crm/components/ActividadTimeline";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
@@ -23,8 +27,23 @@ export default function Cliente360Panel({ clienteId }: Props) {
 
   if (isLoading) return <EmptyStateInline loading message="Cargando datos CRM…" />;
 
-
   const d = data ?? { oportunidades: [], totalAbierto: 0, totalGanado: 0, ultimaCotizacion: null, ultimoEmbarque: null };
+
+  const columns: ColumnDef<Cliente360Oportunidad, unknown>[] = defineColumns<Cliente360Oportunidad>([
+    { id: "nombre", header: "Nombre", meta: { width: COL_W.texto, className: "font-medium" }, cell: ({ row }) => row.original.nombre },
+    {
+      id: "monto", header: "Monto", meta: { width: COL_W.monto, align: "right" },
+      cell: ({ row }) => formatCurrencyCompact(Number(row.original.valor_real ?? row.original.monto_estimado ?? 0), row.original.moneda),
+    },
+    {
+      id: "probabilidad", header: "Prob.", meta: { width: COL_W.tiny, align: "right" },
+      cell: ({ row }) => `${row.original.probabilidad}%`,
+    },
+    {
+      id: "vendedor", header: "Vendedor", meta: { width: COL_W.nombre, className: "text-muted-foreground" },
+      cell: ({ row }) => row.original.vendedor_email || "—",
+    },
+  ]);
 
   return (
     <div className="space-y-4">
@@ -43,41 +62,14 @@ export default function Cliente360Panel({ clienteId }: Props) {
           {d.oportunidades.length === 0 ? (
             <EmptyStateInline icon={Briefcase} message="Sin oportunidades registradas." />
           ) : (
-            <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="text-xs text-muted-foreground border-b">
-                  <th className="text-left py-2 px-3">Nombre</th>
-                  <th className="text-right">Monto</th>
-                  <th className="text-right">Prob.</th>
-                  <th className="text-left">Vendedor</th>
-                </tr>
-              </thead>
-              <tbody>
-                {d.oportunidades.slice(0, 10).map((o) => (
-                  <tr
-                    key={o.id}
-                    className="border-b hover:bg-muted/50 cursor-pointer"
-                    onClick={() => navigate(`/crm/oportunidades/${o.id}`)}
-                    role="link"
-                    tabIndex={0}
-                    aria-label={`Abrir oportunidad ${o.nombre}`}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" || e.key === " ") {
-                        e.preventDefault();
-                        navigate(`/crm/oportunidades/${o.id}`);
-                      }
-                    }}
-                  >
-                    <td className="py-2 px-3 font-medium">{o.nombre}</td>
-                    <td className="text-right">{formatCurrencyCompact(Number(o.valor_real ?? o.monto_estimado ?? 0), o.moneda)}</td>
-                    <td className="text-right">{o.probabilidad}%</td>
-                    <td className="text-xs text-muted-foreground">{o.vendedor_email || "—"}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            </div>
+            <DataTable
+              columns={columns}
+              data={d.oportunidades.slice(0, 10)}
+              rowKey={(o) => o.id}
+              density={TABLE_DENSITY.embebida}
+              getRowHref={(o) => `/crm/oportunidades/${o.id}`}
+              getRowAriaLabel={(o) => `Abrir oportunidad ${o.nombre}`}
+            />
           )}
         </CardContent>
       </Card>
@@ -89,7 +81,7 @@ export default function Cliente360Panel({ clienteId }: Props) {
           </CardHeader>
           <CardContent>
             {d.ultimaCotizacion ? (
-              <div className="space-y-1 text-sm">
+              <div className="space-y-1 text-body-sm">
                 <div className="flex justify-between">
                   <span className="font-medium">{d.ultimaCotizacion.folio}</span>
                   <Badge variant="outline">{d.ultimaCotizacion.estado}</Badge>
@@ -107,7 +99,7 @@ export default function Cliente360Panel({ clienteId }: Props) {
           </CardHeader>
           <CardContent>
             {d.ultimoEmbarque ? (
-              <div className="space-y-1 text-sm">
+              <div className="space-y-1 text-body-sm">
                 <div className="flex justify-between">
                   <span className="font-medium">{d.ultimoEmbarque.expediente}</span>
                   <Badge variant="outline">{d.ultimoEmbarque.estado}</Badge>

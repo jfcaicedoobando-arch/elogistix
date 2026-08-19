@@ -743,6 +743,19 @@ export default tseslint.config(
       "src/features/crm/components/MetasActividadEditor.tsx",
       "src/features/crm/components/PresupuestoCrmEditor.tsx",
       "src/features/crm/components/higiene/HigieneTabla.tsx",
+      // Estado de resultados: subtotales con colSpan y fila de margen con
+      // fondo propio — patrón no soportado por <DataTable />.
+      "src/features/profit/components/EstadoResultadosTable.tsx",
+      // Presupuesto: grid editable (inputs por celda) y comparativo con
+      // encabezado ordenable + barra de cumplimiento por fila.
+      "src/features/presupuesto/components/TabCaptura.tsx",
+      "src/features/presupuesto/components/TabVsReal.tsx",
+      // Sub-vistas de TabVsReal extraídas por el límite de 200 líneas.
+      "src/features/presupuesto/components/VsRealCuerpo.tsx",
+      "src/features/presupuesto/components/VsRealFila.tsx",
+      // Flujo semanal de tesorería: filas expandibles con colSpan por semana.
+      "src/features/tesoreria/components/TablaFlujoSemanal.tsx",
+
 
       // Tests pueden importar primitivas para renders aislados.
       "**/__tests__/**",

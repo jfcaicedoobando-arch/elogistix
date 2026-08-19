@@ -72,7 +72,7 @@ export function BandejaTabs() {
   const groups: GroupId[] = ["preparar", "cobrar", "historico"];
 
   return (
-    <TabsList className="bg-transparent border-0 p-0 h-auto flex flex-wrap items-stretch gap-0">
+    <TabsList variant="underline" className="border-b-0 h-auto flex flex-wrap items-stretch gap-0">
       {groups.map((group, gIdx) => {
         const defs = DEFS.filter((d) => d.group === group);
         return (
@@ -91,7 +91,8 @@ export function BandejaTabs() {
                     <TabsTrigger
                       key={d.id}
                       value={d.id}
-                      className="rounded-none border-b-2 border-transparent bg-transparent px-3 py-2 text-body font-medium text-muted-foreground shadow-none data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=active]:shadow-none -mb-px"
+                      variant="underline"
+                      className="px-3 py-2 data-[state=active]:text-primary"
                     >
                       <span className="flex items-center gap-1.5">
                         {d.label}

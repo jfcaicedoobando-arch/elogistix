@@ -11,13 +11,14 @@ interface Kpis {
 
 /**
  * v13.302.3: migrado al `KpiCard` canónico (`iconVariant="chip"`).
+ * v13.5xx: sin "arcoíris" — plano por defecto, color sólo en alarma (margen negativo).
  */
 export default function ReportesKpiCards({ kpis, isLoading }: { kpis: Kpis; isLoading: boolean }) {
   const cards: Array<{ label: string; value: string; tooltip?: string; icon: LucideIcon; variant: KpiVariant }> = [
-    { label: "Clientes con operaciones", value: String(kpis.totalClientes), icon: Users, variant: "info" },
-    { label: "Venta total USD", value: formatCurrencyCompact(kpis.revenue, "USD"), tooltip: formatCurrency(kpis.revenue, "USD"), icon: DollarSign, variant: "success" },
-    { label: "Utilidad total USD", value: formatCurrencyCompact(kpis.profit, "USD"), tooltip: formatCurrency(kpis.profit, "USD"), icon: TrendingUp, variant: "accent" },
-    { label: "Margen promedio", value: kpis.margenProm.toFixed(1) + "%", icon: Percent, variant: "warning" },
+    { label: "Clientes con operaciones", value: String(kpis.totalClientes), icon: Users, variant: "default" },
+    { label: "Venta total USD", value: formatCurrencyCompact(kpis.revenue, "USD"), tooltip: formatCurrency(kpis.revenue, "USD"), icon: DollarSign, variant: "default" },
+    { label: "Utilidad total USD", value: formatCurrencyCompact(kpis.profit, "USD"), tooltip: formatCurrency(kpis.profit, "USD"), icon: TrendingUp, variant: "default" },
+    { label: "Margen promedio", value: kpis.margenProm.toFixed(1) + "%", icon: Percent, variant: kpis.margenProm < 0 ? "destructive" : "default" },
   ];
 
   return (

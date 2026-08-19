@@ -3,7 +3,7 @@
  * de filas). Ensamblador delgado: la maquinaria (instancia + virtualizer +
  * gridTemplate) vive en `useVirtualTableState`, y el contenedor de filas
  * absolutas en `VirtualRowsContainer`. Header / skeleton / empty siguen
- * en `VirtualTableParts`.
+ * en `VirtualTableParts` (`VirtualTableEmpty` delega en `EmptyStateInline`).
  *
  * Úsala cuando el usuario puede paginar a 100+ filas y la altura por fila
  * es variable. Para tablas comunes sigue usando `DataTable`.
@@ -25,7 +25,7 @@ import { cn } from "@/lib/utils";
 import { omitUndefined } from "@/lib/utils/omitUndefined";
 import PaginationControls from "@/components/shared/PaginationControls";
 import { ErrorStateInline } from "@/components/empty/ErrorStateInline";
-import { VirtualHeaderRow, SkeletonRows, EmptyState } from "@/components/shared/VirtualTableParts";
+import { VirtualHeaderRow, SkeletonRows, VirtualTableEmpty } from "@/components/shared/VirtualTableParts";
 import { VirtualRowsContainer } from "@/components/shared/VirtualRowsContainer";
 import { useVirtualTableState } from "@/components/shared/dataTable/useVirtualTableState";
 import {
@@ -123,7 +123,7 @@ export function VirtualDataTable<T>(props: VirtualDataTableProps<T>) {
         {isLoading && (
           <SkeletonRows count={skeletonRows} table={table} gridTemplate={gridTemplate} cellPad={cellPad} />
         )}
-        {!isLoading && rows.length === 0 && <EmptyState message={emptyMessage} />}
+        {!isLoading && rows.length === 0 && <VirtualTableEmpty message={emptyMessage} />}
         {showBody && (
           <VirtualRowsContainer
             virtualizer={virtualizer}

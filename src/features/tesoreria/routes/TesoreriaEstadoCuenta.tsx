@@ -8,6 +8,7 @@ import { useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Landmark } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
@@ -79,10 +80,11 @@ export default function TesoreriaEstadoCuenta() {
       />
 
       {!cuentaId ? (
-        <Card><CardContent density="compact" className="p-8 text-center text-muted-foreground">
-          <Landmark className="h-12 w-12 mx-auto mb-2 opacity-30" aria-hidden />
-          Selecciona una cuenta para ver su estado de cuenta.
-        </CardContent></Card>
+        <Card>
+          <CardContent density="compact">
+            <EmptyStateInline icon={Landmark} message="Selecciona una cuenta para ver su estado de cuenta." />
+          </CardContent>
+        </Card>
       ) : (
         <>
           <EstadoCuentaResumen estado={estado} isLoading={isLoading} />

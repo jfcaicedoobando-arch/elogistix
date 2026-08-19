@@ -23,6 +23,8 @@ import { ListSkeleton } from "@/components/shared/states/ListSkeleton";
 import { NavieraQuickCreate } from "@/features/costeo/components/NavieraQuickCreate";
 import { COL_W } from "@/components/shared/dataTable/columnWidths";
 import { ErrorState } from "@/components/shared/states/ErrorState";
+import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
+import { Ship } from "lucide-react";
 
 interface FilaNaviera {
   naviera_id: string;
@@ -128,10 +130,12 @@ export default function CosteoNavieras() {
             data={filas}
             rowKey={(f) => f.naviera_id}
             emptyState={
-              <div className="flex flex-col items-center gap-3 p-8 text-center text-muted-foreground">
-                <p className="text-sm">Aún no hay navieras en el catálogo de tu organización.</p>
+              <EmptyStateInline
+                icon={Ship}
+                message="Aún no hay navieras en el catálogo de tu organización."
+              >
                 <NavieraQuickCreate variante="boton" onCreada={() => undefined} />
-              </div>
+              </EmptyStateInline>
             }
           />
         </Card>

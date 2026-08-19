@@ -5,6 +5,7 @@ import { ROUTES } from "@/constants/routes";
 import { Button } from "@/components/ui/button";
 import { notifyInfo } from "@/lib/ui/appFeedback";
 import { Card, CardContent } from "@/components/ui/card";
+import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 
 import { PageHeader } from "@/components/shared/PageHeader";
 import {
@@ -105,7 +106,7 @@ export default function TesoreriaConciliacion() {
   const pendientesCount = movs.filter((m) => m.estado_conciliacion === "Pendiente").length;
 
   return (
-    <PageContainer>
+    <PageContainer width="wide">
       <PageHeader
         title="Conciliación bancaria"
         description="Importa el estado de cuenta y empareja con CxC/CxP"
@@ -136,10 +137,11 @@ export default function TesoreriaConciliacion() {
       />
 
       {!cuentaId ? (
-        <Card><CardContent density="compact" className="p-8 text-center text-muted-foreground">
-          <FileSpreadsheet className="h-12 w-12 mx-auto mb-2 opacity-30" />
-          Selecciona una cuenta para empezar a conciliar.
-        </CardContent></Card>
+        <Card>
+          <CardContent density="compact">
+            <EmptyStateInline icon={FileSpreadsheet} message="Selecciona una cuenta para empezar a conciliar." />
+          </CardContent>
+        </Card>
       ) : (
         <>
         <ResumenConciliacionCards

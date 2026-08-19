@@ -3,6 +3,7 @@ import { Skeleton, SkeletonGroup } from "@/components/ui/skeleton";
 import { Inbox } from "lucide-react";
 import { flexRender, type Table } from "@tanstack/react-table";
 import { ALIGN_CLASS, type ColumnAlign } from "@/components/shared/dataTable/types";
+import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 import "@/components/shared/dataTable/columnMeta";
 
 export function VirtualHeaderRow<T>({ table, gridTemplate }: { table: Table<T>; gridTemplate: string }) {
@@ -58,11 +59,11 @@ export function SkeletonRows<T>({ count, table, gridTemplate, cellPad }: { count
   );
 }
 
-export function EmptyState({ message }: { message: string }) {
-  return (
-    <div className="flex flex-col items-center justify-center gap-2 py-10 text-sm text-muted-foreground">
-      <Inbox className="h-8 w-8 opacity-40" strokeWidth={1.5} />
-      <span>{message}</span>
-    </div>
-  );
+/**
+ * Empty state de `VirtualDataTable` — delega en `EmptyStateInline` (único
+ * punto de verdad visual) con el padding algo mayor que usan las tablas
+ * virtualizadas (py-10 en vez de py-8).
+ */
+export function VirtualTableEmpty({ message }: { message: string }) {
+  return <EmptyStateInline icon={Inbox} message={message} className="py-10" />;
 }

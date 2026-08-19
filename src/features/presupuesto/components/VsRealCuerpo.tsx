@@ -3,6 +3,8 @@
  * gastos en moneda extranjera sin tipo de cambio.
  */
 import { Card, CardContent } from "@/components/ui/card";
+import { TableCell } from "@/components/ui/table";
+import { DetailTableRow } from "@/components/shared/DetailTable";
 import { Button } from "@/components/ui/button";
 import { pluralizar } from "@/lib/format/pluralizar";
 import { VsRealFila } from "./VsRealFila";
@@ -40,9 +42,9 @@ export function VsRealCuerpo({
     );
   }
   return (
-    <tr>
-      <td colSpan={5} className="px-3 py-8 text-center">
-        <p className="text-sm text-muted-foreground mb-3">
+    <DetailTableRow hoverable={false}>
+      <TableCell colSpan={5} className="py-8 text-center">
+        <p className="text-body-sm text-muted-foreground mb-3">
           {soloExcesos
             ? "Ninguna categoría excede el 110% este mes."
             : "No hay categorías de presupuesto capturadas para este periodo."}
@@ -52,7 +54,7 @@ export function VsRealCuerpo({
             Quitar filtro "Solo excesos"
           </Button>
         )}
-      </td>
-    </tr>
+      </TableCell>
+    </DetailTableRow>
   );
 }

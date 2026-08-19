@@ -1,8 +1,8 @@
 /**
  * Cabecera de cifras del estado de cuenta bancario (v13.450.0).
+ * v13.5xx: migrado a `KpiCard` — plano por defecto, color sólo en alarma (saldo final negativo).
  */
-import { Card, CardContent } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
+import { KpiCard } from "@/components/shared/KpiCard";
 import { formatCurrency, formatDate } from "@/lib/formatters";
 import type { EstadoCuentaBancario } from "@/features/tesoreria/domain/estadoCuenta";
 
@@ -12,33 +12,22 @@ interface Props {
 }
 
 export function EstadoCuentaResumen({ estado, isLoading }: Props) {
-  const items = estado
-    ? [
-        { label: "Saldo inicial", valor: formatCurrency(estado.saldo_inicial, estado.moneda) },
-        { label: "Entradas", valor: formatCurrency(estado.total_entradas, estado.moneda), tone: "text-success" },
-        { label: "Salidas", valor: formatCurrency(estado.total_salidas, estado.moneda), tone: "text-destructive" },
-        {
-          label: "Saldo final",
-          valor: formatCurrency(estado.saldo_final, estado.moneda),
-          tone: estado.saldo_final < 0 ? "text-destructive" : undefined,
-        },
-      ]
-    : [];
+  const loading = isLoading || !estado;
+  const saldoNegativo = (estado?.saldo_final ?? 0) < 0;
 
   return (
     <div className="space-y-2">
-      <Card>
-        <CardContent density="compact" className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {isLoading || !estado
-            ? Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-10 w-full" />)
-            : items.map((it) => (
-                <div key={it.label}>
-                  <p className="text-body-sm uppercase tracking-wide text-muted-foreground">{it.label}</p>
-                  <p className={`mt-1 text-lg font-semibold tabular-nums ${it.tone ?? ""}`}>{it.valor}</p>
-                </div>
-              ))}
-        </CardContent>
-      </Card>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <KpiCard label="Saldo inicial" value={estado ? formatCurrency(estado.saldo_inicial, estado.moneda) : ""} loading={loading} />
+        <KpiCard label="Entradas" value={estado ? formatCurrency(estado.total_entradas, estado.moneda) : ""} loading={loading} />
+        <KpiCard label="Salidas" value={estado ? formatCurrency(estado.total_salidas, estado.moneda) : ""} loading={loading} />
+        <KpiCard
+          label="Saldo final"
+          value={estado ? formatCurrency(estado.saldo_final, estado.moneda) : ""}
+          variant={saldoNegativo ? "destructive" : "default"}
+          loading={loading}
+        />
+      </div>
       {estado?.fecha_saldo_inicial && (
         <p className="text-body-sm text-muted-foreground">
           Arranque de la cuenta: saldo inicial al {formatDate(estado.fecha_saldo_inicial)}.

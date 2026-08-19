@@ -1,13 +1,21 @@
 /**
  * Tabla expandible: una fila por semana ISO con totales + detalle al click.
+ * Nota: usa markup de detalle (no `DataTable`) porque cada fila expande un
+ * bloque de detalle con `colSpan` — layout no soportado por `DataTable`.
+ * Homologado con `DetailTable*` (encabezado, hover, zebra) y `whitespace-nowrap`
+ * en todas las columnas para que "Flujo neto" y "Saldo proyectado" nunca
+ * se corten al angostar el viewport (scrollea el contenedor, no las celdas).
  */
 import { Fragment, useState } from "react";
 import { ChevronDown, ChevronRight } from "lucide-react";
+import { Table, TableHeader, TableBody, TableCell } from "@/components/ui/table";
+import { DetailTableHead, DetailTableRow } from "@/components/shared/DetailTable";
 import { formatCurrency } from "@/lib/formatters/numbers";
 import { Card, CardContent } from "@/components/ui/card";
 import type { SemanaFlujo } from "@/features/tesoreria/services";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 import { SectionHeading } from "@/components/shared/SectionHeading";
+import { cn } from "@/lib/utils";
 
 interface Props { semanas: SemanaFlujo[] }
 
@@ -26,27 +34,27 @@ export default function TablaFlujoSemanal({ semanas }: Props) {
     <Card>
       <CardContent className="p-0">
         <div className="overflow-x-auto">
-        <table className="w-full text-body">
-          <thead className="bg-muted/50 text-body-sm text-muted-foreground">
-            <tr>
-              <th className="px-3 py-2 text-left w-8"></th>
-              <th className="px-3 py-2 text-left">Semana</th>
-              <th className="px-3 py-2 text-left">Periodo</th>
-              <th className="px-3 py-2 text-right">Entradas</th>
-              <th className="px-3 py-2 text-right">Salidas</th>
-              <th className="px-3 py-2 text-right">Flujo neto</th>
-              <th className="px-3 py-2 text-right">Saldo proyectado</th>
-            </tr>
-          </thead>
-          <tbody>
+        <Table className="min-w-[720px]">
+          <TableHeader>
+            <DetailTableRow hoverable={false}>
+              <DetailTableHead className="w-8 whitespace-nowrap"></DetailTableHead>
+              <DetailTableHead className="whitespace-nowrap">Semana</DetailTableHead>
+              <DetailTableHead className="whitespace-nowrap">Periodo</DetailTableHead>
+              <DetailTableHead className="whitespace-nowrap text-right">Entradas</DetailTableHead>
+              <DetailTableHead className="whitespace-nowrap text-right">Salidas</DetailTableHead>
+              <DetailTableHead className="whitespace-nowrap text-right">Flujo neto</DetailTableHead>
+              <DetailTableHead className="whitespace-nowrap text-right">Saldo proyectado</DetailTableHead>
+            </DetailTableRow>
+          </TableHeader>
+          <TableBody>
             {semanas.map((s, i) => {
               const isOpen = expanded.has(s.semana_iso);
               const saldoNeg = s.saldo_proyectado_mxn < 0;
-              const rowBg = i % 2 === 1 ? "bg-muted/20" : "";
+              const striped = i % 2 === 1;
               return (
                 <Fragment key={s.semana_iso}>
-                  <tr
-                    className={`border-t cursor-pointer hover:bg-accent/10 ${rowBg}`}
+                  <DetailTableRow
+                    className={cn("cursor-pointer", striped && "bg-muted/20")}
                     onClick={() => toggle(s.semana_iso)}
                     role="button"
                     tabIndex={0}
@@ -59,33 +67,33 @@ export default function TablaFlujoSemanal({ semanas }: Props) {
                       }
                     }}
                   >
-                    <td className="px-3 py-2">
+                    <TableCell className="whitespace-nowrap">
                       {isOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-                    </td>
-                    <td className="px-3 py-2 font-medium">{s.semana_iso}</td>
-                    <td className="px-3 py-2 text-muted-foreground">{s.inicio} → {s.fin}</td>
-                    <td className="px-3 py-2 text-right tabular-nums text-success">{formatCurrency(s.entradas_mxn, "MXN")}</td>
-                    <td className="px-3 py-2 text-right tabular-nums text-destructive">{formatCurrency(s.salidas_mxn, "MXN")}</td>
-                    <td className={`px-3 py-2 text-right tabular-nums font-medium ${s.flujo_neto_mxn >= 0 ? "text-success" : "text-destructive"}`}>
+                    </TableCell>
+                    <TableCell className="whitespace-nowrap font-medium">{s.semana_iso}</TableCell>
+                    <TableCell className="whitespace-nowrap text-muted-foreground">{s.inicio} → {s.fin}</TableCell>
+                    <TableCell className="whitespace-nowrap text-right tabular-nums text-success">{formatCurrency(s.entradas_mxn, "MXN")}</TableCell>
+                    <TableCell className="whitespace-nowrap text-right tabular-nums text-destructive">{formatCurrency(s.salidas_mxn, "MXN")}</TableCell>
+                    <TableCell className={cn("whitespace-nowrap text-right tabular-nums font-medium", s.flujo_neto_mxn >= 0 ? "text-success" : "text-destructive")}>
                       {formatCurrency(s.flujo_neto_mxn, "MXN")}
-                    </td>
-                    <td className={`px-3 py-2 text-right tabular-nums font-semibold ${saldoNeg ? "text-destructive" : ""}`}>
+                    </TableCell>
+                    <TableCell className={cn("whitespace-nowrap text-right tabular-nums font-semibold", saldoNeg && "text-destructive")}>
                       {formatCurrency(s.saldo_proyectado_mxn, "MXN")}
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </DetailTableRow>
                   {isOpen && (
-                    <tr className={rowBg}>
-                      <td></td>
-                      <td colSpan={6} className="px-3 py-2 text-body-sm">
+                    <DetailTableRow hoverable={false} className={striped ? "bg-muted/20" : undefined}>
+                      <TableCell></TableCell>
+                      <TableCell colSpan={6} className="text-body-sm">
                         <DetalleListas s={s} />
-                      </td>
-                    </tr>
+                      </TableCell>
+                    </DetailTableRow>
                   )}
                 </Fragment>
               );
             })}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
         </div>
       </CardContent>
     </Card>
