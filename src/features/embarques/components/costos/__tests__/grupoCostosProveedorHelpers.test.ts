@@ -79,7 +79,7 @@ describe("ordenarFilasPorAjuste", () => {
     expect(res.map((f) => f.concepto)).toEqual(["b", "a"]);
   });
 
-  it("no muta el arreglo original", () => {
+  it("no muta el arreglo original de costos del proveedor", () => {
     const original = [fila({ concepto: "x" }), fila({ concepto: "y" })];
     const copy = [...original];
     ordenarFilasPorAjuste(original);
