@@ -1,5 +1,14 @@
 # Changelog
 
+## [13.689.0] - 2026-08-19
+### Ola E (cierre) — tipografía y badges de estado unificados
+- Embarques, Facturación y Tesorería usan la escala tipográfica del sistema (`text-body` / `text-body-sm`) en lugar de los tamaños crudos de Tailwind, así el mismo tipo de texto se ve igual en todas las pantallas.
+- Los badges de Tesorería (tipo de pago, conciliación bancaria y estado del complemento de pago) se pintan desde el registro central de estados; ya no llevan colores escritos a mano.
+- Nuevo guardarraíl de arquitectura que impide volver a usar `text-sm` / `text-xs` en los módulos ya homologados.
+- Corrección: el estado de resultados devengado excluye facturas borradas lógicamente.
+
+
+
 ## [13.688.0] - 2026-08-19
 ### Ola E — un solo lenguaje visual (porcentajes, moneda e iconos)
 - Los porcentajes de toda la app se muestran igual (un decimal y espacio antes del `%`) usando un único formateador; antes cada pantalla lo escribía a mano.
