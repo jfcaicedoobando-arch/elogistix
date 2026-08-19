@@ -56,14 +56,23 @@ export function ingresosDeFacturas(
   }
 }
 
-export function ingresosDeNotas(ncs: NotaCreditoRow[], out: VentasBucket, tc: TcFallback): void {
+export function ingresosDeNotas(
+  ncs: NotaCreditoRow[],
+  out: VentasBucket,
+  tc: TcFallback,
+  /**
+   * BL-8: modo real del embarque de la factura padre (`factura_id` → modo).
+   * Antes toda NC se contaba como "Marítimo" y desviaba el EERR por modo.
+   */
+  modoPorFactura: ReadonlyMap<string, string> = new Map(),
+): void {
   for (const nc of ncs) {
     const id = `nc-${nc.factura_id}`;
     // Ola 9 · M6: usar el TC de la nota de crédito cuando exista; sólo caer al
     // TC del mes si la NC no lo tiene capturado.
     out.embarques.push({
       id,
-      modo: "Marítimo",
+      modo: modoPorFactura.get(nc.factura_id) ?? "Marítimo",
       tipo_cambio_usd: fallbackTC(Number(nc.tipo_cambio ?? 0), tc.usd),
       tipo_cambio_eur: tc.eur,
     });

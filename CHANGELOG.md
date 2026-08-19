@@ -1,5 +1,13 @@
 # Changelog
 
+## [13.685.0] - 2026-08-19
+### Cierre de Ola B — dinero y fechas residuales
+- Los totales de facturas de proveedor se redondean a centavos al capturar y al editar, así que ya no aparecen descuadres de fracciones de centavo contra los pagos.
+- Al guardar una factura de proveedor sin cambios reales ya no se pide re-aprobación: campos vacíos y nulos se consideran iguales.
+- Al aplicar un anticipo en otra moneda, el sistema ya no afirma que la factura "queda cubierta" (el saldo mostrado es sólo estimado; la base convierte al tipo de cambio oficial).
+- El reparto FIFO de pagos y cobros en lote usa un orden único y determinista (vencimiento, luego emisión, luego folio): dos facturas que vencen el mismo día ya no cambian de orden entre corridas.
+- El Estado de Resultados calcula el modo de transporte de las notas de crédito con menos consultas a la base.
+
 ## [13.684.1] - 2026-08-19
 ### REP de factura en divisa pagada en pesos
 - El complemento de pago ahora envía el tipo de cambio del documento relacionado en la convención del SAT (unidades de la moneda de la factura por una unidad de la moneda del pago). Antes se mandaba 17.06 en lugar de 0.0586 y el PAC rechazaba el REP con `exchange_rate_too_large`.

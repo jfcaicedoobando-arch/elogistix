@@ -26,6 +26,8 @@ export interface FacturaCobroCandidata {
   factura_id: string;
   numero: string | null;
   fecha_vencimiento: string | null;
+  /** Desempata el FIFO cuando dos facturas vencen el mismo día. */
+  fecha_emision?: string | null;
   saldo: number;
   /** PPD ya timbrada: requiere REP por cada pago aplicado. */
   es_ppd_timbrada?: boolean;

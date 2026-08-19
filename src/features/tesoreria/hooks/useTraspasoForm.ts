@@ -3,14 +3,15 @@
  * Extraído para mantener el modal bajo 200 líneas (Power of 10).
  */
 import { useEffect, useMemo, useState } from "react";
-import { format } from "date-fns";
 import type { Tables } from "@/integrations/supabase/types";
 import { roundMoney } from "@/lib/financial/financialUtils";
+import { hoyMx } from "@/lib/date/mx";
 import { useTcDofPorFecha } from "@/features/catalogos/hooks/useTcDofPorFecha";
 
 type Cuenta = Tables<"cuentas_bancarias">;
 
-const hoyIso = () => format(new Date(), "yyyy-MM-dd");
+// BL-14: "hoy" siempre en zona de negocio CDMX, no en la TZ del navegador.
+const hoyIso = () => hoyMx();
 
 export interface TraspasoFormState {
   origenId: string;

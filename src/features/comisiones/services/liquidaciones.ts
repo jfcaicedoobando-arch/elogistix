@@ -6,6 +6,8 @@ import { unwrap, unwrapOr, run } from "@/lib/supabase/response";
 import type { Tables, TablesUpdate } from "@/integrations/supabase/types";
 import { registrarActividad } from "@/services/bitacora/registrar";
 import { CAP_LISTA } from "@/constants/queryCaps";
+import { ymMx } from "@/lib/date/mx";
+import { roundMoney } from "@/lib/financial/financialUtils";
 
 export type LiquidacionRow = Tables<"liquidaciones_comision">;
 
@@ -77,4 +79,30 @@ export async function registrarPagoLiquidacion(p: RegistrarPagoLiquidacionParams
     entidadId: p.id,
     detalles: { fecha_pago: p.fecha_pago, metodo_pago: p.metodo_pago },
   });
+}
+
+/**
+ * BL-7: total liquidado del mes tomado de `liquidaciones_comision.fecha_pago`
+ * (fecha real del pago a la vendedora). Antes el KPI sumaba comisiones cuyo
+ * `created_at` (fecha de devengo) caía en el mes, así que una comisión de mayo
+ * pagada en junio nunca aparecía como liquidada en junio.
+ */
+export async function fetchLiquidadoMxnPorMes(periodo?: string): Promise<number> {
+  const mes = periodo && /^\d{4}-\d{2}$/.test(periodo) ? periodo : ymMx();
+  const [anio, m] = mes.split("-").map(Number);
+  const desde = `${mes}-01`;
+  const hasta = `${String(m === 12 ? anio + 1 : anio).padStart(4, "0")}-${String(m === 12 ? 1 : m + 1).padStart(2, "0")}-01`;
+
+  const rows = (await unwrapOr(
+    supabase
+      .from("liquidaciones_comision")
+      .select("total_mxn")
+      .not("fecha_pago", "is", null)
+      .gte("fecha_pago", desde)
+      .lt("fecha_pago", hasta)
+      .limit(CAP_LISTA),
+    [],
+  )) as { total_mxn: number | null }[];
+
+  return roundMoney(rows.reduce((acc, r) => acc + Number(r.total_mxn ?? 0), 0));
 }

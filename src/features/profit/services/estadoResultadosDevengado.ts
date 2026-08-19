@@ -117,6 +117,54 @@ async function fetchProveedorFacturasMes(orgId: string | null, desde: string, ha
   return mapProveedorFacturaRows(await unwrapOr(q, []));
 }
 
+/**
+ * BL-8: resuelve el modo de transporte real de cada NC a través de su factura
+ * padre (`factura_id` → `expediente` → embarque). Las facturas del mes ya están
+ * cargadas; sólo se consultan los `factura_id` que faltan (NC de meses previos).
+ */
+async function modoPorFacturaDeNotas(
+  ncs: NotaCreditoRow[],
+  facturas: FacturaRow[],
+  embPorExp: Map<string, EmbarqueER>,
+): Promise<Map<string, string>> {
+  const out = new Map<string, string>();
+  const idsNc = Array.from(new Set(ncs.map((n) => n.factura_id).filter(Boolean)));
+  if (idsNc.length === 0) return out;
+
+  const expPorFactura = new Map<string, string | null>();
+  for (const f of facturas) {
+    if (idsNc.includes(f.id)) expPorFactura.set(f.id, f.expediente ?? null);
+  }
+
+  const faltantes = idsNc.filter((id) => !expPorFactura.has(id));
+  if (faltantes.length > 0) {
+    const data = await unwrapOr(
+      supabase.from("facturas").select("id, expediente").in("id", faltantes),
+      [],
+    );
+    for (const row of data as { id: string; expediente: string | null }[]) {
+      expPorFactura.set(row.id, row.expediente ?? null);
+    }
+  }
+
+  const expsFaltantes = Array.from(
+    new Set(
+      Array.from(expPorFactura.values()).filter(
+        (e): e is string => typeof e === "string" && e.length > 0 && !embPorExp.has(e),
+      ),
+    ),
+  );
+  const extra: Map<string, EmbarqueER> =
+    expsFaltantes.length > 0 ? await loadEmbarquesPorExpedientes(expsFaltantes) : new Map();
+
+  for (const [facturaId, exp] of expPorFactura) {
+    if (!exp) continue;
+    const emb = embPorExp.get(exp) ?? extra.get(exp);
+    if (emb?.modo) out.set(facturaId, emb.modo);
+  }
+  return out;
+}
+
 export async function fetchEstadoResultadosDevengado(p: Params): Promise<EstadoResultados> {
   const { desde, hasta } = rangoMes(p.year, p.month);
 
@@ -134,9 +182,11 @@ export async function fetchEstadoResultadosDevengado(p: Params): Promise<EstadoR
     loadEmbarquesPorIds(embIds),
   ]);
 
+  const modoNc = await modoPorFacturaDeNotas(ncs, facturas, embPorExp);
+
   const ventasBucket = { embarques: [] as EmbarqueER[], ventas: [] as ConceptoVentaER[] };
   ingresosDeFacturas(facturas, embPorExp, ventasBucket, tc);
-  ingresosDeNotas(ncs, ventasBucket, tc);
+  ingresosDeNotas(ncs, ventasBucket, tc, modoNc);
 
   const costosBucket = { embarques: [] as EmbarqueER[], costos: [] as ConceptoCostoER[] };
   costosDeProveedorFacturas(pfacts, embPorId, costosBucket, tc);

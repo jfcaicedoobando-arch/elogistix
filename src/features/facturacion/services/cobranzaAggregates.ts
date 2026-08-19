@@ -6,6 +6,7 @@
 import { sumarMontos } from "@/lib/financial/financialUtils";
 import type { FacturaCobranza } from "./cobranza";
 import { logger } from "@/lib/observability/logger";
+import { estaPorVencer } from "@/lib/domain/porVencer";
 
 export interface KPIsCobranza {
   total_mxn: number;
@@ -80,7 +81,7 @@ export function calcularKPIs(filas: FacturaCobranza[]): KPIsCobranza {
       facturas_vencidas++;
       (esUsd ? vencidoUSD : vencidoMXN).push(f.saldo);
     }
-    if (f.dias_vencido <= 0 && f.dias_vencido >= -7) {
+    if (estaPorVencer(f.dias_vencido)) {
       (esUsd ? porVencerUSD : porVencerMXN).push(f.saldo);
     }
   }

@@ -3,14 +3,13 @@
  * Sin estado ni React: se prueban de forma aislada.
  */
 import { round2 } from "@/features/cxp/services";
+import { ordenarFifo } from "@/lib/domain/fifoVencimiento";
 import { TOLERANCIA_CENTAVOS } from "./cobroLoteValidaciones";
 import type { FacturaCobroCandidata, RenglonCobro } from "./pagoClienteLote";
 
 /** Facturas ordenadas FIFO (lo que vence antes primero). */
 export function ordenFifo(facturas: FacturaCobroCandidata[]): FacturaCobroCandidata[] {
-  return [...facturas].sort((a, b) =>
-    (a.fecha_vencimiento ?? "9999-12-31").localeCompare(b.fecha_vencimiento ?? "9999-12-31"),
-  );
+  return ordenarFifo(facturas);
 }
 
 /**

@@ -38,6 +38,8 @@ export function calcularSaldoDespuesDeAplicar(
     saldoRestante,
     excedente,
     estimado,
-    quedaCubierta: saldoRestante <= TOL,
+    // BL-13: con monedas distintas el saldo restante es sólo referencial —
+    // el servidor convierte al TC autoritativo. Nunca afirmar "queda cubierta".
+    quedaCubierta: !estimado && saldoRestante <= TOL,
   };
 }

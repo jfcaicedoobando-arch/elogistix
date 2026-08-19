@@ -6,6 +6,7 @@
  * (Power of 10). Funciones puras: no tocan la base ni el DOM.
  */
 import { round2 } from "@/features/cxp/services";
+import { ordenarFifo } from "@/lib/domain/fifoVencimiento";
 import type { FacturaCobroCandidata, RenglonCobro } from "./pagoClienteLote";
 
 /**
@@ -16,9 +17,7 @@ export function repartirFifo(
   facturas: FacturaCobroCandidata[],
   total: number,
 ): { renglones: RenglonCobro[]; sobrante: number } {
-  const orden = [...facturas].sort((a, b) =>
-    (a.fecha_vencimiento ?? "9999-12-31").localeCompare(b.fecha_vencimiento ?? "9999-12-31"),
-  );
+  const orden = ordenarFifo(facturas);
   let restante = round2(total);
   const renglones: RenglonCobro[] = [];
 
