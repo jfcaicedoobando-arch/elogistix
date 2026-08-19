@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.686.0] - 2026-08-19
+### Ola C — robustez de captura y navegación
+- El wizard de cotización avisa antes de salir o recargar cuando hay captura sin guardar.
+- Al cambiar de organización (super admin) la app regresa al inicio, en vez de quedarse en el detalle de un registro que ya no pertenece al tenant activo.
+- Las búsquedas de los listados esperan a que termines de teclear (350 ms) antes de consultar al servidor.
+- Los campos de dinero aceptan un tope máximo opcional y lo recortan al salir del campo.
+
 ## [13.685.0] - 2026-08-19
 ### Cierre de Ola B — dinero y fechas residuales
 - Los totales de facturas de proveedor se redondean a centavos al capturar y al editar, así que ya no aparecen descuadres de fracciones de centavo contra los pagos.
