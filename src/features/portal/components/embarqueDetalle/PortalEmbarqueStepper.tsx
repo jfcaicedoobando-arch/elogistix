@@ -6,12 +6,13 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { formatDate } from "@/lib/formatters";
 import { useIsMobile } from "@/hooks/shared";
-import type { ReactNode } from "react";
+import type { LucideIcon } from "lucide-react";
 
 export interface ProgressStep {
   key: string;
   label: string;
-  icon: ReactNode;
+  /** v13.681.0 · UI-3: icono Lucide (ya no emojis). */
+  icon: LucideIcon;
 }
 
 interface Props {
@@ -41,6 +42,7 @@ export function PortalEmbarqueStepper({ progressSteps, currentStepIndex, diasPar
             {progressSteps.map((step, i) => {
               const isCompleted = i < currentStepIndex;
               const isCurrent = i === currentStepIndex;
+              const Icon = step.icon;
               return (
                 <li key={step.key} className="flex items-center gap-3 relative">
                   <div
@@ -52,7 +54,7 @@ export function PortalEmbarqueStepper({ progressSteps, currentStepIndex, diasPar
                         : "bg-card border-border text-muted-foreground"
                     }`}
                   >
-                    {step.icon}
+                    <Icon className="h-4 w-4" aria-hidden />
                   </div>
                   <span
                     className={`text-sm font-medium ${
@@ -75,6 +77,7 @@ export function PortalEmbarqueStepper({ progressSteps, currentStepIndex, diasPar
             {progressSteps.map((step, i) => {
               const isCompleted = i < currentStepIndex;
               const isCurrent = i === currentStepIndex;
+              const Icon = step.icon;
               return (
                 <div key={step.key} className="flex flex-col items-center relative z-10 flex-1">
                   <div
@@ -86,7 +89,7 @@ export function PortalEmbarqueStepper({ progressSteps, currentStepIndex, diasPar
                         : "bg-card border-border text-muted-foreground"
                     }`}
                   >
-                    {step.icon}
+                    <Icon className="h-4 w-4" aria-hidden />
                   </div>
                   <span
                     className={`text-2xs mt-2 text-center font-medium ${

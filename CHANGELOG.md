@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.681.0] - 2026-08-19
+### Ola B · auditoría externa (coherencia visual)
+- UI-1 · badges unificados: los estados de CFDI, proformas, leads y conciliación bancaria toman color y etiqueta del `statusRegistry` vía `StatusBadge`; ya no hay paletas escritas a mano por pantalla.
+- UI-3 · iconografía: se retiraron los emojis (📋🚢⚓🛃🏁 y ⚠️) del stepper del portal y de los diálogos de eliminación; ahora se usan iconos Lucide con tokens semánticos.
+- Nuevo guardarraíl `status-badge-domains.test.ts`: falla el CI si un archivo migrado vuelve a inventar clases de color de estado o si reaparece un emoji de modo de transporte.
+
 ## [13.680.0] - 2026-08-19
 ### Ola A · auditoría externa (dinero y seguridad)
 - BL-1 · factura manual: la cantidad ya no se redondea a entero (`Math.round`); usa `parseCantidadFiscal`, así 1.5 toneladas se timbran como 1.5 y el subtotal cuadra con el CFDI.

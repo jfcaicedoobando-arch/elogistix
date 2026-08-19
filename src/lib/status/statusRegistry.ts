@@ -35,6 +35,8 @@ export type StatusDomain =
   | "ruta_maritima"       // Salud de ruta (Activa/Por vencer/Sin tarifa)
   | "liquidacion"         // Pago de operación de proveedor
   | "anticipo_proveedor"  // QW6 — Anticipos a proveedores
+  | "cfdi"                // v13.681.0 — CFDI (factura/NC/REP): borrador→cancelada
+  | "conciliacion"         // v13.681.0 — Conciliación bancaria en Tesorería
   | "conciliacion_costo"; // v13.571.0 — Costeado vs facturado por el proveedor
 
 export interface StatusVisual {
@@ -123,6 +125,8 @@ export const DOMAIN_STATUSES: Record<StatusDomain, readonly string[]> = {
   ruta_maritima: ["Activa", "Por vencer", "Sin tarifa"],
   liquidacion: ["Pagado", "Pendiente"],
   anticipo_proveedor: ["disponible", "aplicado_parcial", "aplicado_total", "cancelado"],
+  cfdi: ["borrador", "aprobada", "timbrada", "aplicada", "cancelada"],
+  conciliacion: ["Pendiente", "Conciliado", "Ignorado"],
   conciliacion_costo: ["Pendiente", "Facturado parcial", "Facturado", "Sobrefacturado", "Pagado", "Moneda mixta"],
 };
 
@@ -133,6 +137,19 @@ const LABEL_OVERRIDES: Partial<Record<StatusDomain, Record<string, string>>> = {
     aplicado_parcial: "Aplicado parcial",
     aplicado_total: "Aplicado total",
     cancelado: "Cancelado",
+  },
+  cfdi: {
+    borrador: "Borrador",
+    aprobada: "Aprobada",
+    timbrada: "Timbrada",
+    aplicada: "Aplicada",
+    cancelada: "Cancelada",
+  },
+  proforma: {
+    pendiente: "Pendiente cliente",
+    aceptada: "Aceptada",
+    rechazada: "Rechazada",
+    facturada: "Facturada",
   },
   lead: {
     Nuevo: "Nuevo",

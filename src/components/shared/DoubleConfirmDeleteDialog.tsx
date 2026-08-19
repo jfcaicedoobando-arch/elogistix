@@ -4,7 +4,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2 } from "lucide-react";
+import { AlertTriangle, Loader2 } from "lucide-react";
 
 import type { ReactNode } from "react";
 
@@ -83,7 +83,10 @@ function DoubleConfirmInner({
       <AlertDialog open={paso2} onOpenChange={(v) => { if (!v) close(); }}>
         <AlertDialogContent className={dialogSize.sm}>
           <AlertDialogHeader>
-            <AlertDialogTitle>⚠️ Confirmar eliminación</AlertDialogTitle>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-destructive" aria-hidden />
+              Confirmar eliminación
+            </AlertDialogTitle>
             {typeof finalDescription === "string" || !finalDescription ? (
               <AlertDialogDescription>
                 {finalDescription || "¿Estás completamente seguro? Esta acción no se puede deshacer."}

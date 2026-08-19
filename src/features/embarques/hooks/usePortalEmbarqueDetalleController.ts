@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { Anchor, Building2, ClipboardList, Flag, Ship, type LucideIcon } from "lucide-react";
 import { parseISO, differenceInDays } from "date-fns";
 import {
   usePortalEmbarque,
@@ -10,15 +11,16 @@ import { calcularEstadoEmbarque } from "@/features/embarques/domain/embarque";
 export interface ProgressStep {
   key: string;
   label: string;
-  icon: string;
+  /** v13.681.0 · UI-3: iconografía Lucide (antes emojis). */
+  icon: LucideIcon;
 }
 
 export const PORTAL_EMBARQUE_PROGRESS_STEPS: ProgressStep[] = [
-  { key: "Confirmado", label: "Confirmado", icon: "📋" },
-  { key: "En Tránsito", label: "En Tránsito", icon: "🚢" },
-  { key: "Arribo", label: "Arribo", icon: "⚓" },
-  { key: "En Aduana", label: "Aduana", icon: "🛃" },
-  { key: "Entregado", label: "Entregado", icon: "🏁" },
+  { key: "Confirmado", label: "Confirmado", icon: ClipboardList },
+  { key: "En Tránsito", label: "En Tránsito", icon: Ship },
+  { key: "Arribo", label: "Arribo", icon: Anchor },
+  { key: "En Aduana", label: "Aduana", icon: Building2 },
+  { key: "Entregado", label: "Entregado", icon: Flag },
 ];
 
 /**
