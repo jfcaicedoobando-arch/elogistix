@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.682.0] - 2026-08-19
+### Ola B · auditoría externa (UI-2 · escala única de antigüedad)
+- La antigüedad de cartera se pinta con una sola escala (`--aging-1..5`) desde `src/lib/aging/buckets.ts`: Cobranza, Tesorería, CxC/CxP y los dashboards ya no colorean la misma deuda de forma distinta.
+- `agingTone.ts` ahora deriva de las cubetas canónicas (1-30 / 31-60 / 61-90 / +90) en vez de sus propios cortes de 15 días.
+- Los chips de bandejas (`agingVencidoBucket`, `agingPorCobrarBucket`) y las barras de dashboard consumen `AGING_SOLID_CLASS` / `AGING_SOFT_CLASS` / `AGING_FILL_CLASS`.
+- Nuevo guardarraíl `aging-escala-unica.test.ts`: falla el CI si un archivo fuera del catálogo escribe clases `*-aging-N` a mano.
+
 ## [13.681.0] - 2026-08-19
 ### Ola B · auditoría externa (coherencia visual)
 - UI-1 · badges unificados: los estados de CFDI, proformas, leads y conciliación bancaria toman color y etiqueta del `statusRegistry` vía `StatusBadge`; ya no hay paletas escritas a mano por pantalla.
