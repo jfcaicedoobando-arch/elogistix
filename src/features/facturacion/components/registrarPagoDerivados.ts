@@ -73,29 +73,25 @@ export function derivarEstadoPago(a: {
   rates: RatesTc | undefined;
 }): DerivadosPago {
   const montoNum = Number(a.monto) || 0;
-  const montoAplicado = convertirAMonedaFactura(
-    montoNum,
-    a.monedaPago,
-    a.monedaFactura,
-    a.rates,
-  );
+  const tcPago = tcParaPago(a.monedaPago, a.monedaFactura, a.rates);
+  // El equivalente en pantalla se calcula con el MISMO TC que guardará la BD
+  // (pesos por divisa), así el "Equivalente" coincide con el monto aplicado real.
+  const montoAplicado = aplicarTcPago(montoNum, a.monedaPago, a.monedaFactura, tcPago);
   // BUG-15: tolerancia canónica de sobrepago (medio centavo) compartida con
   // CobroLoteRenglon — antes aquí era 0.01 y allá 0.009.
   const excede = montoAplicado > a.saldo + TOLERANCIA_SOBREPAGO;
-  const tipoCambio = montoNum > 0 ? montoAplicado / montoNum : 1;
-  // FE-01 / UIA-01: cross-moneda sin TC confiable (factorEntreMonedas === null,
-  // p. ej. exchange-rates caído) → bloqueamos el submit en vez de dejar el
-  // insert reventar contra CHECK (tipo_cambio > 0) con un 23514 crudo.
+  const tipoCambio = tcPago ?? 0;
+  // FE-01 / UIA-01: cross-moneda sin TC confiable (p. ej. exchange-rates caído)
+  // → bloqueamos el submit en vez de dejar el insert reventar contra el CHECK
+  // (tipo_cambio > 0) con un 23514 crudo.
   // EC-10: si el TC disponible es el respaldo operativo (esFallback) y el cobro
   // requiere conversión, también bloqueamos: un REP timbrado con TC estimado es
   // un error fiscal, no sólo de visualización.
   const tcRespaldo = a.monedaPago !== a.monedaFactura && a.rates?.esFallback === true;
-  const tcBloqueado =
-    tcRespaldo ||
-    factorEntreMonedas(a.monedaPago, a.monedaFactura, {
-      usd: a.rates?.usdMxn,
-      eur: a.rates?.eurMxn,
-    }) === null;
+  // La BD sólo soporta cruces con MXN en una pata (LC_PAGO_CRUCE_NO_SOPORTADO).
+  const cruceNoSoportado =
+    a.monedaPago !== a.monedaFactura && a.monedaPago !== "MXN" && a.monedaFactura !== "MXN";
+  const tcBloqueado = tcRespaldo || cruceNoSoportado || tcPago === null;
   // FE-03 / UIA-06: fecha futura o anterior a la emisión distorsiona REP y aging.
   const errorFecha = validarFechaPago(a.fecha, a.hoy, a.fechaEmision);
   return {
