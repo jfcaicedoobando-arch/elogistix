@@ -1,25 +1,21 @@
 /**
- * Escala de severidad por días vencidos (tokens `aging-1..5`).
- * Fuente única para pintar los días en listas de cartera.
+ * Escala de severidad por días vencidos.
+ *
+ * v13.682.0 · UI-2 — delega en el catálogo único `@/lib/aging/buckets`, para
+ * que Cobranza, Tesorería, CxC y CxP usen los MISMOS cortes (1-30 / 31-60 /
+ * 61-90 / +90) y los mismos tokens de color.
  */
-export function agingNivel(dias?: number | null): 1 | 2 | 3 | 4 | 5 {
-  const d = dias ?? 0;
-  if (d <= 15) return 1;
-  if (d <= 30) return 2;
-  if (d <= 60) return 3;
-  if (d <= 90) return 4;
-  return 5;
-}
+import {
+  AGING_TEXT_CLASS,
+  nivelAgingDeDias,
+  type NivelAging,
+} from "@/lib/aging/buckets";
 
-const CLASES: Record<1 | 2 | 3 | 4 | 5, string> = {
-  1: "text-aging-1",
-  2: "text-aging-2",
-  3: "text-aging-3",
-  4: "text-aging-4",
-  5: "text-aging-5",
-};
+export function agingNivel(dias?: number | null): NivelAging {
+  return nivelAgingDeDias(dias ?? 0);
+}
 
 /** Clase de color de texto para los días vencidos. */
 export function agingTextClass(dias?: number | null): string {
-  return CLASES[agingNivel(dias)];
+  return AGING_TEXT_CLASS[agingNivel(dias)];
 }
