@@ -143,14 +143,14 @@ export function StepCostosPrecios(props: Props) {
             <div className="grid grid-cols-3 gap-4 text-center">
               <div>
                 <p className="text-xs text-muted-foreground" id="tc-usd-label">Tipo de Cambio USD</p>
-                <Input aria-labelledby="tc-usd-label" {...register('tipoCambioUSD')} inputMode="decimal" className="text-center mt-1 [appearance:textfield]" />
+                <Input aria-label="Tipo de Cambio USD" {...register('tipoCambioUSD')} inputMode="decimal" className="text-center mt-1 [appearance:textfield]" />
                 <p className="text-label text-muted-foreground mt-1">
                   {tcOrigen ?? "Captura el tipo de cambio del día"}
                 </p>
               </div>
               <div>
                 <p className="text-xs text-muted-foreground" id="tc-eur-label">Tipo de Cambio EUR</p>
-                <Input aria-labelledby="tc-eur-label" {...register('tipoCambioEUR')} inputMode="decimal" className="text-center mt-1 [appearance:textfield]" />
+                <Input aria-label="Tipo de Cambio EUR" {...register('tipoCambioEUR')} inputMode="decimal" className="text-center mt-1 [appearance:textfield]" />
               </div>
               <div className="min-w-0">
                 <p className="text-xs text-muted-foreground">Utilidad Estimada (USD)</p>
