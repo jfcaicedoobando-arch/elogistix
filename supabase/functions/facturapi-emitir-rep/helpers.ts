@@ -175,10 +175,37 @@ export function validateRepContext(ctx: PagoContext): RepValidationIssue[] {
   return issues;
 }
 
+/** Pesos mexicanos por una unidad de `moneda` (convención canónica del sistema). */
+function pesosPorUnidad(moneda: string, tipoCambio: number): number | null {
+  if (moneda === "MXN") return 1;
+  return tipoCambio > 0 ? tipoCambio : null;
+}
+
+/**
+ * TipoCambioDR: factor que convierte el monto del pago a la moneda del
+ * documento relacionado. `null` si falta algún tipo de cambio.
+ * Máximo 10 decimales (límite del SAT).
+ */
+export function tipoCambioDocRelacionado(
+  monedaPago: string,
+  tipoCambioPago: number,
+  monedaDr: string,
+  tipoCambioDr: number,
+): number | null {
+  if (monedaPago === monedaDr) return null;
+  const pago = pesosPorUnidad(monedaPago, tipoCambioPago);
+  const doc = pesosPorUnidad(monedaDr, tipoCambioDr);
+  if (pago === null || doc === null) return null;
+  const factor = pago / doc;
+  if (!Number.isFinite(factor) || factor <= 0) return null;
+  return Math.round(factor * 1e10) / 1e10;
+}
+
 /**
  * Construye el payload Facturapi para timbrar el REP.
  * Si moneda del pago == moneda del documento, no enviamos `exchange` en el doc relacionado.
  */
+
 export function buildRepPayload(ctx: PagoContext): FacturapiRepPayload {
   const dr = ctx.documento_relacionado;
   const sameCurrency = ctx.moneda === dr.moneda_dr;
