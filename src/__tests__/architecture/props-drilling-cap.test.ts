@@ -10,7 +10,7 @@
  */
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
-import { globSync } from "glob";
+import { sync as globSync } from "fast-glob";
 
 const MAX_PROPS = 18;
 

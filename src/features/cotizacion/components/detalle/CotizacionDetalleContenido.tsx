@@ -48,7 +48,7 @@ export interface CotizacionDetalleDialogos {
 }
 
 /** Acciones y estado de formulario que expone el controlador de la pantalla. */
-export interface CotizacionDetalleAcciones {
+interface CotizacionDetalleAcciones {
   clienteForm: DetalleState["clienteForm"];
   setClienteForm: DetalleState["setClienteForm"];
   handleCambiarEstado: DetalleState["handleCambiarEstado"];
