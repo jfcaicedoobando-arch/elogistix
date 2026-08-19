@@ -60,8 +60,9 @@ export default function PresupuestoCrmEditor() {
     <div className="space-y-3">
       <div className="flex items-end gap-3">
         <div className="space-y-1">
-          <Label>Año</Label>
+          <Label htmlFor="presupuesto-anio">Año</Label>
           <Input
+            id="presupuesto-anio"
             type="number"
             className="w-28"
             value={anio}
@@ -93,6 +94,7 @@ export default function PresupuestoCrmEditor() {
                     min={0}
                     step="0.01"
                     className="text-right"
+                    aria-label={`Presupuesto de ${nombre}`}
                     disabled={isLoading}
                     value={montoDe(mes)}
                     onChange={(e) => setBorrador((b) => ({ ...b, [mes]: e.target.value }))}

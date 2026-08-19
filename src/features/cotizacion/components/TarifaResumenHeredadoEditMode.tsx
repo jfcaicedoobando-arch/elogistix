@@ -33,6 +33,7 @@ export default function TarifaResumenHeredadoEditMode({
           type="number" min={0}
           value={transito ?? ""}
           onChange={e => { marcarOverride(form, "tiempoTransitoDias"); setValue("tiempoTransitoDias", e.target.value ? Number(e.target.value) : undefined, OPTS); }}
+          aria-label="Tiempo de tránsito en días"
         />
         {Boolean(override.tiempoTransitoDias) && <span className="text-xs text-warning">Sobreescrito manualmente</span>}
       </label>
@@ -57,6 +58,7 @@ export default function TarifaResumenHeredadoEditMode({
             type="number" min={0}
             value={diasLibres ?? ""}
             onChange={e => { marcarOverride(form, "diasLibresDestino"); setValue("diasLibresDestino", Number(e.target.value), OPTS); }}
+            aria-label="Días libres en destino"
           />
           {Boolean(override.diasLibresDestino) && <span className="text-xs text-warning">Sobreescrito manualmente</span>}
         </label>
@@ -68,6 +70,7 @@ export default function TarifaResumenHeredadoEditMode({
             type="number" min={0}
             value={diasAlmacenaje ?? ""}
             onChange={e => { marcarOverride(form, "diasAlmacenaje"); setValue("diasAlmacenaje", Number(e.target.value), OPTS); }}
+            aria-label="Días libres de almacenaje"
           />
           {Boolean(override.diasAlmacenaje) && <span className="text-xs text-warning">Sobreescrito manualmente</span>}
         </label>

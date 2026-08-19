@@ -53,8 +53,9 @@ export default function PortalInviteDialog({
       }
     >
       <div className="space-y-2">
-        <Label>Email del cliente</Label>
+        <Label htmlFor="portal-invite-email">Email del cliente</Label>
         <Input
+          id="portal-invite-email"
           type="email"
           placeholder="cliente@empresa.com"
           value={email}

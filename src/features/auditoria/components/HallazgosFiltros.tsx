@@ -66,6 +66,7 @@ export function HallazgosFiltros({ filtros: props, conteo }: Props) {
     <div className="relative flex-1 min-w-0 md:min-w-[200px] md:max-w-[280px]">
       <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
       <Input
+        aria-label="Buscar expediente"
         placeholder="Buscar expediente..."
         value={props.search}
         onChange={(e) => props.setSearch(e.target.value)}

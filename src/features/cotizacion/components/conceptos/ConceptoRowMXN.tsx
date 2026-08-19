@@ -46,6 +46,7 @@ export function ConceptoRowMXN({ concepto: c, index: i, total, actualizar, elimi
           }}
           onBlur={e => { if (e.target.value === '') actualizar(i, 'cantidad', 1); }}
           placeholder="1"
+          aria-label="Cantidad"
         />
       </div>
       <div className="col-span-2">
@@ -60,11 +61,12 @@ export function ConceptoRowMXN({ concepto: c, index: i, total, actualizar, elimi
           }}
           onBlur={e => { if (e.target.value === '') actualizar(i, 'precio_unitario', 0); }}
           placeholder="0.00"
+          aria-label="Precio unitario"
         />
       </div>
       <div className="col-span-1">
         {i === 0 && <Label size="sm">Subtotal</Label>}
-        <Input value={formatCurrency(subtotal, 'MXN')} readOnly className="bg-muted" />
+        <Input value={formatCurrency(subtotal, 'MXN')} readOnly aria-label="Subtotal" className="bg-muted" />
       </div>
       <div className="col-span-2">
         {i === 0 && <Label size="sm">Tasa IVA</Label>}
@@ -84,11 +86,11 @@ export function ConceptoRowMXN({ concepto: c, index: i, total, actualizar, elimi
       </div>
       <div className="col-span-1">
         {i === 0 && <Label size="sm">IVA</Label>}
-        <Input value={formatCurrency(iva, 'MXN')} readOnly className="bg-muted" />
+        <Input value={formatCurrency(iva, 'MXN')} readOnly aria-label="IVA" className="bg-muted" />
       </div>
       <div className="col-span-1">
         {i === 0 && <Label size="sm">Total</Label>}
-        <Input value={formatCurrency(c.total, 'MXN')} readOnly className="bg-muted" />
+        <Input value={formatCurrency(c.total, 'MXN')} readOnly aria-label="Total" className="bg-muted" />
       </div>
       <div className="col-span-1">
         <Button variant="ghost" size="icon" onClick={() => eliminar(i)} disabled={total <= 1} aria-label="Eliminar concepto">

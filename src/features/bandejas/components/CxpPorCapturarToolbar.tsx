@@ -78,6 +78,7 @@ export function CxpPorCapturarToolbar({
         <div className="relative flex-1 min-w-[220px]">
           <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
+            aria-label="Buscar por expediente o cliente"
             value={state.query}
             onChange={(e) => set("query", e.target.value)}
             placeholder="Buscar por expediente o cliente…"

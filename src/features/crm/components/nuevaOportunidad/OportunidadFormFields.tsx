@@ -51,8 +51,8 @@ export default function OportunidadFormFields({
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
       <div className="sm:col-span-2 space-y-1">
-        <Label>Nombre *</Label>
-        <Input value={form.nombre} onChange={(e) => set("nombre", e.target.value)} />
+        <Label htmlFor="op-nombre">Nombre *</Label>
+        <Input id="op-nombre" value={form.nombre} onChange={(e) => set("nombre", e.target.value)} />
       </div>
       <div className="space-y-1">
         <Label>Cliente</Label>
@@ -109,8 +109,9 @@ export default function OportunidadFormFields({
         </Select>
       </div>
       <div className="space-y-1">
-        <Label>Probabilidad (%)</Label>
+        <Label htmlFor="op-probabilidad">Probabilidad (%)</Label>
         <Input
+          id="op-probabilidad"
           type="number" min={0} max={100}
           value={form.probabilidad}
           // EC-09: min/max HTML no clampean escritura manual; sin el clamp el
@@ -146,16 +147,16 @@ export default function OportunidadFormFields({
         </>
       )}
       <div className="space-y-1">
-        <Label>Modo</Label>
-        <Input value={form.modo} onChange={(e) => set("modo", e.target.value)} placeholder="Marítimo / Aéreo..." />
+        <Label htmlFor="op-modo">Modo</Label>
+        <Input id="op-modo" value={form.modo} onChange={(e) => set("modo", e.target.value)} placeholder="Marítimo / Aéreo..." />
       </div>
       <div className="space-y-1">
-        <Label>Origen</Label>
-        <Input value={form.origen} onChange={(e) => set("origen", e.target.value)} />
+        <Label htmlFor="op-origen">Origen</Label>
+        <Input id="op-origen" value={form.origen} onChange={(e) => set("origen", e.target.value)} />
       </div>
       <div className="space-y-1">
-        <Label>Destino</Label>
-        <Input value={form.destino} onChange={(e) => set("destino", e.target.value)} />
+        <Label htmlFor="op-destino">Destino</Label>
+        <Input id="op-destino" value={form.destino} onChange={(e) => set("destino", e.target.value)} />
       </div>
       <OportunidadMetasFields form={form} set={set} />
       <div className="sm:col-span-2">

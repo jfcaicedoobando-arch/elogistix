@@ -39,32 +39,33 @@ export function NuevoLeadForm({ form, setForm, autoActividad, setAutoActividad }
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
       <div className="sm:col-span-2 space-y-1">
-        <Label>Empresa *</Label>
-        <Input value={form.empresa} onChange={(e) => set("empresa", e.target.value)} />
+        <Label htmlFor="nuevo-lead-empresa">Empresa *</Label>
+        <Input id="nuevo-lead-empresa" value={form.empresa} onChange={(e) => set("empresa", e.target.value)} />
       </div>
       <div className="space-y-1">
-        <Label>Contacto</Label>
-        <Input value={form.contacto} onChange={(e) => set("contacto", e.target.value)} />
+        <Label htmlFor="nuevo-lead-contacto">Contacto</Label>
+        <Input id="nuevo-lead-contacto" value={form.contacto} onChange={(e) => set("contacto", e.target.value)} />
       </div>
       <div className="space-y-1">
-        <Label>Email</Label>
-        <Input type="email" value={form.email} onChange={(e) => set("email", e.target.value)} />
+        <Label htmlFor="nuevo-lead-email">Email</Label>
+        <Input id="nuevo-lead-email" type="email" value={form.email} onChange={(e) => set("email", e.target.value)} />
       </div>
       <div className="space-y-1">
-        <Label>Teléfono</Label>
-        <Input value={form.telefono} onChange={(e) => set("telefono", e.target.value)} />
+        <Label htmlFor="nuevo-lead-telefono">Teléfono</Label>
+        <Input id="nuevo-lead-telefono" value={form.telefono} onChange={(e) => set("telefono", e.target.value)} />
       </div>
       <div className="space-y-1">
-        <Label>Ciudad</Label>
-        <Input value={form.ciudad} onChange={(e) => set("ciudad", e.target.value)} />
+        <Label htmlFor="nuevo-lead-ciudad">Ciudad</Label>
+        <Input id="nuevo-lead-ciudad" value={form.ciudad} onChange={(e) => set("ciudad", e.target.value)} />
       </div>
       <div className="space-y-1">
-        <Label>País</Label>
-        <Input value={form.pais} onChange={(e) => set("pais", e.target.value)} />
+        <Label htmlFor="nuevo-lead-pais">País</Label>
+        <Input id="nuevo-lead-pais" value={form.pais} onChange={(e) => set("pais", e.target.value)} />
       </div>
       <div className="space-y-1">
-        <Label>Interés (modo)</Label>
+        <Label htmlFor="nuevo-lead-interes-modo">Interés (modo)</Label>
         <Input
+          id="nuevo-lead-interes-modo"
           placeholder="Marítimo / Aéreo / Terrestre…"
           value={form.interes_modo}
           onChange={(e) => set("interes_modo", e.target.value)}

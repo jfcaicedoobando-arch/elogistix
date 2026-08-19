@@ -79,6 +79,7 @@ export default function MetasActividadEditor() {
                   type="number"
                   min={0}
                   className="text-right"
+                  aria-label={`${campo.label} para ${label}`}
                   value={valorDe(value, campo.key)}
                   onChange={(e) => setValor(value, campo.key, e.target.value)}
                 />

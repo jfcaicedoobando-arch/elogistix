@@ -113,14 +113,15 @@ export default function ConvertirLeadDialog({ open, onOpenChange, lead }: Props)
           </div>
 
           <div className="space-y-1">
-            <Label>Nombre de la oportunidad</Label>
-            <Input value={nombre} onChange={(e) => setNombre(e.target.value)} />
+            <Label htmlFor="convertir-nombre-oportunidad">Nombre de la oportunidad</Label>
+            <Input id="convertir-nombre-oportunidad" value={nombre} onChange={(e) => setNombre(e.target.value)} />
           </div>
 
           <div className="grid grid-cols-3 gap-3">
             <div className="space-y-1 col-span-2">
-              <Label>Monto estimado</Label>
+              <Label htmlFor="convertir-monto-estimado">Monto estimado</Label>
               <Input
+                id="convertir-monto-estimado"
                 type="number"
                 min={0}
                 value={monto}

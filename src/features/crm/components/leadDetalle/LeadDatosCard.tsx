@@ -40,32 +40,32 @@ export default function LeadDatosCard({ form, set, canEdit, dirty, isSaving, onS
       <CardContent>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div className="sm:col-span-2 space-y-1">
-            <Label>Empresa</Label>
-            <Input value={form.empresa} onChange={(e) => set("empresa", e.target.value)} disabled={!canEdit} />
+            <Label htmlFor="lead-datos-empresa">Empresa</Label>
+            <Input id="lead-datos-empresa" value={form.empresa} onChange={(e) => set("empresa", e.target.value)} disabled={!canEdit} />
           </div>
           <div className="space-y-1">
-            <Label>Contacto</Label>
-            <Input value={form.contacto} onChange={(e) => set("contacto", e.target.value)} disabled={!canEdit} />
+            <Label htmlFor="lead-datos-contacto">Contacto</Label>
+            <Input id="lead-datos-contacto" value={form.contacto} onChange={(e) => set("contacto", e.target.value)} disabled={!canEdit} />
           </div>
           <div className="space-y-1">
-            <Label>Email</Label>
-            <Input type="email" value={form.email} onChange={(e) => set("email", e.target.value)} disabled={!canEdit} />
+            <Label htmlFor="lead-datos-email">Email</Label>
+            <Input id="lead-datos-email" type="email" value={form.email} onChange={(e) => set("email", e.target.value)} disabled={!canEdit} />
           </div>
           <div className="space-y-1">
-            <Label>Teléfono</Label>
-            <Input value={form.telefono} onChange={(e) => set("telefono", e.target.value)} disabled={!canEdit} />
+            <Label htmlFor="lead-datos-telefono">Teléfono</Label>
+            <Input id="lead-datos-telefono" value={form.telefono} onChange={(e) => set("telefono", e.target.value)} disabled={!canEdit} />
           </div>
           <div className="space-y-1">
-            <Label>Ciudad</Label>
-            <Input value={form.ciudad} onChange={(e) => set("ciudad", e.target.value)} disabled={!canEdit} />
+            <Label htmlFor="lead-datos-ciudad">Ciudad</Label>
+            <Input id="lead-datos-ciudad" value={form.ciudad} onChange={(e) => set("ciudad", e.target.value)} disabled={!canEdit} />
           </div>
           <div className="space-y-1">
-            <Label>País</Label>
-            <Input value={form.pais} onChange={(e) => set("pais", e.target.value)} disabled={!canEdit} />
+            <Label htmlFor="lead-datos-pais">País</Label>
+            <Input id="lead-datos-pais" value={form.pais} onChange={(e) => set("pais", e.target.value)} disabled={!canEdit} />
           </div>
           <div className="space-y-1">
-            <Label>Interés (modo)</Label>
-            <Input value={form.interes_modo} onChange={(e) => set("interes_modo", e.target.value)} disabled={!canEdit} />
+            <Label htmlFor="lead-datos-interes-modo">Interés (modo)</Label>
+            <Input id="lead-datos-interes-modo" value={form.interes_modo} onChange={(e) => set("interes_modo", e.target.value)} disabled={!canEdit} />
           </div>
           <div className="space-y-1">
             <Label>Fuente</Label>
@@ -86,8 +86,9 @@ export default function LeadDatosCard({ form, set, canEdit, dirty, isSaving, onS
             </Select>
           </div>
           <div className="space-y-1">
-            <Label>Score (1-5)</Label>
+            <Label htmlFor="lead-datos-score">Score (1-5)</Label>
             <Input
+              id="lead-datos-score"
               type="number"
               min={1}
               max={5}

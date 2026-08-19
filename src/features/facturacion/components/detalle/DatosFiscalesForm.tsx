@@ -54,8 +54,9 @@ export function DatosFiscalesForm(p: DatosFiscalesFormProps) {
         <SelectSAT label="Método de pago" value={p.metodoPago} onChange={p.setMetodoPago} options={METODOS_PAGO_SAT} />
         <SelectSAT label="Forma de pago" value={p.formaPago} onChange={p.setFormaPago} options={FORMAS_PAGO_SAT} />
         <div>
-          <Label>Días de crédito</Label>
+          <Label htmlFor="factura-dias-credito">Días de crédito</Label>
           <Input
+            id="factura-dias-credito"
             type="number" min={0} value={p.diasCredito}
             onChange={(e) => p.setDiasCredito(Number(e.target.value) || 0)}
           />
@@ -67,8 +68,9 @@ export function DatosFiscalesForm(p: DatosFiscalesFormProps) {
         </div>
         {p.mostrarTipoCambio && (
           <div>
-            <Label>Tipo de cambio</Label>
+            <Label htmlFor="factura-tipo-cambio">Tipo de cambio</Label>
             <Input
+              id="factura-tipo-cambio"
               type="number" step="0.0001" min={0}
               value={p.tipoCambio ?? ""}
               placeholder="Capturar TC del día"

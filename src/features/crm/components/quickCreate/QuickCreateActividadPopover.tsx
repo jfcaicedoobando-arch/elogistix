@@ -61,8 +61,8 @@ export default function QuickCreateActividadPopover({ onCreated, onMore, onClose
     <div className="space-y-3 w-80">
       <SectionHeading as="h3">Nueva actividad</SectionHeading>
       <div className="space-y-1">
-        <Label>Asunto *</Label>
-        <Input autoFocus value={asunto} onChange={(e) => setAsunto(e.target.value)} placeholder="Llamar a cliente" onKeyDown={(e) => { if (e.key === "Enter") submit(); }} />
+        <Label htmlFor="qc-actividad-asunto">Asunto *</Label>
+        <Input id="qc-actividad-asunto" autoFocus value={asunto} onChange={(e) => setAsunto(e.target.value)} placeholder="Llamar a cliente" onKeyDown={(e) => { if (e.key === "Enter") submit(); }} />
       </div>
       <div className="space-y-1">
         <Label>Oportunidad *</Label>

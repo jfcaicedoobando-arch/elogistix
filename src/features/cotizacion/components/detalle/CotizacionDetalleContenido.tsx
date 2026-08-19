@@ -3,8 +3,6 @@
  * conceptos y tarjetas relacionadas. Extraído para bajar la complejidad
  * ciclomática de la ruta.
  */
-import type { EnvioRow } from "@/features/cotizacion/services/envios";
-import type { AppRole } from "@/types/appRole";
 import { EnviarCotizacionDialog } from "@/features/cotizacion/components/detalle/EnviarCotizacionDialog";
 import { HistorialEnviosCard } from "@/features/cotizacion/components/detalle/HistorialEnviosCard";
 import SeccionCostosInternosPLUnificado from "@/features/cotizacion/components/SeccionCostosInternosPLUnificado";
@@ -21,60 +19,21 @@ import { ProspectoBanner, ComentarioClienteCard, NotasCard } from "@/features/co
 import { ReaprobacionTarifaBanner } from "@/features/cotizacion/components/revalidacion/ReaprobacionTarifaBanner";
 import { SinDesgloseBanner } from "@/features/cotizacion/components/SinDesgloseBanner";
 import { AvisoConceptosDescartados } from "@/features/cotizacion/components/AvisoConceptosDescartados";
-import type { useCotizacionDetalleState } from "@/features/cotizacion/hooks";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { useClienteAutorizacion } from "@/features/cliente/hooks/useClienteAutorizacion";
+import type { CotizacionDetalleContenidoProps as Props } from "./cotizacionDetalleContenido.types";
 
-type DetalleState = ReturnType<typeof useCotizacionDetalleState>;
-
-/** Importes ya calculados de la cotización (auditoría 2026-08-18, punto 7). */
-export interface CotizacionDetalleTotales {
-  tasaIva: number;
-  conceptosVentaUSD: DetalleState["conceptosVentaUSD"];
-  conceptosVentaMXN: DetalleState["conceptosVentaMXN"];
-  totalUSD: number;
-  subtotalMXN: number;
-  ivaMXN: number;
-  totalMXN: number;
-  conceptosDescartados: number;
-}
-
-/** Apertura/cierre de los diálogos de la pantalla. */
-export interface CotizacionDetalleDialogos {
-  showConvertir: boolean;
-  setShowConvertir: (v: boolean) => void;
-  enviarOpen: boolean;
-  setEnviarOpen: (v: boolean) => void;
-}
-
-/** Acciones y estado de formulario que expone el controlador de la pantalla. */
-interface CotizacionDetalleAcciones {
-  clienteForm: DetalleState["clienteForm"];
-  setClienteForm: DetalleState["setClienteForm"];
-  handleCambiarEstado: DetalleState["handleCambiarEstado"];
-  abrirDialogConvertir: DetalleState["abrirDialogConvertir"];
-  handleConvertir: DetalleState["handleConvertir"];
-  convertirProspecto: DetalleState["convertirProspecto"];
-  navigate: DetalleState["navigate"];
-}
-
-interface Props {
-  cotizacion: NonNullable<DetalleState["cotizacion"]>;
-  id: string;
-  canEdit: boolean;
-  effectiveRole: AppRole | null;
-  embarquesVinculados: DetalleState["embarquesVinculados"];
-  envios: EnvioRow[];
-  totales: CotizacionDetalleTotales;
-  dialogos: CotizacionDetalleDialogos;
-  acciones: CotizacionDetalleAcciones;
-}
+export type {
+  CotizacionDetalleTotales,
+  CotizacionDetalleDialogos,
+} from "./cotizacionDetalleContenido.types";
 
 /** Renderiza el cuerpo de la vista de detalle (todo lo que va bajo el header). */
 export function CotizacionDetalleContenido({
   cotizacion, id, canEdit, effectiveRole, embarquesVinculados, envios,
   totales, dialogos, acciones,
 }: Props) {
+
   const {
     tasaIva, conceptosVentaUSD, conceptosVentaMXN,
     totalUSD, subtotalMXN, ivaMXN, totalMXN, conceptosDescartados,
