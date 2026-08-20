@@ -1,0 +1,58 @@
+/**
+ * Ola I · candado de tamaño de iconos.
+ *
+ * El design system usa la utilidad corta `size-4` (equivalente a `h-4 w-4`).
+ * Mantener las dos formas en paralelo hace que un cambio de escala haya que
+ * buscarlo dos veces. No se exige migrar los 954 usos históricos hoy: se
+ * congela el conteo (ratchet) para que el código nuevo use `size-4`. Cuando
+ * migres archivos, baja el tope aquí.
+ */
+import { describe, expect, it } from "vitest";
+import { readFileSync } from "node:fs";
+import { sync as globSync } from "fast-glob";
+
+const MAX_PAR_LARGO = 954;
+
+function contarParLargo(): { total: number; porArchivo: Record<string, number> } {
+  const archivos = globSync("src/**/*.tsx", {
+    ignore: ["**/__tests__/**", "**/*.test.ts", "**/*.test.tsx", "src/test/**"],
+  });
+  const porArchivo: Record<string, number> = {};
+  let total = 0;
+  for (const archivo of archivos) {
+    const ocurrencias = readFileSync(archivo, "utf8").match(/\bh-4 w-4\b/g)?.length ?? 0;
+    if (ocurrencias > 0) {
+      porArchivo[archivo] = ocurrencias;
+      total += ocurrencias;
+    }
+  }
+  return { total, porArchivo };
+}
+
+describe("arquitectura · ratchet de tamaño de iconos", () => {
+  it(`no supera ${MAX_PAR_LARGO} usos de "h-4 w-4" (usa size-4 en código nuevo)`, () => {
+    const { total, porArchivo } = contarParLargo();
+    expect(
+      total,
+      `Se detectaron ${total} usos de "h-4 w-4" (tope ${MAX_PAR_LARGO}). ` +
+        `En código nuevo usa \`size-4\`. Archivos con más ocurrencias: ` +
+        JSON.stringify(
+          Object.fromEntries(
+            Object.entries(porArchivo)
+              .sort((a, b) => b[1] - a[1])
+              .slice(0, 10),
+          ),
+          null,
+          2,
+        ),
+    ).toBeLessThanOrEqual(MAX_PAR_LARGO);
+  });
+
+  it("mantiene el tope sincronizado (si migraste archivos, baja el tope)", () => {
+    const { total } = contarParLargo();
+    expect(
+      MAX_PAR_LARGO - total,
+      "Hay margen de sobra en el ratchet: ajusta MAX_PAR_LARGO al conteo real.",
+    ).toBeLessThanOrEqual(20);
+  });
+});
