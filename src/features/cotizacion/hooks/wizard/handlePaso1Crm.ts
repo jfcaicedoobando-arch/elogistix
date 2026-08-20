@@ -16,41 +16,56 @@ import { getErrorMessage } from "@/lib/errors";
 import { notifyError } from "@/lib/ui/appFeedback";
 import { esIncotermSinFleteVenta } from "@/features/cotizacion/utils/incotermRules";
 import type { CotizacionFormValues } from "@/features/cotizacion/domain/mappers/cotizacionForm";
+import {
+  destinatarioSchema,
+  rutaTerrestreSchema,
+  fleteLclManualSchema,
+  primerError,
+} from "@/features/cotizacion/domain/schemas/wizardPasos";
 
 
 // ── Pure sub-validators ──────────────────────────────────────────────────────
 
+/**
+ * EC-4: las reglas viven en schemas zod (`domain/schemas/wizardPasos`); estos
+ * wrappers sólo adaptan el form al input del schema y devuelven el 1er mensaje.
+ */
 export function validateCliente(v: CotizacionFormValues): string | null {
-  if (!v.esProspecto && !v.clienteId) return "Selecciona un cliente";
-  return null;
+  if (v.esProspecto) return null;
+  return primerError(destinatarioSchema, {
+    esProspecto: false,
+    clienteId: v.clienteId ?? null,
+    prospectoEmpresa: "",
+    prospectoContacto: "",
+  });
 }
 
 export function validateProspecto(v: CotizacionFormValues): string | null {
   if (!v.esProspecto) return null;
-  if (v.prospectoModo === "vincular" && !v.oportunidadId && !v.leadId) {
-    return "Selecciona un lead u oportunidad existente, o cambia a 'Crear nuevo prospecto'";
-  }
-  if (!v.prospectoEmpresa.trim()) return "Ingresa el nombre de la empresa del prospecto";
-  if (v.prospectoModo === "nuevo" && !v.prospectoContacto.trim()) {
-    return "Ingresa el nombre del contacto del prospecto";
-  }
-  return null;
+  return primerError(destinatarioSchema, {
+    esProspecto: true,
+    clienteId: v.clienteId ?? null,
+    prospectoModo: v.prospectoModo,
+    oportunidadId: v.oportunidadId ?? null,
+    leadId: v.leadId ?? null,
+    prospectoEmpresa: v.prospectoEmpresa ?? "",
+    prospectoContacto: v.prospectoContacto ?? "",
+  });
 }
 
 export function validateTerrestre(v: CotizacionFormValues): string | null {
-  if (v.modo !== "Terrestre") return null;
-  if (!v.modalidadEquipo?.trim()) return "Selecciona la modalidad de equipo";
-  if (v.modalidadEquipo === "Porta Contenedor" && !v.puntoIntermedio?.trim()) {
-    return "Captura el punto de carga/descarga";
-  }
-  return null;
+  return primerError(rutaTerrestreSchema, {
+    modo: v.modo,
+    modalidadEquipo: v.modalidadEquipo ?? null,
+    puntoIntermedio: v.puntoIntermedio ?? null,
+  });
 }
 
 function validateLclFleteManual(v: CotizacionFormValues): string | null {
-  const tarifaWM = Number(v.lclFleteManual?.tarifaWM ?? 0);
-  const consolidador = v.lclFleteManual?.consolidadorId?.trim() ?? "";
-  if (tarifaWM > 0 && consolidador) return null;
-  return "Captura el flete LCL (Tarifa W/M y Consolidador) antes de continuar (Paso 1 → Flete LCL).";
+  return primerError(fleteLclManualSchema, {
+    tarifaWM: v.lclFleteManual?.tarifaWM ?? 0,
+    consolidadorId: v.lclFleteManual?.consolidadorId ?? null,
+  });
 }
 
 export function validateMaritimo(v: CotizacionFormValues): string | null {
