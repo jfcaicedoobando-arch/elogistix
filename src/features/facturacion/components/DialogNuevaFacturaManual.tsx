@@ -52,6 +52,8 @@ export function DialogNuevaFacturaManual({ open, onOpenChange }: Props) {
       title="Nueva factura manual"
       description="Para anticipos, servicios extra o cobros que no provienen de un embarque cerrado. Lo normal es facturar desde una proforma aprobada."
       size="3xl" footer={footer}
+      // EC-13: con cliente o conceptos capturados, cerrar pide confirmación.
+      isDirty={Boolean(cliente) || conceptos.length > 0}
     >
       <div className="space-y-5">
         <FormDialogSection flat title="Información del cliente">
