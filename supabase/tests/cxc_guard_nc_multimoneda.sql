@@ -49,11 +49,11 @@ DO $caso1$
 BEGIN
   INSERT INTO public.factura_notas_credito
     (id, organization_id, factura_id, monto, moneda, tipo_cambio,
-     fecha_emision, estado)
+     fecha_emision, estado, uuid_fiscal)
   VALUES
     ('44444444-4444-4444-4444-444444444441', '11111111-1111-1111-1111-111111111111',
      '33333333-3333-3333-3333-333333333333', 5000, 'MXN'::public.moneda, 1,
-     CURRENT_DATE, 'Aplicada'::public.estado_nota_credito);
+     CURRENT_DATE, 'Aplicada'::public.estado_nota_credito, gen_random_uuid()::text);
   RAISE NOTICE 'CASO 1 OK: NC MXN 5,000 aceptada contra saldo USD 1,000 (TC 17)';
 END
 $caso1$;
@@ -64,11 +64,11 @@ BEGIN
   BEGIN
     INSERT INTO public.factura_notas_credito
       (id, organization_id, factura_id, monto, moneda, tipo_cambio,
-       fecha_emision, estado)
+       fecha_emision, estado, uuid_fiscal)
     VALUES
       ('44444444-4444-4444-4444-444444444442', '11111111-1111-1111-1111-111111111111',
        '33333333-3333-3333-3333-333333333333', 100000, 'MXN'::public.moneda, 1,
-       CURRENT_DATE, 'Aplicada'::public.estado_nota_credito);
+       CURRENT_DATE, 'Aplicada'::public.estado_nota_credito, gen_random_uuid()::text);
     RAISE EXCEPTION 'CASO 2 FALLÓ: se aceptó una NC de MXN 100,000 sobre un saldo de USD 1,000';
   EXCEPTION
     WHEN check_violation THEN
