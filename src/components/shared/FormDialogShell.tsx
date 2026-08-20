@@ -11,6 +11,7 @@
  * No introduce nuevos tokens de color: usa `bg-primary/10`, `text-primary`, `border`.
  */
 import type { LucideIcon } from "lucide-react";
+import { useCallback, useState } from "react";
 import type { FormEvent, ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import {
@@ -20,9 +21,11 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { ConfirmActionDialog } from "@/components/shared/dialogs/ConfirmActionDialog";
 import { dialogSize } from "@/components/shared/utils/dialogTokens";
 import { useAutoFocusPrimerCampo } from "@/components/shared/utils/useAutoFocusPrimerCampo";
 import { FormDialogStepper } from "./FormDialogStepper";
+
 
 type Size = keyof typeof dialogSize;
 
