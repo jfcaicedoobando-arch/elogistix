@@ -1,5 +1,16 @@
 # Changelog
 
+## [13.699.0] - 2026-08-20
+### Ola 4 (cierre) — Validación del wizard con schemas
+- Cotizaciones: las reglas de cada paso del wizard (destinatario, ruta terrestre, flete LCL, costos y conceptos de venta) viven ahora en un solo lugar, con pruebas por paso. Los mensajes que ve el usuario no cambian.
+
+### Ola 5 — Pulido fino y deuda congelada
+- Candados de calidad con holgura documentada: un cambio pequeño ya no rompe la validación automática por 1 uso de deuda histórica.
+- Formato de fecha antiguo marcado como obsoleto y congelado; el código nuevo usa el formato canónico dd/mm/aaaa.
+- Listados: la búsqueda espera 300 ms antes de filtrar (menos parpadeo al teclear).
+- Barras de filtro: anchos estandarizados en 4 medidas (antes cada pantalla elegía el suyo).
+- Nuevo documento de riesgos aceptados (`docs/riesgos-aceptados.md`).
+
 ## [13.698.0] - 2026-08-20
 ### Ola 4 — Robustez de formularios
 - Modales de captura: cerrar con ESC o clic fuera con datos capturados pide confirmación antes de descartar (cuentas bancarias y factura manual ya lo usan).

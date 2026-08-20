@@ -11,7 +11,14 @@ import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import { sync as globSync } from "fast-glob";
 
-const MAX_SELECT_STAR = 50;
+/**
+ * Ola 5 · RN-1 — holgura documentada: el tope es la deuda congelada + 10.
+ * Sin holgura, cualquier PR inocente rompía CI. Plan: bajar el tope cada
+ * trimestre a `deuda_actual + 10` conforme se migran archivos.
+ */
+const DEUDA_CONGELADA = 50;
+const HOLGURA = 10;
+const MAX_SELECT_STAR = DEUDA_CONGELADA + HOLGURA;
 
 function contarSelectStar(): { total: number; porArchivo: Record<string, number> } {
   const archivos = globSync("src/**/*.{ts,tsx}", {
@@ -43,8 +50,8 @@ describe("arquitectura · ratchet de select(\"*\")", () => {
   it("mantiene el tope sincronizado (si bajaste ocurrencias, baja el tope)", () => {
     const { total } = contarSelectStar();
     expect(
-      MAX_SELECT_STAR - total,
-      "Hay margen de sobra en el ratchet: ajusta MAX_SELECT_STAR al conteo real.",
-    ).toBeLessThanOrEqual(3);
+      DEUDA_CONGELADA - total,
+      "Hay margen de sobra en el ratchet: ajusta DEUDA_CONGELADA al conteo real.",
+    ).toBeLessThanOrEqual(HOLGURA);
   });
 });

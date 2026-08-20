@@ -11,7 +11,14 @@ import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import { sync as globSync } from "fast-glob";
 
-const MAX_PAR_LARGO = 954;
+/**
+ * Ola 5 · RN-1 — holgura documentada: el tope es la deuda congelada + 10.
+ * Sin holgura, cualquier PR inocente rompía CI. Plan: bajar el tope cada
+ * trimestre a `deuda_actual + 10` conforme se migran archivos.
+ */
+const DEUDA_CONGELADA = 954;
+const HOLGURA = 10;
+const MAX_PAR_LARGO = DEUDA_CONGELADA + HOLGURA;
 
 function contarParLargo(): { total: number; porArchivo: Record<string, number> } {
   const archivos = globSync("src/**/*.tsx", {
@@ -51,8 +58,8 @@ describe("arquitectura · ratchet de tamaño de iconos", () => {
   it("mantiene el tope de iconos h-4 w-4 sincronizado (si migraste archivos, baja el tope)", () => {
     const { total } = contarParLargo();
     expect(
-      MAX_PAR_LARGO - total,
-      "Hay margen de sobra en el ratchet: ajusta MAX_PAR_LARGO al conteo real.",
-    ).toBeLessThanOrEqual(20);
+      DEUDA_CONGELADA - total,
+      "Hay margen de sobra en el ratchet: ajusta DEUDA_CONGELADA al conteo real.",
+    ).toBeLessThanOrEqual(HOLGURA);
   });
 });

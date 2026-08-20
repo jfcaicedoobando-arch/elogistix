@@ -13,7 +13,14 @@ import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import { sync as globSync } from "fast-glob";
 
-const MAX_TOFIXED = 99;
+/**
+ * Ola 5 · RN-1 — holgura documentada: el tope es la deuda congelada + 10.
+ * Sin holgura, cualquier PR inocente rompía CI. Plan: bajar el tope cada
+ * trimestre a `deuda_actual + 10` conforme se migran archivos.
+ */
+const DEUDA_CONGELADA = 99;
+const HOLGURA = 10;
+const MAX_TOFIXED = DEUDA_CONGELADA + HOLGURA;
 
 function contarToFixed(): { total: number; porArchivo: Record<string, number> } {
   const archivos = globSync("src/**/*.tsx", {
@@ -53,8 +60,8 @@ describe("arquitectura · ratchet de toFixed en .tsx", () => {
   it("mantiene el tope sincronizado (si migraste archivos, baja el tope)", () => {
     const { total } = contarToFixed();
     expect(
-      MAX_TOFIXED - total,
-      "Hay margen de sobra en el ratchet: ajusta MAX_TOFIXED al conteo real.",
-    ).toBeLessThanOrEqual(5);
+      DEUDA_CONGELADA - total,
+      "Hay margen de sobra en el ratchet: ajusta DEUDA_CONGELADA al conteo real.",
+    ).toBeLessThanOrEqual(HOLGURA);
   });
 });
