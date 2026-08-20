@@ -148,7 +148,7 @@ export default function OportunidadFormFields({
       )}
       <div className="space-y-1">
         <Label htmlFor="op-modo">Modo</Label>
-        <Input id="op-modo" value={form.modo} onChange={(e) => set("modo", e.target.value)} placeholder="Marítimo / Aéreo..." />
+        <Input id="op-modo" value={form.modo} onChange={(e) => set("modo", e.target.value)} placeholder="Marítimo / Aéreo…" />
       </div>
       <div className="space-y-1">
         <Label htmlFor="op-origen">Origen</Label>
