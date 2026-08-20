@@ -81,7 +81,7 @@ describe("conceptosFacturaCrud", () => {
 
   it("actualizarConceptoFactura patcha por id y recalcula", async () => {
     mock.setTableResult("conceptos_factura", { data: [], error: null });
-    mock.setTableResult("facturas", { data: null, error: null });
+    mock.setTableResult("facturas", { data: { subtotal: 0, iva: 0, ret_isr: 0, ret_iva: 0, total: 0 }, error: null });
     await actualizarConceptoFactura({
       conceptoId: "c1", facturaId: "f1",
       input: { descripcion: "Nuevo", cantidad: 1, precio_unitario: 10, clave_sat: "78101800" },
@@ -95,7 +95,7 @@ describe("conceptosFacturaCrud", () => {
     // v13.290.0 — el borrado ahora pasa por el RPC soft_delete_record; no hay
     // más DELETE físico contra `conceptos_factura`.
     mock.setTableResult("conceptos_factura", { data: [], error: null });
-    mock.setTableResult("facturas", { data: null, error: null });
+    mock.setTableResult("facturas", { data: { subtotal: 0, iva: 0, ret_isr: 0, ret_iva: 0, total: 0 }, error: null });
     mock.setRpcResult("soft_delete_record", { data: null, error: null });
     await eliminarConceptoFactura({ conceptoId: "c1", facturaId: "f1" });
     const rpc = mock.rpcCalls.find((c) => c.fn === "soft_delete_record");
@@ -104,11 +104,9 @@ describe("conceptosFacturaCrud", () => {
     expect(mock.rpcCalls.some((c) => c.fn === "recalc_factura_totales")).toBe(true);
   });
 
-  it("recalcularTotalesFactura sin factura => totales en 0", async () => {
+  it("Ola 3.7 — recalcularTotalesFactura sin factura lanza error (nunca ceros silenciosos)", async () => {
     mock.setTableResult("facturas", { data: null, error: null });
-    const totales = await recalcularTotalesFactura("f1");
-    expect(totales.subtotal).toBe(0);
-    expect(totales.total).toBe(0);
+    await expect(recalcularTotalesFactura("f1")).rejects.toThrow(/no se pudo leer la factura/i);
   });
 });
 
