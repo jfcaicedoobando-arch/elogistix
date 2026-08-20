@@ -53,11 +53,13 @@ function tcValido(raw: string | undefined): number {
   return Number.isFinite(n) && n > 0 ? n : 0;
 }
 
-/** Sin T/C mostramos el monto nativo; el banner de aviso fuerza la captura. */
+/** Sin T/C (o moneda sin T/C conocido) mostramos el monto nativo; el banner de aviso fuerza la captura. */
 function convertirAUsd(monto: number, moneda: string, tcUSD: number, tcEUR: number): number {
   if (moneda === "USD" || tcUSD <= 0) return monto;
-  return aUSD(monto, moneda, tcUSD, tcEUR);
+  // BL-15: `aUSD` devuelve null en monedas sin T/C; aquí se muestra el nativo.
+  return aUSD(monto, moneda, tcUSD, tcEUR) ?? monto;
 }
+
 
 export function StepCostosPrecios(props: Props) {
   const {
