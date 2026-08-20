@@ -67,7 +67,7 @@ export function resumirCartera(rows: CarteraPendienteRow[]): CarteraSummary {
     const moneda = (r as { moneda?: string }).moneda ?? "MXN";
     acumular(saldosNativos, moneda, s);
     totalSaldo += s;
-    if (r.dias_vencido > 0) {
+    if (esVencidoPorDias(r.dias_vencido)) {
       vencidasCount += 1;
       vencidoSaldo += s;
       acumular(vencidoNativo, moneda, s);
