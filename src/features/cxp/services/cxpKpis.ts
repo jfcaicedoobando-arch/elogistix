@@ -37,17 +37,18 @@ export function calcularKPIsCxP(filas: FacturaCxP[]): KPIsCxP {
     if (usd) k.por_pagar_usd += f.saldo; else k.por_pagar_mxn += f.saldo;
     // B-020 (v13.320.39): KPI Vencido considera días vencidos reales,
     // no el estatus derivado (una factura "Por aprobar" vencida sigue siendo deuda).
-    if ((f.dias_vencido ?? 0) > 0) {
+    if (esVencidoPorDias(f.dias_vencido)) {
       k.facturas_vencidas++;
       if (usd) k.vencido_usd += f.saldo; else k.vencido_mxn += f.saldo;
     }
-    // Ventana "Por vencer" ampliada a 5 días (política v13.304.1).
-    if (f.dias_vencido === 0 && f.fecha_vencimiento) {
-      const dv = diasVencido(f.fecha_vencimiento);
-      if (dv >= -5 && dv <= 0) {
+    // Ventana "Por vencer" = canon único `DIAS_POR_VENCER_CXC` (7 días). Antes
+    // CxP usaba 5 días mientras la tarjeta rotulaba "7 d" y CxC sí sumaba 7.
+    if ((f.dias_vencido ?? 0) === 0 && f.fecha_vencimiento) {
+      if (estaPorVencer(diasVencido(f.fecha_vencimiento))) {
         if (usd) k.por_vencer_7d_usd += f.saldo; else k.por_vencer_7d_mxn += f.saldo;
       }
     }
   }
+
   return k;
 }
