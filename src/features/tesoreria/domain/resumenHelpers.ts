@@ -3,6 +3,9 @@
  * respetar el límite de 200 líneas · Power of 10).
  */
 import type { CobranzaRow, CxpRow, FlujoMes, TopItem } from "./resumen.types";
+import { esCxcVencida } from "@/lib/domain/vencimiento";
+import { aMxn } from "@/lib/financial/convertir";
+
 
 export function calcularFlujo(
   cobranza: CobranzaRow[],
