@@ -176,21 +176,23 @@ async function manejarExchangeRates(req: Request): Promise<Response> {
   if (preflight) return preflight;
 
   const log = createLogger(req, "exchange-rates");
-  const { fecha, esHoy, key, fechaIso } = await resolverFecha(req);
+  const { fecha, esHoy, key, fechaIso, fechaSolicitada } = await resolverFecha(req);
+  const sellar = (r: Rates) => conFechaSolicitada(r, fechaSolicitada);
 
 
   // Caché: "hoy" con TTL corto; históricas con TTL largo (son inmutables).
   if (esHoy && cacheHoyRef && cacheHoyRef.expiresAt > Date.now()) {
     log.finish(200, "rates_cache_hit_hoy", { payload: cacheHoyRef.rates });
-    return jsonResponse(cacheHoyRef.rates);
+    return jsonResponse(sellar(cacheHoyRef.rates));
   }
   if (!esHoy) {
     const hit = cacheHistorico.get(key);
     if (hit && hit.expiresAt > Date.now()) {
       log.finish(200, "rates_cache_hit_historico", { payload: hit.rates });
-      return jsonResponse(hit.rates);
+      return jsonResponse(sellar(hit.rates));
     }
   }
+
 
   const guardarCache = (rates: Rates) => {
     if (esHoy) {
