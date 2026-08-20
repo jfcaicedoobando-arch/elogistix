@@ -48,7 +48,7 @@ $fixture$;
 DO $caso1$
 BEGIN
   INSERT INTO public.factura_notas_credito
-    (id, organization_id, factura_id, monto, moneda, tipo_cambio,
+    (id, organization_id, factura_id, folio, monto, moneda, tipo_cambio,
      fecha_emision, estado, uuid_fiscal)
   VALUES
     ('44444444-4444-4444-4444-444444444441', '11111111-1111-1111-1111-111111111111',
@@ -63,7 +63,7 @@ DO $caso2$
 BEGIN
   BEGIN
     INSERT INTO public.factura_notas_credito
-      (id, organization_id, factura_id, monto, moneda, tipo_cambio,
+      (id, organization_id, factura_id, folio, monto, moneda, tipo_cambio,
        fecha_emision, estado, uuid_fiscal)
     VALUES
       ('44444444-4444-4444-4444-444444444442', '11111111-1111-1111-1111-111111111111',
