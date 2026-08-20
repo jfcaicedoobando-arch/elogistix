@@ -1,8 +1,8 @@
 import { Seo } from "@/components/shared/Seo";
 import { Link } from "react-router-dom";
-import { ArrowLeft, ShieldCheck, Lock, Users, Activity, DatabaseBackup, Mail } from "lucide-react";
-import { BrandLockup } from "@/components/layout/BrandLockup";
+import { ShieldCheck, Lock, Users, Activity, DatabaseBackup, Mail } from "lucide-react";
 import { ROUTES } from "@/constants/routes";
+import { LegalShell } from "@/features/legal/components/LegalShell";
 
 /**
  * Página de confianza, seguridad y privacidad mantenida por Libre Carga.
@@ -14,22 +14,10 @@ export default function Seguridad() {
   const desc = "Cómo Libre Carga protege la información de las agencias de carga mexicanas: controles de acceso, cifrado en tránsito, aislamiento por organización y respaldos.";
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <>
       <Seo title={title} description={desc} canonical={url} ogTitle={title} ogDescription={desc} ogUrl={url} />
 
-      <header className="border-b border-border bg-background/80 backdrop-blur">
-        <div className="mx-auto flex h-16 max-w-3xl items-center justify-between px-4 sm:px-6">
-          <Link to={ROUTES.LANDING} aria-label="Libre Carga"><BrandLockup variant="horizontal" size="sm" /></Link>
-          <Link to={ROUTES.LANDING} className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
-            <ArrowLeft className="h-4 w-4" /> Volver
-          </Link>
-        </div>
-      </header>
-
-      <main className="mx-auto max-w-3xl px-4 py-12 sm:px-6">
-        <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-accent">Centro de confianza</p>
-        <h1 className="text-4xl font-bold tracking-tight">Seguridad y privacidad</h1>
-        <p className="mt-2 text-sm text-muted-foreground">Última actualización: 18 de junio de 2026</p>
+      <LegalShell eyebrow="Centro de confianza" title="Seguridad y privacidad" updatedAt="18 de junio de 2026" backTo={ROUTES.LANDING}>
         <p className="mt-3 rounded-md border border-border bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
           Esta página es contenido editable mantenido por Libre Carga para responder dudas frecuentes
           sobre seguridad y privacidad de la plataforma. No constituye una certificación independiente
@@ -121,8 +109,8 @@ export default function Seguridad() {
             <Mail className="h-4 w-4" /> Contactar al equipo
           </a>
         </div>
-      </main>
-    </div>
+      </LegalShell>
+    </>
   );
 }
 
