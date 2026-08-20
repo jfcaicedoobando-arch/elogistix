@@ -7,6 +7,7 @@
  */
 import { Layers } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Hint } from "@/components/shared/Hint";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
@@ -46,9 +47,11 @@ export function DialogPagoLoteProveedor(p: Props) {
       <Button variant="outline" onClick={() => p.onOpenChange(false)} disabled={s.guardando}>
         Cancelar
       </Button>
-      <Button onClick={s.submit} disabled={!!s.error} title={s.error ?? undefined} loading={s.guardando}>
-        {s.guardando ? "Guardando…" : "Registrar pago en lote"}
-      </Button>
+      <Hint label={s.error ?? undefined}>
+        <Button onClick={s.submit} disabled={!!s.error} loading={s.guardando}>
+          {s.guardando ? "Guardando…" : "Registrar pago en lote"}
+        </Button>
+      </Hint>
     </>
   );
 

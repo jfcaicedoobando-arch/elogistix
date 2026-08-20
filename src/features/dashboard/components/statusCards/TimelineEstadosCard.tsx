@@ -38,7 +38,6 @@ export function TimelineEstadosCard({ conteoPorEstado, isLoading }: Props) {
                     type="button"
                     onClick={() => navigate(`/embarques?estado=${encodeURIComponent(estado)}`)}
                     aria-label={`Ver embarques en estado ${estado} (${count})`}
-                    title={`Ver embarques en estado ${estado} (${count})`}
                     className="
                       relative flex items-center justify-center w-10 h-10 sm:w-11 sm:h-11 rounded-full
                       border border-border bg-card text-muted-foreground

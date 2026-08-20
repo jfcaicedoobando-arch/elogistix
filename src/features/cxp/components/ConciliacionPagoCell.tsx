@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { formatCurrency, formatFechaDia } from "@/lib/formatters";
 import { useConciliacionPagoCellController } from "@/features/cxp/hooks/useConciliacionPagoCellController";
+import { Hint } from "@/components/shared/Hint";
 
 interface MovimientoVinculado {
   id: string;
@@ -51,18 +52,19 @@ export function ConciliacionPagoCell({
           {movimiento.referencia && <span className="truncate">Ref: {movimiento.referencia}</span>}
         </div>
         {!disabled && (
-          <Button
-            variant="ghost" size="icon"
-            className="h-6 w-6 text-muted-foreground hover:text-destructive"
-            onClick={() => desvincular.mutate(movimiento.id)}
-            disabled={desvincular.isPending}
-            title="Desvincular movimiento"
-            aria-label="Desvincular movimiento"
-          >
-            {desvincular.isPending
-              ? <Loader2 className="h-4 w-4 animate-spin" />
-              : <Link2Off className="h-3 w-3" />}
-          </Button>
+          <Hint label="Desvincular movimiento">
+            <Button
+              variant="ghost" size="icon"
+              className="h-6 w-6 text-muted-foreground hover:text-destructive"
+              onClick={() => desvincular.mutate(movimiento.id)}
+              disabled={desvincular.isPending}
+              aria-label="Desvincular movimiento"
+            >
+              {desvincular.isPending
+                ? <Loader2 className="h-4 w-4 animate-spin" />
+                : <Link2Off className="h-3 w-3" />}
+            </Button>
+          </Hint>
         )}
       </div>
     );

@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import type { ProveedorListItem } from "@/features/proveedor/hooks";
 import { toTitleCase } from "@/lib/formatters";
 import { decodeHtmlEntities } from "@/lib/formatters/decodeHtmlEntities";
+import { Hint } from "@/components/shared/Hint";
 
 function OrigenBadge({ origen }: { origen: ProveedorListItem["origen_proveedor"] }) {
   if (!origen) return <span className="text-muted-foreground text-body-sm">—</span>;
@@ -30,15 +31,17 @@ export const proveedorColumns: ColumnDef<ProveedorListItem, unknown>[] = defineC
     cell: ({ row }) => {
       const nombre = toTitleCase(row.original.nombre ?? "");
       return (
-        <span className="block whitespace-normal break-words leading-snug truncate" title={nombre}>
-          {nombre}
-        </span>
+        <Hint label={nombre}>
+          <span className="block whitespace-normal break-words leading-snug truncate">
+            {nombre}
+          </span>
+        </Hint>
       );
     },
   },
   { id: "tipo", header: "Tipo", meta: { width: COL_W.estado }, cell: ({ row }) => <span className="text-body">{row.original.tipo ?? "—"}</span> },
   { id: "origen", header: "Origen", meta: { width: COL_W.short, className: "hidden xl:table-cell", headerClassName: "hidden xl:table-cell" }, cell: ({ row }) => <OrigenBadge origen={row.original.origen_proveedor} /> },
   { id: "rfc", header: "RFC / Tax ID", accessorFn: (p) => decodeHtmlEntities(p.rfc), enableSorting: true, sortingFn: sortByString<ProveedorListItem>((p) => decodeHtmlEntities(p.rfc)), meta: { width: COL_W.folio, className: "text-body-sm font-mono hidden md:table-cell", headerClassName: "hidden md:table-cell" }, cell: ({ row }) => decodeHtmlEntities(row.original.rfc) },
-  { id: "contacto", header: "Contacto", meta: { width: COL_W.nombre, className: "text-body-sm hidden xl:table-cell", headerClassName: "hidden xl:table-cell" }, cell: ({ row }) => row.original.contacto ? <span title={row.original.contacto}>{toTitleCase(row.original.contacto)}</span> : null },
+  { id: "contacto", header: "Contacto", meta: { width: COL_W.nombre, className: "text-body-sm hidden xl:table-cell", headerClassName: "hidden xl:table-cell" }, cell: ({ row }) => row.original.contacto ? <Hint label={row.original.contacto}><span>{toTitleCase(row.original.contacto)}</span></Hint> : null },
   { id: "moneda", header: "Moneda", meta: { width: COL_W.tiny, className: "text-body-sm hidden xl:table-cell", headerClassName: "hidden xl:table-cell" }, cell: ({ row }) => row.original.moneda_preferida },
 ]);

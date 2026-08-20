@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
+import { Hint } from "@/components/shared/Hint";
 import { useMarcarRevisadosBulk } from "@/features/auditoria/hooks/useMarcarRevisadosBulk";
 import type { HallazgoAuditoria } from "@/features/auditoria/types";
 
@@ -84,7 +85,7 @@ export function MarcarRevisadosBulkDialog({ open, hallazgos, onOpenChange, onSuc
             <div key={`${h.embarque_id}-${h.regla}-${h.detalle}`} className="flex items-start gap-2 px-3 py-2 text-body-sm">
               <Badge variant="outline" className="shrink-0 tabular-nums font-medium">{h.expediente}</Badge>
               <span className="text-muted-foreground shrink-0">{h.regla}</span>
-              <span className="truncate" title={h.detalle}>{h.detalle}</span>
+              <Hint label={h.detalle}><span className="truncate">{h.detalle}</span></Hint>
             </div>
           ))}
         </div>

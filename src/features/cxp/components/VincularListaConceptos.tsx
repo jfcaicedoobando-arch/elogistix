@@ -3,6 +3,7 @@
  * usado por `VincularEmbarqueSection`.
  */
 import { Checkbox } from "@/components/ui/checkbox";
+import { Hint } from "@/components/shared/Hint";
 import { MoneyInput } from "@/components/shared/MoneyInput";
 import { formatCurrency } from "@/lib/formatters";
 import { lineaExcedeOriginal } from "@/features/cxp/utils/topeVinculacion";
@@ -46,7 +47,7 @@ export function VincularListaConceptos({ grupos, seleccion, onToggle, onChangeMo
                     aria-label={`Vincular ${it.concepto}`}
                   />
                   <div className="flex-1 min-w-0">
-                    <div className="truncate" title={it.concepto}>{it.concepto}</div>
+                    <Hint label={it.concepto}><div className="truncate">{it.concepto}</div></Hint>
                     <div className="text-body-sm text-muted-foreground">
                       Cotizado: {formatCurrency(it.monto, it.moneda)}
                       {excede && (

@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import { KpiCard } from "@/components/shared/KpiCard";
 import type { KpiVariant } from "@/components/shared/kpiCard.tokens";
 import type { LucideIcon } from "lucide-react";
+import { Hint } from "@/components/shared/Hint";
 
 export interface CierreLinea {
   label: string;
@@ -44,16 +45,17 @@ export function CierreCard({ tone, icon, titulo, embarques, lineas, footer }: Pr
         {lineas.map((l) => (
           <div key={l.label} className="flex items-baseline justify-between gap-3">
             <span className="text-body-sm text-muted-foreground whitespace-nowrap">{l.label}</span>
-            <span
-              className={cn(
-                "tabular-nums whitespace-nowrap",
-                l.emphasis ? "text-lg font-semibold" : "text-body font-medium",
-                l.className,
-              )}
-              title={l.value}
-            >
-              {l.value}
-            </span>
+            <Hint label={l.value}>
+              <span
+                className={cn(
+                  "tabular-nums whitespace-nowrap",
+                  l.emphasis ? "text-lg font-semibold" : "text-body font-medium",
+                  l.className,
+                )}
+              >
+                {l.value}
+              </span>
+            </Hint>
           </div>
         ))}
       </div>

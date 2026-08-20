@@ -100,7 +100,7 @@ export function buildConciliacionColumns() {
         const meta = CONCILIACION_ESTADO_LABELS[row.original.estado_conciliacion];
         const Icon = meta.icon;
         return (
-          <Badge variant={meta.variant} className="gap-1 text-xs whitespace-nowrap" title={meta.label}>
+          <Badge variant={meta.variant} className="gap-1 text-xs whitespace-nowrap">
             <Icon className="h-3 w-3 shrink-0" /> {meta.label}
           </Badge>
         );

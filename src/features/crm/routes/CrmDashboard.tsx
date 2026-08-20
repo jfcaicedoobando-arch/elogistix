@@ -17,6 +17,7 @@ import { useCrmInicioVM, useForecast, useReportesCRM } from "@/features/crm/hook
 import LeaderboardVendedores from "@/features/crm/components/LeaderboardVendedores";
 import { useDocumentTitle } from "@/hooks/shared";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
+import { Hint } from "@/components/shared/Hint";
 
 import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/components/ui/table";
 import { DetailTableHead } from "@/components/shared/DetailTable";
@@ -37,9 +38,11 @@ function StatStripItem({
       <Icon className="h-4 w-4 text-muted-foreground shrink-0" />
       <div className="min-w-0">
         <div className="text-label text-muted-foreground truncate">{label}</div>
-        <div className="text-base font-semibold tabular-nums truncate" title={valueTooltip}>
-          {value}
-        </div>
+        <Hint label={valueTooltip}>
+          <div className="text-base font-semibold tabular-nums truncate">
+            {value}
+          </div>
+        </Hint>
       </div>
     </Card>
   );

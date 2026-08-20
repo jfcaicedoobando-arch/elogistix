@@ -1,4 +1,5 @@
 import { Badge } from "@/components/ui/badge";
+import { Hint } from "@/components/shared/Hint";
 import {
   Tooltip, TooltipContent, TooltipTrigger, TooltipProvider,
 } from "@/components/ui/tooltip";
@@ -24,15 +25,21 @@ export function ContenedorCell({ embarque: e, info, legacyCount }: ContenedorCel
   const mostrarLcl = esLcl && !primero;
   return (
     <span className="inline-flex items-center gap-1.5 flex-wrap">
-      <span className="truncate max-w-[80px]" title={primero || (mostrarLcl ? "LCL · sin contenedor asignado" : "")}>
-        {/* VB-30: placeholder vacío unificado (em dash) para LCL y resto. */}
-        {primero || PLACEHOLDER_VACIO}
-      </span>
+      <Hint label={primero || (mostrarLcl ? "LCL · sin contenedor asignado" : "")}>
+        <span className="truncate max-w-[80px]">
+          {/* VB-30: placeholder vacío unificado (em dash) para LCL y resto. */}
+          {primero || PLACEHOLDER_VACIO}
+        </span>
+      </Hint>
       {mostrarLcl && (
-        <Badge variant="secondary" className="text-2xs px-1.5 py-0 h-4" title="LCL · sin contenedor asignado">LCL</Badge>
+        <Hint label="LCL · sin contenedor asignado">
+          <Badge variant="secondary" className="text-2xs px-1.5 py-0 h-4">LCL</Badge>
+        </Hint>
       )}
       {count > 1 && (
-        <Badge variant="secondary" className="text-2xs px-1.5 py-0 h-4" title={`${count} contenedores agrupados`}>+{count - 1}</Badge>
+        <Hint label={`${count} contenedores agrupados`}>
+          <Badge variant="secondary" className="text-2xs px-1.5 py-0 h-4">+{count - 1}</Badge>
+        </Hint>
       )}
       {pendientes && (
         <TooltipProvider delayDuration={200}>

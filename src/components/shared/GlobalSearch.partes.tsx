@@ -5,6 +5,7 @@
 import { SearchX, History, Loader2 } from "lucide-react";
 import { CommandFooter, CommandGroup, CommandItem, CommandKey } from "@/components/ui/command";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Hint } from "@/components/shared/Hint";
 
 import type { GlobalSearchResult } from "@/hooks/shared";
 import { ICONO_FILA, typeIcons, typeLabels } from "./globalSearchMeta";
@@ -131,9 +132,11 @@ export function GlobalSearchGrupo({ type, items, onSelect, termino = "" }: Grupo
               <TextoResaltado texto={item.label} termino={termino} />
             </p>
             {item.sublabel && (
-              <p className="truncate text-xs text-muted-foreground" title={item.sublabel}>
-                <TextoResaltado texto={item.sublabel} termino={termino} />
-              </p>
+              <Hint label={item.sublabel}>
+                <p className="truncate text-xs text-muted-foreground">
+                  <TextoResaltado texto={item.sublabel} termino={termino} />
+                </p>
+              </Hint>
             )}
           </div>
 

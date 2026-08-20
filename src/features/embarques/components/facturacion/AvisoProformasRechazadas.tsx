@@ -8,6 +8,7 @@ import { Link } from "react-router-dom";
 import { AlertTriangle, ExternalLink } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { Hint } from "@/components/shared/Hint";
 import { formatDate } from "@/lib/formatters";
 import type { ProformaConFactura } from "@/features/proformas/services";
 
@@ -47,12 +48,11 @@ export function AvisoProformasRechazadas({ proformas }: Props) {
                 </span>
               )}
               {p.motivo_rechazo && (
-                <span
-                  className="text-body-sm italic text-muted-foreground truncate max-w-md"
-                  title={p.motivo_rechazo}
-                >
-                  «{p.motivo_rechazo}»
-                </span>
+                <Hint label={p.motivo_rechazo}>
+                  <span className="text-body-sm italic text-muted-foreground truncate max-w-md">
+                    «{p.motivo_rechazo}»
+                  </span>
+                </Hint>
               )}
               <Button
                 asChild

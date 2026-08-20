@@ -7,6 +7,7 @@ import type { ReactNode } from "react";
 import { Badge } from "@/components/ui/badge";
 import { formatDate } from "@/lib/formatters";
 import { StatusBadge } from "@/components/shared/StatusBadge";
+import { Hint } from "@/components/shared/Hint";
 import type { CotizacionListItem } from "@/features/cotizacion/hooks";
 import { todayLocalISO } from "@/lib/date/today";
 import { diffDiasCalendario } from "@/lib/date/dateOnly";
@@ -70,25 +71,28 @@ export function renderEstadoVigencia(r: CotizacionListItem): ReactNode {
       <div className="flex items-center gap-1.5 flex-wrap">
         <StatusBadge domain="cotizacion" status={estado} />
         {esSolicitudPortal && (
-          <Badge variant="info" className="w-fit text-label whitespace-nowrap"
-            title="Solicitud capturada por el cliente desde su portal">
-            Portal
-          </Badge>
+          <Hint label="Solicitud capturada por el cliente desde su portal">
+            <Badge variant="info" className="w-fit text-label whitespace-nowrap">
+              Portal
+            </Badge>
+          </Hint>
         )}
         {sinCostos && (
           <Badge variant="warning" className="w-fit text-label whitespace-nowrap">Sin costos</Badge>
         )}
         {requiereReaprobacion && (
-          <Badge variant="warning" className="w-fit text-label whitespace-nowrap inline-flex items-center gap-1"
-            title="Tarifa cambió: requiere re-aprobación de ventas">
-            <AlertTriangle className="h-3 w-3" aria-hidden /> Re-aprobación pendiente
-          </Badge>
+          <Hint label="Tarifa cambió: requiere re-aprobación de ventas">
+            <Badge variant="warning" className="w-fit text-label whitespace-nowrap inline-flex items-center gap-1">
+              <AlertTriangle className="h-3 w-3" aria-hidden /> Re-aprobación pendiente
+            </Badge>
+          </Hint>
         )}
         {tarifaVencida && (
-          <Badge variant="destructive" className="w-fit text-label whitespace-nowrap inline-flex items-center gap-1"
-            title={`La tarifa vinculada venció el ${formatDate(vigHasta!)}`}>
-            <AlertTriangle className="h-3 w-3" aria-hidden /> Tarifa vencida
-          </Badge>
+          <Hint label={`La tarifa vinculada venció el ${formatDate(vigHasta!)}`}>
+            <Badge variant="destructive" className="w-fit text-label whitespace-nowrap inline-flex items-center gap-1">
+              <AlertTriangle className="h-3 w-3" aria-hidden /> Tarifa vencida
+            </Badge>
+          </Hint>
         )}
       </div>
       {vigenciaNode && <span className="text-label whitespace-nowrap tabular-nums">{vigenciaNode}</span>}

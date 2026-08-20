@@ -19,6 +19,7 @@ import {
   LABEL_ESTADO_UNIFICADO,
 } from "@/lib/domain/estadoUnificado";
 import { COL_W } from "@/components/shared/dataTable/columnWidths";
+import { Hint } from "@/components/shared/Hint";
 
 
 
@@ -51,12 +52,13 @@ export function buildProformasColumns({
         }
         return (
           <div onClick={(e) => e.stopPropagation()} className="flex justify-center">
-            <Checkbox
-              checked={selection.selectedIds.has(p.id)}
-              onCheckedChange={() => selection.toggle(p.id)}
-              aria-label={`Seleccionar proforma ${p.numero}`}
-              title="Seleccionar para fusionar en una factura"
-            />
+            <Hint label="Seleccionar para fusionar en una factura">
+              <Checkbox
+                checked={selection.selectedIds.has(p.id)}
+                onCheckedChange={() => selection.toggle(p.id)}
+                aria-label={`Seleccionar proforma ${p.numero}`}
+              />
+            </Hint>
           </div>
         );
       },
@@ -90,7 +92,7 @@ export function buildProformasColumns({
       enableSorting: true,
       sortingFn: sortByString<ProformaConFactura>((p) => p.cliente_nombre),
       meta: { width: COL_W.ruta, className: "max-w-[220px] truncate" },
-      cell: ({ row }) => <span title={toTitleCase(row.original.cliente_nombre)}>{toTitleCase(row.original.cliente_nombre)}</span>,
+      cell: ({ row }) => <Hint label={toTitleCase(row.original.cliente_nombre)}><span>{toTitleCase(row.original.cliente_nombre)}</span></Hint>,
     },
     {
       id: "operador",

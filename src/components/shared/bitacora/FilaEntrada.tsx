@@ -7,6 +7,7 @@ import { getEstadoVisual } from "@/lib/ui/estadoConfig";
 import { humanizarEnum } from "@/lib/ui/enumLabels";
 import { ICONOS_ACCION, COLORES_ACCION, RUTAS_MODULO } from "./constants";
 import { formatRelativo } from "@/lib/date/relativo";
+import { Hint } from "@/components/shared/Hint";
 
 function EstadoBadge({ estado, atenuado = false }: { estado: string; atenuado?: boolean }) {
   const visual = getEstadoVisual(estado);
@@ -46,16 +47,17 @@ export function FilaEntrada({
       <div className="space-y-1">
         <div className="flex items-baseline gap-2 flex-wrap">
           {mostrarUsuario && (
-            <span className="text-xs font-medium text-foreground" title={entrada.usuario_email}>
-              {nombreDesdeEmail(entrada.usuario_email)}
-            </span>
+            <Hint label={entrada.usuario_email}>
+              <span className="text-xs font-medium text-foreground">
+                {nombreDesdeEmail(entrada.usuario_email)}
+              </span>
+            </Hint>
           )}
-          <span
-            className="text-xs text-muted-foreground"
-            title={formatDate(entrada.created_at, "dd/MM/yyyy HH:mm")}
-          >
-            {formatRelativo(entrada.created_at)}
-          </span>
+          <Hint label={formatDate(entrada.created_at, "dd/MM/yyyy HH:mm")}>
+            <span className="text-xs text-muted-foreground">
+              {formatRelativo(entrada.created_at)}
+            </span>
+          </Hint>
         </div>
 
         {esCambioEstado ? (

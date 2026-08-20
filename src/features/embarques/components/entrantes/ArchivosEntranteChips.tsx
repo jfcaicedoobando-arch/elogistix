@@ -7,6 +7,7 @@
 import { Check, FileCode2, FileText, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { Hint } from "@/components/shared/Hint";
 
 interface ChipProps {
   titulo: string;
@@ -30,9 +31,11 @@ function ArchivoChip({ titulo, ayuda, archivo, icono: Icono, onQuitar }: ChipPro
         <Icono className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
       )}
       <span className="font-medium">{titulo}</span>
-      <span className="min-w-0 truncate text-muted-foreground" title={archivo?.name ?? ayuda}>
-        {archivo ? archivo.name : ayuda}
-      </span>
+      <Hint label={archivo?.name ?? ayuda}>
+        <span className="min-w-0 truncate text-muted-foreground">
+          {archivo ? archivo.name : ayuda}
+        </span>
+      </Hint>
       {archivo && (
         <Button
           type="button"

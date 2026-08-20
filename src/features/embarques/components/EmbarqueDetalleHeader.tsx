@@ -13,6 +13,7 @@ import { useCotizacionFolio } from "@/features/cotizacion/hooks";
 import { useEmbarqueEstadoActions } from "@/features/embarques/hooks/useEmbarqueEstadoActions";
 import type { EmbarqueRow } from "@/features/embarques/hooks";
 import { EstadoDivergenteHint } from "./header/EstadoDivergenteHint";
+import { Hint } from "@/components/shared/Hint";
 
 /**
  * v13.309.50 · PR-S2-B: el header ahora consume internamente
@@ -98,9 +99,11 @@ export function EmbarqueDetalleHeader({
                 <span className="text-body-sm">Cotización origen no disponible</span>
               )
             ) : (
-              <span className="text-body-sm text-warning" title="Embarque legacy sin cotización vinculada (creado antes de la política tarifa-first)">
-                Sin cotización vinculada
-              </span>
+              <Hint label="Embarque legacy sin cotización vinculada (creado antes de la política tarifa-first)">
+                <span className="text-body-sm text-warning">
+                  Sin cotización vinculada
+                </span>
+              </Hint>
             )}
           </>
         }

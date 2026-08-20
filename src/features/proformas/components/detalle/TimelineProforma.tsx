@@ -6,6 +6,7 @@
  */
 import { Check, Send, FileCheck2, X, FileSpreadsheet } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Hint } from "@/components/shared/Hint";
 import { formatDate, nombreDesdeEmail } from "@/lib/formatters";
 import { resumirEnvios } from "@/features/proformas/domain/proformaDetalleHelpers";
 import type { ProformaTimelineFields } from "@/features/proformas/domain/proformaClienteEstado";
@@ -99,9 +100,11 @@ export function TimelineProforma({ fechaEmision, operador, timeline, envios, bar
                     {done && h.fecha ? formatDate(h.fecha) : "Pendiente"}
                   </p>
                   {done && h.actor && (
-                    <p className="text-body-sm text-muted-foreground truncate" title={h.actor}>
-                      {nombreDesdeEmail(h.actor)}
-                    </p>
+                    <Hint label={h.actor}>
+                      <p className="text-body-sm text-muted-foreground truncate">
+                        {nombreDesdeEmail(h.actor)}
+                      </p>
+                    </Hint>
                   )}
                   {done && h.nota && (
                     <p className="text-body-sm text-muted-foreground truncate">{h.nota}</p>

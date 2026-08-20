@@ -13,6 +13,7 @@ import type { ClientUserEnriched } from "@/features/cliente/services/usuarios";
 import PortalInviteDialog from "./PortalInviteDialog";
 import { useState } from "react";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
+import { Hint } from "@/components/shared/Hint";
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 import { diffDiasCalendario } from "@/lib/date/dateOnly";
 
@@ -108,25 +109,29 @@ export default function TabPortalCliente({ clienteId, organizationId, canEdit }:
         return (
           <div className="flex items-center gap-1">
             {pendiente && (
+              <Hint label="Reenviar invitación">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  aria-label="Reenviar invitación"
+                  onClick={(e) => { e.stopPropagation(); handleResend(u); }}
+                  disabled={resendMutation.isPending}
+                >
+                  <Mail className="h-4 w-4" />
+                </Button>
+              </Hint>
+            )}
+            <Hint label="Revocar acceso">
               <Button
                 variant="ghost"
                 size="sm"
-                title="Reenviar invitación"
-                onClick={(e) => { e.stopPropagation(); handleResend(u); }}
-                disabled={resendMutation.isPending}
+                aria-label="Revocar acceso"
+                onClick={(e) => { e.stopPropagation(); handleRevoke(u.id); }}
+                disabled={revokeMutation.isPending}
               >
-                <Mail className="h-4 w-4" />
+                <Trash2 className="h-4 w-4 text-destructive" />
               </Button>
-            )}
-            <Button
-              variant="ghost"
-              size="sm"
-              title="Revocar acceso"
-              onClick={(e) => { e.stopPropagation(); handleRevoke(u.id); }}
-              disabled={revokeMutation.isPending}
-            >
-              <Trash2 className="h-4 w-4 text-destructive" />
-            </Button>
+            </Hint>
           </div>
         );
       },

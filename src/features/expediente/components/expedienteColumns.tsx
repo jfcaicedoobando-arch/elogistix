@@ -6,6 +6,7 @@ import { Download, Trash2 } from "lucide-react";
 import type { ColumnDef } from "@/components/shared/DataTable";
 import { COL_W } from "@/components/shared/dataTable/columnWidths";
 import { Badge } from "@/components/ui/badge";
+import { Hint } from "@/components/shared/Hint";
 import { Button } from "@/components/ui/button";
 import { formatDate } from "@/lib/formatters";
 import {
@@ -43,9 +44,11 @@ export function expedienteColumns<T extends DocumentoExpediente>(
       header: "Archivo",
       accessorFn: (d) => d.nombre,
       cell: ({ row }) => (
-        <span className="block max-w-[22rem] truncate" title={row.original.nombre}>
-          {row.original.nombre}
-        </span>
+        <Hint label={row.original.nombre}>
+          <span className="block max-w-[22rem] truncate">
+            {row.original.nombre}
+          </span>
+        </Hint>
       ),
     },
     {

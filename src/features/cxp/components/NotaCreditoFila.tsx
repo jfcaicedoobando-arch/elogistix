@@ -10,6 +10,7 @@ import { ToneBadge } from "@/components/shared/ToneBadge";
 import type { ChipTone } from "@/lib/ui/badgeTone";
 import { formatCurrency, formatFechaDia } from "@/lib/formatters";
 import { NcSatBadge } from "./NcSatBadge";
+import { Hint } from "@/components/shared/Hint";
 import type { NotaCreditoProveedor as NotaCredito } from "@/features/cxp/types";
 
 import { TableCell, TableRow } from "@/components/ui/table";
@@ -68,70 +69,75 @@ export function NotaCreditoFila({
       </TableCell>
       <TableCell className="text-center">
         {n.archivo_xml_url ? (
-          <Button
-            size="sm" variant="ghost"
-            className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground"
-            onClick={() => onAbrirArchivo(n.archivo_xml_url)}
-            title="Descargar XML"
-            aria-label={`Descargar XML de la nota ${folio}`}
-          >
-            <FileDigit className="h-3.5 w-3.5" />
-          </Button>
+          <Hint label="Descargar XML">
+            <Button
+              size="sm" variant="ghost"
+              className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground"
+              onClick={() => onAbrirArchivo(n.archivo_xml_url)}
+              aria-label={`Descargar XML de la nota ${folio}`}
+            >
+              <FileDigit className="h-3.5 w-3.5" />
+            </Button>
+          </Hint>
         ) : (
           <span className="text-muted-foreground/40">—</span>
         )}
       </TableCell>
       <TableCell className="text-center">
         {n.archivo_pdf_url ? (
-          <Button
-            size="sm" variant="ghost"
-            className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground"
-            onClick={() => onAbrirArchivo(n.archivo_pdf_url)}
-            title="Descargar PDF"
-            aria-label={`Descargar PDF de la nota ${folio}`}
-          >
-            <FileText className="h-3.5 w-3.5" />
-          </Button>
+          <Hint label="Descargar PDF">
+            <Button
+              size="sm" variant="ghost"
+              className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground"
+              onClick={() => onAbrirArchivo(n.archivo_pdf_url)}
+              aria-label={`Descargar PDF de la nota ${folio}`}
+            >
+              <FileText className="h-3.5 w-3.5" />
+            </Button>
+          </Hint>
         ) : (
           <span className="text-muted-foreground/40">—</span>
         )}
       </TableCell>
       <TableCell className="text-right space-x-1">
         {canEdit && n.estado === "Borrador" && (
-          <Button
-            size="sm" variant="ghost"
-            className="h-7 text-info hover:bg-info/10"
-            onClick={() => onAprobar(n.id)}
-            disabled={pendingAprobar}
-            title="Aprobar"
-            aria-label={`Aprobar nota de crédito ${folio}`}
-          >
-            <ShieldCheck className="h-3.5 w-3.5" />
-          </Button>
+          <Hint label="Aprobar">
+            <Button
+              size="sm" variant="ghost"
+              className="h-7 text-info hover:bg-info/10"
+              onClick={() => onAprobar(n.id)}
+              disabled={pendingAprobar}
+              aria-label={`Aprobar nota de crédito ${folio}`}
+            >
+              <ShieldCheck className="h-3.5 w-3.5" />
+            </Button>
+          </Hint>
         )}
         {canEdit && n.estado === "Aprobada" && (
-          <Button
-            size="sm" variant="ghost"
-            className="h-7 text-success hover:bg-success/10"
-            onClick={() => onAplicar(n.id)}
-            disabled={pendingAplicar}
-            title="Aplicar al saldo"
-            aria-label={`Aplicar al saldo la nota de crédito ${folio}`}
-          >
-            <Check className="h-3.5 w-3.5" />
-          </Button>
+          <Hint label="Aplicar al saldo">
+            <Button
+              size="sm" variant="ghost"
+              className="h-7 text-success hover:bg-success/10"
+              onClick={() => onAplicar(n.id)}
+              disabled={pendingAplicar}
+              aria-label={`Aplicar al saldo la nota de crédito ${folio}`}
+            >
+              <Check className="h-3.5 w-3.5" />
+            </Button>
+          </Hint>
         )}
         {canEdit && n.estado !== "Cancelada" && (
-          <Button
-            size="sm" variant="ghost"
-            className="h-7 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-            onClick={() => onCancelar({ id: n.id, folio })}
-            disabled={pendingCancelar}
-            title="Cancelar"
-            aria-label={`Cancelar nota de crédito ${folio}`}
-          >
-            <X className="h-3.5 w-3.5" />
-          </Button>
+          <Hint label="Cancelar">
+            <Button
+              size="sm" variant="ghost"
+              className="h-7 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+              onClick={() => onCancelar({ id: n.id, folio })}
+              disabled={pendingCancelar}
+              aria-label={`Cancelar nota de crédito ${folio}`}
+            >
+              <X className="h-3.5 w-3.5" />
+            </Button>
+          </Hint>
         )}
       </TableCell>
     </TableRow>

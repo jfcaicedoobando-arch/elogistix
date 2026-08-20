@@ -10,6 +10,7 @@ import type { LucideIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { SectionHeading } from "@/components/shared/SectionHeading";
 import { cn } from "@/lib/utils";
+import { Hint } from "@/components/shared/Hint";
 
 export type CargaMode = "manual" | "cfdi" | "pdf_ia";
 
@@ -65,43 +66,42 @@ export function OrigenDocumentoPicker({ mode, onModeChange }: Props) {
           const activo = mode === o.value;
           const Icono = o.icon;
           return (
-            <button
-              key={o.value}
-              type="button"
-              role="radio"
-              aria-checked={activo}
-              onClick={() => onModeChange(o.value)}
-              className={cn(
-                "group relative rounded-lg border p-3 text-left transition-colors",
-                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                activo
-                  ? "border-primary bg-primary/5 ring-1 ring-primary/30"
-                  : "bg-card hover:border-muted-foreground/40 hover:bg-muted/40",
-              )}
-              title={o.ayuda}
-            >
-              {activo && (
-                <Check className="absolute right-2 top-2 h-3.5 w-3.5 text-primary" aria-hidden />
-              )}
-              <div className="flex flex-wrap items-center gap-1.5 short:gap-2">
-                <Icono
-                  className={cn(
-                    "h-4 w-4 shrink-0",
-                    activo ? "text-primary" : "text-muted-foreground",
-                  )}
-                  aria-hidden
-                />
-                <span className="text-body font-medium leading-tight">{o.titulo}</span>
-                {o.etiqueta && (
-                  <Badge variant="secondary" className="text-label">{o.etiqueta}</Badge>
+            <Hint key={o.value} label={o.ayuda}>
+              <button
+                type="button"
+                role="radio"
+                aria-checked={activo}
+                onClick={() => onModeChange(o.value)}
+                className={cn(
+                  "group relative rounded-lg border p-3 text-left transition-colors",
+                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                  activo
+                    ? "border-primary bg-primary/5 ring-1 ring-primary/30"
+                    : "bg-card hover:border-muted-foreground/40 hover:bg-muted/40",
                 )}
-              </div>
-              {/* En pantallas bajas la ayuda vive en el tooltip nativo. */}
-              <p className="mt-0.5 text-body-sm leading-snug text-muted-foreground short:hidden">
-                {o.ayuda}
-              </p>
-            </button>
-
+              >
+                {activo && (
+                  <Check className="absolute right-2 top-2 h-3.5 w-3.5 text-primary" aria-hidden />
+                )}
+                <div className="flex flex-wrap items-center gap-1.5 short:gap-2">
+                  <Icono
+                    className={cn(
+                      "h-4 w-4 shrink-0",
+                      activo ? "text-primary" : "text-muted-foreground",
+                    )}
+                    aria-hidden
+                  />
+                  <span className="text-body font-medium leading-tight">{o.titulo}</span>
+                  {o.etiqueta && (
+                    <Badge variant="secondary" className="text-label">{o.etiqueta}</Badge>
+                  )}
+                </div>
+                {/* En pantallas bajas la ayuda vive en el tooltip accesible (Hint). */}
+                <p className="mt-0.5 text-body-sm leading-snug text-muted-foreground short:hidden">
+                  {o.ayuda}
+                </p>
+              </button>
+            </Hint>
           );
         })}
       </div>

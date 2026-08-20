@@ -4,6 +4,7 @@
  * equivalente en pesos, más el estado de conciliación y del complemento.
  */
 import { StatusBadge } from "@/components/shared/StatusBadge";
+import { Hint } from "@/components/shared/Hint";
 import { formatCurrency, formatDate } from "@/lib/formatters";
 import { FORMAS_PAGO_SAT, labelDeCatalogo } from "@/constants/catalogosSAT";
 import { defineColumns, type ColumnDef } from "@/components/shared/DataTable";
@@ -77,13 +78,13 @@ export function libroPagosColumns(): ColumnDef<PagoLibro, unknown>[] {
       accessorFn: (p) => p.contraparte ?? "",
       cell: ({ row }) => (
         <div className="max-w-[240px]">
-          <span className="block truncate" title={row.original.contraparte ?? ""}>
-            {row.original.contraparte ?? "—"}
-          </span>
+          <Hint label={row.original.contraparte ?? ""}>
+            <span className="block truncate">{row.original.contraparte ?? "—"}</span>
+          </Hint>
           {row.original.notas ? (
-            <span className="block truncate text-2xs text-muted-foreground" title={row.original.notas}>
-              {row.original.notas}
-            </span>
+            <Hint label={row.original.notas}>
+              <span className="block truncate text-2xs text-muted-foreground">{row.original.notas}</span>
+            </Hint>
           ) : null}
         </div>
       ),
@@ -111,12 +112,11 @@ export function libroPagosColumns(): ColumnDef<PagoLibro, unknown>[] {
       accessorFn: (p) => p.metodo_pago ?? "",
       cell: ({ row }) => (
         <div className="max-w-[160px]">
-          <span
-            className="block truncate text-body-sm"
-            title={labelDeCatalogo(FORMAS_PAGO_SAT, row.original.metodo_pago, row.original.metodo_pago ?? undefined)}
-          >
-            {etiquetaMetodoPago(row.original.metodo_pago)}
-          </span>
+          <Hint label={labelDeCatalogo(FORMAS_PAGO_SAT, row.original.metodo_pago, row.original.metodo_pago ?? undefined)}>
+            <span className="block truncate text-body-sm">
+              {etiquetaMetodoPago(row.original.metodo_pago)}
+            </span>
+          </Hint>
           {row.original.referencia ? (
             <span className="block truncate text-2xs text-muted-foreground">
               Ref. {row.original.referencia}
@@ -130,9 +130,11 @@ export function libroPagosColumns(): ColumnDef<PagoLibro, unknown>[] {
       header: "Cuenta",
       accessorFn: (p) => p.cuenta_alias ?? "",
       cell: ({ row }) => (
-        <span className="block max-w-[140px] truncate text-body-sm" title={row.original.cuenta_alias ?? ""}>
-          {row.original.cuenta_alias ?? "—"}
-        </span>
+        <Hint label={row.original.cuenta_alias ?? ""}>
+          <span className="block max-w-[140px] truncate text-body-sm">
+            {row.original.cuenta_alias ?? "—"}
+          </span>
+        </Hint>
       ),
     },
     {

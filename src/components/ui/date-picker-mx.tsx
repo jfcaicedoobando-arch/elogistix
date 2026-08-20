@@ -1,6 +1,7 @@
 import { useId } from "react";
 import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Hint } from "@/components/shared/Hint";
 import { isoToDisplay } from "./date-picker-mx-helpers";
 import { useDatePickerMxValor } from "./date-picker-mx-valor";
 
@@ -71,10 +72,10 @@ export function DatePickerMx({
 
   return (
     <div className={cn(pickerRootClass, className)}>
+      <Hint label={title ?? PICKER_AYUDA_TECLADO}>
       <div
         role="group"
         aria-label={title}
-        title={title ?? PICKER_AYUDA_TECLADO}
         aria-disabled={disabled || undefined}
         className={cn(pickerTriggerClass({ showError, disabled }))}
       >
@@ -150,6 +151,7 @@ export function DatePickerMx({
           onCerrar={() => inputRef.current?.focus()}
         />
       </div>
+      </Hint>
       {showError && (
         <span id={errorId} className={pickerErrorClass}>
           {errorText ?? MENSAJE_FECHA_INVALIDA}

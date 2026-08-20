@@ -5,6 +5,7 @@ import { ResponsiveDataTable } from "@/components/shared/dataTable/ResponsiveDat
 import { formatCurrency, toTitleCase } from "@/lib/formatters";
 import { MargenBadge } from "@/components/shared/MargenBadge";
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
+import { Hint } from "@/components/shared/Hint";
 
 export type SortField = "profit_usd" | "venta_usd" | "costo_usd" | "margen";
 
@@ -35,7 +36,7 @@ export default function ReportesTablaClientes({ data, isLoading, sortField, sort
 
   const columns: ColumnDef<ClienteRow, unknown>[] = defineColumns<ClienteRow>([
     { id: "cliente", header: "Cliente", meta: { className: "font-medium max-w-[200px] truncate" },
-      cell: ({ row }) => <span title={toTitleCase(row.original.cliente_nombre)}>{toTitleCase(row.original.cliente_nombre)}</span> },
+      cell: ({ row }) => <Hint label={toTitleCase(row.original.cliente_nombre)}><span>{toTitleCase(row.original.cliente_nombre)}</span></Hint> },
     { id: "embarques", header: "Embarques", meta: { align: "center" }, cell: ({ row }) => row.original.total_embarques },
     { id: "venta_usd", header: "Venta USD", enableSorting: true, meta: { align: "right", className: "tabular-nums" }, cell: ({ row }) => formatCurrency(row.original.venta_usd, "USD") },
     { id: "costo_usd", header: "Costo USD", enableSorting: true, meta: { align: "right", className: "tabular-nums" }, cell: ({ row }) => formatCurrency(row.original.costo_usd, "USD") },

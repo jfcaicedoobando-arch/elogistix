@@ -5,6 +5,7 @@ import { ShieldCheck, Loader2 } from "lucide-react";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { useVerificarUuidNcSat } from "@/features/cxp/hooks/useVerificarUuidNcSat";
+import { Hint } from "@/components/shared/Hint";
 
 interface Props {
   facturaId: string;
@@ -20,15 +21,17 @@ export function NcSatBadge({ facturaId, ncId, uuidFiscal, estatus }: Props) {
   return (
     <div className="flex items-center justify-center gap-1">
       <StatusBadge domain="sat_uuid" status={estatus ?? "Sin verificar"} />
-      <Button
-        size="sm" variant="ghost"
-        className="h-6 w-6 p-0 text-muted-foreground hover:text-foreground"
-        onClick={() => verificar.mutate(ncId)}
-        disabled={verificar.isPending}
-        title="Verificar en SAT"
-      >
-        {verificar.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShieldCheck className="h-4 w-4" />}
-      </Button>
+      <Hint label="Verificar en SAT">
+        <Button
+          size="sm" variant="ghost"
+          className="h-6 w-6 p-0 text-muted-foreground hover:text-foreground"
+          onClick={() => verificar.mutate(ncId)}
+          disabled={verificar.isPending}
+          aria-label="Verificar en SAT"
+        >
+          {verificar.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShieldCheck className="h-4 w-4" />}
+        </Button>
+      </Hint>
     </div>
   );
 }

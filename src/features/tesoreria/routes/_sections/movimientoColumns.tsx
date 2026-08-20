@@ -3,6 +3,7 @@
  * Extraído de `TesoreriaConciliacion.tsx` (v13.317.9).
  */
 import { StatusBadge } from "@/components/shared/StatusBadge";
+import { Hint } from "@/components/shared/Hint";
 import { BotonVerPago } from "@/features/tesoreria/components/BotonVerPago";
 import type { RefPago } from "@/features/tesoreria/domain/pagoDetalle";
 import { formatCurrency, formatDate } from "@/lib/formatters";
@@ -31,9 +32,11 @@ export function crearMovimientoColumns(
     header: "Concepto",
     accessorFn: (m) => m.concepto,
     cell: ({ row }) => (
-      <span className="block max-w-[280px] truncate" title={row.original.concepto}>
-        {row.original.concepto}
-      </span>
+      <Hint label={row.original.concepto}>
+        <span className="block max-w-[280px] truncate">
+          {row.original.concepto}
+        </span>
+      </Hint>
     ),
   },
   {

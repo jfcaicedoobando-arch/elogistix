@@ -7,6 +7,7 @@ import type { Tables } from "@/types/db";
 
 import { notifyError } from "@/lib/ui/appFeedback";
 import { getErrorMessage } from "@/lib/errors";
+import { Hint } from "@/components/shared/Hint";
 interface Props {
   proveedor: Tables<"proveedores">;
   onUpdate: (id: string, patch: Record<string, string>) => Promise<unknown>;
@@ -97,19 +98,20 @@ export function ProveedorCsfUpdateButton({ proveedor, onUpdate }: Props) {
         className="hidden"
         onChange={handleCsfFile}
       />
-      <Button
-        size="sm"
-        variant="outline"
-        disabled={csfLoading}
-        onClick={() => csfInputRef.current?.click()}
-        title="Actualizar datos fiscales desde la Constancia de Situación Fiscal"
-      >
-        {csfLoading ? (
-          <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Procesando…</>
-        ) : (
-          <><Upload className="mr-2 h-4 w-4" /> Actualizar con CSF</>
-        )}
-      </Button>
+      <Hint label="Actualizar datos fiscales desde la Constancia de Situación Fiscal">
+        <Button
+          size="sm"
+          variant="outline"
+          disabled={csfLoading}
+          onClick={() => csfInputRef.current?.click()}
+        >
+          {csfLoading ? (
+            <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Procesando…</>
+          ) : (
+            <><Upload className="mr-2 h-4 w-4" /> Actualizar con CSF</>
+          )}
+        </Button>
+      </Hint>
     </>
   );
 }

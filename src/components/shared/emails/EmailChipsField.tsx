@@ -15,6 +15,7 @@ import { useRef, useState, type KeyboardEvent, type ClipboardEvent } from "react
 import { Lock, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
+import { Hint } from "@/components/shared/Hint";
 
 const SPLIT_RE = /[,;\s]+/;
 
@@ -105,25 +106,24 @@ export function EmailChipsField({
       onClick={() => inputRef.current?.focus()}
     >
       {lockedChips.map((c) => (
-        <Badge
-          key={`locked-${c.email}`}
-          variant="secondary"
-          className="gap-1 pl-1.5 pr-2 font-normal"
-          title={c.tooltip ?? c.email}
-          data-testid="envio-chip-locked"
-          data-locked="true"
-        >
-          <Lock className="h-3 w-3 opacity-60" aria-hidden />
-          <span className="truncate max-w-[220px]">{c.label ?? c.email}</span>
-        </Badge>
+        <Hint key={`locked-${c.email}`} label={c.tooltip ?? c.email}>
+          <Badge
+            variant="secondary"
+            className="gap-1 pl-1.5 pr-2 font-normal"
+            data-testid="envio-chip-locked"
+            data-locked="true"
+          >
+            <Lock className="h-3 w-3 opacity-60" aria-hidden />
+            <span className="truncate max-w-[220px]">{c.label ?? c.email}</span>
+          </Badge>
+        </Hint>
       ))}
 
       {chips.map((c) => (
+        <Hint key={c.email} label={c.email}>
         <Badge
-          key={c.email}
           variant={c.invalid ? "destructive" : "secondary"}
           className="gap-1 pl-2 pr-1 font-normal"
-          title={c.email}
           data-testid="envio-chip"
           data-email={c.email}
         >
@@ -154,6 +154,7 @@ export function EmailChipsField({
             <X className="h-3 w-3" />
           </button>
         </Badge>
+        </Hint>
       ))}
 
       <input

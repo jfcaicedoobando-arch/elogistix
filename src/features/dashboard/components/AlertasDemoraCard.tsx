@@ -8,6 +8,7 @@ import type { AlertaDemora } from "@/features/dashboard/hooks";
 import { toTitleCase } from "@/lib/formatters";
 import { activableConTeclado, FOCUS_RING } from "@/lib/ui/keyboardActivation";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
+import { Hint } from "@/components/shared/Hint";
 
 interface Props {
   alertas: AlertaDemora[];
@@ -42,14 +43,15 @@ export const AlertasDemoraCard = memo(function AlertasDemoraCard({ alertas, isLo
               {...activableConTeclado(() => navigate(`/embarques/${e.id}`))}
               className={`flex items-center gap-3 rounded-lg border p-3 cursor-pointer hover:bg-muted/50 transition-colors ${FOCUS_RING}`}
             >
-              <div
-                className={`shrink-0 h-9 w-9 rounded-full flex items-center justify-center text-label font-bold text-primary-foreground ${
-                  e.diasDemora >= 5 ? "bg-destructive" : "bg-warning"
-                }`}
-                title={etiquetaDemora(e.diasDemora).titulo}
-              >
-                {etiquetaDemora(e.diasDemora).badge}
-              </div>
+              <Hint label={etiquetaDemora(e.diasDemora).titulo}>
+                <div
+                  className={`shrink-0 h-9 w-9 rounded-full flex items-center justify-center text-label font-bold text-primary-foreground ${
+                    e.diasDemora >= 5 ? "bg-destructive" : "bg-warning"
+                  }`}
+                >
+                  {etiquetaDemora(e.diasDemora).badge}
+                </div>
+              </Hint>
 
               <div className="min-w-0 flex-1">
                 <p className="text-body font-medium truncate">{e.expediente}</p>

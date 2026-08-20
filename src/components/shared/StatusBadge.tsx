@@ -8,6 +8,7 @@
  */
 import { cn } from "@/lib/utils";
 import { getStatusVisual, type StatusDomain } from "@/lib/status/statusRegistry";
+import { Hint } from "@/components/shared/Hint";
 
 export interface StatusBadgeProps {
   domain: StatusDomain;
@@ -35,19 +36,20 @@ export function StatusBadge({
   const visual = getStatusVisual(domain, status);
   const Icon = visual.icon;
   return (
-    <span
-      className={cn(
-        "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium whitespace-nowrap",
-        visual.badgeClass,
-        className,
-      )}
-      title={title}
-      data-domain={domain}
-      data-status={status ?? ""}
-    >
-      {showIcon && Icon ? <Icon className="h-3 w-3" aria-hidden /> : null}
-      <span>{children ?? label ?? visual.label}</span>
-    </span>
+    <Hint label={title}>
+      <span
+        className={cn(
+          "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium whitespace-nowrap",
+          visual.badgeClass,
+          className,
+        )}
+        data-domain={domain}
+        data-status={status ?? ""}
+      >
+        {showIcon && Icon ? <Icon className="h-3 w-3" aria-hidden /> : null}
+        <span>{children ?? label ?? visual.label}</span>
+      </span>
+    </Hint>
   );
 }
 

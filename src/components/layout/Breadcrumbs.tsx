@@ -2,6 +2,7 @@ import { Link, useLocation } from "react-router-dom";
 import { ChevronRight } from "lucide-react";
 import { Fragment, memo, useMemo } from "react";
 import { useBreadcrumbLabels } from "@/lib/contexts/BreadcrumbContext";
+import { Hint } from "@/components/shared/Hint";
 
 /**
  * Mapa de segmentos de ruta → etiqueta visible.
@@ -156,21 +157,23 @@ function BreadcrumbsBase() {
               />
             )}
             {c.isLast ? (
-              <span
-                className="font-medium text-foreground truncate"
-                aria-current="page"
-                title={c.label}
-              >
-                {c.label}
-              </span>
+              <Hint label={c.label}>
+                <span
+                  className="font-medium text-foreground truncate"
+                  aria-current="page"
+                >
+                  {c.label}
+                </span>
+              </Hint>
             ) : (
-              <Link
-                to={c.to}
-                className="text-muted-foreground hover:text-foreground transition-colors truncate"
-                title={c.label}
-              >
-                {c.label}
-              </Link>
+              <Hint label={c.label}>
+                <Link
+                  to={c.to}
+                  className="text-muted-foreground hover:text-foreground transition-colors truncate"
+                >
+                  {c.label}
+                </Link>
+              </Hint>
             )}
           </Fragment>
         ))}

@@ -1,5 +1,6 @@
 import { Check } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Hint } from "@/components/shared/Hint";
 import type { EstadoFase, FaseIconoId } from "@/features/embarques/domain/embarqueFases";
 import { iconoDeFase } from "./timelineIconos";
 
@@ -32,17 +33,18 @@ export function FaseNodo({ iconoId, estado, enRiesgo = false, tamano = "md", tit
   const Icono = estado === "completada" ? Check : iconoDeFase(iconoId);
   const esSm = tamano === "sm";
   return (
-    <div
-      title={titulo}
-      aria-current={estado === "actual" ? "step" : undefined}
-      className={cn(
-        "flex items-center justify-center rounded-full border-2 shrink-0 transition-colors",
-        estado === "pendiente" ? "border-border border-dashed" : "border-background",
-        esSm ? "h-6 w-6" : "h-9 w-9",
-        claseNodo(estado, enRiesgo),
-      )}
-    >
-      <Icono className={esSm ? "h-3 w-3" : "h-4 w-4"} aria-hidden="true" />
-    </div>
+    <Hint label={titulo}>
+      <div
+        aria-current={estado === "actual" ? "step" : undefined}
+        className={cn(
+          "flex items-center justify-center rounded-full border-2 shrink-0 transition-colors",
+          estado === "pendiente" ? "border-border border-dashed" : "border-background",
+          esSm ? "h-6 w-6" : "h-9 w-9",
+          claseNodo(estado, enRiesgo),
+        )}
+      >
+        <Icono className={esSm ? "h-3 w-3" : "h-4 w-4"} aria-hidden="true" />
+      </div>
+    </Hint>
   );
 }

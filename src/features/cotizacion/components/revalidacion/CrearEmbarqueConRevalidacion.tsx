@@ -11,6 +11,7 @@ import { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Hint } from "@/components/shared/Hint";
 import { Loader2, AlertTriangle } from "lucide-react";
 import { RevalidarTarifaModal } from "@/features/cotizacion/components/revalidacion/RevalidarTarifaModal";
 import { BuscarTarifaDialog } from "@/features/costeo/components/BuscarTarifaDialog";
@@ -143,24 +144,27 @@ export function CrearEmbarqueConRevalidacion({ cotizacionId, numContenedores }: 
 
   return (
     <>
-      <Button
-        size="sm"
-        onClick={handleClick}
-        disabled={revalidando || loading || bloqueadoPorEsquema}
-        variant={bloqueadoPorEsquema ? "outline" : "default"}
-        title={
+      <Hint
+        label={
           bloqueadoPorEsquema
             ? "Revalidación deshabilitada por un bug de sistema. Contacta a soporte."
             : undefined
         }
       >
-        {revalidando ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
-        {bloqueadoPorEsquema ? <AlertTriangle className="h-4 w-4 mr-2 text-warning" /> : null}
-        {bloqueadoPorEsquema ? "Revalidación no disponible" : "Crear embarque"}
-        {!bloqueadoPorEsquema && numContenedores > 1 && (
-          <Badge variant="secondary" className="ml-2">{numContenedores}</Badge>
-        )}
-      </Button>
+        <Button
+          size="sm"
+          onClick={handleClick}
+          disabled={revalidando || loading || bloqueadoPorEsquema}
+          variant={bloqueadoPorEsquema ? "outline" : "default"}
+        >
+          {revalidando ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
+          {bloqueadoPorEsquema ? <AlertTriangle className="h-4 w-4 mr-2 text-warning" /> : null}
+          {bloqueadoPorEsquema ? "Revalidación no disponible" : "Crear embarque"}
+          {!bloqueadoPorEsquema && numContenedores > 1 && (
+            <Badge variant="secondary" className="ml-2">{numContenedores}</Badge>
+          )}
+        </Button>
+      </Hint>
 
 
       <RevalidarTarifaModal

@@ -11,6 +11,7 @@ import { formatCurrency } from "@/lib/formatters/numbers";
 import { formatDate } from "@/lib/formatters/dates";
 import { toTitleCase } from "@/lib/formatters/text";
 import { cn } from "@/lib/utils";
+import { Hint } from "@/components/shared/Hint";
 
 export { actionsColumn } from "./actionsColumn";
 ;
@@ -59,12 +60,11 @@ export function clientColumn<T>({
     header,
     accessorFn: (row) => accessor(row) ?? "",
     cell: ({ row }) => (
-      <span
-        className="block min-w-[220px] whitespace-normal break-words leading-snug"
-        title={accessor(row.original) ?? ""}
-      >
-        {toTitleCase(accessor(row.original) ?? "")}
-      </span>
+      <Hint label={accessor(row.original) ?? ""}>
+        <span className="block min-w-[220px] whitespace-normal break-words leading-snug">
+          {toTitleCase(accessor(row.original) ?? "")}
+        </span>
+      </Hint>
     ),
     enableSorting: true,
   };
@@ -95,7 +95,9 @@ export function moneyColumn<T>({
 }: MoneyColumnOpts<T>): ColumnDef<T, unknown> {
   return {
     id,
-    header: headerTooltip ? () => <span title={headerTooltip}>{header}</span> : header,
+    header: headerTooltip
+      ? () => <Hint label={headerTooltip}><span>{header}</span></Hint>
+      : header,
     accessorFn: (row) => accessor(row) ?? 0,
     cell: ({ row }) => {
       const amount = accessor(row.original) ?? 0;

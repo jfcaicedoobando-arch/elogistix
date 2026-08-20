@@ -9,6 +9,7 @@ import { ESTADO_COLOR, ESTADO_ICON, ESTADO_LABEL, ESTADO_TOOLTIP } from "./desem
 import { ClienteExpandible } from "./ClienteExpandible";
 import { EmbarquesEstadoDialog } from "./EmbarquesEstadoDialog";
 import { nombreDesdeEmail } from "@/lib/formatters";
+import { Hint } from "@/components/shared/Hint";
 
 const TOP_CLIENTES = 5;
 
@@ -52,42 +53,42 @@ export const OperadorCard = memo(function OperadorCard({ operador }: { operador:
           const pct = totalDesglose > 0 ? (count / totalDesglose) * 100 : 0;
           const interactive = count > 0;
           return (
-            <Button
-              key={estado}
-              type="button"
-              variant="ghost"
-              disabled={!interactive}
-              onClick={() => interactive && setEstadoAbierto(estado)}
-              className={`flex h-auto w-full flex-col items-stretch justify-start whitespace-normal text-left font-normal space-y-0.5 rounded-md px-1.5 py-1 -mx-1.5 transition-colors ${
-                interactive
-                  ? "hover:bg-muted/60 cursor-pointer"
-                  : "opacity-60 cursor-default"
-              }`}
-              aria-label={interactive ? `Ver ${count} embarques en ${ESTADO_LABEL[estado]}` : `Sin embarques en ${ESTADO_LABEL[estado]}`}
-              title={ESTADO_TOOLTIP[estado] ?? (interactive ? `Ver detalle de ${ESTADO_LABEL[estado]}` : undefined)}
-            >
-              <div className="flex items-center justify-between text-label">
-                <span className="flex items-center gap-1.5 text-muted-foreground">
-                  <Icon className="h-3 w-3" style={{ color: ESTADO_COLOR[estado] }} />
-                  {ESTADO_LABEL[estado]}
-                </span>
-                <span className="flex items-center gap-1">
-                  <span className="font-semibold tabular-nums">{count}</span>
-                  {interactive && (
-                    <ChevronRight className="h-3 w-3 text-muted-foreground" />
-                  )}
-                </span>
-              </div>
-              <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
-                <div
-                  className="h-full rounded-full transition-[width]"
-                  style={{
-                    width: `${pct}%`,
-                    backgroundColor: ESTADO_COLOR[estado],
-                  }}
-                />
-              </div>
-            </Button>
+            <Hint key={estado} label={ESTADO_TOOLTIP[estado] ?? (interactive ? `Ver detalle de ${ESTADO_LABEL[estado]}` : undefined)}>
+              <Button
+                type="button"
+                variant="ghost"
+                disabled={!interactive}
+                onClick={() => interactive && setEstadoAbierto(estado)}
+                className={`flex h-auto w-full flex-col items-stretch justify-start whitespace-normal text-left font-normal space-y-0.5 rounded-md px-1.5 py-1 -mx-1.5 transition-colors ${
+                  interactive
+                    ? "hover:bg-muted/60 cursor-pointer"
+                    : "opacity-60 cursor-default"
+                }`}
+                aria-label={interactive ? `Ver ${count} embarques en ${ESTADO_LABEL[estado]}` : `Sin embarques en ${ESTADO_LABEL[estado]}`}
+              >
+                <div className="flex items-center justify-between text-label">
+                  <span className="flex items-center gap-1.5 text-muted-foreground">
+                    <Icon className="h-3 w-3" style={{ color: ESTADO_COLOR[estado] }} />
+                    {ESTADO_LABEL[estado]}
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <span className="font-semibold tabular-nums">{count}</span>
+                    {interactive && (
+                      <ChevronRight className="h-3 w-3 text-muted-foreground" />
+                    )}
+                  </span>
+                </div>
+                <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
+                  <div
+                    className="h-full rounded-full transition-[width]"
+                    style={{
+                      width: `${pct}%`,
+                      backgroundColor: ESTADO_COLOR[estado],
+                    }}
+                  />
+                </div>
+              </Button>
+            </Hint>
           );
         })}
       </div>

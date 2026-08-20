@@ -16,6 +16,7 @@ import { useState } from "react";
 import { AlertTriangle, Loader2, RefreshCw } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { Hint } from "@/components/shared/Hint";
 import { notifyInfo, notifySuccess } from "@/lib/ui/appFeedback";
 import { notifyError } from "@/lib/ui/appFeedback";
 import {
@@ -95,16 +96,17 @@ export function ClaimPendingBanner({ facturaId, facturapiId, facturapiClaimAt, n
           {esNc ? "Esta nota de crédito" : "Esta factura"} quedó reservada hace {edadMin} min sin confirmación de FacturAPI.
           {" "}Verifica si el CFDI se emitió y reconcilia el estado.
         </span>
-        <Button
-          size="sm"
-          variant="outline"
-          onClick={onRecuperar}
-          disabled={loading || !puedeIntentar}
-          title={!puedeIntentar ? "Espera al menos 3 minutos desde el intento de timbrado." : undefined}
-        >
-          {loading ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <RefreshCw className="h-4 w-4 mr-1" />}
-          Verificar y recuperar
-        </Button>
+        <Hint label={!puedeIntentar ? "Espera al menos 3 minutos desde el intento de timbrado." : undefined}>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={onRecuperar}
+            disabled={loading || !puedeIntentar}
+          >
+            {loading ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <RefreshCw className="h-4 w-4 mr-1" />}
+            Verificar y recuperar
+          </Button>
+        </Hint>
       </AlertDescription>
     </Alert>
   );

@@ -5,6 +5,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { KpiCard } from "@/components/shared/KpiCard";
 import { SectionHeading } from "@/components/shared/SectionHeading";
+import { Hint } from "@/components/shared/Hint";
 import { formatCurrency, formatCurrencyCompact } from "@/lib/formatters";
 import {
   calcularDesviacion,
@@ -41,9 +42,11 @@ function ListaTop({
                   {f.etiqueta}
                   <span className="ml-2 text-body-sm text-muted-foreground">{f.sub}</span>
                 </span>
-                <span className="tabular-nums font-medium shrink-0" title={formatCurrency(f.montoMxn, "MXN")}>
-                  {formatCurrencyCompact(f.montoMxn, "MXN")}
-                </span>
+                <Hint label={formatCurrency(f.montoMxn, "MXN")}>
+                  <span className="tabular-nums font-medium shrink-0">
+                    {formatCurrencyCompact(f.montoMxn, "MXN")}
+                  </span>
+                </Hint>
               </li>
             ))}
           </ul>

@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import { formatNumber } from "@/lib/formatters";
 import { KpiCard } from "@/components/shared/KpiCard";
 import type { KpiVariant } from "@/components/shared/kpiCard.tokens";
+import { Hint } from "@/components/shared/Hint";
 
 const TONE_TO_VARIANT: Record<string, KpiVariant> = {
   "text-destructive": "destructive",
@@ -62,9 +63,11 @@ export function DistribucionBarras({ items }: { items: DistribucionItem[] }) {
             )}
           >
             <div className="flex items-center justify-between text-body-sm">
-              <span className="truncate font-medium" title={it.label}>
-                {it.label}
-              </span>
+              <Hint label={it.label}>
+                <span className="truncate font-medium">
+                  {it.label}
+                </span>
+              </Hint>
               <span className="tabular-nums text-muted-foreground shrink-0 ml-2">
                 {it.total}
                 {it.destacado > 0 && (

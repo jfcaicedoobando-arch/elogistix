@@ -4,6 +4,7 @@
  */
 import { ListOrdered, CheckCheck, Eraser } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Hint } from "@/components/shared/Hint";
 
 interface Props {
   onFifo: () => void;
@@ -15,39 +16,42 @@ interface Props {
 export function DialogCobroLoteAcciones(p: Props) {
   return (
     <div className="flex flex-wrap items-center gap-2">
-      <Button
-        type="button"
-        variant="outline"
-        size="sm"
-        onClick={p.onFifo}
-        disabled={p.disabled}
-        title="Reparte el importe recibido: primero lo que vence antes"
-      >
-        <ListOrdered className="mr-1.5 h-3.5 w-3.5" />
-        Repartir FIFO
-      </Button>
-      <Button
-        type="button"
-        variant="outline"
-        size="sm"
-        onClick={p.onLiquidarTodo}
-        disabled={p.disabled}
-        title="Asigna el saldo completo de cada factura"
-      >
-        <CheckCheck className="mr-1.5 h-3.5 w-3.5" />
-        Liquidar todo
-      </Button>
-      <Button
-        type="button"
-        variant="ghost"
-        size="sm"
-        onClick={p.onLimpiar}
-        disabled={p.disabled}
-        title="Deja todos los importes en cero"
-      >
-        <Eraser className="mr-1.5 h-3.5 w-3.5" />
-        Limpiar reparto
-      </Button>
+      <Hint label="Reparte el importe recibido: primero lo que vence antes">
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={p.onFifo}
+          disabled={p.disabled}
+        >
+          <ListOrdered className="mr-1.5 h-3.5 w-3.5" />
+          Repartir FIFO
+        </Button>
+      </Hint>
+      <Hint label="Asigna el saldo completo de cada factura">
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={p.onLiquidarTodo}
+          disabled={p.disabled}
+        >
+          <CheckCheck className="mr-1.5 h-3.5 w-3.5" />
+          Liquidar todo
+        </Button>
+      </Hint>
+      <Hint label="Deja todos los importes en cero">
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          onClick={p.onLimpiar}
+          disabled={p.disabled}
+        >
+          <Eraser className="mr-1.5 h-3.5 w-3.5" />
+          Limpiar reparto
+        </Button>
+      </Hint>
     </div>
   );
 }

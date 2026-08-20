@@ -11,6 +11,7 @@ import { queryKeys } from "@/lib/query";
 import { notifySuccess } from "@/lib/ui/appFeedback";
 import { ArrowUpFromLine } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Hint } from "@/components/shared/Hint";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { useRegistrarPagoProveedor, useFacturaProveedor } from "@/features/cxp/hooks";
 import type { FacturaCxP } from "@/features/cxp/services";
@@ -106,9 +107,11 @@ export function DialogRegistrarPagoProveedor({ open, onOpenChange, factura: fact
       <Button variant="outline" onClick={() => onOpenChange(false)} disabled={registrar.isPending}>
         Cancelar
       </Button>
-      <Button onClick={submit} disabled={submitDisabled} title={submitTitle} loading={registrar.isPending}>
-        {registrar.isPending ? "Guardando…" : "Registrar pago"}
-      </Button>
+      <Hint label={submitTitle}>
+        <Button onClick={submit} disabled={submitDisabled} loading={registrar.isPending}>
+          {registrar.isPending ? "Guardando…" : "Registrar pago"}
+        </Button>
+      </Hint>
     </>
   );
 

@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import { esDiaInhabilMx } from "@/lib/date/festivosMx";
 import { pickerIconClass } from "@/components/ui/picker-mx-shell";
 import { dateToIso, isoToDate, isoToDisplay } from "./date-picker-mx-helpers";
+import { Hint } from "@/components/shared/Hint";
 
 interface Props {
   value: string;
@@ -55,16 +56,17 @@ export function DatePickerMxCalendar({
       }}
     >
       <PopoverTrigger asChild>
-        <button
-          type="button"
-          tabIndex={-1}
-          disabled={disabled}
-          aria-label="Abrir calendario"
-          title="Abrir calendario (Alt + Flecha abajo)"
-          className="shrink-0 rounded p-0.5 text-muted-foreground hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:hover:bg-transparent"
-        >
-          <CalendarIcon className={pickerIconClass} />
-        </button>
+        <Hint label="Abrir calendario (Alt + Flecha abajo)">
+          <button
+            type="button"
+            tabIndex={-1}
+            disabled={disabled}
+            aria-label="Abrir calendario"
+            className="shrink-0 rounded p-0.5 text-muted-foreground hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:hover:bg-transparent"
+          >
+            <CalendarIcon className={pickerIconClass} />
+          </button>
+        </Hint>
       </PopoverTrigger>
 
       <PopoverContent className="w-auto p-0" align="start">

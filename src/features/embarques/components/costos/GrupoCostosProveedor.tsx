@@ -22,6 +22,7 @@ import {
 } from "./grupoCostosProveedorHelpers";
 import { describirAjuste, describirAjusteNeto } from "./ajusteDescripcion";
 import { AjusteChip } from "./AjusteChip";
+import { Hint } from "@/components/shared/Hint";
 import { TONE_TEXT } from "@/lib/ui/badgeTone";
 
 import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/components/ui/table";
@@ -72,7 +73,9 @@ export function GrupoCostosProveedor({
       >
         <div className="flex items-center gap-2 min-w-0">
           {abierto ? <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0" /> : <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />}
-          <span className="font-medium text-body truncate" title={proveedorNombre}>{toTitleCase(proveedorNombre)}</span>
+          <Hint label={proveedorNombre}>
+            <span className="font-medium text-body truncate">{toTitleCase(proveedorNombre)}</span>
+          </Hint>
           <Badge variant="outline" className="text-body-sm">{filas.length}</Badge>
           {/* v13.509.0 — Avisamos los costos sin proveedor: bloquean el cotejo
               con la factura del proveedor y deben completarse antes de facturar. */}

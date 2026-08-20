@@ -6,6 +6,7 @@ import { pluralS } from "@/lib/formatters";
 import { useDrilldownRow } from "@/components/shared/dataTable/useDrilldownRow";
 import { cn } from "@/lib/utils";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
+import { Hint } from "@/components/shared/Hint";
 
 interface Props {
   total: number;
@@ -68,11 +69,12 @@ function EstadoBarSegment({ estado, count, pct }: { estado: string; count: numbe
     ariaLabel: `Filtrar por ${estado}`,
   });
   return (
-    <div
-      {...nav}
-      className={cn(nav.className, getEstadoBarColor(estado), "transition-opacity hover:opacity-80 rounded-sm")}
-      style={{ width: `${pct}%` }}
-      title={`${estado}: ${count}`}
-    />
+    <Hint label={`${estado}: ${count}`}>
+      <div
+        {...nav}
+        className={cn(nav.className, getEstadoBarColor(estado), "transition-opacity hover:opacity-80 rounded-sm")}
+        style={{ width: `${pct}%` }}
+      />
+    </Hint>
   );
 }

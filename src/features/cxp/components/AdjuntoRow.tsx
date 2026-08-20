@@ -9,6 +9,7 @@ import {
   ExternalLink, Loader2, Upload, RefreshCcw, X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Hint } from "@/components/shared/Hint";
 import { openFacturaInNewTab } from "@/services/storage/facturas";
 import { ConfirmReplaceDialog, ConfirmRemoveDialog } from "./AdjuntoRow.dialogs";
 import { notifyError } from "@/lib/ui/appFeedback";
@@ -87,25 +88,28 @@ function AdjuntoActions({
         </Button>
       )}
       {canEdit && onUpload && (
-        <Button
-          variant="ghost" size="sm" className="h-7 px-2"
-          disabled={isUploading}
-          onClick={onPickFile}
-          title={adjunto ? `Reemplazar ${tipo}` : `Adjuntar ${tipo}`}
-        >
-          {iconoAccion}
-          {adjunto ? "Reemplazar" : "Adjuntar"}
-        </Button>
+        <Hint label={adjunto ? `Reemplazar ${tipo}` : `Adjuntar ${tipo}`}>
+          <Button
+            variant="ghost" size="sm" className="h-7 px-2"
+            disabled={isUploading}
+            onClick={onPickFile}
+          >
+            {iconoAccion}
+            {adjunto ? "Reemplazar" : "Adjuntar"}
+          </Button>
+        </Hint>
       )}
       {canEdit && adjunto && onRemove && (
-        <Button
-          variant="ghost" size="sm" className="h-7 px-2 text-destructive"
-          disabled={isUploading}
-          onClick={onAskRemove}
-          title={`Quitar ${tipo}`}
-        >
-          <X className="h-3.5 w-3.5" />
-        </Button>
+        <Hint label={`Quitar ${tipo}`}>
+          <Button
+            variant="ghost" size="sm" className="h-7 px-2 text-destructive"
+            disabled={isUploading}
+            onClick={onAskRemove}
+            aria-label={`Quitar ${tipo}`}
+          >
+            <X className="h-3.5 w-3.5" />
+          </Button>
+        </Hint>
       )}
     </div>
   );

@@ -13,6 +13,7 @@
  * Uso preferente: `MoneyCell label="Total" value={compact} fullValue={complete} highlight />`.
  */
 import { cn } from "@/lib/utils";
+import { Hint } from "@/components/shared/Hint";
 
 interface MoneyCellProps {
   label: string;
@@ -34,15 +35,16 @@ export function MoneyCell({ label, value, fullValue, highlight, className }: Mon
       <p className="text-overline font-medium truncate">
         {label}
       </p>
-      <p
-        className={cn(
-          "text-sm sm:text-base font-semibold tabular-nums truncate",
-          highlight ? "text-accent" : "text-foreground",
-        )}
-        title={fullValue ?? value}
-      >
-        {value}
-      </p>
+      <Hint label={fullValue ?? value}>
+        <p
+          className={cn(
+            "text-sm sm:text-base font-semibold tabular-nums truncate",
+            highlight ? "text-accent" : "text-foreground",
+          )}
+        >
+          {value}
+        </p>
+      </Hint>
     </div>
   );
 }

@@ -10,6 +10,7 @@ import { formatCurrency } from "@/lib/formatters/numbers";
 import { agingTextClass } from "@/features/tesoreria/domain/agingTone";
 import type { TopItem } from "@/features/tesoreria/domain/resumen.types";
 import { cn } from "@/lib/utils";
+import { Hint } from "@/components/shared/Hint";
 
 interface Props {
   titulo: string;
@@ -40,7 +41,7 @@ export function TesoreriaTopCartera({
                 key={`${d.nombre}-${d.moneda}`}
                 className="flex items-center justify-between border-b pb-1.5 last:border-0"
               >
-                <span className="flex-1 truncate" title={d.nombre}>{d.nombre}</span>
+                <Hint label={d.nombre}><span className="flex-1 truncate">{d.nombre}</span></Hint>
                 <span className={cn("ml-2 font-medium tabular-nums", montoClass)}>
                   {formatCurrency(d.saldo, d.moneda)}
                 </span>

@@ -5,6 +5,7 @@
  */
 import { Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Hint } from "@/components/shared/Hint";
 import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 import { COL_W } from "@/components/shared/dataTable/columnWidths";
@@ -56,9 +57,11 @@ export function FacturaPagosTabla({
     {
       id: "referencia", header: "Referencia", meta: { width: COL_W.texto },
       cell: ({ row }) => (
-        <span className="block max-w-[200px] truncate" title={row.original.referencia ?? ""}>
-          {row.original.referencia || "—"}
-        </span>
+        <Hint label={row.original.referencia ?? ""}>
+          <span className="block max-w-[200px] truncate">
+            {row.original.referencia || "—"}
+          </span>
+        </Hint>
       ),
     },
     {
@@ -84,24 +87,27 @@ export function FacturaPagosTabla({
             const p = row.original;
             const repVivo = !!p.uuid_rep && !p.rep_cancelado_en;
             return (
-              <Button
-                variant="ghost"
-                size="icon"
-                disabled={repVivo}
-                title={
+              <Hint
+                label={
                   repVivo
                     ? "Cancela el REP (complemento de pago) antes de eliminar este pago"
                     : "Eliminar pago"
                 }
-                onClick={(e) => {
-                  e.stopPropagation();
-                  if (repVivo) return;
-                  onEliminar(p.id);
-                }}
-                aria-label="Eliminar pago"
               >
-                <Trash2 className="h-4 w-4 text-destructive" />
-              </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  disabled={repVivo}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (repVivo) return;
+                    onEliminar(p.id);
+                  }}
+                  aria-label="Eliminar pago"
+                >
+                  <Trash2 className="h-4 w-4 text-destructive" />
+                </Button>
+              </Hint>
             );
           },
         }]

@@ -9,6 +9,7 @@ import { requiereEquivalente } from "@/features/bandejas/domain/carteraFx";
 import { formatNativos } from "@/features/bandejas/domain/carteraFormat";
 import { useExchangeRates } from "@/features/catalogos/hooks";
 import { TipoCambioFallbackBanner } from "@/features/dashboard/direccion/components/TipoCambioFallbackBanner";
+import { Hint } from "@/components/shared/Hint";
 
 interface Equivalente {
   totalMxn: number;
@@ -30,21 +31,19 @@ function Equivalencia({ saldos, eq }: { saldos: SaldosPorMonedaCartera; eq: Equi
   const { data: rates } = useExchangeRates();
   const estimado = rates?.esFallback === true;
   if (!requiereEquivalente(saldos)) return null;
+  const hint = estimado
+    ? "Convertido con tipo de cambio de respaldo (no oficial): úsalo sólo como referencia."
+    : eq.facturasSinTc > 0
+      ? `${eq.facturasSinTc} moneda(s) sin tipo de cambio`
+      : undefined;
   return (
-    <div
-      className="text-xs text-muted-foreground mt-1"
-      title={
-        estimado
-          ? "Convertido con tipo de cambio de respaldo (no oficial): úsalo sólo como referencia."
-          : eq.facturasSinTc > 0
-            ? `${eq.facturasSinTc} moneda(s) sin tipo de cambio`
-            : undefined
-      }
-    >
-      ≈ {formatCurrency(eq.totalMxn, "MXN")} equivalente
-      {estimado && <span className="ml-1 text-warning">(T/C estimado)</span>}
-      {eq.facturasSinTc > 0 && <span className="ml-1">({eq.facturasSinTc} sin TC)</span>}
-    </div>
+    <Hint label={hint}>
+      <div className="text-xs text-muted-foreground mt-1">
+        ≈ {formatCurrency(eq.totalMxn, "MXN")} equivalente
+        {estimado && <span className="ml-1 text-warning">(T/C estimado)</span>}
+        {eq.facturasSinTc > 0 && <span className="ml-1">({eq.facturasSinTc} sin TC)</span>}
+      </div>
+    </Hint>
   );
 }
 

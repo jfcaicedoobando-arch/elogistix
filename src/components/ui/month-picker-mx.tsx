@@ -11,6 +11,7 @@ import {
 import { PATRON_PERIODO } from "./date-picker-mx-segmentos";
 import { manejarAtajosSegmento, seleccionarSegmentoEnCursor } from "./date-picker-mx-teclado";
 import { MonthPickerMxPanel } from "./month-picker-mx-panel";
+import { Hint } from "@/components/shared/Hint";
 import { useMonthPickerMxValor, ymADisplay } from "./month-picker-mx-valor";
 
 interface MonthPickerMxProps {
@@ -49,10 +50,10 @@ export function MonthPickerMx({
 
   return (
     <div className={cn(pickerRootClass, className)}>
+      <Hint label={title ?? PICKER_AYUDA_TECLADO}>
       <div
         role="group"
         aria-label={title}
-        title={title ?? PICKER_AYUDA_TECLADO}
         aria-disabled={disabled || undefined}
         className={cn(pickerTriggerClass({ showError, disabled }))}
       >
@@ -126,18 +127,19 @@ export function MonthPickerMx({
             if (!o) inputRef.current?.focus();
           }}
         >
-          <PopoverTrigger asChild>
-            <button
-              type="button"
-              tabIndex={-1}
-              disabled={disabled}
-              aria-label="Abrir selector de mes"
-              title="Abrir selector de mes (Alt + Flecha abajo)"
-              className="shrink-0 rounded p-0.5 text-muted-foreground hover:bg-muted hover:text-foreground disabled:cursor-not-allowed"
-            >
-              <CalendarIcon className={pickerIconClass} />
-            </button>
-          </PopoverTrigger>
+          <Hint label="Abrir selector de mes (Alt + Flecha abajo)">
+            <PopoverTrigger asChild>
+              <button
+                type="button"
+                tabIndex={-1}
+                disabled={disabled}
+                aria-label="Abrir selector de mes"
+                className="shrink-0 rounded p-0.5 text-muted-foreground hover:bg-muted hover:text-foreground disabled:cursor-not-allowed"
+              >
+                <CalendarIcon className={pickerIconClass} />
+              </button>
+            </PopoverTrigger>
+          </Hint>
           <PopoverContent className="w-64 p-3 pointer-events-auto" align="start">
             <MonthPickerMxPanel
               value={value}
@@ -150,6 +152,7 @@ export function MonthPickerMx({
           </PopoverContent>
         </Popover>
       </div>
+      </Hint>
       {showError && (
         <span id={errorId} className={pickerErrorClass}>
           {errorText ?? "Periodo inválido. Usa MM/AAAA."}

@@ -17,6 +17,7 @@ import type { ProformaConFactura } from "@/features/proformas/services";
 import { esBorradorVacio } from "./esBorradorVacio";
 import { getEstadoUnificado } from "@/lib/domain/estadoUnificado";
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
+import { Hint } from "@/components/shared/Hint";
 
 interface Props {
   proformas: ProformaConFactura[];
@@ -86,9 +87,11 @@ export function HistorialProformas({
         const email = row.original.operador;
         if (!email) return <span className="text-muted-foreground">—</span>;
         return (
-          <span className="truncate block" title={email}>
-            {nombreDesdeEmail(email)}
-          </span>
+          <Hint label={email}>
+            <span className="truncate block">
+              {nombreDesdeEmail(email)}
+            </span>
+          </Hint>
         );
       },
     },

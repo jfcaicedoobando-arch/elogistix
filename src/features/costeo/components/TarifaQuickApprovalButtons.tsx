@@ -6,6 +6,7 @@
  *   - "table"   → icon-only con tooltip (vista tabla densa).
  */
 import { Button } from "@/components/ui/button";
+import { Hint } from "@/components/shared/Hint";
 import { Check, X } from "lucide-react";
 
 interface Props {
@@ -26,7 +27,6 @@ export function TarifaQuickApprovalButtons({ variant, onAprobar, onRechazar, dis
           className="h-7 px-2 border-success/40 text-success hover:bg-success/10 hover:text-success"
           onClick={(e) => { e.stopPropagation(); onAprobar(); }}
           disabled={disabled}
-          title="Aprobar tarifa"
         >
           <Check className="size-3.5 mr-1" />Aprobar
         </Button>
@@ -37,7 +37,6 @@ export function TarifaQuickApprovalButtons({ variant, onAprobar, onRechazar, dis
           className="h-7 px-2 border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive"
           onClick={(e) => { e.stopPropagation(); onRechazar(); }}
           disabled={disabled}
-          title="Rechazar tarifa"
         >
           <X className="size-3.5 mr-1" />Rechazar
         </Button>
@@ -46,30 +45,32 @@ export function TarifaQuickApprovalButtons({ variant, onAprobar, onRechazar, dis
   }
   return (
     <div className="flex items-center gap-0.5">
-      <Button
-        type="button"
-        size="icon"
-        variant="ghost"
-        className="size-7 text-success hover:bg-success/10 hover:text-success"
-        onClick={(e) => { e.stopPropagation(); onAprobar(); }}
-        disabled={disabled}
-        title="Aprobar tarifa"
-        aria-label="Aprobar tarifa"
-      >
-        <Check className="size-4" />
-      </Button>
-      <Button
-        type="button"
-        size="icon"
-        variant="ghost"
-        className="size-7 text-destructive hover:bg-destructive/10 hover:text-destructive"
-        onClick={(e) => { e.stopPropagation(); onRechazar(); }}
-        disabled={disabled}
-        title="Rechazar tarifa"
-        aria-label="Rechazar tarifa"
-      >
-        <X className="size-4" />
-      </Button>
+      <Hint label="Aprobar tarifa">
+        <Button
+          type="button"
+          size="icon"
+          variant="ghost"
+          className="size-7 text-success hover:bg-success/10 hover:text-success"
+          onClick={(e) => { e.stopPropagation(); onAprobar(); }}
+          disabled={disabled}
+          aria-label="Aprobar tarifa"
+        >
+          <Check className="size-4" />
+        </Button>
+      </Hint>
+      <Hint label="Rechazar tarifa">
+        <Button
+          type="button"
+          size="icon"
+          variant="ghost"
+          className="size-7 text-destructive hover:bg-destructive/10 hover:text-destructive"
+          onClick={(e) => { e.stopPropagation(); onRechazar(); }}
+          disabled={disabled}
+          aria-label="Rechazar tarifa"
+        >
+          <X className="size-4" />
+        </Button>
+      </Hint>
     </div>
   );
 }

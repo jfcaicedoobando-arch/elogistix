@@ -7,6 +7,7 @@
  * dot de 6 px indicando severidad. Ver `src/lib/ui/badgeTone.ts`.
  */
 import { Badge } from "@/components/ui/badge";
+import { Hint } from "@/components/shared/Hint";
 import { cn } from "@/lib/utils";
 import { CHIP_BASE, CHIP_BASE_MD, TONE_DOT, type ChipTone } from "@/lib/ui/badgeTone";
 
@@ -31,14 +32,16 @@ export function ToneBadge({
 }: ToneBadgeProps) {
   const base = size === "md" ? CHIP_BASE_MD : CHIP_BASE;
   return (
-    <Badge variant="outline" className={cn(base, className)} title={title}>
-      {withDot && (
-        <span
-          aria-hidden
-          className={cn("inline-block h-1.5 w-1.5 rounded-full shrink-0", TONE_DOT[tone])}
-        />
-      )}
-      <span className="tabular-nums whitespace-nowrap">{children}</span>
-    </Badge>
+    <Hint label={title}>
+      <Badge variant="outline" className={cn(base, className)}>
+        {withDot && (
+          <span
+            aria-hidden
+            className={cn("inline-block h-1.5 w-1.5 rounded-full shrink-0", TONE_DOT[tone])}
+          />
+        )}
+        <span className="tabular-nums whitespace-nowrap">{children}</span>
+      </Badge>
+    </Hint>
   );
 }

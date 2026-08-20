@@ -14,6 +14,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Users, Timer } from "lucide-react";
 import { KpiCard } from "@/components/shared/KpiCard";
 import type { OperadorRanking } from "@/features/auditoria/hooks";
+import { Hint } from "@/components/shared/Hint";
 
 interface Props {
   mttrHoras: number | null;
@@ -42,7 +43,7 @@ function RankingList({ ranking, emptyMsg }: { ranking: OperadorRanking[]; emptyM
           key={op.email}
           className="flex items-center justify-between gap-2 text-body-sm border rounded-md p-2"
         >
-          <span className="truncate font-medium" title={op.email}>{op.email}</span>
+          <Hint label={op.email}><span className="truncate font-medium">{op.email}</span></Hint>
           <div className="flex items-center gap-1.5 shrink-0">
             <Badge variant="secondary" className="tabular-nums">{op.resueltos} resueltos</Badge>
             {op.pendientes > 0 && (

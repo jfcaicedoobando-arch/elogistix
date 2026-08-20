@@ -13,6 +13,7 @@ import { COL_W } from "@/components/shared/dataTable/columnWidths";
 import { buildCarteraSelectionColumns } from "./carteraColumns.selection";
 import { diasVencidoCartera } from "./carteraDias";
 import type { CarteraRow } from "./carteraColumns.types";
+import { Hint } from "@/components/shared/Hint";
 
 export type { CarteraRow };
 
@@ -30,9 +31,9 @@ export function buildCarteraColumns(onRecordatorio?: (row: CarteraRow) => void):
       enableSorting: true,
       meta: { width: COL_W.ruta, className: "max-w-[240px] truncate" },
       cell: ({ row }) => (
-        <span title={row.original.cliente_nombre ?? undefined}>
-          {row.original.cliente_nombre ?? "—"}
-        </span>
+        <Hint label={row.original.cliente_nombre ?? undefined}>
+          <span>{row.original.cliente_nombre ?? "—"}</span>
+        </Hint>
       ),
     },
     {

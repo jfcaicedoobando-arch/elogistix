@@ -22,6 +22,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { AlertTriangle, CheckCircle2, MailWarning } from "lucide-react";
 import { inicialesDeEmail } from "./usuariosCellsUtils";
+import { Hint } from "@/components/shared/Hint";
 import { UNRESOLVED_EMAIL } from "@/features/admin/services/usuario/constants";
 
 
@@ -45,16 +46,17 @@ export function UsuarioCell({ user, isSelf }: UsuarioCellProps) {
         </AvatarFallback>
       </Avatar>
       <div className="flex min-w-0 flex-col">
-        <span
-          className={
-            unresolved
-              ? "italic font-normal text-muted-foreground truncate"
-              : "font-medium truncate"
-          }
-          title={etiqueta}
-        >
-          {etiqueta}
-        </span>
+        <Hint label={etiqueta}>
+          <span
+            className={
+              unresolved
+                ? "italic font-normal text-muted-foreground truncate"
+                : "font-medium truncate"
+            }
+          >
+            {etiqueta}
+          </span>
+        </Hint>
         {fallbackName && (
           <span className="text-label text-muted-foreground italic">
             Correo no disponible

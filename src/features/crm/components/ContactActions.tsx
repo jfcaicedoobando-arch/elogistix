@@ -3,6 +3,7 @@
  */
 import { Copy, Mail, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Hint } from "@/components/shared/Hint";
 import { useCopyText } from "@/hooks/shared";
 import PlantillaSelector from "@/features/crm/components/PlantillaSelector";
 
@@ -32,9 +33,11 @@ export default function ContactActions({ email, telefono, plantillaCtx }: Props)
         {email ? (
           <>
             <a href={`mailto:${email}`} className="text-primary hover:underline truncate rounded-sm focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none">{email}</a>
-            <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => copy(email, "Email")} title="Copiar email" aria-label="Copiar email">
-              <Copy className="h-3 w-3" />
-            </Button>
+            <Hint label="Copiar email">
+              <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => copy(email, "Email")} aria-label="Copiar email">
+                <Copy className="h-3 w-3" />
+              </Button>
+            </Hint>
             {plantillaCtx && (
               <PlantillaSelector
                 canal="email"
@@ -54,9 +57,11 @@ export default function ContactActions({ email, telefono, plantillaCtx }: Props)
         {telefono ? (
           <>
             <a href={`tel:${telefono}`} className="text-primary hover:underline rounded-sm focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none">{telefono}</a>
-            <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => copy(telefono, "Teléfono")} title="Copiar teléfono" aria-label="Copiar teléfono">
-              <Copy className="h-3 w-3" />
-            </Button>
+            <Hint label="Copiar teléfono">
+              <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => copy(telefono, "Teléfono")} aria-label="Copiar teléfono">
+                <Copy className="h-3 w-3" />
+              </Button>
+            </Hint>
             {plantillaCtx && (
               <PlantillaSelector
                 canal="whatsapp"
