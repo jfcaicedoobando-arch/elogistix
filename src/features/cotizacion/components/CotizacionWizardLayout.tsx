@@ -84,7 +84,10 @@ export default function CotizacionWizardLayout({
 
   // Ola C · #13: guarda de salida. Antes se podía navegar (sidebar, migas) con
   // el wizard a medio capturar y se perdía todo sin aviso.
-  const { guardDialog } = useDirtyGuard(form.formState.isDirty && !isBusy);
+  // RN-EC-5: el "Volver" del header era navegación programática y saltaba la
+  // guarda; ahora también pasa por confirmarSalida.
+  const { guardDialog, confirmarSalida } = useDirtyGuard(form.formState.isDirty && !isBusy);
+  const handleBackHeader = useCallback(() => { confirmarSalida(onBack); }, [confirmarSalida, onBack]);
 
   // P1 (v13.294.0) — atajos de teclado del wizard.
   const handleFlushDraft = useCallback(() => {
@@ -108,7 +111,7 @@ export default function CotizacionWizardLayout({
         steps={WIZARD_STEPS}
         currentStep={w.currentStep}
         onStepClick={(s) => w.setCurrentStep(s)}
-        onBack={onBack}
+        onBack={handleBackHeader}
         isBusy={isBusy}
         contentMaxWidth="6xl"
         footer={

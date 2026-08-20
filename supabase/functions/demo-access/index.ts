@@ -91,9 +91,17 @@ async function asegurarUsuarioDemo(admin: SupabaseClient): Promise<string> {
   const existing = list.users.find((u) => u.email?.toLowerCase() === DEMO_EMAIL);
 
   if (existing) {
-    // Resetear password e email_confirm por si cambió manualmente.
-    const { error: updErr } = await admin.auth.admin.updateUserById(existing.id, {
+    // EC-2: sólo tocar la cuenta si hace falta. Antes cada llamada reseteaba el
+    // password (invalidando sesiones demo activas) aunque ya fuera el correcto.
+    const { error: signInErr } = await admin.auth.signInWithPassword({
+      email: DEMO_EMAIL,
       password: DEMO_PASSWORD,
+    });
+    const passwordVigente = !signInErr;
+    if (passwordVigente && existing.email_confirmed_at) return existing.id;
+
+    const { error: updErr } = await admin.auth.admin.updateUserById(existing.id, {
+      ...(passwordVigente ? {} : { password: DEMO_PASSWORD }),
       email_confirm: true,
       user_metadata: { full_name: "Usuario Demo" },
     });

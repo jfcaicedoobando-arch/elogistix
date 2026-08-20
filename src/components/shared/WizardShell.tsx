@@ -97,9 +97,11 @@ export function WizardShell({
     if (target.tagName === "INPUT" && (target as HTMLInputElement).type === "button") return;
     if (target.getAttribute("aria-expanded") === "true") return;
     if (target.tagName !== "INPUT" && target.tagName !== "SELECT") return;
+    // EC-16 — Enter dentro de un campo de captura NO avanza de paso (antes un
+    // Enter accidental saltaba el paso con datos a medias): sólo se evita el
+    // submit implícito. Para avanzar hay que usar el botón "Siguiente".
     e.preventDefault();
-    if (!isBusy && defaultFooter) defaultFooter.onNext();
-  }, [isBusy, defaultFooter]);
+  }, []);
 
   const widthClass = MAX_W[contentMaxWidth];
 

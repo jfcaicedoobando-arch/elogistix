@@ -2,19 +2,56 @@ import { useRef, useState } from "react";
 import { Check, Upload, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ConfirmActionDialog } from "@/components/shared/dialogs/ConfirmActionDialog";
+import { notifyError } from "@/lib/notify";
 
 export type { DocumentoChecklist } from "@/types/documentoChecklist";
 import type { DocumentoChecklist } from "@/types/documentoChecklist";
+
+/** EC-15 — Extensiones aceptadas por defecto (documentos de embarque). */
+const ACCEPT_DEFAULT = ".pdf,.jpg,.jpeg,.png,.xml,.xlsx,.xls,.doc,.docx";
+/** EC-15 — Tope de tamaño por defecto (MB). */
+const MAX_SIZE_MB_DEFAULT = 15;
 
 interface Props {
   documentos: DocumentoChecklist[];
   onFileChange: (docNombre: string, file: File | undefined) => void;
   descripcion?: string;
+  /** Lista `accept` del input de archivo. Default: documentos ofimáticos e imágenes. */
+  accept?: string;
+  /** Tamaño máximo por archivo en MB. Default: 15. */
+  maxSizeMb?: number;
 }
 
-export default function DocumentChecklist({ documentos, onFileChange, descripcion }: Props) {
+export default function DocumentChecklist({
+  documentos,
+  onFileChange,
+  descripcion,
+  accept = ACCEPT_DEFAULT,
+  maxSizeMb = MAX_SIZE_MB_DEFAULT,
+}: Props) {
   const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
   const [pendingDelete, setPendingDelete] = useState<string | null>(null);
+
+  const extensionesOk = accept.split(",").map((e) => e.trim().toLowerCase()).filter(Boolean);
+
+  const handleSeleccion = (docNombre: string, file: File | undefined, input: HTMLInputElement) => {
+    if (!file) {
+      onFileChange(docNombre, undefined);
+      return;
+    }
+    const ext = `.${file.name.split(".").pop()?.toLowerCase() ?? ""}`;
+    if (extensionesOk.length > 0 && !extensionesOk.includes(ext)) {
+      input.value = "";
+      notifyError(undefined, { title: "Tipo de archivo no permitido", description: `Se aceptan: ${accept}` });
+      return;
+    }
+    if (file.size > maxSizeMb * 1024 * 1024) {
+      input.value = "";
+      notifyError(undefined, { title: "Archivo demasiado grande", description: `El máximo permitido es ${maxSizeMb} MB.` });
+      return;
+    }
+    onFileChange(docNombre, file);
+  };
 
   return (
     <div className="space-y-3">
@@ -65,8 +102,9 @@ export default function DocumentChecklist({ documentos, onFileChange, descripcio
           <input
             ref={el => { fileInputRefs.current[doc.nombre] = el; }}
             type="file"
+            accept={accept}
             className="hidden"
-            onChange={e => onFileChange(doc.nombre, e.target.files?.[0])}
+            onChange={e => handleSeleccion(doc.nombre, e.target.files?.[0], e.currentTarget)}
           />
         </div>
       ))}
