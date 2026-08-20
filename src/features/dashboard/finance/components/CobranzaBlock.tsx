@@ -8,7 +8,7 @@ import { ArrowRight, ChevronRight, PartyPopper, Receipt } from "lucide-react";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 import { formatCurrency, formatCurrencyCompact } from "@/lib/formatters";
 import { DrilldownRow } from "@/components/shared/dataTable/DrilldownRow";
-import { CUBETAS_VENCIDAS, type ResumenAgingMxn } from "@/lib/domain/carteraAging";
+import { CUBETAS_VENCIDAS, type ResumenAgingMxn } from "@/features/dashboard/finance/domain/carteraAging";
 import { AGING_SOFT_CLASS, CUBETA_LABELS, CUBETA_NIVEL } from "@/lib/aging/buckets";
 import { Hint } from "@/components/shared/Hint";
 

@@ -11,9 +11,9 @@ import { useHuecoFacturacion } from "@/features/facturacion/hooks/useHuecoFactur
 import { useEmbarquesPendientesAdmin } from "@/features/dashboard/hooks/useEmbarquesPendientesAdmin";
 import { esFacturaPorPagar } from "@/features/cxp/services";
 import { esCxcVencida } from "@/lib/domain/vencimiento";
-import { resumirAgingMxn, type ResumenAgingMxn } from "@/lib/domain/carteraAging";
+import { resumirAgingMxn, type ResumenAgingMxn } from "@/features/dashboard/finance/domain/carteraAging";
 
-export type { AgingMxn } from "@/lib/domain/carteraAging";
+export type { AgingMxn } from "@/features/dashboard/finance/domain/carteraAging";
 
 export function useFinanceDashboard() {
   const cobranzaQ = useCobranza({});

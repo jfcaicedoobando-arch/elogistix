@@ -7,7 +7,7 @@ import {
   esVencidoPorDiasParaVencer,
   estaPorVencer,
 } from "@/lib/domain/vencimiento";
-import { resumirAgingMxn, CUBETAS_VENCIDAS } from "@/lib/domain/carteraAging";
+import { resumirAgingMxn, CUBETAS_VENCIDAS } from "@/features/dashboard/finance/domain/carteraAging";
 
 describe("canon de vencimiento", () => {
   it("esVencidoPorDias sólo cuenta días positivos", () => {
