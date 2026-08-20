@@ -487,6 +487,9 @@ jobs:
       - name: CXP - cancelacion libera embarque y conceptos (v13.505.0)
         run: $PSQL -f supabase/tests/cxp_cancelacion_libera_embarque.sql
 
+      - name: Embarques - Cerrado no cancelable directo (BUG-09)
+        run: $PSQL -f supabase/tests/embarque_cerrado_no_cancelable.sql
+
 
 
 
