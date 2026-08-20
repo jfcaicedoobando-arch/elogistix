@@ -59,6 +59,8 @@ interface Rates {
   // disfrazado de TC real (contrato FIX-10).
   eurMxn: number | null;
   fechaAplicada?: string;
+  /** BL-16: fecha que pidió el cliente (null si no pidió ninguna válida). */
+  fechaSolicitada?: string | null;
   es_fallback?: false;
   /** EF-04: true cuando el EUR no vino de Banxico/tabla (fallback parcial). */
   eur_es_fallback?: boolean;
@@ -67,6 +69,15 @@ interface Rates {
 
 let cacheHoyRef: { rates: Rates; expiresAt: number } | null = null;
 const cacheHistorico = new Map<string, { rates: Rates; expiresAt: number }>();
+
+/**
+ * BL-16: sella la fecha solicitada al momento de responder (NO se guarda en
+ * caché: el mismo TC de "hoy" se sirve a peticiones con fechas distintas).
+ */
+function conFechaSolicitada(rates: Rates, fechaSolicitada: string | null): Rates {
+  return { ...rates, fechaSolicitada };
+}
+
 
 /**
  * Extrae la fecha objetivo: query string (`?fecha=YYYY-MM-DD`) y como fallback
