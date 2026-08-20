@@ -16,6 +16,7 @@ import { formatDateOnlyLocal } from "@/lib/date/dateOnly";
 import { EjecutarPagoDialog, type FormPago } from "./_sections/EjecutarPagoDialog";
 import { PagosProgramadosTablas } from "./_sections/PagosProgramadosTablas";
 import { buildPagosProgramadosColumns, filtrarProgramables, type FiltroBandeja } from "./_sections/pagosProgramadosColumns";
+import { FILTRO_ANCHO } from "@/lib/ui/filterWidths";
 
 export default function TesoreriaPagosProgramados() {
   // B-030: fetch directo sin filtro implícito de estado (antes la RPC
@@ -108,7 +109,7 @@ export default function TesoreriaPagosProgramados() {
       <div className="flex items-center gap-2">
         <span className="text-body text-muted-foreground">Mostrar:</span>
         <Select value={filtro} onValueChange={(v) => setFiltro(v as FiltroBandeja)}>
-          <SelectTrigger className="w-[220px]"><SelectValue /></SelectTrigger>
+          <SelectTrigger className={FILTRO_ANCHO.lg}><SelectValue /></SelectTrigger>
           <SelectContent>
             <SelectItem value="todas">Todas las pendientes</SelectItem>
             <SelectItem value="programadas">Solo con pago programado</SelectItem>

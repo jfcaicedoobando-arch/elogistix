@@ -15,6 +15,7 @@ import { MODULOS_BITACORA } from "@/services/bitacora/registrar";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { useOrganization } from "@/lib/contexts/OrganizationContext";
 import { ErrorState } from "@/components/shared/states/ErrorState";
+import { FILTRO_ANCHO } from "@/lib/ui/filterWidths";
 
 const MODULOS = MODULOS_BITACORA;
 
@@ -114,7 +115,7 @@ export default function Bitacora() {
       {/* Filtros */}
       <div className="flex items-center gap-3 flex-wrap">
         <Select value={moduloFiltro} onValueChange={resetPagina(setModuloFiltro)}>
-          <SelectTrigger className="w-[180px]">
+          <SelectTrigger className={FILTRO_ANCHO.md}>
             <SelectValue placeholder="Módulo" />
           </SelectTrigger>
           <SelectContent>
@@ -127,7 +128,7 @@ export default function Bitacora() {
         </Select>
 
         <Select value={accionFiltro} onValueChange={resetPagina(setAccionFiltro)}>
-          <SelectTrigger className="w-[180px]">
+          <SelectTrigger className={FILTRO_ANCHO.md}>
             <SelectValue placeholder="Acción" />
           </SelectTrigger>
           <SelectContent>
@@ -140,7 +141,7 @@ export default function Bitacora() {
         </Select>
 
         <Select value={rangoFiltro} onValueChange={resetPagina(setRangoFiltro)}>
-          <SelectTrigger className="w-[180px]">
+          <SelectTrigger className={FILTRO_ANCHO.md}>
             <SelectValue placeholder="Rango" />
           </SelectTrigger>
           <SelectContent>

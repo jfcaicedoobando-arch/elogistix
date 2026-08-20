@@ -30,6 +30,7 @@ import { derivarLoteCobro, hayEnTramiteCancelacion } from "./_sections/carteraLo
 import { CarteraSelectionBar } from "./_sections/CarteraSelectionBar";
 import { usePermissions } from "@/hooks/shared/usePermissions";
 import { useDocumentTitle } from "@/hooks/shared";
+import { FILTRO_ANCHO } from "@/lib/ui/filterWidths";
 
 
 export default function Cartera() {
@@ -97,7 +98,7 @@ export default function Cartera() {
         primary={
           <>
             <Select value={paged.filters.urgencia} onValueChange={(v) => paged.setFilter("urgencia", v)}>
-              <SelectTrigger className="w-[200px]" aria-label="Urgencia">
+              <SelectTrigger className={FILTRO_ANCHO.md} aria-label="Urgencia">
                 <SelectValue placeholder="Urgencia" />
               </SelectTrigger>
               <SelectContent>
@@ -108,7 +109,7 @@ export default function Cartera() {
               </SelectContent>
             </Select>
             <Select value={paged.filters.moneda} onValueChange={(v) => paged.setFilter("moneda", v)}>
-              <SelectTrigger className="w-[140px]" aria-label="Moneda">
+              <SelectTrigger className={FILTRO_ANCHO.sm} aria-label="Moneda">
                 <SelectValue placeholder="Moneda" />
               </SelectTrigger>
               <SelectContent>

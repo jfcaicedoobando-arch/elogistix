@@ -36,6 +36,7 @@ import {
 
 import { AgingKpiBucket } from "@/components/shared/kpi/AgingKpiBucket";
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
+import { FILTRO_ANCHO } from "@/lib/ui/filterWidths";
 
 
 interface Filters extends Record<string, string> { cubeta: string }
@@ -129,7 +130,7 @@ export default function CxpAging() {
         searchPlaceholder="Buscar proveedor…"
         primary={
           <Select value={paged.filters.cubeta} onValueChange={(v) => paged.setFilter("cubeta", v)}>
-            <SelectTrigger className="w-[180px]" aria-label="Cubeta">
+            <SelectTrigger className={FILTRO_ANCHO.md} aria-label="Cubeta">
               <SelectValue placeholder="Con saldo en" />
             </SelectTrigger>
             <SelectContent>

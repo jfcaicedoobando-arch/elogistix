@@ -30,6 +30,7 @@ import { UnifiedFiltersBar } from "@/components/shared/filters/UnifiedFiltersBar
 import { useClientPagedList } from "@/hooks/shared/useClientPagedList";
 import { CargaGuard } from "@/components/shared/states/CargaGuard";
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
+import { FILTRO_ANCHO } from "@/lib/ui/filterWidths";
 
 
 const ESTADO_VALUES = ["todos", "Devengada", "Liquidada", "Cancelada"] as const;
@@ -120,7 +121,7 @@ export default function Comisiones() {
             primary={
               <>
                 <Select value={server.v} onValueChange={setVendedora}>
-                  <SelectTrigger className="w-[200px]" aria-label="Vendedora">
+                  <SelectTrigger className={FILTRO_ANCHO.md} aria-label="Vendedora">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -131,7 +132,7 @@ export default function Comisiones() {
                   </SelectContent>
                 </Select>
                 <Select value={server.estado} onValueChange={(v) => setEstado(v as EstadoUrl)}>
-                  <SelectTrigger className="w-[160px]" aria-label="Estado">
+                  <SelectTrigger className={FILTRO_ANCHO.md} aria-label="Estado">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>

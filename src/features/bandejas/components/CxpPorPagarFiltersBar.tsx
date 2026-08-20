@@ -3,6 +3,7 @@ import { Label } from "@/components/ui/label";
 import { DatePickerMx } from "@/components/ui/date-picker-mx";
 import { UnifiedFiltersBar } from "@/components/shared/filters/UnifiedFiltersBar";
 import { rangoLabel } from "@/lib/ui/rangoFechasCopy";
+import { FILTRO_ANCHO } from "@/lib/ui/filterWidths";
 
 export interface CxpPorPagarFiltersBarProps {
   search: string;
@@ -31,7 +32,7 @@ export function CxpPorPagarFiltersBar(props: CxpPorPagarFiltersBarProps) {
       primary={
         <>
           <Select value={props.vencidas} onValueChange={props.onVencidasChange}>
-            <SelectTrigger className="w-[160px]" aria-label="Vencidas">
+            <SelectTrigger className={FILTRO_ANCHO.md} aria-label="Vencidas">
               <SelectValue placeholder="Vencidas" />
             </SelectTrigger>
             <SelectContent>
@@ -41,7 +42,7 @@ export function CxpPorPagarFiltersBar(props: CxpPorPagarFiltersBarProps) {
             </SelectContent>
           </Select>
           <Select value={props.moneda} onValueChange={props.onMonedaChange}>
-            <SelectTrigger className="w-[140px]" aria-label="Moneda">
+            <SelectTrigger className={FILTRO_ANCHO.sm} aria-label="Moneda">
               <SelectValue placeholder="Moneda" />
             </SelectTrigger>
             <SelectContent>
