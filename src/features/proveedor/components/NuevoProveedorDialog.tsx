@@ -43,9 +43,7 @@ export default function NuevoProveedorDialog({ open, onOpenChange, onSave, prefi
           : "Datos bancarios (opcionales). Puedes capturarlos después desde la edición del proveedor."
       }
       size="xl"
-      step={c.step}
-      totalSteps={2}
-      stepLabels={["Identificación", "Datos bancarios"]}
+      stepper={{ step: c.step, totalSteps: 2, labels: ["Identificación", "Datos bancarios"] }}
       headerAside={headerAside}
       footer={c.step === 1 ? (
         <>

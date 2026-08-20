@@ -38,9 +38,7 @@ describe("<FormDialogShell />", () => {
     render(
       <FormDialogShell
         {...baseProps}
-        step={2}
-        totalSteps={3}
-        stepLabels={["Uno", "Dos", "Tres"]}
+        stepper={{ step: 2, totalSteps: 3, labels: ["Uno", "Dos", "Tres"] }}
       >
         <div />
       </FormDialogShell>,

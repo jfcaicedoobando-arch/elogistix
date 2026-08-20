@@ -40,9 +40,7 @@ export function DialogGenerarProforma({ open, onOpenChange, embarque, conceptosP
           : "Revisa el resumen final antes de confirmar. Aún no se ha generado nada."
       }
       size="3xl"
-      step={isSeleccion ? 1 : 2}
-      totalSteps={2}
-      stepLabels={["Selección", "Confirmación"]}
+      stepper={{ step: isSeleccion ? 1 : 2, totalSteps: 2, labels: ["Selección", "Confirmación"] }}
       footer={
         isSeleccion ? (
           <>

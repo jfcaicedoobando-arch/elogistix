@@ -39,10 +39,8 @@ interface Props {
   size?: Size;
   /** Slot derecho del header (p.ej. chip de Total en facturas). */
   headerAside?: ReactNode;
-  /** Si se proveen, renderiza un FormDialogStepper bajo el header. */
-  step?: number;
-  totalSteps?: number;
-  stepLabels?: string[];
+  /** Si se provee, renderiza un FormDialogStepper bajo el header. */
+  stepper?: { step: number; totalSteps: number; labels?: string[] };
   footer: ReactNode;
   /**
    * Cuando se pasan `formId` + `onSubmit`, el cuerpo scrolleable se renderiza
@@ -76,9 +74,7 @@ export function FormDialogShell({
   description,
   size = "lg",
   headerAside,
-  step,
-  totalSteps,
-  stepLabels,
+  stepper,
   footer,
   formId,
   onSubmit,
@@ -89,7 +85,7 @@ export function FormDialogShell({
   isDirty = false,
   children,
 }: Props) {
-  const showStepper = typeof step === "number" && typeof totalSteps === "number" && totalSteps > 1;
+  const showStepper = stepper !== undefined && stepper.totalSteps > 1;
   const enfocar = autoFocusFirstField ?? Boolean(formId);
   const bodyRef = useAutoFocusPrimerCampo(open, enfocar);
   const bodyClass = cn("flex-1 overflow-y-auto px-6 py-5 space-y-5", bodyClassName);
@@ -136,7 +132,11 @@ export function FormDialogShell({
             {headerAside && <div className="text-right shrink-0">{headerAside}</div>}
           </div>
           {showStepper && (
-            <FormDialogStepper step={step!} totalSteps={totalSteps!} labels={stepLabels} />
+            <FormDialogStepper
+              step={stepper!.step}
+              totalSteps={stepper!.totalSteps}
+              labels={stepper!.labels}
+            />
           )}
         </DialogHeader>
 

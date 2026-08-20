@@ -126,9 +126,7 @@ export default function FacturapiOnboardingWizard({ orgId, open, onOpenChange }:
       title="Conectar FacturApi"
       description="Vincula tu cuenta de FacturApi en 3 pasos para empezar a timbrar CFDI 4.0."
       size="lg"
-      step={paso}
-      totalSteps={PASOS.length}
-      stepLabels={[...PASOS]}
+      stepper={{ step: paso, totalSteps: PASOS.length, labels: [...PASOS] }}
       footer={footer}
     >
       {paso === 1 && (

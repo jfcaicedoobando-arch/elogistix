@@ -48,9 +48,7 @@ export function DialogRefacturarReceptor({ facturaId, open, onOpenChange }: Prop
       size="4xl"
       title={`Refacturar a otro receptor · ${s.original?.numero ?? ""}`}
       description="Corrige el receptor del CFDI conservando el pago y la trazabilidad del embarque."
-      step={s.paso}
-      totalSteps={TOTAL_PASOS_REFACTURACION}
-      stepLabels={[...PASOS_REFACTURACION]}
+      stepper={{ step: s.paso, totalSteps: TOTAL_PASOS_REFACTURACION, labels: [...PASOS_REFACTURACION] }}
       stickyBottom={
         w.bloqueo ? (
           <p className="text-body-sm text-destructive" role="alert">

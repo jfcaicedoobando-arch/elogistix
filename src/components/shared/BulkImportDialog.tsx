@@ -79,9 +79,7 @@ export function BulkImportDialog<T>({
       title={title}
       description={description}
       size="2xl"
-      step={stepToIndex(step)}
-      totalSteps={3}
-      stepLabels={STEP_LABELS}
+      stepper={{ step: stepToIndex(step), totalSteps: 3, labels: STEP_LABELS }}
       footer={
         <BulkImportFooter
           step={step}
