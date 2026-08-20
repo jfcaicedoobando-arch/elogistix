@@ -1,4 +1,5 @@
 import { useDeferredValue } from "react";
+import { Plus } from "lucide-react";
 import { useDocumentTitle } from "@/hooks/shared";
 import { Card, CardContent } from "@/components/ui/card";
 import { ResponsiveDataTable } from "@/components/shared/dataTable/ResponsiveDataTable";
@@ -16,6 +17,7 @@ import { EmbarqueMobileCard } from "@/features/embarques/components/EmbarqueMobi
 import { notifyInfo } from "@/lib/ui/appFeedback";
 import { EmbarquesTablaVacia } from "@/features/embarques/components/EmbarquesTablaVacia";
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
+import { FloatingActionButton } from "@/components/shared/FloatingActionButton";
 
 
 function buildDescription(contenedoresCount: number, expedientesCount: number, estadoActivo: boolean): string {
@@ -175,6 +177,14 @@ export default function Embarques() {
         )}
       </CargaGuard>
 
+      {/* UIA-16: en mobile el alta primaria vive en el FAB (el header oculta el botón <md). */}
+      {!isEmptyState ? (
+        <FloatingActionButton
+          onClick={canCrear ? goNuevo : goNuevoDesdeCotizacion}
+          icon={<Plus className="h-6 w-6" />}
+          label="Nuevo embarque"
+        />
+      ) : null}
     </PageContainer>
   );
 }

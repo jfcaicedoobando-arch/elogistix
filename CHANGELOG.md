@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.694.1] - 2026-08-20
+### Embarques — Botón flotante reactivado
+- En móvil vuelve el botón flotante "+" en Embarques y ahora sí abre la acción correcta: alta directa si tienes permiso, o el flujo guiado desde cotización si no.
+- Se retiró "Nuevo embarque" del menú "Más acciones" para dejar un único punto de entrada en móvil (el menú conserva Exportar CSV).
+
 ## [13.694.0] - 2026-08-20
 ### Ola G — Cierre de la auditoría visual
 - Las flechitas de "ver detalle" en Historial de facturas y proformas ahora son legibles (antes casi transparentes) y se realzan al pasar el mouse.
