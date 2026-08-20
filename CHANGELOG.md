@@ -1,5 +1,14 @@
 # Changelog
 
+## [13.691.1] - 2026-08-20
+### Cierre de la Ola G1 (verificación y blindaje)
+- Verificado en la base: un embarque **Cerrado** ya no se puede cancelar de forma directa (hay que reabrirlo primero). Se agrega la prueba automática `embarque_cerrado_no_cancelable.sql` al CI para que la regla no se pierda.
+- Verificado que los conceptos enviados a la papelera no se timbran: nueva prueba `conceptosSoftDelete_test.ts` que revisa el filtro en el timbrado de facturas y de complementos de pago (REP).
+- Verificado que al eliminar un pago sí se libera el anticipo aplicado (sólo existen anticipos de proveedor, y ese flujo ya lo revierte).
+- Revisado el listado de Cotizaciones: la columna **Cliente** muestra el nombre correctamente (hallazgo VR-2 descartado).
+
+
+
 ## [13.691.0] - 2026-08-19
 ### Dinero y seguridad (Ola G1)
 - Las notas de crédito en una moneda distinta a la de la factura ya se convierten a la misma moneda antes de compararse contra el saldo pendiente: antes una nota en pesos sobre una factura en dólares (o al revés) se rechazaba de más o se aceptaba de más. Si no hay tipo de cambio disponible, la nota se rechaza con un aviso claro.
