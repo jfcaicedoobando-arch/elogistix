@@ -77,7 +77,7 @@ export function ConfirmActionDialog({
               <AlertDialogDescription>{description}</AlertDialogDescription>
             ) : (
               <AlertDialogDescription asChild>
-                <div className="text-sm text-muted-foreground">{description}</div>
+                <div className="text-body text-muted-foreground">{description}</div>
               </AlertDialogDescription>
             )
           ) : null}

@@ -24,7 +24,7 @@ export function AgingMonedaFechaBar({
   return (
     <div className="flex items-end justify-between gap-3 flex-wrap">
       <div className="flex items-center gap-1.5 flex-wrap">
-        <span className="text-xs text-muted-foreground mr-1">Moneda:</span>
+        <span className="text-body-sm text-muted-foreground mr-1">Moneda:</span>
         {monedasVisibles.map((m) => (
           <Button
             key={m}
@@ -33,14 +33,14 @@ export function AgingMonedaFechaBar({
             size="sm"
             aria-pressed={monedaActiva === m}
             onClick={() => onMonedaChange(m)}
-            className={cn("h-7 rounded-full px-2.5 text-xs")}
+            className={cn("h-7 rounded-full px-2.5 text-body-sm")}
           >
             {m}
           </Button>
         ))}
       </div>
       <div className="w-[200px]">
-        <label className="text-xs text-muted-foreground mb-1 block" htmlFor={idFecha}>
+        <label className="text-body-sm text-muted-foreground mb-1 block" htmlFor={idFecha}>
           Fecha de corte
         </label>
         <DatePickerMx

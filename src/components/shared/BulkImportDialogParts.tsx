@@ -40,7 +40,7 @@ export function BulkImportBody<T>({
   }
   if (step === "committing") {
     return (
-      <div className="py-12 text-center text-sm text-muted-foreground flex flex-col items-center gap-3">
+      <div className="py-12 text-center text-body text-muted-foreground flex flex-col items-center gap-3">
         <Loader2 className="h-8 w-8 animate-spin text-accent" />
         Importando registros...
       </div>

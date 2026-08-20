@@ -11,7 +11,9 @@ import { DetailTableHead, DetailTableRow } from "@/components/shared/DetailTable
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 import { DENSITY_CELL } from "@/components/shared/dataTable/types";
 import { MODOS_COLUMNAS, type EstadoResultados, type FilaER, type TotalER } from "@/features/profit/domain/estadoResultados";
-import { fmt, pct } from "./EstadoResultadosTable.helpers";
+import { MargenTexto } from "@/components/shared/MargenBadge";
+import { UMBRAL_MARGEN_OPERATIVO } from "@/lib/ui/margen";
+import { fmt } from "./EstadoResultadosTable.helpers";
 
 const CELL_PAD = DENSITY_CELL[TABLE_DENSITY.embebida];
 
@@ -55,12 +57,17 @@ function MargenRow({ margen }: { margen: TotalER }) {
     <DetailTableRow hoverable={false} className="bg-muted/60 font-semibold">
       <TableCell className={CELL_PAD}>Margen %</TableCell>
       {MODOS_COLUMNAS.map((m) => (
-        <TableCell key={m} className={`${CELL_PAD} text-right tabular-nums`}>{pct(margen.porModo[m])}</TableCell>
+        <TableCell key={m} className={`${CELL_PAD} text-right`}>
+          <MargenTexto pct={margen.porModo[m]} umbrales={UMBRAL_MARGEN_OPERATIVO} />
+        </TableCell>
       ))}
-      <TableCell className={`${CELL_PAD} text-right tabular-nums`}>{pct(margen.total)}</TableCell>
+      <TableCell className={`${CELL_PAD} text-right`}>
+        <MargenTexto pct={margen.total} umbrales={UMBRAL_MARGEN_OPERATIVO} />
+      </TableCell>
     </DetailTableRow>
   );
 }
+
 
 function EmptyRow({ label }: { label: string }) {
   return (
@@ -137,7 +144,7 @@ export function EstadoResultadosTable({ data }: { data: EstadoResultados }) {
         </div>
         <div className="bg-muted/60 font-semibold px-3 py-2 flex items-center justify-between text-body-sm">
           <span>Margen %</span>
-          <span className="tabular-nums">{pct(data.margen.total)}</span>
+          <MargenTexto pct={data.margen.total} umbrales={UMBRAL_MARGEN_OPERATIVO} />
         </div>
       </div>
 

@@ -50,22 +50,22 @@ export default function PaginationControls({
   return (
     <div className="flex flex-wrap items-center justify-between gap-3 p-4 border-t bg-muted/30">
       <div className="flex items-center gap-3">
-        <span className="text-sm text-muted-foreground tabular-nums">
+        <span className="text-body text-muted-foreground tabular-nums">
           Página {page + 1} de {Math.max(totalPages, 1)}
         </span>
         {typeof total === "number" && (
-          <span className="text-sm text-muted-foreground tabular-nums">
+          <span className="text-body text-muted-foreground tabular-nums">
             · {total === 0 ? "0" : `${desde}–${hasta}`} de {total}
           </span>
         )}
         {onPageSizeChange && pageSize && (
           <div className="flex items-center gap-1.5">
-            <span className="text-sm text-muted-foreground">|</span>
+            <span className="text-body text-muted-foreground">|</span>
             <Select
               value={String(pageSize)}
               onValueChange={(v) => onPageSizeChange(Number(v))}
             >
-              <SelectTrigger className="h-8 w-[110px] text-xs">
+              <SelectTrigger className="h-8 w-[110px] text-body-sm">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>

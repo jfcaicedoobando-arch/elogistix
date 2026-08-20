@@ -30,7 +30,7 @@ function ContactoRow({
     <label className="flex items-start gap-2 p-2 rounded-md hover:bg-muted/50 cursor-pointer">
       <Checkbox checked={checked} onCheckedChange={(v) => onToggle(!!v)} className="mt-0.5" />
       <div className="flex-1 min-w-0">
-        <div className="text-sm font-medium truncate flex items-center gap-1.5">
+        <div className="text-body font-medium truncate flex items-center gap-1.5">
           <span className="truncate">
             {esPrincipal ? "Email principal del cliente" : c.contacto || c.nombre}
           </span>
@@ -43,7 +43,7 @@ function ContactoRow({
             </Badge>
           )}
         </div>
-        <p className="text-xs text-muted-foreground truncate">{c.email}</p>
+        <p className="text-body-sm text-muted-foreground truncate">{c.email}</p>
       </div>
     </label>
   );

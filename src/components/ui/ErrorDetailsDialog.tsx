@@ -47,11 +47,11 @@ export function ErrorDetailsDialog() {
 
         {report && (
           <div className="space-y-3">
-            <p className="text-sm text-muted-foreground">
+            <p className="text-body text-muted-foreground">
               Comparte este reporte con tu administrador o pégalo en Lovable para
               reproducir y corregir el problema más rápido.
             </p>
-            <pre className="max-h-[50vh] overflow-auto rounded-md border bg-muted p-3 text-xs font-mono whitespace-pre-wrap break-words">
+            <pre className="max-h-[50vh] overflow-auto rounded-md border bg-muted p-3 text-body-sm font-mono whitespace-pre-wrap break-words">
               {markdown}
             </pre>
           </div>

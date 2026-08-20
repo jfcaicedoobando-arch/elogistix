@@ -49,7 +49,7 @@ export const FIELD_STATE_WITHIN_CLASS =
   "focus-within:ring-offset-0 focus-within:border-ring";
 
 /** Mensaje de validación inline debajo de un control. */
-export const FIELD_ERROR_CLASS = "text-xs text-destructive";
+export const FIELD_ERROR_CLASS = "text-body-sm text-destructive";
 
 /**
  * Anillo de foco para controles compactos (checkbox, radio, switch): usan

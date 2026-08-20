@@ -32,7 +32,7 @@ export interface PickerTriggerState {
 /** Clases del contenedor/trigger de un picker MX. */
 export function pickerTriggerClass({ showError, disabled, empty }: PickerTriggerState): string {
   return [
-    "inline-flex w-full items-center gap-1 rounded-md border border-input bg-background px-3 text-sm shadow-sm",
+    "inline-flex w-full items-center gap-1 rounded-md border border-input bg-background px-3 text-body shadow-sm",
     FIELD_HEIGHT_CLASS,
     FIELD_STATE_WITHIN_CLASS,
     showError ? "border-destructive focus-within:border-destructive focus-within:ring-destructive/40" : "",
@@ -66,7 +66,7 @@ export const pickerClearIconClass = "h-3.5 w-3.5";
  * Clases del aviso ámbar (día inhábil). No es un error: la fecha se guarda.
  * v13.614.0 — usa el token semántico `warning`, nunca un color hardcodeado.
  */
-export const pickerAvisoClass = "text-xs text-warning";
+export const pickerAvisoClass = "text-body-sm text-warning";
 
 /** Ayuda de teclado que se muestra como `title` de los pickers con captura. */
 export const PICKER_AYUDA_TECLADO =

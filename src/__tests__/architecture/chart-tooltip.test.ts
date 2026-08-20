@@ -13,6 +13,14 @@ import { walk, relPath } from "../../../scripts/lib/walk";
 
 const ROOT = resolve(__dirname, "../../..");
 
+/**
+ * Ola C · C.4 (R3-V-4) — colapsa saltos de línea para que un prop escrito en
+ * varias líneas (`content={\n  <ChartTooltip …>}`) no esquive la detección.
+ */
+function normalizar(src: string): string {
+  return src.replace(/\s+/g, " ");
+}
+
 function archivosTsx(): string[] {
   const out: string[] = [];
   for (const f of walk(join(ROOT, "src"), {
@@ -28,10 +36,12 @@ describe("architecture — ChartTooltip único (RN-2)", () => {
   it("ningún <Tooltip> de recharts se usa sin ChartTooltip", () => {
     const ofensores: string[] = [];
     for (const f of archivosTsx()) {
-      const src = readFileSync(f, "utf8");
+      const src = normalizar(readFileSync(f, "utf8"));
       if (!src.includes('from "recharts"')) continue;
       if (!src.includes("<Tooltip")) continue;
-      if (!src.includes("content={<ChartTooltip")) ofensores.push(relPath(ROOT, f));
+      if (!src.includes("content={ <ChartTooltip") && !src.includes("content={<ChartTooltip")) {
+        ofensores.push(relPath(ROOT, f));
+      }
     }
     expect(
       ofensores,

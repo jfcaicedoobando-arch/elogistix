@@ -9,7 +9,7 @@ import "@/components/shared/dataTable/columnMeta";
 export function VirtualHeaderRow<T>({ table, gridTemplate }: { table: Table<T>; gridTemplate: string }) {
   return (
     <div
-      className="sticky top-0 z-10 grid bg-muted/60 backdrop-blur-sm text-xs font-medium text-muted-foreground border-b"
+      className="sticky top-0 z-10 grid bg-muted/60 backdrop-blur-sm text-body-sm font-medium text-muted-foreground border-b"
       style={{ gridTemplateColumns: gridTemplate }}
       role="row"
     >

@@ -11,7 +11,7 @@ export function OrgContextoHint({ className }: { className?: string }) {
   const nombre = organization?.nombre;
   if (!nombre) return null;
   return (
-    <p className={`flex items-center justify-center gap-1.5 text-xs text-muted-foreground ${className ?? ""}`}>
+    <p className={`flex items-center justify-center gap-1.5 text-body-sm text-muted-foreground ${className ?? ""}`}>
       <Building2 className="h-3.5 w-3.5" aria-hidden="true" />
       Estás viendo la organización <span className="font-medium text-foreground">{nombre}</span>
     </p>

@@ -100,7 +100,7 @@ export function MonthPickerMx({
           aria-invalid={showError || undefined}
           aria-describedby={showError ? errorId : undefined}
           maxLength={7}
-          className="flex-1 min-w-0 bg-transparent text-sm outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed"
+          className="flex-1 min-w-0 bg-transparent text-body outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed"
         />
 
         {clearable && text && !disabled && (

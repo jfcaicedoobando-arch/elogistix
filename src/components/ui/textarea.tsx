@@ -9,7 +9,7 @@ const Textarea = ({ ref, className, ...props }: TextareaProps & { ref?: React.Re
   return (
     <textarea
       className={cn(
-        "flex min-h-20 text-base md:text-sm",
+        "flex min-h-20 text-base md:text-body",
         FIELD_SURFACE_CLASS,
         FIELD_STATE_CLASS,
         className,

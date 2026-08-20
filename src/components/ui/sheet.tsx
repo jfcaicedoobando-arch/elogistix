@@ -79,7 +79,7 @@ const SheetTitle = ({ ref, className, ...props }: React.ComponentPropsWithoutRef
 SheetTitle.displayName = SheetPrimitive.Title.displayName;
 
 const SheetDescription = ({ ref, className, ...props }: React.ComponentPropsWithoutRef<typeof SheetPrimitive.Description> & { ref?: React.Ref<React.ElementRef<typeof SheetPrimitive.Description>> }) => (
-  <SheetPrimitive.Description ref={ref} className={cn("text-sm text-muted-foreground", className)} {...props} />
+  <SheetPrimitive.Description ref={ref} className={cn("text-body text-muted-foreground", className)} {...props} />
 );
 SheetDescription.displayName = SheetPrimitive.Description.displayName;
 

@@ -39,7 +39,7 @@ export interface KpiBodyProps {
 function KpiLabel({ label, hint }: { label: string; hint?: string }) {
   return (
     <div className="flex items-center gap-1.5 min-w-0">
-      <Hint label={label}><p className="text-xs text-muted-foreground truncate">{label}</p></Hint>
+      <Hint label={label}><p className="text-label text-muted-foreground truncate">{label}</p></Hint>
       {hint && (
         <Tooltip>
           <TooltipTrigger asChild>
@@ -52,7 +52,7 @@ function KpiLabel({ label, hint }: { label: string; hint?: string }) {
               <Info className="h-3 w-3" />
             </span>
           </TooltipTrigger>
-          <TooltipContent side="bottom" className="max-w-[260px] text-xs">{hint}</TooltipContent>
+          <TooltipContent side="bottom" className="max-w-[260px] text-body-sm">{hint}</TooltipContent>
         </Tooltip>
       )}
     </div>
@@ -77,9 +77,9 @@ export function KpiBodyInline({
               </p>
             </Hint>
           )}
-          {delta && <p className={cn("text-xs tabular-nums", kpiDeltaClass(deltaVariant))}>{delta}</p>}
+          {delta && <p className={cn("text-body-sm tabular-nums", kpiDeltaClass(deltaVariant))}>{delta}</p>}
           {sublabel && !delta && (
-            <Hint label={sublabel}><p className="text-xs text-muted-foreground truncate">{sublabel}</p></Hint>
+            <Hint label={sublabel}><p className="text-label text-muted-foreground truncate">{sublabel}</p></Hint>
           )}
           {children}
         </div>
@@ -128,11 +128,11 @@ export function KpiBodyChip({
               </p>
             </Hint>
             {delta && (
-              <p className={cn("text-xs tabular-nums mt-0.5", kpiDeltaClass(deltaVariant))}>{delta}</p>
+              <p className={cn("text-body-sm tabular-nums mt-0.5", kpiDeltaClass(deltaVariant))}>{delta}</p>
             )}
             {sublabel && !delta && (
               <Hint label={sublabel}>
-                <p className="text-xs text-muted-foreground truncate mt-0.5">
+                <p className="text-body-sm text-muted-foreground truncate mt-0.5">
                   {sublabel}
                 </p>
               </Hint>

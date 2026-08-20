@@ -99,7 +99,7 @@ export function EmailChipsField({
       role="group"
       aria-label={ariaLabel}
       className={cn(
-        "flex flex-wrap items-center gap-1.5 rounded-md border bg-background px-2 py-1.5 text-sm transition-colors",
+        "flex flex-wrap items-center gap-1.5 rounded-md border bg-background px-2 py-1.5 text-body transition-colors",
         "min-h-10 cursor-text",
         focused ? "ring-2 ring-ring ring-offset-0 border-ring" : "border-input",
       )}

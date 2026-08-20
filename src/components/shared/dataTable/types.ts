@@ -15,7 +15,7 @@ export interface DataTablePagination {
 }
 
 export const DENSITY_CELL: Record<TableDensity, string> = {
-  compact: "py-1 text-xs",
+  compact: "py-1 text-body-sm",
   comfortable: "py-2",
 };
 

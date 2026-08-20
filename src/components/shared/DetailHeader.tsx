@@ -136,7 +136,7 @@ export function DetailHeader({
               {badge}
             </div>
             {subtitle ? (
-              <p className="mt-1 text-sm text-muted-foreground line-clamp-2">{subtitle}</p>
+              <p className="mt-1 text-body text-muted-foreground line-clamp-2">{subtitle}</p>
             ) : null}
             {meta ? <div className="mt-2 flex flex-wrap items-center gap-2">{meta}</div> : null}
           </div>

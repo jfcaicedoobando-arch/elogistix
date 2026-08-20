@@ -35,6 +35,11 @@ const MODULOS_MIGRADOS: readonly string[] = [
   "src/features/proformas",
   "src/features/costeo",
   "src/features/proveedor",
+  // Ola C · C.1 — primitivas compartidas selladas: un badge y su celda vecina
+  // ya no pueden tener el mismo rol con distinta fuente.
+  "src/components/shared",
+  "src/components/ui",
+
 ];
 
 /** Escalones crudos de Tailwind prohibidos en los módulos migrados. */

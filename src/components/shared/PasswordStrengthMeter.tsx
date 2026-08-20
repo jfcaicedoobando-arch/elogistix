@@ -37,11 +37,11 @@ export function PasswordStrengthMeter({ password, mostrarHint = true }: Props) {
         ))}
       </div>
       {fuerza.label && (
-        <p className="text-xs text-muted-foreground">
+        <p className="text-body-sm text-muted-foreground">
           Fuerza: <span className="font-medium">{fuerza.label}</span>
         </p>
       )}
-      {mostrarHint && <p className="text-xs text-muted-foreground">{PASSWORD_HINT}</p>}
+      {mostrarHint && <p className="text-body-sm text-muted-foreground">{PASSWORD_HINT}</p>}
     </div>
   );
 }

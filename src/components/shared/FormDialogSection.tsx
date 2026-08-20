@@ -28,7 +28,7 @@ export function FormDialogSection({ title, description, flat, cols = 2, children
               {title}
             </SectionHeading>
           )}
-          {description && <p className="text-xs text-muted-foreground/80">{description}</p>}
+          {description && <p className="text-body-sm text-muted-foreground/80">{description}</p>}
         </header>
       )}
       {flat ? (

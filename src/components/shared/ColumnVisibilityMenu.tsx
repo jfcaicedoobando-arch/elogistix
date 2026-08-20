@@ -33,21 +33,21 @@ export function ColumnVisibilityMenu({ options, visibility, onToggle, onReset, i
         <Button variant="outline" size="sm" aria-label="Configurar columnas">
           <Columns3 className="h-4 w-4 mr-2" />
           Columnas
-          <span className="ml-1.5 text-xs text-muted-foreground tabular-nums">
+          <span className="ml-1.5 text-body-sm text-muted-foreground tabular-nums">
             {visibleCount}/{options.length}
           </span>
         </Button>
       </PopoverTrigger>
       <PopoverContent align="end" className="w-56 p-2">
         <div className="flex items-center justify-between mb-1 px-1">
-          <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+          <span className="text-body-sm font-medium text-muted-foreground uppercase tracking-wide">
             Columnas
           </span>
           {isCustom && (
             <Button
               variant="ghost"
               size="sm"
-              className="h-6 px-1.5 text-xs"
+              className="h-6 px-1.5 text-body-sm"
               onClick={onReset}
               aria-label="Restablecer columnas a valores por defecto"
             >
@@ -63,7 +63,7 @@ export function ColumnVisibilityMenu({ options, visibility, onToggle, onReset, i
             return (
               <label
                 key={opt.id}
-                className={`flex items-center gap-2 px-1.5 py-1 rounded-sm text-sm ${disabled ? "opacity-60 cursor-not-allowed" : "cursor-pointer hover:bg-muted/50"}`}
+                className={`flex items-center gap-2 px-1.5 py-1 rounded-sm text-body ${disabled ? "opacity-60 cursor-not-allowed" : "cursor-pointer hover:bg-muted/50"}`}
               >
                 <Checkbox
                   checked={checked}

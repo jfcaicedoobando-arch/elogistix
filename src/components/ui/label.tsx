@@ -6,15 +6,15 @@ import { cn } from "@/lib/utils";
 
 /**
  * UX-08: el tamaño del label es una variante del design system, no un
- * `className="text-xs"` suelto. Usa `size="sm"` para formularios densos.
+ * `className="text-body-sm"` suelto. Usa `size="sm"` para formularios densos.
  */
 const labelVariants = cva(
   "font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70",
   {
     variants: {
       size: {
-        default: "text-sm",
-        sm: "text-xs",
+        default: "text-body",
+        sm: "text-body-sm",
       },
     },
     defaultVariants: { size: "default" },

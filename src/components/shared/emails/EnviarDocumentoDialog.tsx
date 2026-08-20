@@ -84,7 +84,7 @@ export function EnviarDocumentoDialog({
       size="xl"
       footer={
         <>
-          <div className="mr-auto text-xs text-muted-foreground">
+          <div className="mr-auto text-body-sm text-muted-foreground">
             {form.destinatarios.length} destinatario{form.destinatarios.length === 1 ? "" : "s"}
             {form.ccEmails.length > 0 && <> · {form.ccEmails.length} en copia</>}
           </div>
@@ -153,7 +153,7 @@ export function EnviarDocumentoDialog({
       {mostrarMarcarEnviada && (
         <label className="flex items-center gap-2">
           <Checkbox checked={form.marcarEnviada} onCheckedChange={(v) => form.setMarcarEnviada(!!v)} />
-          <span className="text-sm">
+          <span className="text-body">
             {labelMarcarEnviada ?? <>Marcar el documento como <strong>Enviado</strong></>}
           </span>
         </label>

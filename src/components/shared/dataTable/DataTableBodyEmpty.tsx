@@ -33,8 +33,8 @@ export function DataTableBodyEmpty({
             iconNode ? (
               <div className="flex flex-col items-center justify-center gap-2 text-center py-10 px-4 text-muted-foreground">
                 {iconNode}
-                <p className="text-sm">{emptyMessage}</p>
-                {emptyHint && <p className="text-xs opacity-75 max-w-xs">{emptyHint}</p>}
+                <p className="text-body">{emptyMessage}</p>
+                {emptyHint && <p className="text-body-sm opacity-75 max-w-xs">{emptyHint}</p>}
               </div>
             ) : (
               <EmptyStateInline

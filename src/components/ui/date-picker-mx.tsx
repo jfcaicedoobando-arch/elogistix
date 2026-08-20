@@ -123,7 +123,7 @@ export function DatePickerMx({
           aria-invalid={showError || undefined}
           aria-describedby={describedBy}
           maxLength={10}
-          className="flex-1 min-w-0 bg-transparent text-sm outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed"
+          className="flex-1 min-w-0 bg-transparent text-body outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed"
         />
 
         {text && !disabled && !readOnly && (

@@ -37,7 +37,7 @@ export function DocumentoKpiStrip({ kpis, className }: Props) {
             {kpi.value}
           </p>
           {kpi.hint ? (
-            <p className="mt-0.5 truncate text-xs text-muted-foreground">{kpi.hint}</p>
+            <p className="mt-0.5 truncate text-body-sm text-muted-foreground">{kpi.hint}</p>
           ) : null}
         </div>
       ))}

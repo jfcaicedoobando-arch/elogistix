@@ -57,7 +57,7 @@ export function WizardSection({
             )}
           </CardTitle>
           {description && (
-            <p className="text-xs text-muted-foreground">{description}</p>
+            <p className="text-body-sm text-muted-foreground">{description}</p>
           )}
         </div>
         {actions && <div className="flex items-center gap-2">{actions}</div>}

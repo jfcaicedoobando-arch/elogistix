@@ -48,34 +48,34 @@ export function FilaEntrada({
         <div className="flex items-baseline gap-2 flex-wrap">
           {mostrarUsuario && (
             <Hint label={entrada.usuario_email}>
-              <span className="text-xs font-medium text-foreground">
+              <span className="text-body-sm font-medium text-foreground">
                 {nombreDesdeEmail(entrada.usuario_email)}
               </span>
             </Hint>
           )}
           <Hint label={formatDate(entrada.created_at, "dd/MM/yyyy HH:mm")}>
-            <span className="text-xs text-muted-foreground">
+            <span className="text-body-sm text-muted-foreground">
               {formatRelativo(entrada.created_at)}
             </span>
           </Hint>
         </div>
 
         {esCambioEstado ? (
-          <div className="flex items-center gap-1.5 flex-wrap text-sm text-foreground">
+          <div className="flex items-center gap-1.5 flex-wrap text-body text-foreground">
             <span>Cambió estado de</span>
             <EstadoBadge estado={descripcion.estadoAnterior!} atenuado />
             <ArrowRight className="h-3 w-3 text-muted-foreground" />
             <EstadoBadge estado={descripcion.estadoNuevo!} />
           </div>
         ) : (
-          <p className="text-sm text-foreground">{descripcion.titulo}</p>
+          <p className="text-body text-foreground">{descripcion.titulo}</p>
         )}
 
         {descripcion.contexto && (
-          <p className="text-xs text-muted-foreground">{descripcion.contexto}</p>
+          <p className="text-body-sm text-muted-foreground">{descripcion.contexto}</p>
         )}
 
-        <div className="flex items-baseline gap-1.5 flex-wrap text-xs text-muted-foreground">
+        <div className="flex items-baseline gap-1.5 flex-wrap text-body-sm text-muted-foreground">
           <span>en</span>
           <span className="capitalize">{entrada.modulo}</span>
           {entrada.entidad_nombre && (

@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.706.0] - 2026-08-25
+### Ola C — Sellar lo visual
+- Los componentes compartidos (badges, tarjetas de indicadores, celdas de dinero) ya usan la misma escala de letra que el resto del sistema: antes un badge y su celda vecina se veían con tamaños distintos.
+- El Estado de Resultados usa el mismo semáforo de margen que reportes y cotizaciones, en lugar de un color propio.
+- Se documentó la regla de color `primary` vs `accent` en el design system y en la guía de contribución.
+- Los candados automáticos (tipografía, tablas compartidas, fechas) ahora detectan también los casos escritos en varias líneas y no permiten crecer sin justificación.
+
 ## [13.705.0] - 2026-08-25
 ### Ola B — Las comisiones y la cobranza ya no fallan en silencio
 - Cuando faltaban datos (tipo de cambio o costos del embarque), la comisión se guardaba en cero y nadie se enteraba. Ahora queda en una fila de pendientes visible en Comisiones, con un botón "Reintentar recálculo".

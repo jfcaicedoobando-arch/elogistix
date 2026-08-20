@@ -31,7 +31,7 @@ export function LoteRenglonesTable({
 }: LoteRenglonesTableProps) {
   return (
     <div className="overflow-x-auto rounded-md border">
-      <Table className={cn("w-full text-sm", minWidthClassName)}>
+      <Table className={cn("w-full text-body", minWidthClassName)}>
         <TableHeader className="bg-muted/50 text-table-head text-muted-foreground">
           <TableRow>
             {COLUMNAS.map((c) => (

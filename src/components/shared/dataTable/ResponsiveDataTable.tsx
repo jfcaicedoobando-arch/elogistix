@@ -75,7 +75,7 @@ export function ResponsiveDataTable<T>(props: Props<T>) {
           </SkeletonGroup>
         ) : data.length === 0 ? (
           emptyState ?? (
-            <div className="flex flex-col items-center justify-center gap-2 py-12 text-sm text-muted-foreground">
+            <div className="flex flex-col items-center justify-center gap-2 py-12 text-body text-muted-foreground">
               <Inbox className="h-8 w-8 opacity-40" strokeWidth={1.5} />
               <span>{emptyMessage}</span>
             </div>

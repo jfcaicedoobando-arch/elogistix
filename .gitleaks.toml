@@ -7,13 +7,15 @@ useDefault = true
 [allowlist]
 description = "Allowlist global de secretos públicos del proyecto"
 
-# Anon key pública (rol anon de Supabase / Lovable Cloud).
-# Es segura para vivir en código y workflows.
-regexes = [
-  '''eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9\.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVvcnFhZGt1bHF0bmVxamJzYmxrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyMzM5MzEsImV4cCI6MjA4NzgwOTkzMX0\.bNeS84nv01bheza5wL5l8N-2A2OONn0fKKkZQ8ADZRc''',
-]
+# Ola C · C.4 — Sin blanqueo por regex de secretos.
+# El único lugar donde vive la anon key pública (rol `anon` de Lovable Cloud,
+# segura por diseño) es el `.env` versionado por la plataforma. Se permite ese
+# ARCHIVO, no el valor: así un secreto real pegado en código sí se detecta.
 
 paths = [
+  # .env generado por Lovable (sólo URL + claves publicables).
+  '''^\.env$''',
+  '''^\.env\.example$''',
   '''(.*?)(jpg|jpeg|png|gif|webp|svg|ico|pdf|woff2?|ttf|otf)$''',
   '''bun\.lockb$''',
   '''package-lock\.json$''',

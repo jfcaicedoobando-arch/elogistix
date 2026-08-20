@@ -63,7 +63,7 @@ export function ChartTooltip({
   return (
     <div
       className={cn(
-        "rounded-md border border-border bg-popover px-3 py-2 text-xs text-popover-foreground shadow-md",
+        "rounded-md border border-border bg-popover px-3 py-2 text-body-sm text-popover-foreground shadow-md",
         className,
       )}
     >

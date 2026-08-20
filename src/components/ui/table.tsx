@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 
 const Table = ({ ref, className, ...props }: React.HTMLAttributes<HTMLTableElement> & { ref?: React.Ref<HTMLTableElement> }) => (
     <div className="relative w-full overflow-auto">
-      <table ref={ref} className={cn("w-full caption-bottom text-sm", className)} {...props} />
+      <table ref={ref} className={cn("w-full caption-bottom text-body", className)} {...props} />
     </div>
   );
 Table.displayName = "Table";
@@ -51,7 +51,7 @@ const TableCell = ({ ref, className, ...props }: React.TdHTMLAttributes<HTMLTabl
 TableCell.displayName = "TableCell";
 
 const TableCaption = ({ ref, className, ...props }: React.HTMLAttributes<HTMLTableCaptionElement> & { ref?: React.Ref<HTMLTableCaptionElement> }) => (
-    <caption ref={ref} className={cn("mt-4 text-sm text-muted-foreground", className)} {...props} />
+    <caption ref={ref} className={cn("mt-4 text-body text-muted-foreground", className)} {...props} />
   );
 TableCaption.displayName = "TableCaption";
 

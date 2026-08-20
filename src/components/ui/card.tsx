@@ -47,7 +47,7 @@ const CardTitle = ({ ref, className, ...props }: React.HTMLAttributes<HTMLHeadin
 CardTitle.displayName = "CardTitle";
 
 const CardDescription = ({ ref, className, ...props }: React.HTMLAttributes<HTMLParagraphElement> & { ref?: React.Ref<HTMLParagraphElement> }) => (
-    <p ref={ref} className={cn("text-sm text-muted-foreground", className)} {...props} />
+    <p ref={ref} className={cn("text-body text-muted-foreground", className)} {...props} />
   );
 CardDescription.displayName = "CardDescription";
 

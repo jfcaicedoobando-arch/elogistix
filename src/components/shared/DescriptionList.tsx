@@ -41,7 +41,7 @@ export function DescriptionList({
   return (
     <dl
       className={cn(
-        "grid gap-x-4 gap-y-2 text-sm",
+        "grid gap-x-4 gap-y-2 text-body",
         columns === 2 ? "grid-cols-1 md:grid-cols-2" : "grid-cols-1",
         className,
       )}
@@ -59,10 +59,10 @@ export function DescriptionList({
               it.colSpan === 2 && "md:col-span-2",
             )}
           >
-            <dt className="text-xs text-muted-foreground">{it.label}</dt>
+            <dt className="text-body-sm text-muted-foreground">{it.label}</dt>
             <dd
               className={cn(
-                "text-sm text-foreground truncate",
+                "text-body text-foreground truncate",
                 it.mono && "font-mono tabular-nums",
               )}
             >

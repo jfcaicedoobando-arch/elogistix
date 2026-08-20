@@ -77,7 +77,7 @@ export function DetailTableEmptyRow({
       <TableCell colSpan={colSpan} className="p-0">
         <div
           className={cn(
-            "flex items-center justify-center text-center text-sm text-muted-foreground",
+            "flex items-center justify-center text-center text-body text-muted-foreground",
             DETAIL_TABLE_EMPTY_MIN_H[density],
             className,
           )}
