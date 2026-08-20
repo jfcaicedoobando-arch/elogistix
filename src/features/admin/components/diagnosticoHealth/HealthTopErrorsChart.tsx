@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChartSkeleton } from "@/components/shared/ChartSkeleton";
 import { ShieldCheck } from "lucide-react";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
+import { ChartTooltip } from "@/components/shared/ChartTooltip";
 
 interface Row {
   fn: string;
@@ -35,13 +36,7 @@ export default function HealthTopErrorsChart({ loading, data }: Props) {
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
               <XAxis type="number" tick={{ fontSize: 11 }} allowDecimals={false} />
               <YAxis type="category" dataKey="fn" tick={{ fontSize: 11 }} width={140} />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: "hsl(var(--popover))",
-                  border: "1px solid hsl(var(--border))",
-                  fontSize: 12,
-                }}
-              />
+              <Tooltip content={<ChartTooltip />} />
               <Bar dataKey="errors" fill="hsl(var(--destructive))" name="Errores" />
             </BarChart>
           </ResponsiveContainer>

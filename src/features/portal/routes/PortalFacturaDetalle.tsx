@@ -1,3 +1,4 @@
+import { PortalPageShell } from "@/features/portal/components/layout/PortalPageShell";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { useParams, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -59,7 +60,7 @@ export default function PortalFacturaDetalle() {
   const vencida = estadoVisible === "Vencida";
 
   return (
-    <div className="space-y-6">
+    <PortalPageShell>
       <DetailHeader
         backTo={volver}
         backLabel="Volver a Facturas"
@@ -131,6 +132,6 @@ export default function PortalFacturaDetalle() {
         totalFactura={Number(factura.total)}
         moneda={factura.moneda}
       />
-    </div>
+    </PortalPageShell>
   );
 }

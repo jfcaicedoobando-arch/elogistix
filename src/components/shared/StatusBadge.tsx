@@ -18,6 +18,8 @@ export interface StatusBadgeProps {
   label?: string;
   /** Contenido libre (tiene prioridad sobre `label`). */
   children?: React.ReactNode;
+  /** Tooltip nativo opcional (explicación corta del marcador). */
+  title?: string;
   className?: string;
 }
 
@@ -27,6 +29,7 @@ export function StatusBadge({
   showIcon = false,
   label,
   children,
+  title,
   className,
 }: StatusBadgeProps) {
   const visual = getStatusVisual(domain, status);
@@ -38,6 +41,7 @@ export function StatusBadge({
         visual.badgeClass,
         className,
       )}
+      title={title}
       data-domain={domain}
       data-status={status ?? ""}
     >

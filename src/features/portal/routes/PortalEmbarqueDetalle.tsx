@@ -1,3 +1,4 @@
+import { PortalPageShell } from "@/features/portal/components/layout/PortalPageShell";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { useParams } from "react-router-dom";
 import { ROUTES } from "@/constants/routes";
@@ -70,7 +71,7 @@ export default function PortalEmbarqueDetalle() {
 
 
   return (
-    <div className="space-y-6">
+    <PortalPageShell>
       <DetailHeader
         backTo={volver}
         backLabel="Volver a Embarques"
@@ -102,26 +103,26 @@ export default function PortalEmbarqueDetalle() {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <Card>
           <CardContent className="p-3 text-center">
-            <p className="text-2xs text-muted-foreground font-medium">Origen</p>
-            <p className="text-xs font-semibold mt-0.5 truncate" title={getOrigen(embarque)}>{getOrigen(embarque)}</p>
+            <p className="text-label text-muted-foreground font-medium">Origen</p>
+            <p className="text-body-sm font-semibold mt-0.5 truncate" title={getOrigen(embarque)}>{getOrigen(embarque)}</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-3 text-center">
-            <p className="text-2xs text-muted-foreground font-medium">Destino</p>
-            <p className="text-xs font-semibold mt-0.5 truncate" title={getDestino(embarque)}>{getDestino(embarque)}</p>
+            <p className="text-label text-muted-foreground font-medium">Destino</p>
+            <p className="text-body-sm font-semibold mt-0.5 truncate" title={getDestino(embarque)}>{getDestino(embarque)}</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-3 text-center">
-            <p className="text-2xs text-muted-foreground font-medium" title="Fecha estimada de salida">ETD</p>
-            <p className="text-xs font-semibold mt-0.5">{embarque.etd ? formatDate(embarque.etd) : "—"}</p>
+            <p className="text-label text-muted-foreground font-medium" title="Fecha estimada de salida">ETD</p>
+            <p className="text-body-sm font-semibold mt-0.5">{embarque.etd ? formatDate(embarque.etd) : "—"}</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-3 text-center">
-            <p className="text-2xs text-muted-foreground font-medium" title="Fecha estimada de arribo">ETA</p>
-            <p className="text-xs font-semibold mt-0.5">{embarque.eta ? formatDate(embarque.eta) : "—"}</p>
+            <p className="text-label text-muted-foreground font-medium" title="Fecha estimada de arribo">ETA</p>
+            <p className="text-body-sm font-semibold mt-0.5">{embarque.eta ? formatDate(embarque.eta) : "—"}</p>
           </CardContent>
         </Card>
       </div>
@@ -155,6 +156,6 @@ export default function PortalEmbarqueDetalle() {
           <PortalEmbarqueDocumentos documentos={documentos} />
         </TabsContent>
       </Tabs>
-    </div>
+    </PortalPageShell>
   );
 }

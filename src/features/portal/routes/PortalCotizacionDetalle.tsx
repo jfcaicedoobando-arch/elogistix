@@ -1,3 +1,4 @@
+import { PortalPageShell } from "@/features/portal/components/layout/PortalPageShell";
 import { useParams } from "react-router-dom";
 import { ROUTES } from "@/constants/routes";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -68,7 +69,7 @@ export default function PortalCotizacionDetalle() {
   const comentarioCliente = (cot as { comentario_cliente?: string | null }).comentario_cliente;
 
   return (
-    <div className="space-y-6">
+    <PortalPageShell>
       <PortalCotizacionHeader
         folio={cot.folio}
         estado={cot.estado}
@@ -155,6 +156,6 @@ export default function PortalCotizacionDetalle() {
         onOpenChange={onDialogOpenChange}
         onConfirm={handleResponder}
       />
-    </div>
+    </PortalPageShell>
   );
 }

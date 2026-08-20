@@ -7,6 +7,8 @@
 import { Link } from "react-router-dom";
 import { Landmark, TriangleAlert } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { StatusBadge } from "@/components/shared/StatusBadge";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { SectionHeading } from "@/components/shared/SectionHeading";
 import { formatCurrency, formatDate } from "@/lib/formatters";
 import {
@@ -82,15 +84,16 @@ export function BloqueMovimiento({
     return (
       <section className="space-y-2">
         <SectionHeading as="h3" variant="subsection">Movimiento bancario</SectionHeading>
-        <div className="flex items-start gap-2 rounded-md border border-warning/30 bg-warning/5 p-3 text-body">
-          <TriangleAlert className="mt-0.5 h-4 w-4 text-warning" />
-          <div className="space-y-1">
+        <Alert variant="warning">
+          <TriangleAlert className="h-4 w-4" />
+          <AlertDescription className="space-y-1">
             <p>Este pago todavía no está conciliado con un movimiento del banco.</p>
             <Link to="/tesoreria/conciliacion" className="text-body-sm font-medium text-primary hover:underline">
               Ir a Conciliación bancaria
             </Link>
-          </div>
-        </div>
+          </AlertDescription>
+        </Alert>
+
       </section>
     );
   }
@@ -109,9 +112,7 @@ export function BloqueMovimiento({
         as="h3"
         variant="subsection"
         actions={
-          <Badge variant="outline" className="bg-success/10 text-success border-success/20">
-            Conciliado
-          </Badge>
+          <StatusBadge domain="conciliacion" status="Conciliado" />
         }
       >
         Movimiento bancario

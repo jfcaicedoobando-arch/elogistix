@@ -64,16 +64,16 @@ export default function PortalFacturaPagosCard({ facturaId, totalFactura, moneda
                     {(pRep.rep_pdf_url || pRep.rep_xml_url) && (
                       <div className="mt-1.5 flex items-center gap-1.5">
                         {pRep.rep_pdf_url && (
-                          <Button asChild size="sm" variant="outline" className="h-6 px-2 text-2xs">
+                          <Button asChild size="sm" variant="outline">
                             <a href={pRep.rep_pdf_url} target="_blank" rel="noopener noreferrer">
-                              <FileText className="h-3 w-3 mr-1" /> REP PDF
+                              <FileText className="h-4 w-4 mr-1" /> REP PDF
                             </a>
                           </Button>
                         )}
                         {pRep.rep_xml_url && (
-                          <Button asChild size="sm" variant="outline" className="h-6 px-2 text-2xs">
+                          <Button asChild size="sm" variant="outline">
                             <a href={pRep.rep_xml_url} target="_blank" rel="noopener noreferrer">
-                              <FileCode2 className="h-3 w-3 mr-1" /> REP XML
+                              <FileCode2 className="h-4 w-4 mr-1" /> REP XML
                             </a>
                           </Button>
                         )}

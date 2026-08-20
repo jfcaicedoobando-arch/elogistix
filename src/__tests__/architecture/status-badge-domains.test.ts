@@ -18,6 +18,12 @@ const MIGRADOS = [
   "src/features/facturacion/components/proformasColumns.tsx",
   "src/features/crm/routes/leadsColumns.tsx",
   "src/features/tesoreria/components/PanelConciliacionEstados.tsx",
+  // Ola 2 · RN-3 — badges de costeo, CxP y tesorería.
+  "src/features/costeo/components/TarifaEstadoUnificado.tsx",
+  "src/features/costeo/components/CartaGarantiaIndicator.tsx",
+  "src/features/costeo/components/TarifaFila.tsx",
+  "src/features/cxp/components/NcSatBadge.tsx",
+  "src/features/tesoreria/components/DetallePagoSheet.parts.tsx",
 ];
 
 /** Clases de color de estado escritas a mano (el registry es la única fuente). */

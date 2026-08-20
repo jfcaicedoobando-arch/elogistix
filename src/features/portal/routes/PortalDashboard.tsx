@@ -1,3 +1,4 @@
+import { PortalPageShell } from "@/features/portal/components/layout/PortalPageShell";
 import { useState } from "react";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -51,7 +52,7 @@ export default function PortalDashboard() {
   const cargando = loadingEmb || loadingCot || loadingFac;
 
   return (
-    <div className="space-y-6">
+    <PortalPageShell>
       {(errorEmb || errorCot || errorFac) && (
         <ErrorState
           className="mb-2"
@@ -116,6 +117,6 @@ export default function PortalDashboard() {
         </>
       )}
 
-    </div>
+    </PortalPageShell>
   );
 }

@@ -2,7 +2,7 @@
  * Fila de tarifa dentro de un grupo.
  * v13.142.4: botones Aprobar/Rechazar siempre visibles en "borrador" (antes ocultos en hover y cortados).
  */
-import { Badge } from "@/components/ui/badge";
+import { StatusBadge } from "@/components/shared/StatusBadge";
 import { Sparkles, Trophy } from "lucide-react";
 import { TarifaEstadoUnificado } from "./TarifaEstadoUnificado";
 import { TarifaRowActions } from "./TarifaRowActions";
@@ -84,19 +84,19 @@ export function TarifaFila({
 
   return (
     <div
-      className={`${FILA_GRID} py-2.5 text-sm transition-colors hover:bg-muted/40 ${esMejor ? "bg-success/5" : ""} ${atenuar ? "opacity-60" : ""}`}
+      className={`${FILA_GRID} py-2.5 text-sm transition-colors hover:bg-muted/40 ${esMejor ? "row-highlight-success" : ""} ${atenuar ? "opacity-60" : ""}`}
     >
       <div className="min-w-0">
         <div className="flex items-center gap-2">
           {esMejor && (
-            <Badge className="bg-success/15 text-success border-success/30 gap-1" variant="outline">
-              <Trophy className="size-3" />Mejor
-            </Badge>
+            <StatusBadge domain="tarifa_marcador" status="Mejor">
+              <span className="inline-flex items-center gap-1"><Trophy className="size-3" aria-hidden />Mejor</span>
+            </StatusBadge>
           )}
           {nueva && (
-            <Badge className="bg-primary/10 text-primary border-primary/30 gap-1" variant="outline" title="Capturada en los últimos 7 días">
-              <Sparkles className="size-3" />Nueva
-            </Badge>
+            <StatusBadge domain="tarifa_marcador" status="Nueva" title="Capturada en los últimos 7 días">
+              <span className="inline-flex items-center gap-1"><Sparkles className="size-3" aria-hidden />Nueva</span>
+            </StatusBadge>
           )}
           <span className="font-medium truncate">{t.agente_nombre}</span>
         </div>

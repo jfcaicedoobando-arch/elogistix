@@ -7,6 +7,7 @@ import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 import {
   Bar, BarChart, Cell, ResponsiveContainer, XAxis, YAxis, Tooltip,
 } from "recharts";
+import { ChartTooltip } from "@/components/shared/ChartTooltip";
 import type { MargenMes, MargenModo } from "@/features/dashboard/direccion/services/tipos";
 
 const MESES_ES = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
@@ -32,7 +33,7 @@ export function RentabilidadSection({ margen6m, porModo }: { margen6m: MargenMes
             <BarChart data={data}>
               <XAxis dataKey="mes" tickLine={false} axisLine={false} fontSize={12} />
               <YAxis tickFormatter={(v) => `${v}%`} tickLine={false} axisLine={false} fontSize={12} width={40} />
-              <Tooltip formatter={(v: number) => `${v}%`} />
+              <Tooltip content={<ChartTooltip formatValue={(v) => `${v}%`} />} />
               <Bar dataKey="pct" radius={[6, 6, 0, 0]}>
                 {data.map((d) => (
                   <Cell key={d.raw} fill={d.raw === actual ? "hsl(var(--primary))" : "hsl(var(--muted-foreground) / 0.3)"} />
