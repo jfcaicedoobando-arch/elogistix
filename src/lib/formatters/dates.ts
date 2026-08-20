@@ -50,6 +50,10 @@ export function formatDateTimeShort(iso: string): string {
  * (se ancla a mediodía para evitar shifts de zona horaria) o ISO con hora.
  * Opciones passthrough a `toLocaleDateString`.
  * PR-5 · Ítem 3.4: reemplaza `new Date(iso).toLocaleDateString("es-MX", …)` inline.
+ *
+ * @deprecated Ola 5 · V-14 — usa `formatFechaDia` (dd/mm/aaaa con fallback "—")
+ * o `formatFechaHora`. Se conserva sólo para los call-sites históricos; el
+ * ratchet `formatfechaes-deprecado.test.ts` impide que crezcan.
  */
 export function formatFechaEs(
   iso: string | null | undefined,

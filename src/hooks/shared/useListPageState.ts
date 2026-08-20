@@ -16,6 +16,7 @@
  * controller (`useEmbarquesPageState`).
  */
 import { useCallback, useMemo, useRef } from "react";
+import { useDebouncedValue } from "@/lib/hooks/useDebouncedValue";
 import {
   useQueryState,
   useQueryStates,
@@ -29,6 +30,11 @@ export const DEFAULT_PAGE_SIZE = 100;
 export interface ListPageState<TFilters extends Record<string, string>> {
   // Estado
   search: string;
+  /**
+   * EC-9 · Ola 5 — `search` con debounce (300 ms). Úsalo para filtrar/consultar;
+   * `search` se mantiene para el valor del input (escritura sin lag).
+   */
+  searchDebounced: string;
   filters: TFilters;
   page: number;
   pageSize: number;
@@ -109,6 +115,9 @@ export function useListPageState<TFilters extends Record<string, string>>(
 
   const resetPage = useCallback(() => setPageRaw(null), [setPageRaw]);
 
+  // EC-9: evita re-filtrar/re-consultar en cada tecla.
+  const searchDebounced = useDebouncedValue(search, 300);
+
   const paginate = useCallback(
     <T,>(items: T[]) => ({
       items: items.slice(page * pageSize, (page + 1) * pageSize),
@@ -119,6 +128,7 @@ export function useListPageState<TFilters extends Record<string, string>>(
 
   return {
     search,
+    searchDebounced,
     filters: filters as TFilters,
     page,
     pageSize,

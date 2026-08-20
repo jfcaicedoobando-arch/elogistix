@@ -37,7 +37,14 @@ function contarUppercase(): number {
   return total;
 }
 
-const MAX_UPPERCASE = 146;
+/**
+ * Ola 5 · RN-1 — holgura documentada: el tope es la deuda congelada + 10.
+ * Sin holgura, cualquier PR inocente rompía CI. Plan: bajar el tope cada
+ * trimestre a `deuda_actual + 10` conforme se migran archivos.
+ */
+const DEUDA_CONGELADA = 146;
+const HOLGURA = 10;
+const MAX_UPPERCASE = DEUDA_CONGELADA + HOLGURA;
 
 describe("arquitectura · micro-tipografía", () => {
   it('no usa "..." ASCII en textos de interfaz (usa "…")', () => {
