@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import type { DocumentoEmbarqueRow } from "@/features/embarques/hooks";
 import { getDocEstadoColorClass } from "@/lib/ui/uiMappings";
+import { Hint } from "@/components/shared/Hint";
 
 /**
  * Nombres de documentos considerados SIEMPRE obligatorios.
@@ -74,20 +75,21 @@ export function useDocumentoColumns(opts: Options): ColumnDef<DocumentoEmbarqueR
               </Button>
             )}
             {puedeMarcarNoAplica && (
-              <Button
-                variant="ghost"
-                size="sm"
-                disabled={togglingNoAplicaDocId === doc.id}
-                onClick={(e) => { e.stopPropagation(); onToggleNoAplica!(doc); }}
-                title={esNoAplica ? "Volver a marcar como pendiente" : "Marcar como no aplica para este embarque"}
-              >
-                {togglingNoAplicaDocId === doc.id
-                  ? <Loader2 className="h-4 w-4 animate-spin mr-1" />
-                  : esNoAplica
-                    ? <RotateCcw className="h-3.5 w-3.5 mr-1" />
-                    : <Ban className="h-3.5 w-3.5 mr-1" />}
-                {esNoAplica ? "Marcar pendiente" : "No aplica"}
-              </Button>
+              <Hint label={esNoAplica ? "Volver a marcar como pendiente" : "Marcar como no aplica para este embarque"}>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  disabled={togglingNoAplicaDocId === doc.id}
+                  onClick={(e) => { e.stopPropagation(); onToggleNoAplica!(doc); }}
+                >
+                  {togglingNoAplicaDocId === doc.id
+                    ? <Loader2 className="h-4 w-4 animate-spin mr-1" />
+                    : esNoAplica
+                      ? <RotateCcw className="h-3.5 w-3.5 mr-1" />
+                      : <Ban className="h-3.5 w-3.5 mr-1" />}
+                  {esNoAplica ? "Marcar pendiente" : "No aplica"}
+                </Button>
+              </Hint>
             )}
             {doc.archivo && (
               <>

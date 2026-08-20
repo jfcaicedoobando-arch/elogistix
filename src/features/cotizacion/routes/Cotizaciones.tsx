@@ -23,6 +23,7 @@ import { CotizacionesPageActions } from "@/features/cotizacion/components/Cotiza
 import { useTcInicial } from "@/features/catalogos/hooks/useTcInicial";
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 import { CotizacionesBannerOrigen } from "@/features/cotizacion/components/CotizacionesBannerOrigen";
+import { Hint } from "@/components/shared/Hint";
 
 export default function Cotizaciones() {
   const c = useCotizacionesPageController();
@@ -68,18 +69,19 @@ export default function Cotizaciones() {
         <AlertTriangle className="h-4 w-4" />
         Sólo sin costos
       </Button>
-      <Button
-        type="button"
-        variant={c.incluirInactivas ? "default" : "outline"}
-        size="sm"
-        aria-pressed={c.incluirInactivas}
-        onClick={() => c.setFilter("incluirInactivas", c.incluirInactivas ? "no" : "si")}
-        className="w-full gap-2"
-        title="Por defecto se ocultan las cotizaciones Vencidas y Archivadas"
-      >
-        <Archive className="h-4 w-4" />
-        Incluir vencidas/archivadas
-      </Button>
+      <Hint label="Por defecto se ocultan las cotizaciones Vencidas y Archivadas">
+        <Button
+          type="button"
+          variant={c.incluirInactivas ? "default" : "outline"}
+          size="sm"
+          aria-pressed={c.incluirInactivas}
+          onClick={() => c.setFilter("incluirInactivas", c.incluirInactivas ? "no" : "si")}
+          className="w-full gap-2"
+        >
+          <Archive className="h-4 w-4" />
+          Incluir vencidas/archivadas
+        </Button>
+      </Hint>
     </div>
   );
 

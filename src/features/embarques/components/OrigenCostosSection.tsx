@@ -17,6 +17,7 @@ import type { TarifaResumen } from "@/features/costeo/services/tarifas";
 
 import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/components/ui/table";
 import { DetailTableHead } from "@/components/shared/DetailTable";
+import { Hint } from "@/components/shared/Hint";
 type BadgeVariant = "default" | "secondary" | "destructive" | "outline";
 
 const DECISION_LABEL: Record<string, { label: string; variant: BadgeVariant }> = {
@@ -152,7 +153,8 @@ function TarifaChip({
   const resumen: TarifaResumen | undefined = id ? resumenes?.[id] : undefined;
 
   return (
-    <div className="p-2 rounded border bg-muted/30" title={id ?? undefined}>
+    <Hint label={id ?? undefined}>
+    <div className="p-2 rounded border bg-muted/30">
       <p className="text-label uppercase text-muted-foreground">{label}</p>
       {!id ? (
         <p className="text-body-sm text-muted-foreground">—</p>
@@ -178,5 +180,6 @@ function TarifaChip({
         </p>
       )}
     </div>
+    </Hint>
   );
 }

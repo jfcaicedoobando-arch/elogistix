@@ -1,5 +1,6 @@
 import { Clock, MapPin, User } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Hint } from "@/components/shared/Hint";
 import { formatDate } from "@/lib/formatters";
 import { cn } from "@/lib/utils";
 import { iconoDeEvento } from "./timelineIconos";
@@ -51,9 +52,11 @@ export function TimelineEventoItem({ evento, ultimo }: ItemProps) {
             </span>
           )}
           {evento.usuario && (
-            <span className="flex items-center gap-1" title={evento.usuario}>
-              <User className="h-3 w-3" /> {evento.usuario}
-            </span>
+            <Hint label={evento.usuario}>
+              <span className="flex items-center gap-1">
+                <User className="h-3 w-3" /> {evento.usuario}
+              </span>
+            </Hint>
           )}
         </div>
       </div>

@@ -9,6 +9,7 @@ import { ChevronDown, ChevronUp } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Hint } from "@/components/shared/Hint";
 
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
@@ -139,9 +140,11 @@ export function NotasCreditoRecientes() {
                         <TableCell className="whitespace-nowrap font-mono text-body-sm">
                           {n.factura_numero}
                         </TableCell>
-                        <TableCell className="max-w-[200px] truncate" title={toTitleCase(n.cliente_nombre)}>
-                          {toTitleCase(n.cliente_nombre)}
-                        </TableCell>
+                        <Hint label={toTitleCase(n.cliente_nombre)}>
+                          <TableCell className="max-w-[200px] truncate">
+                            {toTitleCase(n.cliente_nombre)}
+                          </TableCell>
+                        </Hint>
                         <TableCell className="text-body-sm whitespace-nowrap">{formatDate(n.fecha_emision)}</TableCell>
                         <TableCell className="text-body-sm">{n.motivo}</TableCell>
                         <TableCell>

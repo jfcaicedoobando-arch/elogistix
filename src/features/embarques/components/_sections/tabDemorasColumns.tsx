@@ -2,6 +2,7 @@
  * Columnas para `TabDemoras` — extraídas en v13.182.0 (Wave 2 splits).
  */
 import { Input } from "@/components/ui/input";
+import { Hint } from "@/components/shared/Hint";
 import { DatePickerMx } from "@/components/ui/date-picker-mx";
 import { Button } from "@/components/ui/button";
 import { defineColumns, type ColumnDef } from "@/components/shared/DataTable";
@@ -72,22 +73,23 @@ export function buildDemorasColumns(deps: DemorasColumnsDeps): ColumnDef<Editabl
       header: "Días libres (override)",
       meta: { align: "right" },
       cell: ({ row }) => (
-        <Input
-          aria-label="Días libres (override)"
-          type="number"
-          min={0}
-          disabled={!canEdit}
-          placeholder="usa naviera"
-          title="Vacío = usa los días libres configurados en la naviera. Capturá un número para sobreescribir."
-          className="h-8 w-[120px] tabular-nums text-right placeholder:italic placeholder:text-muted-foreground/60"
-          value={(valorActual(row.original, "dias_libres_override") as number | null) ?? ""}
-          onChange={(e) => {
-            const raw = e.target.value;
-            setDraft(row.original.id, {
-              dias_libres_override: raw === "" ? null : Number(raw),
-            });
-          }}
-        />
+        <Hint label="Vacío = usa los días libres configurados en la naviera. Capturá un número para sobreescribir.">
+          <Input
+            aria-label="Días libres (override)"
+            type="number"
+            min={0}
+            disabled={!canEdit}
+            placeholder="usa naviera"
+            className="h-8 w-[120px] tabular-nums text-right placeholder:italic placeholder:text-muted-foreground/60"
+            value={(valorActual(row.original, "dias_libres_override") as number | null) ?? ""}
+            onChange={(e) => {
+              const raw = e.target.value;
+              setDraft(row.original.id, {
+                dias_libres_override: raw === "" ? null : Number(raw),
+              });
+            }}
+          />
+        </Hint>
       ),
     },
     {

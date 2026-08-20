@@ -2,6 +2,7 @@ import { useFormContext } from "react-hook-form";
 import { formatCurrency, formatFechaEs } from "@/lib/formatters";
 import { aUSD } from "@/lib/financial/costosUSD";
 import { Card, CardContent } from "@/components/ui/card";
+import { Hint } from "@/components/shared/Hint";
 import { Input } from "@/components/ui/input";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ValidationAlert } from "@/components/feedback/ValidationAlert";
@@ -156,12 +157,13 @@ export function StepCostosPrecios(props: Props) {
               </div>
               <div className="min-w-0">
                 <p className="text-body-sm text-muted-foreground">Utilidad Estimada (USD)</p>
-                <p
-                  className={`text-lg sm:text-xl font-bold mt-2 tabular-nums truncate ${utilidadCalculada >= 0 ? 'text-success' : 'text-destructive'}`}
-                  title={formatCurrency(utilidadCalculada, 'USD')}
-                >
-                  {formatCurrency(utilidadCalculada, 'USD')}
-                </p>
+                <Hint label={formatCurrency(utilidadCalculada, 'USD')}>
+                  <p
+                    className={`text-lg sm:text-xl font-bold mt-2 tabular-nums truncate ${utilidadCalculada >= 0 ? 'text-success' : 'text-destructive'}`}
+                  >
+                    {formatCurrency(utilidadCalculada, 'USD')}
+                  </p>
+                </Hint>
               </div>
             </div>
             <StepCostosTcAviso tcInicial={tcInicial} tcUsdCapturado={tcUSD} />

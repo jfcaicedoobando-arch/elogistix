@@ -9,6 +9,7 @@ import { toTitleCase } from "@/lib/formatters";
 import { sortByString } from "@/components/shared/dataTable/sortingFns";
 import type { FacturaCxP } from "@/features/cxp/services";
 import { EstadoFacturaCxPCell } from "./EstadoFacturaCxPCell";
+import { Hint } from "@/components/shared/Hint";
 
 /**
  * Columnas de la tabla `/compras/facturas`.
@@ -46,9 +47,11 @@ export function buildCxPColumns(): ColumnDef<FacturaCxP, unknown>[] {
             : "";
         return (
           <div className="flex flex-col gap-0.5 min-w-0">
-            <span className="truncate" title={toTitleCase(row.original.proveedor_nombre)}>
-              {toTitleCase(row.original.proveedor_nombre)}
-            </span>
+            <Hint label={toTitleCase(row.original.proveedor_nombre)}>
+              <span className="truncate">
+                {toTitleCase(row.original.proveedor_nombre)}
+              </span>
+            </Hint>
             {origen && (
               <Badge variant="outline" className={`${badgeCls} text-label px-1.5 py-0 h-4 w-fit font-normal`}>
                 {origen}

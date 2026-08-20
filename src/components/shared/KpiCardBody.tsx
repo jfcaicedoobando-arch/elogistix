@@ -1,4 +1,5 @@
 import { CardContent } from "@/components/ui/card";
+import { Hint } from "@/components/shared/Hint";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { ArrowUpRight, Info } from "lucide-react";
@@ -38,7 +39,7 @@ export interface KpiBodyProps {
 function KpiLabel({ label, hint }: { label: string; hint?: string }) {
   return (
     <div className="flex items-center gap-1.5 min-w-0">
-      <p className="text-xs text-muted-foreground truncate" title={label}>{label}</p>
+      <Hint label={label}><p className="text-xs text-muted-foreground truncate">{label}</p></Hint>
       {hint && (
         <Tooltip>
           <TooltipTrigger asChild>
@@ -70,16 +71,15 @@ export function KpiBodyInline({
           {loading ? (
             <Skeleton className="h-7 w-20" />
           ) : (
-            <p
-              className={cn(kpiValueSize(valueStr, "inline"), "font-semibold tabular-nums truncate")}
-              title={valueTooltip ?? valueStr}
-            >
-              {value}
-            </p>
+            <Hint label={valueTooltip ?? valueStr}>
+              <p className={cn(kpiValueSize(valueStr, "inline"), "font-semibold tabular-nums truncate")}>
+                {value}
+              </p>
+            </Hint>
           )}
           {delta && <p className={cn("text-xs tabular-nums", kpiDeltaClass(deltaVariant))}>{delta}</p>}
           {sublabel && !delta && (
-            <p className="text-xs text-muted-foreground truncate" title={sublabel}>{sublabel}</p>
+            <Hint label={sublabel}><p className="text-xs text-muted-foreground truncate">{sublabel}</p></Hint>
           )}
           {children}
         </div>
@@ -117,22 +117,25 @@ export function KpiBodyChip({
           <Skeleton className="h-8 w-24 mt-1" />
         ) : (
           <>
-            <p
-              className={cn(
-                kpiValueSize(valueStr, "chip"),
-                "font-semibold text-foreground tabular-nums leading-tight truncate",
-              )}
-              title={valueTooltip ?? valueStr}
-            >
-              {value}
-            </p>
+            <Hint label={valueTooltip ?? valueStr}>
+              <p
+                className={cn(
+                  kpiValueSize(valueStr, "chip"),
+                  "font-semibold text-foreground tabular-nums leading-tight truncate",
+                )}
+              >
+                {value}
+              </p>
+            </Hint>
             {delta && (
               <p className={cn("text-xs tabular-nums mt-0.5", kpiDeltaClass(deltaVariant))}>{delta}</p>
             )}
             {sublabel && !delta && (
-              <p className="text-xs text-muted-foreground truncate mt-0.5" title={sublabel}>
-                {sublabel}
-              </p>
+              <Hint label={sublabel}>
+                <p className="text-xs text-muted-foreground truncate mt-0.5">
+                  {sublabel}
+                </p>
+              </Hint>
             )}
           </>
         )}

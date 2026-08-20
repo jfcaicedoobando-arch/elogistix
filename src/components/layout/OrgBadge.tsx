@@ -1,6 +1,7 @@
 import { memo } from "react";
 import { Building2 } from "lucide-react";
 import { useOrganization } from "@/lib/contexts/OrganizationContext";
+import { Hint } from "@/components/shared/Hint";
 
 /**
  * Etiqueta de contexto read-only que muestra la organización activa en el
@@ -16,13 +17,14 @@ function OrgBadgeBase({ collapsed }: { collapsed?: boolean }) {
 
   if (collapsed) {
     return (
-      <div
-        className="flex items-center justify-center h-8 w-full text-sidebar-foreground/60"
-        title={`Organización: ${organization.nombre}`}
-        aria-label={`Organización: ${organization.nombre}`}
-      >
-        <Building2 className="h-4 w-4" aria-hidden="true" />
-      </div>
+      <Hint label={`Organización: ${organization.nombre}`}>
+        <div
+          className="flex items-center justify-center h-8 w-full text-sidebar-foreground/60"
+          aria-label={`Organización: ${organization.nombre}`}
+        >
+          <Building2 className="h-4 w-4" aria-hidden="true" />
+        </div>
+      </Hint>
     );
   }
 

@@ -8,6 +8,7 @@ import ReactMarkdown from "react-markdown";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { SectionHeading } from "@/components/shared/SectionHeading";
+import { Hint } from "@/components/shared/Hint";
 import { useExplicarHallazgo, type ExplicacionHallazgo } from "@/features/auditoria/hooks/useExplicarHallazgo";
 import type { HallazgoAuditoria } from "@/features/auditoria/types";
 
@@ -35,16 +36,17 @@ export function ExplicarHallazgoButton({ hallazgo }: Props) {
   return (
     <Popover open={open} onOpenChange={handleOpen}>
       <PopoverTrigger asChild>
-        <Button
-          size="icon"
-          variant="ghost"
-          className="h-7 w-7 text-primary"
-          onClick={(e) => e.stopPropagation()}
-          aria-label="Explicar con IA"
-          title="Explicar este hallazgo con IA"
-        >
-          <Sparkles className="h-3.5 w-3.5" />
-        </Button>
+        <Hint label="Explicar este hallazgo con IA">
+          <Button
+            size="icon"
+            variant="ghost"
+            className="h-7 w-7 text-primary"
+            onClick={(e) => e.stopPropagation()}
+            aria-label="Explicar con IA"
+          >
+            <Sparkles className="h-3.5 w-3.5" />
+          </Button>
+        </Hint>
       </PopoverTrigger>
       <PopoverContent
         side="left"

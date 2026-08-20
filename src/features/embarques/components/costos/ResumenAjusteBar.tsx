@@ -3,6 +3,7 @@
  * (Cotizado / Facturado / Ajuste neto) con lenguaje narrativo.
  */
 import { formatCurrency } from "@/lib/formatters";
+import { Hint } from "@/components/shared/Hint";
 import { cn } from "@/lib/utils";
 import { describirAjusteNeto } from "./ajusteDescripcion";
 import { TONE_TEXT } from "@/lib/ui/badgeTone";
@@ -57,9 +58,11 @@ function Tile({
   label, value, valueClassName, title,
 }: { label: string; value: string; valueClassName?: string; title?: string }) {
   return (
-    <div className="min-w-0" title={title}>
-      <p className="text-2xs uppercase tracking-wide text-muted-foreground truncate">{label}</p>
-      <p className={cn("text-body tabular-nums truncate", valueClassName ?? "font-medium")}>{value}</p>
-    </div>
+    <Hint label={title}>
+      <div className="min-w-0">
+        <p className="text-2xs uppercase tracking-wide text-muted-foreground truncate">{label}</p>
+        <p className={cn("text-body tabular-nums truncate", valueClassName ?? "font-medium")}>{value}</p>
+      </div>
+    </Hint>
   );
 }

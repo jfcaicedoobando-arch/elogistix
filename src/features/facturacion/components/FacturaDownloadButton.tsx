@@ -4,6 +4,7 @@ import { openFacturaInNewTab } from "@/services/storage";
 import { descargarCfdiFacturapi, esUrlFacturapi } from "@/features/facturacion/services/descargarCfdiFacturapi";
 
 import { notifyError } from "@/lib/ui/appFeedback";
+import { Hint } from "@/components/shared/Hint";
 interface Props {
   stored: string | null;
   kind: "pdf" | "xml";
@@ -52,27 +53,29 @@ export function FacturaDownloadButton({ stored, kind, size = "icon", className, 
 
   if (size === "icon") {
     return (
-      <Button
-        variant="outline"
-        size="icon"
-        className={className ?? "h-7 w-7"}
-        title={label}
-        aria-label={label}
-        onClick={onClick}
-      >
-        <Icon className={`h-3.5 w-3.5 ${colorClass}`} />
-      </Button>
+      <Hint label={label}>
+        <Button
+          variant="outline"
+          size="icon"
+          className={className ?? "h-7 w-7"}
+          aria-label={label}
+          onClick={onClick}
+        >
+          <Icon className={`h-3.5 w-3.5 ${colorClass}`} />
+        </Button>
+      </Hint>
     );
   }
   return (
-    <button
-      type="button"
-      title={label}
-      aria-label={label}
-      onClick={onClick}
-      className={className ?? "inline-flex"}
-    >
-      <Icon className={`h-3.5 w-3.5 ${colorClass} hover:opacity-80`} />
-    </button>
+    <Hint label={label}>
+      <button
+        type="button"
+        aria-label={label}
+        onClick={onClick}
+        className={className ?? "inline-flex"}
+      >
+        <Icon className={`h-3.5 w-3.5 ${colorClass} hover:opacity-80`} />
+      </button>
+    </Hint>
   );
 }

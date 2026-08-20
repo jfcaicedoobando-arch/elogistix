@@ -8,6 +8,7 @@ import { HallazgoDetalleCell } from "./HallazgoDetalleCell";
 import { COL_W } from "@/components/shared/dataTable/columnWidths";
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
+import { Hint } from "@/components/shared/Hint";
 
 const reglaToTab: Record<ReglaAuditoria, string> = {
   docs_faltantes: "documentos",
@@ -60,7 +61,11 @@ export function HallazgoTabla({ hallazgos }: Props) {
       ) },
     { id: "exp", header: "Expediente", meta: { width: COL_W.monto, className: "font-medium tabular-nums" }, cell: ({ row }) => row.original.expediente },
     { id: "cliente", header: "Cliente", meta: { className: "truncate max-w-[200px]" },
-      cell: ({ row }) => <span title={row.original.cliente_nombre}>{row.original.cliente_nombre || "—"}</span> },
+      cell: ({ row }) => (
+        <Hint label={row.original.cliente_nombre}>
+          <span>{row.original.cliente_nombre || "—"}</span>
+        </Hint>
+      ) },
     { id: "estado", header: "Estado", meta: { width: COL_W.fecha, className: "text-body-sm text-muted-foreground" }, cell: ({ row }) => row.original.estado },
     { id: "eta", header: "ETA", meta: { width: COL_W.fecha, className: "text-body-sm tabular-nums text-muted-foreground" }, cell: ({ row }) => formatEta(row.original.eta) },
     { id: "detalle", header: "Detalle", meta: { className: "text-body" },
@@ -72,19 +77,20 @@ export function HallazgoTabla({ hallazgos }: Props) {
         const h = row.original;
         const url = `${window.location.origin}/embarques/${h.embarque_id}?tab=${reglaToTab[h.regla]}`;
         return (
-          <Button
-            size="sm" variant="ghost" className="h-7 gap-1 text-body-sm"
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              window.open(url, "_blank", "noopener,noreferrer");
-            }}
-            onMouseDown={(e) => e.stopPropagation()}
-            aria-label={`Abrir embarque ${h.expediente} en nueva pestaña`}
-            title={`Abrir embarque ${h.expediente} en nueva pestaña`}
-          >
-            <ExternalLink className="h-3.5 w-3.5" /> Abrir
-          </Button>
+          <Hint label={`Abrir embarque ${h.expediente} en nueva pestaña`}>
+            <Button
+              size="sm" variant="ghost" className="h-7 gap-1 text-body-sm"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                window.open(url, "_blank", "noopener,noreferrer");
+              }}
+              onMouseDown={(e) => e.stopPropagation()}
+              aria-label={`Abrir embarque ${h.expediente} en nueva pestaña`}
+            >
+              <ExternalLink className="h-3.5 w-3.5" /> Abrir
+            </Button>
+          </Hint>
         );
       } },
   ]);

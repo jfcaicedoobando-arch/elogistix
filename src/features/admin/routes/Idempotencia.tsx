@@ -40,6 +40,7 @@ const FN_OPTIONS: { value: FnFilter; label: string }[] = [
 import { formatFechaSegura } from "@/lib/formatters";
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 import { ErrorState } from "@/components/shared/states/ErrorState";
+import { Hint } from "@/components/shared/Hint";
 
 export default function Idempotencia() {
   useDocumentTitle('Idempotencia');
@@ -78,9 +79,11 @@ export default function Idempotencia() {
         return (
           <div className="flex items-center gap-1">
             <code className="text-body-sm font-mono text-muted-foreground">{r.key.slice(0, 8)}…{r.key.slice(-4)}</code>
-            <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => copyKey(r.key)} title="Copiar requestId completo" aria-label="Copiar requestId completo">
-              <Copy className="h-3 w-3" />
-            </Button>
+            <Hint label="Copiar requestId completo">
+              <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => copyKey(r.key)} aria-label="Copiar requestId completo">
+                <Copy className="h-3 w-3" />
+              </Button>
+            </Hint>
           </div>
         );
       },

@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils";
 import type { CxpPorCapturarRow as RowData } from "@/features/bandejas/services/bandejas";
 import { estatusDeFila } from "@/features/bandejas/hooks/useCxpPorCapturarFilters";
 import { COL_W } from "@/components/shared/dataTable/columnWidths";
+import { Hint } from "@/components/shared/Hint";
 
 const CAPTURA_STATUS: Record<"sin" | "parcial" | "completo", string> = {
   sin: "Sin captura",
@@ -48,7 +49,9 @@ export function buildCxpPorCapturarColumns(opts: BuildOpts): ColumnDef<RowData, 
       accessorFn: (r) => r.cliente_nombre ?? "",
       meta: { width: COL_W.ruta, className: "max-w-[240px] truncate" },
       cell: ({ row }) => (
-        <span title={row.original.cliente_nombre ?? ""}>{row.original.cliente_nombre ?? "—"}</span>
+        <Hint label={row.original.cliente_nombre ?? ""}>
+          <span>{row.original.cliente_nombre ?? "—"}</span>
+        </Hint>
       ),
     },
     {

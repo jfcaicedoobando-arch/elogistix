@@ -8,6 +8,7 @@
  */
 import { Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Hint } from "@/components/shared/Hint";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { useActualizarPagoProveedor } from "@/features/cxp/hooks";
@@ -68,9 +69,11 @@ export function DialogEditarPagoProveedor({ open, onOpenChange, factura, pago }:
       <Button variant="outline" onClick={() => onOpenChange(false)} disabled={actualizar.isPending}>
         Cancelar
       </Button>
-      <Button onClick={submit} disabled={submitDisabled} title={f.validacion.error ?? undefined} loading={actualizar.isPending}>
-        {actualizar.isPending ? "Guardando…" : "Guardar cambios"}
-      </Button>
+      <Hint label={f.validacion.error ?? undefined}>
+        <Button onClick={submit} disabled={submitDisabled} loading={actualizar.isPending}>
+          {actualizar.isPending ? "Guardando…" : "Guardar cambios"}
+        </Button>
+      </Hint>
     </>
   );
 

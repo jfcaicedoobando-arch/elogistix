@@ -31,6 +31,8 @@ export function PdfObjectViewer({
 }: Props) {
   const data = vista ? urlPdfConVista(url, vista) : url;
   return (
+    // `title` en <object> es el nombre accesible del documento embebido (no un
+    // tooltip de UI): se conserva como atributo HTML nativo, no se migra a Hint.
     <object data={data} type="application/pdf" title={title} className={className ?? "h-full w-full"}>
       <div className="flex h-full flex-col items-center justify-center gap-3 p-6 text-center">
         <p className="text-sm text-muted-foreground">

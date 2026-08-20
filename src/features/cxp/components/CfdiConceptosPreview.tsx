@@ -22,6 +22,7 @@ import type { CfdiConceptoParsed } from "@/features/cxp/services";
 
 import { Table, TableBody, TableCell, TableFooter, TableHeader, TableRow } from "@/components/ui/table";
 import { DetailTableHead } from "@/components/shared/DetailTable";
+import { Hint } from "@/components/shared/Hint";
 interface Props {
   conceptos: ReadonlyArray<CfdiConceptoParsed>;
   moneda: string;
@@ -68,11 +69,13 @@ export function CfdiConceptosPreview({ conceptos, moneda }: Props) {
               {conceptos.map((c, i) => (
                 <TableRow key={i} className="border-t odd:bg-background even:bg-muted/20 align-top">
                   <TableCell className="text-muted-foreground">{i + 1}</TableCell>
-                  <TableCell className="max-w-[320px]" title={c.descripcion}>
-                    <span className="line-clamp-2">
-                    {c.descripcion || <span className="text-muted-foreground">(Sin descripción)</span>}
-                    </span>
-                  </TableCell>
+                  <Hint label={c.descripcion}>
+                    <TableCell className="max-w-[320px]">
+                      <span className="line-clamp-2">
+                      {c.descripcion || <span className="text-muted-foreground">(Sin descripción)</span>}
+                      </span>
+                    </TableCell>
+                  </Hint>
                   <TableCell className="text-right">{lineas[i].cantidad}</TableCell>
                   <TableCell className="text-right">{formatCurrency(lineas[i].monto, moneda)}</TableCell>
                   <TableCell className="text-right">

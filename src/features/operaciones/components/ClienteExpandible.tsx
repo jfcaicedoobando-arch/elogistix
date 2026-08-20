@@ -1,5 +1,6 @@
 import { memo, useState } from "react";
 import { Badge } from "@/components/ui/badge";
+import { Hint } from "@/components/shared/Hint";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ChevronRight } from "lucide-react";
 import { toTitleCase } from "@/lib/formatters";
@@ -22,7 +23,7 @@ export const ClienteExpandible = memo(function ClienteExpandible({ cliente }: { 
                   open ? "rotate-90" : ""
                 }`}
               />
-              <span className="truncate" title={cliente.nombre}>{toTitleCase(cliente.nombre)}</span>
+              <Hint label={cliente.nombre}><span className="truncate">{toTitleCase(cliente.nombre)}</span></Hint>
             </span>
             <Badge
               variant="secondary"

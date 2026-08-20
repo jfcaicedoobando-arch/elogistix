@@ -1,4 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Hint } from "@/components/shared/Hint";
 import { formatDate, formatCurrency, nombreDesdeEmail } from "@/lib/formatters";
 
 interface Cotizacion {
@@ -96,7 +97,7 @@ export function CotizacionDatosGeneralesCard({ cotizacion }: Props) {
           {rows.map((r) => (
             <div key={r.label} className={r.colSpan2 ? "col-span-2" : undefined}>
               <span className="text-muted-foreground">{r.label}</span>
-              <p className="font-medium" title={r.title}>{r.value}</p>
+              <Hint label={r.title}><p className="font-medium">{r.value}</p></Hint>
             </div>
           ))}
         </div>

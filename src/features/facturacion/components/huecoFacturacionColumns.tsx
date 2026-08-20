@@ -3,6 +3,7 @@
  * (Fase 2 — ColumnDef nativo TanStack).
  */
 import { Badge } from "@/components/ui/badge";
+import { Hint } from "@/components/shared/Hint";
 import { defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import type { FilaHueco } from "@/features/facturacion/services";
 import { formatCurrency, formatDate, toTitleCase } from "@/lib/formatters";
@@ -29,7 +30,9 @@ export const huecoFacturacionColumns: ColumnDef<FilaHueco, unknown>[] = defineCo
     sortingFn: sortByString<FilaHueco>((f) => f.cliente_nombre),
     meta: { width: COL_W.ruta, className: "max-w-[260px] truncate" },
     cell: ({ row }) => (
-      <span title={toTitleCase(row.original.cliente_nombre)}>{toTitleCase(row.original.cliente_nombre)}</span>
+      <Hint label={toTitleCase(row.original.cliente_nombre)}>
+        <span>{toTitleCase(row.original.cliente_nombre)}</span>
+      </Hint>
     ),
   },
   {
@@ -63,11 +66,11 @@ export const huecoFacturacionColumns: ColumnDef<FilaHueco, unknown>[] = defineCo
       if (!m && !h) return <span className="text-muted-foreground">—</span>;
       return (
         <div className="flex flex-col leading-tight">
-          {m && <span title={`Master: ${m}`}>{m}</span>}
+          {m && <Hint label={`Master: ${m}`}><span>{m}</span></Hint>}
           {h && (
-            <span className="text-muted-foreground" title={`House: ${h}`}>
-              H: {h}
-            </span>
+            <Hint label={`House: ${h}`}>
+              <span className="text-muted-foreground">H: {h}</span>
+            </Hint>
           )}
         </div>
       );

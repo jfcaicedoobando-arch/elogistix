@@ -12,6 +12,7 @@ import {
   PICKER_AYUDA_TECLADO, PLACEHOLDER_FECHA_HORA, pickerAvisoClass, pickerClearClass,
   pickerClearIconClass, pickerErrorClass, pickerIconClass, pickerRootClass, pickerTriggerClass,
 } from "@/components/ui/picker-mx-shell";
+import { Hint } from "@/components/shared/Hint";
 import { dateToIso, isoToDate } from "./date-picker-mx-helpers";
 import { PATRON_FECHA_HORA } from "./date-picker-mx-segmentos";
 import { manejarAtajosSegmento, seleccionarSegmentoEnCursor } from "./date-picker-mx-teclado";
@@ -65,10 +66,10 @@ export function DateTimePickerMx({
 
   return (
     <div className={cn(pickerRootClass, className)}>
+      <Hint label={title ?? PICKER_AYUDA_TECLADO}>
       <div
         role="group"
         aria-label={title}
-        title={title ?? PICKER_AYUDA_TECLADO}
         aria-disabled={disabled || undefined}
         className={cn(pickerTriggerClass({ showError, disabled }))}
       >
@@ -141,18 +142,19 @@ export function DateTimePickerMx({
             if (!o) inputRef.current?.focus();
           }}
         >
-          <PopoverTrigger asChild>
-            <button
-              type="button"
-              tabIndex={-1}
-              disabled={disabled}
-              aria-label="Abrir calendario"
-              title="Abrir calendario (Alt + Flecha abajo)"
-              className="shrink-0 rounded p-0.5 text-muted-foreground hover:bg-muted hover:text-foreground disabled:cursor-not-allowed"
-            >
-              <CalendarIcon className={pickerIconClass} />
-            </button>
-          </PopoverTrigger>
+          <Hint label="Abrir calendario (Alt + Flecha abajo)">
+            <PopoverTrigger asChild>
+              <button
+                type="button"
+                tabIndex={-1}
+                disabled={disabled}
+                aria-label="Abrir calendario"
+                className="shrink-0 rounded p-0.5 text-muted-foreground hover:bg-muted hover:text-foreground disabled:cursor-not-allowed"
+              >
+                <CalendarIcon className={pickerIconClass} />
+              </button>
+            </PopoverTrigger>
+          </Hint>
           <PopoverContent className="w-auto p-0 pointer-events-auto" align="start">
             <Calendar
               mode="single"
@@ -176,6 +178,7 @@ export function DateTimePickerMx({
           </PopoverContent>
         </Popover>
       </div>
+      </Hint>
       {showError && (
         <span id={errorId} className={pickerErrorClass}>
           {errorText ?? "Fecha inválida. Usa DD/MM/AAAA HH:MM."}

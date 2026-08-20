@@ -10,6 +10,7 @@ import { formatCurrency, formatCurrencyCompact } from "@/lib/formatters";
 import { DrilldownRow } from "@/components/shared/dataTable/DrilldownRow";
 import type { AgingBuckets } from "@/features/dashboard/finance/hooks/useFinanceDashboard";
 import { AGING_SOFT_CLASS } from "@/lib/aging/buckets";
+import { Hint } from "@/components/shared/Hint";
 
 interface FacturaVencida {
   id: string;
@@ -70,12 +71,11 @@ export function CobranzaBlock({ aging, facturasVencidas, loading, agingSinTc = 0
                     />
                   </div>
                   <p className="text-label text-muted-foreground text-center">{label}</p>
-                  <p
-                    className="text-body-sm font-semibold text-center tabular-nums truncate"
-                    title={formatCurrency(value, "MXN")}
-                  >
-                    {formatCurrencyCompact(value, "MXN")}
-                  </p>
+                  <Hint label={formatCurrency(value, "MXN")}>
+                    <p className="text-body-sm font-semibold text-center tabular-nums truncate">
+                      {formatCurrencyCompact(value, "MXN")}
+                    </p>
+                  </Hint>
                 </div>
               );
             })}

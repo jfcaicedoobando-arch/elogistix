@@ -1,4 +1,5 @@
 import { StatusBadge } from "@/components/shared/StatusBadge";
+import { Hint } from "@/components/shared/Hint";
 import { memo } from "react";
 import { useDrilldownRow } from "@/components/shared/dataTable/useDrilldownRow";
 import { Badge } from "@/components/ui/badge";
@@ -107,14 +108,18 @@ function EmbarqueCardInner({ e }: { e: EmbarqueCardData }) {
               );
             })()}
             <div className="flex items-center gap-3 ml-auto">
-              <span className="text-body-sm text-muted-foreground flex items-center gap-1 tabular-nums" title="Fecha estimada de salida">
-                <CalendarClock className="h-3 w-3 flex-shrink-0" />
-                ETD: {formatDate(e.etd || "", "dd/MM/yy")}
-              </span>
-              <span className={cn("text-body-sm flex items-center gap-1 tabular-nums", etaCls)} title="Fecha estimada de arribo">
-                <CalendarClock className="h-3 w-3 flex-shrink-0" />
-                ETA: {formatDate(e.eta || "", "dd/MM/yy")}
-              </span>
+              <Hint label="Fecha estimada de salida">
+                <span className="text-body-sm text-muted-foreground flex items-center gap-1 tabular-nums">
+                  <CalendarClock className="h-3 w-3 flex-shrink-0" />
+                  ETD: {formatDate(e.etd || "", "dd/MM/yy")}
+                </span>
+              </Hint>
+              <Hint label="Fecha estimada de arribo">
+                <span className={cn("text-body-sm flex items-center gap-1 tabular-nums", etaCls)}>
+                  <CalendarClock className="h-3 w-3 flex-shrink-0" />
+                  ETA: {formatDate(e.eta || "", "dd/MM/yy")}
+                </span>
+              </Hint>
             </div>
           </div>
 

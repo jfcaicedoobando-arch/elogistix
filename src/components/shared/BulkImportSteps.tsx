@@ -1,6 +1,7 @@
 import { Download, Upload, FileWarning } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Hint } from "@/components/shared/Hint";
 import { cn } from "@/lib/utils";
 import type { ImportPreview, ImportRowError } from "@/lib/csv/importSchemas";
 
@@ -52,9 +53,11 @@ export function PreviewStep<T>({ fileName, preview, error }: PreviewStepProps<T>
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-3 text-sm">
-        <span className="font-medium truncate" title={fileName ?? ""}>
-          {fileName ?? "Archivo"}
-        </span>
+        <Hint label={fileName ?? ""}>
+          <span className="font-medium truncate">
+            {fileName ?? "Archivo"}
+          </span>
+        </Hint>
         <div className="flex gap-2 text-xs">
           <span className="rounded-md bg-success/10 text-success px-2 py-1">
             {valid.length} válidos

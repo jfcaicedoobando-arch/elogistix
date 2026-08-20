@@ -7,6 +7,7 @@ import { Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { formatCurrency, formatFechaDia } from "@/lib/formatters";
 import { ConciliacionPagoCell } from "./ConciliacionPagoCell";
+import { Hint } from "@/components/shared/Hint";
 
 import { TableCell, TableRow } from "@/components/ui/table";
 export interface PagoRow {
@@ -74,28 +75,30 @@ export function PagoFila({ pago: p, canEdit, onEliminar, onEditar }: Props) {
       </TableCell>
       <TableCell className="text-right">
         {canEdit && onEditar && (
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-7 w-7 text-muted-foreground hover:text-primary hover:bg-primary/10"
-            onClick={() => onEditar(p)}
-            title="Editar pago"
-            aria-label="Editar pago"
-          >
-            <Pencil className="h-3.5 w-3.5" />
-          </Button>
+          <Hint label="Editar pago">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7 text-muted-foreground hover:text-primary hover:bg-primary/10"
+              onClick={() => onEditar(p)}
+              aria-label="Editar pago"
+            >
+              <Pencil className="h-3.5 w-3.5" />
+            </Button>
+          </Hint>
         )}
         {canEdit && (
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-7 w-7 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-            onClick={() => onEliminar(p.id)}
-            title="Eliminar pago"
-            aria-label="Eliminar pago"
-          >
-            <Trash2 className="h-3.5 w-3.5" />
-          </Button>
+          <Hint label="Eliminar pago">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+              onClick={() => onEliminar(p.id)}
+              aria-label="Eliminar pago"
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+            </Button>
+          </Hint>
         )}
       </TableCell>
     </TableRow>

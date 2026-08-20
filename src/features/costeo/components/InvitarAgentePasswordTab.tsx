@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { TabsContent } from "@/components/ui/tabs";
 import { Eye, EyeOff, RefreshCw } from "lucide-react";
+import { Hint } from "@/components/shared/Hint";
 
 
 
@@ -62,16 +63,17 @@ export function InvitarAgentePasswordTab({
           >
             {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
           </Button>
-          <Button
-            type="button"
-            variant="outline"
-            size="icon"
-            onClick={onGenerate}
-            aria-label="Generar contraseña segura"
-            title="Generar contraseña segura"
-          >
-            <RefreshCw className="h-4 w-4" />
-          </Button>
+          <Hint label="Generar contraseña segura">
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              onClick={onGenerate}
+              aria-label="Generar contraseña segura"
+            >
+              <RefreshCw className="h-4 w-4" />
+            </Button>
+          </Hint>
         </div>
       </div>
       <p className="text-body-sm text-muted-foreground">

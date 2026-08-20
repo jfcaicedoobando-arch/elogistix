@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { todayLocalISO } from "@/lib/date/today";
 import type { AuditoriaRevision, HallazgoAuditoria } from "@/features/auditoria/types";
+import { Hint } from "@/components/shared/Hint";
 
 interface Props {
   hallazgo: HallazgoAuditoria;
@@ -43,13 +44,12 @@ export function HallazgoResponsableCell({
 
   if (revision?.estado_revision === "revisado") {
     return (
-      <span
-        className="text-body-sm text-muted-foreground flex items-center gap-1"
-        title="Hallazgo revisado: la asignación está cerrada"
-      >
-        <UserCheck className="h-3.5 w-3.5 shrink-0" />
-        <span className="truncate max-w-[110px]">{responsable?.responsable_email ?? "—"}</span>
-      </span>
+      <Hint label="Hallazgo revisado: la asignación está cerrada">
+        <span className="text-body-sm text-muted-foreground flex items-center gap-1">
+          <UserCheck className="h-3.5 w-3.5 shrink-0" />
+          <span className="truncate max-w-[110px]">{responsable?.responsable_email ?? "—"}</span>
+        </span>
+      </Hint>
     );
   }
 
@@ -69,19 +69,20 @@ export function HallazgoResponsableCell({
   const vencida = esVencida(revision?.fecha_limite ?? null);
 
   return (
-    <Button
-      variant="link"
-      size="sm"
-      className={cn(
-        "h-auto p-0 flex items-center gap-1 text-left justify-start",
-        responsable.responsable_id === currentUserId ? "text-primary font-medium" : "text-foreground",
-      )}
-      onClick={(e) => { e.stopPropagation(); onAsignarResponsable(hallazgo); }}
-      title={tituloAsignacion(responsable)}
-    >
-      <UserCheck className="h-3.5 w-3.5 shrink-0" />
-      <span className="truncate max-w-[110px]">{responsable.responsable_email}</span>
-      {vencida && <AlertTriangle className="h-3 w-3 text-destructive shrink-0" aria-label="Vencido" />}
-    </Button>
+    <Hint label={tituloAsignacion(responsable)}>
+      <Button
+        variant="link"
+        size="sm"
+        className={cn(
+          "h-auto p-0 flex items-center gap-1 text-left justify-start",
+          responsable.responsable_id === currentUserId ? "text-primary font-medium" : "text-foreground",
+        )}
+        onClick={(e) => { e.stopPropagation(); onAsignarResponsable(hallazgo); }}
+      >
+        <UserCheck className="h-3.5 w-3.5 shrink-0" />
+        <span className="truncate max-w-[110px]">{responsable.responsable_email}</span>
+        {vencida && <AlertTriangle className="h-3 w-3 text-destructive shrink-0" aria-label="Vencido" />}
+      </Button>
+    </Hint>
   );
 }

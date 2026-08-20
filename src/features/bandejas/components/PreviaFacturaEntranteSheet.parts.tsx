@@ -7,6 +7,7 @@ import {
   CheckCircle2, Download, ExternalLink, FileCode2, FilePlus2, Maximize2, Minimize2, XCircle,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Hint } from "@/components/shared/Hint";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PdfObjectViewer } from "@/components/shared/PdfObjectViewer";
@@ -19,7 +20,7 @@ function DatoLinea({ etiqueta, valor }: { etiqueta: string; valor: string }) {
   return (
     <div className="min-w-0">
       <p className="text-overline">{etiqueta}</p>
-      <p className="truncate text-sm font-medium" title={valor}>{valor}</p>
+      <Hint label={valor}><p className="truncate text-sm font-medium">{valor}</p></Hint>
     </div>
   );
 }

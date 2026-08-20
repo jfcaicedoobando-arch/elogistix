@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { FormDialogSection } from "@/components/shared/FormDialogSection";
+import { Hint } from "@/components/shared/Hint";
 import { formatCurrency } from "@/lib/formatters";
 import { usePagoClienteLoteState } from "@/features/facturacion/hooks/usePagoClienteLoteState";
 import { DialogCobroLoteAcciones } from "./DialogCobroLoteAcciones";
@@ -44,9 +45,11 @@ export function DialogCobroLoteCliente(p: Props) {
       <Button variant="outline" onClick={() => p.onOpenChange(false)} disabled={s.guardando}>
         Cancelar
       </Button>
-      <Button onClick={s.submit} disabled={!!s.error} title={s.error ?? undefined} loading={s.guardando}>
-        {s.guardando ? "Guardando…" : "Aplicar cobro en lote"}
-      </Button>
+      <Hint label={s.error ?? undefined}>
+        <Button onClick={s.submit} disabled={!!s.error} loading={s.guardando}>
+          {s.guardando ? "Guardando…" : "Aplicar cobro en lote"}
+        </Button>
+      </Hint>
     </>
   );
 

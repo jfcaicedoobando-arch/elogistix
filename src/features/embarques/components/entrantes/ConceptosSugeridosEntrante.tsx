@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { formatCurrency } from "@/lib/formatters/numbers";
 import type { ConceptoCostoEmbarque } from "@/features/embarques/services";
 import type { ConceptoSugeridoSeleccion } from "@/features/cxp/hooks";
+import { Hint } from "@/components/shared/Hint";
 
 interface Props {
   conceptos: readonly ConceptoCostoEmbarque[] | undefined;
@@ -44,13 +45,14 @@ function FilaConcepto({
         aria-label={`Marcar ${concepto.concepto}`}
       />
       <div className="min-w-0 flex-1">
-        <Label
-          htmlFor={`concepto-${concepto.id}`}
-          className="block truncate font-normal"
-          title={concepto.concepto}
-        >
-          {concepto.concepto}
-        </Label>
+        <Hint label={concepto.concepto}>
+          <Label
+            htmlFor={`concepto-${concepto.id}`}
+            className="block truncate font-normal"
+          >
+            {concepto.concepto}
+          </Label>
+        </Hint>
         <div className="flex items-center gap-2 text-body-sm text-muted-foreground">
           <span>Costeado: {formatCurrency(concepto.monto, concepto.moneda)}</span>
           {concepto.yaFacturado && (

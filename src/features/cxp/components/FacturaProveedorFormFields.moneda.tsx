@@ -5,6 +5,7 @@
 import { Coins, Loader2, RefreshCw } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { Hint } from "@/components/shared/Hint";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
@@ -58,20 +59,21 @@ export function MonedaImportesSection({
             <div className="flex items-center justify-between gap-2">
               <Label>Tipo de cambio a MXN<RequiredMark /></Label>
               {onObtenerDof && (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="h-6 px-2 text-label"
-                  onClick={onObtenerDof}
-                  disabled={dofLoading}
-                  title="Consulta la Publicación DOF Banxico vigente en la fecha de emisión."
-                >
-                  {dofLoading
-                    ? <Loader2 className="h-4 w-4 mr-1 animate-spin" />
-                    : <RefreshCw className="h-3 w-3 mr-1" />}
-                  Obtener DOF
-                </Button>
+                <Hint label="Consulta la Publicación DOF Banxico vigente en la fecha de emisión.">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="h-6 px-2 text-label"
+                    onClick={onObtenerDof}
+                    disabled={dofLoading}
+                  >
+                    {dofLoading
+                      ? <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                      : <RefreshCw className="h-3 w-3 mr-1" />}
+                    Obtener DOF
+                  </Button>
+                </Hint>
               )}
             </div>
             <NumericInput

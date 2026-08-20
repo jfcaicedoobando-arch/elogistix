@@ -17,6 +17,7 @@ import { PortalBreadcrumbsBar } from "@/features/portal/components/layout/Portal
 import type { PortalCrumb } from "@/features/portal/components/layout/PortalBreadcrumbsBar";
 import { useBreadcrumbLabels } from "@/lib/contexts/BreadcrumbContext";
 import { PageContainer } from "@/components/shared/PageContainer";
+import { Hint } from "@/components/shared/Hint";
 import { ROUTES } from "@/constants/routes";
 
 const NAV = [
@@ -128,13 +129,12 @@ export default function AgenteLayout() {
 
           <div className="flex items-center gap-1 sm:gap-2 shrink-0">
             {orgName && (
-              <span
-                className="hidden sm:inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-muted/60 text-xs font-medium text-foreground max-w-[200px]"
-                title={orgName}
-              >
-                <Building2 className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                <span className="truncate">{orgName}</span>
-              </span>
+              <Hint label={orgName}>
+                <span className="hidden sm:inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-muted/60 text-xs font-medium text-foreground max-w-[200px]">
+                  <Building2 className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                  <span className="truncate">{orgName}</span>
+                </span>
+              </Hint>
             )}
             <ThemeToggle />
             <FeedbackButton />

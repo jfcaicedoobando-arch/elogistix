@@ -12,6 +12,7 @@ import { formatCurrency, formatDate } from "@/lib/formatters";
 import { FacturaDownloadButton } from "@/features/facturacion/components/FacturaDownloadButton";
 import type { ProformaDetalleFull } from "@/features/proformas/services";
 import { SectionHeading } from "@/components/shared/SectionHeading";
+import { Hint } from "@/components/shared/Hint";
 
 export { AccionesProforma } from "./AccionesProforma";
 export { EstadoBadges } from "./ProformaEstadoBadges";
@@ -64,9 +65,11 @@ function FacturaAsociadaItem({ factura, showHeader }: { factura: FacturaAsociada
         </div>
         <div className="min-w-0">
           <p className="text-body-sm text-muted-foreground">UUID fiscal</p>
-          <p className="font-mono text-body-sm truncate" title={factura.uuid_fiscal ?? ''}>
-            {factura.uuid_fiscal || '—'}
-          </p>
+          <Hint label={factura.uuid_fiscal ?? ''}>
+            <p className="font-mono text-body-sm truncate">
+              {factura.uuid_fiscal || '—'}
+            </p>
+          </Hint>
         </div>
         {tieneArchivos && (
           <div className="col-span-2 md:col-span-3 flex flex-wrap gap-2 pt-1 border-t">

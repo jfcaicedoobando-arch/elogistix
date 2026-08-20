@@ -7,6 +7,7 @@
 import { pluralizar } from "@/lib/format/pluralizar";
 import { CheckCircle2, Loader2, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Hint } from "@/components/shared/Hint";
 import { cn } from "@/lib/utils";
 import { formatCurrency } from "@/lib/formatters";
 
@@ -54,20 +55,23 @@ export function ComprasPorAprobarBulkBar({
         )}
       </p>
       <div className="flex items-center gap-2">
-        <Button
-          size="sm"
-          variant="outline"
-          disabled={validablesCount === 0 || ocupado}
-          onClick={onValidarSat}
-          title={
+        <Hint
+          label={
             validablesCount === 0
               ? "Solo las facturas nacionales con UUID fiscal se pueden validar en el SAT"
               : "Consulta el estatus del CFDI en el SAT para la selección"
           }
         >
-          {satRunning ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <ShieldCheck className="h-4 w-4 mr-1" />}
-          Validar en SAT ({validablesCount})
-        </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            disabled={validablesCount === 0 || ocupado}
+            onClick={onValidarSat}
+          >
+            {satRunning ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <ShieldCheck className="h-4 w-4 mr-1" />}
+            Validar en SAT ({validablesCount})
+          </Button>
+        </Hint>
         <Button size="sm" disabled={!hasSelection || ocupado} onClick={onOpenConfirm}>
           {isRunning ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <CheckCircle2 className="h-4 w-4 mr-1" />}
           Aprobar seleccionadas ({selectedCount})

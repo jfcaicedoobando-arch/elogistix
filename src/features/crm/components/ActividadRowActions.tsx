@@ -5,6 +5,7 @@
 import { useState } from "react";
 import { CheckCircle2, Clock, FileText, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Hint } from "@/components/shared/Hint";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
@@ -46,24 +47,28 @@ export default function ActividadRowActions({ actividad }: Props) {
       <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
         {!completada && (
           <>
-            <Button
-              size="sm"
-              variant="ghost"
-              className="h-7 px-2"
-              onClick={handleCompletar}
-              disabled={completar.isPending}
-              title="Marcar como completada"
-            >
-              {completar.isPending
-                ? <Loader2 className="h-4 w-4 animate-spin" />
-                : <CheckCircle2 className="h-3.5 w-3.5 text-success" />}
-            </Button>
+            <Hint label="Marcar como completada">
+              <Button
+                size="sm"
+                variant="ghost"
+                className="h-7 px-2"
+                onClick={handleCompletar}
+                disabled={completar.isPending}
+                aria-label="Marcar como completada"
+              >
+                {completar.isPending
+                  ? <Loader2 className="h-4 w-4 animate-spin" />
+                  : <CheckCircle2 className="h-3.5 w-3.5 text-success" />}
+              </Button>
+            </Hint>
             <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button size="sm" variant="ghost" className="h-7 px-2" disabled={posponer.isPending} title="Posponer">
-                  {posponer.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Clock className="h-4 w-4" />}
-                </Button>
-              </DropdownMenuTrigger>
+              <Hint label="Posponer">
+                <DropdownMenuTrigger asChild>
+                  <Button size="sm" variant="ghost" className="h-7 px-2" disabled={posponer.isPending} aria-label="Posponer">
+                    {posponer.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Clock className="h-4 w-4" />}
+                  </Button>
+                </DropdownMenuTrigger>
+              </Hint>
               <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
                 <DropdownMenuItem onClick={() => handlePosponer(1, "1 día")}>+1 día</DropdownMenuItem>
                 <DropdownMenuItem onClick={() => handlePosponer(3, "3 días")}>+3 días</DropdownMenuItem>
@@ -72,15 +77,17 @@ export default function ActividadRowActions({ actividad }: Props) {
             </DropdownMenu>
           </>
         )}
-        <Button
-          size="sm"
-          variant="ghost"
-          className="h-7 px-2"
-          onClick={() => setNotasOpen(true)}
-          title="Notas / resultado"
-        >
-          <FileText className="h-3.5 w-3.5" />
-        </Button>
+        <Hint label="Notas / resultado">
+          <Button
+            size="sm"
+            variant="ghost"
+            className="h-7 px-2"
+            onClick={() => setNotasOpen(true)}
+            aria-label="Notas / resultado"
+          >
+            <FileText className="h-3.5 w-3.5" />
+          </Button>
+        </Hint>
       </div>
       <ActividadNotasSheet
         actividad={actividad}

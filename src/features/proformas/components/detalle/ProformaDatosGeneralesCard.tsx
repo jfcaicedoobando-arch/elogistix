@@ -11,6 +11,7 @@ import {
   resolverDiasCredito,
   vigenciaPlus30,
 } from "@/features/proformas/domain/proformaDetalleHelpers";
+import { Hint } from "@/components/shared/Hint";
 
 interface Props {
   fechaEmision: string;
@@ -34,12 +35,11 @@ function Field({
   return (
     <div className="min-w-0">
       <p className="text-body-sm text-muted-foreground">{label}</p>
-      <p
-        className={mono ? "font-mono font-medium truncate" : "font-medium truncate"}
-        title={value}
-      >
-        {value}
-      </p>
+      <Hint label={value}>
+        <p className={mono ? "font-mono font-medium truncate" : "font-medium truncate"}>
+          {value}
+        </p>
+      </Hint>
       {badge && (
         <Badge variant="outline" className="mt-1 text-label font-normal">
           {badge}

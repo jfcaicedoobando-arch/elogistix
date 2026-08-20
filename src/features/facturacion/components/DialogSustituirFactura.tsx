@@ -18,6 +18,7 @@ import {
 import { dialogSize } from "@/components/shared/utils/dialogTokens";
 import { duplicarFacturaParaSustitucion } from "@/features/facturacion/services/facturapi";
 import { listarSustitutas } from "@/features/facturacion/services/sustitutasDeFactura";
+import { Hint } from "@/components/shared/Hint";
 import { useCancelarFactura } from "@/features/facturacion/hooks/useTimbrarFactura";
 import { notifyError } from "@/lib/ui/appFeedback";
 import { reportCaughtError } from "@/lib/observability/reportCaughtError";
@@ -180,15 +181,16 @@ export function DialogSustituirFactura({ facturaId, numero, uuidOriginal, open, 
               <Button variant="secondary" onClick={handleIrABorrador}>
                 Volver al borrador
               </Button>
-              <Button
-                variant="destructive"
-                onClick={handleCancelarOriginal}
-                disabled={cancelar.isPending || !s.sustitutaTimbrada}
-                title={!s.sustitutaTimbrada ? "La sustituta debe estar timbrada" : undefined}
-              >
-                <Ban className="h-4 w-4 mr-1" />
-                {cancelar.isPending ? "Cancelando…" : "Cancelar original"}
-              </Button>
+              <Hint label={!s.sustitutaTimbrada ? "La sustituta debe estar timbrada" : undefined}>
+                <Button
+                  variant="destructive"
+                  onClick={handleCancelarOriginal}
+                  disabled={cancelar.isPending || !s.sustitutaTimbrada}
+                >
+                  <Ban className="h-4 w-4 mr-1" />
+                  {cancelar.isPending ? "Cancelando…" : "Cancelar original"}
+                </Button>
+              </Hint>
             </>
           )}
         </DialogFooter>

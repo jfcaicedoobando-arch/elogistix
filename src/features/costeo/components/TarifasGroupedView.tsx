@@ -6,6 +6,7 @@
 import { useMemo, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Hint } from "@/components/shared/Hint";
 import { Button } from "@/components/ui/button";
 import { ChevronDown, ChevronRight, Trophy } from "lucide-react";
 import { TarifaFila, TarifaColumnHeader, type FilaTarifa } from "./TarifaFila";
@@ -75,13 +76,14 @@ export function TarifasGroupedView({ tarifas, onEditar, onDuplicar, onEliminar }
                 </div>
               )}
               {g.mejor && (
-                <Badge
-                  className="bg-success/15 text-success border-success/30 tabular-nums min-w-[150px] justify-end"
-                  variant="outline"
-                  title="Menor total comparable (flete base + recargos incluidos en total) entre tarifas aprobadas, vigentes y no reemplazadas"
-                >
-                  <Trophy className="size-3 mr-1" />Mejor {usd(g.mejor.total_comparable)}
-                </Badge>
+                <Hint label="Menor total comparable (flete base + recargos incluidos en total) entre tarifas aprobadas, vigentes y no reemplazadas">
+                  <Badge
+                    className="bg-success/15 text-success border-success/30 tabular-nums min-w-[150px] justify-end"
+                    variant="outline"
+                  >
+                    <Trophy className="size-3 mr-1" />Mejor {usd(g.mejor.total_comparable)}
+                  </Badge>
+                </Hint>
               )}
             </button>
             {!isCollapsed && (

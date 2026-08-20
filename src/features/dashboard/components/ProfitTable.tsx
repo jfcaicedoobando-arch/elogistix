@@ -4,6 +4,7 @@ import { TrendingUp } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { MargenBadge } from "@/components/shared/MargenBadge";
+import { Hint } from "@/components/shared/Hint";
 import { UMBRAL_MARGEN_COTIZACION } from "@/lib/ui/margen";
 import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { sortByNumber } from "@/components/shared/dataTable/sortingFns";
@@ -45,7 +46,7 @@ function MoneyWithBreakdown({ e, value }: { e: EmbarqueConProfit; value: number 
 
 const columns: ColumnDef<EmbarqueConProfit, unknown>[] = defineColumns<EmbarqueConProfit>([
   { id: "expediente", header: "Expediente", meta: { className: "font-medium" }, cell: ({ row }) => row.original.expediente },
-  { id: "cliente", header: "Cliente", meta: { className: "max-w-[240px] truncate" }, cell: ({ row }) => <span title={row.original.cliente_nombre}>{toTitleCase(row.original.cliente_nombre)}</span> },
+  { id: "cliente", header: "Cliente", meta: { className: "max-w-[240px] truncate" }, cell: ({ row }) => <Hint label={row.original.cliente_nombre}><span>{toTitleCase(row.original.cliente_nombre)}</span></Hint> },
   { id: "venta", header: "Venta MXN", meta: { className: "text-right tabular-nums", headerClassName: "text-right" }, cell: ({ row }) => formatCurrency(row.original.ventaMXN, "MXN") },
   { id: "costo", header: "Costo MXN", meta: { className: "text-right tabular-nums", headerClassName: "text-right" }, cell: ({ row }) => formatCurrency(row.original.costoMXN, "MXN") },
   {

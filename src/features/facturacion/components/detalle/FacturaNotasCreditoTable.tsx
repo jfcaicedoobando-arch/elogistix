@@ -6,6 +6,7 @@
 import { useState } from "react";
 import { Mail, XCircle, Stamp, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Hint } from "@/components/shared/Hint";
 import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 import { COL_W } from "@/components/shared/dataTable/columnWidths";
@@ -106,22 +107,26 @@ export function FacturaNotasCreditoTable(props: Props) {
           <div className="flex justify-end items-center gap-1">
             {timbrada && (
               <>
-                <Button
-                  variant="outline" size="icon" className="h-7 w-7"
-                  title="Previsualizar PDF" aria-label="Previsualizar PDF"
-                  onClick={() => setPreviewNc(n)}
-                >
-                  <Eye className="h-3.5 w-3.5" />
-                </Button>
+                <Hint label="Previsualizar PDF">
+                  <Button
+                    variant="outline" size="icon" className="h-7 w-7"
+                    aria-label="Previsualizar PDF"
+                    onClick={() => setPreviewNc(n)}
+                  >
+                    <Eye className="h-3.5 w-3.5" />
+                  </Button>
+                </Hint>
                 <FacturaDownloadButton stored={n.pdf_url} kind="pdf" notaCreditoId={n.id} />
                 <FacturaDownloadButton stored={n.xml_url} kind="xml" notaCreditoId={n.id} />
-                <Button
-                  variant="outline" size="icon" className="h-7 w-7"
-                  title="Reenviar por email" aria-label="Reenviar por email"
-                  onClick={() => onEmail(n.id)}
-                >
-                  <Mail className="h-3.5 w-3.5" />
-                </Button>
+                <Hint label="Reenviar por email">
+                  <Button
+                    variant="outline" size="icon" className="h-7 w-7"
+                    aria-label="Reenviar por email"
+                    onClick={() => onEmail(n.id)}
+                  >
+                    <Mail className="h-3.5 w-3.5" />
+                  </Button>
+                </Hint>
               </>
             )}
             {canEdit && puedeTimbrar && (
@@ -134,13 +139,15 @@ export function FacturaNotasCreditoTable(props: Props) {
               </Button>
             )}
             {canEdit && cancelable && (
-              <Button
-                variant="ghost" size="icon" className="h-7 w-7"
-                title="Cancelar NC" aria-label="Cancelar NC"
-                onClick={() => onCancelar(n.id)}
-              >
-                <XCircle className="h-3.5 w-3.5 text-destructive" />
-              </Button>
+              <Hint label="Cancelar NC">
+                <Button
+                  variant="ghost" size="icon" className="h-7 w-7"
+                  aria-label="Cancelar NC"
+                  onClick={() => onCancelar(n.id)}
+                >
+                  <XCircle className="h-3.5 w-3.5 text-destructive" />
+                </Button>
+              </Hint>
             )}
           </div>
         );

@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Hint } from "@/components/shared/Hint";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ArrowRight, FileWarning, PartyPopper } from "lucide-react";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
@@ -66,9 +67,11 @@ function Tile({ label, value, fullValue }: { label: string; value: string; fullV
   return (
     <div className="rounded-md border p-3 min-w-0">
       <p className="text-body-sm text-muted-foreground truncate">{label}</p>
-      <p className="text-base font-semibold tabular-nums truncate" title={fullValue ?? value}>
-        {value}
-      </p>
+      <Hint label={fullValue ?? value}>
+        <p className="text-base font-semibold tabular-nums truncate">
+          {value}
+        </p>
+      </Hint>
     </div>
   );
 }

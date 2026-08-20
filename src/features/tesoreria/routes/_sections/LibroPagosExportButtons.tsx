@@ -4,6 +4,7 @@
 import { useState } from "react";
 import { Download, FileSpreadsheet, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Hint } from "@/components/shared/Hint";
 import { descargarBlob } from "@/lib/downloadBlob";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import {
@@ -69,26 +70,28 @@ export function LibroPagosExportButtons({ pagos, rango, totales }: Props) {
 
   return (
     <div className="flex items-center gap-2">
-      <Button
-        type="button" variant="outline" size="sm"
-        onClick={descargarCsv} disabled={sinDatos}
-        title={sinDatos ? "No hay pagos para exportar" : "Descargar CSV"}
-      >
-        <FileSpreadsheet className="h-4 w-4" aria-hidden />
-        CSV
-      </Button>
-      <Button
-        type="button" variant="outline" size="sm"
-        onClick={descargarPdfPagos} disabled={sinDatos || generandoPdf}
-        title={sinDatos ? "No hay pagos para exportar" : "Exportar PDF"}
-      >
-        {generandoPdf ? (
-          <Download className="h-4 w-4 animate-pulse" aria-hidden />
-        ) : (
-          <FileText className="h-4 w-4" aria-hidden />
-        )}
-        {generandoPdf ? "Generando…" : "Exportar PDF"}
-      </Button>
+      <Hint label={sinDatos ? "No hay pagos para exportar" : undefined}>
+        <Button
+          type="button" variant="outline" size="sm"
+          onClick={descargarCsv} disabled={sinDatos}
+        >
+          <FileSpreadsheet className="h-4 w-4" aria-hidden />
+          CSV
+        </Button>
+      </Hint>
+      <Hint label={sinDatos ? "No hay pagos para exportar" : undefined}>
+        <Button
+          type="button" variant="outline" size="sm"
+          onClick={descargarPdfPagos} disabled={sinDatos || generandoPdf}
+        >
+          {generandoPdf ? (
+            <Download className="h-4 w-4 animate-pulse" aria-hidden />
+          ) : (
+            <FileText className="h-4 w-4" aria-hidden />
+          )}
+          {generandoPdf ? "Generando…" : "Exportar PDF"}
+        </Button>
+      </Hint>
     </div>
   );
 }

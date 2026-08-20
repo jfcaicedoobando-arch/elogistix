@@ -8,6 +8,7 @@ import type { RefPago } from "@/features/tesoreria/domain/pagoDetalle";
 import { formatCurrency, formatDate } from "@/lib/formatters";
 import { defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import type { MovimientoEstadoCuenta } from "@/features/tesoreria/domain/estadoCuenta";
+import { Hint } from "@/components/shared/Hint";
 
 export function estadoCuentaColumns(
   moneda: string,
@@ -29,9 +30,11 @@ export function estadoCuentaColumns(
       accessorFn: (m) => m.concepto ?? "",
       cell: ({ row }) => (
         <div className="max-w-[320px]">
-          <span className="block truncate" title={row.original.concepto ?? ""}>
-            {row.original.concepto ?? "—"}
-          </span>
+          <Hint label={row.original.concepto ?? ""}>
+            <span className="block truncate">
+              {row.original.concepto ?? "—"}
+            </span>
+          </Hint>
           {row.original.referencia ? (
             <span className="block truncate text-2xs text-muted-foreground">
               Ref. {row.original.referencia}

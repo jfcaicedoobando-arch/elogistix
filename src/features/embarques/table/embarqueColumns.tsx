@@ -14,6 +14,7 @@ import { sortByNumber } from "@/components/shared/dataTable/sortingFns";
 import { expedienteConsecutivo } from "@/features/embarques/domain/embarquesPageHelpers";
 import { ContenedorCell, type ContenedorInfo } from "@/features/embarques/components/ContenedorCell";
 import { COL_W } from "@/components/shared/dataTable/columnWidths";
+import { Hint } from "@/components/shared/Hint";
 
 export type { ContenedorInfo };
 export interface DocsInfo { pendientes: number; total: number }
@@ -116,7 +117,7 @@ export function buildEmbarqueColumns({
       meta: { width: COL_W.monto, className: "text-body-sm truncate hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
       cell: ({ row }) => {
         const v = shortName(getOrigen(row.original));
-        return <span title={v} className="block truncate">{v}</span>;
+        return <Hint label={v}><span className="block truncate">{v}</span></Hint>;
       },
     },
     {
@@ -125,7 +126,7 @@ export function buildEmbarqueColumns({
       meta: { width: COL_W.monto, className: "text-body-sm truncate hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
       cell: ({ row }) => {
         const v = shortName(getDestino(row.original));
-        return <span title={v} className="block truncate">{v}</span>;
+        return <Hint label={v}><span className="block truncate">{v}</span></Hint>;
       },
     },
     // — Builder: dateColumn ETD (oculto en <xl, mantenemos ETA como referencia principal) —

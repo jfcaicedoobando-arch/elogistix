@@ -2,6 +2,7 @@ import { Badge } from "@/components/ui/badge";
 import { formatCurrency, formatDate, nombreDesdeEmail } from "@/lib/formatters";
 import { CATEGORIA_LABEL, type ActividadItem as Item } from "@/features/embarques/domain/actividadFeed";
 import { ActividadDetalles } from "@/features/embarques/components/ActividadDetalles";
+import { Hint } from "@/components/shared/Hint";
 
 const CATEGORIA_VARIANT: Record<string, "default" | "secondary" | "outline" | "warning" | "success"> = {
   operacion: "secondary",
@@ -32,9 +33,9 @@ export function ActividadItem({ item }: Props) {
         </Badge>
         <span className="font-medium">{item.accion}</span>
         <span className="text-body-sm text-muted-foreground">
-          <span title={item.usuario || undefined} className="font-medium text-foreground">
-            {usuario}
-          </span>
+          <Hint label={item.usuario || undefined}>
+            <span className="font-medium text-foreground">{usuario}</span>
+          </Hint>
           {" · "}
           {formatDate(item.fecha, "HH:mm")}
         </span>

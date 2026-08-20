@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 import { formatCurrency, formatDate } from "@/lib/formatters";
 import type { EstatusCobranza } from "../services/estadoCuenta";
 import type { FilaEstadoCuenta } from "../services/estadoCuentaAging";
+import { Hint } from "@/components/shared/Hint";
 
 const BADGE: Record<EstatusCobranza, "outline" | "warning" | "destructive" | "secondary"> = {
   Vigente: "outline",
@@ -56,9 +57,11 @@ export function EstadoCuentaFilaFactura({ fila, abierta, onToggle, facturaHref }
       <TableCell>
         <div className="flex items-center gap-2 text-body">
           <FileText className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-          <span className="truncate" title={`Factura · Exp. ${fila.expediente}`}>
-            Exp. {fila.expediente}
-          </span>
+          <Hint label={`Factura · Exp. ${fila.expediente}`}>
+            <span className="truncate">
+              Exp. {fila.expediente}
+            </span>
+          </Hint>
         </div>
       </TableCell>
       <TableCell className="tabular-nums whitespace-nowrap text-muted-foreground">

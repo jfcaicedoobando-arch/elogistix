@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { Hint } from "@/components/shared/Hint";
 import { DrillKpi } from "./_helpers";
 import { SCORE_ESTADO_CONFIG, type ScoreEstado } from "./scoreEstadoConfig";
 import type { RegresionScore } from "@/features/auditoria/domain/ejecutivoAgregados";
@@ -26,10 +27,12 @@ function RegresionBadge({ reg }: { reg: RegresionScore }) {
       : "text-success";
   const signo = reg.diferencia > 0 ? "+" : "";
   return (
-    <Badge variant="outline" className={cn("gap-1", tone)} title={`vs. ${reg.fechaAnterior}`}>
-      <Icono className="h-3 w-3" />
-      {signo}{reg.diferencia} pts (7d)
-    </Badge>
+    <Hint label={`vs. ${reg.fechaAnterior}`}>
+      <Badge variant="outline" className={cn("gap-1", tone)}>
+        <Icono className="h-3 w-3" />
+        {signo}{reg.diferencia} pts (7d)
+      </Badge>
+    </Hint>
   );
 }
 

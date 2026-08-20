@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { COLOR_ETAPA_DEFAULT } from "@/lib/chartTokens";
+import { Hint } from "@/components/shared/Hint";
 
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
@@ -107,46 +108,57 @@ export default function EtapasPipelineEditor() {
                     {TIPOS.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
                   </SelectContent>
                 </Select>
-                <Input
-                  type="number" min={0} max={100} className="col-span-1"
-                  title="Probabilidad %"
-                  aria-label={`Probabilidad % de ${d.nombre}`}
-                  value={d.probabilidad_default}
-                  onChange={(ev) => set(e.id, { probabilidad_default: Math.max(0, Math.min(100, Number(ev.target.value) || 0)) })}
-                />
+                <Hint label="Probabilidad %">
+                  <Input
+                    type="number" min={0} max={100} className="col-span-1"
+                    aria-label={`Probabilidad % de ${d.nombre}`}
+                    value={d.probabilidad_default}
+                    onChange={(ev) => set(e.id, { probabilidad_default: Math.max(0, Math.min(100, Number(ev.target.value) || 0)) })}
+                  />
+                </Hint>
                 <Input type="color" className="col-span-1 h-9 p-1" aria-label={`Color de la etapa ${d.nombre}`} value={d.color} onChange={(ev) => set(e.id, { color: ev.target.value })} />
                 <div className="col-span-2 flex items-center gap-1">
-                  <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => mover(e.id, -1)} title="Subir">
-                    <ArrowUp className="h-3 w-3" />
-                  </Button>
+                  <Hint label="Subir">
+                    <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => mover(e.id, -1)} aria-label="Subir">
+                      <ArrowUp className="h-3 w-3" />
+                    </Button>
+                  </Hint>
                   <span className="text-body-sm text-muted-foreground w-6 text-center">{e.orden}</span>
-                  <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => mover(e.id, 1)} title="Bajar">
-                    <ArrowDown className="h-3 w-3" />
-                  </Button>
+                  <Hint label="Bajar">
+                    <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => mover(e.id, 1)} aria-label="Bajar">
+                      <ArrowDown className="h-3 w-3" />
+                    </Button>
+                  </Hint>
                 </div>
-                <div className="col-span-1 flex flex-col items-center gap-0.5" title="Activa">
-                  <Switch checked={d.activa} onCheckedChange={(v) => set(e.id, { activa: v })} aria-label={`Etapa ${d.nombre} activa`} />
-                  <span className="text-3xs text-muted-foreground">Activa</span>
-                </div>
-                <div className="col-span-1 flex flex-col items-center gap-0.5" title="Crear tarea de seguimiento al entrar a esta etapa">
-                  <Switch checked={d.crea_tarea_seguimiento} onCheckedChange={(v) => set(e.id, { crea_tarea_seguimiento: v })} aria-label={`Crear tarea de seguimiento al entrar a ${d.nombre}`} />
-                  <span className="text-3xs text-muted-foreground">Tarea</span>
-                </div>
-                <Input
-                  type="number" min={1} max={30} className="col-span-1"
-                  title="Días para seguimiento"
-                  aria-label={`Días para seguimiento de ${d.nombre}`}
-                  disabled={!d.crea_tarea_seguimiento}
-                  value={d.dias_seguimiento}
-                  onChange={(ev) => set(e.id, { dias_seguimiento: Math.max(1, Math.min(30, Number(ev.target.value) || 1)) })}
-                />
-                <Input
-                  type="number" min={1} max={120} className="col-span-1"
-                  title="SLA de la etapa (días sin movimiento permitidos)"
-                  aria-label={`SLA en días de ${d.nombre}`}
-                  value={d.sla_dias}
-                  onChange={(ev) => set(e.id, { sla_dias: Math.max(1, Math.min(120, Number(ev.target.value) || 1)) })}
-                />
+                <Hint label="Activa">
+                  <div className="col-span-1 flex flex-col items-center gap-0.5">
+                    <Switch checked={d.activa} onCheckedChange={(v) => set(e.id, { activa: v })} aria-label={`Etapa ${d.nombre} activa`} />
+                    <span className="text-3xs text-muted-foreground">Activa</span>
+                  </div>
+                </Hint>
+                <Hint label="Crear tarea de seguimiento al entrar a esta etapa">
+                  <div className="col-span-1 flex flex-col items-center gap-0.5">
+                    <Switch checked={d.crea_tarea_seguimiento} onCheckedChange={(v) => set(e.id, { crea_tarea_seguimiento: v })} aria-label={`Crear tarea de seguimiento al entrar a ${d.nombre}`} />
+                    <span className="text-3xs text-muted-foreground">Tarea</span>
+                  </div>
+                </Hint>
+                <Hint label="Días para seguimiento">
+                  <Input
+                    type="number" min={1} max={30} className="col-span-1"
+                    aria-label={`Días para seguimiento de ${d.nombre}`}
+                    disabled={!d.crea_tarea_seguimiento}
+                    value={d.dias_seguimiento}
+                    onChange={(ev) => set(e.id, { dias_seguimiento: Math.max(1, Math.min(30, Number(ev.target.value) || 1)) })}
+                  />
+                </Hint>
+                <Hint label="SLA de la etapa (días sin movimiento permitidos)">
+                  <Input
+                    type="number" min={1} max={120} className="col-span-1"
+                    aria-label={`SLA en días de ${d.nombre}`}
+                    value={d.sla_dias}
+                    onChange={(ev) => set(e.id, { sla_dias: Math.max(1, Math.min(120, Number(ev.target.value) || 1)) })}
+                  />
+                </Hint>
                 <Button
                   size="sm" className="col-span-1"
                   onClick={() => save(e.id)}

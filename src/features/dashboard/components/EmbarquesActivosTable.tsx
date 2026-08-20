@@ -12,6 +12,7 @@ import type { EmbarqueMesSiguiente, ResumenFacturacion } from "@/features/dashbo
 import { CalendarDays, DollarSign, TrendingUp, FileCheck, Ship } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
+import { Hint } from "@/components/shared/Hint";
 
 interface Props {
   embarques: EmbarqueMesSiguiente[];
@@ -33,7 +34,11 @@ const columns: ColumnDef<EmbarqueMesSiguiente, unknown>[] = defineColumns<Embarq
     accessorFn: (e) => e.cliente_nombre, enableSorting: true,
     sortingFn: sortByString<EmbarqueMesSiguiente>((e) => e.cliente_nombre),
     meta: { className: "max-w-[180px] truncate" },
-    cell: ({ row }) => <span title={row.original.cliente_nombre}>{toTitleCase(row.original.cliente_nombre)}</span>,
+    cell: ({ row }) => (
+      <Hint label={row.original.cliente_nombre}>
+        <span>{toTitleCase(row.original.cliente_nombre)}</span>
+      </Hint>
+    ),
   },
   {
     id: "modo", header: "Modo",
@@ -78,12 +83,11 @@ const columns: ColumnDef<EmbarqueMesSiguiente, unknown>[] = defineColumns<Embarq
     cell: ({ row }) => {
       const e = row.original;
       return (
-        <span
-          className={`text-body-sm font-medium ${e.profitMXN >= 0 ? "text-success" : "text-destructive"}`}
-          title={`Venta ${formatCurrency(e.ventaMXN, "MXN")} · Costo ${formatCurrency(e.costoMXN, "MXN")} (TC USD ${e.tipoCambioUSD.toFixed(2)})`}
-        >
-          {formatCurrency(e.profitMXN, "MXN")}
-        </span>
+        <Hint label={`Venta ${formatCurrency(e.ventaMXN, "MXN")} · Costo ${formatCurrency(e.costoMXN, "MXN")} (TC USD ${e.tipoCambioUSD.toFixed(2)})`}>
+          <span className={`text-body-sm font-medium ${e.profitMXN >= 0 ? "text-success" : "text-destructive"}`}>
+            {formatCurrency(e.profitMXN, "MXN")}
+          </span>
+        </Hint>
       );
     },
   },

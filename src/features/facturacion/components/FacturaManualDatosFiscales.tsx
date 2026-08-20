@@ -9,6 +9,7 @@
  *   ambas series (SF43718 para USD, SF46410 para EUR).
  */
 import { Input } from "@/components/ui/input";
+import { Hint } from "@/components/shared/Hint";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
@@ -48,15 +49,15 @@ export function FacturaManualDatosFiscales({ value, onChange, diasReadonly, dias
     <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
       <div className="space-y-1.5">
         <Label htmlFor="factura-manual-dias-credito">Días crédito</Label>
-        <Input
-          id="factura-manual-dias-credito"
-          type="number" min={0} max={365} value={value.diasCredito}
-          onChange={(e) => onChange({ diasCredito: Math.max(0, Number(e.target.value) || 0) })}
-          readOnly={diasReadonly}
-          disabled={diasReadonly}
-          title={diasReadonly ? diasReadonlyReason : undefined}
-          
-        />
+        <Hint label={diasReadonly ? diasReadonlyReason : undefined}>
+          <Input
+            id="factura-manual-dias-credito"
+            type="number" min={0} max={365} value={value.diasCredito}
+            onChange={(e) => onChange({ diasCredito: Math.max(0, Number(e.target.value) || 0) })}
+            readOnly={diasReadonly}
+            disabled={diasReadonly}
+          />
+        </Hint>
         {diasReadonly && diasReadonlyReason && (
           <p className="text-label text-muted-foreground">{diasReadonlyReason}</p>
         )}
@@ -125,19 +126,21 @@ export function FacturaManualDatosFiscales({ value, onChange, diasReadonly, dias
             className="text-right"
           />
           {requiereTc && (
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="shrink-0 px-2"
-              onClick={() => traerTc.mutate()}
-              disabled={traerTc.isPending}
-              title={`Traer TC DOF Banxico (${value.moneda}/MXN)`}
-            >
-              {traerTc.isPending
-                ? <Loader2 className="h-4 w-4 animate-spin" />
-                : <RefreshCcw className="h-4 w-4" />}
-            </Button>
+            <Hint label={`Traer TC DOF Banxico (${value.moneda}/MXN)`}>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="shrink-0 px-2"
+                onClick={() => traerTc.mutate()}
+                disabled={traerTc.isPending}
+                aria-label={`Traer TC DOF Banxico (${value.moneda}/MXN)`}
+              >
+                {traerTc.isPending
+                  ? <Loader2 className="h-4 w-4 animate-spin" />
+                  : <RefreshCcw className="h-4 w-4" />}
+              </Button>
+            </Hint>
           )}
         </div>
       </div>

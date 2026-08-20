@@ -22,6 +22,7 @@ import { useRegisterBreadcrumbLabel } from "@/lib/contexts/BreadcrumbContext";
 import { useDocumentTitle } from "@/hooks/shared";
 import { useVolver } from "@/hooks/shared/useVolver";
 import { ErrorState } from "@/components/shared/states/ErrorState";
+import { Hint } from "@/components/shared/Hint";
 
 export default function PortalEmbarqueDetalle() {
   const { id } = useParams();
@@ -104,24 +105,32 @@ export default function PortalEmbarqueDetalle() {
         <Card>
           <CardContent className="p-3 text-center">
             <p className="text-label text-muted-foreground font-medium">Origen</p>
-            <p className="text-body-sm font-semibold mt-0.5 truncate" title={getOrigen(embarque)}>{getOrigen(embarque)}</p>
+            <Hint label={getOrigen(embarque)}>
+              <p className="text-body-sm font-semibold mt-0.5 truncate">{getOrigen(embarque)}</p>
+            </Hint>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-3 text-center">
             <p className="text-label text-muted-foreground font-medium">Destino</p>
-            <p className="text-body-sm font-semibold mt-0.5 truncate" title={getDestino(embarque)}>{getDestino(embarque)}</p>
+            <Hint label={getDestino(embarque)}>
+              <p className="text-body-sm font-semibold mt-0.5 truncate">{getDestino(embarque)}</p>
+            </Hint>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-3 text-center">
-            <p className="text-label text-muted-foreground font-medium" title="Fecha estimada de salida">ETD</p>
+            <Hint label="Fecha estimada de salida">
+              <p className="text-label text-muted-foreground font-medium">ETD</p>
+            </Hint>
             <p className="text-body-sm font-semibold mt-0.5">{embarque.etd ? formatDate(embarque.etd) : "—"}</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-3 text-center">
-            <p className="text-label text-muted-foreground font-medium" title="Fecha estimada de arribo">ETA</p>
+            <Hint label="Fecha estimada de arribo">
+              <p className="text-label text-muted-foreground font-medium">ETA</p>
+            </Hint>
             <p className="text-body-sm font-semibold mt-0.5">{embarque.eta ? formatDate(embarque.eta) : "—"}</p>
           </CardContent>
         </Card>

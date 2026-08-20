@@ -10,6 +10,7 @@ import type { ColumnDef } from "@tanstack/react-table";
 import { sortByString } from "@/components/shared/dataTable/sortingFns";
 import { toTitleCase, formatPhoneMx, correctSpanishPlace, formatCurrency } from "@/lib/formatters";
 import { Badge } from "@/components/ui/badge";
+import { Hint } from "@/components/shared/Hint";
 
 export type ClienteRow = {
   id: string;
@@ -39,9 +40,11 @@ export function buildClientesColumns(): ColumnDef<ClienteRow, unknown>[] {
         const excedido = limite != null && limite > 0 && saldo > limite;
         return (
           <div className="flex items-center gap-2 min-w-0">
-            <span className="block whitespace-normal break-words leading-snug truncate" title={nombre}>
-              {nombre}
-            </span>
+            <Hint label={nombre}>
+              <span className="block whitespace-normal break-words leading-snug truncate">
+                {nombre}
+              </span>
+            </Hint>
             {excedido && (
               <Badge variant="destructive" className="shrink-0 text-2xs px-1.5 py-0">
                 Crédito excedido
@@ -91,12 +94,11 @@ export function buildClientesColumns(): ColumnDef<ClienteRow, unknown>[] {
         const excedido = limite != null && limite > 0 && saldo > limite;
         if (saldo <= 0.01) return <span className="text-muted-foreground">—</span>;
         return (
-          <span
-            className={excedido ? "font-semibold text-destructive" : "font-medium"}
-            title={limite && limite > 0 ? `Límite de crédito: ${formatCurrency(limite, "MXN")}` : undefined}
-          >
-            {formatCurrency(saldo, "MXN")}
-          </span>
+          <Hint label={limite && limite > 0 ? `Límite de crédito: ${formatCurrency(limite, "MXN")}` : undefined}>
+            <span className={excedido ? "font-semibold text-destructive" : "font-medium"}>
+              {formatCurrency(saldo, "MXN")}
+            </span>
+          </Hint>
         );
       },
     },

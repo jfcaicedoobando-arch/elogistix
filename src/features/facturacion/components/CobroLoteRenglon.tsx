@@ -8,6 +8,7 @@ import { MoneyInput } from "@/components/shared/MoneyInput";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Hint } from "@/components/shared/Hint";
 import { formatCurrency, formatDate } from "@/lib/formatters";
 import { TOLERANCIA_SOBREPAGO } from "@/lib/financial/toleranciaPago";
 import { diasHastaFecha } from "@/lib/date/dateOnly";
@@ -82,16 +83,17 @@ export function CobroLoteRenglon(p: Props) {
             aria-invalid={!!p.error}
             onChange={(n: number) => p.onMontoChange(n)}
           />
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            className="h-9 px-2 text-body-sm"
-            onClick={p.onAsignarSaldo}
-            title="Asignar el saldo de esta factura"
-          >
-            Saldo
-          </Button>
+          <Hint label="Asignar el saldo de esta factura">
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="h-9 px-2 text-body-sm"
+              onClick={p.onAsignarSaldo}
+            >
+              Saldo
+            </Button>
+          </Hint>
         </div>
         {p.error && <p className="mt-1 text-right text-label text-destructive">{p.error}</p>}
       </TableCell>

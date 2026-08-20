@@ -5,6 +5,7 @@
 import { Link } from "react-router-dom";
 import { ExternalLink } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Hint } from "@/components/shared/Hint";
 import { Button } from "@/components/ui/button";
 import {
   resumirContenedores,
@@ -22,7 +23,7 @@ function Field({ label, value }: { label: string; value: string | null | undefin
   return (
     <div className="min-w-0">
       <p className="text-body-sm text-muted-foreground">{label}</p>
-      <p className="truncate" title={value ?? ""}>{value?.trim() || "—"}</p>
+      <Hint label={value ?? ""}><p className="truncate">{value?.trim() || "—"}</p></Hint>
     </div>
   );
 }

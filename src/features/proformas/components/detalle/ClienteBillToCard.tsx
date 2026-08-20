@@ -6,6 +6,7 @@ import { Link } from "react-router-dom";
 import { ExternalLink } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Hint } from "@/components/shared/Hint";
 import type { ProformaClienteFull } from "@/features/proformas/services";
 
 interface Props {
@@ -35,7 +36,9 @@ export function ClienteBillToCard({ cliente, clienteNombreFallback, clienteId }:
         )}
       </CardHeader>
       <CardContent className="text-body space-y-2">
-        <p className="font-medium break-words" title={nombre}>{nombre}</p>
+        <Hint label={nombre}>
+          <p className="font-medium break-words">{nombre}</p>
+        </Hint>
         <div>
           <p className="text-body-sm text-muted-foreground">RFC</p>
           <p className="font-mono">{rfc || "—"}</p>

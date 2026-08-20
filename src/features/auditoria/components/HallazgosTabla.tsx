@@ -5,6 +5,7 @@ import { format } from "date-fns";
 import { CheckCircle2, ExternalLink } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
+import { Hint } from "@/components/shared/Hint";
 import { Button } from "@/components/ui/button";
 import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { cn } from "@/lib/utils";
@@ -61,15 +62,16 @@ export function HallazgosTabla(props: Props) {
       cell: ({ row }) => {
         const h = row.original;
         return (
-          <Button
-            variant="link"
-            size="sm"
-            className="h-auto p-0 font-normal"
-            onClick={(e) => { e.preventDefault(); e.stopPropagation(); abrirEmbarque(h); }}
-            title={`Abrir embarque ${h.expediente}`}
-          >
-            {h.expediente}
-          </Button>
+          <Hint label={`Abrir embarque ${h.expediente}`}>
+            <Button
+              variant="link"
+              size="sm"
+              className="h-auto p-0 font-normal"
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); abrirEmbarque(h); }}
+            >
+              {h.expediente}
+            </Button>
+          </Hint>
         );
       } },
     { id: "regla", header: "Regla", meta: { width: COL_W.nombre, className: "text-body-sm text-muted-foreground" }, cell: ({ row }) => reglaLabel[row.original.regla] },
@@ -92,13 +94,14 @@ export function HallazgosTabla(props: Props) {
         const revision = getRevision(h);
         if (revision?.estado_revision === "revisado") {
           return (
-            <Button size="sm" variant="ghost"
-              className="h-7 text-label gap-1 text-success hover:text-success dark:text-success"
-              onClick={(e) => { e.stopPropagation(); onMarcarRevisado(h); }}
-              title={`Por: ${revision.revisado_por_email ?? "—"}\n${format(new Date(revision.updated_at), "dd/MM/yyyy HH:mm")}\nAcción: ${revision.accion_tomada ?? ""}`}
-            >
-              <CheckCircle2 className="h-3.5 w-3.5" /> Revisado
-            </Button>
+            <Hint label={`Por: ${revision.revisado_por_email ?? "—"}\n${format(new Date(revision.updated_at), "dd/MM/yyyy HH:mm")}\nAcción: ${revision.accion_tomada ?? ""}`}>
+              <Button size="sm" variant="ghost"
+                className="h-7 text-label gap-1 text-success hover:text-success dark:text-success"
+                onClick={(e) => { e.stopPropagation(); onMarcarRevisado(h); }}
+              >
+                <CheckCircle2 className="h-3.5 w-3.5" /> Revisado
+              </Button>
+            </Hint>
           );
         }
         if (revision?.estado_revision === "en_progreso") {
@@ -125,12 +128,14 @@ export function HallazgosTabla(props: Props) {
         return (
           <div className="flex items-center gap-0.5" onClick={(e) => e.stopPropagation()}>
             <ExplicarHallazgoButton hallazgo={h} />
-            <Button size="icon" variant="ghost" className="h-7 w-7"
-              onClick={(e) => { e.preventDefault(); e.stopPropagation(); abrirEmbarque(h); }}
-              aria-label="Abrir embarque" title={`Abrir embarque ${h.expediente}`}
-            >
-              <ExternalLink className="h-3.5 w-3.5" />
-            </Button>
+            <Hint label={`Abrir embarque ${h.expediente}`}>
+              <Button size="icon" variant="ghost" className="h-7 w-7"
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); abrirEmbarque(h); }}
+                aria-label="Abrir embarque"
+              >
+                <ExternalLink className="h-3.5 w-3.5" />
+              </Button>
+            </Hint>
           </div>
         );
       } },

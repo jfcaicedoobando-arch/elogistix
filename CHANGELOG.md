@@ -1,5 +1,13 @@
 # Changelog
 
+## [13.702.0] - 2026-08-20
+### Accesibilidad — Los "globitos" de ayuda ahora sí se ven
+- Los 187 avisos que dependían del globito nativo del navegador (que no aparece en celular ni al navegar con teclado) se cambiaron por un tooltip propio, visible al pasar el mouse y al enfocar con Tab.
+- Los botones de icono conservan su nombre para lectores de pantalla, y se quitaron los avisos que sólo repetían el texto ya visible en pantalla.
+- Queda un candado de arquitectura: cualquier aviso nuevo debe usar el componente compartido `Hint`.
+
+
+
 ## [13.701.0] - 2026-08-20
 ### Ola 5 (5.2) — Se retiran las 26 tablas crudas
 - Las 26 tablas que aún se dibujaban "a mano" (anticipos aplicados, conciliación de compras, plantillas de cotización, CRM, notas de crédito, conceptos de CFDI, contenedores, costos por proveedor, estado de cuenta, portal de proformas, leads demo, diagnóstico de salud y la guía de puertos) usan ahora las mismas piezas reutilizables del sistema: encabezados, filas, hover, densidad y pies de totales idénticos en toda la app.

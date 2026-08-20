@@ -1,6 +1,7 @@
 import { Info } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Hint } from "@/components/shared/Hint";
 
 export type KpiTone = "default" | "success" | "warn";
 
@@ -21,16 +22,17 @@ export function Kpi({ label, value, tone = "default", emphasis = false, hint }: 
       <p className="text-label font-bold uppercase tracking-tight text-muted-foreground mb-1 truncate">
         {label}
       </p>
-      <p
-        className={cn("text-base font-semibold tabular-nums truncate", valueCls)}
-        title={value}
-      >
-        {value}
-      </p>
-      {hint && (
-        <p className="text-label text-muted-foreground tabular-nums truncate" title={hint}>
-          {hint}
+      <Hint label={value}>
+        <p className={cn("text-base font-semibold tabular-nums truncate", valueCls)}>
+          {value}
         </p>
+      </Hint>
+      {hint && (
+        <Hint label={hint}>
+          <p className="text-label text-muted-foreground tabular-nums truncate">
+            {hint}
+          </p>
+        </Hint>
       )}
     </div>
   );

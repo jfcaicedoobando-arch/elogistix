@@ -4,6 +4,7 @@
  */
 import { Package } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Hint } from "@/components/shared/Hint";
 import { defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import type { GrupoProyeccion } from "@/features/facturacion/domain/proyeccionFacturacion";
 import { formatCurrency, formatDate, toTitleCase } from "@/lib/formatters";
@@ -25,13 +26,14 @@ export const proyeccionColumns: ColumnDef<GrupoProyeccion, unknown>[] = defineCo
       <span className="inline-flex items-center gap-1.5">
         {row.original.expediente}
         {row.original.sinTc && (
-          <Badge
-            variant="outline"
-            className="border-warning/40 text-warning font-normal"
-            title="El embarque no tiene tipo de cambio USD capturado: los importes en dólares no se valúan en pesos."
-          >
-            Sin TC
-          </Badge>
+          <Hint label="El embarque no tiene tipo de cambio USD capturado: los importes en dólares no se valúan en pesos.">
+            <Badge
+              variant="outline"
+              className="border-warning/40 text-warning font-normal"
+            >
+              Sin TC
+            </Badge>
+          </Hint>
         )}
       </span>
     ),
@@ -45,7 +47,9 @@ export const proyeccionColumns: ColumnDef<GrupoProyeccion, unknown>[] = defineCo
     sortingFn: sortByString<GrupoProyeccion>((g) => g.cliente_nombre),
     meta: { width: COL_W.ruta, className: "max-w-[240px] truncate" },
     cell: ({ row }) => (
-      <span title={toTitleCase(row.original.cliente_nombre)}>{toTitleCase(row.original.cliente_nombre)}</span>
+      <Hint label={toTitleCase(row.original.cliente_nombre)}>
+        <span>{toTitleCase(row.original.cliente_nombre)}</span>
+      </Hint>
     ),
   },
   {
@@ -71,10 +75,12 @@ export const proyeccionColumns: ColumnDef<GrupoProyeccion, unknown>[] = defineCo
     header: "Cont.",
     meta: { width: COL_W.tiny, align: "center" },
     cell: ({ row }) => (
-      <span className="inline-flex items-center gap-1 text-body-sm" title={row.original.contenedores.join(", ")}>
-        <Package className="h-3 w-3 opacity-60" />
-        <span className="tabular-nums font-medium">{row.original.totalContenedores || 0}</span>
-      </span>
+      <Hint label={row.original.contenedores.join(", ")}>
+        <span className="inline-flex items-center gap-1 text-body-sm">
+          <Package className="h-3 w-3 opacity-60" />
+          <span className="tabular-nums font-medium">{row.original.totalContenedores || 0}</span>
+        </span>
+      </Hint>
     ),
   },
   {
