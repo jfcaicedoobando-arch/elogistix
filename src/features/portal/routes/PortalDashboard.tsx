@@ -48,9 +48,7 @@ export default function PortalDashboard() {
     estadoDistribucion,
   } = usePortalDashboardKpis(embarques);
 
-  if (loadingEmb || loadingCot || loadingFac) {
-    return <DashboardSkeleton kpis={3} charts={2} />;
-  }
+  const cargando = loadingEmb || loadingCot || loadingFac;
 
   return (
     <div className="space-y-6">
@@ -64,6 +62,8 @@ export default function PortalDashboard() {
           }}
         />
       )}
+      {/* UI-4: el saludo y el acceso a "Solicitar cotización" se pintan desde el
+          primer frame; sólo el cuerpo de datos se sustituye por el esqueleto. */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex-1">
           <PortalWelcomeCard clienteName={clienteName} contactoName={contactoName} orgName={orgName} />
@@ -73,6 +73,7 @@ export default function PortalDashboard() {
         </Button>
       </div>
 
+
       <SolicitarCotizacionDialog
         open={solicitudAbierta}
         onOpenChange={setSolicitudAbierta}
@@ -80,34 +81,41 @@ export default function PortalDashboard() {
         clienteIds={clienteIds}
       />
 
-      <PortalKpiGrid
-        values={{
-          embarques: embarquesActivos.length,
-          cotizaciones: cotizaciones.filter((c) => c.estado === "Enviada").length,
-          facturas: kpisCobranza.facturasAdeudadas,
-        }}
-      />
+      {cargando ? (
+        <DashboardSkeleton kpis={3} charts={2} />
+      ) : (
+        <>
+          <PortalKpiGrid
+            values={{
+              embarques: embarquesActivos.length,
+              cotizaciones: cotizaciones.filter((c) => c.estado === "Enviada").length,
+              facturas: kpisCobranza.facturasAdeudadas,
+            }}
+          />
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <PortalEstadoEmbarquesCard
-          total={embarquesActivos.length}
-          distribucion={estadoDistribucion}
-        />
-        <PortalProximosArribosCard items={proximosArribos} />
-      </div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <PortalEstadoEmbarquesCard
+              total={embarquesActivos.length}
+              distribucion={estadoDistribucion}
+            />
+            <PortalProximosArribosCard items={proximosArribos} />
+          </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <PortalFacturacionPendienteCard
-          montos={kpisCobranza.adeudado}
-          total={kpisCobranza.facturasAdeudadas}
-          vencidas={kpisCobranza.facturasVencidas}
-          className="lg:col-span-1"
-        />
-        <PortalEmbarquesRecientesCard
-          embarques={embarquesActivos}
-          className="lg:col-span-2"
-        />
-      </div>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            <PortalFacturacionPendienteCard
+              montos={kpisCobranza.adeudado}
+              total={kpisCobranza.facturasAdeudadas}
+              vencidas={kpisCobranza.facturasVencidas}
+              className="lg:col-span-1"
+            />
+            <PortalEmbarquesRecientesCard
+              embarques={embarquesActivos}
+              className="lg:col-span-2"
+            />
+          </div>
+        </>
+      )}
+
     </div>
   );
 }

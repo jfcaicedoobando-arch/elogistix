@@ -33,15 +33,18 @@ export default function PortalEmbarques() {
     setFiltroModo,
   } = usePortalEmbarquesController();
 
-  // R-05: sin retry el portal se quedaba en esqueleto indefinido si la API fallaba.
+  // UI-4: el encabezado del portal se pinta SIEMPRE; carga y error viven dentro
+  // del shell (antes el early-return dejaba la pantalla sin título ni contexto).
   if (isLoading || isError) {
     return (
-      <LoadingState
-        label="Cargando tus embarques…"
-        error={isError}
-        onRetry={() => { void refetch(); }}
-        errorLabel="No pudimos cargar tus embarques."
-      />
+      <PortalPageShell icon={<Ship className="h-6 w-6 text-accent" />} title="Mis Embarques">
+        <LoadingState
+          label="Cargando tus embarques…"
+          error={isError}
+          onRetry={() => { void refetch(); }}
+          errorLabel="No pudimos cargar tus embarques."
+        />
+      </PortalPageShell>
     );
   }
 
@@ -51,6 +54,7 @@ export default function PortalEmbarques() {
       title="Mis Embarques"
       actions={<span className="text-sm text-muted-foreground tabular-nums">{filtered.length} de {embarques.length}</span>}
     >
+
       <PortalFiltersBar
         search={search}
         onSearchChange={setSearch}

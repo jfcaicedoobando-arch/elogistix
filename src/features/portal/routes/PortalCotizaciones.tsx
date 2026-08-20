@@ -54,14 +54,18 @@ export default function PortalCotizaciones() {
   if (isLoading || isError) {
     // R-05: la carga nunca se queda colgada; a los 15s (o ante error) se
     // ofrece "Reintentar" en vez de un skeleton perpetuo.
+    // UI-4: el encabezado se conserva para no perder el contexto de la página.
     return (
-      <LoadingState
-        error={isError}
-        onRetry={() => void refetch()}
-        errorLabel="No pudimos cargar tus cotizaciones."
-      />
+      <PortalPageShell icon={<ClipboardList className="h-6 w-6 text-accent" />} title="Mis Cotizaciones">
+        <LoadingState
+          error={isError}
+          onRetry={() => void refetch()}
+          errorLabel="No pudimos cargar tus cotizaciones."
+        />
+      </PortalPageShell>
     );
   }
+
 
   return (
     <PortalPageShell
