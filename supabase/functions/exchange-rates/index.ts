@@ -213,7 +213,7 @@ async function manejarExchangeRates(req: Request): Promise<Response> {
   if (deTabla) {
     guardarCache(deTabla);
     log.finish(200, "rates_ok_tabla", { payload: deTabla });
-    return jsonResponse(deTabla);
+    return jsonResponse(sellar(deTabla));
   }
 
   // 2) Banxico en vivo.
@@ -221,7 +221,7 @@ async function manejarExchangeRates(req: Request): Promise<Response> {
   if (!token) {
     console.warn("exchange-rates: BANXICO_SIE_TOKEN no configurado — usando fallback");
     log.finish(200, "rates_no_token_fallback", { payload: FALLBACK });
-    return jsonResponse(FALLBACK);
+    return jsonResponse(sellar(FALLBACK));
   }
 
   const ctrl = new AbortController();
@@ -234,7 +234,7 @@ async function manejarExchangeRates(req: Request): Promise<Response> {
     ]);
     if (usd.tc == null) {
       log.finish(200, "rates_fallback_usd_missing", { payload: FALLBACK });
-      return jsonResponse(FALLBACK);
+      return jsonResponse(sellar(FALLBACK));
     }
     const rates: Rates = {
       usdMxn: usd.tc,
@@ -247,12 +247,12 @@ async function manejarExchangeRates(req: Request): Promise<Response> {
     };
     guardarCache(rates);
     log.finish(200, esHoy ? "rates_ok_hoy" : "rates_ok_historico", { payload: rates });
-    return jsonResponse(rates);
+    return jsonResponse(sellar(rates));
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     console.warn("exchange-rates fallback:", message);
     log.finish(200, "rates_fallback", { payload: { error: message, ...FALLBACK } });
-    return jsonResponse(FALLBACK);
+    return jsonResponse(sellar(FALLBACK));
   } finally {
     clearTimeout(timer);
   }
@@ -265,6 +265,6 @@ Deno.serve(wrapEdgeHandler("exchange-rates", async (req) => {
     const message = err instanceof Error ? err.message : String(err);
     console.error(JSON.stringify({ level: "error", fn: "exchange-rates", msg: "unhandled", error: message }));
     await captureEdgeException(err, { fn: "exchange-rates", status_code: 200 });
-    return jsonResponse(FALLBACK);
+    return jsonResponse(sellar(FALLBACK));
   }
 }));
