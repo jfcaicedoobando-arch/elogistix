@@ -5,6 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatCurrency } from "@/lib/formatters";
 import type { PortalProformaConcepto, PortalProformaData } from "@/features/proformas/services/portalPublico";
 
+import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/components/ui/table";
+import { DetailTableHead } from "@/components/shared/DetailTable";
 function fmtDinero(v: number | null | undefined, moneda: string | null | undefined): string {
   if (v == null) return "—";
   try {
@@ -48,26 +50,26 @@ export function PortalProformaResumen({ proforma, conceptos }: Props) {
 
         {conceptos.length > 0 && (
           <div className="overflow-x-auto">
-            <table className="w-full text-body">
-              <thead>
-                <tr className="border-b text-left text-body-sm uppercase text-muted-foreground">
-                  <th className="py-2 pr-2">Descripción</th>
-                  <th className="py-2 px-2 text-right">Cantidad</th>
-                  <th className="py-2 px-2 text-right">P. unit.</th>
-                  <th className="py-2 pl-2 text-right">Importe</th>
-                </tr>
-              </thead>
-              <tbody>
+            <Table className="w-full text-body">
+              <TableHeader>
+                <TableRow className="border-b text-left text-body-sm uppercase text-muted-foreground">
+                  <DetailTableHead className="pr-2">Descripción</DetailTableHead>
+                  <DetailTableHead className="text-right">Cantidad</DetailTableHead>
+                  <DetailTableHead className="text-right">P. unit.</DetailTableHead>
+                  <DetailTableHead className="pl-2 text-right">Importe</DetailTableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
                 {conceptos.map((c) => (
-                  <tr key={c.id} className="border-b last:border-0">
-                    <td className="py-2 pr-2">{c.descripcion ?? "—"}</td>
-                    <td className="py-2 px-2 text-right">{c.cantidad ?? "—"}</td>
-                    <td className="py-2 px-2 text-right">{fmtDinero(c.precio_unitario, c.moneda ?? moneda)}</td>
-                    <td className="py-2 pl-2 text-right">{fmtDinero(c.importe, c.moneda ?? moneda)}</td>
-                  </tr>
+                  <TableRow key={c.id} className="border-b last:border-0">
+                    <TableCell className="pr-2">{c.descripcion ?? "—"}</TableCell>
+                    <TableCell className="text-right">{c.cantidad ?? "—"}</TableCell>
+                    <TableCell className="text-right">{fmtDinero(c.precio_unitario, c.moneda ?? moneda)}</TableCell>
+                    <TableCell className="pl-2 text-right">{fmtDinero(c.importe, c.moneda ?? moneda)}</TableCell>
+                  </TableRow>
                 ))}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           </div>
         )}
 

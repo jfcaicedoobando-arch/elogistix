@@ -9,6 +9,7 @@ import { COL_W } from "@/components/shared/dataTable/columnWidths";
 import { formatCurrency } from "@/lib/formatters/numbers";
 import type { ResumenCuenta } from "@/features/tesoreria/services";
 
+import { TableCell, TableRow } from "@/components/ui/table";
 interface Props {
   cuentas: ResumenCuenta[];
 }
@@ -48,15 +49,15 @@ export function SaldosBancosCard({ cuentas }: Props) {
           emptyMessage="Sin cuentas activas."
           footer={() => (
             <>
-              <tr className="font-semibold">
-                <td className="py-2 px-3">Total MXN</td>
-                <td className="py-2 px-3 text-right tabular-nums">{formatCurrency(totalMxn, "MXN")}</td>
-              </tr>
+              <TableRow className="font-semibold">
+                <TableCell>Total MXN</TableCell>
+                <TableCell className="text-right tabular-nums">{formatCurrency(totalMxn, "MXN")}</TableCell>
+              </TableRow>
               {totalUsd > 0 && (
-                <tr className="font-semibold">
-                  <td className="py-1 px-3">Total USD</td>
-                  <td className="py-1 px-3 text-right tabular-nums">{formatCurrency(totalUsd, "USD")}</td>
-                </tr>
+                <TableRow className="font-semibold">
+                  <TableCell>Total USD</TableCell>
+                  <TableCell className="text-right tabular-nums">{formatCurrency(totalUsd, "USD")}</TableCell>
+                </TableRow>
               )}
             </>
           )}

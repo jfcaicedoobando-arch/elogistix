@@ -24,6 +24,8 @@ import { describirAjuste, describirAjusteNeto } from "./ajusteDescripcion";
 import { AjusteChip } from "./AjusteChip";
 import { TONE_TEXT } from "@/lib/ui/badgeTone";
 
+import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/components/ui/table";
+import { DetailTableHead } from "@/components/shared/DetailTable";
 interface Props {
   proveedorNombre: string;
   filas: FilaReconciliacion[];
@@ -106,36 +108,36 @@ export function GrupoCostosProveedor({
 
       {abierto && (
         <div className="overflow-x-auto">
-          <table className="w-full text-body">
-            <thead className="bg-background border-b">
-              <tr className="text-body-sm text-muted-foreground">
-                <th className="text-left px-3 py-2 font-medium">Concepto</th>
-                <th className="text-right px-3 py-2 font-medium">Cotizado</th>
-                <th className="text-right px-3 py-2 font-medium">Facturado</th>
-                <th className="text-left px-3 py-2 font-medium">Ajuste</th>
-                <th className="text-left px-3 py-2 font-medium">Factura(s)</th>
-                <th className="text-left px-3 py-2 font-medium">Estado</th>
-                <th className="text-left px-3 py-2 font-medium">Pago</th>
-                {showContenedorCol && <th className="text-left px-3 py-2 font-medium">Contenedor</th>}
-              </tr>
-            </thead>
-            <tbody>
+          <Table className="w-full text-body">
+            <TableHeader className="bg-background border-b">
+              <TableRow className="text-body-sm text-muted-foreground">
+                <DetailTableHead>Concepto</DetailTableHead>
+                <DetailTableHead className="text-right">Cotizado</DetailTableHead>
+                <DetailTableHead className="text-right">Facturado</DetailTableHead>
+                <DetailTableHead>Ajuste</DetailTableHead>
+                <DetailTableHead>Factura(s)</DetailTableHead>
+                <DetailTableHead>Estado</DetailTableHead>
+                <DetailTableHead>Pago</DetailTableHead>
+                {showContenedorCol && <DetailTableHead>Contenedor</DetailTableHead>}
+              </TableRow>
+            </TableHeader>
+            <TableBody>
               {filasOrdenadas.map((f, idx) => {
                 const ajuste = describirAjuste(f.cotizado, f.real_facturado, f.moneda, {
                   tieneFactura: f.facturas.length > 0,
                 });
                 const pago = peorEstadoPago(f.facturas);
                 return (
-                  <tr key={f.concepto_costo_id} className={idx % 2 === 1 ? "bg-muted/20" : ""}>
-                    <td className="px-3 py-2">{f.concepto}</td>
-                    <td className="px-3 py-2 text-right tabular-nums">{formatCurrency(f.cotizado, f.moneda)}</td>
-                    <td className="px-3 py-2 text-right tabular-nums">
+                  <TableRow key={f.concepto_costo_id} className={idx % 2 === 1 ? "bg-muted/20" : ""}>
+                    <TableCell>{f.concepto}</TableCell>
+                    <TableCell className="text-right tabular-nums">{formatCurrency(f.cotizado, f.moneda)}</TableCell>
+                    <TableCell className="text-right tabular-nums">
                       {f.real_facturado > 0 ? formatCurrency(f.real_facturado, f.moneda) : <span className="text-muted-foreground">—</span>}
-                    </td>
-                    <td className="px-3 py-2">
+                    </TableCell>
+                    <TableCell>
                       <AjusteChip descripcion={ajuste} />
-                    </td>
-                    <td className="px-3 py-2">
+                    </TableCell>
+                    <TableCell>
                       {f.facturas.length === 0 ? (
                         <span className="text-muted-foreground text-body-sm">Sin factura</span>
                       ) : (
@@ -162,27 +164,27 @@ export function GrupoCostosProveedor({
                           </div>
                         </TooltipProvider>
                       )}
-                    </td>
-                    <td className="px-3 py-2">
+                    </TableCell>
+                    <TableCell>
                       <Badge variant="outline" className={`${estatusBadgeClass(f.estatus_renglon)} text-body-sm`}>
                         {estatusLabel(f.estatus_renglon)}
                       </Badge>
-                    </td>
-                    <td className="px-3 py-2">
+                    </TableCell>
+                    <TableCell>
                       {pago ? (
                         <Badge variant="outline" className={`${pagoBadgeClass(pago)} text-body-sm`}>{pago}</Badge>
                       ) : <span className="text-muted-foreground text-body-sm">—</span>}
-                    </td>
+                    </TableCell>
                     {showContenedorCol && (
-                      <td className="px-3 py-2 text-body-sm">
+                      <TableCell className="text-body-sm">
                         {renderContenedor && filaContenedorId ? renderContenedor(filaContenedorId(f)) : "—"}
-                      </td>
+                      </TableCell>
                     )}
-                  </tr>
+                  </TableRow>
                 );
               })}
-            </tbody>
-          </table>
+            </TableBody>
+          </Table>
         </div>
       )}
     </div>

@@ -3,12 +3,14 @@
  *
  * CxP ("Pago en lote a proveedor") y Facturación ("Cobro en lote de cliente")
  * tenían dos tablas casi idénticas que ya empezaban a divergir. Aquí vive una
- * sola vez el contenedor, el `<thead>` y la tipografía de encabezados del
+ * sola vez el contenedor, el `<TableHeader>` y la tipografía de encabezados del
  * design system; cada diálogo aporta sus propios renglones como `children`.
  */
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
+import { Table, TableBody, TableHeader, TableRow } from "@/components/ui/table";
+import { DetailTableHead } from "@/components/shared/DetailTable";
 interface LoteRenglonesTableProps {
   /** Ancho mínimo del scroll horizontal (varía entre CxP y CxC). */
   minWidthClassName?: string;
@@ -29,18 +31,18 @@ export function LoteRenglonesTable({
 }: LoteRenglonesTableProps) {
   return (
     <div className="overflow-x-auto rounded-md border">
-      <table className={cn("w-full text-sm", minWidthClassName)}>
-        <thead className="bg-muted/50 text-table-head text-muted-foreground">
-          <tr>
+      <Table className={cn("w-full text-sm", minWidthClassName)}>
+        <TableHeader className="bg-muted/50 text-table-head text-muted-foreground">
+          <TableRow>
             {COLUMNAS.map((c) => (
-              <th key={c.label} className={cn("px-3 py-2 font-medium", c.width, c.align)}>
+              <DetailTableHead key={c.label} className={cn("px-3 py-2 font-medium", c.width, c.align)}>
                 {c.label}
-              </th>
+              </DetailTableHead>
             ))}
-          </tr>
-        </thead>
-        <tbody>{children}</tbody>
-      </table>
+          </TableRow>
+        </TableHeader>
+        <TableBody>{children}</TableBody>
+      </Table>
     </div>
   );
 }

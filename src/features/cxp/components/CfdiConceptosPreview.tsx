@@ -20,6 +20,8 @@ import {
 import { ConceptosTotalesResumen } from "./ConceptosTotalesResumen";
 import type { CfdiConceptoParsed } from "@/features/cxp/services";
 
+import { Table, TableBody, TableCell, TableFooter, TableHeader, TableRow } from "@/components/ui/table";
+import { DetailTableHead } from "@/components/shared/DetailTable";
 interface Props {
   conceptos: ReadonlyArray<CfdiConceptoParsed>;
   moneda: string;
@@ -49,53 +51,53 @@ export function CfdiConceptosPreview({ conceptos, moneda }: Props) {
       </p>
       <div className="rounded-md border overflow-hidden">
         <div className="max-h-64 overflow-y-auto overflow-x-auto">
-          <table className="w-full min-w-[620px] text-body-sm tabular-nums">
-            <thead className="bg-muted/50 text-muted-foreground uppercase tracking-wide text-label sticky top-0">
-              <tr>
-                <th className="px-2 py-1.5 text-left font-medium">#</th>
-                <th className="px-2 py-1.5 text-left font-medium">Descripción</th>
-                <th className="px-2 py-1.5 text-right font-medium">Cant.</th>
-                <th className="px-2 py-1.5 text-right font-medium">Importe unit.</th>
-                <th className="px-2 py-1.5 text-right font-medium">Total línea</th>
-                <th className="px-2 py-1.5 text-right font-medium">IVA</th>
-                {hayIeps && <th className="px-2 py-1.5 text-right font-medium">IEPS</th>}
-                <th className="px-2 py-1.5 text-right font-medium">Total</th>
-              </tr>
-            </thead>
-            <tbody>
+          <Table className="w-full min-w-[620px] text-body-sm tabular-nums">
+            <TableHeader className="bg-muted/50 text-muted-foreground uppercase tracking-wide text-label sticky top-0">
+              <TableRow>
+                <DetailTableHead>#</DetailTableHead>
+                <DetailTableHead>Descripción</DetailTableHead>
+                <DetailTableHead className="text-right">Cant.</DetailTableHead>
+                <DetailTableHead className="text-right">Importe unit.</DetailTableHead>
+                <DetailTableHead className="text-right">Total línea</DetailTableHead>
+                <DetailTableHead className="text-right">IVA</DetailTableHead>
+                {hayIeps && <DetailTableHead className="text-right">IEPS</DetailTableHead>}
+                <DetailTableHead className="text-right">Total</DetailTableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
               {conceptos.map((c, i) => (
-                <tr key={i} className="border-t odd:bg-background even:bg-muted/20 align-top">
-                  <td className="px-2 py-1.5 text-muted-foreground">{i + 1}</td>
-                  <td className="px-2 py-1.5 max-w-[320px]" title={c.descripcion}>
+                <TableRow key={i} className="border-t odd:bg-background even:bg-muted/20 align-top">
+                  <TableCell className="text-muted-foreground">{i + 1}</TableCell>
+                  <TableCell className="max-w-[320px]" title={c.descripcion}>
                     <span className="line-clamp-2">
                     {c.descripcion || <span className="text-muted-foreground">(Sin descripción)</span>}
                     </span>
-                  </td>
-                  <td className="px-2 py-1.5 text-right">{lineas[i].cantidad}</td>
-                  <td className="px-2 py-1.5 text-right">{formatCurrency(lineas[i].monto, moneda)}</td>
-                  <td className="px-2 py-1.5 text-right">
+                  </TableCell>
+                  <TableCell className="text-right">{lineas[i].cantidad}</TableCell>
+                  <TableCell className="text-right">{formatCurrency(lineas[i].monto, moneda)}</TableCell>
+                  <TableCell className="text-right">
                     {formatCurrency(totalLinea(lineas[i]), moneda)}
-                  </td>
-                  <td className="px-2 py-1.5 text-right">{formatCurrency(Number(c.iva) || 0, moneda)}</td>
+                  </TableCell>
+                  <TableCell className="text-right">{formatCurrency(Number(c.iva) || 0, moneda)}</TableCell>
                   {hayIeps && (
-                    <td className="px-2 py-1.5 text-right">{formatCurrency(Number(c.ieps) || 0, moneda)}</td>
+                    <TableCell className="text-right">{formatCurrency(Number(c.ieps) || 0, moneda)}</TableCell>
                   )}
-                  <td className="px-2 py-1.5 text-right font-semibold">
+                  <TableCell className="text-right font-semibold">
                     {formatCurrency(totalLineaConImpuestos(lineas[i]), moneda)}
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
               ))}
-            </tbody>
-            <tfoot className="bg-muted/40 font-semibold sticky bottom-0">
-              <tr className="border-t">
-                <td className="px-2 py-1.5" colSpan={4}>Totales</td>
-                <td className="px-2 py-1.5 text-right">{formatCurrency(resumen.subtotal, moneda)}</td>
-                <td className="px-2 py-1.5 text-right">{formatCurrency(resumen.iva, moneda)}</td>
-                {hayIeps && <td className="px-2 py-1.5 text-right">{formatCurrency(resumen.ieps, moneda)}</td>}
-                <td className="px-2 py-1.5 text-right">{formatCurrency(totalConImpuestos, moneda)}</td>
-              </tr>
-            </tfoot>
-          </table>
+            </TableBody>
+            <TableFooter className="bg-muted/40 font-semibold sticky bottom-0">
+              <TableRow className="border-t">
+                <TableCell colSpan={4}>Totales</TableCell>
+                <TableCell className="text-right">{formatCurrency(resumen.subtotal, moneda)}</TableCell>
+                <TableCell className="text-right">{formatCurrency(resumen.iva, moneda)}</TableCell>
+                {hayIeps && <TableCell className="text-right">{formatCurrency(resumen.ieps, moneda)}</TableCell>}
+                <TableCell className="text-right">{formatCurrency(totalConImpuestos, moneda)}</TableCell>
+              </TableRow>
+            </TableFooter>
+          </Table>
         </div>
       </div>
       <ConceptosTotalesResumen resumen={resumen} moneda={moneda} />

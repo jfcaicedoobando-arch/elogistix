@@ -7,6 +7,8 @@ import { ROLE_LABELS } from "@/features/admin/domain/roles/roleCatalog";
 import type { AppRole } from "@/types/appRole";
 import type { MigrarRolesLegacyDryRun } from "@/features/admin/services/migrarRolesLegacy";
 
+import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/components/ui/table";
+import { DetailTableHead } from "@/components/shared/DetailTable";
 interface Props {
   data: MigrarRolesLegacyDryRun;
 }
@@ -19,34 +21,34 @@ export function MigrarRolesLegacyPreviewTable({ data }: Props) {
   if (items.length === 0) return null;
   return (
     <div className="rounded-md border max-h-52 overflow-auto">
-      <table className="w-full text-body-sm">
-        <thead className="bg-muted/50 sticky top-0">
-          <tr>
-            <th className="text-left px-2 py-1 font-medium">Fuente</th>
-            <th className="text-left px-2 py-1 font-medium">Usuario</th>
-            <th className="text-left px-2 py-1 font-medium">Organización</th>
-            <th className="text-left px-2 py-1 font-medium">Rol actual</th>
-            <th className="text-left px-2 py-1 font-medium">Rol propuesto</th>
-          </tr>
-        </thead>
-        <tbody>
+      <Table className="w-full text-body-sm">
+        <TableHeader className="bg-muted/50 sticky top-0">
+          <TableRow>
+            <DetailTableHead>Fuente</DetailTableHead>
+            <DetailTableHead>Usuario</DetailTableHead>
+            <DetailTableHead>Organización</DetailTableHead>
+            <DetailTableHead>Rol actual</DetailTableHead>
+            <DetailTableHead>Rol propuesto</DetailTableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
           {items.map((it) => (
-            <tr key={`${it.fuente}-${it.id}`} className="border-t">
-              <td className="px-2 py-1 text-muted-foreground">{it.fuente}</td>
-              <td className="px-2 py-1 font-mono text-label">{it.user_id.slice(0, 8)}…</td>
-              <td className="px-2 py-1 text-muted-foreground">{it.organizacion ?? "—"}</td>
-              <td className="px-2 py-1">
+            <TableRow key={`${it.fuente}-${it.id}`} className="border-t">
+              <TableCell className="text-muted-foreground">{it.fuente}</TableCell>
+              <TableCell className="font-mono text-label">{it.user_id.slice(0, 8)}…</TableCell>
+              <TableCell className="text-muted-foreground">{it.organizacion ?? "—"}</TableCell>
+              <TableCell>
                 <Badge variant="outline" className="text-label">{it.rol_actual}</Badge>
-              </td>
-              <td className="px-2 py-1">
+              </TableCell>
+              <TableCell>
                 <Badge className="text-label">
                   {ROLE_LABELS[it.rol_propuesto as AppRole] ?? it.rol_propuesto}
                 </Badge>
-              </td>
-            </tr>
+              </TableCell>
+            </TableRow>
           ))}
-        </tbody>
-      </table>
+        </TableBody>
+      </Table>
     </div>
   );
 }

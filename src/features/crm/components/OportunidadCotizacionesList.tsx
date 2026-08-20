@@ -12,6 +12,8 @@ import { useOportunidadCotizaciones } from "@/features/crm/hooks";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 import { diffDiasCalendario } from "@/lib/date/dateOnly";
 
+import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/components/ui/table";
+import { DetailTableHead } from "@/components/shared/DetailTable";
 interface Props {
   oportunidadId: string;
 }
@@ -38,23 +40,23 @@ export default function OportunidadCotizacionesList({ oportunidadId }: Props) {
           />
         ) : (
           <div className="overflow-x-auto">
-          <table className="w-full text-body">
-            <thead>
-              <tr className="text-body-sm text-muted-foreground border-b">
-                <th className="text-left py-1">Folio</th>
-                <th className="text-left">Estado</th>
-                <th className="text-right">Monto</th>
-                <th className="text-center">Embarque</th>
-              </tr>
-            </thead>
-            <tbody>
+          <Table className="w-full text-body">
+            <TableHeader>
+              <TableRow className="text-body-sm text-muted-foreground border-b">
+                <DetailTableHead>Folio</DetailTableHead>
+                <DetailTableHead>Estado</DetailTableHead>
+                <DetailTableHead className="text-right">Monto</DetailTableHead>
+                <DetailTableHead className="text-center">Embarque</DetailTableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
               {data.map((c) => {
                 const diasEnviada =
                   c.estado === "Enviada"
                     ? diffDiasCalendario(c.created_at, new Date())
                     : 0;
                 return (
-                  <tr
+                  <TableRow
                     key={c.id}
                     className="border-b hover:bg-muted/50 cursor-pointer"
                     onClick={() => navigate(`/cotizaciones/${c.id}`)}
@@ -68,8 +70,8 @@ export default function OportunidadCotizacionesList({ oportunidadId }: Props) {
                       }
                     }}
                   >
-                    <td className="py-1 font-medium">{c.folio}</td>
-                    <td>
+                    <TableCell className="font-medium">{c.folio}</TableCell>
+                    <TableCell>
                       <div className="flex items-center gap-1.5">
                         <Badge variant="outline">{c.estado}</Badge>
                         {c.estado === "Enviada" && diasEnviada > 5 && (
@@ -78,9 +80,9 @@ export default function OportunidadCotizacionesList({ oportunidadId }: Props) {
                           </Badge>
                         )}
                       </div>
-                    </td>
-                    <td className="text-right">{formatCurrencyCompact(Number(c.subtotal ?? 0), c.moneda)}</td>
-                    <td className="text-center">
+                    </TableCell>
+                    <TableCell className="text-right">{formatCurrencyCompact(Number(c.subtotal ?? 0), c.moneda)}</TableCell>
+                    <TableCell className="text-center">
                       {c.embarque_id ? (
                         <Button
                           variant="link"
@@ -93,12 +95,12 @@ export default function OportunidadCotizacionesList({ oportunidadId }: Props) {
                       ) : (
                         <span className="text-body-sm text-muted-foreground">—</span>
                       )}
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 );
               })}
-            </tbody>
-          </table>
+            </TableBody>
+          </Table>
           </div>
         )}
       </CardContent>

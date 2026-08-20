@@ -9,6 +9,8 @@ import { Wallet } from "lucide-react";
 import { HeaderWithTooltip } from "./DialogDetallePagosProveedor.parts";
 import { PagoFila, type PagoRow } from "./DialogDetallePagosProveedor.fila";
 
+import { Table, TableBody, TableHeader, TableRow } from "@/components/ui/table";
+import { DetailTableHead } from "@/components/shared/DetailTable";
 interface PagosTableProps {
   pagos: PagoRow[];
   isLoading: boolean;
@@ -30,28 +32,28 @@ export function PagosTable({ pagos, isLoading, canEdit, onEliminarPago, onEditar
   }
   return (
     <div className="overflow-x-auto rounded-md border">
-      <table className="w-full text-body">
-        <thead className="bg-muted/40 text-label uppercase tracking-wider text-muted-foreground">
-          <tr>
-            <th className="text-left px-4 py-3 font-bold">Fecha</th>
-            <th className="text-left px-4 py-3 font-bold">Método</th>
-            <th className="text-right px-4 py-3 font-bold">Monto</th>
-            <th className="text-right px-4 py-3 font-bold">
+      <Table className="w-full text-body">
+        <TableHeader className="bg-muted/40 text-label uppercase tracking-wider text-muted-foreground">
+          <TableRow>
+            <DetailTableHead>Fecha</DetailTableHead>
+            <DetailTableHead>Método</DetailTableHead>
+            <DetailTableHead className="text-right">Monto</DetailTableHead>
+            <DetailTableHead className="text-right">
               <HeaderWithTooltip label="TC Pago" hint="Tipo de cambio USD→MXN registrado al momento de aplicar el pago." />
-            </th>
-            <th className="text-right px-4 py-3 font-bold">
+            </DetailTableHead>
+            <DetailTableHead className="text-right">
               <HeaderWithTooltip label="Dif. Cambio" hint="Diferencia cambiaria en MXN (ganancia o pérdida) entre la tasa de la factura y la tasa del pago." />
-            </th>
-            <th className="text-left px-4 py-3 font-bold">Banco</th>
-            <th className="w-12" />
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-border">
+            </DetailTableHead>
+            <DetailTableHead>Banco</DetailTableHead>
+            <DetailTableHead className="w-12" />
+          </TableRow>
+        </TableHeader>
+        <TableBody className="divide-y divide-border">
           {pagos.map((p) => (
             <PagoFila key={p.id} pago={p} canEdit={canEdit} onEliminar={onEliminarPago} onEditar={onEditarPago} />
           ))}
-        </tbody>
-      </table>
+        </TableBody>
+      </Table>
     </div>
   );
 }

@@ -18,6 +18,8 @@ import LeaderboardVendedores from "@/features/crm/components/LeaderboardVendedor
 import { useDocumentTitle } from "@/hooks/shared";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 
+import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/components/ui/table";
+import { DetailTableHead } from "@/components/shared/DetailTable";
 function StatStripItem({
   icon: Icon,
   label,
@@ -99,26 +101,26 @@ function ForecastMesCard() {
         ) : porMes.length === 0 ? (
           <EmptyStateInline icon={TrendingUp} message="Sin datos para los próximos meses." />
         ) : (
-          <table className="w-full text-body">
-            <thead>
-              <tr className="text-body-sm text-muted-foreground border-b">
-                <th className="text-left py-1.5">Mes</th>
-                <th className="text-right">Ponderado</th>
-                <th className="text-right">Ganado</th>
-                <th className="text-right">#</th>
-              </tr>
-            </thead>
-            <tbody>
+          <Table className="w-full text-body">
+            <TableHeader>
+              <TableRow className="text-body-sm text-muted-foreground border-b">
+                <DetailTableHead>Mes</DetailTableHead>
+                <DetailTableHead className="text-right">Ponderado</DetailTableHead>
+                <DetailTableHead className="text-right">Ganado</DetailTableHead>
+                <DetailTableHead className="text-right">#</DetailTableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
               {porMes.map((b) => (
-                <tr key={b.key} className="border-b last:border-0">
-                  <td className="py-1.5">{b.label}</td>
-                  <td className="text-right tabular-nums">{fmt(b.ponderado)}</td>
-                  <td className="text-right tabular-nums">{fmt(b.ganado)}</td>
-                  <td className="text-right tabular-nums">{b.count}</td>
-                </tr>
+                <TableRow key={b.key} className="border-b last:border-0">
+                  <TableCell>{b.label}</TableCell>
+                  <TableCell className="text-right tabular-nums">{fmt(b.ponderado)}</TableCell>
+                  <TableCell className="text-right tabular-nums">{fmt(b.ganado)}</TableCell>
+                  <TableCell className="text-right tabular-nums">{b.count}</TableCell>
+                </TableRow>
               ))}
-            </tbody>
-          </table>
+            </TableBody>
+          </Table>
         )}
       </CardContent>
     </Card>

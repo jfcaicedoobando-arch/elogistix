@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils";
 import { LoteRenglonesTable } from "@/components/shared/LoteRenglonesTable";
 import type { FacturaLoteCandidata, RenglonLote } from "@/features/cxp/services/pagoProveedorLote";
 
+import { TableCell, TableRow } from "@/components/ui/table";
 interface Props {
   facturas: FacturaLoteCandidata[];
   renglones: RenglonLote[];
@@ -29,17 +30,17 @@ export function DialogPagoLoteRenglones({ facturas, renglones, moneda, onMontoCh
             const liquidada = monto > 0 && queda <= 0.005;
             const parcial = monto > 0 && !liquidada;
             return (
-              <tr key={f.factura_id} className={cn("border-t", i % 2 === 1 && "bg-muted/20")}>
-                <td className="px-3 py-2 font-mono text-body-sm">
+              <TableRow key={f.factura_id} className={cn("border-t", i % 2 === 1 && "bg-muted/20")}>
+                <TableCell className="font-mono text-body-sm">
                   {toTitleCase(f.folio_proveedor ?? "") || "—"}
-                </td>
-                <td className="px-3 py-2 text-body-sm text-muted-foreground">
+                </TableCell>
+                <TableCell className="text-body-sm text-muted-foreground">
                   {f.fecha_vencimiento ? formatDate(f.fecha_vencimiento) : "—"}
-                </td>
-                <td className="px-3 py-2 text-right tabular-nums">
+                </TableCell>
+                <TableCell className="text-right tabular-nums">
                   {formatCurrency(f.saldo, moneda)}
-                </td>
-                <td className="px-3 py-2">
+                </TableCell>
+                <TableCell>
                   <MoneyInput
                     className="ml-auto h-9 w-full max-w-[150px] text-right"
                     value={monto === 0 ? null : monto}
@@ -47,8 +48,8 @@ export function DialogPagoLoteRenglones({ facturas, renglones, moneda, onMontoCh
                     aria-label={`Importe aplicado a la factura ${f.folio_proveedor ?? ""}`}
                     onChange={(n: number) => onMontoChange(f.factura_id, n)}
                   />
-                </td>
-                <td className="px-3 py-2 text-right">
+                </TableCell>
+                <TableCell className="text-right">
                   <div className="flex items-center justify-end gap-2">
                     {liquidada && (
                       <Badge variant="outline" className="text-label">Liquidada</Badge>
@@ -60,8 +61,8 @@ export function DialogPagoLoteRenglones({ facturas, renglones, moneda, onMontoCh
                       {formatCurrency(queda, moneda)}
                     </span>
                   </div>
-                </td>
-              </tr>
+                </TableCell>
+              </TableRow>
             );
           })}
     </LoteRenglonesTable>

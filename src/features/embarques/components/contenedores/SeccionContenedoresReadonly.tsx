@@ -15,6 +15,8 @@ import { formatNumber } from "@/lib/formatters";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 import { PackageOpen } from "lucide-react";
 
+import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/components/ui/table";
+import { DetailTableHead } from "@/components/shared/DetailTable";
 interface Props {
   embarqueId: string;
 }
@@ -110,44 +112,44 @@ export function SeccionContenedoresReadonly({ embarqueId }: Props) {
               </div>
             )}
             <div className="overflow-x-auto">
-              <table className="w-full max-w-3xl text-body">
-                <thead className="text-body-sm text-muted-foreground">
-                  <tr className="border-b">
-                    <th className="text-left font-medium py-1.5 px-2 w-auto">Número</th>
-                    <th className="text-left font-medium py-1.5 px-2 w-[140px]">Tipo</th>
-                    {mostrarBLHouse && <th className="text-left font-medium py-1.5 px-2 w-[180px]">BL House</th>}
-                    {!pesoUniforme && <th className="text-right font-medium py-1.5 px-2 w-[120px]">Peso (kg)</th>}
-                    {!volumenUniforme && <th className="text-right font-medium py-1.5 px-2 w-[120px]">Volumen (m³)</th>}
-                    {!piezasUniformes && <th className="text-right font-medium py-1.5 px-2 w-[100px]">Piezas</th>}
-                  </tr>
-                </thead>
-                <tbody>
+              <Table className="w-full max-w-3xl text-body">
+                <TableHeader className="text-body-sm text-muted-foreground">
+                  <TableRow className="border-b">
+                    <DetailTableHead className="w-auto">Número</DetailTableHead>
+                    <DetailTableHead className="w-[140px]">Tipo</DetailTableHead>
+                    {mostrarBLHouse && <DetailTableHead className="w-[180px]">BL House</DetailTableHead>}
+                    {!pesoUniforme && <DetailTableHead className="text-right w-[120px]">Peso (kg)</DetailTableHead>}
+                    {!volumenUniforme && <DetailTableHead className="text-right w-[120px]">Volumen (m³)</DetailTableHead>}
+                    {!piezasUniformes && <DetailTableHead className="text-right w-[100px]">Piezas</DetailTableHead>}
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
                   {lista.map((c) => (
-                    <tr key={c.id} className="border-b last:border-0 odd:bg-muted/20">
-                      <td className="py-1.5 px-2 font-medium">
+                    <TableRow key={c.id} className="border-b last:border-0 odd:bg-muted/20">
+                      <TableCell className="font-medium">
                         {c.numero_contenedor || <span className="text-muted-foreground">—</span>}
-                      </td>
-                      <td className="py-1.5 px-2">
+                      </TableCell>
+                      <TableCell>
                         {c.tipo_contenedor
                           ? <Badge variant="secondary">{resolveTipoContenedorNombre(c.tipo_contenedor, tiposContenedor)}</Badge>
                           : <span className="text-muted-foreground">—</span>}
-                      </td>
+                      </TableCell>
                       {mostrarBLHouse && (
-                        <td className="py-1.5 px-2">{c.bl_house || <span className="text-muted-foreground">—</span>}</td>
+                        <TableCell>{c.bl_house || <span className="text-muted-foreground">—</span>}</TableCell>
                       )}
                       {!pesoUniforme && (
-                        <td className="py-1.5 px-2 text-right tabular-nums">{formatNumber(Number(c.peso_kg))}</td>
+                        <TableCell className="text-right tabular-nums">{formatNumber(Number(c.peso_kg))}</TableCell>
                       )}
                       {!volumenUniforme && (
-                        <td className="py-1.5 px-2 text-right tabular-nums">{formatNumber(Number(c.volumen_m3))}</td>
+                        <TableCell className="text-right tabular-nums">{formatNumber(Number(c.volumen_m3))}</TableCell>
                       )}
                       {!piezasUniformes && (
-                        <td className="py-1.5 px-2 text-right tabular-nums">{c.piezas}</td>
+                        <TableCell className="text-right tabular-nums">{c.piezas}</TableCell>
                       )}
-                    </tr>
+                    </TableRow>
                   ))}
-                </tbody>
-              </table>
+                </TableBody>
+              </Table>
             </div>
           </div>
         )}

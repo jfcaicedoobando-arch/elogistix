@@ -8,6 +8,8 @@ import { formatNumber } from "@/lib/formatters";
 import { Gauge } from "lucide-react";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 
+import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/components/ui/table";
+import { DetailTableHead } from "@/components/shared/DetailTable";
 interface Row {
   fn: string;
   p50_ms: number | null;
@@ -38,26 +40,26 @@ export default function HealthSlowestTable({ loading, data }: Props) {
           <EmptyStateInline icon={Gauge} message="Sin mediciones de latencia." className="py-10" />
         ) : (
           <div className="overflow-x-auto">
-          <table className="w-full text-body-sm">
-            <thead className="text-muted-foreground">
-              <tr className="border-b">
-                <th className="text-left py-2 font-medium">Función</th>
-                <th className="text-right py-2 font-medium">p50</th>
-                <th className="text-right py-2 font-medium">p95</th>
-                <th className="text-right py-2 font-medium">Eventos</th>
-              </tr>
-            </thead>
-            <tbody>
+          <Table className="w-full text-body-sm">
+            <TableHeader className="text-muted-foreground">
+              <TableRow className="border-b">
+                <DetailTableHead>Función</DetailTableHead>
+                <DetailTableHead className="text-right">p50</DetailTableHead>
+                <DetailTableHead className="text-right">p95</DetailTableHead>
+                <DetailTableHead className="text-right">Eventos</DetailTableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
               {data.map((r) => (
-                <tr key={r.fn} className="border-b last:border-0">
-                  <td className="py-2 font-mono">{r.fn}</td>
-                  <td className="py-2 text-right">{formatMs(r.p50_ms)}</td>
-                  <td className="py-2 text-right font-medium">{formatMs(r.p95_ms)}</td>
-                  <td className="py-2 text-right">{formatNumber(r.total)}</td>
-                </tr>
+                <TableRow key={r.fn} className="border-b last:border-0">
+                  <TableCell className="font-mono">{r.fn}</TableCell>
+                  <TableCell className="text-right">{formatMs(r.p50_ms)}</TableCell>
+                  <TableCell className="text-right font-medium">{formatMs(r.p95_ms)}</TableCell>
+                  <TableCell className="text-right">{formatNumber(r.total)}</TableCell>
+                </TableRow>
               ))}
-            </tbody>
-          </table>
+            </TableBody>
+          </Table>
           </div>
         )}
       </CardContent>

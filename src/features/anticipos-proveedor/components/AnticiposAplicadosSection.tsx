@@ -4,6 +4,8 @@ import { formatCurrency } from "@/lib/formatters";
 import { formatDate } from "@/lib/formatters/dates";
 import { ListSkeleton } from "@/components/shared/states/ListSkeleton";
 
+import { Table, TableBody, TableCell, TableFooter, TableHeader, TableRow } from "@/components/ui/table";
+import { DetailTableHead } from "@/components/shared/DetailTable";
 interface Props {
   facturaId: string;
 }
@@ -26,39 +28,39 @@ export function AnticiposAplicadosSection({ facturaId }: Props) {
       </CardHeader>
       <CardContent className="p-0">
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead className="bg-muted/40 text-label uppercase tracking-wider text-muted-foreground">
-              <tr>
-                <th className="text-left px-4 py-3 font-bold">Fecha Aplicación</th>
-                <th className="text-right px-4 py-3 font-bold">Monto Aplicado</th>
-                <th className="text-center px-4 py-3 font-bold">Moneda</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border">
+          <Table className="w-full text-sm">
+            <TableHeader className="bg-muted/40 text-label uppercase tracking-wider text-muted-foreground">
+              <TableRow>
+                <DetailTableHead>Fecha Aplicación</DetailTableHead>
+                <DetailTableHead className="text-right">Monto Aplicado</DetailTableHead>
+                <DetailTableHead className="text-center">Moneda</DetailTableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody className="divide-y divide-border">
               {aplicaciones.map((app) => (
-                <tr key={app.id}>
-                  <td className="px-4 py-3 whitespace-nowrap">
+                <TableRow key={app.id}>
+                  <TableCell className="whitespace-nowrap">
                     {formatDate(app.fecha_aplicacion)}
-                  </td>
-                  <td className="text-right px-4 py-3 whitespace-nowrap font-medium">
+                  </TableCell>
+                  <TableCell className="text-right whitespace-nowrap font-medium">
                     {formatCurrency(app.monto_aplicado, app.moneda_aplicada)}
-                  </td>
-                  <td className="text-center px-4 py-3 whitespace-nowrap">
+                  </TableCell>
+                  <TableCell className="text-center whitespace-nowrap">
                     {app.moneda_aplicada}
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
               ))}
-            </tbody>
-            <tfoot className="bg-muted/40 font-medium">
-              <tr>
-                <td className="px-4 py-3">Total aplicado</td>
-                <td className="text-right px-4 py-3 whitespace-nowrap tabular-nums">
+            </TableBody>
+            <TableFooter className="bg-muted/40 font-medium">
+              <TableRow>
+                <TableCell>Total aplicado</TableCell>
+                <TableCell className="text-right whitespace-nowrap tabular-nums">
                   {formatCurrency(total, monedaTotal)}
-                </td>
-                <td className="text-center px-4 py-3">{monedaTotal}</td>
-              </tr>
-            </tfoot>
-          </table>
+                </TableCell>
+                <TableCell className="text-center">{monedaTotal}</TableCell>
+              </TableRow>
+            </TableFooter>
+          </Table>
         </div>
       </CardContent>
     </Card>

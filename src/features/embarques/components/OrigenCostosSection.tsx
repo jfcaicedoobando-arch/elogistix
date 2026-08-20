@@ -15,6 +15,8 @@ import { formatDate } from "@/lib/formatters";
 import { useTarifasResumen } from "@/features/costeo/hooks/useTarifasResumen";
 import type { TarifaResumen } from "@/features/costeo/services/tarifas";
 
+import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/components/ui/table";
+import { DetailTableHead } from "@/components/shared/DetailTable";
 type BadgeVariant = "default" | "secondary" | "destructive" | "outline";
 
 const DECISION_LABEL: Record<string, { label: string; variant: BadgeVariant }> = {
@@ -57,28 +59,28 @@ function DeltaTable({ cambios }: { cambios: DeltaConcepto[] }) {
       <p className="px-3 py-1.5 text-label uppercase bg-muted/50 text-muted-foreground">
         Snapshot del delta al convertir ({cambios.length} concepto{sufijo})
       </p>
-      <table className="w-full text-body-sm">
-        <thead className="bg-muted/30">
-          <tr className="text-left">
-            <th className="px-3 py-1.5">Concepto</th>
-            <th className="px-3 py-1.5 text-right">Cotizado</th>
-            <th className="px-3 py-1.5 text-right">Vigente</th>
-            <th className="px-3 py-1.5 text-right">Δ%</th>
-          </tr>
-        </thead>
-        <tbody>
+      <Table className="w-full text-body-sm">
+        <TableHeader className="bg-muted/30">
+          <TableRow className="text-left">
+            <DetailTableHead>Concepto</DetailTableHead>
+            <DetailTableHead className="text-right">Cotizado</DetailTableHead>
+            <DetailTableHead className="text-right">Vigente</DetailTableHead>
+            <DetailTableHead className="text-right">Δ%</DetailTableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
           {cambios.map((c, i) => (
-            <tr key={`${c.concepto ?? "x"}-${i}`} className="border-t">
-              <td className="px-3 py-1.5">{c.concepto ?? "—"}</td>
-              <td className="px-3 py-1.5 text-right tabular-nums">{c.monto_anterior ?? "—"}</td>
-              <td className="px-3 py-1.5 text-right tabular-nums">{c.monto_actual ?? "—"}</td>
-              <td className="px-3 py-1.5 text-right tabular-nums">
+            <TableRow key={`${c.concepto ?? "x"}-${i}`} className="border-t">
+              <TableCell>{c.concepto ?? "—"}</TableCell>
+              <TableCell className="text-right tabular-nums">{c.monto_anterior ?? "—"}</TableCell>
+              <TableCell className="text-right tabular-nums">{c.monto_actual ?? "—"}</TableCell>
+              <TableCell className="text-right tabular-nums">
                 {c.delta_pct == null ? "—" : `${c.delta_pct}%`}
-              </td>
-            </tr>
+              </TableCell>
+            </TableRow>
           ))}
-        </tbody>
-      </table>
+        </TableBody>
+      </Table>
     </div>
   );
 }

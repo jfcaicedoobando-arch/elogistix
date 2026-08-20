@@ -12,6 +12,8 @@ import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import type { ResultadoRevalidacion } from "@/features/cotizacion/domain/revalidacionTarifa";
 import { formatCurrency } from "@/lib/formatters";
 
+import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/components/ui/table";
+import { DetailTableHead } from "@/components/shared/DetailTable";
 interface Props {
   open: boolean;
   onOpenChange: (v: boolean) => void;
@@ -94,33 +96,33 @@ export function RevalidarTarifaModal({
     >
       {cambios.length > 0 && (
         <div className="border rounded-md overflow-hidden">
-          <table className="w-full text-body">
-            <thead className="bg-muted/50">
-              <tr className="text-left">
-                <th className="p-2">Concepto</th>
-                <th className="p-2 text-right">Cotizado</th>
-                <th className="p-2 text-right">Vigente</th>
-                <th className="p-2 text-right">Delta</th>
-                <th className="p-2 text-right">%</th>
-              </tr>
-            </thead>
-            <tbody>
+          <Table className="w-full text-body">
+            <TableHeader className="bg-muted/50">
+              <TableRow className="text-left">
+                <DetailTableHead>Concepto</DetailTableHead>
+                <DetailTableHead className="text-right">Cotizado</DetailTableHead>
+                <DetailTableHead className="text-right">Vigente</DetailTableHead>
+                <DetailTableHead className="text-right">Delta</DetailTableHead>
+                <DetailTableHead className="text-right">%</DetailTableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
               {cambios.map((c, i) => (
-                <tr key={`${c.concepto}-${i}`} className="border-t">
-                  <td className="p-2">
+                <TableRow key={`${c.concepto}-${i}`} className="border-t">
+                  <TableCell>
                     {c.concepto}
                     {c.motivo === "eliminado" && (
                       <Badge variant="destructive" className="ml-2">Eliminado</Badge>
                     )}
-                  </td>
-                  <td className="p-2 text-right">{fmtMoney(c.monto_anterior, c.moneda)}</td>
-                  <td className="p-2 text-right">{fmtMoney(c.monto_actual, c.moneda)}</td>
-                  <td className="p-2 text-right">{fmtMoney(c.delta_abs, c.moneda)}</td>
-                  <td className="p-2 text-right">{c.delta_pct == null ? "—" : `${c.delta_pct}%`}</td>
-                </tr>
+                  </TableCell>
+                  <TableCell className="text-right">{fmtMoney(c.monto_anterior, c.moneda)}</TableCell>
+                  <TableCell className="text-right">{fmtMoney(c.monto_actual, c.moneda)}</TableCell>
+                  <TableCell className="text-right">{fmtMoney(c.delta_abs, c.moneda)}</TableCell>
+                  <TableCell className="text-right">{c.delta_pct == null ? "—" : `${c.delta_pct}%`}</TableCell>
+                </TableRow>
               ))}
-            </tbody>
-          </table>
+            </TableBody>
+          </Table>
         </div>
       )}
     </FormDialogShell>
