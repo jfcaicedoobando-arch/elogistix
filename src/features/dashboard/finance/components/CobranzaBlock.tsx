@@ -8,8 +8,8 @@ import { ArrowRight, ChevronRight, PartyPopper, Receipt } from "lucide-react";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 import { formatCurrency, formatCurrencyCompact } from "@/lib/formatters";
 import { DrilldownRow } from "@/components/shared/dataTable/DrilldownRow";
-import type { AgingBuckets } from "@/features/dashboard/finance/hooks/useFinanceDashboard";
-import { AGING_SOFT_CLASS } from "@/lib/aging/buckets";
+import { CUBETAS_VENCIDAS, type ResumenAgingMxn } from "@/lib/domain/carteraAging";
+import { AGING_SOFT_CLASS, CUBETA_LABELS, CUBETA_NIVEL } from "@/lib/aging/buckets";
 import { Hint } from "@/components/shared/Hint";
 
 interface FacturaVencida {
@@ -22,25 +22,16 @@ interface FacturaVencida {
 }
 
 interface Props {
-  aging: AgingBuckets;
+  /** Resumen calculado por el canon `resumirAgingMxn`. */
+  aging: ResumenAgingMxn;
   facturasVencidas: FacturaVencida[];
   loading: boolean;
-  /** Ola 4 · N22: facturas excluidas del aging MXN por falta de TC confiable. */
-  agingSinTc?: number;
 }
 
-// v13.682.0 · UI-2: el color sale de la escala única (`AGING_SOFT_CLASS`).
-const AGING_LABELS: Array<{ key: keyof AgingBuckets; label: string; tone: string }> = [
-  { key: "b0_15", label: "0-15 d", tone: AGING_SOFT_CLASS[1] },
-  { key: "b16_30", label: "16-30 d", tone: AGING_SOFT_CLASS[2] },
-  { key: "b31_60", label: "31-60 d", tone: AGING_SOFT_CLASS[3] },
-  { key: "b61_90", label: "61-90 d", tone: AGING_SOFT_CLASS[4] },
-  { key: "b90plus", label: "90+ d", tone: AGING_SOFT_CLASS[5] },
-];
+export function CobranzaBlock({ aging, facturasVencidas, loading }: Props) {
+  const totalAging = aging.totalVencido;
+  const agingSinTc = aging.sinTipoCambio;
 
-export function CobranzaBlock({ aging, facturasVencidas, loading, agingSinTc = 0 }: Props) {
-  const totalAging =
-    aging.b0_15 + aging.b16_30 + aging.b31_60 + aging.b61_90 + aging.b90plus;
 
   return (
     <Card>
