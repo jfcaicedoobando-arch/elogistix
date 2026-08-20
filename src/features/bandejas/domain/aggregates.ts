@@ -7,6 +7,15 @@ import type {
   CxpPorCapturarRow,
   CxpPorPagarRow,
 } from "../services/bandejas";
+import {
+  esAccionable,
+  estaPorVencer,
+  esVencidoPorDias,
+  esVencidoPorDiasParaVencer,
+  DIAS_POR_VENCER_CXC,
+} from "@/lib/domain/vencimiento";
+import { aMxn } from "@/lib/financial/convertir";
+
 
 const num = (v: number | string | null | undefined): number => Number(v ?? 0) || 0;
 
