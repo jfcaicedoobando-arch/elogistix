@@ -168,7 +168,22 @@ export function FormDialogShell({
         <div className="border-t bg-background px-6 py-3 flex flex-wrap justify-end items-center gap-2">
           {footer}
         </div>
+
+        <ConfirmActionDialog
+          open={confirmarDescartar}
+          onOpenChange={setConfirmarDescartar}
+          title="¿Descartar los cambios?"
+          description="Tienes datos capturados en este formulario. Si cierras ahora, se perderán."
+          confirmLabel="Descartar"
+          cancelLabel="Seguir capturando"
+          variant="destructive"
+          onConfirm={() => {
+            setConfirmarDescartar(false);
+            onOpenChange(false);
+          }}
+        />
       </DialogContent>
     </Dialog>
+
   );
 }
