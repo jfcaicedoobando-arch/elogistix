@@ -46,10 +46,14 @@ export function sumarVencidas<T extends { saldo: number; moneda: string }>(
   let total_mxn = 0;
   let count = 0;
   for (const f of rows) {
-    if (f.saldo <= 0 || estatusOf(f) !== "Vencida") continue;
+    // Canon único de "vencida" + canon único de conversión (`aMxn`): antes esto
+    // multiplicaba `saldo * tc` a mano y no marcaba los saldos sin TC confiable.
+    if (!esCxcVencida({ saldo: f.saldo, estatus: estatusOf(f) })) continue;
     count += 1;
-    total_mxn += f.moneda === "USD" ? f.saldo * tc : f.saldo;
+    const conv = aMxn(f.saldo, f.moneda, f.moneda === "MXN" ? 1 : tc);
+    if (conv.completo) total_mxn += conv.monto;
   }
+
   return { total_mxn, count };
 }
 
