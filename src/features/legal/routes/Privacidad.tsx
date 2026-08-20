@@ -1,9 +1,7 @@
 import { Seo } from "@/components/shared/Seo";
-import { Link } from "react-router-dom";
-import { ArrowLeft } from "lucide-react";
-import { BrandLockup } from "@/components/layout/BrandLockup";
 import { LEGAL_CONTENT_APPROVED } from "@/features/legal/config";
 import { LegalEnRevision } from "@/features/legal/components/LegalEnRevision";
+import { LegalShell } from "@/features/legal/components/LegalShell";
 
 /**
  * Aviso de privacidad. Contenido placeholder — pendiente de revisión legal.
@@ -13,22 +11,9 @@ export default function Privacidad() {
   const title = "Aviso de privacidad · Libre Carga";
   const desc = "Aviso de privacidad de Libre Carga: cómo recopilamos, usamos y protegemos los datos de nuestros clientes en México.";
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <>
       <Seo title={title} description={desc} canonical={url} ogTitle={title} ogDescription={desc} ogUrl={url} />
-      <header className="border-b border-border bg-background/80 backdrop-blur">
-        <div className="mx-auto flex h-16 max-w-3xl items-center justify-between px-4 sm:px-6">
-          <Link to="/" aria-label="Libre Carga"><BrandLockup variant="horizontal" size="sm" /></Link>
-          <Link to="/" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
-            <ArrowLeft className="h-4 w-4" /> Volver
-          </Link>
-        </div>
-      </header>
-
-      <main className="mx-auto max-w-3xl px-4 py-12 sm:px-6">
-        <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-accent">Legal</p>
-        <h1 className="text-4xl font-bold tracking-tight">Aviso de privacidad</h1>
-        <p className="mt-2 text-sm text-muted-foreground">Última actualización: 4 de junio de 2026</p>
-
+      <LegalShell title="Aviso de privacidad" updatedAt="4 de junio de 2026" backTo="/">
         {LEGAL_CONTENT_APPROVED ? (
           <div className="prose prose-sm mt-8 max-w-none space-y-4 text-foreground/85">
             <h2 className="text-xl font-semibold">1. Responsable</h2>
@@ -56,7 +41,7 @@ export default function Privacidad() {
         ) : (
           <LegalEnRevision />
         )}
-      </main>
-    </div>
+      </LegalShell>
+    </>
   );
 }

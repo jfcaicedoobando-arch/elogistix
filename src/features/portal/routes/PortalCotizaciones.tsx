@@ -4,7 +4,7 @@ import { ClipboardList, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SolicitarCotizacionDialog } from "@/features/portal/components/SolicitarCotizacionDialog";
 import EmptyState from "@/components/empty/EmptyState";
-import { PageHeader } from "@/components/shared/PageHeader";
+import { PortalPageShell } from "@/features/portal/components/layout/PortalPageShell";
 import { PortalFiltersBar } from "@/features/portal/components/filtros/PortalFiltersBar";
 import { PortalCotizacionesMobileFilters } from "@/features/portal/components/PortalCotizacionesMobileFilters";
 import {
@@ -64,20 +64,18 @@ export default function PortalCotizaciones() {
   }
 
   return (
-    <div className="space-y-6">
-      <PageHeader
-        icon={<ClipboardList className="h-6 w-6 text-accent" />}
-        title="Mis Cotizaciones"
-        actions={
-          <div className="flex items-center gap-3">
-            <span className="text-sm text-muted-foreground tabular-nums">{filtered.length} de {cotizaciones.length}</span>
-            <Button size="sm" onClick={() => setSolicitudAbierta(true)}>
-              <Plus className="h-4 w-4 mr-1" aria-hidden /> Solicitar cotización
-            </Button>
-          </div>
-        }
-      />
-
+    <PortalPageShell
+      icon={<ClipboardList className="h-6 w-6 text-accent" />}
+      title="Mis Cotizaciones"
+      actions={
+        <div className="flex items-center gap-3">
+          <span className="text-sm text-muted-foreground tabular-nums">{filtered.length} de {cotizaciones.length}</span>
+          <Button size="sm" onClick={() => setSolicitudAbierta(true)}>
+            <Plus className="h-4 w-4 mr-1" aria-hidden /> Solicitar cotización
+          </Button>
+        </div>
+      }
+    >
       <SolicitarCotizacionDialog
         open={solicitudAbierta}
         onOpenChange={setSolicitudAbierta}
@@ -135,6 +133,6 @@ export default function PortalCotizaciones() {
           ))}
         </div>
       )}
-    </div>
+    </PortalPageShell>
   );
 }

@@ -5,7 +5,7 @@ import { calcularEstadoEmbarque } from "@/features/embarques/domain/embarque";
 import { getOrigen, getDestino } from "@/lib/formatters";
 import EmbarqueCard from "@/features/portal/components/EmbarqueCard";
 import EmptyState from "@/components/empty/EmptyState";
-import { PageHeader } from "@/components/shared/PageHeader";
+import { PortalPageShell } from "@/features/portal/components/layout/PortalPageShell";
 import { PortalFiltersBar } from "@/features/portal/components/filtros/PortalFiltersBar";
 import { PortalEmbarquesMobileFilters } from "@/features/portal/components/PortalEmbarquesMobileFilters";
 import { Ship, Package, ChevronDown } from "lucide-react";
@@ -46,14 +46,11 @@ export default function PortalEmbarques() {
   }
 
   return (
-    <div className="space-y-6">
-      <PageHeader
-        icon={<Ship className="h-6 w-6 text-accent" />}
-        title="Mis Embarques"
-        actions={<span className="text-sm text-muted-foreground tabular-nums">{filtered.length} de {embarques.length}</span>}
-      />
-
-
+    <PortalPageShell
+      icon={<Ship className="h-6 w-6 text-accent" />}
+      title="Mis Embarques"
+      actions={<span className="text-sm text-muted-foreground tabular-nums">{filtered.length} de {embarques.length}</span>}
+    >
       <PortalFiltersBar
         search={search}
         onSearchChange={setSearch}
@@ -157,6 +154,6 @@ export default function PortalEmbarques() {
           })}
         </div>
       )}
-    </div>
+    </PortalPageShell>
   );
 }

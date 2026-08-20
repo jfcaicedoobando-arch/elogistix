@@ -7,12 +7,10 @@ import { subscribeToAuthChanges, getCurrentSession, updateUserPassword } from "@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2, CheckCircle2, Eye, EyeOff, AlertCircle } from "lucide-react";
-import { BrandLockup } from "@/components/layout/BrandLockup";
-import { BRAND } from "@/components/shared/utils/brand";
 import { Seo } from "@/components/shared/Seo";
+import { AuthCard } from "@/features/auth/components/AuthCard";
 import { translateAuthError } from "@/lib/auth/translateAuthError";
 import { passwordSchema, PASSWORD_MIN, PASSWORD_MAX } from "@/lib/passwords/policy";
 import { PasswordStrengthMeter } from "@/components/shared/PasswordStrengthMeter";
@@ -88,7 +86,7 @@ export default function ResetPassword() {
   const alertMessage = error ?? firstFieldError;
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-muted px-4 py-8">
+    <>
       <Seo
         title="Restablecer contraseña · Libre Carga"
         description="Define una nueva contraseña para tu cuenta de Libre Carga, la plataforma de agentes de carga en México. Acceso seguro a embarques, cotizaciones y clientes."
@@ -97,12 +95,7 @@ export default function ResetPassword() {
         ogDescription="Crea una nueva contraseña para recuperar el acceso seguro a tu cuenta de Libre Carga."
         ogUrl="https://librecarga.com/reset-password"
       />
-      <Card className="w-full max-w-sm shadow-raised">
-        <CardHeader className="text-center space-y-4 pb-4">
-          <BrandLockup variant="stacked" size="md" subtitle={BRAND.tagline} />
-          <h1 className="sr-only">Restablecer contraseña</h1>
-        </CardHeader>
-        <CardContent className="pt-2">
+      <AuthCard title="Restablecer contraseña" maxWidth="sm">
           {!ready ? (
             <div className="flex justify-center py-8">
               <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
@@ -174,8 +167,7 @@ export default function ResetPassword() {
               </Button>
             </form>
           )}
-        </CardContent>
-      </Card>
-    </div>
+      </AuthCard>
+    </>
   );
 }

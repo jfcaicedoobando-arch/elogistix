@@ -55,7 +55,7 @@ export default function CotizacionInformativaDetalle({ cotizacion }: Props) {
         subtitle={`Cliente: ${cotizacion.cliente_nombre}`}
         trailing={
           <Button onClick={handleDescargar}>
-            <Download className="h-4 w-4 mr-2" /> Descargar PDF
+            <Download className="h-4 w-4 mr-2" /> Exportar PDF
           </Button>
         }
       />

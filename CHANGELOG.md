@@ -1,5 +1,18 @@
 # Changelog
 
+## [13.691.0] - 2026-08-19
+### Dinero y seguridad (Ola G1)
+- Las notas de crédito en una moneda distinta a la de la factura ya se convierten a la misma moneda antes de compararse contra el saldo pendiente: antes una nota en pesos sobre una factura en dólares (o al revés) se rechazaba de más o se aceptaba de más. Si no hay tipo de cambio disponible, la nota se rechaza con un aviso claro.
+- Nueva prueba automática `cxc_guard_nc_multimoneda.sql` en CI.
+
+### Pulido visual (Olas G2 y H)
+- Portal de cliente, páginas de acceso y páginas legales ahora comparten un mismo marco visual (encabezado, ancho y espaciado).
+- Tarjeta de arribos del tablero deja de desbordarse en pantallas angostas y anchas.
+- Chip Tarifario/Transaccional en Cotizaciones usa el mismo estilo de etiqueta que Embarques.
+- Fecha en el listado de Cotizaciones ahora se muestra como dd/mm/aaaa, igual que en el resto de la app.
+- Botones de exportación de PDF unificados como "Exportar PDF" en Tesorería, CxP y Cotizaciones.
+- La tabla de flujo por moneda en Tesorería ya no recorta la columna NETO.
+
 ## [13.690.2] - 2026-08-19
 ### Correcciones desde Sentry
 - Los correos de autenticación (confirmación de cuenta y recuperación de contraseña) volvían un error 500 y no se enviaban: la regla de "no registrar dos veces el mismo correo" estaba definida de forma parcial y el registro fallaba. Ahora la regla es total y el envío se encola correctamente (Sentry JAVASCRIPT-REACT-5G).

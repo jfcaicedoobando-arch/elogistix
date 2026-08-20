@@ -80,14 +80,14 @@ export function LibroPagosExportButtons({ pagos, rango, totales }: Props) {
       <Button
         type="button" variant="outline" size="sm"
         onClick={descargarPdfPagos} disabled={sinDatos || generandoPdf}
-        title={sinDatos ? "No hay pagos para exportar" : "Descargar PDF"}
+        title={sinDatos ? "No hay pagos para exportar" : "Exportar PDF"}
       >
         {generandoPdf ? (
           <Download className="h-4 w-4 animate-pulse" aria-hidden />
         ) : (
           <FileText className="h-4 w-4" aria-hidden />
         )}
-        {generandoPdf ? "Generando…" : "PDF"}
+        {generandoPdf ? "Generando…" : "Exportar PDF"}
       </Button>
     </div>
   );

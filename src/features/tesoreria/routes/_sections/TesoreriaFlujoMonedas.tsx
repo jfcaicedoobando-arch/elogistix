@@ -32,7 +32,8 @@ export function TesoreriaFlujoMonedas({ flujo }: Props) {
         <SectionHeading as="h3" className="mb-3">
           Flujo esperado 30 días por moneda
         </SectionHeading>
-        <Table>
+        <div className="overflow-x-auto">
+        <Table className="min-w-[480px]">
           <TableHeader>
             <DetailTableRow hoverable={false}>
               <DetailTableHead className="whitespace-nowrap">Moneda</DetailTableHead>
@@ -66,6 +67,7 @@ export function TesoreriaFlujoMonedas({ flujo }: Props) {
             })}
           </TableBody>
         </Table>
+        </div>
       </CardContent>
     </Card>
   );

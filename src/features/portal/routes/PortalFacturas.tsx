@@ -6,7 +6,7 @@ import { formatCurrency, formatDate } from "@/lib/formatters";
 import { resolverEstadoFacturaCliente } from "@/lib/domain/estadosFactura";
 import { Receipt, AlertTriangle, ChevronRight } from "lucide-react";
 import EmptyState from "@/components/empty/EmptyState";
-import { PageHeader } from "@/components/shared/PageHeader";
+import { PortalPageShell } from "@/features/portal/components/layout/PortalPageShell";
 import { PortalFiltersBar } from "@/features/portal/components/filtros/PortalFiltersBar";
 import { PortalFacturasMobileFilters } from "@/features/portal/components/facturas/PortalFacturasMobileFilters";
 import { useState, useMemo } from "react";
@@ -54,14 +54,11 @@ export default function PortalFacturas() {
   }
 
   return (
-    <div className="space-y-6">
-      <PageHeader
-        icon={<Receipt className="h-6 w-6 text-accent" />}
-        title="Mis Facturas"
-        actions={<span className="text-sm text-muted-foreground tabular-nums">{filtered.length} de {facturas.length}</span>}
-      />
-
-
+    <PortalPageShell
+      icon={<Receipt className="h-6 w-6 text-accent" />}
+      title="Mis Facturas"
+      actions={<span className="text-sm text-muted-foreground tabular-nums">{filtered.length} de {facturas.length}</span>}
+    >
       <PortalFiltersBar
         search={search}
         onSearchChange={setSearch}
@@ -140,6 +137,6 @@ export default function PortalFacturas() {
           })}
         </div>
       )}
-    </div>
+    </PortalPageShell>
   );
 }
