@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.706.1] - 2026-08-20
+### Actualización segura de dependencias
+- Se actualizaron librerías a sus versiones de mantenimiento (iconos, rutas, PDF, teléfonos, CSV, virtualización de tablas y parámetros de URL) sin cambios de comportamiento visibles.
+- No se tocaron versiones mayores restringidas por la plataforma (React, Vite, Tailwind, TypeScript, router 7).
+
 ## [13.706.0] - 2026-08-25
 ### Ola C — Sellar lo visual
 - Los componentes compartidos (badges, tarjetas de indicadores, celdas de dinero) ya usan la misma escala de letra que el resto del sistema: antes un badge y su celda vecina se veían con tamaños distintos.
