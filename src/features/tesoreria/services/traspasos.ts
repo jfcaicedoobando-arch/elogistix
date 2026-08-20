@@ -25,11 +25,33 @@ export interface RegistrarTraspasoInput {
   comision?: number;
   concepto?: string;
   referencia?: string;
+  /**
+   * OLA A (A.1): clave de idempotencia generada por intento de submit. La BD
+   * tiene un UNIQUE parcial sobre `traspasos_bancarios.client_request_id`, así
+   * que un doble clic o un retry de red no puede duplicar el traspaso.
+   */
+  clientRequestId?: string | null;
+}
+
+export interface RegistrarTraspasoResult {
+  id: string;
+  /** `true` cuando el intento ya se había registrado (dedupe server-side). */
+  duplicado: boolean;
+}
+
+/** Recupera el traspaso ya registrado con la misma clave de idempotencia. */
+async function buscarTraspasoPorClave(clave: string): Promise<string | null> {
+  const { data } = await supabase
+    .from("traspasos_bancarios")
+    .select("id")
+    .eq("client_request_id", clave)
+    .maybeSingle();
+  return data?.id ?? null;
 }
 
 export async function registrarTraspaso(
   input: RegistrarTraspasoInput,
-): Promise<string> {
+): Promise<RegistrarTraspasoResult> {
   if (!Number.isFinite(input.tipoCambio) || input.tipoCambio <= 0) {
     throw new Error("Captura el tipo de cambio del traspaso.");
   }
@@ -42,10 +64,22 @@ export async function registrarTraspaso(
     p_comision: input.comision ?? 0,
     p_concepto: input.concepto ?? "",
     p_referencia: input.referencia ?? "",
+    p_client_request_id: input.clientRequestId ?? undefined,
   });
-  if (error) throw error;
-  return data as string;
+  if (error) {
+    // 23505 sobre el UNIQUE parcial = el mismo intento ya quedó guardado.
+    // No es un error para el usuario: devolvemos el traspaso existente.
+    const esDuplicadoDeIntento =
+      error.code === "23505" && !!input.clientRequestId;
+    if (esDuplicadoDeIntento) {
+      const existente = await buscarTraspasoPorClave(input.clientRequestId!);
+      if (existente) return { id: existente, duplicado: true };
+    }
+    throw error;
+  }
+  return { id: data as string, duplicado: false };
 }
+
 
 export async function cancelarTraspaso(
   traspasoId: string,

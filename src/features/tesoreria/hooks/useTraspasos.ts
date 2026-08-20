@@ -3,7 +3,7 @@
  */
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query";
-import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
+import { notifyError, notifySuccess, notifyWarning } from "@/lib/ui/appFeedback";
 import { getErrorMessage } from "@/lib/errors";
 import {
   registrarTraspaso,
@@ -15,8 +15,13 @@ export function useRegistrarTraspaso() {
   return useMutation({
     mutationFn: (input: RegistrarTraspasoInput) =>
       registrarTraspaso({ ...input }),
-    onSuccess: () => {
+    onSuccess: (res) => {
       qc.invalidateQueries({ queryKey: queryKeys.tesoreria.all });
+      // OLA A (A.1): el dedupe server-side absorbió un doble submit/retry.
+      if (res.duplicado) {
+        notifyWarning(undefined, { title: "Este traspaso ya fue registrado" });
+        return;
+      }
       notifySuccess(undefined, { title: "Traspaso registrado" });
     },
     onError: (error: Error) => {
@@ -28,3 +33,4 @@ export function useRegistrarTraspaso() {
     },
   });
 }
+

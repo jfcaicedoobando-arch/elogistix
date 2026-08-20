@@ -7885,6 +7885,7 @@ export type Database = {
       }
       traspasos_bancarios: {
         Row: {
+          client_request_id: string | null
           comision: number
           concepto: string
           created_at: string
@@ -7907,6 +7908,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          client_request_id?: string | null
           comision?: number
           concepto?: string
           created_at?: string
@@ -7929,6 +7931,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          client_request_id?: string | null
           comision?: number
           concepto?: string
           created_at?: string
@@ -10400,6 +10403,7 @@ export type Database = {
       }
       registrar_traspaso_bancario: {
         Args: {
+          p_client_request_id?: string
           p_comision?: number
           p_concepto?: string
           p_cuenta_destino_id: string
