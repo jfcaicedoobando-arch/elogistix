@@ -74,7 +74,10 @@ const cacheHistorico = new Map<string, { rates: Rates; expiresAt: number }>();
  * BL-16: sella la fecha solicitada al momento de responder (NO se guarda en
  * caché: el mismo TC de "hoy" se sirve a peticiones con fechas distintas).
  */
-function conFechaSolicitada(rates: Rates, fechaSolicitada: string | null): Rates {
+function conFechaSolicitada<T extends Record<string, unknown>>(
+  rates: T,
+  fechaSolicitada: string | null,
+): T & { fechaSolicitada: string | null } {
   return { ...rates, fechaSolicitada };
 }
 
@@ -265,6 +268,6 @@ Deno.serve(wrapEdgeHandler("exchange-rates", async (req) => {
     const message = err instanceof Error ? err.message : String(err);
     console.error(JSON.stringify({ level: "error", fn: "exchange-rates", msg: "unhandled", error: message }));
     await captureEdgeException(err, { fn: "exchange-rates", status_code: 200 });
-    return jsonResponse(sellar(FALLBACK));
+    return jsonResponse({ ...FALLBACK, fechaSolicitada: null });
   }
 }));
