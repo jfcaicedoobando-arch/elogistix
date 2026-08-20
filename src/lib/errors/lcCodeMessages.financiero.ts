@@ -158,6 +158,8 @@ export const LC_CODE_MESSAGES_FINANCIERO: Record<string, string> = {
     "Sólo un rol financiero (admin, contador, auxiliar contable o tesorero) puede cancelar una factura de proveedor.",
   LC_NC_MONEDA_SIN_TC:
     "No hay tipo de cambio para convertir la nota de crédito a la moneda de la factura. Captura el T/C y vuelve a intentar.",
+  LC_NC_SIN_TC:
+    "Falta el tipo de cambio para validar la nota de crédito contra el saldo de la factura. Captura el T/C y vuelve a intentar.",
   LC_NC_TRANSICION_INVALIDA:
     "Ese cambio de estado de la nota de crédito no está permitido.",
   LC_NC_UUID_REQUERIDO:
