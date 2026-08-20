@@ -456,6 +456,9 @@ jobs:
       - name: Espejo de roles - organization_members -> user_roles
         run: $PSQL -f supabase/tests/roles_membership_mirror.sql
 
+      - name: Tesoreria - idempotencia de traspasos (Ola A / A.1)
+        run: $PSQL -f supabase/tests/traspaso_idempotencia.sql
+
 
 
       - name: Guard de estados - guard_estado_cotizacion (C5 + A3)
