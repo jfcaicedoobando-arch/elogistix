@@ -3,7 +3,9 @@
  * Sin I/O — testeable de forma aislada.
  */
 import { sumarMontos } from "@/lib/financial/financialUtils";
+import { esCxcVencida } from "@/lib/domain/vencimiento";
 import type { FacturaEstadoCuenta } from "./estadoCuenta";
+
 
 export interface KpiPorMoneda {
   mxn: number;
