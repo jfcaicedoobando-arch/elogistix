@@ -180,7 +180,7 @@ async function manejarExchangeRates(req: Request): Promise<Response> {
 
   const log = createLogger(req, "exchange-rates");
   const { fecha, esHoy, key, fechaIso, fechaSolicitada } = await resolverFecha(req);
-  const sellar = (r: Rates) => conFechaSolicitada(r, fechaSolicitada);
+  const sellar = <T extends Record<string, unknown>>(r: T) => conFechaSolicitada(r, fechaSolicitada);
 
 
   // Caché: "hoy" con TTL corto; históricas con TTL largo (son inmutables).
