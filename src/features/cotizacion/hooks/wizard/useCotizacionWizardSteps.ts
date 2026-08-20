@@ -5,6 +5,7 @@ import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { fromDb } from "@/lib/supabase/cast";
 import { usePaso1Handlers } from "./usePaso1Handlers";
 import { costosSinConcepto } from "@/features/cotizacion/domain/cotizacionVentaSync";
+import { costosPaso2Schema, conceptosPaso3Schema, primerError } from "@/features/cotizacion/domain/schemas/wizardPasos";
 import { firmaCostos, type WizardStepsDeps as Deps } from "./wizardStepsTypes";
 
 /**
@@ -41,20 +42,20 @@ export function useCotizacionWizardSteps({
     // Race-fix: si el usuario avanza antes de que se llenen los costos internos
     // (típico en LCL con precarga por tarifa aún pendiente), bloqueamos con toast
     // en vez de saltar a paso 3 con `conceptos_venta = []`.
-    if (costosInternos.length === 0) {
-      notifyError(undefined, {
-        title: "Agrega al menos un costo interno antes de continuar",
-        description: "El paso 3 usa los costos del paso 2 para generar los conceptos de venta.",
-      });
-      return;
-    }
     // B-081: un renglón con importes y sin concepto se descartaba en silencio y
-    // la cotización terminaba en $0.00 (PDF vacío). Ahora bloquea el avance.
+    // la cotización terminaba en $0.00 (PDF vacío). Ambas reglas viven en
+    // `costosPaso2Schema` (EC-4).
     const sinConcepto = costosSinConcepto(costosInternos);
-    if (sinConcepto.length > 0) {
+    const errorPaso2 = primerError(costosPaso2Schema, {
+      totalCostos: costosInternos.length,
+      renglonesSinConcepto: sinConcepto.length,
+    });
+    if (errorPaso2) {
       notifyError(undefined, {
-        title: "Hay renglones de costo sin concepto",
-        description: `Selecciona el concepto de ${sinConcepto.length === 1 ? "1 renglón" : `${sinConcepto.length} renglones`} con importes capturados; sin nombre no se genera el concepto de venta.`,
+        title: errorPaso2,
+        description: sinConcepto.length > 0
+          ? `Selecciona el concepto de ${sinConcepto.length === 1 ? "1 renglón" : `${sinConcepto.length} renglones`} con importes capturados; sin nombre no se genera el concepto de venta.`
+          : "El paso 3 usa los costos del paso 2 para generar los conceptos de venta.",
       });
       return;
     }
@@ -89,8 +90,11 @@ export function useCotizacionWizardSteps({
   const handlePaso3 = useCallback(async () => {
     const conceptosUSDValidos = conceptosUSD.filter(c => c.descripcion?.trim());
     const conceptosMXNValidos = conceptosMXN.filter(c => c.descripcion?.trim());
-    if (conceptosUSDValidos.length === 0 && conceptosMXNValidos.length === 0) {
-      notifyError(undefined, { title: "Agrega al menos un concepto de venta" });
+    const errorPaso3 = primerError(conceptosPaso3Schema, {
+      conceptosValidos: conceptosUSDValidos.length + conceptosMXNValidos.length,
+    });
+    if (errorPaso3) {
+      notifyError(undefined, { title: errorPaso3 });
       return;
     }
     try {
