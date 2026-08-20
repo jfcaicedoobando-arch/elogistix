@@ -72,7 +72,7 @@ const cacheHistorico = new Map<string, { rates: Rates; expiresAt: number }>();
  * Extrae la fecha objetivo: query string (`?fecha=YYYY-MM-DD`) y como fallback
  * el body JSON `{ fecha }` (para `supabase.functions.invoke`).
  */
-export async function resolverFecha(req: Request): Promise<{ fecha: Date; esHoy: boolean; key: string; fechaIso: string }> {
+export async function resolverFecha(req: Request): Promise<{ fecha: Date; esHoy: boolean; key: string; fechaIso: string; fechaSolicitada: string | null }> {
   const hoy = new Date();
   // FIX-12 · `toISOString()` da el día en UTC — a las 19:00 CDMX ya es "mañana".
   const hoyIso = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Mexico_City" }).format(hoy);
@@ -84,15 +84,19 @@ export async function resolverFecha(req: Request): Promise<{ fecha: Date; esHoy:
       if (body && typeof body.fecha === "string") raw = body.fecha;
     } catch { /* body no era JSON o vacío */ }
   }
+  // BL-16: la fecha pedida se conserva SIEMPRE en la respuesta. Antes, pedir
+  // una fecha futura devolvía el TC de hoy sin decir que se sustituyó.
+  const solicitada = /^\d{4}-\d{2}-\d{2}$/.test(raw) ? raw : null;
   if (!raw || !/^\d{4}-\d{2}-\d{2}$/.test(raw) || raw >= hoyIso) {
     // N14 (Ola 4): fechaIso es SIEMPRE el día civil MX — única llave válida
     // para tipos_cambio_dof y coherente con el corte de la Publicación DOF.
-    return { fecha: hoy, esHoy: true, key: "hoy", fechaIso: hoyIso };
+    return { fecha: hoy, esHoy: true, key: "hoy", fechaIso: hoyIso, fechaSolicitada: solicitada };
   }
   const d = new Date(raw + "T12:00:00Z");
-  if (Number.isNaN(d.getTime())) return { fecha: hoy, esHoy: true, key: "hoy", fechaIso: hoyIso };
-  return { fecha: d, esHoy: false, key: raw, fechaIso: raw };
+  if (Number.isNaN(d.getTime())) return { fecha: hoy, esHoy: true, key: "hoy", fechaIso: hoyIso, fechaSolicitada: solicitada };
+  return { fecha: d, esHoy: false, key: raw, fechaIso: raw, fechaSolicitada: raw };
 }
+
 
 /**
  * N14 (Ola 4): milisegundos hasta la próxima medianoche en America/Mexico_City.
