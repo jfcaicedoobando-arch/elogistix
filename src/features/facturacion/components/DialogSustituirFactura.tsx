@@ -24,6 +24,7 @@ import { notifyError } from "@/lib/ui/appFeedback";
 import { reportCaughtError } from "@/lib/observability/reportCaughtError";
 import { clearPersisted, writePersisted } from "@/features/facturacion/services/sustitucionPersistence";
 import { useSustitucionState } from "@/features/facturacion/hooks/useSustitucionState";
+import { ConfirmarBody, IntroBody } from "./sustitucion/SustitucionBodies";
 
 interface Props {
   facturaId: string | null;

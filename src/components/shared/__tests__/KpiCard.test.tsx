@@ -43,11 +43,13 @@ describe("<KpiCard />", () => {
     expect(container.querySelector(".border-success\\/30")).toBeNull();
   });
 
-  it("valueTooltip se expone en el atributo title del valor", () => {
+  it("valueTooltip usa tooltip accesible, no el title nativo", () => {
     render(
       <KpiCard label="Profit" value="USD 1.2M" valueTooltip="USD 1,234,567.89" />,
     );
-    expect(screen.getByText("USD 1.2M").getAttribute("title")).toBe("USD 1,234,567.89");
+    const valor = screen.getByText("USD 1.2M");
+    expect(valor.getAttribute("title")).toBeNull();
+    expect(valor).toHaveAttribute("data-state");
   });
 
   it("renderiza children debajo del cuerpo", () => {
