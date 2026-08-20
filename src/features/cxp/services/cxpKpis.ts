@@ -5,6 +5,8 @@
 import type { FacturaCxP } from "./proveedorFacturas";
 import { esFacturaPorPagar } from "./cxpPorPagarFiltro";
 import { diasVencidos } from "@/lib/date/dateOnly";
+import { esVencidoPorDias, estaPorVencer } from "@/lib/domain/vencimiento";
+
 
 export interface KPIsCxP {
   por_pagar_mxn: number;
