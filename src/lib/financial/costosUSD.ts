@@ -120,7 +120,16 @@ export function sumarEnMoneda(
   let centavos = 0;
   for (let i = 0; i < items.length; i++) {
     const item = items[i];
-    const moneda = esMoneda(item.moneda) ? item.moneda : target;
+    // B.3 (R3-BL-1): una divisa que no sea MXN/USD/EUR NO se puede convertir.
+    // Antes se coaccionaba al `target` y un monto en GBP se sumaba como si ya
+    // fuera dólares. Ahora falla fuerte, igual que `aUSD`.
+    if (!esMoneda(item.moneda)) {
+      throw new Error(
+        `Moneda no soportada en la suma: ${item.moneda}. Captura el importe en MXN, USD o EUR.`,
+      );
+    }
+    const moneda = item.moneda;
+
     let factor = factores.get(moneda);
     if (factor === undefined) {
       factor = factorEntreMonedas(moneda, target, { usd: tcUSD, eur: tcEUR }) ?? NaN;

@@ -24,6 +24,7 @@ import { useComisionesDevengadas, useUsuariosVendedores } from "@/features/comis
 import { useVendedorasEmailWarning } from "@/features/comisiones/hooks/useVendedorasEmailWarning";
 import { buildComisionesColumns } from "@/features/comisiones/components/comisionesColumns";
 import { TabLiquidaciones } from "@/features/comisiones/components/TabLiquidaciones";
+import { AlertaComisionesPendientes } from "@/features/comisiones/components/AlertaComisionesPendientes";
 import { TabVendedorasConfig } from "@/features/comisiones/components/TabVendedorasConfig";
 import type { EstadoComision, ComisionDevengada } from "@/features/comisiones/services";
 import { UnifiedFiltersBar } from "@/components/shared/filters/UnifiedFiltersBar";
@@ -108,6 +109,8 @@ export default function Comisiones() {
         </TabsList>
 
         <TabsContent value="devengadas" className="space-y-4">
+          {/* B.1: comisiones que quedaron en 0 por un fallo de cálculo. */}
+          <AlertaComisionesPendientes />
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             <KpiCard label="Devengado del mes" value={formatCurrency(kpis.devengado_mes_mxn, "MXN")} />
             <KpiCard label="Pendiente de liquidar" value={formatCurrency(kpis.pendiente_liquidar_mxn, "MXN")} />

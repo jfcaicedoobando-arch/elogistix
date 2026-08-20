@@ -13,11 +13,7 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
-import { orIlike } from "@/lib/search/ilike";
-import { calcularSaldoFactura } from "@/lib/financial/saldoFactura";
 import { assertNotTruncated } from "@/lib/supabase/assertNotTruncated";
-import { diasVencidos } from "@/lib/date/dateOnly";
-import { estaPorVencer } from "@/features/facturacion/domain/porVencer";
 
 // Re-export de agregados puros (extraídos a `cobranzaAggregates.ts` en 12.61.18).
 export {
@@ -89,96 +85,48 @@ export async function fetchCobranzaKpis(
   return data as unknown as KpisCobranzaRemotos;
 }
 
-type RawFactura = Pick<
-  FacturaRow,
-  | "id" | "numero" | "cliente_id" | "cliente_nombre" | "expediente"
-  | "moneda" | "total" | "fecha_emision" | "fecha_vencimiento"
-  | "estado" | "tipo_cambio"
-> & {
-  pagos_factura: Array<{ monto_aplicado_factura: number; deleted_at: string | null }> | null;
-  factura_notas_credito: Array<{ monto: number; estado: string; deleted_at: string | null }> | null;
-};
-
-function calcularDiasVencido(fechaVencimiento: string): number {
-  return diasVencidos(fechaVencimiento);
-}
-
-function calcularEstatus(saldo: number, diasVencido: number): EstatusCobranza {
-  if (saldo <= 0.01) return "Sin saldo";
-  if (diasVencido > 0) return "Vencida";
-  // BL-9: ventana única de 7 días (antes 3) — ver `lib/domain/porVencer`.
-  if (estaPorVencer(diasVencido)) return "Por vencer";
-  return "Vigente";
-}
 
 // FIX C3 (S6-02): cap explícito verificado por assertNotTruncated.
 const LIMITE_COBRANZA = 2000;
 
+/**
+ * B.5 — El filtrado por estatus vive en la BD (`cobranza_listado`), no en el
+ * navegador. Antes se traían 2000 filas y se filtraba en memoria: con cartera
+ * grande el corte de 2000 dejaba fuera facturas vencidas y el listado no
+ * cuadraba con los KPIs. La RPC aplica el mismo canon de vencimiento.
+ */
 export async function fetchCobranza(filtros: FetchCobranzaFilters = {}): Promise<FacturaCobranza[]> {
-  let query = supabase
-    .from("facturas")
-    .select(`
-      id, numero, cliente_id, cliente_nombre, expediente,
-      moneda, total, fecha_emision, fecha_vencimiento, estado, tipo_cambio,
-      pagos_factura(monto_aplicado_factura, deleted_at),
-      factura_notas_credito(monto, estado, deleted_at)
-    `)
-    .in("estado", [...ESTADOS_ACTIVOS])
-    // Excluye facturas borradas lógicamente (duplicados legacy de respaldo).
-    .is("deleted_at", null)
-    .order("fecha_vencimiento", { ascending: true })
-    .limit(LIMITE_COBRANZA);
-
-  if (filtros.cliente_id) query = query.eq("cliente_id", filtros.cliente_id);
-  if (filtros.moneda && filtros.moneda !== "todas") query = query.eq("moneda", filtros.moneda);
-  if (filtros.search) {
-    query = query.or(orIlike(["numero", "cliente_nombre"], filtros.search));
-  }
-
-  const { data, error } = await query;
+  const { data, error } = await supabase.rpc("cobranza_listado", {
+    p_cliente_id: filtros.cliente_id ?? undefined,
+    p_moneda: filtros.moneda && filtros.moneda !== "todas" ? filtros.moneda : undefined,
+    p_estatus: filtros.estatus && filtros.estatus !== "todos" ? filtros.estatus : undefined,
+    p_search: filtros.search || undefined,
+    p_limit: LIMITE_COBRANZA,
+  });
   if (error) throw error;
   assertNotTruncated(data, LIMITE_COBRANZA, "facturacion.fetchCobranza");
 
-  // SAFE-CAST: `RawFactura` modela el join con pagos_factura; Supabase tipa unknown.
-  const rows = ((data as unknown as RawFactura[] | null) ?? []).map((f): FacturaCobranza => {
-    const pagosActivos = (f.pagos_factura ?? []).filter((p) => !p.deleted_at);
-    const notasActivas = (f.factura_notas_credito ?? []).filter(
-      (n) => !n.deleted_at && n.estado === "Aplicada",
-    );
-    const total = Number(f.total);
-    // A1: canon único `@/lib/financial/saldoFactura` (no reimplementar).
-    const { saldo, pagado, notasCredito: notas } = calcularSaldoFactura(
-      total,
-      pagosActivos,
-      notasActivas,
-    );
-    const diasVencido = calcularDiasVencido(f.fecha_vencimiento);
-    return {
-      id: f.id,
-      numero: f.numero,
-      cliente_id: f.cliente_id,
-      cliente_nombre: f.cliente_nombre,
-      expediente: f.expediente,
-      moneda: f.moneda,
-      total,
-      pagado,
-      notas_credito_aplicadas: notas,
-      saldo,
-      fecha_emision: f.fecha_emision,
-      fecha_vencimiento: f.fecha_vencimiento,
-      // Signo importa: negativo = faltan N días, 0 = vence hoy, positivo = días vencidos.
-      // Este valor lo consume `agingPorCobrarBucket` y `cobranzaAggregates` para clasificar
-      // "Por vencer" vs "Vencida". Un clamp a 0 rompe la bandeja "Por cobrar".
-      dias_vencido: diasVencido,
-      estatus_cobranza: calcularEstatus(saldo, diasVencido),
-      estado_factura: f.estado,
-      tipo_cambio: Number(f.tipo_cambio),
-    };
-  });
-
-  if (filtros.estatus && filtros.estatus !== "todos") {
-    return rows.filter((r) => r.estatus_cobranza === filtros.estatus);
-  }
-  return rows;
+  // SAFE-CAST: la RPC devuelve `moneda`/`estado` como text; el dominio los tipa
+  // con los enums de la tabla `facturas`, que son exactamente esos valores.
+  return (data ?? []).map((f): FacturaCobranza => ({
+    id: f.id,
+    numero: f.numero,
+    cliente_id: f.cliente_id,
+    cliente_nombre: f.cliente_nombre,
+    expediente: f.expediente,
+    moneda: f.moneda as FacturaRow["moneda"],
+    total: Number(f.total),
+    pagado: Number(f.pagado),
+    notas_credito_aplicadas: Number(f.notas_credito_aplicadas),
+    saldo: Number(f.saldo),
+    fecha_emision: f.fecha_emision,
+    fecha_vencimiento: f.fecha_vencimiento,
+    // Signo importa: negativo = faltan N días, 0 = vence hoy, positivo = vencida.
+    dias_vencido: Number(f.dias_vencido),
+    estatus_cobranza: f.estatus_cobranza as EstatusCobranza,
+    estado_factura: f.estado_factura as FacturaRow["estado"],
+    tipo_cambio: Number(f.tipo_cambio),
+  }));
 }
+
 
