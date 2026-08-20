@@ -20,7 +20,7 @@ interface Props {
 }
 
 /** Estado canónico del dominio `tarifa_maritima`. */
-export function resolverEstadoTarifa(props: Props): string {
+function resolverEstadoTarifa(props: Props): string {
   const ap = props.estadoAprobacion ?? "vigente";
   const hoy = todayLocalISO();
   const vencida = props.vigenteHasta < hoy;
