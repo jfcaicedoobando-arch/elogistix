@@ -5,7 +5,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { ResponsiveDataTable } from "@/components/shared/dataTable/ResponsiveDataTable";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { PageHeader } from "@/components/shared/PageHeader";
-import { FloatingActionButton } from "@/components/shared/FloatingActionButton";
 import { CargaGuard } from "@/components/shared/states/CargaGuard";
 
 import EmbarquesFiltros from "@/features/embarques/components/EmbarquesFiltros";
@@ -177,13 +176,6 @@ export default function Embarques() {
         )}
       </CargaGuard>
 
-      {canCrear && !isEmptyState ? (
-        <FloatingActionButton
-          icon={<Plus className="h-6 w-6" />}
-          label="Nuevo embarque"
-          onClick={goNuevo}
-        />
-      ) : null}
     </PageContainer>
   );
 }
