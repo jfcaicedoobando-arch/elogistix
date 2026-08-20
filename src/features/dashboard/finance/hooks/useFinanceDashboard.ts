@@ -67,6 +67,6 @@ export function useFinanceDashboard() {
     facturasVencidas,
     cxpPorPagar,
     aging,
-    agingSinTc,
+
   };
 }
