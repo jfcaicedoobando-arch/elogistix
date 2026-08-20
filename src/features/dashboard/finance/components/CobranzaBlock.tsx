@@ -49,19 +49,21 @@ export function CobranzaBlock({ aging, facturasVencidas, loading }: Props) {
         ) : totalAging === 0 ? (
           <EmptyStateInline icon={PartyPopper} message="Sin saldo vencido" className="py-4" />
         ) : (
-          <div className="grid grid-cols-5 gap-2">
-            {AGING_LABELS.map(({ key, label, tone }) => {
-              const value = aging[key];
+          <div className="grid grid-cols-4 gap-2">
+            {CUBETAS_VENCIDAS.map((cubeta) => {
+              const value = aging.buckets[cubeta];
               const pct = totalAging > 0 ? (value / totalAging) * 100 : 0;
               return (
-                <div key={key} className="space-y-1">
+                <div key={cubeta} className="space-y-1">
                   <div className="h-20 flex flex-col justify-end rounded-md border bg-muted/30 relative overflow-hidden">
                     <div
-                      className={tone}
+                      className={AGING_SOFT_CLASS[CUBETA_NIVEL[cubeta]]}
                       style={{ height: `${Math.max(pct, value > 0 ? 8 : 0)}%` }}
                     />
                   </div>
-                  <p className="text-label text-muted-foreground text-center">{label}</p>
+                  <p className="text-label text-muted-foreground text-center">
+                    {CUBETA_LABELS[cubeta]}
+                  </p>
                   <Hint label={formatCurrency(value, "MXN")}>
                     <p className="text-body-sm font-semibold text-center tabular-nums truncate">
                       {formatCurrencyCompact(value, "MXN")}
@@ -71,6 +73,7 @@ export function CobranzaBlock({ aging, facturasVencidas, loading }: Props) {
               );
             })}
           </div>
+
         )}
         {agingSinTc > 0 && !loading && (
           <p className="text-label text-muted-foreground">
