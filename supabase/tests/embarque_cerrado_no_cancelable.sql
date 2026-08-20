@@ -55,7 +55,8 @@ BEGIN
   -- 5) El assert que consume avanzar_estado_embarque debe lanzar excepcion.
   BEGIN
     PERFORM public.assert_transicion_embarque('Cerrado'::public.estado_embarque,
-                                              'Cancelado'::public.estado_embarque);
+                                              'Cancelado'::public.estado_embarque,
+                                              'ELTEST00001');
   EXCEPTION WHEN OTHERS THEN
     v_assert_falla := true;
   END;
