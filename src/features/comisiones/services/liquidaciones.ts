@@ -104,5 +104,10 @@ export async function fetchLiquidadoMxnPorMes(periodo?: string): Promise<number>
     [],
   )) as { total_mxn: number | null }[];
 
+  // RN-BL-3: es un KPI de dinero; si PostgREST truncó, el total sería una
+  // cifra muda más baja que la real. Mejor error visible que número falso.
+  assertNotTruncated(rows, CAP_LISTA, "comisiones.fetchLiquidadoMxnPorMes");
+
   return roundMoney(rows.reduce((acc, r) => acc + Number(r.total_mxn ?? 0), 0));
 }
+
