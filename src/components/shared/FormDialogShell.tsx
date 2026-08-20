@@ -59,6 +59,11 @@ interface Props {
   stickyBottom?: ReactNode;
   /** Clases extra del contenedor scrolleable (p.ej. layout de 2 columnas). */
   bodyClassName?: string;
+  /**
+   * EC-13 — Cuando es `true` (formulario con captura), cerrar con ESC o clic
+   * fuera pide confirmación antes de descartar lo capturado.
+   */
+  isDirty?: boolean;
   children: ReactNode;
 }
 
@@ -81,18 +86,30 @@ export function FormDialogShell({
   stickyTop,
   stickyBottom,
   bodyClassName,
+  isDirty = false,
   children,
 }: Props) {
   const showStepper = typeof step === "number" && typeof totalSteps === "number" && totalSteps > 1;
   const enfocar = autoFocusFirstField ?? Boolean(formId);
   const bodyRef = useAutoFocusPrimerCampo(open, enfocar);
   const bodyClass = cn("flex-1 overflow-y-auto px-6 py-5 space-y-5", bodyClassName);
+  const [confirmarDescartar, setConfirmarDescartar] = useState(false);
 
-
+  const handleOpenChange = useCallback(
+    (next: boolean) => {
+      if (!next && isDirty) {
+        setConfirmarDescartar(true);
+        return;
+      }
+      onOpenChange(next);
+    },
+    [isDirty, onOpenChange],
+  );
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       {/* v13.423.0 — En pantallas bajas (720-768 px) el modal usa casi todo el
+
           alto disponible: antes el cuerpo scrolleable quedaba en ~290 px. */}
       <DialogContent
         className={cn(
