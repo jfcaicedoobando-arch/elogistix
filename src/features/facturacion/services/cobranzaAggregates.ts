@@ -77,7 +77,7 @@ export function calcularKPIs(filas: FacturaCobranza[]): KPIsCobranza {
     if (f.saldo <= 0) continue;
     if (f.moneda !== "MXN" && f.moneda !== "USD") continue;
     const esUsd = f.moneda === "USD";
-    if (f.estatus_cobranza === "Vencida") {
+    if (esCxcVencida(f)) {
       facturas_vencidas++;
       (esUsd ? vencidoUSD : vencidoMXN).push(f.saldo);
     }
@@ -85,6 +85,7 @@ export function calcularKPIs(filas: FacturaCobranza[]): KPIsCobranza {
       (esUsd ? porVencerUSD : porVencerMXN).push(f.saldo);
     }
   }
+
 
   const { saldoPendienteMXN, saldoPendienteUSD } = agruparSaldosPorMoneda(filas);
 
