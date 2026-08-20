@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.705.0] - 2026-08-25
+### Ola B — Las comisiones y la cobranza ya no fallan en silencio
+- Cuando faltaban datos (tipo de cambio o costos del embarque), la comisión se guardaba en cero y nadie se enteraba. Ahora queda en una fila de pendientes visible en Comisiones, con un botón "Reintentar recálculo".
+- El listado de Cobranza ahora se filtra en la base de datos: antes se traían 2,000 facturas y se filtraba en pantalla, así que con cartera grande el listado no cuadraba con los indicadores.
+- Sumar importes en una divisa no soportada (por ejemplo libras) ahora se detiene con un aviso claro, en vez de sumarlos como si ya fueran dólares.
+
 ## [13.704.0] - 2026-08-25
 ### Ola A — El doble clic ya no duplica traspasos entre cuentas
 - Registrar un traspaso entre cuentas propias era la única operación de dinero sin protección contra duplicados: si el usuario daba doble clic o se cortaba la red y reintentaba, quedaban dos traspasos iguales.

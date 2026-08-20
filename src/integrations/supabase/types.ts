@@ -1172,6 +1172,66 @@ export type Database = {
           },
         ]
       }
+      comisiones_recalculo_pendiente: {
+        Row: {
+          created_at: string
+          etapa: string
+          id: string
+          intentos: number
+          motivo: string
+          organization_id: string
+          pago_factura_id: string
+          resuelto_at: string | null
+          resultado_recalculo: string | null
+          sqlerrm_text: string
+          sqlstate_code: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          etapa: string
+          id?: string
+          intentos?: number
+          motivo?: string
+          organization_id: string
+          pago_factura_id: string
+          resuelto_at?: string | null
+          resultado_recalculo?: string | null
+          sqlerrm_text?: string
+          sqlstate_code?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          etapa?: string
+          id?: string
+          intentos?: number
+          motivo?: string
+          organization_id?: string
+          pago_factura_id?: string
+          resuelto_at?: string | null
+          resultado_recalculo?: string | null
+          sqlerrm_text?: string
+          sqlstate_code?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comisiones_recalculo_pendiente_pago_factura_id_fkey"
+            columns: ["pago_factura_id"]
+            isOneToOne: false
+            referencedRelation: "pagos_factura"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comisiones_recalculo_pendiente_pago_factura_id_fkey"
+            columns: ["pago_factura_id"]
+            isOneToOne: false
+            referencedRelation: "v_pagos_rep_pendientes"
+            referencedColumns: ["pago_id"]
+          },
+        ]
+      }
       conceptos_costo: {
         Row: {
           concepto: string
@@ -8894,6 +8954,33 @@ export type Database = {
         Args: { p_cliente_id?: string; p_moneda?: string }
         Returns: Json
       }
+      cobranza_listado: {
+        Args: {
+          p_cliente_id?: string
+          p_estatus?: string
+          p_limit?: number
+          p_moneda?: string
+          p_search?: string
+        }
+        Returns: {
+          cliente_id: string
+          cliente_nombre: string
+          dias_vencido: number
+          estado_factura: string
+          estatus_cobranza: string
+          expediente: string
+          fecha_emision: string
+          fecha_vencimiento: string
+          id: string
+          moneda: string
+          notas_credito_aplicadas: number
+          numero: string
+          pagado: number
+          saldo: number
+          tipo_cambio: number
+          total: number
+        }[]
+      }
       complete_onboarding: {
         Args: {
           _direccion: string
@@ -10396,6 +10483,17 @@ export type Database = {
         }
         Returns: undefined
       }
+      registrar_comision_pendiente: {
+        Args: {
+          p_etapa: string
+          p_motivo: string
+          p_organization_id: string
+          p_pago_factura_id: string
+          p_sqlerrm: string
+          p_sqlstate: string
+        }
+        Returns: undefined
+      }
       registrar_pago_cliente_lote: { Args: { p_payload: Json }; Returns: Json }
       registrar_pago_proveedor_lote: {
         Args: { p_payload: Json }
@@ -10422,6 +10520,13 @@ export type Database = {
           p_modo?: string
         }
         Returns: Json
+      }
+      reprocesar_comisiones_pendientes: {
+        Args: { p_org?: string }
+        Returns: {
+          procesadas: number
+          resueltas: number
+        }[]
       }
       reseed_organization_catalogs: {
         Args: { p_org_id: string }

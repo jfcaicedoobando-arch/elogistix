@@ -6,4 +6,5 @@ export const comisiones = {
   vendedorasConfig: () => ["comisiones", "vendedoras-config"] as const,
   embarquesSinVendedora: () => ["comisiones", "embarques-sin-vendedora"] as const,
   usuariosVendedores: () => ["comisiones", "usuarios-vendedores"] as const,
+  recalculoPendiente: () => ["comisiones", "recalculo-pendiente"] as const,
 } as const;
