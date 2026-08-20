@@ -37,6 +37,14 @@ export function DialogTraspasoCuentas({ open, onOpenChange, cuentas }: DialogTra
   } = useTraspasoForm(open, cuentas);
   const { mutate: registrar, isPending } = useRegistrarTraspaso();
 
+  // OLA A (A.1): un UUID por apertura del diálogo. Todos los reintentos del
+  // MISMO submit comparten la clave y el UNIQUE parcial de BD absorbe el
+  // duplicado (doble clic o retry de red tras timeout).
+  const clientRequestIdRef = useRef<string | null>(null);
+  useEffect(() => {
+    clientRequestIdRef.current = open ? crypto.randomUUID() : null;
+  }, [open]);
+
   // BL-04: sólo se manda 1 cuando ambas cuentas comparten moneda. Si difieren,
   // el TC capturado es obligatorio (la validación ya bloquea el botón).
   const tipoCambioFinal = mismoMoneda ? 1 : state.tipoCambio;
@@ -55,7 +63,9 @@ export function DialogTraspasoCuentas({ open, onOpenChange, cuentas }: DialogTra
         comision: state.comision,
         concepto: state.concepto.trim() || "Traspaso entre cuentas propias",
         referencia: state.referencia.trim(),
+        clientRequestId: clientRequestIdRef.current,
       },
+
       { onSuccess: () => onOpenChange(false) },
     );
   };
