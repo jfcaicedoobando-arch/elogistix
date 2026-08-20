@@ -58,7 +58,7 @@ export function HallazgosTablaPaginada({
               <X className="h-3 w-3" />
             </button>
           </Badge>
-          <span className="text-xs text-muted-foreground">
+          <span className="text-body-sm text-muted-foreground">
             Mostrando sólo hallazgos pendientes de embarques cuyo ETA ya pasó.
           </span>
         </div>

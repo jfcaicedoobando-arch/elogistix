@@ -66,7 +66,7 @@ export function ConceptosFacturaSection({
       {isLoading ? (
         <Skeleton className="h-16 rounded-md" />
       ) : conceptos.length === 0 ? (
-        <p className="text-xs text-muted-foreground rounded-md border bg-muted/20 px-3 py-3">
+        <p className="text-body-sm text-muted-foreground rounded-md border bg-muted/20 px-3 py-3">
           Esta factura no tiene conceptos capturados del CFDI. Si el proveedor
           expide XML, vuelva a cargarlo desde "Adjuntar XML" para poblar el
           desglose fiscal.
@@ -104,12 +104,12 @@ function ConceptosTable({
   return (
     <div className="space-y-3">
       <div className="rounded-md border overflow-hidden">
-        <p className="text-xs text-muted-foreground px-3 py-2 bg-muted/20 border-b">
+        <p className="text-body-sm text-muted-foreground px-3 py-2 bg-muted/20 border-b">
           El importe es unitario; el total de cada línea es importe × cantidad (sin IVA).
         </p>
         <div className="max-h-72 overflow-y-auto overflow-x-auto">
-          <table className="w-full min-w-[640px] text-xs tabular-nums">
-            <thead className="bg-muted/50 text-muted-foreground uppercase tracking-wide text-2xs sticky top-0">
+          <table className="w-full min-w-[640px] text-body-sm tabular-nums">
+            <thead className="bg-muted/50 text-muted-foreground uppercase tracking-wide text-label sticky top-0">
               <tr>
                 <th className="px-2 py-1.5 text-left font-medium w-8">#</th>
                 <th className="px-2 py-1.5 text-left font-medium">Descripción</th>

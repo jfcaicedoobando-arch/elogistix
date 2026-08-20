@@ -188,7 +188,7 @@ export function DemorasTarifaEditor({ navieraCondicionId }: Props) {
           ))}
         </TableBody>
       </Table>
-      <p className="text-xs text-muted-foreground">
+      <p className="text-body-sm text-muted-foreground">
         Deja "Hasta día" vacío para indicar "en adelante". Los días se cuentan desde el primer día con cargo.
       </p>
     </div>

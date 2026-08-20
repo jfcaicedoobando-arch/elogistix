@@ -28,7 +28,7 @@ export function DestinatariosRecientesChips({
   return (
     <>
       {sugerencias.length > 0 && (
-        <div className="mt-1.5 flex flex-wrap items-center gap-1 text-xs text-muted-foreground">
+        <div className="mt-1.5 flex flex-wrap items-center gap-1 text-body-sm text-muted-foreground">
           <span>Recientes:</span>
           {sugerencias.slice(0, 6).map((e) => (
             <span
@@ -62,7 +62,7 @@ export function DestinatariosRecientesChips({
           variant="link"
           size="sm"
           onClick={() => onRestaurarVarios(ocultos)}
-          className="mt-1 h-auto p-0 text-xs text-muted-foreground underline-offset-2"
+          className="mt-1 h-auto p-0 text-body-sm text-muted-foreground underline-offset-2"
         >
           Restaurar ocultos ({ocultos.length})
         </Button>

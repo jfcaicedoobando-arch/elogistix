@@ -35,8 +35,8 @@ function BloqueTotales({
   total: number;
 }) {
   return (
-    <div className="space-y-1 text-sm">
-      <p className="text-xs text-muted-foreground font-medium">{moneda}</p>
+    <div className="space-y-1 text-body">
+      <p className="text-body-sm text-muted-foreground font-medium">{moneda}</p>
       <div className="flex justify-between gap-6">
         <span className="text-muted-foreground">Subtotal</span>
         <span className="tabular-nums">{formatCurrency(subtotal, moneda)}</span>

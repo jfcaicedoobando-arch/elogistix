@@ -78,7 +78,7 @@ export function ProformaTabs({ proforma, conceptos, totales, emptyConceptos }: P
         facturas.length > 0 ? (
           <FacturaAsociadaCard facturas={facturas} />
         ) : (
-          <p className="rounded-md border bg-muted/20 px-4 py-6 text-center text-sm text-muted-foreground">
+          <p className="rounded-md border bg-muted/20 px-4 py-6 text-center text-body text-muted-foreground">
             Esta proforma aún no tiene facturas asociadas.
           </p>
         ),

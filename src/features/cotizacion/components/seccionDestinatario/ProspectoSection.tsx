@@ -40,13 +40,13 @@ export function ProspectoSection({
       >
         <div className="flex items-center gap-2">
           <RadioGroupItem value="vincular" id="modo-vincular" />
-          <Label htmlFor="modo-vincular" className="cursor-pointer text-sm font-medium">
+          <Label htmlFor="modo-vincular" className="cursor-pointer text-body font-medium">
             Vincular a lead u oportunidad existente
           </Label>
         </div>
         <div className="flex items-center gap-2">
           <RadioGroupItem value="nuevo" id="modo-nuevo" />
-          <Label htmlFor="modo-nuevo" className="cursor-pointer text-sm font-medium">
+          <Label htmlFor="modo-nuevo" className="cursor-pointer text-body font-medium">
             Crear nuevo prospecto
           </Label>
         </div>

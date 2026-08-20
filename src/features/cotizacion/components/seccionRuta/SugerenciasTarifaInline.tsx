@@ -67,11 +67,11 @@ export default function SugerenciasTarifaInline({
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between gap-2 flex-wrap">
-        <div className="flex items-center gap-2 text-sm font-medium">
+        <div className="flex items-center gap-2 text-body font-medium">
           <Sparkles className="size-4 text-primary" />
           Tarifas sugeridas para esta ruta
           {!isFetching && tarifas.length > 0 && (
-            <span className="text-xs text-muted-foreground font-normal">
+            <span className="text-body-sm text-muted-foreground font-normal">
               ({tarifas.length} vigente{tarifas.length === 1 ? "" : "s"})
             </span>
           )}

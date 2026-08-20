@@ -31,7 +31,7 @@ export function AuditoriaHallazgosTab({ c, drillFilters, tablaKey }: Props) {
     );
   }
   if (!c.data) {
-    return <div className="text-sm text-muted-foreground">No se pudo cargar el reporte.</div>;
+    return <div className="text-body text-muted-foreground">No se pudo cargar el reporte.</div>;
   }
   return (
     <>
@@ -42,7 +42,7 @@ export function AuditoriaHallazgosTab({ c, drillFilters, tablaKey }: Props) {
       />
 
       {c.revisadosCount > 0 && (
-        <div className="flex items-center justify-between gap-3 rounded-md border bg-muted/30 px-3 py-2 text-xs">
+        <div className="flex items-center justify-between gap-3 rounded-md border bg-muted/30 px-3 py-2 text-body-sm">
           <span className="text-muted-foreground">
             {c.mostrarRevisados ? (
               <>
@@ -61,7 +61,7 @@ export function AuditoriaHallazgosTab({ c, drillFilters, tablaKey }: Props) {
           <Button
             variant="ghost"
             size="sm"
-            className="h-7 text-xs"
+            className="h-7 text-body-sm"
             onClick={() => c.setMostrarRevisados((v) => !v)}
           >
             {c.mostrarRevisados ? (
@@ -81,12 +81,12 @@ export function AuditoriaHallazgosTab({ c, drillFilters, tablaKey }: Props) {
 
       <div className="flex flex-wrap items-center gap-3">
         <div className="flex items-center gap-2">
-          <span className="text-xs text-muted-foreground">Severidad:</span>
+          <span className="text-body-sm text-muted-foreground">Severidad:</span>
           <Select
             value={c.filtroSev}
             onValueChange={(v) => c.setFiltroSev(v as SeveridadAuditoria | "todas")}
           >
-            <SelectTrigger className="w-[140px] h-8 text-xs">
+            <SelectTrigger className="w-[140px] h-8 text-body-sm">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -98,9 +98,9 @@ export function AuditoriaHallazgosTab({ c, drillFilters, tablaKey }: Props) {
           </Select>
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-xs text-muted-foreground">Modo:</span>
+          <span className="text-body-sm text-muted-foreground">Modo:</span>
           <Select value={c.filtroModo} onValueChange={c.setFiltroModo}>
-            <SelectTrigger className="w-[140px] h-8 text-xs">
+            <SelectTrigger className="w-[140px] h-8 text-body-sm">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -113,7 +113,7 @@ export function AuditoriaHallazgosTab({ c, drillFilters, tablaKey }: Props) {
             </SelectContent>
           </Select>
         </div>
-        <div className="ml-auto text-xs text-muted-foreground tabular-nums">
+        <div className="ml-auto text-body-sm text-muted-foreground tabular-nums">
           Mostrando{" "}
           <span className="font-semibold text-foreground">{c.hallazgosFiltrados.length}</span> de{" "}
           {c.hallazgosVisibles.length} hallazgos

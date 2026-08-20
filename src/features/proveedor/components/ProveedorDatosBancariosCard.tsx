@@ -33,7 +33,7 @@ interface Props {
 function Row({ label, value, mono = false }: { label: string; value: string | null | undefined; mono?: boolean }) {
   return (
     <div>
-      <p className="text-xs text-muted-foreground mb-1">{label}</p>
+      <p className="text-body-sm text-muted-foreground mb-1">{label}</p>
       <p className={value ? (mono ? "font-medium font-mono tabular-nums" : "font-medium") : "text-muted-foreground italic"}>
         {value || "No capturado"}
       </p>
@@ -48,7 +48,7 @@ function BloqueNacional({ banco, clabe }: { banco?: string | null; clabe?: strin
     <>
       <Row label="Banco" value={banco} />
       <div>
-        <p className="text-xs text-muted-foreground mb-1">CLABE interbancaria</p>
+        <p className="text-body-sm text-muted-foreground mb-1">CLABE interbancaria</p>
         {clabe ? (
           <div className="flex items-center gap-2">
             <span className="font-mono tabular-nums tracking-wider">{maskClabe(clabe, revealClabe)}</span>
@@ -100,7 +100,7 @@ function BloqueInternacional(p: Props) {
 /** Estado vacío cuando no hay ningún dato bancario capturado. */
 function SinDatosBancarios({ onCapturar }: { onCapturar?: () => void }) {
   return (
-    <CardContent className="text-sm">
+    <CardContent className="text-body">
       <p className="text-muted-foreground">
         Este proveedor todavía no tiene datos bancarios capturados. Sin ellos no se
         puede registrar el pago.
@@ -144,7 +144,7 @@ export function ProveedorDatosBancariosCard(props: Props) {
       {sinDatos ? (
         <SinDatosBancarios onCapturar={onCapturar} />
       ) : (
-        <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+        <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4 text-body">
           {esInternacional ? (
             <BloqueInternacional {...props} />
           ) : (

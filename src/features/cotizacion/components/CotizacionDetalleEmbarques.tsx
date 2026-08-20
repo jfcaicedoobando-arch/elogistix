@@ -28,7 +28,7 @@ export function CotizacionDetalleEmbarques({ embarques, cotizacionEstado }: Prop
       <CardHeader><CardTitle>Embarques Generados</CardTitle></CardHeader>
       <CardContent>
         {embarques.length === 0 ? (
-          <p className="text-sm text-muted-foreground">
+          <p className="text-body text-muted-foreground">
             Esta cotización aparece como <strong>{cotizacionEstado}</strong>, pero no hay embarques vinculados.
             Verifica con tu administrador o vuelve a generar el embarque desde el botón <em>Crear embarque</em>.
           </p>
@@ -43,7 +43,7 @@ export function CotizacionDetalleEmbarques({ embarques, cotizacionEstado }: Prop
                 <span className="font-medium text-primary">{emb.expediente}</span>
                 <div className="flex items-center gap-3">
                   <StatusBadge domain="embarque" status={emb.estado} />
-                  <span className="text-sm text-muted-foreground">{formatDate(emb.created_at)}</span>
+                  <span className="text-body text-muted-foreground">{formatDate(emb.created_at)}</span>
                 </div>
               </div>
             ))}

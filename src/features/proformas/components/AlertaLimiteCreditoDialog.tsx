@@ -33,7 +33,7 @@ export function AlertaLimiteCreditoDialog({
       size="md"
       onConfirm={onConfirm}
       description={resultado ? (
-        <div className="space-y-1 text-sm">
+        <div className="space-y-1 text-body">
           <p>
             <strong>{clienteNombre ?? "El cliente"}</strong> excederá su límite en
             {" "}<strong>{fmtMxn(resultado.excedentePotencialMxn)}</strong>.
@@ -41,7 +41,7 @@ export function AlertaLimiteCreditoDialog({
           <p className="text-muted-foreground">
             Límite: {fmtMxn(resultado.exposicion.limiteMxn ?? 0)} · En uso: {fmtMxn(resultado.exposicion.enUsoMxn)} · Nueva factura: {fmtMxn(montoNuevaFactura)}
           </p>
-          <p className="text-xs text-muted-foreground pt-2">
+          <p className="text-body-sm text-muted-foreground pt-2">
             Se registrará en bitácora que continuaste a pesar del exceso.
           </p>
         </div>

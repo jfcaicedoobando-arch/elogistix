@@ -49,7 +49,7 @@ export function PortalUsuariosTab({ tipo }: Props) {
 
   return (
     <div className="space-y-3">
-      <p className="text-xs text-muted-foreground">
+      <p className="text-body-sm text-muted-foreground">
         Las cuentas se crean desde la {" "}
         <Link to={fichaPath} className="underline hover:text-foreground">
           {fichaLabel}

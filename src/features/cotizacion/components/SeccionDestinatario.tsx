@@ -70,13 +70,13 @@ export default function SeccionDestinatario({ clientes, complete }: Props) {
       >
         <div className="flex items-center gap-2">
           <RadioGroupItem value="cliente" id="dest-cliente" />
-          <Label htmlFor="dest-cliente" className="cursor-pointer text-sm font-medium">
+          <Label htmlFor="dest-cliente" className="cursor-pointer text-body font-medium">
             Cliente existente
           </Label>
         </div>
         <div className="flex items-center gap-2">
           <RadioGroupItem value="prospecto" id="dest-prospecto" />
-          <Label htmlFor="dest-prospecto" className="cursor-pointer text-sm font-medium">
+          <Label htmlFor="dest-prospecto" className="cursor-pointer text-body font-medium">
             Prospecto
           </Label>
         </div>

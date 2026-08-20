@@ -38,7 +38,7 @@ export default function HealthSlowestTable({ loading, data }: Props) {
           <EmptyStateInline icon={Gauge} message="Sin mediciones de latencia." className="py-10" />
         ) : (
           <div className="overflow-x-auto">
-          <table className="w-full text-xs">
+          <table className="w-full text-body-sm">
             <thead className="text-muted-foreground">
               <tr className="border-b">
                 <th className="text-left py-2 font-medium">Función</th>

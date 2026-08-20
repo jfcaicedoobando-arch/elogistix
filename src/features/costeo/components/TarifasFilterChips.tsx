@@ -44,7 +44,7 @@ interface ChipProps { label: string; onRemove: () => void }
 function Chip({ label, onRemove }: ChipProps) {
   return (
     <Badge variant="secondary" className="gap-1 pr-1 py-1">
-      <span className="text-xs">{label}</span>
+      <span className="text-body-sm">{label}</span>
       <button
         type="button"
         onClick={onRemove}
@@ -81,11 +81,11 @@ export function TarifasFilterChips(props: Props) {
 
   return (
     <div className="flex flex-wrap items-center gap-2">
-      <span className="text-xs text-muted-foreground">Filtros activos:</span>
+      <span className="text-body-sm text-muted-foreground">Filtros activos:</span>
       {chips.map((c) => (
         <Chip key={c.key} label={c.label} onRemove={c.remove} />
       ))}
-      <Button variant="ghost" size="sm" onClick={props.onClearAll} className="h-7 text-xs">
+      <Button variant="ghost" size="sm" onClick={props.onClearAll} className="h-7 text-body-sm">
         Limpiar todo
       </Button>
     </div>

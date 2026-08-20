@@ -16,10 +16,10 @@ export function ProspectoBanner({ empresa, contacto, email, telefono }: Prospect
   return (
     <Card className="border-warning/30 bg-warning/10">
       <CardContent className="p-4">
-        <p className="text-sm font-medium [color:hsl(var(--warning))] mb-2">
+        <p className="text-body font-medium [color:hsl(var(--warning))] mb-2">
           Datos del Prospecto — Convierte a cliente primero para poder generar embarques
         </p>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-body">
           <div><span className="text-muted-foreground">Empresa</span><p className="font-medium">{empresa}</p></div>
           <div><span className="text-muted-foreground">Contacto</span><p className="font-medium">{contacto}</p></div>
           <div><span className="text-muted-foreground">Email</span><p className="font-medium">{email || '-'}</p></div>
@@ -35,7 +35,7 @@ export function ComentarioClienteCard({ texto }: { texto: string }) {
     <Card className="border-info/50">
       <CardHeader><CardTitle>Comentario del Cliente</CardTitle></CardHeader>
       <CardContent>
-        <p className="text-sm whitespace-pre-wrap italic">"{texto}"</p>
+        <p className="text-body whitespace-pre-wrap italic">"{texto}"</p>
       </CardContent>
     </Card>
   );
@@ -46,7 +46,7 @@ export function NotasCard({ texto }: { texto: string }) {
     <Card>
       <CardHeader><CardTitle>Notas</CardTitle></CardHeader>
       <CardContent>
-        <p className="text-sm whitespace-pre-wrap">{texto}</p>
+        <p className="text-body whitespace-pre-wrap">{texto}</p>
       </CardContent>
     </Card>
   );

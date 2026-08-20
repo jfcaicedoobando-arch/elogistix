@@ -27,7 +27,7 @@ export function AvisoMontoDeclarado({
 
   if (cotejo.estado === "moneda_distinta") {
     return (
-      <p className="flex items-start gap-2 rounded-md border bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
+      <p className="flex items-start gap-2 rounded-md border bg-muted/40 px-3 py-2 text-body-sm text-muted-foreground">
         <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden />
         Operaciones declaró {declarado} y la factura está en {monedaCapturada}: no se puede comparar
         directamente.
@@ -37,7 +37,7 @@ export function AvisoMontoDeclarado({
 
   if (cotejo.estado === "coincide") {
     return (
-      <p className="flex items-start gap-2 rounded-md border border-success/40 bg-success/5 px-3 py-2 text-xs text-success">
+      <p className="flex items-start gap-2 rounded-md border border-success/40 bg-success/5 px-3 py-2 text-body-sm text-success">
         <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden />
         Coincide con lo declarado por operaciones ({declarado}).
       </p>
@@ -47,7 +47,7 @@ export function AvisoMontoDeclarado({
   const signo = cotejo.diferencia > 0 ? "+" : "−";
   const pct = formatPercent(cotejo.porcentaje * 100);
   return (
-    <p className="flex items-start gap-2 rounded-md border border-warning/40 bg-warning/5 px-3 py-2 text-xs text-warning">
+    <p className="flex items-start gap-2 rounded-md border border-warning/40 bg-warning/5 px-3 py-2 text-body-sm text-warning">
       <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden />
       Operaciones declaró {declarado} y la factura suma {capturado} ({signo}
       {formatCurrency(Math.abs(cotejo.diferencia), monedaCapturada)} · {pct}). Verifica antes de

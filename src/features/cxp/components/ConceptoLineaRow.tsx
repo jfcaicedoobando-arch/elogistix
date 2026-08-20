@@ -76,7 +76,7 @@ export function ConceptoLineaRow({
         />
 
         <label className="flex flex-1 items-center gap-1.5 md:flex-none">
-          <span className="text-2xs text-muted-foreground md:hidden">Cant.</span>
+          <span className="text-label text-muted-foreground md:hidden">Cant.</span>
           <Input
             className="h-9 w-full text-right tabular-nums md:w-16"
             inputMode="decimal"
@@ -91,7 +91,7 @@ export function ConceptoLineaRow({
         </label>
 
         <label className="flex flex-1 items-center gap-1.5 md:flex-none">
-          <span className="text-2xs text-muted-foreground md:hidden">Precio</span>
+          <span className="text-label text-muted-foreground md:hidden">Precio</span>
           <Input
             className="h-9 w-full text-right tabular-nums md:w-24"
             inputMode="decimal"
@@ -106,7 +106,7 @@ export function ConceptoLineaRow({
         </label>
 
         <label className="flex flex-1 items-center gap-1.5 md:flex-none">
-          <span className="text-2xs text-muted-foreground md:hidden">IVA</span>
+          <span className="text-label text-muted-foreground md:hidden">IVA</span>
           <Input
             className="h-9 w-full text-right tabular-nums md:w-20"
             inputMode="decimal"
@@ -121,7 +121,7 @@ export function ConceptoLineaRow({
         </label>
 
         <label className="flex flex-1 items-center gap-1.5 md:flex-none">
-          <span className="text-2xs text-muted-foreground md:hidden">Unidad</span>
+          <span className="text-label text-muted-foreground md:hidden">Unidad</span>
           <Input
             className="h-9 w-full md:w-16"
             placeholder="E48"
@@ -137,8 +137,8 @@ export function ConceptoLineaRow({
           />
         </label>
 
-        <span className="w-full text-right text-xs font-medium tabular-nums md:w-24">
-          <span className="mr-1 text-2xs font-normal text-muted-foreground md:hidden">Total:</span>
+        <span className="w-full text-right text-body-sm font-medium tabular-nums md:w-24">
+          <span className="mr-1 text-label font-normal text-muted-foreground md:hidden">Total:</span>
           {formatCurrency(total, moneda)}
         </span>
 
@@ -156,7 +156,7 @@ export function ConceptoLineaRow({
                 <Percent className="h-3.5 w-3.5" />
               </Button>
             </TooltipTrigger>
-            <TooltipContent className="text-xs">Calcular IVA 16%</TooltipContent>
+            <TooltipContent className="text-body-sm">Calcular IVA 16%</TooltipContent>
           </Tooltip>
           {onDuplicar && (
             <Tooltip>
@@ -172,7 +172,7 @@ export function ConceptoLineaRow({
                   <Copy className="h-3.5 w-3.5" />
                 </Button>
               </TooltipTrigger>
-              <TooltipContent className="text-xs">Duplicar línea</TooltipContent>
+              <TooltipContent className="text-body-sm">Duplicar línea</TooltipContent>
             </Tooltip>
           )}
           <Tooltip>
@@ -188,7 +188,7 @@ export function ConceptoLineaRow({
                 <Trash2 className="h-3.5 w-3.5" />
               </Button>
             </TooltipTrigger>
-            <TooltipContent className="text-xs">Eliminar línea</TooltipContent>
+            <TooltipContent className="text-body-sm">Eliminar línea</TooltipContent>
           </Tooltip>
         </div>
       </div>

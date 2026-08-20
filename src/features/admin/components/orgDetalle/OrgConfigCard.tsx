@@ -39,10 +39,10 @@ export function OrgConfigCard({ loading, totalItems, grouped }: OrgConfigCardPro
                 <div key={item.id} className="p-3 rounded-lg border bg-muted/30">
                   <div className="flex justify-between items-start">
                     <div>
-                      <p className="text-sm font-medium">{item.clave.replace(/_/g, " ")}</p>
-                      {item.descripcion && <p className="text-xs text-muted-foreground">{item.descripcion}</p>}
+                      <p className="text-body font-medium">{item.clave.replace(/_/g, " ")}</p>
+                      {item.descripcion && <p className="text-body-sm text-muted-foreground">{item.descripcion}</p>}
                     </div>
-                    <Badge variant="secondary" className="text-xs font-mono">
+                    <Badge variant="secondary" className="text-body-sm font-mono">
                       {typeof item.valor === "string" ? item.valor : JSON.stringify(item.valor)}
                     </Badge>
                   </div>

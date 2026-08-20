@@ -98,7 +98,7 @@ export function NavieraCondicionForm({ navieraId, existente, onSaved }: Props) {
       </div>
 
       <fieldset className="rounded-md border p-3 space-y-3">
-        <legend className="text-sm font-medium px-1">Carta Garantía</legend>
+        <legend className="text-body font-medium px-1">Carta Garantía</legend>
         <div className="flex items-center gap-2">
           <Switch
             id="carta"

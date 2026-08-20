@@ -43,7 +43,7 @@ export function proveedorContactosColumns(
       header: "Puesto / Área",
       accessorFn: (c) => c.puesto,
       cell: ({ row }) => (
-        <span className="text-xs text-muted-foreground">
+        <span className="text-body-sm text-muted-foreground">
           {[row.original.puesto, row.original.area].filter(Boolean).join(" · ") || "—"}
         </span>
       ),
@@ -52,7 +52,7 @@ export function proveedorContactosColumns(
       id: "email",
       header: "Correo",
       accessorFn: (c) => c.email,
-      cell: ({ row }) => <span className="text-xs">{row.original.email || "—"}</span>,
+      cell: ({ row }) => <span className="text-body-sm">{row.original.email || "—"}</span>,
     },
     {
       id: "telefono",
@@ -60,7 +60,7 @@ export function proveedorContactosColumns(
       accessorFn: (c) => c.telefono,
       meta: { width: COL_W.short },
       cell: ({ row }) => (
-        <span className="text-xs tabular-nums">
+        <span className="text-body-sm tabular-nums">
           {row.original.telefono || "—"}
           {row.original.extension ? ` ext. ${row.original.extension}` : ""}
         </span>

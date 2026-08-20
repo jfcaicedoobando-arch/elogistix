@@ -31,16 +31,16 @@ export default function ResumenPL({
   const renderCard = (moneda: "USD" | "MXN", totales: TotalesMoneda) => (
     <Card className="border-primary/20">
       <CardContent className="p-4 space-y-2">
-        <p className="text-sm font-semibold text-primary">{moneda}</p>
-        <div className="flex justify-between text-sm">
+        <p className="text-body font-semibold text-primary">{moneda}</p>
+        <div className="flex justify-between text-body">
           <span className="text-muted-foreground">Total Costo</span>
           <span>{formatCurrency(totales.totalCosto, moneda)}</span>
         </div>
-        <div className="flex justify-between text-sm">
+        <div className="flex justify-between text-body">
           <span className="text-muted-foreground">Total Venta</span>
           <span>{formatCurrency(totales.totalVenta, moneda)}</span>
         </div>
-        <div className="flex justify-between text-sm font-semibold">
+        <div className="flex justify-between text-body font-semibold">
           <span>Profit</span>
           <span className={totales.profit >= 0 ? "text-success" : "text-destructive"}>
             {formatCurrency(totales.profit, moneda)}
@@ -82,7 +82,7 @@ export default function ResumenPL({
               {tieneMXN && renderCard("MXN", totalesMXN)}
             </div>
             {notaPie && (
-              <p className="text-xs text-muted-foreground mt-3">* {notaPie}</p>
+              <p className="text-body-sm text-muted-foreground mt-3">* {notaPie}</p>
             )}
           </CardContent>
         </CollapsibleContent>

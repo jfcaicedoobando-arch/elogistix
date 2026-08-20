@@ -58,21 +58,21 @@ export function ExplicarHallazgoButton({ hallazgo }: Props) {
           </SectionHeading>
         </div>
         {explicar.isPending && (
-          <div className="flex items-center gap-2 py-6 justify-center text-sm text-muted-foreground">
+          <div className="flex items-center gap-2 py-6 justify-center text-body text-muted-foreground">
             <Loader2 className="h-4 w-4 animate-spin" />
             Analizando contexto del embarque…
           </div>
         )}
         {!explicar.isPending && data && (
-          <div className="prose prose-sm dark:prose-invert max-w-none text-xs leading-relaxed">
+          <div className="prose prose-sm dark:prose-invert max-w-none text-body-sm leading-relaxed">
             <ReactMarkdown>{data.explicacion}</ReactMarkdown>
-            <p className="mt-3 text-2xs text-muted-foreground italic border-t pt-2">
+            <p className="mt-3 text-label text-muted-foreground italic border-t pt-2">
               Generado por {data.modelo}. Verifica antes de actuar.
             </p>
           </div>
         )}
         {!explicar.isPending && !data && explicar.isError && (
-          <p className="text-xs text-destructive py-4">
+          <p className="text-body-sm text-destructive py-4">
             No se pudo generar la explicación. Intenta de nuevo.
           </p>
         )}

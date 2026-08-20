@@ -63,7 +63,7 @@ function PieAcciones({
           type="button"
           variant="ghost"
           size="sm"
-          className="w-full justify-start text-xs"
+          className="w-full justify-start text-body-sm"
           onClick={() => { onConceptoLibre(texto); onCerrar(); }}
         >
           <PenLine className="h-3.5 w-3.5 mr-1.5" /> Usar "{texto}" como concepto libre
@@ -74,7 +74,7 @@ function PieAcciones({
           type="button"
           variant="ghost"
           size="sm"
-          className="w-full justify-start text-xs"
+          className="w-full justify-start text-body-sm"
           onClick={onCrear}
         >
           <Plus className="h-3.5 w-3.5 mr-1.5" /> Crear concepto
@@ -147,7 +147,7 @@ export function ProductoServicioSelect({ value, onSelect, placeholder = "Selecci
               ) : (
                 <>
                   <CommandEmpty className="p-0">
-                    <div className="p-3 text-sm text-muted-foreground">Sin coincidencias.</div>
+                    <div className="p-3 text-body text-muted-foreground">Sin coincidencias.</div>
                   </CommandEmpty>
                   <CommandGroup>
                     {productos.map((p) => (

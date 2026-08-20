@@ -96,7 +96,7 @@ export function NuevoUsuarioAccesoSection({
                     <SelectItem key={r} value={r}>
                       <div className="flex flex-col py-0.5">
                         <span className="font-medium">{ROLE_LABELS[r]}</span>
-                        <span className="text-xs text-muted-foreground line-clamp-2">
+                        <span className="text-body-sm text-muted-foreground line-clamp-2">
                           {ROLE_DESCRIPTIONS[r]}
                         </span>
                       </div>
@@ -114,7 +114,7 @@ export function NuevoUsuarioAccesoSection({
         <Badge className={`${ROLE_BADGE_CLASSES[role]} whitespace-nowrap`}>
           {ROLE_LABELS[role]}
         </Badge>
-        <p className="text-xs leading-relaxed text-muted-foreground">
+        <p className="text-body-sm leading-relaxed text-muted-foreground">
           {ROLE_DESCRIPTIONS[role]}
         </p>
       </div>

@@ -42,8 +42,8 @@ export function ProspectoDatosFiscales() {
         aria-expanded={abierto}
       >
         {abierto ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-        <span className="text-sm font-medium">Datos fiscales (opcional)</span>
-        <span className="text-xs text-muted-foreground">
+        <span className="text-body font-medium">Datos fiscales (opcional)</span>
+        <span className="text-body-sm text-muted-foreground">
           {capturados > 0 ? `${capturados}/${CAMPOS.length} capturados` : "Evita recapturarlos al convertir a cliente"}
         </span>
       </Button>

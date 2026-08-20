@@ -14,7 +14,7 @@ export function PendientesGuardarHint(props: PendientesCapturaArgs) {
 
   return (
     <p
-      className="mr-auto flex items-start gap-1.5 text-xs text-muted-foreground"
+      className="mr-auto flex items-start gap-1.5 text-body-sm text-muted-foreground"
       aria-live="polite"
     >
       <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-warning" aria-hidden />

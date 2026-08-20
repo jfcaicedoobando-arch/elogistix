@@ -101,7 +101,7 @@ export function useUsuarioColumns({
           sortingFn: sortByDate<UserRow>((u) => u.created_at),
           meta: {
             width: "w-[1%] whitespace-nowrap",
-            className: "text-xs text-muted-foreground whitespace-nowrap",
+            className: "text-body-sm text-muted-foreground whitespace-nowrap",
           },
           cell: ({ row }) => (
             <Tooltip>
@@ -109,7 +109,7 @@ export function useUsuarioColumns({
                 <span className="cursor-help">{formatDate(row.original.created_at)}</span>
               </TooltipTrigger>
               <TooltipContent side="top">
-                <p className="text-xs">{formatDateTimeShort(row.original.created_at)}</p>
+                <p className="text-body-sm">{formatDateTimeShort(row.original.created_at)}</p>
               </TooltipContent>
             </Tooltip>
           ),

@@ -39,7 +39,7 @@ export default function AdminAuditoriaPlataforma() {
         <CardHeader>
           <CardTitle>Módulo en construcción</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-3 text-sm text-muted-foreground">
+        <CardContent className="space-y-3 text-body text-muted-foreground">
           <p>
             Este módulo está reservado para el dueño de Libre Carga. La{" "}
             <strong>Auditoría operativa</strong> que ven los clientes vive en{" "}

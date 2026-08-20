@@ -45,10 +45,10 @@ export function ProgramacionPagoRow({ facturaId, fechaProgramada, saldo }: Props
           Programación de pago
         </span>
         {bonita && !yaSaldada && (
-          <Badge variant="secondary" className="text-2xs">Programada · {bonita}</Badge>
+          <Badge variant="secondary" className="text-label">Programada · {bonita}</Badge>
         )}
         {yaSaldada && (
-          <Badge variant="outline" className="text-2xs">Pagada</Badge>
+          <Badge variant="outline" className="text-label">Pagada</Badge>
         )}
       </div>
       <div className="flex items-center gap-2 flex-wrap">
@@ -56,7 +56,7 @@ export function ProgramacionPagoRow({ facturaId, fechaProgramada, saldo }: Props
           value={valor}
           onChange={setValor}
           disabled={yaSaldada || prog.isPending}
-          className="h-8 w-auto max-w-[180px] text-xs"
+          className="h-8 w-auto max-w-[180px] text-body-sm"
         />
         <Button
           type="button"

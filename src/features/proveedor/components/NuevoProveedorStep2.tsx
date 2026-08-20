@@ -50,7 +50,7 @@ function Step2Nacional({ c }: { c: Controller }) {
           onChange={(e) => c.setField("clabe", e.target.value.replace(/\D/g, ""))}
         />
         {c.form.clabe.length > 0 && c.form.clabe.length !== 18 && (
-          <p className="text-xs text-destructive">
+          <p className="text-body-sm text-destructive">
             La CLABE debe tener 18 dígitos ({c.form.clabe.length}/18).
           </p>
         )}
@@ -64,7 +64,7 @@ function Step2Internacional({ c }: { c: Controller }) {
   const swiftInvalid = swift.length > 0 && !/^[A-Z]{6}[A-Z0-9]{2}([A-Z0-9]{3})?$/.test(swift);
   return (
     <>
-      <p className="text-xs text-muted-foreground -mt-2">
+      <p className="text-body-sm text-muted-foreground -mt-2">
         Transferencia internacional. Captura los datos que te haya proporcionado el proveedor.
       </p>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -93,7 +93,7 @@ function Step2Internacional({ c }: { c: Controller }) {
             onChange={(e) => c.setField("swift_bic", e.target.value.toUpperCase())}
           />
           {swiftInvalid && (
-            <p className="text-xs text-destructive">SWIFT/BIC inválido (formato AAAABBCC o AAAABBCCXXX).</p>
+            <p className="text-body-sm text-destructive">SWIFT/BIC inválido (formato AAAABBCC o AAAABBCCXXX).</p>
           )}
         </div>
         <div className="space-y-2 md:col-span-2">

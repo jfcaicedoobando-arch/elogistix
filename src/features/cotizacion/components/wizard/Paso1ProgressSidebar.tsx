@@ -97,16 +97,16 @@ export default function Paso1ProgressSidebar({ esMaritimo }: Props) {
       <div className="rounded-lg border bg-card p-4 space-y-3">
         <div className="space-y-1">
           <SectionHeading as="h3">Progreso del Paso 1</SectionHeading>
-          <p className="text-xs text-muted-foreground">
+          <p className="text-body-sm text-muted-foreground">
             {completas} de {total} secciones completas{modoLabel}
           </p>
           <Progress value={pct} className="h-1.5" />
           {faltantes.length > 0 && (
-            <p className="text-xs text-muted-foreground">
+            <p className="text-body-sm text-muted-foreground">
               Falta: {faltantes.join(", ")}
             </p>
           )}
-          <p className="text-2xs text-muted-foreground">
+          <p className="text-label text-muted-foreground">
             El total de secciones varía según el modo de transporte.
           </p>
         </div>
@@ -119,7 +119,7 @@ export default function Paso1ProgressSidebar({ esMaritimo }: Props) {
                 type="button"
                 onClick={() => handleClick(s.id)}
                 className={cn(
-                  "w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-left text-sm transition-colors",
+                  "w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-left text-body transition-colors",
                   "hover:bg-muted/60",
                   isActive && "bg-primary/10 text-primary font-medium",
                 )}

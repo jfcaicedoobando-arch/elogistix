@@ -81,7 +81,7 @@ export default function TarifaResumenHeredado({ tarifa }: Props) {
   return (
     <div className="rounded-md border bg-card p-3 space-y-3">
       <div className="flex items-center justify-between gap-2">
-        <div className="flex items-center gap-2 text-sm font-medium">
+        <div className="flex items-center gap-2 text-body font-medium">
           <Lock className="h-4 w-4 text-muted-foreground" />
           Detalles operativos heredados de la tarifa
         </div>
@@ -89,20 +89,20 @@ export default function TarifaResumenHeredado({ tarifa }: Props) {
           <Button
             type="button" size="sm" variant="ghost"
             onClick={() => setEditMode(v => !v)}
-            className="text-xs"
+            className="text-body-sm"
           >
             <Pencil className="h-3.5 w-3.5 mr-1" />
             {editMode ? "Bloquear" : "Editar manual"}
           </Button>
         ) : (
-          <span className="text-xs text-muted-foreground inline-flex items-center gap-1">
+          <span className="text-body-sm text-muted-foreground inline-flex items-center gap-1">
             <Info className="h-3.5 w-3.5" /> Solo lectura
           </span>
         )}
       </div>
 
       {!editMode ? (
-        <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 text-sm">
+        <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 text-body">
           {rows.map(r => (
             <div key={r.label} className="flex items-center justify-between gap-2 min-w-0">
               <dt className="text-muted-foreground shrink-0">{r.label}</dt>

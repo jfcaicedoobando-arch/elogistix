@@ -32,7 +32,7 @@ export default function SeccionTarifasInformativas({ tarifas, onChange }: Props)
   return (
     <div className="space-y-3">
       <div className="flex justify-between items-center">
-        <h3 className="text-sm font-medium">Tarifas ({tarifas.length})</h3>
+        <h3 className="text-body font-medium">Tarifas ({tarifas.length})</h3>
         <Button type="button" size="sm" variant="outline" onClick={add}>
           <Plus className="h-4 w-4 mr-1" /> Agregar tarifa
         </Button>
@@ -46,7 +46,7 @@ export default function SeccionTarifasInformativas({ tarifas, onChange }: Props)
             <div key={t.id} className="border rounded-md p-3 space-y-2 bg-muted/30">
               <div className="grid grid-cols-12 gap-2">
                 <div className="col-span-12 md:col-span-2">
-                  <label className="text-xs text-muted-foreground">Modo</label>
+                  <label className="text-body-sm text-muted-foreground">Modo</label>
                   <Select value={t.modo} onValueChange={(v) => update(idx, { modo: v })}>
                     <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
                     <SelectContent>{MODOS.map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}</SelectContent>
@@ -54,7 +54,7 @@ export default function SeccionTarifasInformativas({ tarifas, onChange }: Props)
                 </div>
                 {esTerrestre && (
                   <div className="col-span-12 md:col-span-3">
-                    <label className="text-xs text-muted-foreground">Modalidad</label>
+                    <label className="text-body-sm text-muted-foreground">Modalidad</label>
                     <Select value={t.modalidad_equipo || ""} onValueChange={(v) => update(idx, { modalidad_equipo: v })}>
                       <SelectTrigger className="h-9"><SelectValue placeholder="Seleccionar…" /></SelectTrigger>
                       <SelectContent>
@@ -64,21 +64,21 @@ export default function SeccionTarifasInformativas({ tarifas, onChange }: Props)
                   </div>
                 )}
                 <div className="col-span-12 md:col-span-3">
-                  <label className="text-xs text-muted-foreground">Origen</label>
+                  <label className="text-body-sm text-muted-foreground">Origen</label>
                   <Input value={t.origen} onChange={(e) => update(idx, { origen: e.target.value })} className="h-9" aria-label={`Origen de la tarifa ${idx + 1}`} />
                 </div>
                 {esPortaCont && (
                   <div className="col-span-12 md:col-span-2">
-                    <label className="text-xs text-muted-foreground">Carga/Descarga</label>
+                    <label className="text-body-sm text-muted-foreground">Carga/Descarga</label>
                     <Input value={t.punto_intermedio || ""} onChange={(e) => update(idx, { punto_intermedio: e.target.value })} className="h-9" aria-label={`Carga/Descarga de la tarifa ${idx + 1}`} />
                   </div>
                 )}
                 <div className="col-span-12 md:col-span-3">
-                  <label className="text-xs text-muted-foreground">Destino</label>
+                  <label className="text-body-sm text-muted-foreground">Destino</label>
                   <Input value={t.destino} onChange={(e) => update(idx, { destino: e.target.value })} className="h-9" aria-label={`Destino de la tarifa ${idx + 1}`} />
                 </div>
                 <div className="col-span-6 md:col-span-2">
-                  <label className="text-xs text-muted-foreground">Unidad</label>
+                  <label className="text-body-sm text-muted-foreground">Unidad</label>
                   <Select value={t.unidad_medida} onValueChange={(v) => update(idx, { unidad_medida: v })}>
                     <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
                     <SelectContent>
@@ -87,11 +87,11 @@ export default function SeccionTarifasInformativas({ tarifas, onChange }: Props)
                   </Select>
                 </div>
                 <div className="col-span-6 md:col-span-2">
-                  <label className="text-xs text-muted-foreground">Precio</label>
+                  <label className="text-body-sm text-muted-foreground">Precio</label>
                   <Input type="number" min={0} step="0.01" value={t.precio} onChange={(e) => update(idx, { precio: parseFloat(e.target.value) || 0 })} className="h-9" aria-label={`Precio de la tarifa ${idx + 1}`} />
                 </div>
                 <div className="col-span-6 md:col-span-2">
-                  <label className="text-xs text-muted-foreground">Moneda</label>
+                  <label className="text-body-sm text-muted-foreground">Moneda</label>
                   <Select value={t.moneda} onValueChange={(v) => update(idx, { moneda: v })}>
                     <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
                     <SelectContent>
@@ -100,7 +100,7 @@ export default function SeccionTarifasInformativas({ tarifas, onChange }: Props)
                   </Select>
                 </div>
                 <div className="col-span-12 md:col-span-5">
-                  <label className="text-xs text-muted-foreground">Notas</label>
+                  <label className="text-body-sm text-muted-foreground">Notas</label>
                   <Input value={t.notas || ""} onChange={(e) => update(idx, { notas: e.target.value })} className="h-9" placeholder="Observaciones de esta tarifa" aria-label={`Notas de la tarifa ${idx + 1}`} />
                 </div>
                 <div className="col-span-12 md:col-span-1 flex md:items-end justify-end">

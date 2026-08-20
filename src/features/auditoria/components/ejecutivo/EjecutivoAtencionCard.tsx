@@ -31,7 +31,7 @@ export function EjecutivoAtencionCard({
           </div>
         </div>
         <Progress value={porcentajeAtendidos} className="h-2" />
-        <div className="flex justify-between text-xs text-muted-foreground">
+        <div className="flex justify-between text-body-sm text-muted-foreground">
           <span>
             <span className="font-semibold text-foreground tabular-nums">{totalRevisados}</span>{" "}
             revisados
@@ -42,7 +42,7 @@ export function EjecutivoAtencionCard({
           </span>
         </div>
         {edadPromediaPendientesDias !== null && (
-          <div className="text-xs text-muted-foreground border-t pt-2">
+          <div className="text-body-sm text-muted-foreground border-t pt-2">
             Edad promedio de hallazgos vencidos:{" "}
             <span className="font-semibold text-foreground tabular-nums">
               {edadPromediaPendientesDias}

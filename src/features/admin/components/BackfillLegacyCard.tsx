@@ -40,7 +40,7 @@ export function BackfillLegacyCard() {
           Backfill de datos legacy
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-3 text-sm">
+      <CardContent className="space-y-3 text-body">
         <p className="text-muted-foreground">
           Repara conceptos de venta y proformas de embarques antiguos que se
           quedaron en estado <code className="bg-muted px-1 rounded">pendiente</code> aunque
@@ -53,7 +53,7 @@ export function BackfillLegacyCard() {
           Ejecutar backfill
         </Button>
         {result && (
-          <div className="rounded-md border bg-success/5 border-success/30 p-3 text-xs space-y-1">
+          <div className="rounded-md border bg-success/5 border-success/30 p-3 text-body-sm space-y-1">
             <div className="flex items-center gap-1 font-semibold text-success dark:text-success">
               <CheckCircle2 className="h-3.5 w-3.5" />
               Último resultado ({formatFechaHora(result.ejecutado_at)})

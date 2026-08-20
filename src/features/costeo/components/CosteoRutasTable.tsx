@@ -84,7 +84,7 @@ export function CosteoRutasTable({ rutasOrdenadas, isLoading, totalRutas, onElim
         accessorFn: (f) => f.ruta.proveedores_count ?? 0,
         sortingFn: sortByNumber((f) => f.ruta.proveedores_count ?? 0),
         enableSorting: true,
-        meta: { align: "center", className: "text-sm text-muted-foreground tabular-nums" },
+        meta: { align: "center", className: "text-body text-muted-foreground tabular-nums" },
         cell: ({ row }) => row.original.ruta.proveedores_count ?? 0,
       },
       {
@@ -93,7 +93,7 @@ export function CosteoRutasTable({ rutasOrdenadas, isLoading, totalRutas, onElim
         accessorFn: (f) => f.ruta.proxima_expiracion,
         sortingFn: sortByDate((f) => f.ruta.proxima_expiracion),
         enableSorting: true,
-        meta: { className: "text-sm" },
+        meta: { className: "text-body" },
         cell: ({ row }) => {
           const ruta = row.original.ruta;
           if (!ruta.proxima_expiracion) return <span className="text-muted-foreground">—</span>;
@@ -113,7 +113,7 @@ export function CosteoRutasTable({ rutasOrdenadas, isLoading, totalRutas, onElim
         accessorFn: (f) => f.ruta.ultima_actualizacion_tarifa,
         sortingFn: sortByDate((f) => f.ruta.ultima_actualizacion_tarifa),
         enableSorting: true,
-        meta: { className: "text-sm text-muted-foreground" },
+        meta: { className: "text-body text-muted-foreground" },
         cell: ({ row }) => formatFechaDia(row.original.ruta.ultima_actualizacion_tarifa),
       },
       statusColumn<FilaRuta>({

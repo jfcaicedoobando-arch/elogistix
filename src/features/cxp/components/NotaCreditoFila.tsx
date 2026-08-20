@@ -52,7 +52,7 @@ export function NotaCreditoFila({
   const folio = n.folio_nc || "s/folio";
   return (
     <tr className="hover:bg-muted/30">
-      <td className="px-3 py-2 font-mono text-xs">{n.folio_nc}</td>
+      <td className="px-3 py-2 font-mono text-body-sm">{n.folio_nc}</td>
       <td className="px-3 py-2">{formatFechaDia(n.fecha)}</td>
       <td className="px-3 py-2 text-muted-foreground">{n.motivo}</td>
       <td className="px-3 py-2 text-right tabular-nums">{formatCurrency(Number(n.monto), n.moneda)}</td>

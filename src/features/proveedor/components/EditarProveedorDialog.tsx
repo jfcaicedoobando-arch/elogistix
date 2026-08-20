@@ -28,7 +28,7 @@ interface Props {
 
 function FieldError({ message }: { message: string | null }) {
   if (!message) return null;
-  return <p className="text-sm text-destructive">{message}</p>;
+  return <p className="text-body text-destructive">{message}</p>;
 }
 
 export default function EditarProveedorDialog({ proveedor, open, onOpenChange, onSave }: Props) {
@@ -36,7 +36,7 @@ export default function EditarProveedorDialog({ proveedor, open, onOpenChange, o
 
   const origen = c.form.origen_proveedor;
   const headerAside = origen ? (
-    <Badge variant={origen === "Nacional" ? "secondary" : "outline"} className="text-2xs font-medium">
+    <Badge variant={origen === "Nacional" ? "secondary" : "outline"} className="text-label font-medium">
       {origen}
     </Badge>
   ) : undefined;

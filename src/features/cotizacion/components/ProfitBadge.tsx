@@ -38,10 +38,10 @@ export function RentabilidadGlobalBadge({
   const usdSaludable = !tieneUSD || porcentajeUSD > UMBRAL_SANO_USD;
   const mxnSaludable = !tieneMXN || porcentajeMXN > UMBRAL_SANO_MXN;
   if (usdSaludable && mxnSaludable && (tieneUSD || tieneMXN))
-    return <Badge variant="success" className="text-sm">Rentabilidad Saludable</Badge>;
+    return <Badge variant="success" className="text-body">Rentabilidad Saludable</Badge>;
   const usdNegativo = tieneUSD && porcentajeUSD < 0;
   const mxnNegativo = tieneMXN && porcentajeMXN < 0;
   if (usdNegativo || mxnNegativo)
-    return <Badge variant="destructive" className="text-sm">Rentabilidad Negativa</Badge>;
-  return <Badge variant="warning" className="text-sm">Rentabilidad Baja</Badge>;
+    return <Badge variant="destructive" className="text-body">Rentabilidad Negativa</Badge>;
+  return <Badge variant="warning" className="text-body">Rentabilidad Baja</Badge>;
 }

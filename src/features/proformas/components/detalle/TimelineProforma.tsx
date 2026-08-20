@@ -94,17 +94,17 @@ export function TimelineProforma({ fechaEmision, operador, timeline, envios, bar
                   )}
                 </div>
                 <div className={`min-w-0 ${esUltimo ? "pb-0" : "pb-4"}`}>
-                  <p className="text-sm font-medium">{h.label}</p>
-                  <p className={`text-xs ${done ? "text-foreground" : "text-muted-foreground"}`}>
+                  <p className="text-body font-medium">{h.label}</p>
+                  <p className={`text-body-sm ${done ? "text-foreground" : "text-muted-foreground"}`}>
                     {done && h.fecha ? formatDate(h.fecha) : "Pendiente"}
                   </p>
                   {done && h.actor && (
-                    <p className="text-xs text-muted-foreground truncate" title={h.actor}>
+                    <p className="text-body-sm text-muted-foreground truncate" title={h.actor}>
                       {nombreDesdeEmail(h.actor)}
                     </p>
                   )}
                   {done && h.nota && (
-                    <p className="text-xs text-muted-foreground truncate">{h.nota}</p>
+                    <p className="text-body-sm text-muted-foreground truncate">{h.nota}</p>
                   )}
                 </div>
               </li>

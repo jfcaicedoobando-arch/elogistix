@@ -91,16 +91,16 @@ export default function TabSeguridadGlobal() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="flex items-center justify-between p-3 rounded-lg border">
             <div>
-              <Label className="text-sm font-medium">Auto-confirmar emails</Label>
-              <p className="text-xs text-muted-foreground mt-1">Los usuarios nuevos no necesitan verificar su email</p>
+              <Label className="text-body font-medium">Auto-confirmar emails</Label>
+              <p className="text-body-sm text-muted-foreground mt-1">Los usuarios nuevos no necesitan verificar su email</p>
             </div>
             <Switch checked={autoConfirmar} onCheckedChange={setAutoConfirmar} />
           </div>
 
           <div className="flex items-center justify-between p-3 rounded-lg border">
             <div>
-              <Label className="text-sm font-medium">Registro público</Label>
-              <p className="text-xs text-muted-foreground mt-1">Permitir que cualquiera se registre en la plataforma</p>
+              <Label className="text-body font-medium">Registro público</Label>
+              <p className="text-body-sm text-muted-foreground mt-1">Permitir que cualquiera se registre en la plataforma</p>
             </div>
             <Switch checked={registroPublico} onCheckedChange={setRegistroPublico} />
           </div>
@@ -148,7 +148,7 @@ export default function TabSeguridadGlobal() {
         <Separator />
 
         <div>
-          <h3 className="text-sm font-medium mb-2">Contacto de soporte</h3>
+          <h3 className="text-body font-medium mb-2">Contacto de soporte</h3>
           <div className="p-3 rounded-lg border max-w-md">
             <FormField label="Email de soporte" hint="Dirección de contacto para soporte técnico de la plataforma">
               <Input value={emailSoporte} onChange={(e) => setEmailSoporte(e.target.value)} placeholder="soporte@librecarga.com" type="email" />

@@ -151,10 +151,10 @@ export default function NuevoUsuarioDialog({
     >
       <div className="flex items-start justify-between gap-4 rounded-md border bg-muted/30 p-3">
         <div className="space-y-0.5">
-          <Label htmlFor="por-invitacion" className="text-sm font-medium">
+          <Label htmlFor="por-invitacion" className="text-body font-medium">
             Invitar por correo
           </Label>
-          <p className="text-xs text-muted-foreground">
+          <p className="text-body-sm text-muted-foreground">
             El usuario recibe un correo para definir su propia contraseña. Desactívalo sólo si
             necesitas entregarle una contraseña temporal.
           </p>

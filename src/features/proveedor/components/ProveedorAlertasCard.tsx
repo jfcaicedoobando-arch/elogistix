@@ -24,7 +24,7 @@ export function ProveedorAlertasCard({ alertas }: { alertas: AlertasProveedor })
   if (items.length === 0) {
     return (
       <Card>
-        <CardContent className="p-4 flex items-center gap-2 text-sm text-success">
+        <CardContent className="p-4 flex items-center gap-2 text-body text-success">
           <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
           Sin alertas: el proveedor está al día en facturación, pagos y documentos.
         </CardContent>
@@ -47,11 +47,11 @@ export function ProveedorAlertasCard({ alertas }: { alertas: AlertasProveedor })
           >
             <Icono className="h-4 w-4 mt-0.5 shrink-0" aria-hidden="true" />
             <div className="min-w-0 flex-1">
-              <p className="text-sm font-medium">{a.titulo}</p>
-              <p className="text-xs opacity-80">{a.detalle}</p>
+              <p className="text-body font-medium">{a.titulo}</p>
+              <p className="text-body-sm opacity-80">{a.detalle}</p>
             </div>
             {a.montoMxn != null && a.montoMxn > 0 && (
-              <span className="text-sm font-medium tabular-nums shrink-0">
+              <span className="text-body font-medium tabular-nums shrink-0">
                 {formatCurrency(a.montoMxn, "MXN")}
               </span>
             )}

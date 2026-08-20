@@ -23,8 +23,8 @@ export function DraftRestoreBanner({ savedAt, onRestore, onDiscard }: Props) {
     >
       <FileClock className="h-5 w-5 [color:hsl(var(--primary))] shrink-0" aria-hidden />
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium">Tienes un borrador sin terminar</p>
-        <p className="text-xs text-muted-foreground">
+        <p className="text-body font-medium">Tienes un borrador sin terminar</p>
+        <p className="text-body-sm text-muted-foreground">
           Guardado automáticamente {relative}. ¿Retomar donde te quedaste?
         </p>
       </div>

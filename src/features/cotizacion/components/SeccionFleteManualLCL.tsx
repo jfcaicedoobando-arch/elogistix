@@ -58,7 +58,7 @@ export default function SeccionFleteManualLCL({ complete }: Props = {}) {
       <div className="space-y-4">
         <div className="rounded-md border border-primary/30 bg-primary/5 p-3 flex items-start gap-2">
           <AlertCircle className="size-4 text-primary mt-0.5 shrink-0" />
-          <p className="text-sm text-muted-foreground">
+          <p className="text-body text-muted-foreground">
             En LCL el flete se cotiza contra un consolidador por{" "}
             <span className="font-medium text-foreground">W/M</span> (peso o
             volumen, el mayor). Vincular una tarifa es opcional: si no la
@@ -110,7 +110,7 @@ export default function SeccionFleteManualLCL({ complete }: Props = {}) {
           </FormField>
         </div>
 
-        <div className="rounded-md border bg-muted/30 p-3 grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+        <div className="rounded-md border bg-muted/30 p-3 grid grid-cols-2 md:grid-cols-4 gap-3 text-body">
           <div>
             <p className="text-muted-foreground">Peso total</p>
             <p className="font-semibold tabular-nums">

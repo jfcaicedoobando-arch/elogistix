@@ -91,13 +91,13 @@ export function OrigenDocumentoPicker({ mode, onModeChange }: Props) {
                   )}
                   aria-hidden
                 />
-                <span className="text-sm font-medium leading-tight">{o.titulo}</span>
+                <span className="text-body font-medium leading-tight">{o.titulo}</span>
                 {o.etiqueta && (
-                  <Badge variant="secondary" className="text-2xs">{o.etiqueta}</Badge>
+                  <Badge variant="secondary" className="text-label">{o.etiqueta}</Badge>
                 )}
               </div>
               {/* En pantallas bajas la ayuda vive en el tooltip nativo. */}
-              <p className="mt-0.5 text-xs leading-snug text-muted-foreground short:hidden">
+              <p className="mt-0.5 text-body-sm leading-snug text-muted-foreground short:hidden">
                 {o.ayuda}
               </p>
             </button>

@@ -18,7 +18,7 @@ export function Kpi({ label, value, tone = "default", emphasis = false, hint }: 
       "min-w-0 rounded-lg border bg-card p-3 short:p-2.5 transition-[box-shadow,border-color]",
       emphasis && "ring-2 ring-accent/30 border-accent/30",
     )}>
-      <p className="text-2xs font-bold uppercase tracking-tight text-muted-foreground mb-1 truncate">
+      <p className="text-label font-bold uppercase tracking-tight text-muted-foreground mb-1 truncate">
         {label}
       </p>
       <p
@@ -28,7 +28,7 @@ export function Kpi({ label, value, tone = "default", emphasis = false, hint }: 
         {value}
       </p>
       {hint && (
-        <p className="text-2xs text-muted-foreground tabular-nums truncate" title={hint}>
+        <p className="text-label text-muted-foreground tabular-nums truncate" title={hint}>
           {hint}
         </p>
       )}
@@ -46,7 +46,7 @@ export function HeaderWithTooltip({ label, hint }: { label: string; hint: string
           <Info className="h-3 w-3 text-muted-foreground/70" />
         </span>
       </TooltipTrigger>
-      <TooltipContent side="top" className="max-w-[240px] text-xs">
+      <TooltipContent side="top" className="max-w-[240px] text-body-sm">
         {hint}
       </TooltipContent>
     </Tooltip>

@@ -16,7 +16,7 @@ export default function AvisoIncotermCIF({ incoterm }: { incoterm: string }) {
     >
       <div className="flex items-start gap-3">
         <Info className="mt-0.5 h-5 w-5 shrink-0 text-primary" aria-hidden />
-        <div className="space-y-1.5 text-sm">
+        <div className="space-y-1.5 text-body">
           <p className="font-semibold text-foreground">
             {`Embarque ${incoterm}: flete y seguro contratados en origen`}
           </p>

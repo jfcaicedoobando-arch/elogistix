@@ -52,7 +52,7 @@ export function OrgDatosGeneralesCard({
         )}
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-body">
           <div>
             <p className="text-muted-foreground mb-1">Nombre</p>
             {editing

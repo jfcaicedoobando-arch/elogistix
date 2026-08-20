@@ -43,13 +43,13 @@ export function ComprasAgingChart({ totales, moneda = "MXN" }: { totales: CxpAgi
       <CardHeader className="pb-2 flex-row items-start justify-between gap-2 space-y-0">
         <div className="min-w-0">
           <CardTitle>Antigüedad de saldos · {moneda}</CardTitle>
-          <p className="text-xs text-muted-foreground mt-0.5 tabular-nums">
+          <p className="text-body-sm text-muted-foreground mt-0.5 tabular-nums">
             {formatCurrencyCompact(vencido, moneda)} vencido de {formatCurrencyCompact(total, moneda)} · {pctVencido}%
           </p>
         </div>
         <Link
           to={ROUTES.COMPRAS_AGING}
-          className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors shrink-0"
+          className="inline-flex items-center gap-1 text-body-sm text-muted-foreground hover:text-primary transition-colors shrink-0"
         >
           Ver detalle <ArrowUpRight className="h-3 w-3" />
         </Link>

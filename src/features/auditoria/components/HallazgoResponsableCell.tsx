@@ -44,7 +44,7 @@ export function HallazgoResponsableCell({
   if (revision?.estado_revision === "revisado") {
     return (
       <span
-        className="text-xs text-muted-foreground flex items-center gap-1"
+        className="text-body-sm text-muted-foreground flex items-center gap-1"
         title="Hallazgo revisado: la asignación está cerrada"
       >
         <UserCheck className="h-3.5 w-3.5 shrink-0" />

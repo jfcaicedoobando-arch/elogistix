@@ -38,7 +38,7 @@ export function AgingActionBar({
             key={c.value}
             onClick={() => onChange(c.value)}
             className={cn(
-              "text-xs font-medium px-2.5 py-1 rounded-full border transition-colors",
+              "text-body-sm font-medium px-2.5 py-1 rounded-full border transition-colors",
               cubeta === c.value
                 ? "bg-primary text-primary-foreground border-primary"
                 : "bg-background hover:bg-muted text-muted-foreground border-border",

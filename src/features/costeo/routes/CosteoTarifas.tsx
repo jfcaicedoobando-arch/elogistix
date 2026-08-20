@@ -58,7 +58,7 @@ export default function CosteoTarifas() {
 
       {s.rutaIdFromUrl && s.tarifas[0] && (
         <div className="flex items-center justify-between rounded-md border bg-muted/40 px-3 py-2">
-          <p className="text-sm">
+          <p className="text-body">
             Filtrando por ruta:{" "}
             <span className="font-medium">
               {s.tarifas[0].puerto_origen_nombre} → {s.tarifas[0].puerto_destino_nombre}
@@ -107,7 +107,7 @@ export default function CosteoTarifas() {
 
       {showList && (
         <div className="flex items-center justify-between">
-          <span className="text-xs text-muted-foreground tabular-nums">
+          <span className="text-body-sm text-muted-foreground tabular-nums">
             {s.tarifasFiltradas.length}{" "}
             {s.tarifasFiltradas.length === 1 ? "tarifa" : "tarifas"}
           </span>
@@ -120,14 +120,14 @@ export default function CosteoTarifas() {
             <ToggleGroupItem
               value="agrupada"
               aria-label="Vista agrupada por ruta"
-              className="h-8 px-3 text-xs"
+              className="h-8 px-3 text-body-sm"
             >
               <Rows3 className="size-4 mr-1" />Agrupada
             </ToggleGroupItem>
             <ToggleGroupItem
               value="tabla"
               aria-label="Vista tabla plana"
-              className="h-8 px-3 text-xs"
+              className="h-8 px-3 text-body-sm"
             >
               <LayoutList className="size-4 mr-1" />Tabla
             </ToggleGroupItem>

@@ -21,7 +21,7 @@ function Renglon({ label, value, fuerte = false }: {
   label: string; value: string; fuerte?: boolean;
 }) {
   return (
-    <div className="flex items-baseline justify-between gap-4 text-xs">
+    <div className="flex items-baseline justify-between gap-4 text-body-sm">
       <span className={fuerte ? "font-medium text-foreground" : "text-muted-foreground"}>
         {label}
       </span>
@@ -40,7 +40,7 @@ export function TotalesChipDesglose({
           type="button"
           className="rounded-lg border bg-card px-3 py-1.5 text-right transition-colors hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
-          <span className="flex items-center gap-1 text-2xs font-bold uppercase tracking-tight text-muted-foreground">
+          <span className="flex items-center gap-1 text-label font-bold uppercase tracking-tight text-muted-foreground">
             Total {moneda}
             <ChevronDown className="h-3 w-3" aria-hidden />
           </span>

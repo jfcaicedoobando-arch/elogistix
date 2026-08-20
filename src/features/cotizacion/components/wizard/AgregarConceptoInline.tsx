@@ -109,7 +109,7 @@ export function AgregarConceptoInline({
                   type="button"
                   onClick={() => setMoneda(m)}
                   className={
-                    "px-3 py-1 text-xs rounded " +
+                    "px-3 py-1 text-body-sm rounded " +
                     (moneda === m
                       ? "bg-primary text-primary-foreground"
                       : "text-muted-foreground hover:bg-muted")

@@ -36,7 +36,7 @@ export function CotizacionDetalleHeader({ cotizacion, nombreDestinatario, onExpo
       title={cotizacion.folio}
       subtitle={toTitleCase(nombreDestinatario)}
       badge={<StatusBadge domain="cotizacion" status={cotizacion.estado} />}
-      meta={metaFecha ? <span className="text-xs text-muted-foreground">{metaFecha}</span> : undefined}
+      meta={metaFecha ? <span className="text-body-sm text-muted-foreground">{metaFecha}</span> : undefined}
       trailing={
         <>
           <Button variant="outline" size="sm" onClick={onExportarPdf} disabled={exportandoPdf}>

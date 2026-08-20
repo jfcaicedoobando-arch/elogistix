@@ -81,7 +81,7 @@ export function ConciliacionPagoCell({
       </PopoverTrigger>
       <PopoverContent align="end" className="w-96 p-0">
         <div className="p-3 border-b bg-muted/30">
-          <p className="text-xs font-medium">Movimientos bancarios candidatos</p>
+          <p className="text-body-sm font-medium">Movimientos bancarios candidatos</p>
           <p className="text-label text-muted-foreground">
             Monto ±$1 · fecha ±5 días · sólo Pendientes
           </p>
@@ -101,7 +101,7 @@ export function ConciliacionPagoCell({
                 <li key={m.id} className="p-3 hover:bg-muted/40 transition-colors">
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0 flex-1">
-                      <p className="text-xs font-medium tabular-nums">
+                      <p className="text-body-sm font-medium tabular-nums">
                         {formatFechaDia(m.fecha)} · {formatCurrency(m.cargo, "MXN")}
                       </p>
                       {m.concepto && (
@@ -110,7 +110,7 @@ export function ConciliacionPagoCell({
                       {m.referencia && (
                         <p className="text-label text-muted-foreground">Ref: {m.referencia}</p>
                       )}
-                      <p className="text-2xs text-muted-foreground/70 mt-0.5">
+                      <p className="text-label text-muted-foreground/70 mt-0.5">
                         Δ {formatCurrency(m.delta_monto, "MXN")} · {m.delta_dias}d
                       </p>
                     </div>

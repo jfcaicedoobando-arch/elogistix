@@ -112,7 +112,7 @@ export function ColumnaDocumento({
       />
 
       {sinPartidas && (modoBuzon || ctl.mode !== "manual") && (
-        <p className="rounded-md border border-dashed px-3 py-4 text-center text-xs text-muted-foreground">
+        <p className="rounded-md border border-dashed px-3 py-4 text-center text-body-sm text-muted-foreground">
           Sube el documento y aquí aparecerán las partidas de la factura.
         </p>
       )}

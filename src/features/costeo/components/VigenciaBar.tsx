@@ -41,7 +41,7 @@ export function VigenciaBar({ desde, hasta }: Props) {
       <Tooltip>
         <TooltipTrigger asChild>
           <div className="space-y-1 cursor-default">
-            <div className="text-xs tabular-nums">{formatVigencia(desde, hasta)}</div>
+            <div className="text-body-sm tabular-nums">{formatVigencia(desde, hasta)}</div>
             <div className={`h-1.5 w-full rounded-full overflow-hidden ${noIniciada ? "bg-muted/40 border border-dashed border-muted-foreground/30" : "bg-muted"}`}>
               {!noIniciada && (
                 <div className={`h-full ${barColor}`} style={{ width: `${progress}%` }} />
@@ -50,7 +50,7 @@ export function VigenciaBar({ desde, hasta }: Props) {
           </div>
         </TooltipTrigger>
         <TooltipContent side="top">
-          <p className={`text-xs ${textColor}`}>{hint.text}</p>
+          <p className={`text-body-sm ${textColor}`}>{hint.text}</p>
         </TooltipContent>
       </Tooltip>
     </TooltipProvider>

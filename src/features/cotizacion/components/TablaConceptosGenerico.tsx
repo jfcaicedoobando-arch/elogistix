@@ -61,7 +61,7 @@ export default function TablaConceptosGenerico({ moneda, conceptos, subtotal, iv
                     <TableCell>
                       {concepto.descripcion ?? "—"}
                       {concepto.notas && (
-                        <p className="text-xs text-muted-foreground mt-0.5">↳ {concepto.notas}</p>
+                        <p className="text-body-sm text-muted-foreground mt-0.5">↳ {concepto.notas}</p>
                       )}
                     </TableCell>
                     <TableCell>{concepto.unidad_medida || '—'}</TableCell>
@@ -84,10 +84,10 @@ export default function TablaConceptosGenerico({ moneda, conceptos, subtotal, iv
               pase subtotal/iva (el portal también desglosa el USD con IVA);
               los call-sites internos no pasan desglose USD → no cambian. */}
           {subtotal !== undefined && (
-            <span className="text-sm">Subtotal {moneda}: {formatCurrency(subtotal, moneda)}</span>
+            <span className="text-body">Subtotal {moneda}: {formatCurrency(subtotal, moneda)}</span>
           )}
           {iva !== undefined && (
-            <span className="text-sm">{esMXN ? ivaLabel : "IVA"}: {formatCurrency(iva, moneda)}</span>
+            <span className="text-body">{esMXN ? ivaLabel : "IVA"}: {formatCurrency(iva, moneda)}</span>
           )}
           <p className="text-lg font-bold">Total {moneda}: {formatCurrency(total, moneda)}</p>
         </div>

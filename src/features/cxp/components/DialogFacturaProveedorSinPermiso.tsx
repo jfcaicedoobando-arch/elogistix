@@ -27,7 +27,7 @@ export function DialogFacturaProveedorSinPermiso({ open, onOpenChange }: Props) 
         </Button>
       }
     >
-      <p className="text-sm text-muted-foreground">
+      <p className="text-body text-muted-foreground">
         No tienes permiso para esta sección. Pide a un administrador, contador o auxiliar
         contable que capture la factura.
       </p>

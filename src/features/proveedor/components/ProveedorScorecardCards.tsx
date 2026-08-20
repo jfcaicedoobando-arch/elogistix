@@ -32,14 +32,14 @@ function ListaTop({
       <CardContent className="p-4">
         <SectionHeading as="h3" variant="subsection" className="mb-3">{titulo}</SectionHeading>
         {filas.length === 0 ? (
-          <p className="text-sm text-muted-foreground text-center py-4">Sin información en el período.</p>
+          <p className="text-body text-muted-foreground text-center py-4">Sin información en el período.</p>
         ) : (
           <ul className="space-y-2">
             {filas.map((f) => (
-              <li key={f.etiqueta} className="flex items-baseline justify-between gap-3 text-sm">
+              <li key={f.etiqueta} className="flex items-baseline justify-between gap-3 text-body">
                 <span className="truncate">
                   {f.etiqueta}
-                  <span className="ml-2 text-xs text-muted-foreground">{f.sub}</span>
+                  <span className="ml-2 text-body-sm text-muted-foreground">{f.sub}</span>
                 </span>
                 <span className="tabular-nums font-medium shrink-0" title={formatCurrency(f.montoMxn, "MXN")}>
                   {formatCurrencyCompact(f.montoMxn, "MXN")}

@@ -27,10 +27,10 @@ export function PagoProveedorFormBody(p: Props) {
     <div className="flex-1 overflow-y-auto px-6 py-5 space-y-6">
       {p.validacion.avisos.length > 0 && (
         <div className="rounded-md border border-warning/30 bg-warning/10 px-3 py-2 space-y-1">
-          <p className="text-xs font-semibold text-warning">Revisa la factura</p>
+          <p className="text-body-sm font-semibold text-warning">Revisa la factura</p>
           <ul className="list-disc pl-4 space-y-0.5">
             {p.validacion.avisos.map((a) => (
-              <li key={a} className="text-xs text-warning">{a}</li>
+              <li key={a} className="text-body-sm text-warning">{a}</li>
             ))}
           </ul>
         </div>
@@ -68,7 +68,7 @@ export function PagoProveedorFormBody(p: Props) {
           <div className="space-y-1">
             <Label htmlFor="pago-prov-monto">Monto</Label>
             <div className="relative">
-              <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">$</span>
+              <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-body text-muted-foreground">$</span>
               <Input id="pago-prov-monto" type="number" step="0.01" inputMode="decimal" placeholder="0.00"
                 className="pl-7 text-right tabular-nums"
                 value={p.monto} onChange={(e) => p.setMonto(e.target.value)} />
@@ -99,7 +99,7 @@ export function PagoProveedorFormBody(p: Props) {
         </div>
 
         {p.validacion.error && p.monto !== "" && (
-          <p className="text-xs text-destructive">{p.validacion.error}</p>
+          <p className="text-body-sm text-destructive">{p.validacion.error}</p>
         )}
 
         <PagoSaldoRestante factura={p.factura} saldoRestante={p.saldoRestante} excede={p.excede} />
@@ -111,7 +111,7 @@ export function PagoProveedorFormBody(p: Props) {
         />
 
         {p.esUsdPagadoEnMxn && p.factura && (
-          <p className="text-xs text-muted-foreground">
+          <p className="text-body-sm text-muted-foreground">
             {p.bloqueadoPorTc
               ? "Captura el tipo de cambio para validar el pago contra el saldo en " + p.factura.moneda + "."
               : `≈ ${p.factura.moneda} ${formatNumber(p.montoEnMonedaFactura, { decimals: 2 })} al TC capturado.`}
@@ -125,12 +125,12 @@ export function PagoProveedorFormBody(p: Props) {
           <div className="space-y-1">
             <Label htmlFor="pago-prov-diff-mxn">Diferencia cambiaria MXN (opcional)</Label>
             <div className="relative">
-              <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">$</span>
+              <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-body text-muted-foreground">$</span>
               <Input id="pago-prov-diff-mxn" type="number" step="0.01" inputMode="decimal" placeholder="0.00"
                 className="pl-7 text-right tabular-nums"
                 value={p.diffMxn} onChange={(e) => p.setDiffMxn(e.target.value)} />
             </div>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-body-sm text-muted-foreground">
               Captura la diferencia cambiaria entre el TC de la factura y el TC del pago.
             </p>
           </div>

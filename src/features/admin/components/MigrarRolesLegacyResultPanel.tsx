@@ -14,7 +14,7 @@ export function MigrarRolesLegacyResultPanel({ result }: Props) {
   const om = result.organization_members;
   const ur = result.user_roles;
   return (
-    <div className="rounded-md border bg-success/5 border-success/30 p-3 text-xs space-y-1">
+    <div className="rounded-md border bg-success/5 border-success/30 p-3 text-body-sm space-y-1">
       <div className="flex items-center gap-1 font-semibold text-success">
         <CheckCircle2 className="h-3.5 w-3.5" />
         Último resultado ({formatFechaHora(result.ejecutado_at)})

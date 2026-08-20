@@ -99,7 +99,7 @@ export function MultiRutaSelect({ rutas, value, onChange, invalid, id }: Props) 
               value={query}
               onValueChange={setQuery}
             />
-            <div className="flex items-center justify-between border-b px-2 py-1 text-xs text-muted-foreground">
+            <div className="flex items-center justify-between border-b px-2 py-1 text-body-sm text-muted-foreground">
               <button
                 type="button"
                 className="hover:text-foreground"

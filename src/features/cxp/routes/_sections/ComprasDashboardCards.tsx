@@ -25,7 +25,7 @@ export function TopProveedoresCard({ rows }: { rows: ProveedorSaldoRow[] }) {
         <CardTitle>Top proveedores con saldo</CardTitle>
         <Link
           to={ROUTES.COMPRAS_AGING}
-          className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors"
+          className="inline-flex items-center gap-1 text-body-sm text-muted-foreground hover:text-primary transition-colors"
         >
           Ver todo <ArrowUpRight className="h-3 w-3" />
         </Link>
@@ -38,10 +38,10 @@ export function TopProveedoresCard({ rows }: { rows: ProveedorSaldoRow[] }) {
             {rows.map((p) => {
               const pct = max > 0 ? (p.saldo_total / max) * 100 : 0;
               return (
-                <li key={p.proveedor_id} className="px-4 py-2.5 text-sm">
+                <li key={p.proveedor_id} className="px-4 py-2.5 text-body">
                   <div className="flex items-center justify-between gap-3 mb-1">
                     <span className="truncate font-medium">{p.proveedor_nombre}</span>
-                    <span className="tabular-nums text-muted-foreground shrink-0 text-xs">
+                    <span className="tabular-nums text-muted-foreground shrink-0 text-body-sm">
                       {formatCurrencyCompact(p.saldo_total, "MXN")}
                     </span>
                   </div>
@@ -77,7 +77,7 @@ export function UltimasFacturasCard({ rows }: { rows: FacturaCapturadaRow[] }) {
         <CardTitle>Últimas facturas capturadas</CardTitle>
         <Link
           to={ROUTES.COMPRAS_FACTURAS}
-          className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors"
+          className="inline-flex items-center gap-1 text-body-sm text-muted-foreground hover:text-primary transition-colors"
         >
           Ver todas <ArrowUpRight className="h-3 w-3" />
         </Link>
@@ -88,14 +88,14 @@ export function UltimasFacturasCard({ rows }: { rows: FacturaCapturadaRow[] }) {
         ) : (
           <ul className="divide-y">
             {rows.map((f) => (
-              <li key={f.id} className="flex items-center justify-between gap-3 px-4 py-2.5 text-sm">
+              <li key={f.id} className="flex items-center justify-between gap-3 px-4 py-2.5 text-body">
                 <div className="min-w-0">
                   <p className="truncate font-medium">{f.proveedor_nombre ?? "—"}</p>
-                  <p className="text-xs text-muted-foreground font-mono">
+                  <p className="text-body-sm text-muted-foreground font-mono">
                     {f.folio_proveedor ?? "s/folio"} · {f.fecha_emision ? formatDate(f.fecha_emision) : "—"}
                   </p>
                 </div>
-                <span className="tabular-nums shrink-0 text-sm">
+                <span className="tabular-nums shrink-0 text-body">
                   {formatCurrency(Number(f.total), f.moneda ?? "MXN")}
                 </span>
               </li>

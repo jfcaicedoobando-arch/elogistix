@@ -27,7 +27,7 @@ export function EstadoAprobacionDot({ estado, cancelada, className }: Props) {
   return (
     <span className={cn("inline-flex items-center gap-2", className)}>
       <span className={cn("h-2 w-2 rounded-full", t.dot)} aria-hidden />
-      <span className={cn("text-xs font-semibold uppercase tracking-wide", t.text)}>
+      <span className={cn("text-body-sm font-semibold uppercase tracking-wide", t.text)}>
         {t.label}
       </span>
     </span>

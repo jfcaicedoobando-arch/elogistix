@@ -24,9 +24,9 @@ export function AccionTab({ ctrl, revisionExistente }: Props) {
         onChange={(e) => ctrl.setAccion(e.target.value)}
         rows={4}
         maxLength={1000}
-        className="text-sm"
+        className="text-body"
       />
-      <div className="text-2xs text-muted-foreground text-right tabular-nums">
+      <div className="text-label text-muted-foreground text-right tabular-nums">
         {ctrl.accion.length} / 1000
       </div>
 

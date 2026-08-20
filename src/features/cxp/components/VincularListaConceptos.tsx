@@ -20,7 +20,7 @@ interface Props {
 export function VincularListaConceptos({ grupos, seleccion, onToggle, onChangeMonto }: Props) {
   if (grupos.length === 0) {
     return (
-      <p className="text-xs text-muted-foreground italic px-3 py-4 text-center">
+      <p className="text-body-sm text-muted-foreground italic px-3 py-4 text-center">
         Ningún concepto coincide con el filtro.
       </p>
     );
@@ -29,7 +29,7 @@ export function VincularListaConceptos({ grupos, seleccion, onToggle, onChangeMo
     <>
       {grupos.map((g) => (
         <div key={g.embarqueId} className="rounded-md border bg-muted/20">
-          <div className="px-3 py-1.5 border-b bg-muted/40 text-xs font-medium">
+          <div className="px-3 py-1.5 border-b bg-muted/40 text-body-sm font-medium">
             Embarque <span className="font-mono">{g.expediente}</span>
           </div>
           <div className="divide-y">
@@ -39,7 +39,7 @@ export function VincularListaConceptos({ grupos, seleccion, onToggle, onChangeMo
               const excede = checked
                 && lineaExcedeOriginal({ monto: sel.monto, montoOriginal: it.monto });
               return (
-                <div key={it.id} className="px-3 py-2 flex items-center gap-3 text-sm">
+                <div key={it.id} className="px-3 py-2 flex items-center gap-3 text-body">
                   <Checkbox
                     checked={checked}
                     onCheckedChange={(v) => onToggle(it, !!v)}
@@ -47,7 +47,7 @@ export function VincularListaConceptos({ grupos, seleccion, onToggle, onChangeMo
                   />
                   <div className="flex-1 min-w-0">
                     <div className="truncate" title={it.concepto}>{it.concepto}</div>
-                    <div className="text-xs text-muted-foreground">
+                    <div className="text-body-sm text-muted-foreground">
                       Cotizado: {formatCurrency(it.monto, it.moneda)}
                       {excede && (
                         <span className="text-destructive ml-1">
@@ -58,7 +58,7 @@ export function VincularListaConceptos({ grupos, seleccion, onToggle, onChangeMo
                   </div>
                   {checked && (
                     <div className="flex items-center gap-1.5">
-                      <span className="text-xs text-muted-foreground">{it.moneda}</span>
+                      <span className="text-body-sm text-muted-foreground">{it.moneda}</span>
                       <MoneyInput
                         value={sel.monto}
                         onChange={(n: number) => onChangeMonto(it.id, n)}

@@ -150,8 +150,8 @@ export default function Cotizaciones() {
             mobileCard={(r) => (
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0 flex-1">
-                  <div className="font-semibold text-sm truncate">{r.folio}</div>
-                  <div className="text-xs text-muted-foreground truncate mt-0.5">{r.cliente_nombre ?? ""}</div>
+                  <div className="font-semibold text-body truncate">{r.folio}</div>
+                  <div className="text-body-sm text-muted-foreground truncate mt-0.5">{r.cliente_nombre ?? ""}</div>
                   <div className="text-label text-muted-foreground mt-0.5">
                     {/* VF-04: fecha en TZ de negocio (America/Mexico_City). */}
                     {r.created_at ? formatFechaEs(r.created_at) : ""}

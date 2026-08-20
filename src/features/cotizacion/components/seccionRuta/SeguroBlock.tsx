@@ -9,9 +9,9 @@ export default function SeguroBlock({ ctx, seguro }: { ctx: Ctx; seguro: boolean
   return (
     <>
       <div className="flex items-center gap-3 pt-6">
-        <Label htmlFor="cot-seguro-switch" className="text-sm font-medium">Seguro</Label>
+        <Label htmlFor="cot-seguro-switch" className="text-body font-medium">Seguro</Label>
         <Switch id="cot-seguro-switch" checked={seguro} onCheckedChange={v => setValue("seguro", v)} />
-        <span className="text-sm text-muted-foreground">{seguro ? 'Sí' : 'No'}</span>
+        <span className="text-body text-muted-foreground">{seguro ? 'Sí' : 'No'}</span>
       </div>
       {seguro && (
         <FormField label="Valor de mercancía (USD)">

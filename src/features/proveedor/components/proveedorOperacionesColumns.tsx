@@ -90,7 +90,7 @@ export function partidasOperacionesColumns<T extends PartidaEstadoCuenta>(): Col
         <div className="flex flex-col gap-0.5">
           <StatusBadge domain="conciliacion_costo" status={row.original.estado_conciliacion} />
           {row.original.moneda_mixta_sin_tc ? (
-            <span className="text-2xs leading-snug text-warning">
+            <span className="text-label leading-snug text-warning">
               Factura en otra moneda sin tipo de cambio: esa porción no se compara.
             </span>
           ) : null}

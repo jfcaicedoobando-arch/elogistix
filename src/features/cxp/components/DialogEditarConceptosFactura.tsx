@@ -102,7 +102,7 @@ export function DialogEditarConceptosFactura({
       }
     >
       {descuadrado && (
-        <div className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-warning/40 bg-warning/10 px-3 py-2 text-xs">
+        <div className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-warning/40 bg-warning/10 px-3 py-2 text-body-sm">
           <span className="leading-relaxed">
             {cuadre.diferencia > 0 ? "Faltan " : "Sobran "}
             <strong className="tabular-nums">

@@ -28,7 +28,7 @@ export function TabButton({ active, onClick, children }: {
     <button
       type="button"
       onClick={onClick}
-      className={`flex-1 px-4 py-2.5 text-sm font-medium transition-colors ${
+      className={`flex-1 px-4 py-2.5 text-body font-medium transition-colors ${
         active ? "bg-background text-foreground" : "text-muted-foreground hover:text-foreground"
       }`}
     >

@@ -38,20 +38,20 @@ export function ProformaBitacoraCard({ proformaId, bare }: Props) {
             {entradas.map((e) => {
               const descripcion = describirEntrada(e);
               return (
-                <li key={e.id} className="py-2 text-sm">
+                <li key={e.id} className="py-2 text-body">
                   <div className="flex items-baseline justify-between gap-2">
                     <span className="font-medium truncate">
                       {descripcion.titulo || e.accion}
                     </span>
-                    <span className="text-xs text-muted-foreground whitespace-nowrap">
+                    <span className="text-body-sm text-muted-foreground whitespace-nowrap">
                       {formatDate(e.created_at)}
                     </span>
                   </div>
                   {descripcion.contexto && (
-                    <p className="text-xs text-muted-foreground truncate">{descripcion.contexto}</p>
+                    <p className="text-body-sm text-muted-foreground truncate">{descripcion.contexto}</p>
                   )}
                   {e.usuario_email && (
-                    <p className="text-xs text-muted-foreground truncate">{e.usuario_email}</p>
+                    <p className="text-body-sm text-muted-foreground truncate">{e.usuario_email}</p>
                   )}
                 </li>
               );

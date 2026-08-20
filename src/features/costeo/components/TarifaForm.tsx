@@ -112,13 +112,13 @@ export function TarifaForm({ open, onOpenChange, initial, tarifaId, agenteIdFijo
       size="2xl"
       headerAside={
         <div className="text-right">
-          <div className="text-2xs uppercase tracking-wide text-muted-foreground">Total comparable</div>
+          <div className="text-label uppercase tracking-wide text-muted-foreground">Total comparable</div>
           <div className="text-lg font-semibold text-foreground tabular-nums">{formatUSD(total)}</div>
         </div>
       }
       footer={
         <div className="flex w-full items-center justify-between gap-3">
-          <p className="text-xs text-muted-foreground" aria-live="polite">
+          <p className="text-body-sm text-muted-foreground" aria-live="polite">
             {tooltipFaltantes ?? "Listo para guardar."}
           </p>
           <div className="flex gap-2">

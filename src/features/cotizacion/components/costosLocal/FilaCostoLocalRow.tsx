@@ -71,7 +71,7 @@ export function FilaCostoLocalRow({ fila, gi, moneda, onUpdate, onRemove }: Prop
           />
           {fila.concepto_libre && (
             <p
-              className="mt-0.5 flex items-center gap-1 text-2xs text-warning"
+              className="mt-0.5 flex items-center gap-1 text-label text-warning"
               data-testid={`concepto-libre-aviso-${gi}`}
             >
               <PenLine className="h-3 w-3" /> Concepto libre: se pedirá la clave SAT al facturar.
@@ -79,14 +79,14 @@ export function FilaCostoLocalRow({ fila, gi, moneda, onUpdate, onRemove }: Prop
           )}
           {conceptoFaltante && (
             <p
-              className="mt-0.5 text-2xs text-destructive"
+              className="mt-0.5 text-label text-destructive"
               data-testid={`concepto-faltante-aviso-${gi}`}
             >
               Selecciona el concepto de este renglón; sin nombre no se genera el concepto de venta.
             </p>
           )}
         </div>
-        <Input value={fila.proveedor} onChange={e => onUpdate(gi, "proveedor", e.target.value)} className="h-9 text-sm w-[120px]" placeholder="Proveedor" aria-label="Proveedor" />
+        <Input value={fila.proveedor} onChange={e => onUpdate(gi, "proveedor", e.target.value)} className="h-9 text-body w-[120px]" placeholder="Proveedor" aria-label="Proveedor" />
         <div className="w-[130px]">
           <UnidadMedidaSelect
             value={fila.unidad_medida}
@@ -97,43 +97,43 @@ export function FilaCostoLocalRow({ fila, gi, moneda, onUpdate, onRemove }: Prop
 
       <div className="flex items-center gap-2">
         <div className="flex items-center gap-1">
-          <span className="text-xs text-muted-foreground">Cant.</span>
+          <span className="text-body-sm text-muted-foreground">Cant.</span>
           <Input
             type="text" inputMode="decimal"
             {...cantidadField}
             aria-label="Cantidad"
             aria-invalid={cantidadExcedida}
-            className="h-8 text-sm text-right w-[80px]"
+            className="h-8 text-body text-right w-[80px]"
           />
         </div>
         <div className="flex items-center gap-1">
-          <span className="text-xs text-muted-foreground">Costo</span>
+          <span className="text-body-sm text-muted-foreground">Costo</span>
           <Input
             type="text" inputMode="decimal"
             {...costoField}
             aria-label="Costo unitario"
-            className="h-8 text-sm text-right w-[110px]"
+            className="h-8 text-body text-right w-[110px]"
           />
         </div>
         <div className="flex items-center gap-1">
-          <span className="text-xs text-muted-foreground">Venta</span>
+          <span className="text-body-sm text-muted-foreground">Venta</span>
           <Input
             type="text" inputMode="decimal"
             {...ventaField}
             aria-label="Precio de venta"
-            className="h-8 text-sm text-right w-[110px]"
+            className="h-8 text-body text-right w-[110px]"
           />
         </div>
         {/* Q-15.9 — totales visibles por partida: el multiplicador queda explícito. */}
-        <span className="text-xs text-muted-foreground whitespace-nowrap">
+        <span className="text-body-sm text-muted-foreground whitespace-nowrap">
           {fila.cantidad} × costo = {formatCurrency(costoTotal, moneda)} · venta {formatCurrency(ventaTotal, moneda)}
         </span>
         {cantidadExcedida && (
-          <span className="text-2xs text-destructive whitespace-nowrap">
+          <span className="text-label text-destructive whitespace-nowrap">
             Cantidad mayor a {formatNumber(CANTIDAD_LIMITE_SANIDAD)} — verifica el dato.
           </span>
         )}
-        <span className={`text-sm font-medium w-[100px] text-right ${profit >= 0 ? "text-success" : "text-destructive"}`}>
+        <span className={`text-body font-medium w-[100px] text-right ${profit >= 0 ? "text-success" : "text-destructive"}`}>
           {formatCurrency(profit, moneda)}
         </span>
         <div className="w-[70px] flex justify-center"><ProfitBadge porcentaje={pct} /></div>
@@ -145,7 +145,7 @@ export function FilaCostoLocalRow({ fila, gi, moneda, onUpdate, onRemove }: Prop
         placeholder="Notas (opcional)"
         value={fila.notas || ""}
         onChange={e => onUpdate(gi, "notas", e.target.value)}
-        className="mt-1 text-xs h-8 resize-none focus:min-h-16 transition-[min-height]"
+        className="mt-1 text-body-sm h-8 resize-none focus:min-h-16 transition-[min-height]"
       />
     </div>
   );

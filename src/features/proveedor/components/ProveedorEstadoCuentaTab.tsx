@@ -86,11 +86,11 @@ export function ProveedorEstadoCuentaTab({ proveedorId, proveedorNombre, rfc }: 
       <Card>
         <CardContent density="compact" className="flex flex-wrap items-end gap-3">
           <div>
-            <p className="mb-1 text-xs text-muted-foreground">Desde</p>
+            <p className="mb-1 text-body-sm text-muted-foreground">Desde</p>
             <DatePickerMx value={desde} onChange={setDesde} max={hasta} aria-label="Fecha inicial del estado de cuenta" />
           </div>
           <div>
-            <p className="mb-1 text-xs text-muted-foreground">Hasta</p>
+            <p className="mb-1 text-body-sm text-muted-foreground">Hasta</p>
             <DatePickerMx value={hasta} onChange={setHasta} min={desde} aria-label="Fecha final del estado de cuenta" />
           </div>
           <div className="ml-auto flex flex-wrap gap-2">
@@ -125,7 +125,7 @@ export function ProveedorEstadoCuentaTab({ proveedorId, proveedorNombre, rfc }: 
           <CardContent className="flex flex-wrap gap-6">
             {saldos.map((s) => (
               <div key={s.moneda}>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-body-sm text-muted-foreground">
                   {s.moneda} · saldo global · cargos {formatCurrency(s.cargos, s.moneda)} ·{" "}
                   abonos{" "}
                   {formatCurrency(s.abonos, s.moneda)}
@@ -135,7 +135,7 @@ export function ProveedorEstadoCuentaTab({ proveedorId, proveedorNombre, rfc }: 
                 </p>
               </div>
             ))}
-            <p className="w-full text-xs text-muted-foreground">
+            <p className="w-full text-body-sm text-muted-foreground">
               Saldo global al día de hoy (sin filtro de periodo); cuadra contra la antigüedad de
               saldos.
             </p>
@@ -156,7 +156,7 @@ export function ProveedorEstadoCuentaTab({ proveedorId, proveedorNombre, rfc }: 
           {apertura.length > 0 && (
             <div className="flex flex-wrap gap-x-6 gap-y-1 border-b px-4 py-3">
               {apertura.map((a) => (
-                <p key={a.moneda} className="text-xs text-muted-foreground">
+                <p key={a.moneda} className="text-body-sm text-muted-foreground">
                   Saldo inicial {a.moneda} (antes del {formatDate(desde)}):{" "}
                   <span className="font-semibold tabular-nums text-foreground">
                     {formatCurrency(a.saldo, a.moneda)}
@@ -166,7 +166,7 @@ export function ProveedorEstadoCuentaTab({ proveedorId, proveedorNombre, rfc }: 
             </div>
           )}
           {data?.hay_mas && (
-            <p className="px-4 pt-3 text-xs text-warning">
+            <p className="px-4 pt-3 text-body-sm text-warning">
               Mostrando los {movimientos.length} movimientos más recientes del periodo
               (total: {data.total_movimientos}). Acota el rango de fechas para ver el resto.
             </p>

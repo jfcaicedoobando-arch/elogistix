@@ -44,7 +44,7 @@ export function ProveedorTendenciaChart({ tendencia }: { tendencia: PuntoTendenc
           <EmptyStateInline icon={LineChartIcon} message="No hay suficientes datos para graficar la tendencia." hint="Se necesitan al menos 2 meses con movimientos." />
         ) : (
           <>
-          <p className="text-2xs text-muted-foreground mb-1">MXN</p>
+          <p className="text-label text-muted-foreground mb-1">MXN</p>
           <div
             className="w-full h-72"
             role="img"

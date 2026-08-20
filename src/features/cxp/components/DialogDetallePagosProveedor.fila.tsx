@@ -59,8 +59,8 @@ export function PagoFila({ pago: p, canEdit, onEliminar, onEditar }: Props) {
       <td className="px-4 py-3 text-right tabular-nums font-medium text-foreground">
         {formatCurrency(Number(p.monto), p.moneda)}
       </td>
-      <td className="px-4 py-3 text-right tabular-nums text-xs text-muted-foreground">{tc}</td>
-      <td className="px-4 py-3 text-right tabular-nums text-xs text-muted-foreground">{dif}</td>
+      <td className="px-4 py-3 text-right tabular-nums text-body-sm text-muted-foreground">{tc}</td>
+      <td className="px-4 py-3 text-right tabular-nums text-body-sm text-muted-foreground">{dif}</td>
       <td className="px-4 py-3">
         <ConciliacionPagoCell
           pagoId={p.id}

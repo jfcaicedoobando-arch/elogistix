@@ -22,9 +22,9 @@ export function VinculoChip({ oportunidadId, leadId, nombre, onDesvincular }: Pr
         <Badge variant="outline" className="border-primary/40 text-primary">
           {tipoLabel}
         </Badge>
-        <span className="truncate text-sm font-medium">{nombre || "Sin nombre"}</span>
+        <span className="truncate text-body font-medium">{nombre || "Sin nombre"}</span>
         {!oportunidadId && leadId && (
-          <span className="text-xs text-muted-foreground">
+          <span className="text-body-sm text-muted-foreground">
             (se creará la oportunidad al guardar)
           </span>
         )}

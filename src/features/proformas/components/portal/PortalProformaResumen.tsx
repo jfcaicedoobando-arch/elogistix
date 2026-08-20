@@ -27,30 +27,30 @@ export function PortalProformaResumen({ proforma, conceptos }: Props) {
         <CardTitle>Detalle de la proforma</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="grid grid-cols-2 gap-4 text-sm">
+        <div className="grid grid-cols-2 gap-4 text-body">
           <div>
-            <div className="text-xs uppercase text-muted-foreground">Número</div>
+            <div className="text-body-sm uppercase text-muted-foreground">Número</div>
             <div className="font-semibold">{proforma.numero ?? "—"}</div>
           </div>
           <div>
-            <div className="text-xs uppercase text-muted-foreground">Embarque</div>
+            <div className="text-body-sm uppercase text-muted-foreground">Embarque</div>
             <div className="font-semibold">{proforma.expediente ?? "—"}</div>
           </div>
           <div>
-            <div className="text-xs uppercase text-muted-foreground">Cliente</div>
+            <div className="text-body-sm uppercase text-muted-foreground">Cliente</div>
             <div className="font-semibold">{proforma.cliente_nombre ?? "—"}</div>
           </div>
           <div>
-            <div className="text-xs uppercase text-muted-foreground">Moneda</div>
+            <div className="text-body-sm uppercase text-muted-foreground">Moneda</div>
             <div className="font-semibold">{moneda}</div>
           </div>
         </div>
 
         {conceptos.length > 0 && (
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className="w-full text-body">
               <thead>
-                <tr className="border-b text-left text-xs uppercase text-muted-foreground">
+                <tr className="border-b text-left text-body-sm uppercase text-muted-foreground">
                   <th className="py-2 pr-2">Descripción</th>
                   <th className="py-2 px-2 text-right">Cantidad</th>
                   <th className="py-2 px-2 text-right">P. unit.</th>
@@ -71,7 +71,7 @@ export function PortalProformaResumen({ proforma, conceptos }: Props) {
           </div>
         )}
 
-        <div className="border-t pt-3 space-y-1 text-sm">
+        <div className="border-t pt-3 space-y-1 text-body">
           <div className="flex justify-between">
             <span className="text-muted-foreground">Subtotal</span>
             <span>{fmtDinero(proforma.subtotal, moneda)}</span>

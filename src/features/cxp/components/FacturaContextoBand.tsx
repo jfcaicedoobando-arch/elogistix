@@ -35,10 +35,10 @@ export function FacturaContextoBand({ factura, variant = "full", emphasis = "sal
   return (
     <div className="space-y-3 -mt-1">
       <div className="flex items-center gap-3 flex-wrap">
-        <span className="px-2 py-0.5 rounded bg-muted text-muted-foreground text-xs font-mono font-semibold uppercase tracking-wider border">
+        <span className="px-2 py-0.5 rounded bg-muted text-muted-foreground text-body-sm font-mono font-semibold uppercase tracking-wider border">
           {factura.folio_interno}
         </span>
-        <span className="text-xs text-muted-foreground truncate">
+        <span className="text-body-sm text-muted-foreground truncate">
           Folio prov. <span className="font-mono">{factura.folio_proveedor}</span> · {factura.proveedor_nombre}
         </span>
       </div>
@@ -48,7 +48,7 @@ export function FacturaContextoBand({ factura, variant = "full", emphasis = "sal
         {vencida && (
           <>
             <span className="h-4 w-px bg-border" aria-hidden />
-            <span className="text-xs font-semibold text-destructive uppercase tracking-wide">
+            <span className="text-body-sm font-semibold text-destructive uppercase tracking-wide">
               Vencida · {factura.dias_vencido} d
             </span>
           </>

@@ -11,7 +11,7 @@ export function FormularioNuevoProspecto() {
   const { watch, setValue } = useFormContext<CotizacionFormValues>();
   return (
     <div className="space-y-3">
-      <div className="flex items-start gap-2 rounded-md border border-info/30 bg-info/5 p-3 text-xs">
+      <div className="flex items-start gap-2 rounded-md border border-info/30 bg-info/5 p-3 text-body-sm">
         <Info className="h-4 w-4 text-info shrink-0 mt-0.5" />
         <p className="text-muted-foreground">
           Al guardar la cotización se creará automáticamente un <strong>lead</strong> y

@@ -55,9 +55,9 @@ export function HallazgosTabla(props: Props) {
     { id: "sev", header: "Severidad", meta: { width: COL_W.fecha },
       cell: ({ row }) => {
         const sev = severidadConfig[row.original.severidad];
-        return <Badge variant="outline" className={cn("text-2xs", sev.className)}>{sev.label}</Badge>;
+        return <Badge variant="outline" className={cn("text-label", sev.className)}>{sev.label}</Badge>;
       } },
-    { id: "exp", header: "Expediente", meta: { width: COL_W.monto, className: "font-medium tabular-nums text-xs" },
+    { id: "exp", header: "Expediente", meta: { width: COL_W.monto, className: "font-medium tabular-nums text-body-sm" },
       cell: ({ row }) => {
         const h = row.original;
         return (
@@ -72,12 +72,12 @@ export function HallazgosTabla(props: Props) {
           </Button>
         );
       } },
-    { id: "regla", header: "Regla", meta: { width: COL_W.nombre, className: "text-xs text-muted-foreground" }, cell: ({ row }) => reglaLabel[row.original.regla] },
-    { id: "detalle", header: "Detalle", meta: { className: "text-xs" },
+    { id: "regla", header: "Regla", meta: { width: COL_W.nombre, className: "text-body-sm text-muted-foreground" }, cell: ({ row }) => reglaLabel[row.original.regla] },
+    { id: "detalle", header: "Detalle", meta: { className: "text-body-sm" },
       cell: ({ row }) => {
         return <HallazgoDetalleCell hallazgo={row.original} />;
       } },
-    { id: "resp", header: "Responsable", meta: { width: COL_W.ruta, className: "text-xs" },
+    { id: "resp", header: "Responsable", meta: { width: COL_W.ruta, className: "text-body-sm" },
       cell: ({ row }) => (
         <HallazgoResponsableCell
           hallazgo={row.original}

@@ -13,7 +13,7 @@ interface Props {
 export function DimensionesAereasTable({ dimensiones, totalPiezas, pesoTotal }: Props) {
   return (
     <div>
-      <span className="text-sm text-muted-foreground font-semibold">Dimensiones</span>
+      <span className="text-body text-muted-foreground font-semibold">Dimensiones</span>
       <div className="border rounded-md overflow-auto mt-1">
         <Table>
           <TableHeader>
@@ -38,7 +38,7 @@ export function DimensionesAereasTable({ dimensiones, totalPiezas, pesoTotal }: 
           </TableBody>
         </Table>
       </div>
-      <div className="flex justify-end gap-6 mt-2 text-sm font-semibold">
+      <div className="flex justify-end gap-6 mt-2 text-body font-semibold">
         <span>Total piezas: {totalPiezas}</span>
         <span>Peso volumétrico total: {pesoTotal} kg</span>
       </div>

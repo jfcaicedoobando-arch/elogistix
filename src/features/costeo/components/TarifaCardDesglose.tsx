@@ -21,14 +21,14 @@ export function TarifaCardDesglose({ recargos }: { recargos: RecargoItem[] }) {
       <button
         type="button"
         onClick={() => setAbierto((v) => !v)}
-        className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1 w-full justify-between py-1"
+        className="text-body-sm text-muted-foreground hover:text-foreground flex items-center gap-1 w-full justify-between py-1"
         aria-expanded={abierto}
       >
         <span>Ver desglose ({recargos.length} {recargos.length === 1 ? "recargo" : "recargos"})</span>
         {abierto ? <ChevronUp className="size-3" /> : <ChevronDown className="size-3" />}
       </button>
       {abierto && (
-        <div className="text-xs space-y-1 mt-1 pl-1 border-l-2 border-border">
+        <div className="text-body-sm space-y-1 mt-1 pl-1 border-l-2 border-border">
           {recargos.map((r) => (
             <div key={r.id} className="flex items-baseline justify-between gap-2 pl-2">
               <span className="text-muted-foreground truncate">{r.concepto} ({r.lado})</span>

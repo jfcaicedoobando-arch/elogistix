@@ -22,12 +22,12 @@ export function EnvioProformaExitoso({ estado, enlacePortal, onCopiar }: Props) 
       <div>
         <Label size="sm" className="uppercase text-muted-foreground" htmlFor="proforma-enlace-portal">Enlace del portal</Label>
         <div className="flex gap-2 mt-1">
-          <Input id="proforma-enlace-portal" readOnly value={enlacePortal} className="text-xs" />
+          <Input id="proforma-enlace-portal" readOnly value={enlacePortal} className="text-body-sm" />
           <Button variant="outline" size="icon" onClick={() => onCopiar(enlacePortal)} aria-label="Copiar enlace">
             <Copy className="h-4 w-4" />
           </Button>
         </div>
-        <p className="text-xs text-muted-foreground mt-1">
+        <p className="text-body-sm text-muted-foreground mt-1">
           Puedes compartir este enlace por WhatsApp u otro canal si el cliente no recibe el correo.
         </p>
       </div>

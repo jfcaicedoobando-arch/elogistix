@@ -21,7 +21,7 @@ export function ProveedorNotaMonedas({ monedasNativas, monedasSinTc, tcEstimado 
   if (!variasMonedas && monedasSinTc.length === 0) return null;
 
   return (
-    <div className="text-xs text-muted-foreground">
+    <div className="text-body-sm text-muted-foreground">
       {tcEstimado ? (
         <span className="text-warning">
           Equivalente calculado con T/C estimado (no oficial) ·{" "}

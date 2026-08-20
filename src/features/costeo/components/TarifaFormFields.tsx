@@ -46,7 +46,7 @@ export function EntidadesFields({ form, setForm, agentes, navieras, errores, age
               disabled
               className="bg-muted/40"
             />
-            <p className="text-2xs text-muted-foreground mt-1">
+            <p className="text-label text-muted-foreground mt-1">
               Las tarifas que captures quedan a tu nombre automáticamente.
             </p>
           </>
@@ -113,7 +113,7 @@ export function RutaTipoFields({
         <div className="flex items-center justify-between gap-2">
           <Label htmlFor="tarifa-ruta">{multiple ? "Rutas *" : "Ruta *"}</Label>
           {multiple && (rutaIds?.length ?? 0) > 1 && (
-            <Badge variant="secondary" className="text-2xs">
+            <Badge variant="secondary" className="text-label">
               Se crearán {rutaIds?.length} tarifas
             </Badge>
           )}
@@ -127,7 +127,7 @@ export function RutaTipoFields({
               onChange={(ids) => onRutaIdsChange?.(ids)}
               invalid={errores?.ruta_id}
             />
-            <p className="mt-1 text-xs text-muted-foreground">
+            <p className="mt-1 text-body-sm text-muted-foreground">
               Tip: selecciona varias rutas para crear una tarifa en cada una con los mismos datos.
             </p>
           </>

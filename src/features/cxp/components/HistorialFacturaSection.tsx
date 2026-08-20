@@ -67,26 +67,26 @@ function FilaEvento({ ev }: { ev: EventoHistorialFactura }) {
         <Icon className={cn("h-3.5 w-3.5", color)} />
       </span>
       <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
-        <span className="text-sm font-medium">{ev.descripcion}</span>
+        <span className="text-body font-medium">{ev.descripcion}</span>
         {ev.monto != null && ev.moneda && (
-          <span className="text-sm tabular-nums font-semibold">
+          <span className="text-body tabular-nums font-semibold">
             {formatCurrency(Number(ev.monto), ev.moneda)}
           </span>
         )}
       </div>
-      <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-muted-foreground mt-0.5">
+      <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-body-sm text-muted-foreground mt-0.5">
         <span>{formatDateTimeShort(ev.ts)}</span>
         {ev.actor_email && (
           <>
             <span>·</span>
-            <Badge variant="outline" className="font-normal text-2xs py-0 px-1.5 h-4">
+            <Badge variant="outline" className="font-normal text-label py-0 px-1.5 h-4">
               {ev.actor_email}
             </Badge>
           </>
         )}
       </div>
       {motivo && (
-        <p className="text-xs italic text-muted-foreground mt-1">
+        <p className="text-body-sm italic text-muted-foreground mt-1">
           Motivo: {motivo}
         </p>
       )}
@@ -111,11 +111,11 @@ export function HistorialFacturaSection({ facturaId }: Props) {
       ) : isError ? (
         <div className="flex flex-col items-center gap-2 py-4 text-center">
           <AlertTriangle className="h-5 w-5 text-destructive" />
-          <p className="text-sm font-medium text-destructive">
+          <p className="text-body font-medium text-destructive">
             No se pudo cargar el historial.
           </p>
           {error instanceof Error && (
-            <p className="max-w-md truncate text-xs text-muted-foreground">
+            <p className="max-w-md truncate text-body-sm text-muted-foreground">
               {getErrorMessage(error)}
             </p>
           )}

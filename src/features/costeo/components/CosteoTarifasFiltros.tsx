@@ -63,7 +63,7 @@ export function CosteoTarifasFiltros({
 
       <Select value={aprobacion} onValueChange={(v) => onAprobacionChange(v as AprobacionFiltro)}>
         <SelectTrigger className="h-9 w-auto gap-1.5" aria-label="Filtrar por aprobación">
-          <span className="text-xs text-muted-foreground">Aprobación:</span>
+          <span className="text-body-sm text-muted-foreground">Aprobación:</span>
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
@@ -76,7 +76,7 @@ export function CosteoTarifasFiltros({
 
       <Select value={estado} onValueChange={(v) => onEstadoChange(v as EstadoFiltro)}>
         <SelectTrigger className="h-9 w-auto gap-1.5" aria-label="Filtrar por vigencia">
-          <span className="text-xs text-muted-foreground">Vigencia:</span>
+          <span className="text-body-sm text-muted-foreground">Vigencia:</span>
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
@@ -89,7 +89,7 @@ export function CosteoTarifasFiltros({
 
       <Select value={agenteId} onValueChange={onAgenteChange}>
         <SelectTrigger className="h-9 w-auto gap-1.5" aria-label="Filtrar por agente">
-          <span className="text-xs text-muted-foreground">Agente:</span>
+          <span className="text-body-sm text-muted-foreground">Agente:</span>
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
@@ -102,7 +102,7 @@ export function CosteoTarifasFiltros({
 
       <Select value={tipoId} onValueChange={onTipoChange}>
         <SelectTrigger className="h-9 w-auto gap-1.5" aria-label="Filtrar por contenedor">
-          <span className="text-xs text-muted-foreground">Contenedor:</span>
+          <span className="text-body-sm text-muted-foreground">Contenedor:</span>
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
@@ -114,7 +114,7 @@ export function CosteoTarifasFiltros({
       </Select>
 
       {hasActiveFilters && (
-        <Button variant="ghost" size="sm" onClick={onClearAll} className="ml-auto h-9 text-xs">
+        <Button variant="ghost" size="sm" onClick={onClearAll} className="ml-auto h-9 text-body-sm">
           <X className="size-4 mr-1" />Limpiar filtros
         </Button>
       )}

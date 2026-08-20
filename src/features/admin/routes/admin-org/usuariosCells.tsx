@@ -56,12 +56,12 @@ export function UsuarioCell({ user, isSelf }: UsuarioCellProps) {
           {etiqueta}
         </span>
         {fallbackName && (
-          <span className="text-2xs text-muted-foreground italic">
+          <span className="text-label text-muted-foreground italic">
             Correo no disponible
           </span>
         )}
         {isSelf && (
-          <span className="text-2xs uppercase tracking-wide text-primary font-semibold">
+          <span className="text-label uppercase tracking-wide text-primary font-semibold">
             Tú
           </span>
         )}
@@ -71,13 +71,13 @@ export function UsuarioCell({ user, isSelf }: UsuarioCellProps) {
               <TooltipTrigger asChild>
                 <Badge
                   variant="outline"
-                  className="mt-0.5 w-fit gap-1 border-warning/60 bg-warning/10 text-2xs uppercase tracking-wide text-warning-foreground"
+                  className="mt-0.5 w-fit gap-1 border-warning/60 bg-warning/10 text-label uppercase tracking-wide text-warning-foreground"
                 >
                   <AlertTriangle className="h-3 w-3" />
                   Rol legado
                 </Badge>
               </TooltipTrigger>
-              <TooltipContent side="top" className="max-w-xs text-xs">
+              <TooltipContent side="top" className="max-w-xs text-body-sm">
                 Este usuario aún tiene el rol legacy <strong>{user.role}</strong>. Cámbialo a{" "}
                 <strong>{ROLE_LABELS[rolModernoSugerido(user.role) ?? "customer_service"]}</strong>{" "}
                 o ejecuta la migración desde <em>Auditoría de plataforma → Migración de roles legacy</em>.
@@ -118,7 +118,7 @@ export function ChangeRoleCell({ user, isSelf, onPendingRole }: ChangeRoleCellPr
       <SelectContent>
         {esRolLegacy(user.role) && (
           <SelectGroup>
-            <SelectLabel className="text-2xs uppercase tracking-wide text-warning-foreground">
+            <SelectLabel className="text-label uppercase tracking-wide text-warning-foreground">
               Rol legado (migrar)
             </SelectLabel>
             <SelectItem key={user.role} value={user.role} disabled>
@@ -128,14 +128,14 @@ export function ChangeRoleCell({ user, isSelf, onPendingRole }: ChangeRoleCellPr
         )}
         {ASSIGNABLE_ROLE_GROUPS.map((group) => (
           <SelectGroup key={group.label}>
-            <SelectLabel className="text-2xs uppercase tracking-wide text-muted-foreground">
+            <SelectLabel className="text-label uppercase tracking-wide text-muted-foreground">
               {group.label}
             </SelectLabel>
             {group.roles.map((r) => (
               <SelectItem key={r} value={r} className="items-start py-2">
                 <div className="flex flex-col gap-0.5">
                   <span className="font-medium">{ROLE_LABELS[r]}</span>
-                  <span className="text-2xs leading-snug text-muted-foreground">
+                  <span className="text-label leading-snug text-muted-foreground">
                     {ROLE_DESCRIPTIONS[r]}
                   </span>
                 </div>
@@ -169,12 +169,12 @@ export function EstadoInvitacionCell({ estado }: { estado: EstadoInvitacion }) {
           </Badge>
         </TooltipTrigger>
         <TooltipContent side="top">
-          <p className="text-xs">El usuario aún no ha iniciado sesión ni confirmado su correo.</p>
+          <p className="text-body-sm">El usuario aún no ha iniciado sesión ni confirmado su correo.</p>
         </TooltipContent>
       </Tooltip>
     );
   }
   // VB-15: placeholder más explícito que un guion cuando el estado es
   // desconocido (p. ej. el directorio de auth no respondió).
-  return <span className="text-xs text-muted-foreground">Sin datos</span>;
+  return <span className="text-body-sm text-muted-foreground">Sin datos</span>;
 }

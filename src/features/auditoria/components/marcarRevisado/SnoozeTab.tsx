@@ -13,7 +13,7 @@ interface Props {
 export function SnoozeTab({ ctrl }: Props) {
   return (
     <TabsContent value="snooze" className="space-y-2 mt-2">
-      <p className="text-xs text-muted-foreground">
+      <p className="text-body-sm text-muted-foreground">
         Silencia este hallazgo hasta una fecha. Sigue contando como pendiente en histórico,
         pero deja de mostrarse en la tabla por defecto.
       </p>
@@ -25,7 +25,7 @@ export function SnoozeTab({ ctrl }: Props) {
           <DatePickerMx
             value={ctrl.snoozeHasta}
             onChange={ctrl.setSnoozeHasta}
-            className="w-full text-sm"
+            className="w-full text-body"
           />
         </div>
       </div>
@@ -40,7 +40,7 @@ export function SnoozeTab({ ctrl }: Props) {
           onChange={(e) => ctrl.setSnoozeMotivo(e.target.value)}
           rows={2}
           maxLength={300}
-          className="text-sm"
+          className="text-body"
         />
       </div>
       <div className="flex gap-2 pt-1">

@@ -56,7 +56,7 @@ export function SugerirEmbarqueBlock({
   if (seleccionado) {
     return (
       <div className="rounded-lg border border-success/40 bg-success/5 px-4 py-3 space-y-2">
-        <div className="flex items-center gap-2 text-sm">
+        <div className="flex items-center gap-2 text-body">
           <Check className="h-4 w-4 text-success" />
           <span className="font-medium">Se creará un costo en el embarque</span>
           <Badge variant="outline" className="font-mono">{seleccionado.expediente}</Badge>
@@ -73,7 +73,7 @@ export function SugerirEmbarqueBlock({
             onChange={(e) => onSeleccionar({ ...seleccionado, concepto: e.target.value })}
             placeholder="Ej. Flete marítimo, Maniobras, Demoras…"
           />
-          <p className="text-xs text-muted-foreground">
+          <p className="text-body-sm text-muted-foreground">
             Se registrará por el total de la factura y quedará marcado como pagado.
           </p>
         </div>
@@ -85,11 +85,11 @@ export function SugerirEmbarqueBlock({
     <div className="rounded-lg border bg-muted/20 px-4 py-3 space-y-3">
       <div className="flex items-center gap-2">
         <Sparkles className="h-4 w-4 text-accent" />
-        <Label className="text-sm font-semibold">
+        <Label className="text-body font-semibold">
           Este proveedor no tiene costos pre-cargados
         </Label>
       </div>
-      <p className="text-xs text-muted-foreground">
+      <p className="text-body-sm text-muted-foreground">
         Liga la factura a un embarque y crearemos el costo directo del embarque automáticamente.
       </p>
 
@@ -105,13 +105,13 @@ export function SugerirEmbarqueBlock({
       </div>
 
       {loading && (
-        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+        <div className="flex items-center gap-2 text-body-sm text-muted-foreground">
           <Loader2 className="h-4 w-4 animate-spin" /> Buscando embarques…
         </div>
       )}
 
       {!loading && lista.length === 0 && (
-        <p className="text-xs text-muted-foreground italic">
+        <p className="text-body-sm text-muted-foreground italic">
           {term.length >= 2
             ? "No encontramos embarques con ese texto. Los embarques cerrados o cancelados no se muestran."
             : "No hay sugerencias automáticas. Busca por expediente o BL (no se muestran embarques cerrados ni cancelados)."}
@@ -121,7 +121,7 @@ export function SugerirEmbarqueBlock({
       {!loading && lista.length > 0 && (
         <div className="space-y-1.5 max-h-56 overflow-y-auto">
           {term.length < 2 && (
-            <p className="text-xs font-medium text-muted-foreground">
+            <p className="text-body-sm font-medium text-muted-foreground">
               Sugeridos para {proveedorNombre}:
             </p>
           )}
@@ -134,12 +134,12 @@ export function SugerirEmbarqueBlock({
               onClick={() => handlePick(e)}
               className="h-auto w-full flex-col items-stretch justify-start gap-0 whitespace-normal rounded-md border bg-background px-3 py-2 text-left font-normal hover:border-accent hover:bg-accent/5 transition-colors"
             >
-              <div className="flex items-center gap-2 text-sm">
+              <div className="flex items-center gap-2 text-body">
                 <span className="font-mono font-medium">{e.expediente ?? "—"}</span>
                 <span className="text-muted-foreground truncate">· {e.cliente_nombre ?? "Sin cliente"}</span>
-                {e.estado && <Badge variant="secondary" className="ml-auto text-xs">{e.estado}</Badge>}
+                {e.estado && <Badge variant="secondary" className="ml-auto text-body-sm">{e.estado}</Badge>}
               </div>
-              <div className="text-xs text-muted-foreground mt-0.5 flex items-center gap-2">
+              <div className="text-body-sm text-muted-foreground mt-0.5 flex items-center gap-2">
                 <span className="text-accent">{e.match_tipo}</span>
                 {e.eta && <span>· ETA {formatFechaEs(e.eta)}</span>}
               </div>

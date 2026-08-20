@@ -79,10 +79,10 @@ export default function Papelera() {
             })}
           </SelectContent>
         </Select>
-        <span className="text-xs text-muted-foreground">
+        <span className="text-body-sm text-muted-foreground">
           {rows.length} {rows.length === 1 ? "registro" : "registros"} en esta tabla
         </span>
-        <span className="text-xs text-muted-foreground ml-auto">
+        <span className="text-body-sm text-muted-foreground ml-auto">
           Total en papelera: <strong>{totalPapelera}</strong>
         </span>
       </div>

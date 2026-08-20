@@ -32,7 +32,7 @@ function BannerContexto({
     ? "border-warning/30 bg-warning/5 text-warning"
     : "border-primary/30 bg-primary/5 text-primary";
   return (
-    <div className={`flex gap-2 rounded-md border px-3 py-2 text-xs ${cls}`}>
+    <div className={`flex gap-2 rounded-md border px-3 py-2 text-body-sm ${cls}`}>
       <Icon className="h-4 w-4 shrink-0 mt-0.5" />
       <div className="text-foreground/90">{children}</div>
     </div>
@@ -56,10 +56,10 @@ function EditorBody({ factura, ctl, categorias }: EditorBodyProps) {
   return (
     <>
       <div className="flex items-center gap-3 flex-wrap -mt-1">
-        <span className="px-2 py-0.5 rounded bg-muted text-muted-foreground text-xs font-mono font-semibold uppercase tracking-wider border">
+        <span className="px-2 py-0.5 rounded bg-muted text-muted-foreground text-body-sm font-mono font-semibold uppercase tracking-wider border">
           {factura.folio_interno}
         </span>
-        <span className="text-xs text-muted-foreground truncate">
+        <span className="text-body-sm text-muted-foreground truncate">
           Folio prov. <span className="font-mono">{factura.folio_proveedor}</span> · {factura.proveedor_nombre}
         </span>
       </div>
@@ -129,13 +129,13 @@ export function DialogEditarFacturaProveedor({ factura, onOpenChange }: Props) {
       footer={footer}
     >
       {ctl.isLoadingRow && (
-        <div className="flex items-center justify-center py-12 text-sm text-muted-foreground">
+        <div className="flex items-center justify-center py-12 text-body text-muted-foreground">
           <EmptyStateInline loading message="Cargando factura…" />
         </div>
       )}
 
       {ctl.isErrorRow && (
-        <div className="rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
+        <div className="rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-body text-destructive">
           No se pudo cargar la factura. Cierra y vuelve a abrir el diálogo.
         </div>
       )}

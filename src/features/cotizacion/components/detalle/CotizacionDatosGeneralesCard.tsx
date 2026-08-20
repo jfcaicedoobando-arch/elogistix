@@ -92,7 +92,7 @@ export function CotizacionDatosGeneralesCard({ cotizacion }: Props) {
     <Card>
       <CardHeader><CardTitle>Datos Generales</CardTitle></CardHeader>
       <CardContent>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm [&>div]:min-w-0 [&>div>p]:truncate">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-body [&>div]:min-w-0 [&>div>p]:truncate">
           {rows.map((r) => (
             <div key={r.label} className={r.colSpan2 ? "col-span-2" : undefined}>
               <span className="text-muted-foreground">{r.label}</span>

@@ -47,7 +47,7 @@ export function AuditoriaRiesgoFinancieroCard({ total, porRegla }: Props) {
       icon={TrendingDown}
       variant="warning"
     >
-      <div className="space-y-1 text-xs mt-2">
+      <div className="space-y-1 text-body-sm mt-2">
           {items.map(([regla, monto]) => (
             <div
               key={regla}

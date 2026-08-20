@@ -48,7 +48,7 @@ export function EditarConceptosButton(props: Props) {
       {puede ? boton : (
         <Tooltip>
           <TooltipTrigger asChild><span className="inline-flex">{boton}</span></TooltipTrigger>
-          <TooltipContent className="max-w-xs text-xs">{motivo}</TooltipContent>
+          <TooltipContent className="max-w-xs text-body-sm">{motivo}</TooltipContent>
         </Tooltip>
       )}
       {puede && (

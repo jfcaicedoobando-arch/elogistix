@@ -9,7 +9,7 @@ interface Props {
 
 export function HallazgoSummary({ hallazgo, revisionExistente, snoozeActivo }: Props) {
   return (
-    <div className="text-xs space-y-1 pt-1 text-muted-foreground">
+    <div className="text-body-sm space-y-1 pt-1 text-muted-foreground">
       <div>
         <span className="font-medium text-foreground">Expediente:</span>{" "}
         <span className="tabular-nums">{hallazgo.expediente}</span>
@@ -22,7 +22,7 @@ export function HallazgoSummary({ hallazgo, revisionExistente, snoozeActivo }: P
       {hallazgo.documentos_faltantes?.length > 0 && (
         <div className="flex flex-wrap gap-1 pt-1">
           {hallazgo.documentos_faltantes.map((d) => (
-            <Badge key={d} variant="secondary" className="text-2xs font-normal">
+            <Badge key={d} variant="secondary" className="text-label font-normal">
               {d}
             </Badge>
           ))}

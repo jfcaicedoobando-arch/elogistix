@@ -70,12 +70,12 @@ export function ProveedorTable({ tipo, search, origen, onSelect, onTotalChange, 
           mobileCard={(p) => (
             <div className="flex items-start justify-between gap-2">
               <div className="min-w-0 flex-1">
-                <div className="font-semibold text-sm truncate">{toTitleCase(p.nombre)}</div>
-                <div className="text-xs text-muted-foreground truncate mt-0.5">{p.rfc || "—"}</div>
+                <div className="font-semibold text-body truncate">{toTitleCase(p.nombre)}</div>
+                <div className="text-body-sm text-muted-foreground truncate mt-0.5">{p.rfc || "—"}</div>
                 <div className="text-label text-muted-foreground truncate mt-0.5">{p.contacto ? toTitleCase(p.contacto) : ""}</div>
               </div>
               {p.origen_proveedor && (
-                <Badge variant="outline" className="text-2xs whitespace-nowrap">{p.origen_proveedor}</Badge>
+                <Badge variant="outline" className="text-label whitespace-nowrap">{p.origen_proveedor}</Badge>
               )}
             </div>
           )}

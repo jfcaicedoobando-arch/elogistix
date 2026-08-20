@@ -51,25 +51,25 @@ export function CrearConceptoInlineForm({ organizationId, nombreInicial, onCread
 
   return (
     <div className="p-3 space-y-2" data-testid="crear-concepto-inline-form">
-      <p className="text-xs font-medium">Nuevo producto/servicio</p>
+      <p className="text-body-sm font-medium">Nuevo producto/servicio</p>
       <div className="space-y-1">
-        <Label htmlFor="cci-nombre" className="text-2xs">Nombre</Label>
-        <Input id="cci-nombre" value={nombre} onChange={(e) => setNombre(e.target.value)} className="h-8 text-sm" />
+        <Label htmlFor="cci-nombre" className="text-label">Nombre</Label>
+        <Input id="cci-nombre" value={nombre} onChange={(e) => setNombre(e.target.value)} className="h-8 text-body" />
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
         <div className="space-y-1">
-          <Label htmlFor="cci-sat" className="text-2xs">Clave SAT</Label>
-          <Input id="cci-sat" value={claveSat} onChange={(e) => setClaveSat(e.target.value)} placeholder="78101800" className="h-8 text-sm" />
+          <Label htmlFor="cci-sat" className="text-label">Clave SAT</Label>
+          <Input id="cci-sat" value={claveSat} onChange={(e) => setClaveSat(e.target.value)} placeholder="78101800" className="h-8 text-body" />
         </div>
         <div className="space-y-1">
-          <Label htmlFor="cci-unidad" className="text-2xs">Clave unidad</Label>
-          <Input id="cci-unidad" value={claveUnidad} onChange={(e) => setClaveUnidad(e.target.value)} className="h-8 text-sm" />
+          <Label htmlFor="cci-unidad" className="text-label">Clave unidad</Label>
+          <Input id="cci-unidad" value={claveUnidad} onChange={(e) => setClaveUnidad(e.target.value)} className="h-8 text-body" />
         </div>
       </div>
       <div className="space-y-1">
-        <Label className="text-2xs">IVA</Label>
+        <Label className="text-label">IVA</Label>
         <Select value={tipoIva} onValueChange={(v) => setTipoIva(v as ProductoCatalogo["tipo_iva"])}>
-          <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
+          <SelectTrigger className="h-8 text-body"><SelectValue /></SelectTrigger>
           <SelectContent>
             <SelectItem value="gravado_16">Gravado 16%</SelectItem>
             <SelectItem value="tasa_0">Tasa 0%</SelectItem>

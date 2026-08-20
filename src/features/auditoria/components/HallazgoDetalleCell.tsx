@@ -14,7 +14,7 @@ export function HallazgoDetalleCell({ hallazgo }: { hallazgo: HallazgoDetalle })
       {documentos.length > 0 && (
         <div className="mt-1 flex flex-wrap gap-1">
           {documentos.map((doc) => (
-            <Badge key={normalizeDocName(doc)} variant="secondary" className="text-2xs font-normal">
+            <Badge key={normalizeDocName(doc)} variant="secondary" className="text-label font-normal">
               {doc}
             </Badge>
           ))}

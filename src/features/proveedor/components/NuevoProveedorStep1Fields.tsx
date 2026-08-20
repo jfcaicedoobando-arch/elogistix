@@ -44,8 +44,8 @@ export function CsfUploader({ c }: { c: Controller }) {
   };
   return (
     <div className="space-y-2 rounded-md border border-dashed border-border bg-muted/40 p-3">
-      <Label className="text-sm">Cargar Constancia de Situación Fiscal (PDF)</Label>
-      <p className="text-xs text-muted-foreground">
+      <Label className="text-body">Cargar Constancia de Situación Fiscal (PDF)</Label>
+      <p className="text-body-sm text-muted-foreground">
         Opcional. Extraemos automáticamente nombre y RFC desde la CSF del SAT.
       </p>
       <input ref={csfInputRef} type="file" accept="application/pdf" className="hidden" onChange={onChange} />

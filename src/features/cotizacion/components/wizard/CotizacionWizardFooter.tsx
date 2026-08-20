@@ -67,7 +67,7 @@ export function CotizacionWizardFooter({
                 <AlertTriangle className="h-4 w-4 mr-2" />
                 <div className="flex flex-col gap-0.5">
                   <span className="font-medium">Cotizar sin desglose</span>
-                  <span className="text-xs text-muted-foreground">
+                  <span className="text-body-sm text-muted-foreground">
                     Salta al paso 3. El embarque quedará bloqueado hasta cargar costos.
                   </span>
                 </div>
@@ -89,13 +89,13 @@ export function CotizacionWizardFooter({
                     : <>Siguiente <ChevronRight className="h-4 w-4 ml-1" /></>}
               </Button>
             </TooltipTrigger>
-            <TooltipContent side="top" className="text-xs">
+            <TooltipContent side="top" className="text-body-sm">
               <span className="font-medium">
                 {currentStep === 4 ? "Guardar" : "Siguiente"}
               </span>
-              <kbd className="ml-2 rounded bg-muted px-1.5 py-0.5 text-2xs font-mono">Ctrl</kbd>
-              <span className="mx-0.5 text-2xs">+</span>
-              <kbd className="rounded bg-muted px-1.5 py-0.5 text-2xs font-mono">↵</kbd>
+              <kbd className="ml-2 rounded bg-muted px-1.5 py-0.5 text-label font-mono">Ctrl</kbd>
+              <span className="mx-0.5 text-label">+</span>
+              <kbd className="rounded bg-muted px-1.5 py-0.5 text-label font-mono">↵</kbd>
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>

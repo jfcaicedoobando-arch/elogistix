@@ -44,7 +44,7 @@ export function buildCotizacionesColumns(params: BuildParams): ColumnDef<Cotizac
       id: "tipo_doc",
       header: "Tipo",
       // Oculto en tableta (<xl) — información secundaria (Tarifario vs Transaccional).
-      meta: { width: COL_W.fecha, className: "text-xs hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
+      meta: { width: COL_W.fecha, className: "text-body-sm hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
       cell: ({ row }) => {
         const esInfo = row.original.tipo_documento === "informativa";
         return (
@@ -58,7 +58,7 @@ export function buildCotizacionesColumns(params: BuildParams): ColumnDef<Cotizac
       id: "modo",
       header: "Modo",
       // Oculto en tableta (<xl).
-      meta: { width: COL_W.short, className: "text-xs whitespace-nowrap hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
+      meta: { width: COL_W.short, className: "text-body-sm whitespace-nowrap hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
       cell: ({ row }) => row.original.modo,
     },
     {
@@ -67,7 +67,7 @@ export function buildCotizacionesColumns(params: BuildParams): ColumnDef<Cotizac
       // Oculto en tableta (<xl) — la ruta se ve en el detalle.
       // VF-15: el tope de 200px truncaba "Shanghái → Manzanillo" habiendo
       // ancho disponible; se amplía al peldaño canónico de ruta.
-      meta: { width: COL_W.ruta, className: "text-xs max-w-[320px] hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
+      meta: { width: COL_W.ruta, className: "text-body-sm max-w-[320px] hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
       cell: ({ row }) => {
         const r = row.original;
         const ruta = `${r.origen || "-"} → ${r.destino || "-"}`;
@@ -76,7 +76,7 @@ export function buildCotizacionesColumns(params: BuildParams): ColumnDef<Cotizac
             <TooltipTrigger asChild>
               <span className="block truncate whitespace-nowrap">{ruta}</span>
             </TooltipTrigger>
-            <TooltipContent side="top" className="text-xs max-w-[320px] break-words">{ruta}</TooltipContent>
+            <TooltipContent side="top" className="text-body-sm max-w-[320px] break-words">{ruta}</TooltipContent>
           </Tooltip>
         );
       },

@@ -64,7 +64,7 @@ export function DialogPagoLoteProveedor(p: Props) {
       headerAside={
         <div className="pr-6 leading-tight">
           <p className="text-overline text-muted-foreground">Saldo seleccionado</p>
-          <p className="text-sm font-semibold tabular-nums">
+          <p className="text-body font-semibold tabular-nums">
             {formatCurrency(s.saldoTotal, p.moneda)}
           </p>
         </div>

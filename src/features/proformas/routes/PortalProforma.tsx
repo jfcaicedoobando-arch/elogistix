@@ -109,7 +109,7 @@ export default function PortalProforma() {
 
         <ContenidoPortal state={state} />
 
-        <p className="text-xs text-muted-foreground text-center pt-4">
+        <p className="text-body-sm text-muted-foreground text-center pt-4">
           © Libre Carga — Este enlace es único para tu proforma y expira por seguridad.
         </p>
       </div>

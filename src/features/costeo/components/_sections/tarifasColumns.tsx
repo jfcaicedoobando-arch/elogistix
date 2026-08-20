@@ -51,7 +51,7 @@ export function buildTarifasColumns(deps: TarifasColumnsDeps): ColumnDef<TarifaR
       accessorFn: (t) => `${t.puerto_origen_nombre} → ${t.puerto_destino_nombre}`,
       sortingFn: sortByString((t) => `${t.puerto_origen_nombre} → ${t.puerto_destino_nombre}`),
       enableSorting: true,
-      meta: { sticky: true, className: "text-sm" },
+      meta: { sticky: true, className: "text-body" },
       cell: ({ row }) => `${row.original.puerto_origen_nombre} → ${row.original.puerto_destino_nombre}`,
     },
     {
@@ -63,7 +63,7 @@ export function buildTarifasColumns(deps: TarifasColumnsDeps): ColumnDef<TarifaR
       cell: ({ row }) => (
         <div>
           <div className="font-medium">{row.original.agente_nombre}</div>
-          <div className="text-xs text-muted-foreground">{row.original.naviera_nombre}</div>
+          <div className="text-body-sm text-muted-foreground">{row.original.naviera_nombre}</div>
         </div>
       ),
     },
@@ -130,7 +130,7 @@ export function buildTarifasColumns(deps: TarifasColumnsDeps): ColumnDef<TarifaR
       accessorFn: (t) => t.vigente_hasta,
       sortingFn: sortByDate((t) => t.vigente_hasta),
       enableSorting: true,
-      meta: { className: "text-xs" },
+      meta: { className: "text-body-sm" },
       cell: ({ row }) => {
         const t = row.original;
         const hint = vigenciaHint(t.vigente_hasta);

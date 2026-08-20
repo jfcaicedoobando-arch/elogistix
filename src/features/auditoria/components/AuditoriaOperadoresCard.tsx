@@ -32,7 +32,7 @@ function formatMttr(horas: number | null | undefined): string {
 function RankingList({ ranking, emptyMsg }: { ranking: OperadorRanking[]; emptyMsg: string }) {
   if (ranking.length === 0) {
     return (
-      <div className="text-xs text-muted-foreground py-6 text-center">{emptyMsg}</div>
+      <div className="text-body-sm text-muted-foreground py-6 text-center">{emptyMsg}</div>
     );
   }
   return (
@@ -40,7 +40,7 @@ function RankingList({ ranking, emptyMsg }: { ranking: OperadorRanking[]; emptyM
       {ranking.map((op) => (
         <div
           key={op.email}
-          className="flex items-center justify-between gap-2 text-xs border rounded-md p-2"
+          className="flex items-center justify-between gap-2 text-body-sm border rounded-md p-2"
         >
           <span className="truncate font-medium" title={op.email}>{op.email}</span>
           <div className="flex items-center gap-1.5 shrink-0">
@@ -80,8 +80,8 @@ export function AuditoriaOperadoresCard({ mttrHoras, ranking, rankingRevisores }
           {tieneTabs ? (
             <Tabs defaultValue="responsables">
               <TabsList className="h-8">
-                <TabsTrigger value="responsables" className="text-xs">Responsables</TabsTrigger>
-                <TabsTrigger value="revisores" className="text-xs">Revisores</TabsTrigger>
+                <TabsTrigger value="responsables" className="text-body-sm">Responsables</TabsTrigger>
+                <TabsTrigger value="revisores" className="text-body-sm">Revisores</TabsTrigger>
               </TabsList>
               <TabsContent value="responsables" className="mt-2">
                 <RankingList

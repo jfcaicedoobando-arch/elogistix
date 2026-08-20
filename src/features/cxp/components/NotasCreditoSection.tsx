@@ -68,7 +68,7 @@ export function NotasCreditoSection({ facturaId, monedaFactura, saldoFactura, ca
         <EmptyStateInline icon={FileMinus2} message="Sin notas de crédito registradas." />
       ) : (
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className="w-full text-body">
             <thead className="bg-muted/20 text-label uppercase tracking-wider text-muted-foreground">
               <tr>
                 <th className="text-left px-3 py-2">Folio</th>
