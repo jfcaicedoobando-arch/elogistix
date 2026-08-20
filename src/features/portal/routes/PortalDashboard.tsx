@@ -81,34 +81,41 @@ export default function PortalDashboard() {
         clienteIds={clienteIds}
       />
 
-      <PortalKpiGrid
-        values={{
-          embarques: embarquesActivos.length,
-          cotizaciones: cotizaciones.filter((c) => c.estado === "Enviada").length,
-          facturas: kpisCobranza.facturasAdeudadas,
-        }}
-      />
+      {cargando ? (
+        <DashboardSkeleton kpis={3} charts={2} />
+      ) : (
+        <>
+          <PortalKpiGrid
+            values={{
+              embarques: embarquesActivos.length,
+              cotizaciones: cotizaciones.filter((c) => c.estado === "Enviada").length,
+              facturas: kpisCobranza.facturasAdeudadas,
+            }}
+          />
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <PortalEstadoEmbarquesCard
-          total={embarquesActivos.length}
-          distribucion={estadoDistribucion}
-        />
-        <PortalProximosArribosCard items={proximosArribos} />
-      </div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <PortalEstadoEmbarquesCard
+              total={embarquesActivos.length}
+              distribucion={estadoDistribucion}
+            />
+            <PortalProximosArribosCard items={proximosArribos} />
+          </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <PortalFacturacionPendienteCard
-          montos={kpisCobranza.adeudado}
-          total={kpisCobranza.facturasAdeudadas}
-          vencidas={kpisCobranza.facturasVencidas}
-          className="lg:col-span-1"
-        />
-        <PortalEmbarquesRecientesCard
-          embarques={embarquesActivos}
-          className="lg:col-span-2"
-        />
-      </div>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            <PortalFacturacionPendienteCard
+              montos={kpisCobranza.adeudado}
+              total={kpisCobranza.facturasAdeudadas}
+              vencidas={kpisCobranza.facturasVencidas}
+              className="lg:col-span-1"
+            />
+            <PortalEmbarquesRecientesCard
+              embarques={embarquesActivos}
+              className="lg:col-span-2"
+            />
+          </div>
+        </>
+      )}
+
     </div>
   );
 }
