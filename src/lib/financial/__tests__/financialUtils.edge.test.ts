@@ -78,11 +78,11 @@ describe("sumarEnUSD / aUSD", () => {
     expect(aUSD(100, "USD", 17.5, 19)).toBe(100);
   });
 
-  it("trata moneda desconocida como USD (passthrough)", () => {
-    // El cast a Moneda en costosUSD no valida; el switch cae al return final.
-    expect(aUSD(42, "XYZ", 17.5, 19)).toBe(42);
+  it("BL-15: moneda desconocida devuelve null (no passthrough como USD)", () => {
+    expect(aUSD(42, "XYZ", 17.5, 19)).toBeNull();
   });
 });
+
 
 describe("calcularTotalesPL — bordes", () => {
   it("retorna ceros con lista vacía sin NaN", () => {

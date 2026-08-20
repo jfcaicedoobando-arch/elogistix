@@ -3,6 +3,8 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import { unwrap, unwrapOr, run } from "@/lib/supabase/response";
+import { assertNotTruncated } from "@/lib/supabase/assertNotTruncated";
+
 import type { Tables, TablesUpdate } from "@/integrations/supabase/types";
 import { registrarActividad } from "@/services/bitacora/registrar";
 import { CAP_LISTA } from "@/constants/queryCaps";
@@ -104,5 +106,10 @@ export async function fetchLiquidadoMxnPorMes(periodo?: string): Promise<number>
     [],
   )) as { total_mxn: number | null }[];
 
+  // RN-BL-3: es un KPI de dinero; si PostgREST truncó, el total sería una
+  // cifra muda más baja que la real. Mejor error visible que número falso.
+  assertNotTruncated(rows, CAP_LISTA, "comisiones.fetchLiquidadoMxnPorMes");
+
   return roundMoney(rows.reduce((acc, r) => acc + Number(r.total_mxn ?? 0), 0));
 }
+

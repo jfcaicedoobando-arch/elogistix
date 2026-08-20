@@ -1,5 +1,14 @@
 # Changelog
 
+## [13.697.0] - 2026-08-21
+### Ola 3 — Lógica de negocio residual
+- Comisiones: nuevas excepciones de porcentaje por cliente o por embarque; el cálculo aplica primero la del embarque, luego la del cliente y, si no hay, el porcentaje de la vendedora.
+- Tipo de cambio: el servicio devuelve la fecha solicitada junto al tipo de cambio, para saber cuándo se sustituyó por el del día.
+- Cobro en lote: el orden de aplicación usa la regla FIFO única del sistema.
+- Facturas: si el recálculo de totales no encuentra la factura, ahora avisa con un error en vez de dejar ceros en silencio.
+- Comisiones liquidadas: el resumen mensual avisa si la consulta se truncó en lugar de mostrar un total incompleto.
+- Monedas desconocidas ya no se convierten a USD con factor 1: se reportan como no convertibles.
+
 ## [13.696.0] - 2026-08-20
 ### Ola 2.4 — Tipografía semántica homologada
 - Portal, CRM, dashboards, CxP, cotizaciones, admin, auditoría, proformas, costeo y proveedores usan la escala semántica (`text-body`, `text-body-sm`, `text-label`): mismo tamaño para el mismo rol de texto en todas las pantallas.

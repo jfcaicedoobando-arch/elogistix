@@ -33,11 +33,22 @@ export async function recalcularTotalesFactura(facturaId: string): Promise<Total
       .maybeSingle(),
   );
 
+  // RN-BL-6: sin fila NO se devuelven ceros. Antes un `?? 0` convertía un
+  // bloqueo de RLS o una factura borrada en "totales en cero", que la UI
+  // mostraba como si la factura no tuviera importe.
+  if (!row) {
+    throw new Error(
+      "No se pudo leer la factura después de recalcular sus totales. " +
+        "Vuelve a cargar la pantalla; si persiste, no tienes acceso a esa factura.",
+    );
+  }
+
   return {
-    subtotal: Number(row?.subtotal ?? 0),
-    iva: Number(row?.iva ?? 0),
-    retIsr: Number(row?.ret_isr ?? 0),
-    retIva: Number(row?.ret_iva ?? 0),
-    total: Number(row?.total ?? 0),
+    subtotal: Number(row.subtotal ?? 0),
+    iva: Number(row.iva ?? 0),
+    retIsr: Number(row.ret_isr ?? 0),
+    retIva: Number(row.ret_iva ?? 0),
+    total: Number(row.total ?? 0),
   };
 }
+

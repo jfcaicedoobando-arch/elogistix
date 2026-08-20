@@ -1112,6 +1112,66 @@ export type Database = {
           },
         ]
       }
+      comisiones_excepciones: {
+        Row: {
+          activa: boolean
+          cliente_id: string | null
+          created_at: string
+          created_by: string | null
+          deleted_at: string | null
+          embarque_id: string | null
+          id: string
+          motivo: string | null
+          organization_id: string
+          porcentaje: number
+          updated_at: string
+          vendedora_id: string
+        }
+        Insert: {
+          activa?: boolean
+          cliente_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          deleted_at?: string | null
+          embarque_id?: string | null
+          id?: string
+          motivo?: string | null
+          organization_id: string
+          porcentaje: number
+          updated_at?: string
+          vendedora_id: string
+        }
+        Update: {
+          activa?: boolean
+          cliente_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          deleted_at?: string | null
+          embarque_id?: string | null
+          id?: string
+          motivo?: string | null
+          organization_id?: string
+          porcentaje?: number
+          updated_at?: string
+          vendedora_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comisiones_excepciones_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comisiones_excepciones_embarque_id_fkey"
+            columns: ["embarque_id"]
+            isOneToOne: false
+            referencedRelation: "embarques"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       conceptos_costo: {
         Row: {
           concepto: string
@@ -10377,6 +10437,15 @@ export type Database = {
       resolver_expediente_por_bl: {
         Args: { _bl_master: string; _tipo_op: string }
         Returns: string
+      }
+      resolver_porcentaje_comision: {
+        Args: {
+          p_cliente_id: string
+          p_embarque_id: string
+          p_organization_id: string
+          p_vendedora_id: string
+        }
+        Returns: number
       }
       resolver_producto_sat: {
         Args: { p_nombre: string; p_org: string }

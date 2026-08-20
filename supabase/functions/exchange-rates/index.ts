@@ -59,6 +59,8 @@ interface Rates {
   // disfrazado de TC real (contrato FIX-10).
   eurMxn: number | null;
   fechaAplicada?: string;
+  /** BL-16: fecha que pidió el cliente (null si no pidió ninguna válida). */
+  fechaSolicitada?: string | null;
   es_fallback?: false;
   /** EF-04: true cuando el EUR no vino de Banxico/tabla (fallback parcial). */
   eur_es_fallback?: boolean;
@@ -69,10 +71,22 @@ let cacheHoyRef: { rates: Rates; expiresAt: number } | null = null;
 const cacheHistorico = new Map<string, { rates: Rates; expiresAt: number }>();
 
 /**
+ * BL-16: sella la fecha solicitada al momento de responder (NO se guarda en
+ * caché: el mismo TC de "hoy" se sirve a peticiones con fechas distintas).
+ */
+function conFechaSolicitada<T extends Record<string, unknown>>(
+  rates: T,
+  fechaSolicitada: string | null,
+): T & { fechaSolicitada: string | null } {
+  return { ...rates, fechaSolicitada };
+}
+
+
+/**
  * Extrae la fecha objetivo: query string (`?fecha=YYYY-MM-DD`) y como fallback
  * el body JSON `{ fecha }` (para `supabase.functions.invoke`).
  */
-export async function resolverFecha(req: Request): Promise<{ fecha: Date; esHoy: boolean; key: string; fechaIso: string }> {
+export async function resolverFecha(req: Request): Promise<{ fecha: Date; esHoy: boolean; key: string; fechaIso: string; fechaSolicitada: string | null }> {
   const hoy = new Date();
   // FIX-12 · `toISOString()` da el día en UTC — a las 19:00 CDMX ya es "mañana".
   const hoyIso = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Mexico_City" }).format(hoy);
@@ -84,15 +98,19 @@ export async function resolverFecha(req: Request): Promise<{ fecha: Date; esHoy:
       if (body && typeof body.fecha === "string") raw = body.fecha;
     } catch { /* body no era JSON o vacío */ }
   }
+  // BL-16: la fecha pedida se conserva SIEMPRE en la respuesta. Antes, pedir
+  // una fecha futura devolvía el TC de hoy sin decir que se sustituyó.
+  const solicitada = /^\d{4}-\d{2}-\d{2}$/.test(raw) ? raw : null;
   if (!raw || !/^\d{4}-\d{2}-\d{2}$/.test(raw) || raw >= hoyIso) {
     // N14 (Ola 4): fechaIso es SIEMPRE el día civil MX — única llave válida
     // para tipos_cambio_dof y coherente con el corte de la Publicación DOF.
-    return { fecha: hoy, esHoy: true, key: "hoy", fechaIso: hoyIso };
+    return { fecha: hoy, esHoy: true, key: "hoy", fechaIso: hoyIso, fechaSolicitada: solicitada };
   }
   const d = new Date(raw + "T12:00:00Z");
-  if (Number.isNaN(d.getTime())) return { fecha: hoy, esHoy: true, key: "hoy", fechaIso: hoyIso };
-  return { fecha: d, esHoy: false, key: raw, fechaIso: raw };
+  if (Number.isNaN(d.getTime())) return { fecha: hoy, esHoy: true, key: "hoy", fechaIso: hoyIso, fechaSolicitada: solicitada };
+  return { fecha: d, esHoy: false, key: raw, fechaIso: raw, fechaSolicitada: raw };
 }
+
 
 /**
  * N14 (Ola 4): milisegundos hasta la próxima medianoche en America/Mexico_City.
@@ -161,21 +179,23 @@ async function manejarExchangeRates(req: Request): Promise<Response> {
   if (preflight) return preflight;
 
   const log = createLogger(req, "exchange-rates");
-  const { fecha, esHoy, key, fechaIso } = await resolverFecha(req);
+  const { fecha, esHoy, key, fechaIso, fechaSolicitada } = await resolverFecha(req);
+  const sellar = <T extends Record<string, unknown>>(r: T) => conFechaSolicitada(r, fechaSolicitada);
 
 
   // Caché: "hoy" con TTL corto; históricas con TTL largo (son inmutables).
   if (esHoy && cacheHoyRef && cacheHoyRef.expiresAt > Date.now()) {
     log.finish(200, "rates_cache_hit_hoy", { payload: cacheHoyRef.rates });
-    return jsonResponse(cacheHoyRef.rates);
+    return jsonResponse(sellar(cacheHoyRef.rates));
   }
   if (!esHoy) {
     const hit = cacheHistorico.get(key);
     if (hit && hit.expiresAt > Date.now()) {
       log.finish(200, "rates_cache_hit_historico", { payload: hit.rates });
-      return jsonResponse(hit.rates);
+      return jsonResponse(sellar(hit.rates));
     }
   }
+
 
   const guardarCache = (rates: Rates) => {
     if (esHoy) {
@@ -196,7 +216,7 @@ async function manejarExchangeRates(req: Request): Promise<Response> {
   if (deTabla) {
     guardarCache(deTabla);
     log.finish(200, "rates_ok_tabla", { payload: deTabla });
-    return jsonResponse(deTabla);
+    return jsonResponse(sellar(deTabla));
   }
 
   // 2) Banxico en vivo.
@@ -204,7 +224,7 @@ async function manejarExchangeRates(req: Request): Promise<Response> {
   if (!token) {
     console.warn("exchange-rates: BANXICO_SIE_TOKEN no configurado — usando fallback");
     log.finish(200, "rates_no_token_fallback", { payload: FALLBACK });
-    return jsonResponse(FALLBACK);
+    return jsonResponse(sellar(FALLBACK));
   }
 
   const ctrl = new AbortController();
@@ -217,7 +237,7 @@ async function manejarExchangeRates(req: Request): Promise<Response> {
     ]);
     if (usd.tc == null) {
       log.finish(200, "rates_fallback_usd_missing", { payload: FALLBACK });
-      return jsonResponse(FALLBACK);
+      return jsonResponse(sellar(FALLBACK));
     }
     const rates: Rates = {
       usdMxn: usd.tc,
@@ -230,12 +250,12 @@ async function manejarExchangeRates(req: Request): Promise<Response> {
     };
     guardarCache(rates);
     log.finish(200, esHoy ? "rates_ok_hoy" : "rates_ok_historico", { payload: rates });
-    return jsonResponse(rates);
+    return jsonResponse(sellar(rates));
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     console.warn("exchange-rates fallback:", message);
     log.finish(200, "rates_fallback", { payload: { error: message, ...FALLBACK } });
-    return jsonResponse(FALLBACK);
+    return jsonResponse(sellar(FALLBACK));
   } finally {
     clearTimeout(timer);
   }
@@ -248,6 +268,6 @@ Deno.serve(wrapEdgeHandler("exchange-rates", async (req) => {
     const message = err instanceof Error ? err.message : String(err);
     console.error(JSON.stringify({ level: "error", fn: "exchange-rates", msg: "unhandled", error: message }));
     await captureEdgeException(err, { fn: "exchange-rates", status_code: 200 });
-    return jsonResponse(FALLBACK);
+    return jsonResponse({ ...FALLBACK, fechaSolicitada: null });
   }
 }));
