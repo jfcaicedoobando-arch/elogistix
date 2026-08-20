@@ -28,6 +28,8 @@ export interface UseTableFiltersOpts<TFilters extends Record<string, string>> {
 
 export interface TableFiltersState<TFilters extends Record<string, string>> {
   search: string;
+  /** EC-9: `search` con debounce (300 ms) para filtrar/consultar sin lag al teclear. */
+  searchDebounced: string;
   filters: TFilters;
   page: number;
   pageSize: number;
@@ -134,6 +136,7 @@ export function useTableFilters<TFilters extends Record<string, string>>({
 
   return {
     search: base.search,
+    searchDebounced: base.searchDebounced,
     filters: base.filters,
     page: base.page,
     pageSize: base.pageSize,
