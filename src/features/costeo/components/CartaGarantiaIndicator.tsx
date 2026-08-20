@@ -1,36 +1,30 @@
 /**
  * Indicador de estado de la carta de garantía de la naviera.
  * Extraído de TarifaResultCard para cumplir Power of 10 (≤200 líneas).
+ *
+ * Ola 2 · RN-3: los colores vienen del `statusRegistry` (dominio
+ * `carta_garantia`), nunca de clases escritas a mano.
  */
-import { Badge } from "@/components/ui/badge";
 import { ShieldAlert, ShieldCheck, ShieldOff } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
+import { StatusBadge } from "@/components/shared/StatusBadge";
 import type { TopTarifaRow } from "@/features/costeo/types";
 
+function resolverEstado(row: TopTarifaRow): { estado: string; Icon: LucideIcon } {
+  if (!row.naviera_condicion_id) return { estado: "Sin condiciones", Icon: ShieldOff };
+  if (row.naviera_carta_garantia_activa) return { estado: "Carta vigente", Icon: ShieldCheck };
+  if (row.naviera_tiene_carta_garantia) return { estado: "Carta vencida", Icon: ShieldAlert };
+  return { estado: "Sin carta", Icon: ShieldOff };
+}
+
 export function CartaGarantiaIndicator({ row }: { row: TopTarifaRow }) {
-  if (!row.naviera_condicion_id) {
-    return (
-      <Badge variant="outline" className="bg-warning/15 text-warning border-warning/30 gap-1">
-        <ShieldOff className="size-3" /> Sin condiciones
-      </Badge>
-    );
-  }
-  if (row.naviera_carta_garantia_activa) {
-    return (
-      <Badge variant="outline" className="bg-success/15 text-success border-success/30 gap-1">
-        <ShieldCheck className="size-3" /> Carta vigente
-      </Badge>
-    );
-  }
-  if (row.naviera_tiene_carta_garantia) {
-    return (
-      <Badge variant="outline" className="bg-destructive/15 text-destructive border-destructive/30 gap-1">
-        <ShieldAlert className="size-3" /> Carta vencida
-      </Badge>
-    );
-  }
+  const { estado, Icon } = resolverEstado(row);
   return (
-    <Badge variant="outline" className="bg-muted text-muted-foreground gap-1">
-      <ShieldOff className="size-3" /> Sin carta
-    </Badge>
+    <StatusBadge domain="carta_garantia" status={estado}>
+      <span className="inline-flex items-center gap-1">
+        <Icon className="size-3" aria-hidden />
+        {estado}
+      </span>
+    </StatusBadge>
   );
 }

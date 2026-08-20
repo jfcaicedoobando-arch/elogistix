@@ -86,4 +86,17 @@ export const EXTRA_STATUS_BADGES: Record<string, EstadoVisual["badge"]> = {
   anticipo: "bg-warning/15 text-warning border border-warning/30",
   Timbrado: "bg-info/15 text-info border border-info/30",
   Cancelado: "bg-destructive/15 text-destructive border border-destructive/30",
+  // Ola 2 · RN-3 — Carta de garantía de la naviera.
+  "Carta vigente": "bg-success/15 text-success border border-success/30",
+  "Carta vencida": "bg-destructive/15 text-destructive border border-destructive/30",
+  "Sin condiciones": "bg-warning/15 text-warning border border-warning/30",
+  "Sin carta": "bg-muted text-muted-foreground border border-border",
+  // Ola 2 · RN-3 — Marcadores de fila en el comparador de tarifas.
+  Mejor: "bg-success/15 text-success border border-success/30",
+  Nueva: "bg-primary/10 text-primary border border-primary/30",
+  // Ola 2 · RN-3 — Estatus del UUID en el SAT.
+  "No Encontrado": "bg-warning/15 text-warning border border-warning/30",
+  "Sin verificar": "bg-muted text-muted-foreground border border-border",
+  // Ola 2 · RN-3 — Tarifa reemplazada por una versión más reciente.
+  Reemplazada: "bg-muted text-muted-foreground border border-border",
 };

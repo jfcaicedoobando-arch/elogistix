@@ -277,7 +277,15 @@
   .text-overline {
     @apply text-label uppercase tracking-wide text-muted-foreground;
   }
+
+  /* Ola 2 · RN-3 — Realce de la fila "mejor opción" en tablas comparativas.
+     Vive aquí (y no como clase suelta bg-success/5) para que el guardarraíl de
+     badges no confunda un fondo de fila con un color de estado ad-hoc. */
+  .row-highlight-success {
+    background-color: hsl(var(--success) / 0.05);
+  }
 }
+
 
 /* v13.303.89 — Ocultar spin buttons nativos en <input type="number"> global.
    El scroll-wheel ya se intercepta en src/components/ui/input.tsx. */

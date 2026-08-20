@@ -39,7 +39,10 @@ export type StatusDomain =
   | "conciliacion"         // v13.681.0 — Conciliación bancaria en Tesorería
   | "conciliacion_costo"  // v13.571.0 — Costeado vs facturado por el proveedor
   | "pago_tipo"           // Ola E · V-2 — libro de pagos: cobro/pago/anticipo
-  | "rep";                // Ola E · V-2 — REP: Timbrado/Cancelado/Pendiente
+  | "rep"                 // Ola E · V-2 — REP: Timbrado/Cancelado/Pendiente
+  | "carta_garantia"      // Ola 2 · RN-3 — Carta de garantía de la naviera
+  | "tarifa_marcador"     // Ola 2 · RN-3 — Marcadores de fila: Mejor / Nueva
+  | "sat_uuid";           // Ola 2 · RN-3 — Estatus del UUID en el SAT
 
 export interface StatusVisual {
   label: string;
@@ -121,7 +124,7 @@ export const DOMAIN_STATUSES: Record<StatusDomain, readonly string[]> = {
   aprobacion_cxp: ["Por aprobar", "Aprobada", "Rechazada"],
   captura_cxp: ["Sin captura", "Parcial", "Completo"],
   actividad_crm: ["Pendiente", "Completada", "Vencida"],
-  tarifa_maritima: ["Borrador", "Vigente", "Rechazada"],
+  tarifa_maritima: ["Borrador", "Vigente", "Pendiente", "Rechazada", "Reemplazada", "Vencida"],
   agente: ["Activo", "Inactivo"],
   garantia_naviera: ["Pendiente", "Depositado", "Liberado", "Retenido"],
   ruta_maritima: ["Activa", "Por vencer", "Sin tarifa"],
@@ -132,6 +135,9 @@ export const DOMAIN_STATUSES: Record<StatusDomain, readonly string[]> = {
   conciliacion_costo: ["Pendiente", "Facturado parcial", "Facturado", "Sobrefacturado", "Pagado", "Moneda mixta"],
   pago_tipo: ["cobro", "pago", "anticipo"],
   rep: ["Timbrado", "Cancelado", "Pendiente"],
+  carta_garantia: ["Carta vigente", "Carta vencida", "Sin condiciones", "Sin carta"],
+  tarifa_marcador: ["Mejor", "Nueva"],
+  sat_uuid: ["Vigente", "Cancelado", "No Encontrado", "Sin verificar"],
 };
 
 /** Overrides por dominio cuando el mismo string necesita otro label. */

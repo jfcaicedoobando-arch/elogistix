@@ -12,9 +12,17 @@ import { PageHeader } from "@/components/shared/PageHeader";
 import { cn } from "@/lib/utils";
 
 export interface PortalPageShellProps {
+  /**
+   * Encabezado alternativo (por ejemplo `<DetailHeader />` en las páginas de
+   * detalle). Cuando se provee, sustituye al `PageHeader` del shell y las
+   * props de título/descripción se ignoran. Si no se pasa `header` ni `title`,
+   * la página dibuja su propio encabezado (p. ej. `DetailHeader`) como primer
+   * hijo y el shell sólo aporta el ritmo vertical.
+   */
+  header?: ReactNode;
   /** Icono a la izquierda del título (mismo slot que `PageHeader`). */
   icon?: ReactNode;
-  title: ReactNode;
+  title?: ReactNode;
   description?: ReactNode;
   /** Acciones alineadas a la derecha del encabezado. */
   actions?: ReactNode;
@@ -23,6 +31,7 @@ export interface PortalPageShellProps {
 }
 
 export function PortalPageShell({
+  header,
   icon,
   title,
   description,
@@ -32,7 +41,9 @@ export function PortalPageShell({
 }: PortalPageShellProps) {
   return (
     <div className={cn("space-y-6", className)}>
-      <PageHeader icon={icon} title={title} description={description} actions={actions} />
+      {header ?? (title ? (
+        <PageHeader icon={icon} title={title} description={description} actions={actions} />
+      ) : null)}
       {children}
     </div>
   );

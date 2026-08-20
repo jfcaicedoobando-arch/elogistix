@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.695.0] - 2026-08-20
+### Ola 2 — Candados de consistencia visual
+- Gráficas: Rentabilidad y los dos gráficos de Diagnóstico ahora usan el tooltip compartido; nuevo candado impide tooltips a mano.
+- Badges: Carta garantía, estado de tarifa, marcador de tarifa y UUID SAT pasan por `StatusBadge` (sin colores sueltos).
+- Portal: las 9 rutas comparten el mismo contenedor `PortalPageShell`, los botones de REP recuperan tamaño táctil y las etiquetas usan tipografía semántica.
+- Tesorería: el aviso de pago sin conciliar usa el componente de alerta estándar.
+
 ## [13.694.2] - 2026-08-20
 ### CI verde otra vez
 - Se agregó el mensaje amigable para el código `LC_NC_SIN_TC` (falta tipo de cambio al validar una nota de crédito contra el saldo de la factura).

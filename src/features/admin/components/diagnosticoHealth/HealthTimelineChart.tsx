@@ -8,6 +8,7 @@ import { ChartSkeleton } from "@/components/shared/ChartSkeleton";
 import { CHART } from "@/lib/chartTokens";
 import { Activity } from "lucide-react";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
+import { ChartTooltip } from "@/components/shared/ChartTooltip";
 
 
 export interface TimelinePoint {
@@ -39,13 +40,7 @@ export default function HealthTimelineChart({ loading, data }: Props) {
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
               <XAxis dataKey="label" tick={{ fontSize: 11 }} />
               <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: "hsl(var(--popover))",
-                  border: "1px solid hsl(var(--border))",
-                  fontSize: 12,
-                }}
-              />
+              <Tooltip content={<ChartTooltip />} />
               <Line type="monotone" dataKey="total" stroke="hsl(var(--primary))" strokeWidth={2} dot={false} name="Total" />
               <Line type="monotone" dataKey="errors" stroke="hsl(var(--destructive))" strokeWidth={2} dot={false} name="Errores" />
               <Line type="monotone" dataKey="warns" stroke={CHART.warning} strokeWidth={2} dot={false} name="Avisos" />
