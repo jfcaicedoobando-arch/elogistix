@@ -26,7 +26,12 @@ describe("aUSD", () => {
   it("lanza si tcEUR=0 al convertir EUR a USD", () => {
     expect(() => aUSD(100, "EUR", 17.5, 0)).toThrow(/tipoCambioEUR/);
   });
+  it("BL-15: moneda sin T/C conocido devuelve null", () => {
+    expect(aUSD(100, "JPY", 17.5, 19)).toBeNull();
+    expect(aUSD(100, "", 17.5, 19)).toBeNull();
+  });
 });
+
 
 describe("sumarEnUSD", () => {
   it("sumarEnUSD retorna 0 con lista vacía", () => {
