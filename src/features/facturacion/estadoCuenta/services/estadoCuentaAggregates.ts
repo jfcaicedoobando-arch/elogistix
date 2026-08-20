@@ -3,7 +3,9 @@
  * Sin I/O — testeable de forma aislada.
  */
 import { sumarMontos } from "@/lib/financial/financialUtils";
+import { esCxcVencida } from "@/lib/domain/vencimiento";
 import type { FacturaEstadoCuenta } from "./estadoCuenta";
+
 
 export interface KpiPorMoneda {
   mxn: number;
@@ -31,7 +33,8 @@ function bucket(rows: FacturaEstadoCuenta[], predicate: (f: FacturaEstadoCuenta)
 
 export function calcularKpisEstadoCuenta(rows: FacturaEstadoCuenta[]): KpisEstadoCuenta {
   const adeudado = bucket(rows, (f) => f.saldo > 0);
-  const vencido = bucket(rows, (f) => f.saldo > 0 && f.estatus_cobranza === "Vencida");
+  // Mismo predicado que Cobranza, Tesorería y el Dashboard (canon compartido).
+  const vencido = bucket(rows, esCxcVencida);
 
   // Saldo a favor = suma de anticipos (monto_no_aplicado en pagos).
   const anticiposMxn: number[] = [];
@@ -44,10 +47,9 @@ export function calcularKpisEstadoCuenta(rows: FacturaEstadoCuenta[]): KpisEstad
     }
   }
 
-  const facturasVencidas = rows.filter(
-    (f) => f.saldo > 0 && f.estatus_cobranza === "Vencida",
-  ).length;
+  const facturasVencidas = rows.filter(esCxcVencida).length;
   const facturasAdeudadas = rows.filter((f) => f.saldo > 0).length;
+
 
   return {
     adeudado,

@@ -7,6 +7,15 @@ import type {
   CxpPorCapturarRow,
   CxpPorPagarRow,
 } from "../services/bandejas";
+import {
+  esAccionable,
+  estaPorVencer,
+  esVencidoPorDias,
+  esVencidoPorDiasParaVencer,
+  DIAS_POR_VENCER_CXC,
+} from "@/lib/domain/vencimiento";
+import { aMxn } from "@/lib/financial/convertir";
+
 
 const num = (v: number | string | null | undefined): number => Number(v ?? 0) || 0;
 
@@ -58,7 +67,7 @@ export function resumirCartera(rows: CarteraPendienteRow[]): CarteraSummary {
     const moneda = (r as { moneda?: string }).moneda ?? "MXN";
     acumular(saldosNativos, moneda, s);
     totalSaldo += s;
-    if (r.dias_vencido > 0) {
+    if (esVencidoPorDias(r.dias_vencido)) {
       vencidasCount += 1;
       vencidoSaldo += s;
       acumular(vencidoNativo, moneda, s);
@@ -77,10 +86,11 @@ export function resumirCartera(rows: CarteraPendienteRow[]): CarteraSummary {
 }
 
 /**
- * Filtro de urgencia para el módulo de Cartera / cobranza.
- * - `accionable` (default UI): vencidas + por vencer en ≤7 días (`dias_vencido ≥ -7`).
- * - `vencidas`: sólo `dias_vencido > 0`.
- * - `por_vencer`: `-7 ≤ dias_vencido ≤ 0` (aún no vence, pero está cerca).
+ * Filtro de urgencia para el módulo de Cartera / cobranza. Los umbrales viven
+ * en el canon `@/lib/domain/vencimiento` (`DIAS_POR_VENCER_CXC`), no aquí.
+ * - `accionable` (default UI): vencidas + por vencer en la ventana oficial.
+ * - `vencidas`: sólo las ya vencidas.
+ * - `por_vencer`: aún no vence, pero está dentro de la ventana.
  * - `todas`: sin filtro.
  *
  * `dias_vencido` viene del RPC como (hoy − vencimiento): positivo = ya venció,
@@ -88,12 +98,13 @@ export function resumirCartera(rows: CarteraPendienteRow[]): CarteraSummary {
  */
 export type UrgenciaCartera = "accionable" | "vencidas" | "por_vencer" | "todas";
 
+export { DIAS_POR_VENCER_CXC };
+
 export function matchesUrgencia(diasVencido: number, urgencia: UrgenciaCartera): boolean {
-  const d = Number(diasVencido) || 0;
   switch (urgencia) {
-    case "vencidas": return d > 0;
-    case "por_vencer": return d <= 0 && d >= -7;
-    case "accionable": return d >= -7;
+    case "vencidas": return esVencidoPorDias(diasVencido);
+    case "por_vencer": return estaPorVencer(diasVencido);
+    case "accionable": return esAccionable(diasVencido);
     case "todas": return true;
   }
 }
@@ -102,7 +113,7 @@ export function matchesUrgencia(diasVencido: number, urgencia: UrgenciaCartera):
 export interface CxpPagarSummary {
   total: number;
   vencidas: number;
-  /** Saldo homologado a MXN (USD * TC, MXN tal cual). EUR sin TC queda fuera. */
+  /** Saldo homologado a MXN vía el canon `aMxn`. Sin TC confiable no se suma. */
   saldoMXN: number;
   /** Suma por moneda nativa (sin conversión). */
   porMoneda: { MXN: number; USD: number; EUR: number };
@@ -119,21 +130,18 @@ export function resumirCxpPorPagar(rows: CxpPorPagarRow[]): CxpPagarSummary {
   for (const r of rows) {
     const saldo = num(r.saldo);
     const moneda = (r.moneda ?? "MXN").toUpperCase();
-    if ((r.dias_para_vencer ?? 0) < 0) vencidas += 1;
+    // `dias_para_vencer` invierte el signo respecto a CxC: el canon lo normaliza.
+    if (esVencidoPorDiasParaVencer(r.dias_para_vencer)) vencidas += 1;
 
-    if (moneda === "MXN") {
-      porMoneda.MXN += saldo;
-      saldoMXN += saldo;
-    } else if (moneda === "USD") {
-      porMoneda.USD += saldo;
-      const tc = num(r.tipo_cambio_usd);
-      if (tc > 0) saldoMXN += saldo * tc;
-      else faltaTipoCambio += 1;
-    } else if (moneda === "EUR") {
-      porMoneda.EUR += saldo;
-      faltaTipoCambio += 1; // EUR no tiene TC en proveedor_facturas todavía
+    if (moneda === "MXN" || moneda === "USD" || moneda === "EUR") {
+      porMoneda[moneda] += saldo;
     }
+    // EUR no tiene TC en `proveedor_facturas` todavía: `aMxn` lo marca incompleto.
+    const conv = aMxn(saldo, moneda, moneda === "USD" ? num(r.tipo_cambio_usd) : null);
+    if (conv.completo) saldoMXN += conv.monto;
+    else faltaTipoCambio += 1;
   }
+
 
   return { total: rows.length, vencidas, saldoMXN, porMoneda, faltaTipoCambio };
 }

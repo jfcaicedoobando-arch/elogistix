@@ -27,12 +27,14 @@ describe("aging — tokens de severidad", () => {
     }
   });
 
-  it("CobranzaBlock usa los 5 niveles de la escala compartida", () => {
+  it("CobranzaBlock deriva el color de la escala compartida, sin índices a mano", () => {
     expect(cobranza).toContain('from "@/lib/aging/buckets"');
-    for (const level of [1, 2, 3, 4, 5]) {
-      expect(cobranza).toContain(`AGING_SOFT_CLASS[${level}]`);
-    }
+    // El nivel sale de `CUBETA_NIVEL[cubeta]`, así que ya no se escriben
+    // literales `AGING_SOFT_CLASS[1..5]` en el componente.
+    expect(cobranza).toContain("AGING_SOFT_CLASS[CUBETA_NIVEL[cubeta]]");
+    expect(cobranza).not.toMatch(/AGING_SOFT_CLASS\[\d\]/);
   });
+
 
   it("CobranzaBlock no reintroduce literales red/orange", () => {
     expect(cobranza).not.toMatch(/(bg|text|border)-(red|orange|amber|emerald)-\d{2,3}/);

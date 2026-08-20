@@ -10,23 +10,10 @@ import { useDashboardEjecutivoFacturacion } from "@/features/facturacion/hooks/u
 import { useHuecoFacturacion } from "@/features/facturacion/hooks/useHuecoFacturacion";
 import { useEmbarquesPendientesAdmin } from "@/features/dashboard/hooks/useEmbarquesPendientesAdmin";
 import { esFacturaPorPagar } from "@/features/cxp/services";
-import { aMxn } from "@/lib/financial/convertir";
+import { esCxcVencida } from "@/lib/domain/vencimiento";
+import { resumirAgingMxn, type ResumenAgingMxn } from "@/lib/domain/carteraAging";
 
-export interface AgingBuckets {
-  b0_15: number;
-  b16_30: number;
-  b31_60: number;
-  b61_90: number;
-  b90plus: number;
-}
-
-const EMPTY_AGING: AgingBuckets = {
-  b0_15: 0,
-  b16_30: 0,
-  b31_60: 0,
-  b61_90: 0,
-  b90plus: 0,
-};
+export type { AgingMxn } from "@/lib/domain/carteraAging";
 
 export function useFinanceDashboard() {
   const cobranzaQ = useCobranza({});
@@ -37,9 +24,7 @@ export function useFinanceDashboard() {
   const pendientesAdminQ = useEmbarquesPendientesAdmin(true);
 
   const facturasVencidas = useMemo(() => {
-    const filas = (cobranzaQ.data ?? []).filter(
-      (f) => f.saldo > 0 && f.estatus_cobranza === "Vencida",
-    );
+    const filas = (cobranzaQ.data ?? []).filter(esCxcVencida);
     return filas
       .slice()
       .sort((a, b) => b.dias_vencido - a.dias_vencido)
@@ -56,30 +41,13 @@ export function useFinanceDashboard() {
       .slice(0, 10);
   }, [cxpQ.data]);
 
-  // Ola 4 · N22: el aging se rotula en MXN, así que hay que convertir cada
-  // saldo con su TC. Las facturas sin TC confiable se excluyen y se cuentan
-  // aparte (`agingSinTc`) para no mezclar monedas en un total "MXN".
-  const { aging, agingSinTc } = useMemo<{ aging: AgingBuckets; agingSinTc: number }>(() => {
-    const acc = { ...EMPTY_AGING };
-    let sinTc = 0;
-    for (const f of cobranzaQ.data ?? []) {
-      if (f.saldo <= 0) continue;
-      const dv = f.dias_vencido;
-      if (dv <= 0) continue;
-      const conv = aMxn(f.saldo, f.moneda, f.tipo_cambio);
-      if (!conv.completo) {
-        sinTc += 1;
-        continue;
-      }
-      const monto = conv.monto;
-      if (dv <= 15) acc.b0_15 += monto;
-      else if (dv <= 30) acc.b16_30 += monto;
-      else if (dv <= 60) acc.b31_60 += monto;
-      else if (dv <= 90) acc.b61_90 += monto;
-      else acc.b90plus += monto;
-    }
-    return { aging: acc, agingSinTc: sinTc };
-  }, [cobranzaQ.data]);
+  // El aging se calcula en el canon compartido (`resumirAgingMxn`): mismos
+  // cortes y misma conversión a MXN que `/cobranza/aging` y `/reportes/cartera`.
+  const aging = useMemo<ResumenAgingMxn>(
+    () => resumirAgingMxn(cobranzaQ.data ?? []),
+    [cobranzaQ.data],
+  );
+
 
   const isLoading =
     cobranzaQ.isLoading ||
@@ -99,6 +67,6 @@ export function useFinanceDashboard() {
     facturasVencidas,
     cxpPorPagar,
     aging,
-    agingSinTc,
+
   };
 }
