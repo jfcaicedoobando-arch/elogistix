@@ -1,5 +1,13 @@
 # Changelog
 
+## [13.693.0] - 2026-08-20
+### UI-4 — Un solo guard de carga y error
+- El portal ya no "pierde" su encabezado mientras carga: Mis Embarques, Mis Cotizaciones y el Dashboard del cliente pintan título y accesos desde el primer instante, y sólo el cuerpo muestra el esqueleto o el mensaje de reintento.
+- Nuevo candado de arquitectura que impide volver al patrón anterior (devolver un esqueleto antes del encabezado), con excepciones justificadas para pantallas de detalle cuyo título depende del dato que se carga.
+- Verificado ya resuelto en versiones previas: doble escritura de totales de factura (ahora sólo la base de datos calcula) y eliminación del ayudante de color de estado duplicado.
+
+
+
 ## [13.692.0] - 2026-08-20
 ### Ola I — Candados de CI e higiene
 - Nuevo candado que congela el uso de la utilidad larga `h-4 w-4` en iconos: el código nuevo debe usar `size-4`, para que un cambio de escala se haga en un solo lugar.
