@@ -1,5 +1,14 @@
 # Changelog
 
+## [13.703.0] - 2026-08-20
+### KPIs unificados — Un solo criterio de "vencido" y de antigüedad
+- "Cartera vencida" se calculaba de cuatro maneras distintas (Cobranza, Estado de cuenta, Tesorería y Bandejas). Ahora todas las pantallas usan el mismo criterio, así que el mismo grupo de facturas da el mismo número en todas.
+- El dashboard financiero dejó de usar su propia escala de antigüedad (0-15 días) y adoptó la oficial (1-30 / 31-60 / 61-90 / +90), la misma de Cobranza y Reportes.
+- Los saldos en dólares se convierten a pesos con el método autorizado: si falta el tipo de cambio, el saldo no se suma en silencio, se reporta como pendiente de tipo de cambio.
+- Corregido: la tarjeta "Por vencer 7 d" de Cuentas por pagar sólo sumaba 5 días; ahora respeta los 7 días que anuncia.
+
+
+
 ## [13.702.0] - 2026-08-20
 ### Accesibilidad — Los "globitos" de ayuda ahora sí se ven
 - Los 187 avisos que dependían del globito nativo del navegador (que no aparece en celular ni al navegar con teclado) se cambiaron por un tooltip propio, visible al pasar el mouse y al enfocar con Tab.
