@@ -4,7 +4,7 @@
  */
 import { Inbox } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
-import { TableCell, TableFooter, TableRow } from "@/components/ui/table";
+import { TableCell, TableRow } from "@/components/ui/table";
 import { DataTable, type ColumnDef } from "@/components/shared/DataTable";
 import { formatDate, formatCurrency } from "@/lib/formatters";
 import type { FacturaProgramable, SemanaPagosProgramados } from "@/features/tesoreria/domain/pagosProgramados";
