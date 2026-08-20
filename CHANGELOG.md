@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.700.0] - 2026-08-20
+### Ola 5 (5.6) — Un solo criterio para el margen
+- El porcentaje de margen se ve y se colorea igual en Reportes, Dashboard, Cotizaciones, Proyección y P&L de embarque (nuevo badge compartido con tres escalas: comercial, ventas y operativa).
+- Márgenes sin venta asociada ya no se pintan en rojo: se muestran en gris porque no son una alarma.
+- Se eliminó el helper de color duplicado y se agregó un candado que impide volver a decidir el color a mano.
+
+
 ## [13.699.0] - 2026-08-20
 ### Ola 4 (cierre) — Validación del wizard con schemas
 - Cotizaciones: las reglas de cada paso del wizard (destinatario, ruta terrestre, flete LCL, costos y conceptos de venta) viven ahora en un solo lugar, con pruebas por paso. Los mensajes que ve el usuario no cambian.

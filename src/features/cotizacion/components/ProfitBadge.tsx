@@ -1,6 +1,7 @@
-import { formatPercent } from "@/lib/formatters";
 import * as React from "react";
 import { Badge } from "@/components/ui/badge";
+import { MargenBadge } from "@/components/shared/MargenBadge";
+import { UMBRAL_MARGEN_COTIZACION } from "@/lib/ui/margen";
 
 /**
  * Badges de rentabilidad compartidos por Cotización y Profit.
@@ -11,22 +12,13 @@ import { Badge } from "@/components/ui/badge";
  * pintura; ahora todos toman el color del mismo catálogo.
  */
 
-/** Umbrales de rentabilidad (en %) usados por los badges. */
-const UMBRAL_SANO_USD = 15;
+/** Umbral de rentabilidad sana en MXN (la escala USD vive en `@/lib/ui/margen`). */
+const UMBRAL_SANO_USD = UMBRAL_MARGEN_COTIZACION.GOOD;
 const UMBRAL_SANO_MXN = 10;
-
-type BadgeTono = "success" | "warning" | "destructive" | "secondary";
-
-function tonoProfit(porcentaje: number): BadgeTono {
-  if (porcentaje > UMBRAL_SANO_USD) return "success";
-  if (porcentaje > 0) return "warning";
-  if (porcentaje < 0) return "destructive";
-  return "secondary";
-}
 
 /** Muestra un badge de porcentaje de profit coloreado según el nivel */
 export function ProfitBadge({ porcentaje }: { porcentaje: number }): React.JSX.Element {
-  return <Badge variant={tonoProfit(porcentaje)}>{formatPercent(porcentaje)}</Badge>;
+  return <MargenBadge pct={porcentaje} umbrales={UMBRAL_MARGEN_COTIZACION} />;
 }
 
 /** Badge global de rentabilidad basado en porcentajes USD y MXN */

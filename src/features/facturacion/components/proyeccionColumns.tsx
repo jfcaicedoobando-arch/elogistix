@@ -8,6 +8,8 @@ import { defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import type { GrupoProyeccion } from "@/features/facturacion/domain/proyeccionFacturacion";
 import { formatCurrency, formatDate, toTitleCase } from "@/lib/formatters";
 import { cn } from "@/lib/utils";
+import { MargenTexto } from "@/components/shared/MargenBadge";
+import { UMBRAL_MARGEN_OPERATIVO } from "@/lib/ui/margen";
 import { sortByString, sortByNumber, sortByDate } from "@/components/shared/dataTable/sortingFns";
 import { COL_W } from "@/components/shared/dataTable/columnWidths";
 
@@ -122,18 +124,7 @@ export const proyeccionColumns: ColumnDef<GrupoProyeccion, unknown>[] = defineCo
     enableSorting: true,
     sortingFn: sortByNumber<GrupoProyeccion>((g) => g.margenPct),
     meta: { width: COL_W.tiny, align: "right", className: "tabular-nums text-body-sm" },
-    cell: ({ row }) => {
-      const m = row.original.margenPct;
-      return (
-        <span
-          className={cn(
-            m < 0 ? "text-destructive" : m < 10 ? "text-warning" : "text-foreground",
-          )}
-        >
-          {m.toFixed(1)}%
-        </span>
-      );
-    },
+    cell: ({ row }) => <MargenTexto pct={row.original.margenPct} umbrales={UMBRAL_MARGEN_OPERATIVO} />,
   },
   {
     id: "estado",

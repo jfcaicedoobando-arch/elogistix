@@ -73,9 +73,5 @@ export const getDiasVencidosTone = (dias: number): SemanticTone => {
   return "default";
 };
 
-/** Color de texto para % de margen de profit (negativo, bajo, sano). */
-export const getProfitToneClass = (margenPct: number): string => {
-  if (margenPct < 0) return "text-destructive";
-  if (margenPct < 10) return "text-warning";
-  return "text-success";
-};
+/* Ola 5 · 5.6: `getProfitToneClass` fue ELIMINADO. Usa `claseTonoMargen` /
+ * `<MargenBadge />` (`@/lib/ui/margen`, `@/components/shared/MargenBadge`). */

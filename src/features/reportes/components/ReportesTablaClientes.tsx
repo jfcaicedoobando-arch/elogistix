@@ -1,10 +1,9 @@
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { ResponsiveDataTable } from "@/components/shared/dataTable/ResponsiveDataTable";
 import { formatCurrency, toTitleCase } from "@/lib/formatters";
-import { MARGIN_THRESHOLDS } from "@/constants/reportes";
+import { MargenBadge } from "@/components/shared/MargenBadge";
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 
 export type SortField = "profit_usd" | "venta_usd" | "costo_usd" | "margen";
@@ -27,13 +26,7 @@ interface Props {
   onSort: (field: SortField) => void;
 }
 
-const margenBadge = (m: number, venta = 0) => {
-  // VT-20: 0.0% con venta $0 no es una alarma — badge neutro (gris).
-  if (!venta) return <Badge variant="neutral">{m.toFixed(1)}%</Badge>;
-  if (m >= MARGIN_THRESHOLDS.GOOD) return <Badge variant="success">{m.toFixed(1)}%</Badge>;
-  if (m >= MARGIN_THRESHOLDS.WARN) return <Badge variant="warning">{m.toFixed(1)}%</Badge>;
-  return <Badge variant="destructive">{m.toFixed(1)}%</Badge>;
-};
+const margenBadge = (m: number, venta = 0) => <MargenBadge pct={m} venta={venta} />;
 
 const SORT_KEYS: SortField[] = ["venta_usd", "costo_usd", "profit_usd", "margen"];
 

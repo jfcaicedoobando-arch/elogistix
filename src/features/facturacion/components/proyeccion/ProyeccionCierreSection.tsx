@@ -3,7 +3,7 @@ import { Progress } from "@/components/ui/progress";
 import { CheckCircle2, Clock, TrendingUp } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { formatCurrency } from "@/lib/formatters";
-import { getProfitToneClass } from "@/lib/ui/uiMappings";
+import { claseTonoMargen, UMBRAL_MARGEN_OPERATIVO } from "@/lib/ui/margen";
 import { CierreCard } from "../CierreCard";
 import { SectionHeading } from "@/components/shared/SectionHeading";
 
@@ -29,7 +29,7 @@ interface Props {
 }
 
 export function ProyeccionCierreSection({ k, mesLabel }: Props) {
-  const profitTone = getProfitToneClass(k.margenProyPct);
+  const profitTone = claseTonoMargen(k.margenProyPct, { umbrales: UMBRAL_MARGEN_OPERATIVO });
   return (
     <Card>
       <CardContent className="p-5">
