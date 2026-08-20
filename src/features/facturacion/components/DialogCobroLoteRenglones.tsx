@@ -4,6 +4,7 @@
  */
 import { CobroLoteRenglon } from "./CobroLoteRenglon";
 import { LoteRenglonesTable } from "@/components/shared/LoteRenglonesTable";
+import { ordenarFifo } from "@/lib/domain/fifoVencimiento";
 import type { FacturaCobroCandidata, RenglonCobro } from "@/features/facturacion/services/pagoClienteLote";
 
 interface Props {
@@ -20,10 +21,11 @@ interface Props {
 
 export function DialogCobroLoteRenglones(p: Props) {
   const montoDe = (id: string) => p.renglones.find((r) => r.factura_id === id)?.monto ?? 0;
-  // El reparto es FIFO: se muestran en el mismo orden en que se aplica.
-  const orden = [...p.facturas].sort((a, b) =>
-    (a.fecha_vencimiento ?? "9999-12-31").localeCompare(b.fecha_vencimiento ?? "9999-12-31"),
-  );
+  // BL-17: el orden mostrado debe ser EXACTAMENTE el del reparto real
+  // (vencimiento → emisión → id). Antes se ordenaba a mano sólo por
+  // vencimiento y la vista previa podía no coincidir con lo aplicado.
+  const orden = ordenarFifo(p.facturas);
+
 
   return (
     <LoteRenglonesTable>
