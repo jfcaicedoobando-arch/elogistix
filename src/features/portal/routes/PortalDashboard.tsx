@@ -48,9 +48,7 @@ export default function PortalDashboard() {
     estadoDistribucion,
   } = usePortalDashboardKpis(embarques);
 
-  if (loadingEmb || loadingCot || loadingFac) {
-    return <DashboardSkeleton kpis={3} charts={2} />;
-  }
+  const cargando = loadingEmb || loadingCot || loadingFac;
 
   return (
     <div className="space-y-6">
@@ -64,6 +62,8 @@ export default function PortalDashboard() {
           }}
         />
       )}
+      {/* UI-4: el saludo y el acceso a "Solicitar cotización" se pintan desde el
+          primer frame; sólo el cuerpo de datos se sustituye por el esqueleto. */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex-1">
           <PortalWelcomeCard clienteName={clienteName} contactoName={contactoName} orgName={orgName} />
@@ -72,6 +72,7 @@ export default function PortalDashboard() {
           <Plus className="h-4 w-4 mr-1" aria-hidden /> Solicitar cotización
         </Button>
       </div>
+
 
       <SolicitarCotizacionDialog
         open={solicitudAbierta}
