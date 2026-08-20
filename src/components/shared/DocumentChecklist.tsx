@@ -2,7 +2,7 @@ import { useRef, useState } from "react";
 import { Check, Upload, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ConfirmActionDialog } from "@/components/shared/dialogs/ConfirmActionDialog";
-import { notifyError } from "@/lib/notify";
+import { notifyError } from "@/lib/ui/appFeedback";
 
 export type { DocumentoChecklist } from "@/types/documentoChecklist";
 import type { DocumentoChecklist } from "@/types/documentoChecklist";
