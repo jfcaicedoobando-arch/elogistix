@@ -46,8 +46,6 @@ export interface FacturaCobranza {
   tipo_cambio: number;
 }
 
-const ESTADOS_ACTIVOS = ["Emitida", "Parcialmente pagada", "Vencida"] as const;
-
 export interface FetchCobranzaFilters {
   search?: string;
   cliente_id?: string;

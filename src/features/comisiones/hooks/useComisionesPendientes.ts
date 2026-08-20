@@ -25,16 +25,17 @@ export function useReprocesarComisionesPendientes() {
     onSuccess: (res) => {
       qc.invalidateQueries({ queryKey: queryKeys.comisiones.all });
       if (res.resueltas === 0) {
-        notifyWarning(
-          "Revisa los tipos de cambio y los costos del embarque; el recálculo sigue dando cero.",
-          { title: "Ninguna comisión se pudo recalcular" },
-        );
+        notifyWarning(undefined, {
+          title: "Ninguna comisión se pudo recalcular",
+          description:
+            "Revisa los tipos de cambio y los costos del embarque; el recálculo sigue dando cero.",
+        });
         return;
       }
-      notifySuccess(
-        `${res.resueltas} de ${res.procesadas} comisiones quedaron recalculadas.`,
-        { title: "Comisiones recalculadas" },
-      );
+      notifySuccess(undefined, {
+        title: "Comisiones recalculadas",
+        description: `${res.resueltas} de ${res.procesadas} comisiones quedaron recalculadas.`,
+      });
     },
     onError: (error: Error) => {
       notifyError(undefined, {
