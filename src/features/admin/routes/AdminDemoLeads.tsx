@@ -19,6 +19,8 @@ import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 import { ErrorState } from "@/components/shared/states/ErrorState";
 
 
+import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/components/ui/table";
+import { DetailTableHead } from "@/components/shared/DetailTable";
 function toCsv(rows: DemoLead[]): string {
   const headers = [
     "fecha",
@@ -103,20 +105,20 @@ export default function AdminDemoLeads() {
         </Card>
       ) : (
         <div className="rounded-md border overflow-x-auto">
-          <table className="w-full text-body">
-            <thead className="bg-muted/50 text-body-sm uppercase tracking-wide text-muted-foreground">
-              <tr>
-                <th className="px-3 py-2 text-left">Fecha</th>
-                <th className="px-3 py-2 text-left">Nombre</th>
-                <th className="px-3 py-2 text-left">Empresa</th>
-                <th className="px-3 py-2 text-left">Contacto</th>
-                <th className="px-3 py-2 text-left">Atribución</th>
-              </tr>
-            </thead>
-            <tbody>
+          <Table className="w-full text-body">
+            <TableHeader className="bg-muted/50 text-body-sm uppercase tracking-wide text-muted-foreground">
+              <TableRow>
+                <DetailTableHead>Fecha</DetailTableHead>
+                <DetailTableHead>Nombre</DetailTableHead>
+                <DetailTableHead>Empresa</DetailTableHead>
+                <DetailTableHead>Contacto</DetailTableHead>
+                <DetailTableHead>Atribución</DetailTableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
               {rows.map((r) => (
-                <tr key={r.id} className="border-t hover:bg-muted/30">
-                  <td className="px-3 py-2 whitespace-nowrap text-muted-foreground">
+                <TableRow key={r.id} className="border-t hover:bg-muted/30">
+                  <TableCell className="whitespace-nowrap text-muted-foreground">
                     {formatFechaHora(r.created_at, {
                       day: "2-digit",
                       month: "2-digit",
@@ -125,10 +127,10 @@ export default function AdminDemoLeads() {
                       minute: "2-digit",
                     })}
 
-                  </td>
-                  <td className="px-3 py-2 font-medium">{r.nombre}</td>
-                  <td className="px-3 py-2">{r.empresa}</td>
-                  <td className="px-3 py-2">
+                  </TableCell>
+                  <TableCell className="font-medium">{r.nombre}</TableCell>
+                  <TableCell>{r.empresa}</TableCell>
+                  <TableCell>
                     <div className="flex flex-col gap-0.5 text-body-sm">
                       <Button
                         type="button"
@@ -151,8 +153,8 @@ export default function AdminDemoLeads() {
                         {formatPhoneMx(r.telefono_e164)}
                       </Button>
                     </div>
-                  </td>
-                  <td className="px-3 py-2 text-body-sm text-muted-foreground">
+                  </TableCell>
+                  <TableCell className="text-body-sm text-muted-foreground">
                     {r.utm_source ? (
                       <span>
                         {r.utm_source} · {r.utm_medium ?? "—"} · {r.utm_campaign ?? "—"}
@@ -162,11 +164,11 @@ export default function AdminDemoLeads() {
                     ) : (
                       <span>directo</span>
                     )}
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
               ))}
-            </tbody>
-          </table>
+            </TableBody>
+          </Table>
         </div>
       )}
     </PageContainer>

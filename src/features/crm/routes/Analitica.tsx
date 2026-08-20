@@ -18,6 +18,8 @@ import { ErrorState } from "@/components/shared/states/ErrorState";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 import { BarChart3, Filter, ThumbsDown } from "lucide-react";
 
+import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/components/ui/table";
+import { DetailTableHead } from "@/components/shared/DetailTable";
 const fmt = (n: number) => formatCurrencyCompact(n, "MXN");
 
 function ForecastPanel() {
@@ -36,23 +38,23 @@ function ForecastPanel() {
           <CardHeader className="pb-2"><CardTitle>Por mes</CardTitle></CardHeader>
           <CardContent>
             <div className="overflow-x-auto">
-            <table className="w-full text-body">
-              <thead><tr className="text-body-sm text-muted-foreground border-b">
-                <th className="text-left py-2">Mes</th><th className="text-right">Pipeline</th><th className="text-right">Ponderado</th><th className="text-right">Ganado</th><th className="text-right">#</th>
-              </tr></thead>
-              <tbody>
+            <Table className="w-full text-body">
+              <TableHeader><TableRow className="text-body-sm text-muted-foreground border-b">
+                <DetailTableHead>Mes</DetailTableHead><DetailTableHead className="text-right">Pipeline</DetailTableHead><DetailTableHead className="text-right">Ponderado</DetailTableHead><DetailTableHead className="text-right">Ganado</DetailTableHead><DetailTableHead className="text-right">#</DetailTableHead>
+              </TableRow></TableHeader>
+              <TableBody>
                 {f.porMes.map((b) => (
-                  <tr key={b.key} className="border-b">
-                    <td className="py-1.5">{b.label}</td>
-                    <td className="text-right tabular-nums">{fmt(b.pipeline)}</td>
-                    <td className="text-right tabular-nums">{fmt(b.ponderado)}</td>
-                    <td className="text-right tabular-nums">{fmt(b.ganado)}</td>
-                    <td className="text-right">{b.count}</td>
-                  </tr>
+                  <TableRow key={b.key} className="border-b">
+                    <TableCell>{b.label}</TableCell>
+                    <TableCell className="text-right tabular-nums">{fmt(b.pipeline)}</TableCell>
+                    <TableCell className="text-right tabular-nums">{fmt(b.ponderado)}</TableCell>
+                    <TableCell className="text-right tabular-nums">{fmt(b.ganado)}</TableCell>
+                    <TableCell className="text-right">{b.count}</TableCell>
+                  </TableRow>
                 ))}
-                {f.porMes.length === 0 && <tr><td colSpan={5}><EmptyStateInline icon={BarChart3} message="Sin datos" density="compact" /></td></tr>}
-              </tbody>
-            </table>
+                {f.porMes.length === 0 && <TableRow><TableCell colSpan={5}><EmptyStateInline icon={BarChart3} message="Sin datos" density="compact" /></TableCell></TableRow>}
+              </TableBody>
+            </Table>
             </div>
           </CardContent>
         </Card>
@@ -60,23 +62,23 @@ function ForecastPanel() {
           <CardHeader className="pb-2"><CardTitle>Por vendedor</CardTitle></CardHeader>
           <CardContent>
             <div className="overflow-x-auto">
-            <table className="w-full text-body">
-              <thead><tr className="text-body-sm text-muted-foreground border-b">
-                <th className="text-left py-2">Vendedor</th><th className="text-right">Pipeline</th><th className="text-right">Ponderado</th><th className="text-right">Ganado</th><th className="text-right">#</th>
-              </tr></thead>
-              <tbody>
+            <Table className="w-full text-body">
+              <TableHeader><TableRow className="text-body-sm text-muted-foreground border-b">
+                <DetailTableHead>Vendedor</DetailTableHead><DetailTableHead className="text-right">Pipeline</DetailTableHead><DetailTableHead className="text-right">Ponderado</DetailTableHead><DetailTableHead className="text-right">Ganado</DetailTableHead><DetailTableHead className="text-right">#</DetailTableHead>
+              </TableRow></TableHeader>
+              <TableBody>
                 {f.porVendedor.map((b) => (
-                  <tr key={b.key} className="border-b">
-                    <td className="py-1.5">{b.label}</td>
-                    <td className="text-right tabular-nums">{fmt(b.pipeline)}</td>
-                    <td className="text-right tabular-nums">{fmt(b.ponderado)}</td>
-                    <td className="text-right tabular-nums">{fmt(b.ganado)}</td>
-                    <td className="text-right">{b.count}</td>
-                  </tr>
+                  <TableRow key={b.key} className="border-b">
+                    <TableCell>{b.label}</TableCell>
+                    <TableCell className="text-right tabular-nums">{fmt(b.pipeline)}</TableCell>
+                    <TableCell className="text-right tabular-nums">{fmt(b.ponderado)}</TableCell>
+                    <TableCell className="text-right tabular-nums">{fmt(b.ganado)}</TableCell>
+                    <TableCell className="text-right">{b.count}</TableCell>
+                  </TableRow>
                 ))}
-                {f.porVendedor.length === 0 && <tr><td colSpan={5}><EmptyStateInline icon={BarChart3} message="Sin datos" density="compact" /></td></tr>}
-              </tbody>
-            </table>
+                {f.porVendedor.length === 0 && <TableRow><TableCell colSpan={5}><EmptyStateInline icon={BarChart3} message="Sin datos" density="compact" /></TableCell></TableRow>}
+              </TableBody>
+            </Table>
             </div>
           </CardContent>
         </Card>
@@ -106,22 +108,22 @@ function EmbudoYPerdidas() {
         <CardHeader className="pb-2"><CardTitle>Conversión por fuente</CardTitle></CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
-          <table className="w-full text-body">
-            <thead><tr className="text-body-sm text-muted-foreground border-b">
-              <th className="text-left py-1">Fuente</th><th className="text-right">Total</th><th className="text-right">Conv.</th><th className="text-right">Tasa</th>
-            </tr></thead>
-            <tbody>
+          <Table className="w-full text-body">
+            <TableHeader><TableRow className="text-body-sm text-muted-foreground border-b">
+              <DetailTableHead>Fuente</DetailTableHead><DetailTableHead className="text-right">Total</DetailTableHead><DetailTableHead className="text-right">Conv.</DetailTableHead><DetailTableHead className="text-right">Tasa</DetailTableHead>
+            </TableRow></TableHeader>
+            <TableBody>
               {r.porFuente.map((f) => (
-                <tr key={f.fuente} className="border-b">
-                  <td className="py-1">{f.fuente}</td>
-                  <td className="text-right tabular-nums">{f.total}</td>
-                  <td className="text-right tabular-nums">{f.convertidos}</td>
-                  <td className="text-right tabular-nums">{formatPercent(f.tasa)}</td>
-                </tr>
+                <TableRow key={f.fuente} className="border-b">
+                  <TableCell>{f.fuente}</TableCell>
+                  <TableCell className="text-right tabular-nums">{f.total}</TableCell>
+                  <TableCell className="text-right tabular-nums">{f.convertidos}</TableCell>
+                  <TableCell className="text-right tabular-nums">{formatPercent(f.tasa)}</TableCell>
+                </TableRow>
               ))}
-              {r.porFuente.length === 0 && <tr><td colSpan={4}><EmptyStateInline icon={BarChart3} message="Sin datos" density="compact" /></td></tr>}
-            </tbody>
-          </table>
+              {r.porFuente.length === 0 && <TableRow><TableCell colSpan={4}><EmptyStateInline icon={BarChart3} message="Sin datos" density="compact" /></TableCell></TableRow>}
+            </TableBody>
+          </Table>
           </div>
         </CardContent>
       </Card>

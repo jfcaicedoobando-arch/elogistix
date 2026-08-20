@@ -3,6 +3,8 @@ import { ArrowDownCircle, FileMinus2 } from "lucide-react";
 import type { FacturaEstadoCuenta } from "../services/estadoCuenta";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 
+import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/components/ui/table";
+import { DetailTableHead } from "@/components/shared/DetailTable";
 interface Props {
   factura: FacturaEstadoCuenta;
 }
@@ -27,28 +29,28 @@ export function EstadoCuentaRowExpanded({ factura }: Props) {
             Pagos aplicados ({pagos.length})
           </div>
           <div className="rounded border bg-background overflow-hidden">
-            <table className="w-full text-body">
-              <thead className="bg-muted/50 text-body-sm">
-                <tr>
-                  <th className="text-left px-3 py-1.5 font-medium">Fecha</th>
-                  <th className="text-left px-3 py-1.5 font-medium">Forma de pago</th>
-                  <th className="text-left px-3 py-1.5 font-medium">Referencia</th>
-                  <th className="text-right px-3 py-1.5 font-medium">Monto aplicado</th>
-                </tr>
-              </thead>
-              <tbody>
+            <Table className="w-full text-body">
+              <TableHeader className="bg-muted/50 text-body-sm">
+                <TableRow>
+                  <DetailTableHead>Fecha</DetailTableHead>
+                  <DetailTableHead>Forma de pago</DetailTableHead>
+                  <DetailTableHead>Referencia</DetailTableHead>
+                  <DetailTableHead className="text-right">Monto aplicado</DetailTableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
                 {pagos.map((p) => (
-                  <tr key={p.id} className="border-t">
-                    <td className="px-3 py-1.5 tabular-nums">{formatDate(p.fecha_pago)}</td>
-                    <td className="px-3 py-1.5">{p.forma_pago ?? "—"}</td>
-                    <td className="px-3 py-1.5 text-muted-foreground">{p.referencia ?? "—"}</td>
-                    <td className="px-3 py-1.5 text-right tabular-nums text-success font-medium">
+                  <TableRow key={p.id} className="border-t">
+                    <TableCell className="tabular-nums">{formatDate(p.fecha_pago)}</TableCell>
+                    <TableCell>{p.forma_pago ?? "—"}</TableCell>
+                    <TableCell className="text-muted-foreground">{p.referencia ?? "—"}</TableCell>
+                    <TableCell className="text-right tabular-nums text-success font-medium">
                       {formatCurrency(p.monto_aplicado, moneda)}
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 ))}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           </div>
         </div>
       )}
@@ -60,26 +62,26 @@ export function EstadoCuentaRowExpanded({ factura }: Props) {
             Notas de crédito aplicadas ({notas_credito.length})
           </div>
           <div className="rounded border bg-background overflow-hidden">
-            <table className="w-full text-body">
-              <thead className="bg-muted/50 text-body-sm">
-                <tr>
-                  <th className="text-left px-3 py-1.5 font-medium">Fecha</th>
-                  <th className="text-left px-3 py-1.5 font-medium">Folio</th>
-                  <th className="text-right px-3 py-1.5 font-medium">Monto</th>
-                </tr>
-              </thead>
-              <tbody>
+            <Table className="w-full text-body">
+              <TableHeader className="bg-muted/50 text-body-sm">
+                <TableRow>
+                  <DetailTableHead>Fecha</DetailTableHead>
+                  <DetailTableHead>Folio</DetailTableHead>
+                  <DetailTableHead className="text-right">Monto</DetailTableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
                 {notas_credito.map((n) => (
-                  <tr key={n.id} className="border-t">
-                    <td className="px-3 py-1.5 tabular-nums">{formatDate(n.fecha_emision)}</td>
-                    <td className="px-3 py-1.5">{n.folio ?? "—"}</td>
-                    <td className="px-3 py-1.5 text-right tabular-nums text-info font-medium">
+                  <TableRow key={n.id} className="border-t">
+                    <TableCell className="tabular-nums">{formatDate(n.fecha_emision)}</TableCell>
+                    <TableCell>{n.folio ?? "—"}</TableCell>
+                    <TableCell className="text-right tabular-nums text-info font-medium">
                       {formatCurrency(n.monto, moneda)}
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 ))}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           </div>
         </div>
       )}

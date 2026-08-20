@@ -12,6 +12,7 @@ import { formatCurrency, formatFechaDia } from "@/lib/formatters";
 import { NcSatBadge } from "./NcSatBadge";
 import type { NotaCreditoProveedor as NotaCredito } from "@/features/cxp/types";
 
+import { TableCell, TableRow } from "@/components/ui/table";
 const NC_TONES: Record<string, { tone: ChipTone; label: string }> = {
   Aplicada: { tone: "success", label: "Aplicada" },
   Aprobada: { tone: "info", label: "Aprobada" },
@@ -51,21 +52,21 @@ export function NotaCreditoFila({
 }: Props) {
   const folio = n.folio_nc || "s/folio";
   return (
-    <tr className="hover:bg-muted/30">
-      <td className="px-3 py-2 font-mono text-body-sm">{n.folio_nc}</td>
-      <td className="px-3 py-2">{formatFechaDia(n.fecha)}</td>
-      <td className="px-3 py-2 text-muted-foreground">{n.motivo}</td>
-      <td className="px-3 py-2 text-right tabular-nums">{formatCurrency(Number(n.monto), n.moneda)}</td>
-      <td className="px-3 py-2 text-center"><NcEstadoBadge estado={n.estado} /></td>
-      <td className="px-3 py-2 text-center">
+    <TableRow className="hover:bg-muted/30">
+      <TableCell className="font-mono text-body-sm">{n.folio_nc}</TableCell>
+      <TableCell>{formatFechaDia(n.fecha)}</TableCell>
+      <TableCell className="text-muted-foreground">{n.motivo}</TableCell>
+      <TableCell className="text-right tabular-nums">{formatCurrency(Number(n.monto), n.moneda)}</TableCell>
+      <TableCell className="text-center"><NcEstadoBadge estado={n.estado} /></TableCell>
+      <TableCell className="text-center">
         <NcSatBadge
           facturaId={facturaId}
           ncId={n.id}
           uuidFiscal={n.uuid_fiscal}
           estatus={n.uuid_estatus_sat}
         />
-      </td>
-      <td className="px-3 py-2 text-center">
+      </TableCell>
+      <TableCell className="text-center">
         {n.archivo_xml_url ? (
           <Button
             size="sm" variant="ghost"
@@ -79,8 +80,8 @@ export function NotaCreditoFila({
         ) : (
           <span className="text-muted-foreground/40">—</span>
         )}
-      </td>
-      <td className="px-3 py-2 text-center">
+      </TableCell>
+      <TableCell className="text-center">
         {n.archivo_pdf_url ? (
           <Button
             size="sm" variant="ghost"
@@ -94,8 +95,8 @@ export function NotaCreditoFila({
         ) : (
           <span className="text-muted-foreground/40">—</span>
         )}
-      </td>
-      <td className="px-2 py-2 text-right space-x-1">
+      </TableCell>
+      <TableCell className="text-right space-x-1">
         {canEdit && n.estado === "Borrador" && (
           <Button
             size="sm" variant="ghost"
@@ -132,7 +133,7 @@ export function NotaCreditoFila({
             <X className="h-3.5 w-3.5" />
           </Button>
         )}
-      </td>
-    </tr>
+      </TableCell>
+    </TableRow>
   );
 }

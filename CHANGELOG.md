@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.701.0] - 2026-08-20
+### Ola 5 (5.2) — Se retiran las 26 tablas crudas
+- Las 26 tablas que aún se dibujaban "a mano" (anticipos aplicados, conciliación de compras, plantillas de cotización, CRM, notas de crédito, conceptos de CFDI, contenedores, costos por proveedor, estado de cuenta, portal de proformas, leads demo, diagnóstico de salud y la guía de puertos) usan ahora las mismas piezas reutilizables del sistema: encabezados, filas, hover, densidad y pies de totales idénticos en toda la app.
+- Se migraron además los fragmentos de fila sueltos (pagos a proveedor, cobro en lote, notas de crédito, saldos de bancos, presupuesto vs real y pagos programados) para que no quede ningún renglón con estilo propio.
+- El candado de arquitectura queda en cero deuda: la única tabla HTML permitida es la primitiva base del sistema de diseño; cualquier tabla nueva debe usar los componentes compartidos.
+
 ## [13.700.0] - 2026-08-20
 ### Ola 5 (5.6) — Un solo criterio para el margen
 - El porcentaje de margen se ve y se colorea igual en Reportes, Dashboard, Cotizaciones, Proyección y P&L de embarque (nuevo badge compartido con tres escalas: comercial, ventas y operativa).

@@ -14,6 +14,7 @@ import { diasHastaFecha } from "@/lib/date/dateOnly";
 import { cn } from "@/lib/utils";
 import type { FacturaCobroCandidata } from "@/features/facturacion/services/pagoClienteLote";
 
+import { TableCell, TableRow } from "@/components/ui/table";
 interface Props {
   factura: FacturaCobroCandidata;
   monto: number;
@@ -49,8 +50,8 @@ export function CobroLoteRenglon(p: Props) {
   const parcial = p.monto > 0 && !liquidada;
 
   return (
-    <tr className={cn("border-t align-top", p.impar && "bg-muted/20", p.error && "bg-destructive/5")}>
-      <td className="px-3 py-2">
+    <TableRow className={cn("border-t align-top", p.impar && "bg-muted/20", p.error && "bg-destructive/5")}>
+      <TableCell>
         <div className="flex items-center gap-1.5">
           <span className="font-mono text-body-sm">{p.factura.numero ?? "—"}</span>
           {p.requiereRep && (
@@ -64,14 +65,14 @@ export function CobroLoteRenglon(p: Props) {
             </Tooltip>
           )}
         </div>
-      </td>
-      <td className="px-3 py-2">
+      </TableCell>
+      <TableCell>
         <ChipVencimiento iso={p.factura.fecha_vencimiento} />
-      </td>
-      <td className="px-3 py-2 text-right tabular-nums">
+      </TableCell>
+      <TableCell className="text-right tabular-nums">
         {formatCurrency(p.factura.saldo, p.moneda)}
-      </td>
-      <td className="px-3 py-2">
+      </TableCell>
+      <TableCell>
         <div className="flex items-center justify-end gap-1.5">
           <MoneyInput
             className={cn("h-9 w-full max-w-[140px] text-right", p.error && "border-destructive")}
@@ -93,8 +94,8 @@ export function CobroLoteRenglon(p: Props) {
           </Button>
         </div>
         {p.error && <p className="mt-1 text-right text-label text-destructive">{p.error}</p>}
-      </td>
-      <td className="px-3 py-2 text-right">
+      </TableCell>
+      <TableCell className="text-right">
         <div className="flex items-center justify-end gap-2">
           {liquidada && <Badge variant="outline" className="text-2xs">Liquidada</Badge>}
           {parcial && <Badge variant="secondary" className="text-2xs">Parcial</Badge>}
@@ -102,7 +103,7 @@ export function CobroLoteRenglon(p: Props) {
             {formatCurrency(queda, p.moneda)}
           </span>
         </div>
-      </td>
-    </tr>
+      </TableCell>
+    </TableRow>
   );
 }

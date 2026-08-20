@@ -11,6 +11,8 @@ import type {
 import { classFromNumber } from "./ConciliacionDetalleHelpers";
 import { FilaRenglon } from "./ConciliacionDetalleFilaRenglon";
 
+import { Table, TableBody, TableHeader, TableRow } from "@/components/ui/table";
+import { DetailTableHead } from "@/components/shared/DetailTable";
 export type FilasType = Awaited<ReturnType<typeof fetchReconciliacionEmbarque>>;
 export type TotalesMoneda = ReturnType<typeof calcularResumenPorMoneda>;
 
@@ -20,20 +22,20 @@ export function TablaBody({ filas, expandidos, onToggle, onVincular }: {
 }) {
   return (
     <div className="rounded-md border overflow-hidden">
-      <table className="w-full text-xs">
-        <thead className="bg-muted/50 text-2xs uppercase tracking-wide text-muted-foreground">
-          <tr>
-            <th className="w-6 p-2"></th>
-            <th className="text-left p-2">Concepto</th>
-            <th className="text-right p-2">Cotizado</th>
-            <th className="text-right p-2">Real</th>
-            <th className="text-right p-2">Δ</th>
-            <th className="text-right p-2">%</th>
-            <th className="text-left p-2">Estatus</th>
-            <th className="w-16 p-2"></th>
-          </tr>
-        </thead>
-        <tbody>
+      <Table className="w-full text-xs">
+        <TableHeader className="bg-muted/50 text-2xs uppercase tracking-wide text-muted-foreground">
+          <TableRow>
+            <DetailTableHead className="w-6"></DetailTableHead>
+            <DetailTableHead>Concepto</DetailTableHead>
+            <DetailTableHead className="text-right">Cotizado</DetailTableHead>
+            <DetailTableHead className="text-right">Real</DetailTableHead>
+            <DetailTableHead className="text-right">Δ</DetailTableHead>
+            <DetailTableHead className="text-right">%</DetailTableHead>
+            <DetailTableHead>Estatus</DetailTableHead>
+            <DetailTableHead className="w-16"></DetailTableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
           {filas.map((f) => (
             <FilaRenglon
               key={f.concepto_costo_id}
@@ -43,8 +45,8 @@ export function TablaBody({ filas, expandidos, onToggle, onVincular }: {
               onVincular={() => onVincular(f.concepto_costo_id)}
             />
           ))}
-        </tbody>
-      </table>
+        </TableBody>
+      </Table>
     </div>
   );
 }

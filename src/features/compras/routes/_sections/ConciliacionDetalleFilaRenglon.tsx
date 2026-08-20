@@ -10,6 +10,8 @@ import { formatCurrency, formatPercent } from "@/lib/formatters";
 import type { FilaReconciliacion } from "@/features/embarques/services/reconciliacionCostos";
 import { ESTATUS_META, classFromNumber } from "./ConciliacionDetalleHelpers";
 
+import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/components/ui/table";
+import { DetailTableHead } from "@/components/shared/DetailTable";
 interface Props {
   fila: FilaReconciliacion;
   expandido: boolean;
@@ -25,8 +27,8 @@ export function FilaRenglon({ fila, expandido, onToggle, onVincular }: Props) {
 
   return (
     <>
-      <tr className="border-t hover:bg-muted/30">
-        <td className="p-2 align-top">
+      <TableRow className="border-t hover:bg-muted/30">
+        <TableCell className="align-top">
           {tienePartidas ? (
             <Button
               type="button"
@@ -41,30 +43,30 @@ export function FilaRenglon({ fila, expandido, onToggle, onVincular }: Props) {
                 : <ChevronRight className="h-3.5 w-3.5" />}
             </Button>
           ) : null}
-        </td>
-        <td className="p-2 align-top">
+        </TableCell>
+        <TableCell className="align-top">
           <div className="font-medium">{fila.concepto}</div>
           <div className="text-2xs text-muted-foreground">{fila.proveedor_nombre || "—"}</div>
-        </td>
-        <td className="p-2 text-right tabular-nums align-top">
+        </TableCell>
+        <TableCell className="text-right tabular-nums align-top">
           {formatCurrency(fila.cotizado, fila.moneda)}
-        </td>
-        <td className="p-2 text-right tabular-nums align-top">
+        </TableCell>
+        <TableCell className="text-right tabular-nums align-top">
           {formatCurrency(fila.real_facturado, fila.moneda)}
-        </td>
-        <td className={`p-2 text-right tabular-nums align-top ${dCls}`}>
+        </TableCell>
+        <TableCell className={`p-2 text-right tabular-nums align-top ${dCls}`}>
           {formatCurrency(fila.diferencia, fila.moneda)}
-        </td>
-        <td className={`p-2 text-right tabular-nums align-top ${pCls}`}>
+        </TableCell>
+        <TableCell className={`p-2 text-right tabular-nums align-top ${pCls}`}>
           {formatPercent(fila.desviacion_pct)}
-        </td>
-        <td className="p-2 align-top">
+        </TableCell>
+        <TableCell className="align-top">
           <Badge variant={meta.variant} className="gap-1 text-2xs">
             <span className={`h-1.5 w-1.5 rounded-full ${meta.dot}`} />
             {meta.label}
           </Badge>
-        </td>
-        <td className="p-2 align-top text-right">
+        </TableCell>
+        <TableCell className="align-top text-right">
           {!tienePartidas && (
             <Button
               size="sm"
@@ -75,8 +77,8 @@ export function FilaRenglon({ fila, expandido, onToggle, onVincular }: Props) {
               <Link2 className="mr-1 h-3 w-3" /> Vincular
             </Button>
           )}
-        </td>
-      </tr>
+        </TableCell>
+      </TableRow>
       {expandido && tienePartidas && (
         <SubTablaPartidas fila={fila} />
       )}
@@ -86,43 +88,40 @@ export function FilaRenglon({ fila, expandido, onToggle, onVincular }: Props) {
 
 function SubTablaPartidas({ fila }: { fila: FilaReconciliacion }) {
   return (
-    <tr className="bg-muted/20">
-      <td colSpan={8} className="px-3 py-2">
+    <TableRow className="bg-muted/20">
+      <TableCell colSpan={8}>
         <div className="overflow-x-auto">
-        <table className="w-full text-label">
-          <thead className="text-muted-foreground">
-            <tr>
-              <th className="text-left py-1 font-normal">Folio</th>
-              <th className="text-left py-1 font-normal">Fecha</th>
-              <th className="text-left py-1 font-normal">Descripción</th>
-              <th className="text-right py-1 font-normal">Monto</th>
-              <th className="text-right py-1 font-normal">% cot.</th>
-            </tr>
-          </thead>
-          <tbody>
+        <Table className="w-full text-label">
+          <TableHeader className="text-muted-foreground">
+            <TableRow>
+              <DetailTableHead className="font-normal">Folio</DetailTableHead>
+              <DetailTableHead className="font-normal">Fecha</DetailTableHead>
+              <DetailTableHead className="font-normal">Descripción</DetailTableHead>
+              <DetailTableHead className="text-right font-normal">Monto</DetailTableHead>
+              <DetailTableHead className="text-right font-normal">% cot.</DetailTableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
             {fila.facturas.map((p) => {
               const pct = fila.cotizado > 0 ? (p.monto / fila.cotizado) * 100 : 0;
               return (
-                <tr
-                  key={p.proveedor_factura_id + p.folio_proveedor}
-                  className="border-t border-border/50"
-                >
-                  <td className="py-1 font-mono">{p.folio_proveedor}</td>
-                  <td className="py-1">{p.fecha_emision ?? "—"}</td>
-                  <td className="py-1">{p.descripcion ?? "—"}</td>
-                  <td className="py-1 text-right tabular-nums">
+                <TableRow key={p.proveedor_factura_id + p.folio_proveedor} className="border-t border-border/50">
+                  <TableCell className="font-mono">{p.folio_proveedor}</TableCell>
+                  <TableCell>{p.fecha_emision ?? "—"}</TableCell>
+                  <TableCell>{p.descripcion ?? "—"}</TableCell>
+                  <TableCell className="text-right tabular-nums">
                     {formatCurrency(p.monto, fila.moneda)}
-                  </td>
-                  <td className="py-1 text-right tabular-nums text-muted-foreground">
+                  </TableCell>
+                  <TableCell className="text-right tabular-nums text-muted-foreground">
                     {formatPercent(pct)}
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
               );
             })}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
         </div>
-      </td>
-    </tr>
+      </TableCell>
+    </TableRow>
   );
 }

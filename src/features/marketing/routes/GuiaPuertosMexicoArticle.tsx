@@ -11,6 +11,8 @@ import {
 import { Anchor, MapPin, Ship } from "lucide-react";
 import { FAQ, PUERTOS, type PuertoData } from "./guiaPuertosMexico.data";
 
+import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/components/ui/table";
+import { DetailTableHead } from "@/components/shared/DetailTable";
 function PuertoSection({ puerto }: { puerto: PuertoData }) {
   return (
     <section id={puerto.id} className="scroll-mt-20 mt-14">
@@ -104,26 +106,26 @@ export function GuiaPuertosMexicoArticle() {
           de carga:
         </p>
         <div className="mt-6 overflow-x-auto">
-          <table className="w-full border-collapse text-sm">
-            <thead>
-              <tr className="border-b border-border bg-muted/40 text-left">
-                <th className="px-3 py-2 font-semibold">Puerto</th>
-                <th className="px-3 py-2 font-semibold">UN/LOCODE</th>
-                <th className="px-3 py-2 font-semibold">Costa</th>
-                <th className="px-3 py-2 font-semibold">Vocación</th>
-              </tr>
-            </thead>
-            <tbody>
+          <Table className="w-full border-collapse text-sm">
+            <TableHeader>
+              <TableRow className="border-b border-border bg-muted/40 text-left">
+                <DetailTableHead>Puerto</DetailTableHead>
+                <DetailTableHead>UN/LOCODE</DetailTableHead>
+                <DetailTableHead>Costa</DetailTableHead>
+                <DetailTableHead>Vocación</DetailTableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
               {PUERTOS.map((p) => (
-                <tr key={p.id} className="border-b border-border/60">
-                  <td className="px-3 py-2 font-medium text-foreground">{p.nombre}</td>
-                  <td className="px-3 py-2 font-mono text-xs">{p.unlocode}</td>
-                  <td className="px-3 py-2 text-muted-foreground">{p.costa}</td>
-                  <td className="px-3 py-2 text-muted-foreground">{p.carga}</td>
-                </tr>
+                <TableRow key={p.id} className="border-b border-border/60">
+                  <TableCell className="font-medium text-foreground">{p.nombre}</TableCell>
+                  <TableCell className="font-mono text-xs">{p.unlocode}</TableCell>
+                  <TableCell className="text-muted-foreground">{p.costa}</TableCell>
+                  <TableCell className="text-muted-foreground">{p.carga}</TableCell>
+                </TableRow>
               ))}
-            </tbody>
-          </table>
+            </TableBody>
+          </Table>
         </div>
       </section>
 

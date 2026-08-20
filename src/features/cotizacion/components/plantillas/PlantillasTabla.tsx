@@ -11,6 +11,8 @@ import {
 import { formatDate } from "@/lib/formatters";
 import type { CotizacionPlantilla } from "@/features/cotizacion/hooks/useCotizacionPlantillas";
 
+import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/components/ui/table";
+import { DetailTableHead } from "@/components/shared/DetailTable";
 interface Props {
   plantillas: CotizacionPlantilla[];
   onEditar: (p: CotizacionPlantilla) => void;
@@ -21,38 +23,34 @@ interface Props {
 export function PlantillasTabla({ plantillas, onEditar, onEliminar, onUsar }: Props) {
   return (
     <div className="overflow-x-auto">
-      <table className="w-full text-body">
-        <thead className="text-body-sm uppercase text-muted-foreground border-b">
-          <tr>
-            <th className="text-left py-2 px-2">Nombre</th>
-            <th className="text-left py-2 px-2">Descripción</th>
-            <th className="text-left py-2 px-2">Visibilidad</th>
-            <th className="text-right py-2 px-2">Usos</th>
-            <th className="text-left py-2 px-2">Actualizada</th>
-            <th className="w-10" />
-          </tr>
-        </thead>
-        <tbody>
+      <Table className="w-full text-body">
+        <TableHeader className="text-body-sm uppercase text-muted-foreground border-b">
+          <TableRow>
+            <DetailTableHead>Nombre</DetailTableHead>
+            <DetailTableHead>Descripción</DetailTableHead>
+            <DetailTableHead>Visibilidad</DetailTableHead>
+            <DetailTableHead className="text-right">Usos</DetailTableHead>
+            <DetailTableHead>Actualizada</DetailTableHead>
+            <DetailTableHead className="w-10" />
+          </TableRow>
+        </TableHeader>
+        <TableBody>
           {plantillas.map((p, i) => (
-            <tr
-              key={p.id}
-              className={i % 2 === 0 ? "bg-background" : "bg-muted/20"}
-              data-testid={`plantilla-row-${p.id}`}
-            >
-              <td className="py-2 px-2 font-medium">{p.nombre}</td>
-              <td className="py-2 px-2 text-muted-foreground max-w-[280px] truncate">
+            <TableRow key={p.id} className={i % 2 === 0 ? "bg-background" : "bg-muted/20"} data-testid={`plantilla-row-${p.id}`}>
+              <TableCell className="font-medium">{p.nombre}</TableCell>
+              <TableCell className="text-muted-foreground max-w-[280px] truncate">
                 {p.descripcion ?? "—"}
-              </td>
-              <td className="py-2 px-2">
+              </TableCell>
+              <TableCell>
                 <Badge variant={p.visibilidad === "org" ? "default" : "secondary"}>
                   {p.visibilidad === "org" ? "Organización" : "Sólo yo"}
                 </Badge>
-              </td>
-              <td className="py-2 px-2 text-right tabular-nums">{p.veces_usada}</td>
-              <td className="py-2 px-2 text-muted-foreground">
+              </TableCell>
+              <TableCell className="text-right tabular-nums">{p.veces_usada}</TableCell>
+              <TableCell className="text-muted-foreground">
                 {formatDate(p.updated_at)}
-              </td>
-              <td className="py-2 px-2">
+              </TableCell>
+              <TableCell>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button
@@ -83,11 +81,11 @@ export function PlantillasTabla({ plantillas, onEditar, onEliminar, onUsar }: Pr
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
-              </td>
-            </tr>
+              </TableCell>
+            </TableRow>
           ))}
-        </tbody>
-      </table>
+        </TableBody>
+      </Table>
     </div>
   );
 }

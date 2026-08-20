@@ -18,6 +18,8 @@ import { useNotasCreditoRecientes, type EstadoNotaCredito } from "@/features/fac
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 import { Receipt } from "lucide-react";
 
+import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/components/ui/table";
+import { DetailTableHead } from "@/components/shared/DetailTable";
 const ESTADO_COLOR: Record<EstadoNotaCredito, string> = {
   Borrador: "bg-muted text-muted-foreground",
   Aprobada: "bg-warning/10 text-warning border-warning/20",
@@ -105,21 +107,21 @@ export function NotasCreditoRecientes() {
               <EmptyStateInline icon={Receipt} message="No hay notas de crédito que coincidan." className="py-4" />
             ) : (
               <div className="overflow-x-auto">
-                <table className="w-full text-body">
-                  <thead className="text-body-sm text-muted-foreground border-y bg-muted/20">
-                    <tr>
-                      <th className="text-left py-2 px-3">Folio</th>
-                      <th className="text-left py-2 px-3">Factura</th>
-                      <th className="text-left py-2 px-3">Cliente</th>
-                      <th className="text-left py-2 px-3">Fecha</th>
-                      <th className="text-left py-2 px-3">Motivo</th>
-                      <th className="text-left py-2 px-3">Estado</th>
-                      <th className="text-right py-2 px-3">Monto</th>
-                    </tr>
-                  </thead>
-                  <tbody>
+                <Table className="w-full text-body">
+                  <TableHeader className="text-body-sm text-muted-foreground border-y bg-muted/20">
+                    <TableRow>
+                      <DetailTableHead>Folio</DetailTableHead>
+                      <DetailTableHead>Factura</DetailTableHead>
+                      <DetailTableHead>Cliente</DetailTableHead>
+                      <DetailTableHead>Fecha</DetailTableHead>
+                      <DetailTableHead>Motivo</DetailTableHead>
+                      <DetailTableHead>Estado</DetailTableHead>
+                      <DetailTableHead className="text-right">Monto</DetailTableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
                     {filtradas.map((n) => (
-                      <tr
+                      <TableRow
                         key={n.id}
                         role="link"
                         tabIndex={0}
@@ -133,25 +135,25 @@ export function NotasCreditoRecientes() {
                         }}
                         className="border-b last:border-0 hover:bg-muted/30 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60"
                       >
-                        <td className="py-2 px-3 font-mono text-body-sm whitespace-nowrap">{n.folio}</td>
-                        <td className="py-2 px-3 whitespace-nowrap font-mono text-body-sm">
+                        <TableCell className="font-mono text-body-sm whitespace-nowrap">{n.folio}</TableCell>
+                        <TableCell className="whitespace-nowrap font-mono text-body-sm">
                           {n.factura_numero}
-                        </td>
-                        <td className="py-2 px-3 max-w-[200px] truncate" title={toTitleCase(n.cliente_nombre)}>
+                        </TableCell>
+                        <TableCell className="max-w-[200px] truncate" title={toTitleCase(n.cliente_nombre)}>
                           {toTitleCase(n.cliente_nombre)}
-                        </td>
-                        <td className="py-2 px-3 text-body-sm whitespace-nowrap">{formatDate(n.fecha_emision)}</td>
-                        <td className="py-2 px-3 text-body-sm">{n.motivo}</td>
-                        <td className="py-2 px-3">
+                        </TableCell>
+                        <TableCell className="text-body-sm whitespace-nowrap">{formatDate(n.fecha_emision)}</TableCell>
+                        <TableCell className="text-body-sm">{n.motivo}</TableCell>
+                        <TableCell>
                           <Badge variant="outline" className={ESTADO_COLOR[n.estado]}>{n.estado}</Badge>
-                        </td>
-                        <td className="py-2 px-3 text-right tabular-nums whitespace-nowrap">
+                        </TableCell>
+                        <TableCell className="text-right tabular-nums whitespace-nowrap">
                           {formatCurrency(Number(n.monto), n.moneda)}
-                        </td>
-                      </tr>
+                        </TableCell>
+                      </TableRow>
                     ))}
-                  </tbody>
-                </table>
+                  </TableBody>
+                </Table>
               </div>
             )}
           </div>

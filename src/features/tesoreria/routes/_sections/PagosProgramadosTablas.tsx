@@ -4,7 +4,7 @@
  */
 import { Inbox } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
-import { TableRow, TableCell } from "@/components/ui/table";
+import { TableCell, TableRow } from "@/components/ui/table";
 import { DataTable, type ColumnDef } from "@/components/shared/DataTable";
 import { formatDate, formatCurrency } from "@/lib/formatters";
 import type { FacturaProgramable, SemanaPagosProgramados } from "@/features/tesoreria/domain/pagosProgramados";
@@ -49,7 +49,7 @@ export function PagosProgramadosTablas({ semanas, sinFecha, columns }: Props) {
                 density={TABLE_DENSITY.embebida}
                 hoverable={false}
                 footer={() => (
-                  // VT-30: el footer se renderiza dentro de <tfoot>; un <div>
+                  // VT-30: el footer se renderiza dentro de <TableFooter>; un <div>
                   // suelto era HTML inválido y el fondo solo cubría ~40% del
                   // ancho. Fila con colspan = todas las columnas → fondo 100%.
                   <TableRow className="bg-muted/30 hover:bg-muted/30">

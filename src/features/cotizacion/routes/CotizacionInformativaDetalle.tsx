@@ -15,6 +15,8 @@ import { useTiposContenedor } from "@/features/catalogos/hooks";
 import { resolveTipoContenedorNombre } from "@/features/cotizacion/utils/resolveTipoContenedorNombre";
 
 import { notifyError } from "@/lib/ui/appFeedback";
+import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/components/ui/table";
+import { DetailTableHead } from "@/components/shared/DetailTable";
 interface Props {
   cotizacion: CotizacionRow;
 }
@@ -86,35 +88,35 @@ export default function CotizacionInformativaDetalle({ cotizacion }: Props) {
       <Card>
         <CardHeader><CardTitle>Tarifas ({tarifas.length})</CardTitle></CardHeader>
         <CardContent className="overflow-x-auto p-0">
-          <table className="w-full text-body">
-            <thead className="bg-muted/50">
-              <tr className="text-left">
-                <th className="p-2">Modo</th>
-                <th className="p-2">Modalidad/Equipo</th>
-                <th className="p-2">Ruta</th>
-                <th className="p-2">Unidad</th>
-                <th className="p-2 text-right">Precio</th>
-                <th className="p-2">Notas</th>
-              </tr>
-            </thead>
-            <tbody>
+          <Table className="w-full text-body">
+            <TableHeader className="bg-muted/50">
+              <TableRow className="text-left">
+                <DetailTableHead>Modo</DetailTableHead>
+                <DetailTableHead>Modalidad/Equipo</DetailTableHead>
+                <DetailTableHead>Ruta</DetailTableHead>
+                <DetailTableHead>Unidad</DetailTableHead>
+                <DetailTableHead className="text-right">Precio</DetailTableHead>
+                <DetailTableHead>Notas</DetailTableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
               {tarifas.map((t, i) => {
                 const ruta = t.modo === "Terrestre" && t.modalidad_equipo === "Porta Contenedor" && t.punto_intermedio
                   ? `${t.origen} → ${t.punto_intermedio} → ${t.destino}`
                   : `${t.origen} → ${t.destino}`;
                 return (
-                  <tr key={t.id} className={i % 2 === 0 ? "bg-background" : "bg-muted/20"}>
-                    <td className="p-2">{t.modo}</td>
-                    <td className="p-2">{t.modalidad_equipo || resolveTipoContenedorNombre(t.tipo_contenedor, tiposContenedor)}</td>
-                    <td className="p-2">{ruta}</td>
-                    <td className="p-2">{t.unidad_medida}</td>
-                    <td className="p-2 text-right tabular-nums">{formatCurrency(t.precio, t.moneda)}</td>
-                    <td className="p-2 text-muted-foreground">{t.notas || "—"}</td>
-                  </tr>
+                  <TableRow key={t.id} className={i % 2 === 0 ? "bg-background" : "bg-muted/20"}>
+                    <TableCell>{t.modo}</TableCell>
+                    <TableCell>{t.modalidad_equipo || resolveTipoContenedorNombre(t.tipo_contenedor, tiposContenedor)}</TableCell>
+                    <TableCell>{ruta}</TableCell>
+                    <TableCell>{t.unidad_medida}</TableCell>
+                    <TableCell className="text-right tabular-nums">{formatCurrency(t.precio, t.moneda)}</TableCell>
+                    <TableCell className="text-muted-foreground">{t.notas || "—"}</TableCell>
+                  </TableRow>
                 );
               })}
-            </tbody>
-          </table>
+            </TableBody>
+          </Table>
         </CardContent>
       </Card>
 

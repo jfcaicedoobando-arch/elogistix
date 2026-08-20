@@ -8,6 +8,8 @@ import { Badge } from "@/components/ui/badge";
 import type { ParsedLeadRow } from "@/lib/csv/leadsCsv";
 import type { Coincidencia } from "@/features/crm/domain/leadsDedupe";
 
+import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/components/ui/table";
+import { DetailTableHead } from "@/components/shared/DetailTable";
 interface Props {
   rows: ParsedLeadRow[];
   validCount: number;
@@ -50,32 +52,32 @@ export function ImportarLeadsCsvPreview({
         {posibles > 0 && <Badge variant="secondary">{posibles} posibles duplicados</Badge>}
       </div>
       <div className="border rounded max-h-64 overflow-auto text-body-sm">
-        <table className="w-full">
-          <thead className="bg-muted sticky top-0">
-            <tr>
-              <th className="p-2 text-left">Empresa</th>
-              <th className="p-2 text-left">Contacto</th>
-              <th className="p-2 text-left">Email</th>
-              <th className="p-2 text-left">Estado</th>
-              <th className="p-2 text-left">Fuente</th>
-              <th className="p-2 text-left">Duplicado</th>
-              <th className="p-2 text-left">Error</th>
-            </tr>
-          </thead>
-          <tbody>
+        <Table className="w-full">
+          <TableHeader className="bg-muted sticky top-0">
+            <TableRow>
+              <DetailTableHead>Empresa</DetailTableHead>
+              <DetailTableHead>Contacto</DetailTableHead>
+              <DetailTableHead>Email</DetailTableHead>
+              <DetailTableHead>Estado</DetailTableHead>
+              <DetailTableHead>Fuente</DetailTableHead>
+              <DetailTableHead>Duplicado</DetailTableHead>
+              <DetailTableHead>Error</DetailTableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
             {rows.slice(0, PREVIEW_LIMIT).map((r, i) => (
-              <tr key={i} className={r.__error ? "bg-destructive/10" : ""}>
-                <td className="p-2">{r.empresa || "—"}</td>
-                <td className="p-2">{r.contacto || "—"}</td>
-                <td className="p-2">{r.email || "—"}</td>
-                <td className="p-2">{r.estado}</td>
-                <td className="p-2">{r.fuente}</td>
-                <td className="p-2"><DuplicadoCelda c={duplicados?.[i]} /></td>
-                <td className="p-2 text-destructive">{r.__error ?? ""}</td>
-              </tr>
+              <TableRow key={i} className={r.__error ? "bg-destructive/10" : ""}>
+                <TableCell>{r.empresa || "—"}</TableCell>
+                <TableCell>{r.contacto || "—"}</TableCell>
+                <TableCell>{r.email || "—"}</TableCell>
+                <TableCell>{r.estado}</TableCell>
+                <TableCell>{r.fuente}</TableCell>
+                <TableCell><DuplicadoCelda c={duplicados?.[i]} /></TableCell>
+                <TableCell className="text-destructive">{r.__error ?? ""}</TableCell>
+              </TableRow>
             ))}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
         {rows.length > PREVIEW_LIMIT && (
           <p className="text-center p-2 text-muted-foreground">
             … {rows.length - PREVIEW_LIMIT} filas más

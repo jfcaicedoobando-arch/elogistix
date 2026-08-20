@@ -19,6 +19,8 @@ import { getFacturaSignedUrl } from "@/services/storage/facturas";
 import { notifyError } from "@/lib/ui/appFeedback";
 import type { MonedaNotaCreditoProveedor as Moneda } from "@/features/cxp/types";
 
+import { Table, TableBody, TableHeader, TableRow } from "@/components/ui/table";
+import { DetailTableHead } from "@/components/shared/DetailTable";
 interface Props {
   facturaId: string;
   monedaFactura: Moneda;
@@ -68,21 +70,21 @@ export function NotasCreditoSection({ facturaId, monedaFactura, saldoFactura, ca
         <EmptyStateInline icon={FileMinus2} message="Sin notas de crédito registradas." />
       ) : (
         <div className="overflow-x-auto">
-          <table className="w-full text-body">
-            <thead className="bg-muted/20 text-label uppercase tracking-wider text-muted-foreground">
-              <tr>
-                <th className="text-left px-3 py-2">Folio</th>
-                <th className="text-left px-3 py-2">Fecha</th>
-                <th className="text-left px-3 py-2">Motivo</th>
-                <th className="text-right px-3 py-2">Monto</th>
-                <th className="text-center px-3 py-2">Estado</th>
-                <th className="text-center px-3 py-2">SAT</th>
-                <th className="text-center px-3 py-2">XML</th>
-                <th className="text-center px-3 py-2">PDF</th>
-                <th className="w-28" />
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border">
+          <Table className="w-full text-body">
+            <TableHeader className="bg-muted/20 text-label uppercase tracking-wider text-muted-foreground">
+              <TableRow>
+                <DetailTableHead>Folio</DetailTableHead>
+                <DetailTableHead>Fecha</DetailTableHead>
+                <DetailTableHead>Motivo</DetailTableHead>
+                <DetailTableHead className="text-right">Monto</DetailTableHead>
+                <DetailTableHead className="text-center">Estado</DetailTableHead>
+                <DetailTableHead className="text-center">SAT</DetailTableHead>
+                <DetailTableHead className="text-center">XML</DetailTableHead>
+                <DetailTableHead className="text-center">PDF</DetailTableHead>
+                <DetailTableHead className="w-28" />
+              </TableRow>
+            </TableHeader>
+            <TableBody className="divide-y divide-border">
               {notas.map((n) => (
                 <NotaCreditoFila
                   key={n.id}
@@ -98,8 +100,8 @@ export function NotasCreditoSection({ facturaId, monedaFactura, saldoFactura, ca
                   onCancelar={setNcACancelar}
                 />
               ))}
-            </tbody>
-          </table>
+            </TableBody>
+          </Table>
         </div>
       )}
 
