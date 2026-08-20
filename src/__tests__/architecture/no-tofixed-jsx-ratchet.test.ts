@@ -60,8 +60,8 @@ describe("arquitectura · ratchet de toFixed en .tsx", () => {
   it("mantiene el tope sincronizado (si migraste archivos, baja el tope)", () => {
     const { total } = contarToFixed();
     expect(
-      MAX_TOFIXED - total,
-      "Hay margen de sobra en el ratchet: ajusta MAX_TOFIXED al conteo real.",
-    ).toBeLessThanOrEqual(5);
+      DEUDA_CONGELADA - total,
+      "Hay margen de sobra en el ratchet: ajusta DEUDA_CONGELADA al conteo real.",
+    ).toBeLessThanOrEqual(HOLGURA);
   });
 });

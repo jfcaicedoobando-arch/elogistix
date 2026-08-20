@@ -58,8 +58,8 @@ describe("arquitectura · ratchet de tamaño de iconos", () => {
   it("mantiene el tope de iconos h-4 w-4 sincronizado (si migraste archivos, baja el tope)", () => {
     const { total } = contarParLargo();
     expect(
-      MAX_PAR_LARGO - total,
-      "Hay margen de sobra en el ratchet: ajusta MAX_PAR_LARGO al conteo real.",
-    ).toBeLessThanOrEqual(20);
+      DEUDA_CONGELADA - total,
+      "Hay margen de sobra en el ratchet: ajusta DEUDA_CONGELADA al conteo real.",
+    ).toBeLessThanOrEqual(HOLGURA);
   });
 });

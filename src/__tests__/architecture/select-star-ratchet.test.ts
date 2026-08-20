@@ -50,8 +50,8 @@ describe("arquitectura · ratchet de select(\"*\")", () => {
   it("mantiene el tope sincronizado (si bajaste ocurrencias, baja el tope)", () => {
     const { total } = contarSelectStar();
     expect(
-      MAX_SELECT_STAR - total,
-      "Hay margen de sobra en el ratchet: ajusta MAX_SELECT_STAR al conteo real.",
-    ).toBeLessThanOrEqual(3);
+      DEUDA_CONGELADA - total,
+      "Hay margen de sobra en el ratchet: ajusta DEUDA_CONGELADA al conteo real.",
+    ).toBeLessThanOrEqual(HOLGURA);
   });
 });
