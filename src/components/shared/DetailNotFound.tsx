@@ -45,7 +45,7 @@ export function DetailNotFound({
         <div className="mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-primary">
           <Icon className="h-8 w-8" />
         </div>
-        <p className="mb-6 max-w-md text-sm text-muted-foreground">
+        <p className="mb-6 max-w-md text-body text-muted-foreground">
           {description ?? "El registro no existe, fue eliminado o no tienes permiso para verlo."}
         </p>
         <Button asChild>

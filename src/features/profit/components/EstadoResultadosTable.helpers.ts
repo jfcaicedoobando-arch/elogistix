@@ -6,10 +6,6 @@ export function fmt(n: number): string {
   return formatCurrency(n, "MXN");
 }
 
-export function pct(n: number): string {
-  return `${n.toFixed(1)}%`;
-}
-
 export const ESTADO_RESULTADOS_CSV_HEADERS = [
   { key: "seccion", label: "Sección" },
   { key: "concepto", label: "Concepto" },

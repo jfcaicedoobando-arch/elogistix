@@ -115,7 +115,7 @@ export function DateTimePickerMx({
           aria-invalid={showError || undefined}
           aria-describedby={describedBy}
           maxLength={16}
-          className="flex-1 min-w-0 bg-transparent text-sm outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed"
+          className="flex-1 min-w-0 bg-transparent text-body outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed"
         />
 
         {text && !disabled && (
@@ -167,7 +167,7 @@ export function DateTimePickerMx({
               className={cn("p-3 pointer-events-auto")}
             />
             <div className="border-t p-3 flex items-center gap-2">
-              <span className="text-xs text-muted-foreground">Hora</span>
+              <span className="text-body-sm text-muted-foreground">Hora</span>
               <Input
                 type="time"
                 value={hora}

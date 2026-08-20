@@ -86,7 +86,7 @@ export function ReasonDialog({
     >
       <div className="space-y-2">
         <Label htmlFor="reason-dialog-motivo">
-          {label} <span className="text-muted-foreground text-xs">(mínimo {minLength} caracteres)</span>
+          {label} <span className="text-muted-foreground text-body-sm">(mínimo {minLength} caracteres)</span>
         </Label>
         <Textarea
           id="reason-dialog-motivo"

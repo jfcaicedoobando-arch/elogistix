@@ -42,7 +42,7 @@ export function GlobalSearchCargando() {
       aria-live="polite"
       data-testid="global-search-cargando"
     >
-      <span className="flex items-center gap-2 px-1 text-xs text-muted-foreground">
+      <span className="flex items-center gap-2 px-1 text-body-sm text-muted-foreground">
         <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
         Buscando…
       </span>
@@ -67,15 +67,15 @@ export function GlobalSearchVacio({ busquedaFallo }: { busquedaFallo: boolean })
       <SearchX className="h-6 w-6 text-muted-foreground" aria-hidden="true" />
       {busquedaFallo ? (
         <>
-          <p className="text-sm font-medium text-foreground">No pudimos completar la búsqueda</p>
-          <p className="text-xs text-muted-foreground">
+          <p className="text-body font-medium text-foreground">No pudimos completar la búsqueda</p>
+          <p className="text-body-sm text-muted-foreground">
             Revisa tu conexión y vuelve a escribir el término para reintentar.
           </p>
         </>
       ) : (
         <>
-          <p className="text-sm font-medium text-foreground">No se encontraron resultados</p>
-          <p className="text-xs text-muted-foreground">
+          <p className="text-body font-medium text-foreground">No se encontraron resultados</p>
+          <p className="text-body-sm text-muted-foreground">
             Intenta con el expediente, el BL/Guía, el RFC o el folio de la factura.
           </p>
         </>
@@ -133,7 +133,7 @@ export function GlobalSearchGrupo({ type, items, onSelect, termino = "" }: Grupo
             </p>
             {item.sublabel && (
               <Hint label={item.sublabel}>
-                <p className="truncate text-xs text-muted-foreground">
+                <p className="truncate text-body-sm text-muted-foreground">
                   <TextoResaltado texto={item.sublabel} termino={termino} />
                 </p>
               </Hint>

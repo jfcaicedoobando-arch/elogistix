@@ -61,7 +61,7 @@ export function LoadingState({
           className,
         )}
       >
-        <p className="text-sm">{errorLabel}</p>
+        <p className="text-body">{errorLabel}</p>
         <Button
           variant="outline"
           size="sm"
@@ -87,7 +87,7 @@ export function LoadingState({
       )}
     >
       <Spinner size="block" />
-      {label ? <span className="text-sm">{label}</span> : null}
+      {label ? <span className="text-body">{label}</span> : null}
     </div>
   );
 }

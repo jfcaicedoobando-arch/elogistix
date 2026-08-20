@@ -35,7 +35,7 @@ export function PdfObjectViewer({
     // tooltip de UI): se conserva como atributo HTML nativo, no se migra a Hint.
     <object data={data} type="application/pdf" title={title} className={className ?? "h-full w-full"}>
       <div className="flex h-full flex-col items-center justify-center gap-3 p-6 text-center">
-        <p className="text-sm text-muted-foreground">
+        <p className="text-body text-muted-foreground">
           Tu navegador bloqueó la vista previa incrustada del PDF. Ábrelo en una pestaña nueva o
           descárgalo para revisarlo.
         </p>

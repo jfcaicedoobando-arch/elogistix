@@ -23,6 +23,16 @@ Configurar en GitHub → Settings → Branches → Branch protection rules:
 - **Do not allow bypassing the above settings** ✓ (incluye admins)
 - **Restrict who can push to matching branches**: nadie (solo merges vía PR)
 
+## Reglas de diseño en revisión de PR
+
+- `docs/design-system.md` es la fuente única de tokens, tipografía y tablas.
+- **RN-10 (`primary` vs `accent`)**: si el elemento es clickeable o navegable →
+  `primary`; si es iconografía o realce decorativo sobre una superficie →
+  `accent`. Ver la sección "Regla `primary` vs `accent`" del design system.
+- Tipografía: sólo `text-body`, `text-body-sm` y `text-label` (los escalones
+  crudos `text-sm`/`text-xs` están bloqueados por guardrail en features y en
+  `src/components/shared` + `src/components/ui`).
+
 ## Versionado
 
 Cada cambio funcional debe:

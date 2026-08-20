@@ -57,11 +57,11 @@ const Input = ({ ref, className, type, onWheel, onFocus, onBlur, ...props }: Rea
       <input
         type={type}
         className={cn(
-          "flex text-base md:text-sm",
+          "flex text-base md:text-body",
           FIELD_HEIGHT_CLASS,
           FIELD_SURFACE_CLASS,
           FIELD_STATE_CLASS,
-          "file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground",
+          "file:border-0 file:bg-transparent file:text-body file:font-medium file:text-foreground",
           className,
         )}
         ref={ref}

@@ -68,7 +68,7 @@ function DoubleConfirmInner({
               </AlertDialogDescription>
             ) : (
               <AlertDialogDescription asChild>
-                <div className="text-sm text-muted-foreground">{description}</div>
+                <div className="text-body text-muted-foreground">{description}</div>
               </AlertDialogDescription>
             )}
           </AlertDialogHeader>
@@ -93,12 +93,12 @@ function DoubleConfirmInner({
               </AlertDialogDescription>
             ) : (
               <AlertDialogDescription asChild>
-                <div className="text-sm text-muted-foreground">{finalDescription}</div>
+                <div className="text-body text-muted-foreground">{finalDescription}</div>
               </AlertDialogDescription>
             )}
           </AlertDialogHeader>
           <div className="space-y-2 py-2">
-            <Label htmlFor="confirm-delete" className="text-sm text-muted-foreground">
+            <Label htmlFor="confirm-delete" className="text-body text-muted-foreground">
               Escribe <span className="font-bold text-destructive">ELIMINAR</span> para confirmar:
             </Label>
             <Input

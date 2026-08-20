@@ -108,7 +108,7 @@ describe("constantes de estilo y textos de picker-mx-shell", () => {
   });
 
   it("expone las clases auxiliares fijas", () => {
-    expect(pickerErrorClass).toBe("text-xs text-destructive");
+    expect(pickerErrorClass).toBe("text-body-sm text-destructive");
     expect(pickerRootClass).toBe("flex w-full min-w-0 flex-col gap-1");
     expect(pickerIconClass).toBe("h-4 w-4 shrink-0 opacity-70");
     expect(pickerClearClass).toMatch(/rounded p-0.5/);

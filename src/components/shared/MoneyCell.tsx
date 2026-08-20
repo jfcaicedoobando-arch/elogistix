@@ -8,7 +8,7 @@
  *  - `min-w-0` + `truncate` para no romper el grid.
  *  - `title` con `fullValue` (o `value` si no se pasa) para exponer el monto completo.
  *  - `tabular-nums` para alinear dígitos.
- *  - `text-sm sm:text-base` — jerarquía adaptativa; `highlight` sube a `accent`.
+ *  - `text-body sm:text-base` — jerarquía adaptativa; `highlight` sube a `accent`.
  *
  * Uso preferente: `MoneyCell label="Total" value={compact} fullValue={complete} highlight />`.
  */
@@ -38,7 +38,7 @@ export function MoneyCell({ label, value, fullValue, highlight, className }: Mon
       <Hint label={fullValue ?? value}>
         <p
           className={cn(
-            "text-sm sm:text-base font-semibold tabular-nums truncate",
+            "text-body sm:text-base font-semibold tabular-nums truncate",
             highlight ? "text-accent" : "text-foreground",
           )}
         >

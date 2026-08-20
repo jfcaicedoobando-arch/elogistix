@@ -120,7 +120,7 @@ export function WizardShell({
           </Button>
           <div>
             <h1 className="text-display font-bold tracking-tight">{title}</h1>
-            {subtitle && <p className="text-sm text-muted-foreground">{subtitle}</p>}
+            {subtitle && <p className="text-body text-muted-foreground">{subtitle}</p>}
           </div>
         </div>
         <StepIndicator

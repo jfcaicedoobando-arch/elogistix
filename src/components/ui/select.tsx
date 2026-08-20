@@ -15,7 +15,7 @@ const SelectTrigger = ({ ref, className, children, ...props }: React.ComponentPr
   <SelectPrimitive.Trigger
     ref={ref}
     className={cn(
-      "flex items-center justify-between text-sm [&>span]:line-clamp-1",
+      "flex items-center justify-between text-body [&>span]:line-clamp-1",
       FIELD_HEIGHT_CLASS,
       FIELD_SURFACE_CLASS,
       FIELD_STATE_RADIX_CLASS,
@@ -83,7 +83,7 @@ const SelectContent = ({ ref, className, children, position = "popper", ...props
 SelectContent.displayName = SelectPrimitive.Content.displayName;
 
 const SelectLabel = ({ ref, className, ...props }: React.ComponentPropsWithoutRef<typeof SelectPrimitive.Label> & { ref?: React.Ref<React.ElementRef<typeof SelectPrimitive.Label>> }) => (
-  <SelectPrimitive.Label ref={ref} className={cn("py-1.5 pl-8 pr-2 text-sm font-semibold", className)} {...props} />
+  <SelectPrimitive.Label ref={ref} className={cn("py-1.5 pl-8 pr-2 text-body font-semibold", className)} {...props} />
 );
 SelectLabel.displayName = SelectPrimitive.Label.displayName;
 
@@ -91,7 +91,7 @@ const SelectItem = ({ ref, className, children, ...props }: React.ComponentProps
   <SelectPrimitive.Item
     ref={ref}
     className={cn(
-      "relative flex w-full cursor-default select-none items-center whitespace-normal break-words leading-snug rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50 focus:bg-accent focus:text-accent-foreground",
+      "relative flex w-full cursor-default select-none items-center whitespace-normal break-words leading-snug rounded-sm py-1.5 pl-8 pr-2 text-body outline-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50 focus:bg-accent focus:text-accent-foreground",
       className,
     )}
     {...props}

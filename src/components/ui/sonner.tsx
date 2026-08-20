@@ -50,8 +50,8 @@ export function Toaster() {
             "data-[type=warning]:border-l-4 data-[type=warning]:border-l-[hsl(var(--warning))]",
             "data-[type=info]:border-l-4 data-[type=info]:border-l-[hsl(var(--info))]",
           ].join(" "),
-          title: "text-sm font-semibold leading-tight text-foreground",
-          description: "text-xs text-muted-foreground leading-snug mt-0.5",
+          title: "text-body font-semibold leading-tight text-foreground",
+          description: "text-body-sm text-muted-foreground leading-snug mt-0.5",
           // Icono coloreado por severidad (sin fondo tintado).
           icon: [
             "shrink-0",
@@ -61,7 +61,7 @@ export function Toaster() {
             "group-data-[type=info]:text-[hsl(var(--info))]",
           ].join(" "),
           actionButton:
-            "!min-h-11 !min-w-[44px] !px-3 !py-2 !bg-primary !text-primary-foreground !text-sm !font-medium !rounded-md",
+            "!min-h-11 !min-w-[44px] !px-3 !py-2 !bg-primary !text-primary-foreground !text-body !font-medium !rounded-md",
           cancelButton:
             "!min-h-11 !min-w-[44px] !px-3 !py-2 !bg-muted !text-muted-foreground !rounded-md",
           closeButton:

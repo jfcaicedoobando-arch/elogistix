@@ -35,13 +35,13 @@ export function ErrorBoundaryFallback({
           <div className="text-center space-y-2">
             <AlertTriangle className="h-12 w-12 mx-auto text-destructive" />
             <h2 className="text-lg font-semibold">Algo salió mal</h2>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-body text-muted-foreground">
               Ocurrió un error inesperado al cargar esta sección. Puedes intentar recargar
               o volver al inicio.
             </p>
           </div>
 
-          <details open={openByDefault} className="rounded-md border bg-muted/50 text-xs">
+          <details open={openByDefault} className="rounded-md border bg-muted/50 text-body-sm">
             <summary className="cursor-pointer select-none px-3 py-2 font-medium">
               Detalles técnicos
             </summary>

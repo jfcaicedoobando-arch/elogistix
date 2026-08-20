@@ -48,7 +48,7 @@ export function FloatingActionButton({
       )}
     >
       {icon}
-      {showLabel && <span className="text-sm font-semibold pr-1">{label}</span>}
+      {showLabel && <span className="text-body font-semibold pr-1">{label}</span>}
     </button>
   );
 }

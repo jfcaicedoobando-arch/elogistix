@@ -56,7 +56,7 @@ export default function DocumentChecklist({
   return (
     <div className="space-y-3">
       {descripcion && (
-        <p className="text-sm text-muted-foreground">{descripcion}</p>
+        <p className="text-body text-muted-foreground">{descripcion}</p>
       )}
       {documentos.map((doc) => (
         <div key={doc.nombre} className="flex items-center justify-between gap-2 rounded-md border p-3">
@@ -67,12 +67,12 @@ export default function DocumentChecklist({
               <div className="h-4 w-4 shrink-0 rounded-full border-2 border-muted-foreground/40" />
             )}
             <div className="min-w-0">
-              <span className="text-sm font-medium">{doc.nombre}</span>
+              <span className="text-body font-medium">{doc.nombre}</span>
               {doc.requerido === false && (
                 <span className="ml-2 text-2xs uppercase tracking-wide text-muted-foreground">Opcional</span>
               )}
               {doc.archivo && (
-                <p className="text-xs text-muted-foreground truncate">{doc.archivo}</p>
+                <p className="text-body-sm text-muted-foreground truncate">{doc.archivo}</p>
               )}
             </div>
           </div>

@@ -16,8 +16,12 @@ const ROOT = resolve(__dirname, "../../..");
 /** Archivos autorizados a definir el mapeo (la fuente de verdad misma). */
 const PERMITIDOS = new Set(["src/lib/ui/margen.ts", "src/components/shared/MargenBadge.tsx"]);
 
-/** `margen... < 0 ? "text-destructive" : ...` en una sola línea. */
-const TERNARIO_MARGEN = /margen\w*\s*[<>]=?[^\n]{0,80}text-(success|warning|destructive)/i;
+/**
+ * `margen... < 0 ? "text-destructive" : ...`.
+ * Ola C · C.4 (R3-V-4): se evalúa sobre el archivo con espacios colapsados,
+ * así un ternario partido en varias líneas ya no esquiva el guardarraíl.
+ */
+const TERNARIO_MARGEN = /margen\w*\s*[<>]=?.{0,100}?text-(success|warning|destructive)/i;
 
 describe("architecture — MargenBadge canónico (5.6)", () => {
   it("ningún componente decide el color del margen a mano", () => {
@@ -29,13 +33,9 @@ describe("architecture — MargenBadge canónico (5.6)", () => {
       if (!/\.tsx?$/.test(f)) continue;
       const rel = relPath(ROOT, f);
       if (PERMITIDOS.has(rel)) continue;
-      const src = readFileSync(f, "utf8");
-      for (const linea of src.split("\n")) {
-        if (TERNARIO_MARGEN.test(linea)) {
-          ofensores.push(`${rel}: ${linea.trim().slice(0, 120)}`);
-          break;
-        }
-      }
+      const src = readFileSync(f, "utf8").replace(/\s+/g, " ");
+      const m = TERNARIO_MARGEN.exec(src);
+      if (m) ofensores.push(`${rel}: ${m[0].slice(0, 120)}`);
     }
     expect(
       ofensores,

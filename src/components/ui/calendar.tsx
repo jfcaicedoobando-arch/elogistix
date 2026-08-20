@@ -28,10 +28,10 @@ function Calendar({
         // nativos sin estilo junto al texto del mes (se veía "agosto agosto ›").
         // Los selects quedan como overlay invisible sobre una píldora estilizada.
         month_caption: "flex h-9 items-center justify-center pt-1 relative",
-        caption_label: "inline-flex items-center gap-1 text-sm font-medium",
+        caption_label: "inline-flex items-center gap-1 text-body font-medium",
         dropdowns: "flex items-center gap-1.5",
         dropdown_root:
-          "relative inline-flex items-center rounded-md border border-input bg-background px-2 py-1 text-sm font-medium hover:bg-accent hover:text-accent-foreground focus-within:ring-2 focus-within:ring-ring",
+          "relative inline-flex items-center rounded-md border border-input bg-background px-2 py-1 text-body font-medium hover:bg-accent hover:text-accent-foreground focus-within:ring-2 focus-within:ring-ring",
         dropdown: "absolute inset-0 h-full w-full cursor-pointer opacity-0",
         months_dropdown: "capitalize",
         nav: "space-x-1 flex items-center absolute inset-x-1 top-1 justify-between",
@@ -48,7 +48,7 @@ function Calendar({
         weekdays: "flex",
         weekday: "text-muted-foreground rounded-md w-9 font-normal text-[0.8rem]",
         week: "flex w-full mt-2",
-        day: "h-9 w-9 text-center text-sm p-0 relative [&:has([aria-selected].day-range-end)]:rounded-r-md [&:has([aria-selected].day-outside)]:bg-accent/50 [&:has([aria-selected])]:bg-accent first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20",
+        day: "h-9 w-9 text-center text-body p-0 relative [&:has([aria-selected].day-range-end)]:rounded-r-md [&:has([aria-selected].day-outside)]:bg-accent/50 [&:has([aria-selected])]:bg-accent first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20",
         day_button: cn(
           buttonVariants({ variant: "ghost" }),
           "h-9 w-9 p-0 font-normal aria-selected:opacity-100",

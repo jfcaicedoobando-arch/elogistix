@@ -45,7 +45,7 @@ export function DocumentoTabs({ tabs, param = "tab", className }: Props) {
             <TabsTrigger key={t.id} value={t.id} className="shrink-0 gap-1.5">
               {t.label}
               {typeof t.count === "number" && t.count > 0 ? (
-                <span className="rounded-full bg-muted px-1.5 text-xs tabular-nums text-muted-foreground">
+                <span className="rounded-full bg-muted px-1.5 text-body-sm tabular-nums text-muted-foreground">
                   {t.count}
                 </span>
               ) : null}

@@ -18,7 +18,7 @@ export function AvisoFechaPreviaCorte({ fecha, corte, aliasCuenta }: Props) {
   return (
     <div className="flex gap-2 rounded-md border border-warning/30 bg-warning/10 px-3 py-2">
       <Info className="h-4 w-4 shrink-0 text-warning mt-0.5" aria-hidden />
-      <p className="text-xs text-warning">{texto}</p>
+      <p className="text-body-sm text-warning">{texto}</p>
     </div>
   );
 }

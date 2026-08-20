@@ -94,7 +94,7 @@ export function UnifiedFiltersBar({
             </Badge>
           ))}
           {chips.length + (search ? 1 : 0) > 1 ? (
-            <Button variant="ghost" size="sm" className="h-6 px-2 text-xs" onClick={onClearAll}>
+            <Button variant="ghost" size="sm" className="h-6 px-2 text-body-sm" onClick={onClearAll}>
               Limpiar todo
             </Button>
           ) : null}

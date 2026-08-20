@@ -45,6 +45,16 @@ describe("arquitectura · formatFechaEs deprecado", () => {
     ).toBeLessThanOrEqual(MAX_FORMAT_FECHA_ES);
   });
 
+  /** Ola C · C.4 (R3-V-2) — sincronización descendente como los otros ratchets. */
+  it("si bajaste ocurrencias, baja el tope", () => {
+    const { total } = contarUsos();
+    expect(
+      total,
+      `Quedan ${total} usos y el tope es ${MAX_FORMAT_FECHA_ES}: baja DEUDA_CONGELADA ` +
+        "a la cuenta real para que el ratchet no permita reintroducir usos.",
+    ).toBeGreaterThan(MAX_FORMAT_FECHA_ES - HOLGURA - 1);
+  });
+
   it("mantiene la marca @deprecated en el canon de fechas", () => {
     const src = readFileSync("src/lib/formatters/dates.ts", "utf8");
     const antes = src.slice(0, src.indexOf("export function formatFechaEs"));

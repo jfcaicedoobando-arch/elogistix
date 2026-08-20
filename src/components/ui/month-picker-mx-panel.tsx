@@ -29,7 +29,7 @@ export function MonthPickerMxPanel({ value, onSelect }: Props) {
         >
           <ChevronLeft className="h-4 w-4" />
         </Button>
-        <div className="text-sm font-medium">{viewYear}</div>
+        <div className="text-body font-medium">{viewYear}</div>
         <Button
           variant="ghost" size="icon" className="h-7 w-7"
           onClick={() => setViewYear((y) => y + 1)} aria-label="Año siguiente"
@@ -43,7 +43,7 @@ export function MonthPickerMxPanel({ value, onSelect }: Props) {
             key={label}
             variant={parsed?.year === viewYear && parsed?.month === idx + 1 ? "default" : "ghost"}
             size="sm"
-            className="h-8 text-xs"
+            className="h-8 text-body-sm"
             onClick={() => onSelect(`${viewYear}-${String(idx + 1).padStart(2, "0")}`)}
           >
             {label}

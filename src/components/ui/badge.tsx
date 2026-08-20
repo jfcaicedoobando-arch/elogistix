@@ -19,7 +19,7 @@ const badgeVariants = cva(
       },
       // Ola 7 · Lote A — reemplaza los ~12 sitios con `text-2xs h-4 px-1.5` inline.
       size: {
-        default: "px-2 py-0.5 text-xs",
+        default: "px-2 py-0.5 text-label",
         xs: "px-1.5 py-0 text-2xs h-4",
         sm: "px-2 py-0 text-2xs h-5",
       },

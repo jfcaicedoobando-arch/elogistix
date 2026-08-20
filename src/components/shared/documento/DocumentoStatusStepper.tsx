@@ -20,7 +20,7 @@ export function DocumentoStatusStepper({ resumen, className }: Props) {
         className={cn("flex items-center gap-2", className)}
         aria-label={`Estado: ${resumen.etiquetaTerminal}`}
       >
-        <span className="rounded-full border border-destructive/40 bg-destructive/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-destructive">
+        <span className="rounded-full border border-destructive/40 bg-destructive/10 px-3 py-1 text-body-sm font-semibold uppercase tracking-wide text-destructive">
           {resumen.etiquetaTerminal}
         </span>
       </div>
@@ -39,7 +39,7 @@ export function DocumentoStatusStepper({ resumen, className }: Props) {
             <span
               aria-current={actual ? "step" : undefined}
               className={cn(
-                "inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-medium transition-colors",
+                "inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-body-sm font-medium transition-colors",
                 actual && "border-accent bg-accent/10 text-accent",
                 completado && "border-success/40 bg-success/10 text-success",
                 !actual && !completado && "border-border bg-muted/40 text-muted-foreground",
@@ -58,7 +58,7 @@ export function DocumentoStatusStepper({ resumen, className }: Props) {
       {resumen.subEtiqueta ? (
         <span
           className={cn(
-            "rounded-full border px-2.5 py-1 text-xs font-medium",
+            "rounded-full border px-2.5 py-1 text-body-sm font-medium",
             resumen.subTono === "destructive"
               ? "border-destructive/40 bg-destructive/10 text-destructive"
               : "border-warning/40 bg-warning/10 text-warning",

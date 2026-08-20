@@ -123,7 +123,7 @@ export function FormDialogShell({
               <div className="min-w-0 space-y-0.5">
                 <DialogTitle className="text-base font-semibold leading-tight">{title}</DialogTitle>
                 {description && (
-                  <DialogDescription className="text-xs text-muted-foreground leading-snug">
+                  <DialogDescription className="text-body-sm text-muted-foreground leading-snug">
                     {description}
                   </DialogDescription>
                 )}

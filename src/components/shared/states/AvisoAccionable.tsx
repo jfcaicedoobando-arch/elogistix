@@ -37,13 +37,13 @@ export function AvisoAccionable({
         )}
         <div className="space-y-2">
           <p className="font-semibold text-foreground">{titulo}</p>
-          <p className="text-sm text-muted-foreground">{descripcion}</p>
+          <p className="text-body text-muted-foreground">{descripcion}</p>
           {pasos && pasos.length > 0 && (
             <div className="space-y-1">
-              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+              <p className="text-body-sm font-medium uppercase tracking-wide text-muted-foreground">
                 Qué puedes hacer
               </p>
-              <ul className="list-disc pl-5 text-sm text-muted-foreground space-y-1">
+              <ul className="list-disc pl-5 text-body text-muted-foreground space-y-1">
                 {pasos.map((paso) => (
                   <li key={paso}>{paso}</li>
                 ))}

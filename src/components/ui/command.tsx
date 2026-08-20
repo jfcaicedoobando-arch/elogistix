@@ -52,7 +52,7 @@ const CommandInput = ({ ref, className, ...props }: React.ComponentPropsWithoutR
     <CommandPrimitive.Input
       ref={ref}
       className={cn(
-        "flex w-full rounded-md bg-transparent py-3 text-sm outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50",
+        "flex w-full rounded-md bg-transparent py-3 text-body outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50",
       FIELD_HEIGHT_CLASS,
         className,
       )}
@@ -73,7 +73,7 @@ const CommandList = ({ ref, className, ...props }: React.ComponentPropsWithoutRe
 
 CommandList.displayName = CommandPrimitive.List.displayName;
 
-const CommandEmpty = ({ ref, ...props }: React.ComponentPropsWithoutRef<typeof CommandPrimitive.Empty> & { ref?: React.Ref<React.ElementRef<typeof CommandPrimitive.Empty>> }) => <CommandPrimitive.Empty ref={ref} className="py-6 text-center text-sm" {...props} />;
+const CommandEmpty = ({ ref, ...props }: React.ComponentPropsWithoutRef<typeof CommandPrimitive.Empty> & { ref?: React.Ref<React.ElementRef<typeof CommandPrimitive.Empty>> }) => <CommandPrimitive.Empty ref={ref} className="py-6 text-center text-body" {...props} />;
 
 CommandEmpty.displayName = CommandPrimitive.Empty.displayName;
 
@@ -102,7 +102,7 @@ const CommandItem = ({ ref, className, ...props }: React.ComponentPropsWithoutRe
       // Fila seleccionada: superficie azul MUY diluida + barra de acento a la
       // izquierda. Nunca fondo sólido: el texto secundario (gris apagado) debe
       // seguir siendo legible encima.
-      "group relative flex cursor-default select-none items-center gap-2 rounded-md px-2 py-1.5 text-sm outline-none transition-colors",
+      "group relative flex cursor-default select-none items-center gap-2 rounded-md px-2 py-1.5 text-body outline-none transition-colors",
       "before:absolute before:left-0 before:top-1 before:bottom-1 before:w-0.5 before:rounded-full before:bg-transparent before:transition-colors",
       "data-[selected=true]:bg-selection data-[selected=true]:text-selection-foreground data-[selected=true]:before:bg-accent",
       "data-[disabled=true]:pointer-events-none data-[disabled=true]:opacity-50",
@@ -141,7 +141,7 @@ const CommandKey = ({ className, ...props }: React.HTMLAttributes<HTMLElement>) 
 CommandKey.displayName = "CommandKey";
 
 const CommandShortcut = ({ className, ...props }: React.HTMLAttributes<HTMLSpanElement>) => {
-  return <span className={cn("ml-auto text-xs tracking-widest text-muted-foreground", className)} {...props} />;
+  return <span className={cn("ml-auto text-body-sm tracking-widest text-muted-foreground", className)} {...props} />;
 };
 CommandShortcut.displayName = "CommandShortcut";
 

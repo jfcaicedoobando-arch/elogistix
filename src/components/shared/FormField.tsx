@@ -72,7 +72,7 @@ export function FormField({
           {label}
           {required && <span className="text-destructive ml-0.5">*</span>}
           {hint && (
-            <span className="text-xs text-muted-foreground font-normal ml-2">
+            <span className="text-body-sm text-muted-foreground font-normal ml-2">
               {hint}
             </span>
           )}
@@ -80,7 +80,7 @@ export function FormField({
       )}
       {control}
       {error && (
-        <p id={errorId} className="text-xs text-destructive" role="alert">
+        <p id={errorId} className="text-body-sm text-destructive" role="alert">
           {error}
         </p>
       )}

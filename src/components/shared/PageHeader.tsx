@@ -23,7 +23,7 @@ interface PageHeaderProps {
  *
  * Estándar visual del sistema:
  *  - <h1> con `text-display font-bold tracking-tight` (token fluido en tailwind.config.ts).
- *  - Descripción con `text-sm text-muted-foreground` y `mt-1` para separación
+ *  - Descripción con `text-body text-muted-foreground` y `mt-1` para separación
  *    consistente respecto al título.
  *  - Layout flex responsive: título e icono a la izquierda, acciones a la
  *    derecha en md+, apilado en mobile.
@@ -51,7 +51,7 @@ export function PageHeader({
             <span className="truncate">{title}</span>
           </h1>
           {description ? (
-            <p className="mt-1 text-sm text-muted-foreground line-clamp-2">{description}</p>
+            <p className="mt-1 text-body text-muted-foreground line-clamp-2">{description}</p>
           ) : null}
           {subHeader ? <div className="mt-2">{subHeader}</div> : null}
         </div>

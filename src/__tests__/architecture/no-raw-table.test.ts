@@ -171,6 +171,28 @@ describe("architecture — no raw @/components/ui/table imports", () => {
         stale.join("\n"),
     ).toEqual([]);
   });
+  /**
+   * Ola C · C.2 (R3-V-1) — Ratchet anti-crecimiento de la allowlist.
+   * La allowlist creció +5 sin penalización; ahora tiene tope. Si migras un
+   * archivo a DataTable y bajas la lista, BAJA también el tope.
+   */
+  it("la allowlist de ui/table no crece por encima del tope", () => {
+    const TOPE = 70; // 69 actuales + 1 de holgura
+    expect(
+      ALLOWLIST.length,
+      `La allowlist tiene ${ALLOWLIST.length} entradas (tope ${TOPE}).\n` +
+        "Migra el archivo a <DataTable />/<DetailTable /> en vez de ampliar la excepción.",
+    ).toBeLessThanOrEqual(TOPE);
+  });
+
+  it("si bajaste entradas de la allowlist, baja el tope", () => {
+    const TOPE = 70;
+    expect(
+      ALLOWLIST.length,
+      "Bajaste entradas de la allowlist: ajusta TOPE a la nueva cuenta + 1 de holgura.",
+    ).toBeGreaterThan(TOPE - 6);
+  });
+
   it("no hay JSX <table> crudo fuera de la deuda congelada", () => {
     const violations: string[] = [];
     for (const f of walk(join(ROOT, "src"), {

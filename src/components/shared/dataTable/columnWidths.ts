@@ -8,7 +8,7 @@
  * "Folio" mida igual en compras, facturación y embarques.
  *
  * Uso:
- *   meta: { width: COL_W.folio, className: "font-mono text-xs" }
+ *   meta: { width: COL_W.folio, className: "font-mono text-body-sm" }
  *   meta: { width: COL_W.monto, align: "right" }
  */
 export const COL_W = {

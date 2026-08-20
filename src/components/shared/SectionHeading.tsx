@@ -2,8 +2,8 @@
  * `<SectionHeading />` — encabezado de sección canónico del ERP.
  *
  * v13.426.0 (Armonización visual global). Antes convivían al menos 6 escalas
- * distintas para el mismo rol (`text-sm font-bold uppercase`, `text-lg
- * font-semibold`, `text-xs font-semibold uppercase`, …). Este componente fija
+ * distintas para el mismo rol (`text-body font-bold uppercase`, `text-lg
+ * font-semibold`, `text-body-sm font-semibold uppercase`, …). Este componente fija
  * dos únicas escalas:
  *
  *  - `variant="section"` (default): `text-base font-semibold` — título de un
@@ -64,7 +64,7 @@ export function SectionHeading({
           ) : null}
         </Tag>
         {description ? (
-          <p className="mt-1 text-xs text-muted-foreground">{description}</p>
+          <p className="mt-1 text-body-sm text-muted-foreground">{description}</p>
         ) : null}
       </div>
       {actions ? <div className="shrink-0">{actions}</div> : null}

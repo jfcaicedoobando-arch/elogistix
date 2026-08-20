@@ -55,6 +55,18 @@ como colores Tailwind en `tailwind.config.ts`.
 | `success` / `warning` / `info` | Estados de resultado | `142 71% 45%` / `38 92% 50%` / `221 83% 53%` |
 | `selection` | Fila resaltada (buscador global, command palette) | — |
 
+### Regla `primary` vs `accent` (RN-10)
+
+Los dos tokens son azules de la marca y se confundían al colorear iconos. Regla
+única, obligatoria en revisión de PR:
+
+- **`text-primary` / `bg-primary`** → acción o navegación: botones principales,
+  enlaces, tabs activas, totales de una tabla.
+- **`text-accent` / `bg-accent`** → iconografía y realces *decorativos* sobre
+  una superficie (icon-tile de un modal, icono de una tarjeta, chip informativo).
+- Nunca mezclar ambos en el mismo elemento ni usar `accent` para un elemento
+  clickeable: si el usuario puede pulsarlo, es `primary`.
+
 ### Escalas de dominio
 
 - `kpi-*` (`info`, `success`, `accent`, `warning`, `secondary`, `danger`, cada una
