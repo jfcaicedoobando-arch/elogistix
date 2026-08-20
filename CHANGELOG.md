@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.704.0] - 2026-08-25
+### Ola A — El doble clic ya no duplica traspasos entre cuentas
+- Registrar un traspaso entre cuentas propias era la única operación de dinero sin protección contra duplicados: si el usuario daba doble clic o se cortaba la red y reintentaba, quedaban dos traspasos iguales.
+- Ahora cada intento lleva un folio interno de control; si llega dos veces, el sistema reconoce el traspaso ya guardado, avisa "Este traspaso ya fue registrado" y no crea otro.
+- Se agregó una prueba automática que impide volver a abrir este hueco.
+
 ## [13.703.1] - 2026-08-20
 ### Correcciones de integración continua
 - Se movió el cálculo de antigüedad al módulo del dashboard financiero (único consumidor) para cumplir la regla de arquitectura.

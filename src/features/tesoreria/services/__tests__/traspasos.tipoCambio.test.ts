@@ -7,7 +7,17 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 const rpc = vi.fn();
 
 vi.mock("@/integrations/supabase/client", () => ({
-  supabase: { rpc: (...args: unknown[]) => rpc(...args) },
+  supabase: {
+    rpc: (...args: unknown[]) => rpc(...args),
+    from: () => ({
+      select: () => ({
+        eq: () => ({
+          maybeSingle: () =>
+            Promise.resolve({ data: { id: "tr-existente" }, error: null }),
+        }),
+      }),
+    }),
+  },
 }));
 
 import { registrarTraspaso } from "@/features/tesoreria/services/traspasos";
@@ -41,10 +51,37 @@ describe("registrarTraspaso — tipo de cambio", () => {
   });
 
   it("envía el tipo de cambio capturado tal cual", async () => {
-    await registrarTraspaso({ ...base, tipoCambio: 18.75 });
+    const res = await registrarTraspaso({ ...base, tipoCambio: 18.75 });
     expect(rpc).toHaveBeenCalledWith(
       "registrar_traspaso_bancario",
       expect.objectContaining({ p_tipo_cambio: 18.75 }),
     );
+    expect(res).toEqual({ id: "tr-1", duplicado: false });
+  });
+
+  // OLA A (A.1) — el doble clic ya no duplica el traspaso.
+  it("envía la clave de idempotencia a la RPC", async () => {
+    await registrarTraspaso({ ...base, tipoCambio: 1, clientRequestId: "k-1" });
+    expect(rpc).toHaveBeenCalledWith(
+      "registrar_traspaso_bancario",
+      expect.objectContaining({ p_client_request_id: "k-1" }),
+    );
+  });
+
+  it("ante 23505 devuelve el traspaso ya registrado con la misma clave", async () => {
+    rpc.mockResolvedValue({ data: null, error: { code: "23505" } });
+    const res = await registrarTraspaso({
+      ...base,
+      tipoCambio: 1,
+      clientRequestId: "k-1",
+    });
+    expect(res).toEqual({ id: "tr-existente", duplicado: true });
+  });
+
+  it("propaga 23505 cuando no hay clave de idempotencia", async () => {
+    rpc.mockResolvedValue({ data: null, error: { code: "23505" } });
+    await expect(registrarTraspaso({ ...base, tipoCambio: 1 })).rejects.toEqual({
+      code: "23505",
+    });
   });
 });
