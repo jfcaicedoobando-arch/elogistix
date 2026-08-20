@@ -1,5 +1,16 @@
 # Changelog
 
+## [13.698.0] - 2026-08-20
+### Ola 4 — Robustez de formularios
+- Modales de captura: cerrar con ESC o clic fuera con datos capturados pide confirmación antes de descartar (cuentas bancarias y factura manual ya lo usan).
+- Campos de dinero: el tope máximo se aplica al teclear (antes sólo al salir del campo) y avisa cuando ajusta el monto.
+- Checklist de documentos: sólo acepta PDF, imágenes, XML y ofimática, con tope de 15 MB por archivo.
+- Wizards: Enter dentro de un campo ya no salta al siguiente paso.
+- Cotizaciones: el botón "Volver" del encabezado del wizard también pide confirmación si hay cambios sin guardar.
+- Cuenta demo: ya no se reinicia la contraseña en cada acceso si sigue siendo la correcta.
+
+
+
 ## [13.697.0] - 2026-08-21
 ### Ola 3 — Lógica de negocio residual
 - Comisiones: nuevas excepciones de porcentaje por cliente o por embarque; el cálculo aplica primero la del embarque, luego la del cliente y, si no hay, el porcentaje de la vendedora.
