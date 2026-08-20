@@ -74,9 +74,7 @@ export default function NuevoClienteDialog({ open, onOpenChange }: Props) {
           : "Adjunta la Constancia de Situación Fiscal; el resto del expediente puede completarse después."
       }
       size="lg"
-      step={c.step}
-      totalSteps={2}
-      stepLabels={["Datos del cliente", "Documentación"]}
+      stepper={{ step: c.step, totalSteps: 2, labels: ["Datos del cliente", "Documentación"] }}
       headerAside={headerAside}
       footer={c.step === 1 ? (
         <>

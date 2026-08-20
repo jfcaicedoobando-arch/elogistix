@@ -101,6 +101,8 @@ export default function TesoreriaCuentas() {
             : "Captura los datos de la nueva cuenta bancaria para conciliación."
         }
         size="lg"
+        // EC-13: cerrar con ESC/clic fuera con captura iniciada pide confirmación.
+        isDirty={!editTarget && form.alias.trim().length > 0}
         footer={
           <>
             <Button variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
