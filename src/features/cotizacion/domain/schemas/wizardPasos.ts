@@ -147,7 +147,7 @@ export const conceptosPaso3Schema = z
  * Corre un schema y devuelve el primer mensaje de error (o `null` si pasa).
  * Los handlers del wizard trabajan con un único mensaje por paso (un solo toast).
  */
-export function primerError<T>(schema: z.ZodType<unknown, z.ZodTypeDef, T>, value: T): string | null {
+export function primerError<S extends z.ZodType>(schema: S, value: z.input<S>): string | null {
   const res = schema.safeParse(value);
   if (res.success) return null;
   return res.error.issues[0]?.message ?? "Datos inválidos";
