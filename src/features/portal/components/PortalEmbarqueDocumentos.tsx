@@ -65,7 +65,7 @@ export function PortalEmbarqueDocumentos({ documentos }: Props) {
         );
       },
     },
-    { id: "estado", header: "Estado", cell: ({ row }) => <Badge variant="secondary" className="text-xs">{row.original.estado}</Badge> },
+    { id: "estado", header: "Estado", cell: ({ row }) => <Badge variant="secondary" className="text-body-sm">{row.original.estado}</Badge> },
     {
       id: "accion", header: "Acción",
       meta: { align: "right", width: "w-24" },
@@ -80,7 +80,7 @@ export function PortalEmbarqueDocumentos({ documentos }: Props) {
           >
             {downloadingId === doc.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
           </Button>
-        ) : <span className="text-xs text-muted-foreground">—</span>;
+        ) : <span className="text-body-sm text-muted-foreground">—</span>;
       },
     },
   ]);

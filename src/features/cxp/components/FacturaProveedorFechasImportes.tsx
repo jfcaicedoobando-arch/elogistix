@@ -42,7 +42,7 @@ export function FechasEImportesBlock({
               onChange={(v) => onChange("emision", v)}
               className="w-full"
             />
-            {errors?.emision && <p className="text-xs text-destructive">{errors.emision}</p>}
+            {errors?.emision && <p className="text-body-sm text-destructive">{errors.emision}</p>}
           </div>
           <div className="space-y-1">
             <Label>Días crédito</Label>

@@ -57,7 +57,7 @@ export function StatusActionBar({
         {/* El estado de aprobación ya se comunica en el stepper del encabezado;
             aquí sólo se muestra el motivo cuando fue rechazada. */}
         {f.estado_aprobacion === "rechazada" && f.motivo_rechazo && (
-          <span className="text-xs text-muted-foreground italic truncate max-w-md">
+          <span className="text-body-sm text-muted-foreground italic truncate max-w-md">
             Motivo del rechazo: {f.motivo_rechazo}
           </span>
         )}

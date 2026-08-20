@@ -103,7 +103,7 @@ export function BitacoraTesoreriaSection({
       )}
 
       {entradas.length > 0 && (
-        <p className="text-xs text-muted-foreground">
+        <p className="text-body-sm text-muted-foreground">
           {visibles.length} de {entradas.length} movimiento{entradas.length === 1 ? "" : "s"}
           {hayFiltrosBitacoraActivos(filtros) ? " (con filtros aplicados)" : ""}
         </p>

@@ -101,7 +101,7 @@ export function GuardarPlantillaDialog({
             maxLength={80}
             autoFocus
           />
-          <p className="text-xs text-muted-foreground">Mínimo 3 caracteres.</p>
+          <p className="text-body-sm text-muted-foreground">Mínimo 3 caracteres.</p>
         </div>
 
         <div className="space-y-1.5">
@@ -123,14 +123,14 @@ export function GuardarPlantillaDialog({
             <RadioGroupItem value="yo" id="vis-yo" className="mt-1" />
             <Label htmlFor="vis-yo" className="font-normal cursor-pointer">
               <span className="font-medium">Sólo yo</span>
-              <span className="block text-xs text-muted-foreground">Sólo tú verás esta plantilla.</span>
+              <span className="block text-body-sm text-muted-foreground">Sólo tú verás esta plantilla.</span>
             </Label>
           </div>
           <div className="flex items-start gap-2">
             <RadioGroupItem value="org" id="vis-org" className="mt-1" />
             <Label htmlFor="vis-org" className="font-normal cursor-pointer">
               <span className="font-medium">Toda la organización</span>
-              <span className="block text-xs text-muted-foreground">Todo el equipo podrá usarla.</span>
+              <span className="block text-body-sm text-muted-foreground">Todo el equipo podrá usarla.</span>
             </Label>
           </div>
         </RadioGroup>

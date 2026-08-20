@@ -63,7 +63,7 @@ export default function CotizacionInformativaDetalle({ cotizacion }: Props) {
 
       <Card>
         <CardHeader><CardTitle>Vigencia</CardTitle></CardHeader>
-        <CardContent className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+        <CardContent className="grid grid-cols-2 md:grid-cols-4 gap-4 text-body">
           <div>
             <p className="text-muted-foreground">Desde</p>
             <p className="font-medium">{cotizacion.vigencia_desde ? formatDate(cotizacion.vigencia_desde) : "—"}</p>
@@ -86,7 +86,7 @@ export default function CotizacionInformativaDetalle({ cotizacion }: Props) {
       <Card>
         <CardHeader><CardTitle>Tarifas ({tarifas.length})</CardTitle></CardHeader>
         <CardContent className="overflow-x-auto p-0">
-          <table className="w-full text-sm">
+          <table className="w-full text-body">
             <thead className="bg-muted/50">
               <tr className="text-left">
                 <th className="p-2">Modo</th>
@@ -121,7 +121,7 @@ export default function CotizacionInformativaDetalle({ cotizacion }: Props) {
       {cotizacion.notas && (
         <Card>
           <CardHeader><CardTitle>Notas y condiciones</CardTitle></CardHeader>
-          <CardContent><p className="text-sm whitespace-pre-wrap">{cotizacion.notas}</p></CardContent>
+          <CardContent><p className="text-body whitespace-pre-wrap">{cotizacion.notas}</p></CardContent>
         </Card>
       )}
     </PageContainer>

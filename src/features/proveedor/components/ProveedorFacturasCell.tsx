@@ -15,7 +15,7 @@ interface Props {
 
 export function ProveedorFacturasCell({ partida }: Props) {
   if (partida.facturas.length === 0) {
-    return <span className="text-xs text-muted-foreground">Sin factura</span>;
+    return <span className="text-body-sm text-muted-foreground">Sin factura</span>;
   }
   return (
     <div className="flex flex-wrap gap-1">
@@ -24,7 +24,7 @@ export function ProveedorFacturasCell({ partida }: Props) {
           key={f.factura_id}
           to={`/compras/facturas/${f.factura_id}`}
           onClick={(e) => e.stopPropagation()}
-          className="text-xs text-accent underline-offset-2 hover:underline"
+          className="text-body-sm text-accent underline-offset-2 hover:underline"
           title={f.folio_proveedor ? `Folio proveedor: ${f.folio_proveedor}` : undefined}
         >
           {f.folio_interno ?? f.folio_proveedor ?? "Ver factura"}

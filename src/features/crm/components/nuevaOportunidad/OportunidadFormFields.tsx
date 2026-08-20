@@ -119,7 +119,7 @@ export default function OportunidadFormFields({
           onChange={(e) => set("probabilidad", Math.max(0, Math.min(100, Number(e.target.value) || 0)))}
         />
         {(form.probabilidad < 0 || form.probabilidad > 100) && (
-          <p className="text-xs text-destructive mt-1">La probabilidad debe estar entre 0 y 100.</p>
+          <p className="text-body-sm text-destructive mt-1">La probabilidad debe estar entre 0 y 100.</p>
         )}
       </div>
       <div className="space-y-1">

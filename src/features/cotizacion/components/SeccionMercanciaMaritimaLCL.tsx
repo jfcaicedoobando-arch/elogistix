@@ -53,7 +53,7 @@ export default function SeccionMercanciaMaritimaLCL({ msdsFile, setMsdsFile }: P
       <Card className="bg-muted/40 border-dashed">
         <CardHeader className="pb-2">
           <div className="flex items-center justify-between">
-            <CardTitle className="text-sm font-semibold flex items-center gap-2">
+            <CardTitle className="text-body font-semibold flex items-center gap-2">
               <Ruler className="h-4 w-4 text-primary" /> Dimensiones LCL
             </CardTitle>
             <Button variant="outline" size="sm" onClick={agregarFila}>
@@ -103,7 +103,7 @@ export default function SeccionMercanciaMaritimaLCL({ msdsFile, setMsdsFile }: P
             </Table>
           </div>
           <div className="flex flex-wrap justify-end items-center gap-3 mt-3">
-            <div className="flex items-center gap-2 text-sm">
+            <div className="flex items-center gap-2 text-body">
               <span className="text-muted-foreground">Peso total (kg):</span>
               <div className="w-32">
                 <NumericInput
@@ -114,7 +114,7 @@ export default function SeccionMercanciaMaritimaLCL({ msdsFile, setMsdsFile }: P
                 />
               </div>
             </div>
-            <div className="flex gap-6 text-sm font-semibold">
+            <div className="flex gap-6 text-body font-semibold">
               <span>Piezas: {totalPiezas}</span>
               <span>Volumen: {totalVolumen.toFixed(4)} m³</span>
               <span className="text-primary">W/M: {wm.toFixed(3)}</span>

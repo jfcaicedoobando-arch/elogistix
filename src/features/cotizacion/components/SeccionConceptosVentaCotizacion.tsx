@@ -73,7 +73,7 @@ export default function SeccionConceptosVentaCotizacion({
           {mixtasUSD.length > 0 && (
             <div
               data-testid="bucket-mixed-warning-usd"
-              className="flex items-start gap-2 rounded-md border border-warning/40 bg-warning/10 px-3 py-2 text-xs text-foreground"
+              className="flex items-start gap-2 rounded-md border border-warning/40 bg-warning/10 px-3 py-2 text-body-sm text-foreground"
             >
               <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" />
               <span>
@@ -95,12 +95,12 @@ export default function SeccionConceptosVentaCotizacion({
           <div className="flex flex-col items-end gap-1 pt-2 border-t">
             {hayIvaUSD ? (
               <>
-                <span className="text-sm">Subtotal s/IVA: {formatCurrency(subtotalSinIvaUSD, 'USD')}</span>
-                <span className="text-sm text-warning">IVA {etiquetaTasaIva(conceptosUSD, tasaIva)}: {formatCurrency(ivaUSD, 'USD')}</span>
-                <span className="text-sm font-semibold">Total USD: {formatCurrency(totalUSD, 'USD')}</span>
+                <span className="text-body">Subtotal s/IVA: {formatCurrency(subtotalSinIvaUSD, 'USD')}</span>
+                <span className="text-body text-warning">IVA {etiquetaTasaIva(conceptosUSD, tasaIva)}: {formatCurrency(ivaUSD, 'USD')}</span>
+                <span className="text-body font-semibold">Total USD: {formatCurrency(totalUSD, 'USD')}</span>
               </>
             ) : (
-              <span className="text-sm font-semibold">Total USD: {formatCurrency(totalUSD, 'USD')}</span>
+              <span className="text-body font-semibold">Total USD: {formatCurrency(totalUSD, 'USD')}</span>
             )}
           </div>
         </CardContent>
@@ -127,7 +127,7 @@ export default function SeccionConceptosVentaCotizacion({
           {mixtasMXN.length > 0 && (
             <div
               data-testid="bucket-mixed-warning-mxn"
-              className="flex items-start gap-2 rounded-md border border-warning/40 bg-warning/10 px-3 py-2 text-xs text-foreground"
+              className="flex items-start gap-2 rounded-md border border-warning/40 bg-warning/10 px-3 py-2 text-body-sm text-foreground"
             >
               <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" />
               <span>
@@ -148,9 +148,9 @@ export default function SeccionConceptosVentaCotizacion({
             />
           ))}
           <div className="flex flex-col items-end gap-1 pt-2 border-t">
-            <span className="text-sm">Subtotal MXN: {formatCurrency(subtotalMXN, 'MXN')}</span>
-            <span className="text-sm">IVA ({tasaPctMXN}): {formatCurrency(ivaMXN, 'MXN')}</span>
-            <span className="text-sm font-semibold">Total MXN: {formatCurrency(totalMXN, 'MXN')}</span>
+            <span className="text-body">Subtotal MXN: {formatCurrency(subtotalMXN, 'MXN')}</span>
+            <span className="text-body">IVA ({tasaPctMXN}): {formatCurrency(ivaMXN, 'MXN')}</span>
+            <span className="text-body font-semibold">Total MXN: {formatCurrency(totalMXN, 'MXN')}</span>
           </div>
         </CardContent>
       </Card>
@@ -159,12 +159,12 @@ export default function SeccionConceptosVentaCotizacion({
         <span className="text-base font-bold">Total USD: {formatCurrency(totalUSD, 'USD')}</span>
         <span className="text-base font-bold">Total MXN (c/IVA): {formatCurrency(totalMXN, 'MXN')}</span>
         {hayIvaMXN && (
-          <span className="text-xs text-muted-foreground">* Los conceptos en MXN incluyen IVA {tasaPctMXN}</span>
+          <span className="text-body-sm text-muted-foreground">* Los conceptos en MXN incluyen IVA {tasaPctMXN}</span>
         )}
         {!hayIvaMXN && !hayIvaUSD && (
-          <span className="text-xs text-muted-foreground">* Ningún concepto causa IVA</span>
+          <span className="text-body-sm text-muted-foreground">* Ningún concepto causa IVA</span>
         )}
-        {hayIvaUSD && <span className="text-xs text-warning">* Algunos conceptos USD incluyen IVA {etiquetaTasaIva(conceptosUSD, tasaIva)}</span>}
+        {hayIvaUSD && <span className="text-body-sm text-warning">* Algunos conceptos USD incluyen IVA {etiquetaTasaIva(conceptosUSD, tasaIva)}</span>}
       </div>
     </div>
   );

@@ -53,7 +53,7 @@ export default function ResumenTotalesCotizacion({
           {sinIva ? "Total MXN:" : "Total MXN (c/IVA):"} {formatCurrency(totalMXN, 'MXN')}
         </span>
       )}
-      <span className="text-xs text-muted-foreground">{nota}</span>
+      <span className="text-body-sm text-muted-foreground">{nota}</span>
     </div>
   );
 }

@@ -41,14 +41,14 @@ export function ConciliacionIncidencias({ incidencias, monedaFactura }: Props) {
             <Badge variant={i.tipo === "descuadre" ? "destructive" : "secondary"}>
               {ETIQUETA[i.tipo]}
             </Badge>
-            <span className="text-xs text-muted-foreground">
+            <span className="text-body-sm text-muted-foreground">
               {formatDateTimeShort(i.fechaPago)}
             </span>
-            <span className="text-sm tabular-nums">
+            <span className="text-body tabular-nums">
               Pago {formatCurrency(i.monto, i.moneda || monedaFactura)}
             </span>
             {i.tipo === "descuadre" && (
-              <span className="text-xs text-muted-foreground tabular-nums">
+              <span className="text-body-sm text-muted-foreground tabular-nums">
                 Banco {formatCurrency(i.cargoMxn, "MXN")} · esperado{" "}
                 {formatCurrency(i.montoEsperadoMxn, "MXN")}
               </span>

@@ -38,7 +38,7 @@ export function PagosCajaBlock({ tesoreria, cxpPorPagar, loading }: Props) {
     <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0">
         <CardTitle>Pagos & Caja</CardTitle>
-        <Button variant="link" size="sm" asChild className="h-auto p-0 text-xs">
+        <Button variant="link" size="sm" asChild className="h-auto p-0 text-body-sm">
             <Link to="/tesoreria" className="flex items-center gap-1">
               Ver tesorería <ArrowRight className="h-3 w-3" />
             </Link>
@@ -69,7 +69,7 @@ export function PagosCajaBlock({ tesoreria, cxpPorPagar, loading }: Props) {
         </div>
 
         <div>
-          <p className="text-xs font-medium text-muted-foreground mb-2">
+          <p className="text-body-sm font-medium text-muted-foreground mb-2">
             Top 10 facturas proveedor próximas a pagar
           </p>
           {loading ? (
@@ -86,18 +86,18 @@ export function PagosCajaBlock({ tesoreria, cxpPorPagar, loading }: Props) {
                       as="li"
                       href={to}
                       ariaLabel={`Abrir ${f.embarque_id ? "embarque" : "CxP"} ${f.folio_proveedor}`}
-                      className="px-3 py-2 text-sm flex items-center gap-3 hover:bg-muted/50 transition-colors"
+                      className="px-3 py-2 text-body flex items-center gap-3 hover:bg-muted/50 transition-colors"
                     >
                       <div className="min-w-0 flex-1">
                         <p className="font-medium truncate">{f.folio_proveedor || "—"}</p>
-                        <p className="text-xs text-muted-foreground truncate">
+                        <p className="text-body-sm text-muted-foreground truncate">
                           {f.proveedor_nombre}
                         </p>
                       </div>
-                      <span className="text-sm tabular-nums font-semibold">
+                      <span className="text-body tabular-nums font-semibold">
                         {formatCurrency(f.saldo, f.moneda)}
                       </span>
-                      <span className="text-2xs text-muted-foreground w-20 text-right">
+                      <span className="text-label text-muted-foreground w-20 text-right">
                         {f.fecha_vencimiento
                           ? formatFechaEs(f.fecha_vencimiento, { day: "2-digit", month: "short" })
                           : "—"}
@@ -129,7 +129,7 @@ function SaldoTile({
 }) {
   return (
     <div className="rounded-md border p-3">
-      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+      <div className="flex items-center gap-2 text-body-sm text-muted-foreground">
         {icon}
         <span>{label}</span>
       </div>
@@ -141,7 +141,7 @@ function SaldoTile({
             {formatCurrency(mxn, "MXN")}
           </p>
           {usd > 0 && (
-            <p className="text-xs text-muted-foreground tabular-nums">
+            <p className="text-body-sm text-muted-foreground tabular-nums">
               + {formatCurrency(usd, "USD")}
             </p>
           )}
@@ -168,7 +168,7 @@ function FlujoTile({
   const color = positive ? "text-success" : "text-destructive";
   return (
     <div className="rounded-md border p-3">
-      <div className={`flex items-center gap-2 text-xs text-muted-foreground`}>
+      <div className={`flex items-center gap-2 text-body-sm text-muted-foreground`}>
         <Icon className={`h-4 w-4 ${color}`} />
         <span>{label}</span>
       </div>
@@ -180,7 +180,7 @@ function FlujoTile({
             {formatCurrency(mxn, "MXN")}
           </p>
           {usd > 0 && (
-            <p className="text-xs text-muted-foreground tabular-nums">
+            <p className="text-body-sm text-muted-foreground tabular-nums">
               + {formatCurrency(usd, "USD")}
             </p>
           )}

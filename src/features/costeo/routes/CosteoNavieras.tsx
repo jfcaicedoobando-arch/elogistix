@@ -69,7 +69,7 @@ export default function CosteoNavieras() {
         {
           id: "scac",
           header: "SCAC",
-          meta: { width: COL_W.fecha, className: "font-mono text-xs" },
+          meta: { width: COL_W.fecha, className: "font-mono text-body-sm" },
           cell: ({ row }) => row.original.naviera_code,
         },
         {
@@ -178,7 +178,7 @@ export default function CosteoNavieras() {
               {seleccion.condicion ? (
                 <DemorasTarifaEditor navieraCondicionId={seleccion.condicion.id} />
               ) : (
-                <p className="text-sm text-muted-foreground">
+                <p className="text-body text-muted-foreground">
                   Primero guarda las condiciones generales para habilitar el tabulador.
                 </p>
               )}

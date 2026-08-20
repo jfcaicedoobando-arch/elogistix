@@ -63,12 +63,12 @@ export default function Idempotencia() {
     {
       id: "created_at",
       header: "Fecha",
-      cell: ({ row }) => <span className="text-sm tabular-nums">{formatFechaSegura(row.original.created_at, "dd/MM/yyyy HH:mm:ss")}</span>,
+      cell: ({ row }) => <span className="text-body tabular-nums">{formatFechaSegura(row.original.created_at, "dd/MM/yyyy HH:mm:ss")}</span>,
     },
     {
       id: "fn",
       header: "Operación",
-      cell: ({ row }) => <span className="text-sm">{FN_LABEL[row.original.fn] ?? row.original.fn}</span>,
+      cell: ({ row }) => <span className="text-body">{FN_LABEL[row.original.fn] ?? row.original.fn}</span>,
     },
     {
       id: "key",
@@ -77,7 +77,7 @@ export default function Idempotencia() {
         const r = row.original;
         return (
           <div className="flex items-center gap-1">
-            <code className="text-xs font-mono text-muted-foreground">{r.key.slice(0, 8)}…{r.key.slice(-4)}</code>
+            <code className="text-body-sm font-mono text-muted-foreground">{r.key.slice(0, 8)}…{r.key.slice(-4)}</code>
             <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => copyKey(r.key)} title="Copiar requestId completo" aria-label="Copiar requestId completo">
               <Copy className="h-3 w-3" />
             </Button>
@@ -88,14 +88,14 @@ export default function Idempotencia() {
     {
       id: "user_email",
       header: "Usuario",
-      cell: ({ row }) => <span className="text-sm text-muted-foreground">{row.original.user_email ?? (row.original.user_id ? row.original.user_id.slice(0, 8) : "—")}</span>,
+      cell: ({ row }) => <span className="text-body text-muted-foreground">{row.original.user_email ?? (row.original.user_id ? row.original.user_id.slice(0, 8) : "—")}</span>,
     },
     {
       id: "hits",
       header: "Reintentos",
       meta: { align: "right" },
       cell: ({ row }) => (
-        <span className={`text-sm tabular-nums ${row.original.hits > 0 ? "font-semibold text-warning" : "text-muted-foreground"}`}>
+        <span className={`text-body tabular-nums ${row.original.hits > 0 ? "font-semibold text-warning" : "text-muted-foreground"}`}>
           {row.original.hits}
         </span>
       ),
@@ -128,15 +128,15 @@ export default function Idempotencia() {
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <Card><CardContent className="p-4">
-          <div className="text-xs text-muted-foreground">Registros creados</div>
+          <div className="text-body-sm text-muted-foreground">Registros creados</div>
           <div className="text-kpi tabular-nums">{totales.totalCreados}</div>
         </CardContent></Card>
         <Card><CardContent className="p-4">
-          <div className="text-xs text-muted-foreground">Respuestas cacheadas</div>
+          <div className="text-body-sm text-muted-foreground">Respuestas cacheadas</div>
           <div className="text-kpi tabular-nums">{totales.totalCacheados}</div>
         </CardContent></Card>
         <Card><CardContent className="p-4">
-          <div className="text-xs text-muted-foreground">Duplicados bloqueados</div>
+          <div className="text-body-sm text-muted-foreground">Duplicados bloqueados</div>
           <div className="text-kpi tabular-nums">{totales.totalDuplicadosBloqueados}</div>
         </CardContent></Card>
       </div>
@@ -148,7 +148,7 @@ export default function Idempotencia() {
             {FN_OPTIONS.map((o) => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
           </SelectContent>
         </Select>
-        <span className="text-xs text-muted-foreground ml-auto">
+        <span className="text-body-sm text-muted-foreground ml-auto">
           {rows.length} {rows.length === 1 ? "registro" : "registros"}
         </span>
       </div>

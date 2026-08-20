@@ -58,7 +58,7 @@ export default function Auditoria() {
           description="Salud operativa, hallazgos y acciones pendientes detectadas en los embarques de tu organización."
           subHeader={
             c.generadoEn ? (
-              <p className="text-xs text-muted-foreground">
+              <p className="text-body-sm text-muted-foreground">
                 Reporte generado:{" "}
                 <span className="tabular-nums">{c.generadoEn}</span>
               </p>

@@ -63,7 +63,7 @@ export function InvitarAgenteCredencialesView({ email, password, onClose }: Prop
         <div className="space-y-1">
           <Label size="sm" className="text-muted-foreground" htmlFor="agente-cred-email">Email</Label>
           <div className="flex gap-2">
-            <Input id="agente-cred-email" readOnly value={email} className="font-mono text-sm" />
+            <Input id="agente-cred-email" readOnly value={email} className="font-mono text-body" />
             <Button
               variant="outline"
               size="icon"
@@ -77,7 +77,7 @@ export function InvitarAgenteCredencialesView({ email, password, onClose }: Prop
         <div className="space-y-1">
           <Label size="sm" className="text-muted-foreground" htmlFor="agente-cred-password">Contraseña</Label>
           <div className="flex gap-2">
-            <Input id="agente-cred-password" readOnly value={password} className="font-mono text-sm" />
+            <Input id="agente-cred-password" readOnly value={password} className="font-mono text-body" />
             <Button
               variant="outline"
               size="icon"
@@ -88,7 +88,7 @@ export function InvitarAgenteCredencialesView({ email, password, onClose }: Prop
             </Button>
           </div>
         </div>
-        <p className="text-xs text-muted-foreground">
+        <p className="text-body-sm text-muted-foreground">
           El agente debe entrar a <code>/login</code> con estas credenciales. Si las pierde, puedes
           reabrir este modal y asignar otra contraseña.
         </p>

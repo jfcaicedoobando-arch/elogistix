@@ -63,14 +63,14 @@ export function CotizacionSuccessDialog({
 
         {onGuardarComoPlantilla && (
           <div className="pt-1">
-            <Button variant="ghost" onClick={onGuardarComoPlantilla} className="w-full text-sm">
+            <Button variant="ghost" onClick={onGuardarComoPlantilla} className="w-full text-body">
               <BookmarkPlus className="h-4 w-4 mr-2" /> Guardar como plantilla
             </Button>
           </div>
         )}
 
         <div className="pt-1">
-          <Button variant="ghost" onClick={onVerDetalle} className="w-full text-sm">
+          <Button variant="ghost" onClick={onVerDetalle} className="w-full text-body">
             Ir al detalle de la cotización
           </Button>
         </div>

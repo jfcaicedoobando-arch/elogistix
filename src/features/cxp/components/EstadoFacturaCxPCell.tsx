@@ -132,7 +132,7 @@ export function EstadoFacturaCxPCell({ factura: f, variant = "tabla" }: Props) {
           </div>
         </TooltipTrigger>
         <TooltipContent side="top" className="max-w-xs">
-          <ul className="space-y-0.5 text-xs">
+          <ul className="space-y-0.5 text-body-sm">
             {details.map((line, i) => (
               <li key={i}>{line}</li>
             ))}

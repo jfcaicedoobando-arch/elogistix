@@ -49,7 +49,7 @@ export function ConceptosManualesSection({
       icon={<ListPlus className="h-3.5 w-3.5" />}
       title={`Conceptos de la factura (${conceptos.length})`}
     >
-      <p className="-mt-1 text-xs text-muted-foreground">
+      <p className="-mt-1 text-body-sm text-muted-foreground">
         El precio es <strong>unitario</strong>: el total de línea es precio × cantidad y la suma debe
         cuadrar con el subtotal. Sin conceptos la factura no se puede aprobar ni pagar.
       </p>

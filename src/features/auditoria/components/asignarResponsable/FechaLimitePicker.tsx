@@ -22,7 +22,7 @@ export function FechaLimitePicker({ fechaLimite, onChange }: Props) {
             variant="outline"
             size="sm"
             className={cn(
-              "w-full justify-start text-xs h-9",
+              "w-full justify-start text-body-sm h-9",
               !fechaLimite && "text-muted-foreground",
             )}
           >
@@ -45,7 +45,7 @@ export function FechaLimitePicker({ fechaLimite, onChange }: Props) {
               <Button
                 variant="ghost"
                 size="sm"
-                className="w-full text-xs"
+                className="w-full text-body-sm"
                 onClick={() => onChange(undefined)}
               >
                 Quitar fecha

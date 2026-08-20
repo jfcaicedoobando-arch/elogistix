@@ -52,7 +52,7 @@ export function EjecutivoScoreCard({
       <CardContent className="space-y-3">
         <div className="flex items-end gap-3 flex-wrap">
           <div className={cn("text-5xl font-bold tabular-nums", cfg.text)}>{score}</div>
-          <div className="text-sm text-muted-foreground pb-2">/ 100</div>
+          <div className="text-body text-muted-foreground pb-2">/ 100</div>
           <div className="ml-auto flex items-center gap-2">
             {regresion7d ? <RegresionBadge reg={regresion7d} /> : null}
             <Badge variant="outline" className={cn(cfg.text)}>
@@ -61,7 +61,7 @@ export function EjecutivoScoreCard({
           </div>
         </div>
         <Progress value={score} className="h-2" />
-        <p className="text-xs text-muted-foreground">{cfg.msg}</p>
+        <p className="text-body-sm text-muted-foreground">{cfg.msg}</p>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1 text-center">
           <DrillKpi
             label="Críticos"

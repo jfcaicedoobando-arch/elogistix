@@ -21,11 +21,11 @@ export function EjecutivoAlertasUrgencia({
           <CardContent className="p-4 flex items-start gap-3">
             <AlertCircle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
             <div className="flex-1 min-w-0">
-              <div className="text-sm font-semibold text-destructive">
+              <div className="text-body font-semibold text-destructive">
                 {pendientesVencidos} hallazgo
                 {pendientesVencidos === 1 ? "" : "s"} en embarques con ETA vencida
               </div>
-              <p className="text-xs text-muted-foreground mt-0.5">
+              <p className="text-body-sm text-muted-foreground mt-0.5">
                 Embarques que ya debieron arribar y aún tienen pendientes sin atender.
               </p>
             </div>
@@ -40,11 +40,11 @@ export function EjecutivoAlertasUrgencia({
           <CardContent className="p-4 flex items-start gap-3">
             <CalendarClock className="h-5 w-5 text-warning shrink-0 mt-0.5" />
             <div className="flex-1 min-w-0">
-              <div className="text-sm font-semibold text-warning">
+              <div className="text-body font-semibold text-warning">
                 {pendientesUrgentesPorEta} hallazgo
                 {pendientesUrgentesPorEta === 1 ? "" : "s"} con ETA en ≤ 3 días
               </div>
-              <p className="text-xs text-muted-foreground mt-0.5">
+              <p className="text-body-sm text-muted-foreground mt-0.5">
                 Atender antes del arribo para no impactar entrega al cliente.
               </p>
             </div>

@@ -19,7 +19,7 @@ interface Props {
 export function SugerenciasTarifaSinIds({ openDialog, setOpenDialog, onElegir, puertoOrigenId, puertoDestinoId, tipoContenedorId }: Props) {
   return (
     <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between rounded-md border border-dashed p-3">
-      <p className="text-sm text-muted-foreground">
+      <p className="text-body text-muted-foreground">
         Selecciona origen, destino y tipo de contenedor para ver tarifas.
       </p>
       <Button type="button" size="sm" variant="default" onClick={() => setOpenDialog(true)}>

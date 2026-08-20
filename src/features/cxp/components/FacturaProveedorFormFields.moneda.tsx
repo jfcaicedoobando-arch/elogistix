@@ -62,7 +62,7 @@ export function MonedaImportesSection({
                   type="button"
                   variant="ghost"
                   size="sm"
-                  className="h-6 px-2 text-2xs"
+                  className="h-6 px-2 text-label"
                   onClick={onObtenerDof}
                   disabled={dofLoading}
                   title="Consulta la Publicación DOF Banxico vigente en la fecha de emisión."

@@ -58,7 +58,7 @@ export function NavieraQuickCreate({ onCreada, variante = "inline", etiqueta }: 
           type="button"
           variant="ghost"
           size="sm"
-          className="mt-1 h-7 px-1 text-2xs text-muted-foreground"
+          className="mt-1 h-7 px-1 text-label text-muted-foreground"
           onClick={() => setOpen(true)}
         >
           <Plus className="mr-1 h-3 w-3" /> {etiqueta ?? "Agregar naviera"}

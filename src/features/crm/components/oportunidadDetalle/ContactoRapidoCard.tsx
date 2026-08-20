@@ -50,7 +50,7 @@ export function ContactoRapidoCard({
             }}
           />
         ) : (
-          <p className="text-sm text-muted-foreground">El cliente no tiene contactos registrados.</p>
+          <p className="text-body text-muted-foreground">El cliente no tiene contactos registrados.</p>
         )}
       </CardContent>
     </Card>

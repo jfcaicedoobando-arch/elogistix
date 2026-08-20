@@ -27,12 +27,12 @@ export function ProveedorNoEncontradoAlert({ rfc, nombre }: Props) {
       <UserPlus className="h-4 w-4" />
       <AlertTitle>No encontramos a este proveedor en tu catálogo</AlertTitle>
       <AlertDescription className="space-y-2">
-        <p className="text-sm">
+        <p className="text-body">
           Detectamos <span className="font-medium">{nombre || "(sin nombre)"}</span>
           {rfc ? <> con RFC / Tax ID <span className="font-mono">{rfc}</span></> : null}.
           El alta de proveedores se hace desde el módulo de Proveedores.
         </p>
-        <p className="text-xs text-muted-foreground">
+        <p className="text-body-sm text-muted-foreground">
           Se abrirá en una pestaña nueva con los datos prellenados; al terminar,
           regresa aquí y selecciona el proveedor en el buscador. No perderás la captura.
         </p>

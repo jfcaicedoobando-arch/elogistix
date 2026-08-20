@@ -44,13 +44,13 @@ export function ActividadesHoyCard({ items }: { items: Actividad[] }) {
                 as="li"
                 href={entidadHref(a.entidad_tipo, a.entidad_id)}
                 ariaLabel={`Abrir ${a.entidad_tipo} vinculado a ${a.asunto}`}
-                className="flex items-center justify-between text-sm py-1 border-b last:border-0 hover:bg-muted/40 rounded-sm"
+                className="flex items-center justify-between text-body py-1 border-b last:border-0 hover:bg-muted/40 rounded-sm"
               >
                 <div className="flex items-center gap-2 min-w-0">
-                  <Badge variant="outline" className="text-2xs">{a.tipo}</Badge>
+                  <Badge variant="outline" className="text-label">{a.tipo}</Badge>
                   <span className="font-medium truncate max-w-[420px]">{a.asunto}</span>
                 </div>
-                <span className="text-xs text-muted-foreground">{formatHora(a.fecha_programada)}</span>
+                <span className="text-body-sm text-muted-foreground">{formatHora(a.fecha_programada)}</span>
               </DrilldownRow>
             ))}
           </ul>

@@ -23,15 +23,15 @@ export function TopListaCard({ title, items, emptyText = "Sin registros." }: Pro
       </CardHeader>
       <CardContent>
         {items.length === 0 ? (
-          <p className="text-sm text-muted-foreground">{emptyText}</p>
+          <p className="text-body text-muted-foreground">{emptyText}</p>
         ) : (
           <ul className="space-y-2">
             {items.map((it, i) => (
-              <li key={`${it.nombre}-${i}`} className="flex items-center justify-between gap-2 text-sm">
+              <li key={`${it.nombre}-${i}`} className="flex items-center justify-between gap-2 text-body">
                 <div className="min-w-0">
                   <p className="truncate font-medium">{it.nombre}</p>
                   {typeof it.dias === "number" && it.dias !== 0 && (
-                    <Badge variant={severidad(it.dias)} className="mt-0.5 text-2xs">
+                    <Badge variant={severidad(it.dias)} className="mt-0.5 text-label">
                       {it.dias > 0 ? `${it.dias} d vencido` : `${Math.abs(it.dias)} d por vencer`}
                     </Badge>
                   )}

@@ -26,7 +26,7 @@ export default function ContactActions({ email, telefono, plantillaCtx }: Props)
   };
 
   return (
-    <div className="flex flex-col gap-2 text-sm">
+    <div className="flex flex-col gap-2 text-body">
       <div className="flex items-center gap-2 flex-wrap">
         <Mail className="h-4 w-4 text-muted-foreground shrink-0" />
         {email ? (

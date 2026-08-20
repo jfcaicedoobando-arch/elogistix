@@ -17,7 +17,7 @@ export function buildAdminOrganizacionesColumns(): ColumnDef<OrgRow, unknown>[] 
       meta: { width: COL_W.texto, className: "font-medium whitespace-nowrap", sticky: true },
       cell: ({ row }) => toTitleCase(row.original.nombre),
     },
-    { id: "rfc", header: "RFC", meta: { width: COL_W.monto, className: "font-mono text-xs" }, cell: ({ row }) => row.original.rfc?.toUpperCase() || "—" },
+    { id: "rfc", header: "RFC", meta: { width: COL_W.monto, className: "font-mono text-body-sm" }, cell: ({ row }) => row.original.rfc?.toUpperCase() || "—" },
     { id: "plan", header: "Plan", meta: { width: COL_W.fecha }, cell: ({ row }) => <Badge variant="outline">{row.original.plan}</Badge> },
     {
       ...statusColumn<OrgRow>({

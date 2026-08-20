@@ -20,7 +20,7 @@ function EmbarqueValor({ f }: { f: FacturaCxP }) {
       </Button>
     );
   }
-  return <span className="text-muted-foreground italic text-xs">Sin expediente</span>;
+  return <span className="text-muted-foreground italic text-body-sm">Sin expediente</span>;
 }
 
 function VencimientoValor({ f }: { f: FacturaCxP }) {
@@ -30,7 +30,7 @@ function VencimientoValor({ f }: { f: FacturaCxP }) {
     <span className="inline-flex items-center gap-2">
       <span>{formatDate(f.fecha_vencimiento)}</span>
       {overdue && (
-        <span className="px-1.5 py-0.5 rounded text-2xs font-semibold text-destructive bg-destructive/10 border border-destructive/30 uppercase tracking-wide">
+        <span className="px-1.5 py-0.5 rounded text-label font-semibold text-destructive bg-destructive/10 border border-destructive/30 uppercase tracking-wide">
           +{f.dias_vencido} d
         </span>
       )}
@@ -59,7 +59,7 @@ function MonedaValor({ f, showTc }: { f: FacturaCxP; showTc: boolean }) {
     <span>
       {f.moneda}
       {showTc && f.tipo_cambio_usd > 0 && (
-        <span className="text-muted-foreground text-xs ml-1.5">
+        <span className="text-muted-foreground text-body-sm ml-1.5">
           · TC {f.tipo_cambio_usd.toFixed(4)}
         </span>
       )}

@@ -27,21 +27,21 @@ export function ClienteBillToCard({ cliente, clienteNombreFallback, clienteId }:
       <CardHeader className="pb-2 flex flex-row items-center justify-between gap-2">
         <CardTitle>Facturar a</CardTitle>
         {clienteId && (
-          <Button variant="link" size="sm" asChild className="h-auto p-0 text-xs shrink-0">
+          <Button variant="link" size="sm" asChild className="h-auto p-0 text-body-sm shrink-0">
             <Link to={`/clientes/${clienteId}`} className="inline-flex items-center gap-1">
               Ver cliente <ExternalLink className="h-3 w-3" />
             </Link>
           </Button>
         )}
       </CardHeader>
-      <CardContent className="text-sm space-y-2">
+      <CardContent className="text-body space-y-2">
         <p className="font-medium break-words" title={nombre}>{nombre}</p>
         <div>
-          <p className="text-xs text-muted-foreground">RFC</p>
+          <p className="text-body-sm text-muted-foreground">RFC</p>
           <p className="font-mono">{rfc || "—"}</p>
         </div>
         <div>
-          <p className="text-xs text-muted-foreground">Dirección</p>
+          <p className="text-body-sm text-muted-foreground">Dirección</p>
           <p className="whitespace-pre-line break-words">{direccion || "—"}</p>
         </div>
       </CardContent>

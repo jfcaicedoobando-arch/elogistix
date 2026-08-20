@@ -43,7 +43,7 @@ export const AlertasDemoraCard = memo(function AlertasDemoraCard({ alertas, isLo
               className={`flex items-center gap-3 rounded-lg border p-3 cursor-pointer hover:bg-muted/50 transition-colors ${FOCUS_RING}`}
             >
               <div
-                className={`shrink-0 h-9 w-9 rounded-full flex items-center justify-center text-2xs font-bold text-primary-foreground ${
+                className={`shrink-0 h-9 w-9 rounded-full flex items-center justify-center text-label font-bold text-primary-foreground ${
                   e.diasDemora >= 5 ? "bg-destructive" : "bg-warning"
                 }`}
                 title={etiquetaDemora(e.diasDemora).titulo}
@@ -52,8 +52,8 @@ export const AlertasDemoraCard = memo(function AlertasDemoraCard({ alertas, isLo
               </div>
 
               <div className="min-w-0 flex-1">
-                <p className="text-sm font-medium truncate">{e.expediente}</p>
-                <p className="text-xs text-muted-foreground truncate">
+                <p className="text-body font-medium truncate">{e.expediente}</p>
+                <p className="text-body-sm text-muted-foreground truncate">
                   {toTitleCase(e.cliente_nombre)}
                 </p>
               </div>
@@ -69,7 +69,7 @@ export const AlertasDemoraCard = memo(function AlertasDemoraCard({ alertas, isLo
           <AlertTriangle className="h-4 w-4 text-destructive" />
           Alertas de Demora
           {alertas.length > 0 && (
-            <Badge variant="destructive" className="ml-auto text-2xs">
+            <Badge variant="destructive" className="ml-auto text-label">
               {alertas.length}
             </Badge>
           )}

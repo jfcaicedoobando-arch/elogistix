@@ -69,7 +69,7 @@ export default function PresupuestoCrmEditor() {
             onChange={(e) => setAnio(Number(e.target.value) || anio)}
           />
         </div>
-        <p className="text-sm text-muted-foreground pb-2">
+        <p className="text-body text-muted-foreground pb-2">
           Total anual capturado: <span className="font-medium">{totalAnualTexto}</span>
         </p>
       </div>

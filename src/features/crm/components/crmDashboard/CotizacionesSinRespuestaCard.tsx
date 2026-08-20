@@ -15,7 +15,7 @@ export function CotizacionesSinRespuestaCard({ items }: { items: CotizacionSinRe
       </CardHeader>
       <CardContent>
         {items.length === 0 ? (
-          <p className="text-sm text-muted-foreground text-center py-4">
+          <p className="text-body text-muted-foreground text-center py-4">
             Todas las cotizaciones recientes han tenido respuesta
           </p>
         ) : (
@@ -30,21 +30,21 @@ export function CotizacionesSinRespuestaCard({ items }: { items: CotizacionSinRe
                   as="li"
                   href={href}
                   ariaLabel={`Ver cotización ${c.folio}`}
-                  className="flex items-center justify-between text-sm py-1 border-b last:border-0 hover:bg-muted/40 rounded-sm"
+                  className="flex items-center justify-between text-body py-1 border-b last:border-0 hover:bg-muted/40 rounded-sm"
                 >
                   <div className="flex flex-col truncate">
                     <span className="font-medium truncate max-w-[260px]">
                       {c.folio} · {c.cliente_nombre || "Sin cliente"}
                     </span>
-                    <span className="text-xs text-muted-foreground">
+                    <span className="text-body-sm text-muted-foreground">
                       Enviada hace {c.dias} días
                     </span>
                   </div>
                   <div className="text-right">
-                    <div className="text-xs tabular-nums font-semibold">
+                    <div className="text-body-sm tabular-nums font-semibold">
                       {formatCurrencyCompact(c.subtotal, c.moneda)}
                     </div>
-                    <Badge variant="outline" className="text-2xs mt-0.5">
+                    <Badge variant="outline" className="text-label mt-0.5">
                       {c.dias}d
                     </Badge>
                   </div>

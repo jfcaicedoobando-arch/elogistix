@@ -15,6 +15,7 @@ import {
   type EstadoVisual,
 } from "@/lib/ui/estadoConfig";
 import { EXTRA_STATUS_BADGES } from "@/lib/status/statusExtras";
+export { DOMAIN_STATUSES } from "@/lib/status/statusDomains";
 
 export type StatusDomain =
   | "factura"
@@ -49,96 +50,6 @@ export interface StatusVisual {
   badgeClass: string;
   icon?: LucideIcon;
 }
-
-/** Dominio → lista de estados canónicos (para tests y filtros). */
-export const DOMAIN_STATUSES: Record<StatusDomain, readonly string[]> = {
-  factura: [
-    "Borrador",
-    "Emitida",
-    "Pagada",
-    "Parcialmente pagada",
-    "Vencida",
-    "En cancelación",
-    "Cancelada",
-    "Sustituida",
-    "Pendiente",
-  ],
-  factura_cxp: [
-    "Vigente",
-    "Parcial",
-    "Por vencer",
-    "Vencida",
-    "Por aprobar",
-    "Rechazada",
-    "Borrador",
-    "Pagada",
-    "Cancelada",
-  ],
-  proforma: [
-    "Borrador",
-    "Enviada",
-    "Aceptada",
-    "Rechazada",
-    "Cancelada",
-  ],
-  embarque: [
-    "Borrador",
-    "Confirmado",
-
-    "En Tránsito",
-    "Arribo",
-    "En Aduana",
-    "EIR",
-    "Entregado",
-    "Por liquidar",
-    "Cerrado",
-    "Cancelado",
-  ],
-  cotizacion: [
-    "Borrador",
-    "Solicitada",
-    "Enviada",
-    "Aceptada",
-    "Confirmada",
-    "Rechazada",
-    "En operación",
-    "Archivada",
-  ],
-  lead: [
-    "Nuevo",
-    "Contactado",
-    "Calificado",
-    "Descalificado",
-    "Convertido",
-    "Descartado",
-  ],
-  comision: [
-    "Devengada",
-    "Liquidada",
-    "Cancelada",
-  ],
-  org: [
-    "Activa",
-    "Inactiva",
-  ],
-  aprobacion_cxp: ["Por aprobar", "Aprobada", "Rechazada"],
-  captura_cxp: ["Sin captura", "Parcial", "Completo"],
-  actividad_crm: ["Pendiente", "Completada", "Vencida"],
-  tarifa_maritima: ["Borrador", "Vigente", "Pendiente", "Rechazada", "Reemplazada", "Vencida"],
-  agente: ["Activo", "Inactivo"],
-  garantia_naviera: ["Pendiente", "Depositado", "Liberado", "Retenido"],
-  ruta_maritima: ["Activa", "Por vencer", "Sin tarifa"],
-  liquidacion: ["Pagado", "Pendiente"],
-  anticipo_proveedor: ["disponible", "aplicado_parcial", "aplicado_total", "cancelado"],
-  cfdi: ["borrador", "aprobada", "timbrada", "aplicada", "cancelada"],
-  conciliacion: ["Pendiente", "Conciliado", "Ignorado"],
-  conciliacion_costo: ["Pendiente", "Facturado parcial", "Facturado", "Sobrefacturado", "Pagado", "Moneda mixta"],
-  pago_tipo: ["cobro", "pago", "anticipo"],
-  rep: ["Timbrado", "Cancelado", "Pendiente"],
-  carta_garantia: ["Carta vigente", "Carta vencida", "Sin condiciones", "Sin carta"],
-  tarifa_marcador: ["Mejor", "Nueva"],
-  sat_uuid: ["Vigente", "Cancelado", "No Encontrado", "Sin verificar"],
-};
 
 /** Overrides por dominio cuando el mismo string necesita otro label. */
 const LABEL_OVERRIDES: Partial<Record<StatusDomain, Record<string, string>>> = {

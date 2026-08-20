@@ -33,7 +33,7 @@ function Field({
 }) {
   return (
     <div className="min-w-0">
-      <p className="text-xs text-muted-foreground">{label}</p>
+      <p className="text-body-sm text-muted-foreground">{label}</p>
       <p
         className={mono ? "font-mono font-medium truncate" : "font-medium truncate"}
         title={value}
@@ -41,7 +41,7 @@ function Field({
         {value}
       </p>
       {badge && (
-        <Badge variant="outline" className="mt-1 text-2xs font-normal">
+        <Badge variant="outline" className="mt-1 text-label font-normal">
           {badge}
         </Badge>
       )}
@@ -64,7 +64,7 @@ export function ProformaDatosGeneralesCard({
       <CardHeader className="pb-2">
         <CardTitle>Datos generales</CardTitle>
       </CardHeader>
-      <CardContent className="grid grid-cols-2 gap-4 text-sm">
+      <CardContent className="grid grid-cols-2 gap-4 text-body">
         <Field label="Vigencia" value={vigenciaPlus30(fechaEmision)} />
         <Field
           label="Días crédito"

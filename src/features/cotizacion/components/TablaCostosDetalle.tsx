@@ -75,21 +75,21 @@ export default function TablaCostosDetalle({ filas, filasMoneda, moneda, title, 
                 return (
                   <React.Fragment key={idx}>
                     <DetailTableRow>
-                      <TableCell className="font-medium text-sm">{fila.concepto}</TableCell>
+                      <TableCell className="font-medium text-body">{fila.concepto}</TableCell>
                       <TableCell>
                         {canEdit ? (
-                          <Input value={fila.proveedor} onChange={e => onUpdate(globalIdx, "proveedor", e.target.value)} className="h-8 text-sm" placeholder="Proveedor" aria-label={`Proveedor de ${fila.concepto}`} />
-                        ) : <span className="text-sm">{fila.proveedor || "-"}</span>}
+                          <Input value={fila.proveedor} onChange={e => onUpdate(globalIdx, "proveedor", e.target.value)} className="h-8 text-body" placeholder="Proveedor" aria-label={`Proveedor de ${fila.concepto}`} />
+                        ) : <span className="text-body">{fila.proveedor || "-"}</span>}
                       </TableCell>
                       <TableCell className="text-right">
                         {canEdit ? (
-                          <Input type="number" value={fila.costo_unitario || ""} onChange={e => onUpdate(globalIdx, "costo_unitario", e.target.value)} className="h-8 text-sm text-right tabular-nums w-28 ml-auto" min={0} step={0.01} aria-label={`Costo unitario de ${fila.concepto}`} />
-                        ) : <span className="text-sm tabular-nums">{formatCurrency(fila.costo_unitario, moneda)}</span>}
+                          <Input type="number" value={fila.costo_unitario || ""} onChange={e => onUpdate(globalIdx, "costo_unitario", e.target.value)} className="h-8 text-body text-right tabular-nums w-28 ml-auto" min={0} step={0.01} aria-label={`Costo unitario de ${fila.concepto}`} />
+                        ) : <span className="text-body tabular-nums">{formatCurrency(fila.costo_unitario, moneda)}</span>}
                       </TableCell>
-                      <TableCell className="text-right text-sm tabular-nums whitespace-nowrap">
+                      <TableCell className="text-right text-body tabular-nums whitespace-nowrap">
                         {formatCurrency(fila.venta, moneda)}
                       </TableCell>
-                      <TableCell className={`text-right text-sm tabular-nums font-medium ${profit >= 0 ? "text-success" : "text-destructive"}`}>
+                      <TableCell className={`text-right text-body tabular-nums font-medium ${profit >= 0 ? "text-success" : "text-destructive"}`}>
                         {formatCurrency(profit, moneda)}
                       </TableCell>
                       <TableCell className="text-right"><ProfitBadge porcentaje={pct} /></TableCell>
@@ -102,10 +102,10 @@ export default function TablaCostosDetalle({ filas, filasMoneda, moneda, title, 
                               placeholder="Notas (opcional)"
                               value={fila.notas || ""}
                               onChange={e => onUpdate(globalIdx, "notas", e.target.value)}
-                              className="text-xs h-8 resize-none focus:min-h-16 transition-[min-height]"
+                              className="text-body-sm h-8 resize-none focus:min-h-16 transition-[min-height]"
                             />
                           ) : (
-                            <span className="text-xs text-muted-foreground italic">↳ {fila.notas}</span>
+                            <span className="text-body-sm text-muted-foreground italic">↳ {fila.notas}</span>
                           )}
                         </TableCell>
                       </TableRow>
@@ -129,7 +129,7 @@ export default function TablaCostosDetalle({ filas, filasMoneda, moneda, title, 
         </div>
         {moneda === "MXN" && (
           <div className="mt-3 space-y-1">
-            <p className="text-xs text-muted-foreground">* P&L calculado sobre subtotales sin IVA</p>
+            <p className="text-body-sm text-muted-foreground">* P&L calculado sobre subtotales sin IVA</p>
           </div>
         )}
       </CardContent>

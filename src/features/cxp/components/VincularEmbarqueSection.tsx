@@ -105,7 +105,7 @@ export function VincularEmbarqueSection({
   if (!proveedorId) return null;
   if (isLoading) {
     return (
-      <div className="rounded-lg border bg-muted/30 px-4 py-3 flex items-center gap-2 text-sm text-muted-foreground">
+      <div className="rounded-lg border bg-muted/30 px-4 py-3 flex items-center gap-2 text-body text-muted-foreground">
         <Loader2 className="h-4 w-4 animate-spin" /> Buscando costos pendientes de este proveedor…
       </div>
     );
@@ -126,8 +126,8 @@ export function VincularEmbarqueSection({
     <div className="space-y-3">
       <div className="flex items-center gap-2 flex-wrap">
         <Link2 className="h-4 w-4 text-accent" />
-        <Label className="text-sm font-semibold">Vincular a costos de embarque (opcional)</Label>
-        <Badge variant="outline" className="ml-auto text-xs">
+        <Label className="text-body font-semibold">Vincular a costos de embarque (opcional)</Label>
+        <Badge variant="outline" className="ml-auto text-body-sm">
           {grupos.length} embarque{grupos.length === 1 ? "" : "s"} con costos pendientes
         </Badge>
         {puedeSugerir && (
@@ -143,13 +143,13 @@ export function VincularEmbarqueSection({
           </Button>
         )}
       </div>
-      <p className="text-xs text-muted-foreground">
+      <p className="text-body-sm text-muted-foreground">
         Marca los conceptos que cubre esta factura, o usa <strong>Sugerir vinculación</strong>{" "}
         para que el sistema los preseleccione por similitud de descripción y monto. Los
         conceptos cubiertos al 100% se marcarán como liquidados automáticamente.
       </p>
       {ultimaSugerencia && ultimaSugerencia.length > 0 && (
-        <div className="rounded-md border border-accent/40 bg-accent/5 px-3 py-2 text-xs text-muted-foreground">
+        <div className="rounded-md border border-accent/40 bg-accent/5 px-3 py-2 text-body-sm text-muted-foreground">
           Última sugerencia: {ultimaSugerencia.length} concepto
           {ultimaSugerencia.length === 1 ? "" : "s"} preseleccionado
           {ultimaSugerencia.length === 1 ? "" : "s"}. Ajusta lo que no cuadre antes de guardar.

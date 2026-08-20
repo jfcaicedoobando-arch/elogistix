@@ -97,7 +97,7 @@ export default function CosteoRutas() {
             </Select>
           </div>
           {conteos.sin_tarifa > 0 && (
-            <p className="text-sm text-muted-foreground">
+            <p className="text-body text-muted-foreground">
               <AlertTriangle className="inline size-3.5 mr-1 text-destructive" />
               {conteos.sin_tarifa} ruta{conteos.sin_tarifa === 1 ? "" : "s"} sin
               tarifa vigente.

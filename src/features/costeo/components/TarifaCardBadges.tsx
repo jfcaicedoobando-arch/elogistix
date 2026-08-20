@@ -12,14 +12,14 @@ import type { TopTarifaRow } from "@/features/costeo/types";
 export function TarifaCardBadges({ row }: { row: TopTarifaRow }) {
   return (
     <>
-      <div className="flex flex-wrap gap-1.5 text-xs">
+      <div className="flex flex-wrap gap-1.5 text-body-sm">
         <Badge variant="outline" className="gap-1">
           <CreditCard className="size-3" /> {row.dias_credito} días crédito
         </Badge>
         <CartaGarantiaIndicator row={row} />
       </div>
 
-      <div className="flex flex-wrap gap-1.5 text-xs">
+      <div className="flex flex-wrap gap-1.5 text-body-sm">
         <Badge variant="outline" className="gap-1">
           <Clock className="size-3" /> {row.dias_libres_demoras} días libres
         </Badge>
@@ -36,7 +36,7 @@ export function TarifaCardBadges({ row }: { row: TopTarifaRow }) {
                 {row.dias_libres_demoras + 1}: {usdTarifa(row.naviera_demora_dia_6)}/día
               </Badge>
             </TooltipTrigger>
-            <TooltipContent className="max-w-xs text-xs">
+            <TooltipContent className="max-w-xs text-body-sm">
               Después de agotar los {row.dias_libres_demoras} días libres, la naviera cobra este
               monto por contenedor y por cada día adicional.
             </TooltipContent>

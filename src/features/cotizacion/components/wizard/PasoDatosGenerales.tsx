@@ -71,13 +71,13 @@ export default function PasoDatosGenerales({ w, clientes }: Props) {
             >
               <div className="flex items-center gap-2">
                 <RadioGroupItem value="FCL" id="tipo-fcl" />
-                <Label htmlFor="tipo-fcl" className="cursor-pointer text-sm font-medium">
+                <Label htmlFor="tipo-fcl" className="cursor-pointer text-body font-medium">
                   FCL (Contenedor completo)
                 </Label>
               </div>
               <div className="flex items-center gap-2">
                 <RadioGroupItem value="LCL" id="tipo-lcl" />
-                <Label htmlFor="tipo-lcl" className="cursor-pointer text-sm font-medium">
+                <Label htmlFor="tipo-lcl" className="cursor-pointer text-body font-medium">
                   LCL (Carga consolidada)
                 </Label>
               </div>

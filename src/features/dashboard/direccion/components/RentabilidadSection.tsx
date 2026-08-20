@@ -24,7 +24,7 @@ export function RentabilidadSection({ margen6m, porModo }: { margen6m: MargenMes
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       <Card className="p-5 rounded-xl border border-border">
-        <p className="text-sm font-medium">Margen bruto — últimos 6 meses</p>
+        <p className="text-body font-medium">Margen bruto — últimos 6 meses</p>
         {data.length === 0 ? (
           <EmptyStateInline icon={BarChart3} message="Sin datos de margen en los últimos 6 meses." className="py-6" />
         ) : (
@@ -46,7 +46,7 @@ export function RentabilidadSection({ margen6m, porModo }: { margen6m: MargenMes
       </Card>
 
       <Card className="p-5 rounded-xl border border-border">
-        <p className="text-sm font-medium">Margen por modo de transporte (mes actual)</p>
+        <p className="text-body font-medium">Margen por modo de transporte (mes actual)</p>
         {porModo.length === 0 ? (
           <EmptyStateInline icon={BarChart3} message="Sin datos del mes." className="py-6" />
         ) : (
@@ -59,14 +59,14 @@ export function RentabilidadSection({ margen6m, porModo }: { margen6m: MargenMes
               const color = m.margen_pct < 0 ? "bg-destructive" : "bg-primary";
               return (
                 <li key={m.modo}>
-                  <div className="flex items-center justify-between text-sm">
+                  <div className="flex items-center justify-between text-body">
                     <span>{m.modo}</span>
                     <span className="tabular-nums font-medium">
                       {sinOperaciones ? "—" : `${m.margen_pct.toFixed(1)}%`}
                     </span>
                   </div>
                   {sinOperaciones ? (
-                    <p className="mt-1 text-xs text-muted-foreground">Sin operaciones en el mes</p>
+                    <p className="mt-1 text-body-sm text-muted-foreground">Sin operaciones en el mes</p>
                   ) : (
                     <div className="mt-1 h-2 rounded bg-muted overflow-hidden">
                       <div className={`h-full ${color}`} style={{ width: `${w}%` }} />

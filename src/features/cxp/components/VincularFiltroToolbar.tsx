@@ -28,7 +28,7 @@ export function VincularFiltroToolbar({
             value={filtro}
             onChange={(e) => onFiltro(e.target.value)}
             placeholder="Filtrar por concepto, expediente o monto…"
-            className="pl-8 h-8 text-sm"
+            className="pl-8 h-8 text-body"
             aria-label="Filtrar conceptos por texto"
           />
         </div>
@@ -54,7 +54,7 @@ export function VincularFiltroToolbar({
         )}
       </div>
       {filtroActivo && (
-        <p className="text-xs text-muted-foreground">
+        <p className="text-body-sm text-muted-foreground">
           Mostrando {visibles} de {total} concepto{total === 1 ? "" : "s"}
         </p>
       )}

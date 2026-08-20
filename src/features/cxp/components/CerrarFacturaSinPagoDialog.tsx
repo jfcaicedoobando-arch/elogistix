@@ -70,12 +70,12 @@ export function CerrarFacturaSinPagoDialog({
         return onConfirm({ motivo, comentario: comentario.trim() || undefined });
       }}
       description={
-        <div className="space-y-3 text-sm">
+        <div className="space-y-3 text-body">
           {factura && <FacturaContextoBand factura={factura} variant="compact" emphasis="saldo" />}
-          <p className="text-xs text-muted-foreground">
+          <p className="text-body-sm text-muted-foreground">
             Vas a saldar esta factura sin registrar un pago real de dinero.
           </p>
-          <ul className="list-disc pl-5 text-muted-foreground text-xs space-y-1">
+          <ul className="list-disc pl-5 text-muted-foreground text-body-sm space-y-1">
             <li>Se creará un ajuste tipificado en el histórico de pagos (marcado como ajuste, no como pago).</li>
             <li>La factura quedará marcada como <strong>Pagada</strong> y desaparecerá del aging.</li>
             <li>La acción queda registrada en la bitácora con tu usuario y el motivo.</li>

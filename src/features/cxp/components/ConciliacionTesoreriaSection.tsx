@@ -73,17 +73,17 @@ export function ConciliacionTesoreriaSection({ facturaId, monedaFactura }: Props
           ) : (
             <AlertTriangle className="h-4 w-4 text-warning shrink-0" aria-hidden />
           )}
-          <span className="text-sm">{resumen.mensaje}</span>
+          <span className="text-body">{resumen.mensaje}</span>
           {reporte?.conciliadoAt && (
-            <span className="ml-auto text-xs text-muted-foreground">
+            <span className="ml-auto text-body-sm text-muted-foreground">
               {formatDateTimeShort(reporte.conciliadoAt)}
             </span>
           )}
         </div>
 
         {factura && (
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 px-3 py-2.5 text-sm">
-            <span className="text-muted-foreground text-xs">Esta factura</span>
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 px-3 py-2.5 text-body">
+            <span className="text-muted-foreground text-body-sm">Esta factura</span>
             <span className="tabular-nums">
               Pagado {formatCurrency(factura.pagado, factura.moneda)}
             </span>
@@ -91,19 +91,19 @@ export function ConciliacionTesoreriaSection({ facturaId, monedaFactura }: Props
               Saldo {formatCurrency(factura.saldo, factura.moneda)}
             </span>
             <Badge variant="outline">{factura.estado}</Badge>
-            <span className="text-xs text-muted-foreground">
+            <span className="text-body-sm text-muted-foreground">
               {factura.pagos} pago(s) · {factura.movimientos} movimiento(s)
             </span>
           </div>
         )}
 
         {resumen.saldoPorMoneda.length > 0 && (
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 px-3 py-2.5 text-sm">
-            <span className="text-muted-foreground text-xs">Saldo pendiente del proveedor</span>
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 px-3 py-2.5 text-body">
+            <span className="text-muted-foreground text-body-sm">Saldo pendiente del proveedor</span>
             {resumen.saldoPorMoneda.map((s) => (
               <span key={s.moneda} className="tabular-nums">
                 {formatCurrency(s.saldo, s.moneda)}
-                <span className="ml-1 text-xs text-muted-foreground">
+                <span className="ml-1 text-body-sm text-muted-foreground">
                   ({s.facturasAbiertas} abierta{s.facturasAbiertas === 1 ? "" : "s"})
                 </span>
               </span>

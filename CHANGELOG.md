@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.696.0] - 2026-08-20
+### Ola 2.4 — Tipografía semántica homologada
+- Portal, CRM, dashboards, CxP, cotizaciones, admin, auditoría, proformas, costeo y proveedores usan la escala semántica (`text-body`, `text-body-sm`, `text-label`): mismo tamaño para el mismo rol de texto en todas las pantallas.
+- El candado de tipografía ahora cubre esos 11 módulos (los escalones crudos de Tailwind bajaron de 940 a 326 usos).
+- Se dividió el catálogo de estados (`statusDomains.ts`) para respetar el límite de 200 líneas por archivo.
+
 ## [13.695.0] - 2026-08-20
 ### Ola 2 — Candados de consistencia visual
 - Gráficas: Rentabilidad y los dos gráficos de Diagnóstico ahora usan el tooltip compartido; nuevo candado impide tooltips a mano.

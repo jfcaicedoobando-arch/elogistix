@@ -66,12 +66,12 @@ export function DialogPagoLoteDatos(p: Props) {
             currency={p.moneda}
             onChange={(n: number) => p.onTotal(round2(n))}
           />
-          <p className="truncate text-xs text-muted-foreground">
+          <p className="truncate text-body-sm text-muted-foreground">
             Saldo {formatCurrency(p.saldoTotal, p.moneda)}
             {p.tcDof && tcValor ? ` · TC DOF ${p.moneda} ${tcValor} (${formatDate(p.tcDof.fecha)})` : ""}
           </p>
           {p.tcBloqueado && (
-            <p className="text-xs font-medium text-warning">
+            <p className="text-body-sm font-medium text-warning">
               Sin tipo de cambio DOF {p.moneda}/MXN para esta fecha: el pago en lote queda bloqueado
               hasta que el T/C esté disponible.
             </p>
@@ -87,7 +87,7 @@ export function DialogPagoLoteDatos(p: Props) {
               ))}
             </SelectContent>
           </Select>
-          <p className="text-xs text-muted-foreground">Catálogo interno</p>
+          <p className="text-body-sm text-muted-foreground">Catálogo interno</p>
         </div>
         <div className="space-y-1.5">
           <Label>Cuenta bancaria</Label>
@@ -101,7 +101,7 @@ export function DialogPagoLoteDatos(p: Props) {
               ))}
             </SelectContent>
           </Select>
-          <p className="text-xs text-muted-foreground">
+          <p className="text-body-sm text-muted-foreground">
             {p.requiereCuenta ? "Requerida" : "Opcional"}
           </p>
         </div>

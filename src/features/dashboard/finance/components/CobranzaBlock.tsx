@@ -45,7 +45,7 @@ export function CobranzaBlock({ aging, facturasVencidas, loading, agingSinTc = 0
     <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0">
         <CardTitle>Cobranza — Aging</CardTitle>
-        <Button variant="link" size="sm" asChild className="h-auto p-0 text-xs">
+        <Button variant="link" size="sm" asChild className="h-auto p-0 text-body-sm">
             <Link to="/cobranza" className="flex items-center gap-1">
               Ver cartera <ArrowRight className="h-3 w-3" />
             </Link>
@@ -69,9 +69,9 @@ export function CobranzaBlock({ aging, facturasVencidas, loading, agingSinTc = 0
                       style={{ height: `${Math.max(pct, value > 0 ? 8 : 0)}%` }}
                     />
                   </div>
-                  <p className="text-2xs text-muted-foreground text-center">{label}</p>
+                  <p className="text-label text-muted-foreground text-center">{label}</p>
                   <p
-                    className="text-xs font-semibold text-center tabular-nums truncate"
+                    className="text-body-sm font-semibold text-center tabular-nums truncate"
                     title={formatCurrency(value, "MXN")}
                   >
                     {formatCurrencyCompact(value, "MXN")}
@@ -82,13 +82,13 @@ export function CobranzaBlock({ aging, facturasVencidas, loading, agingSinTc = 0
           </div>
         )}
         {agingSinTc > 0 && !loading && (
-          <p className="text-2xs text-muted-foreground">
+          <p className="text-label text-muted-foreground">
             {agingSinTc} factura(s) en moneda extranjera sin tipo de cambio no se incluyen en el total en MXN.
           </p>
         )}
 
         <div>
-          <p className="text-xs font-medium text-muted-foreground mb-2">
+          <p className="text-body-sm font-medium text-muted-foreground mb-2">
             Top 10 facturas vencidas
           </p>
           {loading ? (
@@ -103,18 +103,18 @@ export function CobranzaBlock({ aging, facturasVencidas, loading, agingSinTc = 0
                   as="li"
                   href={`/facturacion/${f.id}`}
                   ariaLabel={`Abrir factura ${f.numero}`}
-                  className="px-3 py-2 text-sm flex items-center gap-3 hover:bg-muted/50 transition-colors"
+                  className="px-3 py-2 text-body flex items-center gap-3 hover:bg-muted/50 transition-colors"
                 >
                   <div className="min-w-0 flex-1">
                     <p className="font-medium truncate">{f.numero}</p>
-                    <p className="text-xs text-muted-foreground truncate">
+                    <p className="text-body-sm text-muted-foreground truncate">
                       {f.cliente_nombre}
                     </p>
                   </div>
-                  <span className="text-sm tabular-nums font-semibold">
+                  <span className="text-body tabular-nums font-semibold">
                     {formatCurrency(f.saldo, f.moneda)}
                   </span>
-                  <Badge variant="outline" className="text-2xs border-destructive/40 text-destructive">
+                  <Badge variant="outline" className="text-label border-destructive/40 text-destructive">
                     {f.dias_vencido} d
                   </Badge>
                   <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" aria-hidden="true" />

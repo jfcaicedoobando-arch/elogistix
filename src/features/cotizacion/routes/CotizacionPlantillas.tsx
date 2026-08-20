@@ -99,7 +99,7 @@ export default function CotizacionPlantillas() {
                 <SelectItem value="org">Toda la organización</SelectItem>
               </SelectContent>
             </Select>
-            <span className="text-xs text-muted-foreground ml-auto">
+            <span className="text-body-sm text-muted-foreground ml-auto">
               {filtradas.length} de {plantillas.length}
             </span>
           </div>
@@ -109,14 +109,14 @@ export default function CotizacionPlantillas() {
           ) : isLoading ? (
             <ListSkeleton variant="card" rows={3} />
           ) : filtradas.length === 0 ? (
-            <div className="text-sm text-muted-foreground py-12 text-center space-y-2">
+            <div className="text-body text-muted-foreground py-12 text-center space-y-2">
               <p>
                 {plantillas.length === 0
                   ? "Aún no has guardado plantillas."
                   : "Sin resultados con esos filtros."}
               </p>
               {plantillas.length === 0 && (
-                <p className="text-xs">
+                <p className="text-body-sm">
                   Guarda tu primera plantilla desde el diálogo "Cotización creada" al terminar el wizard.
                 </p>
               )}

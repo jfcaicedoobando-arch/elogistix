@@ -22,10 +22,10 @@ function Fila({
           : "flex items-center justify-between gap-6 px-3 py-1.5"
       }
     >
-      <span className={fuerte ? "text-xs font-semibold uppercase tracking-wide" : "text-xs text-muted-foreground"}>
+      <span className={fuerte ? "text-body-sm font-semibold uppercase tracking-wide" : "text-body-sm text-muted-foreground"}>
         {label}
       </span>
-      <span className={fuerte ? "text-sm font-semibold tabular-nums" : "text-xs font-medium tabular-nums"}>
+      <span className={fuerte ? "text-body font-semibold tabular-nums" : "text-body-sm font-medium tabular-nums"}>
         {negativo && valor > 0 ? "−" : ""}
         {formatCurrency(Math.abs(valor), moneda)}
       </span>
@@ -45,7 +45,7 @@ export function ConceptosTotalesResumen({ resumen, moneda }: Props) {
         )}
         <Fila label={`Total ${moneda}`} valor={resumen.total} moneda={moneda} fuerte />
         {!resumen.cuadra && (
-          <div className="flex items-start gap-2 bg-warning/10 px-3 py-2 text-2xs text-warning">
+          <div className="flex items-start gap-2 bg-warning/10 px-3 py-2 text-label text-warning">
             <AlertTriangle className="mt-0.5 h-3 w-3 shrink-0" />
             <span>
               Los conceptos suman {formatCurrency(resumen.totalCalculado, moneda)}; el total de la

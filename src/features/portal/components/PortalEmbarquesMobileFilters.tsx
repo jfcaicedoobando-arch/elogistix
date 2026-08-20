@@ -45,7 +45,7 @@ export function PortalEmbarquesMobileFilters({
       onClear={clearAll}
     >
       <div className="space-y-1.5">
-        <label className="text-xs font-medium text-muted-foreground">Estado</label>
+        <label className="text-body-sm font-medium text-muted-foreground">Estado</label>
         <Select value={filtroEstado} onValueChange={setFiltroEstado}>
           <SelectTrigger>
             <Filter className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
@@ -58,7 +58,7 @@ export function PortalEmbarquesMobileFilters({
         </Select>
       </div>
       <div className="space-y-1.5">
-        <label className="text-xs font-medium text-muted-foreground">Modo</label>
+        <label className="text-body-sm font-medium text-muted-foreground">Modo</label>
         <Select value={filtroModo} onValueChange={setFiltroModo}>
           <SelectTrigger>
             <Ship className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />

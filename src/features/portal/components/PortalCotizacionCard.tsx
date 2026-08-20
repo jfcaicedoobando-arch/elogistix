@@ -61,7 +61,7 @@ function LineaRespuesta({ fecha, label }: { fecha: string; label: string }) {
   // B-103: fecha date-only → sólo fecha (no "00:00").
   const formato = fecha.includes("T") ? "dd/MM/yyyy HH:mm" : "dd/MM/yyyy";
   return (
-    <p className="text-2xs text-muted-foreground mt-0.5 tabular-nums">
+    <p className="text-label text-muted-foreground mt-0.5 tabular-nums">
       {label} el {formatDate(fecha, formato)}
     </p>
   );
@@ -78,7 +78,7 @@ function EnlaceEmbarque({ embarqueId, expediente }: { embarqueId: string; expedi
         e.stopPropagation();
         navigate(`/portal/embarques/${embarqueId}`);
       }}
-      className="mt-1 inline-flex items-center gap-1 text-xs font-medium text-success hover:underline"
+      className="mt-1 inline-flex items-center gap-1 text-body-sm font-medium text-success hover:underline"
     >
       <Ship className="h-3 w-3" />
       En operación · {expediente}
@@ -106,11 +106,11 @@ export function PortalCotizacionCard({ cotizacion: c, tasaIva }: Props) {
           <div className="flex items-center gap-3 min-w-0 flex-1">
             <StatusBadge domain="cotizacion" status={c.estado} className="shrink-0" />
             <div className="min-w-0">
-              <p className="font-semibold text-sm font-mono tabular-nums">{c.folio}</p>
-              <p className="text-xs text-muted-foreground truncate">
+              <p className="font-semibold text-body font-mono tabular-nums">{c.folio}</p>
+              <p className="text-body-sm text-muted-foreground truncate">
                 {c.modo} • {c.tipo} • {c.origen || "—"} → {c.destino || "—"}
               </p>
-              <p className="text-2xs text-muted-foreground mt-0.5">
+              <p className="text-label text-muted-foreground mt-0.5">
                 Vigencia: {c.fecha_vigencia ? formatDate(c.fecha_vigencia) : "—"}
               </p>
               {fechaRespuesta && fechaRespuestaLabel && (
@@ -122,12 +122,12 @@ export function PortalCotizacionCard({ cotizacion: c, tasaIva }: Props) {
 
             </div>
           </div>
-          <p className="text-sm font-bold tabular-nums shrink-0 text-right min-w-[110px]">
+          <p className="text-body font-bold tabular-nums shrink-0 text-right min-w-[110px]">
             {/* UIB-13: una solicitud sin conceptos no vale "MXN 0.00" — está por cotizar. */}
             {totalLista > 0 ? (
               formatCurrency(totalLista, c.moneda)
             ) : (
-              <span className="text-xs font-medium text-muted-foreground">Por cotizar</span>
+              <span className="text-body-sm font-medium text-muted-foreground">Por cotizar</span>
             )}
           </p>
         </CardContent>

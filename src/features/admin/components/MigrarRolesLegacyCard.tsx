@@ -53,7 +53,7 @@ export function MigrarRolesLegacyCard() {
           Migración de roles legacy
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-3 text-sm">
+      <CardContent className="space-y-3 text-body">
         <p className="text-muted-foreground">
           Reemplaza los roles antiguos <code className="bg-muted px-1 rounded">admin</code>,{" "}
           <code className="bg-muted px-1 rounded">operador</code> y{" "}
@@ -62,7 +62,7 @@ export function MigrarRolesLegacyCard() {
           <strong>roles globales</strong>.
         </p>
 
-        <div className="rounded-md border bg-muted/30 p-3 text-xs space-y-1">
+        <div className="rounded-md border bg-muted/30 p-3 text-body-sm space-y-1">
           <div className="font-medium text-foreground">Mapa aplicado:</div>
           <ul className="list-disc pl-5 text-muted-foreground">
             <li><code>admin</code> → <strong>Administrador</strong> (admin_org)</li>
@@ -72,11 +72,11 @@ export function MigrarRolesLegacyCard() {
         </div>
 
         {preview.isLoading ? (
-          <div className="flex items-center gap-2 text-muted-foreground text-xs">
+          <div className="flex items-center gap-2 text-muted-foreground text-body-sm">
             <Loader2 className="h-4 w-4 animate-spin" /> Calculando registros afectados…
           </div>
         ) : preview.isError ? (
-          <div className="rounded-md border border-destructive/30 bg-destructive/5 p-3 text-xs text-destructive">
+          <div className="rounded-md border border-destructive/30 bg-destructive/5 p-3 text-body-sm text-destructive">
             No se pudo cargar la vista previa. Verifica que estás firmado como super_admin.
           </div>
         ) : preview.data ? (

@@ -61,7 +61,7 @@ export function TarifasGroupedView({ tarifas, onEditar, onDuplicar, onEliminar }
               {isCollapsed ? <ChevronRight className="size-4" /> : <ChevronDown className="size-4" />}
               <div className="flex-1 min-w-0">
                 <div className="font-semibold">{g.rutaLabel}</div>
-                <div className="text-xs text-muted-foreground">
+                <div className="text-body-sm text-muted-foreground">
                   {g.contenedor} · {g.rows.length} tarifa{g.rows.length === 1 ? "" : "s"} · {g.agentes} agente{g.agentes === 1 ? "" : "s"}
                   {g.porVencer > 0 && (
                     <span className="text-warning"> · {g.porVencer} por vencer</span>

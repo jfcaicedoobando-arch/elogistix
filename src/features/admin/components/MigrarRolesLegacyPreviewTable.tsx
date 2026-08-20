@@ -19,7 +19,7 @@ export function MigrarRolesLegacyPreviewTable({ data }: Props) {
   if (items.length === 0) return null;
   return (
     <div className="rounded-md border max-h-52 overflow-auto">
-      <table className="w-full text-xs">
+      <table className="w-full text-body-sm">
         <thead className="bg-muted/50 sticky top-0">
           <tr>
             <th className="text-left px-2 py-1 font-medium">Fuente</th>
@@ -33,13 +33,13 @@ export function MigrarRolesLegacyPreviewTable({ data }: Props) {
           {items.map((it) => (
             <tr key={`${it.fuente}-${it.id}`} className="border-t">
               <td className="px-2 py-1 text-muted-foreground">{it.fuente}</td>
-              <td className="px-2 py-1 font-mono text-2xs">{it.user_id.slice(0, 8)}…</td>
+              <td className="px-2 py-1 font-mono text-label">{it.user_id.slice(0, 8)}…</td>
               <td className="px-2 py-1 text-muted-foreground">{it.organizacion ?? "—"}</td>
               <td className="px-2 py-1">
-                <Badge variant="outline" className="text-2xs">{it.rol_actual}</Badge>
+                <Badge variant="outline" className="text-label">{it.rol_actual}</Badge>
               </td>
               <td className="px-2 py-1">
-                <Badge className="text-2xs">
+                <Badge className="text-label">
                   {ROLE_LABELS[it.rol_propuesto as AppRole] ?? it.rol_propuesto}
                 </Badge>
               </td>

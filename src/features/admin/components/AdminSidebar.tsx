@@ -53,7 +53,7 @@ export function AdminSidebar() {
         {adminGroups.map((group) => (
           <SidebarGroup key={group.label}>
             {!collapsed && (
-              <SidebarGroupLabel className="px-3 py-2 text-xs font-semibold uppercase tracking-wider text-sidebar-foreground/60">
+              <SidebarGroupLabel className="px-3 py-2 text-body-sm font-semibold uppercase tracking-wider text-sidebar-foreground/60">
                 {group.label}
               </SidebarGroupLabel>
             )}
@@ -95,16 +95,16 @@ export function AdminSidebar() {
               className="w-full flex items-center gap-2 rounded-md px-2 py-2 hover:bg-sidebar-accent/50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               aria-label="Menú de usuario"
             >
-              <div className="h-7 w-7 rounded-full bg-primary/15 text-primary flex items-center justify-center text-xs font-semibold shrink-0">
+              <div className="h-7 w-7 rounded-full bg-primary/15 text-primary flex items-center justify-center text-body-sm font-semibold shrink-0">
                 {initials}
               </div>
               {!collapsed && (
                 <>
                   <div className="flex-1 min-w-0 text-left">
-                    <div className="text-xs font-medium text-sidebar-foreground truncate">
+                    <div className="text-body-sm font-medium text-sidebar-foreground truncate">
                       {user?.email}
                     </div>
-                    <div className="text-2xs text-sidebar-foreground/60">Super Admin</div>
+                    <div className="text-label text-sidebar-foreground/60">Super Admin</div>
                   </div>
                   <ChevronUp className="h-3.5 w-3.5 text-sidebar-foreground/60" />
                 </>

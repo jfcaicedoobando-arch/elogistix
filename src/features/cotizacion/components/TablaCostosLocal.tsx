@@ -58,7 +58,7 @@ export default function TablaCostosLocal({ filas, filasMoneda, moneda, title, ic
             />
           ))}
           {filasMoneda.length > 0 && (
-            <div className="bg-muted/50 px-3 py-3 flex items-center gap-2 font-semibold text-sm">
+            <div className="bg-muted/50 px-3 py-3 flex items-center gap-2 font-semibold text-body">
               <span className="flex-1">Totales</span>
               <div className="flex items-center gap-2">
                 <span className="w-[110px] text-right">{formatCurrency(totales.totalCosto, moneda)}</span>

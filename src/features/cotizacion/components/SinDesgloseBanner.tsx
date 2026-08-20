@@ -19,8 +19,8 @@ export function SinDesgloseBanner({ onCargarCostos, className }: Props) {
     >
       <AlertTriangle className="h-5 w-5 flex-shrink-0 text-warning mt-0.5" aria-hidden />
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium">Cotización sin desglose de costos</p>
-        <p className="text-xs text-muted-foreground mt-0.5">
+        <p className="text-body font-medium">Cotización sin desglose de costos</p>
+        <p className="text-body-sm text-muted-foreground mt-0.5">
           Esta cotización se creó sin cargar costos internos. Debes cargar costos
           antes de convertirla en embarque.
         </p>

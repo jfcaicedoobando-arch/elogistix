@@ -25,7 +25,7 @@ export function DialogPagoLoteResumen(p: Props) {
 
   return (
     <div className="space-y-1">
-      <div className="flex flex-wrap items-center gap-x-6 gap-y-1 text-sm">
+      <div className="flex flex-wrap items-center gap-x-6 gap-y-1 text-body">
         <span className="text-muted-foreground">
           Repartido:{" "}
           <strong className="tabular-nums text-foreground">
@@ -40,7 +40,7 @@ export function DialogPagoLoteResumen(p: Props) {
           {liquidadas} de {conMonto || p.facturas.length} quedan liquidadas
         </span>
       </div>
-      {p.error && <p className="text-xs text-destructive">{p.error}</p>}
+      {p.error && <p className="text-body-sm text-destructive">{p.error}</p>}
     </div>
   );
 }

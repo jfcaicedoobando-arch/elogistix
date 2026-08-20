@@ -26,7 +26,7 @@ export function NotasCard({ notas }: { notas: string | null | undefined }) {
     <Card>
       <CardHeader className="pb-2"><CardTitle>Notas</CardTitle></CardHeader>
       <CardContent>
-        <p className="text-sm whitespace-pre-line break-words">{texto}</p>
+        <p className="text-body whitespace-pre-line break-words">{texto}</p>
       </CardContent>
     </Card>
   );
@@ -45,7 +45,7 @@ function FacturaAsociadaItem({ factura, showHeader }: { factura: FacturaAsociada
           {showHeader && <span>Factura asociada</span>}
           <span className="font-mono">{numero}</span>
           <StatusBadge domain="factura" status={factura.estado} />
-          <span className="text-xs text-muted-foreground font-normal">{factura.moneda}</span>
+          <span className="text-body-sm text-muted-foreground font-normal">{factura.moneda}</span>
         </CardTitle>
         <Button size="sm" asChild>
           <Link to={`/facturacion/${factura.id}`}>
@@ -53,18 +53,18 @@ function FacturaAsociadaItem({ factura, showHeader }: { factura: FacturaAsociada
           </Link>
         </Button>
       </CardHeader>
-      <CardContent className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
+      <CardContent className="grid grid-cols-2 md:grid-cols-3 gap-4 text-body">
         <div>
-          <p className="text-xs text-muted-foreground">Monto</p>
+          <p className="text-body-sm text-muted-foreground">Monto</p>
           <p className="tabular-nums font-medium">{formatCurrency(Number(factura.total), factura.moneda)}</p>
         </div>
         <div>
-          <p className="text-xs text-muted-foreground">Fecha emisión</p>
+          <p className="text-body-sm text-muted-foreground">Fecha emisión</p>
           <p>{factura.fecha_emision ? formatDate(factura.fecha_emision) : '—'}</p>
         </div>
         <div className="min-w-0">
-          <p className="text-xs text-muted-foreground">UUID fiscal</p>
-          <p className="font-mono text-xs truncate" title={factura.uuid_fiscal ?? ''}>
+          <p className="text-body-sm text-muted-foreground">UUID fiscal</p>
+          <p className="font-mono text-body-sm truncate" title={factura.uuid_fiscal ?? ''}>
             {factura.uuid_fiscal || '—'}
           </p>
         </div>
@@ -87,7 +87,7 @@ export function FacturaAsociadaCard({ facturas }: { facturas: FacturaAsociada[] 
   return (
     <div className="space-y-3">
       <SectionHeading count={facturas.length}>Facturas asociadas</SectionHeading>
-      <p className="text-xs text-muted-foreground -mt-2">
+      <p className="text-body-sm text-muted-foreground -mt-2">
         Esta proforma se dividió en varios CFDI (el SAT no permite CFDI multi-moneda).
       </p>
       {facturas.map((f) => (

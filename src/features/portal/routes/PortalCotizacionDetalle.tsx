@@ -143,7 +143,7 @@ export default function PortalCotizacionDetalle() {
             <CardTitle>Notas</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-sm whitespace-pre-wrap">{cot.notas}</p>
+            <p className="text-body whitespace-pre-wrap">{cot.notas}</p>
           </CardContent>
         </Card>
       )}

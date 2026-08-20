@@ -66,7 +66,7 @@ export function NuevoUsuarioCredencialesSection(props: CredencialesProps) {
           placeholder="usuario@empresa.com"
           aria-invalid={!!emailError}
         />
-        {emailError && <p className="text-xs text-destructive">{emailError}</p>}
+        {emailError && <p className="text-body-sm text-destructive">{emailError}</p>}
       </div>
 
       {ocultarPassword ? null : (
@@ -103,7 +103,7 @@ export function NuevoUsuarioCredencialesSection(props: CredencialesProps) {
                 </Button>
               </TooltipTrigger>
               <TooltipContent side="top">
-                <p className="text-xs">Generar contraseña fuerte</p>
+                <p className="text-body-sm">Generar contraseña fuerte</p>
               </TooltipContent>
             </Tooltip>
             <Button
@@ -122,9 +122,9 @@ export function NuevoUsuarioCredencialesSection(props: CredencialesProps) {
         <PasswordStrengthMeter password={password} mostrarHint={false} />
 
         {passwordError ? (
-          <p className="text-xs text-destructive">{passwordError}</p>
+          <p className="text-body-sm text-destructive">{passwordError}</p>
         ) : (
-          <p className="text-xs text-muted-foreground">
+          <p className="text-body-sm text-muted-foreground">
             Mínimo {PASSWORD_MIN} caracteres. El usuario podrá cambiarla después.
           </p>
         )}

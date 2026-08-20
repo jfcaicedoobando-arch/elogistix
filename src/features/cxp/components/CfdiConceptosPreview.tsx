@@ -43,14 +43,14 @@ export function CfdiConceptosPreview({ conceptos, moneda }: Props) {
       icon={<FileText className="h-3.5 w-3.5" />}
       title={`Conceptos del CFDI (${conceptos.length})`}
     >
-      <p className="text-xs text-muted-foreground -mt-1">
+      <p className="text-body-sm text-muted-foreground -mt-1">
         Vista previa del desglose recibido del SAT. El importe es unitario; el
         total de cada línea es importe × cantidad (sin IVA).
       </p>
       <div className="rounded-md border overflow-hidden">
         <div className="max-h-64 overflow-y-auto overflow-x-auto">
-          <table className="w-full min-w-[620px] text-xs tabular-nums">
-            <thead className="bg-muted/50 text-muted-foreground uppercase tracking-wide text-2xs sticky top-0">
+          <table className="w-full min-w-[620px] text-body-sm tabular-nums">
+            <thead className="bg-muted/50 text-muted-foreground uppercase tracking-wide text-label sticky top-0">
               <tr>
                 <th className="px-2 py-1.5 text-left font-medium">#</th>
                 <th className="px-2 py-1.5 text-left font-medium">Descripción</th>

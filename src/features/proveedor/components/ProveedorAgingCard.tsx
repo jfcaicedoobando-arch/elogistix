@@ -38,17 +38,17 @@ export function ProveedorAgingCard({ aging }: Props) {
         {aging.map((a) => (
           <div key={a.moneda} className="rounded-md border border-border p-3">
             <div className="flex items-baseline justify-between">
-              <span className="text-sm font-medium">{a.moneda}</span>
+              <span className="text-body font-medium">{a.moneda}</span>
               <span className="text-kpi font-semibold tabular-nums">
                 {formatCurrency(a.total, a.moneda)}
               </span>
             </div>
-            <p className="mt-0.5 text-2xs text-muted-foreground">
+            <p className="mt-0.5 text-label text-muted-foreground">
               {a.conteo} factura(s) con saldo · vencido {formatCurrency(a.vencido, a.moneda)}
             </p>
             <dl className="mt-3 space-y-1">
               {BUCKETS_AGING_PROVEEDOR.map((b) => (
-                <div key={b} className="flex items-center justify-between text-xs">
+                <div key={b} className="flex items-center justify-between text-body-sm">
                   <dt className={CLASE_TONO[CUBETA_WIRE_TONO_KPI_PROVEEDOR[b]]}>{ETIQUETAS_BUCKET_PROVEEDOR[b]}</dt>
                   <dd className="tabular-nums">{formatCurrency(a.buckets[b] ?? 0, a.moneda)}</dd>
                 </div>

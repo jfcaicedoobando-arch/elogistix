@@ -129,7 +129,7 @@ export function ContactoProveedorDialog({
           <Textarea id="cp-notas" rows={3} value={form.notas}
             onChange={(e) => set("notas", e.target.value)} />
         </div>
-        {error && <p role="alert" className="mt-2 text-sm text-destructive">{error}</p>}
+        {error && <p role="alert" className="mt-2 text-body text-destructive">{error}</p>}
       </FormDialogSection>
     </FormDialogShell>
   );

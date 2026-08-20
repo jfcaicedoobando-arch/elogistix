@@ -86,7 +86,7 @@ export function CuadreConceptosBar({ resultado, subtotal, moneda, renglones }: P
 
 
   return (
-    <div className={`rounded-md border ${v.border} ${v.bg} px-3 py-2 text-xs`} aria-live="polite">
+    <div className={`rounded-md border ${v.border} ${v.bg} px-3 py-2 text-body-sm`} aria-live="polite">
       <div className={`flex flex-wrap items-center gap-2 font-medium ${v.text}`}>
         {v.icon}
         <span>{v.titulo}</span>
@@ -104,7 +104,7 @@ export function CuadreConceptosBar({ resultado, subtotal, moneda, renglones }: P
       </div>
       {resultado.estado !== "cuadrado" && resultado.estado !== "sin_conceptos" && (
         <Collapsible open={abierto} onOpenChange={setAbierto}>
-          <CollapsibleTrigger className="mt-1 ml-6 flex items-center gap-1 text-2xs font-medium text-muted-foreground underline-offset-2 hover:underline">
+          <CollapsibleTrigger className="mt-1 ml-6 flex items-center gap-1 text-label font-medium text-muted-foreground underline-offset-2 hover:underline">
             ¿Por qué no cuadra?
             <ChevronDown className={`h-3 w-3 transition-transform ${abierto ? "rotate-180" : ""}`} aria-hidden />
           </CollapsibleTrigger>

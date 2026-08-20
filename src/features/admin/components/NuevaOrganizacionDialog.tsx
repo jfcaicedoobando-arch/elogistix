@@ -99,7 +99,7 @@ export function NuevaOrganizacionDialog({
               )}
             </SelectContent>
           </Select>
-          <p className="text-xs text-muted-foreground">
+          <p className="text-body-sm text-muted-foreground">
             Se le asignará el rol <b>admin</b> en la nueva organización.
           </p>
         </div>

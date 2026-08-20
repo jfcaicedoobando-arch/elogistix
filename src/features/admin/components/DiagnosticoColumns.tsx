@@ -36,14 +36,14 @@ export const diagnosticoColumns: ColumnDef<AppLogRow, unknown>[] = defineColumns
     id: "ts",
     header: "Fecha",
     meta: { width: "180px" },
-    cell: ({ row }) => <span className="text-xs tabular-nums">{fmtTs(row.original.ts)}</span>,
+    cell: ({ row }) => <span className="text-body-sm tabular-nums">{fmtTs(row.original.ts)}</span>,
   },
   {
     id: "level",
     header: "Nivel",
     meta: { width: "90px" },
     cell: ({ row }) => (
-      <Badge variant={levelVariant[row.original.level] ?? "secondary"} className="text-2xs">
+      <Badge variant={levelVariant[row.original.level] ?? "secondary"} className="text-label">
         {levelLabel[row.original.level] ?? row.original.level}
       </Badge>
     ),
@@ -52,14 +52,14 @@ export const diagnosticoColumns: ColumnDef<AppLogRow, unknown>[] = defineColumns
     id: "fn",
     header: "Función",
     meta: { width: "160px" },
-    cell: ({ row }) => <span className="font-mono text-xs">{row.original.fn}</span>,
+    cell: ({ row }) => <span className="font-mono text-body-sm">{row.original.fn}</span>,
   },
   {
     id: "status_code",
     header: "Status",
     meta: { width: "70px", align: "right" },
     cell: ({ row }) => (
-      <span className="font-mono text-xs tabular-nums">
+      <span className="font-mono text-body-sm tabular-nums">
         {row.original.status_code ?? "—"}
       </span>
     ),
@@ -69,7 +69,7 @@ export const diagnosticoColumns: ColumnDef<AppLogRow, unknown>[] = defineColumns
     header: "ms",
     meta: { width: "70px", align: "right" },
     cell: ({ row }) => (
-      <span className="font-mono text-xs tabular-nums">
+      <span className="font-mono text-body-sm tabular-nums">
         {row.original.latency_ms != null ? row.original.latency_ms : "—"}
       </span>
     ),
@@ -81,13 +81,13 @@ export const diagnosticoColumns: ColumnDef<AppLogRow, unknown>[] = defineColumns
       const r = row.original;
       return (
         <div className="max-w-xl">
-          <p className="text-sm">{r.msg}</p>
+          <p className="text-body">{r.msg}</p>
           {r.payload != null && (
             <details className="mt-1">
-              <summary className="text-2xs text-muted-foreground cursor-pointer hover:text-foreground">
+              <summary className="text-label text-muted-foreground cursor-pointer hover:text-foreground">
                 payload
               </summary>
-              <pre className="mt-1 text-2xs bg-muted rounded p-2 overflow-x-auto max-h-40">
+              <pre className="mt-1 text-label bg-muted rounded p-2 overflow-x-auto max-h-40">
                 {JSON.stringify(r.payload, null, 2)}
               </pre>
             </details>
@@ -101,7 +101,7 @@ export const diagnosticoColumns: ColumnDef<AppLogRow, unknown>[] = defineColumns
     header: "Request",
     meta: { width: "120px" },
     cell: ({ row }) => (
-      <span className="font-mono text-2xs text-muted-foreground">
+      <span className="font-mono text-label text-muted-foreground">
         {row.original.request_id ? row.original.request_id.slice(0, 8) : "—"}
       </span>
     ),

@@ -48,7 +48,7 @@ export function AgingDrillDownDialog({ proveedor, open, onOpenChange, cubetaInic
   const columns = useMemo(() => defineColumns<FacturaCxP>([
     {
       id: "folio_prov", header: "Folio prov.",
-      cell: ({ row }) => <span className="font-mono text-xs">{row.original.folio_proveedor}</span>,
+      cell: ({ row }) => <span className="font-mono text-body-sm">{row.original.folio_proveedor}</span>,
     },
     { id: "emision", header: "Emisión", cell: ({ row }) => formatDate(row.original.fecha_emision) },
     {
@@ -61,7 +61,7 @@ export function AgingDrillDownDialog({ proveedor, open, onOpenChange, cubetaInic
         const bucket = bucketDeDias(row.original.dias_vencido);
         return (
           <div className="flex items-center gap-1.5">
-            <span className="tabular-nums text-sm">
+            <span className="tabular-nums text-body">
               {row.original.dias_vencido > 0 ? `+${row.original.dias_vencido}` : row.original.dias_vencido}
             </span>
             <ToneBadge tone={BUCKET_TONE[bucket]}>{BUCKET_LABELS[bucket]}</ToneBadge>
@@ -112,13 +112,13 @@ export function AgingDrillDownDialog({ proveedor, open, onOpenChange, cubetaInic
                 Facturas con saldo
               </DialogTitle>
               {proveedor && (
-                <span className="px-2 py-0.5 rounded bg-muted text-muted-foreground text-xs font-mono font-semibold uppercase tracking-wider border">
+                <span className="px-2 py-0.5 rounded bg-muted text-muted-foreground text-body-sm font-mono font-semibold uppercase tracking-wider border">
                   {proveedor.num_facturas} factura{proveedor.num_facturas === 1 ? "" : "s"}
                 </span>
               )}
             </div>
             {proveedor && (
-              <p className="text-xs text-muted-foreground">{proveedor.proveedor_nombre}</p>
+              <p className="text-body-sm text-muted-foreground">{proveedor.proveedor_nombre}</p>
             )}
           </DialogHeader>
 
@@ -136,7 +136,7 @@ export function AgingDrillDownDialog({ proveedor, open, onOpenChange, cubetaInic
 
           <div className="flex-1 overflow-y-auto px-6 py-4">
             {!proveedor ? (
-              <div className="flex items-center gap-2 text-sm text-muted-foreground py-8 justify-center">
+              <div className="flex items-center gap-2 text-body text-muted-foreground py-8 justify-center">
                 <AlertTriangle className="h-4 w-4" />
                 Selecciona un proveedor.
               </div>

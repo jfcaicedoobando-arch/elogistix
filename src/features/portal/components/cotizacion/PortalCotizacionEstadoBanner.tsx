@@ -15,7 +15,7 @@ interface PortalCotizacionEstadoBannerProps {
 
 function FechaRespuesta({ label, fecha }: { label: string; fecha: string }) {
   return (
-    <p className="mt-1 inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+    <p className="mt-1 inline-flex items-center gap-1.5 text-body-sm text-muted-foreground">
       <CalendarCheck2 className="h-3.5 w-3.5" />
       <span>
         {/* B-103: fecha de respuesta date-only → sin hora falsa "00:00". */}
@@ -77,7 +77,7 @@ export default function PortalCotizacionEstadoBanner({
         <CheckCircle2 className="h-4 w-4 text-success" />
         <AlertDescription className="text-foreground">
           <p className="font-medium">Tu respuesta fue registrada. Aceptaste esta cotización.</p>
-          <p className="text-sm text-muted-foreground mt-0.5">
+          <p className="text-body text-muted-foreground mt-0.5">
             El equipo de Libre Carga dará seguimiento y te avisará cuando tu embarque sea creado.
           </p>
           {fechaAceptacion && <FechaRespuesta label="Aceptada" fecha={fechaAceptacion} />}
@@ -98,7 +98,7 @@ export default function PortalCotizacionEstadoBanner({
         <XCircle className="h-4 w-4 text-destructive" />
         <AlertDescription className="text-destructive">
           <p className="font-medium">Tu respuesta fue registrada. Rechazaste esta cotización.</p>
-          <p className="text-sm opacity-80 mt-0.5">
+          <p className="text-body opacity-80 mt-0.5">
             Si necesitas cambios, contacta al equipo de operaciones para generar una nueva propuesta:{" "}
             {/* VT-26: el banner pedía contactar sin dar el medio de contacto. */}
             <a className="font-medium underline hover:no-underline" href="mailto:hola@librecarga.com">

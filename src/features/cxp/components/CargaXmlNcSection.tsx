@@ -30,7 +30,7 @@ function TipoAlert({ parsed }: { parsed: CfdiParsedResponse | null }) {
   return (
     <div
       className={cn(
-        "flex items-center gap-2 rounded-md border px-3 py-2 text-sm",
+        "flex items-center gap-2 rounded-md border px-3 py-2 text-body",
         esNc ? "bg-success/10 border-success/30 text-success" : "bg-warning/10 border-warning/30 text-warning",
       )}
     >
@@ -67,7 +67,7 @@ function XmlDrop({ xml, onFile, inputRef }: XmlDropProps) {
         onChange={(e) => onFile(e.target.files?.[0] ?? null)}
       />
       {xml ? (
-        <div className="flex items-center justify-center gap-2 text-sm">
+        <div className="flex items-center justify-center gap-2 text-body">
           <FileText className="h-4 w-4 text-primary" />
           <span className="font-medium">{xml.name}</span>
           <span className="text-muted-foreground">({(xml.size / 1024).toFixed(1)} KB)</span>
@@ -83,10 +83,10 @@ function XmlDrop({ xml, onFile, inputRef }: XmlDropProps) {
           </Button>
         </div>
       ) : (
-        <div className="flex flex-col items-center gap-1 text-sm text-muted-foreground">
+        <div className="flex flex-col items-center gap-1 text-body text-muted-foreground">
           <Upload className="h-5 w-5" />
           <span>Arrastra el <strong>XML de la nota de crédito</strong> o haz clic para seleccionar</span>
-          <span className="text-xs">Máximo 2 MB · CFDI 4.0</span>
+          <span className="text-body-sm">Máximo 2 MB · CFDI 4.0</span>
         </div>
       )}
     </div>

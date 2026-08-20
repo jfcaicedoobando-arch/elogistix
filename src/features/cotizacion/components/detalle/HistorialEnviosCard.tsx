@@ -29,9 +29,9 @@ export function HistorialEnviosCard({ envios }: Props) {
           const tos = (e.destinatarios ?? []).map((d) => d.email).join(", ");
           const ccs = (e.cc ?? []).join(", ");
           return (
-            <div key={e.id} className="border rounded-md p-3 space-y-1 text-sm">
+            <div key={e.id} className="border rounded-md p-3 space-y-1 text-body">
               <div className="flex items-center justify-between gap-2">
-                <span className="text-xs text-muted-foreground">
+                <span className="text-body-sm text-muted-foreground">
                   {formatDate(e.created_at, "dd/MM/yyyy HH:mm")}
                 </span>
                 <Badge variant={ESTADO_VARIANT[e.estado] ?? "outline"}>{e.estado}</Badge>
@@ -44,8 +44,8 @@ export function HistorialEnviosCard({ envios }: Props) {
                   <span className="text-muted-foreground">CC:</span> {ccs}
                 </p>
               )}
-              {e.asunto && <p className="text-xs text-muted-foreground truncate">{e.asunto}</p>}
-              {e.error && <p className="text-xs text-destructive truncate">{e.error}</p>}
+              {e.asunto && <p className="text-body-sm text-muted-foreground truncate">{e.asunto}</p>}
+              {e.error && <p className="text-body-sm text-destructive truncate">{e.error}</p>}
               {e.pdf_link_publico && (
                 <Button variant="outline" size="sm" asChild>
                   <a href={e.pdf_link_publico} target="_blank" rel="noreferrer">

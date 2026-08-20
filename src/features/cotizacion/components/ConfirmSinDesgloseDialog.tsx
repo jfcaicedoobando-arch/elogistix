@@ -33,7 +33,7 @@ export function ConfirmSinDesgloseDialog({ open, onOpenChange, onConfirm, isPend
       isPending={isPending}
       onConfirm={onConfirm}
       description={
-        <div className="space-y-3 text-sm">
+        <div className="space-y-3 text-body">
           <p>
             Estás por crear una cotización <strong>sin desglose interno de costos</strong>.
             Esta práctica se desaconseja porque:
@@ -56,7 +56,7 @@ export function ConfirmSinDesgloseDialog({ open, onOpenChange, onConfirm, isPend
           onCheckedChange={(v) => setAcepta(v === true)}
           className="mt-0.5"
         />
-        <span className="text-xs leading-relaxed">
+        <span className="text-body-sm leading-relaxed">
           Entiendo que esta cotización no tiene costos cargados y el embarque
           no podrá iniciarse hasta completarlos.
         </span>

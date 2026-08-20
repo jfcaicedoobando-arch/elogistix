@@ -38,7 +38,7 @@ export function HallazgosFiltrosSelects(p: SelectsProps) {
   return (
     <>
       <Select value={p.filtroRegla} onValueChange={(v) => p.setFiltroRegla(reglaAuditoriaFiltroSchema.parse(v))}>
-        <SelectTrigger className="w-[200px] h-8 text-xs"><SelectValue placeholder="Regla" /></SelectTrigger>
+        <SelectTrigger className="w-[200px] h-8 text-body-sm"><SelectValue placeholder="Regla" /></SelectTrigger>
         <SelectContent>
           <SelectItem value="todas">Todas las reglas</SelectItem>
           {(Object.keys(reglaLabel) as ReglaAuditoria[]).map((r) => (
@@ -48,7 +48,7 @@ export function HallazgosFiltrosSelects(p: SelectsProps) {
       </Select>
 
       <Select value={p.filtroSev} onValueChange={(v) => p.setFiltroSev(severidadFiltroSchema.parse(v))}>
-        <SelectTrigger className="w-[130px] h-8 text-xs"><SelectValue placeholder="Severidad" /></SelectTrigger>
+        <SelectTrigger className="w-[130px] h-8 text-body-sm"><SelectValue placeholder="Severidad" /></SelectTrigger>
         <SelectContent>
           <SelectItem value="todas">Severidad</SelectItem>
           <SelectItem value="critico">Crítico</SelectItem>
@@ -58,7 +58,7 @@ export function HallazgosFiltrosSelects(p: SelectsProps) {
       </Select>
 
       <Select value={p.filtroCliente} onValueChange={p.setFiltroCliente}>
-        <SelectTrigger className="w-[200px] h-8 text-xs"><SelectValue placeholder="Cliente" /></SelectTrigger>
+        <SelectTrigger className="w-[200px] h-8 text-body-sm"><SelectValue placeholder="Cliente" /></SelectTrigger>
         <SelectContent>
           <SelectItem value="todos">Todos los clientes</SelectItem>
           {p.clientes.map((c) => (
@@ -68,7 +68,7 @@ export function HallazgosFiltrosSelects(p: SelectsProps) {
       </Select>
 
       <Select value={p.filtroRevision} onValueChange={(v) => p.setFiltroRevision(filtroRevisionSchema.parse(v))}>
-        <SelectTrigger className="w-[150px] h-8 text-xs"><SelectValue placeholder="Revisión" /></SelectTrigger>
+        <SelectTrigger className="w-[150px] h-8 text-body-sm"><SelectValue placeholder="Revisión" /></SelectTrigger>
         <SelectContent>
           <SelectItem value="todos">Todos</SelectItem>
           <SelectItem value="pendientes">Pendientes</SelectItem>
@@ -78,7 +78,7 @@ export function HallazgosFiltrosSelects(p: SelectsProps) {
       </Select>
 
       <Select value={p.filtroResponsable} onValueChange={(v) => p.setFiltroResponsable(filtroResponsableSchema.parse(v))}>
-        <SelectTrigger className="w-[150px] h-8 text-xs"><SelectValue placeholder="Responsable" /></SelectTrigger>
+        <SelectTrigger className="w-[150px] h-8 text-body-sm"><SelectValue placeholder="Responsable" /></SelectTrigger>
         <SelectContent>
           <SelectItem value="todos">Todos</SelectItem>
           <SelectItem value="mios">Asignados a mí</SelectItem>
@@ -103,7 +103,7 @@ export function HallazgosFiltrosFechas({ etaDesde, etaHasta, setEtaDesde, setEta
       <Popover>
         <PopoverTrigger asChild>
           <Button variant="outline" size="sm"
-            className={cn("h-8 text-xs justify-start font-normal", !etaDesde && "text-muted-foreground")}>
+            className={cn("h-8 text-body-sm justify-start font-normal", !etaDesde && "text-muted-foreground")}>
             <CalendarIcon className="mr-1.5 h-3.5 w-3.5" />
             {etaDesde ? formatFechaDia(etaDesde) : "ETA desde"}
           </Button>
@@ -117,7 +117,7 @@ export function HallazgosFiltrosFechas({ etaDesde, etaHasta, setEtaDesde, setEta
       <Popover>
         <PopoverTrigger asChild>
           <Button variant="outline" size="sm"
-            className={cn("h-8 text-xs justify-start font-normal", !etaHasta && "text-muted-foreground")}>
+            className={cn("h-8 text-body-sm justify-start font-normal", !etaHasta && "text-muted-foreground")}>
             <CalendarIcon className="mr-1.5 h-3.5 w-3.5" />
             {etaHasta ? formatFechaDia(etaHasta) : "ETA hasta"}
           </Button>

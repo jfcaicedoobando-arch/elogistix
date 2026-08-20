@@ -67,7 +67,7 @@ function EmbudoCard() {
               const pct = porcentajeEntero(e.cantidad, max, { minimo: 2 }) ?? 2;
               return (
                 <li key={e.etapa} className="space-y-1">
-                  <div className="flex justify-between text-sm">
+                  <div className="flex justify-between text-body">
                     <span className="truncate">{e.etapa}</span>
                     <span className="font-semibold tabular-nums">{e.cantidad}</span>
                   </div>
@@ -99,9 +99,9 @@ function ForecastMesCard() {
         ) : porMes.length === 0 ? (
           <EmptyStateInline icon={TrendingUp} message="Sin datos para los próximos meses." />
         ) : (
-          <table className="w-full text-sm">
+          <table className="w-full text-body">
             <thead>
-              <tr className="text-xs text-muted-foreground border-b">
+              <tr className="text-body-sm text-muted-foreground border-b">
                 <th className="text-left py-1.5">Mes</th>
                 <th className="text-right">Ponderado</th>
                 <th className="text-right">Ganado</th>

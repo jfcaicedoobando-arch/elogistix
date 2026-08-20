@@ -105,7 +105,7 @@ export default function CrearMiembroOrgDialog({ open, onOpenChange, organization
             </Button>
           </div>
           {fuerza.label && (
-            <p className="text-xs text-muted-foreground">Fuerza: {fuerza.label}</p>
+            <p className="text-body-sm text-muted-foreground">Fuerza: {fuerza.label}</p>
           )}
         </div>
         <div className="space-y-1.5">

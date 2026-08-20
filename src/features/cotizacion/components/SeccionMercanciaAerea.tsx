@@ -49,7 +49,7 @@ export default function SeccionMercanciaAerea({ msdsFile, setMsdsFile }: Props) 
       <Card className="bg-muted/40 border-dashed">
         <CardHeader className="pb-2">
           <div className="flex items-center justify-between">
-            <CardTitle className="text-sm font-semibold flex items-center gap-2">
+            <CardTitle className="text-body font-semibold flex items-center gap-2">
               <Ruler className="h-4 w-4 text-primary" /> Dimensiones Aéreas
             </CardTitle>
             <Button variant="outline" size="sm" onClick={agregarFila}>
@@ -98,7 +98,7 @@ export default function SeccionMercanciaAerea({ msdsFile, setMsdsFile }: Props) 
               </TableBody>
             </Table>
           </div>
-          <div className="flex justify-end gap-6 mt-2 text-sm font-semibold">
+          <div className="flex justify-end gap-6 mt-2 text-body font-semibold">
             <span>Total piezas: {totalPiezas}</span>
             <span>Peso volumétrico total: {totalPesoVolumetrico.toFixed(2)} kg</span>
           </div>

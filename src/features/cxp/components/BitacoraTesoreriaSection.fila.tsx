@@ -66,24 +66,24 @@ export function BitacoraTesoreriaFila({
         )}
         aria-hidden
       />
-      <span className="text-sm font-medium">
+      <span className="text-body font-medium">
         {esBaja ? "Pago eliminado" : esEdicion ? "Pago editado" : "Pago registrado"}
       </span>
       {monto !== null && (
-        <span className="text-sm tabular-nums">{formatCurrency(monto, moneda)}</span>
+        <span className="text-body tabular-nums">{formatCurrency(monto, moneda)}</span>
       )}
       {cargoMxn !== null && moneda !== "MXN" && (
-        <span className="text-xs text-muted-foreground tabular-nums">
+        <span className="text-body-sm text-muted-foreground tabular-nums">
           Cargo {formatCurrency(cargoMxn, "MXN")}
         </span>
       )}
       {cuentaId && (
-        <span className="text-xs text-muted-foreground">
+        <span className="text-body-sm text-muted-foreground">
           {nombreCuenta.get(cuentaId) ?? "Cuenta bancaria"}
         </span>
       )}
       <EtiquetaMovimiento estado={str(detalles, "movimiento_tesoreria")} />
-      <span className="ml-auto text-xs text-muted-foreground">
+      <span className="ml-auto text-body-sm text-muted-foreground">
         {formatDateTimeShort(createdAt)} · {usuarioEmail}
       </span>
     </li>

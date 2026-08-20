@@ -34,7 +34,7 @@ export function RfcField({ c }: { c: Controller }) {
         placeholder={c.form.origen_proveedor === "Extranjero" ? "Ingresa el Tax ID" : "Ingresa el RFC"}
       />
       {c.rfcDuplicado && (
-        <p className="text-xs text-warning">
+        <p className="text-body-sm text-warning">
           Ya existe un proveedor con este {c.rfcLabel}:{" "}
           <a href={`/proveedores/${c.rfcDuplicado.id}`} target="_blank" rel="noopener noreferrer" className="font-medium underline">
             {c.rfcDuplicado.nombre}

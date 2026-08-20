@@ -35,7 +35,7 @@ export function PagoProveedorCuentaField(p: Props) {
         </SelectContent>
       </Select>
       {p.requiereCuenta && !p.cuentaId && (
-        <p className="text-xs text-destructive">
+        <p className="text-body-sm text-destructive">
           Selecciona la cuenta bancaria de donde sale el pago.
         </p>
       )}

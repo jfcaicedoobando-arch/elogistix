@@ -44,12 +44,12 @@ export function AuditoriaTendenciaChart() {
               margin={{ top: 5, right: 10, left: 0, bottom: 0 }}
             >
               <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-              <XAxis dataKey="fecha" className="text-2xs" />
-              <YAxis yAxisId="left" className="text-2xs" domain={[0, 100]} />
+              <XAxis dataKey="fecha" className="text-label" />
+              <YAxis yAxisId="left" className="text-label" domain={[0, 100]} />
               <YAxis
                 yAxisId="right"
                 orientation="right"
-                className="text-2xs"
+                className="text-label"
                 allowDecimals={false}
               />
               <Tooltip content={<ChartTooltip />} />

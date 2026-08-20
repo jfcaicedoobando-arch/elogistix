@@ -39,7 +39,7 @@ export default function ConfigOrganizacion() {
               <SelectItem key={org.id} value={org.id}>
                 <div className="flex items-center gap-2">
                   {org.nombre}
-                  <Badge variant="outline" className="text-2xs">{org.plan}</Badge>
+                  <Badge variant="outline" className="text-label">{org.plan}</Badge>
                 </div>
               </SelectItem>
             ))}
@@ -47,7 +47,7 @@ export default function ConfigOrganizacion() {
         </Select>
 
         {selectedOrgId && !isLoading && configItems.length === 0 && (
-          <p className="text-sm text-muted-foreground py-4">Esta organización no tiene configuración personalizada.</p>
+          <p className="text-body text-muted-foreground py-4">Esta organización no tiene configuración personalizada.</p>
         )}
 
         {selectedOrgId && isLoading && (
@@ -62,12 +62,12 @@ export default function ConfigOrganizacion() {
                 <div key={item.id} className="p-3 rounded-lg border bg-muted/30">
                   <div className="flex justify-between items-start">
                     <div>
-                      <p className="text-sm font-medium">{item.clave.replace(/_/g, " ")}</p>
+                      <p className="text-body font-medium">{item.clave.replace(/_/g, " ")}</p>
                       {item.descripcion && (
-                        <p className="text-xs text-muted-foreground">{item.descripcion}</p>
+                        <p className="text-body-sm text-muted-foreground">{item.descripcion}</p>
                       )}
                     </div>
-                    <Badge variant="secondary" className="text-xs font-mono">
+                    <Badge variant="secondary" className="text-body-sm font-mono">
                       {typeof item.valor === "string" ? item.valor : JSON.stringify(item.valor)}
                     </Badge>
                   </div>

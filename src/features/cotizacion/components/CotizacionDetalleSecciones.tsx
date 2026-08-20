@@ -57,7 +57,7 @@ function AccionesCaptura({
         <Button variant="outline" size="sm" onClick={() => onCambiarEstado("Enviada")}>Marcar como Enviada</Button>
       )}
       {!puedeEnviar && Number(total) <= 0 && (
-        <span className="self-center text-xs text-muted-foreground">
+        <span className="self-center text-body-sm text-muted-foreground">
           Agrega al menos un concepto con importe para poder enviarla.
         </span>
       )}

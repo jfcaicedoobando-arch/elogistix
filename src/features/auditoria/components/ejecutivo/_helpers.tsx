@@ -61,7 +61,7 @@ export function DistribucionBarras({ items }: { items: DistribucionItem[] }) {
               it.onClick && "hover:bg-muted/30 rounded-md p-1 -m-1 transition-colors",
             )}
           >
-            <div className="flex items-center justify-between text-xs">
+            <div className="flex items-center justify-between text-body-sm">
               <span className="truncate font-medium" title={it.label}>
                 {it.label}
               </span>
@@ -94,5 +94,5 @@ export function DistribucionBarras({ items }: { items: DistribucionItem[] }) {
 }
 
 export function EmptyMsg({ msg }: { msg: string }) {
-  return <div className="text-xs text-muted-foreground py-6 text-center">{msg}</div>;
+  return <div className="text-body-sm text-muted-foreground py-6 text-center">{msg}</div>;
 }

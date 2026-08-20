@@ -73,7 +73,7 @@ export function usePortalUsuarioColumns<T extends PortalUserRow>({
             ),
           meta: { width: COL_W.texto },
           cell: ({ row }) => (
-            <span className="text-sm">{getVinculadoNombre(row.original, tipo)}</span>
+            <span className="text-body">{getVinculadoNombre(row.original, tipo)}</span>
           ),
         },
         {
@@ -84,7 +84,7 @@ export function usePortalUsuarioColumns<T extends PortalUserRow>({
           sortingFn: sortByDate<T>((u) => u.created_at),
           meta: {
             width: "w-[1%] whitespace-nowrap",
-            className: "text-xs text-muted-foreground whitespace-nowrap",
+            className: "text-body-sm text-muted-foreground whitespace-nowrap",
           },
           cell: ({ row }) => (
             <Tooltip>
@@ -92,7 +92,7 @@ export function usePortalUsuarioColumns<T extends PortalUserRow>({
                 <span className="cursor-help">{formatDate(row.original.created_at)}</span>
               </TooltipTrigger>
               <TooltipContent side="top">
-                <p className="text-xs">{formatDateTimeShort(row.original.created_at)}</p>
+                <p className="text-body-sm">{formatDateTimeShort(row.original.created_at)}</p>
               </TooltipContent>
             </Tooltip>
           ),
@@ -118,7 +118,7 @@ export function usePortalUsuarioColumns<T extends PortalUserRow>({
                 </Button>
               </TooltipTrigger>
               <TooltipContent side="left">
-                <p className="text-xs">Eliminar usuario</p>
+                <p className="text-body-sm">Eliminar usuario</p>
               </TooltipContent>
             </Tooltip>
           ),

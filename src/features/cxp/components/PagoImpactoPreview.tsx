@@ -23,16 +23,16 @@ function FilaImpacto({ icon, label, antes, despues, detalle, tone = "default" }:
       <div className="flex items-center gap-2 min-w-0">
         <span className="text-muted-foreground shrink-0">{icon}</span>
         <div className="min-w-0">
-          <p className="text-xs font-medium truncate">{label}</p>
+          <p className="text-body-sm font-medium truncate">{label}</p>
           {detalle && <p className="text-label text-muted-foreground truncate">{detalle}</p>}
         </div>
       </div>
       <div className="flex items-center gap-2 shrink-0 tabular-nums">
-        <span className="text-xs text-muted-foreground line-through">{antes}</span>
+        <span className="text-body-sm text-muted-foreground line-through">{antes}</span>
         <ArrowRight className="h-3 w-3 text-muted-foreground" aria-hidden />
         <span
           className={cn(
-            "text-sm font-semibold",
+            "text-body font-semibold",
             tone === "success" && "text-success",
             tone === "warn" && "text-warning",
           )}
@@ -101,7 +101,7 @@ export function PagoImpactoPreview({ impacto, proveedorNombre, cargandoProveedor
           <div className="flex items-center gap-2 min-w-0">
             <Wallet className="h-4 w-4 text-muted-foreground shrink-0" aria-hidden />
             <div className="min-w-0">
-              <p className="text-xs font-medium">Salida de banco</p>
+              <p className="text-body-sm font-medium">Salida de banco</p>
               <p className="text-label text-muted-foreground truncate">
                 {banco.cuentaEtiqueta ?? "Sin cuenta seleccionada"}
                 {banco.montoMxn != null && banco.moneda !== "MXN"
@@ -110,14 +110,14 @@ export function PagoImpactoPreview({ impacto, proveedorNombre, cargandoProveedor
               </p>
             </div>
           </div>
-          <span className="text-sm font-semibold tabular-nums shrink-0">
+          <span className="text-body font-semibold tabular-nums shrink-0">
             {formatCurrency(banco.monto, banco.moneda)}
           </span>
         </div>
       </div>
 
       {factura.excede && (
-        <p className="text-xs text-destructive mt-1">
+        <p className="text-body-sm text-destructive mt-1">
           El pago excede el saldo de la factura; ajusta el monto antes de guardar.
         </p>
       )}

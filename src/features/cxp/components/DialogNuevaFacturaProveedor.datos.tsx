@@ -86,7 +86,7 @@ export function ColumnaDatosFactura({
           expedientePrioritario={entrante?.expediente ?? null}
         />
       ) : (
-        <p className="rounded-md border border-dashed px-3 py-4 text-center text-xs text-muted-foreground">
+        <p className="rounded-md border border-dashed px-3 py-4 text-center text-body-sm text-muted-foreground">
           Elige el proveedor para poder vincular la factura a un embarque.
         </p>
       )}

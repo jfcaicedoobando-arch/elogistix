@@ -71,7 +71,7 @@ export default function SeccionCondicionesComerciales({ complete }: { complete?:
   return (
     <WizardSection title="Condiciones comerciales" complete={complete}>
       {!camposHabilitados && (
-        <div className="flex items-start gap-2 rounded-md border border-muted bg-muted/30 p-3 text-sm text-muted-foreground">
+        <div className="flex items-start gap-2 rounded-md border border-muted bg-muted/30 p-3 text-body text-muted-foreground">
           <Lock className="size-4 mt-0.5 shrink-0" />
           <span>
             Selecciona una tarifa para definir la ruta del barco, la validez de la propuesta y el seguro.
@@ -93,7 +93,7 @@ export default function SeccionCondicionesComerciales({ complete }: { complete?:
             disabled={!camposHabilitados}
           />
           {tieneTarifa && (
-            <p className="text-xs text-muted-foreground mt-1">
+            <p className="text-body-sm text-muted-foreground mt-1">
               Sugerida desde la tarifa. Puedes editarla si el agente confirma escalas.
             </p>
           )}
@@ -131,7 +131,7 @@ export default function SeccionCondicionesComerciales({ complete }: { complete?:
             </PopoverContent>
           </Popover>
           {tarifaHasta && (
-            <p className="text-xs text-muted-foreground mt-1">
+            <p className="text-body-sm text-muted-foreground mt-1">
               Máximo {formatFechaDia(tarifaHasta)} según la tarifa vinculada.
             </p>
           )}

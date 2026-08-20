@@ -28,13 +28,13 @@ export function EntranteCapturaBanner({ entrante, estado, mensaje }: Props) {
         <FileText className="mt-0.5 h-4 w-4 shrink-0 text-info" />
         <div className="min-w-0 flex-1 space-y-1">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="truncate text-sm font-semibold">{entrante.nombreArchivo}</span>
+            <span className="truncate text-body font-semibold">{entrante.nombreArchivo}</span>
             <Badge variant="outline" size="xs">
               {entrante.expediente ?? "Sin expediente"}
             </Badge>
             {!entrante.xmlPath && <Badge variant="warning" size="xs">Sin XML</Badge>}
           </div>
-          <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
+          <p className="flex items-center gap-1.5 text-body-sm text-muted-foreground">
             {estado === "cargando" && <Loader2 className="h-4 w-4 animate-spin" />}
             {estado === "listo" && <CheckCircle2 className="h-3.5 w-3.5 text-success" />}
             {estado === "error" && <AlertTriangle className="h-3.5 w-3.5 text-warning" />}

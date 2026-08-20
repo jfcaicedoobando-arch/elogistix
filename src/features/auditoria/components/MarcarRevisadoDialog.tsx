@@ -70,19 +70,19 @@ export function MarcarRevisadoDialog({ hallazgo, revisionExistente, open, onOpen
 
       <Tabs defaultValue="accion" className="space-y-3">
         <TabsList className="grid grid-cols-3">
-          <TabsTrigger value="accion" className="text-xs">
+          <TabsTrigger value="accion" className="text-body-sm">
             Acción
           </TabsTrigger>
-          <TabsTrigger value="comentarios" className="text-xs" disabled={!revisionExistente}>
+          <TabsTrigger value="comentarios" className="text-body-sm" disabled={!revisionExistente}>
             <MessageSquare className="h-3 w-3 mr-1" />
             Comentarios
             {ctrl.comentarios && ctrl.comentarios.length > 0 && (
-              <Badge variant="secondary" className="ml-1.5 h-4 px-1 text-2xs">
+              <Badge variant="secondary" className="ml-1.5 h-4 px-1 text-label">
                 {ctrl.comentarios.length}
               </Badge>
             )}
           </TabsTrigger>
-          <TabsTrigger value="snooze" className="text-xs">
+          <TabsTrigger value="snooze" className="text-body-sm">
             <CalendarOff className="h-3 w-3 mr-1" />
             Snooze
           </TabsTrigger>

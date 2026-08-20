@@ -49,9 +49,9 @@ export function CancelarFacturaProveedorDialog({
       isPending={isPending}
       onConfirm={() => onConfirm(motivo.trim())}
       description={
-        <div className="space-y-3 text-sm">
+        <div className="space-y-3 text-body">
           {factura && <FacturaContextoBand factura={factura} variant="compact" emphasis="saldo" />}
-          <ul className="list-disc pl-5 text-muted-foreground text-xs space-y-1">
+          <ul className="list-disc pl-5 text-muted-foreground text-body-sm space-y-1">
             <li>Las notas de crédito asociadas se cancelarán automáticamente.</li>
             <li>Los conceptos del embarque dejarán de contarla como liquidada.</li>
             <li>No podrás cancelar si la factura tiene pagos aplicados: debes anularlos primero.</li>

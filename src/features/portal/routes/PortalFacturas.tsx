@@ -57,7 +57,7 @@ export default function PortalFacturas() {
     <PortalPageShell
       icon={<Receipt className="h-6 w-6 text-accent" />}
       title="Mis Facturas"
-      actions={<span className="text-sm text-muted-foreground tabular-nums">{filtered.length} de {facturas.length}</span>}
+      actions={<span className="text-body text-muted-foreground tabular-nums">{filtered.length} de {facturas.length}</span>}
     >
       <PortalFiltersBar
         search={search}
@@ -113,19 +113,19 @@ export default function PortalFacturas() {
                     <StatusBadge domain="factura" status={estadoVisible} className="shrink-0" />
                     <div className="min-w-0">
                       <div className="flex items-center gap-2">
-                        <p className="font-semibold text-sm font-mono tabular-nums">{f.numero}</p>
+                        <p className="font-semibold text-body font-mono tabular-nums">{f.numero}</p>
                         {estadoVisible === "Vencida" && <AlertTriangle className="h-3.5 w-3.5 text-destructive" />}
                       </div>
-                      <p className="text-xs text-muted-foreground truncate">
+                      <p className="text-body-sm text-muted-foreground truncate">
                         Exp: <span className="font-mono">{f.expediente || (f as { embarque_expediente?: string | null }).embarque_expediente || "—"}</span> • Emisión: {f.fecha_emision ? formatDate(f.fecha_emision) : "—"}
                       </p>
-                      <p className="text-2xs text-muted-foreground mt-0.5">
+                      <p className="text-label text-muted-foreground mt-0.5">
                         Vence: {f.fecha_vencimiento ? formatDate(f.fecha_vencimiento) : "—"}
                       </p>
                     </div>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
-                    <p className="text-sm font-bold tabular-nums text-right min-w-[110px]">
+                    <p className="text-body font-bold tabular-nums text-right min-w-[110px]">
                       {formatCurrency(f.total, f.moneda)}
                     </p>
                     <ChevronRight className="h-4 w-4 text-muted-foreground" />

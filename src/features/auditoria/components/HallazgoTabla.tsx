@@ -54,16 +54,16 @@ export function HallazgoTabla({ hallazgos }: Props) {
   const cols: ColumnDef<HallazgoAuditoria, unknown>[] = defineColumns<HallazgoAuditoria>([
     { id: "sev", header: "Severidad", meta: { width: COL_W.fecha },
       cell: ({ row }) => (
-        <Badge variant="outline" className={cn("text-2xs", severidadConfig[row.original.severidad].className)}>
+        <Badge variant="outline" className={cn("text-label", severidadConfig[row.original.severidad].className)}>
           {severidadConfig[row.original.severidad].label}
         </Badge>
       ) },
     { id: "exp", header: "Expediente", meta: { width: COL_W.monto, className: "font-medium tabular-nums" }, cell: ({ row }) => row.original.expediente },
     { id: "cliente", header: "Cliente", meta: { className: "truncate max-w-[200px]" },
       cell: ({ row }) => <span title={row.original.cliente_nombre}>{row.original.cliente_nombre || "—"}</span> },
-    { id: "estado", header: "Estado", meta: { width: COL_W.fecha, className: "text-xs text-muted-foreground" }, cell: ({ row }) => row.original.estado },
-    { id: "eta", header: "ETA", meta: { width: COL_W.fecha, className: "text-xs tabular-nums text-muted-foreground" }, cell: ({ row }) => formatEta(row.original.eta) },
-    { id: "detalle", header: "Detalle", meta: { className: "text-sm" },
+    { id: "estado", header: "Estado", meta: { width: COL_W.fecha, className: "text-body-sm text-muted-foreground" }, cell: ({ row }) => row.original.estado },
+    { id: "eta", header: "ETA", meta: { width: COL_W.fecha, className: "text-body-sm tabular-nums text-muted-foreground" }, cell: ({ row }) => formatEta(row.original.eta) },
+    { id: "detalle", header: "Detalle", meta: { className: "text-body" },
       cell: ({ row }) => {
         return <HallazgoDetalleCell hallazgo={row.original} />;
       } },
@@ -73,7 +73,7 @@ export function HallazgoTabla({ hallazgos }: Props) {
         const url = `${window.location.origin}/embarques/${h.embarque_id}?tab=${reglaToTab[h.regla]}`;
         return (
           <Button
-            size="sm" variant="ghost" className="h-7 gap-1 text-xs"
+            size="sm" variant="ghost" className="h-7 gap-1 text-body-sm"
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();

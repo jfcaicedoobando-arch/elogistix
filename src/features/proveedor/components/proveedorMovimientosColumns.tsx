@@ -70,7 +70,7 @@ export function movimientosProveedorColumns<T extends MovimientoConSaldo>(): Col
         className: "hidden xl:table-cell text-muted-foreground",
         headerClassName: "hidden xl:table-cell",
       },
-      cell: ({ row }) => <span className="text-xs">{row.original.referencia || "—"}</span>,
+      cell: ({ row }) => <span className="text-body-sm">{row.original.referencia || "—"}</span>,
     },
     {
       id: "cargo",

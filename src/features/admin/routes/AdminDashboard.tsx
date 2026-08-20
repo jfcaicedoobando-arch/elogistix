@@ -102,8 +102,8 @@ export default function AdminDashboard() {
                   className="w-full flex items-center justify-between p-2 rounded-md hover:bg-muted/50 transition-colors text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 >
                   <div className="min-w-0">
-                    <div className="text-sm font-medium truncate">{o.nombre}</div>
-                    <div className="text-xs text-muted-foreground">{o.plan} · {formatDate(o.created_at)}</div>
+                    <div className="text-body font-medium truncate">{o.nombre}</div>
+                    <div className="text-body-sm text-muted-foreground">{o.plan} · {formatDate(o.created_at)}</div>
                   </div>
                   <ArrowRight className="h-4 w-4 text-muted-foreground shrink-0" />
                 </button>

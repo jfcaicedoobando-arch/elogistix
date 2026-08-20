@@ -80,7 +80,7 @@ export function ConceptoRowUSD({ concepto: c, index: i, total, actualizar, elimi
             </SelectContent>
           </Select>
         ) : (
-          <span className="text-xs text-muted-foreground flex items-center h-10">—</span>
+          <span className="text-body-sm text-muted-foreground flex items-center h-10">—</span>
         )}
       </div>
       <div className="col-span-2">
@@ -98,7 +98,7 @@ export function ConceptoRowUSD({ concepto: c, index: i, total, actualizar, elimi
           value={c.notas || ''}
           onChange={e => actualizar(i, 'notas', e.target.value)}
           placeholder="Notas (opcional)"
-          className="h-8 text-xs text-muted-foreground resize-none focus:h-16 transition-[height]"
+          className="h-8 text-body-sm text-muted-foreground resize-none focus:h-16 transition-[height]"
           rows={1}
         />
       </div>

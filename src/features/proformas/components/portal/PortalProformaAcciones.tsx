@@ -45,7 +45,7 @@ export function PortalProformaAcciones({ submitting, onResponder, error }: Props
       <CardContent className="space-y-3">
         {modo === "idle" && (
           <>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-body text-muted-foreground">
               Revisa los conceptos y totales. Puedes aceptar la proforma para autorizar la facturación, o
               rechazarla indicando el motivo.
             </p>
@@ -99,9 +99,9 @@ export function PortalProformaAcciones({ submitting, onResponder, error }: Props
 
         {(localError || error) && (
           <div className="space-y-1">
-            <p className="text-sm text-destructive">{localError ?? error}</p>
+            <p className="text-body text-destructive">{localError ?? error}</p>
             {(localError ?? error) === COPY_ENLACE.noDisponible && (
-              <ul className="list-disc pl-5 text-xs text-muted-foreground space-y-0.5">
+              <ul className="list-disc pl-5 text-body-sm text-muted-foreground space-y-0.5">
                 {COPY_PASOS.servicioNoDisponible.map((paso) => (
                   <li key={paso}>{paso}</li>
                 ))}

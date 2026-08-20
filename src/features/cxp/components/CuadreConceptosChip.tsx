@@ -23,8 +23,8 @@ export function CuadreConceptosChip({ estado, suma, subtotal, diferencia, moneda
       <span
         className={
           cuadrado
-            ? "inline-flex items-center gap-1.5 rounded-full border border-success/40 bg-success/10 px-2.5 py-1 text-2xs font-medium text-success"
-            : "inline-flex items-center gap-1.5 rounded-full border border-warning/50 bg-warning/10 px-2.5 py-1 text-2xs font-medium text-warning-foreground"
+            ? "inline-flex items-center gap-1.5 rounded-full border border-success/40 bg-success/10 px-2.5 py-1 text-label font-medium text-success"
+            : "inline-flex items-center gap-1.5 rounded-full border border-warning/50 bg-warning/10 px-2.5 py-1 text-label font-medium text-warning-foreground"
         }
       >
         {cuadrado ? (
@@ -38,7 +38,7 @@ export function CuadreConceptosChip({ estado, suma, subtotal, diferencia, moneda
             ? "Sin partidas"
             : `${diferencia > 0 ? "Faltan" : "Sobran"} ${formatCurrency(Math.abs(diferencia), moneda)}`}
       </span>
-      <p className="text-2xs leading-tight text-muted-foreground">
+      <p className="text-label leading-tight text-muted-foreground">
         Suma <span className="font-medium tabular-nums text-foreground">{formatCurrency(suma, moneda)}</span>
         {" · "}
         Subtotal <span className="font-medium tabular-nums text-foreground">{formatCurrency(subtotal, moneda)}</span>

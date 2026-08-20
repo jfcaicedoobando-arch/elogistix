@@ -103,8 +103,8 @@ export default function AdminDemoLeads() {
         </Card>
       ) : (
         <div className="rounded-md border overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead className="bg-muted/50 text-xs uppercase tracking-wide text-muted-foreground">
+          <table className="w-full text-body">
+            <thead className="bg-muted/50 text-body-sm uppercase tracking-wide text-muted-foreground">
               <tr>
                 <th className="px-3 py-2 text-left">Fecha</th>
                 <th className="px-3 py-2 text-left">Nombre</th>
@@ -129,7 +129,7 @@ export default function AdminDemoLeads() {
                   <td className="px-3 py-2 font-medium">{r.nombre}</td>
                   <td className="px-3 py-2">{r.empresa}</td>
                   <td className="px-3 py-2">
-                    <div className="flex flex-col gap-0.5 text-xs">
+                    <div className="flex flex-col gap-0.5 text-body-sm">
                       <Button
                         type="button"
                         variant="ghost"
@@ -152,7 +152,7 @@ export default function AdminDemoLeads() {
                       </Button>
                     </div>
                   </td>
-                  <td className="px-3 py-2 text-xs text-muted-foreground">
+                  <td className="px-3 py-2 text-body-sm text-muted-foreground">
                     {r.utm_source ? (
                       <span>
                         {r.utm_source} · {r.utm_medium ?? "—"} · {r.utm_campaign ?? "—"}

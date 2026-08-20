@@ -79,7 +79,7 @@ export default function PortalFacturaDetalle() {
         }
         trailing={
           <div className="text-right shrink-0">
-            <p className="text-sm text-muted-foreground">Total</p>
+            <p className="text-body text-muted-foreground">Total</p>
             <p className="text-kpi tabular-nums text-accent">
               {formatCurrency(factura.total, factura.moneda)}
             </p>

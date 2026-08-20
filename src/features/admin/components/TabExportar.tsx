@@ -51,14 +51,14 @@ export default function TabExportar() {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="rounded-lg border bg-muted/30 p-4 text-sm space-y-3">
+        <div className="rounded-lg border bg-muted/30 p-4 text-body space-y-3">
           <p className="font-medium">
             Incluye {EXPORT_TABLES.length} tablas agrupadas por dominio:
           </p>
           <div className="grid gap-3 sm:grid-cols-2">
             {Object.entries(EXPORT_GROUPS).map(([grupo, tablas]) => (
               <div key={grupo} className="space-y-1">
-                <p className="text-xs font-semibold text-foreground">
+                <p className="text-body-sm font-semibold text-foreground">
                   {grupo}{" "}
                   <span className="text-muted-foreground font-normal">({tablas.length})</span>
                 </p>
@@ -68,7 +68,7 @@ export default function TabExportar() {
               </div>
             ))}
           </div>
-          <p className="text-xs text-muted-foreground pt-1 border-t">
+          <p className="text-body-sm text-muted-foreground pt-1 border-t">
             Se excluyen credenciales fiscales, control de acceso y logs internos.
           </p>
         </div>
@@ -80,7 +80,7 @@ export default function TabExportar() {
 
         {progress && (
           <div className="space-y-2">
-            <div className="flex items-center justify-between text-xs text-muted-foreground">
+            <div className="flex items-center justify-between text-body-sm text-muted-foreground">
               <span>
                 {progress.step} / {progress.total} · <span className="font-mono">{progress.current}</span>
                 {progress.rows > 0 ? ` (${progress.rows} filas)` : ""}
@@ -91,7 +91,7 @@ export default function TabExportar() {
           </div>
         )}
 
-        <p className="text-xs text-muted-foreground">
+        <p className="text-body-sm text-muted-foreground">
           Los datos se procesan en tu navegador. No se envían a terceros. El ZIP queda en tu carpeta de descargas.
         </p>
       </CardContent>

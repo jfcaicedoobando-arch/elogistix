@@ -38,7 +38,7 @@ export function AdjuntosDelBuzon({ entrante, faltaPdf, faltaXml }: Props) {
 
   return (
     <div className="rounded-md border border-dashed bg-muted/20 p-3 space-y-2">
-      <p className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
+      <p className="flex items-center gap-2 text-body-sm font-medium text-muted-foreground">
         <Inbox className="h-3.5 w-3.5" /> Documento del buzón
       </p>
       <div className="flex flex-wrap gap-2">
@@ -61,7 +61,7 @@ export function AdjuntosDelBuzon({ entrante, faltaPdf, faltaXml }: Props) {
           </Button>
         )}
       </div>
-      <p className="text-2xs text-muted-foreground">
+      <p className="text-label text-muted-foreground">
         Estos archivos llegaron por el buzón de facturas y aún no se copiaron al
         expediente de la factura.
       </p>

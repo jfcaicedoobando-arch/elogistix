@@ -61,7 +61,7 @@ export function InfoFacturaSection({ factura: f }: Props) {
       {f.notas && (
         <div className="space-y-2">
           <SectionHeading as="h3" variant="subsection">Notas</SectionHeading>
-          <p className="text-sm text-foreground whitespace-pre-wrap rounded-md border bg-muted/30 p-3">
+          <p className="text-body text-foreground whitespace-pre-wrap rounded-md border bg-muted/30 p-3">
             {f.notas}
           </p>
         </div>

@@ -12,7 +12,7 @@ export default function BannerOverride({ ctx }: { ctx: Ctx }) {
   const limpiar = () => setValue("tarifaOverride", {}, OPTS);
 
   return (
-    <div className="flex items-center justify-between gap-3 rounded-md border border-warning/30 bg-warning/5 p-2 text-xs">
+    <div className="flex items-center justify-between gap-3 rounded-md border border-warning/30 bg-warning/5 p-2 text-body-sm">
       <span className="flex items-center gap-2 text-warning">
         <Pencil className="h-3.5 w-3.5" />
         Sobrescribiste {campos.length} campo(s) de la tarifa: <strong>{campos.join(", ")}</strong>

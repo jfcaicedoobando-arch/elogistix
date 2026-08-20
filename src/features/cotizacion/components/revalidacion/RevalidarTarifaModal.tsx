@@ -94,7 +94,7 @@ export function RevalidarTarifaModal({
     >
       {cambios.length > 0 && (
         <div className="border rounded-md overflow-hidden">
-          <table className="w-full text-sm">
+          <table className="w-full text-body">
             <thead className="bg-muted/50">
               <tr className="text-left">
                 <th className="p-2">Concepto</th>

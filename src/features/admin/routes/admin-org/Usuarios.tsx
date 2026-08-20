@@ -73,19 +73,19 @@ export default function Usuarios() {
           <TabsTrigger value="internos">
             Internos
             {tab === "internos" ? (
-              <span className="ml-1 text-xs text-muted-foreground">({internos.length})</span>
+              <span className="ml-1 text-body-sm text-muted-foreground">({internos.length})</span>
             ) : null}
           </TabsTrigger>
           <TabsTrigger value="cliente">
             Portal Cliente
             {tab === "cliente" ? (
-              <span className="ml-1 text-xs text-muted-foreground">({portalCliente.length})</span>
+              <span className="ml-1 text-body-sm text-muted-foreground">({portalCliente.length})</span>
             ) : null}
           </TabsTrigger>
           <TabsTrigger value="agente">
             Portal Agente
             {tab === "agente" ? (
-              <span className="ml-1 text-xs text-muted-foreground">({portalAgente.length})</span>
+              <span className="ml-1 text-body-sm text-muted-foreground">({portalAgente.length})</span>
             ) : null}
           </TabsTrigger>
         </TabsList>

@@ -63,8 +63,8 @@ export function ProveedorComparativoCard({ comparativo, tipoProveedor }: Props) 
             {filas.map((f) => (
               <li key={`${f.concepto}-${f.moneda}`} className="py-2.5 flex items-center justify-between gap-3">
                 <div className="min-w-0">
-                  <p className="text-sm truncate">{f.concepto}</p>
-                  <p className="text-xs text-muted-foreground tabular-nums">
+                  <p className="text-body truncate">{f.concepto}</p>
+                  <p className="text-body-sm text-muted-foreground tabular-nums">
                     {formatCurrency(f.unitarioPropio, f.moneda)} vs {formatCurrency(f.unitarioOtros, f.moneda)}
                     {" · "}{f.opsPropias}/{f.opsOtros} operaciones
                     {" · "}{f.proveedoresComparados} proveedor{f.proveedoresComparados === 1 ? "" : "es"}
@@ -72,7 +72,7 @@ export function ProveedorComparativoCard({ comparativo, tipoProveedor }: Props) 
                 </div>
                 <div className="text-right shrink-0">
                   <Badge className={cn("mb-1", TONO[f.veredicto])}>{ETIQUETA[f.veredicto]}</Badge>
-                  <p className="text-xs tabular-nums text-muted-foreground">
+                  <p className="text-body-sm tabular-nums text-muted-foreground">
                     {f.diffPct > 0 ? "+" : ""}{f.diffPct.toFixed(1)}%
                   </p>
                 </div>

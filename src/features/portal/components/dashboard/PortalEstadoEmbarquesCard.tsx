@@ -36,7 +36,7 @@ export function PortalEstadoEmbarquesCard({ total, distribucion }: Props) {
             );
           })}
         </div>
-        <p className="text-xs text-muted-foreground text-center tabular-nums">
+        <p className="text-body-sm text-muted-foreground text-center tabular-nums">
           {total} embarque{pluralS(total)} activo{pluralS(total)}
         </p>
       </CardContent>
@@ -52,7 +52,7 @@ function EstadoLegendRow({ estado, count }: { estado: string; count: number }) {
   return (
     <div
       {...nav}
-      className={cn(nav.className, "flex items-center justify-between text-sm rounded-md px-1 -mx-1 py-0.5 hover:bg-muted/50 transition-colors")}
+      className={cn(nav.className, "flex items-center justify-between text-body rounded-md px-1 -mx-1 py-0.5 hover:bg-muted/50 transition-colors")}
     >
       <div className="flex items-center gap-2">
         <StatusBadge domain="embarque" status={estado} />

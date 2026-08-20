@@ -47,7 +47,7 @@ export function MargenAutorizacionCard({ oportunidadId, margenPct, autorizadoAt,
           <Badge variant="secondary">Sin autorizar</Badge>
         )}
       </CardHeader>
-      <CardContent className="space-y-3 text-sm">
+      <CardContent className="space-y-3 text-body">
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 items-end">
           <div className="space-y-1">
             <Label htmlFor="margen-autorizar">Margen esperado (%)</Label>
@@ -74,7 +74,7 @@ export function MargenAutorizacionCard({ oportunidadId, margenPct, autorizadoAt,
           )}
         </div>
         <div>
-          <div className="text-muted-foreground text-xs">Riesgos / objeciones</div>
+          <div className="text-muted-foreground text-body-sm">Riesgos / objeciones</div>
           {riesgos && riesgos.length > 0 ? riesgos : "—"}
         </div>
       </CardContent>

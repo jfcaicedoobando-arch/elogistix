@@ -40,20 +40,20 @@ const columns: ColumnDef<EmbarqueMesSiguiente, unknown>[] = defineColumns<Embarq
     cell: ({ row }) => (
       <span className="flex items-center gap-1.5">
         <ModoIcon modo={row.original.modo} size={14} />
-        <span className="text-xs">{row.original.modo}</span>
+        <span className="text-body-sm">{row.original.modo}</span>
       </span>
     ),
   },
   {
     id: "ruta", header: "Origen → Destino",
-    meta: { className: "text-xs max-w-[180px] truncate" },
+    meta: { className: "text-body-sm max-w-[180px] truncate" },
     cell: ({ row }) => `${getOrigen(row.original)} → ${getDestino(row.original)}`,
   },
   {
     id: "contenedor", header: "Contenedor",
     accessorFn: (e) => e.contenedor, enableSorting: true,
     sortingFn: sortByString<EmbarqueMesSiguiente>((e) => e.contenedor),
-    meta: { className: "text-xs font-mono whitespace-nowrap" },
+    meta: { className: "text-body-sm font-mono whitespace-nowrap" },
     // VB-20/VB-30: placeholder vacío unificado (em dash), no guion ASCII.
     cell: ({ row }) => row.original.contenedor || <span className="text-muted-foreground">{PLACEHOLDER_VACIO}</span>,
   },
@@ -61,7 +61,7 @@ const columns: ColumnDef<EmbarqueMesSiguiente, unknown>[] = defineColumns<Embarq
     id: "eta", header: "ETA",
     accessorFn: (e) => e.eta, enableSorting: true,
     sortingFn: sortByDate<EmbarqueMesSiguiente>((e) => e.eta),
-    meta: { className: "text-xs" },
+    meta: { className: "text-body-sm" },
     cell: ({ row }) => row.original.eta ? formatDate(row.original.eta) : PLACEHOLDER_VACIO,
   },
   statusColumn<EmbarqueMesSiguiente>({
@@ -79,7 +79,7 @@ const columns: ColumnDef<EmbarqueMesSiguiente, unknown>[] = defineColumns<Embarq
       const e = row.original;
       return (
         <span
-          className={`text-xs font-medium ${e.profitMXN >= 0 ? "text-success" : "text-destructive"}`}
+          className={`text-body-sm font-medium ${e.profitMXN >= 0 ? "text-success" : "text-destructive"}`}
           title={`Venta ${formatCurrency(e.ventaMXN, "MXN")} · Costo ${formatCurrency(e.costoMXN, "MXN")} (TC USD ${e.tipoCambioUSD.toFixed(2)})`}
         >
           {formatCurrency(e.profitMXN, "MXN")}
@@ -91,7 +91,7 @@ const columns: ColumnDef<EmbarqueMesSiguiente, unknown>[] = defineColumns<Embarq
     id: "facturado", header: "Facturado",
     meta: { className: "text-center", headerClassName: "text-center" },
     cell: ({ row }) => (
-      <Badge variant="secondary" className={`text-2xs ${
+      <Badge variant="secondary" className={`text-label ${
         row.original.facturado
           ? "bg-success/15 text-success border-success/30"
           : "bg-muted text-muted-foreground"
@@ -131,7 +131,7 @@ export function EmbarquesActivosTable({ embarques, resumen, isLoading, hideFinan
             <Ship className="h-4 w-4 text-muted-foreground shrink-0" />
             <div className="min-w-0">
               <p className="text-lg font-bold text-foreground">{resumen.totalEmbarques}</p>
-              <p className="text-2xs text-muted-foreground">Embarques</p>
+              <p className="text-label text-muted-foreground">Embarques</p>
             </div>
           </div>
           {!hideFinancials && (
@@ -139,24 +139,24 @@ export function EmbarquesActivosTable({ embarques, resumen, isLoading, hideFinan
               <div className="flex items-center gap-2 rounded-lg border bg-muted/30 p-3">
                 <DollarSign className="h-4 w-4 text-info shrink-0" />
                 <div className="min-w-0">
-                  <p className="text-sm font-bold text-foreground truncate">{formatCurrency(resumen.ventaMXN, "MXN")}</p>
-                  <p className="text-2xs text-muted-foreground">Venta MXN</p>
+                  <p className="text-body font-bold text-foreground truncate">{formatCurrency(resumen.ventaMXN, "MXN")}</p>
+                  <p className="text-label text-muted-foreground">Venta MXN</p>
                 </div>
               </div>
               <div className="flex items-center gap-2 rounded-lg border bg-muted/30 p-3">
                 <DollarSign className="h-4 w-4 text-warning shrink-0" />
                 <div className="min-w-0">
-                  <p className="text-sm font-bold text-foreground truncate">{formatCurrency(resumen.costoMXN, "MXN")}</p>
-                  <p className="text-2xs text-muted-foreground">Costo MXN</p>
+                  <p className="text-body font-bold text-foreground truncate">{formatCurrency(resumen.costoMXN, "MXN")}</p>
+                  <p className="text-label text-muted-foreground">Costo MXN</p>
                 </div>
               </div>
               <div className="flex items-center gap-2 rounded-lg border bg-muted/30 p-3">
                 <TrendingUp className={`h-4 w-4 shrink-0 ${resumen.profitMXN >= 0 ? "text-success" : "text-destructive"}`} />
                 <div className="min-w-0">
-                  <p className={`text-sm font-bold truncate ${resumen.profitMXN >= 0 ? "text-success" : "text-destructive"}`}>
+                  <p className={`text-body font-bold truncate ${resumen.profitMXN >= 0 ? "text-success" : "text-destructive"}`}>
                     {formatCurrency(resumen.profitMXN, "MXN")}
                   </p>
-                  <p className="text-2xs text-muted-foreground">Profit MXN</p>
+                  <p className="text-label text-muted-foreground">Profit MXN</p>
                 </div>
               </div>
               <div className="col-span-2 md:col-span-3 lg:col-span-1 flex flex-col gap-1.5 rounded-lg border bg-muted/30 p-3">
@@ -164,12 +164,12 @@ export function EmbarquesActivosTable({ embarques, resumen, isLoading, hideFinan
                   <FileCheck className="h-4 w-4 text-primary shrink-0" />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-baseline justify-between gap-2">
-                      <p className="text-sm font-bold text-foreground">
+                      <p className="text-body font-bold text-foreground">
                         {resumen.facturados}/{resumen.totalEmbarques}
                       </p>
-                      <span className="text-2xs text-muted-foreground">{pctFacturados}%</span>
+                      <span className="text-label text-muted-foreground">{pctFacturados}%</span>
                     </div>
-                    <p className="text-2xs text-muted-foreground">Facturados</p>
+                    <p className="text-label text-muted-foreground">Facturados</p>
                   </div>
                 </div>
                 <Progress value={pctFacturados} className={`h-1.5 ${colorClass}`} />

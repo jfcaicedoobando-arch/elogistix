@@ -62,7 +62,7 @@ export function CotizacionWizardSteps({ w, clientes, esMaritimo, sinDesgloseFlag
         <>
           {sinDesgloseFlag && <SinDesgloseBanner onCargarCostos={irACargarCostos} />}
           {w.costosPreLlenados && !sinDesgloseFlag && (
-            <div className="flex items-center gap-2 p-3 rounded-md bg-info/10 border border-info/30 [color:hsl(var(--info))] text-sm">
+            <div className="flex items-center gap-2 p-3 rounded-md bg-info/10 border border-info/30 [color:hsl(var(--info))] text-body">
               <Info className="h-4 w-4 flex-shrink-0" />
               Pre-llenado desde Costos y utilidad. Puedes ajustar si es necesario.
             </div>

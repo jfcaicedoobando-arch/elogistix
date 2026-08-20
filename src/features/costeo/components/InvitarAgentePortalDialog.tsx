@@ -122,7 +122,7 @@ export function InvitarAgentePortalDialog({ agente, onOpenChange }: Props) {
               onChange={(e) => setEmail(e.target.value)}
             />
           </div>
-          <p className="text-xs text-muted-foreground">
+          <p className="text-body-sm text-muted-foreground">
             Se enviará un correo para que establezca su contraseña. Si el agente está en China y no
             le llega el email, usa <strong>Asignar contraseña</strong>.
           </p>

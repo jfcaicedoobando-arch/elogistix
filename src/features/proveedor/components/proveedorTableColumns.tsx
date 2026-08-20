@@ -7,7 +7,7 @@ import { toTitleCase } from "@/lib/formatters";
 import { decodeHtmlEntities } from "@/lib/formatters/decodeHtmlEntities";
 
 function OrigenBadge({ origen }: { origen: ProveedorListItem["origen_proveedor"] }) {
-  if (!origen) return <span className="text-muted-foreground text-xs">—</span>;
+  if (!origen) return <span className="text-muted-foreground text-body-sm">—</span>;
   const cls =
     origen === "Nacional"
       ? "bg-primary/10 text-primary border-primary/20"
@@ -36,9 +36,9 @@ export const proveedorColumns: ColumnDef<ProveedorListItem, unknown>[] = defineC
       );
     },
   },
-  { id: "tipo", header: "Tipo", meta: { width: COL_W.estado }, cell: ({ row }) => <span className="text-sm">{row.original.tipo ?? "—"}</span> },
+  { id: "tipo", header: "Tipo", meta: { width: COL_W.estado }, cell: ({ row }) => <span className="text-body">{row.original.tipo ?? "—"}</span> },
   { id: "origen", header: "Origen", meta: { width: COL_W.short, className: "hidden xl:table-cell", headerClassName: "hidden xl:table-cell" }, cell: ({ row }) => <OrigenBadge origen={row.original.origen_proveedor} /> },
-  { id: "rfc", header: "RFC / Tax ID", accessorFn: (p) => decodeHtmlEntities(p.rfc), enableSorting: true, sortingFn: sortByString<ProveedorListItem>((p) => decodeHtmlEntities(p.rfc)), meta: { width: COL_W.folio, className: "text-xs font-mono hidden md:table-cell", headerClassName: "hidden md:table-cell" }, cell: ({ row }) => decodeHtmlEntities(row.original.rfc) },
-  { id: "contacto", header: "Contacto", meta: { width: COL_W.nombre, className: "text-xs hidden xl:table-cell", headerClassName: "hidden xl:table-cell" }, cell: ({ row }) => row.original.contacto ? <span title={row.original.contacto}>{toTitleCase(row.original.contacto)}</span> : null },
-  { id: "moneda", header: "Moneda", meta: { width: COL_W.tiny, className: "text-xs hidden xl:table-cell", headerClassName: "hidden xl:table-cell" }, cell: ({ row }) => row.original.moneda_preferida },
+  { id: "rfc", header: "RFC / Tax ID", accessorFn: (p) => decodeHtmlEntities(p.rfc), enableSorting: true, sortingFn: sortByString<ProveedorListItem>((p) => decodeHtmlEntities(p.rfc)), meta: { width: COL_W.folio, className: "text-body-sm font-mono hidden md:table-cell", headerClassName: "hidden md:table-cell" }, cell: ({ row }) => decodeHtmlEntities(row.original.rfc) },
+  { id: "contacto", header: "Contacto", meta: { width: COL_W.nombre, className: "text-body-sm hidden xl:table-cell", headerClassName: "hidden xl:table-cell" }, cell: ({ row }) => row.original.contacto ? <span title={row.original.contacto}>{toTitleCase(row.original.contacto)}</span> : null },
+  { id: "moneda", header: "Moneda", meta: { width: COL_W.tiny, className: "text-body-sm hidden xl:table-cell", headerClassName: "hidden xl:table-cell" }, cell: ({ row }) => row.original.moneda_preferida },
 ]);

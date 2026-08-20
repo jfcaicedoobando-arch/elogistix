@@ -73,7 +73,7 @@ export default function PortalCotizaciones() {
       title="Mis Cotizaciones"
       actions={
         <div className="flex items-center gap-3">
-          <span className="text-sm text-muted-foreground tabular-nums">{filtered.length} de {cotizaciones.length}</span>
+          <span className="text-body text-muted-foreground tabular-nums">{filtered.length} de {cotizaciones.length}</span>
           <Button size="sm" onClick={() => setSolicitudAbierta(true)}>
             <Plus className="h-4 w-4 mr-1" aria-hidden /> Solicitar cotización
           </Button>

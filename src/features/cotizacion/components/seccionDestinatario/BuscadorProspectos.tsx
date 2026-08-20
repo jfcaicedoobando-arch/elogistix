@@ -69,8 +69,8 @@ export function BuscadorProspectos({ onSelect }: Props) {
                   {m.kind === "oportunidad" ? "Oport." : "Lead"}
                 </Badge>
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium">{m.empresa}</p>
-                  <p className="truncate text-xs text-muted-foreground">
+                  <p className="truncate text-body font-medium">{m.empresa}</p>
+                  <p className="truncate text-body-sm text-muted-foreground">
                     {m.contacto || m.email || "—"}
                     {m.etapaNombre ? ` · ${m.etapaNombre}` : ""}
                   </p>

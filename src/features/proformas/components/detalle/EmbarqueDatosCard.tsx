@@ -21,7 +21,7 @@ interface Props {
 function Field({ label, value }: { label: string; value: string | null | undefined }) {
   return (
     <div className="min-w-0">
-      <p className="text-xs text-muted-foreground">{label}</p>
+      <p className="text-body-sm text-muted-foreground">{label}</p>
       <p className="truncate" title={value ?? ""}>{value?.trim() || "—"}</p>
     </div>
   );
@@ -42,21 +42,21 @@ export function EmbarqueDatosCard({ embarque, embarqueId, expediente }: Props) {
           Embarque{expediente ? ` ${expediente}` : ""}
         </CardTitle>
         {embarqueId && (
-          <Button variant="link" size="sm" asChild className="h-auto p-0 text-xs shrink-0">
+          <Button variant="link" size="sm" asChild className="h-auto p-0 text-body-sm shrink-0">
             <Link to={`/embarques/${embarqueId}?tab=facturacion`} className="inline-flex items-center gap-1">
               Ver embarque <ExternalLink className="h-3 w-3" />
             </Link>
           </Button>
         )}
       </CardHeader>
-      <CardContent className="text-sm space-y-3">
+      <CardContent className="text-body space-y-3">
         <div className="grid grid-cols-3 gap-3">
           <Field label="Modo" value={embarque.modo} />
           <Field label="Tipo" value={embarque.tipo} />
           <Field label="Incoterm" value={embarque.incoterm} />
         </div>
         <div>
-          <p className="text-xs text-muted-foreground">Ruta</p>
+          <p className="text-body-sm text-muted-foreground">Ruta</p>
           <p className="break-words">
             <span className="font-medium">{origen}</span>
             <span className="mx-2 text-muted-foreground">→</span>
@@ -65,19 +65,19 @@ export function EmbarqueDatosCard({ embarque, embarqueId, expediente }: Props) {
         </div>
         {embarque.bl_house && (
           <div>
-            <p className="text-xs text-muted-foreground">BL House / HAWB</p>
+            <p className="text-body-sm text-muted-foreground">BL House / HAWB</p>
             <p className="font-mono break-all">{embarque.bl_house}</p>
           </div>
         )}
         {resumenContenedores && (
           <div>
-            <p className="text-xs text-muted-foreground">Contenedores</p>
+            <p className="text-body-sm text-muted-foreground">Contenedores</p>
             <p className="break-words">{resumenContenedores}</p>
           </div>
         )}
         {mercancia && (
           <div>
-            <p className="text-xs text-muted-foreground">Descripción de la mercancía</p>
+            <p className="text-body-sm text-muted-foreground">Descripción de la mercancía</p>
             <p className="whitespace-pre-line break-words">{mercancia}</p>
           </div>
         )}

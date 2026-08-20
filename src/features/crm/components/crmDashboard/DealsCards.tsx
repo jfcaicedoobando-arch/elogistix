@@ -24,7 +24,7 @@ interface LeadItem {
 }
 
 function ListEmpty({ msg }: { msg: string }) {
-  return <p className="text-sm text-muted-foreground text-center py-4">{msg}</p>;
+  return <p className="text-body text-muted-foreground text-center py-4">{msg}</p>;
 }
 
 export function CerrandoSemanaCard({ items }: { items: DealItem[] }) {
@@ -44,15 +44,15 @@ export function CerrandoSemanaCard({ items }: { items: DealItem[] }) {
                 as="li"
                 href={`/crm/oportunidades/${o.id}`}
                 ariaLabel={`Ver oportunidad ${o.nombre}`}
-                className="flex items-center justify-between text-sm py-1 border-b last:border-0 hover:bg-muted/40 rounded-sm"
+                className="flex items-center justify-between text-body py-1 border-b last:border-0 hover:bg-muted/40 rounded-sm"
               >
                 <div className="flex flex-col truncate">
                   <span className="font-medium truncate max-w-[260px]">{o.nombre}</span>
-                  <span className="text-xs text-muted-foreground">{o.cliente_nombre || "Sin cliente"}</span>
+                  <span className="text-body-sm text-muted-foreground">{o.cliente_nombre || "Sin cliente"}</span>
                 </div>
                 <div className="text-right">
-                  <div className="text-xs tabular-nums font-semibold">{formatCurrencyCompact(o.monto_estimado, o.moneda)}</div>
-                  <div className="text-2xs text-muted-foreground">{o.fecha_estimada_cierre} · {o.probabilidad}%</div>
+                  <div className="text-body-sm tabular-nums font-semibold">{formatCurrencyCompact(o.monto_estimado, o.moneda)}</div>
+                  <div className="text-label text-muted-foreground">{o.fecha_estimada_cierre} · {o.probabilidad}%</div>
                 </div>
               </DrilldownRow>
             ))}
@@ -80,13 +80,13 @@ export function LeadsSinContactarCard({ items }: { items: LeadItem[] }) {
                 as="li"
                 href={`/crm/leads/${l.id}`}
                 ariaLabel={`Ver lead ${l.empresa}`}
-                className="flex items-center justify-between text-sm py-1 border-b last:border-0 hover:bg-muted/40 rounded-sm"
+                className="flex items-center justify-between text-body py-1 border-b last:border-0 hover:bg-muted/40 rounded-sm"
               >
                 <div className="flex flex-col truncate">
                   <span className="font-medium truncate max-w-[260px]">{l.empresa}</span>
-                  <span className="text-xs text-muted-foreground">{l.contacto || "Sin contacto"} · {l.fuente}</span>
+                  <span className="text-body-sm text-muted-foreground">{l.contacto || "Sin contacto"} · {l.fuente}</span>
                 </div>
-                <span className="text-xs text-muted-foreground">
+                <span className="text-body-sm text-muted-foreground">
                   {formatFechaEs(l.created_at)}
                 </span>
               </DrilldownRow>

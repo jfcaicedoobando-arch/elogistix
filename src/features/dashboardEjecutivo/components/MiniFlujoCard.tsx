@@ -30,7 +30,7 @@ export function MiniFlujoCard({ flujo }: Props) {
           <EmptyStateInline icon={LineChartIcon} message="No hay suficientes datos para graficar la tendencia." hint="Se necesitan al menos 2 semanas." />
         ) : (
         <div className="h-48">
-          <p className="text-2xs text-muted-foreground mb-1">MXN</p>
+          <p className="text-label text-muted-foreground mb-1">MXN</p>
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={data}>
               <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />

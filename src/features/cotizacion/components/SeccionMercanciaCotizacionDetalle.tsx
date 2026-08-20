@@ -37,7 +37,7 @@ export default function SeccionMercanciaCotizacionDetalle({ cotizacion }: Props)
         <MercanciaInfoGrid cotizacion={cotizacion} />
 
         {cotizacion.descripcion_adicional && (
-          <div className="text-sm">
+          <div className="text-body">
             <span className="text-muted-foreground">Descripción Adicional</span>
             <p className="font-medium whitespace-pre-wrap">{cotizacion.descripcion_adicional}</p>
           </div>

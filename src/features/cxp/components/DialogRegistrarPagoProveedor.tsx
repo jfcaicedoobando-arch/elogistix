@@ -125,7 +125,7 @@ export function DialogRegistrarPagoProveedor({ open, onOpenChange, factura: fact
       {factura && <PagoFacturaHeaderInfo factura={factura} />}
 
       {noAprobada && (
-        <div className="rounded-md border border-warning/30 bg-warning/10 px-3 py-2 text-xs text-warning">
+        <div className="rounded-md border border-warning/30 bg-warning/10 px-3 py-2 text-body-sm text-warning">
           Esta factura no está aprobada. Solicita la aprobación en el detalle de la factura antes de registrar pagos.
         </div>
       )}

@@ -42,13 +42,13 @@ export function VersionesCotizacionCard({ cotizacionId }: Props) {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <History className="h-4 w-4" /> Historial de versiones
-          <Badge variant="outline" className="ml-1 text-2xs">
+          <Badge variant="outline" className="ml-1 text-label">
             {versiones.length}
           </Badge>
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-2">
-        <p className="text-xs text-muted-foreground">
+        <p className="text-body-sm text-muted-foreground">
           Cada vez que la cotización pasa a <strong>Enviada</strong> se congela
           una versión inmutable con folio, conceptos y costos vigentes.
         </p>
@@ -56,18 +56,18 @@ export function VersionesCotizacionCard({ cotizacionId }: Props) {
           {versiones.map((v) => (
             <li
               key={v.id}
-              className="flex items-center justify-between gap-3 px-3 py-2 text-sm"
+              className="flex items-center justify-between gap-3 px-3 py-2 text-body"
             >
               <div className="flex items-center gap-3 min-w-0">
                 <Badge variant="secondary" className="shrink-0">
                   v{v.version_num}
                 </Badge>
                 <span className="font-medium truncate">{v.folio}</span>
-                <Badge variant="outline" className="text-2xs shrink-0">
+                <Badge variant="outline" className="text-label shrink-0">
                   {v.estado_al_snapshot}
                 </Badge>
               </div>
-              <span className="text-xs text-muted-foreground whitespace-nowrap">
+              <span className="text-body-sm text-muted-foreground whitespace-nowrap">
                 {formatDate(v.created_at)}
               </span>
             </li>

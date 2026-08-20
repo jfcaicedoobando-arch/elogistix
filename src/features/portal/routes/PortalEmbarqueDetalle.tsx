@@ -133,13 +133,13 @@ export default function PortalEmbarqueDetalle() {
           <TabsTrigger value="tracking" className="relative">
             Tracking
             {eventosVisiblesCount > 0 && (
-              <span className="ml-1.5 rounded-full bg-accent/10 text-accent text-2xs px-1.5 font-bold">{eventosVisiblesCount}</span>
+              <span className="ml-1.5 rounded-full bg-accent/10 text-accent text-label px-1.5 font-bold">{eventosVisiblesCount}</span>
             )}
           </TabsTrigger>
           <TabsTrigger value="documentos" className="relative">
             Documentos
             {docsTotal > 0 && (
-              <span className="ml-1.5 rounded-full bg-accent/10 text-accent text-2xs px-1.5 font-bold">{docsValidados}/{docsTotal}</span>
+              <span className="ml-1.5 rounded-full bg-accent/10 text-accent text-label px-1.5 font-bold">{docsValidados}/{docsTotal}</span>
             )}
           </TabsTrigger>
         </TabsList>

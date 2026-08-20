@@ -22,8 +22,8 @@ export function TopeVinculacionBar({ resultado, subtotal, moneda }: Props) {
     <div
       className={
         excede
-          ? "rounded-md border border-destructive/40 bg-destructive/5 px-3 py-2 text-xs"
-          : "rounded-md border border-success/40 bg-success/5 px-3 py-2 text-xs"
+          ? "rounded-md border border-destructive/40 bg-destructive/5 px-3 py-2 text-body-sm"
+          : "rounded-md border border-success/40 bg-success/5 px-3 py-2 text-body-sm"
       }
     >
       <div

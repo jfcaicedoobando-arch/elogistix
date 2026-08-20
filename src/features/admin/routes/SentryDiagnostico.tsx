@@ -41,8 +41,8 @@ const STATUS_META: Record<
 function Row({ label, value }: { label: string; value: React.ReactNode }) {
   return (
     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 py-2 border-b last:border-0">
-      <span className="text-xs uppercase tracking-wide text-muted-foreground">{label}</span>
-      <span className="text-sm font-mono break-all">{value}</span>
+      <span className="text-body-sm uppercase tracking-wide text-muted-foreground">{label}</span>
+      <span className="text-body font-mono break-all">{value}</span>
     </div>
   );
 }

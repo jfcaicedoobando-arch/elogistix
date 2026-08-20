@@ -51,7 +51,7 @@ export function crearColumnasDemorasVenta(
         header: rangoLabel("Vigencia", "desde"),
         accessor: (t) => t.vigente_desde,
       }),
-      meta: { width: COL_W.monto, className: "text-xs whitespace-nowrap hidden md:table-cell", headerClassName: "hidden md:table-cell" },
+      meta: { width: COL_W.monto, className: "text-body-sm whitespace-nowrap hidden md:table-cell", headerClassName: "hidden md:table-cell" },
     },
     {
       ...dateColumn<Tarifa>({
@@ -59,7 +59,7 @@ export function crearColumnasDemorasVenta(
         header: rangoLabel("Vigencia", "hasta"),
         accessor: (t) => t.vigente_hasta,
       }),
-      meta: { width: COL_W.monto, className: "text-xs whitespace-nowrap hidden md:table-cell", headerClassName: "hidden md:table-cell" },
+      meta: { width: COL_W.monto, className: "text-body-sm whitespace-nowrap hidden md:table-cell", headerClassName: "hidden md:table-cell" },
     },
     {
       id: "acciones",

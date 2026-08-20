@@ -25,7 +25,7 @@ export function CierreAdminBlock({ huecoTotal, huecoUsd, huecoMxn, loading }: Pr
             <FileWarning className="h-4 w-4 text-warning" />
             Hueco de facturación
           </CardTitle>
-          <Button variant="link" size="sm" asChild className="h-auto p-0 text-xs">
+          <Button variant="link" size="sm" asChild className="h-auto p-0 text-body-sm">
             <Link to="/facturacion" className="flex items-center gap-1">
               Ver hueco <ArrowRight className="h-3 w-3" />
             </Link>
@@ -51,7 +51,7 @@ export function CierreAdminBlock({ huecoTotal, huecoUsd, huecoMxn, loading }: Pr
                   fullValue={formatCurrency(huecoUsd, "USD")}
                 />
               </div>
-              <p className="text-xs text-muted-foreground text-center">
+              <p className="text-body-sm text-muted-foreground text-center">
                 Embarques con conceptos de venta pendientes de facturar.
               </p>
             </div>
@@ -65,7 +65,7 @@ export function CierreAdminBlock({ huecoTotal, huecoUsd, huecoMxn, loading }: Pr
 function Tile({ label, value, fullValue }: { label: string; value: string; fullValue?: string }) {
   return (
     <div className="rounded-md border p-3 min-w-0">
-      <p className="text-xs text-muted-foreground truncate">{label}</p>
+      <p className="text-body-sm text-muted-foreground truncate">{label}</p>
       <p className="text-base font-semibold tabular-nums truncate" title={fullValue ?? value}>
         {value}
       </p>

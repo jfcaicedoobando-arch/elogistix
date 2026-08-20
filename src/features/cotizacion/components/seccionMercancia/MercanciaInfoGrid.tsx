@@ -29,7 +29,7 @@ export function MercanciaInfoGrid({ cotizacion }: { cotizacion: Cot }) {
 
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-body">
       {esMaritimo && (
         <div>
           <span className="text-muted-foreground">Tipo de Embarque</span>
@@ -71,7 +71,7 @@ export function MercanciaInfoGrid({ cotizacion }: { cotizacion: Cot }) {
         <div>
           <span className="text-muted-foreground">MSDS</span>
           <Button
-            variant="link" size="sm" className="p-0 h-auto text-sm"
+            variant="link" size="sm" className="p-0 h-auto text-body"
             onClick={async () => {
               // EC-08: sin try/catch un fallo de storage quedaba como promesa
               // rechazada sin manejar y el usuario no veía nada.

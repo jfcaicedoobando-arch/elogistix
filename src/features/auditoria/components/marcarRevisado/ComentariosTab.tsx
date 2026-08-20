@@ -32,8 +32,8 @@ export function ComentariosTab({ ctrl, revisionExistente }: Props) {
             ) : (
               <div className="space-y-2">
                 {ctrl.comentarios.map((c) => (
-                  <div key={c.id} className="text-xs border-b pb-2 last:border-b-0">
-                    <div className="flex items-center justify-between gap-2 text-2xs text-muted-foreground">
+                  <div key={c.id} className="text-body-sm border-b pb-2 last:border-b-0">
+                    <div className="flex items-center justify-between gap-2 text-label text-muted-foreground">
                       <span className="font-medium text-foreground">{c.autor_email}</span>
                       <span className="tabular-nums">
                         {format(new Date(c.created_at), "dd/MM HH:mm")}
@@ -54,7 +54,7 @@ export function ComentariosTab({ ctrl, revisionExistente }: Props) {
               onChange={(e) => ctrl.setComentario(e.target.value)}
               rows={2}
               maxLength={500}
-              className="text-sm"
+              className="text-body"
             />
             <Button
               size="sm"

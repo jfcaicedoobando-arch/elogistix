@@ -42,7 +42,7 @@ export function CargaCfdiSection({
       {mode === "cfdi" && (
         <div className="p-4 space-y-3">
           {cfdiReady && (
-            <div className="flex items-center gap-2 rounded-md bg-success/10 border border-success/30 px-3 py-2 text-sm text-success">
+            <div className="flex items-center gap-2 rounded-md bg-success/10 border border-success/30 px-3 py-2 text-body text-success">
               <CheckCircle2 className="h-4 w-4" />
               CFDI cargado. Los campos del formulario fueron prellenados — puedes editarlos.
             </div>
@@ -76,7 +76,7 @@ export function CargaCfdiSection({
               onChange={(e) => handleXml(e.target.files?.[0] ?? null)}
             />
             {xml ? (
-              <div className="flex items-center justify-center gap-2 text-sm">
+              <div className="flex items-center justify-center gap-2 text-body">
                 <FileText className="h-4 w-4 text-primary" />
                 <span className="font-medium">{xml.name}</span>
                 <span className="text-muted-foreground">({(xml.size / 1024).toFixed(1)} KB)</span>
@@ -92,10 +92,10 @@ export function CargaCfdiSection({
                 </Button>
               </div>
             ) : (
-              <div className="flex flex-col items-center gap-1 text-sm text-muted-foreground">
+              <div className="flex flex-col items-center gap-1 text-body text-muted-foreground">
                 <Upload className="h-5 w-5" />
                 <span>Arrastra el <strong>XML del CFDI</strong> o haz clic para seleccionar</span>
-                <span className="text-xs">Máximo 2 MB · CFDI 4.0</span>
+                <span className="text-body-sm">Máximo 2 MB · CFDI 4.0</span>
               </div>
             )}
           </div>

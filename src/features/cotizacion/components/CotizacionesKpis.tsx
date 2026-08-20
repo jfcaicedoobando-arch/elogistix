@@ -16,7 +16,7 @@ interface Props {
 export function CotizacionesKpis({ total, aceptadas, rechazadas, tasa }: Props) {
   return (
     <div className="space-y-2">
-      <p className="text-xs font-medium text-muted-foreground">
+      <p className="text-body-sm font-medium text-muted-foreground">
         KPIs de los últimos 30 días · no dependen de los filtros de la tabla
       </p>
       <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">

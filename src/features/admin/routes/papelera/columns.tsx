@@ -20,7 +20,7 @@ export function buildPapeleraColumns({ onRestore, onPurgeTarget, isBusy }: Build
     {
       id: "deleted_at",
       header: "Eliminado",
-      cell: ({ row }) => <span className="text-sm text-muted-foreground">{formatFechaSegura(row.original.deleted_at, "dd/MM/yyyy HH:mm")}</span>,
+      cell: ({ row }) => <span className="text-body text-muted-foreground">{formatFechaSegura(row.original.deleted_at, "dd/MM/yyyy HH:mm")}</span>,
     },
     {
       id: "deleted_by_email",
@@ -28,7 +28,7 @@ export function buildPapeleraColumns({ onRestore, onPurgeTarget, isBusy }: Build
       cell: ({ row }) => {
         const r = row.original;
         return (
-          <span className="text-sm text-muted-foreground">
+          <span className="text-body text-muted-foreground">
             {r.deleted_by_email ?? (r.deleted_by ? r.deleted_by.slice(0, 8) : "—")}
           </span>
         );

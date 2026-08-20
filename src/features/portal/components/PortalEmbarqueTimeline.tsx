@@ -57,15 +57,15 @@ export function PortalEmbarqueTimeline({ eventos: eventosCrudos }: Props) {
                     <div className="space-y-1">
                       <div className="flex items-center gap-2 flex-wrap">
                         <EventIcon className="h-4 w-4 text-accent" aria-hidden />
-                        <Badge variant="secondary" className="text-xs">{ev.tipo}</Badge>
-                        <span className="text-xs text-muted-foreground flex items-center gap-1">
+                        <Badge variant="secondary" className="text-body-sm">{ev.tipo}</Badge>
+                        <span className="text-body-sm text-muted-foreground flex items-center gap-1">
                           <Clock className="h-3 w-3" />
                           {formatDate(ev.fecha, esSoloFecha ? "dd MMM yyyy" : "dd MMM yyyy, HH:mm")}
                         </span>
                       </div>
-                      {ev.descripcion && <p className="text-sm text-foreground">{ev.descripcion}</p>}
+                      {ev.descripcion && <p className="text-body text-foreground">{ev.descripcion}</p>}
                       {ev.ubicacion && (
-                        <span className="text-xs text-muted-foreground flex items-center gap-1">
+                        <span className="text-body-sm text-muted-foreground flex items-center gap-1">
                           <MapPin className="h-3 w-3" /> {ev.ubicacion}
                         </span>
                       )}

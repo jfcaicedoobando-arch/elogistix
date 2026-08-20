@@ -70,7 +70,7 @@ export function HallazgosFiltros({ filtros: props, conteo }: Props) {
         placeholder="Buscar expediente…"
         value={props.search}
         onChange={(e) => props.setSearch(e.target.value)}
-        className="pl-8 h-8 text-xs"
+        className="pl-8 h-8 text-body-sm"
       />
     </div>
   );
@@ -109,7 +109,7 @@ export function HallazgosFiltros({ filtros: props, conteo }: Props) {
             />
           </div>
         </MobileFiltersSheet>
-        <div className="ml-auto text-xs text-muted-foreground tabular-nums">
+        <div className="ml-auto text-body-sm text-muted-foreground tabular-nums">
           <span className="font-semibold text-foreground">{conteo.filtrados}</span>/{conteo.total}
         </div>
       </div>
@@ -140,12 +140,12 @@ export function HallazgosFiltros({ filtros: props, conteo }: Props) {
         />
 
         {props.hayFiltros && (
-          <Button variant="ghost" size="sm" className="h-8 text-xs" onClick={props.limpiar}>
+          <Button variant="ghost" size="sm" className="h-8 text-body-sm" onClick={props.limpiar}>
             Limpiar
           </Button>
         )}
 
-        <div className="ml-auto text-xs text-muted-foreground tabular-nums">
+        <div className="ml-auto text-body-sm text-muted-foreground tabular-nums">
           <span className="font-semibold text-foreground">{conteo.filtrados}</span> de {conteo.total}
         </div>
       </div>

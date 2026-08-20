@@ -69,7 +69,7 @@ export function PlantillaSelectorPaso1({ organizationId, form, onApplied }: Prop
     <div className="max-w-6xl mx-auto px-4 pt-4">
       <div className="flex items-center gap-3 rounded-lg border border-dashed bg-muted/30 px-4 py-2.5">
         <Sparkles className="h-4 w-4 text-primary shrink-0" aria-hidden />
-        <div className="flex-1 text-sm">
+        <div className="flex-1 text-body">
           <span className="font-medium">¿Ruta frecuente?</span>{" "}
           <span className="text-muted-foreground">
             Empieza desde una plantilla guardada.
@@ -97,12 +97,12 @@ export function PlantillaSelectorPaso1({ organizationId, form, onApplied }: Prop
                       <div className="flex flex-col gap-0.5 flex-1 min-w-0">
                         <span className="font-medium truncate">{p.nombre}</span>
                         {p.descripcion && (
-                          <span className="text-xs text-muted-foreground truncate">
+                          <span className="text-body-sm text-muted-foreground truncate">
                             {p.descripcion}
                           </span>
                         )}
                       </div>
-                      <span className="text-2xs text-muted-foreground shrink-0">
+                      <span className="text-label text-muted-foreground shrink-0">
                         {p.veces_usada > 0 ? `${p.veces_usada}×` : "Nueva"}
                       </span>
                     </CommandItem>

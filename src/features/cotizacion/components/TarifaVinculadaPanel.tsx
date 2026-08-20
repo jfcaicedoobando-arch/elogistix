@@ -92,7 +92,7 @@ export default function TarifaVinculadaPanel({
           <div className="rounded-md border border-primary/30 bg-primary/5 p-3 space-y-3">
             <div className="flex items-start gap-2">
               <AlertCircle className="size-4 text-primary mt-0.5 shrink-0" />
-              <div className="text-sm">
+              <div className="text-body">
                 <p className="font-medium text-foreground">Tarifa requerida para continuar</p>
                 <p className="text-muted-foreground">
                   Vincula una tarifa marítima vigente. Esto fija el costo real y
@@ -116,7 +116,7 @@ export default function TarifaVinculadaPanel({
         {tarifaId && !isLoading && !tarifa && (
           <div className="flex items-start gap-2 rounded-md border border-warning/30 bg-warning/5 p-3">
             <AlertTriangle className="size-4 text-warning mt-0.5" />
-            <div className="flex-1 text-sm">
+            <div className="flex-1 text-body">
               <p className="font-medium">La tarifa vinculada ya no está vigente o fue eliminada.</p>
               <p className="text-muted-foreground">Quita el vínculo y elige una nueva tarifa.</p>
             </div>
@@ -134,10 +134,10 @@ export default function TarifaVinculadaPanel({
                   <Link2 className="size-4 text-primary" />
                   <span className="font-medium">{tarifa.naviera_nombre}</span>
                   <span className="text-muted-foreground">·</span>
-                  <span className="text-sm">{tarifa.puerto_origen_nombre} → {tarifa.puerto_destino_nombre}</span>
+                  <span className="text-body">{tarifa.puerto_origen_nombre} → {tarifa.puerto_destino_nombre}</span>
                   <Badge variant="secondary">{tarifa.tipo_contenedor_nombre}</Badge>
                 </div>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-body-sm text-muted-foreground">
                   Agente: {tarifa.agente_nombre} · Vigente hasta {tarifa.vigente_hasta} ·
                   {" "}USD {formatNumber(Number(tarifa.flete_base), { decimals: 2 })} +
                   {" "}USD {formatNumber(Number(tarifa.recargos_total), { decimals: 2 })} recargos
@@ -155,13 +155,13 @@ export default function TarifaVinculadaPanel({
             </div>
 
             {vencidaAntesDeValidez && (
-              <div className="flex items-start gap-2 text-xs text-warning">
+              <div className="flex items-start gap-2 text-body-sm text-warning">
                 <AlertTriangle className="size-3.5 mt-0.5" />
                 La tarifa vence el {tarifa.vigente_hasta}, antes de la validez ofrecida al cliente.
               </div>
             )}
             {tipoMismatch && (
-              <div className="flex items-start gap-2 text-xs text-warning">
+              <div className="flex items-start gap-2 text-body-sm text-warning">
                 <AlertTriangle className="size-3.5 mt-0.5" />
                 El tipo de contenedor del Paso 1 difiere del de la tarifa. Considera cambiar la tarifa.
               </div>

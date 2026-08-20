@@ -26,7 +26,7 @@ export default function NuevoProveedorDialog({ open, onOpenChange, onSave, prefi
 
   const origen = c.form.origen_proveedor;
   const headerAside = origen ? (
-    <Badge variant={origen === "Nacional" ? "secondary" : "outline"} className="text-2xs font-medium">
+    <Badge variant={origen === "Nacional" ? "secondary" : "outline"} className="text-label font-medium">
       {origen}
     </Badge>
   ) : undefined;

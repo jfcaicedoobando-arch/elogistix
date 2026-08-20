@@ -77,20 +77,20 @@ export default function ActividadTimeline({ entidadTipo, entidadId }: Props) {
           <ul className="space-y-2">
             {items.map((a) => (
               <li key={a.id} className="border-l-2 border-primary/40 pl-3 py-1">
-                <div className="flex items-center gap-2 text-sm">
-                  <Badge variant="outline" className="text-2xs">{a.tipo}</Badge>
+                <div className="flex items-center gap-2 text-body">
+                  <Badge variant="outline" className="text-label">{a.tipo}</Badge>
                   <span className="font-medium">{a.asunto}</span>
-                  {a.fecha_completada && <Badge variant="secondary" className="text-2xs">Completada</Badge>}
+                  {a.fecha_completada && <Badge variant="secondary" className="text-label">Completada</Badge>}
                 </div>
-                {a.descripcion && <div className="text-xs text-muted-foreground mt-1">{a.descripcion}</div>}
-                <div className="text-2xs text-muted-foreground mt-1 flex items-center gap-2">
+                {a.descripcion && <div className="text-body-sm text-muted-foreground mt-1">{a.descripcion}</div>}
+                <div className="text-label text-muted-foreground mt-1 flex items-center gap-2">
                   <span>{formatFechaHora(a.created_at)}</span>
                   <span>· {a.responsable_email}</span>
                   {!a.fecha_completada && (
                     <Button
                       size="sm"
                       variant="ghost"
-                      className="h-6 px-2 text-2xs"
+                      className="h-6 px-2 text-label"
                       // UX-13: sin disabled, doble clic disparaba la mutación dos veces.
                       disabled={completar.isPending}
                       onClick={() => completar.mutateAsync({ id: a.id })}

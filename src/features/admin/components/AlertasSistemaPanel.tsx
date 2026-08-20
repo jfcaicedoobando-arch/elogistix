@@ -45,7 +45,7 @@ export default function AlertasSistemaPanel() {
         ) : alertas.length === 0 ? (
           <div className="text-center py-10 text-muted-foreground">
             <BellOff className="h-10 w-10 mx-auto mb-2 opacity-50" />
-            <p className="text-sm">Sin alertas {includeAck ? "registradas" : "activas"}.</p>
+            <p className="text-body">Sin alertas {includeAck ? "registradas" : "activas"}.</p>
           </div>
         ) : (
           <div className="space-y-2">
@@ -58,16 +58,16 @@ export default function AlertasSistemaPanel() {
                 >
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1 flex-wrap">
-                      <Badge variant={severityVariant[a.severity] ?? "secondary"} className="uppercase text-2xs">
+                      <Badge variant={severityVariant[a.severity] ?? "secondary"} className="uppercase text-label">
                         {a.severity}
                       </Badge>
-                      <span className="text-xs text-muted-foreground">{a.source}</span>
-                      <span className="text-xs text-muted-foreground">
+                      <span className="text-body-sm text-muted-foreground">{a.source}</span>
+                      <span className="text-body-sm text-muted-foreground">
                         {formatFechaSegura(a.created_at, "dd/MM/yyyy HH:mm")}
                       </span>
-                      {ack && <Badge variant="secondary" className="text-2xs">Reconocida</Badge>}
+                      {ack && <Badge variant="secondary" className="text-label">Reconocida</Badge>}
                     </div>
-                    <p className="text-sm font-medium break-words">{a.message}</p>
+                    <p className="text-body font-medium break-words">{a.message}</p>
                     {a.payload && Object.keys(a.payload).length > 0 && (
                       <pre className="text-label bg-muted rounded p-2 mt-2 overflow-auto max-h-32">
                         {JSON.stringify(a.payload, null, 2)}

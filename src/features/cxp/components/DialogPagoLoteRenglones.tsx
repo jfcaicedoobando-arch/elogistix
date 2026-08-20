@@ -30,10 +30,10 @@ export function DialogPagoLoteRenglones({ facturas, renglones, moneda, onMontoCh
             const parcial = monto > 0 && !liquidada;
             return (
               <tr key={f.factura_id} className={cn("border-t", i % 2 === 1 && "bg-muted/20")}>
-                <td className="px-3 py-2 font-mono text-xs">
+                <td className="px-3 py-2 font-mono text-body-sm">
                   {toTitleCase(f.folio_proveedor ?? "") || "—"}
                 </td>
-                <td className="px-3 py-2 text-xs text-muted-foreground">
+                <td className="px-3 py-2 text-body-sm text-muted-foreground">
                   {f.fecha_vencimiento ? formatDate(f.fecha_vencimiento) : "—"}
                 </td>
                 <td className="px-3 py-2 text-right tabular-nums">
@@ -51,10 +51,10 @@ export function DialogPagoLoteRenglones({ facturas, renglones, moneda, onMontoCh
                 <td className="px-3 py-2 text-right">
                   <div className="flex items-center justify-end gap-2">
                     {liquidada && (
-                      <Badge variant="outline" className="text-2xs">Liquidada</Badge>
+                      <Badge variant="outline" className="text-label">Liquidada</Badge>
                     )}
                     {parcial && (
-                      <Badge variant="secondary" className="text-2xs">Parcial</Badge>
+                      <Badge variant="secondary" className="text-label">Parcial</Badge>
                     )}
                     <span className="tabular-nums text-muted-foreground">
                       {formatCurrency(queda, moneda)}

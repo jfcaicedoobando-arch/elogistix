@@ -21,8 +21,8 @@ interface Props {
 export function PlantillasTabla({ plantillas, onEditar, onEliminar, onUsar }: Props) {
   return (
     <div className="overflow-x-auto">
-      <table className="w-full text-sm">
-        <thead className="text-xs uppercase text-muted-foreground border-b">
+      <table className="w-full text-body">
+        <thead className="text-body-sm uppercase text-muted-foreground border-b">
           <tr>
             <th className="text-left py-2 px-2">Nombre</th>
             <th className="text-left py-2 px-2">Descripción</th>

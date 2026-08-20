@@ -110,7 +110,7 @@ export function AsignarResponsableDialog({
             onValueChange={ctrl.setResponsableId}
             disabled={ctrl.loadingUsers}
           >
-            <SelectTrigger className="h-9 text-sm">
+            <SelectTrigger className="h-9 text-body">
               <SelectValue
                 placeholder={ctrl.loadingUsers ? "Cargando…" : "Selecciona un responsable"}
               />
@@ -120,7 +120,7 @@ export function AsignarResponsableDialog({
               {ctrl.asignables.map((u) => (
                 <SelectItem key={u.id} value={u.id}>
                   {u.email}{" "}
-                  <span className="text-muted-foreground text-2xs ml-1">({u.role})</span>
+                  <span className="text-muted-foreground text-label ml-1">({u.role})</span>
                 </SelectItem>
               ))}
             </SelectContent>

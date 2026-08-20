@@ -61,7 +61,7 @@ export default function SeccionMercanciaWrapper({
 
       <Accordion type="multiple" className="w-full">
         <AccordionItem value="descripcion-adicional" className="border-b-0">
-          <AccordionTrigger className="text-sm font-medium py-2 hover:no-underline">
+          <AccordionTrigger className="text-body font-medium py-2 hover:no-underline">
             Descripción Adicional
           </AccordionTrigger>
           <AccordionContent>
@@ -86,7 +86,7 @@ export default function SeccionMercanciaWrapper({
               onChange={e => setMsdsFile(e.target.files?.[0] || null)}
             />
             {msdsFile && (
-              <span className="text-xs text-muted-foreground flex items-center gap-1">
+              <span className="text-body-sm text-muted-foreground flex items-center gap-1">
                 <Upload className="h-3 w-3" /> {msdsFile.name}
               </span>
             )}

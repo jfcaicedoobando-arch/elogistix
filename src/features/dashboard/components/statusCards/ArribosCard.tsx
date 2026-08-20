@@ -163,7 +163,7 @@ export function ArribosCard({ arribosEsteMes, isLoading, hideFinancials = false 
               trigger={
                 <button type="button" className="flex items-center gap-2 cursor-help w-full">
                   <Progress value={pctBarra} className={`h-2 flex-1 ${barColor}`} />
-                  <span className={`text-xs font-semibold tabular-nums w-12 text-right ${pctTextColor}`}>
+                  <span className={`text-body-sm font-semibold tabular-nums w-12 text-right ${pctTextColor}`}>
                     {sinGastos ? "—" : `${pctReal}%`}
                   </span>
                 </button>
@@ -179,7 +179,7 @@ export function ArribosCard({ arribosEsteMes, isLoading, hideFinancials = false 
                 />
               }
             />
-            <p className="text-2xs text-muted-foreground text-center">Gastos fijos cubiertos</p>
+            <p className="text-label text-muted-foreground text-center">Gastos fijos cubiertos</p>
           </div>
         </div>
       </CardContent>

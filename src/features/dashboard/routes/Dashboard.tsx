@@ -58,7 +58,7 @@ function OperationalDashboard() {
 
         description={hoyStr}
         actions={
-          <Badge variant="secondary" className="text-xs w-fit">
+          <Badge variant="secondary" className="text-body-sm w-fit">
             {scoped.totalActivos} embarques activos
           </Badge>
         }

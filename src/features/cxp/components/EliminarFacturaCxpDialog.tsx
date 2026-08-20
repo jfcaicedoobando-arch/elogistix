@@ -73,11 +73,11 @@ export function EliminarFacturaCxpDialog({ factura, onOpenChange, isPending, onC
                 <span className="px-2 py-0.5 bg-muted text-muted-foreground text-label font-bold tracking-wider rounded border border-border font-mono">
                   {factura.folio_interno}
                 </span>
-                <span className="text-sm text-muted-foreground">
+                <span className="text-body text-muted-foreground">
                   Folio prov. <span className="font-medium text-foreground font-mono">{factura.folio_proveedor}</span>
                 </span>
                 <span className="text-muted-foreground/50">•</span>
-                <span className="text-sm font-medium text-foreground uppercase tracking-tight truncate max-w-[220px]">
+                <span className="text-body font-medium text-foreground uppercase tracking-tight truncate max-w-[220px]">
                   {factura.proveedor_nombre}
                 </span>
               </div>
@@ -103,13 +103,13 @@ export function EliminarFacturaCxpDialog({ factura, onOpenChange, isPending, onC
               {!paso2 ? (
                 <div className="p-4 bg-destructive/5 border border-destructive/20 rounded-lg flex gap-3">
                   <Trash2 className="w-5 h-5 text-destructive shrink-0 mt-0.5" />
-                  <p className="text-sm text-foreground leading-relaxed">
+                  <p className="text-body text-foreground leading-relaxed">
                     La factura será enviada a la papelera. Podrás restaurarla desde el historial si fue un error.
                   </p>
                 </div>
               ) : (
                 <div className="space-y-2 p-4 bg-destructive/5 border border-destructive/20 rounded-lg">
-                  <Label htmlFor="confirm-delete" className="text-sm text-foreground">
+                  <Label htmlFor="confirm-delete" className="text-body text-foreground">
                     Escribe <span className="font-bold text-destructive font-mono">ELIMINAR</span> para confirmar:
                   </Label>
                   <Input

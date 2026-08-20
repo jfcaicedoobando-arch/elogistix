@@ -85,7 +85,7 @@ export default function Ayuda() {
                     <a
                       key={m.id}
                       href={`#${m.id}`}
-                      className="inline-flex items-center px-3 py-1 text-xs rounded-md border border-border bg-muted/50 hover:bg-muted text-foreground transition-colors"
+                      className="inline-flex items-center px-3 py-1 text-body-sm rounded-md border border-border bg-muted/50 hover:bg-muted text-foreground transition-colors"
                     >
                       {m.titulo}
                     </a>
@@ -116,16 +116,16 @@ export default function Ayuda() {
                     </div>
                     <Badge variant="secondary" className="shrink-0">{modulo.faqs.length}</Badge>
                   </CardTitle>
-                  <p className="text-sm text-muted-foreground">{modulo.resumen}</p>
+                  <p className="text-body text-muted-foreground">{modulo.resumen}</p>
                 </CardHeader>
                 <CardContent>
                   <Accordion type="single" collapsible className="w-full">
                     {modulo.faqs.map((faq, idx) => (
                       <AccordionItem key={idx} value={`${modulo.id}-${idx}`}>
-                        <AccordionTrigger className="text-left text-sm font-medium">
+                        <AccordionTrigger className="text-left text-body font-medium">
                           {faq.pregunta}
                         </AccordionTrigger>
-                        <AccordionContent className="text-sm text-muted-foreground">
+                        <AccordionContent className="text-body text-muted-foreground">
                           {faq.respuesta}
                         </AccordionContent>
                       </AccordionItem>
@@ -141,7 +141,7 @@ export default function Ayuda() {
           <Card>
             <CardHeader>
               <CardTitle>Glosario de términos del forwarder</CardTitle>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-body text-muted-foreground">
                 {glosarioFiltrado.length} término{glosarioFiltrado.length === 1 ? "" : "s"}
               </p>
             </CardHeader>
@@ -152,8 +152,8 @@ export default function Ayuda() {
                 <dl className="space-y-4">
                   {glosarioFiltrado.map((g) => (
                     <div key={g.termino} className="border-b border-border last:border-0 pb-3 last:pb-0">
-                      <dt className="font-semibold text-sm text-foreground">{g.termino}</dt>
-                      <dd className="text-sm text-muted-foreground mt-1">{g.definicion}</dd>
+                      <dt className="font-semibold text-body text-foreground">{g.termino}</dt>
+                      <dd className="text-body text-muted-foreground mt-1">{g.definicion}</dd>
                     </div>
                   ))}
                 </dl>
@@ -167,7 +167,7 @@ export default function Ayuda() {
         <CardHeader>
           <CardTitle>¿No encuentras lo que buscas?</CardTitle>
         </CardHeader>
-        <CardContent className="text-sm text-muted-foreground space-y-2">
+        <CardContent className="text-body text-muted-foreground space-y-2">
           <p>
             Usa el botón flotante de <strong>Feedback</strong> (esquina inferior) para reportar un problema
             o sugerir mejora; el equipo lo recibe con captura de pantalla y contexto automático.

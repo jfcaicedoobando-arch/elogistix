@@ -119,7 +119,7 @@ export function RutaFormDialog({ open, onOpenChange, crear, rutas }: Props) {
             </Select>
           </div>
           {mostrarDuplicada && (
-            <p className="text-sm text-destructive" role="alert">
+            <p className="text-body text-destructive" role="alert">
               Esta ruta CN → MX ya está registrada. No necesitas volver a crearla.
             </p>
           )}

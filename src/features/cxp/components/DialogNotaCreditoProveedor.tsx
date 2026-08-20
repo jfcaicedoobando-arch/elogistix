@@ -169,7 +169,7 @@ export function DialogNotaCreditoProveedor({ open, onOpenChange, facturaId, mone
       />
 
       {excede && (
-        <div className="rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-xs text-destructive">
+        <div className="rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-body-sm text-destructive">
           El monto de la nota de crédito excede el saldo pendiente de la factura.
         </div>
       )}

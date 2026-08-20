@@ -25,7 +25,7 @@ export default function EditarProveedorBancariosFields({ c }: { c: Controller })
 /** Mensaje de error de campo (mismo estilo que el dialog padre). */
 function ErrorCampo({ message }: { message: string | null }) {
   if (!message) return null;
-  return <p className="text-xs text-destructive">{message}</p>;
+  return <p className="text-body-sm text-destructive">{message}</p>;
 }
 
 function FieldsNacional({ c }: { c: Controller }) {

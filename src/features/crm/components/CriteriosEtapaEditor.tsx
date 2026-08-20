@@ -82,9 +82,9 @@ export default function CriteriosEtapaEditor() {
       </div>
 
       <div className="space-y-2">
-        {isLoading ? <p className="text-sm text-muted-foreground">Cargando…</p> : null}
+        {isLoading ? <p className="text-body text-muted-foreground">Cargando…</p> : null}
         {!isLoading && criterios.length === 0 ? (
-          <p className="text-sm text-muted-foreground">
+          <p className="text-body text-muted-foreground">
             Esta etapa aún no tiene criterios de salida.
           </p>
         ) : null}
@@ -98,7 +98,7 @@ export default function CriteriosEtapaEditor() {
               }
             />
             <Label htmlFor={`obl-${c.id}`} size="sm" className="cursor-pointer">Obligatorio</Label>
-            <span className="text-sm flex-1">{c.nombre}</span>
+            <span className="text-body flex-1">{c.nombre}</span>
             {!c.activo ? <Badge variant="secondary">Inactivo</Badge> : null}
             <Button
               size="icon"

@@ -60,7 +60,7 @@ export function MarcarRevisadosBulkDialog({ open, hallazgos, onOpenChange, onSuc
       }
     >
       <div className="space-y-2">
-        <Label htmlFor="accion-bulk" className="text-sm font-medium">
+        <Label htmlFor="accion-bulk" className="text-body font-medium">
           Acción tomada <span className="text-destructive">*</span>
         </Label>
         <Textarea
@@ -78,10 +78,10 @@ export function MarcarRevisadosBulkDialog({ open, hallazgos, onOpenChange, onSuc
       </div>
 
       <div className="space-y-2">
-        <Label className="text-sm font-medium">Hallazgos seleccionados</Label>
+        <Label className="text-body font-medium">Hallazgos seleccionados</Label>
         <div className="max-h-60 overflow-y-auto rounded-md border bg-muted/30 divide-y">
           {hallazgos.map((h) => (
-            <div key={`${h.embarque_id}-${h.regla}-${h.detalle}`} className="flex items-start gap-2 px-3 py-2 text-xs">
+            <div key={`${h.embarque_id}-${h.regla}-${h.detalle}`} className="flex items-start gap-2 px-3 py-2 text-body-sm">
               <Badge variant="outline" className="shrink-0 tabular-nums font-medium">{h.expediente}</Badge>
               <span className="text-muted-foreground shrink-0">{h.regla}</span>
               <span className="truncate" title={h.detalle}>{h.detalle}</span>
@@ -91,7 +91,7 @@ export function MarcarRevisadosBulkDialog({ open, hallazgos, onOpenChange, onSuc
       </div>
 
       {bulk.data && bulk.data.fail > 0 && (
-        <div className="rounded-md border border-destructive/40 bg-destructive/5 px-3 py-2 text-xs text-destructive">
+        <div className="rounded-md border border-destructive/40 bg-destructive/5 px-3 py-2 text-body-sm text-destructive">
           {bulk.data.fail} hallazgo{bulk.data.fail === 1 ? "" : "s"} no se pudieron marcar. Revisa permisos e intenta de nuevo.
         </div>
       )}

@@ -37,7 +37,7 @@ export function FormSection({ title, icon, children }: FormSectionProps) {
 export function FieldError({ msg }: { msg?: string }) {
   if (!msg) return null;
   return (
-    <p className="mt-1 flex items-center gap-1 text-xs text-destructive">
+    <p className="mt-1 flex items-center gap-1 text-body-sm text-destructive">
       <AlertCircle className="h-3 w-3" aria-hidden />
       {msg}
     </p>

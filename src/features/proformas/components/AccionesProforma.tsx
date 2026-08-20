@@ -151,7 +151,7 @@ export function AccionesProforma({ proforma, downloadingId, onDescargar }: Props
       <DetalleActionBar primary={primary} secondary={secondary} more={more} />
       {!autorizacion.requiereAutorizacionProforma && <BadgeClienteDeCasa tipo="proforma" />}
       {mostrarHint && (
-        <p className="text-xs text-muted-foreground">
+        <p className="text-body-sm text-muted-foreground">
           {autorizacion.requiereAutorizacionProforma
             ? "Para facturar, el cliente debe aceptar la proforma."
             : "Este cliente no requiere autorización: aprueba la proforma internamente para facturarla."}

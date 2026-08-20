@@ -92,7 +92,7 @@ export function ProveedorResumenCards({
             <div className="bg-success" style={{ width: `${pctPagado}%` }} />
             <div className="flex-1 bg-warning/60" />
           </div>
-          <div className="flex justify-between text-xs text-muted-foreground">
+          <div className="flex justify-between text-body-sm text-muted-foreground">
             <span>Pagado {pctPagado.toFixed(0)}%</span>
             <span>Pendiente {(100 - pctPagado).toFixed(0)}%</span>
           </div>

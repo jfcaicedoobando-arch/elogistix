@@ -38,9 +38,9 @@ export default function OportunidadCotizacionesList({ oportunidadId }: Props) {
           />
         ) : (
           <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className="w-full text-body">
             <thead>
-              <tr className="text-xs text-muted-foreground border-b">
+              <tr className="text-body-sm text-muted-foreground border-b">
                 <th className="text-left py-1">Folio</th>
                 <th className="text-left">Estado</th>
                 <th className="text-right">Monto</th>
@@ -73,7 +73,7 @@ export default function OportunidadCotizacionesList({ oportunidadId }: Props) {
                       <div className="flex items-center gap-1.5">
                         <Badge variant="outline">{c.estado}</Badge>
                         {c.estado === "Enviada" && diasEnviada > 5 && (
-                          <Badge variant="destructive" className="text-2xs">
+                          <Badge variant="destructive" className="text-label">
                             Sin respuesta · {diasEnviada}d
                           </Badge>
                         )}
@@ -91,7 +91,7 @@ export default function OportunidadCotizacionesList({ oportunidadId }: Props) {
                           <Ship className="h-3 w-3" /> Ver
                         </Button>
                       ) : (
-                        <span className="text-xs text-muted-foreground">—</span>
+                        <span className="text-body-sm text-muted-foreground">—</span>
                       )}
                     </td>
                   </tr>

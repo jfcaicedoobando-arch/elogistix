@@ -140,11 +140,11 @@ export function AdjuntoRow({
       role={adjunto ? "button" : undefined}
     >
       <div className="flex items-center gap-3 min-w-0">
-        <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-2xs font-bold ${badgeCls}`}>
+        <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-label font-bold ${badgeCls}`}>
           {icon}
           {label}
         </span>
-        <span className="text-xs text-muted-foreground truncate">
+        <span className="text-body-sm text-muted-foreground truncate">
           {adjunto ? "Adjunto" : "No adjunto"}
         </span>
       </div>

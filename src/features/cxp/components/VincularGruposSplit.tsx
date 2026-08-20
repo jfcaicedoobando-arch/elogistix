@@ -51,7 +51,7 @@ export function VincularGruposSplit({
             onChangeMonto={onChangeMonto}
           />
         ) : (
-          <p className="rounded-md border border-dashed px-3 py-3 text-center text-xs text-muted-foreground">
+          <p className="rounded-md border border-dashed px-3 py-3 text-center text-body-sm text-muted-foreground">
             El expediente {expedientePrioritario ?? "del documento"} no tiene costos pendientes de
             este proveedor: ya están facturados o no se capturó el costo.
           </p>
@@ -64,7 +64,7 @@ export function VincularGruposSplit({
             type="button"
             variant="ghost"
             size="sm"
-            className="h-7 px-1 text-xs text-muted-foreground"
+            className="h-7 px-1 text-body-sm text-muted-foreground"
             onClick={() => setVerOtros((v) => !v)}
             aria-expanded={verOtros}
           >

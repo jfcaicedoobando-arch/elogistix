@@ -28,7 +28,7 @@ export default function LeaderboardVendedores() {
           <ul className="space-y-3">
             {data.map((f) => (
               <li key={f.vendedor} className="space-y-1">
-                <div className="flex justify-between text-sm">
+                <div className="flex justify-between text-body">
                   <span className="font-medium truncate max-w-[60%]">{f.vendedor}</span>
                   <span className="text-muted-foreground">
                     {formatCurrencyCompact(f.cerrado, "MXN")}
@@ -36,7 +36,7 @@ export default function LeaderboardVendedores() {
                   </span>
                 </div>
                 <Progress value={f.avance} className="h-2" />
-                <div className="text-xs text-muted-foreground text-right">{f.avance}%</div>
+                <div className="text-body-sm text-muted-foreground text-right">{f.avance}%</div>
               </li>
             ))}
           </ul>

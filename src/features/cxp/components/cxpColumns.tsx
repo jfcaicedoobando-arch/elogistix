@@ -24,14 +24,14 @@ export function buildCxPColumns(): ColumnDef<FacturaCxP, unknown>[] {
       id: "folio_interno", header: "Folio",
       accessorFn: (f) => f.folio_interno, enableSorting: true,
       sortingFn: sortByString<FacturaCxP>((f) => f.folio_interno),
-      meta: { width: COL_W.folio, className: "font-mono text-xs font-semibold whitespace-nowrap", sticky: true },
+      meta: { width: COL_W.folio, className: "font-mono text-body-sm font-semibold whitespace-nowrap", sticky: true },
       cell: ({ row }) => row.original.folio_interno,
     },
     {
       id: "folio", header: "Folio prov.",
       accessorFn: (f) => f.folio_proveedor, enableSorting: true,
       sortingFn: sortByString<FacturaCxP>((f) => f.folio_proveedor),
-      meta: { width: COL_W.folio, className: "whitespace-nowrap text-xs text-muted-foreground hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
+      meta: { width: COL_W.folio, className: "whitespace-nowrap text-body-sm text-muted-foreground hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
       cell: ({ row }) => row.original.folio_proveedor,
     },
     {
@@ -50,7 +50,7 @@ export function buildCxPColumns(): ColumnDef<FacturaCxP, unknown>[] {
               {toTitleCase(row.original.proveedor_nombre)}
             </span>
             {origen && (
-              <Badge variant="outline" className={`${badgeCls} text-2xs px-1.5 py-0 h-4 w-fit font-normal`}>
+              <Badge variant="outline" className={`${badgeCls} text-label px-1.5 py-0 h-4 w-fit font-normal`}>
                 {origen}
               </Badge>
             )}
@@ -63,18 +63,18 @@ export function buildCxPColumns(): ColumnDef<FacturaCxP, unknown>[] {
         id: "emision", header: "Emisión",
         accessor: (f) => f.fecha_emision,
       }),
-      meta: { width: COL_W.fecha, className: "text-xs whitespace-nowrap hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
+      meta: { width: COL_W.fecha, className: "text-body-sm whitespace-nowrap hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
     },
     {
       ...dateColumn<FacturaCxP>({
         id: "vencimiento", header: "Vencimiento",
         accessor: (f) => f.fecha_vencimiento,
       }),
-      meta: { width: COL_W.fecha, className: "text-xs whitespace-nowrap" },
+      meta: { width: COL_W.fecha, className: "text-body-sm whitespace-nowrap" },
     },
     {
       id: "moneda", header: "Mon.",
-      meta: { width: COL_W.tiny, className: "text-xs hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
+      meta: { width: COL_W.tiny, className: "text-body-sm hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
       cell: ({ row }) => row.original.moneda,
     },
     {

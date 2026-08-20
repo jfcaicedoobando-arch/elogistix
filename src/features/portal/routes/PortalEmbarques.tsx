@@ -52,7 +52,7 @@ export default function PortalEmbarques() {
     <PortalPageShell
       icon={<Ship className="h-6 w-6 text-accent" />}
       title="Mis Embarques"
-      actions={<span className="text-sm text-muted-foreground tabular-nums">{filtered.length} de {embarques.length}</span>}
+      actions={<span className="text-body text-muted-foreground tabular-nums">{filtered.length} de {embarques.length}</span>}
     >
 
       <PortalFiltersBar
@@ -124,13 +124,13 @@ export default function PortalEmbarques() {
                   <CollapsibleTrigger className="w-full cursor-pointer group">
                     <CardContent className="p-3 flex items-center justify-between">
                       <div className="flex flex-col gap-0.5 text-left">
-                        <div className="flex items-center gap-2 text-sm font-bold text-foreground">
+                        <div className="flex items-center gap-2 text-body font-bold text-foreground">
                           <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform duration-200 group-data-[state=closed]:-rotate-90" />
                           <Package className="h-4 w-4 text-muted-foreground" />
                           <span>{expediente}</span>
-                          <span className="text-xs font-normal text-muted-foreground">· {items.length} contenedores</span>
+                          <span className="text-body-sm font-normal text-muted-foreground">· {items.length} contenedores</span>
                         </div>
-                        <p className="text-xs text-muted-foreground ml-10">{ruta}</p>
+                        <p className="text-body-sm text-muted-foreground ml-10">{ruta}</p>
                       </div>
                       <div className="flex items-center gap-1.5 flex-shrink-0">
                         {Object.entries(statusCounts).map(([estado, count]) => (
@@ -139,7 +139,7 @@ export default function PortalEmbarques() {
                             domain="embarque"
                             status={estado}
                             label={`${count} ${estado}`}
-                            className="text-2xs px-1.5 py-0"
+                            className="text-label px-1.5 py-0"
                           />
                         ))}
                       </div>

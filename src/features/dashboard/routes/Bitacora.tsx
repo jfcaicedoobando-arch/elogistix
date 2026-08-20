@@ -165,7 +165,7 @@ export default function Bitacora() {
           </div>
         )}
 
-        <span className="text-xs text-muted-foreground ml-auto">
+        <span className="text-body-sm text-muted-foreground ml-auto">
           {total} {total === 1 ? "registro" : "registros"}
         </span>
       </div>

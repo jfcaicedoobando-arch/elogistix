@@ -124,14 +124,14 @@ export default function NuevaActividadDialog({ open, onOpenChange, defaultEntida
                 {opciones.map((o) => (
                   <SelectItem key={o.id} value={o.id}>{o.label}</SelectItem>
                 ))}
-                {opciones.length === 0 && <div className="p-2 text-xs text-muted-foreground">Sin registros</div>}
+                {opciones.length === 0 && <div className="p-2 text-body-sm text-muted-foreground">Sin registros</div>}
               </SelectContent>
             </Select>
           </div>
         </div>
       )}
       {defaultEntidad?.label && (
-        <div className="text-xs text-muted-foreground">Para: <span className="font-medium text-foreground">{defaultEntidad.label}</span></div>
+        <div className="text-body-sm text-muted-foreground">Para: <span className="font-medium text-foreground">{defaultEntidad.label}</span></div>
       )}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div className="space-y-1">

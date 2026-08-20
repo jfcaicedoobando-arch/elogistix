@@ -70,11 +70,11 @@ export default function ComentariosOportunidad({ oportunidadId, canEdit }: Props
           <ul className="space-y-2">
             {comentarios.map((c) => (
               <li key={c.id} className="border rounded-md p-2 bg-muted/30">
-                <div className="flex justify-between text-xs text-muted-foreground mb-1">
+                <div className="flex justify-between text-body-sm text-muted-foreground mb-1">
                   <span className="font-medium text-foreground">{c.autor_email || "Usuario"}</span>
                   <span>{formatRelativo(c.created_at)}</span>
                 </div>
-                <p className="text-sm whitespace-pre-wrap">{c.texto}</p>
+                <p className="text-body whitespace-pre-wrap">{c.texto}</p>
               </li>
             ))}
           </ul>

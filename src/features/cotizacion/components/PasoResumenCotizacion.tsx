@@ -41,15 +41,15 @@ export default function PasoResumenCotizacion({
               <CardTitle>P&L USD</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
-              <div className="flex justify-between text-sm">
+              <div className="flex justify-between text-body">
                 <span className="text-muted-foreground">Total Costo</span>
                 <span>{formatCurrency(plUSD.totalCosto, "USD")}</span>
               </div>
-              <div className="flex justify-between text-sm">
+              <div className="flex justify-between text-body">
                 <span className="text-muted-foreground">Total Venta</span>
                 <span>{formatCurrency(plUSD.totalVenta, "USD")}</span>
               </div>
-              <div className="flex justify-between text-sm font-semibold">
+              <div className="flex justify-between text-body font-semibold">
                 <span>Profit</span>
                 <span className={plUSD.profit >= 0 ? "text-success" : "text-destructive"}>
                   {formatCurrency(plUSD.profit, "USD")}
@@ -65,15 +65,15 @@ export default function PasoResumenCotizacion({
               <CardTitle>P&L MXN</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
-              <div className="flex justify-between text-sm">
+              <div className="flex justify-between text-body">
                 <span className="text-muted-foreground">Total Costo</span>
                 <span>{formatCurrency(plMXN.totalCosto, "MXN")}</span>
               </div>
-              <div className="flex justify-between text-sm">
+              <div className="flex justify-between text-body">
                 <span className="text-muted-foreground">Total Venta</span>
                 <span>{formatCurrency(plMXN.totalVenta, "MXN")}</span>
               </div>
-              <div className="flex justify-between text-sm font-semibold">
+              <div className="flex justify-between text-body font-semibold">
                 <span>Profit</span>
                 <span className={plMXN.profit >= 0 ? "text-success" : "text-destructive"}>
                   {formatCurrency(plMXN.profit, "MXN")}
@@ -91,7 +91,7 @@ export default function PasoResumenCotizacion({
           <CardTitle>Datos de la Operación</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-body">
             <div>
               <span className="text-muted-foreground">Cliente</span>
               <p className="font-medium">{nombreCliente || '—'}</p>
@@ -126,7 +126,7 @@ export default function PasoResumenCotizacion({
         <span className="text-base font-bold">Total MXN (c/IVA): {formatCurrency(totalMXN, 'MXN')}</span>
       </div>
 
-      <div className="flex items-center gap-2 p-3 rounded-md bg-warning/10 border border-warning/30 [color:hsl(var(--warning))] text-sm">
+      <div className="flex items-center gap-2 p-3 rounded-md bg-warning/10 border border-warning/30 [color:hsl(var(--warning))] text-body">
         <Info className="h-4 w-4 flex-shrink-0" />
         La cotización se guardará en estado Borrador.
       </div>

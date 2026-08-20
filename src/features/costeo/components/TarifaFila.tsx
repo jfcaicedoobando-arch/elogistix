@@ -84,7 +84,7 @@ export function TarifaFila({
 
   return (
     <div
-      className={`${FILA_GRID} py-2.5 text-sm transition-colors hover:bg-muted/40 ${esMejor ? "row-highlight-success" : ""} ${atenuar ? "opacity-60" : ""}`}
+      className={`${FILA_GRID} py-2.5 text-body transition-colors hover:bg-muted/40 ${esMejor ? "row-highlight-success" : ""} ${atenuar ? "opacity-60" : ""}`}
     >
       <div className="min-w-0">
         <div className="flex items-center gap-2">
@@ -100,7 +100,7 @@ export function TarifaFila({
           )}
           <span className="font-medium truncate">{t.agente_nombre}</span>
         </div>
-        <div className="text-xs text-muted-foreground truncate">{t.naviera_nombre}</div>
+        <div className="text-body-sm text-muted-foreground truncate">{t.naviera_nombre}</div>
       </div>
       <VigenciaBar desde={t.vigente_desde} hasta={t.vigente_hasta} />
       <div className="flex justify-start">

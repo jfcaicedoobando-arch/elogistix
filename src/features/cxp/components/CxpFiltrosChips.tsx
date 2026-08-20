@@ -103,12 +103,12 @@ export function CxpFiltrosChips(p: CxpFiltrosChipsProps) {
 
   return (
     <div className="flex items-center flex-wrap gap-2 pt-3 mt-3 border-t border-border">
-      <span className="text-xs font-medium text-muted-foreground">Activos:</span>
+      <span className="text-body-sm font-medium text-muted-foreground">Activos:</span>
       {chips.map((chip) => (
         <Badge
           key={chip.key}
           variant="secondary"
-          className="gap-1 pr-1 pl-2 py-1 text-xs font-normal"
+          className="gap-1 pr-1 pl-2 py-1 text-body-sm font-normal"
         >
           <span className="text-muted-foreground">{chip.label}:</span>
           <span className="font-medium truncate max-w-[180px]">{chip.value}</span>
@@ -125,7 +125,7 @@ export function CxpFiltrosChips(p: CxpFiltrosChipsProps) {
       <Button
         variant="ghost" size="sm"
         onClick={p.onClearAll}
-        className="ml-auto h-7 px-2 text-xs text-muted-foreground hover:text-foreground"
+        className="ml-auto h-7 px-2 text-body-sm text-muted-foreground hover:text-foreground"
       >
         Limpiar todo
       </Button>

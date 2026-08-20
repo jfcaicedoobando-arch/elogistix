@@ -21,7 +21,7 @@ export function CargaPdfIaSection({ categorias, onParsed, pdfReady }: Props) {
 
   return (
     <div className="p-4 space-y-3">
-      <div className="flex items-start gap-2 rounded-md bg-primary/5 border border-primary/20 px-3 py-2 text-xs text-muted-foreground">
+      <div className="flex items-start gap-2 rounded-md bg-primary/5 border border-primary/20 px-3 py-2 text-body-sm text-muted-foreground">
         <Sparkles className="h-4 w-4 text-primary flex-shrink-0 mt-0.5" />
         <span>
           Sube el PDF de la factura del proveedor extranjero. La IA extraerá folio, fechas,
@@ -30,7 +30,7 @@ export function CargaPdfIaSection({ categorias, onParsed, pdfReady }: Props) {
       </div>
 
       {pdfReady && (
-        <div className="flex items-center gap-2 rounded-md bg-success/10 border border-success/30 px-3 py-2 text-sm text-success">
+        <div className="flex items-center gap-2 rounded-md bg-success/10 border border-success/30 px-3 py-2 text-body text-success">
           <CheckCircle2 className="h-4 w-4" />
           PDF procesado. Los campos del formulario fueron prellenados — revísalos y edítalos si es necesario.
         </div>
@@ -56,7 +56,7 @@ export function CargaPdfIaSection({ categorias, onParsed, pdfReady }: Props) {
           onChange={(e) => handlePdf(e.target.files?.[0] ?? null)}
         />
         {pdf ? (
-          <div className="flex items-center justify-center gap-2 text-sm">
+          <div className="flex items-center justify-center gap-2 text-body">
             <FileText className="h-4 w-4 text-primary" />
             <span className="font-medium">{pdf.name}</span>
             <span className="text-muted-foreground">({(pdf.size / 1024).toFixed(1)} KB)</span>
@@ -72,10 +72,10 @@ export function CargaPdfIaSection({ categorias, onParsed, pdfReady }: Props) {
             </Button>
           </div>
         ) : (
-          <div className="flex flex-col items-center gap-1 text-sm text-muted-foreground">
+          <div className="flex flex-col items-center gap-1 text-body text-muted-foreground">
             <Upload className="h-5 w-5" />
             <span>Arrastra el <strong>PDF de la factura</strong> o haz clic para seleccionar</span>
-            <span className="text-xs">Máximo 10 MB · La IA soporta inglés, chino, español y otros idiomas</span>
+            <span className="text-body-sm">Máximo 10 MB · La IA soporta inglés, chino, español y otros idiomas</span>
           </div>
         )}
       </div>

@@ -13,8 +13,8 @@ import { COL_W } from "@/components/shared/dataTable/columnWidths";
 export const baseActividadColumns: ColumnDef<CrmActividadRow, unknown>[] = defineColumns<CrmActividadRow>([
   { id: "tipo", header: "Tipo", meta: { width: COL_W.fecha }, cell: ({ row }) => <Badge variant="outline">{row.original.tipo}</Badge> },
   { id: "asunto", header: "Asunto", meta: { className: "font-medium" }, cell: ({ row }) => row.original.asunto },
-  { id: "entidad", header: "Entidad", meta: { className: "text-xs" }, cell: ({ row }) => row.original.entidad_tipo },
-  { id: "responsable", header: "Responsable", meta: { className: "text-xs" }, cell: ({ row }) => row.original.responsable_email || "—" },
+  { id: "entidad", header: "Entidad", meta: { className: "text-body-sm" }, cell: ({ row }) => row.original.entidad_tipo },
+  { id: "responsable", header: "Responsable", meta: { className: "text-body-sm" }, cell: ({ row }) => row.original.responsable_email || "—" },
   {
     ...statusColumn<CrmActividadRow>({
       domain: "actividad_crm",
@@ -29,7 +29,7 @@ export const baseActividadColumns: ColumnDef<CrmActividadRow, unknown>[] = defin
     meta: { width: COL_W.fecha },
   },
   {
-    id: "fecha_programada", header: "Programada", meta: { className: "text-xs" },
+    id: "fecha_programada", header: "Programada", meta: { className: "text-body-sm" },
     cell: ({ row }) => row.original.fecha_programada ? formatFechaHora(row.original.fecha_programada) : "—",
   },
 ]);
