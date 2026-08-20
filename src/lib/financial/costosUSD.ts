@@ -161,11 +161,14 @@ export function sumarEnUSD(
  * Antes devolvía silenciosamente `Infinity`/`NaN` cuando el TC venía en 0, lo
  * cual se propagaba a totales financieros. Ahora lanza explícitamente — la UI
  * debe esperar a tener TC vigente antes de llamar este helper.
+ *
+ * BL-15: una moneda que no sea USD/MXN/EUR devuelve `null` (no hay T/C con el
+ * cual convertir). Antes se devolvía el monto tal cual, etiquetado como USD:
+ * un importe en otra divisa se sumaba como si ya fuera dólares.
  */
-export function aUSD(monto: number, moneda: string, tcUSD: number, tcEUR: number): number {
+export function aUSD(monto: number, moneda: string, tcUSD: number, tcEUR: number): number | null {
   if (moneda === 'USD') return monto;
-  // Monedas desconocidas: passthrough histórico (no hay TC que aplicar).
-  if (moneda !== 'MXN' && moneda !== 'EUR') return monto;
+  if (moneda !== 'MXN' && moneda !== 'EUR') return null;
   if (!Number.isFinite(tcUSD) || tcUSD <= 0) {
     throw new Error('TC requerido para conversión: tipoCambioUSD inválido (0/NaN) al convertir a USD');
   }
@@ -174,4 +177,5 @@ export function aUSD(monto: number, moneda: string, tcUSD: number, tcEUR: number
   }
   return convertirFila(monto, moneda as Moneda, 'USD', tcUSD, tcEUR);
 }
+
 
