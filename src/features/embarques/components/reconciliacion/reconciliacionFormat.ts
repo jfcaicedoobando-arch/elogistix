@@ -15,7 +15,7 @@ export function colorPorClasificacion(c: ClasificacionVarianza): string {
     case "critica":
       return "bg-destructive/10 text-destructive";
     case "alerta":
-      return "bg-warning/10 text-warning-foreground";
+      return "bg-warning/10 text-warning";
     default:
       return "bg-muted text-muted-foreground";
   }

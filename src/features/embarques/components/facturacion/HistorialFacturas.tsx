@@ -67,7 +67,7 @@ export function HistorialFacturas({ facturas, proformas }: Props) {
       id: "chevron",
       header: "",
       meta: { align: "right", className: "w-8" },
-      cell: () => <ChevronRight className="h-4 w-4 text-muted-foreground/40 ml-auto" />,
+      cell: () => <ChevronRight className="size-4 ml-auto text-muted-foreground transition-colors group-hover:text-foreground" />,
     },
   ]);
 

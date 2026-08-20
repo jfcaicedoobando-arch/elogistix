@@ -115,7 +115,7 @@ export function HistorialProformas({
         const consolidada = (p.estado_revision ?? "aprobada") === "consolidada";
         const puedeEliminar = canEdit && !facturada && !consolidada;
         if (!puedeEliminar) {
-          return <ChevronRight className="h-4 w-4 text-muted-foreground/40 ml-auto" />;
+          return <ChevronRight className="size-4 ml-auto text-muted-foreground transition-colors group-hover:text-foreground" />;
         }
         return (
           <DropdownMenu>

@@ -87,7 +87,7 @@ export function ClaimPendingBanner({ facturaId, facturapiId, facturapiClaimAt, n
   };
 
   return (
-    <Alert variant="destructive" className="border-warning bg-warning/10 text-warning-foreground">
+    <Alert variant="destructive" className="border-warning bg-warning/10 text-warning">
       <AlertTriangle className="h-4 w-4" />
       <AlertTitle>Timbrado en proceso interrumpido</AlertTitle>
       <AlertDescription className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">

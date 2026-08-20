@@ -45,7 +45,7 @@ export function TotalesPeriodoCard({ totales, desdeIso, isLoading }: Props) {
   return (
     <Card className="p-5 rounded-xl border border-border bg-card">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <p className="text-xs uppercase tracking-wide text-muted-foreground">
+        <p className="text-body-sm text-muted-foreground">
           Totales del periodo por moneda
         </p>
         <p className="text-xs text-muted-foreground">
