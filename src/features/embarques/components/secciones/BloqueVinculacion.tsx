@@ -77,7 +77,7 @@ export function BloqueVinculacion({
             </PopoverTrigger>
             <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
               <Command>
-                <CommandInput placeholder="Buscar por folio o cliente..." />
+                <CommandInput placeholder="Buscar por folio o cliente…" />
                 <CommandList>
                   <CommandEmpty>Sin cotizaciones aceptadas</CommandEmpty>
                   <CommandGroup>
@@ -152,7 +152,7 @@ export function BloqueVinculacion({
                   </PopoverTrigger>
                   <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
                     <Command>
-                      <CommandInput placeholder="Buscar por expediente o BL..." />
+                      <CommandInput placeholder="Buscar por expediente o BL…" />
                       <CommandList>
                         <CommandEmpty>Sin expedientes abiertos para este cliente</CommandEmpty>
                         <CommandGroup>

@@ -94,7 +94,7 @@ export default function ProformasFiltros(props: Props) {
           <SearchInput
             value={props.search}
             onChange={props.onSearchChange}
-            placeholder="Buscar proformas..."
+            placeholder="Buscar proformas…"
             className="flex-1 min-w-0"
           />
           <FilterButton count={totalActive} />

@@ -11,10 +11,10 @@ export default function OrigenDestinoBlock({
     return (
       <>
         <FormField label="Origen">
-          <PortSelect value={watch("origen")} onValueChange={v => setValue("origen", v)} placeholder="Buscar puerto de origen..." />
+          <PortSelect value={watch("origen")} onValueChange={v => setValue("origen", v)} placeholder="Buscar puerto de origen…" />
         </FormField>
         <FormField label="Destino">
-          <PortSelect value={watch("destino")} onValueChange={v => setValue("destino", v)} placeholder="Buscar puerto de destino..." />
+          <PortSelect value={watch("destino")} onValueChange={v => setValue("destino", v)} placeholder="Buscar puerto de destino…" />
         </FormField>
       </>
     );

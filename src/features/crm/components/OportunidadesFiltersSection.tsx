@@ -37,7 +37,7 @@ export default function OportunidadesFiltersSection({
         {/* Mobile */}
         <div className="flex gap-2 md:hidden">
           <div className="flex-1 min-w-0">
-            <SearchInput value={search} onChange={onSearchChange} placeholder="Buscar..." />
+            <SearchInput value={search} onChange={onSearchChange} placeholder="Buscar…" />
           </div>
           <MobileFiltersSheet
             open={filtersOpen}
@@ -57,7 +57,7 @@ export default function OportunidadesFiltersSection({
         {/* Desktop */}
         <div className="hidden md:flex md:flex-row md:gap-2 md:items-center">
           <div className="flex-1">
-            <SearchInput value={search} onChange={onSearchChange} placeholder="Buscar por nombre o cliente..." />
+            <SearchInput value={search} onChange={onSearchChange} placeholder="Buscar por nombre o cliente…" />
           </div>
           <Collapsible open={filtersOpen} onOpenChange={onFiltersOpenChange}>
             <CollapsibleTrigger asChild>

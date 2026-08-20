@@ -9,11 +9,11 @@ describe("<PortalFiltersBar />", () => {
       <PortalFiltersBar
         search=""
         onSearchChange={onSearchChange}
-        searchPlaceholder="Buscar..."
+        searchPlaceholder="Buscar…"
         hideOnMobile={false}
       />,
     );
-    const input = screen.getByPlaceholderText("Buscar...");
+    const input = screen.getByPlaceholderText("Buscar…");
     fireEvent.change(input, { target: { value: "abc" } });
     expect(onSearchChange).toHaveBeenCalled();
     expect(onSearchChange).toHaveBeenLastCalledWith("abc");

@@ -129,7 +129,7 @@ export function PagoFormFields({ values, onChange, cuentas = [] }: Props) {
           id="pago-referencia"
           value={values.referencia}
           onChange={(e) => onChange("referencia", e.target.value)}
-          placeholder="Folio SPEI, cheque..."
+          placeholder="Folio SPEI, cheque…"
         />
       </div>
       <div className="sm:col-span-2 space-y-1">

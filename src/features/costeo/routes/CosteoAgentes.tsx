@@ -114,7 +114,7 @@ export default function CosteoAgentes() {
           <SearchInput
             value={search}
             onChange={setSearch}
-            placeholder="Buscar por nombre, país, contacto o email..."
+            placeholder="Buscar por nombre, país, contacto o email…"
           />
         </CardContent>
       </Card>

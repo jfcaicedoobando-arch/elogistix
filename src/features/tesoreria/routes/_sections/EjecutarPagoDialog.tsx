@@ -74,7 +74,7 @@ export function EjecutarPagoDialog({
       <div className="sm:col-span-2">
         <Label htmlFor="pago-cuenta">Cuenta bancaria *</Label>
         <Select value={form.cuentaBancariaId} onValueChange={(v) => setField("cuentaBancariaId", v)}>
-          <SelectTrigger id="pago-cuenta"><SelectValue placeholder="Selecciona cuenta..." /></SelectTrigger>
+          <SelectTrigger id="pago-cuenta"><SelectValue placeholder="Selecciona cuenta…" /></SelectTrigger>
           <SelectContent>
             {cuentasCompatibles.length === 0
               ? <SelectItem value="__sin" disabled>Sin cuentas en {facturaPago?.moneda}</SelectItem>

@@ -70,7 +70,7 @@ export default function WizardInformativa() {
           <div className="md:col-span-3">
             <Label>Cliente *</Label>
             <Select value={clienteId} onValueChange={setClienteId}>
-              <SelectTrigger><SelectValue placeholder="Seleccionar cliente..." /></SelectTrigger>
+              <SelectTrigger><SelectValue placeholder="Seleccionar cliente…" /></SelectTrigger>
               <SelectContent>
                 {clientes.map((c) => <SelectItem key={c.id} value={c.id}>{c.nombre}</SelectItem>)}
               </SelectContent>
@@ -109,7 +109,7 @@ export default function WizardInformativa() {
       <div className="flex justify-end gap-2">
         <Button variant="outline" onClick={() => navigate("/cotizaciones")}>Cancelar</Button>
         <Button onClick={guardar} disabled={createMut.isPending}>
-          {createMut.isPending ? "Guardando..." : "Guardar tarifario"}
+          {createMut.isPending ? "Guardando…" : "Guardar tarifario"}
         </Button>
       </div>
     </div>

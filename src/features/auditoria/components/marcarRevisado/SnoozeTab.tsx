@@ -35,7 +35,7 @@ export function SnoozeTab({ ctrl }: Props) {
         </Label>
         <Textarea
           id="snooze-motivo"
-          placeholder="Por qué se silencia (ej. esperando documentación del cliente)..."
+          placeholder="Por qué se silencia (ej. esperando documentación del cliente)…"
           value={ctrl.snoozeMotivo}
           onChange={(e) => ctrl.setSnoozeMotivo(e.target.value)}
           rows={2}

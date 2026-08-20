@@ -1,6 +1,5 @@
 import { useDeferredValue } from "react";
 import { useDocumentTitle } from "@/hooks/shared";
-import { Plus } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { ResponsiveDataTable } from "@/components/shared/dataTable/ResponsiveDataTable";
 import { PageContainer } from "@/components/shared/PageContainer";

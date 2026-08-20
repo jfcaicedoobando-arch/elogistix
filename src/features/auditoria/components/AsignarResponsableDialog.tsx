@@ -112,7 +112,7 @@ export function AsignarResponsableDialog({
           >
             <SelectTrigger className="h-9 text-sm">
               <SelectValue
-                placeholder={ctrl.loadingUsers ? "Cargando..." : "Selecciona un responsable"}
+                placeholder={ctrl.loadingUsers ? "Cargando…" : "Selecciona un responsable"}
               />
             </SelectTrigger>
             <SelectContent>

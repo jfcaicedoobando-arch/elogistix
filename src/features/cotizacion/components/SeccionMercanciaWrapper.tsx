@@ -68,7 +68,7 @@ export default function SeccionMercanciaWrapper({
             <Textarea
               value={watch("descripcionAdicional")}
               onChange={e => setValue("descripcionAdicional", e.target.value)}
-              placeholder="Describe aquí más detalles de la mercancía..."
+              placeholder="Describe aquí más detalles de la mercancía…"
               rows={3}
             />
           </AccordionContent>

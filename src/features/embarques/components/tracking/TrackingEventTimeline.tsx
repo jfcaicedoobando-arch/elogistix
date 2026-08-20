@@ -10,7 +10,7 @@ interface Props {
 }
 
 export function TrackingEventTimeline({ eventos, isLoading }: Props) {
-  if (isLoading) return <EmptyStateInline loading message="Cargando eventos..." />;
+  if (isLoading) return <EmptyStateInline loading message="Cargando eventos…" />;
   if (eventos.length === 0) {
     return <EmptyStateInline icon={Clock} message="No hay eventos de tracking registrados." />;
   }

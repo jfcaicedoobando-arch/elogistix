@@ -43,7 +43,7 @@ export function MsdsUploadSection({ onMsdsUpload }: MsdsProps) {
       ) : (
         <Button type="button" variant="outline" className="w-full" disabled={subiendoMsds} onClick={openPicker}>
           <Upload className="h-4 w-4 mr-2" aria-hidden />
-          {subiendoMsds ? "Subiendo..." : "Adjuntar MSDS"}
+          {subiendoMsds ? "Subiendo…" : "Adjuntar MSDS"}
         </Button>
       )}
       <input

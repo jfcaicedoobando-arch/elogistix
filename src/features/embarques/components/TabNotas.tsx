@@ -74,7 +74,7 @@ export function TabNotas({ embarqueId, expediente }: Props) {
         {canEdit && embarqueId && (
           <div className="flex gap-2">
             <Textarea
-              placeholder="Escribe una nota..."
+              placeholder="Escribe una nota…"
               value={texto}
               onChange={(e) => setTexto(e.target.value)}
               className="min-h-16"

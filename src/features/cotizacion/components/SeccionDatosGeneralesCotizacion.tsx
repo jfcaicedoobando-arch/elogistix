@@ -62,7 +62,7 @@ export default function SeccionDatosGeneralesCotizacion({ complete }: { complete
               clearErrors("modalidadEquipo");
             }}
           >
-            <SelectTrigger aria-invalid={!!errors.modalidadEquipo}><SelectValue placeholder="Seleccionar..." /></SelectTrigger>
+            <SelectTrigger aria-invalid={!!errors.modalidadEquipo}><SelectValue placeholder="Seleccionar…" /></SelectTrigger>
             <SelectContent>
               {MODALIDADES_EQUIPO_TERRESTRE.map(m => (
                 <SelectItem key={m} value={m}>{m}</SelectItem>

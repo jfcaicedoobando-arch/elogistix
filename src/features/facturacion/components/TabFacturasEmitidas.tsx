@@ -105,7 +105,7 @@ export function TabFacturasEmitidas({ filtros: f, tabla: t, acciones: a }: Props
               <UnifiedFiltersBar
                 search={f.search}
                 onSearchChange={f.setSearch}
-                searchPlaceholder="Buscar factura o cliente..."
+                searchPlaceholder="Buscar factura o cliente…"
                 primary={primarySlot}
                 secondary={secondarySlot}
                 chips={chips}

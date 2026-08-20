@@ -62,7 +62,7 @@ export default function PortalFacturas() {
       <PortalFiltersBar
         search={search}
         onSearchChange={setSearch}
-        searchPlaceholder="Buscar por número, expediente..."
+        searchPlaceholder="Buscar por número, expediente…"
         selects={[
           {
             value: filtroEstado,

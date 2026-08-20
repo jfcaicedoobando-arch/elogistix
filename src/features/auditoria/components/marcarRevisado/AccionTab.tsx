@@ -19,7 +19,7 @@ export function AccionTab({ ctrl, revisionExistente }: Props) {
       </Label>
       <Textarea
         id="accion-tomada"
-        placeholder="Describe la acción tomada para resolver o justificar este hallazgo..."
+        placeholder="Describe la acción tomada para resolver o justificar este hallazgo…"
         value={ctrl.accion}
         onChange={(e) => ctrl.setAccion(e.target.value)}
         rows={4}
@@ -52,7 +52,7 @@ export function AccionTab({ ctrl, revisionExistente }: Props) {
 export function AccionButton({ ctrl }: { ctrl: ReturnType<typeof useMarcarRevisadoController> }) {
   return (
     <Button size="sm" onClick={ctrl.handleGuardar} disabled={ctrl.cargando || !ctrl.accion.trim()}>
-      {ctrl.marcando ? "Guardando..." : ctrl.yaRevisado ? "Actualizar" : "Marcar como revisado"}
+      {ctrl.marcando ? "Guardando…" : ctrl.yaRevisado ? "Actualizar" : "Marcar como revisado"}
     </Button>
   );
 }

@@ -85,7 +85,7 @@ export function ActualizarEtaForm({ etaActual, isPending, onSubmit, onCancel }: 
                 <Input
                   id="actualizar-eta-fuente"
                   {...field}
-                  placeholder="Ej. Portal Maersk, aviso del agente..."
+                  placeholder="Ej. Portal Maersk, aviso del agente…"
                   maxLength={120}
                 />
               )}
@@ -97,7 +97,7 @@ export function ActualizarEtaForm({ etaActual, isPending, onSubmit, onCancel }: 
               Volver
             </Button>
             <Button type="submit" size="sm" disabled={!isValid || isPending}>
-              {isPending ? "Guardando..." : "Actualizar ETA"}
+              {isPending ? "Guardando…" : "Actualizar ETA"}
             </Button>
           </div>
         </form>

@@ -87,7 +87,7 @@ export function MarcarLlegadaForm({
               Volver
             </Button>
             <Button type="submit" size="sm" disabled={!isValid || isPending}>
-              {isPending ? "Guardando..." : "Registrar llegada"}
+              {isPending ? "Guardando…" : "Registrar llegada"}
             </Button>
           </div>
         </form>

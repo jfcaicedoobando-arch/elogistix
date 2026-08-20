@@ -36,7 +36,7 @@ export default function VendedorSelect({ value, onChange, label = "Vendedor asig
           onChange(v, u?.email ?? "");
         }}
       >
-        <SelectTrigger><SelectValue placeholder="Sin asignar..." /></SelectTrigger>
+        <SelectTrigger><SelectValue placeholder="Sin asignar…" /></SelectTrigger>
         <SelectContent>
           <SelectItem value="ninguno">Sin asignar</SelectItem>
           {candidatos.map((u) => (

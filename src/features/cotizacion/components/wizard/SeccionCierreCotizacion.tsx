@@ -65,7 +65,7 @@ export default function SeccionCierreCotizacion({ form, complete }: Props) {
               id="cot-notas"
               value={form.watch("notas") as string}
               onChange={(e) => form.setValue("notas", e.target.value)}
-              placeholder="Observaciones o condiciones..."
+              placeholder="Observaciones o condiciones…"
               rows={3}
             />
           </AccordionContent>

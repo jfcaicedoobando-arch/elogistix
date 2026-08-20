@@ -48,7 +48,7 @@ export function ConciliacionToolbar({
     <Card>
       <CardContent density="compact" className="flex flex-wrap gap-3 items-center">
         <Select value={cuentaId} onValueChange={onCuentaChange}>
-          <SelectTrigger className="w-full sm:w-[260px]"><SelectValue placeholder="Selecciona cuenta..." /></SelectTrigger>
+          <SelectTrigger className="w-full sm:w-[260px]"><SelectValue placeholder="Selecciona cuenta…" /></SelectTrigger>
           <SelectContent>
             {cuentas.length === 0
               ? <SelectItem value="__sin" disabled>No hay cuentas activas</SelectItem>
@@ -75,7 +75,7 @@ export function ConciliacionToolbar({
           disabled={!cuentaId || isAutoConciliando || pendientesCount === 0}
         >
           <Sparkles className="h-4 w-4 mr-2 text-primary" />
-          {isAutoConciliando ? "Conciliando..." : "Conciliar exactos"}
+          {isAutoConciliando ? "Conciliando…" : "Conciliar exactos"}
         </Button>
 
         {puedeCapturar ? (
@@ -87,7 +87,7 @@ export function ConciliacionToolbar({
             <input ref={fileRef} type="file" accept=".xlsx,.csv" onChange={onFile} className="hidden" />
             <Button onClick={() => fileRef.current?.click()} disabled={!cuentaId || importando}>
               <Upload className="h-4 w-4 mr-2" />
-              {importando ? "Importando..." : "Importar XLSX/CSV"}
+              {importando ? "Importando…" : "Importar XLSX/CSV"}
             </Button>
           </>
         ) : (

@@ -33,7 +33,7 @@ interface PortalFilterSheetProps {
 export function PortalFilterSheet({
   search,
   onSearchChange,
-  searchPlaceholder = "Buscar...",
+  searchPlaceholder = "Buscar…",
   title,
   activeCount,
   onClear,

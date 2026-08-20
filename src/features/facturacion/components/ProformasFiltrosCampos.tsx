@@ -103,7 +103,7 @@ export function ProformasFiltrosCampos(props: ProformasFiltrosCamposProps) {
         <SearchInput
           value={props.search}
           onChange={props.onSearchChange}
-          placeholder="Buscar por número, expediente, cliente o folio..."
+          placeholder="Buscar por número, expediente, cliente o folio…"
           className="flex-1 min-w-[200px]"
         />
         {EstadoSelect}

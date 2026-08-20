@@ -49,7 +49,7 @@ interface PortalFiltersBarProps {
 export function PortalFiltersBar({
   search,
   onSearchChange,
-  searchPlaceholder = "Buscar...",
+  searchPlaceholder = "Buscar…",
   selects = [],
   hideOnMobile = true,
   className,
