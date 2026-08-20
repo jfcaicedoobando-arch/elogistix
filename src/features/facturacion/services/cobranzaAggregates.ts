@@ -6,7 +6,7 @@
 import { sumarMontos } from "@/lib/financial/financialUtils";
 import type { FacturaCobranza } from "./cobranza";
 import { logger } from "@/lib/observability/logger";
-import { estaPorVencer } from "@/features/facturacion/domain/porVencer";
+import { estaPorVencer, esCxcVencida } from "@/lib/domain/vencimiento";
 
 export interface KPIsCobranza {
   total_mxn: number;
