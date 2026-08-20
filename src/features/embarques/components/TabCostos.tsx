@@ -1,7 +1,8 @@
 import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
-import { formatCurrency } from "@/lib/formatters";
+import { formatCurrency, formatPercent } from "@/lib/formatters";
+import { claseTonoMargen, UMBRAL_MARGEN_OPERATIVO } from "@/lib/ui/margen";
 import { useContenedoresEmbarque } from "@/features/embarques/hooks";
 import { useReconciliacionEmbarque } from "@/features/embarques/hooks/useReconciliacionEmbarque";
 
@@ -49,7 +50,7 @@ export function TabCostos({ conceptosCosto, totalVenta, totalCosto, utilidad, ma
     { label: 'Total Venta', value: formatCurrency(totalVenta, 'MXN'), color: '' },
     { label: 'Total Costo', value: formatCurrency(totalCosto, 'MXN'), color: '' },
     { label: 'Utilidad', value: formatCurrency(utilidad, 'MXN'), color: utilidad >= 0 ? 'text-success' : 'text-destructive' },
-    { label: 'Margen', value: `${margen.toFixed(1)}%`, color: margen >= 0 ? 'text-success' : 'text-destructive' },
+    { label: 'Margen', value: formatPercent(margen), color: claseTonoMargen(margen, { umbrales: UMBRAL_MARGEN_OPERATIVO }) },
   ];
 
   const irACargarCostos = canEdit && embarqueId

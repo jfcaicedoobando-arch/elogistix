@@ -2,8 +2,9 @@ import { memo } from "react";
 import { TrendingUp } from "lucide-react";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { MargenBadge } from "@/components/shared/MargenBadge";
+import { UMBRAL_MARGEN_COTIZACION } from "@/lib/ui/margen";
 import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { sortByNumber } from "@/components/shared/dataTable/sortingFns";
 import { formatCurrency, toTitleCase } from "@/lib/formatters";
@@ -59,18 +60,9 @@ const columns: ColumnDef<EmbarqueConProfit, unknown>[] = defineColumns<EmbarqueC
     accessorFn: (e) => e.margenMXN, enableSorting: true,
     sortingFn: sortByNumber<EmbarqueConProfit>((e) => e.margenMXN),
     meta: { className: "text-right", headerClassName: "text-right" },
-    cell: ({ row }) => {
-      const e = row.original;
-      return (
-        <Badge className={`text-label ${
-          e.margenMXN > 15 ? "bg-success/15 text-success border-success/30"
-            : e.margenMXN > 0 ? "bg-warning/15 text-warning border-warning/30"
-            : "bg-destructive/15 text-destructive border-destructive/30"
-        }`}>
-          {e.margenMXN.toFixed(1)}%
-        </Badge>
-      );
-    },
+    cell: ({ row }) => (
+      <MargenBadge pct={row.original.margenMXN} umbrales={UMBRAL_MARGEN_COTIZACION} className="text-label" />
+    ),
   },
 ]);
 
