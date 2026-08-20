@@ -32,7 +32,7 @@ export default function ConfigOrganizacion() {
       <CardContent className="space-y-4">
         <Select value={selectedOrgId} onValueChange={setSelectedOrgId}>
           <SelectTrigger className="w-80">
-            <SelectValue placeholder="Seleccionar organización..." />
+            <SelectValue placeholder="Seleccionar organización…" />
           </SelectTrigger>
           <SelectContent>
             {organizations.map((org) => (

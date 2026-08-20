@@ -32,7 +32,7 @@ export function ProfitTooltipContent({ data }: { data: ArribosEsteMes }) {
     <div className="space-y-3">
       <div>
         <SectionHeading as="h3">Profit proyectado del mes</SectionHeading>
-        <div className="text-2xs text-muted-foreground uppercase tracking-wide mt-0.5">
+        <div className="text-body-sm text-muted-foreground mt-0.5">
           Homologado a MXN
         </div>
       </div>
@@ -63,7 +63,7 @@ export function ProfitTooltipContent({ data }: { data: ArribosEsteMes }) {
             style={{ width: `${profitBarPct}%` }}
           />
         </div>
-        <div className="mt-1 flex justify-between text-3xs text-muted-foreground uppercase tracking-wide">
+        <div className="mt-1 flex justify-between text-body-sm text-muted-foreground">
           <span>Costo</span>
           <span>{profitPositivo ? "Profit" : "Pérdida"}</span>
         </div>
@@ -71,13 +71,13 @@ export function ProfitTooltipContent({ data }: { data: ArribosEsteMes }) {
 
       {desglose.length > 0 && (
         <div className="border-t pt-2">
-          <div className="text-2xs uppercase tracking-wide text-muted-foreground mb-1">
+          <div className="text-body-sm text-muted-foreground mb-1">
             Desglose por moneda origen
           </div>
           <div className="grid grid-cols-[auto_1fr_1fr] gap-x-3 gap-y-0.5 text-label">
-            <span className="text-2xs uppercase text-muted-foreground">Origen</span>
-            <span className="text-2xs uppercase text-muted-foreground text-right">Venta MXN</span>
-            <span className="text-2xs uppercase text-muted-foreground text-right">Costo MXN</span>
+            <span className="text-body-sm text-muted-foreground">Origen</span>
+            <span className="text-body-sm text-muted-foreground text-right">Venta MXN</span>
+            <span className="text-body-sm text-muted-foreground text-right">Costo MXN</span>
             {desglose.map((r) => (
               <Fragment key={r.label}>
                 <span className="font-medium">{r.label}</span>

@@ -58,7 +58,7 @@ export default function PortalEmbarques() {
       <PortalFiltersBar
         search={search}
         onSearchChange={setSearch}
-        searchPlaceholder="Buscar por expediente, ruta..."
+        searchPlaceholder="Buscar por expediente, ruta…"
         selects={[
           {
             value: filtroEstado,

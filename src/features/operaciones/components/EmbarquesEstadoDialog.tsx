@@ -77,7 +77,7 @@ export function EmbarquesEstadoDialog({ open, onOpenChange, operador, estado, bu
           aria-label="Buscar por expediente o cliente"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder="Buscar por expediente o cliente..."
+          placeholder="Buscar por expediente o cliente…"
           className="pl-9"
           autoFocus
         />

@@ -68,7 +68,7 @@ export default function TesoreriaConciliacion() {
       return;
     }
     try {
-      notifyInfo(undefined, { title: "Procesando archivo..." });
+      notifyInfo(undefined, { title: "Procesando archivo…" });
       const movimientos = await parseEstadoCuentaBBVA(file);
       if (movimientos.length === 0) return notifyError(undefined, { title: "No se encontraron movimientos válidos", method: "PAGES_TESORERIA_TESORERIACONCILIACION_2" });
       const res = await importar.mutateAsync({ cuentaId, movimientos });

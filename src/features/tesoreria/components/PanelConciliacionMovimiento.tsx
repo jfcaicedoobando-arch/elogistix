@@ -147,7 +147,7 @@ export function PanelConciliacionMovimiento({ movimiento, onClose, moneda = "MXN
       >
         <div className="space-y-2">
           <Label htmlFor="conciliacion-motivo-ignorar">Motivo</Label>
-          <Input id="conciliacion-motivo-ignorar" value={motivo} onChange={(e) => setMotivo(e.target.value)} placeholder="Comisión bancaria, traspaso interno..." />
+          <Input id="conciliacion-motivo-ignorar" value={motivo} onChange={(e) => setMotivo(e.target.value)} placeholder="Comisión bancaria, traspaso interno…" />
         </div>
       </FormDialogShell>
 

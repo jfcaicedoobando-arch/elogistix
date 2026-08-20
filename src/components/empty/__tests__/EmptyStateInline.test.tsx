@@ -33,7 +33,7 @@ describe("EmptyStateInline", () => {
   });
 
   it("loading muestra spinner en vez de icono", () => {
-    const { container } = render(<EmptyStateInline loading message="Cargando..." icon={Ship} />);
+    const { container } = render(<EmptyStateInline loading message="Cargando…" icon={Ship} />);
     expect(container.querySelector(".animate-spin")).not.toBeNull();
   });
 });

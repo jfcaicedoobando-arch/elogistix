@@ -17,7 +17,7 @@ interface Props {
 export function EmbarquesHeaderActions({
   canEdit, exportandoCsv, onExport, onNuevo, onNuevoDesdeCotizacion,
 }: Props) {
-  const exportLabel = exportandoCsv ? "Exportando..." : "Exportar CSV";
+  const exportLabel = exportandoCsv ? "Exportando…" : "Exportar CSV";
   return (
     <>
       <Button variant="outline" onClick={onExport} disabled={exportandoCsv} className="hidden md:inline-flex">

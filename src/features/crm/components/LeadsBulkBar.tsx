@@ -67,7 +67,7 @@ export default function LeadsBulkBar({ ids, onClear, onDone }: Props) {
 
       <Select onValueChange={(v) => handleEstado(v as CrmLeadEstado)}>
         <SelectTrigger className="h-8 w-[170px] bg-background text-foreground">
-          <SelectValue placeholder="Cambiar estado..." />
+          <SelectValue placeholder="Cambiar estado…" />
         </SelectTrigger>
         <SelectContent>
           {LEAD_ESTADOS.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}

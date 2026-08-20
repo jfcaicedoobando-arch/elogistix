@@ -175,7 +175,7 @@ export default function SeccionCostosInternosPLDetalle({ cotizacionId, conceptos
         <div className="flex justify-end">
           <Button onClick={handleGuardar} disabled={upsert.isPending}>
             <Save className="h-4 w-4 mr-1" />
-            {upsert.isPending ? "Guardando..." : "Guardar Costos"}
+            {upsert.isPending ? "Guardando…" : "Guardar Costos"}
           </Button>
         </div>
       )}

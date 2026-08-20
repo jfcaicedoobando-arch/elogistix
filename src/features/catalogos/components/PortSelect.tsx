@@ -39,7 +39,7 @@ export default function PortSelect({ value, onValueChange, placeholder = "Selecc
       </PopoverTrigger>
       <PopoverContent className="w-[350px] p-0" align="start">
         <Command>
-          <CommandInput placeholder="Buscar puerto, país o ciudad..." value={search} onValueChange={setSearch} />
+          <CommandInput placeholder="Buscar puerto, país o ciudad…" value={search} onValueChange={setSearch} />
           <CommandList>
             <CommandEmpty>
               {search.trim() ? (

@@ -90,7 +90,7 @@ export default function PortalCotizaciones() {
       <PortalFiltersBar
         search={search}
         onSearchChange={setSearch}
-        searchPlaceholder="Buscar por folio, ruta..."
+        searchPlaceholder="Buscar por folio, ruta…"
         selects={[
           {
             value: filtroEstado,

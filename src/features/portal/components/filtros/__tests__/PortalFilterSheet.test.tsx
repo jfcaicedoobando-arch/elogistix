@@ -17,7 +17,7 @@ describe("PortalFilterSheet", () => {
         <div>campo</div>
       </PortalFilterSheet>,
     );
-    expect(screen.getByPlaceholderText("Buscar...")).toBeInTheDocument();
+    expect(screen.getByPlaceholderText("Buscar…")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Filtros/i })).toBeInTheDocument();
   });
 
@@ -28,7 +28,7 @@ describe("PortalFilterSheet", () => {
         <div />
       </PortalFilterSheet>,
     );
-    fireEvent.change(screen.getByPlaceholderText("Buscar..."), { target: { value: "abc" } });
+    fireEvent.change(screen.getByPlaceholderText("Buscar…"), { target: { value: "abc" } });
     expect(onSearchChange).toHaveBeenCalledWith("abc");
   });
 
@@ -45,10 +45,10 @@ describe("PortalFilterSheet", () => {
 
   it("respeta placeholder personalizado", () => {
     render(
-      <PortalFilterSheet {...baseProps} searchPlaceholder="Buscar factura...">
+      <PortalFilterSheet {...baseProps} searchPlaceholder="Buscar factura…">
         <div />
       </PortalFilterSheet>,
     );
-    expect(screen.getByPlaceholderText("Buscar factura...")).toBeInTheDocument();
+    expect(screen.getByPlaceholderText("Buscar factura…")).toBeInTheDocument();
   });
 });

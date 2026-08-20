@@ -56,7 +56,7 @@ export default function Ayuda() {
               aria-label="Buscar término, pregunta o concepto"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Buscar término, pregunta o concepto..."
+              placeholder="Buscar término, pregunta o concepto…"
               className="pl-10"
             />
           </div>

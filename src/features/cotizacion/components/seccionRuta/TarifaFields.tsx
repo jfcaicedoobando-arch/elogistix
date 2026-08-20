@@ -47,7 +47,7 @@ function CartaGarantiaSlot({ ctx, tarifaCtx }: { ctx: Ctx; tarifaCtx: TarifaCtx 
   return (
     <FormField label="Carta garantía">
       <Select value={watch("cartaGarantia") ? 'si' : 'no'} onValueChange={v => { marcarOverride(ctx, "cartaGarantia"); setValue("cartaGarantia", v === 'si', OPTS); }}>
-        <SelectTrigger><SelectValue placeholder="Seleccione..." /></SelectTrigger>
+        <SelectTrigger><SelectValue placeholder="Seleccione…" /></SelectTrigger>
         <SelectContent>
           <SelectItem value="si">Sí</SelectItem>
           <SelectItem value="no">No</SelectItem>

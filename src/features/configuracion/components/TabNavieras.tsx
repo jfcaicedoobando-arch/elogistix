@@ -93,7 +93,7 @@ export default function TabNavieras() {
           </Button>
         </div>
 
-        <SearchInput value={busqueda} onChange={setBusqueda} placeholder="Buscar por código o nombre..." />
+        <SearchInput value={busqueda} onChange={setBusqueda} placeholder="Buscar por código o nombre…" />
 
         <div className="max-h-[calc(100vh-20rem)] min-h-[320px] overflow-auto rounded-md border">
           <DataTable

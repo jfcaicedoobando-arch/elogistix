@@ -11,7 +11,7 @@ import { cn } from "@/lib/utils";
  *
  * Uso:
  *   <EmptyStateInline icon={Receipt} message="No hay proformas generadas." />
- *   <EmptyStateInline loading message="Cargando eventos..." />
+ *   <EmptyStateInline loading message="Cargando eventos…" />
  *   <EmptyStateInline icon={Ship} message="Sin navieras." density="compact"
  *     action={{ label: "Dar de alta", to: "/catalogos/navieras" }} />
  */

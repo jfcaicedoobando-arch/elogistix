@@ -58,7 +58,7 @@ export default function ActividadTimeline({ entidadTipo, entidadId }: Props) {
               {ACTIVIDAD_TIPOS.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
             </SelectContent>
           </Select>
-          <Input aria-label="Asunto de la actividad" placeholder="Asunto..." value={asunto} onChange={(e) => setAsunto(e.target.value)} />
+          <Input aria-label="Asunto de la actividad" placeholder="Asunto…" value={asunto} onChange={(e) => setAsunto(e.target.value)} />
           <Button onClick={handleCrear} disabled={crear.isPending}>
             {crear.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
           </Button>

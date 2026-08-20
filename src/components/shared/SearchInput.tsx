@@ -22,7 +22,7 @@ interface SearchInputProps {
 export default function SearchInput({
   value,
   onChange,
-  placeholder = "Buscar...",
+  placeholder = "Buscar…",
   className,
   inputClassName,
   "aria-label": ariaLabel,

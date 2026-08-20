@@ -85,7 +85,7 @@ export default function TabPuertos() {
           </Button>
         </div>
 
-        <SearchInput value={puertoBusqueda} onChange={setPuertoBusqueda} placeholder="Buscar por código, nombre o país..." />
+        <SearchInput value={puertoBusqueda} onChange={setPuertoBusqueda} placeholder="Buscar por código, nombre o país…" />
 
         <div className="max-h-[calc(100vh-20rem)] min-h-[320px] overflow-auto rounded-md border">
           <DataTable

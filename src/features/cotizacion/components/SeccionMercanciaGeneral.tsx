@@ -22,7 +22,7 @@ export default function SeccionMercanciaGeneral({ msdsFile, setMsdsFile }: Props
             type="text"
             value={watch("tipoUnidad")}
             onChange={e => setValue("tipoUnidad", e.target.value)}
-            placeholder="Ej. Trailer, Caja seca..."
+            placeholder="Ej. Trailer, Caja seca…"
           />
         </div>
         <div>

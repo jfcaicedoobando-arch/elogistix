@@ -13,7 +13,7 @@ import { useDocumentTitle } from "@/hooks/shared";
 
 
 function getSaveButtonLabel(isSaving: boolean): string {
-  return isSaving ? "Guardando..." : "Guardar Cambios";
+  return isSaving ? "Guardando…" : "Guardar Cambios";
 }
 
 const TABS_CON_GUARDAR = new Set(["empresa", "facturacion"]);

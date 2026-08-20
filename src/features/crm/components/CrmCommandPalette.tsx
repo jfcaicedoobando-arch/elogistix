@@ -32,7 +32,7 @@ export default function CrmCommandPalette({ open, onOpenChange }: Props) {
 
   return (
     <CommandDialog open={open} onOpenChange={onOpenChange}>
-      <CommandInput value={term} onValueChange={setTerm} placeholder="Buscar leads, oportunidades, actividades..." />
+      <CommandInput value={term} onValueChange={setTerm} placeholder="Buscar leads, oportunidades, actividades…" />
       <CommandList>
         {debounced.length < 2 ? (
           <div className="p-4 text-xs text-muted-foreground">Escribe al menos 2 caracteres…</div>

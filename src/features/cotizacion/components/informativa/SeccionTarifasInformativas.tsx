@@ -56,7 +56,7 @@ export default function SeccionTarifasInformativas({ tarifas, onChange }: Props)
                   <div className="col-span-12 md:col-span-3">
                     <label className="text-xs text-muted-foreground">Modalidad</label>
                     <Select value={t.modalidad_equipo || ""} onValueChange={(v) => update(idx, { modalidad_equipo: v })}>
-                      <SelectTrigger className="h-9"><SelectValue placeholder="Seleccionar..." /></SelectTrigger>
+                      <SelectTrigger className="h-9"><SelectValue placeholder="Seleccionar…" /></SelectTrigger>
                       <SelectContent>
                         {MODALIDADES_EQUIPO_TERRESTRE.map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}
                       </SelectContent>

@@ -68,7 +68,7 @@ export function MovimientoManualDialog({
           value={manualForm.cuentaBancariaId ?? ""}
           onValueChange={(v) => setManualField("cuentaBancariaId", v)}
         >
-          <SelectTrigger id="mov-cuenta"><SelectValue placeholder="Selecciona cuenta..." /></SelectTrigger>
+          <SelectTrigger id="mov-cuenta"><SelectValue placeholder="Selecciona cuenta…" /></SelectTrigger>
           <SelectContent>
             {cuentas.map((c) => (
               <SelectItem key={c.id} value={c.id}>{c.banco} · {c.alias} ({c.moneda})</SelectItem>

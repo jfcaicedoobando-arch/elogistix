@@ -32,7 +32,7 @@ export default function ProformasListado() {
   const porEmitir = estadoInicial === "aceptada";
 
   return (
-    <PageContainer>
+    <PageContainer width="wide">
       <PageHeader
         icon={<FileSpreadsheet className="h-6 w-6 text-primary" />}
         title={porEmitir ? "Proformas por emitir" : "Proformas"}

@@ -58,7 +58,7 @@ export function RecotizarModal({
             Cancelar
           </Button>
           <Button onClick={handleSubmit} disabled={!canSubmit || mut.isPending}>
-            {mut.isPending ? "Re-cotizando..." : "Confirmar re-cotización"}
+            {mut.isPending ? "Re-cotizando…" : "Confirmar re-cotización"}
           </Button>
         </>
       }

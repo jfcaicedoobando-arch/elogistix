@@ -120,7 +120,7 @@ export function ProformaFooterFields({ notas, onNotasChange }: FooterFieldsProps
         id="notas"
         value={notas}
         onChange={(e) => onNotasChange(e.target.value)}
-        placeholder="Notas adicionales para esta proforma..."
+        placeholder="Notas adicionales para esta proforma…"
         rows={2}
         className="mt-1"
       />

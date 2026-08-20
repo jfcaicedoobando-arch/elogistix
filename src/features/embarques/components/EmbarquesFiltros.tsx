@@ -83,7 +83,7 @@ export default function EmbarquesFiltros(props: Props) {
     <UnifiedFiltersBar
       search={search}
       onSearchChange={onSearchChange}
-      searchPlaceholder="Buscar por expediente, cliente o mercancía..."
+      searchPlaceholder="Buscar por expediente, cliente o mercancía…"
       chips={chips}
       activeCount={secondaryCount}
       onClearAll={clearAll}

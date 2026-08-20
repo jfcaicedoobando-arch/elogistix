@@ -65,7 +65,7 @@ export default function OportunidadFormFields({
             set("cliente_nombre", c?.nombre ?? "");
           }}
         >
-          <SelectTrigger><SelectValue placeholder="Selecciona..." /></SelectTrigger>
+          <SelectTrigger><SelectValue placeholder="Selecciona…" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="ninguno">Sin cliente</SelectItem>
             {clientes.map((c) => <SelectItem key={c.id} value={c.id}>{c.nombre}</SelectItem>)}
@@ -82,7 +82,7 @@ export default function OportunidadFormFields({
             if (et) set("probabilidad", et.probabilidad_default);
           }}
         >
-          <SelectTrigger><SelectValue placeholder="Etapa..." /></SelectTrigger>
+          <SelectTrigger><SelectValue placeholder="Etapa…" /></SelectTrigger>
           <SelectContent>
             {etapas.map((e) => <SelectItem key={e.id} value={e.id}>{e.nombre}</SelectItem>)}
           </SelectContent>
@@ -148,7 +148,7 @@ export default function OportunidadFormFields({
       )}
       <div className="space-y-1">
         <Label htmlFor="op-modo">Modo</Label>
-        <Input id="op-modo" value={form.modo} onChange={(e) => set("modo", e.target.value)} placeholder="Marítimo / Aéreo..." />
+        <Input id="op-modo" value={form.modo} onChange={(e) => set("modo", e.target.value)} placeholder="Marítimo / Aéreo…" />
       </div>
       <div className="space-y-1">
         <Label htmlFor="op-origen">Origen</Label>

@@ -7,7 +7,7 @@
  * portal cliente, tesorería, operaciones, etc.
  *
  * Uso:
- *   <DrilldownRow href={`/embarques/${e.id}`} ariaLabel={`Ver ${e.expediente}`} className="flex ...">
+ *   <DrilldownRow href={`/embarques/${e.id}`} ariaLabel={`Ver ${e.expediente}`} className="flex …">
  *     ...contenido...
  *   </DrilldownRow>
  *
