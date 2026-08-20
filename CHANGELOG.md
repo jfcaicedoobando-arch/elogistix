@@ -1,5 +1,14 @@
 # Changelog
 
+## [13.692.0] - 2026-08-20
+### Ola I — Candados de CI e higiene
+- Nuevo candado que congela el uso de la utilidad larga `h-4 w-4` en iconos: el código nuevo debe usar `size-4`, para que un cambio de escala se haga en un solo lugar.
+- Nuevo candado que congela el uso de `toFixed` en componentes: los importes y porcentajes que ve el usuario deben salir de los formateadores es-MX (moneda, miles, decimales).
+- Los demás candados de la ola ya existían y se verificaron: colores crudos y hex fuera de tokens, emojis decorativos, tipografía semántica, tablas nativas y estados vacíos.
+- Pendiente manual (`AUDIT-M16`): `.env` sigue rastreado en git. Se resuelve con `git rm --cached .env` de tu parte; el archivo solo contiene llaves publicables, así que es higiene de repositorio, no fuga.
+
+
+
 ## [13.691.1] - 2026-08-20
 ### Cierre de la Ola G1 (verificación y blindaje)
 - Verificado en la base: un embarque **Cerrado** ya no se puede cancelar de forma directa (hay que reabrirlo primero). Se agrega la prueba automática `embarque_cerrado_no_cancelable.sql` al CI para que la regla no se pierda.
