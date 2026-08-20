@@ -1,5 +1,6 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { Receipt } from "lucide-react";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
 
@@ -55,5 +56,20 @@ describe("<FormDialogShell />", () => {
       </FormDialogShell>,
     );
     expect(screen.queryByText("hidden")).toBeNull();
+  });
+
+  it("EC-13: con isDirty pide confirmación antes de cerrar", async () => {
+    const onOpenChange = vi.fn();
+    render(
+      <FormDialogShell {...baseProps} onOpenChange={onOpenChange} isDirty>
+        <div>body</div>
+      </FormDialogShell>,
+    );
+    await userEvent.keyboard("{Escape}");
+    expect(onOpenChange).not.toHaveBeenCalled();
+    expect(screen.getByText("¿Descartar los cambios?")).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole("button", { name: "Descartar" }));
+    expect(onOpenChange).toHaveBeenCalledWith(false);
   });
 });
