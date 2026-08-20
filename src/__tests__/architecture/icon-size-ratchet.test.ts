@@ -48,7 +48,7 @@ describe("arquitectura · ratchet de tamaño de iconos", () => {
     ).toBeLessThanOrEqual(MAX_PAR_LARGO);
   });
 
-  it("mantiene el tope sincronizado (si migraste archivos, baja el tope)", () => {
+  it("mantiene el tope de iconos h-4 w-4 sincronizado (si migraste archivos, baja el tope)", () => {
     const { total } = contarParLargo();
     expect(
       MAX_PAR_LARGO - total,

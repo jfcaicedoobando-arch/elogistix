@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.694.2] - 2026-08-20
+### CI verde otra vez
+- Se agregó el mensaje amigable para el código `LC_NC_SIN_TC` (falta tipo de cambio al validar una nota de crédito contra el saldo de la factura).
+- Se renombró un título de test duplicado en los candados de arquitectura para pasar la auditoría de higiene de pruebas.
+
 ## [13.694.1] - 2026-08-20
 ### Embarques — Botón flotante reactivado
 - En móvil vuelve el botón flotante "+" en Embarques y ahora sí abre la acción correcta: alta directa si tienes permiso, o el flujo guiado desde cotización si no.
