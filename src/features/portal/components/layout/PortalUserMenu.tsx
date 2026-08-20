@@ -45,7 +45,7 @@ export function PortalUserMenu({ initials, clienteName, email, onSignOut, perfil
       <DropdownMenuContent align="end" className="w-60">
         <DropdownMenuLabel className="flex flex-col gap-0.5">
           {clienteName && (
-            <span className="text-sm font-semibold leading-tight">{clienteName}</span>
+            <span className="text-body font-semibold leading-tight">{clienteName}</span>
           )}
           <span className="text-label font-normal text-muted-foreground truncate">
             {email}

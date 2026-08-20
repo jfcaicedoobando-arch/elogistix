@@ -44,9 +44,9 @@ export default function PortalFacturaConceptosTable({ snapshot, moneda, pdfDispo
         <CardContent>
           <div className="flex flex-col items-center justify-center py-8 text-center text-muted-foreground">
             <Receipt className="h-8 w-8 mb-2 opacity-50" />
-            <p className="text-sm">Esta factura no incluye un desglose detallado.</p>
+            <p className="text-body">Esta factura no incluye un desglose detallado.</p>
             {pdfDisponible && (
-              <p className="text-xs mt-1">Consulta el PDF para más información.</p>
+              <p className="text-body-sm mt-1">Consulta el PDF para más información.</p>
             )}
           </div>
         </CardContent>
@@ -67,8 +67,8 @@ export default function PortalFacturaConceptosTable({ snapshot, moneda, pdfDispo
             const importe = c.importe ?? c.total ?? 0;
             return (
               <div key={i} className="rounded-lg border p-3">
-                <p className="text-sm font-medium">{descripcion}</p>
-                <div className="flex justify-between mt-2 text-xs text-muted-foreground">
+                <p className="text-body font-medium">{descripcion}</p>
+                <div className="flex justify-between mt-2 text-body-sm text-muted-foreground">
                   <span>Cant: {c.cantidad ?? 1}</span>
                   <span className="font-bold text-foreground tabular-nums">
                     {formatCurrency(importe, moneda)}

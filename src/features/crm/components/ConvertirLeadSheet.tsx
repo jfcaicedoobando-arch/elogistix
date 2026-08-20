@@ -79,7 +79,7 @@ export default function ConvertirLeadSheet({ open, onOpenChange, lead, onAbrirAv
         </SheetHeader>
 
         {yaConvertido ? (
-          <div className="space-y-3 py-4 text-sm">
+          <div className="space-y-3 py-4 text-body">
             {lead.oportunidad_convertida_id && (
               <Button variant="outline" className="w-full justify-between" onClick={() => navigate(`/crm/oportunidades/${lead.oportunidad_convertida_id}`)}>
                 Ver oportunidad <ArrowRight className="h-4 w-4" />
@@ -121,7 +121,7 @@ export default function ConvertirLeadSheet({ open, onOpenChange, lead, onAbrirAv
                 onCheckedChange={(c) => setCrearCliente(!!c)}
                 disabled={!!lead.cliente_convertido_id}
               />
-              <Label htmlFor="crear-cliente-sheet" className="text-sm font-normal cursor-pointer">
+              <Label htmlFor="crear-cliente-sheet" className="text-body font-normal cursor-pointer">
                 Crear cliente "{lead.empresa}" en el directorio
               </Label>
             </div>

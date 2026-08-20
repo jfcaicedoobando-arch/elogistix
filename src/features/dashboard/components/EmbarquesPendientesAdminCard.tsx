@@ -62,7 +62,7 @@ export function EmbarquesPendientesAdminCard({ enabled }: Props) {
 
 
         <div>
-          <p className="text-xs font-medium text-muted-foreground mb-2">
+          <p className="text-body-sm font-medium text-muted-foreground mb-2">
             Top 10 más antiguos
           </p>
           {isLoading ? (
@@ -81,11 +81,11 @@ export function EmbarquesPendientesAdminCard({ enabled }: Props) {
                   as="li"
                   href={`/embarques/${it.id}`}
                   ariaLabel={`Abrir embarque ${it.expediente ?? it.id}`}
-                  className="flex items-center justify-between gap-3 px-3 py-2 text-sm hover:bg-muted/50 transition-colors"
+                  className="flex items-center justify-between gap-3 px-3 py-2 text-body hover:bg-muted/50 transition-colors"
                 >
                   <div className="min-w-0 flex-1">
                     <p className="font-medium truncate">{it.expediente ?? "—"}</p>
-                    <p className="text-xs text-muted-foreground truncate">
+                    <p className="text-body-sm text-muted-foreground truncate">
                       {it.cliente_nombre}
                     </p>
                   </div>
@@ -95,7 +95,7 @@ export function EmbarquesPendientesAdminCard({ enabled }: Props) {
                   >
                     {it.estado}
                   </Badge>
-                  <span className="text-xs text-muted-foreground tabular-nums w-12 text-right">
+                  <span className="text-body-sm text-muted-foreground tabular-nums w-12 text-right">
                     {it.diasEnEstado} d
                   </span>
                   <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" aria-hidden="true" />

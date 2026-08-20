@@ -36,8 +36,8 @@ function ForecastPanel() {
           <CardHeader className="pb-2"><CardTitle>Por mes</CardTitle></CardHeader>
           <CardContent>
             <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead><tr className="text-xs text-muted-foreground border-b">
+            <table className="w-full text-body">
+              <thead><tr className="text-body-sm text-muted-foreground border-b">
                 <th className="text-left py-2">Mes</th><th className="text-right">Pipeline</th><th className="text-right">Ponderado</th><th className="text-right">Ganado</th><th className="text-right">#</th>
               </tr></thead>
               <tbody>
@@ -60,8 +60,8 @@ function ForecastPanel() {
           <CardHeader className="pb-2"><CardTitle>Por vendedor</CardTitle></CardHeader>
           <CardContent>
             <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead><tr className="text-xs text-muted-foreground border-b">
+            <table className="w-full text-body">
+              <thead><tr className="text-body-sm text-muted-foreground border-b">
                 <th className="text-left py-2">Vendedor</th><th className="text-right">Pipeline</th><th className="text-right">Ponderado</th><th className="text-right">Ganado</th><th className="text-right">#</th>
               </tr></thead>
               <tbody>
@@ -95,7 +95,7 @@ function EmbudoYPerdidas() {
         <CardHeader className="pb-2"><CardTitle>Embudo</CardTitle></CardHeader>
         <CardContent>
           {isLoading ? "…" : r.embudo.map((e) => (
-            <div key={e.etapa} className="flex justify-between py-1 text-sm border-b last:border-0">
+            <div key={e.etapa} className="flex justify-between py-1 text-body border-b last:border-0">
               <span>{e.etapa}</span><span className="font-semibold tabular-nums">{e.cantidad}</span>
             </div>
           ))}
@@ -106,8 +106,8 @@ function EmbudoYPerdidas() {
         <CardHeader className="pb-2"><CardTitle>Conversión por fuente</CardTitle></CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead><tr className="text-xs text-muted-foreground border-b">
+          <table className="w-full text-body">
+            <thead><tr className="text-body-sm text-muted-foreground border-b">
               <th className="text-left py-1">Fuente</th><th className="text-right">Total</th><th className="text-right">Conv.</th><th className="text-right">Tasa</th>
             </tr></thead>
             <tbody>
@@ -129,7 +129,7 @@ function EmbudoYPerdidas() {
         <CardHeader className="pb-2"><CardTitle>Motivos de pérdida</CardTitle></CardHeader>
         <CardContent>
           {r.motivosPerdida.map((m) => (
-            <div key={m.motivo} className="flex justify-between py-1 text-sm border-b last:border-0">
+            <div key={m.motivo} className="flex justify-between py-1 text-body border-b last:border-0">
               <span>{m.motivo}</span><span className="font-semibold tabular-nums">{m.cantidad}</span>
             </div>
           ))}

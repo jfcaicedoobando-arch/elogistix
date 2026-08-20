@@ -34,7 +34,7 @@ export function PortalFacturasMobileFilters({
       onClear={() => setFiltroEstado("todos")}
     >
       <div className="space-y-1.5">
-        <label className="text-xs font-medium text-muted-foreground">Estado</label>
+        <label className="text-body-sm font-medium text-muted-foreground">Estado</label>
         <Select value={filtroEstado} onValueChange={setFiltroEstado}>
           <SelectTrigger>
             <Filter className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />

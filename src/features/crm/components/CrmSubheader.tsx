@@ -13,7 +13,7 @@ interface Props {
 export function CrmSubheader({ context, actions }: Props) {
   if (!context && !actions) return null;
   return (
-    <div className="flex items-center justify-end gap-3 h-10 px-1 text-xs text-muted-foreground">
+    <div className="flex items-center justify-end gap-3 h-10 px-1 text-body-sm text-muted-foreground">
       {context && <span className="tabular-nums">{context}</span>}
       {actions}
     </div>

@@ -46,7 +46,7 @@ export function PortalEmbarqueStepper({ progressSteps, currentStepIndex, diasPar
               return (
                 <li key={step.key} className="flex items-center gap-3 relative">
                   <div
-                    className={`w-10 h-10 rounded-full flex items-center justify-center text-sm border-2 shrink-0 z-10 transition-colors ${
+                    className={`w-10 h-10 rounded-full flex items-center justify-center text-body border-2 shrink-0 z-10 transition-colors ${
                       isCompleted
                         ? "bg-accent border-accent text-accent-foreground"
                         : isCurrent
@@ -57,7 +57,7 @@ export function PortalEmbarqueStepper({ progressSteps, currentStepIndex, diasPar
                     <Icon className="h-4 w-4" aria-hidden />
                   </div>
                   <span
-                    className={`text-sm font-medium ${
+                    className={`text-body font-medium ${
                       isCompleted || isCurrent ? "text-foreground" : "text-muted-foreground"
                     }`}
                   >
@@ -81,7 +81,7 @@ export function PortalEmbarqueStepper({ progressSteps, currentStepIndex, diasPar
               return (
                 <div key={step.key} className="flex flex-col items-center relative z-10 flex-1">
                   <div
-                    className={`w-10 h-10 rounded-full flex items-center justify-center text-sm border-2 transition-colors ${
+                    className={`w-10 h-10 rounded-full flex items-center justify-center text-body border-2 transition-colors ${
                       isCompleted
                         ? "bg-accent border-accent text-accent-foreground"
                         : isCurrent
@@ -92,7 +92,7 @@ export function PortalEmbarqueStepper({ progressSteps, currentStepIndex, diasPar
                     <Icon className="h-4 w-4" aria-hidden />
                   </div>
                   <span
-                    className={`text-2xs mt-2 text-center font-medium ${
+                    className={`text-label mt-2 text-center font-medium ${
                       isCompleted || isCurrent ? "text-foreground" : "text-muted-foreground"
                     }`}
                   >
@@ -106,7 +106,7 @@ export function PortalEmbarqueStepper({ progressSteps, currentStepIndex, diasPar
 
         {diasParaEta !== null && diasParaEta > 0 && (
           <div className="mt-4 text-center">
-            <p className="text-xs text-muted-foreground">
+            <p className="text-body-sm text-muted-foreground">
               Llegada estimada en{" "}
               <span className="font-bold text-accent">
                 {diasParaEta} día{diasParaEta !== 1 ? "s" : ""}

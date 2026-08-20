@@ -47,10 +47,10 @@ export const ProximosArribosCard = memo(function ProximosArribosCard({ arribos, 
           <Clock className="h-4 w-4 text-warning" />
         </div>
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-medium truncate">
+          <p className="text-body font-medium truncate">
             {e.expediente} — {toTitleCase(e.cliente_nombre)}
           </p>
-          <p className="text-xs text-muted-foreground flex items-center gap-1.5">
+          <p className="text-body-sm text-muted-foreground flex items-center gap-1.5">
             <ModoIcon modo={e.modo} size={12} />
             <span className="truncate">
               ETA: {formatDate(e.eta!)} · {formatDiasRestantes(e.diasRestantes)}
@@ -69,7 +69,7 @@ export const ProximosArribosCard = memo(function ProximosArribosCard({ arribos, 
           <CalendarClock className="h-4 w-4 text-warning" />
           Próximos Arribos (7 días)
           {arribos.length > 0 && (
-            <Badge className="ml-auto text-2xs bg-warning/15 text-warning border-warning/30">
+            <Badge className="ml-auto text-label bg-warning/15 text-warning border-warning/30">
               {arribos.length}
             </Badge>
           )}

@@ -31,7 +31,7 @@ export default function DatosGeneralesCard({ cot }: { cot: CotDatos }) {
         <CardTitle>Datos Generales</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-body">
           <Item label="Modo" value={cot.modo} />
           <Item label="Tipo" value={cot.tipo} />
           <Item label="Incoterm" value={cot.incoterm} />

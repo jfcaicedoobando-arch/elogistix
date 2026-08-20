@@ -26,7 +26,7 @@ export function AvisoLeadDuplicado({ empresa, email, telefono }: Props) {
           ? "Este prospecto ya existe"
           : "Posible duplicado"}
       </AlertTitle>
-      <AlertDescription className="text-xs">
+      <AlertDescription className="text-body-sm">
         Coincide en {coincidencia.campos.join(", ")} con{" "}
         <strong>{ex?.empresa ?? "un lead existente"}</strong>
         {ex?.contacto ? ` (${ex.contacto})` : ""}

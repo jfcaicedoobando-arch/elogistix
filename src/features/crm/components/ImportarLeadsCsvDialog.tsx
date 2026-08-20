@@ -50,14 +50,14 @@ export default function ImportarLeadsCsvDialog({ open, onOpenChange }: Props) {
       stepLabels={["Cargar archivo", "Revisar e importar"]}
       footer={footer}
     >
-      <p className="text-xs text-muted-foreground">
+      <p className="text-body-sm text-muted-foreground">
         Columnas reconocidas: <code>empresa, contacto, email, telefono, ciudad, pais, fuente, estado, score, notas</code>.
         La fila 1 debe contener los encabezados. Empresa es obligatoria.
       </p>
 
       <label className="flex items-center justify-center gap-2 border-2 border-dashed rounded-md p-6 cursor-pointer hover:bg-muted/30">
         <Upload className="h-4 w-4 text-muted-foreground" />
-        <span className="text-sm">{fileName || "Selecciona un archivo .csv"}</span>
+        <span className="text-body">{fileName || "Selecciona un archivo .csv"}</span>
         <input
           type="file" accept=".csv,text/csv" className="hidden"
           onChange={(e) => { const f = e.target.files?.[0]; if (f) void handleFile(f); }}

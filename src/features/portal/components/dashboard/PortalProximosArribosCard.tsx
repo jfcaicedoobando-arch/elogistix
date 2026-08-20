@@ -49,7 +49,7 @@ export function PortalProximosArribosCard({ items }: Props) {
             Próximos Arribos
           </CardTitle>
           <Link to={ROUTES.PORTAL_EMBARQUES}>
-            <Button variant="ghost" size="sm" className="text-xs h-7">
+            <Button variant="ghost" size="sm" className="text-body-sm h-7">
               Ver todos <ArrowRight className="h-3 w-3 ml-1" />
             </Button>
           </Link>
@@ -83,14 +83,14 @@ function ArriboRow({ e }: { e: ArriboItem }) {
       <div className="flex items-center gap-3 min-w-0">
         <ModoIcon modo={e.modo} size={16} circle className="flex-shrink-0" />
         <div className="min-w-0">
-          <p className="font-medium text-sm truncate font-mono tabular-nums">{labelExpediente(e.expediente, e.id)}</p>
-          <p className="text-xs text-muted-foreground truncate">
+          <p className="font-medium text-body truncate font-mono tabular-nums">{labelExpediente(e.expediente, e.id)}</p>
+          <p className="text-body-sm text-muted-foreground truncate">
             {e.puerto_destino || e.aeropuerto_destino || e.ciudad_destino || "—"}
           </p>
         </div>
       </div>
       <div className="text-right flex-shrink-0 ml-2">
-        <p className={cn("text-xs font-semibold tabular-nums", etaProximityClass(e.eta))}>
+        <p className={cn("text-body-sm font-semibold tabular-nums", etaProximityClass(e.eta))}>
           {e.eta ? formatDate(e.eta, "dd MMM") : "—"}
         </p>
       </div>

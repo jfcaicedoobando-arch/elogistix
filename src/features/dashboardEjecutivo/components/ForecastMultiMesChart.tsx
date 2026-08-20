@@ -32,7 +32,7 @@ export function ForecastMultiMesChart({ historico, mesesAdelante = 3 }: Props) {
     <Card>
       <CardHeader className="pb-2">
         <CardTitle>Forecast de ingresos</CardTitle>
-        <p className="text-xs text-muted-foreground">
+        <p className="text-body-sm text-muted-foreground">
           Meses reales + proyección {mesesAdelante} meses (promedio móvil 3m, banda ±15%).
           El mes en curso es parcial y se excluye del promedio.
         </p>
@@ -42,7 +42,7 @@ export function ForecastMultiMesChart({ historico, mesesAdelante = 3 }: Props) {
           <EmptyStateInline icon={LineChartIcon} message="No hay suficientes datos para graficar la tendencia." hint="Se requieren al menos 3 meses de historia para proyectar." />
         ) : (
           <div className="h-64">
-            <p className="text-2xs text-muted-foreground mb-1">MXN</p>
+            <p className="text-label text-muted-foreground mb-1">MXN</p>
             <ResponsiveContainer width="100%" height="100%">
               <ComposedChart data={data}>
                 <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />

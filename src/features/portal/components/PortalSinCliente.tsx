@@ -21,7 +21,7 @@ export function PortalSinCliente({ email, onSignOut }: Props) {
           </div>
           <div className="space-y-1">
             <h1 className="text-lg font-semibold">Tu cuenta aún no está vinculada a una empresa</h1>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-body text-muted-foreground">
               Ya iniciaste sesión{email ? ` como ${email}` : ""}, pero tu usuario todavía no está
               asociado a un cliente. En cuanto tu ejecutivo lo active verás aquí tus embarques,
               cotizaciones y facturas.

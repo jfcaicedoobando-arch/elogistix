@@ -18,7 +18,7 @@ export function PortalWelcomeCard({ clienteName, contactoName, orgName }: Props)
       <h1 className="text-xl font-bold tracking-tight">
         {saludo}
       </h1>
-      <p className="text-sm text-muted-foreground mt-1">
+      <p className="text-body text-muted-foreground mt-1">
         {orgName ? `${orgName} · ` : ""}Consulta el estado de tus embarques, cotizaciones y facturas en un solo lugar.
       </p>
     </div>

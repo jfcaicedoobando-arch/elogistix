@@ -65,7 +65,7 @@ function FilaCliente({ cliente: c, totalActivosGlobal, onClick }: FilaProps) {
 
           {/* Client name + chips */}
           <div className="flex-1 min-w-0 space-y-1">
-            <p className="text-sm font-medium truncate text-foreground group-hover:text-primary transition-colors">
+            <p className="text-body font-medium truncate text-foreground group-hover:text-primary transition-colors">
               {c.clienteNombre}
             </p>
             <div className="flex flex-wrap gap-1">
@@ -78,7 +78,7 @@ function FilaCliente({ cliente: c, totalActivosGlobal, onClick }: FilaProps) {
                     domain="embarque"
                     status={est}
                     label={`${count} ${est}`}
-                    className="text-2xs px-1.5 py-0 leading-4"
+                    className="text-label px-1.5 py-0 leading-4"
                   />
                 );
               })}
@@ -110,15 +110,15 @@ function FilaCliente({ cliente: c, totalActivosGlobal, onClick }: FilaProps) {
       <TooltipContent side="top" align="end" collisionPadding={16} className="max-w-xs">
         <p className="font-semibold mb-1">{c.clienteNombre}</p>
         {hasGlobal ? (
-          <p className="text-xs">
+          <p className="text-body-sm">
             <span className="font-medium">{c.totalVisible}</span> de{" "}
             <span className="font-medium">{totalActivosGlobal}</span> cargas activas{" "}
             <span className="text-muted-foreground">({pctRedondeado}% del total de tu organización)</span>
           </p>
         ) : (
-          <p className="text-xs">{c.totalVisible} cargas activas</p>
+          <p className="text-body-sm">{c.totalVisible} cargas activas</p>
         )}
-        <p className="text-2xs text-muted-foreground mt-1.5 leading-snug">
+        <p className="text-label text-muted-foreground mt-1.5 leading-snug">
           Incluye embarques en: {ESTADOS_TEXTO}
         </p>
       </TooltipContent>
@@ -161,7 +161,7 @@ export const CargasActivasClienteCard = memo(function CargasActivasClienteCard({
             <Ship className="h-4 w-4 text-muted-foreground" />
             Cargas activas por cliente
           </CardTitle>
-          <p className="text-xs text-muted-foreground leading-snug">
+          <p className="text-body-sm text-muted-foreground leading-snug">
             Suma de embarques en {ESTADOS_TEXTO}. El % de cada fila indica qué porción
             del total activo de tu organización representa ese cliente.
           </p>

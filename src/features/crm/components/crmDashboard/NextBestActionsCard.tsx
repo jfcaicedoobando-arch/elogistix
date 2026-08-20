@@ -27,7 +27,7 @@ export function NextBestActionsCard({ items, isLoading }: Props) {
       </CardHeader>
       <CardContent>
         {isLoading ? (
-          <p className="text-sm text-muted-foreground py-3">Calculando…</p>
+          <p className="text-body text-muted-foreground py-3">Calculando…</p>
         ) : items.length === 0 ? (
           <EmptyStateInline icon={Target} message="Todo al día. No hay acciones urgentes ahora." />
         ) : (
@@ -45,8 +45,8 @@ export function NextBestActionsCard({ items, isLoading }: Props) {
                   <div className="flex items-start gap-3 min-w-0">
                     <Icon className="h-4 w-4 mt-0.5 text-primary shrink-0" />
                     <div className="min-w-0">
-                      <p className="text-sm font-medium truncate">{it.titulo}</p>
-                      <p className="text-xs text-muted-foreground truncate">{it.subtitulo}</p>
+                      <p className="text-body font-medium truncate">{it.titulo}</p>
+                      <p className="text-body-sm text-muted-foreground truncate">{it.subtitulo}</p>
                     </div>
                   </div>
                   <ArrowRight className="h-4 w-4 text-muted-foreground shrink-0" aria-hidden="true" />

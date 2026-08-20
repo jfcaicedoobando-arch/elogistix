@@ -26,12 +26,12 @@ export default function PipelineResumen({ oportunidades }: Props) {
         <div key={label} className="flex items-center gap-2">
           <Icon className="h-4 w-4 text-muted-foreground" />
           <div>
-            <div className="text-2xs uppercase text-muted-foreground">{label}</div>
-            <div className="text-sm font-semibold tabular-nums">{valor}</div>
+            <div className="text-label uppercase text-muted-foreground">{label}</div>
+            <div className="text-body font-semibold tabular-nums">{valor}</div>
           </div>
         </div>
       ))}
-      <div className="ml-auto text-xs text-muted-foreground">
+      <div className="ml-auto text-body-sm text-muted-foreground">
         {t.cantidad} oportunidades abiertas
         {cumplimiento != null ? ` · ${cumplimiento}% de la meta capturada` : ""}
       </div>

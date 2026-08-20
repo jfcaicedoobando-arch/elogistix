@@ -42,7 +42,7 @@ export function PortalHeader({
             </span>
           </Link>
           {activeSection && (
-            <span className="md:hidden text-sm font-semibold text-foreground truncate ml-1">
+            <span className="md:hidden text-body font-semibold text-foreground truncate ml-1">
               {activeSection}
             </span>
           )}
@@ -55,7 +55,7 @@ export function PortalHeader({
               <Link
                 key={item.href}
                 to={item.href}
-                className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                className={`flex items-center gap-2 px-3 py-2 rounded-lg text-body font-medium transition-colors ${
                   isActive
                     ? "bg-accent/10 text-accent"
                     : "text-muted-foreground hover:text-foreground hover:bg-muted"

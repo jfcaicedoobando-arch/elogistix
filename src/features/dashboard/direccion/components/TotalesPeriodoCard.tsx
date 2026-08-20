@@ -25,7 +25,7 @@ function MonedasList({ montos }: { montos: Record<string, number> }) {
   return (
     <ul className="mt-1 space-y-0.5">
       {entradas.map(([moneda, monto]) => (
-        <li key={moneda} className="text-sm tabular-nums">
+        <li key={moneda} className="text-body tabular-nums">
           {/* VB-04: formatCurrency ya incluye el código ISO; no repetirlo como sufijo. */}
           {formatCurrency(Number(monto), moneda)}
 
@@ -48,7 +48,7 @@ export function TotalesPeriodoCard({ totales, desdeIso, isLoading }: Props) {
         <p className="text-body-sm text-muted-foreground">
           Totales del periodo por moneda
         </p>
-        <p className="text-xs text-muted-foreground">
+        <p className="text-body-sm text-muted-foreground">
           Desde {formatDate(desdeIso)} · {totales?.embarques ?? 0} embarques
         </p>
       </div>
@@ -58,7 +58,7 @@ export function TotalesPeriodoCard({ totales, desdeIso, isLoading }: Props) {
         <div className="mt-3 grid grid-cols-2 md:grid-cols-4 gap-4">
           {BLOQUES.map((b) => (
             <div key={b.key}>
-              <p className="text-xs font-medium text-muted-foreground">{b.label}</p>
+              <p className="text-body-sm font-medium text-muted-foreground">{b.label}</p>
               <MonedasList montos={totales[b.key]} />
             </div>
           ))}

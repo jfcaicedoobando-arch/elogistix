@@ -42,7 +42,7 @@ export function PortalNotificationsBell() {
           {noLeidas > 0 && (
             <Badge
               variant="destructive"
-              className="absolute -top-1 -right-1 h-4 min-w-4 px-1 text-2xs tabular-nums rounded-full"
+              className="absolute -top-1 -right-1 h-4 min-w-4 px-1 text-label tabular-nums rounded-full"
             >
               {noLeidas > 99 ? "99+" : noLeidas}
             </Badge>
@@ -56,7 +56,7 @@ export function PortalNotificationsBell() {
             <Button
               variant="ghost"
               size="sm"
-              className="h-7 text-xs gap-1"
+              className="h-7 text-body-sm gap-1"
               onClick={() => marcarTodas.mutate()}
               disabled={marcarTodas.isPending}
             >
@@ -67,7 +67,7 @@ export function PortalNotificationsBell() {
         </div>
         <div className="max-h-80 overflow-y-auto">
           {items.length === 0 ? (
-            <p className="text-xs text-muted-foreground px-3 py-8 text-center">
+            <p className="text-body-sm text-muted-foreground px-3 py-8 text-center">
               Sin notificaciones por ahora.
             </p>
           ) : (
@@ -86,11 +86,11 @@ export function PortalNotificationsBell() {
                         <span className="mt-1.5 h-2 w-2 rounded-full bg-accent shrink-0" aria-hidden />
                       )}
                       <div className="min-w-0 flex-1">
-                        <p className="text-xs font-medium truncate">{n.titulo}</p>
+                        <p className="text-body-sm font-medium truncate">{n.titulo}</p>
                         {n.mensaje && (
                           <p className="text-label text-muted-foreground line-clamp-2">{n.mensaje}</p>
                         )}
-                        <p className="text-2xs text-muted-foreground mt-0.5 tabular-nums">
+                        <p className="text-label text-muted-foreground mt-0.5 tabular-nums">
                           {formatDateTimeShort(n.created_at)}
                         </p>
                       </div>

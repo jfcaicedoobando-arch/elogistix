@@ -57,8 +57,8 @@ export default function PortalFacturaPagosCard({ facturaId, totalFactura, moneda
               return (
                 <li key={p.id} className="py-2 flex items-start justify-between gap-3">
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium">{formatDate(p.fecha_pago)}</p>
-                    <p className="text-xs text-muted-foreground truncate">
+                    <p className="text-body font-medium">{formatDate(p.fecha_pago)}</p>
+                    <p className="text-body-sm text-muted-foreground truncate">
                       {labelDeCatalogo(FORMAS_PAGO_SAT, p.forma_pago)}{p.referencia ? ` • ${p.referencia}` : ""}
                     </p>
                     {(pRep.rep_pdf_url || pRep.rep_xml_url) && (
@@ -81,11 +81,11 @@ export default function PortalFacturaPagosCard({ facturaId, totalFactura, moneda
                     )}
                   </div>
                   <div className="text-right shrink-0">
-                    <p className="text-sm font-bold tabular-nums">
+                    <p className="text-body font-bold tabular-nums">
                       {formatCurrency(Number(p.monto_aplicado_factura), moneda)}
                     </p>
                     {p.moneda !== moneda && (
-                      <p className="text-2xs text-muted-foreground">
+                      <p className="text-label text-muted-foreground">
                         {formatCurrency(Number(p.monto), p.moneda)}
                       </p>
                     )}
@@ -98,17 +98,17 @@ export default function PortalFacturaPagosCard({ facturaId, totalFactura, moneda
 
         {notasCredito.length > 0 && (
           <div className="border-t pt-3 space-y-2">
-            <p className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
+            <p className="text-body-sm font-medium text-muted-foreground flex items-center gap-1.5">
               <Receipt className="h-3.5 w-3.5" /> Notas de crédito aplicadas
             </p>
             <ul className="divide-y">
               {notasCredito.map((nc) => (
                 <li key={nc.id} className="py-2 flex items-center justify-between gap-3">
                   <div className="min-w-0">
-                    <p className="text-sm font-medium truncate">NC {nc.folio ?? "—"}</p>
-                    <p className="text-xs text-muted-foreground">{formatDate(nc.fecha_emision)}</p>
+                    <p className="text-body font-medium truncate">NC {nc.folio ?? "—"}</p>
+                    <p className="text-body-sm text-muted-foreground">{formatDate(nc.fecha_emision)}</p>
                   </div>
-                  <p className="text-sm font-bold tabular-nums text-success shrink-0">
+                  <p className="text-body font-bold tabular-nums text-success shrink-0">
                     −{formatCurrency(Number(nc.monto), moneda)}
                   </p>
                 </li>
@@ -117,7 +117,7 @@ export default function PortalFacturaPagosCard({ facturaId, totalFactura, moneda
           </div>
         )}
 
-        <dl className="border-t pt-3 space-y-1.5 text-sm">
+        <dl className="border-t pt-3 space-y-1.5 text-body">
           <div className="flex items-center justify-between">
             <dt className="text-muted-foreground">Total facturado</dt>
             <dd className="tabular-nums">{formatCurrency(totalFactura, moneda)}</dd>

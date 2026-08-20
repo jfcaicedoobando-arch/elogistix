@@ -62,13 +62,13 @@ export default function OportunidadCard({ op, onClick, proxima, avance, esCerrad
       className="bg-card border border-border hover:border-primary/50 transition-colors"
     >
       <CardContent className="p-3 space-y-1">
-        <div className="font-medium text-sm line-clamp-2">{op.nombre}</div>
+        <div className="font-medium text-body line-clamp-2">{op.nombre}</div>
         {op.cliente_nombre ? (
-          <div className="text-xs text-muted-foreground line-clamp-1">{op.cliente_nombre}</div>
+          <div className="text-body-sm text-muted-foreground line-clamp-1">{op.cliente_nombre}</div>
         ) : null}
         <div className="flex items-center justify-between pt-1">
-          <span className="text-xs font-semibold">{fmtMxn(Number(op.monto_estimado ?? 0))}</span>
-          <Badge variant="secondary" className="text-2xs h-5 px-1.5">{op.probabilidad}%</Badge>
+          <span className="text-body-sm font-semibold">{fmtMxn(Number(op.monto_estimado ?? 0))}</span>
+          <Badge variant="secondary" className="text-label h-5 px-1.5">{op.probabilidad}%</Badge>
         </div>
 
         {semaforo !== "sin_criterios" && avance ? (

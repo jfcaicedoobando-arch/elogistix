@@ -70,7 +70,7 @@ export default function QuickCreateActividadPopover({ onCreated, onMore, onClose
           <SelectTrigger><SelectValue placeholder="Selecciona…" /></SelectTrigger>
           <SelectContent>
             {ops.map((o) => (<SelectItem key={o.id} value={o.id}>{o.nombre}</SelectItem>))}
-            {ops.length === 0 && <div className="p-2 text-xs text-muted-foreground">Sin oportunidades</div>}
+            {ops.length === 0 && <div className="p-2 text-body-sm text-muted-foreground">Sin oportunidades</div>}
           </SelectContent>
         </Select>
       </div>
@@ -79,7 +79,7 @@ export default function QuickCreateActividadPopover({ onCreated, onMore, onClose
         <DateTimePickerMx value={fecha} onChange={setFecha} />
       </div>
       <div className="flex items-center justify-between pt-1">
-        <Button variant="ghost" size="sm" onClick={onMore} className="text-xs">Más campos →</Button>
+        <Button variant="ghost" size="sm" onClick={onMore} className="text-body-sm">Más campos →</Button>
         <Button size="sm" onClick={submit} loading={crear.isPending}>
           Crear
         </Button>

@@ -87,7 +87,7 @@ export default function EtapasPipelineEditor() {
     <Card>
       <CardHeader>
         <CardTitle>Etapas del pipeline</CardTitle>
-        <p className="text-xs text-muted-foreground">
+        <p className="text-body-sm text-muted-foreground">
           Configura nombre, tipo, probabilidad, color y orden. Activa "Crear tarea" para auto-generar
           una tarea de seguimiento al mover una oportunidad a esta etapa. "SLA" son los días sin
           movimiento permitidos antes de marcar la oportunidad como vencida en Higiene.
@@ -119,7 +119,7 @@ export default function EtapasPipelineEditor() {
                   <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => mover(e.id, -1)} title="Subir">
                     <ArrowUp className="h-3 w-3" />
                   </Button>
-                  <span className="text-xs text-muted-foreground w-6 text-center">{e.orden}</span>
+                  <span className="text-body-sm text-muted-foreground w-6 text-center">{e.orden}</span>
                   <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => mover(e.id, 1)} title="Bajar">
                     <ArrowDown className="h-3 w-3" />
                   </Button>

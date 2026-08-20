@@ -35,9 +35,9 @@ export default function CrmCommandPalette({ open, onOpenChange }: Props) {
       <CommandInput value={term} onValueChange={setTerm} placeholder="Buscar leads, oportunidades, actividades…" />
       <CommandList>
         {debounced.length < 2 ? (
-          <div className="p-4 text-xs text-muted-foreground">Escribe al menos 2 caracteres…</div>
+          <div className="p-4 text-body-sm text-muted-foreground">Escribe al menos 2 caracteres…</div>
         ) : isFetching ? (
-          <div className="p-4 text-xs text-muted-foreground">Buscando…</div>
+          <div className="p-4 text-body-sm text-muted-foreground">Buscando…</div>
         ) : hits.length === 0 ? (
           <CommandEmpty>Sin resultados</CommandEmpty>
         ) : null}
@@ -47,7 +47,7 @@ export default function CrmCommandPalette({ open, onOpenChange }: Props) {
               <CommandItem key={`l-${h.id}`} value={`lead-${h.id}-${h.title}`} onSelect={() => go(`/crm/leads/${h.id}`)}>
                 <UserPlus className="h-4 w-4 mr-2" />
                 <div className="flex-1 min-w-0">
-                  <div className="text-sm truncate">{h.title}</div>
+                  <div className="text-body truncate">{h.title}</div>
                   <div className="text-label text-muted-foreground truncate">{h.subtitle}</div>
                 </div>
               </CommandItem>
@@ -60,7 +60,7 @@ export default function CrmCommandPalette({ open, onOpenChange }: Props) {
               <CommandItem key={`o-${h.id}`} value={`op-${h.id}-${h.title}`} onSelect={() => go(`/crm/oportunidades/${h.id}`)}>
                 <Target className="h-4 w-4 mr-2" />
                 <div className="flex-1 min-w-0">
-                  <div className="text-sm truncate">{h.title}</div>
+                  <div className="text-body truncate">{h.title}</div>
                   <div className="text-label text-muted-foreground truncate">{h.subtitle}</div>
                 </div>
               </CommandItem>
@@ -73,7 +73,7 @@ export default function CrmCommandPalette({ open, onOpenChange }: Props) {
               <CommandItem key={`a-${h.id}`} value={`act-${h.id}-${h.title}`} onSelect={() => go(`/crm/actividades`)}>
                 <ClipboardList className="h-4 w-4 mr-2" />
                 <div className="flex-1 min-w-0">
-                  <div className="text-sm truncate">{h.title}</div>
+                  <div className="text-body truncate">{h.title}</div>
                   <div className="text-label text-muted-foreground truncate">{h.subtitle}</div>
                 </div>
               </CommandItem>

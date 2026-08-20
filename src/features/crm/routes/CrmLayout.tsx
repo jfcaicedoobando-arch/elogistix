@@ -66,7 +66,7 @@ export default function CrmLayout() {
                   <t.icon className="h-4 w-4" />
                   {t.label}
                   {showBadge && (
-                    <Badge variant="destructive" className="h-5 min-w-5 px-1 text-2xs font-bold rounded-full">
+                    <Badge variant="destructive" className="h-5 min-w-5 px-1 text-label font-bold rounded-full">
                       {vencidas > 99 ? "99+" : vencidas}
                     </Badge>
                   )}
@@ -81,7 +81,7 @@ export default function CrmLayout() {
                 to="/crm/configuracion"
                 className={({ isActive }) =>
                   cn(
-                    "inline-flex items-center justify-center w-9 h-9 rounded-md text-sm transition-colors",
+                    "inline-flex items-center justify-center w-9 h-9 rounded-md text-body transition-colors",
                     isActive
                       ? "bg-primary/10 text-primary"
                       : "text-muted-foreground hover:text-foreground hover:bg-muted",

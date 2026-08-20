@@ -23,7 +23,7 @@ export default function PortalCotizacionTotalCard({ conceptosCount, subtotal, mo
       </CardHeader>
       <CardContent>
         <p className="text-base font-bold tabular-nums">{formatCurrency(monto, moneda ?? "MXN")}</p>
-        <p className="text-xs text-muted-foreground mt-1">
+        <p className="text-body-sm text-muted-foreground mt-1">
           Monto total de la cotización. El desglose de conceptos no está disponible en esta cotización.
         </p>
       </CardContent>

@@ -25,7 +25,7 @@ export default function PortalFacturaResumenCard({ factura }: Props) {
         <CardTitle>Datos de la factura</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-body">
           <Field label="Cliente" value={factura.cliente_nombre} />
           <Field label="Expediente" value={factura.expediente} mono />
           <Field label="Moneda" value={factura.moneda} />
@@ -50,8 +50,8 @@ export default function PortalFacturaResumenCard({ factura }: Props) {
 
         {factura.notas && (
           <div className="border-t pt-4">
-            <p className="text-xs text-muted-foreground mb-1">Notas</p>
-            <p className="text-sm whitespace-pre-wrap">{factura.notas}</p>
+            <p className="text-body-sm text-muted-foreground mb-1">Notas</p>
+            <p className="text-body whitespace-pre-wrap">{factura.notas}</p>
           </div>
         )}
       </CardContent>
@@ -62,7 +62,7 @@ export default function PortalFacturaResumenCard({ factura }: Props) {
 function Field({ label, value, mono }: { label: string; value: string; mono?: boolean }) {
   return (
     <div>
-      <p className="text-xs text-muted-foreground">{label}</p>
+      <p className="text-body-sm text-muted-foreground">{label}</p>
       <p className={`font-medium ${mono ? "font-mono" : ""}`}>{value}</p>
     </div>
   );

@@ -61,17 +61,17 @@ export function KpiDrilldownSheet({
 
         <div className="mt-4 space-y-2">
           {items.length === 0 ? (
-            <p className="text-sm text-muted-foreground py-6 text-center">{emptyText}</p>
+            <p className="text-body text-muted-foreground py-6 text-center">{emptyText}</p>
           ) : (
             <ul className="divide-y">
               {items.slice(0, 10).map((it, i) => {
                 const lbl = labelDias(it.dias, diasTone);
                 return (
-                  <li key={`${it.nombre}-${i}`} className="py-2 flex items-center justify-between gap-2 text-sm">
+                  <li key={`${it.nombre}-${i}`} className="py-2 flex items-center justify-between gap-2 text-body">
                     <div className="min-w-0">
                       <p className="truncate font-medium">{it.nombre}</p>
                       {lbl && (
-                        <Badge variant={badgeVariant(it.dias, diasTone)} className="mt-0.5 text-2xs">
+                        <Badge variant={badgeVariant(it.dias, diasTone)} className="mt-0.5 text-label">
                           {lbl}
                         </Badge>
                       )}

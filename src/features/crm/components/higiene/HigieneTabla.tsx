@@ -59,20 +59,20 @@ export default function HigieneTabla({ filas }: Props) {
                 <TableCell>
                   <span className="font-medium">{fila.nombre}</span>
                   {fila.cliente_nombre && (
-                    <span className="block text-xs text-muted-foreground">{fila.cliente_nombre}</span>
+                    <span className="block text-body-sm text-muted-foreground">{fila.cliente_nombre}</span>
                   )}
                   {!fila.registro_completo && (
                     <Badge variant="outline" className="mt-1">Datos incompletos</Badge>
                   )}
                 </TableCell>
                 <TableCell>{fila.etapa_nombre}</TableCell>
-                <TableCell className="text-xs">{fila.vendedor_email ?? "Sin asignar"}</TableCell>
+                <TableCell className="text-body-sm">{fila.vendedor_email ?? "Sin asignar"}</TableCell>
                 <TableCell className="text-right">
                   {formatCurrency(fila.monto_estimado ?? 0, fila.moneda ?? "MXN")}
                 </TableCell>
                 <TableCell className="text-right">{fila.dias_sin_movimiento}</TableCell>
                 <TableCell className="text-right">{fila.sla_dias}</TableCell>
-                <TableCell className="text-xs">
+                <TableCell className="text-body-sm">
                   {fila.proxima_actividad_at
                     ? formatFechaEs(fila.proxima_actividad_at)
                     : "Sin programar"}

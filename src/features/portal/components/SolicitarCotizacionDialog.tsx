@@ -153,7 +153,7 @@ export function SolicitarCotizacionDialog({ open, onOpenChange, clienteId, clien
           <Input id="solicitud-origen" value={origen} onChange={(e) => setOrigen(e.target.value)}
             placeholder="Shanghái, China" aria-invalid={intentoEnvio && origen.trim() === ""} />
           {intentoEnvio && origen.trim() === "" && (
-            <p className="text-xs text-muted-foreground">{COPY_VALIDACION.requerido("el origen")}</p>
+            <p className="text-body-sm text-muted-foreground">{COPY_VALIDACION.requerido("el origen")}</p>
           )}
         </div>
         <div className="space-y-1.5">
@@ -161,7 +161,7 @@ export function SolicitarCotizacionDialog({ open, onOpenChange, clienteId, clien
           <Input id="solicitud-destino" value={destino} onChange={(e) => setDestino(e.target.value)}
             placeholder="Manzanillo, México" aria-invalid={intentoEnvio && destino.trim() === ""} />
           {intentoEnvio && destino.trim() === "" && (
-            <p className="text-xs text-muted-foreground">{COPY_VALIDACION.requerido("el destino")}</p>
+            <p className="text-body-sm text-muted-foreground">{COPY_VALIDACION.requerido("el destino")}</p>
           )}
         </div>
       </FormDialogSection>
@@ -180,7 +180,7 @@ export function SolicitarCotizacionDialog({ open, onOpenChange, clienteId, clien
       </FormDialogSection>
 
       {intentoEnvio && !puedeEnviar && (
-        <p className="text-xs text-muted-foreground">{COPY_VALIDACION.camposObligatorios}</p>
+        <p className="text-body-sm text-muted-foreground">{COPY_VALIDACION.camposObligatorios}</p>
       )}
     </FormDialogShell>
   );

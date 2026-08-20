@@ -58,12 +58,12 @@ export default function PlantillaSelector({ canal, destino, vars, entidadTipo, e
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="sm" className="h-6 text-xs gap-1">
+        <Button variant="ghost" size="sm" className="h-6 text-body-sm gap-1">
           <Icon className="h-3 w-3" /> Plantilla
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56">
-        <DropdownMenuLabel className="text-xs">
+        <DropdownMenuLabel className="text-body-sm">
           Plantillas {canal === "email" ? "de email" : "WhatsApp"}
         </DropdownMenuLabel>
         <DropdownMenuSeparator />

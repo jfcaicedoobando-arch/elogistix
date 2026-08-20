@@ -21,7 +21,7 @@ export function CriteriosRow({
     <div className="flex items-center gap-2 pt-1">
       <Progress value={porcentajeCriterios(avance) * 100} className="h-1.5 flex-1" />
       <span
-        className={`text-2xs flex items-center gap-1 ${completo ? "text-success" : "text-warning"}`}
+        className={`text-label flex items-center gap-1 ${completo ? "text-success" : "text-warning"}`}
       >
         {completo ? <CheckCircle2 className="h-3 w-3" /> : null}
         {avance.cumplidos}/{avance.total}
@@ -46,7 +46,7 @@ export function MetaRow({
     avance != null ? ` · ${fraccionAPorcentaje(avance)}% de ${fmtMxn(montoMeta)}` : "";
   return (
     <div
-      className={`text-2xs flex items-center gap-1 ${
+      className={`text-label flex items-center gap-1 ${
         vencida ? "text-destructive" : "text-muted-foreground"
       }`}
     >
@@ -69,7 +69,7 @@ export function ProximaRow({
 }) {
   return (
     <div
-      className={`text-2xs flex items-center gap-1 truncate pt-1 border-t border-border/40 mt-1 ${
+      className={`text-label flex items-center gap-1 truncate pt-1 border-t border-border/40 mt-1 ${
         vencida ? "text-destructive" : "text-muted-foreground"
       }`}
     >

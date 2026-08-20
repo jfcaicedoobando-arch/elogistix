@@ -19,11 +19,11 @@ export function PulsoSection({ pulso }: { pulso: PulsoKpis }) {
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
       <Card className="p-5 rounded-xl border border-border">
         <div className="flex items-center justify-between">
-          <p className="text-sm font-medium">Embarques activos</p>
+          <p className="text-body font-medium">Embarques activos</p>
           <Ship className="h-5 w-5 text-primary" aria-hidden />
         </div>
         <p className="mt-2 text-2xl font-semibold tabular-nums">{pulso.embarques_activos}</p>
-        <ul className="mt-3 space-y-1 text-sm text-muted-foreground">
+        <ul className="mt-3 space-y-1 text-body text-muted-foreground">
           {pulso.embarques_por_estado.slice(0, 4).map((e) => (
             <li key={e.estado} className="flex justify-between">
               <span>{e.estado}</span>
@@ -35,10 +35,10 @@ export function PulsoSection({ pulso }: { pulso: PulsoKpis }) {
 
       <Card className="p-5 rounded-xl border border-border">
         <div className="flex items-center justify-between">
-          <p className="text-sm font-medium">Alertas operativas</p>
+          <p className="text-body font-medium">Alertas operativas</p>
           <Semaforo ok={alertasCount === 0} />
         </div>
-        <ul className="mt-3 space-y-1 text-sm">
+        <ul className="mt-3 space-y-1 text-body">
           <li className="flex justify-between">
             <span>Demoras</span>
             <span className={`tabular-nums ${pulso.demoras > 0 ? "text-destructive font-medium" : ""}`}>{pulso.demoras}</span>
@@ -56,10 +56,10 @@ export function PulsoSection({ pulso }: { pulso: PulsoKpis }) {
 
       <Card className="p-5 rounded-xl border border-border">
         <div className="flex items-center justify-between">
-          <p className="text-sm font-medium">Estatus fiscal</p>
+          <p className="text-body font-medium">Estatus fiscal</p>
           <Semaforo ok={fiscalOk} />
         </div>
-        <ul className="mt-3 space-y-1 text-sm">
+        <ul className="mt-3 space-y-1 text-body">
           <li className="flex justify-between">
             <span>CFDI timbrados este mes</span>
             <span className="tabular-nums">{pulso.cfdi_timbrados_mes}</span>

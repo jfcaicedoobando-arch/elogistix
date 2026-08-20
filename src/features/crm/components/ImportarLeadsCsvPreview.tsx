@@ -38,18 +38,18 @@ export function ImportarLeadsCsvPreview({
 
   return (
     <div className="space-y-2">
-      <div className="flex flex-wrap items-center gap-2 text-sm">
+      <div className="flex flex-wrap items-center gap-2 text-body">
         <FileText className="h-4 w-4" />
         <span>{rows.length} filas leídas</span>
         <Badge variant="default">{validCount} válidas</Badge>
         {errorCount > 0 && <Badge variant="destructive">{errorCount} con errores</Badge>}
         {duplicadosCargando && (
-          <span className="text-xs text-muted-foreground">Revisando duplicados…</span>
+          <span className="text-body-sm text-muted-foreground">Revisando duplicados…</span>
         )}
         {exactos > 0 && <Badge variant="destructive">{exactos} duplicados (se omiten)</Badge>}
         {posibles > 0 && <Badge variant="secondary">{posibles} posibles duplicados</Badge>}
       </div>
-      <div className="border rounded max-h-64 overflow-auto text-xs">
+      <div className="border rounded max-h-64 overflow-auto text-body-sm">
         <table className="w-full">
           <thead className="bg-muted sticky top-0">
             <tr>

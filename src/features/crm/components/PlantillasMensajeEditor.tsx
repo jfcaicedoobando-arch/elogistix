@@ -60,7 +60,7 @@ export default function PlantillasMensajeEditor() {
         <CardTitle className="flex items-center gap-2">
           <MessageSquare className="h-4 w-4 text-primary" /> Plantillas de mensaje
         </CardTitle>
-        <p className="text-xs text-muted-foreground">
+        <p className="text-body-sm text-muted-foreground">
           Variables: {VARIABLES.join(" · ")}
         </p>
       </CardHeader>
@@ -147,7 +147,7 @@ export default function PlantillasMensajeEditor() {
                     defaultValue={p.asunto}
                     aria-label={`Asunto de la plantilla ${p.nombre}`}
                     placeholder="Asunto"
-                    className="h-8 text-xs"
+                    className="h-8 text-body-sm"
                     onBlur={(e) => {
                       if (e.target.value !== p.asunto) actualizar.mutate({ id: p.id, patch: { asunto: e.target.value } });
                     }}
@@ -156,12 +156,12 @@ export default function PlantillasMensajeEditor() {
                 <Textarea
                   defaultValue={p.cuerpo}
                   rows={3}
-                  className="text-xs"
+                  className="text-body-sm"
                   onBlur={(e) => {
                     if (e.target.value !== p.cuerpo) actualizar.mutate({ id: p.id, patch: { cuerpo: e.target.value } });
                   }}
                 />
-                <div className="flex items-center gap-1 text-2xs text-muted-foreground">
+                <div className="flex items-center gap-1 text-label text-muted-foreground">
                   <Save className="h-3 w-3" /> Los cambios se guardan al salir del campo.
                 </div>
               </li>

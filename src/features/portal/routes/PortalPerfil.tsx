@@ -12,8 +12,8 @@ import { useDocumentTitle } from "@/hooks/shared";
 function Field({ label, value }: { label: string; value?: string | null }) {
   return (
     <div className="space-y-1">
-      <p className="text-xs font-medium text-muted-foreground">{label}</p>
-      <p className="text-sm text-foreground break-words">
+      <p className="text-body-sm font-medium text-muted-foreground">{label}</p>
+      <p className="text-body text-foreground break-words">
         {value && value.length > 0 ? value : <span className="text-muted-foreground">—</span>}
       </p>
     </div>
@@ -88,7 +88,7 @@ export default function PortalPerfil() {
         </CardContent>
       </Card>
 
-      <p className="text-xs text-muted-foreground">
+      <p className="text-body-sm text-muted-foreground">
         ¿Necesitas actualizar tu razón social, RFC o dirección fiscal? Contacta a tu ejecutivo
         para que actualice estos datos.
       </p>

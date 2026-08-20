@@ -30,7 +30,7 @@ export default function OportunidadesViewChips({ value, onChange }: Props) {
             type="button"
             size="sm"
             variant={activa === v.id ? "default" : "outline"}
-            className="h-7 rounded-full px-3 text-xs"
+            className="h-7 rounded-full px-3 text-body-sm"
             aria-pressed={activa === v.id}
             onClick={() => onChange(v.filtros)}
           >

@@ -13,7 +13,7 @@ import { DrilldownRow } from "@/components/shared/dataTable/DrilldownRow";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 
 function Empty({ text }: { text: string }) {
-  return <p className="text-xs text-muted-foreground">{text}</p>;
+  return <p className="text-body-sm text-muted-foreground">{text}</p>;
 }
 
 export function LeadLineageCard({ leadId }: { leadId: string }) {
@@ -38,8 +38,8 @@ export function LeadLineageCard({ leadId }: { leadId: string }) {
             className="flex items-center justify-between gap-2 p-2 rounded border hover:bg-muted/50 transition-colors"
           >
             <div className="min-w-0">
-              <div className="text-sm font-medium truncate">{o.nombre}</div>
-              <div className="text-xs text-muted-foreground">
+              <div className="text-body font-medium truncate">{o.nombre}</div>
+              <div className="text-body-sm text-muted-foreground">
                 {formatCurrencyCompact(Number(o.monto_estimado ?? 0), o.moneda)} ·{" "}
                 {Number(o.probabilidad ?? 0)}% · cierre {o.fecha_estimada_cierre ?? "—"}
               </div>
@@ -69,7 +69,7 @@ export function OportunidadLineageCard({ oportunidadId, leadId }: OpLineageProps
       </CardHeader>
       <CardContent className="space-y-4">
         <div>
-          <div className="text-xs font-semibold text-muted-foreground mb-1 flex items-center gap-1">
+          <div className="text-body-sm font-semibold text-muted-foreground mb-1 flex items-center gap-1">
             <UserPlus className="h-3 w-3" /> Lead de origen
           </div>
           {leadId && lead ? (
@@ -78,7 +78,7 @@ export function OportunidadLineageCard({ oportunidadId, leadId }: OpLineageProps
               ariaLabel={`Ver lead ${lead.empresa}`}
               className="flex items-center justify-between gap-2 p-2 rounded border hover:bg-muted/50"
             >
-              <div className="text-sm font-medium truncate">{lead.empresa}</div>
+              <div className="text-body font-medium truncate">{lead.empresa}</div>
               <Badge variant="outline">{lead.estado}</Badge>
             </DrilldownRow>
           ) : (
@@ -87,7 +87,7 @@ export function OportunidadLineageCard({ oportunidadId, leadId }: OpLineageProps
         </div>
 
         <div>
-          <div className="text-xs font-semibold text-muted-foreground mb-1 flex items-center gap-1">
+          <div className="text-body-sm font-semibold text-muted-foreground mb-1 flex items-center gap-1">
             <ClipboardList className="h-3 w-3" /> Cotizaciones <Badge variant="outline" className="ml-1">{cots.length}</Badge>
           </div>
           {isLoadingCots && <EmptyStateInline loading message="Cargando…" className="py-2" />}
@@ -100,10 +100,10 @@ export function OportunidadLineageCard({ oportunidadId, leadId }: OpLineageProps
                 ariaLabel={`Ver cotización ${c.folio}`}
                 className="flex items-center justify-between gap-2 p-2 rounded border hover:bg-muted/50"
               >
-                <div className="text-sm font-medium truncate">{c.folio}</div>
+                <div className="text-body font-medium truncate">{c.folio}</div>
                 <div className="flex items-center gap-2">
-                  <Badge variant="outline" className="text-xs">{c.modo}</Badge>
-                  <Badge variant="secondary" className="text-xs">{c.estado}</Badge>
+                  <Badge variant="outline" className="text-body-sm">{c.modo}</Badge>
+                  <Badge variant="secondary" className="text-body-sm">{c.estado}</Badge>
                 </div>
               </DrilldownRow>
             ))}
@@ -111,7 +111,7 @@ export function OportunidadLineageCard({ oportunidadId, leadId }: OpLineageProps
         </div>
 
         <div>
-          <div className="text-xs font-semibold text-muted-foreground mb-1 flex items-center gap-1">
+          <div className="text-body-sm font-semibold text-muted-foreground mb-1 flex items-center gap-1">
             <Ship className="h-3 w-3" /> Embarques <Badge variant="outline" className="ml-1">{embs.length}</Badge>
           </div>
           {embs.length === 0 && <Empty text="Sin embarques generados todavía." />}
@@ -123,10 +123,10 @@ export function OportunidadLineageCard({ oportunidadId, leadId }: OpLineageProps
                 ariaLabel={`Ver embarque ${e.expediente}`}
                 className="flex items-center justify-between gap-2 p-2 rounded border hover:bg-muted/50"
               >
-                <div className="text-sm font-medium truncate">{e.expediente}</div>
+                <div className="text-body font-medium truncate">{e.expediente}</div>
                 <div className="flex items-center gap-2">
-                  <Badge variant="outline" className="text-xs">{e.modo}</Badge>
-                  <Badge variant="secondary" className="text-xs">{e.estado}</Badge>
+                  <Badge variant="outline" className="text-body-sm">{e.modo}</Badge>
+                  <Badge variant="secondary" className="text-body-sm">{e.estado}</Badge>
                 </div>
               </DrilldownRow>
             ))}

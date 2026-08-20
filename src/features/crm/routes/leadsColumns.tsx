@@ -31,7 +31,7 @@ function EstadoCell({ lead }: { lead: CrmLeadRow }) {
         }}
         disabled={actualizar.isPending}
       >
-        <SelectTrigger className="h-7 text-xs px-2 w-full max-w-[140px]">
+        <SelectTrigger className="h-7 text-body-sm px-2 w-full max-w-[140px]">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
@@ -70,13 +70,13 @@ export function makeLeadsColumns(
       meta: { width: COL_W.ruta, className: "font-medium whitespace-nowrap", sticky: true },
       cell: ({ row }) => toTitleCase(row.original.empresa),
     },
-    { id: "contacto", header: "Contacto", meta: { width: COL_W.nombre, className: "text-xs" }, cell: ({ row }) => toTitleCase(row.original.contacto ?? "") },
-    { id: "email", header: "Email", meta: { width: COL_W.texto, className: "text-xs truncate hidden xl:table-cell", headerClassName: "hidden xl:table-cell" }, cell: ({ row }) => row.original.email ?? "" },
-    { id: "fuente", header: "Fuente", meta: { width: COL_W.folio, className: "text-xs hidden xl:table-cell", headerClassName: "hidden xl:table-cell" }, cell: ({ row }) => row.original.fuente },
+    { id: "contacto", header: "Contacto", meta: { width: COL_W.nombre, className: "text-body-sm" }, cell: ({ row }) => toTitleCase(row.original.contacto ?? "") },
+    { id: "email", header: "Email", meta: { width: COL_W.texto, className: "text-body-sm truncate hidden xl:table-cell", headerClassName: "hidden xl:table-cell" }, cell: ({ row }) => row.original.email ?? "" },
+    { id: "fuente", header: "Fuente", meta: { width: COL_W.folio, className: "text-body-sm hidden xl:table-cell", headerClassName: "hidden xl:table-cell" }, cell: ({ row }) => row.original.fuente },
     {
       id: "estado", header: "Estado", meta: { width: COL_W.nombre },
       cell: ({ row }) => <EstadoCell lead={row.original} />,
     },
-    { id: "score", header: "Score", meta: { width: COL_W.tiny, align: "center", className: "text-center text-xs tabular-nums" }, cell: ({ row }) => row.original.score },
+    { id: "score", header: "Score", meta: { width: COL_W.tiny, align: "center", className: "text-center text-body-sm tabular-nums" }, cell: ({ row }) => row.original.score },
   ]);
 }

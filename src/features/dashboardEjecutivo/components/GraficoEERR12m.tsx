@@ -25,7 +25,7 @@ export function GraficoEERR12m({ data }: Props) {
           <EmptyStateInline icon={LineChartIcon} message="No hay suficientes datos para graficar la tendencia." hint="Se necesitan al menos 2 periodos." />
         ) : (
         <div className="h-64">
-          <p className="text-2xs text-muted-foreground mb-1">MXN</p>
+          <p className="text-label text-muted-foreground mb-1">MXN</p>
           <ResponsiveContainer width="100%" height="100%">
             <ComposedChart data={data}>
               <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />

@@ -24,6 +24,10 @@ const MODULOS_MIGRADOS: readonly string[] = [
   "src/features/embarques",
   "src/features/facturacion",
   "src/features/tesoreria",
+  "src/features/portal",
+  "src/features/crm",
+  "src/features/dashboard",
+  "src/features/dashboardEjecutivo",
 ];
 
 /** Escalones crudos de Tailwind prohibidos en los módulos migrados. */

@@ -26,15 +26,15 @@ export function CarteraSection({ antiguedad, topClientes }: { antiguedad: Bucket
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       <Card className="p-5 rounded-xl border border-border">
         <div className="flex items-baseline justify-between">
-          <p className="text-sm font-medium">Antigüedad de cartera</p>
-          <p className="text-sm text-muted-foreground tabular-nums">Total: {fmt(total)}</p>
+          <p className="text-body font-medium">Antigüedad de cartera</p>
+          <p className="text-body text-muted-foreground tabular-nums">Total: {fmt(total)}</p>
         </div>
         <ul className="mt-4 space-y-3">
           {antiguedad.map((b) => {
             const w = total > 0 ? (b.monto_mxn / total) * 100 : 0;
             return (
               <li key={b.bucket}>
-                <div className="flex items-center justify-between text-sm">
+                <div className="flex items-center justify-between text-body">
                   <span className="flex items-center gap-2">
                     <span className={`inline-block w-2 h-2 rounded-full ${COLOR_BUCKET[b.bucket]}`} aria-hidden />
                     {b.bucket === "Corriente" ? "Corriente" : `${b.bucket} días`}
@@ -53,15 +53,15 @@ export function CarteraSection({ antiguedad, topClientes }: { antiguedad: Bucket
 
       <Card className="p-5 rounded-xl border border-border">
         <div className="flex items-baseline justify-between">
-          <p className="text-sm font-medium">Concentración — Top 5 clientes</p>
-          <p className="text-sm text-muted-foreground tabular-nums">{totalPct.toFixed(1)}% del margen</p>
+          <p className="text-body font-medium">Concentración — Top 5 clientes</p>
+          <p className="text-body text-muted-foreground tabular-nums">{totalPct.toFixed(1)}% del margen</p>
         </div>
         {topClientes.length === 0 ? (
           <EmptyStateInline icon={Users} message="Sin datos del mes." className="py-6" />
         ) : (
           <ol className="mt-4 space-y-2">
             {topClientes.map((c, i) => (
-              <li key={(c.cliente_id ?? c.cliente_nombre) + i} className="flex items-center justify-between text-sm">
+              <li key={(c.cliente_id ?? c.cliente_nombre) + i} className="flex items-center justify-between text-body">
                 <span className="truncate pr-3">
                   <span className="text-muted-foreground mr-2 tabular-nums">{i + 1}.</span>
                   {c.cliente_nombre}

@@ -34,7 +34,7 @@ export function WidgetCard({
           <Icon className={`h-4 w-4 ${iconClass}`} />
           {title}
           {!isLoading && count > 0 && (
-            <Badge variant="secondary" className="ml-auto text-2xs">{count}</Badge>
+            <Badge variant="secondary" className="ml-auto text-label">{count}</Badge>
           )}
         </CardTitle>
       </CardHeader>
@@ -62,13 +62,13 @@ export function Row({ onClick, badge, badgeClass, title, subtitle }: RowProps) {
       className="flex items-center gap-3 rounded-lg border p-2.5 cursor-pointer hover:bg-muted/50 transition-colors"
     >
       <div
-        className={`shrink-0 min-w-[2.25rem] h-8 px-2 rounded-md flex items-center justify-center text-xs font-bold text-primary-foreground ${badgeClass}`}
+        className={`shrink-0 min-w-[2.25rem] h-8 px-2 rounded-md flex items-center justify-center text-body-sm font-bold text-primary-foreground ${badgeClass}`}
       >
         {badge}
       </div>
       <div className="min-w-0 flex-1">
-        <p className="text-sm font-medium truncate">{title}</p>
-        <p className="text-xs text-muted-foreground truncate">{subtitle}</p>
+        <p className="text-body font-medium truncate">{title}</p>
+        <p className="text-body-sm text-muted-foreground truncate">{subtitle}</p>
       </div>
       <ArrowRight className="h-4 w-4 text-muted-foreground shrink-0" />
     </div>

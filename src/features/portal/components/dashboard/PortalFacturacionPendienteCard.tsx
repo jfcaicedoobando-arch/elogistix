@@ -30,7 +30,7 @@ export function PortalFacturacionPendienteCard({ montos, total, vencidas, classN
         </CardHeader>
         <CardContent>
           {total === 0 ? (
-            <p className="text-xs text-muted-foreground text-center py-6">
+            <p className="text-body-sm text-muted-foreground text-center py-6">
               Sin facturas pendientes.
             </p>
           ) : (
@@ -44,12 +44,12 @@ export function PortalFacturacionPendienteCard({ montos, total, vencidas, classN
                   {formatCurrency(montos.usd, "USD")}
                 </p>
               )}
-              <p className="text-xs text-muted-foreground mt-1">
+              <p className="text-body-sm text-muted-foreground mt-1">
                 {total} factura{total !== 1 ? "s" : ""} por pagar
               </p>
               <div className="mt-4 space-y-2">
                 {vencidas > 0 && (
-                  <div className="flex items-center gap-2 text-xs p-2 rounded bg-destructive/10 text-destructive">
+                  <div className="flex items-center gap-2 text-body-sm p-2 rounded bg-destructive/10 text-destructive">
                     <span className="font-medium inline-flex items-center gap-1.5"><AlertTriangle className="h-3.5 w-3.5" aria-hidden /> {vencidas} vencida(s)</span>
                   </div>
                 )}
@@ -57,7 +57,7 @@ export function PortalFacturacionPendienteCard({ montos, total, vencidas, classN
               <Button
                 variant="outline"
                 size="sm"
-                className="w-full mt-4 text-xs pointer-events-none"
+                className="w-full mt-4 text-body-sm pointer-events-none"
                 tabIndex={-1}
                 aria-hidden
               >

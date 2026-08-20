@@ -21,7 +21,7 @@ export default function CrmConfiguracion() {
   useDocumentTitle('Configuración del CRM');
   const { canEditCrm } = usePermissions();
   if (!canEditCrm) {
-    return <div className="p-8 text-center text-sm text-muted-foreground">No tienes permiso para configurar el CRM.</div>;
+    return <div className="p-8 text-center text-body text-muted-foreground">No tienes permiso para configurar el CRM.</div>;
   }
   return (
     <PageContainer>
@@ -32,38 +32,38 @@ export default function CrmConfiguracion() {
       />
       <Accordion type="single" collapsible defaultValue="pipeline" className="w-full space-y-2">
         <AccordionItem value="pipeline" className="border rounded-md bg-card px-4">
-          <AccordionTrigger className="text-sm font-semibold">Pipeline (etapas)</AccordionTrigger>
+          <AccordionTrigger className="text-body font-semibold">Pipeline (etapas)</AccordionTrigger>
           <AccordionContent className="pt-2 pb-4">
             <EtapasPipelineEditor />
           </AccordionContent>
         </AccordionItem>
         <AccordionItem value="criterios" className="border rounded-md bg-card px-4">
-          <AccordionTrigger className="text-sm font-semibold">Criterios de salida por etapa</AccordionTrigger>
+          <AccordionTrigger className="text-body font-semibold">Criterios de salida por etapa</AccordionTrigger>
           <AccordionContent className="pt-2 pb-4">
             <CriteriosEtapaEditor />
           </AccordionContent>
         </AccordionItem>
         <AccordionItem value="motivos" className="border rounded-md bg-card px-4">
 
-          <AccordionTrigger className="text-sm font-semibold">Motivos de pérdida</AccordionTrigger>
+          <AccordionTrigger className="text-body font-semibold">Motivos de pérdida</AccordionTrigger>
           <AccordionContent className="pt-2 pb-4">
             <MotivosPerdidaEditor />
           </AccordionContent>
         </AccordionItem>
         <AccordionItem value="presupuesto" className="border rounded-md bg-card px-4">
-          <AccordionTrigger className="text-sm font-semibold">Presupuesto comercial mensual</AccordionTrigger>
+          <AccordionTrigger className="text-body font-semibold">Presupuesto comercial mensual</AccordionTrigger>
           <AccordionContent className="pt-2 pb-4">
             <PresupuestoCrmEditor />
           </AccordionContent>
         </AccordionItem>
         <AccordionItem value="metas" className="border rounded-md bg-card px-4">
-          <AccordionTrigger className="text-sm font-semibold">Metas de actividad</AccordionTrigger>
+          <AccordionTrigger className="text-body font-semibold">Metas de actividad</AccordionTrigger>
           <AccordionContent className="pt-2 pb-4">
             <MetasActividadEditor />
           </AccordionContent>
         </AccordionItem>
         <AccordionItem value="plantillas" className="border rounded-md bg-card px-4">
-          <AccordionTrigger className="text-sm font-semibold">Plantillas de mensaje</AccordionTrigger>
+          <AccordionTrigger className="text-body font-semibold">Plantillas de mensaje</AccordionTrigger>
           <AccordionContent className="pt-2 pb-4">
             <PlantillasMensajeEditor />
           </AccordionContent>
