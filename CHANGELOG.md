@@ -1,5 +1,14 @@
 # Changelog
 
+## [13.694.0] - 2026-08-20
+### Ola G — Cierre de la auditoría visual
+- Las flechitas de "ver detalle" en Historial de facturas y proformas ahora son legibles (antes casi transparentes) y se realzan al pasar el mouse.
+- Etiquetas de KPI sin MAYÚSCULAS y con la escala tipográfica del sistema en Totales del periodo y tooltips de arribos.
+- Mejor contraste en avisos ámbar sobre fondo suave (reconciliación de embarques y aviso de timbrado interrumpido), especialmente en modo oscuro.
+- El listado de proformas usa el ancho amplio como el resto de listados densos: las tablas ya no "saltan" de ancho al cambiar de módulo.
+- Puntos suspensivos tipográficos ("…") unificados en textos de interfaz y se retiró el botón flotante inactivo de Embarques.
+- Nuevos candados de CI: prohibido "..." ASCII en textos de UI y tope al uso de `uppercase`.
+
 ## [13.693.0] - 2026-08-20
 ### UI-4 — Un solo guard de carga y error
 - El portal ya no "pierde" su encabezado mientras carga: Mis Embarques, Mis Cotizaciones y el Dashboard del cliente pintan título y accesos desde el primer instante, y sólo el cuerpo muestra el esqueleto o el mensaje de reintento.

@@ -37,7 +37,7 @@ function contarUppercase(): number {
   return total;
 }
 
-const MAX_UPPERCASE = contarUppercase();
+const MAX_UPPERCASE = 146;
 
 describe("arquitectura · micro-tipografía", () => {
   it('no usa "..." ASCII en textos de interfaz (usa "…")', () => {
