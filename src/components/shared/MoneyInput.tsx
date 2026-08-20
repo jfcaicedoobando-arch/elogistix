@@ -71,15 +71,30 @@ const MoneyInput = forwardRef<HTMLInputElement, MoneyInputProps>(
       if (actual !== (value ?? 0)) setText(valorANumeroTexto(value));
     }, [value, allowNegative]);
 
+    const [topeAplicado, setTopeAplicado] = useState(false);
+
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       const el = e.currentTarget;
       const caret = el.selectionStart ?? el.value.length;
       const clean = sanitizeMoneyText(el.value, allowNegative);
+      const parsed = parseMoneyText(clean) ?? 0;
+
+      // EC-11 — El tope se aplica también al teclear (antes sólo en blur): un
+      // cero extra dejaba de mostrarse como monto imposible al instante.
+      if (typeof max === "number" && parsed > max) {
+        setTopeAplicado(true);
+        const acotadoTexto = valorANumeroTexto(max);
+        setText(formatMoneyDisplay(acotadoTexto));
+        onChange(max);
+        return;
+      }
+      setTopeAplicado(false);
+
       const display = formatMoneyDisplay(clean);
       const significativos = contarSignificativos(el.value, caret);
 
       setText(display);
-      onChange(parseMoneyText(clean) ?? 0);
+      onChange(parsed);
 
       // Restaura el cursor tras el re-render (contando dígitos, no comas).
       const pos = posicionCursor(display, significativos);
@@ -92,6 +107,7 @@ const MoneyInput = forwardRef<HTMLInputElement, MoneyInputProps>(
       const clean = sanitizeMoneyText(text, allowNegative);
       const parsed = parseMoneyText(clean) ?? 0;
       const acotado = typeof max === "number" && parsed > max ? max : parsed;
+      setTopeAplicado(acotado !== parsed);
       setText(acotado === parsed ? normalizeMoneyText(clean) : valorANumeroTexto(acotado));
       onChange(acotado);
       onBlur?.();
@@ -113,6 +129,11 @@ const MoneyInput = forwardRef<HTMLInputElement, MoneyInputProps>(
           onBlur={handleBlur}
           className={cn("text-right tabular-nums", currency && "pr-12", className)}
         />
+        {topeAplicado && (
+          <p role="status" className="mt-1 text-2xs text-destructive">
+            Se ajustó al máximo permitido.
+          </p>
+        )}
         {currency && (
           <span
             aria-hidden="true"
