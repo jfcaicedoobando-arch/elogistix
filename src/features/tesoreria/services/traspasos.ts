@@ -64,7 +64,7 @@ export async function registrarTraspaso(
     p_comision: input.comision ?? 0,
     p_concepto: input.concepto ?? "",
     p_referencia: input.referencia ?? "",
-    p_client_request_id: input.clientRequestId ?? null,
+    p_client_request_id: input.clientRequestId ?? undefined,
   });
   if (error) {
     // 23505 sobre el UNIQUE parcial = el mismo intento ya quedó guardado.
