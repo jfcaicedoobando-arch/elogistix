@@ -4,7 +4,7 @@
  * los literales 10% (sobrecosto) y 15% (margen mínimo) vivían hardcodeados
  * en JSX, invisibles para otros consumidores del P&L.
  *
- * NO confundir con `MARGIN_THRESHOLDS` de `src/constants/reportes.ts`
+ * NO confundir con `margenTono` de `src/lib/ui/margen.ts`
  * (escala 20/10): aquella colorea badges de rentabilidad por cliente en
  * Reportes; esta gobierna las alertas del P&L de embarque. Si un segundo
  * módulo (dashboard ejecutivo, profit) adopta estas alertas, promover este

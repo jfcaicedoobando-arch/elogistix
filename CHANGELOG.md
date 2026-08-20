@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.703.1] - 2026-08-20
+### Correcciones de integración continua
+- Se movió el cálculo de antigüedad al módulo del dashboard financiero (único consumidor) para cumplir la regla de arquitectura.
+- Se dividió el diálogo de sustitución de CFDI para respetar el límite de 200 líneas por archivo.
+- Se eliminó un archivo de constantes sin uso y se actualizó la prueba de la tarjeta de KPI al tooltip accesible.
+
 ## [13.703.0] - 2026-08-20
 ### KPIs unificados — Un solo criterio de "vencido" y de antigüedad
 - "Cartera vencida" se calculaba de cuatro maneras distintas (Cobranza, Estado de cuenta, Tesorería y Bandejas). Ahora todas las pantallas usan el mismo criterio, así que el mismo grupo de facturas da el mismo número en todas.
