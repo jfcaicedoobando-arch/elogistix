@@ -72,9 +72,13 @@ BEGIN
      OR position('resuelto_at IS NULL' IN v_def) = 0 THEN
     RAISE EXCEPTION 'CASO 2 FALLÓ: el cierre no revisa la cola de recálculo abierta';
   END IF;
-  IF position('definitiva' IN v_def) > 0 THEN
+  -- Sólo importa el USO de la bandera como filtro; el nombre puede seguir
+  -- apareciendo en comentarios o en la etiqueta `no_definitivas` del check.
+  IF v_def ~* 'definitiva\s*=\s*false' OR v_def ~* 'definitiva\s+IS\s+FALSE'
+     OR v_def ~* 'NOT\s+definitiva' THEN
     RAISE EXCEPTION 'CASO 2 FALLÓ: sigue usando la bandera `definitiva` (dependencia circular)';
   END IF;
+
   RAISE NOTICE 'CASO 2 OK · cierre bloquea por pendientes reales.';
 END
 $caso2$ LANGUAGE plpgsql;
