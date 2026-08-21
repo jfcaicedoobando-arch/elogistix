@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.718.0] - 2026-08-27
+### Ola 8 — "Estructural y escala" (Entrega 1)
+- **Roles por organización**: nuevos helpers `has_role_in_org` / `has_any_role_in_org`; los pagos en lote a proveedor, cobros en lote a cliente y la eliminación de pagos a proveedor ahora exigen el rol financiero en la organización del documento, no de forma global.
+- **Kanban CRM paginado**: 50 tarjetas por etapa con botón "Mostrar más" para evitar bloqueos de UI en pipelines grandes.
+- **Analítica CRM**: nuevas gráficas de embudo (`CrmEmbudoChart`) y forecast mensual (`CrmForecastMensualChart`) con tokens del design system.
+- **Tolerancia unificada**: `cobroLoteValidaciones` importa `TOLERANCIA_SOBREPAGO` del núcleo financiero en lugar de duplicar el valor.
+
 ## [13.717.0] - 2026-08-21
 ### Ola 7 — "Vendedor productivo" (Entrega 1)
 - **O7.7 · Conversión transaccional**: la propagación lead→cliente usa la RPC `crm_propagar_conversion_cliente`, así que oportunidad y cliente quedan sincronizados o no cambia nada.

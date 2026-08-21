@@ -4,17 +4,18 @@
 -- re-emite el cuerpo final de Ola 12 vía 20260824060000).
 -- Regla: cualquier cambio a esta función debe actualizar este archivo
 -- en el mismo PR (ver supabase/schema/README.md).
+-- v13.718.0 (Ola 8): la autorización de rol financiero se evalúa por
+-- membresía en la organización del documento (has_any_role_in_org).
 
 CREATE OR REPLACE FUNCTION public.registrar_pago_proveedor_lote(p_payload jsonb)
-RETURNS uuid
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path TO 'public'
+ RETURNS uuid
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public'
 AS $function$
 DECLARE
   v_uid uuid := auth.uid();
   v_org uuid;
-  v_autorizado boolean;
   v_proveedor_id uuid := (p_payload->>'proveedor_id')::uuid;
   v_fecha date := COALESCE((p_payload->>'fecha_pago')::date, CURRENT_DATE);
   v_moneda public.moneda := (p_payload->>'moneda')::public.moneda;
@@ -57,17 +58,6 @@ BEGIN
     RETURN (v_cached->>'lote_id')::uuid;
   END IF;
 
-  SELECT EXISTS (
-    SELECT 1 FROM public.user_roles ur
-    WHERE ur.user_id = v_uid
-      AND ur.role::text = ANY (ARRAY['admin','admin_org','super_admin','contador','tesorero'])
-  ) INTO v_autorizado;
-
-  IF NOT v_autorizado THEN
-    RAISE EXCEPTION 'LC_LOTE_SIN_ROL: Sólo administración, contabilidad o tesorería pueden registrar pagos en lote.'
-      USING ERRCODE = '42501';
-  END IF;
-
   SELECT organization_id, nombre INTO v_org, v_proveedor_nombre
   FROM public.proveedores WHERE id = v_proveedor_id;
 
@@ -78,6 +68,17 @@ BEGIN
   IF v_org <> public.current_user_org_id()
      AND NOT public.has_role(v_uid,'super_admin'::app_role) THEN
     RAISE EXCEPTION 'LC_LOTE_PROVEEDOR_OTRA_ORG: El proveedor pertenece a otra organización.';
+  END IF;
+
+  -- Ola 8: el rol financiero debe venir de la membresía en ESTA organización
+  -- (antes: EXISTS global sobre user_roles — un contador de la org A podía
+  -- registrar pagos en la org B). super_admin conserva su bypass de plataforma
+  -- dentro del helper.
+  IF NOT public.has_any_role_in_org(v_uid,
+       ARRAY['admin','admin_org','contador','tesorero']::public.app_role[],
+       v_org) THEN
+    RAISE EXCEPTION 'LC_LOTE_SIN_ROL: Sólo administración, contabilidad o tesorería pueden registrar pagos en lote.'
+      USING ERRCODE = '42501';
   END IF;
 
   -- Ola 11 · RFE-02/RNF-03: misma regla que el pago individual.
@@ -248,7 +249,5 @@ BEGIN
 END;
 $function$;
 
-REVOKE ALL ON FUNCTION public.registrar_pago_proveedor_lote(jsonb) FROM PUBLIC;
-REVOKE ALL ON FUNCTION public.registrar_pago_proveedor_lote(jsonb) FROM anon;
-GRANT EXECUTE ON FUNCTION public.registrar_pago_proveedor_lote(jsonb) TO authenticated;
-GRANT EXECUTE ON FUNCTION public.registrar_pago_proveedor_lote(jsonb) TO service_role;
+REVOKE ALL ON FUNCTION public.registrar_pago_proveedor_lote(jsonb) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.registrar_pago_proveedor_lote(jsonb) TO authenticated, service_role;

@@ -16,7 +16,10 @@ import { KpiCard } from "@/components/shared/KpiCard";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { ErrorState } from "@/components/shared/states/ErrorState";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
-import { BarChart3, Filter, ThumbsDown } from "lucide-react";
+import { BarChart3, ThumbsDown } from "lucide-react";
+import CrmEmbudoChart from "@/features/crm/components/analitica/CrmEmbudoChart";
+import CrmForecastMensualChart from "@/features/crm/components/analitica/CrmForecastMensualChart";
+
 
 import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/components/ui/table";
 import { DetailTableHead } from "@/components/shared/DetailTable";
@@ -36,8 +39,10 @@ function ForecastPanel() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <Card>
           <CardHeader className="pb-2"><CardTitle>Por mes</CardTitle></CardHeader>
-          <CardContent>
+          <CardContent className="space-y-4">
+            <CrmForecastMensualChart porMes={f.porMes} isLoading={isLoading} />
             <div className="overflow-x-auto">
+
             <Table className="w-full text-body">
               <TableHeader><TableRow className="text-body-sm text-muted-foreground border-b">
                 <DetailTableHead>Mes</DetailTableHead><DetailTableHead className="text-right">Pipeline</DetailTableHead><DetailTableHead className="text-right">Ponderado</DetailTableHead><DetailTableHead className="text-right">Ganado</DetailTableHead><DetailTableHead className="text-right">#</DetailTableHead>
@@ -96,12 +101,8 @@ function EmbudoYPerdidas() {
       <Card>
         <CardHeader className="pb-2"><CardTitle>Embudo</CardTitle></CardHeader>
         <CardContent>
-          {isLoading ? "…" : r.embudo.map((e) => (
-            <div key={e.etapa} className="flex justify-between py-1 text-body border-b last:border-0">
-              <span>{e.etapa}</span><span className="font-semibold tabular-nums">{e.cantidad}</span>
-            </div>
-          ))}
-          {!isLoading && r.embudo.length === 0 && <EmptyStateInline icon={Filter} message="Sin datos" />}
+          <CrmEmbudoChart embudo={r.embudo} isLoading={isLoading} />
+
         </CardContent>
       </Card>
       <Card>
