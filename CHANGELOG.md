@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.712.2] - 2026-08-21
+### Corrección
+- **fix(cxp)**: se extrajo el cuerpo del wizard de captura a `CapturaFacturaPasosBody` para bajar la complejidad del componente (lint) y se actualizó la prueba de `dialogTokens` para incluir el tamaño `5xl`.
+
 ## [13.712.1] - 2026-08-21
 ### Corrección
 - El wizard de captura de factura de proveedor ahora abre siempre en el paso 1 ("Documento y conceptos"), también cuando se abre desde el buzón CxP: antes saltaba al paso 2 asumiendo que el documento ya estaba revisado.

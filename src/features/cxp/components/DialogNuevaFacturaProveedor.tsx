@@ -5,7 +5,6 @@
  * vinculación al embarque). Cada paso usa todo el ancho del modal para que la
  * tabla de conceptos y los campos dejen de aparecer truncados.
  */
-import { useNavigate } from "react-router-dom";
 import { FileSpreadsheet } from "lucide-react";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
 
@@ -17,17 +16,14 @@ import { useNuevaFacturaProveedorForm } from "@/features/cxp/hooks";
 import { CuadreConceptosBar } from "./CuadreConceptosBar";
 import { TotalesChipDesglose } from "./TotalesChipDesglose";
 import { CapturaFacturaFooter } from "./CapturaFacturaFooter";
-import { PasoDocumento } from "./_sections/PasoDocumento";
-import { PasoDatos } from "./_sections/PasoDatos";
-import { PasoVinculacion } from "./_sections/PasoVinculacion";
+import { CapturaFacturaPasosBody } from "./_sections/CapturaFacturaPasosBody";
 
 import { useCuadreCaptura } from "@/features/cxp/hooks/useCuadreCaptura";
 import { useModoBuzonWiring } from "@/features/cxp/hooks/useModoBuzonWiring";
 import { useCapturaFacturaPasos } from "@/features/cxp/hooks/useCapturaFacturaPasos";
 import { pendientesDeCaptura } from "./pendientesDeCaptura";
-import {
-  derivarMontos, hayCapturaFactura, verArchivoBuzon,
-} from "./_sections/capturaDerivados";
+import { derivarMontos, hayCapturaFactura } from "./_sections/capturaDerivados";
+
 import { useCapturaEntranteWiring } from "@/features/cxp/hooks/useCapturaEntranteWiring";
 import type { EmbarqueSeleccionado, EntranteParaCaptura } from "@/features/cxp/types";
 
@@ -56,7 +52,7 @@ export function DialogNuevaFacturaProveedor(props: Props) {
 function DialogNuevaFacturaProveedorForm({
   open, onOpenChange, initialEmbarqueAdHoc, entrante, onCapturada,
 }: Props) {
-  const navigate = useNavigate();
+  
   const cats = usePresupuestoCategorias(true);
   const wiring = useCapturaEntranteWiring({
     entrante, initialEmbarqueAdHoc, onCapturada,
@@ -143,51 +139,19 @@ function DialogNuevaFacturaProveedorForm({
           ) : undefined
         }
       >
-        <div
-          className="space-y-5"
-          onKeyDown={(e) => {
-            if (!(e.metaKey || e.ctrlKey) || e.key !== "Enter") return;
-            e.preventDefault();
-            if (!pasos.esUltimo) pasos.siguiente();
-            else if (ctl.puedeGuardar) void ctl.submit();
-          }}
-        >
-          {pasos.paso === 1 && (
-            <PasoDocumento
-              ctl={ctl}
-              categorias={cats.data ?? []}
-              entrante={entrante ?? null}
-              autocarga={autocarga}
-              keyRenglonSospechoso={keyRenglonSospechoso}
-              modoBuzon={modoBuzon}
-              onVerArchivoBuzon={(path, nombre) => void verArchivoBuzon(path, nombre)}
-              onVerFacturaDuplicada={(id: string) => {
-                ctl.reset();
-                onOpenChange(false);
-                navigate(`/compras/facturas?factura=${id}`);
-              }}
-            />
-          )}
+        <CapturaFacturaPasosBody
+          ctl={ctl}
+          pasos={pasos}
+          categorias={cats.data ?? []}
+          entrante={entrante ?? null}
+          autocarga={autocarga}
+          categoriaCogs={categoriaCogs}
+          herencia={herencia}
+          keyRenglonSospechoso={keyRenglonSospechoso}
+          modoBuzon={modoBuzon}
+          onCerrar={() => onOpenChange(false)}
+        />
 
-          {pasos.paso === 2 && (
-            <PasoDatos
-              ctl={ctl}
-              categorias={cats.data ?? []}
-              entrante={entrante ?? null}
-              categoriaCogs={categoriaCogs}
-            />
-          )}
-
-          {pasos.paso === 3 && (
-            <PasoVinculacion
-              ctl={ctl}
-              entrante={entrante ?? null}
-              herencia={herencia}
-              sinCostoCapturado={entrante?.sinCostoCapturado}
-              onIrADatos={() => pasos.irA(2)}
-            />
-          )}
-        </div>
     </FormDialogShell>
     </>
   );
