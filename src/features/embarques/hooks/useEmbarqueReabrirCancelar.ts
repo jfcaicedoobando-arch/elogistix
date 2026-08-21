@@ -21,11 +21,21 @@ export function useEmbarqueReabrirCancelar(
   const registrarActividad = useRegistrarActividad();
   const avanzarEstado = useAvanzarEstadoEmbarque();
   const reabrirEmbarque = useReabrirEmbarque();
+  // O1.11: una llave por intento, estable ante reintentos de red y renovada
+  // sólo tras éxito. Evita reabrir/cancelar dos veces el mismo embarque.
+  const reqIdReabrir = useStableRequestId();
+  const reqIdCancelar = useStableRequestId();
 
   const handleReabrir = useCallback(async (motivo: string) => {
     if (!embarque || !id) return;
     try {
-      await reabrirEmbarque.mutateAsync({ embarqueId: id, usuarioEmail, motivo });
+      await reabrirEmbarque.mutateAsync({
+        embarqueId: id,
+        usuarioEmail,
+        motivo,
+        requestId: reqIdReabrir.get(),
+      });
+      reqIdReabrir.reset();
       registrarActividad.mutate({
         accion: "reabrir_embarque",
         modulo: "embarques",
