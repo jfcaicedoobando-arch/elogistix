@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.716.1] - 2026-08-21
+### Correcciones
+- **CI (RLS)**: la prueba `test_rls_ola6_ventas_arranca.sql` sembraba un usuario con el rol legacy `viewer`, que la base ya bloquea (`LC_ROL_LEGACY_BLOQUEADO`). Ahora usa `customer_service` como rol sin permisos de ventas.
+
 ## [13.716.0] - 2026-08-21
 ### Ola 6 — "Ventas arranca" (CRM Fase 1)
 - **Bolsa común de prospectos (O6.1)**: los vendedores ya ven los leads de su organización sin vendedor asignado y pueden tomarlos con el botón "Tomar lead". La asignación va por la RPC `crm_tomar_lead` (SECURITY DEFINER, `FOR UPDATE`), así que dos vendedores no pueden tomar el mismo: el segundo recibe `LC_LEAD_YA_ASIGNADO`. La privacidad de leads propios queda intacta.
