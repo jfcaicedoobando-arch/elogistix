@@ -48,6 +48,8 @@ export const LC_CODE_MESSAGES_OPERATIVO_GENERICOS: Record<string, string> = {
     "El total detectado del XML debe ser mayor a cero. Verifica el archivo CFDI.",
   LC_MOTIVO_REQUERIDO:
     "Indica el motivo para poder continuar.",
+  LC_DOC_INEXISTENTE:
+    "El documento no existe o no pertenece a tu organización. Recarga la página.",
   LC_ENTRANTE_RETIRO_FORBIDDEN:
     "Solo quien subió el archivo o un administrador puede retirarlo del buzón.",
   LC_ENTRANTE_RETIRO_CAPTURADA:
