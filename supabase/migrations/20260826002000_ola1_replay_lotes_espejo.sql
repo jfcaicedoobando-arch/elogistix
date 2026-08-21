@@ -247,8 +247,7 @@ BEGIN
   PERFORM public.idempotency_store(v_request_id, v_resp);
   RETURN v_resp;
 END;
-$function$
-;
+$function$;
 
 REVOKE ALL ON FUNCTION public.registrar_pago_cliente_lote(jsonb) FROM PUBLIC;
 REVOKE ALL ON FUNCTION public.registrar_pago_cliente_lote(jsonb) FROM anon;
@@ -496,8 +495,7 @@ BEGIN
 
   RETURN v_lote_id;
 END;
-$function$
-;
+$function$;
 
 REVOKE ALL ON FUNCTION public.registrar_pago_proveedor_lote(jsonb) FROM PUBLIC;
 REVOKE ALL ON FUNCTION public.registrar_pago_proveedor_lote(jsonb) FROM anon;
