@@ -51,7 +51,7 @@ describe("architecture — sin format() de date-fns en src/features (O3.15b)", (
     ).toBeLessThanOrEqual(MAX_USOS);
   });
 
-  it("si bajaste ocurrencias, baja el tope", () => {
+  it("date-fns format en features: si bajaste ocurrencias, baja el tope", () => {
     const { total } = contarUsos();
     expect(
       total,

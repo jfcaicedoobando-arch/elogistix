@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Loader2, RefreshCw, Send } from "lucide-react";
+import { RefreshCw, Send } from "lucide-react";
 
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { usePermissions } from "@/hooks/shared";

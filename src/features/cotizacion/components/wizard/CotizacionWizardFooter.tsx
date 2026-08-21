@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Save, ChevronRight, ChevronLeft, Loader2, AlertTriangle, MoreHorizontal } from "lucide-react";
+import { Save, ChevronRight, ChevronLeft, AlertTriangle, MoreHorizontal } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,

@@ -2,7 +2,7 @@
  * Acciones del encabezado del detalle de oportunidad (v13.629.1).
  * Extraído de `OportunidadDetalleContent` para bajar su complejidad.
  */
-import { ClipboardList, Edit, Loader2, Trash2 } from "lucide-react";
+import { ClipboardList, Edit, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface Props {

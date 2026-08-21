@@ -37,8 +37,7 @@ import {
 import { AgingKpiBucket } from "@/components/shared/kpi/AgingKpiBucket";
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 import { FILTRO_ANCHO } from "@/lib/ui/filterWidths";
-import { MoneyCell } from "@/components/shared/MoneyCell";
-import { formatCurrency } from "@/lib/formatters";
+import { CxpAgingMobileCard } from "@/features/cxp/components/CxpAgingMobileCard";
 
 
 interface Filters extends Record<string, string> { cubeta: string }
@@ -169,32 +168,8 @@ export default function CxpAging() {
             striped
             hoverable
             density={TABLE_DENSITY.embebida}
-            mobileCard={(r) => {
-              const peorCubeta = r.mas_90 > 0
-                ? "+90 días"
-                : r.d_61_90 > 0
-                  ? "61-90 días"
-                  : r.d_31_60 > 0
-                    ? "31-60 días"
-                    : r.d_1_30 > 0
-                      ? "1-30 días"
-                      : "Vigente";
-              return (
-                <div className="flex items-start justify-between gap-2">
-                  <div className="min-w-0 flex-1 space-y-1">
-                    <div className="font-semibold text-body truncate">{r.proveedor_nombre}</div>
-                    <div className="text-body-sm text-muted-foreground">{r.num_facturas} factura{r.num_facturas === 1 ? "" : "s"}</div>
-                    <div className="text-label text-muted-foreground">Cubeta más vencida: {peorCubeta}</div>
-                  </div>
-                  <MoneyCell
-                    label="Saldo total"
-                    value={formatCurrency(r.saldo_total, r.moneda)}
-                    highlight
-                    className="shrink-0 w-28"
-                  />
-                </div>
-              );
-            }}
+            mobileCard={(r) => <CxpAgingMobileCard row={r} />}
+
           />
         </CardContent>
       </Card>

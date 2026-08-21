@@ -61,7 +61,7 @@ describe("arquitectura · sin Loader2 manual dentro de <Button>", () => {
     ).toBeLessThanOrEqual(MAX_LOADER2_EN_BUTTON);
   });
 
-  it("mantiene el tope sincronizado (si migraste archivos, baja el tope)", () => {
+  it("Loader2 en Button: mantiene el tope sincronizado (si migraste archivos, baja el tope)", () => {
     const { total } = contarLoader2EnButton();
     expect(
       DEUDA_CONGELADA - total,

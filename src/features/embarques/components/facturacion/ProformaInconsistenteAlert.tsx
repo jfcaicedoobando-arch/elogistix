@@ -4,7 +4,7 @@
  * existen conceptos de venta pendientes sin asignar. Permite asignar los
  * conceptos pendientes al borrador o eliminarlo.
  */
-import { AlertTriangle, Loader2 } from "lucide-react";
+import { AlertTriangle } from "lucide-react";
 import { useMemo } from "react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";

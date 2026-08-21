@@ -30,7 +30,7 @@
  * Para footers custom (p. ej. "Cotizar sin desglose") pasa el prop `footer`.
  */
 import { KeyboardEvent, ReactNode, useCallback, useRef } from "react";
-import { ArrowLeft, ChevronLeft, ChevronRight, Loader2, Save } from "lucide-react";
+import { ArrowLeft, ChevronLeft, ChevronRight, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { StepIndicator } from "@/features/embarques/components/StepIndicator";
 import { cn } from "@/lib/utils";

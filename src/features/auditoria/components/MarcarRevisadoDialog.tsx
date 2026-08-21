@@ -3,7 +3,7 @@
  * Lógica en `useMarcarRevisadoController`; UI dividida en marcarRevisado/*.
  * Migrado a FormDialogShell (v13.152.0 — Oleada 3).
  */
-import { CalendarOff, CheckCircle2, Loader2, MessageSquare } from "lucide-react";
+import { CalendarOff, CheckCircle2, MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";

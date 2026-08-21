@@ -7,8 +7,7 @@ import { CotizacionesKpis } from "@/features/cotizacion/components/CotizacionesK
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ResponsiveDataTable } from "@/components/shared/dataTable/ResponsiveDataTable";
-import { formatCurrency, formatFechaEs } from "@/lib/formatters";
-import { MoneyCell } from "@/components/shared/MoneyCell";
+import { CotizacionMobileCard } from "@/features/cotizacion/components/CotizacionMobileCard";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { Seo } from "@/components/shared/Seo";
@@ -16,7 +15,6 @@ import { pluralizar } from "@/lib/format/pluralizar";
 import DoubleConfirmDeleteDialog from "@/components/shared/DoubleConfirmDeleteDialog";
 import { UnifiedFiltersBar } from "@/components/shared/filters/UnifiedFiltersBar";
 import { CargaGuard } from "@/components/shared/states/CargaGuard";
-import { StatusBadge } from "@/components/shared/StatusBadge";
 import { useCotizacionesPageController } from "@/features/cotizacion/hooks";
 import { buildCotizacionesColumns } from "@/features/cotizacion/components/cotizacionesColumns";
 import { EstadoSelect, ClienteSelect } from "@/features/cotizacion/components/CotizacionesFilterSelects";
@@ -151,25 +149,14 @@ export default function Cotizaciones() {
             density={TABLE_DENSITY.listado}
             className="pb-24 sm:pb-0"
             mobileCard={(r) => (
-              <div className="flex flex-col gap-2 min-w-0">
-                <div className="flex items-start justify-between gap-2">
-                  <div className="min-w-0 flex-1">
-                    <div className="font-semibold text-body truncate">{r.folio}</div>
-                    <div className="text-body-sm text-muted-foreground truncate mt-0.5">{r.cliente_nombre ?? ""}</div>
-                    <div className="text-label text-muted-foreground mt-0.5">
-                      {/* VF-04: fecha en TZ de negocio (America/Mexico_City). */}
-                      {r.created_at ? formatFechaEs(r.created_at) : ""}
-                    </div>
-                  </div>
-                  <StatusBadge domain="cotizacion" status={r.estado} />
-                </div>
-                {typeof r.subtotal === "number" && (
-                  <MoneyCell
-                    label="Subtotal"
-                    value={formatCurrency(r.subtotal, r.moneda ?? "USD")}
-                  />
-                )}
-              </div>
+              <CotizacionMobileCard
+                folio={r.folio}
+                clienteNombre={r.cliente_nombre ?? null}
+                createdAt={r.created_at ?? null}
+                estado={r.estado}
+                subtotal={typeof r.subtotal === "number" ? r.subtotal : null}
+                moneda={r.moneda ?? null}
+              />
             )}
             pagination={{
               page: c.page,

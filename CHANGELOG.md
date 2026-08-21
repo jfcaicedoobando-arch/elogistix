@@ -1,5 +1,15 @@
 # Changelog
 
+## [13.711.0] - 2026-08-21
+### Ola 3 — Un solo equipo de diseño
+- Tipografía, encabezados y diálogos unificados con los tokens del sistema (sentence case, escala semántica) en portales, auth, legal y módulos operativos.
+- Mensajes de validación centralizados en `COPY_VALIDACION` (español mexicano, con punto final) para auth, cotizaciones y CxP.
+- Botones con estado de carga vía la prop `loading`; se retiraron los spinners manuales.
+- Listados densos de Facturación, CxP y Tesorería migrados a `ResponsiveDataTable` con tarjeta móvil y `MoneyCell`.
+- Paleta cerrada de etapas del CRM, casing único de nombres de cliente/proveedor y "Profit" ahora se muestra como "Utilidad".
+- Nuevos candados de CI: KPI sin tamaños literales, avisos sin markup crudo, fechas sin `date-fns/format` en features y spinners fuera de `Button`.
+
+
 ## [13.710.1] - 2026-08-21
 ### CI — cobertura Sentry para edge function `verificar-sat-semanal`
 - Se agregó `supabase/functions/verificar-sat-semanal/index.ts` al listado `CRITICAL` de `sentry-edge-wrapping.test.ts`, ya que la función usa `wrapEdgeHandler` y el test de cobertura de arquitectura la exige.

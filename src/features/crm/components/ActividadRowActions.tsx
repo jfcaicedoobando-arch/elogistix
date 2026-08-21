@@ -3,7 +3,7 @@
  * Las notas siguen disponibles incluso en actividades completadas.
  */
 import { useState } from "react";
-import { CheckCircle2, Clock, FileText, Loader2 } from "lucide-react";
+import { CheckCircle2, Clock, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Hint } from "@/components/shared/Hint";
 import {

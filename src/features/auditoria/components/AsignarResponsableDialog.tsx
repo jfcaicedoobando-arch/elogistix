@@ -2,7 +2,7 @@
  * Diálogo de asignación de responsable a un hallazgo de auditoría.
  * Pura presentación: la lógica vive en `useAsignarResponsableController`.
  */
-import { Hand, Loader2, UserPlus } from "lucide-react";
+import { Hand, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import {

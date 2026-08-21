@@ -5,7 +5,7 @@
  * v13.188.0 — Ola 2 · Item 2.
  */
 import { useState, useEffect } from "react";
-import { CalendarClock, Loader2, X } from "lucide-react";
+import { CalendarClock, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useProgramarPagoProveedor } from "@/features/cxp/hooks/useProgramarPagoProveedor";

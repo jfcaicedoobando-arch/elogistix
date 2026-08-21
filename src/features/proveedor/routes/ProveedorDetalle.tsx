@@ -4,7 +4,6 @@ import { PackageX } from "lucide-react";
 import { useRegisterBreadcrumbLabel } from "@/lib/contexts/BreadcrumbContext";
 import { useVolver } from "@/hooks/shared/useVolver";
 import { DetailSkeleton } from "@/components/shared/skeletons";
-import { toTitleCase } from "@/lib/formatters";
 import { formatNombreEntidad } from "@/lib/formatNombreEntidad";
 import EditarProveedorDialog from "@/features/proveedor/components/EditarProveedorDialog";
 import DoubleConfirmDeleteDialog from "@/components/shared/DoubleConfirmDeleteDialog";

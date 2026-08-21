@@ -12,7 +12,7 @@
  * usuario puede personalizar por etapa), pero el fallback y las columnas
  * "cerradas" (ganada/perdida) siempre usan esta paleta, no un hex inline.
  */
-import { CHART_TOKENS } from "@/lib/chartTokens";
+import { CHART as CHART_TOKENS } from "@/lib/chartTokens";
 
 export type EtapaColorTipo = "abierta" | "ganada" | "perdida";
 
