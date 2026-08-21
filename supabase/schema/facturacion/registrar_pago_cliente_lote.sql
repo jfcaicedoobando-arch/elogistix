@@ -140,12 +140,14 @@ BEGIN
       RAISE EXCEPTION 'LC_COBRO_LOTE_MONTO_INVALIDO: Cada factura del lote debe tener un importe mayor a cero.';
     END IF;
 
+    -- Ola 1: las notas de crédito se restan CONVERTIDAS a la moneda de la
+    -- factura (canon `public.nc_aplicadas_en_moneda_factura`); antes se sumaba
+    -- `nc.monto` en crudo y una NC en USD inflaba el saldo de una factura MXN.
     SELECT
       f.total
       - COALESCE((SELECT SUM(pf.monto_aplicado_factura) FROM public.pagos_factura pf
                    WHERE pf.factura_id = f.id AND pf.deleted_at IS NULL), 0)
-      - COALESCE((SELECT SUM(nc.monto) FROM public.factura_notas_credito nc
-                   WHERE nc.factura_id = f.id AND nc.estado = 'Aplicada' AND nc.deleted_at IS NULL), 0),
+      - public.nc_aplicadas_en_moneda_factura(f.id),
       f.fecha_emision
       INTO v_saldo, v_fecha_emision
     FROM public.facturas f

@@ -73,6 +73,16 @@ export const LC_CODE_MESSAGES_FINANCIERO: Record<string, string> = {
   LC_PAGO_PROV_SOBREPAGO:
     "El pago excede el saldo de la factura de proveedor (incluyendo impuestos).",
   LC_PAGO_SOBREPAGO: "El pago excede el saldo pendiente de la factura.",
+  // Ola 1 (major release): espejo de LC_LOTE_FECHA_FUTURA en el cobro individual.
+  LC_PAGO_FECHA_FUTURA: "La fecha del cobro no puede ser futura.",
+  LC_FACTURA_REQUERIDA: "Falta indicar la factura sobre la que se opera.",
+  LC_FACTURA_NO_EXISTE: "La factura no existe o fue eliminada.",
+  LC_PAGO_PROGRAMADO_EN_PROCESO:
+    "Este pago programado ya se está procesando. Espera unos segundos y verifica antes de reintentar.",
+  LC_TC_DOF_FORBIDDEN:
+    "El tipo de cambio DOF es un catálogo global de la plataforma: sólo un super administrador puede capturarlo.",
+  LC_TC_DOF_INVALIDO: "El tipo de cambio USD debe ser mayor a cero.",
+  LC_TC_DOF_FECHA_INVALIDA: "La fecha del tipo de cambio no puede ser futura.",
   LC_PAGO_EXCEDE_SALDO: "El monto excede el saldo pendiente.",
   LC_PAGO_MONTO_INVALIDO: "El monto del pago no es válido.",
   LC_PAGO_TC_REQUERIDO:

@@ -1,3 +1,10 @@
+-- Fuente canónica de public.assert_factura_viva_para_pago() (trigger de pagos_factura).
+-- Ola 1 (major release): notas de crédito CONVERTIDAS a la moneda de la factura
+-- (canon public.nc_aplicadas_en_moneda_factura), tolerancia unificada en 0.005
+-- (medio centavo, igual que tg_pago_factura_no_sobrepago) y guard de fecha
+-- futura al alta del cobro (espejo de LC_LOTE_FECHA_FUTURA).
+-- Al modificar: edita ESTE archivo y genera la migración con el mismo cuerpo.
+
 CREATE OR REPLACE FUNCTION public.assert_factura_viva_para_pago()
  RETURNS trigger
  LANGUAGE plpgsql
@@ -20,8 +27,7 @@ BEGIN
   -- FIX-63: un UPDATE que NO toca el dinero (p. ej. sincronizar el estatus del
   -- REP ante el SAT, adjuntar PDF/XML o marcar el acuse) es mantenimiento
   -- documental, no un cobro nuevo. Esos updates deben pasar aunque la factura
-  -- esté cancelada o con cancelación en trámite; de lo contrario la
-  -- reconciliación queda bloqueada y la BD divergen del SAT.
+  -- esté cancelada o con cancelación en trámite.
   IF TG_OP = 'UPDATE' THEN
     v_solo_metadatos := (
       NEW.factura_id IS NOT DISTINCT FROM OLD.factura_id
@@ -36,6 +42,14 @@ BEGIN
     IF v_solo_metadatos THEN
       RETURN NEW;
     END IF;
+  END IF;
+
+  -- Ola 1: espejo de LC_LOTE_FECHA_FUTURA (cobro en lote). Un cobro con fecha
+  -- futura ensucia aging, REP y reportes de flujo.
+  IF TG_OP = 'INSERT' AND NEW.fecha_pago IS NOT NULL AND NEW.fecha_pago > CURRENT_DATE THEN
+    RAISE EXCEPTION 'LC_PAGO_FECHA_FUTURA: la fecha del cobro no puede ser futura'
+      USING ERRCODE = 'check_violation',
+            HINT    = json_build_object('fecha_pago', NEW.fecha_pago)::text;
   END IF;
 
   -- FIX-23: bloquear la factura padre para serializar pagos concurrentes.
@@ -64,16 +78,13 @@ BEGIN
     AND pf.deleted_at IS NULL
     AND pf.id <> COALESCE(NEW.id, '00000000-0000-0000-0000-000000000000'::uuid);
 
-  SELECT COALESCE(SUM(monto), 0) INTO v_ncs
-  FROM public.factura_notas_credito
-  WHERE factura_id = NEW.factura_id
-    AND deleted_at IS NULL
-    AND estado = 'Aplicada';
+  -- Ola 1: NC convertidas a la moneda de la factura (antes SUM(monto) crudo).
+  v_ncs := public.nc_aplicadas_en_moneda_factura(NEW.factura_id);
 
   v_saldo_disponible_previo := v_total - v_pagos_otros - v_ncs;
   v_saldo_post := v_saldo_disponible_previo - COALESCE(NEW.monto_aplicado_factura, 0);
 
-  IF v_saldo_post < -0.01 THEN
+  IF v_saldo_post < -0.005 THEN
     RAISE EXCEPTION 'LC_PAGO_SOBREPAGO: el pago excede el saldo pendiente'
       USING ERRCODE = 'check_violation',
             HINT    = json_build_object(
@@ -86,3 +97,7 @@ BEGIN
   RETURN NEW;
 END;
 $function$;
+
+-- FIX-45: ninguna función financiera es ejecutable por anon.
+REVOKE ALL ON FUNCTION public.assert_factura_viva_para_pago() FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.assert_factura_viva_para_pago() FROM anon;

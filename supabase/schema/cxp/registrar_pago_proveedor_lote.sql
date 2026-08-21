@@ -126,7 +126,13 @@ BEGIN
   END IF;
 
   -- Validar renglones y calcular total.
-  FOR v_renglon IN SELECT * FROM jsonb_array_elements(COALESCE(p_payload->'renglones','[]'::jsonb)) LOOP
+  -- Ola 1 (espejo BL-13 de CxC): los locks se toman en orden determinista por
+  -- factura_id, no en el orden del payload; dos lotes concurrentes con las
+  -- mismas facturas en orden distinto hacían deadlock.
+  FOR v_renglon IN
+    SELECT r FROM jsonb_array_elements(COALESCE(p_payload->'renglones','[]'::jsonb)) AS r
+    ORDER BY (r->>'factura_id')::uuid
+  LOOP
     IF COALESCE((v_renglon->>'monto')::numeric, 0) <= 0 THEN
       RAISE EXCEPTION 'LC_LOTE_MONTO_INVALIDO: Cada factura del lote debe tener un importe mayor a cero.';
     END IF;
@@ -135,13 +141,15 @@ BEGIN
     -- exista/sea del proveedor y trae fecha_emision para el guard de fecha.
     -- Ola 12 · R3BD-03: también trae la moneda para el guard de paridad.
     -- BL-03: también trae el estado para el guard de vida (paridad CxC).
+    -- Ola 1: FOR UPDATE serializa el reparto contra pagos concurrentes.
     SELECT pf.fecha_emision, pf.moneda, pf.estado
       INTO v_fecha_emision, v_moneda_factura, v_estado_factura
     FROM public.proveedor_facturas pf
     WHERE pf.id = (v_renglon->>'factura_id')::uuid
       AND pf.deleted_at IS NULL
       AND pf.organization_id = v_org
-      AND pf.proveedor_id = v_proveedor_id;
+      AND pf.proveedor_id = v_proveedor_id
+    FOR UPDATE OF pf;
 
     IF v_fecha_emision IS NULL THEN
       RAISE EXCEPTION 'LC_LOTE_FACTURA_INVALIDA: Una de las facturas no existe o no pertenece al proveedor seleccionado.';

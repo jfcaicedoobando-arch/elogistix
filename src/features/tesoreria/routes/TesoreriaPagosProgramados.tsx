@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
   fetchPagosProgramables,
@@ -36,6 +36,7 @@ export default function TesoreriaPagosProgramados() {
 
   const { data: cuentas = [] } = useCuentasBancarias();
   const ejecutarPago = useEjecutarPagoProgramado();
+  const requestIdRef = useRef<string | null>(null);
 
   const cuentasCompatibles = useMemo(
     () => cuentas.filter((c) => c.moneda === facturaPago?.moneda),
@@ -44,6 +45,9 @@ export default function TesoreriaPagosProgramados() {
 
   const abrirDialogoPago = (f: FacturaProgramable) => {
     setFacturaPago(f);
+    // Ola 1 · idempotencia: una llave por apertura del diálogo. Si el usuario
+    // da doble clic (o la red reintenta), la RPC devuelve el pago original.
+    requestIdRef.current = crypto.randomUUID();
     setForm({
       cuentaBancariaId: "",
       fecha: formatDateOnlyLocal(new Date()),
@@ -65,9 +69,11 @@ export default function TesoreriaPagosProgramados() {
       monto: form.monto,
       metodoPago: form.metodoPago,
       referencia: form.referencia,
+      requestId: requestIdRef.current ?? undefined,
       moneda: facturaPago.moneda,
       proveedorNombre: facturaPago.proveedor_nombre,
     });
+    requestIdRef.current = null;
     setFacturaPago(null);
   };
 

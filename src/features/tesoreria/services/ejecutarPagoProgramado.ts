@@ -13,6 +13,12 @@ export interface EjecutarPagoProgramadoInput {
   monto: number;
   metodoPago?: string;
   referencia?: string;
+  /**
+   * Ola 1 (major release) · idempotencia: llave estable del submit. Con ella
+   * un doble clic o un reintento por red lenta devuelve el pago original en
+   * lugar de registrar el cargo dos veces (`idempotency_claim` en la RPC).
+   */
+  requestId?: string;
   /** Datos sólo para bitácora — no viajan a la RPC. */
   moneda?: string;
   proveedorNombre?: string | null;
@@ -34,6 +40,7 @@ export async function ejecutarPagoProgramado(
     p_monto: input.monto,
     p_metodo_pago: input.metodoPago ?? "Transferencia",
     p_referencia: input.referencia ?? "",
+    p_request_id: input.requestId ?? undefined,
   });
   if (error) throw error;
   // SAFE-CAST: la RPC devuelve `Json` en los tipos generados; el shape real lo

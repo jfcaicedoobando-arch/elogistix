@@ -19,4 +19,6 @@ export const LC_CODE_MESSAGES_CRM: Record<string, string> = {
     "Captura el nombre de la empresa del prospecto para poder guardarlo.",
   LC_COTIZACION_SIN_PERMISO_ESCRITURA:
     "Tu rol no puede crear ni modificar cotizaciones. Solicita acceso a ventas o gerencia comercial.",
+  LC_COTIZACION_SIN_PERMISO:
+    "Tu rol no puede archivar ni versionar cotizaciones. Solicita acceso a ventas o gerencia comercial.",
 };
