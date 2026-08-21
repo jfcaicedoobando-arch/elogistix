@@ -194,5 +194,7 @@ El estándar es 16×16 (`[&_svg]:size-4` en `Button`), pero en tablas principale
 3. **V-03** — subir el contraste de los tonos de estado en `index.css` vía `StatusBadge`. *(bajo)*
 4. **V-04 + V-05** — `aria-label` y `min-h-9 min-w-9` en acciones de ícono. *(medio)*
 5. **V-06 + V-07** — homologar densidad de `/inicio` y niveles de encabezado. *(medio)*
-6. **V-08 + V-09** — migrar tablas crudas y sustituir colores literales, módulo por módulo. *(alto)*
-7. **V-10 a V-12** — pulido final. *(bajo)*
+6. **V-08 + V-09 + V-10** — migrar las 3 tablas crudas, poner `PageHeader` en las páginas de detalle y
+   `FormDialogShell` en `DemoAccessDialog`. *(alto)*
+7. **V-11 a V-14** — pulido final (scroll, íconos, `h-dvh`, estilo inline del landing). *(bajo)*
+
