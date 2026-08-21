@@ -42,21 +42,17 @@ describe("agruparPendientes", () => {
 });
 
 describe("useCapturaFacturaPasos", () => {
-  it("arranca en el paso 1 en captura normal y en el 2 desde el buzón", () => {
-    const normal = renderHook(() =>
-      useCapturaFacturaPasos({ abierto: true, modoBuzon: false, pendientes: [] }),
+  it("arranca siempre en el paso 1 (captura manual y buzón)", () => {
+    const { result } = renderHook(() =>
+      useCapturaFacturaPasos({ abierto: true, pendientes: [] }),
     );
-    expect(normal.result.current.paso).toBe(1);
-
-    const buzon = renderHook(() =>
-      useCapturaFacturaPasos({ abierto: true, modoBuzon: true, pendientes: [] }),
-    );
-    expect(buzon.result.current.paso).toBe(2);
+    expect(result.current.paso).toBe(1);
+    expect(result.current.esPrimero).toBe(true);
   });
 
   it("avanza y regresa sin salir del rango de pasos", () => {
     const { result } = renderHook(() =>
-      useCapturaFacturaPasos({ abierto: true, modoBuzon: false, pendientes: [] }),
+      useCapturaFacturaPasos({ abierto: true, pendientes: [] }),
     );
 
     act(() => result.current.anterior());
@@ -76,7 +72,6 @@ describe("useCapturaFacturaPasos", () => {
     const { result } = renderHook(() =>
       useCapturaFacturaPasos({
         abierto: true,
-        modoBuzon: false,
         pendientes: ["Falta el proveedor", "Este CFDI ya está capturado"],
       }),
     );
