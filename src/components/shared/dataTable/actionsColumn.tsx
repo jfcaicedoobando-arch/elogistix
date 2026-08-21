@@ -42,7 +42,7 @@ export function actionsColumn<T>({
       return (
         <DropdownMenu>
           <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+            <Button variant="ghost" size="sm" className="h-10 w-10 md:h-9 md:w-9 p-0">
               <MoreHorizontal className="h-4 w-4" aria-hidden />
               <span className="sr-only">Acciones</span>
             </Button>

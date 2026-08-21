@@ -293,7 +293,17 @@
   .row-highlight-success {
     background-color: hsl(var(--success) / 0.05);
   }
+
+  /* V-14 (auditoría visual 2026-08-21) — patrón de rejilla del hero de la
+     landing. Antes vivía como `style={{ backgroundImage… }}` estático. */
+  .bg-grid-hero {
+    background-image:
+      linear-gradient(to right, hsl(var(--primary-foreground) / 0.15) 1px, transparent 1px),
+      linear-gradient(to bottom, hsl(var(--primary-foreground) / 0.15) 1px, transparent 1px);
+    background-size: 48px 48px;
+  }
 }
+
 
 
 /* v13.303.89 — Ocultar spin buttons nativos en <input type="number"> global.

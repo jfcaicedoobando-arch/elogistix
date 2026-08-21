@@ -81,7 +81,7 @@ export default function PaginationControls({
       </div>
       <div className="flex items-center gap-2">
         <Button
-          variant="outline" size="sm" className="h-8 w-8 p-0"
+          variant="outline" size="sm" className="h-10 w-10 md:h-9 md:w-9 p-0"
           aria-label="Primera página"
           disabled={enPrimera} onClick={() => onPageChange(0)}
         >
@@ -94,7 +94,7 @@ export default function PaginationControls({
           Siguiente
         </Button>
         <Button
-          variant="outline" size="sm" className="h-8 w-8 p-0"
+          variant="outline" size="sm" className="h-10 w-10 md:h-9 md:w-9 p-0"
           aria-label="Última página"
           disabled={enUltima} onClick={() => onPageChange(ultima)}
         >

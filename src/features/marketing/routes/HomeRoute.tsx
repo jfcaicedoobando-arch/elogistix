@@ -17,7 +17,7 @@ export default function HomeRoute() {
   // UI-07: skeleton en lugar de spinner de página.
   if (loading) {
     return (
-      <div className="flex h-screen items-center justify-center p-6">
+      <div className="flex h-dvh items-center justify-center p-6">
         <PageSkeleton className="w-full max-w-3xl" />
       </div>
     );
@@ -35,7 +35,7 @@ export default function HomeRoute() {
   return (
     <Suspense
       fallback={
-        <div className="flex h-screen items-center justify-center p-6">
+        <div className="flex h-dvh items-center justify-center p-6">
           <PageSkeleton className="w-full max-w-3xl" />
         </div>
       }

@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.720.0] - 2026-08-21
+### Remediación auditoría visual — Entrega 2 (V-04, V-05, V-13, V-14)
+- Áreas táctiles: acciones de fila (`actionsColumn`), paginación, contactos de cliente, hallazgos de auditoría y el trigger/ítems del sidebar colapsado suben a 36 px (40 px en móvil).
+- V-04 revalidado: el barrido de `size="icon"` no encontró botones sin `aria-label`/`sr-only`; los 48 casos del reporte eran falsos positivos del heurístico (el sidebar colapsado conserva la etiqueta en el DOM). Sólo quedaba el tamaño táctil, ya corregido.
+- `h-screen` → `h-dvh` en los estados de carga de la ruta raíz (recorte por barra del navegador en móvil).
+- Estilo inline estático del hero de la landing movido a la utilidad `.bg-grid-hero`.
+
 ## [13.719.0] - 2026-08-21
 ### Remediación auditoría visual (V-01, V-02, V-03)
 - `cn()` declara la escala tipográfica propia como grupo `font-size` en `tailwind-merge`: `text-body*`/`text-label`/`text-display` ya no borran el color de la variante (texto invisible 1.24:1 en el chip de filtros de CxP y ~19 badges más).
