@@ -9,7 +9,7 @@ import { useAllTiposContenedor, useAdminTiposContenedor } from "@/features/catal
 import SearchInput from "@/components/shared/SearchInput";
 import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
-import { DeleteConfirmDialog } from "@/components/shared/dialogs/DeleteConfirmDialog";
+import DoubleConfirmDeleteDialog from "@/components/shared/DoubleConfirmDeleteDialog";
 import { usePermissions } from "@/hooks/shared";
 
 type TipoContenedor = { id: string; code: string; name: string; activo: boolean };
@@ -93,7 +93,7 @@ export default function TabTiposContenedor() {
         </div>
         <p className="text-xs text-muted-foreground">{tipos.length} tipos en total · {tipos.filter(t => t.activo).length} activos</p>
       </CardContent>
-      <DeleteConfirmDialog
+      <DoubleConfirmDeleteDialog
         open={!!tipoAEliminar}
         onOpenChange={(open) => { if (!open) setTipoAEliminar(null); }}
         entityName={tipoAEliminar ? `el tipo de contenedor "${tipoAEliminar.name}"` : "este tipo de contenedor"}

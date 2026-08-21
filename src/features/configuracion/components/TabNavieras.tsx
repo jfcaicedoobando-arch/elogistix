@@ -9,7 +9,7 @@ import { useAllNavieras, useAdminNavieras } from "@/features/catalogos/hooks";
 import SearchInput from "@/components/shared/SearchInput";
 import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { NavieraFormDialog } from "@/components/shared/NavieraFormDialog";
-import { DeleteConfirmDialog } from "@/components/shared/dialogs/DeleteConfirmDialog";
+import DoubleConfirmDeleteDialog from "@/components/shared/DoubleConfirmDeleteDialog";
 import type { Naviera } from "@/features/catalogos/services";
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 import { usePermissions } from "@/hooks/shared";
@@ -113,7 +113,7 @@ export default function TabNavieras() {
         onOpenChange={(open) => { if (!open) setNavieraEnEdicion(null); }}
         naviera={navieraEnEdicion}
       />
-      <DeleteConfirmDialog
+      <DoubleConfirmDeleteDialog
         open={!!navieraAEliminar}
         onOpenChange={(open) => { if (!open) setNavieraAEliminar(null); }}
         entityName={navieraAEliminar ? `la naviera "${navieraAEliminar.name}"` : "esta naviera"}

@@ -13,7 +13,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { DeleteConfirmDialog } from "@/components/shared/dialogs/DeleteConfirmDialog";
+import DoubleConfirmDeleteDialog from "@/components/shared/DoubleConfirmDeleteDialog";
 import {
   useCotizacionPlantillas,
   useEliminarPlantilla,
@@ -141,7 +141,7 @@ export default function CotizacionPlantillas() {
         />
       )}
 
-      <DeleteConfirmDialog
+      <DoubleConfirmDeleteDialog
         open={!!aEliminar}
         onOpenChange={(o) => { if (!o) setAEliminar(null); }}
         entityName={aEliminar?.nombre ?? ""}

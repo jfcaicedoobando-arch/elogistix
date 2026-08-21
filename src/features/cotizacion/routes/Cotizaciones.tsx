@@ -12,7 +12,7 @@ import { PageContainer } from "@/components/shared/PageContainer";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { Seo } from "@/components/shared/Seo";
 import { pluralizar } from "@/lib/format/pluralizar";
-import { DeleteConfirmDialog } from "@/components/shared/dialogs/DeleteConfirmDialog";
+import DoubleConfirmDeleteDialog from "@/components/shared/DoubleConfirmDeleteDialog";
 import { UnifiedFiltersBar } from "@/components/shared/filters/UnifiedFiltersBar";
 import { CargaGuard } from "@/components/shared/states/CargaGuard";
 import { StatusBadge } from "@/components/shared/StatusBadge";
@@ -178,7 +178,7 @@ export default function Cotizaciones() {
       </Card>
       </CargaGuard>
 
-      <DeleteConfirmDialog
+      <DoubleConfirmDeleteDialog
         open={!!c.cotizacionAEliminar}
         onOpenChange={(open) => { if (!open) c.setCotizacionAEliminar(null); }}
         entityName="cotización"

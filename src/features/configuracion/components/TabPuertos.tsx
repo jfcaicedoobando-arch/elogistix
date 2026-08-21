@@ -9,7 +9,7 @@ import { useAllPuertos, useAdminPuertos } from "@/features/catalogos/hooks";
 import SearchInput from "@/components/shared/SearchInput";
 import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
-import { DeleteConfirmDialog } from "@/components/shared/dialogs/DeleteConfirmDialog";
+import DoubleConfirmDeleteDialog from "@/components/shared/DoubleConfirmDeleteDialog";
 import { usePermissions } from "@/hooks/shared";
 
 type Puerto = { id: string; code: string; name: string; country: string; activo: boolean };
@@ -100,7 +100,7 @@ export default function TabPuertos() {
         </div>
         <p className="text-xs text-muted-foreground">{puertos.length} puertos en total · {puertos.filter(p => p.activo).length} activos</p>
       </CardContent>
-      <DeleteConfirmDialog
+      <DoubleConfirmDeleteDialog
         open={!!puertoAEliminar}
         onOpenChange={(open) => { if (!open) setPuertoAEliminar(null); }}
         entityName={puertoAEliminar ? `el puerto "${puertoAEliminar.name}"` : "este puerto"}
