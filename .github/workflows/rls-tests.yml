@@ -459,6 +459,9 @@ jobs:
       - name: Tesoreria - idempotencia de traspasos (Ola A / A.1)
         run: $PSQL -f supabase/tests/traspaso_idempotencia.sql
 
+      - name: Ola 1 - candados de horas (fecha futura, T/C DOF global)
+        run: $PSQL -f supabase/tests/ola1_candados_regresion.sql
+
 
 
       - name: Guard de estados - guard_estado_cotizacion (C5 + A3)
