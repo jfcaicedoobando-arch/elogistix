@@ -2,7 +2,7 @@
  * Tabla migrada a `DataTable` (Ola F, punto 8).
  */
 import { useState } from "react";
-import { Plus, CheckCircle2, Receipt } from "lucide-react";
+import { Plus, CheckCircle2, Receipt, Ban } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
@@ -11,6 +11,7 @@ import { COL_W } from "@/components/shared/dataTable/columnWidths";
 import { formatCurrency, formatDate } from "@/lib/formatters";
 import { useLiquidaciones } from "@/features/comisiones/hooks";
 import { useAuth } from "@/lib/contexts/AuthContext";
+import { DialogCancelarLiquidacion } from "./DialogCancelarLiquidacion";
 import { DialogGenerarLiquidacion } from "./DialogGenerarLiquidacion";
 import { DialogRegistrarPagoLiquidacion } from "./DialogRegistrarPagoLiquidacion";
 import type { LiquidacionRow } from "@/features/comisiones/services";
@@ -21,6 +22,7 @@ export function TabLiquidaciones({ vendedoras }: { vendedoras: VendedoraOpt[] })
   const { data: liquidaciones = [], isLoading } = useLiquidaciones();
   const [genOpen, setGenOpen] = useState(false);
   const [pagoOpen, setPagoOpen] = useState<LiquidacionRow | null>(null);
+  const [cancelOpen, setCancelOpen] = useState<LiquidacionRow | null>(null);
   // Ola 4 · N28: mismos roles que la RPC/RLS — gerentes son sólo lectura.
   const { effectiveRole } = useAuth();
   const puedeGestionar =
@@ -44,6 +46,10 @@ export function TabLiquidaciones({ vendedoras }: { vendedoras: VendedoraOpt[] })
         : <span className="text-muted-foreground italic">pendiente</span>,
     },
     {
+      id: "estado", header: "Estado", meta: { width: COL_W.estado, className: "text-body-sm" },
+      cell: ({ row }) => row.original.estado ?? "Generada",
+    },
+    {
       id: "referencia", header: "Referencia", meta: { width: COL_W.texto, className: "text-muted-foreground text-body-sm" },
       cell: ({ row }) => row.original.referencia ?? "—",
     },
@@ -51,15 +57,21 @@ export function TabLiquidaciones({ vendedoras }: { vendedoras: VendedoraOpt[] })
       id: "acciones", header: "", meta: { width: COL_W.ruta, align: "right" },
       cell: ({ row }) => {
         const l = row.original;
-        if (l.fecha_pago || !puedeGestionar) return null;
+        if (l.fecha_pago || l.estado === "Cancelada" || !puedeGestionar) return null;
         return (
-          <Button size="sm" variant="outline" onClick={() => setPagoOpen(l)}>
-            <CheckCircle2 className="h-4 w-4 mr-1" /> Registrar pago
-          </Button>
+          <div className="flex justify-end gap-2">
+            <Button size="sm" variant="outline" onClick={() => setPagoOpen(l)}>
+              <CheckCircle2 className="h-4 w-4 mr-1" /> Registrar pago
+            </Button>
+            <Button size="sm" variant="ghost" onClick={() => setCancelOpen(l)}>
+              <Ban className="h-4 w-4 mr-1" /> Cancelar
+            </Button>
+          </div>
         );
       },
     },
   ]);
+
 
   return (
     <div className="space-y-4">
@@ -90,6 +102,11 @@ export function TabLiquidaciones({ vendedoras }: { vendedoras: VendedoraOpt[] })
         open={!!pagoOpen}
         onOpenChange={(o) => !o && setPagoOpen(null)}
         liq={pagoOpen}
+      />
+      <DialogCancelarLiquidacion
+        open={!!cancelOpen}
+        onOpenChange={(o) => !o && setCancelOpen(null)}
+        liq={cancelOpen}
       />
     </div>
   );

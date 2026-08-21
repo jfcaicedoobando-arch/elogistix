@@ -2,10 +2,10 @@
  * Servicio de liquidaciones de comisión: lista, RPC de generación, registro de pago.
  */
 import { supabase } from "@/integrations/supabase/client";
-import { unwrap, unwrapOr, run } from "@/lib/supabase/response";
+import { unwrap, unwrapOr } from "@/lib/supabase/response";
 import { assertNotTruncated } from "@/lib/supabase/assertNotTruncated";
 
-import type { Tables, TablesUpdate } from "@/integrations/supabase/types";
+import type { Tables } from "@/integrations/supabase/types";
 import { registrarActividad } from "@/services/bitacora/registrar";
 import { CAP_LISTA } from "@/constants/queryCaps";
 import { ymMx } from "@/lib/date/mx";
@@ -15,7 +15,7 @@ export type LiquidacionRow = Tables<"liquidaciones_comision">;
 
 // v13.56.1 — Columnas explícitas (auditoría: evitar SELECT * en tablas financieras).
 const LIQUIDACION_COLUMNS =
-  "id, organization_id, vendedora_id, periodo, total_mxn, fecha_pago, metodo_pago, referencia, notas, creada_por, created_at, updated_at";
+  "id, organization_id, vendedora_id, periodo, total_mxn, fecha_pago, metodo_pago, referencia, notas, estado, cancelada_at, motivo_cancelacion, creada_por, created_at, updated_at";
 
 export async function fetchLiquidaciones(): Promise<LiquidacionRow[]> {
   return unwrapOr(
@@ -67,14 +67,21 @@ export interface RegistrarPagoLiquidacionParams {
   notas?: string;
 }
 
+/**
+ * Ola 2 · O2.6 — el pago se registra por RPC (no por UPDATE directo): la RPC
+ * toma `FOR UPDATE`, rechaza liquidaciones ya pagadas o canceladas y marca el
+ * estado. Antes un doble clic reescribía la fecha de pago sin protesta.
+ */
 export async function registrarPagoLiquidacion(p: RegistrarPagoLiquidacionParams): Promise<void> {
-  const changes: TablesUpdate<"liquidaciones_comision"> = {
-    fecha_pago: p.fecha_pago,
-    metodo_pago: p.metodo_pago,
-    referencia: p.referencia,
-    notas: p.notas ?? null,
-  };
-  await run(supabase.from("liquidaciones_comision").update(changes).eq("id", p.id));
+  await unwrap(
+    supabase.rpc("registrar_pago_liquidacion", {
+      p_liquidacion_id: p.id,
+      p_fecha_pago: p.fecha_pago,
+      p_metodo_pago: p.metodo_pago,
+      p_referencia: p.referencia,
+      p_notas: p.notas ?? undefined,
+    }),
+  );
   await registrarActividad({
     modulo: "facturacion",
     accion: "registrar_pago_liquidacion_comision",
@@ -82,6 +89,31 @@ export async function registrarPagoLiquidacion(p: RegistrarPagoLiquidacionParams
     detalles: { fecha_pago: p.fecha_pago, metodo_pago: p.metodo_pago },
   });
 }
+
+export interface CancelarLiquidacionParams {
+  id: string;
+  motivo: string;
+}
+
+/**
+ * Ola 2 · O2.6 — cancelar una liquidación no pagada regresa sus comisiones a
+ * `Devengada` para que puedan re-liquidarse en el periodo correcto.
+ */
+export async function cancelarLiquidacion(p: CancelarLiquidacionParams): Promise<void> {
+  await unwrap(
+    supabase.rpc("cancelar_liquidacion_comision", {
+      p_liquidacion_id: p.id,
+      p_motivo: p.motivo,
+    }),
+  );
+  await registrarActividad({
+    modulo: "facturacion",
+    accion: "cancelar_liquidacion_comision",
+    entidadId: p.id,
+    detalles: { motivo: p.motivo },
+  });
+}
+
 
 /**
  * BL-7: total liquidado del mes tomado de `liquidaciones_comision.fecha_pago`

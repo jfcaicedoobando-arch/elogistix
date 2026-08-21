@@ -7,8 +7,10 @@ import {
   fetchLiquidaciones,
   generarLiquidacion,
   registrarPagoLiquidacion,
+  cancelarLiquidacion,
   type GenerarLiquidacionParams,
   type RegistrarPagoLiquidacionParams,
+  type CancelarLiquidacionParams,
 } from "@/features/comisiones/services";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { getErrorMessage } from "@/lib/errors";
@@ -55,6 +57,29 @@ export function useRegistrarPagoLiquidacion() {
     },
     onError: (error: Error) => {
       notifyError(undefined, { title: "No se pudo registrar pago", description: getErrorMessage(error), error, method: "REGISTER_LIQUIDACION_PAYMENT" });
+    },
+  });
+}
+
+/** Ola 2 · O2.6 — cancelar liquidación no pagada (libera sus comisiones). */
+export function useCancelarLiquidacion() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (p: CancelarLiquidacionParams) => cancelarLiquidacion(p),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.comisiones.all });
+      notifySuccess(undefined, {
+        title: "Liquidación cancelada",
+        description: "Sus comisiones volvieron a quedar como devengadas.",
+      });
+    },
+    onError: (error: Error) => {
+      notifyError(undefined, {
+        title: "No se pudo cancelar la liquidación",
+        description: getErrorMessage(error),
+        error,
+        method: "CANCEL_LIQUIDACION",
+      });
     },
   });
 }

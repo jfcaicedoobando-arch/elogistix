@@ -18,6 +18,7 @@ vi.mock("@/features/comisiones/hooks", () => ({
   useLiquidaciones: mockUseLiquidaciones,
   useGenerarLiquidacion: () => ({ mutate: vi.fn(), mutateAsync: vi.fn(), isPending: false }),
   useRegistrarPagoLiquidacion: () => ({ mutate: vi.fn(), mutateAsync: vi.fn(), isPending: false }),
+  useCancelarLiquidacion: () => ({ mutate: vi.fn(), mutateAsync: vi.fn(), isPending: false }),
 }));
 
 const LIQ_ROW = {
@@ -27,6 +28,7 @@ const LIQ_ROW = {
   total_mxn: 100,
   fecha_pago: null,
   referencia: null,
+  estado: "Generada",
 };
 
 function renderTab(effectiveRole: string | null) {

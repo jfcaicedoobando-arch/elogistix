@@ -5490,13 +5490,17 @@ export type Database = {
       }
       liquidaciones_comision: {
         Row: {
+          cancelada_at: string | null
+          cancelada_por: string | null
           creada_por: string | null
           created_at: string
           deleted_at: string | null
           deleted_by: string | null
+          estado: string
           fecha_pago: string | null
           id: string
           metodo_pago: string | null
+          motivo_cancelacion: string | null
           notas: string | null
           organization_id: string
           periodo: string
@@ -5506,13 +5510,17 @@ export type Database = {
           vendedora_id: string
         }
         Insert: {
+          cancelada_at?: string | null
+          cancelada_por?: string | null
           creada_por?: string | null
           created_at?: string
           deleted_at?: string | null
           deleted_by?: string | null
+          estado?: string
           fecha_pago?: string | null
           id?: string
           metodo_pago?: string | null
+          motivo_cancelacion?: string | null
           notas?: string | null
           organization_id: string
           periodo: string
@@ -5522,13 +5530,17 @@ export type Database = {
           vendedora_id: string
         }
         Update: {
+          cancelada_at?: string | null
+          cancelada_por?: string | null
           creada_por?: string | null
           created_at?: string
           deleted_at?: string | null
           deleted_by?: string | null
+          estado?: string
           fecha_pago?: string | null
           id?: string
           metodo_pago?: string | null
+          motivo_cancelacion?: string | null
           notas?: string | null
           organization_id?: string
           periodo?: string
@@ -8875,6 +8887,35 @@ export type Database = {
         Args: { p_factura_id: string; p_motivo: string }
         Returns: undefined
       }
+      cancelar_liquidacion_comision: {
+        Args: { p_liquidacion_id: string; p_motivo: string }
+        Returns: {
+          cancelada_at: string | null
+          cancelada_por: string | null
+          creada_por: string | null
+          created_at: string
+          deleted_at: string | null
+          deleted_by: string | null
+          estado: string
+          fecha_pago: string | null
+          id: string
+          metodo_pago: string | null
+          motivo_cancelacion: string | null
+          notas: string | null
+          organization_id: string
+          periodo: string
+          referencia: string | null
+          total_mxn: number
+          updated_at: string
+          vendedora_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "liquidaciones_comision"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       cancelar_traspaso_bancario: {
         Args: { p_motivo?: string; p_traspaso_id: string }
         Returns: undefined
@@ -8979,6 +9020,16 @@ export type Database = {
           saldo: number
           tipo_cambio: number
           total: number
+        }[]
+      }
+      comisiones_sobre_devengadas: {
+        Args: never
+        Returns: {
+          comision_mxn: number
+          embarque_id: string
+          facturas: number
+          proporcion_total: number
+          utilidad_prorrateada_mxn: number
         }[]
       }
       complete_onboarding: {
@@ -10444,6 +10495,7 @@ export type Database = {
           p_notas?: string
           p_proveedor_id: string
           p_referencia?: string
+          p_request_id?: string
           p_tipo_cambio_usd?: number
         }
         Returns: {
@@ -10499,6 +10551,41 @@ export type Database = {
         Returns: undefined
       }
       registrar_pago_cliente_lote: { Args: { p_payload: Json }; Returns: Json }
+      registrar_pago_liquidacion: {
+        Args: {
+          p_fecha_pago: string
+          p_liquidacion_id: string
+          p_metodo_pago: string
+          p_notas?: string
+          p_referencia?: string
+        }
+        Returns: {
+          cancelada_at: string | null
+          cancelada_por: string | null
+          creada_por: string | null
+          created_at: string
+          deleted_at: string | null
+          deleted_by: string | null
+          estado: string
+          fecha_pago: string | null
+          id: string
+          metodo_pago: string | null
+          motivo_cancelacion: string | null
+          notas: string | null
+          organization_id: string
+          periodo: string
+          referencia: string | null
+          total_mxn: number
+          updated_at: string
+          vendedora_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "liquidaciones_comision"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       registrar_pago_proveedor_lote: {
         Args: { p_payload: Json }
         Returns: string
@@ -10800,6 +10887,10 @@ export type Database = {
       validar_cierre_embarque: {
         Args: { p_embarque_id: string }
         Returns: Json
+      }
+      venta_embarque_mxn_neta: {
+        Args: { p_embarque_id: string; p_tc_eur: number; p_tc_usd: number }
+        Returns: number
       }
       vincular_anticipo_embarque: {
         Args: { p_embarque_id?: string; p_id: string }

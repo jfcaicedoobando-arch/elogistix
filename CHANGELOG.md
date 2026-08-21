@@ -1,5 +1,13 @@
 # Changelog
 
+## [13.708.0] - 2026-08-26
+### Ola 2 — Comisiones cierran y cierran bien
+- La comisión de un embarque con varias facturas ya no se duplica: el reparto se calcula contra la venta neta del embarque (menos notas de crédito) y nunca puede pasar del 100%.
+- Cerrar un embarque ahora se bloquea sólo por pendientes reales de comisión (notas por resolver o recálculos en cola), no por una bandera que nadie podía apagar.
+- Registrar un anticipo a proveedor es idempotente: un doble clic o un reintento ya no crea dos anticipos ni dos cargos en el banco.
+- Liquidaciones de comisión con estado (Generada / Pagada / Cancelada): pagar dos veces se rechaza con mensaje claro y se puede cancelar una liquidación no pagada, devolviendo sus comisiones a devengadas.
+- Nuevo reporte de auditoría de comisiones sobre-devengadas y pruebas de regresión en CI.
+
 ## [13.707.4] - 2026-08-26
 ### Corrección de CI — espejo de las funciones de lote
 - Se volvieron a emitir, tal cual, las funciones de cobro y pago en lote para que una base nueva quede idéntica a producción (notas de crédito convertidas a la moneda de la factura y bloqueos en orden fijo).

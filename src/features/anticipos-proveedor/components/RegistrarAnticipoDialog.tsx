@@ -11,6 +11,7 @@ import { useRegistrarAnticipoDefaults } from "@/features/anticipos-proveedor/hoo
 import { equivalenteMxnAnticipo } from "@/features/anticipos-proveedor/domain/registrarAnticipoPolicy";
 import { todayLocalISO } from "@/lib/date/today";
 import { RegistrarAnticipoFields } from "./RegistrarAnticipoFields";
+import { useStableRequestId } from "@/lib/idempotency";
 import { registrarAnticipoSchema, type RegistrarAnticipoFormValues } from "./registrarAnticipo.schema";
 
 interface Props {
@@ -25,6 +26,9 @@ export function RegistrarAnticipoDialog({
   open, onOpenChange, proveedorIdInicial, proveedorNombreInicial,
 }: Props) {
   const registrar = useRegistrarAnticipo();
+  // Ola 2 · O2.5 — misma llave mientras se reintenta: el servidor deduplica
+  // el anticipo y su cargo bancario en vez de crearlos dos veces.
+  const requestId = useStableRequestId();
   const [proveedorNombre, setProveedorNombre] = useState(proveedorNombreInicial ?? "");
 
   const { control, register, handleSubmit, reset, watch, setValue, formState: { errors } } =
@@ -98,7 +102,9 @@ export function RegistrarAnticipoDialog({
       referencia: values.referencia || undefined,
       notas: values.notas || undefined,
       embarqueId: values.embarqueId ?? null,
+      requestId: requestId.get(),
     });
+    requestId.reset();
     handleOpenChange(false);
   }, onInvalid);
 
