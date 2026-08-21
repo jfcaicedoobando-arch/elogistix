@@ -1,5 +1,13 @@
 # Changelog
 
+## [13.707.2] - 2026-08-21
+### Ola 1 — Remate final
+- Un solo nombre para el diálogo de borrado con doble confirmación (se retiró el alias duplicado).
+- Los encabezados de tabla ya no se parten en dos renglones (p. ej. "Vence en" en Facturación).
+- La tarjeta "Aplicado a facturas" en Anticipos deja de pintarse en verde cuando el valor es cero.
+- Pruebas de regresión ampliadas: tolerancia de medio centavo en cobros y catálogo de códigos LC_*.
+- Nuevo reporte de sólo lectura de restricciones históricas sin validar (`scripts/db/report-not-valid-constraints.sql`).
+
 ## [13.707.1] - 2026-08-26
 ### Ola 1 — Cierre
 - Avanzar, reabrir o cancelar un embarque usa una llave estable por intento: si la red falla y vuelves a intentar, no se duplica la transición ni la bitácora.
