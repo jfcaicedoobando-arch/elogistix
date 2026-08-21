@@ -8981,6 +8981,16 @@ export type Database = {
           total: number
         }[]
       }
+      comisiones_sobre_devengadas: {
+        Args: never
+        Returns: {
+          comision_mxn: number
+          embarque_id: string
+          facturas: number
+          proporcion_total: number
+          utilidad_prorrateada_mxn: number
+        }[]
+      }
       complete_onboarding: {
         Args: {
           _direccion: string
@@ -10800,6 +10810,10 @@ export type Database = {
       validar_cierre_embarque: {
         Args: { p_embarque_id: string }
         Returns: Json
+      }
+      venta_embarque_mxn_neta: {
+        Args: { p_embarque_id: string; p_tc_eur: number; p_tc_usd: number }
+        Returns: number
       }
       vincular_anticipo_embarque: {
         Args: { p_embarque_id?: string; p_id: string }
