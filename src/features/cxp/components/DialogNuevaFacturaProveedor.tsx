@@ -1,14 +1,12 @@
 /**
  * Captura de factura de proveedor: manual, por XML CFDI, por PDF con IA o
  * desde el buzón CxP (v13.366.0).
- * v13.400.0 — Optimizado para HD: ancho 4xl, dos columnas desde `lg`, KPIs de
- * totales fijos arriba y semáforo de cuadre fijo sobre el footer.
- * v13.507.0 — Modo buzón: hereda proveedor, nota y conceptos que declaró
- * operaciones, y esconde la carga de archivos porque el documento ya existe.
+ * v13.712.0 — Wizard de 3 pasos (documento y conceptos · datos de la factura ·
+ * vinculación al embarque). Cada paso usa todo el ancho del modal para que la
+ * tabla de conceptos y los campos dejen de aparecer truncados.
  */
 import { useNavigate } from "react-router-dom";
 import { FileSpreadsheet } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
 
 import { usePresupuestoCategorias } from "@/features/presupuesto/hooks";
@@ -18,13 +16,15 @@ import { DialogFacturaProveedorSinPermiso } from "@/features/cxp/components/Dial
 import { useNuevaFacturaProveedorForm } from "@/features/cxp/hooks";
 import { CuadreConceptosBar } from "./CuadreConceptosBar";
 import { TotalesChipDesglose } from "./TotalesChipDesglose";
-import { PendientesGuardarHint } from "./PendientesGuardarHint";
-import {
-  BandaOrigenYAlertas, ColumnaDocumento, ColumnaDatosFactura,
-} from "./DialogNuevaFacturaProveedor.columnas";
+import { CapturaFacturaFooter } from "./CapturaFacturaFooter";
+import { PasoDocumento } from "./_sections/PasoDocumento";
+import { PasoDatos } from "./_sections/PasoDatos";
+import { PasoVinculacion } from "./_sections/PasoVinculacion";
 
 import { useCuadreCaptura } from "@/features/cxp/hooks/useCuadreCaptura";
 import { useModoBuzonWiring } from "@/features/cxp/hooks/useModoBuzonWiring";
+import { useCapturaFacturaPasos } from "@/features/cxp/hooks/useCapturaFacturaPasos";
+import { pendientesDeCaptura } from "./pendientesDeCaptura";
 import {
   derivarMontos, hayCapturaFactura, verArchivoBuzon,
 } from "./_sections/capturaDerivados";
@@ -67,6 +67,7 @@ function DialogNuevaFacturaProveedorForm({
     ctl, categorias: cats.data ?? [], entrante, abierto: open,
   });
 
+  const modoBuzon = Boolean(entrante);
   const { sub, iva, ieps, ret } = derivarMontos(ctl.values);
   const moneda = ctl.values.moneda;
 
@@ -86,32 +87,27 @@ function DialogNuevaFacturaProveedorForm({
     vinculos: ctl.vinculos,
   });
 
+  const pendientes = pendientesDeCaptura({
+    values: ctl.values,
+    total: ctl.total,
+    topeExcedido: ctl.topeVinculacion.excede,
+    cfdiDuplicado: !!ctl.cfdiDuplicado,
+    avisoMontoDeclarado: entrante
+      ? { montoDeclarado: entrante.montoDeclarado, monedaDeclarada: entrante.monedaDeclarada }
+      : undefined,
+    sinVinculos: modoBuzon && Object.keys(ctl.vinculos).length === 0,
+  });
 
+  const pasos = useCapturaFacturaPasos({ abierto: open, modoBuzon, pendientes });
 
   const footer = (
-    <>
-      <PendientesGuardarHint
-        values={ctl.values}
-        total={ctl.total}
-        topeExcedido={ctl.topeVinculacion.excede}
-        cfdiDuplicado={!!ctl.cfdiDuplicado}
-        avisoMontoDeclarado={
-          entrante
-            ? {
-                montoDeclarado: entrante.montoDeclarado,
-                monedaDeclarada: entrante.monedaDeclarada,
-              }
-            : undefined
-        }
-        sinVinculos={Boolean(entrante) && Object.keys(ctl.vinculos).length === 0}
-      />
-      <Button variant="outline" onClick={() => onOpenChange(false)} disabled={ctl.isPending}>
-        Cancelar
-      </Button>
-      <Button onClick={ctl.submit} disabled={!ctl.puedeGuardar} loading={ctl.isPending}>
-        {ctl.isPending ? "Guardando…" : "Guardar factura"}
-      </Button>
-    </>
+    <CapturaFacturaFooter
+      pasos={pasos}
+      guardando={ctl.isPending}
+      puedeGuardar={ctl.puedeGuardar}
+      onCancelar={() => onOpenChange(false)}
+      onGuardar={() => void ctl.submit()}
+    />
   );
 
   return (
@@ -122,9 +118,14 @@ function DialogNuevaFacturaProveedorForm({
         onOpenChange={(o) => { if (!o) ctl.reset(); onOpenChange(o); }}
         icon={FileSpreadsheet}
         title="Capturar factura de proveedor"
-        description="Registra la factura recibida. Si es de un proveedor mexicano, sube el XML CFDI y se prellenará automáticamente."
-        size="4xl"
+        description={
+          modoBuzon
+            ? "Verifica los datos que se leyeron del documento antes de guardar."
+            : "Registra la factura recibida. Si el proveedor es mexicano, sube el XML CFDI y se prellenará."
+        }
+        size="5xl"
         footer={footer}
+        stepper={{ step: pasos.paso, totalSteps: pasos.totalPasos, labels: [...pasos.etiquetas] }}
         headerAside={
           <TotalesChipDesglose
             subtotal={sub} iva={iva} ieps={ieps} retenciones={ret}
@@ -132,55 +133,62 @@ function DialogNuevaFacturaProveedorForm({
           />
         }
         stickyBottom={
-          <CuadreConceptosBar
-            resultado={cuadre}
-            subtotal={sub}
-            moneda={moneda}
-            renglones={conceptosParaCuadre.length}
-          />
+          pasos.paso === 1 ? (
+            <CuadreConceptosBar
+              resultado={cuadre}
+              subtotal={sub}
+              moneda={moneda}
+              renglones={conceptosParaCuadre.length}
+            />
+          ) : undefined
         }
       >
         <div
           className="space-y-5"
           onKeyDown={(e) => {
-            if ((e.metaKey || e.ctrlKey) && e.key === "Enter" && ctl.puedeGuardar) {
-              e.preventDefault();
-              void ctl.submit();
-            }
+            if (!(e.metaKey || e.ctrlKey) || e.key !== "Enter") return;
+            e.preventDefault();
+            if (!pasos.esUltimo) pasos.siguiente();
+            else if (ctl.puedeGuardar) void ctl.submit();
           }}
         >
-          <BandaOrigenYAlertas
-            ctl={ctl}
-            entrante={entrante ?? null}
-            autocarga={autocarga}
-            modoBuzon={Boolean(entrante)}
-            onVerArchivoBuzon={(path, nombre) => void verArchivoBuzon(path, nombre)}
-            onVerFacturaDuplicada={(id: string) => {
-              ctl.reset();
-              onOpenChange(false);
-              navigate(`/compras/facturas?factura=${id}`);
-            }}
-          />
-
-          <div className="lg:grid lg:grid-cols-[1.15fr_1fr] lg:gap-6 lg:items-start">
-            <ColumnaDocumento
+          {pasos.paso === 1 && (
+            <PasoDocumento
               ctl={ctl}
               categorias={cats.data ?? []}
+              entrante={entrante ?? null}
+              autocarga={autocarga}
               keyRenglonSospechoso={keyRenglonSospechoso}
-              modoBuzon={Boolean(entrante)}
+              modoBuzon={modoBuzon}
+              onVerArchivoBuzon={(path, nombre) => void verArchivoBuzon(path, nombre)}
+              onVerFacturaDuplicada={(id: string) => {
+                ctl.reset();
+                onOpenChange(false);
+                navigate(`/compras/facturas?factura=${id}`);
+              }}
             />
-            <ColumnaDatosFactura
+          )}
+
+          {pasos.paso === 2 && (
+            <PasoDatos
               ctl={ctl}
               categorias={cats.data ?? []}
-              herencia={herencia}
-              sinCostoCapturado={entrante?.sinCostoCapturado}
               entrante={entrante ?? null}
               categoriaCogs={categoriaCogs}
             />
-          </div>
+          )}
+
+          {pasos.paso === 3 && (
+            <PasoVinculacion
+              ctl={ctl}
+              entrante={entrante ?? null}
+              herencia={herencia}
+              sinCostoCapturado={entrante?.sinCostoCapturado}
+              onIrADatos={() => pasos.irA(2)}
+            />
+          )}
         </div>
     </FormDialogShell>
     </>
   );
 }
-

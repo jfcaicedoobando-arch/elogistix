@@ -1,5 +1,13 @@
 # Changelog
 
+## [13.712.0] - 2026-08-21
+### Captura de factura de proveedor — wizard de 3 pasos
+- El modal se reorganizó en pasos: 1) documento y conceptos, 2) datos de la factura (proveedor, folio, fechas, importes, T/C, categoría, notas) y 3) vinculación al embarque con resumen previo al guardado.
+- Cada paso usa todo el ancho (`5xl`): la tabla de conceptos del CFDI ya no se corta ni requiere scroll horizontal y las descripciones se muestran hasta en 3 líneas.
+- Footer contextual: Atrás/Continuar en los primeros pasos, Guardar factura sólo en el último, y los pendientes de otros pasos son enlaces que saltan al paso que los resuelve.
+- Desde el buzón CxP el modal abre directo en el paso 2 porque el documento ya viene precargado.
+- Errores de campo en una sola línea con el detalle en tooltip accesible, en vez de párrafos rojos que desplazaban el formulario.
+
 ## [13.711.1] - 2026-08-21
 ### Corrección
 - Captura de facturas por IA (PDF): se refresca la sesión antes de llamar a `parse-invoice-pdf` y se reintenta ante 401, eliminando el error "Token inválido" cuando el token había expirado.

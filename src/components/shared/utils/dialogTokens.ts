@@ -14,6 +14,7 @@
  * - 2xl → formularios largos                         (sm:max-w-2xl, ~42rem)
  * - 3xl → previews de documento, grandes selecciones (sm:max-w-3xl, ~48rem)
  * - 4xl → wizards inline, tablas anidadas            (sm:max-w-4xl, ~56rem)
+ * - 5xl → wizards con tabla de partidas completa     (sm:max-w-5xl, ~64rem)
  */
 export const dialogSize = {
   sm: "sm:max-w-sm",
@@ -23,6 +24,7 @@ export const dialogSize = {
   "2xl": "sm:max-w-2xl",
   "3xl": "sm:max-w-3xl",
   "4xl": "sm:max-w-4xl",
+  "5xl": "sm:max-w-5xl",
 } as const;
 
 /**

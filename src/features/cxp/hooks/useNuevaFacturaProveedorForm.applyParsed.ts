@@ -79,7 +79,7 @@ export async function aplicarPdfIaParsed(
   // inventamos: se pide capturarlo a mano para no chocar con otra factura.
   if (!result.values.folio.trim()) {
     deps.setErrors({
-      folio: "Captura el folio tal como aparece impreso en el documento (la IA no lo detectó con certeza).",
+      folio: "Verifica el folio: la IA no lo detectó con certeza en el documento.",
     });
   }
   return true;

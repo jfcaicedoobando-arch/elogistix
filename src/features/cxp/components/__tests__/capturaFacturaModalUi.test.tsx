@@ -7,7 +7,6 @@ import { fireEvent } from "@testing-library/react";
 import { describe, it, expect, vi } from "vitest";
 import { OrigenDocumentoPicker } from "../OrigenDocumentoPicker";
 import { pendientesDeCaptura } from "../pendientesDeCaptura";
-import { PendientesGuardarHint } from "../PendientesGuardarHint";
 import type { FacturaFormValues } from "@/features/cxp/types";
 
 const values: FacturaFormValues = {
@@ -58,9 +57,8 @@ describe("pendientesDeCaptura", () => {
     ]);
   });
 
-  it("sin pendientes no renderiza nada", () => {
+  it("sin pendientes devuelve lista vacía", () => {
     const ok: FacturaFormValues = { ...values, provId: "p1", folio: "A-1" };
-    const { container } = render(<PendientesGuardarHint values={ok} total={116} />);
-    expect(container).toBeEmptyDOMElement();
+    expect(pendientesDeCaptura({ values: ok, total: 116 })).toEqual([]);
   });
 });
