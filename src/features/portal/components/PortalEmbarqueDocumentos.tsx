@@ -1,4 +1,4 @@
-import { Download, FileCheck, FileX, Loader2 } from "lucide-react";
+import { Download, FileCheck, FileX } from "lucide-react";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -76,9 +76,10 @@ export function PortalEmbarqueDocumentos({ documentos }: Props) {
             variant="ghost"
             size="sm"
             disabled={downloadingId === doc.id}
+            loading={downloadingId === doc.id}
             onClick={(e) => { e.stopPropagation(); handleDownload(doc.archivo!, doc.id); }}
           >
-            {downloadingId === doc.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+            {downloadingId !== doc.id && <Download className="h-4 w-4" />}
           </Button>
         ) : <span className="text-body-sm text-muted-foreground">—</span>;
       },

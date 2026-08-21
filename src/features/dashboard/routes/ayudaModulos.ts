@@ -11,10 +11,10 @@ export const MODULOS: AyudaModulo[] = [
     resumen: "Tu pantalla de arranque: qué pasa hoy en la operación.",
     audiencia: ["Todos"],
     faqs: [
-      { pregunta: "¿Qué muestra el dashboard?", respuesta: "Cards de arribos del mes (con profit proyectado), embarques en riesgo (demoras), facturación pendiente y comisiones devengadas. Cambia según tu rol: un vendedor ve sólo sus cuentas, un coordinador ve toda la operación." },
+      { pregunta: "¿Qué muestra el dashboard?", respuesta: "Cards de arribos del mes (con utilidad proyectada), embarques en riesgo (demoras), facturación pendiente y comisiones devengadas. Cambia según tu rol: un vendedor ve sólo sus cuentas, un coordinador ve toda la operación." },
       { pregunta: "¿Para qué sirve el toggle 'míos / todos'?", respuesta: "Lo ven vendedores y operadores. Filtra el dashboard a sólo los embarques/cuentas asignados a ti, o muestra los de toda la organización." },
       { pregunta: "¿Qué significan los colores de los badges?", respuesta: "Rojo = atención urgente (factura vencida, demora). Amarillo = próximo a vencer (ETA en ≤1 día). Azul = informativo. Gris = sin pendientes." },
-      { pregunta: "¿Por qué no veo profit MXN en una card?", respuesta: "Profit se calcula al tipo de cambio del día de cierre. Si el embarque sigue abierto, verás 'proyectado' con el TC actual; cuando cierre, se fija el real." },
+      { pregunta: "¿Por qué no veo utilidad MXN en una card?", respuesta: "La utilidad se calcula al tipo de cambio del día de cierre. Si el embarque sigue abierto, verás 'proyectado' con el TC actual; cuando cierre, se fija el real." },
     ],
   },
   {
@@ -118,7 +118,7 @@ export const MODULOS: AyudaModulo[] = [
   },
   {
     id: "profit",
-    titulo: "9. Profit y Reportes",
+    titulo: "9. Utilidad y reportes",
     resumen: "Estado de resultados, P&L por contenedor y leaderboard.",
     audiencia: ["Gerencia", "Contador"],
     faqs: [

@@ -132,7 +132,7 @@ export function CxcAgingDrillDownDialog({
       <DialogContent className={`${dialogSize["4xl"]} p-0 gap-0 max-h-[90vh] overflow-y-auto`}>
         <TooltipProvider>
           <DialogHeader className="px-6 py-4 border-b">
-            <DialogTitle className="flex items-center gap-2 text-base">
+            <DialogTitle className="flex items-center gap-2">
               <FileText className="h-4 w-4 text-accent" />
               Facturas con saldo · {cliente?.cliente_nombre ?? ""}
             </DialogTitle>

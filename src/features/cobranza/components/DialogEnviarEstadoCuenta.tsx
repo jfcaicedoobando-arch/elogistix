@@ -4,7 +4,7 @@
  * QW12 Tanda 3 — Quick Wins facturación.
  */
 import { useMemo, useState } from "react";
-import { Mail, Loader2 } from "lucide-react";
+import { Mail } from "lucide-react";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -70,13 +70,8 @@ export function DialogEnviarEstadoCuenta({
       <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isPending}>
         Cancelar
       </Button>
-      <Button onClick={handleEnviar} disabled={!puedeEnviar}>
-        {isPending ? (
-          <>
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            Enviando…
-          </>
-        ) : (
+      <Button onClick={handleEnviar} disabled={!puedeEnviar} loading={isPending}>
+          {isPending ? "Enviando…" : (
           "Enviar estado de cuenta"
         )}
       </Button>

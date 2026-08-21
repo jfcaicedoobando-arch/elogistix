@@ -9,6 +9,7 @@
  * Los mensajes son idénticos a los previos: la UI y los tests dependen de ellos.
  */
 import { z } from "zod";
+import { COPY_VALIDACION } from "@/lib/copy/publicoCopy";
 
 // ── Paso 1 · Destinatario (cliente o prospecto) ──────────────────────────────
 
@@ -25,7 +26,7 @@ export const destinatarioSchema = z
   .superRefine((v, ctx) => {
     if (!v.esProspecto) {
       if (!v.clienteId) {
-        ctx.addIssue({ code: "custom", path: ["clienteId"], message: "Selecciona un cliente" });
+        ctx.addIssue({ code: "custom", path: ["clienteId"], message: COPY_VALIDACION.clienteRequerido });
       }
       return;
     }
@@ -33,22 +34,21 @@ export const destinatarioSchema = z
       ctx.addIssue({
         code: "custom",
         path: ["oportunidadId"],
-        message:
-          "Selecciona un lead u oportunidad existente, o cambia a 'Crear nuevo prospecto'",
+        message: COPY_VALIDACION.prospectoOportunidadRequerida,
       });
     }
     if (!v.prospectoEmpresa.trim()) {
       ctx.addIssue({
         code: "custom",
         path: ["prospectoEmpresa"],
-        message: "Ingresa el nombre de la empresa del prospecto",
+        message: COPY_VALIDACION.prospectoEmpresaRequerida,
       });
     }
     if (v.prospectoModo === "nuevo" && !v.prospectoContacto.trim()) {
       ctx.addIssue({
         code: "custom",
         path: ["prospectoContacto"],
-        message: "Ingresa el nombre del contacto del prospecto",
+        message: COPY_VALIDACION.prospectoContactoRequerido,
       });
     }
   });
@@ -67,7 +67,7 @@ export const rutaTerrestreSchema = z
       ctx.addIssue({
         code: "custom",
         path: ["modalidadEquipo"],
-        message: "Selecciona la modalidad de equipo",
+        message: COPY_VALIDACION.modalidadEquipoRequerida,
       });
       return;
     }
@@ -75,7 +75,7 @@ export const rutaTerrestreSchema = z
       ctx.addIssue({
         code: "custom",
         path: ["puntoIntermedio"],
-        message: "Captura el punto de carga/descarga",
+        message: COPY_VALIDACION.puntoIntermedioRequerido,
       });
     }
   });
@@ -92,8 +92,7 @@ export const fleteLclManualSchema = z
     ctx.addIssue({
       code: "custom",
       path: ["tarifaWM"],
-      message:
-        "Captura el flete LCL (Tarifa W/M y Consolidador) antes de continuar (Paso 1 → Flete LCL).",
+      message: COPY_VALIDACION.fleteLclRequerido,
     });
   });
 
@@ -114,7 +113,7 @@ export const costosPaso2Schema = z
       ctx.addIssue({
         code: "custom",
         path: ["totalCostos"],
-        message: "Agrega al menos un costo interno antes de continuar",
+        message: COPY_VALIDACION.costosInternosRequeridos,
       });
       return;
     }
@@ -122,7 +121,7 @@ export const costosPaso2Schema = z
       ctx.addIssue({
         code: "custom",
         path: ["renglonesSinConcepto"],
-        message: "Hay renglones de costo sin concepto",
+        message: COPY_VALIDACION.renglonesSinConcepto,
       });
     }
   });
@@ -136,7 +135,7 @@ export const conceptosPaso3Schema = z
       ctx.addIssue({
         code: "custom",
         path: ["conceptosValidos"],
-        message: "Agrega al menos un concepto de venta",
+        message: COPY_VALIDACION.conceptosVentaRequeridos,
       });
     }
   });

@@ -97,8 +97,8 @@ export default function PlantillasMensajeEditor() {
             onChange={(e) => setNuevo((n) => ({ ...n, cuerpo: e.target.value }))}
           />
           <div className="flex justify-end">
-            <Button size="sm" onClick={handleCrear} disabled={crear.isPending}>
-              {crear.isPending ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Plus className="h-4 w-4 mr-1" />}
+            <Button size="sm" onClick={handleCrear} disabled={crear.isPending} loading={crear.isPending}>
+              {!crear.isPending && <Plus className="h-4 w-4 mr-1" />}
               Agregar
             </Button>
           </div>

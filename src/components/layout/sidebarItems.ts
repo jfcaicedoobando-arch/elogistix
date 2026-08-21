@@ -81,7 +81,7 @@ export const SIDEBAR_DINERO_ITEMS: SidebarItem[] = [
 ];
 
 export const SIDEBAR_ANALISIS_ITEMS: SidebarItem[] = [
-  { title: "Profit", url: "/profit", icon: TrendingUp },
+  { title: "Utilidad", url: "/profit", icon: TrendingUp },
   { title: "Cierre mensual", url: "/reportes/cierre-mensual", icon: Calendar },
   { title: "Rentabilidad", url: "/reportes/rentabilidad", icon: BarChart3 },
   { title: "Cartera y antigüedad", url: "/reportes/cartera", icon: LayoutList },

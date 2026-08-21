@@ -4,7 +4,6 @@
  */
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { Loader2 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
 interface Props {
@@ -26,10 +25,9 @@ export function ExportFileButton({ label, icon: Icon, tooltip, busy, onClick, di
             size="sm"
             onClick={onClick}
             disabled={disabled}
+            loading={busy}
           >
-            {busy
-              ? <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />
-              : <Icon className="h-4 w-4 mr-1.5" />}
+            {!busy && <Icon className="h-4 w-4 mr-1.5" />}
             {label}
           </Button>
         </span>

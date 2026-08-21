@@ -97,7 +97,7 @@ export default function GuiaIncoterms2020() {
                     </span>
                     <h3 className="text-lg font-semibold">{i.name}</h3>
                   </div>
-                  <p className="mt-1 text-xs uppercase tracking-wider text-muted-foreground">
+                  <p className="mt-1 text-overline">
                     {i.modo}
                   </p>
                   <p className="mt-3 text-sm text-muted-foreground">

@@ -48,8 +48,9 @@ export function SnoozeTab({ ctrl }: Props) {
           size="sm"
           onClick={ctrl.handleSnooze}
           disabled={!ctrl.snoozeHasta || !ctrl.snoozeMotivo.trim() || ctrl.snoozeando}
+          loading={ctrl.snoozeando}
         >
-          {ctrl.snoozeando ? <Loader2 className="h-4 w-4 animate-spin" /> : "Silenciar"}
+          Silenciar
         </Button>
         {ctrl.snoozeActivo && (
           <Button variant="outline" size="sm" onClick={ctrl.handleQuitarSnooze} disabled={ctrl.cargando}>

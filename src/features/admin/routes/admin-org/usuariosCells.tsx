@@ -130,7 +130,7 @@ export function ChangeRoleCell({ user, isSelf, onPendingRole }: ChangeRoleCellPr
         )}
         {ASSIGNABLE_ROLE_GROUPS.map((group) => (
           <SelectGroup key={group.label}>
-            <SelectLabel className="text-label uppercase tracking-wide text-muted-foreground">
+            <SelectLabel className="text-overline">
               {group.label}
             </SelectLabel>
             {group.roles.map((r) => (

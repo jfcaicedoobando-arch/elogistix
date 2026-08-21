@@ -82,7 +82,7 @@ export default function AgenteEmbarques() {
     <div className="space-y-6">
       <PageHeader
         icon={<Ship className="h-6 w-6 text-accent" />}
-        title="Mis Embarques"
+        title="Mis embarques"
         description="Embarques donde figuras como agente de carga. Sólo lectura — sin datos comerciales del cliente final."
       />
 

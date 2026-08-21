@@ -38,7 +38,7 @@ export function BloquePago({ pago }: { pago: PagoDetalleEncabezado }) {
         <p className="text-2xs uppercase tracking-wide text-muted-foreground">
           {esCobro ? "Dinero recibido" : "Dinero pagado"}
         </p>
-        <p className={`text-xl font-semibold tabular-nums ${esCobro ? "text-success" : "text-destructive"}`}>
+        <p className={`text-kpi tabular-nums ${esCobro ? "text-success" : "text-destructive"}`}>
           {formatCurrency(pago.monto, pago.moneda)}
         </p>
         {pago.moneda !== "MXN" ? (

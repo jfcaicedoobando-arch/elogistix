@@ -22,7 +22,7 @@ export function PulsoSection({ pulso }: { pulso: PulsoKpis }) {
           <p className="text-body font-medium">Embarques activos</p>
           <Ship className="h-5 w-5 text-primary" aria-hidden />
         </div>
-        <p className="mt-2 text-2xl font-semibold tabular-nums">{pulso.embarques_activos}</p>
+        <p className="mt-2 text-kpi tabular-nums">{pulso.embarques_activos}</p>
         <ul className="mt-3 space-y-1 text-body text-muted-foreground">
           {pulso.embarques_por_estado.slice(0, 4).map((e) => (
             <li key={e.estado} className="flex justify-between">

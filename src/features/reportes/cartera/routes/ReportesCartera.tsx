@@ -6,7 +6,7 @@
  * corte), exportable a CSV y PDF.
  */
 import { useMemo, useState } from "react";
-import { FileSpreadsheet, FileText, LayoutList, Loader2 } from "lucide-react";
+import { FileSpreadsheet, FileText, LayoutList } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -69,12 +69,9 @@ export default function ReportesCartera() {
               size="sm"
               onClick={() => void exportarPdf()}
               disabled={sinDatos || generandoPdf}
+              loading={generandoPdf}
             >
-              {generandoPdf ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden />
-              ) : (
-                <FileText className="mr-2 h-4 w-4" aria-hidden />
-              )}
+              {!generandoPdf && <FileText className="mr-2 h-4 w-4" aria-hidden />}
               {generandoPdf ? "Generando…" : "Exportar PDF"}
             </Button>
           </div>

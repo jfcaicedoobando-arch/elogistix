@@ -12,6 +12,7 @@
 import { z } from "zod";
 import type { FacturaFormValues } from "@/features/cxp/types";
 import { diffDiasCalendario } from "@/lib/date/dateOnly";
+import { COPY_VALIDACION } from "@/lib/copy/publicoCopy";
 
 export interface FacturaFormValidationContext {
   total: number;
@@ -34,9 +35,9 @@ export function buildFacturaFormSchema(ctx: FacturaFormValidationContext) {
       // vencimiento a fechas absurdas (año 2299) y distorsionaba el aging.
       diasCredito: z
         .number()
-        .int({ message: "Los días de crédito deben ser un número entero" })
-        .min(0, { message: "Los días de crédito no pueden ser negativos" })
-        .max(365, { message: "Los días de crédito no pueden ser mayores a 365" }),
+        .int({ message: COPY_VALIDACION.diasCreditoEntero })
+        .min(0, { message: COPY_VALIDACION.diasCreditoNegativo })
+        .max(365, { message: COPY_VALIDACION.diasCreditoMaximo }),
       vencimiento: z.string(),
       moneda: z.string(),
       tc: z.string(),
@@ -66,18 +67,18 @@ type Valores = {
 /** Campos que no pueden quedar vacíos. */
 function validarObligatorios(values: Valores, refCtx: RefCtx): void {
   if (!values.provId) {
-    refCtx.addIssue({ code: "custom", path: ["provId"], message: "Selecciona un proveedor" });
+    refCtx.addIssue({ code: "custom", path: ["provId"], message: COPY_VALIDACION.proveedorRequerido });
   }
   if (!values.folio.trim()) {
-    refCtx.addIssue({ code: "custom", path: ["folio"], message: "Captura el folio del proveedor" });
+    refCtx.addIssue({ code: "custom", path: ["folio"], message: COPY_VALIDACION.folioProveedorRequerido });
   }
   // P1-2: sin fecha de emisión el índice único de la BD (proveedor + folio
   // + fecha) no puede evaluarse y el 23505 llega crudo al toast.
   if (!values.emision.trim()) {
-    refCtx.addIssue({ code: "custom", path: ["emision"], message: "La fecha de emisión es obligatoria" });
+    refCtx.addIssue({ code: "custom", path: ["emision"], message: COPY_VALIDACION.emisionRequerida });
   }
   if (!values.categoriaId) {
-    refCtx.addIssue({ code: "custom", path: ["categoriaId"], message: "Selecciona una categoría contable" });
+    refCtx.addIssue({ code: "custom", path: ["categoriaId"], message: COPY_VALIDACION.categoriaContableRequerida });
   }
 }
 
@@ -87,10 +88,10 @@ function validarObligatorios(values: Valores, refCtx: RefCtx): void {
  */
 function validarImportes(values: Valores, refCtx: RefCtx, ctx: FacturaFormValidationContext): void {
   const componentes: Array<[string, string, string]> = [
-    ["subtotal", values.subtotal, "El subtotal no puede ser negativo"],
-    ["iva", values.iva, "El IVA no puede ser negativo"],
-    ["ieps", values.ieps, "El IEPS no puede ser negativo"],
-    ["retenciones", values.retenciones, "Las retenciones no pueden ser negativas"],
+    ["subtotal", values.subtotal, COPY_VALIDACION.subtotalNoNegativo],
+    ["iva", values.iva, COPY_VALIDACION.ivaNoNegativo],
+    ["ieps", values.ieps, COPY_VALIDACION.iepsNoNegativo],
+    ["retenciones", values.retenciones, COPY_VALIDACION.retencionesNoNegativas],
   ];
   for (const [campo, texto, mensaje] of componentes) {
     if (texto.trim() !== "" && Number(texto) < 0) {
@@ -98,7 +99,7 @@ function validarImportes(values: Valores, refCtx: RefCtx, ctx: FacturaFormValida
     }
   }
   if (ctx.total <= 0) {
-    refCtx.addIssue({ code: "custom", path: ["subtotal"], message: "El total debe ser mayor a 0" });
+    refCtx.addIssue({ code: "custom", path: ["subtotal"], message: COPY_VALIDACION.totalMayorACero });
   }
 }
 
@@ -109,7 +110,7 @@ function validarFechas(values: Valores, refCtx: RefCtx): void {
     refCtx.addIssue({
       code: "custom",
       path: ["vencimiento"],
-      message: "La fecha de vencimiento no puede ser anterior a la fecha de emisión",
+      message: COPY_VALIDACION.vencimientoAnteriorAEmision,
     });
   }
   // Ola 19 · paso 1: un solo cálculo de días naturales (helper central).
@@ -117,7 +118,7 @@ function validarFechas(values: Valores, refCtx: RefCtx): void {
     refCtx.addIssue({
       code: "custom",
       path: ["vencimiento"],
-      message: "La fecha de vencimiento está demasiado lejos de la emisión",
+      message: COPY_VALIDACION.vencimientoDemasiadoLejano,
     });
   }
 }
@@ -125,13 +126,13 @@ function validarFechas(values: Valores, refCtx: RefCtx): void {
 /** Tipo de cambio obligatorio en divisa y acotado a TC_MAX = 1000 (FE-06c). */
 function validarTipoCambio(values: Valores, refCtx: RefCtx): void {
   if (values.moneda !== "MXN" && !(Number(values.tc) > 0)) {
-    refCtx.addIssue({ code: "custom", path: ["tc"], message: "Captura el tipo de cambio" });
+    refCtx.addIssue({ code: "custom", path: ["tc"], message: COPY_VALIDACION.tipoCambioRequerido });
   }
   if (Number(values.tc) > 1000) {
     refCtx.addIssue({
       code: "custom",
       path: ["tc"],
-      message: "El tipo de cambio no puede ser mayor a 1000",
+      message: COPY_VALIDACION.tipoCambioMaximo,
     });
   }
 }

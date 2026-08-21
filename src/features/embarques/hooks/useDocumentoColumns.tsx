@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { Upload, Download, Loader2, Trash2, Ban, RotateCcw } from "lucide-react";
+import { Upload, Download, Trash2, Ban, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import type { DocumentoEmbarqueRow } from "@/features/embarques/hooks";
@@ -58,7 +58,7 @@ export function useDocumentoColumns(opts: Options): ColumnDef<DocumentoEmbarqueR
               <Button
                 variant="outline"
                 size="sm"
-                disabled={uploadingDocId === doc.id}
+                loading={uploadingDocId === doc.id}
                 onClick={(e) => {
                   e.stopPropagation();
                   const input = document.createElement("input");
@@ -70,7 +70,7 @@ export function useDocumentoColumns(opts: Options): ColumnDef<DocumentoEmbarqueR
                   input.click();
                 }}
               >
-                {uploadingDocId === doc.id ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Upload className="h-4 w-4 mr-1" />}
+                {uploadingDocId !== doc.id && <Upload className="h-4 w-4 mr-1" />}
                 Subir
               </Button>
             )}
@@ -79,14 +79,14 @@ export function useDocumentoColumns(opts: Options): ColumnDef<DocumentoEmbarqueR
                 <Button
                   variant="ghost"
                   size="sm"
-                  disabled={togglingNoAplicaDocId === doc.id}
+                  loading={togglingNoAplicaDocId === doc.id}
                   onClick={(e) => { e.stopPropagation(); onToggleNoAplica!(doc); }}
                 >
-                  {togglingNoAplicaDocId === doc.id
-                    ? <Loader2 className="h-4 w-4 animate-spin mr-1" />
-                    : esNoAplica
+                  {togglingNoAplicaDocId !== doc.id && (
+                    esNoAplica
                       ? <RotateCcw className="h-3.5 w-3.5 mr-1" />
-                      : <Ban className="h-3.5 w-3.5 mr-1" />}
+                      : <Ban className="h-3.5 w-3.5 mr-1" />
+                  )}
                   {esNoAplica ? "Marcar pendiente" : "No aplica"}
                 </Button>
               </Hint>
@@ -96,10 +96,10 @@ export function useDocumentoColumns(opts: Options): ColumnDef<DocumentoEmbarqueR
                 <Button
                   variant="ghost"
                   size="sm"
-                  disabled={downloadingDocId === doc.id}
+                  loading={downloadingDocId === doc.id}
                   onClick={(e) => { e.stopPropagation(); onDownload(doc.archivo!, doc.id); }}
                 >
-                  {downloadingDocId === doc.id ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Download className="h-4 w-4 mr-1" />}
+                  {downloadingDocId !== doc.id && <Download className="h-4 w-4 mr-1" />}
                   Descargar
                 </Button>
                 {canEdit && onDelete && (
@@ -107,10 +107,10 @@ export function useDocumentoColumns(opts: Options): ColumnDef<DocumentoEmbarqueR
                     variant="ghost"
                     size="sm"
                     className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                    disabled={deletingDocId === doc.id}
+                    loading={deletingDocId === doc.id}
                     onClick={(e) => { e.stopPropagation(); onRequestDelete(doc); }}
                   >
-                    {deletingDocId === doc.id ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Trash2 className="h-4 w-4 mr-1" />}
+                    {deletingDocId !== doc.id && <Trash2 className="h-4 w-4 mr-1" />}
                     Eliminar
                   </Button>
                 )}

@@ -46,7 +46,7 @@ export default function EditarProveedorDialog({ proveedor, open, onOpenChange, o
       open={open}
       onOpenChange={onOpenChange}
       icon={Building2}
-      title="Editar Proveedor"
+      title="Editar proveedor"
       description="Modifica la información fiscal y de contacto del proveedor."
       size="xl"
       headerAside={headerAside}

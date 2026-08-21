@@ -14,7 +14,7 @@ export { AdjuntoRow } from "./AdjuntoRow";
 export function Field({ label, value, mono = false }: { label: string; value: React.ReactNode; mono?: boolean }) {
   return (
     <div className="flex flex-col gap-0.5 min-w-0">
-      <span className="text-label uppercase tracking-wider text-muted-foreground font-medium">
+      <span className="text-overline font-medium">
         {label}
       </span>
       <span className={`text-body text-foreground truncate ${mono ? "font-mono" : ""}`}>
@@ -62,7 +62,7 @@ export function UuidFiscalField({
           : "secondary";
   return (
     <div className="flex flex-col gap-1 min-w-0 col-span-2 md:col-span-1">
-      <span className="text-label uppercase tracking-wider text-muted-foreground font-medium">
+      <span className="text-overline font-medium">
         Folio fiscal (UUID)
       </span>
       <span className="text-body text-foreground truncate font-mono">
@@ -90,11 +90,10 @@ export function UuidFiscalField({
             size="sm"
             className="h-6 px-2 text-label"
             disabled={isPending}
+            loading={isPending}
             onClick={onVerify}
           >
-            {isPending
-              ? <Loader2 className="h-4 w-4 mr-1 animate-spin" />
-              : <ShieldCheck className="h-3 w-3 mr-1" />}
+            {!isPending && <ShieldCheck className="h-3 w-3 mr-1" />}
             Verificar en SAT
           </Button>
         </div>

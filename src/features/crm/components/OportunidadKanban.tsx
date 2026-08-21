@@ -7,11 +7,36 @@ import { useMemo } from "react";
 import {
   DndContext, PointerSensor, useSensor, useSensors, type DragEndEvent,
 } from "@dnd-kit/core";
+import { AlertCircle } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useProximasActividades, type ProximaActividad } from "@/features/crm/hooks";
 import { useAvanceCriterios } from "@/features/crm/hooks/useCriteriosEtapa";
 import ColumnaEtapa from "./kanban/ColumnaEtapa";
 import PipelineResumen from "./kanban/PipelineResumen";
 import type { CrmOportunidadRow, CrmEtapaRow } from "@/features/crm/hooks";
+
+/**
+ * Ola 3 · O3.7.4 — carril sintético para oportunidades cuya `etapa_id` es
+ * nula o apunta a una etapa inexistente (antes desaparecían del tablero).
+ * No es un destino de drag válido: `handleDragEnd` sólo acepta etapas reales.
+ */
+const ETAPA_SIN_ETAPA: CrmEtapaRow = {
+  id: "__sin_etapa__",
+  nombre: "Sin etapa",
+  color: "hsl(var(--muted-foreground))",
+  tipo: "abierta",
+  orden: -1,
+  activa: true,
+  crea_tarea_seguimiento: false,
+  created_at: "",
+  deleted_at: null,
+  deleted_by: null,
+  dias_seguimiento: 0,
+  organization_id: "",
+  probabilidad_default: 0,
+  sla_dias: null,
+  updated_at: "",
+};
 
 interface Props {
   etapas: CrmEtapaRow[];
@@ -26,14 +51,16 @@ export default function OportunidadKanban({ etapas, oportunidades, onMover, onCl
   const { data: proximasMap } = useProximasActividades("oportunidad", ids);
   const { data: avanceMap } = useAvanceCriterios(ids);
 
-  const porEtapa = useMemo(() => {
+  const { porEtapa, huerfanas } = useMemo(() => {
     const m = new Map<string, CrmOportunidadRow[]>();
     for (const e of etapas) m.set(e.id, []);
+    const sinEtapa: CrmOportunidadRow[] = [];
     for (const o of oportunidades) {
       const arr = m.get(o.etapa_id);
       if (arr) arr.push(o);
+      else sinEtapa.push(o);
     }
-    return m;
+    return { porEtapa: m, huerfanas: sinEtapa };
   }, [etapas, oportunidades]);
 
   const handleDragEnd = (e: DragEndEvent) => {
@@ -51,8 +78,28 @@ export default function OportunidadKanban({ etapas, oportunidades, onMover, onCl
   return (
     <div className="space-y-3">
       <PipelineResumen oportunidades={oportunidades} />
+      {huerfanas.length > 0 && (
+        <Alert variant="warning">
+          <AlertCircle className="h-4 w-4" aria-hidden />
+          <AlertTitle>Oportunidades sin etapa</AlertTitle>
+          <AlertDescription>
+            {huerfanas.length === 1
+              ? "1 oportunidad no tiene etapa asignada; arrástrala a una etapa del pipeline o asígnala desde su detalle."
+              : `${huerfanas.length} oportunidades no tienen etapa asignada; arrástralas a una etapa del pipeline o asígnalas desde su detalle.`}
+          </AlertDescription>
+        </Alert>
+      )}
       <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
         <div className="flex gap-3 overflow-x-auto pb-3">
+          {huerfanas.length > 0 && (
+            <ColumnaEtapa
+              etapa={ETAPA_SIN_ETAPA}
+              ops={huerfanas}
+              onClickCard={onClickCard}
+              proximasMap={proximas}
+              avanceMap={avanceMap ?? new Map()}
+            />
+          )}
           {etapas.map((e) => (
             <ColumnaEtapa
               key={e.id}

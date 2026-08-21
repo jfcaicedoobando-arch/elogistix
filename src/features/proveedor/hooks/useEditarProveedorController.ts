@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { validarDatosBancarios } from "@/lib/domain/datosBancarios";
+import { COPY_VALIDACION } from "@/lib/copy/publicoCopy";
 import type { Enums, Tables, TablesUpdate } from "@/integrations/supabase/types";
 
 type TipoProveedor = Enums<"tipo_proveedor">;
@@ -66,7 +67,7 @@ export function useEditarProveedorController(
       e.rfc = `El ${form.origen_proveedor === "Extranjero" ? "Tax ID" : "RFC"} es requerido`;
     }
     if (isAgenteCarga && !form.pais) e.pais = "El país es requerido";
-    if (form.email && !EMAIL_RE.test(form.email)) e.email = "Email inválido";
+    if (form.email && !EMAIL_RE.test(form.email)) e.email = COPY_VALIDACION.correoInvalido;
     // P2-1 (R5): antes se podía guardar una CLABE de 17 dígitos sin aviso.
     const errBanco = validarDatosBancarios({
       esExtranjero,

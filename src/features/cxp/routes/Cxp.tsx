@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Plus, FileText, Download } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { DataTable } from "@/components/shared/DataTable";
+import { ResponsiveDataTable } from "@/components/shared/dataTable/ResponsiveDataTable";
 import { ColumnVisibilityMenu } from "@/components/shared/ColumnVisibilityMenu";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { PageContainer } from "@/components/shared/PageContainer";
@@ -26,6 +26,9 @@ import { ROUTES } from "@/constants/routes";
 import { exportarCxpCsv } from "@/features/cxp/routes/_helpers/exportarCxpCsv";
 import { CxpEmptyState } from "@/features/cxp/components/CxpEmptyState";
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
+import { EstadoFacturaCxPCell } from "@/features/cxp/components/EstadoFacturaCxPCell";
+import { MoneyCell } from "@/components/shared/MoneyCell";
+import { formatDate, toTitleCase, formatCurrency } from "@/lib/formatters";
 
 export default function Cxp() {
   useDocumentTitle("Facturas de proveedor");
@@ -106,7 +109,7 @@ export default function Cxp() {
             <CxpEmptyState canEdit={canCapturarFacturaProveedor} onCapturar={() => f.setOpenNueva(true)} />
           ) : (
             <TooltipProvider delayDuration={200}>
-              <DataTable
+              <ResponsiveDataTable
                 columns={columns}
                 data={pageData}
                 isLoading={isLoading}
@@ -130,6 +133,24 @@ export default function Cxp() {
                   pageSize: f.pageSize,
                   total: data.length,
                 }}
+                mobileCard={(fact) => (
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0 flex-1 space-y-1">
+                      <div className="font-semibold text-body truncate font-mono">{fact.folio_interno}</div>
+                      <div className="text-body-sm text-muted-foreground truncate">{toTitleCase(fact.proveedor_nombre)}</div>
+                      <div className="text-label text-muted-foreground">
+                        Vence {fact.fecha_vencimiento ? formatDate(fact.fecha_vencimiento) : "—"}
+                      </div>
+                      <EstadoFacturaCxPCell factura={fact} />
+                    </div>
+                    <MoneyCell
+                      label="Saldo"
+                      value={formatCurrency(fact.saldo, fact.moneda)}
+                      highlight
+                      className="shrink-0 w-28"
+                    />
+                  </div>
+                )}
               />
             </TooltipProvider>
           )}

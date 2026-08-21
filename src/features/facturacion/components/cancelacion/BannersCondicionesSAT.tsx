@@ -15,10 +15,10 @@ interface Props {
 export function BannersCondicionesSAT({ mismoDia, montoBajo, rfcGenerico, requiereAceptacion }: Props) {
   if (mismoDia) {
     return (
-      <Alert className="border-success/30 bg-success/10">
-        <CheckCircle2 className="h-4 w-4 text-success" />
-        <AlertTitle className="text-success">Ventana de cancelación inmediata</AlertTitle>
-        <AlertDescription className="text-foreground">
+      <Alert variant="success">
+        <CheckCircle2 className="h-4 w-4" aria-hidden />
+        <AlertTitle>Ventana de cancelación inmediata</AlertTitle>
+        <AlertDescription>
           Esta factura se emitió hoy. El SAT permite cancelarla sin aceptación del receptor.
         </AlertDescription>
       </Alert>
@@ -26,10 +26,10 @@ export function BannersCondicionesSAT({ mismoDia, montoBajo, rfcGenerico, requie
   }
   if (requiereAceptacion) {
     return (
-      <Alert className="border-warning/30 bg-warning/10">
-        <Info className="h-4 w-4 text-warning" />
-        <AlertTitle className="text-warning">El receptor debe aceptar la cancelación</AlertTitle>
-        <AlertDescription className="text-foreground space-y-1">
+      <Alert variant="warning">
+        <Info className="h-4 w-4" aria-hidden />
+        <AlertTitle>El receptor debe aceptar la cancelación</AlertTitle>
+        <AlertDescription className="space-y-1">
           <p>
             Por regla SAT 2.7.1.34, esta factura requiere que el cliente <strong>acepte la cancelación
             en su Buzón Tributario</strong>. Timbrar la sustituta (relación 04) no exenta este paso.
@@ -41,10 +41,10 @@ export function BannersCondicionesSAT({ mismoDia, montoBajo, rfcGenerico, requie
   }
   if (montoBajo || rfcGenerico) {
     return (
-      <Alert className="border-success/30 bg-success/10">
-        <CheckCircle2 className="h-4 w-4 text-success" />
-        <AlertTitle className="text-success">Cancelación sin aceptación</AlertTitle>
-        <AlertDescription className="text-foreground">
+      <Alert variant="success">
+        <CheckCircle2 className="h-4 w-4" aria-hidden />
+        <AlertTitle>Cancelación sin aceptación</AlertTitle>
+        <AlertDescription>
           {montoBajo && "Monto ≤ $1,000 MXN: exenta de aceptación del receptor."}
           {rfcGenerico && "RFC genérico: exenta de aceptación del receptor."}
         </AlertDescription>

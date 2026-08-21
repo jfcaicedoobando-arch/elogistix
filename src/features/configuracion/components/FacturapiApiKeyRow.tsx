@@ -91,12 +91,12 @@ export function FacturapiApiKeyRow({ orgId, ambiente, last4, label, prefijo }: A
           onChange={(e) => setValor(e.target.value)}
           className="font-mono text-xs"
         />
-        <Button type="button" onClick={onGuardar} disabled={!valor.trim() || setKey.isPending}>
-          {setKey.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4 mr-1" />}
+        <Button type="button" onClick={onGuardar} disabled={!valor.trim() || setKey.isPending} loading={setKey.isPending}>
+          {!setKey.isPending && <Save className="h-4 w-4 mr-1" />}
           Guardar
         </Button>
-        <Button type="button" variant="outline" onClick={onProbar} disabled={!cargada || probar.isPending}>
-          {probar.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <PlugZap className="h-4 w-4 mr-1" />}
+        <Button type="button" variant="outline" onClick={onProbar} disabled={!cargada || probar.isPending} loading={probar.isPending}>
+          {!probar.isPending && <PlugZap className="h-4 w-4 mr-1" />}
           Probar
         </Button>
       </div>

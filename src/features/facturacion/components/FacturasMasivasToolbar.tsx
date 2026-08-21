@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Download, Mail, CheckCircle2, Loader2 } from "lucide-react";
+import { Download, Mail, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   fetchFacturasParaZip,
@@ -156,16 +156,16 @@ export function FacturasMasivasToolbar({ selectedIds, onClear }: Props) {
         {ids.length} seleccionada{ids.length === 1 ? "" : "s"}
       </span>
       <div className="flex-1" />
-      <Button variant="outline" size="sm" disabled={disabled || !!busy} onClick={descargarZip}>
-        {busy === "zip" ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Download className="h-4 w-4 mr-1" />}
+      <Button variant="outline" size="sm" disabled={disabled || !!busy} loading={busy === "zip"} onClick={descargarZip}>
+        {busy !== "zip" && <Download className="h-4 w-4 mr-1" />}
         {busy === "zip" && progreso ? `Descargando ${progreso.hechas}/${progreso.total}…` : "Descargar ZIP"}
       </Button>
-      <Button variant="outline" size="sm" disabled={disabled || !!busy} onClick={() => setConfirmEmailOpen(true)}>
-        {busy === "email" ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Mail className="h-4 w-4 mr-1" />}
+      <Button variant="outline" size="sm" disabled={disabled || !!busy} loading={busy === "email"} onClick={() => setConfirmEmailOpen(true)}>
+        {busy !== "email" && <Mail className="h-4 w-4 mr-1" />}
         {busy === "email" && progreso ? `Reenviando ${progreso.hechas}/${progreso.total}…` : "Reenviar por email"}
       </Button>
-      <Button variant="outline" size="sm" disabled={disabled || !!busy} onClick={marcarEnviada}>
-        {busy === "mark" ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <CheckCircle2 className="h-4 w-4 mr-1" />}
+      <Button variant="outline" size="sm" disabled={disabled || !!busy} loading={busy === "mark"} onClick={marcarEnviada}>
+        {busy !== "mark" && <CheckCircle2 className="h-4 w-4 mr-1" />}
         Marcar enviada
       </Button>
       {ids.length > 0 && (

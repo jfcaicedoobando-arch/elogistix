@@ -11,6 +11,7 @@
  */
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { COPY_VALIDACION } from "@/lib/copy/publicoCopy";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -48,7 +49,7 @@ export function InvitarAgentePortalDialog({ agente, onOpenChange }: Props) {
 
   const handleInvite = async () => {
     if (!agente || !organizationId) return;
-    if (!email.includes("@")) return notifyError(undefined, { title: "Email inválido" });
+    if (!email.includes("@")) return notifyError(undefined, { title: COPY_VALIDACION.correoInvalido });
     if (mode === "password" && password.length < 8) {
       return notifyError(undefined, { title: "La contraseña debe tener al menos 8 caracteres" });
     }

@@ -13,6 +13,7 @@ import { Seo } from "@/components/shared/Seo";
 import { AuthCard } from "@/features/auth/components/AuthCard";
 import { translateAuthError } from "@/lib/auth/translateAuthError";
 import { passwordSchema, PASSWORD_MIN, PASSWORD_MAX } from "@/lib/passwords/policy";
+import { COPY_VALIDACION } from "@/lib/copy/publicoCopy";
 import { PasswordStrengthMeter } from "@/components/shared/PasswordStrengthMeter";
 
 
@@ -27,7 +28,7 @@ const resetSchema = z
   })
   .refine((v) => v.password === v.password2, {
     path: ["password2"],
-    message: "Las contraseñas no coinciden.",
+    message: COPY_VALIDACION.contrasenasNoCoinciden,
   });
 
 type ResetValues = z.infer<typeof resetSchema>;

@@ -131,6 +131,13 @@ Reglas:
 
 - `width="wide"` (`max-w-[1720px]`) sólo para listados densos: Facturación,
   Cobranza, CxP.
+- **Regla O3.14**: todo listado `wide` (denso) declara su estrategia móvil.
+  El patrón por defecto es `ResponsiveDataTable` (`src/components/shared/dataTable/ResponsiveDataTable.tsx`): en `<sm` renderiza
+  tarjetas apiladas vía la prop `mobileCard(row)`; en `≥sm` delega en `DataTable`.
+  Aplicado en los listados densos de Facturación (bandejas), CxP y Tesorería.
+  Excepción documentada: tablas que usan `VirtualDataTable` (listas muy largas,
+  ej. conciliación de Tesorería) posponen su vista de tarjetas — quedan pendientes
+  como deuda explícita, no como omisión silenciosa.
 - `noSpacing` cuando la página maneja su propio ritmo vertical.
 - Breakpoint `short:` (`max-height: 800px`) para compactar en laptops de 720p;
   ya está aplicado en `PageContainer` y `PageHeader`.
@@ -281,3 +288,28 @@ Nunca componer un badge a mano con `bg-*/15 text-*`.
 - [ ] Cero colores, px o `style` literales; textos en español mexicano.
 - [ ] Verificado a 1280×720 y en modo oscuro.
 - [ ] `bun run lint` y las pruebas de arquitectura en verde.
+
+---
+
+## 9. Portales y pantallas auth/legal
+
+`PortalWelcomeCard`, `PortalSinCliente`, `NotFound`, `SinAcceso` y
+`LegalShell` **no** tienen una escala tipográfica propia: reutilizan los
+mismos tokens del punto 3 (`text-display`, `text-section`, `text-body`,
+`text-label`, `text-kpi`). No existen `text-page` ni `text-overline`; son
+alias que no están declarados en `tailwind.config.ts` — usa `text-display`
+para el H1 (título de bienvenida del portal, título de "Página no
+encontrada"/"Sin acceso", título de página legal) y `text-label` para
+micro-copy en mayúsculas (eyebrow de `LegalShell`).
+
+| Pantalla | Antes (ad-hoc) | Ahora |
+| --- | --- | --- |
+| `NotFound` | `text-5xl font-bold` (código "404") + `text-lg font-semibold` (mensaje) | `text-kpi` (código, cifra secundaria) + `text-display` (H1) |
+| `SinAcceso` | `text-2xl font-bold tracking-tight` | `text-display` |
+| `LegalShell` | `text-4xl font-bold tracking-tight` (título) + `text-xs` (eyebrow) | `text-display` (título) + `text-label` (eyebrow) |
+| `PortalWelcomeCard` | `text-xl font-bold tracking-tight` | `text-display` |
+| `PortalSinCliente` | `text-lg font-semibold` | `text-section` |
+
+No se declara una escala "portal" separada: mantener un único contrato
+tipográfico evita que las pantallas de borde (404, sin acceso, legal,
+portal) se vean diseñadas por otro equipo.

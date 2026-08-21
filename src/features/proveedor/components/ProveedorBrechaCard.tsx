@@ -46,7 +46,7 @@ export function ProveedorBrechaCard({ brecha, huerfanas, proveedorNombre }: Prop
             <FileWarning className="mt-0.5 h-5 w-5 text-warning shrink-0" />
             <div className="space-y-1">
               <p className="text-body font-medium">Comprometido sin factura del proveedor</p>
-              <p className="text-lg font-semibold tabular-nums">
+              <p className="text-kpi tabular-nums">
                 {montos.length > 0
                   ? montos.map(([mon, monto]) => formatCurrency(monto, mon)).join(" · ")
                   : formatCurrency(0, "MXN")}

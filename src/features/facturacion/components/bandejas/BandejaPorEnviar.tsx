@@ -11,8 +11,10 @@ import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { MailWarning, Mail } from "lucide-react";
-import { DataTable, defineColumns } from "@/components/shared/DataTable";
+import { defineColumns } from "@/components/shared/DataTable";
+import { ResponsiveDataTable } from "@/components/shared/dataTable/ResponsiveDataTable";
 import { clientColumn, moneyColumn, dateColumn } from "@/components/shared/dataTable/columnBuilders";
+import { formatCurrency, formatDate, toTitleCase } from "@/lib/formatters";
 import { useClientPagedList } from "@/hooks/shared/useClientPagedList";
 import { useFacturasPorEnviar, type FilaPorEnviar } from "@/features/facturacion/hooks/useBandejas";
 import { DialogEnviarCfdi } from "@/features/facturacion/components/DialogEnviarCfdi";
@@ -113,13 +115,16 @@ export function BandejaPorEnviar() {
       >
         <Card>
           <CardContent className="p-0">
-            <DataTable
+            <ResponsiveDataTable
               columns={columns}
               data={paged.rows}
               isLoading={paged.isLoading}
-              emptyIcon={MailWarning}
-              emptyMessage="Todos los CFDI timbrados ya se enviaron al cliente."
-              emptyHint="Aquí aparecerán las facturas ya timbradas que todavía no se han enviado por correo al cliente."
+              emptyState={
+                <div className="flex flex-col items-center justify-center gap-2 py-12 text-center text-body text-muted-foreground px-4">
+                  <MailWarning className="h-8 w-8 opacity-40" strokeWidth={1.5} />
+                  <span>Todos los CFDI timbrados ya se enviaron al cliente.</span>
+                </div>
+              }
               rowKey={(r) => r.id}
               getRowHref={(r) => `/facturacion/${r.id}`}
               getRowAriaLabel={(r) => `Abrir factura ${r.numero}`}
@@ -127,6 +132,24 @@ export function BandejaPorEnviar() {
               controlledSort={paged.controlledSort}
               onSortChange={paged.setSort}
               pagination={paged.pagination}
+              mobileCard={(r) => (
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0 flex-1">
+                    <div className="font-semibold text-body truncate font-mono">{r.numero}</div>
+                    <div className="text-body-sm text-muted-foreground truncate mt-0.5">{toTitleCase(r.cliente_nombre)}</div>
+                    <div className="text-label text-muted-foreground mt-0.5">
+                      {formatDate(r.fecha_emision)} · {formatCurrency(r.total, r.moneda)}
+                    </div>
+                  </div>
+                  <EnviarButton
+                    onClick={() => setSeleccion({
+                      facturaId: r.id,
+                      numero: r.numero,
+                      clienteId: r.cliente_id,
+                    })}
+                  />
+                </div>
+              )}
             />
           </CardContent>
         </Card>

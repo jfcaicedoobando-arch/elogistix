@@ -137,7 +137,7 @@ function SaldoTile({
         <Skeleton className="h-6 w-24 mt-1" />
       ) : (
         <>
-          <p className="text-lg font-semibold tabular-nums mt-1">
+          <p className="text-kpi tabular-nums mt-1">
             {formatCurrency(mxn, "MXN")}
           </p>
           {usd > 0 && (
@@ -176,7 +176,7 @@ function FlujoTile({
         <Skeleton className="h-6 w-24 mt-1" />
       ) : (
         <>
-          <p className="text-lg font-semibold tabular-nums mt-1">
+          <p className="text-kpi tabular-nums mt-1">
             {formatCurrency(mxn, "MXN")}
           </p>
           {usd > 0 && (

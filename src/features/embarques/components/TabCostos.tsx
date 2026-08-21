@@ -64,7 +64,7 @@ export function TabCostos({ conceptosCosto, totalVenta, totalCosto, utilidad, ma
           <Card key={kpi.label} className={kpiColors[i]}>
             <CardContent className="p-4">
               <p className="text-body-sm font-medium text-muted-foreground uppercase tracking-wide">{kpi.label}</p>
-              <p className={`text-lg font-bold mt-1 tabular-nums ${kpi.color}`}>{kpi.value}</p>
+              <p className={`text-kpi mt-1 tabular-nums ${kpi.color}`}>{kpi.value}</p>
             </CardContent>
           </Card>
         ))}

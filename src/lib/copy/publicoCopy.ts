@@ -17,14 +17,57 @@ export const COPY_ENLACE = {
     "El servicio no está disponible en este momento. Vuelve a intentarlo en unos minutos.",
 } as const;
 
-/** Mensajes de validación de formularios públicos. */
+/**
+ * Mensajes de validación de formularios, tanto públicos como internos
+ * (Ola 3 · O3.4: catálogo único para que zod hable siempre igual en toda la
+ * app: español mexicano, trato de "tú" y punto final en cada mensaje).
+ */
 export const COPY_VALIDACION = {
   /** Campo obligatorio vacío. `campo` en minúsculas: "el origen". */
   requerido: (campo: string) => `Captura ${campo} para continuar.`,
   /** Falta capturar uno o más campos obligatorios del paso actual. */
   camposObligatorios: "Completa los campos marcados con * para continuar.",
+  /** Correo con formato inválido. Única redacción ("Correo", con punto). */
+  correoInvalido: "Correo inválido.",
   /** Motivo de rechazo demasiado corto. */
   motivoRechazo: "Escribe el motivo del rechazo (al menos 3 caracteres).",
+
+  // ── Auth ────────────────────────────────────────────────────────────────
+  nombreRequerido: "Ingresa tu nombre.",
+  contrasenasNoCoinciden: "Las contraseñas no coinciden.",
+  terminosRequeridos: "Debes aceptar los términos para continuar.",
+
+  // ── Cotización · wizard paso 1 ──────────────────────────────────────────
+  clienteRequerido: "Selecciona un cliente.",
+  prospectoOportunidadRequerida:
+    "Selecciona un lead u oportunidad existente, o cambia a 'Crear nuevo prospecto'.",
+  prospectoEmpresaRequerida: "Ingresa el nombre de la empresa del prospecto.",
+  prospectoContactoRequerido: "Ingresa el nombre del contacto del prospecto.",
+  modalidadEquipoRequerida: "Selecciona la modalidad de equipo.",
+  puntoIntermedioRequerido: "Captura el punto de carga/descarga.",
+  fleteLclRequerido:
+    "Captura el flete LCL (Tarifa W/M y Consolidador) antes de continuar (Paso 1 → Flete LCL).",
+  costosInternosRequeridos: "Agrega al menos un costo interno antes de continuar.",
+  renglonesSinConcepto: "Hay renglones de costo sin concepto.",
+  conceptosVentaRequeridos: "Agrega al menos un concepto de venta.",
+
+  // ── CxP · captura de facturas de proveedor ──────────────────────────────
+  proveedorRequerido: "Selecciona un proveedor.",
+  folioProveedorRequerido: "Captura el folio del proveedor.",
+  emisionRequerida: "La fecha de emisión es obligatoria.",
+  categoriaContableRequerida: "Selecciona una categoría contable.",
+  diasCreditoEntero: "Los días de crédito deben ser un número entero.",
+  diasCreditoNegativo: "Los días de crédito no pueden ser negativos.",
+  diasCreditoMaximo: "Los días de crédito no pueden ser mayores a 365.",
+  subtotalNoNegativo: "El subtotal no puede ser negativo.",
+  ivaNoNegativo: "El IVA no puede ser negativo.",
+  iepsNoNegativo: "El IEPS no puede ser negativo.",
+  retencionesNoNegativas: "Las retenciones no pueden ser negativas.",
+  totalMayorACero: "El total debe ser mayor a 0.",
+  vencimientoAnteriorAEmision: "La fecha de vencimiento no puede ser anterior a la fecha de emisión.",
+  vencimientoDemasiadoLejano: "La fecha de vencimiento está demasiado lejos de la emisión.",
+  tipoCambioRequerido: "Captura el tipo de cambio.",
+  tipoCambioMaximo: "El tipo de cambio no puede ser mayor a 1000.",
 } as const;
 
 /** Textos de marca y pie de página de vistas públicas. */

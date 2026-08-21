@@ -32,16 +32,16 @@ export function LegalShell({
       <header className="border-b border-border bg-background/80 backdrop-blur">
         <div className="mx-auto flex h-16 max-w-3xl items-center justify-between px-4 sm:px-6">
           <Link to={backTo} aria-label="Libre Carga"><BrandLockup variant="horizontal" size="sm" /></Link>
-          <Link to={backTo} className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground min-h-11">
+          <Link to={backTo} className="inline-flex items-center gap-1 text-body text-muted-foreground hover:text-foreground min-h-11">
             <ArrowLeft className="h-4 w-4" /> Volver
           </Link>
         </div>
       </header>
 
       <main className="mx-auto max-w-3xl px-4 py-12 sm:px-6">
-        <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-accent">{eyebrow}</p>
-        <h1 className="text-4xl font-bold tracking-tight">{title}</h1>
-        {updatedAt ? <p className="mt-2 text-sm text-muted-foreground">Última actualización: {updatedAt}</p> : null}
+        <p className="mb-2 text-label font-semibold uppercase tracking-wider text-accent">{eyebrow}</p>
+        <h1 className="text-display">{title}</h1>
+        {updatedAt ? <p className="mt-2 text-body text-muted-foreground">Última actualización: {updatedAt}</p> : null}
         {children}
       </main>
     </div>

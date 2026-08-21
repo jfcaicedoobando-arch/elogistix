@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/select";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { PageContainer } from "@/components/shared/PageContainer";
-import { DataTable } from "@/components/shared/DataTable";
+import { ResponsiveDataTable } from "@/components/shared/dataTable/ResponsiveDataTable";
 
 import { buildCxpAgingColumns } from "@/features/cxp/components/cxpAgingColumns";
 import { useCxpAging } from "@/features/cxp/hooks/useCxpAging";
@@ -37,6 +37,8 @@ import {
 import { AgingKpiBucket } from "@/components/shared/kpi/AgingKpiBucket";
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 import { FILTRO_ANCHO } from "@/lib/ui/filterWidths";
+import { MoneyCell } from "@/components/shared/MoneyCell";
+import { formatCurrency } from "@/lib/formatters";
 
 
 interface Filters extends Record<string, string> { cubeta: string }
@@ -82,7 +84,7 @@ export default function CxpAging() {
     <PageContainer width="wide">
       <PageHeader
         icon={<LayoutList className="h-6 w-6 text-accent" />}
-        title="Antigüedad de Saldos"
+        title="Antigüedad de saldos"
         description={`Saldos por proveedor agrupados por días de vencimiento (${monedaActiva}).`}
         actions={
           <div className="flex items-center gap-2">
@@ -150,7 +152,7 @@ export default function CxpAging() {
 
       <Card>
         <CardContent className="p-0">
-          <DataTable<CxpAgingRow>
+          <ResponsiveDataTable<CxpAgingRow>
             columns={columns}
             data={paged.rows}
             isLoading={paged.isLoading}
@@ -164,10 +166,35 @@ export default function CxpAging() {
             onRowClick={(r) => setDrilldown({ prov: r, cubeta: "todas" })}
             getRowAriaLabel={(r) => `Ver facturas con saldo de ${r.proveedor_nombre}`}
             emptyMessage="Sin saldos pendientes"
-            emptyHint="No hay facturas de proveedor con saldo abierto."
             striped
             hoverable
             density={TABLE_DENSITY.embebida}
+            mobileCard={(r) => {
+              const peorCubeta = r.mas_90 > 0
+                ? "+90 días"
+                : r.d_61_90 > 0
+                  ? "61-90 días"
+                  : r.d_31_60 > 0
+                    ? "31-60 días"
+                    : r.d_1_30 > 0
+                      ? "1-30 días"
+                      : "Vigente";
+              return (
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0 flex-1 space-y-1">
+                    <div className="font-semibold text-body truncate">{r.proveedor_nombre}</div>
+                    <div className="text-body-sm text-muted-foreground">{r.num_facturas} factura{r.num_facturas === 1 ? "" : "s"}</div>
+                    <div className="text-label text-muted-foreground">Cubeta más vencida: {peorCubeta}</div>
+                  </div>
+                  <MoneyCell
+                    label="Saldo total"
+                    value={formatCurrency(r.saldo_total, r.moneda)}
+                    highlight
+                    className="shrink-0 w-28"
+                  />
+                </div>
+              );
+            }}
           />
         </CardContent>
       </Card>

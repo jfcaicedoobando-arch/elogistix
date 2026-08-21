@@ -99,7 +99,7 @@ export default function NuevoLeadDialog({ open, onOpenChange, onCreated }: Props
       open={open}
       onOpenChange={handleOpenChange}
       icon={Target}
-      title="Nuevo Lead"
+      title="Nuevo lead"
       description="Captura los datos básicos del prospecto. Podrás convertirlo a cliente y oportunidad desde su ficha."
       size="2xl"
       footer={footer}

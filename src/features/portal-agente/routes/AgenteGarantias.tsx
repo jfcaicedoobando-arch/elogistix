@@ -106,7 +106,7 @@ export default function AgenteGarantias() {
     <div className="space-y-6">
       <PageHeader
         icon={<ShieldCheck className="h-6 w-6 text-accent" />}
-        title="Carta Garantía y Demoras"
+        title="Carta garantía y demoras"
         description="Mantén actualizada tu carta garantía y el tabulador escalonado de demoras por naviera."
       />
 

@@ -36,7 +36,7 @@ export default function NuevoProveedorDialog({ open, onOpenChange, onSave, prefi
       open={open}
       onOpenChange={(abierto) => { if (!abierto) c.resetAndClose(); else onOpenChange(abierto); }}
       icon={Building2}
-      title="Nuevo Proveedor"
+      title="Nuevo proveedor"
       description={
         c.step === 1
           ? "Identifica al proveedor y captura sus datos fiscales y de contacto."

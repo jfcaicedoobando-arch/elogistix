@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -62,16 +63,14 @@ function computeFreshness(
 
 function EtaVencidaBanner({ eta }: { eta: string }) {
   return (
-    <div className="flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/5 p-3">
-      <AlertTriangle className="h-4 w-4 text-destructive mt-0.5 shrink-0" />
-      <div className="text-body">
-        <div className="font-medium text-destructive">ETA vencida</div>
-        <div className="text-muted-foreground">
-          La ETA era {formatDate(eta, "dd/MM/yyyy")}. Consulta la web de la naviera y
-          actualiza el estado o la fecha de llegada real.
-        </div>
-      </div>
-    </div>
+    <Alert variant="destructive">
+      <AlertTriangle className="h-4 w-4" aria-hidden />
+      <AlertTitle>ETA vencida</AlertTitle>
+      <AlertDescription>
+        La ETA era {formatDate(eta, "dd/MM/yyyy")}. Consulta la web de la naviera y
+        actualiza el estado o la fecha de llegada real.
+      </AlertDescription>
+    </Alert>
   );
 }
 

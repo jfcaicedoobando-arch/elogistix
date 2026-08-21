@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { DollarSign, TrendingUp, Landmark, AlertTriangle, Receipt, Target } from "lucide-react";
 import { KpiCard } from "@/components/shared/KpiCard";
-import { formatCurrency } from "@/lib/formatters/numbers";
+import { formatCurrency, formatNumber, formatPercent} from "@/lib/formatters/numbers";
 import type { KPIsEjecutivos } from "@/features/dashboardEjecutivo/services";
 import type { TopItem } from "@/features/tesoreria/services";
 import type { ResumenVsReal } from "@/features/presupuesto/services";
@@ -31,7 +31,7 @@ function formatDelta(pct: number | null): { text: string; variant: "positive" | 
   if (!isFinite(pct) || Math.abs(pct) < EPS_PCT) return { text: "Sin variación vs. mes anterior", variant: "neutral" };
   const sign = pct > 0 ? "+" : "";
   return {
-    text: `${sign}${pct.toFixed(1)}% vs periodo anterior`,
+    text: `${sign}${formatPercent(pct, 1)} vs periodo anterior`,
     variant: pct > 0 ? "positive" : "negative",
   };
 }
@@ -42,12 +42,12 @@ function formatDelta(pct: number | null): { text: string; variant: "positive" | 
  * comparable (Fase I). Fase I fix #1: umbral EPS_PP evita "+0.0pp" ruidoso.
  */
 function buildUtilidadDelta(kpis: KPIsEjecutivos): string {
-  const margen = `Margen ${kpis.margen_pct.toFixed(1)}%`;
+  const margen = `Margen ${formatPercent(kpis.margen_pct, 1)}`;
   if (kpis.margen_delta_puntos == null) return `${margen} · sin comparable previo`;
   const puntos = kpis.margen_delta_puntos;
   if (Math.abs(puntos) < EPS_PP) return `${margen} · sin variación vs mes anterior`;
   const signo = puntos > 0 ? "+" : "";
-  return `${margen} · ${signo}${puntos.toFixed(1)}pp vs mes anterior`;
+  return `${margen} · ${signo}${formatNumber(puntos, { decimals: 1 })} pp vs mes anterior`;
 }
 
 function utilidadVariant(kpis: KPIsEjecutivos): "positive" | "negative" | "neutral" {
@@ -126,7 +126,7 @@ export function BandaKPIs({ kpis, topDeudores, topAcreedores, presupuesto }: Pro
         />
         <KpiCard
           label="Cumplim. presupuesto"
-          value={sinPresupuesto ? "—" : `${cumplimiento.toFixed(1)}%`}
+          value={sinPresupuesto ? "—" : formatPercent(cumplimiento, 1)}
           delta={cumpl.delta}
           deltaVariant={cumpl.variant}
           icon={Target}

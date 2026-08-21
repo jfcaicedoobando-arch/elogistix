@@ -1,7 +1,8 @@
 import type { ReactNode } from "react";
-import type { ColumnDef } from "@tanstack/react-table";
+import type { ColumnDef, OnChangeFn, RowSelectionState, VisibilityState } from "@tanstack/react-table";
 import { useNavigate } from "react-router-dom";
 import { DataTable } from "@/components/shared/DataTable";
+import { ErrorStateInline } from "@/components/empty/ErrorStateInline";
 import PaginationControls from "@/components/shared/PaginationControls";
 import { Skeleton, SkeletonGroup } from "@/components/ui/skeleton";
 import { Inbox } from "lucide-react";
@@ -22,11 +23,19 @@ import type {
  *
  * v13.200.0: `getRowHref` es reconocido tanto en desktop (fila navegable)
  * como en mobile (tarjeta navegable con teclado + Ctrl+click).
+ *
+ * O3.14: props de sólo-desktop (`stickyHeader`, `columnVisibility`,
+ * `rowSelection`, `initialSort`, `striped`, `hoverable`, `bordered`,
+ * `tableClassName`) se pasan tal cual a `DataTable` en `≥sm` y se ignoran en
+ * móvil (no aplican a una lista de tarjetas). `isError`/`onRetry` y `footer`
+ * sí se replican en móvil para no perder el estado de error ni los totales.
  */
 interface Props<T> {
   columns: ReadonlyArray<ColumnDef<T, unknown>>;
   data: T[];
   isLoading?: boolean;
+  isError?: boolean;
+  onRetry?: () => void;
   emptyMessage?: string;
   /** Nodo custom para el empty state (CTA accionable). Si se define, reemplaza `emptyMessage`. */
   emptyState?: ReactNode;
@@ -38,6 +47,7 @@ interface Props<T> {
   rowClassName?: (item: T) => string;
   sortMode?: "client" | "server";
   controlledSort?: { key: string | null; dir: SortDir };
+  initialSort?: { key: string; dir: SortDir };
   onSortChange?: (key: string | null, dir: SortDir) => void;
   density?: TableDensity;
   pagination?: DataTablePagination;
@@ -45,13 +55,26 @@ interface Props<T> {
   /** Render de tarjeta móvil. Devuelve el contenido interno; el wrapper aplica tap target y borde. */
   mobileCard: (row: T) => ReactNode;
   skeletonRows?: number;
+  /** Totales/resumen bajo la tabla (desktop) o bajo la lista de tarjetas (móvil). */
+  footer?: ReactNode | ((data: T[]) => ReactNode);
+  /** Sólo-desktop: pasan directo a `DataTable`, ignorados en la vista de tarjetas. */
+  stickyHeader?: boolean;
+  columnVisibility?: VisibilityState;
+  onColumnVisibilityChange?: OnChangeFn<VisibilityState>;
+  rowSelection?: RowSelectionState;
+  onRowSelectionChange?: OnChangeFn<RowSelectionState>;
+  enableRowSelection?: boolean;
+  striped?: boolean;
+  hoverable?: boolean;
+  bordered?: boolean;
+  tableClassName?: string;
 }
 
 export function ResponsiveDataTable<T>(props: Props<T>) {
   const {
-    data, isLoading, emptyMessage = "Sin resultados", emptyState, onRowClick,
+    data, isLoading, isError, onRetry, emptyMessage = "Sin resultados", emptyState, onRowClick,
     getRowHref, getRowAriaLabel,
-    rowKey, mobileCard, pagination, skeletonRows = 5, className,
+    rowKey, mobileCard, pagination, skeletonRows = 5, className, footer,
   } = props;
   const navigate = useNavigate();
   const isMobile = useIsMobile();
@@ -64,10 +87,17 @@ export function ResponsiveDataTable<T>(props: Props<T>) {
     );
   }
 
+  const renderedFooter = typeof footer === "function" ? (footer as (d: T[]) => ReactNode)(data) : footer;
+
   return (
     <div className={className}>
       <div>
-        {isLoading && data.length === 0 ? (
+        {isError ? (
+          <ErrorStateInline
+            message="No pudimos cargar la información. Revisa tu conexión e intenta de nuevo."
+            onRetry={onRetry}
+          />
+        ) : isLoading && data.length === 0 ? (
           <SkeletonGroup className="p-3 space-y-2">
             {Array.from({ length: skeletonRows }).map((_, i) => (
               <Skeleton key={i} className="h-20 w-full rounded-lg" />
@@ -125,7 +155,10 @@ export function ResponsiveDataTable<T>(props: Props<T>) {
             })}
           </ul>
         )}
-        {pagination && (
+        {!isError && renderedFooter && data.length > 0 && !isLoading && (
+          <div className="border-t px-3 py-2.5 bg-muted/30">{renderedFooter}</div>
+        )}
+        {!isError && pagination && (
           <PaginationControls
             page={pagination.page}
             totalPages={pagination.totalPages}
@@ -140,4 +173,3 @@ export function ResponsiveDataTable<T>(props: Props<T>) {
     </div>
   );
 }
-

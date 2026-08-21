@@ -5,7 +5,7 @@
 import { Badge } from "@/components/ui/badge";
 import { KpiCard } from "@/components/shared/KpiCard";
 import { SectionHeading } from "@/components/shared/SectionHeading";
-import { formatCurrency, formatCurrencyCompact } from "@/lib/formatters";
+import { formatCurrency, formatCurrencyCompact, formatNumber, formatPercent} from "@/lib/formatters";
 import { cn } from "@/lib/utils";
 import type { SaludProveedor } from "@/features/cxp/services";
 
@@ -51,12 +51,12 @@ export function ProveedorSaludKpis({ data }: { data: SaludProveedor }) {
         />
         <KpiCard
           label="% Pagadas a tiempo"
-          value={data.pct_pagadas_a_tiempo == null ? "—" : `${data.pct_pagadas_a_tiempo.toFixed(0)}%`}
+          value={data.pct_pagadas_a_tiempo == null ? "—" : formatPercent(data.pct_pagadas_a_tiempo, 0)}
           variant={tonePct === "good" ? "success" : tonePct === "warn" ? "warning" : "destructive"}
         />
         <KpiCard
           label="Días promedio de pago"
-          value={data.dias_promedio_pago == null ? "—" : `${data.dias_promedio_pago.toFixed(0)} d`}
+          value={data.dias_promedio_pago == null ? "—" : formatNumber(data.dias_promedio_pago, { decimals: 0, suffix: "d" })}
         />
         <KpiCard
           label="Notas de crédito"

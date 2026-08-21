@@ -114,7 +114,7 @@ export function ArribosCard({ arribosEsteMes, isLoading, hideFinancials = false 
           </div>
 
           <div className="flex-1 min-w-0">
-            <KpiStrip desktopCols={hideFinancials ? 3 : 4} className="gap-3">
+            <KpiStrip desktopCols={hideFinancials ? 3 : 4} autoFit className="gap-3">
               <KpiCard label="Total" value={arribosEsteMes.total} loading={isLoading} />
               <KpiCard
                 label="Ya llegaron"

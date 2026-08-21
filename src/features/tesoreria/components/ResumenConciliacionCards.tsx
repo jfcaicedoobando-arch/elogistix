@@ -40,7 +40,7 @@ export function ResumenConciliacionCards({ resumen, moneda, isLoading, saldo }: 
           : items.map((it) => (
               <div key={it.label}>
                 <p className="text-body-sm uppercase tracking-wide text-muted-foreground">{it.label}</p>
-                <p className={`mt-1 text-lg font-semibold tabular-nums ${it.tone ?? ""}`}>{it.valor}</p>
+                <p className={`mt-1 text-kpi tabular-nums ${it.tone ?? ""}`}>{it.valor}</p>
               </div>
             ))}
       </CardContent>

@@ -11,6 +11,15 @@
  * (Loader2 + `animate-spin` reemplazando el ícono mientras se espera una
  * mutación), Button acepta `loading` para mostrar el spinner y deshabilitar
  * el control automáticamente, sin que cada consumidor repita el patrón.
+ *
+ * Ola 3 · O3.10 — se migraron todos los `<Button>` con `Loader2 +
+ * animate-spin` manual a esta prop `loading` (ver
+ * `no-loader2-en-button.test.ts`, que impide reintroducirlos). Excepción
+ * deliberada: los botones de "refrescar tipo de cambio" (DOF/Banxico) en
+ * `FacturaProveedorFormFields.moneda.tsx` y
+ * `FacturaManualDatosFiscales.tsx` siguen usando `Loader2` inline porque su
+ * ícono en reposo es `RefreshCw`/`RefreshCcw` (no tiene sentido combinarlo
+ * con `loading`, que solo intercambia el ícono por el spinner).
  */
 import * as React from "react";
 import { Slot } from "@radix-ui/react-slot";

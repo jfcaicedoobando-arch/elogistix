@@ -58,11 +58,10 @@ export function ConciliacionPagoCell({
               className="h-6 w-6 text-muted-foreground hover:text-destructive"
               onClick={() => desvincular.mutate(movimiento.id)}
               disabled={desvincular.isPending}
+              loading={desvincular.isPending}
               aria-label="Desvincular movimiento"
             >
-              {desvincular.isPending
-                ? <Loader2 className="h-4 w-4 animate-spin" />
-                : <Link2Off className="h-3 w-3" />}
+              {!desvincular.isPending && <Link2Off className="h-3 w-3" />}
             </Button>
           </Hint>
         )}
@@ -121,10 +120,9 @@ export function ConciliacionPagoCell({
                       className="h-7 px-2 text-label"
                       onClick={() => vincular.mutate(m.id)}
                       disabled={vincular.isPending}
+                      loading={vincular.isPending}
                     >
-                      {vincular.isPending
-                        ? <Loader2 className="h-4 w-4 animate-spin" />
-                        : "Vincular"}
+                      {!vincular.isPending && "Vincular"}
                     </Button>
                   </div>
                 </li>

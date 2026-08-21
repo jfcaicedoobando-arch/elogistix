@@ -17,7 +17,7 @@ describe("wizardPasos · Paso 1 destinatario", () => {
         prospectoEmpresa: "",
         prospectoContacto: "",
       }),
-    ).toBe("Selecciona un cliente");
+    ).toBe("Selecciona un cliente.");
   });
 
   it("acepta cliente seleccionado", () => {
@@ -50,7 +50,7 @@ describe("wizardPasos · Paso 1 destinatario", () => {
         prospectoEmpresa: "  ",
         prospectoContacto: "Juan",
       }),
-    ).toBe("Ingresa el nombre de la empresa del prospecto");
+    ).toBe("Ingresa el nombre de la empresa del prospecto.");
     expect(
       primerError(destinatarioSchema, {
         esProspecto: true,
@@ -58,7 +58,7 @@ describe("wizardPasos · Paso 1 destinatario", () => {
         prospectoEmpresa: "ACME",
         prospectoContacto: "",
       }),
-    ).toBe("Ingresa el nombre del contacto del prospecto");
+    ).toBe("Ingresa el nombre del contacto del prospecto.");
     expect(
       primerError(destinatarioSchema, {
         esProspecto: true,
@@ -77,14 +77,14 @@ describe("wizardPasos · Paso 1 ruta y flete", () => {
 
   it("terrestre exige modalidad y punto intermedio en porta contenedor", () => {
     expect(primerError(rutaTerrestreSchema, { modo: "Terrestre" })).toBe(
-      "Selecciona la modalidad de equipo",
+      "Selecciona la modalidad de equipo.",
     );
     expect(
       primerError(rutaTerrestreSchema, {
         modo: "Terrestre",
         modalidadEquipo: "Porta Contenedor",
       }),
-    ).toBe("Captura el punto de carga/descarga");
+    ).toBe("Captura el punto de carga/descarga.");
     expect(
       primerError(rutaTerrestreSchema, {
         modo: "Terrestre",
@@ -108,17 +108,17 @@ describe("wizardPasos · Paso 1 ruta y flete", () => {
 describe("wizardPasos · Pasos 2 y 3", () => {
   it("paso 2 exige costos y conceptos por renglón", () => {
     expect(primerError(costosPaso2Schema, { totalCostos: 0, renglonesSinConcepto: 0 })).toBe(
-      "Agrega al menos un costo interno antes de continuar",
+      "Agrega al menos un costo interno antes de continuar.",
     );
     expect(primerError(costosPaso2Schema, { totalCostos: 3, renglonesSinConcepto: 1 })).toBe(
-      "Hay renglones de costo sin concepto",
+      "Hay renglones de costo sin concepto.",
     );
     expect(primerError(costosPaso2Schema, { totalCostos: 3, renglonesSinConcepto: 0 })).toBeNull();
   });
 
   it("paso 3 exige al menos un concepto de venta", () => {
     expect(primerError(conceptosPaso3Schema, { conceptosValidos: 0 })).toBe(
-      "Agrega al menos un concepto de venta",
+      "Agrega al menos un concepto de venta.",
     );
     expect(primerError(conceptosPaso3Schema, { conceptosValidos: 2 })).toBeNull();
   });

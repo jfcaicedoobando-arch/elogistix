@@ -42,7 +42,12 @@ function contarUppercase(): number {
  * Sin holgura, cualquier PR inocente rompía CI. Plan: bajar el tope cada
  * trimestre a `deuda_actual + 10` conforme se migran archivos.
  */
-const DEUDA_CONGELADA = 146;
+/**
+ * Ola 3 · O3.5 — la deuda bajó de 146 a 131 al adoptar `text-overline` en
+ * las micro-etiquetas manuales de CxP, admin, costeo, cotización y
+ * anticipos. Mantén este número igual al conteo real al migrar más.
+ */
+const DEUDA_CONGELADA = 131;
 const HOLGURA = 10;
 const MAX_UPPERCASE = DEUDA_CONGELADA + HOLGURA;
 

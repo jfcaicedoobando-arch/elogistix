@@ -1,8 +1,8 @@
-import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { TabsContent } from "@/components/ui/tabs";
+import { formatFechaHoraCorta } from "@/lib/formatters";
 import type { useMarcarRevisadoController } from "@/features/auditoria/hooks";
 import type { AuditoriaRevision } from "@/features/auditoria/types";
 
@@ -39,7 +39,7 @@ export function AccionTab({ ctrl, revisionExistente }: Props) {
           <div>
             <span className="text-muted-foreground">Fecha:</span>{" "}
             <span className="tabular-nums">
-              {format(new Date(revisionExistente.updated_at), "dd/MM/yyyy HH:mm")}
+              {formatFechaHoraCorta(revisionExistente.updated_at)}
             </span>
           </div>
         </div>

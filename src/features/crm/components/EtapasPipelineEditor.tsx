@@ -163,8 +163,9 @@ export default function EtapasPipelineEditor() {
                   size="sm" className="col-span-1"
                   onClick={() => save(e.id)}
                   disabled={!isDirty(e.id) || actualizar.isPending}
+                  loading={actualizar.isPending}
                 >
-                  {actualizar.isPending ? <Loader2 className="h-4 w-4" /> : <Save className="h-4 w-4" />}
+                  {!actualizar.isPending && <Save className="h-4 w-4" />}
                 </Button>
               </div>
             );

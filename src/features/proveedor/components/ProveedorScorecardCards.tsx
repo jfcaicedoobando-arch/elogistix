@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { KpiCard } from "@/components/shared/KpiCard";
 import { SectionHeading } from "@/components/shared/SectionHeading";
 import { Hint } from "@/components/shared/Hint";
-import { formatCurrency, formatCurrencyCompact } from "@/lib/formatters";
+import { formatCurrency, formatCurrencyCompact, formatNumber, formatPercent} from "@/lib/formatters";
 import {
   calcularDesviacion,
   pctPartidasFacturadas,
@@ -68,13 +68,13 @@ export function ProveedorScorecardCards({ scorecard }: { scorecard: ScorecardPro
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <KpiCard
           label="Días en facturar"
-          value={scorecard.diasFacturacionProm == null ? "—" : `${scorecard.diasFacturacionProm.toFixed(1)} d`}
+          value={scorecard.diasFacturacionProm == null ? "—" : formatNumber(scorecard.diasFacturacionProm, { decimals: 1, suffix: "d" })}
           variant={VARIANTE[toneDias]}
           hint="Promedio entre el registro del costo y la fecha de la factura del proveedor."
         />
         <KpiCard
           label="Desviación vs presupuesto"
-          value={desviacion.pct == null ? "—" : `${desviacion.pct > 0 ? "+" : ""}${desviacion.pct.toFixed(1)}%`}
+          value={desviacion.pct == null ? "—" : `${desviacion.pct > 0 ? "+" : ""}${formatPercent(desviacion.pct, 1)}`}
           sublabel={formatCurrency(desviacion.montoMxn, "MXN")}
           variant={VARIANTE[desviacion.semaforo]}
           hint="Comparado solo sobre las partidas que ya tienen factura ligada."
@@ -87,7 +87,7 @@ export function ProveedorScorecardCards({ scorecard }: { scorecard: ScorecardPro
         />
         <KpiCard
           label="Partidas facturadas"
-          value={cobertura == null ? "—" : `${cobertura.toFixed(0)}%`}
+          value={cobertura == null ? "—" : formatPercent(cobertura, 0)}
           sublabel={`${scorecard.partidasFacturadas} de ${scorecard.partidasTotal}`}
           variant={cobertura == null ? "default" : cobertura >= 90 ? "success" : cobertura >= 60 ? "warning" : "destructive"}
         />

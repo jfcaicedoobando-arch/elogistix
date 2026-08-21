@@ -43,7 +43,7 @@ export function NuevaOrganizacionDialog({
       open={open}
       onOpenChange={onOpenChange}
       icon={Building2}
-      title="Nueva Organización"
+      title="Nueva organización"
       description="Crea una organización y asigna a su administrador inicial en un solo paso."
       size="md"
       footer={

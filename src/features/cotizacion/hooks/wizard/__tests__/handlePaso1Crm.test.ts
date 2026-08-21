@@ -65,7 +65,7 @@ beforeEach(() => {
 
 describe("validateCliente", () => {
   it("error cuando no es prospecto y falta clienteId", () => {
-    expect(validateCliente(base({ clienteId: "" }))).toBe("Selecciona un cliente");
+    expect(validateCliente(base({ clienteId: "" }))).toBe("Selecciona un cliente.");
   });
 
   it("null cuando no es prospecto y hay clienteId", () => {
@@ -264,18 +264,18 @@ describe("vincularCrmTrasCrear", () => {
 // marcar el error inline (rojo bajo el control), no sólo por toast.
 describe("campoParaErrorPaso1 (reexport desde handlePaso1Crm)", () => {
   it("mapea 'Selecciona un cliente' a clienteId", () => {
-    expect(campoParaErrorPaso1("Selecciona un cliente")).toBe("clienteId");
+    expect(campoParaErrorPaso1("Selecciona un cliente.")).toBe("clienteId");
   });
 
   it("mapea errores de prospecto a sus campos", () => {
-    expect(campoParaErrorPaso1("Selecciona un lead u oportunidad existente, o cambia a 'Crear nuevo prospecto'")).toBe("oportunidadId");
-    expect(campoParaErrorPaso1("Ingresa el nombre de la empresa del prospecto")).toBe("prospectoEmpresa");
-    expect(campoParaErrorPaso1("Ingresa el nombre del contacto del prospecto")).toBe("prospectoContacto");
+    expect(campoParaErrorPaso1("Selecciona un lead u oportunidad existente, o cambia a 'Crear nuevo prospecto'.")).toBe("oportunidadId");
+    expect(campoParaErrorPaso1("Ingresa el nombre de la empresa del prospecto.")).toBe("prospectoEmpresa");
+    expect(campoParaErrorPaso1("Ingresa el nombre del contacto del prospecto.")).toBe("prospectoContacto");
   });
 
   it("mapea errores terrestres y marítimos", () => {
-    expect(campoParaErrorPaso1("Selecciona la modalidad de equipo")).toBe("modalidadEquipo");
-    expect(campoParaErrorPaso1("Captura el punto de carga/descarga")).toBe("puntoIntermedio");
+    expect(campoParaErrorPaso1("Selecciona la modalidad de equipo.")).toBe("modalidadEquipo");
+    expect(campoParaErrorPaso1("Captura el punto de carga/descarga.")).toBe("puntoIntermedio");
     expect(campoParaErrorPaso1("Vincula o crea una tarifa marítima antes de continuar (Paso 1 → Tarifa marítima vinculada).")).toBe("tarifaId");
   });
 

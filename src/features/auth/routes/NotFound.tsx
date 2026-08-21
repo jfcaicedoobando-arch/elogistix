@@ -27,9 +27,9 @@ const NotFound = () => {
         <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-primary">
           <Compass className="h-8 w-8" />
         </div>
-        <h1 className="text-5xl font-bold tracking-tight text-foreground">404</h1>
-        <p className="text-lg font-semibold text-foreground">Página no encontrada</p>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-kpi text-muted-foreground">404</p>
+        <h1 className="text-display text-foreground">Página no encontrada</h1>
+        <p className="text-body text-muted-foreground">
           La ruta <span className="font-mono text-foreground/80">{location.pathname}</span> no existe o fue movida.
         </p>
         <Button asChild>

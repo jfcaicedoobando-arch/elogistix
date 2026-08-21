@@ -49,7 +49,7 @@ export function CarteraBloque({
               <p className="text-xs text-muted-foreground">{BUCKET_AGING_LABELS[b.bucket]}</p>
               <p
                 className={cn(
-                  "mt-1 text-lg font-semibold tabular-nums",
+                  "mt-1 text-kpi tabular-nums",
                   b.bucket === "mas_90" || b.bucket === "d_61_90"
                     ? "text-destructive"
                     : "text-foreground",

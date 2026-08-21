@@ -37,7 +37,7 @@ export default function SeccionDatosGeneralesCotizacion({ complete }: { complete
 
   // Layout: 3 columnas estándar; en terrestre quitamos Incoterm y agregamos Modalidad.
   return (
-    <WizardSection title="Datos Generales" columns={3} complete={complete}>
+    <WizardSection title="Datos generales" columns={3} complete={complete}>
       <FormField label="Modo de transporte" required error={errors.modo?.message}>
         <Select value={modo} onValueChange={v => { setValue("modo", v, { shouldValidate: true, shouldDirty: true }); clearErrors("modo"); }}>
           <SelectTrigger aria-invalid={!!errors.modo}><SelectValue /></SelectTrigger>

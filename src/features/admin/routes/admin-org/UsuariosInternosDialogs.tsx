@@ -52,9 +52,10 @@ export function UsuariosInternosDialogs({
         onOpenChange={(open) => {
           if (!open) onDeleteTargetChange(null);
         }}
-        entityName={deleteTarget?.email ?? "usuario"}
-        description={`El usuario ${deleteTarget?.email} será eliminado permanentemente del sistema y de la organización.`}
+        entityName={deleteTarget?.email ?? "este usuario"}
+        description={`El usuario ${deleteTarget?.email ?? "seleccionado"} será eliminado permanentemente del sistema y de la organización.`}
         finalDescription="Esta acción eliminará al usuario completamente. No se puede deshacer."
+        confirmLabel="Eliminar cuenta"
         onConfirm={onDelete}
         isPending={deletePending}
       />

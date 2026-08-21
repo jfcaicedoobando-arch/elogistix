@@ -4,6 +4,7 @@
  */
 import { formatPercent } from "@/lib/formatters";
 import { CheckCircle2, AlertTriangle, Info } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { formatCurrency } from "@/lib/formatters/numbers";
 import { cotejarMontoDeclarado } from "@/features/cxp/domain/montoDeclarado";
 
@@ -37,21 +38,25 @@ export function AvisoMontoDeclarado({
 
   if (cotejo.estado === "coincide") {
     return (
-      <p className="flex items-start gap-2 rounded-md border border-success/40 bg-success/5 px-3 py-2 text-body-sm text-success">
-        <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden />
-        Coincide con lo declarado por operaciones ({declarado}).
-      </p>
+      <Alert variant="success" className="px-3 py-2 [&>svg]:left-3 [&>svg]:top-2.5">
+        <CheckCircle2 className="h-4 w-4" aria-hidden />
+        <AlertDescription className="text-body-sm">
+          Coincide con lo declarado por operaciones ({declarado}).
+        </AlertDescription>
+      </Alert>
     );
   }
 
   const signo = cotejo.diferencia > 0 ? "+" : "−";
   const pct = formatPercent(cotejo.porcentaje * 100);
   return (
-    <p className="flex items-start gap-2 rounded-md border border-warning/40 bg-warning/5 px-3 py-2 text-body-sm text-warning">
-      <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden />
-      Operaciones declaró {declarado} y la factura suma {capturado} ({signo}
-      {formatCurrency(Math.abs(cotejo.diferencia), monedaCapturada)} · {pct}). Verifica antes de
-      guardar.
-    </p>
+    <Alert variant="warning" className="px-3 py-2 [&>svg]:left-3 [&>svg]:top-2.5">
+      <AlertTriangle className="h-4 w-4" aria-hidden />
+      <AlertDescription className="text-body-sm">
+        Operaciones declaró {declarado} y la factura suma {capturado} ({signo}
+        {formatCurrency(Math.abs(cotejo.diferencia), monedaCapturada)} · {pct}). Verifica antes de
+        guardar.
+      </AlertDescription>
+    </Alert>
   );
 }

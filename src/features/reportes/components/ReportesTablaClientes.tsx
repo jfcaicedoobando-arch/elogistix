@@ -6,6 +6,7 @@ import { formatCurrency, toTitleCase } from "@/lib/formatters";
 import { MargenBadge } from "@/components/shared/MargenBadge";
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 import { Hint } from "@/components/shared/Hint";
+import { MoneyCell } from "@/components/shared/MoneyCell";
 
 export type SortField = "profit_usd" | "venta_usd" | "costo_usd" | "margen";
 
@@ -65,13 +66,18 @@ export default function ReportesTablaClientes({ data, isLoading, sortField, sort
             emptyMessage="Sin datos en el periodo seleccionado"
             density={TABLE_DENSITY.embebida}
             mobileCard={(c) => (
-              <div className="flex items-start justify-between gap-2">
-                <div className="min-w-0 flex-1">
-                  <div className="font-semibold text-sm truncate">{toTitleCase(c.cliente_nombre)}</div>
-                  <div className="text-xs text-muted-foreground mt-0.5">{c.total_embarques} embarques · Venta {formatCurrency(c.venta_usd, "USD")}</div>
-                  <div className="text-xs text-muted-foreground mt-0.5 tabular-nums">Utilidad: {formatCurrency(c.profit_usd, "USD")}</div>
+              <div className="flex flex-col gap-2 min-w-0">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0 flex-1">
+                    <div className="font-semibold text-sm truncate">{toTitleCase(c.cliente_nombre)}</div>
+                    <div className="text-xs text-muted-foreground mt-0.5">{c.total_embarques} embarques</div>
+                  </div>
+                  {margenBadge(c.margen, c.venta_usd)}
                 </div>
-                {margenBadge(c.margen, c.venta_usd)}
+                <div className="grid grid-cols-2 gap-2">
+                  <MoneyCell label="Venta" value={formatCurrency(c.venta_usd, "USD")} />
+                  <MoneyCell label="Utilidad" value={formatCurrency(c.profit_usd, "USD")} highlight />
+                </div>
               </div>
             )}
           />

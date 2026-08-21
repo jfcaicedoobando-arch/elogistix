@@ -6,19 +6,45 @@ import { Inbox } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { DataTable, type ColumnDef } from "@/components/shared/DataTable";
+import { ResponsiveDataTable } from "@/components/shared/dataTable/ResponsiveDataTable";
 import { formatDate, formatCurrency } from "@/lib/formatters";
 import type { FacturaProgramable, SemanaPagosProgramados } from "@/features/tesoreria/domain/pagosProgramados";
 import { SectionHeading } from "@/components/shared/SectionHeading";
 import EmptyState from "@/components/empty/EmptyState";
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
+import { MoneyCell } from "@/components/shared/MoneyCell";
+import { ToneBadge } from "@/components/shared/ToneBadge";
+import { Button } from "@/components/ui/button";
+import { Wallet } from "lucide-react";
 
 interface Props {
   semanas: SemanaPagosProgramados[];
   sinFecha: FacturaProgramable[];
   columns: ColumnDef<FacturaProgramable, unknown>[];
+  onEjecutarPago: (f: FacturaProgramable) => void;
 }
 
-export function PagosProgramadosTablas({ semanas, sinFecha, columns }: Props) {
+function MobileCardFactura({ r, onEjecutarPago }: { r: FacturaProgramable; onEjecutarPago: (f: FacturaProgramable) => void }) {
+  const fecha = r.fecha_programada_pago ?? r.fecha_vencimiento;
+  return (
+    <div className="flex items-start justify-between gap-2">
+      <div className="min-w-0 flex-1 space-y-1">
+        <div className="font-semibold text-body truncate">{r.proveedor_nombre ?? "—"}</div>
+        <div className="text-body-sm text-muted-foreground truncate font-mono">{r.folio_proveedor ?? "—"}</div>
+        <div className="flex items-center gap-1.5 text-label text-muted-foreground">
+          <span>{fecha ? formatDate(fecha) : "—"}</span>
+          {r.fecha_programada_pago && <ToneBadge tone="info" size="sm">Prog.</ToneBadge>}
+        </div>
+        <Button size="sm" variant="outline" onClick={() => onEjecutarPago(r)}>
+          <Wallet className="h-3.5 w-3.5 mr-1.5" /> Ejecutar pago
+        </Button>
+      </div>
+      <MoneyCell label="Saldo" value={formatCurrency(r.saldo, r.moneda)} highlight className="shrink-0 w-28" />
+    </div>
+  );
+}
+
+export function PagosProgramadosTablas({ semanas, sinFecha, columns, onEjecutarPago }: Props) {
   if (semanas.length === 0 && sinFecha.length === 0) {
     return (
       <Card>
@@ -42,12 +68,13 @@ export function PagosProgramadosTablas({ semanas, sinFecha, columns }: Props) {
           </SectionHeading>
           <Card>
             <CardContent className="p-0">
-              <DataTable
+              <ResponsiveDataTable
                 columns={columns}
                 data={s.facturas}
                 rowKey={(r) => r.id}
                 density={TABLE_DENSITY.embebida}
                 hoverable={false}
+                mobileCard={(r) => <MobileCardFactura r={r} onEjecutarPago={onEjecutarPago} />}
                 footer={() => (
                   // VT-30: el footer se renderiza dentro de <TableFooter>; un <div>
                   // suelto era HTML inválido y el fondo solo cubría ~40% del
@@ -78,7 +105,7 @@ export function PagosProgramadosTablas({ semanas, sinFecha, columns }: Props) {
           </SectionHeading>
           <Card>
             <CardContent className="p-0">
-              <DataTable columns={columns} data={sinFecha} rowKey={(r) => r.id} density={TABLE_DENSITY.embebida} hoverable={false} />
+              <ResponsiveDataTable columns={columns} data={sinFecha} rowKey={(r) => r.id} density={TABLE_DENSITY.embebida} hoverable={false} mobileCard={(r) => <MobileCardFactura r={r} onEjecutarPago={onEjecutarPago} />} />
             </CardContent>
           </Card>
         </section>

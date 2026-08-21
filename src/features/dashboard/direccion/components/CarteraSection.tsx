@@ -4,7 +4,7 @@
 import { Card } from "@/components/ui/card";
 import { Users } from "lucide-react";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
-import { formatCurrency } from "@/lib/formatters/numbers";
+import { formatCurrency, formatPercent} from "@/lib/formatters/numbers";
 import type { BucketAntiguedad, TopCliente } from "@/features/dashboard/direccion/services/tipos";
 import { AGING_FILL_CLASS } from "@/lib/aging/buckets";
 
@@ -54,7 +54,7 @@ export function CarteraSection({ antiguedad, topClientes }: { antiguedad: Bucket
       <Card className="p-5 rounded-xl border border-border">
         <div className="flex items-baseline justify-between">
           <p className="text-body font-medium">Concentración — Top 5 clientes</p>
-          <p className="text-body text-muted-foreground tabular-nums">{totalPct.toFixed(1)}% del margen</p>
+          <p className="text-body text-muted-foreground tabular-nums">{formatPercent(totalPct, 1)} del margen</p>
         </div>
         {topClientes.length === 0 ? (
           <EmptyStateInline icon={Users} message="Sin datos del mes." className="py-6" />
@@ -68,7 +68,7 @@ export function CarteraSection({ antiguedad, topClientes }: { antiguedad: Bucket
                 </span>
                 <span className="flex items-center gap-3 shrink-0">
                   <span className="tabular-nums text-muted-foreground">{fmt(c.utilidad_mxn)}</span>
-                  <span className="tabular-nums font-medium w-14 text-right">{c.pct.toFixed(1)}%</span>
+                  <span className="tabular-nums font-medium w-14 text-right">{formatPercent(c.pct, 1)}</span>
                 </span>
               </li>
             ))}

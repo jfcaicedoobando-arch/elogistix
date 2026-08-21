@@ -65,7 +65,7 @@ export function PagoSaldoRestante({
       <div className="rounded-lg border bg-muted/40 px-4 py-3 flex items-center justify-between">
         <span className="text-body font-medium text-muted-foreground">Saldo restante tras el pago</span>
         <span className={cn(
-          "text-lg font-semibold tabular-nums",
+          "text-kpi tabular-nums",
           excede ? "text-destructive" : saldoRestante === 0 ? "text-success" : "text-foreground",
         )}>
           {factura ? formatCurrency(saldoRestante, factura.moneda) : "—"}

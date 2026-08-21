@@ -90,7 +90,15 @@ export default function Leads() {
         title="Leads"
         description="Prospectos y empresas en seguimiento comercial"
       />
-      <CrmSubheader context={`${list.count} leads en cartera`} />
+      {/* Ola 3 · O3.7.2 — el contador sale de la misma query del listado
+          (count exact de listLeads) y se etiqueta cuando hay filtros. */}
+      <CrmSubheader
+        context={
+          list.search || list.activeCount > 0
+            ? `${list.count} leads coinciden con los filtros`
+            : `${list.count} leads en cartera`
+        }
+      />
 
       {canEditCrm && selected.size > 0 && (
         <LeadsBulkBar ids={Array.from(selected)} onClear={clearSel} onDone={clearSel} />
@@ -109,7 +117,7 @@ export default function Leads() {
               value={list.filters.estado}
               onValueChange={(v) => list.setFilter("estado", v)}
             >
-              <SelectTrigger className="h-9 w-[150px]"><SelectValue /></SelectTrigger>
+              <SelectTrigger className="h-9 w-auto min-w-[150px]"><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="todos">Todos los estados</SelectItem>
                 {LEAD_ESTADOS.map((e) => <SelectItem key={e} value={e}>{e}</SelectItem>)}
@@ -119,7 +127,7 @@ export default function Leads() {
               value={list.filters.fuente}
               onValueChange={(v) => list.setFilter("fuente", v)}
             >
-              <SelectTrigger className="h-9 w-[160px]"><SelectValue /></SelectTrigger>
+              <SelectTrigger className="h-9 w-auto min-w-[160px]"><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="todos">Todas las fuentes</SelectItem>
                 {LEAD_FUENTES.map((f) => <SelectItem key={f} value={f}>{f}</SelectItem>)}

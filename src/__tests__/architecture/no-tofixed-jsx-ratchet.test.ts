@@ -18,7 +18,13 @@ import { sync as globSync } from "fast-glob";
  * Sin holgura, cualquier PR inocente rompía CI. Plan: bajar el tope cada
  * trimestre a `deuda_actual + 10` conforme se migran archivos.
  */
-const DEUDA_CONGELADA = 99;
+/**
+ * Ola 3 · O3.9 — la deuda bajó de 99 a 64 al migrar los .tsx visibles de
+ * dashboards (ejecutivo, dirección, /inicio), proveedor, tesorería y el
+ * aviso de TC de embarques a formatPercent / formatNumber /
+ * formatTipoCambio. Mantén este número igual al conteo real al migrar más.
+ */
+const DEUDA_CONGELADA = 64;
 const HOLGURA = 10;
 const MAX_TOFIXED = DEUDA_CONGELADA + HOLGURA;
 

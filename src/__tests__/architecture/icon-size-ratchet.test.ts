@@ -16,7 +16,7 @@ import { sync as globSync } from "fast-glob";
  * Sin holgura, cualquier PR inocente rompía CI. Plan: bajar el tope cada
  * trimestre a `deuda_actual + 10` conforme se migran archivos.
  */
-const DEUDA_CONGELADA = 954;
+const DEUDA_CONGELADA = 900;
 const HOLGURA = 10;
 const MAX_PAR_LARGO = DEUDA_CONGELADA + HOLGURA;
 

@@ -4,8 +4,10 @@
  */
 import { Card, CardContent } from "@/components/ui/card";
 import { Stamp } from "lucide-react";
-import { DataTable, defineColumns } from "@/components/shared/DataTable";
+import { defineColumns } from "@/components/shared/DataTable";
+import { ResponsiveDataTable } from "@/components/shared/dataTable/ResponsiveDataTable";
 import { clientColumn, moneyColumn, dateColumn } from "@/components/shared/dataTable/columnBuilders";
+import { formatCurrency, formatDate, toTitleCase } from "@/lib/formatters";
 import { useClientPagedList } from "@/hooks/shared/useClientPagedList";
 import { useFacturasPorTimbrar, type FilaPorTimbrar } from "@/features/facturacion/hooks/useBandejas";
 import { BandejaShell } from "./BandejaShell";
@@ -62,13 +64,16 @@ export function BandejaPorTimbrar() {
     >
       <Card>
         <CardContent className="p-0">
-          <DataTable
+          <ResponsiveDataTable
             columns={columns}
             data={paged.rows}
             isLoading={paged.isLoading}
-            emptyIcon={Stamp}
-            emptyMessage="No hay CFDI en borrador esperando timbrado."
-            emptyHint="Aquí aparecerán las facturas pendientes de timbrar ante el SAT."
+            emptyState={
+              <div className="flex flex-col items-center justify-center gap-2 py-12 text-center text-body text-muted-foreground px-4">
+                <Stamp className="h-8 w-8 opacity-40" strokeWidth={1.5} />
+                <span>No hay CFDI en borrador esperando timbrado.</span>
+              </div>
+            }
             rowKey={(r) => r.id}
             getRowHref={(r) => `/facturacion/${r.id}`}
             getRowAriaLabel={(r) => `Abrir factura ${r.numero}`}
@@ -76,6 +81,18 @@ export function BandejaPorTimbrar() {
             controlledSort={paged.controlledSort}
             onSortChange={paged.setSort}
             pagination={paged.pagination}
+            mobileCard={(r) => (
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0 flex-1">
+                  <div className="font-semibold text-body truncate font-mono">
+                    {r.numero.startsWith("BORRADOR-") ? <span className="text-muted-foreground italic font-sans">Sin folio</span> : r.numero}
+                  </div>
+                  <div className="text-body-sm text-muted-foreground truncate mt-0.5">{toTitleCase(r.cliente_nombre)}</div>
+                  <div className="text-label text-muted-foreground mt-0.5">{formatDate(r.fecha_emision)}</div>
+                </div>
+                <span className="text-body font-semibold tabular-nums whitespace-nowrap">{formatCurrency(r.total, r.moneda)}</span>
+              </div>
+            )}
           />
         </CardContent>
       </Card>

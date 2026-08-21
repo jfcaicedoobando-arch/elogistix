@@ -67,7 +67,7 @@ export default function SinAcceso() {
         <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-destructive/10 text-destructive">
           <Icono className="h-8 w-8" aria-hidden />
         </div>
-        <h1 className="text-2xl font-bold tracking-tight text-foreground">{titulo}</h1>
+        <h1 className="text-display text-foreground">{titulo}</h1>
         <SinAccesoMensaje
           variant={variant}
           effectiveRole={effectiveRole}

@@ -56,7 +56,7 @@ export default function PortalFacturas() {
   return (
     <PortalPageShell
       icon={<Receipt className="h-6 w-6 text-accent" />}
-      title="Mis Facturas"
+      title="Mis facturas"
       actions={<span className="text-body text-muted-foreground tabular-nums">{filtered.length} de {facturas.length}</span>}
     >
       <PortalFiltersBar

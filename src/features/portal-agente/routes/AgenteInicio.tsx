@@ -3,7 +3,8 @@
  * v13.226.0 (Lote 6): migrado a `KpiCard` compartido + Title Case + icon en PageHeader.
  */
 import { Card } from "@/components/ui/card";
-import { FileSpreadsheet, ShieldCheck, Ship, ClipboardCheck, Clock, LayoutDashboard } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { AlertTriangle, FileSpreadsheet, ShieldCheck, Ship, ClipboardCheck, Clock, LayoutDashboard } from "lucide-react";
 import { Link } from "react-router-dom";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { KpiCard } from "@/components/shared/KpiCard";
@@ -55,23 +56,27 @@ export default function AgenteInicio() {
       </div>
 
       {rechazadas > 0 && (
-        <Card className="p-4 border-destructive/40 bg-destructive/5 space-y-2">
-          <p className="text-sm">
-            Tienes <strong>{rechazadas}</strong> tarifa(s) rechazada(s) por operaciones.
-            <Link to={ROUTES.AGENTE_TARIFAS} className="text-accent ml-1 underline">Revisarlas</Link>
-          </p>
-          <ul className="text-xs space-y-1 list-disc pl-5">
-            {tarifas
-              .filter((t) => t.estado_aprobacion === "rechazada")
-              .slice(0, 3)
-              .map((t) => (
-                <li key={t.id}>
-                  <strong>{t.puerto_origen_nombre} → {t.puerto_destino_nombre}</strong>
-                  {t.motivo_rechazo ? `: ${t.motivo_rechazo}` : ""}
-                </li>
-              ))}
-          </ul>
-        </Card>
+        <Alert variant="destructive">
+          <AlertTriangle className="h-4 w-4" aria-hidden />
+          <AlertTitle>Tarifas rechazadas</AlertTitle>
+          <AlertDescription className="space-y-2">
+            <p className="text-sm">
+              Tienes <strong>{rechazadas}</strong> tarifa(s) rechazada(s) por operaciones.
+              <Link to={ROUTES.AGENTE_TARIFAS} className="text-accent ml-1 underline">Revisarlas</Link>
+            </p>
+            <ul className="text-xs space-y-1 list-disc pl-5">
+              {tarifas
+                .filter((t) => t.estado_aprobacion === "rechazada")
+                .slice(0, 3)
+                .map((t) => (
+                  <li key={t.id}>
+                    <strong>{t.puerto_origen_nombre} → {t.puerto_destino_nombre}</strong>
+                    {t.motivo_rechazo ? `: ${t.motivo_rechazo}` : ""}
+                  </li>
+                ))}
+            </ul>
+          </AlertDescription>
+        </Alert>
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">

@@ -91,10 +91,8 @@ function KeyRow({ orgId, ambiente, last4, label, prefijo, activo }: KeyRowProps)
           onChange={(e) => setValor(e.target.value)}
           className="font-mono text-xs"
         />
-        <Button type="button" onClick={onGuardar} disabled={!valor.trim() || setKey.isPending}>
-          {setKey.isPending ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
+        <Button type="button" onClick={onGuardar} disabled={!valor.trim() || setKey.isPending} loading={setKey.isPending}>
+          {!setKey.isPending && (
             <>
               <Save className="h-4 w-4 mr-1" /> Guardar
             </>

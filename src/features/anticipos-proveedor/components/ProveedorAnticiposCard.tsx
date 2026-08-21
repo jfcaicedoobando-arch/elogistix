@@ -46,8 +46,8 @@ export function ProveedorAnticiposCard({ proveedorId, proveedorNombre, canEdit }
               <div className="flex flex-wrap gap-4">
                 {porMoneda.map((m) => (
                   <div key={m.moneda}>
-                    <p className="text-xs uppercase tracking-wider text-muted-foreground">{m.moneda}</p>
-                    <p className="text-lg font-semibold tabular-nums">
+                    <p className="text-overline">{m.moneda}</p>
+                    <p className="text-kpi tabular-nums">
                       {formatCurrency(m.disponible, m.moneda)}
                     </p>
                   </div>

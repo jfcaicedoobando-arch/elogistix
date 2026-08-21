@@ -41,7 +41,7 @@ export default function Usuarios() {
     <PageContainer>
       <PageHeader
         icon={<ShieldCheck className="h-6 w-6 text-primary" />}
-        title="Gestión de Usuarios"
+        title="Gestión de usuarios"
         description="Administra usuarios internos y accesos a los portales de clientes y agentes."
         actions={
           tab === "internos" ? (

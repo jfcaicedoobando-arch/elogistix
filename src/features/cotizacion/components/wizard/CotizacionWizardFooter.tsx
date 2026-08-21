@@ -80,10 +80,11 @@ export function CotizacionWizardFooter({
             <TooltipTrigger asChild>
               <Button
                 disabled={busy}
+                loading={busy}
                 onClick={() => { if (currentStep < 4) onNext(); else onSave(); }}
               >
                 {busy
-                  ? <><Loader2 className="h-4 w-4 mr-1 animate-spin" /> {currentStep === 4 ? "Guardando…" : "Procesando…"}</>
+                  ? (currentStep === 4 ? "Guardando…" : "Procesando…")
                   : currentStep === 4
                     ? <><Save className="h-4 w-4 mr-1" /> {saveLabel}</>
                     : <>Siguiente <ChevronRight className="h-4 w-4 ml-1" /></>}

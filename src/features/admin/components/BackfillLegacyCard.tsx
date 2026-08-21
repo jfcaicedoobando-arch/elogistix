@@ -18,6 +18,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ConfirmActionDialog } from "@/components/shared/dialogs/ConfirmActionDialog";
 import { formatFechaHora } from "@/lib/formatters/dates";
+import { Alert } from "@/components/ui/alert";
 
 export function BackfillLegacyCard() {
   const [open, setOpen] = useState(false);
@@ -53,9 +54,9 @@ export function BackfillLegacyCard() {
           Ejecutar backfill
         </Button>
         {result && (
-          <div className="rounded-md border bg-success/5 border-success/30 p-3 text-body-sm space-y-1">
-            <div className="flex items-center gap-1 font-semibold text-success dark:text-success">
-              <CheckCircle2 className="h-3.5 w-3.5" />
+          <Alert variant="success" className="p-3 text-body-sm space-y-1">
+            <div className="flex items-center gap-1 font-semibold">
+              <CheckCircle2 className="h-3.5 w-3.5 text-success" />
               Último resultado ({formatFechaHora(result.ejecutado_at)})
             </div>
             <ul className="list-disc pl-5 text-muted-foreground">
@@ -63,7 +64,7 @@ export function BackfillLegacyCard() {
               <li>{result.totales.embarques_afectados} embarques afectados</li>
               <li>{result.totales.proformas_actualizadas} proformas marcadas como facturadas</li>
             </ul>
-          </div>
+          </Alert>
         )}
 
         <ConfirmActionDialog

@@ -9,6 +9,7 @@ import { Clock, Hourglass, Waves } from "lucide-react";
 import { KpiCard } from "@/components/shared/KpiCard";
 import { KpiStrip } from "@/components/shared/KpiStrip";
 import type { KPIsEjecutivos } from "@/features/dashboardEjecutivo/services";
+import { formatNumber } from "@/lib/formatters";
 
 interface Props {
   kpis: KPIsEjecutivos;
@@ -16,7 +17,7 @@ interface Props {
 
 function fmtDias(n: number | null): string {
   if (n == null) return "—";
-  return `${n.toFixed(0)} días`;
+  return `${formatNumber(n, { decimals: 0 })} días`;
 }
 
 function dsoVariant(n: number | null): "positive" | "negative" | "neutral" {
@@ -45,7 +46,7 @@ function runwayValue(n: number | null): string {
   if (n == null) return "Sin burn";
   if (n === 0) return "Caja agotada";
   if (n < 1) return "< 1 mes";
-  return `${n.toFixed(1)} meses`;
+  return `${formatNumber(n, { decimals: 1 })} meses`;
 }
 
 export function BandaKPIsEficiencia({ kpis }: Props) {

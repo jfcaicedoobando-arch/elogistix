@@ -7,6 +7,7 @@
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Info } from "lucide-react";
 import { useExchangeRates } from "@/features/catalogos/hooks";
+import { formatTipoCambio } from "@/lib/formatters";
 
 export function TipoCambioFallbackBanner() {
   const { data } = useExchangeRates();
@@ -17,8 +18,8 @@ export function TipoCambioFallbackBanner() {
       <AlertTitle>Tipo de cambio estimado</AlertTitle>
       <AlertDescription>
         No pudimos obtener el tipo de cambio oficial de Banxico. Los importes en
-        MXN se están calculando con un valor de referencia (USD ≈ {data.usdMxn.toFixed(2)}
-        , EUR ≈ {data.eurMxn.toFixed(2)}). Reintenta más tarde o valida con tu equipo
+        MXN se están calculando con un valor de referencia (USD ≈ {formatTipoCambio(data.usdMxn)}
+        , EUR ≈ {formatTipoCambio(data.eurMxn)}). Reintenta más tarde o valida con tu equipo
         financiero antes de tomar decisiones basadas en estas cifras.
       </AlertDescription>
     </Alert>

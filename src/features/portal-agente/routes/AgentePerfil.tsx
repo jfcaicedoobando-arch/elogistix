@@ -42,7 +42,7 @@ export default function AgentePerfil() {
     <div className="max-w-xl space-y-6">
       <PageHeader
         icon={<UserIcon className="h-6 w-6 text-accent" />}
-        title="Mi Perfil"
+        title="Mi perfil"
         description="Datos de tu cuenta de agente y cambio de contraseña."
       />
 

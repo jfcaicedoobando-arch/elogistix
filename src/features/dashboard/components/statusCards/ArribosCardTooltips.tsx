@@ -31,7 +31,7 @@ export function ProfitTooltipContent({ data }: { data: ArribosEsteMes }) {
   return (
     <div className="space-y-3">
       <div>
-        <SectionHeading as="h3">Profit proyectado del mes</SectionHeading>
+        <SectionHeading as="h3">Utilidad proyectada del mes</SectionHeading>
         <div className="text-body-sm text-muted-foreground mt-0.5">
           Homologado a MXN
         </div>
@@ -47,7 +47,7 @@ export function ProfitTooltipContent({ data }: { data: ArribosEsteMes }) {
       <div className={`rounded-md px-2.5 py-2 ${profitBg}`}>
         <div className="grid grid-cols-[1fr_auto] gap-x-3 items-baseline">
           <span className="text-body-sm font-semibold">
-            Profit
+            Utilidad
             <span className="ml-1.5 text-label font-normal text-muted-foreground tabular-nums">
               ({margenPct.toFixed(1)}%)
             </span>
@@ -65,7 +65,7 @@ export function ProfitTooltipContent({ data }: { data: ArribosEsteMes }) {
         </div>
         <div className="mt-1 flex justify-between text-body-sm text-muted-foreground">
           <span>Costo</span>
-          <span>{profitPositivo ? "Profit" : "Pérdida"}</span>
+          <span>{profitPositivo ? "Utilidad" : "Pérdida"}</span>
         </div>
       </div>
 
@@ -112,7 +112,7 @@ export function CoberturaTooltipContent({
     <div className="space-y-2">
       <SectionHeading as="h3">Cobertura de gastos fijos</SectionHeading>
       <div className="grid grid-cols-[1fr_auto] gap-x-3 gap-y-1 text-body-sm">
-        <span className="text-muted-foreground">Profit proyectado</span>
+        <span className="text-muted-foreground">Utilidad proyectada</span>
         <span className="tabular-nums font-medium text-right">{formatCurrency(profitMXN, "MXN")}</span>
         <span className="text-muted-foreground">Gastos fijos del mes</span>
         <span className="tabular-nums font-medium text-right">{formatCurrency(gastos, "MXN")}</span>
@@ -134,7 +134,7 @@ export function CoberturaTooltipContent({
         </p>
       ) : (
         <p className="text-label text-muted-foreground border-t pt-1.5">
-          Faltan <span className="font-semibold text-foreground">{formatCurrency(faltante, "MXN")}</span> de profit para cubrir tus gastos fijos.
+          Faltan <span className="font-semibold text-foreground">{formatCurrency(faltante, "MXN")}</span> de utilidad para cubrir tus gastos fijos.
         </p>
       )}
       <p className="text-label text-muted-foreground italic">

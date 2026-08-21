@@ -79,7 +79,7 @@ export default function CxcAging() {
     <PageContainer width="wide">
       <PageHeader
         icon={<LayoutList className="h-6 w-6 text-accent" />}
-        title="Antigüedad de Saldos"
+        title="Antigüedad de saldos"
         description={`Saldos por cliente agrupados por días de vencimiento (${monedaActiva}).`}
         actions={
           <div className="flex items-center gap-2">

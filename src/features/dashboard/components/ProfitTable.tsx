@@ -8,7 +8,7 @@ import { Hint } from "@/components/shared/Hint";
 import { UMBRAL_MARGEN_COTIZACION } from "@/lib/ui/margen";
 import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { sortByNumber } from "@/components/shared/dataTable/sortingFns";
-import { formatCurrency, toTitleCase } from "@/lib/formatters";
+import { formatCurrency, toTitleCase, formatTipoCambio} from "@/lib/formatters";
 import type { EmbarqueConProfit } from "@/features/dashboard/hooks";
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 
@@ -35,7 +35,7 @@ function MoneyWithBreakdown({ e, value }: { e: EmbarqueConProfit; value: number 
               <div className="flex justify-between gap-3"><span>USD → MXN:</span><span className="tabular-nums">V {formatCurrency(e.ventaMxnFromUsd, "MXN")} · C {formatCurrency(e.costoMxnFromUsd, "MXN")}</span></div>
               <div className="flex justify-between gap-3"><span>EUR → MXN:</span><span className="tabular-nums">V {formatCurrency(e.ventaMxnFromEur, "MXN")} · C {formatCurrency(e.costoMxnFromEur, "MXN")}</span></div>
               <div className="flex justify-between gap-3"><span>MXN nativo:</span><span className="tabular-nums">V {formatCurrency(e.ventaMxnNative, "MXN")} · C {formatCurrency(e.costoMxnNative, "MXN")}</span></div>
-              <div className="pt-1 italic">TC USD {e.tipoCambioUSD.toFixed(4)} · TC EUR {e.tipoCambioEUR.toFixed(4)}</div>
+              <div className="pt-1 italic">TC USD {formatTipoCambio(e.tipoCambioUSD)} · TC EUR {formatTipoCambio(e.tipoCambioEUR)}</div>
             </div>
           </div>
         </TooltipContent>
@@ -50,7 +50,7 @@ const columns: ColumnDef<EmbarqueConProfit, unknown>[] = defineColumns<EmbarqueC
   { id: "venta", header: "Venta MXN", meta: { className: "text-right tabular-nums", headerClassName: "text-right" }, cell: ({ row }) => formatCurrency(row.original.ventaMXN, "MXN") },
   { id: "costo", header: "Costo MXN", meta: { className: "text-right tabular-nums", headerClassName: "text-right" }, cell: ({ row }) => formatCurrency(row.original.costoMXN, "MXN") },
   {
-    id: "profit", header: "Profit MXN",
+    id: "profit", header: "Utilidad MXN",
     accessorFn: (e) => e.profitMXN, enableSorting: true,
     sortingFn: sortByNumber<EmbarqueConProfit>((e) => e.profitMXN),
     meta: { className: "text-right font-semibold tabular-nums", headerClassName: "text-right" },
@@ -73,7 +73,7 @@ export const ProfitTable = memo(function ProfitTable({ embarques, isLoading }: P
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center gap-2">
           <TrendingUp className="h-4 w-4 text-success" />
-          Profit MXN — Arribos este mes
+          Utilidad MXN — Arribos este mes
         </CardTitle>
       </CardHeader>
       <CardContent>

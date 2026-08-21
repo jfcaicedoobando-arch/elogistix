@@ -7,6 +7,7 @@ import { Briefcase } from "lucide-react";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 import { formatCurrencyCompact } from "@/lib/formatters";
 import { totalesEtapa, type AvanceCriterios } from "@/features/crm/domain/criterios";
+import { colorAcentoEtapa } from "@/features/crm/lib/etapaColores";
 import OportunidadCard from "./OportunidadCard";
 import type { ProximaActividad } from "@/features/crm/hooks";
 import type { CrmOportunidadRow, CrmEtapaRow } from "@/features/crm/hooks";
@@ -30,7 +31,7 @@ export default function ColumnaEtapa({ etapa, ops, onClickCard, proximasMap, ava
     <div className="flex-shrink-0 w-72 flex flex-col bg-muted/40 rounded-lg">
       <div
         className="p-3 border-b border-border rounded-t-lg border-t-[3px]"
-        style={{ borderTopColor: etapa.color ?? undefined }}
+        style={{ borderTopColor: colorAcentoEtapa(etapa) }}
       >
         <div className="font-semibold text-body">{etapa.nombre}</div>
         <div className="text-body-sm text-muted-foreground">

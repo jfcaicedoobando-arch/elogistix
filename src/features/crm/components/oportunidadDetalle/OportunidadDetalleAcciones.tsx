@@ -17,12 +17,8 @@ export function OportunidadDetalleAcciones({
 }: Props) {
   return (
     <div className="flex flex-wrap gap-2">
-      <Button size="sm" variant="outline" onClick={crearCotizacion} disabled={crearCotPending}>
-        {crearCotPending ? (
-          <Loader2 className="h-4 w-4 mr-1 animate-spin" />
-        ) : (
-          <ClipboardList className="h-4 w-4 mr-1" />
-        )}
+      <Button size="sm" variant="outline" onClick={crearCotizacion} disabled={crearCotPending} loading={crearCotPending}>
+        {!crearCotPending && <ClipboardList className="h-4 w-4 mr-1" />}
         Nueva cotización
       </Button>
       <Button size="sm" variant="outline" onClick={onEditar}>

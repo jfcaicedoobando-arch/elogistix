@@ -45,7 +45,7 @@ function useMensaje({ variant, effectiveRole, esAdministrador, from }: Omit<SinA
 }
 
 export function SinAccesoMensaje(props: Omit<SinAccesoContentProps, "onRetry" | "retrying">) {
-  return <p className="text-sm text-muted-foreground">{useMensaje(props)}</p>;
+  return <p className="text-body text-muted-foreground">{useMensaje(props)}</p>;
 }
 
 export function SinAccesoAcciones({ variant, esAdministrador, onRetry, retrying }: SinAccesoContentProps) {

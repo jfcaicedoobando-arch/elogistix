@@ -5,13 +5,16 @@
 import { Download, PackageCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { DataTable } from "@/components/shared/DataTable";
-import { formatCurrency } from "@/lib/formatters";
+import { ResponsiveDataTable } from "@/components/shared/dataTable/ResponsiveDataTable";
+import { formatCurrency, formatDate, toTitleCase } from "@/lib/formatters";
 import { useHuecoFacturacion } from "@/features/facturacion/hooks";
 import { huecoFacturacionColumns } from "@/features/facturacion/components/huecoFacturacionColumns";
 import { useClientPagedList } from "@/hooks/shared/useClientPagedList";
 import type { FilaHueco } from "@/features/facturacion/services";
 import { BandejaShell } from "./BandejaShell";
+import { getDiasVencidosTone } from "@/lib/ui/uiMappings";
+import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 
 export function BandejaPorFacturar() {
   const { filas, isLoading, isError, refetch, totalEmbarques, totalUsd, totalMxn, exportarCsv } =
@@ -64,14 +67,16 @@ export function BandejaPorFacturar() {
       >
         <Card>
           <CardContent className="p-0">
-            <DataTable
+            <ResponsiveDataTable
               columns={huecoFacturacionColumns}
               data={paged.rows}
               isLoading={paged.isLoading}
-              emptyIcon={PackageCheck}
-              emptyMessage="Sin embarques listos por facturar — no hay hueco de facturación."
-              emptyHint="Aquí aparecerán los embarques por llegar (o ya llegados) que todavía no tienen una factura emitida."
-
+              emptyState={
+                <div className="flex flex-col items-center justify-center gap-2 py-12 text-center text-body text-muted-foreground px-4">
+                  <PackageCheck className="h-8 w-8 opacity-40" strokeWidth={1.5} />
+                  <span>Sin embarques listos por facturar — no hay hueco de facturación.</span>
+                </div>
+              }
               rowKey={(row) => row.embarque_id}
               getRowHref={(row) => `/embarques/${row.embarque_id}?tab=facturacion`}
               getRowAriaLabel={(row) => `Abrir embarque ${row.expediente ?? row.embarque_id}`}
@@ -79,6 +84,33 @@ export function BandejaPorFacturar() {
               controlledSort={paged.controlledSort}
               onSortChange={paged.setSort}
               pagination={paged.pagination}
+              mobileCard={(row) => {
+                const d = row.diasDesdeEta;
+                const label = d < 0 ? `faltan ${Math.abs(d)} d` : `${d} d`;
+                const tone = getDiasVencidosTone(d);
+                return (
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0 flex-1">
+                      <div className="font-semibold text-body truncate font-mono">{row.expediente || "—"}</div>
+                      <div className="text-body-sm text-muted-foreground truncate mt-0.5">{toTitleCase(row.cliente_nombre)}</div>
+                      <div className="text-label text-muted-foreground mt-0.5">
+                        ETA {formatDate(row.eta)} · {formatCurrency(row.ventaUsd, "USD")}
+                      </div>
+                    </div>
+                    <Badge
+                      variant="outline"
+                      className={cn(
+                        "tabular-nums font-semibold whitespace-nowrap",
+                        tone === "destructive" && "bg-destructive/10 text-destructive border-destructive/30",
+                        tone === "warning" && "bg-warning/10 text-warning border-warning/30",
+                        tone === "default" && "bg-muted text-foreground",
+                      )}
+                    >
+                      {label}
+                    </Badge>
+                  </div>
+                );
+              }}
             />
           </CardContent>
         </Card>

@@ -108,7 +108,7 @@ export function AgingDrillDownDialog({ proveedor, open, onOpenChange, cubetaInic
           <DialogHeader className="px-6 pt-5 pb-4 border-b bg-muted/30 space-y-1">
             <div className="flex items-center gap-3 flex-wrap">
               <FileText className="h-5 w-5 text-accent" aria-hidden />
-              <DialogTitle className="text-lg font-bold text-primary">
+              <DialogTitle className="text-primary">
                 Facturas con saldo
               </DialogTitle>
               {proveedor && (

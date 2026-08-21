@@ -15,7 +15,7 @@ export function PortalWelcomeCard({ clienteName, contactoName, orgName }: Props)
   }
   return (
     <div className="bg-gradient-to-r from-accent/5 via-accent/3 to-transparent rounded-xl px-5 py-4 border">
-      <h1 className="text-xl font-bold tracking-tight">
+      <h1 className="text-display">
         {saludo}
       </h1>
       <p className="text-body text-muted-foreground mt-1">

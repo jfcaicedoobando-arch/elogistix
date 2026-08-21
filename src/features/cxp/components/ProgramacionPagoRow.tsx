@@ -41,7 +41,7 @@ export function ProgramacionPagoRow({ facturaId, fechaProgramada, saldo }: Props
     <div className="mt-3 pt-3 border-t">
       <div className="flex items-center gap-2 mb-2">
         <CalendarClock className="h-4 w-4 text-muted-foreground" />
-        <span className="text-label uppercase tracking-wider text-muted-foreground font-medium">
+        <span className="text-overline font-medium">
           Programación de pago
         </span>
         {bonita && !yaSaldada && (
@@ -63,11 +63,9 @@ export function ProgramacionPagoRow({ facturaId, fechaProgramada, saldo }: Props
           size="sm"
           className="h-8"
           disabled={yaSaldada || prog.isPending || !dirty || !valor}
+          loading={prog.isPending}
           onClick={() => prog.mutate({ facturaId, fecha: valor })}
         >
-          {prog.isPending
-            ? <Loader2 className="h-4 w-4 mr-1 animate-spin" />
-            : null}
           Guardar
         </Button>
         {fechaProgramada && !yaSaldada && (

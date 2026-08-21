@@ -117,13 +117,19 @@ export default function Clientes() {
               columns={columns}
               data={clientes as ClienteRow[]}
               isLoading={isLoading}
-              emptyMessage={search ? "No se encontraron clientes" : "No hay clientes registrados"}
+              emptyMessage={search ? `Sin resultados para «${search}»` : "No hay clientes registrados"}
               emptyState={
                 <EmptyState
                   icon={Building2}
-                  title={search ? "No se encontraron clientes" : "Aún no hay clientes"}
-                  description={search ? "Ajusta la búsqueda e intenta de nuevo." : "Crea tu primer cliente para empezar a cotizar y facturar."}
-                  primaryAction={canEdit ? { label: "Crear cliente", onClick: () => setDialogOpen(true) } : undefined}
+                  title={search ? `Sin resultados para «${search}»` : "Aún no hay clientes"}
+                  description={search ? "Ajusta la búsqueda o límpiala para ver todos los clientes." : "Crea tu primer cliente para empezar a cotizar y facturar."}
+                  primaryAction={
+                    search
+                      ? { label: "Limpiar búsqueda", onClick: () => setSearch("") }
+                      : canEdit
+                        ? { label: "Crear cliente", onClick: () => setDialogOpen(true) }
+                        : undefined
+                  }
                 />
               }
               getRowHref={(c) => `/clientes/${c.id}`}

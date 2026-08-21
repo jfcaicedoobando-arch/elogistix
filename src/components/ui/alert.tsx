@@ -9,9 +9,13 @@ const alertVariants = cva(
     variants: {
       variant: {
         default: "bg-background text-foreground",
-        destructive: "border-destructive/50 text-destructive dark:border-destructive [&>svg]:text-destructive",
-        warning: "border-warning/50 text-warning dark:border-warning [&>svg]:text-warning",
-        success: "border-success/50 text-success dark:border-success [&>svg]:text-success",
+        /* Ola 3 · O3.8 — callout canónico: borde y fondo suave tintados +
+           icono al tono; es la única forma permitida de banner de estado
+           (ver guardia no-raw-callout). */
+        info: "border-info/40 bg-info/5 text-foreground [&>svg]:text-info",
+        destructive: "border-destructive/40 bg-destructive/5 text-foreground [&>svg]:text-destructive",
+        warning: "border-warning/40 bg-warning/5 text-foreground [&>svg]:text-warning",
+        success: "border-success/40 bg-success/5 text-foreground [&>svg]:text-success",
       },
     },
     defaultVariants: {

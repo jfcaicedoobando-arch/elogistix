@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { Upload, Loader2 } from "lucide-react";
+import { Upload } from "lucide-react";
 import { notifySuccess, notifyWarning } from "@/lib/ui/appFeedback";
 import { Button } from "@/components/ui/button";
 import { parseCsf, type CsfParsedData } from "@/features/cliente/services/csf";
@@ -103,13 +103,10 @@ export function ProveedorCsfUpdateButton({ proveedor, onUpdate }: Props) {
           size="sm"
           variant="outline"
           disabled={csfLoading}
+          loading={csfLoading}
           onClick={() => csfInputRef.current?.click()}
         >
-          {csfLoading ? (
-            <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Procesando…</>
-          ) : (
-            <><Upload className="mr-2 h-4 w-4" /> Actualizar con CSF</>
-          )}
+          {csfLoading ? "Procesando…" : (<><Upload className="mr-2 h-4 w-4" /> Actualizar con CSF</>)}
         </Button>
       </Hint>
     </>

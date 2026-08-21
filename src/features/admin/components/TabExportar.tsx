@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Download, Loader2, FileArchive } from "lucide-react";
+import { Download, FileArchive } from "lucide-react";
 import { useOrganization } from "@/lib/contexts/OrganizationContext";
 import {
   exportOrganizationZip,
@@ -73,8 +73,8 @@ export default function TabExportar() {
           </p>
         </div>
 
-        <Button onClick={handleExport} disabled={running} className="gap-2">
-          {running ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+        <Button loading={running} onClick={handleExport} disabled={running} className="gap-2">
+          <Download className="h-4 w-4" />
           {running ? "Generando…" : "Descargar ZIP"}
         </Button>
 

@@ -1,4 +1,4 @@
-import { Calendar, Download, FileText, Info, Loader2 } from "lucide-react";
+import { Calendar, Download, FileText, Info } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ListSkeleton } from "@/components/shared/states/ListSkeleton";
@@ -60,7 +60,7 @@ export default function ProfitEstadoResultados() {
   return (
     <PageContainer>
       <PageHeader
-        title="Estado de Resultados"
+        title="Estado de resultados"
         description="P&G mensual por modo de transporte basado en ETA del embarque"
         tabs={<ProfitSubNav />}
       />
@@ -84,8 +84,8 @@ export default function ProfitEstadoResultados() {
           <Button variant="outline" onClick={handleExport} disabled={!data || sinDatos === true}>
             <Download className="h-4 w-4 mr-2" /> Exportar CSV
           </Button>
-          <Button variant="outline" onClick={handleExportPdf} disabled={!data || sinDatos === true || exportandoPdf}>
-            {exportandoPdf ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <FileText className="h-4 w-4 mr-2" />}
+          <Button loading={exportandoPdf} variant="outline" onClick={handleExportPdf} disabled={!data || sinDatos === true || exportandoPdf}>
+            <FileText className="h-4 w-4 mr-2" />
             {exportandoPdf ? "Generando…" : "PDF"}
           </Button>
         </CardContent>

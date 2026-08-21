@@ -85,7 +85,7 @@ export default function AgenteTarifas() {
     <div className="space-y-6">
       <PageHeader
         icon={<FileSpreadsheet className="h-6 w-6 text-accent" />}
-        title="Mis Tarifas Marítimas"
+        title="Mis tarifas marítimas"
         description="Tarifas que has subido para tus rutas marítimas. Las nuevas tarifas quedan en borrador hasta que operaciones las aprueba."
         actions={
           <Button onClick={() => setEditor({ open: true, modo: "crear" })}>

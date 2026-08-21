@@ -3,8 +3,10 @@
  * v13.553.0 — el operador puede seguir con su número, pero lo ve comparado.
  */
 import { useFormContext } from "react-hook-form";
+import { AlertTriangle } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { formatFechaEs } from "@/lib/formatters";
+import { formatFechaEs, formatPercent, formatTipoCambio } from "@/lib/formatters";
 import { TC_DESVIACION_UMBRAL_PCT } from "@/features/embarques/services/tcEmbarqueDof";
 import { desviacionTcPct } from "@/features/embarques/domain/tcDesviacion";
 import type { TcInicial } from "@/features/catalogos/hooks/useTcInicial";
@@ -25,13 +27,15 @@ export function StepCostosTcAviso({ tcInicial, tcUsdCapturado }: Props) {
   // Aviso no bloqueante: el operador puede corregir el TC a mano.
   if (tcInicial?.esFallback) {
     return (
-      <div className="rounded-md border border-warning/40 bg-warning/5 p-3 text-body-sm">
-        <span className="text-warning-foreground">
-          <strong>Tipo de cambio de respaldo.</strong> No se pudo obtener el TC oficial
-          (Banxico/DOF); el valor precargado (USD ≈ {tcInicial.usdMxn.toFixed(4)}) es una
-          estimación operativa. Verifícalo antes de cerrar costos del embarque.
-        </span>
-      </div>
+      <Alert variant="warning">
+        <AlertTriangle className="h-4 w-4" aria-hidden />
+        <AlertTitle>Tipo de cambio de respaldo</AlertTitle>
+        <AlertDescription className="text-body-sm">
+          No se pudo obtener el TC oficial (Banxico/DOF); el valor precargado
+          (USD ≈ {formatTipoCambio(tcInicial.usdMxn)}) es una estimación operativa.
+          Verifícalo antes de cerrar costos del embarque.
+        </AlertDescription>
+      </Alert>
     );
   }
 
@@ -46,15 +50,16 @@ export function StepCostosTcAviso({ tcInicial, tcUsdCapturado }: Props) {
   };
 
   return (
-    <div className="rounded-md border border-warning/40 bg-warning/5 p-3 text-body-sm flex flex-wrap items-center gap-2">
-      <span className="text-warning-foreground">
-        Capturaste {tcUsdCapturado.toFixed(4)}; el DOF del {formatFechaEs(tcInicial.fecha)} publicó{" "}
-        {tcInicial.usdMxn.toFixed(4)} ({pct > 0 ? "+" : ""}
-        {pct.toFixed(2)}%). Puedes continuar, pero el P&L usará tu número.
-      </span>
+    <Alert variant="warning" className="flex flex-wrap items-center gap-2">
+      <AlertTriangle className="h-4 w-4" aria-hidden />
+      <AlertDescription className="text-body-sm">
+        Capturaste {formatTipoCambio(tcUsdCapturado)}; el DOF del {formatFechaEs(tcInicial.fecha)} publicó{" "}
+        {formatTipoCambio(tcInicial.usdMxn)} ({pct > 0 ? "+" : ""}
+        {formatPercent(pct, 2)}). Puedes continuar, pero el P&L usará tu número.
+      </AlertDescription>
       <Button type="button" variant="outline" size="sm" onClick={usarDof}>
         Usar el del DOF
       </Button>
-    </div>
+    </Alert>
   );
 }

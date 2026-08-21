@@ -8,6 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ResponsiveDataTable } from "@/components/shared/dataTable/ResponsiveDataTable";
 import { formatCurrency, formatFechaEs } from "@/lib/formatters";
+import { MoneyCell } from "@/components/shared/MoneyCell";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { Seo } from "@/components/shared/Seo";
@@ -150,17 +151,24 @@ export default function Cotizaciones() {
             density={TABLE_DENSITY.listado}
             className="pb-24 sm:pb-0"
             mobileCard={(r) => (
-              <div className="flex items-start justify-between gap-2">
-                <div className="min-w-0 flex-1">
-                  <div className="font-semibold text-body truncate">{r.folio}</div>
-                  <div className="text-body-sm text-muted-foreground truncate mt-0.5">{r.cliente_nombre ?? ""}</div>
-                  <div className="text-label text-muted-foreground mt-0.5">
-                    {/* VF-04: fecha en TZ de negocio (America/Mexico_City). */}
-                    {r.created_at ? formatFechaEs(r.created_at) : ""}
-                    {typeof r.subtotal === "number" ? ` · ${formatCurrency(r.subtotal, r.moneda ?? "USD")}` : ""}
+              <div className="flex flex-col gap-2 min-w-0">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0 flex-1">
+                    <div className="font-semibold text-body truncate">{r.folio}</div>
+                    <div className="text-body-sm text-muted-foreground truncate mt-0.5">{r.cliente_nombre ?? ""}</div>
+                    <div className="text-label text-muted-foreground mt-0.5">
+                      {/* VF-04: fecha en TZ de negocio (America/Mexico_City). */}
+                      {r.created_at ? formatFechaEs(r.created_at) : ""}
+                    </div>
                   </div>
+                  <StatusBadge domain="cotizacion" status={r.estado} />
                 </div>
-                <StatusBadge domain="cotizacion" status={r.estado} />
+                {typeof r.subtotal === "number" && (
+                  <MoneyCell
+                    label="Subtotal"
+                    value={formatCurrency(r.subtotal, r.moneda ?? "USD")}
+                  />
+                )}
               </div>
             )}
             pagination={{

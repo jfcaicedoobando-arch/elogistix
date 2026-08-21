@@ -24,7 +24,7 @@ export default function DialogConvertirProspecto({
       open={open}
       onOpenChange={onOpenChange}
       icon={UserCheck}
-      title="Convertir Prospecto a Cliente"
+      title="Convertir prospecto a cliente"
       description="Convierte el prospecto en cliente registrado para habilitar la generación de embarques."
       size="lg"
       footer={

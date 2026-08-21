@@ -112,8 +112,8 @@ export function TarifaForm({ open, onOpenChange, initial, tarifaId, agenteIdFijo
       size="2xl"
       headerAside={
         <div className="text-right">
-          <div className="text-label uppercase tracking-wide text-muted-foreground">Total comparable</div>
-          <div className="text-lg font-semibold text-foreground tabular-nums">{formatUSD(total)}</div>
+          <div className="text-overline">Total comparable</div>
+          <div className="text-kpi text-foreground tabular-nums">{formatUSD(total)}</div>
         </div>
       }
       footer={
