@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.707.4] - 2026-08-26
+### Corrección de CI — espejo de las funciones de lote
+- Se volvieron a emitir, tal cual, las funciones de cobro y pago en lote para que una base nueva quede idéntica a producción (notas de crédito convertidas a la moneda de la factura y bloqueos en orden fijo).
+- Manifiesto de migraciones sincronizado (1028).
+
 ## [13.707.3] - 2026-08-21
 ### Corrección de CI — radar de drift
 - Se reaplicaron los candados de cobro/pago en lote que migraciones posteriores habían dejado fuera en una base recién creada (notas de crédito en moneda de la factura y bloqueos en orden fijo para evitar trabas simultáneas).
