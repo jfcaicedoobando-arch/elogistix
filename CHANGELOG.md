@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.718.1] - 2026-08-27
+### Correcciones de CI
+- `crmCsvExport` usa el formateador canónico `formatFechaDia` en lugar de `toLocaleDateString` (UI-04).
+- Mensajes amigables para `LC_OPORTUNIDAD_NO_ENCONTRADA`, `LC_PARAMETROS_INVALIDOS` y `LC_SIN_PERMISO`.
+- Higiene de tests: aserción específica y título único en `propagarConversion.test.ts`.
+
 ## [13.718.0] - 2026-08-27
 ### Ola 8 — "Estructural y escala" (Entrega 1)
 - **Roles por organización**: nuevos helpers `has_role_in_org` / `has_any_role_in_org`; los pagos en lote a proveedor, cobros en lote a cliente y la eliminación de pagos a proveedor ahora exigen el rol financiero en la organización del documento, no de forma global.
