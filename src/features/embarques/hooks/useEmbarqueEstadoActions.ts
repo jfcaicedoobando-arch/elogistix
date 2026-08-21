@@ -12,6 +12,7 @@ import { usePermissions } from "@/hooks/shared/usePermissions";
 import { notifyError, notifySuccess, notifyWarning } from "@/lib/ui/appFeedback";
 import { labelExpediente } from "@/lib/domain/labelExpediente";
 import { useState, useCallback } from "react";
+import { useStableRequestId } from "@/lib/idempotency";
 import {
   getSiguienteEstado,
   clasificarBloqueoAvance,
@@ -36,6 +37,7 @@ export function useEmbarqueEstadoActions(embarque: EmbarqueRow | undefined, id: 
   const { user } = useAuth();
   const registrarActividad = useRegistrarActividad();
   const avanzarEstado = useAvanzarEstadoEmbarque();
+  const reqIdAvance = useStableRequestId();
   const conceptosQuery = useEmbarqueConceptosVenta(id);
   const conceptosVenta = conceptosQuery.data ?? [];
   const { data: contenedores = [] } = useContenedoresEmbarque(id);
@@ -88,7 +90,16 @@ export function useEmbarqueEstadoActions(embarque: EmbarqueRow | undefined, id: 
   const ejecutarAvance = useCallback(async (siguiente: string) => {
     if (!embarque || !id) return;
     try {
-      await avanzarEstado.mutateAsync({ embarqueId: id, nuevoEstado: siguiente, usuarioEmail });
+      // O1.11: la llave viaja estable entre reintentos; si la red falla y el
+      // usuario vuelve a intentar, la RPC devuelve el resultado ya registrado
+      // en lugar de duplicar la transición (y su evento/bitácora).
+      await avanzarEstado.mutateAsync({
+        embarqueId: id,
+        nuevoEstado: siguiente,
+        usuarioEmail,
+        requestId: reqIdAvance.get(),
+      });
+      reqIdAvance.reset();
       registrarActividad.mutate({
         accion: 'cambiar_estado', modulo: 'embarques',
         entidad_id: id, entidad_nombre: labelExpediente(embarque.expediente, embarque.id),
@@ -98,7 +109,7 @@ export function useEmbarqueEstadoActions(embarque: EmbarqueRow | undefined, id: 
     } catch (err: unknown) {
       notificarErrorAvance(err, embarque.estado, siguiente);
     }
-  }, [embarque, id, avanzarEstado, usuarioEmail, registrarActividad, notificarErrorAvance]);
+  }, [embarque, id, avanzarEstado, usuarioEmail, registrarActividad, notificarErrorAvance, reqIdAvance]);
 
   const handleAvanzarEstado = async () => {
     if (!embarque || !id) return;

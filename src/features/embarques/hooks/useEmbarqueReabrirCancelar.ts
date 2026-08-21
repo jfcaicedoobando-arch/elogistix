@@ -8,6 +8,7 @@ import {
 } from "@/features/embarques/hooks/useEmbarques";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { labelExpediente } from "@/lib/domain/labelExpediente";
+import { useStableRequestId } from "@/lib/idempotency";
 
 /**
  * Handlers de "Reabrir" y "Cancelar" para el detalle de embarque.
@@ -21,11 +22,21 @@ export function useEmbarqueReabrirCancelar(
   const registrarActividad = useRegistrarActividad();
   const avanzarEstado = useAvanzarEstadoEmbarque();
   const reabrirEmbarque = useReabrirEmbarque();
+  // O1.11: una llave por intento, estable ante reintentos de red y renovada
+  // sólo tras éxito. Evita reabrir/cancelar dos veces el mismo embarque.
+  const reqIdReabrir = useStableRequestId();
+  const reqIdCancelar = useStableRequestId();
 
   const handleReabrir = useCallback(async (motivo: string) => {
     if (!embarque || !id) return;
     try {
-      await reabrirEmbarque.mutateAsync({ embarqueId: id, usuarioEmail, motivo });
+      await reabrirEmbarque.mutateAsync({
+        embarqueId: id,
+        usuarioEmail,
+        motivo,
+        requestId: reqIdReabrir.get(),
+      });
+      reqIdReabrir.reset();
       registrarActividad.mutate({
         accion: "reabrir_embarque",
         modulo: "embarques",
@@ -46,7 +57,7 @@ export function useEmbarqueReabrirCancelar(
         method: "HANDLE_REABRIR_EMBARQUE",
       });
     }
-  }, [embarque, id, reabrirEmbarque, usuarioEmail, registrarActividad]);
+  }, [embarque, id, reabrirEmbarque, usuarioEmail, registrarActividad, reqIdReabrir]);
 
   const handleCancelar = useCallback(
     async (motivo: string) => {
@@ -56,7 +67,9 @@ export function useEmbarqueReabrirCancelar(
           embarqueId: id,
           nuevoEstado: "Cancelado",
           usuarioEmail,
+          requestId: reqIdCancelar.get(),
         });
+        reqIdCancelar.reset();
         registrarActividad.mutate({
           accion: "cancelar_embarque",
           modulo: "embarques",
@@ -74,7 +87,7 @@ export function useEmbarqueReabrirCancelar(
         });
       }
     },
-    [embarque, id, avanzarEstado, usuarioEmail, registrarActividad],
+    [embarque, id, avanzarEstado, usuarioEmail, registrarActividad, reqIdCancelar],
   );
 
   return { handleReabrir, reabrirEmbarque, handleCancelar };

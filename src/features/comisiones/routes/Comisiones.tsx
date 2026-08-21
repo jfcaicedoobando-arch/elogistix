@@ -32,6 +32,7 @@ import { useClientPagedList } from "@/hooks/shared/useClientPagedList";
 import { CargaGuard } from "@/components/shared/states/CargaGuard";
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 import { FILTRO_ANCHO } from "@/lib/ui/filterWidths";
+import { useDocumentTitle } from "@/hooks/shared";
 
 
 const ESTADO_VALUES = ["todos", "Devengada", "Liquidada", "Cancelada"] as const;
@@ -45,6 +46,7 @@ interface ClientFilters extends Record<string, string> {
 const CLIENT_DEFAULTS: ClientFilters = { _unused: "" };
 
 export default function Comisiones() {
+  useDocumentTitle("Comisiones");
   // Filtros que van al servidor — sincronizados con la URL igual que el resto.
   const [server, setServer] = useQueryStates({
     v: parseAsString.withDefault("todas"),
