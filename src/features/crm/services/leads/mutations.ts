@@ -1,5 +1,5 @@
 /**
- * Leads — mutaciones individuales (create/update/softDelete).
+ * Leads — mutaciones individuales (create/update/softDelete/tomar de la bolsa).
  */
 import { supabase } from "@/integrations/supabase/client";
 import { unwrap, run } from "@/lib/supabase/response";
@@ -44,5 +44,22 @@ export async function softDeleteLead(id: string, userId: string | null): Promise
     accion: "eliminar_lead",
     entidadId: id,
     detalles: { deleted_by: userId },
+  });
+}
+
+/**
+ * Ola 6 · O6.1 — toma un lead de la bolsa común (sin vendedor asignado).
+ * La RPC valida org, rol de ventas y serializa tomas simultáneas (FOR UPDATE);
+ * lanza LC_LEAD_YA_ASIGNADO si otro vendedor llegó primero.
+ */
+export async function tomarLead(id: string, empresa: string): Promise<void> {
+  const { data, error } = await supabase.rpc("crm_tomar_lead", { p_lead_id: id });
+  if (error) throw error;
+  await registrarActividad({
+    modulo: "crm",
+    accion: "tomar_lead",
+    entidadId: id,
+    entidadNombre: empresa,
+    detalles: { tomado: (data as { tomado?: boolean } | null)?.tomado ?? true },
   });
 }

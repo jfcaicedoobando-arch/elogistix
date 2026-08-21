@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { queryKeys } from "@/lib/query";
-import { createLead, updateLead, softDeleteLead } from "@/features/crm/services/leads";
+import { createLead, updateLead, softDeleteLead, tomarLead } from "@/features/crm/services/leads";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import type { LeadInput } from "./constants";
 import { getErrorMessage } from "@/lib/errors";
@@ -50,6 +50,23 @@ export function useEliminarLead() {
     },
     onError: (error: Error) => {
       notifyError(undefined, { title: "No se pudo eliminar lead", description: getErrorMessage(error), error, method: "DELETE_LEAD" });
+    },
+  });
+}
+
+/** Ola 6 · O6.1 — toma un lead sin asignar de la bolsa común (CRM Fase 1). */
+export function useTomarLead() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, empresa }: { id: string; empresa: string }) => tomarLead(id, empresa),
+    onSuccess: (_d, vars) => {
+      qc.invalidateQueries({ queryKey: queryKeys.crm.leads.all });
+      qc.invalidateQueries({ queryKey: queryKeys.crm.leads.detail(vars.id) });
+      qc.invalidateQueries({ queryKey: queryKeys.crm.kpis });
+      notifySuccess(undefined, { title: "Lead asignado a tu cartera" });
+    },
+    onError: (error: Error) => {
+      notifyError(undefined, { title: "No se pudo tomar el lead", description: getErrorMessage(error), error, method: "TOMAR_LEAD" });
     },
   });
 }

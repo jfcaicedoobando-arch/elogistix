@@ -3,8 +3,11 @@
  * Soporta dos modos de conversión:
  *  - Click rápido → onConvertirRapido (Sheet con 3 campos)
  *  - Menú "Más campos →" dentro del Sheet → onConvertirAvanzado (Dialog clásico)
+ *
+ * Ola 6 · O6.1: cuando el lead está sin asignar (bolsa común) y el usuario
+ * tiene permiso de ventas, se ofrece "Tomar lead" (RPC crm_tomar_lead).
  */
-import { Repeat, Trash2 } from "lucide-react";
+import { Repeat, Trash2, UserCheck } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import type { CrmLeadEstado } from "@/features/crm/hooks";
@@ -14,12 +17,30 @@ interface Props {
   canEdit: boolean;
   onConvertir: () => void;
   onEliminar: () => void;
+  /** O6.1: el lead está en la bolsa (sin vendedor) y el usuario puede tomarlo. */
+  mostrarTomar?: boolean;
+  onTomar?: () => void;
+  tomando?: boolean;
 }
 
-export default function LeadHeaderActions({ estado, canEdit, onConvertir, onEliminar }: Props) {
+export default function LeadHeaderActions({
+  estado,
+  canEdit,
+  onConvertir,
+  onEliminar,
+  mostrarTomar = false,
+  onTomar,
+  tomando = false,
+}: Props) {
   return (
     <div className="flex gap-2">
       {estado === "Convertido" ? <Badge variant="outline">Convertido</Badge> : null}
+      {mostrarTomar && onTomar && (
+        <Button variant="default" onClick={onTomar} disabled={tomando}>
+          <UserCheck className="h-4 w-4 mr-1" />
+          {tomando ? "Tomando…" : "Tomar lead"}
+        </Button>
+      )}
       {canEdit && (
         <Button variant="outline" onClick={onConvertir}>
           <Repeat className="h-4 w-4 mr-1" />

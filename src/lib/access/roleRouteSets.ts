@@ -61,6 +61,12 @@ export const REPORTES_ROLES: AppRole[] = [
 export const CRM_ROLES: AppRole[] = [
   ...ADMINS, "vendedor", "gerente_comercial", "gerente_operaciones",
 ];
+/**
+ * Ola 6 (O6.3) — `/crm/configuracion` queda restringida a administración del
+ * tenant + gerencia comercial (espejo de CRM_CONFIG en permissionMatrix.ts y
+ * de la policy "Tenant admin crm_etapas_pipeline").
+ */
+export const CRM_CONFIGURACION_ROLES: AppRole[] = [...ADMINS, "gerente_comercial"];
 export const BITACORA_ROLES: AppRole[] = [...ADMINS, "contador", "tesorero", ...GERENTES];
 export const PROVEEDORES_ROLES: AppRole[] = [...COMPRAS_READ_ROLES, "ejecutivo_pricing"];
 export const COMPRAS_HUB_ROLES: AppRole[] = [...COMPRAS_READ_ROLES];

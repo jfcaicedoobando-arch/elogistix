@@ -23,7 +23,7 @@ import ActividadTimeline from "@/features/crm/components/ActividadTimeline";
 import LeadDatosCard from "@/features/crm/components/leadDetalle/LeadDatosCard";
 import LeadIcpCard from "@/features/crm/components/leadDetalle/LeadIcpCard";
 import LeadHeaderActions from "@/features/crm/components/leadDetalle/LeadHeaderActions";
-import { useActualizarLead, useEliminarLead, useLead } from "@/features/crm/hooks";
+import { useActualizarLead, useEliminarLead, useLead, useTomarLead } from "@/features/crm/hooks";
 import { useLeadEditForm } from "@/features/crm/hooks";
 import { ROUTES } from "@/constants/routes";
 import { formatFechaEs } from "@/lib/formatters/dates";
@@ -31,12 +31,13 @@ import { formatFechaEs } from "@/lib/formatters/dates";
 export default function LeadDetalle() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { canEdit } = usePermissions();
+  const { canEdit, canTomarLead } = usePermissions();
   const volver = useVolver(ROUTES.CRM_LEADS);
   const { data: lead, isLoading } = useLead(id);
   useDocumentTitle(lead ? `Lead · ${lead.empresa}` : "Lead");
   const actualizar = useActualizarLead();
   const eliminar = useEliminarLead();
+  const tomar = useTomarLead();
 
   const { form, set, dirty } = useLeadEditForm(lead);
   const [convertirSheetOpen, setConvertirSheetOpen] = useState(false);
@@ -72,6 +73,12 @@ export default function LeadDetalle() {
         method: "HANDLE_DELETE",
       });
     }
+  };
+
+  // Ola 6 · O6.1: tomar el lead de la bolsa común (asigna vendedor_id = yo).
+  const handleTomar = () => {
+    if (!lead) return;
+    tomar.mutate({ id: lead.id, empresa: lead.empresa });
   };
 
   if (isLoading) {
@@ -123,6 +130,9 @@ export default function LeadDetalle() {
             canEdit={canEdit}
             onConvertir={() => setConvertirSheetOpen(true)}
             onEliminar={() => setDeleteOpen(true)}
+            mostrarTomar={canTomarLead && !lead.vendedor_id && lead.estado !== "Convertido"}
+            onTomar={handleTomar}
+            tomando={tomar.isPending}
           />
         }
       />

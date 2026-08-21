@@ -117,4 +117,26 @@ describe("usePermissions", () => {
     expect(result.current.canCapturarMovimientoBancario).toBe(false);
   });
 
+  // Ola 6 · O6.1/O6.3 — bolsa de leads y gating de /crm/configuracion.
+  it("vendedor → canTomarLead true, canConfigurarCrm false", () => {
+    mockUseAuth.mockReturnValue({ role: "vendedor", effectiveRole: "vendedor" } as Partial<ReturnType<typeof useAuth>> as ReturnType<typeof useAuth>);
+    const { result } = renderHook(() => usePermissions());
+    expect(result.current.canTomarLead).toBe(true);
+    expect(result.current.canConfigurarCrm).toBe(false);
+  });
+
+  it("gerente_comercial → canTomarLead y canConfigurarCrm true", () => {
+    mockUseAuth.mockReturnValue({ role: "gerente_comercial", effectiveRole: "gerente_comercial" } as Partial<ReturnType<typeof useAuth>> as ReturnType<typeof useAuth>);
+    const { result } = renderHook(() => usePermissions());
+    expect(result.current.canTomarLead).toBe(true);
+    expect(result.current.canConfigurarCrm).toBe(true);
+  });
+
+  it("operador → canTomarLead y canConfigurarCrm false", () => {
+    mockUseAuth.mockReturnValue({ role: "operador", effectiveRole: "operador" } as Partial<ReturnType<typeof useAuth>> as ReturnType<typeof useAuth>);
+    const { result } = renderHook(() => usePermissions());
+    expect(result.current.canTomarLead).toBe(false);
+    expect(result.current.canConfigurarCrm).toBe(false);
+  });
+
 });

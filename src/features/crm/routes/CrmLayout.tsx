@@ -22,7 +22,7 @@ const TABS = [
 
 export default function CrmLayout() {
   const { data: vencidas = 0 } = useActividadesVencidasCount();
-  const { canEditCrm, canEdit } = usePermissions();
+  const { canConfigurarCrm, canEdit } = usePermissions();
   const [openTrigger, setOpenTrigger] = useState(0);
   const [dialogTrigger, setDialogTrigger] = useState<{ kind: "lead" | "oportunidad" | "actividad"; n: number } | undefined>(undefined);
   const [paletteOpen, setPaletteOpen] = useState(false);
@@ -76,7 +76,10 @@ export default function CrmLayout() {
           </nav>
           <div className="flex items-center gap-2 shrink-0 pl-2 border-l border-border/60">
             {canEdit && <QuickAddMenu openTrigger={openTrigger} dialogTrigger={dialogTrigger} />}
-            {canEditCrm && (
+            {/* Ola 6 (O6.3): el ícono de configuración sigue el mismo permiso
+                que la ruta /crm/configuracion (admin del tenant + gerente
+                comercial), no el permiso amplio de edición del CRM. */}
+            {canConfigurarCrm && (
               <NavLink
                 to="/crm/configuracion"
                 className={({ isActive }) =>
