@@ -61,3 +61,21 @@ no los históricos.
 
 **Cuándo revisar.** Antes de un `VALIDATE CONSTRAINT` masivo, correr la
 auditoría de filas infractoras y limpiarlas por módulo.
+
+## RN-4 · Diferencia cambiaria en cobranza (O2.7) — retirada
+
+El plan de la Ola 2 contemplaba registrar la diferencia cambiaria del cobro de
+cliente (`diferencia_cambiaria_mxn`) cuando el pago llega con un tipo de cambio
+distinto al de la factura.
+
+**Por qué se retira.** El canon vigente ya valúa cada pago con la cascada
+CFDI > DOF de la fecha del pago > T/C del embarque, y el saldo se compara
+siempre en la moneda de la factura. La "diferencia cambiaria" en pesos sería un
+dato contable derivado, no un control operativo: hoy no lo consume ningún
+reporte ni la póliza contable, y guardarlo crearía una segunda fuente de verdad
+del mismo número. La decisión es calcularlo en el reporte cuando contabilidad lo
+pida, no persistirlo.
+
+**Cuándo revisar.** Si contabilidad exige la póliza de diferencia cambiaria por
+cobro, se agrega como columna calculada del layout contable (no como columna de
+`pagos_factura`).
