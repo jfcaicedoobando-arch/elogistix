@@ -10,14 +10,16 @@ Ya resuelto en la Fase A o ya existía en el proyecto:
 
 Pendiente de verdad (6 puntos):
 
-| Punto | Qué falta hoy | Riesgo |
-|---|---|---|
-| O2.3 | Al aplicar una nota de crédito al cliente, nada recalcula la comisión ya devengada | Se paga comisión sobre dinero que el cliente no pagó |
-| O2.4 | El cálculo de comisión sólo mira el embarque directo de la factura; en facturas consolidadas (varios embarques) guarda comisión sin vendedora y en silencio | Comisiones perdidas sin aviso |
-| O2.7 | En cobranza no se calcula la diferencia cambiaria (en pagos a proveedor sí) | Utilidad en multimoneda incompleta |
-| O2.8 | El auto-ajuste de estado del embarque escribe directo en la tabla, saltándose el candado de documentos | Un embarque puede "arribar" sin BL/DODA |
-| O2.10 | Al mandar un embarque a la papelera, la cotización queda ligada a un embarque borrado | Cotización huérfana, no se puede reusar |
-| O2.11 | Faltan dos tareas automáticas: reproceso diario de comisiones pendientes y verificación semanal de UUIDs ante el SAT | Trabajo manual y cancelaciones del SAT descubiertas tarde |
+
+| Punto | Qué falta hoy                                                                                                                                               | Riesgo                                                    |
+| ----- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------- |
+| O2.3  | Al aplicar una nota de crédito al cliente, nada recalcula la comisión ya devengada                                                                          | Se paga comisión sobre dinero que el cliente no pagó      |
+| O2.4  | El cálculo de comisión sólo mira el embarque directo de la factura; en facturas consolidadas (varios embarques) guarda comisión sin vendedora y en silencio | Comisiones perdidas sin aviso                             |
+| O2.7  | En cobranza no se calcula la diferencia cambiaria (en pagos a proveedor sí)                                                                                 | Utilidad en multimoneda incompleta                        |
+| O2.8  | El auto-ajuste de estado del embarque escribe directo en la tabla, saltándose el candado de documentos                                                      | Un embarque puede "arribar" sin BL/DODA                   |
+| O2.10 | Al mandar un embarque a la papelera, la cotización queda ligada a un embarque borrado                                                                       | Cotización huérfana, no se puede reusar                   |
+| O2.11 | Faltan dos tareas automáticas: reproceso diario de comisiones pendientes y verificación semanal de UUIDs ante el SAT                                        | Trabajo manual y cancelaciones del SAT descubiertas tarde |
+
 
 ## ¿Vale la pena terminarla?
 
@@ -52,5 +54,5 @@ Propuesta: dos entregas.
 
 ## Preguntas que hay que cerrar antes de programar
 
-1. Comisión ya **Liquidada** y luego llega una nota de crédito: ¿descuento en la siguiente liquidación (recomendado) o no se ajusta?
-2. Diferencia cambiaria en cobranza: ¿se calcula, o se retira el campo del contrato y se documenta que no aplica?
+1. Comisión ya **Liquidada** y luego llega una nota de crédito: ¿descuento en la siguiente liquidación (recomendado) o no se ajusta? Descuento en la siguiente.
+2. Diferencia cambiaria en cobranza: ¿se calcula, o se retira el campo del contrato y se documenta que no aplica? Se retira.
