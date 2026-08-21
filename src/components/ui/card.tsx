@@ -41,10 +41,20 @@ const CardHeader = ({ ref, className, ...props }: React.HTMLAttributes<HTMLDivEl
   );
 CardHeader.displayName = "CardHeader";
 
-const CardTitle = ({ ref, className, ...props }: React.HTMLAttributes<HTMLHeadingElement> & { ref?: React.Ref<HTMLParagraphElement> }) => (
-    <h3 ref={ref} className={cn("text-card-title tracking-tight", className)} {...props} />
+/**
+ * V-07 (auditoría visual 2026-08-21): el nivel semántico por defecto es `h2`
+ * para no saltar de `h1` (PageHeader) a `h3`. Usa `as="h3"` cuando la tarjeta
+ * vive dentro de una sección que ya tiene su propio `h2`.
+ */
+type CardTitleProps = React.HTMLAttributes<HTMLHeadingElement> & {
+  as?: "h2" | "h3" | "h4";
+  ref?: React.Ref<HTMLHeadingElement>;
+};
+
+const CardTitle = ({ ref, className, as: Tag = "h2", ...props }: CardTitleProps) => (
+    <Tag ref={ref} className={cn("text-card-title tracking-tight", className)} {...props} />
   );
-CardTitle.displayName = "CardTitle";
+
 
 const CardDescription = ({ ref, className, ...props }: React.HTMLAttributes<HTMLParagraphElement> & { ref?: React.Ref<HTMLParagraphElement> }) => (
     <p ref={ref} className={cn("text-body text-muted-foreground", className)} {...props} />
