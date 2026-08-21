@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.709.1] - 2026-08-21
+### CI — artifact de logs RLS ya no avisa "No files were found"
+- La carpeta `.rls-logs/` y un manifiesto (grupo, suites, run) se siembran antes de descargar y restaurar la base, así que el artifact de cada grupo siempre sube algo aunque la restauración falle antes de correr las suites.
+- Nota: el aviso de `supabase/schema/baseline.sql` y las dos advertencias de la migración anclada en `drift-anclas.txt` son intencionales (la baseline se siembra con el artifact `schema-snapshot-actual`; la migración anclada tiene su estado final garantizado por la reaplicación posterior).
+
+
 ## [13.709.0] - 2026-08-21
 ### Ola 2 · Fase B — comisiones que sí bajan y candados que no se saltan
 - **Notas de crédito (O2.3):** al aplicar una nota de crédito de cliente, la comisión de esa factura se recalcula automáticamente. Si ya estaba liquidada, no se toca el histórico: queda el ajuste anotado para descontarlo en la siguiente liquidación.
