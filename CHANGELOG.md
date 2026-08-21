@@ -1,6 +1,14 @@
 # Changelog
 
+## [13.717.0] - 2026-08-21
+### Ola 7 — "Vendedor productivo" (Entrega 1)
+- **O7.7 · Conversión transaccional**: la propagación lead→cliente usa la RPC `crm_propagar_conversion_cliente`, así que oportunidad y cliente quedan sincronizados o no cambia nada.
+- **O7.4 · Auto-registro de actividad**: al usar una plantilla de email/WhatsApp se crea la actividad en el CRM con seguimiento a 2 días, para que el contacto cuente en métricas.
+- **O7.8 · Leaderboard etiquetado**: cuando sólo se ve la propia fila, el título dice "Tu desempeño del mes".
+- **O7.6 · Exportar CSV**: botón de exportación en Leads y Oportunidades (respeta filtros y permisos).
+
 ## [13.716.2] - 2026-08-21
+
 ### Correcciones
 - **CI (mensajes LC)**: se agregó el mensaje amigable de `LC_DOC_INEXISTENTE` en `lcCodeMessages.operativo.genericos.ts`; la prueba de cobertura de códigos `LC_*` ya pasa.
 
