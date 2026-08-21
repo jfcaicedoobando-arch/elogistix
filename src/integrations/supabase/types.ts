@@ -3480,7 +3480,6 @@ export type Database = {
           proveedor_actual: string | null
           riesgos_objeciones: string | null
           rutas: string | null
-          sector: string | null
           tipo_carga: string
           ultimo_movimiento_at: string | null
           updated_at: string
@@ -3528,7 +3527,6 @@ export type Database = {
           proveedor_actual?: string | null
           riesgos_objeciones?: string | null
           rutas?: string | null
-          sector?: string | null
           tipo_carga?: string
           ultimo_movimiento_at?: string | null
           updated_at?: string
@@ -3576,7 +3574,6 @@ export type Database = {
           proveedor_actual?: string | null
           riesgos_objeciones?: string | null
           rutas?: string | null
-          sector?: string | null
           tipo_carga?: string
           ultimo_movimiento_at?: string | null
           updated_at?: string
@@ -9505,10 +9502,7 @@ export type Database = {
           telefono_norm: string
         }[]
       }
-      crm_tomar_lead: {
-        Args: { p_lead_id: string }
-        Returns: Json
-      }
+      crm_tomar_lead: { Args: { p_lead_id: string }; Returns: Json }
       crm_vincular_cotizacion: {
         Args: {
           p_cotizacion_id: string
