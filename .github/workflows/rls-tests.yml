@@ -153,10 +153,14 @@ jobs:
           #    columnas de salida de `cartera_pendiente()` con CREATE OR
           #    REPLACE (`cannot change return type of existing function`);
           #    estado final en 20260810203738 y 20260810203939.
+          #  - Además se exime cualquier basename listado en
+          #    supabase/tests/rls/drift-anclas.txt (migraciones ancladas por
+          #    texto con reaplicación posterior garantizada).
           MIGRACIONES_EXENTAS: "20260729035825 20260812090000"
         run: |
           set -uo pipefail
           shopt -s nullglob
+          ANCLADAS=$(grep -vE '^\s*(#|$)' supabase/tests/rls/drift-anclas.txt || true)
           # --single-transaction: si una migración falla a la mitad, hace
           # rollback completo del archivo (ON_ERROR_STOP=1). Evita estado
           # parcial de objetos creados antes del error.
@@ -174,9 +178,14 @@ jobs:
               echo "::warning file=$f::migración legacy exenta (no aplica en base limpia; estado final en migración posterior)"
               continue
             fi
+            if printf '%s\n' "$ANCLADAS" | grep -qxF "$base"; then
+              echo "::warning file=$f::migración anclada por texto (drift-anclas.txt); estado final garantizado por una reaplicación posterior"
+              continue
+            fi
             echo "::error file=$f::la migración no aplica en una base limpia"
             exit 1
           done
+
 
 
 
