@@ -1,5 +1,13 @@
 # Changelog
 
+## [13.707.1] - 2026-08-26
+### Ola 1 — Cierre
+- Avanzar, reabrir o cancelar un embarque usa una llave estable por intento: si la red falla y vuelves a intentar, no se duplica la transición ni la bitácora.
+- Nueva prueba automática de regresión para los candados de cobro con fecha futura y de captura del tipo de cambio DOF.
+- Títulos de pestaña en Nueva cotización, Proformas, Comisiones y Dashboard ejecutivo.
+- Se retiró un nombre técnico de tabla visible en Conciliación de compras.
+- Documentados los riesgos aceptados de límites de archivos y restricciones históricas sin validar.
+
 ## [13.707.0] - 2026-08-26
 ### Ola 1 — Candados de horas
 - Las notas de crédito en otra divisa ya no inflan ni desinflan el saldo: se convierten a la moneda de la factura antes de validar un cobro.
