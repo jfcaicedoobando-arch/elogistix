@@ -30,9 +30,10 @@ export async function authenticate(req: Request, log?: Logger): Promise<AuthCont
   });
 
   const token = authHeader.replace("Bearer ", "");
-  // RTC-01: `getClaims` sólo existe en versiones recientes de supabase-js; en
-  // 2.45 no está ni en tipos ni en runtime. Se usa cuando está disponible y se
-  // cae a `getUser(token)` (verificación remota) cuando no lo está.
+  // RTC-02: la verificación remota (`getUser`) es la fuente de verdad. Cuando el
+  // proyecto firma con el secreto legacy (HS256), `getClaims` no puede validar la
+  // firma en local y devolvía "Token inválido" con tokens perfectamente válidos.
+  // `getClaims` queda sólo como respaldo si la llamada remota falla.
   const authApi = anonClient.auth as unknown as {
     getClaims?: (t: string) => Promise<{
       data: { claims?: { sub?: string } } | null;
@@ -41,15 +42,17 @@ export async function authenticate(req: Request, log?: Logger): Promise<AuthCont
   };
 
   let userId: string | undefined;
-  if (typeof authApi.getClaims === "function") {
+  const { data: userData, error: userErr } = await anonClient.auth.getUser(token);
+  if (!userErr && userData?.user?.id) {
+    userId = userData.user.id;
+  } else if (typeof authApi.getClaims === "function") {
     const { data, error } = await authApi.getClaims(token);
     if (error || !data?.claims?.sub) throw new Error("401:Token inválido");
     userId = data.claims.sub;
   } else {
-    const { data, error } = await anonClient.auth.getUser(token);
-    if (error || !data?.user?.id) throw new Error("401:Token inválido");
-    userId = data.user.id;
+    throw new Error("401:Token inválido");
   }
+
 
   log?.setUserId(userId);
 
