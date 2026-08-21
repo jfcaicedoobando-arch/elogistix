@@ -89,7 +89,14 @@ export default function Leads() {
       <PageHeader
         title="Leads"
         description="Prospectos y empresas en seguimiento comercial"
+        actions={
+          <ExportarCsvButton
+            onExport={() => exportarLeadsCsv(leads)}
+            disabled={list.isLoading}
+          />
+        }
       />
+
       {/* Ola 3 · O3.7.2 — el contador sale de la misma query del listado
           (count exact de listLeads) y se etiqueta cuando hay filtros. */}
       <CrmSubheader
