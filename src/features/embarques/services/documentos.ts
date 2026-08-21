@@ -136,3 +136,19 @@ export async function setDocumentoEstadoNoAplica(
     entidadId: docId,
   });
 }
+
+/**
+ * Rechaza un documento adjunto (O5.3): la RPC limpia el archivo, deja el
+ * motivo en las notas, marca el estado `Rechazado` y notifica a quien creó el
+ * embarque para que vuelva a subirlo correctamente.
+ */
+export async function rechazarDocumentoEmbarque(
+  docId: string,
+  motivo: string,
+): Promise<void> {
+  const { error } = await supabase.rpc('rechazar_documento_embarque', {
+    _doc_id: docId,
+    _motivo: motivo,
+  });
+  if (error) throw error;
+}

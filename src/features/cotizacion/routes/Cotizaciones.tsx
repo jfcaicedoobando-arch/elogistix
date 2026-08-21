@@ -101,10 +101,7 @@ export default function Cotizaciones() {
 
   return (
     <PageContainer width="wide">
-      <Seo
-        title="Cotizaciones · Libre Carga"
-        description="Consulta, filtra y da seguimiento a tus cotizaciones."
-      />
+      <Seo title="Cotizaciones · Libre Carga" description="Consulta, filtra y da seguimiento a tus cotizaciones." />
       <PageHeader
         title="Cotizaciones"
         description={`${pluralizar(c.filtered.length, "cotización", { plural: "cotizaciones" })} ${c.filtered.length === 1 ? "encontrada" : "encontradas"}`}
@@ -119,12 +116,7 @@ export default function Cotizaciones() {
       />
 
       <CotizacionesBannerOrigen />
-      <CotizacionesKpis
-        total={c.kpis.total}
-        aceptadas={c.kpis.aceptadas}
-        rechazadas={c.kpis.rechazadas}
-        tasa={c.kpis.tasa}
-      />
+      <CotizacionesKpis {...c.kpis} />
 
       <Card>
         <CardContent className="p-4">
@@ -142,9 +134,7 @@ export default function Cotizaciones() {
       </Card>
 
       <CargaGuard
-        isLoading={c.isLoading}
-        isError={c.isError}
-        onRetry={() => c.refetch()}
+        isLoading={c.isLoading} isError={c.isError} onRetry={() => c.refetch()}
         errorTitle="No se pudieron cargar las cotizaciones"
         errorDescription="Revisa tu conexión e intenta de nuevo."
       >

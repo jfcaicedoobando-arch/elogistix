@@ -6,6 +6,7 @@ import {
   useUploadDocumentoEmbarque,
   useDeleteDocumentoEmbarque,
   useSetDocumentoNoAplica,
+  useRechazarDocumentoEmbarque,
   type EmbarqueRow,
   type DocumentoEmbarqueRow,
 } from "@/features/embarques/hooks/useEmbarques";
@@ -21,6 +22,7 @@ export function useEmbarqueDocumentosActions(embarque: EmbarqueRow | undefined, 
   const uploadDoc = useUploadDocumentoEmbarque();
   const deleteDoc = useDeleteDocumentoEmbarque();
   const setNoAplica = useSetDocumentoNoAplica();
+  const rechazarDoc = useRechazarDocumentoEmbarque();
 
   const [downloadingDocId, setDownloadingDocId] = useState<string | null>(null);
 
@@ -126,14 +128,41 @@ export function useEmbarqueDocumentosActions(embarque: EmbarqueRow | undefined, 
     }
   };
 
+  const handleRechazarDoc = async (doc: DocumentoEmbarqueRow, motivo: string) => {
+    if (!id) return;
+    try {
+      await rechazarDoc.mutateAsync({ embarqueId: id, docId: doc.id, motivo });
+      registrarActividad.mutate({
+        accion: 'rechazar_documento', modulo: 'embarques',
+        entidad_id: id, entidad_nombre: embarque?.expediente ?? '',
+        detalles: { documento: doc.nombre, motivo },
+      });
+      notifySuccess(undefined, {
+        title: `"${doc.nombre}" fue rechazado`,
+        description: 'Se avisó a quien abrió el embarque para que lo suba de nuevo.',
+      });
+    } catch (err: unknown) {
+      notifyError(undefined, {
+        phase: "rechazo de documento",
+        title: "Error al rechazar documento",
+        description: getErrorMessage(err),
+        error: err,
+        context: { embarqueId: id, documentoId: doc.id, documentoNombre: doc.nombre },
+        method: "HANDLE_RECHAZAR_DOC",
+      });
+    }
+  };
+
   return {
     handleUpload,
     handleDeleteDoc,
     handleDownload,
     handleToggleNoAplica,
+    handleRechazarDoc,
     downloadingDocId,
     uploadDoc,
     deleteDoc,
     setNoAplica,
+    rechazarDoc,
   };
 }

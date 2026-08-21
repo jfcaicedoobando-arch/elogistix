@@ -52,6 +52,7 @@ export {  obtenerEtiquetaRol } from "@/features/admin/domain/roles/roleCatalog";
 export const getDocEstadoColorClass = (estado: string): string => {
   if (estado === "Validado" || estado === "Recibido") return "bg-success";
   if (estado === "No aplica") return "bg-muted-foreground/40";
+  if (estado === "Rechazado") return "bg-warning";
   return "bg-destructive";
 };
 

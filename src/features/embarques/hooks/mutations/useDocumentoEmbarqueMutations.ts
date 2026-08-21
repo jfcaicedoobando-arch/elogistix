@@ -9,6 +9,7 @@ import {
   deleteDocumentoEmbarque,
   createDocumentoEmbarqueRow,
   setDocumentoEstadoNoAplica,
+  rechazarDocumentoEmbarque,
 } from '@/features/embarques/services';
 
 /**
@@ -77,6 +78,22 @@ export function useSetDocumentoNoAplica() {
       setDocumentoEstadoNoAplica(docId, noAplica),
     errorTitle: "Error al marcar documento",
     errorMethod: "SET_DOC_NO_APLICA",
+    onSuccess: (_r, vars) => invalidateDocumentosCaches(queryClient, vars.embarqueId),
+  });
+}
+
+/**
+ * Rechaza un documento adjunto: la RPC limpia el archivo, guarda el motivo en
+ * notas, marca el estado `Rechazado` y notifica a quien abrió el embarque.
+ */
+export function useRechazarDocumentoEmbarque() {
+  const queryClient = useQueryClient();
+  return useMutationWithFeedback({
+    mutationFn: ({ docId, motivo }: { embarqueId: string; docId: string; motivo: string }) =>
+      rechazarDocumentoEmbarque(docId, motivo),
+    successTitle: "Documento rechazado",
+    errorTitle: "Error al rechazar documento",
+    errorMethod: "RECHAZAR_DOC_EMBARQUE",
     onSuccess: (_r, vars) => invalidateDocumentosCaches(queryClient, vars.embarqueId),
   });
 }

@@ -21,6 +21,7 @@ vi.mock("@/features/embarques/hooks/useEmbarques", () => ({
   useUploadDocumentoEmbarque: () => ({ mutateAsync: vi.fn().mockResolvedValue({}) }),
   useDeleteDocumentoEmbarque: () => ({ mutateAsync: vi.fn().mockResolvedValue({}) }),
   useSetDocumentoNoAplica: () => ({ mutateAsync: vi.fn().mockResolvedValue({}) }),
+  useRechazarDocumentoEmbarque: () => ({ mutateAsync: vi.fn().mockResolvedValue({}) }),
 }));
 
 vi.mock("@/features/embarques/hooks/useEmbarqueQueries", () => ({
