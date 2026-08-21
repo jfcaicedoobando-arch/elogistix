@@ -14,7 +14,7 @@ Deno.serve(async (req: Request) => {
     const r2 = await fetch(`${url}/auth/v1/user`, {
       headers: { Authorization: authHeader, apikey: sr },
     });
-    remote = `anon=${r.status} service=${r2.status} anon_prefix=${(anonKey ?? "").slice(0, 3)}`;
+    remote = `anon=${r.status}:${(await r.text()).slice(0, 200)} service=${r2.status}:${(await r2.text()).slice(0, 200)} url=${url}`;
   }
   return new Response(
     JSON.stringify({
