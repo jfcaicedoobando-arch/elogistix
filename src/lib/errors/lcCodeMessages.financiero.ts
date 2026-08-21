@@ -75,6 +75,8 @@ export const LC_CODE_MESSAGES_FINANCIERO: Record<string, string> = {
   LC_PAGO_SOBREPAGO: "El pago excede el saldo pendiente de la factura.",
   // Ola 1 (major release): espejo de LC_LOTE_FECHA_FUTURA en el cobro individual.
   LC_PAGO_FECHA_FUTURA: "La fecha del cobro no puede ser futura.",
+  LC_FACTURA_REQUERIDA: "Falta indicar la factura sobre la que se opera.",
+  LC_FACTURA_NO_EXISTE: "La factura no existe o fue eliminada.",
   LC_PAGO_PROGRAMADO_EN_PROCESO:
     "Este pago programado ya se está procesando. Espera unos segundos y verifica antes de reintentar.",
   LC_TC_DOF_FORBIDDEN:
