@@ -36,3 +36,28 @@ Los ratchets de deuda (iconos `h-4 w-4`, `toFixed`, `uppercase`, `select("*")`,
 `formatFechaEs`) usan `DEUDA_CONGELADA + 10`. Se acepta que la deuda pueda
 crecer hasta 10 usos entre limpiezas para no romper CI en PRs no relacionados;
 el plan es bajar el tope cada trimestre.
+
+## RN-2 · Buckets de storage sin tope de tamaño ni lista de MIME (O1.15)
+
+Los 7 buckets (`documentos`, `facturas`, `cxp-inbox`, …) tienen
+`file_size_limit` y `allowed_mime_types` en `null`.
+
+**Por qué se acepta.** En Lovable Cloud la configuración de buckets no se
+cambia por migración (`storage.buckets` está bloqueado) y la herramienta
+disponible sólo alterna público/privado. La validación vive en el cliente
+(`MAX_FILE_SIZE_MB`, `ALLOWED_MIME_TYPES`) y todos los buckets son privados con
+RLS por tenant.
+
+**Cuándo revisar.** Si la plataforma expone configuración de buckets, fijar
+15 MB y la lista blanca de MIME (PDF/JPG/PNG/XLSX/DOCX/XML).
+
+## RN-3 · 11 constraints en estado `NOT VALID` (O1.16)
+
+Existen 11 restricciones creadas con `NOT VALID`: validan los datos nuevos pero
+no los históricos.
+
+**Por qué se acepta.** Validarlas requiere depurar datos previos a los candados
+(embarques y facturas antiguos). El comportamiento a futuro ya está protegido.
+
+**Cuándo revisar.** Antes de un `VALIDATE CONSTRAINT` masivo, correr la
+auditoría de filas infractoras y limpiarlas por módulo.
