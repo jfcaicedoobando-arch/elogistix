@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.712.1] - 2026-08-21
+### Corrección
+- El wizard de captura de factura de proveedor ahora abre siempre en el paso 1 ("Documento y conceptos"), también cuando se abre desde el buzón CxP: antes saltaba al paso 2 asumiendo que el documento ya estaba revisado.
+
 ## [13.712.0] - 2026-08-21
 ### Captura de factura de proveedor — wizard de 3 pasos
 - El modal se reorganizó en pasos: 1) documento y conceptos, 2) datos de la factura (proveedor, folio, fechas, importes, T/C, categoría, notas) y 3) vinculación al embarque con resumen previo al guardado.

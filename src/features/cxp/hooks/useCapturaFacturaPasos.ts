@@ -1,9 +1,9 @@
 /**
  * Navegación por pasos del modal "Capturar factura de proveedor" (v13.712.0).
  *
- * Sólo presentación: decide el paso activo, el paso inicial (modo buzón abre en
- * "Datos de la factura" porque el documento ya viene precargado) y a qué paso
- * pertenece cada pendiente para poder saltar ahí desde el footer.
+ * Sólo presentación: decide el paso activo (siempre arranca en el paso 1, tanto
+ * en captura manual como desde el buzón) y a qué paso pertenece cada pendiente
+ * para poder saltar ahí desde el footer.
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
@@ -50,8 +50,6 @@ export function agruparPendientes(pendientes: readonly string[]): PendientesPorP
 interface Args {
   /** El modal está abierto (para reiniciar el paso al reabrir). */
   abierto: boolean;
-  /** La captura nace de un documento del buzón: arranca en el paso 2. */
-  modoBuzon: boolean;
   /** Pendientes vigentes de la captura (texto plano). */
   pendientes: readonly string[];
 }
@@ -70,10 +68,9 @@ export interface CapturaPasos {
   pendientesDeOtrosPasos: Array<{ paso: 1 | 2 | 3; texto: string }>;
 }
 
-export function useCapturaFacturaPasos({ abierto, modoBuzon, pendientes }: Args): CapturaPasos {
+export function useCapturaFacturaPasos({ abierto, pendientes }: Args): CapturaPasos {
   // v13.712.1: el wizard SIEMPRE arranca en el paso 1, incluso desde el buzón:
   // el usuario debe ver primero el documento y sus conceptos antes de capturar.
-  void modoBuzon;
   const [paso, setPaso] = useState<1 | 2 | 3>(1);
   const estabaAbierto = useRef(abierto);
 

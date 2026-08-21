@@ -98,7 +98,7 @@ function DialogNuevaFacturaProveedorForm({
     sinVinculos: modoBuzon && Object.keys(ctl.vinculos).length === 0,
   });
 
-  const pasos = useCapturaFacturaPasos({ abierto: open, modoBuzon, pendientes });
+  const pasos = useCapturaFacturaPasos({ abierto: open, pendientes });
 
   const footer = (
     <CapturaFacturaFooter
