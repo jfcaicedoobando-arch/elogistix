@@ -29,6 +29,9 @@ function hoyIso(): string {
 export default function TabTipoCambioDof() {
   const { data: historial = [], isLoading, refetch, isFetching } = useHistorialTcDof(90);
   const upsert = useUpsertTcDofManual();
+  // Ola 1: `tipos_cambio_dof` es catálogo GLOBAL de la plataforma; la captura
+  // manual sólo la permite la RPC a super_admin (LC_TC_DOF_FORBIDDEN).
+  const { isSuperAdmin } = usePermissions();
 
   const [fecha, setFecha] = useState(hoyIso());
   const [usd, setUsd] = useState("");
