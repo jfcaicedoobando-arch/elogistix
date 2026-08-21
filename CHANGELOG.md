@@ -1,6 +1,11 @@
 # Changelog
 
+## [13.708.1] - 2026-08-21
+### Corrección de CI — migraciones ancladas en el snapshot RLS
+- El job que reconstruye la base limpia ahora respeta `drift-anclas.txt`, igual que el radar de drift: las migraciones que parchan por texto ya no rompen CI cuando su estado final está garantizado por una reaplicación posterior.
+
 ## [13.708.0] - 2026-08-26
+
 ### Ola 2 — Comisiones cierran y cierran bien
 - La comisión de un embarque con varias facturas ya no se duplica: el reparto se calcula contra la venta neta del embarque (menos notas de crédito) y nunca puede pasar del 100%.
 - Cerrar un embarque ahora se bloquea sólo por pendientes reales de comisión (notas por resolver o recálculos en cola), no por una bandera que nadie podía apagar.
