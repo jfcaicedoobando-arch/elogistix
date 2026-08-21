@@ -52,6 +52,13 @@ export interface CotizacionFilterParams {
   filterCliente: string;
   filterSinCostos: boolean;
   incluirInactivas: boolean;
+  /** O4.5(a): bandeja "Aceptadas sin embarque" (estado Aceptada y sin embarque_id). */
+  soloAceptadasSinEmbarque: boolean;
+}
+
+/** O4.5(a): la cotización quedó aceptada pero nadie abrió el embarque. */
+export function esAceptadaSinEmbarque(c: CotizacionListItem): boolean {
+  return c.estado === "Aceptada" && !c.embarque_id;
 }
 
 export function matchesCotizacionFilter(
@@ -62,6 +69,7 @@ export function matchesCotizacionFilter(
   if (p.filterEstado !== "todos" && c.estado !== p.filterEstado) return false;
   if (p.filterCliente !== "todos" && c.cliente_id !== p.filterCliente) return false;
   if (p.filterSinCostos && !(!!c.sin_desglose_costos && ((c.cotizacion_costos_count ?? 0) === 0))) return false;
+  if (p.soloAceptadasSinEmbarque && !esAceptadaSinEmbarque(c)) return false;
   if (esCotizacionInactivaOculta(c, p.incluirInactivas, p.filterEstado)) return false;
   return true;
 }
@@ -92,6 +100,7 @@ const DEFAULT_FILTERS = {
   cliente: "todos",
   sinCostos: "no",
   incluirInactivas: "no",
+  aceptadasSinEmbarque: "no",
 } as const;
 
 type CotizacionFilters = Record<keyof typeof DEFAULT_FILTERS, string>;
@@ -117,6 +126,7 @@ export function useCotizacionesPageController() {
       cliente: "Cliente",
       sinCostos: "Sin costos",
       incluirInactivas: "Incl. inactivas",
+      aceptadasSinEmbarque: "Aceptadas sin embarque",
     },
   });
 
@@ -124,6 +134,7 @@ export function useCotizacionesPageController() {
   const filterCliente = tf.filters.cliente;
   const filterSinCostos = tf.filters.sinCostos === "si";
   const incluirInactivas = tf.filters.incluirInactivas === "si";
+  const soloAceptadasSinEmbarque = tf.filters.aceptadasSinEmbarque === "si";
 
   const filtered = useMemo(
     () =>
@@ -134,10 +145,21 @@ export function useCotizacionesPageController() {
           filterCliente,
           filterSinCostos,
           incluirInactivas,
+          soloAceptadasSinEmbarque,
         }),
       ),
-    [cotizaciones, tf.search, filterEstado, filterCliente, filterSinCostos, incluirInactivas],
+    [
+      cotizaciones, tf.search, filterEstado, filterCliente, filterSinCostos,
+      incluirInactivas, soloAceptadasSinEmbarque,
+    ],
   );
+
+  // O4.5(a): contador de la bandeja, independiente de los filtros visibles.
+  const totalAceptadasSinEmbarque = useMemo(
+    () => cotizaciones.filter(esAceptadaSinEmbarque).length,
+    [cotizaciones],
+  );
+
 
   const { items: paginated, totalPages } = tf.paginate(filtered);
   const kpis = useCotizacionKpis(cotizaciones);
@@ -158,6 +180,8 @@ export function useCotizacionesPageController() {
     filterCliente,
     filterSinCostos,
     incluirInactivas,
+    soloAceptadasSinEmbarque,
+    totalAceptadasSinEmbarque,
     page: tf.page,
     pageSize: tf.pageSize,
     totalPages,
