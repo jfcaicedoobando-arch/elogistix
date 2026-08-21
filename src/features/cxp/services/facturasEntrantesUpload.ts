@@ -20,6 +20,7 @@ import {
   esErrorUnicidad,
   limpiarArchivosHuerfanosSeguro,
 } from "@/features/cxp/services/facturasEntrantesDedupe";
+import { verificarYAdjuntarXmlEntrante } from "@/features/cxp/services/adjuntarXmlEntranteEdge";
 import { guardarConceptosSugeridos } from "@/features/cxp/services/facturasEntrantesConceptos";
 import {
   calcularHash,
