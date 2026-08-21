@@ -107,7 +107,7 @@ export function useEmbarqueEstadoActions(embarque: EmbarqueRow | undefined, id: 
     } catch (err: unknown) {
       notificarErrorAvance(err, embarque.estado, siguiente);
     }
-  }, [embarque, id, avanzarEstado, usuarioEmail, registrarActividad, notificarErrorAvance]);
+  }, [embarque, id, avanzarEstado, usuarioEmail, registrarActividad, notificarErrorAvance, reqIdAvance]);
 
   const handleAvanzarEstado = async () => {
     if (!embarque || !id) return;
