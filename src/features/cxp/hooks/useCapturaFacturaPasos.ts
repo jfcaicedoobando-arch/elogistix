@@ -71,15 +71,18 @@ export interface CapturaPasos {
 }
 
 export function useCapturaFacturaPasos({ abierto, modoBuzon, pendientes }: Args): CapturaPasos {
-  const pasoInicial: 1 | 2 = modoBuzon ? 2 : 1;
-  const [paso, setPaso] = useState<1 | 2 | 3>(pasoInicial);
+  // v13.712.1: el wizard SIEMPRE arranca en el paso 1, incluso desde el buzón:
+  // el usuario debe ver primero el documento y sus conceptos antes de capturar.
+  void modoBuzon;
+  const [paso, setPaso] = useState<1 | 2 | 3>(1);
   const estabaAbierto = useRef(abierto);
 
-  // Al reabrir el modal volvemos al paso inicial del modo correspondiente.
+  // Al reabrir el modal volvemos al primer paso.
   useEffect(() => {
-    if (abierto && !estabaAbierto.current) setPaso(pasoInicial);
+    if (abierto && !estabaAbierto.current) setPaso(1);
     estabaAbierto.current = abierto;
-  }, [abierto, pasoInicial]);
+  }, [abierto]);
+
 
   const irA = useCallback((destino: 1 | 2 | 3) => setPaso(destino), []);
   const siguiente = useCallback(
