@@ -29,6 +29,10 @@ export const crmChildRoutes = (
     <Route path="analitica" element={<AnaliticaCrm />} />
     <Route path="forecast" element={<Navigate to="/crm/analitica" replace />} />
     <Route path="reportes" element={<Navigate to="/crm/analitica?tab=embudo" replace />} />
+    {/* V-02 (auditoría visual 2026-08-21): `/crm/pipeline` daba 404; el Kanban
+        vive en `/crm/oportunidades`. */}
+    <Route path="pipeline" element={<Navigate to="/crm/oportunidades" replace />} />
+
     {/* Ola 6 (O6.3): configuración del CRM gateada a admin del tenant +
         gerencia comercial; el ícono del header usa el mismo permiso. */}
     <Route
