@@ -98,16 +98,20 @@ END
 $caso2$ LANGUAGE plpgsql;
 
 -- -------------------------------------------------------------
--- CASO 3: tolerancia de sobrepago = medio centavo (0.005)
---   3a) saldo + 0.004 → se acepta
---   3b) saldo + 0.010 → LC_PAGO_SOBREPAGO
+-- CASO 3: frontera del sobrepago
+--   3a) saldo exacto → se acepta
+--   3b) un centavo extra (0.01 > tolerancia 0.005) → LC_PAGO_SOBREPAGO
+--   Nota: la columna monto tiene escala 2 (constraint
+--   pagos_factura_monto_escala), así que el medio centavo de tolerancia no
+--   es representable en la tabla; se prueba la frontera real: 0.00 pasa,
+--   0.01 no.
 -- -------------------------------------------------------------
 DO $caso3$
 DECLARE
   v_sqlstate text;
   v_msg text;
 BEGIN
-  -- 3a) dentro de tolerancia
+  -- 3a) saldo exacto
   INSERT INTO public.pagos_factura
     (id, factura_id, organization_id, fecha_pago, monto, moneda, tipo_cambio,
      monto_aplicado_factura, forma_pago, referencia, notas, diferencia_cambiaria_mxn)
@@ -115,8 +119,9 @@ BEGIN
     ('1b1b1b1b-4444-4444-4444-444444444403',
      '1b1b1b1b-3333-3333-3333-333333333333',
      '1b1b1b1b-1111-1111-1111-111111111111',
-     CURRENT_DATE, 5000.004, 'MXN', 1, 5000.004, 'Transferencia', 'OLA1-C3A', '', 0);
-  RAISE NOTICE 'CASO 3a OK · centavo de holgura aceptado.';
+     CURRENT_DATE, 5000.00, 'MXN', 1, 5000.00, 'Transferencia', 'OLA1-C3A', '', 0);
+  RAISE NOTICE 'CASO 3a OK · saldo exacto aceptado.';
+
 
   -- 3b) fuera de tolerancia (la factura ya quedó saldada arriba)
   BEGIN
