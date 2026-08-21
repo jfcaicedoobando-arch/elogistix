@@ -17,8 +17,8 @@ de los componentes implicados.
 |---|---|
 | Crítico (texto invisible / ruta rota) | 2 |
 | Alto (contraste AA, accesibilidad) | 3 |
-| Medio (consistencia tipográfica, densidad, jerarquía) | 4 |
-| Bajo (pulido, iconografía, scroll) | 3 |
+| Medio (consistencia tipográfica, jerarquía, componentes base) | 5 |
+| Bajo (pulido, iconografía, scroll) | 4 |
 
 El hallazgo **V-01 es la raíz de una familia de bugs visuales**: `cn()` usa `tailwind-merge` sin
 extender el tema, por lo que las utilidades tipográficas propias del proyecto (`text-body`,
