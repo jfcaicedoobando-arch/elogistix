@@ -46,7 +46,7 @@ export function TabLiquidaciones({ vendedoras }: { vendedoras: VendedoraOpt[] })
         : <span className="text-muted-foreground italic">pendiente</span>,
     },
     {
-      id: "estado", header: "Estado", meta: { width: COL_W.estado ?? COL_W.fecha, className: "text-body-sm" },
+      id: "estado", header: "Estado", meta: { width: COL_W.estado, className: "text-body-sm" },
       cell: ({ row }) => row.original.estado ?? "Generada",
     },
     {
@@ -54,7 +54,7 @@ export function TabLiquidaciones({ vendedoras }: { vendedoras: VendedoraOpt[] })
       cell: ({ row }) => row.original.referencia ?? "—",
     },
     {
-      id: "acciones", header: "", meta: { width: COL_W.acciones ?? COL_W.ruta, align: "right" },
+      id: "acciones", header: "", meta: { width: COL_W.ruta, align: "right" },
       cell: ({ row }) => {
         const l = row.original;
         if (l.fecha_pago || l.estado === "Cancelada" || !puedeGestionar) return null;
