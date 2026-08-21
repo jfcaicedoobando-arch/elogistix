@@ -25,4 +25,10 @@ export const LC_CODE_MESSAGES_CRM: Record<string, string> = {
     "Tu rol no puede crear ni modificar cotizaciones. Solicita acceso a ventas o gerencia comercial.",
   LC_COTIZACION_SIN_PERMISO:
     "Tu rol no puede archivar ni versionar cotizaciones. Solicita acceso a ventas o gerencia comercial.",
+  LC_OPORTUNIDAD_NO_ENCONTRADA:
+    "La oportunidad no existe o pertenece a otra organización.",
+  LC_PARAMETROS_INVALIDOS:
+    "Faltan datos o son inválidos para completar la operación. Revisa el formulario e inténtalo de nuevo.",
+  LC_SIN_PERMISO:
+    "Tu rol no tiene permiso para esta acción en la organización actual.",
 };

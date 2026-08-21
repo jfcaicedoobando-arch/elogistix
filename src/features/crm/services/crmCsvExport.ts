@@ -5,6 +5,7 @@
  * así que un vendedor exporta únicamente su cartera.
  */
 import { toCsv } from "@/lib/csv/serializeCsv";
+import { formatFechaDia } from "@/lib/formatters";
 import { downloadCsvWithFeedback } from "@/lib/ui/notifyCsvExport";
 import type { CrmLeadRow } from "@/features/crm/domain/leads/constants";
 import type { CrmOportunidadRow } from "@/features/crm/types/oportunidades";
@@ -25,10 +26,7 @@ function txt(v: unknown): string {
 
 /** Fecha ISO → DD/MM/YYYY (es-MX) para abrir el CSV en Excel local. */
 function fechaMx(iso: string | null | undefined): string {
-  if (!iso) return "";
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return "";
-  return d.toLocaleDateString("es-MX", { timeZone: "UTC" });
+  return formatFechaDia(iso, "");
 }
 
 export function buildLeadsCsv(rows: CrmLeadRow[]): string {
