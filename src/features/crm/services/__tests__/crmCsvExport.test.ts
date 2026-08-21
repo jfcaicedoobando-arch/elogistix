@@ -29,7 +29,7 @@ const op = {
   moneda: "USD",
   probabilidad: 60,
   vendedor_email: "v@lc.mx",
-  fecha_cierre_estimada: "2026-09-01",
+  fecha_estimada_cierre: "2026-09-01",
   created_at: "2026-08-21T00:00:00Z",
 } as unknown as OpLike;
 
