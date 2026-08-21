@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
  * Garantiza tipografía y espaciado consistentes en todos los pasos.
  *
  * Uso:
- *   <WizardSection title="Datos Generales" complete={status.cliente}>
+ *   <WizardSection title="Datos generales" complete={status.cliente}>
  *     <FormField ...> ... </FormField>
  *   </WizardSection>
  */

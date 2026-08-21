@@ -3,7 +3,7 @@
  * seleccionados en una sola pasada (secuencial) sin salir de la bandeja.
  */
 import { Button } from "@/components/ui/button";
-import { Loader2, ReceiptText, X } from "lucide-react";
+import { ReceiptText, X } from "lucide-react";
 
 interface Props {
   seleccionados: number;
@@ -23,12 +23,8 @@ export function BandejaRepAcciones(p: Props) {
         {p.progreso ? ` · timbrando ${p.progreso.hechos} de ${p.progreso.total}…` : ""}
       </p>
       <div className="flex items-center gap-2">
-        <Button size="sm" onClick={p.onTimbrar} disabled={p.enProceso}>
-          {p.enProceso ? (
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-          ) : (
-            <ReceiptText className="mr-2 h-4 w-4" />
-          )}
+        <Button size="sm" onClick={p.onTimbrar} disabled={p.enProceso} loading={p.enProceso}>
+          {!p.enProceso && <ReceiptText className="mr-2 h-4 w-4" />}
           Timbrar REP seleccionados
         </Button>
         <Button size="sm" variant="ghost" onClick={p.onLimpiar} disabled={p.enProceso}>

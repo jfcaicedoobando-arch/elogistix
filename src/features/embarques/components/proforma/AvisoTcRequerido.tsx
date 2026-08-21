@@ -67,12 +67,11 @@ export function AvisoTcRequerido({ tcSugerido, guardando, onGuardarYReintentar }
             type="button"
             size="sm"
             disabled={!valido || guardando}
+            loading={guardando}
             onClick={() => onGuardarYReintentar(tc)}
           >
             {guardando ? (
-              <>
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" /> Guardando...
-              </>
+              "Guardando…"
             ) : (
               <>
                 <RefreshCw className="h-4 w-4 mr-2" /> Guardar y reintentar

@@ -36,6 +36,14 @@ export default function Login() {
         ogUrl="https://librecarga.com/login"
       />
       <AuthCard title="Iniciar sesión en Libre Carga">
+        {/* Ola 3 · O3.13 — login contextual: /portal/login llega con
+            ?audiencia=cliente y muestra el subtítulo de la audiencia. La
+            ruta destino se conserva vía location.state.from (LoginForm). */}
+        {searchParams.get("audiencia") === "cliente" && (
+          <p className="text-center text-body-sm text-muted-foreground -mt-2 mb-4">
+            Portal de clientes
+          </p>
+        )}
         <Tabs value={tab} onValueChange={handleTabChange} className="w-full">
           <TabsList className="grid w-full grid-cols-2 mb-4">
             <TabsTrigger value="login">Iniciar sesión</TabsTrigger>

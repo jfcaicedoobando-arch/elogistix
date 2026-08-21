@@ -26,7 +26,7 @@ export default function DireccionDashboard() {
   return (
     <PageContainer>
       <PageHeader
-        title="Dashboard Dirección"
+        title="Dashboard de dirección"
         description="¿Ganamos dinero, quién nos debe, y vamos según meta?"
       />
 

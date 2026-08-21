@@ -58,10 +58,11 @@ export function ProformaInconsistenteAlert({
             size="sm"
             variant="default"
             disabled={asignar.isPending}
+            loading={asignar.isPending}
             onClick={() => asignar.mutate()}
           >
             {asignar.isPending ? (
-              <><Loader2 className="h-4 w-4 mr-1 animate-spin" /> Asignando…</>
+              "Asignando…"
             ) : (
               <>Asignar {n} concepto{n !== 1 ? "s" : ""} a esta proforma</>
             )}

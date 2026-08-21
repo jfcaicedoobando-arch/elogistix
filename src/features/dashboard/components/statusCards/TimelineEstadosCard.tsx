@@ -56,7 +56,7 @@ export function TimelineEstadosCard({ conteoPorEstado, isLoading }: Props) {
                     ) : (
                       <span
                         data-e2e-mask="dynamic-count"
-                        className="text-xl sm:text-2xl font-semibold tabular-nums tracking-tight text-foreground"
+                        className="text-kpi tabular-nums tracking-tight text-foreground"
                       >
                         {count}
                       </span>

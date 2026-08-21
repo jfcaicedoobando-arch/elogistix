@@ -51,7 +51,7 @@ export function DocumentPreviewDialog({
         className={cn(dialogSize.xl, "max-h-[90vh] flex flex-col gap-0 p-0", className)}
       >
         <DialogHeader className="px-6 pt-6 pb-3 border-b">
-          <DialogTitle className="text-base font-semibold">{title}</DialogTitle>
+          <DialogTitle>{title}</DialogTitle>
         </DialogHeader>
         <div className="flex-1 overflow-hidden bg-muted/30">
           {url ? (

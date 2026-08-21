@@ -124,7 +124,7 @@ export default function TesoreriaPagosProgramados() {
         </Select>
       </div>
 
-      <PagosProgramadosTablas semanas={semanas} sinFecha={sinFecha} columns={columns} />
+      <PagosProgramadosTablas semanas={semanas} sinFecha={sinFecha} columns={columns} onEjecutarPago={abrirDialogoPago} />
 
       <EjecutarPagoDialog
         facturaPago={facturaPago}

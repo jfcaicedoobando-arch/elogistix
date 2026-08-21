@@ -61,7 +61,7 @@ export function WizardTotalsBar({ plUSD, plMXN, totalVentaMXN }: Props) {
 function Metric({ label, mxn, usd }: { label: string; mxn: number; usd: number }) {
   return (
     <div className="flex flex-col leading-tight">
-      <span className="text-label uppercase tracking-wide text-muted-foreground">{label}</span>
+      <span className="text-overline">{label}</span>
       <div className="flex items-center gap-2">
         <span className="font-medium tabular-nums">{formatCurrency(mxn, "MXN")}</span>
         {usd > 0 && (

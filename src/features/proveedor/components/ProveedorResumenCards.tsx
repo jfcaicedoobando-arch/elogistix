@@ -9,7 +9,7 @@
 import { Receipt, CheckCircle2, Clock } from "lucide-react";
 import { KpiStrip } from "@/components/shared/KpiStrip";
 import { KpiCard } from "@/components/shared/KpiCard";
-import { formatCurrency } from "@/lib/formatters";
+import { formatCurrency, formatPercent} from "@/lib/formatters";
 import { useExchangeRates } from "@/features/catalogos/hooks";
 import { ProveedorNotaMonedas } from "@/features/proveedor/components/ProveedorNotaMonedas";
 import { TipoCambioFallbackBanner } from "@/features/dashboard/direccion/components/TipoCambioFallbackBanner";
@@ -60,7 +60,7 @@ export function ProveedorResumenCards({
         <KpiCard
           label="Pagado"
           value={formatCurrency(totalPagado, moneda)}
-          sublabel={`${pctPagado.toFixed(0)}% del total`}
+          sublabel={`${formatPercent(pctPagado, 0)} del total`}
           icon={CheckCircle2}
           iconVariant="chip"
           variant="success"
@@ -68,7 +68,7 @@ export function ProveedorResumenCards({
         <KpiCard
           label="Pendiente"
           value={formatCurrency(totalPendiente, moneda)}
-          sublabel={`${(100 - pctPagado).toFixed(0)}% del total`}
+          sublabel={`${formatPercent(100 - pctPagado, 0)} del total`}
           icon={Clock}
           iconVariant="chip"
           variant={totalPendiente > 0 ? "warning" : "default"}
@@ -87,7 +87,7 @@ export function ProveedorResumenCards({
           <div
             className="flex h-2 w-full overflow-hidden rounded-full bg-muted"
             role="img"
-            aria-label={`${pctPagado.toFixed(0)}% pagado del total facturado`}
+            aria-label={`${formatPercent(pctPagado, 0)} pagado del total facturado`}
           >
             <div className="bg-success" style={{ width: `${pctPagado}%` }} />
             <div className="flex-1 bg-warning/60" />

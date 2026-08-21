@@ -9,7 +9,7 @@ import {
 
 describe("seccionParaErrorPaso1", () => {
   it("mapea errores de cliente/prospecto/contacto", () => {
-    expect(seccionParaErrorPaso1("Selecciona un cliente")).toBe("seccion-cliente");
+    expect(seccionParaErrorPaso1("Selecciona un cliente.")).toBe("seccion-cliente");
     expect(seccionParaErrorPaso1("Falta el prospecto")).toBe("seccion-cliente");
     expect(seccionParaErrorPaso1("Contacto requerido")).toBe("seccion-cliente");
     expect(seccionParaErrorPaso1("Debes elegir empresa")).toBe("seccion-cliente");

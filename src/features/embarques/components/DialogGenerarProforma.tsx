@@ -54,9 +54,9 @@ export function DialogGenerarProforma({ open, onOpenChange, embarque, conceptosP
             <Button variant="outline" onClick={() => c.setPaso('seleccion')} disabled={c.isPending}>
               <ArrowLeft className="h-4 w-4 mr-2" /> Volver
             </Button>
-            <Button onClick={c.handleConfirmar} disabled={c.isPending}>
+            <Button onClick={c.handleConfirmar} disabled={c.isPending} loading={c.isPending}>
               {c.isPending ? (
-                <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Generando...</>
+                "Generando…"
               ) : (
                 <><FileSpreadsheet className="h-4 w-4 mr-2" /> Confirmar y Generar</>
               )}

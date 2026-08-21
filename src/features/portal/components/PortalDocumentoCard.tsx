@@ -2,7 +2,7 @@
  * Card de documento de embarque para vista mobile.
  * Vertical, full-width, con botón de descarga grande para tap-friendly.
  */
-import { Download, FileCheck, FileX, Loader2 } from "lucide-react";
+import { Download, FileCheck, FileX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -46,13 +46,10 @@ export function PortalDocumentoCard({ doc, downloadingId, onDownload }: Props) {
             size="sm"
             className="w-full"
             disabled={downloading}
+            loading={downloading}
             onClick={() => onDownload(doc.archivo!, doc.id)}
           >
-            {downloading ? (
-              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-            ) : (
-              <Download className="h-4 w-4 mr-2" />
-            )}
+            {!downloading && <Download className="h-4 w-4 mr-2" />}
             Descargar
           </Button>
         ) : (

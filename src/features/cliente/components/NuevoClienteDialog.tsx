@@ -9,6 +9,7 @@ import { useRef, useState } from "react";
 import { ArrowLeft, ArrowRight, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
+import { COPY_VALIDACION } from "@/lib/copy/publicoCopy";
 import { FormDialogSection } from "@/components/shared/FormDialogSection";
 import DocumentChecklist from "@/components/shared/DocumentChecklist";
 import { useNuevoClienteController } from "@/features/cliente/hooks";
@@ -67,7 +68,7 @@ export default function NuevoClienteDialog({ open, onOpenChange }: Props) {
       open={open}
       onOpenChange={(abierto) => { if (!abierto) intentarCerrar(); else onOpenChange(abierto); }}
       icon={UserPlus}
-      title="Nuevo Cliente"
+      title="Nuevo cliente"
       description={
         c.step === 1
           ? "Captura los datos del cliente o sube su CSF para prellenar el formulario."
@@ -130,7 +131,7 @@ export default function NuevoClienteDialog({ open, onOpenChange }: Props) {
             <ClienteField label="Estado" field="estado" form={c.form} onChange={c.handleChange} prefilledFromCsf={prefilled} />
             <ClienteField label="Contacto" field="contacto" form={c.form} onChange={c.handleChange} required />
             <ClienteField label="Email" field="email" form={c.form} onChange={c.handleChange} required
-              validate={(v) => (v && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v) ? "Email inválido" : null)} />
+              validate={(v) => (v && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v) ? COPY_VALIDACION.correoInvalido : null)} />
             <ClienteField label="Teléfono" field="telefono" form={c.form} onChange={c.handleChange} required />
 
           </FormDialogSection>

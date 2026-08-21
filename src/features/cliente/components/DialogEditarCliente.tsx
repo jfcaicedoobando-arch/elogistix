@@ -87,7 +87,7 @@ export default function DialogEditarCliente({ open, onOpenChange, cliente, onSav
       open={open}
       onOpenChange={onOpenChange}
       icon={UserCog}
-      title="Editar Cliente"
+      title="Editar cliente"
       description="Modifica los datos generales y fiscales del cliente."
       size="lg"
       footer={(

@@ -29,11 +29,11 @@ describe("facturaFormErrorsFromZod · EC-18 (diasCredito)", () => {
 
   it("rechaza días de crédito negativos, fraccionarios o mayores a 365", () => {
     expect(facturaFormErrorsFromZod({ ...base, diasCredito: -30 }, { total: 1160 }).diasCredito)
-      .toBe("Los días de crédito no pueden ser negativos");
+      .toBe("Los días de crédito no pueden ser negativos.");
     expect(facturaFormErrorsFromZod({ ...base, diasCredito: 15.5 }, { total: 1160 }).diasCredito)
-      .toBe("Los días de crédito deben ser un número entero");
+      .toBe("Los días de crédito deben ser un número entero.");
     expect(facturaFormErrorsFromZod({ ...base, diasCredito: 99999 }, { total: 1160 }).diasCredito)
-      .toBe("Los días de crédito no pueden ser mayores a 365");
+      .toBe("Los días de crédito no pueden ser mayores a 365.");
   });
 
   it("rechaza un vencimiento absurdamente lejano a la emisión", () => {
@@ -42,7 +42,7 @@ describe("facturaFormErrorsFromZod · EC-18 (diasCredito)", () => {
       { total: 1160 },
     );
     expect(errores.vencimiento).toBe(
-      "La fecha de vencimiento está demasiado lejos de la emisión",
+      "La fecha de vencimiento está demasiado lejos de la emisión.",
     );
   });
 

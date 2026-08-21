@@ -102,11 +102,11 @@ function DemorasResumen({ data }: { data: DemoraDesglose }) {
       <div className="grid grid-cols-2 gap-3">
         <div className="rounded-md border p-3">
           <p className="text-body-sm text-muted-foreground uppercase">Costo total (naviera, {moneda})</p>
-          <p className="text-lg font-bold tabular-nums">{formatCurrency(data.total_costo_usd, moneda)}</p>
+          <p className="text-kpi tabular-nums">{formatCurrency(data.total_costo_usd, moneda)}</p>
         </div>
         <div className="rounded-md border p-3">
           <p className="text-body-sm text-muted-foreground uppercase">Venta total (cliente)</p>
-          <p className="text-lg font-bold tabular-nums text-success">{formatCurrency(data.total_venta_usd, 'USD')}</p>
+          <p className="text-kpi tabular-nums text-success">{formatCurrency(data.total_venta_usd, 'USD')}</p>
         </div>
       </div>
       {data.contenedores.length > 0 && (

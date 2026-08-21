@@ -121,7 +121,7 @@ export function FormDialogShell({
                 <Icon className="h-5 w-5" />
               </div>
               <div className="min-w-0 space-y-0.5">
-                <DialogTitle className="text-base font-semibold leading-tight">{title}</DialogTitle>
+                <DialogTitle>{title}</DialogTitle>
                 {description && (
                   <DialogDescription className="text-body-sm text-muted-foreground leading-snug">
                     {description}

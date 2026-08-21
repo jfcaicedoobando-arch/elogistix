@@ -4,7 +4,7 @@
  */
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Loader2, ReceiptText } from "lucide-react";
+import { ReceiptText } from "lucide-react";
 import { defineColumns } from "@/components/shared/DataTable";
 import { clientColumn, moneyColumn, dateColumn } from "@/components/shared/dataTable/columnBuilders";
 import { COL_W } from "@/components/shared/dataTable/columnWidths";
@@ -63,14 +63,11 @@ export function buildRepPendientesColumns(o: Opts) {
               size="sm"
               variant="outline"
               disabled={o.bloqueado}
+              loading={enProceso}
               onClick={() => o.onTimbrar(row.original.id)}
               aria-label={`Timbrar REP de la factura ${row.original.factura_numero}`}
             >
-              {enProceso ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : (
-                <ReceiptText className="mr-2 h-3.5 w-3.5" />
-              )}
+              {!enProceso && <ReceiptText className="mr-2 h-3.5 w-3.5" />}
               Timbrar REP
             </Button>
           </div>

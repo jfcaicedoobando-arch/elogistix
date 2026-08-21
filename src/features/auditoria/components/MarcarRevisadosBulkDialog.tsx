@@ -53,8 +53,8 @@ export function MarcarRevisadosBulkDialog({ open, hallazgos, onOpenChange, onSuc
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={bulk.isPending}>
             Cancelar
           </Button>
-          <Button onClick={handleConfirmar} disabled={!puedeConfirmar} className="gap-1">
-            {bulk.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
+          <Button onClick={handleConfirmar} disabled={!puedeConfirmar} loading={bulk.isPending} className="gap-1">
+            {!bulk.isPending && <CheckCircle2 className="h-4 w-4" />}
             Confirmar ({total})
           </Button>
         </>

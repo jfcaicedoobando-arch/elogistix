@@ -122,7 +122,7 @@ export default function ComprasReportes() {
     <PageContainer>
       <PageHeader
         icon={<BarChart3 className="h-6 w-6 text-accent" />}
-        title="Reportes de Compras"
+        title="Reportes de compras"
         description="Analítica de gasto por proveedor y período. Basado en fecha de emisión de la factura."
         actions={
           <Button variant="outline" size="sm" onClick={handleExport} disabled={topProveedores.length === 0}>

@@ -159,7 +159,7 @@ export function StepCostosPrecios(props: Props) {
                 <p className="text-body-sm text-muted-foreground">Utilidad Estimada (USD)</p>
                 <Hint label={formatCurrency(utilidadCalculada, 'USD')}>
                   <p
-                    className={`text-lg sm:text-xl font-bold mt-2 tabular-nums truncate ${utilidadCalculada >= 0 ? 'text-success' : 'text-destructive'}`}
+                    className={`text-kpi mt-2 tabular-nums truncate ${utilidadCalculada >= 0 ? 'text-success' : 'text-destructive'}`}
                   >
                     {formatCurrency(utilidadCalculada, 'USD')}
                   </p>

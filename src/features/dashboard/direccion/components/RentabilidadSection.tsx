@@ -9,6 +9,7 @@ import {
 } from "recharts";
 import { ChartTooltip } from "@/components/shared/ChartTooltip";
 import type { MargenMes, MargenModo } from "@/features/dashboard/direccion/services/tipos";
+import { formatPercent } from "@/lib/formatters";
 
 const MESES_ES = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
 function labelMes(ymStr: string): string {
@@ -17,7 +18,7 @@ function labelMes(ymStr: string): string {
 }
 
 export function RentabilidadSection({ margen6m, porModo }: { margen6m: MargenMes[]; porModo: MargenModo[] }) {
-  const data = margen6m.map((m) => ({ mes: labelMes(m.mes), pct: Number(m.margen_pct.toFixed(1)), raw: m.mes }));
+  const data = margen6m.map((m) => ({ mes: labelMes(m.mes), pct: Math.round(m.margen_pct * 10) / 10, raw: m.mes }));
   const actual = margen6m[margen6m.length - 1]?.mes;
   const maxModo = Math.max(1, ...porModo.map((m) => Math.abs(m.margen_pct)));
 
@@ -62,7 +63,7 @@ export function RentabilidadSection({ margen6m, porModo }: { margen6m: MargenMes
                   <div className="flex items-center justify-between text-body">
                     <span>{m.modo}</span>
                     <span className="tabular-nums font-medium">
-                      {sinOperaciones ? "—" : `${m.margen_pct.toFixed(1)}%`}
+                      {sinOperaciones ? "—" : formatPercent(m.margen_pct, 1)}
                     </span>
                   </div>
                   {sinOperaciones ? (

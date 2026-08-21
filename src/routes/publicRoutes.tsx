@@ -28,7 +28,7 @@ export const publicRoutes = (
     <Route path="/" element={<HomeRoute />} />
     <Route path="/login" element={<Login />} />
     <Route path="/reset-password" element={<ResetPassword />} />
-    <Route path="/portal/login" element={<Navigate to="/login" replace />} />
+    <Route path="/portal/login" element={<Navigate to="/login?audiencia=cliente" replace />} />
     <Route path="/tracking/:token" element={<TrackingPublico />} />
     <Route path="/unsubscribe" element={<Unsubscribe />} />
     {/* UIB-07: vista QA del logo — sólo en dev; en producción cae al 404. */}

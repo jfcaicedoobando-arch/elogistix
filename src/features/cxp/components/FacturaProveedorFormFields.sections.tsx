@@ -34,7 +34,7 @@ export function ProveedorYFolioSection({
       {proveedorReadOnly ? (
         <div className="space-y-3">
           <div className="rounded-md border bg-muted/40 px-3 py-2">
-            <div className="text-label font-semibold uppercase tracking-wide text-muted-foreground">
+            <div className="text-overline font-semibold">
               Proveedor (no editable)
             </div>
             <div className="mt-0.5 text-body font-medium text-foreground truncate">

@@ -1,7 +1,6 @@
 /**
  * Tabla pura de hallazgos de auditoría — render solamente.
  */
-import { format } from "date-fns";
 import { CheckCircle2, ExternalLink } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
@@ -22,6 +21,7 @@ import { HallazgoResponsableCell } from "./HallazgoResponsableCell";
 import { buildSelectColumn } from "./hallazgosTablaSelectColumn";
 import { COL_W } from "@/components/shared/dataTable/columnWidths";
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
+import { formatFechaHoraCorta } from "@/lib/formatters";
 
 interface Props {
   visibles: HallazgoAuditoria[];
@@ -94,7 +94,7 @@ export function HallazgosTabla(props: Props) {
         const revision = getRevision(h);
         if (revision?.estado_revision === "revisado") {
           return (
-            <Hint label={`Por: ${revision.revisado_por_email ?? "—"}\n${format(new Date(revision.updated_at), "dd/MM/yyyy HH:mm")}\nAcción: ${revision.accion_tomada ?? ""}`}>
+            <Hint label={`Por: ${revision.revisado_por_email ?? "—"}\n${formatFechaHoraCorta(revision.updated_at)}\nAcción: ${revision.accion_tomada ?? ""}`}>
               <Button size="sm" variant="ghost"
                 className="h-7 text-label gap-1 text-success hover:text-success dark:text-success"
                 onClick={(e) => { e.stopPropagation(); onMarcarRevisado(h); }}

@@ -5,8 +5,7 @@
  * Ola 4 · N29: un hallazgo revisado NO se reasigna desde la tabla (reasignarlo
  * lo reabriría, ver `revisiones.ts`); se muestra como texto plano.
  */
-import { formatFechaDia } from "@/lib/formatters";
-import { format } from "date-fns";
+import { formatFechaDia, formatFechaHoraCorta } from "@/lib/formatters";
 import { AlertTriangle, UserCheck, UserPlus } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -29,7 +28,7 @@ function esVencida(fechaLimite: string | null): boolean {
 
 function tituloAsignacion(revision: AuditoriaRevision): string {
   const asignadoAt = revision.asignado_at
-    ? ` el ${format(new Date(revision.asignado_at), "dd/MM/yyyy HH:mm")}`
+    ? ` el ${formatFechaHoraCorta(revision.asignado_at)}`
     : "";
   const limite = revision.fecha_limite
     ? `\nFecha límite: ${formatFechaDia(revision.fecha_limite)}`

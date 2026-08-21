@@ -5,6 +5,7 @@ import { useRegisterBreadcrumbLabel } from "@/lib/contexts/BreadcrumbContext";
 import { useVolver } from "@/hooks/shared/useVolver";
 import { DetailSkeleton } from "@/components/shared/skeletons";
 import { toTitleCase } from "@/lib/formatters";
+import { formatNombreEntidad } from "@/lib/formatNombreEntidad";
 import EditarProveedorDialog from "@/features/proveedor/components/EditarProveedorDialog";
 import DoubleConfirmDeleteDialog from "@/components/shared/DoubleConfirmDeleteDialog";
 import { DetailNotFound } from "@/components/shared/DetailNotFound";
@@ -31,7 +32,7 @@ export default function ProveedorDetalle() {
     isErrorProveedor, errorProveedor, refetchProveedor,
     isErrorEstadoCuenta, errorEstadoCuenta, refetchEstadoCuenta, isFetchingEstadoCuenta,
   } = useProveedorDetalleController();
-  useRegisterBreadcrumbLabel(id, proveedor?.nombre);
+  useRegisterBreadcrumbLabel(id, proveedor?.nombre ? formatNombreEntidad(proveedor.nombre) : undefined);
 
   // Mismo estado de carga que el detalle de cliente (PageContainer + skeleton).
   if (isLoading) {
@@ -68,7 +69,7 @@ export default function ProveedorDetalle() {
     );
   }
 
-  const nombreFmt = toTitleCase(proveedor.nombre);
+  const nombreFmt = formatNombreEntidad(proveedor.nombre);
   const rfcFmt = (proveedor.rfc || "").toUpperCase();
   // R3P-14: NULL = Nacional (fuente única: esNacionalOrigen).
   const esNacional = esNacionalOrigen(proveedor.origen_proveedor);

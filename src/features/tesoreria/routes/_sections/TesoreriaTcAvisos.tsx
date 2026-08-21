@@ -8,7 +8,7 @@
 import { AlertTriangle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
-import { formatCurrency } from "@/lib/formatters";
+import { formatCurrency, formatTipoCambio} from "@/lib/formatters";
 import { formatFechaEs } from "@/lib/formatters";
 
 interface Props {
@@ -25,10 +25,10 @@ interface Props {
 }
 
 function etiquetaTc(tipoCambioUsd: number | null, tipoCambioFecha: string | null, tcEstimado: boolean) {
-  if (tcEstimado) return `T/C estimado $${(tipoCambioUsd ?? 0).toFixed(4)} · no oficial`;
+  if (tcEstimado) return `T/C estimado ${formatTipoCambio(tipoCambioUsd)} · no oficial`;
   if (!tipoCambioUsd) return "TC DOF no disponible";
   const fecha = tipoCambioFecha ? ` · ${formatFechaEs(tipoCambioFecha)}` : "";
-  return `TC DOF $${tipoCambioUsd.toFixed(4)}${fecha}`;
+  return `TC DOF ${formatTipoCambio(tipoCambioUsd)}${fecha}`;
 }
 
 function variantTc(tipoCambioUsd: number | null, tcEstimado: boolean) {

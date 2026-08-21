@@ -27,9 +27,10 @@ export function NcSatBadge({ facturaId, ncId, uuidFiscal, estatus }: Props) {
           className="h-6 w-6 p-0 text-muted-foreground hover:text-foreground"
           onClick={() => verificar.mutate(ncId)}
           disabled={verificar.isPending}
+          loading={verificar.isPending}
           aria-label="Verificar en SAT"
         >
-          {verificar.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShieldCheck className="h-4 w-4" />}
+          {!verificar.isPending && <ShieldCheck className="h-4 w-4" />}
         </Button>
       </Hint>
     </div>

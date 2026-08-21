@@ -112,7 +112,7 @@ export function DialogNuevaFacturaManual({ open, onOpenChange }: Props) {
             </div>
             <div className="pt-3 border-t border-primary-foreground/20 flex justify-between items-baseline">
               <span className="text-base font-medium">Total</span>
-              <span className="text-2xl font-bold tabular-nums">
+              <span className="text-kpi tabular-nums">
                 {formatCurrency(totales.total, fiscal.moneda)}
                 <span className="text-body-sm font-normal opacity-70 ml-1">{fiscal.moneda}</span>
               </span>

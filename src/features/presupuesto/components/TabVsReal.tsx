@@ -10,7 +10,7 @@
  * vez de un `<table>` crudo, para compartir estilos base con el resto del ERP.
  */
 import { useMemo, useState } from "react";
-import { FileText, Loader2 } from "lucide-react";
+import { FileText } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { CardSkeleton } from "@/components/shared/skeletons";
 import { KpiCard } from "@/components/shared/KpiCard";
@@ -90,8 +90,8 @@ export function TabVsReal() {
           <Switch id="solo-excesos" checked={soloExcesos} onCheckedChange={setSoloExcesos} />
           <Label htmlFor="solo-excesos">Solo excesos</Label>
         </div>
-        <Button variant="outline" onClick={handlePdf} disabled={!data || generandoPdf}>
-          {generandoPdf ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <FileText className="h-4 w-4 mr-2" />}
+        <Button loading={generandoPdf} variant="outline" onClick={handlePdf} disabled={!data || generandoPdf}>
+          <FileText className="h-4 w-4 mr-2" />
           {generandoPdf ? "Generando…" : "PDF"}
         </Button>
       </div>

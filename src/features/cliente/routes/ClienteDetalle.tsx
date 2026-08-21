@@ -10,6 +10,7 @@ import { ErrorStateInline } from "@/components/empty/ErrorStateInline";
 import { getErrorMessage } from "@/lib/errors";
 import { useClienteDetalleController } from "@/features/cliente/hooks";
 import { useRegisterBreadcrumbLabel } from "@/lib/contexts/BreadcrumbContext";
+import { formatNombreEntidad } from "@/lib/formatNombreEntidad";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { ClienteDetalleTabs } from "./_sections/ClienteDetalleTabs";
 import { leerFlagAutorizacion } from "@/features/cliente/domain/autorizacionCliente";
@@ -51,7 +52,7 @@ export default function ClienteDetalle() {
     openNewContact,
     openEditContact,
   } = useClienteDetalleController();
-  useRegisterBreadcrumbLabel(id, cliente?.nombre);
+  useRegisterBreadcrumbLabel(id, cliente?.nombre ? formatNombreEntidad(cliente.nombre) : undefined);
 
   if (errorCliente) {
     return (

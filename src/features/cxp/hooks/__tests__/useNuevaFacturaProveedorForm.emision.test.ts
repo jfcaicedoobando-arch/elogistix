@@ -31,11 +31,11 @@ describe("facturaFormErrorsFromZod · fecha de emisión (P1-2)", () => {
 
   it("rechaza el submit cuando la fecha de emisión viene vacía", () => {
     const errores = facturaFormErrorsFromZod({ ...base, emision: "" }, { total: 1160 });
-    expect(errores.emision).toBe("La fecha de emisión es obligatoria");
+    expect(errores.emision).toBe("La fecha de emisión es obligatoria.");
   });
 
   it("rechaza fecha de emisión con sólo espacios", () => {
     const errores = facturaFormErrorsFromZod({ ...base, emision: "   " }, { total: 1160 });
-    expect(errores.emision).toBe("La fecha de emisión es obligatoria");
+    expect(errores.emision).toBe("La fecha de emisión es obligatoria.");
   });
 });

@@ -4,7 +4,7 @@
  * v13.313.1
  */
 import { useState } from "react";
-import { Mail, Loader2 } from "lucide-react";
+import { Mail } from "lucide-react";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -53,13 +53,8 @@ export function DialogRecordatorioCobranza({ open, onOpenChange, factura }: Prop
       <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isPending}>
         Cancelar
       </Button>
-      <Button onClick={handleEnviar} disabled={!puedeEnviar}>
-        {isPending ? (
-          <>
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            Enviando…
-          </>
-        ) : (
+      <Button onClick={handleEnviar} disabled={!puedeEnviar} loading={isPending}>
+          {isPending ? "Enviando…" : (
           "Enviar recordatorio"
         )}
       </Button>

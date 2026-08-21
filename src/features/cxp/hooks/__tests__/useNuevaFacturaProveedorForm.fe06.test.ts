@@ -28,16 +28,16 @@ describe("facturaFormErrorsFromZod · FE-06", () => {
       { ...base, subtotal: "-100", iva: "200" },
       { total: 100 },
     );
-    expect(errores.subtotal).toBe("El subtotal no puede ser negativo");
+    expect(errores.subtotal).toBe("El subtotal no puede ser negativo.");
   });
 
   it("rechaza IVA, IEPS y retenciones negativos", () => {
     expect(facturaFormErrorsFromZod({ ...base, iva: "-1" }, { total: 999 }).iva)
-      .toBe("El IVA no puede ser negativo");
+      .toBe("El IVA no puede ser negativo.");
     expect(facturaFormErrorsFromZod({ ...base, ieps: "-1" }, { total: 999 }).ieps)
-      .toBe("El IEPS no puede ser negativo");
+      .toBe("El IEPS no puede ser negativo.");
     expect(facturaFormErrorsFromZod({ ...base, retenciones: "-1" }, { total: 999 }).retenciones)
-      .toBe("Las retenciones no pueden ser negativas");
+      .toBe("Las retenciones no pueden ser negativas.");
   });
 
   it("rechaza vencimiento anterior a la emisión", () => {
@@ -46,7 +46,7 @@ describe("facturaFormErrorsFromZod · FE-06", () => {
       { total: 1160 },
     );
     expect(errores.vencimiento).toBe(
-      "La fecha de vencimiento no puede ser anterior a la fecha de emisión",
+      "La fecha de vencimiento no puede ser anterior a la fecha de emisión.",
     );
   });
 
@@ -55,7 +55,7 @@ describe("facturaFormErrorsFromZod · FE-06", () => {
       { ...base, moneda: "USD", tc: "1500" },
       { total: 1160 },
     );
-    expect(errores.tc).toBe("El tipo de cambio no puede ser mayor a 1000");
+    expect(errores.tc).toBe("El tipo de cambio no puede ser mayor a 1000.");
   });
 
   it("acepta el caso válido (regresión)", () => {

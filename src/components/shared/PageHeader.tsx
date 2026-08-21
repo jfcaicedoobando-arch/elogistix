@@ -43,7 +43,7 @@ export function PageHeader({
   return (
     <div className={cn("space-y-3 short:space-y-2", className)}>
       {/* En tableta (<lg) el header apila: título full-width evita truncado con
-          acciones (Tesorería, Cotizaciones, Profit) — activar flex-row sólo en lg+. */}
+          acciones (Tesorería, Cotizaciones, Utilidad) — activar flex-row sólo en lg+. */}
       <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
         <div className="min-w-0 flex-1">
           <h1 className="flex items-center gap-2 text-display font-bold tracking-tight">

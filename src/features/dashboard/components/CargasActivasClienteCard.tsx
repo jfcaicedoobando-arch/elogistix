@@ -59,7 +59,7 @@ function FilaCliente({ cliente: c, totalActivosGlobal, onClick }: FilaProps) {
           className={`flex items-center gap-3 px-3 py-2.5 rounded-md cursor-pointer hover:bg-primary/5 transition-colors group ${FOCUS_RING}`}
         >
           {/* Total — big number (suma exacta de los chips) */}
-          <span className="text-2xl font-bold tabular-nums min-w-[2.5rem] text-right text-foreground">
+          <span className="text-kpi tabular-nums min-w-[2.5rem] text-right text-foreground">
             {c.totalVisible}
           </span>
 

@@ -59,8 +59,8 @@ export default function ActividadTimeline({ entidadTipo, entidadId }: Props) {
             </SelectContent>
           </Select>
           <Input aria-label="Asunto de la actividad" placeholder="Asunto…" value={asunto} onChange={(e) => setAsunto(e.target.value)} />
-          <Button onClick={handleCrear} disabled={crear.isPending}>
-            {crear.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+          <Button onClick={handleCrear} disabled={crear.isPending} loading={crear.isPending}>
+            {!crear.isPending && <Plus className="h-4 w-4" />}
           </Button>
           <Textarea
             className="md:col-span-3"

@@ -3,7 +3,7 @@ import { campoParaErrorPaso1 } from "../scrollToErrorSection";
 
 describe("campoParaErrorPaso1", () => {
   it("mapea el error de cliente", () => {
-    expect(campoParaErrorPaso1("Selecciona un cliente")).toBe("clienteId");
+    expect(campoParaErrorPaso1("Selecciona un cliente.")).toBe("clienteId");
   });
 
   it("mapea los errores de prospecto", () => {
@@ -16,8 +16,8 @@ describe("campoParaErrorPaso1", () => {
   });
 
   it("mapea los errores terrestres", () => {
-    expect(campoParaErrorPaso1("Selecciona la modalidad de equipo")).toBe("modalidadEquipo");
-    expect(campoParaErrorPaso1("Captura el punto de carga/descarga")).toBe("puntoIntermedio");
+    expect(campoParaErrorPaso1("Selecciona la modalidad de equipo.")).toBe("modalidadEquipo");
+    expect(campoParaErrorPaso1("Captura el punto de carga/descarga.")).toBe("puntoIntermedio");
   });
 
   it("mapea los errores de tarifa", () => {

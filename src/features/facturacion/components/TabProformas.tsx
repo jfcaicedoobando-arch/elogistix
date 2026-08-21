@@ -1,4 +1,4 @@
-import { Download, Receipt, Loader2, X, FileSpreadsheet } from "lucide-react";
+import { Download, Receipt, X, FileSpreadsheet } from "lucide-react";
 
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -109,6 +109,7 @@ export function TabProformas({ isInRange, estadoInicial }: {
             <Button
               size="sm"
               disabled={!puedeFusionar || convirtiendo}
+              loading={convirtiendo}
               onClick={() => {
                 if (!c.fusionInfo.organizationId) return;
                 convertir(
@@ -121,9 +122,7 @@ export function TabProformas({ isInRange, estadoInicial }: {
                 );
               }}
             >
-              {convirtiendo
-                ? <Loader2 className="h-4 w-4 mr-1 animate-spin" />
-                : <Receipt className="h-4 w-4 mr-1" />}
+              {!convirtiendo && <Receipt className="h-4 w-4 mr-1" />}
               {seleccionados === 1 ? "Convertir a factura" : `Fusionar ${seleccionados} en una factura`}
             </Button>
           </CardContent>

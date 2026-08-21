@@ -52,11 +52,9 @@ export function PasoProbar({ ambiente, resultado, probando, onProbar }: Props) {
       </Alert>
 
       <div className="flex justify-center">
-        <Button type="button" size="lg" onClick={onProbar} disabled={probando}>
+        <Button type="button" size="lg" onClick={onProbar} disabled={probando} loading={probando}>
           {probando ? (
-            <>
-              <Loader2 className="h-4 w-4 mr-2 animate-spin" /> Probando conexión…
-            </>
+            "Probando conexión…"
           ) : (
             <>
               <PlugZap className="h-4 w-4 mr-2" /> Probar conexión
@@ -66,8 +64,8 @@ export function PasoProbar({ ambiente, resultado, probando, onProbar }: Props) {
       </div>
 
       {resultado?.ok && (
-        <Alert className="border-success/40 bg-success/5">
-          <CheckCircle2 className="h-4 w-4 text-success" />
+        <Alert variant="success">
+          <CheckCircle2 className="h-4 w-4" aria-hidden />
           <AlertDescription className="text-xs space-y-1">
             <div className="font-semibold text-success">¡Conexión exitosa!</div>
             {resultado.nombre && (

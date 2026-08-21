@@ -104,7 +104,7 @@ export default function Bitacora() {
     <PageContainer>
       <PageHeader
         icon={<History className="h-6 w-6" />}
-        title="Bitácora de Actividad"
+        title="Bitácora de actividad"
         description={
           isAdmin
             ? "Registro de todas las acciones realizadas en el sistema."

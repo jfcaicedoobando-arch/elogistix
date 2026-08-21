@@ -155,9 +155,9 @@ export function CrearEmbarqueConRevalidacion({ cotizacionId, numContenedores }: 
           size="sm"
           onClick={handleClick}
           disabled={revalidando || loading || bloqueadoPorEsquema}
+          loading={revalidando}
           variant={bloqueadoPorEsquema ? "outline" : "default"}
         >
-          {revalidando ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
           {bloqueadoPorEsquema ? <AlertTriangle className="h-4 w-4 mr-2 text-warning" /> : null}
           {bloqueadoPorEsquema ? "Revalidación no disponible" : "Crear embarque"}
           {!bloqueadoPorEsquema && numContenedores > 1 && (

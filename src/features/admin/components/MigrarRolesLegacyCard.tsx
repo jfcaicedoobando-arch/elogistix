@@ -28,6 +28,7 @@ import { ConfirmActionDialog } from "@/components/shared/dialogs/ConfirmActionDi
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { MigrarRolesLegacyPreviewTable } from "./MigrarRolesLegacyPreviewTable";
 import { MigrarRolesLegacyResultPanel } from "./MigrarRolesLegacyResultPanel";
+import { Alert } from "@/components/ui/alert";
 
 export function MigrarRolesLegacyCard() {
   const [open, setOpen] = useState(false);
@@ -76,9 +77,9 @@ export function MigrarRolesLegacyCard() {
             <Loader2 className="h-4 w-4 animate-spin" /> Calculando registros afectados…
           </div>
         ) : preview.isError ? (
-          <div className="rounded-md border border-destructive/30 bg-destructive/5 p-3 text-body-sm text-destructive">
+          <Alert variant="destructive" className="p-3 text-body-sm">
             No se pudo cargar la vista previa. Verifica que estás firmado como super_admin.
-          </div>
+          </Alert>
         ) : preview.data ? (
           <div className="space-y-3">
             <div className="flex items-center gap-2">

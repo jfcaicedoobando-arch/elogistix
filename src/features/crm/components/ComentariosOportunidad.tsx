@@ -54,8 +54,8 @@ export default function ComentariosOportunidad({ oportunidadId, canEdit }: Props
               maxLength={1000}
             />
             <div className="flex justify-end">
-              <Button size="sm" onClick={enviar} disabled={!texto.trim() || crear.isPending}>
-                {crear.isPending ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Send className="h-4 w-4 mr-1" />}
+              <Button size="sm" onClick={enviar} disabled={!texto.trim() || crear.isPending} loading={crear.isPending}>
+                {!crear.isPending && <Send className="h-4 w-4 mr-1" />}
                 Publicar
               </Button>
             </div>

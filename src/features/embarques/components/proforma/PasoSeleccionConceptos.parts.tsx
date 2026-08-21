@@ -83,7 +83,7 @@ interface TotalesProps {
 export function TotalesProformaBox({ totales, tasaIva, seleccionadosVisibles }: TotalesProps) {
   return (
     <div className="rounded-md border-2 border-primary/30 bg-primary/5 p-4 space-y-2">
-      <SectionHeading as="h3" variant="subsection" className="mb-2">Totales de la Proforma</SectionHeading>
+      <SectionHeading as="h3" variant="subsection" className="mb-2">Totales de la proforma</SectionHeading>
       {totales.subtotal_usd > 0 && (
         <div className="space-y-1 text-body">
           <div className="flex justify-between"><span>Subtotal USD:</span><span>{formatCurrency(totales.subtotal_usd, "USD")}</span></div>

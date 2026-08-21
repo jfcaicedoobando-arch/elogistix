@@ -56,7 +56,7 @@ export default function PortalCotizaciones() {
     // ofrece "Reintentar" en vez de un skeleton perpetuo.
     // UI-4: el encabezado se conserva para no perder el contexto de la página.
     return (
-      <PortalPageShell icon={<ClipboardList className="h-6 w-6 text-accent" />} title="Mis Cotizaciones">
+      <PortalPageShell icon={<ClipboardList className="h-6 w-6 text-accent" />} title="Mis cotizaciones">
         <LoadingState
           error={isError}
           onRetry={() => void refetch()}
@@ -70,7 +70,7 @@ export default function PortalCotizaciones() {
   return (
     <PortalPageShell
       icon={<ClipboardList className="h-6 w-6 text-accent" />}
-      title="Mis Cotizaciones"
+      title="Mis cotizaciones"
       actions={
         <div className="flex items-center gap-3">
           <span className="text-body text-muted-foreground tabular-nums">{filtered.length} de {cotizaciones.length}</span>

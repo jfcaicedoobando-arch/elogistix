@@ -40,7 +40,7 @@ export default function PortalInviteDialog({
       open={open}
       onOpenChange={onOpenChange}
       icon={Send}
-      title="Invitar Cliente al Portal"
+      title="Invitar cliente al portal"
       description="Envía una invitación al cliente para acceder al portal de seguimiento."
       size="md"
       footer={

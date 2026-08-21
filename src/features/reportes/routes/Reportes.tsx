@@ -1,5 +1,5 @@
 import { lazy, Suspense } from "react";
-import { Download, FileText, ChevronDown, Loader2 } from "lucide-react";
+import { Download, FileText, ChevronDown } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -48,7 +48,7 @@ export default function Reportes() {
   return (
     <PageContainer>
       <PageHeader
-        title="Rentabilidad por Cliente"
+        title="Rentabilidad por cliente"
         description="P&L agrupado por cuenta con filtros de periodo y modo"
         actions={
           <>
@@ -56,7 +56,7 @@ export default function Reportes() {
             <div className="sm:hidden">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm" disabled={!canExport}>
+                  <Button loading={isExportingPdf} variant="outline" size="sm" disabled={!canExport}>
                     <Download className="h-4 w-4 mr-1" /> Exportar
                     <ChevronDown className="h-3.5 w-3.5 ml-1 opacity-60" />
                   </Button>
@@ -74,7 +74,7 @@ export default function Reportes() {
             {/* Desktop */}
             <div className="hidden sm:flex gap-2">
               <Button variant="outline" size="sm" onClick={handleExportPdf} disabled={!canExport || isExportingPdf}>
-                {isExportingPdf ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <FileText className="h-4 w-4 mr-2" />}
+                <FileText className="h-4 w-4 mr-2" />
                 {isExportingPdf ? "Generando…" : "PDF"}
               </Button>
               <Button variant="outline" size="sm" onClick={handleExport} disabled={!canExport}>

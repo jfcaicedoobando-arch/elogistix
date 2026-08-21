@@ -85,12 +85,9 @@ export function TabNotas({ embarqueId, expediente }: Props) {
               onClick={handleSubmit}
               aria-label="Enviar nota"
               disabled={!texto.trim() || crearNota.isPending}
+              loading={crearNota.isPending}
             >
-              {crearNota.isPending ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Send className="h-4 w-4" />
-              )}
+              {!crearNota.isPending && <Send className="h-4 w-4" />}
             </Button>
           </div>
         )}

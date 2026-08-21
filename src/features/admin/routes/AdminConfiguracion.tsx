@@ -16,7 +16,7 @@ export default function AdminConfiguracion() {
     <PageContainer>
       <PageHeader
         icon={<Settings className="h-6 w-6 text-primary" />}
-        title="Configuración Global"
+        title="Configuración global"
         description="Parámetros globales de la plataforma que aplican a todas las organizaciones."
       />
 

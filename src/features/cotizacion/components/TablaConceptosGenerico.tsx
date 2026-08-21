@@ -89,7 +89,7 @@ export default function TablaConceptosGenerico({ moneda, conceptos, subtotal, iv
           {iva !== undefined && (
             <span className="text-body">{esMXN ? ivaLabel : "IVA"}: {formatCurrency(iva, moneda)}</span>
           )}
-          <p className="text-lg font-bold">Total {moneda}: {formatCurrency(total, moneda)}</p>
+          <p className="text-kpi tabular-nums">Total {moneda}: {formatCurrency(total, moneda)}</p>
         </div>
       </CardContent>
     </Card>

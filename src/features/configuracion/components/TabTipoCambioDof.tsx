@@ -100,11 +100,11 @@ export default function TabTipoCambioDof() {
             </div>
             <div className="rounded-md border p-3">
               <p className="text-xs text-muted-foreground">USD / MXN</p>
-              <p className="text-lg font-semibold tabular-nums">{fmtTc(ultimo.usd_mxn)}</p>
+              <p className="text-kpi tabular-nums">{fmtTc(ultimo.usd_mxn)}</p>
             </div>
             <div className="rounded-md border p-3">
               <p className="text-xs text-muted-foreground">EUR / MXN</p>
-              <p className="text-lg font-semibold tabular-nums">{fmtTc(ultimo.eur_mxn)}</p>
+              <p className="text-kpi tabular-nums">{fmtTc(ultimo.eur_mxn)}</p>
             </div>
           </div>
         )}

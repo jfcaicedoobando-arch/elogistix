@@ -36,7 +36,7 @@ export default function AdminDashboard() {
   return (
     <PageContainer>
       <PageHeader
-        title="Dashboard Super Admin"
+        title="Dashboard super admin"
         description="Resumen global de toda la plataforma."
       />
 

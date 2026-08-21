@@ -7,6 +7,7 @@ import { statusColumn } from "@/components/shared/dataTable/columnBuilders";
 import { sortByString, sortByNumber, sortByDate } from "@/components/shared/dataTable/sortingFns";
 import { formatDate, formatCurrency, getOrigen, getDestino, toTitleCase, PLACEHOLDER_VACIO } from "@/lib/formatters";
 import { ModoIcon } from "@/components/shared/ModoIcon";
+import { KpiCard } from "@/components/shared/KpiCard";
 import type { EmbarqueMesSiguiente, ResumenFacturacion } from "@/features/dashboard/hooks";
 
 import { CalendarDays, DollarSign, TrendingUp, FileCheck, Ship } from "lucide-react";
@@ -131,53 +132,40 @@ export function EmbarquesActivosTable({ embarques, resumen, isLoading, hideFinan
       <CardContent className="space-y-4">
         {/* Resumen de facturación */}
         <div className={`grid gap-3 ${hideFinancials ? "grid-cols-1" : "grid-cols-2 md:grid-cols-3 lg:grid-cols-5"}`}>
-          <div className="flex items-center gap-2 rounded-lg border bg-muted/30 p-3">
-            <Ship className="h-4 w-4 text-muted-foreground shrink-0" />
-            <div className="min-w-0">
-              <p className="text-lg font-bold text-foreground">{resumen.totalEmbarques}</p>
-              <p className="text-label text-muted-foreground">Embarques</p>
-            </div>
-          </div>
+          <KpiCard label="Embarques" value={resumen.totalEmbarques} icon={Ship} iconVariant="chip" />
           {!hideFinancials && (
             <>
-              <div className="flex items-center gap-2 rounded-lg border bg-muted/30 p-3">
-                <DollarSign className="h-4 w-4 text-info shrink-0" />
-                <div className="min-w-0">
-                  <p className="text-body font-bold text-foreground truncate">{formatCurrency(resumen.ventaMXN, "MXN")}</p>
-                  <p className="text-label text-muted-foreground">Venta MXN</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-2 rounded-lg border bg-muted/30 p-3">
-                <DollarSign className="h-4 w-4 text-warning shrink-0" />
-                <div className="min-w-0">
-                  <p className="text-body font-bold text-foreground truncate">{formatCurrency(resumen.costoMXN, "MXN")}</p>
-                  <p className="text-label text-muted-foreground">Costo MXN</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-2 rounded-lg border bg-muted/30 p-3">
-                <TrendingUp className={`h-4 w-4 shrink-0 ${resumen.profitMXN >= 0 ? "text-success" : "text-destructive"}`} />
-                <div className="min-w-0">
-                  <p className={`text-body font-bold truncate ${resumen.profitMXN >= 0 ? "text-success" : "text-destructive"}`}>
-                    {formatCurrency(resumen.profitMXN, "MXN")}
-                  </p>
-                  <p className="text-label text-muted-foreground">Profit MXN</p>
-                </div>
-              </div>
-              <div className="col-span-2 md:col-span-3 lg:col-span-1 flex flex-col gap-1.5 rounded-lg border bg-muted/30 p-3">
-                <div className="flex items-center gap-2">
-                  <FileCheck className="h-4 w-4 text-primary shrink-0" />
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-baseline justify-between gap-2">
-                      <p className="text-body font-bold text-foreground">
-                        {resumen.facturados}/{resumen.totalEmbarques}
-                      </p>
-                      <span className="text-label text-muted-foreground">{pctFacturados}%</span>
-                    </div>
-                    <p className="text-label text-muted-foreground">Facturados</p>
-                  </div>
-                </div>
-                <Progress value={pctFacturados} className={`h-1.5 ${colorClass}`} />
-              </div>
+              <KpiCard
+                label="Venta MXN"
+                value={formatCurrency(resumen.ventaMXN, "MXN")}
+                icon={DollarSign}
+                iconVariant="chip"
+                variant="info"
+              />
+              <KpiCard
+                label="Costo MXN"
+                value={formatCurrency(resumen.costoMXN, "MXN")}
+                icon={DollarSign}
+                iconVariant="chip"
+                variant="warning"
+              />
+              <KpiCard
+                label="Profit MXN"
+                value={formatCurrency(resumen.profitMXN, "MXN")}
+                icon={TrendingUp}
+                iconVariant="chip"
+                variant={resumen.profitMXN >= 0 ? "success" : "destructive"}
+              />
+              <KpiCard
+                label="Facturados"
+                value={`${resumen.facturados}/${resumen.totalEmbarques}`}
+                icon={FileCheck}
+                iconVariant="chip"
+                delta={`${pctFacturados}%`}
+                className="col-span-2 md:col-span-3 lg:col-span-1"
+              >
+                <Progress value={pctFacturados} className={`h-1.5 mt-1.5 ${colorClass}`} />
+              </KpiCard>
             </>
           )}
         </div>

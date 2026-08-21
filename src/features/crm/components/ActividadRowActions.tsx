@@ -54,18 +54,17 @@ export default function ActividadRowActions({ actividad }: Props) {
                 className="h-7 px-2"
                 onClick={handleCompletar}
                 disabled={completar.isPending}
+                loading={completar.isPending}
                 aria-label="Marcar como completada"
               >
-                {completar.isPending
-                  ? <Loader2 className="h-4 w-4 animate-spin" />
-                  : <CheckCircle2 className="h-3.5 w-3.5 text-success" />}
+                {!completar.isPending && <CheckCircle2 className="h-3.5 w-3.5 text-success" />}
               </Button>
             </Hint>
             <DropdownMenu>
               <Hint label="Posponer">
                 <DropdownMenuTrigger asChild>
-                  <Button size="sm" variant="ghost" className="h-7 px-2" disabled={posponer.isPending} aria-label="Posponer">
-                    {posponer.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Clock className="h-4 w-4" />}
+                  <Button size="sm" variant="ghost" className="h-7 px-2" disabled={posponer.isPending} loading={posponer.isPending} aria-label="Posponer">
+                    {!posponer.isPending && <Clock className="h-4 w-4" />}
                   </Button>
                 </DropdownMenuTrigger>
               </Hint>

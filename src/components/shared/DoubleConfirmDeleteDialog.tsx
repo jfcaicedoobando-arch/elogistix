@@ -16,6 +16,12 @@ interface DoubleConfirmDeleteDialogProps {
   description?: ReactNode;
   /** Second step description (string o ReactNode). */
   finalDescription?: ReactNode;
+  /** Contenido extra del paso 1 (p. ej. el grid financiero de una factura).
+   *  Ola 3 · O3.1 — permite adoptar el patrón sin clonarlo cuando el diálogo
+   *  necesita mostrar datos de la entidad antes de confirmar. */
+  children?: ReactNode;
+  /** Etiqueta del botón destructivo final. Default "Eliminar definitivamente". */
+  confirmLabel?: string;
   onConfirm: () => void | Promise<void>;
   isPending?: boolean;
 }
@@ -33,6 +39,8 @@ function DoubleConfirmInner({
   entityName,
   description,
   finalDescription,
+  children,
+  confirmLabel = "Eliminar definitivamente",
   onConfirm,
   isPending = false,
 }: DoubleConfirmDeleteDialogProps) {
@@ -72,6 +80,7 @@ function DoubleConfirmInner({
               </AlertDialogDescription>
             )}
           </AlertDialogHeader>
+          {children}
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
             <AlertDialogAction onClick={(e) => { e.preventDefault(); setPaso2(true); }}>Continuar</AlertDialogAction>
@@ -140,9 +149,9 @@ function DoubleConfirmInner({
               disabled={isPending || !canDelete}
             >
               {isPending ? (
-                <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Eliminando...</>
+                <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Eliminando…</>
               ) : (
-                "Eliminar definitivamente"
+                confirmLabel
               )}
             </AlertDialogAction>
           </AlertDialogFooter>

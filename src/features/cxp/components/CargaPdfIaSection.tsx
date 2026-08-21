@@ -86,12 +86,8 @@ export function CargaPdfIaSection({ categorias, onParsed, pdfReady }: Props) {
             Limpiar
           </Button>
         )}
-        <Button type="button" size="sm" onClick={procesar} disabled={!pdf || loading}>
-          {loading ? (
-            <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />
-          ) : (
-            <Sparkles className="h-4 w-4 mr-1.5" />
-          )}
+        <Button type="button" size="sm" onClick={procesar} disabled={!pdf || loading} loading={loading}>
+          {!loading && <Sparkles className="h-4 w-4 mr-1.5" />}
           {loading ? "Procesando con IA…" : "Procesar con IA"}
         </Button>
       </div>

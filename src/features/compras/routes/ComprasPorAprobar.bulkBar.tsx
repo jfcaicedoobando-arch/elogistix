@@ -5,7 +5,7 @@
  * v13.428.0 — se agrega "Validar en SAT" antes de aprobar.
  */
 import { pluralizar } from "@/lib/format/pluralizar";
-import { CheckCircle2, Loader2, ShieldCheck } from "lucide-react";
+import { CheckCircle2, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Hint } from "@/components/shared/Hint";
 import { cn } from "@/lib/utils";
@@ -62,18 +62,18 @@ export function ComprasPorAprobarBulkBar({
               : "Consulta el estatus del CFDI en el SAT para la selección"
           }
         >
-          <Button
+          <Button loading={satRunning}
             size="sm"
             variant="outline"
             disabled={validablesCount === 0 || ocupado}
             onClick={onValidarSat}
           >
-            {satRunning ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <ShieldCheck className="h-4 w-4 mr-1" />}
+            <ShieldCheck className="h-4 w-4 mr-1" />
             Validar en SAT ({validablesCount})
           </Button>
         </Hint>
-        <Button size="sm" disabled={!hasSelection || ocupado} onClick={onOpenConfirm}>
-          {isRunning ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <CheckCircle2 className="h-4 w-4 mr-1" />}
+        <Button loading={isRunning} size="sm" disabled={!hasSelection || ocupado} onClick={onOpenConfirm}>
+          <CheckCircle2 className="h-4 w-4 mr-1" />
           Aprobar seleccionadas ({selectedCount})
         </Button>
       </div>

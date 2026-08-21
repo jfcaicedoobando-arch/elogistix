@@ -55,7 +55,7 @@ export function CostoTotalBlock({
             </TooltipContent>
           </Tooltip>
         </div>
-        <span className={cn("text-xl font-bold tabular-nums whitespace-nowrap", esGanador && "text-success")}>
+        <span className={cn("text-kpi tabular-nums whitespace-nowrap", esGanador && "text-success")}>
           {usd(row.total_comparable)}
         </span>
       </div>

@@ -4,8 +4,10 @@
  */
 import { Card, CardContent } from "@/components/ui/card";
 import { FileCheck2 } from "lucide-react";
-import { DataTable, defineColumns } from "@/components/shared/DataTable";
+import { defineColumns } from "@/components/shared/DataTable";
+import { ResponsiveDataTable } from "@/components/shared/dataTable/ResponsiveDataTable";
 import { clientColumn, dateColumn } from "@/components/shared/dataTable/columnBuilders";
+import { formatDate, toTitleCase } from "@/lib/formatters";
 import { formatCurrency } from "@/lib/formatters";
 import { useClientPagedList } from "@/hooks/shared/useClientPagedList";
 import { useProformasListas, type FilaProformaLista } from "@/features/facturacion/hooks/useProformasListas";
@@ -79,13 +81,16 @@ export function BandejaProformasListas() {
     >
       <Card>
         <CardContent className="p-0">
-          <DataTable
+          <ResponsiveDataTable
             columns={columns}
             data={paged.rows}
             isLoading={paged.isLoading}
-            emptyIcon={FileCheck2}
-            emptyMessage="Sin proformas aceptadas pendientes de convertir a CFDI."
-            emptyHint="Aquí aparecerán las proformas aceptadas por el cliente que todavía no se han convertido en factura."
+            emptyState={
+              <div className="flex flex-col items-center justify-center gap-2 py-12 text-center text-body text-muted-foreground px-4">
+                <FileCheck2 className="h-8 w-8 opacity-40" strokeWidth={1.5} />
+                <span>Sin proformas aceptadas pendientes de convertir a CFDI.</span>
+              </div>
+            }
             rowKey={(r) => r.id}
             getRowHref={(r) => `/proformas/${r.id}`}
             getRowAriaLabel={(r) => `Abrir proforma ${r.numero || r.id}`}
@@ -93,6 +98,18 @@ export function BandejaProformasListas() {
             controlledSort={paged.controlledSort}
             onSortChange={paged.setSort}
             pagination={paged.pagination}
+            mobileCard={(r) => (
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0 flex-1">
+                  <div className="font-semibold text-body truncate font-mono">{r.numero || "—"}</div>
+                  <div className="text-body-sm text-muted-foreground truncate mt-0.5">{toTitleCase(r.cliente_nombre)}</div>
+                  <div className="text-label text-muted-foreground mt-0.5">{r.expediente ?? "—"} · {formatDate(r.created_at)}</div>
+                </div>
+                <span className="text-body font-semibold tabular-nums whitespace-nowrap">
+                  {r.total_usd && r.total_usd > 0 ? formatCurrency(r.total_usd, "USD") : r.total_mxn && r.total_mxn > 0 ? formatCurrency(r.total_mxn, "MXN") : "—"}
+                </span>
+              </div>
+            )}
           />
         </CardContent>
       </Card>

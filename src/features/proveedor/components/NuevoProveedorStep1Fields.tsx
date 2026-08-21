@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Upload } from "lucide-react";
+import { Upload } from "lucide-react";
 import { useRef } from "react";
 import {
   MONEDAS_PROVEEDOR as MONEDAS,
@@ -49,12 +49,8 @@ export function CsfUploader({ c }: { c: Controller }) {
         Opcional. Extraemos automáticamente nombre y RFC desde la CSF del SAT.
       </p>
       <input ref={csfInputRef} type="file" accept="application/pdf" className="hidden" onChange={onChange} />
-      <Button type="button" variant="outline" size="sm" disabled={c.csfLoading} onClick={() => csfInputRef.current?.click()}>
-        {c.csfLoading ? (
-          <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Procesando…</>
-        ) : (
-          <><Upload className="h-4 w-4 mr-2" /> Subir CSF</>
-        )}
+      <Button type="button" variant="outline" size="sm" disabled={c.csfLoading} loading={c.csfLoading} onClick={() => csfInputRef.current?.click()}>
+        {c.csfLoading ? "Procesando…" : (<><Upload className="h-4 w-4 mr-2" /> Subir CSF</>)}
       </Button>
     </div>
   );

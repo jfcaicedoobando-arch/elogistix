@@ -13,7 +13,7 @@
  * PENDING:<uuid> (Ola 4 · N1) y también pueden quedar huérfanas.
  */
 import { useState } from "react";
-import { AlertTriangle, Loader2, RefreshCw } from "lucide-react";
+import { AlertTriangle, RefreshCw } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Hint } from "@/components/shared/Hint";
@@ -97,13 +97,13 @@ export function ClaimPendingBanner({ facturaId, facturapiId, facturapiClaimAt, n
           {" "}Verifica si el CFDI se emitió y reconcilia el estado.
         </span>
         <Hint label={!puedeIntentar ? "Espera al menos 3 minutos desde el intento de timbrado." : undefined}>
-          <Button
+          <Button loading={loading}
             size="sm"
             variant="outline"
             onClick={onRecuperar}
             disabled={loading || !puedeIntentar}
           >
-            {loading ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <RefreshCw className="h-4 w-4 mr-1" />}
+            <RefreshCw className="h-4 w-4 mr-1" />
             Verificar y recuperar
           </Button>
         </Hint>

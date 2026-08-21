@@ -1,4 +1,3 @@
-import { format } from "date-fns";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -7,6 +6,7 @@ import type { useMarcarRevisadoController } from "@/features/auditoria/hooks";
 import type { AuditoriaRevision } from "@/features/auditoria/types";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 import { MessageSquare, MessageSquareOff } from "lucide-react";
+import { formatFechaHora } from "@/lib/formatters";
 
 interface Props {
   ctrl: ReturnType<typeof useMarcarRevisadoController>;
@@ -36,7 +36,7 @@ export function ComentariosTab({ ctrl, revisionExistente }: Props) {
                     <div className="flex items-center justify-between gap-2 text-label text-muted-foreground">
                       <span className="font-medium text-foreground">{c.autor_email}</span>
                       <span className="tabular-nums">
-                        {format(new Date(c.created_at), "dd/MM HH:mm")}
+                        {formatFechaHora(c.created_at, { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit", hour12: false })}
                       </span>
                     </div>
                     <div className="text-foreground/90 mt-0.5 whitespace-pre-wrap">
@@ -60,12 +60,9 @@ export function ComentariosTab({ ctrl, revisionExistente }: Props) {
               size="sm"
               onClick={ctrl.handleAgregarComentario}
               disabled={!ctrl.comentario.trim() || ctrl.agregandoComentario}
+              loading={ctrl.agregandoComentario}
             >
-              {ctrl.agregandoComentario ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                "Agregar comentario"
-              )}
+              {ctrl.agregandoComentario ? null : "Agregar comentario"}
             </Button>
           </div>
         </>

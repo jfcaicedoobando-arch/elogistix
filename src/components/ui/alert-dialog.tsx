@@ -51,7 +51,7 @@ const AlertDialogFooter = ({ className, ...props }: React.HTMLAttributes<HTMLDiv
 AlertDialogFooter.displayName = "AlertDialogFooter";
 
 const AlertDialogTitle = ({ ref, className, ...props }: React.ComponentPropsWithoutRef<typeof AlertDialogPrimitive.Title> & { ref?: React.Ref<React.ElementRef<typeof AlertDialogPrimitive.Title>> }) => (
-  <AlertDialogPrimitive.Title ref={ref} className={cn("text-lg font-semibold", className)} {...props} />
+  <AlertDialogPrimitive.Title ref={ref} className={cn("text-section", className)} {...props} />
 );
 AlertDialogTitle.displayName = AlertDialogPrimitive.Title.displayName;
 
