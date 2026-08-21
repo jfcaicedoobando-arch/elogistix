@@ -4,7 +4,8 @@
 -- Red de seguridad conductual para los candados que se agregaron en la
 -- Ola 1 y que hasta ahora no tenían prueba propia:
 --   · CASO 1 — cobro con fecha futura        → LC_PAGO_FECHA_FUTURA (23514)
---   · CASO 3 — tc_dof_upsert_manual sin rol  → LC_TC_DOF_FORBIDDEN (42501)
+--   · CASO 2 — tc_dof_upsert_manual sin rol  → 42501 (EXECUTE revocado o
+--               LC_TC_DOF_FORBIDDEN si el rol sí puede invocarla)
 --
 -- Todo el fixture vive dentro de BEGIN…ROLLBACK: no ensucia el snapshot.
 --
@@ -70,9 +71,9 @@ END
 $caso1$ LANGUAGE plpgsql;
 
 -- -- -------------------------------------------------------------
--- CASO 3: tc_dof_upsert_manual sin sesión super_admin → LC_TC_DOF_FORBIDDEN
+-- CASO 2: tc_dof_upsert_manual sin sesión super_admin → 42501
 -- -------------------------------------------------------------
-DO $caso3$
+DO $caso2$
 DECLARE
   v_sqlstate text;
   v_msg text;
@@ -85,13 +86,15 @@ BEGIN
   END;
 
   IF v_sqlstate = '00000' THEN
-    RAISE EXCEPTION 'CASO 3 FALLÓ: se permitió capturar T/C DOF sin rol super_admin';
+    RAISE EXCEPTION 'CASO 2 FALLÓ: se permitió capturar T/C DOF sin rol super_admin';
   END IF;
-  IF v_msg NOT LIKE '%LC_TC_DOF_FORBIDDEN%' THEN
-    RAISE EXCEPTION 'CASO 3 FALLÓ: se esperaba LC_TC_DOF_FORBIDDEN, llegó: % (%)', v_msg, v_sqlstate;
+  -- Doble candado válido: EXECUTE revocado (permission denied) o el guard
+  -- explícito dentro de la función. Ambos son 42501 (insufficient_privilege).
+  IF v_sqlstate <> '42501' THEN
+    RAISE EXCEPTION 'CASO 2 FALLÓ: se esperaba 42501, llegó: % (%)', v_msg, v_sqlstate;
   END IF;
-  RAISE NOTICE 'CASO 3 OK · catálogo global protegido (%).', v_sqlstate;
+  RAISE NOTICE 'CASO 2 OK · catálogo global protegido (% / %).', v_sqlstate, v_msg;
 END
-$caso3$ LANGUAGE plpgsql;
+$caso2$ LANGUAGE plpgsql;
 
 ROLLBACK;
