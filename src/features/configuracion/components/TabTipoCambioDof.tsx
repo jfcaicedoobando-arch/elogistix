@@ -13,7 +13,7 @@ import type { TipoCambioDof } from "@/features/catalogos/services/tipoCambioDof"
 import { formatDate } from "@/lib/formatters/dates";
 import { formatNumber } from "@/lib/formatters";
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
-import { usePermissions } from "@/hooks/shared/usePermissions";
+import { usePermissions } from "@/hooks/shared";
 
 /** Formatea un TC con 4 decimales (convención Banxico/DOF). */
 function fmtTc(valor: number | null): string {
