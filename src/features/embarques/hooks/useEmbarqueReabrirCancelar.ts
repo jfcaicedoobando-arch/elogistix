@@ -56,7 +56,7 @@ export function useEmbarqueReabrirCancelar(
         method: "HANDLE_REABRIR_EMBARQUE",
       });
     }
-  }, [embarque, id, reabrirEmbarque, usuarioEmail, registrarActividad]);
+  }, [embarque, id, reabrirEmbarque, usuarioEmail, registrarActividad, reqIdReabrir]);
 
   const handleCancelar = useCallback(
     async (motivo: string) => {
@@ -66,7 +66,9 @@ export function useEmbarqueReabrirCancelar(
           embarqueId: id,
           nuevoEstado: "Cancelado",
           usuarioEmail,
+          requestId: reqIdCancelar.get(),
         });
+        reqIdCancelar.reset();
         registrarActividad.mutate({
           accion: "cancelar_embarque",
           modulo: "embarques",
