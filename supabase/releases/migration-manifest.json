@@ -65110,10 +65110,7 @@
       "20260826001000_nbl01_replay_validar_cierre_embarque.sql",
       "20260826002000_ola1_replay_lotes_espejo.sql",
       "20260826003000_ola2_comisiones_espejo.sql",
-      "20260826004000_ola5_o58_adjuntar_xml_verificado.sql",
-      "20260827060010_ola6_bolsa_leads.sql",
-      "20260827060020_ola6_convertir_propaga_fiscales.sql",
-      "20260827060030_ola6_crm_etapas_policy.sql"
+      "20260826004000_ola5_o58_adjuntar_xml_verificado.sql"
     ]
   }
 }
