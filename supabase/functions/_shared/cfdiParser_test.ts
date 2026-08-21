@@ -1,6 +1,6 @@
 // @ts-nocheck — Deno runtime
 import { assertEquals, assertThrows } from "https://deno.land/std@0.224.0/assert/mod.ts";
-import { parseCfdi } from "./parser.ts";
+import { parseCfdi } from "./cfdiParser.ts";
 
 const SAMPLE = `<?xml version="1.0" encoding="UTF-8"?>
 <cfdi:Comprobante xmlns:cfdi="http://www.sat.gob.mx/cfd/4" Version="4.0" Serie="A" Folio="123" Fecha="2025-03-14T10:22:01" SubTotal="1000.00" Total="1160.00" Moneda="MXN" TipoCambio="1">
@@ -226,7 +226,7 @@ Deno.test("parseCfdi decodifica entidades XML en RFC, nombres y textos", () => {
 });
 
 Deno.test("decodeXmlEntities no re-decodifica secuencias generadas", async () => {
-  const { decodeXmlEntities } = await import("./parser.ts");
+  const { decodeXmlEntities } = await import("./cfdiParser.ts");
   assertEquals(decodeXmlEntities("&amp;lt;"), "&lt;");
   assertEquals(decodeXmlEntities("&#38;"), "&");
   assertEquals(decodeXmlEntities("sin entidades"), "sin entidades");

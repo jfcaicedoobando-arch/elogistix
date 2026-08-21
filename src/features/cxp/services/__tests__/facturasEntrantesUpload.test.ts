@@ -33,6 +33,15 @@ vi.mock("@/integrations/supabase/client", () => ({
   },
 }));
 
+// Ola 5 · O5.8: la escritura de metadatos pasa por el edge `adjuntar-xml-entrante`.
+// Se reusa `rpcMock` como fuente del resultado para conservar los casos RG4-7.
+vi.mock("@/features/cxp/services/adjuntarXmlEntranteEdge", () => ({
+  verificarYAdjuntarXmlEntrante: async () => {
+    const { error } = await rpcMock();
+    return error ?? null;
+  },
+}));
+
 vi.mock("@/services/bitacora/registrar", () => ({
   registrarActividad: vi.fn().mockResolvedValue(undefined),
 }));

@@ -1,10 +1,10 @@
 /**
- * Smoke compile-time: garantiza que aiHelpers.ts y parser.ts siguen
+ * Smoke compile-time: garantiza que aiHelpers.ts y _shared/cfdiParser.ts siguen
  * exportando lo que index.ts consume.
  */
 import { assert } from "https://deno.land/std@0.224.0/assert/mod.ts";
 import * as ai from "./aiHelpers.ts";
-import * as parser from "./parser.ts";
+import * as parser from "../_shared/cfdiParser.ts";
 
 Deno.test("aiHelpers expone la API consumida por index.ts", () => {
   assert(typeof ai.fallbackResult === "function");

@@ -20,6 +20,7 @@ import {
   esErrorUnicidad,
   limpiarArchivosHuerfanosSeguro,
 } from "@/features/cxp/services/facturasEntrantesDedupe";
+import { verificarYAdjuntarXmlEntrante } from "@/features/cxp/services/adjuntarXmlEntranteEdge";
 import { guardarConceptosSugeridos } from "@/features/cxp/services/facturasEntrantesConceptos";
 import {
   calcularHash,
@@ -146,26 +147,22 @@ export async function adjuntarXmlFacturaEntrante(params: {
     embarqueId: params.embarqueId,
     organizationId: params.organizationId,
   }, hashXml);
-  // RNF-08 (Ola 11): el UPDATE directo lo rechazaba la RLS para contabilidad
-  // (la política exige subido_por = uid o admin) y el XML ya subido quedaba
-  // huérfano en el bucket. La RPC valida rol, organización y estado
-  // server-side con la matriz del plan de permisos contables.
-  const { error } = await supabase.rpc("adjuntar_xml_factura_entrante", {
-    p_documento_id: params.id,
-    p_xml_path: subido.path,
-    p_xml_nombre: subido.nombre,
-    p_xml_hash: subido.hash,
-    p_uuid_fiscal: params.meta?.uuid ?? undefined,
-    p_rfc_emisor: params.meta?.rfcEmisor ?? undefined,
-    p_folio_serie: params.meta?.folioSerie ?? undefined,
-    p_fecha_emision: params.meta?.fechaEmision ?? undefined,
-    p_total_detectado: params.meta?.total ?? undefined,
-    p_moneda_detectada: params.meta?.moneda ?? undefined,
+  // Ola 5 · O5.8 (BUG-18): los metadatos fiscales YA NO se escriben desde el
+  // navegador. La edge function descarga el XML de Storage, verifica su hash,
+  // lo re-parsea y compara contra lo declarado; si algo no cuadra rechaza con
+  // LC_XML_METADATA_MISMATCH. La RPC de escritura sólo acepta service_role.
+  const error = await verificarYAdjuntarXmlEntrante({
+    documentoId: params.id,
+    xmlPath: subido.path,
+    xmlNombre: subido.nombre,
+    xmlHash: subido.hash,
+    meta: params.meta,
   });
   if (error) {
     // Ola 5 · RG4-7: mismo criterio que subirFacturaEntrante.
     throw await errorGuardadoEntrante(error, [subido.path], params.organizationId);
   }
+
   await registrarActividad({
     modulo: "cxp",
     accion: "adjuntar_xml_factura_entrante",

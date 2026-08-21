@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.715.0] - 2026-08-21
+### Ola 5 — Entrega 2: verificación fiscal del XML en el servidor (O5.8)
+- **Adjuntar XML al buzón CxP**: el navegador ya no decide los datos fiscales. La nueva Edge Function `adjuntar-xml-entrante` descarga el XML real del bucket, valida su hash SHA-256, lo vuelve a parsear (CFDI 4.0, sin DOM) y guarda **sus** valores de UUID, RFC emisor, folio, fecha, total y moneda. Si lo capturado no coincide con el archivo, se rechaza con `LC_XML_METADATA_MISMATCH`.
+- **Base de datos**: nueva RPC `adjuntar_xml_entrante_verificado` (sólo `service_role`, valida membresía y rol del actor) y se revocó `adjuntar_xml_factura_entrante` para `authenticated`, cerrando la vía que permitía declarar metadatos falsos.
+- **Refactor**: el parser CFDI se movió a `supabase/functions/_shared/cfdiParser.ts` para poder reutilizarlo entre funciones.
+
+
 ## [13.714.0] - 2026-08-21
 ### Ola 5 — Entrega 1: rechazo de documentos y consultas por lotes
 - **Rechazar documento del embarque (O5.3)**: nuevo botón "Rechazar" en el tab Documentos. Pide un motivo (mín. 10 caracteres), quita el archivo adjunto, deja el documento en estado `Rechazado` (vuelve a contar como faltante), guarda el motivo en las notas y envía una notificación interna a quien abrió el embarque. Todo en una sola RPC (`rechazar_documento_embarque`) con validación de organización y bitácora.
