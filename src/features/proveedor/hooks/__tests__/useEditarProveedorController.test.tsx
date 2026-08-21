@@ -21,7 +21,7 @@ describe("useEditarProveedorController", () => {
     });
     
     expect(result.current.isValid).toBe(false);
-    expect(result.current.fieldErrorMessage("email")).toBe("Email inválido");
+    expect(result.current.fieldErrorMessage("email")).toBe("Correo inválido.");
   });
 
   it("handles saving when valid", () => {
