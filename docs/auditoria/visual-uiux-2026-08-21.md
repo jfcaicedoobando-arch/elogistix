@@ -149,28 +149,40 @@ página por diseño. El portal usa `PortalPageShell` como patrón paralelo — d
 
 ## Bajo
 
-### V-10 · Dobles barras de desplazamiento
+### V-11 · Dobles barras de desplazamiento
 `/inicio` tiene 4 contenedores con scroll propio anidados dentro del scroll de página; en tableta
 aparecen dos barras simultáneas. **Fix:** dejar un único contenedor con scroll por vista.
 
-### V-11 · Tamaños de ícono mezclados
+### V-12 · Tamaños de ícono mezclados
 El estándar es 16×16 (`[&_svg]:size-4` en `Button`), pero en tablas principales hay íconos de
 14×14 y 12×12 sueltos. **Fix:** normalizar a `size-4` / `size-3.5` documentados.
 
-### V-12 · `h-screen` en lugar de `h-dvh`
-Quedan usos de `h-screen`, que en móvil deja un recorte por la barra del navegador.
+### V-13 · `h-screen` en lugar de `h-dvh`
+`src/features/marketing/routes/HomeRoute.tsx:20` y `:38` son los únicos usos de `h-screen` literal
+(el resto de la app usa `min-h-screen`); en móvil deja un recorte por la barra del navegador.
+
+### V-14 · Estilo inline estático
+`src/features/marketing/components/sections/LandingHero.tsx:15-22` fija `backgroundImage` /
+`backgroundSize` por `style={{}}` sin ningún valor dinámico; debe ser una clase. El resto de los
+`style={{}}` del repo son dinámicos (virtualización, barras de progreso, gráficas) y son correctos.
 
 ---
 
 ## Lo que sí está bien (no tocar)
 
-- **Foco de teclado:** anillo visible y consistente (`outline: 2px solid` + ring `rgb(36,99,235)`)
-  en la navegación por `Tab`. Evidencia: `detalle-foco-teclado-cotizaciones.png`.
+- **Colores:** el barrido de utilidades literales (`text-white`, `bg-[#…]`, `emerald-*`, `amber-*`,
+  `slate-N`) devuelve **0 ocurrencias en `src/features/`**; la única está en `components/ui/alert-dialog.tsx`
+  (componente base shadcn). Los tokens semánticos están bien aplicados.
+- **Tamaños de texto arbitrarios:** 0 ocurrencias de `text-[Npx]` fuera de `src/pdf/`.
+- **Anchos de modal:** 0 `DialogContent` con `max-w-*` literal; todos usan `dialogTokens`.
+- **Foco de teclado:** anillo visible y consistente (`outline: 2px solid` + ring `rgb(36,99,235)`).
+  Evidencia: `detalle-foco-teclado-cotizaciones.png`.
 - **Hover de filas:** `hover:bg-primary/5` con `transition-colors 150ms` y zebra `even:bg-muted/45`,
   homogéneo en tablas migradas a `DataTable`.
 - **Sin overflow horizontal:** las 14 rutas miden 0 px de desbordamiento en `main` y en el documento,
   en ambos viewports.
 - **Tipografía:** "Inter" es la única familia en uso; no hay fuentes intrusas.
+
 
 ---
 
