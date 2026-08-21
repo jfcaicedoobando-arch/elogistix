@@ -8,6 +8,7 @@ import {
 } from "@/features/embarques/hooks/useEmbarques";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { labelExpediente } from "@/lib/domain/labelExpediente";
+import { useStableRequestId } from "@/lib/idempotency";
 
 /**
  * Handlers de "Reabrir" y "Cancelar" para el detalle de embarque.
