@@ -143,51 +143,19 @@ function DialogNuevaFacturaProveedorForm({
           ) : undefined
         }
       >
-        <div
-          className="space-y-5"
-          onKeyDown={(e) => {
-            if (!(e.metaKey || e.ctrlKey) || e.key !== "Enter") return;
-            e.preventDefault();
-            if (!pasos.esUltimo) pasos.siguiente();
-            else if (ctl.puedeGuardar) void ctl.submit();
-          }}
-        >
-          {pasos.paso === 1 && (
-            <PasoDocumento
-              ctl={ctl}
-              categorias={cats.data ?? []}
-              entrante={entrante ?? null}
-              autocarga={autocarga}
-              keyRenglonSospechoso={keyRenglonSospechoso}
-              modoBuzon={modoBuzon}
-              onVerArchivoBuzon={(path, nombre) => void verArchivoBuzon(path, nombre)}
-              onVerFacturaDuplicada={(id: string) => {
-                ctl.reset();
-                onOpenChange(false);
-                navigate(`/compras/facturas?factura=${id}`);
-              }}
-            />
-          )}
+        <CapturaFacturaPasosBody
+          ctl={ctl}
+          pasos={pasos}
+          categorias={cats.data ?? []}
+          entrante={entrante ?? null}
+          autocarga={autocarga}
+          categoriaCogs={categoriaCogs}
+          herencia={herencia}
+          keyRenglonSospechoso={keyRenglonSospechoso}
+          modoBuzon={modoBuzon}
+          onCerrar={() => onOpenChange(false)}
+        />
 
-          {pasos.paso === 2 && (
-            <PasoDatos
-              ctl={ctl}
-              categorias={cats.data ?? []}
-              entrante={entrante ?? null}
-              categoriaCogs={categoriaCogs}
-            />
-          )}
-
-          {pasos.paso === 3 && (
-            <PasoVinculacion
-              ctl={ctl}
-              entrante={entrante ?? null}
-              herencia={herencia}
-              sinCostoCapturado={entrante?.sinCostoCapturado}
-              onIrADatos={() => pasos.irA(2)}
-            />
-          )}
-        </div>
     </FormDialogShell>
     </>
   );
