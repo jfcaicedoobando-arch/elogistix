@@ -99,15 +99,26 @@ export function useSyncEstadoEmbarque() {
   return useMutationWithFeedback<void, Error, SyncEstadoInput>({
     mutationFn: async ({ embarqueId, nuevoEstado, usuarioEmail }: SyncEstadoInput) => {
       // v13.309.2 — La traducción de `LC_TRANSICION_INVALIDA` (y demás
-      // códigos LC_*) vive ahora en `src/lib/errors/lcCodes.ts` y la aplica
+      // códigos LC_*) vive en `src/lib/errors/lcCodes.ts` y la aplica
       // `getErrorMessage` en el wrapper `useMutationWithFeedback`.
-      await actualizarEstadoEmbarque(embarqueId, nuevoEstado);
-      await insertarEventoTracking(
-        embarqueId,
-        nuevoEstado,
-        usuarioEmail && usuarioEmail.trim() ? usuarioEmail : 'sistema',
-      );
+      try {
+        await avanzarEstadoEmbarqueRpc({
+          embarqueId,
+          nuevoEstado,
+          usuarioEmail: usuarioEmail && usuarioEmail.trim() ? usuarioEmail : 'sistema',
+          tipoEvento: tipoEventoParaEstado(nuevoEstado),
+          descripcionEvento: descripcionEventoCambioEstado(nuevoEstado),
+          requestId: requestIdTransicion(embarqueId, nuevoEstado),
+        });
+      } catch (error) {
+        if (esRechazoEsperado(error)) {
+          // Estado sugerido por fechas que aún no procede: no es error de usuario.
+          return;
+        }
+        throw error;
+      }
     },
+
     invalidate: [queryKeys.embarques.all, queryKeys.auditoria.embarques],
     optimistic: [
       { queryKey: (v) => queryKeys.embarques.detail(v.embarqueId), updater: patchEstado },
