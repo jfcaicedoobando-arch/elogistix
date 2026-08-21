@@ -1,5 +1,14 @@
 # Changelog
 
+## [13.709.0] - 2026-08-21
+### Ola 2 · Fase B — comisiones que sí bajan y candados que no se saltan
+- **Notas de crédito (O2.3):** al aplicar una nota de crédito de cliente, la comisión de esa factura se recalcula automáticamente. Si ya estaba liquidada, no se toca el histórico: queda el ajuste anotado para descontarlo en la siguiente liquidación.
+- **Facturas consolidadas (O2.4):** la comisión ya resuelve los embarques por su vínculo activo, suma utilidad y venta de todos, y si no puede resolverlo lo manda a la cola de recálculo en vez de guardar comisión en cero en silencio.
+- **Papelera de embarques (O2.10):** enviar un embarque a la papelera libera la cotización vinculada y la regresa a "Aceptada".
+- **Auto-sync de estado (O2.8):** el cambio automático de estado por fechas ya viaja por la RPC oficial, hereda el candado de documentos y usa una llave estable por transición (no duplica notas ni eventos). Los rechazos esperados del candado ya no muestran error al usuario.
+- Nueva prueba de regresión `supabase/tests/ola2_faseb_regresion.sql`.
+
+
 ## [13.708.4] - 2026-08-21
 ### Corrección de CI — prueba de comisiones: falso positivo del caso 2
 - La prueba buscaba la palabra `definitiva` en todo el texto de `validar_cierre_embarque`, y fallaba por un comentario y por la etiqueta `no_definitivas`. Ahora detecta sólo el uso real de la bandera como filtro.
