@@ -22,6 +22,9 @@ import { usePermissions, useDocumentTitle } from "@/hooks/shared";
 import { CrmSubheader } from "@/features/crm/components/CrmSubheader";
 import LeadsBulkBar from "@/features/crm/components/LeadsBulkBar";
 import { listLeads } from "@/features/crm/services/leads";
+import { exportarLeadsCsv } from "@/features/crm/services/crmCsvExport";
+import ExportarCsvButton from "@/features/crm/components/ExportarCsvButton";
+
 import {
   LEAD_ESTADOS, LEAD_FUENTES, LEAD_SORTABLE_KEYS,
   type CrmLeadRow, type CrmLeadEstado, type CrmLeadFuente, type LeadSortKey,
@@ -89,7 +92,14 @@ export default function Leads() {
       <PageHeader
         title="Leads"
         description="Prospectos y empresas en seguimiento comercial"
+        actions={
+          <ExportarCsvButton
+            onExport={() => exportarLeadsCsv(leads)}
+            disabled={list.isLoading}
+          />
+        }
       />
+
       {/* Ola 3 · O3.7.2 — el contador sale de la misma query del listado
           (count exact de listLeads) y se etiqueta cuando hay filtros. */}
       <CrmSubheader

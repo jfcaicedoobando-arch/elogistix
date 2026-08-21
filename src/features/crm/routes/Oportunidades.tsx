@@ -15,6 +15,9 @@ import { sumarPipelineMxn } from "@/features/crm/domain/pipelineMoneda";
 import { LoadingState } from "@/components/shared/states/LoadingState";
 import OportunidadKanban from "@/features/crm/components/OportunidadKanban";
 import OportunidadesFiltersSection from "@/features/crm/components/OportunidadesFiltersSection";
+import ExportarCsvButton from "@/features/crm/components/ExportarCsvButton";
+import { exportarOportunidadesCsv } from "@/features/crm/services/crmCsvExport";
+
 import OportunidadesDialogs from "@/features/crm/components/OportunidadesDialogs";
 import { FILTROS_DEFAULT, type OportunidadesFiltros } from "@/features/crm/components/oportunidadesFiltersTypes";
 import { useOportunidades, useEtapasPipeline, type CrmEtapaRow } from "@/features/crm/hooks";
@@ -80,7 +83,11 @@ export default function Oportunidades() {
       <PageHeader
         title="Oportunidades"
         description="Pipeline de ventas por etapa con vista Kanban y tabla"
+        actions={
+          <ExportarCsvButton onExport={() => exportarOportunidadesCsv(ops)} disabled={isLoading} />
+        }
       />
+
       <CrmSubheader context={`${ops.length} de ${opsRaw.length} oportunidades · pipeline ${formatCurrencyCompact(pipelineMxn.mxn, "MXN")}${pipelineMxn.estimado ? " (T/C estimado)" : ""}`} />
       {listaTruncada && (
         <p className="text-label text-warning">
