@@ -44,22 +44,32 @@ export function TabLiquidaciones({ vendedoras }: { vendedoras: VendedoraOpt[] })
         : <span className="text-muted-foreground italic">pendiente</span>,
     },
     {
+      id: "estado", header: "Estado", meta: { width: COL_W.estado ?? COL_W.fecha, className: "text-body-sm" },
+      cell: ({ row }) => row.original.estado ?? "Generada",
+    },
+    {
       id: "referencia", header: "Referencia", meta: { width: COL_W.texto, className: "text-muted-foreground text-body-sm" },
       cell: ({ row }) => row.original.referencia ?? "—",
     },
     {
-      id: "acciones", header: "", meta: { width: COL_W.ruta, align: "right" },
+      id: "acciones", header: "", meta: { width: COL_W.acciones ?? COL_W.ruta, align: "right" },
       cell: ({ row }) => {
         const l = row.original;
-        if (l.fecha_pago || !puedeGestionar) return null;
+        if (l.fecha_pago || l.estado === "Cancelada" || !puedeGestionar) return null;
         return (
-          <Button size="sm" variant="outline" onClick={() => setPagoOpen(l)}>
-            <CheckCircle2 className="h-4 w-4 mr-1" /> Registrar pago
-          </Button>
+          <div className="flex justify-end gap-2">
+            <Button size="sm" variant="outline" onClick={() => setPagoOpen(l)}>
+              <CheckCircle2 className="h-4 w-4 mr-1" /> Registrar pago
+            </Button>
+            <Button size="sm" variant="ghost" onClick={() => setCancelOpen(l)}>
+              <Ban className="h-4 w-4 mr-1" /> Cancelar
+            </Button>
+          </div>
         );
       },
     },
   ]);
+
 
   return (
     <div className="space-y-4">
