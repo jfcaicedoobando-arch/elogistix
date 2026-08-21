@@ -15,6 +15,9 @@ import { sumarPipelineMxn } from "@/features/crm/domain/pipelineMoneda";
 import { LoadingState } from "@/components/shared/states/LoadingState";
 import OportunidadKanban from "@/features/crm/components/OportunidadKanban";
 import OportunidadesFiltersSection from "@/features/crm/components/OportunidadesFiltersSection";
+import ExportarCsvButton from "@/features/crm/components/ExportarCsvButton";
+import { exportarOportunidadesCsv } from "@/features/crm/services/crmCsvExport";
+
 import OportunidadesDialogs from "@/features/crm/components/OportunidadesDialogs";
 import { FILTROS_DEFAULT, type OportunidadesFiltros } from "@/features/crm/components/oportunidadesFiltersTypes";
 import { useOportunidades, useEtapasPipeline, type CrmEtapaRow } from "@/features/crm/hooks";
