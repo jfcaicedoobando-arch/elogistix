@@ -1,5 +1,17 @@
 # Changelog
 
+## [13.707.0] - 2026-08-26
+### Ola 1 — Candados de horas
+- Las notas de crédito en otra divisa ya no inflan ni desinflan el saldo: se convierten a la moneda de la factura antes de validar un cobro.
+- Ya no se puede registrar un cobro con fecha futura (ensuciaba antigüedad de cartera y flujo).
+- Los pagos programados llevan una llave por captura: un doble clic ya no genera dos cargos al banco.
+- La captura manual del Tipo de Cambio DOF quedó reservada al super administrador (es un catálogo compartido por toda la plataforma) y queda registrada en bitácora.
+- Cobros y pagos en lote toman los candados en orden fijo por factura, para evitar bloqueos cuando dos personas guardan al mismo tiempo.
+- Las funciones de reversión de proformas, limpieza de cancelaciones y archivado de versiones ahora validan organización y rol.
+- Mensajes claros para los nuevos avisos (fecha futura, tipo de cambio sin permiso, doble envío del mismo pago).
+
+
+
 ## [13.706.1] - 2026-08-20
 ### Actualización segura de dependencias
 - Se actualizaron librerías a sus versiones de mantenimiento (iconos, rutas, PDF, teléfonos, CSV, virtualización de tablas y parámetros de URL) sin cambios de comportamiento visibles.
