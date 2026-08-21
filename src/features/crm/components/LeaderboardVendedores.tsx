@@ -1,24 +1,33 @@
 /**
  * Leaderboard de vendedores (Sprint D).
  * 11.13.0: queries movidas a `useLeaderboardVendedores`.
+ * OLA 7 · O7.8: el RLS puede dejar sólo la fila del vendedor; en ese caso el
+ * título dice "Tu desempeño del mes" para no dar a entender que va ganando.
  */
 import { Trophy } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { formatCurrencyCompact } from "@/lib/formatters";
 import { useLeaderboardVendedores } from "@/features/crm/hooks";
+import { useAuth } from "@/lib/contexts/AuthContext";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 
 export default function LeaderboardVendedores() {
   const { data = [], isLoading } = useLeaderboardVendedores();
+  const { user } = useAuth();
+  const soloYo =
+    data.length === 1 &&
+    !!user?.email &&
+    data[0].vendedor.toLowerCase() === user.email.toLowerCase();
 
   return (
     <Card>
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center gap-2">
-          <Trophy className="h-4 w-4" /> Leaderboard del mes
+          <Trophy className="h-4 w-4" /> {soloYo ? "Tu desempeño del mes" : "Leaderboard del mes"}
         </CardTitle>
       </CardHeader>
+
       <CardContent>
         {isLoading ? (
           <EmptyStateInline loading message="Cargando…" />
