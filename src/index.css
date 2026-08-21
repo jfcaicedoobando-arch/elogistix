@@ -38,8 +38,12 @@
     --brand-surface: 0 0% 100%;
 
 
-    --destructive: 0 84% 60%;
+    /* V-03 (auditoría visual 2026-08-21): se oscureció de 60% a 45% de luminosidad
+       porque este token también se usa como COLOR DE TEXTO en badges sobre fondo
+       suave (`bg-destructive/15 text-destructive`), donde daba 3.78:1 (<AA 4.5:1). */
+    --destructive: 0 74% 45%;
     --destructive-foreground: 210 40% 98%;
+
 
     --border: 214 28% 92%;
     --input: 214 28% 92%;
@@ -77,10 +81,13 @@
     /* Estados operativos adicionales usados por estadoConfig — categóricos.
        Replican paletas Tailwind (cyan-500, violet-500, orange-500, indigo-500)
        para mantener continuidad visual con los badges/barras previos. */
-    --state-arribo: 189 94% 43%;       --state-arribo-soft: 185 100% 96%;   /* cyan */
-    --state-aduana: 262 83% 58%;       --state-aduana-soft: 270 100% 97%;   /* violet */
-    --state-eir: 25 95% 53%;           --state-eir-soft: 33 100% 96%;       /* orange */
-    --state-operacion: 239 84% 67%;    --state-operacion-soft: 226 100% 97%; /* indigo */
+    /* V-03: `arribo` y `eir` se usan como texto sobre `/15`; bajados a
+       luminosidad AA (antes 43% → 2.42:1 y 53% → 2.79:1). */
+    --state-arribo: 189 94% 28%;       --state-arribo-soft: 185 100% 96%;   /* cyan */
+    --state-aduana: 262 83% 45%;       --state-aduana-soft: 270 100% 97%;   /* violet */
+    --state-eir: 25 95% 33%;           --state-eir-soft: 33 100% 96%;       /* orange */
+    --state-operacion: 239 60% 48%;    --state-operacion-soft: 226 100% 97%; /* indigo */
+
 
     /* Modos de transporte categóricos (Marítimo/Terrestre ya usan info/warning).
        Sólo Aéreo y Multimodal requieren tokens dedicados. */
@@ -101,12 +108,14 @@
     /* Paleta categórica para KPIs/métricas (azul, esmeralda, violeta, ámbar, cian, rojo).
        Cada token tiene variante `-soft` (fondo pastel) y normal (texto/icono).
        Son intencionalmente categóricas — no semánticas — para diferenciar tarjetas. */
-    --kpi-info: 217 91% 50%;          --kpi-info-soft: 214 100% 96%;
-    --kpi-success: 160 84% 39%;       --kpi-success-soft: 152 81% 96%;
-    --kpi-accent: 262 83% 58%;        --kpi-accent-soft: 270 100% 97%;
-    --kpi-warning: 38 92% 50%;        --kpi-warning-soft: 48 100% 96%;
-    --kpi-secondary: 199 89% 48%;     --kpi-secondary-soft: 204 100% 96%;
-    --kpi-danger: 0 84% 60%;          --kpi-danger-soft: 0 100% 97%;
+    /* V-03: los tonos KPI también pintan texto (valor/label); luminosidad AA. */
+    --kpi-info: 217 91% 42%;          --kpi-info-soft: 214 100% 96%;
+    --kpi-success: 160 84% 28%;       --kpi-success-soft: 152 81% 96%;
+    --kpi-accent: 262 83% 45%;        --kpi-accent-soft: 270 100% 97%;
+    --kpi-warning: 33 92% 33%;        --kpi-warning-soft: 48 100% 96%;
+    --kpi-secondary: 199 89% 32%;     --kpi-secondary-soft: 204 100% 96%;
+    --kpi-danger: 0 74% 45%;          --kpi-danger-soft: 0 100% 97%;
+
 
     /* Sistema de elevación con tinte de marca (azul-marino) — más cálido que neutro puro */
     --shadow-card: 0 1px 2px 0 hsl(220 40% 13% / 0.04), 0 1px 3px 0 hsl(220 40% 13% / 0.06);
