@@ -462,6 +462,9 @@ jobs:
       - name: Ola 1 - candados de horas (fecha futura, T/C DOF global)
         run: $PSQL -f supabase/tests/ola1_candados_regresion.sql
 
+      - name: Ola 2 - comisiones (prorrateo, cierre, anticipos, liquidaciones)
+        run: $PSQL -f supabase/tests/ola2_comisiones_regresion.sql
+
 
 
       - name: Guard de estados - guard_estado_cotizacion (C5 + A3)
