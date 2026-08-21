@@ -16,7 +16,9 @@ function findLatestBody(): string {
   for (const f of files) {
     const body = readFileSync(resolve(MIGRATIONS_DIR, f), "utf8");
     if (
-      /FUNCTION\s+public\.revertir_proforma_al_cancelar_sustitucion\b/i.test(body)
+      /CREATE\s+OR\s+REPLACE\s+FUNCTION\s+public\.revertir_proforma_al_cancelar_sustitucion\b/i.test(
+        body,
+      )
     ) {
       latest = body;
     }
@@ -33,7 +35,10 @@ describe("revertir_proforma_al_cancelar_sustitucion cuenta borradores como vivos
 
   it("la última definición NO excluye 'Borrador' del check de facturas vivas", () => {
     // Extraer sólo el bloque más reciente de la función
-    const idx = body.lastIndexOf("revertir_proforma_al_cancelar_sustitucion");
+    // Ancla en la última DEFINICIÓN (no en los GRANT/REVOKE del pie del archivo).
+    const idx = body.toUpperCase().lastIndexOf(
+      "CREATE OR REPLACE FUNCTION PUBLIC.REVERTIR_PROFORMA_AL_CANCELAR_SUSTITUCION",
+    );
     const slice = body.slice(idx);
     // El NOT IN debe listar sólo Cancelada y Sustituida
     expect(slice).toMatch(

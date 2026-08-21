@@ -23,6 +23,10 @@ const historial = [
   },
 ];
 
+vi.mock("@/hooks/shared", () => ({
+  usePermissions: () => ({ isSuperAdmin: true }),
+}));
+
 vi.mock("@/features/catalogos/hooks/useTipoCambioDof", () => ({
   useHistorialTcDof: () => ({ data: historial, isLoading: false, refetch, isFetching: false }),
   useUpsertTcDofManual: () => ({ mutate, isPending: false }),
