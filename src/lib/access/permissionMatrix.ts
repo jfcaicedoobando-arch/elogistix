@@ -82,14 +82,14 @@ export const SALES: readonly AppRole[] = [
 /**
  * Ola 6 (O6.3) — Roles que configuran el CRM (`/crm/configuracion`:
  * etapas del pipeline, motivos de pérdida, metas, presupuesto). Espejo de la
- * policy "Tenant admin crm_etapas_pipeline" (migración 20260827060030) — al
+ * policy "Tenant admin crm_etapas_pipeline" (migración 20260821145033) — al
  * cambiar esta lista hay que cambiar también esa policy.
  */
 export const CRM_CONFIG: readonly AppRole[] = [...TENANT_ADMINS, "gerente_comercial"];
 
 /**
  * Ola 6 (O6.1) — Roles que pueden tomar leads de la bolsa común. Espejo de
- * `public.crm_tomar_lead()` (has_role 'vendedor', migración 20260827060010) —
+ * `public.crm_tomar_lead()` (has_role 'vendedor', migración 20260821144907) —
  * al cambiar esta lista hay que cambiar también esa RPC.
  */
 export const CRM_TOMAR_LEAD: readonly AppRole[] = [

@@ -83,7 +83,7 @@ export function usePermissions() {
   const isOperador = roleStr === "operador" || roleStr === "coordinador_logistico";
   const canEditCrm = canEdit || canEditSales;
   // Ola 6 (O6.3): configuración del CRM — espejo de la policy
-  // "Tenant admin crm_etapas_pipeline" (migración 20260827060030).
+  // "Tenant admin crm_etapas_pipeline" (migración 20260821145033).
   const canConfigurarCrm = has(CRM_CONFIG, roleStr);
   // Ola 6 (O6.1): tomar leads de la bolsa — espejo de crm_tomar_lead.
   const canTomarLead = has(CRM_TOMAR_LEAD, roleStr);
