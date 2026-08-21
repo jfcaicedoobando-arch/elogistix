@@ -10,17 +10,18 @@
 -- RNF-01 (idempotencia) y RNF-02 (cuadre exacto). Sincroniza la fuente
 -- canónica (1:1). Sin backfill de históricos en esta migración.
 -- ============================================================
+-- v13.718.0 (Ola 8): la autorización de rol financiero se evalúa por
+-- membresía en la organización del documento (has_any_role_in_org).
 
 CREATE OR REPLACE FUNCTION public.registrar_pago_cliente_lote(p_payload jsonb)
-RETURNS jsonb
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path TO 'public'
+ RETURNS jsonb
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public'
 AS $function$
 DECLARE
   v_uid uuid := auth.uid();
   v_org uuid;
-  v_autorizado boolean;
   v_cliente_id uuid := (p_payload->>'cliente_id')::uuid;
   v_fecha date := COALESCE((p_payload->>'fecha_pago')::date, CURRENT_DATE);
   v_moneda public.moneda := (p_payload->>'moneda')::public.moneda;
@@ -64,17 +65,6 @@ BEGIN
     RETURN v_cached;
   END IF;
 
-  SELECT EXISTS (
-    SELECT 1 FROM public.user_roles ur
-    WHERE ur.user_id = v_uid
-      AND ur.role::text = ANY (ARRAY['admin','admin_org','super_admin','contador','tesorero'])
-  ) INTO v_autorizado;
-
-  IF NOT v_autorizado THEN
-    RAISE EXCEPTION 'LC_COBRO_LOTE_SIN_ROL: Sólo administración, contabilidad o tesorería pueden registrar cobros en lote.'
-      USING ERRCODE = '42501';
-  END IF;
-
   SELECT organization_id, nombre INTO v_org, v_cliente_nombre
   FROM public.clientes WHERE id = v_cliente_id AND deleted_at IS NULL;
 
@@ -85,6 +75,14 @@ BEGIN
   IF v_org <> public.current_user_org_id()
      AND NOT public.has_role(v_uid,'super_admin'::app_role) THEN
     RAISE EXCEPTION 'LC_COBRO_LOTE_CLIENTE_OTRA_ORG: El cliente pertenece a otra organización.';
+  END IF;
+
+  -- Ola 8: rol financiero por membresía en la organización del cliente.
+  IF NOT public.has_any_role_in_org(v_uid,
+       ARRAY['admin','admin_org','contador','tesorero']::public.app_role[],
+       v_org) THEN
+    RAISE EXCEPTION 'LC_COBRO_LOTE_SIN_ROL: Sólo administración, contabilidad o tesorería pueden registrar cobros en lote.'
+      USING ERRCODE = '42501';
   END IF;
 
   -- Ola 11 · RFE-02/RNF-03: misma regla que el cobro individual (FE-03).
@@ -256,16 +254,5 @@ BEGIN
 END;
 $function$;
 
--- FIX-H6-12: REVOKE/GRANT explícitos tras recrear una SECURITY DEFINER.
-REVOKE ALL ON FUNCTION public.registrar_pago_cliente_lote(jsonb) FROM PUBLIC;
-REVOKE ALL ON FUNCTION public.registrar_pago_cliente_lote(jsonb) FROM anon;
-GRANT EXECUTE ON FUNCTION public.registrar_pago_cliente_lote(jsonb) TO authenticated;
-GRANT EXECUTE ON FUNCTION public.registrar_pago_cliente_lote(jsonb) TO service_role;-- ============================================================
--- Ola 11 · RNF-06 (espejo RG4-6 de CxC): una misma factura no puede
--- aparecer dos veces en el reparto del lote CxP — dos renglones a la
--- misma factura pasaban el chequeo individual y podían sobre-aplicar el
--- pago (sólo fallaban si la suma excedía el saldo). Mismo chequeo que
--- LC_COBRO_LOTE_FACTURA_DUPLICADA. El guard RG4-12 (lote duplicado en
--- 10 min) es del lado cliente (pagoProveedorLote.ts), igual que en CxC.
--- ACUMULATIVA: incluye RFE-02/RNF-03 (fecha) y RNF-05 (importe + cuadre).
--- Sin cambio de firma: (p_payload jsonb).
+REVOKE ALL ON FUNCTION public.registrar_pago_cliente_lote(jsonb) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.registrar_pago_cliente_lote(jsonb) TO authenticated, service_role;

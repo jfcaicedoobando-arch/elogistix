@@ -10067,6 +10067,14 @@ export type Database = {
         }
         Returns: boolean
       }
+      has_any_role_in_org: {
+        Args: {
+          _org: string
+          _roles: Database["public"]["Enums"]["app_role"][]
+          _user_id: string
+        }
+        Returns: boolean
+      }
       has_org_role: {
         Args: {
           _org_id: string
@@ -10077,6 +10085,14 @@ export type Database = {
       }
       has_role: {
         Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      has_role_in_org: {
+        Args: {
+          _org: string
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }

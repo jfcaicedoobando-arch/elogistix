@@ -5,6 +5,7 @@
  * complejidad máxima (Power of 10): `validarCobroLote` sólo orquesta.
  */
 import { round2 } from "@/features/cxp/services";
+import { TOLERANCIA_SOBREPAGO } from "@/lib/financial/toleranciaPago";
 import type { FacturaCobroCandidata, RenglonCobro } from "./pagoClienteLote";
 import { validarFechaPago } from "@/features/facturacion/domain/validarFechaPago";
 import { todayLocalISO } from "@/lib/date/today";
@@ -16,8 +17,12 @@ import { todayLocalISO } from "@/lib/date/today";
  * BUG-15 (Ola D): 0.005 = medio centavo, idéntico a la RPC
  * `registrar_pago_cliente_lote` y al trigger `tg_pago_factura_no_sobrepago`;
  * antes 0.009 aquí dejaba pasar importes que el servidor rechazaba.
+ * Ola 8 (limpieza): la constante vive en `@/lib/financial/toleranciaPago`
+ * (TOLERANCIA_SOBREPAGO); aquí sólo se re-exporta con el nombre histórico
+ * para no tocar a los consumidores.
  */
-export const TOLERANCIA_CENTAVOS = 0.005;
+export const TOLERANCIA_CENTAVOS = TOLERANCIA_SOBREPAGO;
+
 
 /**
  * Ola 11 · RFE-02/RNF-03: misma regla de fecha que el cobro individual

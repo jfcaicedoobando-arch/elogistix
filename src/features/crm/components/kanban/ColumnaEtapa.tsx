@@ -1,10 +1,15 @@
 /**
  * Columna del Kanban: encabezado con totales (estimado, meta, ponderado)
  * y lista de tarjetas de la etapa.
+ * Ola 8: la lista se pagina por etapa (LIMITE_ETAPA_INICIAL + "Mostrar más")
+ * para que una etapa con cientos de oportunidades no congele el tablero; el
+ * aviso de truncamiento reemplaza al render silencioso de todo el historial.
  */
+import { useState } from "react";
 import { useDroppable } from "@dnd-kit/core";
 import { Briefcase } from "lucide-react";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
+import { Button } from "@/components/ui/button";
 import { formatCurrencyCompact } from "@/lib/formatters";
 import { totalesEtapa, type AvanceCriterios } from "@/features/crm/domain/criterios";
 import { colorAcentoEtapa } from "@/features/crm/lib/etapaColores";
@@ -13,6 +18,10 @@ import type { ProximaActividad } from "@/features/crm/hooks";
 import type { CrmOportunidadRow, CrmEtapaRow } from "@/features/crm/hooks";
 
 const fmtMxn = (n: number) => formatCurrencyCompact(n, "MXN");
+
+/** Tarjetas renderizadas por etapa al abrir el tablero y por cada "Mostrar más". */
+export const LIMITE_ETAPA_INICIAL = 50;
+export const INCREMENTO_ETAPA = 50;
 
 interface Props {
   etapa: CrmEtapaRow;
@@ -24,8 +33,12 @@ interface Props {
 
 export default function ColumnaEtapa({ etapa, ops, onClickCard, proximasMap, avanceMap }: Props) {
   const { setNodeRef, isOver } = useDroppable({ id: etapa.id });
+  const [visibles, setVisibles] = useState(LIMITE_ETAPA_INICIAL);
   const totales = totalesEtapa(ops);
   const esCerrada = etapa.tipo === "ganada" || etapa.tipo === "perdida";
+  const opsVisibles = ops.slice(0, visibles);
+  const ocultas = ops.length - opsVisibles.length;
+
 
   return (
     <div className="flex-shrink-0 w-72 flex flex-col bg-muted/40 rounded-lg">
@@ -49,7 +62,7 @@ export default function ColumnaEtapa({ etapa, ops, onClickCard, proximasMap, ava
         ref={setNodeRef}
         className={`flex-1 p-2 space-y-2 min-h-48 transition-colors ${isOver ? "bg-primary/5" : ""}`}
       >
-        {ops.map((op) => (
+        {opsVisibles.map((op) => (
           <OportunidadCard
             key={op.id}
             op={op}
@@ -62,6 +75,21 @@ export default function ColumnaEtapa({ etapa, ops, onClickCard, proximasMap, ava
         {ops.length === 0 && (
           <EmptyStateInline icon={Briefcase} message="Sin oportunidades" className="py-8" />
         )}
+        {ocultas > 0 && (
+          <div className="flex flex-col items-center gap-1.5 border-t border-border px-2 pt-2 pb-1">
+            <span className="text-label text-warning">
+              Mostrando {opsVisibles.length} de {ops.length} en esta etapa
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setVisibles((v) => v + INCREMENTO_ETAPA)}
+            >
+              Mostrar más
+            </Button>
+          </div>
+        )}
+
       </div>
     </div>
   );
