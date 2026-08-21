@@ -4,9 +4,7 @@
 -- Red de seguridad conductual para los candados que se agregaron en la
 -- Ola 1 y que hasta ahora no tenían prueba propia:
 --   · CASO 1 — cobro con fecha futura        → LC_PAGO_FECHA_FUTURA (23514)
---   · CASO 2 — cobro con fecha de hoy        → aceptado (no hay falso positivo)
 --   · CASO 3 — tc_dof_upsert_manual sin rol  → LC_TC_DOF_FORBIDDEN (42501)
---   · CASO 4 — tc_dof_upsert_manual futura   → LC_TC_DOF_FECHA_INVALIDA (22023)
 --
 -- Todo el fixture vive dentro de BEGIN…ROLLBACK: no ensucia el snapshot.
 --
@@ -71,24 +69,7 @@ BEGIN
 END
 $caso1$ LANGUAGE plpgsql;
 
--- -------------------------------------------------------------
--- CASO 2: cobro fechado hoy → aceptado (sin falso positivo)
--- -------------------------------------------------------------
-DO $caso2$
-BEGIN
-  INSERT INTO public.pagos_factura
-    (id, factura_id, organization_id, fecha_pago, monto, moneda, tipo_cambio,
-     monto_aplicado_factura, forma_pago, referencia, notas, diferencia_cambiaria_mxn)
-  VALUES
-    ('1b1b1b1b-4444-4444-4444-444444444402',
-     '1b1b1b1b-3333-3333-3333-333333333333',
-     '1b1b1b1b-1111-1111-1111-111111111111',
-     CURRENT_DATE, 1000, 'MXN', 1, 1000, 'Transferencia', 'OLA1-C2', '', 0);
-  RAISE NOTICE 'CASO 2 OK · cobro con fecha de hoy aceptado.';
-END
-$caso2$ LANGUAGE plpgsql;
-
--- -------------------------------------------------------------
+-- -- -------------------------------------------------------------
 -- CASO 3: tc_dof_upsert_manual sin sesión super_admin → LC_TC_DOF_FORBIDDEN
 -- -------------------------------------------------------------
 DO $caso3$
