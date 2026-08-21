@@ -39,7 +39,7 @@ DECLARE
   vendedor_a2 uuid := gen_random_uuid();
   vendedor_b uuid := gen_random_uuid();
   gerente_a uuid := gen_random_uuid();
-  viewer_a uuid := gen_random_uuid();
+  sin_ventas_a uuid := gen_random_uuid();
   lead_bolsa_a uuid := gen_random_uuid();
   lead_bolsa_a2 uuid := gen_random_uuid();
   lead_asignado_a uuid := gen_random_uuid();
@@ -58,13 +58,13 @@ BEGIN
     (org_a, vendedor_a2, 'vendedor'),
     (org_b, vendedor_b, 'vendedor'),
     (org_a, gerente_a, 'gerente_comercial'),
-    (org_a, viewer_a, 'viewer');
+    (org_a, sin_ventas_a, 'customer_service');
   INSERT INTO public.user_roles(user_id, role) VALUES
     (vendedor_a1, 'vendedor'),
     (vendedor_a2, 'vendedor'),
     (vendedor_b, 'vendedor'),
     (gerente_a, 'gerente_comercial'),
-    (viewer_a, 'viewer')
+    (sin_ventas_a, 'customer_service')
   ON CONFLICT (user_id) DO UPDATE SET role = EXCLUDED.role;
 
   INSERT INTO public.crm_etapas_pipeline(id, organization_id, nombre, orden, tipo)
@@ -147,14 +147,14 @@ BEGIN
       format('O6.1: toma cross-tenant lanzó [%s] en vez de LC_ORG_AJENA', SQLERRM));
   END;
 
-  -- TEST 8: viewer (sin rol de ventas) no puede tomar leads
-  PERFORM pg_temp.as_user(viewer_a);
+  -- TEST 8: customer_service (sin rol de ventas) no puede tomar leads
+  PERFORM pg_temp.as_user(sin_ventas_a);
   BEGIN
     PERFORM public.crm_tomar_lead(lead_bolsa_a2);
-    RAISE EXCEPTION 'O6.1: viewer tomó un lead';
+    RAISE EXCEPTION 'O6.1: customer_service tomó un lead';
   EXCEPTION WHEN raise_exception THEN
     PERFORM pg_temp.assert(SQLERRM LIKE '%LC_LEAD_SIN_PERMISO_TOMA%',
-      format('O6.1: toma por viewer lanzó [%s] en vez de LC_LEAD_SIN_PERMISO_TOMA', SQLERRM));
+      format('O6.1: toma por customer_service lanzó [%s] en vez de LC_LEAD_SIN_PERMISO_TOMA', SQLERRM));
   END;
 
   -- El lead libre de Org A sigue sin asignar tras los intentos bloqueados
