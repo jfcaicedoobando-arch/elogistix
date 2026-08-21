@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.716.2] - 2026-08-21
+### Correcciones
+- **CI (mensajes LC)**: se agregó el mensaje amigable de `LC_DOC_INEXISTENTE` en `lcCodeMessages.operativo.genericos.ts`; la prueba de cobertura de códigos `LC_*` ya pasa.
+
 ## [13.716.1] - 2026-08-21
 ### Correcciones
 - **CI (RLS)**: la prueba `test_rls_ola6_ventas_arranca.sql` sembraba un usuario con el rol legacy `viewer`, que la base ya bloquea (`LC_ROL_LEGACY_BLOQUEADO`). Ahora usa `customer_service` como rol sin permisos de ventas.
