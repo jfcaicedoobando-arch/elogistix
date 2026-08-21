@@ -60920,6 +60920,7 @@
       "20260821002602_6bcfb79c-0c26-475d-93bf-33622243f1d9.sql",
       "20260821002652_60e70c49-9d28-49cd-a629-5170126f188f.sql",
       "20260821005333_170f9c71-77e8-4f8d-8669-bfdb924110c2.sql",
+      "20260821005722_6dc00deb-ed7a-4a62-84fc-b6fe1704ebf6.sql",
       "20260821030800_ola11_lotes_paridad.sql",
       "20260824040000_ola13_r4bd05_p_offset_desde_el_final.sql",
       "20260824050000_ola13_has_role_cliente.sql",
@@ -60948,7 +60949,8 @@
       "20260826000500_bug18_adjuntar_xml_validaciones_minimas.sql",
       "20260826000600_bug15_tolerancia_sobrepago_unificada.sql",
       "20260826000700_fix_h6_21_revoke_grant_ola_d.sql",
-      "20260826001000_nbl01_replay_validar_cierre_embarque.sql"
+      "20260826001000_nbl01_replay_validar_cierre_embarque.sql",
+      "20260826002000_ola1_replay_lotes_espejo.sql"
     ]
   }
 }
