@@ -1,6 +1,11 @@
 # Changelog
 
+## [13.708.2] - 2026-08-21
+### Corrección de CI — prueba de sobrepago con centavos válidos
+- La prueba `ola1_candados_regresion.sql` usaba un cobro de 3 decimales, prohibido por la base (escala 2). Ahora prueba la frontera real: saldo exacto pasa, un centavo extra se rechaza con `LC_PAGO_SOBREPAGO`.
+
 ## [13.708.1] - 2026-08-21
+
 ### Corrección de CI — migraciones ancladas en el snapshot RLS
 - El job que reconstruye la base limpia ahora respeta `drift-anclas.txt`, igual que el radar de drift: las migraciones que parchan por texto ya no rompen CI cuando su estado final está garantizado por una reaplicación posterior.
 
