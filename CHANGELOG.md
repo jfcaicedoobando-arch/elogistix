@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.708.4] - 2026-08-21
+### Corrección de CI — prueba de comisiones: falso positivo del caso 2
+- La prueba buscaba la palabra `definitiva` en todo el texto de `validar_cierre_embarque`, y fallaba por un comentario y por la etiqueta `no_definitivas`. Ahora detecta sólo el uso real de la bandera como filtro.
+
+
+
 ## [13.708.3] - 2026-08-21
 ### Corrección de CI — permisos de comisiones, espejo de cierre y dos pruebas
 - `comisiones_sobre_devengadas()` ya declara sus permisos explícitos (H6).
