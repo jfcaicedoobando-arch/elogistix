@@ -1,6 +1,13 @@
 # Changelog
 
+## [13.719.0] - 2026-08-21
+### Remediación auditoría visual (V-01, V-02, V-03)
+- `cn()` declara la escala tipográfica propia como grupo `font-size` en `tailwind-merge`: `text-body*`/`text-label`/`text-display` ya no borran el color de la variante (texto invisible 1.24:1 en el chip de filtros de CxP y ~19 badges más).
+- `/crm/pipeline` redirige a `/crm/oportunidades` en lugar de mostrar 404.
+- Tokens `--destructive`, `--state-arribo`, `--state-eir`, `--state-aduana`, `--state-operacion` y `--kpi-*` oscurecidos en modo claro para cumplir WCAG AA como color de texto en badges/KPIs.
+
 ## [13.718.1] - 2026-08-27
+
 ### Correcciones de CI
 - `crmCsvExport` usa el formateador canónico `formatFechaDia` en lugar de `toLocaleDateString` (UI-04).
 - Mensajes amigables para `LC_OPORTUNIDAD_NO_ENCONTRADA`, `LC_PARAMETROS_INVALIDOS` y `LC_SIN_PERMISO`.
