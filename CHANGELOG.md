@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.708.3] - 2026-08-21
+### Corrección de CI — permisos de comisiones, espejo de cierre y dos pruebas
+- `comisiones_sobre_devengadas()` ya declara sus permisos explícitos (H6).
+- El espejo canónico de `validar_cierre_embarque` se sincronizó con la regla de cierre de la Ola 2.
+- La prueba de captura manual del TC DOF simula al super admin; el guardrail de proformas ahora ancla en la definición de la función, no en sus permisos.
+
 ## [13.708.2] - 2026-08-21
 ### Corrección de CI — prueba de sobrepago con centavos válidos
 - La prueba `ola1_candados_regresion.sql` usaba un cobro de 3 decimales, prohibido por la base (escala 2). Ahora prueba la frontera real: saldo exacto pasa, un centavo extra se rechaza con `LC_PAGO_SOBREPAGO`.
