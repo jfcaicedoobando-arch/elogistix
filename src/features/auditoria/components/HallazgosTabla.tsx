@@ -129,7 +129,7 @@ export function HallazgosTabla(props: Props) {
           <div className="flex items-center gap-0.5" onClick={(e) => e.stopPropagation()}>
             <ExplicarHallazgoButton hallazgo={h} />
             <Hint label={`Abrir embarque ${h.expediente}`}>
-              <Button size="icon" variant="ghost" className="h-7 w-7"
+              <Button size="icon" variant="ghost" className="h-9 w-9"
                 onClick={(e) => { e.preventDefault(); e.stopPropagation(); abrirEmbarque(h); }}
                 aria-label="Abrir embarque"
               >
