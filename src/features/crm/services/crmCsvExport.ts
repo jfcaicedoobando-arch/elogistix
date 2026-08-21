@@ -5,6 +5,7 @@
  * así que un vendedor exporta únicamente su cartera.
  */
 import { toCsv } from "@/lib/csv/serializeCsv";
+import { formatFechaDia } from "@/lib/formatters";
 import { downloadCsvWithFeedback } from "@/lib/ui/notifyCsvExport";
 import type { CrmLeadRow } from "@/features/crm/domain/leads/constants";
 import type { CrmOportunidadRow } from "@/features/crm/types/oportunidades";
