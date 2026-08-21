@@ -80,7 +80,11 @@ export default function Oportunidades() {
       <PageHeader
         title="Oportunidades"
         description="Pipeline de ventas por etapa con vista Kanban y tabla"
+        actions={
+          <ExportarCsvButton onExport={() => exportarOportunidadesCsv(ops)} disabled={isLoading} />
+        }
       />
+
       <CrmSubheader context={`${ops.length} de ${opsRaw.length} oportunidades · pipeline ${formatCurrencyCompact(pipelineMxn.mxn, "MXN")}${pipelineMxn.estimado ? " (T/C estimado)" : ""}`} />
       {listaTruncada && (
         <p className="text-label text-warning">
