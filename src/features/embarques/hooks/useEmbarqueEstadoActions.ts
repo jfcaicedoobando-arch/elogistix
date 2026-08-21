@@ -88,7 +88,16 @@ export function useEmbarqueEstadoActions(embarque: EmbarqueRow | undefined, id: 
   const ejecutarAvance = useCallback(async (siguiente: string) => {
     if (!embarque || !id) return;
     try {
-      await avanzarEstado.mutateAsync({ embarqueId: id, nuevoEstado: siguiente, usuarioEmail });
+      // O1.11: la llave viaja estable entre reintentos; si la red falla y el
+      // usuario vuelve a intentar, la RPC devuelve el resultado ya registrado
+      // en lugar de duplicar la transición (y su evento/bitácora).
+      await avanzarEstado.mutateAsync({
+        embarqueId: id,
+        nuevoEstado: siguiente,
+        usuarioEmail,
+        requestId: reqIdAvance.get(),
+      });
+      reqIdAvance.reset();
       registrarActividad.mutate({
         accion: 'cambiar_estado', modulo: 'embarques',
         entidad_id: id, entidad_nombre: labelExpediente(embarque.expediente, embarque.id),
