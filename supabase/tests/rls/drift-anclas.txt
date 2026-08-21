@@ -1,0 +1,19 @@
+# Migraciones exentas del radar de drift por estar escritas con "anclas de
+# texto" (parchan la definición viva con `replace(pg_get_functiondef(...))`).
+#
+# Por qué existe esta lista: una migración anclada sólo aplica si el texto de la
+# función en ese punto de la historia coincide byte a byte. En una base limpia
+# la definición previa puede venir de otra migración con formato distinto, así
+# que la ancla no encuentra su bloque y la migración aborta — aunque el estado
+# final de producción sea correcto.
+#
+# Regla: sólo se agrega una migración aquí cuando existe una migración POSTERIOR
+# de reaplicación (sin anclas, o con anclas tolerantes + asserts finales) que
+# garantiza el estado final en base limpia. El archivo NO es un permiso para
+# escribir migraciones ancladas nuevas: úsense `CREATE OR REPLACE` completos.
+#
+# Un nombre de archivo por línea (basename), sin rutas.
+
+# Ola 1 · parte 2 (parche a las RPC de lote). Estado final garantizado por
+# 20260821010000_ola1_reaplica_lotes_sin_anclas.sql.
+20260821002652_60e70c49-9d28-49cd-a629-5170126f188f.sql
