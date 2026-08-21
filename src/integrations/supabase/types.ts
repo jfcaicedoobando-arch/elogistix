@@ -10130,6 +10130,10 @@ export type Database = {
         }
         Returns: number
       }
+      nc_aplicadas_en_moneda_factura: {
+        Args: { p_factura_id: string }
+        Returns: number
+      }
       notificacion_cliente_marcar_leida: {
         Args: { p_id: string }
         Returns: undefined
