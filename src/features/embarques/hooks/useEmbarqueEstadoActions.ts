@@ -36,6 +36,7 @@ export function useEmbarqueEstadoActions(embarque: EmbarqueRow | undefined, id: 
   const { user } = useAuth();
   const registrarActividad = useRegistrarActividad();
   const avanzarEstado = useAvanzarEstadoEmbarque();
+  const reqIdAvance = useStableRequestId();
   const conceptosQuery = useEmbarqueConceptosVenta(id);
   const conceptosVenta = conceptosQuery.data ?? [];
   const { data: contenedores = [] } = useContenedoresEmbarque(id);
