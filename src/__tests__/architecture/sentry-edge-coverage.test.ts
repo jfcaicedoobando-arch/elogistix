@@ -74,6 +74,8 @@ const WRAPPED_COVERAGE = [
   // 13.430.1 — Mantenimiento CxP y verificación SAT en lote
   "supabase/functions/backfill-cxp-buzon/index.ts",
   "supabase/functions/verificar-sat-lote/index.ts",
+  // 13.710.0 — Verificación SAT semanal (cron) para CFDI cancelados
+  "supabase/functions/verificar-sat-semanal/index.ts",
 ];
 
 // Funciones intencionalmente exentas de Sentry (proxy puro, sin lógica propia
