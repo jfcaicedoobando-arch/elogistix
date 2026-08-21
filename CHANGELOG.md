@@ -1,5 +1,13 @@
 # Changelog
 
+## [13.710.0] - 2026-08-21
+### Ola 2 · Fase B2 — las comisiones se recalculan solas y el SAT se revisa cada semana
+- **Reproceso diario (O2.11.1):** una tarea de plataforma corre todas las noches (00:20 CDMX), recorre las organizaciones con comisiones en la cola de recálculo y las reintenta sin necesidad de que alguien entre a la app. Es idempotente y nunca toca comisiones ya liquidadas.
+- **Verificación SAT semanal (O2.11.2):** los lunes a las 08:00 CDMX se barre el estatus de los CFDI de proveedores nacionales. Si el SAT reporta uno cancelado, llega aviso interno a administración, contabilidad y tesorería (un aviso por factura cada 30 días). La verificación no cambia estados ni importes de la factura.
+- **Diferencia cambiaria en cobranza (O2.7):** se retira formalmente; queda documentada como RN-4 en `docs/riesgos-aceptados.md`.
+- El barrido SAT quedó en un módulo compartido (`_shared/satBarrido.ts`) que usan la corrida manual y la semanal, con trabajo acotado por corrida.
+- Nueva prueba de regresión `supabase/tests/ola2_faseb2_regresion.sql`.
+
 ## [13.709.1] - 2026-08-21
 ### CI — artifact de logs RLS ya no avisa "No files were found"
 - La carpeta `.rls-logs/` y un manifiesto (grupo, suites, run) se siembran antes de descargar y restaurar la base, así que el artifact de cada grupo siempre sube algo aunque la restauración falle antes de correr las suites.
