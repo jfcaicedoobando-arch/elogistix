@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.707.3] - 2026-08-21
+### Corrección de CI — radar de drift
+- Se reaplicaron los candados de cobro/pago en lote que migraciones posteriores habían dejado fuera en una base recién creada (notas de crédito en moneda de la factura y bloqueos en orden fijo para evitar trabas simultáneas).
+- El radar de migraciones ahora reconoce las migraciones antiguas que "parchan por texto" mediante `supabase/tests/rls/drift-anclas.txt`, en lugar de fallar el build.
+
 ## [13.707.2] - 2026-08-21
 ### Ola 1 — Remate final
 - Un solo nombre para el diálogo de borrado con doble confirmación (se retiró el alias duplicado).
