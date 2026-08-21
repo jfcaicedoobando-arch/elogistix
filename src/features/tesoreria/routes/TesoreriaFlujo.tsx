@@ -98,7 +98,7 @@ export default function TesoreriaFlujo() {
 
           <Card>
             <CardContent density="compact">
-              <SectionHeading as="h3" className="mb-3">Flujo semanal (MXN)</SectionHeading>
+              <SectionHeading className="mb-3">Flujo semanal (MXN)</SectionHeading>
               <Suspense fallback={<ChartSkeleton height={288} />}>
                 <GraficoFlujoProyectado semanas={data.semanas} />
               </Suspense>

@@ -1,5 +1,13 @@
 # Changelog
 
+## [13.721.0] - 2026-08-21
+### Remediación auditoría visual — Entrega 3 (V-07, V-10)
+- `CardTitle` acepta `as` y usa `h2` por defecto: se elimina el salto de jerarquía `h1 → h3` en `/inicio`, `/compras` y `/tesoreria`.
+- El encabezado "Flujo semanal (MXN)" de Tesorería pasa a `h2` (nivel correcto bajo el `h1` de la página).
+- `DemoAccessDialog` migrado a `FormDialogShell` + `FormDialogSection` + `FormDialogFooter`: mismo padding, secciones y footer sticky que los otros 96 modales.
+
+
+
 ## [13.720.0] - 2026-08-21
 ### Remediación auditoría visual — Entrega 2 (V-04, V-05, V-13, V-14)
 - Áreas táctiles: acciones de fila (`actionsColumn`), paginación, contactos de cliente, hallazgos de auditoría y el trigger/ítems del sidebar colapsado suben a 36 px (40 px en móvil).
