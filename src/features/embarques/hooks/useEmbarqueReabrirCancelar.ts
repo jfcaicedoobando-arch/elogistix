@@ -86,7 +86,7 @@ export function useEmbarqueReabrirCancelar(
         });
       }
     },
-    [embarque, id, avanzarEstado, usuarioEmail, registrarActividad],
+    [embarque, id, avanzarEstado, usuarioEmail, registrarActividad, reqIdCancelar],
   );
 
   return { handleReabrir, reabrirEmbarque, handleCancelar };
