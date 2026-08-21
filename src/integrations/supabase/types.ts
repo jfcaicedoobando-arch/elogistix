@@ -9022,6 +9022,10 @@ export type Database = {
           total: number
         }[]
       }
+      comision_embarques_de_factura: {
+        Args: { p_factura_id: string }
+        Returns: string[]
+      }
       comisiones_sobre_devengadas: {
         Args: never
         Returns: {
