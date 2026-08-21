@@ -223,8 +223,20 @@ BEGIN
     'regla','rep_timbrados','ok',v_ok,
     'detalle', jsonb_build_object('pendientes', v_rep_pendientes, 'ids', v_rep_ids)));
 
-  SELECT COUNT(*) INTO v_com_count FROM comisiones_devengadas
-   WHERE embarque_id=p_embarque_id AND definitiva=false;
+  -- Ola 2 · O2.2: se bloquea por pendientes REALES (nota de pendiente o
+  -- cola de recálculo), no por la bandera `definitiva` que sólo se marca al
+  -- cerrar (círculo vicioso que obligaba a "forzar" todos los cierres).
+  SELECT COUNT(*) INTO v_com_count FROM comisiones_devengadas cd
+   WHERE cd.embarque_id=p_embarque_id
+     AND cd.estado='Devengada' AND cd.deleted_at IS NULL
+     AND cd.nota IS NOT NULL;
+  IF EXISTS (SELECT 1 FROM comisiones_recalculo_pendiente crp
+               JOIN pagos_factura pf2 ON pf2.id = crp.pago_factura_id
+               JOIN facturas f2 ON f2.id = pf2.factura_id
+              WHERE f2.embarque_id = p_embarque_id
+                AND crp.resuelto_at IS NULL) THEN
+    v_com_count := v_com_count + 1;
+  END IF;
   v_ok := (v_com_count=0); v_puede := v_puede AND v_ok;
   v_checks := v_checks || jsonb_build_array(jsonb_build_object(
     'regla','comisiones_definitivas','ok',v_ok,
@@ -253,4 +265,5 @@ BEGIN
       'margen_pct', v_margen_pct, 'minimo_pct', v_margen_min)));
 
   RETURN jsonb_build_object('puede_cerrar', v_puede, 'checks', v_checks);
-END $function$;
+END $function$
+;

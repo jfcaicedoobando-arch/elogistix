@@ -834,3 +834,5 @@ REVOKE ALL ON FUNCTION public.registrar_pago_liquidacion(uuid, date, text, text,
 GRANT EXECUTE ON FUNCTION public.registrar_pago_liquidacion(uuid, date, text, text, text) TO authenticated, service_role;
 REVOKE ALL ON FUNCTION public.cancelar_liquidacion_comision(uuid, text) FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.cancelar_liquidacion_comision(uuid, text) TO authenticated, service_role;
+REVOKE ALL ON FUNCTION public.comisiones_sobre_devengadas() FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.comisiones_sobre_devengadas() TO authenticated, service_role;
