@@ -75,7 +75,7 @@ Deno.serve(
         servidor = metaDesdeCfdi(parseCfdi(new TextDecoder("utf-8").decode(bytes)));
       } catch (e) {
         const detalle = e instanceof Error ? e.message : String(e);
-        throw new Error(`400:LC_XML_INVALIDO: ${detalle}`);
+        throw new Error(`400:LC_XML_INVALIDO: ${detalle}`, { cause: e });
       }
 
       const fallos = discrepanciasMeta(datos.declarado, servidor);
