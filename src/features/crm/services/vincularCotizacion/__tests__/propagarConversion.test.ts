@@ -41,13 +41,13 @@ describe("propagarConversionProspectoCRM", () => {
     expect(mock.tableCalls.map((c) => c.table)).not.toContain("crm_oportunidades");
   });
 
-  it("propaga el error de la RPC", async () => {
+  it("propaga el error de la RPC crm_propagar_conversion_cliente", async () => {
     mock.setRpcResult("crm_propagar_conversion_cliente", {
       data: null,
       error: { message: "LC_ORG_AJENA" },
     });
     await expect(
       propagarConversionProspectoCRM({ oportunidadId: "op-1", clienteId: "c-1", clienteNombre: "X" }),
-    ).rejects.toBeDefined();
+    ).rejects.toThrow(/LC_ORG_AJENA/);
   });
 });
