@@ -4,10 +4,13 @@
  *
  * Estos elementos `<Route>` se montan dentro del `<Route path="/crm">` de
  * `appRoutes.tsx`. No incluyen `Layout` ni `ProtectedRoute`: heredan los
- * de la ruta padre.
+ * de la ruta padre. Excepción Ola 6 (O6.3): `configuracion` añade un
+ * ProtectedRoute inline con CRM_CONFIGURACION_ROLES (subconjunto de CRM_ROLES).
  */
 import { Fragment } from "react";
 import { Route, Navigate } from "react-router-dom";
+import { ProtectedRoute } from "@/features/auth/components/ProtectedRoute";
+import { CRM_CONFIGURACION_ROLES } from "@/lib/access/roleRouteMatrix";
 import {
   CrmDashboard, CrmMiDia, Leads, LeadDetalle,
   Oportunidades, OportunidadDetalle, ActividadesCrm, AnaliticaCrm, CrmConfiguracion, CrmHigiene,
@@ -26,6 +29,15 @@ export const crmChildRoutes = (
     <Route path="analitica" element={<AnaliticaCrm />} />
     <Route path="forecast" element={<Navigate to="/crm/analitica" replace />} />
     <Route path="reportes" element={<Navigate to="/crm/analitica?tab=embudo" replace />} />
-    <Route path="configuracion" element={<CrmConfiguracion />} />
+    {/* Ola 6 (O6.3): configuración del CRM gateada a admin del tenant +
+        gerencia comercial; el ícono del header usa el mismo permiso. */}
+    <Route
+      path="configuracion"
+      element={
+        <ProtectedRoute allowedRoles={CRM_CONFIGURACION_ROLES} inline>
+          <CrmConfiguracion />
+        </ProtectedRoute>
+      }
+    />
   </Fragment>
 );

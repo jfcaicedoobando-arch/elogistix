@@ -9,6 +9,8 @@ import {
   CERRAR_EMBARQUE,
   CONFIGURAR_AUTORIZACION_CLIENTE,
   COTIZAR_SIN_DESGLOSE,
+  CRM_CONFIG,
+  CRM_TOMAR_LEAD,
   ELIMINAR_EMBARQUE,
   EMITIR_FACTURA_CLIENTE,
   EXPEDIENTE_ESCRITURA,
@@ -80,11 +82,18 @@ export function usePermissions() {
   const isSuperAdmin = (role as AppRole) === "super_admin";
   const isOperador = roleStr === "operador" || roleStr === "coordinador_logistico";
   const canEditCrm = canEdit || canEditSales;
+  // Ola 6 (O6.3): configuración del CRM — espejo de la policy
+  // "Tenant admin crm_etapas_pipeline" (migración 20260821145033).
+  const canConfigurarCrm = has(CRM_CONFIG, roleStr);
+  // Ola 6 (O6.1): tomar leads de la bolsa — espejo de crm_tomar_lead.
+  const canTomarLead = has(CRM_TOMAR_LEAD, roleStr);
 
   return {
     canEdit,
     canEditExpediente,
     canEditCrm,
+    canConfigurarCrm,
+    canTomarLead,
     isAdmin,
     isSuperAdmin,
     isOperador,

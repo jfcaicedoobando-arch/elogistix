@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.716.0] - 2026-08-21
+### Ola 6 — "Ventas arranca" (CRM Fase 1)
+- **Bolsa común de prospectos (O6.1)**: los vendedores ya ven los leads de su organización sin vendedor asignado y pueden tomarlos con el botón "Tomar lead". La asignación va por la RPC `crm_tomar_lead` (SECURITY DEFINER, `FOR UPDATE`), así que dos vendedores no pueden tomar el mismo: el segundo recibe `LC_LEAD_YA_ASIGNADO`. La privacidad de leads propios queda intacta.
+- **Captura única al convertir (O6.2)**: `convertir_lead_rpc` ahora propaga `rfc`, `direccion`, `ciudad`, `entidad_federativa` y `cp` del lead al cliente nuevo, y la oportunidad hereda `sector`, `origen` y `destino` (columna `sector` agregada a `crm_oportunidades`). Antes el cliente nacía con esos campos vacíos y había recaptura manual.
+- **Configuración del CRM (O6.3)**: `/crm/configuracion` queda gateada con `CRM_CONFIGURACION_ROLES` (admins del tenant + `gerente_comercial`) y la policy de `crm_etapas_pipeline` se alineó al mismo set, cerrando el caso "veo la pantalla pero el guardado falla".
+- **Tests**: `supabase/tests/ola6_convertir_propaga.sql` y `supabase/tests/rls/test_rls_ola6_ventas_arranca.sql` (grupo `operaciones` del workflow de RLS).
+
 ## [13.715.0] - 2026-08-21
 ### Ola 5 — Entrega 2: verificación fiscal del XML en el servidor (O5.8)
 - **Adjuntar XML al buzón CxP**: el navegador ya no decide los datos fiscales. La nueva Edge Function `adjuntar-xml-entrante` descarga el XML real del bucket, valida su hash SHA-256, lo vuelve a parsear (CFDI 4.0, sin DOM) y guarda **sus** valores de UUID, RFC emisor, folio, fecha, total y moneda. Si lo capturado no coincide con el archivo, se rechaza con `LC_XML_METADATA_MISMATCH`.

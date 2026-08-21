@@ -13,6 +13,10 @@ export const LC_CODE_MESSAGES_CRM: Record<string, string> = {
     "La oportunidad pertenece a otra organización, no puedes vincularla aquí.",
   LC_CRM_LEAD_AJENO:
     "El prospecto pertenece a otra organización, no puedes usarlo aquí.",
+  LC_LEAD_YA_ASIGNADO:
+    "Otro vendedor ya tomó este lead. Actualiza la lista para ver la bolsa disponible.",
+  LC_LEAD_SIN_PERMISO_TOMA:
+    "Tu rol no puede tomar leads de la bolsa. Solicita acceso a ventas o gerencia comercial.",
   LC_CRM_SIN_ETAPA_ABIERTA:
     "Configura al menos una etapa abierta en el pipeline antes de crear oportunidades.",
   LC_CRM_PROSPECTO_SIN_EMPRESA:
