@@ -10,7 +10,9 @@ import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 import { normalizarRazonSocial } from "@/lib/text/razonSocial";
 export const EMPTY_CLIENTE = {
   nombre: "", rfc: "", direccion: "", ciudad: "", estado: "", cp: "", contacto: "", email: "", telefono: "",
-  regimen_fiscal: "", uso_cfdi_default: "G03",
+  // O4.6: pre-flight fiscal — capturamos los defaults de pago desde el alta
+  // para que el timbrado nunca se detenga por datos faltantes.
+  regimen_fiscal: "", uso_cfdi_default: "G03", forma_pago_default: "99", metodo_pago_default: "PPD",
 };
 
 /** Único documento indispensable para dar de alta al cliente. */
@@ -57,6 +59,9 @@ export function useNuevoClienteController(onClose: () => void) {
       form.rfc.trim() &&
       form.cp.trim() &&
       form.regimen_fiscal.trim() &&
+      form.uso_cfdi_default.trim() &&
+      form.forma_pago_default.trim() &&
+      form.metodo_pago_default.trim() &&
       form.email.trim() &&
       form.telefono.trim() &&
       form.contacto.trim()

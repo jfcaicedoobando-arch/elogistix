@@ -13,7 +13,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { REGIMENES_FISCALES_SAT } from "@/constants/regimenFiscalSAT";
-import { USOS_CFDI_SAT } from "@/constants/catalogosSAT";
+import { USOS_CFDI_SAT, FORMAS_PAGO_SAT, METODOS_PAGO_SAT } from "@/constants/catalogosSAT";
 import type { ClienteForm } from "@/features/cliente/hooks";
 
 
@@ -183,7 +183,35 @@ export function ClienteFiscalSelects({ form, onChange, prefilledRegimen }: Selec
           </SelectContent>
         </Select>
       </div>
+      {/* O4.6: pre-flight fiscal — evita que el timbrado se detenga después. */}
+      <div>
+        <Label size="sm" className="flex items-center">
+          Forma de pago por defecto<span className="text-destructive ml-0.5">*</span>
+        </Label>
+        <Select value={form.forma_pago_default || undefined} onValueChange={(v) => onChange("forma_pago_default", v)}>
+          <SelectTrigger className="mt-1"><SelectValue placeholder="Selecciona forma de pago" /></SelectTrigger>
+          <SelectContent>
+            {FORMAS_PAGO_SAT.map((f) => (
+              <SelectItem key={f.value} value={f.value}>{f.label}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+      <div>
+        <Label size="sm" className="flex items-center">
+          Método de pago por defecto<span className="text-destructive ml-0.5">*</span>
+        </Label>
+        <Select value={form.metodo_pago_default || undefined} onValueChange={(v) => onChange("metodo_pago_default", v)}>
+          <SelectTrigger className="mt-1"><SelectValue placeholder="Selecciona método de pago" /></SelectTrigger>
+          <SelectContent>
+            {METODOS_PAGO_SAT.map((m) => (
+              <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
     </>
+
   );
 }
 

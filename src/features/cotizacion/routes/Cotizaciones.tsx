@@ -1,7 +1,7 @@
 import { useMemo, useDeferredValue } from "react";
 import { useNavigate } from "react-router-dom";
 import { useDuplicarCotizacion } from "@/features/cotizacion/hooks/useCotizacionVersiones";
-import { Plus, AlertTriangle, Archive } from "lucide-react";
+import { Plus, AlertTriangle, Archive, Truck } from "lucide-react";
 import { FloatingActionButton } from "@/components/shared/FloatingActionButton";
 import { CotizacionesKpis } from "@/features/cotizacion/components/CotizacionesKpis";
 import { Card, CardContent } from "@/components/ui/card";
@@ -57,6 +57,21 @@ export default function Cotizaciones() {
 
   const secondaryFilters = (
     <div className="space-y-3">
+      {/* O4.5(a): bandeja "Aceptadas sin embarque" — el trabajo vendido sin operar. */}
+      <Hint label="Cotizaciones aceptadas a las que nadie les abrió el embarque">
+        <Button
+          type="button"
+          variant={c.soloAceptadasSinEmbarque ? "default" : "outline"}
+          size="sm"
+          aria-pressed={c.soloAceptadasSinEmbarque}
+          onClick={() => c.setFilter("aceptadasSinEmbarque", c.soloAceptadasSinEmbarque ? "no" : "si")}
+          className="w-full gap-2"
+        >
+          <Truck className="h-4 w-4" />
+          Aceptadas sin embarque
+          {c.totalAceptadasSinEmbarque > 0 && ` (${c.totalAceptadasSinEmbarque})`}
+        </Button>
+      </Hint>
       <Button
         type="button"
         variant={c.filterSinCostos ? "default" : "outline"}

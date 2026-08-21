@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.713.0] - 2026-08-21
+### Ola 4 — Entrega 1: "El dinero avisa solo" (bajo riesgo)
+- **Alta de cliente (pre-flight fiscal)**: la captura ahora exige forma de pago y método de pago por defecto (además de régimen y uso de CFDI), con valores sugeridos `99` y `PPD`, para que el timbrado no se detenga después por datos fiscales faltantes.
+- **Cotizaciones · bandeja "Aceptadas sin embarque"**: nuevo filtro con contador que muestra las cotizaciones aceptadas a las que nadie les abrió el embarque.
+
 ## [13.712.2] - 2026-08-21
 ### Corrección
 - **fix(cxp)**: se extrajo el cuerpo del wizard de captura a `CapturaFacturaPasosBody` para bajar la complejidad del componente (lint) y se actualizó la prueba de `dialogTokens` para incluir el tamaño `5xl`.
