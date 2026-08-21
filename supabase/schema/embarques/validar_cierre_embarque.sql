@@ -265,4 +265,5 @@ BEGIN
       'margen_pct', v_margen_pct, 'minimo_pct', v_margen_min)));
 
   RETURN jsonb_build_object('puede_cerrar', v_puede, 'checks', v_checks);
-END $function$;
+END $function$
+;
