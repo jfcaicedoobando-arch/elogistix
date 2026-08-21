@@ -15,5 +15,5 @@
 # Un nombre de archivo por línea (basename), sin rutas.
 
 # Ola 1 · parte 2 (parche a las RPC de lote). Estado final garantizado por
-# 20260821010000_ola1_reaplica_lotes_sin_anclas.sql.
+# 20260821005333_170f9c71-77e8-4f8d-8669-bfdb924110c2.sql.
 20260821002652_60e70c49-9d28-49cd-a629-5170126f188f.sql
