@@ -54,6 +54,9 @@ type CardTitleProps = React.HTMLAttributes<HTMLHeadingElement> & {
 const CardTitle = ({ ref, className, as: Tag = "h2", ...props }: CardTitleProps) => (
     <Tag ref={ref} className={cn("text-card-title tracking-tight", className)} {...props} />
   );
+CardTitle.displayName = "CardTitle";
+
+
 
 
 const CardDescription = ({ ref, className, ...props }: React.HTMLAttributes<HTMLParagraphElement> & { ref?: React.Ref<HTMLParagraphElement> }) => (
