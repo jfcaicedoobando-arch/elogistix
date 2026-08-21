@@ -97,4 +97,72 @@ BEGIN
 END
 $caso2$ LANGUAGE plpgsql;
 
+-- -------------------------------------------------------------
+-- CASO 3: tolerancia de sobrepago = medio centavo (0.005)
+--   3a) saldo + 0.004 → se acepta
+--   3b) saldo + 0.010 → LC_PAGO_SOBREPAGO
+-- -------------------------------------------------------------
+DO $caso3$
+DECLARE
+  v_sqlstate text;
+  v_msg text;
+BEGIN
+  -- 3a) dentro de tolerancia
+  INSERT INTO public.pagos_factura
+    (id, factura_id, organization_id, fecha_pago, monto, moneda, tipo_cambio,
+     monto_aplicado_factura, forma_pago, referencia, notas, diferencia_cambiaria_mxn)
+  VALUES
+    ('1b1b1b1b-4444-4444-4444-444444444403',
+     '1b1b1b1b-3333-3333-3333-333333333333',
+     '1b1b1b1b-1111-1111-1111-111111111111',
+     CURRENT_DATE, 5000.004, 'MXN', 1, 5000.004, 'Transferencia', 'OLA1-C3A', '', 0);
+  RAISE NOTICE 'CASO 3a OK · centavo de holgura aceptado.';
+
+  -- 3b) fuera de tolerancia (la factura ya quedó saldada arriba)
+  BEGIN
+    INSERT INTO public.pagos_factura
+      (id, factura_id, organization_id, fecha_pago, monto, moneda, tipo_cambio,
+       monto_aplicado_factura, forma_pago, referencia, notas, diferencia_cambiaria_mxn)
+    VALUES
+      ('1b1b1b1b-4444-4444-4444-444444444404',
+       '1b1b1b1b-3333-3333-3333-333333333333',
+       '1b1b1b1b-1111-1111-1111-111111111111',
+       CURRENT_DATE, 0.01, 'MXN', 1, 0.01, 'Transferencia', 'OLA1-C3B', '', 0);
+    v_sqlstate := '00000';
+  EXCEPTION WHEN OTHERS THEN
+    GET STACKED DIAGNOSTICS v_sqlstate = RETURNED_SQLSTATE, v_msg = MESSAGE_TEXT;
+  END;
+
+  IF v_sqlstate = '00000' THEN
+    RAISE EXCEPTION 'CASO 3b FALLÓ: se aceptó un sobrepago fuera de tolerancia';
+  END IF;
+  IF v_msg NOT LIKE '%LC_PAGO_SOBREPAGO%' THEN
+    RAISE EXCEPTION 'CASO 3b FALLÓ: se esperaba LC_PAGO_SOBREPAGO, llegó: % (%)', v_msg, v_sqlstate;
+  END IF;
+  RAISE NOTICE 'CASO 3b OK · sobrepago real rechazado (%).', v_sqlstate;
+END
+$caso3$ LANGUAGE plpgsql;
+
+-- -------------------------------------------------------------
+-- CASO 4: los códigos LC_* usados por la Ola 1 están en el catálogo
+--         de mensajes (para que la UI nunca muestre un código pelón).
+-- -------------------------------------------------------------
+DO $caso4$
+DECLARE
+  v_faltantes text[];
+BEGIN
+  IF to_regclass('public.codigos_error') IS NULL THEN
+    RAISE NOTICE 'CASO 4 SKIP · el catálogo de códigos vive en el frontend.';
+    RETURN;
+  END IF;
+  SELECT array_agg(c) INTO v_faltantes
+  FROM unnest(ARRAY['LC_PAGO_FECHA_FUTURA','LC_PAGO_SOBREPAGO','LC_TC_DOF_FORBIDDEN']) AS c
+  WHERE NOT EXISTS (SELECT 1 FROM public.codigos_error e WHERE e.codigo = c);
+  IF v_faltantes IS NOT NULL THEN
+    RAISE EXCEPTION 'CASO 4 FALLÓ: códigos sin descripción: %', v_faltantes;
+  END IF;
+  RAISE NOTICE 'CASO 4 OK · códigos LC_* documentados.';
+END
+$caso4$ LANGUAGE plpgsql;
+
 ROLLBACK;
