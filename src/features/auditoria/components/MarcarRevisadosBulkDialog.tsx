@@ -3,7 +3,7 @@
  * misma "acción tomada". UI sigue el patrón `FormDialogShell`.
  */
 import { useEffect, useState } from "react";
-import { CheckCircle2, Loader2 } from "lucide-react";
+import { CheckCircle2 } from "lucide-react";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";

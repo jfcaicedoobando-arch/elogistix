@@ -3,7 +3,7 @@
  * Sprint C: incluye `crea_tarea_seguimiento` + `dias_seguimiento` para automatizaciones.
  */
 import { useEffect, useState } from "react";
-import { ArrowDown, ArrowUp, Loader2, Save } from "lucide-react";
+import { ArrowDown, ArrowUp, Save } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";

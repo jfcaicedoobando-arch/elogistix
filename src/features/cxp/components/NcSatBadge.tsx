@@ -1,7 +1,7 @@
 /**
  * Badge de estatus SAT + botón de verificación para notas de crédito de proveedor.
  */
-import { ShieldCheck, Loader2 } from "lucide-react";
+import { ShieldCheck } from "lucide-react";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { useVerificarUuidNcSat } from "@/features/cxp/hooks/useVerificarUuidNcSat";

@@ -5,7 +5,7 @@
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle2, AlertTriangle, PlugZap, Loader2, FlaskConical } from "lucide-react";
+import { CheckCircle2, AlertTriangle, PlugZap, FlaskConical } from "lucide-react";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 import type {
   FacturapiAmbiente,

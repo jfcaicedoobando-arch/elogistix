@@ -4,7 +4,7 @@
  * v13.307.17 — `AdjuntoRow` movido a su propio archivo (`./AdjuntoRow.tsx`)
  *              para bajar complejidad ciclomática y respetar `max-lines`.
  */
-import { Loader2, ShieldCheck, Ban } from "lucide-react";
+import { ShieldCheck, Ban } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { formatFechaHora } from "@/lib/formatters";

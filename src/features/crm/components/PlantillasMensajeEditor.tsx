@@ -2,7 +2,7 @@
  * Editor CRUD de plantillas de mensaje (email / WhatsApp) en /crm/configuracion.
  */
 import { useState } from "react";
-import { Plus, Save, Trash2, Loader2, MessageSquare, Mail } from "lucide-react";
+import { Plus, Save, Trash2, MessageSquare, Mail } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

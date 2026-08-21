@@ -3,7 +3,7 @@
  * Espejo de `CargaCfdiSection` con dropzone PDF + botón "Procesar con IA".
  */
 import { useRef } from "react";
-import { Upload, FileText, Loader2, CheckCircle2, X, Sparkles } from "lucide-react";
+import { Upload, FileText, CheckCircle2, X, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { CfdiParsedResponse } from "@/features/cxp/services";

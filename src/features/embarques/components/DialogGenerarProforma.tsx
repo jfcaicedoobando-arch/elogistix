@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Loader2, FileSpreadsheet, ArrowLeft, ArrowRight } from "lucide-react";
+import { FileSpreadsheet, ArrowLeft, ArrowRight } from "lucide-react";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { useDialogGenerarProformaController } from "@/features/embarques/hooks";
 import { PasoSeleccionConceptos } from "./proforma/PasoSeleccionConceptos";

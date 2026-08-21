@@ -2,7 +2,7 @@
  * ActividadTimeline — timeline + alta rápida de actividades polimórficas.
  */
 import { useState } from "react";
-import { Activity, Check, History, Loader2, Plus } from "lucide-react";
+import { Activity, Check, History, Plus } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
