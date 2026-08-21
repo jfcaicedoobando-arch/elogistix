@@ -11,7 +11,7 @@
 --     - segunda toma (otro vendedor) → LC_LEAD_YA_ASIGNADO y el lead queda
 --       fuera de su alcance de escritura
 --     - toma cross-tenant → LC_ORG_AJENA
---     - rol sin ventas (viewer) → LC_LEAD_SIN_PERMISO_TOMA
+--     - rol sin ventas (customer_service) → LC_LEAD_SIN_PERMISO_TOMA
 --   O6.3 · Policy "Tenant admin crm_etapas_pipeline":
 --     - gerente_comercial SÍ escribe etapas de su org
 --     - vendedor NO escribe etapas, pero SÍ las lee (kanban)
