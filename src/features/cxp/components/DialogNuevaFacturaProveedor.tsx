@@ -6,7 +6,6 @@
  * tabla de conceptos y los campos dejen de aparecer truncados.
  */
 import { FileSpreadsheet } from "lucide-react";
-import { FileSpreadsheet } from "lucide-react";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
 
 import { usePresupuestoCategorias } from "@/features/presupuesto/hooks";
@@ -17,17 +16,14 @@ import { useNuevaFacturaProveedorForm } from "@/features/cxp/hooks";
 import { CuadreConceptosBar } from "./CuadreConceptosBar";
 import { TotalesChipDesglose } from "./TotalesChipDesglose";
 import { CapturaFacturaFooter } from "./CapturaFacturaFooter";
-import { PasoDocumento } from "./_sections/PasoDocumento";
-import { PasoDatos } from "./_sections/PasoDatos";
-import { PasoVinculacion } from "./_sections/PasoVinculacion";
+import { CapturaFacturaPasosBody } from "./_sections/CapturaFacturaPasosBody";
 
 import { useCuadreCaptura } from "@/features/cxp/hooks/useCuadreCaptura";
 import { useModoBuzonWiring } from "@/features/cxp/hooks/useModoBuzonWiring";
 import { useCapturaFacturaPasos } from "@/features/cxp/hooks/useCapturaFacturaPasos";
 import { pendientesDeCaptura } from "./pendientesDeCaptura";
-import {
-  derivarMontos, hayCapturaFactura, verArchivoBuzon,
-} from "./_sections/capturaDerivados";
+import { derivarMontos, hayCapturaFactura } from "./_sections/capturaDerivados";
+
 import { useCapturaEntranteWiring } from "@/features/cxp/hooks/useCapturaEntranteWiring";
 import type { EmbarqueSeleccionado, EntranteParaCaptura } from "@/features/cxp/types";
 
