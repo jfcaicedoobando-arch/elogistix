@@ -63,6 +63,15 @@ export const UNIQUE_CONSTRAINT_MESSAGES: readonly ConstraintMessage[] = [
       "Esta operación ya se registró (posible doble clic). Refresca la pantalla para ver el resultado.",
   },
   {
+    // Ola 1 (major release): llaves de idempotencia por submit en pagos y
+    // traspasos. El usuario no debe ver el nombre del índice, sólo que su
+    // movimiento ya quedó registrado una sola vez.
+    match: /client_request_id/i,
+    message:
+      "Este movimiento ya se registró con esta misma solicitud (posible doble clic). Refresca la pantalla: el pago quedó guardado una sola vez.",
+  },
+
+  {
     match: /embarques?_.*expediente|expediente_unico/i,
     message:
       "Ya existe un embarque con ese número de expediente. Verifica el consecutivo.",
