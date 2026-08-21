@@ -1,14 +1,18 @@
 /**
  * Dropdown que lista plantillas activas y abre mailto:/wa.me con variables renderizadas.
+ * OLA 7 · O7.4: además deja la actividad registrada en el CRM.
  */
 import { MessageSquare, Mail } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { usePlantillasMensaje, renderPlantilla, type PlantillaCanal } from "@/features/crm/hooks";
 import { insertBitacora } from "@/features/auditoria/services/bitacora";
+import { registrarContactoAutomatico } from "@/features/crm/services/autoRegistroContacto";
 import { useAuth } from "@/lib/contexts/AuthContext";
+import { queryKeys } from "@/lib/query";
 import { buildWhatsappUrl } from "@/constants/externalUrls";
 
 interface Props {
@@ -26,6 +30,7 @@ function sanitizeTel(t: string): string {
 export default function PlantillaSelector({ canal, destino, vars, entidadTipo, entidadId }: Props) {
   const { data = [] } = usePlantillasMensaje(canal, true);
   const { user } = useAuth();
+  const qc = useQueryClient();
   const Icon = canal === "email" ? Mail : MessageSquare;
 
   const handleUsar = (_plantillaId: string, asunto: string, cuerpo: string, nombre: string) => {
@@ -51,7 +56,21 @@ export default function PlantillaSelector({ canal, destino, vars, entidadTipo, e
         detalles: { canal, plantilla: nombre },
       }).catch(() => undefined);
     }
+    // O7.4: la actividad queda en el pipeline con resultado pendiente.
+    void registrarContactoAutomatico(
+      {
+        canal: canal === "email" ? "email" : "whatsapp",
+        entidadTipo,
+        entidadId,
+        plantilla: nombre,
+        destino,
+      },
+      user,
+    ).then(() => {
+      qc.invalidateQueries({ queryKey: queryKeys.crm.actividades.all });
+    });
   };
+
 
   if (!destino || data.length === 0) return null;
 
