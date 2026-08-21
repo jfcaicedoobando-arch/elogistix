@@ -5,7 +5,7 @@
  * Flujo:
  *  1. JWT válido (el actor se toma del token, nunca del body).
  *  2. Descarga el XML de Storage con service_role y verifica su SHA-256.
- *  3. Re-parsea el CFDI (`parse-cfdi-xml/parser.ts`) — esa es la verdad fiscal.
+ *  3. Re-parsea el CFDI (`_shared/cfdiParser.ts`) — esa es la verdad fiscal.
  *  4. Si lo declarado por el cliente difiere → 409 LC_XML_METADATA_MISMATCH.
  *  5. Escribe vía `adjuntar_xml_entrante_verificado` (sólo service_role).
  */
@@ -14,7 +14,7 @@ import { jsonResponse, errorResponse } from "../_shared/response.ts";
 import { authenticate } from "../_shared/auth.ts";
 import { createLogger } from "../_shared/logger.ts";
 import { captureEdgeException, wrapEdgeHandler } from "../_shared/sentry.ts";
-import { parseCfdi } from "../parse-cfdi-xml/parser.ts";
+import { parseCfdi } from "../_shared/cfdiParser.ts";
 import { discrepanciasMeta, metaDesdeCfdi, sha256Hex } from "./verificacion.ts";
 
 const BUCKET = "cxp-inbox";

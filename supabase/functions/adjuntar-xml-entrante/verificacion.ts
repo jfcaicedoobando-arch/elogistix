@@ -5,7 +5,7 @@
  * Regla: los valores que se guardan son SIEMPRE los del servidor. Lo declarado
  * sólo se usa para detectar manipulación y rechazar la operación.
  */
-import type { CfdiParsed } from "../parse-cfdi-xml/parser.ts";
+import type { CfdiParsed } from "../_shared/cfdiParser.ts";
 
 export interface MetaDeclarada {
   uuid?: string | null;

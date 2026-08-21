@@ -12,7 +12,7 @@ import { jsonResponse, errorResponse } from "../_shared/response.ts";
 import { authenticate } from "../_shared/auth.ts";
 import { createLogger } from "../_shared/logger.ts";
 import { captureEdgeException, debeReportarStatus, wrapEdgeHandler } from "../_shared/sentry.ts";
-import { parseCfdi } from "./parser.ts";
+import { parseCfdi } from "../_shared/cfdiParser.ts";
 import {
   fallbackResult,
   parseCategoriasJson,
