@@ -27,7 +27,10 @@ export const SIZE_EXEMPT = new Set<string>([
 export const CLIENT_IMPORT_ALLOW = new Set<string>([
   "src/lib/auth/signOut.ts",
   "src/lib/auth/changePassword.ts",
+  // v13.712.0: wrapper de refresco de sesión previo a llamadas a Edge Functions.
+  "src/lib/auth/ensureFreshSession.ts",
 ]);
+
 
 export interface OversizedFile {
   file: string;
