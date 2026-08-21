@@ -10,7 +10,11 @@ Deno.serve(async (req: Request) => {
     const r = await fetch(`${url}/auth/v1/user`, {
       headers: { Authorization: authHeader, apikey: anonKey ?? "" },
     });
-    remote = `${r.status}`;
+    const sr = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+    const r2 = await fetch(`${url}/auth/v1/user`, {
+      headers: { Authorization: authHeader, apikey: sr },
+    });
+    remote = `anon=${r.status} service=${r2.status} anon_prefix=${(anonKey ?? "").slice(0, 3)}`;
   }
   return new Response(
     JSON.stringify({
