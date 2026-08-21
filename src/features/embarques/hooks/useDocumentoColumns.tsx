@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { Upload, Download, Trash2, Ban, RotateCcw } from "lucide-react";
+import { Upload, Download, Trash2, Ban, RotateCcw, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import type { DocumentoEmbarqueRow } from "@/features/embarques/hooks";
@@ -23,12 +23,15 @@ interface Options {
   onDelete?: (doc: DocumentoEmbarqueRow) => void;
   onToggleNoAplica?: (doc: DocumentoEmbarqueRow) => void;
   onRequestDelete: (doc: DocumentoEmbarqueRow) => void;
+  rechazandoDocId?: string | null;
+  onRequestRechazo?: (doc: DocumentoEmbarqueRow) => void;
 }
 
 export function useDocumentoColumns(opts: Options): ColumnDef<DocumentoEmbarqueRow, unknown>[] {
   const {
     canEdit, uploadingDocId, downloadingDocId, deletingDocId, togglingNoAplicaDocId,
     onUpload, onDownload, onDelete, onToggleNoAplica, onRequestDelete,
+    rechazandoDocId, onRequestRechazo,
   } = opts;
   return useMemo<ColumnDef<DocumentoEmbarqueRow, unknown>[]>(() => defineColumns<DocumentoEmbarqueRow>([
     { id: "nombre", header: "Documento", meta: { className: "font-medium" }, cell: ({ row }) => row.original.nombre },
@@ -102,6 +105,20 @@ export function useDocumentoColumns(opts: Options): ColumnDef<DocumentoEmbarqueR
                   {downloadingDocId !== doc.id && <Download className="h-4 w-4 mr-1" />}
                   Descargar
                 </Button>
+                {canEdit && onRequestRechazo && (
+                  <Hint label="Rechazar: se quita el archivo y se avisa a quien abrió el embarque">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-warning hover:text-warning hover:bg-warning/10"
+                      loading={rechazandoDocId === doc.id}
+                      onClick={(e) => { e.stopPropagation(); onRequestRechazo(doc); }}
+                    >
+                      {rechazandoDocId !== doc.id && <XCircle className="h-4 w-4 mr-1" />}
+                      Rechazar
+                    </Button>
+                  </Hint>
+                )}
                 {canEdit && onDelete && (
                   <Button
                     variant="ghost"
@@ -120,5 +137,5 @@ export function useDocumentoColumns(opts: Options): ColumnDef<DocumentoEmbarqueR
         );
       },
     },
-  ]), [canEdit, uploadingDocId, downloadingDocId, deletingDocId, togglingNoAplicaDocId, onUpload, onDownload, onDelete, onToggleNoAplica, onRequestDelete]);
+  ]), [canEdit, uploadingDocId, downloadingDocId, deletingDocId, togglingNoAplicaDocId, onUpload, onDownload, onDelete, onToggleNoAplica, onRequestDelete, rechazandoDocId, onRequestRechazo]);
 }

@@ -89,6 +89,8 @@ export function EmbarqueDetalleTabs({
           onDownload={docHandlers.onDownload}
           onDelete={docHandlers.onDelete}
           onToggleNoAplica={docHandlers.onToggleNoAplica}
+          rechazandoDocId={docHandlers.rechazandoDocId}
+          onRechazar={docHandlers.onRechazar}
         />
       </TabsContent>
       {/* v13.347.0 — Costos y facturas de proveedor fusionados: el buzón CxP vive

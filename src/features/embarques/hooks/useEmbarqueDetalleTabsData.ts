@@ -49,6 +49,8 @@ export function useEmbarqueDetalleTabsData(
     onDownload: docs.handleDownload,
     onDelete: docs.handleDeleteDoc,
     onToggleNoAplica: docs.handleToggleNoAplica,
+    rechazandoDocId: docs.rechazarDoc.isPending ? (docs.rechazarDoc.variables?.docId ?? null) : null,
+    onRechazar: docs.handleRechazarDoc,
   };
 
   return { conceptosCosto, documentos, notas, facturas, financials, docHandlers };

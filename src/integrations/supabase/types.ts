@@ -10449,6 +10449,10 @@ export type Database = {
         Args: { p_cotizacion_id: string }
         Returns: number
       }
+      rechazar_documento_embarque: {
+        Args: { _doc_id: string; _motivo: string }
+        Returns: undefined
+      }
       rechazar_factura_entrante: {
         Args: { p_documento_id: string; p_motivo: string }
         Returns: undefined
@@ -10993,7 +10997,12 @@ export type Database = {
         | "Vencida"
         | "En operación"
         | "Archivada"
-      estado_documento: "Pendiente" | "Recibido" | "Validado" | "No aplica"
+      estado_documento:
+        | "Pendiente"
+        | "Recibido"
+        | "Validado"
+        | "No aplica"
+        | "Rechazado"
       estado_embarque:
         | "Cotización"
         | "Borrador"
@@ -11291,7 +11300,13 @@ export const Constants = {
         "En operación",
         "Archivada",
       ],
-      estado_documento: ["Pendiente", "Recibido", "Validado", "No aplica"],
+      estado_documento: [
+        "Pendiente",
+        "Recibido",
+        "Validado",
+        "No aplica",
+        "Rechazado",
+      ],
       estado_embarque: [
         "Cotización",
         "Borrador",

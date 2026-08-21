@@ -8,6 +8,7 @@ import { DataTable } from "@/components/shared/DataTable";
 import type { DocumentoEmbarqueRow } from "@/features/embarques/hooks";
 import { useFocusSection } from "@/features/embarques/hooks/useFocusSection";
 import { AgregarDocumentoDialog } from "./tabDocumentos/AgregarDocumentoDialog";
+import { RechazarDocumentoDialog } from "./tabDocumentos/RechazarDocumentoDialog";
 import { useDocumentoColumns } from "@/features/embarques/hooks/useDocumentoColumns";
 
 interface Props {
@@ -23,13 +24,16 @@ interface Props {
   onDownload: (archivo: string, docId: string) => void;
   onDelete?: (doc: DocumentoEmbarqueRow) => void;
   onToggleNoAplica?: (doc: DocumentoEmbarqueRow) => void;
+  rechazandoDocId?: string | null;
+  onRechazar?: (doc: DocumentoEmbarqueRow, motivo: string) => Promise<void> | void;
 }
 
 export function TabDocumentos({
   embarqueId, modo, documentos, canEdit, uploadingDocId, downloadingDocId, deletingDocId, togglingNoAplicaDocId,
-  onUpload, onDownload, onDelete, onToggleNoAplica,
+  onUpload, onDownload, onDelete, onToggleNoAplica, rechazandoDocId, onRechazar,
 }: Props) {
   const [docToDelete, setDocToDelete] = useState<DocumentoEmbarqueRow | null>(null);
+  const [docToReject, setDocToReject] = useState<DocumentoEmbarqueRow | null>(null);
   const [addOpen, setAddOpen] = useState(false);
   const { focus, registerRef, clearFocus } = useFocusSection();
   const filtrarFaltantes = focus === "faltantes";
@@ -43,6 +47,8 @@ export function TabDocumentos({
     canEdit, uploadingDocId, downloadingDocId, deletingDocId, togglingNoAplicaDocId,
     onUpload, onDownload, onDelete, onToggleNoAplica,
     onRequestDelete: setDocToDelete,
+    rechazandoDocId,
+    onRequestRechazo: onRechazar ? setDocToReject : undefined,
   });
 
   return (
@@ -89,6 +95,17 @@ export function TabDocumentos({
         embarqueId={embarqueId}
         modo={modo}
         documentos={documentos}
+      />
+
+      <RechazarDocumentoDialog
+        open={!!docToReject}
+        onOpenChange={(open) => { if (!open) setDocToReject(null); }}
+        documentoNombre={docToReject?.nombre ?? ''}
+        pendiente={!!docToReject && rechazandoDocId === docToReject.id}
+        onConfirm={async (motivo) => {
+          if (docToReject && onRechazar) await onRechazar(docToReject, motivo);
+          setDocToReject(null);
+        }}
       />
 
       <ConfirmActionDialog

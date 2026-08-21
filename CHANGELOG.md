@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.714.0] - 2026-08-21
+### Ola 5 — Entrega 1: rechazo de documentos y consultas por lotes
+- **Rechazar documento del embarque (O5.3)**: nuevo botón "Rechazar" en el tab Documentos. Pide un motivo (mín. 10 caracteres), quita el archivo adjunto, deja el documento en estado `Rechazado` (vuelve a contar como faltante), guarda el motivo en las notas y envía una notificación interna a quien abrió el embarque. Todo en una sola RPC (`rechazar_documento_embarque`) con validación de organización y bitácora.
+- **Consultas por lotes (O5.9)**: nuevo helper `chunkedIn` (lotes de 200 IDs) aplicado a la conciliación de costos y a las dependencias financieras del embarque, para que los filtros `.in(...)` no revienten la longitud de la petición ni degraden el plan de consulta en embarques con muchas facturas.
+
 ## [13.713.0] - 2026-08-21
 ### Ola 4 — Entrega 1: "El dinero avisa solo" (bajo riesgo)
 - **Alta de cliente (pre-flight fiscal)**: la captura ahora exige forma de pago y método de pago por defecto (además de régimen y uso de CFDI), con valores sugeridos `99` y `PPD`, para que el timbrado no se detenga después por datos fiscales faltantes.

@@ -6,6 +6,7 @@
  * (Pages → Hooks → **Services** → Lib).
  */
 import { supabase } from '@/integrations/supabase/client';
+import { countInChunks } from '@/lib/supabase/chunkedIn';
 
 export interface FacturaLigada {
   id: string;
@@ -24,11 +25,6 @@ export interface EmbarqueDependenciasFinancieras {
 
 
 const MAX_FOLIOS = 20;
-
-interface CountResult {
-  count: number | null;
-  error: { message: string } | null;
-}
 
 async function fetchFacturasLigadas(embarqueId: string): Promise<{ cxc: FacturaLigada[]; cxcCount: number; cxp: FacturaLigada[]; cxpCount: number }> {
   const [cxcRes, cxpRes] = await Promise.all([
@@ -59,31 +55,32 @@ async function fetchFacturasLigadas(embarqueId: string): Promise<{ cxc: FacturaL
   };
 }
 
+type TablaConteo = 'factura_notas_credito' | 'proveedor_notas_credito' | 'pagos_factura' | 'pagos_proveedor';
+
+/** Conteo por lotes de IDs (O5.9): evita URLs gigantes en el filtro `.in`. */
+async function contarPorFacturaIds(tabla: TablaConteo, ids: string[]): Promise<number> {
+  return countInChunks(ids, async (lote) => {
+    const { count, error } = await supabase
+      .from(tabla)
+      .select('id', { count: 'exact', head: true })
+      .in('factura_id', lote)
+      .is('deleted_at', null);
+    if (error) throw error;
+    return count ?? 0;
+  });
+}
+
 async function fetchNotasYPagos(cxcIds: string[], cxpIds: string[]): Promise<{ notasCredito: number; pagos: number }> {
-  const empty: CountResult = { count: 0, error: null };
-  const [ncCxcRes, ncCxpRes, pagosCxcRes, pagosCxpRes] = await Promise.all<CountResult>([
-    cxcIds.length
-      ? supabase.from('factura_notas_credito').select('id', { count: 'exact', head: true }).in('factura_id', cxcIds).is('deleted_at', null)
-      : Promise.resolve(empty),
-    cxpIds.length
-      ? supabase.from('proveedor_notas_credito').select('id', { count: 'exact', head: true }).in('factura_id', cxpIds).is('deleted_at', null)
-      : Promise.resolve(empty),
-    cxcIds.length
-      ? supabase.from('pagos_factura').select('id', { count: 'exact', head: true }).in('factura_id', cxcIds).is('deleted_at', null)
-      : Promise.resolve(empty),
-    cxpIds.length
-      ? supabase.from('pagos_proveedor').select('id', { count: 'exact', head: true }).in('factura_id', cxpIds).is('deleted_at', null)
-      : Promise.resolve(empty),
+  const [ncCxc, ncCxp, pagosCxc, pagosCxp] = await Promise.all([
+    contarPorFacturaIds('factura_notas_credito', cxcIds),
+    contarPorFacturaIds('proveedor_notas_credito', cxpIds),
+    contarPorFacturaIds('pagos_factura', cxcIds),
+    contarPorFacturaIds('pagos_proveedor', cxpIds),
   ]);
 
-  if (ncCxcRes.error) throw ncCxcRes.error;
-  if (ncCxpRes.error) throw ncCxpRes.error;
-  if (pagosCxcRes.error) throw pagosCxcRes.error;
-  if (pagosCxpRes.error) throw pagosCxpRes.error;
-
   return {
-    notasCredito: (ncCxcRes.count ?? 0) + (ncCxpRes.count ?? 0),
-    pagos: (pagosCxcRes.count ?? 0) + (pagosCxpRes.count ?? 0),
+    notasCredito: ncCxc + ncCxp,
+    pagos: pagosCxc + pagosCxp,
   };
 }
 
