@@ -17,3 +17,7 @@
 # Ola 1 · parte 2 (parche a las RPC de lote). Estado final garantizado por
 # 20260821005333_170f9c71-77e8-4f8d-8669-bfdb924110c2.sql.
 20260821002652_60e70c49-9d28-49cd-a629-5170126f188f.sql
+
+# Ola 2 · O2.2 (parche por texto a validar_cierre_embarque). Estado final
+# garantizado por 20260826003000_ola2_comisiones_espejo.sql.
+20260821010645_da0cff63-83ed-4870-bb70-73237a0ba039.sql
