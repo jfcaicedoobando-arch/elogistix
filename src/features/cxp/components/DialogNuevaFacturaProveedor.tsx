@@ -5,7 +5,7 @@
  * vinculación al embarque). Cada paso usa todo el ancho del modal para que la
  * tabla de conceptos y los campos dejen de aparecer truncados.
  */
-import { useNavigate } from "react-router-dom";
+import { FileSpreadsheet } from "lucide-react";
 import { FileSpreadsheet } from "lucide-react";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
 
