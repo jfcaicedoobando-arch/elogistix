@@ -320,12 +320,30 @@ jobs:
           pg_restore --no-owner --dbname=postgres \
             .rls-snapshot/db.dump
 
+      # v13.709.1 — El artifact de logs avisaba "No files were found" cuando la
+      # step de suites no llegaba a correr (p. ej. falla el restore del dump):
+      # `.rls-logs/` nunca se creaba. Ahora la carpeta y un manifiesto se
+      # siembran en una step propia, así el artifact siempre trae contexto.
+      - name: Preparar carpeta de logs
+        env:
+          SUITES: ${{ matrix.suites }}
+        run: |
+          set -euo pipefail
+          mkdir -p .rls-logs
+          {
+            echo "grupo: ${{ matrix.grupo }}"
+            echo "suites: $SUITES"
+            echo "run: ${{ github.run_id }} · sha ${{ github.sha }}"
+            echo "nota: si no hay archivos suite-*.log, la step de suites no llegó a correr."
+          } > .rls-logs/00-manifiesto.txt
+
       - name: Run RLS suites — ${{ matrix.grupo }}
         env:
           SUITES: ${{ matrix.suites }}
         run: |
           set -uo pipefail
           mkdir -p .rls-logs
+
           fallidas=""
           for suite in $SUITES; do
             archivo="supabase/tests/rls/test_rls_${suite}.sql"
