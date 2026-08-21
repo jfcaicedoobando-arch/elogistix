@@ -62,6 +62,8 @@ const CRITICAL = [
   // 13.430.1 — Mantenimiento CxP y verificación SAT en lote
   "supabase/functions/backfill-cxp-buzon/index.ts",
   "supabase/functions/verificar-sat-lote/index.ts",
+  // 13.710.0 — Verificación SAT semanal (cron) para CFDI cancelados
+  "supabase/functions/verificar-sat-semanal/index.ts",
 ];
 
 describe("Edge functions críticas envueltas con wrapEdgeHandler", () => {
