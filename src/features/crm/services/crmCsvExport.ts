@@ -48,7 +48,7 @@ export function buildOportunidadesCsv(rows: CrmOportunidadRow[]): string {
     rows.map((o) => [
       txt(o.nombre), txt(o.cliente_nombre), txt(o.monto_estimado), txt(o.moneda),
       txt(o.probabilidad), txt(o.vendedor_email),
-      fechaMx(o.fecha_cierre_estimada), fechaMx(o.created_at),
+      fechaMx(o.fecha_estimada_cierre), fechaMx(o.created_at),
     ]),
   );
 }
