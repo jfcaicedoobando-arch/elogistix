@@ -1,11 +1,9 @@
 /**
  * Comisiones — devengadas + liquidaciones + config.
  *
- * v13.173.2 (Ola 1 · Filtros globales): la pestaña "Devengadas" se migra al
- * primitivo `useClientPagedList` + `<UnifiedFiltersBar />`. Los tres filtros
- * server (vendedora, estado, periodo) se leen/escriben en la URL vía `nuqs`
- * y se propagan al RPC; encima, se añade búsqueda por factura/cliente, orden
- * por columna y paginación 10/20/50/100.
+ * Devengadas usa `useClientPagedList` + `<UnifiedFiltersBar />`; los filtros
+ * server (vendedora, estado, periodo) viven en la URL vía `nuqs` y se propagan
+ * al RPC, más búsqueda, orden por columna y paginación 10/20/50/100.
  */
 import { useMemo } from "react";
 import { PageContainer } from "@/components/shared/PageContainer";

@@ -3,7 +3,7 @@
  *
  * Cubre los "¿Estás seguro?" que hoy se repiten en cada página con
  * `AlertDialog` inline. Para borrados irreversibles usa
- * `<DeleteConfirmDialog />` (typable ELIMINAR).
+ * `<DoubleConfirmDeleteDialog />` (typable ELIMINAR).
  */
 import type * as React from "react";
 import { Loader2 } from "lucide-react";

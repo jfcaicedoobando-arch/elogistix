@@ -15,7 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/components/ui/table";
 import { DetailTableHead, DetailTableRow, DetailTableEmptyRow } from "@/components/shared/DetailTable";
-import { DeleteConfirmDialog } from "@/components/shared/dialogs/DeleteConfirmDialog";
+import DoubleConfirmDeleteDialog from "@/components/shared/DoubleConfirmDeleteDialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EditRow } from "./CatalogoClavesSATCard.parts";
 import {
@@ -121,7 +121,7 @@ export function CatalogoClavesSATCard() {
           </Table>
         </div>
       </CardContent>
-      <DeleteConfirmDialog
+      <DoubleConfirmDeleteDialog
         open={!!rowAEliminar}
         onOpenChange={(open) => { if (!open) setRowAEliminar(null); }}
         entityName={rowAEliminar ? `el producto "${rowAEliminar.patron}"` : "este producto"}
