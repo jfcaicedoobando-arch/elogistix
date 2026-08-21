@@ -12,14 +12,8 @@ export function LandingHero() {
     >
       {/* Grid pattern + radial glow */}
       <div aria-hidden="true" className="pointer-events-none absolute inset-0">
-        <div
-          className="absolute inset-0 opacity-[0.08]"
-          style={{
-            backgroundImage:
-              "linear-gradient(to right, hsl(var(--primary-foreground) / 0.15) 1px, transparent 1px), linear-gradient(to bottom, hsl(var(--primary-foreground) / 0.15) 1px, transparent 1px)",
-            backgroundSize: "48px 48px",
-          }}
-        />
+        <div className="absolute inset-0 opacity-[0.08] bg-grid-hero" />
+
         <div className="absolute -left-32 -top-32 h-96 w-96 rounded-full bg-accent/20 blur-3xl" />
         <div className="absolute -bottom-40 -right-40 h-[28rem] w-[28rem] rounded-full bg-info/15 blur-3xl" />
 
