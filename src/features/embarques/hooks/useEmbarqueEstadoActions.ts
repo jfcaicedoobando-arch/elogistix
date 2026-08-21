@@ -12,6 +12,7 @@ import { usePermissions } from "@/hooks/shared/usePermissions";
 import { notifyError, notifySuccess, notifyWarning } from "@/lib/ui/appFeedback";
 import { labelExpediente } from "@/lib/domain/labelExpediente";
 import { useState, useCallback } from "react";
+import { useStableRequestId } from "@/lib/idempotency";
 import {
   getSiguienteEstado,
   clasificarBloqueoAvance,
