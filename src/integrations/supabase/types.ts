@@ -9505,6 +9505,14 @@ export type Database = {
           telefono_norm: string
         }[]
       }
+      crm_propagar_conversion_cliente: {
+        Args: {
+          p_cliente_id: string
+          p_cliente_nombre: string
+          p_oportunidad_id: string
+        }
+        Returns: Json
+      }
       crm_tomar_lead: { Args: { p_lead_id: string }; Returns: Json }
       crm_vincular_cotizacion: {
         Args: {
