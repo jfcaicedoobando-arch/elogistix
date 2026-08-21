@@ -8446,6 +8446,13 @@ export type Database = {
           en_verificacion: number
         }[]
       }
+      _reprocesar_comisiones_org: {
+        Args: { p_org: string }
+        Returns: {
+          procesadas: number
+          resueltas: number
+        }[]
+      }
       _resolver_proveedor_por_nombre: {
         Args: { p_nombre: string; p_org: string }
         Returns: string
@@ -10197,6 +10204,10 @@ export type Database = {
         Args: never
         Returns: number
       }
+      notificar_uuid_cancelado_sat: {
+        Args: { p_facturas: Json; p_org: string }
+        Returns: number
+      }
       obtener_costos_cotizacion_version: {
         Args: { p_cotizacion_id: string; p_version?: number }
         Returns: Json[]
@@ -10616,6 +10627,7 @@ export type Database = {
         }
         Returns: Json
       }
+      reprocesar_comisiones_job: { Args: never; Returns: Json }
       reprocesar_comisiones_pendientes: {
         Args: { p_org?: string }
         Returns: {
