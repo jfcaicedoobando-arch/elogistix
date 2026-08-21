@@ -104,4 +104,18 @@ export const LC_CODE_MESSAGES_TESORERIA: Record<string, string> = {
     "La factura de proveedor está cancelada o eliminada y no admite pagos.",
   LC_LIQUIDACION_EN_PROCESO:
     "Esta liquidación ya está en proceso. Espera unos segundos y verifica antes de reintentar.",
+  // ── Ola 2 · O2.5–O2.6 · Anticipos idempotentes y ciclo de liquidaciones ──
+  LC_LIQUIDACION_NO_EXISTE: "La liquidación de comisiones no existe o fue eliminada.",
+  LC_LIQUIDACION_OTRA_ORG: "La liquidación pertenece a otra organización.",
+  LC_LIQUIDACION_SIN_ROL:
+    "Sólo administración, contabilidad o tesorería pueden pagar o cancelar liquidaciones de comisión.",
+  LC_LIQUIDACION_YA_PAGADA:
+    "Esta liquidación ya tiene un pago registrado; revisa el listado antes de volver a pagarla.",
+  LC_LIQUIDACION_CANCELADA:
+    "La liquidación está cancelada. Genera una liquidación nueva para pagar esas comisiones.",
+  LC_LIQUIDACION_PAGADA_NO_CANCELABLE:
+    "La liquidación ya fue pagada; registra el ajuste en la siguiente liquidación en lugar de cancelarla.",
+  LC_LIQUIDACION_FECHA_FUTURA: "La fecha del pago de la liquidación no puede ser futura.",
+  LC_LIQUIDACION_MOTIVO_REQUERIDO: "Captura el motivo de la cancelación de la liquidación.",
 };
+
