@@ -28,6 +28,8 @@ export interface RegistrarAnticipoInput {
   notas?: string;
   /** Embarque (expediente) al que corresponde el anticipo. Opcional. */
   embarqueId?: string | null;
+  /** Ola 2 · O2.5 — llave de idempotencia: evita anticipos y cargos duplicados. */
+  requestId?: string;
 }
 
 export async function registrarAnticipo(input: RegistrarAnticipoInput): Promise<Anticipo> {
@@ -46,6 +48,7 @@ export async function registrarAnticipo(input: RegistrarAnticipoInput): Promise<
     p_cuenta_bancaria_id: input.cuentaBancariaId ?? undefined,
     p_notas: input.notas ?? undefined,
     p_embarque_id: input.embarqueId ?? undefined,
+    p_request_id: input.requestId ?? undefined,
   });
   if (error) throw mapApiError(error);
   // SAFE-CAST: la RPC retorna el row completo tipado en el server.

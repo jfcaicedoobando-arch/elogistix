@@ -2,10 +2,10 @@
  * Servicio de liquidaciones de comisión: lista, RPC de generación, registro de pago.
  */
 import { supabase } from "@/integrations/supabase/client";
-import { unwrap, unwrapOr, run } from "@/lib/supabase/response";
+import { unwrap, unwrapOr } from "@/lib/supabase/response";
 import { assertNotTruncated } from "@/lib/supabase/assertNotTruncated";
 
-import type { Tables, TablesUpdate } from "@/integrations/supabase/types";
+import type { Tables } from "@/integrations/supabase/types";
 import { registrarActividad } from "@/services/bitacora/registrar";
 import { CAP_LISTA } from "@/constants/queryCaps";
 import { ymMx } from "@/lib/date/mx";
@@ -15,7 +15,7 @@ export type LiquidacionRow = Tables<"liquidaciones_comision">;
 
 // v13.56.1 — Columnas explícitas (auditoría: evitar SELECT * en tablas financieras).
 const LIQUIDACION_COLUMNS =
-  "id, organization_id, vendedora_id, periodo, total_mxn, fecha_pago, metodo_pago, referencia, notas, creada_por, created_at, updated_at";
+  "id, organization_id, vendedora_id, periodo, total_mxn, fecha_pago, metodo_pago, referencia, notas, estado, cancelada_at, motivo_cancelacion, creada_por, created_at, updated_at";
 
 export async function fetchLiquidaciones(): Promise<LiquidacionRow[]> {
   return unwrapOr(
