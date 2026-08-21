@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.710.1] - 2026-08-21
+### CI — cobertura Sentry para edge function `verificar-sat-semanal`
+- Se agregó `supabase/functions/verificar-sat-semanal/index.ts` al listado `CRITICAL` de `sentry-edge-wrapping.test.ts`, ya que la función usa `wrapEdgeHandler` y el test de cobertura de arquitectura la exige.
+
 ## [13.710.0] - 2026-08-21
 ### Ola 2 · Fase B2 — las comisiones se recalculan solas y el SAT se revisa cada semana
 - **Reproceso diario (O2.11.1):** una tarea de plataforma corre todas las noches (00:20 CDMX), recorre las organizaciones con comisiones en la cola de recálculo y las reintenta sin necesidad de que alguien entre a la app. Es idempotente y nunca toca comisiones ya liquidadas.
