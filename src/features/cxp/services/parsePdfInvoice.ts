@@ -14,6 +14,7 @@ import {
 } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { AUTH_ERROR_MESSAGES } from "@/constants/authMessages";
+import { ensureFreshSession } from "@/lib/auth/ensureFreshSession";
 import { CfdiUploadError, type CfdiParsedResponse, type CfdiUploadPhase } from "./parseCfdi.types";
 
 const MAX_ATTEMPTS = 2;
@@ -40,19 +41,25 @@ interface Attempt {
   retryable: boolean;
 }
 
-async function invokeOnce(file: File, categorias: { id: string; nombre: string }[]): Promise<Attempt> {
+async function invokeOnce(
+  file: File,
+  categorias: { id: string; nombre: string }[],
+  token: string,
+): Promise<Attempt> {
   const fd = new FormData();
   fd.append("file", file);
   fd.append("categorias", JSON.stringify(categorias));
   try {
     const { data, error } = await supabase.functions.invoke<CfdiParsedResponse>(
       "parse-invoice-pdf",
-      { body: fd },
+      { body: fd, headers: { Authorization: `Bearer ${token}` } },
     );
     if (error) {
       if (error instanceof FunctionsHttpError) {
         const m = await mapHttpError(error);
-        const retryable = m.status !== null && [408, 429, 500, 502, 503, 504].includes(m.status);
+        // 401: el token pudo expirar mientras se subía el PDF; se reintenta con
+        // sesión refrescada antes de rendirse.
+        const retryable = m.status !== null && [401, 408, 429, 500, 502, 503, 504].includes(m.status);
         return { ok: false, phase: "response", status: m.status, message: m.message, cause: error, retryable };
       }
       if (error instanceof FunctionsRelayError) {
@@ -107,7 +114,9 @@ async function invokeWithRetry(
   const t0 = performance.now();
   let last: Attempt | null = null;
   for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
-    const r = await invokeOnce(file, categorias);
+    const token = await ensureFreshSession(attempt > 1);
+    if (!token) throw new Error(AUTH_ERROR_MESSAGES.csfSessionRequired);
+    const r = await invokeOnce(file, categorias, token);
     if (r.ok && r.data) {
       return { data: r.data, latencyMs: Math.round(performance.now() - t0), attempts: attempt };
     }
@@ -129,11 +138,6 @@ export async function parsePdfInvoice(
     level: "info",
     data: { pdf_size: file.size, pdf_name: file.name, categorias_count: categorias.length },
   });
-
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session?.access_token) {
-    throw new Error(AUTH_ERROR_MESSAGES.csfSessionRequired);
-  }
 
   const { data, latencyMs, attempts } = await invokeWithRetry(file, categorias);
   Sentry.addBreadcrumb({
