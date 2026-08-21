@@ -52,7 +52,7 @@ export function DialogNuevaFacturaProveedor(props: Props) {
 function DialogNuevaFacturaProveedorForm({
   open, onOpenChange, initialEmbarqueAdHoc, entrante, onCapturada,
 }: Props) {
-  const navigate = useNavigate();
+  
   const cats = usePresupuestoCategorias(true);
   const wiring = useCapturaEntranteWiring({
     entrante, initialEmbarqueAdHoc, onCapturada,
