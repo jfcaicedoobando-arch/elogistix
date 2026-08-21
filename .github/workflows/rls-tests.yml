@@ -872,13 +872,20 @@ jobs:
           shopt -s nullglob
           legacy=0
           nuevas=""
+          # Exentas documentadas (migraciones ancladas por texto con
+          # reaplicación posterior que garantiza el estado final).
+          ancladas=$(grep -vE '^\s*(#|$)' supabase/tests/rls/drift-anclas.txt || true)
           for f in $(printf '%s\n' supabase/migrations/*.sql | LC_ALL=C sort); do
             base=$(basename "$f")
             if ! sed -E \
               -e 's/^[[:space:]]+CREATE EXTENSION[[:space:]]+(IF NOT EXISTS[[:space:]]+)?(pg_cron|pg_net|pgmq|supabase_vault)[^;]*;/    PERFORM 1; -- [ci] stubbed \2/I' \
               -e 's/^CREATE EXTENSION[[:space:]]+(IF NOT EXISTS[[:space:]]+)?(pg_cron|pg_net|pgmq|supabase_vault)[^;]*;/SELECT 1; -- [ci] stubbed \2/I' \
               "$f" | $PSQL --single-transaction > /tmp/mig.log 2>&1; then
-              if [[ "${base%%_*}" < "$DRIFT_CORTE" ]]; then
+              if printf '%s\n' "$ancladas" | grep -Fxq "$base"; then
+                echo "::notice file=$f::migración anclada por texto (exenta en drift-anclas.txt); su estado final lo garantiza una reaplicación posterior"
+                legacy=$((legacy + 1))
+                echo "- \`$base\` (anclada, exenta)" >> /tmp/legacy.md
+              elif [[ "${base%%_*}" < "$DRIFT_CORTE" ]]; then
                 legacy=$((legacy + 1))
                 echo "- \`$base\`" >> /tmp/legacy.md
               else
