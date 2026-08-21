@@ -1,15 +1,16 @@
 /**
- * Mutations de cambio de estado del embarque: avanzar, sync directo y reabrir.
- * v13.278.0 · `useSyncEstadoEmbarque` ahora escribe el estado en caché de forma
+ * Mutations de cambio de estado del embarque: avanzar, sync automático y reabrir.
+ * v13.278.0 · `useSyncEstadoEmbarque` escribe el estado en caché de forma
  * optimista (detail + full) con rollback automático si la mutación falla.
+ * Ola 2 · O2.8 — el auto-sync ya NO escribe directo en `embarques`: viaja por
+ * la RPC `avanzar_estado_embarque` con un requestId estable por transición, de
+ * modo que hereda el candado de documentos, el FOR UPDATE y la guarda optimista.
  */
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { queryKeys } from '@/lib/query';
 import {
-  actualizarEstadoEmbarque,
   avanzarEstadoEmbarqueRpc,
   reabrirEmbarqueRpc,
-  insertEventoEmbarque,
 } from '@/features/embarques/services';
 import {
   tipoEventoParaEstado,
@@ -19,16 +20,39 @@ import { newRequestId } from '@/lib/idempotency';
 
 import { useMutationWithFeedback } from '@/hooks/shared/useMutationWithFeedback';
 
-async function insertarEventoTracking(embarqueId: string, nuevoEstado: string, usuario: string) {
-  await insertEventoEmbarque({
-    embarqueId,
-    tipo: tipoEventoParaEstado(nuevoEstado),
-    descripcion: descripcionEventoCambioEstado(nuevoEstado),
-    ubicacion: '',
-    fecha: new Date().toISOString(),
-    usuario,
-  });
+/**
+ * requestId estable por (embarque, estado destino): dos renders (o dos
+ * pestañas del mismo navegador) del mismo auto-sync reusan la llave y la RPC
+ * devuelve la respuesta cacheada en vez de duplicar nota y evento.
+ */
+const requestIdsAutoSync = new Map<string, string>();
+function requestIdTransicion(embarqueId: string, nuevoEstado: string): string {
+  const clave = `${embarqueId}:${nuevoEstado}`;
+  const existente = requestIdsAutoSync.get(clave);
+  if (existente) return existente;
+  const nuevo = newRequestId();
+  requestIdsAutoSync.set(clave, nuevo);
+  return nuevo;
 }
+
+/**
+ * Rechazos esperados del auto-sync: el estado sugerido por fechas no procede
+ * todavía (faltan documentos, falta la llegada real, la transición no aplica o
+ * alguien más movió el embarque). No son errores del usuario: se ignoran en
+ * silencio y el cambio manual sigue mostrando el motivo.
+ */
+const RECHAZOS_ESPERADOS_AUTOSYNC = [
+  'documentos_faltantes',
+  'fecha_llegada_real_requerida',
+  'LC_TRANSICION_INVALIDA',
+  'LC_ESTADO_CONCURRENTE',
+];
+
+function esRechazoEsperado(error: unknown): boolean {
+  const mensaje = error instanceof Error ? error.message : String(error ?? '');
+  return RECHAZOS_ESPERADOS_AUTOSYNC.some((codigo) => mensaje.includes(codigo));
+}
+
 
 export function useAvanzarEstadoEmbarque() {
   const queryClient = useQueryClient();
