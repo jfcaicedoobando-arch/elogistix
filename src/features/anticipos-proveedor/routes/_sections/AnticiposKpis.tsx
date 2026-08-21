@@ -58,7 +58,7 @@ export function AnticiposKpis({ anticipos }: Props) {
         label="Aplicado a facturas"
         value={aplicado.length > 0 ? aplicado.join(" · ") : "—"}
         icon={CheckCircle2}
-        variant="success"
+        variant={aplicado.length > 0 ? "success" : "default"}
         sublabel="Ya cruzado contra facturas"
       />
     </KpiStrip>
