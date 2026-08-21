@@ -36,6 +36,7 @@ export default function TesoreriaPagosProgramados() {
 
   const { data: cuentas = [] } = useCuentasBancarias();
   const ejecutarPago = useEjecutarPagoProgramado();
+  const requestIdRef = useRef<string | null>(null);
 
   const cuentasCompatibles = useMemo(
     () => cuentas.filter((c) => c.moneda === facturaPago?.moneda),
