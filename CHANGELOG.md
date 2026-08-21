@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.711.1] - 2026-08-21
+### Corrección
+- Captura de facturas por IA (PDF): se refresca la sesión antes de llamar a `parse-invoice-pdf` y se reintenta ante 401, eliminando el error "Token inválido" cuando el token había expirado.
+- `_shared/auth.ts`: la verificación remota del JWT es la fuente de verdad y `getClaims` queda como respaldo.
+
 ## [13.711.0] - 2026-08-21
 ### Ola 3 — Un solo equipo de diseño
 - Tipografía, encabezados y diálogos unificados con los tokens del sistema (sentence case, escala semántica) en portales, auth, legal y módulos operativos.
