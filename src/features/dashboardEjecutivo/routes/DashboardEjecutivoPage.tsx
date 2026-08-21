@@ -32,10 +32,12 @@ import { PeriodoMensualToolbar } from "@/features/profit/components/PeriodoMensu
 import { FuenteEerrToggle } from "@/features/profit/components/FuenteEerrToggle";
 import { ErrorStateInline } from "@/components/empty/ErrorStateInline";
 import { ProfitSubNav } from "@/features/profit/components/ProfitSubNav";
+import { useDocumentTitle } from "@/hooks/shared";
 
 const MES_MINIMO = "2026-04";
 
 export default function DashboardEjecutivoPage() {
+  useDocumentTitle("Dashboard ejecutivo");
   const periodoCtl = usePeriodoMesUrl("mes", MES_MINIMO);
   const periodo = periodoCtl.mesActual.key;
   const [generandoPdf, setGenerandoPdf] = useState(false);

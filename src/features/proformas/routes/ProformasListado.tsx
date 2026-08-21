@@ -13,6 +13,7 @@ import { PageContainer } from "@/components/shared/PageContainer";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { TabProformas } from "@/features/facturacion/components/TabProformas";
 import type { FiltroEstadoProforma } from "@/features/facturacion/hooks";
+import { useDocumentTitle } from "@/hooks/shared";
 
 const ESTADOS_VALIDOS: FiltroEstadoProforma[] = [
   "todas",
@@ -27,6 +28,7 @@ function parseEstado(valor: string | null): FiltroEstadoProforma {
 }
 
 export default function ProformasListado() {
+  useDocumentTitle("Proformas");
   const [searchParams] = useSearchParams();
   const estadoInicial = parseEstado(searchParams.get("estado"));
   const porEmitir = estadoInicial === "aceptada";

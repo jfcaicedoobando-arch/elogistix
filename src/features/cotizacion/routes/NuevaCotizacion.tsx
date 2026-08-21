@@ -21,10 +21,12 @@ import { GuardarPlantillaDialog } from "@/features/cotizacion/components/wizard/
 import { PlantillaSelectorPaso1 } from "@/features/cotizacion/components/wizard/PlantillaSelectorPaso1";
 import { useOrgActiva } from "@/hooks/shared/useOrgActiva";
 import { PageContainer } from "@/components/shared/PageContainer";
+import { useDocumentTitle } from "@/hooks/shared";
 
 
 
 export default function NuevaCotizacion() {
+  useDocumentTitle("Nueva cotización");
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth();
