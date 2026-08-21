@@ -120,17 +120,30 @@ En `/inicio`, `/compras` y `/tesoreria` se salta de `h1` a `h3` sin `h2` interme
 esquema de navegación por encabezados. **Fix:** usar `SectionHeading` con el nivel correcto
 (ya soporta el nivel semántico) en lugar de elegir tamaño visual.
 
-### V-08 · Tablas crudas en reportes financieros
+### V-08 · Tablas crudas fuera de `DataTable`
 
-Sobreviven `<table>` construidas a mano en vistas de reportes; no heredan el zebra, el alto de fila,
-el hover ni el estado vacío de `DataTable`, y se ven distintas al resto del sistema.
-**Fix:** migrarlas a `DataTable`.
+Tres archivos de features siguen con `<table>` a mano, así que no heredan zebra, alto de fila, hover
+ni los estados `DataTableBodyEmpty` / `DataTableBodySkeleton`:
+`src/features/presupuesto/components/TabVsReal.tsx`, `src/features/presupuesto/components/TabCaptura.tsx`
+y `src/features/profit/components/EstadoResultadosTable.tsx`.
+**Fix:** migrar a `DataTable` o, si el layout tipo estado de resultados lo justifica, darles su propio
+skeleton y estado vacío explícitos.
 
-### V-09 · Colores fuera de tokens
+### V-09 · Páginas de detalle sin `PageHeader`
 
-El barrido de código encontra utilidades de color literales (`emerald-*`, `amber-*`, `slate-*`,
-`text-white`) en ~86 archivos. Rompen el tema y el modo oscuro.
-**Fix:** sustituir por tokens semánticos, por módulo, empezando por los financieros.
+~19 páginas de negocio de nivel superior no usan `PageHeader`/`SectionHeading`, por lo que su título,
+altura de encabezado y acciones no coinciden con el resto: `ClienteDetalle`, `EmbarqueDetalle`,
+`EditarEmbarque`, `NuevoEmbarque`, `CotizacionDetalle`, `CotizacionInformativaDetalle`,
+`EditarCotizacion`, `NuevaCotizacion`, `FacturaDetalle`, `FacturaProveedorDetalle`, `ProformaDetalle`,
+`ProveedorDetalle`, `LeadDetalle`, `OportunidadDetalle`, `EstadoCuentaInterno`, `TesoreriaFlujo`.
+Las públicas (login, 404, legal, marketing, onboarding) quedan fuera del hallazgo: no llevan header de
+página por diseño. El portal usa `PortalPageShell` como patrón paralelo — decidir si se homologa.
+
+### V-10 · Diálogo de formulario sin `FormDialogShell`
+
+`src/features/marketing/components/DemoAccessDialog.tsx` es el único modal con formulario que no usa
+`FormDialogShell`, así que su padding, secciones y footer no coinciden con los otros 96 modales.
+
 
 ---
 
