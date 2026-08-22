@@ -58,6 +58,7 @@ $caso1b$ LANGUAGE plpgsql;
 DO $fixture$
 DECLARE
   v_org uuid := 'a1a1a1a1-1111-1111-1111-111111111111';
+  v_cli uuid := 'a1a1a1a1-4444-4444-4444-444444444444';
   v_emb uuid := 'a1a1a1a1-2222-2222-2222-222222222222';
   v_doc uuid := 'a1a1a1a1-3333-3333-3333-333333333333';
 BEGIN
@@ -65,8 +66,12 @@ BEGIN
   VALUES (v_org, 'Test Org Rev1')
   ON CONFLICT (id) DO NOTHING;
 
-  INSERT INTO public.embarques (id, organization_id, expediente, estado)
-  VALUES (v_emb, v_org, 'REV1-0001', 'Confirmado')
+  INSERT INTO public.clientes (id, organization_id, nombre, rfc, email)
+  VALUES (v_cli, v_org, 'Test Cli Rev1', 'XAXX010101000', 'rev1@test.mx')
+  ON CONFLICT (id) DO NOTHING;
+
+  INSERT INTO public.embarques (id, organization_id, cliente_id, expediente, estado)
+  VALUES (v_emb, v_org, v_cli, 'REV1-0001', 'Confirmado')
   ON CONFLICT (id) DO NOTHING;
 
   INSERT INTO public.documentos_embarque
@@ -75,6 +80,7 @@ BEGIN
   ON CONFLICT (id) DO NOTHING;
 END
 $fixture$ LANGUAGE plpgsql;
+
 
 -- CASO 2: la RPC ya no revienta con 42883 (undefined_function).
 DO $caso2$
