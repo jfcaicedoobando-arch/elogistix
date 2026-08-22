@@ -121,7 +121,7 @@ export function WizardShell({
           </Button>
           {/* V-09: el título del wizard usa el mismo `PageHeader` que listados y
               detalle (misma escala `text-display`, misma separación del
-              subtítulo), en lugar de un <h1> propio. */}
+              subtítulo), en lugar de un encabezado propio. */}
           <PageHeader title={title} description={subtitle} className="min-w-0 flex-1 space-y-0" />
         </div>
         <StepIndicator
