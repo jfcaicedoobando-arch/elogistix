@@ -38,7 +38,7 @@ export function WidgetCard({
           )}
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-1 max-h-[260px] overflow-y-auto">
+      <CardContent className="space-y-1">
         {isLoading
           ? <ListSkeleton rows={3} />
           : children}
