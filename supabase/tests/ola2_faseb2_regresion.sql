@@ -131,10 +131,16 @@ BEGIN
     RETURN;
   END IF;
 
-  EXECUTE $q$
-    SELECT count(*) FROM cron.job
-     WHERE jobname = 'reprocesar_comisiones_diario' AND active
-  $q$ INTO v_n;
+  BEGIN
+    EXECUTE $q$
+      SELECT count(*) FROM cron.job
+       WHERE jobname = 'reprocesar_comisiones_diario' AND active
+    $q$ INTO v_n;
+  EXCEPTION WHEN insufficient_privilege THEN
+    RAISE NOTICE 'CASO 5 OMITIDO · el rol de prueba no puede leer cron.job.';
+    RETURN;
+  END;
+
   IF v_n <> 1 THEN
     RAISE EXCEPTION 'CASO 5 FALLÓ: falta el job activo reprocesar_comisiones_diario';
   END IF;
@@ -149,5 +155,6 @@ BEGIN
   RAISE NOTICE 'CASO 5 OK · tareas programadas de la Fase B2 presentes.';
 END
 $caso5$ LANGUAGE plpgsql;
+
 
 ROLLBACK;

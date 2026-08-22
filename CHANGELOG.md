@@ -1,5 +1,15 @@
 # Changelog
 
+## [13.726.0] - 2026-08-22
+### Remediación informe 2026-08-22 — Entregas 3 y 4
+- **Replay limpio (B-1, B-2, B-3, B-5)**: migraciones espejo `20260828000100/200/300` re-emiten los fixes de las Entregas 1, 2 y 4 con timestamp posterior a los espejos `20260826*`/`20260827*`, que en base limpia volvían a pisar `is_org_member`, `calcular_comision_pago`, `generar_liquidacion_comision` y `rechazar_documento_embarque`.
+- **CI (B-3, comisiones)**: `rls-tests.yml` ahora corre `ola2_faseb_regresion.sql`, `ola2_faseb2_regresion.sql` y `rev1_org_less_y_rechazo_doc.sql`; el caso de `pg_cron` se omite (en vez de fallar) cuando el rol de prueba no puede leer `cron.job`.
+- **B-6**: verificado en base viva que no existen usuarios con rol financiero (`contador`, `tesorero`, `auxiliar_contable`, `ejecutivo_cobranza`, `admin_org`, `admin`) sin membresía de organización: 0 filas, el endurecimiento de `is_org_member` no bloquea a nadie en operación.
+- **M-1 · CRM**: `crm_propagar_conversion_cliente` sólo la ejecuta el vendedor dueño de la oportunidad o un rol gerencial, y ya no pisa una conversión previa hacia otro cliente (`LC_OPORTUNIDAD_AJENA`, `LC_OPORTUNIDAD_YA_CONVERTIDA`).
+- **M-2**: en esa misma RPC el permiso se valida antes de la existencia del registro (sin oráculo de existencia).
+- Mensajes amigables nuevos: `LC_DOC_VALIDADO`, `LC_DOC_YA_RECHAZADO`, `LC_OPORTUNIDAD_AJENA`, `LC_OPORTUNIDAD_YA_CONVERTIDA`.
+
+
 ## [13.724.1] - 2026-08-21
 ### CI verde
 - `DemoAccessDialog` dividido en `demoAccess/useDemoAccessForm.ts` + `demoAccess/DemoAccessFields.tsx` (Power of 10: archivos ≤200 líneas).
