@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.724.0] - 2026-08-21
+### Remediación auditoría visual — Entrega 6 (V-09)
+- Encabezado de página homologado: `WizardShell` (Nuevo/Editar embarque y Nueva/Editar cotización) usa `PageHeader` en lugar de su propio `<h1>`; misma escala `text-display` y separación del subtítulo que listados y fichas.
+- Auditoría de las 16 páginas de detalle: todas ya usan el canónico `DetailHeader` (directo o vía su componente de header); no había títulos ad-hoc.
+- Nuevo guardrail `src/__tests__/architecture/page-header-canonical.test.ts`: ninguna pantalla interna puede definir su propio `<h1>` (sólo `PageHeader`/`DetailHeader`; login, legal, portal y marketing quedan en allowlist).
+
 ## [13.723.0] - 2026-08-21
 ### Remediación auditoría visual — Entrega 5 (V-04, V-08)
 - Sidebar colapsado accesible: cada enlace de navegación lleva `aria-label` con su título, eliminando los 48 controles sin nombre accesible detectados en tableta (768 px), tanto en el sidebar principal como en el de administración.
