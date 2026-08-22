@@ -66,8 +66,8 @@ export function useGarantiasColumns({ embarqueId, canEdit, fechaLlegadaReal }: P
     )},
     { id: 'tipo', header: 'Tipo', cell: ({ row }) => row.original.tipo_contenedor },
     { id: 'carta', header: 'Carta Garantía', cell: ({ row }) => row.original.tiene_carta_garantia
-      ? <Badge className="bg-success/15 text-success border-success/30"><ShieldCheck className="size-3 mr-1" />Sí</Badge>
-      : <Badge variant="outline" className="text-muted-foreground"><ShieldOff className="size-3 mr-1" />No</Badge>
+      ? <Badge className="bg-success/15 text-success border-success/30"><ShieldCheck className="size-3.5 mr-1" />Sí</Badge>
+      : <Badge variant="outline" className="text-muted-foreground"><ShieldOff className="size-3.5 mr-1" />No</Badge>
     },
     { id: 'monto', header: 'Depósito USD', meta: { align: 'right', className: 'tabular-nums font-medium' },
       cell: ({ row }) => {

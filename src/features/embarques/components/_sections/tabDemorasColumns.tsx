@@ -104,7 +104,7 @@ export function buildDemorasColumns(deps: DemorasColumnsDeps): ColumnDef<Editabl
             disabled={!hasDraft || isPending || !canEdit}
             onClick={() => guardar(row.original.id)}
           >
-            <Save className="size-3 mr-1" />
+            <Save className="size-3.5 mr-1" />
             Guardar
           </Button>
         );

@@ -141,7 +141,7 @@ export function buildPlanesColumns({
         return editingId === p.id ? (
           <div className="flex gap-1">
             <Button size="sm" onClick={saveEdit} disabled={updatePlan.isPending} aria-label="Guardar plan">
-              <Save className="h-3 w-3" />
+              <Save className="size-3.5" />
             </Button>
             <Button size="sm" variant="ghost" onClick={() => setEditingId(null)} aria-label="Cancelar edición">
               ✕
@@ -149,7 +149,7 @@ export function buildPlanesColumns({
           </div>
         ) : (
           <Button size="sm" variant="ghost" onClick={() => startEdit(p)}>
-            <Pencil className="h-3 w-3" />
+            <Pencil className="size-3.5" />
           </Button>
         );
       },

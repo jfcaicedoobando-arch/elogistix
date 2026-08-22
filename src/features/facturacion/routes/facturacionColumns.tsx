@@ -48,7 +48,7 @@ export function buildFacturaColumns(): ColumnDef<Factura, unknown>[] {
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Badge variant="outline" className="gap-1 border-success/40 text-success h-5 px-1.5">
-                    <MailCheck className="h-3 w-3" />
+                    <MailCheck className="size-3.5" />
                     <span className="text-2xs">Enviada</span>
                   </Badge>
                 </TooltipTrigger>

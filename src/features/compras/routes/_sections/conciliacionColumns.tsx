@@ -101,7 +101,7 @@ export function buildConciliacionColumns() {
         const Icon = meta.icon;
         return (
           <Badge variant={meta.variant} className="gap-1 text-xs whitespace-nowrap">
-            <Icon className="h-3 w-3 shrink-0" /> {meta.label}
+            <Icon className="size-3.5 shrink-0" /> {meta.label}
           </Badge>
         );
       },
