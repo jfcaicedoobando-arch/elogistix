@@ -494,6 +494,16 @@ jobs:
       - name: Ola 2 - comisiones (prorrateo, cierre, anticipos, liquidaciones)
         run: $PSQL -f supabase/tests/ola2_comisiones_regresion.sql
 
+      - name: Ola 2 Fase B - notas de credito, papelera y auto-sync
+        run: $PSQL -f supabase/tests/ola2_faseb_regresion.sql
+
+      - name: Ola 2 Fase B2 - cron de comisiones y barrido SAT
+        run: $PSQL -f supabase/tests/ola2_faseb2_regresion.sql
+
+      - name: Remediacion informe 2026-08-22 - guards sin org y rechazo de documento
+        run: $PSQL -f supabase/tests/rev1_org_less_y_rechazo_doc.sql
+
+
 
 
       - name: Guard de estados - guard_estado_cotizacion (C5 + A3)
