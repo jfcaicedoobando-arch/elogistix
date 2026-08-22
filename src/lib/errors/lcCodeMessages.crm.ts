@@ -31,4 +31,9 @@ export const LC_CODE_MESSAGES_CRM: Record<string, string> = {
     "Faltan datos o son inválidos para completar la operación. Revisa el formulario e inténtalo de nuevo.",
   LC_SIN_PERMISO:
     "Tu rol no tiene permiso para esta acción en la organización actual.",
+  LC_OPORTUNIDAD_AJENA:
+    "La oportunidad está asignada a otra persona. Pide a gerencia comercial que la reasigne.",
+  LC_OPORTUNIDAD_YA_CONVERTIDA:
+    "Esta oportunidad ya está ligada a otro cliente. Recarga la página para ver el vínculo actual.",
+
 };
