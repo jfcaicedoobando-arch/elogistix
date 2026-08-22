@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.722.0] - 2026-08-21
+### Remediación auditoría visual — Entrega 4 (V-06, V-11, V-12)
+- Dashboard sin scrolls anidados: "Próximos arribos", "Alertas de demora" y los widgets de operación muestran los primeros 5 registros con enlace "Ver N más en embarques" (`DashboardListaVerMas`) en lugar de `max-h` + `overflow-y-auto`.
+- Densidad homologada: las celdas de las tablas del dashboard heredan `text-body` (14 px) como el resto de la app; `text-body-sm` queda reservado al modo compacto.
+- Íconos de columnas de tabla normalizados a `size-3.5` (antes convivían 12 y 14 px).
+
 ## [13.721.0] - 2026-08-21
 ### Remediación auditoría visual — Entrega 3 (V-07, V-10)
 - `CardTitle` acepta `as` y usa `h2` por defecto: se elimina el salto de jerarquía `h1 → h3` en `/inicio`, `/compras` y `/tesoreria`.
