@@ -96,7 +96,7 @@ export default function Paso1ProgressSidebar({ esMaritimo }: Props) {
     <aside className="hidden lg:block sticky top-4 self-start w-56 shrink-0">
       <div className="rounded-lg border bg-card p-4 space-y-3">
         <div className="space-y-1">
-          <SectionHeading as="h3">Progreso del Paso 1</SectionHeading>
+          <SectionHeading as="h2">Progreso del Paso 1</SectionHeading>
           <p className="text-body-sm text-muted-foreground">
             {completas} de {total} secciones completas{modoLabel}
           </p>

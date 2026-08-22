@@ -1,5 +1,5 @@
 /**
- * Versión de la aplicación. Se sincroniza con la última entrada de
- * `CHANGELOG.md` (raíz). Actualizar en cada cambio funcional.
+ * Versión de la aplicación. Se actualiza en cada cambio funcional junto con
+ * `CHANGELOG.md` (raíz).
  */
-export const APP_VERSION = "13.723.0";
+export const APP_VERSION = "13.724.0";
