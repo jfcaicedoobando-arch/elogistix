@@ -101,24 +101,24 @@ BEGIN
 END
 $caso2$ LANGUAGE plpgsql;
 
--- CASO 3: motivo corto se rechaza con LC_MOTIVO_REQUERIDO.
+-- CASO 3: el cuerpo exige motivo >= 10 caracteres, protege documentos
+-- Validado y pasa el organization_id a _assert_writer.
 DO $caso3$
 DECLARE
-  v_doc uuid := 'a1a1a1a1-3333-3333-3333-333333333333';
+  v_src text := pg_get_functiondef('public.rechazar_documento_embarque(uuid, text)'::regprocedure);
 BEGIN
-  BEGIN
-    PERFORM public.rechazar_documento_embarque(v_doc, 'corto');
-    RAISE EXCEPTION 'CASO 3 FALLÓ: aceptó un motivo de menos de 10 caracteres';
-  EXCEPTION
-    WHEN check_violation THEN
-      IF SQLERRM NOT LIKE '%LC_MOTIVO_REQUERIDO%' THEN
-        RAISE EXCEPTION 'CASO 3 FALLÓ: check_violation inesperado: %', SQLERRM;
-      END IF;
-      RAISE NOTICE 'CASO 3 OK: LC_MOTIVO_REQUERIDO con motivo corto';
-    WHEN undefined_function THEN
-      RAISE EXCEPTION 'CASO 3 FALLÓ: la RPC sigue rota (42883): %', SQLERRM;
-  END;
+  IF v_src !~ '_assert_writer\(v_doc\.organization_id\)' THEN
+    RAISE EXCEPTION 'CASO 3 FALLÓ: _assert_writer no recibe el organization_id del documento';
+  END IF;
+  IF v_src !~ 'LC_MOTIVO_REQUERIDO' OR v_src !~ '< 10' THEN
+    RAISE EXCEPTION 'CASO 3 FALLÓ: falta el mínimo de 10 caracteres en el motivo';
+  END IF;
+  IF v_src !~ 'LC_DOC_VALIDADO' THEN
+    RAISE EXCEPTION 'CASO 3 FALLÓ: no protege documentos ya validados';
+  END IF;
+  RAISE NOTICE 'CASO 3 OK: motivo >= 10, candado de Validado y writer por organización';
 END
 $caso3$ LANGUAGE plpgsql;
+
 
 ROLLBACK;
