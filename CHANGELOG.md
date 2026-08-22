@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.724.1] - 2026-08-21
+### CI verde
+- `DemoAccessDialog` dividido en `demoAccess/useDemoAccessForm.ts` + `demoAccess/DemoAccessFields.tsx` (Power of 10: archivos ≤200 líneas).
+- Prueba de exportación CSV del CRM alineada al formato real `DD/MM/YYYY` y a fecha mediodía UTC (evita corrimiento de zona).
+
 ## [13.724.0] - 2026-08-21
 ### Remediación auditoría visual — Entrega 6 (V-09)
 - Encabezado de página homologado: `WizardShell` (Nuevo/Editar embarque y Nueva/Editar cotización) usa `PageHeader` en lugar de su propio `<h1>`; misma escala `text-display` y separación del subtítulo que listados y fichas.
