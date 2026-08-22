@@ -118,7 +118,7 @@ function SeccionConfig({ vendedoras }: { vendedoras: VendedoraOpt[] }) {
                     className="w-24"
                     aria-label={`Porcentaje de comisión de ${v?.nombre ?? "vendedora"}`}
                   />
-                  <Button size="sm" variant="outline" onClick={() => guardarPct(c.id)}>
+                  <Button size="sm" variant="outline" onClick={() => guardarPct(c.id)} aria-label="Guardar porcentaje de comisión">
                     <Save className="h-4 w-4" />
                   </Button>
                   <div className="flex items-center gap-2">
