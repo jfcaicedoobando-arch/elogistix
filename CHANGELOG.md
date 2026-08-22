@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.723.0] - 2026-08-21
+### Remediación auditoría visual — Entrega 5 (V-04, V-08)
+- Sidebar colapsado accesible: cada enlace de navegación lleva `aria-label` con su título, eliminando los 48 controles sin nombre accesible detectados en tableta (768 px), tanto en el sidebar principal como en el de administración.
+- Botones de ícono de "Editar plan" (Admin · Planes) y "Guardar porcentaje" (Comisiones) ahora anuncian su acción.
+- V-08 cerrado: las tres tablas señaladas (`TabVsReal`, `TabCaptura`, `EstadoResultadosTable`) ya usan `Table`/`DetailTableRow` del sistema con la excepción documentada al guardrail `no-raw-table`; no quedan `<table>` crudos en features.
+
 ## [13.722.0] - 2026-08-21
 ### Remediación auditoría visual — Entrega 4 (V-06, V-11, V-12)
 - Dashboard sin scrolls anidados: "Próximos arribos", "Alertas de demora" y los widgets de operación muestran los primeros 5 registros con enlace "Ver N más en embarques" (`DashboardListaVerMas`) en lugar de `max-h` + `overflow-y-auto`.

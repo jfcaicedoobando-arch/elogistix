@@ -148,7 +148,7 @@ export function buildPlanesColumns({
             </Button>
           </div>
         ) : (
-          <Button size="sm" variant="ghost" onClick={() => startEdit(p)}>
+          <Button size="sm" variant="ghost" onClick={() => startEdit(p)} aria-label="Editar plan">
             <Pencil className="size-3.5" />
           </Button>
         );

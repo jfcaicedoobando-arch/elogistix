@@ -103,6 +103,7 @@ function SidebarGroupBlockBase({
                 <NavLink
                   to={item.url}
                   end={item.url === "/" || exact}
+                  aria-label={item.title}
                   onClick={() => handleNavigate(item)}
                   className={cn(
                     "hover:bg-sidebar-accent/10 hover:text-sidebar-foreground",
