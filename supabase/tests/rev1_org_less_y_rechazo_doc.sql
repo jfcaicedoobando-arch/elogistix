@@ -70,8 +70,8 @@ BEGIN
   VALUES (v_cli, v_org, 'Test Cli Rev1', 'XAXX010101000', 'rev1@test.mx')
   ON CONFLICT (id) DO NOTHING;
 
-  INSERT INTO public.embarques (id, organization_id, cliente_id, expediente, estado, modo)
-  VALUES (v_emb, v_org, v_cli, 'REV1-0001', 'Confirmado', 'Marítimo')
+  INSERT INTO public.embarques (id, organization_id, cliente_id, expediente, estado, modo, tipo)
+  VALUES (v_emb, v_org, v_cli, 'REV1-0001', 'Confirmado', 'Marítimo', 'Importación')
   ON CONFLICT (id) DO NOTHING;
 
   INSERT INTO public.documentos_embarque
