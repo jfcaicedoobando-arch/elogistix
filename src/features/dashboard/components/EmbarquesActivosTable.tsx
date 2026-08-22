@@ -46,20 +46,20 @@ const columns: ColumnDef<EmbarqueMesSiguiente, unknown>[] = defineColumns<Embarq
     cell: ({ row }) => (
       <span className="flex items-center gap-1.5">
         <ModoIcon modo={row.original.modo} size={14} />
-        <span className="text-body-sm">{row.original.modo}</span>
+        <span>{row.original.modo}</span>
       </span>
     ),
   },
   {
     id: "ruta", header: "Origen → Destino",
-    meta: { className: "text-body-sm max-w-[180px] truncate" },
+    meta: { className: "max-w-[180px] truncate" },
     cell: ({ row }) => `${getOrigen(row.original)} → ${getDestino(row.original)}`,
   },
   {
     id: "contenedor", header: "Contenedor",
     accessorFn: (e) => e.contenedor, enableSorting: true,
     sortingFn: sortByString<EmbarqueMesSiguiente>((e) => e.contenedor),
-    meta: { className: "text-body-sm font-mono whitespace-nowrap" },
+    meta: { className: "font-mono whitespace-nowrap" },
     // VB-20/VB-30: placeholder vacío unificado (em dash), no guion ASCII.
     cell: ({ row }) => row.original.contenedor || <span className="text-muted-foreground">{PLACEHOLDER_VACIO}</span>,
   },
@@ -67,7 +67,6 @@ const columns: ColumnDef<EmbarqueMesSiguiente, unknown>[] = defineColumns<Embarq
     id: "eta", header: "ETA",
     accessorFn: (e) => e.eta, enableSorting: true,
     sortingFn: sortByDate<EmbarqueMesSiguiente>((e) => e.eta),
-    meta: { className: "text-body-sm" },
     cell: ({ row }) => row.original.eta ? formatDate(row.original.eta) : PLACEHOLDER_VACIO,
   },
   statusColumn<EmbarqueMesSiguiente>({
@@ -85,7 +84,7 @@ const columns: ColumnDef<EmbarqueMesSiguiente, unknown>[] = defineColumns<Embarq
       const e = row.original;
       return (
         <Hint label={`Venta ${formatCurrency(e.ventaMXN, "MXN")} · Costo ${formatCurrency(e.costoMXN, "MXN")} (TC USD ${e.tipoCambioUSD.toFixed(2)})`}>
-          <span className={`text-body-sm font-medium ${e.profitMXN >= 0 ? "text-success" : "text-destructive"}`}>
+          <span className={`font-medium ${e.profitMXN >= 0 ? "text-success" : "text-destructive"}`}>
             {formatCurrency(e.profitMXN, "MXN")}
           </span>
         </Hint>
