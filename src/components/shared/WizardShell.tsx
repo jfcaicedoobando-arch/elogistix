@@ -33,6 +33,7 @@ import { KeyboardEvent, ReactNode, useCallback, useRef } from "react";
 import { ArrowLeft, ChevronLeft, ChevronRight, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { StepIndicator } from "@/features/embarques/components/StepIndicator";
+import { PageHeader } from "@/components/shared/PageHeader";
 import { cn } from "@/lib/utils";
 
 export interface WizardStep {
@@ -118,10 +119,10 @@ export function WizardShell({
           >
             <ArrowLeft className="h-4 w-4" aria-hidden />
           </Button>
-          <div>
-            <h1 className="text-display font-bold tracking-tight">{title}</h1>
-            {subtitle && <p className="text-body text-muted-foreground">{subtitle}</p>}
-          </div>
+          {/* V-09: el título del wizard usa el mismo `PageHeader` que listados y
+              detalle (misma escala `text-display`, misma separación del
+              subtítulo), en lugar de un <h1> propio. */}
+          <PageHeader title={title} description={subtitle} className="min-w-0 flex-1 space-y-0" />
         </div>
         <StepIndicator
           steps={steps}
