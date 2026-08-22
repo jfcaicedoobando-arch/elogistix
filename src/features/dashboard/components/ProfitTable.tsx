@@ -27,7 +27,7 @@ function MoneyWithBreakdown({ e, value }: { e: EmbarqueConProfit; value: number 
           </span>
         </TooltipTrigger>
         <TooltipContent side="left" className="max-w-xs">
-          <div className="space-y-1 text-body-sm">
+          <div className="space-y-1 text-body">
             <div className="font-semibold border-b pb-1 mb-1">Desglose homologado a MXN</div>
             <div className="flex justify-between gap-3"><span className="text-muted-foreground">Venta:</span><span className="tabular-nums">{formatCurrency(e.ventaMXN, "MXN")}</span></div>
             <div className="flex justify-between gap-3"><span className="text-muted-foreground">Costo:</span><span className="tabular-nums">{formatCurrency(e.costoMXN, "MXN")}</span></div>

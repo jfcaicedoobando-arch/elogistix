@@ -75,7 +75,7 @@ export function UsuarioCell({ user, isSelf }: UsuarioCellProps) {
                   variant="outline"
                   className="mt-0.5 w-fit gap-1 border-warning/60 bg-warning/10 text-label uppercase tracking-wide text-warning-foreground"
                 >
-                  <AlertTriangle className="h-3 w-3" />
+                  <AlertTriangle className="size-3.5" />
                   Rol legado
                 </Badge>
               </TooltipTrigger>
@@ -158,7 +158,7 @@ export function EstadoInvitacionCell({ estado }: { estado: EstadoInvitacion }) {
   if (estado === "activo") {
     return (
       <Badge variant="outline" className="gap-1 border-success/40 text-success">
-        <CheckCircle2 className="h-3 w-3" /> Activo
+        <CheckCircle2 className="size-3.5" /> Activo
       </Badge>
     );
   }
@@ -167,7 +167,7 @@ export function EstadoInvitacionCell({ estado }: { estado: EstadoInvitacion }) {
       <Tooltip>
         <TooltipTrigger asChild>
           <Badge variant="outline" className="gap-1 border-warning/40 text-warning">
-            <MailWarning className="h-3 w-3" /> Invitación pendiente
+            <MailWarning className="size-3.5" /> Invitación pendiente
           </Badge>
         </TooltipTrigger>
         <TooltipContent side="top">

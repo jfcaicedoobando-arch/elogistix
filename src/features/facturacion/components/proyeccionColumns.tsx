@@ -77,7 +77,7 @@ export const proyeccionColumns: ColumnDef<GrupoProyeccion, unknown>[] = defineCo
     cell: ({ row }) => (
       <Hint label={row.original.contenedores.join(", ")}>
         <span className="inline-flex items-center gap-1 text-body-sm">
-          <Package className="h-3 w-3 opacity-60" />
+          <Package className="size-3.5 opacity-60" />
           <span className="tabular-nums font-medium">{row.original.totalContenedores || 0}</span>
         </span>
       </Hint>

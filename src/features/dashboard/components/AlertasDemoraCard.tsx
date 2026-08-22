@@ -9,6 +9,10 @@ import { toTitleCase } from "@/lib/formatters";
 import { activableConTeclado, FOCUS_RING } from "@/lib/ui/keyboardActivation";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 import { Hint } from "@/components/shared/Hint";
+import {
+  DashboardListaVerMas,
+  MAX_ITEMS_TARJETA_DASHBOARD,
+} from "@/features/dashboard/components/DashboardListaVerMas";
 
 interface Props {
   alertas: AlertaDemora[];
@@ -37,7 +41,7 @@ export const AlertasDemoraCard = memo(function AlertasDemoraCard({ alertas, isLo
         <EmptyStateInline icon={ShieldCheck} message="Sin alertas de demora" className="py-6" />
       );
     }
-    return alertas.map((e) => (
+    return alertas.slice(0, MAX_ITEMS_TARJETA_DASHBOARD).map((e) => (
             <div
               key={e.id}
               {...activableConTeclado(() => navigate(`/embarques/${e.id}`))}
@@ -77,8 +81,9 @@ export const AlertasDemoraCard = memo(function AlertasDemoraCard({ alertas, isLo
           )}
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-2 max-h-[280px] overflow-y-auto">
+      <CardContent className="space-y-2">
         {renderBody()}
+        {!isLoading && <DashboardListaVerMas total={alertas.length} ruta="/embarques" etiqueta="embarques" />}
       </CardContent>
     </Card>
   );

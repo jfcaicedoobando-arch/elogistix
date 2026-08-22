@@ -9,6 +9,10 @@ import { ModoIcon } from "@/components/shared/ModoIcon";
 import type { ProximoArribo } from "@/features/dashboard/hooks";
 import { activableConTeclado, FOCUS_RING } from "@/lib/ui/keyboardActivation";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
+import {
+  DashboardListaVerMas,
+  MAX_ITEMS_TARJETA_DASHBOARD,
+} from "@/features/dashboard/components/DashboardListaVerMas";
 
 interface Props {
   arribos: ProximoArribo[];
@@ -37,7 +41,7 @@ export const ProximosArribosCard = memo(function ProximosArribosCard({ arribos, 
         <EmptyStateInline icon={CalendarClock} message="Sin arribos próximos" className="py-6" />
       );
     }
-    return arribos.map((e) => (
+    return arribos.slice(0, MAX_ITEMS_TARJETA_DASHBOARD).map((e) => (
       <div
         key={e.id}
         {...activableConTeclado(() => navigate(`/embarques/${e.id}`))}
@@ -75,8 +79,9 @@ export const ProximosArribosCard = memo(function ProximosArribosCard({ arribos, 
           )}
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-2 max-h-[280px] overflow-y-auto">
+      <CardContent className="space-y-2">
         {renderBody()}
+        {!isLoading && <DashboardListaVerMas total={arribos.length} ruta="/embarques" etiqueta="embarques" />}
       </CardContent>
     </Card>
   );
