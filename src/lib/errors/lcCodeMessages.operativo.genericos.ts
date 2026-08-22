@@ -50,6 +50,11 @@ export const LC_CODE_MESSAGES_OPERATIVO_GENERICOS: Record<string, string> = {
     "Indica el motivo para poder continuar.",
   LC_DOC_INEXISTENTE:
     "El documento no existe o no pertenece a tu organización. Recarga la página.",
+  LC_DOC_VALIDADO:
+    "Este documento ya está validado: cámbialo a pendiente antes de rechazarlo.",
+  LC_DOC_YA_RECHAZADO:
+    "Este documento ya estaba rechazado. Recarga la página para ver el motivo registrado.",
+
   LC_ENTRANTE_RETIRO_FORBIDDEN:
     "Solo quien subió el archivo o un administrador puede retirarlo del buzón.",
   LC_ENTRANTE_RETIRO_CAPTURADA:
