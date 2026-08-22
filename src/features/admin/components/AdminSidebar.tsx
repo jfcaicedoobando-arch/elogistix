@@ -71,6 +71,7 @@ export function AdminSidebar() {
                         <NavLink
                           to={item.url}
                           end={item.url === "/admin"}
+                          aria-label={item.title}
                           className="hover:bg-sidebar-accent/50 focus-visible:ring-2 focus-visible:ring-ring"
                           activeClassName="bg-primary/10 text-primary font-medium border-l-2 border-primary"
                         >
