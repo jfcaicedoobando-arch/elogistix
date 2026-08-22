@@ -19,7 +19,7 @@ const lead = {
   estado: "Nuevo",
   score: 80,
   vendedor_email: "v@lc.mx",
-  created_at: "2026-08-21T00:00:00Z",
+  created_at: "2026-08-21T12:00:00Z",
 } as unknown as LeadLike;
 
 const op = {
@@ -30,7 +30,7 @@ const op = {
   probabilidad: 60,
   vendedor_email: "v@lc.mx",
   fecha_estimada_cierre: "2026-09-01",
-  created_at: "2026-08-21T00:00:00Z",
+  created_at: "2026-08-21T12:00:00Z",
 } as unknown as OpLike;
 
 describe("crmCsvExport", () => {
@@ -40,7 +40,7 @@ describe("crmCsvExport", () => {
     expect(header).toContain("Empresa");
     expect(header).toContain("Vendedor");
     expect(fila).toContain("Acme SA");
-    expect(fila).toContain("21/8/2026");
+    expect(fila).toContain("21/08/2026");
   });
 
   it("serializa oportunidades con monto y moneda", () => {
