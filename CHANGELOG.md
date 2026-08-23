@@ -1,5 +1,14 @@
 # Changelog
 
+## [13.728.0] - 2026-08-23
+### Comisiones — validación del parche `fix-b2-comisiones.diff`
+- **Ajustes de nota de crédito sobre comisiones ya liquidadas**: el reproceso nocturno (`_reprocesar_comisiones_org`) ya no cierra en silencio las entradas `ajuste_nc_liquidada`; quedan abiertas y visibles para descontarlas manualmente en la siguiente liquidación.
+- **Espejos canónicos nuevos**: `supabase/schema/comisiones/calcular_comision_pago.sql`, `generar_liquidacion_comision.sql` y `_reprocesar_comisiones_org.sql`, para que `audit:replay-mirror` detecte futuras regresiones de replay en las funciones que ya se rompieron dos veces por orden de migraciones.
+- **Pruebas de comportamiento**: `supabase/tests/fix_b4_nc_reduce_comision.sql` (5 casos, incluye el reproceso) y `fix_b5_periodo_cdmx.sql`, cableadas en `rls-tests.yml`.
+- **Descartado del parche**: B-2 (consolidadas), B-4 (NC baja la comisión), B-5 (periodo CDMX), el cableado de CI de Fase B/B2 y los `REVOKE` de `_ci_post_migrate.sql` ya estaban corregidos (v13.725.0–v13.726.1) y el espejo vigente `20260828000200` es posterior a las migraciones que los pisaban; aplicar el parche los habría re-emitido con timestamp anterior.
+
+
+
 ## [13.727.0] - 2026-08-23
 ### Seguridad y notificaciones
 - **rechazar_documento_embarque**: cuando el embarque no tiene `created_by`, el rechazo ahora notifica a los administradores (`admin`/`admin_org`) de la organización en lugar de no avisar a nadie.

@@ -503,6 +503,13 @@ jobs:
       - name: Remediacion informe 2026-08-22 - guards sin org y rechazo de documento
         run: $PSQL -f supabase/tests/rev1_org_less_y_rechazo_doc.sql
 
+      - name: FIX B-4 - la nota de credito reduce la comision devengada
+        run: $PSQL -f supabase/tests/fix_b4_nc_reduce_comision.sql
+
+      - name: FIX B-5 - periodo de liquidacion en horario CDMX
+        run: $PSQL -f supabase/tests/fix_b5_periodo_cdmx.sql
+
+
 
 
 
