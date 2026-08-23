@@ -11,7 +11,7 @@ import { AlertCircle, Sparkles } from "lucide-react";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { FormDialogFooter } from "@/components/shared/FormDialogFooter";
 import { DemoAccessFields } from "./demoAccess/DemoAccessFields";
-import { useDemoAccessForm } from "./demoAccess/useDemoAccessForm";
+import { useDemoAccessForm } from "@/features/marketing/hooks/useDemoAccessForm";
 
 interface Props {
   open: boolean;
