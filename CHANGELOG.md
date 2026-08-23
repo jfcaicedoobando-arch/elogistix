@@ -1,5 +1,15 @@
 # Changelog
 
+## [13.727.0] - 2026-08-23
+### Seguridad y notificaciones
+- **rechazar_documento_embarque**: cuando el embarque no tiene `created_by`, el rechazo ahora notifica a los administradores (`admin`/`admin_org`) de la organización en lugar de no avisar a nadie.
+- **revertir_proforma_al_cancelar_sustitucion**: además de membresía, exige rol financiero por organización (`has_any_role_in_org`: admin, admin_org, contador, tesorero) → nuevo código `LC_ROL_INSUFICIENTE` con mensaje amigable.
+- Migración espejo `20260829000100` para que el replay en base limpia no pise ambos fixes.
+- Regresión: `supabase/tests/rev1_org_less_y_rechazo_doc.sql` suma CASO 4 (fallback de notificación) y CASO 5 (rol financiero).
+- Del parche `fix-b1-seguridad.diff` se descartó lo ya corregido (B-1, B-1b, B-3, candado de `Validado`) y el cambio de `MIN_MOTIVO` a 5, que habría desalineado el front con la RPC (mínimo real: 10).
+
+
+
 ## [13.726.2] - 2026-08-22
 ### Fix CI
 - **chore(marketing)**: `useDemoAccessForm.ts` se movió de `components/demoAccess/` a `features/marketing/hooks/` para cumplir el guardrail de arquitectura (hooks fuera de `components/`).
