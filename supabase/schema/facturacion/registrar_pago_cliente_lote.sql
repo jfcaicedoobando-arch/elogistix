@@ -12,6 +12,9 @@
 -- ============================================================
 -- v13.718.0 (Ola 8): la autorización de rol financiero se evalúa por
 -- membresía en la organización del documento (has_any_role_in_org).
+-- v13.729.0 (FIX B-6): la lista de roles vuelve a ser la EXACTA previa al
+-- piloto, sin expansión de jerarquía (has_any_role_in_org_exact);
+-- auxiliar_contable queda fuera por decisión conservadora.
 
 CREATE OR REPLACE FUNCTION public.registrar_pago_cliente_lote(p_payload jsonb)
  RETURNS jsonb
@@ -77,9 +80,12 @@ BEGIN
     RAISE EXCEPTION 'LC_COBRO_LOTE_CLIENTE_OTRA_ORG: El cliente pertenece a otra organización.';
   END IF;
 
-  -- Ola 8: rol financiero por membresía en la organización del cliente.
-  IF NOT public.has_any_role_in_org(v_uid,
-       ARRAY['admin','admin_org','contador','tesorero']::public.app_role[],
+  -- Ola 8 + FIX B-6: rol financiero por membresía en la organización del
+  -- cliente, con la lista EXACTA previa al piloto {admin, admin_org,
+  -- super_admin, contador, tesorero} y SIN expansión de jerarquía:
+  -- `auxiliar_contable` queda fuera por decisión conservadora.
+  IF NOT public.has_any_role_in_org_exact(v_uid,
+       ARRAY['admin','admin_org','super_admin','contador','tesorero']::public.app_role[],
        v_org) THEN
     RAISE EXCEPTION 'LC_COBRO_LOTE_SIN_ROL: Sólo administración, contabilidad o tesorería pueden registrar cobros en lote.'
       USING ERRCODE = '42501';

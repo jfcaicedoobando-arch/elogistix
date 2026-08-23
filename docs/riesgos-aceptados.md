@@ -79,3 +79,34 @@ pida, no persistirlo.
 **Cuándo revisar.** Si contabilidad exige la póliza de diferencia cambiaria por
 cobro, se agrega como columna calculada del layout contable (no como columna de
 `pagos_factura`).
+
+## RN-5 · Bloqueo de usuarios legacy con rol financiero sólo en `user_roles` (Ola 8, H2)
+
+Las 3 RPCs piloto de la Ola 8 (`registrar_pago_proveedor_lote`,
+`registrar_pago_cliente_lote`, `eliminar_pago_proveedor`) autorizan por
+membresía en la organización del documento (`organization_members`) y ya no
+por el rol global en `user_roles`. Un usuario con rol financiero en
+`user_roles` pero sin membresía equivalente (históricamente poblado por la
+edge `user-management` o SQL manual) operaba antes y recibirá
+`LC_LOTE_SIN_ROL` / `LC_COBRO_LOTE_SIN_ROL` / `LC_PAGO_SIN_PERMISO` tras el
+deploy.
+
+**Por qué se acepta.** La membresía es la fuente de verdad declarada (el
+espejo canónico va membresía → `user_roles` vía
+`_sync_user_roles_desde_membership`) y no se puede hacer backfill a ciegas sin
+conocer la población real de producción: asignar orgs por inferencia podría
+dar acceso a la organización equivocada.
+
+**Mitigación.** Antes de CADA deploy que incluya
+`20260827080020_ola8_replay_pilotos_rol_por_org.sql` (o su corrección
+`20260827090060`), correr `scripts/db/predeploy_b6_roles_legacy.sql` contra
+producción: 0 filas = luz verde; cada fila es un usuario a sanear (alta o
+corrección de su membresía, o retiro del rol huérfano) ANTES del deploy.
+
+**Cuándo revisar.** Cuando la query lleve dos releases consecutivos en 0
+filas, el riesgo legacy se puede dar por saneado y esta entrada retirarse.
+Además, queda el caso multi-org pre-existente: `current_user_org_id()` es la
+primera membresía, así que un miembro de 2 orgs es rechazado por el guard de
+org en documentos de su segunda organización (H2 del review 2026-08-27); si el
+negocio adopta multi-org de verdad hay que resolver ese guard, no sólo el
+rol.

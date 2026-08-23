@@ -1,5 +1,13 @@
 # Changelog
 
+## [13.729.0] - 2026-08-23
+### Seguridad — validación del parche `fix-b6-roles.diff`
+- **FIX B-6 (bug real)**: el piloto de la Ola 8 autorizaba los 3 movimientos de dinero (`registrar_pago_proveedor_lote`, `registrar_pago_cliente_lote`, `eliminar_pago_proveedor`) con `has_any_role_in_org`, que expande `roles_jerarquia`; como `roles_jerarquia('contador')` incluye `auxiliar_contable`, ese rol ganó acceso a pagar/cobrar en lote y a eliminar pagos sin estar en las listas previas al piloto. Nuevo helper `has_any_role_in_org_exact` (sin expansión, conserva el bypass `super_admin`) y re-emisión de los 3 cuerpos con la lista literal previa; se mantiene el scoping por organización. Impacto vivo verificado: 0 membresías `auxiliar_contable`, nadie pierde acceso.
+- **Espejo de replay**: `20260830000100_fix_b6_espejo_pilotos_listas_explicitas.sql`, posterior a `20260827080020`, para que una base limpia no reintroduzca la versión con jerarquía. Espejos canónicos actualizados en `supabase/schema/{cxp,facturacion,tesoreria}/`.
+- **Pruebas**: `supabase/tests/ola8_has_role_in_org.sql` (helpers + conducta del piloto CxC) y el linter `supabase/tests/rls/test_rls_rpc_org_scope_linter.sql`, cableados en `rls-tests.yml`.
+- **Verificación pre-deploy**: `scripts/db/predeploy_b6_roles_legacy.sql` + riesgo RN-5 en `docs/riesgos-aceptados.md`. Consultado en vivo: la única fila es el `super_admin` de plataforma, que conserva bypass, así que H2 no bloquea a nadie.
+- **Descartado del parche**: su bloque de CHANGELOG con versión 13.719.0 (ya consumida) y el timestamp de migración `20260827090060`, sustituido por el espejo posterior.
+
 ## [13.728.0] - 2026-08-23
 ### Comisiones — validación del parche `fix-b2-comisiones.diff`
 - **Ajustes de nota de crédito sobre comisiones ya liquidadas**: el reproceso nocturno (`_reprocesar_comisiones_org`) ya no cierra en silencio las entradas `ajuste_nc_liquidada`; quedan abiertas y visibles para descontarlas manualmente en la siguiente liquidación.
