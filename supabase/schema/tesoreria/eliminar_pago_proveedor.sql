@@ -3,6 +3,10 @@
 -- aplicaciones de anticipo asociadas para que el saldo del anticipo se libere.
 -- v13.718.0 (Ola 8): la autorización de rol financiero se evalúa por
 -- membresía en la organización del documento (has_any_role_in_org).
+-- v13.729.0 (FIX B-6): la lista de roles vuelve a ser la EXACTA de
+-- es_escritor_financiero, sin expansión de jerarquía
+-- (has_any_role_in_org_exact); auxiliar_contable queda fuera por decisión
+-- conservadora.
 
 CREATE OR REPLACE FUNCTION public.eliminar_pago_proveedor(_pago_id uuid, _motivo text DEFAULT NULL::text)
  RETURNS jsonb
@@ -41,10 +45,13 @@ BEGIN
       USING ERRCODE = '42501';
   END IF;
 
-  -- Ola 8: el rol financiero se valida contra la membresía en la organización
-  -- del pago (paridad de roles con es_escritor_financiero).
-  IF NOT public.has_any_role_in_org(v_uid,
-       ARRAY['admin','admin_org','contador','tesorero','ejecutivo_cobranza']::public.app_role[],
+  -- Ola 8 + FIX B-6: el rol financiero se valida contra la membresía en la
+  -- organización del pago, con la lista EXACTA de es_escritor_financiero
+  -- {super_admin, admin, admin_org, contador, tesorero, ejecutivo_cobranza}
+  -- y SIN expansión de jerarquía: `auxiliar_contable` queda fuera por
+  -- decisión conservadora.
+  IF NOT public.has_any_role_in_org_exact(v_uid,
+       ARRAY['super_admin','admin','admin_org','contador','tesorero','ejecutivo_cobranza']::public.app_role[],
        v_pago.organization_id) THEN
     RAISE EXCEPTION 'LC_PAGO_SIN_PERMISO: tu rol no puede eliminar pagos'
       USING ERRCODE = '42501';

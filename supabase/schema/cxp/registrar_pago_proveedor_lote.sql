@@ -6,6 +6,9 @@
 -- en el mismo PR (ver supabase/schema/README.md).
 -- v13.718.0 (Ola 8): la autorización de rol financiero se evalúa por
 -- membresía en la organización del documento (has_any_role_in_org).
+-- v13.729.0 (FIX B-6): la lista de roles vuelve a ser la EXACTA previa al
+-- piloto, sin expansión de jerarquía (has_any_role_in_org_exact);
+-- auxiliar_contable queda fuera por decisión conservadora.
 
 CREATE OR REPLACE FUNCTION public.registrar_pago_proveedor_lote(p_payload jsonb)
  RETURNS uuid
@@ -70,12 +73,14 @@ BEGIN
     RAISE EXCEPTION 'LC_LOTE_PROVEEDOR_OTRA_ORG: El proveedor pertenece a otra organización.';
   END IF;
 
-  -- Ola 8: el rol financiero debe venir de la membresía en ESTA organización
-  -- (antes: EXISTS global sobre user_roles — un contador de la org A podía
-  -- registrar pagos en la org B). super_admin conserva su bypass de plataforma
-  -- dentro del helper.
-  IF NOT public.has_any_role_in_org(v_uid,
-       ARRAY['admin','admin_org','contador','tesorero']::public.app_role[],
+  -- Ola 8 + FIX B-6: el rol financiero debe venir de la membresía en ESTA
+  -- organización (antes: EXISTS global sobre user_roles — un contador de la
+  -- org A podía registrar pagos en la org B), con la lista EXACTA previa al
+  -- piloto {admin, admin_org, super_admin, contador, tesorero} y SIN expansión
+  -- de jerarquía: `auxiliar_contable` queda fuera por decisión conservadora.
+  -- super_admin conserva su bypass de plataforma dentro del helper.
+  IF NOT public.has_any_role_in_org_exact(v_uid,
+       ARRAY['admin','admin_org','super_admin','contador','tesorero']::public.app_role[],
        v_org) THEN
     RAISE EXCEPTION 'LC_LOTE_SIN_ROL: Sólo administración, contabilidad o tesorería pueden registrar pagos en lote.'
       USING ERRCODE = '42501';
