@@ -6,6 +6,9 @@
 export const LC_CODE_MESSAGES_OPERATIVO_AUTH: Record<string, string> = {
   LC_AUTH_REQUIRED: "Debes iniciar sesión para continuar.",
   LC_NO_AUTORIZADO: "No tienes permisos para realizar esta acción.",
+  LC_ROL_INSUFICIENTE:
+    "Necesitas un rol financiero (administrador, contador o tesorero) para esta acción.",
+
   LC_ROL_LEGACY_BLOQUEADO:
     "Ese rol ya no se usa. Asigna uno del catálogo actual (por ejemplo, admin_org o coordinador_logistico).",
   LC_ROL_PLATAFORMA_NO_PERMITIDO:

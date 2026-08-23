@@ -121,4 +121,39 @@ END
 $caso3$ LANGUAGE plpgsql;
 
 
+-- -------------------------------------------------------------
+-- CASO 4: sin `created_by` en el embarque, el rechazo notifica a los
+-- administradores de la organización (antes nadie era avisado).
+-- -------------------------------------------------------------
+DO $caso4$
+DECLARE
+  v_src text := pg_get_functiondef('public.rechazar_documento_embarque(uuid, text)'::regprocedure);
+BEGIN
+  IF v_src !~ 'organization_members' THEN
+    RAISE EXCEPTION 'CASO 4 FALLÓ: falta el fallback de notificación a administradores cuando created_by es NULL';
+  END IF;
+  RAISE NOTICE 'CASO 4 OK: fallback de notificación a administradores presente';
+END
+$caso4$ LANGUAGE plpgsql;
+
+-- -------------------------------------------------------------
+-- CASO 5: liberar proformas exige rol financiero por organización,
+-- no sólo membresía.
+-- -------------------------------------------------------------
+DO $caso5$
+DECLARE
+  v_src text := pg_get_functiondef(
+    'public.revertir_proforma_al_cancelar_sustitucion(uuid)'::regprocedure);
+BEGIN
+  IF v_src !~ 'has_any_role_in_org' THEN
+    RAISE EXCEPTION 'CASO 5 FALLÓ: la reversión de proformas no valida rol financiero por organización';
+  END IF;
+  IF v_src !~ 'LC_ROL_INSUFICIENTE' THEN
+    RAISE EXCEPTION 'CASO 5 FALLÓ: falta el código LC_ROL_INSUFICIENTE en la reversión de proformas';
+  END IF;
+  RAISE NOTICE 'CASO 5 OK: rol financiero requerido para liberar proformas';
+END
+$caso5$ LANGUAGE plpgsql;
+
 ROLLBACK;
+
