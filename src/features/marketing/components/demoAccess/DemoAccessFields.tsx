@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { FormDialogSection } from "@/components/shared/FormDialogSection";
-import type { DemoAccessValues } from "./useDemoAccessForm";
+import type { DemoAccessValues } from "@/features/marketing/hooks/useDemoAccessForm";
 
 interface Props {
   values: DemoAccessValues;
