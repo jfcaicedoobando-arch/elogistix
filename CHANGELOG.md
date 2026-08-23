@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.726.2] - 2026-08-22
+### Fix CI
+- **chore(marketing)**: `useDemoAccessForm.ts` se movió de `components/demoAccess/` a `features/marketing/hooks/` para cumplir el guardrail de arquitectura (hooks fuera de `components/`).
+
+
 ## [13.726.1] - 2026-08-22
 ### Fix CI
 - **CASO 4 de `ola2_faseb2_regresion.sql`**: el `GRANT EXECUTE ON ALL FUNCTIONS` que CI aplica al rol `authenticated` pisaba los `REVOKE` de las migraciones. `_ci_post_migrate.sql` vuelve a cerrar las funciones de plataforma (`_reprocesar_comisiones_org`, `reprocesar_comisiones_job`, `verificar_sat_semanal_job`, `notificar_uuid_cancelado_sat`) a `anon`/`authenticated`, dejando sólo `service_role`. En base viva ya estaban cerradas: era infidelidad del entorno de CI, no un permiso abierto en producción.
