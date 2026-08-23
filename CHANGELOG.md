@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.726.1] - 2026-08-22
+### Fix CI
+- **CASO 4 de `ola2_faseb2_regresion.sql`**: el `GRANT EXECUTE ON ALL FUNCTIONS` que CI aplica al rol `authenticated` pisaba los `REVOKE` de las migraciones. `_ci_post_migrate.sql` vuelve a cerrar las funciones de plataforma (`_reprocesar_comisiones_org`, `reprocesar_comisiones_job`, `verificar_sat_semanal_job`, `notificar_uuid_cancelado_sat`) a `anon`/`authenticated`, dejando sólo `service_role`. En base viva ya estaban cerradas: era infidelidad del entorno de CI, no un permiso abierto en producción.
+
 ## [13.726.0] - 2026-08-22
 ### Remediación informe 2026-08-22 — Entregas 3 y 4
 - **Replay limpio (B-1, B-2, B-3, B-5)**: migraciones espejo `20260828000100/200/300` re-emiten los fixes de las Entregas 1, 2 y 4 con timestamp posterior a los espejos `20260826*`/`20260827*`, que en base limpia volvían a pisar `is_org_member`, `calcular_comision_pago`, `generar_liquidacion_comision` y `rechazar_documento_embarque`.
