@@ -45,6 +45,31 @@ GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO authenticated, service_
 GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA public TO authenticated, service_role;
 
 -- ============================================================================
+-- Re-cierre de funciones de plataforma (regla H6).
+-- El GRANT masivo de arriba (necesario para el Postgres bare de CI) pisa los
+-- REVOKE explícitos de las migraciones. Las funciones que sólo debe invocar
+-- `service_role` (jobs de pg_cron y sus helpers) se vuelven a cerrar aquí para
+-- que CI sea fiel a prod y las regresiones tipo FIX-45 detecten fugas reales.
+-- ============================================================================
+DO $$
+DECLARE
+  v_fn text;
+BEGIN
+  FOREACH v_fn IN ARRAY ARRAY[
+    'public._reprocesar_comisiones_org(uuid)',
+    'public.reprocesar_comisiones_job()',
+    'public.verificar_sat_semanal_job()',
+    'public.notificar_uuid_cancelado_sat(uuid, jsonb)'
+  ]
+  LOOP
+    IF to_regprocedure(v_fn) IS NOT NULL THEN
+      EXECUTE format('REVOKE ALL ON FUNCTION %s FROM PUBLIC, anon, authenticated', v_fn);
+      EXECUTE format('GRANT EXECUTE ON FUNCTION %s TO service_role', v_fn);
+    END IF;
+  END LOOP;
+END $$;
+
+-- ============================================================================
 -- Triggers de comisiones.
 --
 -- Antes se dropeaba `trg_pago_factura_comision_ins` aquí para evitar un bug
