@@ -1,5 +1,13 @@
 # Changelog
 
+## [13.734.0] - 2026-08-24
+### Remediación de la auditoría visual (P1–P4) — `docs/auditoria/visual-2026-08-24.md`
+- **P1**: se retira el emoji de bandera (renderizaba "tofu" en Windows/Chrome) del hero, footer y guías de marketing; bullet del hero alineado a la primera línea; `min-h-screen` → `min-h-dvh` en los 20 shells de página.
+- **P2**: `CierreDialogs`, `DialogSustituirFactura`, `NavieraQuickCreate` y `CancelarAnticipoDialog` migrados a `FormDialogShell`; `dialogSize` fijo en `UsuariosInternosDialogs`, `AdjuntoRow.dialogs` y `PnlTcAlinearDialog`; `text-xs` → token tipográfico en `carteraColumns` y `clienteColumns`.
+- **P3**: nuevo skeleton único de carga de ruta usado por `ProtectedRoute`, `AgenteProtectedRoute` y `PortalProtectedRoute`; skeletons en lugar de spinners en tablas/formularios; `EmptyStateInline`/`ErrorStateInline` con "Reintentar" en CxC Aging, Comisiones, TabPnl, TabNotas, bandejas, Tesorería y Compras.
+- **P4**: 50 botones icon-only garantizan 44 px táctiles en móvil conservando densidad en desktop; `aria-label` completado en `SidebarTrigger`; mejor contraste del tab activo/inactivo.
+
+
 ## [13.733.0] - 2026-08-24
 ### Correcciones — revisión de errores en Sentry
 - **JAVASCRIPT-REACT-1G (bug real, bloqueante)**: el botón "Ver demo" fallaba con HTTP 500 (`permission denied for function seed_demo_organization_guarded`, 42501). Causa raíz confirmada en logs de Postgres: `demo-access` hacía `signInWithPassword` **sobre el cliente admin** para verificar la contraseña demo; supabase-js guarda esa sesión en memoria (aun con `persistSession: false`) y a partir de ahí manda el token del usuario demo, así que las RPC siguientes corrían como `authenticated` en vez de `service_role`. Ahora la verificación usa un cliente efímero con la llave pública y `signOut` inmediato; el cliente admin conserva la credencial de servicio.
