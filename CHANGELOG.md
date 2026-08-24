@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.735.2] - 2026-08-24
+### Seguridad — vista con SECURITY DEFINER (linter 0010)
+- `public.embarques_interno_v` pasa a `security_invoker = true`: ya no se evalúa con los privilegios de su creador. Las columnas internas (`cerrado_snapshot`, `tarifa_delta_jsonb`, `reabierto_motivo`, `created_by_email`) se leen por la nueva función acotada `public.embarques_internos_src()` (`SECURITY DEFINER`, `search_path` fijo, `EXECUTE` sólo para `authenticated`/`service_role`), que reaplica los mismos candados: membresía de organización y exclusión de los roles de portal `cliente` y `agente_carga`. `anon` sigue sin acceso. `supabase/tests/fix2_embarques_interno_y_nc.sql`: 5/5 casos OK.
+
+
+
 ## [13.735.1] - 2026-08-24
 ### Corrección de CI — `deno check` de Edge Functions
 - `user-management/reinvitacion.ts`: se retira el `@ts-expect-error` del import de tipo remoto de `@supabase/supabase-js` (TS2578 "Unused '@ts-expect-error' directive"); Deno ya resuelve el tipo sin supresión.
