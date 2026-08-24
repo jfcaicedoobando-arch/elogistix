@@ -151,8 +151,9 @@ export async function obtenerReconciliacion3Columnas(
   if (realErr) throw new Error(realErr.message);
   const reales = (realesRaw ?? []) as ConceptoCostoRow[];
 
-  // 3. Delta del embarque (Fase 1).
-  const deltaRaw = emb.tarifa_delta_jsonb as { cambios?: DeltaConcepto[] } | null;
+  // 3. Delta del embarque (Fase 1) desde la vista interna (sólo staff).
+  const interno = await obtenerEmbarqueInterno(embarqueId);
+  const deltaRaw = interno?.tarifa_delta_jsonb as { cambios?: DeltaConcepto[] } | null;
   const delta = Array.isArray(deltaRaw?.cambios) ? deltaRaw!.cambios : [];
 
   const filas = buildFilas3C(cotizados, delta, reales, umbrales);
