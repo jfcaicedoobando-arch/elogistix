@@ -6,12 +6,6 @@
 import { FileSpreadsheet } from "lucide-react";
 import EmptyState from "@/components/empty/EmptyState";
 
-export function mensajeVacioProformas(search: string, filtroEstado: string): string {
-  const q = search.trim();
-  if (q) return `Sin resultados para «${q}»`;
-  if (filtroEstado === "aceptada") return "Ninguna proforma aceptada pendiente de emitir";
-  return "No hay proformas generadas";
-}
 
 export function ProformasEmptyState({
   search,
