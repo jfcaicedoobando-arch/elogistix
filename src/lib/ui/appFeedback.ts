@@ -81,8 +81,7 @@ export function notifyError(_toast: AnyToastFn | undefined, opts: ErrorNotifyOpt
   const dedupeKey = computeToastDedupeKey("error", computedTitle, description);
   if (!shouldSuppressDuplicateToast(dedupeKey)) {
     ERROR_TOAST_IDS.add(errorToastId);
-    // "Ver detalles" sólo tiene sentido si hay algo que mostrar; si no,
-    // omitimos la acción en vez de dejar un botón que no hace nada.
+    // "Ver detalles" sólo si hay algo que mostrar (no un botón muerto).
     const hayDetalle = shouldAttachDetails({ title: computedTitle, error, context, errorCode, method, payload, requestId });
     const detallesAction = hayDetalle ? { label: "Ver detalles", onClick: () => openErrorReport(debug) } : undefined;
     sonnerToast.error(computedTitle, {
