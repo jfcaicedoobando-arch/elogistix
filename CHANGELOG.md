@@ -1,5 +1,17 @@
 # Changelog
 
+## [13.735.0] - 2026-08-24
+### Remediación completa de la auditoría visual del ERP — `docs/auditoria/visual-2026-08-24-erp.md`
+- **E-1 (crítico)**: los KPI de Tesorería ya no truncan dinero con elipsis: notación compacta (`MXN 943.4 K`) con el valor exacto en tooltip.
+- **E-2 / E-15**: la tarjeta "Arribos este mes" apila a 1 columna en móvil (ya no se corta "Ya llegaron") y el stepper de estados expone el nombre completo con `Hint`.
+- **E-3**: scroll horizontal con degradado de borde y colchón derecho en `DataTable`, Kanban de CRM y "Flujo esperado 30 días por moneda".
+- **E-4 / E-16**: gráfica de flujo proyectado responsiva en 375 px; chip "TC DOF" con contraste AA (`text-primary` sobre `bg-primary/10`).
+- **E-5 / E-6 / E-11 / E-14**: sub-tabs de CRM con scroll y sin encimar "Nuevo"; columnas Kanban vacías acotadas y con `EmptyStateInline` + CTA; textos truncados (tarjetas Kanban, "Top 5 deudores") con tooltip.
+- **E-7 / E-12 / E-13**: encabezado móvil sin banda vacía; el contador de embarques dice "Cargando embarques…" mientras la consulta no resuelve (ya no se contradice con el skeleton).
+- **E-8 / E-9 / E-10 / E-17**: variantes únicas de `Tabs` (`seccion` y `vista`) documentadas en `docs/design-system.md`; criterio único de botón deshabilitado; anillo de foco visible (`ring-ring` sin opacidad) en botones.
+
+
+
 ## [13.734.0] - 2026-08-24
 ### Remediación de la auditoría visual (P1–P4) — `docs/auditoria/visual-2026-08-24.md`
 - **P1**: se retira el emoji de bandera (renderizaba "tofu" en Windows/Chrome) del hero, footer y guías de marketing; bullet del hero alineado a la primera línea; `min-h-screen` → `min-h-dvh` en los 20 shells de página.
