@@ -1,4 +1,4 @@
-import { Pencil, Trash2, Loader2, Plus, Users, UserX } from "lucide-react";
+import { Pencil, Trash2, Plus, Users, UserX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -56,17 +56,11 @@ export default function TablaContactos({ contactos, isLoading, canEdit, onAdd, o
   ]);
 
   function renderBody() {
-    if (isLoading) {
-      return (
-        <div className="flex items-center justify-center py-8">
-          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-        </div>
-      );
-    }
     return (
       <DataTable
         columns={columns}
         data={contactos}
+        isLoading={isLoading}
         rowKey={(c) => c.id}
         density={TABLE_DENSITY.embebida}
         emptyState={
