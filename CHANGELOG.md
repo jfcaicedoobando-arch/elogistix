@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.737.1] - 2026-08-24
+### Hotfix R3-01 — `/embarques` devolvía 42501 "permission denied for table embarques"
+- **Causa**: `public.embarques_listado` es SECURITY INVOKER y su cuerpo hacía `SELECT e.* FROM embarques e`. El endurecimiento FIX2 B-1 (`20260824033552`) revocó el `SELECT` a nivel tabla en `public.embarques` y lo re-otorgó columna por columna (74/78, excluyendo las 4 internas), así que `e.*` dejó de estar permitido y el listado se caía para todo el staff.
+- **Fix**: la función ahora nombra columnas explícitas en el CTE `filtered`; se conservan firma, filtros, orden, paginación y permisos, y las 4 columnas internas siguen cerradas a `authenticated`/`anon`.
+- **Regresión**: `supabase/tests/embarques_listado_sin_select_estrella.sql` (4 casos: sin `e.*`, sin SELECT de tabla, columnas internas cerradas, sigue SECURITY INVOKER).
+
 ## [13.737.0] - 2026-08-24
 ### R3 — Endurecimiento de Edge Functions (auditoría `fix3-edge-hardening`)
 - **email_send_log ya no se atora en `pending`** (P2): nueva RPC `email_send_log_touch` (upsert por `message_id`, sólo `service_role`) + columna `intentos`. `send-transactional-email` y `process-email-queue/*` usan `registrarEstadoEmail` en lugar de un segundo INSERT que reventaba el índice único `uq_email_send_log_message_id` con 23505 silencioso. Limpieza única de las 18 filas zombie (>24 h) a `failed`.
