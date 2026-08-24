@@ -44,8 +44,7 @@ BEGIN
     v_estado_link := 'activo';
   END IF;
 
-  -- BL-11 (migración 20260817142000): link no vigente → no exponer montos,
-  -- conceptos ni datos del cliente; sólo el estado y el número.
+  -- BL-11: link no vigente → no exponer montos, conceptos ni datos del cliente.
   IF v_estado_link <> 'activo' THEN
     RETURN jsonb_build_object(
       'estado_link', v_estado_link,

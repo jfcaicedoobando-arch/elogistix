@@ -68,6 +68,32 @@ export async function fetchTrackingPublico(token: string): Promise<TrackingPubli
 
 // ─── tracking_links CRUD ──────────────────────────────────────────────────────
 
+/**
+ * Vigencia por defecto de una liga de tracking público, alineada con la de
+ * los enlaces de proforma (`generar_token_proforma`, p_dias_vigencia = 30).
+ * Antes el flujo "Compartir" no pasaba `expires_at` → NULL = enlace eterno.
+ */
+export const TRACKING_LINK_VIGENCIA_DIAS = 30;
+
+/** Lista las ligas de tracking de un embarque, más recientes primero. */
+export async function fetchTrackingLinks(embarqueId: string): Promise<TrackingLinkRow[]> {
+  const { data, error } = await supabase
+    .from("tracking_links")
+    .select()
+    .eq("embarque_id", embarqueId)
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  return data ?? [];
+}
+
+/** ¿La liga sigue vigente? Las legacy sin `expires_at` (eternas) NO se
+ *  reutilizan: compartir genera una nueva con vigencia y la eterna se puede
+ *  revocar desde el menú del embarque. */
+export function esTrackingLinkVigente(link: TrackingLinkRow, ahora: number = Date.now()): boolean {
+  if (!link.expires_at) return false;
+  return new Date(link.expires_at).getTime() > ahora;
+}
+
 export async function createTrackingLink(params: {
   embarqueId: string;
   expiresAt?: string | null;
@@ -87,4 +113,22 @@ export async function createTrackingLink(params: {
     detalles: { trackingLinkId: data.id, expiraEn: params.expiresAt ?? null },
   });
   return data;
+}
+
+/** Revoca (borra) una liga de tracking público. La policy
+ *  "Org staff manage tracking_links" (FOR ALL) ya lo permite a staff de la org. */
+export async function deleteTrackingLink(params: {
+  linkId: string;
+  embarqueId: string;
+}): Promise<void> {
+  const { error } = await supabase
+    .from("tracking_links")
+    .delete()
+    .eq("id", params.linkId);
+  if (error) throw error;
+  await registrarBitacoraEmbarque({
+    accion: "Revocó liga de tracking público de embarque",
+    entidadId: params.embarqueId,
+    detalles: { trackingLinkId: params.linkId },
+  });
 }

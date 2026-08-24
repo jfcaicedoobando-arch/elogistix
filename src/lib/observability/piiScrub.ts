@@ -61,6 +61,25 @@ export function scrubPii(input: string | undefined | null): string | undefined {
 /** Limpia query string: quita pares cuyo nombre coincide con la lista de sensibles. */
 const SENSITIVE_QS = new Set(["email", "rfc", "token", "access_token", "refresh_token", "curp"]);
 
+/**
+ * Segmentos de path que funcionan como credencial de acceso público:
+ * tokens de tracking (32 hex, `/tracking/<token>`) y UUIDs
+ * (`/portal/proformas/<uuid>`, invites, etc.). Si quedan en logs/Sentry,
+ * cualquiera con acceso a observabilidad puede usar el enlace (la proforma
+ * hasta permite aceptar/rechazar). Se sustituyen por `[token]`.
+ */
+const PATH_TOKEN_SEGMENT_RE =
+  /^(?:[0-9a-f]{32}|[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/i;
+
+/** Sustituye por `[token]` los segmentos del path que parecen tokens públicos. */
+export function scrubPathTokens(path: string | undefined | null): string | undefined {
+  if (!path) return path ?? undefined;
+  return path
+    .split("/")
+    .map((seg) => (PATH_TOKEN_SEGMENT_RE.test(seg) ? "[token]" : seg))
+    .join("/");
+}
+
 export function scrubUrl(url: string | undefined | null): string | undefined {
   if (!url) return url ?? undefined;
   try {
@@ -71,6 +90,13 @@ export function scrubUrl(url: string | undefined | null): string | undefined {
         u.searchParams.set(key, "[REDACTED]");
         changed = true;
       }
+    }
+    // Tokens en segmentos del path (tracking/proformas/unsubscribe), no sólo
+    // en la query string.
+    const cleanPath = scrubPathTokens(u.pathname);
+    if (cleanPath !== undefined && cleanPath !== u.pathname) {
+      u.pathname = cleanPath;
+      changed = true;
     }
     if (!changed) return scrubPii(url);
     // Conservar el path original (sin host artificial cuando la URL era relativa).

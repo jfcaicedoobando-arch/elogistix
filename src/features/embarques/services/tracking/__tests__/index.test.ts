@@ -9,7 +9,7 @@ const mock = await vi.hoisted(async () => {
 });
 vi.mock('@/integrations/supabase/client', () => ({ supabase: mock.supabase }));
 
-import { createTrackingLink, fetchTrackingPublico } from '../index';
+import { createTrackingLink, deleteTrackingLink, esTrackingLinkVigente, fetchTrackingLinks, fetchTrackingPublico, TRACKING_LINK_VIGENCIA_DIAS } from '../index';
 
 describe('tracking/index', () => {
   beforeEach(() => {
@@ -51,5 +51,48 @@ describe('tracking/index', () => {
   it('createTrackingLink propaga error de insert', async () => {
     mock.setTableResult('tracking_links', { data: null, error: new Error('insert fail') });
     await expect(createTrackingLink({ embarqueId: 'emb1' })).rejects.toThrow('insert fail');
+  });
+
+  it('fetchTrackingLinks consulta por embarque', async () => {
+    const rows = [{ id: '1', embarque_id: 'emb1' }];
+    mock.setTableResult('tracking_links', { data: rows, error: null });
+    const result = await fetchTrackingLinks('emb1');
+    expect(mock.tableCalls.some((c) => c.table === 'tracking_links')).toBe(true);
+    expect(result).toEqual(rows);
+  });
+
+  it('deleteTrackingLink borra por id', async () => {
+    mock.setTableResult('tracking_links', { data: null, error: null });
+    await deleteTrackingLink({ linkId: 'l1', embarqueId: 'emb1' });
+    expect(mock.tableCalls.some((c) => c.table === 'tracking_links')).toBe(true);
+  });
+
+  it('deleteTrackingLink propaga error de delete', async () => {
+    mock.setTableResult('tracking_links', { data: null, error: new Error('delete fail') });
+    await expect(deleteTrackingLink({ linkId: 'l1', embarqueId: 'emb1' })).rejects.toThrow('delete fail');
+  });
+
+  it('la vigencia por defecto es de 30 días (alineada con proformas)', () => {
+    expect(TRACKING_LINK_VIGENCIA_DIAS).toBe(30);
+  });
+});
+
+describe('esTrackingLinkVigente', () => {
+  const ahora = new Date('2026-08-31T12:00:00Z').getTime();
+
+  it('vigente cuando expires_at está en el futuro', () => {
+    expect(
+      esTrackingLinkVigente({ expires_at: '2026-09-30T12:00:00Z' } as never, ahora),
+    ).toBe(true);
+  });
+
+  it('no vigente cuando expires_at ya pasó', () => {
+    expect(
+      esTrackingLinkVigente({ expires_at: '2026-08-01T12:00:00Z' } as never, ahora),
+    ).toBe(false);
+  });
+
+  it('liga legacy sin expires_at (eterna) NO se reutiliza', () => {
+    expect(esTrackingLinkVigente({ expires_at: null } as never, ahora)).toBe(false);
   });
 });

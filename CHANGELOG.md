@@ -1,5 +1,15 @@
 # Changelog
 
+## [13.739.0] - 2026-08-24
+### FIX-R3 — Superficie pública del portal (parche `fix3-portal-tokens`)
+- **RLS de eventos/notas**: las policies `Cliente read own eventos`, `Cliente read own notas` y `Agente read own notas` replican ahora el predicado del RPC público (`get_tracking_public`): sólo hitos de negocio / `cambio_estado`, sin marcas `[interno]/harness/e2e/seed/qa-` y sin borrados lógicos. Antes, por API directa con el JWT del portal, cliente y agente podían leer eventos internos y notas de texto libre del staff.
+- **`portal_responder_por_token`**: se corrige un fallo real (insertaba `usuario_id = NULL` en `bitacora_actividad`, columna `NOT NULL` → toda respuesta del cliente reventaba tras actualizar la proforma). Además `SELECT ... FOR UPDATE` + `UPDATE` compare-and-set sobre `estado_cliente = 'pendiente'` cierran el TOCTOU (doble liberación de conceptos / doble notificación) y el motivo de rechazo se acota a 1000 caracteres.
+- **`portal_solicitar_cotizacion`**: rate limit 10/hora por (cliente, usuario) y topes de longitud (origen/destino 200, descripción/notas 2000). Grants sin cambio (nunca fue `anon`).
+- **Grants**: `handle_new_user_signup` deja de ser ejecutable por `anon`/`authenticated` (es función trigger; corre como owner).
+- **Ligas de tracking**: "Compartir" reutiliza la liga vigente y las nuevas nacen con 30 días de vigencia (antes cada clic creaba un token eterno; las 12 ligas existentes no tenían `expires_at`). Nueva acción "Revocar liga de tracking" con registro en bitácora.
+- **Observabilidad**: `scrubPathTokens` en `piiScrub` y `scrubUrl`/`logClientError` ya no persisten tokens de path (`/tracking/<token>`, `/portal/proformas/<uuid>`) en `app_logs` ni Sentry.
+- Tests SQL `fix3_portal_rls_eventos_notas.sql` y `fix3_portal_rpcs.sql` cableados en el workflow de RLS.
+
 ## [13.738.1] - 2026-08-24
 ### FIX-R3-02 — CI: `_ci_verify_rls.sql` fallaba por `cron_locks`
 - **Causa**: `public.cron_locks` (mutex de crons, v13.737.0) quedó con RLS habilitada y CERO policies. El verificador de cobertura RLS exige al menos una policy declarada, porque un deny implícito hace que los tests de aislamiento pasen trivialmente con `count = 0`.

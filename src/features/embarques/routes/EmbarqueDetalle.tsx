@@ -56,7 +56,7 @@ export default function EmbarqueDetalle() {
   const [dialogEliminarAbierto, setDialogEliminarAbierto] = useState(false);
   const [dialogDuplicarAbierto, setDialogDuplicarAbierto] = useState(false);
 
-  const { handleCompartirTracking, isPending: trackingPending } = useEmbarqueDetalleTracking(id);
+  const { handleCompartirTracking, handleRevocarTracking, tieneLinkActivo, isPending: trackingPending } = useEmbarqueDetalleTracking(id);
 
   if (!isLoading && !error && !embarque) return <NotFoundState />;
 
@@ -85,7 +85,9 @@ export default function EmbarqueDetalle() {
               siguienteEstado={siguienteEstado}
               canEdit={canEdit}
               trackingPending={trackingPending}
+              tieneLinkActivo={tieneLinkActivo}
               onCompartirTracking={handleCompartirTracking}
+              onRevocarTracking={handleRevocarTracking}
               onAbrirEliminar={() => setDialogEliminarAbierto(true)}
               onAbrirDuplicar={() => setDialogDuplicarAbierto(true)}
               onNavigateTab={(tab) => setActiveTab(tab)}
