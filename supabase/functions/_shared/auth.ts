@@ -62,8 +62,15 @@ export async function authenticate(req: Request, log?: Logger): Promise<AuthCont
 }
 
 /**
- * Verifica si el usuario es admin global (admin/super_admin) o admin de organización.
- * Retorna { isGlobalAdmin, orgId } — orgId es la organización del usuario si aplica.
+ * Verifica si el usuario es admin de PLATAFORMA (`super_admin`) o admin de
+ * organización. Retorna { isGlobalAdmin, orgId }.
+ *
+ * R2 seguridad · P1 (alineado con Ola 9 · A13): el rol global legacy `admin`
+ * ya NO otorga acceso cross-org — antes se equiparaba a `super_admin` y
+ * `isGlobalAdmin` habilita alta/baja de usuarios y recordatorios en CUALQUIER
+ * organización. Un `admin` legacy conserva permisos de administrador
+ * únicamente donde tenga membresía admin/admin_org (segunda rama de abajo),
+ * igual que ya hacen `authorizeOrgMembership` y `authorizeOrgRole`.
  */
 export async function checkAdminAccess(
   adminClient: SupabaseClient,
@@ -73,8 +80,9 @@ export async function checkAdminAccess(
     .from("user_roles")
     .select("role")
     .eq("user_id", userId)
-    .in("role", ["admin", "super_admin"])
+    .eq("role", "super_admin")
     .maybeSingle();
+
 
   const isGlobalAdmin = !!roleData;
 
