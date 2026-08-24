@@ -5,6 +5,7 @@
  */
 import { createClient, SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { jsonResponse, errorResponse } from "../_shared/response.ts";
+import { validarReinvitacionPortal } from "./reinvitacion.ts";
 import type { HandlerCtx, AdminAccess } from "./handlers.ts";
 import { resolveRedirectTo } from "./clientHandlers.ts";
 // Ola 14 · R5EF-01: mismo catálogo LC_* que inviteHandler.ts (R4EF-01); el
