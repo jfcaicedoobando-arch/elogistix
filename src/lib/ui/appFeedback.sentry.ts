@@ -6,10 +6,27 @@ export function shouldReportToSentry(error: unknown): boolean {
   if (isExpectedValidation(error)) return false;
   if (isAuthorizationError(error)) return false;
   if (isAuthRateLimit(error)) return false;
+  if (isWeakPasswordNotice(error)) return false;
   if (isExpectedFacturapiValidation(error)) return false;
   if (isTransientFacturapiNetwork(error)) return false;
   return true;
 }
+
+/**
+ * Aviso de contraseña débil de Supabase Auth (`weak_password`). Es una
+ * validación correcta mostrada al usuario en el alta/cambio de contraseña,
+ * no una falla de la app (Sentry JAVASCRIPT-REACT-5J).
+ */
+export function isWeakPasswordNotice(err: unknown): boolean {
+  const msg =
+    err instanceof Error ? err.message : typeof err === "string" ? err : "";
+  if (/password is known to be weak|weak_password|password should be at least/i.test(msg)) {
+    return true;
+  }
+  if (typeof err !== "object" || err === null) return false;
+  return (err as { code?: unknown }).code === "weak_password";
+}
+
 
 /**
  * Límite de reenvío de Supabase Auth ("For security purposes, you can only
