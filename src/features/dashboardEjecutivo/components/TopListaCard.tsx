@@ -1,5 +1,7 @@
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Hint } from "@/components/shared/Hint";
+
 import { formatCurrency } from "@/lib/formatters/numbers";
 import type { TopItem } from "@/features/tesoreria/services";
 
@@ -29,8 +31,13 @@ export function TopListaCard({ title, items, emptyText = "Sin registros." }: Pro
             {items.map((it, i) => (
               <li key={`${it.nombre}-${i}`} className="flex items-center justify-between gap-2 text-body">
                 <div className="min-w-0">
-                  <p className="truncate font-medium">{it.nombre}</p>
+                  {/* E-14 (auditoría visual 2026-08-24): nombre truncado con
+                      tooltip para poder leerlo completo. */}
+                  <Hint label={it.nombre}>
+                    <p className="truncate font-medium">{it.nombre}</p>
+                  </Hint>
                   {typeof it.dias === "number" && it.dias !== 0 && (
+
                     <Badge variant={severidad(it.dias)} className="mt-0.5 text-label">
                       {it.dias > 0 ? `${it.dias} d vencido` : `${Math.abs(it.dias)} d por vencer`}
                     </Badge>
