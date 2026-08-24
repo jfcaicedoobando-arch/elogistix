@@ -93,12 +93,27 @@ async function asegurarUsuarioDemo(admin: SupabaseClient): Promise<string> {
   if (existing) {
     // EC-2: sólo tocar la cuenta si hace falta. Antes cada llamada reseteaba el
     // password (invalidando sesiones demo activas) aunque ya fuera el correcto.
-    const { error: signInErr } = await admin.auth.signInWithPassword({
+    //
+    // BUG (Sentry JAVASCRIPT-REACT-1G, 13.733.0): este `signInWithPassword`
+    // NO puede correr sobre el cliente `admin`. supabase-js guarda la sesión
+    // del usuario demo EN MEMORIA (aunque `persistSession: false`) y a partir
+    // de ahí manda su access token como `Authorization`, así que las RPC
+    // siguientes dejaban de correr como `service_role` y fallaban con
+    // `permission denied for function seed_demo_organization_guarded` (42501).
+    // Se usa un cliente efímero y desechable sólo para la verificación.
+    const probe = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_ANON_KEY") ?? Deno.env.get("SUPABASE_PUBLISHABLE_KEY")!,
+      { auth: { autoRefreshToken: false, persistSession: false } },
+    );
+    const { error: signInErr } = await probe.auth.signInWithPassword({
       email: DEMO_EMAIL,
       password: DEMO_PASSWORD,
     });
+    await probe.auth.signOut().catch(() => undefined);
     const passwordVigente = !signInErr;
     if (passwordVigente && existing.email_confirmed_at) return existing.id;
+
 
     const { error: updErr } = await admin.auth.admin.updateUserById(existing.id, {
       ...(passwordVigente ? {} : { password: DEMO_PASSWORD }),

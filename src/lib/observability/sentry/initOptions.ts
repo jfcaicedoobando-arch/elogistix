@@ -54,7 +54,12 @@ export const IGNORE_ERRORS: Array<string | RegExp> = [
   /NetworkError when attempting to fetch resource/i,
   /Extension context invalidated/i,
   /The operation was aborted/i,
+  // 13.733.0 (Sentry JAVASCRIPT-REACT-5F): extensiones/traductores mueven
+  // nodos bajo React y rompen el commit del DOM. No es código nuestro.
+  /Failed to execute '(insertBefore|removeChild)' on 'Node'/i,
+  /is known to be weak and easy to guess/i,
 ];
+
 
 /** 13.312.10: URL del túnel Sentry sólo si tenemos base de Supabase configurada. */
 export function resolveTunnelUrl(): string | undefined {
