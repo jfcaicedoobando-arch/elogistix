@@ -62,8 +62,15 @@ export async function authenticate(req: Request, log?: Logger): Promise<AuthCont
 }
 
 /**
- * Verifica si el usuario es admin global (admin/super_admin) o admin de organización.
- * Retorna { isGlobalAdmin, orgId } — orgId es la organización del usuario si aplica.
+ * Verifica si el usuario es admin de PLATAFORMA (`super_admin`) o admin de
+ * organización. Retorna { isGlobalAdmin, orgId }.
+ *
+ * R2 seguridad · P1 (alineado con Ola 9 · A13): el rol global legacy `admin`
+ * ya NO otorga acceso cross-org — antes se equiparaba a `super_admin` y
+ * `isGlobalAdmin` habilita alta/baja de usuarios y recordatorios en CUALQUIER
+ * organización. Un `admin` legacy conserva permisos de administrador
+ * únicamente donde tenga membresía admin/admin_org (segunda rama de abajo),
+ * igual que ya hacen `authorizeOrgMembership` y `authorizeOrgRole`.
  */
 export async function checkAdminAccess(
   adminClient: SupabaseClient,
@@ -73,8 +80,9 @@ export async function checkAdminAccess(
     .from("user_roles")
     .select("role")
     .eq("user_id", userId)
-    .in("role", ["admin", "super_admin"])
+    .eq("role", "super_admin")
     .maybeSingle();
+
 
   const isGlobalAdmin = !!roleData;
 
@@ -158,6 +166,20 @@ export const ROLES_DESCARGA_CFDI: readonly string[] = [
   ...ROLES_CONSULTA_FISCAL,
   "operador", "coordinador_logistico", "gerente_operaciones", "gerente_visor",
 ];
+
+/**
+ * R2 seguridad · P1 — Captura CxP (buzón / parseo con IA de facturas de
+ * proveedor). Espejo server-side de `COMPRAS_POR_CAPTURAR_ROLES`
+ * (`src/lib/access/roleRouteSets.ts`). Mantener sincronizada. Excluye
+ * `operador` y los roles de portal (`cliente`, `agente_carga`) y con ello a la
+ * cuenta demo pública.
+ */
+export const ROLES_CAPTURA_CXP: readonly string[] = [
+  "super_admin", "admin", "admin_org", "contador", "tesorero",
+  "auxiliar_contable", "gerente_operaciones", "gerente_visor",
+];
+
+
 
 /**
  * FIX C2 (S5-02) + A13 (Ola 4) — Membresía + rol efectivo. Semántica:

@@ -47,3 +47,43 @@ export async function emailPerteneceACliente(
   const permitidos = await emailsPermitidosCliente(adminClient, clienteId);
   return permitidos.has(email.trim().toLowerCase());
 }
+
+/** Extrae el dominio (lowercase) de un correo; null si no tiene '@' útil. */
+export function dominioDeEmail(email: string): string | null {
+  const limpio = email.trim().toLowerCase();
+  const idx = limpio.lastIndexOf('@');
+  return idx > 0 && idx < limpio.length - 1 ? limpio.slice(idx + 1) : null;
+}
+
+/**
+ * R2 seguridad · P1 — Allowlist de destinatarios para documentos fiscales.
+ * Un destinatario es "propio" si:
+ *  1) pertenece a los contactos del cliente del documento (M8), o
+ *  2) su dominio está en `dominiosOrg` (dominio corporativo de la org —
+ *     típicamente el dominio del correo del caller, para copias internas).
+ * Devuelve la lista de correos AJENOS (vacía = todos propios).
+ *
+ * Política de uso (decisión de producto): el resultado NO se bloquea de forma
+ * ciega. Los flujos financieros de escritura pueden enviar a terceros
+ * legítimos (agente aduanal, contador externo) y lo asientan en bitácora; los
+ * roles de sólo lectura sí quedan bloqueados.
+ */
+export async function destinatariosNoPermitidos(
+  adminClient: SupabaseClient,
+  clienteId: string | null,
+  emails: readonly string[],
+  dominiosOrg: readonly string[],
+): Promise<string[]> {
+  const permitidos = clienteId
+    ? await emailsPermitidosCliente(adminClient, clienteId)
+    : new Set<string>();
+  const dominios = new Set(
+    dominiosOrg.map((d) => d.trim().toLowerCase()).filter((d) => d.length > 0),
+  );
+  return emails.filter((e) => {
+    const limpio = e.trim().toLowerCase();
+    if (permitidos.has(limpio)) return false;
+    const dom = dominioDeEmail(limpio);
+    return !(dom && dominios.has(dom));
+  });
+}

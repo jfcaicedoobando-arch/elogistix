@@ -102,6 +102,7 @@ async function sembrarConceptos(
 async function procesarDoc(
   admin: SupabaseClient,
   doc: DocRow,
+  organizationId: string | null,
 ): Promise<ResultadoFactura | null> {
   const { data: factura, error } = await admin
     .from("proveedor_facturas")
@@ -111,6 +112,10 @@ async function procesarDoc(
   if (error) throw error;
   const f = factura as FacturaRow | null;
   if (!f || f.deleted_at) return null;
+  // R2 seguridad · P1 — defensa en profundidad: el barrido ya viene filtrado
+  // por org, pero la factura vinculada nunca debe salirse del tenant.
+  if (organizationId && f.organization_id !== organizationId) return null;
+
 
   const patch: { archivo_pdf_url?: string; archivo_xml_url?: string } = {};
   if (!f.archivo_pdf_url && doc.archivo_path && !doc.archivo_path.toLowerCase().endsWith(".xml")) {
@@ -151,8 +156,9 @@ async function procesarDoc(
 
 export async function ejecutarBackfill(
   admin: SupabaseClient,
-  opciones: { facturaId?: string | null } = {},
+  opciones: { facturaId?: string | null; organizationId?: string | null } = {},
 ): Promise<{ revisados: number; cambiados: ResultadoFactura[]; errores: ResultadoFactura[] }> {
+  const organizationId = opciones.organizationId ?? null;
   let query = admin
     .from("embarque_facturas_entrantes")
     .select(
@@ -161,6 +167,9 @@ export async function ejecutarBackfill(
     .eq("estado", "capturada")
     .is("deleted_at", null)
     .not("proveedor_factura_id", "is", null);
+  // R2 seguridad · P1: sin este filtro el barrido tocaba documentos y storage
+  // de TODAS las organizaciones (el cliente usa la service role key).
+  if (organizationId) query = query.eq("organization_id", organizationId);
   if (opciones.facturaId) query = query.eq("proveedor_factura_id", opciones.facturaId);
 
   const { data, error } = await query;
@@ -171,11 +180,12 @@ export async function ejecutarBackfill(
   const errores: ResultadoFactura[] = [];
   for (const doc of docs) {
     try {
-      const r = await procesarDoc(admin, doc);
+      const r = await procesarDoc(admin, doc, organizationId);
       if (r) cambiados.push(r);
     } catch (e) {
       errores.push({
         factura_id: doc.proveedor_factura_id,
+
         pdf: false,
         xml: false,
         conceptos: 0,

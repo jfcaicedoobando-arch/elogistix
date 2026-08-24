@@ -34,5 +34,7 @@ export const LC_CODE_MESSAGES_OPERATIVO_AUTH: Record<string, string> = {
     "El registro pertenece a otra organización. Cambia de organización activa para poder verlo o editarlo.",
   LC_SOLO_SUPER_ADMIN:
     "Esta acción sólo la puede realizar el administrador de la plataforma.",
+  LC_CUENTA_NO_REINVITABLE:
+    "Ese correo ya tiene una cuenta que no es de portal de esta organización. Pide a la persona que inicie sesión con su cuenta actual o usa otro correo.",
   LC_DELETE_PROHIBIDO: "Este registro no puede eliminarse desde la aplicación.",
 };

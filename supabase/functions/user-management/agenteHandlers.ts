@@ -5,6 +5,7 @@
  */
 import { createClient, SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { jsonResponse, errorResponse } from "../_shared/response.ts";
+import { validarReinvitacionPortal } from "./reinvitacion.ts";
 import type { HandlerCtx, AdminAccess } from "./handlers.ts";
 import { resolveRedirectTo } from "./clientHandlers.ts";
 // Ola 14 · R5EF-01: mismo catálogo LC_* que inviteHandler.ts (R4EF-01); el
@@ -195,6 +196,13 @@ export async function handleInviteAgente(ctx: HandlerCtx, admin: AdminAccess): P
       user_id: callerId, organization_id: admin.orgId, payload: { target_org: organization_id },
     });
     return errorResponse("No autorizado para invitar agentes de esa organización", 403, cors);
+  }
+
+  // B-1: bloquear toma de cuentas existentes que no sean de portal de esta org.
+  const motivo = await validarReinvitacionPortal(adminClient, email, organization_id);
+  if (motivo) {
+    log.finish(409, "cuenta_no_reinvitable", { user_id: callerId, organization_id });
+    return errorResponse(motivo, 409, cors);
   }
 
   const ok = await ensureAgenteEnOrg(adminClient, agente_id, organization_id);

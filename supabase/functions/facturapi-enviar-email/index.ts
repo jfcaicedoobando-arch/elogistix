@@ -12,6 +12,7 @@ import { buildCors, handlePreflightStrict } from "../_shared/cors.ts";
 import { wrapEdgeHandler } from "../_shared/sentry.ts";
 import { resolveFacturapiKey, FACTURAPI_BASE, basicAuthHeader } from "../_shared/facturapiAuth.ts";
 import { authorizeOrgRole, ROLES_CONSULTA_FISCAL } from "../_shared/auth.ts";
+import { bloqueoDestinatarioOverride } from "./overrideDestinatario.ts";
 import { registrarBitacoraEdge } from "../_shared/bitacora.ts";
 import { jsonResponse, makeJson } from "../_shared/response.ts";
 
@@ -193,6 +194,18 @@ Deno.serve(wrapEdgeHandler("facturapi-enviar-email", async (req) => {
   if (!isValidEmail(email)) return json({ error: "invalid_email", message: "Email inválido." }, 400);
 
   const overrideManual = resolucion.fuente === "override";
+  // B-4: destinatario manual ajeno al cliente exige rol con envío a terceros.
+  if (overrideManual) {
+    const bloqueo = await bloqueoDestinatarioOverride({
+      supabase,
+      userId: userData.user.id,
+      userEmail: userData.user.email,
+      organizationId: target.data.organizationId,
+      clienteId: target.data.clienteId || null,
+      email,
+    });
+    if (bloqueo) return json({ error: "forbidden_recipient", message: bloqueo }, 403);
+  }
   const emailDistintoSugerido = Boolean(
     resolucion.emailSugerido && email.toLowerCase() !== resolucion.emailSugerido.toLowerCase(),
   );

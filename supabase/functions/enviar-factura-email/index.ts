@@ -91,7 +91,7 @@ Deno.serve(wrapEdgeHandler("enviar-factura-email", async (req) => {
     estado,
     envio_id: envioId,
     resultados,
-    pdf_link: paths.pdfLink,
-    xml_link: paths.xmlLink,
+    // B-5: los enlaces firmados (acceso sin autenticación al CFDI) ya NO se
+    // devuelven al navegador; sólo viajan dentro del correo al destinatario.
   });
 }));

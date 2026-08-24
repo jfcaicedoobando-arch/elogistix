@@ -4,6 +4,7 @@
  */
 import { createClient, SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { jsonResponse, errorResponse } from "../_shared/response.ts";
+import { validarReinvitacionPortal } from "./reinvitacion.ts";
 import type { HandlerCtx, AdminAccess } from "./handlers.ts";
 // Ola 14 · R5EF-01: mensaje seguro LC_* al cliente; crudo sólo al log.
 import { mensajeSeguro } from "./errores.ts";
@@ -110,6 +111,13 @@ export async function handleInviteClient(ctx: HandlerCtx, admin: AdminAccess): P
       user_id: callerId, organization_id: admin.orgId, payload: { target_org: organization_id },
     });
     return errorResponse("No autorizado para invitar usuarios a esa organización", 403, cors);
+  }
+
+  // B-1: bloquear toma de cuentas existentes que no sean de portal de esta org.
+  const motivo = await validarReinvitacionPortal(adminClient, email, organization_id);
+  if (motivo) {
+    log.finish(409, "cuenta_no_reinvitable", { user_id: callerId, organization_id });
+    return errorResponse(motivo, 409, cors);
   }
 
   const clienteOk = await ensureClienteEnOrg(adminClient, cliente_id, organization_id);
