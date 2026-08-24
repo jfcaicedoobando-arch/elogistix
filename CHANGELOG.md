@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.733.0] - 2026-08-24
+### Correcciones — revisión de errores en Sentry
+- **JAVASCRIPT-REACT-1G (bug real, bloqueante)**: el botón "Ver demo" fallaba con HTTP 500 (`permission denied for function seed_demo_organization_guarded`, 42501). Causa raíz confirmada en logs de Postgres: `demo-access` hacía `signInWithPassword` **sobre el cliente admin** para verificar la contraseña demo; supabase-js guarda esa sesión en memoria (aun con `persistSession: false`) y a partir de ahí manda el token del usuario demo, así que las RPC siguientes corrían como `authenticated` en vez de `service_role`. Ahora la verificación usa un cliente efímero con la llave pública y `signOut` inmediato; el cliente admin conserva la credencial de servicio.
+- **JAVASCRIPT-REACT-5J (no era bug)**: `Password is known to be weak…` es la validación de contraseñas de la plataforma avisando al usuario. Se filtra en `appFeedback.sentry.ts` (`isWeakPasswordNotice`) y en `IGNORE_ERRORS`.
+- **JAVASCRIPT-REACT-5F (no era bug)**: `Failed to execute 'insertBefore' on 'Node'` proviene de extensiones/traductores que mutan el DOM bajo React. Agregado a `IGNORE_ERRORS`.
+
 ## [13.732.0] - 2026-08-24
 ### Correcciones — validación del parche `fix2-db.diff`
 - **B-1 (bug real, crítico · fuga de PnL al portal)**: RLS filtra *filas*, no *columnas*: un usuario del portal con acceso a su embarque podía leer `cerrado_snapshot`, `tarifa_delta_jsonb`, `reabierto_motivo` y `created_by_email`. Ahora el `SELECT` sobre `public.embarques` se otorga **columna por columna** (el `REVOKE` por columna no basta si existe un grant de tabla) excluyendo esas cuatro. El staff las consulta por la vista `public.embarques_interno_v` (valida membresía y excluye roles `cliente`/`agente_carga`), y `get_embarque_full` fusiona esos datos con lista explícita de columnas. Frontend: nuevo servicio `internoEmbarque.ts`, usado por `tarifaInfo.ts` y `reconciliacion3Columnas.ts`.
