@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.739.1] - 2026-08-24
+### CI — `rpc_org_scope_linter`
+- Se re-cierran en `_ci_post_migrate.sql` las funciones de plataforma `cron_try_lock`, `cron_unlock` y `email_send_log_touch` (sólo `service_role`), que el GRANT masivo del Postgres bare de CI reabría a `authenticated`. En producción ya estaban revocadas.
+
 ## [13.739.0] - 2026-08-24
 ### FIX-R3 — Superficie pública del portal (parche `fix3-portal-tokens`)
 - **RLS de eventos/notas**: las policies `Cliente read own eventos`, `Cliente read own notas` y `Agente read own notas` replican ahora el predicado del RPC público (`get_tracking_public`): sólo hitos de negocio / `cambio_estado`, sin marcas `[interno]/harness/e2e/seed/qa-` y sin borrados lógicos. Antes, por API directa con el JWT del portal, cliente y agente podían leer eventos internos y notas de texto libre del staff.
