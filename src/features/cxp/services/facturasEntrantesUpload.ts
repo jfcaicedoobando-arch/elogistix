@@ -20,7 +20,10 @@ import {
   esErrorUnicidad,
   limpiarArchivosHuerfanosSeguro,
 } from "@/features/cxp/services/facturasEntrantesDedupe";
-import { verificarYAdjuntarXmlEntrante } from "@/features/cxp/services/adjuntarXmlEntranteEdge";
+import {
+  verificarYAdjuntarXmlEntrante,
+  mensajeErrorAdjuntarXml,
+} from "@/features/cxp/services/adjuntarXmlEntranteEdge";
 import { guardarConceptosSugeridos } from "@/features/cxp/services/facturasEntrantesConceptos";
 import {
   calcularHash,
@@ -68,6 +71,39 @@ async function errorGuardadoEntrante(
   }
   const duplicado = mensajeDuplicadoEntrante(`${error.message} ${error.details ?? ""}`);
   return duplicado ? new Error(duplicado) : error;
+}
+
+/**
+ * FIX3 · M-6 (BUG-18) extendido al ALTA INICIAL: los metadatos fiscales del
+ * INSERT quedan sellados server-side como NO verificados. Aquí replicamos el
+ * flujo de "adjuntar XML posterior": la edge descarga el XML, verifica su hash,
+ * lo re-parsea y REEMPLAZA los metadatos con los del servidor (marcándolos como
+ * verificados). Si algo no cuadra, se avisa al usuario y queda rastro.
+ */
+async function verificarMetadatosDelAlta(params: {
+  documentoId: string;
+  xml: ArchivoSubido | null;
+  meta: CfdiXmlMeta | null;
+  nombreArchivo: string;
+}): Promise<void> {
+  if (!params.xml) return;
+  const error = await verificarYAdjuntarXmlEntrante({
+    documentoId: params.documentoId,
+    xmlPath: params.xml.path,
+    xmlNombre: params.xml.nombre,
+    xmlHash: params.xml.hash,
+    meta: params.meta,
+  });
+  if (!error) return;
+  await registrarActividad({
+    modulo: "cxp",
+    accion: "verificacion_xml_entrante_fallida",
+    entidadId: params.documentoId,
+    entidadNombre: params.nombreArchivo,
+  });
+  throw new Error(
+    mensajeErrorAdjuntarXml(`${error.message} ${error.details ?? ""}`),
+  );
 }
 
 export async function subirFacturaEntrante(input: SubirFacturaEntranteInput): Promise<string> {
@@ -122,6 +158,12 @@ export async function subirFacturaEntrante(input: SubirFacturaEntranteInput): Pr
       entidadNombre: archivoPrincipal.name,
     });
   }
+  await verificarMetadatosDelAlta({
+    documentoId: data.id,
+    xml: xmlSubido ?? (input.xml && !input.pdf ? principal : null),
+    meta: input.meta ?? null,
+    nombreArchivo: archivoPrincipal.name,
+  });
   await registrarActividad({
     modulo: "cxp",
     accion: "subir_factura_entrante",

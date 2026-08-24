@@ -5,6 +5,9 @@
 -- `adjuntar_xml_factura_entrante(...)` deja de estar disponible para
 -- `authenticated`, de modo que un cliente ya no puede declarar metadatos
 -- fiscales de otro CFDI.
+-- FIX3 (tanda 3): el UPDATE sella metadatos_verificados=true y la RPC levanta
+-- la GUC transaccional `app.entrante_xml_verificado` (extensión de la
+-- verificación server-side al alta inicial del buzón).
 -- Al modificar: edita ESTE archivo y genera la migración con el mismo cuerpo.
 
 CREATE OR REPLACE FUNCTION public.adjuntar_xml_entrante_verificado(
@@ -79,6 +82,12 @@ BEGIN
       USING ERRCODE = '23514';
   END IF;
 
+  -- FIX3 (BUG-18 alta inicial): los metadatos vienen RE-PARSEADOS en servidor
+  -- por la edge; al escribirlos quedan sellados como verificados. El sello lo
+  -- autoriza la GUC transaccional que levanta ESTA RPC — el trigger
+  -- trg_entrante_meta_no_verificada fuerza false en cualquier otra vía.
+  PERFORM set_config('app.entrante_xml_verificado', 'on', true);
+
   UPDATE public.embarque_facturas_entrantes
      SET xml_path = p_xml_path,
          xml_nombre = p_xml_nombre,
@@ -88,7 +97,8 @@ BEGIN
          folio_serie = p_folio_serie,
          fecha_emision = p_fecha_emision,
          total_detectado = p_total_detectado,
-         moneda_detectada = p_moneda_detectada
+         moneda_detectada = p_moneda_detectada,
+         metadatos_verificados = true
    WHERE id = p_documento_id
      AND organization_id = v_org
      AND estado = 'por_capturar'

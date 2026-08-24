@@ -3,17 +3,23 @@
 -- (canon public.nc_aplicadas_en_moneda_factura), tolerancia unificada en 0.005
 -- (medio centavo, igual que tg_pago_factura_no_sobrepago) y guard de fecha
 -- futura al alta del cobro (espejo de LC_LOTE_FECHA_FUTURA).
+-- FIX3 (M-4): el guard de fecha futura cubre INSERT y UPDATE (fecha_pago sale
+-- de la lista "sólo metadatos"), nueva regla LC_PAGO_FECHA_PREVIA_EMISION
+-- (paridad con el lote CxC) y la función pasa a SECURITY DEFINER para poder
+-- llamar al canon de NCs tras el REVOKE de los helpers a `authenticated`.
 -- Al modificar: edita ESTE archivo y genera la migración con el mismo cuerpo.
 
 CREATE OR REPLACE FUNCTION public.assert_factura_viva_para_pago()
  RETURNS trigger
  LANGUAGE plpgsql
+ SECURITY DEFINER
  SET search_path TO 'public'
 AS $function$
 DECLARE
   v_estado text;
   v_cancel text;
   v_total numeric;
+  v_fecha_emision date;
   v_pagos_otros numeric;
   v_ncs numeric;
   v_saldo_disponible_previo numeric;
@@ -37,6 +43,8 @@ BEGIN
       AND NEW.tipo_cambio IS NOT DISTINCT FROM OLD.tipo_cambio
       AND NEW.ret_isr IS NOT DISTINCT FROM OLD.ret_isr
       AND NEW.ret_iva IS NOT DISTINCT FROM OLD.ret_iva
+      -- FIX3 (M-4): un cambio de fecha ya no es "sólo metadatos".
+      AND NEW.fecha_pago IS NOT DISTINCT FROM OLD.fecha_pago
       AND OLD.deleted_at IS NULL
     );
     IF v_solo_metadatos THEN
@@ -46,7 +54,8 @@ BEGIN
 
   -- Ola 1: espejo de LC_LOTE_FECHA_FUTURA (cobro en lote). Un cobro con fecha
   -- futura ensucia aging, REP y reportes de flujo.
-  IF TG_OP = 'INSERT' AND NEW.fecha_pago IS NOT NULL AND NEW.fecha_pago > CURRENT_DATE THEN
+  -- FIX3 (M-4): aplica también en UPDATE.
+  IF NEW.fecha_pago IS NOT NULL AND NEW.fecha_pago > CURRENT_DATE THEN
     RAISE EXCEPTION 'LC_PAGO_FECHA_FUTURA: la fecha del cobro no puede ser futura'
       USING ERRCODE = 'check_violation',
             HINT    = json_build_object('fecha_pago', NEW.fecha_pago)::text;
@@ -55,8 +64,9 @@ BEGIN
   -- FIX-23: bloquear la factura padre para serializar pagos concurrentes.
   PERFORM 1 FROM public.facturas WHERE id = NEW.factura_id FOR UPDATE;
 
-  SELECT estado::text, COALESCE(total, 0), COALESCE(cancellation_status, 'none')
-    INTO v_estado, v_total, v_cancel
+  SELECT estado::text, COALESCE(total, 0), COALESCE(cancellation_status, 'none'),
+         fecha_emision
+    INTO v_estado, v_total, v_cancel, v_fecha_emision
   FROM public.facturas
   WHERE id = NEW.factura_id;
 
@@ -70,6 +80,19 @@ BEGIN
     RAISE EXCEPTION 'LC_FACTURA_EN_CANCELACION: la factura tiene una cancelación en trámite ante el SAT y no admite cobros'
       USING ERRCODE = 'check_violation',
             HINT    = json_build_object('cancellation_status', v_cancel)::text;
+  END IF;
+
+  -- FIX3 (M-4): paridad con el lote CxC — el cobro no puede ser anterior a la
+  -- emisión de la factura. Facturas sin fecha_emision quedan fuera de la regla.
+  IF NEW.fecha_pago IS NOT NULL
+     AND v_fecha_emision IS NOT NULL
+     AND NEW.fecha_pago < v_fecha_emision THEN
+    RAISE EXCEPTION 'LC_PAGO_FECHA_PREVIA_EMISION: la fecha del cobro no puede ser anterior a la emisión de la factura'
+      USING ERRCODE = 'check_violation',
+            HINT    = json_build_object(
+              'fecha_pago', NEW.fecha_pago,
+              'fecha_emision', v_fecha_emision
+            )::text;
   END IF;
 
   SELECT COALESCE(SUM(pf.monto_aplicado_factura), 0) INTO v_pagos_otros

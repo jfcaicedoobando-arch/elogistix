@@ -515,6 +515,32 @@ jobs:
       - name: FIX B-5 - periodo de liquidacion en horario CDMX
         run: $PSQL -f supabase/tests/fix_b5_periodo_cdmx.sql
 
+      - name: FIX3 - helpers financieros sin EXECUTE para authenticated (ronda 2 P2)
+        run: $PSQL -f supabase/tests/fix3_helpers_financieros_revoke.sql
+
+      - name: FIX3 - rate limit restaurado en portal_obtener_proforma_por_token (drift ronda 2)
+        run: $PSQL -f supabase/tests/fix3_portal_proforma_ratelimit.sql
+
+      - name: FIX3 - sync_cotizacion_embarque_link valida misma org (ronda 2 P3)
+        run: $PSQL -f supabase/tests/fix3_sync_cotizacion_org.sql
+
+      - name: FIX3 - recalculo de comisiones por NC escucha deleted_at y salida de Aplicada (ronda 2 P3)
+        run: $PSQL -f supabase/tests/fix3_nc_recalcular_deleted_at.sql
+
+      - name: "FIX3 - fecha de pago individual: guard en UPDATE y no previa a emision (M-4)"
+        run: $PSQL -f supabase/tests/fix3_pago_fecha_update.sql
+
+      - name: FIX3 - triggers updated_at en las 10 tablas objetivo (M-5/O1.14)
+        run: $PSQL -f supabase/tests/fix3_updated_at_tablas.sql
+
+      - name: FIX3 - crm_propagar_conversion_cliente cross-vendedor 42501 (M-1/O7.7)
+        run: $PSQL -f supabase/tests/fix3_crm_propagar_cross_vendedor.sql
+
+      - name: FIX3 - BUG-18 alta inicial del buzon queda sin verificar + RPC vieja revocada (M-6/M-7)
+        run: $PSQL -f supabase/tests/fix3_bug18_alta_inicial.sql
+
+
+
 
 
 

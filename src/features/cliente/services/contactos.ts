@@ -6,7 +6,7 @@ import { registrarActividad } from "@/services/bitacora/registrar";
 export type ContactoCliente = Tables<"contactos_cliente">;
 
 export const CONTACTO_COLUMNS =
-  "id, cliente_id, tipo, nombre, contacto, rfc, telefono, email, direccion, ciudad, pais, organization_id, created_at, deleted_at, deleted_by" as const;
+  "id, cliente_id, tipo, nombre, contacto, rfc, telefono, email, direccion, ciudad, pais, organization_id, created_at, updated_at, deleted_at, deleted_by" as const;
 
 export async function fetchContactosCliente(clienteId: string) {
   return unwrapOr(

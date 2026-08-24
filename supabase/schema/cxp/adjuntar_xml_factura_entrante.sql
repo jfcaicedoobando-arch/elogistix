@@ -84,4 +84,9 @@ $$;
 
 REVOKE ALL ON FUNCTION public.adjuntar_xml_factura_entrante(uuid, text, text, text, text, text, text, date, numeric, text) FROM PUBLIC;
 REVOKE ALL ON FUNCTION public.adjuntar_xml_factura_entrante(uuid, text, text, text, text, text, text, date, numeric, text) FROM anon;
-GRANT EXECUTE ON FUNCTION public.adjuntar_xml_factura_entrante(uuid, text, text, text, text, text, text, date, numeric, text) TO authenticated;
+-- FIX3 (M-7): este espejo conservaba `GRANT EXECUTE ... TO authenticated`
+-- aunque la migración viva ya lo había revocado al cerrar BUG-18; re-aplicar el
+-- espejo reabría el vector en silencio. El estado canónico es SIN EXECUTE para
+-- authenticated: la escritura de metadatos fiscales pasa por la edge
+-- `adjuntar-xml-entrante` → `adjuntar_xml_entrante_verificado` (service_role).
+REVOKE EXECUTE ON FUNCTION public.adjuntar_xml_factura_entrante(uuid, text, text, text, text, text, text, date, numeric, text) FROM authenticated;

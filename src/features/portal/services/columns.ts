@@ -10,10 +10,10 @@ export const PORTAL_EMBARQUE_DETAIL_COLUMNS =
 // exponer IDs UUID de staff interno ni metadatos de borrado suave. Las queries
 // filtran `deleted_at IS NULL` para ocultar registros eliminados.
 export const PORTAL_EVENTO_COLUMNS =
-  'id, embarque_id, tipo, descripcion, ubicacion, fecha, usuario, organization_id, created_at' as const;
+  'id, embarque_id, tipo, descripcion, ubicacion, fecha, usuario, organization_id, created_at, updated_at' as const;
 
 export const PORTAL_DOCUMENTO_COLUMNS =
-  'id, embarque_id, nombre, archivo, estado, notas, organization_id, created_at' as const;
+  'id, embarque_id, nombre, archivo, estado, notas, organization_id, created_at, updated_at' as const;
 
 // B-099: `conceptos_venta` permite mostrar el TOTAL (subtotal + IVA) en la
 // lista — el mismo concepto de cifra que el detalle.

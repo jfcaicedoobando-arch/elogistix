@@ -89,8 +89,6 @@ DECLARE
     'tc_dof_vigente',
     'tc_para_documento',
     'calcular_costo_demoras',
-    'nc_aplicadas_en_moneda_factura',
-    'venta_embarque_mxn_neta',
     'saldo_cuenta_bancaria',
     'idempotency_store',
     -- ── E. Deuda real por-ID: reciben el ID de un documento que el caller
@@ -103,7 +101,7 @@ DECLARE
     '_refact_reps_bloqueantes',
     'assert_transicion_embarque',
     'cliente_requiere_autorizacion',
-    'comision_embarques_de_factura',
+    
     'convertir_proformas_a_factura_check_embarque_vivo',
     'embarque_admin_pendientes_resumen',
     'embarque_operativo_completo',
