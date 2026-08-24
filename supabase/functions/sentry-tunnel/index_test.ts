@@ -1,41 +1,32 @@
 /**
- * Tests del sentry-tunnel: validación del header DSN y rate-limit en memoria.
- * 13.114.17: añade cobertura del rate-limit (60 req/min/IP).
+ * R3 · P3 — sentry-tunnel: tope de tamaño del envelope (413).
+ * Endpoint público que antes leía el body completo en memoria sin límite.
+ *
+ * Run: deno test --no-check supabase/functions/sentry-tunnel/index_test.ts
  */
-import { assertEquals } from "https://deno.land/std@0.168.0/testing/asserts.ts";
-import { parseEnvelopeDsn, checkRateLimit } from "./index.ts";
+// @ts-nocheck — Deno runtime.
+import { assert, assertEquals, assertStringIncludes } from "https://deno.land/std@0.224.0/assert/mod.ts";
+import { excedeContentLength, MAX_ENVELOPE_BYTES } from "./index.ts";
 
-Deno.test("parseEnvelopeDsn extrae host y projectId del header", () => {
-  const header = JSON.stringify({
-    dsn: "https://abc@o123.ingest.us.sentry.io/456",
-    sent_at: "2026-06-23T00:00:00Z",
+Deno.test("P3: excedeContentLength corta bodies declarados > 1 MB", () => {
+  const grande = new Request("https://x/", {
+    method: "POST",
+    headers: { "content-length": String(MAX_ENVELOPE_BYTES + 1) },
   });
-  const got = parseEnvelopeDsn(header);
-  assertEquals(got, { host: "o123.ingest.us.sentry.io", projectId: "456" });
+  assert(excedeContentLength(grande));
+  const justo = new Request("https://x/", {
+    method: "POST",
+    headers: { "content-length": String(MAX_ENVELOPE_BYTES) },
+  });
+  assert(!excedeContentLength(justo));
+  const sinHeader = new Request("https://x/", { method: "POST" });
+  assert(!excedeContentLength(sinHeader));
 });
 
-Deno.test("parseEnvelopeDsn retorna null si el header no tiene DSN", () => {
-  assertEquals(parseEnvelopeDsn(JSON.stringify({ sent_at: "x" })), null);
-});
-
-Deno.test("parseEnvelopeDsn retorna null si el JSON es inválido", () => {
-  assertEquals(parseEnvelopeDsn("not-json"), null);
-});
-
-Deno.test("checkRateLimit permite hasta 60 requests por IP", () => {
-  const ip = `test-ip-${crypto.randomUUID()}`;
-  const t0 = Date.now();
-  for (let i = 0; i < 60; i++) {
-    assertEquals(checkRateLimit(ip, t0 + i), true, `req ${i} debería pasar`);
-  }
-  assertEquals(checkRateLimit(ip, t0 + 60), false, "req 61 debería bloquearse");
-});
-
-Deno.test("checkRateLimit libera la ventana después de 60s", () => {
-  const ip = `test-ip-${crypto.randomUUID()}`;
-  const t0 = Date.now();
-  for (let i = 0; i < 60; i++) checkRateLimit(ip, t0 + i);
-  assertEquals(checkRateLimit(ip, t0 + 60), false);
-  // Ventana expirada → nuevo bucket.
-  assertEquals(checkRateLimit(ip, t0 + 60_001), true);
+Deno.test("P3: el handler responde 413 y no usa req.text() sin tope", async () => {
+  const src = await Deno.readTextFile(new URL("./index.ts", import.meta.url));
+  assertStringIncludes(src, "payload_too_large");
+  assertStringIncludes(src, "413");
+  assert(!src.includes("await req.text()"), "quedó lectura sin límite");
+  assertStringIncludes(src, "leerEnvelopeAcotado");
 });

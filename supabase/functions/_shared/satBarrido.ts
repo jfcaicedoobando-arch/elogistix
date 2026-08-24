@@ -121,6 +121,28 @@ export async function cargarFacturasPorAntiguedadVerificacion(
   return (data ?? []) as unknown as FilaFactura[];
 }
 
+/**
+ * R3 · P2 — Patch de persistencia del barrido SAT. `uuid_verificado` sólo
+ * cambia con un VEREDICTO definitivo del SAT (Vigente/Cancelado/No
+ * Encontrado). Un estatus transitorio (`Error`: SAT caído/timeout; `No
+ * verificable`: expresión rechazada) es indeterminado y NO debe revertir en
+ * masa banderas legítimas durante un outage — se registra el estatus y la
+ * fecha para reintentar en la siguiente corrida, conservando el valor previo.
+ * Extraída como función pura para testearla sin red.
+ */
+export function patchVerificacionSat(
+  estatus: EstatusSat,
+  fechaIso: string,
+): { uuid_verificado?: boolean; uuid_estatus_sat: EstatusSat; uuid_verificado_fecha: string } {
+  const esVeredictoDefinitivo =
+    estatus === "Vigente" || estatus === "Cancelado" || estatus === "No Encontrado";
+  return {
+    ...(esVeredictoDefinitivo ? { uuid_verificado: estatus === "Vigente" } : {}),
+    uuid_estatus_sat: estatus,
+    uuid_verificado_fecha: fechaIso,
+  };
+}
+
 export async function procesarFactura(
   admin: SupabaseClient,
   f: FilaFactura,
@@ -152,11 +174,7 @@ export async function procesarFactura(
 
   const { error } = await admin
     .from("proveedor_facturas")
-    .update({
-      uuid_verificado: res.estatus === "Vigente",
-      uuid_estatus_sat: res.estatus,
-      uuid_verificado_fecha: new Date().toISOString(),
-    })
+    .update(patchVerificacionSat(res.estatus, new Date().toISOString()))
     .eq("id", f.id);
   if (error) out.fallos.push({ id: f.id, motivo: `No se pudo guardar: ${error.message}` });
 }

@@ -4,8 +4,8 @@
  */
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { corsHeaders } from "../_shared/cors.ts";
-import { authenticate } from "../_shared/auth.ts";
-import { wrapEdgeHandler } from "../_shared/sentry.ts";
+import { authenticate, type AuthContext } from "../_shared/auth.ts";
+import { wrapEdgeHandler, captureEdgeException } from "../_shared/sentry.ts";
 import {
   badRequest,
   jsonResponse,
@@ -34,6 +34,39 @@ async function authOrError(req: Request) {
   }
 }
 
+/** R3 · P3 — dedupe por (cotización, estado) + tope por usuario portal. */
+async function checkThrottle(
+  ctx: AuthContext,
+  cotizacionId: string,
+  estado: string,
+): Promise<Response | null> {
+  const reglas = [
+    { key: `cotizacion-respuesta:${cotizacionId}:${estado}`, windowSeconds: 600, max: 1, duplicada: true },
+    { key: `cotizacion-respuesta:user:${ctx.userId}`, windowSeconds: 3600, max: 30, duplicada: false },
+  ];
+  for (const regla of reglas) {
+    const { data, error } = await ctx.adminClient.rpc("check_ratelimit", {
+      p_key: regla.key,
+      p_window_seconds: regla.windowSeconds,
+      p_max: regla.max,
+    });
+    if (error) {
+      await captureEdgeException(new Error(`check_ratelimit failed: ${error.message}`), {
+        fn: "notificar-respuesta-cotizacion",
+      });
+      continue; // fail-open: la notificación legítima no se pierde
+    }
+    const res = data as { ok?: boolean } | null;
+    if (res?.ok === false) {
+      return regla.duplicada
+        // Misma respuesta ya notificada hace <10 min: idempotente, no es error.
+        ? jsonResponse({ sent: 0, deduplicated: true })
+        : jsonResponse({ error: "Demasiadas notificaciones; intenta más tarde" }, 429);
+    }
+  }
+  return null;
+}
+
 Deno.serve(
   wrapEdgeHandler("notificar-respuesta-cotizacion", async (req) => {
     if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
@@ -48,6 +81,14 @@ Deno.serve(
     const auth = await authOrError(req);
     if (auth.error) return auth.error;
     const ctx = auth.ctx!;
+
+    // R3 · P3: freno de frecuencia. Un usuario portal podía invocar en bucle
+    // con el mismo cotizacion_id y cada llamada reenviaba correos a TODOS los
+    // operadores de la org. Dedupe por (cotización, estado) 10 min + tope por
+    // usuario. Fail-open con captura a Sentry: si la RPC falta, la notificación
+    // legítima no debe perderse.
+    const throttle = await checkThrottle(ctx, parsed.cotizacionId, parsed.estado);
+    if (throttle) return throttle;
 
     const { data: operadores, error: rpcErr } = await ctx.anonClient.rpc(
       "get_operadores_para_cotizacion",

@@ -2,6 +2,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0'
 import { wrapEdgeHandler } from "../_shared/sentry.ts"
 import { corsHeaders } from "../_shared/cors.ts"
 import { extractToken } from './tokenExtractor.ts'
+import { maskEmail } from '../_shared/redact.ts'
 
 function jsonResponse(data: Record<string, unknown>, status = 200): Response {
   return new Response(JSON.stringify(data), {
@@ -61,10 +62,10 @@ Deno.serve(wrapEdgeHandler("handle-email-unsubscribe", async (req) => {
     )
 
   if (suppressError) {
-    console.error('Failed to suppress email', { error: suppressError, email: tokenRecord.email })
+    console.error('Failed to suppress email', { error: suppressError, email: maskEmail(tokenRecord.email) })
     return jsonResponse({ error: 'Failed to process unsubscribe' }, 500)
   }
 
-  console.log('Email unsubscribed', { email: tokenRecord.email })
+  console.log('Email unsubscribed', { email: maskEmail(tokenRecord.email) })
   return jsonResponse({ success: true })
 }))

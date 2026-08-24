@@ -14,6 +14,8 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { corsHeaders } from "../_shared/cors.ts";
 import { wrapEdgeHandler } from "../_shared/sentry.ts";
 import { jsonResponse } from "../_shared/response.ts";
+import { tomarCronLock, soltarCronLock } from "../_shared/cronLock.ts";
+import { timingSafeEqual } from "../_shared/timingSafe.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -42,12 +44,28 @@ Deno.serve(wrapEdgeHandler("rep-retry-nocturno", async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
   // Cron-only endpoint: exigimos X-Cron-Secret (mismo patrón que auditoria-snapshot-daily).
-  if (!CRON_SECRET || req.headers.get("X-Cron-Secret") !== CRON_SECRET) {
+  // R3 · P3: comparación constante en tiempo (patrón _shared/timingSafe.ts).
+  if (!CRON_SECRET || !timingSafeEqual(req.headers.get("X-Cron-Secret") ?? "", CRON_SECRET)) {
     return jsonResponse({ error: "unauthorized" }, 401);
   }
 
   const admin = createClient(SUPABASE_URL, SERVICE_KEY, { auth: { persistSession: false } });
 
+  // R3 · P3: mutex anti-traslape — dos corridas concurrentes pasaban el
+  // SELECT de dedupe y una reventaba el batch completo con 23505 (alertas
+  // REP perdidas). "error" = RPC no disponible → fail-open capturado en
+  // Sentry (la inserción fila a fila tolerante a 23505 sigue protegiendo).
+  const lock = await tomarCronLock(admin, "rep-retry-nocturno", 3600);
+  if (lock === "ocupado") return jsonResponse({ ok: true, skipped: "locked" });
+
+  try {
+    return await ejecutar(admin);
+  } finally {
+    if (lock === "tomado") await soltarCronLock(admin, "rep-retry-nocturno");
+  }
+}));
+
+async function ejecutar(admin: ReturnType<typeof createClient>): Promise<Response> {
   const { data: pendientes, error } = await admin
     .from("v_pagos_rep_pendientes")
     .select("pago_id, factura_id, factura_numero, factura_serie, organization_id, dias_restantes, fecha_limite_rep, monto_aplicado_factura, moneda")
@@ -95,8 +113,25 @@ Deno.serve(wrapEdgeHandler("rep-retry-nocturno", async (req) => {
   const nuevas = alertas.filter((a) => !abiertos.has(a.dedupe_key));
   if (nuevas.length === 0) return jsonResponse({ ok: true, revisados: rows.length, alertas: 0, reabiertas: 0 });
 
-  const { error: upErr } = await admin.from("alertas_sistema").insert(nuevas);
-  if (upErr) return jsonResponse({ error: "insert_failed", detail: upErr.message }, 500);
+  // R3 · P3: inserción fila a fila tolerante a 23505. El índice único parcial
+  // de dedupe_key no es inferible por ON CONFLICT (42P10), así que un choque
+  // de dedupe se detecta por código y se OMITE sólo esa fila — antes un solo
+  // duplicado reventaba el batch completo y se perdían TODAS las alertas de
+  // la corrida.
+  let insertadas = 0;
+  let omitidas = 0;
+  for (const alerta of nuevas) {
+    const { error: upErr } = await admin.from("alertas_sistema").insert(alerta);
+    if (!upErr) {
+      insertadas += 1;
+      continue;
+    }
+    if (upErr.code === "23505") {
+      omitidas += 1;
+      continue;
+    }
+    return jsonResponse({ error: "insert_failed", detail: upErr.message, insertadas }, 500);
+  }
 
-  return jsonResponse({ ok: true, revisados: rows.length, alertas: nuevas.length });
-}));
+  return jsonResponse({ ok: true, revisados: rows.length, alertas: insertadas, omitidas_dedupe: omitidas });
+}

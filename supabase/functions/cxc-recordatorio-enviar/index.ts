@@ -164,13 +164,23 @@ function buildTemplateData(
   };
 }
 
+// R3 · P2: ventana de idempotencia — un doble clic / reintento dentro de la
+// misma ventana reutiliza el message_id, y la cola deduplica por
+// email_send_log (isAlreadySent) en vez de enviar dos correos al cliente.
+export const VENTANA_IDEMPOTENCIA_MS = 10 * 60 * 1000;
+
+export function messageIdRecordatorio(facturaId: string, canal: string, now: number = Date.now()): string {
+  const ventana = Math.floor(now / VENTANA_IDEMPOTENCIA_MS);
+  return `recordatorio-${facturaId}-${canal}-${ventana}`;
+}
+
 async function sendRecordatorio(
   supabaseUrl: string,
   serviceRoleKey: string,
   destinatario: string,
   templateData: TemplateData,
+  messageId: string,
 ): Promise<void> {
-  const messageId = `recordatorio-${templateData.numero}-${Date.now()}`;
   const sendUrl = `${supabaseUrl}/functions/v1/send-transactional-email`;
   const sendResp = await fetch(sendUrl, {
     method: 'POST',
@@ -239,6 +249,14 @@ Deno.serve(wrapEdgeHandler('cxc-recordatorio-enviar', async (req) => {
       loadOrgName(supabaseAdmin, factura.organization_id),
     ]);
 
+    const templateData = buildTemplateData(factura, orgName, perfil, nota);
+    // R3 · P2: PRIMERO se envía (encola) y SÓLO si tuvo éxito se registra el
+    // recordatorio — antes la fila quedaba como "enviado" aunque el envío
+    // fallara (historial de cobranza falso). El message_id es estable por
+    // (factura, canal, ventana de 10 min) para deduplicar dobles clics.
+    const messageId = messageIdRecordatorio(factura.id, canal);
+    await sendRecordatorio(supabaseUrl, serviceRoleKey, destinatario, templateData, messageId);
+
     const { error: insertError } = await supabaseAdmin.from('factura_recordatorios').insert({
       factura_id: factura.id,
       organization_id: factura.organization_id,
@@ -246,10 +264,14 @@ Deno.serve(wrapEdgeHandler('cxc-recordatorio-enviar', async (req) => {
       canal,
       nota: nota ?? null,
     });
-    if (insertError) throw new Error(`500:Error al guardar recordatorio: ${insertError.message}`);
-
-    const templateData = buildTemplateData(factura, orgName, perfil, nota);
-    await sendRecordatorio(supabaseUrl, serviceRoleKey, destinatario, templateData);
+    if (insertError) {
+      // El correo YA salió: no devolvemos 500 al usuario (reintentaría y
+      // duplicaría); el fallo de historial queda en logs/Sentry.
+      console.error('cxc-recordatorio-enviar: envío OK pero falló el registro', {
+        factura_id: factura.id,
+        error: insertError.message,
+      });
+    }
 
     return corsJson({ ok: true, enviado_a: destinatario }, 200, req);
   } catch (err) {

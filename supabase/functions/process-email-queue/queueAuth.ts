@@ -4,6 +4,7 @@
  */
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0'
 import { timingSafeEqual } from '../_shared/timingSafe.ts'
+import { registrarEstadoEmail } from '../_shared/emailSendLog.ts'
 
 declare const Deno: { env: { get(key: string): string | undefined } }
 
@@ -115,12 +116,13 @@ export async function moveToDlq(
   reason: string,
 ): Promise<void> {
   const payload = msg.message
-  await supabase.from('email_send_log').insert({
-    message_id: payload.message_id,
-    template_name: (payload.label || queue) as string,
-    recipient_email: payload.to,
+  // R3 · P2: upsert por message_id (el insert repetido reventaba 23505).
+  await registrarEstadoEmail(supabase, {
+    messageId: payload.message_id,
+    templateName: (payload.label || queue) as string,
+    recipientEmail: payload.to,
     status: 'dlq',
-    error_message: reason,
+    errorMessage: reason,
   })
   const { error } = await supabase.rpc('move_to_dlq', {
     source_queue: queue,
@@ -152,11 +154,13 @@ export async function loadFailedAttempts(
   const result = new Map<string, number>()
   if (messageIds.length === 0) return result
 
+  // R3 · P2: con el upsert por message_id ya no hay una fila por fallo; el
+  // conteo vive en la columna `intentos` (la incrementa email_send_log_touch).
   const { data: failedRows, error } = await supabase
     .from('email_send_log')
-    .select('message_id')
+    .select('message_id, intentos')
     .in('message_id', messageIds)
-    .eq('status', 'failed')
+    .in('status', ['failed', 'rate_limited'])
 
   if (error) {
     console.error('Failed to load failed-attempt counters', { queue, error })
@@ -165,7 +169,8 @@ export async function loadFailedAttempts(
   for (const row of failedRows ?? []) {
     const id = row?.message_id
     if (typeof id !== 'string' || !id) continue
-    result.set(id, (result.get(id) ?? 0) + 1)
+    const intentos = Number((row as { intentos?: number }).intentos ?? 1)
+    result.set(id, Math.max(result.get(id) ?? 0, Number.isFinite(intentos) ? intentos : 1))
   }
   return result
 }

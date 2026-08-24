@@ -25,11 +25,13 @@ async function buildFailedAttemptsMap(
 ): Promise<Map<string, number>> {
   const map = new Map<string, number>()
   if (messageIds.length === 0) return map
+  // R3 · P2: con el upsert por message_id ya no hay una fila por fallo; el
+  // conteo vive en la columna `intentos` (la incrementa email_send_log_touch).
   const { data: failedRows, error } = await supabase
     .from('email_send_log')
-    .select('message_id')
+    .select('message_id, intentos')
     .in('message_id', messageIds)
-    .eq('status', 'failed')
+    .in('status', ['failed', 'rate_limited'])
   if (error) {
     console.error('Failed to load failed-attempt counters', { queue, error })
     return map
@@ -37,7 +39,8 @@ async function buildFailedAttemptsMap(
   for (const row of failedRows ?? []) {
     const id = row?.message_id
     if (typeof id !== 'string' || !id) continue
-    map.set(id, (map.get(id) ?? 0) + 1)
+    const intentos = Number((row as { intentos?: number }).intentos ?? 1)
+    map.set(id, Math.max(map.get(id) ?? 0, Number.isFinite(intentos) ? intentos : 1))
   }
   return map
 }

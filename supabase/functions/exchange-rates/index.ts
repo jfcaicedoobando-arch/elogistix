@@ -17,6 +17,7 @@ import { handlePreflight } from "../_shared/cors.ts";
 import { jsonResponse } from "../_shared/response.ts";
 import { createLogger } from "../_shared/logger.ts";
 import { captureEdgeException, wrapEdgeHandler } from "../_shared/sentry.ts";
+import { limitarPeticionesPublicas } from "../_shared/ratelimit.ts";
 import {
   extraerPublicacionDof as dofPublicacion,
   extraerUltimoTC as ultimoTC,
@@ -36,6 +37,8 @@ export const FALLBACK = { usdMxn: 17.25, eurMxn: 18.5, es_fallback: true } as co
 const FETCH_TIMEOUT_MS = 6000;
 const CACHE_TTL_MS = 12 * 60 * 60 * 1000; // 12 h
 const CACHE_TTL_HISTORICO_MS = 30 * 24 * 60 * 60 * 1000; // 30 días
+// R3 · P3: tope de entradas del caché histórico en memoria del aislado.
+const MAX_CACHE_HISTORICO = 400;
 
 // Re-exports para compatibilidad con tests y consumidores previos.
 export function extraerUltimoTC(data: BanxicoResponse): number | null {
@@ -206,7 +209,15 @@ async function manejarExchangeRates(req: Request): Promise<Response> {
       const ttl = Math.min(CACHE_TTL_MS, msHastaMedianocheMx(new Date()));
       cacheHoyRef = { rates, expiresAt: Date.now() + ttl };
     }
-    else cacheHistorico.set(key, { rates, expiresAt: Date.now() + CACHE_TTL_HISTORICO_MS });
+    else {
+      // R3 · P3: el Map vive en el aislado — tope de entradas para que un
+      // atacante iterando fechas no infle la memoria (evicción FIFO).
+      if (cacheHistorico.size >= MAX_CACHE_HISTORICO) {
+        const primero = cacheHistorico.keys().next().value;
+        if (primero !== undefined) cacheHistorico.delete(primero);
+      }
+      cacheHistorico.set(key, { rates, expiresAt: Date.now() + CACHE_TTL_HISTORICO_MS });
+    }
   };
 
   // 1) Tabla interna alimentada por el cron `tc-dof-diario`.
@@ -219,7 +230,23 @@ async function manejarExchangeRates(req: Request): Promise<Response> {
     return jsonResponse(sellar(deTabla));
   }
 
-  // 2) Banxico en vivo.
+  // 2) Banxico en vivo — R3 · P3: endpoint PÚBLICO; sin freno, un atacante
+  // iterando `?fecha=` distintas (que saltan el caché) agota la cuota del
+  // token SIE. Rate limit persistente por IP + global (fail-CLOSED, patrón
+  // EC-3 de _shared/ratelimit.ts) sólo en el camino que pega a Banxico: los
+  // hits de caché y de tabla interna no se penalizan.
+  const supabaseUrl = Deno.env.get("SUPABASE_URL");
+  const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  if (supabaseUrl && serviceKey) {
+    const admin = createClient(supabaseUrl, serviceKey, { auth: { persistSession: false } });
+    const corte = await limitarPeticionesPublicas(admin, req, {
+      fn: "exchange-rates",
+      porIp: { windowSeconds: 60, max: 30 },
+      global: { windowSeconds: 60, max: 300 },
+    });
+    if (corte) return corte;
+  }
+
   const token = Deno.env.get("BANXICO_SIE_TOKEN");
   if (!token) {
     console.warn("exchange-rates: BANXICO_SIE_TOKEN no configurado — usando fallback");

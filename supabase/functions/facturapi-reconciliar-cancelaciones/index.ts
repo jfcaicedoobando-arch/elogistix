@@ -9,6 +9,7 @@ import { wrapEdgeHandler, captureEdgeException } from "../_shared/sentry.ts";
 import { getFacturapiClient, withFacturapiTimeout } from "../_shared/facturapiClient.ts";
 import { registrarBitacoraEdge } from "../_shared/bitacora.ts";
 import { jsonResponse } from "../_shared/response.ts";
+import { tomarCronLock, soltarCronLock } from "../_shared/cronLock.ts";
 import { validarRequest, cargarPendientes, type Pendientes } from "./entrada.ts";
 import { reconcileOneRep } from "./reps.ts";
 import {
@@ -287,10 +288,20 @@ Deno.serve(wrapEdgeHandler("facturapi-reconciliar-cancelaciones", async (req) =>
 
   const supabase = createClient(SUPABASE_URL, SERVICE_KEY, { auth: { persistSession: false } });
 
-  const pendientes = await cargarPendientes(supabase);
-  if (!pendientes.ok) return pendientes.res;
+  // R3 · P3: mutex anti-traslape — corre cada 30 min; dos corridas
+  // concurrentes duplican retrieves a Facturapi y parches de BD. "error" =
+  // RPC no disponible → fail-open capturado en Sentry.
+  const lock = await tomarCronLock(supabase, "facturapi-reconciliar-cancelaciones", 1800);
+  if (lock === "ocupado") return jsonResponse({ ok: true, skipped: "locked" });
 
-  const resumen = await reconciliarPorOrg(supabase, pendientes.data);
-  return jsonResponse({ ok: true, resumen });
+  try {
+    const pendientes = await cargarPendientes(supabase);
+    if (!pendientes.ok) return pendientes.res;
+
+    const resumen = await reconciliarPorOrg(supabase, pendientes.data);
+    return jsonResponse({ ok: true, resumen });
+  } finally {
+    if (lock === "tomado") await soltarCronLock(supabase, "facturapi-reconciliar-cancelaciones");
+  }
 }));
 

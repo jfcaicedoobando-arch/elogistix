@@ -1,4 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0'
+import { maskEmail } from '../_shared/redact.ts'
 
 function generateToken(): string {
   const bytes = new Uint8Array(32)
@@ -23,7 +24,7 @@ export async function getOrCreateUnsubscribeToken(
     .maybeSingle()
 
   if (lookupError) {
-    console.error('Token lookup failed', { error: lookupError, email: normalizedEmail })
+    console.error('Token lookup failed', { error: lookupError, email: maskEmail(normalizedEmail) })
     return { tokenError: 'Failed to look up unsubscribe token' }
   }
 
@@ -31,7 +32,7 @@ export async function getOrCreateUnsubscribeToken(
 
   if (existing?.used_at) {
     // Token used but email not in suppressed list — safety fallback
-    console.warn('Unsubscribe token already used but email not suppressed', { email: normalizedEmail })
+    console.warn('Unsubscribe token already used but email not suppressed', { email: maskEmail(normalizedEmail) })
     return { suppressed: true }
   }
 
