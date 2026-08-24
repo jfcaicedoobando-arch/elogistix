@@ -125,6 +125,12 @@ export async function subirFacturaEntrante(input: SubirFacturaEntranteInput): Pr
       entidadNombre: archivoPrincipal.name,
     });
   }
+  await verificarMetadatosDelAlta({
+    documentoId: data.id,
+    xml: xmlSubido ?? (input.xml && !input.pdf ? principal : null),
+    meta: input.meta ?? null,
+    nombreArchivo: archivoPrincipal.name,
+  });
   await registrarActividad({
     modulo: "cxp",
     accion: "subir_factura_entrante",
