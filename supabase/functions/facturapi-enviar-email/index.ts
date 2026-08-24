@@ -163,6 +163,48 @@ function isValidEmail(e: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
 }
 
+type DestinatarioOk = { email: string; emailDistintoSugerido: boolean };
+
+/**
+ * Resuelve y autoriza el destinatario del correo. Devuelve un `Response` de
+ * error o el email final. Extraído del handler para mantener la complejidad
+ * ciclomática bajo el límite del lint.
+ */
+async function resolverDestinatarioAutorizado(args: {
+  supabase: SupabaseClient;
+  json: (body: unknown, status?: number) => Response;
+  userId: string;
+  userEmail: string | undefined;
+  organizationId: string;
+  clienteId: string | null;
+  emailSolicitado?: string;
+}): Promise<Response | DestinatarioOk> {
+  const { supabase, json, organizationId, clienteId } = args;
+  const resolucion = await resolveEmail(supabase, clienteId ?? "", args.emailSolicitado);
+  const email = resolucion.email;
+  if (!email) return json({ error: "missing_email", message: "El cliente no tiene email registrado." }, 422);
+  if (!isValidEmail(email)) return json({ error: "invalid_email", message: "Email inválido." }, 400);
+
+  // B-4: destinatario manual ajeno al cliente exige rol con envío a terceros.
+  if (resolucion.fuente === "override") {
+    const bloqueo = await bloqueoDestinatarioOverride({
+      supabase,
+      userId: args.userId,
+      userEmail: args.userEmail,
+      organizationId,
+      clienteId,
+      email,
+    });
+    if (bloqueo) return json({ error: "forbidden_recipient", message: bloqueo }, 403);
+  }
+  return {
+    email,
+    emailDistintoSugerido: Boolean(
+      resolucion.emailSugerido && email.toLowerCase() !== resolucion.emailSugerido.toLowerCase(),
+    ),
+  };
+}
+
 Deno.serve(wrapEdgeHandler("facturapi-enviar-email", async (req) => {
   // EF-10: endpoints con JWT usan CORS de whitelist (guía _shared/cors.ts).
   const preflight = handlePreflightStrict(req);
@@ -188,27 +230,17 @@ Deno.serve(wrapEdgeHandler("facturapi-enviar-email", async (req) => {
     return json({ error: "forbidden" }, 403);
   }
 
-  const resolucion = await resolveEmail(supabase, target.data.clienteId, body.email);
-  const email = resolucion.email;
-  if (!email) return json({ error: "missing_email", message: "El cliente no tiene email registrado." }, 422);
-  if (!isValidEmail(email)) return json({ error: "invalid_email", message: "Email inválido." }, 400);
-
-  const overrideManual = resolucion.fuente === "override";
-  // B-4: destinatario manual ajeno al cliente exige rol con envío a terceros.
-  if (overrideManual) {
-    const bloqueo = await bloqueoDestinatarioOverride({
-      supabase,
-      userId: userData.user.id,
-      userEmail: userData.user.email,
-      organizationId: target.data.organizationId,
-      clienteId: target.data.clienteId || null,
-      email,
-    });
-    if (bloqueo) return json({ error: "forbidden_recipient", message: bloqueo }, 403);
-  }
-  const emailDistintoSugerido = Boolean(
-    resolucion.emailSugerido && email.toLowerCase() !== resolucion.emailSugerido.toLowerCase(),
-  );
+  const destinatario = await resolverDestinatarioAutorizado({
+    supabase,
+    json,
+    userId: userData.user.id,
+    userEmail: userData.user.email,
+    organizationId: target.data.organizationId,
+    clienteId: target.data.clienteId || null,
+    emailSolicitado: body.email,
+  });
+  if (destinatario instanceof Response) return destinatario;
+  const { email, emailDistintoSugerido } = destinatario;
 
   // La llave se resuelve con cliente SERVICE_ROLE (sin el JWT del usuario):
   // RLS de `facturapi_credenciales` sólo permite leer a admin/contador de la
