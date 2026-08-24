@@ -68,18 +68,24 @@ describe("services/facturas/notasCredito", () => {
     expect(payload.folio).toMatch(/^BORRADOR-\d{1,8}$/);
   });
 
-  it("cambiarEstadoNotaCredito permite Borrador→Aprobada", async () => {
+  it("cambiarEstadoNotaCredito permite Borrador→Timbrada (canon FIX2)", async () => {
     mock.setTableResult("factura_notas_credito", { data: null, error: null });
     await expect(
-      cambiarEstadoNotaCredito("nc1", "Borrador", "Aprobada"),
+      cambiarEstadoNotaCredito("nc1", "Borrador", "Timbrada"),
     ).resolves.toBeUndefined();
   });
 
-  it("cambiarEstadoNotaCredito permite Aprobada→Aplicada", async () => {
+  it("cambiarEstadoNotaCredito permite Timbrada→Aplicada", async () => {
     mock.setTableResult("factura_notas_credito", { data: null, error: null });
     await expect(
-      cambiarEstadoNotaCredito("nc1", "Aprobada", "Aplicada"),
+      cambiarEstadoNotaCredito("nc1", "Timbrada", "Aplicada"),
     ).resolves.toBeUndefined();
+  });
+
+  it("cambiarEstadoNotaCredito rechaza Borrador→Aplicada (debe timbrarse primero)", async () => {
+    await expect(
+      cambiarEstadoNotaCredito("nc1", "Borrador", "Aplicada"),
+    ).rejects.toThrow(/Transición inválida/);
   });
 
   it("cambiarEstadoNotaCredito rechaza transición inválida", async () => {
