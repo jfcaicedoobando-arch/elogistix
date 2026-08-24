@@ -112,6 +112,13 @@ export async function handleInviteClient(ctx: HandlerCtx, admin: AdminAccess): P
     return errorResponse("No autorizado para invitar usuarios a esa organización", 403, cors);
   }
 
+  // B-1: bloquear toma de cuentas existentes que no sean de portal de esta org.
+  const motivo = await validarReinvitacionPortal(adminClient, email, organization_id);
+  if (motivo) {
+    log.finish(409, "cuenta_no_reinvitable", { user_id: callerId, organization_id });
+    return errorResponse(motivo, 409, cors);
+  }
+
   const clienteOk = await ensureClienteEnOrg(adminClient, cliente_id, organization_id);
   if (!clienteOk) {
     log.finish(400, "invalid_cliente", { user_id: callerId, organization_id, payload: { cliente_id } });
