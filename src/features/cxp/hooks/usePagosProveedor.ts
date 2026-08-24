@@ -80,6 +80,8 @@ export function useActualizarPagoProveedor(facturaId: string) {
       qc.invalidateQueries({ queryKey: queryKeys.tesoreria.all });
       // Ola 12 · R3P-02: el detalle 360 del proveedor lee las mismas tablas.
       qc.invalidateQueries({ queryKey: queryKeys.proveedores.all });
+      // B-2: refrescar la bandeja "CxP por pagar" y su badge de conteo.
+      qc.invalidateQueries({ queryKey: queryKeys.bandejas.all });
       qc.invalidateQueries({ queryKey: queryKeys.bitacora.all });
     },
     onError: (error: Error) => {
