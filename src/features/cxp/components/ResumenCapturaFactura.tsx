@@ -4,7 +4,7 @@
  */
 import { ClipboardCheck } from "lucide-react";
 import { FormSection } from "./facturaFormPrimitives";
-import { formatCurrency, formatFechaSegura } from "@/lib/formatters";
+import { formatCurrency, formatFechaDia } from "@/lib/formatters";
 
 import type { FacturaFormValues } from "@/features/cxp/types";
 
@@ -36,8 +36,11 @@ export function ResumenCapturaFactura({ values, total, vinculos, onEditarDatos }
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
           <Dato label="Proveedor" value={values.provNombre} />
           <Dato label="Folio" value={values.folio} />
-          <Dato label="Emisión" value={formatFechaSegura(values.emision)} />
-          <Dato label="Vencimiento" value={formatFechaSegura(values.vencimiento)} />
+          {/* emision/vencimiento son date-only (YYYY-MM-DD): formatFechaDia las
+              ancla a mediodía UTC; formatFechaSegura(new Date) las corría un
+              día en America/Mexico_City (frontend_hunter P2). */}
+          <Dato label="Emisión" value={formatFechaDia(values.emision)} />
+          <Dato label="Vencimiento" value={formatFechaDia(values.vencimiento)} />
           <Dato label={`Total ${moneda}`} value={formatCurrency(total, moneda)} />
         </div>
         <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t pt-3">

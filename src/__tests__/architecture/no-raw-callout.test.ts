@@ -19,8 +19,10 @@ import { sync as globSync } from "fast-glob";
 const RAW_CALLOUT =
   /\bborder-(info|success|warning|destructive|primary|accent)\/[2345]0\b[^"'\n`]*\bbg-[a-z-]+\/(5|10)\b|\bbg-(info|success|warning|destructive|primary|accent)\/(5|10)\b[^"'\n`]*\bborder-[a-z-]+\/[2345]0\b/g;
 
-/** Deuda restante tras la migración de los banners de mayor visibilidad. */
-const DEUDA_CONGELADA = 145;
+/** Deuda restante tras la migración de los banners de mayor visibilidad.
+ *  FIX-R3 (review_ola3 H2): baseline real verificado con este mismo regex —
+ *  147 ocurrencias al 2026-08-31 (el baseline previo, 145, mentía por abajo). */
+const DEUDA_CONGELADA = 147;
 const HOLGURA = 10;
 const MAX_RAW_CALLOUT = DEUDA_CONGELADA + HOLGURA;
 
@@ -68,7 +70,9 @@ describe("arquitectura · no-raw-callout", () => {
   it("mantiene el tope sincronizado (si migraste banners, baja el tope)", () => {
     const { total } = contarRawCallouts();
     expect(
-      DEUDA_CONGELADA - total,
+      // FIX-R3: chequeo bidireccional — antes era unilateral y no detectaba
+      // un baseline POR DEBAJO del conteo real (145 vs 147).
+      Math.abs(DEUDA_CONGELADA - total),
       "Hay margen de sobra en el ratchet: ajusta DEUDA_CONGELADA al conteo real.",
     ).toBeLessThanOrEqual(HOLGURA);
   });

@@ -35,7 +35,7 @@ const cols: PdfColumn<RentabilidadClienteRow>[] = [
   { key: "emb", title: "Embarques", cellStyle: styles.cellQty, render: (r) => String(r.total_embarques) },
   { key: "venta", title: "Venta", cellStyle: styles.cellNumWide, render: (r) => formatCurrency(r.venta_usd, "USD") },
   { key: "costo", title: "Costo", cellStyle: styles.cellNumWide, render: (r) => formatCurrency(r.costo_usd, "USD") },
-  { key: "profit", title: "Profit", cellStyle: styles.cellNumWide, render: (r) => formatCurrency(r.profit_usd, "USD") },
+  { key: "profit", title: "Utilidad", cellStyle: styles.cellNumWide, render: (r) => formatCurrency(r.profit_usd, "USD") },
   { key: "margen", title: "Margen", cellStyle: styles.cellNum, render: (r) => `${r.margen.toFixed(1)}%` },
 ];
 

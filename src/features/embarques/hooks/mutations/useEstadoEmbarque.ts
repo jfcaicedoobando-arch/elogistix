@@ -24,15 +24,27 @@ import { useMutationWithFeedback } from '@/hooks/shared/useMutationWithFeedback'
  * requestId estable por (embarque, estado destino): dos renders (o dos
  * pestañas del mismo navegador) del mismo auto-sync reusan la llave y la RPC
  * devuelve la respuesta cacheada en vez de duplicar nota y evento.
+ *
+ * FIX-R3 (M-3 / review_ola1 B2): el Map era eterno — tras reabrir un embarque,
+ * la misma transición reusaba la llave y la RPC devolvía la respuesta cacheada
+ * SIN ejecutarse (desync silencioso UI↔BD). Ahora cada entrada tiene TTL y,
+ * cuando la RPC responde `replay: true`, la llave se invalida y se reintenta
+ * con requestId fresco para que el avance ocurra de verdad.
  */
-const requestIdsAutoSync = new Map<string, string>();
+const TTL_REQUEST_ID_AUTOSYNC_MS = 30 * 60 * 1000; // 30 min
+const requestIdsAutoSync = new Map<string, { requestId: string; creadoEn: number }>();
 function requestIdTransicion(embarqueId: string, nuevoEstado: string): string {
   const clave = `${embarqueId}:${nuevoEstado}`;
   const existente = requestIdsAutoSync.get(clave);
-  if (existente) return existente;
+  if (existente && Date.now() - existente.creadoEn < TTL_REQUEST_ID_AUTOSYNC_MS) {
+    return existente.requestId;
+  }
   const nuevo = newRequestId();
-  requestIdsAutoSync.set(clave, nuevo);
+  requestIdsAutoSync.set(clave, { requestId: nuevo, creadoEn: Date.now() });
   return nuevo;
+}
+function invalidarRequestIdTransicion(embarqueId: string, nuevoEstado: string): void {
+  requestIdsAutoSync.delete(`${embarqueId}:${nuevoEstado}`);
 }
 
 /**
@@ -102,7 +114,7 @@ export function useSyncEstadoEmbarque() {
       // códigos LC_*) vive en `src/lib/errors/lcCodes.ts` y la aplica
       // `getErrorMessage` en el wrapper `useMutationWithFeedback`.
       try {
-        await avanzarEstadoEmbarqueRpc({
+        const resultado = await avanzarEstadoEmbarqueRpc({
           embarqueId,
           nuevoEstado,
           usuarioEmail: usuarioEmail && usuarioEmail.trim() ? usuarioEmail : 'sistema',
@@ -110,6 +122,23 @@ export function useSyncEstadoEmbarque() {
           descripcionEvento: descripcionEventoCambioEstado(nuevoEstado),
           requestId: requestIdTransicion(embarqueId, nuevoEstado),
         });
+        if (resultado?.replay) {
+          // M-3: la llave estaba vieja (p. ej. el embarque se reabrió y el
+          // auto-sync sugiere la misma transición otra vez): la RPC devolvió
+          // la respuesta cacheada SIN ejecutar el avance. Se regenera la llave
+          // y se reintenta UNA vez — con requestId fresco la transición se
+          // ejecuta (o el candado la rechaza, manejado abajo) y la bitácora la
+          // escribe esta ejecución real.
+          invalidarRequestIdTransicion(embarqueId, nuevoEstado);
+          await avanzarEstadoEmbarqueRpc({
+            embarqueId,
+            nuevoEstado,
+            usuarioEmail: usuarioEmail && usuarioEmail.trim() ? usuarioEmail : 'sistema',
+            tipoEvento: tipoEventoParaEstado(nuevoEstado),
+            descripcionEvento: descripcionEventoCambioEstado(nuevoEstado),
+            requestId: requestIdTransicion(embarqueId, nuevoEstado),
+          });
+        }
       } catch (error) {
         if (esRechazoEsperado(error)) {
           // Estado sugerido por fechas que aún no procede: no es error de usuario.

@@ -30,7 +30,6 @@
 import { useMutation, useQueryClient, type UseMutationOptions } from "@tanstack/react-query";
 import type { QueryKey } from "@tanstack/react-query";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
-import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 import { getErrorMessage } from "@/lib/errors";
 
 /**
@@ -167,6 +166,9 @@ export function useMutationWithFeedback<TData = unknown, TError = Error, TVariab
         qc.setQueryData(snap.key, snap.previous);
       }
       // FIX-R2-03: traducimos códigos `LC_*` en UN solo punto (getErrorMessage).
+      // FIX-R3 (frontend_hunter P3): sin errorCode fijo — antes VALIDATION_FAILED
+      // compartía el toast id entre todas las mutations y etiquetaba mal el
+      // reporte; ahora el id sale de `errorMethod` y el código de la causa real.
       if (!silent) {
         notifyError(undefined, {
           title: errorTitle,
@@ -174,7 +176,6 @@ export function useMutationWithFeedback<TData = unknown, TError = Error, TVariab
           description: getErrorMessage(error as unknown as Error),
           error,
           method: errorMethod,
-          errorCode: ERROR_CODES.VALIDATION_FAILED,
         });
       }
       userOnError?.(error, variables, onMutateResult, context);

@@ -83,9 +83,11 @@ export function ConceptoLineaRow({
             value={cantidadTxt}
             onChange={(e) => {
               setCantidadTxt(e.target.value);
-              onActualizar(c.key, "cantidad", parseMonto(e.target.value, 1));
+              // FIX-R3: la cantidad NO es dinero — sin el opt-out, "1.500"
+              // (una cantidad con 3 decimales) se leería como 1,500.
+              onActualizar(c.key, "cantidad", parseMonto(e.target.value, 1, { puntoDeMiles: false }));
             }}
-            onBlur={() => setCantidadTxt(String(parseMonto(cantidadTxt, 1) || 1))}
+            onBlur={() => setCantidadTxt(String(parseMonto(cantidadTxt, 1, { puntoDeMiles: false }) || 1))}
             aria-label="Cantidad"
           />
         </label>

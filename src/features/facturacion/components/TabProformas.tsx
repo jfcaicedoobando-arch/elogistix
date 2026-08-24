@@ -138,14 +138,27 @@ export function TabProformas({ isInRange, estadoInicial }: {
             isLoading={c.isLoading}
             emptyMessage={
               // VF-23: el copy del empty state refleja el filtro de estado activo
-              // (bandeja "Por emitir" = ?estado=aceptada).
-              c.filtroEstado === "aceptada"
-                ? "Ninguna proforma aceptada pendiente de emitir"
-                : "No hay proformas generadas"
+              // (bandeja "Por emitir" = ?estado=aceptada). Con búsqueda activa
+              // manda el patrón «Sin resultados para…» (O3.7.6).
+              c.search.trim()
+                ? `Sin resultados para «${c.search.trim()}»`
+                : c.filtroEstado === "aceptada"
+                  ? "Ninguna proforma aceptada pendiente de emitir"
+                  : "No hay proformas generadas"
             }
             emptyState={
               c.counts.todas > 0 && c.filtered.length === 0 ? (
-                c.filtroEstado === "aceptada" ? (
+                // O3.7.6 (FIX-R3): con búsqueda activa el empty debe decir
+                // QUÉ no se encontró y ofrecer limpiar la búsqueda — antes
+                // era idéntico al estado inicial (shots/17).
+                c.search.trim() ? (
+                  <EmptyState
+                    icon={FileSpreadsheet}
+                    title={`Sin resultados para «${c.search.trim()}»`}
+                    description="Ajusta la búsqueda o límpiala para ver todas las proformas."
+                    primaryAction={{ label: "Limpiar búsqueda", onClick: () => c.setSearch("") }}
+                  />
+                ) : c.filtroEstado === "aceptada" ? (
                   <EmptyState
                     icon={FileSpreadsheet}
                     title="Ninguna proforma aceptada pendiente de emitir"

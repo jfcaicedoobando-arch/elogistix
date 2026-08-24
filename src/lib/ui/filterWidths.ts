@@ -17,6 +17,15 @@ export const FILTRO_ANCHO = {
   lg: "w-full sm:w-56",
   /** Búsqueda de texto y rangos de fecha. */
   search: "w-full sm:w-72",
+  /**
+   * Variantes auto-ajustables (O3.7.8, patrón de Leads): crecen con la
+   * etiqueta seleccionada en vez de truncarla ("Todas las vendedoras",
+   * "Accionable (≤7d o vencidas)", …) conservando el mínimo de la escala.
+   * Úsalas cuando las opciones del select tienen textos largos.
+   */
+  smAuto: "w-full sm:w-auto sm:min-w-36",
+  mdAuto: "w-full sm:w-auto sm:min-w-44",
+  lgAuto: "w-full sm:w-auto sm:min-w-56",
 } as const;
 
 export type FiltroAncho = keyof typeof FILTRO_ANCHO;

@@ -51,7 +51,7 @@ export default function ClienteSummaryCards({ embarques, cotizaciones, contactos
       variant: "warning",
     },
     {
-      label: "Profit",
+      label: "Utilidad",
       value: formatCurrencyCompact(profitUSD, "USD"),
       sublabel: "Utilidad acumulada (USD)",
       tooltip: formatCurrency(profitUSD, "USD"),

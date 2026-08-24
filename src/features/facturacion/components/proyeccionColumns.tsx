@@ -112,7 +112,7 @@ export const proyeccionColumns: ColumnDef<GrupoProyeccion, unknown>[] = defineCo
   },
   {
     id: "profit",
-    header: "Profit MXN",
+    header: "Utilidad MXN",
     accessorFn: (g) => g.profitMxn,
     enableSorting: true,
     sortingFn: sortByNumber<GrupoProyeccion>((g) => g.profitMxn),

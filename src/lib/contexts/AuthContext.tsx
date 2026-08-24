@@ -8,6 +8,7 @@ import { useAuthProfile, type CachedOrganization } from "./auth/useAuthProfile";
 import { useLoginAudit } from "./auth/useLoginAudit";
 import { signOutCurrentSession } from "@/lib/auth/signOut";
 import { purgeSessionCache, debePurgarPorCambioDeUsuario } from "@/lib/auth/purgeSessionCache";
+import { clearPersistedQueryCache } from "@/lib/browserStorage";
 
 import { registrarActividad } from "@/services/bitacora/registrar";
 import { fromDb } from "@/lib/supabase/cast";
@@ -128,6 +129,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     resetProfile();
     // EC-01: no dejar datos del tenant saliente para el siguiente usuario.
     purgeSessionCache(queryClient);
+    // FIX-R3 (frontend_hunter P3): el borrador del wizard de cotización
+    // persiste 24 h en localStorage con precios/costos/márgenes (P&L) del
+    // tenant — no debe sobrevivir al logout. Import dinámico (mismo patrón
+    // que los preloads de abajo) para no acoplar lib/contexts → features.
+    const { clearAllDrafts } = await import("@/features/cotizacion/hooks/wizard/cotizacionDraftStorage");
+    clearAllDrafts();
+    // La copia persistida del query cache (lc-query-cache-v1) tampoco queda.
+    clearPersistedQueryCache();
   }, [userId, clearLoginAudit, resetProfile, queryClient]);
 
 

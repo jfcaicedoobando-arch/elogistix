@@ -1,7 +1,11 @@
--- Fuente canónica de public.avanzar_estado_embarque
--- Regenerada desde DB. Cada cambio DEBE actualizarse aquí en el mismo PR que la migración correspondiente.
--- Ver supabase/schema/README.md.
-
+-- FIX-R3 (delta_hunter P2 + review_ola1 B2/M-3): la respuesta cacheada por
+-- idempotency_claim viaja ahora con `replay: true`. Antes el frontend no podía
+-- distinguir "transición ejecutada" de "respuesta cacheada", así que cada
+-- re-disparo del auto-sync con la misma llave escribía una bitácora
+-- "Avanzó estado de embarque" por una transición que NO ocurrió (y, tras
+-- reabrir un embarque, la UI pintaba un avance que la BD no hizo).
+-- El marcador `__idempotency_pending` (claim en vuelo) NO se marca como replay.
+-- Espejo: supabase/schema/embarques/avanzar_estado_embarque.sql
 CREATE OR REPLACE FUNCTION public.avanzar_estado_embarque(p_embarque_id uuid, p_nuevo_estado text, p_usuario_email text, p_tipo_evento text, p_descripcion_evento text, p_request_id uuid DEFAULT NULL::uuid)
  RETURNS jsonb
  LANGUAGE plpgsql
@@ -97,6 +101,4 @@ BEGIN
   PERFORM public.idempotency_store(p_request_id, v_resp);
   RETURN v_resp;
 END;
-$function$
-
-;
+$function$;

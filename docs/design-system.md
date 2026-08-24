@@ -107,6 +107,7 @@ Un escalón por rol — no se mezclan `text-lg`/`text-xl` ad-hoc en encabezados.
 | `text-body` | Cuerpo por defecto | 14 px |
 | `text-body-sm` | Cuerpo denso (celdas, listas compactas) | 13 px |
 | `text-label` | Micro-copy, chips, footnotes | 11 px |
+| `text-overline` | Micro-etiqueta en mayúsculas (eyebrow/overline) | 11 px uppercase |
 | `text-2xs` / `text-3xs` | Badges y chips mínimos | 10 px / 9 px |
 | `text-kpi` | Cifra grande de KPI | clamp 18 → 24 px |
 
@@ -114,6 +115,10 @@ Reglas:
 
 - Un solo `h1` por pantalla, siempre vía `PageHeader`/`DetailHeader`.
 - Prohibido `text-[11px]`, `text-[10px]` y similares: existe un escalón para eso.
+- Las micro-etiquetas en mayúsculas (eyebrow, overline de tarjeta) usan
+  **únicamente** `text-overline` (`src/index.css`, `@layer components`):
+  prohibido recomponerla a mano (`text-label uppercase tracking-…`); la
+  composición manual cuenta como deuda en el ratchet de uppercase (O3.5).
 - Cifras siempre con `tabular-nums` para que las columnas de dinero se alineen.
 - Montos y fechas se formatean con los helpers de `src/lib/formatters` (es-MX,
   DD/MM/YYYY), nunca a mano.
@@ -329,22 +334,23 @@ Nunca componer un badge a mano con `bg-*/15 text-*`.
 
 ---
 
-## 9. Portales y pantallas auth/legal
+## 10. Portales y pantallas auth/legal
 
 `PortalWelcomeCard`, `PortalSinCliente`, `NotFound`, `SinAcceso` y
 `LegalShell` **no** tienen una escala tipográfica propia: reutilizan los
 mismos tokens del punto 3 (`text-display`, `text-section`, `text-body`,
-`text-label`, `text-kpi`). No existen `text-page` ni `text-overline`; son
-alias que no están declarados en `tailwind.config.ts` — usa `text-display`
-para el H1 (título de bienvenida del portal, título de "Página no
-encontrada"/"Sin acceso", título de página legal) y `text-label` para
-micro-copy en mayúsculas (eyebrow de `LegalShell`).
+`text-label`, `text-overline`, `text-kpi`). No existe `text-page`; es un
+alias que no está declarado — usa `text-display` para el H1 (título de
+bienvenida del portal, título de "Página no encontrada"/"Sin acceso",
+título de página legal). Para micro-copy en mayúsculas (eyebrow de
+`LegalShell`) usa `text-overline`: sí está declarada en `src/index.css`
+(`@layer components`) y es la clase canónica de O3.5 para ese rol.
 
 | Pantalla | Antes (ad-hoc) | Ahora |
 | --- | --- | --- |
 | `NotFound` | `text-5xl font-bold` (código "404") + `text-lg font-semibold` (mensaje) | `text-kpi` (código, cifra secundaria) + `text-display` (H1) |
 | `SinAcceso` | `text-2xl font-bold tracking-tight` | `text-display` |
-| `LegalShell` | `text-4xl font-bold tracking-tight` (título) + `text-xs` (eyebrow) | `text-display` (título) + `text-label` (eyebrow) |
+| `LegalShell` | `text-4xl font-bold tracking-tight` (título) + `text-xs` (eyebrow) | `text-display` (título) + `text-overline` (eyebrow) |
 | `PortalWelcomeCard` | `text-xl font-bold tracking-tight` | `text-display` |
 | `PortalSinCliente` | `text-lg font-semibold` | `text-section` |
 

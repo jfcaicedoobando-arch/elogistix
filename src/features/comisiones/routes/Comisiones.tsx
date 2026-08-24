@@ -124,7 +124,7 @@ export default function Comisiones() {
             primary={
               <>
                 <Select value={server.v} onValueChange={setVendedora}>
-                  <SelectTrigger className={FILTRO_ANCHO.md} aria-label="Vendedora">
+                  <SelectTrigger className={FILTRO_ANCHO.mdAuto} aria-label="Vendedora">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -135,7 +135,7 @@ export default function Comisiones() {
                   </SelectContent>
                 </Select>
                 <Select value={server.estado} onValueChange={(v) => setEstado(v as EstadoUrl)}>
-                  <SelectTrigger className={FILTRO_ANCHO.md} aria-label="Estado">
+                  <SelectTrigger className={FILTRO_ANCHO.mdAuto} aria-label="Estado">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>

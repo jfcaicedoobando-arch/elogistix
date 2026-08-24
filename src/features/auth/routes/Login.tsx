@@ -9,12 +9,25 @@ import { SignupForm } from "@/features/auth/components/SignupForm";
 
 type TabKey = "login" | "signup";
 
+/**
+ * Ola 3 · O3.13 — login contextual por audiencia. El subtítulo se muestra
+ * cuando la ruta trae `?audiencia=…` (redirección directa de /portal/login o
+ * del guard `PortalProtectedRoute`/`AgenteProtectedRoute` con deep-link).
+ * El nombre de la org no está disponible sin sesión; si llega a estarlo,
+ * se puede componer "Portal de clientes — {Org}" aquí.
+ */
+const SUBTITULOS_AUDIENCIA: Record<string, string> = {
+  cliente: "Portal de clientes",
+  agente: "Portal de agentes",
+};
+
 export default function Login() {
   const [searchParams, setSearchParams] = useSearchParams();
   const initialTab: TabKey = searchParams.get("tab") === "signup" ? "signup" : "login";
   const [tab, setTab] = useState<TabKey>(initialTab);
   const [forgotOpen, setForgotOpen] = useState(false);
   const [lastEmail, setLastEmail] = useState("");
+  const subtituloAudiencia = SUBTITULOS_AUDIENCIA[searchParams.get("audiencia") ?? ""];
 
   const handleTabChange = (value: string) => {
     const next = (value === "signup" ? "signup" : "login") as TabKey;
@@ -37,11 +50,12 @@ export default function Login() {
       />
       <AuthCard title="Iniciar sesión en Libre Carga">
         {/* Ola 3 · O3.13 — login contextual: /portal/login llega con
-            ?audiencia=cliente y muestra el subtítulo de la audiencia. La
-            ruta destino se conserva vía location.state.from (LoginForm). */}
-        {searchParams.get("audiencia") === "cliente" && (
+            ?audiencia=cliente y los guards (PortalProtectedRoute /
+            AgenteProtectedRoute) redirigen con la audiencia de su portal.
+            La ruta destino se conserva vía location.state.from (LoginForm). */}
+        {subtituloAudiencia && (
           <p className="text-center text-body-sm text-muted-foreground -mt-2 mb-4">
-            Portal de clientes
+            {subtituloAudiencia}
           </p>
         )}
         <Tabs value={tab} onValueChange={handleTabChange} className="w-full">

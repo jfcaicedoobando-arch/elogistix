@@ -75,12 +75,13 @@ export function notifyError(_toast: AnyToastFn | undefined, opts: ErrorNotifyOpt
     method,
   });
 
-  const errorToastId = `err-${errorCode ?? phase ?? "generic"}`;
+  // P-05 / FIX-R3: id por código → fase → `method`; con fallback fijo "generic"
+  // dos errores sin código en <8 s se reemplazaban entre sí.
+  const errorToastId = `err-${errorCode ?? phase ?? method ?? "generic"}`;
   const dedupeKey = computeToastDedupeKey("error", computedTitle, description);
   if (!shouldSuppressDuplicateToast(dedupeKey)) {
     ERROR_TOAST_IDS.add(errorToastId);
-    // "Ver detalles" sólo tiene sentido si hay algo que mostrar; si no,
-    // omitimos la acción en vez de dejar un botón que no hace nada.
+    // "Ver detalles" sólo si hay algo que mostrar (no un botón muerto).
     const hayDetalle = shouldAttachDetails({ title: computedTitle, error, context, errorCode, method, payload, requestId });
     const detallesAction = hayDetalle ? { label: "Ver detalles", onClick: () => openErrorReport(debug) } : undefined;
     sonnerToast.error(computedTitle, {
@@ -95,8 +96,7 @@ export function notifyError(_toast: AnyToastFn | undefined, opts: ErrorNotifyOpt
     });
   }
 
-  // 13.114.20 / 13.300.7 / 13.301.59: reportamos a Sentry sólo cuando hay error
-  // real y no es autorización / validación esperada / fallo transitorio de red.
+  // 13.301.59: a Sentry sólo error real (no auth / validación / red transitoria).
   if (shouldReportToSentry(error)) {
     reportCaughtError(
       error,

@@ -61,8 +61,8 @@ export default function TablaCostosDetalle({ filas, filasMoneda, moneda, title, 
                 <DetailTableHead className="whitespace-nowrap">Proveedor</DetailTableHead>
                 <DetailTableHead className="text-right whitespace-nowrap">Costo Unit.</DetailTableHead>
                 <DetailTableHead className="text-right whitespace-nowrap">Venta</DetailTableHead>
-                <DetailTableHead className="text-right whitespace-nowrap">Profit</DetailTableHead>
-                <DetailTableHead className="text-right whitespace-nowrap">% Profit</DetailTableHead>
+                <DetailTableHead className="text-right whitespace-nowrap">Utilidad</DetailTableHead>
+                <DetailTableHead className="text-right whitespace-nowrap">% Utilidad</DetailTableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
