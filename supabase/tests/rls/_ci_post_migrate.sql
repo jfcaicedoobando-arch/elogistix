@@ -59,7 +59,16 @@ BEGIN
     'public._reprocesar_comisiones_org(uuid)',
     'public.reprocesar_comisiones_job()',
     'public.verificar_sat_semanal_job()',
-    'public.notificar_uuid_cancelado_sat(uuid, jsonb)'
+    'public.notificar_uuid_cancelado_sat(uuid, jsonb)',
+    -- FIX3 tanda 3: helpers financieros sin filtro org (ronda 2 P2) — sólo
+    -- service_role / llamadas internas DEFINER.
+    'public.venta_embarque_mxn_neta(uuid, numeric, numeric)',
+    'public.nc_aplicadas_en_moneda_factura(uuid)',
+    'public.comision_embarques_de_factura(uuid)',
+    -- FIX3 tanda 3 (BUG-18 / O5.8): metadatos fiscales del buzón CxP sólo se
+    -- escriben vía la edge (service_role).
+    'public.adjuntar_xml_factura_entrante(uuid, text, text, text, text, text, text, date, numeric, text)',
+    'public.adjuntar_xml_entrante_verificado(uuid, uuid, text, text, text, text, text, text, date, numeric, text)'
   ]
   LOOP
     IF to_regprocedure(v_fn) IS NOT NULL THEN
