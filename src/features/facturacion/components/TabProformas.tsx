@@ -13,7 +13,8 @@ import { usePermissions } from "@/hooks/shared";
 import { useMemo } from "react";
 import { todayLocalISO } from "@/lib/date/today";
 import { CargaGuard } from "@/components/shared/states/CargaGuard";
-import { mensajeVacioProformas, ProformasEmptyState } from "./proformasEmpty";
+import { mensajeVacioProformas } from "./proformasEmptyCopy";
+import { ProformasEmptyState } from "./proformasEmpty";
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 
 
