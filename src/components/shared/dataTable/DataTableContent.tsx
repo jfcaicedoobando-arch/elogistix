@@ -52,8 +52,11 @@ export function DataTableContent<T>(props: DataTableContentProps<T>) {
       <div
         ref={scrollRef}
         data-testid="datatable-scroll"
-        className="relative w-full overflow-x-auto rounded-md [scrollbar-width:thin]"
+        /* E-3 (auditoría visual 2026-08-24): colchón derecho para que la última
+           columna (p. ej. ESTADO) no quede a ras del borde bajo el degradado. */
+        className="relative w-full overflow-x-auto rounded-md pr-2 [scrollbar-width:thin]"
       >
+
         <Table className={tableClassName}>
           {showHeader && (
             <DataTableHeaderRow table={table} striped={striped} bordered={bordered} stickyHeader={stickyHeader} />
