@@ -1,8 +1,12 @@
 /**
  * Notas de crédito internas (CxC – Sprint 1).
  *
- * Flujo de estado: Borrador → Aprobada → Aplicada (resta saldo a la factura).
- * También puede ir a Cancelada desde Borrador o Aprobada.
+ * Máquina canónica (espejo EXACTO de public.guard_nc_cliente_transicion,
+ * FIX2 ronda 2):
+ *   Borrador  → {Timbrada, Cancelada}
+ *   Timbrada  → {Aplicada, Cancelada}
+ *   Aplicada  → {Cancelada}
+ *   Aprobada  → {Timbrada, Cancelada}  (legado, sólo salida)
  */
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables, TablesInsert } from "@/integrations/supabase/types";
