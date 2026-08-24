@@ -110,9 +110,9 @@ export default function Oportunidades() {
       />
 
       <Tabs defaultValue="kanban">
-        <TabsList>
-          <TabsTrigger value="kanban">Kanban</TabsTrigger>
-          <TabsTrigger value="tabla">Tabla</TabsTrigger>
+        <TabsList variant="vista">
+          <TabsTrigger variant="vista" value="kanban">Kanban</TabsTrigger>
+          <TabsTrigger variant="vista" value="tabla">Tabla</TabsTrigger>
         </TabsList>
         <TabsContent value="kanban" className="mt-4">
           {isError ? (

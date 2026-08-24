@@ -62,16 +62,16 @@ export default function Configuracion() {
       />
 
       <Tabs value={tab} onValueChange={setTab} className="space-y-4">
-        <TabsList className="flex-wrap h-auto gap-1">
+        <TabsList variant="seccion" className="flex-wrap h-auto gap-1">
           {!esContador && (
-            <TabsTrigger value="empresa" className="gap-1.5"><Building2 className="h-3.5 w-3.5" /> Empresa</TabsTrigger>
+            <TabsTrigger variant="seccion" value="empresa" className="gap-1.5"><Building2 className="h-3.5 w-3.5" /> Empresa</TabsTrigger>
           )}
-          <TabsTrigger value="facturacion" className="gap-1.5"><Receipt className="h-3.5 w-3.5" /> Facturación</TabsTrigger>
+          <TabsTrigger variant="seccion" value="facturacion" className="gap-1.5"><Receipt className="h-3.5 w-3.5" /> Facturación</TabsTrigger>
           {!esContador && (
             <>
-              <TabsTrigger value="catalogos" className="gap-1.5"><Anchor className="h-3.5 w-3.5" /> Catálogos</TabsTrigger>
-              <TabsTrigger value="operaciones" className="gap-1.5"><Scale className="h-3.5 w-3.5" /> Operaciones</TabsTrigger>
-              <TabsTrigger value="herramientas" className="gap-1.5"><Wrench className="h-3.5 w-3.5" /> Herramientas</TabsTrigger>
+              <TabsTrigger variant="seccion" value="catalogos" className="gap-1.5"><Anchor className="h-3.5 w-3.5" /> Catálogos</TabsTrigger>
+              <TabsTrigger variant="seccion" value="operaciones" className="gap-1.5"><Scale className="h-3.5 w-3.5" /> Operaciones</TabsTrigger>
+              <TabsTrigger variant="seccion" value="herramientas" className="gap-1.5"><Wrench className="h-3.5 w-3.5" /> Herramientas</TabsTrigger>
             </>
           )}
         </TabsList>
