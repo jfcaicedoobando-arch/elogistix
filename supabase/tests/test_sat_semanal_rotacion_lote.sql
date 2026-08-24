@@ -49,6 +49,14 @@ DECLARE
   v_a uuid; v_b uuid; v_c uuid;
   v_lote1 uuid[]; v_lote2 uuid[]; v_union uuid[];
 BEGIN
+  -- La RPC es sólo para service_role; si la sesión no puede ejecutarla
+  -- (sandbox local sin privilegios), se omite el caso funcional. En CI la
+  -- sesión es el owner de la base y sí lo ejecuta.
+  IF NOT has_function_privilege(
+       to_regprocedure('public.seleccionar_lote_sat_semanal(integer)'), 'EXECUTE') THEN
+    RAISE NOTICE 'CASO 3 OMITIDO: la sesión (%) no puede ejecutar la RPC', current_user;
+    RETURN;
+  END IF;
   -- Fechas antiguas explícitas: las tres orgs de prueba encabezan el orden
   -- (sat_barrido_fecha ASC) sin necesidad de tocar las orgs preexistentes,
   -- que hoy tienen NULL (nunca barridas) — se les estampa fecha al primer
