@@ -37,7 +37,6 @@ interface ConceptoCostoRow {
 
 interface EmbarqueMeta {
   cotizacion_id: string | null;
-  tarifa_delta_jsonb: unknown;
   organization_id: string;
   version_aceptada: number | null;
 }
