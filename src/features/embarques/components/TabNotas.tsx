@@ -14,6 +14,7 @@ import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { ActividadFeedTimeline } from "@/features/embarques/components/ActividadFeedTimeline";
 import { ActividadFiltros } from "@/features/embarques/components/ActividadFiltros";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
+import { ErrorStateInline } from "@/components/empty/ErrorStateInline";
 import { MessageSquare } from "lucide-react";
 
 interface Props {
@@ -97,12 +98,12 @@ export function TabNotas({ embarqueId, expediente }: Props) {
         {isLoading ? (
           <EmptyStateInline loading message="Cargando actividad…" className="py-6" />
         ) : isError ? (
-          <div className="py-6 text-center">
-            <p className="text-body text-muted-foreground">No se pudo cargar la actividad.</p>
-            <Button variant="outline" size="sm" className="mt-2" onClick={refetch}>
-              Reintentar
-            </Button>
-          </div>
+          <ErrorStateInline
+            title="No se pudo cargar la actividad"
+            message="Ocurrió un error al obtener las notas y eventos del embarque."
+            onRetry={() => void refetch()}
+            className="py-6"
+          />
         ) : items.length === 0 ? (
           <EmptyStateInline icon={MessageSquare} message="Sin actividad registrada" className="py-8" />
         ) : (

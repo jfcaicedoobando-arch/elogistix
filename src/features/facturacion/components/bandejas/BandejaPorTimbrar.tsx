@@ -4,6 +4,7 @@
  */
 import { Card, CardContent } from "@/components/ui/card";
 import { Stamp } from "lucide-react";
+import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 import { defineColumns } from "@/components/shared/DataTable";
 import { ResponsiveDataTable } from "@/components/shared/dataTable/ResponsiveDataTable";
 import { clientColumn, moneyColumn, dateColumn } from "@/components/shared/dataTable/columnBuilders";
@@ -69,10 +70,11 @@ export function BandejaPorTimbrar() {
             data={paged.rows}
             isLoading={paged.isLoading}
             emptyState={
-              <div className="flex flex-col items-center justify-center gap-2 py-12 text-center text-body text-muted-foreground px-4">
-                <Stamp className="h-8 w-8 opacity-40" strokeWidth={1.5} />
-                <span>No hay CFDI en borrador esperando timbrado.</span>
-              </div>
+              <EmptyStateInline
+                icon={Stamp}
+                message="No hay CFDI en borrador esperando timbrado."
+                className="py-12"
+              />
             }
             rowKey={(r) => r.id}
             getRowHref={(r) => `/facturacion/${r.id}`}

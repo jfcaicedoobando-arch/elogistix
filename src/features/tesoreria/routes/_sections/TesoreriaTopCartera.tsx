@@ -11,6 +11,8 @@ import { agingTextClass } from "@/features/tesoreria/domain/agingTone";
 import type { TopItem } from "@/features/tesoreria/domain/resumen.types";
 import { cn } from "@/lib/utils";
 import { Hint } from "@/components/shared/Hint";
+import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
+import { Wallet } from "lucide-react";
 
 interface Props {
   titulo: string;
@@ -33,7 +35,7 @@ export function TesoreriaTopCartera({
       <CardContent density="compact" className="flex flex-1 flex-col">
         <SectionHeading as="h3" className="mb-3">{titulo}</SectionHeading>
         {items.length === 0 ? (
-          <p className="text-body text-muted-foreground">{vacio}</p>
+          <EmptyStateInline icon={Wallet} message={vacio} className="py-4" />
         ) : (
           <ul className="space-y-1.5 text-body">
             {items.map((d) => (

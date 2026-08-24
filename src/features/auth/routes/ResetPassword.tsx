@@ -8,13 +8,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Loader2, CheckCircle2, Eye, EyeOff, AlertCircle } from "lucide-react";
+import { CheckCircle2, Eye, EyeOff, AlertCircle } from "lucide-react";
 import { Seo } from "@/components/shared/Seo";
 import { AuthCard } from "@/features/auth/components/AuthCard";
 import { translateAuthError } from "@/lib/auth/translateAuthError";
 import { passwordSchema, PASSWORD_MIN, PASSWORD_MAX } from "@/lib/passwords/policy";
 import { COPY_VALIDACION } from "@/lib/copy/publicoCopy";
 import { PasswordStrengthMeter } from "@/components/shared/PasswordStrengthMeter";
+import { Skeleton, SkeletonGroup } from "@/components/ui/skeleton";
 
 
 /**
@@ -98,9 +99,18 @@ export default function ResetPassword() {
       />
       <AuthCard title="Restablecer contraseña" maxWidth="sm">
           {!ready ? (
-            <div className="flex justify-center py-8">
-              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-            </div>
+            <SkeletonGroup loadingLabel="Verificando enlace" className="space-y-4 py-2">
+              <Skeleton className="h-4 w-3/4" />
+              <div className="space-y-2">
+                <Skeleton className="h-4 w-32" />
+                <Skeleton className="h-10 w-full" />
+              </div>
+              <div className="space-y-2">
+                <Skeleton className="h-4 w-40" />
+                <Skeleton className="h-10 w-full" />
+              </div>
+              <Skeleton className="h-10 w-full" />
+            </SkeletonGroup>
           ) : done ? (
             <div className="space-y-3 py-4 text-center">
               <CheckCircle2 className="mx-auto h-10 w-10 text-accent" />
