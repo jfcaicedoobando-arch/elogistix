@@ -11,6 +11,7 @@
  * simplemente no se registra y el error queda en logs/Sentry.
  */
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { timingSafeEqual } from "../_shared/timingSafe.ts";
 import { buildCors, handlePreflightStrict } from "../_shared/cors.ts";
 import { createLogger } from "../_shared/logger.ts";
 import { initSentryEdge, captureEdgeException } from "../_shared/sentry.ts";
@@ -25,12 +26,12 @@ initSentryEdge("tc-dof-diario");
 const FETCH_TIMEOUT_MS = 10_000;
 const MAX_DIAS_BACKFILL = 90;
 
-/** Valida el secreto de cron. */
+/** Valida el secreto de cron (R3 · P3: comparación constante en tiempo). */
 export function checkCronSecret(
   secret: string | undefined,
   headerValue: string | null,
 ): boolean {
-  return !!(secret && headerValue === secret);
+  return !!secret && headerValue != null && timingSafeEqual(headerValue, secret);
 }
 
 /** Normaliza el parámetro `dias` (1 = sólo hoy). */

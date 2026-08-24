@@ -3706,6 +3706,24 @@ export type Database = {
         }
         Relationships: []
       }
+      cron_locks: {
+        Row: {
+          key: string
+          locked_at: string
+          owner: string | null
+        }
+        Insert: {
+          key: string
+          locked_at?: string
+          owner?: string | null
+        }
+        Update: {
+          key?: string
+          locked_at?: string
+          owner?: string | null
+        }
+        Relationships: []
+      }
       cuentas_bancarias: {
         Row: {
           activa: boolean
@@ -3888,6 +3906,7 @@ export type Database = {
           created_at: string
           error_message: string | null
           id: string
+          intentos: number
           message_id: string | null
           metadata: Json | null
           recipient_email: string
@@ -3898,6 +3917,7 @@ export type Database = {
           created_at?: string
           error_message?: string | null
           id?: string
+          intentos?: number
           message_id?: string | null
           metadata?: Json | null
           recipient_email: string
@@ -3908,6 +3928,7 @@ export type Database = {
           created_at?: string
           error_message?: string | null
           id?: string
+          intentos?: number
           message_id?: string | null
           metadata?: Json | null
           recipient_email?: string
@@ -9570,6 +9591,11 @@ export type Database = {
         }
         Returns: Json
       }
+      cron_try_lock: {
+        Args: { p_key: string; p_owner?: string; p_ttl_seconds?: number }
+        Returns: boolean
+      }
+      cron_unlock: { Args: { p_key: string }; Returns: undefined }
       current_agente_id: { Args: never; Returns: string }
       current_agente_org: { Args: never; Returns: string }
       current_agente_proveedor_id: { Args: never; Returns: string }
@@ -9739,6 +9765,16 @@ export type Database = {
       }
       eliminar_proforma_rpc: { Args: { p_proforma_id: string }; Returns: Json }
       email_queue_dispatch: { Args: never; Returns: undefined }
+      email_send_log_touch: {
+        Args: {
+          p_error?: string
+          p_message_id: string
+          p_recipient: string
+          p_status: string
+          p_template: string
+        }
+        Returns: undefined
+      }
       embarque_admin_pendientes_resumen: {
         Args: { p_embarque_id: string }
         Returns: Json

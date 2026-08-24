@@ -7,6 +7,7 @@
  */
 import { createClient, type SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { wrapEdgeHandler, captureEdgeException } from "../_shared/sentry.ts"
+import { timingSafeEqual } from "../_shared/timingSafe.ts";
 import { buildCors, handlePreflightStrict } from "../_shared/cors.ts";
 import { createLogger } from "../_shared/logger.ts";
 
@@ -158,7 +159,8 @@ Deno.serve(wrapEdgeHandler("auditoria-weekly-digest", async (req) => {
 
   const cronSecret = Deno.env.get("CRON_SECRET");
   const headerSecret = req.headers.get("X-Cron-Secret");
-  if (!cronSecret || headerSecret !== cronSecret) {
+  // R3 · P3: comparación constante en tiempo (patrón _shared/timingSafe.ts).
+  if (!cronSecret || !timingSafeEqual(headerSecret ?? "", cronSecret)) {
     log.finish(401, "unauthorized_cron");
     return unauthorized(corsHeaders);
   }

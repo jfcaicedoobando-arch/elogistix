@@ -7,6 +7,8 @@ import { TEMPLATES } from '../_shared/transactional-email-templates/registry.ts'
 import { parseRequest, corsResponse } from './validation.ts'
 import { getOrCreateUnsubscribeToken } from './unsubscribeToken.ts'
 import { timingSafeEqual } from '../_shared/timingSafe.ts'
+import { registrarEstadoEmail } from '../_shared/emailSendLog.ts'
+import { maskEmail } from '../_shared/redact.ts'
 
 const SITE_NAME = "elogistix"
 const SENDER_DOMAIN = "notify.librecarga.com"
@@ -59,16 +61,16 @@ async function checkSuppressionOrFail(
     .maybeSingle()
 
   if (suppressionError) {
-    console.error('Suppression check failed — refusing to send', { error: suppressionError, effectiveRecipient: meta.effectiveRecipient })
+    console.error('Suppression check failed — refusing to send', { error: suppressionError, effectiveRecipient: maskEmail(meta.effectiveRecipient) })
     return corsResponse({ error: 'Failed to verify suppression status' }, 500)
   }
 
   if (suppressed) {
-    await supabase.from('email_send_log').insert({
-      message_id: meta.messageId, template_name: meta.templateName,
-      recipient_email: meta.effectiveRecipient, status: 'suppressed',
+    await registrarEstadoEmail(supabase, {
+      messageId: meta.messageId, templateName: meta.templateName,
+      recipientEmail: meta.effectiveRecipient, status: 'suppressed',
     })
-    console.log('Email suppressed', { effectiveRecipient: meta.effectiveRecipient, templateName: meta.templateName })
+    console.log('Email suppressed', { effectiveRecipient: maskEmail(meta.effectiveRecipient), templateName: meta.templateName })
     return corsResponse({ success: false, reason: 'email_suppressed' })
   }
   return null
@@ -81,18 +83,18 @@ async function resolveUnsubscribeOrFail(
 ): Promise<{ token: string } | Response> {
   const tokenResult = await getOrCreateUnsubscribeToken(supabase, normalizedEmail)
   if ('suppressed' in tokenResult) {
-    await supabase.from('email_send_log').insert({
-      message_id: meta.messageId, template_name: meta.templateName,
-      recipient_email: meta.effectiveRecipient, status: 'suppressed',
-      error_message: 'Unsubscribe token used but email missing from suppressed list',
+    await registrarEstadoEmail(supabase, {
+      messageId: meta.messageId, templateName: meta.templateName,
+      recipientEmail: meta.effectiveRecipient, status: 'suppressed',
+      errorMessage: 'Unsubscribe token used but email missing from suppressed list',
     })
     return corsResponse({ success: false, reason: 'email_suppressed' })
   }
   if ('tokenError' in tokenResult) {
-    await supabase.from('email_send_log').insert({
-      message_id: meta.messageId, template_name: meta.templateName,
-      recipient_email: meta.effectiveRecipient, status: 'failed',
-      error_message: tokenResult.tokenError,
+    await registrarEstadoEmail(supabase, {
+      messageId: meta.messageId, templateName: meta.templateName,
+      recipientEmail: meta.effectiveRecipient, status: 'failed',
+      errorMessage: tokenResult.tokenError,
     })
     return corsResponse({ error: 'Failed to prepare email' }, 500)
   }
@@ -150,11 +152,17 @@ Deno.serve(wrapEdgeHandler("send-transactional-email", async (req) => {
   const resolvedSubject =
     typeof template.subject === 'function' ? template.subject(templateData) : template.subject
 
-  // Log pending BEFORE enqueue so we have a record even if enqueue crashes
-  await supabase.from('email_send_log').insert({
+  // Log pending BEFORE enqueue so we have a record even if enqueue crashes.
+  // R3 · P2: upsert con ignoreDuplicates — un reintento del caller con el
+  // mismo message_id no debe reventar 23505 ni pisar un estado posterior
+  // ('sent'), que la cola usa para deduplicar (isAlreadySent).
+  const { error: pendingError } = await supabase.from('email_send_log').upsert({
     message_id: messageId, template_name: templateName,
     recipient_email: effectiveRecipient, status: 'pending',
-  })
+  }, { onConflict: 'message_id', ignoreDuplicates: true })
+  if (pendingError) {
+    console.error('Failed to log pending email', { error: pendingError, templateName })
+  }
 
   const { error: enqueueError } = await supabase.rpc('enqueue_email', {
     queue_name: 'transactional_emails',
@@ -175,15 +183,18 @@ Deno.serve(wrapEdgeHandler("send-transactional-email", async (req) => {
   })
 
   if (enqueueError) {
-    console.error('Failed to enqueue email', { error: enqueueError, templateName, effectiveRecipient })
-    await supabase.from('email_send_log').insert({
-      message_id: messageId, template_name: templateName,
-      recipient_email: effectiveRecipient, status: 'failed',
-      error_message: 'Failed to enqueue email',
+    console.error('Failed to enqueue email', { error: enqueueError, templateName, effectiveRecipient: maskEmail(effectiveRecipient) })
+    // R3 · P2: la fila 'pending' ya existe con este message_id — un segundo
+    // INSERT revienta el índice único (23505) y dejaba la fila zombie en
+    // 'pending' sin registrar el fallo. Upsert por message_id vía RPC.
+    await registrarEstadoEmail(supabase, {
+      messageId: messageId, templateName: templateName,
+      recipientEmail: effectiveRecipient, status: 'failed',
+      errorMessage: 'Failed to enqueue email',
     })
     return corsResponse({ error: 'Failed to enqueue email' }, 500)
   }
 
-  console.log('Transactional email enqueued', { templateName, effectiveRecipient })
+  console.log('Transactional email enqueued', { templateName, effectiveRecipient: maskEmail(effectiveRecipient) })
   return corsResponse({ success: true, queued: true })
 }))

@@ -2,6 +2,7 @@ import { sendLovableEmail } from 'npm:@lovable.dev/email-js'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0'
 
 const MAX_RETRIES = 5
+import { registrarEstadoEmail } from '../_shared/emailSendLog.ts'
 
 export interface QueueMessage {
   msg_id: number
@@ -51,12 +52,14 @@ export async function moveToDlq(
   reason: string
 ): Promise<void> {
   const payload = msg.message
-  await supabase.from('email_send_log').insert({
-    message_id: payload.message_id,
-    template_name: (payload.label || queue) as string,
-    recipient_email: payload.to,
+  // R3 · P2: upsert por message_id — el insert repetido reventaba 23505 en
+  // silencio contra uq_email_send_log_message_id y el estado nunca se marcaba.
+  await registrarEstadoEmail(supabase, {
+    messageId: payload.message_id,
+    templateName: (payload.label || queue) as string,
+    recipientEmail: payload.to,
     status: 'dlq',
-    error_message: reason,
+    errorMessage: reason,
   })
   const { error } = await supabase.rpc('move_to_dlq', {
     source_queue: queue,
@@ -108,12 +111,12 @@ async function handleSendError(
   console.error('Email send failed', { queue, msg_id: msg.msg_id, read_ct: msg.read_ct, failed_attempts: failedAttempts, error: errorMsg })
 
   if (isRateLimited(error)) {
-    await supabase.from('email_send_log').insert({
-      message_id: payload.message_id,
-      template_name: payload.label || queue,
-      recipient_email: payload.to,
+    await registrarEstadoEmail(supabase, {
+      messageId: payload.message_id,
+      templateName: payload.label || queue,
+      recipientEmail: payload.to,
       status: 'rate_limited',
-      error_message: errorMsg.slice(0, 1000),
+      errorMessage: errorMsg.slice(0, 1000),
     })
     const retryAfterSecs = getRetryAfterSeconds(error)
     await supabase
@@ -128,12 +131,12 @@ async function handleSendError(
     return { status: 'forbidden' }
   }
 
-  await supabase.from('email_send_log').insert({
-    message_id: payload.message_id,
-    template_name: payload.label || queue,
-    recipient_email: payload.to,
+  await registrarEstadoEmail(supabase, {
+    messageId: payload.message_id,
+    templateName: payload.label || queue,
+    recipientEmail: payload.to,
     status: 'failed',
-    error_message: errorMsg.slice(0, 1000),
+    errorMessage: errorMsg.slice(0, 1000),
   })
   return { status: 'failed' }
 }
@@ -175,10 +178,12 @@ export async function processMessage(
       },
       { apiKey, sendUrl }
     )
-    await supabase.from('email_send_log').insert({
-      message_id: payload.message_id,
-      template_name: payload.label || queue,
-      recipient_email: payload.to,
+    // R3 · P2: upsert por message_id — la fila 'pending' ya existe; el insert
+    // reventaba 23505 y 'sent' nunca se marcaba (dobles envíos en reintentos).
+    await registrarEstadoEmail(supabase, {
+      messageId: payload.message_id,
+      templateName: payload.label || queue,
+      recipientEmail: payload.to,
       status: 'sent',
     })
     const { error: delError } = await supabase.rpc('delete_email', {

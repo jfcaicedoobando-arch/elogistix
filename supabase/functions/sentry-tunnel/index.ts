@@ -69,6 +69,53 @@ interface EnvelopeHeader {
   [k: string]: unknown;
 }
 
+/**
+ * R3 · P3: tope de tamaño del envelope. El endpoint es público
+ * (verify_jwt=false) y antes leía el body COMPLETO en memoria sin límite —
+ * drenaje de memoria del aislado y de la cuota de Sentry. 1 MB sobra para
+ * envelopes reales (eventos con breadcrumbs/stacktrace).
+ */
+export const MAX_ENVELOPE_BYTES = 1_048_576; // 1 MB
+
+/** true si el Content-Length declarado ya excede el tope (corte barato). */
+export function excedeContentLength(req: Request): boolean {
+  const len = Number(req.headers.get("content-length") ?? 0);
+  return Number.isFinite(len) && len > MAX_ENVELOPE_BYTES;
+}
+
+/**
+ * Lee el body cortando en MAX_ENVELOPE_BYTES. Devuelve `null` si excede el
+ * tope (el caller responde 413) — nunca materializa más del tope en memoria.
+ */
+async function leerEnvelopeAcotado(req: Request): Promise<string | null> {
+  if (excedeContentLength(req)) return null;
+  if (!req.body) return "";
+  const reader = req.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let total = 0;
+  try {
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      total += value.byteLength;
+      if (total > MAX_ENVELOPE_BYTES) {
+        await reader.cancel().catch(() => {});
+        return null;
+      }
+      chunks.push(value);
+    }
+  } finally {
+    reader.releaseLock();
+  }
+  const buf = new Uint8Array(total);
+  let off = 0;
+  for (const c of chunks) {
+    buf.set(c, off);
+    off += c.byteLength;
+  }
+  return new TextDecoder().decode(buf);
+}
+
 /** Parsea el header del envelope (primera línea NDJSON) y extrae host + projectId. */
 export function parseEnvelopeDsn(firstLine: string): { host: string; projectId: string } | null {
   let header: EnvelopeHeader;
@@ -96,6 +143,12 @@ Deno.serve(async (req) => {
     return new Response("method_not_allowed", { status: 405, headers: corsHeaders });
   }
 
+  // R3 · P3: corte barato por Content-Length ANTES del rate limit (un body
+  // gigante ni siquiera consume ventana de rate limit).
+  if (excedeContentLength(req)) {
+    return new Response("payload_too_large", { status: 413, headers: corsHeaders });
+  }
+
   const ip = getClientIp(req);
   if (!checkRateLimit(ip)) {
     return new Response("rate_limited", { status: 429, headers: { ...corsHeaders, "Retry-After": "60" } });
@@ -103,7 +156,11 @@ Deno.serve(async (req) => {
 
 
   try {
-    const body = await req.text();
+    // Corte duro por stream aunque el cliente mienta en Content-Length.
+    const body = await leerEnvelopeAcotado(req);
+    if (body === null) {
+      return new Response("payload_too_large", { status: 413, headers: corsHeaders });
+    }
     const firstNewline = body.indexOf("\n");
     if (firstNewline === -1) {
       return new Response("invalid_envelope", { status: 400, headers: corsHeaders });

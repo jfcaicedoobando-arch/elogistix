@@ -6,6 +6,7 @@
 import { sendLovableEmail } from 'npm:@lovable.dev/email-js'
 import type { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0'
 import { MAX_RETRIES, moveToDlq } from './queueAuth.ts'
+import { registrarEstadoEmail } from '../_shared/emailSendLog.ts'
 
 type Supabase = ReturnType<typeof createClient>
 
@@ -103,12 +104,12 @@ async function handleRateLimit(
   supabase: Supabase, queue: string, msg: QueueMessage, error: unknown, errorMsg: string,
 ): Promise<void> {
   const payload = msg.message
-  await supabase.from('email_send_log').insert({
-    message_id: payload.message_id,
-    template_name: payload.label || queue,
-    recipient_email: payload.to,
+  await registrarEstadoEmail(supabase, {
+    messageId: payload.message_id,
+    templateName: payload.label || queue,
+    recipientEmail: payload.to,
     status: 'rate_limited',
-    error_message: errorMsg.slice(0, 1000),
+    errorMessage: errorMsg.slice(0, 1000),
   })
   const retryAfterSecs = getRetryAfterSeconds(error)
   await supabase.from('email_send_state').update({
@@ -122,12 +123,12 @@ async function logFailure(
 ): Promise<void> {
   const { supabase, queue, msg, errorMsg, ctx, failedAttempts } = args
   const payload = msg.message
-  await supabase.from('email_send_log').insert({
-    message_id: payload.message_id,
-    template_name: payload.label || queue,
-    recipient_email: payload.to,
+  await registrarEstadoEmail(supabase, {
+    messageId: payload.message_id,
+    templateName: payload.label || queue,
+    recipientEmail: payload.to,
     status: 'failed',
-    error_message: errorMsg.slice(0, 1000),
+    errorMessage: errorMsg.slice(0, 1000),
   })
   if (typeof payload.message_id === 'string' && payload.message_id) {
     ctx.failedAttemptsByMessageId.set(payload.message_id, failedAttempts + 1)
@@ -146,10 +147,10 @@ async function sendOne(supabase: Supabase, queue: string, msg: QueueMessage, api
     },
     { apiKey, sendUrl: Deno.env.get('LOVABLE_SEND_URL') },
   )
-  await supabase.from('email_send_log').insert({
-    message_id: payload.message_id,
-    template_name: payload.label || queue,
-    recipient_email: payload.to,
+  await registrarEstadoEmail(supabase, {
+    messageId: payload.message_id,
+    templateName: payload.label || queue,
+    recipientEmail: payload.to,
     status: 'sent',
   })
   const { error: delError } = await supabase.rpc('delete_email', {

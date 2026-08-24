@@ -24,6 +24,7 @@ import { corsHeaders } from "../_shared/cors.ts";
 import { wrapEdgeHandler, captureEdgeException } from "../_shared/sentry.ts";
 import { jsonResponse } from "../_shared/response.ts";
 import { timingSafeEqual } from "../_shared/timingSafe.ts";
+import { tomarCronLock, soltarCronLock } from "../_shared/cronLock.ts";
 import {
   barrerOrganizacion,
   cargarFacturasPorAntiguedadVerificacion,
@@ -125,6 +126,20 @@ Deno.serve(wrapEdgeHandler("verificar-sat-semanal", async (req) => {
 
   const admin = createClient(SUPABASE_URL, SERVICE_KEY, { auth: { persistSession: false } });
 
+  // R3 · P3: mutex anti-traslape — dos corridas concurrentes duplicaban
+  // consultas al SAT (throttling/bloqueo de IP compartida). "error" = RPC no
+  // disponible → fail-open capturado en Sentry.
+  const lock = await tomarCronLock(admin, "verificar-sat-semanal", 6 * 3600);
+  if (lock === "ocupado") return jsonResponse({ ok: true, skipped: "locked" });
+
+  try {
+    return await ejecutar(admin);
+  } finally {
+    if (lock === "tomado") await soltarCronLock(admin, "verificar-sat-semanal");
+  }
+}));
+
+async function ejecutar(admin: SupabaseClient): Promise<Response> {
   let orgs: string[];
   try {
     orgs = await seleccionarLoteSemanal(admin);
@@ -163,4 +178,4 @@ Deno.serve(wrapEdgeHandler("verificar-sat-semanal", async (req) => {
   };
   console.log("[verificar-sat-semanal] resumen", JSON.stringify(totales));
   return jsonResponse({ ...totales, detalle: resumen }, 200);
-}));
+}

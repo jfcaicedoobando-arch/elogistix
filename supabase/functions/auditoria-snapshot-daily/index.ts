@@ -8,15 +8,17 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { buildCors, handlePreflightStrict } from "../_shared/cors.ts";
 import { createLogger } from "../_shared/logger.ts";
 import { initSentryEdge, captureEdgeException } from "../_shared/sentry.ts";
+import { timingSafeEqual } from "../_shared/timingSafe.ts";
 
 initSentryEdge("auditoria-snapshot-daily");
 
-/** Returns true when the provided secret matches the header value. */
+/** Returns true when the provided secret matches the header value.
+ *  R3 · P3: comparación constante en tiempo (patrón _shared/timingSafe.ts). */
 export function checkCronSecret(
   secret: string | undefined,
   headerValue: string | null,
 ): boolean {
-  return !!(secret && headerValue === secret);
+  return !!secret && headerValue != null && timingSafeEqual(headerValue, secret);
 }
 
 Deno.serve(async (req) => {
