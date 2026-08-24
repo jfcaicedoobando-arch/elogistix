@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.735.1] - 2026-08-24
+### Corrección de CI — `deno check` de Edge Functions
+- `user-management/reinvitacion.ts`: se retira el `@ts-expect-error` del import de tipo remoto de `@supabase/supabase-js` (TS2578 "Unused '@ts-expect-error' directive"); Deno ya resuelve el tipo sin supresión.
+
+
+
 ## [13.735.0] - 2026-08-24
 ### Remediación completa de la auditoría visual del ERP — `docs/auditoria/visual-2026-08-24-erp.md`
 - **E-1 (crítico)**: los KPI de Tesorería ya no truncan dinero con elipsis: notación compacta (`MXN 943.4 K`) con el valor exacto en tooltip.

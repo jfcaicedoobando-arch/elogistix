@@ -15,8 +15,9 @@
  * pertenecen a la organización objetivo. En cualquier otro caso se rechaza con
  * `LC_CUENTA_NO_REINVITABLE`.
  */
-// @ts-expect-error Deno remote import
+// Import de tipo remoto: Deno lo resuelve sin necesidad de suprimir el chequeo.
 import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+
 
 /** Roles que sí corresponden a cuentas de portal re-invitables. */
 const ROLES_PORTAL = ["cliente", "agente_carga"];
