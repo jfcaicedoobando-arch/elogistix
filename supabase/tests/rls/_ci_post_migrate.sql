@@ -70,7 +70,13 @@ BEGIN
     -- FIX3 tanda 3 (BUG-18 / O5.8): metadatos fiscales del buzón CxP sólo se
     -- escriben vía la edge (service_role).
     'public.adjuntar_xml_factura_entrante(uuid, text, text, text, text, text, text, date, numeric, text)',
-    'public.adjuntar_xml_entrante_verificado(uuid, uuid, text, text, text, text, text, text, date, numeric, text)'
+    'public.adjuntar_xml_entrante_verificado(uuid, uuid, text, text, text, text, text, text, date, numeric, text)',
+    -- FIX3 edge-hardening (v13.737.0): mutex de crons + bitácora de correos.
+    -- Son helpers de plataforma sin ancla tenant; sólo los invocan las edge
+    -- functions con service_role.
+    'public.cron_try_lock(text, integer, text)',
+    'public.cron_unlock(text)',
+    'public.email_send_log_touch(text, text, text, text, text)'
   ]
   LOOP
     IF to_regprocedure(v_fn) IS NOT NULL THEN
