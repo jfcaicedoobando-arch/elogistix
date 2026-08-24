@@ -167,6 +167,39 @@ export async function leerTcDeTabla(fechaIso: string): Promise<Rates | null> {
   }
 }
 
+/** Lee el caché correspondiente (hoy con TTL corto, histórico inmutable). */
+function buscarEnCache(esHoy: boolean, key: string): { rates: Rates; motivo: string } | null {
+  if (esHoy) {
+    if (cacheHoyRef && cacheHoyRef.expiresAt > Date.now()) {
+      return { rates: cacheHoyRef.rates, motivo: "rates_cache_hit_hoy" };
+    }
+    return null;
+  }
+  const hit = cacheHistorico.get(key);
+  if (hit && hit.expiresAt > Date.now()) return { rates: hit.rates, motivo: "rates_cache_hit_historico" };
+  return null;
+}
+
+/** Guarda en caché respetando la ventana de desfase UTC y el tope de memoria. */
+function guardarEnCache(rates: Rates, esHoy: boolean, key: string, fechaIso: string): void {
+  if (esHoy) {
+    // N14 (Ola 4): (1) no cachear durante la ventana de desfase UTC
+    // (18:00–23:59 CST), cuando el día UTC ya es mañana; (2) el TTL nunca
+    // cruza la medianoche MX.
+    if (formatFechaBanxico(new Date()) !== fechaIso) return;
+    const ttl = Math.min(CACHE_TTL_MS, msHastaMedianocheMx(new Date()));
+    cacheHoyRef = { rates, expiresAt: Date.now() + ttl };
+    return;
+  }
+  // R3 · P3: el Map vive en el aislado — tope de entradas para que un
+  // atacante iterando fechas no infle la memoria (evicción FIFO).
+  if (cacheHistorico.size >= MAX_CACHE_HISTORICO) {
+    const primero = cacheHistorico.keys().next().value;
+    if (primero !== undefined) cacheHistorico.delete(primero);
+  }
+  cacheHistorico.set(key, { rates, expiresAt: Date.now() + CACHE_TTL_HISTORICO_MS });
+}
+
 /**
  * v13.624.6 — Blindaje del contrato de respuesta.
  *
@@ -185,40 +218,14 @@ async function manejarExchangeRates(req: Request): Promise<Response> {
   const { fecha, esHoy, key, fechaIso, fechaSolicitada } = await resolverFecha(req);
   const sellar = <T extends Record<string, unknown>>(r: T) => conFechaSolicitada(r, fechaSolicitada);
 
-
-  // Caché: "hoy" con TTL corto; históricas con TTL largo (son inmutables).
-  if (esHoy && cacheHoyRef && cacheHoyRef.expiresAt > Date.now()) {
-    log.finish(200, "rates_cache_hit_hoy", { payload: cacheHoyRef.rates });
-    return jsonResponse(sellar(cacheHoyRef.rates));
-  }
-  if (!esHoy) {
-    const hit = cacheHistorico.get(key);
-    if (hit && hit.expiresAt > Date.now()) {
-      log.finish(200, "rates_cache_hit_historico", { payload: hit.rates });
-      return jsonResponse(sellar(hit.rates));
-    }
+  const enCache = buscarEnCache(esHoy, key);
+  if (enCache) {
+    log.finish(200, enCache.motivo, { payload: enCache.rates });
+    return jsonResponse(sellar(enCache.rates));
   }
 
+  const guardarCache = (rates: Rates) => guardarEnCache(rates, esHoy, key, fechaIso);
 
-  const guardarCache = (rates: Rates) => {
-    if (esHoy) {
-      // N14 (Ola 4): (1) no cachear durante la ventana de desfase UTC
-      // (18:00–23:59 CST), cuando el día UTC ya es mañana; (2) el TTL nunca
-      // cruza la medianoche MX.
-      if (formatFechaBanxico(new Date()) !== fechaIso) return;
-      const ttl = Math.min(CACHE_TTL_MS, msHastaMedianocheMx(new Date()));
-      cacheHoyRef = { rates, expiresAt: Date.now() + ttl };
-    }
-    else {
-      // R3 · P3: el Map vive en el aislado — tope de entradas para que un
-      // atacante iterando fechas no infle la memoria (evicción FIFO).
-      if (cacheHistorico.size >= MAX_CACHE_HISTORICO) {
-        const primero = cacheHistorico.keys().next().value;
-        if (primero !== undefined) cacheHistorico.delete(primero);
-      }
-      cacheHistorico.set(key, { rates, expiresAt: Date.now() + CACHE_TTL_HISTORICO_MS });
-    }
-  };
 
   // 1) Tabla interna alimentada por el cron `tc-dof-diario`.
   // N14 (Ola 4): llave MX — antes formatFechaBanxico(fecha) (UTC) consultaba
