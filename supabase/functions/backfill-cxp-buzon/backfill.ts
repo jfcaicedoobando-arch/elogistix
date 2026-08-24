@@ -102,6 +102,7 @@ async function sembrarConceptos(
 async function procesarDoc(
   admin: SupabaseClient,
   doc: DocRow,
+  organizationId: string | null,
 ): Promise<ResultadoFactura | null> {
   const { data: factura, error } = await admin
     .from("proveedor_facturas")
@@ -111,6 +112,10 @@ async function procesarDoc(
   if (error) throw error;
   const f = factura as FacturaRow | null;
   if (!f || f.deleted_at) return null;
+  // R2 seguridad · P1 — defensa en profundidad: el barrido ya viene filtrado
+  // por org, pero la factura vinculada nunca debe salirse del tenant.
+  if (organizationId && f.organization_id !== organizationId) return null;
+
 
   const patch: { archivo_pdf_url?: string; archivo_xml_url?: string } = {};
   if (!f.archivo_pdf_url && doc.archivo_path && !doc.archivo_path.toLowerCase().endsWith(".xml")) {
