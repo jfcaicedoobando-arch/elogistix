@@ -1252,6 +1252,7 @@ export type Database = {
           proveedor_nombre: string
           referencia_pago: string | null
           tasa_iva_aplicada: number
+          updated_at: string | null
         }
         Insert: {
           concepto: string
@@ -1272,6 +1273,7 @@ export type Database = {
           proveedor_nombre?: string
           referencia_pago?: string | null
           tasa_iva_aplicada?: number
+          updated_at?: string | null
         }
         Update: {
           concepto?: string
@@ -1292,6 +1294,7 @@ export type Database = {
           proveedor_nombre?: string
           referencia_pago?: string | null
           tasa_iva_aplicada?: number
+          updated_at?: string | null
         }
         Relationships: [
           {
@@ -1347,6 +1350,7 @@ export type Database = {
           tasa_ret_iva: number
           tipo_iva: string
           total: number
+          updated_at: string | null
         }
         Insert: {
           cantidad?: number
@@ -1370,6 +1374,7 @@ export type Database = {
           tasa_ret_iva?: number
           tipo_iva?: string
           total?: number
+          updated_at?: string | null
         }
         Update: {
           cantidad?: number
@@ -1393,6 +1398,7 @@ export type Database = {
           tasa_ret_iva?: number
           tipo_iva?: string
           total?: number
+          updated_at?: string | null
         }
         Relationships: [
           {
@@ -1451,6 +1457,7 @@ export type Database = {
           proforma_id: string | null
           tasa_iva_aplicada: number
           total: number
+          updated_at: string | null
         }
         Insert: {
           aplica_iva?: boolean
@@ -1470,6 +1477,7 @@ export type Database = {
           proforma_id?: string | null
           tasa_iva_aplicada?: number
           total?: number
+          updated_at?: string | null
         }
         Update: {
           aplica_iva?: boolean
@@ -1489,6 +1497,7 @@ export type Database = {
           proforma_id?: string | null
           tasa_iva_aplicada?: number
           total?: number
+          updated_at?: string | null
         }
         Relationships: [
           {
@@ -1616,6 +1625,7 @@ export type Database = {
           rfc: string
           telefono: string
           tipo: Database["public"]["Enums"]["tipo_contacto"]
+          updated_at: string | null
         }
         Insert: {
           ciudad?: string
@@ -1633,6 +1643,7 @@ export type Database = {
           rfc?: string
           telefono?: string
           tipo?: Database["public"]["Enums"]["tipo_contacto"]
+          updated_at?: string | null
         }
         Update: {
           ciudad?: string
@@ -1650,6 +1661,7 @@ export type Database = {
           rfc?: string
           telefono?: string
           tipo?: Database["public"]["Enums"]["tipo_contacto"]
+          updated_at?: string | null
         }
         Relationships: [
           {
@@ -3366,6 +3378,7 @@ export type Database = {
           organization_id: string
           tipo: string
           titulo: string
+          updated_at: string | null
           user_id: string
         }
         Insert: {
@@ -3377,6 +3390,7 @@ export type Database = {
           organization_id?: string
           tipo: string
           titulo: string
+          updated_at?: string | null
           user_id: string
         }
         Update: {
@@ -3388,6 +3402,7 @@ export type Database = {
           organization_id?: string
           tipo?: string
           titulo?: string
+          updated_at?: string | null
           user_id?: string
         }
         Relationships: []
@@ -3823,6 +3838,7 @@ export type Database = {
           nombre: string
           notas: string | null
           organization_id: string
+          updated_at: string | null
         }
         Insert: {
           archivo?: string | null
@@ -3835,6 +3851,7 @@ export type Database = {
           nombre: string
           notas?: string | null
           organization_id?: string
+          updated_at?: string | null
         }
         Update: {
           archivo?: string | null
@@ -3847,6 +3864,7 @@ export type Database = {
           nombre?: string
           notas?: string | null
           organization_id?: string
+          updated_at?: string | null
         }
         Relationships: [
           {
@@ -4035,6 +4053,7 @@ export type Database = {
           ia_estado: string
           ia_payload: Json | null
           id: string
+          metadatos_verificados: boolean
           moneda_declarada: string | null
           moneda_detectada: string | null
           monto_declarado: number | null
@@ -4068,6 +4087,7 @@ export type Database = {
           ia_estado?: string
           ia_payload?: Json | null
           id?: string
+          metadatos_verificados?: boolean
           moneda_declarada?: string | null
           moneda_detectada?: string | null
           monto_declarado?: number | null
@@ -4101,6 +4121,7 @@ export type Database = {
           ia_estado?: string
           ia_payload?: Json | null
           id?: string
+          metadatos_verificados?: boolean
           moneda_declarada?: string | null
           moneda_detectada?: string | null
           monto_declarado?: number | null
@@ -4716,6 +4737,7 @@ export type Database = {
           organization_id: string
           tipo: Database["public"]["Enums"]["tipo_evento_tracking"]
           ubicacion: string
+          updated_at: string | null
           usuario: string
         }
         Insert: {
@@ -4729,6 +4751,7 @@ export type Database = {
           organization_id?: string
           tipo: Database["public"]["Enums"]["tipo_evento_tracking"]
           ubicacion?: string
+          updated_at?: string | null
           usuario?: string
         }
         Update: {
@@ -4742,6 +4765,7 @@ export type Database = {
           organization_id?: string
           tipo?: Database["public"]["Enums"]["tipo_evento_tracking"]
           ubicacion?: string
+          updated_at?: string | null
           usuario?: string
         }
         Relationships: [
@@ -5628,6 +5652,7 @@ export type Database = {
           id: string
           organization_id: string
           tipo: Database["public"]["Enums"]["tipo_nota"]
+          updated_at: string | null
           usuario: string
         }
         Insert: {
@@ -5640,6 +5665,7 @@ export type Database = {
           id?: string
           organization_id?: string
           tipo?: Database["public"]["Enums"]["tipo_nota"]
+          updated_at?: string | null
           usuario?: string
         }
         Update: {
@@ -5652,6 +5678,7 @@ export type Database = {
           id?: string
           organization_id?: string
           tipo?: Database["public"]["Enums"]["tipo_nota"]
+          updated_at?: string | null
           usuario?: string
         }
         Relationships: [
@@ -6402,6 +6429,7 @@ export type Database = {
           tasa_iva_aplicada: number
           tipo_contenedor: string | null
           total: number
+          updated_at: string | null
         }
         Insert: {
           aplica_iva?: boolean
@@ -6421,6 +6449,7 @@ export type Database = {
           tasa_iva_aplicada?: number
           tipo_contenedor?: string | null
           total?: number
+          updated_at?: string | null
         }
         Update: {
           aplica_iva?: boolean
@@ -6440,6 +6469,7 @@ export type Database = {
           tasa_iva_aplicada?: number
           tipo_contenedor?: string | null
           total?: number
+          updated_at?: string | null
         }
         Relationships: [
           {
@@ -7083,6 +7113,7 @@ export type Database = {
           monto: number
           organization_id: string
           proveedor_factura_id: string
+          updated_at: string | null
         }
         Insert: {
           cantidad?: number
@@ -7096,6 +7127,7 @@ export type Database = {
           monto?: number
           organization_id?: string
           proveedor_factura_id: string
+          updated_at?: string | null
         }
         Update: {
           cantidad?: number
@@ -7109,6 +7141,7 @@ export type Database = {
           monto?: number
           organization_id?: string
           proveedor_factura_id?: string
+          updated_at?: string | null
         }
         Relationships: [
           {
