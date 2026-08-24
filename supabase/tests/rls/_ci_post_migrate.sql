@@ -59,6 +59,8 @@ BEGIN
     'public._reprocesar_comisiones_org(uuid)',
     'public.reprocesar_comisiones_job()',
     'public.verificar_sat_semanal_job()',
+    -- B-3: rotación del lote semanal del barrido SAT (job de plataforma).
+    'public.seleccionar_lote_sat_semanal(integer)',
     'public.notificar_uuid_cancelado_sat(uuid, jsonb)',
     -- FIX3 tanda 3: helpers financieros sin filtro org (ronda 2 P2) — sólo
     -- service_role / llamadas internas DEFINER.
