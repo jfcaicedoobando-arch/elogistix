@@ -117,5 +117,7 @@ export const LC_CODE_MESSAGES_TESORERIA: Record<string, string> = {
     "La liquidación ya fue pagada; registra el ajuste en la siguiente liquidación en lugar de cancelarla.",
   LC_LIQUIDACION_FECHA_FUTURA: "La fecha del pago de la liquidación no puede ser futura.",
   LC_LIQUIDACION_MOTIVO_REQUERIDO: "Captura el motivo de la cancelación de la liquidación.",
+  // FIX3 · M-4 — guard de fecha del cobro/pago contra la emisión del CFDI.
+  LC_PAGO_FECHA_PREVIA_EMISION:
+    "La fecha del pago no puede ser anterior a la fecha de emisión de la factura.",
 };
-

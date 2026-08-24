@@ -36,4 +36,7 @@ export const LC_CODE_MESSAGES_CRM: Record<string, string> = {
   LC_OPORTUNIDAD_YA_CONVERTIDA:
     "Esta oportunidad ya está ligada a otro cliente. Recarga la página para ver el vínculo actual.",
 
+  // FIX3 · P3 — vínculo cotización↔embarque acotado a la organización.
+  LC_COTIZACION_OTRA_ORG:
+    "La cotización pertenece a otra organización; no puede vincularse a este embarque.",
 };

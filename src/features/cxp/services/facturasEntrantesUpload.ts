@@ -106,10 +106,15 @@ async function verificarMetadatosDelAlta(params: {
   );
 }
 
-export async function subirFacturaEntrante(input: SubirFacturaEntranteInput): Promise<string> {
-  const invalido = validarParejaEntrante({ pdf: input.pdf, xml: input.xml });
-  if (invalido) throw new Error(invalido);
-
+/**
+ * Deduplica y sube los archivos del buzón (PDF y/o XML) antes de tocar la BD.
+ * Extraído de `subirFacturaEntrante` para respetar el límite de complejidad.
+ */
+async function subirArchivosDelBuzon(input: SubirFacturaEntranteInput): Promise<{
+  archivoPrincipal: File;
+  principal: ArchivoSubido;
+  xmlSubido: ArchivoSubido | null;
+}> {
   // El registro principal apunta al PDF cuando existe; si sólo hay XML, a él.
   // v13.419.0 — Se valida el duplicado ANTES de subir: así el usuario ve el
   // mensaje claro del buzón en vez de un error técnico del almacenamiento.
@@ -128,7 +133,16 @@ export async function subirFacturaEntrante(input: SubirFacturaEntranteInput): Pr
   const xmlSubido = input.pdf && input.xml
     ? await subirArchivo(input.xml, input, hashXmlAcompanante ?? undefined)
     : null;
+  return { archivoPrincipal, principal, xmlSubido };
+}
 
+/** Inserta el renglón del buzón y traduce los errores de guardado. */
+async function insertarFilaEntrante(params: {
+  input: SubirFacturaEntranteInput;
+  principal: ArchivoSubido;
+  xmlSubido: ArchivoSubido | null;
+}): Promise<string> {
+  const { input, principal, xmlSubido } = params;
   const { data: userData } = await supabase.auth.getUser();
   const { data, error } = await supabase
     .from("embarque_facturas_entrantes")
@@ -147,19 +161,30 @@ export async function subirFacturaEntrante(input: SubirFacturaEntranteInput): Pr
       input.organizationId,
     );
   }
-  const sugerenciasOk = await guardarConceptosSugeridos(data.id, input);
+  return data.id;
+}
+
+export async function subirFacturaEntrante(input: SubirFacturaEntranteInput): Promise<string> {
+  const invalido = validarParejaEntrante({ pdf: input.pdf, xml: input.xml });
+  if (invalido) throw new Error(invalido);
+
+  const { archivoPrincipal, principal, xmlSubido } = await subirArchivosDelBuzon(input);
+  const documentoId = await insertarFilaEntrante({ input, principal, xmlSubido });
+
+  const sugerenciasOk = await guardarConceptosSugeridos(documentoId, input);
   if (!sugerenciasOk) {
     // RNF-09: rastro auditable del fallo; el usuario ya recibió el aviso y el
     // documento queda subido de todos modos.
     await registrarActividad({
       modulo: "cxp",
       accion: "conceptos_sugeridos_no_guardados",
-      entidadId: data.id,
+      entidadId: documentoId,
       entidadNombre: archivoPrincipal.name,
     });
   }
+
   await verificarMetadatosDelAlta({
-    documentoId: data.id,
+    documentoId,
     xml: xmlSubido ?? (input.xml && !input.pdf ? principal : null),
     meta: input.meta ?? null,
     nombreArchivo: archivoPrincipal.name,
@@ -167,10 +192,11 @@ export async function subirFacturaEntrante(input: SubirFacturaEntranteInput): Pr
   await registrarActividad({
     modulo: "cxp",
     accion: "subir_factura_entrante",
-    entidadId: data.id,
+    entidadId: documentoId,
     entidadNombre: archivoPrincipal.name,
   });
-  return data.id;
+  return documentoId;
+
 }
 
 /** Completa un documento existente adjuntándole el XML que faltaba. */
