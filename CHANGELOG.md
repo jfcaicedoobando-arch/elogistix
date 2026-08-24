@@ -1,5 +1,13 @@
 # Changelog
 
+## [13.732.0] - 2026-08-24
+### Correcciones — validación del parche `fix2-db.diff`
+- **B-1 (bug real, crítico · fuga de PnL al portal)**: RLS filtra *filas*, no *columnas*: un usuario del portal con acceso a su embarque podía leer `cerrado_snapshot`, `tarifa_delta_jsonb`, `reabierto_motivo` y `created_by_email`. Ahora el `SELECT` sobre `public.embarques` se otorga **columna por columna** (el `REVOKE` por columna no basta si existe un grant de tabla) excluyendo esas cuatro. El staff las consulta por la vista `public.embarques_interno_v` (valida membresía y excluye roles `cliente`/`agente_carga`), y `get_embarque_full` fusiona esos datos con lista explícita de columnas. Frontend: nuevo servicio `internoEmbarque.ts`, usado por `tarifaInfo.ts` y `reconciliacion3Columnas.ts`.
+- **B-2 (bloqueante)**: la máquina de estados de notas de crédito no admitía `Borrador → Timbrada`, así que timbrar desde la app fallaba. Canon unificado BD + frontend: `Borrador → {Timbrada, Cancelada}`, `Timbrada → {Aplicada, Cancelada}`, `Aplicada → {Cancelada}` (`Aprobada` queda sólo como estado legado de salida).
+- **B-3 (drift de permisos)**: `public.puede_escribir_cotizaciones` ahora es espejo exacto de la matriz `SALES`: se agrega `admin_org` (el dueño de la organización no podía cotizar) y se retira `operador`.
+- Prueba nueva: `supabase/tests/fix2_embarques_interno_y_nc.sql` (5 casos, cableada en CI).
+
+
 ## [13.731.0] - 2026-08-24
 ### Correcciones — validación del parche `fix2-misc.diff`
 - **B-1 (bug real, UI obsoleta)**: el árbol de caché *singular* `['embarque', id, ...]` no lo cubre el prefijo *plural* `['embarques']`. `useSetSinComisionEmbarque` ahora invalida la key exacta `embarques.sinComision(id)` (el Select de la regla de comisión volvía al valor viejo tras guardar); las mutaciones de documentos invalidan `adminPendientes(id)` (badge de pendientes administrativos) y `useUpdateEmbarque` invalida `pnlFinanciero(id)`. Documentado en `src/features/embarques/queryKeys.ts`.
