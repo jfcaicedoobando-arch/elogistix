@@ -1,5 +1,14 @@
 # Changelog
 
+## [13.731.0] - 2026-08-24
+### Correcciones — validación del parche `fix2-misc.diff`
+- **B-1 (bug real, UI obsoleta)**: el árbol de caché *singular* `['embarque', id, ...]` no lo cubre el prefijo *plural* `['embarques']`. `useSetSinComisionEmbarque` ahora invalida la key exacta `embarques.sinComision(id)` (el Select de la regla de comisión volvía al valor viejo tras guardar); las mutaciones de documentos invalidan `adminPendientes(id)` (badge de pendientes administrativos) y `useUpdateEmbarque` invalida `pnlFinanciero(id)`. Documentado en `src/features/embarques/queryKeys.ts`.
+- **B-2 (bug real, riesgo de doble pago)**: los hooks de pago a proveedor (individual, lote, editar, eliminar) no invalidaban `bandejas.all`, así que la bandeja "CxP por pagar" y su badge seguían listando la factura ya pagada. Se agrega la invalidación (y `proveedores.all` en el pago en lote, por paridad con el individual).
+- **B-3 (bug real, latente)**: `verificar-sat-semanal` seleccionaba organizaciones con `ORDER BY created_at ASC LIMIT 5` sin rotación: las orgs 6+ nunca se verificaban y un CFDI de proveedor cancelado ante el SAT no generaba aviso. Nueva columna `organizations.sat_barrido_fecha` y RPC `public.seleccionar_lote_sat_semanal(integer)` (SECURITY DEFINER, sólo `service_role`) que ordena por `sat_barrido_fecha ASC NULLS FIRST` y estampa la fecha atómicamente. `MAX_FACTURAS` baja a 50 y `POR_ORG = MAX_FACTURAS / MAX_ORGS` para que cada org del lote reciba cupo (antes 60/20: las 3 primeras lo agotaban).
+- **M-1 (mejora)**: nuevo helper `invalidarTrasTimbrado` (espejo de `invalidarTrasRep`) usado al timbrar/cancelar factura y nota de crédito: refresca bandejas "Por timbrar"/"Por enviar", sus conteos y la cartera/aging CxC, que quedaban mostrando como cobrable un CFDI cancelado o con NC aplicada.
+- **N-1 (no aplica)**: el parche re-agendaba el job `verificar_sat_semanal`; se verificó que ya está agendado (lunes 14:00 UTC), así que no se tocó el cron.
+- Pruebas nuevas: `src/features/embarques/hooks/__tests__/useSinComisionEmbarque.test.tsx` y `supabase/tests/test_sat_semanal_rotacion_lote.sql` (cableada en CI).
+
 ## [13.730.0] - 2026-08-23
 ### Seguridad — validación del parche `fix2-edge-seguridad.diff` (Edge Functions)
 - **B-1 (crítico, bug real)**: `invite_client` / `invite_agente` re-vinculaban cualquier cuenta existente con el correo indicado: en modo `password` reasignaban la contraseña y en ambos modos forzaban `user_roles.role` a `cliente`/`agente_carga`. Un admin de organización podía tomar cuentas de staff u otro tenant (incluido `super_admin`). Nuevo candado `supabase/functions/user-management/reinvitacion.ts`: sólo se re-invita una cuenta de portal cuyos vínculos pertenezcan a la organización objetivo; en otro caso 409 `LC_CUENTA_NO_REINVITABLE` (con mensaje amigable en el catálogo `LC_*`).

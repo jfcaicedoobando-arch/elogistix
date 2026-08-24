@@ -500,6 +500,9 @@ jobs:
       - name: Ola 2 Fase B2 - cron de comisiones y barrido SAT
         run: $PSQL -f supabase/tests/ola2_faseb2_regresion.sql
 
+      - name: FIX B-3 - rotacion del lote del barrido SAT semanal
+        run: $PSQL -f supabase/tests/test_sat_semanal_rotacion_lote.sql
+
       - name: Remediacion informe 2026-08-22 - guards sin org y rechazo de documento
         run: $PSQL -f supabase/tests/rev1_org_less_y_rechazo_doc.sql
 
