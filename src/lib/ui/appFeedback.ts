@@ -96,8 +96,7 @@ export function notifyError(_toast: AnyToastFn | undefined, opts: ErrorNotifyOpt
     });
   }
 
-  // 13.114.20 / 13.300.7 / 13.301.59: reportamos a Sentry sólo cuando hay error
-  // real y no es autorización / validación esperada / fallo transitorio de red.
+  // 13.301.59: a Sentry sólo error real (no auth / validación / red transitoria).
   if (shouldReportToSentry(error)) {
     reportCaughtError(
       error,
