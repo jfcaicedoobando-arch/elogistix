@@ -3,7 +3,7 @@
  * mexicano y revisable desde un solo archivo.
  */
 export const HERO = {
-  eyebrow: "Hecho en México 🇲🇽 · Gratis para siempre",
+  eyebrow: "Hecho en México · Gratis para siempre",
   socialBullet: "Construido por forwarders mexicanos, para forwarders mexicanos.",
   h1: "El sistema operativo de tu agencia de carga",
   sub: "Cotiza, embarca, factura y cobra desde un solo lugar. Libre Carga reemplaza tus hojas de Excel, tus carpetas compartidas y tu pizarrón de embarques.",

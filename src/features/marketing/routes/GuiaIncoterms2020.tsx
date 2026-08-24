@@ -26,7 +26,7 @@ import {
 
 export default function GuiaIncoterms2020() {
   return (
-    <div className="landing-scope min-h-screen bg-background text-foreground">
+    <div className="landing-scope min-h-dvh bg-background text-foreground">
       <Seo
         title="Guía Incoterms 2020 México: las 11 reglas explicadas (2026)"
         description="Guía práctica de los 11 Incoterms 2020 para comercio exterior mexicano: EXW, FCA, FOB, CIF, DAP, DDP y más. Cuándo usar cada uno y cambios vs 2010."
@@ -51,7 +51,7 @@ export default function GuiaIncoterms2020() {
               <span className="text-foreground">Guía Incoterms 2020</span>
             </nav>
             <p className="mb-3 inline-flex items-center gap-2 rounded-full bg-accent/10 px-3 py-1 text-sm font-medium text-accent">
-              <Globe className="h-4 w-4" /> Comercio exterior · México 🇲🇽
+              <Globe className="h-4 w-4" /> Comercio exterior · México
             </p>
             <h1 className="text-balance text-4xl font-bold tracking-tight text-foreground sm:text-5xl">
               Guía Incoterms 2020: las 11 reglas aplicadas al comercio exterior mexicano

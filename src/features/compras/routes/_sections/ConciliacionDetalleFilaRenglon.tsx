@@ -36,7 +36,7 @@ export function FilaRenglon({ fila, expandido, onToggle, onVincular }: Props) {
               size="icon"
               onClick={onToggle}
               aria-label={expandido ? "Ocultar partidas" : "Ver partidas"}
-              className="h-6 w-6 text-muted-foreground hover:text-foreground"
+              className="min-h-11 min-w-11 md:h-6 md:w-6 md:min-h-0 md:min-w-0 text-muted-foreground hover:text-foreground"
             >
               {expandido
                 ? <ChevronDown className="h-3.5 w-3.5" />

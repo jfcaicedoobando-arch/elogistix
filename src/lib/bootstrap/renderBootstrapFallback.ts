@@ -11,7 +11,7 @@
  */
 
 const CONTENEDOR_CLASSES =
-  "min-h-screen flex items-center justify-center bg-background text-foreground p-6";
+  "min-h-dvh flex items-center justify-center bg-background text-foreground p-6";
 const TARJETA_CLASSES =
   "max-w-md w-full rounded-lg border border-border bg-card p-6 text-center shadow-sm";
 const BOTON_CLASSES =

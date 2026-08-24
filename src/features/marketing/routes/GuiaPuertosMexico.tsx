@@ -21,7 +21,7 @@ import { GuiaPuertosMexicoArticle } from "./GuiaPuertosMexicoArticle";
 
 export default function GuiaPuertosMexico() {
   return (
-    <div className="landing-scope min-h-screen bg-background text-foreground">
+    <div className="landing-scope min-h-dvh bg-background text-foreground">
       <Seo
         title="Principales puertos de México 2026: guía marítima"
         description="Guía 2026 de los 5 puertos más importantes de México: Manzanillo, Veracruz, Lázaro Cárdenas, Altamira y Ensenada. Códigos UN/LOCODE, rutas, navieras y tipo de carga."
@@ -47,7 +47,7 @@ export default function GuiaPuertosMexico() {
               <span className="text-foreground">Puertos de México</span>
             </nav>
             <p className="mb-3 inline-flex items-center gap-2 rounded-full bg-accent/10 px-3 py-1 text-sm font-medium text-accent">
-              <Anchor className="h-4 w-4" /> Guía marítima · México 🇲🇽
+              <Anchor className="h-4 w-4" /> Guía marítima · México
             </p>
             <h1 className="text-balance text-4xl font-bold tracking-tight text-foreground sm:text-5xl">
               Principales puertos marítimos de México: guía 2026

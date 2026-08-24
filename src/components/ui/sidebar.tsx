@@ -220,7 +220,8 @@ const SidebarTrigger = ({ ref, className, onClick, ...props }: React.ComponentPr
         data-sidebar="trigger"
         variant="ghost"
         size="icon"
-        className={cn("h-9 w-9", className)}
+        className={cn("min-h-11 min-w-11 md:h-9 md:w-9 md:min-h-0 md:min-w-0", className)}
+        aria-label="Mostrar u ocultar la barra lateral"
         onClick={(event) => {
           onClick?.(event);
           toggleSidebar();

@@ -35,7 +35,7 @@ export function Layout() {
 
   return (
     <SidebarProvider defaultOpen={defaultOpen}>
-      <div className="min-h-screen flex w-full">
+      <div className="min-h-dvh flex w-full">
         <AppSidebar />
         <div className="flex-1 flex flex-col min-w-0">
           <header className="sticky top-0 z-40 h-11 sm:h-12 flex items-center gap-2 sm:gap-3 border-b border-border/60 bg-card/95 px-3 sm:px-6 shrink-0 backdrop-blur supports-[backdrop-filter]:bg-card/80">

@@ -95,7 +95,7 @@ export function NuevoUsuarioCredencialesSection(props: CredencialesProps) {
                   type="button"
                   variant="ghost"
                   size="icon"
-                  className="h-7 w-7 text-muted-foreground hover:text-foreground"
+                  className="min-h-11 min-w-11 md:h-7 md:w-7 md:min-h-0 md:min-w-0 text-muted-foreground hover:text-foreground"
                   onClick={handleGenerar}
                   aria-label="Generar contraseña fuerte"
                 >
@@ -110,7 +110,7 @@ export function NuevoUsuarioCredencialesSection(props: CredencialesProps) {
               type="button"
               variant="ghost"
               size="icon"
-              className="h-7 w-7 text-muted-foreground hover:text-foreground"
+              className="min-h-11 min-w-11 md:h-7 md:w-7 md:min-h-0 md:min-w-0 text-muted-foreground hover:text-foreground"
               onClick={onToggleShowPassword}
               aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
             >

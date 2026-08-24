@@ -2,19 +2,12 @@
  * Diálogos de confirmación para cerrar/reabrir embarque.
  * Extraído de `TabCierre.tsx` (v13.139.12) para mantener archivos < 200 líneas.
  */
+import { Lock, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { dialogSize } from "@/components/shared/utils/dialogTokens";
+import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { CIERRE_MOTIVO_MIN } from "@/features/embarques/hooks/useCierreDialog";
 
 interface CerrarDialogProps {
@@ -37,32 +30,37 @@ export function CerrarEmbarqueDialog({
   onConfirm,
 }: CerrarDialogProps) {
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className={dialogSize.md}>
-        <DialogHeader>
-          <DialogTitle>Confirmar cierre del embarque</DialogTitle>
-          <DialogDescription>
-            Esta acción es <strong>irreversible</strong> sin intervención de un super admin.
-            Escribe <strong>CERRAR</strong> para confirmar.
-          </DialogDescription>
-        </DialogHeader>
-        <div className="space-y-2">
-          <Label htmlFor="confirm-cerrar">Confirmación</Label>
-          <Input
-            id="confirm-cerrar"
-            value={confirmText}
-            onChange={(e) => onConfirmTextChange(e.target.value)}
-            placeholder="CERRAR"
-          />
-        </div>
-        <DialogFooter>
+    <FormDialogShell
+      open={open}
+      onOpenChange={onOpenChange}
+      icon={Lock}
+      title="Confirmar cierre del embarque"
+      description={
+        <>
+          Esta acción es <strong>irreversible</strong> sin intervención de un super admin.
+          Escribe <strong>CERRAR</strong> para confirmar.
+        </>
+      }
+      size="md"
+      footer={
+        <>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
           <Button disabled={!puedeConfirmar || isPending} onClick={onConfirm}>
             Cerrar embarque
           </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </>
+      }
+    >
+      <div className="space-y-2">
+        <Label htmlFor="confirm-cerrar">Confirmación</Label>
+        <Input
+          id="confirm-cerrar"
+          value={confirmText}
+          onChange={(e) => onConfirmTextChange(e.target.value)}
+          placeholder="CERRAR"
+        />
+      </div>
+    </FormDialogShell>
   );
 }
 
@@ -86,33 +84,34 @@ export function ReabrirEmbarqueDialog({
   onConfirm,
 }: ReabrirDialogProps) {
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className={dialogSize.md}>
-        <DialogHeader>
-          <DialogTitle>Reabrir embarque cerrado</DialogTitle>
-          <DialogDescription>
-            Describe el motivo (mínimo {CIERRE_MOTIVO_MIN} caracteres). Quedará registrado en bitácora.
-          </DialogDescription>
-        </DialogHeader>
-        <div className="space-y-2">
-          <Label htmlFor="motivo-reapertura">Motivo</Label>
-          <Textarea
-            id="motivo-reapertura"
-            value={motivo}
-            onChange={(e) => onMotivoChange(e.target.value)}
-            rows={4}
-          />
-          <p className="text-body-sm text-muted-foreground">
-            {motivo.trim().length}/{CIERRE_MOTIVO_MIN} caracteres
-          </p>
-        </div>
-        <DialogFooter>
+    <FormDialogShell
+      open={open}
+      onOpenChange={onOpenChange}
+      icon={RotateCcw}
+      title="Reabrir embarque cerrado"
+      description={`Describe el motivo (mínimo ${CIERRE_MOTIVO_MIN} caracteres). Quedará registrado en bitácora.`}
+      size="md"
+      footer={
+        <>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
           <Button disabled={!puedeConfirmar || isPending} onClick={onConfirm}>
             Reabrir
           </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </>
+      }
+    >
+      <div className="space-y-2">
+        <Label htmlFor="motivo-reapertura">Motivo</Label>
+        <Textarea
+          id="motivo-reapertura"
+          value={motivo}
+          onChange={(e) => onMotivoChange(e.target.value)}
+          rows={4}
+        />
+        <p className="text-body-sm text-muted-foreground">
+          {motivo.trim().length}/{CIERRE_MOTIVO_MIN} caracteres
+        </p>
+      </div>
+    </FormDialogShell>
   );
 }

@@ -32,15 +32,15 @@ export function PagoRepCell({ pagoId, facturaId, estadoRep, serieRep, folioRep, 
         <CfdiEstadoBadge tono="timbrada" mono>{label}</CfdiEstadoBadge>
         <Hint label="Previsualizar PDF del REP">
           <Button
-            variant="outline" size="icon" className="h-6 w-6"
+            variant="outline" size="icon" className="min-h-11 min-w-11 md:h-6 md:w-6 md:min-h-0 md:min-w-0"
             aria-label="Previsualizar PDF del REP"
             onClick={(e) => { e.stopPropagation(); onPreview(pagoId, label); }}
           >
             <Eye className="h-3 w-3" />
           </Button>
         </Hint>
-        <FacturaDownloadButton stored={null} kind="pdf" pagoId={pagoId} size="icon" className="h-6 w-6" />
-        <FacturaDownloadButton stored={null} kind="xml" pagoId={pagoId} size="icon" className="h-6 w-6" />
+        <FacturaDownloadButton stored={null} kind="pdf" pagoId={pagoId} size="icon" className="min-h-11 min-w-11 md:h-6 md:w-6 md:min-h-0 md:min-w-0" />
+        <FacturaDownloadButton stored={null} kind="xml" pagoId={pagoId} size="icon" className="min-h-11 min-w-11 md:h-6 md:w-6 md:min-h-0 md:min-w-0" />
       </div>
     );
   }
@@ -52,7 +52,7 @@ export function PagoRepCell({ pagoId, facturaId, estadoRep, serieRep, folioRep, 
         <CfdiEstadoBadge tono="cancelada">REP cancelado</CfdiEstadoBadge>
         <Hint label="Re-timbrar REP (el cancelado queda archivado como antecedente)">
           <Button
-            variant="outline" size="icon" className="h-6 w-6"
+            variant="outline" size="icon" className="min-h-11 min-w-11 md:h-6 md:w-6 md:min-h-0 md:min-w-0"
             aria-label="Re-timbrar REP (el cancelado queda archivado como antecedente)"
             disabled={timbrar.isPending}
             onClick={(e) => { e.stopPropagation(); timbrar.mutate(pagoId); }}
@@ -69,7 +69,7 @@ export function PagoRepCell({ pagoId, facturaId, estadoRep, serieRep, folioRep, 
         <CfdiEstadoBadge tono="borrador">REP con error</CfdiEstadoBadge>
         <Hint label="Reintentar timbrado del REP">
           <Button
-            variant="outline" size="icon" className="h-6 w-6"
+            variant="outline" size="icon" className="min-h-11 min-w-11 md:h-6 md:w-6 md:min-h-0 md:min-w-0"
             aria-label="Reintentar timbrado del REP"
             disabled={timbrar.isPending}
             onClick={(e) => { e.stopPropagation(); timbrar.mutate(pagoId); }}

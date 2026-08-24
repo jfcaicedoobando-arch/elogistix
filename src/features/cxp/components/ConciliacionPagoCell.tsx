@@ -55,7 +55,7 @@ export function ConciliacionPagoCell({
           <Hint label="Desvincular movimiento">
             <Button
               variant="ghost" size="icon"
-              className="h-6 w-6 text-muted-foreground hover:text-destructive"
+              className="min-h-11 min-w-11 md:h-6 md:w-6 md:min-h-0 md:min-w-0 text-muted-foreground hover:text-destructive"
               onClick={() => desvincular.mutate(movimiento.id)}
               disabled={desvincular.isPending}
               loading={desvincular.isPending}

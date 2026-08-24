@@ -78,7 +78,7 @@ export function proveedorContactosColumns(
         <div className="flex justify-end gap-1">
           {acciones.onEditar && (
             <Button
-              variant="ghost" size="icon" className="h-7 w-7"
+              variant="ghost" size="icon" className="min-h-11 min-w-11 md:h-7 md:w-7 md:min-h-0 md:min-w-0"
               aria-label={`Editar contacto ${row.original.nombre}`}
               onClick={(e) => { e.stopPropagation(); acciones.onEditar?.(row.original); }}
             >
@@ -87,7 +87,7 @@ export function proveedorContactosColumns(
           )}
           {acciones.onEliminar && (
             <Button
-              variant="ghost" size="icon" className="h-7 w-7 text-destructive"
+              variant="ghost" size="icon" className="min-h-11 min-w-11 md:h-7 md:w-7 md:min-h-0 md:min-w-0 text-destructive"
               aria-label={`Eliminar contacto ${row.original.nombre}`}
               onClick={(e) => { e.stopPropagation(); acciones.onEliminar?.(row.original); }}
             >

@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { KpiGridSkeleton } from "@/components/shared/skeletons";
 import { ChartSkeleton } from "@/components/shared/ChartSkeleton";
 import { AlertCircle } from "lucide-react";
+import { ErrorStateInline } from "@/components/empty/ErrorStateInline";
 import { fmtPnl, pctPnl, deltaPnl } from "@/lib/formatters/pnl";
 import { calcularAlertasPnl, PNL_UMBRAL_MARGEN_MIN_PCT } from "@/features/embarques/domain/pnlAlertas";
 import { usePnlFinanciero } from "@/features/embarques/hooks/usePnlFinanciero";
@@ -23,7 +24,7 @@ interface Props {
 
 // eslint-disable-next-line complexity
 export function TabPnl({ embarqueId }: Props) {
-  const { data, isLoading, error } = usePnlFinanciero(embarqueId);
+  const { data, isLoading, error, refetch } = usePnlFinanciero(embarqueId);
   const { registerRef } = useFocusSection();
 
   if (isLoading) {
@@ -37,11 +38,11 @@ export function TabPnl({ embarqueId }: Props) {
 
   if (error || !data) {
     return (
-      <Card>
-        <CardContent className="pt-6 text-body text-destructive">
-          No se pudo cargar el P&L del embarque. {(error as Error | null)?.message ?? ""}
-        </CardContent>
-      </Card>
+      <ErrorStateInline
+        title="No se pudo cargar el P&L del embarque"
+        message={(error as Error | null)?.message ?? "Ocurrió un error inesperado. Intenta de nuevo."}
+        onRetry={() => void refetch()}
+      />
     );
   }
 

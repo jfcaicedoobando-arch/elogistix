@@ -38,7 +38,7 @@ export function EstadoCuentaFilaFactura({ fila, abierta, onToggle, facturaHref }
         <Button
           variant="ghost"
           size="icon"
-          className="h-6 w-6"
+          className="min-h-11 min-w-11 md:h-6 md:w-6 md:min-h-0 md:min-w-0"
           onClick={() => onToggle(fila.id)}
           aria-label={abierta ? "Colapsar" : "Expandir"}
           aria-expanded={abierta}

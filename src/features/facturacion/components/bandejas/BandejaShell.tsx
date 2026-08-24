@@ -12,7 +12,7 @@
  */
 import type { ReactNode } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { ErrorState } from "@/components/shared/states/ErrorState";
+import { ErrorStateInline } from "@/components/empty/ErrorStateInline";
 import { UnifiedFiltersBar } from "@/components/shared/filters/UnifiedFiltersBar";
 import type { ChipItem } from "@/hooks/shared/useTableFilters";
 
@@ -69,10 +69,10 @@ export function BandejaShell({
       {isError ? (
         <Card>
           <CardContent className="p-0">
-            <ErrorState
+            <ErrorStateInline
               className="m-4"
               title="No se pudo cargar la bandeja"
-              description="Hubo un problema al consultar la base de datos. Intenta de nuevo en unos segundos."
+              message="Hubo un problema al consultar la base de datos. Intenta de nuevo en unos segundos."
               onRetry={onRetry}
             />
           </CardContent>

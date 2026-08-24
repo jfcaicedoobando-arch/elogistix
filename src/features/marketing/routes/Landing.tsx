@@ -33,7 +33,7 @@ const FAQ_JSONLD = {
 export default function Landing() {
   useCaptureUtmParams();
   return (
-    <div className="landing-scope min-h-screen bg-background text-foreground">
+    <div className="landing-scope min-h-dvh bg-background text-foreground">
       <Seo canonical="https://librecarga.com/" ogUrl="https://librecarga.com/" jsonLd={FAQ_JSONLD} />
       <LandingNav />
       <main>

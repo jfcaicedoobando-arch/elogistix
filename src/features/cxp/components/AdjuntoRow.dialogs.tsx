@@ -8,6 +8,7 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import type { TipoAdjuntoCfdi } from "@/features/cxp/services";
+import { dialogSize } from "@/components/shared/utils/dialogTokens";
 
 export function ConfirmReplaceDialog({
   file, tipo, onCancel, onConfirm,
@@ -19,7 +20,7 @@ export function ConfirmReplaceDialog({
 }) {
   return (
     <AlertDialog open={!!file} onOpenChange={(o) => !o && onCancel()}>
-      <AlertDialogContent>
+      <AlertDialogContent className={dialogSize.sm}>
         <AlertDialogHeader>
           <AlertDialogTitle>¿Reemplazar el {tipo} actual?</AlertDialogTitle>
           <AlertDialogDescription>
@@ -48,7 +49,7 @@ export function ConfirmRemoveDialog({
 }) {
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent>
+      <AlertDialogContent className={dialogSize.sm}>
         <AlertDialogHeader>
           <AlertDialogTitle>¿Quitar el {tipo} adjunto?</AlertDialogTitle>
           <AlertDialogDescription>

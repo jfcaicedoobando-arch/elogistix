@@ -133,7 +133,7 @@ export default function PlantillasMensajeEditor() {
                     <Button
                       size="icon"
                       variant="ghost"
-                      className="h-8 w-8 text-destructive"
+                      className="min-h-11 min-w-11 md:h-8 md:w-8 md:min-h-0 md:min-w-0 text-destructive"
                       onClick={() => setAEliminar({ id: p.id, nombre: p.nombre })}
                       aria-label={`Eliminar plantilla ${p.nombre}`}
                     >

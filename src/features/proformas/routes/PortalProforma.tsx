@@ -96,7 +96,7 @@ export default function PortalProforma() {
   const state = usePortalProforma(token);
 
   return (
-    <div className="min-h-screen bg-muted/30 py-8 px-4">
+    <div className="min-h-dvh bg-muted/30 py-8 px-4">
       <Seo title="Proforma para revisión — Libre Carga" description="Portal de aprobación de proformas" noIndex />
       <div className="max-w-2xl mx-auto space-y-4">
         <DetailHeader

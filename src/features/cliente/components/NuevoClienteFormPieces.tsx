@@ -2,12 +2,13 @@
  * Helpers presentacionales para el modal de Nuevo Cliente.
  * Aislado del Dialog para mantenerlo ≤200 líneas.
  */
-import { Upload, Loader2, FileText, CheckCircle2, Sparkles } from "lucide-react";
+import { Upload, FileText, CheckCircle2, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { Skeleton, SkeletonGroup } from "@/components/ui/skeleton";
 
 import type { ClienteForm } from "@/features/cliente/hooks";
 
@@ -42,10 +43,10 @@ export function CsfDropZone({ parsingCsf, fileName, onFile }: CsfDropZoneProps) 
         onChange={(e) => onFile(e.target.files?.[0] ?? null)}
       />
       {parsingCsf ? (
-        <div className="flex flex-col items-center gap-2">
-          <Loader2 className="h-6 w-6 animate-spin text-primary" />
-          <p className="text-sm text-muted-foreground">Extrayendo datos del CSF…</p>
-        </div>
+        <SkeletonGroup loadingLabel="Extrayendo datos del CSF" className="flex flex-col items-center gap-2">
+          <Skeleton className="h-4 w-40" />
+          <Skeleton className="h-4 w-32" />
+        </SkeletonGroup>
       ) : fileName ? (
         <div className="flex items-center justify-center gap-2 text-sm">
           <FileText className="h-4 w-4 text-primary" />

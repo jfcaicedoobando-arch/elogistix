@@ -55,7 +55,7 @@ function OrgInfoCardBase() {
           <div className="text-xs uppercase tracking-wide text-muted-foreground">ID de organización</div>
           <div className="flex items-center gap-2">
             <code className="px-2 py-1 rounded bg-muted text-xs font-mono truncate">{organization.id}</code>
-            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={copiarId} aria-label="Copiar ID">
+            <Button variant="ghost" size="icon" className="min-h-11 min-w-11 md:h-7 md:w-7 md:min-h-0 md:min-w-0" onClick={copiarId} aria-label="Copiar ID">
               <Copy className="h-3.5 w-3.5" />
             </Button>
           </div>

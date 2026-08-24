@@ -34,7 +34,7 @@ export function NotificacionesPopover() {
             <Button
               variant="ghost"
               size="icon"
-              className="relative h-8 w-8"
+              className="relative min-h-11 min-w-11 md:h-8 md:w-8 md:min-h-0 md:min-w-0"
               aria-label="Notificaciones"
             >
               <Bell className="h-4 w-4" />

@@ -137,7 +137,7 @@ export function FilaCostoLocalRow({ fila, gi, moneda, onUpdate, onRemove }: Prop
           {formatCurrency(profit, moneda)}
         </span>
         <div className="w-[70px] flex justify-center"><ProfitBadge porcentaje={pct} /></div>
-        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onRemove(gi)} aria-label="Eliminar grupo">
+        <Button variant="ghost" size="icon" className="min-h-11 min-w-11 md:h-8 md:w-8 md:min-h-0 md:min-w-0" onClick={() => onRemove(gi)} aria-label="Eliminar grupo">
           <Trash2 className="h-4 w-4 text-destructive" />
         </Button>
       </div>

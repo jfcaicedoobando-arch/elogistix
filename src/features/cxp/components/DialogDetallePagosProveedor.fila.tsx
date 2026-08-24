@@ -79,7 +79,7 @@ export function PagoFila({ pago: p, canEdit, onEliminar, onEditar }: Props) {
             <Button
               variant="ghost"
               size="icon"
-              className="h-7 w-7 text-muted-foreground hover:text-primary hover:bg-primary/10"
+              className="min-h-11 min-w-11 md:h-7 md:w-7 md:min-h-0 md:min-w-0 text-muted-foreground hover:text-primary hover:bg-primary/10"
               onClick={() => onEditar(p)}
               aria-label="Editar pago"
             >
@@ -92,7 +92,7 @@ export function PagoFila({ pago: p, canEdit, onEliminar, onEditar }: Props) {
             <Button
               variant="ghost"
               size="icon"
-              className="h-7 w-7 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+              className="min-h-11 min-w-11 md:h-7 md:w-7 md:min-h-0 md:min-w-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
               onClick={() => onEliminar(p.id)}
               aria-label="Eliminar pago"
             >

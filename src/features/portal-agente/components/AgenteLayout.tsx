@@ -91,7 +91,7 @@ export default function AgenteLayout() {
   const orgName = ctx?.organizacionNombre ?? null;
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="min-h-dvh bg-background flex flex-col">
       <header className="border-b bg-card sticky top-0 z-50 shadow-card">
         <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 flex items-center justify-between h-14 sm:h-16 gap-2">
           <Link to="/agente" className="flex items-center min-w-0">

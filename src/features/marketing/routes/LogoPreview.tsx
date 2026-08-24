@@ -105,7 +105,7 @@ export default function LogoPreview() {
     };
   }, []);
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="min-h-dvh bg-background text-foreground">
       <Seo
         title="QA logo · Libre Carga"
         description="Vista interna de QA del lockup del logo de Libre Carga sobre distintos fondos y estados."

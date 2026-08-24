@@ -80,7 +80,7 @@ export default function Idempotencia() {
           <div className="flex items-center gap-1">
             <code className="text-body-sm font-mono text-muted-foreground">{r.key.slice(0, 8)}…{r.key.slice(-4)}</code>
             <Hint label="Copiar requestId completo">
-              <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => copyKey(r.key)} aria-label="Copiar requestId completo">
+              <Button size="icon" variant="ghost" className="min-h-11 min-w-11 md:h-6 md:w-6 md:min-h-0 md:min-w-0" onClick={() => copyKey(r.key)} aria-label="Copiar requestId completo">
                 <Copy className="h-3 w-3" />
               </Button>
             </Hint>

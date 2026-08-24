@@ -119,13 +119,13 @@ export default function EtapasPipelineEditor() {
                 <Input type="color" className="col-span-1 h-9 p-1" aria-label={`Color de la etapa ${d.nombre}`} value={d.color} onChange={(ev) => set(e.id, { color: ev.target.value })} />
                 <div className="col-span-2 flex items-center gap-1">
                   <Hint label="Subir">
-                    <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => mover(e.id, -1)} aria-label="Subir">
+                    <Button size="icon" variant="ghost" className="min-h-11 min-w-11 md:h-7 md:w-7 md:min-h-0 md:min-w-0" onClick={() => mover(e.id, -1)} aria-label="Subir">
                       <ArrowUp className="h-3 w-3" />
                     </Button>
                   </Hint>
                   <span className="text-body-sm text-muted-foreground w-6 text-center">{e.orden}</span>
                   <Hint label="Bajar">
-                    <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => mover(e.id, 1)} aria-label="Bajar">
+                    <Button size="icon" variant="ghost" className="min-h-11 min-w-11 md:h-7 md:w-7 md:min-h-0 md:min-w-0" onClick={() => mover(e.id, 1)} aria-label="Bajar">
                       <ArrowDown className="h-3 w-3" />
                     </Button>
                   </Hint>

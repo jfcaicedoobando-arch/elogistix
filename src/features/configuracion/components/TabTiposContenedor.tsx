@@ -52,7 +52,7 @@ export default function TabTiposContenedor() {
       meta: { headerClassName: "w-12" },
       cell: ({ row }) =>
         canAdminTenant ? (
-          <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" disabled={eliminarTipo.isPending} onClick={() => setTipoAEliminar(row.original)} aria-label={`Eliminar tipo ${row.original.name}`}>
+          <Button variant="ghost" size="icon" className="min-h-11 min-w-11 md:h-8 md:w-8 md:min-h-0 md:min-w-0 text-destructive hover:text-destructive" disabled={eliminarTipo.isPending} onClick={() => setTipoAEliminar(row.original)} aria-label={`Eliminar tipo ${row.original.name}`}>
             <Trash2 className="h-4 w-4" />
           </Button>
         ) : null,

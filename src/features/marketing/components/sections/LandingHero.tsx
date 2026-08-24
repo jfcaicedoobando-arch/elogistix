@@ -31,8 +31,8 @@ export function LandingHero() {
           >
             {HERO.h1}
           </h1>
-          <p className="mt-5 flex items-center gap-2 text-sm font-medium text-primary-foreground/90">
-            <span className="h-1.5 w-1.5 rounded-full bg-primary-foreground" />
+          <p className="mt-5 flex items-start gap-2 text-sm font-medium text-primary-foreground/90">
+            <span className="mt-2 h-1.5 w-1.5 flex-none rounded-full bg-primary-foreground" />
             {HERO.socialBullet}
           </p>
           <p className="mt-4 max-w-xl text-lg leading-relaxed text-primary-foreground/85">

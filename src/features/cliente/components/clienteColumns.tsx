@@ -32,8 +32,8 @@ export type CotizacionCliente = {
 
 export const embarqueColumns: ColumnDef<EmbarqueCliente, unknown>[] = defineColumns<EmbarqueCliente>([
   { id: "expediente", header: "Expediente", meta: { width: COL_W.folio, className: "font-medium" }, cell: ({ row }) => row.original.expediente },
-  { id: "modo", header: "Modo", meta: { width: COL_W.short, className: "text-xs" }, cell: ({ row }) => row.original.modo },
-  { id: "ruta", header: "Origen → Destino", meta: { width: COL_W.ruta, className: "text-xs" }, cell: ({ row }) => `${shortName(getOrigen(row.original))} → ${shortName(getDestino(row.original))}` },
+  { id: "modo", header: "Modo", meta: { width: COL_W.short, className: "text-body-sm" }, cell: ({ row }) => row.original.modo },
+  { id: "ruta", header: "Origen → Destino", meta: { width: COL_W.ruta, className: "text-body-sm" }, cell: ({ row }) => `${shortName(getOrigen(row.original))} → ${shortName(getDestino(row.original))}` },
   {
     ...statusColumn<EmbarqueCliente>({
       id: "estado",
@@ -43,15 +43,15 @@ export const embarqueColumns: ColumnDef<EmbarqueCliente, unknown>[] = defineColu
     }),
     meta: { width: COL_W.estado },
   },
-  { id: "etd", header: "ETD", meta: { width: COL_W.fecha, className: "text-xs" }, cell: ({ row }) => formatDate(row.original.etd || "") },
-  { id: "eta", header: "ETA", meta: { width: COL_W.fecha, className: "text-xs" }, cell: ({ row }) => formatDate(row.original.eta || "") },
+  { id: "etd", header: "ETD", meta: { width: COL_W.fecha, className: "text-body-sm" }, cell: ({ row }) => formatDate(row.original.etd || "") },
+  { id: "eta", header: "ETA", meta: { width: COL_W.fecha, className: "text-body-sm" }, cell: ({ row }) => formatDate(row.original.eta || "") },
 ]);
 
 export const cotizacionColumns: ColumnDef<CotizacionCliente, unknown>[] = defineColumns<CotizacionCliente>([
   { id: "folio", header: "Folio", meta: { width: COL_W.folio, className: "font-medium" }, cell: ({ row }) => row.original.folio },
-  { id: "modo", header: "Modo", meta: { width: COL_W.short, className: "text-xs" }, cell: ({ row }) => row.original.modo },
-  { id: "ruta", header: "Origen → Destino", meta: { width: COL_W.ruta, className: "text-xs" }, cell: ({ row }) => `${row.original.origen || "-"} → ${row.original.destino || "-"}` },
-  { id: "subtotal", header: "Subtotal", meta: { width: COL_W.monto, align: "right", className: "text-xs tabular-nums" }, cell: ({ row }) => formatCurrency(row.original.subtotal, row.original.moneda) },
+  { id: "modo", header: "Modo", meta: { width: COL_W.short, className: "text-body-sm" }, cell: ({ row }) => row.original.modo },
+  { id: "ruta", header: "Origen → Destino", meta: { width: COL_W.ruta, className: "text-body-sm" }, cell: ({ row }) => `${row.original.origen || "-"} → ${row.original.destino || "-"}` },
+  { id: "subtotal", header: "Subtotal", meta: { width: COL_W.monto, align: "right", className: "text-body-sm tabular-nums" }, cell: ({ row }) => formatCurrency(row.original.subtotal, row.original.moneda) },
   { ...statusColumn<CotizacionCliente>({ id: "estado", header: "Estado", domain: "cotizacion", accessor: (c) => c.estado }), meta: { width: COL_W.estado } },
-  { id: "fecha", header: "Fecha", meta: { width: COL_W.fecha, className: "text-xs" }, cell: ({ row }) => formatDate(row.original.created_at) },
+  { id: "fecha", header: "Fecha", meta: { width: COL_W.fecha, className: "text-body-sm" }, cell: ({ row }) => formatDate(row.original.created_at) },
 ]);

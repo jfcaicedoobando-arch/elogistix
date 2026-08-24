@@ -1,11 +1,11 @@
 import { Navigate, useLocation } from "react-router-dom";
 import { useEffect } from "react";
 import { useAuth } from "@/lib/contexts/AuthContext";
-import { Loader2 } from "lucide-react";
 import type { AppRole } from "@/types/appRole";
 import { anyRoleSatisfies } from "@/lib/auth/roleHierarchy";
 import { resolveProtectedRouteRedirect } from "@/features/auth/utils/resolveProtectedRouteRedirect";
 import { notifyWarning } from "@/lib/ui/appFeedback";
+import { RouteLoadingSkeleton } from "@/components/ui/RouteLoadingSkeleton";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -39,20 +39,7 @@ export function ProtectedRoute({ children, allowedRoles, inline = false }: Prote
   }, [sinAcceso, location.pathname]);
 
   if (loading) {
-    return (
-      <div
-        role="status"
-        aria-live="polite"
-        className={
-          inline
-            ? "flex min-h-[50vh] items-center justify-center"
-            : "flex h-dvh items-center justify-center"
-        }
-      >
-        <Loader2 className="h-8 w-8 animate-spin text-primary" aria-hidden />
-        <span className="sr-only">Verificando permisos…</span>
-      </div>
-    );
+    return <RouteLoadingSkeleton inline={inline} />;
   }
 
   if (!user) {

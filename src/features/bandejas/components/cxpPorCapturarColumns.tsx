@@ -137,7 +137,7 @@ export function buildCxpPorCapturarColumns(opts: BuildOpts): ColumnDef<RowData, 
               <Button
                 size="icon"
                 variant="ghost"
-                className="h-8 w-8"
+                className="min-h-11 min-w-11 md:h-8 md:w-8 md:min-h-0 md:min-w-0"
                 onClick={() => onCapturar(row.original)}
                 aria-label={`Capturar factura del embarque ${row.original.expediente ?? row.original.embarque_id}`}
               >

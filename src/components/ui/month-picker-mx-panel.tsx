@@ -24,14 +24,14 @@ export function MonthPickerMxPanel({ value, onSelect }: Props) {
     <>
       <div className="flex items-center justify-between mb-2">
         <Button
-          variant="ghost" size="icon" className="h-7 w-7"
+          variant="ghost" size="icon" className="min-h-11 min-w-11 md:h-7 md:w-7 md:min-h-0 md:min-w-0"
           onClick={() => setViewYear((y) => y - 1)} aria-label="Año anterior"
         >
           <ChevronLeft className="h-4 w-4" />
         </Button>
         <div className="text-body font-medium">{viewYear}</div>
         <Button
-          variant="ghost" size="icon" className="h-7 w-7"
+          variant="ghost" size="icon" className="min-h-11 min-w-11 md:h-7 md:w-7 md:min-h-0 md:min-w-0"
           onClick={() => setViewYear((y) => y + 1)} aria-label="Año siguiente"
         >
           <ChevronRight className="h-4 w-4" />

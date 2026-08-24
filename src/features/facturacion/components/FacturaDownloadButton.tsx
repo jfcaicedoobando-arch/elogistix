@@ -57,7 +57,7 @@ export function FacturaDownloadButton({ stored, kind, size = "icon", className, 
         <Button
           variant="outline"
           size="icon"
-          className={className ?? "h-7 w-7"}
+          className={className ?? "min-h-11 min-w-11 md:h-7 md:w-7 md:min-h-0 md:min-w-0"}
           aria-label={label}
           onClick={onClick}
         >

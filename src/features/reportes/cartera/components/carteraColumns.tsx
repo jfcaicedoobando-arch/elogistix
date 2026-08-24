@@ -25,14 +25,14 @@ export function carteraColumns(etiquetaContraparte: string): ColumnDef<FilaCarte
       id: "contraparte",
       header: etiquetaContraparte,
       accessorFn: (f) => f.contraparte,
-      cell: ({ row }) => <span className="text-xs font-medium">{row.original.contraparte}</span>,
+      cell: ({ row }) => <span className="text-body-sm font-medium">{row.original.contraparte}</span>,
     },
     {
       id: "folio",
       header: "Folio",
       accessorFn: (f) => f.folio,
       meta: { width: "w-28" },
-      cell: ({ row }) => <span className="text-xs tabular-nums">{row.original.folio}</span>,
+      cell: ({ row }) => <span className="text-body-sm tabular-nums">{row.original.folio}</span>,
     },
     {
       id: "expediente",
@@ -40,7 +40,7 @@ export function carteraColumns(etiquetaContraparte: string): ColumnDef<FilaCarte
       accessorFn: (f) => f.expediente,
       meta: { width: "w-28" },
       cell: ({ row }) => (
-        <span className="text-xs text-muted-foreground">{row.original.expediente || "—"}</span>
+        <span className="text-body-sm text-muted-foreground">{row.original.expediente || "—"}</span>
       ),
     },
     {
@@ -49,7 +49,7 @@ export function carteraColumns(etiquetaContraparte: string): ColumnDef<FilaCarte
       accessorFn: (f) => f.fechaVencimiento ?? "",
       meta: { width: "w-24" },
       cell: ({ row }) => (
-        <span className="whitespace-nowrap text-xs">
+        <span className="whitespace-nowrap text-body-sm">
           {row.original.fechaVencimiento ? formatDate(row.original.fechaVencimiento) : "—"}
         </span>
       ),
@@ -71,7 +71,7 @@ export function carteraColumns(etiquetaContraparte: string): ColumnDef<FilaCarte
       accessorFn: (f) => f.saldo,
       meta: { width: "w-32", align: "right" },
       cell: ({ row }) => (
-        <span className="text-xs tabular-nums">
+        <span className="text-body-sm tabular-nums">
           {formatCurrency(row.original.saldo, row.original.moneda)}
         </span>
       ),
@@ -82,7 +82,7 @@ export function carteraColumns(etiquetaContraparte: string): ColumnDef<FilaCarte
       accessorFn: (f) => f.mxnHistorico,
       meta: { width: "w-36", align: "right" },
       cell: ({ row }) => (
-        <span className="text-xs tabular-nums">
+        <span className="text-body-sm tabular-nums">
           {formatCurrency(row.original.mxnHistorico, "MXN")}
         </span>
       ),
@@ -93,7 +93,7 @@ export function carteraColumns(etiquetaContraparte: string): ColumnDef<FilaCarte
       accessorFn: (f) => f.mxnCorte,
       meta: { width: "w-36", align: "right" },
       cell: ({ row }) => (
-        <span className="text-xs font-medium tabular-nums">
+        <span className="text-body-sm font-medium tabular-nums">
           {formatCurrency(row.original.mxnCorte, "MXN")}
         </span>
       ),
@@ -106,7 +106,7 @@ export function carteraColumns(etiquetaContraparte: string): ColumnDef<FilaCarte
       cell: ({ row }) => (
         <span
           className={cn(
-            "text-xs tabular-nums",
+            "text-body-sm tabular-nums",
             row.original.diferencia > 0 && "text-success",
             row.original.diferencia < 0 && "text-destructive",
           )}

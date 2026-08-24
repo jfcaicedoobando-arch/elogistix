@@ -15,7 +15,7 @@ const Ayuda = lazy(() => import("@/features/dashboard/routes/Ayuda"));
  */
 export function AyudaPublicShell() {
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="min-h-dvh bg-background text-foreground">
       <header className="border-b border-border bg-background/80 backdrop-blur">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
           <Link to="/" aria-label="Libre Carga">
