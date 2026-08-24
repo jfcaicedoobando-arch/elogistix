@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { formatFechaEs } from "@/lib/formatters";
 import { useAlinearTcEmbarqueDof } from "@/features/embarques/hooks/useTcEmbarqueDof";
+import { dialogSize } from "@/components/shared/utils/dialogTokens";
 
 interface Props {
   embarqueId: string;
@@ -35,7 +36,7 @@ export function PnlTcAlinearDialog({ embarqueId, fecha, tcActual, tcDof }: Props
           Usar el del DOF
         </Button>
       </AlertDialogTrigger>
-      <AlertDialogContent>
+      <AlertDialogContent className={dialogSize.md}>
         <AlertDialogHeader>
           <AlertDialogTitle>¿Alinear el tipo de cambio al DOF?</AlertDialogTitle>
           <AlertDialogDescription>

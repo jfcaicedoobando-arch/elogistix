@@ -10,6 +10,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import type { UserRow } from "@/features/admin/services/usuario";
+import { dialogSize } from "@/components/shared/utils/dialogTokens";
 import { RoleChangeAlertDialog, type PendingRoleChange } from "./RoleChangeAlertDialog";
 
 interface Props {
@@ -66,7 +67,7 @@ export function UsuariosInternosDialogs({
           if (!open) onQuitarTargetChange(null);
         }}
       >
-        <AlertDialogContent>
+        <AlertDialogContent className={dialogSize.md}>
           <AlertDialogHeader>
             <AlertDialogTitle>Quitar de la organización</AlertDialogTitle>
             <AlertDialogDescription>
