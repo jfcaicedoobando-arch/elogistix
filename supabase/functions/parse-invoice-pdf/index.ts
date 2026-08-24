@@ -5,12 +5,19 @@
  * Devuelve el MISMO shape que `parse-cfdi-xml` para que el frontend reutilice
  * el flujo de prellenado (`handleCfdiParsed`), con `uuid = ""` y RFC = tax_id
  * extranjero. La UI y el usuario siempre revisan antes de guardar.
+ *
+ * Seguridad (R2 · P1 — drenaje de cuota IA), ver `./guardas.ts`:
+ *  - JWT válido + membresía de org + rol de captura CxP (ROLES_CAPTURA_CXP).
+ *  - Rate limit persistente por usuario y por org (fail-CLOSED).
+ *  - Tope de 10 MB: corte por `Content-Length` antes de parsear el multipart
+ *    y revalidación con el tamaño real del archivo.
  */
 import { handlePreflightStrict, buildCors } from "../_shared/cors.ts";
 import { jsonResponse, errorResponse } from "../_shared/response.ts";
 import { authenticate } from "../_shared/auth.ts";
 import { createLogger } from "../_shared/logger.ts";
 import { captureEdgeException, debeReportarStatus, wrapEdgeHandler } from "../_shared/sentry.ts";
+import { autorizarYLimitar } from "./guardas.ts";
 import {
   callGeminiExtract,
   mapGeminiToCfdiShape,
@@ -19,9 +26,14 @@ import {
 } from "./extract.ts";
 
 const MAX_BYTES = 10 * 1024 * 1024;
+// Margen para el overhead del multipart (boundary + headers de la parte).
+const MAX_CONTENT_LENGTH = MAX_BYTES + 512 * 1024;
 
-async function handle(req: Request, cors: HeadersInit, log: ReturnType<typeof createLogger>) {
-  await authenticate(req);
+async function handle(req: Request, cors: Record<string, string>, log: ReturnType<typeof createLogger>) {
+  const auth = await authenticate(req, log);
+  const rechazo = await autorizarYLimitar(auth, cors, log);
+  if (rechazo) return rechazo;
+
   // @ts-expect-error Deno
   const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
   if (!LOVABLE_API_KEY) return errorResponse("Falta LOVABLE_API_KEY en el servidor", 500, cors);
@@ -32,6 +44,13 @@ async function handle(req: Request, cors: HeadersInit, log: ReturnType<typeof cr
   if (!contentType.toLowerCase().includes("multipart/form-data")) {
     return errorResponse("Envía el PDF como multipart/form-data", 400, cors);
   }
+
+  // R2 · P1: corte temprano por Content-Length ANTES de bufferar el multipart.
+  const contentLength = Number(req.headers.get("content-length") ?? "0");
+  if (Number.isFinite(contentLength) && contentLength > MAX_CONTENT_LENGTH) {
+    return errorResponse("El PDF excede 10 MB", 413, cors);
+  }
+
 
   let form: FormData;
   try {
