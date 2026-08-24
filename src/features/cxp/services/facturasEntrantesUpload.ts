@@ -2,164 +2,45 @@
  * v13.361.2 — Subida de archivos del buzón de facturas de proveedor
  * (PDF + XML del mismo CFDI). Extraído de `facturasEntrantes.ts`.
  */
-import { supabase } from "@/integrations/supabase/client";
 import { registrarActividad } from "@/services/bitacora/registrar";
 import { validarParejaEntrante } from "@/lib/domain/facturasEntrantes";
 import type { CfdiXmlMeta } from "@/lib/domain/cfdiXmlMeta";
-import {
-  columnasMetaEntrante,
-  columnasXmlEntrante,
-  type ArchivoSubido,
-} from "@/features/cxp/services/facturasEntrantesFila";
-import {
-  mensajeDuplicadoEntrante,
-  type SubirFacturaEntranteInput,
-} from "@/features/cxp/services/facturasEntrantes.types";
-import {
-  validarNoDuplicadoEnBuzon,
-  esErrorUnicidad,
-  limpiarArchivosHuerfanosSeguro,
-} from "@/features/cxp/services/facturasEntrantesDedupe";
-import {
-  verificarYAdjuntarXmlEntrante,
-  mensajeErrorAdjuntarXml,
-} from "@/features/cxp/services/adjuntarXmlEntranteEdge";
+import type { SubirFacturaEntranteInput } from "@/features/cxp/services/facturasEntrantes.types";
+import { validarNoDuplicadoEnBuzon } from "@/features/cxp/services/facturasEntrantesDedupe";
+import { verificarYAdjuntarXmlEntrante } from "@/features/cxp/services/adjuntarXmlEntranteEdge";
 import { guardarConceptosSugeridos } from "@/features/cxp/services/facturasEntrantesConceptos";
 import {
   calcularHash,
   subirArchivoEntrante as subirArchivo,
 } from "@/features/cxp/services/facturasEntrantesUploadHelpers";
-
-/** Arma el renglón a insertar; aísla el mapeo para mantener baja la complejidad. */
-function filaEntranteAInsertar(params: {
-  input: SubirFacturaEntranteInput;
-  principal: ArchivoSubido;
-  xmlSubido: ArchivoSubido | null;
-  userId: string | null;
-}) {
-  const { input, principal, xmlSubido, userId } = params;
-  return {
-    embarque_id: input.embarqueId,
-    organization_id: input.organizationId,
-    archivo_path: principal.path,
-    archivo_hash: principal.hash,
-    nombre_archivo: principal.nombre,
-    ...columnasXmlEntrante({ soloXml: !input.pdf, principal, xmlSubido }),
-    ...columnasMetaEntrante(input.meta),
-    nota: input.nota?.trim() || null,
-    monto_declarado: input.montoDeclarado ?? null,
-    sin_costo_capturado: Boolean(input.sinCostoCapturado),
-    moneda_declarada: input.montoDeclarado != null ? (input.monedaDeclarada ?? "MXN") : null,
-    proveedor_id: input.proveedorId ?? null,
-    subido_por: userId,
-  };
-}
-
-/**
- * Limpieza + traducción común de errores al guardar el renglón del buzón:
- * con 23505 (unicidad) NO se borra el objeto — el path es content-addressed y
- * lo referencia la fila ganadora de la carrera. Para otros errores se limpian
- * sólo los paths sin fila viva. Devuelve el error listo para lanzar.
- */
-async function errorGuardadoEntrante(
-  error: { message: string; details?: string | null },
-  paths: string[],
-  organizationId: string,
-): Promise<Error | typeof error> {
-  if (!esErrorUnicidad(error)) {
-    await limpiarArchivosHuerfanosSeguro(paths, organizationId);
-  }
-  const duplicado = mensajeDuplicadoEntrante(`${error.message} ${error.details ?? ""}`);
-  return duplicado ? new Error(duplicado) : error;
-}
-
-/**
- * FIX3 · M-6 (BUG-18) extendido al ALTA INICIAL: los metadatos fiscales del
- * INSERT quedan sellados server-side como NO verificados. Aquí replicamos el
- * flujo de "adjuntar XML posterior": la edge descarga el XML, verifica su hash,
- * lo re-parsea y REEMPLAZA los metadatos con los del servidor (marcándolos como
- * verificados). Si algo no cuadra, se avisa al usuario y queda rastro.
- */
-async function verificarMetadatosDelAlta(params: {
-  documentoId: string;
-  xml: ArchivoSubido | null;
-  meta: CfdiXmlMeta | null;
-  nombreArchivo: string;
-}): Promise<void> {
-  if (!params.xml) return;
-  const error = await verificarYAdjuntarXmlEntrante({
-    documentoId: params.documentoId,
-    xmlPath: params.xml.path,
-    xmlNombre: params.xml.nombre,
-    xmlHash: params.xml.hash,
-    meta: params.meta,
-  });
-  if (!error) return;
-  await registrarActividad({
-    modulo: "cxp",
-    accion: "verificacion_xml_entrante_fallida",
-    entidadId: params.documentoId,
-    entidadNombre: params.nombreArchivo,
-  });
-  throw new Error(
-    mensajeErrorAdjuntarXml(`${error.message} ${error.details ?? ""}`),
-  );
-}
+import {
+  errorGuardadoEntrante,
+  insertarFilaEntrante,
+  subirArchivosDelBuzon,
+  verificarMetadatosDelAlta,
+} from "@/features/cxp/services/facturasEntrantesUploadAlta";
 
 export async function subirFacturaEntrante(input: SubirFacturaEntranteInput): Promise<string> {
   const invalido = validarParejaEntrante({ pdf: input.pdf, xml: input.xml });
   if (invalido) throw new Error(invalido);
 
-  // El registro principal apunta al PDF cuando existe; si sólo hay XML, a él.
-  // v13.419.0 — Se valida el duplicado ANTES de subir: así el usuario ve el
-  // mensaje claro del buzón en vez de un error técnico del almacenamiento.
-  const archivoPrincipal = (input.pdf ?? input.xml) as File;
-  const hashPrincipal = await calcularHash(archivoPrincipal);
-  await validarNoDuplicadoEnBuzon(hashPrincipal, input.organizationId);
+  const { archivoPrincipal, principal, xmlSubido } = await subirArchivosDelBuzon(input);
+  const documentoId = await insertarFilaEntrante({ input, principal, xmlSubido });
 
-  // N36 (Ola 4): el XML acompañante también se deduplica (antes nunca se
-  // validaba su hash y podía acompañar varios documentos).
-  const hashXmlAcompanante = input.pdf && input.xml ? await calcularHash(input.xml) : null;
-  if (hashXmlAcompanante) {
-    await validarNoDuplicadoEnBuzon(hashXmlAcompanante, input.organizationId, "xml_hash");
-  }
-
-  const principal = await subirArchivo(archivoPrincipal, input, hashPrincipal);
-  const xmlSubido = input.pdf && input.xml
-    ? await subirArchivo(input.xml, input, hashXmlAcompanante ?? undefined)
-    : null;
-
-  const { data: userData } = await supabase.auth.getUser();
-  const { data, error } = await supabase
-    .from("embarque_facturas_entrantes")
-    .insert(filaEntranteAInsertar({
-      input,
-      principal,
-      xmlSubido,
-      userId: userData?.user?.id ?? null,
-    }))
-    .select("id")
-    .single();
-  if (error) {
-    throw await errorGuardadoEntrante(
-      error,
-      [principal.path, ...(xmlSubido ? [xmlSubido.path] : [])],
-      input.organizationId,
-    );
-  }
-  const sugerenciasOk = await guardarConceptosSugeridos(data.id, input);
+  const sugerenciasOk = await guardarConceptosSugeridos(documentoId, input);
   if (!sugerenciasOk) {
     // RNF-09: rastro auditable del fallo; el usuario ya recibió el aviso y el
     // documento queda subido de todos modos.
     await registrarActividad({
       modulo: "cxp",
       accion: "conceptos_sugeridos_no_guardados",
-      entidadId: data.id,
+      entidadId: documentoId,
       entidadNombre: archivoPrincipal.name,
     });
   }
+
   await verificarMetadatosDelAlta({
-    documentoId: data.id,
+    documentoId,
     xml: xmlSubido ?? (input.xml && !input.pdf ? principal : null),
     meta: input.meta ?? null,
     nombreArchivo: archivoPrincipal.name,
@@ -167,10 +48,11 @@ export async function subirFacturaEntrante(input: SubirFacturaEntranteInput): Pr
   await registrarActividad({
     modulo: "cxp",
     accion: "subir_factura_entrante",
-    entidadId: data.id,
+    entidadId: documentoId,
     entidadNombre: archivoPrincipal.name,
   });
-  return data.id;
+  return documentoId;
+
 }
 
 /** Completa un documento existente adjuntándole el XML que faltaba. */

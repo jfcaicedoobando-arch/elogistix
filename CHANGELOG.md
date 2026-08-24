@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.736.2] - 2026-08-24
+### CI verde tras FIX3
+- **Mensajes LC_***: se añaden `LC_PAGO_FECHA_PREVIA_EMISION` (tesorería) y `LC_COTIZACION_OTRA_ORG` (CRM) al catálogo de mensajes amigables.
+- **Replay de espejos**: nueva migración `20260831000100_fix3_m6_espejo_adjuntar_xml_verificado.sql` re-emite `adjuntar_xml_entrante_verificado` con la GUC `app.entrante_xml_verificado`; sin ella, la migración posterior (20260826004000) reintroducía la versión sin sello en un replay limpio. Manifiesto de migraciones sincronizado (1063).
+- **Power of 10 / ESLint**: `subirFacturaEntrante` baja de complejidad 19 a límite (helpers `subirArchivosDelBuzon` / `insertarFilaEntrante`) y los helpers del alta se mueven a `facturasEntrantesUploadAlta.ts` (archivos ≤200 líneas).
+
 ## [13.736.1] - 2026-08-24
 - CI (RLS · rpc_org_scope_linter): `seleccionar_lote_sat_semanal(integer)` se vuelve a cerrar a `service_role` en `_ci_post_migrate.sql`; el GRANT masivo del Postgres bare de CI la exponía a `authenticated` y disparaba el linter.
 
