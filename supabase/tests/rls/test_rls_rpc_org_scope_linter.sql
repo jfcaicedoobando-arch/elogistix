@@ -89,8 +89,6 @@ DECLARE
     'tc_dof_vigente',
     'tc_para_documento',
     'calcular_costo_demoras',
-    'nc_aplicadas_en_moneda_factura',
-    'venta_embarque_mxn_neta',
     'saldo_cuenta_bancaria',
     'idempotency_store',
     -- ── E. Deuda real por-ID: reciben el ID de un documento que el caller
