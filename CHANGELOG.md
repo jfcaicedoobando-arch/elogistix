@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.738.1] - 2026-08-24
+### FIX-R3-02 — CI: `_ci_verify_rls.sql` fallaba por `cron_locks`
+- **Causa**: `public.cron_locks` (mutex de crons, v13.737.0) quedó con RLS habilitada y CERO policies. El verificador de cobertura RLS exige al menos una policy declarada, porque un deny implícito hace que los tests de aislamiento pasen trivialmente con `count = 0`.
+- **Fix**: policy explícita `USING (false) WITH CHECK (false)` para `anon`/`authenticated` + `REVOKE ALL`. Los crons corren con `service_role`, que hace bypass de RLS, así que no hay cambio de comportamiento.
+- Manifiesto sincronizado (1067 migraciones) y verificador local en verde.
+
 ## [13.738.0] - 2026-09-01
 ### FIX-R3 — Pulido de frontend (parche `fix3-frontend-pulido`)
 - **Parseo de dinero unificado**: `parseMonto` ahora aplica la misma heurística que `MoneyInput` (`"1.500"` sin coma = 1,500) y acepta `{ puntoDeMiles: false }` para valores que no son dinero (cantidades, tipos de cambio). Antes el mismo texto pegado valía 1000× menos según el campo.
