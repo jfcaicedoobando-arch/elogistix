@@ -1,5 +1,19 @@
 # Changelog
 
+## [13.737.0] - 2026-08-24
+### R3 — Endurecimiento de Edge Functions (auditoría `fix3-edge-hardening`)
+- **email_send_log ya no se atora en `pending`** (P2): nueva RPC `email_send_log_touch` (upsert por `message_id`, sólo `service_role`) + columna `intentos`. `send-transactional-email` y `process-email-queue/*` usan `registrarEstadoEmail` en lugar de un segundo INSERT que reventaba el índice único `uq_email_send_log_message_id` con 23505 silencioso. Limpieza única de las 18 filas zombie (>24 h) a `failed`.
+- **Barrido SAT** (P2): `patchVerificacionSat` sólo mueve `uuid_verificado` con veredicto definitivo (`Vigente`/`Cancelado`/`No Encontrado`); los transitorios (`Error`, `No verificable`) ya no borran sellos buenos cuando el SAT se cae.
+- **Mutex de crons** (P3): tabla `cron_locks` + `cron_try_lock`/`cron_unlock` (lease con TTL) y helper `_shared/cronLock.ts`; aplicado a `rep-retry-nocturno`, `verificar-sat-semanal` y `facturapi-reconciliar-cancelaciones`.
+- **`rep-retry-nocturno`** (P3): las alertas se insertan fila a fila tolerando 23505; antes un choque tumbaba el lote completo.
+- **CRON_SECRET** (P3): `timingSafeEqual` en `tc-dof-diario`, `auditoria-snapshot-daily`, `auditoria-weekly-digest` y `rep-retry-nocturno`.
+- **`exchange-rates`** (P3): rate limit para el endpoint público y caché histórico con tope FIFO (antes crecía sin límite iterando `?fecha=`).
+- **`notificar-respuesta-cotizacion`** (P3): dedupe por (cotización, estado) 10 min + tope por usuario vía `check_ratelimit`; evitaba el reenvío en bucle a todos los operadores.
+- **`sentry-tunnel`** (P3): tope de 1 MB en el envelope leído (endpoint público).
+- **PII** (P3): `_shared/redact.ts` (`maskEmail`) en los logs de las edges de correo.
+- **Descartado del parche**: el bloque `resolveOrgScope`/`scopePorOrganizacion` en `facturapi-*` (los lookups ya corren con el JWT del usuario y RLS filtra por org; el cambio arriesgaba a los usuarios del portal). También se omitió el `deno.lock` propuesto.
+
+
 ## [13.736.3] - 2026-08-24
 - CI (FIX2 B-1): `_ci_post_migrate.sql` vuelve a cerrar las columnas internas de `public.embarques` (`cerrado_snapshot`, `tarifa_delta_jsonb`, `reabierto_motivo`, `created_by_email`) tras el `GRANT SELECT ON ALL TABLES` del Postgres bare de CI, que reinstalaba el privilegio a nivel tabla y hacía fallar `fix2_embarques_interno_y_nc.sql`.
 
