@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.736.3] - 2026-08-24
+- CI (FIX2 B-1): `_ci_post_migrate.sql` vuelve a cerrar las columnas internas de `public.embarques` (`cerrado_snapshot`, `tarifa_delta_jsonb`, `reabierto_motivo`, `created_by_email`) tras el `GRANT SELECT ON ALL TABLES` del Postgres bare de CI, que reinstalaba el privilegio a nivel tabla y hacía fallar `fix2_embarques_interno_y_nc.sql`.
+
+
 ## [13.736.2] - 2026-08-24
 ### CI verde tras FIX3
 - **Mensajes LC_***: se añaden `LC_PAGO_FECHA_PREVIA_EMISION` (tesorería) y `LC_COTIZACION_OTRA_ORG` (CRM) al catálogo de mensajes amigables.
