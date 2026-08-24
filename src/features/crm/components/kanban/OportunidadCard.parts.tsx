@@ -4,6 +4,7 @@
  */
 import { Calendar, CheckCircle2, Target } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
+import { Hint } from "@/components/shared/Hint";
 import { formatCurrencyCompact, fraccionAPorcentaje } from "@/lib/formatters";
 import { formatFechaEs } from "@/lib/formatters/dates";
 import { porcentajeCriterios, type AvanceCriterios } from "@/features/crm/domain/criterios";
@@ -44,6 +45,7 @@ export function MetaRow({
   const etiquetaFecha = fechaMeta ? `Meta ${formatFechaEs(fechaMeta)}` : "Meta";
   const etiquetaAvance =
     avance != null ? ` · ${fraccionAPorcentaje(avance)}% de ${fmtMxn(montoMeta)}` : "";
+  const texto = `${etiquetaFecha}${etiquetaAvance}${vencida ? " · vencida" : ""}`;
   return (
     <div
       className={`text-label flex items-center gap-1 ${
@@ -51,11 +53,10 @@ export function MetaRow({
       }`}
     >
       <Target className="h-3 w-3 shrink-0" />
-      <span className="truncate">
-        {etiquetaFecha}
-        {etiquetaAvance}
-        {vencida ? " · vencida" : ""}
-      </span>
+      {/* E-14: texto truncado sin forma de leerlo completo. */}
+      <Hint label={texto}>
+        <span className="truncate">{texto}</span>
+      </Hint>
     </div>
   );
 }
@@ -74,7 +75,9 @@ export function ProximaRow({
       }`}
     >
       <Calendar className="h-3 w-3 shrink-0" />
-      <span className="truncate">{texto}</span>
+      <Hint label={texto}>
+        <span className="truncate">{texto}</span>
+      </Hint>
     </div>
   );
 }

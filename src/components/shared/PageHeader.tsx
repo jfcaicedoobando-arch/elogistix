@@ -42,9 +42,12 @@ export function PageHeader({
 }: PageHeaderProps) {
   return (
     <div className={cn("space-y-3 short:space-y-2", className)}>
-      {/* En tableta (<lg) el header apila: título full-width evita truncado con
-          acciones (Tesorería, Cotizaciones, Utilidad) — activar flex-row sólo en lg+. */}
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+      {/* En tableta (sm..lg) el header apila: título full-width evita truncado con
+          acciones (Tesorería, Cotizaciones, Utilidad) — flex-row en lg+.
+          E-7 (auditoría visual 2026-08-24): en móvil (<sm) las acciones ya vienen
+          colapsadas en un menú "…", así que vuelven a la línea del título para no
+          dejar una banda vacía bajo el subtítulo. */}
+      <div className="flex flex-row items-start justify-between gap-3 sm:flex-col lg:flex-row lg:items-start lg:justify-between">
         <div className="min-w-0 flex-1">
           <h1 className="flex items-center gap-2 text-display font-bold tracking-tight">
             {icon}
@@ -56,13 +59,14 @@ export function PageHeader({
           {subHeader ? <div className="mt-2">{subHeader}</div> : null}
         </div>
         {actions ? (
-          // Mobile/tableta: acciones envueltas alineadas a la derecha bajo el título.
-          // lg+: fila horizontal sin envolver.
-          <div className="flex flex-wrap items-center justify-end gap-2 w-full lg:w-auto lg:flex-nowrap lg:justify-end">
+          // <sm: acciones en la misma línea del título (menú compacto).
+          // sm..lg: fila propia alineada a la derecha. lg+: sin envolver.
+          <div className="flex shrink-0 flex-wrap items-center justify-end gap-2 w-auto sm:w-full lg:w-auto lg:flex-nowrap lg:justify-end">
             {actions}
           </div>
         ) : null}
       </div>
+
       {tabs ? <div className="pt-1">{tabs}</div> : null}
     </div>
   );

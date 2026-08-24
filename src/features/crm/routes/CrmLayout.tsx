@@ -46,8 +46,15 @@ export default function CrmLayout() {
           shell ya indica el módulo y cada ruta hija trae su propio PageHeader.
           Antes se veían dos títulos apilados ("CRM" + "Resumen ejecutivo"). */}
       <div className="border-b bg-background">
-        <div className="px-4 sm:px-6 flex items-center gap-2 h-11">
-          <nav className="flex items-center gap-1 overflow-x-auto flex-1 min-w-0 h-11 -mb-px">
+        {/* E-5 (auditoría 2026-08-24): en móvil el botón "Nuevo" se encimaba con
+            los sub-tabs porque ambos compartían una sola fila fija. Ahora el
+            layout apila tabs y acciones en columnas <sm y las acciones quedan
+            en su propia franja, sin overlap. */}
+        <div className="flex flex-col sm:flex-row sm:items-center gap-0 px-2 sm:px-6 sm:h-11">
+          <nav
+            className="flex items-center gap-1 overflow-x-auto snap-x flex-1 min-w-0 h-11 -mb-px [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+            aria-label="Secciones del CRM"
+          >
             {TABS.map((t) => {
               const showBadge = t.to === "/crm/actividades" && vencidas > 0;
               return (
@@ -58,7 +65,7 @@ export default function CrmLayout() {
                   className={({ isActive }) =>
                     cn(
                       tabsUnderlineTriggerClass,
-                      "h-11 pb-0 gap-2 shrink-0",
+                      "h-11 pb-0 gap-2 shrink-0 snap-start",
                       isActive ? "text-foreground" : "text-muted-foreground",
                     )
                   }
@@ -74,7 +81,7 @@ export default function CrmLayout() {
               );
             })}
           </nav>
-          <div className="flex items-center gap-2 shrink-0 pl-2 border-l border-border/60">
+          <div className="flex items-center justify-end gap-2 shrink-0 py-1 sm:py-0 sm:pl-2 border-t sm:border-t-0 sm:border-l border-border/60">
             {canEdit && <QuickAddMenu openTrigger={openTrigger} dialogTrigger={dialogTrigger} />}
             {/* Ola 6 (O6.3): el ícono de configuración sigue el mismo permiso
                 que la ruta /crm/configuracion (admin del tenant + gerente

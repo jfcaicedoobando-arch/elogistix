@@ -142,6 +142,44 @@ Reglas:
 - Breakpoint `short:` (`max-height: 800px`) para compactar en laptops de 720p;
   ya está aplicado en `PageContainer` y `PageHeader`.
 
+## 4c. Variantes de `Tabs` (E-8)
+
+`src/components/ui/tabs.tsx` define las variantes vía `cva` en `TabsList` y
+`TabsTrigger` (prop `variant`). `default` se mantiene igual para no romper
+pantallas existentes; hay dos variantes nuevas con uso documentado:
+
+- **`variant="seccion"`**: pill con fondo (`bg-muted`), para navegar entre
+  secciones completas de una pantalla (ej. `/configuracion`: Empresa,
+  Facturación, Catálogos, Operaciones, Herramientas).
+
+  ```tsx
+  <Tabs value={tab} onValueChange={setTab}>
+    <TabsList variant="seccion">
+      <TabsTrigger variant="seccion" value="empresa">Empresa</TabsTrigger>
+      <TabsTrigger variant="seccion" value="facturacion">Facturación</TabsTrigger>
+    </TabsList>
+    <TabsContent value="empresa">…</TabsContent>
+  </Tabs>
+  ```
+
+- **`variant="vista"`**: pill compacto, para alternar la misma información
+  entre dos representaciones (ej. Kanban / Tabla en Oportunidades CRM).
+
+  ```tsx
+  <Tabs defaultValue="kanban">
+    <TabsList variant="vista">
+      <TabsTrigger variant="vista" value="kanban">Kanban</TabsTrigger>
+      <TabsTrigger variant="vista" value="tabla">Tabla</TabsTrigger>
+    </TabsList>
+    <TabsContent value="kanban">…</TabsContent>
+  </Tabs>
+  ```
+
+- **`variant="underline"`** (V-12) sigue disponible para cockpits densos con
+  línea inferior en vez de pastilla.
+
+---
+
 ---
 
 ## 4b. Anatomía de una ficha de detalle

@@ -19,6 +19,7 @@ import ExportarCsvButton from "@/features/crm/components/ExportarCsvButton";
 import { exportarOportunidadesCsv } from "@/features/crm/services/crmCsvExport";
 
 import OportunidadesDialogs from "@/features/crm/components/OportunidadesDialogs";
+import NuevaOportunidadDialog from "@/features/crm/components/NuevaOportunidadDialog";
 import { FILTROS_DEFAULT, type OportunidadesFiltros } from "@/features/crm/components/oportunidadesFiltersTypes";
 import { useOportunidades, useEtapasPipeline, type CrmEtapaRow } from "@/features/crm/hooks";
 import { useMoverOportunidadEtapa } from "@/features/crm/hooks/useMoverOportunidadEtapa";
@@ -38,6 +39,7 @@ export default function Oportunidades() {
   const [search, setSearch] = useState("");
   const [filtros, setFiltros] = useState<OportunidadesFiltros>(FILTROS_DEFAULT);
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [nuevaOpen, setNuevaOpen] = useState(false);
   const debounced = useDebounce(search, 300);
 
   const { data: etapas = [] } = useEtapasPipeline();
@@ -108,9 +110,9 @@ export default function Oportunidades() {
       />
 
       <Tabs defaultValue="kanban">
-        <TabsList>
-          <TabsTrigger value="kanban">Kanban</TabsTrigger>
-          <TabsTrigger value="tabla">Tabla</TabsTrigger>
+        <TabsList variant="vista">
+          <TabsTrigger variant="vista" value="kanban">Kanban</TabsTrigger>
+          <TabsTrigger variant="vista" value="tabla">Tabla</TabsTrigger>
         </TabsList>
         <TabsContent value="kanban" className="mt-4">
           {isError ? (
@@ -123,6 +125,7 @@ export default function Oportunidades() {
               oportunidades={ops}
               onMover={handleMover}
               onClickCard={(id) => navigate(`/crm/oportunidades/${id}`)}
+              onNuevo={() => setNuevaOpen(true)}
             />
           )}
         </TabsContent>
@@ -154,6 +157,12 @@ export default function Oportunidades() {
         cerrarPerdida={cerrarPerdida}
         confirmarPerdida={confirmarPerdida}
         moviendo={moviendo}
+      />
+      {/* E-11: CTA del estado vacío de las columnas del Kanban. */}
+      <NuevaOportunidadDialog
+        open={nuevaOpen}
+        onOpenChange={setNuevaOpen}
+        onSaved={() => { setNuevaOpen(false); void refetch(); }}
       />
     </PageContainer>
   );

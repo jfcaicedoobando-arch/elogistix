@@ -3,6 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ESTADOS_FILTRO, type EstadoFiltro } from "@/features/dashboard/hooks";
 import { getEstadoVisual } from "@/lib/ui/estadoConfig";
+import { Hint } from "@/components/shared/Hint";
 
 interface Props {
   conteoPorEstado: Record<EstadoFiltro, number>;
@@ -63,9 +64,14 @@ export function TimelineEstadosCard({ conteoPorEstado, isLoading }: Props) {
                     )}
                   </div>
 
-                  <span className="text-label sm:text-label font-medium mt-0.5 text-muted-foreground text-center truncate max-w-full px-1">
-                    {estado}
-                  </span>
+                  {/* E-15: la etiqueta se trunca en pantallas angostas
+                      ("Confirm…"); Hint expone el nombre completo del
+                      estado como texto accesible (foco y hover/tap). */}
+                  <Hint label={estado}>
+                    <span className="text-label sm:text-label font-medium mt-0.5 text-muted-foreground text-center truncate max-w-full px-1 cursor-help">
+                      {estado}
+                    </span>
+                  </Hint>
 
                   {idx < ESTADOS_FILTRO.length - 1 && (
                     <div className="absolute top-5 sm:top-6 left-full w-full flex items-center justify-center pointer-events-none">

@@ -9,6 +9,10 @@ interface KpiStripProps {
    *  para que las tarjetas envuelvan en lugar de cortarse cuando el
    *  contenedor es más angosto que el viewport (p. ej. /inicio a 1920px). */
   autoFit?: boolean;
+  /** Auditoría E-2: en `<640px` reemplaza el carrusel horizontal (que
+   *  deja tiles cortados a la mitad en el borde) por una sola columna
+   *  apilada, sin scroll horizontal. */
+  mobileStack?: boolean;
   className?: string;
 }
 
@@ -25,13 +29,24 @@ const DESKTOP_COLS: Record<number, string> = {
  * - `<sm`: carrusel horizontal con scroll-snap (cards ~78% del ancho)
  * - `≥sm`: grid según `desktopCols`
  */
-export function KpiStrip({ children, desktopCols = 6, autoFit = false, className }: KpiStripProps) {
+export function KpiStrip({
+  children,
+  desktopCols = 6,
+  autoFit = false,
+  mobileStack = false,
+  className,
+}: KpiStripProps) {
   return (
     <div
       className={cn(
-        // Mobile: carrusel snap
-        "flex overflow-x-auto snap-x snap-mandatory gap-3 -mx-4 px-4 pb-2",
-        "[&>*]:snap-start [&>*]:shrink-0 [&>*]:w-[78%]",
+        mobileStack
+          // Mobile: 1 columna apilada, sin scroll horizontal ni cortes.
+          ? "grid grid-cols-1 gap-3 min-w-0"
+          : [
+              // Mobile: carrusel snap
+              "flex overflow-x-auto snap-x snap-mandatory gap-3 -mx-4 px-4 pb-2",
+              "[&>*]:snap-start [&>*]:shrink-0 [&>*]:w-[78%]",
+            ],
         // Desktop: grid (resetea reglas móviles)
         "sm:grid sm:overflow-visible sm:mx-0 sm:px-0 sm:pb-0",
         "sm:[&>*]:w-auto sm:[&>*]:shrink",
