@@ -256,6 +256,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "anticipos_proveedor_embarque_id_fkey"
+            columns: ["embarque_id"]
+            isOneToOne: false
+            referencedRelation: "embarques_interno_v"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "anticipos_proveedor_proveedor_id_fkey"
             columns: ["proveedor_id"]
             isOneToOne: false
@@ -427,6 +434,13 @@ export type Database = {
             columns: ["embarque_id"]
             isOneToOne: false
             referencedRelation: "embarques"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "auditoria_revisiones_embarque_id_fkey"
+            columns: ["embarque_id"]
+            isOneToOne: false
+            referencedRelation: "embarques_interno_v"
             referencedColumns: ["id"]
           },
           {
@@ -744,6 +758,13 @@ export type Database = {
             columns: ["embarque_id"]
             isOneToOne: false
             referencedRelation: "embarques"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cierre_embarque_log_embarque_id_fkey"
+            columns: ["embarque_id"]
+            isOneToOne: false
+            referencedRelation: "embarques_interno_v"
             referencedColumns: ["id"]
           },
         ]
@@ -1090,6 +1111,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "comisiones_devengadas_embarque_id_fkey"
+            columns: ["embarque_id"]
+            isOneToOne: false
+            referencedRelation: "embarques_interno_v"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "comisiones_devengadas_factura_id_fkey"
             columns: ["factura_id"]
             isOneToOne: false
@@ -1168,6 +1196,13 @@ export type Database = {
             columns: ["embarque_id"]
             isOneToOne: false
             referencedRelation: "embarques"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comisiones_excepciones_embarque_id_fkey"
+            columns: ["embarque_id"]
+            isOneToOne: false
+            referencedRelation: "embarques_interno_v"
             referencedColumns: ["id"]
           },
         ]
@@ -1309,6 +1344,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "conceptos_costo_embarque_id_fkey"
+            columns: ["embarque_id"]
+            isOneToOne: false
+            referencedRelation: "embarques_interno_v"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "conceptos_costo_organization_id_fkey"
             columns: ["organization_id"]
             isOneToOne: false
@@ -1400,6 +1442,13 @@ export type Database = {
             columns: ["embarque_id"]
             isOneToOne: false
             referencedRelation: "embarques"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conceptos_factura_embarque_id_fkey"
+            columns: ["embarque_id"]
+            isOneToOne: false
+            referencedRelation: "embarques_interno_v"
             referencedColumns: ["id"]
           },
           {
@@ -1503,6 +1552,13 @@ export type Database = {
             columns: ["embarque_id"]
             isOneToOne: false
             referencedRelation: "embarques"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conceptos_venta_embarque_id_fkey"
+            columns: ["embarque_id"]
+            isOneToOne: false
+            referencedRelation: "embarques_interno_v"
             referencedColumns: ["id"]
           },
           {
@@ -2804,6 +2860,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "cotizaciones_embarque_id_fkey"
+            columns: ["embarque_id"]
+            isOneToOne: false
+            referencedRelation: "embarques_interno_v"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "cotizaciones_lcl_consolidador_id_fkey"
             columns: ["lcl_consolidador_id"]
             isOneToOne: false
@@ -3857,6 +3920,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "documentos_embarque_embarque_id_fkey"
+            columns: ["embarque_id"]
+            isOneToOne: false
+            referencedRelation: "embarques_interno_v"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "documentos_embarque_organization_id_fkey"
             columns: ["organization_id"]
             isOneToOne: false
@@ -4018,6 +4088,13 @@ export type Database = {
             referencedRelation: "embarques"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "embarque_contenedores_embarque_id_fkey"
+            columns: ["embarque_id"]
+            isOneToOne: false
+            referencedRelation: "embarques_interno_v"
+            referencedColumns: ["id"]
+          },
         ]
       }
       embarque_facturas_entrantes: {
@@ -4126,6 +4203,13 @@ export type Database = {
             columns: ["embarque_id"]
             isOneToOne: false
             referencedRelation: "embarques"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "embarque_facturas_entrantes_embarque_id_fkey"
+            columns: ["embarque_id"]
+            isOneToOne: false
+            referencedRelation: "embarques_interno_v"
             referencedColumns: ["id"]
           },
           {
@@ -4284,6 +4368,13 @@ export type Database = {
             columns: ["embarque_id"]
             isOneToOne: false
             referencedRelation: "embarques"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "embarque_garantias_contenedor_embarque_id_fkey"
+            columns: ["embarque_id"]
+            isOneToOne: false
+            referencedRelation: "embarques_interno_v"
             referencedColumns: ["id"]
           },
           {
@@ -4753,6 +4844,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "eventos_embarque_embarque_id_fkey"
+            columns: ["embarque_id"]
+            isOneToOne: false
+            referencedRelation: "embarques_interno_v"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "eventos_embarque_organization_id_fkey"
             columns: ["organization_id"]
             isOneToOne: false
@@ -4789,6 +4887,13 @@ export type Database = {
             columns: ["embarque_id"]
             isOneToOne: false
             referencedRelation: "embarques"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "factura_embarques_embarque_id_fkey"
+            columns: ["embarque_id"]
+            isOneToOne: false
+            referencedRelation: "embarques_interno_v"
             referencedColumns: ["id"]
           },
           {
@@ -5397,6 +5502,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "facturas_embarque_id_fkey"
+            columns: ["embarque_id"]
+            isOneToOne: false
+            referencedRelation: "embarques_interno_v"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "facturas_organization_id_fkey"
             columns: ["organization_id"]
             isOneToOne: false
@@ -5660,6 +5772,13 @@ export type Database = {
             columns: ["embarque_id"]
             isOneToOne: false
             referencedRelation: "embarques"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notas_embarque_embarque_id_fkey"
+            columns: ["embarque_id"]
+            isOneToOne: false
+            referencedRelation: "embarques_interno_v"
             referencedColumns: ["id"]
           },
           {
@@ -5990,6 +6109,13 @@ export type Database = {
             columns: ["embarque_id"]
             isOneToOne: false
             referencedRelation: "embarques"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pagos_factura_embarque_id_fkey"
+            columns: ["embarque_id"]
+            isOneToOne: false
+            referencedRelation: "embarques_interno_v"
             referencedColumns: ["id"]
           },
           {
@@ -6450,6 +6576,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "pcc_embarque_id_fkey"
+            columns: ["embarque_id"]
+            isOneToOne: false
+            referencedRelation: "embarques_interno_v"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "pcc_organization_id_fkey"
             columns: ["organization_id"]
             isOneToOne: false
@@ -6713,6 +6846,13 @@ export type Database = {
             columns: ["embarque_id"]
             isOneToOne: false
             referencedRelation: "embarques"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "proformas_embarque_id_fkey"
+            columns: ["embarque_id"]
+            isOneToOne: false
+            referencedRelation: "embarques_interno_v"
             referencedColumns: ["id"]
           },
           {
@@ -7059,6 +7199,13 @@ export type Database = {
             columns: ["embarque_id"]
             isOneToOne: false
             referencedRelation: "embarques"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "proveedor_facturas_embarque_id_fkey"
+            columns: ["embarque_id"]
+            isOneToOne: false
+            referencedRelation: "embarques_interno_v"
             referencedColumns: ["id"]
           },
           {
@@ -7647,6 +7794,13 @@ export type Database = {
             referencedRelation: "embarques"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "seguros_embarque_embarque_id_fkey"
+            columns: ["embarque_id"]
+            isOneToOne: false
+            referencedRelation: "embarques_interno_v"
+            referencedColumns: ["id"]
+          },
         ]
       }
       super_admin_org_activa: {
@@ -7822,6 +7976,13 @@ export type Database = {
             referencedRelation: "embarques"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "tracking_externo_embarque_id_fkey"
+            columns: ["embarque_id"]
+            isOneToOne: false
+            referencedRelation: "embarques_interno_v"
+            referencedColumns: ["id"]
+          },
         ]
       }
       tracking_intentos: {
@@ -7915,6 +8076,13 @@ export type Database = {
             columns: ["embarque_id"]
             isOneToOne: false
             referencedRelation: "embarques"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tracking_links_embarque_id_fkey"
+            columns: ["embarque_id"]
+            isOneToOne: false
+            referencedRelation: "embarques_interno_v"
             referencedColumns: ["id"]
           },
         ]
@@ -8206,6 +8374,41 @@ export type Database = {
           },
         ]
       }
+      embarques_interno_v: {
+        Row: {
+          cerrado_snapshot: Json | null
+          created_by_email: string | null
+          id: string | null
+          organization_id: string | null
+          reabierto_motivo: string | null
+          tarifa_delta_jsonb: Json | null
+        }
+        Insert: {
+          cerrado_snapshot?: Json | null
+          created_by_email?: string | null
+          id?: string | null
+          organization_id?: string | null
+          reabierto_motivo?: string | null
+          tarifa_delta_jsonb?: Json | null
+        }
+        Update: {
+          cerrado_snapshot?: Json | null
+          created_by_email?: string | null
+          id?: string | null
+          organization_id?: string | null
+          reabierto_motivo?: string | null
+          tarifa_delta_jsonb?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "embarques_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       v_pagos_rep_pendientes: {
         Row: {
           cliente_id: string | null
@@ -8236,6 +8439,13 @@ export type Database = {
             columns: ["embarque_id"]
             isOneToOne: false
             referencedRelation: "embarques"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "facturas_embarque_id_fkey"
+            columns: ["embarque_id"]
+            isOneToOne: false
+            referencedRelation: "embarques_interno_v"
             referencedColumns: ["id"]
           },
           {

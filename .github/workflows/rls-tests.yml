@@ -463,6 +463,9 @@ jobs:
       - name: CxC guard - NC multimoneda vs saldo (Ola G1)
         run: $PSQL -f supabase/tests/cxc_guard_nc_multimoneda.sql
 
+      - name: FIX2 - columnas internas de embarques + maquina NC + roles cotizaciones
+        run: $PSQL -f supabase/tests/fix2_embarques_interno_y_nc.sql
+
 
       - name: CxC guard - factura con cancelacion en tramite no admite cobros
         run: $PSQL -f supabase/tests/cxc_guard_factura_en_cancelacion.sql

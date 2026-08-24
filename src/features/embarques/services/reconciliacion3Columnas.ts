@@ -9,6 +9,7 @@
  * Devuelve filas alineadas por (concepto, moneda) listas para la UI.
  */
 import { supabase } from "@/integrations/supabase/client";
+import { obtenerEmbarqueInterno } from "./internoEmbarque";
 import {
   obtenerCostosCotizacionVersion,
   type CostoVersionado,
@@ -37,7 +38,6 @@ interface ConceptoCostoRow {
 
 interface EmbarqueMeta {
   cotizacion_id: string | null;
-  tarifa_delta_jsonb: unknown;
   organization_id: string;
   version_aceptada: number | null;
 }
@@ -107,11 +107,11 @@ export async function obtenerReconciliacion3Columnas(
   embarqueId: string,
   umbrales: UmbralesVarianza = UMBRALES_DEFAULT,
 ): Promise<ResultadoReconciliacion3C> {
-  // 1. Meta del embarque (incluye cotizacion_id y delta de Fase 1).
+  // 1. Meta del embarque (cotizacion_id). El delta de Fase 1 vive en
+  // `embarques_interno_v` desde FIX2 · B-1 (columna revocada a authenticated).
   const { data: embRaw, error: embErr } = await supabase
     .from("embarques")
-    // SAFE-CAST: tarifa_delta_jsonb se agregó en Fase 1 y puede no estar en tipos.
-    .select("cotizacion_id, tarifa_delta_jsonb, organization_id" as unknown as string)
+    .select("cotizacion_id, organization_id")
     .eq("id", embarqueId)
     .maybeSingle();
   if (embErr) throw new Error(embErr.message);
@@ -152,8 +152,9 @@ export async function obtenerReconciliacion3Columnas(
   if (realErr) throw new Error(realErr.message);
   const reales = (realesRaw ?? []) as ConceptoCostoRow[];
 
-  // 3. Delta del embarque (Fase 1).
-  const deltaRaw = emb.tarifa_delta_jsonb as { cambios?: DeltaConcepto[] } | null;
+  // 3. Delta del embarque (Fase 1) desde la vista interna (sólo staff).
+  const interno = await obtenerEmbarqueInterno(embarqueId);
+  const deltaRaw = interno?.tarifa_delta_jsonb as { cambios?: DeltaConcepto[] } | null;
   const delta = Array.isArray(deltaRaw?.cambios) ? deltaRaw!.cambios : [];
 
   const filas = buildFilas3C(cotizados, delta, reales, umbrales);
