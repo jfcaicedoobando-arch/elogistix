@@ -4,7 +4,7 @@
  */
 import { Banknote, TrendingDown, TrendingUp, Wallet } from "lucide-react";
 import { KpiCard } from "@/components/shared/KpiCard";
-import { formatCurrency } from "@/lib/formatters/numbers";
+import { formatCurrency, formatCurrencyCompact } from "@/lib/formatters/numbers";
 import { ROUTES } from "@/constants/routes";
 import type { ResumenTesoreria } from "@/features/tesoreria/domain";
 
@@ -24,7 +24,8 @@ export function TesoreriaKpis({ data }: Props) {
     <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
       <KpiCard
         label="Saldo total en bancos"
-        value={formatCurrency(data.saldo_bancos_mxn, "MXN")}
+        value={formatCurrencyCompact(data.saldo_bancos_mxn, "MXN")}
+        valueTooltip={formatCurrency(data.saldo_bancos_mxn, "MXN")}
         sublabel={desgloseMonedas(data.saldos_por_moneda)}
         icon={Wallet}
         iconVariant="chip"
@@ -38,7 +39,8 @@ export function TesoreriaKpis({ data }: Props) {
       />
       <KpiCard
         label="Por cobrar 30 días"
-        value={formatCurrency(data.flujo.por_cobrar_total_mxn, "MXN")}
+        value={formatCurrencyCompact(data.flujo.por_cobrar_total_mxn, "MXN")}
+        valueTooltip={formatCurrency(data.flujo.por_cobrar_total_mxn, "MXN")}
         sublabel={
           data.cartera_vencida_count > 0
             ? `${data.cartera_vencida_count} vencidas · ${formatCurrency(data.cartera_vencida_total_mxn, "MXN")}`
@@ -56,7 +58,8 @@ export function TesoreriaKpis({ data }: Props) {
       />
       <KpiCard
         label="Por pagar 30 días"
-        value={formatCurrency(data.flujo.por_pagar_total_mxn, "MXN")}
+        value={formatCurrencyCompact(data.flujo.por_pagar_total_mxn, "MXN")}
+        valueTooltip={formatCurrency(data.flujo.por_pagar_total_mxn, "MXN")}
         sublabel={
           data.cxp_vencidas_count > 0
             ? `${data.cxp_vencidas_count} vencidas · ${formatCurrency(data.cxp_vencidas_total_mxn, "MXN")}`
@@ -74,7 +77,8 @@ export function TesoreriaKpis({ data }: Props) {
       />
       <KpiCard
         label="Flujo neto 30 días"
-        value={formatCurrency(neto, "MXN")}
+        value={formatCurrencyCompact(neto, "MXN")}
+        valueTooltip={formatCurrency(neto, "MXN")}
         sublabel={neto >= 0 ? "Cobros mayores a pagos" : "Los pagos superan los cobros"}
         icon={Banknote}
         iconVariant="chip"

@@ -7,6 +7,7 @@
 import { useDraggable } from "@dnd-kit/core";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Hint } from "@/components/shared/Hint";
 import { formatCurrencyCompact } from "@/lib/formatters";
 import { todayLocalISO } from "@/lib/date/today";
 import { estadoMeta, semaforoCriterios, type AvanceCriterios } from "@/features/crm/domain/criterios";
@@ -62,9 +63,15 @@ export default function OportunidadCard({ op, onClick, proxima, avance, esCerrad
       className="bg-card border border-border hover:border-primary/50 transition-colors"
     >
       <CardContent className="p-3 space-y-1">
-        <div className="font-medium text-body line-clamp-2">{op.nombre}</div>
+        {/* E-14: nombre y cliente se truncan en tarjetas angostas; el texto
+            completo queda disponible en un tooltip accesible. */}
+        <Hint label={op.nombre}>
+          <div className="font-medium text-body line-clamp-2">{op.nombre}</div>
+        </Hint>
         {op.cliente_nombre ? (
-          <div className="text-body-sm text-muted-foreground line-clamp-1">{op.cliente_nombre}</div>
+          <Hint label={op.cliente_nombre}>
+            <div className="text-body-sm text-muted-foreground line-clamp-1">{op.cliente_nombre}</div>
+          </Hint>
         ) : null}
         <div className="flex items-center justify-between pt-1">
           <span className="text-body-sm font-semibold">{fmtMxn(Number(op.monto_estimado ?? 0))}</span>

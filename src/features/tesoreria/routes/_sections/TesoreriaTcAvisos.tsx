@@ -8,6 +8,7 @@
 import { AlertTriangle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 import { formatCurrency, formatTipoCambio} from "@/lib/formatters";
 import { formatFechaEs } from "@/lib/formatters";
 
@@ -33,7 +34,15 @@ function etiquetaTc(tipoCambioUsd: number | null, tipoCambioFecha: string | null
 
 function variantTc(tipoCambioUsd: number | null, tcEstimado: boolean) {
   if (tcEstimado) return "warning" as const;
-  return tipoCambioUsd ? ("info" as const) : ("secondary" as const);
+  return tipoCambioUsd ? ("outline" as const) : ("secondary" as const);
+}
+
+// E-16: la variante `info` (azul claro sobre fondo claro) no cumple 4.5:1.
+// Para el chip de TC DOF usamos `text-primary` sobre `bg-primary/10`, que sí
+// pasa AA, en vez del par de tokens `info` (reservado a otros contextos).
+function claseTc(tipoCambioUsd: number | null, tcEstimado: boolean): string | undefined {
+  if (tcEstimado || !tipoCambioUsd) return undefined;
+  return "border-transparent bg-primary/10 text-primary hover:bg-primary/15";
 }
 
 export function TesoreriaTcAvisos({
@@ -51,7 +60,10 @@ export function TesoreriaTcAvisos({
   return (
     <>
       <div className="flex flex-wrap items-center justify-end gap-2">
-        <Badge variant={variantTc(tipoCambioUsd, tcEstimado)}>
+        <Badge
+          variant={variantTc(tipoCambioUsd, tcEstimado)}
+          className={cn(claseTc(tipoCambioUsd, tcEstimado))}
+        >
           {etiquetaTc(tipoCambioUsd, tipoCambioFecha, tcEstimado)}
         </Badge>
       </div>

@@ -29,9 +29,11 @@ interface Props {
   onClickCard: (id: string) => void;
   proximasMap: Map<string, ProximaActividad>;
   avanceMap: Map<string, AvanceCriterios>;
+  /** CTA del estado vacío (E-11). Sin esto, la columna vacía no muestra acción. */
+  onNuevo?: () => void;
 }
 
-export default function ColumnaEtapa({ etapa, ops, onClickCard, proximasMap, avanceMap }: Props) {
+export default function ColumnaEtapa({ etapa, ops, onClickCard, proximasMap, avanceMap, onNuevo }: Props) {
   const { setNodeRef, isOver } = useDroppable({ id: etapa.id });
   const [visibles, setVisibles] = useState(LIMITE_ETAPA_INICIAL);
   const totales = totalesEtapa(ops);
@@ -39,9 +41,8 @@ export default function ColumnaEtapa({ etapa, ops, onClickCard, proximasMap, ava
   const opsVisibles = ops.slice(0, visibles);
   const ocultas = ops.length - opsVisibles.length;
 
-
   return (
-    <div className="flex-shrink-0 w-72 flex flex-col bg-muted/40 rounded-lg">
+    <div className="flex-shrink-0 w-72 flex flex-col bg-muted/40 rounded-lg snap-start">
       <div
         className="p-3 border-b border-border rounded-t-lg border-t-[3px]"
         style={{ borderTopColor: colorAcentoEtapa(etapa) }}
@@ -58,9 +59,11 @@ export default function ColumnaEtapa({ etapa, ops, onClickCard, proximasMap, ava
           </div>
         )}
       </div>
+      {/* E-6: alto mínimo acotado en vez de estirarse a la altura de la
+          columna más llena del tablero (antes ~900px en móvil vacío). */}
       <div
         ref={setNodeRef}
-        className={`flex-1 p-2 space-y-2 min-h-48 transition-colors ${isOver ? "bg-primary/5" : ""}`}
+        className={`flex-1 p-2 space-y-2 min-h-40 transition-colors ${isOver ? "bg-primary/5" : ""}`}
       >
         {opsVisibles.map((op) => (
           <OportunidadCard
@@ -73,7 +76,14 @@ export default function ColumnaEtapa({ etapa, ops, onClickCard, proximasMap, ava
           />
         ))}
         {ops.length === 0 && (
-          <EmptyStateInline icon={Briefcase} message="Sin oportunidades" className="py-8" />
+          // E-11: mismo componente de estado vacío que el resto del ERP, con
+          // CTA coherente en vez del icono de maletín propio del Kanban.
+          <EmptyStateInline
+            icon={Briefcase}
+            message="Sin oportunidades"
+            density="compact"
+            action={!esCerrada && onNuevo ? { label: "Nueva oportunidad", onClick: onNuevo } : undefined}
+          />
         )}
         {ocultas > 0 && (
           <div className="flex flex-col items-center gap-1.5 border-t border-border px-2 pt-2 pb-1">
@@ -89,7 +99,6 @@ export default function ColumnaEtapa({ etapa, ops, onClickCard, proximasMap, ava
             </Button>
           </div>
         )}
-
       </div>
     </div>
   );

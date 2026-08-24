@@ -43,9 +43,11 @@ interface Props {
   oportunidades: CrmOportunidadRow[];
   onMover: (oportunidadId: string, etapaId: string, probDefault: number) => void;
   onClickCard: (id: string) => void;
+  /** CTA del estado vacío de cada columna (E-11). Omitir oculta la acción. */
+  onNuevo?: () => void;
 }
 
-export default function OportunidadKanban({ etapas, oportunidades, onMover, onClickCard }: Props) {
+export default function OportunidadKanban({ etapas, oportunidades, onMover, onClickCard, onNuevo }: Props) {
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }));
   const ids = useMemo(() => oportunidades.map((o) => o.id), [oportunidades]);
   const { data: proximasMap } = useProximasActividades("oportunidad", ids);
@@ -89,29 +91,38 @@ export default function OportunidadKanban({ etapas, oportunidades, onMover, onCl
           </AlertDescription>
         </Alert>
       )}
-      <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
-        <div className="flex gap-3 overflow-x-auto pb-3">
-          {huerfanas.length > 0 && (
-            <ColumnaEtapa
-              etapa={ETAPA_SIN_ETAPA}
-              ops={huerfanas}
-              onClickCard={onClickCard}
-              proximasMap={proximas}
-              avanceMap={avanceMap ?? new Map()}
-            />
-          )}
-          {etapas.map((e) => (
-            <ColumnaEtapa
-              key={e.id}
-              etapa={e}
-              ops={porEtapa.get(e.id) ?? []}
-              onClickCard={onClickCard}
-              proximasMap={proximas}
-              avanceMap={avanceMap ?? new Map()}
-            />
-          ))}
-        </div>
-      </DndContext>
+      {/* E-3: contenedor relativo con máscara de degradado a la derecha para
+          señalar que hay más columnas fuera de la vista (p. ej. "Ganada"). */}
+      <div className="relative">
+        <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
+          <div className="flex gap-3 overflow-x-auto pb-3 items-start snap-x">
+            {huerfanas.length > 0 && (
+              <ColumnaEtapa
+                etapa={ETAPA_SIN_ETAPA}
+                ops={huerfanas}
+                onClickCard={onClickCard}
+                proximasMap={proximas}
+                avanceMap={avanceMap ?? new Map()}
+              />
+            )}
+            {etapas.map((e) => (
+              <ColumnaEtapa
+                key={e.id}
+                etapa={e}
+                ops={porEtapa.get(e.id) ?? []}
+                onClickCard={onClickCard}
+                proximasMap={proximas}
+                avanceMap={avanceMap ?? new Map()}
+                onNuevo={onNuevo}
+              />
+            ))}
+          </div>
+        </DndContext>
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-background to-transparent"
+        />
+      </div>
     </div>
   );
 }

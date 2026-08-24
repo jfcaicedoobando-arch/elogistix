@@ -8,6 +8,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { SectionHeading } from "@/components/shared/SectionHeading";
 import { formatCurrency } from "@/lib/formatters/numbers";
 import { cn } from "@/lib/utils";
+import { useHorizontalScrollEdges } from "@/components/shared/dataTable/useHorizontalScrollEdges";
+import { HorizontalScrollFades } from "@/components/shared/dataTable/HorizontalScrollFades";
 import type { FlujoMes } from "@/features/tesoreria/domain/resumen.types";
 
 interface Props {
@@ -21,6 +23,7 @@ interface Renglon {
 }
 
 export function TesoreriaFlujoMonedas({ flujo }: Props) {
+  const { ref: scrollRef, atStart, atEnd, overflowing } = useHorizontalScrollEdges<HTMLDivElement>();
   const renglones: Renglon[] = [
     { moneda: "MXN", cobrar: flujo.por_cobrar_mxn, pagar: flujo.por_pagar_mxn },
     { moneda: "USD", cobrar: flujo.por_cobrar_usd, pagar: flujo.por_pagar_usd },
@@ -32,8 +35,9 @@ export function TesoreriaFlujoMonedas({ flujo }: Props) {
         <SectionHeading as="h3" className="mb-3">
           Flujo esperado 30 días por moneda
         </SectionHeading>
-        <div className="overflow-x-auto">
-        <Table className="min-w-[480px]">
+        <div className="relative">
+          <div ref={scrollRef} className="overflow-x-auto [scrollbar-width:thin]">
+            <Table className="min-w-[480px]">
           <TableHeader>
             <DetailTableRow hoverable={false}>
               <DetailTableHead className="whitespace-nowrap">Moneda</DetailTableHead>
@@ -66,7 +70,9 @@ export function TesoreriaFlujoMonedas({ flujo }: Props) {
               );
             })}
           </TableBody>
-        </Table>
+            </Table>
+          </div>
+          <HorizontalScrollFades overflowing={overflowing} atStart={atStart} atEnd={atEnd} />
         </div>
       </CardContent>
     </Card>
