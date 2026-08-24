@@ -8,6 +8,7 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import { APP_VERSION } from "@/constants/appVersion";
+import { scrubUrl } from "@/lib/observability/piiScrub";
 
 export interface ClientErrorPayload {
   message: string;
@@ -22,9 +23,13 @@ export function logClientError({ message, stack, componentStack }: ClientErrorPa
         message,
         stack: stack ?? null,
         component_stack: componentStack ?? null,
+        // Se pasa por scrubUrl para no persistir tokens públicos
+        // (/tracking/<32-hex>, /portal/proformas/<uuid>, ?token=…) en
+        // app_logs: son credenciales de acceso (la proforma hasta permite
+        // aceptar/rechazar) y los logs los lee staff/SaaS de terceros.
         route:
           typeof window !== "undefined"
-            ? window.location.pathname + window.location.search
+            ? scrubUrl(window.location.pathname + window.location.search) ?? null
             : null,
         user_agent: typeof navigator !== "undefined" ? navigator.userAgent : null,
         app_version: APP_VERSION,

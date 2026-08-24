@@ -23,6 +23,7 @@ export interface AccionesEmbarqueContexto {
 export interface AccionesEmbarqueEstado {
   avanzandoEstado: boolean;
   trackingPending: boolean;
+  tieneLinkActivo: boolean;
   puedeReabrir: boolean;
   reabriendoEstado: boolean;
   docsFaltantes: string[];
@@ -43,6 +44,7 @@ export interface AccionesEmbarqueCierre {
 export interface AccionesEmbarqueCallbacks {
   onAvanzarEstado: () => void;
   onCompartirTracking: () => void;
+  onRevocarTracking: () => void;
   onAbrirEliminar: () => void;
   onAbrirDuplicar: () => void;
   onReabrir: (motivo: string) => void;
@@ -74,12 +76,12 @@ export function EmbarqueDetalleHeaderActions({
 }: Props) {
   const { expediente, estadoVisual, siguienteEstado, canEdit, embarqueId } = contexto;
   const {
-    avanzandoEstado, trackingPending, puedeReabrir, reabriendoEstado,
+    avanzandoEstado, trackingPending, tieneLinkActivo, puedeReabrir, reabriendoEstado,
     docsFaltantes, bloqueadoPorDocs, cancelandoEmbarque, tieneDeudaPendiente,
   } = estado;
   const { cierreEsSiguiente, rolPuedeCerrar, cierrePuedeAvanzar, cierreMotivoBloqueo } = cierre;
   const {
-    onAvanzarEstado, onCompartirTracking, onAbrirEliminar, onAbrirDuplicar,
+    onAvanzarEstado, onCompartirTracking, onRevocarTracking, onAbrirEliminar, onAbrirDuplicar,
     onReabrir, onIrACierre, onIrADocumentos, onCancelar,
   } = acciones;
   // B-058 (v13.320.39): en estados terminales/cerrados el borrado ya no aplica.
@@ -131,11 +133,13 @@ export function EmbarqueDetalleHeaderActions({
       {canEdit && (
         <MenuMasAccionesEmbarque
           trackingPending={trackingPending}
+          tieneLinkActivo={tieneLinkActivo}
           puedeCancelar={puedeCancelar}
           puedeEliminar={puedeEliminar}
           esTerminal={esTerminal}
           canEliminarEmbarque={canEliminarEmbarque}
           onCompartirTracking={onCompartirTracking}
+          onRevocarTracking={onRevocarTracking}
           onAbrirDuplicar={onAbrirDuplicar}
           onAbrirEliminar={onAbrirEliminar}
           onPedirCancelar={() => setCancelarOpen(true)}

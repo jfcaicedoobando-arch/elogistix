@@ -6,6 +6,12 @@ const createTrackingLinkMock = vi.fn().mockResolvedValue({ id: "link-1", embarqu
 
 vi.mock("@/features/embarques/services/tracking", () => ({
   createTrackingLink: (...args: unknown[]) => createTrackingLinkMock(...args),
+  // fix3: el módulo ahora también exporta estas funciones; el mock debe
+  // declararlas aunque este test sólo ejercite useCreateTrackingLink.
+  deleteTrackingLink: vi.fn().mockResolvedValue(undefined),
+  fetchTrackingLinks: vi.fn().mockResolvedValue([]),
+  esTrackingLinkVigente: vi.fn().mockReturnValue(false),
+  TRACKING_LINK_VIGENCIA_DIAS: 30,
 }));
 
 import { useCreateTrackingLink } from "../useTrackingLinks";

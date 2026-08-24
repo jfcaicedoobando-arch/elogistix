@@ -454,6 +454,12 @@ jobs:
       - name: FIX-45 - whitelist de EXECUTE para anon
         run: $PSQL -f supabase/tests/fix45_anon_execute_whitelist.sql
 
+      - name: fix3 - RLS portal (eventos y notas internos no legibles por cliente/agente)
+        run: $PSQL -f supabase/tests/fix3_portal_rls_eventos_notas.sql
+
+      - name: fix3 - RPCs portal (TOCTOU, caps de longitud y rate limits)
+        run: $PSQL -f supabase/tests/fix3_portal_rpcs.sql
+
       - name: Aging CxP - paridad NC soft-deleted (FIX-AGING-NC-01)
         run: $PSQL -f supabase/tests/aging_nc_deleted_at.sql
 

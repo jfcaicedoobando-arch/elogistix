@@ -29,7 +29,9 @@ interface Props {
   siguienteEstado: string | null;
   canEdit: boolean;
   trackingPending: boolean;
+  tieneLinkActivo: boolean;
   onCompartirTracking: () => void;
+  onRevocarTracking: () => void;
   onAbrirEliminar: () => void;
   onAbrirDuplicar: () => void;
   onNavigateTab: (tab: "documentos" | "tracking" | "cierre") => void;
@@ -38,7 +40,8 @@ interface Props {
 
 export function EmbarqueDetalleHeader({
   embarque, embarqueId, estadoVisual, siguienteEstado, canEdit,
-  trackingPending, onCompartirTracking, onAbrirEliminar, onAbrirDuplicar,
+  trackingPending, tieneLinkActivo, onCompartirTracking, onRevocarTracking,
+  onAbrirEliminar, onAbrirDuplicar,
   onNavigateTab,
 }: Props) {
 
@@ -116,6 +119,7 @@ export function EmbarqueDetalleHeader({
             estado={{
               avanzandoEstado: avanzarEstado.isPending,
               trackingPending,
+              tieneLinkActivo,
               puedeReabrir,
               reabriendoEstado: reabrirEmbarque.isPending,
               docsFaltantes,
@@ -127,6 +131,7 @@ export function EmbarqueDetalleHeader({
             acciones={{
               onAvanzarEstado: handleAvanzarEstado,
               onCompartirTracking,
+              onRevocarTracking,
               onAbrirEliminar,
               onAbrirDuplicar,
               onReabrir: handleReabrir,
