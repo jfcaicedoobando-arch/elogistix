@@ -1,5 +1,20 @@
 # Changelog
 
+## [13.736.0] - 2026-08-24
+### FIX3 — consistencia y seguridad de base de datos (8 hallazgos validados)
+- **M-4 · fecha del cobro**: `assert_factura_viva_para_pago()` valida fecha futura también en `UPDATE` (antes sólo `INSERT`), `fecha_pago` sale de la lista "sólo metadatos" y se añade `LC_PAGO_FECHA_PREVIA_EMISION` (paridad con el lote CxC). La función pasa a `SECURITY DEFINER`.
+- **Ronda 2 P2 · privacidad cross-tenant**: `venta_embarque_mxn_neta`, `nc_aplicadas_en_moneda_factura` y `comision_embarques_de_factura` pierden `EXECUTE` para `authenticated` (eran oráculos de lectura sin filtro de organización); sólo `service_role` y llamadas internas `DEFINER`.
+- **Ronda 2 drift · portal público**: `portal_obtener_proforma_por_token` recupera `check_ratelimit` (30/min por IP+identidad) y vuelve a `VOLATILE`.
+- **Ronda 2 P3 · vínculo cotización↔embarque**: `sync_cotizacion_embarque_link` rechaza cotizaciones de otra organización (`LC_COTIZACION_OTRA_ORG`) y el update de papelera se acota a la org del embarque.
+- **Ronda 2 P3 · comisiones y NC**: `trg_nc_cliente_recalcular_comisiones` escucha `deleted_at` y la salida de `Aplicada`; si la comisión ya se liquidó se registra el ajuste pendiente.
+- **M-5 / O1.14 · trazabilidad**: columna y trigger `updated_at` en `conceptos_venta`, `conceptos_costo`, `conceptos_factura`, `contactos_cliente`, `documentos_embarque`, `eventos_embarque`, `notas_embarque`, `proforma_conceptos_consolidados`, `proveedor_facturas_conceptos` y `crm_notificaciones`.
+- **M-1 · CRM**: `crm_propagar_conversion_cliente` propaga `ERRCODE 42501` en los rechazos de permiso.
+- **M-6 / BUG-18 · buzón CxP**: nueva bandera `metadatos_verificados` sellada sólo por `adjuntar_xml_entrante_verificado` (GUC transaccional + trigger `trg_entrante_meta_no_verificada`); el alta inicial ahora también re-verifica el XML en servidor vía la edge y avisa al usuario si no cuadra.
+- Pruebas nuevas en CI: 8 archivos `supabase/tests/fix3_*.sql` en el workflow de RLS.
+
+
+
+
 ## [13.735.2] - 2026-08-24
 ### Seguridad — vista con SECURITY DEFINER (linter 0010)
 - `public.embarques_interno_v` pasa a `security_invoker = true`: ya no se evalúa con los privilegios de su creador. Las columnas internas (`cerrado_snapshot`, `tarifa_delta_jsonb`, `reabierto_motivo`, `created_by_email`) se leen por la nueva función acotada `public.embarques_internos_src()` (`SECURITY DEFINER`, `search_path` fijo, `EXECUTE` sólo para `authenticated`/`service_role`), que reaplica los mismos candados: membresía de organización y exclusión de los roles de portal `cliente` y `agente_carga`. `anon` sigue sin acceso. `supabase/tests/fix2_embarques_interno_y_nc.sql`: 5/5 casos OK.
