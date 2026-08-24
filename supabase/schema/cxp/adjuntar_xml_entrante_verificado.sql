@@ -5,6 +5,9 @@
 -- `adjuntar_xml_factura_entrante(...)` deja de estar disponible para
 -- `authenticated`, de modo que un cliente ya no puede declarar metadatos
 -- fiscales de otro CFDI.
+-- FIX3 (tanda 3): el UPDATE sella metadatos_verificados=true y la RPC levanta
+-- la GUC transaccional `app.entrante_xml_verificado` (extensión de la
+-- verificación server-side al alta inicial del buzón).
 -- Al modificar: edita ESTE archivo y genera la migración con el mismo cuerpo.
 
 CREATE OR REPLACE FUNCTION public.adjuntar_xml_entrante_verificado(
