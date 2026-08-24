@@ -101,7 +101,7 @@ DECLARE
     '_refact_reps_bloqueantes',
     'assert_transicion_embarque',
     'cliente_requiere_autorizacion',
-    'comision_embarques_de_factura',
+    
     'convertir_proformas_a_factura_check_embarque_vivo',
     'embarque_admin_pendientes_resumen',
     'embarque_operativo_completo',
