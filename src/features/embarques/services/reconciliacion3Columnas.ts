@@ -9,6 +9,7 @@
  * Devuelve filas alineadas por (concepto, moneda) listas para la UI.
  */
 import { supabase } from "@/integrations/supabase/client";
+import { obtenerEmbarqueInterno } from "./internoEmbarque";
 import {
   obtenerCostosCotizacionVersion,
   type CostoVersionado,
