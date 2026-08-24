@@ -107,11 +107,11 @@ export async function obtenerReconciliacion3Columnas(
   embarqueId: string,
   umbrales: UmbralesVarianza = UMBRALES_DEFAULT,
 ): Promise<ResultadoReconciliacion3C> {
-  // 1. Meta del embarque (incluye cotizacion_id y delta de Fase 1).
+  // 1. Meta del embarque (cotizacion_id). El delta de Fase 1 vive en
+  // `embarques_interno_v` desde FIX2 · B-1 (columna revocada a authenticated).
   const { data: embRaw, error: embErr } = await supabase
     .from("embarques")
-    // SAFE-CAST: tarifa_delta_jsonb se agregó en Fase 1 y puede no estar en tipos.
-    .select("cotizacion_id, tarifa_delta_jsonb, organization_id" as unknown as string)
+    .select("cotizacion_id, organization_id")
     .eq("id", embarqueId)
     .maybeSingle();
   if (embErr) throw new Error(embErr.message);
