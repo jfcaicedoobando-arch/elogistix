@@ -12,10 +12,7 @@ import { useNavigate } from "react-router-dom";
 import { Replace, ArrowRight, Ban, RotateCw } from "lucide-react";
 import { notifyInfo, notifySuccess } from "@/lib/ui/appFeedback";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
-} from "@/components/ui/dialog";
-import { dialogSize } from "@/components/shared/utils/dialogTokens";
+import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { duplicarFacturaParaSustitucion } from "@/features/facturacion/services/facturapi";
 import { listarSustitutas } from "@/features/facturacion/services/sustitutasDeFactura";
 import { Hint } from "@/components/shared/Hint";
@@ -96,30 +93,15 @@ export function DialogSustituirFactura({ facturaId, numero, uuidOriginal, open, 
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className={dialogSize.lg}>
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Replace className="h-5 w-5 text-accent" /> Sustituir CFDI {numero ?? ""}
-          </DialogTitle>
-          <DialogDescription>
-            Sustitución SAT motivo 01. Se crea una nueva factura, la editas/timbras
-            y al confirmar se cancela la original enlazándolas.
-          </DialogDescription>
-        </DialogHeader>
-
-        {s.step === "intro" && <IntroBody numero={numero} uuidOriginal={uuidOriginal} />}
-
-        {s.step === "confirmar" && (
-          <ConfirmarBody
-            numero={numero}
-            isLoading={s.sustitutaQuery.isLoading}
-            timbrada={s.sustitutaTimbrada}
-            estadoLabel={s.sustitutaEstadoLabel}
-          />
-        )}
-
-        <DialogFooter className="gap-2">
+    <FormDialogShell
+      open={open}
+      onOpenChange={onOpenChange}
+      icon={Replace}
+      title={`Sustituir CFDI ${numero ?? ""}`}
+      description="Sustitución SAT motivo 01. Se crea una nueva factura, la editas/timbras y al confirmar se cancela la original enlazándolas."
+      size="lg"
+      footer={
+        <>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cerrar</Button>
 
           {s.step === "intro" && (
@@ -148,8 +130,19 @@ export function DialogSustituirFactura({ facturaId, numero, uuidOriginal, open, 
               </Hint>
             </>
           )}
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </>
+      }
+    >
+      {s.step === "intro" && <IntroBody numero={numero} uuidOriginal={uuidOriginal} />}
+
+      {s.step === "confirmar" && (
+        <ConfirmarBody
+          numero={numero}
+          isLoading={s.sustitutaQuery.isLoading}
+          timbrada={s.sustitutaTimbrada}
+          estadoLabel={s.sustitutaEstadoLabel}
+        />
+      )}
+    </FormDialogShell>
   );
 }

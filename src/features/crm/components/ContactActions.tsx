@@ -34,7 +34,7 @@ export default function ContactActions({ email, telefono, plantillaCtx }: Props)
           <>
             <a href={`mailto:${email}`} className="text-primary hover:underline truncate rounded-sm focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none">{email}</a>
             <Hint label="Copiar email">
-              <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => copy(email, "Email")} aria-label="Copiar email">
+              <Button size="icon" variant="ghost" className="min-h-11 min-w-11 md:h-6 md:w-6 md:min-h-0 md:min-w-0" onClick={() => copy(email, "Email")} aria-label="Copiar email">
                 <Copy className="h-3 w-3" />
               </Button>
             </Hint>
@@ -58,7 +58,7 @@ export default function ContactActions({ email, telefono, plantillaCtx }: Props)
           <>
             <a href={`tel:${telefono}`} className="text-primary hover:underline rounded-sm focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none">{telefono}</a>
             <Hint label="Copiar teléfono">
-              <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => copy(telefono, "Teléfono")} aria-label="Copiar teléfono">
+              <Button size="icon" variant="ghost" className="min-h-11 min-w-11 md:h-6 md:w-6 md:min-h-0 md:min-w-0" onClick={() => copy(telefono, "Teléfono")} aria-label="Copiar teléfono">
                 <Copy className="h-3 w-3" />
               </Button>
             </Hint>

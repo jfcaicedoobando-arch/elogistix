@@ -149,7 +149,7 @@ export function ConceptoLineaRow({
                 type="button"
                 variant="ghost"
                 size="icon"
-                className="h-8 w-8 text-muted-foreground hover:text-primary"
+                className="min-h-11 min-w-11 md:h-8 md:w-8 md:min-h-0 md:min-w-0 text-muted-foreground hover:text-primary"
                 onClick={aplicarIva16}
                 aria-label="Aplicar IVA 16% a esta línea"
               >
@@ -165,7 +165,7 @@ export function ConceptoLineaRow({
                   type="button"
                   variant="ghost"
                   size="icon"
-                  className="h-8 w-8 text-muted-foreground hover:text-primary"
+                  className="min-h-11 min-w-11 md:h-8 md:w-8 md:min-h-0 md:min-w-0 text-muted-foreground hover:text-primary"
                   onClick={() => onDuplicar(c.key)}
                   aria-label="Duplicar concepto"
                 >
@@ -181,7 +181,7 @@ export function ConceptoLineaRow({
                 type="button"
                 variant="ghost"
                 size="icon"
-                className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                className="min-h-11 min-w-11 md:h-8 md:w-8 md:min-h-0 md:min-w-0 text-muted-foreground hover:text-destructive"
                 onClick={() => onEliminar(c.key)}
                 aria-label="Eliminar concepto"
               >

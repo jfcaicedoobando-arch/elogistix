@@ -56,7 +56,7 @@ function BloqueNacional({ banco, clabe }: { banco?: string | null; clabe?: strin
               type="button"
               variant="ghost"
               size="icon"
-              className="h-6 w-6"
+              className="min-h-11 min-w-11 md:h-6 md:w-6 md:min-h-0 md:min-w-0"
               onClick={() => setRevealClabe((v) => !v)}
               aria-label={revealClabe ? "Ocultar CLABE" : "Mostrar CLABE"}
             >

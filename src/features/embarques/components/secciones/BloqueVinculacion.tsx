@@ -63,7 +63,7 @@ export function BloqueVinculacion({
             <Badge variant="success" className="px-3 py-1.5 text-body inline-flex items-center gap-1.5">
               <Check className="h-3.5 w-3.5" aria-hidden /> Vinculada a {cotizacionVinculada.folio} — {cotizacionVinculada.cliente_nombre}
             </Badge>
-            <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={() => setDesvincularOpen(true)} aria-label="Desvincular cotización">
+            <Button type="button" variant="ghost" size="icon" className="min-h-11 min-w-11 md:h-7 md:w-7 md:min-h-0 md:min-w-0" onClick={() => setDesvincularOpen(true)} aria-label="Desvincular cotización">
               <X className="h-4 w-4" />
             </Button>
           </div>
@@ -135,7 +135,7 @@ export function BloqueVinculacion({
                     type="button"
                     variant="ghost"
                     size="icon"
-                    className="h-7 w-7"
+                    className="min-h-11 min-w-11 md:h-7 md:w-7 md:min-h-0 md:min-w-0"
                     onClick={() => onModoExpedienteChange?.('nuevo')}
                     aria-label="Quitar expediente vinculado"
                   >

@@ -87,7 +87,7 @@ export function OrgMembersCard({ members, loading, onAddClick, onChangeRole, onR
         <Button
           variant="ghost"
           size="icon"
-          className="h-8 w-8 text-destructive hover:text-destructive"
+          className="min-h-11 min-w-11 md:h-8 md:w-8 md:min-h-0 md:min-w-0 text-destructive hover:text-destructive"
           aria-label="Eliminar miembro"
           onClick={() => setMemberAEliminar(row.original)}
         >

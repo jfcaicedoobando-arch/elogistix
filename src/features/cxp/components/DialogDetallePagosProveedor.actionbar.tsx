@@ -107,7 +107,7 @@ function OverflowMenu({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button size="icon" variant="ghost" className="h-8 w-8" aria-label="Más acciones">
+        <Button size="icon" variant="ghost" className="min-h-11 min-w-11 md:h-8 md:w-8 md:min-h-0 md:min-w-0" aria-label="Más acciones">
           <MoreHorizontal className="h-4 w-4" />
         </Button>
       </DropdownMenuTrigger>

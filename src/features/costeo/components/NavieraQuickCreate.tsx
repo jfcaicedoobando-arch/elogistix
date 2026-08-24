@@ -8,11 +8,8 @@ import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
-} from "@/components/ui/dialog";
+import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { useAdminNavieras } from "@/features/catalogos/hooks";
-import { dialogSize } from "@/components/shared/utils/dialogTokens";
 
 interface Props {
   /** Se invoca con el id de la naviera recién creada para seleccionarla. */
@@ -65,45 +62,46 @@ export function NavieraQuickCreate({ onCreada, variante = "inline", etiqueta }: 
         </Button>
       )}
 
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className={dialogSize.sm}>
-          <DialogHeader>
-            <DialogTitle>Nueva naviera</DialogTitle>
-            <DialogDescription>
-              Se agrega al catálogo de la organización y queda seleccionada en la tarifa.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-3">
-            <div>
-              <Label htmlFor="quick-naviera-code">Código (SCAC) *</Label>
-              <Input
-                id="quick-naviera-code"
-                value={code}
-                onChange={(e) => setCode(e.target.value)}
-                placeholder="Ej. MSCU"
-                maxLength={10}
-              />
-            </div>
-            <div>
-              <Label htmlFor="quick-naviera-name">Nombre *</Label>
-              <Input
-                id="quick-naviera-name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Ej. Mediterranean Shipping Company"
-              />
-            </div>
-          </div>
-          <DialogFooter>
+      <FormDialogShell
+        open={open}
+        onOpenChange={setOpen}
+        icon={Plus}
+        title="Nueva naviera"
+        description="Se agrega al catálogo de la organización y queda seleccionada en la tarifa."
+        size="sm"
+        footer={
+          <>
             <Button type="button" variant="outline" onClick={() => setOpen(false)}>
               Cancelar
             </Button>
             <Button type="button" onClick={handleGuardar} disabled={!puedeGuardar || agregarNaviera.isPending}>
               Guardar
             </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          </>
+        }
+      >
+        <div className="space-y-3">
+          <div>
+            <Label htmlFor="quick-naviera-code">Código (SCAC) *</Label>
+            <Input
+              id="quick-naviera-code"
+              value={code}
+              onChange={(e) => setCode(e.target.value)}
+              placeholder="Ej. MSCU"
+              maxLength={10}
+            />
+          </div>
+          <div>
+            <Label htmlFor="quick-naviera-name">Nombre *</Label>
+            <Input
+              id="quick-naviera-name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Ej. Mediterranean Shipping Company"
+            />
+          </div>
+        </div>
+      </FormDialogShell>
     </>
   );
 }

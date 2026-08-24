@@ -70,7 +70,7 @@ export function FilaVentaPrecio({
           </Tooltip>
         )}
       </div>
-      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => remove(venta.id)} disabled={disableRemove} aria-label="Eliminar concepto de venta">
+      <Button variant="ghost" size="icon" className="min-h-11 min-w-11 md:h-8 md:w-8 md:min-h-0 md:min-w-0" onClick={() => remove(venta.id)} disabled={disableRemove} aria-label="Eliminar concepto de venta">
         <Trash2 className="h-4 w-4 text-destructive" />
       </Button>
     </div>

@@ -109,7 +109,7 @@ export function FacturaNotasCreditoTable(props: Props) {
               <>
                 <Hint label="Previsualizar PDF">
                   <Button
-                    variant="outline" size="icon" className="h-7 w-7"
+                    variant="outline" size="icon" className="min-h-11 min-w-11 md:h-7 md:w-7 md:min-h-0 md:min-w-0"
                     aria-label="Previsualizar PDF"
                     onClick={() => setPreviewNc(n)}
                   >
@@ -120,7 +120,7 @@ export function FacturaNotasCreditoTable(props: Props) {
                 <FacturaDownloadButton stored={n.xml_url} kind="xml" notaCreditoId={n.id} />
                 <Hint label="Reenviar por email">
                   <Button
-                    variant="outline" size="icon" className="h-7 w-7"
+                    variant="outline" size="icon" className="min-h-11 min-w-11 md:h-7 md:w-7 md:min-h-0 md:min-w-0"
                     aria-label="Reenviar por email"
                     onClick={() => onEmail(n.id)}
                   >
@@ -141,7 +141,7 @@ export function FacturaNotasCreditoTable(props: Props) {
             {canEdit && cancelable && (
               <Hint label="Cancelar NC">
                 <Button
-                  variant="ghost" size="icon" className="h-7 w-7"
+                  variant="ghost" size="icon" className="min-h-11 min-w-11 md:h-7 md:w-7 md:min-h-0 md:min-w-0"
                   aria-label="Cancelar NC"
                   onClick={() => onCancelar(n.id)}
                 >

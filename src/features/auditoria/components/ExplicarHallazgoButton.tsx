@@ -40,7 +40,7 @@ export function ExplicarHallazgoButton({ hallazgo }: Props) {
           <Button
             size="icon"
             variant="ghost"
-            className="h-7 w-7 text-primary"
+            className="min-h-11 min-w-11 md:h-7 md:w-7 md:min-h-0 md:min-w-0 text-primary"
             onClick={(e) => e.stopPropagation()}
             aria-label="Explicar con IA"
           >

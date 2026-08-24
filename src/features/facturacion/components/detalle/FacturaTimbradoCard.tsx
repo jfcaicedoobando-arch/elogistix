@@ -79,7 +79,7 @@ export function FacturaTimbradoCard(props: Props) {
             <p className="text-overline font-medium">Folio fiscal (UUID)</p>
             <div className="flex items-center gap-1">
               <p className="font-mono text-body truncate">{uuidFiscal}</p>
-              <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0" onClick={copiarUuid} aria-label="Copiar folio fiscal (UUID)">
+              <Button variant="ghost" size="icon" className="min-h-11 min-w-11 md:h-6 md:w-6 md:min-h-0 md:min-w-0 shrink-0" onClick={copiarUuid} aria-label="Copiar folio fiscal (UUID)">
                 <Copy className="h-3 w-3" />
               </Button>
             </div>

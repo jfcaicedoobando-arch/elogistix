@@ -23,7 +23,7 @@ function CopyValueButton({ value, label }: { value: string; label: string }) {
       type="button"
       variant="ghost"
       size="icon"
-      className="h-6 w-6 shrink-0 text-muted-foreground opacity-60 hover:opacity-100"
+      className="min-h-11 min-w-11 md:h-6 md:w-6 md:min-h-0 md:min-w-0 shrink-0 text-muted-foreground opacity-60 hover:opacity-100"
       aria-label={`Copiar ${label}`}
       onClick={() => {
         void navigator.clipboard?.writeText(value);

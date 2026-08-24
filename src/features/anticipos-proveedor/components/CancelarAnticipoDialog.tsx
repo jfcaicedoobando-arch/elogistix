@@ -1,11 +1,10 @@
-/** Confirmación "Cancelar anticipo" (QW6). AlertDialog + motivo + RPC cancelar_anticipo_proveedor. */
+/** Confirmación "Cancelar anticipo" (QW6). FormDialogShell + motivo + RPC cancelar_anticipo_proveedor. */
 import { useState } from "react";
-import {
-  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
-  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { Ban } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { useCancelarAnticipo } from "@/features/anticipos-proveedor/hooks/useAnticipoProveedorMutations";
 import { notifyWarning } from "@/lib/ui/appFeedback";
 import type { AnticipoProveedorRow } from "@/features/anticipos-proveedor/hooks/useAnticiposProveedor";
@@ -41,36 +40,43 @@ export function CancelarAnticipoDialog({ open, onOpenChange, anticipo }: Props) 
   if (!anticipo) return null;
 
   return (
-    <AlertDialog open={open} onOpenChange={handleOpenChange}>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>¿Cancelar este anticipo?</AlertDialogTitle>
-          <AlertDialogDescription>
-            El anticipo de {anticipo.proveedor_nombre ?? "este proveedor"} quedará marcado como cancelado y ya no
-            podrá aplicarse a facturas. Esta acción no se puede deshacer.
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <div className="space-y-1.5">
-          <Label htmlFor="cancel-motivo">Motivo de cancelación</Label>
-          <Textarea
-            id="cancel-motivo"
-            rows={3}
-            value={motivo}
-            onChange={(e) => setMotivo(e.target.value)}
-            placeholder="Ej. Registrado por error, duplicado…"
-          />
-        </div>
-        <AlertDialogFooter>
-          <AlertDialogCancel disabled={cancelar.isPending}>Volver</AlertDialogCancel>
-          <AlertDialogAction
-            onClick={(e) => { e.preventDefault(); void handleConfirm(); }}
+    <FormDialogShell
+      open={open}
+      onOpenChange={handleOpenChange}
+      icon={Ban}
+      title="¿Cancelar este anticipo?"
+      description={
+        <>
+          El anticipo de {anticipo.proveedor_nombre ?? "este proveedor"} quedará marcado como cancelado y ya no
+          podrá aplicarse a facturas. Esta acción no se puede deshacer.
+        </>
+      }
+      size="md"
+      footer={
+        <>
+          <Button variant="outline" onClick={() => handleOpenChange(false)} disabled={cancelar.isPending}>
+            Volver
+          </Button>
+          <Button
+            variant="destructive"
+            onClick={() => void handleConfirm()}
             disabled={cancelar.isPending}
-            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
           >
             {cancelar.isPending ? "Cancelando…" : "Cancelar anticipo"}
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+          </Button>
+        </>
+      }
+    >
+      <div className="space-y-1.5">
+        <Label htmlFor="cancel-motivo">Motivo de cancelación</Label>
+        <Textarea
+          id="cancel-motivo"
+          rows={3}
+          value={motivo}
+          onChange={(e) => setMotivo(e.target.value)}
+          placeholder="Ej. Registrado por error, duplicado…"
+        />
+      </div>
+    </FormDialogShell>
   );
 }
