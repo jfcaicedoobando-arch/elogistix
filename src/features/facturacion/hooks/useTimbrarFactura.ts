@@ -6,6 +6,7 @@ import { useMutationWithFeedback } from "@/hooks/shared";
 import { notifySuccess, notifyError, notifyInfo, notifyWarning } from "@/lib/ui/appFeedback";
 import { queryKeys } from "@/lib/query";
 import { invalidateHuecoFacturacion } from "@/features/facturacion/hooks/invalidateHuecoFacturacion";
+import { invalidarTrasTimbrado } from "@/features/facturacion/hooks/invalidarTrasTimbrado";
 import { getErrorMessage } from "@/lib/errors";
 
 /**
@@ -27,6 +28,8 @@ export function useTimbrarFactura() {
         description: `Serie ${res.serie} · Folio ${res.folio}`,
       });
       invalidateHuecoFacturacion(qc);
+      // M-1: bandejas, conteos y cartera CxC también cambian al timbrar.
+      invalidarTrasTimbrado(qc);
     },
   });
 }
@@ -66,6 +69,8 @@ export function useCancelarFactura() {
       }
       qc.invalidateQueries({ queryKey: facturasKeys.all });
       invalidateHuecoFacturacion(qc);
+      // M-1: una factura cancelada deja de ser cobrable en cartera/aging.
+      invalidarTrasTimbrado(qc);
     },
     onError: (err: Error, vars) => {
       // Error transitorio del SAT: pintar toast ámbar con acción "Reintentar"
@@ -91,6 +96,7 @@ export function useCancelarFactura() {
                   notifySuccess(undefined, { title: "CFDI cancelado" });
                   qc.invalidateQueries({ queryKey: facturasKeys.all });
                   invalidateHuecoFacturacion(qc);
+                  invalidarTrasTimbrado(qc);
                 })
                 .catch((e: Error) => {
                   notifyError(undefined, { title: "No se pudo cancelar la factura", description: getErrorMessage(e), error: e, method: "FEATURES_FACTURACION_HOOKS_USETIMBRARFACTURA_RETRY" });

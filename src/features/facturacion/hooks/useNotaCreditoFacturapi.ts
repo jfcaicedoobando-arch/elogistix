@@ -10,6 +10,7 @@ import { facturas as facturasKeys } from "@/features/facturacion/queryKeys";
 import { queryKeys } from "@/lib/query";
 import { tituloTimbrado } from "@/features/facturacion/utils/uuidCorto";
 import { getErrorMessage } from "@/lib/errors";
+import { invalidarTrasTimbrado } from "@/features/facturacion/hooks/invalidarTrasTimbrado";
 
 export function useTimbrarNotaCredito(facturaId: string) {
   const qc = useQueryClient();
@@ -20,6 +21,8 @@ export function useTimbrarNotaCredito(facturaId: string) {
       notifySuccess(undefined, { title: tituloTimbrado("Nota de crédito timbrada", res.uuid) });
       qc.invalidateQueries({ queryKey: facturasKeys.notasCredito(facturaId) });
       qc.invalidateQueries({ queryKey: facturasKeys.notasCreditoRecientes() });
+      // M-1: la NC cambia el saldo cobrable (saldo = total − pagos − NC aplicadas).
+      invalidarTrasTimbrado(qc, facturaId);
     },
     onError: (err: Error) =>
       notifyError(undefined, {
@@ -44,6 +47,8 @@ export function useCancelarNotaCredito(facturaId: string) {
       });
       qc.invalidateQueries({ queryKey: facturasKeys.notasCredito(facturaId) });
       qc.invalidateQueries({ queryKey: facturasKeys.notasCreditoRecientes() });
+      // M-1: la NC cambia el saldo cobrable (saldo = total − pagos − NC aplicadas).
+      invalidarTrasTimbrado(qc, facturaId);
     },
     onError: (err: Error) =>
       notifyError(undefined, {
