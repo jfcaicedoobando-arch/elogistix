@@ -168,6 +168,20 @@ export const ROLES_DESCARGA_CFDI: readonly string[] = [
 ];
 
 /**
+ * R2 seguridad · P1 — Captura CxP (buzón / parseo con IA de facturas de
+ * proveedor). Espejo server-side de `COMPRAS_POR_CAPTURAR_ROLES`
+ * (`src/lib/access/roleRouteSets.ts`). Mantener sincronizada. Excluye
+ * `operador` y los roles de portal (`cliente`, `agente_carga`) y con ello a la
+ * cuenta demo pública.
+ */
+export const ROLES_CAPTURA_CXP: readonly string[] = [
+  "super_admin", "admin", "admin_org", "contador", "tesorero",
+  "auxiliar_contable", "gerente_operaciones", "gerente_visor",
+];
+
+
+
+/**
  * FIX C2 (S5-02) + A13 (Ola 4) — Membresía + rol efectivo. Semántica:
  *   1) `super_admin` global (`user_roles`) → acceso cross-org (rol de plataforma).
  *   2) Miembro de la org cuyo `organization_members.role` (rol efectivo)
