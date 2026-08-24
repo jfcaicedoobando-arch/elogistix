@@ -4,10 +4,75 @@
  * del archivo (reglas de lint del proyecto).
  */
 import type { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
-import { resolveEmail } from "./destinatarioCliente.ts";
 import { bloqueoDestinatarioOverride } from "./overrideDestinatario.ts";
 
 type SbClient = ReturnType<typeof createClient>;
+
+const TIPOS_FACTURACION = [
+  "facturacion", "facturación", "cobranza", "contabilidad", "pagador",
+  "administracion", "administración",
+];
+
+interface EmailResolucion {
+  email: string | null;
+  fuente: "override" | "contacto_facturacion" | "contacto_reciente" | "cliente" | "ninguna";
+  emailSugerido: string | null;
+}
+
+async function fetchContactosYCliente(supabase: SbClient, clienteId: string) {
+  const contactosPromise = supabase
+    .from("contactos_cliente")
+    .select("email, tipo, created_at")
+    .eq("cliente_id", clienteId)
+    .is("deleted_at", null)
+    .not("email", "is", null)
+    .order("created_at", { ascending: false });
+  const clientePromise = supabase.from("clientes").select("email").eq("id", clienteId).maybeSingle();
+
+  const [contactosRes, clienteRes] = await Promise.all([contactosPromise, clientePromise]);
+  const contactos = ((contactosRes?.data ?? []) as Array<{ email: string | null; tipo: string | null }>)
+    .filter((c) => c.email && c.email.includes("@"));
+  const facturacion = contactos.find((c) => {
+    const t = (c.tipo ?? "").toLowerCase().trim();
+    return TIPOS_FACTURACION.some((k) => t.includes(k));
+  });
+  const emailCliente = (clienteRes?.data?.email as string | null) ?? null;
+  return { contactos, facturacion, emailCliente };
+}
+
+function elegirEmail(
+  facturacion: { email: string | null } | undefined,
+  primero: { email: string | null } | undefined,
+  emailCliente: string | null,
+): { email: string | null; fuente: EmailResolucion["fuente"] } {
+  if (facturacion?.email) return { email: facturacion.email, fuente: "contacto_facturacion" };
+  if (primero?.email) return { email: primero.email, fuente: "contacto_reciente" };
+  if (emailCliente) return { email: emailCliente, fuente: "cliente" };
+  return { email: null, fuente: "ninguna" };
+}
+
+async function resolveEmail(
+  supabase: SbClient,
+  clienteId: string,
+  override: string | undefined,
+): Promise<EmailResolucion> {
+  const { contactos, facturacion, emailCliente } = clienteId
+    ? await fetchContactosYCliente(supabase, clienteId)
+    : { contactos: [], facturacion: undefined, emailCliente: null as string | null };
+
+  const primero = contactos[0];
+  const emailSugerido = facturacion?.email ?? primero?.email ?? emailCliente;
+
+  if (override && override.includes("@")) {
+    return { email: override.trim(), fuente: "override", emailSugerido };
+  }
+  const { email, fuente } = elegirEmail(facturacion, primero, emailCliente);
+  return { email, fuente, emailSugerido };
+}
+
+
+
+
 
 function isValidEmail(e: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
