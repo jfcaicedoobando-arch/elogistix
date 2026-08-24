@@ -53,8 +53,8 @@ const SEGMENT_LABELS: Record<string, string> = {
   oportunidades: "Oportunidades",
   actividades: "Actividades",
   analitica: "Analítica",
-  // Profit / finanzas
-  profit: "Profit",
+  // Utilidad / finanzas
+  profit: "Utilidad",
   dashboard: "Dashboard",
   ejecutivo: "Ejecutivo",
   "estado-resultados": "Estado de Resultados",

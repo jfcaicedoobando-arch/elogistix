@@ -51,6 +51,24 @@ describe("appFeedback (sonner)", () => {
     );
   });
 
+  // FIX-R3 (frontend_hunter P3): el id del toast no puede colapsar a un mismo
+  // valor para errores de contextos distintos — se deriva del método.
+  it("notifyError deriva el id del method cuando no hay errorCode ni phase", () => {
+    notifyError(undefined, { title: "Falló", description: "x", method: "RECHAZAR_DOC_EMBARQUE" });
+    expect(m.error).toHaveBeenCalledWith(
+      "Falló",
+      expect.objectContaining({ id: "err-RECHAZAR_DOC_EMBARQUE" }),
+    );
+  });
+
+  it("notifyError prioriza errorCode sobre method para el id", () => {
+    notifyError(undefined, { title: "Falló", description: "x", errorCode: "LC_PRUEBA", method: "M" });
+    expect(m.error).toHaveBeenCalledWith(
+      "Falló",
+      expect.objectContaining({ id: "err-LC_PRUEBA" }),
+    );
+  });
+
   it("notifyWarning emite sonner.warning", () => {
     notifyWarning(undefined, { title: "Aviso", description: "ok" });
     expect(m.warning).toHaveBeenCalledWith(

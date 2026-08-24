@@ -1,5 +1,14 @@
 # Changelog
 
+## [13.738.0] - 2026-09-01
+### FIX-R3 — Pulido de frontend (parche `fix3-frontend-pulido`)
+- **Parseo de dinero unificado**: `parseMonto` ahora aplica la misma heurística que `MoneyInput` (`"1.500"` sin coma = 1,500) y acepta `{ puntoDeMiles: false }` para valores que no son dinero (cantidades, tipos de cambio). Antes el mismo texto pegado valía 1000× menos según el campo.
+- **Idempotencia honesta**: `public.avanzar_estado_embarque` marca la respuesta cacheada con `replay: true`; el frontend ya no escribe bitácora ni pinta un avance que la BD no ejecutó, y reintenta con `requestId` nuevo. Los `requestId` de auto-sync caducan a los 30 min.
+- **Toasts sin colisión**: el id de error se deriva del contexto (`method`) en vez de un `VALIDATION_FAILED` compartido por todas las mutations; se elimina el doble toast al rechazar documentos.
+- **Sesión limpia**: `signOut` purga borradores del wizard y caché persistida de queries.
+- **Copy es-MX**: "Profit" → "Utilidad" en breadcrumbs, tarjetas de cliente, proyección y PDF de rentabilidad.
+- Espejo `supabase/schema/embarques/avanzar_estado_embarque.sql` sincronizado con la migración `20260901000100`.
+
 ## [13.737.1] - 2026-08-24
 ### Hotfix R3-01 — `/embarques` devolvía 42501 "permission denied for table embarques"
 - **Causa**: `public.embarques_listado` es SECURITY INVOKER y su cuerpo hacía `SELECT e.* FROM embarques e`. El endurecimiento FIX2 B-1 (`20260824033552`) revocó el `SELECT` a nivel tabla en `public.embarques` y lo re-otorgó columna por columna (74/78, excluyendo las 4 internas), así que `e.*` dejó de estar permitido y el listado se caía para todo el staff.

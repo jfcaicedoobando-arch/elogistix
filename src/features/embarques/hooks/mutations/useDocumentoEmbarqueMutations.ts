@@ -89,14 +89,16 @@ export function useSetDocumentoNoAplica() {
 /**
  * Rechaza un documento adjunto: la RPC limpia el archivo, guarda el motivo en
  * notas, marca el estado `Rechazado` y notifica a quien abrió el embarque.
+ * `silent: true` porque el handler (`useEmbarqueDocumentosActions.handleRechazarDoc`)
+ * emite los toasts con contexto rico (nombre del documento, motivo); sin esto
+ * cada rechazo mostraba doble toast de éxito/error (delta_hunter P2).
  */
 export function useRechazarDocumentoEmbarque() {
   const queryClient = useQueryClient();
   return useMutationWithFeedback({
     mutationFn: ({ docId, motivo }: { embarqueId: string; docId: string; motivo: string }) =>
       rechazarDocumentoEmbarque(docId, motivo),
-    successTitle: "Documento rechazado",
-    errorTitle: "Error al rechazar documento",
+    silent: true,
     errorMethod: "RECHAZAR_DOC_EMBARQUE",
     onSuccess: (_r, vars) => invalidateDocumentosCaches(queryClient, vars.embarqueId),
   });

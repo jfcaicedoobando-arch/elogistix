@@ -24,7 +24,9 @@ export function AvisoTcRequerido({ tcSugerido, guardando, onGuardarYReintentar }
   const [valor, setValor] = useState("");
 
   // Ola 9 · B5: parseo centralizado (maneja "$ 1,200.50" y espacios duros).
-  const tc = parseMonto(valor, NaN);
+  // `puntoDeMiles: false`: el TC es una tasa (puede llevar 3 decimales,
+  // "18.455"), no un monto — la heurística EC-06 lo leería como 18,455.
+  const tc = parseMonto(valor, NaN, { puntoDeMiles: false });
 
   const valido = Number.isFinite(tc) && tc > 0;
 

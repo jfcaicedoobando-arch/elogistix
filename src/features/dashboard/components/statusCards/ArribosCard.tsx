@@ -132,14 +132,14 @@ export function ArribosCard({ arribosEsteMes, isLoading, hideFinancials = false 
               />
               {!hideFinancials && (
                 isLoading ? (
-                  <KpiCard label="Profit MXN proyectado" value="" loading />
+                  <KpiCard label="Utilidad MXN proyectada" value="" loading />
                 ) : (
                   <InfoHint
                     widthClass="w-[min(320px,calc(100vw-2rem))]"
                     trigger={
                       <div className="cursor-help">
                         <KpiCard
-                          label="Profit MXN proyectado"
+                          label="Utilidad MXN proyectada"
                           value={formatCurrencyCompact(arribosEsteMes.profitMXN, "MXN")}
                           valueTooltip={formatCurrency(arribosEsteMes.profitMXN, "MXN")}
                           icon={TrendingUp}

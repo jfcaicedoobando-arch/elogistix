@@ -10,6 +10,13 @@ const mock = await vi.hoisted(async () => {
 });
 vi.mock("@/integrations/supabase/client", () => ({ supabase: mock.supabase }));
 
+// La bitácora se mockea a nivel módulo: el mock de supabase no tiene `auth`
+// y `registrarActividad` haría early-return sin sesión, imposible de observar.
+const registrarActividadMock = vi.hoisted(() => vi.fn().mockResolvedValue(undefined));
+vi.mock("@/services/bitacora/registrar", () => ({
+  registrarActividad: (...args: unknown[]) => registrarActividadMock(...args),
+}));
+
 import {
   crearEmbarqueRpc,
   actualizarEmbarqueRpc,
@@ -33,6 +40,7 @@ const UUID2 = "22222222-2222-4222-8222-222222222222";
 beforeEach(() => {
   mock.rpcCalls.length = 0;
   mock.tableCalls.length = 0;
+  registrarActividadMock.mockClear();
 });
 
 
@@ -138,6 +146,48 @@ describe("avanzarEstadoEmbarqueRpc", () => {
     const args = call?.args as { p_nuevo_estado: string; p_tipo_evento: string };
     expect(args.p_nuevo_estado).toBe("En tránsito");
     expect(args.p_tipo_evento).toBe("estado");
+  });
+
+  it("escribe bitácora cuando la transición se ejecutó (sin replay)", async () => {
+    mock.setRpcResult("avanzar_estado_embarque", { data: { id: UUID, estado: "Cerrado" }, error: null });
+    const resultado = await avanzarEstadoEmbarqueRpc({
+      embarqueId: UUID,
+      nuevoEstado: "Cerrado",
+      usuarioEmail: "u@d.com",
+      tipoEvento: "estado",
+      descripcionEvento: "Cambio",
+    });
+    expect(resultado).toEqual({ replay: false, pendiente: false });
+    expect(registrarActividadMock).toHaveBeenCalledTimes(1);
+    expect(registrarActividadMock).toHaveBeenCalledWith(
+      expect.objectContaining({ accion: "Avanzó estado de embarque", modulo: "embarques" }),
+    );
+  });
+
+  it("FIX-R3: NO escribe bitácora cuando la RPC responde replay=true", async () => {
+    mock.setRpcResult("avanzar_estado_embarque", { data: { id: UUID, estado: "Cerrado", replay: true }, error: null });
+    const resultado = await avanzarEstadoEmbarqueRpc({
+      embarqueId: UUID,
+      nuevoEstado: "Cerrado",
+      usuarioEmail: "u@d.com",
+      tipoEvento: "estado",
+      descripcionEvento: "Cambio",
+    });
+    expect(resultado.replay).toBe(true);
+    expect(registrarActividadMock).not.toHaveBeenCalled();
+  });
+
+  it("FIX-R3: NO escribe bitácora cuando el claim está en vuelo (__idempotency_pending)", async () => {
+    mock.setRpcResult("avanzar_estado_embarque", { data: { __idempotency_pending: true }, error: null });
+    const resultado = await avanzarEstadoEmbarqueRpc({
+      embarqueId: UUID,
+      nuevoEstado: "Cerrado",
+      usuarioEmail: "u@d.com",
+      tipoEvento: "estado",
+      descripcionEvento: "Cambio",
+    });
+    expect(resultado.pendiente).toBe(true);
+    expect(registrarActividadMock).not.toHaveBeenCalled();
   });
 });
 

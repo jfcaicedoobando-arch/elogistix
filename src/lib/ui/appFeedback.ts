@@ -75,7 +75,9 @@ export function notifyError(_toast: AnyToastFn | undefined, opts: ErrorNotifyOpt
     method,
   });
 
-  const errorToastId = `err-${errorCode ?? phase ?? "generic"}`;
+  // P-05 / FIX-R3: id por código, luego fase, luego `method` (call site). Con
+  // fallback fijo "generic", dos errores sin código en <8 s se reemplazaban.
+  const errorToastId = `err-${errorCode ?? phase ?? method ?? "generic"}`;
   const dedupeKey = computeToastDedupeKey("error", computedTitle, description);
   if (!shouldSuppressDuplicateToast(dedupeKey)) {
     ERROR_TOAST_IDS.add(errorToastId);

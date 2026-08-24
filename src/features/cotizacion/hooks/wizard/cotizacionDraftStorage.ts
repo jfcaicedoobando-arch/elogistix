@@ -4,7 +4,7 @@
  * respetar el límite de 200 líneas por archivo: aquí vive el formato del draft
  * y su validación; el hook sólo orquesta el debounce.
  */
-import { safeLocalStorage } from "@/lib/browserStorage";
+import { getStorageRef, safeLocalStorage } from "@/lib/browserStorage";
 import type { CotizacionFormValues } from "@/features/cotizacion/domain/mappers/cotizacionForm";
 import type { FilaCostoLocal } from "@/features/cotizacion/types";
 
@@ -18,8 +18,9 @@ export const DEBOUNCE_MS = 800;
  * con varias membresías cambiaba de tenant y el wizard le ofrecía restaurar el
  * borrador capturado en la organización anterior (fuga cross-tenant).
  */
+export const DRAFT_KEY_PREFIX = "lc:cotizacion:draft:";
 export const draftKey = (userId: string, organizationId?: string | null): string =>
-  `lc:cotizacion:draft:${organizationId || "sin-org"}:${userId || "anon"}`;
+  `${DRAFT_KEY_PREFIX}${organizationId || "sin-org"}:${userId || "anon"}`;
 
 export interface StoredDraft {
   version: 3;
@@ -112,4 +113,21 @@ export function loadDraft(userId: string, organizationId?: string | null): Store
 
 export function clearDraft(userId: string, organizationId?: string | null): void {
   safeLocalStorage.removeItem(draftKey(userId, organizationId));
+}
+
+/**
+ * Barre TODOS los borradores del wizard de cotización del dispositivo. Se
+ * llama al cerrar sesión (frontend_hunter P3): el draft persiste 24 h en
+ * claro e incluye precios, costos internos y márgenes (P&L) del tenant —
+ * no debe sobrevivir al logout en un equipo compartido.
+ */
+export function clearAllDrafts(): void {
+  const storage = getStorageRef("local");
+  if (!storage) return;
+  const keys: string[] = [];
+  for (let i = 0; i < storage.length; i++) {
+    const key = storage.key(i);
+    if (key?.startsWith(DRAFT_KEY_PREFIX)) keys.push(key);
+  }
+  for (const key of keys) safeLocalStorage.removeItem(key);
 }

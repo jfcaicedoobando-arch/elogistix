@@ -1,7 +1,7 @@
--- Fuente canónica de public.avanzar_estado_embarque
--- Regenerada desde DB. Cada cambio DEBE actualizarse aquí en el mismo PR que la migración correspondiente.
--- Ver supabase/schema/README.md.
-
+-- FIX-R3 (delta_hunter P2 + review_ola1 B2/M-3): la respuesta cacheada por
+-- idempotency_claim viaja ahora con `replay: true` para que el frontend no
+-- escriba bitácora ni pinte avances que la BD no ejecutó.
+-- Espejo: supabase/schema/embarques/avanzar_estado_embarque.sql
 CREATE OR REPLACE FUNCTION public.avanzar_estado_embarque(p_embarque_id uuid, p_nuevo_estado text, p_usuario_email text, p_tipo_evento text, p_descripcion_evento text, p_request_id uuid DEFAULT NULL::uuid)
  RETURNS jsonb
  LANGUAGE plpgsql

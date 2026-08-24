@@ -80,9 +80,12 @@ export function PortalUsuariosTab({ tipo }: Props) {
         onOpenChange={(open) => {
           if (!open) setDeleteTarget(null);
         }}
-        entityName={deleteTarget?.email ?? "usuario"}
-        description={`El usuario ${deleteTarget?.email} perderá acceso al portal y será eliminado permanentemente del sistema.`}
+        // O3.7.7 (FIX-R3): mismos fallbacks que UsuariosInternosDialogs —
+        // antes un email ausente imprimía "El usuario undefined perderá acceso…".
+        entityName={deleteTarget?.email ?? "este usuario"}
+        description={`El usuario ${deleteTarget?.email ?? "seleccionado"} perderá acceso al portal y será eliminado permanentemente del sistema.`}
         finalDescription="Esta acción no se puede deshacer."
+        confirmLabel="Eliminar cuenta"
         onConfirm={handleDelete}
         isPending={deleteMutation.isPending}
       />

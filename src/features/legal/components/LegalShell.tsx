@@ -39,7 +39,10 @@ export function LegalShell({
       </header>
 
       <main className="mx-auto max-w-3xl px-4 py-12 sm:px-6">
-        <p className="mb-2 text-label font-semibold uppercase tracking-wider text-accent">{eyebrow}</p>
+        {/* O3.5: la micro-etiqueta en mayúsculas usa el token canónico
+            text-overline; recomponerla a mano está prohibido y cuenta
+            como deuda en el ratchet de O3.5. */}
+        <p className="mb-2 text-overline">{eyebrow}</p>
         <h1 className="text-display">{title}</h1>
         {updatedAt ? <p className="mt-2 text-body text-muted-foreground">Última actualización: {updatedAt}</p> : null}
         {children}

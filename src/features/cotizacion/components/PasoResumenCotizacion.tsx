@@ -50,7 +50,7 @@ export default function PasoResumenCotizacion({
                 <span>{formatCurrency(plUSD.totalVenta, "USD")}</span>
               </div>
               <div className="flex justify-between text-body font-semibold">
-                <span>Profit</span>
+                <span>Utilidad</span>
                 <span className={plUSD.profit >= 0 ? "text-success" : "text-destructive"}>
                   {formatCurrency(plUSD.profit, "USD")}
                 </span>
@@ -74,7 +74,7 @@ export default function PasoResumenCotizacion({
                 <span>{formatCurrency(plMXN.totalVenta, "MXN")}</span>
               </div>
               <div className="flex justify-between text-body font-semibold">
-                <span>Profit</span>
+                <span>Utilidad</span>
                 <span className={plMXN.profit >= 0 ? "text-success" : "text-destructive"}>
                   {formatCurrency(plMXN.profit, "MXN")}
                 </span>

@@ -6,6 +6,7 @@ import { describe, it, expect, beforeEach } from "vitest";
 import {
   loadDraft,
   clearDraft,
+  clearAllDrafts,
   draftKey,
   DEBOUNCE_MS,
 } from "@/features/cotizacion/hooks/wizard/cotizacionDraftStorage";
@@ -189,6 +190,27 @@ describe("clearDraft (cotizacionDraftStorage)", () => {
     window.localStorage.setItem(draftKey(USER), "algo");
     clearDraft(USER);
     expect(window.localStorage.getItem(draftKey(USER))).toBeNull();
+  });
+});
+
+describe("clearAllDrafts (logout · frontend_hunter P3)", () => {
+  it("barre los borradores de todos los usuarios/orgs del dispositivo", () => {
+    window.localStorage.setItem(draftKey("user-1", "org-1"), "a");
+    window.localStorage.setItem(draftKey("user-2", "org-2"), "b");
+    window.localStorage.setItem(draftKey("user-1"), "c");
+    clearAllDrafts();
+    expect(window.localStorage.getItem(draftKey("user-1", "org-1"))).toBeNull();
+    expect(window.localStorage.getItem(draftKey("user-2", "org-2"))).toBeNull();
+    expect(window.localStorage.getItem(draftKey("user-1"))).toBeNull();
+  });
+
+  it("no toca claves ajenas al prefijo del draft", () => {
+    window.localStorage.setItem(draftKey(USER), "a");
+    window.localStorage.setItem("lc-query-cache-v1", "cache");
+    window.localStorage.setItem("librecarga-theme", "dark");
+    clearAllDrafts();
+    expect(window.localStorage.getItem("lc-query-cache-v1")).toBe("cache");
+    expect(window.localStorage.getItem("librecarga-theme")).toBe("dark");
   });
 });
 

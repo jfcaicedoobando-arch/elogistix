@@ -72,7 +72,7 @@ export default function Operaciones() {
           {!isLoading && <Progress value={contPct} className="h-1.5 mt-1.5 [&>div]:bg-kpi-accent" />}
         </KpiCard>
         {/* VB-28: la moneda ya la muestra el valor ("USD …"); no duplicarla en el label. */}
-        <KpiCard label="Profit" value={formatCurrencyCompact(global.totalProfit, "USD")} valueTooltip={formatCurrency(global.totalProfit, "USD")} icon={TrendingUp} variant="success" iconVariant="chip" loading={isLoading} />
+        <KpiCard label="Utilidad" value={formatCurrencyCompact(global.totalProfit, "USD")} valueTooltip={formatCurrency(global.totalProfit, "USD")} icon={TrendingUp} variant="success" iconVariant="chip" loading={isLoading} />
         <KpiCard label="Alertas" value={totalAlertas} sublabel={totalAlertas > 0 ? `${global.totalCriticos} críticos · ${global.totalEnPuerto} en puerto` : "Sin alertas"} icon={AlertTriangle} variant="destructive" iconVariant="chip" loading={isLoading} />
         <KpiCard
           label="Tarifas a re-aprobar"

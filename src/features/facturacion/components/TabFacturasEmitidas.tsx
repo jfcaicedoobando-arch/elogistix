@@ -7,6 +7,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { DatePickerMx } from "@/components/ui/date-picker-mx";
+import { FILTRO_ANCHO } from "@/lib/ui/filterWidths";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { DataTable } from "@/components/shared/DataTable";
@@ -62,7 +63,7 @@ export function TabFacturasEmitidas({ filtros: f, tabla: t, acciones: a }: Props
   const primarySlot = (
     <>
       <Select value={f.filterEstado} onValueChange={(v) => f.setFilter("estado", v)}>
-        <SelectTrigger className="w-[180px]" aria-label="Estado de la factura">
+        <SelectTrigger className={FILTRO_ANCHO.mdAuto} aria-label="Estado de la factura">
           <SelectValue placeholder="Estado" />
         </SelectTrigger>
         <SelectContent>
@@ -71,7 +72,7 @@ export function TabFacturasEmitidas({ filtros: f, tabla: t, acciones: a }: Props
         </SelectContent>
       </Select>
       <Select value={f.filterCliente} onValueChange={(v) => f.setFilter("cliente", v)}>
-        <SelectTrigger className="w-[210px]" aria-label="Cliente">
+        <SelectTrigger className={FILTRO_ANCHO.lgAuto} aria-label="Cliente">
           <SelectValue placeholder="Cliente" />
         </SelectTrigger>
         <SelectContent>

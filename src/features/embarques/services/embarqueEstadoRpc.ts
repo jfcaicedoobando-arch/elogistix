@@ -6,7 +6,7 @@
  * compatibilidad con los imports existentes.
  */
 import { supabase } from "@/integrations/supabase/client";
-import { run } from "@/lib/supabase/response";
+import { run, unwrap } from "@/lib/supabase/response";
 import { getErrorMessage } from "@/lib/errors";
 import { registrarBitacoraEmbarque } from "./bitacoraEmbarques";
 
@@ -20,10 +20,20 @@ export interface AvanzarEstadoEmbarqueInput {
   requestId?: string;
 }
 
+/**
+ * Resultado de la RPC de avance. `replay: true` = la respuesta venía del caché
+ * de idempotencia (la transición NO se ejecutó esta vez); `pendiente: true` =
+ * otro request con la misma llave la está ejecutando ahora mismo.
+ */
+export interface AvanzarEstadoResultado {
+  replay: boolean;
+  pendiente: boolean;
+}
+
 export async function avanzarEstadoEmbarqueRpc(
   input: AvanzarEstadoEmbarqueInput,
-): Promise<void> {
-  await run(
+): Promise<AvanzarEstadoResultado> {
+  const data: unknown = await unwrap(
     supabase.rpc("avanzar_estado_embarque", {
       p_embarque_id: input.embarqueId,
       p_nuevo_estado: input.nuevoEstado,
@@ -33,11 +43,21 @@ export async function avanzarEstadoEmbarqueRpc(
       p_request_id: input.requestId,
     }),
   );
-  await registrarBitacoraEmbarque({
-    accion: "Avanzó estado de embarque",
-    entidadId: input.embarqueId,
-    detalles: { nuevoEstado: input.nuevoEstado, tipoEvento: input.tipoEvento, descripcionEvento: input.descripcionEvento },
-  });
+  const bag = data && typeof data === "object" ? (data as Record<string, unknown>) : {};
+  const replay = bag.replay === true;
+  const pendiente = bag.__idempotency_pending === true;
+  // FIX-R3 (delta_hunter P2): la bitácora "Avanzó estado" sólo se escribe
+  // cuando la transición se ejecutó de verdad. Un replay cacheado (requestId
+  // repetido, p. ej. re-disparo del auto-sync) o un claim en vuelo no movieron
+  // el embarque en ESTA llamada — antes cada replay insertaba una fila más.
+  if (!replay && !pendiente) {
+    await registrarBitacoraEmbarque({
+      accion: "Avanzó estado de embarque",
+      entidadId: input.embarqueId,
+      detalles: { nuevoEstado: input.nuevoEstado, tipoEvento: input.tipoEvento, descripcionEvento: input.descripcionEvento },
+    });
+  }
+  return { replay, pendiente };
 }
 
 export interface ReabrirEmbarqueInput {

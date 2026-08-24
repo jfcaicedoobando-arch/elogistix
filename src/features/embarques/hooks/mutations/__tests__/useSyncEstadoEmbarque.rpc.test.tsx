@@ -60,4 +60,27 @@ describe("useSyncEstadoEmbarque (O2.8)", () => {
     result.current.mutate({ embarqueId: EMB, nuevoEstado: "Arribo", usuarioEmail: "a@b.mx" });
     await waitFor(() => expect(result.current.isError).toBe(true));
   });
+
+  it("M-3: ante replay cacheado invalida la llave y reintenta con requestId fresco", async () => {
+    // Primera transición real (sin replay): la llave queda en el Map.
+    avanzarMock.mockResolvedValueOnce({ replay: false, pendiente: false });
+    const { result } = renderHook(() => useSyncEstadoEmbarque(), { wrapper });
+    result.current.mutate({ embarqueId: EMB, nuevoEstado: "Cerrado", usuarioEmail: "a@b.mx" });
+    await waitFor(() => expect(avanzarMock).toHaveBeenCalledTimes(1));
+    const llaveInicial = (avanzarMock.mock.calls[0][0] as { requestId: string }).requestId;
+
+    // Tras reabrir, el auto-sync sugiere la MISMA transición: la RPC responde
+    // replay=true (respuesta cacheada, sin ejecutar) con la llave vieja…
+    avanzarMock
+      .mockResolvedValueOnce({ replay: true, pendiente: false })
+      .mockResolvedValueOnce({ replay: false, pendiente: false });
+    result.current.mutate({ embarqueId: EMB, nuevoEstado: "Cerrado", usuarioEmail: "a@b.mx" });
+    await waitFor(() => expect(avanzarMock).toHaveBeenCalledTimes(3));
+
+    // …y el hook reintenta con una llave NUEVA para que el avance se ejecute.
+    const llamadaReplay = avanzarMock.mock.calls[1][0] as { requestId: string };
+    const llamadaReintento = avanzarMock.mock.calls[2][0] as { requestId: string };
+    expect(llamadaReplay.requestId).toBe(llaveInicial);
+    expect(llamadaReintento.requestId).not.toBe(llaveInicial);
+  });
 });

@@ -2,9 +2,18 @@
  * Mensajes amigables de los códigos `LC_*` del CRM comercial
  * (oportunidades, criterios de salida y autorización de margen).
  */
+
+/**
+ * Concepto "oportunidad inexistente" compartido por los dos códigos que lo
+ * lanzan: `LC_OPORTUNIDAD_INEXISTENTE` (RPCs históricas) y
+ * `LC_OPORTUNIDAD_NO_ENCONTRADA` (`crm_propagar_conversion_cliente`).
+ * Se deduplica el texto para que el toast sea idéntico sin importar la RPC.
+ */
+const MSG_OPORTUNIDAD_INEXISTENTE =
+  "La oportunidad ya no existe o pertenece a otra organización.";
+
 export const LC_CODE_MESSAGES_CRM: Record<string, string> = {
-  LC_OPORTUNIDAD_INEXISTENTE:
-    "La oportunidad ya no existe o pertenece a otra organización.",
+  LC_OPORTUNIDAD_INEXISTENTE: MSG_OPORTUNIDAD_INEXISTENTE,
   LC_SIN_PERMISO_AUTORIZAR_MARGEN:
     "Sólo gerencia comercial o administración pueden autorizar el margen de una oportunidad.",
   LC_MOTIVO_PERDIDA_REQUERIDO:
@@ -25,8 +34,7 @@ export const LC_CODE_MESSAGES_CRM: Record<string, string> = {
     "Tu rol no puede crear ni modificar cotizaciones. Solicita acceso a ventas o gerencia comercial.",
   LC_COTIZACION_SIN_PERMISO:
     "Tu rol no puede archivar ni versionar cotizaciones. Solicita acceso a ventas o gerencia comercial.",
-  LC_OPORTUNIDAD_NO_ENCONTRADA:
-    "La oportunidad no existe o pertenece a otra organización.",
+  LC_OPORTUNIDAD_NO_ENCONTRADA: MSG_OPORTUNIDAD_INEXISTENTE,
   LC_PARAMETROS_INVALIDOS:
     "Faltan datos o son inválidos para completar la operación. Revisa el formulario e inténtalo de nuevo.",
   LC_SIN_PERMISO:

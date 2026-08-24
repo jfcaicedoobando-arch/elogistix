@@ -15,8 +15,11 @@ import { sync as globSync } from "fast-glob";
  * Ola 5 · RN-1 — holgura documentada: el tope es la deuda congelada + 10.
  * Sin holgura, cualquier PR inocente rompía CI. Plan: bajar el tope cada
  * trimestre a `deuda_actual + 10` conforme se migran archivos.
+ *
+ * FIX-R3 (review_ola3 H2): baseline real verificado con este mismo regex —
+ * 907 ocurrencias al 2026-08-31 (el baseline previo, 900, mentía por abajo).
  */
-const DEUDA_CONGELADA = 900;
+const DEUDA_CONGELADA = 907;
 const HOLGURA = 10;
 const MAX_PAR_LARGO = DEUDA_CONGELADA + HOLGURA;
 
@@ -58,7 +61,9 @@ describe("arquitectura · ratchet de tamaño de iconos", () => {
   it("mantiene el tope de iconos h-4 w-4 sincronizado (si migraste archivos, baja el tope)", () => {
     const { total } = contarParLargo();
     expect(
-      DEUDA_CONGELADA - total,
+      // FIX-R3: chequeo bidireccional — antes era unilateral y no detectaba
+      // un baseline POR DEBAJO del conteo real (900 vs 907).
+      Math.abs(DEUDA_CONGELADA - total),
       "Hay margen de sobra en el ratchet: ajusta DEUDA_CONGELADA al conteo real.",
     ).toBeLessThanOrEqual(HOLGURA);
   });

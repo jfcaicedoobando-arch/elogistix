@@ -76,7 +76,7 @@ const columns: ColumnDef<EmbarqueMesSiguiente, unknown>[] = defineColumns<Embarq
     accessor: (e) => e.estadoReal,
   }),
   {
-    id: "profit", header: "Profit MXN",
+    id: "profit", header: "Utilidad MXN",
     accessorFn: (e) => e.profitMXN, enableSorting: true,
     sortingFn: sortByNumber<EmbarqueMesSiguiente>((e) => e.profitMXN),
     meta: { className: "text-right tabular-nums", headerClassName: "text-right" },
@@ -149,7 +149,7 @@ export function EmbarquesActivosTable({ embarques, resumen, isLoading, hideFinan
                 variant="warning"
               />
               <KpiCard
-                label="Profit MXN"
+                label="Utilidad MXN"
                 value={formatCurrency(resumen.profitMXN, "MXN")}
                 icon={TrendingUp}
                 iconVariant="chip"
