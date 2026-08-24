@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.736.1] - 2026-08-24
+- CI (RLS · rpc_org_scope_linter): `seleccionar_lote_sat_semanal(integer)` se vuelve a cerrar a `service_role` en `_ci_post_migrate.sql`; el GRANT masivo del Postgres bare de CI la exponía a `authenticated` y disparaba el linter.
+
 ## [13.736.0] - 2026-08-24
 ### FIX3 — consistencia y seguridad de base de datos (8 hallazgos validados)
 - **M-4 · fecha del cobro**: `assert_factura_viva_para_pago()` valida fecha futura también en `UPDATE` (antes sólo `INSERT`), `fecha_pago` sale de la lista "sólo metadatos" y se añade `LC_PAGO_FECHA_PREVIA_EMISION` (paridad con el lote CxC). La función pasa a `SECURITY DEFINER`.
