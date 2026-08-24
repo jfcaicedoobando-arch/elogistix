@@ -81,6 +81,36 @@ BEGIN
 END $$;
 
 -- ============================================================================
+-- FIX2 B-1: re-cierre de las columnas internas de `public.embarques`.
+-- El `GRANT SELECT ... ON ALL TABLES` de arriba reinstala el privilegio a
+-- nivel tabla, lo que anula los REVOKE por columna de las migraciones
+-- 20260824033159 / 20260824033552. Se repite aquí el mismo patrón
+-- (revoke de tabla + grant columna por columna) para que CI sea fiel a prod.
+-- ============================================================================
+DO $$
+DECLARE
+  v_cols text;
+  v_internas text[] := ARRAY['cerrado_snapshot','tarifa_delta_jsonb','reabierto_motivo','created_by_email'];
+BEGIN
+  IF to_regclass('public.embarques') IS NULL THEN
+    RETURN;
+  END IF;
+
+  SELECT string_agg(quote_ident(column_name), ', ' ORDER BY ordinal_position)
+    INTO v_cols
+  FROM information_schema.columns
+  WHERE table_schema = 'public'
+    AND table_name = 'embarques'
+    AND NOT (column_name = ANY (v_internas));
+
+  EXECUTE 'REVOKE SELECT ON public.embarques FROM authenticated';
+  EXECUTE 'REVOKE SELECT ON public.embarques FROM anon';
+  EXECUTE format('GRANT SELECT (%s) ON public.embarques TO authenticated', v_cols);
+  EXECUTE format('GRANT SELECT (%s) ON public.embarques TO anon', v_cols);
+END $$;
+
+
+-- ============================================================================
 -- Triggers de comisiones.
 --
 -- Antes se dropeaba `trg_pago_factura_comision_ins` aquí para evitar un bug
