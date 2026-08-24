@@ -9,7 +9,10 @@ import { FACTURAPI_BASE, basicAuthHeader } from '../_shared/facturapiAuth.ts';
 import { fetchOrgSlug } from '../_shared/orgSlug.ts';
 import { buildFilename } from '../_shared/facturaFilename.ts';
 
-export const SIGNED_URL_TTL = 60 * 60 * 24 * 30; // 30 días
+// R2 seguridad · P1 (B-5): 7 días en lugar de 30. Son URLs firmadas que dan
+// acceso al CFDI sin autenticación; viven dentro del correo enviado al cliente
+// y ya NO se devuelven en la respuesta HTTP de la función.
+export const SIGNED_URL_TTL = 60 * 60 * 24 * 7; // 7 días
 export const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 // Alias local con firma (cors, data, status) para conservar callsites de este handler.

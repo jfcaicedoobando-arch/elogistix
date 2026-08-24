@@ -27,8 +27,9 @@ export interface EnviarFacturaEmailResult {
   estado: "enviado" | "parcial" | "fallido";
   envio_id: string | null;
   resultados: Array<{ email: string; tipo: string; ok: boolean; error?: string }>;
-  pdf_link: string;
-  xml_link: string;
+  /** B-5: la Edge Function ya no expone enlaces firmados en la respuesta. */
+  pdf_link?: string;
+  xml_link?: string;
 }
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
