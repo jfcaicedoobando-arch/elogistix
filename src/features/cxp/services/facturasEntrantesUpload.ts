@@ -73,6 +73,39 @@ async function errorGuardadoEntrante(
   return duplicado ? new Error(duplicado) : error;
 }
 
+/**
+ * FIX3 · M-6 (BUG-18) extendido al ALTA INICIAL: los metadatos fiscales del
+ * INSERT quedan sellados server-side como NO verificados. Aquí replicamos el
+ * flujo de "adjuntar XML posterior": la edge descarga el XML, verifica su hash,
+ * lo re-parsea y REEMPLAZA los metadatos con los del servidor (marcándolos como
+ * verificados). Si algo no cuadra, se avisa al usuario y queda rastro.
+ */
+async function verificarMetadatosDelAlta(params: {
+  documentoId: string;
+  xml: ArchivoSubido | null;
+  meta: CfdiXmlMeta | null;
+  nombreArchivo: string;
+}): Promise<void> {
+  if (!params.xml) return;
+  const error = await verificarYAdjuntarXmlEntrante({
+    documentoId: params.documentoId,
+    xmlPath: params.xml.path,
+    xmlNombre: params.xml.nombre,
+    xmlHash: params.xml.hash,
+    meta: params.meta,
+  });
+  if (!error) return;
+  await registrarActividad({
+    modulo: "cxp",
+    accion: "verificacion_xml_entrante_fallida",
+    entidadId: params.documentoId,
+    entidadNombre: params.nombreArchivo,
+  });
+  throw new Error(
+    mensajeErrorAdjuntarXml(`${error.message} ${error.details ?? ""}`),
+  );
+}
+
 export async function subirFacturaEntrante(input: SubirFacturaEntranteInput): Promise<string> {
   const invalido = validarParejaEntrante({ pdf: input.pdf, xml: input.xml });
   if (invalido) throw new Error(invalido);
