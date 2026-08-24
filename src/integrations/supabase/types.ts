@@ -5802,6 +5802,7 @@ export type Database = {
           onboarding_completado: boolean
           plan: string | null
           rfc: string | null
+          sat_barrido_fecha: string | null
           updated_at: string | null
         }
         Insert: {
@@ -5815,6 +5816,7 @@ export type Database = {
           onboarding_completado?: boolean
           plan?: string | null
           rfc?: string | null
+          sat_barrido_fecha?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -5828,6 +5830,7 @@ export type Database = {
           onboarding_completado?: boolean
           plan?: string | null
           rfc?: string | null
+          sat_barrido_fecha?: string | null
           updated_at?: string | null
         }
         Relationships: []
@@ -10787,6 +10790,12 @@ export type Database = {
       seed_presupuesto_categorias: {
         Args: { p_organization_id: string }
         Returns: undefined
+      }
+      seleccionar_lote_sat_semanal: {
+        Args: { p_max_orgs?: number }
+        Returns: {
+          organization_id: string
+        }[]
       }
       set_facturapi_api_key: {
         Args: { p_ambiente: string; p_api_key: string; p_org_id: string }

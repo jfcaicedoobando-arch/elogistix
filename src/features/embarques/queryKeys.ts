@@ -24,6 +24,11 @@ export const embarques = {
   eventos: (id: string) => ['eventos_embarque', id] as const,
   relacionados: (id: string, blMaster: string) => ['embarques', 'relacionados', id, blMaster] as const,
   // Detalle singular (distinto de `detail`, usado por hooks de cierre/pnl/seguros/proformas).
+  // B-1: `single(id)` es el PREFIJO CANÓNICO del árbol singular
+  // ['embarque', id, ...] (adminPendientes, cierre*, pnlFinanciero, tcContexto,
+  // seguros, sinComision). El prefijo plural `all` (['embarques']) NO cubre
+  // este árbol: toda mutación que afecte esas sub-queries debe invalidar su
+  // key exacta o este prefijo — invalidar sólo `all` deja la pantalla obsoleta.
   single: (id?: string) => ['embarque', id] as const,
   bitacora: (embarqueId?: string, expediente?: string) =>
     ['embarques', 'bitacora', embarqueId, expediente] as const,

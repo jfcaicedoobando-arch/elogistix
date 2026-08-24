@@ -36,8 +36,12 @@ const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const CRON_SECRET = Deno.env.get("CRON_SECRET");
 
 const MAX_ORGS = 5;
-const MAX_FACTURAS = 60;
-const POR_ORG = 20;
+// EF-05: 50 es el tope que cabe en el wall-clock de la edge (~150 s), mismo
+// límite que el lote manual (`LIMITE_MAX` en `_shared/satBarrido.ts`).
+const MAX_FACTURAS = 50;
+// Cupo parejo por org: antes (60/20) las 3 primeras orgs agotaban el cupo y el
+// resto del lote se quedaba en cero.
+const POR_ORG = MAX_FACTURAS / MAX_ORGS;
 
 interface ResumenOrg {
   organization_id: string;
@@ -48,15 +52,20 @@ interface ResumenOrg {
   error?: string;
 }
 
-async function organizacionesConRfc(admin: SupabaseClient): Promise<string[]> {
-  const { data, error } = await admin
-    .from("organizations")
-    .select("id, rfc")
-    .not("rfc", "is", null)
-    .order("created_at", { ascending: true })
-    .limit(MAX_ORGS);
+/**
+ * Lote de orgs de esta corrida. La rotación vive en BD
+ * (`seleccionar_lote_sat_semanal`): ordena por `sat_barrido_fecha ASC NULLS
+ * FIRST` y estampa la fecha atómicamente, así corridas consecutivas barren
+ * orgs distintas y todas entran al ciclo en ceil(N / MAX_ORGS) semanas.
+ * Antes era `ORDER BY created_at ASC LIMIT 5` fijo: siempre las mismas 5 orgs
+ * y las nuevas jamás se verificaban (fix B-3).
+ */
+async function seleccionarLoteSemanal(admin: SupabaseClient): Promise<string[]> {
+  const { data, error } = await admin.rpc("seleccionar_lote_sat_semanal", {
+    p_max_orgs: MAX_ORGS,
+  });
   if (error) throw new Error(error.message);
-  return ((data ?? []) as { id: string }[]).map((o) => o.id);
+  return ((data ?? []) as { organization_id: string }[]).map((r) => r.organization_id);
 }
 
 async function avisarCanceladas(
@@ -118,7 +127,7 @@ Deno.serve(wrapEdgeHandler("verificar-sat-semanal", async (req) => {
 
   let orgs: string[];
   try {
-    orgs = await organizacionesConRfc(admin);
+    orgs = await seleccionarLoteSemanal(admin);
   } catch (e) {
     await captureEdgeException(e, { fn: "verificar-sat-semanal" });
     return jsonResponse({ error: "query_failed", detail: (e as Error).message }, 500);

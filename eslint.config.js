@@ -361,6 +361,9 @@ export default tseslint.config(
       "**/*.test.tsx",
     ],
     rules: {
+      // `previewAuthStorage.ts` es autogenerado por la plataforma (prohibido
+      // editarlo), así que sus reglas de estilo se relajan aquí.
+      "prefer-const": "off",
       "max-lines": "off",
       "max-lines-per-function": "off",
       "complexity": "off",

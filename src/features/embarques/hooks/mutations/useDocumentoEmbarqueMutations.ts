@@ -25,6 +25,10 @@ function invalidateDocumentosCaches(
   queryClient.invalidateQueries({ queryKey: queryKeys.embarques.documentos(embarqueId) });
   queryClient.invalidateQueries({ queryKey: queryKeys.embarques.all });
   queryClient.invalidateQueries({ queryKey: queryKeys.auditoria.embarques });
+  // B-1 (mismo mismatch del toggle de comisión): el badge de pendientes
+  // administrativos cuenta documentos faltantes y su query vive en el árbol
+  // singular ['embarque', id, 'admin-pendientes'], no cubierto por ['embarques'].
+  queryClient.invalidateQueries({ queryKey: queryKeys.embarques.adminPendientes(embarqueId) });
 }
 
 export function useUploadDocumentoEmbarque() {

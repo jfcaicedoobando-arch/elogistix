@@ -99,24 +99,15 @@ async function sembrarConceptos(
   return rows.length;
 }
 
-async function procesarDoc(
+/**
+ * Copia a storage los archivos que la factura de proveedor todavía no tiene.
+ * Extraído de `procesarDoc` para mantener la complejidad bajo el límite.
+ */
+async function copiarArchivosFaltantes(
   admin: SupabaseClient,
   doc: DocRow,
-  organizationId: string | null,
-): Promise<ResultadoFactura | null> {
-  const { data: factura, error } = await admin
-    .from("proveedor_facturas")
-    .select("id, organization_id, archivo_pdf_url, archivo_xml_url, deleted_at")
-    .eq("id", doc.proveedor_factura_id)
-    .maybeSingle();
-  if (error) throw error;
-  const f = factura as FacturaRow | null;
-  if (!f || f.deleted_at) return null;
-  // R2 seguridad · P1 — defensa en profundidad: el barrido ya viene filtrado
-  // por org, pero la factura vinculada nunca debe salirse del tenant.
-  if (organizationId && f.organization_id !== organizationId) return null;
-
-
+  f: FacturaRow,
+): Promise<{ archivo_pdf_url?: string; archivo_xml_url?: string }> {
   const patch: { archivo_pdf_url?: string; archivo_xml_url?: string } = {};
   if (!f.archivo_pdf_url && doc.archivo_path && !doc.archivo_path.toLowerCase().endsWith(".xml")) {
     patch.archivo_pdf_url = await copiarArchivo(admin, {
@@ -136,6 +127,28 @@ async function procesarDoc(
       tipo: "XML",
     });
   }
+  return patch;
+}
+
+async function procesarDoc(
+  admin: SupabaseClient,
+  doc: DocRow,
+  organizationId: string | null,
+): Promise<ResultadoFactura | null> {
+  const { data: factura, error } = await admin
+    .from("proveedor_facturas")
+    .select("id, organization_id, archivo_pdf_url, archivo_xml_url, deleted_at")
+    .eq("id", doc.proveedor_factura_id)
+    .maybeSingle();
+  if (error) throw error;
+  const f = factura as FacturaRow | null;
+  if (!f || f.deleted_at) return null;
+  // R2 seguridad · P1 — defensa en profundidad: el barrido ya viene filtrado
+  // por org, pero la factura vinculada nunca debe salirse del tenant.
+  if (organizationId && f.organization_id !== organizationId) return null;
+
+
+  const patch = await copiarArchivosFaltantes(admin, doc, f);
   if (Object.keys(patch).length > 0) {
     const { error: errUpd } = await admin
       .from("proveedor_facturas")
