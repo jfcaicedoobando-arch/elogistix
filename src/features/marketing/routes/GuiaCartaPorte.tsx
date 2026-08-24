@@ -20,7 +20,7 @@ import { GuiaCartaPorteArticle } from "./GuiaCartaPorteArticle";
 
 export default function GuiaCartaPorte() {
   return (
-    <div className="landing-scope min-h-screen bg-background text-foreground">
+    <div className="landing-scope min-h-dvh bg-background text-foreground">
       <Seo
         title="Guía Carta Porte 3.0 México (2026): CFDI, obligados y multas"
         description="Guía práctica del complemento Carta Porte 3.0 del SAT: quién está obligado, tipos de CFDI, campos clave, multas y checklist para forwarders mexicanos."

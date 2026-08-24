@@ -61,7 +61,7 @@ export default function Unsubscribe() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
+    <div className="min-h-dvh flex items-center justify-center bg-background p-4">
       <Seo title="Cancelar suscripción — Libre Carga" noIndex />
       <Card className="max-w-md w-full">
         <CardHeader>

@@ -16,7 +16,7 @@ const NotFound = () => {
   }, [location.pathname]);
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-6">
+    <div className="flex min-h-dvh items-center justify-center bg-background px-6">
       <Seo
         title="Página no encontrada · Libre Carga"
         description="La ruta solicitada no existe en Libre Carga. Vuelve al inicio para continuar."

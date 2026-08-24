@@ -22,7 +22,7 @@ export interface AuthCardProps {
 
 export function AuthCard({ title, maxWidth = "md", children, className }: AuthCardProps) {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-muted px-4 py-8">
+    <div className="min-h-dvh flex items-center justify-center bg-gradient-to-br from-background via-background to-muted px-4 py-8">
       <Card className={cn("w-full shadow-raised", maxWidth === "sm" ? "max-w-sm" : "max-w-md", className)}>
         <CardHeader className="text-center space-y-4 pb-4">
           <BrandLockup variant="stacked" size="md" subtitle={BRAND.tagline} />

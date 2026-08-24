@@ -38,7 +38,7 @@ export default function TrackingPublico() {
   const orgNombre = organizacion?.nombre || COPY_PIE.seguimientoTitulo;
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-dvh bg-background">
       <Seo
         title={`Seguimiento ${e.expediente} · Libre Carga`}
         description={`Consulta el estatus en tiempo real del embarque ${e.expediente} con Libre Carga.`}

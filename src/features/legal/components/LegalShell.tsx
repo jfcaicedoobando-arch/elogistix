@@ -28,7 +28,7 @@ export function LegalShell({
   children,
 }: LegalShellProps) {
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="min-h-dvh bg-background text-foreground">
       <header className="border-b border-border bg-background/80 backdrop-blur">
         <div className="mx-auto flex h-16 max-w-3xl items-center justify-between px-4 sm:px-6">
           <Link to={backTo} aria-label="Libre Carga"><BrandLockup variant="horizontal" size="sm" /></Link>

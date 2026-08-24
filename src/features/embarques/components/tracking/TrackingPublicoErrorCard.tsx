@@ -10,7 +10,7 @@ export function TrackingPublicoErrorCard({ message }: { message?: string }) {
   const esEnlace = descripcion === COPY_ENLACE.invalido;
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center">
+    <div className="min-h-dvh bg-background flex items-center justify-center">
       <Card className="max-w-md w-full mx-4">
         <CardContent className="py-8">
           <AvisoAccionable

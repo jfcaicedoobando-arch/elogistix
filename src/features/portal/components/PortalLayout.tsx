@@ -44,7 +44,7 @@ export default function PortalLayout() {
     : user?.email?.slice(0, 2).toUpperCase() ?? "?";
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="min-h-dvh bg-background flex flex-col">
       <PortalHeader
         pathname={location.pathname}
         orgName={orgName}

@@ -21,7 +21,7 @@ import { GuiaPuertosMexicoArticle } from "./GuiaPuertosMexicoArticle";
 
 export default function GuiaPuertosMexico() {
   return (
-    <div className="landing-scope min-h-screen bg-background text-foreground">
+    <div className="landing-scope min-h-dvh bg-background text-foreground">
       <Seo
         title="Principales puertos de México 2026: guía marítima"
         description="Guía 2026 de los 5 puertos más importantes de México: Manzanillo, Veracruz, Lázaro Cárdenas, Altamira y Ensenada. Códigos UN/LOCODE, rutas, navieras y tipo de carga."

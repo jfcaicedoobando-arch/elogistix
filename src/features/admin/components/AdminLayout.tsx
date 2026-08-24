@@ -13,7 +13,7 @@ export function AdminLayout() {
   return (
     <BreadcrumbProvider>
       <SidebarProvider>
-        <div className="min-h-screen flex w-full">
+        <div className="min-h-dvh flex w-full">
           <AdminSidebar />
           <div className="flex-1 flex flex-col min-w-0">
             <header className="h-14 flex items-center border-b bg-card px-4 shrink-0 gap-3">
