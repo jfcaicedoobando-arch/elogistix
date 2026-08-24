@@ -29,15 +29,15 @@ const MAX_BYTES = 10 * 1024 * 1024;
 // Margen para el overhead del multipart (boundary + headers de la parte).
 const MAX_CONTENT_LENGTH = MAX_BYTES + 512 * 1024;
 
-async function handle(req: Request, cors: Record<string, string>, log: ReturnType<typeof createLogger>) {
-  const auth = await authenticate(req, log);
-  const rechazo = await autorizarYLimitar(auth, cors, log);
-  if (rechazo) return rechazo;
-
-  // @ts-expect-error Deno
-  const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-  if (!LOVABLE_API_KEY) return errorResponse("Falta LOVABLE_API_KEY en el servidor", 500, cors);
-
+/**
+ * Validación y lectura del PDF del multipart. Devuelve un `Response` de error
+ * o el archivo ya convertido a base64. Extraído de `handle` para mantener la
+ * complejidad ciclomática bajo el límite del lint.
+ */
+async function leerPdfDelRequest(
+  req: Request,
+  cors: Record<string, string>,
+): Promise<Response | { file: File; base64: string; categoriasJson: string | null }> {
   // Sentry JAVASCRIPT-REACT-57: sin `content-type: multipart/form-data`,
   // `req.formData()` lanza "Missing content type" y se reportaba como 500.
   const contentType = req.headers.get("content-type") ?? "";
@@ -51,7 +51,6 @@ async function handle(req: Request, cors: Record<string, string>, log: ReturnTyp
     return errorResponse("El PDF excede 10 MB", 413, cors);
   }
 
-
   let form: FormData;
   try {
     form = await req.formData();
@@ -60,7 +59,6 @@ async function handle(req: Request, cors: Record<string, string>, log: ReturnTyp
   }
   const file = form.get("file") as File | null;
   const categoriasJson = form.get("categorias") as string | null;
-
 
   if (!file) return errorResponse("Falta archivo PDF", 400, cors);
   if (file.size > MAX_BYTES) return errorResponse("El PDF excede 10 MB", 413, cors);
@@ -74,7 +72,21 @@ async function handle(req: Request, cors: Record<string, string>, log: ReturnTyp
   for (let i = 0; i < buf.length; i += chunk) {
     bin += String.fromCharCode(...buf.subarray(i, i + chunk));
   }
-  const base64 = btoa(bin);
+  return { file, base64: btoa(bin), categoriasJson };
+}
+
+async function handle(req: Request, cors: Record<string, string>, log: ReturnType<typeof createLogger>) {
+  const auth = await authenticate(req, log);
+  const rechazo = await autorizarYLimitar(auth, cors, log);
+  if (rechazo) return rechazo;
+
+  // @ts-expect-error Deno
+  const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+  if (!LOVABLE_API_KEY) return errorResponse("Falta LOVABLE_API_KEY en el servidor", 500, cors);
+
+  const leido = await leerPdfDelRequest(req, cors);
+  if (leido instanceof Response) return leido;
+  const { file, base64, categoriasJson } = leido;
 
   const categorias: Categoria[] = parseCategoriasJson(categoriasJson);
 
