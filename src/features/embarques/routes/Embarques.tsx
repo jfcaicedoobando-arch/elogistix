@@ -67,7 +67,13 @@ export default function Embarques() {
     });
     navigate("/cotizaciones");
   };
-  const headerDescription = buildDescription(contenedoresCount, expedientesCount, filterEstado !== "todos");
+  // E-12 (auditoría visual 2026-08-24): mientras la consulta no resuelve, el
+  // encabezado no puede afirmar "0 embarques" — se contradecía con el skeleton
+  // de la tabla y parecía una carga colgada.
+  const headerDescription = isLoading
+    ? "Cargando embarques…"
+    : buildDescription(contenedoresCount, expedientesCount, filterEstado !== "todos");
+
 
 
   // Diferimos las filas visibles del listado para que al cambiar filtros/página
