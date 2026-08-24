@@ -47,6 +47,10 @@ export function useUpdateEmbarque() {
       queryClient.invalidateQueries({ queryKey: queryKeys.embarques.conceptosVenta(embarqueActualizado.id) });
       queryClient.invalidateQueries({ queryKey: queryKeys.embarques.conceptosCosto(embarqueActualizado.id) });
       queryClient.invalidateQueries({ queryKey: queryKeys.embarques.contenedores(embarqueActualizado.id) });
+      // B-1 (mismo mismatch del toggle de comisión): el P&L del embarque cambia
+      // al editar conceptos/datos y su query vive en el árbol singular
+      // ['embarque', id, 'pnl-financiero'], no cubierto por ['embarques'].
+      queryClient.invalidateQueries({ queryKey: queryKeys.embarques.pnlFinanciero(embarqueActualizado.id) });
       queryClient.invalidateQueries({ queryKey: queryKeys.auditoria.embarques });
       invalidateProfitDependencies(queryClient);
       // Nota: el toast de éxito lo dispara el caller (p. ej. useEditarEmbarqueWizard)
