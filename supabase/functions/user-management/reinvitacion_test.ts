@@ -15,10 +15,13 @@ for (const archivo of ["./agenteHandlers.ts", "./clientHandlers.ts"]) {
       src.includes("validarReinvitacionPortal"),
       `${archivo} debe llamar validarReinvitacionPortal`,
     );
-    const idxGuard = src.indexOf("await validarReinvitacionPortal");
+    // Los helpers `inviteOrLinkUser` / `createOrResetUserWithPassword` se
+    // definen arriba en el archivo; sólo interesa el orden DENTRO del handler.
+    const handler = src.slice(src.indexOf("export async function handleInvite"));
+    const idxGuard = handler.indexOf("await validarReinvitacionPortal");
     const idxInvite = Math.min(
       ...["inviteOrLinkUser(", "createOrResetUserWithPassword(", "executeInvitePath("]
-        .map((n) => src.indexOf(`await ${n}`))
+        .map((n) => handler.indexOf(`await ${n}`))
         .filter((i) => i >= 0),
     );
     assert(idxGuard > 0 && idxGuard < idxInvite, "el candado debe correr ANTES del invite");
