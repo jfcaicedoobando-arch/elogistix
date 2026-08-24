@@ -51,7 +51,7 @@ export default function GuiaIncoterms2020() {
               <span className="text-foreground">Guía Incoterms 2020</span>
             </nav>
             <p className="mb-3 inline-flex items-center gap-2 rounded-full bg-accent/10 px-3 py-1 text-sm font-medium text-accent">
-              <Globe className="h-4 w-4" /> Comercio exterior · México 🇲🇽
+              <Globe className="h-4 w-4" /> Comercio exterior · México
             </p>
             <h1 className="text-balance text-4xl font-bold tracking-tight text-foreground sm:text-5xl">
               Guía Incoterms 2020: las 11 reglas aplicadas al comercio exterior mexicano

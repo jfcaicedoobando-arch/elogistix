@@ -47,7 +47,7 @@ export default function GuiaPuertosMexico() {
               <span className="text-foreground">Puertos de México</span>
             </nav>
             <p className="mb-3 inline-flex items-center gap-2 rounded-full bg-accent/10 px-3 py-1 text-sm font-medium text-accent">
-              <Anchor className="h-4 w-4" /> Guía marítima · México 🇲🇽
+              <Anchor className="h-4 w-4" /> Guía marítima · México
             </p>
             <h1 className="text-balance text-4xl font-bold tracking-tight text-foreground sm:text-5xl">
               Principales puertos marítimos de México: guía 2026

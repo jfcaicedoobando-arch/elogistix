@@ -61,7 +61,7 @@ export function LandingFooter() {
           <span>{FOOTER.copyright}</span>
           <div className="flex items-center gap-4">
             <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-muted/40 px-2.5 py-1">
-              Hecho en México 🇲🇽
+              Hecho en México
             </span>
           </div>
         </div>

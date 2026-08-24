@@ -46,7 +46,7 @@ export default function GuiaCartaPorte() {
               <span className="text-foreground">Guía Carta Porte 3.0</span>
             </nav>
             <p className="mb-3 inline-flex items-center gap-2 rounded-full bg-accent/10 px-3 py-1 text-sm font-medium text-accent">
-              <FileText className="h-4 w-4" /> Guía SAT · México 🇲🇽
+              <FileText className="h-4 w-4" /> Guía SAT · México
             </p>
             <h1 className="text-balance text-4xl font-bold tracking-tight text-foreground sm:text-5xl">
               Guía Carta Porte 3.0: complemento CFDI 2026 para México
