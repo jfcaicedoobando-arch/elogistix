@@ -72522,5 +72522,10 @@
       "20260829000100_rev5_espejo_notif_rechazo_y_rol_proforma.sql",
       "20260830000100_fix_b6_espejo_pilotos_listas_explicitas.sql"
     ]
+  },
+  "13.736.0": {
+    "migrations": [
+      "20260824161646_743a58e9-3606-43c7-a350-d16d577e6465.sql"
+    ]
   }
 }
