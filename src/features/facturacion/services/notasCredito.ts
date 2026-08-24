@@ -142,10 +142,11 @@ export async function crearNotaCredito(input: CrearNotaCreditoInput): Promise<No
 
 function asegurarTransicion(actual: EstadoNotaCredito, siguiente: EstadoNotaCredito): void {
   const validas: Record<EstadoNotaCredito, EstadoNotaCredito[]> = {
-    Borrador: ["Aprobada", "Timbrada", "Cancelada"],
-    Aprobada: ["Timbrada", "Aplicada", "Cancelada"],
+    // Espejo EXACTO de public.guard_nc_cliente_transicion (FIX2 ronda 2).
+    Borrador: ["Timbrada", "Cancelada"],
+    Aprobada: ["Timbrada", "Cancelada"],
     Timbrada: ["Aplicada", "Cancelada"],
-    Aplicada: [],
+    Aplicada: ["Cancelada"],
     Cancelada: [],
   };
   if (!validas[actual].includes(siguiente)) {
