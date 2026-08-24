@@ -8,14 +8,29 @@
 CREATE OR REPLACE FUNCTION public.portal_obtener_proforma_por_token(p_token uuid)
  RETURNS jsonb
  LANGUAGE plpgsql
- STABLE SECURITY DEFINER
+ VOLATILE SECURITY DEFINER
  SET search_path TO 'public'
 AS $function$
 DECLARE
   v_proforma public.proformas%ROWTYPE;
   v_conceptos jsonb;
   v_estado_link text;
+  v_rl jsonb;
 BEGIN
+  -- FIX3 (drift ronda 2): rate limit de BD restaurado (30 lecturas/min por
+  -- IP+identidad), mismo patrón que las demás RPCs de la whitelist anon.
+  -- check_ratelimit escribe en ratelimit_buckets → la función debe ser VOLATILE.
+  v_rl := public.check_ratelimit(
+    'rpc:portal_obtener_proforma_por_token:'
+      || COALESCE(NULLIF(current_setting('request.headers', true)::jsonb->>'x-forwarded-for', ''), 'sin-ip')
+      || ':' || COALESCE(auth.uid()::text, 'anon'),
+    60, 30
+  );
+  IF (v_rl->>'ok') = 'false' THEN
+    RAISE EXCEPTION 'Demasiadas solicitudes. Intenta de nuevo en % segundos.', COALESCE(v_rl->>'retry_after', '60')
+      USING ERRCODE = 'P0001';
+  END IF;
+
   IF p_token IS NULL THEN RETURN NULL; END IF;
 
   SELECT * INTO v_proforma FROM public.proformas WHERE token_publico = p_token;
