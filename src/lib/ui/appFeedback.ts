@@ -25,11 +25,12 @@ import { STEP_LABELS } from "@/features/embarques/domain/embarqueWizardSchemas";
 import { buildErrorReport } from "./errorReport";
 import { openErrorReport } from "@/lib/diagnostics/errorDetailsStore";
 import { reportCaughtError } from "@/lib/observability/reportCaughtError";
-import { shouldAttachDetails, buildDetailsAction } from "./appFeedback.details";
+import { shouldAttachDetails } from "./appFeedback.details";
 import { shouldReportToSentry } from "./appFeedback.sentry";
 import { sanitizeToastText } from "./sanitizeToastText";
 import { computeToastDedupeKey, shouldSuppressDuplicateToast } from "./appFeedback.dedupe";
-import type { AnyToastFn, ErrorNotifyOptions, InfoNotifyOptions } from "./appFeedback.types";
+import type { AnyToastFn, ErrorNotifyOptions } from "./appFeedback.types";
+
 
 /** Q-08 · ids de los toasts de error vivos, para poder descartar SÓLO errores
  *  al cambiar de ruta sin borrar confirmaciones de éxito. */
@@ -130,77 +131,9 @@ export function notifyError(_toast: AnyToastFn | undefined, opts: ErrorNotifyOpt
   }
 }
 
-/**
- * Ola 17 · Higiene de toasts: id estable para deduplicar toasts de
- * éxito/aviso/info cuando el usuario da doble clic rápido. Si el call site no
- * pasa `id`, se deriva de `method` (o del título) para que el segundo toast
- * reemplace al primero en lugar de apilarse.
- */
-function idDedupe(opts: InfoNotifyOptions, prefijo: string): string | number | undefined {
-  if (opts.id !== undefined) return opts.id;
-  const base = opts.method ?? opts.errorCode ?? opts.title;
-  return base ? `${prefijo}-${base}` : undefined;
-}
+/** Toasts no bloqueantes (aviso / éxito / info) — ver `appFeedback.notices`. */
+export { notifyWarning, notifySuccess, notifyInfo } from "./appFeedback.notices";
 
-/** Emite un toast de advertencia (no bloquea). Puede llevar "Ver detalles". */
-export function notifyWarning(
-  _toast: AnyToastFn | undefined,
-  opts: InfoNotifyOptions,
-) {
-  const action = opts.action
-    ?? (shouldAttachDetails(opts)
-      ? buildDetailsAction({ ...opts, titleFinal: opts.title })
-      : undefined);
-  const descripcionSaneada = sanitizeToastText(opts.description);
-  const dedupeKey = computeToastDedupeKey("warning", opts.title, descripcionSaneada);
-  if (shouldSuppressDuplicateToast(dedupeKey)) return;
-  sonnerToast.warning(opts.title, {
-    description: descripcionSaneada,
-    duration: opts.persistent ? Infinity : opts.duration,
-    id: idDedupe(opts, "warn"),
-    action,
-  });
-}
-
-/** Emite un toast de éxito. Puede llevar "Ver detalles" si se pasa error/context/etc. */
-export function notifySuccess(
-  _toast: AnyToastFn | undefined,
-  opts: InfoNotifyOptions,
-) {
-  const action = opts.action
-    ?? (shouldAttachDetails(opts)
-      ? buildDetailsAction({ ...opts, titleFinal: opts.title })
-      : undefined);
-  const descripcionSaneada = sanitizeToastText(opts.description);
-  const dedupeKey = computeToastDedupeKey("success", opts.title, descripcionSaneada);
-  if (shouldSuppressDuplicateToast(dedupeKey)) return;
-  sonnerToast.success(opts.title, {
-    description: descripcionSaneada,
-    duration: opts.persistent ? Infinity : opts.duration,
-    id: idDedupe(opts, "ok"),
-    action,
-  });
-}
-
-/** Emite un toast informativo (neutro). Puede llevar "Ver detalles". */
-export function notifyInfo(
-  _toast: AnyToastFn | undefined,
-  opts: InfoNotifyOptions,
-) {
-  const action = opts.action
-    ?? (shouldAttachDetails(opts)
-      ? buildDetailsAction({ ...opts, titleFinal: opts.title })
-      : undefined);
-  const descripcionSaneada = sanitizeToastText(opts.description);
-  const dedupeKey = computeToastDedupeKey("info", opts.title, descripcionSaneada);
-  if (shouldSuppressDuplicateToast(dedupeKey)) return;
-  sonnerToast(opts.title, {
-    description: descripcionSaneada,
-    duration: opts.persistent ? Infinity : opts.duration,
-    id: idDedupe(opts, "info"),
-    action,
-  });
-}
 
 /** Descarta SÓLO los toasts de error vivos (p. ej. al cambiar de ruta, Q-08).
  *  Las confirmaciones de éxito/aviso sobreviven a la navegación para que el

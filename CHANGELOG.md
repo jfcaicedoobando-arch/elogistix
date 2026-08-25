@@ -1,5 +1,16 @@
 # Changelog
 
+## [13.739.3] - 2026-08-25
+### FIX4 — tanda 4 de base de datos (N-1, N-2, N-2b + 3xP3)
+- **N-1 · papelera vs 'En operación' (bug real)**: mandar a la papelera un embarque cuya cotización ligada estaba 'En operación' abortaba con `LC_COT_TRANSICION_INVALIDA`. `sync_cotizacion_embarque_link` levanta la GUC transaccional `app.liberando_papelera` (patrón `app.bypass_cierre`) y `guard_estado_cotizacion` admite ÚNICAMENTE 'En operación'→'Aceptada' con la GUC puesta.
+- **N-2 · portal proforma 500 en link activo (bug real)**: `portal_obtener_proforma_por_token` referenciaba `moneda/subtotal/iva/total`, columnas inexistentes tras la multimoneda (`*_mxn/_usd`) → 42703 en todo link vigente. La RPC devuelve ambos juegos duales + claves legacy derivadas; espejo `supabase/schema/portal/`, `portalPublico.ts` y `PortalProformaResumen.tsx` sincronizados. BL-11 intacto.
+- **N-2b · responder desde el portal daba 500**: `bitacora_actividad.usuario_id` era NOT NULL y el actor anónimo inserta NULL → 23502. La columna queda nullable (`usuario_email` sigue siendo la pista de auditoría).
+- **P3 · health-check.sql**: sección de snapshots alineada a `total_hallazgos/total_pendientes/criticos/score`.
+- **P3 · harness CI service_role-only**: lista canónica `supabase/tests/rls/_ci_service_role_only.sql` consumida por `_ci_post_migrate.sql` y por el candado bidireccional `_ci_check_service_role_only.sql`; re-cierre explícito de `venta_embarque_mxn_neta`; whitelist del linter org-scope de 49 a 42 entradas.
+- **P3 · carrera signup**: `handle_new_user_signup` serializa el bootstrap super_admin con `pg_advisory_xact_lock`.
+- Split de `appFeedback.ts` en `appFeedback.notices.ts` (Power of 10, 200 líneas) y ACLs explícitas H6 en `avanzar_estado_embarque`, `handle_new_user_signup` y 5 trigger functions service_role-only.
+- Pruebas nuevas en CI: `fix4_n1_papelera_cotizacion_en_operacion`, `fix4_n2_portal_proforma_dual`, `fix4_service_role_only_grants`, `fix4_signup_bootstrap_lock`.
+
 ## [13.739.2] - 2026-08-25
 ### CI — `test_sat_semanal_rotacion_lote`
 - El CASO 3 estacionaba las orgs preexistentes con un bucle de "drenado" que las mezclaba en el mismo lote que las orgs de prueba (y `now()` está congelado dentro de la transacción, así que el desempate caía en `created_at` y devolvía siempre el mismo lote). Ahora la prueba estaciona las orgs con RFC en `2999-01-01` antes de insertar las tres de prueba, dejando el orden determinista. La RPC `seleccionar_lote_sat_semanal` no cambia.
@@ -78,6 +89,7 @@
 - **M-5 / O1.14 · trazabilidad**: columna y trigger `updated_at` en `conceptos_venta`, `conceptos_costo`, `conceptos_factura`, `contactos_cliente`, `documentos_embarque`, `eventos_embarque`, `notas_embarque`, `proforma_conceptos_consolidados`, `proveedor_facturas_conceptos` y `crm_notificaciones`.
 - **M-1 · CRM**: `crm_propagar_conversion_cliente` propaga `ERRCODE 42501` en los rechazos de permiso.
 - **M-6 / BUG-18 · buzón CxP**: nueva bandera `metadatos_verificados` sellada sólo por `adjuntar_xml_entrante_verificado` (GUC transaccional + trigger `trg_entrante_meta_no_verificada`); el alta inicial ahora también re-verifica el XML en servidor vía la edge y avisa al usuario si no cuadra.
+- Split de `appFeedback.ts` en `appFeedback.notices.ts` (Power of 10, 200 líneas) y ACLs explícitas H6 en `avanzar_estado_embarque`, `handle_new_user_signup` y 5 trigger functions service_role-only.
 - Pruebas nuevas en CI: 8 archivos `supabase/tests/fix3_*.sql` en el workflow de RLS.
 
 

@@ -50,34 +50,21 @@ GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA public TO authenticated, service_role;
 -- REVOKE explícitos de las migraciones. Las funciones que sólo debe invocar
 -- `service_role` (jobs de pg_cron y sus helpers) se vuelven a cerrar aquí para
 -- que CI sea fiel a prod y las regresiones tipo FIX-45 detecten fugas reales.
+--
+-- FIX4 (P3): la lista ya NO vive inline — es la lista canónica única
+-- `_ci_service_role_only.sql`, la misma que audita el candado bidireccional
+-- `_ci_check_service_role_only.sql` ANTES de este re-cierre. Así una función
+-- service_role-only sin REVOKE en su migración rompe CI en vez de quedar
+-- enmascarada por este archivo.
 -- ============================================================================
+\ir _ci_service_role_only.sql
+
 DO $$
 DECLARE
   v_fn text;
 BEGIN
-  FOREACH v_fn IN ARRAY ARRAY[
-    'public._reprocesar_comisiones_org(uuid)',
-    'public.reprocesar_comisiones_job()',
-    'public.verificar_sat_semanal_job()',
-    -- B-3: rotación del lote semanal del barrido SAT (job de plataforma).
-    'public.seleccionar_lote_sat_semanal(integer)',
-    'public.notificar_uuid_cancelado_sat(uuid, jsonb)',
-    -- FIX3 tanda 3: helpers financieros sin filtro org (ronda 2 P2) — sólo
-    -- service_role / llamadas internas DEFINER.
-    'public.venta_embarque_mxn_neta(uuid, numeric, numeric)',
-    'public.nc_aplicadas_en_moneda_factura(uuid)',
-    'public.comision_embarques_de_factura(uuid)',
-    -- FIX3 tanda 3 (BUG-18 / O5.8): metadatos fiscales del buzón CxP sólo se
-    -- escriben vía la edge (service_role).
-    'public.adjuntar_xml_factura_entrante(uuid, text, text, text, text, text, text, date, numeric, text)',
-    'public.adjuntar_xml_entrante_verificado(uuid, uuid, text, text, text, text, text, text, date, numeric, text)',
-    -- FIX3 edge-hardening (v13.737.0): mutex de crons + bitácora de correos.
-    -- Son helpers de plataforma sin ancla tenant; sólo los invocan las edge
-    -- functions con service_role.
-    'public.cron_try_lock(text, integer, text)',
-    'public.cron_unlock(text)',
-    'public.email_send_log_touch(text, text, text, text, text)'
-  ]
+  FOR v_fn IN SELECT fn FROM _ci_service_role_only
+
   LOOP
     IF to_regprocedure(v_fn) IS NOT NULL THEN
       EXECUTE format('REVOKE ALL ON FUNCTION %s FROM PUBLIC, anon, authenticated', v_fn);

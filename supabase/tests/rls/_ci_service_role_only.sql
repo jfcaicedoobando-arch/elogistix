@@ -1,0 +1,62 @@
+-- ============================================================================
+-- Lista canónica de funciones service_role-only (FIX4 tanda 4 · P3).
+--
+-- ÚNICA fuente de verdad del patrón "sólo service_role / llamadas internas
+-- DEFINER". Se consume con \ir desde:
+--   · _ci_post_migrate.sql            → re-cierra todo lo de la lista tras el
+--                                       GRANT masivo del Postgres bare de CI.
+--   · _ci_check_service_role_only.sql → candado bidireccional que corre ANTES
+--                                       del re-cierre (ver su encabezado).
+--   · ../fix4_service_role_only_grants.sql → verifica el estado ya re-cerrado.
+--
+-- El script deja la lista en la tabla TEMP de sesión `_ci_service_role_only`
+-- (psql no empalma \ir dentro de una sentencia a medias, por eso el archivo
+-- es autocontenido).
+--
+-- Reglas al tocar la lista:
+--   · Toda función aquí listada DEBE traer su REVOKE en su propia migración
+--     (el candado bidireccional falla si no).
+--   · Toda función service_role-only nueva DEBE añadirse aquí en la misma PR
+--     (el candado falla si falta).
+--   · Si una función cambia de firma o se elimina, actualiza su entrada en la
+--     misma PR (el candado marca entradas obsoletas).
+-- ============================================================================
+
+DROP TABLE IF EXISTS pg_temp._ci_service_role_only;
+CREATE TEMP TABLE _ci_service_role_only (fn text);
+INSERT INTO _ci_service_role_only (fn) VALUES
+  ('public._audit_embarques_agregar(jsonb, jsonb)'),
+  ('public._audit_embarques_umbrales(uuid)'),
+  ('public._cotizaciones_bloquear_auto_aceptacion()'),
+  ('public._cotizaciones_bloquear_envio_sin_oportunidad()'),
+  ('public._crm_vincular_cotizacion_core(uuid, jsonb, uuid, uuid, text, uuid)'),
+  ('public._recalc_estado_proveedor_factura(uuid)'),
+  ('public._reprocesar_comisiones_org(uuid)'),
+  ('public.adjuntar_xml_entrante_verificado(uuid, uuid, text, text, text, text, text, text, date, numeric, text)'),
+  -- RPC vieja del buzón CxP (M-7): cerrada a todos en migraciones; el
+  -- re-cierre la mantiene así (grant a service_role por compatibilidad con
+  -- el post_migrate previo a FIX4).
+  ('public.adjuntar_xml_factura_entrante(uuid, text, text, text, text, text, text, date, numeric, text)'),
+  ('public.assert_pago_sin_rep_vivo_delete()'),
+  ('public.calc_pago_retenciones()'),
+  ('public.calcular_comision_pago()'),
+  ('public.comision_embarques_de_factura(uuid)'),
+  ('public.crm_backfill_cotizaciones_sin_oportunidad()'),
+  ('public.cron_try_lock(text, integer, text)'),
+  ('public.cron_unlock(text)'),
+  ('public.delete_email(text, bigint)'),
+  ('public.email_send_log_touch(text, text, text, text, text)'),
+  ('public.enqueue_email(text, jsonb)'),
+  ('public.marcar_facturas_vencidas()'),
+  ('public.move_to_dlq(text, text, bigint, jsonb)'),
+  ('public.nc_aplicadas_en_moneda_factura(uuid)'),
+  ('public.notificar_uuid_cancelado_sat(uuid, jsonb)'),
+  ('public.read_email_batch(text, integer, integer)'),
+  ('public.registrar_comision_pendiente(uuid, uuid, text, text, text, text)'),
+  ('public.reprocesar_comisiones_job()'),
+  ('public.seed_demo_organization_core()'),
+  ('public.seed_demo_organization_guarded(bigint)'),
+  ('public.seleccionar_lote_sat_semanal(integer)'),
+  ('public.tg_facturas_link_proforma()'),
+  ('public.tg_liberar_folio_proveedor_factura()'),
+  ('public.venta_embarque_mxn_neta(uuid, numeric, numeric)');

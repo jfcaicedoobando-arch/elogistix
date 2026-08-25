@@ -1,17 +1,22 @@
 {
-  "version": "13.641.1",
-  "generatedAt": "2026-08-17T18:04:23.212Z",
+  "version": "13.739.3",
+  "generatedAt": "2026-08-25T00:14:35.794Z",
   "arch": {
     "hooksContextsDirectImports": [],
     "componentsPagesDirectImports": [],
-    "oversized": []
+    "oversized": [
+      {
+        "file": "src/lib/ui/appFeedback.ts",
+        "lines": 213
+      }
+    ]
   },
   "casts": {
-    "total": 3065,
+    "total": 3146,
     "bySeverity": {
-      "SAFE": 918,
-      "LOW": 148,
-      "MEDIUM": 1999,
+      "SAFE": 933,
+      "LOW": 145,
+      "MEDIUM": 2068,
       "HIGH": 0,
       "CRITICAL": 0
     },
@@ -47,6 +52,11 @@
         "weight": 20
       },
       {
+        "file": "src/features/cotizacion/hooks/wizard/cotizacionDraftStorage.ts",
+        "total": 10,
+        "weight": 19
+      },
+      {
         "file": "src/lib/mappers/genericPayloadMapper.ts",
         "total": 11,
         "weight": 19
@@ -58,11 +68,6 @@
       },
       {
         "file": "src/features/cotizacion/hooks/wizard/__tests__/useCotizacionWizardSteps.test.tsx",
-        "total": 9,
-        "weight": 18
-      },
-      {
-        "file": "src/features/embarques/domain/mappers/__tests__/embarqueCotizacionDesvincular.test.ts",
         "total": 9,
         "weight": 18
       }

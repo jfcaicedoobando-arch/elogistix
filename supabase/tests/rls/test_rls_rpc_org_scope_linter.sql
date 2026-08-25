@@ -27,8 +27,14 @@
 --   `user_roles` directamente; el patrón textual también captura helpers
 --   puros (conversión de moneda, colas de email) y funciones-por-ID cuya
 --   tenancy la garantiza el caller vía RLS — deuda real pero distinta.
---   Delta documentado: 53 = 11 helpers de rol/plataforma + 3 portal/token +
---   13 colas/jobs + 8 cálculo puro + 18 funciones-por-ID (deuda por-ID).
+--   Delta documentado: 42 = 11 helpers de rol/plataforma + 3 portal/token +
+--   6 colas/jobs + 6 cálculo puro + 16 funciones-por-ID (deuda por-ID).
+--   FIX4 tanda 4: 8 entradas salieron de la whitelist porque la lista
+--   canónica service_role-only (_ci_service_role_only.sql) las re-cierra en
+--   CI igual que en prod (enqueue_email, read_email_batch, delete_email,
+--   move_to_dlq, marcar_facturas_vencidas, crm_backfill_cotizaciones_sin_
+--   oportunidad, seed_demo_organization_guarded, _recalc_estado_proveedor_
+--   factura): ya no son ejecutables por authenticated en el snapshot.
 --
 -- Cómo mantenerla:
 --   · RPC NUEVA sin ancla → el linter falla: añade el ancla, NO la whitelist.
@@ -68,19 +74,12 @@ DECLARE
     'check_ratelimit',
     -- ── C. Colas y jobs internos (cron/edge/service): operan tablas de
     --    infraestructura global (email, logs, webhooks), no documentos tenant.
-    'enqueue_email',
-    'read_email_batch',
-    'delete_email',
-    'move_to_dlq',
     'email_queue_dispatch',
     'detectar_alertas_app_logs',
     'purge_app_logs_old',
     'purgar_facturapi_webhook_eventos',
     'expirar_cotizaciones_job',
-    'marcar_facturas_vencidas',
-    'crm_backfill_cotizaciones_sin_oportunidad',
     'seed_demo_organization',
-    'seed_demo_organization_guarded',
     -- ── D. Cálculo puro / conversión / estado derivado: reciben IDs o
     --    importes, no leen tablas tenant directamente o son helpers de
     --    aritmética de moneda. idempotency_store es por (key, user_id),
@@ -97,7 +96,6 @@ DECLARE
     '_assert_receptor_fiscal_valido',
     '_cxp_desvincular_por_rechazo',
     '_recalc_anticipo_saldo',
-    '_recalc_estado_proveedor_factura',
     '_refact_reps_bloqueantes',
     'assert_transicion_embarque',
     'cliente_requiere_autorizacion',

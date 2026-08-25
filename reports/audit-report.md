@@ -1,6 +1,6 @@
-# Audit Report — 13.641.1
+# Audit Report — 13.739.3
 
-Generado: 2026-08-17T18:04:23.212Z
+Generado: 2026-08-25T00:14:35.794Z
 
 ## Resumen
 
@@ -8,8 +8,8 @@ Generado: 2026-08-17T18:04:23.212Z
 |---|---|---|
 | Capa (Supabase directo en hooks/contexts) | ✅ | 0 archivos |
 | Capa (Supabase directo en components/pages) | ✅ | 0 archivos |
-| Power-of-10 (>200 líneas) | ✅ | 0 archivos |
-| Casts HIGH + CRITICAL | ✅ | 0 / 3065 |
+| Power-of-10 (>200 líneas) | ❌ | 1 archivos |
+| Casts HIGH + CRITICAL | ✅ | 0 / 3146 |
 | Higiene de tests | ✅ | 0 violaciones |
 | Adopción zod en `fromDb` | ⚠️ | 12/49 validados (25%) |
 
@@ -22,17 +22,17 @@ Generado: 2026-08-17T18:04:23.212Z
 ✅ Ninguno
 
 ### Archivos productivos > 200 líneas
-✅ Ninguno
+-  213  `src/lib/ui/appFeedback.ts`
 
 ## Casts
 
-Total: **3065** — HIGH: **0**, CRITICAL: **0**
+Total: **3146** — HIGH: **0**, CRITICAL: **0**
 
 | Severidad | Cantidad |
 |---|---:|
-| SAFE | 918 |
-| LOW | 148 |
-| MEDIUM | 1999 |
+| SAFE | 933 |
+| LOW | 145 |
+| MEDIUM | 2068 |
 | HIGH | 0 |
 | CRITICAL | 0 |
 
@@ -46,10 +46,10 @@ Total: **3065** — HIGH: **0**, CRITICAL: **0**
 | 4 | `src/features/embarques/domain/mappers/__tests__/embarqueToDb.test.ts` | 14 | 26 |
 | 5 | `src/features/cotizacion/services/__tests__/informativa.test.ts` | 10 | 20 |
 | 6 | `src/features/portal/services/__tests__/queries.test.ts` | 11 | 20 |
-| 7 | `src/lib/mappers/genericPayloadMapper.ts` | 11 | 19 |
-| 8 | `src/features/cotizacion/hooks/__tests__/usePaso1SectionStatus.test.tsx` | 9 | 18 |
-| 9 | `src/features/cotizacion/hooks/wizard/__tests__/useCotizacionWizardSteps.test.tsx` | 9 | 18 |
-| 10 | `src/features/embarques/domain/mappers/__tests__/embarqueCotizacionDesvincular.test.ts` | 9 | 18 |
+| 7 | `src/features/cotizacion/hooks/wizard/cotizacionDraftStorage.ts` | 10 | 19 |
+| 8 | `src/lib/mappers/genericPayloadMapper.ts` | 11 | 19 |
+| 9 | `src/features/cotizacion/hooks/__tests__/usePaso1SectionStatus.test.tsx` | 9 | 18 |
+| 10 | `src/features/cotizacion/hooks/wizard/__tests__/useCotizacionWizardSteps.test.tsx` | 9 | 18 |
 
 ## Boundaries de datos (`fromDb`)
 
@@ -77,4 +77,4 @@ Casts crudos `fromDb<T>()` pendientes por feature:
 
 ---
 
-_Estado general: ✅ Baseline arquitectónico limpio._
+_Estado general: ⚠️ Revisar violaciones arriba._
