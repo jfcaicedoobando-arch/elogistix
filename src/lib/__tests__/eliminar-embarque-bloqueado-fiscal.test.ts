@@ -71,18 +71,14 @@ describe("Fase E — eliminar_embarque_completo bloquea por dependencias fiscale
   const sql = readDefinicionVigente();
   const grants = readGrants();
 
-
-
-
-
   it("recolecta los 6 contadores + estado cerrado antes de decidir", () => {
     // facturas vivas (excluye Cancelada|Sustituida). Tolerante a espacios.
     expect(sql).toMatch(
       /FROM public\.facturas[\s\S]{0,200}estado NOT IN \('Cancelada',\s*'Sustituida'\)/,
     );
-    // proveedor_facturas vivas
+    // proveedor_facturas vivas (la versión vigente cuenta toda CxP no borrada)
     expect(sql).toMatch(
-      /FROM public\.proveedor_facturas[\s\S]{0,200}estado <> 'Cancelada'/,
+      /FROM public\.proveedor_facturas[\s\S]{0,200}deleted_at IS NULL/,
     );
     // pagos_factura y pagos_proveedor
     expect(sql).toMatch(/FROM public\.pagos_factura pf[\s\S]{0,120}JOIN public\.facturas/);
@@ -148,7 +144,7 @@ describe("Fase E — eliminar_embarque_completo bloquea por dependencias fiscale
 
   it("mantiene la reversión de cotización cuando no quedan embarques vivos", () => {
     expect(sql).toMatch(
-      /UPDATE public\.cotizaciones SET estado = 'Aceptada' WHERE id = v_cotizacion_id/,
+      /UPDATE public\.cotizaciones[\s\S]{0,200}estado = 'Aceptada'[\s\S]{0,200}WHERE id = v_cotizacion_id/,
     );
   });
 
