@@ -190,6 +190,15 @@ jobs:
 
 
 
+      - name: "Candado service_role-only en migraciones (bidireccional)"
+        # FIX4 (P3): corre DESPUÉS de aplicar migraciones y ANTES del
+        # GRANT masivo + re-cierre de _ci_post_migrate.sql. Falla si una
+        # función de la lista canónica _ci_service_role_only.sql quedó sin
+        # REVOKE en su migración, si hay funciones service_role-only fuera
+        # de la lista, o si la lista tiene entradas obsoletas.
+        if: steps.snapshot-cache.outputs.cache-hit != 'true'
+        run: $PSQL -f supabase/tests/rls/_ci_check_service_role_only.sql
+
       - name: Post-migrate (drop auth.users FKs para CI)
         if: steps.snapshot-cache.outputs.cache-hit != 'true'
         run: $PSQL -f supabase/tests/rls/_ci_post_migrate.sql
@@ -544,6 +553,18 @@ jobs:
 
       - name: FIX3 - BUG-18 alta inicial del buzon queda sin verificar + RPC vieja revocada (M-6/M-7)
         run: $PSQL -f supabase/tests/fix3_bug18_alta_inicial.sql
+
+      - name: FIX4 - papelera libera cotizacion En operacion via GUC app.liberando_papelera (N-1)
+        run: $PSQL -f supabase/tests/fix4_n1_papelera_cotizacion_en_operacion.sql
+
+      - name: FIX4 - portal proforma dual MXN/USD + responder con actor anonimo (N-2/N-2b)
+        run: $PSQL -f supabase/tests/fix4_n2_portal_proforma_dual.sql
+
+      - name: FIX4 - lista canonica service_role-only cerrada en la BD re-cerrada (P3)
+        run: $PSQL -f supabase/tests/fix4_service_role_only_grants.sql
+
+      - name: FIX4 - bootstrap super_admin serializado con advisory lock (P3)
+        run: $PSQL -f supabase/tests/fix4_signup_bootstrap_lock.sql
 
 
 
