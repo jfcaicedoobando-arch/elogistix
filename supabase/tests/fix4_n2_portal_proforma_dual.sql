@@ -131,10 +131,13 @@ BEGIN
   PERFORM pg_temp.assert(v_estado = 'aceptada', 'CASO 5: la proforma no quedó aceptada');
   SELECT count(*) INTO v_bit FROM public.bitacora_actividad
    WHERE entidad_id = v_pf_b AND accion = 'proforma_aceptada_cliente'
-     AND usuario_id IS NULL;
+     -- El actor anónimo se registra sin usuario real: o NULL, o el usuario
+     -- sentinel de sistema ('00000000-…') que usa la RPC del portal.
+     AND (usuario_id IS NULL OR usuario_id = '00000000-0000-0000-0000-000000000000'::uuid)
+     AND usuario_email = 'cliente-portal-token';
   PERFORM pg_temp.assert(v_bit = 1,
-    'CASO 5: la bitácora del actor anónimo no quedó escrita con usuario_id NULL');
-  RAISE NOTICE 'CASO 5 OK · responder end-to-end 200 + bitácora con usuario_id NULL.';
+    'CASO 5: la bitácora del actor anónimo no quedó escrita sin usuario real');
+  RAISE NOTICE 'CASO 5 OK · responder end-to-end 200 + bitácora de actor anónimo.';
 
   RAISE NOTICE 'FIX4 N2 OK · 5/5 casos.';
 END $$;
