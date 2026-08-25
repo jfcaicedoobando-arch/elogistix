@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.743.7] - 2026-08-25
+### CI: `saldo_factura_bruto` sin ancla de organización
+- `public.saldo_factura_bruto` se reescribió en PL/pgSQL con el mismo candado multi-tenant de `public.saldo_factura` (devuelve 0 si quien consulta no pertenece a la organización de la factura y no es `super_admin`/`service_role`). Corrige el fallo del guard `rpc_org_scope_linter` sin ampliar la whitelist congelada.
+
+
+
 ## [13.743.6] - 2026-08-25
 ### Saldo fantasma en facturas legacy marcadas como "Pagada"
 - Regla única: una factura en estado terminal (`Pagada`, `Cancelada`, `Sustituida`, `Borrador`) reporta saldo 0 en frontend (`calcularSaldoFactura` + `esEstadoSinSaldo`) y en base (`saldo_factura`, `estado_cuenta_agregados`, `facturas_cartera_cliente`). Antes, 31 facturas migradas sin pagos capturados inflaban ~374,631 de adeudo en estado de cuenta y portal.
