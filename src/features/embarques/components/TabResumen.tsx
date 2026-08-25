@@ -21,6 +21,9 @@ interface Props {
 export function TabResumen({ embarque }: Props) {
   const { data: relacionados = [] } = useEmbarquesRelacionados(embarque.id, embarque.bl_master);
   const { registerRef } = useFocusSection();
+  // `tarifa_delta_jsonb` no es legible en la tabla `embarques`: viene de la
+  // vista interna (staff). Sin esto la sección "Origen de costos" quedaba vacía.
+  const { data: interno } = useEmbarqueInterno(embarque.id);
 
   return (
     <div className="space-y-6">
