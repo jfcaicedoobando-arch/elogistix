@@ -16,15 +16,23 @@ interface Props {
   facturaId: string;
   totalFactura: number;
   moneda: string;
+  /** Estado de la factura: si es terminal (Pagada/Cancelada) el saldo es 0. */
+  estadoFactura?: string | null;
 }
 
-export default function PortalFacturaPagosCard({ facturaId, totalFactura, moneda }: Props) {
+export default function PortalFacturaPagosCard({
+  facturaId,
+  totalFactura,
+  moneda,
+  estadoFactura,
+}: Props) {
   const { data: pagos = [], isLoading } = usePortalPagosFactura(facturaId);
   const { data: notasCredito = [], isLoading: loadingNc } =
     usePortalNotasCreditoFactura(facturaId);
 
   // B-082: el saldo del portal descuenta pagos Y notas de crédito aplicadas.
-  const resumen = calcularSaldoFacturaPortal(totalFactura, pagos, notasCredito);
+  const resumen = calcularSaldoFacturaPortal(totalFactura, pagos, notasCredito, estadoFactura);
+
   const { pagado: totalPagado, notasCredito: totalNc, saldo, liquidada } = resumen;
   const hayMovimientos = pagos.length > 0 || notasCredito.length > 0;
 
