@@ -1,4 +1,3 @@
-\restrict t3bJMTBNM2AvCAWI8LODpyjqd7IRhke5IOutWtXcdID28pInKODZkeOe3v1A3Zq
 CREATE SCHEMA public;
 CREATE COLLATION public.lc_unicode_upper (provider = icu, locale = 'und');
 CREATE TYPE public.ambiente_facturapi AS ENUM (
@@ -29037,4 +29036,3 @@ GRANT ALL ON TABLE public.v_saldos_cuentas_bancarias TO service_role;
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.vendedora_config TO authenticated;
 GRANT ALL ON TABLE public.vendedora_config TO service_role;
 ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public GRANT ALL ON FUNCTIONS  TO authenticated;
-\unrestrict t3bJMTBNM2AvCAWI8LODpyjqd7IRhke5IOutWtXcdID28pInKODZkeOe3v1A3Zq
