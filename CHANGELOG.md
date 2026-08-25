@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.746.1] - 2026-08-25
+### CI verde: complejidad y catálogos
+- `VincularConceptoRow` y `VincularEmbarqueSection` se dividen en `VincularConceptoAvisos` y `VincularEmbarqueHeader`; `extraerCfdiXmlMeta` extrae `mapearComprobante`. Sin cambios de comportamiento.
+- Alta de `LC_XML_SUBTOTAL_INVALIDO` en el catálogo de mensajes y fixture Deno del buzón con `subtotal`.
+
 ## [13.746.0] - 2026-08-25
 ### CRM: el botón "Nuevo" ya abre el formulario
 - Las altas express (lead, oportunidad, actividad) pasan de Popover anclado al menú a modal estándar (`FormDialogShell`): antes el clic en "Nuevo lead" no mostraba nada porque el Popover perdía la carrera contra el cierre del menú.
