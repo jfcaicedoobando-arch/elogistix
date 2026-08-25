@@ -1,8 +1,10 @@
 # Changelog
 
 ## [13.743.7] - 2026-08-25
-### CI: `saldo_factura_bruto` sin ancla de organización
+### CI: cierre del fix de saldo fantasma
 - `public.saldo_factura_bruto` se reescribió en PL/pgSQL con el mismo candado multi-tenant de `public.saldo_factura` (devuelve 0 si quien consulta no pertenece a la organización de la factura y no es `super_admin`/`service_role`). Corrige el fallo del guard `rpc_org_scope_linter` sin ampliar la whitelist congelada.
+- Espejo `supabase/schema/facturacion/saldo_factura.sql` sincronizado con la migración vigente (incluye `'Pagada'` entre los estados terminales) — `audit:replay-mirror` en verde.
+- `migration-manifest.json` regenerado (1083 migraciones) y el guard Fase D actualizado a la nueva lista de estados sin saldo.
 
 
 
