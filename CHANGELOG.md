@@ -1,5 +1,13 @@
 # Changelog
 
+## [13.743.6] - 2026-08-25
+### Saldo fantasma en facturas legacy marcadas como "Pagada"
+- Regla única: una factura en estado terminal (`Pagada`, `Cancelada`, `Sustituida`, `Borrador`) reporta saldo 0 en frontend (`calcularSaldoFactura` + `esEstadoSinSaldo`) y en base (`saldo_factura`, `estado_cuenta_agregados`, `facturas_cartera_cliente`). Antes, 31 facturas migradas sin pagos capturados inflaban ~374,631 de adeudo en estado de cuenta y portal.
+- Nueva `public.saldo_factura_bruto(uuid)` (total − pagos − NC aplicadas) usada por `tg_pago_factura_no_sobrepago`, para que el candado anti-sobrepago no impida capturar pagos históricos faltantes.
+- `facturas_cartera_cliente` dejó de referenciar la columna inexistente `f.folio`.
+- Backfill: pago histórico `AJUSTE-LEGACY` (sin REP, sin banco) por el total de cada factura `Pagada` sin pagos; 31 filas.
+- Guard nuevo `supabase/tests/cxc_guard_pagada_sin_saldo.sql` (en el manifiesto) congela la invariante: ninguna factura viva `Pagada` con saldo bruto > 0.01.
+
 ## [13.743.5] - 2026-08-25
 ### CI: siete guards conductuales apuntaban a un esquema ya evolucionado
 - Expedientes de fixture (`ELCM00001`, `ELCC00001`, `ELIMP0NC01`) violaban `embarques_expediente_formato_valido` (`EL` + 3 letras + dígitos): ahora usan folios válidos.
