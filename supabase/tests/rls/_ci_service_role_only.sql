@@ -32,7 +32,7 @@ INSERT INTO _ci_service_role_only (fn) VALUES
   ('public._crm_vincular_cotizacion_core(uuid, jsonb, uuid, uuid, text, uuid)'),
   ('public._recalc_estado_proveedor_factura(uuid)'),
   ('public._reprocesar_comisiones_org(uuid)'),
-  ('public.adjuntar_xml_entrante_verificado(uuid, uuid, text, text, text, text, text, text, date, numeric, text)'),
+  ('public.adjuntar_xml_entrante_verificado(uuid, uuid, text, text, text, text, text, text, date, numeric, text, numeric)'),
   -- RPC vieja del buzón CxP (M-7): cerrada a todos en migraciones; el
   -- re-cierre la mantiene así (grant a service_role por compatibilidad con
   -- el post_migrate previo a FIX4).

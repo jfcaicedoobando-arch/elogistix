@@ -9,24 +9,15 @@
 -- la GUC transaccional `app.entrante_xml_verificado` (extensión de la
 -- verificación server-side al alta inicial del buzón).
 -- Al modificar: edita ESTE archivo y genera la migración con el mismo cuerpo.
+-- v13.746.4: firma vigente de 12 args (incluye p_subtotal_detectado, sin IVA);
+-- la sobrecarga de 11 args quedó eliminada en 20260901000000.
 
-CREATE OR REPLACE FUNCTION public.adjuntar_xml_entrante_verificado(
-  p_documento_id uuid,
-  p_actor uuid,
-  p_xml_path text,
-  p_xml_nombre text,
-  p_xml_hash text,
-  p_uuid_fiscal text DEFAULT NULL,
-  p_rfc_emisor text DEFAULT NULL,
-  p_folio_serie text DEFAULT NULL,
-  p_fecha_emision date DEFAULT NULL,
-  p_total_detectado numeric DEFAULT NULL,
-  p_moneda_detectada text DEFAULT NULL
-) RETURNS void
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path = public
-AS $$
+CREATE OR REPLACE FUNCTION public.adjuntar_xml_entrante_verificado(p_documento_id uuid, p_actor uuid, p_xml_path text, p_xml_nombre text, p_xml_hash text, p_uuid_fiscal text DEFAULT NULL::text, p_rfc_emisor text DEFAULT NULL::text, p_folio_serie text DEFAULT NULL::text, p_fecha_emision date DEFAULT NULL::date, p_total_detectado numeric DEFAULT NULL::numeric, p_moneda_detectada text DEFAULT NULL::text, p_subtotal_detectado numeric DEFAULT NULL::numeric)
+ RETURNS void
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public'
+AS $function$
 DECLARE
   v_org uuid;
   v_rol public.app_role;
@@ -48,8 +39,6 @@ BEGIN
     RAISE EXCEPTION 'LC_ESTADO_INVALIDO: el documento no existe o fue eliminado';
   END IF;
 
-  -- Tenancy: el actor debe ser miembro de la organización del documento
-  -- (super_admin es el único rol de plataforma con acceso cross-org).
   IF NOT public.has_role(p_actor, 'super_admin'::public.app_role)
      AND NOT EXISTS (
        SELECT 1 FROM public.organization_members
@@ -81,11 +70,11 @@ BEGIN
     RAISE EXCEPTION 'LC_XML_TOTAL_INVALIDO: el total detectado debe ser mayor a cero'
       USING ERRCODE = '23514';
   END IF;
+  IF p_subtotal_detectado IS NOT NULL AND p_subtotal_detectado < 0 THEN
+    RAISE EXCEPTION 'LC_XML_SUBTOTAL_INVALIDO: el subtotal detectado no puede ser negativo'
+      USING ERRCODE = '23514';
+  END IF;
 
-  -- FIX3 (BUG-18 alta inicial): los metadatos vienen RE-PARSEADOS en servidor
-  -- por la edge; al escribirlos quedan sellados como verificados. El sello lo
-  -- autoriza la GUC transaccional que levanta ESTA RPC — el trigger
-  -- trg_entrante_meta_no_verificada fuerza false en cualquier otra vía.
   PERFORM set_config('app.entrante_xml_verificado', 'on', true);
 
   UPDATE public.embarque_facturas_entrantes
@@ -97,6 +86,7 @@ BEGIN
          folio_serie = p_folio_serie,
          fecha_emision = p_fecha_emision,
          total_detectado = p_total_detectado,
+         subtotal_detectado = p_subtotal_detectado,
          moneda_detectada = p_moneda_detectada,
          metadatos_verificados = true
    WHERE id = p_documento_id
@@ -108,12 +98,13 @@ BEGIN
     RAISE EXCEPTION 'LC_ESTADO_INVALIDO: el documento no existe, ya fue capturado o pertenece a otra organización';
   END IF;
 END;
-$$;
+$function$
 
-REVOKE ALL ON FUNCTION public.adjuntar_xml_entrante_verificado(uuid, uuid, text, text, text, text, text, text, date, numeric, text) FROM PUBLIC;
-REVOKE ALL ON FUNCTION public.adjuntar_xml_entrante_verificado(uuid, uuid, text, text, text, text, text, text, date, numeric, text) FROM anon;
-REVOKE ALL ON FUNCTION public.adjuntar_xml_entrante_verificado(uuid, uuid, text, text, text, text, text, text, date, numeric, text) FROM authenticated;
-GRANT EXECUTE ON FUNCTION public.adjuntar_xml_entrante_verificado(uuid, uuid, text, text, text, text, text, text, date, numeric, text) TO service_role;
+
+REVOKE ALL ON FUNCTION public.adjuntar_xml_entrante_verificado(uuid, uuid, text, text, text, text, text, text, date, numeric, text, numeric) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.adjuntar_xml_entrante_verificado(uuid, uuid, text, text, text, text, text, text, date, numeric, text, numeric) FROM anon;
+REVOKE ALL ON FUNCTION public.adjuntar_xml_entrante_verificado(uuid, uuid, text, text, text, text, text, text, date, numeric, text, numeric) FROM authenticated;
+GRANT EXECUTE ON FUNCTION public.adjuntar_xml_entrante_verificado(uuid, uuid, text, text, text, text, text, text, date, numeric, text, numeric) TO service_role;
 
 -- BUG-18: cierre del vector. El cliente ya no puede escribir metadatos fiscales
 -- directamente; debe pasar por la edge function que re-parsea el XML.
