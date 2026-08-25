@@ -179,17 +179,26 @@ describe("entranteSinImporte", () => {
 });
 
 describe("importeEntrante", () => {
-  it("prefiere el total del CFDI sobre el declarado", () => {
+  it("prefiere el subtotal sin IVA del CFDI", () => {
     expect(
-      importeEntrante(fila({ total_detectado: 100, moneda_detectada: "USD", monto_declarado: 90 })),
-    ).toEqual({ monto: 100, moneda: "USD", fuente: "cfdi" });
+      importeEntrante(
+        fila({ subtotal_detectado: 100, total_detectado: 116, moneda_detectada: "USD", monto_declarado: 90 }),
+      ),
+    ).toEqual({ monto: 100, moneda: "USD", fuente: "cfdi", conIva: false, totalConIva: 116 });
+  });
+
+  it("cae al total con IVA cuando el documento no tiene subtotal guardado", () => {
+    expect(
+      importeEntrante(fila({ total_detectado: 116, moneda_detectada: "USD", monto_declarado: 90 })),
+    ).toEqual({ monto: 116, moneda: "USD", fuente: "cfdi", conIva: true, totalConIva: 116 });
   });
 
   it("usa el declarado cuando no hay CFDI", () => {
     expect(
       importeEntrante(fila({ monto_declarado: 90, moneda_declarada: "EUR" })),
-    ).toEqual({ monto: 90, moneda: "EUR", fuente: "declarado" });
+    ).toEqual({ monto: 90, moneda: "EUR", fuente: "declarado", conIva: false, totalConIva: null });
   });
+
 
   it("regresa null cuando no hay ningún importe", () => {
     expect(importeEntrante(fila())).toBeNull();
