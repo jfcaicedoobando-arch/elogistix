@@ -14,34 +14,38 @@ import { describe, it, expect } from "vitest";
 import fs from "node:fs";
 import path from "node:path";
 
-function readAllEliminarEmbarqueMigrations(): string {
-  // Extraemos SÓLO los bloques que definen `public.eliminar_embarque_completo`
-  // (desde `CREATE OR REPLACE FUNCTION ...` hasta la sentencia `$$;` de cierre,
-  // más los GRANT y COMMENT ON FUNCTION inmediatos). Concatenar migraciones
-  // enteras contaminaría con código de funciones vecinas (p.ej. restaurar_embarque).
+function readUltimaDefinicionEliminarEmbarque(): string {
+  // Auditoría de tests (v13.741.0): antes se concatenaban TODAS las
+  // definiciones históricas de `eliminar_embarque_completo`, así que el
+  // guardrail pasaba aunque la versión vigente hubiera perdido una guarda
+  // (bastaba con que alguna migración antigua la tuviera). Ahora se lee sólo
+  // el ÚLTIMO bloque `CREATE OR REPLACE FUNCTION` — la versión vigente en BD —
+  // más los GRANT de esa misma migración.
   const dir = path.resolve(__dirname, "../../../supabase/migrations");
   const files = fs
     .readdirSync(dir)
     .filter((f) => f.endsWith(".sql"))
-    .sort();
-  const blocks: string[] = [];
+    .sort()
+    .reverse();
   const fnRegex =
     /CREATE OR REPLACE FUNCTION public\.eliminar_embarque_completo[\s\S]*?\$\$;/g;
   const grantRegex =
     /GRANT EXECUTE ON FUNCTION public\.eliminar_embarque_completo[^;]*;/g;
   for (const f of files) {
     const body = fs.readFileSync(path.join(dir, f), "utf8");
-    for (const m of body.matchAll(fnRegex)) blocks.push(m[0]);
-    for (const m of body.matchAll(grantRegex)) blocks.push(m[0]);
+    const defs = [...body.matchAll(fnRegex)];
+    if (defs.length === 0) continue;
+    const vigente = defs[defs.length - 1][0];
+    const grants = [...body.matchAll(grantRegex)].map((m) => m[0]);
+    return [vigente, ...grants].join("\n\n");
   }
-  if (blocks.length === 0) {
-    throw new Error("No se encontró FUNCTION public.eliminar_embarque_completo");
-  }
-  return blocks.join("\n\n-- ── siguiente bloque ──\n\n");
+  throw new Error("No se encontró FUNCTION public.eliminar_embarque_completo");
 }
 
 describe("Fase E — eliminar_embarque_completo bloquea por dependencias fiscales", () => {
-  const sql = readAllEliminarEmbarqueMigrations();
+  const sql = readUltimaDefinicionEliminarEmbarque();
+
+
 
   it("recolecta los 6 contadores + estado cerrado antes de decidir", () => {
     // facturas vivas (excluye Cancelada|Sustituida). Tolerante a espacios.
