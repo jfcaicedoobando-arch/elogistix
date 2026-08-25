@@ -615,7 +615,7 @@ export type Database = {
           modulo: string
           organization_id: string | null
           usuario_email: string
-          usuario_id: string
+          usuario_id: string | null
         }
         Insert: {
           accion: string
@@ -627,7 +627,7 @@ export type Database = {
           modulo: string
           organization_id?: string | null
           usuario_email?: string
-          usuario_id: string
+          usuario_id?: string | null
         }
         Update: {
           accion?: string
@@ -639,7 +639,7 @@ export type Database = {
           modulo?: string
           organization_id?: string | null
           usuario_email?: string
-          usuario_id?: string
+          usuario_id?: string | null
         }
         Relationships: [
           {
