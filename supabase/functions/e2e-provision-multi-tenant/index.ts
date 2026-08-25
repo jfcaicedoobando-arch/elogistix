@@ -63,14 +63,31 @@ Deno.serve(async (req) => {
 
   try {
     if (isCleanup) {
-      const result = await cleanupOrgsByName(admin, [payload.org_a?.nombre, payload.org_b?.nombre]);
+      const result = await cleanupOrgsByName(
+        admin,
+        [payload.org_a?.nombre, payload.org_b?.nombre],
+        orgAllowlist,
+      );
+      const rechazados = result.filter((r) => r.skipped === "name_not_allowed");
+      if (rechazados.length > 0) {
+        return json(
+          { error: "org_name_not_allowed", rechazados: rechazados.map((r) => r.nombre), cleaned: result },
+          400,
+        );
+      }
       return json({ ok: true, cleaned: result });
     }
-    const result = await provisionMultiTenant(admin, payload);
+    const result = await provisionMultiTenant(admin, payload, orgAllowlist);
     return json({ ok: true, ...result });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     console.error("[e2e-provision-multi-tenant]", message);
-    return json({ error: "provision_failed", message }, 500);
+    // Sin detalle interno: sólo el código de dominio hacia el caller.
+    const noPermitido = message.startsWith("org_name_not_allowed");
+    return json(
+      { error: noPermitido ? "org_name_not_allowed" : "provision_failed" },
+      noPermitido ? 400 : 500,
+    );
   }
 });
+
