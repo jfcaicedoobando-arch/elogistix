@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.743.8] - 2026-08-25
+### CI: notas de crédito sobre facturas borradas fallaban con `LC_NC_SIN_TC`
+- `public.saldo_factura_bruto` devolvía `NULL` cuando la factura estaba borrada o en estado no cobrable; el guard fail-closed de notas de crédito interpretaba ese `NULL` como "sin tipo de cambio" y abortaba. Ahora devuelve `0` en ese caso, igual que `public.saldo_factura`. Corrige la suite `test_rls_soft_delete_reportes`.
+- `migration-manifest.json` regenerado (1084 migraciones).
+
+
+
 ## [13.743.7] - 2026-08-25
 ### CI: cierre del fix de saldo fantasma
 - `public.saldo_factura_bruto` se reescribió en PL/pgSQL con el mismo candado multi-tenant de `public.saldo_factura` (devuelve 0 si quien consulta no pertenece a la organización de la factura y no es `super_admin`/`service_role`). Corrige el fallo del guard `rpc_org_scope_linter` sin ampliar la whitelist congelada.
