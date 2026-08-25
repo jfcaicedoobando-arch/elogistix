@@ -75,7 +75,7 @@ BEGIN
 
   INSERT INTO public.facturas (
     id, organization_id, cliente_id, embarque_id, serie, numero, moneda,
-    tipo_cambio_usd, subtotal, iva, total, estado
+    tipo_cambio, subtotal, iva, total, estado
   ) VALUES (
     'c2222222-2222-2222-2222-222222222222', v_org, v_cliente, v_embarque,
     'A', 'A-1', 'MXN'::public.moneda, 0, 100, 0, 100, 'Cancelada'

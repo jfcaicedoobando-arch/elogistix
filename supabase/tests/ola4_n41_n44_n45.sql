@@ -58,7 +58,7 @@ BEGIN
     estado, fecha_emision
   ) VALUES (
     'c9999991-1111-1111-1111-111111111111', v_org, v_prov, 'Prov Ola4', 'OLA4-N41-USD-SIN-TC',
-    v_cat, 'USD'::public.moneda, 0, 1000, 0, 1000, 'Aprobada', v_hoy
+    v_cat, 'USD'::public.moneda, 0, 1000, 0, 1000, 'Vigente', v_hoy
   ) ON CONFLICT (id) DO NOTHING;
 
   -- (b) USD con TC = 17 -> debe aportar 1000*17 = 17,000.
@@ -68,7 +68,7 @@ BEGIN
     estado, fecha_emision
   ) VALUES (
     'c9999992-2222-2222-2222-222222222222', v_org, v_prov, 'Prov Ola4', 'OLA4-N41-USD-CON-TC',
-    v_cat, 'USD'::public.moneda, 17, 1000, 0, 1000, 'Aprobada', v_hoy
+    v_cat, 'USD'::public.moneda, 17, 1000, 0, 1000, 'Vigente', v_hoy
   ) ON CONFLICT (id) DO NOTHING;
 
   -- (c) EUR sin embarque vinculado (sin tipo_cambio_eur) -> no debe sumar
@@ -79,7 +79,7 @@ BEGIN
     estado, fecha_emision
   ) VALUES (
     'c9999993-3333-3333-3333-333333333333', v_org, v_prov, 'Prov Ola4', 'OLA4-N41-EUR-SIN-TC',
-    v_cat, 'EUR'::public.moneda, 0, 1000, 0, 1000, 'Aprobada', v_hoy
+    v_cat, 'EUR'::public.moneda, 0, 1000, 0, 1000, 'Vigente', v_hoy
   ) ON CONFLICT (id) DO NOTHING;
 
   -- ---- N44: factura USD 10,000 con NC en MXN 5,000 ----
