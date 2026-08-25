@@ -35,6 +35,9 @@ export function columnasMetaEntrante(meta: CfdiXmlMeta | null | undefined) {
     fecha_emision: m.fechaEmision ?? null,
     folio_detectado: m.folioSerie ?? null,
     total_detectado: m.total ?? null,
+    // v13.744.0 — El buzón muestra el subtotal (sin IVA): es la cifra que
+    // se compara contra los costos del embarque.
+    subtotal_detectado: m.subTotal ?? null,
     moneda_detectada: m.moneda ?? null,
   };
 }

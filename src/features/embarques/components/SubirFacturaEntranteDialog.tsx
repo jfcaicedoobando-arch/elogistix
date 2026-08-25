@@ -143,7 +143,7 @@ export function SubirFacturaEntranteDialog({ open, onOpenChange, embarqueId, org
           moneda={form.monedaDeclarada}
           onMonto={form.setMontoDeclarado}
           onMoneda={form.setMonedaDeclarada}
-          totalCfdi={form.meta?.total ?? null}
+          totalCfdi={form.meta?.subTotal ?? form.meta?.total ?? null}
           costeadoPorMoneda={costos.data}
           cargandoCostos={costos.isLoading}
           proveedorElegido={Boolean(form.proveedor)}

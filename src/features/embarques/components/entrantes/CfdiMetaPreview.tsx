@@ -42,7 +42,11 @@ export function CfdiMetaPreview({ meta, metaUtil }: Props) {
       <div className="grid gap-3 sm:grid-cols-2">
         <Dato etiqueta="Folio" valor={meta.folioSerie ?? "Sin folio"} />
         <Dato
-          etiqueta="Total"
+          etiqueta="Subtotal (sin IVA)"
+          valor={meta.subTotal == null ? "—" : formatCurrency(meta.subTotal, meta.moneda ?? "MXN")}
+        />
+        <Dato
+          etiqueta="Total con impuestos"
           valor={meta.total == null ? "—" : formatCurrency(meta.total, meta.moneda ?? "MXN")}
         />
         <Dato etiqueta="RFC emisor" valor={meta.rfcEmisor ?? "—"} />

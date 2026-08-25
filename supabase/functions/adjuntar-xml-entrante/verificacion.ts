@@ -20,6 +20,8 @@ export interface MetaServidor {
   folioSerie: string | null;
   fechaEmision: string | null;
   total: number;
+  /** v13.744.0 — Subtotal (sin IVA) del CFDI. */
+  subtotal: number;
   moneda: string;
 }
 
@@ -34,6 +36,7 @@ export function metaDesdeCfdi(cfdi: CfdiParsed): MetaServidor {
     folioSerie: folio || null,
     fechaEmision: cfdi.fecha || null,
     total: cfdi.total,
+    subtotal: cfdi.subtotal,
     moneda: (cfdi.moneda || "MXN").toUpperCase(),
   };
 }

@@ -104,7 +104,13 @@ export function CorregirDatosEntranteDialog({ row, onOpenChange }: Props) {
           moneda={form.monedaDeclarada}
           onMonto={form.setMontoDeclarado}
           onMoneda={form.setMonedaDeclarada}
-          totalCfdi={row?.total_detectado != null ? Number(row.total_detectado) : null}
+          totalCfdi={
+            row?.subtotal_detectado != null
+              ? Number(row.subtotal_detectado)
+              : row?.total_detectado != null
+                ? Number(row.total_detectado)
+                : null
+          }
           costeadoPorMoneda={costos.data}
           cargandoCostos={costos.isLoading}
           proveedorElegido={Boolean(form.proveedor)}

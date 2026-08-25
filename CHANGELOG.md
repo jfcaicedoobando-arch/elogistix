@@ -1,5 +1,14 @@
 # Changelog
 
+## [13.744.0] - 2026-08-25
+### Buzón CxP: importes sin IVA
+- El buzón de facturas de proveedor ahora muestra el **subtotal (sin IVA)** del CFDI, alineado con los costos del ERP; el total con impuestos queda en el tooltip.
+- Documentos antiguos sin subtotal guardado se marcan como "Total con IVA" en vez de fingir que son netos.
+- Al subir un documento, el monto se prellena con el subtotal del XML y la etiqueta pasa a "Monto de la factura sin IVA"; el cotejo contra costos compara contra el subtotal.
+- La verificación server-side del XML (`adjuntar-xml-entrante`) guarda `subtotal_detectado` re-parseado del CFDI.
+
+
+
 ## [13.743.11] - 2026-08-25
 ### CI: baseline de esquema con pg_dump 17 (`\restrict`)
 - `pg_dump` 17 envuelve el dump con las metacomandos `\restrict` / `\unrestrict` (token aleatorio en cada corrida), lo que generaba un diff falso permanente en el job `schema-baseline`.
