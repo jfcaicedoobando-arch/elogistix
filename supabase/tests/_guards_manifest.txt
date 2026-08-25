@@ -1,0 +1,60 @@
+# Manifiesto de guards conductuales / schema invariants.
+# Lo consume `scripts/ci/run-guards.sh` (job `rls-guards` de rls-tests.yml),
+# que los ejecuta en paralelo sobre el snapshot restaurado.
+#
+# Reglas:
+#   - Una ruta por línea, relativa a la raíz del repo.
+#   - Cada suite debe ser autocontenida (BEGIN … ROLLBACK) para poder correr
+#     en paralelo con las demás sin contaminarse.
+#   - Líneas vacías y las que empiezan con `#` se ignoran.
+
+supabase/tests/schema-invariants.sql
+supabase/tests/cxp_guard_sobrepago.sql
+supabase/tests/cxp_guard_aprobacion_directa.sql
+supabase/tests/fix45_anon_execute_whitelist.sql
+supabase/tests/fix3_portal_rls_eventos_notas.sql
+supabase/tests/fix3_portal_rpcs.sql
+supabase/tests/aging_nc_deleted_at.sql
+supabase/tests/cxc_guard_sobrepago.sql
+supabase/tests/cxc_guard_nc_multimoneda.sql
+supabase/tests/fix2_embarques_interno_y_nc.sql
+supabase/tests/cxc_guard_factura_en_cancelacion.sql
+supabase/tests/convertir_monto_pago.sql
+supabase/tests/comision_cobrado_mxn.sql
+supabase/tests/cxp_guard_factura_cancelada.sql
+supabase/tests/guard_estado_factura.sql
+supabase/tests/bug12_marcar_facturas_vencidas.sql
+supabase/tests/roles_membership_mirror.sql
+supabase/tests/traspaso_idempotencia.sql
+supabase/tests/ola1_candados_regresion.sql
+supabase/tests/ola2_comisiones_regresion.sql
+supabase/tests/ola2_faseb_regresion.sql
+supabase/tests/ola2_faseb2_regresion.sql
+supabase/tests/test_sat_semanal_rotacion_lote.sql
+supabase/tests/rev1_org_less_y_rechazo_doc.sql
+supabase/tests/fix_b4_nc_reduce_comision.sql
+supabase/tests/fix_b5_periodo_cdmx.sql
+supabase/tests/fix3_helpers_financieros_revoke.sql
+supabase/tests/fix3_portal_proforma_ratelimit.sql
+supabase/tests/fix3_sync_cotizacion_org.sql
+supabase/tests/fix3_nc_recalcular_deleted_at.sql
+supabase/tests/fix3_pago_fecha_update.sql
+supabase/tests/fix3_updated_at_tablas.sql
+supabase/tests/fix3_crm_propagar_cross_vendedor.sql
+supabase/tests/fix3_bug18_alta_inicial.sql
+supabase/tests/fix4_n1_papelera_cotizacion_en_operacion.sql
+supabase/tests/fix4_n2_portal_proforma_dual.sql
+supabase/tests/fix4_service_role_only_grants.sql
+supabase/tests/fix4_signup_bootstrap_lock.sql
+supabase/tests/guard_estado_cotizacion.sql
+supabase/tests/guard_cotizacion_vigencia.sql
+supabase/tests/ola6_transaccional.sql
+supabase/tests/ola6_convertir_propaga.sql
+supabase/tests/ola8_has_role_in_org.sql
+supabase/tests/ola4_altas.sql
+supabase/tests/ola4_altas_finanzas.sql
+supabase/tests/ola4_altas_indices.sql
+supabase/tests/cxp_rechazo_libera_embarque.sql
+supabase/tests/cxp_pago_embarque_cerrado.sql
+supabase/tests/cxp_cancelacion_libera_embarque.sql
+supabase/tests/embarque_cerrado_no_cancelable.sql
