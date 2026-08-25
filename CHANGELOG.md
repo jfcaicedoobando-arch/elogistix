@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.743.10] - 2026-08-25
+### CI: anotaciones limpias en suites RLS
+- Los artifacts `rls-suite-logs-*` ahora incluyen explícitamente el directorio oculto `.rls-logs`; su ausencia pasa a ser un error real en vez de cinco advertencias engañosas.
+- Las migraciones ancladas conocidas siguen documentadas y exentas, pero se registran como salida normal del job en vez de generar `warning`/`notice` permanentes.
+- La ausencia de `supabase/schema/baseline.sql` ahora falla de forma explícita; se incorpora la baseline normalizada generada con PostgreSQL 15.8.
+
 ## [13.743.9] - 2026-08-25
 ### CI: candado de notas de crédito ignoraba facturas en papelera
 - `public.assert_nc_no_excede_saldo` ahora omite la validación cuando la factura padre está borrada (`deleted_at IS NOT NULL`): al devolver `saldo_factura_bruto = 0` para facturas en papelera, el candado abortaba con `LC_NC_EXCEDE_SALDO`. Corrige `test_rls_soft_delete_reportes`.
