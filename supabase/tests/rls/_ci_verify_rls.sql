@@ -13,7 +13,10 @@
 -- pública, catálogos compartidos, tablas internas no expuestas).
 -- ============================================================================
 
+\ir _ci_exempt_tables.sql
+
 DO $$
+
 DECLARE
   rec record;
   fail_count int := 0;
