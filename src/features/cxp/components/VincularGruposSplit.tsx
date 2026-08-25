@@ -10,6 +10,7 @@ import { VincularListaConceptos } from "./VincularListaConceptos";
 import { separarGrupoPrioritario, type Grupo } from "./vincularEmbarqueHelpers";
 import type { ConceptoCostoAbierto } from "@/features/cxp/hooks";
 import type { SeleccionLinea } from "@/features/cxp/types";
+import type { TcPivote } from "@/features/cxp/utils/vinculoMoneda";
 
 interface Props {
   grupos: Grupo[];
@@ -19,11 +20,17 @@ interface Props {
   /** Embarque del documento del buzón (si la captura viene de ahí). */
   embarqueIdPrioritario?: string | null;
   expedientePrioritario?: string | null;
+  /** Moneda de la factura: los importes vinculados se capturan en ella. */
+  facturaMoneda: string;
+  /** T/C DOF de la fecha de emisión (pivote MXN). */
+  tc: TcPivote | null;
+  tcFecha?: string | null;
 }
 
 export function VincularGruposSplit({
   grupos, seleccion, onToggle, onChangeMonto,
   embarqueIdPrioritario, expedientePrioritario,
+  facturaMoneda, tc, tcFecha,
 }: Props) {
   const [verOtros, setVerOtros] = useState(false);
   const { prioritario, otros } = separarGrupoPrioritario(grupos, embarqueIdPrioritario);
@@ -35,6 +42,9 @@ export function VincularGruposSplit({
         seleccion={seleccion}
         onToggle={onToggle}
         onChangeMonto={onChangeMonto}
+        facturaMoneda={facturaMoneda}
+        tc={tc}
+        tcFecha={tcFecha}
       />
     );
   }
@@ -49,6 +59,9 @@ export function VincularGruposSplit({
             seleccion={seleccion}
             onToggle={onToggle}
             onChangeMonto={onChangeMonto}
+            facturaMoneda={facturaMoneda}
+            tc={tc}
+            tcFecha={tcFecha}
           />
         ) : (
           <p className="rounded-md border border-dashed px-3 py-3 text-center text-body-sm text-muted-foreground">
@@ -81,6 +94,9 @@ export function VincularGruposSplit({
               seleccion={seleccion}
               onToggle={onToggle}
               onChangeMonto={onChangeMonto}
+              facturaMoneda={facturaMoneda}
+              tc={tc}
+              tcFecha={tcFecha}
             />
           )}
         </div>
