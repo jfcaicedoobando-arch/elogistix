@@ -3,7 +3,8 @@
 --
 -- Casos (todos con fixtures reales y recálculo vía trigger/RPC):
 --   · CASO 1 — factura liquidada con NC (pago 80% + NC 20% aplicada vía
---              ciclo real Borrador→Aprobada→Timbrada→Aplicada): la comisión
+--              ciclo real vigente Borrador→Timbrada→Aplicada (el guard
+--              guard_nc_cliente_transicion ya no admite Borrador→Aprobada)): la comisión
 --              queda en el 80% del devengado pleno; la NC NO la infla.
 --   · CASO 2 — pago parcial + NC: la comisión NO sube tras la NC (el bug
 --              Fase A/B la subía de 0.50 a 0.625 de proporción).
@@ -64,7 +65,6 @@ VALUES ('bb4b4b4b-0000-4000-8000-000000000031', 'bb4b4b4b-0000-4000-8000-0000000
 INSERT INTO public.factura_notas_credito (id, organization_id, factura_id, folio, motivo, monto, moneda, tipo_cambio, estado, fecha_emision)
 VALUES ('bb4b4b4b-0000-4000-8000-000000000032', 'bb4b4b4b-0000-4000-8000-000000000010',
         'bb4b4b4b-0000-4000-8000-000000000030', 'B4-NC1', 'Descuento', 200, 'MXN', 1, 'Borrador', CURRENT_DATE);
-UPDATE public.factura_notas_credito SET estado = 'Aprobada' WHERE id = 'bb4b4b4b-0000-4000-8000-000000000032';
 UPDATE public.factura_notas_credito SET estado = 'Timbrada', uuid_fiscal = 'bb4b4b4b-0000-4000-8000-000000000032' WHERE id = 'bb4b4b4b-0000-4000-8000-000000000032';
 UPDATE public.factura_notas_credito SET estado = 'Aplicada' WHERE id = 'bb4b4b4b-0000-4000-8000-000000000032';
 
@@ -105,7 +105,6 @@ VALUES ('bb4b4b4b-0000-4000-8000-000000000041', 'bb4b4b4b-0000-4000-8000-0000000
 INSERT INTO public.factura_notas_credito (id, organization_id, factura_id, folio, motivo, monto, moneda, tipo_cambio, estado, fecha_emision)
 VALUES ('bb4b4b4b-0000-4000-8000-000000000042', 'bb4b4b4b-0000-4000-8000-000000000010',
         'bb4b4b4b-0000-4000-8000-000000000040', 'B4-NC2', 'Descuento', 200, 'MXN', 1, 'Borrador', CURRENT_DATE);
-UPDATE public.factura_notas_credito SET estado = 'Aprobada' WHERE id = 'bb4b4b4b-0000-4000-8000-000000000042';
 UPDATE public.factura_notas_credito SET estado = 'Timbrada', uuid_fiscal = 'bb4b4b4b-0000-4000-8000-000000000042' WHERE id = 'bb4b4b4b-0000-4000-8000-000000000042';
 UPDATE public.factura_notas_credito SET estado = 'Aplicada' WHERE id = 'bb4b4b4b-0000-4000-8000-000000000042';
 
@@ -223,7 +222,6 @@ VALUES ('bb4b4b4b-0000-4000-8000-000000000071', 'bb4b4b4b-0000-4000-8000-0000000
 INSERT INTO public.factura_notas_credito (id, organization_id, factura_id, folio, motivo, monto, moneda, tipo_cambio, estado, fecha_emision)
 VALUES ('bb4b4b4b-0000-4000-8000-000000000072', 'bb4b4b4b-0000-4000-8000-000000000010',
         'bb4b4b4b-0000-4000-8000-000000000070', 'B4-NCC', 'Descuento', 200, 'MXN', 1, 'Borrador', CURRENT_DATE);
-UPDATE public.factura_notas_credito SET estado = 'Aprobada' WHERE id = 'bb4b4b4b-0000-4000-8000-000000000072';
 UPDATE public.factura_notas_credito SET estado = 'Timbrada', uuid_fiscal = 'bb4b4b4b-0000-4000-8000-000000000072' WHERE id = 'bb4b4b4b-0000-4000-8000-000000000072';
 UPDATE public.factura_notas_credito SET estado = 'Aplicada' WHERE id = 'bb4b4b4b-0000-4000-8000-000000000072';
 
