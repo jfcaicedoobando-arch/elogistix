@@ -16,12 +16,13 @@
  * Opcionales:
  *   E2E_MT_A_NOMBRE (default "E2E Multi-Tenant A")
  *   E2E_MT_B_NOMBRE (default "E2E Multi-Tenant B")
-
+ *
  * OJO: la edge function sólo acepta nombres con prefijo de test (E2E-/TEST-
  * por defecto; allowlist sobreescribible en el runtime con
  * `E2E_PROVISION_ORG_ALLOWLIST`). Si personalizas E2E_MT_*_NOMBRE, conserva
  * el prefijo o el provisioning/cleanup responderá 400 `org_name_not_allowed`.
  *
+
 
  * Escribe el resultado en `e2e/.tmp/multi-tenant.json` (git-ignored).
  */
