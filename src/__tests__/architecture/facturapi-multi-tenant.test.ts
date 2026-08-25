@@ -1,5 +1,6 @@
 /**
- * Guardrail v13.136.0 / v13.136.4 — Las 4 edge functions de FacturApi deben:
+ * Guardrail v13.136.0 / v13.136.4 — Las 6 edge functions de FacturApi (emitir,
+ * cancelar, emitir/cancelar REP y emitir/cancelar nota de crédito) deben:
  *   1. Resolver la API key vía el helper compartido `_shared/facturapiAuth.ts`
  *      (multi-tenant por organización) — directamente o a través del SDK helper
  *      `_shared/facturapiClient.ts` (`getFacturapiClient`).
