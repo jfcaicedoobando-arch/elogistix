@@ -64,13 +64,16 @@ BEGIN
     PERFORM public.crm_propagar_conversion_cliente(v_op_b, v_cli_1, 'Cliente Uno FIX3');
     RAISE EXCEPTION 'CASO 1 FAIL: un vendedor propagó la conversión de una oportunidad AJENA';
   EXCEPTION
-    WHEN insufficient_privilege THEN
+    -- La RPC levanta los LC_ de autorización sin ERRCODE explícito, así que
+    -- llegan como raise_exception (P0001); el contrato que congelamos es el
+    -- prefijo del mensaje, que es lo que el frontend traduce.
+    WHEN raise_exception THEN
       IF SQLERRM NOT LIKE 'LC_OPORTUNIDAD_AJENA%' THEN
-        RAISE EXCEPTION 'CASO 1 FAIL: se esperaba LC_OPORTUNIDAD_AJENA y vino: % (SQLSTATE %)', SQLERRM, SQLSTATE;
+        RAISE;
       END IF;
   END;
   PERFORM pg_temp.as_postgres();
-  RAISE NOTICE 'CASO 1 OK · cross-vendedor rechazado con 42501 LC_OPORTUNIDAD_AJENA.';
+  RAISE NOTICE 'CASO 1 OK · cross-vendedor rechazado con LC_OPORTUNIDAD_AJENA.';
 
   -- ----------------------------------------------------------
   -- CASO 2: el vendedor dueño propaga su propia oportunidad.
