@@ -798,6 +798,7 @@ export default tseslint.config(
       "**/*.test.tsx",
       // Wrappers autorizados de `sonner` — la implementación de referencia.
       "src/lib/ui/appFeedback.ts",
+      "src/lib/ui/appFeedback.notices.ts",
       "src/lib/ui/__tests__/**",
       "src/hooks/shared/useToast.ts",
       "src/hooks/shared/useCopyText.ts",
