@@ -86,6 +86,10 @@ BEGIN
   VALUES ('d5555555-5555-5555-5555-555555555555', 'super_admin')
   ON CONFLICT DO NOTHING;
 
+  -- El RPC valida auth.uid(): simulamos la sesión del super_admin.
+  PERFORM set_config('request.jwt.claims',
+    jsonb_build_object('sub', 'd5555555-5555-5555-5555-555555555555')::text, true);
+
   BEGIN
     PERFORM public.provision_organization('Org Huerfana N27', NULL, 'd5555555-5555-5555-5555-555555555555');
     v_failed := true; -- si no lanzó excepción, el fix no está aplicado

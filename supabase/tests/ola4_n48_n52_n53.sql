@@ -73,14 +73,14 @@ BEGIN
   -- N53: cotización que perdió estado real por el bug (estado_anterior='Enviada'
   -- ya preservado por 4b), y otra Vencida sin estado_anterior previo (fallback).
   INSERT INTO public.cotizaciones (
-    id, folio, cliente_id, cliente_nombre, modo, tipo, estado, estado_anterior,
+    id, organization_id, folio, cliente_id, cliente_nombre, modo, tipo, estado, estado_anterior,
     updated_at
   ) VALUES
-    (v_cot_a, 'OLA4-N53-A', v_cliente, 'Cliente Ola4 N52',
+    (v_cot_a, v_org, 'OLA4-N53-A', v_cliente, 'Cliente Ola4 N52',
      'Marítimo'::public.modo_transporte, 'Importación'::public.tipo_operacion,
      'Vencida'::public.estado_cotizacion, 'Enviada'::public.estado_cotizacion,
      now() - interval '120 days'),
-    (v_cot_b, 'OLA4-N53-B', v_cliente, 'Cliente Ola4 N52',
+    (v_cot_b, v_org, 'OLA4-N53-B', v_cliente, 'Cliente Ola4 N52',
      'Marítimo'::public.modo_transporte, 'Importación'::public.tipo_operacion,
      'Vencida'::public.estado_cotizacion, NULL,
      now() - interval '120 days')
