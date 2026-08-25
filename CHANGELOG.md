@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.740.0] - 2026-08-25
+### FIX4 — frontend CRM + provisión E2E
+- **CRM · alta express de actividad (bug real)**: `QuickCreateActividadPopover` hacía `new Date(fecha).toISOString()` sin validar; al limpiar el `DateTimePickerMx` el valor llega como `""` → *Invalid Date* → `RangeError: Invalid time value`. Ahora fecha vacía se envía como `null` (igual que `NuevaActividadDialog`) y una fecha no parseable muestra "Selecciona una fecha válida".
+- **CRM · convertir lead (bug real)**: `useConvertirLead` no invalidaba `crm.oportunidades.all` ni `crm.dashboardAll`, así que la oportunidad recién creada no aparecía en el kanban/dashboard hasta vencer el `staleTime` (`refetchOnWindowFocus` desactivado).
+- **P3 · `e2e-provision-multi-tenant`**: el secreto se comparaba con `!==` (no timing-safe) y el payload aceptaba CUALQUIER nombre de org, así que con el secreto filtrado el cleanup borraba (o el provisioning contaminaba) una org real homónima con `service_role`. Nueva allowlist estricta `orgNameAllowlist.ts` (prefijos `E2E …`/`TEST …` con separador; sobreescribible con `E2E_PROVISION_ORG_ALLOWLIST`), doble verificación payload + nombre persistido antes de borrar, `timingSafeEqual` y respuestas sin detalle interno (`400 org_name_not_allowed`).
+- Pruebas nuevas: `src/__tests__/security/e2eProvisionOrgAllowlist.test.ts` y `src/features/crm/hooks/__tests__/useConvertirLead.test.tsx`.
+
 ## [13.739.3] - 2026-08-25
 ### FIX4 — tanda 4 de base de datos (N-1, N-2, N-2b + 3xP3)
 - **N-1 · papelera vs 'En operación' (bug real)**: mandar a la papelera un embarque cuya cotización ligada estaba 'En operación' abortaba con `LC_COT_TRANSICION_INVALIDA`. `sync_cotizacion_embarque_link` levanta la GUC transaccional `app.liberando_papelera` (patrón `app.bypass_cierre`) y `guard_estado_cotizacion` admite ÚNICAMENTE 'En operación'→'Aceptada' con la GUC puesta.
