@@ -92,7 +92,7 @@ BEGIN
     id, organization_id, numero, embarque_id, expediente, cliente_id, cliente_nombre,
     subtotal, iva, total, moneda, tipo_cambio, fecha_emision, fecha_vencimiento, estado
   ) VALUES (
-    'ID_PLACEHOLDERc3333331-1111-1111-1111-111111111111', 'OLA4-N44-01', 'c2222221-1111-1111-1111-111111111111',
+    'c3333331-1111-1111-1111-111111111111', v_org, 'OLA4-N44-01', 'c2222221-1111-1111-1111-111111111111',
     'ELOLA4441', v_cli, 'Cliente Ola4 N41', 10000, 0, 10000, 'USD'::public.moneda, 17,
     v_hoy, v_hoy + interval '15 day', 'Emitida'::public.estado_factura
   ) ON CONFLICT (id) DO NOTHING;
@@ -118,7 +118,7 @@ BEGIN
     id, organization_id, numero, embarque_id, expediente, cliente_id, cliente_nombre,
     subtotal, iva, total, moneda, tipo_cambio, fecha_emision, fecha_vencimiento, estado
   ) VALUES (
-    'ID_PLACEHOLDERc6666661-1111-1111-1111-111111111111', 'OLA4-N45-01', 'c5555551-1111-1111-1111-111111111111',
+    'c6666661-1111-1111-1111-111111111111', v_org, 'OLA4-N45-01', 'c5555551-1111-1111-1111-111111111111',
     'ELOLA4451', v_cli, 'Cliente Ola4 N41', 1000, 0, 1000, 'MXN'::public.moneda, 1,
     v_hoy, v_hoy + interval '15 day', 'Sustituida'::public.estado_factura
   ) ON CONFLICT (id) DO NOTHING;
@@ -135,7 +135,7 @@ BEGIN
     id, organization_id, numero, embarque_id, expediente, cliente_id, cliente_nombre,
     subtotal, iva, total, moneda, tipo_cambio, fecha_emision, fecha_vencimiento, estado
   ) VALUES (
-    'ID_PLACEHOLDERc6666662-2222-2222-2222-222222222222', 'OLA4-N45-02', 'c5555552-2222-2222-2222-222222222222',
+    'c6666662-2222-2222-2222-222222222222', v_org, 'OLA4-N45-02', 'c5555552-2222-2222-2222-222222222222',
     'ELOLA4452', v_cli, 'Cliente Ola4 N41', 1000, 0, 1000, 'MXN'::public.moneda, 1,
     v_hoy, v_hoy + interval '15 day', 'Emitida'::public.estado_factura
   ) ON CONFLICT (id) DO NOTHING;
