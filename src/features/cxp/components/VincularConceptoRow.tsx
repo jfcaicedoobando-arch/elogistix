@@ -12,10 +12,10 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Hint } from "@/components/shared/Hint";
 import { MoneyInput } from "@/components/shared/MoneyInput";
 import { formatCurrency, formatFechaEs } from "@/lib/formatters";
-import { lineaExcedeOriginal } from "@/features/cxp/utils/topeVinculacion";
 import {
   convertirMonto,
   desviacionTcExcedida,
+  excedeCotizadoConTc,
   factorConversion,
   tcImplicito,
   type TcPivote,
@@ -90,15 +90,27 @@ export function VincularConceptoRow({
               {")"}
             </span>
           )}
-          {excede && (
-            <span className="text-destructive ml-1">· el monto asignado supera lo cotizado</span>
-          )}
+
         </div>
         {sinTc && (
           <p className="mt-0.5 flex items-center gap-1 text-label text-warning">
             <AlertTriangle className="h-3 w-3 shrink-0" aria-hidden />
             Costo en {it.moneda} y factura en {facturaMoneda}: falta el tipo de cambio DOF de la
             fecha de emisión. Regístralo en Configuración → Tipo de cambio DOF para poder vincular.
+          </p>
+        )}
+        {excede && (
+          <p className="mt-0.5 flex items-start gap-1 text-label text-destructive">
+            <AlertTriangle className="h-3 w-3 shrink-0 mt-0.5" aria-hidden />
+            <span>
+              El importe asignado supera lo cotizado
+              {cotizadoEnFactura !== null && !mismaMoneda
+                ? ` (${formatCurrency(cotizadoEnFactura, facturaMoneda)} al T/C DOF)`
+                : ""}
+              . Siguiente paso: baja el importe a lo cotizado, o déjalo así si el proveedor
+              realmente cobró más — la diferencia se registrará como ajuste de costo en el
+              embarque al guardar.
+            </span>
           </p>
         )}
         {implicito !== null && (
