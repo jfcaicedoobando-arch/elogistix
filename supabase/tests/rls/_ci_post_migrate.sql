@@ -83,7 +83,7 @@ END $$;
 DO $$
 DECLARE
   v_cols text;
-  v_internas text[] := ARRAY['cerrado_snapshot','tarifa_delta_jsonb','reabierto_motivo','created_by_email'];
+  v_internas text[] := pg_temp.columnas_internas_embarques();
 BEGIN
   IF to_regclass('public.embarques') IS NULL THEN
     RETURN;

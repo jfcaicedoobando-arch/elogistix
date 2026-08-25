@@ -58,7 +58,7 @@ BEGIN
   END LOOP;
 
   IF fail_count > 0 THEN
-    RAISE EXCEPTION E'RLS COVERAGE FAIL (% problemas):\n\nTablas con RLS pero SIN policies:%\n\nTablas SIN RLS:%\n\nSi alguna es intencional, agregarla al whitelist en _ci_verify_rls.sql',
+    RAISE EXCEPTION E'RLS COVERAGE FAIL (% problemas):\n\nTablas con RLS pero SIN policies:%\n\nTablas SIN RLS:%\n\nSi alguna es intencional, agregarla al catálogo _ci_exempt_tables.sql (categoría sin-rls)',
       fail_count,
       coalesce(nullif(missing_policies, ''), E'\n  (ninguna)'),
       coalesce(nullif(missing_rls, ''), E'\n  (ninguna)');

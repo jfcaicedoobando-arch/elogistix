@@ -18,29 +18,18 @@
 
 BEGIN;
 
+\ir _ci_exempt_tables.sql
+
 DO $$
 DECLARE
   r record;
   violations text := '';
   n int := 0;
   -- Tablas explícitamente exentas (globales/catálogos) — documentar por qué.
-  exempt text[] := ARRAY[
-    'catalogo_claves_sat',       -- catálogo SAT global
-    'planes',                    -- catálogo de planes
-    'tipos_contenedor',          -- catálogo global
-    'navieras',                  -- catálogo global de líneas navieras
-    'puertos',                   -- catálogo UN/LOCODE
-    'configuracion_global',      -- config app-wide (owner)
-    'email_unsubscribe_tokens',  -- vía token, no org
-    'tracking_links',            -- vía token
-    'ratelimit_buckets',         -- vía key
-    'suppressed_emails',         -- global email suppression
-    'demo_leads',                -- landing público
-    'folio_secuencias',          -- app-wide
-    'idempotency_keys',          -- por user_id
-    'email_send_state',          -- interno edge fn
-    'facturapi_webhook_eventos'  -- ingest interno de FacturAPI (solo service_role)
-  ];
+  -- Exenciones centralizadas en _ci_exempt_tables.sql
+  -- (categoría 'sin-filtro-tenant'): catálogos globales, acceso por token/key
+  -- e internas de edge functions.
+  exempt text[] := pg_temp.tablas_exentas('sin-filtro-tenant');
 BEGIN
   FOR r IN
     -- Sólo BASE TABLE. Las VIEW aparecen en information_schema.columns pero
