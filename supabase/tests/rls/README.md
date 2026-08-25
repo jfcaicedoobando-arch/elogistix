@@ -123,3 +123,31 @@ PERFORM pg_temp.assert(visible_count = <esperado>,
 Mantener cada caso pequeño y autónomo. Si una nueva tabla con
 `organization_id` se agrega al esquema, añadir mínimo un test de lectura
 cruzada entre Org A y Org B.
+
+## Guards conductuales: manifiestos (v13.743.0)
+
+El job `rls-guards` ya **no** lista los guards paso por paso en el YAML. La
+fuente de verdad son dos manifiestos, que `scripts/ci/run-guards.sh` ejecuta en
+paralelo (concurrencia 4, logs en el artifact `rls-guards-logs`):
+
+| Archivo | Modo | Contenido |
+| --- | --- | --- |
+| `supabase/tests/_guards_manifest.txt` | bloqueante | Guards estables (schema-invariants, CxC/CxP, portal, olas, FIX*). |
+| `supabase/tests/_guards_manifest_radar.txt` | aviso (`continue-on-error`) | Suites que antes no corrían en ningún workflow; se promueven al bloqueante al estabilizarse. |
+
+Requisitos para agregar una suite: ruta relativa al repo, una por línea, y la
+suite debe ser autocontenida (`BEGIN … ROLLBACK`) para correr en paralelo.
+El test `src/__tests__/architecture/guards-sql-en-manifiesto.test.ts` falla si
+un `.sql` queda huérfano (sin manifiesto ni referencia en workflows).
+
+## Contador de skips
+
+Cuando una aserción se salta condicionalmente (`IF EXISTS … THEN`), regístralo:
+
+```sql
+PERFORM pg_temp.skip('policy X aún no existe en este esquema');
+-- al final de la suite:
+PERFORM pg_temp.assert_max_skips(1);
+```
+
+Así una suite no puede terminar en verde habiendo verificado nada.

@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.743.0] - 2026-08-25
+### Guards SQL: manifiesto, paralelización y suites huérfanas
+- **Suites huérfanas detectadas (cobertura ficticia)**: 13 archivos `supabase/tests/*.sql` existían en el repo pero **ningún workflow los ejecutaba** (`ola4_n24_n27`, `validar_cierre_umbral_por_moneda`, `embarques_listado_sin_select_estrella`, etc.). Ahora corren en `supabase/tests/_guards_manifest_radar.txt` en modo aviso (`continue-on-error`) hasta estabilizarse.
+- **Manifiesto + runner paralelo**: los ~50 pasos `run: $PSQL -f ...` del job `rls-guards` se reemplazaron por `supabase/tests/_guards_manifest.txt` + `scripts/ci/run-guards.sh`, que los ejecuta con concurrencia 4, resume verdes/rojos y sube los logs como artifact `rls-guards-logs`.
+- **Guardrail anti-huérfanos**: `src/__tests__/architecture/guards-sql-en-manifiesto.test.ts` falla si una suite `.sql` no está en un manifiesto ni referenciada en un workflow, y valida que los manifiestos no tengan rutas duplicadas o inexistentes.
+- **Contador de skips** en `supabase/tests/rls/_helpers.sql`: `pg_temp.skip(motivo)` + `pg_temp.assert_max_skips(n)` para que una suite no quede verde habiendo saltado sus aserciones.
+
 ## [13.742.0] - 2026-08-25
 ### Limpieza y optimización de la suite RLS
 - **Catálogo único de columnas internas de `embarques`** (`supabase/tests/_catalogo_columnas_internas.sql`): la lista `cerrado_snapshot / tarifa_delta_jsonb / reabierto_motivo / created_by_email` estaba copiada en 3 archivos (`fix2_embarques_interno_y_nc.sql`, `embarques_listado_sin_select_estrella.sql`, `_ci_post_migrate.sql`). Si se añadía una columna sensible nueva, un archivo la auditaba y los otros quedaban ciegos. Ahora los tres la leen de `pg_temp.columnas_internas_embarques()`.
