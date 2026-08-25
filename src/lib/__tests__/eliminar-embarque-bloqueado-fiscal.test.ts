@@ -14,36 +14,64 @@ import { describe, it, expect } from "vitest";
 import fs from "node:fs";
 import path from "node:path";
 
-function readUltimaDefinicionEliminarEmbarque(): string {
-  // Auditoría de tests (v13.741.0): antes se concatenaban TODAS las
-  // definiciones históricas de `eliminar_embarque_completo`, así que el
-  // guardrail pasaba aunque la versión vigente hubiera perdido una guarda
-  // (bastaba con que alguna migración antigua la tuviera). Ahora se lee sólo
-  // el ÚLTIMO bloque `CREATE OR REPLACE FUNCTION` — la versión vigente en BD —
-  // más los GRANT de esa misma migración.
-  const dir = path.resolve(__dirname, "../../../supabase/migrations");
-  const files = fs
-    .readdirSync(dir)
+const MIGRATIONS_DIR = path.resolve(__dirname, "../../../supabase/migrations");
+const FN = "public.eliminar_embarque_completo";
+
+function migracionesOrdenadas(): string[] {
+  return fs
+    .readdirSync(MIGRATIONS_DIR)
     .filter((f) => f.endsWith(".sql"))
-    .sort()
-    .reverse();
-  const fnRegex =
-    /CREATE OR REPLACE FUNCTION public\.eliminar_embarque_completo[\s\S]*?\$\$;/g;
-  const grantRegex =
-    /GRANT EXECUTE ON FUNCTION public\.eliminar_embarque_completo[^;]*;/g;
-  for (const f of files) {
-    const body = fs.readFileSync(path.join(dir, f), "utf8");
-    const defs = [...body.matchAll(fnRegex)];
-    if (defs.length === 0) continue;
-    const vigente = defs[defs.length - 1][0];
-    const grants = [...body.matchAll(grantRegex)].map((m) => m[0]);
-    return [vigente, ...grants].join("\n\n");
+    .sort();
+}
+
+/**
+ * Extrae los bloques `CREATE OR REPLACE FUNCTION public.eliminar_embarque_completo`
+ * de un SQL, respetando la etiqueta de dollar-quoting con la que abre el cuerpo
+ * (`$$` o `$function$`) para no derramarse hacia funciones vecinas.
+ */
+function extraerDefiniciones(sql: string): string[] {
+  const out: string[] = [];
+  const inicio = new RegExp(`CREATE OR REPLACE FUNCTION ${FN.replace(".", "\\.")}`, "g");
+  for (const m of sql.matchAll(inicio)) {
+    const desde = m.index ?? 0;
+    const tag = /AS\s+(\$[A-Za-z_]*\$)/.exec(sql.slice(desde));
+    if (!tag) continue;
+    const abre = desde + (tag.index ?? 0) + tag[0].length;
+    const cierra = sql.indexOf(tag[1], abre);
+    if (cierra === -1) continue;
+    out.push(sql.slice(desde, cierra + tag[1].length));
   }
-  throw new Error("No se encontró FUNCTION public.eliminar_embarque_completo");
+  return out;
+}
+
+/**
+ * Auditoría de tests (v13.741.0): antes se concatenaban TODAS las definiciones
+ * históricas, así que el guardrail pasaba aunque la versión vigente hubiera
+ * perdido una guarda (bastaba con que una migración antigua la tuviera). Ahora
+ * se lee sólo la ÚLTIMA definición — la vigente en la base de datos.
+ */
+function readDefinicionVigente(): string {
+  for (const f of migracionesOrdenadas().reverse()) {
+    const defs = extraerDefiniciones(fs.readFileSync(path.join(MIGRATIONS_DIR, f), "utf8"));
+    if (defs.length > 0) return defs[defs.length - 1];
+  }
+  throw new Error(`No se encontró FUNCTION ${FN}`);
+}
+
+/** Los GRANT sobreviven a `CREATE OR REPLACE`, así que se buscan en todo el historial. */
+function readGrants(): string {
+  const re = new RegExp(`GRANT EXECUTE ON FUNCTION ${FN.replace(".", "\\.")}[^;]*;`, "g");
+  return migracionesOrdenadas()
+    .flatMap((f) => [...fs.readFileSync(path.join(MIGRATIONS_DIR, f), "utf8").matchAll(re)])
+    .map((m) => m[0])
+    .join("\n");
 }
 
 describe("Fase E — eliminar_embarque_completo bloquea por dependencias fiscales", () => {
-  const sql = readUltimaDefinicionEliminarEmbarque();
+  const sql = readDefinicionVigente();
+  const grants = readGrants();
+
+
 
 
 
