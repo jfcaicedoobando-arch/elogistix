@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.746.6] - 2026-08-25
+### CI: baseline de esquema sincronizado
+- `supabase/schema/baseline.sql` se sincroniza con el esquema actual del buzón CxP: `subtotal_detectado` y la firma vigente de 12 argumentos de `adjuntar_xml_entrante_verificado`. Sin cambios funcionales.
+
 ## [13.746.5] - 2026-08-25
 ### Lint: reduce complejidad en `scrollToErrorSection.ts`
 - `seccionParaErrorPaso1` se refactoriza a una tabla de búsqueda (`REGLAS_SECCION`) para bajar la complejidad ciclomática por debajo del límite de ESLint (16). Sin cambios de comportamiento.

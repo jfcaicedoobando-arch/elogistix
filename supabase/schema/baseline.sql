@@ -3305,7 +3305,7 @@ BEGIN
   );
 END;
 $$;
-CREATE FUNCTION public.adjuntar_xml_entrante_verificado(p_documento_id uuid, p_actor uuid, p_xml_path text, p_xml_nombre text, p_xml_hash text, p_uuid_fiscal text DEFAULT NULL::text, p_rfc_emisor text DEFAULT NULL::text, p_folio_serie text DEFAULT NULL::text, p_fecha_emision date DEFAULT NULL::date, p_total_detectado numeric DEFAULT NULL::numeric, p_moneda_detectada text DEFAULT NULL::text) RETURNS void
+CREATE FUNCTION public.adjuntar_xml_entrante_verificado(p_documento_id uuid, p_actor uuid, p_xml_path text, p_xml_nombre text, p_xml_hash text, p_uuid_fiscal text DEFAULT NULL::text, p_rfc_emisor text DEFAULT NULL::text, p_folio_serie text DEFAULT NULL::text, p_fecha_emision date DEFAULT NULL::date, p_total_detectado numeric DEFAULT NULL::numeric, p_moneda_detectada text DEFAULT NULL::text, p_subtotal_detectado numeric DEFAULT NULL::numeric) RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $_$
@@ -3327,8 +3327,6 @@ BEGIN
   IF v_org IS NULL THEN
     RAISE EXCEPTION 'LC_ESTADO_INVALIDO: el documento no existe o fue eliminado';
   END IF;
-  -- Tenancy: el actor debe ser miembro de la organización del documento
-  -- (super_admin es el único rol de plataforma con acceso cross-org).
   IF NOT public.has_role(p_actor, 'super_admin'::public.app_role)
      AND NOT EXISTS (
        SELECT 1 FROM public.organization_members
@@ -3358,10 +3356,10 @@ BEGIN
     RAISE EXCEPTION 'LC_XML_TOTAL_INVALIDO: el total detectado debe ser mayor a cero'
       USING ERRCODE = '23514';
   END IF;
-  -- FIX3 (BUG-18 alta inicial): los metadatos vienen RE-PARSEADOS en servidor
-  -- por la edge; al escribirlos quedan sellados como verificados. El sello lo
-  -- autoriza la GUC transaccional que levanta ESTA RPC — el trigger
-  -- trg_entrante_meta_no_verificada fuerza false en cualquier otra vía.
+  IF p_subtotal_detectado IS NOT NULL AND p_subtotal_detectado < 0 THEN
+    RAISE EXCEPTION 'LC_XML_SUBTOTAL_INVALIDO: el subtotal detectado no puede ser negativo'
+      USING ERRCODE = '23514';
+  END IF;
   PERFORM set_config('app.entrante_xml_verificado', 'on', true);
   UPDATE public.embarque_facturas_entrantes
      SET xml_path = p_xml_path,
@@ -3372,6 +3370,7 @@ BEGIN
          folio_serie = p_folio_serie,
          fecha_emision = p_fecha_emision,
          total_detectado = p_total_detectado,
+         subtotal_detectado = p_subtotal_detectado,
          moneda_detectada = p_moneda_detectada,
          metadatos_verificados = true
    WHERE id = p_documento_id
@@ -24480,6 +24479,7 @@ CREATE TABLE public.embarque_facturas_entrantes (
     moneda_declarada text,
     sin_costo_capturado boolean DEFAULT false NOT NULL,
     metadatos_verificados boolean DEFAULT false NOT NULL,
+    subtotal_detectado numeric,
     CONSTRAINT chk_efe_moneda_declarada CHECK (((moneda_declarada IS NULL) OR (moneda_declarada = ANY (ARRAY['MXN'::text, 'USD'::text, 'EUR'::text])))),
     CONSTRAINT chk_efe_monto_declarado_positivo CHECK (((monto_declarado IS NULL) OR (monto_declarado > (0)::numeric))),
     CONSTRAINT embarque_facturas_entrantes_estado_check CHECK ((estado = ANY (ARRAY['por_capturar'::text, 'capturada'::text, 'rechazada'::text]))),
@@ -27482,8 +27482,8 @@ GRANT ALL ON FUNCTION public.actualizar_tarifa_con_recargos_rpc(p_id uuid, p_tar
 REVOKE ALL ON FUNCTION public.actualizar_tc_embarque_dof(_embarque_id uuid, _fecha date) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.actualizar_tc_embarque_dof(_embarque_id uuid, _fecha date) TO authenticated;
 GRANT ALL ON FUNCTION public.actualizar_tc_embarque_dof(_embarque_id uuid, _fecha date) TO service_role;
-REVOKE ALL ON FUNCTION public.adjuntar_xml_entrante_verificado(p_documento_id uuid, p_actor uuid, p_xml_path text, p_xml_nombre text, p_xml_hash text, p_uuid_fiscal text, p_rfc_emisor text, p_folio_serie text, p_fecha_emision date, p_total_detectado numeric, p_moneda_detectada text) FROM PUBLIC;
-GRANT ALL ON FUNCTION public.adjuntar_xml_entrante_verificado(p_documento_id uuid, p_actor uuid, p_xml_path text, p_xml_nombre text, p_xml_hash text, p_uuid_fiscal text, p_rfc_emisor text, p_folio_serie text, p_fecha_emision date, p_total_detectado numeric, p_moneda_detectada text) TO service_role;
+REVOKE ALL ON FUNCTION public.adjuntar_xml_entrante_verificado(p_documento_id uuid, p_actor uuid, p_xml_path text, p_xml_nombre text, p_xml_hash text, p_uuid_fiscal text, p_rfc_emisor text, p_folio_serie text, p_fecha_emision date, p_total_detectado numeric, p_moneda_detectada text, p_subtotal_detectado numeric) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.adjuntar_xml_entrante_verificado(p_documento_id uuid, p_actor uuid, p_xml_path text, p_xml_nombre text, p_xml_hash text, p_uuid_fiscal text, p_rfc_emisor text, p_folio_serie text, p_fecha_emision date, p_total_detectado numeric, p_moneda_detectada text, p_subtotal_detectado numeric) TO service_role;
 REVOKE ALL ON FUNCTION public.adjuntar_xml_factura_entrante(p_documento_id uuid, p_xml_path text, p_xml_nombre text, p_xml_hash text, p_uuid_fiscal text, p_rfc_emisor text, p_folio_serie text, p_fecha_emision date, p_total_detectado numeric, p_moneda_detectada text) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.adjuntar_xml_factura_entrante(p_documento_id uuid, p_xml_path text, p_xml_nombre text, p_xml_hash text, p_uuid_fiscal text, p_rfc_emisor text, p_folio_serie text, p_fecha_emision date, p_total_detectado numeric, p_moneda_detectada text) TO service_role;
 REVOKE ALL ON FUNCTION public.agente_aprobar_tarifa(_tarifa_id uuid, _estado text, _motivo text) FROM PUBLIC;
