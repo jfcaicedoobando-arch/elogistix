@@ -450,165 +450,26 @@ jobs:
       - name: Restore database snapshot
         run: pg_restore --no-owner --dbname=postgres .rls-snapshot/db.dump
 
-      - name: Verify schema invariants (triggers/functions esperados)
-        run: $PSQL -f supabase/tests/schema-invariants.sql
+      - name: Guards conductuales + schema invariants (manifiesto, en paralelo)
+        # v13.743.0 — antes: ~50 pasos `run: $PSQL -f ...` en serie (mantener el
+        # YAML a mano + tiempo lineal). Ahora la lista vive en
+        # `supabase/tests/_guards_manifest.txt` y el runner los corre en
+        # paralelo; cada suite es BEGIN…ROLLBACK, así que no se contaminan.
+        env:
+          JOBS: 4
+          LOG_DIR: /tmp/guards-logs
+        run: bash scripts/ci/run-guards.sh
 
-      - name: CxP guard - tests conductuales de sobrepago (FIX-R3-01)
-        run: $PSQL -f supabase/tests/cxp_guard_sobrepago.sql
-
-      - name: CxP guard - aprobación directa bloqueada (RNF-07)
-        run: $PSQL -f supabase/tests/cxp_guard_aprobacion_directa.sql
-
-
-      - name: FIX-45 - whitelist de EXECUTE para anon
-        run: $PSQL -f supabase/tests/fix45_anon_execute_whitelist.sql
-
-      - name: fix3 - RLS portal (eventos y notas internos no legibles por cliente/agente)
-        run: $PSQL -f supabase/tests/fix3_portal_rls_eventos_notas.sql
-
-      - name: fix3 - RPCs portal (TOCTOU, caps de longitud y rate limits)
-        run: $PSQL -f supabase/tests/fix3_portal_rpcs.sql
-
-      - name: Aging CxP - paridad NC soft-deleted (FIX-AGING-NC-01)
-        run: $PSQL -f supabase/tests/aging_nc_deleted_at.sql
-
-      - name: CxC guard - tests conductuales de sobrepago
-        run: $PSQL -f supabase/tests/cxc_guard_sobrepago.sql
-
-      - name: CxC guard - NC multimoneda vs saldo (Ola G1)
-        run: $PSQL -f supabase/tests/cxc_guard_nc_multimoneda.sql
-
-      - name: FIX2 - columnas internas de embarques + maquina NC + roles cotizaciones
-        run: $PSQL -f supabase/tests/fix2_embarques_interno_y_nc.sql
+      - name: Subir logs de guards
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: rls-guards-logs
+          path: /tmp/guards-logs
+          if-no-files-found: ignore
+          retention-days: 7
 
 
-      - name: CxC guard - factura con cancelacion en tramite no admite cobros
-        run: $PSQL -f supabase/tests/cxc_guard_factura_en_cancelacion.sql
-
-      - name: Conversion de moneda - convertir_monto_pago_a_factura
-        run: $PSQL -f supabase/tests/convertir_monto_pago.sql
-
-      - name: Comisiones - monto_cobrado_mxn 4 cuadrantes de moneda (BL-01)
-        run: $PSQL -f supabase/tests/comision_cobrado_mxn.sql
-
-      - name: CxP guard - pago sobre factura Cancelada/papelera bloqueado (BL-03)
-        run: $PSQL -f supabase/tests/cxp_guard_factura_cancelada.sql
-
-      - name: Guard de estados - guard_estado_factura
-        run: $PSQL -f supabase/tests/guard_estado_factura.sql
-
-      - name: Barrido de vencidas - marcar_facturas_vencidas (BUG-12)
-        run: $PSQL -f supabase/tests/bug12_marcar_facturas_vencidas.sql
-
-      - name: Espejo de roles - organization_members -> user_roles
-        run: $PSQL -f supabase/tests/roles_membership_mirror.sql
-
-      - name: Tesoreria - idempotencia de traspasos (Ola A / A.1)
-        run: $PSQL -f supabase/tests/traspaso_idempotencia.sql
-
-      - name: Ola 1 - candados de horas (fecha futura, T/C DOF global)
-        run: $PSQL -f supabase/tests/ola1_candados_regresion.sql
-
-      - name: Ola 2 - comisiones (prorrateo, cierre, anticipos, liquidaciones)
-        run: $PSQL -f supabase/tests/ola2_comisiones_regresion.sql
-
-      - name: Ola 2 Fase B - notas de credito, papelera y auto-sync
-        run: $PSQL -f supabase/tests/ola2_faseb_regresion.sql
-
-      - name: Ola 2 Fase B2 - cron de comisiones y barrido SAT
-        run: $PSQL -f supabase/tests/ola2_faseb2_regresion.sql
-
-      - name: FIX B-3 - rotacion del lote del barrido SAT semanal
-        run: $PSQL -f supabase/tests/test_sat_semanal_rotacion_lote.sql
-
-      - name: Remediacion informe 2026-08-22 - guards sin org y rechazo de documento
-        run: $PSQL -f supabase/tests/rev1_org_less_y_rechazo_doc.sql
-
-      - name: FIX B-4 - la nota de credito reduce la comision devengada
-        run: $PSQL -f supabase/tests/fix_b4_nc_reduce_comision.sql
-
-      - name: FIX B-5 - periodo de liquidacion en horario CDMX
-        run: $PSQL -f supabase/tests/fix_b5_periodo_cdmx.sql
-
-      - name: FIX3 - helpers financieros sin EXECUTE para authenticated (ronda 2 P2)
-        run: $PSQL -f supabase/tests/fix3_helpers_financieros_revoke.sql
-
-      - name: FIX3 - rate limit restaurado en portal_obtener_proforma_por_token (drift ronda 2)
-        run: $PSQL -f supabase/tests/fix3_portal_proforma_ratelimit.sql
-
-      - name: FIX3 - sync_cotizacion_embarque_link valida misma org (ronda 2 P3)
-        run: $PSQL -f supabase/tests/fix3_sync_cotizacion_org.sql
-
-      - name: FIX3 - recalculo de comisiones por NC escucha deleted_at y salida de Aplicada (ronda 2 P3)
-        run: $PSQL -f supabase/tests/fix3_nc_recalcular_deleted_at.sql
-
-      - name: "FIX3 - fecha de pago individual: guard en UPDATE y no previa a emision (M-4)"
-        run: $PSQL -f supabase/tests/fix3_pago_fecha_update.sql
-
-      - name: FIX3 - triggers updated_at en las 10 tablas objetivo (M-5/O1.14)
-        run: $PSQL -f supabase/tests/fix3_updated_at_tablas.sql
-
-      - name: FIX3 - crm_propagar_conversion_cliente cross-vendedor 42501 (M-1/O7.7)
-        run: $PSQL -f supabase/tests/fix3_crm_propagar_cross_vendedor.sql
-
-      - name: FIX3 - BUG-18 alta inicial del buzon queda sin verificar + RPC vieja revocada (M-6/M-7)
-        run: $PSQL -f supabase/tests/fix3_bug18_alta_inicial.sql
-
-      - name: FIX4 - papelera libera cotizacion En operacion via GUC app.liberando_papelera (N-1)
-        run: $PSQL -f supabase/tests/fix4_n1_papelera_cotizacion_en_operacion.sql
-
-      - name: FIX4 - portal proforma dual MXN/USD + responder con actor anonimo (N-2/N-2b)
-        run: $PSQL -f supabase/tests/fix4_n2_portal_proforma_dual.sql
-
-      - name: FIX4 - lista canonica service_role-only cerrada en la BD re-cerrada (P3)
-        run: $PSQL -f supabase/tests/fix4_service_role_only_grants.sql
-
-      - name: FIX4 - bootstrap super_admin serializado con advisory lock (P3)
-        run: $PSQL -f supabase/tests/fix4_signup_bootstrap_lock.sql
-
-
-
-
-
-
-
-      - name: Guard de estados - guard_estado_cotizacion (C5 + A3)
-        run: $PSQL -f supabase/tests/guard_estado_cotizacion.sql
-
-      - name: Guard de vigencia - cotizaciones (Ola 18)
-        run: $PSQL -f supabase/tests/guard_cotizacion_vigencia.sql
-
-
-
-      - name: Integridad transaccional - ola6 RPCs atomicas (A3, M3, M4, M15)
-        run: $PSQL -f supabase/tests/ola6_transaccional.sql
-
-      - name: Ola 6 - convertir lead propaga datos fiscales (O6.2)
-        run: $PSQL -f supabase/tests/ola6_convertir_propaga.sql
-
-      - name: Ola 8 - has_role_in_org + pilotos con lista exacta (H1/H2, FIX B-6)
-        run: $PSQL -f supabase/tests/ola8_has_role_in_org.sql
-
-      - name: Ola 4 ALTAS - tenancy de RPCs (N6, N12)
-        run: $PSQL -f supabase/tests/ola4_altas.sql
-
-      - name: Ola 4 ALTAS - reportes financieros (N7, N8, N9, N10)
-        run: $PSQL -f supabase/tests/ola4_altas_finanzas.sql
-
-      - name: Ola 4 ALTAS - indices unicos vivos (N15, N16)
-        run: $PSQL -f supabase/tests/ola4_altas_indices.sql
-
-      - name: CXP - rechazo libera embarque y conceptos (v13.493.0)
-        run: $PSQL -f supabase/tests/cxp_rechazo_libera_embarque.sql
-
-      - name: CXP - pago permitido en embarque Cerrado (v13.497.1)
-        run: $PSQL -f supabase/tests/cxp_pago_embarque_cerrado.sql
-
-      - name: CXP - cancelacion libera embarque y conceptos (v13.505.0)
-        run: $PSQL -f supabase/tests/cxp_cancelacion_libera_embarque.sql
-
-      - name: Embarques - Cerrado no cancelable directo (BUG-09)
-        run: $PSQL -f supabase/tests/embarque_cerrado_no_cancelable.sql
 
 
 
