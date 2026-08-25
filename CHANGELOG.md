@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.746.2] - 2026-08-25
+- `facturasEntrantesBuzon.ts` (216 líneas) se divide en `facturasEntrantesTipos.ts` e `facturasEntrantesImporte.ts` para cumplir el límite de 200 líneas (Power of 10). Sin cambios de comportamiento; el barrel reexporta la API pública.
+
 ## [13.746.1] - 2026-08-25
 ### CI verde: complejidad y catálogos
 - `VincularConceptoRow` y `VincularEmbarqueSection` se dividen en `VincularConceptoAvisos` y `VincularEmbarqueHeader`; `extraerCfdiXmlMeta` extrae `mapearComprobante`. Sin cambios de comportamiento.
