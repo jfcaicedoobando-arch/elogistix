@@ -179,12 +179,19 @@ jobs:
               continue
             fi
             if printf '%s\n' "$ANCLADAS" | grep -qxF "$base"; then
-              echo "::warning file=$f::migración anclada por texto (drift-anclas.txt); estado final garantizado por una reaplicación posterior"
+              echo "↷ $base: migración anclada omitida; estado final cubierto por reaplicación posterior" | tee -a /tmp/migraciones-ancladas.log
               continue
             fi
             echo "::error file=$f::la migración no aplica en una base limpia"
             exit 1
           done
+          if [ -s /tmp/migraciones-ancladas.log ]; then
+            {
+              echo "### Migraciones ancladas conocidas"
+              echo ""
+              sed 's/^/- /' /tmp/migraciones-ancladas.log
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
 
 
 
@@ -392,7 +399,10 @@ jobs:
         with:
           name: rls-suite-logs-${{ matrix.grupo }}
           path: .rls-logs/
-          if-no-files-found: warn
+          # upload-artifact v4+ excluye archivos/directorios ocultos por
+          # defecto; `.rls-logs` sí existe, pero sin esta opción parece vacío.
+          include-hidden-files: true
+          if-no-files-found: error
           retention-days: 7
 
 
@@ -680,7 +690,7 @@ jobs:
         with:
           name: schema-snapshot-actual
           path: /tmp/schema.actual.sql
-          if-no-files-found: warn
+          if-no-files-found: error
           retention-days: 7
 
       - name: Compare against committed baseline
@@ -691,7 +701,7 @@ jobs:
           # committeado, este job avisa y publica el snapshot como artifact en
           # vez de reprobar el pipeline: no hay nada contra qué comparar todavía.
           if [ ! -f "$BASELINE" ]; then
-            echo "::warning::Falta $BASELINE — sembrala con el artifact 'schema-snapshot-actual' de este run (o 'bun run db:baseline:update' con Docker local)."
+            echo "::error::Falta $BASELINE — genera y confirma la baseline antes de continuar."
             {
               echo "## ⚠️ Baseline de esquema ausente (bootstrap)"
               echo ""
@@ -707,7 +717,7 @@ jobs:
               echo 'bun run db:baseline:update'
               echo '```'
             } >> "$GITHUB_STEP_SUMMARY"
-            exit 0
+            exit 1
           fi
           if diff -u "$BASELINE" /tmp/schema.actual.sql > /tmp/schema.diff; then
             echo "✓ El estado final del esquema coincide con la baseline"
@@ -868,7 +878,7 @@ jobs:
               -e 's/^CREATE EXTENSION[[:space:]]+(IF NOT EXISTS[[:space:]]+)?(pg_cron|pg_net|pgmq|supabase_vault)[^;]*;/SELECT 1; -- [ci] stubbed \2/I' \
               "$f" | $PSQL --single-transaction > /tmp/mig.log 2>&1; then
               if printf '%s\n' "$ancladas" | grep -Fxq "$base"; then
-                echo "::notice file=$f::migración anclada por texto (exenta en drift-anclas.txt); su estado final lo garantiza una reaplicación posterior"
+                echo "↷ $base: migración anclada exenta; estado final cubierto por reaplicación posterior"
                 legacy=$((legacy + 1))
                 echo "- \`$base\` (anclada, exenta)" >> /tmp/legacy.md
               elif [[ "${base%%_*}" < "$DRIFT_CORTE" ]]; then
