@@ -36,6 +36,10 @@ export function EmbarqueDetalleTabs({
   // se requiere el el cast doble histórico.
   const { conceptosCosto, documentos, notas, facturas, financials, docHandlers } =
     useEmbarqueDetalleTabsData(embarqueId, embarque);
+  // `created_by_email` no es legible en la tabla `embarques`: viene de la vista
+  // interna (staff), no de la fila de detalle.
+  const { data: interno } = useEmbarqueInterno(embarqueId);
+
 
   return (
     <Tabs value={activeTab} onValueChange={setActiveTab}>
