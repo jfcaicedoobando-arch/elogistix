@@ -3,6 +3,7 @@ import { Pencil } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toTitleCase } from "@/lib/formatters";
 import { useEmbarquesRelacionados } from "@/features/embarques/hooks";
+import { useEmbarqueInterno } from "@/features/embarques/hooks/useEmbarqueInterno";
 import { useFocusSection } from "@/features/embarques/hooks/useFocusSection";
 import type { EmbarqueRow } from "@/features/embarques/hooks";
 import { EstadoProgresoCard } from "./tabResumen/EstadoProgresoCard";
