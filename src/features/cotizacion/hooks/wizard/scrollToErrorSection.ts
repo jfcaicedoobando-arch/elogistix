@@ -71,10 +71,22 @@ export type CampoErrorPaso1 =
   | "prospectoContacto"
   | "modalidadEquipo"
   | "puntoIntermedio"
-  | "tarifaId";
+  | "tarifaId"
+  | "modo"
+  | "tipo"
+  | "incoterm"
+  | "descripcionMercancia"
+  | "origen"
+  | "destino";
 
 export function campoParaErrorPaso1(mensaje: string): CampoErrorPaso1 | null {
   const m = mensaje.toLowerCase();
+  if (m.includes("modo de transporte")) return "modo";
+  if (m.includes("tipo de operación")) return "tipo";
+  if (m.includes("incoterm")) return "incoterm";
+  if (m.includes("descripción de la mercancía")) return "descripcionMercancia";
+  if (m.includes("origen de la ruta")) return "origen";
+  if (m.includes("destino de la ruta")) return "destino";
   if (m.includes("lead") || m.includes("oportunidad")) return "oportunidadId";
   if (m.includes("empresa del prospecto")) return "prospectoEmpresa";
   if (m.includes("contacto del prospecto")) return "prospectoContacto";
@@ -84,3 +96,4 @@ export function campoParaErrorPaso1(mensaje: string): CampoErrorPaso1 | null {
   if (m.includes("tarifa")) return "tarifaId";
   return null;
 }
+
