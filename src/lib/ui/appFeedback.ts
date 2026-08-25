@@ -25,11 +25,12 @@ import { STEP_LABELS } from "@/features/embarques/domain/embarqueWizardSchemas";
 import { buildErrorReport } from "./errorReport";
 import { openErrorReport } from "@/lib/diagnostics/errorDetailsStore";
 import { reportCaughtError } from "@/lib/observability/reportCaughtError";
-import { shouldAttachDetails, buildDetailsAction } from "./appFeedback.details";
+import { shouldAttachDetails } from "./appFeedback.details";
 import { shouldReportToSentry } from "./appFeedback.sentry";
 import { sanitizeToastText } from "./sanitizeToastText";
 import { computeToastDedupeKey, shouldSuppressDuplicateToast } from "./appFeedback.dedupe";
-import type { AnyToastFn, ErrorNotifyOptions, InfoNotifyOptions } from "./appFeedback.types";
+import type { AnyToastFn, ErrorNotifyOptions } from "./appFeedback.types";
+
 
 /** Q-08 · ids de los toasts de error vivos, para poder descartar SÓLO errores
  *  al cambiar de ruta sin borrar confirmaciones de éxito. */
