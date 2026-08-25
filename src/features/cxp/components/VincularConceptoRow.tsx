@@ -48,10 +48,17 @@ export function VincularConceptoRow({
   const cotizadoEnFactura = convertirMonto(it.monto, it.moneda, facturaMoneda, tc);
   const sinTc = !mismaMoneda && cotizadoEnFactura === null;
 
-  const referencia = cotizadoEnFactura ?? it.monto;
-  const excede = checked && lineaExcedeOriginal({ monto: sel.monto, montoOriginal: referencia });
+  const excede =
+    checked &&
+    excedeCotizadoConTc({
+      montoCapturado: Number(sel.monto) || 0,
+      montoCotizado: it.monto,
+      factorDof: factor,
+      mismaMoneda,
+    });
   const implicito = checked && !mismaMoneda ? tcImplicito(Number(sel.monto) || 0, it.monto) : null;
   const desviado = desviacionTcExcedida(implicito, factor);
+
 
   const handleToggle = (v: boolean) => {
     onToggle(it, v);
