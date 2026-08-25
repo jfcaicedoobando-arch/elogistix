@@ -78953,7 +78953,8 @@
       "20260831200100_fix3_portal_rls_eventos_notas.sql",
       "20260831200200_fix3_portal_responder_cas_y_motivo_cap.sql",
       "20260831200300_fix3_portal_solicitar_cotizacion_ratelimit.sql",
-      "20260831200400_fix3_rpcs_anon_ratelimit_y_grants.sql"
+      "20260831200400_fix3_rpcs_anon_ratelimit_y_grants.sql",
+      "20260901000100_r4_replay_avanzar_estado_embarque.sql"
     ]
   }
 }
