@@ -50,5 +50,6 @@ dump | sed -E \
   -e '/^SET /d' \
   -e '/^SELECT pg_catalog\.set_config/d' \
   -e '/^ALTER .* OWNER TO /d' \
+  -e '/^\\(un)?restrict /d' \
   -e '/^[[:space:]]*$/d' \
   > "$OUT"
