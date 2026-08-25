@@ -4087,6 +4087,7 @@ export type Database = {
           rfc_emisor: string | null
           sin_costo_capturado: boolean
           subido_por: string | null
+          subtotal_detectado: number | null
           total_detectado: number | null
           updated_at: string
           uuid_fiscal: string | null
@@ -4121,6 +4122,7 @@ export type Database = {
           rfc_emisor?: string | null
           sin_costo_capturado?: boolean
           subido_por?: string | null
+          subtotal_detectado?: number | null
           total_detectado?: number | null
           updated_at?: string
           uuid_fiscal?: string | null
@@ -4155,6 +4157,7 @@ export type Database = {
           rfc_emisor?: string | null
           sin_costo_capturado?: boolean
           subido_por?: string | null
+          subtotal_detectado?: number | null
           total_detectado?: number | null
           updated_at?: string
           uuid_fiscal?: string | null
@@ -8633,6 +8636,7 @@ export type Database = {
           p_folio_serie?: string
           p_moneda_detectada?: string
           p_rfc_emisor?: string
+          p_subtotal_detectado?: number
           p_total_detectado?: number
           p_uuid_fiscal?: string
           p_xml_hash: string

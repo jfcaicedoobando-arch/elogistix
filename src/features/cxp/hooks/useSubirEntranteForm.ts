@@ -62,8 +62,11 @@ export function useSubirEntranteForm({ organizationId }: Args) {
     try {
       const leido = await extraerCfdiXmlMetaDeArchivo(archivo);
       setMeta(leido);
-      // Prellena el monto con el total del CFDI (el operador puede ajustarlo).
-      if (leido.total != null && leido.total > 0) setMontoDeclarado(leido.total);
+      // v13.744.0 — Prellena con el SUBTOTAL (sin IVA) del CFDI, porque los
+      // costos del ERP se manejan sin impuestos. Si el XML no trae subtotal,
+      // se usa el total como último recurso.
+      const base = leido.subTotal != null && leido.subTotal > 0 ? leido.subTotal : leido.total;
+      if (base != null && base > 0) setMontoDeclarado(base);
       if (leido.moneda) setMonedaDeclarada(leido.moneda);
       const encontrado = leido.rfcEmisor
         ? await findProveedorByRfcEnOrg(leido.rfcEmisor, organizationId)

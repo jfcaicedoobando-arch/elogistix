@@ -18,6 +18,8 @@ export interface FilaBuzon {
   xml_path?: string | null;
   /** v13.398.0 — Importe leído del CFDI/PDF; sin él no se puede priorizar la captura. */
   total_detectado?: number | null;
+  /** v13.744.0 — Subtotal del CFDI (sin IVA): es la cifra que muestra el buzón. */
+  subtotal_detectado?: number | null;
   moneda_detectada?: string | null;
   /** v13.618.0 — Importe que capturó operaciones al subir (documentos sin XML). */
   monto_declarado?: number | null;
@@ -85,18 +87,55 @@ export function entranteSinImporte(row: FilaBuzon): boolean {
   return importeEntrante(row) === null;
 }
 
+export interface ImporteEntranteInfo {
+  monto: number;
+  moneda: string;
+  fuente: "cfdi" | "declarado";
+  /** true = el importe mostrado incluye impuestos (no hay subtotal disponible). */
+  conIva: boolean;
+  /** Total con impuestos del CFDI, cuando se conoce (para el desglose). */
+  totalConIva: number | null;
+}
+
 /**
  * v13.618.0 — Importe del documento con su origen. El CFDI manda; si el
  * proveedor sólo mandó PDF, vale lo que capturó operaciones al subirlo.
+ *
+ * v13.744.0 — Se muestra el SUBTOTAL (sin IVA), porque todos los costos del
+ * ERP se manejan sin IVA. Si el documento es viejo y no tiene subtotal
+ * guardado, se muestra el total y se marca `conIva` para avisarlo.
  */
-export function importeEntrante(
-  row: FilaBuzon,
-): { monto: number; moneda: string; fuente: "cfdi" | "declarado" } | null {
-  const cfdi = Number(row.total_detectado ?? 0);
-  if (cfdi > 0) return { monto: cfdi, moneda: row.moneda_detectada ?? "MXN", fuente: "cfdi" };
+export function importeEntrante(row: FilaBuzon): ImporteEntranteInfo | null {
+  const total = Number(row.total_detectado ?? 0);
+  const totalConIva = total > 0 ? total : null;
+  const subtotal = Number(row.subtotal_detectado ?? 0);
+  if (subtotal > 0) {
+    return {
+      monto: subtotal,
+      moneda: row.moneda_detectada ?? "MXN",
+      fuente: "cfdi",
+      conIva: false,
+      totalConIva,
+    };
+  }
+  if (total > 0) {
+    return {
+      monto: total,
+      moneda: row.moneda_detectada ?? "MXN",
+      fuente: "cfdi",
+      conIva: true,
+      totalConIva,
+    };
+  }
   const declarado = Number(row.monto_declarado ?? 0);
   if (declarado > 0) {
-    return { monto: declarado, moneda: row.moneda_declarada ?? "MXN", fuente: "declarado" };
+    return {
+      monto: declarado,
+      moneda: row.moneda_declarada ?? "MXN",
+      fuente: "declarado",
+      conIva: false,
+      totalConIva: null,
+    };
   }
   return null;
 }

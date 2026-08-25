@@ -18,6 +18,8 @@ export interface CfdiXmlMeta {
   nombreEmisor: string | null;
   folioSerie: string | null;
   total: number | null;
+  /** v13.744.0 — Subtotal (sin IVA): es el importe que el ERP usa como costo. */
+  subTotal: number | null;
   moneda: string | null;
   fechaEmision: string | null;
 }
@@ -28,6 +30,7 @@ export const CFDI_XML_META_VACIO: CfdiXmlMeta = {
   nombreEmisor: null,
   folioSerie: null,
   total: null,
+  subTotal: null,
   moneda: null,
   fechaEmision: null,
 };
@@ -80,6 +83,8 @@ export function extraerCfdiXmlMeta(xmlTexto: string): CfdiXmlMeta {
   const emisor = firstByLocalName(comprobante, "Emisor");
   const timbre = firstByLocalName(doc, "TimbreFiscalDigital");
   const totalRaw = attr(comprobante, "Total") ?? attr(comprobante, "total");
+  const subTotalRaw = attr(comprobante, "SubTotal") ?? attr(comprobante, "subTotal")
+    ?? attr(comprobante, "subtotal");
   const uuid = attr(timbre, "UUID");
 
   return {
@@ -88,6 +93,7 @@ export function extraerCfdiXmlMeta(xmlTexto: string): CfdiXmlMeta {
     nombreEmisor: attr(emisor, "Nombre") ?? attr(emisor, "nombre"),
     folioSerie: armarFolioSerie(comprobante),
     total: totalRaw == null ? null : parseImporteFiscal(totalRaw, 0),
+    subTotal: subTotalRaw == null ? null : parseImporteFiscal(subTotalRaw, 0),
     moneda: (attr(comprobante, "Moneda") ?? attr(comprobante, "moneda"))?.toUpperCase() ?? null,
     fechaEmision: fechaCfdiADia(attr(comprobante, "Fecha") ?? attr(comprobante, "fecha")),
   };

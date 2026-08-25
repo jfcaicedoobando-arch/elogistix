@@ -25,6 +25,8 @@ export interface FacturaEntranteRow {
   proveedor_factura_id: string | null;
   folio_detectado: string | null;
   total_detectado: number | null;
+  /** v13.744.0 — Subtotal del CFDI (sin IVA); es el importe que muestra el buzón. */
+  subtotal_detectado: number | null;
   moneda_detectada: string | null;
   /** v13.503.0 — Monto capturado por operaciones al subir el documento. */
   monto_declarado: number | null;
@@ -55,7 +57,7 @@ export interface FacturaEntranteRow {
 export const SELECT_COLS_ENTRANTES =
   "id, embarque_id, organization_id, archivo_path, archivo_hash, nombre_archivo, nota, estado," +
   " xml_path, xml_nombre, uuid_fiscal, rfc_emisor, folio_serie, fecha_emision," +
-  " proveedor_id, proveedor_factura_id, folio_detectado, total_detectado, moneda_detectada," +
+  " proveedor_id, proveedor_factura_id, folio_detectado, total_detectado, subtotal_detectado, moneda_detectada," +
   " monto_declarado, moneda_declarada, sin_costo_capturado," +
 
   " rechazo_motivo, subido_por, capturado_por, created_at," +

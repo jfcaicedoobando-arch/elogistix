@@ -30,7 +30,10 @@ interface Props {
   moneda: string;
   onMonto: (valor: number | null) => void;
   onMoneda: (valor: string) => void;
-  /** Total leído del CFDI, si el XML lo trae. */
+  /**
+   * Importe de referencia del CFDI: el SUBTOTAL (sin IVA) cuando el XML lo
+   * trae, porque los costos del ERP se manejan sin impuestos.
+   */
   totalCfdi: number | null;
   /** Suma de costos vivos del proveedor por moneda. */
   costeadoPorMoneda: Readonly<Record<string, number>> | null | undefined;
@@ -118,7 +121,7 @@ export function VerificacionMontoEntrante(props: Props) {
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-[1fr_auto]">
         <div className="space-y-1.5">
           <Label htmlFor="entrante-monto">
-            Monto de la factura <span className="text-destructive">*</span>
+            Monto de la factura sin IVA <span className="text-destructive">*</span>
           </Label>
           <MoneyInput
             id="entrante-monto"
@@ -161,11 +164,14 @@ export function VerificacionMontoEntrante(props: Props) {
         </div>
       )}
       {totalCfdi != null && !difiereCfdi && (
-        <p className="text-body-sm text-muted-foreground">Leído del CFDI; puedes ajustarlo si hace falta.</p>
+        <p className="text-body-sm text-muted-foreground">
+          Subtotal sin IVA leído del CFDI; puedes ajustarlo si hace falta.
+        </p>
       )}
       {difiereCfdi && (
         <Aviso tono="alerta" icono={AlertTriangle}>
-          El monto capturado no coincide con el total del CFDI ({formatCurrency(totalCfdi ?? 0, moneda)}).
+          El monto capturado no coincide con el subtotal sin IVA del CFDI (
+          {formatCurrency(totalCfdi ?? 0, moneda)}).
         </Aviso>
       )}
       <MensajeCotejo {...props} />

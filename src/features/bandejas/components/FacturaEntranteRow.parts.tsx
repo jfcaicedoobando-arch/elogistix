@@ -148,13 +148,27 @@ export function ImporteEntrante({
 
   return (
     <div className="w-full shrink-0 text-left md:w-[128px] md:text-right">
-      <p className="truncate text-sm font-semibold tabular-nums">
-        {formatCurrency(importe.monto, importe.moneda)}
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <p className="truncate text-sm font-semibold tabular-nums">
+            {formatCurrency(importe.monto, importe.moneda)}
+          </p>
+        </TooltipTrigger>
+        <TooltipContent className="max-w-xs">
+          {importe.conIva
+            ? "Este documento antiguo sólo tiene el total con impuestos. El costo sin IVA se confirma al capturarlo."
+            : "Importe sin IVA, igual que los costos del embarque."}
+          {importe.totalConIva != null && (
+            <> Total con impuestos del CFDI: {formatCurrency(importe.totalConIva, importe.moneda)}.</>
+          )}
+        </TooltipContent>
+      </Tooltip>
+      <p className="text-label text-muted-foreground">
+        {importe.conIva ? "Total con IVA" : "Sin IVA"}
+        {importe.fuente === "declarado" && " · declarado por operaciones"}
       </p>
-      {importe.fuente === "declarado" && (
-        <p className="text-label text-muted-foreground">Declarado por operaciones</p>
-      )}
     </div>
   );
 }
+
 

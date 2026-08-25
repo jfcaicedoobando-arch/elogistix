@@ -20,17 +20,21 @@ function LineaOrigen({ row }: { row: FacturaEntranteRow }) {
 
 function LineaCfdi({ row }: { row: FacturaEntranteRow }) {
   const total = row.total_detectado;
-  if (!row.folio_serie && total == null) return null;
+  const subtotal = row.subtotal_detectado;
+  if (!row.folio_serie && total == null && subtotal == null) return null;
+  const moneda = row.moneda_detectada ?? "MXN";
   const folio = row.folio_serie ? `Folio proveedor ${row.folio_serie}` : "Sin folio del proveedor";
-  const importe = total == null ? "" : ` · ${formatCurrency(Number(total), row.moneda_detectada ?? "MXN")}`;
-  return <Linea>{folio}{importe}</Linea>;
+  // v13.744.0 — Primero el subtotal (sin IVA), que es el costo del ERP.
+  const sinIva = subtotal == null ? "" : ` · ${formatCurrency(Number(subtotal), moneda)} sin IVA`;
+  const conIva = total == null ? "" : ` · ${formatCurrency(Number(total), moneda)} con IVA`;
+  return <Linea>{folio}{sinIva}{conIva}</Linea>;
 }
 
 function LineaDeclarado({ row }: { row: FacturaEntranteRow }) {
   if (row.monto_declarado == null) return null;
   return (
     <Linea>
-      Monto declarado por operaciones:{" "}
+      Monto declarado por operaciones (sin IVA):{" "}
       {formatCurrency(Number(row.monto_declarado), row.moneda_declarada ?? "MXN")}
     </Linea>
   );

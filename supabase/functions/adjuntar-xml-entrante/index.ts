@@ -100,6 +100,7 @@ Deno.serve(
         p_fecha_emision: servidor.fechaEmision,
         p_total_detectado: servidor.total,
         p_moneda_detectada: servidor.moneda,
+        p_subtotal_detectado: servidor.subtotal,
       });
       if (rpcError) {
         const esPermiso = /LC_FORBIDDEN|LC_NO_AUTORIZADO/.test(rpcError.message);
