@@ -153,7 +153,7 @@ describe("Fase E — eliminar_embarque_completo bloquea por dependencias fiscale
   });
 
   it("otorga EXECUTE sólo a authenticated y service_role", () => {
-    expect(sql).toMatch(
+    expect(grants).toMatch(
       /GRANT EXECUTE ON FUNCTION public\.eliminar_embarque_completo\(uuid\) TO authenticated, service_role/,
     );
   });
