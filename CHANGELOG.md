@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.746.5] - 2026-08-25
+### Lint: reduce complejidad en `scrollToErrorSection.ts`
+- `seccionParaErrorPaso1` se refactoriza a una tabla de búsqueda (`REGLAS_SECCION`) para bajar la complejidad ciclomática por debajo del límite de ESLint (16). Sin cambios de comportamiento.
+
 ## [13.746.4] - 2026-08-25
 ### Suite RLS: sobrecarga duplicada en el buzón CxP
 - Nueva migración espejo `20260901000000_ola_espejo_adjuntar_xml_subtotal.sql`: en base limpia `public.adjuntar_xml_entrante_verificado` quedaba con DOS firmas (11 y 12 args), porque `20260826004000` y `20260831000100` reintroducían la variante sin `p_subtotal_detectado` después de `20260825160948`. Cualquier llamada moría con `function ... is not unique` (guard `fix3_bug18_alta_inicial`).
