@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { calcularSaldoFactura } from "@/lib/financial/saldoFactura";
+import { calcularSaldoFactura, esEstadoSinSaldo } from "@/lib/financial/saldoFactura";
 
 describe("calcularSaldoFactura (canon A1)", () => {
   it("resta pagos y notas de crédito aplicadas", () => {
