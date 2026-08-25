@@ -24,10 +24,44 @@ Suites adicionales:
 - `test_rls_tarifas_y_costeo.sql` — `costeo_rutas`, `costeo_tarifas` (incluye intento de UPDATE cruzado bloqueado y verificación de no fuga de `flete_base`), `proveedor_notas_credito` (monto contable nunca visible), `auditoria_revisiones` (detalle de cumplimiento aislado) (8 aserciones).
 - `test_rls_roles_no_admin.sql` — matriz `{viewer, operador, cliente}` × `{SELECT, INSERT, UPDATE, DELETE}` sobre `facturas`, `pagos_factura`, `embarques`, `cotizaciones` (15 aserciones). Cubre el gap "todas las suites previas solo probaban `admin`".
 
+## Catálogos únicos (no duplicar listas)
+
+| Archivo | Qué centraliza | Consumidores |
+|---|---|---|
+| `_ci_exempt_tables.sql` | Tablas exentas: `sin-rls` y `sin-filtro-tenant` | `_ci_verify_rls.sql`, `test_rls_policy_linter.sql` |
+| `_ci_service_role_only.sql` | Funciones sólo para `service_role` | `_ci_post_migrate.sql`, `_ci_check_service_role_only.sql`, `fix4_service_role_only_grants.sql` |
+| `../_catalogo_columnas_internas.sql` | Columnas internas de `embarques` (PnL/PII) | `_ci_post_migrate.sql`, `fix2_embarques_interno_y_nc.sql`, `embarques_listado_sin_select_estrella.sql` |
+
+Prohibido copiar estas listas dentro de una suite: si se duplican, una columna
+o tabla nueva queda auditada en un archivo y ciega en el otro.
+
+## Fixture compartido
+
+`_helpers.sql` expone `pg_temp.seed_org_pair('PREFIJO')`, que siembra dos
+organizaciones con un admin cada una (y `auth.users` en modo best-effort):
+
+```sql
+DECLARE fx record;
+...
+SELECT * INTO STRICT fx FROM pg_temp.seed_org_pair('SCOPE');
+-- fx.org_a / fx.org_b / fx.admin_a / fx.admin_b
+```
+
+Las suites nuevas deben usarlo en lugar de reescribir el seed a mano.
+
+## Suites disponibles
+
+La lista viva está en `matrix.include[].suites` de
+`.github/workflows/rls-tests.yml`, agrupada en 5 grupos que corren en paralelo
+(`aislamiento`, `financiero`, `operaciones`, `roles`, `costeo`). Un paso del CI
+falla si un archivo `test_rls_*.sql` no está declarado en la matriz, así que
+esa matriz —y no este README— es la fuente de verdad del inventario.
+
 ## CI automatizado
 
-El workflow `.github/workflows/rls-tests.yml` corre las 6 suites en cada
-PR/push que toque `supabase/migrations/**` o `supabase/tests/rls/**`.
+El workflow `.github/workflows/rls-tests.yml` corre TODAS las suites (hoy 34)
+en cada PR/push que toque `supabase/migrations/**`, `supabase/tests/**` o
+`supabase/schema/**`.
 
 Flujo:
 
