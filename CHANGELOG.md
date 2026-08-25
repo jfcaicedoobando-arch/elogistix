@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.743.1] - 2026-08-25
+### CI: candado service_role-only sincronizado
+- `supabase/tests/rls/_ci_service_role_only.sql` no incluía `public.handle_new_user_signup()`, que sí trae su `REVOKE` en migración. El candado bidireccional fallaba con "faltan en _ci_service_role_only.sql". Se añadió a la lista canónica.
+
 ## [13.743.0] - 2026-08-25
 ### Guards SQL: manifiesto, paralelización y suites huérfanas
 - **Suites huérfanas detectadas (cobertura ficticia)**: 13 archivos `supabase/tests/*.sql` existían en el repo pero **ningún workflow los ejecutaba** (`ola4_n24_n27`, `validar_cierre_umbral_por_moneda`, `embarques_listado_sin_select_estrella`, etc.). Ahora corren en `supabase/tests/_guards_manifest_radar.txt` en modo aviso (`continue-on-error`) hasta estabilizarse.

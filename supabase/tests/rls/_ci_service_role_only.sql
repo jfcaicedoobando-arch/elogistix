@@ -47,6 +47,8 @@ INSERT INTO _ci_service_role_only (fn) VALUES
   ('public.delete_email(text, bigint)'),
   ('public.email_send_log_touch(text, text, text, text, text)'),
   ('public.enqueue_email(text, jsonb)'),
+  -- Función trigger de auth.users: la ejecuta el trigger, nunca un cliente.
+  ('public.handle_new_user_signup()'),
   ('public.marcar_facturas_vencidas()'),
   ('public.move_to_dlq(text, text, bigint, jsonb)'),
   ('public.nc_aplicadas_en_moneda_factura(uuid)'),
