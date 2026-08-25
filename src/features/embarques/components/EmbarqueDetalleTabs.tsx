@@ -166,7 +166,7 @@ export function EmbarqueDetalleTabs({
           notas={notas}
           embarqueId={embarqueId}
           expediente={embarque.expediente}
-          creadoPor={embarque.created_by_email ?? null}
+          creadoPor={interno?.created_by_email ?? null}
           creadoEn={embarque.created_at}
         />
       </TabsContent>
