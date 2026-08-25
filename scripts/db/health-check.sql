@@ -91,12 +91,16 @@ from conteos c
 order by c.n_huerfanas desc, c.n_filas desc;
 
 -- Verificación adicional: snapshot diario presente para hoy
+-- FIX4 (P3): auditoria_snapshots ya no publica
+-- total_embarques/total_facturas/total_proformas; las columnas actuales son
+-- total_hallazgos/total_pendientes/criticos/altos/medios/score.
 select
   o.nombre as organizacion,
   s.fecha,
-  s.total_embarques,
-  s.total_facturas,
-  s.total_proformas,
+  s.total_hallazgos,
+  s.total_pendientes,
+  s.criticos,
+  s.score,
   case when s.fecha is null then '🚨 falta snapshot hoy' else '✅' end as estado
 from organizations o
 left join auditoria_snapshots s

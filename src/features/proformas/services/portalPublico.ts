@@ -21,10 +21,19 @@ export interface PortalProformaData {
   numero: string | null;
   cliente_nombre: string | null;
   expediente: string | null;
+  /** Claves legacy singulares derivadas en el backend (MXN si subtotal_mxn>0
+   *  o ambos cero; si no, USD). Se conservan por compat con el front publicado. */
   moneda: string | null;
   subtotal: number | null;
   iva: number | null;
   total: number | null;
+  /** Juegos duales multimoneda (fuente de verdad tras FIX4 N-2). */
+  subtotal_mxn: number | null;
+  iva_mxn: number | null;
+  total_mxn: number | null;
+  subtotal_usd: number | null;
+  iva_usd: number | null;
+  total_usd: number | null;
   estado_cliente: "pendiente" | "aceptada" | "rechazada";
   aceptada_at: string | null;
   rechazada_at: string | null;
