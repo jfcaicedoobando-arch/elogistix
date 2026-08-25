@@ -1,22 +1,17 @@
 {
-  "version": "13.739.3",
-  "generatedAt": "2026-08-25T00:14:35.794Z",
+  "version": "13.740.0",
+  "generatedAt": "2026-08-25T01:04:28.586Z",
   "arch": {
     "hooksContextsDirectImports": [],
     "componentsPagesDirectImports": [],
-    "oversized": [
-      {
-        "file": "src/lib/ui/appFeedback.ts",
-        "lines": 213
-      }
-    ]
+    "oversized": []
   },
   "casts": {
-    "total": 3146,
+    "total": 3149,
     "bySeverity": {
       "SAFE": 933,
       "LOW": 145,
-      "MEDIUM": 2068,
+      "MEDIUM": 2071,
       "HIGH": 0,
       "CRITICAL": 0
     },
