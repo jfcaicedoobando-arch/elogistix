@@ -41,7 +41,7 @@ BEGIN
     (v_org, v_fac, 'NC-UUID-001', 'Otro', 'Prueba BUG-05', 500, 'MXN', 'Borrador')
   RETURNING id INTO v_nc1;
 
-  UPDATE public.factura_notas_credito SET estado = 'Aprobada' WHERE id = v_nc1;
+  -- Canon vigente: Borrador -> Timbrada (el paso por 'Aprobada' es legado).
   UPDATE public.factura_notas_credito
      SET estado = 'Timbrada', uuid_fiscal = 'AAAAAAAA-BBBB-CCCC-DDDD-EEEEEEEEEEE1'
    WHERE id = v_nc1;
