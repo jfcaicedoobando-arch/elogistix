@@ -81088,6 +81088,7 @@
       "20260825000900_bl17_comision_nota_tc_requeridos.sql",
       "20260825001000_bl18_cobro_lote_locks_deterministas.sql",
       "20260825001403_0b1c26dd-586b-4497-aafe-bc2ebdb84c35.sql",
+      "20260825001504_c0d4a5d0-10ef-4c90-864a-88fb87e32c20.sql",
       "20260826000100_bug11_cotizacion_totales_moneda_no_soportada.sql",
       "20260826000200_bug13_validar_cierre_umbral_por_moneda.sql",
       "20260826000300_bug17_totales_renglon_consolidados.sql",
