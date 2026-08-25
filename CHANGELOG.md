@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.745.0] - 2026-08-25
+### CxP: conciliar costos en USD contra facturas en MXN
+- En el paso 3 de "Capturar factura de proveedor" los importes vinculados se capturan SIEMPRE en la moneda de la factura.
+- Un costo cotizado en otra moneda muestra su equivalencia con el T/C DOF de la fecha de emisión (p. ej. 51.00 USD ≈ 872.57 MXN) y se prellena ya convertido al marcarlo.
+- Se muestra el T/C implícito de lo capturado y un aviso ámbar si se desvía más de 2% del DOF.
+- Sin T/C DOF del día, el concepto en otra moneda queda bloqueado con instrucción de registrar el tipo de cambio, en lugar de mezclar monedas y generar ajustes de costo espurios.
+
 ## [13.744.0] - 2026-08-25
 ### Buzón CxP: importes sin IVA
 - El buzón de facturas de proveedor ahora muestra el **subtotal (sin IVA)** del CFDI, alineado con los costos del ERP; el total con impuestos queda en el tooltip.
