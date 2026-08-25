@@ -118,3 +118,48 @@ BEGIN
   RETURN QUERY SELECT o_a, o_b, u_a, u_b;
 END;
 $$;
+
+-- ============================================================================
+-- Contador de skips (v13.743.0).
+--
+-- Varias suites saltan aserciones cuando la policy/tabla no existe todavía
+-- (`IF EXISTS … THEN … END IF`). Sin contarlos, una suite podía quedar en verde
+-- habiendo verificado 0 cosas. Uso:
+--
+--   PERFORM pg_temp.skip('policy X no existe en este esquema');
+--   ...
+--   PERFORM pg_temp.assert_max_skips(2);  -- al final de la suite
+--
+-- `assert_max_skips` imprime los motivos y aborta si se excede el umbral.
+-- ============================================================================
+CREATE UNLOGGED TABLE IF NOT EXISTS pg_temp.skips_registrados (
+  id     serial PRIMARY KEY,
+  motivo text NOT NULL
+);
+
+CREATE OR REPLACE FUNCTION pg_temp.skip(_motivo text) RETURNS void
+LANGUAGE plpgsql AS $$
+BEGIN
+  INSERT INTO pg_temp.skips_registrados(motivo) VALUES (_motivo);
+  RAISE NOTICE 'SKIP: %', _motivo;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION pg_temp.assert_max_skips(_maximo integer DEFAULT 0)
+RETURNS void LANGUAGE plpgsql AS $$
+DECLARE
+  v_total   integer;
+  v_motivos text;
+BEGIN
+  SELECT count(*), coalesce(string_agg(motivo, ' | '), '')
+    INTO v_total, v_motivos
+    FROM pg_temp.skips_registrados;
+
+  RAISE NOTICE 'Skips registrados: % (umbral %)', v_total, _maximo;
+
+  IF v_total > _maximo THEN
+    RAISE EXCEPTION 'RLS TEST FAIL: % aserciones saltadas (umbral %): %',
+      v_total, _maximo, v_motivos;
+  END IF;
+END;
+$$;
