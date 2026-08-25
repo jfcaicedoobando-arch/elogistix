@@ -22,7 +22,7 @@ BEGIN
   VALUES (v_org, 'CLIENTE NC UUID', '') RETURNING id INTO v_cli;
 
   INSERT INTO public.embarques (organization_id, cliente_id, expediente, modo, tipo)
-  VALUES (v_org, v_cli, 'ELIMP0NC01', 'Marítimo'::public.modo_transporte,
+  VALUES (v_org, v_cli, 'ELIMP00901', 'Marítimo'::public.modo_transporte,
           'Importación'::public.tipo_operacion)
   RETURNING id INTO v_emb;
 

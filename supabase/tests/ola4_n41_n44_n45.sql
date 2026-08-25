@@ -35,7 +35,7 @@ BEGIN
   ON CONFLICT (id) DO NOTHING;
   INSERT INTO public.organization_members (organization_id, user_id, role)
   VALUES (v_org, v_uid, 'admin') ON CONFLICT DO NOTHING;
-  INSERT INTO public.user_roles (user_id, role) VALUES (v_uid, 'admin')
+  INSERT INTO public.user_roles (user_id, role) VALUES (v_uid, 'admin_org')
   ON CONFLICT DO NOTHING;
 
   INSERT INTO public.clientes (id, organization_id, nombre, rfc, email)
