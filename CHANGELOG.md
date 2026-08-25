@@ -1,6 +1,15 @@
 # Changelog
 
+## [13.741.1] - 2026-08-25
+### Limpieza de la suite de pruebas (hallazgos restantes)
+- **Tests "acta de nacimiento" eliminados** (tautológicos: sólo comprobaban que existiera una migración histórica e inmutable): `rep-guard-hotfix-migration.test.ts`, `revincular-backfill-solo-1a1.test.ts`, `consolidar-proformas-repunta-conceptos.test.ts`.
+- **Ratchets de estructura consolidados**: los 4 archivos de olas cerradas (`fase3-4-reubicaciones`, `fase4-naming-camelcase`, `facturacion-fusion`, `admin-configuracion-cycle`) se fusionaron en un único `src/__tests__/architecture/estructura-legacy-ratchet.test.ts` con una sola lista de paths/imports prohibidos. No se pierde ninguna aserción (incluye las 4 cards de `orgDetalle`, el ciclo admin ↔ configuracion y las query keys unificadas de facturación).
+- **Nombres por comportamiento, no por ticket**: `useNuevaFacturaProveedorForm.{dup,fe06,emision}` → `{duplicados,validacionesMontos,validacionesFecha}`; `vsReal.faseJ` → `vsReal.derivados`; `roleHierarchy.extra` → `roleHierarchy.bordes`; `useMutationWithFeedback.{migration-ola1,migration-ola1-batch2}` → `{notificaciones,consumidores}`.
+- **Docstring desalineado**: `facturapi-multi-tenant.test.ts` decía "las 4 edge functions" cuando valida 6.
+- Verificado: 66 archivos / 417 tests afectados en verde.
+
 ## [13.741.0] - 2026-08-25
+
 ### Limpieza de la suite de pruebas (auditoría de tests)
 - **Guardrail con falso positivo (crítico)**: `eliminar-embarque-bloqueado-fiscal.test.ts` concatenaba TODAS las definiciones históricas de `eliminar_embarque_completo` encontradas en `supabase/migrations`, así que pasaba aunque la versión vigente hubiera perdido una guarda (bastaba con que una migración vieja la tuviera). Ahora extrae sólo la ÚLTIMA definición, respetando la etiqueta de dollar-quoting (`$$` vs `$function$` — el extractor anterior se derramaba hacia funciones vecinas), y los `GRANT` se buscan aparte porque sobreviven al `CREATE OR REPLACE`. Aserciones realineadas con la versión vigente (CxP se cuenta por `deleted_at IS NULL`; el `UPDATE public.cotizaciones` es multilínea).
 - **Canary de PDF duplicado**: eliminado `src/pdf/render/__tests__/pdfRenderLeak.test.tsx` — medía exactamente lo mismo que `src/test/canaries/pdfLeak.test.tsx` (200 render+unmount, umbral 50 MB) y gastaba ~9 s de CI. Se conserva el canary con `cleanup()` en `finally`.
