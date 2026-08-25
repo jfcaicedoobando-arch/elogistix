@@ -1,6 +1,12 @@
 # Changelog
 
+## [13.743.9] - 2026-08-25
+### CI: candado de notas de crédito ignoraba facturas en papelera
+- `public.assert_nc_no_excede_saldo` ahora omite la validación cuando la factura padre está borrada (`deleted_at IS NOT NULL`): al devolver `saldo_factura_bruto = 0` para facturas en papelera, el candado abortaba con `LC_NC_EXCEDE_SALDO`. Corrige `test_rls_soft_delete_reportes`.
+- Suite RLS completa verde en base limpia: 36 suites + `_ci_post_migrate` / `_ci_verify_rls` / `_ci_roles` / `service_role_only`.
+
 ## [13.743.8] - 2026-08-25
+
 ### CI: notas de crédito sobre facturas borradas fallaban con `LC_NC_SIN_TC`
 - `public.saldo_factura_bruto` devolvía `NULL` cuando la factura estaba borrada o en estado no cobrable; el guard fail-closed de notas de crédito interpretaba ese `NULL` como "sin tipo de cambio" y abortaba. Ahora devuelve `0` en ese caso, igual que `public.saldo_factura`. Corrige la suite `test_rls_soft_delete_reportes`.
 - `migration-manifest.json` regenerado (1084 migraciones).
