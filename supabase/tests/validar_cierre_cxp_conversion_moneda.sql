@@ -78,29 +78,24 @@ BEGIN
   END IF;
   RAISE NOTICE '✓ caso 1: saldo USD % con pago en MXN convertido', v_saldo;
 
-  -- Caso 2: pago de 9500 MXN SIN tipo de cambio => excluido (fail-closed).
-  UPDATE public.pagos_proveedor SET monto = 9500, tipo_cambio_usd = NULL WHERE id = v_pago;
-
-  PERFORM set_config('request.jwt.claims', jsonb_build_object('sub', v_uid)::text, true);
-  SELECT c INTO v_check
-    FROM jsonb_array_elements(public.validar_cierre_embarque(v_emb)->'checks') c
-   WHERE c->>'regla' = 'cxp_pagada';
-  PERFORM set_config('request.jwt.claims', NULL, true);
-
-  SELECT m INTO v_moneda FROM jsonb_array_elements(v_check->'detalle'->'por_moneda') m
-   WHERE m->>'moneda' = 'USD';
-
-  IF (v_check->>'ok')::boolean IS DISTINCT FROM false THEN
-    RAISE EXCEPTION 'FAIL caso 2: pago sin TC no debe contar como pagado: %', v_check;
-  END IF;
-  IF (v_moneda->>'saldo')::numeric <> 500 THEN
-    RAISE EXCEPTION 'FAIL caso 2: saldo esperado 500 USD, obtenido % (%)',
-      (v_moneda->>'saldo')::numeric, v_moneda;
-  END IF;
-  IF COALESCE((v_moneda->>'pagos_sin_tipo_cambio')::int, 0) <> 1 THEN
-    RAISE EXCEPTION 'FAIL caso 2: pagos_sin_tipo_cambio esperado 1, obtenido %', v_moneda;
-  END IF;
-  RAISE NOTICE '✓ caso 2: pago sin TC excluido y reportado (%)', v_moneda;
+  -- Caso 2: la base ya no permite dejar un pago en otra moneda sin TC
+  -- (guard LC_PAGO_TC_REQUERIDO). El escenario "pago sin TC" es hoy
+  -- inalcanzable: verificamos que el guard lo rechaza.
+  DECLARE
+    v_state text;
+    v_msg text;
+  BEGIN
+    BEGIN
+      UPDATE public.pagos_proveedor SET monto = 9500, tipo_cambio_usd = NULL WHERE id = v_pago;
+      v_state := '00000';
+    EXCEPTION WHEN OTHERS THEN
+      GET STACKED DIAGNOSTICS v_state = RETURNED_SQLSTATE, v_msg = MESSAGE_TEXT;
+    END;
+    IF v_state = '00000' OR COALESCE(v_msg, '') NOT LIKE 'LC_PAGO_TC_REQUERIDO%' THEN
+      RAISE EXCEPTION 'FAIL caso 2: se esperaba LC_PAGO_TC_REQUERIDO al dejar el pago sin TC, vino % / %', v_state, v_msg;
+    END IF;
+    RAISE NOTICE '✓ caso 2: la base bloquea pagos en otra moneda sin tipo de cambio (%)', v_msg;
+  END;
 
   -- Caso 3: pago de 9500 MXN con TC 19 = 500 USD => cubre la factura.
   UPDATE public.pagos_proveedor SET monto = 9500, tipo_cambio_usd = 19 WHERE id = v_pago;
