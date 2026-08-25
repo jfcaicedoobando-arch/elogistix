@@ -109,10 +109,10 @@ BEGIN
     (o_a, _prefijo || ' A'), (o_b, _prefijo || ' B');
 
   INSERT INTO public.organization_members(organization_id, user_id, role) VALUES
-    (o_a, u_a, _rol::text::app_role), (o_b, u_b, _rol::text::app_role);
+    (o_a, u_a, _rol::app_role), (o_b, u_b, _rol::app_role);
 
   INSERT INTO public.user_roles(user_id, role) VALUES
-    (u_a, _rol::text::app_role), (u_b, _rol::text::app_role)
+    (u_a, _rol::app_role), (u_b, _rol::app_role)
   ON CONFLICT (user_id) DO UPDATE SET role = EXCLUDED.role;
 
   RETURN QUERY SELECT o_a, o_b, u_a, u_b;
