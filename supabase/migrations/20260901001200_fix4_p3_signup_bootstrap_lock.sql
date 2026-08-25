@@ -66,3 +66,9 @@ END $function$;
 
 -- Sin cambios de GRANT/REVOKE: CREATE OR REPLACE preserva las ACLs vigentes
 -- y la función la invoca el trigger de auth.users, no roles de la API.
+
+-- H6: ACLs explícitas. La función sólo la invoca el trigger de auth.users
+-- (SECURITY DEFINER); ningún rol de la API debe poder llamarla directamente.
+REVOKE ALL ON FUNCTION public.handle_new_user_signup() FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.handle_new_user_signup() FROM anon;
+GRANT EXECUTE ON FUNCTION public.handle_new_user_signup() TO service_role;

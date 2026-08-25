@@ -100,3 +100,8 @@ END;
 $function$
 
 ;
+
+-- H6: ACLs explícitas (idempotentes) para que el replay no dependa del estado previo.
+REVOKE ALL ON FUNCTION public.avanzar_estado_embarque(uuid, text, text, text, text, uuid) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.avanzar_estado_embarque(uuid, text, text, text, text, uuid) FROM anon;
+GRANT EXECUTE ON FUNCTION public.avanzar_estado_embarque(uuid, text, text, text, text, uuid) TO authenticated, service_role;
