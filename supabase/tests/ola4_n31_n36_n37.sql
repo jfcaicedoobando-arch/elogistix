@@ -74,18 +74,20 @@ BEGIN
   ON CONFLICT (id) DO NOTHING;
 
   INSERT INTO public.facturas (
-    id, organization_id, cliente_id, embarque_id, serie, folio, moneda,
-    tipo_cambio_usd, subtotal, iva, total, estado
+    id, organization_id, cliente_id, embarque_id, serie, numero, moneda,
+    tipo_cambio, subtotal, iva, total, estado
   ) VALUES (
     'c2222222-2222-2222-2222-222222222222', v_org, v_cliente, v_embarque,
-    'A', 1, 'MXN'::public.moneda, 0, 100, 0, 100, 'Cancelada'
+    'A', 'A-1', 'MXN'::public.moneda, 1, 100, 0, 100, 'Cancelada'
   ) ON CONFLICT (id) DO NOTHING;
 
   INSERT INTO public.proformas (
-    id, organization_id, embarque_id, numero, estado_proforma, factura_id
+    id, organization_id, embarque_id, numero, cliente_id, cliente_nombre,
+    expediente, estado_proforma, factura_id
   ) VALUES (
     'c1234567-1234-1234-1234-123456789012', v_org, v_embarque, 'PRO-OLA4-N37',
-    'enviada', 'c2222222-2222-2222-2222-222222222222'
+    v_cliente, 'Cliente Ola4 C', 'ELOLC001',
+    'pendiente', 'c2222222-2222-2222-2222-222222222222'
   ) ON CONFLICT (id) DO NOTHING;
 
   PERFORM set_config('request.jwt.claims', jsonb_build_object('sub', v_uid)::text, true);

@@ -1,5 +1,15 @@
 # Changelog
 
+## [13.743.5] - 2026-08-25
+### CI: siete guards conductuales apuntaban a un esquema ya evolucionado
+- Expedientes de fixture (`ELCM00001`, `ELCC00001`, `ELIMP0NC01`) violaban `embarques_expediente_formato_valido` (`EL` + 3 letras + dígitos): ahora usan folios válidos.
+- `ola4_n24_n27`: `provision_organization` exige `auth.uid()` con `super_admin`, y `user_roles` se sincroniza con la membresía, así que un miembro no puede portarlo. El caso ahora usa un super admin de plataforma sin membresía como caller.
+- `ola4_n31_n36_n37`: `facturas` ya no tiene `folio`/`tipo_cambio_usd` (usa `numero`/`tipo_cambio`, TC > 0) y `proformas` exige `cliente_id`, `cliente_nombre`, `expediente` con `estado_proforma IN ('pendiente','facturada')`.
+- `ola4_n41_n44_n45`: rol legacy `admin` bloqueado (`admin_org`), `estado_proveedor_factura` sin `Aprobada` (`Vigente`), `facturas.organization_id` obligatorio y `cartera_pendiente()` expone `factura_id`, no `id`.
+- `ola4_n48_n52_n53`: `cotizaciones` exige `organization_id` y `reactivar_cotizacion_rpc` requiere `conceptos_venta` con importes (`LC_COTIZACION_SIN_IMPORTES`).
+- `nc_cliente_transicion_uuid_fiscal`: el canon vigente es `Borrador → Timbrada`; se retiró el paso legado por `Aprobada`.
+- `validar_cierre_cxp_conversion_moneda`: el CASO 2 dejaba un pago sin TC, hoy imposible por `LC_PAGO_TC_REQUERIDO`; ahora congela ese bloqueo de base.
+
 ## [13.743.4] - 2026-08-25
 ### CI: tres guards conductuales congelaban expectativas obsoletas
 - `fix_b4_nc_reduce_comision`: el CASO 3 reutilizaba el embarque del CASO 1/2, así que el prorrateo repartía la utilidad entre tres facturas y la comisión plena daba 24.00 en vez de 40.00. Ahora el caso siembra su propio embarque (venta 1000 − costo 600) y mide sólo el tope por nota de crédito.

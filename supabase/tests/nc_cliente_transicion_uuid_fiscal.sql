@@ -22,7 +22,7 @@ BEGIN
   VALUES (v_org, 'CLIENTE NC UUID', '') RETURNING id INTO v_cli;
 
   INSERT INTO public.embarques (organization_id, cliente_id, expediente, modo, tipo)
-  VALUES (v_org, v_cli, 'ELIMP0NC01', 'Marítimo'::public.modo_transporte,
+  VALUES (v_org, v_cli, 'ELIMP00901', 'Marítimo'::public.modo_transporte,
           'Importación'::public.tipo_operacion)
   RETURNING id INTO v_emb;
 
@@ -41,7 +41,7 @@ BEGIN
     (v_org, v_fac, 'NC-UUID-001', 'Otro', 'Prueba BUG-05', 500, 'MXN', 'Borrador')
   RETURNING id INTO v_nc1;
 
-  UPDATE public.factura_notas_credito SET estado = 'Aprobada' WHERE id = v_nc1;
+  -- Canon vigente: Borrador -> Timbrada (el paso por 'Aprobada' es legado).
   UPDATE public.factura_notas_credito
      SET estado = 'Timbrada', uuid_fiscal = 'AAAAAAAA-BBBB-CCCC-DDDD-EEEEEEEEEEE1'
    WHERE id = v_nc1;

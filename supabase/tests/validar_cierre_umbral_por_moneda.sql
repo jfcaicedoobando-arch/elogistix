@@ -34,7 +34,7 @@ BEGIN
   VALUES (v_org, 'CLIENTE CIERRE MONEDA', '') RETURNING id INTO v_cli;
 
   INSERT INTO public.embarques (organization_id, cliente_id, expediente, modo, tipo)
-  VALUES (v_org, v_cli, 'ELCM00001', 'Aéreo'::public.modo_transporte,
+  VALUES (v_org, v_cli, 'ELCMX00001', 'Aéreo'::public.modo_transporte,
           'Importación'::public.tipo_operacion)
   RETURNING id INTO v_emb;
 
