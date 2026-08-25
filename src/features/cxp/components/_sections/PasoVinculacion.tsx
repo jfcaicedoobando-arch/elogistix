@@ -83,6 +83,7 @@ export function PasoVinculacion({
         tope={ctl.topeVinculacion}
         embarqueIdPrioritario={entrante?.embarqueId ?? null}
         expedientePrioritario={entrante?.expediente ?? null}
+        fechaEmision={ctl.values.emision}
       />
 
       <ResumenCapturaFactura

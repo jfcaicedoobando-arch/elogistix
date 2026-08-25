@@ -29,6 +29,8 @@ import {
 } from "./vincularEmbarqueHelpers";
 
 import type { SeleccionLinea } from "@/features/cxp/types";
+import { useTcDofPorFecha } from "@/features/catalogos/hooks/useTcDofPorFecha";
+import type { TcPivote } from "@/features/cxp/utils/vinculoMoneda";
 
 
 interface Props {
@@ -53,6 +55,8 @@ interface Props {
   /** v13.510.0 — Embarque que originó el documento del buzón (se prioriza). */
   embarqueIdPrioritario?: string | null;
   expedientePrioritario?: string | null;
+  /** Fecha de emisión de la factura: define el T/C DOF de conversión. */
+  fechaEmision?: string | null;
 }
 
 
@@ -60,9 +64,15 @@ export function VincularEmbarqueSection({
   proveedorId, proveedorNombre, organizationId, seleccion, onToggle, onChangeMonto,
   onAplicarSugerencias, facturaDescripcion, facturaMonto, facturaMoneda,
   embarqueAdHoc, onEmbarqueAdHoc, tope,
-  embarqueIdPrioritario, expedientePrioritario,
+  embarqueIdPrioritario, expedientePrioritario, fechaEmision,
 }: Props) {
   const { data, isLoading } = useConceptosCostoAbiertos(proveedorId, organizationId);
+  // Conciliación multi-moneda: el T/C DOF de la fecha de emisión convierte los
+  // costos cotizados en otra moneda a la moneda de la factura.
+  const { data: tcDof } = useTcDofPorFecha(fechaEmision ?? null, !!fechaEmision);
+  const tc: TcPivote | null = tcDof
+    ? { usdMxn: tcDof.usdMxn, eurMxn: tcDof.eurMxn }
+    : null;
   const grupos = useMemo(() => agruparPorEmbarque(data ?? []), [data]);
   const [ultimaSugerencia, setUltimaSugerencia] = useState<SugerenciaVinculo[] | null>(null);
   const [filtro, setFiltro] = useState<string>("");
@@ -173,6 +183,9 @@ export function VincularEmbarqueSection({
           onChangeMonto={onChangeMonto}
           embarqueIdPrioritario={embarqueIdPrioritario}
           expedientePrioritario={expedientePrioritario}
+          facturaMoneda={facturaMoneda ?? "MXN"}
+          tc={tc}
+          tcFecha={tcDof?.fecha ?? null}
         />
       </div>
 
