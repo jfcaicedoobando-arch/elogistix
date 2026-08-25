@@ -1,16 +1,12 @@
--- Fuente canónica de public.adjuntar_xml_entrante_verificado(...) — Ola 5 · O5.8 (BUG-18).
--- Sólo la edge function `adjuntar-xml-entrante` (service_role) puede ejecutarla:
--- ella descarga el XML de Storage, verifica el hash y RE-PARSEA los metadatos
--- server-side antes de escribirlos. La variante vieja
--- `adjuntar_xml_factura_entrante(...)` deja de estar disponible para
--- `authenticated`, de modo que un cliente ya no puede declarar metadatos
--- fiscales de otro CFDI.
--- FIX3 (tanda 3): el UPDATE sella metadatos_verificados=true y la RPC levanta
--- la GUC transaccional `app.entrante_xml_verificado` (extensión de la
--- verificación server-side al alta inicial del buzón).
--- Al modificar: edita ESTE archivo y genera la migración con el mismo cuerpo.
--- v13.746.4: firma vigente de 12 args (incluye p_subtotal_detectado, sin IVA);
--- la sobrecarga de 11 args quedó eliminada en 20260901000000.
+-- Espejo de replay (v13.746.4): la RPC pública
+-- public.adjuntar_xml_entrante_verificado quedó con DOS sobrecargas al aplicar
+-- las migraciones en base limpia — la variante de 11 args (sin
+-- p_subtotal_detectado) la reintroducen 20260826004000 y 20260831000100, cuyo
+-- timestamp es POSTERIOR al de 20260825160948 (que agregó el subtotal y dropeó
+-- la vieja). Resultado: `function ... is not unique` en cualquier llamada.
+-- Aquí se re-emite el cuerpo vigente (12 args, con subtotal sin IVA), se elimina
+-- la sobrecarga legacy y se restaura la postura service_role-only.
+-- Contenido idéntico al espejo supabase/schema/cxp/adjuntar_xml_entrante_verificado.sql.
 
 CREATE OR REPLACE FUNCTION public.adjuntar_xml_entrante_verificado(p_documento_id uuid, p_actor uuid, p_xml_path text, p_xml_nombre text, p_xml_hash text, p_uuid_fiscal text DEFAULT NULL::text, p_rfc_emisor text DEFAULT NULL::text, p_folio_serie text DEFAULT NULL::text, p_fecha_emision date DEFAULT NULL::date, p_total_detectado numeric DEFAULT NULL::numeric, p_moneda_detectada text DEFAULT NULL::text, p_subtotal_detectado numeric DEFAULT NULL::numeric)
  RETURNS void
@@ -101,11 +97,9 @@ END;
 $function$;
 
 
+DROP FUNCTION IF EXISTS public.adjuntar_xml_entrante_verificado(uuid, uuid, text, text, text, text, text, text, date, numeric, text);
+
 REVOKE ALL ON FUNCTION public.adjuntar_xml_entrante_verificado(uuid, uuid, text, text, text, text, text, text, date, numeric, text, numeric) FROM PUBLIC;
 REVOKE ALL ON FUNCTION public.adjuntar_xml_entrante_verificado(uuid, uuid, text, text, text, text, text, text, date, numeric, text, numeric) FROM anon;
 REVOKE ALL ON FUNCTION public.adjuntar_xml_entrante_verificado(uuid, uuid, text, text, text, text, text, text, date, numeric, text, numeric) FROM authenticated;
 GRANT EXECUTE ON FUNCTION public.adjuntar_xml_entrante_verificado(uuid, uuid, text, text, text, text, text, text, date, numeric, text, numeric) TO service_role;
-
--- BUG-18: cierre del vector. El cliente ya no puede escribir metadatos fiscales
--- directamente; debe pasar por la edge function que re-parsea el XML.
-REVOKE EXECUTE ON FUNCTION public.adjuntar_xml_factura_entrante(uuid, text, text, text, text, text, text, date, numeric, text) FROM authenticated;
