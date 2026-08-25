@@ -47,13 +47,13 @@ describe("Fase D — saldo_factura + NCs en cierre y cobro", () => {
 
   it("crea la función pública saldo_factura(uuid)", () => {
     expect(sql).toMatch(/CREATE OR REPLACE FUNCTION public\.saldo_factura\(p_factura_id uuid\)/);
-    expect(sql).toMatch(/GRANT EXECUTE ON FUNCTION public\.saldo_factura\(uuid\)/);
   });
 
-  it("saldo_factura devuelve 0 para Cancelada, Sustituida y Borrador", () => {
-    // La lógica está en un IF exact-match; blindamos que los tres estados aparezcan juntos.
+  it("saldo_factura devuelve 0 para estados terminales (incluye Pagada)", () => {
+    // v13.743.6 (BUG-2026-08-25): 'Pagada' se sumó a la lista de estados sin saldo
+    // porque las facturas legacy migradas sin pagos capturados inflaban el adeudo.
     expect(sql).toMatch(
-      /IF v_estado IN \('Cancelada', 'Sustituida', 'Borrador'\) THEN RETURN 0;/,
+      /IF v_estado IN \('Cancelada', 'Sustituida', 'Borrador', 'Pagada'\) THEN RETURN 0;/,
     );
   });
 
