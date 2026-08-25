@@ -37,16 +37,29 @@ const num = (v: unknown): number => {
   return Number.isFinite(n) ? n : 0;
 };
 
+/** Estados en los que la factura NO puede tener saldo por cobrar. */
+export const ESTADOS_SIN_SALDO = [
+  "Pagada",
+  "Cancelada",
+  "Sustituida",
+  "Borrador",
+] as const;
+
+export function esEstadoSinSaldo(estado?: string | null): boolean {
+  return !!estado && (ESTADOS_SIN_SALDO as readonly string[]).includes(estado);
+}
+
 export function calcularSaldoFactura(
   total: number,
   pagos: readonly PagoAplicadoLike[] = [],
   notasCredito: readonly NotaCreditoAplicadaLike[] = [],
+  estadoFactura?: string | null,
 ): SaldoFactura {
   const totalFactura = num(total);
   const pagado = sumarMontos(pagos.map((p) => num(p.monto_aplicado_factura)));
   const nc = sumarMontos(notasCredito.map((n) => num(n.monto)));
   const bruto = sumarMontos([totalFactura, -pagado, -nc]);
-  const saldo = bruto > 0 ? bruto : 0;
+  const saldo = esEstadoSinSaldo(estadoFactura) || bruto <= 0 ? 0 : bruto;
 
   return {
     total: totalFactura,
@@ -56,3 +69,4 @@ export function calcularSaldoFactura(
     liquidada: saldo < 0.01,
   };
 }
+
