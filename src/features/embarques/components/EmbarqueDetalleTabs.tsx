@@ -20,6 +20,7 @@ import { TabCierre } from "@/features/embarques/components/TabCierre";
 import { TabDemoras } from "@/features/embarques/components/TabDemoras";
 import { SeccionDemorasAuto } from "@/features/embarques/components/financiero/SeccionDemorasAuto";
 import { useEmbarqueDetalleTabsData } from "@/features/embarques/hooks/useEmbarqueDetalleTabsData";
+import { useEmbarqueInterno } from "@/features/embarques/hooks/useEmbarqueInterno";
 import { SectionHeading } from "@/components/shared/SectionHeading";
 import type {
   EmbarqueDetalleTabsProps,
