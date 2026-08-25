@@ -14,43 +14,71 @@ import { describe, it, expect } from "vitest";
 import fs from "node:fs";
 import path from "node:path";
 
-function readAllEliminarEmbarqueMigrations(): string {
-  // Extraemos SÓLO los bloques que definen `public.eliminar_embarque_completo`
-  // (desde `CREATE OR REPLACE FUNCTION ...` hasta la sentencia `$$;` de cierre,
-  // más los GRANT y COMMENT ON FUNCTION inmediatos). Concatenar migraciones
-  // enteras contaminaría con código de funciones vecinas (p.ej. restaurar_embarque).
-  const dir = path.resolve(__dirname, "../../../supabase/migrations");
-  const files = fs
-    .readdirSync(dir)
+const MIGRATIONS_DIR = path.resolve(__dirname, "../../../supabase/migrations");
+const FN = "public.eliminar_embarque_completo";
+
+function migracionesOrdenadas(): string[] {
+  return fs
+    .readdirSync(MIGRATIONS_DIR)
     .filter((f) => f.endsWith(".sql"))
     .sort();
-  const blocks: string[] = [];
-  const fnRegex =
-    /CREATE OR REPLACE FUNCTION public\.eliminar_embarque_completo[\s\S]*?\$\$;/g;
-  const grantRegex =
-    /GRANT EXECUTE ON FUNCTION public\.eliminar_embarque_completo[^;]*;/g;
-  for (const f of files) {
-    const body = fs.readFileSync(path.join(dir, f), "utf8");
-    for (const m of body.matchAll(fnRegex)) blocks.push(m[0]);
-    for (const m of body.matchAll(grantRegex)) blocks.push(m[0]);
+}
+
+/**
+ * Extrae los bloques `CREATE OR REPLACE FUNCTION public.eliminar_embarque_completo`
+ * de un SQL, respetando la etiqueta de dollar-quoting con la que abre el cuerpo
+ * (`$$` o `$function$`) para no derramarse hacia funciones vecinas.
+ */
+function extraerDefiniciones(sql: string): string[] {
+  const out: string[] = [];
+  const inicio = new RegExp(`CREATE OR REPLACE FUNCTION ${FN.replace(".", "\\.")}`, "g");
+  for (const m of sql.matchAll(inicio)) {
+    const desde = m.index ?? 0;
+    const tag = /AS\s+(\$[A-Za-z_]*\$)/.exec(sql.slice(desde));
+    if (!tag) continue;
+    const abre = desde + (tag.index ?? 0) + tag[0].length;
+    const cierra = sql.indexOf(tag[1], abre);
+    if (cierra === -1) continue;
+    out.push(sql.slice(desde, cierra + tag[1].length));
   }
-  if (blocks.length === 0) {
-    throw new Error("No se encontró FUNCTION public.eliminar_embarque_completo");
+  return out;
+}
+
+/**
+ * Auditoría de tests (v13.741.0): antes se concatenaban TODAS las definiciones
+ * históricas, así que el guardrail pasaba aunque la versión vigente hubiera
+ * perdido una guarda (bastaba con que una migración antigua la tuviera). Ahora
+ * se lee sólo la ÚLTIMA definición — la vigente en la base de datos.
+ */
+function readDefinicionVigente(): string {
+  for (const f of migracionesOrdenadas().reverse()) {
+    const defs = extraerDefiniciones(fs.readFileSync(path.join(MIGRATIONS_DIR, f), "utf8"));
+    if (defs.length > 0) return defs[defs.length - 1];
   }
-  return blocks.join("\n\n-- ── siguiente bloque ──\n\n");
+  throw new Error(`No se encontró FUNCTION ${FN}`);
+}
+
+/** Los GRANT sobreviven a `CREATE OR REPLACE`, así que se buscan en todo el historial. */
+function readGrants(): string {
+  const re = new RegExp(`GRANT EXECUTE ON FUNCTION ${FN.replace(".", "\\.")}[^;]*;`, "g");
+  return migracionesOrdenadas()
+    .flatMap((f) => [...fs.readFileSync(path.join(MIGRATIONS_DIR, f), "utf8").matchAll(re)])
+    .map((m) => m[0])
+    .join("\n");
 }
 
 describe("Fase E — eliminar_embarque_completo bloquea por dependencias fiscales", () => {
-  const sql = readAllEliminarEmbarqueMigrations();
+  const sql = readDefinicionVigente();
+  const grants = readGrants();
 
   it("recolecta los 6 contadores + estado cerrado antes de decidir", () => {
     // facturas vivas (excluye Cancelada|Sustituida). Tolerante a espacios.
     expect(sql).toMatch(
       /FROM public\.facturas[\s\S]{0,200}estado NOT IN \('Cancelada',\s*'Sustituida'\)/,
     );
-    // proveedor_facturas vivas
+    // proveedor_facturas vivas (la versión vigente cuenta toda CxP no borrada)
     expect(sql).toMatch(
-      /FROM public\.proveedor_facturas[\s\S]{0,200}estado <> 'Cancelada'/,
+      /FROM public\.proveedor_facturas[\s\S]{0,200}deleted_at IS NULL/,
     );
     // pagos_factura y pagos_proveedor
     expect(sql).toMatch(/FROM public\.pagos_factura pf[\s\S]{0,120}JOIN public\.facturas/);
@@ -116,12 +144,12 @@ describe("Fase E — eliminar_embarque_completo bloquea por dependencias fiscale
 
   it("mantiene la reversión de cotización cuando no quedan embarques vivos", () => {
     expect(sql).toMatch(
-      /UPDATE public\.cotizaciones SET estado = 'Aceptada' WHERE id = v_cotizacion_id/,
+      /UPDATE public\.cotizaciones[\s\S]{0,200}estado = 'Aceptada'[\s\S]{0,200}WHERE id = v_cotizacion_id/,
     );
   });
 
   it("otorga EXECUTE sólo a authenticated y service_role", () => {
-    expect(sql).toMatch(
+    expect(grants).toMatch(
       /GRANT EXECUTE ON FUNCTION public\.eliminar_embarque_completo\(uuid\) TO authenticated, service_role/,
     );
   });

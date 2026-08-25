@@ -1,5 +1,13 @@
 # Changelog
 
+## [13.741.0] - 2026-08-25
+### Limpieza de la suite de pruebas (auditoría de tests)
+- **Guardrail con falso positivo (crítico)**: `eliminar-embarque-bloqueado-fiscal.test.ts` concatenaba TODAS las definiciones históricas de `eliminar_embarque_completo` encontradas en `supabase/migrations`, así que pasaba aunque la versión vigente hubiera perdido una guarda (bastaba con que una migración vieja la tuviera). Ahora extrae sólo la ÚLTIMA definición, respetando la etiqueta de dollar-quoting (`$$` vs `$function$` — el extractor anterior se derramaba hacia funciones vecinas), y los `GRANT` se buscan aparte porque sobreviven al `CREATE OR REPLACE`. Aserciones realineadas con la versión vigente (CxP se cuenta por `deleted_at IS NULL`; el `UPDATE public.cotizaciones` es multilínea).
+- **Canary de PDF duplicado**: eliminado `src/pdf/render/__tests__/pdfRenderLeak.test.tsx` — medía exactamente lo mismo que `src/test/canaries/pdfLeak.test.tsx` (200 render+unmount, umbral 50 MB) y gastaba ~9 s de CI. Se conserva el canary con `cleanup()` en `finally`.
+- **Test tautológico**: eliminado `src/lib/__tests__/proformas-huerfanas-baseline.test.ts` — sólo verificaba que existiera una migración histórica e inmutable (imposible de romper).
+- **Helper huérfano**: eliminado `src/test/helpers/assertOrgScoped.ts` (nunca importado desde su creación).
+- Verificado: `audit:tests` y suite completa en verde.
+
 ## [13.740.0] - 2026-08-25
 ### FIX4 — frontend CRM + provisión E2E
 - **CRM · alta express de actividad (bug real)**: `QuickCreateActividadPopover` hacía `new Date(fecha).toISOString()` sin validar; al limpiar el `DateTimePickerMx` el valor llega como `""` → *Invalid Date* → `RangeError: Invalid time value`. Ahora fecha vacía se envía como `null` (igual que `NuevaActividadDialog`) y una fecha no parseable muestra "Selecciona una fecha válida".
