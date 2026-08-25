@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.745.1] - 2026-08-25
+- CXP paso 3: el aviso "el monto asignado supera lo cotizado" ya no aparece por la diferencia normal de tipo de cambio (sólo si el T/C implícito se desvía >2% del DOF) y el mensaje explica el siguiente paso.
+
 ## [13.745.0] - 2026-08-25
 ### CxP: conciliar costos en USD contra facturas en MXN
 - En el paso 3 de "Capturar factura de proveedor" los importes vinculados se capturan SIEMPRE en la moneda de la factura.
