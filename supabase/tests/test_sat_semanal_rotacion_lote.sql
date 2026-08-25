@@ -57,10 +57,15 @@ BEGIN
     RAISE NOTICE 'CASO 3 OMITIDO: la sesión (%) no puede ejecutar la RPC', current_user;
     RETURN;
   END IF;
-  -- Fechas antiguas explícitas: las tres orgs de prueba encabezan el orden
-  -- (sat_barrido_fecha ASC) sin necesidad de tocar las orgs preexistentes,
-  -- que hoy tienen NULL (nunca barridas) — se les estampa fecha al primer
-  -- lote, por eso se consumen las corridas necesarias antes de medir.
+  -- Aislamiento determinista: las orgs preexistentes de la base (CI siembra
+  -- varias con RFC, algunas con sat_barrido_fecha NULL = prioridad máxima) se
+  -- estacionan en el futuro para que el orden (sat_barrido_fecha ASC NULLS
+  -- FIRST) empiece siempre por las tres orgs de prueba. Todo va en la
+  -- transacción con ROLLBACK: no altera datos reales.
+  UPDATE public.organizations
+     SET sat_barrido_fecha = timestamptz '2999-01-01'
+   WHERE rfc IS NOT NULL AND btrim(rfc) <> '';
+
   INSERT INTO public.organizations (nombre, rfc, sat_barrido_fecha)
   VALUES ('ZZ Test Rot A', 'AAA010101AAA', timestamptz '1900-01-01') RETURNING id INTO v_a;
   INSERT INTO public.organizations (nombre, rfc, sat_barrido_fecha)
@@ -68,14 +73,6 @@ BEGIN
   INSERT INTO public.organizations (nombre, rfc, sat_barrido_fecha)
   VALUES ('ZZ Test Rot C', 'CCC010101CCC', timestamptz '1900-01-03') RETURNING id INTO v_c;
 
-  -- Drenar las orgs con sat_barrido_fecha NULL (prioridad máxima) para que el
-  -- siguiente lote empiece por las tres de prueba.
-  WHILE EXISTS (
-    SELECT 1 FROM public.organizations
-     WHERE rfc IS NOT NULL AND btrim(rfc) <> '' AND sat_barrido_fecha IS NULL
-  ) LOOP
-    PERFORM public.seleccionar_lote_sat_semanal(5);
-  END LOOP;
 
   SELECT array_agg(organization_id) INTO v_lote1
     FROM public.seleccionar_lote_sat_semanal(2);
