@@ -73,3 +73,4 @@ instrucciones. Dos caminos:
 | Diff enorme sin cambios de migraciones | `pg_dump` de otra versión | Regenerar con `bun run db:baseline:update` (usa el contenedor pinneado) |
 | Diff sólo en cuerpos de funciones | `CREATE OR REPLACE` reformateado | Es real: revisar y commitear la baseline |
 | Diff en `GRANT`/policies | Permisos abiertos o cerrados | Revisar con lupa: es exactamente lo que este job vino a atrapar |
+| Diff sólo en `\restrict` / `\unrestrict` con token aleatorio | `pg_dump` 17 envuelve el dump con esos metacomandos | Ya se filtran en `schema-snapshot.sh`; si reaparecen, regenerar la baseline |
