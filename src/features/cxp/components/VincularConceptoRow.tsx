@@ -7,11 +7,11 @@
  * moneda se muestra su equivalencia con el T/C DOF de la fecha de emisión y el
  * T/C implícito de lo capturado.
  */
-import { AlertTriangle } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Hint } from "@/components/shared/Hint";
 import { MoneyInput } from "@/components/shared/MoneyInput";
 import { formatCurrency, formatFechaEs } from "@/lib/formatters";
+import { VincularConceptoAvisos } from "./VincularConceptoAvisos";
 import {
   convertirMonto,
   desviacionTcExcedida,
