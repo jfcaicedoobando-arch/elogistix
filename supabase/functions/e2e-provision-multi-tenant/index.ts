@@ -37,7 +37,13 @@ Deno.serve(async (req) => {
 
   const expected = Deno.env.get("E2E_PROVISION_SECRET");
   if (!expected) return json({ error: "e2e_provision_secret_not_configured" }, 500);
-  if (req.headers.get("x-e2e-secret") !== expected) return json({ error: "unauthorized" }, 401);
+  const provided = req.headers.get("x-e2e-secret") ?? "";
+  if (!timingSafeEqual(provided, expected)) return json({ error: "unauthorized" }, 401);
+
+  // Allowlist estricta de nombres de org provisionables/borrables (prefijos
+  // E2E-/TEST- por defecto; sobreescribible con E2E_PROVISION_ORG_ALLOWLIST).
+  const orgAllowlist = Deno.env.get("E2E_PROVISION_ORG_ALLOWLIST");
+
 
   const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
   const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
