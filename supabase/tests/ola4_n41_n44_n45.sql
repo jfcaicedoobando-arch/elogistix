@@ -180,7 +180,7 @@ DECLARE
 BEGIN
   SELECT cp.saldo INTO v_saldo
   FROM public.cartera_pendiente() cp
-  WHERE cp.id = 'c3333331-1111-1111-1111-111111111111';
+  WHERE cp.factura_id = 'c3333331-1111-1111-1111-111111111111';
 
   IF v_saldo IS NULL THEN
     RAISE EXCEPTION 'TEST FAIL: N44 - la factura no aparece en cartera_pendiente (saldo debería ser > 0)';

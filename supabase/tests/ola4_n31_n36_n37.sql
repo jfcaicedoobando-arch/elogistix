@@ -82,9 +82,11 @@ BEGIN
   ) ON CONFLICT (id) DO NOTHING;
 
   INSERT INTO public.proformas (
-    id, organization_id, embarque_id, numero, estado_proforma, factura_id
+    id, organization_id, embarque_id, numero, cliente_id, cliente_nombre,
+    expediente, estado_proforma, factura_id
   ) VALUES (
     'c1234567-1234-1234-1234-123456789012', v_org, v_embarque, 'PRO-OLA4-N37',
+    v_cliente, 'Cliente Ola4 C', 'ELOLC001',
     'enviada', 'c2222222-2222-2222-2222-222222222222'
   ) ON CONFLICT (id) DO NOTHING;
 
