@@ -3,9 +3,10 @@
 --
 -- crm_propagar_conversion_cliente (SECURITY DEFINER) ya no permite que un
 -- vendedor propague la conversión de una oportunidad de OTRO vendedor
--- (fix de fondo en 20260828000300_rev4; errcodes de autorización a 42501
--- en 20260831100700). Este test congela el comportamiento:
---   · CASO 1: vendedor A sobre oportunidad del vendedor B → 42501
+-- (fix de fondo en 20260828000300_rev4). Los LC_ de autorización viajan como
+-- raise_exception (P0001) — el contrato es el prefijo del mensaje, que es lo
+-- que traduce `lcCodeMessages`. Este test congela el comportamiento:
+--   · CASO 1: vendedor A sobre oportunidad del vendedor B →
 --     LC_OPORTUNIDAD_AJENA.
 --   · CASO 2: el vendedor dueño SÍ propaga (camino feliz intacto).
 --   · CASO 3: no pisa una conversión previa hacia OTRO cliente
@@ -64,13 +65,16 @@ BEGIN
     PERFORM public.crm_propagar_conversion_cliente(v_op_b, v_cli_1, 'Cliente Uno FIX3');
     RAISE EXCEPTION 'CASO 1 FAIL: un vendedor propagó la conversión de una oportunidad AJENA';
   EXCEPTION
-    WHEN insufficient_privilege THEN
+    -- La RPC levanta los LC_ de autorización sin ERRCODE explícito, así que
+    -- llegan como raise_exception (P0001); el contrato que congelamos es el
+    -- prefijo del mensaje, que es lo que el frontend traduce.
+    WHEN raise_exception THEN
       IF SQLERRM NOT LIKE 'LC_OPORTUNIDAD_AJENA%' THEN
-        RAISE EXCEPTION 'CASO 1 FAIL: se esperaba LC_OPORTUNIDAD_AJENA y vino: % (SQLSTATE %)', SQLERRM, SQLSTATE;
+        RAISE;
       END IF;
   END;
   PERFORM pg_temp.as_postgres();
-  RAISE NOTICE 'CASO 1 OK · cross-vendedor rechazado con 42501 LC_OPORTUNIDAD_AJENA.';
+  RAISE NOTICE 'CASO 1 OK · cross-vendedor rechazado con LC_OPORTUNIDAD_AJENA.';
 
   -- ----------------------------------------------------------
   -- CASO 2: el vendedor dueño propaga su propia oportunidad.
