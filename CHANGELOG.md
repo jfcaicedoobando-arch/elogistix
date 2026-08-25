@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.743.11] - 2026-08-25
+### CI: baseline de esquema con pg_dump 17 (`\restrict`)
+- `pg_dump` 17 envuelve el dump con las metacomandos `\restrict` / `\unrestrict` (token aleatorio en cada corrida), lo que generaba un diff falso permanente en el job `schema-baseline`.
+- `scripts/db/schema-snapshot.sh` ahora filtra esas líneas y se regeneró `supabase/schema/baseline.sql` sin ellas.
+
 ## [13.743.10] - 2026-08-25
 ### CI: anotaciones limpias en suites RLS
 - Los artifacts `rls-suite-logs-*` ahora incluyen explícitamente el directorio oculto `.rls-logs`; su ausencia pasa a ser un error real en vez de cinco advertencias engañosas.
