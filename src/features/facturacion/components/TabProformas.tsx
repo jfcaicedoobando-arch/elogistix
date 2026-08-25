@@ -1,4 +1,4 @@
-import { Download, Receipt, X, FileSpreadsheet } from "lucide-react";
+import { Download, Receipt, X } from "lucide-react";
 
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
