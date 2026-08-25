@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.742.0] - 2026-08-25
+### Limpieza y optimización de la suite RLS
+- **Catálogo único de columnas internas de `embarques`** (`supabase/tests/_catalogo_columnas_internas.sql`): la lista `cerrado_snapshot / tarifa_delta_jsonb / reabierto_motivo / created_by_email` estaba copiada en 3 archivos (`fix2_embarques_interno_y_nc.sql`, `embarques_listado_sin_select_estrella.sql`, `_ci_post_migrate.sql`). Si se añadía una columna sensible nueva, un archivo la auditaba y los otros quedaban ciegos. Ahora los tres la leen de `pg_temp.columnas_internas_embarques()`.
+- **Catálogo único de tablas exentas** (`supabase/tests/rls/_ci_exempt_tables.sql`): las whitelists manuales de `_ci_verify_rls.sql` (categoría `sin-rls`) y `test_rls_policy_linter.sql` (`sin-filtro-tenant`) se unificaron con motivo obligatorio por entrada, eliminando el riesgo de drift entre linters.
+- **Fixture compartido** `pg_temp.seed_org_pair('PREFIJO')` en `_helpers.sql`: siembra 2 organizaciones + 1 admin cada una (con `auth.users` best-effort). Las suites nuevas dejan de reimplementar el seed a mano.
+- **README de `supabase/tests/rls`** actualizado: tabla de catálogos únicos, uso del fixture y aclaración de que el inventario vivo de suites es `matrix.include[].suites` del workflow (no una lista manual que se desincroniza).
+
 ## [13.741.1] - 2026-08-25
 ### Limpieza de la suite de pruebas (hallazgos restantes)
 - **Tests "acta de nacimiento" eliminados** (tautológicos: sólo comprobaban que existiera una migración histórica e inmutable): `rep-guard-hotfix-migration.test.ts`, `revincular-backfill-solo-1a1.test.ts`, `consolidar-proformas-repunta-conceptos.test.ts`.
