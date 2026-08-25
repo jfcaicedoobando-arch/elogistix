@@ -185,6 +185,13 @@ jobs:
             echo "::error file=$f::la migración no aplica en una base limpia"
             exit 1
           done
+          if [ -s /tmp/migraciones-ancladas.log ]; then
+            {
+              echo "### Migraciones ancladas conocidas"
+              echo ""
+              sed 's/^/- /' /tmp/migraciones-ancladas.log
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
 
 
 
@@ -683,7 +690,7 @@ jobs:
         with:
           name: schema-snapshot-actual
           path: /tmp/schema.actual.sql
-          if-no-files-found: warn
+          if-no-files-found: error
           retention-days: 7
 
       - name: Compare against committed baseline
