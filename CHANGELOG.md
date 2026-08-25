@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.739.2] - 2026-08-25
+### CI — `test_sat_semanal_rotacion_lote`
+- El CASO 3 estacionaba las orgs preexistentes con un bucle de "drenado" que las mezclaba en el mismo lote que las orgs de prueba (y `now()` está congelado dentro de la transacción, así que el desempate caía en `created_at` y devolvía siempre el mismo lote). Ahora la prueba estaciona las orgs con RFC en `2999-01-01` antes de insertar las tres de prueba, dejando el orden determinista. La RPC `seleccionar_lote_sat_semanal` no cambia.
+
 ## [13.739.1] - 2026-08-24
 ### CI — `rpc_org_scope_linter`
 - **`audit:replay-mirror`**: se re-emite `public.avanzar_estado_embarque` como migración nueva (`20260901000100`) para que la migración vigente incluya el marcador `replay: true` del espejo.
