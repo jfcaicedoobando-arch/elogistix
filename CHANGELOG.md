@@ -1,5 +1,13 @@
 # Changelog
 
+## [13.746.4] - 2026-08-25
+### Suite RLS: sobrecarga duplicada en el buzón CxP
+- Nueva migración espejo `20260901000000_ola_espejo_adjuntar_xml_subtotal.sql`: en base limpia `public.adjuntar_xml_entrante_verificado` quedaba con DOS firmas (11 y 12 args), porque `20260826004000` y `20260831000100` reintroducían la variante sin `p_subtotal_detectado` después de `20260825160948`. Cualquier llamada moría con `function ... is not unique` (guard `fix3_bug18_alta_inicial`).
+- La migración re-emite el cuerpo vigente (12 args, subtotal sin IVA), dropea la sobrecarga legacy y restaura la postura `service_role`-only (se retira el `EXECUTE` a `authenticated`).
+- Espejo canónico `supabase/schema/cxp/adjuntar_xml_entrante_verificado.sql` y catálogo `_ci_service_role_only.sql` actualizados a la firma de 12 args.
+- Resultado local (Postgres efímero + 1063 migraciones): 34/34 suites RLS y 51/51 guards bloqueantes en verde; radar 12/13 (`normalizar_razon_social_unicode` sólo falla por locale `C` del sandbox, no en CI).
+
+
 ## [13.746.3] - 2026-08-25
 ### Cotizaciones: validación clara en Paso 1
 - Los campos obligatorios del borrador (modo, tipo de operación, Incoterm, descripción de la mercancía, origen y destino) ahora se validan ANTES de guardar: se marcan inline con scroll+foco a su sección, en lugar del toast técnico "Cotización — Modo: requerido." al fallar el boundary de mutación.
