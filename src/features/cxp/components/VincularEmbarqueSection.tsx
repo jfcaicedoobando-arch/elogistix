@@ -7,10 +7,8 @@
  * con el del concepto_costo; el usuario puede editarlo.
  */
 import { useMemo, useState } from "react";
-import { Loader2, Link2, Sparkles } from "lucide-react";
-import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Loader2 } from "lucide-react";
+import { VincularEmbarqueHeader } from "./VincularEmbarqueHeader";
 import { useConceptosCostoAbiertos, type ConceptoCostoAbierto } from "@/features/cxp/hooks";
 import type { SugerenciaVinculo } from "@/features/compras/matching/matcher";
 import { SugerirEmbarqueBlock } from "./SugerirEmbarqueBlock";
