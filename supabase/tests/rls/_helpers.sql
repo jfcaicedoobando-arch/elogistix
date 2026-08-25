@@ -73,3 +73,48 @@ BEGIN
   END;
 END;
 $$;
+
+-- ============================================================================
+-- Fixture compartido: dos organizaciones + un admin en cada una.
+-- (~30 suites reimplementaban este seed a mano; las nuevas deben usar esto.)
+--
+-- Uso:
+--   SELECT * INTO STRICT v_fx FROM pg_temp.seed_org_pair('SCOPE');
+--   -- v_fx.org_a / v_fx.org_b / v_fx.admin_a / v_fx.admin_b
+--
+-- Siembra `auth.users` en modo best-effort (en CI los FK a auth.users se
+-- sueltan y GoTrue no existe). Siempre dentro de un BEGIN…ROLLBACK.
+-- ============================================================================
+CREATE OR REPLACE FUNCTION pg_temp.seed_org_pair(
+  _prefijo text,
+  _rol text DEFAULT 'admin_org'
+) RETURNS TABLE (org_a uuid, org_b uuid, admin_a uuid, admin_b uuid)
+LANGUAGE plpgsql AS $$
+DECLARE
+  o_a uuid := gen_random_uuid();
+  o_b uuid := gen_random_uuid();
+  u_a uuid := gen_random_uuid();
+  u_b uuid := gen_random_uuid();
+BEGIN
+  BEGIN
+    INSERT INTO auth.users(id, email) VALUES
+      (u_a, lower(_prefijo) || '-a@test.local'),
+      (u_b, lower(_prefijo) || '-b@test.local')
+    ON CONFLICT (id) DO NOTHING;
+  EXCEPTION WHEN OTHERS THEN
+    NULL;  -- CI sin GoTrue: los FK contra auth.users ya no existen.
+  END;
+
+  INSERT INTO public.organizations(id, nombre) VALUES
+    (o_a, _prefijo || ' A'), (o_b, _prefijo || ' B');
+
+  INSERT INTO public.organization_members(organization_id, user_id, role) VALUES
+    (o_a, u_a, _rol::app_role), (o_b, u_b, _rol::app_role);
+
+  INSERT INTO public.user_roles(user_id, role) VALUES
+    (u_a, _rol::app_role), (u_b, _rol::app_role)
+  ON CONFLICT (user_id) DO UPDATE SET role = EXCLUDED.role;
+
+  RETURN QUERY SELECT o_a, o_b, u_a, u_b;
+END;
+$$;

@@ -18,12 +18,14 @@
 
 BEGIN;
 
+\ir _catalogo_columnas_internas.sql
+
 -- ---------- CASO 1 · privilegios de columna revocados -------------------
 DO $caso1$
 DECLARE
   v_col text;
 BEGIN
-  FOREACH v_col IN ARRAY ARRAY['cerrado_snapshot','tarifa_delta_jsonb','reabierto_motivo','created_by_email']
+  FOREACH v_col IN ARRAY pg_temp.columnas_internas_embarques()
   LOOP
     IF has_column_privilege('authenticated', 'public.embarques', v_col, 'SELECT') THEN
       RAISE EXCEPTION 'CASO 1 FALLÓ: authenticated aún puede leer embarques.%', v_col;

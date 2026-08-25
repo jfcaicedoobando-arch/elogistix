@@ -79,11 +79,17 @@ END $$;
 -- nivel tabla, lo que anula los REVOKE por columna de las migraciones
 -- 20260824033159 / 20260824033552. Se repite aquí el mismo patrón
 -- (revoke de tabla + grant columna por columna) para que CI sea fiel a prod.
+-- La lista de columnas internas vive en un catálogo único compartido con las
+-- suites `fix2_embarques_interno_y_nc.sql` y
+-- `embarques_listado_sin_select_estrella.sql`.
 -- ============================================================================
+\ir ../_catalogo_columnas_internas.sql
+
 DO $$
+
 DECLARE
   v_cols text;
-  v_internas text[] := ARRAY['cerrado_snapshot','tarifa_delta_jsonb','reabierto_motivo','created_by_email'];
+  v_internas text[] := pg_temp.columnas_internas_embarques();
 BEGIN
   IF to_regclass('public.embarques') IS NULL THEN
     RETURN;

@@ -13,20 +13,18 @@
 -- pública, catálogos compartidos, tablas internas no expuestas).
 -- ============================================================================
 
+\ir _ci_exempt_tables.sql
+
 DO $$
+
 DECLARE
   rec record;
   fail_count int := 0;
   missing_policies text := '';
   missing_rls text := '';
-  -- Whitelist de tablas que NO requieren RLS (catálogos compartidos / internas)
-  whitelist text[] := ARRAY[
-    'ratelimit_buckets'            -- bucket de rate limiting interno
-    -- O6 (auditoría 2026-07-29, S7-18): eliminadas las 3 entradas
-    -- '_backup_*' (tablas dropped en 20260717042435 y 20260717033242).
-    -- Política: los backups temporales viven fuera de `public` o con
-    -- RLS deny-all; NUNCA se whitelistean aquí.
-  ];
+  -- Whitelist centralizada en _ci_exempt_tables.sql (categoría 'sin-rls').
+  whitelist text[] := pg_temp.tablas_exentas('sin-rls');
+
 BEGIN
   -- 1) Tablas con RLS pero sin policies
   FOR rec IN
@@ -60,7 +58,7 @@ BEGIN
   END LOOP;
 
   IF fail_count > 0 THEN
-    RAISE EXCEPTION E'RLS COVERAGE FAIL (% problemas):\n\nTablas con RLS pero SIN policies:%\n\nTablas SIN RLS:%\n\nSi alguna es intencional, agregarla al whitelist en _ci_verify_rls.sql',
+    RAISE EXCEPTION E'RLS COVERAGE FAIL (% problemas):\n\nTablas con RLS pero SIN policies:%\n\nTablas SIN RLS:%\n\nSi alguna es intencional, agregarla al catálogo _ci_exempt_tables.sql (categoría sin-rls)',
       fail_count,
       coalesce(nullif(missing_policies, ''), E'\n  (ninguna)'),
       coalesce(nullif(missing_rls, ''), E'\n  (ninguna)');

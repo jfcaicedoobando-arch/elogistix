@@ -19,6 +19,8 @@
 
 BEGIN;
 
+\ir _catalogo_columnas_internas.sql
+
 -- ---------- CASO 1 · sin SELECT estrella sobre embarques ----------------
 DO $caso1$
 DECLARE
@@ -61,7 +63,7 @@ DO $caso3$
 DECLARE
   v_col text;
 BEGIN
-  FOREACH v_col IN ARRAY ARRAY['cerrado_snapshot','tarifa_delta_jsonb','reabierto_motivo','created_by_email']
+  FOREACH v_col IN ARRAY pg_temp.columnas_internas_embarques()
   LOOP
     IF has_column_privilege('authenticated', 'public.embarques', v_col, 'SELECT') THEN
       RAISE EXCEPTION 'CASO 3 FALLÓ: authenticated puede leer embarques.%', v_col;
