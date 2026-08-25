@@ -76,3 +76,25 @@ export function desviacionTcExcedida(
   if (implicito === null || factorDof === null || factorDof <= 0) return false;
   return Math.abs(implicito - factorDof) / factorDof > TOLERANCIA_DESVIACION_TC;
 }
+
+/**
+ * `true` si el importe capturado supera lo cotizado *más allá de lo explicable
+ * por el tipo de cambio*.
+ *
+ * En conceptos en otra moneda, capturar 872.57 MXN contra un costo de 51 USD
+ * (≈865.20 MXN al DOF) NO es un exceso: es la diferencia normal de T/C. Sólo
+ * se marca exceso cuando el T/C implícito rebasa la tolerancia del 2%.
+ */
+export function excedeCotizadoConTc(params: {
+  montoCapturado: number;
+  montoCotizado: number;
+  factorDof: number | null;
+  mismaMoneda: boolean;
+}): boolean {
+  const { montoCapturado, montoCotizado, factorDof, mismaMoneda } = params;
+  if (!(montoCotizado > 0)) return false;
+  if (mismaMoneda) return montoCapturado - montoCotizado > 0.01;
+  const implicito = tcImplicito(montoCapturado, montoCotizado);
+  if (implicito === null || factorDof === null || factorDof <= 0) return false;
+  return (implicito - factorDof) / factorDof > TOLERANCIA_DESVIACION_TC;
+}

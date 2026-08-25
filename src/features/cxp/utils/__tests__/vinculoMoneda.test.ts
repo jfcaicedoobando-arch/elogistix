@@ -1,3 +1,4 @@
+import { excedeCotizadoConTc } from "../vinculoMoneda";
 import { describe, expect, it } from "vitest";
 import {
   convertirMonto,
@@ -74,5 +75,40 @@ describe("desviacionTcExcedida", () => {
   it("es tolerante con datos faltantes", () => {
     expect(desviacionTcExcedida(null, 17.1092)).toBe(false);
     expect(desviacionTcExcedida(17.1, null)).toBe(false);
+  });
+});
+
+describe("excedeCotizadoConTc", () => {
+  it("misma moneda: excede si supera por más de un centavo", () => {
+    const base = { montoCotizado: 100, factorDof: 1, mismaMoneda: true };
+    expect(excedeCotizadoConTc({ ...base, montoCapturado: 101 })).toBe(true);
+    expect(excedeCotizadoConTc({ ...base, montoCapturado: 100 })).toBe(false);
+  });
+
+  it("otra moneda: la diferencia normal de T/C no marca exceso", () => {
+    expect(
+      excedeCotizadoConTc({
+        montoCapturado: 872.57, montoCotizado: 51, factorDof: 16.9647, mismaMoneda: false,
+      }),
+    ).toBe(false);
+  });
+
+  it("otra moneda: marca exceso si el T/C implícito rebasa 2%", () => {
+    expect(
+      excedeCotizadoConTc({
+        montoCapturado: 1200, montoCotizado: 51, factorDof: 16.9647, mismaMoneda: false,
+      }),
+    ).toBe(true);
+  });
+
+  it("sin cotizado o sin T/C no marca exceso", () => {
+    expect(
+      excedeCotizadoConTc({ montoCapturado: 100, montoCotizado: 0, factorDof: 1, mismaMoneda: true }),
+    ).toBe(false);
+    expect(
+      excedeCotizadoConTc({
+        montoCapturado: 100, montoCotizado: 51, factorDof: null, mismaMoneda: false,
+      }),
+    ).toBe(false);
   });
 });
