@@ -18,10 +18,12 @@ import { esIncotermSinFleteVenta } from "@/features/cotizacion/utils/incotermRul
 import type { CotizacionFormValues } from "@/features/cotizacion/domain/mappers/cotizacionForm";
 import {
   destinatarioSchema,
+  datosGeneralesSchema,
   rutaTerrestreSchema,
   fleteLclManualSchema,
   primerError,
 } from "@/features/cotizacion/domain/schemas/wizardPasos";
+
 
 
 // ── Pure sub-validators ──────────────────────────────────────────────────────
