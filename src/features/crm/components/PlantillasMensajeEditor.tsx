@@ -77,7 +77,7 @@ export default function PlantillasMensajeEditor() {
             <Select value={nuevo.canal} onValueChange={(v) => setNuevo((n) => ({ ...n, canal: v as PlantillaCanal }))}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="email">Email</SelectItem>
+                <SelectItem value="email">Correo</SelectItem>
                 <SelectItem value="whatsapp">WhatsApp</SelectItem>
               </SelectContent>
             </Select>

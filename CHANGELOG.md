@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.746.0] - 2026-08-25
+### CRM: el botón "Nuevo" ya abre el formulario
+- Las altas express (lead, oportunidad, actividad) pasan de Popover anclado al menú a modal estándar (`FormDialogShell`): antes el clic en "Nuevo lead" no mostraba nada porque el Popover perdía la carrera contra el cierre del menú.
+- Los atajos L / O / A abren los mismos modales; "Más campos →" sigue abriendo el formulario completo.
+- Etiquetas homologadas al es-MX del ERP: "Email" → "Correo" en leads, plantillas, importación CSV y acciones de contacto.
+
 ## [13.745.1] - 2026-08-25
 - CXP paso 3: el aviso "el monto asignado supera lo cotizado" ya no aparece por la diferencia normal de tipo de cambio (sólo si el T/C implícito se desvía >2% del DOF) y el mensaje explica el siguiente paso.
 

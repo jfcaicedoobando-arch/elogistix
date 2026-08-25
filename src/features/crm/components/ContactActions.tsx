@@ -34,7 +34,7 @@ export default function ContactActions({ email, telefono, plantillaCtx }: Props)
           <>
             <a href={`mailto:${email}`} className="text-primary hover:underline truncate rounded-sm focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none">{email}</a>
             <Hint label="Copiar email">
-              <Button size="icon" variant="ghost" className="min-h-11 min-w-11 md:h-6 md:w-6 md:min-h-0 md:min-w-0" onClick={() => copy(email, "Email")} aria-label="Copiar email">
+              <Button size="icon" variant="ghost" className="min-h-11 min-w-11 md:h-6 md:w-6 md:min-h-0 md:min-w-0" onClick={() => copy(email, "Correo")} aria-label="Copiar correo">
                 <Copy className="h-3 w-3" />
               </Button>
             </Hint>

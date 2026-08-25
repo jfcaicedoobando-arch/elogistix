@@ -47,7 +47,7 @@ export function NuevoLeadForm({ form, setForm, autoActividad, setAutoActividad }
         <Input id="nuevo-lead-contacto" value={form.contacto} onChange={(e) => set("contacto", e.target.value)} />
       </div>
       <div className="space-y-1">
-        <Label htmlFor="nuevo-lead-email">Email</Label>
+        <Label htmlFor="nuevo-lead-email">Correo</Label>
         <Input id="nuevo-lead-email" type="email" value={form.email} onChange={(e) => set("email", e.target.value)} />
       </div>
       <div className="space-y-1">

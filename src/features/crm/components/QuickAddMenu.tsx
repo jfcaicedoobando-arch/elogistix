@@ -1,10 +1,14 @@
 /**
- * QuickAddMenu — botón "+ Nuevo" global del CRM con popovers express.
+ * QuickAddMenu — botón "+ Nuevo" global del CRM con altas express.
  *
- * Cambio v11.50.0: cada opción abre un Popover inline de 2 campos en lugar
- * de un Dialog. "Más campos →" abre el dialog completo cuando se necesita.
+ * Cambio v13.746.0: las altas express dejan de ser Popovers anclados al menú y
+ * pasan a ser modales estándar (FormDialogShell). El Popover anidado en el
+ * DropdownMenu perdía la carrera contra el cierre del menú (Radix desmonta el
+ * content y devuelve el foco en el mismo gesto), así que al dar clic en
+ * "Nuevo lead" no pasaba nada. Un Dialog no depende del ancla ni del foco del
+ * menú, por lo que el clic siempre abre el formulario.
  *
- * Atajos: N abre el menú; L/O/A abren directo el popover correspondiente.
+ * Atajos: N abre el menú; L/O/A abren directo el formulario correspondiente.
  */
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -13,14 +17,13 @@ import { Button } from "@/components/ui/button";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Popover, PopoverAnchor, PopoverContent } from "@/components/ui/popover";
 import NuevoLeadDialog from "@/features/crm/components/NuevoLeadDialog";
 import NuevaOportunidadDialog from "@/features/crm/components/NuevaOportunidadDialog";
 import NuevaActividadDialog from "@/features/crm/components/NuevaActividadDialog";
 import ImportarLeadsCsvDialog from "@/features/crm/components/ImportarLeadsCsvDialog";
-import QuickCreateLeadPopover from "@/features/crm/components/quickCreate/QuickCreateLeadPopover";
-import QuickCreateOportunidadPopover from "@/features/crm/components/quickCreate/QuickCreateOportunidadPopover";
-import QuickCreateActividadPopover from "@/features/crm/components/quickCreate/QuickCreateActividadPopover";
+import QuickCreateLeadDialog from "@/features/crm/components/quickCreate/QuickCreateLeadDialog";
+import QuickCreateOportunidadDialog from "@/features/crm/components/quickCreate/QuickCreateOportunidadDialog";
+import QuickCreateActividadDialog from "@/features/crm/components/quickCreate/QuickCreateActividadDialog";
 import { usePermissions } from "@/hooks/shared";
 
 export interface QuickAddMenuProps {
@@ -60,78 +63,60 @@ export default function QuickAddMenu({ openTrigger, dialogTrigger }: QuickAddMen
     setQuick(dialogTrigger.kind);
   }, [dialogTrigger]);
 
-  // REG B-004: abrir el Popover en el mismo tick del click del item pierde la
-  // carrera contra el cierre del DropdownMenu (Radix desmonta el content y
-  // devuelve el foco al trigger dentro del mismo gesto; el Popover recién
-  // abierto se desancla). Se cierra el menú primero y se abre el popover en
-  // el siguiente frame — el mismo camino de los hotkeys L/O/A, que sí
-  // funcionan porque el menú ya está cerrado.
   const abrirQuick = (kind: Exclude<Quick, null>) => {
     setMenuOpen(false);
-    requestAnimationFrame(() => setQuick(kind));
+    setQuick(kind);
   };
+
+  const cerrarQuick = (open: boolean) => { if (!open) setQuick(null); };
 
   return (
     <>
-      {/* B-004 (v13.320.32): el <PopoverAnchor asChild> envolvía a <DropdownMenu>
-          — un componente sin nodo DOM propio — así que Radix nunca posicionaba
-          el Popover y los items del menú se veían "muertos". Ahora envolvemos
-          en un <span> real que Radix puede usar como ancla. */}
-      <Popover open={quick !== null} onOpenChange={(o) => { if (!o) setQuick(null); }}>
-        <PopoverAnchor asChild>
-          <span className="inline-block">
-            <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
-              <DropdownMenuTrigger asChild>
-                <Button size="sm" className="gap-1">
-                  <Plus className="h-4 w-4" /> Nuevo
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuItem onSelect={() => abrirQuick("lead")}>
-                  <Users className="h-4 w-4 mr-2" /> Nuevo lead <span className="ml-auto text-label text-muted-foreground">L</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem onSelect={() => abrirQuick("oportunidad")}>
-                  <Target className="h-4 w-4 mr-2" /> Nueva oportunidad <span className="ml-auto text-label text-muted-foreground">O</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem onSelect={() => abrirQuick("actividad")}>
-                  <Activity className="h-4 w-4 mr-2" /> Nueva actividad <span className="ml-auto text-label text-muted-foreground">A</span>
-                </DropdownMenuItem>
-                {canEditCrm && (
-                  <>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem onSelect={() => { setMenuOpen(false); requestAnimationFrame(() => setImportOpen(true)); }}>
-                      <Upload className="h-4 w-4 mr-2" /> Importar leads CSV
-                    </DropdownMenuItem>
-                  </>
-                )}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </span>
-        </PopoverAnchor>
-        <PopoverContent align="end" className="p-3">
-          {quick === "lead" && (
-            <QuickCreateLeadPopover
-              onCreated={(id) => navigate(`/crm/leads/${id}`)}
-              onMore={() => { setQuick(null); setLeadOpen(true); }}
-              onClose={() => setQuick(null)}
-            />
+      <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
+        <DropdownMenuTrigger asChild>
+          <Button size="sm" className="gap-1">
+            <Plus className="h-4 w-4" /> Nuevo
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-56">
+          <DropdownMenuItem onSelect={() => abrirQuick("lead")}>
+            <Users className="h-4 w-4 mr-2" /> Nuevo lead <span className="ml-auto text-label text-muted-foreground">L</span>
+          </DropdownMenuItem>
+          <DropdownMenuItem onSelect={() => abrirQuick("oportunidad")}>
+            <Target className="h-4 w-4 mr-2" /> Nueva oportunidad <span className="ml-auto text-label text-muted-foreground">O</span>
+          </DropdownMenuItem>
+          <DropdownMenuItem onSelect={() => abrirQuick("actividad")}>
+            <Activity className="h-4 w-4 mr-2" /> Nueva actividad <span className="ml-auto text-label text-muted-foreground">A</span>
+          </DropdownMenuItem>
+          {canEditCrm && (
+            <>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onSelect={() => { setMenuOpen(false); setImportOpen(true); }}>
+                <Upload className="h-4 w-4 mr-2" /> Importar leads CSV
+              </DropdownMenuItem>
+            </>
           )}
-          {quick === "oportunidad" && (
-            <QuickCreateOportunidadPopover
-              onCreated={(id) => navigate(`/crm/oportunidades/${id}`)}
-              onMore={() => { setQuick(null); setOpOpen(true); }}
-              onClose={() => setQuick(null)}
-            />
-          )}
-          {quick === "actividad" && (
-            <QuickCreateActividadPopover
-              onCreated={() => navigate("/crm/actividades")}
-              onMore={() => { setQuick(null); setActOpen(true); }}
-              onClose={() => setQuick(null)}
-            />
-          )}
-        </PopoverContent>
-      </Popover>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      <QuickCreateLeadDialog
+        open={quick === "lead"}
+        onOpenChange={cerrarQuick}
+        onCreated={(id) => navigate(`/crm/leads/${id}`)}
+        onMore={() => { setQuick(null); setLeadOpen(true); }}
+      />
+      <QuickCreateOportunidadDialog
+        open={quick === "oportunidad"}
+        onOpenChange={cerrarQuick}
+        onCreated={(id) => navigate(`/crm/oportunidades/${id}`)}
+        onMore={() => { setQuick(null); setOpOpen(true); }}
+      />
+      <QuickCreateActividadDialog
+        open={quick === "actividad"}
+        onOpenChange={cerrarQuick}
+        onCreated={() => navigate("/crm/actividades")}
+        onMore={() => { setQuick(null); setActOpen(true); }}
+      />
 
       <NuevoLeadDialog open={leadOpen} onOpenChange={setLeadOpen} onCreated={(id) => navigate(`/crm/leads/${id}`)} />
       <NuevaOportunidadDialog open={opOpen} onOpenChange={setOpOpen} onSaved={(id) => navigate(`/crm/oportunidades/${id}`)} />
