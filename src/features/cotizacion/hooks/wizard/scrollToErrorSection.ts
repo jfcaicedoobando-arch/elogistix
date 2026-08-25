@@ -6,6 +6,15 @@
  */
 export function seccionParaErrorPaso1(mensaje: string): string {
   const m = mensaje.toLowerCase();
+  if (m.includes("modo de transporte") || m.includes("tipo de operación") || m.includes("incoterm")) {
+    return "seccion-operacion";
+  }
+  if (m.includes("descripción de la mercancía")) {
+    return "seccion-mercancia";
+  }
+  if (m.includes("origen") || m.includes("destino")) {
+    return "seccion-ruta";
+  }
   if (m.includes("cliente") || m.includes("prospecto") || m.includes("lead") || m.includes("oportunidad") || m.includes("empresa") || m.includes("contacto")) {
     return "seccion-cliente";
   }
@@ -17,6 +26,7 @@ export function seccionParaErrorPaso1(mensaje: string): string {
   }
   return "seccion-cliente";
 }
+
 
 /**
  * Hace scroll suave al primer elemento con `id` y aplica focus al primer
