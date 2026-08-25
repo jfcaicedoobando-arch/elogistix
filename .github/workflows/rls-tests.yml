@@ -460,6 +460,17 @@ jobs:
           LOG_DIR: /tmp/guards-logs
         run: bash scripts/ci/run-guards.sh
 
+      - name: Guards RADAR (suites que nunca corrían — modo aviso)
+        # v13.743.0 — 12 suites SQL existían sin estar referenciadas en ningún
+        # workflow (cobertura ficticia). Corren aquí en modo aviso hasta
+        # estabilizarse; luego se mueven al manifiesto bloqueante.
+        continue-on-error: true
+        env:
+          MANIFEST: supabase/tests/_guards_manifest_radar.txt
+          JOBS: 4
+          LOG_DIR: /tmp/guards-logs-radar
+        run: bash scripts/ci/run-guards.sh
+
       - name: Subir logs de guards
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
