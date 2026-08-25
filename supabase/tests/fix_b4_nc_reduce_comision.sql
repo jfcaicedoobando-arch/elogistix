@@ -135,10 +135,26 @@ $caso2$ LANGUAGE plpgsql;
 -- assert_factura_viva_para_pago ya no permiten crear hoy). Se siembra
 -- con session_replication_role=replica y se recalcula por la RPC.
 -- Esperado: 40.00 → 32.00 (baja exactamente el 20% de la NC).
+--
+-- Embarque propio (E3): el prorrateo reparte la utilidad del embarque entre
+-- TODAS sus facturas, así que reutilizar E1 (que ya tiene B4-F1 y B4-F2)
+-- diluía la comisión plena a 24.00 y el caso medía el prorrateo, no el tope
+-- por nota de crédito que aquí se quiere verificar.
 -- -------------------------------------------------------------
+INSERT INTO public.embarques (id, organization_id, cliente_id, modo, tipo, vendedora_id, tipo_cambio_usd)
+VALUES ('bb4b4b4b-0000-4000-8000-000000000053', 'bb4b4b4b-0000-4000-8000-000000000010',
+        'bb4b4b4b-0000-4000-8000-000000000011', 'Marítimo', 'Importación',
+        'bb4b4b4b-0000-4000-8000-000000000012', 20);
+
+INSERT INTO public.conceptos_venta (embarque_id, organization_id, descripcion, cantidad, precio_unitario, total, moneda)
+VALUES ('bb4b4b4b-0000-4000-8000-000000000053', 'bb4b4b4b-0000-4000-8000-000000000010', 'Flete E3', 1, 1000, 1000, 'MXN');
+
+INSERT INTO public.conceptos_costo (embarque_id, organization_id, concepto, monto, moneda)
+VALUES ('bb4b4b4b-0000-4000-8000-000000000053', 'bb4b4b4b-0000-4000-8000-000000000010', 'Maniobras E3', 600, 'MXN');
+
 INSERT INTO public.facturas (id, organization_id, numero, cliente_id, embarque_id, subtotal, iva, total, moneda, tipo_cambio, estado, fecha_emision)
 VALUES ('bb4b4b4b-0000-4000-8000-000000000050', 'bb4b4b4b-0000-4000-8000-000000000010', 'B4-F3',
-        'bb4b4b4b-0000-4000-8000-000000000011', 'bb4b4b4b-0000-4000-8000-000000000020',
+        'bb4b4b4b-0000-4000-8000-000000000011', 'bb4b4b4b-0000-4000-8000-000000000053',
         1000, 0, 1000, 'MXN', 1, 'Emitida', CURRENT_DATE);
 
 INSERT INTO public.pagos_factura (id, factura_id, organization_id, fecha_pago, monto, moneda, tipo_cambio, monto_aplicado_factura)
