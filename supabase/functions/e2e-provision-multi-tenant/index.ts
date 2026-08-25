@@ -9,18 +9,25 @@
 // - POST + `?cleanup=1` → borra las dos orgs por nombre (cascada) y sus objetos
 //   en storage. Se llama al final del spec cuando pasa.
 //
-// Protegida por header `x-e2e-secret` = runtime secret `E2E_PROVISION_SECRET`.
+// Protegida por header `x-e2e-secret` = runtime secret `E2E_PROVISION_SECRET`
+// (comparación timing-safe) Y por allowlist estricta de nombres de org
+// (`orgNameAllowlist.ts`): sólo nombres con prefijo de test (E2E-/TEST- por
+// defecto, sobreescribible con `E2E_PROVISION_ORG_ALLOWLIST`) pueden
+// provisionarse o borrarse — con el secreto filtrado ya no se puede borrar ni
+// adjuntar datos a una org real homónima.
 // NOTA: elude la RPC `provision_organization` (que exige super_admin del caller)
 // porque este pipeline corre con `service_role`. El acceso está limitado por el
 // secreto compartido; NO exponer esta función a usuarios finales.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { corsHeaders } from "../_shared/cors.ts";
+import { timingSafeEqual } from "../_shared/timingSafe.ts";
 import {
   cleanupOrgsByName,
   jsonResponse,
   provisionMultiTenant,
   type MultiTenantPayload,
 } from "./provisioning.ts";
+
 
 const json = (body: unknown, status = 200) => jsonResponse(body, status, corsHeaders);
 
@@ -30,7 +37,13 @@ Deno.serve(async (req) => {
 
   const expected = Deno.env.get("E2E_PROVISION_SECRET");
   if (!expected) return json({ error: "e2e_provision_secret_not_configured" }, 500);
-  if (req.headers.get("x-e2e-secret") !== expected) return json({ error: "unauthorized" }, 401);
+  const provided = req.headers.get("x-e2e-secret") ?? "";
+  if (!timingSafeEqual(provided, expected)) return json({ error: "unauthorized" }, 401);
+
+  // Allowlist estricta de nombres de org provisionables/borrables (prefijos
+  // E2E-/TEST- por defecto; sobreescribible con E2E_PROVISION_ORG_ALLOWLIST).
+  const orgAllowlist = Deno.env.get("E2E_PROVISION_ORG_ALLOWLIST");
+
 
   const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
   const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -50,14 +63,31 @@ Deno.serve(async (req) => {
 
   try {
     if (isCleanup) {
-      const result = await cleanupOrgsByName(admin, [payload.org_a?.nombre, payload.org_b?.nombre]);
+      const result = await cleanupOrgsByName(
+        admin,
+        [payload.org_a?.nombre, payload.org_b?.nombre],
+        orgAllowlist,
+      );
+      const rechazados = result.filter((r) => r.skipped === "name_not_allowed");
+      if (rechazados.length > 0) {
+        return json(
+          { error: "org_name_not_allowed", rechazados: rechazados.map((r) => r.nombre), cleaned: result },
+          400,
+        );
+      }
       return json({ ok: true, cleaned: result });
     }
-    const result = await provisionMultiTenant(admin, payload);
+    const result = await provisionMultiTenant(admin, payload, orgAllowlist);
     return json({ ok: true, ...result });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     console.error("[e2e-provision-multi-tenant]", message);
-    return json({ error: "provision_failed", message }, 500);
+    // Sin detalle interno: sólo el código de dominio hacia el caller.
+    const noPermitido = message.startsWith("org_name_not_allowed");
+    return json(
+      { error: noPermitido ? "org_name_not_allowed" : "provision_failed" },
+      noPermitido ? 400 : 500,
+    );
   }
 });
+

@@ -9,6 +9,11 @@ import {
   upsertCotizacion,
   uploadMarker,
 } from "./entities.ts";
+import {
+  nombreOrgPermitido,
+  primerNombreOrgNoPermitido,
+} from "./orgNameAllowlist.ts";
+
 
 type AdminClient = ReturnType<typeof createClient>;
 
@@ -48,9 +53,19 @@ export function jsonResponse(body: unknown, status: number, corsHeaders: Headers
 export async function provisionMultiTenant(
   admin: AdminClient,
   payload: MultiTenantPayload,
+  allowlistRaw?: string | null,
 ): Promise<{ org_a: OrgProvisionResult; org_b: OrgProvisionResult }> {
   if (!payload.org_a || !payload.org_b) {
     throw new Error("payload requires org_a and org_b");
+  }
+  // Sin allowlist, `findOrgByName` haría upsert sobre CUALQUIER org homónima:
+  // provisionar "ACME SA" adjuntaría datos y un admin E2E a la org real.
+  const rechazado = primerNombreOrgNoPermitido(
+    [payload.org_a.nombre, payload.org_b.nombre],
+    allowlistRaw,
+  );
+  if (rechazado) {
+    throw new Error(`org_name_not_allowed: ${rechazado}`);
   }
   const org_a = await provisionOne(admin, payload.org_a, "A");
   const org_b = await provisionOne(admin, payload.org_b, "B");
@@ -60,15 +75,32 @@ export async function provisionMultiTenant(
 export async function cleanupOrgsByName(
   admin: AdminClient,
   names: Array<string | undefined>,
-): Promise<Array<{ nombre: string; deleted: boolean }>> {
-  const results: Array<{ nombre: string; deleted: boolean }> = [];
+  allowlistRaw?: string | null,
+): Promise<Array<{ nombre: string; deleted: boolean; skipped?: string }>> {
+  const results: Array<{ nombre: string; deleted: boolean; skipped?: string }> = [];
   for (const nombre of names) {
     if (!nombre) continue;
+    // Allowlist estricta ANTES de cualquier borrado: con el secreto filtrado,
+    // un nombre arbitrario ("ACME SA") borraba la org real con service_role.
+    if (!nombreOrgPermitido(nombre, allowlistRaw)) {
+      console.warn(`[e2e-provision-multi-tenant] cleanup rechazado: nombre sin prefijo de test (${nombre})`);
+      results.push({ nombre, deleted: false, skipped: "name_not_allowed" });
+      continue;
+    }
     const org = await findOrgByName(admin, nombre);
     if (!org) {
       results.push({ nombre, deleted: false });
       continue;
     }
+    // Verificación de defensa en profundidad sobre la fila encontrada, por si
+    // el lookup cambia en el futuro (ilike/wildcard): nunca borrar una org
+    // cuyo nombre persistido no pase la allowlist.
+    if (!nombreOrgPermitido(org.nombre, allowlistRaw)) {
+      console.warn(`[e2e-provision-multi-tenant] cleanup abortado: org ${org.id} no es de test`);
+      results.push({ nombre, deleted: false, skipped: "name_not_allowed" });
+      continue;
+    }
+
     // Borrar objetos del storage bajo el prefijo de la org.
     const prefix = `e2e-mt/${org.id}/`;
     const { data: objs } = await admin.storage.from(BUCKET).list(`e2e-mt/${org.id}`);

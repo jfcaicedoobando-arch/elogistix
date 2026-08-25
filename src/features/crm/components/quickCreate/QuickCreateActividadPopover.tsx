@@ -3,6 +3,8 @@
  * Por default: tarea, hoy 17:00, entidad oportunidad si hay contexto.
  */
 import { useState, useMemo } from "react";
+import { isValid } from "date-fns";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -39,6 +41,14 @@ export default function QuickCreateActividadPopover({ onCreated, onMore, onClose
     const a = asunto.trim();
     if (!a) return notifyError(undefined, { title: "Asunto requerido", method: "FEATURES_CRM_COMPONENTS_QUICKCREATE_QUICKCREATEACTIVIDADPOPOVER_1" });
     if (!entidadId) return notifyError(undefined, { title: "Selecciona una oportunidad", method: "FEATURES_CRM_COMPONENTS_QUICKCREATE_QUICKCREATEACTIVIDADPOPOVER_2" });
+    // Si el usuario limpia el DateTimePickerMx emite "" — `new Date("")` es
+    // Invalid Date y `toISOString()` lanza RangeError ("Invalid time value").
+    // Como en NuevaActividadDialog, la fecha es opcional: vacía → null; un
+    // valor no parseable se valida con un mensaje claro en vez del RangeError.
+    const fechaDate = fecha ? new Date(fecha) : null;
+    if (fechaDate && !isValid(fechaDate)) {
+      return notifyError(undefined, { title: "Selecciona una fecha válida", method: "FEATURES_CRM_COMPONENTS_QUICKCREATE_QUICKCREATEACTIVIDADPOPOVER_4" });
+    }
     try {
       await crear.mutateAsync({
         tipo: "tarea",
@@ -46,8 +56,9 @@ export default function QuickCreateActividadPopover({ onCreated, onMore, onClose
         descripcion: "",
         entidad_tipo: "oportunidad" as CrmEntidadTipo,
         entidad_id: entidadId,
-        fecha_programada: new Date(fecha).toISOString(),
+        fecha_programada: fechaDate ? fechaDate.toISOString() : null,
       });
+
       notifySuccess(undefined, { title: "Actividad creada", duration: 2000 });
       setAsunto("");
       onClose();

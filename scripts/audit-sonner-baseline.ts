@@ -52,6 +52,7 @@ function parseAllowlist(): string[] {
   // Wrappers autorizados adicionales (siempre válidos).
   const wrappers = [
     "src/lib/ui/appFeedback.ts",
+    "src/lib/ui/appFeedback.notices.ts",
     "src/hooks/shared/useToast.ts",
     "src/hooks/shared/useCopyText.ts",
     "src/components/ui/sonner.tsx",

@@ -1,6 +1,6 @@
-# Audit Report — 13.739.3
+# Audit Report — 13.740.0
 
-Generado: 2026-08-25T00:14:35.794Z
+Generado: 2026-08-25T01:04:28.586Z
 
 ## Resumen
 
@@ -8,8 +8,8 @@ Generado: 2026-08-25T00:14:35.794Z
 |---|---|---|
 | Capa (Supabase directo en hooks/contexts) | ✅ | 0 archivos |
 | Capa (Supabase directo en components/pages) | ✅ | 0 archivos |
-| Power-of-10 (>200 líneas) | ❌ | 1 archivos |
-| Casts HIGH + CRITICAL | ✅ | 0 / 3146 |
+| Power-of-10 (>200 líneas) | ✅ | 0 archivos |
+| Casts HIGH + CRITICAL | ✅ | 0 / 3149 |
 | Higiene de tests | ✅ | 0 violaciones |
 | Adopción zod en `fromDb` | ⚠️ | 12/49 validados (25%) |
 
@@ -22,17 +22,17 @@ Generado: 2026-08-25T00:14:35.794Z
 ✅ Ninguno
 
 ### Archivos productivos > 200 líneas
--  213  `src/lib/ui/appFeedback.ts`
+✅ Ninguno
 
 ## Casts
 
-Total: **3146** — HIGH: **0**, CRITICAL: **0**
+Total: **3149** — HIGH: **0**, CRITICAL: **0**
 
 | Severidad | Cantidad |
 |---|---:|
 | SAFE | 933 |
 | LOW | 145 |
-| MEDIUM | 2068 |
+| MEDIUM | 2071 |
 | HIGH | 0 |
 | CRITICAL | 0 |
 
@@ -77,4 +77,4 @@ Casts crudos `fromDb<T>()` pendientes por feature:
 
 ---
 
-_Estado general: ⚠️ Revisar violaciones arriba._
+_Estado general: ✅ Baseline arquitectónico limpio._
