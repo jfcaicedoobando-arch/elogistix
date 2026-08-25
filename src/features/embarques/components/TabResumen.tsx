@@ -3,6 +3,7 @@ import { Pencil } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toTitleCase } from "@/lib/formatters";
 import { useEmbarquesRelacionados } from "@/features/embarques/hooks";
+import { useEmbarqueInterno } from "@/features/embarques/hooks/useEmbarqueInterno";
 import { useFocusSection } from "@/features/embarques/hooks/useFocusSection";
 import type { EmbarqueRow } from "@/features/embarques/hooks";
 import { EstadoProgresoCard } from "./tabResumen/EstadoProgresoCard";
@@ -20,6 +21,9 @@ interface Props {
 export function TabResumen({ embarque }: Props) {
   const { data: relacionados = [] } = useEmbarquesRelacionados(embarque.id, embarque.bl_master);
   const { registerRef } = useFocusSection();
+  // `tarifa_delta_jsonb` no es legible en la tabla `embarques`: viene de la
+  // vista interna (staff). Sin esto la sección "Origen de costos" quedaba vacía.
+  const { data: interno } = useEmbarqueInterno(embarque.id);
 
   return (
     <div className="space-y-6">
@@ -63,7 +67,7 @@ export function TabResumen({ embarque }: Props) {
         tarifaIdOriginal={(embarque as { tarifa_id_original?: string | null }).tarifa_id_original}
         tarifaIdAplicada={(embarque as { tarifa_id_aplicada?: string | null }).tarifa_id_aplicada}
         decision={(embarque as { tarifa_decision?: string | null }).tarifa_decision}
-        deltaJsonb={(embarque as { tarifa_delta_jsonb?: unknown }).tarifa_delta_jsonb}
+        deltaJsonb={interno?.tarifa_delta_jsonb}
         revalidadaEn={(embarque as { tarifa_revalidada_en?: string | null }).tarifa_revalidada_en}
       />
 

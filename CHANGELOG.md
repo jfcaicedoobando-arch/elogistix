@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.743.3] - 2026-08-25
+### Detalle de embarque: columnas internas se leen por la vista de staff
+- `TabResumen` pedía `tarifa_delta_jsonb` a la fila de detalle, pero esa columna ya no es legible en `embarques` para `authenticated`. El valor llegaba siempre `undefined` y la sección "Origen de costos" no mostraba el snapshot cotizado vs vigente. Ahora usa el nuevo hook `useEmbarqueInterno` (vista `embarques_interno_v`).
+- Mismo caso en `EmbarqueDetalleTabs`: `creadoPor` de la pestaña Notas leía `embarque.created_by_email` (siempre vacío) y ahora viene de la vista interna.
+
 ## [13.743.2] - 2026-08-25
 ### CI: contador de skips rompía 5 suites RLS
 - `supabase/tests/rls/_helpers.sql` creaba el contador con `CREATE UNLOGGED TABLE pg_temp.skips_registrados`, sintaxis que Postgres rechaza («only temporary relations may be created in temporary schemas»). Las suites `isolation`, `org_scope`, `anon_deny_all`, `cross_tenant_mutations` y `super_admin_planos` abortaban al cargar el helper. Ahora usa `CREATE TEMP TABLE IF NOT EXISTS skips_registrados`.

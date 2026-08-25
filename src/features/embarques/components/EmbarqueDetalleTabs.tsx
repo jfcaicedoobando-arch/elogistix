@@ -20,6 +20,7 @@ import { TabCierre } from "@/features/embarques/components/TabCierre";
 import { TabDemoras } from "@/features/embarques/components/TabDemoras";
 import { SeccionDemorasAuto } from "@/features/embarques/components/financiero/SeccionDemorasAuto";
 import { useEmbarqueDetalleTabsData } from "@/features/embarques/hooks/useEmbarqueDetalleTabsData";
+import { useEmbarqueInterno } from "@/features/embarques/hooks/useEmbarqueInterno";
 import { SectionHeading } from "@/components/shared/SectionHeading";
 import type {
   EmbarqueDetalleTabsProps,
@@ -35,6 +36,10 @@ export function EmbarqueDetalleTabs({
   // se requiere el el cast doble histórico.
   const { conceptosCosto, documentos, notas, facturas, financials, docHandlers } =
     useEmbarqueDetalleTabsData(embarqueId, embarque);
+  // `created_by_email` no es legible en la tabla `embarques`: viene de la vista
+  // interna (staff), no de la fila de detalle.
+  const { data: interno } = useEmbarqueInterno(embarqueId);
+
 
   return (
     <Tabs value={activeTab} onValueChange={setActiveTab}>
@@ -161,7 +166,7 @@ export function EmbarqueDetalleTabs({
           notas={notas}
           embarqueId={embarqueId}
           expediente={embarque.expediente}
-          creadoPor={embarque.created_by_email ?? null}
+          creadoPor={interno?.created_by_email ?? null}
           creadoEn={embarque.created_at}
         />
       </TabsContent>

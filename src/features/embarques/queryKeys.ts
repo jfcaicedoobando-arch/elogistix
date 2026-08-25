@@ -43,6 +43,8 @@ export const embarques = {
   dependenciasFinancieras: (embarqueId?: string) =>
     ['embarques', 'dependencias-financieras', embarqueId] as const,
   tarifaInfo: (embarqueId?: string) => ['embarques', 'tarifa-info', embarqueId] as const,
+  /** Columnas internas (sólo staff) leídas vía `embarques_interno_v`. */
+  interno: (embarqueId?: string) => ['embarques', 'interno', embarqueId] as const,
   alertasResumen: () => ['embarques', 'alertas-ids'] as const,
   garantias: (embarqueId?: string) => ['garantias-embarque', embarqueId] as const,
   pnlFinanciero: (embarqueId?: string) => ['embarque', embarqueId, 'pnl-financiero'] as const,
