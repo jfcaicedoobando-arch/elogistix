@@ -19,6 +19,8 @@ export function calcularSaldoFacturaPortal(
   total: number,
   pagos: readonly PagoAplicadoLike[] = [],
   notasCredito: readonly NotaCreditoAplicadaLike[] = [],
+  estadoFactura?: string | null,
 ): SaldoFacturaPortal {
-  return calcularSaldoFactura(total, pagos, notasCredito);
+  return calcularSaldoFactura(total, pagos, notasCredito, estadoFactura);
 }
+
