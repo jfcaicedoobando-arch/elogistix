@@ -7,11 +7,11 @@
  * moneda se muestra su equivalencia con el T/C DOF de la fecha de emisión y el
  * T/C implícito de lo capturado.
  */
-import { AlertTriangle } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Hint } from "@/components/shared/Hint";
 import { MoneyInput } from "@/components/shared/MoneyInput";
 import { formatCurrency, formatFechaEs } from "@/lib/formatters";
+import { VincularConceptoAvisos } from "./VincularConceptoAvisos";
 import {
   convertirMonto,
   desviacionTcExcedida,
@@ -92,34 +92,18 @@ export function VincularConceptoRow({
           )}
 
         </div>
-        {sinTc && (
-          <p className="mt-0.5 flex items-center gap-1 text-label text-warning">
-            <AlertTriangle className="h-3 w-3 shrink-0" aria-hidden />
-            Costo en {it.moneda} y factura en {facturaMoneda}: falta el tipo de cambio DOF de la
-            fecha de emisión. Regístralo en Configuración → Tipo de cambio DOF para poder vincular.
-          </p>
-        )}
-        {excede && (
-          <p className="mt-0.5 flex items-start gap-1 text-label text-destructive">
-            <AlertTriangle className="h-3 w-3 shrink-0 mt-0.5" aria-hidden />
-            <span>
-              El importe asignado supera lo cotizado
-              {cotizadoEnFactura !== null && !mismaMoneda
-                ? ` (${formatCurrency(cotizadoEnFactura, facturaMoneda)} al T/C DOF)`
-                : ""}
-              . Siguiente paso: baja el importe a lo cotizado, o déjalo así si el proveedor
-              realmente cobró más — la diferencia se registrará como ajuste de costo en el
-              embarque al guardar.
-            </span>
-          </p>
-        )}
-        {implicito !== null && (
-          <p className={`mt-0.5 text-label tabular-nums ${desviado ? "text-warning" : "text-muted-foreground"}`}>
-            T/C aplicado: {fmtTc(implicito)}
-            {desviado && " · se desvía más de 2% del DOF, verifica el importe"}
-          </p>
-        )}
+        <VincularConceptoAvisos
+          sinTc={sinTc}
+          monedaCosto={it.moneda}
+          facturaMoneda={facturaMoneda}
+          mismaMoneda={mismaMoneda}
+          excede={excede}
+          cotizadoEnFactura={cotizadoEnFactura}
+          implicito={implicito}
+          desviado={desviado}
+        />
       </div>
+
       {checked && (
         <div className="flex items-center gap-1.5">
           <span className="text-body-sm text-muted-foreground">{facturaMoneda}</span>

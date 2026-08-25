@@ -64,22 +64,8 @@ export function fechaCfdiADia(valor: string | null): string | null {
   return match ? match[1] : null;
 }
 
-/**
- * Extrae los metadatos del XML. Devuelve campos en `null` cuando el archivo no
- * es un CFDI válido: la subida al buzón nunca se bloquea por esto.
- */
-export function extraerCfdiXmlMeta(xmlTexto: string): CfdiXmlMeta {
-  if (typeof DOMParser === "undefined") return { ...CFDI_XML_META_VACIO };
-  let doc: Document;
-  try {
-    doc = new DOMParser().parseFromString(xmlTexto, "application/xml");
-  } catch {
-    return { ...CFDI_XML_META_VACIO };
-  }
-  if (doc.getElementsByTagName("parsererror").length > 0) return { ...CFDI_XML_META_VACIO };
-
-  const comprobante = firstByLocalName(doc, "Comprobante");
-  if (!comprobante) return { ...CFDI_XML_META_VACIO };
+/** Arma los metadatos a partir del nodo Comprobante ya localizado. */
+function mapearComprobante(doc: Document, comprobante: Element): CfdiXmlMeta {
   const emisor = firstByLocalName(comprobante, "Emisor");
   const timbre = firstByLocalName(doc, "TimbreFiscalDigital");
   const totalRaw = attr(comprobante, "Total") ?? attr(comprobante, "total");
@@ -98,6 +84,26 @@ export function extraerCfdiXmlMeta(xmlTexto: string): CfdiXmlMeta {
     fechaEmision: fechaCfdiADia(attr(comprobante, "Fecha") ?? attr(comprobante, "fecha")),
   };
 }
+
+/**
+ * Extrae los metadatos del XML. Devuelve campos en `null` cuando el archivo no
+ * es un CFDI válido: la subida al buzón nunca se bloquea por esto.
+ */
+export function extraerCfdiXmlMeta(xmlTexto: string): CfdiXmlMeta {
+  if (typeof DOMParser === "undefined") return { ...CFDI_XML_META_VACIO };
+  let doc: Document;
+  try {
+    doc = new DOMParser().parseFromString(xmlTexto, "application/xml");
+  } catch {
+    return { ...CFDI_XML_META_VACIO };
+  }
+  if (doc.getElementsByTagName("parsererror").length > 0) return { ...CFDI_XML_META_VACIO };
+
+  const comprobante = firstByLocalName(doc, "Comprobante");
+  if (!comprobante) return { ...CFDI_XML_META_VACIO };
+  return mapearComprobante(doc, comprobante);
+}
+
 
 /** Lee el archivo y extrae los metadatos. */
 export async function extraerCfdiXmlMetaDeArchivo(file: File): Promise<CfdiXmlMeta> {

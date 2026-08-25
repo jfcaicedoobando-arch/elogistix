@@ -46,6 +46,8 @@ export const LC_CODE_MESSAGES_OPERATIVO_GENERICOS: Record<string, string> = {
     "El UUID fiscal del XML no tiene el formato correcto. Verifica el archivo CFDI.",
   LC_XML_TOTAL_INVALIDO:
     "El total detectado del XML debe ser mayor a cero. Verifica el archivo CFDI.",
+  LC_XML_SUBTOTAL_INVALIDO:
+    "El subtotal (sin IVA) detectado del XML no puede ser negativo. Verifica el archivo CFDI.",
   LC_MOTIVO_REQUERIDO:
     "Indica el motivo para poder continuar.",
   LC_DOC_INEXISTENTE:

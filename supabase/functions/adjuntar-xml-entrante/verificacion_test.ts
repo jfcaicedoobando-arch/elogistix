@@ -7,6 +7,7 @@ const SERVIDOR: MetaServidor = {
   folioSerie: "A-100",
   fechaEmision: "2026-08-01",
   total: 1160.5,
+  subtotal: 1000,
   moneda: "MXN",
 };
 
