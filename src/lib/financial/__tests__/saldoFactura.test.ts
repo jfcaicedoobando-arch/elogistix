@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { calcularSaldoFactura } from "@/lib/financial/saldoFactura";
+import { calcularSaldoFactura, esEstadoSinSaldo } from "@/lib/financial/saldoFactura";
 
 describe("calcularSaldoFactura (canon A1)", () => {
   it("resta pagos y notas de crédito aplicadas", () => {
@@ -24,4 +24,31 @@ describe("calcularSaldoFactura (canon A1)", () => {
     const r = calcularSaldoFactura(500, [{ monto_aplicado_factura: null }], [{ monto: undefined }]);
     expect(r.saldo).toBe(500);
   });
+
+  // BUG-2026-08-25: facturas legacy marcadas Pagada sin pagos capturados.
+  it.each(["Pagada", "Cancelada", "Sustituida", "Borrador"])(
+    "devuelve saldo 0 en estado terminal %s aunque no haya pagos",
+    (estado) => {
+      const r = calcularSaldoFactura(1000, [], [], estado);
+      expect(r.saldo).toBe(0);
+      expect(r.liquidada).toBe(true);
+      expect(r.total).toBe(1000);
+    },
+  );
+
+  it("conserva el saldo en estados vivos", () => {
+    expect(calcularSaldoFactura(1000, [], [], "Emitida").saldo).toBe(1000);
+    expect(calcularSaldoFactura(1000, [], [], "Parcialmente pagada").saldo).toBe(1000);
+    expect(calcularSaldoFactura(1000, [], [], "Vencida").saldo).toBe(1000);
+  });
 });
+
+describe("esEstadoSinSaldo", () => {
+  it("sólo reconoce los estados terminales", () => {
+    expect(esEstadoSinSaldo("Pagada")).toBe(true);
+    expect(esEstadoSinSaldo("Emitida")).toBe(false);
+    expect(esEstadoSinSaldo(null)).toBe(false);
+    expect(esEstadoSinSaldo(undefined)).toBe(false);
+  });
+});
+

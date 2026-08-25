@@ -140,7 +140,9 @@ export function mapFacturaEstadoCuenta(f: RawFactura): FacturaEstadoCuenta {
     total,
     pagosActivos,
     notasActivas,
+    f.estado,
   );
+
   const dias = diasVencido(f.fecha_vencimiento);
 
   return {

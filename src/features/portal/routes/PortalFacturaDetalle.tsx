@@ -131,7 +131,9 @@ export default function PortalFacturaDetalle() {
         facturaId={factura.id}
         totalFactura={Number(factura.total)}
         moneda={factura.moneda}
+        estadoFactura={factura.estado}
       />
+
     </PortalPageShell>
   );
 }

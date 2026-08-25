@@ -16,6 +16,7 @@ supabase/tests/fix3_portal_rls_eventos_notas.sql
 supabase/tests/fix3_portal_rpcs.sql
 supabase/tests/aging_nc_deleted_at.sql
 supabase/tests/cxc_guard_sobrepago.sql
+supabase/tests/cxc_guard_pagada_sin_saldo.sql
 supabase/tests/cxc_guard_nc_multimoneda.sql
 supabase/tests/fix2_embarques_interno_y_nc.sql
 supabase/tests/cxc_guard_factura_en_cancelacion.sql
