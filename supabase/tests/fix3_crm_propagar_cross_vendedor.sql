@@ -3,9 +3,10 @@
 --
 -- crm_propagar_conversion_cliente (SECURITY DEFINER) ya no permite que un
 -- vendedor propague la conversión de una oportunidad de OTRO vendedor
--- (fix de fondo en 20260828000300_rev4; errcodes de autorización a 42501
--- en 20260831100700). Este test congela el comportamiento:
---   · CASO 1: vendedor A sobre oportunidad del vendedor B → 42501
+-- (fix de fondo en 20260828000300_rev4). Los LC_ de autorización viajan como
+-- raise_exception (P0001) — el contrato es el prefijo del mensaje, que es lo
+-- que traduce `lcCodeMessages`. Este test congela el comportamiento:
+--   · CASO 1: vendedor A sobre oportunidad del vendedor B →
 --     LC_OPORTUNIDAD_AJENA.
 --   · CASO 2: el vendedor dueño SÍ propaga (camino feliz intacto).
 --   · CASO 3: no pisa una conversión previa hacia OTRO cliente
