@@ -1,4 +1,4 @@
-import { Download, Receipt, X, FileSpreadsheet } from "lucide-react";
+import { Download, Receipt, X } from "lucide-react";
 
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -13,7 +13,8 @@ import { usePermissions } from "@/hooks/shared";
 import { useMemo } from "react";
 import { todayLocalISO } from "@/lib/date/today";
 import { CargaGuard } from "@/components/shared/states/CargaGuard";
-import EmptyState from "@/components/empty/EmptyState";
+import { mensajeVacioProformas } from "./proformasEmptyCopy";
+import { ProformasEmptyState } from "./proformasEmpty";
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 
 
@@ -136,43 +137,15 @@ export function TabProformas({ isInRange, estadoInicial }: {
             columns={columns}
             data={c.paginated}
             isLoading={c.isLoading}
-            emptyMessage={
-              // VF-23: el copy del empty state refleja el filtro de estado activo
-              // (bandeja "Por emitir" = ?estado=aceptada). Con búsqueda activa
-              // manda el patrón «Sin resultados para…» (O3.7.6).
-              c.search.trim()
-                ? `Sin resultados para «${c.search.trim()}»`
-                : c.filtroEstado === "aceptada"
-                  ? "Ninguna proforma aceptada pendiente de emitir"
-                  : "No hay proformas generadas"
-            }
+            emptyMessage={mensajeVacioProformas(c.search, c.filtroEstado)}
             emptyState={
               c.counts.todas > 0 && c.filtered.length === 0 ? (
-                // O3.7.6 (FIX-R3): con búsqueda activa el empty debe decir
-                // QUÉ no se encontró y ofrecer limpiar la búsqueda — antes
-                // era idéntico al estado inicial (shots/17).
-                c.search.trim() ? (
-                  <EmptyState
-                    icon={FileSpreadsheet}
-                    title={`Sin resultados para «${c.search.trim()}»`}
-                    description="Ajusta la búsqueda o límpiala para ver todas las proformas."
-                    primaryAction={{ label: "Limpiar búsqueda", onClick: () => c.setSearch("") }}
-                  />
-                ) : c.filtroEstado === "aceptada" ? (
-                  <EmptyState
-                    icon={FileSpreadsheet}
-                    title="Ninguna proforma aceptada pendiente de emitir"
-                    description="Cuando un cliente acepte una proforma, aparecerá aquí lista para convertirse en factura."
-                    primaryAction={{ label: "Limpiar filtros", onClick: c.clearFiltros }}
-                  />
-                ) : (
-                <EmptyState
-                  icon={FileSpreadsheet}
-                  title="No hay proformas con estos filtros"
-                  description="Ajusta o quita los filtros aplicados para ver el listado completo de proformas."
-                  primaryAction={{ label: "Limpiar filtros", onClick: c.clearFiltros }}
+                <ProformasEmptyState
+                  search={c.search}
+                  filtroEstado={c.filtroEstado}
+                  onLimpiarBusqueda={() => c.setSearch("")}
+                  onLimpiarFiltros={c.clearFiltros}
                 />
-                )
               ) : undefined
             }
             rowKey={(p) => p.id}

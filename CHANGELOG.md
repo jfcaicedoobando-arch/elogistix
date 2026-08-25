@@ -2,6 +2,8 @@
 
 ## [13.739.1] - 2026-08-24
 ### CI — `rpc_org_scope_linter`
+- **`audit:replay-mirror`**: se re-emite `public.avanzar_estado_embarque` como migración nueva (`20260901000100`) para que la migración vigente incluya el marcador `replay: true` del espejo.
+- **Lint (complejidad)**: se extraen los estados vacíos de proformas (`proformasEmpty.tsx` / `proformasEmptyCopy.ts`) y la emisión del toast de error (`emitirToastError` en `appFeedback.ts`).
 - Se re-cierran en `_ci_post_migrate.sql` las funciones de plataforma `cron_try_lock`, `cron_unlock` y `email_send_log_touch` (sólo `service_role`), que el GRANT masivo del Postgres bare de CI reabría a `authenticated`. En producción ya estaban revocadas.
 
 ## [13.739.0] - 2026-08-24
