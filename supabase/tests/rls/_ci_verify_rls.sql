@@ -22,14 +22,9 @@ DECLARE
   fail_count int := 0;
   missing_policies text := '';
   missing_rls text := '';
-  -- Whitelist de tablas que NO requieren RLS (catálogos compartidos / internas)
-  whitelist text[] := ARRAY[
-    'ratelimit_buckets'            -- bucket de rate limiting interno
-    -- O6 (auditoría 2026-07-29, S7-18): eliminadas las 3 entradas
-    -- '_backup_*' (tablas dropped en 20260717042435 y 20260717033242).
-    -- Política: los backups temporales viven fuera de `public` o con
-    -- RLS deny-all; NUNCA se whitelistean aquí.
-  ];
+  -- Whitelist centralizada en _ci_exempt_tables.sql (categoría 'sin-rls').
+  whitelist text[] := pg_temp.tablas_exentas('sin-rls');
+
 BEGIN
   -- 1) Tablas con RLS pero sin policies
   FOR rec IN
