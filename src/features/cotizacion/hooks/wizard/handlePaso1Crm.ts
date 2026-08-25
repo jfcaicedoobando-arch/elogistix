@@ -18,10 +18,12 @@ import { esIncotermSinFleteVenta } from "@/features/cotizacion/utils/incotermRul
 import type { CotizacionFormValues } from "@/features/cotizacion/domain/mappers/cotizacionForm";
 import {
   destinatarioSchema,
+  datosGeneralesSchema,
   rutaTerrestreSchema,
   fleteLclManualSchema,
   primerError,
 } from "@/features/cotizacion/domain/schemas/wizardPasos";
+
 
 
 // ── Pure sub-validators ──────────────────────────────────────────────────────
@@ -83,9 +85,31 @@ export function validateMaritimo(v: CotizacionFormValues): string | null {
 
 // ── Combined validator (public API) ─────────────────────────────────────────
 
-export function validatePaso1(v: CotizacionFormValues): string | null {
-  return validateCliente(v) ?? validateProspecto(v) ?? validateTerrestre(v) ?? validateMaritimo(v);
+/**
+ * VB-41: los datos generales obligatorios del borrador se validan aquí (antes
+ * sólo fallaban en el boundary de mutación con un mensaje técnico).
+ */
+export function validateDatosGenerales(v: CotizacionFormValues): string | null {
+  return primerError(datosGeneralesSchema, {
+    modo: v.modo ?? "",
+    tipo: v.tipo ?? "",
+    incoterm: v.incoterm ?? "",
+    descripcionMercancia: v.descripcionMercancia ?? "",
+    origen: v.origen ?? "",
+    destino: v.destino ?? "",
+  });
 }
+
+export function validatePaso1(v: CotizacionFormValues): string | null {
+  return (
+    validateCliente(v) ??
+    validateDatosGenerales(v) ??
+    validateProspecto(v) ??
+    validateTerrestre(v) ??
+    validateMaritimo(v)
+  );
+}
+
 
 // ── Validación inline (VF-09 / VB-34) ────────────────────────────────────────
 

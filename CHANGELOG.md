@@ -1,6 +1,12 @@
 # Changelog
 
+## [13.746.3] - 2026-08-25
+### Cotizaciones: validación clara en Paso 1
+- Los campos obligatorios del borrador (modo, tipo de operación, Incoterm, descripción de la mercancía, origen y destino) ahora se validan ANTES de guardar: se marcan inline con scroll+foco a su sección, en lugar del toast técnico "Cotización — Modo: requerido." al fallar el boundary de mutación.
+- Nuevo `datosGeneralesSchema` en `domain/schemas/wizardPasos.ts`; mensajes en `COPY_VALIDACION`; `campoParaErrorPaso1` y `seccionParaErrorPaso1` mapean los seis campos nuevos.
+
 ## [13.746.2] - 2026-08-25
+
 - `facturasEntrantesBuzon.ts` (216 líneas) se divide en `facturasEntrantesTipos.ts` e `facturasEntrantesImporte.ts` para cumplir el límite de 200 líneas (Power of 10). Sin cambios de comportamiento; el barrel reexporta la API pública.
 
 ## [13.746.1] - 2026-08-25

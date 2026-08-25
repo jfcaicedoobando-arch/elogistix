@@ -40,6 +40,9 @@ const base = (over: Partial<CotizacionFormValues> = {}): CotizacionFormValues =>
   oportunidadId: "",
   leadId: "",
   modo: "Marítimo",
+  tipo: "Importación",
+  incoterm: "FOB",
+  descripcionMercancia: "Mercancía general",
   origen: "MXVER",
   destino: "CNSHA",
   tipoContenedor: "tc-1",
@@ -93,5 +96,27 @@ describe("validatePaso1 — política tarifa-first (Marítimo)", () => {
         validatePaso1(base({ tarifaId: "", incoterm: inco } as never)),
       ).toMatch(/tarifa marítima/i);
     }
+  });
+});
+
+describe("validatePaso1 — datos generales obligatorios (VB-41)", () => {
+  const casos: [keyof CotizacionFormValues, RegExp][] = [
+    ["modo", /modo de transporte/i],
+    ["tipo", /tipo de operación/i],
+    ["incoterm", /incoterm/i],
+    ["descripcionMercancia", /descripción de la mercancía/i],
+    ["origen", /origen de la ruta/i],
+    ["destino", /destino de la ruta/i],
+  ];
+
+  for (const [campo, patron] of casos) {
+    it(`bloquea cuando falta ${campo}`, () => {
+      const v = base({ tarifaId: "tar-1", [campo]: "" } as never);
+      expect(validatePaso1(v)).toMatch(patron);
+    });
+  }
+
+  it("pasa cuando todos los datos generales están capturados", () => {
+    expect(validatePaso1(base({ tarifaId: "tar-1" }))).toBeNull();
   });
 });

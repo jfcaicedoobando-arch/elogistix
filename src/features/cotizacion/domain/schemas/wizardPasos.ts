@@ -11,7 +11,41 @@
 import { z } from "zod";
 import { COPY_VALIDACION } from "@/lib/copy/publicoCopy";
 
+// ── Paso 1 · Datos generales obligatorios del borrador ───────────────────────
+
+/**
+ * VB-41: estos seis campos son requeridos por el boundary de mutación
+ * (`cotizacionDraftInputSchema`). Antes sólo fallaban al guardar, con un toast
+ * técnico ("Cotización — Modo: requerido."); ahora se validan antes de tocar
+ * la base y se marcan inline en el campo culpable.
+ */
+export const datosGeneralesSchema = z
+  .object({
+    modo: z.string().default(""),
+    tipo: z.string().default(""),
+    incoterm: z.string().default(""),
+    descripcionMercancia: z.string().default(""),
+    origen: z.string().default(""),
+    destino: z.string().default(""),
+  })
+  .superRefine((v, ctx) => {
+    const faltantes: [keyof typeof v, string][] = [
+      ["modo", COPY_VALIDACION.modoRequerido],
+      ["tipo", COPY_VALIDACION.tipoOperacionRequerido],
+      ["incoterm", COPY_VALIDACION.incotermRequerido],
+      ["descripcionMercancia", COPY_VALIDACION.descripcionMercanciaRequerida],
+      ["origen", COPY_VALIDACION.origenRequerido],
+      ["destino", COPY_VALIDACION.destinoRequerido],
+    ];
+    for (const [campo, message] of faltantes) {
+      if (!String(v[campo] ?? "").trim()) {
+        ctx.addIssue({ code: "custom", path: [campo], message });
+      }
+    }
+  });
+
 // ── Paso 1 · Destinatario (cliente o prospecto) ──────────────────────────────
+
 
 export const destinatarioSchema = z
   .object({

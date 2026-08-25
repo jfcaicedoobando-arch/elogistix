@@ -39,6 +39,12 @@ export const COPY_VALIDACION = {
 
   // ── Cotización · wizard paso 1 ──────────────────────────────────────────
   clienteRequerido: "Selecciona un cliente.",
+  modoRequerido: "Selecciona el modo de transporte.",
+  tipoOperacionRequerido: "Selecciona el tipo de operación.",
+  incotermRequerido: "Selecciona el Incoterm.",
+  descripcionMercanciaRequerida: "Captura la descripción de la mercancía.",
+  origenRequerido: "Captura el origen de la ruta.",
+  destinoRequerido: "Captura el destino de la ruta.",
   prospectoOportunidadRequerida:
     "Selecciona un lead u oportunidad existente, o cambia a 'Crear nuevo prospecto'.",
   prospectoEmpresaRequerida: "Ingresa el nombre de la empresa del prospecto.",
