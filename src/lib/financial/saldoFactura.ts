@@ -5,8 +5,15 @@
  * Las NC deben llegar pre-filtradas (estado "Aplicada" y sin `deleted_at`).
  * Función pura (sin I/O) para poder testearse aislada.
  *
+ * BUG-2026-08-25 (facturas legacy): si el estado de la factura ya es terminal
+ * (`Pagada`, `Cancelada`, `Sustituida`, `Borrador`) el saldo SIEMPRE es 0,
+ * aunque falten los pagos históricos en la tabla. Sin esta regla, las
+ * facturas migradas marcadas "Pagada" sin pagos capturados inflaban el
+ * adeudo del estado de cuenta. Misma regla que `public.saldo_factura`.
+ *
  * NO reimplementar esta fórmula en componentes ni services.
  */
+
 import { sumarMontos } from "./financialUtils";
 
 export interface PagoAplicadoLike {
