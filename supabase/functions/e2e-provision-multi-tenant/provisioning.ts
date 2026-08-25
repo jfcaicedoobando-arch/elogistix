@@ -9,6 +9,11 @@ import {
   upsertCotizacion,
   uploadMarker,
 } from "./entities.ts";
+import {
+  nombreOrgPermitido,
+  primerNombreOrgNoPermitido,
+} from "./orgNameAllowlist.ts";
+
 
 type AdminClient = ReturnType<typeof createClient>;
 
