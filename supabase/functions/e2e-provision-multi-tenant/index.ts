@@ -9,18 +9,25 @@
 // - POST + `?cleanup=1` → borra las dos orgs por nombre (cascada) y sus objetos
 //   en storage. Se llama al final del spec cuando pasa.
 //
-// Protegida por header `x-e2e-secret` = runtime secret `E2E_PROVISION_SECRET`.
+// Protegida por header `x-e2e-secret` = runtime secret `E2E_PROVISION_SECRET`
+// (comparación timing-safe) Y por allowlist estricta de nombres de org
+// (`orgNameAllowlist.ts`): sólo nombres con prefijo de test (E2E-/TEST- por
+// defecto, sobreescribible con `E2E_PROVISION_ORG_ALLOWLIST`) pueden
+// provisionarse o borrarse — con el secreto filtrado ya no se puede borrar ni
+// adjuntar datos a una org real homónima.
 // NOTA: elude la RPC `provision_organization` (que exige super_admin del caller)
 // porque este pipeline corre con `service_role`. El acceso está limitado por el
 // secreto compartido; NO exponer esta función a usuarios finales.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { corsHeaders } from "../_shared/cors.ts";
+import { timingSafeEqual } from "../_shared/timingSafe.ts";
 import {
   cleanupOrgsByName,
   jsonResponse,
   provisionMultiTenant,
   type MultiTenantPayload,
 } from "./provisioning.ts";
+
 
 const json = (body: unknown, status = 200) => jsonResponse(body, status, corsHeaders);
 
