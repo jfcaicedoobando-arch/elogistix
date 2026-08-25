@@ -132,7 +132,10 @@ $$;
 --
 -- `assert_max_skips` imprime los motivos y aborta si se excede el umbral.
 -- ============================================================================
-CREATE UNLOGGED TABLE IF NOT EXISTS pg_temp.skips_registrados (
+-- Nota: debe ser `CREATE TEMP TABLE` (sin UNLOGGED y sin prefijo de esquema).
+-- Postgres rechaza `CREATE UNLOGGED TABLE pg_temp.x` con
+-- «only temporary relations may be created in temporary schemas».
+CREATE TEMP TABLE IF NOT EXISTS skips_registrados (
   id     serial PRIMARY KEY,
   motivo text NOT NULL
 );

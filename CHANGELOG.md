@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.743.2] - 2026-08-25
+### CI: contador de skips rompía 5 suites RLS
+- `supabase/tests/rls/_helpers.sql` creaba el contador con `CREATE UNLOGGED TABLE pg_temp.skips_registrados`, sintaxis que Postgres rechaza («only temporary relations may be created in temporary schemas»). Las suites `isolation`, `org_scope`, `anon_deny_all`, `cross_tenant_mutations` y `super_admin_planos` abortaban al cargar el helper. Ahora usa `CREATE TEMP TABLE IF NOT EXISTS skips_registrados`.
+
 ## [13.743.1] - 2026-08-25
 ### CI: candado service_role-only sincronizado
 - `supabase/tests/rls/_ci_service_role_only.sql` no incluía `public.handle_new_user_signup()`, que sí trae su `REVOKE` en migración. El candado bidireccional fallaba con "faltan en _ci_service_role_only.sql". Se añadió a la lista canónica.
