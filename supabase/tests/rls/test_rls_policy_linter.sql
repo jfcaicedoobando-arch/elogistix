@@ -25,7 +25,6 @@ DECLARE
   r record;
   violations text := '';
   n int := 0;
-  -- Tablas explícitamente exentas (globales/catálogos) — documentar por qué.
   -- Exenciones centralizadas en _ci_exempt_tables.sql
   -- (categoría 'sin-filtro-tenant'): catálogos globales, acceso por token/key
   -- e internas de edge functions.
