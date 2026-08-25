@@ -94,7 +94,7 @@ BEGIN
     RAISE EXCEPTION 'LC_ESTADO_INVALIDO: el documento no existe, ya fue capturado o pertenece a otra organización';
   END IF;
 END;
-$function$
+$function$;
 
 
 DROP FUNCTION IF EXISTS public.adjuntar_xml_entrante_verificado(uuid, uuid, text, text, text, text, text, text, date, numeric, text);
