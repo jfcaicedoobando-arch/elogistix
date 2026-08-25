@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.743.4] - 2026-08-25
+### CI: tres guards conductuales congelaban expectativas obsoletas
+- `fix_b4_nc_reduce_comision`: el CASO 3 reutilizaba el embarque del CASO 1/2, así que el prorrateo repartía la utilidad entre tres facturas y la comisión plena daba 24.00 en vez de 40.00. Ahora el caso siembra su propio embarque (venta 1000 − costo 600) y mide sólo el tope por nota de crédito.
+- `fix3_crm_propagar_cross_vendedor`: esperaba SQLSTATE 42501 en `LC_OPORTUNIDAD_AJENA`, pero esa migración de errcodes nunca existió: la RPC levanta los `LC_` sin errcode (P0001). El guard ahora congela el prefijo del mensaje, que es el contrato que traduce `lcCodeMessages`.
+- `fix4_n2_portal_proforma_dual`: el CASO 5 exigía `usuario_id IS NULL` en bitácora, pero `portal_responder_por_token` escribe el usuario sentinel de sistema. Ahora acepta NULL o sentinel y verifica `usuario_email = 'cliente-portal-token'`.
+
 ## [13.743.3] - 2026-08-25
 ### Detalle de embarque: columnas internas se leen por la vista de staff
 - `TabResumen` pedía `tarifa_delta_jsonb` a la fila de detalle, pero esa columna ya no es legible en `embarques` para `authenticated`. El valor llegaba siempre `undefined` y la sección "Origen de costos" no mostraba el snapshot cotizado vs vigente. Ahora usa el nuevo hook `useEmbarqueInterno` (vista `embarques_interno_v`).
