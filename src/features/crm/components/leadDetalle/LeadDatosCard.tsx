@@ -48,7 +48,7 @@ export default function LeadDatosCard({ form, set, canEdit, dirty, isSaving, onS
             <Input id="lead-datos-contacto" value={form.contacto} onChange={(e) => set("contacto", e.target.value)} disabled={!canEdit} />
           </div>
           <div className="space-y-1">
-            <Label htmlFor="lead-datos-email">Email</Label>
+            <Label htmlFor="lead-datos-email">Correo</Label>
             <Input id="lead-datos-email" type="email" value={form.email} onChange={(e) => set("email", e.target.value)} disabled={!canEdit} />
           </div>
           <div className="space-y-1">

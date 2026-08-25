@@ -57,7 +57,7 @@ export function ImportarLeadsCsvPreview({
             <TableRow>
               <DetailTableHead>Empresa</DetailTableHead>
               <DetailTableHead>Contacto</DetailTableHead>
-              <DetailTableHead>Email</DetailTableHead>
+              <DetailTableHead>Correo</DetailTableHead>
               <DetailTableHead>Estado</DetailTableHead>
               <DetailTableHead>Fuente</DetailTableHead>
               <DetailTableHead>Duplicado</DetailTableHead>
