@@ -4,27 +4,19 @@
  *
  * Los ids provienen de `PasoDatosGenerales.tsx` (`seccion-cliente`, etc.).
  */
+const REGLAS_SECCION: Array<[readonly string[], string]> = [
+  [["modo de transporte", "tipo de operación", "incoterm"], "seccion-operacion"],
+  [["descripción de la mercancía"], "seccion-mercancia"],
+  [["origen", "destino"], "seccion-ruta"],
+  [["cliente", "prospecto", "lead", "oportunidad", "empresa", "contacto"], "seccion-cliente"],
+  [["modalidad", "equipo", "punto de carga"], "seccion-operacion"],
+  [["tarifa"], "seccion-tarifa"],
+];
+
 export function seccionParaErrorPaso1(mensaje: string): string {
   const m = mensaje.toLowerCase();
-  if (m.includes("modo de transporte") || m.includes("tipo de operación") || m.includes("incoterm")) {
-    return "seccion-operacion";
-  }
-  if (m.includes("descripción de la mercancía")) {
-    return "seccion-mercancia";
-  }
-  if (m.includes("origen") || m.includes("destino")) {
-    return "seccion-ruta";
-  }
-  if (m.includes("cliente") || m.includes("prospecto") || m.includes("lead") || m.includes("oportunidad") || m.includes("empresa") || m.includes("contacto")) {
-    return "seccion-cliente";
-  }
-  if (m.includes("modalidad") || m.includes("equipo") || m.includes("punto de carga")) {
-    return "seccion-operacion";
-  }
-  if (m.includes("tarifa")) {
-    return "seccion-tarifa";
-  }
-  return "seccion-cliente";
+  const match = REGLAS_SECCION.find(([patrones]) => patrones.some((p) => m.includes(p)));
+  return match?.[1] ?? "seccion-cliente";
 }
 
 
