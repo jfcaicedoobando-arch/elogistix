@@ -80,15 +80,19 @@ DECLARE
   v_count int;
   v_failed boolean := false;
 BEGIN
-  PERFORM public.has_role('d5555555-5555-5555-5555-555555555555'::uuid, 'super_admin'::app_role);
-  -- Otorgar temporalmente super_admin al caller para poder invocar la RPC.
+  -- El caller debe ser super_admin de plataforma SIN membresía: user_roles se
+  -- sincroniza con organization_members, así que un miembro no puede portar
+  -- super_admin. Usamos un usuario de plataforma aparte como caller.
+  INSERT INTO auth.users (id, email)
+  VALUES ('d6666666-6666-6666-6666-666666666666', 'ola4-n27-sa@test.mx')
+  ON CONFLICT (id) DO NOTHING;
   INSERT INTO public.user_roles (user_id, role)
-  VALUES ('d5555555-5555-5555-5555-555555555555', 'super_admin')
+  VALUES ('d6666666-6666-6666-6666-666666666666', 'super_admin')
   ON CONFLICT DO NOTHING;
 
   -- El RPC valida auth.uid(): simulamos la sesión del super_admin.
   PERFORM set_config('request.jwt.claims',
-    jsonb_build_object('sub', 'd5555555-5555-5555-5555-555555555555')::text, true);
+    jsonb_build_object('sub', 'd6666666-6666-6666-6666-666666666666')::text, true);
 
   BEGIN
     PERFORM public.provision_organization('Org Huerfana N27', NULL, 'd5555555-5555-5555-5555-555555555555');
