@@ -4671,6 +4671,10 @@ BEGIN
   FOR UPDATE;
   IF v_org_id IS NULL THEN RAISE EXCEPTION 'Embarque no encontrado'; END IF;
   PERFORM public._assert_writer(v_org_id);
+  -- QA-R2 D-02: marca que el cambio de estado (incluida la cancelacion) viene
+  -- de esta RPC; el trigger embarques_assert_cancelacion_sin_cxc_cxp exige la
+  -- GUC para cancelar y aplica la misma validacion CxC/CxP en escritura directa.
+  PERFORM set_config('app.via_rpc_estado', '1', true);
   -- B-01: no cancelar una operación que todavía conserva CxC o CxP vivas.
   IF p_nuevo_estado = 'Cancelado' THEN
     IF EXISTS (
@@ -4737,6 +4741,25 @@ BEGIN
   IF NOT FOUND THEN
     RAISE EXCEPTION 'LC_ESTADO_CONCURRENTE: el embarque cambió de estado durante la transición'
       USING ERRCODE = '40001';
+  END IF;
+  -- QA-R2 R-02: al cancelar, liberar las cotizaciones ligadas al embarque.
+  -- La reversión 'En operación' → 'Aceptada' es housekeeping (mismo patrón
+  -- que la papelera: GUC app.liberando_papelera ante guard_estado_cotizacion);
+  -- no se tocan subtotal/moneda/conceptos, así que el guard de cotización
+  -- congelada no aplica.
+  IF p_nuevo_estado = 'Cancelado' THEN
+    PERFORM set_config('app.liberando_papelera', 'on', true);
+    UPDATE public.cotizaciones
+       SET embarque_id = NULL,
+           estado = CASE
+             WHEN estado = 'En operación'::estado_cotizacion
+               THEN 'Aceptada'::estado_cotizacion
+             ELSE estado
+           END,
+           updated_at = now()
+     WHERE embarque_id = p_embarque_id
+       AND organization_id = v_org_id;
+    PERFORM set_config('app.liberando_papelera', 'off', true);
   END IF;
   INSERT INTO notas_embarque (embarque_id, contenido, tipo, usuario, organization_id)
   VALUES (p_embarque_id, 'Estado cambiado a "' || p_nuevo_estado || '"', 'cambio_estado'::tipo_nota, v_actor_email, v_org_id);
@@ -11981,6 +12004,37 @@ CREATE FUNCTION public.embarques_alertas_ids() RETURNS TABLE(embarque_id uuid, t
       )
     );
 $$;
+CREATE FUNCTION public.embarques_assert_cancelacion_sin_cxc_cxp() RETURNS trigger
+    LANGUAGE plpgsql
+    SET search_path TO 'public'
+    AS $$
+BEGIN
+  IF NEW.estado = 'Cancelado'::public.estado_embarque
+     AND OLD.estado NOT IN ('Cancelado'::public.estado_embarque, 'Cerrado'::public.estado_embarque)
+     AND NEW.deleted_at IS NULL
+     AND current_setting('app.via_rpc_estado', true) IS DISTINCT FROM '1' THEN
+    IF EXISTS (
+      SELECT 1 FROM public.facturas f
+      WHERE f.embarque_id = NEW.id
+        AND f.deleted_at IS NULL
+        AND f.estado IN ('Emitida', 'Vencida', 'Parcialmente pagada')
+    ) THEN
+      RAISE EXCEPTION 'LC_CANCEL_CON_CXC: cancela o sustituye las facturas de cliente antes de cancelar el embarque'
+        USING ERRCODE = 'P0001';
+    END IF;
+    IF EXISTS (
+      SELECT 1 FROM public.proveedor_facturas pf
+      WHERE pf.embarque_id = NEW.id
+        AND pf.deleted_at IS NULL
+        AND pf.estado <> 'Cancelada'
+    ) THEN
+      RAISE EXCEPTION 'LC_CANCEL_CON_CXP: cancela las facturas de proveedor antes de cancelar el embarque'
+        USING ERRCODE = 'P0001';
+    END IF;
+  END IF;
+  RETURN NEW;
+END
+$$;
 CREATE FUNCTION public.embarques_freeze_eta_original() RETURNS trigger
     LANGUAGE plpgsql
     SET search_path TO 'public'
@@ -17412,6 +17466,41 @@ BEGIN
   );
 END;
 $$;
+CREATE FUNCTION public.proveedor_facturas_assert_folio_unico() RETURNS trigger
+    LANGUAGE plpgsql
+    SET search_path TO 'public'
+    AS $$
+DECLARE
+  v_folio_norm text;
+BEGIN
+  v_folio_norm := upper(btrim(COALESCE(NEW.folio_proveedor, '')));
+  IF v_folio_norm = '' THEN
+    RETURN NEW;
+  END IF;
+  IF TG_OP = 'UPDATE'
+     AND v_folio_norm = upper(btrim(COALESCE(OLD.folio_proveedor, '')))
+     AND NEW.proveedor_id IS NOT DISTINCT FROM OLD.proveedor_id
+     AND NEW.organization_id IS NOT DISTINCT FROM OLD.organization_id THEN
+    RETURN NEW;
+  END IF;
+  -- Serializa altas/ediciones del mismo folio dentro de la org.
+  PERFORM pg_advisory_xact_lock(
+    hashtext(NEW.organization_id::text || ':' || NEW.proveedor_id::text || ':' || v_folio_norm));
+  IF EXISTS (
+    SELECT 1 FROM public.proveedor_facturas pf
+    WHERE pf.organization_id = NEW.organization_id
+      AND pf.proveedor_id IS NOT DISTINCT FROM NEW.proveedor_id
+      AND upper(btrim(pf.folio_proveedor)) = v_folio_norm
+      AND pf.deleted_at IS NULL
+      AND pf.estado <> 'Cancelada'::public.estado_proveedor_factura
+      AND pf.id IS DISTINCT FROM NEW.id
+  ) THEN
+    RAISE EXCEPTION 'LC_CXP_FOLIO_DUPLICADO: ya existe una factura viva del proveedor con el folio %', v_folio_norm
+      USING ERRCODE = '23505';
+  END IF;
+  RETURN NEW;
+END
+$$;
 CREATE FUNCTION public.proveedor_inteligencia(p_proveedor_id uuid) RETURNS jsonb
     LANGUAGE plpgsql STABLE SECURITY DEFINER
     SET search_path TO 'public'
@@ -22040,10 +22129,16 @@ BEGIN
     RAISE EXCEPTION 'Permisos insuficientes';
   END IF;
   IF _table = 'clientes' THEN
+    -- QA-R2 D-03: sólo estados vivos/no terminales cuentan como dependencia:
+    -- embarques Cancelados y cotizaciones en Borrador no bloquean la baja.
     SELECT
-      (SELECT count(*) FROM public.embarques e WHERE e.cliente_id = _id AND e.deleted_at IS NULL)
+      (SELECT count(*) FROM public.embarques e
+        WHERE e.cliente_id = _id AND e.deleted_at IS NULL
+          AND e.estado <> 'Cancelado')
       + (SELECT count(*) FROM public.facturas f WHERE f.cliente_id = _id AND f.deleted_at IS NULL)
-      + (SELECT count(*) FROM public.cotizaciones c WHERE c.cliente_id = _id AND c.deleted_at IS NULL)
+      + (SELECT count(*) FROM public.cotizaciones c
+        WHERE c.cliente_id = _id AND c.deleted_at IS NULL
+          AND c.estado <> 'Borrador')
       INTO _deps;
   ELSIF _table = 'embarques' THEN
     SELECT
@@ -26239,6 +26334,7 @@ CREATE TRIGGER trg_efe_updated_at BEFORE UPDATE ON public.embarque_facturas_entr
 CREATE TRIGGER trg_efec_updated_at BEFORE UPDATE ON public.embarque_facturas_entrantes_conceptos FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 CREATE TRIGGER trg_embarque_contenedores_updated_at BEFORE UPDATE ON public.embarque_contenedores FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 CREATE TRIGGER trg_embarque_transicion_valida BEFORE UPDATE OF estado ON public.embarques FOR EACH ROW WHEN ((old.estado IS DISTINCT FROM new.estado)) EXECUTE FUNCTION public.trg_fn_embarque_transicion_valida();
+CREATE TRIGGER trg_embarques_cancelacion_cxc_cxp BEFORE UPDATE OF estado ON public.embarques FOR EACH ROW EXECUTE FUNCTION public.embarques_assert_cancelacion_sin_cxc_cxp();
 CREATE TRIGGER trg_embarques_entregado_demoras AFTER UPDATE OF estado ON public.embarques FOR EACH ROW EXECUTE FUNCTION public.trg_recalcular_demoras_al_entregar();
 CREATE TRIGGER trg_embarques_freeze_eta_original BEFORE INSERT OR UPDATE ON public.embarques FOR EACH ROW EXECUTE FUNCTION public.embarques_freeze_eta_original();
 CREATE TRIGGER trg_embarques_protect_creator BEFORE UPDATE ON public.embarques FOR EACH ROW EXECUTE FUNCTION public.embarques_protect_creator();
@@ -26305,6 +26401,7 @@ CREATE TRIGGER trg_proforma_eur_no_soportada BEFORE UPDATE OF estado_proforma ON
 CREATE TRIGGER trg_proforma_no_soft_delete_facturada BEFORE UPDATE OF deleted_at ON public.proformas FOR EACH ROW EXECUTE FUNCTION public.enforce_proforma_no_soft_delete_facturada();
 CREATE TRIGGER trg_proveedor_contacto_principal_unico BEFORE INSERT OR UPDATE OF es_principal, deleted_at ON public.proveedor_contactos FOR EACH ROW EXECUTE FUNCTION public._proveedor_contacto_principal_unico();
 CREATE TRIGGER trg_proveedor_contactos_updated_at BEFORE UPDATE ON public.proveedor_contactos FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+CREATE TRIGGER trg_proveedor_facturas_folio_unico BEFORE INSERT OR UPDATE OF organization_id, proveedor_id, folio_proveedor ON public.proveedor_facturas FOR EACH ROW EXECUTE FUNCTION public.proveedor_facturas_assert_folio_unico();
 CREATE TRIGGER trg_proveedor_facturas_recalc_liq AFTER UPDATE ON public.proveedor_facturas FOR EACH ROW EXECUTE FUNCTION public.tg_proveedor_facturas_recalc_liq();
 CREATE TRIGGER trg_proveedor_facturas_total_guard BEFORE INSERT OR UPDATE OF subtotal, iva, ieps, retenciones, total ON public.proveedor_facturas FOR EACH ROW EXECUTE FUNCTION public.guard_proveedor_factura_total();
 CREATE TRIGGER trg_proveedor_facturas_updated BEFORE UPDATE ON public.proveedor_facturas FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
@@ -26794,14 +26891,14 @@ CREATE POLICY "Cliente read own clientes" ON public.clientes FOR SELECT TO authe
 CREATE POLICY "Cliente read own conceptos_venta" ON public.conceptos_venta FOR SELECT TO authenticated USING ((( SELECT public.has_role(( SELECT auth.uid() AS uid), 'cliente'::public.app_role) AS has_role) AND (embarque_id IN ( SELECT embarques.id
    FROM public.embarques
   WHERE (embarques.cliente_id IN ( SELECT public.current_user_client_ids() AS current_user_client_ids))))));
-CREATE POLICY "Cliente read own cotizaciones" ON public.cotizaciones FOR SELECT TO authenticated USING ((( SELECT public.has_role(( SELECT auth.uid() AS uid), 'cliente'::public.app_role) AS has_role) AND (cliente_id IN ( SELECT public.current_user_client_ids() AS current_user_client_ids)) AND (estado = ANY (ARRAY['Solicitada'::public.estado_cotizacion, 'Enviada'::public.estado_cotizacion, 'Aceptada'::public.estado_cotizacion, 'Rechazada'::public.estado_cotizacion, 'En operación'::public.estado_cotizacion]))));
+CREATE POLICY "Cliente read own cotizaciones" ON public.cotizaciones FOR SELECT TO authenticated USING (((deleted_at IS NULL) AND public.has_role(auth.uid(), 'cliente'::public.app_role) AND (cliente_id IN ( SELECT public.current_user_client_ids() AS current_user_client_ids))));
 CREATE POLICY "Cliente read own documentos" ON public.documentos_embarque FOR SELECT TO authenticated USING ((( SELECT public.has_role(( SELECT auth.uid() AS uid), 'cliente'::public.app_role) AS has_role) AND (embarque_id IN ( SELECT embarques.id
    FROM public.embarques
   WHERE (embarques.cliente_id IN ( SELECT public.current_user_client_ids() AS current_user_client_ids))))));
 CREATE POLICY "Cliente read own embarque_contenedores" ON public.embarque_contenedores FOR SELECT TO authenticated USING ((( SELECT public.has_role(( SELECT auth.uid() AS uid), 'cliente'::public.app_role) AS has_role) AND (embarque_id IN ( SELECT e.id
    FROM public.embarques e
   WHERE (e.cliente_id IN ( SELECT public.current_user_client_ids() AS current_user_client_ids))))));
-CREATE POLICY "Cliente read own embarques" ON public.embarques FOR SELECT TO authenticated USING ((( SELECT public.has_role(( SELECT auth.uid() AS uid), 'cliente'::public.app_role) AS has_role) AND (cliente_id IN ( SELECT public.current_user_client_ids() AS current_user_client_ids))));
+CREATE POLICY "Cliente read own embarques" ON public.embarques FOR SELECT TO authenticated USING (((deleted_at IS NULL) AND public.has_role(auth.uid(), 'cliente'::public.app_role) AND (cliente_id IN ( SELECT public.current_user_client_ids() AS current_user_client_ids))));
 CREATE POLICY "Cliente read own eventos" ON public.eventos_embarque FOR SELECT TO authenticated USING ((public.has_role(auth.uid(), 'cliente'::public.app_role) AND (embarque_id IN ( SELECT embarques.id
    FROM public.embarques
   WHERE (embarques.cliente_id IN ( SELECT public.current_user_client_ids() AS current_user_client_ids)))) AND ((tipo)::text = ANY (ARRAY['Zarpe'::text, 'Transbordo'::text, 'Arribo a Puerto'::text, 'Descarga'::text, 'Despacho Aduanal'::text, 'Liberación'::text, 'En Ruta Terrestre'::text, 'Entrega'::text, 'Cambio de ETA'::text])) AND (deleted_at IS NULL) AND (lower(COALESCE(descripcion, ''::text)) !~~ ALL (ARRAY['%[interno]%'::text, '%harness%'::text, '%e2e%'::text, '%seed%'::text, '%qa-%'::text])) AND (lower(COALESCE(usuario, ''::text)) !~~ ALL (ARRAY['%[interno]%'::text, '%harness%'::text, '%e2e%'::text, '%seed%'::text, '%qa-%'::text]))));
@@ -28042,6 +28139,9 @@ GRANT ALL ON FUNCTION public.embarques_admin_pendientes_count() TO service_role;
 REVOKE ALL ON FUNCTION public.embarques_alertas_ids() FROM PUBLIC;
 GRANT ALL ON FUNCTION public.embarques_alertas_ids() TO authenticated;
 GRANT ALL ON FUNCTION public.embarques_alertas_ids() TO service_role;
+REVOKE ALL ON FUNCTION public.embarques_assert_cancelacion_sin_cxc_cxp() FROM PUBLIC;
+GRANT ALL ON FUNCTION public.embarques_assert_cancelacion_sin_cxc_cxp() TO authenticated;
+GRANT ALL ON FUNCTION public.embarques_assert_cancelacion_sin_cxc_cxp() TO service_role;
 GRANT ALL ON FUNCTION public.embarques_freeze_eta_original() TO authenticated;
 GRANT ALL ON FUNCTION public.embarques_freeze_eta_original() TO service_role;
 REVOKE ALL ON FUNCTION public.embarques_internos_src() FROM PUBLIC;
@@ -28395,6 +28495,9 @@ GRANT ALL ON FUNCTION public.proveedor_estado_cuenta(p_proveedor_id uuid) TO ser
 REVOKE ALL ON FUNCTION public.proveedor_estado_cuenta_movimientos(p_proveedor_id uuid, p_desde date, p_hasta date, p_limite integer, p_offset integer) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.proveedor_estado_cuenta_movimientos(p_proveedor_id uuid, p_desde date, p_hasta date, p_limite integer, p_offset integer) TO authenticated;
 GRANT ALL ON FUNCTION public.proveedor_estado_cuenta_movimientos(p_proveedor_id uuid, p_desde date, p_hasta date, p_limite integer, p_offset integer) TO service_role;
+REVOKE ALL ON FUNCTION public.proveedor_facturas_assert_folio_unico() FROM PUBLIC;
+GRANT ALL ON FUNCTION public.proveedor_facturas_assert_folio_unico() TO authenticated;
+GRANT ALL ON FUNCTION public.proveedor_facturas_assert_folio_unico() TO service_role;
 REVOKE ALL ON FUNCTION public.proveedor_inteligencia(p_proveedor_id uuid) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.proveedor_inteligencia(p_proveedor_id uuid) TO authenticated;
 GRANT ALL ON FUNCTION public.proveedor_inteligencia(p_proveedor_id uuid) TO service_role;
