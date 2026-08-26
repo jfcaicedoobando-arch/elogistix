@@ -29,8 +29,9 @@ describe("calcularTotalesProforma", () => {
     ];
     const r = calcularTotalesProforma(conceptos, tasa);
     expect(r.subtotal_mxn).toBe(250);
-    expect(r.iva_mxn).toBeCloseTo(40);
-    expect(r.total_mxn).toBeCloseTo(290);
+    // 200 gravado (32) + 50 exento (0).
+    expect(r.iva_mxn).toBeCloseTo(32);
+    expect(r.total_mxn).toBeCloseTo(282);
   });
 
   it("USD respeta el flag aplica_iva del concepto", () => {
