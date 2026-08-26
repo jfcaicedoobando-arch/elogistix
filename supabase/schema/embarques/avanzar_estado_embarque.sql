@@ -39,6 +39,11 @@ BEGIN
   IF v_org_id IS NULL THEN RAISE EXCEPTION 'Embarque no encontrado'; END IF;
   PERFORM public._assert_writer(v_org_id);
 
+  -- QA-R2 D-02: marca que el cambio de estado (incluida la cancelacion) viene
+  -- de esta RPC; el trigger embarques_assert_cancelacion_sin_cxc_cxp exige la
+  -- GUC para cancelar y aplica la misma validacion CxC/CxP en escritura directa.
+  PERFORM set_config('app.via_rpc_estado', '1', true);
+
   -- B-01: no cancelar una operación que todavía conserva CxC o CxP vivas.
   IF p_nuevo_estado = 'Cancelado' THEN
     IF EXISTS (
@@ -117,6 +122,26 @@ BEGIN
   IF NOT FOUND THEN
     RAISE EXCEPTION 'LC_ESTADO_CONCURRENTE: el embarque cambió de estado durante la transición'
       USING ERRCODE = '40001';
+  END IF;
+
+  -- QA-R2 R-02: al cancelar, liberar las cotizaciones ligadas al embarque.
+  -- La reversión 'En operación' → 'Aceptada' es housekeeping (mismo patrón
+  -- que la papelera: GUC app.liberando_papelera ante guard_estado_cotizacion);
+  -- no se tocan subtotal/moneda/conceptos, así que el guard de cotización
+  -- congelada no aplica.
+  IF p_nuevo_estado = 'Cancelado' THEN
+    PERFORM set_config('app.liberando_papelera', 'on', true);
+    UPDATE public.cotizaciones
+       SET embarque_id = NULL,
+           estado = CASE
+             WHEN estado = 'En operación'::estado_cotizacion
+               THEN 'Aceptada'::estado_cotizacion
+             ELSE estado
+           END,
+           updated_at = now()
+     WHERE embarque_id = p_embarque_id
+       AND organization_id = v_org_id;
+    PERFORM set_config('app.liberando_papelera', 'off', true);
   END IF;
 
   INSERT INTO notas_embarque (embarque_id, contenido, tipo, usuario, organization_id)

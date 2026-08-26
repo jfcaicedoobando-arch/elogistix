@@ -35,10 +35,16 @@ BEGIN
   END IF;
 
   IF _table = 'clientes' THEN
+    -- QA-R2 D-03: sólo estados vivos/no terminales cuentan como dependencia:
+    -- embarques Cancelados y cotizaciones en Borrador no bloquean la baja.
     SELECT
-      (SELECT count(*) FROM public.embarques e WHERE e.cliente_id = _id AND e.deleted_at IS NULL)
+      (SELECT count(*) FROM public.embarques e
+        WHERE e.cliente_id = _id AND e.deleted_at IS NULL
+          AND e.estado <> 'Cancelado')
       + (SELECT count(*) FROM public.facturas f WHERE f.cliente_id = _id AND f.deleted_at IS NULL)
-      + (SELECT count(*) FROM public.cotizaciones c WHERE c.cliente_id = _id AND c.deleted_at IS NULL)
+      + (SELECT count(*) FROM public.cotizaciones c
+        WHERE c.cliente_id = _id AND c.deleted_at IS NULL
+          AND c.estado <> 'Borrador')
       INTO _deps;
   ELSIF _table = 'embarques' THEN
     SELECT
