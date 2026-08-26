@@ -98,6 +98,8 @@ export async function fetchPortalCotizaciones(clienteIds: string[]) {
       .select(PORTAL_COTIZACION_LIST_COLUMNS)
       .in("cliente_id", clienteIds)
       .in("estado", PORTAL_COTIZACION_ESTADOS_VISIBLES)
+      // v13.756.0: el portal nunca debe mostrar cotizaciones eliminadas.
+      .is("deleted_at", null)
       .order("created_at", { ascending: false })
       .limit(PORTAL_LIST_MAX),
     [],
