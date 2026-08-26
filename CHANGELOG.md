@@ -1,5 +1,14 @@
 # Changelog
 
+## [13.749.0] - 2026-08-26
+### Bitácora no falsificable, vínculo cotización↔embarque y cartera móvil
+- B-06: al reabrir un embarque, el usuario que queda firmado en notas, eventos y bitácora se toma de la sesión autenticada. Antes se escribía el correo que enviaba el navegador, que podía alterarse; el frontend ya no lo manda y la función lo ignora.
+- B-05: si el embarque se crea pero falla el vínculo con la cotización, ahora se reintenta dos veces con espera y, si aún falla, se muestra un error visible con el expediente y la cotización a reconciliar (antes era un aviso discreto que pasaba desapercibido). El flujo sí continúa al embarque creado para no capturarlo dos veces.
+- B-11/B-12: al intentar editar una cotización no editable ya no hay rebote mudo al detalle: se explica el motivo. También se bloquea la edición de cotizaciones ya vinculadas a un embarque, aunque sigan en Borrador (evita desincronizar venta contra costos reales).
+- B-25: la lista de Cartera en celular mostraba "-5d" en facturas por vencer; ahora usa las mismas etiquetas que la tabla de escritorio (Vencida Nd / Vence hoy / Vence en Nd).
+- Dictamen del parche: se descartan B-07 (visibilidad de costos por rol, sin cambios por decisión de negocio), B-26 (reintentos en marcado masivo de hallazgos, ya idempotente) y B-27 (paginación por cursor en la bitácora, sin evidencia de impacto).
+
+
 ## [13.748.0] - 2026-08-26
 ### Validación financiera: IVA en pesos, T/C por fecha y topes de captura
 - B-09: los conceptos en MXN dejan de gravarse "por default". Ahora se respeta el flag de exención de cada fila (había 285 conceptos marcados como exentos que igual llevaban 16%, típico en fletes internacionales).

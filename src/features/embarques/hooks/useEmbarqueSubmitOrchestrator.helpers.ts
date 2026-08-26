@@ -54,3 +54,27 @@ export function reportPhaseError(
   });
   return false;
 }
+
+/**
+ * B-05 — Reintenta la vinculación de la cotización (fase 4) con backoff
+ * exponencial (500 ms, 1000 ms). La operación es idempotente: sólo fija estado
+ * y `embarque_id`. Devuelve el último error o `null` si tuvo éxito.
+ */
+export async function vincularCotizacionConReintentos(
+  intentar: () => Promise<unknown>,
+  maxReintentos = 2,
+): Promise<unknown> {
+  let ultimoError: unknown = null;
+  for (let intento = 0; intento <= maxReintentos; intento++) {
+    try {
+      await intentar();
+      return null;
+    } catch (err: unknown) {
+      ultimoError = err;
+      if (intento < maxReintentos) {
+        await new Promise((r) => setTimeout(r, 500 * 2 ** intento));
+      }
+    }
+  }
+  return ultimoError;
+}

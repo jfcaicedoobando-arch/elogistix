@@ -17926,7 +17926,11 @@ DECLARE
   v_resp jsonb;
   v_es_admin boolean;
   v_motivo text := NULLIF(trim(COALESCE(p_motivo, '')), '');
+  v_actor_id uuid := auth.uid();
+  v_actor_email text;
 BEGIN
+  SELECT email INTO v_actor_email FROM auth.users WHERE id = v_actor_id;
+  v_actor_email := COALESCE(v_actor_email, 'usuario:' || COALESCE(v_actor_id::text, 'desconocido'));
   v_resp := public.idempotency_claim(p_request_id, 'reabrir_embarque');
   IF v_resp IS NOT NULL THEN RETURN v_resp; END IF;
   IF v_motivo IS NULL OR length(v_motivo) < 20 THEN
@@ -17966,9 +17970,9 @@ BEGIN
   PERFORM set_config('app.bypass_cierre','off', true);
   INSERT INTO notas_embarque (embarque_id, contenido, tipo, usuario, organization_id)
   VALUES (p_embarque_id, 'Embarque reabierto desde Cerrado a Por liquidar. Motivo: ' || v_motivo,
-          'cambio_estado'::tipo_nota, p_usuario_email, v_org_id);
+          'cambio_estado'::tipo_nota, v_actor_email, v_org_id);
   INSERT INTO eventos_embarque (embarque_id, tipo, descripcion, ubicacion, fecha, usuario, organization_id)
-  VALUES (p_embarque_id, 'Otro'::tipo_evento_tracking, 'Embarque reabierto por administrador', '', now(), p_usuario_email, v_org_id);
+  VALUES (p_embarque_id, 'Otro'::tipo_evento_tracking, 'Embarque reabierto por administrador', '', now(), v_actor_email, v_org_id);
   BEGIN
     INSERT INTO cierre_embarque_log(embarque_id, organization_id, accion, usuario_id, motivo, snapshot)
     VALUES (p_embarque_id, v_org_id, 'reabrir', auth.uid(), v_motivo, NULL);

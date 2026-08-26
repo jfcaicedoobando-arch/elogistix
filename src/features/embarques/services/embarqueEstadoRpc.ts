@@ -14,7 +14,12 @@ import { registrarBitacoraEmbarque } from "./bitacoraEmbarques";
 export interface AvanzarEstadoEmbarqueInput {
   embarqueId: string;
   nuevoEstado: string;
-  usuarioEmail: string;
+  /**
+   * @deprecated B-06 (v13.749.0): el actor de la bitácora se deriva en la BD
+   * desde la sesión autenticada. Ya NO se envía a la RPC (era falsificable).
+   * Se conserva en el input por compatibilidad con los hooks existentes.
+   */
+  usuarioEmail?: string;
   tipoEvento: string;
   descripcionEvento: string;
   requestId?: string;
@@ -37,7 +42,8 @@ export async function avanzarEstadoEmbarqueRpc(
     supabase.rpc("avanzar_estado_embarque", {
       p_embarque_id: input.embarqueId,
       p_nuevo_estado: input.nuevoEstado,
-      p_usuario_email: input.usuarioEmail,
+      // B-06: la RPC ignora este valor y usa auth.uid() -> auth.users.email.
+      p_usuario_email: "",
       p_tipo_evento: input.tipoEvento,
       p_descripcion_evento: input.descripcionEvento,
       p_request_id: input.requestId,
@@ -62,7 +68,8 @@ export async function avanzarEstadoEmbarqueRpc(
 
 export interface ReabrirEmbarqueInput {
   embarqueId: string;
-  usuarioEmail: string;
+  /** @deprecated B-06: ignorado por la RPC (actor derivado de la sesión). */
+  usuarioEmail?: string;
   /** Obligatorio: mínimo 20 caracteres (validado también en la RPC). */
   motivo: string;
   requestId?: string;
@@ -81,7 +88,8 @@ export async function reabrirEmbarqueRpc(input: ReabrirEmbarqueInput): Promise<v
     await run(
       supabase.rpc("reabrir_embarque", {
         p_embarque_id: input.embarqueId,
-        p_usuario_email: input.usuarioEmail,
+        // B-06: ignorado por la RPC; el actor real sale de la sesión.
+        p_usuario_email: "",
         p_motivo: input.motivo,
         p_request_id: input.requestId,
       }),

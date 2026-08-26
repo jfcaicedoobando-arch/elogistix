@@ -11,7 +11,7 @@
 import { useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/shared";
-import { notifyError, notifyWarning, notifySuccess } from "@/lib/ui/appFeedback";
+import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { useRegistrarActividad } from "@/hooks/shared";
 import {
@@ -33,6 +33,7 @@ import {
 import {
   deriveContenedoresPayload,
   reportPhaseError,
+  vincularCotizacionConReintentos,
 } from "./useEmbarqueSubmitOrchestrator.helpers";
 import { getErrorMessage } from "@/lib/errors";
 import { useStableRequestId } from "@/lib/idempotency";
@@ -128,18 +129,28 @@ export function useEmbarqueSubmitOrchestrator() {
         return false;
       }
 
-      // Fase 4: actualizar cotización (no bloqueante) — estado + vínculo embarque_id
+      // Fase 4 (B-05): vincular cotización — estado + embarque_id. Si queda a
+      // medias, la cotización queda "Aceptada" sin vínculo y el embarque sin su
+      // origen comercial. Se reintenta con backoff y, si falla, se reporta como
+      // ERROR visible (antes era un aviso discreto que se perdía), pero SÍ se
+      // continúa al embarque creado para que nadie lo capture dos veces.
       if (p.cotizacionVinculada) {
-        try {
-          await updateEstadoCotizacion.mutateAsync({
-            id: p.cotizacionVinculada.id,
+        const errorFase4 = await vincularCotizacionConReintentos(() =>
+          updateEstadoCotizacion.mutateAsync({
+            id: p.cotizacionVinculada!.id,
             estado: "En operación",
             embarqueId: embarqueCreadoId,
-          });
-        } catch (err: unknown) {
-          notifyWarning(undefined, {
-            title: "Embarque creado con advertencia",
-            description: `Cotización: no se pudo actualizar el estado (${getErrorMessage(err)}).`,
+          }),
+        );
+        if (errorFase4) {
+          notifyError(undefined, {
+            title: "Embarque creado, cotización sin actualizar",
+            description:
+              `El embarque ${expediente} se creó, pero no se pudo vincular la cotización ` +
+              `${p.cotizacionVinculada.folio ?? p.cotizacionVinculada.id} (${getErrorMessage(errorFase4)}). ` +
+              "Reconcilia la cotización manualmente o contacta a soporte.",
+            error: errorFase4,
+            method: "USE_EMBARQUE_SUBMIT_ORCHESTRATOR_FASE4",
           });
         }
       }
