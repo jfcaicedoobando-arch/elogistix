@@ -35,8 +35,10 @@ export function ExplicarHallazgoButton({ hallazgo }: Props) {
 
   return (
     <Popover open={open} onOpenChange={handleOpen}>
-      <PopoverTrigger asChild>
-        <Hint label="Explicar este hallazgo con IA">
+      {/* Hint por fuera: `asChild` clona props en su hijo directo y `Hint` no
+          las reenvía; invertido, el botón perdía el handler del popover. */}
+      <Hint label="Explicar este hallazgo con IA">
+        <PopoverTrigger asChild>
           <Button
             size="icon"
             variant="ghost"
@@ -46,8 +48,9 @@ export function ExplicarHallazgoButton({ hallazgo }: Props) {
           >
             <Sparkles className="h-3.5 w-3.5" />
           </Button>
-        </Hint>
-      </PopoverTrigger>
+        </PopoverTrigger>
+      </Hint>
+
       <PopoverContent
         side="left"
         align="start"
