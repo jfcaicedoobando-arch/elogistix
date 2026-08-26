@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.754.1] - 2026-08-26
+### CI · Baseline de esquema sincronizado
+- Se agregaron al `baseline.sql` los objetos de la etapa QA-R2 (candado de cancelación con CxC/CxP vivas, liberación de cotizaciones al cancelar, folio único de facturas de proveedor, dependencias de baja de clientes y políticas de portal), eliminando el falso positivo del job de baseline.
+
 ## [13.754.0] - 2026-08-26
 ### QA ronda 2 · Etapa A-C: bugs de frontend, importación masiva y bloqueo optimista
 - Cotizaciones sólo en pesos ya no se guardan con subtotal 0: `subtotal` y `moneda` se derivan de los conceptos de venta (moneda dominante) y el detalle deja de bloquear el envío por "sin importe" (W-01).
