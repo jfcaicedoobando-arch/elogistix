@@ -43,7 +43,7 @@ LANGUAGE sql STABLE SET search_path TO 'public' AS $function$
   SELECT b.id, b.numero, b.cliente_id, COALESCE(c.nombre, b.cliente_nombre),
     b.embarque_id, e.expediente,
     b.fecha_emision, b.fecha_vencimiento,
-    (CURRENT_DATE - b.fecha_vencimiento)::int,
+    GREATEST(0, (now() AT TIME ZONE 'America/Mexico_City')::date - b.fecha_vencimiento)::int,
     b.moneda, b.total, b.pagado,
     (b.total - b.pagado - b.nc_aplicadas),
     (SELECT MAX(cs.fecha) FROM public.cobranza_seguimiento cs WHERE cs.factura_id=b.id),
