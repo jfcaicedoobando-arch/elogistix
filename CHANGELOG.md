@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.752.1] - 2026-08-26
+### Baseline de esquema con el formato de Postgres 15 (el de CI)
+- `supabase/schema/baseline.sql`: normalizado al estilo de `pg_dump` 15.8 (vistas con alias calificado y espaciado de `ALTER DEFAULT PRIVILEGES`). El baseline se había regenerado con `pg_dump` 17 local, lo que producía diff falso en el job "Baseline de esquema".
+
 ## [13.752.0] - 2026-08-26
 ### Corridas de RLS: dos reglas corregidas y dos pruebas alineadas
 - Cartera: los "días vencido" volvieron a mostrarse con signo. Una factura que vence en 10 días ya no aparece como "vence hoy" (regresión introducida en 13.747.0).
