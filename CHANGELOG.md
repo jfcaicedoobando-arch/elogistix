@@ -1,5 +1,19 @@
 # Changelog
 
+## [13.754.0] - 2026-08-26
+### QA ronda 2 · Etapa A-C: bugs de frontend, importación masiva y bloqueo optimista
+- Cotizaciones sólo en pesos ya no se guardan con subtotal 0: `subtotal` y `moneda` se derivan de los conceptos de venta (moneda dominante) y el detalle deja de bloquear el envío por "sin importe" (W-01).
+- La barra de totales del wizard muestra el margen por moneda (USD y MXN por separado) en lugar de un consolidado que ignoraba la utilidad en pesos (W-06).
+- P&L por contenedor: sin venta el margen se muestra como "n/a" en vez de "0.0%" (W-07).
+- Dashboard: los embarques con estado legacy `Llegada` vuelven a contarse dentro de `Arribo` (W-10).
+- PDF de cotización: la fecha se formatea en la zona horaria de negocio, ya no se corta el día en UTC (W-12).
+- Conceptos de proforma: la columna IVA dice "Sí" sólo si la tasa resuelta de la línea es mayor a cero (respeta conceptos MXN exentos) (R-03).
+- Eventos de embarque: se inserta el dato ya normalizado por el esquema de validación (R-06).
+- Portal de cliente: se ocultan embarques en papelera y se dejó de exponer el campo interno `notas` de los documentos (N-03/N-04).
+- Importación masiva CSV: tope de 2 MB y 1,000 filas por archivo, con inserción en lotes de 200 y concurrencia acotada (N-05).
+- Edición de clientes con bloqueo optimista: si otro usuario modificó el registro, se avisa en vez de sobrescribir sus cambios (N-06).
+- Mensajes de cancelación de embarque con facturas vivas reescritos para explicar el siguiente paso.
+
 ## [13.753.0] - 2026-08-26
 ### QA ronda 2 · Etapa 1: candados validados de la auditoría
 - Cancelar un embarque con facturas de cliente con saldo o facturas de proveedor vivas ahora se bloquea también en escritura directa a tabla (nuevo trigger `trg_embarques_cancelacion_cxc_cxp`), no sólo dentro de la RPC (D-02).
