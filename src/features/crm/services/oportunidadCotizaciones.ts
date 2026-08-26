@@ -17,6 +17,8 @@ export async function fetchOportunidadCotizaciones(
     .from("cotizaciones")
     .select("id, folio, estado, subtotal, moneda, created_at, embarque_id")
     .eq("oportunidad_id", oportunidadId)
+    // v13.756.0: sólo cotizaciones vivas dentro de la oportunidad.
+    .is("deleted_at", null)
     .order("created_at", { ascending: false });
   if (error) throw error;
   return (data ?? []) as OportunidadCotizacionRow[];
