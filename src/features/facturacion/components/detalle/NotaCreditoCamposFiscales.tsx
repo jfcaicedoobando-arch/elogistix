@@ -9,6 +9,7 @@
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { DatePickerMx } from "@/components/ui/date-picker-mx";
+import { todayLocalISO } from "@/lib/utils/fechas";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { USOS_CFDI_SAT, FORMAS_PAGO_SAT } from "@/constants/catalogosSAT";
 import type { MotivoNotaCredito as Motivo } from "@/features/facturacion/types";
@@ -47,8 +48,8 @@ export function NotaCreditoCamposFiscales(props: Props) {
             value={fecha}
             onChange={setFecha}
             className="w-full"
-            minDate={fechaMinima ? new Date(`${fechaMinima.slice(0, 10)}T12:00:00`) : undefined}
-            maxDate={new Date()}
+            min={fechaMinima ? fechaMinima.slice(0, 10) : undefined}
+            max={todayLocalISO()}
           />
           <p className="text-label text-muted-foreground">
             No puede ser anterior a la emisión de la factura ni futura.
