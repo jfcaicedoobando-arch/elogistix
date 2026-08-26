@@ -66,9 +66,13 @@ export const EXPEDIENTE_ESCRITURA: readonly AppRole[] = [
 
 /**
 
- * Roles de ventas. Espejo en la base de datos:
- * `public.puede_escribir_cotizaciones()` (v13.554.0) — al cambiar esta lista,
+ * Roles con escritura en cotizaciones. Espejo en la base de datos:
+ * `public.puede_escribir_cotizaciones()` (v13.750.0) — al cambiar esta lista,
  * actualizar también esa función para no desincronizar UI y RLS.
+ *
+ * v13.750.0 — se añaden los roles operativos (coordinador logístico, gerente de
+ * operaciones, operador y customer service): la ruta `/cotizaciones/nueva` ya
+ * estaba abierta para ellos, pero el guardado fallaba con RLS 42501.
  */
 export const SALES: readonly AppRole[] = [
   "super_admin",
@@ -77,7 +81,12 @@ export const SALES: readonly AppRole[] = [
   "gerente_comercial",
   "vendedor",
   "ejecutivo_pricing",
+  "coordinador_logistico",
+  "gerente_operaciones",
+  "operador",
+  "customer_service",
 ];
+
 
 /**
  * Ola 6 (O6.3) — Roles que configuran el CRM (`/crm/configuracion`:
