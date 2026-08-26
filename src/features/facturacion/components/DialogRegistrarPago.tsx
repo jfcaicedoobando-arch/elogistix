@@ -49,7 +49,10 @@ const FORM_ID = "form-registrar-pago";
 
 
 export function DialogRegistrarPago({ open, onOpenChange, factura }: Props) {
-  const { data: rates } = useExchangeRates();
+  // B-03: el pago puede tener fecha PASADA (`fecha_pago` es editable); valuarlo
+  // con el TC de hoy distorsiona el importe aplicado. Se pide el DOF de la fecha.
+  const [fechaValuacion, setFechaValuacion] = useState<string>(today());
+  const { data: rates } = useExchangeRates(fechaValuacion);
   const { data: cuentas = [] } = useCuentasBancarias();
   const { data: pagosPrevios = [] } = usePagosFactura(factura?.id);
   const { data: notasAplicadas = [] } = useNotasCreditoAplicadas(factura?.id);

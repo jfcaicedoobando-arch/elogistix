@@ -53,7 +53,8 @@ export function FacturaDatosFiscalesCard({ factura }: Props) {
     usoCfdi, formaPago, metodoPago, diasCredito, tipoCambio, notas,
   });
 
-  const obtenerTC = useBanxicoTipoCambio(factura.moneda, setTipoCambio);
+  // B-03: TC DOF vigente en la fecha de emisión de la factura, no el de hoy.
+  const obtenerTC = useBanxicoTipoCambio(factura.moneda, setTipoCambio, factura.fecha_emision);
 
   return (
     <Card>
