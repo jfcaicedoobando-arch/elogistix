@@ -16,8 +16,12 @@ DECLARE
   v_estado_actual public.estado_embarque;
   v_expediente text;
   v_tipo public.tipo_operacion;
+  v_actor_id uuid := auth.uid();
+  v_actor_email text;
   v_estados_bloqueantes text[] := ARRAY['En Tránsito','En Aduana','Llegada','Arribo','Entregado','EIR','Cerrado'];
 BEGIN
+  SELECT email INTO v_actor_email FROM auth.users WHERE id = v_actor_id;
+  v_actor_email := COALESCE(v_actor_email, 'usuario:' || COALESCE(v_actor_id::text, 'desconocido'));
   v_resp := public.idempotency_claim(p_request_id, 'avanzar_estado_embarque');
   IF v_resp IS NOT NULL THEN
     -- Claim en vuelo: otra petición con la misma llave la está ejecutando.
@@ -51,10 +55,16 @@ BEGIN
     PERFORM set_config('app.bypass_cierre','on', true);
 
     INSERT INTO notas_embarque (embarque_id, contenido, tipo, usuario, organization_id)
-    VALUES (p_embarque_id, 'Estado cambiado a "Cerrado"', 'cambio_estado'::tipo_nota, p_usuario_email, v_org_id);
+    VALUES (p_embarque_id, 'Estado cambiado a "Cerrado"', 'cambio_estado'::tipo_nota, v_actor_email, v_org_id);
 
     INSERT INTO eventos_embarque (embarque_id, tipo, descripcion, ubicacion, fecha, usuario, organization_id)
-    VALUES (p_embarque_id, p_tipo_evento::tipo_evento_tracking, p_descripcion_evento, '', now(), p_usuario_email, v_org_id);
+    VALUES (p_embarque_id, p_tipo_evento::tipo_evento_tracking, p_descripcion_evento, '', now(), v_actor_email, v_org_id);
+
+    INSERT INTO public.bitacora_actividad
+      (organization_id, usuario_id, usuario_email, modulo, accion, entidad_id, entidad_nombre, detalles)
+    VALUES
+      (v_org_id, v_actor_id, v_actor_email, 'Embarques', 'Cambio de estado', p_embarque_id,
+       v_expediente, jsonb_build_object('estado_anterior', v_estado_actual, 'estado_nuevo', 'Cerrado'));
 
     PERFORM set_config('app.bypass_cierre','off', true);
 
@@ -88,10 +98,16 @@ BEGIN
   END IF;
 
   INSERT INTO notas_embarque (embarque_id, contenido, tipo, usuario, organization_id)
-  VALUES (p_embarque_id, 'Estado cambiado a "' || p_nuevo_estado || '"', 'cambio_estado'::tipo_nota, p_usuario_email, v_org_id);
+  VALUES (p_embarque_id, 'Estado cambiado a "' || p_nuevo_estado || '"', 'cambio_estado'::tipo_nota, v_actor_email, v_org_id);
 
   INSERT INTO eventos_embarque (embarque_id, tipo, descripcion, ubicacion, fecha, usuario, organization_id)
-  VALUES (p_embarque_id, p_tipo_evento::tipo_evento_tracking, p_descripcion_evento, '', now(), p_usuario_email, v_org_id);
+  VALUES (p_embarque_id, p_tipo_evento::tipo_evento_tracking, p_descripcion_evento, '', now(), v_actor_email, v_org_id);
+
+  INSERT INTO public.bitacora_actividad
+    (organization_id, usuario_id, usuario_email, modulo, accion, entidad_id, entidad_nombre, detalles)
+  VALUES
+    (v_org_id, v_actor_id, v_actor_email, 'Embarques', 'Cambio de estado', p_embarque_id,
+     v_expediente, jsonb_build_object('estado_anterior', v_estado_actual, 'estado_nuevo', p_nuevo_estado));
 
   v_resp := jsonb_build_object('id', p_embarque_id, 'estado', p_nuevo_estado, 'expediente', v_expediente);
   PERFORM public.idempotency_store(p_request_id, v_resp);
