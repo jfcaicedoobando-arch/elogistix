@@ -8003,6 +8003,11 @@ CREATE FUNCTION public.cotizaciones_guard_en_operacion() RETURNS trigger
     SET search_path TO 'public'
     AS $$
 BEGIN
+  -- QA-R2 R-04: procesos internos de sincronización (p.ej.
+  -- recalcular_subtotal_cotizacion) levantan esta GUC transaccional.
+  IF current_setting('app.cotizacion_sync', true) = '1' THEN
+    RETURN NEW;
+  END IF;
   IF (OLD.estado = 'En operación'::public.estado_cotizacion OR OLD.embarque_id IS NOT NULL)
      AND (NEW.subtotal IS DISTINCT FROM OLD.subtotal
        OR NEW.moneda IS DISTINCT FROM OLD.moneda
@@ -18670,6 +18675,9 @@ BEGIN
     NULLIF(CASE WHEN v_moneda = 'USD' THEN v_t.subtotal_mxn ELSE v_t.subtotal_usd END, 0),
     0
   );
+  -- QA-R2 R-04: el recálculo deriva el subtotal de los conceptos; no es una
+  -- edición comercial, bypass transaccional del guard de cotización congelada.
+  PERFORM set_config('app.cotizacion_sync', '1', true);
   UPDATE public.cotizaciones
      SET subtotal = v_sub, updated_at = now()
    WHERE id = p_cotizacion_id;
@@ -27001,20 +27009,20 @@ CREATE POLICY "Cliente read own conceptos_venta" ON public.conceptos_venta FOR S
    FROM public.embarques
   WHERE (embarques.cliente_id IN ( SELECT public.current_user_client_ids() AS current_user_client_ids))))));
 CREATE POLICY "Cliente read own cotizaciones" ON public.cotizaciones FOR SELECT TO authenticated USING (((deleted_at IS NULL) AND public.has_role(auth.uid(), 'cliente'::public.app_role) AND (cliente_id IN ( SELECT public.current_user_client_ids() AS current_user_client_ids))));
-CREATE POLICY "Cliente read own documentos" ON public.documentos_embarque FOR SELECT TO authenticated USING ((( SELECT public.has_role(( SELECT auth.uid() AS uid), 'cliente'::public.app_role) AS has_role) AND (embarque_id IN ( SELECT embarques.id
-   FROM public.embarques
-  WHERE (embarques.cliente_id IN ( SELECT public.current_user_client_ids() AS current_user_client_ids))))));
-CREATE POLICY "Cliente read own embarque_contenedores" ON public.embarque_contenedores FOR SELECT TO authenticated USING ((( SELECT public.has_role(( SELECT auth.uid() AS uid), 'cliente'::public.app_role) AS has_role) AND (embarque_id IN ( SELECT e.id
+CREATE POLICY "Cliente read own documentos" ON public.documentos_embarque FOR SELECT TO authenticated USING (((deleted_at IS NULL) AND ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'cliente'::public.app_role) AS has_role) AND (embarque_id IN ( SELECT e.id
    FROM public.embarques e
-  WHERE (e.cliente_id IN ( SELECT public.current_user_client_ids() AS current_user_client_ids))))));
+  WHERE ((e.deleted_at IS NULL) AND (e.cliente_id IN ( SELECT public.current_user_client_ids() AS current_user_client_ids)))))));
+CREATE POLICY "Cliente read own embarque_contenedores" ON public.embarque_contenedores FOR SELECT TO authenticated USING (((deleted_at IS NULL) AND ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'cliente'::public.app_role) AS has_role) AND (embarque_id IN ( SELECT e.id
+   FROM public.embarques e
+  WHERE ((e.deleted_at IS NULL) AND (e.cliente_id IN ( SELECT public.current_user_client_ids() AS current_user_client_ids)))))));
 CREATE POLICY "Cliente read own embarques" ON public.embarques FOR SELECT TO authenticated USING (((deleted_at IS NULL) AND public.has_role(auth.uid(), 'cliente'::public.app_role) AND (cliente_id IN ( SELECT public.current_user_client_ids() AS current_user_client_ids))));
 CREATE POLICY "Cliente read own eventos" ON public.eventos_embarque FOR SELECT TO authenticated USING ((public.has_role(auth.uid(), 'cliente'::public.app_role) AND (embarque_id IN ( SELECT embarques.id
    FROM public.embarques
   WHERE (embarques.cliente_id IN ( SELECT public.current_user_client_ids() AS current_user_client_ids)))) AND ((tipo)::text = ANY (ARRAY['Zarpe'::text, 'Transbordo'::text, 'Arribo a Puerto'::text, 'Descarga'::text, 'Despacho Aduanal'::text, 'Liberación'::text, 'En Ruta Terrestre'::text, 'Entrega'::text, 'Cambio de ETA'::text])) AND (deleted_at IS NULL) AND (lower(COALESCE(descripcion, ''::text)) !~~ ALL (ARRAY['%[interno]%'::text, '%harness%'::text, '%e2e%'::text, '%seed%'::text, '%qa-%'::text])) AND (lower(COALESCE(usuario, ''::text)) !~~ ALL (ARRAY['%[interno]%'::text, '%harness%'::text, '%e2e%'::text, '%seed%'::text, '%qa-%'::text]))));
-CREATE POLICY "Cliente read own factura_notas_credito" ON public.factura_notas_credito FOR SELECT TO authenticated USING ((( SELECT public.has_role(( SELECT auth.uid() AS uid), 'cliente'::public.app_role) AS has_role) AND (factura_id IN ( SELECT f.id
+CREATE POLICY "Cliente read own factura_notas_credito" ON public.factura_notas_credito FOR SELECT TO authenticated USING (((deleted_at IS NULL) AND ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'cliente'::public.app_role) AS has_role) AND (factura_id IN ( SELECT f.id
    FROM public.facturas f
-  WHERE (f.cliente_id IN ( SELECT public.current_user_client_ids() AS current_user_client_ids))))));
-CREATE POLICY "Cliente read own facturas" ON public.facturas FOR SELECT TO authenticated USING ((( SELECT public.has_role(( SELECT auth.uid() AS uid), 'cliente'::public.app_role) AS has_role) AND (cliente_id IN ( SELECT public.current_user_client_ids() AS current_user_client_ids))));
+  WHERE ((f.deleted_at IS NULL) AND (f.cliente_id IN ( SELECT public.current_user_client_ids() AS current_user_client_ids)))))));
+CREATE POLICY "Cliente read own facturas" ON public.facturas FOR SELECT TO authenticated USING (((deleted_at IS NULL) AND ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'cliente'::public.app_role) AS has_role) AND (cliente_id IN ( SELECT public.current_user_client_ids() AS current_user_client_ids))));
 CREATE POLICY "Cliente read own notas" ON public.notas_embarque FOR SELECT TO authenticated USING ((public.has_role(auth.uid(), 'cliente'::public.app_role) AND (tipo = 'cambio_estado'::public.tipo_nota) AND (deleted_at IS NULL) AND (lower(COALESCE(contenido, ''::text)) !~~ ALL (ARRAY['%[interno]%'::text, '%harness%'::text, '%e2e%'::text, '%seed%'::text, '%qa-%'::text])) AND (lower(COALESCE(usuario, ''::text)) !~~ ALL (ARRAY['%[interno]%'::text, '%harness%'::text, '%e2e%'::text, '%seed%'::text, '%qa-%'::text])) AND (embarque_id IN ( SELECT embarques.id
    FROM public.embarques
   WHERE (embarques.cliente_id IN ( SELECT public.current_user_client_ids() AS current_user_client_ids))))));

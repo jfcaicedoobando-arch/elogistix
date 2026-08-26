@@ -4,6 +4,11 @@ LANGUAGE plpgsql
 SET search_path TO 'public'
 AS $function$
 BEGIN
+  -- QA-R2 R-04: procesos internos de sincronización (p.ej.
+  -- recalcular_subtotal_cotizacion) levantan esta GUC transaccional.
+  IF current_setting('app.cotizacion_sync', true) = '1' THEN
+    RETURN NEW;
+  END IF;
   IF (OLD.estado = 'En operación'::public.estado_cotizacion OR OLD.embarque_id IS NOT NULL)
      AND (NEW.subtotal IS DISTINCT FROM OLD.subtotal
        OR NEW.moneda IS DISTINCT FROM OLD.moneda
