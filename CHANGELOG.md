@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.758.2] - 2026-08-26
+### Fix
+- `fetchClientesForSelect` ahora filtra `deleted_at IS NULL` (guardia audit:soft-delete en verde).
+
+
 ## [13.758.1] - 2026-08-26
 ### CI verde
 - Mensajes amigables para `LC_FACTURA_SIN_CONCEPTOS`, `LC_CXP_FOLIO_DUPLICADO`, `LC_DELETED_AT_INMUTABLE` y `LC_RESTORE_DIRECTO`.
