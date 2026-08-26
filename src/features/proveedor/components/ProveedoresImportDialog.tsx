@@ -1,9 +1,8 @@
-import { procesarEnLotes } from "@/lib/csv/importLimits";
 import { useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query";
 import { BulkImportDialog } from "@/components/shared/BulkImportDialog";
 import { PROVEEDOR_TEMPLATE_HEADERS, mapProveedorRows } from "@/lib/csv/importSchemas";
-import { insertProveedor } from "@/features/proveedor/services";
+import { insertProveedoresLote } from "@/features/proveedor/services";
 import { useRegistrarActividad, useOrgFilter } from "@/hooks/shared";
 import { notifySuccess } from "@/lib/ui/appFeedback";
 
@@ -43,8 +42,8 @@ export function ProveedoresImportDialog({ open, onOpenChange }: Props) {
       templateFileName="plantilla-proveedores.csv"
       mapRows={(rows) => mapProveedorRows(rows, organizationId)}
       onCommit={async (payloads) => {
-        // N-05 (QA r2): inserción en lotes con concurrencia acotada.
-        await procesarEnLotes(payloads, (p) => insertProveedor(p));
+        // N-05 (QA r2): un INSERT por lote de 200 filas (no uno por fila).
+        await insertProveedoresLote(payloads);
         registrarActividad.mutate({
           accion: "crear",
           modulo: "proveedores",

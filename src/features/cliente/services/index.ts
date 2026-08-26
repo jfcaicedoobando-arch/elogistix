@@ -5,6 +5,7 @@
  *  - relacionados → embarques y cotizaciones del cliente
  */
 export * from "./crud";
+export { createClientesLote } from "./importLote";
 export * from "./contactos";
 export * from "./relacionados";
 export * from "./financials";

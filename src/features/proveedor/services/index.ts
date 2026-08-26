@@ -12,6 +12,7 @@ export {
   deleteProveedor,
 } from "./proveedoresCrud";
 export type { ProveedorListItem } from "./proveedoresCrud";
+export { insertProveedoresLote } from "./importLote";
 export {
   ProveedorDuplicadoError,
   findProveedorByRfcEnOrg,
