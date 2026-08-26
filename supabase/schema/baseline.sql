@@ -69,7 +69,8 @@ CREATE TYPE public.estado_aprobacion_factura_proveedor AS ENUM (
 CREATE TYPE public.estado_comision AS ENUM (
     'Devengada',
     'Liquidada',
-    'Cancelada'
+    'Cancelada',
+    'Por recuperar'
 );
 CREATE TYPE public.estado_conciliacion AS ENUM (
     'Pendiente',
@@ -5225,7 +5226,8 @@ BEGIN
   RETURN NEW;
 END $$;
 CREATE FUNCTION public.calcular_comision_pago(p_pago_factura_id uuid) RETURNS void
-    LANGUAGE plpgsql SECURITY DEFINER
+    LANGUAGE plpgsql
+    SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
 DECLARE
@@ -5247,6 +5249,13 @@ BEGIN
     UPDATE comisiones_devengadas
        SET estado = 'Cancelada', comision_mxn = 0
      WHERE pago_factura_id = p_pago_factura_id AND estado <> 'Liquidada';
+    -- QA-R2 N-07: el pago (respaldo) desaparece pero la comision ya fue
+    -- liquidada: no se cancela en silencio, se marca para recuperacion.
+    UPDATE comisiones_devengadas
+       SET estado = 'Por recuperar',
+           nota = trim(both ' ' FROM COALESCE(nota,'') || ' [auto] pago eliminado con comision liquidada'),
+           updated_at = now()
+     WHERE pago_factura_id = p_pago_factura_id AND estado = 'Liquidada';
     RETURN;
   END IF;
   SELECT * INTO v_factura FROM facturas WHERE id = v_pago.factura_id;
@@ -5280,6 +5289,12 @@ BEGIN
        SET estado = 'Cancelada', comision_mxn = 0,
            nota = 'Embarque excluido de comisión', updated_at = now()
      WHERE pago_factura_id = p_pago_factura_id AND estado <> 'Liquidada';
+    -- QA-R2 N-07: embarque excluido con comision ya liquidada -> por recuperar.
+    UPDATE comisiones_devengadas
+       SET estado = 'Por recuperar',
+           nota = trim(both ' ' FROM COALESCE(nota,'') || ' [auto] embarque excluido con comision liquidada'),
+           updated_at = now()
+     WHERE pago_factura_id = p_pago_factura_id AND estado = 'Liquidada';
     RETURN;
   END IF;
   SELECT COALESCE(MAX(NULLIF(e.tipo_cambio_usd, 0)), 0),
@@ -5413,7 +5428,8 @@ BEGIN
     ELSE
       v_proporcion := 0;
     END IF;
-    v_comision_mxn := ROUND(v_utilidad * v_proporcion * (v_pct / 100.0), 2);
+    -- QA-R2 N-07: la comision nunca es negativa.
+    v_comision_mxn := GREATEST(0, ROUND(v_utilidad * v_proporcion * (v_pct / 100.0), 2));
     v_nota := CASE
       WHEN v_costos_mxn = 0 THEN 'Costos del embarque pendientes'
       WHEN (v_req_usd AND v_tc_usd = 0) OR (v_req_eur AND v_tc_eur = 0)
@@ -7034,7 +7050,8 @@ BEGIN
 END;
 $$;
 CREATE FUNCTION public.congelar_factura_al_emitir() RETURNS trigger
-    LANGUAGE plpgsql SECURITY DEFINER
+    LANGUAGE plpgsql
+    SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
 DECLARE
@@ -7046,6 +7063,16 @@ BEGIN
   -- Sólo congelar al transicionar a Emitida/Pagada y si aún no hay snapshot
   IF NEW.estado NOT IN ('Emitida', 'Pagada') THEN
     RETURN NEW;
+  END IF;
+  -- QA-R2 D-05: no emitir una factura sin conceptos vivos.
+  IF NEW.estado = 'Emitida'
+     AND (TG_OP = 'INSERT' OR OLD.estado IS DISTINCT FROM 'Emitida'::public.estado_factura)
+     AND NOT EXISTS (
+       SELECT 1 FROM public.conceptos_factura cf
+       WHERE cf.factura_id = NEW.id AND cf.deleted_at IS NULL
+     ) THEN
+    RAISE EXCEPTION 'LC_FACTURA_SIN_CONCEPTOS: no se puede emitir una factura sin conceptos'
+      USING ERRCODE = 'P0001';
   END IF;
   IF NEW.snapshot_emision IS NOT NULL THEN
     RETURN NEW;
@@ -18406,12 +18433,14 @@ BEGIN
   WHERE c.factura_id = p_factura_id
     AND c.deleted_at IS NULL;
   IF v_n = 0 THEN
-    -- Factura sin renglones (histórica o recién creada): solo se limpian
-    -- retenciones y se cuadra el total con lo capturado.
+    -- QA-R2 D-05: factura sin renglones vivos -> totales en cero (antes se
+    -- conservaban subtotal/iva capturados y el total quedaba inflado).
     UPDATE public.facturas
-       SET ret_isr = 0,
+       SET subtotal = 0,
+           iva = 0,
+           ret_isr = 0,
            ret_iva = 0,
-           total = COALESCE(subtotal, 0) + COALESCE(iva, 0),
+           total = 0,
            updated_at = now()
      WHERE id = p_factura_id;
     RETURN;
@@ -22646,7 +22675,8 @@ BEGIN
 END;
 $$;
 CREATE FUNCTION public.tg_factura_cancelada_comisiones() RETURNS trigger
-    LANGUAGE plpgsql SECURITY DEFINER
+    LANGUAGE plpgsql
+    SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
 BEGIN
@@ -22660,6 +22690,17 @@ BEGIN
         updated_at = now()
     WHERE factura_id = NEW.id
       AND estado = 'Devengada';
+    -- QA-R2 N-07: las comisiones ya liquidadas no se cancelan
+    -- retroactivamente; se marcan para recuperacion en la siguiente
+    -- liquidacion.
+    UPDATE public.comisiones_devengadas
+    SET estado = 'Por recuperar',
+        nota = trim(both ' ' FROM
+              COALESCE(nota,'') || ' [auto] factura ' || NEW.estado::text ||
+              ' con comision liquidada (núm. ' || COALESCE(NEW.numero, NEW.id::text) || ')'),
+        updated_at = now()
+    WHERE factura_id = NEW.id
+      AND estado = 'Liquidada';
   END IF;
   RETURN NEW;
 END;
