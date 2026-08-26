@@ -116,11 +116,13 @@ export function FacturaManualDatosFiscales({ value, onChange, diasReadonly, dias
         </Select>
       </div>
       <div className="space-y-1.5">
-        <Label htmlFor="factura-manual-tipo-cambio">Tipo de cambio</Label>
+        <Label htmlFor="factura-manual-tipo-cambio">{etiquetaTcContraMxn(value.moneda)}</Label>
         <div className="flex gap-1">
           <Input
             id="factura-manual-tipo-cambio"
             type="number" step="0.0001" min={0.0001}
+            placeholder={TC_PLACEHOLDER_MXN}
+            aria-label={etiquetaTcContraMxn(value.moneda)}
             value={value.tipoCambio}
             onChange={(e) => onChange({ tipoCambio: Number(e.target.value) || 1 })}
             disabled={!requiereTc}
