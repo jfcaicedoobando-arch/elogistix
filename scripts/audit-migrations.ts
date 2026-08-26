@@ -180,8 +180,17 @@ const MIG_DIR = path.resolve(process.cwd(), "supabase/migrations");
  *    `20260826000700` re-aplica los permisos (`REVOKE ALL … FROM PUBLIC, anon`
  *    + `GRANT EXECUTE … TO authenticated, service_role`); los archivos
  *    originales quedan como legacy auditado.
+ *  - `20260901002100` — post-FIX-H6-22: `20260826030340` y
+ *    `20260901001500` (bitácora con actor de sesión) re-emitieron
+ *    `reabrir_embarque` y `20260901001400` (remediación selectiva QA)
+ *    re-emitió `avanzar_estado_embarque` (SECURITY DEFINER) sin el bloque
+ *    REVOKE/GRANT en el mismo archivo. La migración correctiva
+ *    `20260901002100` re-aplica los permisos (`REVOKE ALL … FROM PUBLIC, anon`
+ *    + `GRANT EXECUTE … TO authenticated, service_role`); los archivos
+ *    originales quedan como legacy auditado.
  */
-const BASELINE = "20260826000700";
+const BASELINE = "20260901002100";
+
 
 
 export const FNAME_RE = /^(\d{14})_[a-z0-9_-]+\.sql$/;
