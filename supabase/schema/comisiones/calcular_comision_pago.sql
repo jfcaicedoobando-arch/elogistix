@@ -1,5 +1,5 @@
 -- Espejo canónico de public.calcular_comision_pago
--- Fuente vigente (mayor timestamp): 20260826202702_ef3834ee-e456-4f79-aecc-c8c71c68a17b.sql
+-- Fuente vigente (mayor timestamp): 20260902000300_qa_r2_n07_comisiones_por_recuperar.sql
 -- Vigilado por `bun run audit:replay-mirror` y `audit:schema-functions`.
 
 CREATE OR REPLACE FUNCTION public.calcular_comision_pago(p_pago_factura_id uuid)
