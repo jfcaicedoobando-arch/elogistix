@@ -39,6 +39,28 @@ BEGIN
   IF v_org_id IS NULL THEN RAISE EXCEPTION 'Embarque no encontrado'; END IF;
   PERFORM public._assert_writer(v_org_id);
 
+  -- B-01: no cancelar una operación que todavía conserva CxC o CxP vivas.
+  IF p_nuevo_estado = 'Cancelado' THEN
+    IF EXISTS (
+      SELECT 1 FROM public.facturas f
+      WHERE f.embarque_id = p_embarque_id
+        AND f.deleted_at IS NULL
+        AND f.estado IN ('Emitida', 'Vencida', 'Parcialmente pagada')
+    ) THEN
+      RAISE EXCEPTION 'LC_CANCEL_CON_CXC: cancela o sustituye las facturas de cliente antes de cancelar el embarque'
+        USING ERRCODE = 'P0001';
+    END IF;
+    IF EXISTS (
+      SELECT 1 FROM public.proveedor_facturas pf
+      WHERE pf.embarque_id = p_embarque_id
+        AND pf.deleted_at IS NULL
+        AND pf.estado <> 'Cancelada'
+    ) THEN
+      RAISE EXCEPTION 'LC_CANCEL_CON_CXP: cancela las facturas de proveedor antes de cancelar el embarque'
+        USING ERRCODE = 'P0001';
+    END IF;
+  END IF;
+
   PERFORM public.assert_transicion_embarque(v_estado_actual, p_nuevo_estado::public.estado_embarque, v_expediente);
 
   -- v13.303.42: al confirmar un borrador sin folio, reservar expediente ahora.

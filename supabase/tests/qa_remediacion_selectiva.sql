@@ -21,9 +21,17 @@ BEGIN
   IF NOT EXISTS (
     SELECT 1 FROM pg_trigger WHERE tgname='trg_conceptos_factura_assert_borrador' AND NOT tgisinternal
   ) THEN RAISE EXCEPTION 'B-18 FAIL: falta trigger de conceptos inmutables'; END IF;
+  IF pg_get_functiondef('public.avanzar_estado_embarque(uuid,text,text,text,text,uuid)'::regprocedure)
+       NOT LIKE '%LC_CANCEL_CON_CXC%' THEN
+    RAISE EXCEPTION 'B-01 FAIL: falta guard de CxC al cancelar embarque';
+  END IF;
+  IF pg_get_functiondef('public.soft_delete_record(text,uuid)'::regprocedure)
+       NOT LIKE '%LC_BAJA_CON_DEPENDENCIAS%' THEN
+    RAISE EXCEPTION 'B-02 FAIL: falta guard de dependencias en papelera';
+  END IF;
   IF NOT EXISTS (
-    SELECT 1 FROM pg_trigger WHERE tgname='trg_cotizaciones_guard_embarque_id' AND NOT tgisinternal
-  ) THEN RAISE EXCEPTION 'B-12 FAIL: falta guard de embarque_id'; END IF;
+    SELECT 1 FROM pg_trigger WHERE tgname='trg_cotizaciones_guard_en_operacion' AND NOT tgisinternal
+  ) THEN RAISE EXCEPTION 'B-11 FAIL: falta guard de cotización operada'; END IF;
 END $$;
 
 ROLLBACK;
