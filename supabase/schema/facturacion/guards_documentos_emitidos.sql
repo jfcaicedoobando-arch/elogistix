@@ -9,7 +9,7 @@ DECLARE
 BEGIN
   SELECT f.fecha_emision INTO v_fecha_factura
   FROM public.facturas f
-  WHERE f.id = NEW.factura_id AND f.deleted_at IS NULL;
+  WHERE f.id = NEW.factura_id;
 
   IF v_fecha_factura IS NULL OR NEW.fecha_emision IS NULL
      OR NEW.fecha_emision < v_fecha_factura OR NEW.fecha_emision > v_hoy_mexico THEN
