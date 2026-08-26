@@ -102,6 +102,7 @@ export async function fetchClientesForSelect(organizationId: string | null) {
   let query = supabase
     .from("clientes")
     .select("id, nombre")
+    .is("deleted_at", null)
     .order("nombre");
   if (organizationId) query = query.eq("organization_id", organizationId);
   return unwrapOr(query, []);
