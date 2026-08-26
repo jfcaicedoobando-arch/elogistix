@@ -94268,7 +94268,6 @@
       "20260826212816_ca5bf51b-c046-4a8d-8ed2-8892118498a1.sql",
       "20260826212920_8b70d533-991d-4477-b77e-874d9b2b92a6.sql",
       "20260826222328_6951616d-9d8b-4f93-8dd8-87d6d43ec942.sql",
-      "20260826234724_ab6ab9ff-431c-4454-8fe6-eddf170468ae.sql",
       "20260827080020_ola8_replay_pilotos_rol_por_org.sql",
       "20260828000100_rev1_espejo_guards_y_rechazo_doc.sql",
       "20260828000200_rev2_espejo_comisiones_nc_y_periodo.sql",
@@ -94293,7 +94292,8 @@
       "20260902000100_qa_r2_etapa1_guards.sql",
       "20260902000200_qa_r2_n07_enum_por_recuperar.sql",
       "20260902000300_qa_r2_n07_comisiones_por_recuperar.sql",
-      "20260902000400_qa_r2_d05_factura_sin_conceptos.sql"
+      "20260902000400_qa_r2_d05_factura_sin_conceptos.sql",
+      "20260902001000_qa_r2_r04_portal_papelera.sql"
     ]
   }
 }
