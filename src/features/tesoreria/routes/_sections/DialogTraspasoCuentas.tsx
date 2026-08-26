@@ -18,6 +18,8 @@ import { DatePickerMx } from "@/components/ui/date-picker-mx";
 import { MoneyInput } from "@/components/shared/MoneyInput";
 import { useRegistrarTraspaso } from "@/features/tesoreria/hooks/useTraspasos";
 import { useTraspasoForm } from "@/features/tesoreria/hooks/useTraspasoForm";
+import { etiquetaTc } from "@/features/tesoreria/domain/tcPar";
+
 import type { Tables } from "@/integrations/supabase/types";
 import { formatCurrency } from "@/lib/formatters";
 
@@ -33,7 +35,7 @@ const FORM_ID = "form-traspaso-cuentas";
 
 export function DialogTraspasoCuentas({ open, onOpenChange, cuentas }: DialogTraspasoCuentasProps) {
   const {
-    state, setField, origen, destino, mismoMoneda, montoDestino, error, fechaTcDof,
+    state, setField, origen, destino, mismoMoneda, par, factorOrigenDestino, montoDestino, error, fechaTcDof,
   } = useTraspasoForm(open, cuentas);
   const { mutate: registrar, isPending } = useRegistrarTraspaso();
 
@@ -45,10 +47,11 @@ export function DialogTraspasoCuentas({ open, onOpenChange, cuentas }: DialogTra
     clientRequestIdRef.current = open ? crypto.randomUUID() : null;
   }, [open]);
 
-  // BL-04: sólo se manda 1 cuando ambas cuentas comparten moneda. Si difieren,
-  // el TC capturado es obligatorio (la validación ya bloquea el botón).
-  const tipoCambioFinal = mismoMoneda ? 1 : state.tipoCambio;
+  // BL-04: la RPC recibe el multiplicador origen→destino. El usuario captura
+  // la cotización a la mexicana (pesos por dólar) y aquí se deriva el factor.
+  const tipoCambioFinal = mismoMoneda ? 1 : (factorOrigenDestino ?? 0);
   const bloqueado = !!error || isPending || !(tipoCambioFinal > 0);
+
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -122,18 +125,18 @@ export function DialogTraspasoCuentas({ open, onOpenChange, cuentas }: DialogTra
             currency={origen?.moneda}
           />
         </div>
-        {!mismoMoneda && origen && destino && (
+        {!mismoMoneda && origen && destino && par && (
           <div className="space-y-1.5">
-            <Label htmlFor="traspaso-tc">Tipo de cambio *</Label>
+            <Label htmlFor="traspaso-tc">{etiquetaTc(par)} *</Label>
             <MoneyInput
               id="traspaso-tc"
-              value={state.tipoCambio}
-              onChange={(v) => setField("tipoCambio", v)}
-              placeholder="1.00"
+              value={state.tcQuote}
+              onChange={(v) => setField("tcQuote", v)}
+              placeholder={par.quote === "MXN" ? "18.4200" : "1.0800"}
             />
-            {state.tipoCambio > 0 ? (
+            {state.tcQuote > 0 ? (
               <p className="text-body-sm text-muted-foreground">
-                {`Estimado con el TC capturado: ${origen.moneda} → ${destino.moneda}: ${formatCurrency(montoDestino, destino.moneda)}`}
+                {`1 ${par.base} = ${state.tcQuote} ${par.quote}. Traspasas ${formatCurrency(state.montoOrigen, origen.moneda)} y se abonan ${formatCurrency(montoDestino, destino.moneda)}.`}
               </p>
             ) : (
               <p className="text-body-sm text-destructive" role="alert">
@@ -145,12 +148,9 @@ export function DialogTraspasoCuentas({ open, onOpenChange, cuentas }: DialogTra
                 Sugerido con el TC DOF publicado el {fechaTcDof}. Puedes editarlo si tu banco usó otro.
               </p>
             )}
-            <p className="text-body-sm text-muted-foreground">
-              El tipo de cambio multiplica: 1 {origen.moneda} = {state.tipoCambio || "?"} {destino.moneda}.
-              Si tu referencia viene expresada al revés, divídela antes de capturarla.
-            </p>
           </div>
         )}
+
         <div className="space-y-1.5">
           <Label htmlFor="traspaso-comision">Comisión bancaria (opcional)</Label>
           <MoneyInput

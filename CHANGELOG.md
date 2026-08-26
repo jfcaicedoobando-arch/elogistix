@@ -1,5 +1,13 @@
 # Changelog
 
+## [13.751.0] - 2026-08-26
+### El tipo de cambio del traspaso ya se captura "pesos por dólar"
+- En "Traspaso entre cuentas propias" el tipo de cambio se pedía invertido: para pasar de MXN a USD había que teclear 0.0543 en lugar de 18.42. Ahora el campo siempre se captura a la mexicana (unidades de la divisa débil por 1 de la fuerte), sin importar la dirección del traspaso.
+- La etiqueta indica el par explícitamente ("Tipo de cambio (MXN por 1 USD)"), la sugerencia del TC DOF se muestra en la misma convención y la ayuda ahora previsualiza el abono real.
+- Lo que se guarda en la base no cambió: el multiplicador origen→destino se deriva internamente.
+
+
+
 ## [13.750.1] - 2026-08-26
 ### El icono de calendario ya abre el selector de fechas
 - En los campos de fecha (por ejemplo el traspaso entre cuentas de Tesorería) el botón del calendario no hacía nada: el tooltip envolvía al disparador y se comía el clic. Ahora abre el calendario en todos los formularios.
