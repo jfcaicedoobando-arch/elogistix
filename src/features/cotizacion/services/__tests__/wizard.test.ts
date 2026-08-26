@@ -115,6 +115,11 @@ describe("savePaso2", () => {
   });
 });
 
+function primerArgUpdate(): { data: { subtotal: number; moneda: string } } {
+  const calls = muts.updateCotizacion.mutateAsync.mock.calls as unknown as unknown[][];
+  return calls[0][0] as { data: { subtotal: number; moneda: string } };
+}
+
 describe("savePaso3 (W-01: subtotal/moneda derivados de conceptos)", () => {
   it("USD: subtotal = suma de conceptos USD", async () => {
     await savePaso3({
@@ -138,9 +143,7 @@ describe("savePaso3 (W-01: subtotal/moneda derivados de conceptos)", () => {
       conceptosVenta: [{ concepto: "Flete", moneda: "MXN", total: 12000 }],
       mutations: muts,
     });
-    const arg = muts.updateCotizacion.mutateAsync.mock.calls[0]?.[0] as unknown as {
-      data: { subtotal: number; moneda: string };
-    };
+    const arg = primerArgUpdate();
     expect(arg.data.subtotal).toBe(12000);
     expect(arg.data.moneda).toBe("MXN");
   });
@@ -154,9 +157,7 @@ describe("savePaso3 (W-01: subtotal/moneda derivados de conceptos)", () => {
       ],
       mutations: muts,
     });
-    const arg = muts.updateCotizacion.mutateAsync.mock.calls[0]?.[0] as unknown as {
-      data: { subtotal: number; moneda: string };
-    };
+    const arg = primerArgUpdate();
     expect(arg.data).toEqual({ ...arg.data, subtotal: 5000, moneda: "MXN" });
   });
 });
