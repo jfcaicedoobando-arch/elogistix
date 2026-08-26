@@ -140,9 +140,11 @@ export async function actualizarActividadNotas(input: { id: string; resultado: s
 
 // B-055: las actividades pueden tener solo responsable_email (sin id); el
 // filtro "mías" debe cubrir ambas llaves.
+// B-24: `quoteOrValue` protege el `.or()` de PostgREST — un valor con `,`, `(`,
+// `)` o `"` rompería el parser.
 const filtroResponsable = (userId: string, email?: string | null) =>
   email
-    ? `responsable_id.eq.${userId},responsable_email.eq.${email}`
+    ? `responsable_id.eq.${userId},responsable_email.eq.${quoteOrValue(email)}`
     : `responsable_id.eq.${userId}`;
 
 export async function countActividadesVencidas(userId: string, email?: string | null): Promise<number> {

@@ -28,7 +28,11 @@ export function ilikePattern(input: string): string {
  * comillas dobles cuando contiene caracteres reservados (`,`, `(`, `)`, `"`).
  * Los `"` internos se escapan como `""`.
  */
-function quoteOrValue(v: string): string {
+/**
+ * B-24: exportada para poder componer expresiones `.or()` con `eq` (no sólo
+ * `ilike`), p. ej. filtros por email.
+ */
+export function quoteOrValue(v: string): string {
   if (/[,()"]/.test(v)) {
     return `"${v.replace(/"/g, '""')}"`;
   }
