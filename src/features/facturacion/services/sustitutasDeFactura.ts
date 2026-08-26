@@ -20,7 +20,7 @@ export interface SustitutaCandidata {
 export async function listarSustitutas(facturaId: string): Promise<SustitutaCandidata[]> {
   const { data, error } = await supabase
     .from("facturas")
-    .select("id, numero, serie, folio_fiscal, uuid_fiscal, estado, facturapi_id")
+    .select("id, numero, serie, folio_fiscal, uuid_fiscal, estado, facturapi_id").is("deleted_at", null)
     .eq("sustituye_a", facturaId)
     .order("created_at", { ascending: false });
   if (error) throw error;

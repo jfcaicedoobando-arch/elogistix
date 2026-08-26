@@ -17,7 +17,7 @@ export async function fetchExpedientesCliente(
 ): Promise<ExpedienteCliente[]> {
   let query = supabase
     .from("embarques")
-    .select("expediente, bl_master, cliente_nombre")
+    .select("expediente, bl_master, cliente_nombre").is("deleted_at", null)
     .eq("cliente_id", clienteId)
     .order("created_at", { ascending: false });
   if (!opts.incluirCerrados) {

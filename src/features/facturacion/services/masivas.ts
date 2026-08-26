@@ -17,7 +17,7 @@ export async function fetchFacturasParaZip(ids: string[]): Promise<FacturaParaZi
   if (ids.length === 0) return [];
   const { data, error } = await supabase
     .from("facturas")
-    .select("id, numero, factura_pdf_url, factura_xml_url")
+    .select("id, numero, factura_pdf_url, factura_xml_url").is("deleted_at", null)
     .in("id", ids);
   if (error) throw error;
   return (data ?? []) as FacturaParaZip[];

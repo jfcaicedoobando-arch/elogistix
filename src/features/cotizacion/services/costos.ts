@@ -14,7 +14,7 @@ export async function fetchCotizacionCostos(
 ): Promise<CostoCotizacion[]> {
   const { data, error } = await supabase
     .from("cotizacion_costos")
-    .select("*")
+    .select("*").is("deleted_at", null)
     .eq("cotizacion_id", cotizacionId)
     // EC-05: límite defensivo sobre partidas de costo de una cotización.
     .limit(CAP_LISTA);
@@ -72,7 +72,7 @@ export async function fetchCotizacionCostosForEmbarque(
 ): Promise<CotizacionCostoLookup[]> {
   const { data, error } = await supabase
     .from("cotizacion_costos")
-    .select("concepto, costo_unitario, moneda, proveedor")
+    .select("concepto, costo_unitario, moneda, proveedor").is("deleted_at", null)
     .eq("cotizacion_id", cotizacionId);
   if (error) throw new Error(error.message);
   return (data ?? []) as CotizacionCostoLookup[];

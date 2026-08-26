@@ -14,7 +14,7 @@ import { reportCaughtError } from "@/lib/observability/reportCaughtError";
 export async function tieneCostosCargados(cotizacionId: string): Promise<boolean> {
   const { count, error } = await supabase
     .from("cotizacion_costos")
-    .select("id", { count: "exact", head: true })
+    .select("id", { count: "exact", head: true }).is("deleted_at", null)
     .eq("cotizacion_id", cotizacionId);
   if (error) {
     // 13.114.19: antes sólo `console.error`; ahora reportamos a Sentry para

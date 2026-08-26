@@ -29,7 +29,7 @@ export async function fetchLiquidacionesPendientes(
 ): Promise<LiquidacionRow[]> {
   let q = supabase
     .from("liquidaciones_comision")
-    .select("id, vendedora_id, periodo, total_mxn, fecha_pago, created_at")
+    .select("id, vendedora_id, periodo, total_mxn, fecha_pago, created_at").is("deleted_at", null)
     .is("fecha_pago", null)
     .limit(CAP_LISTA);
   if (organizationId) q = q.eq("organization_id", organizationId);

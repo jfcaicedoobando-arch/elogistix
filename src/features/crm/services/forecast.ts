@@ -47,8 +47,8 @@ export async function fetchReportesCRM(): Promise<ReportesCRM> {
   const [leadsR, opsR, motivosR, etapasR] = await Promise.all([
     supabase.from("crm_leads").select("estado, fuente").is("deleted_at", null).limit(LIMITE_CRM),
     supabase.from("crm_oportunidades").select("motivo_perdida_id, etapa_id").is("deleted_at", null).limit(LIMITE_CRM),
-    supabase.from("crm_motivos_perdida").select("id, nombre"),
-    supabase.from("crm_etapas_pipeline").select("id, nombre, tipo"),
+    supabase.from("crm_motivos_perdida").select("id, nombre").is("deleted_at", null),
+    supabase.from("crm_etapas_pipeline").select("id, nombre, tipo").is("deleted_at", null),
   ]);
   if (leadsR.error) throw leadsR.error;
   if (opsR.error) throw opsR.error;

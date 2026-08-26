@@ -187,7 +187,7 @@ export async function fetchConceptosConsolidados(
   proformaId: string,
 ): Promise<ProformaConceptoConsolidadoRow[]> {
   return unwrapOr(
-    supabase.from("proforma_conceptos_consolidados").select("*").eq("proforma_id", proformaId),
+    supabase.from("proforma_conceptos_consolidados").select("*").is("deleted_at", null).eq("proforma_id", proformaId),
     [] as ProformaConceptoConsolidadoRow[],
   ) as Promise<ProformaConceptoConsolidadoRow[]>;
 }

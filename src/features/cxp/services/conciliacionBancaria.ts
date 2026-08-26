@@ -37,7 +37,7 @@ export async function sugerirMovsParaPagoProveedor(pago: {
 
   let q = supabase
     .from("bbva_movimientos")
-    .select("id, fecha, concepto, referencia, cargo, cuenta_bancaria_id")
+    .select("id, fecha, concepto, referencia, cargo, cuenta_bancaria_id").is("deleted_at", null)
     .eq("estado_conciliacion", "Pendiente")
     .gte("fecha", desde)
     .lte("fecha", hasta)

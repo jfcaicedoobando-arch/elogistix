@@ -238,9 +238,13 @@ jobs:
           R=$!
           bun run audit:sonner      > /tmp/audit-sonner.log      2>&1 &
           N=$!
-          # v13.603.0 (R5TC-02) — ningún secreto server-side ni .env sombra.
-          bun run audit:no-env      > /tmp/audit-no-env.log      2>&1 &
-          E=$!
+           # v13.603.0 (R5TC-02) — ningún secreto server-side ni .env sombra.
+           bun run audit:no-env      > /tmp/audit-no-env.log      2>&1 &
+           E=$!
+           # v13.758.0 (D-01b) — ninguna lista/contador/buscador nuevo puede
+           # leer tablas con borrado lógico sin filtrar `deleted_at`.
+           bun run audit:soft-delete > /tmp/audit-soft-delete.log 2>&1 &
+           D=$!
           fail=0
           wait $A || { echo '❌ audit:arch';       cat /tmp/audit-arch.log;       fail=1; }
           wait $C || { echo '❌ audit:casts';      cat /tmp/audit-casts.log;      fail=1; }
@@ -252,8 +256,9 @@ jobs:
           wait $V || { echo '❌ audit:manifest';   cat /tmp/audit-manifest.log;   fail=1; }
           wait $R || { echo '❌ audit:rpc-sync';    cat /tmp/audit-rpc-sync.log;    fail=1; }
           wait $N || { echo '❌ audit:sonner';      cat /tmp/audit-sonner.log;      fail=1; }
-          wait $E || { echo '❌ audit:no-env';      cat /tmp/audit-no-env.log;      fail=1; }
-          exit $fail
+           wait $E || { echo '❌ audit:no-env';      cat /tmp/audit-no-env.log;      fail=1; }
+           wait $D || { echo '❌ audit:soft-delete'; cat /tmp/audit-soft-delete.log; fail=1; }
+           exit $fail
 
       # v13.322.1 (GHA-audit A4) — Los architecture gating tests se excluyen
       # del matrix de Vitest cuando se corre con `--shard` (ver

@@ -31,13 +31,13 @@ export async function buscarProspectos(term: string): Promise<ProspectoMatch[]> 
   const [leadsRes, opsRes] = await Promise.all([
     supabase
       .from("crm_leads")
-      .select("id, empresa, contacto, email, telefono")
+      .select("id, empresa, contacto, email, telefono").is("deleted_at", null)
       .or(orIlike(["empresa", "contacto", "email"], term))
       .neq("estado", "Convertido")
       .limit(8),
     supabase
       .from("crm_oportunidades")
-      .select("id, nombre, lead_id, cliente_nombre, etapa:crm_etapas_pipeline!etapa_id(nombre)")
+      .select("id, nombre, lead_id, cliente_nombre, etapa:crm_etapas_pipeline!etapa_id(nombre)").is("deleted_at", null)
       .or(orIlike(["nombre", "cliente_nombre"], term))
       .is("cliente_id", null)
       .limit(8),

@@ -21,7 +21,7 @@ export type { ResumenCuenta, ResumenTesoreria,  TopItem } from "@/features/tesor
 export async function fetchSaldosCuentas(organizationId?: string | null): Promise<ResumenCuenta[]> {
   let q = supabase
     .from("cuentas_bancarias")
-    .select("id, alias, banco, moneda, saldo_inicial, organization_id")
+    .select("id, alias, banco, moneda, saldo_inicial, organization_id").is("deleted_at", null)
     .eq("activa", true)
     .order("alias");
   if (organizationId) q = q.eq("organization_id", organizationId);

@@ -6,7 +6,7 @@ export type { EmbarqueListExtras } from "./paginados";
 export async function fetchEmbarquesRelacionados(_embarqueId: string, blMaster: string) {
   const { data, error } = await supabase
     .from("embarques")
-    .select("id, expediente, bl_house, contenedor, tipo_contenedor, peso_kg, volumen_m3, piezas, estado")
+    .select("id, expediente, bl_house, contenedor, tipo_contenedor, peso_kg, volumen_m3, piezas, estado").is("deleted_at", null)
     .eq("bl_master", blMaster)
     .order("contenedor", { ascending: true, nullsFirst: false });
   if (error) throw error;

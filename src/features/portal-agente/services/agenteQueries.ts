@@ -98,7 +98,7 @@ export async function fetchAgenteEmbarques(): Promise<AgenteEmbarqueRow[]> {
   const data = await unwrapOr(
     supabase
       .from("embarques")
-      .select("id, expediente, modo, estado, bl_master, puerto_origen, puerto_destino, etd, eta")
+      .select("id, expediente, modo, estado, bl_master, puerto_origen, puerto_destino, etd, eta").is("deleted_at", null)
       .order("etd", { ascending: false, nullsFirst: false })
       .limit(200),
     [],

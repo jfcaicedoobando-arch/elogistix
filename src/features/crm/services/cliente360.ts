@@ -47,11 +47,11 @@ export async function fetchCliente360(clienteId: string): Promise<Cliente360Resu
       .limit(1),
     supabase
       .from("embarques")
-      .select("id, expediente, estado, created_at")
+      .select("id, expediente, estado, created_at").is("deleted_at", null)
       .eq("cliente_id", clienteId)
       .order("created_at", { ascending: false })
       .limit(1),
-    supabase.from("crm_etapas_pipeline").select("id, tipo"),
+    supabase.from("crm_etapas_pipeline").select("id, tipo").is("deleted_at", null),
   ]);
   if (opsR.error) throw opsR.error;
   if (cotR.error) throw cotR.error;

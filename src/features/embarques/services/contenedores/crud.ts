@@ -37,7 +37,7 @@ export async function listarPorEmbarque(
   return unwrapOr(
     supabase
       .from("embarque_contenedores")
-      .select("*")
+      .select("*").is("deleted_at", null)
       .eq("embarque_id", embarqueId)
       .order("orden", { ascending: true })
       .order("created_at", { ascending: true }),
