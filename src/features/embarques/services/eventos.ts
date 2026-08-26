@@ -43,7 +43,9 @@ export async function insertEventoEmbarque(input: {
 }): Promise<void> {
   // B-24: boundary de validación — el schema rechaza tipos vacíos y fechas con
   // formato distinto de `AAAA-MM-DD`.
-  parseOrThrow(eventoTrackingSchema, {
+  // R-06 (QA r2): se inserta el output transformado por el schema (trim/
+  // normalización), no el input crudo.
+  const parsed = parseOrThrow(eventoTrackingSchema, {
     tipo: input.tipo,
     fecha: input.fecha,
     ubicacion: input.ubicacion,
@@ -52,10 +54,10 @@ export async function insertEventoEmbarque(input: {
   const { error } = await supabase.from('eventos_embarque').insert([
     {
       embarque_id: input.embarqueId,
-      tipo: input.tipo as Enums<'tipo_evento_tracking'>,
-      descripcion: input.descripcion,
-      ubicacion: input.ubicacion,
-      fecha: input.fecha,
+      tipo: parsed.tipo as Enums<'tipo_evento_tracking'>,
+      descripcion: parsed.descripcion,
+      ubicacion: parsed.ubicacion,
+      fecha: parsed.fecha,
       usuario: input.usuario,
     },
   ]);
@@ -63,6 +65,6 @@ export async function insertEventoEmbarque(input: {
   await registrarBitacoraEmbarque({
     accion: "Registró evento de tracking en embarque",
     entidadId: input.embarqueId,
-    detalles: { tipo: input.tipo, ubicacion: input.ubicacion, fecha: input.fecha },
+    detalles: { tipo: parsed.tipo, ubicacion: parsed.ubicacion, fecha: parsed.fecha },
   });
 }

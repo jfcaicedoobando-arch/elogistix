@@ -32,6 +32,8 @@ export async function fetchPortalEmbarques(clienteIds: string[]) {
       .from("embarques")
       .select(PORTAL_EMBARQUE_LIST_COLUMNS)
       .in("cliente_id", clienteIds)
+      // N-03 (QA r2): ocultar embarques en papelera al cliente.
+      .is("deleted_at", null)
       .order("created_at", { ascending: false })
       .limit(PORTAL_LIST_MAX),
     [],
@@ -44,6 +46,7 @@ export async function fetchPortalEmbarque(id: string) {
       .from("embarques")
       .select(PORTAL_EMBARQUE_DETAIL_COLUMNS)
       .eq("id", id)
+      .is("deleted_at", null)
       .single(),
   );
 }

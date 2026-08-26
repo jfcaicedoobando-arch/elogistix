@@ -1,3 +1,4 @@
+import { procesarEnLotes } from "@/lib/csv/importLimits";
 import { useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query";
 import { BulkImportDialog } from "@/components/shared/BulkImportDialog";
@@ -42,9 +43,8 @@ export function ProveedoresImportDialog({ open, onOpenChange }: Props) {
       templateFileName="plantilla-proveedores.csv"
       mapRows={(rows) => mapProveedorRows(rows, organizationId)}
       onCommit={async (payloads) => {
-        for (const p of payloads) {
-          await insertProveedor(p);
-        }
+        // N-05 (QA r2): inserción en lotes con concurrencia acotada.
+        await procesarEnLotes(payloads, (p) => insertProveedor(p));
         registrarActividad.mutate({
           accion: "crear",
           modulo: "proveedores",

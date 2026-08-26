@@ -6,8 +6,13 @@ import { roundMoney } from "@/lib/financial/financialUtils";
 
 export const round2 = (n: number): number => roundMoney(n);
 
-export const calcMargen = (utilidad: number, venta: number): number =>
-  venta > 0 ? (utilidad / venta) * 100 : 0;
+/**
+ * W-07 (QA r2): margen indeterminado cuando no hay venta. Antes devolvía 0,
+ * que la tabla mostraba como "0.0%" (un margen real de cero no es lo mismo que
+ * "sin venta"). `null` se renderiza como "n/a".
+ */
+export const calcMargen = (utilidad: number, venta: number): number | null =>
+  venta > 0 ? (utilidad / venta) * 100 : null;
 
 export interface AcumuladorContenedor {
   ventaDirecta: number;

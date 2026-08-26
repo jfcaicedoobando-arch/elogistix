@@ -83,16 +83,36 @@ export async function savePaso2(opts: {
   await mutations.upsertCostos.mutateAsync({ cotizacionId, costos });
 }
 
+/**
+ * W-01 (QA r2): `subtotal` y `moneda` se derivan de los conceptos de venta.
+ * Antes se persistía sólo `totalUSD`: una cotización sólo en pesos quedaba con
+ * `subtotal = 0` y el detalle bloqueaba el envío por "sin importe" (la BD sí la
+ * dejaba enviar, porque su guard evalúa los conceptos). En cotizaciones mixtas
+ * se usa la moneda dominante (mayor monto) y el subtotal de esa moneda.
+ */
+export function derivarSubtotalMoneda(
+  conceptosVenta: Record<string, unknown>[],
+): { subtotal: number; moneda: "USD" | "MXN" } {
+  let usd = 0;
+  let mxn = 0;
+  for (const c of conceptosVenta) {
+    const total = Number(c?.total) || 0;
+    if (c?.moneda === "MXN") mxn += total;
+    else usd += total;
+  }
+  return mxn > usd ? { subtotal: mxn, moneda: "MXN" } : { subtotal: usd, moneda: "USD" };
+}
+
 export async function savePaso3(opts: {
   cotizacionId: string;
   conceptosVenta: Record<string, unknown>[];
-  totalUSD: number;
   mutations: Pick<Mutations, "updateCotizacion">;
 }): Promise<void> {
-  const { cotizacionId, conceptosVenta, totalUSD, mutations } = opts;
+  const { cotizacionId, conceptosVenta, mutations } = opts;
+  const { subtotal, moneda } = derivarSubtotalMoneda(conceptosVenta);
   await mutations.updateCotizacion.mutateAsync({
     id: cotizacionId,
-    data: { conceptos_venta: conceptosVenta, subtotal: totalUSD },
+    data: { conceptos_venta: conceptosVenta, subtotal, moneda },
   });
 }
 

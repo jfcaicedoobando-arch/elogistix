@@ -21,7 +21,10 @@ interface Props {
 export function CotizacionDetalleHeader({ cotizacion, nombreDestinatario, onExportarPdf, exportandoPdf = false, onEnviarEmail, yaEnviada }: Props) {
   const volver = useVolver("/cotizaciones");
   // R-08: una cotización sin importe no puede enviarse al cliente.
-  const sinImporte = !(Number(cotizacion.subtotal) > 0);
+  // W-01 (QA r2): se evalúa contra los conceptos de venta (USD y MXN) — antes
+  // sólo `subtotal`, que era 0 en cotizaciones MXN-only y bloqueaba el envío
+  // aunque la cotización sí tuviera importes.
+  const sinImporte = !(cotizacion.conceptos_venta ?? []).some((c) => Number(c?.total) > 0);
   const metaFecha = cotizacion.fecha_aceptacion
     ? `Aceptada el ${formatDate(cotizacion.fecha_aceptacion, "dd/MM/yyyy HH:mm")}`
     : cotizacion.fecha_rechazo

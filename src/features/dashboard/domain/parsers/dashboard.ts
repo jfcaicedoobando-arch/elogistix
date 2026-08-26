@@ -147,7 +147,9 @@ export function parseCargasPorCliente(stats: DashboardStats): CargaPorCliente[] 
       desglose: {
         Confirmado: Number(d.Confirmado ?? 0),
         "En Tránsito": Number(d["En Tránsito"] ?? 0),
-        Arribo: Number(d.Arribo ?? 0),
+        // W-10 (QA r2): mismo merge que `parseConteoPorEstado` — `Llegada`
+        // (deprecado) se suma a `Arribo` para no perder conteos legacy.
+        Arribo: Number(d.Arribo ?? 0) + Number(d.Llegada ?? 0),
         "En Aduana": Number(d["En Aduana"] ?? 0),
         Entregado: Number(d.Entregado ?? 0),
       },

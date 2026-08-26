@@ -42,7 +42,7 @@ export interface FilaPnlContenedor {
   costoProrrateado: number;
   costoTotal: number;
   utilidad: number;
-  margenPct: number; // 0–100
+  margenPct: number | null; // 0–100; null = sin venta (indeterminado, "n/a")
   esTotal?: boolean;
   esGenerales?: boolean;
 }

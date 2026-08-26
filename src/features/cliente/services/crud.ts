@@ -3,6 +3,7 @@ import type { Tables, TablesInsert } from "@/integrations/supabase/types";
 import { unwrap, unwrapOr } from "@/lib/supabase/response";
 import { normalizarRazonSocial } from "@/lib/text/razonSocial";
 import { registrarActividad } from "@/services/bitacora/registrar";
+import { conflictoConcurrenciaError } from "@/lib/errors/concurrencia";
 
 import {
   clienteInsertSchema,
@@ -178,15 +179,26 @@ export async function createCliente(cliente: TablesInsert<"clientes">) {
 export async function updateCliente(
   id: string,
   updates: Partial<Cliente>,
+  /**
+   * N-06 (QA r2): bloqueo optimista. `updated_at` leído al abrir el
+   * formulario; si la fila ya cambió, el UPDATE no toca ninguna fila y se
+   * lanza LC_CONFLICTO_CONCURRENCIA en vez de sobrescribir cambios ajenos.
+   */
+  expectedUpdatedAt?: string | null,
 ): Promise<Cliente> {
   parseOrThrow(clienteUpdateSchema, updates, "Cliente");
   const payload =
     updates.nombre === undefined
       ? updates
       : { ...updates, nombre: normalizarRazonSocial(updates.nombre) };
-  const actualizado = (await unwrap(
-    supabase.from("clientes").update(payload).eq("id", id).select().single(),
-  )) as Cliente;
+  let query = supabase.from("clientes").update(payload).eq("id", id);
+  if (expectedUpdatedAt) query = query.eq("updated_at", expectedUpdatedAt);
+  const rows = (await unwrap(query.select())) as Cliente[] | null;
+  if (!rows || rows.length === 0) {
+    if (expectedUpdatedAt) throw conflictoConcurrenciaError();
+    throw new Error("No se guardaron los cambios del cliente: no tienes permiso o el cliente ya no existe.");
+  }
+  const actualizado = rows[0];
   await registrarActividad({
     modulo: "clientes",
     accion: "editar",

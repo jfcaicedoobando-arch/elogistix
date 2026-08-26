@@ -2,7 +2,7 @@ import { Document, Page, Text, View } from "@react-pdf/renderer";
 import type { CotizacionRow, ConceptoVentaCotizacion } from "@/features/cotizacion/types";
 import type { TipoContenedorCatalogo } from "@/features/cotizacion/utils/resolveTipoContenedorNombre";
 import { TASA_IVA, calcularIVA, resolverTasaConcepto } from "@/lib/financial/financialUtils";
-import { formatCurrency, formatDate } from "@/lib/formatters";
+import { formatCurrency, formatDate, formatFechaDia } from "@/lib/formatters";
 import {
   calcularTotales,
   splitConceptos,
@@ -108,7 +108,9 @@ export function CotizacionDocument({ cotizacion, tasaIva = TASA_IVA, emisor, tip
 
   const headerMeta = [
     { label: "Estado", value: cotizacion.estado },
-    { label: "Fecha", value: formatDate(cotizacion.created_at.substring(0, 10)) },
+    // W-12 (QA r2): `created_at.substring(0,10)` tomaba el día UTC (de 18:00 a
+    // 23:59 CDMX ya es "mañana"). `formatFechaDia` formatea en la TZ de negocio.
+    { label: "Fecha", value: formatFechaDia(cotizacion.created_at) },
     ...(cotizacion.fecha_vigencia
       ? [{ label: "Vigencia", value: formatDate(cotizacion.fecha_vigencia) }]
       : []),

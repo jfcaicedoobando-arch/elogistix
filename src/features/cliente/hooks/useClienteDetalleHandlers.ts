@@ -16,7 +16,11 @@ interface Deps {
   createContacto: { mutateAsync: (d: { cliente_id: string } & ContactoFormData) => Promise<unknown> };
   updateContacto: { mutateAsync: (d: { id: string; cliente_id: string } & ContactoFormData) => Promise<unknown> };
   deleteContacto: { mutateAsync: (d: { id: string; cliente_id: string }) => Promise<unknown> };
-  updateCliente: { mutateAsync: (d: { id: string } & ClienteFormData) => Promise<unknown> };
+  updateCliente: {
+    mutateAsync: (
+      d: { id: string; expectedUpdatedAt?: string | null } & ClienteFormData,
+    ) => Promise<unknown>;
+  };
   registrarActividad: {
     mutate: (d: {
       accion: string;
@@ -62,7 +66,12 @@ export function useClienteDetalleHandlers(deps: Deps) {
         data,
         SENSITIVE_FIELDS.cliente,
       );
-      await updateCliente.mutateAsync({ id: cliente.id, ...data });
+      // N-06: enviamos el updated_at con el que se abrió el formulario.
+      await updateCliente.mutateAsync({
+        id: cliente.id,
+        expectedUpdatedAt: cliente.updated_at,
+        ...data,
+      });
       registrarActividad.mutate({
         accion: "editar",
         modulo: "clientes",

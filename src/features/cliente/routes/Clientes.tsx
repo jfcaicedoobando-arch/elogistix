@@ -1,4 +1,5 @@
 
+import { procesarEnLotes } from "@/lib/csv/importLimits";
 import { pluralizar } from "@/lib/format/pluralizar";
 import { Building2, Plus, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -168,9 +169,8 @@ export default function Clientes() {
         templateFileName="plantilla-clientes.csv"
         mapRows={(rows) => mapClienteRows(rows, organizationId)}
         onCommit={async (payloads) => {
-          for (const p of payloads) {
-            await createCliente(p);
-          }
+          // N-05 (QA r2): inserción en lotes con concurrencia acotada.
+          await procesarEnLotes(payloads, (p) => createCliente(p));
           registrarActividad.mutate({
             accion: "crear",
             modulo: "clientes",
