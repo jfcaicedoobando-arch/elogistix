@@ -115,18 +115,49 @@ describe("savePaso2", () => {
   });
 });
 
-describe("savePaso3", () => {
-  it("update con subtotal=totalUSD y conceptos_venta", async () => {
+describe("savePaso3 (W-01: subtotal/moneda derivados de conceptos)", () => {
+  it("USD: subtotal = suma de conceptos USD", async () => {
     await savePaso3({
       cotizacionId: "c1",
-      conceptosVenta: [{ concepto: "A" }],
-      totalUSD: 500,
+      conceptosVenta: [{ concepto: "A", moneda: "USD", total: 500 }],
       mutations: muts,
     });
     expect(muts.updateCotizacion.mutateAsync).toHaveBeenCalledWith({
       id: "c1",
-      data: { conceptos_venta: [{ concepto: "A" }], subtotal: 500 },
+      data: {
+        conceptos_venta: [{ concepto: "A", moneda: "USD", total: 500 }],
+        subtotal: 500,
+        moneda: "USD",
+      },
     });
+  });
+
+  it("MXN-only: subtotal en pesos y moneda MXN (antes quedaba en 0)", async () => {
+    await savePaso3({
+      cotizacionId: "c1",
+      conceptosVenta: [{ concepto: "Flete", moneda: "MXN", total: 12000 }],
+      mutations: muts,
+    });
+    const arg = muts.updateCotizacion.mutateAsync.mock.calls[0][0] as {
+      data: { subtotal: number; moneda: string };
+    };
+    expect(arg.data.subtotal).toBe(12000);
+    expect(arg.data.moneda).toBe("MXN");
+  });
+
+  it("mixta: gana la moneda con mayor monto", async () => {
+    await savePaso3({
+      cotizacionId: "c1",
+      conceptosVenta: [
+        { moneda: "USD", total: 100 },
+        { moneda: "MXN", total: 5000 },
+      ],
+      mutations: muts,
+    });
+    const arg = muts.updateCotizacion.mutateAsync.mock.calls[0][0] as {
+      data: { subtotal: number; moneda: string };
+    };
+    expect(arg.data).toEqual({ ...arg.data, subtotal: 5000, moneda: "MXN" });
   });
 });
 

@@ -185,7 +185,7 @@ describe("calcularPnlPorContenedor (v13.66.14)", () => {
       }
     });
 
-    it("venta = 0: margen es 0 (no NaN por división)", () => {
+    it("venta = 0: margen es null (no NaN por división)", () => {
       const c = mkCont("a", 1);
       const r = calcularPnlPorContenedor({
         expediente: "EXP",
@@ -194,8 +194,8 @@ describe("calcularPnlPorContenedor (v13.66.14)", () => {
         conceptosCosto: [mkCosto(100, "USD", "a")],
       });
       expect(r.USD[0].ventaTotal).toBe(0);
-      expect(r.USD[0].margenPct).toBe(0);
-      expect(Number.isNaN(r.USD[0].margenPct)).toBe(false);
+      // W-07: sin venta el margen es null ("n/a"), nunca NaN ni 0%.
+      expect(r.USD[0].margenPct).toBeNull();
     });
 
     it("todos los montos en 0: filas existen y son ceros limpios", () => {
@@ -210,7 +210,7 @@ describe("calcularPnlPorContenedor (v13.66.14)", () => {
       expect(fila.ventaTotal).toBe(0);
       expect(fila.costoTotal).toBe(0);
       expect(fila.utilidad).toBe(0);
-      expect(fila.margenPct).toBe(0);
+      expect(fila.margenPct).toBeNull();
     });
 
     it("contenedor con id duplicado en concepto: no genera división rara", () => {

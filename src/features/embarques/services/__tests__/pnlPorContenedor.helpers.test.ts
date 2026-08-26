@@ -24,9 +24,10 @@ describe("pnlPorContenedor.helpers", () => {
     it("calcula porcentaje", () => {
       expect(calcMargen(20, 100)).toBe(20);
     });
-    it("retorna 0 cuando venta <= 0", () => {
-      expect(calcMargen(50, 0)).toBe(0);
-      expect(calcMargen(50, -10)).toBe(0);
+    // W-07: sin venta el margen es indeterminado (null → "n/a"), no 0%.
+    it("retorna null cuando venta <= 0", () => {
+      expect(calcMargen(50, 0)).toBeNull();
+      expect(calcMargen(50, -10)).toBeNull();
     });
   });
 
