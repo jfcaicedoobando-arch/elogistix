@@ -32,6 +32,8 @@ export const EXTRA_STATUS_BADGES: Record<string, EstadoVisual["badge"]> = {
   // Comisión
   Devengada: "bg-warning/15 text-warning border border-warning/30",
   Liquidada: "bg-success/15 text-success border border-success/30",
+  // Comisión liquidada cuyo respaldo desapareció: se ajusta en la siguiente liquidación.
+  "Por recuperar": "bg-destructive/15 text-destructive border border-destructive/30",
   // Organización
   Activa: "bg-success/15 text-success border border-success/30",
   Inactiva: "bg-muted text-muted-foreground border border-border",
