@@ -7098,9 +7098,13 @@ BEGIN
   IF NEW.estado NOT IN ('Emitida', 'Pagada') THEN
     RETURN NEW;
   END IF;
-  -- QA-R2 D-05: no emitir una factura sin conceptos vivos.
-  IF NEW.estado = 'Emitida'
-     AND (TG_OP = 'INSERT' OR OLD.estado IS DISTINCT FROM 'Emitida'::public.estado_factura)
+  -- QA-R2 D-05: no emitir una factura sin conceptos vivos. Sólo aplica en la
+  -- transición normal de captura (Borrador/Por timbrar -> Emitida); en INSERT
+  -- los conceptos aún no pueden existir por la FK y otras transiciones
+  -- (reapertura de canceladas) tienen su propio candado.
+  IF TG_OP = 'UPDATE'
+     AND NEW.estado = 'Emitida'
+     AND OLD.estado IN ('Borrador', 'Por timbrar')
      AND NOT EXISTS (
        SELECT 1 FROM public.conceptos_factura cf
        WHERE cf.factura_id = NEW.id AND cf.deleted_at IS NULL
