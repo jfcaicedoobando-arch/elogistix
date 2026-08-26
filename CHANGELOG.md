@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.755.0] - 2026-08-26
+### QA ronda 2 · Facturas sin conceptos, comisiones "Por recuperar" y topes de archivos
+- D-05: una factura sin conceptos vivos ya deja todos sus totales en cero (antes conservaba subtotal/IVA capturados y el total quedaba inflado); además ya no se puede pasar una factura a "Emitida" si no tiene conceptos (`LC_FACTURA_SIN_CONCEPTOS`).
+- N-07: las comisiones ya liquidadas cuyo respaldo desaparece (pago eliminado, factura cancelada o sustituida, embarque excluido) se marcan con el nuevo estado **Por recuperar** para su ajuste en la siguiente liquidación, y el monto de comisión nunca queda negativo. El estado ya aparece con chip propio y en el filtro de Comisiones.
+- W-08: los buckets de archivos (documentos, facturas, PDFs de cotizaciones y facturas, buzón CxP, cartas garantía y reportes) ahora rechazan archivos mayores a 25 MB.
+- Mantenimiento: espejo canónico de `calcular_comision_pago`, manifiesto de migraciones y `baseline.sql` sincronizados.
+
 ## [13.754.1] - 2026-08-26
 ### CI · Baseline de esquema sincronizado
 - Se agregaron al `baseline.sql` los objetos de la etapa QA-R2 (candado de cancelación con CxC/CxP vivas, liberación de cotizaciones al cancelar, folio único de facturas de proveedor, dependencias de baja de clientes y políticas de portal), eliminando el falso positivo del job de baseline.
