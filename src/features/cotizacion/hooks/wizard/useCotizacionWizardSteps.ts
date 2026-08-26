@@ -19,7 +19,7 @@ export function useCotizacionWizardSteps({
   cotizacionId, setCotizacionId, currentStep, setCurrentStep,
   msdsFile, costosInternos, costosPreLlenados, setCostosPreLlenados,
   conceptosUSD, conceptosMXN, setConceptosUSD, setConceptosMXN,
-  totalUSD, tasaIva, buildPaso1Data, mutations, onFinalized,
+  tasaIva, buildPaso1Data, mutations, onFinalized,
 }: Deps) {
   const { updateCotizacion, upsertCostos, registrarActividad } = mutations;
 
@@ -99,7 +99,8 @@ export function useCotizacionWizardSteps({
     }
     try {
       if (cotizacionId) {
-        await savePaso3({ cotizacionId, conceptosVenta: fromDb<Record<string, unknown>[]>([...conceptosUSDValidos, ...conceptosMXNValidos]), totalUSD, mutations: { updateCotizacion } });
+        // W-01: `subtotal`/`moneda` se derivan de los conceptos dentro de savePaso3.
+        await savePaso3({ cotizacionId, conceptosVenta: fromDb<Record<string, unknown>[]>([...conceptosUSDValidos, ...conceptosMXNValidos]), mutations: { updateCotizacion } });
       }
       setCurrentStep(4);
     } catch (e: unknown) {
@@ -111,7 +112,7 @@ export function useCotizacionWizardSteps({
         context: { cotizacionId, paso: 3 },
       });
     }
-  }, [conceptosUSD, conceptosMXN, cotizacionId, totalUSD, updateCotizacion, setCurrentStep]);
+  }, [conceptosUSD, conceptosMXN, cotizacionId, updateCotizacion, setCurrentStep]);
 
   const handleSiguiente = useCallback(async () => {
     if (currentStep === 1) return handlePaso1();
@@ -135,8 +136,7 @@ export function useCotizacionWizardSteps({
           setConceptosUSD(usd);
           setConceptosMXN(mxn);
           lastCostosHash.current = firmaCostos(costosInternos);
-          const nuevoTotalUSD = usd.reduce((s, c) => s + (Number(c.total) || 0), 0);
-          await savePaso3({ cotizacionId, conceptosVenta: fromDb<Record<string, unknown>[]>(conceptosValidos), totalUSD: nuevoTotalUSD, mutations: { updateCotizacion } });
+          await savePaso3({ cotizacionId, conceptosVenta: fromDb<Record<string, unknown>[]>(conceptosValidos), mutations: { updateCotizacion } });
         }
       }
       if (conceptosValidos.length === 0 && hayVentasEnCostos) {

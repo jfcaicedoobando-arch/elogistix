@@ -12,8 +12,11 @@ export const PORTAL_EMBARQUE_DETAIL_COLUMNS =
 export const PORTAL_EVENTO_COLUMNS =
   'id, embarque_id, tipo, descripcion, ubicacion, fecha, usuario, organization_id, created_at, updated_at' as const;
 
+// N-04 (QA r2): `notas` es un campo interno de staff; no se expone al portal.
+// (`cotizaciones.notas` sí se conserva: son las notas dirigidas al cliente que
+// muestra PortalCotizacionDetalle.)
 export const PORTAL_DOCUMENTO_COLUMNS =
-  'id, embarque_id, nombre, archivo, estado, notas, organization_id, created_at, updated_at' as const;
+  'id, embarque_id, nombre, archivo, estado, organization_id, created_at, updated_at' as const;
 
 // B-099: `conceptos_venta` permite mostrar el TOTAL (subtotal + IVA) en la
 // lista — el mismo concepto de cifra que el detalle.

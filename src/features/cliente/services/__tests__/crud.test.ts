@@ -38,7 +38,8 @@ describe("createCliente", () => {
 
 describe("updateCliente", () => {
   it("happy path: actualiza y devuelve data", async () => {
-    mock.setTableResult("clientes", { data: { id: "c-1", nombre: "Nuevo" }, error: null });
+    // N-06: `updateCliente` ahora usa `.select()` (lista) para detectar 0 filas.
+    mock.setTableResult("clientes", { data: [{ id: "c-1", nombre: "Nuevo" }], error: null });
     const r = await updateCliente("c-1", { nombre: "Nuevo" });
     expect(r.nombre).toBe("Nuevo");
     expect(mock.tableCalls[0]?.ops).toContain("update");
@@ -47,6 +48,13 @@ describe("updateCliente", () => {
   it("propaga error de supabase al actualizar cliente", async () => {
     mock.setTableResult("clientes", { data: null, error: { message: "conflict" } });
     await expect(updateCliente("c-1", { nombre: "X" })).rejects.toThrow();
+  });
+
+  it("N-06: 0 filas con expectedUpdatedAt lanza conflicto de concurrencia", async () => {
+    mock.setTableResult("clientes", { data: [], error: null });
+    await expect(
+      updateCliente("c-1", { nombre: "X" }, "2026-01-01T00:00:00Z"),
+    ).rejects.toThrow(/LC_CONFLICTO_CONCURRENCIA/);
   });
 
   it("zod: email malformado lanza antes del update", async () => {

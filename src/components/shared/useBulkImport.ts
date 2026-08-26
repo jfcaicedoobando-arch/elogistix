@@ -2,6 +2,12 @@ import { useRef, useState } from "react";
 import { leerArchivoTexto } from "@/lib/io/readFileText";
 import { parseCsv } from "@/lib/csv/parseCsv";
 import type { ImportPreview } from "@/lib/csv/importSchemas";
+import {
+  IMPORT_MAX_BYTES,
+  IMPORT_MAX_FILAS,
+  mensajeArchivoDemasiadoGrande,
+  mensajeDemasiadasFilas,
+} from "@/lib/csv/importLimits";
 
 type Step = "upload" | "preview" | "committing" | "done";
 
@@ -32,11 +38,20 @@ export function useBulkImport<T>({ mapRows, onCommit, onSuccess }: UseBulkImport
     setError(null);
     setFileName(file.name);
     try {
+      // N-05 (QA r2): tope de tamaño antes de leer el archivo completo.
+      if (file.size > IMPORT_MAX_BYTES) {
+        setError(mensajeArchivoDemasiadoGrande(file.size));
+        return;
+      }
       // N34 (Ola 4): tolera Windows-1252 (exports de Excel en es-MX).
       const text = await leerArchivoTexto(file);
       const parsed = parseCsv(text);
       if (parsed.rows.length === 0) {
         setError("El archivo no contiene filas de datos.");
+        return;
+      }
+      if (parsed.rows.length > IMPORT_MAX_FILAS) {
+        setError(mensajeDemasiadasFilas(parsed.rows.length));
         return;
       }
       setPreview(mapRows(parsed.rows));

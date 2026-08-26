@@ -175,9 +175,9 @@ export const LC_CODE_MESSAGES_FINANCIERO: Record<string, string> = {
   LC_NC_UUID_REQUERIDO:
     "La nota de crédito necesita su UUID fiscal (CFDI de egreso) antes de timbrarse o aplicarse.",
   LC_CANCEL_CON_CXC:
-    "No puedes cancelar: la factura tiene pagos de cliente registrados. Cancela o elimina primero los pagos.",
+    "No puedes cancelar el embarque: tiene facturas de cliente con saldo. Cancela o sustituye esas facturas antes de cancelar el embarque.",
   LC_CANCEL_CON_CXP:
-    "No puedes cancelar: la factura de proveedor tiene pagos registrados. Cancela o elimina primero los pagos.",
+    "No puedes cancelar el embarque: tiene facturas de proveedor activas. Cancélalas antes de cancelar el embarque.",
   LC_FACTURA_INMUTABLE:
     "La factura ya está timbrada: sus datos fiscales y conceptos no se pueden modificar. Emite una nota de crédito o una sustitución.",
   LC_NC_FECHA_INVALIDA:

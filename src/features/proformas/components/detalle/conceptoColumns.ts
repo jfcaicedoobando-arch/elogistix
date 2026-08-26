@@ -6,6 +6,7 @@
  */
 import { defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { formatCurrency, formatNumber } from "@/lib/formatters";
+import { TASA_IVA, resolverTasaConcepto } from "@/lib/financial/financialUtils";
 import type { ConceptoVentaRow } from "@/features/proformas/services";
 
 /** Devuelve la moneda común de los conceptos, o `null` si hay mezcla. */
@@ -14,8 +15,20 @@ export function monedaComun(conceptos: ConceptoVentaRow[]): string | null {
   return monedas.size === 1 ? (conceptos[0]?.moneda ?? null) : null;
 }
 
+/**
+ * R-03 (QA r2): la celda IVA dice "Sí" sólo si la tasa resuelta de la fila es
+ * > 0. Antes bastaba `aplica_iva || moneda === "MXN"`, lo que marcaba "Sí" en
+ * conceptos MXN exentos (`aplica_iva = false`) aunque el cálculo los tratara
+ * con tasa 0.
+ */
+function tasaLinea(c: ConceptoVentaRow, tasaIva: number): number {
+  if (c.aplica_iva === false) return 0;
+  return resolverTasaConcepto(c, tasaIva);
+}
+
 export function buildConceptoColumns(
   moneda: string | null,
+  tasaIva: number = TASA_IVA,
 ): ColumnDef<ConceptoVentaRow, unknown>[] {
   const sufijo = moneda ? ` (${moneda})` : "";
   const importe = (row: ConceptoVentaRow) =>
@@ -50,7 +63,7 @@ export function buildConceptoColumns(
       id: "iva",
       header: "IVA",
       meta: { align: "center", className: "w-[80px] text-xs" },
-      cell: ({ row }) => (row.original.aplica_iva || row.original.moneda === "MXN" ? "Sí" : "No"),
+      cell: ({ row }) => (tasaLinea(row.original, tasaIva) > 0 ? "Sí" : "No"),
     },
   ]);
 }

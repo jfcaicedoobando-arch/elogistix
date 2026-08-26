@@ -135,7 +135,10 @@ export function useCotizacionesCliente(clienteId: string | undefined) {
 export function useUpdateCliente() {
   const queryClient = useQueryClient();
   return useMutationWithFeedback({
-    mutationFn: ({ id, ...updates }: Partial<Cliente> & { id: string }) => updateCliente(id, updates),
+    // N-06: `expectedUpdatedAt` es el updated_at leído al abrir el formulario
+    // (bloqueo optimista); nunca se escribe en la fila.
+    mutationFn: ({ id, expectedUpdatedAt, ...updates }: Partial<Cliente> & { id: string; expectedUpdatedAt?: string | null }) =>
+      updateCliente(id, updates, expectedUpdatedAt),
     invalidate: queryKeys.clientes.all,
     errorTitle: "Error al actualizar cliente",
     errorMethod: "UPDATE_CLIENTE",

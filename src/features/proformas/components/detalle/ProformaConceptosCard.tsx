@@ -13,6 +13,7 @@ import {
 } from "@/features/proformas/components/detalle/conceptoColumns";
 import type { calcularTotalesProforma } from "@/features/proformas/domain/proforma";
 import type { ConceptoVentaRow } from "@/features/proformas/services";
+import { useTasaIVA } from "@/features/catalogos/hooks/useTasaIVA";
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 
 type Totales = ReturnType<typeof calcularTotalesProforma>;
@@ -54,8 +55,9 @@ function BloqueTotales({
 }
 
 export function ProformaConceptosCard({ conceptos, totales, emptyMessage }: Props) {
+  const tasaIva = useTasaIVA();
   const moneda = useMemo(() => monedaComun(conceptos), [conceptos]);
-  const columns = useMemo(() => buildConceptoColumns(moneda), [moneda]);
+  const columns = useMemo(() => buildConceptoColumns(moneda, tasaIva), [moneda, tasaIva]);
   const hasUsd = totales.subtotal_usd > 0;
   const hasMxn = totales.subtotal_mxn > 0;
 

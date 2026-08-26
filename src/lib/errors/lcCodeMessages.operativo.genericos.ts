@@ -7,6 +7,9 @@
 export const LC_CODE_MESSAGES_OPERATIVO_GENERICOS: Record<string, string> = {
   // ── Genéricos ──────────────────────────────────────────────────────────
   LC_FORBIDDEN: "No tienes permisos para realizar esta acción.",
+  // N-06 (QA r2): bloqueo optimista al editar registros.
+  LC_CONFLICTO_CONCURRENCIA:
+    "Otro usuario modificó este registro mientras lo editabas. Recarga la página para ver los datos actuales y vuelve a aplicar tus cambios.",
   LC_ORG_MISMATCH: "El recurso no pertenece a tu organización.",
   LC_C5_ANCLA_NO_ENCONTRADA:
     "No se pudo aplicar un ajuste interno de base de datos. Reporta este error a soporte.",

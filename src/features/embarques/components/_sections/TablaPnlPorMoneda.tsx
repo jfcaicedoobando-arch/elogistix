@@ -19,10 +19,11 @@ interface TablaProps {
 export function TablaPorMoneda({ moneda, filas }: TablaProps) {
   const total = filas.find((f) => f.esTotal);
   const utilidad = total?.utilidad ?? 0;
-  const margen = total?.margenPct ?? 0;
+  // W-07: margen null = sin venta → "n/a", no "0.0%".
+  const margen = total?.margenPct ?? null;
 
   const fmt = useCallback((n: number) => formatCurrency(n, moneda), [moneda]);
-  const pct = (n: number) => `${n.toFixed(1)}%`;
+  const pct = (n: number | null) => (n === null ? "n/a" : `${n.toFixed(1)}%`);
 
   const columns = useMemo<ColumnDef<FilaPnlContenedor, unknown>[]>(
     () => defineColumns<FilaPnlContenedor>([
@@ -107,7 +108,7 @@ export function TablaPorMoneda({ moneda, filas }: TablaProps) {
           <KpiCard
             label="Margen"
             value={pct(margen)}
-            variant={margen < PNL_UMBRAL_MARGEN_MIN_PCT ? "warning" : "success"}
+            variant={margen !== null && margen < PNL_UMBRAL_MARGEN_MIN_PCT ? "warning" : "success"}
           />
         </div>
 

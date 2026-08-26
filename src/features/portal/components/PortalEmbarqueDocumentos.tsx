@@ -10,7 +10,8 @@ import { PortalDocumentoCard } from "./PortalDocumentoCard";
 import type { Tables } from "@/types/db";
 
 // v13.301.90 (Fase Q.1): el portal no expone `deleted_at`/`deleted_by`.
-type Doc = Omit<Tables<"documentos_embarque">, "deleted_at" | "deleted_by">;
+// N-04 (QA r2): `notas` ya no se selecciona en PORTAL_DOCUMENTO_COLUMNS.
+type Doc = Omit<Tables<"documentos_embarque">, "deleted_at" | "deleted_by" | "notas">;
 
 const DOC_ESTADO_ICON: Record<string, { icon: typeof FileCheck; color: string }> = {
   Pendiente: { icon: FileX, color: "text-warning" },
