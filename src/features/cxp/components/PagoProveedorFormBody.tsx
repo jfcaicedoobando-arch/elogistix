@@ -93,6 +93,7 @@ export function PagoProveedorFormBody(p: Props) {
               tcDof={p.tcDof}
               cargandoTcDof={p.cargandoTcDof}
               aplicarTcDof={p.aplicarTcDof}
+              moneda={p.moneda === "MXN" ? p.factura?.moneda : p.moneda}
             />
           )}
 

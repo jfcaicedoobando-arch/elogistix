@@ -80,6 +80,7 @@ export function FacturaDatosFiscalesCard({ factura }: Props) {
           notas={notas} setNotas={setNotas}
           mostrarTipoCambio={factura.moneda !== "MXN"}
           fechaEmision={factura.fecha_emision}
+          moneda={factura.moneda}
         />
 
         {factura.moneda !== "MXN" && (

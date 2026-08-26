@@ -12,6 +12,11 @@ import {
 import { USOS_CFDI_SAT, FORMAS_PAGO_SAT, METODOS_PAGO_SAT } from "@/constants/catalogosSAT";
 import { addDaysIso } from "@/lib/date/dateOnly";
 import { formatDate } from "@/lib/formatters/dates";
+import {
+  ayudaTcContraMxn,
+  etiquetaTcContraMxn,
+  TC_PLACEHOLDER_MXN,
+} from "@/lib/financial/tcPar";
 
 interface Option { value: string; label: string }
 
@@ -41,6 +46,8 @@ export interface DatosFiscalesFormProps {
   mostrarTipoCambio: boolean;
   /** Fecha de emisión del borrador; se usa para previsualizar el vencimiento. */
   fechaEmision?: string | null;
+  /** Moneda de la factura; rotula el par del tipo de cambio ("MXN por 1 USD"). */
+  moneda?: string | null;
 }
 
 export function DatosFiscalesForm(p: DatosFiscalesFormProps) {
@@ -68,12 +75,13 @@ export function DatosFiscalesForm(p: DatosFiscalesFormProps) {
         </div>
         {p.mostrarTipoCambio && (
           <div>
-            <Label htmlFor="factura-tipo-cambio">Tipo de cambio</Label>
+            <Label htmlFor="factura-tipo-cambio">{etiquetaTcContraMxn(p.moneda)}</Label>
             <Input
               id="factura-tipo-cambio"
               type="number" step="0.0001" min={0}
               value={p.tipoCambio ?? ""}
-              placeholder="Capturar TC del día"
+              placeholder={TC_PLACEHOLDER_MXN}
+              aria-label={etiquetaTcContraMxn(p.moneda)}
               onChange={(e) => {
                 const raw = e.target.value.trim();
                 if (raw === "") return p.setTipoCambio(null);
@@ -81,6 +89,9 @@ export function DatosFiscalesForm(p: DatosFiscalesFormProps) {
                 p.setTipoCambio(Number.isFinite(n) && n > 0 ? n : null);
               }}
             />
+            {ayudaTcContraMxn(p.moneda) && (
+              <p className="mt-1 text-body-sm text-muted-foreground">{ayudaTcContraMxn(p.moneda)}</p>
+            )}
           </div>
         )}
       </div>

@@ -16,6 +16,11 @@ import { Button } from "@/components/ui/button";
 import { RefreshCcw, Loader2 } from "lucide-react";
 import { USOS_CFDI_SAT, FORMAS_PAGO_SAT, METODOS_PAGO_SAT } from "@/constants/catalogosSAT";
 import { useBanxicoTipoCambio } from "@/features/facturacion/hooks/useBanxicoTipoCambio";
+import {
+  ayudaTcContraMxn,
+  etiquetaTcContraMxn,
+  TC_PLACEHOLDER_MXN,
+} from "@/lib/financial/tcPar";
 import type { Moneda } from "@/types/db";
 
 export type MonedaManual = Moneda;
@@ -116,11 +121,13 @@ export function FacturaManualDatosFiscales({ value, onChange, diasReadonly, dias
         </Select>
       </div>
       <div className="space-y-1.5">
-        <Label htmlFor="factura-manual-tipo-cambio">Tipo de cambio</Label>
+        <Label htmlFor="factura-manual-tipo-cambio">{etiquetaTcContraMxn(value.moneda)}</Label>
         <div className="flex gap-1">
           <Input
             id="factura-manual-tipo-cambio"
             type="number" step="0.0001" min={0.0001}
+            placeholder={TC_PLACEHOLDER_MXN}
+            aria-label={etiquetaTcContraMxn(value.moneda)}
             value={value.tipoCambio}
             onChange={(e) => onChange({ tipoCambio: Number(e.target.value) || 1 })}
             disabled={!requiereTc}
@@ -144,6 +151,9 @@ export function FacturaManualDatosFiscales({ value, onChange, diasReadonly, dias
             </Hint>
           )}
         </div>
+        {requiereTc && ayudaTcContraMxn(value.moneda) && (
+          <p className="text-label text-muted-foreground">{ayudaTcContraMxn(value.moneda)}</p>
+        )}
       </div>
     </div>
   );
