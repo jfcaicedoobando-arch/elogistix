@@ -1,5 +1,5 @@
 -- Espejo canónico de public.calcular_comision_pago
--- Fuente vigente (mayor timestamp): 20260828000200_rev2_espejo_comisiones_nc_y_periodo.sql
+-- Fuente vigente (mayor timestamp): 20260826202702_ef3834ee-e456-4f79-aecc-c8c71c68a17b.sql
 -- Vigilado por `bun run audit:replay-mirror` y `audit:schema-functions`.
 
 CREATE OR REPLACE FUNCTION public.calcular_comision_pago(p_pago_factura_id uuid)
@@ -27,6 +27,13 @@ BEGIN
     UPDATE comisiones_devengadas
        SET estado = 'Cancelada', comision_mxn = 0
      WHERE pago_factura_id = p_pago_factura_id AND estado <> 'Liquidada';
+    -- QA-R2 N-07: el pago (respaldo) desaparece pero la comision ya fue
+    -- liquidada: no se cancela en silencio, se marca para recuperacion.
+    UPDATE comisiones_devengadas
+       SET estado = 'Por recuperar',
+           nota = trim(both ' ' FROM COALESCE(nota,'') || ' [auto] pago eliminado con comision liquidada'),
+           updated_at = now()
+     WHERE pago_factura_id = p_pago_factura_id AND estado = 'Liquidada';
     RETURN;
   END IF;
 
@@ -65,6 +72,12 @@ BEGIN
        SET estado = 'Cancelada', comision_mxn = 0,
            nota = 'Embarque excluido de comisión', updated_at = now()
      WHERE pago_factura_id = p_pago_factura_id AND estado <> 'Liquidada';
+    -- QA-R2 N-07: embarque excluido con comision ya liquidada -> por recuperar.
+    UPDATE comisiones_devengadas
+       SET estado = 'Por recuperar',
+           nota = trim(both ' ' FROM COALESCE(nota,'') || ' [auto] embarque excluido con comision liquidada'),
+           updated_at = now()
+     WHERE pago_factura_id = p_pago_factura_id AND estado = 'Liquidada';
     RETURN;
   END IF;
 
@@ -213,7 +226,8 @@ BEGIN
       v_proporcion := 0;
     END IF;
 
-    v_comision_mxn := ROUND(v_utilidad * v_proporcion * (v_pct / 100.0), 2);
+    -- QA-R2 N-07: la comision nunca es negativa.
+    v_comision_mxn := GREATEST(0, ROUND(v_utilidad * v_proporcion * (v_pct / 100.0), 2));
     v_nota := CASE
       WHEN v_costos_mxn = 0 THEN 'Costos del embarque pendientes'
       WHEN (v_req_usd AND v_tc_usd = 0) OR (v_req_eur AND v_tc_eur = 0)
