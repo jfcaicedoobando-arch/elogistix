@@ -4,6 +4,7 @@ import type { CreateCotizacionInput } from "@/features/cotizacion/types";
 import { fromDb, toDbJson } from "@/lib/supabase/cast";
 import { cotizacionUpdateSchema, parseOrThrow } from "@/lib/validation/mutationSchemas";
 import { registrarActividad } from "@/services/bitacora/registrar";
+import { conflictoConcurrenciaError } from "@/lib/errors/concurrencia";
 import type { CotizacionInsert } from "./payloadBuilders";
 
 type CotizacionUpdate = Partial<CotizacionInsert>;
@@ -11,7 +12,13 @@ type CotizacionUpdate = Partial<CotizacionInsert>;
 export async function updateCotizacion(
   id: string,
   data: Partial<CreateCotizacionInput>,
-): Promise<void> {
+  /**
+   * N-06 (QA r2): bloqueo optimista. `updated_at` leído al abrir el wizard; si
+   * la fila ya cambió en otra sesión el UPDATE no toca ninguna fila y se lanza
+   * LC_CONFLICTO_CONCURRENCIA en vez de pisar el trabajo ajeno.
+   */
+  expectedUpdatedAt?: string | null,
+): Promise<string | null> {
   parseOrThrow(cotizacionUpdateSchema, data, "No se pudo actualizar la cotización");
   const updatePayload = fromDb<CotizacionUpdate>({ ...data });
   // Ola 18: la validez propuesta manda sobre la vigencia mostrada (detalle y
@@ -29,12 +36,21 @@ export async function updateCotizacion(
   if (data.incoterm)
     updatePayload.incoterm = data.incoterm as TablesInsert<"cotizaciones">["incoterm"];
   if (data.moneda) updatePayload.moneda = data.moneda as TablesInsert<"cotizaciones">["moneda"];
-  const { error } = await supabase.from("cotizaciones").update(updatePayload).eq("id", id);
+  let query = supabase.from("cotizaciones").update(updatePayload).eq("id", id);
+  if (expectedUpdatedAt) query = query.eq("updated_at", expectedUpdatedAt);
+  const { data: filas, error } = await query.select("updated_at");
   if (error) throw error;
+  if (!filas || filas.length === 0) {
+    if (expectedUpdatedAt) throw conflictoConcurrenciaError();
+    throw new Error(
+      "No se guardaron los cambios de la cotización: no tienes permiso o la cotización ya no existe.",
+    );
+  }
   await registrarActividad({
     modulo: "cotizaciones",
     accion: "editar_cotizacion",
     entidadId: id,
     detalles: { campos: Object.keys(data) },
   });
+  return filas[0]?.updated_at ?? null;
 }
