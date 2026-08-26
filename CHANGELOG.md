@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.751.1] - 2026-08-26
+### El tipo de cambio se pide igual en todo el ERP
+- Auditoría completa: el cálculo ya era el estándar mexicano (pesos por 1 dólar) en todos los módulos; lo que variaba era la etiqueta.
+- Los campos que sólo decían "Tipo de cambio" ahora indican el par ("Tipo de cambio (MXN por 1 USD)"), con placeholder 18.4200 y la ayuda "Pesos que se pagan por 1 USD": pago a proveedor, configuración de timbrado de factura y factura manual.
+- El helper de la convención se movió a `src/lib/financial/tcPar.ts` para que Tesorería, Compras y Facturación compartan la misma etiqueta. Sin cambios en la base de datos.
+
+
 ## [13.751.0] - 2026-08-26
 ### El tipo de cambio del traspaso ya se captura "pesos por dólar"
 - En "Traspaso entre cuentas propias" el tipo de cambio se pedía invertido: para pasar de MXN a USD había que teclear 0.0543 en lugar de 18.42. Ahora el campo siempre se captura a la mexicana (unidades de la divisa débil por 1 de la fuerte), sin importar la dirección del traspaso.
