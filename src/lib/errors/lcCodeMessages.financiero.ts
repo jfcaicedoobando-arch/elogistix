@@ -186,4 +186,8 @@ export const LC_CODE_MESSAGES_FINANCIERO: Record<string, string> = {
     "No se puede dar de baja: el registro tiene documentos u operaciones asociadas. Cancela o reasigna esas dependencias primero.",
   LC_COTIZACION_EN_OPERACION:
     "La cotización ya está en operación (tiene embarque o proforma): no se puede modificar. Crea una nueva versión.",
+  LC_FACTURA_SIN_CONCEPTOS:
+    "La factura no tiene conceptos con importe: agrega al menos un concepto antes de emitirla o timbrarla.",
+  LC_CXP_FOLIO_DUPLICADO:
+    "Ya existe una factura de proveedor con ese folio interno. Recarga la lista y vuelve a guardar.",
 };
