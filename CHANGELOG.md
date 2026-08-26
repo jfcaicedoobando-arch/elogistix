@@ -1,5 +1,14 @@
 # Changelog
 
+## [13.752.0] - 2026-08-26
+### Corridas de RLS: dos reglas corregidas y dos pruebas alineadas
+- Cartera: los "días vencido" volvieron a mostrarse con signo. Una factura que vence en 10 días ya no aparece como "vence hoy" (regresión introducida en 13.747.0).
+- Notas de crédito: la validación de fecha ya no marca "fecha inválida" cuando la factura ligada fue archivada.
+- Pruebas actualizadas al canon vigente: conceptos de factura se siembran en Borrador y el permiso de cotizaciones acepta los roles operativos habilitados en 13.750.0.
+- `scripts/db/local-verify.sh` ahora respeta las migraciones ancladas y exentas igual que CI, para que la corrida local no se detenga en un parche histórico.
+- `supabase/schema/baseline.sql` regenerado: llevaba tres migraciones de atraso (B-01/B-06 y remediación selectiva) y el job de baseline habría marcado drift.
+
+
 ## [13.751.1] - 2026-08-26
 ### El tipo de cambio se pide igual en todo el ERP
 - Auditoría completa: el cálculo ya era el estándar mexicano (pesos por 1 dólar) en todos los módulos; lo que variaba era la etiqueta.

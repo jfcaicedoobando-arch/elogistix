@@ -127,20 +127,35 @@ if [ "$REUSE" != "1" ]; then
   migr_log="$LOGDIR/migrations.log"
   : > "$migr_log"
   total=0
+  # Paridad con CI (.github/workflows/rls-tests.yml): las migraciones legacy
+  # exentas y las "ancladas por texto" no aplican en base limpia; su estado
+  # final lo garantiza una migración posterior de reaplicación.
+  local exentas=" 20260729035825 20260812090000 "
+  local ancladas
+  ancladas="$(grep -vE '^\s*(#|$)' supabase/tests/rls/drift-anclas.txt 2>/dev/null || true)"
   for f in $(printf '%s\n' supabase/migrations/*.sql | LC_ALL=C sort); do
     base="$(basename "$f")"
     echo "▶ $base" >> "$migr_log"
     # Las extensiones que no existen en la imagen oficial se neutralizan,
     # igual que en CI, para que la migración aplique en base limpia.
-    if ! sed -E \
+    if sed -E \
         -e 's/^[[:space:]]+CREATE EXTENSION[[:space:]]+(IF NOT EXISTS[[:space:]]+)?(pg_cron|pg_net|pgmq|supabase_vault)[^;]*;/    PERFORM 1; -- [ci] stubbed \2/I' \
         -e 's/^CREATE EXTENSION[[:space:]]+(IF NOT EXISTS[[:space:]]+)?(pg_cron|pg_net|pgmq|supabase_vault)[^;]*;/SELECT 1; -- [ci] stubbed \2/I' \
         "$f" | "${PSQL[@]}" --single-transaction >> "$migr_log" 2>&1; then
-      fail "migración '$base' no aplica en base limpia — ver $migr_log"
-      tail -n 30 "$migr_log" >&2
-      exit 1
+      total=$((total + 1))
+      continue
     fi
-    total=$((total + 1))
+    if [[ "$exentas" == *" ${base%%_*} "* ]]; then
+      echo "↷ $base: migración legacy exenta (estado final en migración posterior)"
+      continue
+    fi
+    if printf '%s\n' "$ancladas" | grep -qxF "$base"; then
+      echo "↷ $base: migración anclada omitida (reaplicación posterior garantiza el estado)"
+      continue
+    fi
+    fail "migración '$base' no aplica en base limpia — ver $migr_log"
+    tail -n 30 "$migr_log" >&2
+    exit 1
   done
   ok "$total migraciones aplicadas"
 
