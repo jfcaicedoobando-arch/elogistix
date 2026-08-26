@@ -10,8 +10,7 @@ RETURNS TABLE(factura_id uuid, numero text, cliente_id uuid, cliente_nombre text
   embarque_id uuid, expediente text,
   fecha_emision date, fecha_vencimiento date, dias_vencido integer,
   moneda text, total numeric, pagado numeric, saldo numeric,
-  ultimo_contacto date, estado text, cancellation_status text
-)
+  ultimo_contacto date, estado text, cancellation_status text)
 LANGUAGE sql STABLE SET search_path TO 'public' AS $function$
   WITH base AS (
     SELECT f.id, f.numero, f.cliente_id, f.embarque_id, f.fecha_emision,
