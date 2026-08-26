@@ -5260,8 +5260,7 @@ BEGIN
   RETURN NEW;
 END $$;
 CREATE FUNCTION public.calcular_comision_pago(p_pago_factura_id uuid) RETURNS void
-    LANGUAGE plpgsql
-    SECURITY DEFINER
+    LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
 DECLARE
@@ -7084,8 +7083,7 @@ BEGIN
 END;
 $$;
 CREATE FUNCTION public.congelar_factura_al_emitir() RETURNS trigger
-    LANGUAGE plpgsql
-    SECURITY DEFINER
+    LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
 DECLARE
@@ -22717,8 +22715,7 @@ BEGIN
 END;
 $$;
 CREATE FUNCTION public.tg_factura_cancelada_comisiones() RETURNS trigger
-    LANGUAGE plpgsql
-    SECURITY DEFINER
+    LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
 BEGIN
