@@ -99,4 +99,8 @@ export const LC_CODE_MESSAGES_OPERATIVO_GENERICOS: Record<string, string> = {
     "El usuario elegido ya pertenece a una organización. Elige otro o retíralo primero de la actual.",
   LC_VALIDACION:
     "La validación no pasó. Revisa los motivos indicados y corrige la información antes de continuar.",
+  LC_DELETED_AT_INMUTABLE:
+    "No se puede cambiar directamente el estado de borrado del registro. Usa las acciones de eliminar o restaurar de la papelera.",
+  LC_RESTORE_DIRECTO:
+    "Para restaurar este registro usa la papelera de la app; no puede reactivarse editándolo directamente.",
 };

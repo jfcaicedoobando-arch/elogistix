@@ -10,7 +10,10 @@
  * homologar la etiqueta en todo el ERP (facturación, CxP, tesorería).
  */
 
-export type MonedaTc = "MXN" | "USD" | "EUR";
+import type { Moneda } from "@/types/db";
+
+/** Alias local del catálogo central de monedas (`@/types/db`). */
+export type MonedaTc = Moneda;
 
 /** Fuerza relativa: la divisa con mayor rango es la base del par. */
 const RANGO: Record<MonedaTc, number> = { EUR: 3, USD: 2, MXN: 1 };

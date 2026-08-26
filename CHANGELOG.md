@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.758.1] - 2026-08-26
+### CI verde
+- Mensajes amigables para `LC_FACTURA_SIN_CONCEPTOS`, `LC_CXP_FOLIO_DUPLICADO`, `LC_DELETED_AT_INMUTABLE` y `LC_RESTORE_DIRECTO`.
+- `supabase/tests/qa_remediacion_selectiva.sql` registrada en el manifiesto de guards.
+- `tcPar.ts` usa el alias central `Moneda` en lugar de redeclarar la unión de monedas.
+- `cliente/services/crud.ts` dividido: los listados viven en `cliente/services/listado.ts` (Power of 10 ≤200 líneas).
+
 ## [13.758.0] - 2026-08-26
 ### D-01b · Guardia automática contra "registros fantasma"
 - Nuevo auditor `bun run audit:soft-delete`: revisa todo `src/` y falla si un listado, contador o buscador nuevo lee una tabla con borrado lógico sin `deleted_at IS NULL`. Corre en CI junto a las demás auditorías.
