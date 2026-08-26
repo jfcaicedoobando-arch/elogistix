@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.750.1] - 2026-08-26
+### El icono de calendario ya abre el selector de fechas
+- En los campos de fecha (por ejemplo el traspaso entre cuentas de Tesorería) el botón del calendario no hacía nada: el tooltip envolvía al disparador y se comía el clic. Ahora abre el calendario en todos los formularios.
+- Mismo arreglo en el botón "Explicar con IA" de Auditoría.
+
+
+
 ## [13.750.0] - 2026-08-26
 ### Los roles operativos ya pueden cotizar
 - El Coordinador Logístico, Gerente de Operaciones, Operador y Customer Service podían abrir el wizard de "Nueva cotización" pero el guardado fallaba con "No tienes permisos" (RLS 42501). Ahora la regla de escritura de la base de datos los incluye, igual que al equipo comercial.

@@ -55,8 +55,11 @@ export function DatePickerMxCalendar({
         if (!o) onCerrar?.();
       }}
     >
-      <PopoverTrigger asChild>
-        <Hint label="Abrir calendario (Alt + Flecha abajo)">
+      {/* Hint va POR FUERA de PopoverTrigger: `asChild` clona props (onClick, ref)
+          en su hijo directo, y `Hint` no las reenvía, así que al invertirlo el
+          botón perdía el handler y el calendario nunca abría. */}
+      <Hint label="Abrir calendario (Alt + Flecha abajo)">
+        <PopoverTrigger asChild>
           <button
             type="button"
             tabIndex={-1}
@@ -66,8 +69,9 @@ export function DatePickerMxCalendar({
           >
             <CalendarIcon className={pickerIconClass} />
           </button>
-        </Hint>
-      </PopoverTrigger>
+        </PopoverTrigger>
+      </Hint>
+
 
       <PopoverContent className="w-auto p-0" align="start">
         <Calendar
