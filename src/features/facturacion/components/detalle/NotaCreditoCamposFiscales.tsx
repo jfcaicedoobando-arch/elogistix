@@ -9,7 +9,7 @@
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { DatePickerMx } from "@/components/ui/date-picker-mx";
-import { todayLocalISO } from "@/lib/utils/fechas";
+import { todayLocalISO } from "@/lib/date/today";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { USOS_CFDI_SAT, FORMAS_PAGO_SAT } from "@/constants/catalogosSAT";
 import type { MotivoNotaCredito as Motivo } from "@/features/facturacion/types";
