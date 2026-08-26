@@ -44,6 +44,10 @@ export async function fetchCotizaciones(organizationId: string | null) {
   let query = supabase
     .from("cotizaciones")
     .select(COTIZACION_LIST_COLUMNS)
+    // v13.756.0: sólo cotizaciones vivas. Sin este filtro las cotizaciones
+    // eliminadas (soft-delete, `deleted_at != null`) seguían apareciendo en el
+    // listado como si nada hubiera pasado.
+    .is("deleted_at", null)
     .order("created_at", { ascending: false })
     // FE-05: límite explícito defensivo — PostgREST capa en ~1000 filas sin
     // avisar y las cotizaciones más viejas desaparecían del listado.
