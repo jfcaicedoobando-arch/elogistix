@@ -19,6 +19,8 @@ export async function fetchCotizacionesCliente(clienteId: string) {
       "id, folio, modo, tipo, origen, destino, estado, subtotal, moneda, created_at",
     )
     .eq("cliente_id", clienteId)
+    // v13.756.0: sólo cotizaciones vivas en el detalle del cliente.
+    .is("deleted_at", null)
     .order("created_at", { ascending: false });
   if (error) throw error;
   return data ?? [];
