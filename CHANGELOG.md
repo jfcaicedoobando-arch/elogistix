@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.758.4] - 2026-08-26
+### Fix
+- CI: la corrección del candado `LC_FACTURA_SIN_CONCEPTOS` vivía en una migración con fecha anterior a la que lo introdujo, así que en un `db reset` limpio se reaplicaba la versión vieja y tumbaba 28 suites RLS. Se corrigió en la migración original `20260902000400_qa_r2_d05_factura_sin_conceptos.sql` y se regeneró el manifiesto (1102 migraciones).
+
+
 ## [13.758.3] - 2026-08-26
 ### Fix
 - `congelar_factura_al_emitir`: el candado `LC_FACTURA_SIN_CONCEPTOS` sólo aplica en la transición `Borrador`/`Por timbrar` → `Emitida`. En `INSERT` era imposible de cumplir (los conceptos requieren que la factura ya exista) y tapaba el mensaje `LC_FAC_REAPERTURA` al reabrir canceladas.
