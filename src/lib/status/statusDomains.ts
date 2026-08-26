@@ -70,6 +70,7 @@ export const DOMAIN_STATUSES: Record<StatusDomain, readonly string[]> = {
     "Devengada",
     "Liquidada",
     "Cancelada",
+    "Por recuperar",
   ],
   org: [
     "Activa",
