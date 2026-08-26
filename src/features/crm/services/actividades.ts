@@ -2,7 +2,7 @@
  * Servicio CRM — Actividades. Capa de I/O para `crm_actividades`.
  */
 import { supabase } from "@/integrations/supabase/client";
-import { ilikePattern } from "@/lib/search/ilike";
+import { ilikePattern, quoteOrValue } from "@/lib/search/ilike";
 import { unwrap, unwrapOr, run } from "@/lib/supabase/response";
 import { registrarActividad } from "@/services/bitacora/registrar";
 import type { Database } from "@/integrations/supabase/types";

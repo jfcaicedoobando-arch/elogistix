@@ -105,7 +105,6 @@ export function FacturaDetalleBody(props: FacturaDetalleBodyProps) {
         <FacturaPagosSection
           facturaId={factura.id}
           facturaNumero={factura.numero}
-          fechaFactura={factura.fecha_emision}
           totalFactura={Number(factura.total)}
           moneda={factura.moneda}
           estadoFactura={factura.estado}
@@ -122,6 +121,7 @@ export function FacturaDetalleBody(props: FacturaDetalleBodyProps) {
         <FacturaNotasCreditoSeccion
           facturaId={factura.id}
           facturaNumero={factura.numero}
+          fechaFactura={factura.fecha_emision}
           monedaFactura={factura.moneda}
           tipoCambioFactura={Number(factura.tipo_cambio ?? 1)}
           saldoFactura={Number(factura.total)}
