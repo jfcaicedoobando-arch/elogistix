@@ -2,9 +2,9 @@
 
 ## [13.747.0] - 2026-08-26
 ### Integridad selectiva de operaciones y finanzas
-- Se corrigen B-02, B-04, B-06, B-11, B-12, B-17, B-18, B-20 y B-25 con guards mínimos: bajas con dependencias, identidad de auditoría real, cotizaciones/facturas emitidas inmutables, fechas contables de NC y aging en horario de México.
-- B-13 queda sin mutación automática: el folio repetido corresponde a dos expedientes distintos y necesita conciliación funcional antes de decidir cuál documento conservar.
-- No se aplican B-01, B-14, B-15, B-16, B-19, B-22 ni B-28 por ser reglas no confirmadas, cambios incompletos, cobertura existente o residuos ausentes.
+- Se corrigen B-01, B-02, B-04, B-06, B-11, B-17, B-18, B-20 y B-25: bloqueo de cancelación con CxC/CxP vivas, bajas con dependencias, identidad de auditoría real, documentos operados inmutables, fechas contables de NC y aging en horario de México.
+- B-12 se excluye porque bloquear `embarque_id` rompe la liberación legítima de cotizaciones al enviar un embarque a papelera; B-13 queda sin mutación automática porque el folio repetido pertenece a dos expedientes y requiere conciliación funcional.
+- No se aplican B-14, B-15, B-16, B-19, B-22 ni B-28 por ser cambios incompletos, cobertura existente o residuos ausentes.
 
 ## [13.746.6] - 2026-08-25
 ### CI: baseline de esquema sincronizado

@@ -1,8 +1,5 @@
--- Remediación selectiva QA B-02/B-04/B-06/B-11/B-12/B-17/B-18/B-20/B-25.
--- B-13 se excluye deliberadamente: el único folio repetido está ligado a dos
--- expedientes y requiere conciliación funcional antes de modificar datos.
-
-
+-- QA selectiva confirmada: B-01/B-02/B-04/B-06/B-11/B-17/B-18/B-20/B-25.
+-- Excluidos: B-12 rompe el flujo legítimo de papelera; B-13 requiere conciliación funcional.
 -- Fuente canónica de public.soft_delete_record.
 CREATE OR REPLACE FUNCTION public.soft_delete_record(_table text, _id uuid)
 RETURNS void
@@ -70,9 +67,7 @@ END
 $function$;
 
 REVOKE ALL ON FUNCTION public.soft_delete_record(text, uuid) FROM PUBLIC, anon;
-GRANT EXECUTE ON FUNCTION public.soft_delete_record(text, uuid) TO authenticated, service_role;
-
-CREATE OR REPLACE FUNCTION public.cotizaciones_guard_en_operacion()
+GRANT EXECUTE ON FUNCTION public.soft_delete_record(text, uuid) TO authenticated, service_role;CREATE OR REPLACE FUNCTION public.cotizaciones_guard_en_operacion()
 RETURNS trigger
 LANGUAGE plpgsql
 SET search_path TO 'public'
@@ -89,31 +84,10 @@ BEGIN
 END
 $function$;
 
-CREATE OR REPLACE FUNCTION public.cotizaciones_guard_embarque_id()
-RETURNS trigger
-LANGUAGE plpgsql
-SET search_path TO 'public'
-AS $function$
-BEGIN
-  IF NEW.embarque_id IS DISTINCT FROM OLD.embarque_id AND current_user <> 'postgres' THEN
-    RAISE EXCEPTION 'LC_COTIZACION_EMBARQUE_DIRECTO: usa el flujo de conversión a embarque'
-      USING ERRCODE = '42501';
-  END IF;
-  RETURN NEW;
-END
-$function$;
-
 DROP TRIGGER IF EXISTS trg_cotizaciones_guard_en_operacion ON public.cotizaciones;
 CREATE TRIGGER trg_cotizaciones_guard_en_operacion
 BEFORE UPDATE ON public.cotizaciones
-FOR EACH ROW EXECUTE FUNCTION public.cotizaciones_guard_en_operacion();
-
-DROP TRIGGER IF EXISTS trg_cotizaciones_guard_embarque_id ON public.cotizaciones;
-CREATE TRIGGER trg_cotizaciones_guard_embarque_id
-BEFORE UPDATE OF embarque_id ON public.cotizaciones
-FOR EACH ROW EXECUTE FUNCTION public.cotizaciones_guard_embarque_id();
-
-CREATE OR REPLACE FUNCTION public.assert_nc_fecha_valida()
+FOR EACH ROW EXECUTE FUNCTION public.cotizaciones_guard_en_operacion();CREATE OR REPLACE FUNCTION public.assert_nc_fecha_valida()
 RETURNS trigger
 LANGUAGE plpgsql
 SET search_path TO 'public'
@@ -166,9 +140,7 @@ FOR EACH ROW EXECUTE FUNCTION public.assert_nc_fecha_valida();
 DROP TRIGGER IF EXISTS trg_conceptos_factura_assert_borrador ON public.conceptos_factura;
 CREATE TRIGGER trg_conceptos_factura_assert_borrador
 BEFORE INSERT OR UPDATE OR DELETE ON public.conceptos_factura
-FOR EACH ROW EXECUTE FUNCTION public.conceptos_factura_assert_borrador();
-
--- Fuente canónica de public.eerr_resumen_anual.
+FOR EACH ROW EXECUTE FUNCTION public.conceptos_factura_assert_borrador();-- Fuente canónica de public.eerr_resumen_anual.
 CREATE OR REPLACE FUNCTION public.eerr_resumen_anual(p_year integer, p_fuente text DEFAULT 'embarques'::text)
  RETURNS TABLE(mes integer, ingresos_mxn numeric, costos_mxn numeric, excluidos_sin_tc integer)
  LANGUAGE plpgsql
@@ -394,9 +366,7 @@ $function$;
 REVOKE ALL ON FUNCTION public.eerr_resumen_anual(integer, text) FROM PUBLIC;
 REVOKE ALL ON FUNCTION public.eerr_resumen_anual(integer, text) FROM anon;
 GRANT EXECUTE ON FUNCTION public.eerr_resumen_anual(integer, text) TO authenticated;
-GRANT EXECUTE ON FUNCTION public.eerr_resumen_anual(integer, text) TO service_role;
-
--- Fuente canónica de public.cartera_pendiente() (Ola 6 · O6-SCHEMA).
+GRANT EXECUTE ON FUNCTION public.eerr_resumen_anual(integer, text) TO service_role;-- Fuente canónica de public.cartera_pendiente() (Ola 6 · O6-SCHEMA).
 -- 1:1 con supabase/migrations/20260813230758_55fd47bb-2d11-4849-9db5-14215387682a.sql.
 -- Firma vigente: 16 columnas (factura_id … cancellation_status). NO renombrar columnas de salida (42P13).
 -- v13.592.0: se agregó cancellation_status para excluir del cobro en lote las
@@ -460,8 +430,6 @@ REVOKE ALL ON FUNCTION public.cartera_pendiente() FROM PUBLIC;
 REVOKE ALL ON FUNCTION public.cartera_pendiente() FROM anon;
 GRANT EXECUTE ON FUNCTION public.cartera_pendiente() TO authenticated;
 GRANT EXECUTE ON FUNCTION public.cartera_pendiente() TO service_role;
-
-
 -- Fuente canónica de public.avanzar_estado_embarque
 -- Regenerada desde DB. Cada cambio DEBE actualizarse aquí en el mismo PR que la migración correspondiente.
 -- Ver supabase/schema/README.md.
@@ -502,6 +470,28 @@ BEGIN
   FOR UPDATE;
   IF v_org_id IS NULL THEN RAISE EXCEPTION 'Embarque no encontrado'; END IF;
   PERFORM public._assert_writer(v_org_id);
+
+  -- B-01: no cancelar una operación que todavía conserva CxC o CxP vivas.
+  IF p_nuevo_estado = 'Cancelado' THEN
+    IF EXISTS (
+      SELECT 1 FROM public.facturas f
+      WHERE f.embarque_id = p_embarque_id
+        AND f.deleted_at IS NULL
+        AND f.estado IN ('Emitida', 'Vencida', 'Parcialmente pagada')
+    ) THEN
+      RAISE EXCEPTION 'LC_CANCEL_CON_CXC: cancela o sustituye las facturas de cliente antes de cancelar el embarque'
+        USING ERRCODE = 'P0001';
+    END IF;
+    IF EXISTS (
+      SELECT 1 FROM public.proveedor_facturas pf
+      WHERE pf.embarque_id = p_embarque_id
+        AND pf.deleted_at IS NULL
+        AND pf.estado <> 'Cancelada'
+    ) THEN
+      RAISE EXCEPTION 'LC_CANCEL_CON_CXP: cancela las facturas de proveedor antes de cancelar el embarque'
+        USING ERRCODE = 'P0001';
+    END IF;
+  END IF;
 
   PERFORM public.assert_transicion_embarque(v_estado_actual, p_nuevo_estado::public.estado_embarque, v_expediente);
 
