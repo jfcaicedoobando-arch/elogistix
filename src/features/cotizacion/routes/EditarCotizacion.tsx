@@ -14,8 +14,10 @@ import type { NavigateFunction } from "react-router-dom";
 import type { CotizacionRow } from "@/features/cotizacion/hooks";
 import type { CostoCotizacion } from "@/features/cotizacion/hooks";
 import { useRegisterBreadcrumbLabel } from "@/lib/contexts/BreadcrumbContext";
-import { esEstadoEditableEnWizard } from "@/features/cotizacion/domain/estadosEditables";
+import { motivoBloqueoEdicionCotizacion } from "@/features/cotizacion/domain/estadosEditables";
 import { ErrorState } from "@/components/shared/states/ErrorState";
+import { EmptyState } from "@/components/shared/states/EmptyState";
+import { Lock } from "lucide-react";
 
 
 export default function EditarCotizacion() {
@@ -41,8 +43,24 @@ export default function EditarCotizacion() {
     );
   }
 
-  if (!cotizacion || !canEdit || !esEstadoEditableEnWizard(cotizacion.estado)) {
+  if (!cotizacion || !canEdit) {
     return <Navigate to={`/cotizaciones/${id}`} replace />;
+  }
+
+  // B-11/B-12: antes rebotaba al detalle sin explicar nada. Ahora se muestra el
+  // motivo del candado (estado no editable o cotización ya en operación).
+  const motivoBloqueo = motivoBloqueoEdicionCotizacion(cotizacion);
+  if (motivoBloqueo) {
+    return (
+      <PageContainer>
+        <EmptyState
+          icon={Lock}
+          title="Edición bloqueada"
+          description={motivoBloqueo}
+          action={{ label: "Ver cotización", onClick: () => navigate(`/cotizaciones/${id}`) }}
+        />
+      </PageContainer>
+    );
   }
 
 

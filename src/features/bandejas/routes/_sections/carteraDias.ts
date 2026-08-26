@@ -17,3 +17,18 @@ export function diasVencidoCartera(
   if (!fechaVencimiento) return diasVencidoRpc;
   return calcularDiasVencidoFactura(fechaVencimiento) ?? diasVencidoRpc;
 }
+
+/**
+ * B-25 — Etiqueta semántica de vencimiento, compartida por la tabla de
+ * escritorio y la lista móvil (antes la móvil pintaba "-5d" en crudo).
+ */
+export function badgeVencimientoCartera(
+  fechaVencimiento: string | null | undefined,
+  diasVencidoRpc: number,
+): { texto: string; variant: "destructive" | "secondary" | "outline" } {
+  const d = diasVencidoCartera(fechaVencimiento, diasVencidoRpc);
+  if (d > 0) return { texto: `Vencida ${d}d`, variant: "destructive" };
+  if (d === 0) return { texto: "Vence hoy", variant: "secondary" };
+  if (d >= -7) return { texto: `Vence en ${Math.abs(d)}d`, variant: "secondary" };
+  return { texto: `Vence en ${Math.abs(d)}d`, variant: "outline" };
+}

@@ -33,6 +33,7 @@ import {
 import {
   deriveContenedoresPayload,
   reportPhaseError,
+  vincularCotizacionConReintentos,
 } from "./useEmbarqueSubmitOrchestrator.helpers";
 import { getErrorMessage } from "@/lib/errors";
 import { useStableRequestId } from "@/lib/idempotency";
