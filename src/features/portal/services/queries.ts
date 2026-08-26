@@ -132,6 +132,8 @@ export async function fetchPortalCotizacion(id: string) {
       .from("cotizaciones")
       .select(PORTAL_COTIZACION_DETAIL_COLUMNS)
       .eq("id", id)
+      // v13.756.0: una cotización eliminada se trata como inexistente.
+      .is("deleted_at", null)
       .maybeSingle(),
   );
   if (!data) return null;
