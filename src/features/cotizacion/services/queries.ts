@@ -84,6 +84,8 @@ export async function fetchCotizacionesAceptadas(organizationId: string | null) 
     .from("cotizaciones")
     .select(COTIZACION_ACEPTADA_COLUMNS)
     .in("estado", ["Aceptada", "En operación"])
+    // v13.756.0: una cotización eliminada no debe poder vincularse a embarques.
+    .is("deleted_at", null)
     .order("created_at", { ascending: false })
     .limit(CAP_POSTGREST); // FE-05: mismo cap defensivo que `fetchCotizaciones`
   if (organizationId) query = query.eq("organization_id", organizationId);
@@ -96,8 +98,10 @@ export async function fetchCotizacionById(id: string): Promise<CotizacionRow | n
   // PGRST116 cuando la cotización fue borrada o el link está viejo.
   // La UI (`CotizacionDetalle`, `EditarCotizacion`) ya maneja `null`.
   // Fixes Sentry JAVASCRIPT-REACT-1M.
+  // v13.756.0: una cotización soft-deleted se trata como inexistente para que
+  // no se pueda abrir ni editar desde un link viejo.
   const data = await unwrap(
-    supabase.from("cotizaciones").select("*").eq("id", id).maybeSingle(),
+    supabase.from("cotizaciones").select("*").eq("id", id).is("deleted_at", null).maybeSingle(),
   );
   return data ? fromDbChecked<CotizacionRow>(data, cotizacionRowDbSchema) : null;
 }
