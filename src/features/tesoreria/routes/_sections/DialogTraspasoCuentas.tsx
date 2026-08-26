@@ -33,7 +33,7 @@ const FORM_ID = "form-traspaso-cuentas";
 
 export function DialogTraspasoCuentas({ open, onOpenChange, cuentas }: DialogTraspasoCuentasProps) {
   const {
-    state, setField, origen, destino, mismoMoneda, montoDestino, error, fechaTcDof,
+    state, setField, origen, destino, mismoMoneda, par, factorOrigenDestino, montoDestino, error, fechaTcDof,
   } = useTraspasoForm(open, cuentas);
   const { mutate: registrar, isPending } = useRegistrarTraspaso();
 
@@ -45,10 +45,11 @@ export function DialogTraspasoCuentas({ open, onOpenChange, cuentas }: DialogTra
     clientRequestIdRef.current = open ? crypto.randomUUID() : null;
   }, [open]);
 
-  // BL-04: sólo se manda 1 cuando ambas cuentas comparten moneda. Si difieren,
-  // el TC capturado es obligatorio (la validación ya bloquea el botón).
-  const tipoCambioFinal = mismoMoneda ? 1 : state.tipoCambio;
+  // BL-04: la RPC recibe el multiplicador origen→destino. El usuario captura
+  // la cotización a la mexicana (pesos por dólar) y aquí se deriva el factor.
+  const tipoCambioFinal = mismoMoneda ? 1 : (factorOrigenDestino ?? 0);
   const bloqueado = !!error || isPending || !(tipoCambioFinal > 0);
+
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
