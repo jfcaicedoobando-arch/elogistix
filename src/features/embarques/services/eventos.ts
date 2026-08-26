@@ -2,7 +2,7 @@ import { supabase } from '@/integrations/supabase/client';
 import type { Enums } from '@/integrations/supabase/types';
 import { registrarBitacoraEmbarque } from './bitacoraEmbarques';
 import { eventoTrackingSchema } from '@/lib/validation/mutationSchemas.otros';
-import { parseOrThrow } from '@/lib/validation/parseOrThrow';
+import { parseOrThrow } from '@/lib/validation/mutationSchemas';
 
 export interface EventoEmbarqueRow {
   id: string;
