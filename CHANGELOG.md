@@ -1,5 +1,13 @@
 # Changelog
 
+## [13.750.0] - 2026-08-26
+### Los roles operativos ya pueden cotizar
+- El Coordinador Logístico, Gerente de Operaciones, Operador y Customer Service podían abrir el wizard de "Nueva cotización" pero el guardado fallaba con "No tienes permisos" (RLS 42501). Ahora la regla de escritura de la base de datos los incluye, igual que al equipo comercial.
+- Se alinea la captura de conceptos de venta para incluir a Customer Service.
+- Los roles de sólo consulta (Viewer, Gerente Visor, Cliente) siguen sin poder crear cotizaciones.
+
+
+
 ## [13.749.0] - 2026-08-26
 ### Bitácora no falsificable, vínculo cotización↔embarque y cartera móvil
 - B-06: al reabrir un embarque, el usuario que queda firmado en notas, eventos y bitácora se toma de la sesión autenticada. Antes se escribía el correo que enviaba el navegador, que podía alterarse; el frontend ya no lo manda y la función lo ignora.
