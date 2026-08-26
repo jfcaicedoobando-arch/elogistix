@@ -1,6 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables, TablesInsert } from "@/integrations/supabase/types";
-import { unwrap, unwrapOr } from "@/lib/supabase/response";
+import { unwrap } from "@/lib/supabase/response";
 import { normalizarRazonSocial } from "@/lib/text/razonSocial";
 import { registrarActividad } from "@/services/bitacora/registrar";
 import { conflictoConcurrenciaError } from "@/lib/errors/concurrencia";
