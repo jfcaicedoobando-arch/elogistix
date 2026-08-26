@@ -69,7 +69,13 @@ function ProformaDetalleContent({ data }: ContentProps) {
   const { descargar, downloadingId } = useDescargarProformaPdf();
   const tasaIva = useTasaIVA();
   const totales = useMemo(
-    () => calcularTotalesProforma(data.conceptos, tasaIva),
+    () =>
+      // B-08: pasamos los totales persistidos para que el dominio advierta
+      // (console.warn) si el cálculo difiere del total guardado.
+      calcularTotalesProforma(data.conceptos, tasaIva, {}, {
+        total_usd: data.proforma?.total_usd ?? null,
+        total_mxn: data.proforma?.total_mxn ?? null,
+      }),
     [data, tasaIva],
   );
 

@@ -9,6 +9,7 @@
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { DatePickerMx } from "@/components/ui/date-picker-mx";
+import { todayLocalISO } from "@/lib/date/today";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { USOS_CFDI_SAT, FORMAS_PAGO_SAT } from "@/constants/catalogosSAT";
 import type { MotivoNotaCredito as Motivo } from "@/features/facturacion/types";
@@ -22,6 +23,8 @@ const MOTIVOS: { value: Motivo; label: string }[] = [
 ];
 
 interface Props {
+  /** B-24: fecha de emisión de la factura original — cota inferior de la NC. */
+  fechaMinima?: string | null;
   fecha: string;
   setFecha: (v: string) => void;
   motivo: Motivo;
@@ -35,13 +38,22 @@ interface Props {
 }
 
 export function NotaCreditoCamposFiscales(props: Props) {
-  const { fecha, setFecha, motivo, setMotivo, usoCfdi, setUsoCfdi, formaPago, setFormaPago, descripcion, setDescripcion } = props;
+  const { fechaMinima, fecha, setFecha, motivo, setMotivo, usoCfdi, setUsoCfdi, formaPago, setFormaPago, descripcion, setDescripcion } = props;
   return (
     <>
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1.5">
           <Label htmlFor="nc-fecha">Fecha *</Label>
-          <DatePickerMx value={fecha} onChange={setFecha} className="w-full" />
+          <DatePickerMx
+            value={fecha}
+            onChange={setFecha}
+            className="w-full"
+            min={fechaMinima ? fechaMinima.slice(0, 10) : undefined}
+            max={todayLocalISO()}
+          />
+          <p className="text-label text-muted-foreground">
+            No puede ser anterior a la emisión de la factura ni futura.
+          </p>
         </div>
         <div className="space-y-1.5">
           <Label>Motivo SAT *</Label>

@@ -21,6 +21,8 @@ import { parseConceptosSugeridos } from "./facturaNotasCreditoConceptos";
 interface Props {
   facturaId: string;
   facturaNumero: string;
+  /** B-24: fecha de emisión de la factura (cota inferior de la fecha de NC). */
+  fechaFactura?: string | null;
   monedaFactura: Moneda;
   tipoCambioFactura: number;
   saldoFactura: number;
@@ -30,7 +32,7 @@ interface Props {
 }
 
 export function FacturaNotasCreditoSeccion(props: Props) {
-  const { facturaId, facturaNumero, monedaFactura, tipoCambioFactura, saldoFactura, uuidFacturaOriginal, snapshotEmision, canEdit } = props;
+  const { facturaId, facturaNumero, fechaFactura, monedaFactura, tipoCambioFactura, saldoFactura, uuidFacturaOriginal, snapshotEmision, canEdit } = props;
   const [openCrear, setOpenCrear] = useState(false);
   const [emailNcId, setEmailNcId] = useState<string | null>(null);
   const [cancelarNcId, setCancelarNcId] = useState<string | null>(null);
@@ -113,6 +115,7 @@ export function FacturaNotasCreditoSeccion(props: Props) {
         onOpenChange={setOpenCrear}
         facturaId={facturaId}
         facturaNumero={facturaNumero}
+        fechaFactura={fechaFactura}
         monedaFactura={monedaFactura}
         tipoCambioFactura={tipoCambioFactura}
         saldoFactura={saldoFactura}

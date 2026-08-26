@@ -31,7 +31,13 @@ export const notaSchema = z.object({
 
 export const eventoTrackingSchema = z.object({
   tipo: z.string().min(1, "Selecciona un tipo de evento"),
-  fecha: z.string().min(1, "Fecha requerida"),
+  // B-24: formato `AAAA-MM-DD` (se acepta un ISO completo y se recorta la parte
+  // de fecha) — antes cualquier string pasaba y llegaba basura a la BD.
+  fecha: z
+    .string()
+    .min(1, "Fecha requerida")
+    .transform((v) => v.slice(0, 10))
+    .refine((v) => /^\d{4}-\d{2}-\d{2}$/.test(v), "Fecha inválida (usa AAAA-MM-DD)"),
   ubicacion: z.string().max(120, "Máximo 120 caracteres").optional().default(""),
   descripcion: z.string().max(500, "Máximo 500 caracteres").optional().default(""),
 });

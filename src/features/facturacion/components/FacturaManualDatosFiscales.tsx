@@ -40,9 +40,10 @@ interface Props {
 }
 
 export function FacturaManualDatosFiscales({ value, onChange, diasReadonly, diasReadonlyReason }: Props) {
+  // B-03: TC DOF vigente en la fecha de emisión capturada, no el de hoy.
   const traerTc = useBanxicoTipoCambio(value.moneda, (tc) => {
     if (tc && tc > 0) onChange({ tipoCambio: tc });
-  });
+  }, value.fechaEmision);
   const requiereTc = value.moneda !== "MXN";
   const monedas: MonedaManual[] = ["MXN", "USD", "EUR"];
   return (

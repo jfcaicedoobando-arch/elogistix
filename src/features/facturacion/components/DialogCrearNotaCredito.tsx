@@ -23,6 +23,8 @@ interface Props {
   tipoCambioFactura: number;
   saldoFactura: number;
   uuidFacturaOriginal: string | null;
+  /** B-24: fecha de emisión de la factura original (cota inferior de la NC). */
+  fechaFactura?: string | null;
   /** Conceptos sugeridos desde la factura original (snapshot). */
   conceptosSugeridos?: ConceptoNotaCredito[];
 }
@@ -30,7 +32,7 @@ interface Props {
 export function DialogCrearNotaCredito(props: Props) {
   const s = useNotaCreditoDraft(props);
   const {
-    open, onOpenChange, facturaNumero, monedaFactura, saldoFactura,
+    open, onOpenChange, facturaNumero, monedaFactura, saldoFactura, fechaFactura,
   } = props;
 
   const footer = (
@@ -78,6 +80,7 @@ export function DialogCrearNotaCredito(props: Props) {
       )}
 
       <NotaCreditoCamposFiscales
+        fechaMinima={fechaFactura}
         fecha={s.fecha} setFecha={s.setFecha}
         motivo={s.motivo} setMotivo={s.setMotivo}
         usoCfdi={s.usoCfdi} setUsoCfdi={s.setUsoCfdi}

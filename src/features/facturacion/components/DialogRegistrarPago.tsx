@@ -49,7 +49,6 @@ const FORM_ID = "form-registrar-pago";
 
 
 export function DialogRegistrarPago({ open, onOpenChange, factura }: Props) {
-  const { data: rates } = useExchangeRates();
   const { data: cuentas = [] } = useCuentasBancarias();
   const { data: pagosPrevios = [] } = usePagosFactura(factura?.id);
   const { data: notasAplicadas = [] } = useNotasCreditoAplicadas(factura?.id);
@@ -65,6 +64,13 @@ export function DialogRegistrarPago({ open, onOpenChange, factura }: Props) {
     fecha: today(), monto: "", moneda: "MXN",
     formaPago: "03", referencia: "", notas: "", cuentaBancariaId: "",
   });
+
+  // B-03: el pago puede tener fecha PASADA (`fecha` es editable); valuarlo con el
+  // TC de hoy distorsiona el importe aplicado. Se pide el DOF de esa fecha.
+  const { data: rates } = useExchangeRates(
+    /^\d{4}-\d{2}-\d{2}$/.test(values.fecha) ? values.fecha : undefined,
+  );
+
 
   // FE-02: inicializar una sola vez por apertura (open + factura.id). Antes las
   // deps vivas (objeto factura nuevo en cada refetch, saldo derivado de queries)
