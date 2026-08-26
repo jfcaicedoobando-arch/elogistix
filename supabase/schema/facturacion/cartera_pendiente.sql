@@ -6,8 +6,7 @@
 -- Al modificar: edita ESTE archivo y genera la migración con el mismo cuerpo.
 
 CREATE OR REPLACE FUNCTION public.cartera_pendiente()
-RETURNS TABLE(
-  factura_id uuid, numero text, cliente_id uuid, cliente_nombre text,
+RETURNS TABLE(factura_id uuid, numero text, cliente_id uuid, cliente_nombre text,
   embarque_id uuid, expediente text,
   fecha_emision date, fecha_vencimiento date, dias_vencido integer,
   moneda text, total numeric, pagado numeric, saldo numeric,
@@ -43,7 +42,8 @@ LANGUAGE sql STABLE SET search_path TO 'public' AS $function$
   SELECT b.id, b.numero, b.cliente_id, COALESCE(c.nombre, b.cliente_nombre),
     b.embarque_id, e.expediente,
     b.fecha_emision, b.fecha_vencimiento,
-    GREATEST(0, (now() AT TIME ZONE 'America/Mexico_City')::date - b.fecha_vencimiento)::int,
+    -- N9 (canon signado): positivo = vencida, 0 = vence hoy, negativo = por vencer.
+    ((now() AT TIME ZONE 'America/Mexico_City')::date - b.fecha_vencimiento)::int,
     b.moneda, b.total, b.pagado,
     (b.total - b.pagado - b.nc_aplicadas),
     (SELECT MAX(cs.fecha) FROM public.cobranza_seguimiento cs WHERE cs.factura_id=b.id),
