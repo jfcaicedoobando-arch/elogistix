@@ -20830,7 +20830,8 @@ BEGIN
   ) THEN
     RAISE EXCEPTION 'Permisos insuficientes';
   END IF;
-  -- Restaurar hijos del mismo lote (mismo deleted_at exacto)
+  -- D-01: puerta oficial de restauración.
+  PERFORM set_config('app.papelera_restore', 'on', true);
   UPDATE public.conceptos_venta       SET deleted_at = NULL, deleted_by = NULL WHERE embarque_id = p_embarque_id AND deleted_at = v_deleted_at;
   UPDATE public.conceptos_costo       SET deleted_at = NULL, deleted_by = NULL WHERE embarque_id = p_embarque_id AND deleted_at = v_deleted_at;
   UPDATE public.documentos_embarque   SET deleted_at = NULL, deleted_by = NULL WHERE embarque_id = p_embarque_id AND deleted_at = v_deleted_at;
@@ -20839,8 +20840,8 @@ BEGIN
   UPDATE public.embarque_contenedores SET deleted_at = NULL, deleted_by = NULL WHERE embarque_id = p_embarque_id AND deleted_at = v_deleted_at;
   UPDATE public.facturas              SET deleted_at = NULL, deleted_by = NULL WHERE embarque_id = p_embarque_id AND deleted_at = v_deleted_at;
   UPDATE public.seguros_embarque      SET deleted_at = NULL                    WHERE embarque_id = p_embarque_id AND deleted_at = v_deleted_at;
-  -- Restaurar el embarque
   UPDATE public.embarques SET deleted_at = NULL, deleted_by = NULL WHERE id = p_embarque_id;
+  PERFORM set_config('app.papelera_restore', 'off', true);
 END;
 $$;
 CREATE FUNCTION public.restore_record(_table text, _id uuid) RETURNS void
@@ -20876,8 +20877,11 @@ BEGIN
   ) THEN
     RAISE EXCEPTION 'Permisos insuficientes';
   END IF;
+  -- D-01: puerta oficial de restauración.
+  PERFORM set_config('app.papelera_restore', 'on', true);
   EXECUTE format('UPDATE public.%I SET deleted_at = NULL, deleted_by = NULL WHERE id = $1', _table)
     USING _id;
+  PERFORM set_config('app.papelera_restore', 'off', true);
 END;
 $_$;
 CREATE FUNCTION public.retirar_factura_entrante(p_documento_id uuid) RETURNS void
@@ -27724,6 +27728,9 @@ GRANT ALL ON FUNCTION public._garantia_historial_trg() TO authenticated;
 GRANT ALL ON FUNCTION public._garantia_historial_trg() TO service_role;
 GRANT ALL ON FUNCTION public._garantia_transicion_valida_trg() TO authenticated;
 GRANT ALL ON FUNCTION public._garantia_transicion_valida_trg() TO service_role;
+REVOKE ALL ON FUNCTION public._guard_soft_delete() FROM PUBLIC;
+GRANT ALL ON FUNCTION public._guard_soft_delete() TO authenticated;
+GRANT ALL ON FUNCTION public._guard_soft_delete() TO service_role;
 REVOKE ALL ON FUNCTION public._log_provisioning_step(p_org_id uuid, p_source text, p_accion text, p_entidad text, p_filas integer, p_detalles jsonb) FROM PUBLIC;
 GRANT ALL ON FUNCTION public._log_provisioning_step(p_org_id uuid, p_source text, p_accion text, p_entidad text, p_filas integer, p_detalles jsonb) TO authenticated;
 GRANT ALL ON FUNCTION public._log_provisioning_step(p_org_id uuid, p_source text, p_accion text, p_entidad text, p_filas integer, p_detalles jsonb) TO service_role;
