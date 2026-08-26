@@ -65,6 +65,13 @@ export function DialogRegistrarPago({ open, onOpenChange, factura }: Props) {
     formaPago: "03", referencia: "", notas: "", cuentaBancariaId: "",
   });
 
+  // B-03: el pago puede tener fecha PASADA (`fecha` es editable); valuarlo con el
+  // TC de hoy distorsiona el importe aplicado. Se pide el DOF de esa fecha.
+  const { data: rates } = useExchangeRates(
+    /^\d{4}-\d{2}-\d{2}$/.test(values.fecha) ? values.fecha : undefined,
+  );
+
+
   // FE-02: inicializar una sola vez por apertura (open + factura.id). Antes las
   // deps vivas (objeto factura nuevo en cada refetch, saldo derivado de queries)
   // re-ejecutaban el efecto y borraban lo que el usuario ya había capturado.
