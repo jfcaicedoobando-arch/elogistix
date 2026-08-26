@@ -1,5 +1,13 @@
 # Changelog
 
+## [13.756.0] - 2026-08-26
+### Cotizaciones eliminadas ya desaparecen de todas las vistas
+- Las cotizaciones eliminadas (borrado lógico) seguían apareciendo en el listado de Cotizaciones; ahora se filtran en la lectura (`deleted_at IS NULL`).
+- Mismo filtro aplicado en: buscador de cotizaciones aceptadas para vincular a embarques, apertura por link directo, detalle de cliente, Cliente 360, CRM (oportunidad y "sin respuesta"), contadores de re-aprobación y portal del cliente (listado y detalle).
+
+## [13.755.0] - 2026-08-26
+
+
 ## [13.755.0] - 2026-08-26
 ### QA ronda 2 · Facturas sin conceptos, comisiones "Por recuperar" y topes de archivos
 - D-05: una factura sin conceptos vivos ya deja todos sus totales en cero (antes conservaba subtotal/IVA capturados y el total quedaba inflado); además ya no se puede pasar una factura a "Emitida" si no tiene conceptos (`LC_FACTURA_SIN_CONCEPTOS`).
