@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.758.5] - 2026-08-26
+### Fix
+- Baseline de esquema: se normalizó el formato de `LANGUAGE plpgsql SECURITY DEFINER` en `calcular_comision_pago`, `congelar_factura_al_emitir` y `tg_factura_cancelada_comisiones` para que el snapshot del CI coincida byte a byte.
+
 ## [13.758.4] - 2026-08-26
 ### Fix
 - CI: la corrección del candado `LC_FACTURA_SIN_CONCEPTOS` vivía en una migración con fecha anterior a la que lo introdujo, así que en un `db reset` limpio se reaplicaba la versión vieja y tumbaba 28 suites RLS. Se corrigió en la migración original `20260902000400_qa_r2_d05_factura_sin_conceptos.sql` y se regeneró el manifiesto (1102 migraciones).
