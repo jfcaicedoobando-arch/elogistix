@@ -26,7 +26,7 @@ import type { SeleccionLinea } from "@/features/cxp/types";
 interface Props {
   concepto: ConceptoCostoAbierto;
   seleccion: SeleccionLinea | undefined;
-  onToggle: (concepto: ConceptoCostoAbierto, checked: boolean) => void;
+  onToggle: (concepto: ConceptoCostoAbierto, checked: boolean, montoBase?: number) => void;
   onChangeMonto: (conceptoId: string, monto: number) => void;
   /** Moneda de la factura que se está capturando. */
   facturaMoneda: string;

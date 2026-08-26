@@ -15,7 +15,7 @@ import type { TcPivote } from "@/features/cxp/utils/vinculoMoneda";
 interface Props {
   grupos: Grupo[];
   seleccion: Record<string, SeleccionLinea>;
-  onToggle: (concepto: ConceptoCostoAbierto, checked: boolean) => void;
+  onToggle: (concepto: ConceptoCostoAbierto, checked: boolean, montoBase?: number) => void;
   onChangeMonto: (conceptoId: string, monto: number) => void;
   /** Embarque del documento del buzón (si la captura viene de ahí). */
   embarqueIdPrioritario?: string | null;
