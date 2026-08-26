@@ -362,17 +362,14 @@ CREATE TRIGGER trg_proveedor_facturas_folio_unico
   FOR EACH ROW EXECUTE FUNCTION public.proveedor_facturas_assert_folio_unico();
 
 -- ============================================================================
--- QA ronda 2 · W-09 (medio) + W-08 (medio) — storage
+-- QA ronda 2 · W-09 (medio) — storage
 -- W-09: la policy "Tenant scoped read documentos" leia filas de
 --       documentos_embarque/embarques en papelera. Se recrea exigiendo
 --       d.deleted_at IS NULL AND e.deleted_at IS NULL en ambas ramas EXISTS
 --       (staff y cliente). La policy "Org folder read documentos" opera por
 --       prefijo de carpeta via can_manage_document_object (que ya filtra
 --       deleted_at en sus ramas por fila), no aplica el cambio.
--- W-08: limite de 25 MB y MIME permitidos en los buckets del proyecto
---       (documentos, facturas, reportes-feedback, cotizaciones-pdf,
---       facturas-pdf, cxp-inbox, agente-cartas-garantia); la columna public
---       se conserva como esta.
+-- W-08 (limites de bucket) se aplica con la herramienta de buckets, no por SQL.
 -- ============================================================================
 
 -- W-09
