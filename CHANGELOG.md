@@ -1,5 +1,17 @@
 # Changelog
 
+## [13.748.0] - 2026-08-26
+### Validación financiera: IVA en pesos, T/C por fecha y topes de captura
+- B-09: los conceptos en MXN dejan de gravarse "por default". Ahora se respeta el flag de exención de cada fila (había 285 conceptos marcados como exentos que igual llevaban 16%, típico en fletes internacionales).
+- B-03: los tipos de cambio se consultan con la fecha del documento (emisión de factura/NC, fecha del pago) en vez del T/C de hoy, para no valuar mal capturas retroactivas.
+- B-08: detector de desviación que avisa en consola si el total guardado de una proforma difiere del recalculado por más de medio centavo.
+- B-21: la suma de costos multi-moneda usa la primitiva canónica de redondeo, alineada con Postgres en montos negativos.
+- B-23: topes de magnitud en cotizaciones (montos ≤ 999,999,999.99 y cantidades ≤ 1,000,000) para frenar dedazos.
+- B-24: los eventos de tracking se validan (tipo obligatorio y fecha AAAA-MM-DD), su lectura está acotada, la fecha de nota de crédito no puede ser anterior a la factura ni futura, y los filtros de responsable en CRM escapan el correo.
+- Se añaden mensajes en español para LC_CANCEL_CON_CXC, LC_CANCEL_CON_CXP, LC_FACTURA_INMUTABLE, LC_NC_FECHA_INVALIDA, LC_BAJA_CON_DEPENDENCIAS y LC_COTIZACION_EN_OPERACION.
+
+
+
 ## [13.747.1] - 2026-08-26
 ### Vinculación multi-moneda sin ajuste fantasma
 - Al vincular un costo cotizado en otra moneda (p. ej. 51 USD facturados como 872.57 MXN), la base de comparación se guarda ya convertida a la moneda de la factura: se elimina el ajuste de costo falso de ~821 que inflaba el embarque.
