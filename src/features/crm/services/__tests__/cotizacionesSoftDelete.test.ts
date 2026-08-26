@@ -32,7 +32,7 @@ describe("cotizaciones · filtro de soft-delete en lecturas", () => {
       () => contarMisCotizacionesPendientesReaprobacion("a@b.mx"),
     ],
   ])("%s aplica deleted_at is null", async (_nombre, ejecutar) => {
-    mock.setTableResult("cotizaciones", { data: [], error: null, count: 0 });
+    mock.setTableResult("cotizaciones", { data: [], error: null });
     await ejecutar();
     const call = mock.tableCalls.find((c) => c.table === "cotizaciones");
     const isIdx = call?.ops.indexOf("is") ?? -1;
