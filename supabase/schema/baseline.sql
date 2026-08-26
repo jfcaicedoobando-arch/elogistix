@@ -27009,20 +27009,20 @@ CREATE POLICY "Cliente read own conceptos_venta" ON public.conceptos_venta FOR S
    FROM public.embarques
   WHERE (embarques.cliente_id IN ( SELECT public.current_user_client_ids() AS current_user_client_ids))))));
 CREATE POLICY "Cliente read own cotizaciones" ON public.cotizaciones FOR SELECT TO authenticated USING (((deleted_at IS NULL) AND public.has_role(auth.uid(), 'cliente'::public.app_role) AND (cliente_id IN ( SELECT public.current_user_client_ids() AS current_user_client_ids))));
-CREATE POLICY "Cliente read own documentos" ON public.documentos_embarque FOR SELECT TO authenticated USING ((( SELECT public.has_role(( SELECT auth.uid() AS uid), 'cliente'::public.app_role) AS has_role) AND (embarque_id IN ( SELECT embarques.id
-   FROM public.embarques
-  WHERE (embarques.cliente_id IN ( SELECT public.current_user_client_ids() AS current_user_client_ids))))));
-CREATE POLICY "Cliente read own embarque_contenedores" ON public.embarque_contenedores FOR SELECT TO authenticated USING ((( SELECT public.has_role(( SELECT auth.uid() AS uid), 'cliente'::public.app_role) AS has_role) AND (embarque_id IN ( SELECT e.id
+CREATE POLICY "Cliente read own documentos" ON public.documentos_embarque FOR SELECT TO authenticated USING (((deleted_at IS NULL) AND ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'cliente'::public.app_role) AS has_role) AND (embarque_id IN ( SELECT e.id
    FROM public.embarques e
-  WHERE (e.cliente_id IN ( SELECT public.current_user_client_ids() AS current_user_client_ids))))));
+  WHERE ((e.deleted_at IS NULL) AND (e.cliente_id IN ( SELECT public.current_user_client_ids() AS current_user_client_ids)))))));
+CREATE POLICY "Cliente read own embarque_contenedores" ON public.embarque_contenedores FOR SELECT TO authenticated USING (((deleted_at IS NULL) AND ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'cliente'::public.app_role) AS has_role) AND (embarque_id IN ( SELECT e.id
+   FROM public.embarques e
+  WHERE ((e.deleted_at IS NULL) AND (e.cliente_id IN ( SELECT public.current_user_client_ids() AS current_user_client_ids)))))));
 CREATE POLICY "Cliente read own embarques" ON public.embarques FOR SELECT TO authenticated USING (((deleted_at IS NULL) AND public.has_role(auth.uid(), 'cliente'::public.app_role) AND (cliente_id IN ( SELECT public.current_user_client_ids() AS current_user_client_ids))));
 CREATE POLICY "Cliente read own eventos" ON public.eventos_embarque FOR SELECT TO authenticated USING ((public.has_role(auth.uid(), 'cliente'::public.app_role) AND (embarque_id IN ( SELECT embarques.id
    FROM public.embarques
   WHERE (embarques.cliente_id IN ( SELECT public.current_user_client_ids() AS current_user_client_ids)))) AND ((tipo)::text = ANY (ARRAY['Zarpe'::text, 'Transbordo'::text, 'Arribo a Puerto'::text, 'Descarga'::text, 'Despacho Aduanal'::text, 'Liberación'::text, 'En Ruta Terrestre'::text, 'Entrega'::text, 'Cambio de ETA'::text])) AND (deleted_at IS NULL) AND (lower(COALESCE(descripcion, ''::text)) !~~ ALL (ARRAY['%[interno]%'::text, '%harness%'::text, '%e2e%'::text, '%seed%'::text, '%qa-%'::text])) AND (lower(COALESCE(usuario, ''::text)) !~~ ALL (ARRAY['%[interno]%'::text, '%harness%'::text, '%e2e%'::text, '%seed%'::text, '%qa-%'::text]))));
-CREATE POLICY "Cliente read own factura_notas_credito" ON public.factura_notas_credito FOR SELECT TO authenticated USING ((( SELECT public.has_role(( SELECT auth.uid() AS uid), 'cliente'::public.app_role) AS has_role) AND (factura_id IN ( SELECT f.id
+CREATE POLICY "Cliente read own factura_notas_credito" ON public.factura_notas_credito FOR SELECT TO authenticated USING (((deleted_at IS NULL) AND ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'cliente'::public.app_role) AS has_role) AND (factura_id IN ( SELECT f.id
    FROM public.facturas f
-  WHERE (f.cliente_id IN ( SELECT public.current_user_client_ids() AS current_user_client_ids))))));
-CREATE POLICY "Cliente read own facturas" ON public.facturas FOR SELECT TO authenticated USING ((( SELECT public.has_role(( SELECT auth.uid() AS uid), 'cliente'::public.app_role) AS has_role) AND (cliente_id IN ( SELECT public.current_user_client_ids() AS current_user_client_ids))));
+  WHERE ((f.deleted_at IS NULL) AND (f.cliente_id IN ( SELECT public.current_user_client_ids() AS current_user_client_ids)))))));
+CREATE POLICY "Cliente read own facturas" ON public.facturas FOR SELECT TO authenticated USING (((deleted_at IS NULL) AND ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'cliente'::public.app_role) AS has_role) AND (cliente_id IN ( SELECT public.current_user_client_ids() AS current_user_client_ids))));
 CREATE POLICY "Cliente read own notas" ON public.notas_embarque FOR SELECT TO authenticated USING ((public.has_role(auth.uid(), 'cliente'::public.app_role) AND (tipo = 'cambio_estado'::public.tipo_nota) AND (deleted_at IS NULL) AND (lower(COALESCE(contenido, ''::text)) !~~ ALL (ARRAY['%[interno]%'::text, '%harness%'::text, '%e2e%'::text, '%seed%'::text, '%qa-%'::text])) AND (lower(COALESCE(usuario, ''::text)) !~~ ALL (ARRAY['%[interno]%'::text, '%harness%'::text, '%e2e%'::text, '%seed%'::text, '%qa-%'::text])) AND (embarque_id IN ( SELECT embarques.id
    FROM public.embarques
   WHERE (embarques.cliente_id IN ( SELECT public.current_user_client_ids() AS current_user_client_ids))))));
