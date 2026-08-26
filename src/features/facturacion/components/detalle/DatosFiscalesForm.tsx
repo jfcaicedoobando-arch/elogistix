@@ -46,6 +46,8 @@ export interface DatosFiscalesFormProps {
   mostrarTipoCambio: boolean;
   /** Fecha de emisión del borrador; se usa para previsualizar el vencimiento. */
   fechaEmision?: string | null;
+  /** Moneda de la factura; rotula el par del tipo de cambio ("MXN por 1 USD"). */
+  moneda?: string | null;
 }
 
 export function DatosFiscalesForm(p: DatosFiscalesFormProps) {
