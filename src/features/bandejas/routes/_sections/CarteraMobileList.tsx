@@ -8,7 +8,7 @@ import { useNavigate } from "react-router-dom";
 import { Inbox } from "lucide-react";
 import { formatCurrency, formatDate } from "@/lib/formatters";
 import { handleRowClick, handleRowKeyDown } from "@/components/shared/dataTable/rowNav";
-import { diasVencidoCartera } from "./carteraDias";
+import { badgeVencimientoCartera } from "./carteraDias";
 import type { CarteraRow } from "./carteraColumns";
 import { ListSkeleton } from "@/components/shared/states/ListSkeleton";
 
@@ -46,9 +46,12 @@ export function CarteraMobileList({ rows, isLoading }: Props) {
               >
                 <div className="flex items-start justify-between gap-2">
                   <span className="font-semibold truncate">{row.numero ?? "—"}</span>
-                  <Badge variant={diasVencidoCartera(row.fecha_vencimiento, row.dias_vencido) > 0 ? "destructive" : "secondary"}>
-                    {diasVencidoCartera(row.fecha_vencimiento, row.dias_vencido)}d
-                  </Badge>
+                  {(() => {
+                    // B-25: antes mostraba "-5d" en facturas por vencer (dato
+                    // que se leía como error). Mismas etiquetas que escritorio.
+                    const b = badgeVencimientoCartera(row.fecha_vencimiento, row.dias_vencido);
+                    return <Badge variant={b.variant}>{b.texto}</Badge>;
+                  })()}
                 </div>
                 <div className="text-sm font-medium truncate">{row.cliente_nombre ?? "—"}</div>
                 {row.embarque_id && (
