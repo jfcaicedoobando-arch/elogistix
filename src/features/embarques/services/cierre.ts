@@ -64,11 +64,13 @@ export async function cerrarEmbarque(embarqueId: string): Promise<void> {
 export async function reabrirEmbarque(
   embarqueId: string,
   motivo: string,
-  usuarioEmail: string,
+  /** @deprecated B-06: ignorado; el actor se deriva de la sesión en la BD. */
+  _usuarioEmail?: string,
 ): Promise<void> {
   const { error } = await supabase.rpc("reabrir_embarque" as never, {
     p_embarque_id: embarqueId,
-    p_usuario_email: usuarioEmail,
+    // B-06: la RPC ignora este valor (era falsificable desde el cliente).
+    p_usuario_email: "",
     p_motivo: motivo,
     p_request_id: crypto.randomUUID(),
   } as never);
