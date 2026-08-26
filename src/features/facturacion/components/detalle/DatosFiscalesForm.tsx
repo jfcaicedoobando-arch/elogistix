@@ -68,12 +68,13 @@ export function DatosFiscalesForm(p: DatosFiscalesFormProps) {
         </div>
         {p.mostrarTipoCambio && (
           <div>
-            <Label htmlFor="factura-tipo-cambio">Tipo de cambio</Label>
+            <Label htmlFor="factura-tipo-cambio">{etiquetaTcContraMxn(p.moneda)}</Label>
             <Input
               id="factura-tipo-cambio"
               type="number" step="0.0001" min={0}
               value={p.tipoCambio ?? ""}
-              placeholder="Capturar TC del día"
+              placeholder={TC_PLACEHOLDER_MXN}
+              aria-label={etiquetaTcContraMxn(p.moneda)}
               onChange={(e) => {
                 const raw = e.target.value.trim();
                 if (raw === "") return p.setTipoCambio(null);
@@ -81,6 +82,9 @@ export function DatosFiscalesForm(p: DatosFiscalesFormProps) {
                 p.setTipoCambio(Number.isFinite(n) && n > 0 ? n : null);
               }}
             />
+            {ayudaTcContraMxn(p.moneda) && (
+              <p className="mt-1 text-body-sm text-muted-foreground">{ayudaTcContraMxn(p.moneda)}</p>
+            )}
           </div>
         )}
       </div>
