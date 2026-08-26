@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.759.0] - 2026-08-26
+### Fix
+- Portal de cliente: las policies `Cliente read own facturas`, `Cliente read own documentos`, `Cliente read own factura_notas_credito` y `Cliente read own embarque_contenedores` ahora exigen `deleted_at IS NULL` (propio y del padre). Antes el portal mostraba registros enviados a la papelera.
+- QA-R2 R-04: `recalcular_subtotal_cotizacion` levanta la GUC transaccional `app.cotizacion_sync` y `cotizaciones_guard_en_operacion` la respeta, para que la sincronización interna del subtotal no choque con `LC_COTIZACION_EN_OPERACION`.
+- Tests RLS: `test_rls_portal_intra_org` verifica que factura y documento en papelera no son visibles al rol cliente.
+
 ## [13.758.5] - 2026-08-26
 ### Fix
 - Baseline de esquema: se normalizó el formato de `LANGUAGE plpgsql SECURITY DEFINER` en `calcular_comision_pago`, `congelar_factura_al_emitir` y `tg_factura_cancelada_comisiones` para que el snapshot del CI coincida byte a byte.
