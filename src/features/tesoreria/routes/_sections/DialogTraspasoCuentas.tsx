@@ -18,6 +18,8 @@ import { DatePickerMx } from "@/components/ui/date-picker-mx";
 import { MoneyInput } from "@/components/shared/MoneyInput";
 import { useRegistrarTraspaso } from "@/features/tesoreria/hooks/useTraspasos";
 import { useTraspasoForm } from "@/features/tesoreria/hooks/useTraspasoForm";
+import { etiquetaTc } from "@/features/tesoreria/domain/tcPar";
+
 import type { Tables } from "@/integrations/supabase/types";
 import { formatCurrency } from "@/lib/formatters";
 
