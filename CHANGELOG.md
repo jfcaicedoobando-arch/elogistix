@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.752.2] - 2026-08-26
+### Higiene de migraciones: permisos, espejos y manifiesto al día
+- Nueva migración `20260901002100`: re-aplica los permisos explícitos (`REVOKE` a público/anónimo + `GRANT EXECUTE` a sesión iniciada y sistema) de `reabrir_embarque` y `avanzar_estado_embarque`, que se habían re-emitido sin ese bloque (H6).
+- Espejos canónicos `cartera_pendiente.sql` y `guards_documentos_emitidos.sql` sincronizados con la migración vigente, para que un replay limpio no pise los fixes de 13.752.0.
+- `migration-manifest.json` regenerado (1093 migraciones).
+
 ## [13.752.1] - 2026-08-26
 ### Baseline de esquema con el formato de Postgres 15 (el de CI)
 - `supabase/schema/baseline.sql`: normalizado al estilo de `pg_dump` 15.8 (vistas con alias calificado y espaciado de `ALTER DEFAULT PRIVILEGES`). El baseline se había regenerado con `pg_dump` 17 local, lo que producía diff falso en el job "Baseline de esquema".
