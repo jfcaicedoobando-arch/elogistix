@@ -107,21 +107,33 @@ BEGIN
 END;
 $caso4$;
 
--- ---------- CASO 5 · permisos de cotizaciones = SALES -------------------
+-- ---------- CASO 5 · permisos de cotizaciones (canon v13.750.0) ---------
+-- El canon SALES-only se amplió en v13.750.0: los roles operativos
+-- (coordinador_logistico, gerente_operaciones, operador, customer_service)
+-- también cotizan porque son quienes reciben la solicitud del cliente.
+-- Lo que sigue prohibido es que roles sin relación comercial escriban
+-- (contador, tesorero, cliente_portal, auditor, invitado).
 DO $caso5$
 DECLARE
   v_def text := pg_get_functiondef('public.puede_escribir_cotizaciones(uuid)'::regprocedure);
+  v_rol text;
 BEGIN
   IF v_def NOT LIKE '%admin_org%' THEN
     RAISE EXCEPTION 'CASO 5 FALLÓ: admin_org (dueño de organización) no puede escribir cotizaciones';
-  END IF;
-  IF v_def LIKE '%''operador''%' THEN
-    RAISE EXCEPTION 'CASO 5 FALLÓ: operador sigue con escritura en cotizaciones (fuera del canon SALES)';
   END IF;
   IF v_def NOT LIKE '%vendedor%' OR v_def NOT LIKE '%gerente_comercial%'
      OR v_def NOT LIKE '%ejecutivo_pricing%' OR v_def NOT LIKE '%super_admin%' THEN
     RAISE EXCEPTION 'CASO 5 FALLÓ: falta algún rol del canon SALES';
   END IF;
+  IF v_def NOT LIKE '%coordinador_logistico%' OR v_def NOT LIKE '%gerente_operaciones%'
+     OR v_def NOT LIKE '%''operador''%' OR v_def NOT LIKE '%customer_service%' THEN
+    RAISE EXCEPTION 'CASO 5 FALLÓ: falta algún rol operativo habilitado en v13.750.0';
+  END IF;
+  FOREACH v_rol IN ARRAY ARRAY['contador', 'tesorero', 'cliente_portal', 'auditor'] LOOP
+    IF v_def LIKE '%''' || v_rol || '''%' THEN
+      RAISE EXCEPTION 'CASO 5 FALLÓ: % obtuvo escritura en cotizaciones (fuera del canon)', v_rol;
+    END IF;
+  END LOOP;
 END;
 $caso5$;
 
