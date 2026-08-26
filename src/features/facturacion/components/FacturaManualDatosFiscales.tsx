@@ -146,6 +146,9 @@ export function FacturaManualDatosFiscales({ value, onChange, diasReadonly, dias
             </Hint>
           )}
         </div>
+        {requiereTc && ayudaTcContraMxn(value.moneda) && (
+          <p className="text-label text-muted-foreground">{ayudaTcContraMxn(value.moneda)}</p>
+        )}
       </div>
     </div>
   );
