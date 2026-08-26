@@ -50,7 +50,7 @@ describe("B.3.2 flujo Embarque → Proforma → Factura", () => {
       },
       [
         { id: "c1", cantidad: 1, precio_unitario: 1000, moneda: "USD", aplica_iva: false },
-        { id: "c2", cantidad: 2, precio_unitario: 500, moneda: "MXN" },
+        { id: "c2", cantidad: 2, precio_unitario: 500, moneda: "MXN", aplica_iva: true },
       ],
     );
     const pA2 = totalesAProforma(
@@ -85,7 +85,7 @@ describe("B.3.2 flujo Embarque → Proforma → Factura", () => {
           { numero: "X2", tipo: "40HC" },
         ],
       },
-      [{ id: "c4", cantidad: 1, precio_unitario: 250, moneda: "MXN" }],
+      [{ id: "c4", cantidad: 1, precio_unitario: 250, moneda: "MXN", aplica_iva: true }],
     );
 
     const grupos = agruparProformasPendientes([pA1, pA2, pB1]);
@@ -134,7 +134,7 @@ describe("B.3.2 flujo Embarque → Proforma → Factura", () => {
         contenedores_lista: [],
       },
       [
-        // MXN siempre lleva IVA salvo que tasa_iva_aplicada=0 lo declare exento.
+        // B-09: MXN grava sólo si el concepto lo declara (aplica_iva / tasa).
         { id: "c1", cantidad: 1, precio_unitario: 1000, moneda: "MXN", tasa_iva_aplicada: 0 },
       ],
     );

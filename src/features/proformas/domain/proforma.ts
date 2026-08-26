@@ -54,6 +54,10 @@ function tasaLineaProforma(
       ? Number(c.tasa_iva_aplicada)
       : tasaIva;
   }
+  // Precedencia B-09: el flag manda cuando declara exento. En la BD hay 285
+  // conceptos con `aplica_iva=false` y `tasa_iva_aplicada=0.16` (default de la
+  // columna, nunca editado); usar la tasa a secas los grava por error.
+  if (c.aplica_iva === false) return 0;
   return resolverTasaConcepto(c, tasaIva);
 }
 

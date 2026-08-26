@@ -89,9 +89,9 @@ describe("proforma.extra — calcularTotalesProforma USD", () => {
 });
 
 describe("proforma.extra — calcularTotalesProforma MXN", () => {
-  it("MXN siempre lleva IVA con tasa global", () => {
+  it("MXN grava sólo si el concepto aplica IVA (B-09)", () => {
     const r = calcularTotalesProforma(
-      [mkConcepto({ moneda: "MXN", cantidad: 1, precio_unitario: 1000 })],
+      [mkConcepto({ moneda: "MXN", cantidad: 1, precio_unitario: 1000, aplica_iva: true })],
       TASA,
     );
     expect(r.iva_mxn).toBeCloseTo(160, 5);

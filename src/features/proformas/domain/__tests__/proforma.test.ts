@@ -22,9 +22,9 @@ describe("calcularTotalesProforma", () => {
     });
   });
 
-  it("MXN siempre lleva IVA", () => {
+  it("MXN respeta aplica_iva del concepto (B-09)", () => {
     const conceptos: ConceptoVentaLite[] = [
-      { id: "1", cantidad: 2, precio_unitario: 100, moneda: "MXN" },
+      { id: "1", cantidad: 2, precio_unitario: 100, moneda: "MXN", aplica_iva: true },
       { id: "2", cantidad: 1, precio_unitario: 50, moneda: "MXN", aplica_iva: false },
     ];
     const r = calcularTotalesProforma(conceptos, tasa);
