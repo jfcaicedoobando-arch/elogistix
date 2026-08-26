@@ -137,8 +137,21 @@ BEGIN
   SELECT count(*) INTO visible FROM public.facturas WHERE id = fac_a;
   PERFORM pg_temp.assert(visible = 0, 'portal_b NO debe ver factura de cli_a');
 
+  -- ════════════════════════════════════════════════════════════════════════
+  -- QA-R2: el portal NO debe ver registros en papelera (deleted_at)
+  -- ════════════════════════════════════════════════════════════════════════
   PERFORM pg_temp.as_postgres();
-  RAISE NOTICE '✓ test_rls_portal_intra_org: 10 aserciones OK';
+  UPDATE public.facturas            SET deleted_at = now() WHERE id = fac_a;
+  UPDATE public.documentos_embarque SET deleted_at = now() WHERE id = doc_a;
+
+  PERFORM pg_temp.as_user(portal_a);
+  SELECT count(*) INTO visible FROM public.facturas WHERE id = fac_a;
+  PERFORM pg_temp.assert(visible = 0, 'portal_a NO debe ver una factura en papelera');
+  SELECT count(*) INTO visible FROM public.documentos_embarque WHERE id = doc_a;
+  PERFORM pg_temp.assert(visible = 0, 'portal_a NO debe ver un documento en papelera');
+
+  PERFORM pg_temp.as_postgres();
+  RAISE NOTICE '✓ test_rls_portal_intra_org: 12 aserciones OK';
 END;
 $$;
 
