@@ -6,6 +6,7 @@ import {
   type ImportPreview,
   type ImportRowError,
   type ImportRowResult,
+  sanitizeRow,
   type Row,
 } from "./importSchemasShared";
 
@@ -120,7 +121,8 @@ export function mapProveedorRows(
 
   rows.forEach((raw, idx) => {
     const rowNumber = idx + 2;
-    const effective: Row = { ...raw };
+    // N-05: neutraliza fórmulas de Excel antes de validar.
+    const effective: Row = sanitizeRow(raw);
     if (!effective.categoria) effective.categoria = "Logistico";
     if (!effective.tipo && defaultTipo && effective.categoria === "Logistico") {
       effective.tipo = defaultTipo;
