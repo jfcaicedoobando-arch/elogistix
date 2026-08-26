@@ -24,11 +24,20 @@ export interface BanxicoTcResult {
 /**
  * Devuelve una mutación que consulta el TC DOF de Banxico y ejecuta `onTC`
  * con el valor. Auto-guarda a través del callback (no requiere botón manual).
+ *
+ * B-03: `fechaEmision` (ISO `YYYY-MM-DD`) consulta la Publicación DOF vigente
+ * en ESA fecha. Sin ella se usa la de hoy, lo que valúa mal los documentos
+ * capturados con fecha pasada.
  */
-export function useBanxicoTipoCambio(moneda: string, onTC: (tc: number | null) => void) {
+export function useBanxicoTipoCambio(
+  moneda: string,
+  onTC: (tc: number | null) => void,
+  fechaEmision?: string | null,
+) {
   return useMutation({
     mutationFn: async (): Promise<BanxicoTcResult> => {
-      const rates = await fetchExchangeRates();
+      const fecha = fechaEmision && /^\d{4}-\d{2}-\d{2}$/.test(fechaEmision) ? fechaEmision : undefined;
+      const rates = await fetchExchangeRates(fecha);
       // FIX-10: el fallback jamás se usa en flujos fiscales; forzar reintento.
       if (rates.esFallback) {
         throw new Error(
