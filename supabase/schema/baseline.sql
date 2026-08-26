@@ -8003,6 +8003,11 @@ CREATE FUNCTION public.cotizaciones_guard_en_operacion() RETURNS trigger
     SET search_path TO 'public'
     AS $$
 BEGIN
+  -- QA-R2 R-04: procesos internos de sincronización (p.ej.
+  -- recalcular_subtotal_cotizacion) levantan esta GUC transaccional.
+  IF current_setting('app.cotizacion_sync', true) = '1' THEN
+    RETURN NEW;
+  END IF;
   IF (OLD.estado = 'En operación'::public.estado_cotizacion OR OLD.embarque_id IS NOT NULL)
      AND (NEW.subtotal IS DISTINCT FROM OLD.subtotal
        OR NEW.moneda IS DISTINCT FROM OLD.moneda
@@ -18670,6 +18675,9 @@ BEGIN
     NULLIF(CASE WHEN v_moneda = 'USD' THEN v_t.subtotal_mxn ELSE v_t.subtotal_usd END, 0),
     0
   );
+  -- QA-R2 R-04: el recálculo deriva el subtotal de los conceptos; no es una
+  -- edición comercial, bypass transaccional del guard de cotización congelada.
+  PERFORM set_config('app.cotizacion_sync', '1', true);
   UPDATE public.cotizaciones
      SET subtotal = v_sub, updated_at = now()
    WHERE id = p_cotizacion_id;
