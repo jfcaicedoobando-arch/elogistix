@@ -12,17 +12,25 @@ export function toggleVinculoReducer(
   prev: VinculosState,
   c: ConceptoCostoAbierto,
   checked: boolean,
+  /**
+   * Monto cotizado ya convertido a la moneda de la factura. Es la base contra la
+   * que se calculan los ajustes de costo; si el costo está en otra moneda hay
+   * que pasarlo convertido, o el delta sería un ajuste fantasma (872.57 − 51).
+   */
+  montoBaseEnMonedaFactura?: number,
 ): VinculosState {
   const next = { ...prev };
   if (!checked) { delete next[c.id]; return next; }
+  const base = typeof montoBaseEnMonedaFactura === "number" ? montoBaseEnMonedaFactura : c.monto;
   next[c.id] = {
     embarqueId: c.embarque_id,
     descripcion: c.concepto,
-    monto: c.monto,
-    montoOriginal: c.monto,
+    monto: base,
+    montoOriginal: base,
   };
   return next;
 }
+
 
 export function setVinculoMontoReducer(
   prev: VinculosState,

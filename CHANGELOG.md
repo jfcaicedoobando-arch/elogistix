@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.747.1] - 2026-08-26
+### Vinculación multi-moneda sin ajuste fantasma
+- Al vincular un costo cotizado en otra moneda (p. ej. 51 USD facturados como 872.57 MXN), la base de comparación se guarda ya convertida a la moneda de la factura: se elimina el ajuste de costo falso de ~821 que inflaba el embarque.
+
 ## [13.747.0] - 2026-08-26
 ### Integridad selectiva de operaciones y finanzas
 - Se corrigen B-01, B-02, B-04, B-06, B-11, B-17, B-18, B-20 y B-25: bloqueo de cancelación con CxC/CxP vivas, bajas con dependencias, identidad de auditoría real, documentos operados inmutables, fechas contables de NC y aging en horario de México.

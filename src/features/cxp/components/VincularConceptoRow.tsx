@@ -26,7 +26,7 @@ import type { SeleccionLinea } from "@/features/cxp/types";
 interface Props {
   concepto: ConceptoCostoAbierto;
   seleccion: SeleccionLinea | undefined;
-  onToggle: (concepto: ConceptoCostoAbierto, checked: boolean) => void;
+  onToggle: (concepto: ConceptoCostoAbierto, checked: boolean, montoBase?: number) => void;
   onChangeMonto: (conceptoId: string, monto: number) => void;
   /** Moneda de la factura que se está capturando. */
   facturaMoneda: string;
@@ -61,11 +61,12 @@ export function VincularConceptoRow({
 
 
   const handleToggle = (v: boolean) => {
-    onToggle(it, v);
-    if (v && !mismaMoneda && cotizadoEnFactura !== null) {
-      onChangeMonto(it.id, cotizadoEnFactura);
-    }
+    // La base del vínculo se guarda SIEMPRE en la moneda de la factura, para que
+    // el ajuste de costo no incluya la diferencia de conversión.
+    const base = !mismaMoneda && cotizadoEnFactura !== null ? cotizadoEnFactura : undefined;
+    onToggle(it, v, base);
   };
+
 
   return (
     <div className="px-3 py-2 flex items-center gap-3 text-body">

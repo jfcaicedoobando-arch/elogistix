@@ -37,7 +37,7 @@ interface Props {
   organizationId: string | null;
   /** Map conceptoCostoId → {monto} (solo presentes los marcados). */
   seleccion: Record<string, SeleccionLinea>;
-  onToggle: (concepto: ConceptoCostoAbierto, checked: boolean) => void;
+  onToggle: (concepto: ConceptoCostoAbierto, checked: boolean, montoBase?: number) => void;
   onChangeMonto: (conceptoId: string, monto: number) => void;
   /** Aplica de golpe una lista de sugerencias del motor de matching. */
   onAplicarSugerencias?: (sugs: ReadonlyArray<{

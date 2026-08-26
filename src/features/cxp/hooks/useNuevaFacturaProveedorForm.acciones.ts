@@ -19,8 +19,9 @@ export function crearAccionesVinculos(
   setVinculos: Dispatch<SetStateAction<VinculosState>>,
 ) {
   return {
-    toggleVinculo: (c: ConceptoCostoAbierto, checked: boolean) =>
-      setVinculos((prev) => toggleVinculoReducer(prev, c, checked)),
+    toggleVinculo: (c: ConceptoCostoAbierto, checked: boolean, montoBase?: number) =>
+      setVinculos((prev) => toggleVinculoReducer(prev, c, checked, montoBase)),
+
     setVinculoMonto: (conceptoId: string, monto: number) =>
       setVinculos((prev) => setVinculoMontoReducer(prev, conceptoId, monto)),
     aplicarSugerencias: (sugs: ReadonlyArray<SugerenciaAplicable>) =>
