@@ -108,9 +108,13 @@ export function sumarEnMoneda(
   // aritmética equivalente a `currency(x, { precision: 2 }).add(...)` pero sin
   // instanciar un objeto por fila (hot path en tablas de miles de conceptos).
   if (homogenea) {
+    // B-21: el redondeo por fila usa la primitiva canónica `roundMoney`
+    // ("half away from zero", idéntica a `ROUND(numeric,2)` de Postgres). Con
+    // `Math.round(monto * 100)` los montos negativos divergían de la BD
+    // (−2.505 → −2.50 aquí vs −2.51 en Postgres).
     let centavos = 0;
     for (let i = 0; i < items.length; i++) {
-      centavos += Math.round(items[i].monto * 100);
+      centavos += Math.round(roundMoney(items[i].monto) * 100);
     }
     return { total: centavos / 100, filasMixtas, homogenea };
   }
@@ -140,7 +144,10 @@ export function sumarEnMoneda(
       }
       factores.set(moneda, factor);
     }
-    centavos += Math.round(currency(item.monto, { precision: 2 }).multiply(factor).value * 100);
+    // B-21: la fila convertida se redondea con la primitiva exacta.
+    centavos += Math.round(
+      roundMoney(currency(item.monto, { precision: 2 }).multiply(factor).value) * 100,
+    );
   }
   const total = centavos / 100;
 
