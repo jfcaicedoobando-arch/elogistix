@@ -22,6 +22,8 @@ const MOTIVOS: { value: Motivo; label: string }[] = [
 ];
 
 interface Props {
+  /** B-24: fecha de emisión de la factura original — cota inferior de la NC. */
+  fechaMinima?: string | null;
   fecha: string;
   setFecha: (v: string) => void;
   motivo: Motivo;
@@ -35,13 +37,22 @@ interface Props {
 }
 
 export function NotaCreditoCamposFiscales(props: Props) {
-  const { fecha, setFecha, motivo, setMotivo, usoCfdi, setUsoCfdi, formaPago, setFormaPago, descripcion, setDescripcion } = props;
+  const { fechaMinima, fecha, setFecha, motivo, setMotivo, usoCfdi, setUsoCfdi, formaPago, setFormaPago, descripcion, setDescripcion } = props;
   return (
     <>
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1.5">
           <Label htmlFor="nc-fecha">Fecha *</Label>
-          <DatePickerMx value={fecha} onChange={setFecha} className="w-full" />
+          <DatePickerMx
+            value={fecha}
+            onChange={setFecha}
+            className="w-full"
+            minDate={fechaMinima ? new Date(`${fechaMinima.slice(0, 10)}T12:00:00`) : undefined}
+            maxDate={new Date()}
+          />
+          <p className="text-label text-muted-foreground">
+            No puede ser anterior a la emisión de la factura ni futura.
+          </p>
         </div>
         <div className="space-y-1.5">
           <Label>Motivo SAT *</Label>
