@@ -16,7 +16,7 @@ import type { CostoCotizacion } from "@/features/cotizacion/hooks";
 import { useRegisterBreadcrumbLabel } from "@/lib/contexts/BreadcrumbContext";
 import { motivoBloqueoEdicionCotizacion } from "@/features/cotizacion/domain/estadosEditables";
 import { ErrorState } from "@/components/shared/states/ErrorState";
-import { EmptyState } from "@/components/shared/states/EmptyState";
+import EmptyState from "@/components/empty/EmptyState";
 import { Lock } from "lucide-react";
 
 
@@ -57,7 +57,7 @@ export default function EditarCotizacion() {
           icon={Lock}
           title="Edición bloqueada"
           description={motivoBloqueo}
-          action={{ label: "Ver cotización", onClick: () => navigate(`/cotizaciones/${id}`) }}
+          primaryAction={{ label: "Ver cotización", onClick: () => navigate(`/cotizaciones/${id}`) }}
         />
       </PageContainer>
     );
