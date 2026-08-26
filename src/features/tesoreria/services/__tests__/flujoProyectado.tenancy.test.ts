@@ -13,16 +13,17 @@ describe("fetchLiquidacionesPendientes — tenancy", () => {
     mock.setTableResult("liquidaciones_comision", { data: [], error: null });
   });
 
-  it("filtra por organization_id y fecha_pago IS NULL (sin deleted_at)", async () => {
+  it("filtra por organization_id, fecha_pago IS NULL y deleted_at IS NULL", async () => {
     await fetchLiquidacionesPendientes("org-b");
     const call = mock.tableCalls.find((c) => c.table === "liquidaciones_comision");
     expect(call).toBeDefined();
     const pairs = call!.ops.map((op, i) => ({ op, args: call!.opArgs[i] }));
     expect(pairs.some((p) => p.op === "eq" && p.args[0] === "organization_id" && p.args[1] === "org-b"))
       .toBe(true);
-    // liquidaciones_comision no tiene columna deleted_at; sólo fecha_pago IS NULL
+    // v13.758.0 (D-01b): liquidaciones_comision SÍ tiene borrado lógico; una
+    // liquidación borrada no debe seguir proyectando flujo de salida.
     const isCalls = pairs.filter((p) => p.op === "is");
-    expect(isCalls.some((p) => p.args[0] === "deleted_at")).toBe(false);
+    expect(isCalls.some((p) => p.args[0] === "deleted_at" && p.args[1] === null)).toBe(true);
     expect(isCalls.some((p) => p.args[0] === "fecha_pago" && p.args[1] === null)).toBe(true);
   });
 
