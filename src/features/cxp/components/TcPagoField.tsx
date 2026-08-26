@@ -7,6 +7,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { formatDate } from "@/lib/formatters";
+import {
+  ayudaTcContraMxn,
+  etiquetaTcContraMxn,
+  TC_PLACEHOLDER_MXN,
+} from "@/lib/financial/tcPar";
 
 interface Props {
   tc: string;
@@ -14,24 +19,30 @@ interface Props {
   tcDof?: { usdMxn: number; fecha: string; exacto: boolean } | null;
   cargandoTcDof?: boolean;
   aplicarTcDof?: () => void;
+  /** Moneda extranjera del pago o de la factura, para rotular el par. */
+  moneda?: string | null;
 }
 
-export function TcPagoField({ tc, setTc, tcDof, cargandoTcDof, aplicarTcDof }: Props) {
+export function TcPagoField({ tc, setTc, tcDof, cargandoTcDof, aplicarTcDof, moneda }: Props) {
   const coincide = !!tcDof && Number(tc) === tcDof.usdMxn;
+  const etiqueta = etiquetaTcContraMxn(moneda);
+  const ayuda = ayudaTcContraMxn(moneda);
 
   return (
     <div className="space-y-1">
-      <Label htmlFor="tc-pago">Tipo de cambio</Label>
+      <Label htmlFor="tc-pago">{etiqueta}</Label>
       <Input
         id="tc-pago"
         type="number"
         step="0.0001"
         inputMode="decimal"
-        placeholder="0.00"
+        placeholder={TC_PLACEHOLDER_MXN}
         className="text-right tabular-nums"
+        aria-label={etiqueta}
         value={tc}
         onChange={(e) => setTc(e.target.value)}
       />
+      {ayuda && <p className="text-label text-muted-foreground">{ayuda}</p>}
       {cargandoTcDof && !tcDof && (
         <p className="text-label text-muted-foreground">Consultando DOF…</p>
       )}
