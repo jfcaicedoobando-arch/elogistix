@@ -11142,7 +11142,7 @@ export type Database = {
         | "pendiente"
         | "aprobada"
         | "rechazada"
-      estado_comision: "Devengada" | "Liquidada" | "Cancelada"
+      estado_comision: "Devengada" | "Liquidada" | "Cancelada" | "Por recuperar"
       estado_conciliacion: "Pendiente" | "Conciliado" | "Ignorado"
       estado_cotizacion:
         | "Borrador"
@@ -11444,7 +11444,7 @@ export const Constants = {
         "aprobada",
         "rechazada",
       ],
-      estado_comision: ["Devengada", "Liquidada", "Cancelada"],
+      estado_comision: ["Devengada", "Liquidada", "Cancelada", "Por recuperar"],
       estado_conciliacion: ["Pendiente", "Conciliado", "Ignorado"],
       estado_cotizacion: [
         "Borrador",
