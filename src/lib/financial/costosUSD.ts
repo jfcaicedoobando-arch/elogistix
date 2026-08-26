@@ -15,7 +15,7 @@
 
 import currency from "currency.js";
 import { factorEntreMonedas } from "@/lib/financial/convertir";
-import { type Moneda } from "@/lib/financial/financialUtils";
+import { roundMoney, type Moneda } from "@/lib/financial/financialUtils";
 
 interface MontoEnMoneda {
   monto: number;
