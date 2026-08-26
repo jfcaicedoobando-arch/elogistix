@@ -174,4 +174,16 @@ export const LC_CODE_MESSAGES_FINANCIERO: Record<string, string> = {
     "Ese cambio de estado de la nota de crédito no está permitido.",
   LC_NC_UUID_REQUERIDO:
     "La nota de crédito necesita su UUID fiscal (CFDI de egreso) antes de timbrarse o aplicarse.",
+  LC_CANCEL_CON_CXC:
+    "No puedes cancelar: la factura tiene pagos de cliente registrados. Cancela o elimina primero los pagos.",
+  LC_CANCEL_CON_CXP:
+    "No puedes cancelar: la factura de proveedor tiene pagos registrados. Cancela o elimina primero los pagos.",
+  LC_FACTURA_INMUTABLE:
+    "La factura ya está timbrada: sus datos fiscales y conceptos no se pueden modificar. Emite una nota de crédito o una sustitución.",
+  LC_NC_FECHA_INVALIDA:
+    "La fecha de la nota de crédito no puede ser anterior a la emisión de la factura ni una fecha futura.",
+  LC_BAJA_CON_DEPENDENCIAS:
+    "No se puede dar de baja: el registro tiene documentos u operaciones asociadas. Cancela o reasigna esas dependencias primero.",
+  LC_COTIZACION_EN_OPERACION:
+    "La cotización ya está en operación (tiene embarque o proforma): no se puede modificar. Crea una nueva versión.",
 };
