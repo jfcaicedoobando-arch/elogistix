@@ -1,5 +1,17 @@
 # Changelog
 
+## [13.753.0] - 2026-08-26
+### QA ronda 2 · Etapa 1: candados validados de la auditoría
+- Cancelar un embarque con facturas de cliente con saldo o facturas de proveedor vivas ahora se bloquea también en escritura directa a tabla (nuevo trigger `trg_embarques_cancelacion_cxc_cxp`), no sólo dentro de la RPC (D-02).
+- Al cancelar un embarque se liberan sus cotizaciones ligadas: `embarque_id` a nulo y `En operación` → `Aceptada` (R-02).
+- La baja de un cliente ya no cuenta embarques `Cancelado` ni cotizaciones en `Borrador` como dependencias vivas (D-03).
+- Folio de proveedor único por organización + proveedor normalizando mayúsculas y espacios, ignorando papelera y canceladas (D-04).
+- Storage: la lectura del bucket `documentos` exige que el documento y su embarque no estén en papelera (W-09).
+- Portal de cliente: las políticas de lectura de embarques y cotizaciones excluyen registros en papelera (N-03).
+- Fuera de alcance por riesgo de regresión (documentado en la auditoría): D-01, D-05, N-07, W-08, R-01, R-04.
+
+
+
 ## [13.752.2] - 2026-08-26
 ### Higiene de migraciones: permisos, espejos y manifiesto al día
 - Nueva migración `20260901002100`: re-aplica los permisos explícitos (`REVOKE` a público/anónimo + `GRANT EXECUTE` a sesión iniciada y sistema) de `reabrir_embarque` y `avanzar_estado_embarque`, que se habían re-emitido sin ese bloque (H6).
