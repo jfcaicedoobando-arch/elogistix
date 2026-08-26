@@ -5,11 +5,31 @@
 import { z } from "zod";
 import { nonEmpty, uuidSchema } from "./mutationSchemas.shared";
 
+/**
+ * B-23: topes de magnitud. No convertimos los objetos a `.strict()` a propósito
+ * — las mutaciones envían legítimamente más columnas que las listadas —, pero sí
+ * acotamos los números para que un dedazo (o un `NaN`/`Infinity`) no escriba
+ * importes absurdos en la base.
+ */
+const MONTO_MAX = 999_999_999.99;
+const CANTIDAD_MAX = 1_000_000;
+
+const montoSchema = (label: string) =>
+  z
+    .number()
+    .finite(`${label}: debe ser un número válido.`)
+    .nonnegative(`${label}: no puede ser negativo.`)
+    .max(MONTO_MAX, `${label}: excede el máximo permitido (999,999,999.99).`);
+
 const conceptoVentaSchema = z.object({
   descripcion: nonEmpty("Descripción del concepto", 300),
-  cantidad: z.number().nonnegative("Cantidad: no puede ser negativa."),
-  precio_unitario: z.number().nonnegative("Precio unitario: no puede ser negativo."),
-  total: z.number().nonnegative("Total: no puede ser negativo."),
+  cantidad: z
+    .number()
+    .finite("Cantidad: debe ser un número válido.")
+    .nonnegative("Cantidad: no puede ser negativa.")
+    .max(CANTIDAD_MAX, "Cantidad: excede el máximo permitido (1,000,000)."),
+  precio_unitario: montoSchema("Precio unitario"),
+  total: montoSchema("Total"),
 }).passthrough();
 
 const cotizacionBaseSchema = z.object({
@@ -28,7 +48,7 @@ const cotizacionBaseSchema = z.object({
     .int("Vigencia: debe ser entero.")
     .min(1, "Vigencia: mínimo 1 día.")
     .max(365, "Vigencia: máximo 365 días."),
-  subtotal: z.number().nonnegative("Subtotal: no puede ser negativo."),
+  subtotal: montoSchema("Subtotal"),
 }).passthrough();
 
 export const cotizacionDraftInputSchema = cotizacionBaseSchema.extend({
@@ -49,8 +69,8 @@ export const cotizacionUpdateSchema = cotizacionBaseSchema
   .partial()
   .extend({
     conceptos_venta: z.array(conceptoVentaSchema).optional(),
-    total: z.number().nonnegative("Total: no puede ser negativo.").optional(),
-    iva: z.number().nonnegative("IVA: no puede ser negativo.").optional(),
+    total: montoSchema("Total").optional(),
+    iva: montoSchema("IVA").optional(),
     tipo_cambio: z.number().positive("Tipo de cambio: debe ser mayor a cero.").optional().nullable(),
   })
   .passthrough();
