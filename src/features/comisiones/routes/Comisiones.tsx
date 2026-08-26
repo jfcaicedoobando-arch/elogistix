@@ -33,7 +33,7 @@ import { FILTRO_ANCHO } from "@/lib/ui/filterWidths";
 import { useDocumentTitle } from "@/hooks/shared";
 
 
-const ESTADO_VALUES = ["todos", "Devengada", "Liquidada", "Cancelada"] as const;
+const ESTADO_VALUES = ["todos", "Devengada", "Liquidada", "Cancelada", "Por recuperar"] as const;
 type EstadoUrl = typeof ESTADO_VALUES[number];
 
 interface ClientFilters extends Record<string, string> {
