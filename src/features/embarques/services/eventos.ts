@@ -24,7 +24,7 @@ const EVENTO_COLS = "id, embarque_id, tipo, descripcion, ubicacion, fecha, usuar
 export async function fetchEventosEmbarque(embarqueId: string): Promise<EventoEmbarqueRow[]> {
   const { data, error } = await supabase
     .from('eventos_embarque')
-    .select(EVENTO_COLS)
+    .select(EVENTO_COLS).is("deleted_at", null)
     .eq('embarque_id', embarqueId)
     .order('fecha', { ascending: false })
     // B-24: tabla append-only; sin límite la query crece sin tope.

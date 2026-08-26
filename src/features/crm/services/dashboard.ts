@@ -94,7 +94,7 @@ export async function fetchCrmDashboard(userId: string | undefined): Promise<Crm
       .lte("created_at", hace7.toISOString())
       .order("created_at", { ascending: true })
       .limit(10),
-    supabase.from("crm_etapas_pipeline").select("id, nombre, color, tipo, orden").eq("activa", true).order("orden", { ascending: true }),
+    supabase.from("crm_etapas_pipeline").select("id, nombre, color, tipo, orden").is("deleted_at", null).eq("activa", true).order("orden", { ascending: true }),
   ]);
 
   const opsAbiertas = (opsAbiertasQ.data ?? []) as OpRow[];

@@ -43,10 +43,10 @@ describe("fetchPresupuestoVsReal — tenancy", () => {
     }
   });
 
-  // Regresión v13.300.42 — el crash del Dashboard Ejecutivo se debía a
-  // `column liquidaciones_comision.deleted_at does not exist`. La tabla
-  // no tiene borrado lógico, así que la query NO debe filtrar por deleted_at.
-  it("NO filtra liquidaciones_comision por deleted_at (columna inexistente)", async () => {
+  // v13.758.0 (D-01b) — `liquidaciones_comision` YA tiene borrado lógico
+  // (`deleted_at`/`deleted_by`), así que el real ejecutado debe excluir las
+  // liquidaciones borradas. Antes (v13.300.42) la columna no existía.
+  it("filtra liquidaciones_comision por deleted_at IS NULL", async () => {
     await fetchPresupuestoVsReal("2026-06", "org-c");
     const call = mock.tableCalls.find((c) => c.table === "liquidaciones_comision");
     expect(call).toBeDefined();
@@ -54,8 +54,8 @@ describe("fetchPresupuestoVsReal — tenancy", () => {
       .map((op, i) => ({ op, args: call!.opArgs[i] }))
       .filter((p) => p.op === "is");
     expect(
-      isCalls.some((p) => p.args[0] === "deleted_at"),
-      "liquidaciones_comision no debe filtrarse por deleted_at",
-    ).toBe(false);
+      isCalls.some((p) => p.args[0] === "deleted_at" && p.args[1] === null),
+      "una liquidación borrada no debe contar como gasto real",
+    ).toBe(true);
   });
 });

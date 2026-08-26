@@ -125,7 +125,7 @@ export async function obtenerFacturasConRep(ids: string[]): Promise<string[]> {
   if (ids.length === 0) return [];
   const { data, error } = await supabase
     .from("facturas")
-    .select("id, metodo_pago, uuid_fiscal")
+    .select("id, metodo_pago, uuid_fiscal").is("deleted_at", null)
     .in("id", ids);
   if (error) throw error;
   return (data ?? [])

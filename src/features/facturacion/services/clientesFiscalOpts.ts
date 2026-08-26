@@ -16,7 +16,7 @@ export interface ClienteFiscalOpt {
 export async function fetchClientesFiscalOpts(): Promise<ClienteFiscalOpt[]> {
   const { data, error } = await supabase
     .from("clientes")
-    .select("id, nombre, rfc, codigo_postal, regimen_fiscal, uso_cfdi_default, dias_credito, limite_credito_mxn")
+    .select("id, nombre, rfc, codigo_postal, regimen_fiscal, uso_cfdi_default, dias_credito, limite_credito_mxn").is("deleted_at", null)
     .order("nombre")
     .limit(CAP_REPORTE);
   if (error) throw error;

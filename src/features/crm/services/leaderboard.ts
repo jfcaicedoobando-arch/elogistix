@@ -39,7 +39,7 @@ export async function fetchLeaderboardRaw(
       .is("deleted_at", null)
       .gte("fecha_cierre_real", inicioMesISO)
       .limit(LIMITE_OPS_MES), // defensivo: oportunidades cerradas del mes por org
-    supabase.from("crm_etapas_pipeline").select("id, tipo"),
+    supabase.from("crm_etapas_pipeline").select("id, tipo").is("deleted_at", null),
   ]);
   if (cuotasR.error) throw cuotasR.error;
   if (opsR.error) throw opsR.error;

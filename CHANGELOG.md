@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.758.0] - 2026-08-26
+### D-01b · Guardia automática contra "registros fantasma"
+- Nuevo auditor `bun run audit:soft-delete`: revisa todo `src/` y falla si un listado, contador o buscador nuevo lee una tabla con borrado lógico sin `deleted_at IS NULL`. Corre en CI junto a las demás auditorías.
+- Excepciones legítimas (Papelera) se declaran con `// SOFT-DELETE-OK: motivo`; la deuda histórica vive en `scripts/audit-soft-delete-baseline.json` y sólo puede bajar.
+- Corregidas 28 lecturas reales que aún mostraban registros eliminados: comisiones y liquidaciones, costos de cotización, conciliación bancaria BBVA, contenedores y eventos de embarque, expedientes y BL master, tablero del operador, CRM (Cliente 360, tablero, forecast, leaderboard, buscador de prospectos), clientes fiscales, facturas masivas/sustitutas/cobro en lote, portal del agente, presupuesto vs real, conceptos de proforma y saldos de tesorería.
+
 ## [13.757.0] - 2026-08-26
 ### D-01 · Candado a la papelera (`deleted_at`)
 - Un registro eliminado ya sólo se puede restaurar desde la Papelera (RPC con validación de rol y organización); se bloquea la restauración directa por la API de datos (`LC_RESTORE_DIRECTO`).

@@ -21,7 +21,7 @@ export async function fetchLiquidaciones(): Promise<LiquidacionRow[]> {
   return unwrapOr(
     supabase
       .from("liquidaciones_comision")
-      .select(LIQUIDACION_COLUMNS)
+      .select(LIQUIDACION_COLUMNS).is("deleted_at", null)
       .order("periodo", { ascending: false })
       .order("created_at", { ascending: false })
       .limit(CAP_LISTA),
@@ -130,7 +130,7 @@ export async function fetchLiquidadoMxnPorMes(periodo?: string): Promise<number>
   const rows = (await unwrapOr(
     supabase
       .from("liquidaciones_comision")
-      .select("total_mxn")
+      .select("total_mxn").is("deleted_at", null)
       .not("fecha_pago", "is", null)
       .gte("fecha_pago", desde)
       .lt("fecha_pago", hasta)

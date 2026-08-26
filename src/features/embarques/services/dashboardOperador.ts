@@ -93,7 +93,7 @@ export async function fetchSinTrackingOperador(email: string): Promise<SinTracki
   const ids = embarques.map((e) => e.id);
   const { data: eventos, error: eErr } = await supabase
     .from("eventos_embarque")
-    .select("embarque_id, fecha")
+    .select("embarque_id, fecha").is("deleted_at", null)
     .in("embarque_id", ids)
     .order("fecha", { ascending: false })
     // EC-05: límite defensivo (200 embarques x ~10 eventos esperados).
