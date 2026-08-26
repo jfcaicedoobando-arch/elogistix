@@ -59,3 +59,4 @@ supabase/tests/cxp_rechazo_libera_embarque.sql
 supabase/tests/cxp_pago_embarque_cerrado.sql
 supabase/tests/cxp_cancelacion_libera_embarque.sql
 supabase/tests/embarque_cerrado_no_cancelable.sql
+supabase/tests/d01_guard_soft_delete.sql

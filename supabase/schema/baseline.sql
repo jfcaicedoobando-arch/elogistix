@@ -1961,6 +1961,40 @@ BEGIN
   RETURN NEW;
 END;
 $$;
+CREATE FUNCTION public._guard_soft_delete() RETURNS trigger
+    LANGUAGE plpgsql
+    SET search_path TO 'public'
+    AS $$
+DECLARE
+  v_new jsonb;
+  v_uid uuid;
+BEGIN
+  IF current_user NOT IN ('authenticated', 'anon') THEN
+    RETURN NEW;
+  END IF;
+  IF COALESCE(current_setting('app.papelera_restore', true), 'off') = 'on' THEN
+    RETURN NEW;
+  END IF;
+  IF NEW.deleted_at IS NOT DISTINCT FROM OLD.deleted_at THEN
+    RETURN NEW;
+  END IF;
+  IF OLD.deleted_at IS NOT NULL AND NEW.deleted_at IS NULL THEN
+    RAISE EXCEPTION 'LC_RESTORE_DIRECTO: para restaurar este registro usa la Papelera'
+      USING ERRCODE = 'P0001';
+  END IF;
+  IF OLD.deleted_at IS NOT NULL AND NEW.deleted_at IS NOT NULL THEN
+    RAISE EXCEPTION 'LC_DELETED_AT_INMUTABLE: la fecha de borrado de un registro en papelera no se puede modificar'
+      USING ERRCODE = 'P0001';
+  END IF;
+  v_uid := auth.uid();
+  v_new := to_jsonb(NEW) || jsonb_build_object('deleted_at', now());
+  IF v_new ? 'deleted_by' AND v_uid IS NOT NULL THEN
+    v_new := v_new || jsonb_build_object('deleted_by', v_uid);
+  END IF;
+  NEW := jsonb_populate_record(NEW, v_new);
+  RETURN NEW;
+END;
+$$;
 CREATE FUNCTION public._log_provisioning_step(p_org_id uuid, p_source text, p_accion text, p_entidad text, p_filas integer, p_detalles jsonb DEFAULT '{}'::jsonb) RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
@@ -20796,7 +20830,8 @@ BEGIN
   ) THEN
     RAISE EXCEPTION 'Permisos insuficientes';
   END IF;
-  -- Restaurar hijos del mismo lote (mismo deleted_at exacto)
+  -- D-01: puerta oficial de restauración.
+  PERFORM set_config('app.papelera_restore', 'on', true);
   UPDATE public.conceptos_venta       SET deleted_at = NULL, deleted_by = NULL WHERE embarque_id = p_embarque_id AND deleted_at = v_deleted_at;
   UPDATE public.conceptos_costo       SET deleted_at = NULL, deleted_by = NULL WHERE embarque_id = p_embarque_id AND deleted_at = v_deleted_at;
   UPDATE public.documentos_embarque   SET deleted_at = NULL, deleted_by = NULL WHERE embarque_id = p_embarque_id AND deleted_at = v_deleted_at;
@@ -20805,8 +20840,8 @@ BEGIN
   UPDATE public.embarque_contenedores SET deleted_at = NULL, deleted_by = NULL WHERE embarque_id = p_embarque_id AND deleted_at = v_deleted_at;
   UPDATE public.facturas              SET deleted_at = NULL, deleted_by = NULL WHERE embarque_id = p_embarque_id AND deleted_at = v_deleted_at;
   UPDATE public.seguros_embarque      SET deleted_at = NULL                    WHERE embarque_id = p_embarque_id AND deleted_at = v_deleted_at;
-  -- Restaurar el embarque
   UPDATE public.embarques SET deleted_at = NULL, deleted_by = NULL WHERE id = p_embarque_id;
+  PERFORM set_config('app.papelera_restore', 'off', true);
 END;
 $$;
 CREATE FUNCTION public.restore_record(_table text, _id uuid) RETURNS void
@@ -20842,8 +20877,11 @@ BEGIN
   ) THEN
     RAISE EXCEPTION 'Permisos insuficientes';
   END IF;
+  -- D-01: puerta oficial de restauración.
+  PERFORM set_config('app.papelera_restore', 'on', true);
   EXECUTE format('UPDATE public.%I SET deleted_at = NULL, deleted_by = NULL WHERE id = $1', _table)
     USING _id;
+  PERFORM set_config('app.papelera_restore', 'off', true);
 END;
 $_$;
 CREATE FUNCTION public.retirar_factura_entrante(p_documento_id uuid) RETURNS void
@@ -26402,6 +26440,35 @@ CREATE TRIGGER trg_guard_aprobacion_proveedor_factura BEFORE UPDATE OF estado_ap
 CREATE TRIGGER trg_guard_estado_cotizacion BEFORE UPDATE OF estado ON public.cotizaciones FOR EACH ROW WHEN ((old.estado IS DISTINCT FROM new.estado)) EXECUTE FUNCTION public.guard_estado_cotizacion();
 CREATE TRIGGER trg_guard_estado_factura BEFORE UPDATE OF estado ON public.facturas FOR EACH ROW EXECUTE FUNCTION public.guard_estado_factura();
 CREATE TRIGGER trg_guard_estado_proveedor_factura BEFORE UPDATE OF estado ON public.proveedor_facturas FOR EACH ROW EXECUTE FUNCTION public.guard_estado_proveedor_factura();
+CREATE TRIGGER trg_guard_soft_delete BEFORE UPDATE ON public.clientes FOR EACH ROW EXECUTE FUNCTION public._guard_soft_delete();
+CREATE TRIGGER trg_guard_soft_delete BEFORE UPDATE ON public.conceptos_costo FOR EACH ROW EXECUTE FUNCTION public._guard_soft_delete();
+CREATE TRIGGER trg_guard_soft_delete BEFORE UPDATE ON public.conceptos_factura FOR EACH ROW EXECUTE FUNCTION public._guard_soft_delete();
+CREATE TRIGGER trg_guard_soft_delete BEFORE UPDATE ON public.conceptos_venta FOR EACH ROW EXECUTE FUNCTION public._guard_soft_delete();
+CREATE TRIGGER trg_guard_soft_delete BEFORE UPDATE ON public.contactos_cliente FOR EACH ROW EXECUTE FUNCTION public._guard_soft_delete();
+CREATE TRIGGER trg_guard_soft_delete BEFORE UPDATE ON public.cotizacion_costos FOR EACH ROW EXECUTE FUNCTION public._guard_soft_delete();
+CREATE TRIGGER trg_guard_soft_delete BEFORE UPDATE ON public.cotizaciones FOR EACH ROW EXECUTE FUNCTION public._guard_soft_delete();
+CREATE TRIGGER trg_guard_soft_delete BEFORE UPDATE ON public.crm_actividades FOR EACH ROW EXECUTE FUNCTION public._guard_soft_delete();
+CREATE TRIGGER trg_guard_soft_delete BEFORE UPDATE ON public.crm_comentarios_oportunidad FOR EACH ROW EXECUTE FUNCTION public._guard_soft_delete();
+CREATE TRIGGER trg_guard_soft_delete BEFORE UPDATE ON public.crm_etapas_pipeline FOR EACH ROW EXECUTE FUNCTION public._guard_soft_delete();
+CREATE TRIGGER trg_guard_soft_delete BEFORE UPDATE ON public.crm_leads FOR EACH ROW EXECUTE FUNCTION public._guard_soft_delete();
+CREATE TRIGGER trg_guard_soft_delete BEFORE UPDATE ON public.crm_motivos_perdida FOR EACH ROW EXECUTE FUNCTION public._guard_soft_delete();
+CREATE TRIGGER trg_guard_soft_delete BEFORE UPDATE ON public.crm_oportunidades FOR EACH ROW EXECUTE FUNCTION public._guard_soft_delete();
+CREATE TRIGGER trg_guard_soft_delete BEFORE UPDATE ON public.crm_plantillas_mensaje FOR EACH ROW EXECUTE FUNCTION public._guard_soft_delete();
+CREATE TRIGGER trg_guard_soft_delete BEFORE UPDATE ON public.cuentas_bancarias FOR EACH ROW EXECUTE FUNCTION public._guard_soft_delete();
+CREATE TRIGGER trg_guard_soft_delete BEFORE UPDATE ON public.documentos_embarque FOR EACH ROW EXECUTE FUNCTION public._guard_soft_delete();
+CREATE TRIGGER trg_guard_soft_delete BEFORE UPDATE ON public.embarque_contenedores FOR EACH ROW EXECUTE FUNCTION public._guard_soft_delete();
+CREATE TRIGGER trg_guard_soft_delete BEFORE UPDATE ON public.embarques FOR EACH ROW EXECUTE FUNCTION public._guard_soft_delete();
+CREATE TRIGGER trg_guard_soft_delete BEFORE UPDATE ON public.eventos_embarque FOR EACH ROW EXECUTE FUNCTION public._guard_soft_delete();
+CREATE TRIGGER trg_guard_soft_delete BEFORE UPDATE ON public.factura_notas_credito FOR EACH ROW EXECUTE FUNCTION public._guard_soft_delete();
+CREATE TRIGGER trg_guard_soft_delete BEFORE UPDATE ON public.facturas FOR EACH ROW EXECUTE FUNCTION public._guard_soft_delete();
+CREATE TRIGGER trg_guard_soft_delete BEFORE UPDATE ON public.notas_embarque FOR EACH ROW EXECUTE FUNCTION public._guard_soft_delete();
+CREATE TRIGGER trg_guard_soft_delete BEFORE UPDATE ON public.pagos_factura FOR EACH ROW EXECUTE FUNCTION public._guard_soft_delete();
+CREATE TRIGGER trg_guard_soft_delete BEFORE UPDATE ON public.pagos_proveedor FOR EACH ROW EXECUTE FUNCTION public._guard_soft_delete();
+CREATE TRIGGER trg_guard_soft_delete BEFORE UPDATE ON public.proforma_conceptos_consolidados FOR EACH ROW EXECUTE FUNCTION public._guard_soft_delete();
+CREATE TRIGGER trg_guard_soft_delete BEFORE UPDATE ON public.proformas FOR EACH ROW EXECUTE FUNCTION public._guard_soft_delete();
+CREATE TRIGGER trg_guard_soft_delete BEFORE UPDATE ON public.proveedor_facturas FOR EACH ROW EXECUTE FUNCTION public._guard_soft_delete();
+CREATE TRIGGER trg_guard_soft_delete BEFORE UPDATE ON public.proveedor_notas_credito FOR EACH ROW EXECUTE FUNCTION public._guard_soft_delete();
+CREATE TRIGGER trg_guard_soft_delete BEFORE UPDATE ON public.seguros_embarque FOR EACH ROW EXECUTE FUNCTION public._guard_soft_delete();
 CREATE TRIGGER trg_guard_sustitucion_ciclo BEFORE INSERT OR UPDATE OF sustituye_a ON public.facturas FOR EACH ROW WHEN ((new.sustituye_a IS NOT NULL)) EXECUTE FUNCTION public.guard_sustitucion_ciclo();
 CREATE TRIGGER trg_handle_new_organization AFTER INSERT ON public.organizations FOR EACH ROW EXECUTE FUNCTION public.handle_new_organization();
 CREATE TRIGGER trg_liberar_folio_proveedor_factura AFTER UPDATE OF deleted_at ON public.proveedor_facturas FOR EACH ROW WHEN ((old.deleted_at IS DISTINCT FROM new.deleted_at)) EXECUTE FUNCTION public.tg_liberar_folio_proveedor_factura();
@@ -27661,6 +27728,9 @@ GRANT ALL ON FUNCTION public._garantia_historial_trg() TO authenticated;
 GRANT ALL ON FUNCTION public._garantia_historial_trg() TO service_role;
 GRANT ALL ON FUNCTION public._garantia_transicion_valida_trg() TO authenticated;
 GRANT ALL ON FUNCTION public._garantia_transicion_valida_trg() TO service_role;
+REVOKE ALL ON FUNCTION public._guard_soft_delete() FROM PUBLIC;
+GRANT ALL ON FUNCTION public._guard_soft_delete() TO authenticated;
+GRANT ALL ON FUNCTION public._guard_soft_delete() TO service_role;
 REVOKE ALL ON FUNCTION public._log_provisioning_step(p_org_id uuid, p_source text, p_accion text, p_entidad text, p_filas integer, p_detalles jsonb) FROM PUBLIC;
 GRANT ALL ON FUNCTION public._log_provisioning_step(p_org_id uuid, p_source text, p_accion text, p_entidad text, p_filas integer, p_detalles jsonb) TO authenticated;
 GRANT ALL ON FUNCTION public._log_provisioning_step(p_org_id uuid, p_source text, p_accion text, p_entidad text, p_filas integer, p_detalles jsonb) TO service_role;

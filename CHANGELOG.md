@@ -1,5 +1,13 @@
 # Changelog
 
+## [13.757.0] - 2026-08-26
+### D-01 · Candado a la papelera (`deleted_at`)
+- Un registro eliminado ya sólo se puede restaurar desde la Papelera (RPC con validación de rol y organización); se bloquea la restauración directa por la API de datos (`LC_RESTORE_DIRECTO`).
+- La fecha de borrado se normaliza a `now()` y `deleted_by` al usuario de la sesión: ya no se pueden falsificar fechas ni autoría.
+- La fecha de borrado de un registro que ya está en papelera es inmutable (`LC_DELETED_AT_INMUTABLE`).
+- Trigger `trg_guard_soft_delete` aplicado a las 29 tablas de la allowlist de papelera; prueba de regresión en `supabase/tests/d01_guard_soft_delete.sql`.
+
+
 ## [13.756.0] - 2026-08-26
 ### Cotizaciones eliminadas ya desaparecen de todas las vistas
 - Las cotizaciones eliminadas (borrado lógico) seguían apareciendo en el listado de Cotizaciones; ahora se filtran en la lectura (`deleted_at IS NULL`).
