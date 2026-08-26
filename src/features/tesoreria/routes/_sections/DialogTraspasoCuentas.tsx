@@ -122,18 +122,18 @@ export function DialogTraspasoCuentas({ open, onOpenChange, cuentas }: DialogTra
             currency={origen?.moneda}
           />
         </div>
-        {!mismoMoneda && origen && destino && (
+        {!mismoMoneda && origen && destino && par && (
           <div className="space-y-1.5">
-            <Label htmlFor="traspaso-tc">Tipo de cambio *</Label>
+            <Label htmlFor="traspaso-tc">{etiquetaTc(par)} *</Label>
             <MoneyInput
               id="traspaso-tc"
-              value={state.tipoCambio}
-              onChange={(v) => setField("tipoCambio", v)}
-              placeholder="1.00"
+              value={state.tcQuote}
+              onChange={(v) => setField("tcQuote", v)}
+              placeholder={par.quote === "MXN" ? "18.4200" : "1.0800"}
             />
-            {state.tipoCambio > 0 ? (
+            {state.tcQuote > 0 ? (
               <p className="text-body-sm text-muted-foreground">
-                {`Estimado con el TC capturado: ${origen.moneda} → ${destino.moneda}: ${formatCurrency(montoDestino, destino.moneda)}`}
+                {`1 ${par.base} = ${state.tcQuote} ${par.quote}. Traspasas ${formatCurrency(state.montoOrigen, origen.moneda)} y se abonan ${formatCurrency(montoDestino, destino.moneda)}.`}
               </p>
             ) : (
               <p className="text-body-sm text-destructive" role="alert">
@@ -145,12 +145,9 @@ export function DialogTraspasoCuentas({ open, onOpenChange, cuentas }: DialogTra
                 Sugerido con el TC DOF publicado el {fechaTcDof}. Puedes editarlo si tu banco usó otro.
               </p>
             )}
-            <p className="text-body-sm text-muted-foreground">
-              El tipo de cambio multiplica: 1 {origen.moneda} = {state.tipoCambio || "?"} {destino.moneda}.
-              Si tu referencia viene expresada al revés, divídela antes de capturarla.
-            </p>
           </div>
         )}
+
         <div className="space-y-1.5">
           <Label htmlFor="traspaso-comision">Comisión bancaria (opcional)</Label>
           <MoneyInput
