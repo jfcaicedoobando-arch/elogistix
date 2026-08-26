@@ -1,11 +1,13 @@
 import { describe, it, expect } from "vitest";
 import { badgeVencimientoCartera } from "@/features/bandejas/routes/_sections/carteraDias";
 
-/** Fecha ISO desplazada N días respecto a hoy (UTC). */
+/** Fecha AAAA-MM-DD desplazada N días respecto a hoy en zona local. */
 function enDias(n: number): string {
   const d = new Date();
-  d.setUTCDate(d.getUTCDate() + n);
-  return d.toISOString().slice(0, 10);
+  d.setDate(d.getDate() + n);
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  return `${d.getFullYear()}-${mm}-${dd}`;
 }
 
 describe("badgeVencimientoCartera (B-25)", () => {
