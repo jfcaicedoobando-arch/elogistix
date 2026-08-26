@@ -68,7 +68,7 @@ describe("cierre service", () => {
   });
 
   describe("reabrirEmbarque", () => {
-    it("usa la RPC canónica con email, motivo y request_id", async () => {
+    it("usa la RPC canónica con motivo y request_id, sin email del cliente (B-06)", async () => {
       mockedRpc.mockResolvedValue({ data: { ok: true }, error: null });
       const motivo = "Corrección de costos por reclamo del cliente principal";
       await reabrirEmbarque("emb-3", motivo, "ops@elogistix.mx");
@@ -77,7 +77,8 @@ describe("cierre service", () => {
         expect.objectContaining({
           p_embarque_id: "emb-3",
           p_motivo: motivo,
-          p_usuario_email: "ops@elogistix.mx",
+          // B-06: el actor lo deriva la BD desde la sesión; el cliente ya no lo envía.
+          p_usuario_email: "",
         }),
       );
       const args = mockedRpc.mock.calls.at(-1)?.[1] as { p_request_id?: string };

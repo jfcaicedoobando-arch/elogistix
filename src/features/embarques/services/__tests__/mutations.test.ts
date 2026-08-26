@@ -199,7 +199,8 @@ describe("reabrirEmbarqueRpc", () => {
     expect(call).toBeTruthy();
     const args = call?.args as { p_embarque_id: string; p_usuario_email: string };
     expect(args.p_embarque_id).toBe(UUID);
-    expect(args.p_usuario_email).toBe("admin@d.com");
+    // B-06: el email del navegador ya NO se envía (era falsificable); la BD usa auth.
+    expect(args.p_usuario_email).toBe("");
   });
 
   it("propaga el error de Supabase (no admin, estado inválido, etc.)", async () => {
