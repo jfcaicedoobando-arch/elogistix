@@ -12,6 +12,11 @@ import {
 import { USOS_CFDI_SAT, FORMAS_PAGO_SAT, METODOS_PAGO_SAT } from "@/constants/catalogosSAT";
 import { addDaysIso } from "@/lib/date/dateOnly";
 import { formatDate } from "@/lib/formatters/dates";
+import {
+  ayudaTcContraMxn,
+  etiquetaTcContraMxn,
+  TC_PLACEHOLDER_MXN,
+} from "@/lib/financial/tcPar";
 
 interface Option { value: string; label: string }
 
