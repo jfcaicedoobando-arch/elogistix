@@ -27,6 +27,8 @@ export async function fetchCotizacionesSinRespuesta(
     .select("id, folio, cliente_nombre, subtotal, moneda, created_at, oportunidad_id")
     .eq("estado", "Enviada")
     .lte("created_at", corte.toISOString())
+    // v13.756.0: una cotización eliminada ya no requiere seguimiento.
+    .is("deleted_at", null)
     .order("created_at", { ascending: true })
     .limit(limit);
   if (error) throw error;

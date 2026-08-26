@@ -113,5 +113,21 @@ describe("services/cotizacion/queries", () => {
     expect(isIdx).toBeGreaterThanOrEqual(0);
     expect(call.opArgs[isIdx]).toEqual(["deleted_at", null]);
   });
+
+  // v13.756.0: una cotización eliminada (soft-delete) no debe aparecer en el
+  // listado, ni en el buscador de vinculación, ni abrirse por link directo.
+  it.each([
+    ["fetchCotizaciones", () => fetchCotizaciones("org1"), [] as unknown],
+    ["fetchCotizacionesAceptadas", () => fetchCotizacionesAceptadas("org1"), [] as unknown],
+    ["fetchCotizacionById", () => fetchCotizacionById("c1"), null as unknown],
+  ])("%s filtra cotizaciones eliminadas (deleted_at is null)", async (_n, run, data) => {
+    mock.setTableResult("cotizaciones", { data, error: null });
+    await run();
+    const call = mock.tableCalls[0];
+    const isIdx = call.ops.indexOf("is");
+    expect(isIdx).toBeGreaterThanOrEqual(0);
+    expect(call.opArgs[isIdx]).toEqual(["deleted_at", null]);
+  });
 });
+
 

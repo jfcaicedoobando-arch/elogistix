@@ -41,6 +41,8 @@ export async function fetchCliente360(clienteId: string): Promise<Cliente360Resu
       .from("cotizaciones")
       .select("id, folio, estado, subtotal, created_at")
       .eq("cliente_id", clienteId)
+      // v13.756.0: ignorar cotizaciones eliminadas en el resumen 360.
+      .is("deleted_at", null)
       .order("created_at", { ascending: false })
       .limit(1),
     supabase

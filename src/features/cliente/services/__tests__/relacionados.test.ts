@@ -81,4 +81,13 @@ describe("cliente/services/relacionados", () => {
     const r = await fetchCotizacionesCliente("c1");
     expect(r[0].id).toBe("q1");
   });
+
+  // v13.756.0: las cotizaciones eliminadas no deben listarse en el cliente.
+  it("relacionados.cotizaciones: filtra eliminadas (deleted_at is null)", async () => {
+    mock.setTableResult("cotizaciones", { data: [], error: null });
+    await fetchCotizacionesCliente("c1");
+    const call = mock.tableCalls.find((c) => c.table === "cotizaciones");
+    const isIdx = call?.ops.indexOf("is") ?? -1;
+    expect(call?.opArgs[isIdx]).toEqual(["deleted_at", null]);
+  });
 });
