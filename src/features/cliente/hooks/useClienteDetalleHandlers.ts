@@ -12,7 +12,7 @@ import type { ContactoFormData, ClienteFormData } from "./useClienteDetalleContr
 type ContactoCliente = Tables<"contactos_cliente">;
 
 interface Deps {
-  cliente: { id: string } | null | undefined;
+  cliente: { id: string; updated_at?: string | null } | null | undefined;
   createContacto: { mutateAsync: (d: { cliente_id: string } & ContactoFormData) => Promise<unknown> };
   updateContacto: { mutateAsync: (d: { id: string; cliente_id: string } & ContactoFormData) => Promise<unknown> };
   deleteContacto: { mutateAsync: (d: { id: string; cliente_id: string }) => Promise<unknown> };
@@ -69,7 +69,7 @@ export function useClienteDetalleHandlers(deps: Deps) {
       // N-06: enviamos el updated_at con el que se abrió el formulario.
       await updateCliente.mutateAsync({
         id: cliente.id,
-        expectedUpdatedAt: cliente.updated_at,
+        expectedUpdatedAt: cliente.updated_at ?? null,
         ...data,
       });
       registrarActividad.mutate({
