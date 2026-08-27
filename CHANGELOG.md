@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.765.1] - 2026-08-27
+### Corrección
+- CI: `supabase/schema/baseline.sql` sincronizada con el esquema real — incluye los estados `Prospecto` y `Pendiente de alta`, la función/trigger `_crm_lead_avanzar_por_cotizacion`, sus permisos y el candado `LC_LEAD_ALTA_CLIENTE_PROHIBIDA` en `convertir_lead_rpc`.
+
 ## [13.765.0] - 2026-08-27
 ### Nueva funcionalidad
 - Cotizaciones: segmentación Clientes / Prospectos / Todas en el listado (tabs con conteos); los KPIs de 30 días se calculan dentro del segmento activo.
