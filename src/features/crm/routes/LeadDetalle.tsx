@@ -24,8 +24,10 @@ import LeadDatosCard from "@/features/crm/components/leadDetalle/LeadDatosCard";
 import LeadIcpCard from "@/features/crm/components/leadDetalle/LeadIcpCard";
 import LeadHeaderActions from "@/features/crm/components/leadDetalle/LeadHeaderActions";
 import LeadEtapaProspectoAviso from "@/features/crm/components/leadDetalle/LeadEtapaProspectoAviso";
+import OportunidadesDelProspecto from "@/features/crm/components/leadDetalle/OportunidadesDelProspecto";
+import NuevaOportunidadDialog from "@/features/crm/components/NuevaOportunidadDialog";
 import { useActualizarLead, useCalificarProspecto, useEliminarLead, useLead, useTomarLead } from "@/features/crm/hooks";
-import { faltantesGateProspecto, puedeCalificarse } from "@/features/crm/domain/leads/etapas";
+import { esProspecto, faltantesGateProspecto, puedeCalificarse } from "@/features/crm/domain/leads/etapas";
 import { useLeadEditForm } from "@/features/crm/hooks";
 import { ROUTES } from "@/constants/routes";
 import { formatFechaEs } from "@/lib/formatters/dates";
@@ -46,6 +48,7 @@ export default function LeadDetalle() {
   const [convertirSheetOpen, setConvertirSheetOpen] = useState(false);
   const [convertirAvanzadoOpen, setConvertirAvanzadoOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [nuevaOportunidadOpen, setNuevaOportunidadOpen] = useState(false);
 
   const handleSave = async () => {
     if (!id) return;
@@ -157,6 +160,8 @@ export default function LeadDetalle() {
             mostrarCalificar={canEdit && puedeCalificarse(lead.estado)}
             onCalificar={handleCalificar}
             calificando={calificar.isPending}
+            mostrarNuevaOportunidad={canEdit && esProspecto(lead.estado)}
+            onNuevaOportunidad={() => setNuevaOportunidadOpen(true)}
           />
         }
       />
@@ -175,6 +180,14 @@ export default function LeadDetalle() {
 
       <LeadIcpCard leadId={lead.id} lead={lead} canEdit={canEdit} />
 
+      {esProspecto(lead.estado) && (
+        <OportunidadesDelProspecto
+          leadId={lead.id}
+          canEdit={canEdit}
+          onNuevaOportunidad={() => setNuevaOportunidadOpen(true)}
+        />
+      )}
+
       <LeadLineageCard leadId={lead.id} />
 
       <ActividadTimeline entidadTipo="lead" entidadId={lead.id} />
@@ -186,6 +199,12 @@ export default function LeadDetalle() {
         onAbrirAvanzado={() => setConvertirAvanzadoOpen(true)}
       />
       <ConvertirLeadDialog open={convertirAvanzadoOpen} onOpenChange={setConvertirAvanzadoOpen} lead={lead} />
+
+      <NuevaOportunidadDialog
+        open={nuevaOportunidadOpen}
+        onOpenChange={setNuevaOportunidadOpen}
+        origenInicial={{ tipo: "prospecto", id: lead.id, nombre: lead.empresa }}
+      />
 
       <DoubleConfirmDeleteDialog
         open={deleteOpen}

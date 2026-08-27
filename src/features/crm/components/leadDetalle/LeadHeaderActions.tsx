@@ -7,7 +7,7 @@
  * Ola 6 · O6.1: cuando el lead está sin asignar (bolsa común) y el usuario
  * tiene permiso de ventas, se ofrece "Tomar lead" (RPC crm_tomar_lead).
  */
-import { BadgeCheck, Repeat, Trash2, UserCheck } from "lucide-react";
+import { BadgeCheck, Briefcase, Repeat, Trash2, UserCheck } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import type { CrmLeadEstado } from "@/features/crm/hooks";
@@ -25,6 +25,9 @@ interface Props {
   mostrarCalificar?: boolean;
   onCalificar?: () => void;
   calificando?: boolean;
+  /** Fase 2 rediseño CRM: crear oportunidad desde el prospecto. */
+  mostrarNuevaOportunidad?: boolean;
+  onNuevaOportunidad?: () => void;
 }
 
 export default function LeadHeaderActions({
@@ -38,6 +41,8 @@ export default function LeadHeaderActions({
   mostrarCalificar = false,
   onCalificar,
   calificando = false,
+  mostrarNuevaOportunidad = false,
+  onNuevaOportunidad,
 }: Props) {
   return (
     <div className="flex gap-2">
@@ -52,6 +57,11 @@ export default function LeadHeaderActions({
         <Button variant="default" onClick={onCalificar} disabled={calificando}>
           <BadgeCheck className="h-4 w-4 mr-1" />
           {calificando ? "Calificando…" : "Calificar como prospecto"}
+        </Button>
+      )}
+      {mostrarNuevaOportunidad && onNuevaOportunidad && (
+        <Button variant="default" onClick={onNuevaOportunidad}>
+          <Briefcase className="h-4 w-4 mr-1" /> Nueva oportunidad
         </Button>
       )}
       {canEdit && (
