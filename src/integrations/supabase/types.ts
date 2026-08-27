@@ -5329,7 +5329,7 @@ export type Database = {
           facturapi_claim_at?: string | null
           facturapi_id?: string | null
           fecha_emision?: string
-          fecha_vencimiento?: string
+          fecha_vencimiento: string
           folio_fiscal?: number | null
           forma_pago?: string | null
           id?: string
