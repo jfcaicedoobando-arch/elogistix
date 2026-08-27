@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.761.1] - 2026-08-27
+### Corrección de errores
+- Eventos de tracking (cambio de ETA, arribo): la validación recortaba la hora y guardaba sólo el día, así que un evento de esta tarde aparecía en la línea de tiempo como "ayer a las 6:00 PM". Ahora se conserva la fecha y hora completas y los eventos se ordenan bien dentro del día.
+
 ## [13.761.0] - 2026-09-02
 ### Seguridad
 - W-02: el PDF que se envía por correo se resuelve en el servidor a partir de la cotización (ya no se acepta la ruta que manda el navegador), así que nadie puede pedir un enlace firmado de un archivo de otra organización.
