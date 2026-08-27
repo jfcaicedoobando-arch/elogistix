@@ -146,3 +146,20 @@ END $$;
 -- que se ejecuta al momento del replay → error en CI limpio. Guard idempotente.
 -- ---------------------------------------------------------------------------
 CREATE SEQUENCE IF NOT EXISTS public.embarque_consecutivo_seq;
+
+-- ---------------------------------------------------------------------------
+-- public.cotizaciones_guard_en_operacion()
+-- La migración de reparación 20260827010526 reinstala el trigger que usa esta
+-- función, pero su definición canónica vive en 20260901001400 (posterior). En
+-- base limpia el trigger no encuentra la función → error de replay. Stub
+-- permisivo (no-op) que las migraciones posteriores reemplazan con la real.
+-- ---------------------------------------------------------------------------
+CREATE OR REPLACE FUNCTION public.cotizaciones_guard_en_operacion()
+RETURNS trigger
+LANGUAGE plpgsql
+SET search_path TO 'public'
+AS $ci_stub$
+BEGIN
+  RETURN NEW;
+END
+$ci_stub$;
