@@ -15,6 +15,8 @@ export interface ContactoProveedor {
   es_principal: boolean;
   notas: string | null;
   created_at: string;
+  /** Sello de versión para el bloqueo optimista al editar (H5). */
+  updated_at?: string | null;
 }
 
 export interface ContactoProveedorForm {

@@ -125,7 +125,11 @@ export function useTesoreriaCuentasController() {
     }
     try {
       if (editTarget) {
-        await actualizar.mutateAsync({ id: editTarget.id, patch: payloadForm() });
+        await actualizar.mutateAsync({
+          id: editTarget.id,
+          patch: payloadForm(),
+          expectedUpdatedAt: editTarget.updated_at ?? null,
+        });
       } else {
         await crear.mutateAsync({ ...payloadForm(), activa: true });
       }
