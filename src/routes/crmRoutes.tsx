@@ -12,7 +12,7 @@ import { Route, Navigate } from "react-router-dom";
 import { ProtectedRoute } from "@/features/auth/components/ProtectedRoute";
 import { CRM_CONFIGURACION_ROLES } from "@/lib/access/roleRouteMatrix";
 import {
-  CrmDashboard, CrmMiDia, Leads, LeadDetalle,
+  CrmDashboard, CrmMiDia, Leads, LeadDetalle, CrmProspectos,
   Oportunidades, OportunidadDetalle, ActividadesCrm, AnaliticaCrm, CrmConfiguracion, CrmHigiene,
 } from "./appRoutes.lazy";
 
@@ -22,6 +22,7 @@ export const crmChildRoutes = (
     <Route path="mi-dia" element={<CrmMiDia />} />
     <Route path="leads" element={<Leads />} />
     <Route path="leads/:id" element={<LeadDetalle />} />
+    <Route path="prospectos" element={<CrmProspectos />} />
     <Route path="oportunidades" element={<Oportunidades />} />
     <Route path="oportunidades/:id" element={<OportunidadDetalle />} />
     <Route path="actividades" element={<ActividadesCrm />} />

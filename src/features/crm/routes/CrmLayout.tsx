@@ -1,6 +1,6 @@
 import { useState, useCallback, useMemo } from "react";
 import { NavLink, Outlet } from "react-router-dom";
-import { Target, Users, Activity, BarChart3, LayoutDashboard, Settings, Sun, ShieldCheck } from "lucide-react";
+import { Target, Users, UserCheck, Activity, BarChart3, LayoutDashboard, Settings, Sun, ShieldCheck } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { useActividadesVencidasCount } from "@/features/crm/hooks";
@@ -14,6 +14,7 @@ const TABS = [
   { to: "/crm/mi-dia", label: "Mi día", icon: Sun, end: false },
   { to: "/crm", label: "Resumen", icon: LayoutDashboard, end: true },
   { to: "/crm/leads", label: "Leads", icon: Users, end: false },
+  { to: "/crm/prospectos", label: "Prospectos", icon: UserCheck, end: false },
   { to: "/crm/oportunidades", label: "Oportunidades", icon: Target, end: false },
   { to: "/crm/actividades", label: "Actividades", icon: Activity, end: false },
   { to: "/crm/higiene", label: "Higiene", icon: ShieldCheck, end: false },
