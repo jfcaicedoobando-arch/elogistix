@@ -223,6 +223,11 @@ export async function processMessage(
   const isDuplicate = await checkAndDeleteDuplicate(supabase, queue, msg)
   if (isDuplicate) return { status: 'duplicate' }
 
+  // W-11: claim atómico pre-envío. Si otra corrida ya se adjudicó el mensaje,
+  // se aborta sin llamar al proveedor (evita el correo duplicado).
+  const claimed = await claimSendAtomico(supabase, queue, msg)
+  if (!claimed) return { status: 'duplicate' }
+
   try {
     await sendLovableEmail(
       {
@@ -234,14 +239,7 @@ export async function processMessage(
       },
       { apiKey, sendUrl }
     )
-    // R3 · P2: upsert por message_id — la fila 'pending' ya existe; el insert
-    // reventaba 23505 y 'sent' nunca se marcaba (dobles envíos en reintentos).
-    await registrarEstadoEmail(supabase, {
-      messageId: payload.message_id,
-      templateName: payload.label || queue,
-      recipientEmail: payload.to,
-      status: 'sent',
-    })
+
     const { error: delError } = await supabase.rpc('delete_email', {
       queue_name: queue,
       message_id: msg.msg_id,
