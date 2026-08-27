@@ -5,7 +5,9 @@
  * Reglas de negocio y validaciones viven en `proveedorFacturas.update.reglas.ts`.
  */
 import { supabase } from "@/integrations/supabase/client";
+import { conflictoConcurrenciaError } from "@/lib/errors/concurrencia";
 import { registrarActividad } from "@/services/bitacora/registrar";
+
 import {
   existeFacturaDuplicada,
   type ProveedorFacturaRow,
