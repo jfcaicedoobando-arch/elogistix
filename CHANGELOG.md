@@ -1,5 +1,21 @@
 # Changelog
 
+## [13.761.0] - 2026-09-02
+### Seguridad
+- W-02: el PDF que se envía por correo se resuelve en el servidor a partir de la cotización (ya no se acepta la ruta que manda el navegador), así que nadie puede pedir un enlace firmado de un archivo de otra organización.
+- W-04: los datos del ejecutivo que firman el correo se toman de la sesión, no del mensaje del navegador (evita suplantación).
+- W-05: sólo los roles con permiso de escritura en cotizaciones pueden enviarlas por correo.
+- W-03: el enlace del PDF caduca en 7 días (antes 30).
+- N-01: el lector de Constancias de Situación Fiscal exige rol con permiso de alta fiscal y aplica topes de uso (20/hora por usuario, 100/hora por organización) para que nadie agote la cuota de IA.
+- N-02: los errores del lector de CSF ya no devuelven detalles internos al navegador; sólo un mensaje claro (el detalle queda en el registro técnico).
+
+### Fix
+- W-01: se corrigió el orden de argumentos en las respuestas de `enviar-cotizacion-email`, que rompía el envío de cotizaciones por correo.
+- N-01: el llamado a la IA del lector de CSF corta a los 45 segundos y devuelve un mensaje de reintento en vez de quedarse colgado.
+- W-11: la cola de correos reclama cada envío antes de llamar al proveedor, para que dos corridas traslapadas del proceso automático no manden el mismo correo dos veces.
+
+
+
 ## [13.760.0] - 2026-09-02
 ### Seguridad
 - Importación CSV de clientes y proveedores: se neutralizan las celdas que inician con `=`, `+`, `-` o `@` (anteponiendo `'`) para evitar inyección de fórmulas al abrir el archivo exportado en Excel.
