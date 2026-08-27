@@ -12,6 +12,8 @@ import { Hint } from "@/components/shared/Hint";
 import { TableCell, TableRow } from "@/components/ui/table";
 export interface PagoRow {
   id: string;
+  /** Sello de versión para el bloqueo optimista al editar (H5). */
+  updated_at?: string | null;
   fecha_pago: string;
   metodo_pago: string;
   notas?: string | null;

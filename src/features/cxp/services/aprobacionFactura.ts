@@ -13,6 +13,12 @@ export type EstadoAprobacion = "pendiente" | "aprobada" | "rechazada";
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 export const MOTIVO_RECHAZO_MIN = 3;
 export const MOTIVO_RECHAZO_MAX = 500;
+/**
+ * Ola 4 (H2): mínimo de caracteres de la justificación cuando la factura no
+ * está ligada a un embarque ni a costos acordados (lo exige la base de datos).
+ */
+export const JUSTIFICACION_SIN_VINCULO_MIN = 10;
+
 
 export class AprobacionFacturaError extends Error {
   code: string;
@@ -95,6 +101,20 @@ const ERROR_RULES: readonly RuleMatch[] = [
     message: "Verifica el UUID en el SAT antes de aprobar. Si es un proveedor internacional, quita el UUID fiscal desde el detalle de la factura.",
     matches: (raw) => raw.includes("lc_cxp_uuid_no_verificado"),
   },
+  // Ola 4 (H2) — respaldo mínimo: sin embarque ni costos acordados vinculados.
+  {
+    code: "LC_CXP_SIN_RESPALDO_MONTO",
+    message:
+      "La factura excede el monto que puede aprobarse sin respaldo. Vincúlala al embarque o a sus conceptos de costo antes de aprobar (el límite se ajusta en Configuración → Compras).",
+    matches: (raw) => raw.includes("lc_cxp_sin_respaldo_monto"),
+  },
+  {
+    code: "LC_CXP_SIN_RESPALDO",
+    message:
+      "Esta factura no está ligada a un embarque ni a costos acordados. Escribe la justificación del gasto (mínimo 10 caracteres) para poder aprobarla.",
+    matches: (raw) => raw.includes("lc_cxp_sin_respaldo"),
+  },
+
   {
     code: "INVALID_STATE",
     message: "Esta factura ya fue procesada. Recarga la página para ver su estado actual.",
@@ -116,6 +136,14 @@ function mapApiError(error: { message?: string; code?: string; details?: string 
   return new AprobacionFacturaError("UNKNOWN", error.message || "Ocurrió un error inesperado al procesar la factura.");
 }
 
+/**
+ * Aprueba o rechaza una factura de proveedor.
+ *
+ * `motivo` cumple dos papeles según la acción (así lo espera la RPC):
+ * - al **rechazar**, es el motivo del rechazo (obligatorio);
+ * - al **aprobar**, es la justificación del gasto cuando la factura no está
+ *   ligada a un embarque ni a costos acordados (Ola 4 · H2).
+ */
 export async function aprobarFacturaProveedor(
   id: string,
   aprobar: boolean,
@@ -126,7 +154,7 @@ export async function aprobarFacturaProveedor(
     throw new AprobacionFacturaError("INVALID_ID", "Identificador de factura inválido.");
   }
 
-  let motivoLimpio: string | undefined;
+  let motivoLimpio: string | undefined = (motivo ?? "").trim() || undefined;
   if (!aprobar) {
     motivoLimpio = (motivo ?? "").trim();
     if (motivoLimpio.length < MOTIVO_RECHAZO_MIN) {
@@ -141,7 +169,13 @@ export async function aprobarFacturaProveedor(
         `El motivo no puede exceder ${MOTIVO_RECHAZO_MAX} caracteres.`,
       );
     }
+  } else if (motivoLimpio && motivoLimpio.length > MOTIVO_RECHAZO_MAX) {
+    throw new AprobacionFacturaError(
+      "MOTIVO_TOO_LONG",
+      `La justificación no puede exceder ${MOTIVO_RECHAZO_MAX} caracteres.`,
+    );
   }
+
 
   const { data, error } = await supabase.rpc("aprobar_factura_proveedor", {
     p_id: id,

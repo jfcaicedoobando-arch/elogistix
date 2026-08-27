@@ -155,5 +155,6 @@ function aPagoEditable(p: PagoRow): PagoEditable {
     cuenta_bancaria_id: p.cuenta_bancaria_id ?? null,
     diferencia_cambiaria_mxn:
       p.diferencia_cambiaria_mxn != null ? Number(p.diferencia_cambiaria_mxn) : null,
+    updated_at: p.updated_at ?? null,
   };
 }

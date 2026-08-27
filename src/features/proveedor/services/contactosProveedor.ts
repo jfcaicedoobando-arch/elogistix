@@ -5,13 +5,15 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import { unwrap, unwrapOr, run } from "@/lib/supabase/response";
+import { primeraFila } from "@/lib/supabase/primeraFila";
+import { conflictoConcurrenciaError } from "@/lib/errors/concurrencia";
 import type {
   ContactoProveedor,
   ContactoProveedorForm,
 } from "@/features/proveedor/domain/contactosProveedor";
 
 const SELECT =
-  "id, proveedor_id, nombre, puesto, area, email, telefono, extension, es_principal, notas, created_at" as const;
+  "id, proveedor_id, nombre, puesto, area, email, telefono, extension, es_principal, notas, created_at, updated_at" as const;
 
 export async function fetchProveedorContactos(
   proveedorId: string,
@@ -66,13 +68,19 @@ export async function crearContactoProveedor(input: {
 export async function actualizarContactoProveedor(input: {
   id: string;
   form: ContactoProveedorForm;
+  /** H5 (Ola 4): `updated_at` leído al abrir el formulario. */
+  expectedUpdatedAt?: string | null;
 }): Promise<void> {
-  await run(
-    supabase
-      .from("proveedor_contactos")
-      .update(aFila(input.form))
-      .eq("id", input.id),
-  );
+  let query = supabase
+    .from("proveedor_contactos")
+    .update(aFila(input.form))
+    .eq("id", input.id);
+  if (input.expectedUpdatedAt) query = query.eq("updated_at", input.expectedUpdatedAt);
+  const filas = primeraFila((await unwrap(query.select("id"))) as Array<{ id: string }> | null);
+  if (!filas) {
+    if (input.expectedUpdatedAt) throw conflictoConcurrenciaError();
+    throw new Error("No se guardaron los cambios: el contacto ya no existe o no tienes permiso.");
+  }
 }
 
 /** Borrado lógico: conservamos el histórico de con quién tratábamos. */

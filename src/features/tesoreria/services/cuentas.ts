@@ -7,6 +7,8 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables, TablesInsert, TablesUpdate } from "@/integrations/supabase/types";
 import { unwrap, unwrapOr, run } from "@/lib/supabase/response";
+import { primeraFila } from "@/lib/supabase/primeraFila";
+import { conflictoConcurrenciaError } from "@/lib/errors/concurrencia";
 import { registrarActividad } from "@/services/bitacora/registrar";
 
 export type CuentaBancaria = Tables<"cuentas_bancarias">;
@@ -45,10 +47,24 @@ export async function crearCuenta(payload: TablesInsert<"cuentas_bancarias">): P
   return cuenta;
 }
 
-export async function actualizarCuenta(id: string, patch: TablesUpdate<"cuentas_bancarias">): Promise<CuentaBancaria> {
-  const cuenta = (await unwrap(
-    supabase.from("cuentas_bancarias").update(patch).eq("id", id).select().single(),
-  )) as CuentaBancaria;
+/**
+ * H5 (Ola 4): `expectedUpdatedAt` es el `updated_at` leído al abrir el
+ * formulario. Si otro usuario ya guardó, el UPDATE no toca filas y se avisa en
+ * vez de sobrescribir sus cambios.
+ */
+export async function actualizarCuenta(
+  id: string,
+  patch: TablesUpdate<"cuentas_bancarias">,
+  expectedUpdatedAt?: string | null,
+): Promise<CuentaBancaria> {
+  let query = supabase.from("cuentas_bancarias").update(patch).eq("id", id);
+  if (expectedUpdatedAt) query = query.eq("updated_at", expectedUpdatedAt);
+  const filas = primeraFila((await unwrap(query.select())) as CuentaBancaria[] | null);
+  if (!filas) {
+    if (expectedUpdatedAt) throw conflictoConcurrenciaError();
+    throw new Error("No se guardaron los cambios: la cuenta ya no existe o no tienes permiso.");
+  }
+  const cuenta = filas;
   await registrarActividad({
     modulo: "tesoreria",
     accion: "editar_cuenta_bancaria",

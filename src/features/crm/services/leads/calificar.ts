@@ -58,5 +58,6 @@ export async function calificarProspecto(
     p_lead_id: leadId,
   });
   if (error) throw error;
+  // SAFE-CAST: jsonb devuelto por la RPC crm_calificar_prospecto.
   return data as unknown as CalificarProspectoResultado;
 }

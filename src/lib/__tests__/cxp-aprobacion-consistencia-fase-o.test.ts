@@ -33,7 +33,7 @@ describe("Fase O — Validación de aprobación CxP", () => {
 
   it("declara la función `_cxp_validar_aprobacion(uuid)` como SECURITY DEFINER", () => {
     expect(sql).toMatch(
-      /CREATE OR REPLACE FUNCTION public\._cxp_validar_aprobacion\(p_factura_id uuid\)[\s\S]*?SECURITY DEFINER/,
+      /CREATE OR REPLACE FUNCTION public\._cxp_validar_aprobacion\(p_factura_id uuid(, p_justificacion text DEFAULT NULL)?\)[\s\S]*?SECURITY DEFINER/,
     );
   });
 
@@ -66,14 +66,14 @@ describe("Fase O — Validación de aprobación CxP", () => {
 
   it("revoca EXECUTE de PUBLIC/anon y otorga a authenticated + service_role", () => {
     expect(sql).toMatch(
-      /REVOKE ALL ON FUNCTION public\._cxp_validar_aprobacion\(uuid\) FROM PUBLIC/,
+      /REVOKE ALL ON FUNCTION public\._cxp_validar_aprobacion\(uuid(, text)?\) FROM PUBLIC/,
     );
     expect(sql).toMatch(
-      /REVOKE ALL ON FUNCTION public\._cxp_validar_aprobacion\(uuid\) FROM (PUBLIC, )?anon/,
+      /REVOKE ALL ON FUNCTION public\._cxp_validar_aprobacion\(uuid(, text)?\) FROM (PUBLIC, )?anon/,
     );
 
     expect(sql).toMatch(
-      /GRANT EXECUTE ON FUNCTION public\._cxp_validar_aprobacion\(uuid\) TO authenticated, service_role/,
+      /GRANT EXECUTE ON FUNCTION public\._cxp_validar_aprobacion\(uuid(, text)?\) TO authenticated, service_role/,
     );
   });
 
@@ -87,7 +87,7 @@ describe("Fase O — Validación de aprobación CxP", () => {
       "CREATE OR REPLACE FUNCTION public.aprobar_factura_proveedor",
     );
     expect(wrapperSql).toMatch(
-      /IF p_aprobar THEN\s+PERFORM public\._cxp_validar_aprobacion\(p_id\)/,
+      /IF p_aprobar THEN\s+PERFORM public\._cxp_validar_aprobacion\(p_id(, p_motivo)?\)/,
     );
   });
 });

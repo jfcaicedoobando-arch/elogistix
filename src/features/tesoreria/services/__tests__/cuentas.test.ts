@@ -27,10 +27,17 @@ describe("cuentas service", () => {
   });
 
   it("actualizarCuenta hace update", async () => {
-    mock.setTableResult("cuentas_bancarias", { data: { id: "1" }, error: null });
+    mock.setTableResult("cuentas_bancarias", { data: [{ id: "1" }], error: null });
     await actualizarCuenta("1", { alias: "Nuevo" });
     const call = mock.tableCalls.find(c => c.table === "cuentas_bancarias");
     expect(call?.ops).toContain("update");
+  });
+
+  it("actualizarCuenta avisa del conflicto si otro usuario ya guardó (H5)", async () => {
+    mock.setTableResult("cuentas_bancarias", { data: [], error: null });
+    await expect(
+      actualizarCuenta("1", { alias: "Nuevo" }, "2026-01-01T00:00:00Z"),
+    ).rejects.toThrow(/LC_CONFLICTO_CONCURRENCIA/);
   });
 
   it("eliminarCuenta hace soft delete", async () => {

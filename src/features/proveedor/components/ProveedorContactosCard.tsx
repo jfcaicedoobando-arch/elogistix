@@ -101,7 +101,7 @@ export function ProveedorContactosCard({ proveedorId, organizationId, canEdit }:
           isPending={guardar.isPending}
           onGuardar={(form) =>
             guardar.mutate(
-              { id: enEdicion?.id, form },
+              { id: enEdicion?.id, form, expectedUpdatedAt: enEdicion?.updated_at ?? null },
               { onSuccess: () => setDialogOpen(false) },
             )
           }

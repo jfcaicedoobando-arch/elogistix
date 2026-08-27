@@ -8,6 +8,7 @@
  */
 import { LC_CODE_MESSAGES_OPERATIVO } from "./lcCodeMessages.operativo";
 import { LC_CODE_MESSAGES_FINANCIERO } from "./lcCodeMessages.financiero";
+import { LC_CODE_MESSAGES_PAGOS } from "./lcCodeMessages.pagos";
 import { LC_CODE_MESSAGES_TESORERIA } from "./lcCodeMessages.tesoreria";
 import { LC_CODE_MESSAGES_COBRANZA } from "./lcCodeMessages.cobranza";
 import { LC_CODE_MESSAGES_TRASPASOS } from "./lcCodeMessages.traspasos";
@@ -17,6 +18,7 @@ import { LC_CODE_MESSAGES_CRM } from "./lcCodeMessages.crm";
 export const LC_CODE_MESSAGES: Record<string, string> = {
   ...LC_CODE_MESSAGES_OPERATIVO,
   ...LC_CODE_MESSAGES_FINANCIERO,
+  ...LC_CODE_MESSAGES_PAGOS,
   ...LC_CODE_MESSAGES_TESORERIA,
   ...LC_CODE_MESSAGES_COBRANZA,
   ...LC_CODE_MESSAGES_TRASPASOS,

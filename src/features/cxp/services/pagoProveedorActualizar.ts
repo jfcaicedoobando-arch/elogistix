@@ -6,6 +6,8 @@
  * una cuenta) y se deja rastro en la bitácora.
  */
 import { supabase } from "@/integrations/supabase/client";
+import { primeraFila } from "@/lib/supabase/primeraFila";
+import { conflictoConcurrenciaError } from "@/lib/errors/concurrencia";
 import type { TablesUpdate } from "@/integrations/supabase/types";
 import { registrarActividad } from "@/services/bitacora/registrar";
 import {
@@ -29,6 +31,11 @@ export interface ActualizarPagoProveedorInput {
   cuenta_bancaria_id?: string | null;
   notas?: string;
   diferencia_cambiaria_mxn?: number | null;
+  /**
+   * H5 (Ola 4): bloqueo optimista. `updated_at` leído al abrir el modal; si
+   * otro usuario ya editó el pago, se avisa en vez de pisar su cambio.
+   */
+  expectedUpdatedAt?: string | null;
 }
 
 async function leerPagoActual(id: string) {
@@ -63,11 +70,14 @@ export async function actualizarPagoProveedor(
     diferencia_cambiaria_mxn: input.diferencia_cambiaria_mxn ?? null,
   };
 
-  const { error } = await supabase
+  let query = supabase
     .from("pagos_proveedor")
     .update(payload)
     .eq("id", input.id);
+  if (input.expectedUpdatedAt) query = query.eq("updated_at", input.expectedUpdatedAt);
+  const { data: filas, error } = await query.select("id");
   if (error) throw error;
+  if (!primeraFila(filas)) throw conflictoConcurrenciaError();
 
   // El movimiento bancario anterior deja de ser válido: se da de baja y, si el
   // pago sigue saliendo de una cuenta, se genera de nuevo con los datos nuevos.

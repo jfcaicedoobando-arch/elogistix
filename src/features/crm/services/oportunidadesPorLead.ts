@@ -42,6 +42,7 @@ export async function listOportunidadesPorLead(
     .order("created_at", { ascending: false })
     .limit(50);
   if (error) throw error;
+  // SAFE-CAST: shape del select explícito, no inferido por Supabase.
   return ((data ?? []) as unknown as Fila[]).map((o) => ({
     id: o.id,
     nombre: o.nombre,

@@ -5,7 +5,10 @@
  * Reglas de negocio y validaciones viven en `proveedorFacturas.update.reglas.ts`.
  */
 import { supabase } from "@/integrations/supabase/client";
+import { primeraFila } from "@/lib/supabase/primeraFila";
+import { conflictoConcurrenciaError } from "@/lib/errors/concurrencia";
 import { registrarActividad } from "@/services/bitacora/registrar";
+
 import {
   existeFacturaDuplicada,
   type ProveedorFacturaRow,
@@ -29,7 +32,7 @@ const FACTURA_EDIT_SELECT = `
   fecha_emision, fecha_vencimiento, dias_credito,
   moneda, tipo_cambio_usd,
   subtotal, iva, ieps, retenciones, total,
-  categoria_presupuesto_id, notas, estado_aprobacion
+  categoria_presupuesto_id, notas, estado_aprobacion, updated_at
 ` as const;
 
 /** Carga una factura de proveedor con los campos que el form de edición necesita. */
@@ -47,6 +50,12 @@ export async function fetchFacturaParaEdicion(id: string): Promise<FacturaParaEd
 export async function actualizarFacturaProveedor(
   id: string,
   payload: ActualizarFacturaPayload,
+  /**
+   * H5 (Ola 4): bloqueo optimista. `updated_at` leído al abrir el formulario;
+   * si otro usuario ya guardó, el UPDATE no toca filas y se avisa en vez de
+   * sobrescribir su trabajo.
+   */
+  expectedUpdatedAt?: string | null,
 ): Promise<ProveedorFacturaRow> {
   // 1) Lee factura actual: necesitamos proveedor_id y estado_aprobacion.
   const { data: actual, error: errActual } = await supabase
@@ -55,6 +64,7 @@ export async function actualizarFacturaProveedor(
     .eq("id", id)
     .single();
   if (errActual) throw errActual;
+
 
   // 2) Duplicado (proveedor + folio + emisión) excluyendo self.
   const dup = await existeFacturaDuplicada(
@@ -97,13 +107,19 @@ export async function actualizarFacturaProveedor(
     updateBody.aprobada_at = null;
   }
 
-  const { data, error } = await supabase
+  let query = supabase
     .from("proveedor_facturas")
     .update(updateBody)
-    .eq("id", id)
-    .select()
-    .single();
+    .eq("id", id);
+  if (expectedUpdatedAt) query = query.eq("updated_at", expectedUpdatedAt);
+  const { data: filas, error } = await query.select();
   if (error) throw error;
+  const data = primeraFila(filas);
+  if (!data) {
+    if (expectedUpdatedAt) throw conflictoConcurrenciaError();
+    throw new Error("No se guardaron los cambios: la factura ya no existe o no tienes permiso.");
+  }
+
   await registrarActividad({
     modulo: "cxp",
     accion: "editar",

@@ -34,9 +34,17 @@ export function useGuardarContactoProveedor(
 ) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (input: { id?: string; form: ContactoProveedorForm }) =>
+    mutationFn: (input: {
+      id?: string;
+      form: ContactoProveedorForm;
+      expectedUpdatedAt?: string | null;
+    }) =>
       input.id
-        ? actualizarContactoProveedor({ id: input.id, form: input.form })
+        ? actualizarContactoProveedor({
+            id: input.id,
+            form: input.form,
+            expectedUpdatedAt: input.expectedUpdatedAt,
+          })
         : crearContactoProveedor({ proveedorId, organizationId, form: input.form }).then(
             () => undefined,
           ),

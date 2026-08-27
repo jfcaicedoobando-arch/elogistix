@@ -6058,6 +6058,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "pagos_factura_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "pagos_factura_refacturacion_fk"
             columns: ["refacturacion_id"]
             isOneToOne: false
@@ -6227,6 +6234,13 @@ export type Database = {
             columns: ["lote_id"]
             isOneToOne: false
             referencedRelation: "pagos_proveedor_lote"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pagos_proveedor_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
           {
@@ -6969,6 +6983,7 @@ export type Database = {
       }
       proveedor_facturas: {
         Row: {
+          aprobacion_heredada: boolean
           aprobada_at: string | null
           aprobada_por: string | null
           archivo_pdf_url: string | null
@@ -6993,6 +7008,7 @@ export type Database = {
           id: string
           ieps: number
           iva: number
+          justificacion_sin_vinculo: string | null
           moneda: Database["public"]["Enums"]["moneda"]
           motivo_cancelacion: string | null
           motivo_rechazo: string | null
@@ -7013,6 +7029,7 @@ export type Database = {
           uuid_verificado_fecha: string | null
         }
         Insert: {
+          aprobacion_heredada?: boolean
           aprobada_at?: string | null
           aprobada_por?: string | null
           archivo_pdf_url?: string | null
@@ -7037,6 +7054,7 @@ export type Database = {
           id?: string
           ieps?: number
           iva?: number
+          justificacion_sin_vinculo?: string | null
           moneda?: Database["public"]["Enums"]["moneda"]
           motivo_cancelacion?: string | null
           motivo_rechazo?: string | null
@@ -7057,6 +7075,7 @@ export type Database = {
           uuid_verificado_fecha?: string | null
         }
         Update: {
+          aprobacion_heredada?: boolean
           aprobada_at?: string | null
           aprobada_por?: string | null
           archivo_pdf_url?: string | null
@@ -7081,6 +7100,7 @@ export type Database = {
           id?: string
           ieps?: number
           iva?: number
+          justificacion_sin_vinculo?: string | null
           moneda?: Database["public"]["Enums"]["moneda"]
           motivo_cancelacion?: string | null
           motivo_rechazo?: string | null
@@ -7113,6 +7133,13 @@ export type Database = {
             columns: ["embarque_id"]
             isOneToOne: false
             referencedRelation: "embarques"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "proveedor_facturas_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
           {
@@ -7173,6 +7200,13 @@ export type Database = {
             columns: ["concepto_costo_id"]
             isOneToOne: false
             referencedRelation: "conceptos_costo"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "proveedor_facturas_conceptos_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
           {
@@ -8255,6 +8289,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "proveedor_facturas_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "proveedor_facturas_proveedor_id_fkey"
             columns: ["proveedor_id"]
             isOneToOne: false
@@ -8311,6 +8352,13 @@ export type Database = {
             columns: ["factura_id"]
             isOneToOne: false
             referencedRelation: "facturas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pagos_factura_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
         ]
@@ -8380,7 +8428,15 @@ export type Database = {
           saldo?: never
           total?: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "proveedor_facturas_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       v_saldos_cuentas_bancarias: {
         Row: {
@@ -8487,7 +8543,7 @@ export type Database = {
         Returns: Json
       }
       _cxp_validar_aprobacion: {
-        Args: { p_factura_id: string }
+        Args: { p_factura_id: string; p_justificacion?: string }
         Returns: undefined
       }
       _dashboard_details_calc: { Args: never; Returns: Json }
@@ -8541,6 +8597,7 @@ export type Database = {
         Args: { p_permitir_generico?: boolean; p_rfc: string }
         Returns: boolean
       }
+      _seed_demo_limpiar_financiero: { Args: never; Returns: undefined }
       a_mxn: {
         Args: {
           p_eur_mxn: number
@@ -8730,6 +8787,7 @@ export type Database = {
       aprobar_factura_proveedor: {
         Args: { p_aprobar: boolean; p_id: string; p_motivo?: string }
         Returns: {
+          aprobacion_heredada: boolean
           aprobada_at: string | null
           aprobada_por: string | null
           archivo_pdf_url: string | null
@@ -8754,6 +8812,7 @@ export type Database = {
           id: string
           ieps: number
           iva: number
+          justificacion_sin_vinculo: string | null
           moneda: Database["public"]["Enums"]["moneda"]
           motivo_cancelacion: string | null
           motivo_rechazo: string | null
@@ -9704,6 +9763,8 @@ export type Database = {
           total: number
         }[]
       }
+      cxp_umbral_sin_vinculo: { Args: { p_org: string }; Returns: number }
+      cxp_umbral_sin_vinculo_actual: { Args: never; Returns: number }
       dashboard_details: { Args: never; Returns: Json }
       dashboard_facturacion_kpis: {
         Args: { p_fallback_usd?: number; p_meses?: number }

@@ -39,8 +39,12 @@ export function useCrearCuenta() {
 export function useActualizarCuenta() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (vars: { id: string; patch: TablesUpdate<"cuentas_bancarias"> }) =>
-      actualizarCuenta(vars.id, vars.patch),
+    mutationFn: (vars: {
+      id: string;
+      patch: TablesUpdate<"cuentas_bancarias">;
+      /** H5: sello de versión leído al abrir el formulario. */
+      expectedUpdatedAt?: string | null;
+    }) => actualizarCuenta(vars.id, vars.patch, vars.expectedUpdatedAt),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.tesoreria.all });
       notifySuccess(undefined, { title: "Cuenta bancaria actualizada" });
