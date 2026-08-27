@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.762.9] - 2026-08-27
+### Corrección de errores
+- CI (drift radar): la migración `20260827020732` revoca permisos de `cotizaciones_guard_en_operacion()`, función creada en una migración posterior, por lo que abortaba en base limpia. Se agregó a `drift-anclas.txt` (estado final garantizado por `20260902003000`).
+
+
 ## [13.762.8] - 2026-08-27
 ### Corrección de errores
 - Crear embarque desde cotización: la migración B-19 (cantidades fraccionadas) reescribía funciones con un reemplazo de texto y dejó el tipo corrupto `numericeger` en `_crear_embarque_replicar_conceptos`, rompiendo la replicación de conceptos. Se reinstalaron las definiciones canónicas de `_crear_embarque_replicar_conceptos`, `actualizar_embarque_completo` y `crear_embarque_completo`.
