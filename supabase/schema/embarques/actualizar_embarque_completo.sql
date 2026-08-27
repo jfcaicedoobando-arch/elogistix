@@ -5,12 +5,10 @@
 -- Cada cambio DEBE actualizarse aquí en el mismo PR que la migración correspondiente.
 -- Ver supabase/schema/README.md.
 
-CREATE OR REPLACE FUNCTION public.actualizar_embarque_completo(p_embarque_id uuid, p_embarque jsonb, p_conceptos_venta jsonb DEFAULT '[]'::jsonb, p_conceptos_costo jsonb DEFAULT '[]'::jsonb, p_request_id uuid DEFAULT NULL::uuid, p_expected_updated_at timestamp with time zone DEFAULT NULL::timestamp with time zone)
- RETURNS jsonb
- LANGUAGE plpgsql
- SECURITY DEFINER
- SET search_path TO 'public'
-AS $$
+CREATE OR REPLACE FUNCTION public.actualizar_embarque_completo(p_embarque_id uuid, p_embarque jsonb, p_conceptos_venta jsonb DEFAULT '[]'::jsonb, p_conceptos_costo jsonb DEFAULT '[]'::jsonb, p_request_id uuid DEFAULT NULL::uuid, p_expected_updated_at timestamp with time zone DEFAULT NULL::timestamp with time zone) RETURNS jsonb
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
 DECLARE
   v_org_id uuid;
   v_resp jsonb;
@@ -23,9 +21,6 @@ DECLARE
 BEGIN
   v_resp := public.idempotency_claim(p_request_id, 'actualizar_embarque_completo');
   IF v_resp IS NOT NULL THEN RETURN v_resp; END IF;
-
-  -- Lock la fila y lee tanto org como updated_at atómicamente. Esto
-  -- evita carreras entre la verificación optimista y el UPDATE.
   SELECT organization_id, updated_at
     INTO v_org_id, v_current_updated_at
     FROM embarques
@@ -33,10 +28,6 @@ BEGIN
    FOR UPDATE;
   IF v_org_id IS NULL THEN RAISE EXCEPTION 'Embarque no encontrado'; END IF;
   PERFORM public._assert_writer(v_org_id);
-
-  -- FIX-15: si el cliente envió el timestamp que leyó al abrir el wizard,
-  -- verificamos que nadie más haya guardado en el mientras. `IS DISTINCT
-  -- FROM` maneja correctamente el caso de nulos.
   IF p_expected_updated_at IS NOT NULL
      AND v_current_updated_at IS DISTINCT FROM p_expected_updated_at THEN
     RAISE EXCEPTION 'LC_CONFLICTO_CONCURRENCIA: otro usuario modificó este embarque. Recarga y vuelve a intentar.'
@@ -46,7 +37,6 @@ BEGIN
               'client_expected_updated_at', p_expected_updated_at
             )::text;
   END IF;
-
   UPDATE embarques SET
     cliente_id = COALESCE((p_embarque->>'cliente_id')::uuid, cliente_id),
     cliente_nombre = COALESCE(p_embarque->>'cliente_nombre', cliente_nombre),
@@ -83,26 +73,21 @@ BEGIN
     carta_porte = CASE WHEN p_embarque ? 'carta_porte' THEN p_embarque->>'carta_porte' ELSE carta_porte END,
     etd = CASE WHEN p_embarque ? 'etd' THEN (p_embarque->>'etd')::date ELSE etd END,
     eta = CASE WHEN p_embarque ? 'eta' THEN (p_embarque->>'eta')::date ELSE eta END,
-    -- 13.334.6 · Blindaje `embarques_tc_{usd,eur}_pos`: un TC vacío o 0 se
-    -- trata como "sin dato" y conserva el valor previo, en vez de intentar
-    -- escribir 0 y reventar con 23514.
     tipo_cambio_usd = COALESCE(NULLIF(NULLIF(p_embarque->>'tipo_cambio_usd','')::numeric, 0), tipo_cambio_usd),
     tipo_cambio_eur = COALESCE(NULLIF(NULLIF(p_embarque->>'tipo_cambio_eur','')::numeric, 0), tipo_cambio_eur),
     msds_archivo = CASE WHEN p_embarque ? 'msds_archivo' THEN p_embarque->>'msds_archivo' ELSE msds_archivo END,
     updated_at = now()
   WHERE id = p_embarque_id;
-
   v_incoming_venta_ids := ARRAY(
     SELECT (elem->>'id')::uuid
       FROM jsonb_array_elements(p_conceptos_venta) elem
      WHERE elem ? 'id' AND elem->>'id' IS NOT NULL AND elem->>'id' <> ''
   );
-
   FOR cv IN SELECT * FROM jsonb_array_elements(p_conceptos_venta) LOOP
     IF cv ? 'id' AND cv->>'id' IS NOT NULL AND cv->>'id' <> '' THEN
       UPDATE conceptos_venta SET
         descripcion = COALESCE(cv->>'descripcion', descripcion),
-        cantidad = COALESCE((cv->>'cantidad')::int, cantidad),
+        cantidad = COALESCE((cv->>'cantidad')::numeric, cantidad),
         precio_unitario = COALESCE((cv->>'precio_unitario')::numeric, precio_unitario),
         moneda = COALESCE((cv->>'moneda')::moneda, moneda),
         total = COALESCE((cv->>'total')::numeric, total)
@@ -111,38 +96,36 @@ BEGIN
         AND estado_facturacion IN ('pendiente', 'en_proforma');
     ELSE
       INSERT INTO conceptos_venta (
-        embarque_id, descripcion, cantidad, precio_unitario, moneda, total, organization_id
-      )
-      VALUES (
-        p_embarque_id, cv->>'descripcion', (cv->>'cantidad')::int,
-        (cv->>'precio_unitario')::numeric, (cv->>'moneda')::moneda,
-        (cv->>'total')::numeric, v_org_id
+        embarque_id, descripcion, cantidad, precio_unitario, moneda, total, contenedor_id, organization_id
+      ) VALUES (
+        p_embarque_id,
+        cv->>'descripcion',
+        COALESCE((cv->>'cantidad')::numeric, 1),
+        COALESCE((cv->>'precio_unitario')::numeric, 0),
+        COALESCE((cv->>'moneda')::moneda, 'MXN'::moneda),
+        COALESCE((cv->>'total')::numeric, 0),
+        NULLIF(cv->>'contenedor_id','')::uuid,
+        v_org_id
       )
       RETURNING id INTO v_new_id;
       v_incoming_venta_ids := array_append(v_incoming_venta_ids, v_new_id);
     END IF;
   END LOOP;
-
   UPDATE conceptos_venta
      SET deleted_at = now()
    WHERE embarque_id = p_embarque_id
      AND deleted_at IS NULL
      AND estado_facturacion = 'pendiente'
-     AND proforma_id IS NULL
      AND NOT (id = ANY(v_incoming_venta_ids));
-
   v_incoming_costo_ids := ARRAY(
     SELECT (elem->>'id')::uuid
       FROM jsonb_array_elements(p_conceptos_costo) elem
      WHERE elem ? 'id' AND elem->>'id' IS NOT NULL AND elem->>'id' <> ''
   );
-
   FOR cc IN SELECT * FROM jsonb_array_elements(p_conceptos_costo) LOOP
     IF cc ? 'id' AND cc->>'id' IS NOT NULL AND cc->>'id' <> '' THEN
       UPDATE conceptos_costo SET
         concepto = COALESCE(cc->>'concepto', concepto),
-        -- v13.509.0 · un nombre vacío ya NO borra el proveedor existente:
-        -- solo se reemplaza cuando el payload manda un nombre real.
         proveedor_nombre = CASE
           WHEN cc ? 'proveedor_nombre' AND COALESCE(btrim(cc->>'proveedor_nombre'), '') <> ''
             THEN cc->>'proveedor_nombre'
@@ -160,27 +143,33 @@ BEGIN
         AND COALESCE(estado_liquidacion, 'Pendiente') <> 'Pagado';
     ELSE
       INSERT INTO conceptos_costo (
-        embarque_id, concepto, proveedor_nombre, proveedor_id, moneda, monto, organization_id
-      )
-      VALUES (
-        p_embarque_id, cc->>'concepto', COALESCE(cc->>'proveedor_nombre', ''),
-        CASE WHEN cc->>'proveedor_id' IS NOT NULL AND cc->>'proveedor_id' <> ''
-             THEN (cc->>'proveedor_id')::uuid ELSE NULL END,
-        (cc->>'moneda')::moneda, (cc->>'monto')::numeric, v_org_id
+        embarque_id, concepto, proveedor_id, proveedor_nombre, moneda, monto, contenedor_id, organization_id
+      ) VALUES (
+        p_embarque_id,
+        cc->>'concepto',
+        NULLIF(cc->>'proveedor_id','')::uuid,
+        COALESCE(cc->>'proveedor_nombre',''),
+        COALESCE((cc->>'moneda')::moneda, 'MXN'::moneda),
+        COALESCE((cc->>'monto')::numeric, 0),
+        NULLIF(cc->>'contenedor_id','')::uuid,
+        v_org_id
       )
       RETURNING id INTO v_new_id;
       v_incoming_costo_ids := array_append(v_incoming_costo_ids, v_new_id);
     END IF;
   END LOOP;
-
   UPDATE conceptos_costo
      SET deleted_at = now()
    WHERE embarque_id = p_embarque_id
      AND deleted_at IS NULL
      AND COALESCE(estado_liquidacion, 'Pendiente') <> 'Pagado'
+     AND NOT EXISTS (
+       SELECT 1 FROM public.proveedor_facturas_conceptos pfc
+        WHERE pfc.concepto_costo_id = conceptos_costo.id
+     )
      AND NOT (id = ANY(v_incoming_costo_ids));
-
-  v_resp := jsonb_build_object('id', p_embarque_id);
+  v_resp := jsonb_build_object('ok', true, 'embarque_id', p_embarque_id);
+  -- v13.509.5 · firma real: idempotency_store(_key uuid, _response jsonb)
   PERFORM public.idempotency_store(p_request_id, v_resp);
   RETURN v_resp;
 END;
