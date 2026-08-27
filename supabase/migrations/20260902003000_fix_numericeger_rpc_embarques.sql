@@ -358,3 +358,11 @@ ALTER TABLE public.conceptos_venta DROP CONSTRAINT IF EXISTS conceptos_venta_tot
 ALTER TABLE public.conceptos_venta
   ADD CONSTRAINT conceptos_venta_total_calc
   CHECK (abs(total - round(cantidad * precio_unitario, 2)) <= 0.01) NOT VALID;
+
+-- H6: permisos explícitos (idempotentes) tras recrear las funciones.
+GRANT EXECUTE ON FUNCTION public._crear_embarque_replicar_conceptos(uuid, uuid, uuid, uuid[], jsonb) TO service_role;
+GRANT EXECUTE ON FUNCTION public._crear_embarque_replicar_conceptos(uuid, uuid, uuid, uuid[], jsonb) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.actualizar_embarque_completo(uuid, jsonb, jsonb, jsonb, uuid, timestamp with time zone) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.actualizar_embarque_completo(uuid, jsonb, jsonb, jsonb, uuid, timestamp with time zone) TO service_role;
+GRANT EXECUTE ON FUNCTION public.crear_embarque_completo(jsonb, jsonb, jsonb, jsonb, uuid) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.crear_embarque_completo(jsonb, jsonb, jsonb, jsonb, uuid) TO service_role;
