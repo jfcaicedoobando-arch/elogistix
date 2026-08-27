@@ -53,6 +53,7 @@ describe("useTesoreriaCuentasController — edición de cuenta", () => {
     expect(actualizarMutate).toHaveBeenCalledWith({
       id: "c1",
       patch: expect.objectContaining({ saldo_inicial: 535548.69, fecha_saldo_inicial: "2026-08-06" }),
+      expectedUpdatedAt: null,
     });
   });
 
