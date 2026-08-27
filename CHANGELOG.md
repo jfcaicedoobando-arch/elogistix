@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.762.8] - 2026-08-27
+### Corrección de errores
+- Crear embarque desde cotización: la migración B-19 (cantidades fraccionadas) reescribía funciones con un reemplazo de texto y dejó el tipo corrupto `numericeger` en `_crear_embarque_replicar_conceptos`, rompiendo la replicación de conceptos. Se reinstalaron las definiciones canónicas de `_crear_embarque_replicar_conceptos`, `actualizar_embarque_completo` y `crear_embarque_completo`.
+- Se recreó el CHECK `conceptos_venta_total_calc` sin el casteo heredado de cuando `cantidad` era entero y se revocó el acceso público a `cotizaciones_guard_en_operacion` (H6). `baseline.sql` sincronizado.
+
+
 ## [13.762.7] - 2026-08-27
 ### Corrección de errores
 - Notas de crédito: el arreglo anterior quedó con una marca de tiempo (`20260827015809`) previa a la migración que reintroducía la versión vieja (`20260901002000`), así que en el replay del CI volvía a ganar la validación estricta. Se reordenó como `20260902002000_nc_fecha_tolerante_utc.sql` y los 3 guards de NC quedan en verde.
