@@ -74,42 +74,48 @@ const TOOL_SCHEMA = {
 };
 
 
+/**
+ * N-01 (auditoría R2): timeout de 45 s al gateway (patrón de
+ * `parse-invoice-pdf/extract.ts`). Sin él, un gateway colgado dejaba la
+ * invocación abierta hasta el límite de plataforma.
+ */
 async function callAiGateway(apiKey: string, fileName: string, base64: string) {
-  return await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-    method: "POST",
-    headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-    body: JSON.stringify({
-      model: "google/gemini-2.5-flash",
-      messages: [
-        { role: "system", content: SYSTEM_PROMPT },
-        {
-          role: "user",
-          content: [
-            { type: "file", file: { filename: fileName, file_data: `data:application/pdf;base64,${base64}` } },
-            { type: "text", text: "Extrae los datos fiscales de esta Constancia de Situación Fiscal." },
-          ],
-        },
-      ],
-      tools: [TOOL_SCHEMA],
-      tool_choice: { type: "function", function: { name: "extraer_datos_csf" } },
-    }),
-  });
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 45_000);
+  try {
+    return await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      signal: controller.signal,
+      headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "google/gemini-2.5-flash",
+        messages: [
+          { role: "system", content: SYSTEM_PROMPT },
+          {
+            role: "user",
+            content: [
+              { type: "file", file: { filename: fileName, file_data: `data:application/pdf;base64,${base64}` } },
+              { type: "text", text: "Extrae los datos fiscales de esta Constancia de Situación Fiscal." },
+            ],
+          },
+        ],
+        tools: [TOOL_SCHEMA],
+        tool_choice: { type: "function", function: { name: "extraer_datos_csf" } },
+      }),
+    });
+  } finally {
+    clearTimeout(timeoutId);
+  }
 }
 
-async function processCsf(req: Request, cors: HeadersInit, log: ReturnType<typeof createLogger>) {
+async function processCsf(req: Request, cors: Record<string, string>, log: ReturnType<typeof createLogger>) {
   const auth = await authenticate(req);
-  // Cualquier miembro autenticado de una organización puede invocar (contador, coordinador, admin_org, etc.).
-  // El JWT obligatorio evita drenaje de créditos Gemini por anónimos.
-  const { data: membership } = await auth.adminClient
-    .from("organization_members")
-    .select("organization_id")
-    .eq("user_id", auth.userId)
-    .limit(1)
-    .maybeSingle();
-  if (!membership?.organization_id) {
-    log.warn("acceso denegado a parse-csf", { status_code: 403, user_id: auth.userId });
-    return errorResponse("Tu usuario no pertenece a ninguna organización", 403, cors);
-  }
+  // N-01 (auditoría R2): rol de alta fiscal + rate limit persistente por
+  // usuario y por org (fail-CLOSED). Antes bastaba cualquier membresía, así que
+  // cualquier sesión podía drenar los créditos de IA.
+  const rechazo = await autorizarYLimitar(auth, cors, log);
+  if (rechazo) return rechazo;
+
   // @ts-expect-error Deno global
   const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
   if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
