@@ -20,6 +20,12 @@ export const LC_CODE_MESSAGES_CRM: Record<string, string> = {
     "Indica el motivo de pérdida para cerrar la oportunidad como perdida.",
   LC_CRM_OPORTUNIDAD_AJENA:
     "La oportunidad pertenece a otra organización, no puedes vincularla aquí.",
+  LC_OPORTUNIDAD_SIN_ORIGEN:
+    "Toda oportunidad debe nacer de un prospecto calificado o de un cliente del directorio.",
+  LC_OPORTUNIDAD_ORIGEN_NO_CALIFICADO:
+    "Ese lead todavía no está calificado como prospecto. Complétale el perfil comercial y califícalo antes de crear la oportunidad.",
+  LC_CRM_CLIENTE_AJENO:
+    "El cliente pertenece a otra organización, no puedes usarlo aquí.",
   LC_CRM_LEAD_AJENO:
     "El prospecto pertenece a otra organización, no puedes usarlo aquí.",
   LC_LEAD_YA_ASIGNADO:
