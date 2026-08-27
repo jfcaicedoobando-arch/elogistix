@@ -99,7 +99,7 @@ describe("conciliacion service", () => {
 
   describe("conciliarConPago", () => {
     it("escribe pago_factura_id (no pago_proveedor_id) cuando tipo=cxc", async () => {
-      mock.setTableResult("bbva_movimientos", { data: [], error: null });
+      mock.setTableResult("bbva_movimientos", { data: [{ id: "m1" }], error: null });
       await conciliarConPago("m1", "cxc", "p1", "u1");
       const { assertUpdatePayload, assertEq, findTableCall } = await import(
         "@/test/helpers/assertMutation"
@@ -115,7 +115,7 @@ describe("conciliacion service", () => {
     });
 
     it("escribe pago_proveedor_id (no pago_factura_id) cuando tipo=cxp", async () => {
-      mock.setTableResult("bbva_movimientos", { data: [], error: null });
+      mock.setTableResult("bbva_movimientos", { data: [{ id: "m1" }], error: null });
       await conciliarConPago("m2", "cxp", "p2", "u1");
       const { assertUpdatePayload, findTableCall } = await import(
         "@/test/helpers/assertMutation"
