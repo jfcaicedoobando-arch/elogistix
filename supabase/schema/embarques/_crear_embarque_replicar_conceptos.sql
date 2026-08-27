@@ -16,7 +16,7 @@ DECLARE
   v_costo public.cotizacion_costos%ROWTYPE;
   v_cid   uuid;
   v_venta jsonb;
-  v_cant  integer;
+  v_cant  numeric;
   v_total numeric;
   v_pu    numeric;
   v_base  numeric;
@@ -83,7 +83,7 @@ BEGIN
   IF jsonb_typeof(p_conceptos_venta) = 'array' THEN
     FOR v_venta IN SELECT * FROM jsonb_array_elements(p_conceptos_venta) LOOP
       IF COALESCE(trim(v_venta->>'descripcion'), '') <> '' THEN
-        v_cant  := GREATEST(COALESCE((v_venta->>'cantidad')::integer, 1), 1);
+        v_cant  := GREATEST(COALESCE((v_venta->>'cantidad')::numeric, 1), 1);
         v_total := ROUND(COALESCE((v_venta->>'total')::numeric, 0), 2);
         v_pu    := COALESCE((v_venta->>'precio_unitario')::numeric, 0);
 
