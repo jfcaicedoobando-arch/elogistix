@@ -143,4 +143,12 @@ describe("mutationSchemas | eventoTrackingSchema", () => {
   it("30 — rechaza descripcion > 500 caracteres", () => {
     expect(eventoTrackingSchema.safeParse({ tipo: "t", fecha: "2024-01-01", descripcion: "x".repeat(501) }).success).toBe(false);
   });
+  it("31 — preserva la hora cuando llega un ISO datetime completo", () => {
+    const iso = "2026-08-26T23:45:00.000Z";
+    const parsed = eventoTrackingSchema.parse({ tipo: "Arribo", fecha: iso });
+    expect(parsed.fecha).toBe(iso);
+  });
+  it("32 — rechaza basura que no es fecha", () => {
+    expect(eventoTrackingSchema.safeParse({ tipo: "t", fecha: "hola mundo" }).success).toBe(false);
+  });
 });
