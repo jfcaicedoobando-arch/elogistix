@@ -6,7 +6,6 @@ import PaginationControls from "@/components/shared/PaginationControls";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { BitacoraActividad } from "@/components/shared/BitacoraActividad";
 import { BitacoraFiltros } from "@/features/dashboard/components/BitacoraFiltros";
-import { MODULOS_BITACORA } from "@/services/bitacora/registrar";
 import { useBitacora } from "@/hooks/shared";
 import { usePermissions, useDocumentTitle } from "@/hooks/shared";
 import { GRUPOS_ACCION } from "@/lib/domain/bitacoraDescripcion";
