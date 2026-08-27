@@ -65,3 +65,4 @@ supabase/tests/qa_r2_etapa1_cxp_guards.sql
 supabase/tests/ola1_saldo_nc_multimoneda.sql
 supabase/tests/ola1_guards_c6_c7_c8.sql
 supabase/tests/ola2_fk_compuestas_org.sql
+supabase/tests/ola3_controles_ciclo.sql
