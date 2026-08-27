@@ -134,8 +134,9 @@ BEGIN
 
   BEGIN
     INSERT INTO public.conceptos_costo
-      (organization_id, embarque_id, concepto, moneda, cantidad, costo_unitario)
-    VALUES (org_a, emb_b, 'OLA2 CRUCE', 'MXN', 1, 1);
+      (organization_id, embarque_id, concepto, moneda, monto)
+    VALUES (org_a, emb_b, 'OLA2 CRUCE', 'MXN', 1);
+
     RAISE EXCEPTION 'OLA2 FALLA: se aceptó un concepto de costo con embarque de otra organización';
   EXCEPTION
     WHEN foreign_key_violation THEN
