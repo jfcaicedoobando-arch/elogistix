@@ -116,7 +116,28 @@ export default function Cotizaciones() {
       />
 
       <CotizacionesBannerOrigen />
-      <CotizacionesKpis {...c.kpis} />
+      <CotizacionesKpis {...c.kpis} segmento={c.segmento} />
+
+      {/* Segmento comercial: separa la prospección CRM de la operación con
+          clientes activos; los KPIs y la tabla siguen al segmento elegido. */}
+      <Tabs
+        value={c.segmento}
+        onValueChange={(v) => c.setFilter("segmento", v)}
+        className="w-full"
+      >
+        <TabsList aria-label="Segmento de cotizaciones">
+          <TabsTrigger value="clientes">
+            Clientes ({c.segmentoConteos.clientes})
+          </TabsTrigger>
+          <TabsTrigger value="prospectos">
+            Prospectos ({c.segmentoConteos.prospectos})
+          </TabsTrigger>
+          <TabsTrigger value="todas">
+            Todas ({c.segmentoConteos.todas})
+          </TabsTrigger>
+        </TabsList>
+      </Tabs>
+
 
       <Card>
         <CardContent className="p-4">

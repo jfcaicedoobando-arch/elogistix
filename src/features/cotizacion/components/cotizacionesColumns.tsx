@@ -9,7 +9,6 @@ import type { CotizacionListItem } from "@/features/cotizacion/hooks";
 import { renderEstadoVigencia } from "./columnsParts/estadoVigenciaCell";
 import { formatFechaHora } from "@/lib/formatters";
 import {
-  clientColumn,
   moneyColumn,
   actionsColumn,
 } from "@/components/shared/dataTable/columnBuilders";
