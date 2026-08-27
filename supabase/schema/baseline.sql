@@ -26944,29 +26944,29 @@ ALTER TABLE ONLY public.comisiones_excepciones
 ALTER TABLE ONLY public.comisiones_recalculo_pendiente
     ADD CONSTRAINT comisiones_recalculo_pendiente_pago_factura_id_fkey FOREIGN KEY (pago_factura_id) REFERENCES public.pagos_factura(id) ON DELETE CASCADE;
 ALTER TABLE ONLY public.conceptos_costo
-    ADD CONSTRAINT conceptos_costo_contenedor_org_fkey FOREIGN KEY (contenedor_id, organization_id) REFERENCES public.embarque_contenedores(id, organization_id) ON DELETE SET NULL;
+    ADD CONSTRAINT conceptos_costo_contenedor_id_fkey FOREIGN KEY (contenedor_id) REFERENCES public.embarque_contenedores(id) ON DELETE SET NULL;
 ALTER TABLE ONLY public.conceptos_costo
-    ADD CONSTRAINT conceptos_costo_embarque_org_fkey FOREIGN KEY (embarque_id, organization_id) REFERENCES public.embarques(id, organization_id) ON DELETE CASCADE;
+    ADD CONSTRAINT conceptos_costo_embarque_id_fkey FOREIGN KEY (embarque_id) REFERENCES public.embarques(id) ON DELETE CASCADE;
 ALTER TABLE ONLY public.conceptos_costo
     ADD CONSTRAINT conceptos_costo_organization_id_fkey FOREIGN KEY (organization_id) REFERENCES public.organizations(id);
 ALTER TABLE ONLY public.conceptos_costo
-    ADD CONSTRAINT conceptos_costo_proveedor_org_fkey FOREIGN KEY (proveedor_id, organization_id) REFERENCES public.proveedores(id, organization_id);
+    ADD CONSTRAINT conceptos_costo_proveedor_id_fkey FOREIGN KEY (proveedor_id) REFERENCES public.proveedores(id);
 ALTER TABLE ONLY public.conceptos_factura
-    ADD CONSTRAINT conceptos_factura_embarque_org_fkey FOREIGN KEY (embarque_id, organization_id) REFERENCES public.embarques(id, organization_id) ON DELETE SET NULL;
+    ADD CONSTRAINT conceptos_factura_embarque_id_fkey FOREIGN KEY (embarque_id) REFERENCES public.embarques(id) ON DELETE SET NULL;
 ALTER TABLE ONLY public.conceptos_factura
-    ADD CONSTRAINT conceptos_factura_factura_org_fkey FOREIGN KEY (factura_id, organization_id) REFERENCES public.facturas(id, organization_id) ON DELETE CASCADE;
+    ADD CONSTRAINT conceptos_factura_factura_id_fkey FOREIGN KEY (factura_id) REFERENCES public.facturas(id) ON DELETE CASCADE;
 ALTER TABLE ONLY public.conceptos_factura
     ADD CONSTRAINT conceptos_factura_organization_id_fkey FOREIGN KEY (organization_id) REFERENCES public.organizations(id);
 ALTER TABLE ONLY public.conceptos_factura
-    ADD CONSTRAINT conceptos_factura_proforma_origen_org_fkey FOREIGN KEY (proforma_id_origen, organization_id) REFERENCES public.proformas(id, organization_id) ON DELETE SET NULL;
+    ADD CONSTRAINT conceptos_factura_proforma_id_origen_fkey FOREIGN KEY (proforma_id_origen) REFERENCES public.proformas(id) ON DELETE SET NULL;
 ALTER TABLE ONLY public.conceptos_venta
-    ADD CONSTRAINT conceptos_venta_contenedor_org_fkey FOREIGN KEY (contenedor_id, organization_id) REFERENCES public.embarque_contenedores(id, organization_id) ON DELETE SET NULL;
+    ADD CONSTRAINT conceptos_venta_contenedor_id_fkey FOREIGN KEY (contenedor_id) REFERENCES public.embarque_contenedores(id) ON DELETE SET NULL;
 ALTER TABLE ONLY public.conceptos_venta
-    ADD CONSTRAINT conceptos_venta_embarque_org_fkey FOREIGN KEY (embarque_id, organization_id) REFERENCES public.embarques(id, organization_id) ON DELETE CASCADE;
+    ADD CONSTRAINT conceptos_venta_embarque_id_fkey FOREIGN KEY (embarque_id) REFERENCES public.embarques(id) ON DELETE CASCADE;
 ALTER TABLE ONLY public.conceptos_venta
     ADD CONSTRAINT conceptos_venta_organization_id_fkey FOREIGN KEY (organization_id) REFERENCES public.organizations(id);
 ALTER TABLE ONLY public.conceptos_venta
-    ADD CONSTRAINT conceptos_venta_proforma_org_fkey FOREIGN KEY (proforma_id, organization_id) REFERENCES public.proformas(id, organization_id) ON DELETE SET NULL;
+    ADD CONSTRAINT conceptos_venta_proforma_id_fkey FOREIGN KEY (proforma_id) REFERENCES public.proformas(id) ON DELETE SET NULL;
 ALTER TABLE ONLY public.configuracion
     ADD CONSTRAINT configuracion_organization_id_fkey FOREIGN KEY (organization_id) REFERENCES public.organizations(id);
 ALTER TABLE ONLY public.contactos_cliente
@@ -27014,7 +27014,7 @@ ALTER TABLE ONLY public.cotizacion_costos
 ALTER TABLE ONLY public.cotizacion_costos
     ADD CONSTRAINT cotizacion_costos_costeo_tarifa_recargo_id_fkey FOREIGN KEY (costeo_tarifa_recargo_id) REFERENCES public.costeo_tarifa_recargos(id) ON DELETE SET NULL;
 ALTER TABLE ONLY public.cotizacion_costos
-    ADD CONSTRAINT cotizacion_costos_cotizacion_org_fkey FOREIGN KEY (cotizacion_id, organization_id) REFERENCES public.cotizaciones(id, organization_id) ON DELETE CASCADE;
+    ADD CONSTRAINT cotizacion_costos_cotizacion_id_fkey FOREIGN KEY (cotizacion_id) REFERENCES public.cotizaciones(id) ON DELETE CASCADE;
 ALTER TABLE ONLY public.cotizacion_costos_historico
     ADD CONSTRAINT cotizacion_costos_historico_cotizacion_id_fkey FOREIGN KEY (cotizacion_id) REFERENCES public.cotizaciones(id) ON DELETE CASCADE;
 ALTER TABLE ONLY public.cotizacion_costos
@@ -27068,7 +27068,7 @@ ALTER TABLE ONLY public.documentos_embarque
 ALTER TABLE ONLY public.documentos_embarque
     ADD CONSTRAINT documentos_embarque_organization_id_fkey FOREIGN KEY (organization_id) REFERENCES public.organizations(id);
 ALTER TABLE ONLY public.embarque_contenedores
-    ADD CONSTRAINT embarque_contenedores_embarque_org_fkey FOREIGN KEY (embarque_id, organization_id) REFERENCES public.embarques(id, organization_id) ON DELETE CASCADE;
+    ADD CONSTRAINT embarque_contenedores_embarque_id_fkey FOREIGN KEY (embarque_id) REFERENCES public.embarques(id) ON DELETE CASCADE;
 ALTER TABLE ONLY public.embarque_facturas_entrantes_conceptos
     ADD CONSTRAINT embarque_facturas_entrantes_conceptos_concepto_costo_id_fkey FOREIGN KEY (concepto_costo_id) REFERENCES public.conceptos_costo(id) ON DELETE CASCADE;
 ALTER TABLE ONLY public.embarque_facturas_entrantes_conceptos
@@ -27124,7 +27124,7 @@ ALTER TABLE ONLY public.factura_embarques
 ALTER TABLE ONLY public.factura_envios
     ADD CONSTRAINT factura_envios_factura_id_fkey FOREIGN KEY (factura_id) REFERENCES public.facturas(id) ON DELETE CASCADE;
 ALTER TABLE ONLY public.factura_notas_credito
-    ADD CONSTRAINT factura_notas_credito_factura_org_fkey FOREIGN KEY (factura_id, organization_id) REFERENCES public.facturas(id, organization_id) ON DELETE CASCADE;
+    ADD CONSTRAINT factura_notas_credito_factura_id_fkey FOREIGN KEY (factura_id) REFERENCES public.facturas(id) ON DELETE CASCADE;
 ALTER TABLE ONLY public.factura_notas_credito
     ADD CONSTRAINT factura_notas_credito_organization_id_fkey FOREIGN KEY (organization_id) REFERENCES public.organizations(id) ON DELETE CASCADE;
 ALTER TABLE ONLY public.factura_recordatorios
@@ -27134,21 +27134,21 @@ ALTER TABLE ONLY public.factura_series
 ALTER TABLE ONLY public.facturapi_credenciales
     ADD CONSTRAINT facturapi_credenciales_organization_id_fkey FOREIGN KEY (organization_id) REFERENCES public.organizations(id) ON DELETE CASCADE;
 ALTER TABLE ONLY public.facturas
-    ADD CONSTRAINT facturas_cliente_org_fkey FOREIGN KEY (cliente_id, organization_id) REFERENCES public.clientes(id, organization_id);
+    ADD CONSTRAINT facturas_cliente_id_fkey FOREIGN KEY (cliente_id) REFERENCES public.clientes(id);
 ALTER TABLE ONLY public.facturas
-    ADD CONSTRAINT facturas_cotizacion_org_fkey FOREIGN KEY (cotizacion_id, organization_id) REFERENCES public.cotizaciones(id, organization_id) ON DELETE SET NULL;
+    ADD CONSTRAINT facturas_cotizacion_id_fkey FOREIGN KEY (cotizacion_id) REFERENCES public.cotizaciones(id) ON DELETE SET NULL;
 ALTER TABLE ONLY public.facturas
-    ADD CONSTRAINT facturas_embarque_org_fkey FOREIGN KEY (embarque_id, organization_id) REFERENCES public.embarques(id, organization_id);
+    ADD CONSTRAINT facturas_embarque_id_fkey FOREIGN KEY (embarque_id) REFERENCES public.embarques(id);
 ALTER TABLE ONLY public.facturas
     ADD CONSTRAINT facturas_organization_id_fkey FOREIGN KEY (organization_id) REFERENCES public.organizations(id);
 ALTER TABLE ONLY public.facturas
-    ADD CONSTRAINT facturas_proforma_org_fkey FOREIGN KEY (proforma_id, organization_id) REFERENCES public.proformas(id, organization_id) ON DELETE SET NULL;
+    ADD CONSTRAINT facturas_proforma_id_fkey FOREIGN KEY (proforma_id) REFERENCES public.proformas(id) ON DELETE SET NULL;
 ALTER TABLE ONLY public.facturas
     ADD CONSTRAINT facturas_serie_id_fkey FOREIGN KEY (serie_id) REFERENCES public.factura_series(id);
 ALTER TABLE ONLY public.facturas
-    ADD CONSTRAINT facturas_sustituida_por_org_fkey FOREIGN KEY (sustituida_por, organization_id) REFERENCES public.facturas(id, organization_id) ON DELETE SET NULL;
+    ADD CONSTRAINT facturas_sustituida_por_fkey FOREIGN KEY (sustituida_por) REFERENCES public.facturas(id) ON DELETE SET NULL;
 ALTER TABLE ONLY public.facturas
-    ADD CONSTRAINT facturas_sustituye_a_org_fkey FOREIGN KEY (sustituye_a, organization_id) REFERENCES public.facturas(id, organization_id) ON DELETE SET NULL;
+    ADD CONSTRAINT facturas_sustituye_a_fkey FOREIGN KEY (sustituye_a) REFERENCES public.facturas(id) ON DELETE SET NULL;
 ALTER TABLE ONLY public.notas_embarque
     ADD CONSTRAINT notas_embarque_embarque_id_fkey FOREIGN KEY (embarque_id) REFERENCES public.embarques(id) ON DELETE CASCADE;
 ALTER TABLE ONLY public.notas_embarque
@@ -27158,9 +27158,9 @@ ALTER TABLE ONLY public.organization_members
 ALTER TABLE ONLY public.pagos_factura
     ADD CONSTRAINT pagos_factura_cuenta_bancaria_id_fkey FOREIGN KEY (cuenta_bancaria_id) REFERENCES public.cuentas_bancarias(id);
 ALTER TABLE ONLY public.pagos_factura
-    ADD CONSTRAINT pagos_factura_embarque_org_fkey FOREIGN KEY (embarque_id, organization_id) REFERENCES public.embarques(id, organization_id) ON DELETE SET NULL;
+    ADD CONSTRAINT pagos_factura_embarque_id_fkey FOREIGN KEY (embarque_id) REFERENCES public.embarques(id) ON DELETE SET NULL;
 ALTER TABLE ONLY public.pagos_factura
-    ADD CONSTRAINT pagos_factura_factura_org_fkey FOREIGN KEY (factura_id, organization_id) REFERENCES public.facturas(id, organization_id) ON DELETE CASCADE;
+    ADD CONSTRAINT pagos_factura_factura_id_fkey FOREIGN KEY (factura_id) REFERENCES public.facturas(id) ON DELETE CASCADE;
 ALTER TABLE ONLY public.pagos_factura_lote
     ADD CONSTRAINT pagos_factura_lote_cliente_id_fkey FOREIGN KEY (cliente_id) REFERENCES public.clientes(id);
 ALTER TABLE ONLY public.pagos_factura_lote
@@ -27171,14 +27171,14 @@ ALTER TABLE ONLY public.pagos_factura
     ADD CONSTRAINT pagos_factura_refacturacion_fk FOREIGN KEY (refacturacion_id) REFERENCES public.refacturaciones(id) ON DELETE RESTRICT NOT VALID;
 ALTER TABLE ONLY public.pagos_proveedor
     ADD CONSTRAINT pagos_proveedor_cuenta_bancaria_id_fkey FOREIGN KEY (cuenta_bancaria_id) REFERENCES public.cuentas_bancarias(id) ON DELETE SET NULL;
-ALTER TABLE ONLY public.pagos_proveedor
-    ADD CONSTRAINT pagos_proveedor_factura_org_fkey FOREIGN KEY (proveedor_factura_id, organization_id) REFERENCES public.proveedor_facturas(id, organization_id) ON DELETE RESTRICT;
 ALTER TABLE ONLY public.pagos_proveedor_lote
     ADD CONSTRAINT pagos_proveedor_lote_cuenta_bancaria_id_fkey FOREIGN KEY (cuenta_bancaria_id) REFERENCES public.cuentas_bancarias(id);
 ALTER TABLE ONLY public.pagos_proveedor
     ADD CONSTRAINT pagos_proveedor_lote_id_fkey FOREIGN KEY (lote_id) REFERENCES public.pagos_proveedor_lote(id);
 ALTER TABLE ONLY public.pagos_proveedor_lote
     ADD CONSTRAINT pagos_proveedor_lote_proveedor_id_fkey FOREIGN KEY (proveedor_id) REFERENCES public.proveedores(id);
+ALTER TABLE ONLY public.pagos_proveedor
+    ADD CONSTRAINT pagos_proveedor_proveedor_factura_id_fkey FOREIGN KEY (proveedor_factura_id) REFERENCES public.proveedor_facturas(id) ON DELETE RESTRICT;
 ALTER TABLE ONLY public.proforma_conceptos_consolidados
     ADD CONSTRAINT pcc_embarque_id_fkey FOREIGN KEY (embarque_id) REFERENCES public.embarques(id) ON DELETE SET NULL;
 ALTER TABLE ONLY public.proforma_conceptos_consolidados
@@ -27190,15 +27190,15 @@ ALTER TABLE ONLY public.proforma_conceptos_consolidados
 ALTER TABLE ONLY public.proforma_envios
     ADD CONSTRAINT proforma_envios_proforma_id_fkey FOREIGN KEY (proforma_id) REFERENCES public.proformas(id) ON DELETE CASCADE;
 ALTER TABLE ONLY public.proformas
-    ADD CONSTRAINT proformas_cliente_org_fkey FOREIGN KEY (cliente_id, organization_id) REFERENCES public.clientes(id, organization_id);
+    ADD CONSTRAINT proformas_cliente_id_fkey FOREIGN KEY (cliente_id) REFERENCES public.clientes(id);
 ALTER TABLE ONLY public.proformas
-    ADD CONSTRAINT proformas_consolidada_en_org_fkey FOREIGN KEY (consolidada_en, organization_id) REFERENCES public.proformas(id, organization_id) ON DELETE SET NULL;
+    ADD CONSTRAINT proformas_consolidada_en_fkey FOREIGN KEY (consolidada_en) REFERENCES public.proformas(id) ON DELETE SET NULL;
 ALTER TABLE ONLY public.proformas
-    ADD CONSTRAINT proformas_embarque_org_fkey FOREIGN KEY (embarque_id, organization_id) REFERENCES public.embarques(id, organization_id) ON DELETE CASCADE;
+    ADD CONSTRAINT proformas_embarque_id_fkey FOREIGN KEY (embarque_id) REFERENCES public.embarques(id) ON DELETE CASCADE;
 ALTER TABLE ONLY public.proformas
-    ADD CONSTRAINT proformas_factura_org_fkey FOREIGN KEY (factura_id, organization_id) REFERENCES public.facturas(id, organization_id) ON DELETE SET NULL;
+    ADD CONSTRAINT proformas_factura_id_fkey FOREIGN KEY (factura_id) REFERENCES public.facturas(id) ON DELETE SET NULL;
 ALTER TABLE ONLY public.proformas
-    ADD CONSTRAINT proformas_factura_secundaria_org_fkey FOREIGN KEY (factura_secundaria_id, organization_id) REFERENCES public.facturas(id, organization_id) ON DELETE SET NULL;
+    ADD CONSTRAINT proformas_factura_secundaria_id_fkey FOREIGN KEY (factura_secundaria_id) REFERENCES public.facturas(id) ON DELETE SET NULL;
 ALTER TABLE ONLY public.proformas
     ADD CONSTRAINT proformas_organization_id_fkey FOREIGN KEY (organization_id) REFERENCES public.organizations(id) ON DELETE RESTRICT;
 ALTER TABLE ONLY public.proveedor_alias
@@ -27216,9 +27216,9 @@ ALTER TABLE ONLY public.proveedor_facturas_conceptos
 ALTER TABLE ONLY public.proveedor_facturas_conceptos
     ADD CONSTRAINT proveedor_facturas_conceptos_proveedor_factura_id_fkey FOREIGN KEY (proveedor_factura_id) REFERENCES public.proveedor_facturas(id) ON DELETE CASCADE;
 ALTER TABLE ONLY public.proveedor_facturas
-    ADD CONSTRAINT proveedor_facturas_embarque_org_fkey FOREIGN KEY (embarque_id, organization_id) REFERENCES public.embarques(id, organization_id) ON DELETE SET NULL;
+    ADD CONSTRAINT proveedor_facturas_embarque_id_fkey FOREIGN KEY (embarque_id) REFERENCES public.embarques(id) ON DELETE SET NULL;
 ALTER TABLE ONLY public.proveedor_facturas
-    ADD CONSTRAINT proveedor_facturas_proveedor_org_fkey FOREIGN KEY (proveedor_id, organization_id) REFERENCES public.proveedores(id, organization_id) ON DELETE RESTRICT;
+    ADD CONSTRAINT proveedor_facturas_proveedor_id_fkey FOREIGN KEY (proveedor_id) REFERENCES public.proveedores(id) ON DELETE RESTRICT;
 ALTER TABLE ONLY public.proveedor_notas_credito
     ADD CONSTRAINT proveedor_notas_credito_proveedor_factura_id_fkey FOREIGN KEY (proveedor_factura_id) REFERENCES public.proveedor_facturas(id) ON DELETE RESTRICT;
 ALTER TABLE ONLY public.proveedores
