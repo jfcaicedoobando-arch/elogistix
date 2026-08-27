@@ -1,5 +1,14 @@
 # Changelog
 
+## [13.767.0] - 2026-08-27
+### Nueva funcionalidad
+- Rediseño CRM (etapa 2): toda **oportunidad** se crea eligiendo su origen — **Prospecto calificado** o **Cliente actual** — con nuevo selector `SelectorOrigenOportunidad` (pestañas + buscador).
+- Ficha del prospecto: botón **"Nueva oportunidad"** y tarjeta **Oportunidades del prospecto** con etapa, monto y fecha estimada de cierre.
+- Validación en el formulario antes de enviar (origen obligatorio) y mensajes claros para `LC_OPORTUNIDAD_SIN_ORIGEN`, `LC_OPORTUNIDAD_ORIGEN_NO_CALIFICADO` y `LC_CRM_CLIENTE_AJENO`.
+- En edición el origen queda de sólo lectura para no romper la trazabilidad del embudo.
+
+
+
 ## [13.766.0] - 2026-08-27
 ### Nueva funcionalidad
 - Rediseño CRM (etapa 1): embudo explícito **Lead → Prospecto → Oportunidad → alta de cliente (fuera del CRM)**.
