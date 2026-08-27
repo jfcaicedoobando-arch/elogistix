@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.762.3] - 2026-08-27
+### Fix
+- Sincronizado `migration-manifest.json` con las 1106 migraciones en disco.
+
 ## [13.762.2] - 2026-08-27
 ### Corrección de errores
 - Bitácora: la barra de filtros se separó en su propio componente para cumplir el límite de tamaño de archivo (sin cambios visibles).
