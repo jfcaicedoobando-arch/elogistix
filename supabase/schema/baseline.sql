@@ -26713,6 +26713,7 @@ CREATE TRIGGER trg_cotizaciones_guard_en_operacion BEFORE UPDATE ON public.cotiz
 CREATE TRIGGER trg_cotizaciones_sod_aceptacion BEFORE UPDATE ON public.cotizaciones FOR EACH ROW EXECUTE FUNCTION public._cotizaciones_bloquear_auto_aceptacion();
 CREATE TRIGGER trg_cotizaciones_subtotal_server BEFORE INSERT OR UPDATE OF conceptos_venta, moneda ON public.cotizaciones FOR EACH ROW EXECUTE FUNCTION public.trg_cotizacion_subtotal_server();
 CREATE TRIGGER trg_cotizaciones_sync_vigencia BEFORE INSERT OR UPDATE OF validez_propuesta, vigencia_dias, fecha_vigencia ON public.cotizaciones FOR EACH ROW EXECUTE FUNCTION public._cotizaciones_sync_vigencia();
+CREATE TRIGGER trg_cotizaciones_validar_prospecto BEFORE INSERT OR UPDATE ON public.cotizaciones FOR EACH ROW EXECUTE FUNCTION public._cotizaciones_validar_prospecto();
 CREATE TRIGGER trg_crear_garantia_contenedor AFTER INSERT ON public.embarque_contenedores FOR EACH ROW EXECUTE FUNCTION public.crear_garantia_contenedor();
 CREATE TRIGGER trg_crm_act_updated_at BEFORE UPDATE ON public.crm_actividades FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 CREATE TRIGGER trg_crm_actividad_toca_oportunidad AFTER INSERT ON public.crm_actividades FOR EACH ROW EXECUTE FUNCTION public._crm_actividad_toca_oportunidad();
