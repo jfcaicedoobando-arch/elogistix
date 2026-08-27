@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.764.0] - 2026-08-27
+### Nueva funcionalidad
+- CRM: ciclo de vida del prospecto. Nuevos estados de lead `Prospecto` (calificado y en cotización) y `Pendiente de alta` (aceptó cotización pero aún no es cliente).
+- BD: trigger `trg_crm_lead_avanzar_por_cotizacion` avanza el lead según el estado de su cotización de prospecto (Enviada/Solicitada → `Prospecto`, Aceptada → `Pendiente de alta`), sin tocar leads Descalificados ni Convertidos.
+- UI: `LeadEtapaProspectoAviso` explica en la ficha del lead que aún no es cliente y ofrece el alta manual sólo a roles autorizados.
+
+
 ## [13.763.1] - 2026-08-27
 ### Corrección de errores
 - CRM: `ReferenceError: SIN_CLIENTE is not defined` al abrir el diálogo/sheet de convertir lead. Se extrajo `SIN_CLIENTE` a `src/features/crm/constants/crmConstants.ts` para desacoplarlo del default export de `SelectorClienteExistente` y evitar que Vite/SWC no resuelva el named export en runtime.
