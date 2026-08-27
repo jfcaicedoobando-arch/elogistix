@@ -132,6 +132,7 @@ export { sugerirCandidatos,  } from "./sugerirCandidatos";
 
 export { MovimientoVinculoError } from "./conciliacionErrors";
 import { mapConciliacionError, MovimientoVinculoError } from "./conciliacionErrors";
+import { conflictoConcurrenciaError } from "@/lib/errors/concurrencia";
 
 
 export async function conciliarConPago(
@@ -161,7 +162,10 @@ export async function conciliarConPago(
   const patch = tipo === "cxc"
     ? { pago_factura_id: pagoId, pago_proveedor_id: null }
     : { pago_proveedor_id: pagoId, pago_factura_id: null };
-  const { error } = await supabase
+  // H5 (Ola 4): bloqueo optimista — sólo se concilia un movimiento que siga
+  // pendiente. Si otro usuario lo concilió o lo ignoró mientras el modal estaba
+  // abierto, no se pisa su decisión: se avisa y se pide recargar.
+  const { data: filas, error } = await supabase
     .from("bbva_movimientos")
     .update({
       ...patch,
@@ -170,7 +174,12 @@ export async function conciliarConPago(
       conciliado_at: new Date().toISOString(),
     })
     .eq("id", movId)
-    .is("deleted_at", null);
+    .eq("estado_conciliacion", "Pendiente")
+    .is("deleted_at", null)
+    .select("id");
+  if (!error && (!filas || filas.length === 0)) {
+    throw conflictoConcurrenciaError();
+  }
   if (error) {
     reportCaughtError(error, {
       feature: "tesoreria",

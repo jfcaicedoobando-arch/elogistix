@@ -22,6 +22,9 @@ const VALIDACIONES_NEGOCIO = [
   "no cuadra",
   "no está en estado",
   "sin permiso",
+  // Ola 4 (H2): respaldo mínimo. Se aprueban una por una con justificación.
+  "no está ligada",
+  "excede el monto",
 ];
 
 function esValidacionNegocio(msg: string): boolean {
