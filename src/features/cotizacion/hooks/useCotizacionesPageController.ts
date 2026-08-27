@@ -113,6 +113,9 @@ const DEFAULT_FILTERS = {
   sinCostos: "no",
   incluirInactivas: "no",
   aceptadasSinEmbarque: "no",
+  // Por defecto se muestran las cotizaciones a clientes; la prospección
+  // (CRM) vive en su propio segmento para no mezclar embudos.
+  segmento: "clientes",
 } as const;
 
 type CotizacionFilters = Record<keyof typeof DEFAULT_FILTERS, string>;
