@@ -80,6 +80,12 @@ export const LC_CODE_MESSAGES_OPERATIVO_GENERICOS: Record<string, string> = {
     "No encontramos la cotización. Es posible que alguien más la haya eliminado.",
   LC_COTIZACION_NO_REACTIVABLE:
     "Solo se pueden reactivar cotizaciones rechazadas o vencidas.",
+  LC_ORG_CRUZADA:
+    "El registro pertenece a otra organización y no puede vincularse aquí. Recarga la página y verifica la empresa activa.",
+  LC_DASHBOARD_SIN_PERMISO:
+    "No tienes permiso para ver los indicadores de este tablero.",
+  LC_DEMO_SOLO_SERVICIO:
+    "Esta acción sólo puede ejecutarla el sistema en la organización de demostración.",
   LC_LEAD_NO_ENCONTRADO:
     "No encontramos el prospecto. Recarga la página y vuelve a intentarlo.",
   LC_OPORTUNIDAD_SIN_NOMBRE: "Captura el nombre de la oportunidad para continuar.",

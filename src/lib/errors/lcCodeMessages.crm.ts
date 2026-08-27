@@ -28,6 +28,19 @@ export const LC_CODE_MESSAGES_CRM: Record<string, string> = {
     "El cliente pertenece a otra organización, no puedes usarlo aquí.",
   LC_CRM_LEAD_AJENO:
     "El prospecto pertenece a otra organización, no puedes usarlo aquí.",
+  // ── Ola 1-3 · calificación de leads y cotizaciones de prospecto ────────
+  LC_LEAD_ESTADO_NO_CALIFICABLE:
+    "El lead no está en un estado que permita calificarlo. Contáctalo y actualiza su estado antes de calificarlo como prospecto.",
+  LC_LEAD_PERFIL_INCOMPLETO:
+    "Faltan datos del perfil comercial del lead (empresa, contacto, servicio de interés). Complétalos antes de calificarlo.",
+  LC_LEAD_SIN_PERMISO_CALIFICAR:
+    "No tienes permiso para calificar leads como prospectos. Pídelo a tu gerente comercial.",
+  LC_COT_CLIENTE_REQUERIDO:
+    "La cotización necesita un cliente. Selecciona el cliente al que va dirigida.",
+  LC_COT_PROSPECTO_CON_CLIENTE:
+    "Una cotización de prospecto no puede tener cliente asignado. Elige prospecto o cliente, no ambos.",
+  LC_COT_PROSPECTO_SIN_EMPRESA:
+    "Captura el nombre de la empresa del prospecto antes de guardar la cotización.",
   LC_LEAD_YA_ASIGNADO:
     "Otro vendedor ya tomó este lead. Actualiza la lista para ver la bolsa disponible.",
   LC_LEAD_SIN_PERMISO_TOMA:
