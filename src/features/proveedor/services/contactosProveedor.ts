@@ -4,7 +4,7 @@
  * garantiza un solo contacto principal por proveedor.
  */
 import { supabase } from "@/integrations/supabase/client";
-import { unwrap, unwrapOr } from "@/lib/supabase/response";
+import { unwrap, unwrapOr, run } from "@/lib/supabase/response";
 import { conflictoConcurrenciaError } from "@/lib/errors/concurrencia";
 import type {
   ContactoProveedor,
