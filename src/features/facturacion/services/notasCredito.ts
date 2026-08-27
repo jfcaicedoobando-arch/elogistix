@@ -12,6 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Tables, TablesInsert } from "@/integrations/supabase/types";
 import { getCurrentUser } from "@/features/auth/services";
 import { run, unwrap, unwrapOr } from "@/lib/supabase/response";
+import { conflictoConcurrenciaError } from "@/lib/errors/concurrencia";
 import { registrarActividad } from "@/services/bitacora/registrar";
 
 export type NotaCredito = Tables<"factura_notas_credito">;
@@ -158,6 +159,11 @@ export async function cambiarEstadoNotaCredito(
   id: string,
   estadoActual: EstadoNotaCredito,
   estadoNuevo: EstadoNotaCredito,
+  /**
+   * N-06 (QA r2): bloqueo optimista. Junto con el filtro por `estado` garantiza
+   * que la NC sigue exactamente como estaba cuando se validó la transición.
+   */
+  expectedUpdatedAt?: string | null,
 ): Promise<void> {
   asegurarTransicion(estadoActual, estadoNuevo);
   const patch: Partial<NotaCredito> = { estado: estadoNuevo };
@@ -166,7 +172,14 @@ export async function cambiarEstadoNotaCredito(
     patch.aprobada_por = user.id;
     patch.aprobada_at = new Date().toISOString();
   }
-  await run(supabase.from("factura_notas_credito").update(patch).eq("id", id));
+  let query = supabase
+    .from("factura_notas_credito")
+    .update(patch)
+    .eq("id", id)
+    .eq("estado", estadoActual);
+  if (expectedUpdatedAt) query = query.eq("updated_at", expectedUpdatedAt);
+  const filas = await unwrapOr(query.select("id"), []);
+  if (filas.length === 0) throw conflictoConcurrenciaError();
   await registrarActividad({
     modulo: "facturacion",
     accion: `Cambió estado de nota de crédito a ${estadoNuevo}`,

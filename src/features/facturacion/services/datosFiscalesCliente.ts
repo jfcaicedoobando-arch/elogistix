@@ -5,7 +5,8 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import { registrarActividad } from "@/services/bitacora/registrar";
-import { unwrap, run } from "@/lib/supabase/response";
+import { unwrap, run, unwrapOr } from "@/lib/supabase/response";
+import { conflictoConcurrenciaError } from "@/lib/errors/concurrencia";
 
 export interface ClienteFiscalRow {
   rfc: string | null;
@@ -38,8 +39,13 @@ export interface DatosTimbradoPatch {
 export async function actualizarDatosTimbradoFactura(
   facturaId: string,
   patch: DatosTimbradoPatch,
+  /** N-06 (QA r2): bloqueo optimista opcional (`updated_at` leído al abrir el diálogo). */
+  expectedUpdatedAt?: string | null,
 ): Promise<void> {
-  await run(supabase.from("facturas").update(patch).eq("id", facturaId));
+  let query = supabase.from("facturas").update(patch).eq("id", facturaId);
+  if (expectedUpdatedAt) query = query.eq("updated_at", expectedUpdatedAt);
+  const filas = await unwrapOr(query.select("id"), []);
+  if (filas.length === 0 && expectedUpdatedAt) throw conflictoConcurrenciaError();
   await registrarActividad({
     modulo: "facturacion",
     accion: "actualizar_datos_timbrado_factura",
