@@ -24,7 +24,7 @@ describe("useCotizacionUpdateGuard", () => {
     );
     await result.current.mutateAsync(VARS);
     await result.current.mutateAsync(VARS);
-    expect(mutateAsync.mock.calls[1]?.[0]).toMatchObject({
+    expect((mutateAsync.mock.calls as unknown as [{ expectedUpdatedAt: string | null }][])[1]?.[0]).toMatchObject({
       expectedUpdatedAt: "2026-09-02T10:00:00Z",
     });
   });
@@ -35,7 +35,7 @@ describe("useCotizacionUpdateGuard", () => {
       useCotizacionUpdateGuard({ mutateAsync, isPending: false }, undefined),
     );
     await result.current.mutateAsync(VARS);
-    expect(mutateAsync.mock.calls[0]?.[0]).toMatchObject({ expectedUpdatedAt: null });
+    expect((mutateAsync.mock.calls as unknown as [{ expectedUpdatedAt: string | null }][])[0]?.[0]).toMatchObject({ expectedUpdatedAt: null });
   });
 
   it("propaga isPending de la mutación subyacente", () => {

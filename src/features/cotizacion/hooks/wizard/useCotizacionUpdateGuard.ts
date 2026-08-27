@@ -18,7 +18,7 @@ export interface UpdateCotizacionMutation {
 }
 
 export interface GuardedUpdateMutation {
-  mutateAsync: (d: UpdateVars) => Promise<void>;
+  mutateAsync: (d: UpdateVars) => Promise<unknown>;
   isPending: boolean;
 }
 

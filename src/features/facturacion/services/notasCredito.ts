@@ -11,7 +11,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables, TablesInsert } from "@/integrations/supabase/types";
 import { getCurrentUser } from "@/features/auth/services";
-import { run, unwrap, unwrapOr } from "@/lib/supabase/response";
+import { unwrap, unwrapOr } from "@/lib/supabase/response";
 import { conflictoConcurrenciaError } from "@/lib/errors/concurrencia";
 import { registrarActividad } from "@/services/bitacora/registrar";
 

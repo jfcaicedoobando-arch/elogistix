@@ -16,7 +16,8 @@ import { requiereTransicionABorrador } from "@/features/cotizacion/domain/estado
 
 interface Mutations {
   crearCotizacion: { mutateAsync: (d: CreateCotizacionInput) => Promise<{ id: string }> };
-  updateCotizacion: { mutateAsync: (d: { id: string; data: Record<string, unknown> }) => Promise<void> };
+  // Devuelve el nuevo `updated_at` (N-06) o void; al wizard le basta con esperarlo.
+  updateCotizacion: { mutateAsync: (d: { id: string; data: Record<string, unknown> }) => Promise<unknown> };
   upsertCostos: { mutateAsync: (d: { cotizacionId: string; costos: CostoCotizacion[] }) => Promise<CostoCotizacion[]> };
 }
 
