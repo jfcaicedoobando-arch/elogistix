@@ -47,6 +47,12 @@ export async function fetchFacturaParaEdicion(id: string): Promise<FacturaParaEd
 export async function actualizarFacturaProveedor(
   id: string,
   payload: ActualizarFacturaPayload,
+  /**
+   * H5 (Ola 4): bloqueo optimista. `updated_at` leído al abrir el formulario;
+   * si otro usuario ya guardó, el UPDATE no toca filas y se avisa en vez de
+   * sobrescribir su trabajo.
+   */
+  expectedUpdatedAt?: string | null,
 ): Promise<ProveedorFacturaRow> {
   // 1) Lee factura actual: necesitamos proveedor_id y estado_aprobacion.
   const { data: actual, error: errActual } = await supabase
@@ -55,6 +61,7 @@ export async function actualizarFacturaProveedor(
     .eq("id", id)
     .single();
   if (errActual) throw errActual;
+
 
   // 2) Duplicado (proveedor + folio + emisión) excluyendo self.
   const dup = await existeFacturaDuplicada(
