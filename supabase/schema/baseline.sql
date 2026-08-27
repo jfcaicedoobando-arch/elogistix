@@ -28324,6 +28324,9 @@ GRANT ALL ON FUNCTION public.crm_avance_actividad(p_desde date, p_hasta date) TO
 GRANT ALL ON FUNCTION public.crm_avance_actividad(p_desde date, p_hasta date) TO service_role;
 REVOKE ALL ON FUNCTION public.crm_backfill_cotizaciones_sin_oportunidad() FROM PUBLIC;
 GRANT ALL ON FUNCTION public.crm_backfill_cotizaciones_sin_oportunidad() TO service_role;
+REVOKE ALL ON FUNCTION public.crm_calificar_prospecto(p_lead_id uuid) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.crm_calificar_prospecto(p_lead_id uuid) TO authenticated;
+GRANT ALL ON FUNCTION public.crm_calificar_prospecto(p_lead_id uuid) TO service_role;
 REVOKE ALL ON FUNCTION public.crm_cierra_oportunidad_desde_cotizacion() FROM PUBLIC;
 GRANT ALL ON FUNCTION public.crm_cierra_oportunidad_desde_cotizacion() TO authenticated;
 GRANT ALL ON FUNCTION public.crm_cierra_oportunidad_desde_cotizacion() TO service_role;
