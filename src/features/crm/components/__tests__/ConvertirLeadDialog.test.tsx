@@ -68,7 +68,7 @@ describe("ConvertirLeadDialog · regresión SIN_CLIENTE", () => {
     expect(screen.getByText("Sin cliente (ligar después)")).toBeTruthy();
   });
 
-  it("deshabilita el selector cuando el lead ya fue convertido a cliente", () => {
+  it("muestra modo de solo lectura cuando el lead ya fue convertido", () => {
     const leadConvertido = {
       ...leadBase,
       estado: "Convertido",
@@ -76,6 +76,8 @@ describe("ConvertirLeadDialog · regresión SIN_CLIENTE", () => {
       oportunidad_convertida_id: "op-1",
     } as unknown as CrmLeadRow;
     renderDialog({ lead: leadConvertido });
-    expect(screen.getByText("Lead convertido")).toBeTruthy();
+    expect(screen.getByText("Este lead ya fue convertido.")).toBeTruthy();
+    expect(screen.getByRole("button", { name: /Ver cliente/i })).toBeTruthy();
+    expect(screen.getByRole("button", { name: /Ver oportunidad/i })).toBeTruthy();
   });
 });
