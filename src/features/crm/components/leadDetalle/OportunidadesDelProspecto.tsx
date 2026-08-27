@@ -8,9 +8,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useOportunidadesPorLead } from "@/features/crm/hooks";
-import { formatMoneda } from "@/lib/formatters";
+import { formatCurrencyCompact } from "@/lib/formatters";
 import { formatFechaEs } from "@/lib/formatters/dates";
-import type { Moneda } from "@/types/db";
 
 interface Props {
   leadId: string;
@@ -54,7 +53,7 @@ export default function OportunidadesDelProspecto({ leadId, canEdit, onNuevaOpor
                   <span className="flex items-center gap-2 text-body-sm text-muted-foreground">
                     {o.etapa_nombre ? <Badge variant="outline">{o.etapa_nombre}</Badge> : null}
                     <span>
-                      {formatMoneda(Number(o.monto_estimado ?? 0), (o.moneda as Moneda) ?? "MXN")}
+                      {formatCurrencyCompact(Number(o.monto_estimado ?? 0), o.moneda ?? "MXN")}
                     </span>
                     <span>
                       {o.fecha_estimada_cierre ? formatFechaEs(o.fecha_estimada_cierre) : "sin fecha"}
