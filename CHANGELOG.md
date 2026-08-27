@@ -1,5 +1,16 @@
 # Changelog
 
+## [13.760.0] - 2026-09-02
+### Seguridad
+- Importación CSV de clientes y proveedores: se neutralizan las celdas que inician con `=`, `+`, `-` o `@` (anteponiendo `'`) para evitar inyección de fórmulas al abrir el archivo exportado en Excel.
+
+### Fix
+- N-06: bloqueo optimista (`updated_at`) al editar cotizaciones, cambiar el estado de notas de crédito y actualizar datos de timbrado de facturas. Si otra sesión ya modificó el registro se lanza `LC_CONFLICTO_CONCURRENCIA` en lugar de sobrescribir en silencio.
+- W-13: en el alta de cotizaciones el MSDS se sube DESPUÉS de crear el registro; antes, si la creación fallaba, el PDF quedaba huérfano en el almacenamiento.
+
+### Rendimiento
+- Importación masiva: `createClientesLote` e `insertProveedoresLote` hacen un solo `insert` por lote de 200 filas en vez de una inserción por fila (5 viajes por cada 1000 registros). Los proveedores reintentan fila a fila sólo si el lote choca con el RFC duplicado.
+
 ## [13.759.0] - 2026-08-26
 ### Fix
 - Portal de cliente: las policies `Cliente read own facturas`, `Cliente read own documentos`, `Cliente read own factura_notas_credito` y `Cliente read own embarque_contenedores` ahora exigen `deleted_at IS NULL` (propio y del padre). Antes el portal mostraba registros enviados a la papelera.
