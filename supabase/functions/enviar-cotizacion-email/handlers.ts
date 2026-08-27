@@ -122,6 +122,8 @@ export interface SendParams {
   cors: Record<string, string>;
 }
 
+interface Ejecutivo { nombre?: string; email?: string; telefono?: string }
+
 interface SendBodyParsed {
   destinatarios: Destinatario[];
   validRecipients: Destinatario[];
@@ -131,23 +133,69 @@ interface SendBodyParsed {
   pdfStoragePath: string;
   marcarEnviada: boolean;
   totales: { mxn?: string; usd?: string };
-  ejecutivo: { nombre?: string; email?: string; telefono?: string };
+  ejecutivo: Ejecutivo;
+}
+
+/** Sanea un total mostrado en el correo: texto corto, sin HTML. */
+function saneaTotal(valor: unknown): string | undefined {
+  if (typeof valor !== 'string') return undefined;
+  const limpio = valor.replace(/[<>]/g, '').trim().slice(0, 40);
+  return limpio || undefined;
 }
 
 function parseSendBody(body: Record<string, unknown>): SendBodyParsed {
   const destinatarios = Array.isArray(body.destinatarios) ? (body.destinatarios as Destinatario[]) : [];
   const ccEmails = Array.isArray(body.cc) ? (body.cc as string[]).filter(isEmail) : [];
+  const totales = (body.totales ?? {}) as { mxn?: unknown; usd?: unknown };
   return {
     destinatarios,
     validRecipients: destinatarios.filter((d) => d?.email && isEmail(d.email)),
     ccEmails,
     mensaje: typeof body.mensaje === 'string' ? body.mensaje : '',
     asunto: typeof body.asunto === 'string' ? body.asunto : '',
-    pdfStoragePath: typeof body.pdf_path === 'string' ? body.pdf_path : '',
+    // W-02 (auditoría R2): `body.pdf_path` se IGNORA. El path se resuelve
+    // server-side bajo `${organization_id}/${cotizacion_id}/`; antes cualquier
+    // miembro podía pedir un link firmado a CUALQUIER PDF del bucket, incluido
+    // el de otra organización.
+    pdfStoragePath: '',
     marcarEnviada: body.marcar_enviada !== false,
-    totales: (body.totales ?? {}) as { mxn?: string; usd?: string },
-    ejecutivo: (body.ejecutivo ?? {}) as { nombre?: string; email?: string; telefono?: string },
+    totales: { mxn: saneaTotal(totales.mxn), usd: saneaTotal(totales.usd) },
+    // W-04: el ejecutivo se resuelve desde la sesión, nunca desde el body.
+    ejecutivo: {},
   };
+}
+
+/**
+ * W-02: resuelve el PDF más reciente subido para ESTA cotización. El prefijo
+ * lo construye el servidor con la org y el id de la cotización ya validados,
+ * así que es imposible firmar un archivo ajeno.
+ */
+async function resolverPdfPath(
+  admin: ReturnType<typeof createClient>,
+  cot: Cotizacion,
+): Promise<string | null> {
+  const prefijo = `${cot.organization_id}/${cot.id}`;
+  const { data: archivos, error } = await admin
+    .storage.from(BUCKET_PDF)
+    .list(prefijo, { limit: 20, sortBy: { column: 'created_at', order: 'desc' } });
+  if (error || !archivos || archivos.length === 0) return null;
+  const pdf = archivos.find((a) => a.name.toLowerCase().endsWith('.pdf'));
+  return pdf ? `${prefijo}/${pdf.name}` : null;
+}
+
+/** W-04: datos del ejecutivo desde la sesión (no del body, evita suplantación). */
+async function resolverEjecutivo(
+  admin: ReturnType<typeof createClient>,
+  userId: string,
+  userEmail: string,
+): Promise<Ejecutivo> {
+  const { data } = await admin.auth.admin.getUserById(userId);
+  const meta = (data?.user?.user_metadata ?? {}) as Record<string, unknown>;
+  const nombre = typeof meta.full_name === 'string' && meta.full_name.trim()
+    ? meta.full_name.trim()
+    : (data?.user?.email ?? userEmail);
+  const telefono = typeof meta.telefono === 'string' ? meta.telefono : undefined;
+  return { nombre: nombre || undefined, email: data?.user?.email ?? userEmail, telefono };
 }
 
 interface PersistParams {
@@ -170,6 +218,7 @@ async function persistEnvioAndLog(params: PersistParams): Promise<string | null>
     .insert({
       cotizacion_id: cot.id, organization_id: cot.organization_id, enviado_por: userId,
       destinatarios: parsed.validRecipients, cc: parsed.ccEmails, asunto: parsed.asunto, mensaje: parsed.mensaje,
+      // W-03: `pdf_link_publico` es un link TEMPORAL firmado (TTL 7 días).
       pdf_storage_path: parsed.pdfStoragePath, pdf_link_publico: pdfLink, estado: estadoEnvio,
       error: anyFail ? JSON.stringify(resultados.filter((r) => !r.ok)) : null,
     })
@@ -200,39 +249,68 @@ function buildTemplateData(cot: Cotizacion, parsed: SendBodyParsed, pdfLink: str
   };
 }
 
+/**
+ * Validaciones previas al envío: rol de escritura (W-05) y destinatarios que
+ * pertenezcan a los contactos del cliente (M8). Devuelve la Response de
+ * rechazo o `null` si puede continuar.
+ */
+async function validarEnvio(
+  admin: ReturnType<typeof createClient>,
+  cot: Cotizacion,
+  userId: string,
+  parsed: SendBodyParsed,
+  cors: Record<string, string>,
+): Promise<Response | null> {
+  if (parsed.validRecipients.length === 0) {
+    return jsonResponse({ error: 'Al menos un destinatario válido es requerido' }, 400, cors);
+  }
+  // W-05 (auditoría R2): antes bastaba ser miembro de la org (incluido
+  // `viewer`) para enviar cotizaciones al cliente en nombre de la empresa.
+  const okRol = await authorizeOrgRole(admin, userId, cot.organization_id, ROLES_ESCRITURA_COTIZACIONES);
+  if (!okRol) {
+    return jsonResponse({ error: 'Tu rol no puede enviar cotizaciones' }, 403, cors);
+  }
+  if (!cot.cliente_id) return null;
+  const permitidos = await emailsPermitidosCliente(admin as never, cot.cliente_id);
+  const ajenos = [...parsed.validRecipients.map((d) => d.email), ...parsed.ccEmails]
+    .filter((e) => !permitidos.has(e.trim().toLowerCase()));
+  if (ajenos.length > 0) {
+    return jsonResponse({
+      error: 'Uno o más correos no pertenecen a los contactos del cliente',
+      code: DESTINATARIO_NO_PERMITIDO,
+    }, 400, cors);
+  }
+  return null;
+}
+
 export async function handleSend(params: SendParams): Promise<Response> {
   const { admin, supabaseUrl, supabaseServiceKey, cot, userId, userEmail, body, timestamp, cors } = params;
 
   const parsed = parseSendBody(body);
-  if (parsed.validRecipients.length === 0) return jsonResponse(cors, { error: 'Al menos un destinatario válido es requerido' }, 400);
-  if (!parsed.pdfStoragePath) return jsonResponse(cors, { error: 'pdf_path requerido (sube el PDF primero con action=prepare)' }, 400);
+  const rechazo = await validarEnvio(admin, cot, userId, parsed, cors);
+  if (rechazo) return rechazo;
 
-  // M8: los destinatarios deben pertenecer al cliente de la cotización.
-  if (cot.cliente_id) {
-    const permitidos = await emailsPermitidosCliente(admin as never, cot.cliente_id);
-    const ajenos = [...parsed.validRecipients.map((d) => d.email), ...parsed.ccEmails]
-      .filter((e) => !permitidos.has(e.trim().toLowerCase()));
-    if (ajenos.length > 0) {
-      return jsonResponse(cors, {
-        error: 'Uno o más correos no pertenecen a los contactos del cliente',
-        code: DESTINATARIO_NO_PERMITIDO,
-      }, 400);
-    }
+  const pdfPath = await resolverPdfPath(admin, cot);
+  if (!pdfPath) {
+    return jsonResponse({ error: 'No hay PDF para esta cotización (súbelo primero con action=prepare)' }, 400, cors);
   }
-
+  parsed.pdfStoragePath = pdfPath;
+  parsed.ejecutivo = await resolverEjecutivo(admin, userId, userEmail);
 
   const safeFolio = (cot.folio ?? 'cotizacion').replace(/[^A-Za-z0-9._-]+/g, '_');
   const orgSlug = await fetchOrgSlug(admin, cot.organization_id);
   const { data: signed, error: signErr } = await admin
-    .storage.from('cotizaciones-pdf')
-    .createSignedUrl(parsed.pdfStoragePath, SIGNED_URL_TTL, {
+    .storage.from(BUCKET_PDF)
+    .createSignedUrl(pdfPath, SIGNED_URL_TTL, {
       download: `${orgSlug}_Cotizacion-${safeFolio}.pdf`,
     });
-  if (signErr || !signed) return jsonResponse(cors, { error: 'No se pudo generar link al PDF', detail: signErr?.message }, 500);
+  if (signErr || !signed) {
+    return jsonResponse({ error: 'No se pudo generar link al PDF', detail: signErr?.message }, 500, cors);
+  }
 
   const pdfLink = signed.signedUrl;
-  const enlacePortal = `${APP_URL}/cotizaciones/${cot.id}`;
-  const templateData = buildTemplateData(cot, parsed, pdfLink, enlacePortal);
+  const pdfLinkExpiraEn = new Date(Date.now() + SIGNED_URL_TTL * 1000).toISOString();
+  const templateData = buildTemplateData(cot, parsed, pdfLink, `${APP_URL}/cotizaciones/${cot.id}`);
 
   const recipients = [
     ...parsed.validRecipients.map((d) => ({ email: d.email, nombre: d.nombre, tipo: 'to' as const })),
@@ -252,5 +330,9 @@ export async function handleSend(params: SendParams): Promise<Response> {
 
   await updateCotizacionEstado(admin, cot, anyOk, parsed.marcarEnviada);
 
-  return jsonResponse(cors, { success: anyOk, estado: estadoEnvio, envio_id: envioId, resultados, pdf_link: pdfLink });
+  return jsonResponse({
+    success: anyOk, estado: estadoEnvio, envio_id: envioId, resultados,
+    pdf_link: pdfLink, pdf_link_expires_at: pdfLinkExpiraEn,
+  }, 200, cors);
 }
+
