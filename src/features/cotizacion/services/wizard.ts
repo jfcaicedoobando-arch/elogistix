@@ -16,7 +16,8 @@ import { requiereTransicionABorrador } from "@/features/cotizacion/domain/estado
 
 interface Mutations {
   crearCotizacion: { mutateAsync: (d: CreateCotizacionInput) => Promise<{ id: string }> };
-  updateCotizacion: { mutateAsync: (d: { id: string; data: Record<string, unknown> }) => Promise<void> };
+  // Devuelve el nuevo `updated_at` (N-06) o void; al wizard le basta con esperarlo.
+  updateCotizacion: { mutateAsync: (d: { id: string; data: Record<string, unknown> }) => Promise<unknown> };
   upsertCostos: { mutateAsync: (d: { cotizacionId: string; costos: CostoCotizacion[] }) => Promise<CostoCotizacion[]> };
 }
 
@@ -30,20 +31,13 @@ export async function savePaso1(opts: {
   const { form, msdsFile, cotizacionId, buildPaso1Data, mutations } = opts;
   const v = form.getValues();
 
-  let msdsArchivo: string | null = null;
-  if (v.tipoCarga === "Mercancía Peligrosa" && msdsFile) {
-    // v13.420.0 (Sentry JAVASCRIPT-REACT-4M): ruta con organization_id raíz.
-    const { buildMsdsPath } = await import("@/services/storage/orgPath");
-    const path = await buildMsdsPath(msdsFile.name);
-    await uploadFile(path, msdsFile);
-    msdsArchivo = path;
-  }
-
-
+  const hayMsds = v.tipoCarga === "Mercancía Peligrosa" && !!msdsFile;
   const data = buildPaso1Data();
-  if (msdsArchivo) data.msds_archivo = msdsArchivo;
 
   if (cotizacionId) {
+    // En UPDATE el registro ya existe: subir el MSDS antes es seguro.
+    const msdsArchivo = hayMsds ? await subirMsds(msdsFile as File) : null;
+    if (msdsArchivo) data.msds_archivo = msdsArchivo;
     // BL-3: en UPDATE nunca se escribe `msds_archivo` si no hubo archivo nuevo.
     // Antes se mandaba `null` y cualquier edición de una cotización de mercancía
     // peligrosa borraba el documento de seguridad ya cargado.
@@ -56,11 +50,29 @@ export async function savePaso1(opts: {
     delete data.subtotal;
     await mutations.updateCotizacion.mutateAsync({ id: cotizacionId, data });
     return cotizacionId;
-  } else {
-    data.msds_archivo = msdsArchivo;
-    const cotizacion = await mutations.crearCotizacion.mutateAsync(fromDb<CreateCotizacionInput>(data));
-    return cotizacion.id;
   }
+  // W-13 (QA r2): en CREATE primero se crea la cotización y DESPUÉS se sube el
+  // MSDS. Antes el orden era inverso: si la creación fallaba, el PDF quedaba
+  // huérfano en el almacenamiento.
+  data.msds_archivo = null;
+  const cotizacion = await mutations.crearCotizacion.mutateAsync(fromDb<CreateCotizacionInput>(data));
+  if (hayMsds) {
+    const msdsArchivo = await subirMsds(msdsFile as File);
+    await mutations.updateCotizacion.mutateAsync({
+      id: cotizacion.id,
+      data: { msds_archivo: msdsArchivo },
+    });
+  }
+  return cotizacion.id;
+}
+
+/** Sube el MSDS al bucket de la organización y devuelve su ruta. */
+async function subirMsds(file: File): Promise<string> {
+  // v13.420.0 (Sentry JAVASCRIPT-REACT-4M): ruta con organization_id raíz.
+  const { buildMsdsPath } = await import("@/services/storage/orgPath");
+  const path = await buildMsdsPath(file.name);
+  await uploadFile(path, file);
+  return path;
 }
 
 export async function savePaso2(opts: {

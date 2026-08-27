@@ -79,7 +79,44 @@ describe("savePaso1", () => {
     const arg = (uploadFileMock.mock.calls[0] as unknown as [string])[0];
     expect(arg.startsWith("00000000-0000-0000-0000-000000000001/msds/")).toBe(true);
     expect(arg.endsWith(".pdf")).toBe(true);
+  });
 
+  // W-13 (QA r2): sin cotización creada no debe existir archivo en storage.
+  it("crea la cotización ANTES de subir el MSDS y luego la actualiza", async () => {
+    const orden: string[] = [];
+    muts.crearCotizacion.mutateAsync.mockImplementationOnce(async () => {
+      orden.push("crear");
+      return { id: "cot1" };
+    });
+    uploadFileMock.mockImplementationOnce(async () => {
+      orden.push("upload");
+      return undefined;
+    });
+    const file = new File(["x"], "ficha.pdf", { type: "application/pdf" });
+    await savePaso1({
+      form: makeForm({ tipoCarga: "Mercancía Peligrosa" }),
+      msdsFile: file, cotizacionId: null,
+      buildPaso1Data: () => ({}), mutations: muts,
+    });
+    expect(orden).toEqual(["crear", "upload"]);
+    const patch = muts.updateCotizacion.mutateAsync.mock.calls[0] as unknown as [
+      { id: string; data: { msds_archivo: string } },
+    ];
+    expect(patch[0].id).toBe("cot1");
+    expect(patch[0].data.msds_archivo).toContain("/msds/");
+  });
+
+  it("no deja huérfano el MSDS si falla la creación de la cotización", async () => {
+    muts.crearCotizacion.mutateAsync.mockRejectedValueOnce(new Error("boom"));
+    const file = new File(["x"], "ficha.pdf", { type: "application/pdf" });
+    await expect(
+      savePaso1({
+        form: makeForm({ tipoCarga: "Mercancía Peligrosa" }),
+        msdsFile: file, cotizacionId: null,
+        buildPaso1Data: () => ({}), mutations: muts,
+      }),
+    ).rejects.toThrow("boom");
+    expect(uploadFileMock).not.toHaveBeenCalled();
   });
 
   it("no sube MSDS si tipoCarga es general aunque haya archivo", async () => {

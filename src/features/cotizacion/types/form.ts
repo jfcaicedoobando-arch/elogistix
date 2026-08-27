@@ -147,6 +147,8 @@ export interface CotizacionInitialData {
   agente_nombre?: string | null;
   naviera_id?: string | null;
   naviera_nombre?: string | null;
+  /** N-06 (QA r2): sello leído al abrir el wizard, para el bloqueo optimista. */
+  updated_at?: string | null;
 }
 
 export interface CotizacionInitialCosto {

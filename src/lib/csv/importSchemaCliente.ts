@@ -6,6 +6,7 @@ import {
   type ImportPreview,
   type ImportRowError,
   type ImportRowResult,
+  sanitizeRow,
   type Row,
 } from "./importSchemasShared";
 
@@ -60,7 +61,8 @@ export function mapClienteRows(
 
   rows.forEach((raw, idx) => {
     const rowNumber = idx + 2;
-    const parsed = clienteRowSchema.safeParse(raw);
+    // N-05: neutraliza fórmulas de Excel antes de validar.
+    const parsed = clienteRowSchema.safeParse(sanitizeRow(raw));
     if (!parsed.success) {
       invalid.push({ rowNumber, message: firstZodMessage(parsed.error), raw });
       return;

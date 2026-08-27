@@ -32,8 +32,13 @@ export function useCreateCotizacion() {
 export function useUpdateCotizacion() {
   const queryClient = useQueryClient();
   return useMutationWithFeedback({
-    mutationFn: ({ id, data }: { id: string; data: Partial<CreateCotizacionInput> }) =>
-      svcUpdate(id, data),
+    // N-06 (QA r2): `expectedUpdatedAt` opcional = bloqueo optimista; el
+    // servicio devuelve el nuevo `updated_at` para la siguiente escritura.
+    mutationFn: ({ id, data, expectedUpdatedAt }: {
+      id: string;
+      data: Partial<CreateCotizacionInput>;
+      expectedUpdatedAt?: string | null;
+    }) => svcUpdate(id, data, expectedUpdatedAt),
     invalidate: queryKeys.cotizaciones.all,
     errorTitle: "Error al actualizar cotización",
     errorMethod: "UPDATE_COTIZACION",

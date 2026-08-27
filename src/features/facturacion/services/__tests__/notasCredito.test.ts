@@ -69,14 +69,14 @@ describe("services/facturas/notasCredito", () => {
   });
 
   it("cambiarEstadoNotaCredito permite Borrador→Timbrada (canon FIX2)", async () => {
-    mock.setTableResult("factura_notas_credito", { data: null, error: null });
+    mock.setTableResult("factura_notas_credito", { data: [{ id: "nc1" }], error: null });
     await expect(
       cambiarEstadoNotaCredito("nc1", "Borrador", "Timbrada"),
     ).resolves.toBeUndefined();
   });
 
   it("cambiarEstadoNotaCredito permite Timbrada→Aplicada", async () => {
-    mock.setTableResult("factura_notas_credito", { data: null, error: null });
+    mock.setTableResult("factura_notas_credito", { data: [{ id: "nc1" }], error: null });
     await expect(
       cambiarEstadoNotaCredito("nc1", "Timbrada", "Aplicada"),
     ).resolves.toBeUndefined();
@@ -92,6 +92,14 @@ describe("services/facturas/notasCredito", () => {
     await expect(
       cambiarEstadoNotaCredito("nc1", "Aplicada", "Borrador"),
     ).rejects.toThrow(/Transición inválida/);
+  });
+
+  // N-06 (QA r2): 0 filas afectadas = la NC cambió en otra sesión.
+  it("cambiarEstadoNotaCredito lanza conflicto si la NC ya cambió de estado", async () => {
+    mock.setTableResult("factura_notas_credito", { data: [], error: null });
+    await expect(cambiarEstadoNotaCredito("nc1", "Borrador", "Timbrada")).rejects.toThrow(
+      /LC_CONFLICTO_CONCURRENCIA/,
+    );
   });
 
   it("cambiarEstadoNotaCredito propaga error de update", async () => {
