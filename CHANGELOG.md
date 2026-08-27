@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.762.4] - 2026-08-27
+### Corrección de errores
+- Notas de crédito: se corrigió el rechazo indebido "la fecha debe estar entre la emisión de la factura y hoy" al capturar por la tarde/noche en México (el servidor ya estaba en el día siguiente).
+- Suite RLS: se agregó la función faltante al arranque de pruebas para que el replay en base limpia no aborte.
+
 ## [13.762.3] - 2026-08-27
 ### Fix
 - Sincronizado `migration-manifest.json` con las 1106 migraciones en disco.
