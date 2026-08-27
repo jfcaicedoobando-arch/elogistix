@@ -15,6 +15,9 @@ DECLARE
   v_emb_org uuid;
   v_origen text;
   v_tiene_xml_lineas boolean;
+  v_suma_vinculada numeric(18,4);
+  v_comprometido numeric(18,4);
+  v_sobrecosto numeric(18,4);
 BEGIN
   SELECT * INTO v_row FROM public.proveedor_facturas WHERE id = p_factura_id;
   IF v_row.id IS NULL OR v_row.deleted_at IS NOT NULL THEN
@@ -59,6 +62,32 @@ BEGIN
       to_char(COALESCE(v_row.subtotal,0),'FM999,999,999,990.00'),
       to_char(v_diferencia,              'FM999,999,999,990.00'),
       to_char(v_tolerancia,              'FM999,999,999,990.00');
+  END IF;
+
+  -- QA B-15: lo facturado en conceptos vinculados no debe exceder lo
+  -- comprometido en conceptos_costo (tolerancia 0.02; umbral duro 5%).
+  SELECT COALESCE(SUM(pfc.monto * COALESCE(NULLIF(pfc.cantidad,0),1)), 0),
+         COALESCE(SUM(cc.monto), 0)
+    INTO v_suma_vinculada, v_comprometido
+    FROM public.proveedor_facturas_conceptos pfc
+    JOIN public.conceptos_costo cc
+      ON cc.id = pfc.concepto_costo_id AND cc.deleted_at IS NULL
+   WHERE pfc.proveedor_factura_id = p_factura_id
+     AND pfc.concepto_costo_id IS NOT NULL;
+
+  v_sobrecosto := v_suma_vinculada - v_comprometido;
+  IF v_sobrecosto > 0.02 THEN
+    IF v_comprometido > 0 AND v_sobrecosto > v_comprometido * 0.05 THEN
+      RAISE EXCEPTION 'LC_CXP_SOBRECOSTO: Lo facturado (%) excede lo comprometido (%) en %; revisa los conceptos vinculados antes de aprobar.',
+        to_char(v_suma_vinculada, 'FM999,999,999,990.00'),
+        to_char(v_comprometido,   'FM999,999,999,990.00'),
+        to_char(v_sobrecosto,     'FM999,999,999,990.00');
+    ELSE
+      RAISE WARNING 'LC_CXP_SOBRECOSTO: lo facturado (%) excede lo comprometido (%) en % (<= 5%%, se aprueba con advertencia).',
+        to_char(v_suma_vinculada, 'FM999,999,999,990.00'),
+        to_char(v_comprometido,   'FM999,999,999,990.00'),
+        to_char(v_sobrecosto,     'FM999,999,999,990.00');
+    END IF;
   END IF;
 
   IF v_row.embarque_id IS NOT NULL THEN
