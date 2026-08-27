@@ -1,5 +1,6 @@
 import FacturapiCredencialesCard from "@/features/configuracion/components/FacturapiCredencialesCard";
 import { CatalogoClavesSATCard } from "@/features/configuracion/components/CatalogoClavesSATCard";
+import CierrePeriodoCard from "@/features/configuracion/components/CierrePeriodoCard";
 
 /**
  * Tab de Facturación en Configuración.
@@ -12,6 +13,7 @@ export default function TabFacturacion() {
   return (
     <div className="space-y-4">
       <FacturapiCredencialesCard />
+      <CierrePeriodoCard />
       <CatalogoClavesSATCard />
     </div>
   );
