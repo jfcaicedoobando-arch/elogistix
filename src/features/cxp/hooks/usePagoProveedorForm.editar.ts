@@ -19,6 +19,8 @@ export interface PagoEditable {
   notas: string | null;
   cuenta_bancaria_id: string | null;
   diferencia_cambiaria_mxn: number | null;
+  /** Sello de versión para el bloqueo optimista al guardar (H5). */
+  updated_at?: string | null;
 }
 
 /** Monto del pago original expresado en la moneda de la factura. */
