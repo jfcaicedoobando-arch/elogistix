@@ -104,13 +104,19 @@ export async function actualizarFacturaProveedor(
     updateBody.aprobada_at = null;
   }
 
-  const { data, error } = await supabase
+  let query = supabase
     .from("proveedor_facturas")
     .update(updateBody)
-    .eq("id", id)
-    .select()
-    .single();
+    .eq("id", id);
+  if (expectedUpdatedAt) query = query.eq("updated_at", expectedUpdatedAt);
+  const { data: filas, error } = await query.select();
   if (error) throw error;
+  if (!filas || filas.length === 0) {
+    if (expectedUpdatedAt) throw conflictoConcurrenciaError();
+    throw new Error("No se guardaron los cambios: la factura ya no existe o no tienes permiso.");
+  }
+  const data = filas[0];
+
   await registrarActividad({
     modulo: "cxp",
     accion: "editar",
