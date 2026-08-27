@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.762.1] - 2026-08-27
+### Corrección de errores
+- Reparada una diferencia entre la base de datos y el código: volvieron a activarse tres candados que no habían llegado a producción (fecha válida en notas de crédito, conceptos de factura editables sólo en Borrador y bloqueo de cambios en cotizaciones ya operadas).
+- Estado de resultados anual: sólo cuenta facturas realmente emitidas (antes sumaba borradores y facturas por timbrar) y agrupa las notas de crédito por su fecha de emisión, no por la última modificación.
+
 ## [13.762.0] - 2026-08-27
 ### Mejoras
 - Cuentas por pagar: al aprobar una factura de proveedor ahora se compara lo facturado contra el costo comprometido del embarque. Si el exceso pasa del 5% se bloquea (`LC_CXP_SOBRECOSTO`); si es menor, se aprueba con advertencia.
