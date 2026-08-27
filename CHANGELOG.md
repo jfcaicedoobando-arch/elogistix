@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.762.5] - 2026-08-27
+### Fix
+- CI (radar de drift): se eximió `20260827010526…` del replay en base limpia — instala un trigger cuya función se crea en una migración posterior; el estado final lo garantizan `20260901001400` y `20260902001000`.
+
 ## [13.762.4] - 2026-08-27
 ### Corrección de errores
 - Notas de crédito: se corrigió el rechazo indebido "la fecha debe estar entre la emisión de la factura y hoy" al capturar por la tarde/noche en México (el servidor ya estaba en el día siguiente).
