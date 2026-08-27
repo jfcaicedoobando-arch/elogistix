@@ -102,7 +102,7 @@ export function useCotizacionKpis(cotizaciones: CotizacionListItem[], segmento: 
     const rechazadas = ultimos30.filter((c) => c.estado === "Rechazada").length;
     const tasa = total > 0 ? ((aceptadas / total) * 100).toFixed(1) : "0.0";
     return { total, aceptadas, rechazadas, tasa };
-  }, [cotizaciones]);
+  }, [cotizaciones, segmento]);
 }
 
 // ── Hook composer ───────────────────────────────────────────────────────────
