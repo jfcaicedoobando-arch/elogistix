@@ -1,5 +1,21 @@
 # Changelog
 
+## [13.770.0] - 2026-08-27
+### Corrección
+- **Notas de crédito multi-moneda (C1/C1b)**: el saldo y el estado de la factura ahora convierten la nota de crédito a la moneda de la factura. Una factura MXN saldada con una NC en USD ya queda en **Pagada** y desaparece de cartera (antes mostraba un adeudo fantasma).
+- Las tres fuentes de saldo (`saldo_factura_bruto`, `recalcular_estado_factura` y `cartera_pendiente`) usan una sola función canónica `_nc_aplicadas_moneda_factura`.
+- El rollback de una factura manual fallida ahora usa baja lógica en lugar de borrado físico.
+### Seguridad
+- **C7**: `ensure_demo_membership` dejó de ser ejecutable por usuarios autenticados (sólo el servicio interno); cerraba una vía de escalación de privilegios entre organizaciones.
+- **C6**: prohibido el borrado físico de facturas (privilegios revocados, policy eliminada y trigger `trg_prohibir_delete_factura`).
+- **C8**: `uuid_fiscal` único por organización en facturas vivas.
+- **C9**: los indicadores de dirección (`dashboard_summary`, `dashboard_details`) exigen rol autorizado; el cálculo interno quedó reservado al servicio.
+- Lectura de costos de cotización separada de la escritura: sólo roles con visibilidad de costo los reciben.
+### Pruebas
+- Nuevas suites de regresión `ola1_saldo_nc_multimoneda.sql` y `ola1_guards_c6_c7_c8.sql` registradas en el manifiesto de guards.
+
+
+
 ## [13.767.0] - 2026-08-27
 ### Nueva funcionalidad
 - Rediseño CRM (etapa 2): toda **oportunidad** se crea eligiendo su origen — **Prospecto calificado** o **Cliente actual** — con nuevo selector `SelectorOrigenOportunidad` (pestañas + buscador).
