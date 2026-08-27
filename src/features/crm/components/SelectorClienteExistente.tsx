@@ -12,8 +12,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { useClientesForSelect } from "@/features/cliente/hooks";
-
-export const SIN_CLIENTE = "sin_cliente";
+import { SIN_CLIENTE } from "@/features/crm/constants/crmConstants";
 
 interface Props {
   value: string;

@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.763.1] - 2026-08-27
+### Corrección de errores
+- CRM: `ReferenceError: SIN_CLIENTE is not defined` al abrir el diálogo/sheet de convertir lead. Se extrajo `SIN_CLIENTE` a `src/features/crm/constants/crmConstants.ts` para desacoplarlo del default export de `SelectorClienteExistente` y evitar que Vite/SWC no resuelva el named export en runtime.
+- Pruebas: se agregaron tests de renderizado para `ConvertirLeadDialog` y `ConvertirLeadSheet` que cubren la regresión.
+
 ## [13.763.0] - 2026-08-27
 ### Seguridad
 - CRM: `convertir_lead_rpc` ya no crea clientes (`LC_LEAD_ALTA_CLIENTE_PROHIBIDA`) y sólo es ejecutable por `authenticated`. El alta de clientes vive únicamente en el módulo de Clientes, con su gate de roles y validaciones fiscales (RFC, CP, régimen).
