@@ -179,6 +179,29 @@ export const ROLES_CAPTURA_CXP: readonly string[] = [
   "auxiliar_contable", "gerente_operaciones", "gerente_visor",
 ];
 
+/**
+ * R2 · W-05 — Escritura/envío de cotizaciones. Espejo server-side del helper
+ * SQL `public.puede_escribir_cotizaciones` (v13.750.0). Mantener sincronizada:
+ * si un rol puede editar la cotización en BD, debe poder enviarla por correo.
+ * Excluye roles de portal (`cliente`, `agente_carga`) y de sólo lectura.
+ */
+export const ROLES_ESCRITURA_COTIZACIONES: readonly string[] = [
+  "super_admin", "admin", "admin_org", "gerente_comercial", "vendedor",
+  "ejecutivo_pricing", "coordinador_logistico", "gerente_operaciones",
+  "operador", "customer_service",
+];
+
+/**
+ * R2 · N-01 — Alta de datos fiscales (parseo de CSF con IA en clientes y
+ * proveedores). Une los roles comerciales que dan de alta clientes con los
+ * roles contables que dan de alta proveedores.
+ */
+export const ROLES_ALTA_FISCAL: readonly string[] = [
+  "super_admin", "admin", "admin_org", "gerente_comercial", "vendedor",
+  "coordinador_logistico", "gerente_operaciones", "contador",
+  "auxiliar_contable", "tesorero",
+];
+
 
 
 /**
