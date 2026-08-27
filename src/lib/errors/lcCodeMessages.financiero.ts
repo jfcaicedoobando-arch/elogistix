@@ -204,5 +204,11 @@ export const LC_CODE_MESSAGES_FINANCIERO: Record<string, string> = {
     "Ya existe una factura de proveedor con ese folio interno. Recarga la lista y vuelve a guardar.",
   LC_CXP_SOBRECOSTO:
     "Lo facturado por el proveedor excede el costo comprometido del embarque en más del 5%. Revisa los conceptos vinculados o ajusta el costo antes de aprobar.",
+  // ── Ola 4 · respaldo mínimo al aprobar CxP (three-way match) ───────────
+  LC_CXP_SIN_RESPALDO:
+    "Esta factura no está ligada a un embarque ni a costos acordados. Escribe la justificación del gasto (mínimo 10 caracteres) para poder aprobarla.",
+  LC_CXP_SIN_RESPALDO_MONTO:
+    "La factura excede el monto que puede aprobarse sin respaldo. Vincúlala al embarque o a sus conceptos de costo antes de aprobar (el límite se ajusta en Configuración → Compras).",
 };
+
 
