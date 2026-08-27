@@ -212,6 +212,8 @@ export function useCotizacionesPageController() {
     filterSinCostos,
     incluirInactivas,
     soloAceptadasSinEmbarque,
+    segmento,
+    segmentoConteos,
     totalAceptadasSinEmbarque,
     page: tf.page, pageSize: tf.pageSize, totalPages,
     setSearch: tf.setSearch, setFilter: tf.setFilter,
