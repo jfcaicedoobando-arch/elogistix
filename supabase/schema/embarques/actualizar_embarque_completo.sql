@@ -10,7 +10,7 @@ CREATE OR REPLACE FUNCTION public.actualizar_embarque_completo(p_embarque_id uui
  LANGUAGE plpgsql
  SECURITY DEFINER
  SET search_path TO 'public'
-AS $function$
+AS $$
 DECLARE
   v_org_id uuid;
   v_resp jsonb;
@@ -184,7 +184,7 @@ BEGIN
   PERFORM public.idempotency_store(p_request_id, v_resp);
   RETURN v_resp;
 END;
-$function$;
+$$;
 
 -- Permisos (1:1 con la migración 20260819100000):
 REVOKE ALL ON FUNCTION public.actualizar_embarque_completo(uuid, jsonb, jsonb, jsonb, uuid, timestamp with time zone) FROM PUBLIC, anon;

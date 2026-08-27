@@ -11,7 +11,7 @@ CREATE OR REPLACE FUNCTION public._crear_embarque_replicar_conceptos(p_cotizacio
  LANGUAGE plpgsql
  SECURITY DEFINER
  SET search_path TO 'public', 'pg_catalog'
-AS $function$
+AS $$
 DECLARE
   v_costo public.cotizacion_costos%ROWTYPE;
   v_cid   uuid;
@@ -104,7 +104,7 @@ BEGIN
     END LOOP;
   END IF;
 END;
-$function$;
+$$;
 
 -- Permisos (1:1 con la migración 20260819100000):
 REVOKE ALL ON FUNCTION public._crear_embarque_replicar_conceptos(uuid, uuid, uuid, uuid[], jsonb) FROM PUBLIC, anon;
