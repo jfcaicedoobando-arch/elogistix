@@ -142,6 +142,8 @@ export function useCotizacionesPageController() {
       sinCostos: "Sin costos",
       incluirInactivas: "Incl. inactivas",
       aceptadasSinEmbarque: "Aceptadas sin embarque",
+      // El segmento se controla con tabs propios, no como chip de filtro.
+      segmento: "Segmento",
     },
   });
 
@@ -150,6 +152,9 @@ export function useCotizacionesPageController() {
   const filterSinCostos = tf.filters.sinCostos === "si";
   const incluirInactivas = tf.filters.incluirInactivas === "si";
   const soloAceptadasSinEmbarque = tf.filters.aceptadasSinEmbarque === "si";
+  const segmento = (tf.filters.segmento === "prospectos" || tf.filters.segmento === "todas"
+    ? tf.filters.segmento
+    : "clientes") as SegmentoCotizacion;
 
   const filtered = useMemo(
     () =>
@@ -161,13 +166,25 @@ export function useCotizacionesPageController() {
           filterSinCostos,
           incluirInactivas,
           soloAceptadasSinEmbarque,
+          segmento,
         }),
       ),
     [
       cotizaciones, tf.search, filterEstado, filterCliente, filterSinCostos,
-      incluirInactivas, soloAceptadasSinEmbarque,
+      incluirInactivas, soloAceptadasSinEmbarque, segmento,
     ],
   );
+
+  // Conteos por segmento para los tabs (ignoran el resto de filtros).
+  const segmentoConteos = useMemo(() => {
+    let clientes = 0;
+    let prospectos = 0;
+    for (const c of cotizaciones) {
+      if (c.es_prospecto === true) prospectos += 1;
+      else clientes += 1;
+    }
+    return { clientes, prospectos, todas: clientes + prospectos };
+  }, [cotizaciones]);
 
   // O4.5(a): contador de la bandeja, independiente de los filtros visibles.
   const totalAceptadasSinEmbarque = useMemo(
