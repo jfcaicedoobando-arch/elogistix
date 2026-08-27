@@ -1,24 +1,19 @@
 import { useState, useMemo } from "react";
 import { History } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ListSkeleton } from "@/components/shared/states/ListSkeleton";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
 import PaginationControls from "@/components/shared/PaginationControls";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { BitacoraActividad } from "@/components/shared/BitacoraActividad";
+import { BitacoraFiltros } from "@/features/dashboard/components/BitacoraFiltros";
 import { useBitacora } from "@/hooks/shared";
 import { usePermissions, useDocumentTitle } from "@/hooks/shared";
 import { GRUPOS_ACCION } from "@/lib/domain/bitacoraDescripcion";
-import { MODULOS_BITACORA } from "@/services/bitacora/registrar";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { useOrganization } from "@/lib/contexts/OrganizationContext";
 import { ErrorState } from "@/components/shared/states/ErrorState";
-import { FILTRO_ANCHO } from "@/lib/ui/filterWidths";
 import type { CursorBitacora } from "@/types/bitacora";
 
-const MODULOS = MODULOS_BITACORA;
 
 const RANGOS = [
   { valor: "todo", etiqueta: "Todo el tiempo", dias: null as number | null },
@@ -126,64 +121,20 @@ export default function Bitacora() {
         }
       />
 
-      {/* Filtros */}
-      <div className="flex items-center gap-3 flex-wrap">
-        <Select value={moduloFiltro} onValueChange={resetPagina(setModuloFiltro)}>
-          <SelectTrigger className={FILTRO_ANCHO.md}>
-            <SelectValue placeholder="Módulo" />
-          </SelectTrigger>
-          <SelectContent>
-            {MODULOS.map((modulo) => (
-              <SelectItem key={modulo.valor} value={modulo.valor}>
-                {modulo.etiqueta}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+      <BitacoraFiltros
+        rangos={RANGOS}
+        moduloFiltro={moduloFiltro}
+        accionFiltro={accionFiltro}
+        rangoFiltro={rangoFiltro}
+        mostrarLogins={mostrarLogins}
+        mostrarSwitchLogins={!esAuth}
+        total={total}
+        onModuloChange={resetPagina(setModuloFiltro)}
+        onAccionChange={resetPagina(setAccionFiltro)}
+        onRangoChange={resetPagina(setRangoFiltro)}
+        onMostrarLoginsChange={resetPagina(setMostrarLogins)}
+      />
 
-        <Select value={accionFiltro} onValueChange={resetPagina(setAccionFiltro)}>
-          <SelectTrigger className={FILTRO_ANCHO.md}>
-            <SelectValue placeholder="Acción" />
-          </SelectTrigger>
-          <SelectContent>
-            {GRUPOS_ACCION.map((grupo) => (
-              <SelectItem key={grupo.valor} value={grupo.valor}>
-                {grupo.etiqueta}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-
-        <Select value={rangoFiltro} onValueChange={resetPagina(setRangoFiltro)}>
-          <SelectTrigger className={FILTRO_ANCHO.md}>
-            <SelectValue placeholder="Rango" />
-          </SelectTrigger>
-          <SelectContent>
-            {RANGOS.map((rango) => (
-              <SelectItem key={rango.valor} value={rango.valor}>
-                {rango.etiqueta}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-
-        {!esAuth && (
-          <div className="flex items-center gap-2">
-            <Switch
-              id="mostrar-logins"
-              checked={mostrarLogins}
-              onCheckedChange={(v) => { setMostrarLogins(v); setPagina(0); setCursores({}); }}
-            />
-            <Label size="sm" htmlFor="mostrar-logins" className="text-muted-foreground cursor-pointer">
-              Incluir logins
-            </Label>
-          </div>
-        )}
-
-        <span className="text-body-sm text-muted-foreground ml-auto">
-          {total} {total === 1 ? "registro" : "registros"}
-        </span>
-      </div>
 
       {/* Timeline */}
       <Card>

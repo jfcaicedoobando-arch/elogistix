@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.762.2] - 2026-08-27
+### Corrección de errores
+- Bitácora: la barra de filtros se separó en su propio componente para cumplir el límite de tamaño de archivo (sin cambios visibles).
+- Se agregó el mensaje en español para el candado de sobrecosto de facturas de proveedor (LC_CXP_SOBRECOSTO).
+
 ## [13.762.1] - 2026-08-27
 ### Corrección de errores
 - Reparada una diferencia entre la base de datos y el código: volvieron a activarse tres candados que no habían llegado a producción (fecha válida en notas de crédito, conceptos de factura editables sólo en Borrador y bloqueo de cambios en cotizaciones ya operadas).
