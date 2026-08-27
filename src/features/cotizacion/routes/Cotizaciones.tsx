@@ -1,11 +1,10 @@
 import { useMemo, useDeferredValue } from "react";
 import { useNavigate } from "react-router-dom";
 import { useDuplicarCotizacion } from "@/features/cotizacion/hooks/useCotizacionVersiones";
-import { Plus, AlertTriangle, Archive, Truck } from "lucide-react";
+import { Plus } from "lucide-react";
 import { FloatingActionButton } from "@/components/shared/FloatingActionButton";
 import { CotizacionesKpis } from "@/features/cotizacion/components/CotizacionesKpis";
 import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { ResponsiveDataTable } from "@/components/shared/dataTable/ResponsiveDataTable";
 import { CotizacionMobileCard } from "@/features/cotizacion/components/CotizacionMobileCard";
 import { PageContainer } from "@/components/shared/PageContainer";
@@ -22,7 +21,7 @@ import { CotizacionesPageActions } from "@/features/cotizacion/components/Cotiza
 import { useTcInicial } from "@/features/catalogos/hooks/useTcInicial";
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 import { CotizacionesBannerOrigen } from "@/features/cotizacion/components/CotizacionesBannerOrigen";
-import { Hint } from "@/components/shared/Hint";
+import { CotizacionesSecondaryFilters } from "@/features/cotizacion/components/CotizacionesSecondaryFilters";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function Cotizaciones() {
@@ -54,50 +53,6 @@ export default function Cotizaciones() {
       <EstadoSelect value={c.filterEstado} onChange={(v) => c.setFilter("estado", v)} />
       <ClienteSelect value={c.filterCliente} onChange={(v) => c.setFilter("cliente", v)} clientes={c.clientes} />
     </>
-  );
-
-  const secondaryFilters = (
-    <div className="space-y-3">
-      {/* O4.5(a): bandeja "Aceptadas sin embarque" — el trabajo vendido sin operar. */}
-      <Hint label="Cotizaciones aceptadas a las que nadie les abrió el embarque">
-        <Button
-          type="button"
-          variant={c.soloAceptadasSinEmbarque ? "default" : "outline"}
-          size="sm"
-          aria-pressed={c.soloAceptadasSinEmbarque}
-          onClick={() => c.setFilter("aceptadasSinEmbarque", c.soloAceptadasSinEmbarque ? "no" : "si")}
-          className="w-full gap-2"
-        >
-          <Truck className="h-4 w-4" />
-          Aceptadas sin embarque
-          {c.totalAceptadasSinEmbarque > 0 && ` (${c.totalAceptadasSinEmbarque})`}
-        </Button>
-      </Hint>
-      <Button
-        type="button"
-        variant={c.filterSinCostos ? "default" : "outline"}
-        size="sm"
-        aria-pressed={c.filterSinCostos}
-        onClick={() => c.setFilter("sinCostos", c.filterSinCostos ? "no" : "si")}
-        className="w-full gap-2"
-      >
-        <AlertTriangle className="h-4 w-4" />
-        Sólo sin costos
-      </Button>
-      <Hint label="Por defecto se ocultan las cotizaciones Vencidas y Archivadas">
-        <Button
-          type="button"
-          variant={c.incluirInactivas ? "default" : "outline"}
-          size="sm"
-          aria-pressed={c.incluirInactivas}
-          onClick={() => c.setFilter("incluirInactivas", c.incluirInactivas ? "no" : "si")}
-          className="w-full gap-2"
-        >
-          <Archive className="h-4 w-4" />
-          Incluir vencidas/archivadas
-        </Button>
-      </Hint>
-    </div>
   );
 
   return (
@@ -147,7 +102,15 @@ export default function Cotizaciones() {
             onSearchChange={c.setSearch}
             searchPlaceholder="Buscar por folio, cliente o mercancía…"
             primary={primaryFilters}
-            secondary={secondaryFilters}
+            secondary={
+              <CotizacionesSecondaryFilters
+                soloAceptadasSinEmbarque={c.soloAceptadasSinEmbarque}
+                totalAceptadasSinEmbarque={c.totalAceptadasSinEmbarque}
+                filterSinCostos={c.filterSinCostos}
+                incluirInactivas={c.incluirInactivas}
+                setFilter={c.setFilter}
+              />
+            }
             chips={c.activeChips}
             activeCount={c.activeCount}
             onClearAll={c.resetAll}
