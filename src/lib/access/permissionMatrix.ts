@@ -50,6 +50,19 @@ export const FINANCE_VIEWERS: readonly AppRole[] = [
 ];
 
 /**
+ * QA B-07 — Roles que pueden ver COSTO, utilidad y margen.
+ *
+ * `FINANCE_VIEWERS` habilita la vista financiera (venta, cobranza), pero los
+ * roles puramente comerciales (`vendedor`, `ejecutivo_pricing`) no deben ver el
+ * costo del proveedor ni la utilidad: sólo el lado de venta.
+ */
+export const COST_VIEWERS: readonly AppRole[] = FINANCE_VIEWERS.filter(
+  (r) => r !== "vendedor" && r !== "ejecutivo_pricing",
+);
+
+
+
+/**
  * Roles con escritura en el expediente (documentos de cliente/proveedor y
  * contactos de proveedor). Espejo EXACTO de las policies RLS de
  * `cliente_documentos`, `proveedor_contactos`, `proveedor_documentos` y del
