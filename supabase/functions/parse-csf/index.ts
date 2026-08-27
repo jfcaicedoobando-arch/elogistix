@@ -17,6 +17,8 @@ import { jsonResponse, errorResponse } from "../_shared/response.ts";
 import { authenticate } from "../_shared/auth.ts";
 import { createLogger } from "../_shared/logger.ts";
 import { initSentryEdge, captureEdgeException, debeReportarStatus } from "../_shared/sentry.ts";
+import { autorizarYLimitar } from "./guardas.ts";
+
 
 initSentryEdge("parse-csf");
 import { validateFile } from "./validate.ts";
