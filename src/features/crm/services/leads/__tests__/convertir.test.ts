@@ -52,13 +52,23 @@ describe("convertirLead", () => {
     const call = mock.rpcCalls.find((c) => c.fn === "convertir_lead_rpc");
     expect(call?.args).toMatchObject({
       p_lead_id: "lead-1",
-      p_crear_cliente: true,
+      p_crear_cliente: false,
       p_cliente_id: null,
       p_nombre_oportunidad: "Embarque Q1",
       p_monto_estimado: 15000,
       p_moneda: "USD",
       p_fecha_estimada_cierre: "2026-12-31",
     });
+  });
+
+  it("nunca pide crear cliente aunque el caller lo solicite (candado CRM)", async () => {
+    mock.setRpcResult("convertir_lead_rpc", {
+      data: { cliente_id: null, oportunidad_id: "op-2", creado: true },
+      error: null,
+    });
+    await convertirLead({ ...baseParams, crearCliente: true }, user);
+    const call = mock.rpcCalls.find((c) => c.fn === "convertir_lead_rpc");
+    expect((call?.args as { p_crear_cliente: boolean }).p_crear_cliente).toBe(false);
   });
 
   it("es idempotente: lead ya convertido devuelve los ids existentes", async () => {
