@@ -261,6 +261,39 @@ CREATE TYPE public.tipo_servicio_maritimo AS ENUM (
     'FCL',
     'LCL'
 );
+CREATE FUNCTION public._assert_concepto_no_proformado() RETURNS trigger
+    LANGUAGE plpgsql
+    SET search_path TO 'public'
+    AS $$
+BEGIN
+  IF current_setting('app.bypass_cierre', true) = 'on' THEN
+    RETURN COALESCE(NEW, OLD);
+  END IF;
+
+  IF TG_OP = 'DELETE' THEN
+    IF OLD.proforma_id IS NOT NULL THEN
+      RAISE EXCEPTION
+        'LC_CONCEPTO_PROFORMADO: el concepto ya está incluido en una proforma y no puede eliminarse'
+        USING ERRCODE = 'P0001';
+    END IF;
+    RETURN OLD;
+  END IF;
+
+  IF OLD.proforma_id IS NOT NULL
+     AND (NEW.descripcion       IS DISTINCT FROM OLD.descripcion
+       OR NEW.cantidad          IS DISTINCT FROM OLD.cantidad
+       OR NEW.precio_unitario   IS DISTINCT FROM OLD.precio_unitario
+       OR NEW.moneda            IS DISTINCT FROM OLD.moneda
+       OR NEW.aplica_iva        IS DISTINCT FROM OLD.aplica_iva
+       OR NEW.tasa_iva_aplicada IS DISTINCT FROM OLD.tasa_iva_aplicada) THEN
+    RAISE EXCEPTION
+      'LC_CONCEPTO_PROFORMADO: el concepto ya está incluido en una proforma; libéralo de la proforma antes de editarlo'
+      USING ERRCODE = 'P0001';
+  END IF;
+
+  RETURN NEW;
+END;
+$$;
 CREATE FUNCTION public._assert_facturapi_admin(p_org_id uuid) RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
@@ -345,6 +378,49 @@ BEGIN
 END;
 $_$;
 
+CREATE FUNCTION public._assert_periodo_abierto() RETURNS trigger
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+DECLARE
+  v_col    text := TG_ARGV[0];
+  v_cierre date;
+  v_new    date;
+  v_old    date;
+BEGIN
+  IF current_setting('app.bypass_cierre_periodo', true) = '1' THEN
+    RETURN NEW;
+  END IF;
+
+  v_new := NULLIF(to_jsonb(NEW) ->> v_col, '')::date;
+
+  IF TG_OP = 'UPDATE' THEN
+    v_old := NULLIF(to_jsonb(OLD) ->> v_col, '')::date;
+    IF v_new IS NOT DISTINCT FROM v_old THEN
+      RETURN NEW;  -- la fecha no cambió: los recálculos de estado siguen libres
+    END IF;
+  END IF;
+
+  v_cierre := public.cierre_periodo_fecha(NEW.organization_id);
+  IF v_cierre IS NULL THEN
+    RETURN NEW;
+  END IF;
+
+  IF v_new IS NOT NULL AND v_new <= v_cierre THEN
+    RAISE EXCEPTION
+      'LC_PERIODO_CERRADO: el periodo contable está cerrado hasta el %; la fecha % no es válida',
+      v_cierre, v_new USING ERRCODE = 'P0001';
+  END IF;
+
+  IF v_old IS NOT NULL AND v_old <= v_cierre THEN
+    RAISE EXCEPTION
+      'LC_PERIODO_CERRADO: el periodo contable está cerrado hasta el %; no se puede mover la fecha % de un registro ya cerrado',
+      v_cierre, v_old USING ERRCODE = 'P0001';
+  END IF;
+
+  RETURN NEW;
+END;
+$$;
 CREATE FUNCTION public._assert_receptor_fiscal_valido(p_cliente_id uuid) RETURNS void
     LANGUAGE plpgsql STABLE SECURITY DEFINER
     SET search_path TO 'public'
@@ -400,6 +476,20 @@ BEGIN
     RAISE EXCEPTION 'LC_REFACT_FORBIDDEN: se requiere rol de administrador de la organización o un rol contable'
       USING ERRCODE = '42501';
   END IF;
+END;
+$$;
+CREATE FUNCTION public._assert_uuid_fiscal_single_write() RETURNS trigger
+    LANGUAGE plpgsql
+    SET search_path TO 'public'
+    AS $$
+BEGIN
+  IF OLD.uuid_fiscal IS NOT NULL
+     AND NEW.uuid_fiscal IS DISTINCT FROM OLD.uuid_fiscal THEN
+    RAISE EXCEPTION
+      'LC_UUID_FISCAL_INMUTABLE: el folio fiscal de la factura % ya fue asignado y no puede cambiarse',
+      OLD.numero USING ERRCODE = 'P0001';
+  END IF;
+  RETURN NEW;
 END;
 $$;
 CREATE FUNCTION public._assert_writer(p_org uuid) RETURNS void
@@ -7049,6 +7139,29 @@ BEGIN
   RETURN jsonb_build_object('ok', true, 'retry_after', 0);
 END;
 $$;
+CREATE FUNCTION public.cierre_periodo_actual() RETURNS date
+    LANGUAGE sql STABLE SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+  SELECT public.cierre_periodo_fecha(public.current_user_org_id());
+$$;
+CREATE FUNCTION public.cierre_periodo_fecha(p_org uuid) RETURNS date
+    LANGUAGE sql STABLE SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $_$
+  SELECT CASE
+           WHEN v ~ '^\d{4}-\d{2}-\d{2}$' THEN v::date
+           ELSE NULL
+         END
+  FROM (
+    SELECT NULLIF(c.valor #>> '{}', '') AS v
+    FROM public.configuracion c
+    WHERE c.organization_id = p_org
+      AND c.categoria = 'contabilidad'
+      AND c.clave = 'cierre_periodo_fecha'
+    LIMIT 1
+  ) s;
+$_$;
 CREATE FUNCTION public.clear_facturapi_api_key(p_org_id uuid, p_ambiente text) RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public', 'vault', 'extensions'
@@ -8524,15 +8637,20 @@ BEGIN
   IF current_setting('app.cotizacion_sync', true) = '1' THEN
     RETURN NEW;
   END IF;
-  IF (OLD.estado = 'En operación'::public.estado_cotizacion OR OLD.embarque_id IS NOT NULL)
+
+  IF (OLD.estado IN ('En operación'::public.estado_cotizacion,
+                     'Aceptada'::public.estado_cotizacion)
+      OR OLD.embarque_id IS NOT NULL)
      AND (NEW.subtotal IS DISTINCT FROM OLD.subtotal
        OR NEW.moneda IS DISTINCT FROM OLD.moneda
        OR NEW.conceptos_venta IS DISTINCT FROM OLD.conceptos_venta) THEN
-    RAISE EXCEPTION 'LC_COTIZACION_EN_OPERACION: los importes y conceptos ya están vinculados a una operación'
+    RAISE EXCEPTION
+      'LC_COTIZACION_INMUTABLE: la cotización ya fue aceptada o está en operación; sus importes y conceptos no pueden cambiar (usa una nueva versión)'
       USING ERRCODE = 'P0001';
   END IF;
+
   RETURN NEW;
-END
+END;
 $$;
 CREATE FUNCTION public.cotizaciones_listado(p_organization_id uuid DEFAULT NULL::uuid, p_search text DEFAULT NULL::text, p_estado text DEFAULT NULL::text, p_modo text DEFAULT NULL::text, p_cliente_id uuid DEFAULT NULL::uuid, p_fecha_desde date DEFAULT NULL::date, p_fecha_hasta date DEFAULT NULL::date, p_offset integer DEFAULT 0, p_limit integer DEFAULT 50) RETURNS TABLE(id uuid, folio text, cliente_id uuid, cliente_nombre text, modo public.modo_transporte, origen text, destino text, subtotal numeric, moneda public.moneda, estado public.estado_cotizacion, fecha_vigencia date, created_at timestamp with time zone, descripcion_mercancia text, embarques_vinculados bigint, total_count bigint)
     LANGUAGE sql STABLE
