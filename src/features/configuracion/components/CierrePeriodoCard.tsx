@@ -9,7 +9,7 @@ import { useEffect, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { FormField } from "@/components/shared/FormField";
-import { DatePickerMx } from "@/components/shared/DatePickerMx";
+import { DatePickerMx } from "@/components/ui/date-picker-mx";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Lock, Save, Unlock } from "lucide-react";
 import { useConfigValue, useUpdateConfiguracion } from "@/features/configuracion/hooks/useConfiguracion";
