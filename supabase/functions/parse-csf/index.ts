@@ -167,12 +167,24 @@ serve(async (req) => {
   try {
     return await processCsf(req, cors, log);
   } catch (error) {
+    // N-02 (auditoría R2): NO se devuelve `err.message` al cliente (filtraba
+    // huellas internas: nombres de variables de entorno, rutas, detalle del
+    // gateway). Se mapea la CLASE de error a (status, mensaje genérico); el
+    // detalle queda en logs y Sentry.
     const message = error instanceof Error ? error.message : "Error desconocido";
-    const [code, ...rest] = message.split(":");
-    const status = /^\d+$/.test(code) ? parseInt(code) : 500;
+    let status = 500;
+    let mensajeCliente = "Error interno al procesar el documento";
+    if (message.startsWith("401:")) {
+      status = 401;
+      mensajeCliente = "No autorizado";
+    } else if (error instanceof DOMException && error.name === "AbortError") {
+      status = 504;
+      mensajeCliente = "El servicio de IA tardó demasiado en responder, intenta de nuevo.";
+    }
     log.error("parse-csf falló", { status_code: status, payload: { error: message } });
     // 13.114.20: capturar también 4xx inesperados (consistencia con 13.114.19).
     if (debeReportarStatus(status)) await captureEdgeException(error, { fn: "parse-csf", status_code: status });
-    return errorResponse(rest.join(":") || message, status, cors);
+    return errorResponse(mensajeCliente, status, cors);
   }
 });
+
