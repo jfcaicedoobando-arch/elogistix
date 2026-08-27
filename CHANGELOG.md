@@ -2,9 +2,10 @@
 
 ## [13.771.0] - 2026-08-27
 ### Seguridad
-- **Ola 2 — Aislamiento entre organizaciones (hallazgos H de la auditoría 3)**: 28 relaciones críticas pasaron a llaves compuestas por organización (facturas ↔ embarque/cliente/cotización/proforma/sustitución, pagos ↔ factura y embarque, notas de crédito ↔ factura, conceptos de venta y costo ↔ embarque/contenedor/proforma/proveedor, conceptos de factura, costos de cotización, proformas, facturas y pagos de proveedor, contenedores).
-- Ahora es imposible —incluso desde procesos internos que no pasan por las reglas de acceso— colgar un documento de un registro de otra empresa.
+- **Ola 2 — Aislamiento entre organizaciones (hallazgos H de la auditoría 3)**: 28 relaciones críticas quedaron blindadas contra cruces entre empresas (facturas ↔ embarque/cliente/cotización/proforma/sustitución, pagos ↔ factura y embarque, notas de crédito ↔ factura, conceptos de venta y costo ↔ embarque/contenedor/proforma/proveedor, conceptos de factura, costos de cotización, proformas, facturas y pagos de proveedor, contenedores).
+- El candado son validaciones automáticas en la base (`_assert_padre_misma_org`), que aplican también a procesos internos que no pasan por las reglas de acceso. Se probó con llaves compuestas y se descartó porque rompía las consultas embebidas de la app.
 - No hubo cambios de datos: se verificó que no existía ni un registro cruzado antes de aplicar la migración.
+
 ### Pruebas
 - Nueva suite `ola2_fk_compuestas_org.sql` (verifica las 28 relaciones y prueba que la base rechaza un cruce real).
 
