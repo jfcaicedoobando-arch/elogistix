@@ -16,9 +16,11 @@ beforeEach(() => {
 });
 
 describe("updateCotizacion", () => {
-  it("happy path: resuelve void cuando no hay error", async () => {
-    mock.setTableResult("cotizaciones", { data: null, error: null });
-    await expect(updateCotizacion("cot-1", { notas: "cambio" })).resolves.toBeUndefined();
+  it("happy path: devuelve el nuevo updated_at cuando no hay error", async () => {
+    mock.setTableResult("cotizaciones", { data: [{ updated_at: "2026-09-02T10:00:00Z" }], error: null });
+    await expect(updateCotizacion("cot-1", { notas: "cambio" })).resolves.toBe(
+      "2026-09-02T10:00:00Z",
+    );
     expect(mock.tableCalls[0]?.table).toBe("cotizaciones");
     expect(mock.tableCalls[0]?.ops).toContain("update");
     expect(mock.tableCalls[0]?.ops).toContain("eq");
@@ -30,12 +32,12 @@ describe("updateCotizacion", () => {
   });
 
   it("acepta patch vacío sin lanzar", async () => {
-    mock.setTableResult("cotizaciones", { data: null, error: null });
-    await expect(updateCotizacion("cot-1", {})).resolves.toBeUndefined();
+    mock.setTableResult("cotizaciones", { data: [{ updated_at: "2026-09-02T10:00:00Z" }], error: null });
+    await expect(updateCotizacion("cot-1", {})).resolves.toBeTruthy();
   });
 
   it("serializa conceptos_venta cuando viene en el patch", async () => {
-    mock.setTableResult("cotizaciones", { data: null, error: null });
+    mock.setTableResult("cotizaciones", { data: [{ updated_at: "2026-09-02T10:00:00Z" }], error: null });
     await updateCotizacion("cot-1", {
       conceptos_venta: [
         {
@@ -53,7 +55,7 @@ describe("updateCotizacion", () => {
   });
 
   it("acepta cambios de enums (modo/tipo/incoterm/moneda) sin lanzar", async () => {
-    mock.setTableResult("cotizaciones", { data: null, error: null });
+    mock.setTableResult("cotizaciones", { data: [{ updated_at: "2026-09-02T10:00:00Z" }], error: null });
     await expect(
       updateCotizacion("cot-1", {
         modo: "Aéreo",
@@ -61,13 +63,26 @@ describe("updateCotizacion", () => {
         incoterm: "CIF",
         moneda: "MXN",
       }),
-    ).resolves.toBeUndefined();
+    ).resolves.toBeTruthy();
+  });
+
+  // N-06 (QA r2): bloqueo optimista — 0 filas con sello esperado = conflicto.
+  it("lanza LC_CONFLICTO_CONCURRENCIA si otra sesión ya modificó la cotización", async () => {
+    mock.setTableResult("cotizaciones", { data: [], error: null });
+    await expect(
+      updateCotizacion("cot-1", { notas: "x" }, "2026-09-01T00:00:00Z"),
+    ).rejects.toThrow(/LC_CONFLICTO_CONCURRENCIA|modific/i);
+  });
+
+  it("avisa de permisos cuando 0 filas y no hubo sello esperado", async () => {
+    mock.setTableResult("cotizaciones", { data: [], error: null });
+    await expect(updateCotizacion("cot-1", { notas: "x" })).rejects.toThrow(/permiso/i);
   });
 });
 
 describe("updateCotizacion — validación zod (M4)", () => {
   it("rechaza conceptos con precio unitario negativo", async () => {
-    mock.setTableResult("cotizaciones", { data: null, error: null });
+    mock.setTableResult("cotizaciones", { data: [{ updated_at: "2026-09-02T10:00:00Z" }], error: null });
     await expect(
       updateCotizacion("cot-1", {
         conceptos_venta: [
@@ -87,7 +102,7 @@ describe("updateCotizacion — validación zod (M4)", () => {
   });
 
   it("rechaza subtotal negativo sin tocar la base", async () => {
-    mock.setTableResult("cotizaciones", { data: null, error: null });
+    mock.setTableResult("cotizaciones", { data: [{ updated_at: "2026-09-02T10:00:00Z" }], error: null });
     await expect(updateCotizacion("cot-1", { subtotal: -5 })).rejects.toThrow();
     expect(mock.tableCalls.length).toBe(0);
   });
