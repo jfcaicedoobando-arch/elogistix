@@ -1471,9 +1471,36 @@ CREATE FUNCTION public._crm_oportunidad_requiere_origen() RETURNS trigger
     LANGUAGE plpgsql
     SET search_path TO 'public'
     AS $$
+DECLARE
+  v_lead_org uuid;
+  v_lead_estado public.crm_lead_estado;
+  v_cliente_org uuid;
 BEGIN
   IF NEW.lead_id IS NULL AND NEW.cliente_id IS NULL THEN
     RAISE EXCEPTION 'LC_OPORTUNIDAD_SIN_ORIGEN';
+  END IF;
+  IF NEW.lead_id IS NOT NULL THEN
+    SELECT organization_id, estado INTO v_lead_org, v_lead_estado
+      FROM public.crm_leads
+     WHERE id = NEW.lead_id AND deleted_at IS NULL;
+    IF v_lead_org IS NULL OR v_lead_org IS DISTINCT FROM NEW.organization_id THEN
+      RAISE EXCEPTION 'LC_CRM_LEAD_AJENO';
+    END IF;
+    IF v_lead_estado IN (
+      'Nuevo'::public.crm_lead_estado,
+      'Contactado'::public.crm_lead_estado,
+      'Descalificado'::public.crm_lead_estado
+    ) THEN
+      RAISE EXCEPTION 'LC_OPORTUNIDAD_ORIGEN_NO_CALIFICADO';
+    END IF;
+  END IF;
+  IF NEW.cliente_id IS NOT NULL THEN
+    SELECT organization_id INTO v_cliente_org
+      FROM public.clientes
+     WHERE id = NEW.cliente_id AND deleted_at IS NULL;
+    IF v_cliente_org IS NULL OR v_cliente_org IS DISTINCT FROM NEW.organization_id THEN
+      RAISE EXCEPTION 'LC_CRM_CLIENTE_AJENO';
+    END IF;
   END IF;
   RETURN NEW;
 END;
@@ -1870,6 +1897,374 @@ BEGIN
   END IF;
 END;
 $$;
+CREATE FUNCTION public._dashboard_details_calc() RETURNS jsonb
+    LANGUAGE plpgsql STABLE SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+DECLARE
+  v_hoy date := current_date;
+  v_inicio_mes date := date_trunc('month', v_hoy)::date;
+  v_fin_mes date := (date_trunc('month', v_hoy) + interval '1 month' - interval '1 day')::date;
+  v_inicio_sig date := (date_trunc('month', v_hoy) + interval '1 month')::date;
+  v_fin_sig date := (date_trunc('month', v_hoy) + interval '2 months' - interval '1 day')::date;
+  v_dias_libres int := 7;
+  v_nombre_mes text;
+  v_meses text[] := ARRAY['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+BEGIN
+  v_nombre_mes := v_meses[extract(month from v_inicio_sig)::int] || ' ' || extract(year from v_inicio_sig)::text;
+  RETURN (
+    WITH embarques_base AS (
+      SELECT e.id, e.expediente, e.cliente_nombre, e.cliente_id, e.modo::text, e.tipo::text,
+             e.estado::text, e.etd, e.eta, e.operador,
+             e.puerto_origen, e.puerto_destino,
+             e.aeropuerto_origen, e.aeropuerto_destino,
+             e.ciudad_origen, e.ciudad_destino, e.contenedor, e.created_at,
+             e.tipo_cambio_usd, e.tipo_cambio_eur,
+        CASE
+          -- Ola 4 · N10 (guard B-033): preservar Borrador.
+          WHEN e.estado = 'Borrador' THEN 'Borrador'
+          WHEN e.estado IN ('Arribo','En Aduana','Entregado','EIR','Por liquidar','Cerrado') THEN e.estado::text
+          WHEN e.modo = 'Marítimo' AND e.tipo = 'Importación' AND e.etd IS NOT NULL AND e.eta IS NOT NULL THEN
+            CASE
+              WHEN v_hoy < e.etd THEN 'Confirmado'
+              WHEN v_hoy >= e.etd AND v_hoy < e.eta THEN 'En Tránsito'
+              WHEN v_hoy >= e.eta THEN 'Arribo'
+              ELSE e.estado::text
+            END
+          ELSE e.estado::text
+        END AS estado_real
+      FROM embarques e
+      WHERE e.deleted_at IS NULL              -- FIX C5
+        AND (e.organization_id = public.org_scope())
+    ),
+    profit AS (SELECT * FROM profit_por_embarque()),
+    -- Ola 4 · N10 (B-033): Borrador ya no cuenta como activo operativo.
+    activos AS (SELECT * FROM embarques_base WHERE estado_real NOT IN ('Borrador','EIR','Por liquidar','Cerrado','Cancelado')),
+    alertas_src AS (
+      SELECT a.* FROM activos a
+      WHERE a.estado_real = 'Arribo' AND a.eta IS NOT NULL AND (v_hoy - a.eta) >= v_dias_libres
+      ORDER BY (v_hoy - a.eta) DESC LIMIT 15
+    ),
+    alertas AS (
+      SELECT jsonb_agg(jsonb_build_object(
+        'id', a.id, 'expediente', a.expediente, 'cliente_nombre', a.cliente_nombre,
+        'modo', a.modo, 'tipo', a.tipo, 'estado', a.estado, 'estadoReal', a.estado_real,
+        'etd', a.etd, 'eta', a.eta, 'operador', a.operador,
+        'puerto_origen', a.puerto_origen, 'puerto_destino', a.puerto_destino,
+        'aeropuerto_origen', a.aeropuerto_origen, 'aeropuerto_destino', a.aeropuerto_destino,
+        'ciudad_origen', a.ciudad_origen, 'ciudad_destino', a.ciudad_destino,
+        'contenedor', a.contenedor, 'created_at', a.created_at,
+        'diasDesdeEta', (v_hoy - a.eta),
+        'diasDemora', (v_hoy - a.eta) - v_dias_libres
+      )) AS val FROM alertas_src a
+    ),
+    proximos_src AS (
+      SELECT a.* FROM activos a
+      WHERE a.estado_real = 'En Tránsito' AND a.eta IS NOT NULL
+        AND (a.eta - v_hoy) >= 0 AND (a.eta - v_hoy) <= 7
+      ORDER BY (a.eta - v_hoy) ASC LIMIT 15
+    ),
+    proximos AS (
+      SELECT jsonb_agg(jsonb_build_object(
+        'id', a.id, 'expediente', a.expediente, 'cliente_nombre', a.cliente_nombre,
+        'modo', a.modo, 'tipo', a.tipo, 'estado', a.estado, 'estadoReal', a.estado_real,
+        'etd', a.etd, 'eta', a.eta, 'operador', a.operador,
+        'puerto_origen', a.puerto_origen, 'puerto_destino', a.puerto_destino,
+        'aeropuerto_origen', a.aeropuerto_origen, 'aeropuerto_destino', a.aeropuerto_destino,
+        'ciudad_origen', a.ciudad_origen, 'ciudad_destino', a.ciudad_destino,
+        'contenedor', a.contenedor, 'created_at', a.created_at,
+        'diasRestantes', (a.eta - v_hoy)
+      )) AS val FROM proximos_src a
+    ),
+    profit_este_mes_src AS (
+      SELECT eb.*, p.venta_usd, p.costo_usd, p.venta_mxn, p.costo_mxn,
+             p.venta_mxn_from_usd, p.costo_mxn_from_usd,
+             p.venta_mxn_from_eur, p.costo_mxn_from_eur,
+             p.venta_mxn_native, p.costo_mxn_native
+      FROM activos eb LEFT JOIN profit p ON p.embarque_id = eb.id
+      WHERE eb.eta IS NOT NULL AND eb.eta >= v_inicio_mes AND eb.eta <= v_fin_mes
+        AND (COALESCE(p.venta_mxn, 0) > 0 OR COALESCE(p.costo_mxn, 0) > 0)
+      ORDER BY (COALESCE(p.venta_mxn, 0) - COALESCE(p.costo_mxn, 0)) DESC LIMIT 30
+    ),
+    profit_este_mes AS (
+      SELECT jsonb_agg(jsonb_build_object(
+        'id', eb.id, 'expediente', eb.expediente, 'cliente_nombre', eb.cliente_nombre,
+        'modo', eb.modo, 'tipo', eb.tipo, 'estado', eb.estado, 'estadoReal', eb.estado_real,
+        'etd', eb.etd, 'eta', eb.eta, 'operador', eb.operador,
+        'puerto_origen', eb.puerto_origen, 'puerto_destino', eb.puerto_destino,
+        'aeropuerto_origen', eb.aeropuerto_origen, 'aeropuerto_destino', eb.aeropuerto_destino,
+        'ciudad_origen', eb.ciudad_origen, 'ciudad_destino', eb.ciudad_destino,
+        'contenedor', eb.contenedor, 'created_at', eb.created_at,
+        'tipoCambioUSD', eb.tipo_cambio_usd, 'tipoCambioEUR', eb.tipo_cambio_eur,
+        'ventaUSD', COALESCE(eb.venta_usd, 0),
+        'costoUSD', COALESCE(eb.costo_usd, 0),
+        'ventaMXN', COALESCE(eb.venta_mxn, 0),
+        'costoMXN', COALESCE(eb.costo_mxn, 0),
+        'profitMXN', COALESCE(eb.venta_mxn, 0) - COALESCE(eb.costo_mxn, 0),
+        'margenMXN', CASE WHEN COALESCE(eb.venta_mxn, 0) > 0
+                          THEN ((COALESCE(eb.venta_mxn, 0) - COALESCE(eb.costo_mxn, 0)) / eb.venta_mxn) * 100
+                          ELSE 0 END,
+        'ventaMxnFromUsd', COALESCE(eb.venta_mxn_from_usd, 0),
+        'costoMxnFromUsd', COALESCE(eb.costo_mxn_from_usd, 0),
+        'ventaMxnFromEur', COALESCE(eb.venta_mxn_from_eur, 0),
+        'costoMxnFromEur', COALESCE(eb.costo_mxn_from_eur, 0),
+        'ventaMxnNative', COALESCE(eb.venta_mxn_native, 0),
+        'costoMxnNative', COALESCE(eb.costo_mxn_native, 0),
+        'profit', COALESCE(eb.venta_usd, 0) - COALESCE(eb.costo_usd, 0),
+        'margen', CASE WHEN COALESCE(eb.venta_usd, 0) > 0
+                       THEN ((COALESCE(eb.venta_usd, 0) - COALESCE(eb.costo_usd, 0)) / eb.venta_usd) * 100
+                       ELSE 0 END
+      )) AS val FROM profit_este_mes_src eb
+    ),
+    mes_sig_src AS (
+      SELECT eb.*, p.venta_usd, p.costo_usd, p.venta_mxn, p.costo_mxn,
+             p.venta_mxn_from_usd, p.costo_mxn_from_usd,
+             p.venta_mxn_from_eur, p.costo_mxn_from_eur,
+             p.venta_mxn_native, p.costo_mxn_native,
+             EXISTS (
+               SELECT 1 FROM facturas f
+               WHERE f.embarque_id = eb.id
+                 AND f.deleted_at IS NULL     -- FIX C5
+                 -- Ola 5 · RG4-2 (N45): 'Sustituida' ya no es CFDI vigente;
+                 -- excluirla del flag "facturado" (la definición vigente
+                 -- sólo excluía Cancelada/Borrador).
+                 AND f.estado::text NOT IN ('Cancelada','Borrador','Sustituida')
+             ) AS facturado_flag
+      FROM activos eb LEFT JOIN profit p ON p.embarque_id = eb.id
+      WHERE eb.eta IS NOT NULL AND eb.eta >= v_inicio_sig AND eb.eta <= v_fin_sig
+      ORDER BY eb.eta ASC LIMIT 30
+    ),
+    mes_sig AS (
+      SELECT jsonb_agg(jsonb_build_object(
+        'id', eb.id, 'expediente', eb.expediente, 'cliente_nombre', eb.cliente_nombre,
+        'modo', eb.modo, 'tipo', eb.tipo, 'estado', eb.estado, 'estadoReal', eb.estado_real,
+        'etd', eb.etd, 'eta', eb.eta, 'operador', eb.operador,
+        'puerto_origen', eb.puerto_origen, 'puerto_destino', eb.puerto_destino,
+        'aeropuerto_origen', eb.aeropuerto_origen, 'aeropuerto_destino', eb.aeropuerto_destino,
+        'ciudad_origen', eb.ciudad_origen, 'ciudad_destino', eb.ciudad_destino,
+        'contenedor', eb.contenedor, 'created_at', eb.created_at,
+        'tipoCambioUSD', eb.tipo_cambio_usd, 'tipoCambioEUR', eb.tipo_cambio_eur,
+        'ventaUSD', COALESCE(eb.venta_usd, 0),
+        'costoUSD', COALESCE(eb.costo_usd, 0),
+        'ventaMXN', COALESCE(eb.venta_mxn, 0),
+        'costoMXN', COALESCE(eb.costo_mxn, 0),
+        'profitMXN', COALESCE(eb.venta_mxn, 0) - COALESCE(eb.costo_mxn, 0),
+        'margenMXN', CASE WHEN COALESCE(eb.venta_mxn, 0) > 0
+                          THEN ((COALESCE(eb.venta_mxn, 0) - COALESCE(eb.costo_mxn, 0)) / eb.venta_mxn) * 100
+                          ELSE 0 END,
+        'ventaMxnFromUsd', COALESCE(eb.venta_mxn_from_usd, 0),
+        'costoMxnFromUsd', COALESCE(eb.costo_mxn_from_usd, 0),
+        'ventaMxnFromEur', COALESCE(eb.venta_mxn_from_eur, 0),
+        'costoMxnFromEur', COALESCE(eb.costo_mxn_from_eur, 0),
+        'ventaMxnNative', COALESCE(eb.venta_mxn_native, 0),
+        'costoMxnNative', COALESCE(eb.costo_mxn_native, 0),
+        'profit', COALESCE(eb.venta_usd, 0) - COALESCE(eb.costo_usd, 0),
+        'margen', CASE WHEN COALESCE(eb.venta_usd, 0) > 0
+                       THEN ((COALESCE(eb.venta_usd, 0) - COALESCE(eb.costo_usd, 0)) / eb.venta_usd) * 100
+                       ELSE 0 END,
+        'facturado', eb.facturado_flag
+      )) AS val FROM mes_sig_src eb
+    ),
+    mes_sig_resumen AS (
+      SELECT jsonb_build_object(
+        'totalEmbarques', count(*),
+        'ventaUSD', COALESCE(sum(COALESCE(venta_usd, 0)), 0),
+        'costoUSD', COALESCE(sum(COALESCE(costo_usd, 0)), 0),
+        'profitUSD', COALESCE(sum(COALESCE(venta_usd, 0) - COALESCE(costo_usd, 0)), 0),
+        'ventaMXN', COALESCE(sum(COALESCE(venta_mxn, 0)), 0),
+        'costoMXN', COALESCE(sum(COALESCE(costo_mxn, 0)), 0),
+        'profitMXN', COALESCE(sum(COALESCE(venta_mxn, 0) - COALESCE(costo_mxn, 0)), 0),
+        'facturados', count(*) FILTER (WHERE facturado_flag),
+        'nombreMes', v_nombre_mes
+      ) AS val FROM mes_sig_src
+    ),
+    cargas_cliente AS (
+      SELECT jsonb_agg(x ORDER BY (x->>'total')::int DESC) AS val
+      FROM (
+        SELECT jsonb_build_object(
+          'clienteId', cliente_id,
+          'clienteNombre', cliente_nombre,
+          'total', count(*),
+          'desglose', jsonb_build_object(
+            'Confirmado',   count(*) FILTER (WHERE estado_real = 'Confirmado'),
+            'En Tránsito',  count(*) FILTER (WHERE estado_real = 'En Tránsito'),
+            'Arribo',       count(*) FILTER (WHERE estado_real = 'Arribo'),
+            'En Aduana',    count(*) FILTER (WHERE estado_real = 'En Aduana'),
+            'Entregado',    count(*) FILTER (WHERE estado_real = 'Entregado')
+          )
+        ) AS x
+        FROM activos WHERE cliente_id IS NOT NULL
+        GROUP BY cliente_id, cliente_nombre
+        ORDER BY count(*) DESC LIMIT 10
+      ) sub
+    ),
+    cargas_total AS (
+      SELECT count(*) FILTER (
+        WHERE cliente_id IS NOT NULL
+          AND estado_real IN ('Confirmado','En Tránsito','Arribo','En Aduana','Entregado')
+      )::int AS val
+      FROM activos
+    ),
+    -- v13.303.13 · Listado ligero de EIR para el scope "mis embarques" del chip EIR.
+    embarques_eir AS (
+      SELECT jsonb_agg(jsonb_build_object(
+        'id', eb.id,
+        'operador', eb.operador,
+        'estadoReal', eb.estado_real
+      )) AS val
+      FROM (
+        SELECT id, operador, estado_real, created_at
+        FROM embarques_base
+        WHERE estado_real IN ('EIR','Por liquidar')
+        ORDER BY created_at DESC
+        LIMIT 500
+      ) eb
+    )
+    SELECT jsonb_build_object(
+      'alertasDemora', COALESCE((SELECT val FROM alertas), '[]'::jsonb),
+      'proximosArribos', COALESCE((SELECT val FROM proximos), '[]'::jsonb),
+      'profitArribosEsteMes', COALESCE((SELECT val FROM profit_este_mes), '[]'::jsonb),
+      'embarquesMesSiguiente', COALESCE((SELECT val FROM mes_sig), '[]'::jsonb),
+      'resumenMesSiguiente', COALESCE((SELECT val FROM mes_sig_resumen), jsonb_build_object(
+        'totalEmbarques', 0, 'ventaUSD', 0, 'costoUSD', 0, 'profitUSD', 0,
+        'ventaMXN', 0, 'costoMXN', 0, 'profitMXN', 0,
+        'facturados', 0, 'nombreMes', v_nombre_mes
+      )),
+      'cargasPorCliente', COALESCE((SELECT val FROM cargas_cliente), '[]'::jsonb),
+      'cargasActivasTotal', COALESCE((SELECT val FROM cargas_total), 0),
+      'embarquesEir', COALESCE((SELECT val FROM embarques_eir), '[]'::jsonb)
+    )
+  );
+END;
+$$;
+CREATE FUNCTION public._dashboard_summary_calc() RETURNS jsonb
+    LANGUAGE plpgsql STABLE SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+DECLARE
+  v_hoy date := current_date;
+  v_inicio_mes date := date_trunc('month', v_hoy)::date;
+  v_fin_mes date := (date_trunc('month', v_hoy) + interval '1 month' - interval '1 day')::date;
+  v_inicio_sig date := (date_trunc('month', v_hoy) + interval '1 month')::date;
+  v_fin_sig date := (date_trunc('month', v_hoy) + interval '2 months' - interval '1 day')::date;
+BEGIN
+  RETURN (
+    WITH embarques_base AS (
+      SELECT e.id, e.estado::text, e.modo, e.tipo, e.etd, e.eta,
+        e.tipo_cambio_eur,
+        CASE
+          WHEN e.estado = 'Borrador' THEN 'Borrador'
+          WHEN e.estado IN ('Arribo','En Aduana','Entregado','EIR','Por liquidar','Cerrado') THEN e.estado::text
+          WHEN e.modo = 'Marítimo' AND e.tipo = 'Importación' AND e.etd IS NOT NULL AND e.eta IS NOT NULL THEN
+            CASE
+              WHEN v_hoy < e.etd THEN 'Confirmado'
+              WHEN v_hoy >= e.etd AND v_hoy < e.eta THEN 'En Tránsito'
+              WHEN v_hoy >= e.eta THEN 'Arribo'
+              ELSE e.estado::text
+            END
+          ELSE e.estado::text
+        END AS estado_real
+      FROM embarques e
+      WHERE e.deleted_at IS NULL
+        AND (e.organization_id = public.org_scope())
+    ),
+    profit AS (SELECT * FROM profit_por_embarque()),
+    activos AS (SELECT * FROM embarques_base WHERE estado_real NOT IN ('Borrador','EIR','Por liquidar','Cerrado','Cancelado')),
+    conteo AS (
+      SELECT jsonb_build_object(
+        'Confirmado', count(*) FILTER (WHERE estado_real = 'Confirmado'),
+        'En Tránsito', count(*) FILTER (WHERE estado_real = 'En Tránsito'),
+        'Arribo', count(*) FILTER (WHERE estado_real = 'Arribo'),
+        'En Aduana', count(*) FILTER (WHERE estado_real = 'En Aduana'),
+        'Entregado', count(*) FILTER (WHERE estado_real = 'Entregado'),
+        'EIR', count(*) FILTER (WHERE estado_real = 'EIR'),
+        'Por liquidar', count(*) FILTER (WHERE estado_real = 'Por liquidar')
+      ) AS val
+      FROM embarques_base
+    ),
+    gastos_op_facturas AS (
+      SELECT COALESCE(SUM(
+        CASE
+          WHEN pf.moneda = 'MXN' THEN pf.total
+          WHEN pf.moneda = 'USD' AND pf.tipo_cambio_usd > 1 THEN pf.total * pf.tipo_cambio_usd
+          WHEN pf.moneda = 'EUR' AND eb.tipo_cambio_eur > 1 THEN pf.total * eb.tipo_cambio_eur
+          ELSE NULL
+        END
+      ), 0) AS val
+      FROM proveedor_facturas pf
+      JOIN presupuesto_categorias pc ON pc.id = pf.categoria_presupuesto_id
+      LEFT JOIN embarques_base eb ON eb.id = pf.embarque_id
+      WHERE pc.tipo_contable IN ('Venta','Administracion')
+        AND pf.deleted_at IS NULL
+        AND pf.fecha_emision BETWEEN v_inicio_mes AND v_fin_mes
+        AND (pf.organization_id = public.org_scope())
+    ),
+    gastos_op_sin_tc AS (
+      SELECT COUNT(*) AS val
+      FROM proveedor_facturas pf
+      JOIN presupuesto_categorias pc ON pc.id = pf.categoria_presupuesto_id
+      LEFT JOIN embarques_base eb ON eb.id = pf.embarque_id
+      WHERE pc.tipo_contable IN ('Venta','Administracion')
+        AND pf.deleted_at IS NULL
+        AND pf.fecha_emision BETWEEN v_inicio_mes AND v_fin_mes
+        AND (pf.organization_id = public.org_scope())
+        AND pf.moneda <> 'MXN'
+        AND NOT (pf.moneda = 'USD' AND pf.tipo_cambio_usd > 1)
+        -- Ola 6 · RG5-2: COALESCE porque eb.tipo_cambio_eur es NULLABLE.
+        AND NOT (pf.moneda = 'EUR' AND COALESCE(eb.tipo_cambio_eur, 0) > 1)
+    ),
+    gastos_op_comisiones AS (
+      SELECT COALESCE(SUM(total_mxn), 0) AS val
+      FROM liquidaciones_comision
+      WHERE periodo = to_char(v_inicio_mes, 'YYYY-MM')
+        AND (organization_id = public.org_scope())
+    ),
+    arribos_mes AS (
+      SELECT jsonb_build_object(
+        'total', count(*),
+        'yaLlegaron', count(*) FILTER (WHERE eb.estado_real IN ('Arribo','En Aduana','Entregado','EIR','Por liquidar','Cerrado')),
+        'enCamino', count(*) FILTER (WHERE eb.estado_real IN ('Confirmado','En Tránsito')),
+        'ventaMXN', COALESCE(sum(COALESCE(p.venta_mxn, 0)), 0),
+        'costoMXN', COALESCE(sum(COALESCE(p.costo_mxn, 0)), 0),
+        'profitMXN', COALESCE(sum(COALESCE(p.venta_mxn, 0) - COALESCE(p.costo_mxn, 0)), 0),
+        'ventaMxnFromUsd', COALESCE(sum(COALESCE(p.venta_mxn_from_usd, 0)), 0),
+        'costoMxnFromUsd', COALESCE(sum(COALESCE(p.costo_mxn_from_usd, 0)), 0),
+        'ventaMxnFromEur', COALESCE(sum(COALESCE(p.venta_mxn_from_eur, 0)), 0),
+        'costoMxnFromEur', COALESCE(sum(COALESCE(p.costo_mxn_from_eur, 0)), 0),
+        'ventaMxnNative', COALESCE(sum(COALESCE(p.venta_mxn_native, 0)), 0),
+        'costoMxnNative', COALESCE(sum(COALESCE(p.costo_mxn_native, 0)), 0),
+        'profitUSD', COALESCE(sum(COALESCE(p.venta_usd, 0) - COALESCE(p.costo_usd, 0)), 0),
+        'gastosOperativosMXN',
+          COALESCE((SELECT val FROM gastos_op_facturas), 0)
+          + COALESCE((SELECT val FROM gastos_op_comisiones), 0),
+        'gastosOperativosSinTC', COALESCE((SELECT val FROM gastos_op_sin_tc), 0)
+      ) AS val
+      FROM embarques_base eb
+      LEFT JOIN profit p ON p.embarque_id = eb.id
+      WHERE eb.eta IS NOT NULL AND eb.eta >= v_inicio_mes AND eb.eta <= v_fin_mes
+    ),
+    resumen_sig AS (
+      SELECT jsonb_build_object(
+        'total', count(*),
+        'ventaUSD', COALESCE(sum(COALESCE(p.venta_usd, 0)), 0),
+        'costoUSD', COALESCE(sum(COALESCE(p.costo_usd, 0)), 0),
+        'ventaMXN', COALESCE(sum(COALESCE(p.venta_mxn, 0)), 0),
+        'costoMXN', COALESCE(sum(COALESCE(p.costo_mxn, 0)), 0),
+        'profitMXN', COALESCE(sum(COALESCE(p.venta_mxn, 0) - COALESCE(p.costo_mxn, 0)), 0)
+      ) AS val
+      FROM activos eb
+      LEFT JOIN profit p ON p.embarque_id = eb.id
+      WHERE eb.eta IS NOT NULL AND eb.eta >= v_inicio_sig AND eb.eta <= v_fin_sig
+    )
+    SELECT jsonb_build_object(
+      'totalActivos', (SELECT count(*) FROM activos),
+      'conteoPorEstado', COALESCE((SELECT val FROM conteo), '{}'::jsonb),
+      'arribosEsteMes', COALESCE((SELECT val FROM arribos_mes), '{}'::jsonb),
+      'resumenMesSiguiente', COALESCE((SELECT val FROM resumen_sig), '{}'::jsonb)
+    )
+  );
+END;
+$$;
 CREATE FUNCTION public._docs_requeridos_por_estado(p_modo text, p_estado text) RETURNS text[]
     LANGUAGE sql IMMUTABLE
     SET search_path TO 'public'
@@ -2123,6 +2518,30 @@ BEGIN
   RETURN NEW;
 END;
 $$;
+CREATE FUNCTION public._nc_aplicadas_moneda_factura(p_factura_id uuid) RETURNS numeric
+    LANGUAGE sql STABLE
+    SET search_path TO 'public'
+    AS $$
+  SELECT COALESCE(SUM(
+    CASE
+      WHEN nc.moneda::text = f.moneda::text THEN nc.monto
+      WHEN f.moneda::text = 'MXN' AND nc.moneda::text <> 'MXN' AND nc.tipo_cambio > 1
+        THEN nc.monto * nc.tipo_cambio
+      WHEN f.moneda::text <> 'MXN' AND nc.moneda::text = 'MXN' AND f.tipo_cambio > 1
+        THEN nc.monto / f.tipo_cambio
+      WHEN f.moneda::text <> 'MXN' AND nc.moneda::text <> 'MXN'
+           AND f.moneda::text <> nc.moneda::text
+           AND nc.tipo_cambio > 1 AND f.tipo_cambio > 1
+        THEN (nc.monto * nc.tipo_cambio) / f.tipo_cambio
+      ELSE 0
+    END), 0)
+  FROM public.facturas f
+  JOIN public.factura_notas_credito nc
+    ON nc.factura_id = f.id
+   AND nc.deleted_at IS NULL
+   AND nc.estado = 'Aplicada'
+  WHERE f.id = p_factura_id;
+$$;
 CREATE FUNCTION public._nc_cliente_recalcular_comisiones() RETURNS trigger
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
@@ -2203,6 +2622,15 @@ BEGIN
     NEW.uuid_fiscal := NULLIF(upper(btrim(NEW.uuid_fiscal)), '');
   END IF;
   RETURN NEW;
+END;
+$$;
+CREATE FUNCTION public._prohibir_delete_factura() RETURNS trigger
+    LANGUAGE plpgsql
+    SET search_path TO 'public'
+    AS $$
+BEGIN
+  RAISE EXCEPTION 'LC_FACTURA_DELETE_PROHIBIDO: las facturas no se borran físicamente; usa la baja lógica (soft_delete_record) o cancela/sustituye el CFDI'
+    USING ERRCODE = '42501';
 END;
 $$;
 CREATE FUNCTION public._proveedor_contacto_principal_unico() RETURNS trigger
@@ -5055,20 +5483,25 @@ CREATE FUNCTION public.bloquear_modificacion_factura_emitida() RETURNS trigger
     SET search_path TO 'public'
     AS $$
 BEGIN
-  -- Si no había snapshot, no hay nada que proteger
   IF OLD.snapshot_emision IS NULL THEN
     RETURN NEW;
   END IF;
-  -- Permitir cancelación explícita (sólo cambio de estado a Cancelada)
   IF NEW.estado = 'Cancelada' AND OLD.estado <> 'Cancelada' THEN
     RETURN NEW;
   END IF;
-  -- Permitir soft delete
   IF NEW.deleted_at IS NOT NULL AND OLD.deleted_at IS NULL THEN
     RETURN NEW;
   END IF;
-  -- Campos editables incluso después de emisión:
-  --   factura_pdf_url, factura_xml_url, notas, updated_at, snapshot_emision (set inicial)
+  -- OLA 1 · C8: la identidad fiscal (UUID SAT y artefactos del PAC) sólo puede
+  -- escribirla el servidor (webhook/edge con credencial de servicio).
+  IF auth.role() IS DISTINCT FROM 'service_role' THEN
+    IF NEW.uuid_fiscal IS DISTINCT FROM OLD.uuid_fiscal
+     OR NEW.facturapi_id IS DISTINCT FROM OLD.facturapi_id
+    THEN
+      RAISE EXCEPTION 'factura_inmutable: la identidad fiscal de la factura % no puede modificarse desde la aplicación.', OLD.numero
+        USING ERRCODE = 'check_violation';
+    END IF;
+  END IF;
   IF NEW.numero        IS DISTINCT FROM OLD.numero
    OR NEW.subtotal     IS DISTINCT FROM OLD.subtotal
    OR NEW.iva          IS DISTINCT FROM OLD.iva
@@ -6225,25 +6658,11 @@ CREATE FUNCTION public.cartera_pendiente() RETURNS TABLE(factura_id uuid, numero
   WITH base AS (
     SELECT f.id, f.numero, f.cliente_id, f.embarque_id, f.fecha_emision,
       f.fecha_vencimiento, f.moneda::text AS moneda, f.total,
-      f.estado::text AS estado, f.cliente_nombre, f.tipo_cambio AS factura_tc,
+      f.estado::text AS estado, f.cliente_nombre,
       COALESCE(f.cancellation_status, 'none') AS cancellation_status,
       COALESCE((SELECT SUM(pf.monto_aplicado_factura) FROM public.pagos_factura pf
                  WHERE pf.factura_id=f.id AND pf.deleted_at IS NULL),0) AS pagado,
-      COALESCE((SELECT SUM(
-                 CASE
-                   WHEN nc.moneda::text = f.moneda::text THEN nc.monto
-                   WHEN f.moneda::text = 'MXN' AND nc.moneda::text <> 'MXN' AND nc.tipo_cambio > 1
-                     THEN nc.monto * nc.tipo_cambio
-                   WHEN f.moneda::text <> 'MXN' AND nc.moneda::text = 'MXN' AND f.tipo_cambio > 1
-                     THEN nc.monto / f.tipo_cambio
-                   WHEN f.moneda::text <> 'MXN' AND nc.moneda::text <> 'MXN'
-                        AND f.moneda::text <> nc.moneda::text
-                        AND nc.tipo_cambio > 1 AND f.tipo_cambio > 1
-                     THEN (nc.monto * nc.tipo_cambio) / f.tipo_cambio
-                   ELSE NULL
-                 END)
-                FROM public.factura_notas_credito nc
-                 WHERE nc.factura_id=f.id AND nc.estado='Aplicada' AND nc.deleted_at IS NULL),0) AS nc_aplicadas
+      public._nc_aplicadas_moneda_factura(f.id) AS nc_aplicadas
     FROM public.facturas f
     WHERE f.deleted_at IS NULL
       AND f.estado::text IN ('Emitida','Vencida','Parcialmente pagada')
@@ -6251,7 +6670,6 @@ CREATE FUNCTION public.cartera_pendiente() RETURNS TABLE(factura_id uuid, numero
   SELECT b.id, b.numero, b.cliente_id, COALESCE(c.nombre, b.cliente_nombre),
     b.embarque_id, e.expediente,
     b.fecha_emision, b.fecha_vencimiento,
-    -- N9 (canon signado): positivo = vencida, 0 = vence hoy, negativo = por vencer.
     ((now() AT TIME ZONE 'America/Mexico_City')::date - b.fecha_vencimiento)::int,
     b.moneda, b.total, b.pagado,
     (b.total - b.pagado - b.nc_aplicadas),
@@ -9784,240 +10202,13 @@ CREATE FUNCTION public.dashboard_details() RETURNS jsonb
     LANGUAGE plpgsql STABLE SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
-DECLARE
-  v_hoy date := current_date;
-  v_inicio_mes date := date_trunc('month', v_hoy)::date;
-  v_fin_mes date := (date_trunc('month', v_hoy) + interval '1 month' - interval '1 day')::date;
-  v_inicio_sig date := (date_trunc('month', v_hoy) + interval '1 month')::date;
-  v_fin_sig date := (date_trunc('month', v_hoy) + interval '2 months' - interval '1 day')::date;
-  v_dias_libres int := 7;
-  v_nombre_mes text;
-  v_meses text[] := ARRAY['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 BEGIN
-  v_nombre_mes := v_meses[extract(month from v_inicio_sig)::int] || ' ' || extract(year from v_inicio_sig)::text;
-  RETURN (
-    WITH embarques_base AS (
-      SELECT e.id, e.expediente, e.cliente_nombre, e.cliente_id, e.modo::text, e.tipo::text,
-             e.estado::text, e.etd, e.eta, e.operador,
-             e.puerto_origen, e.puerto_destino,
-             e.aeropuerto_origen, e.aeropuerto_destino,
-             e.ciudad_origen, e.ciudad_destino, e.contenedor, e.created_at,
-             e.tipo_cambio_usd, e.tipo_cambio_eur,
-        CASE
-          -- Ola 4 · N10 (guard B-033): preservar Borrador.
-          WHEN e.estado = 'Borrador' THEN 'Borrador'
-          WHEN e.estado IN ('Arribo','En Aduana','Entregado','EIR','Por liquidar','Cerrado') THEN e.estado::text
-          WHEN e.modo = 'Marítimo' AND e.tipo = 'Importación' AND e.etd IS NOT NULL AND e.eta IS NOT NULL THEN
-            CASE
-              WHEN v_hoy < e.etd THEN 'Confirmado'
-              WHEN v_hoy >= e.etd AND v_hoy < e.eta THEN 'En Tránsito'
-              WHEN v_hoy >= e.eta THEN 'Arribo'
-              ELSE e.estado::text
-            END
-          ELSE e.estado::text
-        END AS estado_real
-      FROM embarques e
-      WHERE e.deleted_at IS NULL              -- FIX C5
-        AND (e.organization_id = public.org_scope())
-    ),
-    profit AS (SELECT * FROM profit_por_embarque()),
-    -- Ola 4 · N10 (B-033): Borrador ya no cuenta como activo operativo.
-    activos AS (SELECT * FROM embarques_base WHERE estado_real NOT IN ('Borrador','EIR','Por liquidar','Cerrado','Cancelado')),
-    alertas_src AS (
-      SELECT a.* FROM activos a
-      WHERE a.estado_real = 'Arribo' AND a.eta IS NOT NULL AND (v_hoy - a.eta) >= v_dias_libres
-      ORDER BY (v_hoy - a.eta) DESC LIMIT 15
-    ),
-    alertas AS (
-      SELECT jsonb_agg(jsonb_build_object(
-        'id', a.id, 'expediente', a.expediente, 'cliente_nombre', a.cliente_nombre,
-        'modo', a.modo, 'tipo', a.tipo, 'estado', a.estado, 'estadoReal', a.estado_real,
-        'etd', a.etd, 'eta', a.eta, 'operador', a.operador,
-        'puerto_origen', a.puerto_origen, 'puerto_destino', a.puerto_destino,
-        'aeropuerto_origen', a.aeropuerto_origen, 'aeropuerto_destino', a.aeropuerto_destino,
-        'ciudad_origen', a.ciudad_origen, 'ciudad_destino', a.ciudad_destino,
-        'contenedor', a.contenedor, 'created_at', a.created_at,
-        'diasDesdeEta', (v_hoy - a.eta),
-        'diasDemora', (v_hoy - a.eta) - v_dias_libres
-      )) AS val FROM alertas_src a
-    ),
-    proximos_src AS (
-      SELECT a.* FROM activos a
-      WHERE a.estado_real = 'En Tránsito' AND a.eta IS NOT NULL
-        AND (a.eta - v_hoy) >= 0 AND (a.eta - v_hoy) <= 7
-      ORDER BY (a.eta - v_hoy) ASC LIMIT 15
-    ),
-    proximos AS (
-      SELECT jsonb_agg(jsonb_build_object(
-        'id', a.id, 'expediente', a.expediente, 'cliente_nombre', a.cliente_nombre,
-        'modo', a.modo, 'tipo', a.tipo, 'estado', a.estado, 'estadoReal', a.estado_real,
-        'etd', a.etd, 'eta', a.eta, 'operador', a.operador,
-        'puerto_origen', a.puerto_origen, 'puerto_destino', a.puerto_destino,
-        'aeropuerto_origen', a.aeropuerto_origen, 'aeropuerto_destino', a.aeropuerto_destino,
-        'ciudad_origen', a.ciudad_origen, 'ciudad_destino', a.ciudad_destino,
-        'contenedor', a.contenedor, 'created_at', a.created_at,
-        'diasRestantes', (a.eta - v_hoy)
-      )) AS val FROM proximos_src a
-    ),
-    profit_este_mes_src AS (
-      SELECT eb.*, p.venta_usd, p.costo_usd, p.venta_mxn, p.costo_mxn,
-             p.venta_mxn_from_usd, p.costo_mxn_from_usd,
-             p.venta_mxn_from_eur, p.costo_mxn_from_eur,
-             p.venta_mxn_native, p.costo_mxn_native
-      FROM activos eb LEFT JOIN profit p ON p.embarque_id = eb.id
-      WHERE eb.eta IS NOT NULL AND eb.eta >= v_inicio_mes AND eb.eta <= v_fin_mes
-        AND (COALESCE(p.venta_mxn, 0) > 0 OR COALESCE(p.costo_mxn, 0) > 0)
-      ORDER BY (COALESCE(p.venta_mxn, 0) - COALESCE(p.costo_mxn, 0)) DESC LIMIT 30
-    ),
-    profit_este_mes AS (
-      SELECT jsonb_agg(jsonb_build_object(
-        'id', eb.id, 'expediente', eb.expediente, 'cliente_nombre', eb.cliente_nombre,
-        'modo', eb.modo, 'tipo', eb.tipo, 'estado', eb.estado, 'estadoReal', eb.estado_real,
-        'etd', eb.etd, 'eta', eb.eta, 'operador', eb.operador,
-        'puerto_origen', eb.puerto_origen, 'puerto_destino', eb.puerto_destino,
-        'aeropuerto_origen', eb.aeropuerto_origen, 'aeropuerto_destino', eb.aeropuerto_destino,
-        'ciudad_origen', eb.ciudad_origen, 'ciudad_destino', eb.ciudad_destino,
-        'contenedor', eb.contenedor, 'created_at', eb.created_at,
-        'tipoCambioUSD', eb.tipo_cambio_usd, 'tipoCambioEUR', eb.tipo_cambio_eur,
-        'ventaUSD', COALESCE(eb.venta_usd, 0),
-        'costoUSD', COALESCE(eb.costo_usd, 0),
-        'ventaMXN', COALESCE(eb.venta_mxn, 0),
-        'costoMXN', COALESCE(eb.costo_mxn, 0),
-        'profitMXN', COALESCE(eb.venta_mxn, 0) - COALESCE(eb.costo_mxn, 0),
-        'margenMXN', CASE WHEN COALESCE(eb.venta_mxn, 0) > 0
-                          THEN ((COALESCE(eb.venta_mxn, 0) - COALESCE(eb.costo_mxn, 0)) / eb.venta_mxn) * 100
-                          ELSE 0 END,
-        'ventaMxnFromUsd', COALESCE(eb.venta_mxn_from_usd, 0),
-        'costoMxnFromUsd', COALESCE(eb.costo_mxn_from_usd, 0),
-        'ventaMxnFromEur', COALESCE(eb.venta_mxn_from_eur, 0),
-        'costoMxnFromEur', COALESCE(eb.costo_mxn_from_eur, 0),
-        'ventaMxnNative', COALESCE(eb.venta_mxn_native, 0),
-        'costoMxnNative', COALESCE(eb.costo_mxn_native, 0),
-        'profit', COALESCE(eb.venta_usd, 0) - COALESCE(eb.costo_usd, 0),
-        'margen', CASE WHEN COALESCE(eb.venta_usd, 0) > 0
-                       THEN ((COALESCE(eb.venta_usd, 0) - COALESCE(eb.costo_usd, 0)) / eb.venta_usd) * 100
-                       ELSE 0 END
-      )) AS val FROM profit_este_mes_src eb
-    ),
-    mes_sig_src AS (
-      SELECT eb.*, p.venta_usd, p.costo_usd, p.venta_mxn, p.costo_mxn,
-             p.venta_mxn_from_usd, p.costo_mxn_from_usd,
-             p.venta_mxn_from_eur, p.costo_mxn_from_eur,
-             p.venta_mxn_native, p.costo_mxn_native,
-             EXISTS (
-               SELECT 1 FROM facturas f
-               WHERE f.embarque_id = eb.id
-                 AND f.deleted_at IS NULL     -- FIX C5
-                 -- Ola 5 · RG4-2 (N45): 'Sustituida' ya no es CFDI vigente;
-                 -- excluirla del flag "facturado" (la definición vigente
-                 -- sólo excluía Cancelada/Borrador).
-                 AND f.estado::text NOT IN ('Cancelada','Borrador','Sustituida')
-             ) AS facturado_flag
-      FROM activos eb LEFT JOIN profit p ON p.embarque_id = eb.id
-      WHERE eb.eta IS NOT NULL AND eb.eta >= v_inicio_sig AND eb.eta <= v_fin_sig
-      ORDER BY eb.eta ASC LIMIT 30
-    ),
-    mes_sig AS (
-      SELECT jsonb_agg(jsonb_build_object(
-        'id', eb.id, 'expediente', eb.expediente, 'cliente_nombre', eb.cliente_nombre,
-        'modo', eb.modo, 'tipo', eb.tipo, 'estado', eb.estado, 'estadoReal', eb.estado_real,
-        'etd', eb.etd, 'eta', eb.eta, 'operador', eb.operador,
-        'puerto_origen', eb.puerto_origen, 'puerto_destino', eb.puerto_destino,
-        'aeropuerto_origen', eb.aeropuerto_origen, 'aeropuerto_destino', eb.aeropuerto_destino,
-        'ciudad_origen', eb.ciudad_origen, 'ciudad_destino', eb.ciudad_destino,
-        'contenedor', eb.contenedor, 'created_at', eb.created_at,
-        'tipoCambioUSD', eb.tipo_cambio_usd, 'tipoCambioEUR', eb.tipo_cambio_eur,
-        'ventaUSD', COALESCE(eb.venta_usd, 0),
-        'costoUSD', COALESCE(eb.costo_usd, 0),
-        'ventaMXN', COALESCE(eb.venta_mxn, 0),
-        'costoMXN', COALESCE(eb.costo_mxn, 0),
-        'profitMXN', COALESCE(eb.venta_mxn, 0) - COALESCE(eb.costo_mxn, 0),
-        'margenMXN', CASE WHEN COALESCE(eb.venta_mxn, 0) > 0
-                          THEN ((COALESCE(eb.venta_mxn, 0) - COALESCE(eb.costo_mxn, 0)) / eb.venta_mxn) * 100
-                          ELSE 0 END,
-        'ventaMxnFromUsd', COALESCE(eb.venta_mxn_from_usd, 0),
-        'costoMxnFromUsd', COALESCE(eb.costo_mxn_from_usd, 0),
-        'ventaMxnFromEur', COALESCE(eb.venta_mxn_from_eur, 0),
-        'costoMxnFromEur', COALESCE(eb.costo_mxn_from_eur, 0),
-        'ventaMxnNative', COALESCE(eb.venta_mxn_native, 0),
-        'costoMxnNative', COALESCE(eb.costo_mxn_native, 0),
-        'profit', COALESCE(eb.venta_usd, 0) - COALESCE(eb.costo_usd, 0),
-        'margen', CASE WHEN COALESCE(eb.venta_usd, 0) > 0
-                       THEN ((COALESCE(eb.venta_usd, 0) - COALESCE(eb.costo_usd, 0)) / eb.venta_usd) * 100
-                       ELSE 0 END,
-        'facturado', eb.facturado_flag
-      )) AS val FROM mes_sig_src eb
-    ),
-    mes_sig_resumen AS (
-      SELECT jsonb_build_object(
-        'totalEmbarques', count(*),
-        'ventaUSD', COALESCE(sum(COALESCE(venta_usd, 0)), 0),
-        'costoUSD', COALESCE(sum(COALESCE(costo_usd, 0)), 0),
-        'profitUSD', COALESCE(sum(COALESCE(venta_usd, 0) - COALESCE(costo_usd, 0)), 0),
-        'ventaMXN', COALESCE(sum(COALESCE(venta_mxn, 0)), 0),
-        'costoMXN', COALESCE(sum(COALESCE(costo_mxn, 0)), 0),
-        'profitMXN', COALESCE(sum(COALESCE(venta_mxn, 0) - COALESCE(costo_mxn, 0)), 0),
-        'facturados', count(*) FILTER (WHERE facturado_flag),
-        'nombreMes', v_nombre_mes
-      ) AS val FROM mes_sig_src
-    ),
-    cargas_cliente AS (
-      SELECT jsonb_agg(x ORDER BY (x->>'total')::int DESC) AS val
-      FROM (
-        SELECT jsonb_build_object(
-          'clienteId', cliente_id,
-          'clienteNombre', cliente_nombre,
-          'total', count(*),
-          'desglose', jsonb_build_object(
-            'Confirmado',   count(*) FILTER (WHERE estado_real = 'Confirmado'),
-            'En Tránsito',  count(*) FILTER (WHERE estado_real = 'En Tránsito'),
-            'Arribo',       count(*) FILTER (WHERE estado_real = 'Arribo'),
-            'En Aduana',    count(*) FILTER (WHERE estado_real = 'En Aduana'),
-            'Entregado',    count(*) FILTER (WHERE estado_real = 'Entregado')
-          )
-        ) AS x
-        FROM activos WHERE cliente_id IS NOT NULL
-        GROUP BY cliente_id, cliente_nombre
-        ORDER BY count(*) DESC LIMIT 10
-      ) sub
-    ),
-    cargas_total AS (
-      SELECT count(*) FILTER (
-        WHERE cliente_id IS NOT NULL
-          AND estado_real IN ('Confirmado','En Tránsito','Arribo','En Aduana','Entregado')
-      )::int AS val
-      FROM activos
-    ),
-    -- v13.303.13 · Listado ligero de EIR para el scope "mis embarques" del chip EIR.
-    embarques_eir AS (
-      SELECT jsonb_agg(jsonb_build_object(
-        'id', eb.id,
-        'operador', eb.operador,
-        'estadoReal', eb.estado_real
-      )) AS val
-      FROM (
-        SELECT id, operador, estado_real, created_at
-        FROM embarques_base
-        WHERE estado_real IN ('EIR','Por liquidar')
-        ORDER BY created_at DESC
-        LIMIT 500
-      ) eb
-    )
-    SELECT jsonb_build_object(
-      'alertasDemora', COALESCE((SELECT val FROM alertas), '[]'::jsonb),
-      'proximosArribos', COALESCE((SELECT val FROM proximos), '[]'::jsonb),
-      'profitArribosEsteMes', COALESCE((SELECT val FROM profit_este_mes), '[]'::jsonb),
-      'embarquesMesSiguiente', COALESCE((SELECT val FROM mes_sig), '[]'::jsonb),
-      'resumenMesSiguiente', COALESCE((SELECT val FROM mes_sig_resumen), jsonb_build_object(
-        'totalEmbarques', 0, 'ventaUSD', 0, 'costoUSD', 0, 'profitUSD', 0,
-        'ventaMXN', 0, 'costoMXN', 0, 'profitMXN', 0,
-        'facturados', 0, 'nombreMes', v_nombre_mes
-      )),
-      'cargasPorCliente', COALESCE((SELECT val FROM cargas_cliente), '[]'::jsonb),
-      'cargasActivasTotal', COALESCE((SELECT val FROM cargas_total), 0),
-      'embarquesEir', COALESCE((SELECT val FROM embarques_eir), '[]'::jsonb)
-    )
-  );
+  IF auth.role() IS DISTINCT FROM 'service_role'
+     AND NOT public.puede_ver_dashboard_direccion(auth.uid()) THEN
+    RAISE EXCEPTION 'LC_DASHBOARD_SIN_PERMISO: tu rol no tiene acceso a los indicadores de dirección (costos y utilidad)'
+      USING ERRCODE = '42501';
+  END IF;
+  RETURN public._dashboard_details_calc();
 END;
 $$;
 CREATE FUNCTION public.dashboard_facturacion_kpis(p_meses integer DEFAULT 6, p_fallback_usd numeric DEFAULT NULL::numeric) RETURNS jsonb
@@ -10307,146 +10498,13 @@ CREATE FUNCTION public.dashboard_summary() RETURNS jsonb
     LANGUAGE plpgsql STABLE SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
-DECLARE
-  v_hoy date := current_date;
-  v_inicio_mes date := date_trunc('month', v_hoy)::date;
-  v_fin_mes date := (date_trunc('month', v_hoy) + interval '1 month' - interval '1 day')::date;
-  v_inicio_sig date := (date_trunc('month', v_hoy) + interval '1 month')::date;
-  v_fin_sig date := (date_trunc('month', v_hoy) + interval '2 months' - interval '1 day')::date;
 BEGIN
-  RETURN (
-    WITH embarques_base AS (
-      SELECT e.id, e.estado::text, e.modo, e.tipo, e.etd, e.eta,
-        e.tipo_cambio_eur,
-        CASE
-          WHEN e.estado = 'Borrador' THEN 'Borrador'
-          WHEN e.estado IN ('Arribo','En Aduana','Entregado','EIR','Por liquidar','Cerrado') THEN e.estado::text
-          WHEN e.modo = 'Marítimo' AND e.tipo = 'Importación' AND e.etd IS NOT NULL AND e.eta IS NOT NULL THEN
-            CASE
-              WHEN v_hoy < e.etd THEN 'Confirmado'
-              WHEN v_hoy >= e.etd AND v_hoy < e.eta THEN 'En Tránsito'
-              WHEN v_hoy >= e.eta THEN 'Arribo'
-              ELSE e.estado::text
-            END
-          ELSE e.estado::text
-        END AS estado_real
-      FROM embarques e
-      WHERE e.deleted_at IS NULL
-        AND (e.organization_id = public.org_scope())
-    ),
-    profit AS (SELECT * FROM profit_por_embarque()),
-    activos AS (SELECT * FROM embarques_base WHERE estado_real NOT IN ('Borrador','EIR','Por liquidar','Cerrado','Cancelado')),
-    conteo AS (
-      SELECT jsonb_build_object(
-        'Confirmado', count(*) FILTER (WHERE estado_real = 'Confirmado'),
-        'En Tránsito', count(*) FILTER (WHERE estado_real = 'En Tránsito'),
-        'Arribo', count(*) FILTER (WHERE estado_real = 'Arribo'),
-        'En Aduana', count(*) FILTER (WHERE estado_real = 'En Aduana'),
-        'Entregado', count(*) FILTER (WHERE estado_real = 'Entregado'),
-        'EIR', count(*) FILTER (WHERE estado_real = 'EIR'),
-        'Por liquidar', count(*) FILTER (WHERE estado_real = 'Por liquidar')
-      ) AS val
-      FROM embarques_base
-    ),
-    gastos_op_facturas AS (
-      -- FIX BL-11: EUR usa el TC del embarque ligado y, si no hay, el TC DOF
-      -- vigente a fecha_emision (LEFT JOIN LATERAL sobre tipos_cambio_dof).
-      SELECT COALESCE(SUM(
-        CASE
-          WHEN pf.moneda = 'MXN' THEN pf.total
-          WHEN pf.moneda = 'USD' AND pf.tipo_cambio_usd > 1 THEN pf.total * pf.tipo_cambio_usd
-          WHEN pf.moneda = 'EUR' AND COALESCE(eb.tipo_cambio_eur, dof.eur_mxn) > 1
-               THEN pf.total * COALESCE(eb.tipo_cambio_eur, dof.eur_mxn)
-          ELSE NULL
-        END
-      ), 0) AS val
-      FROM proveedor_facturas pf
-      JOIN presupuesto_categorias pc ON pc.id = pf.categoria_presupuesto_id
-      LEFT JOIN embarques_base eb ON eb.id = pf.embarque_id
-      LEFT JOIN LATERAL (
-        SELECT d.eur_mxn
-          FROM public.tipos_cambio_dof d
-         WHERE d.fecha <= pf.fecha_emision
-         ORDER BY d.fecha DESC
-         LIMIT 1
-      ) dof ON pf.moneda = 'EUR' AND eb.tipo_cambio_eur IS NULL
-      WHERE pc.tipo_contable IN ('Venta','Administracion')
-        AND pf.deleted_at IS NULL
-        AND pf.fecha_emision BETWEEN v_inicio_mes AND v_fin_mes
-        AND (pf.organization_id = public.org_scope())
-    ),
-    gastos_op_sin_tc AS (
-      -- FIX BL-11: mismo fallback DOF — una factura EUR con TC DOF disponible ya
-      -- no cuenta como "sin TC".
-      SELECT COUNT(*) AS val
-      FROM proveedor_facturas pf
-      JOIN presupuesto_categorias pc ON pc.id = pf.categoria_presupuesto_id
-      LEFT JOIN embarques_base eb ON eb.id = pf.embarque_id
-      LEFT JOIN LATERAL (
-        SELECT d.eur_mxn
-          FROM public.tipos_cambio_dof d
-         WHERE d.fecha <= pf.fecha_emision
-         ORDER BY d.fecha DESC
-         LIMIT 1
-      ) dof ON pf.moneda = 'EUR' AND eb.tipo_cambio_eur IS NULL
-      WHERE pc.tipo_contable IN ('Venta','Administracion')
-        AND pf.deleted_at IS NULL
-        AND pf.fecha_emision BETWEEN v_inicio_mes AND v_fin_mes
-        AND (pf.organization_id = public.org_scope())
-        AND pf.moneda <> 'MXN'
-        AND NOT (pf.moneda = 'USD' AND pf.tipo_cambio_usd > 1)
-        AND NOT (pf.moneda = 'EUR' AND COALESCE(eb.tipo_cambio_eur, dof.eur_mxn, 0) > 1)
-    ),
-    gastos_op_comisiones AS (
-      SELECT COALESCE(SUM(total_mxn), 0) AS val
-      FROM liquidaciones_comision
-      WHERE periodo = to_char(v_inicio_mes, 'YYYY-MM')
-        AND (organization_id = public.org_scope())
-    ),
-    arribos_mes AS (
-      SELECT jsonb_build_object(
-        'total', count(*),
-        'yaLlegaron', count(*) FILTER (WHERE eb.estado_real IN ('Arribo','En Aduana','Entregado','EIR','Por liquidar','Cerrado')),
-        'enCamino', count(*) FILTER (WHERE eb.estado_real IN ('Confirmado','En Tránsito')),
-        'ventaMXN', COALESCE(sum(COALESCE(p.venta_mxn, 0)), 0),
-        'costoMXN', COALESCE(sum(COALESCE(p.costo_mxn, 0)), 0),
-        'profitMXN', COALESCE(sum(COALESCE(p.venta_mxn, 0) - COALESCE(p.costo_mxn, 0)), 0),
-        'ventaMxnFromUsd', COALESCE(sum(COALESCE(p.venta_mxn_from_usd, 0)), 0),
-        'costoMxnFromUsd', COALESCE(sum(COALESCE(p.costo_mxn_from_usd, 0)), 0),
-        'ventaMxnFromEur', COALESCE(sum(COALESCE(p.venta_mxn_from_eur, 0)), 0),
-        'costoMxnFromEur', COALESCE(sum(COALESCE(p.costo_mxn_from_eur, 0)), 0),
-        'ventaMxnNative', COALESCE(sum(COALESCE(p.venta_mxn_native, 0)), 0),
-        'costoMxnNative', COALESCE(sum(COALESCE(p.costo_mxn_native, 0)), 0),
-        'profitUSD', COALESCE(sum(COALESCE(p.venta_usd, 0) - COALESCE(p.costo_usd, 0)), 0),
-        'gastosOperativosMXN',
-          COALESCE((SELECT val FROM gastos_op_facturas), 0)
-          + COALESCE((SELECT val FROM gastos_op_comisiones), 0),
-        'gastosOperativosSinTC', COALESCE((SELECT val FROM gastos_op_sin_tc), 0)
-      ) AS val
-      FROM embarques_base eb
-      LEFT JOIN profit p ON p.embarque_id = eb.id
-      WHERE eb.eta IS NOT NULL AND eb.eta >= v_inicio_mes AND eb.eta <= v_fin_mes
-    ),
-    resumen_sig AS (
-      SELECT jsonb_build_object(
-        'total', count(*),
-        'ventaUSD', COALESCE(sum(COALESCE(p.venta_usd, 0)), 0),
-        'costoUSD', COALESCE(sum(COALESCE(p.costo_usd, 0)), 0),
-        'ventaMXN', COALESCE(sum(COALESCE(p.venta_mxn, 0)), 0),
-        'costoMXN', COALESCE(sum(COALESCE(p.costo_mxn, 0)), 0),
-        'profitMXN', COALESCE(sum(COALESCE(p.venta_mxn, 0) - COALESCE(p.costo_mxn, 0)), 0)
-      ) AS val
-      FROM activos eb
-      LEFT JOIN profit p ON p.embarque_id = eb.id
-      WHERE eb.eta IS NOT NULL AND eb.eta >= v_inicio_sig AND eb.eta <= v_fin_sig
-    )
-    SELECT jsonb_build_object(
-      'totalActivos', (SELECT count(*) FROM activos),
-      'conteoPorEstado', COALESCE((SELECT val FROM conteo), '{}'::jsonb),
-      'arribosEsteMes', COALESCE((SELECT val FROM arribos_mes), '{}'::jsonb),
-      'resumenMesSiguiente', COALESCE((SELECT val FROM resumen_sig), '{}'::jsonb)
-    )
-  );
+  IF auth.role() IS DISTINCT FROM 'service_role'
+     AND NOT public.puede_ver_dashboard_direccion(auth.uid()) THEN
+    RAISE EXCEPTION 'LC_DASHBOARD_SIN_PERMISO: tu rol no tiene acceso a los indicadores de dirección (costos y utilidad)'
+      USING ERRCODE = '42501';
+  END IF;
+  RETURN public._dashboard_summary_calc();
 END;
 $$;
 CREATE FUNCTION public.default_user_org_id() RETURNS uuid
@@ -12605,6 +12663,12 @@ CREATE FUNCTION public.ensure_demo_membership(_user_id uuid) RETURNS void
     SET search_path TO 'public'
     AS $$
 BEGIN
+  -- OLA 1 · C7: privilegio de servicio obligatorio. Antes cualquier usuario
+  -- autenticado podía reescribir el rol y la organización de otra persona.
+  IF auth.role() IS DISTINCT FROM 'service_role' AND auth.uid() IS NOT NULL THEN
+    RAISE EXCEPTION 'LC_DEMO_SOLO_SERVICIO: la asignación demo sólo puede hacerse desde el servidor'
+      USING ERRCODE = '42501';
+  END IF;
   INSERT INTO public.user_roles (user_id, role)
   VALUES (_user_id, 'admin_org'::app_role)
   ON CONFLICT (user_id) DO UPDATE SET role = 'admin_org'::app_role;
@@ -15636,36 +15700,10 @@ EXCEPTION WHEN undefined_table THEN
 END;
 $$;
 CREATE FUNCTION public.nc_aplicadas_en_moneda_factura(p_factura_id uuid) RETURNS numeric
-    LANGUAGE plpgsql STABLE SECURITY DEFINER
+    LANGUAGE sql STABLE SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
-DECLARE
-  v_moneda text;
-  v_tc numeric;
-  v_ncs numeric;
-BEGIN
-  SELECT f.moneda::text, f.tipo_cambio INTO v_moneda, v_tc
-  FROM public.facturas f WHERE f.id = p_factura_id;
-  IF v_moneda IS NULL THEN RETURN 0; END IF;
-  SELECT COALESCE(SUM(
-      CASE
-        WHEN nc.moneda::text = v_moneda THEN nc.monto
-        WHEN v_moneda = 'MXN' AND nc.moneda::text <> 'MXN' AND nc.tipo_cambio > 1
-          THEN nc.monto * nc.tipo_cambio
-        WHEN v_moneda <> 'MXN' AND nc.moneda::text = 'MXN' AND v_tc > 1
-          THEN nc.monto / v_tc
-        WHEN v_moneda <> 'MXN' AND nc.moneda::text <> 'MXN'
-             AND v_moneda <> nc.moneda::text
-             AND nc.tipo_cambio > 1 AND v_tc > 1
-          THEN (nc.monto * nc.tipo_cambio) / v_tc
-        ELSE 0
-      END), 0) INTO v_ncs
-  FROM public.factura_notas_credito nc
-  WHERE nc.factura_id = p_factura_id
-    AND nc.deleted_at IS NULL
-    AND nc.estado = 'Aplicada';
-  RETURN COALESCE(v_ncs, 0);
-END;
+  SELECT public._nc_aplicadas_moneda_factura(p_factura_id);
 $$;
 CREATE FUNCTION public.notif_cli_on_embarque_estado() RETURNS trigger
     LANGUAGE plpgsql SECURITY DEFINER
@@ -18282,6 +18320,26 @@ CREATE FUNCTION public.puede_escribir_cotizaciones(_user_id uuid DEFAULT auth.ui
     OR public.has_role(_user_id, 'customer_service'::app_role)
   )
 $$;
+CREATE FUNCTION public.puede_ver_costos_cotizacion(_user_id uuid DEFAULT auth.uid()) RETURNS boolean
+    LANGUAGE sql STABLE SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+  SELECT _user_id IS NOT NULL AND public.has_any_role_efectivo(
+    _user_id,
+    ARRAY['admin','admin_org','super_admin','gerente_comercial','gerente_visor',
+          'gerente_operaciones','ejecutivo_pricing','vendedor','coordinador_logistico',
+          'operador','customer_service','contador','tesorero','auxiliar_contable']::app_role[]
+  );
+$$;
+CREATE FUNCTION public.puede_ver_dashboard_direccion(_user_id uuid DEFAULT auth.uid()) RETURNS boolean
+    LANGUAGE sql STABLE SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+  SELECT _user_id IS NOT NULL AND public.has_any_role_efectivo(
+    _user_id,
+    ARRAY['admin','admin_org','super_admin','gerente_comercial','gerente_visor','gerente_operaciones']::app_role[]
+  );
+$$;
 CREATE FUNCTION public.purgar_embarque_cascade(p_embarque_id uuid) RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
@@ -18770,14 +18828,12 @@ BEGIN
   IF v_estado_actual IN ('Cancelada', 'Borrador', 'Sustituida') THEN
     RETURN COALESCE(NEW, OLD);
   END IF;
-  -- P13: una sola pasada por pagos_factura y factura_notas_credito.
   SELECT COALESCE(SUM(monto_aplicado_factura), 0) INTO v_pagado
   FROM public.pagos_factura
   WHERE factura_id = v_factura_id AND deleted_at IS NULL;
-  SELECT COALESCE(SUM(monto), 0) INTO v_ncs
-  FROM public.factura_notas_credito
-  WHERE factura_id = v_factura_id AND deleted_at IS NULL AND estado = 'Aplicada';
-  v_saldo := COALESCE(v_total, 0) - v_pagado - v_ncs;
+  -- OLA 1 · C1: NC convertidas a la moneda de la factura (fuente única).
+  v_ncs := public._nc_aplicadas_moneda_factura(v_factura_id);
+  v_saldo := COALESCE(v_total, 0) - v_pagado - COALESCE(v_ncs, 0);
   IF v_saldo <= 0.01 THEN
     v_nuevo_estado := 'Pagada';
   ELSIF v_pagado > 0 THEN
@@ -21504,7 +21560,6 @@ BEGIN
   WHERE f.id = p_factura_id AND f.deleted_at IS NULL
     AND f.estado NOT IN ('Cancelada', 'Sustituida', 'Borrador');
   IF NOT FOUND THEN RETURN 0; END IF;
-  -- Ancla tenant: mismo candado que public.saldo_factura.
   v_uid := auth.uid();
   v_caller_org := public.current_user_org_id();
   IF v_uid IS NOT NULL
@@ -21517,11 +21572,8 @@ BEGIN
   SELECT COALESCE(SUM(p.monto_aplicado_factura), 0) INTO v_pagos
   FROM public.pagos_factura p
   WHERE p.factura_id = p_factura_id AND p.deleted_at IS NULL;
-  SELECT COALESCE(SUM(nc.monto), 0) INTO v_ncs
-  FROM public.factura_notas_credito nc
-  WHERE nc.factura_id = p_factura_id AND nc.deleted_at IS NULL
-    AND nc.estado = 'Aplicada';
-  RETURN COALESCE(v_total, 0) - v_pagos - v_ncs;
+  v_ncs := public._nc_aplicadas_moneda_factura(p_factura_id);
+  RETURN COALESCE(v_total, 0) - v_pagos - COALESCE(v_ncs, 0);
 END;
 $$;
 CREATE FUNCTION public.saldo_factura_proveedor(p_factura_id uuid) RETURNS jsonb
@@ -26205,6 +26257,7 @@ CREATE UNIQUE INDEX contenedores_numero_unico ON public.embarque_contenedores US
 CREATE UNIQUE INDEX documentos_embarque_unico_por_nombre ON public.documentos_embarque USING btree (embarque_id, nombre) WHERE (deleted_at IS NULL);
 CREATE UNIQUE INDEX embarques_expediente_org_unico ON public.embarques USING btree (organization_id, expediente) WHERE (deleted_at IS NULL);
 CREATE UNIQUE INDEX facturas_numero_org_unico ON public.facturas USING btree (organization_id, numero) WHERE ((deleted_at IS NULL) AND (numero IS NOT NULL));
+CREATE UNIQUE INDEX facturas_uuid_fiscal_unico ON public.facturas USING btree (organization_id, uuid_fiscal) WHERE ((uuid_fiscal IS NOT NULL) AND (deleted_at IS NULL));
 CREATE INDEX idx_aa_anticipo ON public.anticipos_aplicaciones USING btree (anticipo_id) WHERE (deleted_at IS NULL);
 CREATE INDEX idx_aa_factura ON public.anticipos_aplicaciones USING btree (proveedor_factura_id) WHERE (deleted_at IS NULL);
 CREATE INDEX idx_aa_org ON public.anticipos_aplicaciones USING btree (organization_id) WHERE (deleted_at IS NULL);
@@ -26733,6 +26786,7 @@ CREATE TRIGGER trg_presupuesto_categorias_updated_at BEFORE UPDATE ON public.pre
 CREATE TRIGGER trg_presupuesto_mensual_updated_at BEFORE UPDATE ON public.presupuesto_mensual FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 CREATE TRIGGER trg_proforma_eur_no_soportada BEFORE UPDATE OF estado_proforma ON public.proformas FOR EACH ROW EXECUTE FUNCTION public.tg_proforma_eur_no_soportada();
 CREATE TRIGGER trg_proforma_no_soft_delete_facturada BEFORE UPDATE OF deleted_at ON public.proformas FOR EACH ROW EXECUTE FUNCTION public.enforce_proforma_no_soft_delete_facturada();
+CREATE TRIGGER trg_prohibir_delete_factura BEFORE DELETE ON public.facturas FOR EACH ROW EXECUTE FUNCTION public._prohibir_delete_factura();
 CREATE TRIGGER trg_proveedor_contacto_principal_unico BEFORE INSERT OR UPDATE OF es_principal, deleted_at ON public.proveedor_contactos FOR EACH ROW EXECUTE FUNCTION public._proveedor_contacto_principal_unico();
 CREATE TRIGGER trg_proveedor_contactos_updated_at BEFORE UPDATE ON public.proveedor_contactos FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 CREATE TRIGGER trg_proveedor_facturas_dedupe_folio BEFORE INSERT OR UPDATE OF organization_id, proveedor_id, folio_proveedor ON public.proveedor_facturas FOR EACH ROW EXECUTE FUNCTION public.proveedor_facturas_dedupe_folio();
@@ -27488,7 +27542,6 @@ CREATE POLICY "Super admins manage organizations" ON public.organizations TO aut
 CREATE POLICY "Tenant CRUD bbva_movimientos" ON public.bbva_movimientos TO authenticated USING ((((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) AND (( SELECT public.has_role(( SELECT auth.uid() AS uid), 'admin'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)))) WITH CHECK ((((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) AND (( SELECT public.has_role(( SELECT auth.uid() AS uid), 'admin'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role))));
 CREATE POLICY "Tenant CRUD conceptos_factura" ON public.conceptos_factura USING ((((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) AND (( SELECT public.has_role(( SELECT auth.uid() AS uid), 'admin'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'operador'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'contador'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)))) WITH CHECK ((((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) AND (( SELECT public.has_role(( SELECT auth.uid() AS uid), 'admin'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'operador'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'contador'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role))));
 CREATE POLICY "Tenant CRUD contactos_cliente" ON public.contactos_cliente USING ((((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) AND (( SELECT public.has_role(( SELECT auth.uid() AS uid), 'admin'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'operador'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'contador'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)))) WITH CHECK ((((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) AND (( SELECT public.has_role(( SELECT auth.uid() AS uid), 'admin'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'operador'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'contador'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role))));
-CREATE POLICY "Tenant CRUD cotizacion_costos" ON public.cotizacion_costos TO authenticated USING ((((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) AND ( SELECT public.puede_escribir_cotizaciones(( SELECT auth.uid() AS uid)) AS puede_escribir_cotizaciones))) WITH CHECK ((((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) AND ( SELECT public.puede_escribir_cotizaciones(( SELECT auth.uid() AS uid)) AS puede_escribir_cotizaciones)));
 CREATE POLICY "Tenant CRUD cotizaciones" ON public.cotizaciones TO authenticated USING ((((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) AND ( SELECT public.puede_escribir_cotizaciones(( SELECT auth.uid() AS uid)) AS puede_escribir_cotizaciones))) WITH CHECK ((((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) AND ( SELECT public.puede_escribir_cotizaciones(( SELECT auth.uid() AS uid)) AS puede_escribir_cotizaciones)));
 CREATE POLICY "Tenant CRUD cuentas_bancarias" ON public.cuentas_bancarias TO authenticated USING ((((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) AND (( SELECT public.has_role(( SELECT auth.uid() AS uid), 'admin'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'admin_org'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)))) WITH CHECK ((((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) AND (( SELECT public.has_role(( SELECT auth.uid() AS uid), 'admin'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'admin_org'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role))));
 CREATE POLICY "Tenant CRUD demoras venta" ON public.costeo_demoras_venta_tarifa TO authenticated USING ((((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) AND (( SELECT public.has_role(( SELECT auth.uid() AS uid), 'admin'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'admin_org'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'gerente_operaciones'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'ejecutivo_pricing'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'operador'::public.app_role) AS has_role))) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role))) WITH CHECK ((((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) AND (( SELECT public.has_role(( SELECT auth.uid() AS uid), 'admin'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'admin_org'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'gerente_operaciones'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'ejecutivo_pricing'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'operador'::public.app_role) AS has_role))) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)));
@@ -27509,11 +27562,12 @@ CREATE POLICY "Tenant admin crm_plantillas_mensaje" ON public.crm_plantillas_men
 CREATE POLICY "Tenant admin/contador CRUD catalogo_claves_sat" ON public.catalogo_claves_sat TO authenticated USING ((((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) AND (( SELECT public.has_role(( SELECT auth.uid() AS uid), 'admin'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'admin_org'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'contador'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)))) WITH CHECK ((((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) AND (( SELECT public.has_role(( SELECT auth.uid() AS uid), 'admin'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'admin_org'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'contador'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role))));
 CREATE POLICY "Tenant delete conceptos_costo" ON public.conceptos_costo FOR DELETE TO authenticated USING ((((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) AND ( SELECT public.has_any_role_efectivo(( SELECT auth.uid() AS uid), ARRAY['admin'::public.app_role, 'operador'::public.app_role, 'contador'::public.app_role, 'super_admin'::public.app_role]) AS has_any_role)));
 CREATE POLICY "Tenant delete conceptos_venta" ON public.conceptos_venta FOR DELETE TO authenticated USING ((((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) AND ( SELECT public.has_any_role_efectivo(( SELECT auth.uid() AS uid), ARRAY['admin'::public.app_role, 'admin_org'::public.app_role, 'operador'::public.app_role, 'contador'::public.app_role, 'super_admin'::public.app_role]) AS has_any_role)));
+CREATE POLICY "Tenant delete cotizacion_costos" ON public.cotizacion_costos FOR DELETE TO authenticated USING ((((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) AND ( SELECT public.puede_escribir_cotizaciones(( SELECT auth.uid() AS uid)) AS puede_escribir_cotizaciones)));
 CREATE POLICY "Tenant delete documentos_embarque" ON public.documentos_embarque FOR DELETE TO authenticated USING ((((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) AND ( SELECT public.has_any_role_efectivo(( SELECT auth.uid() AS uid), ARRAY['admin'::public.app_role, 'operador'::public.app_role, 'super_admin'::public.app_role]) AS has_any_role)));
 CREATE POLICY "Tenant delete embarques" ON public.embarques FOR DELETE TO authenticated USING ((((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) AND ( SELECT public.has_any_role_efectivo(( SELECT auth.uid() AS uid), ARRAY['admin'::public.app_role, 'operador'::public.app_role, 'super_admin'::public.app_role]) AS has_any_role)));
-CREATE POLICY "Tenant delete facturas" ON public.facturas FOR DELETE TO authenticated USING ((((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) AND ( SELECT public.has_any_role_efectivo(( SELECT auth.uid() AS uid), ARRAY['admin'::public.app_role, 'admin_org'::public.app_role, 'operador'::public.app_role, 'contador'::public.app_role, 'super_admin'::public.app_role]) AS has_any_role)));
 CREATE POLICY "Tenant delete proformas" ON public.proformas FOR DELETE TO authenticated USING ((((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) AND ( SELECT public.has_any_role_efectivo(( SELECT auth.uid() AS uid), ARRAY['admin'::public.app_role, 'admin_org'::public.app_role, 'operador'::public.app_role, 'contador'::public.app_role, 'super_admin'::public.app_role]) AS has_any_role)));
 CREATE POLICY "Tenant insert bitacora" ON public.bitacora_actividad FOR INSERT TO authenticated WITH CHECK (((usuario_id = ( SELECT auth.uid() AS uid)) AND ((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role))));
+CREATE POLICY "Tenant insert cotizacion_costos" ON public.cotizacion_costos FOR INSERT TO authenticated WITH CHECK ((((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) AND ( SELECT public.puede_escribir_cotizaciones(( SELECT auth.uid() AS uid)) AS puede_escribir_cotizaciones)));
 CREATE POLICY "Tenant insert proforma_envios" ON public.proforma_envios FOR INSERT TO authenticated WITH CHECK ((organization_id IN ( SELECT om.organization_id
    FROM public.organization_members om
   WHERE (om.user_id = ( SELECT auth.uid() AS uid)))));
@@ -27528,6 +27582,7 @@ CREATE POLICY "Tenant read clientes" ON public.clientes FOR SELECT TO authentica
 CREATE POLICY "Tenant read conceptos_costo" ON public.conceptos_costo FOR SELECT TO authenticated USING ((((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) AND ( SELECT public.has_any_role(( SELECT auth.uid() AS uid), ARRAY['viewer'::public.app_role]) AS has_any_role)));
 CREATE POLICY "Tenant read conceptos_venta" ON public.conceptos_venta FOR SELECT TO authenticated USING ((((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) AND ( SELECT public.has_any_role(( SELECT auth.uid() AS uid), ARRAY['viewer'::public.app_role]) AS has_any_role)));
 CREATE POLICY "Tenant read configuracion" ON public.configuracion FOR SELECT TO authenticated USING (((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)));
+CREATE POLICY "Tenant read cotizacion_costos" ON public.cotizacion_costos FOR SELECT TO authenticated USING ((((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) AND ( SELECT public.puede_ver_costos_cotizacion(( SELECT auth.uid() AS uid)) AS puede_ver_costos_cotizacion)));
 CREATE POLICY "Tenant read crm_comentarios_oportunidad" ON public.crm_comentarios_oportunidad FOR SELECT TO authenticated USING (((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)));
 CREATE POLICY "Tenant read crm_cuotas_vendedor" ON public.crm_cuotas_vendedor FOR SELECT TO authenticated USING (((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)));
 CREATE POLICY "Tenant read crm_etapa_criterios" ON public.crm_etapa_criterios FOR SELECT TO authenticated USING (((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)));
@@ -27566,6 +27621,7 @@ CREATE POLICY "Tenant staff lee notificaciones" ON public.notificaciones_cliente
 CREATE POLICY "Tenant update clientes" ON public.clientes FOR UPDATE TO authenticated USING ((((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) AND (( SELECT public.has_role(( SELECT auth.uid() AS uid), 'admin'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'admin_org'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'operador'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'contador'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)))) WITH CHECK ((((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) AND (( SELECT public.has_role(( SELECT auth.uid() AS uid), 'admin'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'admin_org'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'operador'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'contador'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role))));
 CREATE POLICY "Tenant update conceptos_costo" ON public.conceptos_costo FOR UPDATE TO authenticated USING ((((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) AND ( SELECT public.has_any_role_efectivo(( SELECT auth.uid() AS uid), ARRAY['admin'::public.app_role, 'operador'::public.app_role, 'contador'::public.app_role, 'super_admin'::public.app_role]) AS has_any_role))) WITH CHECK ((((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) AND ( SELECT public.has_any_role_efectivo(( SELECT auth.uid() AS uid), ARRAY['admin'::public.app_role, 'operador'::public.app_role, 'contador'::public.app_role, 'super_admin'::public.app_role]) AS has_any_role)));
 CREATE POLICY "Tenant update conceptos_venta" ON public.conceptos_venta FOR UPDATE TO authenticated USING ((((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) AND ( SELECT public.has_any_role_efectivo(( SELECT auth.uid() AS uid), ARRAY['admin'::public.app_role, 'admin_org'::public.app_role, 'operador'::public.app_role, 'contador'::public.app_role, 'super_admin'::public.app_role, 'customer_service'::public.app_role]) AS has_any_role_efectivo))) WITH CHECK ((((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) AND ( SELECT public.has_any_role_efectivo(( SELECT auth.uid() AS uid), ARRAY['admin'::public.app_role, 'admin_org'::public.app_role, 'operador'::public.app_role, 'contador'::public.app_role, 'super_admin'::public.app_role, 'customer_service'::public.app_role]) AS has_any_role_efectivo)));
+CREATE POLICY "Tenant update cotizacion_costos" ON public.cotizacion_costos FOR UPDATE TO authenticated USING ((((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) AND ( SELECT public.puede_escribir_cotizaciones(( SELECT auth.uid() AS uid)) AS puede_escribir_cotizaciones))) WITH CHECK ((((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) AND ( SELECT public.puede_escribir_cotizaciones(( SELECT auth.uid() AS uid)) AS puede_escribir_cotizaciones)));
 CREATE POLICY "Tenant update documentos_embarque" ON public.documentos_embarque FOR UPDATE TO authenticated USING ((((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) AND ( SELECT public.has_any_role_efectivo(( SELECT auth.uid() AS uid), ARRAY['admin'::public.app_role, 'operador'::public.app_role, 'super_admin'::public.app_role]) AS has_any_role))) WITH CHECK ((((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) AND ( SELECT public.has_any_role_efectivo(( SELECT auth.uid() AS uid), ARRAY['admin'::public.app_role, 'operador'::public.app_role, 'super_admin'::public.app_role]) AS has_any_role)));
 CREATE POLICY "Tenant update embarques" ON public.embarques FOR UPDATE TO authenticated USING ((((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) AND ( SELECT public.has_any_role_efectivo(( SELECT auth.uid() AS uid), ARRAY['admin'::public.app_role, 'operador'::public.app_role, 'super_admin'::public.app_role]) AS has_any_role))) WITH CHECK ((((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) AND ( SELECT public.has_any_role_efectivo(( SELECT auth.uid() AS uid), ARRAY['admin'::public.app_role, 'operador'::public.app_role, 'super_admin'::public.app_role]) AS has_any_role)));
 CREATE POLICY "Tenant update facturas" ON public.facturas FOR UPDATE TO authenticated USING ((((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) AND ( SELECT public.has_any_role_efectivo(( SELECT auth.uid() AS uid), ARRAY['admin'::public.app_role, 'admin_org'::public.app_role, 'operador'::public.app_role, 'contador'::public.app_role, 'super_admin'::public.app_role]) AS has_any_role))) WITH CHECK ((((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) AND ( SELECT public.has_any_role_efectivo(( SELECT auth.uid() AS uid), ARRAY['admin'::public.app_role, 'admin_org'::public.app_role, 'operador'::public.app_role, 'contador'::public.app_role, 'super_admin'::public.app_role]) AS has_any_role)));
@@ -27946,6 +28002,10 @@ GRANT ALL ON FUNCTION public._cxp_desvincular_por_rechazo(p_id uuid, p_motivo te
 REVOKE ALL ON FUNCTION public._cxp_validar_aprobacion(p_factura_id uuid) FROM PUBLIC;
 GRANT ALL ON FUNCTION public._cxp_validar_aprobacion(p_factura_id uuid) TO authenticated;
 GRANT ALL ON FUNCTION public._cxp_validar_aprobacion(p_factura_id uuid) TO service_role;
+REVOKE ALL ON FUNCTION public._dashboard_details_calc() FROM PUBLIC;
+GRANT ALL ON FUNCTION public._dashboard_details_calc() TO service_role;
+REVOKE ALL ON FUNCTION public._dashboard_summary_calc() FROM PUBLIC;
+GRANT ALL ON FUNCTION public._dashboard_summary_calc() TO service_role;
 REVOKE ALL ON FUNCTION public._docs_requeridos_por_estado(p_modo text, p_estado text) FROM PUBLIC;
 GRANT ALL ON FUNCTION public._docs_requeridos_por_estado(p_modo text, p_estado text) TO authenticated;
 GRANT ALL ON FUNCTION public._docs_requeridos_por_estado(p_modo text, p_estado text) TO service_role;
@@ -27974,6 +28034,9 @@ GRANT ALL ON FUNCTION public._log_role_change_om() TO service_role;
 REVOKE ALL ON FUNCTION public._log_role_change_ur() FROM PUBLIC;
 GRANT ALL ON FUNCTION public._log_role_change_ur() TO authenticated;
 GRANT ALL ON FUNCTION public._log_role_change_ur() TO service_role;
+REVOKE ALL ON FUNCTION public._nc_aplicadas_moneda_factura(p_factura_id uuid) FROM PUBLIC;
+GRANT ALL ON FUNCTION public._nc_aplicadas_moneda_factura(p_factura_id uuid) TO authenticated;
+GRANT ALL ON FUNCTION public._nc_aplicadas_moneda_factura(p_factura_id uuid) TO service_role;
 REVOKE ALL ON FUNCTION public._nc_cliente_recalcular_comisiones() FROM PUBLIC;
 GRANT ALL ON FUNCTION public._nc_cliente_recalcular_comisiones() TO authenticated;
 GRANT ALL ON FUNCTION public._nc_cliente_recalcular_comisiones() TO service_role;
@@ -27982,6 +28045,8 @@ GRANT ALL ON FUNCTION public._normalizar_razon_social() TO service_role;
 REVOKE ALL ON FUNCTION public._normalizar_uuid_fiscal() FROM PUBLIC;
 GRANT ALL ON FUNCTION public._normalizar_uuid_fiscal() TO authenticated;
 GRANT ALL ON FUNCTION public._normalizar_uuid_fiscal() TO service_role;
+GRANT ALL ON FUNCTION public._prohibir_delete_factura() TO authenticated;
+GRANT ALL ON FUNCTION public._prohibir_delete_factura() TO service_role;
 GRANT ALL ON FUNCTION public._proveedor_contacto_principal_unico() TO authenticated;
 GRANT ALL ON FUNCTION public._proveedor_contacto_principal_unico() TO service_role;
 REVOKE ALL ON FUNCTION public._reabrir_entrantes_factura() FROM PUBLIC;
@@ -28267,7 +28332,7 @@ GRANT ALL ON FUNCTION public.convertir_lead_rpc(p_lead_id uuid, p_crear_cliente 
 REVOKE ALL ON FUNCTION public.convertir_monto_pago_a_factura(p_monto numeric, p_moneda_pago public.moneda, p_tc_pago numeric, p_moneda_fact public.moneda, p_tc_fact numeric) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.convertir_monto_pago_a_factura(p_monto numeric, p_moneda_pago public.moneda, p_tc_pago numeric, p_moneda_fact public.moneda, p_tc_fact numeric) TO authenticated;
 GRANT ALL ON FUNCTION public.convertir_monto_pago_a_factura(p_monto numeric, p_moneda_pago public.moneda, p_tc_pago numeric, p_moneda_fact public.moneda, p_tc_fact numeric) TO service_role;
-GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.facturas TO authenticated;
+GRANT SELECT,INSERT,UPDATE ON TABLE public.facturas TO authenticated;
 GRANT ALL ON TABLE public.facturas TO service_role;
 REVOKE ALL ON FUNCTION public.convertir_proformas_a_factura(p_proforma_ids uuid[], p_serie_id uuid, p_metodo_pago text, p_forma_pago text, p_uso_cfdi text, p_dias_credito integer, p_notas text, p_request_id uuid) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.convertir_proformas_a_factura(p_proforma_ids uuid[], p_serie_id uuid, p_metodo_pago text, p_forma_pago text, p_uso_cfdi text, p_dias_credito integer, p_notas text, p_request_id uuid) TO authenticated;
@@ -28523,7 +28588,6 @@ GRANT ALL ON FUNCTION public.enforce_revalidacion_sin_cambios(p_cotizacion_id uu
 REVOKE ALL ON FUNCTION public.enqueue_email(queue_name text, payload jsonb) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.enqueue_email(queue_name text, payload jsonb) TO service_role;
 REVOKE ALL ON FUNCTION public.ensure_demo_membership(_user_id uuid) FROM PUBLIC;
-GRANT ALL ON FUNCTION public.ensure_demo_membership(_user_id uuid) TO authenticated;
 GRANT ALL ON FUNCTION public.ensure_demo_membership(_user_id uuid) TO service_role;
 REVOKE ALL ON FUNCTION public.es_admin_catalogo(_uid uuid) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.es_admin_catalogo(_uid uuid) TO authenticated;
@@ -28868,6 +28932,12 @@ GRANT ALL ON FUNCTION public.provision_organization(p_nombre text, p_rfc text, p
 REVOKE ALL ON FUNCTION public.puede_escribir_cotizaciones(_user_id uuid) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.puede_escribir_cotizaciones(_user_id uuid) TO authenticated;
 GRANT ALL ON FUNCTION public.puede_escribir_cotizaciones(_user_id uuid) TO service_role;
+REVOKE ALL ON FUNCTION public.puede_ver_costos_cotizacion(_user_id uuid) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.puede_ver_costos_cotizacion(_user_id uuid) TO authenticated;
+GRANT ALL ON FUNCTION public.puede_ver_costos_cotizacion(_user_id uuid) TO service_role;
+REVOKE ALL ON FUNCTION public.puede_ver_dashboard_direccion(_user_id uuid) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.puede_ver_dashboard_direccion(_user_id uuid) TO authenticated;
+GRANT ALL ON FUNCTION public.puede_ver_dashboard_direccion(_user_id uuid) TO service_role;
 REVOKE ALL ON FUNCTION public.purgar_embarque_cascade(p_embarque_id uuid) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.purgar_embarque_cascade(p_embarque_id uuid) TO authenticated;
 GRANT ALL ON FUNCTION public.purgar_embarque_cascade(p_embarque_id uuid) TO service_role;

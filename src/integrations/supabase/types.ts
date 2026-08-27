@@ -8490,6 +8490,8 @@ export type Database = {
         Args: { p_factura_id: string }
         Returns: undefined
       }
+      _dashboard_details_calc: { Args: never; Returns: Json }
+      _dashboard_summary_calc: { Args: never; Returns: Json }
       _docs_requeridos_por_estado: {
         Args: { p_estado: string; p_modo: string }
         Returns: string[]
@@ -8504,6 +8506,10 @@ export type Database = {
           p_source: string
         }
         Returns: undefined
+      }
+      _nc_aplicadas_moneda_factura: {
+        Args: { p_factura_id: string }
+        Returns: number
       }
       _recalc_anticipo_saldo: {
         Args: { p_anticipo_id: string }
@@ -10531,6 +10537,14 @@ export type Database = {
         Returns: string
       }
       puede_escribir_cotizaciones: {
+        Args: { _user_id?: string }
+        Returns: boolean
+      }
+      puede_ver_costos_cotizacion: {
+        Args: { _user_id?: string }
+        Returns: boolean
+      }
+      puede_ver_dashboard_direccion: {
         Args: { _user_id?: string }
         Returns: boolean
       }

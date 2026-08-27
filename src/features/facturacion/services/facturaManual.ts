@@ -170,8 +170,10 @@ export async function crearFacturaManual(input: CrearFacturaManualInput): Promis
     .from("conceptos_factura")
     .insert(conceptosRows);
   if (errConc) {
-    // rollback manual: borrar factura huérfana
-    await supabase.from("facturas").delete().eq("id", facturaId);
+    // Rollback: baja lógica (el DELETE físico de facturas está prohibido en BD
+    // desde la Ola 1 de remediación — hallazgo C6 de la auditoría).
+    await supabase.rpc("soft_delete_record", { _table: "facturas", _id: facturaId });
+
     await registrarActividad({
       modulo: "facturacion",
       accion: "Eliminó factura borrador",
