@@ -1,16 +1,29 @@
 /**
  * Payload y validación del formulario de Oportunidad (v13.629.1).
  * Extraído de `NuevaOportunidadDialog` para bajar la complejidad del handler.
+ *
+ * Fase 2 rediseño CRM: el ORIGEN (prospecto o cliente) es obligatorio y
+ * excluyente — así el guard de base de datos nunca se ve forzado a rechazar.
  */
 import type { OportunidadFormState } from "@/features/crm/domain/oportunidadFormState";
 
 const opt = (v: number) => (v > 0 ? v : null);
 
+function bloqueOrigen(form: OportunidadFormState) {
+  if (form.origen_tipo === "prospecto") {
+    return { lead_id: form.lead_id, cliente_id: null, cliente_nombre: "" };
+  }
+  return {
+    lead_id: null,
+    cliente_id: form.cliente_id,
+    cliente_nombre: form.cliente_nombre,
+  };
+}
+
 export function buildOportunidadFormPayload(form: OportunidadFormState, esGanada: boolean) {
   return {
     nombre: form.nombre,
-    cliente_id: form.cliente_id,
-    cliente_nombre: form.cliente_nombre,
+    ...bloqueOrigen(form),
     etapa_id: form.etapa_id,
     monto_estimado: form.monto_estimado,
     moneda: form.moneda,
@@ -43,6 +56,20 @@ export function validarOportunidadForm(
   esGanada: boolean,
 ): { title: string; description?: string } | null {
   if (!form.nombre.trim()) return { title: "Nombre es obligatorio" };
+  if (form.origen_tipo === "prospecto" && !form.lead_id) {
+    return {
+      title: "Selecciona el prospecto de origen",
+      description:
+        "Toda oportunidad nace de un prospecto calificado o de un cliente del directorio.",
+    };
+  }
+  if (form.origen_tipo === "cliente" && !form.cliente_id) {
+    return {
+      title: "Selecciona el cliente de origen",
+      description:
+        "Toda oportunidad nace de un prospecto calificado o de un cliente del directorio.",
+    };
+  }
   if (!form.etapa_id) return { title: "Selecciona una etapa" };
   if (esGanada && !form.fecha_cierre_real) {
     return {

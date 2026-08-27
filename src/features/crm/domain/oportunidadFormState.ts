@@ -4,8 +4,17 @@
  */
 import type { Moneda } from "@/features/crm/types/oportunidades";
 
+/**
+ * Fase 2 rediseño CRM: toda oportunidad nace de un prospecto calificado o de
+ * un cliente del directorio (guard `_crm_oportunidad_requiere_origen`).
+ */
+export type OportunidadOrigenTipo = "prospecto" | "cliente";
+
 export interface OportunidadFormState {
   nombre: string;
+  origen_tipo: OportunidadOrigenTipo;
+  lead_id: string | null;
+  lead_nombre: string;
   cliente_id: string | null;
   cliente_nombre: string;
   etapa_id: string;
@@ -33,6 +42,9 @@ export interface OportunidadFormState {
 
 export const EMPTY_OPORTUNIDAD: OportunidadFormState = {
   nombre: "",
+  origen_tipo: "prospecto",
+  lead_id: null,
+  lead_nombre: "",
   cliente_id: null,
   cliente_nombre: "",
   etapa_id: "",
@@ -54,4 +66,3 @@ export const EMPTY_OPORTUNIDAD: OportunidadFormState = {
   margen_pct: 0,
   riesgos_objeciones: "",
 };
-

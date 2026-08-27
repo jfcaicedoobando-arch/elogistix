@@ -12,9 +12,11 @@ import {
 import {
   buildFromOportunidad,
   buildEmptyForNueva,
+  type OrigenInicial,
 } from "@/features/crm/domain/oportunidadFormHelpers";
 
 export type { OportunidadFormState };
+export type { OrigenInicial };
 export { EMPTY_OPORTUNIDAD };
 
 interface Etapa {
@@ -27,6 +29,7 @@ export function useOportunidadForm(
   oportunidad: CrmOportunidadRow | null | undefined,
   etapas: Etapa[],
   user: User | null,
+  origenInicial?: OrigenInicial | null,
 ) {
   const [form, setForm] = useState<OportunidadFormState>(EMPTY_OPORTUNIDAD);
 
@@ -39,23 +42,27 @@ export function useOportunidadForm(
   const etapasRef = useRef(etapas);
   const userRef = useRef(user);
   const oportunidadRef = useRef(oportunidad);
+  const origenRef = useRef(origenInicial);
   etapasRef.current = etapas;
   userRef.current = user;
   oportunidadRef.current = oportunidad;
+  origenRef.current = origenInicial;
 
   const oportunidadId = oportunidad?.id ?? null;
+  // La identidad del origen prefijado también reinicia el formulario.
+  const origenKey = origenInicial ? `${origenInicial.tipo}:${origenInicial.id}` : "";
 
   useEffect(() => {
     const current = oportunidadRef.current;
     if (current) {
       setForm(buildFromOportunidad(current));
     } else if (open) {
-      setForm(buildEmptyForNueva(etapasRef.current, userRef.current));
+      setForm(buildEmptyForNueva(etapasRef.current, userRef.current, origenRef.current));
     }
-    // La dependencia real es la *identidad* del registro (oportunidadId) y
-    // `open`; el objeto se lee vía ref para evitar loops cuando el backend
-    // devuelve una referencia nueva con el mismo id.
-  }, [oportunidadId, open]);
+    // La dependencia real es la *identidad* del registro (oportunidadId), el
+    // origen prefijado y `open`; los objetos se leen vía ref para evitar loops
+    // cuando el backend devuelve una referencia nueva con el mismo id.
+  }, [oportunidadId, open, origenKey]);
 
   const set = <K extends keyof OportunidadFormState>(k: K, v: OportunidadFormState[K]) =>
     setForm((f) => ({ ...f, [k]: v }));

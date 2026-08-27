@@ -16,6 +16,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import VendedorSelect from "@/features/crm/components/VendedorSelect";
+import SelectorOrigenOportunidad from "./SelectorOrigenOportunidad";
 import OportunidadMetasFields from "./OportunidadMetasFields";
 import type { Moneda } from "@/features/crm/hooks";
 import type { OportunidadFormState } from "@/features/crm/hooks";
@@ -50,27 +51,47 @@ export default function OportunidadFormFields({
   const esGanada = etapaSel?.tipo === "ganada";
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      {/* Fase 2 rediseño CRM: el origen (prospecto o cliente) es obligatorio. */}
+      <SelectorOrigenOportunidad
+        origenTipo={form.origen_tipo}
+        onOrigenTipoChange={(t) =>
+          setForm((f) => ({
+            ...f,
+            origen_tipo: t,
+            lead_id: t === "prospecto" ? f.lead_id : null,
+            lead_nombre: t === "prospecto" ? f.lead_nombre : "",
+            cliente_id: t === "cliente" ? f.cliente_id : null,
+            cliente_nombre: t === "cliente" ? f.cliente_nombre : "",
+          }))
+        }
+        leadId={form.lead_id}
+        leadNombre={form.lead_nombre}
+        onProspecto={(p) =>
+          setForm((f) => ({
+            ...f,
+            lead_id: p.id,
+            lead_nombre: p.empresa,
+            nombre: f.nombre.trim() ? f.nombre : `Oportunidad ${p.empresa}`,
+            vendedor_id: p.vendedorId ?? f.vendedor_id,
+            vendedor_email: p.vendedorEmail ?? f.vendedor_email,
+          }))
+        }
+        clienteId={form.cliente_id}
+        clienteNombre={form.cliente_nombre}
+        onCliente={(c) =>
+          setForm((f) => ({
+            ...f,
+            cliente_id: c.id,
+            cliente_nombre: c.nombre,
+            nombre: f.nombre.trim() ? f.nombre : `Oportunidad ${c.nombre}`,
+          }))
+        }
+        clientes={clientes}
+        readOnly={isEdit}
+      />
       <div className="sm:col-span-2 space-y-1">
         <Label htmlFor="op-nombre">Nombre *</Label>
         <Input id="op-nombre" value={form.nombre} onChange={(e) => set("nombre", e.target.value)} />
-      </div>
-      <div className="space-y-1">
-        <Label>Cliente</Label>
-        <Select
-          value={form.cliente_id ?? "ninguno"}
-          onValueChange={(v) => {
-            if (v === "ninguno") { set("cliente_id", null); set("cliente_nombre", ""); return; }
-            const c = clientes.find((x) => x.id === v);
-            set("cliente_id", v);
-            set("cliente_nombre", c?.nombre ?? "");
-          }}
-        >
-          <SelectTrigger><SelectValue placeholder="Selecciona…" /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="ninguno">Sin cliente</SelectItem>
-            {clientes.map((c) => <SelectItem key={c.id} value={c.id}>{c.nombre}</SelectItem>)}
-          </SelectContent>
-        </Select>
       </div>
       <div className="space-y-1">
         <Label>Etapa *</Label>

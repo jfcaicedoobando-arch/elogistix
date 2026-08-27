@@ -18,7 +18,7 @@ import {
 import { useEtapasPipeline } from "@/features/crm/hooks";
 import { useClientesForSelect } from "@/features/cliente/hooks";
 import { useCrearActividad } from "@/features/crm/hooks";
-import { useOportunidadForm } from "@/features/crm/hooks";
+import { useOportunidadForm, type OrigenInicial } from "@/features/crm/hooks";
 import OportunidadFormFields from "@/features/crm/components/nuevaOportunidad/OportunidadFormFields";
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 import {
@@ -31,9 +31,11 @@ interface Props {
   onOpenChange: (open: boolean) => void;
   oportunidad?: CrmOportunidadRow | null;
   onSaved?: (id: string) => void;
+  /** Fase 2 rediseño CRM: prefija el origen (prospecto o cliente). */
+  origenInicial?: OrigenInicial | null;
 }
 
-export default function NuevaOportunidadDialog({ open, onOpenChange, oportunidad, onSaved }: Props) {
+export default function NuevaOportunidadDialog({ open, onOpenChange, oportunidad, onSaved, origenInicial }: Props) {
   const isEdit = !!oportunidad;
   const { user } = useAuth();
   const { data: etapas = [] } = useEtapasPipeline();
@@ -42,7 +44,7 @@ export default function NuevaOportunidadDialog({ open, onOpenChange, oportunidad
   const actualizar = useActualizarOportunidad();
   const crearActividad = useCrearActividad();
 
-  const { form, setForm, set } = useOportunidadForm(open, oportunidad, etapas, user);
+  const { form, setForm, set } = useOportunidadForm(open, oportunidad, etapas, user, origenInicial);
   const [autoActividad, setAutoActividad] = useState(true);
 
   const etapaSel = etapas.find((e) => e.id === form.etapa_id);
