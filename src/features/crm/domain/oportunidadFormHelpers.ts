@@ -4,19 +4,33 @@
  *
  * v13.629.1 — `buildFromOportunidad` se dividió en tres bloques puros
  * (identidad, comercial, metas) para cumplir el límite de complejidad.
+ * Fase 2 rediseño CRM — el origen (prospecto/cliente) viaja en el estado.
  */
 import type { CrmOportunidadRow, Moneda } from "@/features/crm/types/oportunidades";
 import type { User } from "@supabase/supabase-js";
-import { EMPTY_OPORTUNIDAD, type OportunidadFormState } from "@/features/crm/domain/oportunidadFormState";
+import {
+  EMPTY_OPORTUNIDAD,
+  type OportunidadFormState,
+} from "@/features/crm/domain/oportunidadFormState";
 
 interface Etapa {
   id: string;
   probabilidad_default: number;
 }
 
+/** Origen inicial opcional (p. ej. al crear desde la ficha del prospecto). */
+export interface OrigenInicial {
+  tipo: "prospecto" | "cliente";
+  id: string;
+  nombre: string;
+}
+
 function bloqueIdentidad(o: CrmOportunidadRow) {
   return {
     nombre: o.nombre,
+    origen_tipo: (o.lead_id ? "prospecto" : "cliente") as OportunidadFormState["origen_tipo"],
+    lead_id: o.lead_id ?? null,
+    lead_nombre: "",
     cliente_id: o.cliente_id ?? null,
     cliente_nombre: o.cliente_nombre ?? "",
     etapa_id: o.etapa_id,
@@ -64,9 +78,28 @@ export function buildFromOportunidad(o: CrmOportunidadRow): OportunidadFormState
   };
 }
 
+function bloqueOrigenInicial(origen: OrigenInicial | null | undefined) {
+  if (!origen) return {};
+  if (origen.tipo === "prospecto") {
+    return {
+      origen_tipo: "prospecto" as const,
+      lead_id: origen.id,
+      lead_nombre: origen.nombre,
+      nombre: origen.nombre ? `Oportunidad ${origen.nombre}` : "",
+    };
+  }
+  return {
+    origen_tipo: "cliente" as const,
+    cliente_id: origen.id,
+    cliente_nombre: origen.nombre,
+    nombre: origen.nombre ? `Oportunidad ${origen.nombre}` : "",
+  };
+}
+
 export function buildEmptyForNueva(
   etapas: Etapa[],
   user: User | null,
+  origen?: OrigenInicial | null,
 ): OportunidadFormState {
   const primera = etapas[0];
   return {
@@ -75,5 +108,6 @@ export function buildEmptyForNueva(
     probabilidad: primera?.probabilidad_default ?? 0,
     vendedor_id: user?.id ?? null,
     vendedor_email: user?.email ?? "",
+    ...bloqueOrigenInicial(origen),
   };
 }
