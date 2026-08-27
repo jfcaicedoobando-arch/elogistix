@@ -33,7 +33,12 @@ export interface EnviarEmailInput {
   asunto: string;
   marcarEnviada: boolean;
   totales: { mxn?: string; usd?: string };
-  ejecutivo: { nombre?: string; email?: string; telefono?: string };
+  /**
+   * R2 · W-04: ya NO se envía al servidor (la edge function lo toma de la
+   * sesión). Se conserva sólo para la vista previa del correo en el cliente.
+   */
+  ejecutivo?: { nombre?: string; email?: string; telefono?: string };
+
   tasaIva?: number;
 }
 
@@ -43,7 +48,10 @@ export interface EnviarEmailResult {
   envio_id: string | null;
   resultados: Array<{ email: string; tipo: string; ok: boolean; error?: string }>;
   pdf_link: string;
+  /** R2 · W-03: el link firmado del PDF caduca (TTL 7 días). */
+  pdf_link_expires_at?: string;
 }
+
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string;
@@ -142,6 +150,8 @@ export async function enviarCotizacionPorEmail(input: EnviarEmailInput): Promise
   if (uploadErr) throw new Error(`Subida de PDF falló: ${uploadErr.message}`);
 
   // 4. send
+  // R2 · W-02/W-04: `pdf_path` y `ejecutivo` ya NO se envían; el servidor
+  // resuelve el PDF de la cotización y los datos del ejecutivo desde la sesión.
   const send = await invokeEnviarCotizacion<EnviarEmailResult & { error?: string }>({
     action: "send",
     cotizacion_id: cotizacion.id,
@@ -150,10 +160,9 @@ export async function enviarCotizacionPorEmail(input: EnviarEmailInput): Promise
     mensaje: input.mensaje,
     asunto: input.asunto,
     marcar_enviada: input.marcarEnviada,
-    pdf_path: prep.path,
     totales: input.totales,
-    ejecutivo: input.ejecutivo,
   });
+
   if (!send) throw new Error("Respuesta vacía del servidor");
   if (send.error) throw new Error(send.error);
   return send;
