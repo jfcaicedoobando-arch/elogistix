@@ -16,6 +16,7 @@ import { PageContainer } from "@/components/shared/PageContainer";
 import { useOrganization } from "@/lib/contexts/OrganizationContext";
 import { ErrorState } from "@/components/shared/states/ErrorState";
 import { FILTRO_ANCHO } from "@/lib/ui/filterWidths";
+import type { CursorBitacora } from "@/types/bitacora";
 
 const MODULOS = MODULOS_BITACORA;
 
@@ -171,7 +172,7 @@ export default function Bitacora() {
             <Switch
               id="mostrar-logins"
               checked={mostrarLogins}
-              onCheckedChange={(v) => { setMostrarLogins(v); setPagina(0); }}
+              onCheckedChange={(v) => { setMostrarLogins(v); setPagina(0); setCursores({}); }}
             />
             <Label size="sm" htmlFor="mostrar-logins" className="text-muted-foreground cursor-pointer">
               Incluir logins
@@ -197,9 +198,9 @@ export default function Bitacora() {
       <PaginationControls
         page={pagina}
         totalPages={totalPaginas}
-        onPageChange={setPagina}
+        onPageChange={irAPagina}
         pageSize={limitePagina}
-        onPageSizeChange={(s) => { setLimitePagina(s); setPagina(0); }}
+        onPageSizeChange={(s) => { setLimitePagina(s); setPagina(0); setCursores({}); }}
         pageSizeOptions={[...OPCIONES_PAGINA]}
         hideWhenSinglePage
       />
