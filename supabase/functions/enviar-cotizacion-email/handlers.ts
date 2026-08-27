@@ -12,7 +12,11 @@ const APP_URL = Deno.env.get('APP_PUBLIC_URL') ?? 'https://elogistix.lovable.app
 // alcanzan para que el cliente lo abra; si expira, se reenvía la cotización.
 export const SIGNED_URL_TTL = 60 * 60 * 24 * 7; // 7 días
 
-const BUCKET_PDF = 'cotizaciones-pdf';
+import {
+  BUCKET_PDF, buildTemplateData, parseSendBody, resolverEjecutivo, resolverPdfPath,
+  type Cotizacion, type Destinatario, type SendBodyParsed,
+} from './sendHelpers.ts';
+
 
 import { isEmail } from './emailValidation.ts';
 import { jsonResponse } from "../_shared/response.ts";
