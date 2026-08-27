@@ -9062,6 +9062,7 @@ export type Database = {
         Args: { p_key: string; p_max?: number; p_window_seconds?: number }
         Returns: Json
       }
+      cierre_periodo_fecha: { Args: { p_org: string }; Returns: string }
       clear_facturapi_api_key: {
         Args: { p_ambiente: string; p_org_id: string }
         Returns: undefined
