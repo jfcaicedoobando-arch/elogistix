@@ -17,8 +17,13 @@ import { registrarActividad } from "@/services/bitacora/registrar";
  *   - `10000` < `9999` en orden por texto → tras `COT-YYYY-9999` todos
  *     los folios nuevos colisionaban en `COT-YYYY-10000`.
  */
-async function generarFolioAtomico(): Promise<string> {
-  const { data, error } = await supabase.rpc("siguiente_folio_cotizacion");
+async function generarFolioAtomico(esProspecto: boolean): Promise<string> {
+  // Prospectos llevan folio COT-P-YYYY-#### (secuencia independiente) para
+  // distinguirse de las cotizaciones a clientes (COT-YYYY-####) en PDF/correo.
+  const rpc = esProspecto
+    ? "siguiente_folio_cotizacion_prospecto"
+    : "siguiente_folio_cotizacion";
+  const { data, error } = await supabase.rpc(rpc);
   if (error) throw error;
   if (!data || typeof data !== "string") {
     throw new Error("No se pudo generar el folio de cotización");
@@ -28,7 +33,7 @@ async function generarFolioAtomico(): Promise<string> {
 
 export async function crearCotizacion(input: CreateCotizacionInput): Promise<CotizacionRow> {
   parseOrThrow(cotizacionDraftInputSchema, input, "Cotización");
-  const folio = await generarFolioAtomico();
+  const folio = await generarFolioAtomico(input.es_prospecto === true);
   // Ola 10 · A11: la vigencia se calcula desde "hoy" en zona CDMX. Con
   // `toISOString()` cualquier alta después de las 18:00 hora de México
   // guardaba la fecha del día siguiente (la cotización vencía un día tarde).
