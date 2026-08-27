@@ -29,3 +29,10 @@
 # assert_nc_fecha_valida, conceptos_factura_assert_borrador, eerr_resumen_anual
 # y la función + trigger del guard) y 20260902001000_qa_r2_r04_portal_papelera.sql.
 20260827010526_7dabf435-2f49-4759-969e-c451be0d8ec8.sql
+
+# H6 (v13.762.8): revoca permisos de public.cotizaciones_guard_en_operacion(),
+# función que nace en la migración POSTERIOR 20260901001400, así que en base
+# limpia aborta. Estado final garantizado por
+# 20260902003000_fix_numericeger_rpc_embarques.sql, que reinstala las RPC y
+# repite el mismo REVOKE.
+20260827020732_cccb6c49-6410-4d1d-9689-3292ffd2bdda.sql
