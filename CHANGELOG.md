@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.772.1] - 2026-08-27
+### Mantenimiento
+- **Higiene de código (Power of 10)**: se dividieron los cuatro archivos que superaban 200 líneas — filtros del listado de cotizaciones, filtros secundarios de la página, acciones de la ficha de lead y campos de ruta del formulario de oportunidad. Sin cambios de comportamiento.
+- **Pruebas**: corregido el mock de conciliación bancaria para sembrar el movimiento antes de vincular el pago.
+
 ## [13.772.0] - 2026-08-27
 ### Seguridad
 - **Ola 3 — Controles del ciclo comercial y fiscal (auditoría 3)**.
