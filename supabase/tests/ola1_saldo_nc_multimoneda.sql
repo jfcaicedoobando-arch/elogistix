@@ -15,6 +15,8 @@
 -- Ejecución manual (requiere un rol con EXECUTE sobre los helpers financieros;
 -- el rol restringido del sandbox no puede ejecutarlos):
 --   psql "$SUPABASE_DB_URL" -f supabase/tests/ola1_saldo_nc_multimoneda.sql
+-- =============================================================
+
 
 
 BEGIN;
