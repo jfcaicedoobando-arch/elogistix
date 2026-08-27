@@ -142,6 +142,8 @@ export async function enviarCotizacionPorEmail(input: EnviarEmailInput): Promise
   if (uploadErr) throw new Error(`Subida de PDF falló: ${uploadErr.message}`);
 
   // 4. send
+  // R2 · W-02/W-04: `pdf_path` y `ejecutivo` ya NO se envían; el servidor
+  // resuelve el PDF de la cotización y los datos del ejecutivo desde la sesión.
   const send = await invokeEnviarCotizacion<EnviarEmailResult & { error?: string }>({
     action: "send",
     cotizacion_id: cotizacion.id,
@@ -150,10 +152,9 @@ export async function enviarCotizacionPorEmail(input: EnviarEmailInput): Promise
     mensaje: input.mensaje,
     asunto: input.asunto,
     marcar_enviada: input.marcarEnviada,
-    pdf_path: prep.path,
     totales: input.totales,
-    ejecutivo: input.ejecutivo,
   });
+
   if (!send) throw new Error("Respuesta vacía del servidor");
   if (send.error) throw new Error(send.error);
   return send;
