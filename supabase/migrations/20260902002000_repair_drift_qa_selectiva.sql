@@ -1,4 +1,6 @@
--- Reparación de drift: objetos de 20260901001400 que no llegaron a la BD.
+-- Reparación de drift (v13.762.1): objetos de 20260901001400 que nunca llegaron a la BD.
+-- Fuente: espejos canónicos vigentes (no revierte 20260901002000).
+
 CREATE OR REPLACE FUNCTION public.assert_nc_fecha_valida()
 RETURNS trigger
 LANGUAGE plpgsql
@@ -10,7 +12,7 @@ DECLARE
 BEGIN
   SELECT f.fecha_emision INTO v_fecha_factura
   FROM public.facturas f
-  WHERE f.id = NEW.factura_id AND f.deleted_at IS NULL;
+  WHERE f.id = NEW.factura_id;
 
   IF v_fecha_factura IS NULL OR NEW.fecha_emision IS NULL
      OR NEW.fecha_emision < v_fecha_factura OR NEW.fecha_emision > v_hoy_mexico THEN
@@ -53,6 +55,21 @@ DROP TRIGGER IF EXISTS trg_conceptos_factura_assert_borrador ON public.conceptos
 CREATE TRIGGER trg_conceptos_factura_assert_borrador
 BEFORE INSERT OR UPDATE OR DELETE ON public.conceptos_factura
 FOR EACH ROW EXECUTE FUNCTION public.conceptos_factura_assert_borrador();
+
+DROP TRIGGER IF EXISTS trg_nc_fecha_valida ON public.factura_notas_credito;
+CREATE TRIGGER trg_nc_fecha_valida
+BEFORE INSERT OR UPDATE OF factura_id, fecha_emision ON public.factura_notas_credito
+FOR EACH ROW EXECUTE FUNCTION public.assert_nc_fecha_valida();
+
+DROP TRIGGER IF EXISTS trg_conceptos_factura_assert_borrador ON public.conceptos_factura;
+CREATE TRIGGER trg_conceptos_factura_assert_borrador
+BEFORE INSERT OR UPDATE OR DELETE ON public.conceptos_factura
+FOR EACH ROW EXECUTE FUNCTION public.conceptos_factura_assert_borrador();
+
+DROP TRIGGER IF EXISTS trg_cotizaciones_guard_en_operacion ON public.cotizaciones;
+CREATE TRIGGER trg_cotizaciones_guard_en_operacion
+BEFORE UPDATE ON public.cotizaciones
+FOR EACH ROW EXECUTE FUNCTION public.cotizaciones_guard_en_operacion();
 
 -- Fuente canónica de public.eerr_resumen_anual.
 CREATE OR REPLACE FUNCTION public.eerr_resumen_anual(p_year integer, p_fuente text DEFAULT 'embarques'::text)
