@@ -6,6 +6,7 @@
  * una cuenta) y se deja rastro en la bitácora.
  */
 import { supabase } from "@/integrations/supabase/client";
+import { primeraFila } from "@/lib/supabase/primeraFila";
 import { conflictoConcurrenciaError } from "@/lib/errors/concurrencia";
 import type { TablesUpdate } from "@/integrations/supabase/types";
 import { registrarActividad } from "@/services/bitacora/registrar";
@@ -76,7 +77,7 @@ export async function actualizarPagoProveedor(
   if (input.expectedUpdatedAt) query = query.eq("updated_at", input.expectedUpdatedAt);
   const { data: filas, error } = await query.select("id");
   if (error) throw error;
-  if (!filas || filas.length === 0) throw conflictoConcurrenciaError();
+  if (!primeraFila(filas)) throw conflictoConcurrenciaError();
 
   // El movimiento bancario anterior deja de ser válido: se da de baja y, si el
   // pago sigue saliendo de una cuenta, se genera de nuevo con los datos nuevos.
