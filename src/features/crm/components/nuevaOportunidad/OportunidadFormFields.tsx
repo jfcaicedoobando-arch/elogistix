@@ -16,6 +16,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import VendedorSelect from "@/features/crm/components/VendedorSelect";
+import SelectorOrigenOportunidad from "./SelectorOrigenOportunidad";
 import OportunidadMetasFields from "./OportunidadMetasFields";
 import type { Moneda } from "@/features/crm/hooks";
 import type { OportunidadFormState } from "@/features/crm/hooks";
