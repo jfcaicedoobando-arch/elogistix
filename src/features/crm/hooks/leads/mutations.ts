@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { queryKeys } from "@/lib/query";
 import { createLead, updateLead, softDeleteLead, tomarLead } from "@/features/crm/services/leads";
+import { calificarProspecto, mensajeErrorCalificar } from "@/features/crm/services/leads";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import type { LeadInput } from "./constants";
 import { getErrorMessage } from "@/lib/errors";
@@ -67,6 +68,32 @@ export function useTomarLead() {
     },
     onError: (error: Error) => {
       notifyError(undefined, { title: "No se pudo tomar el lead", description: getErrorMessage(error), error, method: "TOMAR_LEAD" });
+    },
+  });
+}
+
+/**
+ * Rediseño CRM (v13.766.0) — gate Lead → Prospecto.
+ * La validación (perfil comercial completo, rol de ventas, misma organización)
+ * vive en la RPC `crm_calificar_prospecto`.
+ */
+export function useCalificarProspecto() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => calificarProspecto(id),
+    onSuccess: (_d, id) => {
+      qc.invalidateQueries({ queryKey: queryKeys.crm.leads.all });
+      qc.invalidateQueries({ queryKey: queryKeys.crm.leads.detail(id) });
+      qc.invalidateQueries({ queryKey: queryKeys.crm.kpis });
+      notifySuccess(undefined, { title: "Lead calificado como prospecto" });
+    },
+    onError: (error: Error) => {
+      notifyError(undefined, {
+        title: "No se pudo calificar el lead",
+        description: mensajeErrorCalificar(error),
+        error,
+        method: "CALIFICAR_PROSPECTO",
+      });
     },
   });
 }
