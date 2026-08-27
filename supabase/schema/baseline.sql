@@ -1332,7 +1332,7 @@ DECLARE
   v_costo public.cotizacion_costos%ROWTYPE;
   v_cid   uuid;
   v_venta jsonb;
-  v_cant  integer;
+  v_cant  numeric;
   v_total numeric;
   v_pu    numeric;
   v_base  numeric;
@@ -1395,7 +1395,7 @@ BEGIN
   IF jsonb_typeof(p_conceptos_venta) = 'array' THEN
     FOR v_venta IN SELECT * FROM jsonb_array_elements(p_conceptos_venta) LOOP
       IF COALESCE(trim(v_venta->>'descripcion'), '') <> '' THEN
-        v_cant  := GREATEST(COALESCE((v_venta->>'cantidad')::integer, 1), 1);
+        v_cant  := GREATEST(COALESCE((v_venta->>'cantidad')::numeric, 1), 1);
         v_total := ROUND(COALESCE((v_venta->>'total')::numeric, 0), 2);
         v_pu    := COALESCE((v_venta->>'precio_unitario')::numeric, 0);
         IF ABS(v_total - ROUND(v_cant::numeric * v_pu, 2)) > 0.01 THEN
@@ -3019,7 +3019,7 @@ BEGIN
   END IF;
 END;
 $$;
-CREATE FUNCTION public.actualizar_embarque_completo(p_embarque_id uuid, p_embarque jsonb, p_conceptos_venta jsonb, p_conceptos_costo jsonb, p_request_id uuid, p_expected_updated_at timestamp with time zone) RETURNS jsonb
+CREATE FUNCTION public.actualizar_embarque_completo(p_embarque_id uuid, p_embarque jsonb, p_conceptos_venta jsonb DEFAULT '[]'::jsonb, p_conceptos_costo jsonb DEFAULT '[]'::jsonb, p_request_id uuid DEFAULT NULL::uuid, p_expected_updated_at timestamp with time zone DEFAULT NULL::timestamp with time zone) RETURNS jsonb
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -8431,7 +8431,7 @@ BEGIN
   RETURN v_embarque_id;
 END;
 $$;
-CREATE FUNCTION public.crear_embarque_completo(p_embarque jsonb, p_conceptos_venta jsonb, p_conceptos_costo jsonb, p_documentos jsonb, p_request_id uuid) RETURNS jsonb
+CREATE FUNCTION public.crear_embarque_completo(p_embarque jsonb, p_conceptos_venta jsonb DEFAULT '[]'::jsonb, p_conceptos_costo jsonb DEFAULT '[]'::jsonb, p_documentos jsonb DEFAULT '[]'::jsonb, p_request_id uuid DEFAULT NULL::uuid) RETURNS jsonb
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -25781,7 +25781,7 @@ ALTER TABLE ONLY public.conceptos_factura
 ALTER TABLE ONLY public.conceptos_venta
     ADD CONSTRAINT conceptos_venta_pkey PRIMARY KEY (id);
 ALTER TABLE public.conceptos_venta
-    ADD CONSTRAINT conceptos_venta_total_calc CHECK ((abs((total - round(((cantidad)::numeric * precio_unitario), 2))) <= 0.01)) NOT VALID;
+    ADD CONSTRAINT conceptos_venta_total_calc CHECK ((abs((total - round((cantidad * precio_unitario), 2))) <= 0.01)) NOT VALID;
 ALTER TABLE ONLY public.configuracion_global
     ADD CONSTRAINT configuracion_global_categoria_clave_key UNIQUE (categoria, clave);
 ALTER TABLE ONLY public.configuracion_global
@@ -28154,6 +28154,7 @@ GRANT ALL ON FUNCTION public.costeo_tarifas_match_agente_org() TO service_role;
 REVOKE ALL ON FUNCTION public.cotizacion_totales_conceptos(p_conceptos jsonb) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.cotizacion_totales_conceptos(p_conceptos jsonb) TO authenticated;
 GRANT ALL ON FUNCTION public.cotizacion_totales_conceptos(p_conceptos jsonb) TO service_role;
+REVOKE ALL ON FUNCTION public.cotizaciones_guard_en_operacion() FROM PUBLIC;
 GRANT ALL ON FUNCTION public.cotizaciones_guard_en_operacion() TO authenticated;
 GRANT ALL ON FUNCTION public.cotizaciones_guard_en_operacion() TO service_role;
 REVOKE ALL ON FUNCTION public.cotizaciones_listado(p_organization_id uuid, p_search text, p_estado text, p_modo text, p_cliente_id uuid, p_fecha_desde date, p_fecha_hasta date, p_offset integer, p_limit integer) FROM PUBLIC;
