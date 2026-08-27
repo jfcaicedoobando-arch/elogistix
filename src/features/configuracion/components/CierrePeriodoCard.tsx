@@ -61,7 +61,7 @@ export default function CierrePeriodoCard() {
             label="Cerrado hasta"
             hint="Deja el campo vacío para reabrir todos los periodos"
           >
-            <DatePickerMx value={fecha} onChange={(v) => setFecha(v ?? "")} />
+            <DatePickerMx value={fecha} onChange={setFecha} />
           </FormField>
         </div>
 
