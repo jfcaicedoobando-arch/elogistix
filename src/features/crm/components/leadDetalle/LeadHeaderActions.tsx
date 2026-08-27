@@ -7,7 +7,7 @@
  * Ola 6 · O6.1: cuando el lead está sin asignar (bolsa común) y el usuario
  * tiene permiso de ventas, se ofrece "Tomar lead" (RPC crm_tomar_lead).
  */
-import { Repeat, Trash2, UserCheck } from "lucide-react";
+import { BadgeCheck, Repeat, Trash2, UserCheck } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import type { CrmLeadEstado } from "@/features/crm/hooks";
@@ -21,6 +21,10 @@ interface Props {
   mostrarTomar?: boolean;
   onTomar?: () => void;
   tomando?: boolean;
+  /** Rediseño CRM (v13.766.0): gate Lead → Prospecto. */
+  mostrarCalificar?: boolean;
+  onCalificar?: () => void;
+  calificando?: boolean;
 }
 
 export default function LeadHeaderActions({
@@ -31,6 +35,9 @@ export default function LeadHeaderActions({
   mostrarTomar = false,
   onTomar,
   tomando = false,
+  mostrarCalificar = false,
+  onCalificar,
+  calificando = false,
 }: Props) {
   return (
     <div className="flex gap-2">
@@ -39,6 +46,12 @@ export default function LeadHeaderActions({
         <Button variant="default" onClick={onTomar} disabled={tomando}>
           <UserCheck className="h-4 w-4 mr-1" />
           {tomando ? "Tomando…" : "Tomar lead"}
+        </Button>
+      )}
+      {mostrarCalificar && onCalificar && (
+        <Button variant="default" onClick={onCalificar} disabled={calificando}>
+          <BadgeCheck className="h-4 w-4 mr-1" />
+          {calificando ? "Calificando…" : "Calificar como prospecto"}
         </Button>
       )}
       {canEdit && (

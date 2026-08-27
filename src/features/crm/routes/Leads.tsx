@@ -25,8 +25,9 @@ import { listLeads } from "@/features/crm/services/leads";
 import { exportarLeadsCsv } from "@/features/crm/services/crmCsvExport";
 import ExportarCsvButton from "@/features/crm/components/ExportarCsvButton";
 
+import { LEAD_ESTADOS_ETAPA_LEAD } from "@/features/crm/domain/leads/etapas";
 import {
-  LEAD_ESTADOS, LEAD_FUENTES, LEAD_SORTABLE_KEYS,
+  LEAD_FUENTES, LEAD_SORTABLE_KEYS,
   type CrmLeadRow, type CrmLeadEstado, type CrmLeadFuente, type LeadSortKey,
 } from "@/features/crm/domain/leads/constants";
 import { makeLeadsColumns } from "./leadsColumns";
@@ -59,6 +60,8 @@ export default function Leads() {
       const { data, count } = await listLeads({
         search,
         estado: (filters.estado as CrmLeadEstado | "todos") ?? "todos",
+        // Rediseño CRM (v13.766.0): los leads calificados viven en /crm/prospectos.
+        estadoIn: LEAD_ESTADOS_ETAPA_LEAD,
         fuente: (filters.fuente as CrmLeadFuente | "todos") ?? "todos",
         page,
         pageSize,
@@ -91,7 +94,7 @@ export default function Leads() {
     <PageContainer width="wide">
       <PageHeader
         title="Leads"
-        description="Prospectos y empresas en seguimiento comercial"
+        description="Primer contacto: empresas por contactar y calificar"
         actions={
           <ExportarCsvButton
             onExport={() => exportarLeadsCsv(leads)}
@@ -130,7 +133,7 @@ export default function Leads() {
               <SelectTrigger className="h-9 w-auto min-w-[150px]"><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="todos">Todos los estados</SelectItem>
-                {LEAD_ESTADOS.map((e) => <SelectItem key={e} value={e}>{e}</SelectItem>)}
+                {LEAD_ESTADOS_ETAPA_LEAD.map((e) => <SelectItem key={e} value={e}>{e}</SelectItem>)}
               </SelectContent>
             </Select>
             <Select

@@ -7,13 +7,15 @@ import { defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { sortByString } from "@/components/shared/dataTable/sortingFns";
 import { toTitleCase } from "@/lib/formatters";
 import { notifyError } from "@/lib/ui/appFeedback";
-import { LEAD_ESTADOS, useActualizarLead, type CrmLeadEstado, type CrmLeadRow } from "@/features/crm/hooks";
+import { useActualizarLead, type CrmLeadEstado, type CrmLeadRow } from "@/features/crm/hooks";
+import { LEAD_ESTADOS_ETAPA_LEAD, esProspecto } from "@/features/crm/domain/leads/etapas";
 import { COL_W } from "@/components/shared/dataTable/columnWidths";
 import { getErrorMessage } from "@/lib/errors";
 
 function EstadoCell({ lead }: { lead: CrmLeadRow }) {
   const actualizar = useActualizarLead();
-  if (lead.estado === "Convertido") {
+  // Rediseño CRM: prospectos y convertidos ya no cambian de etapa desde la tabla.
+  if (lead.estado === "Convertido" || esProspecto(lead.estado)) {
     // v13.681.0 · UI-1: color unificado por el statusRegistry (dominio lead).
     return <StatusBadge domain="lead" status={lead.estado} />;
   }
@@ -35,7 +37,7 @@ function EstadoCell({ lead }: { lead: CrmLeadRow }) {
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
-          {LEAD_ESTADOS.filter((s) => s !== "Convertido").map((s) => (
+          {LEAD_ESTADOS_ETAPA_LEAD.map((s) => (
             <SelectItem key={s} value={s}>{s}</SelectItem>
           ))}
         </SelectContent>
