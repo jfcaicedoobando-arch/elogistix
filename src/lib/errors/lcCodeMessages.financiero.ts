@@ -190,4 +190,7 @@ export const LC_CODE_MESSAGES_FINANCIERO: Record<string, string> = {
     "La factura no tiene conceptos con importe: agrega al menos un concepto antes de emitirla o timbrarla.",
   LC_CXP_FOLIO_DUPLICADO:
     "Ya existe una factura de proveedor con ese folio interno. Recarga la lista y vuelve a guardar.",
+  LC_CXP_SOBRECOSTO:
+    "Lo facturado por el proveedor excede el costo comprometido del embarque en más del 5%. Revisa los conceptos vinculados o ajusta el costo antes de aprobar.",
 };
+
