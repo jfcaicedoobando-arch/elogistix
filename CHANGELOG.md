@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.762.7] - 2026-08-27
+### Corrección de errores
+- Notas de crédito: el arreglo anterior quedó con una marca de tiempo (`20260827015809`) previa a la migración que reintroducía la versión vieja (`20260901002000`), así que en el replay del CI volvía a ganar la validación estricta. Se reordenó como `20260902002000_nc_fecha_tolerante_utc.sql` y los 3 guards de NC quedan en verde.
+- Suite RLS/guards ejecutada en base limpia local: 54/54 (las 2 fallas observadas provenían de migraciones abortadas sólo en el sandbox; los triggers existen en la base real).
+
+
+
 ## [13.762.6] - 2026-08-27
 ### Corrección de errores
 - Notas de crédito de cliente: una migración posterior había reinstalado la validación de fecha vieja (sólo fecha de México), rechazando NC capturadas por la tarde/noche. Se reaplicó la versión tolerante (fecha de México o del servidor).
