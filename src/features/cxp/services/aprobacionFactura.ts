@@ -136,6 +136,14 @@ function mapApiError(error: { message?: string; code?: string; details?: string 
   return new AprobacionFacturaError("UNKNOWN", error.message || "Ocurrió un error inesperado al procesar la factura.");
 }
 
+/**
+ * Aprueba o rechaza una factura de proveedor.
+ *
+ * `motivo` cumple dos papeles según la acción (así lo espera la RPC):
+ * - al **rechazar**, es el motivo del rechazo (obligatorio);
+ * - al **aprobar**, es la justificación del gasto cuando la factura no está
+ *   ligada a un embarque ni a costos acordados (Ola 4 · H2).
+ */
 export async function aprobarFacturaProveedor(
   id: string,
   aprobar: boolean,
@@ -146,7 +154,7 @@ export async function aprobarFacturaProveedor(
     throw new AprobacionFacturaError("INVALID_ID", "Identificador de factura inválido.");
   }
 
-  let motivoLimpio: string | undefined;
+  let motivoLimpio: string | undefined = (motivo ?? "").trim() || undefined;
   if (!aprobar) {
     motivoLimpio = (motivo ?? "").trim();
     if (motivoLimpio.length < MOTIVO_RECHAZO_MIN) {
@@ -161,7 +169,13 @@ export async function aprobarFacturaProveedor(
         `El motivo no puede exceder ${MOTIVO_RECHAZO_MAX} caracteres.`,
       );
     }
+  } else if (motivoLimpio && motivoLimpio.length > MOTIVO_RECHAZO_MAX) {
+    throw new AprobacionFacturaError(
+      "MOTIVO_TOO_LONG",
+      `La justificación no puede exceder ${MOTIVO_RECHAZO_MAX} caracteres.`,
+    );
   }
+
 
   const { data, error } = await supabase.rpc("aprobar_factura_proveedor", {
     p_id: id,
