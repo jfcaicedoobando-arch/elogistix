@@ -13,7 +13,7 @@ interface Props {
   totalAceptadasSinEmbarque: number;
   filterSinCostos: boolean;
   incluirInactivas: boolean;
-  setFilter: (clave: string, valor: string) => void;
+  setFilter: (clave: "aceptadasSinEmbarque" | "sinCostos" | "incluirInactivas", valor: string) => void;
 }
 
 export function CotizacionesSecondaryFilters({
