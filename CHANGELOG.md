@@ -1,5 +1,17 @@
 # Changelog
 
+## [13.762.0] - 2026-08-27
+### Mejoras
+- Cuentas por pagar: al aprobar una factura de proveedor ahora se compara lo facturado contra el costo comprometido del embarque. Si el exceso pasa del 5% se bloquea (`LC_CXP_SOBRECOSTO`); si es menor, se aprueba con advertencia.
+- Facturas de proveedor: la fecha de vencimiento se calcula sola (emisión + días de crédito) y se recalcula si cambia alguno de los dos. Las facturas de cliente ya no nacen con vencimiento "hoy" por default.
+- Facturas de proveedor: candado transaccional contra folios duplicados del mismo proveedor (no afecta registros históricos ni ediciones que no toquen el folio).
+- Conceptos de venta: la cantidad ahora admite decimales (por ejemplo 1.5 toneladas).
+- Privacidad de costos: los roles comerciales (vendedor, ejecutivo de pricing) ya no ven columnas de costo, utilidad ni margen en el tablero de rentabilidad.
+- Bitácora: navegación por cursor (keyset), mucho más rápida en historiales largos.
+
+### Corrección de errores
+- Se reintegró la tolerancia de medio centavo por unidad al cuadrar conceptos vs subtotal de facturas de proveedor, que se había perdido con el cambio anterior.
+
 ## [13.761.1] - 2026-08-27
 ### Corrección de errores
 - Eventos de tracking (cambio de ETA, arribo): la validación recortaba la hora y guardaba sólo el día, así que un evento de esta tarde aparecía en la línea de tiempo como "ayer a las 6:00 PM". Ahora se conserva la fecha y hora completas y los eventos se ordenan bien dentro del día.
