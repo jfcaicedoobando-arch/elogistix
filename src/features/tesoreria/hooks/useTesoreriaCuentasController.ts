@@ -36,6 +36,8 @@ export interface CuentaEditable {
   clabe: string | null;
   saldo_inicial: number | string;
   fecha_saldo_inicial: string;
+  /** Sello de versión para el bloqueo optimista al guardar (H5). */
+  updated_at?: string | null;
 }
 
 export function useTesoreriaCuentasController() {
