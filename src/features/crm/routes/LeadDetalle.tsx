@@ -3,7 +3,7 @@
  * Lógica de formulario en `useLeadEditForm`; subcomponentes en `components/crm/leadDetalle/`.
  */
 import { useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { UserPlus } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { DetailHeader } from "@/components/shared/DetailHeader";
@@ -12,8 +12,6 @@ import { PageContainer } from "@/components/shared/PageContainer";
 import { LoadingState } from "@/components/shared/states/LoadingState";
 import { ErrorState } from "@/components/shared/states/ErrorState";
 import DoubleConfirmDeleteDialog from "@/components/shared/DoubleConfirmDeleteDialog";
-import { notifyError } from "@/lib/ui/appFeedback";
-import { crmToast } from "@/features/crm/lib/crmToast";
 import { usePermissions, useDocumentTitle } from "@/hooks/shared";
 import ConvertirLeadDialog from "@/features/crm/components/ConvertirLeadDialog";
 import ConvertirLeadSheet from "@/features/crm/components/ConvertirLeadSheet";
@@ -26,84 +24,28 @@ import LeadHeaderActions from "@/features/crm/components/leadDetalle/LeadHeaderA
 import LeadEtapaProspectoAviso from "@/features/crm/components/leadDetalle/LeadEtapaProspectoAviso";
 import OportunidadesDelProspecto from "@/features/crm/components/leadDetalle/OportunidadesDelProspecto";
 import NuevaOportunidadDialog from "@/features/crm/components/NuevaOportunidadDialog";
-import { useActualizarLead, useCalificarProspecto, useEliminarLead, useLead, useTomarLead } from "@/features/crm/hooks";
-import { esProspecto, faltantesGateProspecto, puedeCalificarse } from "@/features/crm/domain/leads/etapas";
+import { useLead } from "@/features/crm/hooks";
+import { useLeadDetalleAcciones } from "@/features/crm/hooks/useLeadDetalleAcciones";
+import { esProspecto, puedeCalificarse } from "@/features/crm/domain/leads/etapas";
 import { useLeadEditForm } from "@/features/crm/hooks";
 import { ROUTES } from "@/constants/routes";
 import { formatFechaEs } from "@/lib/formatters/dates";
 
 export default function LeadDetalle() {
   const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
   const { canEdit, canTomarLead } = usePermissions();
   const volver = useVolver(ROUTES.CRM_LEADS);
   const { data: lead, isLoading } = useLead(id);
   useDocumentTitle(lead ? `Lead · ${lead.empresa}` : "Lead");
-  const actualizar = useActualizarLead();
-  const eliminar = useEliminarLead();
-  const tomar = useTomarLead();
-  const calificar = useCalificarProspecto();
-
   const { form, set, dirty } = useLeadEditForm(lead);
+  const {
+    handleSave, handleDelete, handleCalificar, handleTomar,
+    guardando, eliminando, tomando, calificando,
+  } = useLeadDetalleAcciones(id, lead ?? undefined, form);
   const [convertirSheetOpen, setConvertirSheetOpen] = useState(false);
   const [convertirAvanzadoOpen, setConvertirAvanzadoOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [nuevaOportunidadOpen, setNuevaOportunidadOpen] = useState(false);
-
-  const handleSave = async () => {
-    if (!id) return;
-    try {
-      await actualizar.mutateAsync({ id, patch: form });
-      crmToast.success("Cambios guardados");
-    } catch (e) {
-      notifyError(undefined, {
-        title: "No se pudo guardar",
-        description: e instanceof Error ? e.message : undefined,
-        error: e,
-        method: "HANDLE_SAVE",
-      });
-    }
-  };
-
-  const handleDelete = async () => {
-    if (!id) return;
-    try {
-      await eliminar.mutateAsync(id);
-      crmToast.success("Lead eliminado");
-      navigate(ROUTES.CRM_LEADS);
-    } catch (e) {
-      notifyError(undefined, {
-        title: "No se pudo eliminar",
-        description: e instanceof Error ? e.message : undefined,
-        error: e,
-        method: "HANDLE_DELETE",
-      });
-    }
-  };
-
-  /**
-   * Rediseño CRM (v13.766.0): gate Lead → Prospecto. Avisamos los faltantes
-   * antes de llamar a la RPC para no gastar un viaje al servidor.
-   */
-  const handleCalificar = () => {
-    if (!lead) return;
-    const faltantes = faltantesGateProspecto(lead);
-    if (faltantes.length > 0) {
-      notifyError(undefined, {
-        title: "Falta completar el perfil comercial",
-        description: `Captura en el perfil ICP: ${faltantes.join(", ")}.`,
-        method: "GATE_PROSPECTO",
-      });
-      return;
-    }
-    calificar.mutate(lead.id);
-  };
-
-  // Ola 6 · O6.1: tomar el lead de la bolsa común (asigna vendedor_id = yo).
-  const handleTomar = () => {
-    if (!lead) return;
-    tomar.mutate({ id: lead.id, empresa: lead.empresa });
-  };
 
   if (isLoading) {
     return <LoadingState label="Cargando lead…" />;
@@ -156,10 +98,10 @@ export default function LeadDetalle() {
             onEliminar={() => setDeleteOpen(true)}
             mostrarTomar={canTomarLead && !lead.vendedor_id && lead.estado !== "Convertido"}
             onTomar={handleTomar}
-            tomando={tomar.isPending}
+            tomando={tomando}
             mostrarCalificar={canEdit && puedeCalificarse(lead.estado)}
             onCalificar={handleCalificar}
-            calificando={calificar.isPending}
+            calificando={calificando}
             mostrarNuevaOportunidad={canEdit && esProspecto(lead.estado)}
             onNuevaOportunidad={() => setNuevaOportunidadOpen(true)}
           />
@@ -174,7 +116,7 @@ export default function LeadDetalle() {
         set={set}
         canEdit={canEdit}
         dirty={dirty}
-        isSaving={actualizar.isPending}
+        isSaving={guardando}
         onSave={handleSave}
       />
 
@@ -211,7 +153,7 @@ export default function LeadDetalle() {
         onOpenChange={setDeleteOpen}
         entityName={lead.empresa}
         onConfirm={handleDelete}
-        isPending={eliminar.isPending}
+        isPending={eliminando}
       />
     </PageContainer>
   );

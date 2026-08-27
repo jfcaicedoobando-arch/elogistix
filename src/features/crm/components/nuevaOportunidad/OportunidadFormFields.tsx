@@ -18,6 +18,7 @@ import {
 import VendedorSelect from "@/features/crm/components/VendedorSelect";
 import SelectorOrigenOportunidad from "./SelectorOrigenOportunidad";
 import OportunidadMetasFields from "./OportunidadMetasFields";
+import OportunidadRutaFields from "./OportunidadRutaFields";
 import type { Moneda } from "@/features/crm/hooks";
 import type { OportunidadFormState } from "@/features/crm/hooks";
 
@@ -167,18 +168,7 @@ export default function OportunidadFormFields({
           </div>
         </>
       )}
-      <div className="space-y-1">
-        <Label htmlFor="op-modo">Modo</Label>
-        <Input id="op-modo" value={form.modo} onChange={(e) => set("modo", e.target.value)} placeholder="Marítimo / Aéreo…" />
-      </div>
-      <div className="space-y-1">
-        <Label htmlFor="op-origen">Origen</Label>
-        <Input id="op-origen" value={form.origen} onChange={(e) => set("origen", e.target.value)} />
-      </div>
-      <div className="space-y-1">
-        <Label htmlFor="op-destino">Destino</Label>
-        <Input id="op-destino" value={form.destino} onChange={(e) => set("destino", e.target.value)} />
-      </div>
+      <OportunidadRutaFields form={form} set={set} />
       <OportunidadMetasFields form={form} set={set} />
       <div className="sm:col-span-2">
         <VendedorSelect

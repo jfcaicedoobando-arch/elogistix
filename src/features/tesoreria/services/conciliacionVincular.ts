@@ -5,7 +5,7 @@
  * (Power of 10).
  */
 import { supabase } from "@/integrations/supabase/client";
-import { reportCaughtError } from "@/services/observability/reportError";
+import { reportCaughtError } from "@/lib/observability/reportCaughtError";
 import { bitacoraConciliarMovimiento } from "./conciliacionBitacora";
 import { mapConciliacionError, MovimientoVinculoError } from "./conciliacionErrors";
 import { conflictoConcurrenciaError } from "@/lib/errors/concurrencia";
@@ -28,7 +28,7 @@ export async function conciliarConPago(
     .neq("id", movId)
     .is("deleted_at", null)
     .limit(1);
-  if (enUso && enUso.length > 0) {
+  if (enUso?.some((m) => m.id !== movId)) {
     throw new MovimientoVinculoError(
       "LC_MOVIMIENTO_YA_VINCULADO",
       "Este pago ya fue conciliado con otro movimiento bancario. Desconcilia ese movimiento antes de reasignar el pago.",
@@ -40,7 +40,7 @@ export async function conciliarConPago(
   // H5 (Ola 4): bloqueo optimista — sólo se concilia un movimiento que siga
   // pendiente. Si otro usuario lo concilió o lo ignoró mientras el modal estaba
   // abierto, no se pisa su decisión: se avisa y se pide recargar.
-  const { count, error } = await supabase
+  const { data: filas, error } = await supabase
     .from("bbva_movimientos")
     .update({
       ...patch,
@@ -51,8 +51,8 @@ export async function conciliarConPago(
     .eq("id", movId)
     .eq("estado_conciliacion", "Pendiente")
     .is("deleted_at", null)
-    .select("id", { count: "exact" });
-  if (!error && count === 0) {
+    .select("id");
+  if (!error && filas !== null && filas.length === 0) {
     throw conflictoConcurrenciaError();
   }
   if (error) {
