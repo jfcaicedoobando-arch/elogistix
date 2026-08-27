@@ -31,11 +31,13 @@ export const crm = {
   prospectos: {
     all: ['crm', 'prospectos'] as const,
     paged: ['crm', 'prospectos', 'paged'] as const,
+    select: (term: string) => ['crm', 'prospectos', 'select', term] as const,
   },
   oportunidades: {
     all: ['crm', 'oportunidades'] as const,
     list: (filters: Record<string, unknown>) => ['crm', 'oportunidades', filters] as const,
     detail: (id: string) => ['crm', 'oportunidades', 'detail', id] as const,
+    byLead: (leadId: string) => ['crm', 'oportunidades', 'by-lead', leadId] as const,
   },
   opCotizaciones: {
     all: ['crm', 'op-cotizaciones'] as const,
