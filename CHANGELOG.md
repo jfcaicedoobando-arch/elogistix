@@ -1,5 +1,15 @@
 # Changelog
 
+## [13.765.0] - 2026-08-27
+### Nueva funcionalidad
+- Cotizaciones: segmentación Clientes / Prospectos / Todas en el listado (tabs con conteos); los KPIs de 30 días se calculan dentro del segmento activo.
+- Cotizaciones a prospecto llevan folio propio `COT-P-YYYY-####` (RPC `siguiente_folio_cotizacion_prospecto`, secuencia independiente por org/año) y badge "Prospecto" en tabla y tarjeta móvil.
+- CRM: `fetchCotizacionesSinRespuesta` acepta filtro por segmento y muestra la empresa del prospecto cuando aplica.
+
+### Seguridad e integridad
+- BD: trigger `trg_cotizaciones_validar_prospecto` — una cotización de prospecto no puede tener cliente ligado y exige `prospecto_empresa`; una cotización de cliente fuera de borrador exige `cliente_id`.
+- BD: `convertir_prospecto_a_cliente_rpc` ahora re-vincula TODAS las cotizaciones históricas del prospecto (misma empresa y org) al cliente nuevo, conservando el historial.
+
 ## [13.764.0] - 2026-08-27
 ### Nueva funcionalidad
 - CRM: ciclo de vida del prospecto. Nuevos estados de lead `Prospecto` (calificado y en cotización) y `Pendiente de alta` (aceptó cotización pero aún no es cliente).

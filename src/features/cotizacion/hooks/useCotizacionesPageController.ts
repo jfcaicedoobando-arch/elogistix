@@ -46,6 +46,15 @@ export function esCotizacionInactivaOculta(
   return true;
 }
 
+/** Segmento comercial: separa la prospección (CRM) de la operación con clientes. */
+export type SegmentoCotizacion = "clientes" | "prospectos" | "todas";
+
+export function matchesSegmento(c: CotizacionListItem, segmento: SegmentoCotizacion): boolean {
+  if (segmento === "todas") return true;
+  const esProspecto = c.es_prospecto === true;
+  return segmento === "prospectos" ? esProspecto : !esProspecto;
+}
+
 export interface CotizacionFilterParams {
   search: string;
   filterEstado: string;
@@ -54,6 +63,7 @@ export interface CotizacionFilterParams {
   incluirInactivas: boolean;
   /** O4.5(a): bandeja "Aceptadas sin embarque" (estado Aceptada y sin embarque_id). */
   soloAceptadasSinEmbarque: boolean;
+  segmento: SegmentoCotizacion;
 }
 
 /** O4.5(a): la cotización quedó aceptada pero nadie abrió el embarque. */
@@ -65,6 +75,7 @@ export function matchesCotizacionFilter(
   c: CotizacionListItem,
   p: CotizacionFilterParams,
 ): boolean {
+  if (!matchesSegmento(c, p.segmento)) return false;
   if (!matchesSearch(c, p.search)) return false;
   if (p.filterEstado !== "todos" && c.estado !== p.filterEstado) return false;
   if (p.filterCliente !== "todos" && c.cliente_id !== p.filterCliente) return false;
@@ -74,11 +85,12 @@ export function matchesCotizacionFilter(
   return true;
 }
 
-/** KPIs derivados — siempre últimos 30 días, ignoran filtros visibles. */
-export function useCotizacionKpis(cotizaciones: CotizacionListItem[]) {
+/** KPIs derivados — siempre últimos 30 días, ignoran filtros visibles (salvo el segmento). */
+export function useCotizacionKpis(cotizaciones: CotizacionListItem[], segmento: SegmentoCotizacion) {
   return useMemo(() => {
     const hace30Dias = Date.now() - 30 * 24 * 60 * 60 * 1000;
     const ultimos30 = cotizaciones.filter((c) => {
+      if (!matchesSegmento(c, segmento)) return false;
       if (!c.created_at) return false;
       const ts = new Date(c.created_at).getTime();
       return Number.isFinite(ts) && ts >= hace30Dias;
@@ -90,7 +102,7 @@ export function useCotizacionKpis(cotizaciones: CotizacionListItem[]) {
     const rechazadas = ultimos30.filter((c) => c.estado === "Rechazada").length;
     const tasa = total > 0 ? ((aceptadas / total) * 100).toFixed(1) : "0.0";
     return { total, aceptadas, rechazadas, tasa };
-  }, [cotizaciones]);
+  }, [cotizaciones, segmento]);
 }
 
 // ── Hook composer ───────────────────────────────────────────────────────────
@@ -101,6 +113,9 @@ const DEFAULT_FILTERS = {
   sinCostos: "no",
   incluirInactivas: "no",
   aceptadasSinEmbarque: "no",
+  // Por defecto se muestran las cotizaciones a clientes; la prospección
+  // (CRM) vive en su propio segmento para no mezclar embudos.
+  segmento: "clientes",
 } as const;
 
 type CotizacionFilters = Record<keyof typeof DEFAULT_FILTERS, string>;
@@ -127,6 +142,8 @@ export function useCotizacionesPageController() {
       sinCostos: "Sin costos",
       incluirInactivas: "Incl. inactivas",
       aceptadasSinEmbarque: "Aceptadas sin embarque",
+      // El segmento se controla con tabs propios, no como chip de filtro.
+      segmento: "Segmento",
     },
   });
 
@@ -135,6 +152,9 @@ export function useCotizacionesPageController() {
   const filterSinCostos = tf.filters.sinCostos === "si";
   const incluirInactivas = tf.filters.incluirInactivas === "si";
   const soloAceptadasSinEmbarque = tf.filters.aceptadasSinEmbarque === "si";
+  const segmento = (tf.filters.segmento === "prospectos" || tf.filters.segmento === "todas"
+    ? tf.filters.segmento
+    : "clientes") as SegmentoCotizacion;
 
   const filtered = useMemo(
     () =>
@@ -146,13 +166,25 @@ export function useCotizacionesPageController() {
           filterSinCostos,
           incluirInactivas,
           soloAceptadasSinEmbarque,
+          segmento,
         }),
       ),
     [
       cotizaciones, tf.search, filterEstado, filterCliente, filterSinCostos,
-      incluirInactivas, soloAceptadasSinEmbarque,
+      incluirInactivas, soloAceptadasSinEmbarque, segmento,
     ],
   );
+
+  // Conteos por segmento para los tabs (ignoran el resto de filtros).
+  const segmentoConteos = useMemo(() => {
+    let clientes = 0;
+    let prospectos = 0;
+    for (const c of cotizaciones) {
+      if (c.es_prospecto === true) prospectos += 1;
+      else clientes += 1;
+    }
+    return { clientes, prospectos, todas: clientes + prospectos };
+  }, [cotizaciones]);
 
   // O4.5(a): contador de la bandeja, independiente de los filtros visibles.
   const totalAceptadasSinEmbarque = useMemo(
@@ -162,7 +194,7 @@ export function useCotizacionesPageController() {
 
 
   const { items: paginated, totalPages } = tf.paginate(filtered);
-  const kpis = useCotizacionKpis(cotizaciones);
+  const kpis = useCotizacionKpis(cotizaciones, segmento);
 
   return {
     // datos
@@ -180,6 +212,8 @@ export function useCotizacionesPageController() {
     filterSinCostos,
     incluirInactivas,
     soloAceptadasSinEmbarque,
+    segmento,
+    segmentoConteos,
     totalAceptadasSinEmbarque,
     page: tf.page, pageSize: tf.pageSize, totalPages,
     setSearch: tf.setSearch, setFilter: tf.setFilter,

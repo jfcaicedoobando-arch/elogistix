@@ -23,6 +23,7 @@ import { useTcInicial } from "@/features/catalogos/hooks/useTcInicial";
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 import { CotizacionesBannerOrigen } from "@/features/cotizacion/components/CotizacionesBannerOrigen";
 import { Hint } from "@/components/shared/Hint";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function Cotizaciones() {
   const c = useCotizacionesPageController();
@@ -116,7 +117,28 @@ export default function Cotizaciones() {
       />
 
       <CotizacionesBannerOrigen />
-      <CotizacionesKpis {...c.kpis} />
+      <CotizacionesKpis {...c.kpis} segmento={c.segmento} />
+
+      {/* Segmento comercial: separa la prospección CRM de la operación con
+          clientes activos; los KPIs y la tabla siguen al segmento elegido. */}
+      <Tabs
+        value={c.segmento}
+        onValueChange={(v) => c.setFilter("segmento", v)}
+        className="w-full"
+      >
+        <TabsList aria-label="Segmento de cotizaciones">
+          <TabsTrigger value="clientes">
+            Clientes ({c.segmentoConteos.clientes})
+          </TabsTrigger>
+          <TabsTrigger value="prospectos">
+            Prospectos ({c.segmentoConteos.prospectos})
+          </TabsTrigger>
+          <TabsTrigger value="todas">
+            Todas ({c.segmentoConteos.todas})
+          </TabsTrigger>
+        </TabsList>
+      </Tabs>
+
 
       <Card>
         <CardContent className="p-4">
@@ -156,11 +178,12 @@ export default function Cotizaciones() {
             mobileCard={(r) => (
               <CotizacionMobileCard
                 folio={r.folio}
-                clienteNombre={r.cliente_nombre ?? null}
+                clienteNombre={(r.es_prospecto ? r.prospecto_empresa : r.cliente_nombre) ?? null}
                 createdAt={r.created_at ?? null}
                 estado={r.estado}
                 subtotal={typeof r.subtotal === "number" ? r.subtotal : null}
                 moneda={r.moneda ?? null}
+                esProspecto={r.es_prospecto === true}
               />
             )}
             pagination={{

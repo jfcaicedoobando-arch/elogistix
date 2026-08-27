@@ -4,6 +4,7 @@
  */
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { MoneyCell } from "@/components/shared/MoneyCell";
+import { Badge } from "@/components/ui/badge";
 import { formatCurrency } from "@/lib/formatters";
 import { formatFechaEs } from "@/lib/formatters";
 
@@ -14,16 +15,20 @@ interface Props {
   estado: string;
   subtotal: number | null;
   moneda: string | null;
+  esProspecto?: boolean;
 }
 
 export function CotizacionMobileCard({
-  folio, clienteNombre, createdAt, estado, subtotal, moneda,
+  folio, clienteNombre, createdAt, estado, subtotal, moneda, esProspecto = false,
 }: Props) {
   return (
     <div className="flex flex-col gap-2 min-w-0">
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0 flex-1">
-          <div className="font-semibold text-body truncate">{folio}</div>
+          <div className="flex items-center gap-2">
+            <div className="font-semibold text-body truncate">{folio}</div>
+            {esProspecto && <Badge variant="info" size="sm" className="shrink-0">Prospecto</Badge>}
+          </div>
           <div className="text-body-sm text-muted-foreground truncate mt-0.5">
             {clienteNombre ?? ""}
           </div>

@@ -9,7 +9,6 @@ import type { CotizacionListItem } from "@/features/cotizacion/hooks";
 import { renderEstadoVigencia } from "./columnsParts/estadoVigenciaCell";
 import { formatFechaHora } from "@/lib/formatters";
 import {
-  clientColumn,
   moneyColumn,
   actionsColumn,
 } from "@/components/shared/dataTable/columnBuilders";
@@ -36,10 +35,28 @@ export function buildCotizacionesColumns(params: BuildParams): ColumnDef<Cotizac
       meta: { width: COL_W.folio, className: "font-medium whitespace-nowrap", sticky: true },
       cell: ({ row }) => row.original.folio,
     },
-    clientColumn<CotizacionListItem>({
+    {
       id: "cliente",
-      accessor: (r) => r.cliente_nombre,
-    }),
+      header: "Cliente",
+      // Las cotizaciones de prospecto muestran la empresa capturada (sin alta
+      // en el catálogo de clientes) y un badge para no mezclar embudos.
+      accessorFn: (r) => (r.es_prospecto ? r.prospecto_empresa : r.cliente_nombre) ?? "",
+      enableSorting: true,
+      cell: ({ row }) => {
+        const r = row.original;
+        const nombre = r.es_prospecto
+          ? (r.prospecto_empresa || r.cliente_nombre)
+          : r.cliente_nombre;
+        return (
+          <span className="flex items-center gap-2 min-w-0">
+            <span className="truncate">{nombre}</span>
+            {r.es_prospecto === true && (
+              <Badge variant="info" size="sm" className="shrink-0">Prospecto</Badge>
+            )}
+          </span>
+        );
+      },
+    },
     {
       id: "tipo_doc",
       header: "Tipo",
