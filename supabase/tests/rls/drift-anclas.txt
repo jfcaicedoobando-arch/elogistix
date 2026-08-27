@@ -21,3 +21,11 @@
 # Ola 2 · O2.2 (parche por texto a validar_cierre_embarque). Estado final
 # garantizado por 20260826003000_ola2_comisiones_espejo.sql.
 20260821010645_da0cff63-83ed-4870-bb70-73237a0ba039.sql
+
+# Reparación de drift (v13.747.x): instala trg_cotizaciones_guard_en_operacion,
+# pero la función public.cotizaciones_guard_en_operacion() nace en una migración
+# POSTERIOR (20260901001400), así que en base limpia aborta. Estado final
+# garantizado por 20260901001400_qa_remediacion_selectiva.sql (reaplica
+# assert_nc_fecha_valida, conceptos_factura_assert_borrador, eerr_resumen_anual
+# y la función + trigger del guard) y 20260902001000_qa_r2_r04_portal_papelera.sql.
+20260827010526_7dabf435-2f49-4759-969e-c451be0d8ec8.sql
