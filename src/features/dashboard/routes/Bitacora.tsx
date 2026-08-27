@@ -16,6 +16,7 @@ import { PageContainer } from "@/components/shared/PageContainer";
 import { useOrganization } from "@/lib/contexts/OrganizationContext";
 import { ErrorState } from "@/components/shared/states/ErrorState";
 import { FILTRO_ANCHO } from "@/lib/ui/filterWidths";
+import type { CursorBitacora } from "@/types/bitacora";
 
 const MODULOS = MODULOS_BITACORA;
 
@@ -51,6 +52,9 @@ export default function Bitacora() {
   const [accionFiltro, setAccionFiltro] = useState("todas");
   const [rangoFiltro, setRangoFiltro] = useState("todo");
   const [pagina, setPagina] = useState(0);
+  // QA B-27: cursores keyset por página (0 = sin cursor). Al avanzar de forma
+  // secuencial se usa el cursor; un salto arbitrario cae al offset clásico.
+  const [cursores, setCursores] = useState<Record<number, CursorBitacora>>({});
   const [mostrarLogins, setMostrarLogins] = useState(false);
   const [limitePagina, setLimitePagina] = useState<number>(LIMITE_DEFAULT);
 
@@ -69,6 +73,7 @@ export default function Bitacora() {
     fechaDesde,
     limite: limitePagina,
     pagina,
+    cursor: cursores[pagina] ?? null,
     excluirLogin: esAuth ? false : !mostrarLogins,
     organizationId,
   });
@@ -81,7 +86,16 @@ export default function Bitacora() {
     return (v: T) => {
       setter(v);
       setPagina(0);
+      setCursores({});
     };
+  }
+
+  function irAPagina(nueva: number) {
+    const cursorSiguiente = data?.cursorSiguiente;
+    if (nueva === pagina + 1 && cursorSiguiente) {
+      setCursores((prev) => ({ ...prev, [nueva]: cursorSiguiente }));
+    }
+    setPagina(nueva);
   }
 
   function renderActividad() {
@@ -158,7 +172,7 @@ export default function Bitacora() {
             <Switch
               id="mostrar-logins"
               checked={mostrarLogins}
-              onCheckedChange={(v) => { setMostrarLogins(v); setPagina(0); }}
+              onCheckedChange={(v) => { setMostrarLogins(v); setPagina(0); setCursores({}); }}
             />
             <Label size="sm" htmlFor="mostrar-logins" className="text-muted-foreground cursor-pointer">
               Incluir logins
@@ -184,9 +198,9 @@ export default function Bitacora() {
       <PaginationControls
         page={pagina}
         totalPages={totalPaginas}
-        onPageChange={setPagina}
+        onPageChange={irAPagina}
         pageSize={limitePagina}
-        onPageSizeChange={(s) => { setLimitePagina(s); setPagina(0); }}
+        onPageSizeChange={(s) => { setLimitePagina(s); setPagina(0); setCursores({}); }}
         pageSizeOptions={[...OPCIONES_PAGINA]}
         hideWhenSinglePage
       />

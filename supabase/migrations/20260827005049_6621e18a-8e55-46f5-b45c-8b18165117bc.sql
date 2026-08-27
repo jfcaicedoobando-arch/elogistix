@@ -1,3 +1,6 @@
+-- QA R2 · Etapa 1 (fix) — reintegra la tolerancia de medio centavo por unidad
+-- (B-21/B-22) que la migración 20260827004501 sobreescribió, conservando el
+-- candado de sobrecosto B-15.
 CREATE OR REPLACE FUNCTION public._cxp_validar_aprobacion(p_factura_id uuid)
  RETURNS void
  LANGUAGE plpgsql

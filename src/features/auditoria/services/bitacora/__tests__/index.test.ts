@@ -37,4 +37,24 @@ describe("bitacora/index", () => {
       .filter((x): x is unknown[] => x !== null);
     expect(eqArgs).toContainEqual(["modulo", "crm"]);
   });
+
+  it("QA B-27: con cursor usa keyset (.or + .limit) y no offset", async () => {
+    mock.setTableResult("bitacora_actividad", {
+      data: [{ id: "b2", created_at: "2026-01-01T00:00:00.000Z" }],
+      error: null,
+      count: 100,
+    } as any);
+    const res = await fetchBitacora({
+      limite: 10,
+      cursor: { createdAt: "2026-02-01T00:00:00.000Z", id: "b1" },
+    });
+    const call = mock.tableCalls.find((c) => c.table === "bitacora_actividad")!;
+    expect(call.ops).not.toContain("range");
+    expect(call.ops).toContain("limit");
+    const orIdx = call.ops.indexOf("or");
+    expect(orIdx).toBeGreaterThanOrEqual(0);
+    expect(String(call.opArgs[orIdx]?.[0])).toContain("created_at.lt.2026-02-01T00:00:00.000Z");
+    expect(res.cursorSiguiente).toEqual({ createdAt: "2026-01-01T00:00:00.000Z", id: "b2" });
+  });
 });
+

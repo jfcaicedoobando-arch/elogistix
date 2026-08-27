@@ -5,8 +5,8 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { Json } from "@/integrations/supabase/types";
 
-export type { EntradaBitacora, FiltrosBitacora } from "@/types/bitacora";
-import type { EntradaBitacora, FiltrosBitacora } from "@/types/bitacora";
+export type { EntradaBitacora, FiltrosBitacora, CursorBitacora } from "@/types/bitacora";
+import type { CursorBitacora, EntradaBitacora, FiltrosBitacora } from "@/types/bitacora";
 
 const BITACORA_COLUMNS =
   "id, usuario_id, usuario_email, accion, modulo, entidad_id, entidad_nombre, detalles, created_at" as const;
@@ -36,6 +36,8 @@ function aplicarFiltrosBitacora<Q extends {
 export async function fetchBitacora(filtros: FiltrosBitacora = {}): Promise<{
   datos: EntradaBitacora[];
   total: number;
+  /** QA B-27: cursor de la última fila; sirve para pedir la página siguiente. */
+  cursorSiguiente: CursorBitacora | null;
 }> {
   const {
     limite = 50,
@@ -47,16 +49,27 @@ export async function fetchBitacora(filtros: FiltrosBitacora = {}): Promise<{
     fechaHasta,
     excluirLogin = true,
     organizationId,
+    cursor,
   } = filtros;
 
   // Perf (asesor BD 2026-08-07): `count: "exact"` obligaba a contar TODA la
   // tabla en cada página (máx 3.8 s). `"estimated"` devuelve el conteo exacto
   // mientras la tabla es chica y cae al estimado del planner cuando crece.
+  // QA B-27: keyset `(created_at, id)` cuando hay cursor; `range` (offset) sólo
+  // como respaldo para saltos de página arbitrarios.
   let query = supabase
     .from("bitacora_actividad")
     .select(BITACORA_COLUMNS, { count: "estimated" })
     .order("created_at", { ascending: false })
-    .range(pagina * limite, (pagina + 1) * limite - 1);
+    .order("id", { ascending: false });
+
+  query = cursor
+    ? query
+        .or(
+          `created_at.lt.${cursor.createdAt},and(created_at.eq.${cursor.createdAt},id.lt.${cursor.id})`,
+        )
+        .limit(limite)
+    : query.range(pagina * limite, (pagina + 1) * limite - 1);
 
   const { acciones } = filtros;
   query = aplicarFiltrosBitacora(query, {
@@ -65,7 +78,13 @@ export async function fetchBitacora(filtros: FiltrosBitacora = {}): Promise<{
 
   const { data, error, count } = await query;
   if (error) throw error;
-  return { datos: (data ?? []) as EntradaBitacora[], total: count ?? 0 };
+  const datos = (data ?? []) as EntradaBitacora[];
+  const ultima = datos.length > 0 ? datos[datos.length - 1] : null;
+  return {
+    datos,
+    total: count ?? 0,
+    cursorSiguiente: ultima ? { createdAt: ultima.created_at, id: ultima.id } : null,
+  };
 }
 
 export async function insertBitacora(entrada: {

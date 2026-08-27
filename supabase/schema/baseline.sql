@@ -1731,6 +1731,9 @@ DECLARE
   v_emb_org uuid;
   v_origen text;
   v_tiene_xml_lineas boolean;
+  v_suma_vinculada numeric(18,4);
+  v_comprometido numeric(18,4);
+  v_sobrecosto numeric(18,4);
 BEGIN
   SELECT * INTO v_row FROM public.proveedor_facturas WHERE id = p_factura_id;
   IF v_row.id IS NULL OR v_row.deleted_at IS NOT NULL THEN
@@ -1770,6 +1773,30 @@ BEGIN
       to_char(COALESCE(v_row.subtotal,0),'FM999,999,999,990.00'),
       to_char(v_diferencia,              'FM999,999,999,990.00'),
       to_char(v_tolerancia,              'FM999,999,999,990.00');
+  END IF;
+  -- QA B-15: lo facturado en conceptos vinculados no debe exceder lo
+  -- comprometido en conceptos_costo (tolerancia 0.02; umbral duro 5%).
+  SELECT COALESCE(SUM(pfc.monto * COALESCE(NULLIF(pfc.cantidad,0),1)), 0),
+         COALESCE(SUM(cc.monto), 0)
+    INTO v_suma_vinculada, v_comprometido
+    FROM public.proveedor_facturas_conceptos pfc
+    JOIN public.conceptos_costo cc
+      ON cc.id = pfc.concepto_costo_id AND cc.deleted_at IS NULL
+   WHERE pfc.proveedor_factura_id = p_factura_id
+     AND pfc.concepto_costo_id IS NOT NULL;
+  v_sobrecosto := v_suma_vinculada - v_comprometido;
+  IF v_sobrecosto > 0.02 THEN
+    IF v_comprometido > 0 AND v_sobrecosto > v_comprometido * 0.05 THEN
+      RAISE EXCEPTION 'LC_CXP_SOBRECOSTO: Lo facturado (%) excede lo comprometido (%) en %; revisa los conceptos vinculados antes de aprobar.',
+        to_char(v_suma_vinculada, 'FM999,999,999,990.00'),
+        to_char(v_comprometido,   'FM999,999,999,990.00'),
+        to_char(v_sobrecosto,     'FM999,999,999,990.00');
+    ELSE
+      RAISE WARNING 'LC_CXP_SOBRECOSTO: lo facturado (%) excede lo comprometido (%) en % (<= 5%%, se aprueba con advertencia).',
+        to_char(v_suma_vinculada, 'FM999,999,999,990.00'),
+        to_char(v_comprometido,   'FM999,999,999,990.00'),
+        to_char(v_sobrecosto,     'FM999,999,999,990.00');
+    END IF;
   END IF;
   IF v_row.embarque_id IS NOT NULL THEN
     SELECT estado, organization_id INTO v_emb_estado, v_emb_org
@@ -2992,7 +3019,7 @@ BEGIN
   END IF;
 END;
 $$;
-CREATE FUNCTION public.actualizar_embarque_completo(p_embarque_id uuid, p_embarque jsonb, p_conceptos_venta jsonb DEFAULT '[]'::jsonb, p_conceptos_costo jsonb DEFAULT '[]'::jsonb, p_request_id uuid DEFAULT NULL::uuid, p_expected_updated_at timestamp with time zone DEFAULT NULL::timestamp with time zone) RETURNS jsonb
+CREATE FUNCTION public.actualizar_embarque_completo(p_embarque_id uuid, p_embarque jsonb, p_conceptos_venta jsonb, p_conceptos_costo jsonb, p_request_id uuid, p_expected_updated_at timestamp with time zone) RETURNS jsonb
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -3008,8 +3035,6 @@ DECLARE
 BEGIN
   v_resp := public.idempotency_claim(p_request_id, 'actualizar_embarque_completo');
   IF v_resp IS NOT NULL THEN RETURN v_resp; END IF;
-  -- Lock la fila y lee tanto org como updated_at atómicamente. Esto
-  -- evita carreras entre la verificación optimista y el UPDATE.
   SELECT organization_id, updated_at
     INTO v_org_id, v_current_updated_at
     FROM embarques
@@ -3017,9 +3042,6 @@ BEGIN
    FOR UPDATE;
   IF v_org_id IS NULL THEN RAISE EXCEPTION 'Embarque no encontrado'; END IF;
   PERFORM public._assert_writer(v_org_id);
-  -- FIX-15: si el cliente envió el timestamp que leyó al abrir el wizard,
-  -- verificamos que nadie más haya guardado en el mientras. `IS DISTINCT
-  -- FROM` maneja correctamente el caso de nulos.
   IF p_expected_updated_at IS NOT NULL
      AND v_current_updated_at IS DISTINCT FROM p_expected_updated_at THEN
     RAISE EXCEPTION 'LC_CONFLICTO_CONCURRENCIA: otro usuario modificó este embarque. Recarga y vuelve a intentar.'
@@ -3065,9 +3087,6 @@ BEGIN
     carta_porte = CASE WHEN p_embarque ? 'carta_porte' THEN p_embarque->>'carta_porte' ELSE carta_porte END,
     etd = CASE WHEN p_embarque ? 'etd' THEN (p_embarque->>'etd')::date ELSE etd END,
     eta = CASE WHEN p_embarque ? 'eta' THEN (p_embarque->>'eta')::date ELSE eta END,
-    -- 13.334.6 · Blindaje `embarques_tc_{usd,eur}_pos`: un TC vacío o 0 se
-    -- trata como "sin dato" y conserva el valor previo, en vez de intentar
-    -- escribir 0 y reventar con 23514.
     tipo_cambio_usd = COALESCE(NULLIF(NULLIF(p_embarque->>'tipo_cambio_usd','')::numeric, 0), tipo_cambio_usd),
     tipo_cambio_eur = COALESCE(NULLIF(NULLIF(p_embarque->>'tipo_cambio_eur','')::numeric, 0), tipo_cambio_eur),
     msds_archivo = CASE WHEN p_embarque ? 'msds_archivo' THEN p_embarque->>'msds_archivo' ELSE msds_archivo END,
@@ -3082,7 +3101,7 @@ BEGIN
     IF cv ? 'id' AND cv->>'id' IS NOT NULL AND cv->>'id' <> '' THEN
       UPDATE conceptos_venta SET
         descripcion = COALESCE(cv->>'descripcion', descripcion),
-        cantidad = COALESCE((cv->>'cantidad')::int, cantidad),
+        cantidad = COALESCE((cv->>'cantidad')::numeric, cantidad),
         precio_unitario = COALESCE((cv->>'precio_unitario')::numeric, precio_unitario),
         moneda = COALESCE((cv->>'moneda')::moneda, moneda),
         total = COALESCE((cv->>'total')::numeric, total)
@@ -3091,12 +3110,16 @@ BEGIN
         AND estado_facturacion IN ('pendiente', 'en_proforma');
     ELSE
       INSERT INTO conceptos_venta (
-        embarque_id, descripcion, cantidad, precio_unitario, moneda, total, organization_id
-      )
-      VALUES (
-        p_embarque_id, cv->>'descripcion', (cv->>'cantidad')::int,
-        (cv->>'precio_unitario')::numeric, (cv->>'moneda')::moneda,
-        (cv->>'total')::numeric, v_org_id
+        embarque_id, descripcion, cantidad, precio_unitario, moneda, total, contenedor_id, organization_id
+      ) VALUES (
+        p_embarque_id,
+        cv->>'descripcion',
+        COALESCE((cv->>'cantidad')::numeric, 1),
+        COALESCE((cv->>'precio_unitario')::numeric, 0),
+        COALESCE((cv->>'moneda')::moneda, 'MXN'::moneda),
+        COALESCE((cv->>'total')::numeric, 0),
+        NULLIF(cv->>'contenedor_id','')::uuid,
+        v_org_id
       )
       RETURNING id INTO v_new_id;
       v_incoming_venta_ids := array_append(v_incoming_venta_ids, v_new_id);
@@ -3107,7 +3130,6 @@ BEGIN
    WHERE embarque_id = p_embarque_id
      AND deleted_at IS NULL
      AND estado_facturacion = 'pendiente'
-     AND proforma_id IS NULL
      AND NOT (id = ANY(v_incoming_venta_ids));
   v_incoming_costo_ids := ARRAY(
     SELECT (elem->>'id')::uuid
@@ -3118,8 +3140,6 @@ BEGIN
     IF cc ? 'id' AND cc->>'id' IS NOT NULL AND cc->>'id' <> '' THEN
       UPDATE conceptos_costo SET
         concepto = COALESCE(cc->>'concepto', concepto),
-        -- v13.509.0 · un nombre vacío ya NO borra el proveedor existente:
-        -- solo se reemplaza cuando el payload manda un nombre real.
         proveedor_nombre = CASE
           WHEN cc ? 'proveedor_nombre' AND COALESCE(btrim(cc->>'proveedor_nombre'), '') <> ''
             THEN cc->>'proveedor_nombre'
@@ -3137,13 +3157,16 @@ BEGIN
         AND COALESCE(estado_liquidacion, 'Pendiente') <> 'Pagado';
     ELSE
       INSERT INTO conceptos_costo (
-        embarque_id, concepto, proveedor_nombre, proveedor_id, moneda, monto, organization_id
-      )
-      VALUES (
-        p_embarque_id, cc->>'concepto', COALESCE(cc->>'proveedor_nombre', ''),
-        CASE WHEN cc->>'proveedor_id' IS NOT NULL AND cc->>'proveedor_id' <> ''
-             THEN (cc->>'proveedor_id')::uuid ELSE NULL END,
-        (cc->>'moneda')::moneda, (cc->>'monto')::numeric, v_org_id
+        embarque_id, concepto, proveedor_id, proveedor_nombre, moneda, monto, contenedor_id, organization_id
+      ) VALUES (
+        p_embarque_id,
+        cc->>'concepto',
+        NULLIF(cc->>'proveedor_id','')::uuid,
+        COALESCE(cc->>'proveedor_nombre',''),
+        COALESCE((cc->>'moneda')::moneda, 'MXN'::moneda),
+        COALESCE((cc->>'monto')::numeric, 0),
+        NULLIF(cc->>'contenedor_id','')::uuid,
+        v_org_id
       )
       RETURNING id INTO v_new_id;
       v_incoming_costo_ids := array_append(v_incoming_costo_ids, v_new_id);
@@ -3154,8 +3177,13 @@ BEGIN
    WHERE embarque_id = p_embarque_id
      AND deleted_at IS NULL
      AND COALESCE(estado_liquidacion, 'Pendiente') <> 'Pagado'
+     AND NOT EXISTS (
+       SELECT 1 FROM public.proveedor_facturas_conceptos pfc
+        WHERE pfc.concepto_costo_id = conceptos_costo.id
+     )
      AND NOT (id = ANY(v_incoming_costo_ids));
-  v_resp := jsonb_build_object('id', p_embarque_id);
+  v_resp := jsonb_build_object('ok', true, 'embarque_id', p_embarque_id);
+  -- v13.509.5 · firma real: idempotency_store(_key uuid, _response jsonb)
   PERFORM public.idempotency_store(p_request_id, v_resp);
   RETURN v_resp;
 END;
@@ -7486,7 +7514,7 @@ CREATE TABLE public.facturas (
     moneda public.moneda DEFAULT 'MXN'::public.moneda NOT NULL,
     tipo_cambio numeric,
     fecha_emision date DEFAULT CURRENT_DATE NOT NULL,
-    fecha_vencimiento date DEFAULT CURRENT_DATE NOT NULL,
+    fecha_vencimiento date NOT NULL,
     estado public.estado_factura DEFAULT 'Borrador'::public.estado_factura NOT NULL,
     referencia_bl text,
     notas text,
@@ -8400,7 +8428,7 @@ BEGIN
   RETURN v_embarque_id;
 END;
 $$;
-CREATE FUNCTION public.crear_embarque_completo(p_embarque jsonb, p_conceptos_venta jsonb DEFAULT '[]'::jsonb, p_conceptos_costo jsonb DEFAULT '[]'::jsonb, p_documentos jsonb DEFAULT '[]'::jsonb, p_request_id uuid DEFAULT NULL::uuid) RETURNS jsonb
+CREATE FUNCTION public.crear_embarque_completo(p_embarque jsonb, p_conceptos_venta jsonb, p_conceptos_costo jsonb, p_documentos jsonb, p_request_id uuid) RETURNS jsonb
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -8457,7 +8485,7 @@ BEGIN
   );
   FOR cv IN SELECT * FROM jsonb_array_elements(p_conceptos_venta) LOOP
     INSERT INTO conceptos_venta (embarque_id, descripcion, cantidad, precio_unitario, moneda, total, organization_id)
-    VALUES (nuevo_id, cv->>'descripcion', (cv->>'cantidad')::int, (cv->>'precio_unitario')::numeric,
+    VALUES (nuevo_id, cv->>'descripcion', (cv->>'cantidad')::numeric, (cv->>'precio_unitario')::numeric,
             (cv->>'moneda')::moneda, (cv->>'total')::numeric, v_org_id);
   END LOOP;
   FOR cc IN SELECT * FROM jsonb_array_elements(p_conceptos_costo) LOOP
@@ -17569,6 +17597,59 @@ BEGIN
   RETURN NEW;
 END
 $$;
+CREATE FUNCTION public.proveedor_facturas_dedupe_folio() RETURNS trigger
+    LANGUAGE plpgsql
+    SET search_path TO 'public'
+    AS $$
+BEGIN
+  IF NEW.deleted_at IS NOT NULL OR NEW.estado = 'Cancelada' THEN
+    RETURN NEW;
+  END IF;
+  IF NEW.folio_proveedor IS NULL OR NEW.proveedor_id IS NULL THEN
+    RETURN NEW;
+  END IF;
+  -- En UPDATE sólo se valida si la llave natural cambió: así los duplicados
+  -- históricos siguen editables (cambios de estado, pagos, etc.).
+  IF TG_OP = 'UPDATE'
+     AND NEW.organization_id IS NOT DISTINCT FROM OLD.organization_id
+     AND NEW.proveedor_id IS NOT DISTINCT FROM OLD.proveedor_id
+     AND NEW.folio_proveedor IS NOT DISTINCT FROM OLD.folio_proveedor THEN
+    RETURN NEW;
+  END IF;
+  PERFORM pg_advisory_xact_lock(
+    hashtext(NEW.organization_id::text || '|' || NEW.proveedor_id::text || '|' || lower(NEW.folio_proveedor))
+  );
+  IF EXISTS (
+    SELECT 1 FROM public.proveedor_facturas pf
+    WHERE pf.organization_id = NEW.organization_id
+      AND pf.proveedor_id = NEW.proveedor_id
+      AND pf.folio_proveedor = NEW.folio_proveedor
+      AND pf.deleted_at IS NULL
+      AND pf.estado <> 'Cancelada'
+      AND pf.id IS DISTINCT FROM NEW.id
+  ) THEN
+    RAISE EXCEPTION 'LC_CXP_FOLIO_DUPLICADO: ya existe una factura viva del mismo proveedor con el folio %', NEW.folio_proveedor
+      USING ERRCODE = '23505';
+  END IF;
+  RETURN NEW;
+END;
+$$;
+CREATE FUNCTION public.proveedor_facturas_set_fecha_vencimiento() RETURNS trigger
+    LANGUAGE plpgsql
+    SET search_path TO 'public'
+    AS $$
+BEGIN
+  -- Escape hatch documentado: SET LOCAL app.pf_vencimiento_override = '1'
+  -- respeta el vencimiento capturado a mano (negociaciones puntuales).
+  IF COALESCE(current_setting('app.pf_vencimiento_override', true), '') = '1' THEN
+    RETURN NEW;
+  END IF;
+  IF NEW.fecha_emision IS NOT NULL THEN
+    NEW.fecha_vencimiento := NEW.fecha_emision + COALESCE(NEW.dias_credito, 0);
+  END IF;
+  RETURN NEW;
+END;
+$$;
 CREATE FUNCTION public.proveedor_inteligencia(p_proveedor_id uuid) RETURNS jsonb
     LANGUAGE plpgsql STABLE SECURITY DEFINER
     SET search_path TO 'public'
@@ -24147,7 +24228,7 @@ CREATE TABLE public.conceptos_venta (
     id uuid DEFAULT gen_random_uuid() NOT NULL,
     embarque_id uuid NOT NULL,
     descripcion text NOT NULL,
-    cantidad integer DEFAULT 1 NOT NULL,
+    cantidad numeric DEFAULT 1 NOT NULL,
     precio_unitario numeric DEFAULT 0 NOT NULL,
     moneda public.moneda DEFAULT 'MXN'::public.moneda NOT NULL,
     total numeric DEFAULT 0 NOT NULL,
@@ -24162,7 +24243,7 @@ CREATE TABLE public.conceptos_venta (
     tasa_iva_aplicada numeric(5,4) DEFAULT 0.16 NOT NULL,
     origen text DEFAULT 'manual'::text NOT NULL,
     updated_at timestamp with time zone DEFAULT now(),
-    CONSTRAINT conceptos_venta_cantidad_pos CHECK ((cantidad >= 1)),
+    CONSTRAINT conceptos_venta_cantidad_pos CHECK ((cantidad >= (1)::numeric)),
     CONSTRAINT conceptos_venta_estado_facturacion_check CHECK ((estado_facturacion = ANY (ARRAY['pendiente'::text, 'en_proforma'::text, 'facturado'::text]))),
     CONSTRAINT conceptos_venta_origen_check CHECK ((origen = ANY (ARRAY['manual'::text, 'demoras_auto'::text, 'cotizacion'::text, 'costeo_tarifa'::text]))),
     CONSTRAINT conceptos_venta_precio_nonneg CHECK ((precio_unitario >= (0)::numeric)),
@@ -26313,6 +26394,7 @@ CREATE UNIQUE INDEX proveedor_alias_org_alias_uq ON public.proveedor_alias USING
 CREATE INDEX proveedor_alias_proveedor_idx ON public.proveedor_alias USING btree (proveedor_id);
 CREATE UNIQUE INDEX proveedor_facturas_folio_interno_org_uq ON public.proveedor_facturas USING btree (organization_id, folio_interno) WHERE (deleted_at IS NULL);
 CREATE UNIQUE INDEX proveedor_facturas_org_prov_folio_uq ON public.proveedor_facturas USING btree (organization_id, proveedor_id, folio_proveedor, fecha_emision) WHERE ((deleted_at IS NULL) AND (estado <> 'Cancelada'::public.estado_proveedor_factura));
+CREATE INDEX proveedor_facturas_org_prov_folio_vivo_idx ON public.proveedor_facturas USING btree (organization_id, proveedor_id, folio_proveedor) WHERE ((deleted_at IS NULL) AND (estado <> 'Cancelada'::public.estado_proveedor_factura));
 CREATE UNIQUE INDEX proveedores_org_rfc_unique ON public.proveedores USING btree (organization_id, upper(btrim(rfc))) WHERE ((rfc IS NOT NULL) AND (btrim(rfc) <> ''::text) AND (upper(btrim(rfc)) <> ALL (ARRAY['XEXX010101000'::text, 'XAXX010101000'::text])) AND (deleted_at IS NULL));
 CREATE UNIQUE INDEX puertos_code_uniq_idx ON public.puertos USING btree (upper(btrim(code)));
 CREATE UNIQUE INDEX tipos_contenedor_code_uniq_idx ON public.tipos_contenedor USING btree (upper(btrim(code)));
@@ -26518,8 +26600,10 @@ CREATE TRIGGER trg_proforma_eur_no_soportada BEFORE UPDATE OF estado_proforma ON
 CREATE TRIGGER trg_proforma_no_soft_delete_facturada BEFORE UPDATE OF deleted_at ON public.proformas FOR EACH ROW EXECUTE FUNCTION public.enforce_proforma_no_soft_delete_facturada();
 CREATE TRIGGER trg_proveedor_contacto_principal_unico BEFORE INSERT OR UPDATE OF es_principal, deleted_at ON public.proveedor_contactos FOR EACH ROW EXECUTE FUNCTION public._proveedor_contacto_principal_unico();
 CREATE TRIGGER trg_proveedor_contactos_updated_at BEFORE UPDATE ON public.proveedor_contactos FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+CREATE TRIGGER trg_proveedor_facturas_dedupe_folio BEFORE INSERT OR UPDATE OF organization_id, proveedor_id, folio_proveedor ON public.proveedor_facturas FOR EACH ROW EXECUTE FUNCTION public.proveedor_facturas_dedupe_folio();
 CREATE TRIGGER trg_proveedor_facturas_folio_unico BEFORE INSERT OR UPDATE OF organization_id, proveedor_id, folio_proveedor ON public.proveedor_facturas FOR EACH ROW EXECUTE FUNCTION public.proveedor_facturas_assert_folio_unico();
 CREATE TRIGGER trg_proveedor_facturas_recalc_liq AFTER UPDATE ON public.proveedor_facturas FOR EACH ROW EXECUTE FUNCTION public.tg_proveedor_facturas_recalc_liq();
+CREATE TRIGGER trg_proveedor_facturas_set_fecha_vencimiento BEFORE INSERT OR UPDATE OF fecha_emision, dias_credito ON public.proveedor_facturas FOR EACH ROW EXECUTE FUNCTION public.proveedor_facturas_set_fecha_vencimiento();
 CREATE TRIGGER trg_proveedor_facturas_total_guard BEFORE INSERT OR UPDATE OF subtotal, iva, ieps, retenciones, total ON public.proveedor_facturas FOR EACH ROW EXECUTE FUNCTION public.guard_proveedor_factura_total();
 CREATE TRIGGER trg_proveedor_facturas_updated BEFORE UPDATE ON public.proveedor_facturas FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 CREATE TRIGGER trg_proveedor_notas_credito_updated BEFORE UPDATE ON public.proveedor_notas_credito FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
@@ -28618,6 +28702,12 @@ GRANT ALL ON FUNCTION public.proveedor_estado_cuenta_movimientos(p_proveedor_id 
 REVOKE ALL ON FUNCTION public.proveedor_facturas_assert_folio_unico() FROM PUBLIC;
 GRANT ALL ON FUNCTION public.proveedor_facturas_assert_folio_unico() TO authenticated;
 GRANT ALL ON FUNCTION public.proveedor_facturas_assert_folio_unico() TO service_role;
+REVOKE ALL ON FUNCTION public.proveedor_facturas_dedupe_folio() FROM PUBLIC;
+GRANT ALL ON FUNCTION public.proveedor_facturas_dedupe_folio() TO authenticated;
+GRANT ALL ON FUNCTION public.proveedor_facturas_dedupe_folio() TO service_role;
+REVOKE ALL ON FUNCTION public.proveedor_facturas_set_fecha_vencimiento() FROM PUBLIC;
+GRANT ALL ON FUNCTION public.proveedor_facturas_set_fecha_vencimiento() TO authenticated;
+GRANT ALL ON FUNCTION public.proveedor_facturas_set_fecha_vencimiento() TO service_role;
 REVOKE ALL ON FUNCTION public.proveedor_inteligencia(p_proveedor_id uuid) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.proveedor_inteligencia(p_proveedor_id uuid) TO authenticated;
 GRANT ALL ON FUNCTION public.proveedor_inteligencia(p_proveedor_id uuid) TO service_role;
