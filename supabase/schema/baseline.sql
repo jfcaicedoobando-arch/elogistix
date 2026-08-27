@@ -7514,7 +7514,7 @@ CREATE TABLE public.facturas (
     moneda public.moneda DEFAULT 'MXN'::public.moneda NOT NULL,
     tipo_cambio numeric,
     fecha_emision date DEFAULT CURRENT_DATE NOT NULL,
-    fecha_vencimiento date DEFAULT CURRENT_DATE NOT NULL,
+    fecha_vencimiento date NOT NULL,
     estado public.estado_factura DEFAULT 'Borrador'::public.estado_factura NOT NULL,
     referencia_bl text,
     notas text,
@@ -24228,7 +24228,7 @@ CREATE TABLE public.conceptos_venta (
     id uuid DEFAULT gen_random_uuid() NOT NULL,
     embarque_id uuid NOT NULL,
     descripcion text NOT NULL,
-    cantidad integer DEFAULT 1 NOT NULL,
+    cantidad numeric DEFAULT 1 NOT NULL,
     precio_unitario numeric DEFAULT 0 NOT NULL,
     moneda public.moneda DEFAULT 'MXN'::public.moneda NOT NULL,
     total numeric DEFAULT 0 NOT NULL,
@@ -24243,7 +24243,7 @@ CREATE TABLE public.conceptos_venta (
     tasa_iva_aplicada numeric(5,4) DEFAULT 0.16 NOT NULL,
     origen text DEFAULT 'manual'::text NOT NULL,
     updated_at timestamp with time zone DEFAULT now(),
-    CONSTRAINT conceptos_venta_cantidad_pos CHECK ((cantidad >= 1)),
+    CONSTRAINT conceptos_venta_cantidad_pos CHECK ((cantidad >= (1)::numeric)),
     CONSTRAINT conceptos_venta_estado_facturacion_check CHECK ((estado_facturacion = ANY (ARRAY['pendiente'::text, 'en_proforma'::text, 'facturado'::text]))),
     CONSTRAINT conceptos_venta_origen_check CHECK ((origen = ANY (ARRAY['manual'::text, 'demoras_auto'::text, 'cotizacion'::text, 'costeo_tarifa'::text]))),
     CONSTRAINT conceptos_venta_precio_nonneg CHECK ((precio_unitario >= (0)::numeric)),
@@ -26394,6 +26394,7 @@ CREATE UNIQUE INDEX proveedor_alias_org_alias_uq ON public.proveedor_alias USING
 CREATE INDEX proveedor_alias_proveedor_idx ON public.proveedor_alias USING btree (proveedor_id);
 CREATE UNIQUE INDEX proveedor_facturas_folio_interno_org_uq ON public.proveedor_facturas USING btree (organization_id, folio_interno) WHERE (deleted_at IS NULL);
 CREATE UNIQUE INDEX proveedor_facturas_org_prov_folio_uq ON public.proveedor_facturas USING btree (organization_id, proveedor_id, folio_proveedor, fecha_emision) WHERE ((deleted_at IS NULL) AND (estado <> 'Cancelada'::public.estado_proveedor_factura));
+CREATE INDEX proveedor_facturas_org_prov_folio_vivo_idx ON public.proveedor_facturas USING btree (organization_id, proveedor_id, folio_proveedor) WHERE ((deleted_at IS NULL) AND (estado <> 'Cancelada'::public.estado_proveedor_factura));
 CREATE UNIQUE INDEX proveedores_org_rfc_unique ON public.proveedores USING btree (organization_id, upper(btrim(rfc))) WHERE ((rfc IS NOT NULL) AND (btrim(rfc) <> ''::text) AND (upper(btrim(rfc)) <> ALL (ARRAY['XEXX010101000'::text, 'XAXX010101000'::text])) AND (deleted_at IS NULL));
 CREATE UNIQUE INDEX puertos_code_uniq_idx ON public.puertos USING btree (upper(btrim(code)));
 CREATE UNIQUE INDEX tipos_contenedor_code_uniq_idx ON public.tipos_contenedor USING btree (upper(btrim(code)));
@@ -26599,8 +26600,10 @@ CREATE TRIGGER trg_proforma_eur_no_soportada BEFORE UPDATE OF estado_proforma ON
 CREATE TRIGGER trg_proforma_no_soft_delete_facturada BEFORE UPDATE OF deleted_at ON public.proformas FOR EACH ROW EXECUTE FUNCTION public.enforce_proforma_no_soft_delete_facturada();
 CREATE TRIGGER trg_proveedor_contacto_principal_unico BEFORE INSERT OR UPDATE OF es_principal, deleted_at ON public.proveedor_contactos FOR EACH ROW EXECUTE FUNCTION public._proveedor_contacto_principal_unico();
 CREATE TRIGGER trg_proveedor_contactos_updated_at BEFORE UPDATE ON public.proveedor_contactos FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+CREATE TRIGGER trg_proveedor_facturas_dedupe_folio BEFORE INSERT OR UPDATE OF organization_id, proveedor_id, folio_proveedor ON public.proveedor_facturas FOR EACH ROW EXECUTE FUNCTION public.proveedor_facturas_dedupe_folio();
 CREATE TRIGGER trg_proveedor_facturas_folio_unico BEFORE INSERT OR UPDATE OF organization_id, proveedor_id, folio_proveedor ON public.proveedor_facturas FOR EACH ROW EXECUTE FUNCTION public.proveedor_facturas_assert_folio_unico();
 CREATE TRIGGER trg_proveedor_facturas_recalc_liq AFTER UPDATE ON public.proveedor_facturas FOR EACH ROW EXECUTE FUNCTION public.tg_proveedor_facturas_recalc_liq();
+CREATE TRIGGER trg_proveedor_facturas_set_fecha_vencimiento BEFORE INSERT OR UPDATE OF fecha_emision, dias_credito ON public.proveedor_facturas FOR EACH ROW EXECUTE FUNCTION public.proveedor_facturas_set_fecha_vencimiento();
 CREATE TRIGGER trg_proveedor_facturas_total_guard BEFORE INSERT OR UPDATE OF subtotal, iva, ieps, retenciones, total ON public.proveedor_facturas FOR EACH ROW EXECUTE FUNCTION public.guard_proveedor_factura_total();
 CREATE TRIGGER trg_proveedor_facturas_updated BEFORE UPDATE ON public.proveedor_facturas FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 CREATE TRIGGER trg_proveedor_notas_credito_updated BEFORE UPDATE ON public.proveedor_notas_credito FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
@@ -28699,6 +28702,12 @@ GRANT ALL ON FUNCTION public.proveedor_estado_cuenta_movimientos(p_proveedor_id 
 REVOKE ALL ON FUNCTION public.proveedor_facturas_assert_folio_unico() FROM PUBLIC;
 GRANT ALL ON FUNCTION public.proveedor_facturas_assert_folio_unico() TO authenticated;
 GRANT ALL ON FUNCTION public.proveedor_facturas_assert_folio_unico() TO service_role;
+REVOKE ALL ON FUNCTION public.proveedor_facturas_dedupe_folio() FROM PUBLIC;
+GRANT ALL ON FUNCTION public.proveedor_facturas_dedupe_folio() TO authenticated;
+GRANT ALL ON FUNCTION public.proveedor_facturas_dedupe_folio() TO service_role;
+REVOKE ALL ON FUNCTION public.proveedor_facturas_set_fecha_vencimiento() FROM PUBLIC;
+GRANT ALL ON FUNCTION public.proveedor_facturas_set_fecha_vencimiento() TO authenticated;
+GRANT ALL ON FUNCTION public.proveedor_facturas_set_fecha_vencimiento() TO service_role;
 REVOKE ALL ON FUNCTION public.proveedor_inteligencia(p_proveedor_id uuid) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.proveedor_inteligencia(p_proveedor_id uuid) TO authenticated;
 GRANT ALL ON FUNCTION public.proveedor_inteligencia(p_proveedor_id uuid) TO service_role;
