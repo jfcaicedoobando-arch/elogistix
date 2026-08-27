@@ -23,6 +23,7 @@ import { useTcInicial } from "@/features/catalogos/hooks/useTcInicial";
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 import { CotizacionesBannerOrigen } from "@/features/cotizacion/components/CotizacionesBannerOrigen";
 import { Hint } from "@/components/shared/Hint";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function Cotizaciones() {
   const c = useCotizacionesPageController();
@@ -177,11 +178,12 @@ export default function Cotizaciones() {
             mobileCard={(r) => (
               <CotizacionMobileCard
                 folio={r.folio}
-                clienteNombre={r.cliente_nombre ?? null}
+                clienteNombre={(r.es_prospecto ? r.prospecto_empresa : r.cliente_nombre) ?? null}
                 createdAt={r.created_at ?? null}
                 estado={r.estado}
                 subtotal={typeof r.subtotal === "number" ? r.subtotal : null}
                 moneda={r.moneda ?? null}
+                esProspecto={r.es_prospecto === true}
               />
             )}
             pagination={{
