@@ -26,6 +26,8 @@ export const LC_CODE_MESSAGES_CRM: Record<string, string> = {
     "Otro vendedor ya tomó este lead. Actualiza la lista para ver la bolsa disponible.",
   LC_LEAD_SIN_PERMISO_TOMA:
     "Tu rol no puede tomar leads de la bolsa. Solicita acceso a ventas o gerencia comercial.",
+  LC_LEAD_ALTA_CLIENTE_PROHIBIDA:
+    "El alta de clientes se hace únicamente en el módulo de Clientes (con RFC, CP y régimen fiscal). Da de alta al cliente ahí y vuelve a ligarlo en la conversión del lead.",
   LC_CRM_SIN_ETAPA_ABIERTA:
     "Configura al menos una etapa abierta en el pipeline antes de crear oportunidades.",
   LC_CRM_PROSPECTO_SIN_EMPRESA:
