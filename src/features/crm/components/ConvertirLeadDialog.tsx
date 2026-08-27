@@ -27,7 +27,7 @@ interface Props {
 }
 
 export default function ConvertirLeadDialog({ open, onOpenChange, lead }: Props) {
-  const [crearCliente, setCrearCliente] = useState(true);
+  const [clienteId, setClienteId] = useState<string>(lead.cliente_convertido_id ?? SIN_CLIENTE);
   const [nombre, setNombre] = useState(`Oportunidad — ${lead.empresa}`);
   const [monto, setMonto] = useState<string>("0");
   const [moneda, setMoneda] = useState<Moneda>("MXN");
