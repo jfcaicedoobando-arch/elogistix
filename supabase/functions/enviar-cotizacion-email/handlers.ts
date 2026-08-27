@@ -2,10 +2,17 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
 import { captureEdgeException } from '../_shared/sentry.ts';
 import { fetchOrgSlug } from '../_shared/orgSlug.ts';
 import { DESTINATARIO_NO_PERMITIDO, emailsPermitidosCliente } from '../_shared/destinatarioCliente.ts';
+import { authorizeOrgRole, ROLES_ESCRITURA_COTIZACIONES } from '../_shared/auth.ts';
 
 
 const APP_URL = Deno.env.get('APP_PUBLIC_URL') ?? 'https://elogistix.lovable.app';
-const SIGNED_URL_TTL = 60 * 60 * 24 * 30; // 30 días
+// W-03 (auditoría R2): el link firmado viaja en el correo y queda persistido en
+// `cotizacion_envios.pdf_link_publico`. 30 días exponían el PDF (precios,
+// condiciones) ante cualquier filtración del historial de correo. 7 días
+// alcanzan para que el cliente lo abra; si expira, se reenvía la cotización.
+export const SIGNED_URL_TTL = 60 * 60 * 24 * 7; // 7 días
+
+const BUCKET_PDF = 'cotizaciones-pdf';
 
 import { isEmail } from './emailValidation.ts';
 import { jsonResponse } from "../_shared/response.ts";
@@ -17,13 +24,14 @@ export async function handlePrepare(
   cors: Record<string, string>,
 ): Promise<Response> {
   const { data: upload, error: upErr } = await admin
-    .storage.from('cotizaciones-pdf')
+    .storage.from(BUCKET_PDF)
     .createSignedUploadUrl(pdfPath);
   if (upErr || !upload) {
-    return jsonResponse(cors, { error: 'No se pudo preparar la subida', detail: upErr?.message }, 500);
+    return jsonResponse({ error: 'No se pudo preparar la subida', detail: upErr?.message }, 500, cors);
   }
-  return jsonResponse(cors, { upload_url: upload.signedUrl, upload_token: upload.token, path: pdfPath });
+  return jsonResponse({ upload_url: upload.signedUrl, upload_token: upload.token, path: pdfPath }, 200, cors);
 }
+
 
 interface Destinatario { email: string; nombre?: string }
 interface Cotizacion {
