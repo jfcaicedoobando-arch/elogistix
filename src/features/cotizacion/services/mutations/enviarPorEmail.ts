@@ -33,7 +33,12 @@ export interface EnviarEmailInput {
   asunto: string;
   marcarEnviada: boolean;
   totales: { mxn?: string; usd?: string };
-  ejecutivo: { nombre?: string; email?: string; telefono?: string };
+  /**
+   * R2 · W-04: ya NO se envía al servidor (la edge function lo toma de la
+   * sesión). Se conserva sólo para la vista previa del correo en el cliente.
+   */
+  ejecutivo?: { nombre?: string; email?: string; telefono?: string };
+
   tasaIva?: number;
 }
 
