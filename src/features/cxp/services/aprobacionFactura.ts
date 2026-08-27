@@ -101,6 +101,20 @@ const ERROR_RULES: readonly RuleMatch[] = [
     message: "Verifica el UUID en el SAT antes de aprobar. Si es un proveedor internacional, quita el UUID fiscal desde el detalle de la factura.",
     matches: (raw) => raw.includes("lc_cxp_uuid_no_verificado"),
   },
+  // Ola 4 (H2) — respaldo mínimo: sin embarque ni costos acordados vinculados.
+  {
+    code: "LC_CXP_SIN_RESPALDO_MONTO",
+    message:
+      "La factura excede el monto que puede aprobarse sin respaldo. Vincúlala al embarque o a sus conceptos de costo antes de aprobar (el límite se ajusta en Configuración → Compras).",
+    matches: (raw) => raw.includes("lc_cxp_sin_respaldo_monto"),
+  },
+  {
+    code: "LC_CXP_SIN_RESPALDO",
+    message:
+      "Esta factura no está ligada a un embarque ni a costos acordados. Escribe la justificación del gasto (mínimo 10 caracteres) para poder aprobarla.",
+    matches: (raw) => raw.includes("lc_cxp_sin_respaldo"),
+  },
+
   {
     code: "INVALID_STATE",
     message: "Esta factura ya fue procesada. Recarga la página para ver su estado actual.",
