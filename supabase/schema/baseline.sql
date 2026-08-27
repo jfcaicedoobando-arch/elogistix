@@ -27990,6 +27990,8 @@ GRANT ALL ON FUNCTION public._assert_facturapi_admin(p_org_id uuid) TO service_r
 REVOKE ALL ON FUNCTION public._assert_internal_reader(p_org uuid) FROM PUBLIC;
 GRANT ALL ON FUNCTION public._assert_internal_reader(p_org uuid) TO authenticated;
 GRANT ALL ON FUNCTION public._assert_internal_reader(p_org uuid) TO service_role;
+REVOKE ALL ON FUNCTION public._assert_padre_misma_org() FROM PUBLIC;
+GRANT ALL ON FUNCTION public._assert_padre_misma_org() TO service_role;
 REVOKE ALL ON FUNCTION public._assert_receptor_fiscal_valido(p_cliente_id uuid) FROM PUBLIC;
 GRANT ALL ON FUNCTION public._assert_receptor_fiscal_valido(p_cliente_id uuid) TO authenticated;
 GRANT ALL ON FUNCTION public._assert_receptor_fiscal_valido(p_cliente_id uuid) TO service_role;
