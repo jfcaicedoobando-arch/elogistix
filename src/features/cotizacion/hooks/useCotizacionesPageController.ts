@@ -194,7 +194,7 @@ export function useCotizacionesPageController() {
 
 
   const { items: paginated, totalPages } = tf.paginate(filtered);
-  const kpis = useCotizacionKpis(cotizaciones);
+  const kpis = useCotizacionKpis(cotizaciones, segmento);
 
   return {
     // datos
