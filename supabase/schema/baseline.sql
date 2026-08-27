@@ -26786,7 +26786,7 @@ CREATE TRIGGER trg_presupuesto_categorias_updated_at BEFORE UPDATE ON public.pre
 CREATE TRIGGER trg_presupuesto_mensual_updated_at BEFORE UPDATE ON public.presupuesto_mensual FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 CREATE TRIGGER trg_proforma_eur_no_soportada BEFORE UPDATE OF estado_proforma ON public.proformas FOR EACH ROW EXECUTE FUNCTION public.tg_proforma_eur_no_soportada();
 CREATE TRIGGER trg_proforma_no_soft_delete_facturada BEFORE UPDATE OF deleted_at ON public.proformas FOR EACH ROW EXECUTE FUNCTION public.enforce_proforma_no_soft_delete_facturada();
-CREATE TRIGGER trg_prohibir_delete_factura BEFORE DELETE ON public.facturas FOR EACH ROW EXECUTE FUNCTION _prohibir_delete_factura();
+CREATE TRIGGER trg_prohibir_delete_factura BEFORE DELETE ON public.facturas FOR EACH ROW EXECUTE FUNCTION public._prohibir_delete_factura();
 CREATE TRIGGER trg_proveedor_contacto_principal_unico BEFORE INSERT OR UPDATE OF es_principal, deleted_at ON public.proveedor_contactos FOR EACH ROW EXECUTE FUNCTION public._proveedor_contacto_principal_unico();
 CREATE TRIGGER trg_proveedor_contactos_updated_at BEFORE UPDATE ON public.proveedor_contactos FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 CREATE TRIGGER trg_proveedor_facturas_dedupe_folio BEFORE INSERT OR UPDATE OF organization_id, proveedor_id, folio_proveedor ON public.proveedor_facturas FOR EACH ROW EXECUTE FUNCTION public.proveedor_facturas_dedupe_folio();
