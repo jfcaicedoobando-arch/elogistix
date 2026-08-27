@@ -99,6 +99,62 @@ async function checkAndDeleteDuplicate(
   return true
 }
 
+/**
+ * W-11 (auditoría R2): claim atómico ANTES de llamar al proveedor.
+ *
+ * Antes el estado 'sent' se marcaba DESPUÉS de enviar: si dos corridas del cron
+ * tomaban el mismo mensaje (visibility timeout de pgmq expirado o traslape de
+ * schedule), ambas veían "no enviado" y el correo salía dos veces. Ahora se
+ * marca 'sent' con un UPDATE condicionado a estado no-final; Postgres serializa
+ * el row-lock, así que la segunda corrida actualiza 0 filas y aborta como
+ * duplicado. Si el proveedor falla después, `handleSendError` regresa la fila a
+ * 'failed'/'rate_limited' y el mensaje se reintenta normalmente.
+ *
+ * Devuelve `true` si esta corrida se adjudicó el envío.
+ */
+async function claimSendAtomico(
+  supabase: ReturnType<typeof createClient>,
+  queue: string,
+  msg: QueueMessage,
+): Promise<boolean> {
+  const payload = msg.message
+  const messageId = payload.message_id
+  // Sin `message_id` no hay clave de deduplicación: se envía sin claim (mismo
+  // comportamiento que `checkAndDeleteDuplicate`).
+  if (typeof messageId !== 'string' || !messageId) return true
+
+  const { data: claimed, error } = await supabase
+    .from('email_send_log')
+    .update({ status: 'sent' })
+    .eq('message_id', messageId)
+    .not('status', 'in', '("sent","dlq")')
+    .select('id')
+  if (error) {
+    console.error('Failed to claim email send', { queue, msg_id: msg.msg_id, message_id: messageId, error: error.message })
+    return false
+  }
+  if (claimed && claimed.length > 0) return true
+
+  // 0 filas: o ya está en estado final (duplicado real) o la fila 'pending'
+  // nunca se creó. Sólo en el segundo caso se debe enviar.
+  const { data: existente } = await supabase
+    .from('email_send_log')
+    .select('id')
+    .eq('message_id', messageId)
+    .maybeSingle()
+  if (existente) {
+    console.warn('Skipping duplicate send (claim perdido)', { queue, msg_id: msg.msg_id, message_id: messageId })
+    return false
+  }
+  await registrarEstadoEmail(supabase, {
+    messageId,
+    templateName: (payload.label || queue) as string,
+    recipientEmail: payload.to,
+    status: 'sent',
+  })
+  return true
+}
+
 async function handleSendError(
   error: unknown,
   ctx: ProcessCtx,
