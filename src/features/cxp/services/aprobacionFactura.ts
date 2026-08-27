@@ -13,6 +13,12 @@ export type EstadoAprobacion = "pendiente" | "aprobada" | "rechazada";
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 export const MOTIVO_RECHAZO_MIN = 3;
 export const MOTIVO_RECHAZO_MAX = 500;
+/**
+ * Ola 4 (H2): mínimo de caracteres de la justificación cuando la factura no
+ * está ligada a un embarque ni a costos acordados (lo exige la base de datos).
+ */
+export const JUSTIFICACION_SIN_VINCULO_MIN = 10;
+
 
 export class AprobacionFacturaError extends Error {
   code: string;
