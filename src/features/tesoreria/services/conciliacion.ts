@@ -132,7 +132,6 @@ export { sugerirCandidatos,  } from "./sugerirCandidatos";
 
 export { MovimientoVinculoError } from "./conciliacionErrors";
 import { mapConciliacionError, MovimientoVinculoError } from "./conciliacionErrors";
-import { primeraFila } from "@/lib/supabase/primeraFila";
 import { conflictoConcurrenciaError } from "@/lib/errors/concurrencia";
 
 
@@ -166,7 +165,7 @@ export async function conciliarConPago(
   // H5 (Ola 4): bloqueo optimista — sólo se concilia un movimiento que siga
   // pendiente. Si otro usuario lo concilió o lo ignoró mientras el modal estaba
   // abierto, no se pisa su decisión: se avisa y se pide recargar.
-  const { data: filas, error } = await supabase
+  const { count, error } = await supabase
     .from("bbva_movimientos")
     .update({
       ...patch,
@@ -177,8 +176,8 @@ export async function conciliarConPago(
     .eq("id", movId)
     .eq("estado_conciliacion", "Pendiente")
     .is("deleted_at", null)
-    .select("id");
-  if (!error && !primeraFila(filas)) {
+    .select("id", { count: "exact" });
+  if (!error && count === 0) {
     throw conflictoConcurrenciaError();
   }
   if (error) {
