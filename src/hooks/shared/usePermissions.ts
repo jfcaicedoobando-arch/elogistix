@@ -8,6 +8,7 @@ import {
 
   CERRAR_EMBARQUE,
   CONFIGURAR_AUTORIZACION_CLIENTE,
+  COST_VIEWERS,
   COTIZAR_SIN_DESGLOSE,
   CRM_CONFIG,
   CRM_TOMAR_LEAD,
@@ -52,6 +53,8 @@ export function usePermissions() {
   const canEditOperations = has(OPERATIONS, roleStr);
   const canEditFinance = has(FINANCE, roleStr);
   const canViewFinancials = has(FINANCE_VIEWERS, roleStr);
+  // QA B-07: costo/utilidad/margen ocultos para roles comerciales.
+  const canViewCosts = has(COST_VIEWERS, roleStr);
   const canEditSales = has(SALES, roleStr);
   const canCotizarSinDesglose = has(COTIZAR_SIN_DESGLOSE, roleStr);
   // v13.303.26 — `canCrearEmbarqueLibre` eliminado.
@@ -98,6 +101,7 @@ export function usePermissions() {
     isSuperAdmin,
     isOperador,
     canViewFinancials,
+    canViewCosts,
     role: effectiveRole,
     canAdminTenant,
     canAdminCuentasBancarias,
