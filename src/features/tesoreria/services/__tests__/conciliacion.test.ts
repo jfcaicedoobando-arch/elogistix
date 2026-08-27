@@ -115,7 +115,7 @@ describe("conciliacion service", () => {
     });
 
     it("escribe pago_proveedor_id (no pago_factura_id) cuando tipo=cxp", async () => {
-      mock.setTableResult("bbva_movimientos", { data: [{ id: "m1" }], error: null });
+      mock.setTableResult("bbva_movimientos", { data: [{ id: "m2" }], error: null });
       await conciliarConPago("m2", "cxp", "p2", "u1");
       const { assertUpdatePayload, findTableCall } = await import(
         "@/test/helpers/assertMutation"
