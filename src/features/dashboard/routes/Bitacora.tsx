@@ -15,7 +15,6 @@ import { useOrganization } from "@/lib/contexts/OrganizationContext";
 import { ErrorState } from "@/components/shared/states/ErrorState";
 import type { CursorBitacora } from "@/types/bitacora";
 
-const MODULOS = MODULOS_BITACORA;
 
 const RANGOS = [
   { valor: "todo", etiqueta: "Todo el tiempo", dias: null as number | null },
