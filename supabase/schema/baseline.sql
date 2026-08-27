@@ -7894,6 +7894,7 @@ BEGIN
     SELECT * INTO v_nueva FROM public.proformas WHERE id = (v_cached->>'id')::uuid;
     IF FOUND THEN RETURN v_nueva; END IF;
   END IF;
+
   v_caller_org := public.current_user_org_id();
   IF public.has_role(auth.uid(), 'super_admin'::app_role) THEN
     v_org_efectiva := p_organization_id;
@@ -7901,21 +7902,37 @@ BEGIN
     v_org_efectiva := v_caller_org;
   END IF;
   PERFORM public._assert_writer(v_org_efectiva);
+
   IF p_proforma_ids IS NULL OR array_length(p_proforma_ids, 1) IS NULL OR array_length(p_proforma_ids, 1) < 2 THEN
     RAISE EXCEPTION 'Selecciona al menos 2 proformas para consolidar';
   END IF;
+
   SELECT count(*) INTO v_count
   FROM public.proformas
   WHERE id = ANY(p_proforma_ids) AND organization_id = v_org_efectiva;
   IF v_count <> array_length(p_proforma_ids, 1) THEN
     RAISE EXCEPTION 'Una o más proformas no existen o no pertenecen a la organización';
   END IF;
+
+  -- Ola 3: la consolidación no puede cruzar embarques.
+  IF EXISTS (
+    SELECT 1 FROM public.proformas
+    WHERE id = ANY(p_proforma_ids)
+      AND embarque_id IS DISTINCT FROM p_embarque_id
+  ) THEN
+    RAISE EXCEPTION
+      'LC_PROFORMA_EMBARQUE_AJENO: todas las proformas a consolidar deben pertenecer al mismo embarque'
+      USING ERRCODE = 'P0001';
+  END IF;
+
   SELECT
     COALESCE(SUM(subtotal_usd), 0), COALESCE(SUM(iva_usd), 0), COALESCE(SUM(total_usd), 0),
     COALESCE(SUM(subtotal_mxn), 0), COALESCE(SUM(iva_mxn), 0), COALESCE(SUM(total_mxn), 0)
   INTO v_subtotal_usd, v_iva_usd, v_total_usd, v_subtotal_mxn, v_iva_mxn, v_total_mxn
   FROM public.proformas WHERE id = ANY(p_proforma_ids);
+
   v_numero := public.generar_numero_proforma(v_org_efectiva);
+
   INSERT INTO public.proformas (
     numero, embarque_id, cliente_id, cliente_nombre, expediente, bl_master,
     subtotal_usd, iva_usd, total_usd, subtotal_mxn, iva_mxn, total_mxn,
@@ -7928,6 +7945,7 @@ BEGIN
     p_operador, p_dias_credito, v_org_efectiva,
     'aprobada', true, p_proforma_ids, p_tasa_iva
   ) RETURNING * INTO v_nueva;
+
   INSERT INTO public.proforma_conceptos_consolidados (
     proforma_id, embarque_id, contenedor, tipo_contenedor,
     descripcion, cantidad, precio_unitario, total, moneda, aplica_iva, iva,
@@ -7945,22 +7963,29 @@ BEGIN
   LEFT JOIN public.embarques e ON e.id = cv.embarque_id
   LEFT JOIN public.embarque_contenedores ec ON ec.id = cv.contenedor_id
   WHERE cv.proforma_id = ANY(p_proforma_ids)
+    AND cv.organization_id = v_org_efectiva
+    AND cv.embarque_id = p_embarque_id
+    AND cv.deleted_at IS NULL
   GROUP BY cv.embarque_id,
     COALESCE(NULLIF(ec.numero_contenedor, ''), NULLIF(e.contenedor, ''), 'Sin contenedor'),
     COALESCE(NULLIF(ec.tipo_contenedor, ''), NULLIF(e.tipo_contenedor, '')),
     cv.descripcion, cv.precio_unitario, cv.moneda, cv.aplica_iva;
+
   UPDATE public.proformas
   SET estado_revision = 'consolidada', consolidada_en = v_nueva.id
   WHERE id = ANY(p_proforma_ids);
+
   -- v13.301.69 FIX BUG 2: repuntar conceptos_venta a la proforma consolidada
   -- para que sync_conceptos_venta_facturado propague correctamente al
-  -- facturar/cancelar. Bypass defensivo del guard de embarque cerrado.
+  -- facturar/cancelar. Bypass defensivo de los guards internos.
   PERFORM set_config('app.bypass_cierre', 'on', true);
   UPDATE public.conceptos_venta
      SET proforma_id = v_nueva.id
    WHERE proforma_id = ANY(p_proforma_ids)
+     AND organization_id = v_org_efectiva
      AND deleted_at IS NULL;
   PERFORM set_config('app.bypass_cierre', 'off', true);
+
   PERFORM public.idempotency_store(p_request_id, jsonb_build_object('id', v_nueva.id));
   RETURN v_nueva;
 END;
@@ -26805,6 +26830,7 @@ CREATE TRIGGER trg_clientes_propaga_nombre AFTER UPDATE OF nombre ON public.clie
 CREATE TRIGGER trg_clientes_sync_cp BEFORE INSERT OR UPDATE ON public.clientes FOR EACH ROW EXECUTE FUNCTION public.clientes_sync_cp();
 CREATE TRIGGER trg_cobranza_seg_updated_at BEFORE UPDATE ON public.cobranza_seguimiento FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 CREATE TRIGGER trg_com_dev_updated BEFORE UPDATE ON public.comisiones_devengadas FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+CREATE TRIGGER trg_concepto_no_proformado BEFORE DELETE OR UPDATE ON public.conceptos_venta FOR EACH ROW EXECUTE FUNCTION public._assert_concepto_no_proformado();
 CREATE TRIGGER trg_conceptos_factura_assert_borrador BEFORE INSERT OR DELETE OR UPDATE ON public.conceptos_factura FOR EACH ROW EXECUTE FUNCTION public.conceptos_factura_assert_borrador();
 CREATE TRIGGER trg_conceptos_factura_calc_ret BEFORE INSERT OR UPDATE ON public.conceptos_factura FOR EACH ROW EXECUTE FUNCTION public.calc_concepto_retenciones();
 CREATE TRIGGER trg_conceptos_factura_rollup AFTER INSERT OR DELETE OR UPDATE ON public.conceptos_factura FOR EACH ROW EXECUTE FUNCTION public.trg_conceptos_factura_rollup();
@@ -26973,6 +26999,12 @@ CREATE TRIGGER trg_pagos_proveedor_lote_updated BEFORE UPDATE ON public.pagos_pr
 CREATE TRIGGER trg_pagos_proveedor_recalc_liq AFTER INSERT OR DELETE OR UPDATE ON public.pagos_proveedor FOR EACH ROW EXECUTE FUNCTION public.tg_pagos_proveedor_recalc_liq();
 CREATE TRIGGER trg_pagos_proveedor_recalcular_estado AFTER INSERT OR DELETE OR UPDATE ON public.pagos_proveedor FOR EACH ROW EXECUTE FUNCTION public.tg_recalcular_estado_factura_proveedor();
 CREATE TRIGGER trg_pagos_proveedor_updated BEFORE UPDATE ON public.pagos_proveedor FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+CREATE TRIGGER trg_periodo_factura_notas_credito BEFORE INSERT OR UPDATE ON public.factura_notas_credito FOR EACH ROW EXECUTE FUNCTION public._assert_periodo_abierto('fecha_emision');
+CREATE TRIGGER trg_periodo_facturas BEFORE INSERT OR UPDATE ON public.facturas FOR EACH ROW EXECUTE FUNCTION public._assert_periodo_abierto('fecha_emision');
+CREATE TRIGGER trg_periodo_pagos_factura BEFORE INSERT OR UPDATE ON public.pagos_factura FOR EACH ROW EXECUTE FUNCTION public._assert_periodo_abierto('fecha_pago');
+CREATE TRIGGER trg_periodo_pagos_proveedor BEFORE INSERT OR UPDATE ON public.pagos_proveedor FOR EACH ROW EXECUTE FUNCTION public._assert_periodo_abierto('fecha_pago');
+CREATE TRIGGER trg_periodo_proveedor_facturas BEFORE INSERT OR UPDATE ON public.proveedor_facturas FOR EACH ROW EXECUTE FUNCTION public._assert_periodo_abierto('fecha_emision');
+CREATE TRIGGER trg_periodo_proveedor_notas_credito BEFORE INSERT OR UPDATE ON public.proveedor_notas_credito FOR EACH ROW EXECUTE FUNCTION public._assert_periodo_abierto('fecha');
 CREATE TRIGGER trg_pf_normalizar_uuid_fiscal BEFORE INSERT OR UPDATE OF uuid_fiscal ON public.proveedor_facturas FOR EACH ROW EXECUTE FUNCTION public._normalizar_uuid_fiscal();
 CREATE TRIGGER trg_pfc_promover_por_liquidar AFTER INSERT OR DELETE OR UPDATE ON public.proveedor_facturas_conceptos FOR EACH ROW EXECUTE FUNCTION public._trg_promover_por_liquidar_pfc();
 CREATE TRIGGER trg_pfc_recalc_liq AFTER INSERT OR DELETE OR UPDATE ON public.proveedor_facturas_conceptos FOR EACH ROW EXECUTE FUNCTION public.tg_pfc_recalc_liq();
@@ -27015,6 +27047,7 @@ CREATE TRIGGER trg_tipos_cambio_dof_updated_at BEFORE UPDATE ON public.tipos_cam
 CREATE TRIGGER trg_touch_auditoria_revisiones BEFORE UPDATE ON public.auditoria_revisiones FOR EACH ROW EXECUTE FUNCTION public.touch_auditoria_revisiones();
 CREATE TRIGGER trg_tracking_externo_updated BEFORE UPDATE ON public.tracking_externo FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 CREATE TRIGGER trg_traspasos_bancarios_updated BEFORE UPDATE ON public.traspasos_bancarios FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+CREATE TRIGGER trg_uuid_fiscal_single_write BEFORE UPDATE OF uuid_fiscal ON public.facturas FOR EACH ROW EXECUTE FUNCTION public._assert_uuid_fiscal_single_write();
 CREATE TRIGGER trg_validar_snooze_auditoria BEFORE INSERT OR UPDATE OF snoozed_until, snooze_motivo ON public.auditoria_revisiones FOR EACH ROW EXECUTE FUNCTION public.validar_snooze_auditoria();
 CREATE TRIGGER trg_validate_cotizacion_informativa BEFORE INSERT OR UPDATE ON public.cotizaciones FOR EACH ROW EXECUTE FUNCTION public.validate_cotizacion_informativa();
 CREATE TRIGGER trg_vendedora_config_updated BEFORE UPDATE ON public.vendedora_config FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
@@ -28103,6 +28136,8 @@ CREATE POLICY vendedora_config_self_read ON public.vendedora_config FOR SELECT T
 GRANT USAGE ON SCHEMA public TO anon;
 GRANT USAGE ON SCHEMA public TO authenticated;
 GRANT USAGE ON SCHEMA public TO service_role;
+REVOKE ALL ON FUNCTION public._assert_concepto_no_proformado() FROM PUBLIC;
+GRANT ALL ON FUNCTION public._assert_concepto_no_proformado() TO service_role;
 REVOKE ALL ON FUNCTION public._assert_facturapi_admin(p_org_id uuid) FROM PUBLIC;
 GRANT ALL ON FUNCTION public._assert_facturapi_admin(p_org_id uuid) TO authenticated;
 GRANT ALL ON FUNCTION public._assert_facturapi_admin(p_org_id uuid) TO service_role;
@@ -28111,12 +28146,16 @@ GRANT ALL ON FUNCTION public._assert_internal_reader(p_org uuid) TO authenticate
 GRANT ALL ON FUNCTION public._assert_internal_reader(p_org uuid) TO service_role;
 REVOKE ALL ON FUNCTION public._assert_padre_misma_org() FROM PUBLIC;
 GRANT ALL ON FUNCTION public._assert_padre_misma_org() TO service_role;
+REVOKE ALL ON FUNCTION public._assert_periodo_abierto() FROM PUBLIC;
+GRANT ALL ON FUNCTION public._assert_periodo_abierto() TO service_role;
 REVOKE ALL ON FUNCTION public._assert_receptor_fiscal_valido(p_cliente_id uuid) FROM PUBLIC;
 GRANT ALL ON FUNCTION public._assert_receptor_fiscal_valido(p_cliente_id uuid) TO authenticated;
 GRANT ALL ON FUNCTION public._assert_receptor_fiscal_valido(p_cliente_id uuid) TO service_role;
 REVOKE ALL ON FUNCTION public._assert_refacturador(p_org uuid) FROM PUBLIC;
 GRANT ALL ON FUNCTION public._assert_refacturador(p_org uuid) TO authenticated;
 GRANT ALL ON FUNCTION public._assert_refacturador(p_org uuid) TO service_role;
+REVOKE ALL ON FUNCTION public._assert_uuid_fiscal_single_write() FROM PUBLIC;
+GRANT ALL ON FUNCTION public._assert_uuid_fiscal_single_write() TO service_role;
 REVOKE ALL ON FUNCTION public._assert_writer(p_org uuid) FROM PUBLIC;
 GRANT ALL ON FUNCTION public._assert_writer(p_org uuid) TO authenticated;
 GRANT ALL ON FUNCTION public._assert_writer(p_org uuid) TO service_role;
@@ -28321,6 +28360,11 @@ GRANT ALL ON FUNCTION public.agente_aprobar_tarifa(_tarifa_id uuid, _estado text
 GRANT ALL ON FUNCTION public.agente_aprobar_tarifa(_tarifa_id uuid, _estado text, _motivo text) TO service_role;
 GRANT ALL ON FUNCTION public.alertas_sistema_pending_count() TO authenticated;
 GRANT ALL ON FUNCTION public.alertas_sistema_pending_count() TO service_role;
+REVOKE ALL ON FUNCTION public.cierre_periodo_actual() FROM PUBLIC;
+GRANT ALL ON FUNCTION public.cierre_periodo_actual() TO authenticated;
+GRANT ALL ON FUNCTION public.cierre_periodo_actual() TO service_role;
+REVOKE ALL ON FUNCTION public.cierre_periodo_fecha(p_org uuid) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.cierre_periodo_fecha(p_org uuid) TO service_role;
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.anticipos_aplicaciones TO authenticated;
 GRANT ALL ON TABLE public.anticipos_aplicaciones TO service_role;
 REVOKE ALL ON FUNCTION public.aplicar_anticipo_a_factura(p_anticipo_id uuid, p_factura_id uuid, p_monto numeric, p_fecha_aplicacion date, p_request_id uuid) FROM PUBLIC;
