@@ -164,17 +164,8 @@ async function persistEnvioAndLog(params: PersistParams): Promise<string | null>
   return envio?.id ?? null;
 }
 
-function buildTemplateData(cot: Cotizacion, parsed: SendBodyParsed, pdfLink: string, enlacePortal: string) {
-  return {
-    folio: cot.folio, cliente: cot.cliente_nombre, origen: cot.origen, destino: cot.destino,
-    incoterm: cot.incoterm, modo: cot.modo, vigencia: cot.fecha_vigencia ?? undefined,
-    totalMxn: parsed.totales.mxn, totalUsd: parsed.totales.usd,
-    mensaje: parsed.mensaje, enlacePortal, enlacePdf: pdfLink,
-    ejecutivoNombre: parsed.ejecutivo.nombre,
-    ejecutivoEmail: parsed.ejecutivo.email,
-    ejecutivoTelefono: parsed.ejecutivo.telefono,
-  };
-}
+
+
 
 /**
  * Validaciones previas al envío: rol de escritura (W-05) y destinatarios que
