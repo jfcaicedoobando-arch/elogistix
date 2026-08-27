@@ -74,12 +74,15 @@ DO $$
 DECLARE
   v_org uuid;
   v_prov uuid;
+  v_cat uuid;
   v_id uuid;
   v_venc date;
 BEGIN
-  SELECT organization_id, proveedor_id INTO v_org, v_prov
+  SELECT organization_id, proveedor_id, categoria_presupuesto_id
+    INTO v_org, v_prov, v_cat
     FROM public.proveedor_facturas
    WHERE deleted_at IS NULL AND proveedor_id IS NOT NULL
+     AND categoria_presupuesto_id IS NOT NULL
    LIMIT 1;
   IF v_org IS NULL THEN
     RAISE NOTICE 'B-14/B-13: sin datos base, se omite la prueba funcional';
@@ -87,8 +90,8 @@ BEGIN
   END IF;
 
   INSERT INTO public.proveedor_facturas
-    (organization_id, proveedor_id, folio_proveedor, fecha_emision, dias_credito, subtotal, total, moneda, estado)
-  VALUES (v_org, v_prov, 'QA-R2-DEDUPE-001', DATE '2026-01-10', 30, 100, 100, 'MXN', 'Borrador')
+    (organization_id, proveedor_id, categoria_presupuesto_id, folio_proveedor, fecha_emision, dias_credito, subtotal, total, moneda, estado)
+  VALUES (v_org, v_prov, v_cat, 'QA-R2-DEDUPE-001', DATE '2026-01-10', 30, 100, 100, 'MXN', 'Borrador')
   RETURNING id, fecha_vencimiento INTO v_id, v_venc;
 
   IF v_venc IS DISTINCT FROM DATE '2026-02-09' THEN
@@ -97,8 +100,8 @@ BEGIN
 
   BEGIN
     INSERT INTO public.proveedor_facturas
-      (organization_id, proveedor_id, folio_proveedor, fecha_emision, dias_credito, subtotal, total, moneda, estado)
-    VALUES (v_org, v_prov, 'QA-R2-DEDUPE-001', DATE '2026-01-11', 0, 100, 100, 'MXN', 'Borrador');
+      (organization_id, proveedor_id, categoria_presupuesto_id, folio_proveedor, fecha_emision, dias_credito, subtotal, total, moneda, estado)
+    VALUES (v_org, v_prov, v_cat, 'QA-R2-DEDUPE-001', DATE '2026-01-11', 0, 100, 100, 'MXN', 'Borrador');
     RAISE EXCEPTION 'B-13 FAIL: se permitió capturar un folio duplicado';
   EXCEPTION WHEN unique_violation THEN
     NULL; -- esperado: LC_CXP_FOLIO_DUPLICADO
