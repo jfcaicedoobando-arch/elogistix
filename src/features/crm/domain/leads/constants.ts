@@ -9,6 +9,10 @@ export const LEAD_ESTADOS: CrmLeadEstado[] = [
   "Nuevo",
   "Contactado",
   "Calificado",
+  // Prospecto: lead calificado al que ya se le cotiza, pero que aún no acepta nada.
+  "Prospecto",
+  // Pendiente de alta: aceptó una cotización; NO es cliente hasta el alta manual autorizada.
+  "Pendiente de alta",
   "Descalificado",
   "Convertido",
 ];
