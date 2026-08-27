@@ -24,4 +24,6 @@ export type FacturaParaEdicion = Pick<
   | "moneda" | "tipo_cambio_usd"
   | "subtotal" | "iva" | "ieps" | "retenciones" | "total"
   | "categoria_presupuesto_id" | "notas" | "estado_aprobacion"
+  // H5 (Ola 4): sello para el bloqueo optimista al guardar.
+  | "updated_at"
 >;

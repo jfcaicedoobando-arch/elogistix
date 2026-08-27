@@ -63,8 +63,12 @@ export function useEliminarFacturaProveedor() {
 export function useActualizarFacturaProveedor() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, payload }: { id: string; payload: ActualizarFacturaPayload }) =>
-      actualizarFacturaProveedor(id, payload),
+    mutationFn: ({ id, payload, expectedUpdatedAt }: {
+      id: string;
+      payload: ActualizarFacturaPayload;
+      /** H5 (Ola 4): `updated_at` leído al abrir el modal (bloqueo optimista). */
+      expectedUpdatedAt?: string | null;
+    }) => actualizarFacturaProveedor(id, payload, expectedUpdatedAt),
     onSuccess: (_data, vars) => {
       qc.invalidateQueries({ queryKey: queryKeys.cxp.all });
       // Ola 12 · R3P-02: conciliación/estado de cuenta del proveedor.

@@ -179,7 +179,7 @@ export function useEditarFacturaProveedorForm({ factura, onDone }: UseEditarPara
       notas: values.notas,
     };
     try {
-      await actualizar.mutateAsync({ id: factura.id, payload });
+      await actualizar.mutateAsync({ id: factura.id, payload, expectedUpdatedAt: row?.updated_at ?? null });
       onDone();
     } catch {
       // Notificación gestionada por el hook.

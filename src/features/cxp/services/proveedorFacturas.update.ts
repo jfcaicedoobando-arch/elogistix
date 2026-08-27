@@ -31,7 +31,7 @@ const FACTURA_EDIT_SELECT = `
   fecha_emision, fecha_vencimiento, dias_credito,
   moneda, tipo_cambio_usd,
   subtotal, iva, ieps, retenciones, total,
-  categoria_presupuesto_id, notas, estado_aprobacion
+  categoria_presupuesto_id, notas, estado_aprobacion, updated_at
 ` as const;
 
 /** Carga una factura de proveedor con los campos que el form de edición necesita. */
