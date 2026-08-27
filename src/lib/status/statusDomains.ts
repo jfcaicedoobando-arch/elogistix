@@ -62,6 +62,8 @@ export const DOMAIN_STATUSES: Record<StatusDomain, readonly string[]> = {
     "Nuevo",
     "Contactado",
     "Calificado",
+    "Prospecto",
+    "Pendiente de alta",
     "Descalificado",
     "Convertido",
     "Descartado",

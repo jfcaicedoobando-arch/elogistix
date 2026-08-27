@@ -11129,6 +11129,8 @@ export type Database = {
         | "Nuevo"
         | "Contactado"
         | "Calificado"
+        | "Prospecto"
+        | "Pendiente de alta"
         | "Descalificado"
         | "Convertido"
       crm_lead_fuente:
@@ -11428,6 +11430,8 @@ export const Constants = {
         "Nuevo",
         "Contactado",
         "Calificado",
+        "Prospecto",
+        "Pendiente de alta",
         "Descalificado",
         "Convertido",
       ],

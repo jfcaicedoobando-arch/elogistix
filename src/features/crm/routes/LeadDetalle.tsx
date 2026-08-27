@@ -23,6 +23,7 @@ import ActividadTimeline from "@/features/crm/components/ActividadTimeline";
 import LeadDatosCard from "@/features/crm/components/leadDetalle/LeadDatosCard";
 import LeadIcpCard from "@/features/crm/components/leadDetalle/LeadIcpCard";
 import LeadHeaderActions from "@/features/crm/components/leadDetalle/LeadHeaderActions";
+import LeadEtapaProspectoAviso from "@/features/crm/components/leadDetalle/LeadEtapaProspectoAviso";
 import { useActualizarLead, useEliminarLead, useLead, useTomarLead } from "@/features/crm/hooks";
 import { useLeadEditForm } from "@/features/crm/hooks";
 import { ROUTES } from "@/constants/routes";
@@ -137,6 +138,8 @@ export default function LeadDetalle() {
         }
       />
 
+
+      <LeadEtapaProspectoAviso estado={lead.estado} canAltaCliente={canEdit} />
 
       <LeadDatosCard
         form={form}

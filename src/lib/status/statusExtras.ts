@@ -18,6 +18,10 @@ export const EXTRA_STATUS_BADGES: Record<string, EstadoVisual["badge"]> = {
   Nuevo: "bg-info/15 text-info border border-info/30",
   Contactado: "bg-warning/15 text-warning border border-warning/30",
   Calificado: "bg-success/15 text-success border border-success/30",
+  // Prospecto: en curso comercial (aún no es cliente).
+  Prospecto: "bg-info/15 text-info border border-info/30",
+  // Pendiente de alta: requiere acción de un rol autorizado.
+  "Pendiente de alta": "bg-warning/15 text-warning border border-warning/30",
   Descalificado: "bg-destructive/15 text-destructive border border-destructive/30",
   Convertido: "bg-primary/15 text-primary border border-primary/30",
   Descartado: "bg-muted text-muted-foreground border border-border",
