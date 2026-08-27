@@ -103181,7 +103181,8 @@
       "20260902000300_qa_r2_n07_comisiones_por_recuperar.sql",
       "20260902000400_qa_r2_d05_factura_sin_conceptos.sql",
       "20260902001000_qa_r2_r04_portal_papelera.sql",
-      "20260902002000_nc_fecha_tolerante_utc.sql"
+      "20260902002000_nc_fecha_tolerante_utc.sql",
+      "20260902002100_nc_fecha_formato_baseline.sql"
     ]
   }
 }
