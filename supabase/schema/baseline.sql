@@ -27962,6 +27962,7 @@ GRANT ALL ON FUNCTION public.assert_factura_viva_para_rep() TO service_role;
 REVOKE ALL ON FUNCTION public.assert_movimiento_pago_consistente() FROM PUBLIC;
 GRANT ALL ON FUNCTION public.assert_movimiento_pago_consistente() TO authenticated;
 GRANT ALL ON FUNCTION public.assert_movimiento_pago_consistente() TO service_role;
+REVOKE ALL ON FUNCTION public.assert_nc_fecha_valida() FROM PUBLIC;
 GRANT ALL ON FUNCTION public.assert_nc_fecha_valida() TO authenticated;
 GRANT ALL ON FUNCTION public.assert_nc_fecha_valida() TO service_role;
 GRANT ALL ON FUNCTION public.assert_nc_no_excede_saldo() TO authenticated;
