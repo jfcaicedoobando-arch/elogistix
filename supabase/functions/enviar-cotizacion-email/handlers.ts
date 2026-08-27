@@ -33,13 +33,8 @@ export async function handlePrepare(
 }
 
 
-interface Destinatario { email: string; nombre?: string }
-interface Cotizacion {
-  id: string; folio: string; organization_id: string; cliente_nombre: string;
-  cliente_id?: string | null;
-  origen: string; destino: string; incoterm: string; modo: string;
-  fecha_vigencia: string | null; estado: string;
-}
+
+
 
 
 interface SendBatchParams {
