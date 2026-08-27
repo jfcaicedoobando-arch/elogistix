@@ -1,5 +1,15 @@
 # Changelog
 
+## [13.771.0] - 2026-08-27
+### Seguridad
+- **Ola 2 — Aislamiento entre organizaciones (hallazgos H de la auditoría 3)**: 28 relaciones críticas pasaron a llaves compuestas por organización (facturas ↔ embarque/cliente/cotización/proforma/sustitución, pagos ↔ factura y embarque, notas de crédito ↔ factura, conceptos de venta y costo ↔ embarque/contenedor/proforma/proveedor, conceptos de factura, costos de cotización, proformas, facturas y pagos de proveedor, contenedores).
+- Ahora es imposible —incluso desde procesos internos que no pasan por las reglas de acceso— colgar un documento de un registro de otra empresa.
+- No hubo cambios de datos: se verificó que no existía ni un registro cruzado antes de aplicar la migración.
+### Pruebas
+- Nueva suite `ola2_fk_compuestas_org.sql` (verifica las 28 relaciones y prueba que la base rechaza un cruce real).
+
+
+
 ## [13.770.0] - 2026-08-27
 ### Corrección
 - **Notas de crédito multi-moneda (C1/C1b)**: el saldo y el estado de la factura ahora convierten la nota de crédito a la moneda de la factura. Una factura MXN saldada con una NC en USD ya queda en **Pagada** y desaparece de cartera (antes mostraba un adeudo fantasma).
