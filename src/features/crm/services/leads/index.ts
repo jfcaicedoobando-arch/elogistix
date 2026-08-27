@@ -7,3 +7,4 @@ export * from "./queries";
 export * from "./mutations";
 export * from "./bulk";
 export * from "./convertir";
+export * from "./calificar";

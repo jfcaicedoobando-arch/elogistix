@@ -32,6 +32,11 @@ export const LEAD_SORTABLE_KEYS = ["created_at", "empresa", "estado", "fuente", 
 export interface LeadFiltros {
   search?: string;
   estado?: CrmLeadEstado | "todos";
+  /**
+   * Rediseño CRM (v13.766.0): acota el listado a una etapa del embudo
+   * (leads vs prospectos). Se aplica además de `estado`.
+   */
+  estadoIn?: CrmLeadEstado[];
   fuente?: CrmLeadFuente | "todos";
   page?: number;
   pageSize?: number;

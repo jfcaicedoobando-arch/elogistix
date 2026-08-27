@@ -9502,6 +9502,7 @@ export type Database = {
         }[]
       }
       crm_backfill_cotizaciones_sin_oportunidad: { Args: never; Returns: Json }
+      crm_calificar_prospecto: { Args: { p_lead_id: string }; Returns: Json }
       crm_criterios_avance: {
         Args: { p_oportunidad_ids: string[] }
         Returns: {

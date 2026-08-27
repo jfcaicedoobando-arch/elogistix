@@ -28,6 +28,10 @@ export const crm = {
     detail: (id: string) => ['crm', 'leads', 'detail', id] as const,
     paged: ['crm', 'leads', 'paged'] as const,
   },
+  prospectos: {
+    all: ['crm', 'prospectos'] as const,
+    paged: ['crm', 'prospectos', 'paged'] as const,
+  },
   oportunidades: {
     all: ['crm', 'oportunidades'] as const,
     list: (filters: Record<string, unknown>) => ['crm', 'oportunidades', filters] as const,

@@ -34,6 +34,7 @@ export async function listLeads(filtros: LeadFiltros): Promise<LeadsResultado> {
   if (search.trim()) {
     q = q.or(orIlike(["empresa", "contacto", "email"], search));
   }
+  if (filtros.estadoIn && filtros.estadoIn.length > 0) q = q.in("estado", filtros.estadoIn);
   if (estado !== "todos") q = q.eq("estado", estado);
   if (fuente !== "todos") q = q.eq("fuente", fuente);
 

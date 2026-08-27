@@ -24,7 +24,8 @@ import LeadDatosCard from "@/features/crm/components/leadDetalle/LeadDatosCard";
 import LeadIcpCard from "@/features/crm/components/leadDetalle/LeadIcpCard";
 import LeadHeaderActions from "@/features/crm/components/leadDetalle/LeadHeaderActions";
 import LeadEtapaProspectoAviso from "@/features/crm/components/leadDetalle/LeadEtapaProspectoAviso";
-import { useActualizarLead, useEliminarLead, useLead, useTomarLead } from "@/features/crm/hooks";
+import { useActualizarLead, useCalificarProspecto, useEliminarLead, useLead, useTomarLead } from "@/features/crm/hooks";
+import { faltantesGateProspecto, puedeCalificarse } from "@/features/crm/domain/leads/etapas";
 import { useLeadEditForm } from "@/features/crm/hooks";
 import { ROUTES } from "@/constants/routes";
 import { formatFechaEs } from "@/lib/formatters/dates";
@@ -39,6 +40,7 @@ export default function LeadDetalle() {
   const actualizar = useActualizarLead();
   const eliminar = useEliminarLead();
   const tomar = useTomarLead();
+  const calificar = useCalificarProspecto();
 
   const { form, set, dirty } = useLeadEditForm(lead);
   const [convertirSheetOpen, setConvertirSheetOpen] = useState(false);
@@ -74,6 +76,24 @@ export default function LeadDetalle() {
         method: "HANDLE_DELETE",
       });
     }
+  };
+
+  /**
+   * Rediseño CRM (v13.766.0): gate Lead → Prospecto. Avisamos los faltantes
+   * antes de llamar a la RPC para no gastar un viaje al servidor.
+   */
+  const handleCalificar = () => {
+    if (!lead) return;
+    const faltantes = faltantesGateProspecto(lead);
+    if (faltantes.length > 0) {
+      notifyError(undefined, {
+        title: "Falta completar el perfil comercial",
+        description: `Captura en el perfil ICP: ${faltantes.join(", ")}.`,
+        method: "GATE_PROSPECTO",
+      });
+      return;
+    }
+    calificar.mutate(lead.id);
   };
 
   // Ola 6 · O6.1: tomar el lead de la bolsa común (asigna vendedor_id = yo).
@@ -134,6 +154,9 @@ export default function LeadDetalle() {
             mostrarTomar={canTomarLead && !lead.vendedor_id && lead.estado !== "Convertido"}
             onTomar={handleTomar}
             tomando={tomar.isPending}
+            mostrarCalificar={canEdit && puedeCalificarse(lead.estado)}
+            onCalificar={handleCalificar}
+            calificando={calificar.isPending}
           />
         }
       />
