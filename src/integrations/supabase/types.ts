@@ -1298,18 +1298,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "conceptos_costo_contenedor_id_fkey"
-            columns: ["contenedor_id"]
+            foreignKeyName: "conceptos_costo_contenedor_org_fkey"
+            columns: ["contenedor_id", "organization_id"]
             isOneToOne: false
             referencedRelation: "embarque_contenedores"
-            referencedColumns: ["id"]
+            referencedColumns: ["id", "organization_id"]
           },
           {
-            foreignKeyName: "conceptos_costo_embarque_id_fkey"
-            columns: ["embarque_id"]
+            foreignKeyName: "conceptos_costo_embarque_org_fkey"
+            columns: ["embarque_id", "organization_id"]
             isOneToOne: false
             referencedRelation: "embarques"
-            referencedColumns: ["id"]
+            referencedColumns: ["id", "organization_id"]
           },
           {
             foreignKeyName: "conceptos_costo_organization_id_fkey"
@@ -1319,11 +1319,11 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "conceptos_costo_proveedor_id_fkey"
-            columns: ["proveedor_id"]
+            foreignKeyName: "conceptos_costo_proveedor_org_fkey"
+            columns: ["proveedor_id", "organization_id"]
             isOneToOne: false
             referencedRelation: "proveedores"
-            referencedColumns: ["id"]
+            referencedColumns: ["id", "organization_id"]
           },
         ]
       }
@@ -1402,18 +1402,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "conceptos_factura_embarque_id_fkey"
-            columns: ["embarque_id"]
+            foreignKeyName: "conceptos_factura_embarque_org_fkey"
+            columns: ["embarque_id", "organization_id"]
             isOneToOne: false
             referencedRelation: "embarques"
-            referencedColumns: ["id"]
+            referencedColumns: ["id", "organization_id"]
           },
           {
-            foreignKeyName: "conceptos_factura_factura_id_fkey"
-            columns: ["factura_id"]
+            foreignKeyName: "conceptos_factura_factura_org_fkey"
+            columns: ["factura_id", "organization_id"]
             isOneToOne: false
             referencedRelation: "facturas"
-            referencedColumns: ["id"]
+            referencedColumns: ["id", "organization_id"]
           },
           {
             foreignKeyName: "conceptos_factura_organization_id_fkey"
@@ -1423,18 +1423,18 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "conceptos_factura_proforma_id_origen_fkey"
-            columns: ["proforma_id_origen"]
+            foreignKeyName: "conceptos_factura_proforma_origen_org_fkey"
+            columns: ["proforma_id_origen", "organization_id"]
             isOneToOne: false
             referencedRelation: "proformas"
-            referencedColumns: ["id"]
+            referencedColumns: ["id", "organization_id"]
           },
           {
-            foreignKeyName: "conceptos_factura_proforma_id_origen_fkey"
-            columns: ["proforma_id_origen"]
+            foreignKeyName: "conceptos_factura_proforma_origen_org_fkey"
+            columns: ["proforma_id_origen", "organization_id"]
             isOneToOne: false
             referencedRelation: "v_proforma_factura_link"
-            referencedColumns: ["proforma_id"]
+            referencedColumns: ["proforma_id", "organization_id"]
           },
         ]
       }
@@ -1501,18 +1501,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "conceptos_venta_contenedor_id_fkey"
-            columns: ["contenedor_id"]
+            foreignKeyName: "conceptos_venta_contenedor_org_fkey"
+            columns: ["contenedor_id", "organization_id"]
             isOneToOne: false
             referencedRelation: "embarque_contenedores"
-            referencedColumns: ["id"]
+            referencedColumns: ["id", "organization_id"]
           },
           {
-            foreignKeyName: "conceptos_venta_embarque_id_fkey"
-            columns: ["embarque_id"]
+            foreignKeyName: "conceptos_venta_embarque_org_fkey"
+            columns: ["embarque_id", "organization_id"]
             isOneToOne: false
             referencedRelation: "embarques"
-            referencedColumns: ["id"]
+            referencedColumns: ["id", "organization_id"]
           },
           {
             foreignKeyName: "conceptos_venta_organization_id_fkey"
@@ -1522,18 +1522,18 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "conceptos_venta_proforma_id_fkey"
-            columns: ["proforma_id"]
+            foreignKeyName: "conceptos_venta_proforma_org_fkey"
+            columns: ["proforma_id", "organization_id"]
             isOneToOne: false
             referencedRelation: "proformas"
-            referencedColumns: ["id"]
+            referencedColumns: ["id", "organization_id"]
           },
           {
-            foreignKeyName: "conceptos_venta_proforma_id_fkey"
-            columns: ["proforma_id"]
+            foreignKeyName: "conceptos_venta_proforma_org_fkey"
+            columns: ["proforma_id", "organization_id"]
             isOneToOne: false
             referencedRelation: "v_proforma_factura_link"
-            referencedColumns: ["proforma_id"]
+            referencedColumns: ["proforma_id", "organization_id"]
           },
         ]
       }
@@ -2254,11 +2254,11 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "cotizacion_costos_cotizacion_id_fkey"
-            columns: ["cotizacion_id"]
+            foreignKeyName: "cotizacion_costos_cotizacion_org_fkey"
+            columns: ["cotizacion_id", "organization_id"]
             isOneToOne: false
             referencedRelation: "cotizaciones"
-            referencedColumns: ["id"]
+            referencedColumns: ["id", "organization_id"]
           },
           {
             foreignKeyName: "cotizacion_costos_organization_id_fkey"
@@ -4051,11 +4051,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "embarque_contenedores_embarque_id_fkey"
-            columns: ["embarque_id"]
+            foreignKeyName: "embarque_contenedores_embarque_org_fkey"
+            columns: ["embarque_id", "organization_id"]
             isOneToOne: false
             referencedRelation: "embarques"
-            referencedColumns: ["id"]
+            referencedColumns: ["id", "organization_id"]
           },
         ]
       }
@@ -5046,11 +5046,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "factura_notas_credito_factura_id_fkey"
-            columns: ["factura_id"]
+            foreignKeyName: "factura_notas_credito_factura_org_fkey"
+            columns: ["factura_id", "organization_id"]
             isOneToOne: false
             referencedRelation: "facturas"
-            referencedColumns: ["id"]
+            referencedColumns: ["id", "organization_id"]
           },
           {
             foreignKeyName: "factura_notas_credito_organization_id_fkey"
@@ -5424,25 +5424,25 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "facturas_cliente_id_fkey"
-            columns: ["cliente_id"]
+            foreignKeyName: "facturas_cliente_org_fkey"
+            columns: ["cliente_id", "organization_id"]
             isOneToOne: false
             referencedRelation: "clientes"
-            referencedColumns: ["id"]
+            referencedColumns: ["id", "organization_id"]
           },
           {
-            foreignKeyName: "facturas_cotizacion_id_fkey"
-            columns: ["cotizacion_id"]
+            foreignKeyName: "facturas_cotizacion_org_fkey"
+            columns: ["cotizacion_id", "organization_id"]
             isOneToOne: false
             referencedRelation: "cotizaciones"
-            referencedColumns: ["id"]
+            referencedColumns: ["id", "organization_id"]
           },
           {
-            foreignKeyName: "facturas_embarque_id_fkey"
-            columns: ["embarque_id"]
+            foreignKeyName: "facturas_embarque_org_fkey"
+            columns: ["embarque_id", "organization_id"]
             isOneToOne: false
             referencedRelation: "embarques"
-            referencedColumns: ["id"]
+            referencedColumns: ["id", "organization_id"]
           },
           {
             foreignKeyName: "facturas_organization_id_fkey"
@@ -5452,18 +5452,18 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "facturas_proforma_id_fkey"
-            columns: ["proforma_id"]
+            foreignKeyName: "facturas_proforma_org_fkey"
+            columns: ["proforma_id", "organization_id"]
             isOneToOne: false
             referencedRelation: "proformas"
-            referencedColumns: ["id"]
+            referencedColumns: ["id", "organization_id"]
           },
           {
-            foreignKeyName: "facturas_proforma_id_fkey"
-            columns: ["proforma_id"]
+            foreignKeyName: "facturas_proforma_org_fkey"
+            columns: ["proforma_id", "organization_id"]
             isOneToOne: false
             referencedRelation: "v_proforma_factura_link"
-            referencedColumns: ["proforma_id"]
+            referencedColumns: ["proforma_id", "organization_id"]
           },
           {
             foreignKeyName: "facturas_serie_id_fkey"
@@ -5473,18 +5473,18 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "facturas_sustituida_por_fkey"
-            columns: ["sustituida_por"]
+            foreignKeyName: "facturas_sustituida_por_org_fkey"
+            columns: ["sustituida_por", "organization_id"]
             isOneToOne: false
             referencedRelation: "facturas"
-            referencedColumns: ["id"]
+            referencedColumns: ["id", "organization_id"]
           },
           {
-            foreignKeyName: "facturas_sustituye_a_fkey"
-            columns: ["sustituye_a"]
+            foreignKeyName: "facturas_sustituye_a_org_fkey"
+            columns: ["sustituye_a", "organization_id"]
             isOneToOne: false
             referencedRelation: "facturas"
-            referencedColumns: ["id"]
+            referencedColumns: ["id", "organization_id"]
           },
         ]
       }
@@ -6037,18 +6037,18 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "pagos_factura_embarque_id_fkey"
-            columns: ["embarque_id"]
+            foreignKeyName: "pagos_factura_embarque_org_fkey"
+            columns: ["embarque_id", "organization_id"]
             isOneToOne: false
             referencedRelation: "embarques"
-            referencedColumns: ["id"]
+            referencedColumns: ["id", "organization_id"]
           },
           {
-            foreignKeyName: "pagos_factura_factura_id_fkey"
-            columns: ["factura_id"]
+            foreignKeyName: "pagos_factura_factura_org_fkey"
+            columns: ["factura_id", "organization_id"]
             isOneToOne: false
             referencedRelation: "facturas"
-            referencedColumns: ["id"]
+            referencedColumns: ["id", "organization_id"]
           },
           {
             foreignKeyName: "pagos_factura_lote_id_fkey"
@@ -6223,32 +6223,32 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "pagos_proveedor_factura_org_fkey"
+            columns: ["proveedor_factura_id", "organization_id"]
+            isOneToOne: false
+            referencedRelation: "cxp_alertas_vencimiento"
+            referencedColumns: ["proveedor_factura_id", "organization_id"]
+          },
+          {
+            foreignKeyName: "pagos_proveedor_factura_org_fkey"
+            columns: ["proveedor_factura_id", "organization_id"]
+            isOneToOne: false
+            referencedRelation: "proveedor_facturas"
+            referencedColumns: ["id", "organization_id"]
+          },
+          {
+            foreignKeyName: "pagos_proveedor_factura_org_fkey"
+            columns: ["proveedor_factura_id", "organization_id"]
+            isOneToOne: false
+            referencedRelation: "v_proveedor_facturas_saldo"
+            referencedColumns: ["proveedor_factura_id", "organization_id"]
+          },
+          {
             foreignKeyName: "pagos_proveedor_lote_id_fkey"
             columns: ["lote_id"]
             isOneToOne: false
             referencedRelation: "pagos_proveedor_lote"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "pagos_proveedor_proveedor_factura_id_fkey"
-            columns: ["proveedor_factura_id"]
-            isOneToOne: false
-            referencedRelation: "cxp_alertas_vencimiento"
-            referencedColumns: ["proveedor_factura_id"]
-          },
-          {
-            foreignKeyName: "pagos_proveedor_proveedor_factura_id_fkey"
-            columns: ["proveedor_factura_id"]
-            isOneToOne: false
-            referencedRelation: "proveedor_facturas"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "pagos_proveedor_proveedor_factura_id_fkey"
-            columns: ["proveedor_factura_id"]
-            isOneToOne: false
-            referencedRelation: "v_proveedor_facturas_saldo"
-            referencedColumns: ["proveedor_factura_id"]
           },
         ]
       }
@@ -6742,46 +6742,46 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "proformas_cliente_id_fkey"
-            columns: ["cliente_id"]
+            foreignKeyName: "proformas_cliente_org_fkey"
+            columns: ["cliente_id", "organization_id"]
             isOneToOne: false
             referencedRelation: "clientes"
-            referencedColumns: ["id"]
+            referencedColumns: ["id", "organization_id"]
           },
           {
-            foreignKeyName: "proformas_consolidada_en_fkey"
-            columns: ["consolidada_en"]
+            foreignKeyName: "proformas_consolidada_en_org_fkey"
+            columns: ["consolidada_en", "organization_id"]
             isOneToOne: false
             referencedRelation: "proformas"
-            referencedColumns: ["id"]
+            referencedColumns: ["id", "organization_id"]
           },
           {
-            foreignKeyName: "proformas_consolidada_en_fkey"
-            columns: ["consolidada_en"]
+            foreignKeyName: "proformas_consolidada_en_org_fkey"
+            columns: ["consolidada_en", "organization_id"]
             isOneToOne: false
             referencedRelation: "v_proforma_factura_link"
-            referencedColumns: ["proforma_id"]
+            referencedColumns: ["proforma_id", "organization_id"]
           },
           {
-            foreignKeyName: "proformas_embarque_id_fkey"
-            columns: ["embarque_id"]
+            foreignKeyName: "proformas_embarque_org_fkey"
+            columns: ["embarque_id", "organization_id"]
             isOneToOne: false
             referencedRelation: "embarques"
-            referencedColumns: ["id"]
+            referencedColumns: ["id", "organization_id"]
           },
           {
-            foreignKeyName: "proformas_factura_id_fkey"
-            columns: ["factura_id"]
+            foreignKeyName: "proformas_factura_org_fkey"
+            columns: ["factura_id", "organization_id"]
             isOneToOne: false
             referencedRelation: "facturas"
-            referencedColumns: ["id"]
+            referencedColumns: ["id", "organization_id"]
           },
           {
-            foreignKeyName: "proformas_factura_secundaria_id_fkey"
-            columns: ["factura_secundaria_id"]
+            foreignKeyName: "proformas_factura_secundaria_org_fkey"
+            columns: ["factura_secundaria_id", "organization_id"]
             isOneToOne: false
             referencedRelation: "facturas"
-            referencedColumns: ["id"]
+            referencedColumns: ["id", "organization_id"]
           },
           {
             foreignKeyName: "proformas_organization_id_fkey"
@@ -7109,18 +7109,18 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "proveedor_facturas_embarque_id_fkey"
-            columns: ["embarque_id"]
+            foreignKeyName: "proveedor_facturas_embarque_org_fkey"
+            columns: ["embarque_id", "organization_id"]
             isOneToOne: false
             referencedRelation: "embarques"
-            referencedColumns: ["id"]
+            referencedColumns: ["id", "organization_id"]
           },
           {
-            foreignKeyName: "proveedor_facturas_proveedor_id_fkey"
-            columns: ["proveedor_id"]
+            foreignKeyName: "proveedor_facturas_proveedor_org_fkey"
+            columns: ["proveedor_id", "organization_id"]
             isOneToOne: false
             referencedRelation: "proveedores"
-            referencedColumns: ["id"]
+            referencedColumns: ["id", "organization_id"]
           },
         ]
       }
@@ -8255,11 +8255,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "proveedor_facturas_proveedor_id_fkey"
-            columns: ["proveedor_id"]
+            foreignKeyName: "proveedor_facturas_proveedor_org_fkey"
+            columns: ["proveedor_id", "organization_id"]
             isOneToOne: false
             referencedRelation: "proveedores"
-            referencedColumns: ["id"]
+            referencedColumns: ["id", "organization_id"]
           },
         ]
       }
@@ -8293,25 +8293,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "facturas_cliente_id_fkey"
-            columns: ["cliente_id"]
-            isOneToOne: false
-            referencedRelation: "clientes"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "facturas_embarque_id_fkey"
-            columns: ["embarque_id"]
-            isOneToOne: false
-            referencedRelation: "embarques"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "pagos_factura_factura_id_fkey"
-            columns: ["factura_id"]
+            foreignKeyName: "pagos_factura_factura_org_fkey"
+            columns: ["factura_id", "organization_id"]
             isOneToOne: false
             referencedRelation: "facturas"
-            referencedColumns: ["id"]
+            referencedColumns: ["id", "organization_id"]
           },
         ]
       }
@@ -8333,18 +8319,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "proformas_cliente_id_fkey"
-            columns: ["cliente_id"]
+            foreignKeyName: "proformas_cliente_org_fkey"
+            columns: ["cliente_id", "organization_id"]
             isOneToOne: false
             referencedRelation: "clientes"
-            referencedColumns: ["id"]
+            referencedColumns: ["id", "organization_id"]
           },
           {
-            foreignKeyName: "proformas_factura_id_fkey"
-            columns: ["factura_id"]
+            foreignKeyName: "proformas_factura_org_fkey"
+            columns: ["factura_id", "organization_id"]
             isOneToOne: false
             referencedRelation: "facturas"
-            referencedColumns: ["id"]
+            referencedColumns: ["id", "organization_id"]
           },
           {
             foreignKeyName: "proformas_organization_id_fkey"
