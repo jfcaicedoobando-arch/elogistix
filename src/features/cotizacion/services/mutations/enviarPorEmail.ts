@@ -43,7 +43,10 @@ export interface EnviarEmailResult {
   envio_id: string | null;
   resultados: Array<{ email: string; tipo: string; ok: boolean; error?: string }>;
   pdf_link: string;
+  /** R2 · W-03: el link firmado del PDF caduca (TTL 7 días). */
+  pdf_link_expires_at?: string;
 }
+
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string;
