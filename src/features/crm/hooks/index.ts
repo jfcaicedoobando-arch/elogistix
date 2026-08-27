@@ -19,6 +19,8 @@ export * from './useOportunidadCotizaciones';
 export * from './useOportunidadDetalleActions';
 export * from './useOportunidadForm';
 export * from './useOportunidades';
+export * from './useOportunidadesPorLead';
+export * from './leads/prospectosSelect';
 export * from './usePlantillasMensaje';
 export * from './useProximasActividades';
 export * from './useCrmInicioVM';
