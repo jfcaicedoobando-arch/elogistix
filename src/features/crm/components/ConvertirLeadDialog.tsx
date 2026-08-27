@@ -101,17 +101,11 @@ export default function ConvertirLeadDialog({ open, onOpenChange, lead }: Props)
         </div>
       ) : (
         <>
-          <div className="flex items-center gap-2 rounded-md border p-3">
-            <Checkbox
-              id="crear-cliente"
-              checked={crearCliente}
-              onCheckedChange={(c) => setCrearCliente(!!c)}
-              disabled={!!lead.cliente_convertido_id}
-            />
-            <Label htmlFor="crear-cliente" className="text-body font-normal cursor-pointer">
-              Crear cliente "{lead.empresa}" en el directorio
-            </Label>
-          </div>
+          <SelectorClienteExistente
+            value={clienteId}
+            onChange={setClienteId}
+            disabled={!!lead.cliente_convertido_id}
+          />
 
           <div className="space-y-1">
             <Label htmlFor="convertir-nombre-oportunidad">Nombre de la oportunidad</Label>
