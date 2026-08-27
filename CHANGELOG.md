@@ -1,5 +1,14 @@
 # Changelog
 
+## [13.766.0] - 2026-08-27
+### Nueva funcionalidad
+- Rediseño CRM (etapa 1): embudo explícito **Lead → Prospecto → Oportunidad → alta de cliente (fuera del CRM)**.
+- Nueva pestaña **CRM → Prospectos** (`/crm/prospectos`) con los leads ya calificados; `/crm/leads` ahora sólo muestra el primer contacto (Nuevo, Contactado, Descalificado).
+- Botón **"Calificar como prospecto"** en la ficha del lead: exige el perfil comercial mínimo (sector, mercancía, rutas, volumen, frecuencia, dolor explícito y proveedor actual) vía RPC `crm_calificar_prospecto` (rol de ventas + candado multi-tenant + bitácora).
+### Base de datos
+- `_crm_lead_avanzar_por_cotizacion` ya no promueve leads sin calificar; sólo avanza prospectos.
+- Nuevo trigger `trg_crm_oportunidad_requiere_origen`: toda oportunidad debe nacer de un prospecto o de un cliente (`LC_OPORTUNIDAD_SIN_ORIGEN`).
+
 ## [13.765.1] - 2026-08-27
 ### Corrección
 - CI: `supabase/schema/baseline.sql` sincronizada con el esquema real — incluye los estados `Prospecto` y `Pendiente de alta`, la función/trigger `_crm_lead_avanzar_por_cotizacion`, sus permisos y el candado `LC_LEAD_ALTA_CLIENTE_PROHIBIDA` en `convertir_lead_rpc`.
