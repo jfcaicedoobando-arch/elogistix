@@ -5,6 +5,7 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import { unwrap, unwrapOr, run } from "@/lib/supabase/response";
+import { primeraFila } from "@/lib/supabase/primeraFila";
 import { conflictoConcurrenciaError } from "@/lib/errors/concurrencia";
 import type {
   ContactoProveedor,
@@ -75,8 +76,8 @@ export async function actualizarContactoProveedor(input: {
     .update(aFila(input.form))
     .eq("id", input.id);
   if (input.expectedUpdatedAt) query = query.eq("updated_at", input.expectedUpdatedAt);
-  const filas = (await unwrap(query.select("id"))) as Array<{ id: string }> | null;
-  if (!filas || filas.length === 0) {
+  const filas = primeraFila((await unwrap(query.select("id"))) as Array<{ id: string }> | null);
+  if (!filas) {
     if (input.expectedUpdatedAt) throw conflictoConcurrenciaError();
     throw new Error("No se guardaron los cambios: el contacto ya no existe o no tienes permiso.");
   }

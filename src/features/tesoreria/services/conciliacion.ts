@@ -132,6 +132,7 @@ export { sugerirCandidatos,  } from "./sugerirCandidatos";
 
 export { MovimientoVinculoError } from "./conciliacionErrors";
 import { mapConciliacionError, MovimientoVinculoError } from "./conciliacionErrors";
+import { primeraFila } from "@/lib/supabase/primeraFila";
 import { conflictoConcurrenciaError } from "@/lib/errors/concurrencia";
 
 
@@ -177,7 +178,7 @@ export async function conciliarConPago(
     .eq("estado_conciliacion", "Pendiente")
     .is("deleted_at", null)
     .select("id");
-  if (!error && (!filas || filas.length === 0)) {
+  if (!error && !primeraFila(filas)) {
     throw conflictoConcurrenciaError();
   }
   if (error) {

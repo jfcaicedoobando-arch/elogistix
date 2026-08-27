@@ -5,6 +5,7 @@
  * Reglas de negocio y validaciones viven en `proveedorFacturas.update.reglas.ts`.
  */
 import { supabase } from "@/integrations/supabase/client";
+import { primeraFila } from "@/lib/supabase/primeraFila";
 import { conflictoConcurrenciaError } from "@/lib/errors/concurrencia";
 import { registrarActividad } from "@/services/bitacora/registrar";
 
@@ -113,11 +114,11 @@ export async function actualizarFacturaProveedor(
   if (expectedUpdatedAt) query = query.eq("updated_at", expectedUpdatedAt);
   const { data: filas, error } = await query.select();
   if (error) throw error;
-  if (!filas || filas.length === 0) {
+  const data = primeraFila(filas);
+  if (!data) {
     if (expectedUpdatedAt) throw conflictoConcurrenciaError();
     throw new Error("No se guardaron los cambios: la factura ya no existe o no tienes permiso.");
   }
-  const data = filas[0];
 
   await registrarActividad({
     modulo: "cxp",

@@ -7,6 +7,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables, TablesInsert, TablesUpdate } from "@/integrations/supabase/types";
 import { unwrap, unwrapOr, run } from "@/lib/supabase/response";
+import { primeraFila } from "@/lib/supabase/primeraFila";
 import { conflictoConcurrenciaError } from "@/lib/errors/concurrencia";
 import { registrarActividad } from "@/services/bitacora/registrar";
 
@@ -58,12 +59,12 @@ export async function actualizarCuenta(
 ): Promise<CuentaBancaria> {
   let query = supabase.from("cuentas_bancarias").update(patch).eq("id", id);
   if (expectedUpdatedAt) query = query.eq("updated_at", expectedUpdatedAt);
-  const filas = (await unwrap(query.select())) as CuentaBancaria[] | null;
-  if (!filas || filas.length === 0) {
+  const filas = primeraFila((await unwrap(query.select())) as CuentaBancaria[] | null);
+  if (!filas) {
     if (expectedUpdatedAt) throw conflictoConcurrenciaError();
     throw new Error("No se guardaron los cambios: la cuenta ya no existe o no tienes permiso.");
   }
-  const cuenta = filas[0];
+  const cuenta = filas;
   await registrarActividad({
     modulo: "tesoreria",
     accion: "editar_cuenta_bancaria",
