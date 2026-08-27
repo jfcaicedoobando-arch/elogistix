@@ -25914,6 +25914,8 @@ ALTER TABLE ONLY public.anticipos_aplicaciones
     ADD CONSTRAINT anticipos_aplicaciones_pkey PRIMARY KEY (id);
 ALTER TABLE ONLY public.anticipos_proveedor
     ADD CONSTRAINT anticipos_proveedor_pkey PRIMARY KEY (id);
+ALTER TABLE public.anticipos_proveedor
+    ADD CONSTRAINT anticipos_proveedor_saldo_no_negativo CHECK ((saldo_disponible >= (0)::numeric)) NOT VALID;
 ALTER TABLE ONLY public.app_logs
     ADD CONSTRAINT app_logs_pkey PRIMARY KEY (id);
 ALTER TABLE ONLY public.auditoria_comentarios
@@ -26138,8 +26140,6 @@ ALTER TABLE ONLY public.nav_events
     ADD CONSTRAINT nav_events_pkey PRIMARY KEY (id);
 ALTER TABLE ONLY public.navieras
     ADD CONSTRAINT navieras_code_key UNIQUE (code);
-ALTER TABLE public.navieras
-    ADD CONSTRAINT navieras_code_scac_format CHECK ((code ~ '^[A-Z]{4}$'::text)) NOT VALID;
 ALTER TABLE ONLY public.navieras
     ADD CONSTRAINT navieras_pkey PRIMARY KEY (id);
 ALTER TABLE ONLY public.notas_embarque
