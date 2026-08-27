@@ -5,7 +5,7 @@
  * (Power of 10).
  */
 import { supabase } from "@/integrations/supabase/client";
-import { reportCaughtError } from "@/services/observability/reportError";
+import { reportCaughtError } from "@/lib/observability/reportCaughtError";
 import { bitacoraConciliarMovimiento } from "./conciliacionBitacora";
 import { mapConciliacionError, MovimientoVinculoError } from "./conciliacionErrors";
 import { conflictoConcurrenciaError } from "@/lib/errors/concurrencia";
