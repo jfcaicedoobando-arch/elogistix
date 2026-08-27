@@ -9,6 +9,7 @@ export { parseConfigSafe, plataformaConfigSchema, seguridadConfigSchema, useConf
 export { agruparConfigPorCategoria } from "./domain/configuracion";
 export { default as TabEmpresa } from "./components/TabEmpresa";
 export { default as TabFacturacion } from "./components/TabFacturacion";
+export { default as CierrePeriodoCard } from "./components/CierrePeriodoCard";
 export { default as TabPuertos } from "./components/TabPuertos";
 export { default as TabOperaciones } from "./components/TabOperaciones";
 export { default as TabNavieras } from "./components/TabNavieras";

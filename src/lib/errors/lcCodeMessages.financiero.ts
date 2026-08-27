@@ -5,6 +5,16 @@
  * Se consume desde `lcCodeMessages.ts` (índice).
  */
 export const LC_CODE_MESSAGES_FINANCIERO: Record<string, string> = {
+  // ── Ola 3 · cierre de periodo e inmutabilidad fiscal ───────────────────
+  LC_PERIODO_CERRADO:
+    "El periodo contable ya está cerrado en esa fecha. Usa una fecha posterior al cierre " +
+    "o pide a administración que reabra el periodo en Configuración → Facturación.",
+  LC_UUID_FISCAL_INMUTABLE:
+    "La factura ya tiene folio fiscal (UUID) asignado y no puede cambiarse.",
+  LC_CONCEPTO_PROFORMADO:
+    "El concepto ya está incluido en una proforma. Libéralo de la proforma antes de editarlo o eliminarlo.",
+  LC_PROFORMA_EMBARQUE_AJENO:
+    "Todas las proformas a consolidar deben pertenecer al mismo embarque.",
   // ── Facturas cliente (CxC) ─────────────────────────────────────────────
   LC_FACTURA_NO_ENCONTRADA: "La factura no existe o fue eliminada.",
   LC_FAC_ESTADO_CALCULADO:

@@ -1,5 +1,17 @@
 # Changelog
 
+## [13.772.0] - 2026-08-27
+### Seguridad
+- **Ola 3 — Controles del ciclo comercial y fiscal (auditoría 3)**.
+- **Cierre de periodo contable**: nueva configuración por empresa en Configuración → Facturación. Al fijar la fecha de cierre, la base rechaza registrar o mover facturas, pagos de cliente, pagos a proveedor, facturas de proveedor y notas de crédito (cliente y proveedor) con fecha igual o anterior (`LC_PERIODO_CERRADO`).
+- **Cotización aceptada inmutable**: antes sólo se bloqueaban los importes cuando la cotización ya estaba "En operación"; ahora también en "Aceptada" (`LC_COTIZACION_INMUTABLE`).
+- **Conceptos ya proformados**: no se pueden editar (descripción, cantidad, precio, moneda, IVA) ni borrar físicamente mientras pertenezcan a una proforma (`LC_CONCEPTO_PROFORMADO`).
+- **Consolidación de proformas**: exige mismo embarque y misma empresa; ya no puede arrastrar conceptos de otro embarque (`LC_PROFORMA_EMBARQUE_AJENO`).
+- **Folio fiscal de una sola escritura**: una vez asignado el UUID del CFDI, ningún proceso puede sobrescribirlo (`LC_UUID_FISCAL_INMUTABLE`).
+
+### Pruebas
+- Nueva suite `ola3_controles_ciclo.sql` (cierre de periodo, cotización aceptada, concepto proformado y folio fiscal inmutable).
+
 ## [13.771.0] - 2026-08-27
 ### Seguridad
 - **Ola 2 — Aislamiento entre organizaciones (hallazgos H de la auditoría 3)**: 28 relaciones críticas quedaron blindadas contra cruces entre empresas (facturas ↔ embarque/cliente/cotización/proforma/sustitución, pagos ↔ factura y embarque, notas de crédito ↔ factura, conceptos de venta y costo ↔ embarque/contenedor/proforma/proveedor, conceptos de factura, costos de cotización, proformas, facturas y pagos de proveedor, contenedores).
