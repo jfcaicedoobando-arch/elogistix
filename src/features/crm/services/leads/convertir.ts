@@ -31,7 +31,8 @@ export async function convertirLead(
   // tipos generados por Supabase los exponen como requeridos; el cast sólo cierra ese gap.
   const rpcArgs = {
     p_lead_id: params.lead.id,
-    p_crear_cliente: params.crearCliente,
+    // Candado: la conversión nunca crea clientes (ver LC_LEAD_ALTA_CLIENTE_PROHIBIDA).
+    p_crear_cliente: false,
     p_cliente_id: params.clienteIdExistente ?? null,
     p_nombre_oportunidad: params.nombreOportunidad,
     p_monto_estimado: params.montoEstimado,
