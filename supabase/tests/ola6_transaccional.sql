@@ -90,13 +90,13 @@ BEGIN
   VALUES (v_org, 'LEAD OLA6', 'Nuevo'::public.crm_lead_estado)
   RETURNING id INTO v_lead;
 
-  v_res := public.convertir_lead_rpc(v_lead, true, NULL, 'OP OLA6', 5000, 'USD', NULL);
+  v_res := public.convertir_lead_rpc(v_lead, false, NULL, 'OP OLA6', 5000, 'USD', NULL);
   v_op1 := (v_res->>'oportunidad_id')::uuid;
   IF v_op1 IS NULL THEN
     RAISE EXCEPTION 'OLA6 M4 FAIL: no se creó la oportunidad';
   END IF;
 
-  v_res := public.convertir_lead_rpc(v_lead, true, NULL, 'OP OLA6', 5000, 'USD', NULL);
+  v_res := public.convertir_lead_rpc(v_lead, false, NULL, 'OP OLA6', 5000, 'USD', NULL);
   v_op2 := (v_res->>'oportunidad_id')::uuid;
   IF v_op2 <> v_op1 THEN
     RAISE EXCEPTION 'OLA6 M4 FAIL: la reconversión duplicó la oportunidad';
