@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DatePickerMx } from "@/components/ui/date-picker-mx";
 import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
+import SelectorClienteExistente, { SIN_CLIENTE } from "@/features/crm/components/SelectorClienteExistente";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
@@ -27,7 +27,7 @@ interface Props {
 }
 
 export default function ConvertirLeadDialog({ open, onOpenChange, lead }: Props) {
-  const [crearCliente, setCrearCliente] = useState(true);
+  const [clienteId, setClienteId] = useState<string>(lead.cliente_convertido_id ?? SIN_CLIENTE);
   const [nombre, setNombre] = useState(`Oportunidad — ${lead.empresa}`);
   const [monto, setMonto] = useState<string>("0");
   const [moneda, setMoneda] = useState<Moneda>("MXN");
@@ -41,8 +41,8 @@ export default function ConvertirLeadDialog({ open, onOpenChange, lead }: Props)
     try {
       const r = await convertir.mutateAsync({
         lead,
-        crearCliente,
-        clienteIdExistente: lead.cliente_convertido_id ?? null,
+        clienteIdExistente:
+          lead.cliente_convertido_id ?? (clienteId === SIN_CLIENTE ? null : clienteId || null),
         nombreOportunidad: nombre.trim() || `Oportunidad — ${lead.empresa}`,
         montoEstimado: Number(monto) || 0,
         moneda,
@@ -101,17 +101,11 @@ export default function ConvertirLeadDialog({ open, onOpenChange, lead }: Props)
         </div>
       ) : (
         <>
-          <div className="flex items-center gap-2 rounded-md border p-3">
-            <Checkbox
-              id="crear-cliente"
-              checked={crearCliente}
-              onCheckedChange={(c) => setCrearCliente(!!c)}
-              disabled={!!lead.cliente_convertido_id}
-            />
-            <Label htmlFor="crear-cliente" className="text-body font-normal cursor-pointer">
-              Crear cliente "{lead.empresa}" en el directorio
-            </Label>
-          </div>
+          <SelectorClienteExistente
+            value={clienteId}
+            onChange={setClienteId}
+            disabled={!!lead.cliente_convertido_id}
+          />
 
           <div className="space-y-1">
             <Label htmlFor="convertir-nombre-oportunidad">Nombre de la oportunidad</Label>

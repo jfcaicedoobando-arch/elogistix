@@ -1,5 +1,14 @@
 # Changelog
 
+## [13.763.0] - 2026-08-27
+### Seguridad
+- CRM: `convertir_lead_rpc` ya no crea clientes (`LC_LEAD_ALTA_CLIENTE_PROHIBIDA`) y sólo es ejecutable por `authenticated`. El alta de clientes vive únicamente en el módulo de Clientes, con su gate de roles y validaciones fiscales (RFC, CP, régimen).
+- Al convertir un prospecto ahora se liga un cliente **existente** (`SelectorClienteExistente`) o se deja la oportunidad sin cliente; se retiró el checkbox de creación en `ConvertirLeadDialog` y `ConvertirLeadSheet`.
+- Datos: el cliente `IAASA`, creado incompleto por esta vía, se envió a la papelera y su oportunidad quedó sin cliente para religarla tras el alta oficial.
+- Pruebas: `supabase/tests/ola6_convertir_propaga.sql` cubre el candado, la herencia a la oportunidad, el ligado de cliente existente y el rechazo de clientes de otra organización.
+
+
+
 ## [13.762.9] - 2026-08-27
 ### Corrección de errores
 - CI (drift radar): la migración `20260827020732` revoca permisos de `cotizaciones_guard_en_operacion()`, función creada en una migración posterior, por lo que abortaba en base limpia. Se agregó a `drift-anclas.txt` (estado final garantizado por `20260902003000`).
