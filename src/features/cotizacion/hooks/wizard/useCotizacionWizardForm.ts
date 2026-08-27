@@ -15,6 +15,7 @@ import {
 import { useConceptosVentaCotizacion } from "@/features/cotizacion/hooks/useConceptosVentaCotizacion";
 import { useCotizacionPL } from "@/features/cotizacion/hooks/useCotizacionPL";
 import { useCotizacionWizardSteps } from "@/features/cotizacion/hooks/wizard/useCotizacionWizardSteps";
+import { useCotizacionUpdateGuard } from "@/features/cotizacion/hooks/wizard/useCotizacionUpdateGuard";
 
 // Re-exports para preservar la API pública existente
 ;
@@ -51,6 +52,12 @@ interface HookDeps {
 export function useCotizacionWizardForm({ navigate, toast, userEmail, clientes, mutations, initialData, initialCostos, onFinalized }: HookDeps) {
   const { crearCotizacion, updateCotizacion, upsertCostos } = mutations;
   const isEditMode = !!initialData;
+
+  // N-06 (QA r2): todas las escrituras del wizard viajan con el `updated_at`
+  // leído al abrir la cotización; si otra sesión la modificó, el guardado se
+  // rechaza con LC_CONFLICTO_CONCURRENCIA en vez de pisar cambios ajenos.
+  const updateGuardado = useCotizacionUpdateGuard(updateCotizacion, initialData?.updated_at);
+  const mutationsGuardadas = { ...mutations, updateCotizacion: updateGuardado };
 
   const form = useForm<CotizacionFormValues>({
     defaultValues: buildCotizacionDefaultValues(initialData),
@@ -114,7 +121,7 @@ export function useCotizacionWizardForm({ navigate, toast, userEmail, clientes, 
     msdsFile, costosInternos, costosPreLlenados, setCostosPreLlenados,
     conceptosUSD, conceptosMXN, setConceptosUSD, setConceptosMXN,
     totalUSD, tasaIva, buildPaso1Data,
-    mutations, onFinalized,
+    mutations: mutationsGuardadas, onFinalized,
   });
 
   const isPending = crearCotizacion.isPending || updateCotizacion.isPending || upsertCostos.isPending;
