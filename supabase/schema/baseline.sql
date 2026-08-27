@@ -1720,6 +1720,7 @@ CREATE FUNCTION public._cxp_validar_aprobacion(p_factura_id uuid) RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
+
 DECLARE
   v_row public.proveedor_facturas;
   v_conceptos_count integer;
@@ -1731,15 +1732,20 @@ DECLARE
   v_emb_org uuid;
   v_origen text;
   v_tiene_xml_lineas boolean;
+  v_suma_vinculada numeric(18,4);
+  v_comprometido numeric(18,4);
+  v_sobrecosto numeric(18,4);
 BEGIN
   SELECT * INTO v_row FROM public.proveedor_facturas WHERE id = p_factura_id;
   IF v_row.id IS NULL OR v_row.deleted_at IS NOT NULL THEN
     RAISE EXCEPTION 'LC_CXP_NO_EXISTE: La factura no existe.';
   END IF;
+
   SELECT EXISTS (
     SELECT 1 FROM public.proveedor_facturas_conceptos
     WHERE proveedor_factura_id = p_factura_id AND concepto_costo_id IS NULL
   ) INTO v_tiene_xml_lineas;
+
   IF v_tiene_xml_lineas THEN
     SELECT COUNT(*),
            COALESCE(SUM(monto * COALESCE(NULLIF(cantidad,0),1)),0),
@@ -1756,13 +1762,16 @@ BEGIN
       FROM public.proveedor_facturas_conceptos
       WHERE proveedor_factura_id = p_factura_id;
   END IF;
+
   IF v_conceptos_count = 0 THEN
     RAISE EXCEPTION 'LC_CXP_SIN_CONCEPTOS: Captura los conceptos de la factura antes de aprobar.';
   END IF;
+
   -- Tolerancia de redondeo: medio centavo por unidad de cantidad (el precio
   -- unitario del CFDI viene redondeado a 2 decimales y el error se multiplica
   -- por la cantidad). Mínimo 1 centavo. Un error real de captura sigue fallando.
   v_tolerancia := GREATEST(0.01, 0.005 * COALESCE(v_suma_cantidades,0));
+
   v_diferencia := ABS(COALESCE(v_row.subtotal,0) - v_suma_conceptos);
   IF v_diferencia > v_tolerancia THEN
     RAISE EXCEPTION 'LC_CXP_DESCUADRE: Los conceptos (%) no cuadran con el subtotal (%) de la factura. Diferencia: % (tolerancia: %)',
@@ -1771,6 +1780,33 @@ BEGIN
       to_char(v_diferencia,              'FM999,999,999,990.00'),
       to_char(v_tolerancia,              'FM999,999,999,990.00');
   END IF;
+
+  -- QA B-15: lo facturado en conceptos vinculados no debe exceder lo
+  -- comprometido en conceptos_costo (tolerancia 0.02; umbral duro 5%).
+  SELECT COALESCE(SUM(pfc.monto * COALESCE(NULLIF(pfc.cantidad,0),1)), 0),
+         COALESCE(SUM(cc.monto), 0)
+    INTO v_suma_vinculada, v_comprometido
+    FROM public.proveedor_facturas_conceptos pfc
+    JOIN public.conceptos_costo cc
+      ON cc.id = pfc.concepto_costo_id AND cc.deleted_at IS NULL
+   WHERE pfc.proveedor_factura_id = p_factura_id
+     AND pfc.concepto_costo_id IS NOT NULL;
+
+  v_sobrecosto := v_suma_vinculada - v_comprometido;
+  IF v_sobrecosto > 0.02 THEN
+    IF v_comprometido > 0 AND v_sobrecosto > v_comprometido * 0.05 THEN
+      RAISE EXCEPTION 'LC_CXP_SOBRECOSTO: Lo facturado (%) excede lo comprometido (%) en %; revisa los conceptos vinculados antes de aprobar.',
+        to_char(v_suma_vinculada, 'FM999,999,999,990.00'),
+        to_char(v_comprometido,   'FM999,999,999,990.00'),
+        to_char(v_sobrecosto,     'FM999,999,999,990.00');
+    ELSE
+      RAISE WARNING 'LC_CXP_SOBRECOSTO: lo facturado (%) excede lo comprometido (%) en % (<= 5%%, se aprueba con advertencia).',
+        to_char(v_suma_vinculada, 'FM999,999,999,990.00'),
+        to_char(v_comprometido,   'FM999,999,999,990.00'),
+        to_char(v_sobrecosto,     'FM999,999,999,990.00');
+    END IF;
+  END IF;
+
   IF v_row.embarque_id IS NOT NULL THEN
     SELECT estado, organization_id INTO v_emb_estado, v_emb_org
       FROM public.embarques WHERE id = v_row.embarque_id;
@@ -1784,8 +1820,10 @@ BEGIN
       RAISE EXCEPTION 'LC_CXP_EMBARQUE_ORG_MISMATCH: El embarque pertenece a otra organización.';
     END IF;
   END IF;
+
   SELECT origen_proveedor::text INTO v_origen
     FROM public.proveedores WHERE id = v_row.proveedor_id;
+
   IF COALESCE(v_origen,'Nacional') = 'Nacional'
      AND v_row.uuid_fiscal IS NOT NULL
      AND COALESCE(v_row.uuid_verificado,false) = false THEN
