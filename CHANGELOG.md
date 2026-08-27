@@ -1,5 +1,32 @@
 # Changelog
 
+## [13.771.0] - 2026-08-27
+### Seguridad
+- **Ola 2 — Aislamiento entre organizaciones (hallazgos H de la auditoría 3)**: 28 relaciones críticas quedaron blindadas contra cruces entre empresas (facturas ↔ embarque/cliente/cotización/proforma/sustitución, pagos ↔ factura y embarque, notas de crédito ↔ factura, conceptos de venta y costo ↔ embarque/contenedor/proforma/proveedor, conceptos de factura, costos de cotización, proformas, facturas y pagos de proveedor, contenedores).
+- El candado son validaciones automáticas en la base (`_assert_padre_misma_org`), que aplican también a procesos internos que no pasan por las reglas de acceso. Se probó con llaves compuestas y se descartó porque rompía las consultas embebidas de la app.
+- No hubo cambios de datos: se verificó que no existía ni un registro cruzado antes de aplicar la migración.
+
+### Pruebas
+- Nueva suite `ola2_fk_compuestas_org.sql` (verifica las 28 relaciones y prueba que la base rechaza un cruce real).
+
+
+
+## [13.770.0] - 2026-08-27
+### Corrección
+- **Notas de crédito multi-moneda (C1/C1b)**: el saldo y el estado de la factura ahora convierten la nota de crédito a la moneda de la factura. Una factura MXN saldada con una NC en USD ya queda en **Pagada** y desaparece de cartera (antes mostraba un adeudo fantasma).
+- Las tres fuentes de saldo (`saldo_factura_bruto`, `recalcular_estado_factura` y `cartera_pendiente`) usan una sola función canónica `_nc_aplicadas_moneda_factura`.
+- El rollback de una factura manual fallida ahora usa baja lógica en lugar de borrado físico.
+### Seguridad
+- **C7**: `ensure_demo_membership` dejó de ser ejecutable por usuarios autenticados (sólo el servicio interno); cerraba una vía de escalación de privilegios entre organizaciones.
+- **C6**: prohibido el borrado físico de facturas (privilegios revocados, policy eliminada y trigger `trg_prohibir_delete_factura`).
+- **C8**: `uuid_fiscal` único por organización en facturas vivas.
+- **C9**: los indicadores de dirección (`dashboard_summary`, `dashboard_details`) exigen rol autorizado; el cálculo interno quedó reservado al servicio.
+- Lectura de costos de cotización separada de la escritura: sólo roles con visibilidad de costo los reciben.
+### Pruebas
+- Nuevas suites de regresión `ola1_saldo_nc_multimoneda.sql` y `ola1_guards_c6_c7_c8.sql` registradas en el manifiesto de guards.
+
+
+
 ## [13.767.0] - 2026-08-27
 ### Nueva funcionalidad
 - Rediseño CRM (etapa 2): toda **oportunidad** se crea eligiendo su origen — **Prospecto calificado** o **Cliente actual** — con nuevo selector `SelectorOrigenOportunidad` (pestañas + buscador).

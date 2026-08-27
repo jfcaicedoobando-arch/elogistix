@@ -314,6 +314,37 @@ BEGIN
   END IF;
 END;
 $$;
+CREATE FUNCTION public._assert_padre_misma_org() RETURNS trigger
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $_$
+DECLARE
+  v_col    text := TG_ARGV[0];
+  v_padre  text := TG_ARGV[1];
+  v_id     uuid;
+  v_org    uuid;
+BEGIN
+  v_id  := (to_jsonb(NEW) ->> v_col)::uuid;
+  v_org := (to_jsonb(NEW) ->> 'organization_id')::uuid;
+  IF v_id IS NULL OR v_org IS NULL THEN
+    RETURN NEW;
+  END IF;
+  EXECUTE format(
+    'SELECT organization_id FROM public.%I WHERE id = $1', v_padre
+  ) INTO v_org USING v_id;
+  IF v_org IS NULL THEN
+    RETURN NEW; -- la FK se encarga de la existencia
+  END IF;
+  IF v_org <> (to_jsonb(NEW) ->> 'organization_id')::uuid THEN
+    RAISE EXCEPTION
+      'LC_ORG_CRUZADA: %.% apunta a un registro de otra organización (%)',
+      TG_TABLE_NAME, v_col, v_padre
+      USING ERRCODE = 'check_violation';
+  END IF;
+  RETURN NEW;
+END;
+$_$;
+
 CREATE FUNCTION public._assert_receptor_fiscal_valido(p_cliente_id uuid) RETURNS void
     LANGUAGE plpgsql STABLE SECURITY DEFINER
     SET search_path TO 'public'
@@ -25943,6 +25974,8 @@ ALTER TABLE ONLY public.client_users
 ALTER TABLE ONLY public.cliente_documentos
     ADD CONSTRAINT cliente_documentos_pkey PRIMARY KEY (id);
 ALTER TABLE ONLY public.clientes
+    ADD CONSTRAINT clientes_id_org_uniq UNIQUE (id, organization_id);
+ALTER TABLE ONLY public.clientes
     ADD CONSTRAINT clientes_pkey PRIMARY KEY (id);
 ALTER TABLE public.clientes
     ADD CONSTRAINT clientes_rfc_formato CHECK (((rfc IS NULL) OR (rfc = ''::text) OR (rfc ~ '^[A-ZÑ&]{3,4}[0-9]{6}[A-Z0-9]{3}$'::text))) NOT VALID;
@@ -26013,6 +26046,8 @@ ALTER TABLE ONLY public.cotizacion_versiones
 ALTER TABLE ONLY public.cotizacion_versiones
     ADD CONSTRAINT cotizacion_versiones_pkey PRIMARY KEY (id);
 ALTER TABLE ONLY public.cotizaciones
+    ADD CONSTRAINT cotizaciones_id_org_uniq UNIQUE (id, organization_id);
+ALTER TABLE ONLY public.cotizaciones
     ADD CONSTRAINT cotizaciones_pkey PRIMARY KEY (id);
 ALTER TABLE ONLY public.crm_actividades
     ADD CONSTRAINT crm_actividades_pkey PRIMARY KEY (id);
@@ -26075,6 +26110,8 @@ ALTER TABLE ONLY public.email_unsubscribe_tokens
 ALTER TABLE ONLY public.email_unsubscribe_tokens
     ADD CONSTRAINT email_unsubscribe_tokens_token_key UNIQUE (token);
 ALTER TABLE ONLY public.embarque_contenedores
+    ADD CONSTRAINT embarque_contenedores_id_org_uniq UNIQUE (id, organization_id);
+ALTER TABLE ONLY public.embarque_contenedores
     ADD CONSTRAINT embarque_contenedores_pkey PRIMARY KEY (id);
 ALTER TABLE ONLY public.embarque_facturas_entrantes_conceptos
     ADD CONSTRAINT embarque_facturas_entrantes_conceptos_pkey PRIMARY KEY (id);
@@ -26088,6 +26125,8 @@ ALTER TABLE ONLY public.embarque_garantias_historial
     ADD CONSTRAINT embarque_garantias_historial_pkey PRIMARY KEY (id);
 ALTER TABLE public.embarques
     ADD CONSTRAINT embarques_expediente_formato_valido CHECK (((expediente IS NULL) OR (expediente ~ '^EL[A-Z]{3}[0-9]+$'::text) OR (expediente ~ '^DEMO-[0-9]{4}-[0-9]+$'::text))) NOT VALID;
+ALTER TABLE ONLY public.embarques
+    ADD CONSTRAINT embarques_id_org_uniq UNIQUE (id, organization_id);
 ALTER TABLE ONLY public.embarques
     ADD CONSTRAINT embarques_pkey PRIMARY KEY (id);
 ALTER TABLE ONLY public.eventos_embarque
@@ -26112,6 +26151,8 @@ ALTER TABLE ONLY public.facturapi_webhook_eventos
     ADD CONSTRAINT facturapi_webhook_eventos_pkey PRIMARY KEY (id);
 ALTER TABLE ONLY public.facturapi_webhook_eventos
     ADD CONSTRAINT facturapi_webhook_eventos_unique UNIQUE (organization_id, event_id);
+ALTER TABLE ONLY public.facturas
+    ADD CONSTRAINT facturas_id_org_uniq UNIQUE (id, organization_id);
 ALTER TABLE public.facturas
     ADD CONSTRAINT facturas_no_autosustitucion CHECK (((sustituye_a IS NULL) OR (sustituye_a <> id))) NOT VALID;
 ALTER TABLE ONLY public.facturas
@@ -26173,6 +26214,8 @@ ALTER TABLE ONLY public.proforma_conceptos_consolidados
 ALTER TABLE ONLY public.proforma_envios
     ADD CONSTRAINT proforma_envios_pkey PRIMARY KEY (id);
 ALTER TABLE ONLY public.proformas
+    ADD CONSTRAINT proformas_id_org_uniq UNIQUE (id, organization_id);
+ALTER TABLE ONLY public.proformas
     ADD CONSTRAINT proformas_organization_id_numero_key UNIQUE (organization_id, numero);
 ALTER TABLE ONLY public.proformas
     ADD CONSTRAINT proformas_pkey PRIMARY KEY (id);
@@ -26187,6 +26230,8 @@ ALTER TABLE ONLY public.proveedor_documentos
 ALTER TABLE ONLY public.proveedor_facturas_conceptos
     ADD CONSTRAINT proveedor_facturas_conceptos_pkey PRIMARY KEY (id);
 ALTER TABLE ONLY public.proveedor_facturas
+    ADD CONSTRAINT proveedor_facturas_id_org_uniq UNIQUE (id, organization_id);
+ALTER TABLE ONLY public.proveedor_facturas
     ADD CONSTRAINT proveedor_facturas_pkey PRIMARY KEY (id);
 ALTER TABLE public.proveedor_facturas
     ADD CONSTRAINT proveedor_facturas_total_consistente CHECK ((abs((total - round((((COALESCE(subtotal, (0)::numeric) + COALESCE(iva, (0)::numeric)) + COALESCE(ieps, (0)::numeric)) - COALESCE(retenciones, (0)::numeric)), 2))) <= 0.01)) NOT VALID;
@@ -26194,6 +26239,8 @@ ALTER TABLE public.proveedor_facturas
     ADD CONSTRAINT proveedor_facturas_total_nonneg CHECK ((total >= (0)::numeric)) NOT VALID;
 ALTER TABLE ONLY public.proveedor_notas_credito
     ADD CONSTRAINT proveedor_notas_credito_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.proveedores
+    ADD CONSTRAINT proveedores_id_org_uniq UNIQUE (id, organization_id);
 ALTER TABLE ONLY public.proveedores
     ADD CONSTRAINT proveedores_pkey PRIMARY KEY (id);
 ALTER TABLE ONLY public.provisioning_log
@@ -26666,6 +26713,7 @@ CREATE TRIGGER trg_cotizaciones_guard_en_operacion BEFORE UPDATE ON public.cotiz
 CREATE TRIGGER trg_cotizaciones_sod_aceptacion BEFORE UPDATE ON public.cotizaciones FOR EACH ROW EXECUTE FUNCTION public._cotizaciones_bloquear_auto_aceptacion();
 CREATE TRIGGER trg_cotizaciones_subtotal_server BEFORE INSERT OR UPDATE OF conceptos_venta, moneda ON public.cotizaciones FOR EACH ROW EXECUTE FUNCTION public.trg_cotizacion_subtotal_server();
 CREATE TRIGGER trg_cotizaciones_sync_vigencia BEFORE INSERT OR UPDATE OF validez_propuesta, vigencia_dias, fecha_vigencia ON public.cotizaciones FOR EACH ROW EXECUTE FUNCTION public._cotizaciones_sync_vigencia();
+CREATE TRIGGER trg_cotizaciones_validar_prospecto BEFORE INSERT OR UPDATE ON public.cotizaciones FOR EACH ROW EXECUTE FUNCTION public._cotizaciones_validar_prospecto();
 CREATE TRIGGER trg_crear_garantia_contenedor AFTER INSERT ON public.embarque_contenedores FOR EACH ROW EXECUTE FUNCTION public.crear_garantia_contenedor();
 CREATE TRIGGER trg_crm_act_updated_at BEFORE UPDATE ON public.crm_actividades FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 CREATE TRIGGER trg_crm_actividad_toca_oportunidad AFTER INSERT ON public.crm_actividades FOR EACH ROW EXECUTE FUNCTION public._crm_actividad_toca_oportunidad();
@@ -26766,6 +26814,34 @@ CREATE TRIGGER trg_nc_prov_estado_machine BEFORE INSERT OR UPDATE OF estado ON p
 CREATE TRIGGER trg_notas_credito_prov_recalcular_estado AFTER INSERT OR DELETE OR UPDATE ON public.proveedor_notas_credito FOR EACH ROW EXECUTE FUNCTION public.tg_recalcular_estado_factura_proveedor();
 CREATE TRIGGER trg_notif_cli_embarque_estado AFTER UPDATE OF estado ON public.embarques FOR EACH ROW EXECUTE FUNCTION public.notif_cli_on_embarque_estado();
 CREATE TRIGGER trg_notificar_asignacion_hallazgo AFTER INSERT OR UPDATE OF responsable_id ON public.auditoria_revisiones FOR EACH ROW EXECUTE FUNCTION public.notificar_asignacion_hallazgo();
+CREATE TRIGGER trg_org_conceptos_costo_contenedor_id BEFORE INSERT OR UPDATE OF contenedor_id, organization_id ON public.conceptos_costo FOR EACH ROW EXECUTE FUNCTION public._assert_padre_misma_org('contenedor_id', 'embarque_contenedores');
+CREATE TRIGGER trg_org_conceptos_costo_embarque_id BEFORE INSERT OR UPDATE OF embarque_id, organization_id ON public.conceptos_costo FOR EACH ROW EXECUTE FUNCTION public._assert_padre_misma_org('embarque_id', 'embarques');
+CREATE TRIGGER trg_org_conceptos_costo_proveedor_id BEFORE INSERT OR UPDATE OF proveedor_id, organization_id ON public.conceptos_costo FOR EACH ROW EXECUTE FUNCTION public._assert_padre_misma_org('proveedor_id', 'proveedores');
+CREATE TRIGGER trg_org_conceptos_factura_embarque_id BEFORE INSERT OR UPDATE OF embarque_id, organization_id ON public.conceptos_factura FOR EACH ROW EXECUTE FUNCTION public._assert_padre_misma_org('embarque_id', 'embarques');
+CREATE TRIGGER trg_org_conceptos_factura_factura_id BEFORE INSERT OR UPDATE OF factura_id, organization_id ON public.conceptos_factura FOR EACH ROW EXECUTE FUNCTION public._assert_padre_misma_org('factura_id', 'facturas');
+CREATE TRIGGER trg_org_conceptos_factura_proforma_id_origen BEFORE INSERT OR UPDATE OF proforma_id_origen, organization_id ON public.conceptos_factura FOR EACH ROW EXECUTE FUNCTION public._assert_padre_misma_org('proforma_id_origen', 'proformas');
+CREATE TRIGGER trg_org_conceptos_venta_contenedor_id BEFORE INSERT OR UPDATE OF contenedor_id, organization_id ON public.conceptos_venta FOR EACH ROW EXECUTE FUNCTION public._assert_padre_misma_org('contenedor_id', 'embarque_contenedores');
+CREATE TRIGGER trg_org_conceptos_venta_embarque_id BEFORE INSERT OR UPDATE OF embarque_id, organization_id ON public.conceptos_venta FOR EACH ROW EXECUTE FUNCTION public._assert_padre_misma_org('embarque_id', 'embarques');
+CREATE TRIGGER trg_org_conceptos_venta_proforma_id BEFORE INSERT OR UPDATE OF proforma_id, organization_id ON public.conceptos_venta FOR EACH ROW EXECUTE FUNCTION public._assert_padre_misma_org('proforma_id', 'proformas');
+CREATE TRIGGER trg_org_cotizacion_costos_cotizacion_id BEFORE INSERT OR UPDATE OF cotizacion_id, organization_id ON public.cotizacion_costos FOR EACH ROW EXECUTE FUNCTION public._assert_padre_misma_org('cotizacion_id', 'cotizaciones');
+CREATE TRIGGER trg_org_embarque_contenedores_embarque_id BEFORE INSERT OR UPDATE OF embarque_id, organization_id ON public.embarque_contenedores FOR EACH ROW EXECUTE FUNCTION public._assert_padre_misma_org('embarque_id', 'embarques');
+CREATE TRIGGER trg_org_factura_notas_credito_factura_id BEFORE INSERT OR UPDATE OF factura_id, organization_id ON public.factura_notas_credito FOR EACH ROW EXECUTE FUNCTION public._assert_padre_misma_org('factura_id', 'facturas');
+CREATE TRIGGER trg_org_facturas_cliente_id BEFORE INSERT OR UPDATE OF cliente_id, organization_id ON public.facturas FOR EACH ROW EXECUTE FUNCTION public._assert_padre_misma_org('cliente_id', 'clientes');
+CREATE TRIGGER trg_org_facturas_cotizacion_id BEFORE INSERT OR UPDATE OF cotizacion_id, organization_id ON public.facturas FOR EACH ROW EXECUTE FUNCTION public._assert_padre_misma_org('cotizacion_id', 'cotizaciones');
+CREATE TRIGGER trg_org_facturas_embarque_id BEFORE INSERT OR UPDATE OF embarque_id, organization_id ON public.facturas FOR EACH ROW EXECUTE FUNCTION public._assert_padre_misma_org('embarque_id', 'embarques');
+CREATE TRIGGER trg_org_facturas_proforma_id BEFORE INSERT OR UPDATE OF proforma_id, organization_id ON public.facturas FOR EACH ROW EXECUTE FUNCTION public._assert_padre_misma_org('proforma_id', 'proformas');
+CREATE TRIGGER trg_org_facturas_sustituida_por BEFORE INSERT OR UPDATE OF sustituida_por, organization_id ON public.facturas FOR EACH ROW EXECUTE FUNCTION public._assert_padre_misma_org('sustituida_por', 'facturas');
+CREATE TRIGGER trg_org_facturas_sustituye_a BEFORE INSERT OR UPDATE OF sustituye_a, organization_id ON public.facturas FOR EACH ROW EXECUTE FUNCTION public._assert_padre_misma_org('sustituye_a', 'facturas');
+CREATE TRIGGER trg_org_pagos_factura_embarque_id BEFORE INSERT OR UPDATE OF embarque_id, organization_id ON public.pagos_factura FOR EACH ROW EXECUTE FUNCTION public._assert_padre_misma_org('embarque_id', 'embarques');
+CREATE TRIGGER trg_org_pagos_factura_factura_id BEFORE INSERT OR UPDATE OF factura_id, organization_id ON public.pagos_factura FOR EACH ROW EXECUTE FUNCTION public._assert_padre_misma_org('factura_id', 'facturas');
+CREATE TRIGGER trg_org_pagos_proveedor_proveedor_factura_id BEFORE INSERT OR UPDATE OF proveedor_factura_id, organization_id ON public.pagos_proveedor FOR EACH ROW EXECUTE FUNCTION public._assert_padre_misma_org('proveedor_factura_id', 'proveedor_facturas');
+CREATE TRIGGER trg_org_proformas_cliente_id BEFORE INSERT OR UPDATE OF cliente_id, organization_id ON public.proformas FOR EACH ROW EXECUTE FUNCTION public._assert_padre_misma_org('cliente_id', 'clientes');
+CREATE TRIGGER trg_org_proformas_consolidada_en BEFORE INSERT OR UPDATE OF consolidada_en, organization_id ON public.proformas FOR EACH ROW EXECUTE FUNCTION public._assert_padre_misma_org('consolidada_en', 'proformas');
+CREATE TRIGGER trg_org_proformas_embarque_id BEFORE INSERT OR UPDATE OF embarque_id, organization_id ON public.proformas FOR EACH ROW EXECUTE FUNCTION public._assert_padre_misma_org('embarque_id', 'embarques');
+CREATE TRIGGER trg_org_proformas_factura_id BEFORE INSERT OR UPDATE OF factura_id, organization_id ON public.proformas FOR EACH ROW EXECUTE FUNCTION public._assert_padre_misma_org('factura_id', 'facturas');
+CREATE TRIGGER trg_org_proformas_factura_secundaria_id BEFORE INSERT OR UPDATE OF factura_secundaria_id, organization_id ON public.proformas FOR EACH ROW EXECUTE FUNCTION public._assert_padre_misma_org('factura_secundaria_id', 'facturas');
+CREATE TRIGGER trg_org_proveedor_facturas_embarque_id BEFORE INSERT OR UPDATE OF embarque_id, organization_id ON public.proveedor_facturas FOR EACH ROW EXECUTE FUNCTION public._assert_padre_misma_org('embarque_id', 'embarques');
+CREATE TRIGGER trg_org_proveedor_facturas_proveedor_id BEFORE INSERT OR UPDATE OF proveedor_id, organization_id ON public.proveedor_facturas FOR EACH ROW EXECUTE FUNCTION public._assert_padre_misma_org('proveedor_id', 'proveedores');
 CREATE TRIGGER trg_pago_factura_comision_ins AFTER INSERT OR UPDATE ON public.pagos_factura FOR EACH ROW EXECUTE FUNCTION public.trg_pago_factura_comision();
 CREATE TRIGGER trg_pago_factura_rep_viva BEFORE INSERT OR UPDATE OF uuid_rep, estado_rep, facturapi_rep_id ON public.pagos_factura FOR EACH ROW WHEN (((new.uuid_rep IS NOT NULL) OR (new.facturapi_rep_id IS NOT NULL))) EXECUTE FUNCTION public.assert_factura_viva_para_rep();
 CREATE TRIGGER trg_pago_proveedor_factura_viva BEFORE INSERT OR UPDATE ON public.pagos_proveedor FOR EACH ROW WHEN ((new.deleted_at IS NULL)) EXECUTE FUNCTION public.assert_proveedor_factura_viva_para_pago();
@@ -27915,6 +27991,8 @@ GRANT ALL ON FUNCTION public._assert_facturapi_admin(p_org_id uuid) TO service_r
 REVOKE ALL ON FUNCTION public._assert_internal_reader(p_org uuid) FROM PUBLIC;
 GRANT ALL ON FUNCTION public._assert_internal_reader(p_org uuid) TO authenticated;
 GRANT ALL ON FUNCTION public._assert_internal_reader(p_org uuid) TO service_role;
+REVOKE ALL ON FUNCTION public._assert_padre_misma_org() FROM PUBLIC;
+GRANT ALL ON FUNCTION public._assert_padre_misma_org() TO service_role;
 REVOKE ALL ON FUNCTION public._assert_receptor_fiscal_valido(p_cliente_id uuid) FROM PUBLIC;
 GRANT ALL ON FUNCTION public._assert_receptor_fiscal_valido(p_cliente_id uuid) TO authenticated;
 GRANT ALL ON FUNCTION public._assert_receptor_fiscal_valido(p_cliente_id uuid) TO service_role;
