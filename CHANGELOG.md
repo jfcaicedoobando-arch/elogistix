@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.762.6] - 2026-08-27
+### Corrección de errores
+- Notas de crédito de cliente: una migración posterior había reinstalado la validación de fecha vieja (sólo fecha de México), rechazando NC capturadas por la tarde/noche. Se reaplicó la versión tolerante (fecha de México o del servidor).
+
 ## [13.762.5] - 2026-08-27
 ### Fix
 - CI (radar de drift): se eximió `20260827010526…` del replay en base limpia — instala un trigger cuya función se crea en una migración posterior; el estado final lo garantizan `20260901001400` y `20260902001000`.
