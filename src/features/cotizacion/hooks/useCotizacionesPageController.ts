@@ -46,6 +46,15 @@ export function esCotizacionInactivaOculta(
   return true;
 }
 
+/** Segmento comercial: separa la prospección (CRM) de la operación con clientes. */
+export type SegmentoCotizacion = "clientes" | "prospectos" | "todas";
+
+export function matchesSegmento(c: CotizacionListItem, segmento: SegmentoCotizacion): boolean {
+  if (segmento === "todas") return true;
+  const esProspecto = c.es_prospecto === true;
+  return segmento === "prospectos" ? esProspecto : !esProspecto;
+}
+
 export interface CotizacionFilterParams {
   search: string;
   filterEstado: string;
@@ -54,6 +63,7 @@ export interface CotizacionFilterParams {
   incluirInactivas: boolean;
   /** O4.5(a): bandeja "Aceptadas sin embarque" (estado Aceptada y sin embarque_id). */
   soloAceptadasSinEmbarque: boolean;
+  segmento: SegmentoCotizacion;
 }
 
 /** O4.5(a): la cotización quedó aceptada pero nadie abrió el embarque. */
@@ -65,6 +75,7 @@ export function matchesCotizacionFilter(
   c: CotizacionListItem,
   p: CotizacionFilterParams,
 ): boolean {
+  if (!matchesSegmento(c, p.segmento)) return false;
   if (!matchesSearch(c, p.search)) return false;
   if (p.filterEstado !== "todos" && c.estado !== p.filterEstado) return false;
   if (p.filterCliente !== "todos" && c.cliente_id !== p.filterCliente) return false;
@@ -74,11 +85,12 @@ export function matchesCotizacionFilter(
   return true;
 }
 
-/** KPIs derivados — siempre últimos 30 días, ignoran filtros visibles. */
-export function useCotizacionKpis(cotizaciones: CotizacionListItem[]) {
+/** KPIs derivados — siempre últimos 30 días, ignoran filtros visibles (salvo el segmento). */
+export function useCotizacionKpis(cotizaciones: CotizacionListItem[], segmento: SegmentoCotizacion) {
   return useMemo(() => {
     const hace30Dias = Date.now() - 30 * 24 * 60 * 60 * 1000;
     const ultimos30 = cotizaciones.filter((c) => {
+      if (!matchesSegmento(c, segmento)) return false;
       if (!c.created_at) return false;
       const ts = new Date(c.created_at).getTime();
       return Number.isFinite(ts) && ts >= hace30Dias;
