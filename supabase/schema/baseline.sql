@@ -50,6 +50,8 @@ CREATE TYPE public.crm_lead_estado AS ENUM (
     'Nuevo',
     'Contactado',
     'Calificado',
+    'Prospecto',
+    'Pendiente de alta',
     'Descalificado',
     'Convertido'
 );
@@ -1425,6 +1427,43 @@ BEGIN
        SET ultimo_movimiento_at = now()
      WHERE id = NEW.entidad_id;
   END IF;
+  RETURN NEW;
+END;
+$$;
+CREATE FUNCTION public._crm_lead_avanzar_por_cotizacion() RETURNS trigger
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+DECLARE
+  v_lead_id uuid;
+  v_destino text;
+BEGIN
+  IF NEW.oportunidad_id IS NULL OR COALESCE(NEW.es_prospecto, false) = false THEN
+    RETURN NEW;
+  END IF;
+  IF NEW.estado::text = 'Aceptada' THEN
+    v_destino := 'Pendiente de alta';
+  ELSIF NEW.estado::text IN ('Solicitada', 'Enviada') THEN
+    v_destino := 'Prospecto';
+  ELSE
+    RETURN NEW;
+  END IF;
+  SELECT o.lead_id INTO v_lead_id
+  FROM public.crm_oportunidades o
+  WHERE o.id = NEW.oportunidad_id
+    AND o.organization_id = NEW.organization_id;
+  IF v_lead_id IS NULL THEN
+    RETURN NEW;
+  END IF;
+  UPDATE public.crm_leads l
+     SET estado = v_destino::public.crm_lead_estado,
+         updated_at = now()
+   WHERE l.id = v_lead_id
+     AND l.organization_id = NEW.organization_id
+     AND l.deleted_at IS NULL
+     AND l.estado::text NOT IN ('Descalificado', 'Convertido')
+     AND l.estado::text <> v_destino
+     AND NOT (v_destino = 'Prospecto' AND l.estado::text = 'Pendiente de alta');
   RETURN NEW;
 END;
 $$;
@@ -7408,6 +7447,10 @@ BEGIN
   IF NULLIF(btrim(COALESCE(p_nombre_oportunidad, '')), '') IS NULL THEN
     RAISE EXCEPTION 'LC_OPORTUNIDAD_SIN_NOMBRE';
   END IF;
+  -- Candado: el alta de clientes vive sólo en el módulo de Clientes.
+  IF COALESCE(p_crear_cliente, false) AND p_cliente_id IS NULL THEN
+    RAISE EXCEPTION 'LC_LEAD_ALTA_CLIENTE_PROHIBIDA';
+  END IF;
   IF p_cliente_id IS NOT NULL THEN
     SELECT id, nombre INTO v_cliente_id, v_cliente_nombre
     FROM public.clientes
@@ -7415,24 +7458,6 @@ BEGIN
     IF v_cliente_id IS NULL THEN
       RAISE EXCEPTION 'LC_CLIENTE_NO_ENCONTRADO';
     END IF;
-  ELSIF COALESCE(p_crear_cliente, false) THEN
-    -- O6.2: captura única — el cliente nace con los datos fiscales del lead.
-    INSERT INTO public.clientes (
-      organization_id, nombre, rfc, direccion, ciudad, estado, cp, email, telefono, contacto
-    )
-    VALUES (
-      v_lead.organization_id,
-      v_lead.empresa,
-      COALESCE(v_lead.rfc, ''),
-      COALESCE(v_lead.direccion, ''),
-      COALESCE(v_lead.ciudad, ''),
-      COALESCE(v_lead.entidad_federativa, ''),
-      COALESCE(v_lead.cp, ''),
-      COALESCE(v_lead.email, ''),
-      COALESCE(v_lead.telefono, ''),
-      COALESCE(v_lead.contacto, '')
-    )
-    RETURNING id, nombre INTO v_cliente_id, v_cliente_nombre;
   END IF;
   SELECT id, COALESCE(probabilidad_default, 0) INTO v_etapa_id, v_prob
   FROM public.crm_etapas_pipeline
@@ -26489,6 +26514,7 @@ CREATE TRIGGER trg_crm_actividad_toca_oportunidad AFTER INSERT ON public.crm_act
 CREATE TRIGGER trg_crm_cuotas_updated_at BEFORE UPDATE ON public.crm_cuotas_vendedor FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 CREATE TRIGGER trg_crm_etapa_criterios_updated_at BEFORE UPDATE ON public.crm_etapa_criterios FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 CREATE TRIGGER trg_crm_etapas_updated_at BEFORE UPDATE ON public.crm_etapas_pipeline FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+CREATE TRIGGER trg_crm_lead_avanzar_por_cotizacion AFTER UPDATE OF estado ON public.cotizaciones FOR EACH ROW WHEN ((old.estado IS DISTINCT FROM new.estado)) EXECUTE FUNCTION public._crm_lead_avanzar_por_cotizacion();
 CREATE TRIGGER trg_crm_leads_updated_at BEFORE UPDATE ON public.crm_leads FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 CREATE TRIGGER trg_crm_notify_comentario_oportunidad AFTER INSERT ON public.crm_comentarios_oportunidad FOR EACH ROW EXECUTE FUNCTION public.crm_notify_comentario_oportunidad();
 CREATE TRIGGER trg_crm_op_updated_at BEFORE UPDATE ON public.crm_oportunidades FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
@@ -27788,6 +27814,9 @@ GRANT ALL ON FUNCTION public._crear_embarque_replicar_conceptos(p_cotizacion_id 
 REVOKE ALL ON FUNCTION public._crm_actividad_toca_oportunidad() FROM PUBLIC;
 GRANT ALL ON FUNCTION public._crm_actividad_toca_oportunidad() TO authenticated;
 GRANT ALL ON FUNCTION public._crm_actividad_toca_oportunidad() TO service_role;
+REVOKE ALL ON FUNCTION public._crm_lead_avanzar_por_cotizacion() FROM PUBLIC;
+GRANT ALL ON FUNCTION public._crm_lead_avanzar_por_cotizacion() TO authenticated;
+GRANT ALL ON FUNCTION public._crm_lead_avanzar_por_cotizacion() TO service_role;
 REVOKE ALL ON FUNCTION public._crm_registrar_cambio_etapa() FROM PUBLIC;
 GRANT ALL ON FUNCTION public._crm_registrar_cambio_etapa() TO authenticated;
 GRANT ALL ON FUNCTION public._crm_registrar_cambio_etapa() TO service_role;
