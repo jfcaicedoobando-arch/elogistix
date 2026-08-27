@@ -1,21 +1,18 @@
 import { useState, useMemo } from "react";
 import { History } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ListSkeleton } from "@/components/shared/states/ListSkeleton";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
 import PaginationControls from "@/components/shared/PaginationControls";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { BitacoraActividad } from "@/components/shared/BitacoraActividad";
+import { BitacoraFiltros } from "@/features/dashboard/components/BitacoraFiltros";
+import { MODULOS_BITACORA } from "@/services/bitacora/registrar";
 import { useBitacora } from "@/hooks/shared";
 import { usePermissions, useDocumentTitle } from "@/hooks/shared";
 import { GRUPOS_ACCION } from "@/lib/domain/bitacoraDescripcion";
-import { MODULOS_BITACORA } from "@/services/bitacora/registrar";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { useOrganization } from "@/lib/contexts/OrganizationContext";
 import { ErrorState } from "@/components/shared/states/ErrorState";
-import { FILTRO_ANCHO } from "@/lib/ui/filterWidths";
 import type { CursorBitacora } from "@/types/bitacora";
 
 const MODULOS = MODULOS_BITACORA;
