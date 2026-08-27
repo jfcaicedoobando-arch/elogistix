@@ -3,7 +3,7 @@
  * Lógica de formulario en `useLeadEditForm`; subcomponentes en `components/crm/leadDetalle/`.
  */
 import { useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { UserPlus } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { DetailHeader } from "@/components/shared/DetailHeader";
@@ -12,8 +12,6 @@ import { PageContainer } from "@/components/shared/PageContainer";
 import { LoadingState } from "@/components/shared/states/LoadingState";
 import { ErrorState } from "@/components/shared/states/ErrorState";
 import DoubleConfirmDeleteDialog from "@/components/shared/DoubleConfirmDeleteDialog";
-import { notifyError } from "@/lib/ui/appFeedback";
-import { crmToast } from "@/features/crm/lib/crmToast";
 import { usePermissions, useDocumentTitle } from "@/hooks/shared";
 import ConvertirLeadDialog from "@/features/crm/components/ConvertirLeadDialog";
 import ConvertirLeadSheet from "@/features/crm/components/ConvertirLeadSheet";
@@ -28,14 +26,13 @@ import OportunidadesDelProspecto from "@/features/crm/components/leadDetalle/Opo
 import NuevaOportunidadDialog from "@/features/crm/components/NuevaOportunidadDialog";
 import { useLead } from "@/features/crm/hooks";
 import { useLeadDetalleAcciones } from "@/features/crm/hooks/useLeadDetalleAcciones";
-import { esProspecto, faltantesGateProspecto, puedeCalificarse } from "@/features/crm/domain/leads/etapas";
+import { esProspecto, puedeCalificarse } from "@/features/crm/domain/leads/etapas";
 import { useLeadEditForm } from "@/features/crm/hooks";
 import { ROUTES } from "@/constants/routes";
 import { formatFechaEs } from "@/lib/formatters/dates";
 
 export default function LeadDetalle() {
   const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
   const { canEdit, canTomarLead } = usePermissions();
   const volver = useVolver(ROUTES.CRM_LEADS);
   const { data: lead, isLoading } = useLead(id);
@@ -44,7 +41,7 @@ export default function LeadDetalle() {
   const {
     handleSave, handleDelete, handleCalificar, handleTomar,
     guardando, eliminando, tomando, calificando,
-  } = useLeadDetalleAcciones(id, lead, form);
+  } = useLeadDetalleAcciones(id, lead ?? undefined, form);
   const [convertirSheetOpen, setConvertirSheetOpen] = useState(false);
   const [convertirAvanzadoOpen, setConvertirAvanzadoOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
