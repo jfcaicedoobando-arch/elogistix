@@ -1,4 +1,4 @@
-import { memo } from "react";
+import { memo, useMemo } from "react";
 import { TrendingUp } from "lucide-react";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,6 +10,7 @@ import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/Da
 import { sortByNumber } from "@/components/shared/dataTable/sortingFns";
 import { formatCurrency, toTitleCase, formatTipoCambio} from "@/lib/formatters";
 import type { EmbarqueConProfit } from "@/features/dashboard/hooks";
+import { usePermissions } from "@/hooks/shared/usePermissions";
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 
 interface Props {
@@ -44,7 +45,13 @@ function MoneyWithBreakdown({ e, value }: { e: EmbarqueConProfit; value: number 
   );
 }
 
-const columns: ColumnDef<EmbarqueConProfit, unknown>[] = defineColumns<EmbarqueConProfit>([
+/**
+ * QA B-07 — Columnas de la tabla de utilidad.
+ * En modo "solo ventas" (roles comerciales sin permiso de costos) se omiten
+ * costo, utilidad y margen: sólo se muestra el lado de venta.
+ */
+function construirColumnas(verCostos: boolean): ColumnDef<EmbarqueConProfit, unknown>[] {
+  return defineColumns<EmbarqueConProfit>([
   { id: "expediente", header: "Expediente", meta: { className: "font-medium" }, cell: ({ row }) => row.original.expediente },
   { id: "cliente", header: "Cliente", meta: { className: "max-w-[240px] truncate" }, cell: ({ row }) => <Hint label={row.original.cliente_nombre}><span>{toTitleCase(row.original.cliente_nombre)}</span></Hint> },
   { id: "venta", header: "Venta MXN", meta: { className: "text-right tabular-nums", headerClassName: "text-right" }, cell: ({ row }) => formatCurrency(row.original.ventaMXN, "MXN") },
@@ -65,15 +72,19 @@ const columns: ColumnDef<EmbarqueConProfit, unknown>[] = defineColumns<EmbarqueC
       <MargenBadge pct={row.original.margenMXN} umbrales={UMBRAL_MARGEN_COTIZACION} className="text-label" />
     ),
   },
-]);
+  ]).filter((c) => verCostos || !["costo", "profit", "margen"].includes(String(c.id)));
+}
 
 export const ProfitTable = memo(function ProfitTable({ embarques, isLoading }: Props) {
+  const { canViewCosts } = usePermissions();
+  const columns = useMemo(() => construirColumnas(canViewCosts), [canViewCosts]);
+
   return (
     <Card>
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center gap-2">
           <TrendingUp className="h-4 w-4 text-success" />
-          Utilidad MXN — Arribos este mes
+          {canViewCosts ? "Utilidad MXN — Arribos este mes" : "Venta MXN — Arribos este mes"}
         </CardTitle>
       </CardHeader>
       <CardContent>
