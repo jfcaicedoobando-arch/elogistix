@@ -9,7 +9,11 @@ import type { Moneda } from "@/types/db";
 
 export interface ConvertirLeadParams {
   lead: CrmLeadRow;
-  crearCliente: boolean;
+  /**
+   * @deprecated El alta de clientes vive sólo en el módulo de Clientes (candado
+   * `LC_LEAD_ALTA_CLIENTE_PROHIBIDA`). Se ignora: siempre se envía `false`.
+   */
+  crearCliente?: boolean;
   clienteIdExistente?: string | null;
   nombreOportunidad: string;
   montoEstimado: number;
