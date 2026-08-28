@@ -42,7 +42,12 @@ export default function TesoreriaConciliacion() {
       return next;
     }, { replace: true });
   };
-  const [estado, setEstado] = useState<"Pendiente" | "Conciliado" | "Ignorado" | "todos">("Pendiente");
+  // M8 (Ola 8): el estado del movimiento también viaja en la URL.
+  const [estado, setEstado] = useFiltroUrl<"Pendiente" | "Conciliado" | "Ignorado" | "todos">(
+    "estado",
+    ESTADOS_MOVIMIENTO,
+    "Pendiente",
+  );
   const [sel, setSel] = useState<MovimientoBBVA | null>(null);
   const [refPago, setRefPago] = useState<RefPago | null>(null);
   const [manualOpen, setManualOpen] = useState(false);
