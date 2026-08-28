@@ -1,5 +1,16 @@
 # Changelog
 
+## [13.787.0] - 2026-08-28
+### Infraestructura
+- **Auditoría de versiones del CI**: se verificó pin por pin contra upstream. Todas las acciones (`checkout` v7.0.1, `cache` v6.1.0, `upload/download-artifact` v7.0.1/v8.0.1, `github-script` v9.0.0, `setup-bun` v2.2.0, `setup-deno` v2.0.5, `paths-filter` v4.0.3, `dependency-review` v5.0.0, `gitleaks` v3.0.0, `codeql` v4.37.9, `actionlint` 1.7.12), Bun 1.4.0 y Deno 2.6.x están en la última versión. **No queda nada pendiente en workflows.**
+- **Bumps de parche/minor (Bloque A)**: `@sentry/react` 10.72.0, `@supabase/supabase-js` 2.112.4, `@tanstack/*` 5.102.8, `react-hook-form` 7.86.0, `terser` 5.51.2, `eslint` 10.9.1, `typescript-eslint` 8.68.0, `eslint-plugin-react-refresh` 0.5.5, `knip` 6.33.0, `@testing-library/react` 16.3.3, `@types/node` 26.4.0, `@react-pdf/types` 2.14.0, `rollup-plugin-visualizer` 7.1.1. Sin cambios de mayor (Vite 5, Tailwind 3, TS 5, router 6, Vitest 3 siguen pinneados).
+- **Postgres de pruebas**: se mantiene en 17.9 (producción corre 17.6); subir a 17.11 exigiría regenerar `baseline.sql` sin beneficio real hoy.
+
+### Correcciones
+- `CxpFiltrosSheetFields.tsx`: se quitó el `export { ESTATUS }` sin consumidores que rompía `eslint --max-warnings 0` con `react-refresh` 0.5.5.
+- Guardrails de la Ola E4 que quedaron a medias: se registraron `ola_e2_{a,b,d}_guards.sql` en `_guards_manifest.txt` (antes eran suites huérfanas que CI no ejecutaba) y se añadieron los mensajes amigables de `LC_MOVIMIENTO_INMUTABLE`, `LC_MOVIMIENTO_TRANSICION_INVALIDA`, `LC_LIQUIDACION_TRANSICION_INVALIDA`, `LC_LIQUIDACION_CANCELADA_INMUTABLE`, `LC_COMISION_DELETE_PROHIBIDO` y `LC_SIN_TC_DOF`.
+- Verificación: `lint --max-warnings 0`, `lint:unused` y `build` en verde; suite completa **7789 tests, 0 fallos** tras los tres arreglos.
+
 ## [13.786.0] - 2026-08-28
 ### Infraestructura
 - **CI · Bun 1.4.0**: la composite `setup-bun` sube el pin de `1.3.3` a **1.4.0** (última estable) y se refresca la clave de cache de `node_modules` (`bun1.4.0`). Verificado en local con Bun 1.4.0: `bun install --frozen-lockfile` sin cambios de lockfile, `lint` y `build` en verde.
