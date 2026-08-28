@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.789.0] - 2026-08-28
+### Mejoras
+- **Captura de factura de proveedor**: el chip del encabezado mostraba el total **con IVA** como cifra grande, pero todo el cuadre de costos del ERP (barra de conceptos y el trigger `_cxp_validar_aprobacion`) corre sobre el subtotal sin impuestos, así que los capturistas comparaban contra la cifra equivocada. Ahora la cifra principal es `Subtotal <moneda>` y el total con IVA queda debajo como referencia secundaria.
+- El desglose del popover resalta el subtotal, renombra el último renglón a `Total con IVA <moneda>` y agrega la nota "Las conciliaciones de costo se hacen sobre el subtotal (sin impuestos)".
+
+
+
 ## [13.788.0] - 2026-09-03
 ### Seguridad
 - **N6 residual**: `seed_presupuesto_categorias` la podía ejecutar cualquier usuario autenticado. Ahora exige rol administrativo (`public.es_admin_catalogo`) y conserva el candado multi-tenant; el mantenimiento (`service_role`, replay de migraciones, suites del CI) sigue permitido.
