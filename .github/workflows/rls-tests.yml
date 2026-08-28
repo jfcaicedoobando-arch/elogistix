@@ -41,6 +41,9 @@ concurrency:
 env:
   # Pinneado por digest para evitar drift entre runs.
   # Equivale a postgres:17.9 (linux/amd64).
+  # IMPORTANTE: al subir esta imagen hay que subir también la mayor del cliente
+  # en .github/actions/setup-pg-client (input `version`, hoy 17). El runner
+  # ubuntu-24.04 trae pg_dump 16, que aborta contra un servidor 17.
   POSTGRES_IMAGE: postgres@sha256:66b6a97eac1771fc78bd201b918b4253859f436c6913aeede97bd5366cce89ae
 
 jobs:
@@ -77,6 +80,9 @@ jobs:
         with:
           # v13.322.1 (GHA-audit H4) — no se hace push/fetch autenticado.
           persist-credentials: false
+
+      - name: Cliente de Postgres 17 (paridad con la imagen pinneada)
+        uses: ./.github/actions/setup-pg-client
 
       - name: Validate matrix covers every test_rls_*.sql
         # Si alguien añade supabase/tests/rls/test_rls_<nuevo>.sql y olvida
@@ -315,6 +321,9 @@ jobs:
           # v13.322.1 (GHA-audit H4) — no se hace push/fetch autenticado.
           persist-credentials: false
 
+      - name: Cliente de Postgres 17 (paridad con la imagen pinneada)
+        uses: ./.github/actions/setup-pg-client
+
       # v13.709.1 — El artifact de logs avisaba "No files were found" cuando la
       # step de suites no llegaba a correr (p. ej. falla el restore del dump):
       # `.rls-logs/` nunca se creaba. Ahora la carpeta y un manifiesto se
@@ -444,6 +453,9 @@ jobs:
         with:
           persist-credentials: false
 
+      - name: Cliente de Postgres 17 (paridad con la imagen pinneada)
+        uses: ./.github/actions/setup-pg-client
+
       - name: Download database snapshot
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
@@ -535,6 +547,9 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+
+      - name: Cliente de Postgres 17 (paridad con la imagen pinneada)
+        uses: ./.github/actions/setup-pg-client
 
       - uses: ./.github/actions/setup-bun
 
@@ -653,6 +668,9 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+
+      - name: Cliente de Postgres 17 (paridad con la imagen pinneada)
+        uses: ./.github/actions/setup-pg-client
 
       - name: Download database snapshot
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
@@ -847,6 +865,9 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+
+      - name: Cliente de Postgres 17 (paridad con la imagen pinneada)
+        uses: ./.github/actions/setup-pg-client
 
       - name: Bootstrap (stubs auth/storage/cron/net/pgmq)
         run: $PSQL -f supabase/tests/rls/_ci_bootstrap.sql

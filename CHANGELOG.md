@@ -1,5 +1,13 @@
 # Changelog
 
+## [13.787.1] - 2026-08-28
+### Correcciones
+- **CI rls-tests: `pg_dump: server version mismatch`**. El Postgres de pruebas ya corre 17.9, pero el runner `ubuntu-24.04` trae el cliente 16.15 y `pg_dump` se niega a respaldar un servidor más nuevo, así que el paso "Dump prepared database" abortaba y con él toda la suite RLS.
+- Nueva acción compuesta `.github/actions/setup-pg-client` que instala `postgresql-client-17` desde el repositorio oficial PGDG (llave verificada), lo antepone en el `PATH` e imprime `psql`/`pg_dump`/`pg_restore --version` como evidencia. Es idempotente: si ya hay un cliente 17, no reinstala.
+- Se agregó el paso a los 6 jobs de `rls-tests.yml` que hablan con la base (snapshot, suites, guards, drift de types, baseline y radar de drift). Esto también previene que el error se mudara al `pg_restore` de los jobs consumidores del dump.
+- `POSTGRES_IMAGE` quedó documentado: subir la imagen obliga a subir el input `version` de la acción.
+- `scripts/db/local-verify.sh` avisa si el `pg_dump` local es menor a 17 antes de usar `--snapshot`.
+
 ## [13.787.0] - 2026-08-28
 ### Infraestructura
 - **Auditoría de versiones del CI**: se verificó pin por pin contra upstream. Todas las acciones (`checkout` v7.0.1, `cache` v6.1.0, `upload/download-artifact` v7.0.1/v8.0.1, `github-script` v9.0.0, `setup-bun` v2.2.0, `setup-deno` v2.0.5, `paths-filter` v4.0.3, `dependency-review` v5.0.0, `gitleaks` v3.0.0, `codeql` v4.37.9, `actionlint` 1.7.12), Bun 1.4.0 y Deno 2.6.x están en la última versión. **No queda nada pendiente en workflows.**
