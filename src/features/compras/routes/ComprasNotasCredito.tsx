@@ -29,8 +29,10 @@ import { RANGO_DESDE_LABEL, RANGO_HASTA_LABEL } from "@/lib/ui/rangoFechasCopy";
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 import { ErrorState } from "@/components/shared/states/ErrorState";
 
-type MonedaFiltro = "todas" | "MXN" | "USD";
-type EstadoFiltro = "todos" | NotaCreditoRow["estado"];
+const MONEDAS_FILTRO = ["todas", "MXN", "USD"] as const;
+type MonedaFiltro = (typeof MONEDAS_FILTRO)[number];
+const ESTADOS_FILTRO = ["todos", "Borrador", "Aprobada", "Aplicada", "Cancelada"] as const;
+type EstadoFiltro = (typeof ESTADOS_FILTRO)[number] & ("todos" | NotaCreditoRow["estado"]);
 
 function firstOfYear(): string {
   return `${new Date().getFullYear()}-01-01`;
