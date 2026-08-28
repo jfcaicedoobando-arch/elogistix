@@ -98,7 +98,8 @@ describe("cierre service", () => {
         error: null,
       });
       // L1: la consulta principal desempata con un segundo .order("id").
-      const eqFn = vi.fn().mockReturnValue({ order: () => ({ order: orderFn }) });
+      const orderIdFn = vi.fn().mockReturnValue({ order: orderFn });
+      const eqFn = vi.fn().mockReturnValue({ order: orderIdFn });
       const selectFn = vi.fn().mockReturnValue({ eq: eqFn });
       // Bitácora fallback chain: select -> eq -> eq -> order
       const bitacoraOrder = vi.fn().mockResolvedValue({ data: [], error: null });
@@ -113,7 +114,8 @@ describe("cierre service", () => {
       const log = await fetchCierreLog("emb-4");
       expect(mockedFrom).toHaveBeenCalledWith("cierre_embarque_log");
       expect(eqFn).toHaveBeenCalledWith("embarque_id", "emb-4");
-      expect(orderFn).toHaveBeenCalledWith("created_at", { ascending: false });
+      expect(orderIdFn).toHaveBeenCalledWith("created_at", { ascending: false });
+      expect(orderFn).toHaveBeenCalledWith("id", { ascending: false });
       expect(log).toHaveLength(1);
       expect(log[0].accion).toBe("cerrar");
     });
