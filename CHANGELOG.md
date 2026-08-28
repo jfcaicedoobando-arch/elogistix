@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.778.0] - 2026-08-28
+### Corregido
+- **Comisiones "Por recuperar" ahora se descuentan (antes se perdían)**: `generar_liquidacion_comision` sólo sumaba `Devengada`, así que una comisión ya pagada cuya factura se canceló o se acreditó quedaba huérfana y la empresa la pagaba dos veces. Ahora se descuentan de la liquidación del periodo (de la más antigua a la más reciente, sólo hasta donde alcance el devengo), quedan marcadas y ligadas a esa liquidación con nota, y el remanente sigue pendiente para la siguiente.
+- **Tope de sobrecosto CxP por concepto y en pesos**: `_cxp_validar_aprobacion` comparaba lo facturado contra lo comprometido usando *sólo* la factura en aprobación y sumando monedas distintas. Dos facturas podían cubrir cada una el 100% del mismo costo y ambas aprobarse (doble costo/doble pago), y un costo en USD contra factura en MXN generaba falsos sobrecostos o los ocultaba. Ahora el tope se evalúa concepto por concepto, incluyendo todas las facturas vivas ligadas a ese costo, con ambos lados normalizados a MXN vía `a_mxn_doc` (T/C del documento con fallback DOF). El helper interno dejó de ser ejecutable por `authenticated`.
+
 ## [13.777.13] - 2026-08-28
 ### Corregido
 - **`baseline.sql` regenerado desde el replay real (fin del drift de formato)**: el snapshot traía bloques escritos a mano (líneas en blanco dentro de los cuerpos, encabezados `RETURNS ...` en renglón aparte en `cartera_pendiente`, `crear_clientes`, `is_org_member`, `vincular_anticipo_embarque`, `_factura_tc_dof_obligatorio`) y una definición duplicada de `crear_clientes`, cosas que `pg_dump` nunca emite; el guard de esquema fallaba por formato, no por estructura. Ahora el baseline es exactamente el dump normalizado del replay de las 1140 migraciones (510 funciones, 423 políticas, 296 triggers, 119 tablas, 7 vistas, 1438 grants), verificado recargándolo en base limpia sin errores.

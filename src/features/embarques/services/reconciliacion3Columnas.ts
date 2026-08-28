@@ -40,6 +40,8 @@ interface EmbarqueMeta {
   cotizacion_id: string | null;
   organization_id: string;
   version_aceptada: number | null;
+  tipo_cambio_usd: number | string | null;
+  tipo_cambio_eur: number | string | null;
 }
 
 export interface ResultadoReconciliacion3C {
@@ -111,7 +113,7 @@ export async function obtenerReconciliacion3Columnas(
   // `embarques_interno_v` desde FIX2 · B-1 (columna revocada a authenticated).
   const { data: embRaw, error: embErr } = await supabase
     .from("embarques")
-    .select("cotizacion_id, organization_id")
+    .select("cotizacion_id, organization_id, tipo_cambio_usd, tipo_cambio_eur")
     .eq("id", embarqueId)
     .maybeSingle();
   if (embErr) throw new Error(embErr.message);
@@ -158,9 +160,15 @@ export async function obtenerReconciliacion3Columnas(
   const delta = Array.isArray(deltaRaw?.cambios) ? deltaRaw!.cambios : [];
 
   const filas = buildFilas3C(cotizados, delta, reales, umbrales);
+  // Auditoría 2026-08-28 · Hallazgo 3: los totales se normalizan a MXN con el
+  // TC del embarque (antes se sumaban monedas distintas y se rotulaban "USD").
+  const tc = {
+    usd: Number(emb.tipo_cambio_usd) || undefined,
+    eur: Number(emb.tipo_cambio_eur) || undefined,
+  };
   return {
     filas,
-    resumen: construirResumen(filas, umbrales),
+    resumen: construirResumen(filas, umbrales, tc),
     tiene_cotizacion: Boolean(emb.cotizacion_id),
     version_aceptada: versionAceptada,
   };

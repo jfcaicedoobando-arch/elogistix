@@ -11,7 +11,7 @@ import { DialogRefacturarReceptor } from "@/features/facturacion/components/refa
 import type { Factura } from "@/features/facturacion/types";
 
 interface Props {
-  factura: Pick<Factura, "id" | "numero" | "total" | "moneda" | "metodo_pago" | "uuid_fiscal" | "cliente_id" | "fecha_emision" | "rfc_cliente">;
+  factura: Pick<Factura, "id" | "numero" | "total" | "moneda" | "metodo_pago" | "uuid_fiscal" | "cliente_id" | "fecha_emision" | "rfc_cliente" | "estado">;
   pagoOpen: boolean;
   setPagoOpen: (v: boolean) => void;
   timbrarOpen: boolean;
@@ -43,6 +43,7 @@ export function FacturaDetalleModales(props: Props) {
           metodoPago: factura.metodo_pago ?? null,
           uuidFiscal: factura.uuid_fiscal ?? null,
           fechaEmision: factura.fecha_emision ?? null,
+          estado: factura.estado ?? null,
         }}
       />
       <DialogTimbrarFactura

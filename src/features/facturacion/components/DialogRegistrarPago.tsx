@@ -33,6 +33,8 @@ interface Factura {
   uuidFiscal?: string | null;
   /** Fecha de emisión (ISO corto). FE-03: cota inferior para la fecha del pago. */
   fechaEmision?: string | null;
+  /** Estado de la factura: las terminales (Pagada/Cancelada/…) no tienen saldo. */
+  estado?: string | null;
 }
 
 interface Props {
@@ -54,9 +56,10 @@ export function DialogRegistrarPago({ open, onOpenChange, factura }: Props) {
   const { data: notasAplicadas = [] } = useNotasCreditoAplicadas(factura?.id);
   const { submit, isPending, timbrandoRep } = useRegistrarPagoSubmit(() => onOpenChange(false));
 
-  // A1: canon único `@/lib/financial/saldoFactura` (descuenta pagos y NC aplicadas).
+  // A1: canon `saldoFactura` (pagos + NC). Se pasa el ESTADO para que las
+  // terminales (Pagada/Cancelada/…) den saldo 0 (adeudo fantasma legacy).
   const { saldo, pagado: totalPagado } = useMemo(
-    () => calcularSaldoFactura(factura?.total ?? 0, pagosPrevios, notasAplicadas),
+    () => calcularSaldoFactura(factura?.total ?? 0, pagosPrevios, notasAplicadas, factura?.estado),
     [factura, pagosPrevios, notasAplicadas],
   );
 

@@ -15,15 +15,15 @@ export function ResumenReconciliacion({ resumen, versionAceptada }: Props) {
     <div className="rounded-md border p-3 text-body">
       <div className="flex justify-between">
         <span>Total cotizado:</span>
-        <span>{fmt(resumen.total_cotizado, "USD")}</span>
+        <span>{fmt(resumen.total_cotizado, resumen.moneda_total)}</span>
       </div>
       <div className="flex justify-between">
         <span>Total refrescado:</span>
-        <span>{fmt(resumen.total_refrescado, "USD")}</span>
+        <span>{fmt(resumen.total_refrescado, resumen.moneda_total)}</span>
       </div>
       <div className="flex justify-between font-semibold">
         <span>Total real:</span>
-        <span>{fmt(resumen.total_real, "USD")}</span>
+        <span>{fmt(resumen.total_real, resumen.moneda_total)}</span>
       </div>
       <div className="flex justify-between mt-1">
         <span>Δ Cot. vs Real:</span>
@@ -34,6 +34,15 @@ export function ResumenReconciliacion({ resumen, versionAceptada }: Props) {
           </Badge>
         </span>
       </div>
+      <div className="text-body-sm text-muted-foreground mt-2">
+        Totales convertidos a MXN con el tipo de cambio del embarque.
+      </div>
+      {resumen.filas_sin_tipo_cambio > 0 && (
+        <div className="text-body-sm text-destructive mt-1">
+          {resumen.filas_sin_tipo_cambio} concepto(s) en moneda extranjera no se
+          incluyeron: falta capturar su tipo de cambio en el embarque.
+        </div>
+      )}
       {versionAceptada != null && (
         <div className="text-body-sm text-muted-foreground mt-2">
           Versión cotizada aceptada: v{versionAceptada}
