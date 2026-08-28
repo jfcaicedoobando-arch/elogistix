@@ -121307,6 +121307,11 @@
       "20260828023509_99e61915-336a-42f3-a05f-a47c3dd1f1db.sql",
       "20260828031423_ffb3534d-3c78-4671-b094-d631f733c1eb.sql",
       "20260828031517_0e0f9955-6582-4a0c-a870-fff2ee41918a.sql",
+      "20260828054348_8b93242d-9a81-4cfb-a4b0-9658dbc73830.sql",
+      "20260828054459_a8edb387-150d-427d-8c54-636240a89f81.sql",
+      "20260828054537_ca60a1f3-16fa-4be8-9c12-ccc1097393ef.sql",
+      "20260828054552_47949741-d140-4c12-9ece-6e3e06bb07be.sql",
+      "20260828054635_2ebe1929-dcf7-46fc-8628-98a5c1a095a3.sql",
       "20260829000100_rev5_espejo_notif_rechazo_y_rol_proforma.sql",
       "20260830000100_fix_b6_espejo_pilotos_listas_explicitas.sql",
       "20260831000100_fix3_m6_espejo_adjuntar_xml_verificado.sql",
@@ -121336,7 +121341,8 @@
       "20260902005000_ci_service_role_only_recierre_embarques.sql",
       "20260902006000_cartera_pendiente_nc_inline.sql",
       "20260902007000_cotizacion_inmutable_recierre.sql",
-      "20260902008000_ola17_demoras_mx_nc_prov_tc.sql"
+      "20260902008000_ola17_demoras_mx_nc_prov_tc.sql",
+      "20260903000100_ola_e1_n21_eliminar_pago_proveedor.sql"
     ]
   }
 }

@@ -1,13 +1,7 @@
--- Fuente canónica de public.eliminar_pago_proveedor.
--- v13.646.0 (BUG-07): al eliminar el pago se revierten también las
--- aplicaciones de anticipo asociadas para que el saldo del anticipo se libere.
--- v13.718.0 (Ola 8): la autorización de rol financiero se evalúa por
--- membresía en la organización del documento (has_any_role_in_org).
--- v13.729.0 (FIX B-6): la lista de roles vuelve a ser la EXACTA de
--- es_escritor_financiero, sin expansión de jerarquía.
--- Ola E1 · N21: se eliminó la condición muerta del CTE `baja`; sólo se dan de
--- baja los movimientos generados por el pago (hash_dedupe 'pago-<id>').
--- Fuente vigente (mayor timestamp): 20260828054537_ca60a1f3-16fa-4be8-9c12-ccc1097393ef.sql
+-- Ola E1 · N21 — Re-emisión canónica de public.eliminar_pago_proveedor.
+-- La condición muerta del CTE `baja` (`OR pago_proveedor_id = _pago_id` anulada
+-- por un AND posterior) se eliminó. Se re-emite con timestamp posterior a
+-- 20260830000100 para que el replay en base limpia deje la versión vigente.
 
 CREATE OR REPLACE FUNCTION public.eliminar_pago_proveedor(_pago_id uuid, _motivo text DEFAULT NULL::text)
  RETURNS jsonb
@@ -126,3 +120,7 @@ BEGIN
   );
 END;
 $function$;
+
+-- H6 · higiene de permisos (idéntica a 20260830000100).
+REVOKE ALL ON FUNCTION public.eliminar_pago_proveedor(uuid, text) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.eliminar_pago_proveedor(uuid, text) TO authenticated, service_role;

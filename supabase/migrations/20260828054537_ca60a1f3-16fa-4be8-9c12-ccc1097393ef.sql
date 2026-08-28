@@ -1,14 +1,30 @@
--- Fuente canónica de public.eliminar_pago_proveedor.
--- v13.646.0 (BUG-07): al eliminar el pago se revierten también las
--- aplicaciones de anticipo asociadas para que el saldo del anticipo se libere.
--- v13.718.0 (Ola 8): la autorización de rol financiero se evalúa por
--- membresía en la organización del documento (has_any_role_in_org).
--- v13.729.0 (FIX B-6): la lista de roles vuelve a ser la EXACTA de
--- es_escritor_financiero, sin expansión de jerarquía.
--- Ola E1 · N21: se eliminó la condición muerta del CTE `baja`; sólo se dan de
--- baja los movimientos generados por el pago (hash_dedupe 'pago-<id>').
--- Fuente vigente (mayor timestamp): 20260828054537_ca60a1f3-16fa-4be8-9c12-ccc1097393ef.sql
+-- =========================================================================
+-- Ola E1 · Bloque 3 — Fechas y limpieza (N12, N21)
+-- =========================================================================
 
+-- N12: días restantes del REP contra el día civil de México.
+CREATE OR REPLACE VIEW public.v_pagos_rep_pendientes AS
+ SELECT pf.id AS pago_id,
+    pf.factura_id,
+    pf.organization_id,
+    pf.fecha_pago,
+    pf.monto_aplicado_factura,
+    pf.moneda,
+    pf.tipo_cambio,
+    f.numero AS factura_numero,
+    f.serie AS factura_serie,
+    f.uuid_fiscal AS factura_uuid,
+    f.cliente_id,
+    f.embarque_id,
+    (date_trunc('month'::text, pf.fecha_pago::timestamp with time zone) + '1 mon'::interval + '4 days'::interval)::date AS fecha_limite_rep,
+    ((date_trunc('month'::text, pf.fecha_pago::timestamp with time zone) + '1 mon'::interval + '4 days'::interval)::date
+      - (now() AT TIME ZONE 'America/Mexico_City')::date) AS dias_restantes
+   FROM pagos_factura pf
+     JOIN facturas f ON f.id = pf.factura_id AND f.deleted_at IS NULL
+  WHERE pf.estado_rep = 'Pendiente'::text AND pf.deleted_at IS NULL AND f.metodo_pago = 'PPD'::text;
+
+-- N21: la condición redundante anulaba el OR y dejaba vivos los movimientos
+-- bancarios conciliados contra el pago eliminado.
 CREATE OR REPLACE FUNCTION public.eliminar_pago_proveedor(_pago_id uuid, _motivo text DEFAULT NULL::text)
  RETURNS jsonb
  LANGUAGE plpgsql

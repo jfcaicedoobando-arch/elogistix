@@ -86,10 +86,23 @@ function conFechaSolicitada<T extends Record<string, unknown>>(
 
 
 /**
+ * Ola E1 · N23: `2023-02-31` pasaba el regex y `new Date()` la corría a marzo,
+ * devolviendo el T/C de otro día como si fuera el pedido. Aquí validamos el
+ * round-trip del día civil.
+ */
+export function esFechaCivilValida(raw: string): boolean {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(raw)) return false;
+  const [y, m, d] = raw.split("-").map(Number);
+  if (m < 1 || m > 12 || d < 1 || d > 31) return false;
+  const dt = new Date(Date.UTC(y, m - 1, d, 12, 0, 0));
+  return dt.getUTCFullYear() === y && dt.getUTCMonth() === m - 1 && dt.getUTCDate() === d;
+}
+
+/**
  * Extrae la fecha objetivo: query string (`?fecha=YYYY-MM-DD`) y como fallback
  * el body JSON `{ fecha }` (para `supabase.functions.invoke`).
  */
-export async function resolverFecha(req: Request): Promise<{ fecha: Date; esHoy: boolean; key: string; fechaIso: string; fechaSolicitada: string | null }> {
+export async function resolverFecha(req: Request): Promise<{ fecha: Date; esHoy: boolean; key: string; fechaIso: string; fechaSolicitada: string | null; invalida: boolean }> {
   const hoy = new Date();
   // FIX-12 · `toISOString()` da el día en UTC — a las 19:00 CDMX ya es "mañana".
   const hoyIso = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Mexico_City" }).format(hoy);
@@ -101,18 +114,22 @@ export async function resolverFecha(req: Request): Promise<{ fecha: Date; esHoy:
       if (body && typeof body.fecha === "string") raw = body.fecha;
     } catch { /* body no era JSON o vacío */ }
   }
+  // N23: fecha capturada pero imposible (o mal formada) => 400, no silencio.
+  if (raw && !esFechaCivilValida(raw)) {
+    return { fecha: hoy, esHoy: true, key: "hoy", fechaIso: hoyIso, fechaSolicitada: null, invalida: true };
+  }
   // BL-16: la fecha pedida se conserva SIEMPRE en la respuesta. Antes, pedir
   // una fecha futura devolvía el TC de hoy sin decir que se sustituyó.
-  const solicitada = /^\d{4}-\d{2}-\d{2}$/.test(raw) ? raw : null;
-  if (!raw || !/^\d{4}-\d{2}-\d{2}$/.test(raw) || raw >= hoyIso) {
+  const solicitada = raw || null;
+  if (!raw || raw >= hoyIso) {
     // N14 (Ola 4): fechaIso es SIEMPRE el día civil MX — única llave válida
     // para tipos_cambio_dof y coherente con el corte de la Publicación DOF.
-    return { fecha: hoy, esHoy: true, key: "hoy", fechaIso: hoyIso, fechaSolicitada: solicitada };
+    return { fecha: hoy, esHoy: true, key: "hoy", fechaIso: hoyIso, fechaSolicitada: solicitada, invalida: false };
   }
   const d = new Date(raw + "T12:00:00Z");
-  if (Number.isNaN(d.getTime())) return { fecha: hoy, esHoy: true, key: "hoy", fechaIso: hoyIso, fechaSolicitada: solicitada };
-  return { fecha: d, esHoy: false, key: raw, fechaIso: raw, fechaSolicitada: raw };
+  return { fecha: d, esHoy: false, key: raw, fechaIso: raw, fechaSolicitada: raw, invalida: false };
 }
+
 
 
 /**
@@ -215,8 +232,16 @@ async function manejarExchangeRates(req: Request): Promise<Response> {
   if (preflight) return preflight;
 
   const log = createLogger(req, "exchange-rates");
-  const { fecha, esHoy, key, fechaIso, fechaSolicitada } = await resolverFecha(req);
+  const { fecha, esHoy, key, fechaIso, fechaSolicitada, invalida } = await resolverFecha(req);
+  if (invalida) {
+    log.finish(400, "fecha_invalida");
+    return jsonResponse(
+      { error: "fecha_invalida", mensaje: "La fecha debe existir y venir en formato AAAA-MM-DD." },
+      400,
+    );
+  }
   const sellar = <T extends Record<string, unknown>>(r: T) => conFechaSolicitada(r, fechaSolicitada);
+
 
   const enCache = buscarEnCache(esHoy, key);
   if (enCache) {
