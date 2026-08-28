@@ -1,4 +1,9 @@
-CREATE OR REPLACE FUNCTION public._cxp_validar_aprobacion(p_factura_id uuid)
+-- Fuente canónica de public._cxp_validar_aprobacion(uuid, text).
+-- 1:1 con supabase/migrations/20260827224436_426fa39b-ab98-40b6-b31d-89ce1b2b660f.sql
+-- (Ola 4 · H2 three-way match: exige justificación y respeta el umbral por organización).
+-- Al modificar: edita ESTE archivo y genera la migración con el mismo cuerpo.
+
+CREATE OR REPLACE FUNCTION public._cxp_validar_aprobacion(p_factura_id uuid, p_justificacion text DEFAULT NULL)
  RETURNS void
  LANGUAGE plpgsql
  SECURITY DEFINER
@@ -18,6 +23,8 @@ DECLARE
   v_suma_vinculada numeric(18,4);
   v_comprometido numeric(18,4);
   v_sobrecosto numeric(18,4);
+  v_total_mxn numeric(18,4);
+  v_umbral numeric;
 BEGIN
   SELECT * INTO v_row FROM public.proveedor_facturas WHERE id = p_factura_id;
   IF v_row.id IS NULL OR v_row.deleted_at IS NOT NULL THEN
@@ -90,6 +97,33 @@ BEGIN
     END IF;
   END IF;
 
+  -- Ola 4 (H2): three-way match mínimo. Sin embarque ni un solo concepto ligado
+  -- a costo acordado no hay nada contra qué contrastar: se exige justificación
+  -- escrita y, por arriba del umbral de la organización, se rechaza.
+  IF v_row.embarque_id IS NULL
+     AND NOT EXISTS (
+       SELECT 1 FROM public.proveedor_facturas_conceptos
+        WHERE proveedor_factura_id = p_factura_id
+          AND concepto_costo_id IS NOT NULL
+     )
+  THEN
+    v_total_mxn := COALESCE(v_row.total,0) * CASE
+      WHEN v_row.moneda = 'MXN'::public.moneda THEN 1
+      ELSE COALESCE(NULLIF(v_row.tipo_cambio_usd,0), 1)
+    END;
+    v_umbral := public.cxp_umbral_sin_vinculo(v_row.organization_id);
+
+    IF v_total_mxn > v_umbral THEN
+      RAISE EXCEPTION 'LC_CXP_SIN_RESPALDO_MONTO: La factura por % MXN no está ligada a un embarque ni a costos acordados y excede el umbral autorizado (%). Vincúlala al embarque o a sus conceptos de costo antes de aprobar.',
+        to_char(v_total_mxn, 'FM999,999,999,990.00'),
+        to_char(v_umbral,    'FM999,999,999,990.00');
+    END IF;
+
+    IF length(COALESCE(btrim(p_justificacion), '')) < 10 THEN
+      RAISE EXCEPTION 'LC_CXP_SIN_RESPALDO: Esta factura no está ligada a un embarque ni a costos acordados. Escribe la justificación del gasto (mínimo 10 caracteres) para aprobarla.';
+    END IF;
+  END IF;
+
   IF v_row.embarque_id IS NOT NULL THEN
     SELECT estado, organization_id INTO v_emb_estado, v_emb_org
       FROM public.embarques WHERE id = v_row.embarque_id;
@@ -115,6 +149,5 @@ BEGIN
 END;
 $function$;
 
-REVOKE ALL ON FUNCTION public._cxp_validar_aprobacion(uuid) FROM PUBLIC;
-REVOKE ALL ON FUNCTION public._cxp_validar_aprobacion(uuid) FROM anon;
-GRANT EXECUTE ON FUNCTION public._cxp_validar_aprobacion(uuid) TO authenticated, service_role;
+REVOKE ALL ON FUNCTION public._cxp_validar_aprobacion(uuid, text) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public._cxp_validar_aprobacion(uuid, text) TO authenticated, service_role;
