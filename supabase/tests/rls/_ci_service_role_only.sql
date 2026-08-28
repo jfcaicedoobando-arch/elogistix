@@ -49,13 +49,18 @@ INSERT INTO _ci_service_role_only (fn) VALUES
   ('public.assert_pago_sin_rep_vivo_delete()'),
   ('public.calc_pago_retenciones()'),
   ('public.calcular_comision_pago()'),
+  ('public.cierre_periodo_fecha(uuid)'),
   ('public.comision_embarques_de_factura(uuid)'),
   ('public.crm_backfill_cotizaciones_sin_oportunidad()'),
   ('public.cron_try_lock(text, integer, text)'),
   ('public.cron_unlock(text)'),
+  ('public.dashboard_details_datos()'),
+  ('public.dashboard_summary_datos()'),
   ('public.delete_email(text, bigint)'),
   ('public.email_send_log_touch(text, text, text, text, text)'),
   ('public.enqueue_email(text, jsonb)'),
+  ('public.ensure_demo_membership(uuid)'),
+
   -- Función trigger de auth.users: la ejecuta el trigger, nunca un cliente.
   ('public.handle_new_user_signup()'),
   ('public.marcar_facturas_vencidas()'),
