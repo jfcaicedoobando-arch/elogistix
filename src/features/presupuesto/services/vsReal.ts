@@ -138,6 +138,10 @@ function mapNcsCxP(data: unknown[]): NcCxPRow[] {
       tipo_cambio_usd: (r.tipo_cambio as number | string | null)
         ?? (pf.tipo_cambio_usd as number | string | null)
         ?? null,
+      // N9 (backlog v4): la paridad heredada de la factura padre es MXN/USD;
+      // sólo la propia de la NC corresponde a SU divisa.
+      paridad_propia: r.tipo_cambio != null,
+
 
     };
   });
