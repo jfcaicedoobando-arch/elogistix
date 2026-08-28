@@ -1,5 +1,18 @@
 # Changelog
 
+## [13.785.0] - 2026-08-28
+### Infraestructura
+- **CI · Deno 2**: los jobs `edge-functions` (`ci.yml`) y `user-management-smoke` (`post-deploy-smoke.yml`) pasan de `deno-version: v1.46.x` a `v2.6.x`. Las Edge Functions ya corren sobre Deno 2 en el backend, así que probábamos con un motor distinto al de producción (misma divergencia que Postgres 15 vs 17). Se añadió `--node-modules-dir=none` a los dos `deno test`: con Deno 2 y un `package.json` en la raíz, Deno intentaba resolver los `npm:` de las edges contra el `node_modules` de la app. Validado en local con Deno 2.6.10: **545 tests verdes, 0 fallos**.
+- **CI · acciones de GitHub actualizadas** (todas ancladas por SHA):
+  - `actions/checkout` v6.1.0 → **v7.0.1**
+  - `actions/cache` v5.1.0 (y v5.0.5 en la composite `setup-bun`) → **v6.1.0** unificada en los 11 usos
+  - `actions/github-script` v8.0.0 → **v9.0.0** (verificado que ningún script usa `require('@actions/github')` ni redeclara `getOctokit`, los dos cambios incompatibles)
+  - `dorny/paths-filter` v3.0.4 → **v4.0.3**
+  - `actions/dependency-review-action` v4.9.0 → **v5.0.0** (runtime node24)
+  - `rhysd/actionlint` (binario con verificación de checksum) 1.7.7 → **1.7.12**
+- **Sin cambios deliberados**: `runs-on: ubuntu-24.04` sigue anclado, Bun se queda en 1.3.3 (no corrige ninguna divergencia con producción) y ya estaban al día `setup-bun` v2.2.0, `setup-deno` v2.0.5, `gitleaks-action` v3.0.0, `upload-artifact` v7.0.1, `download-artifact` v8.0.1 y `codeql-action` v4.37.9.
+- Verificación: `actionlint` verde sobre los 8 workflows.
+
 ## [13.784.0] - 2026-08-28
 ### Infraestructura
 - **CI · PostgreSQL 17**: el pipeline de base de datos ahora se valida contra Postgres **17.9** (mismo tren mayor que la base real, que corre 17.6) en lugar de 15.8. Se actualizó el digest pinneado en los 7 servicios de `.github/workflows/rls-tests.yml` y en `scripts/db/local-verify.sh`, y se invalidó la cache del snapshot (`rls-snapshot-pg17.9-…`). Antes revisábamos los planos con una regla distinta a la de la obra: ahora CI y producción usan la misma.
