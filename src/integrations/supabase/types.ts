@@ -10525,8 +10525,11 @@ export type Database = {
         Returns: {
           cliente_id: string
           cliente_nombre: string
+          costo_mxn: number
           costo_usd: number
+          embarques_sin_tc: number
           total_embarques: number
+          venta_mxn: number
           venta_usd: number
         }[]
       }
