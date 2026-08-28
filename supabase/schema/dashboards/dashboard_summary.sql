@@ -3,7 +3,7 @@
 -- FIX BL-11: fallback EUR → tipos_cambio_dof cuando no hay TC de embarque.
 -- Al modificar: edita ESTE archivo y genera la migración con el mismo cuerpo.
 
-CREATE OR REPLACE FUNCTION public.dashboard_summary()
+CREATE OR REPLACE FUNCTION public.dashboard_summary_datos()
  RETURNS jsonb
  LANGUAGE plpgsql
  STABLE SECURITY DEFINER
@@ -152,5 +152,7 @@ BEGIN
 END;
 $function$;
 
-REVOKE ALL ON FUNCTION public.dashboard_summary() FROM PUBLIC, anon;
-GRANT EXECUTE ON FUNCTION public.dashboard_summary() TO authenticated, service_role;
+-- Ola 5 (C9): el cuerpo es interno; la RPC pública `dashboard_summary()` lo envuelve
+-- y enmascara costos/utilidad según el rol (ver dashboard_rpc_costos.sql).
+REVOKE ALL ON FUNCTION public.dashboard_summary_datos() FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.dashboard_summary_datos() TO service_role;
