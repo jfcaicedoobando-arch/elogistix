@@ -3146,6 +3146,57 @@ BEGIN
   RETURN NULL;
 END;
 $$;
+CREATE FUNCTION public._validar_cronologia_evento_embarque() RETURNS trigger
+    LANGUAGE plpgsql
+    SET search_path TO 'public'
+    AS $$
+DECLARE
+  v_zarpe timestamptz;
+  v_arribo timestamptz;
+  v_reales text[] := ARRAY[
+    'Zarpe','Arribo a Puerto','Descarga','Despacho Aduanal','Liberación','Entrega'
+  ];
+BEGIN
+  IF NEW.deleted_at IS NOT NULL THEN
+    RETURN NEW;
+  END IF;
+
+  IF NEW.tipo::text = ANY (v_reales) AND NEW.fecha > now() + interval '1 day' THEN
+    RAISE EXCEPTION 'LC_EVENTO_FECHA_FUTURA: el evento "%" no puede registrarse con fecha futura.', NEW.tipo
+      USING ERRCODE = 'check_violation';
+  END IF;
+
+  SELECT min(e.fecha) INTO v_zarpe
+  FROM public.eventos_embarque e
+  WHERE e.embarque_id = NEW.embarque_id
+    AND e.deleted_at IS NULL
+    AND e.id <> NEW.id
+    AND e.tipo = 'Zarpe';
+
+  IF v_zarpe IS NOT NULL
+     AND NEW.tipo::text IN ('Arribo a Puerto','Descarga','Despacho Aduanal','Liberación','Entrega')
+     AND NEW.fecha < v_zarpe THEN
+    RAISE EXCEPTION 'LC_EVENTO_ORDEN_INVALIDO: "%" no puede ser anterior al zarpe (%).', NEW.tipo, v_zarpe
+      USING ERRCODE = 'check_violation';
+  END IF;
+
+  IF NEW.tipo::text = 'Entrega' THEN
+    SELECT min(e.fecha) INTO v_arribo
+    FROM public.eventos_embarque e
+    WHERE e.embarque_id = NEW.embarque_id
+      AND e.deleted_at IS NULL
+      AND e.id <> NEW.id
+      AND e.tipo = 'Arribo a Puerto';
+
+    IF v_arribo IS NOT NULL AND NEW.fecha < v_arribo THEN
+      RAISE EXCEPTION 'LC_EVENTO_ORDEN_INVALIDO: la entrega no puede ser anterior al arribo (%).', v_arribo
+        USING ERRCODE = 'check_violation';
+    END IF;
+  END IF;
+
+  RETURN NEW;
+END;
+$$;
 CREATE FUNCTION public.a_mxn(p_monto numeric, p_moneda text, p_usd_mxn numeric, p_eur_mxn numeric) RETURNS numeric
     LANGUAGE sql IMMUTABLE
     SET search_path TO 'public'
@@ -26995,6 +27046,8 @@ CREATE TRIGGER trg_calc_fecha_limite_devolucion BEFORE INSERT OR UPDATE OF fecha
 CREATE TRIGGER trg_catalogo_claves_sat_updated_at BEFORE UPDATE ON public.catalogo_claves_sat FOR EACH ROW EXECUTE FUNCTION public.tg_catalogo_claves_sat_updated_at();
 CREATE TRIGGER trg_cerrar_entrantes_por_uuid AFTER INSERT OR UPDATE OF uuid_fiscal, deleted_at ON public.proveedor_facturas FOR EACH ROW EXECUTE FUNCTION public._cerrar_entrantes_por_uuid();
 CREATE TRIGGER trg_cliente_documentos_updated_at BEFORE UPDATE ON public.cliente_documentos FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+CREATE TRIGGER trg_clientes_email_unico BEFORE INSERT OR UPDATE OF email ON public.clientes FOR EACH ROW EXECUTE FUNCTION public._assert_email_unico_org();
+CREATE TRIGGER trg_clientes_normalizar_email BEFORE INSERT OR UPDATE OF email ON public.clientes FOR EACH ROW EXECUTE FUNCTION public._normalizar_email();
 CREATE TRIGGER trg_clientes_nombre_mayusculas BEFORE INSERT OR UPDATE OF nombre ON public.clientes FOR EACH ROW EXECUTE FUNCTION public._normalizar_razon_social();
 CREATE TRIGGER trg_clientes_normaliza_campos BEFORE INSERT OR UPDATE OF nombre, email, rfc ON public.clientes FOR EACH ROW EXECUTE FUNCTION public.trg_clientes_normaliza_campos();
 CREATE TRIGGER trg_clientes_propaga_nombre AFTER UPDATE OF nombre ON public.clientes FOR EACH ROW EXECUTE FUNCTION public.trg_clientes_propaga_nombre();
@@ -27019,6 +27072,8 @@ CREATE TRIGGER trg_costeo_tarifas_agente_force_borrador BEFORE INSERT OR UPDATE 
 CREATE TRIGGER trg_costeo_tarifas_estado_derivado BEFORE INSERT OR UPDATE OF estado, vigente_desde, vigente_hasta ON public.costeo_tarifas FOR EACH ROW EXECUTE FUNCTION public.trg_costeo_tarifas_estado_derivado();
 CREATE TRIGGER trg_costeo_tarifas_marcar_reemplazadas AFTER INSERT OR UPDATE OF estado, estado_aprobacion ON public.costeo_tarifas FOR EACH ROW EXECUTE FUNCTION public.costeo_tarifas_marcar_reemplazadas();
 CREATE TRIGGER trg_costeo_tarifas_updated BEFORE UPDATE ON public.costeo_tarifas FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+CREATE TRIGGER trg_contactos_cliente_email_unico BEFORE INSERT OR UPDATE OF email ON public.contactos_cliente FOR EACH ROW EXECUTE FUNCTION public._assert_email_unico_org();
+CREATE TRIGGER trg_contactos_cliente_normalizar_email BEFORE INSERT OR UPDATE OF email ON public.contactos_cliente FOR EACH ROW EXECUTE FUNCTION public._normalizar_email();
 CREATE TRIGGER trg_cotizacion_acepta_oportunidad AFTER INSERT OR UPDATE OF estado ON public.cotizaciones FOR EACH ROW EXECUTE FUNCTION public.crm_marcar_oportunidad_ganada();
 CREATE TRIGGER trg_cotizacion_cierra_oportunidad AFTER INSERT OR UPDATE OF estado, embarque_id ON public.cotizaciones FOR EACH ROW EXECUTE FUNCTION public.crm_cierra_oportunidad_desde_cotizacion();
 CREATE TRIGGER trg_cotizacion_plantillas_updated_at BEFORE UPDATE ON public.cotizacion_plantillas FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
@@ -27065,6 +27120,7 @@ CREATE TRIGGER trg_enforce_cotizacion_obligatoria BEFORE INSERT ON public.embarq
 CREATE TRIGGER trg_enforce_proforma_aceptada BEFORE UPDATE ON public.proformas FOR EACH ROW EXECUTE FUNCTION public.enforce_proforma_aceptada_before_factura();
 CREATE TRIGGER trg_entrante_meta_no_verificada BEFORE INSERT OR UPDATE ON public.embarque_facturas_entrantes FOR EACH ROW EXECUTE FUNCTION public._entrante_meta_cliente_no_verificada();
 CREATE TRIGGER trg_entrantes_promover_por_liquidar AFTER INSERT OR UPDATE ON public.embarque_facturas_entrantes FOR EACH ROW EXECUTE FUNCTION public._trg_promover_por_liquidar();
+CREATE TRIGGER trg_eventos_embarque_cronologia BEFORE INSERT OR UPDATE OF fecha, tipo ON public.eventos_embarque FOR EACH ROW EXECUTE FUNCTION public._validar_cronologia_evento_embarque();
 CREATE TRIGGER trg_factura_cancelada_comisiones AFTER UPDATE OF estado ON public.facturas FOR EACH ROW EXECUTE FUNCTION public.tg_factura_cancelada_comisiones();
 CREATE TRIGGER trg_factura_tc_extranjera_obligatorio BEFORE INSERT ON public.facturas FOR EACH ROW EXECUTE FUNCTION public.trg_factura_tc_extranjera_obligatorio();
 CREATE TRIGGER trg_facturapi_credenciales_updated_at BEFORE UPDATE ON public.facturapi_credenciales FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
@@ -28308,6 +28364,9 @@ GRANT USAGE ON SCHEMA public TO authenticated;
 GRANT USAGE ON SCHEMA public TO service_role;
 REVOKE ALL ON FUNCTION public._assert_concepto_no_proformado() FROM PUBLIC;
 GRANT ALL ON FUNCTION public._assert_concepto_no_proformado() TO service_role;
+REVOKE ALL ON FUNCTION public._assert_email_unico_org() FROM PUBLIC;
+GRANT ALL ON FUNCTION public._assert_email_unico_org() TO authenticated;
+GRANT ALL ON FUNCTION public._assert_email_unico_org() TO service_role;
 REVOKE ALL ON FUNCTION public._assert_facturapi_admin(p_org_id uuid) FROM PUBLIC;
 GRANT ALL ON FUNCTION public._assert_facturapi_admin(p_org_id uuid) TO authenticated;
 GRANT ALL ON FUNCTION public._assert_facturapi_admin(p_org_id uuid) TO service_role;
@@ -28485,6 +28544,9 @@ GRANT ALL ON FUNCTION public._trg_promover_por_liquidar() TO service_role;
 REVOKE ALL ON FUNCTION public._trg_promover_por_liquidar_pfc() FROM PUBLIC;
 GRANT ALL ON FUNCTION public._trg_promover_por_liquidar_pfc() TO authenticated;
 GRANT ALL ON FUNCTION public._trg_promover_por_liquidar_pfc() TO service_role;
+REVOKE ALL ON FUNCTION public._validar_cronologia_evento_embarque() FROM PUBLIC;
+GRANT ALL ON FUNCTION public._validar_cronologia_evento_embarque() TO authenticated;
+GRANT ALL ON FUNCTION public._validar_cronologia_evento_embarque() TO service_role;
 REVOKE ALL ON FUNCTION public.a_mxn(p_monto numeric, p_moneda text, p_usd_mxn numeric, p_eur_mxn numeric) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.a_mxn(p_monto numeric, p_moneda text, p_usd_mxn numeric, p_eur_mxn numeric) TO authenticated;
 GRANT ALL ON FUNCTION public.a_mxn(p_monto numeric, p_moneda text, p_usd_mxn numeric, p_eur_mxn numeric) TO service_role;
