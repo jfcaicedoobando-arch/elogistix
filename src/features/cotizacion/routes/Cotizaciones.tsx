@@ -7,6 +7,7 @@ import { CotizacionesKpis } from "@/features/cotizacion/components/CotizacionesK
 import { Card, CardContent } from "@/components/ui/card";
 import { ResponsiveDataTable } from "@/components/shared/dataTable/ResponsiveDataTable";
 import { CotizacionMobileCard } from "@/features/cotizacion/components/CotizacionMobileCard";
+import { subtotalesDeFila } from "@/features/cotizacion/components/columnsParts/subtotalCell";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { Seo } from "@/components/shared/Seo";
@@ -144,8 +145,7 @@ export default function Cotizaciones() {
                 clienteNombre={(r.es_prospecto ? r.prospecto_empresa : r.cliente_nombre) ?? null}
                 createdAt={r.created_at ?? null}
                 estado={r.estado}
-                subtotal={typeof r.subtotal === "number" ? r.subtotal : null}
-                moneda={r.moneda ?? null}
+                subtotales={subtotalesDeFila(r)}
                 esProspecto={r.es_prospecto === true}
               />
             )}
