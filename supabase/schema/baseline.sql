@@ -1,6 +1,5 @@
 CREATE SCHEMA public;
 CREATE COLLATION public.lc_unicode_upper (provider = icu, locale = 'und');
-
 CREATE TYPE public.ambiente_facturapi AS ENUM (
     'sandbox',
     'live'
@@ -1186,6 +1185,47 @@ BEGIN
   )
   INTO v_result;
   RETURN v_result;
+END;
+$$;
+CREATE FUNCTION public._bbva_guard_update() RETURNS trigger
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+DECLARE
+  v_interno boolean := public._es_rol_interno();
+BEGIN
+  -- Inmutabilidad de los datos financieros del movimiento importado/capturado.
+  IF NOT v_interno THEN
+    IF NEW.cargo IS DISTINCT FROM OLD.cargo
+       OR NEW.abono IS DISTINCT FROM OLD.abono
+       OR NEW.saldo IS DISTINCT FROM OLD.saldo
+       OR NEW.fecha IS DISTINCT FROM OLD.fecha
+       OR NEW.cuenta_bancaria_id IS DISTINCT FROM OLD.cuenta_bancaria_id
+       OR NEW.organization_id IS DISTINCT FROM OLD.organization_id THEN
+      RAISE EXCEPTION 'LC_MOVIMIENTO_INMUTABLE: los importes, la fecha y la cuenta de un movimiento bancario no se pueden modificar; cancela el movimiento y captúralo de nuevo'
+        USING ERRCODE = 'P0001';
+    END IF;
+  END IF;
+  -- Máquina de estados de conciliación (aplica a todos los flujos).
+  IF NEW.estado_conciliacion IS DISTINCT FROM OLD.estado_conciliacion THEN
+    IF NOT (
+      (OLD.estado_conciliacion = 'Pendiente'  AND NEW.estado_conciliacion IN ('Conciliado','Ignorado'))
+      OR (OLD.estado_conciliacion = 'Conciliado' AND NEW.estado_conciliacion = 'Pendiente')
+      OR (OLD.estado_conciliacion = 'Ignorado'   AND NEW.estado_conciliacion = 'Pendiente')
+    ) THEN
+      RAISE EXCEPTION 'LC_MOVIMIENTO_TRANSICION_INVALIDA: no se permite pasar de % a %; regresa el movimiento a Pendiente primero',
+        OLD.estado_conciliacion, NEW.estado_conciliacion
+        USING ERRCODE = 'P0001';
+    END IF;
+    IF NEW.estado_conciliacion = 'Conciliado' AND NEW.conciliado_at IS NULL THEN
+      NEW.conciliado_at := now();
+    END IF;
+    IF NEW.estado_conciliacion = 'Pendiente' THEN
+      NEW.conciliado_at := NULL;
+      NEW.conciliado_por := NULL;
+    END IF;
+  END IF;
+  RETURN NEW;
 END;
 $$;
 CREATE FUNCTION public._bitacora_facturas_estado() RETURNS trigger
@@ -2625,6 +2665,12 @@ BEGIN
   RETURN NEW;
 END;
 $$;
+CREATE FUNCTION public._es_rol_interno() RETURNS boolean
+    LANGUAGE sql STABLE
+    SET search_path TO 'public'
+    AS $$
+  SELECT current_user IN ('postgres', 'service_role', 'supabase_admin');
+$$;
 CREATE FUNCTION public._factura_tc_dof_obligatorio() RETURNS trigger
     LANGUAGE plpgsql
     SET search_path TO 'public'
@@ -2773,6 +2819,26 @@ BEGIN
     v_new := v_new || jsonb_build_object('deleted_by', v_uid);
   END IF;
   NEW := jsonb_populate_record(NEW, v_new);
+  RETURN NEW;
+END;
+$$;
+CREATE FUNCTION public._liquidacion_guard_estado() RETURNS trigger
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+BEGIN
+  IF NEW.estado IS DISTINCT FROM OLD.estado THEN
+    IF NOT (
+      (OLD.estado = 'Generada' AND NEW.estado IN ('Pagada','Cancelada'))
+      OR (OLD.estado = 'Pagada' AND NEW.estado = 'Cancelada')
+    ) THEN
+      RAISE EXCEPTION 'LC_LIQUIDACION_TRANSICION_INVALIDA: no se permite pasar la liquidación de % a %', OLD.estado, NEW.estado
+        USING ERRCODE = 'P0001';
+    END IF;
+  ELSIF OLD.estado = 'Cancelada' AND NEW.deleted_at IS NOT DISTINCT FROM OLD.deleted_at THEN
+    RAISE EXCEPTION 'LC_LIQUIDACION_CANCELADA_INMUTABLE: una liquidación cancelada no se puede modificar'
+      USING ERRCODE = 'P0001';
+  END IF;
   RETURN NEW;
 END;
 $$;
@@ -3009,6 +3075,15 @@ BEGIN
     NEW.uuid_fiscal := NULLIF(upper(btrim(NEW.uuid_fiscal)), '');
   END IF;
   RETURN NEW;
+END;
+$$;
+CREATE FUNCTION public._prohibir_delete_comisiones() RETURNS trigger
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+BEGIN
+  RAISE EXCEPTION 'LC_COMISION_DELETE_PROHIBIDO: las comisiones y liquidaciones no se borran; usa la cancelación oficial'
+    USING ERRCODE = 'P0001';
 END;
 $$;
 CREATE FUNCTION public._prohibir_delete_factura() RETURNS trigger
@@ -7101,7 +7176,8 @@ CREATE TABLE public.liquidaciones_comision (
     cancelada_at timestamp with time zone,
     cancelada_por uuid,
     motivo_cancelacion text,
-    CONSTRAINT liquidaciones_comision_estado_chk CHECK ((estado = ANY (ARRAY['Generada'::text, 'Pagada'::text, 'Cancelada'::text])))
+    CONSTRAINT liquidaciones_comision_estado_chk CHECK ((estado = ANY (ARRAY['Generada'::text, 'Pagada'::text, 'Cancelada'::text]))),
+    CONSTRAINT liquidaciones_comision_total_chk CHECK ((total_mxn >= (0)::numeric))
 );
 CREATE FUNCTION public.cancelar_liquidacion_comision(p_liquidacion_id uuid, p_motivo text) RETURNS public.liquidaciones_comision
     LANGUAGE plpgsql SECURITY DEFINER
@@ -25811,7 +25887,8 @@ CREATE TABLE public.comisiones_devengadas (
     pnl_base numeric,
     calculo_snapshot jsonb,
     deleted_at timestamp with time zone,
-    deleted_by uuid
+    deleted_by uuid,
+    CONSTRAINT comisiones_devengadas_montos_chk CHECK (((comision_mxn >= (0)::numeric) AND ((porcentaje_aplicado IS NULL) OR ((porcentaje_aplicado >= (0)::numeric) AND (porcentaje_aplicado <= (100)::numeric)))))
 );
 CREATE TABLE public.comisiones_excepciones (
     id uuid DEFAULT gen_random_uuid() NOT NULL,
@@ -28118,6 +28195,7 @@ CREATE TRIGGER set_updated_at_proveedor_documentos BEFORE UPDATE ON public.prove
 CREATE TRIGGER trg_agentes_propaga_nombre AFTER UPDATE OF nombre ON public.costeo_agentes FOR EACH ROW EXECUTE FUNCTION public.trg_agentes_propaga_nombre();
 CREATE TRIGGER trg_anticipo_saldo AFTER INSERT OR DELETE OR UPDATE ON public.anticipos_aplicaciones FOR EACH ROW EXECUTE FUNCTION public.tg_anticipo_saldo();
 CREATE TRIGGER trg_auditoria_revisiones_updated_at BEFORE UPDATE ON public.auditoria_revisiones FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+CREATE TRIGGER trg_bbva_guard_update BEFORE UPDATE ON public.bbva_movimientos FOR EACH ROW EXECUTE FUNCTION public._bbva_guard_update();
 CREATE TRIGGER trg_bitacora_facturas_estado AFTER UPDATE OF estado ON public.facturas FOR EACH ROW EXECUTE FUNCTION public._bitacora_facturas_estado();
 CREATE TRIGGER trg_bitacora_normalizar_modulo BEFORE INSERT OR UPDATE OF modulo ON public.bitacora_actividad FOR EACH ROW EXECUTE FUNCTION public._bitacora_normalizar_modulo();
 CREATE TRIGGER trg_bloquear_cierre BEFORE INSERT OR DELETE OR UPDATE ON public.conceptos_costo FOR EACH ROW EXECUTE FUNCTION public.tg_bloquear_si_embarque_cerrado();
@@ -28269,6 +28347,7 @@ CREATE TRIGGER trg_guard_sustitucion_ciclo BEFORE INSERT OR UPDATE OF sustituye_
 CREATE TRIGGER trg_handle_new_organization AFTER INSERT ON public.organizations FOR EACH ROW EXECUTE FUNCTION public.handle_new_organization();
 CREATE TRIGGER trg_liberar_folio_proveedor_factura AFTER UPDATE OF deleted_at ON public.proveedor_facturas FOR EACH ROW WHEN ((old.deleted_at IS DISTINCT FROM new.deleted_at)) EXECUTE FUNCTION public.tg_liberar_folio_proveedor_factura();
 CREATE TRIGGER trg_liq_com_updated BEFORE UPDATE ON public.liquidaciones_comision FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+CREATE TRIGGER trg_liquidacion_guard_estado BEFORE UPDATE ON public.liquidaciones_comision FOR EACH ROW EXECUTE FUNCTION public._liquidacion_guard_estado();
 CREATE TRIGGER trg_log_role_change_om AFTER UPDATE OF role ON public.organization_members FOR EACH ROW EXECUTE FUNCTION public._log_role_change_om();
 CREATE TRIGGER trg_log_role_change_ur AFTER UPDATE OF role ON public.user_roles FOR EACH ROW EXECUTE FUNCTION public._log_role_change_ur();
 CREATE TRIGGER trg_movimiento_pago_consistente BEFORE INSERT OR UPDATE OF pago_factura_id, pago_proveedor_id, cuenta_bancaria_id, organization_id, anticipo_proveedor_id, pago_proveedor_lote_id, pago_factura_lote_id, traspaso_id, cargo, abono ON public.bbva_movimientos FOR EACH ROW EXECUTE FUNCTION public.assert_movimiento_pago_consistente();
@@ -28287,6 +28366,7 @@ CREATE TRIGGER trg_notif_cli_embarque_estado AFTER UPDATE OF estado ON public.em
 CREATE TRIGGER trg_notificar_asignacion_hallazgo AFTER INSERT OR UPDATE OF responsable_id ON public.auditoria_revisiones FOR EACH ROW EXECUTE FUNCTION public.notificar_asignacion_hallazgo();
 CREATE TRIGGER trg_org_anticipos_embarque_id BEFORE INSERT OR UPDATE OF embarque_id, organization_id ON public.anticipos_proveedor FOR EACH ROW EXECUTE FUNCTION public._assert_padre_misma_org('embarque_id', 'embarques');
 CREATE TRIGGER trg_org_anticipos_proveedor_id BEFORE INSERT OR UPDATE OF proveedor_id, organization_id ON public.anticipos_proveedor FOR EACH ROW EXECUTE FUNCTION public._assert_padre_misma_org('proveedor_id', 'proveedores');
+CREATE TRIGGER trg_org_bbva_cuenta_bancaria_id BEFORE INSERT OR UPDATE OF cuenta_bancaria_id, organization_id ON public.bbva_movimientos FOR EACH ROW EXECUTE FUNCTION public._assert_padre_misma_org('cuenta_bancaria_id', 'cuentas_bancarias');
 CREATE TRIGGER trg_org_conceptos_costo_contenedor_id BEFORE INSERT OR UPDATE OF contenedor_id, organization_id ON public.conceptos_costo FOR EACH ROW EXECUTE FUNCTION public._assert_padre_misma_org('contenedor_id', 'embarque_contenedores');
 CREATE TRIGGER trg_org_conceptos_costo_embarque_id BEFORE INSERT OR UPDATE OF embarque_id, organization_id ON public.conceptos_costo FOR EACH ROW EXECUTE FUNCTION public._assert_padre_misma_org('embarque_id', 'embarques');
 CREATE TRIGGER trg_org_conceptos_costo_proveedor_id BEFORE INSERT OR UPDATE OF proveedor_id, organization_id ON public.conceptos_costo FOR EACH ROW EXECUTE FUNCTION public._assert_padre_misma_org('proveedor_id', 'proveedores');
@@ -28344,7 +28424,9 @@ CREATE TRIGGER trg_presupuesto_categorias_updated_at BEFORE UPDATE ON public.pre
 CREATE TRIGGER trg_presupuesto_mensual_updated_at BEFORE UPDATE ON public.presupuesto_mensual FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 CREATE TRIGGER trg_proforma_eur_no_soportada BEFORE UPDATE OF estado_proforma ON public.proformas FOR EACH ROW EXECUTE FUNCTION public.tg_proforma_eur_no_soportada();
 CREATE TRIGGER trg_proforma_no_soft_delete_facturada BEFORE UPDATE OF deleted_at ON public.proformas FOR EACH ROW EXECUTE FUNCTION public.enforce_proforma_no_soft_delete_facturada();
+CREATE TRIGGER trg_prohibir_delete_comisiones BEFORE DELETE ON public.comisiones_devengadas FOR EACH ROW EXECUTE FUNCTION public._prohibir_delete_comisiones();
 CREATE TRIGGER trg_prohibir_delete_factura BEFORE DELETE ON public.facturas FOR EACH ROW EXECUTE FUNCTION public._prohibir_delete_factura();
+CREATE TRIGGER trg_prohibir_delete_liquidaciones BEFORE DELETE ON public.liquidaciones_comision FOR EACH ROW EXECUTE FUNCTION public._prohibir_delete_comisiones();
 CREATE TRIGGER trg_proveedor_contacto_principal_unico BEFORE INSERT OR UPDATE OF es_principal, deleted_at ON public.proveedor_contactos FOR EACH ROW EXECUTE FUNCTION public._proveedor_contacto_principal_unico();
 CREATE TRIGGER trg_proveedor_contactos_updated_at BEFORE UPDATE ON public.proveedor_contactos FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 CREATE TRIGGER trg_proveedor_facturas_dedupe_folio BEFORE INSERT OR UPDATE OF organization_id, proveedor_id, folio_proveedor ON public.proveedor_facturas FOR EACH ROW EXECUTE FUNCTION public.proveedor_facturas_dedupe_folio();
@@ -28444,9 +28526,9 @@ ALTER TABLE ONLY public.auditoria_revisiones
 ALTER TABLE ONLY public.auditoria_revisiones
     ADD CONSTRAINT auditoria_revisiones_organization_id_fkey FOREIGN KEY (organization_id) REFERENCES public.organizations(id) ON DELETE RESTRICT;
 ALTER TABLE ONLY public.bbva_movimientos
-    ADD CONSTRAINT bbva_movimientos_anticipo_proveedor_id_fkey FOREIGN KEY (anticipo_proveedor_id) REFERENCES public.anticipos_proveedor(id) ON DELETE SET NULL;
+    ADD CONSTRAINT bbva_movimientos_anticipo_proveedor_id_fkey FOREIGN KEY (anticipo_proveedor_id) REFERENCES public.anticipos_proveedor(id) ON DELETE RESTRICT;
 ALTER TABLE ONLY public.bbva_movimientos
-    ADD CONSTRAINT bbva_movimientos_cuenta_bancaria_id_fkey FOREIGN KEY (cuenta_bancaria_id) REFERENCES public.cuentas_bancarias(id) ON DELETE CASCADE;
+    ADD CONSTRAINT bbva_movimientos_cuenta_bancaria_id_fkey FOREIGN KEY (cuenta_bancaria_id) REFERENCES public.cuentas_bancarias(id) ON DELETE RESTRICT;
 ALTER TABLE ONLY public.bbva_movimientos
     ADD CONSTRAINT bbva_movimientos_pago_factura_lote_id_fkey FOREIGN KEY (pago_factura_lote_id) REFERENCES public.pagos_factura_lote(id);
 ALTER TABLE ONLY public.bbva_movimientos
@@ -28478,9 +28560,9 @@ ALTER TABLE ONLY public.cobranza_seguimiento
 ALTER TABLE ONLY public.comisiones_devengadas
     ADD CONSTRAINT comisiones_devengadas_embarque_id_fkey FOREIGN KEY (embarque_id) REFERENCES public.embarques(id) ON DELETE SET NULL;
 ALTER TABLE ONLY public.comisiones_devengadas
-    ADD CONSTRAINT comisiones_devengadas_factura_id_fkey FOREIGN KEY (factura_id) REFERENCES public.facturas(id) ON DELETE CASCADE;
+    ADD CONSTRAINT comisiones_devengadas_factura_id_fkey FOREIGN KEY (factura_id) REFERENCES public.facturas(id) ON DELETE RESTRICT;
 ALTER TABLE ONLY public.comisiones_devengadas
-    ADD CONSTRAINT comisiones_devengadas_pago_factura_id_fkey FOREIGN KEY (pago_factura_id) REFERENCES public.pagos_factura(id) ON DELETE CASCADE;
+    ADD CONSTRAINT comisiones_devengadas_pago_factura_id_fkey FOREIGN KEY (pago_factura_id) REFERENCES public.pagos_factura(id) ON DELETE RESTRICT;
 ALTER TABLE ONLY public.comisiones_excepciones
     ADD CONSTRAINT comisiones_excepciones_cliente_id_fkey FOREIGN KEY (cliente_id) REFERENCES public.clientes(id) ON DELETE CASCADE;
 ALTER TABLE ONLY public.comisiones_excepciones
@@ -28668,7 +28750,7 @@ ALTER TABLE ONLY public.factura_embarques
 ALTER TABLE ONLY public.factura_envios
     ADD CONSTRAINT factura_envios_factura_id_fkey FOREIGN KEY (factura_id) REFERENCES public.facturas(id) ON DELETE CASCADE;
 ALTER TABLE ONLY public.factura_notas_credito
-    ADD CONSTRAINT factura_notas_credito_factura_id_fkey FOREIGN KEY (factura_id) REFERENCES public.facturas(id) ON DELETE CASCADE;
+    ADD CONSTRAINT factura_notas_credito_factura_id_fkey FOREIGN KEY (factura_id) REFERENCES public.facturas(id) ON DELETE RESTRICT;
 ALTER TABLE ONLY public.factura_notas_credito
     ADD CONSTRAINT factura_notas_credito_organization_id_fkey FOREIGN KEY (organization_id) REFERENCES public.organizations(id) ON DELETE CASCADE;
 ALTER TABLE ONLY public.factura_recordatorios
@@ -28704,7 +28786,7 @@ ALTER TABLE ONLY public.pagos_factura
 ALTER TABLE ONLY public.pagos_factura
     ADD CONSTRAINT pagos_factura_embarque_id_fkey FOREIGN KEY (embarque_id) REFERENCES public.embarques(id) ON DELETE SET NULL;
 ALTER TABLE ONLY public.pagos_factura
-    ADD CONSTRAINT pagos_factura_factura_id_fkey FOREIGN KEY (factura_id) REFERENCES public.facturas(id) ON DELETE CASCADE;
+    ADD CONSTRAINT pagos_factura_factura_id_fkey FOREIGN KEY (factura_id) REFERENCES public.facturas(id) ON DELETE RESTRICT;
 ALTER TABLE ONLY public.pagos_factura_lote
     ADD CONSTRAINT pagos_factura_lote_cliente_id_fkey FOREIGN KEY (cliente_id) REFERENCES public.clientes(id);
 ALTER TABLE ONLY public.pagos_factura_lote
@@ -29248,15 +29330,9 @@ CREATE POLICY "Ver plantillas propias o compartidas de la org" ON public.cotizac
 ALTER TABLE public.agente_users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.alertas_sistema ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.anticipos_aplicaciones ENABLE ROW LEVEL SECURITY;
-CREATE POLICY anticipos_aplicaciones_delete_own_org ON public.anticipos_aplicaciones FOR DELETE TO authenticated USING (((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)));
-CREATE POLICY anticipos_aplicaciones_insert_own_org ON public.anticipos_aplicaciones FOR INSERT TO authenticated WITH CHECK (((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)));
 CREATE POLICY anticipos_aplicaciones_select_own_org ON public.anticipos_aplicaciones FOR SELECT TO authenticated USING (((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)));
-CREATE POLICY anticipos_aplicaciones_update_own_org ON public.anticipos_aplicaciones FOR UPDATE TO authenticated USING (((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role))) WITH CHECK (((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)));
 ALTER TABLE public.anticipos_proveedor ENABLE ROW LEVEL SECURITY;
-CREATE POLICY anticipos_proveedor_delete_own_org ON public.anticipos_proveedor FOR DELETE TO authenticated USING (((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)));
-CREATE POLICY anticipos_proveedor_insert_own_org ON public.anticipos_proveedor FOR INSERT TO authenticated WITH CHECK (((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)));
 CREATE POLICY anticipos_proveedor_select_own_org ON public.anticipos_proveedor FOR SELECT TO authenticated USING (((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)));
-CREATE POLICY anticipos_proveedor_update_own_org ON public.anticipos_proveedor FOR UPDATE TO authenticated USING (((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role))) WITH CHECK (((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)));
 ALTER TABLE public.app_logs ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "app_logs insert authenticated" ON public.app_logs FOR INSERT TO authenticated WITH CHECK ((((user_id IS NULL) OR (user_id = ( SELECT auth.uid() AS uid))) AND ((organization_id IS NULL) OR (organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)))));
 ALTER TABLE public.auditoria_comentarios ENABLE ROW LEVEL SECURITY;
@@ -29274,7 +29350,7 @@ CREATE POLICY cobranza_seg_insert_org ON public.cobranza_seguimiento FOR INSERT 
 CREATE POLICY cobranza_seg_select_org ON public.cobranza_seguimiento FOR SELECT TO authenticated USING (((organization_id = public.current_user_org_id()) AND (public.has_role(( SELECT auth.uid() AS uid), 'contador'::public.app_role) OR public.has_role(( SELECT auth.uid() AS uid), 'tesorero'::public.app_role) OR public.has_role(( SELECT auth.uid() AS uid), 'ejecutivo_cobranza'::public.app_role) OR public.has_role(( SELECT auth.uid() AS uid), 'admin_org'::public.app_role) OR public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) OR public.has_role(( SELECT auth.uid() AS uid), 'gerente_operaciones'::public.app_role) OR public.has_role(( SELECT auth.uid() AS uid), 'gerente_visor'::public.app_role))));
 CREATE POLICY cobranza_seg_update_org ON public.cobranza_seguimiento FOR UPDATE TO authenticated USING ((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id))) WITH CHECK ((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)));
 ALTER TABLE public.cobranza_seguimiento ENABLE ROW LEVEL SECURITY;
-CREATE POLICY com_dev_admin_full ON public.comisiones_devengadas TO authenticated USING ((((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) AND (( SELECT public.has_role(( SELECT auth.uid() AS uid), 'admin'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)))) WITH CHECK ((((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) AND (( SELECT public.has_role(( SELECT auth.uid() AS uid), 'admin'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role))));
+CREATE POLICY com_dev_admin_read ON public.comisiones_devengadas FOR SELECT TO authenticated USING ((((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) AND (( SELECT public.has_role(( SELECT auth.uid() AS uid), 'admin'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role))));
 CREATE POLICY com_dev_self_read ON public.comisiones_devengadas FOR SELECT TO authenticated USING (((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) AND (vendedora_id = ( SELECT auth.uid() AS uid))));
 ALTER TABLE public.comisiones_devengadas ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.comisiones_excepciones ENABLE ROW LEVEL SECURITY;
@@ -29397,7 +29473,7 @@ CREATE POLICY "folio_secuencias lectura org" ON public.folio_secuencias FOR SELE
 CREATE POLICY "gestionar credenciales facturapi de su org" ON public.facturapi_credenciales TO authenticated USING ((public.is_org_admin(( SELECT auth.uid() AS uid), organization_id) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'contador'::public.app_role) AS has_role))) WITH CHECK ((public.is_org_admin(( SELECT auth.uid() AS uid), organization_id) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'contador'::public.app_role) AS has_role)));
 ALTER TABLE public.idempotency_keys ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "leer credenciales facturapi de su org" ON public.facturapi_credenciales FOR SELECT TO authenticated USING ((public.is_org_admin(( SELECT auth.uid() AS uid), organization_id) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'contador'::public.app_role) AS has_role)));
-CREATE POLICY liq_admin_full ON public.liquidaciones_comision TO authenticated USING ((((organization_id = public.current_user_org_id()) OR public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role)) AND public.has_any_role_efectivo(( SELECT auth.uid() AS uid), ARRAY['admin'::public.app_role, 'admin_org'::public.app_role, 'super_admin'::public.app_role, 'contador'::public.app_role, 'tesorero'::public.app_role]))) WITH CHECK ((((organization_id = public.current_user_org_id()) OR public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role)) AND public.has_any_role_efectivo(( SELECT auth.uid() AS uid), ARRAY['admin'::public.app_role, 'admin_org'::public.app_role, 'super_admin'::public.app_role, 'contador'::public.app_role, 'tesorero'::public.app_role])));
+CREATE POLICY liq_admin_read ON public.liquidaciones_comision FOR SELECT TO authenticated USING ((((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) AND (( SELECT public.has_role(( SELECT auth.uid() AS uid), 'admin'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role))));
 CREATE POLICY liq_finanzas_read ON public.liquidaciones_comision FOR SELECT TO authenticated USING ((((organization_id = public.current_user_org_id()) OR public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role)) AND public.has_any_role_efectivo(( SELECT auth.uid() AS uid), ARRAY['gerente_comercial'::public.app_role, 'gerente_operaciones'::public.app_role, 'gerente_visor'::public.app_role])));
 CREATE POLICY liq_self_read ON public.liquidaciones_comision FOR SELECT TO authenticated USING (((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) AND (vendedora_id = ( SELECT auth.uid() AS uid))));
 ALTER TABLE public.liquidaciones_comision ENABLE ROW LEVEL SECURITY;
@@ -29515,6 +29591,8 @@ GRANT ALL ON FUNCTION public._audit_embarques_umbrales(p_organization_id uuid) T
 REVOKE ALL ON FUNCTION public._auditoria_embarques_org_base(p_organization_id uuid) FROM PUBLIC;
 GRANT ALL ON FUNCTION public._auditoria_embarques_org_base(p_organization_id uuid) TO authenticated;
 GRANT ALL ON FUNCTION public._auditoria_embarques_org_base(p_organization_id uuid) TO service_role;
+REVOKE ALL ON FUNCTION public._bbva_guard_update() FROM PUBLIC;
+GRANT ALL ON FUNCTION public._bbva_guard_update() TO service_role;
 REVOKE ALL ON FUNCTION public._bitacora_facturas_estado() FROM PUBLIC;
 GRANT ALL ON FUNCTION public._bitacora_facturas_estado() TO authenticated;
 GRANT ALL ON FUNCTION public._bitacora_facturas_estado() TO service_role;
@@ -29592,6 +29670,8 @@ GRANT ALL ON FUNCTION public._embarques_sembrar_tc_dof() TO authenticated;
 GRANT ALL ON FUNCTION public._embarques_sembrar_tc_dof() TO service_role;
 GRANT ALL ON FUNCTION public._entrante_meta_cliente_no_verificada() TO authenticated;
 GRANT ALL ON FUNCTION public._entrante_meta_cliente_no_verificada() TO service_role;
+REVOKE ALL ON FUNCTION public._es_rol_interno() FROM PUBLIC;
+GRANT ALL ON FUNCTION public._es_rol_interno() TO service_role;
 GRANT ALL ON FUNCTION public._factura_tc_dof_obligatorio() TO authenticated;
 GRANT ALL ON FUNCTION public._factura_tc_dof_obligatorio() TO service_role;
 GRANT ALL ON FUNCTION public._garantia_congelar_monto_trg() TO authenticated;
@@ -29605,6 +29685,8 @@ GRANT ALL ON FUNCTION public._garantia_transicion_valida_trg() TO service_role;
 REVOKE ALL ON FUNCTION public._guard_soft_delete() FROM PUBLIC;
 GRANT ALL ON FUNCTION public._guard_soft_delete() TO authenticated;
 GRANT ALL ON FUNCTION public._guard_soft_delete() TO service_role;
+REVOKE ALL ON FUNCTION public._liquidacion_guard_estado() FROM PUBLIC;
+GRANT ALL ON FUNCTION public._liquidacion_guard_estado() TO service_role;
 REVOKE ALL ON FUNCTION public._log_provisioning_step(p_org_id uuid, p_source text, p_accion text, p_entidad text, p_filas integer, p_detalles jsonb) FROM PUBLIC;
 GRANT ALL ON FUNCTION public._log_provisioning_step(p_org_id uuid, p_source text, p_accion text, p_entidad text, p_filas integer, p_detalles jsonb) TO authenticated;
 GRANT ALL ON FUNCTION public._log_provisioning_step(p_org_id uuid, p_source text, p_accion text, p_entidad text, p_filas integer, p_detalles jsonb) TO service_role;
@@ -29632,6 +29714,8 @@ GRANT ALL ON FUNCTION public._normalizar_razon_social() TO service_role;
 REVOKE ALL ON FUNCTION public._normalizar_uuid_fiscal() FROM PUBLIC;
 GRANT ALL ON FUNCTION public._normalizar_uuid_fiscal() TO authenticated;
 GRANT ALL ON FUNCTION public._normalizar_uuid_fiscal() TO service_role;
+REVOKE ALL ON FUNCTION public._prohibir_delete_comisiones() FROM PUBLIC;
+GRANT ALL ON FUNCTION public._prohibir_delete_comisiones() TO service_role;
 GRANT ALL ON FUNCTION public._prohibir_delete_factura() TO authenticated;
 GRANT ALL ON FUNCTION public._prohibir_delete_factura() TO service_role;
 GRANT ALL ON FUNCTION public._proveedor_contacto_principal_unico() TO authenticated;
