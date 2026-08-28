@@ -1,18 +1,26 @@
 -- Espejo canónico de public.generar_liquidacion_comision
--- Fuente vigente (mayor timestamp): 20260828000200_rev2_espejo_comisiones_nc_y_periodo.sql
+-- Fuente vigente (mayor timestamp): 20260828031423_ffb3534d-3c78-4671-b094-d631f733c1eb.sql
 -- Vigilado por `bun run audit:replay-mirror` y `audit:schema-functions`.
 
-CREATE OR REPLACE FUNCTION public.generar_liquidacion_comision(p_vendedora_id uuid, p_periodo text, p_organization_id uuid, p_request_id uuid DEFAULT NULL::uuid)
- RETURNS uuid
- LANGUAGE plpgsql
- SECURITY DEFINER
- SET search_path TO 'public'
+CREATE OR REPLACE FUNCTION public.generar_liquidacion_comision(
+  p_vendedora_id uuid,
+  p_periodo text,
+  p_organization_id uuid,
+  p_request_id uuid DEFAULT NULL::uuid
+)
+RETURNS uuid
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO 'public'
 AS $function$
 DECLARE
   v_total numeric(14,2);
   v_liq_id uuid;
   v_org uuid;
   v_cached jsonb;
+  v_disponible numeric(14,2);
+  v_aplicado numeric(14,2) := 0;
+  v_rec record;
 BEGIN
   IF NOT has_any_role_efectivo(auth.uid(),
         ARRAY['admin','admin_org','contador','tesorero']::app_role[]) THEN
@@ -49,8 +57,28 @@ BEGIN
     RAISE EXCEPTION 'Sin comisiones devengadas para liquidar';
   END IF;
 
+  -- Auditoría 2026-08-28 · Hallazgo 1: las comisiones "Por recuperar" (ya
+  -- pagadas y cuyo respaldo se canceló/acreditó después) quedaban huérfanas.
+  -- Se descuentan de esta liquidación, de la más antigua a la más reciente y
+  -- sólo hasta donde alcance el devengo del periodo; el remanente sigue
+  -- pendiente para la siguiente liquidación.
+  v_disponible := v_total;
+  FOR v_rec IN
+    SELECT id, comision_mxn
+      FROM public.comisiones_devengadas
+     WHERE organization_id = v_org
+       AND vendedora_id = p_vendedora_id
+       AND estado = 'Por recuperar'
+     ORDER BY created_at ASC
+  LOOP
+    EXIT WHEN v_disponible <= 0;
+    CONTINUE WHEN v_rec.comision_mxn > v_disponible;
+    v_disponible := v_disponible - v_rec.comision_mxn;
+    v_aplicado := v_aplicado + v_rec.comision_mxn;
+  END LOOP;
+
   INSERT INTO public.liquidaciones_comision (organization_id, vendedora_id, periodo, total_mxn, creada_por)
-  VALUES (v_org, p_vendedora_id, p_periodo, v_total, auth.uid())
+  VALUES (v_org, p_vendedora_id, p_periodo, ROUND(v_total - v_aplicado, 2), auth.uid())
   RETURNING id INTO v_liq_id;
 
   UPDATE public.comisiones_devengadas
@@ -60,8 +88,33 @@ BEGIN
      AND estado = 'Devengada'
      AND to_char(created_at AT TIME ZONE 'America/Mexico_City', 'YYYY-MM') = p_periodo;
 
+  IF v_aplicado > 0 THEN
+    v_disponible := v_total;
+    FOR v_rec IN
+      SELECT id, comision_mxn
+        FROM public.comisiones_devengadas
+       WHERE organization_id = v_org
+         AND vendedora_id = p_vendedora_id
+         AND estado = 'Por recuperar'
+       ORDER BY created_at ASC
+    LOOP
+      EXIT WHEN v_disponible <= 0;
+      CONTINUE WHEN v_rec.comision_mxn > v_disponible;
+      v_disponible := v_disponible - v_rec.comision_mxn;
+      UPDATE public.comisiones_devengadas
+         SET estado = 'Cancelada',
+             liquidacion_id = v_liq_id,
+             nota = COALESCE(nota || ' · ', '')
+                    || 'Recuperada al descontarse de la liquidación del periodo ' || p_periodo,
+             updated_at = now()
+       WHERE id = v_rec.id;
+    END LOOP;
+  END IF;
+
   PERFORM public.idempotency_store(p_request_id,
-    jsonb_build_object('liquidacion_id', v_liq_id, 'total_mxn', v_total));
+    jsonb_build_object('liquidacion_id', v_liq_id,
+                       'total_mxn', ROUND(v_total - v_aplicado, 2),
+                       'recuperado_mxn', v_aplicado));
 
   RETURN v_liq_id;
 END;
