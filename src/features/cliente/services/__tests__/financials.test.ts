@@ -12,33 +12,61 @@ beforeEach(() => {
 });
 
 describe("fetchClienteFinancials", () => {
-  it("suma facturado total y pendiente sólo de Emitida/Vencida", async () => {
+  it("convierte cada factura a MXN con su TC (Ola 6 · M1) y separa el pendiente", async () => {
     mock.setTableResult("facturas", {
       data: [
-        { total: 100, moneda: "USD", estado: "Emitida", embarque_id: "e1" },
-        { total: 200, moneda: "USD", estado: "Pagada", embarque_id: "e2" },
-        { total: 50, moneda: "USD", estado: "Vencida", embarque_id: "e3" },
+        { total: 100, moneda: "USD", tipo_cambio: 18, estado: "Emitida", embarque_id: "e1" },
+        { total: 200, moneda: "MXN", tipo_cambio: null, estado: "Pagada", embarque_id: "e2" },
+        { total: 50, moneda: "USD", tipo_cambio: 20, estado: "Vencida", embarque_id: "e3" },
       ],
       error: null,
     });
     mock.setRpcResult("profit_por_cliente", {
       data: [
-        { cliente_id: "cli-1", venta_usd: 500, costo_usd: 300 },
-        { cliente_id: "cli-2", venta_usd: 999, costo_usd: 1 },
+        { cliente_id: "cli-1", venta_mxn: 5000, costo_mxn: 3000, embarques_sin_tc: 0 },
+        { cliente_id: "cli-2", venta_mxn: 999, costo_mxn: 1, embarques_sin_tc: 3 },
       ],
       error: null,
     });
     const r = await fetchClienteFinancials("cli-1");
-    expect(r.facturadoUSD).toBe(350);
-    expect(r.pendienteUSD).toBe(150);
-    expect(r.profitUSD).toBe(200);
+    // 100 USD × 18 + 200 MXN + 50 USD × 20 = 3,000
+    expect(r.facturadoMXN).toBe(3000);
+    expect(r.pendienteMXN).toBe(2800);
+    expect(r.profitMXN).toBe(2000);
+    expect(r.facturasSinTc).toBe(0);
+    expect(r.embarquesSinTc).toBe(0);
   });
 
-  it("profit = 0 cuando el cliente no aparece en la RPC", async () => {
+  it("excluye y cuenta las facturas en moneda extranjera sin TC confiable", async () => {
+    mock.setTableResult("facturas", {
+      data: [
+        { total: 100, moneda: "USD", tipo_cambio: null, estado: "Emitida", embarque_id: "e1" },
+        { total: 100, moneda: "USD", tipo_cambio: 1, estado: "Emitida", embarque_id: "e2" },
+        { total: 300, moneda: "MXN", tipo_cambio: null, estado: "Emitida", embarque_id: "e3" },
+      ],
+      error: null,
+    });
+    mock.setRpcResult("profit_por_cliente", {
+      data: [{ cliente_id: "cli-1", venta_mxn: 0, costo_mxn: 0, embarques_sin_tc: 2 }],
+      error: null,
+    });
+    const r = await fetchClienteFinancials("cli-1");
+    expect(r.facturadoMXN).toBe(300);
+    expect(r.facturasSinTc).toBe(2);
+    expect(r.embarquesSinTc).toBe(2);
+  });
+
+  it("utilidad = 0 cuando el cliente no aparece en la RPC", async () => {
     mock.setTableResult("facturas", { data: [], error: null });
     mock.setRpcResult("profit_por_cliente", { data: [], error: null });
     const r = await fetchClienteFinancials("desconocido");
-    expect(r).toEqual({ facturadoUSD: 0, pendienteUSD: 0, profitUSD: 0 });
+    expect(r).toEqual({
+      facturadoMXN: 0,
+      pendienteMXN: 0,
+      profitMXN: 0,
+      facturasSinTc: 0,
+      embarquesSinTc: 0,
+    });
   });
 
   it("propaga error al consultar facturas del cliente", async () => {
