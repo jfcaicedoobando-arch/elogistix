@@ -109926,7 +109926,8 @@
       "20260902001000_qa_r2_r04_portal_papelera.sql",
       "20260902002000_nc_fecha_tolerante_utc.sql",
       "20260902002100_nc_fecha_formato_baseline.sql",
-      "20260902003000_fix_numericeger_rpc_embarques.sql"
+      "20260902003000_fix_numericeger_rpc_embarques.sql",
+      "20260902004000_replay_mirror_reemision_canonica.sql"
     ]
   }
 }
