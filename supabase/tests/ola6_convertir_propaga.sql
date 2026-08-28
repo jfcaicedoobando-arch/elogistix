@@ -40,7 +40,7 @@ BEGIN
     organization_id, empresa, estado,
     rfc, direccion, cp, entidad_federativa, sector, origen, destino
   ) VALUES (
-    v_org, 'LEAD FISCAL OLA6', 'Nuevo'::public.crm_lead_estado,
+    v_org, 'LEAD FISCAL OLA6', 'Calificado'::public.crm_lead_estado,
     'PROS260821AB1', 'Av. Siempre Viva 742', '04360', 'Ciudad de México',
     'Manufactura', 'Veracruz', 'Lázaro Cárdenas'
   ) RETURNING id INTO v_lead;
@@ -92,7 +92,7 @@ BEGIN
   RETURNING id INTO v_cli;
 
   INSERT INTO public.crm_leads (organization_id, empresa, estado)
-  VALUES (v_org, 'LEAD LIGA OLA6', 'Nuevo'::public.crm_lead_estado)
+  VALUES (v_org, 'LEAD LIGA OLA6', 'Calificado'::public.crm_lead_estado)
   RETURNING id INTO v_lead2;
 
   v_res := public.convertir_lead_rpc(v_lead2, false, v_cli, 'OP LIGADA OLA6', 500, 'MXN', NULL);
@@ -108,7 +108,7 @@ BEGIN
   RETURNING id INTO v_cli_ajeno;
 
   INSERT INTO public.crm_leads (organization_id, empresa, estado)
-  VALUES (v_org, 'LEAD AJENO OLA6', 'Nuevo'::public.crm_lead_estado)
+  VALUES (v_org, 'LEAD AJENO OLA6', 'Calificado'::public.crm_lead_estado)
   RETURNING id INTO v_lead2;
 
   BEGIN

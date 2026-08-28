@@ -33,11 +33,15 @@ BEGIN
   -- A3: reactivar_cotizacion_rpc
   ----------------------------------------------------------------------------
   INSERT INTO public.cotizaciones (
-    organization_id, estado, estado_anterior, folio, modo, tipo, conceptos_venta
+    organization_id, estado, estado_anterior, folio, modo, tipo, conceptos_venta,
+    es_prospecto, prospecto_empresa
   ) VALUES (
     v_org, 'Vencida'::public.estado_cotizacion, 'Enviada'::public.estado_cotizacion,
     'COT-OLA6-0001', 'Marítimo'::public.modo_transporte, 'Importación'::public.tipo_operacion,
-    '[{"descripcion":"FLETE OLA6","cantidad":1,"precio_unitario":1000,"moneda":"USD","aplica_iva":false}]'::jsonb
+    '[{"descripcion":"FLETE OLA6","cantidad":1,"precio_unitario":1000,"moneda":"USD","aplica_iva":false}]'::jsonb,
+    -- v13.777.9: la segmentación comercial exige cliente ligado fuera de
+    -- borrador; esta cotización es de prospecto (M3 la convierte a cliente).
+    true, 'PROSPECTO OLA6'
   ) RETURNING id INTO v_cot;
 
   v_estado := public.reactivar_cotizacion_rpc(v_cot);
@@ -86,8 +90,9 @@ BEGIN
   ) VALUES (v_org, 'Prospección OLA6', 'abierta'::public.crm_etapa_tipo, 1, true, 20, '#2563EB', 3, false)
   RETURNING id INTO v_etapa;
 
+  -- v13.777.9: CRM Fase 2 exige lead calificado para abrir oportunidad.
   INSERT INTO public.crm_leads (organization_id, empresa, estado)
-  VALUES (v_org, 'LEAD OLA6', 'Nuevo'::public.crm_lead_estado)
+  VALUES (v_org, 'LEAD OLA6', 'Calificado'::public.crm_lead_estado)
   RETURNING id INTO v_lead;
 
   v_res := public.convertir_lead_rpc(v_lead, false, NULL, 'OP OLA6', 5000, 'USD', NULL);
