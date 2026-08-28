@@ -19,6 +19,8 @@ import { ProveedoresImportDialog } from "../components/ProveedoresImportDialog";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { useDocumentTitle } from "@/hooks/shared";
 
+const ORIGENES_FILTRO = ["todos", "Nacional", "Extranjero"] as const;
+
 export default function Proveedores() {
   useDocumentTitle("Proveedores");
   // M8 (Ola 8): filtros del directorio en la URL (link compartible).
