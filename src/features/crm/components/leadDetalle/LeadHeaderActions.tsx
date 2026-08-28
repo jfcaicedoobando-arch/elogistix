@@ -7,7 +7,7 @@
  * Ola 6 · O6.1: cuando el lead está sin asignar (bolsa común) y el usuario
  * tiene permiso de ventas, se ofrece "Tomar lead" (RPC crm_tomar_lead).
  */
-import { BadgeCheck, Briefcase, Repeat, Trash2, UserCheck } from "lucide-react";
+import { Repeat, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import LeadAccionesEtapa from "./LeadAccionesEtapa";
 import { Button } from "@/components/ui/button";
