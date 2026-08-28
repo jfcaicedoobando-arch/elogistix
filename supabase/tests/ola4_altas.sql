@@ -21,6 +21,9 @@ DECLARE
   v_org_b uuid := 'b2222222-2222-2222-2222-222222222222';
   v_uid_a uuid := 'a5555555-5555-5555-5555-555555555555';
   v_prov  uuid := 'a3333333-3333-3333-3333-333333333333';
+  -- v13.777.9: los FK compuestos por org (Ola 2) prohíben que una factura de
+  -- la org B apunte al proveedor de la org A: cada org necesita el suyo.
+  v_prov_b uuid := 'b3333333-3333-3333-3333-333333333333';
   v_cat_a uuid := 'a6666666-6666-6666-6666-666666666666';
   v_cat_b uuid := 'b6666666-6666-6666-6666-666666666666';
 BEGIN
@@ -36,7 +39,8 @@ BEGIN
   ON CONFLICT DO NOTHING;
 
   INSERT INTO public.proveedores (id, organization_id, nombre, categoria, subtipo_gasto)
-  VALUES (v_prov, v_org_a, 'Test Prov Ola4', 'GastoOperativo', 'Otros')
+  VALUES (v_prov, v_org_a, 'Test Prov Ola4', 'GastoOperativo', 'Otros'),
+         (v_prov_b, v_org_b, 'Test Prov Ola4 B', 'GastoOperativo', 'Otros')
   ON CONFLICT (id) DO NOTHING;
 
   INSERT INTO public.presupuesto_categorias (id, organization_id, nombre, orden, activa, tipo_contable)
@@ -72,7 +76,7 @@ BEGIN
   INSERT INTO public.anticipos_proveedor (
     id, organization_id, proveedor_id, monto, moneda, estado, saldo_disponible
   ) VALUES (
-    'b8888888-8888-8888-8888-888888888888', v_org_b, v_prov, 500, 'MXN'::public.moneda,
+    'b8888888-8888-8888-8888-888888888888', v_org_b, v_prov_b, 500, 'MXN'::public.moneda,
     'disponible', 500
   ) ON CONFLICT (id) DO NOTHING;
 
@@ -81,7 +85,7 @@ BEGIN
     categoria_presupuesto_id, moneda, tipo_cambio_usd, subtotal, iva, total,
     estado, estado_aprobacion
   ) VALUES (
-    'b4444444-4444-4444-4444-444444444444', v_org_b, v_prov, 'Test Prov', 'OLA4-N12-01',
+    'b4444444-4444-4444-4444-444444444444', v_org_b, v_prov_b, 'Test Prov', 'OLA4-N12-01',
     v_cat_b, 'MXN'::public.moneda, 0, 500, 0, 500, 'Borrador', 'aprobada'
   ) ON CONFLICT (id) DO NOTHING;
 
