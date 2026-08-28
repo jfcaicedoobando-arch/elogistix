@@ -8,13 +8,12 @@ import { type ColumnDef } from "@/components/shared/DataTable";
 import type { CotizacionListItem } from "@/features/cotizacion/hooks";
 import { renderEstadoVigencia } from "./columnsParts/estadoVigenciaCell";
 import { formatFechaHora } from "@/lib/formatters";
-import {
-  moneyColumn,
-  actionsColumn,
-} from "@/components/shared/dataTable/columnBuilders";
+import { actionsColumn } from "@/components/shared/dataTable/columnBuilders";
+import { Hint } from "@/components/shared/Hint";
 import { Trash2, Copy } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { normalizarSubtotalMxn } from "@/features/cotizacion/domain/ordenSubtotalMxn";
+import { normalizarSubtotalesMxn } from "@/features/cotizacion/domain/subtotalesPorMoneda";
+import { SubtotalCotizacionCell, subtotalesDeFila } from "./columnsParts/subtotalCell";
 import { COL_W } from "@/components/shared/dataTable/columnWidths";
 
 export interface BuildParams {
@@ -98,16 +97,27 @@ export function buildCotizacionesColumns(params: BuildParams): ColumnDef<Cotizac
         );
       },
     },
-    moneyColumn<CotizacionListItem>({
+    {
       id: "subtotal",
-      header: "Subtotal",
-      accessor: (r) => r.subtotal,
-      currencyAccessor: (r) => r.moneda,
+      header: () => (
+        <Hint label="Cotizaciones mixtas muestran un renglón por moneda. Ordenado por equivalente en MXN">
+          <span>Subtotal</span>
+        </Hint>
+      ),
+      accessorFn: (r) => r.subtotal ?? 0,
+      enableSorting: true,
+      cell: ({ row }) => <SubtotalCotizacionCell cotizacion={row.original} />,
       // FIX 10: ordenar por equivalente en MXN evita mezclar montos nominales
       // de MXN y USD; sin TC confiable el valor queda al final.
-      normalizar: (r) => normalizarSubtotalMxn(r.subtotal, r.moneda, params.usdMxn),
-      headerTooltip: "Ordenado por equivalente en MXN",
-    }),
+      sortingFn: (a, b) => {
+        const va = normalizarSubtotalesMxn(subtotalesDeFila(a.original), params.usdMxn);
+        const vb = normalizarSubtotalesMxn(subtotalesDeFila(b.original), params.usdMxn);
+        const fa = va == null || !Number.isFinite(va) ? Number.POSITIVE_INFINITY : va;
+        const fb = vb == null || !Number.isFinite(vb) ? Number.POSITIVE_INFINITY : vb;
+        return fa - fb;
+      },
+    },
+
     {
       id: "estado_vigencia",
       header: "Estado",

@@ -6,6 +6,7 @@ import { StatusBadge } from "@/components/shared/StatusBadge";
 import { MoneyCell } from "@/components/shared/MoneyCell";
 import { Badge } from "@/components/ui/badge";
 import { formatCurrency } from "@/lib/formatters";
+import type { SubtotalMoneda } from "@/features/cotizacion/domain/subtotalesPorMoneda";
 import { formatFechaEs } from "@/lib/formatters";
 
 interface Props {
@@ -13,13 +14,13 @@ interface Props {
   clienteNombre: string | null;
   createdAt: string | null;
   estado: string;
-  subtotal: number | null;
-  moneda: string | null;
+  /** Un renglón por moneda: las cotizaciones mixtas tienen USD y MXN. */
+  subtotales: SubtotalMoneda[];
   esProspecto?: boolean;
 }
 
 export function CotizacionMobileCard({
-  folio, clienteNombre, createdAt, estado, subtotal, moneda, esProspecto = false,
+  folio, clienteNombre, createdAt, estado, subtotales, esProspecto = false,
 }: Props) {
   return (
     <div className="flex flex-col gap-2 min-w-0">
@@ -39,9 +40,13 @@ export function CotizacionMobileCard({
         </div>
         <StatusBadge domain="cotizacion" status={estado} />
       </div>
-      {typeof subtotal === "number" && (
-        <MoneyCell label="Subtotal" value={formatCurrency(subtotal, moneda ?? "USD")} />
-      )}
+      {subtotales.map((s, i) => (
+        <MoneyCell
+          key={s.moneda}
+          label={i === 0 ? "Subtotal" : ""}
+          value={formatCurrency(s.monto, s.moneda)}
+        />
+      ))}
     </div>
   );
 }

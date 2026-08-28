@@ -18,6 +18,11 @@ export interface ConceptoVentaPrellenado {
   clave_sat?: string;
   /** Tasa IVA específica del producto (0.16, 0, exento). Prevalece sobre `tasaIva`. */
   tasa_iva_aplicada?: number;
+  /**
+   * Comentarios capturados en la fila de costos. Se propagan al concepto de
+   * venta para que aparezcan como subrenglón en el PDF de la cotización.
+   */
+  notas?: string;
 }
 
 /**
@@ -54,6 +59,7 @@ export function buildConceptosFromCostos(
         aplica_iva: tieneIva,
         total: tieneIva ? calcularTotalConIVA(subtotal, tasaAplicar) : subtotal,
         clave_sat: c.clave_sat,
+        notas: c.notas,
         // P2-4 (R5): persistimos la tasa EFECTIVA, no la del catálogo. Antes quedaba
         // `undefined` en filas manuales y el IVA se guardaba como 0 aguas abajo.
         tasa_iva_aplicada: tieneIva ? tasaAplicar : 0,
@@ -79,6 +85,7 @@ export function buildConceptosFromCostos(
         aplica_iva: tieneIva,
         total: tieneIva ? calcularTotalConIVA(subtotal, tasaAplicar) : subtotal,
         clave_sat: c.clave_sat,
+        notas: c.notas,
         // P2-4 (R5): persistimos la tasa EFECTIVA, no la del catálogo. Antes quedaba
         // `undefined` en filas manuales y el IVA se guardaba como 0 aguas abajo.
         tasa_iva_aplicada: tieneIva ? tasaAplicar : 0,

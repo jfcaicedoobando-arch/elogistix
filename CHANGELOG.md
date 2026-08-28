@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.792.0] - 2026-08-28
+### Cotizaciones
+- Listado: la columna Subtotal ahora muestra un renglón por moneda en cotizaciones mixtas (antes sólo se veía el monto de una moneda, p. ej. COT-217/218 ocultaban los USD). El orden sigue usando el equivalente en MXN, ahora sumando ambas monedas.
+- PDF: los comentarios capturados en las filas de costos se propagan al concepto de venta (`buildConceptosFromCostos` y la sincronización manual), por lo que aparecen como subrenglón en el PDF de la cotización.
+- Eliminado `ordenSubtotalMxn.ts`, reemplazado por `subtotalesPorMoneda.ts` (con pruebas).
+
 ## [13.791.3] - 2026-08-28
 ### CI
 - Power of 10: divididos `vsRealDomain.ts` (222 → se extrae `vsRealGastos.ts` con la conversión a MXN de gastos/NCs) y `DevolverAnticipoDialog.tsx` (213 → se extrae el hook `useDevolverAnticipoForm`); el guard de archivos >200 líneas vuelve a verde.
