@@ -15,10 +15,7 @@ import { useOrgFilter } from "@/hooks/shared";
 import { subirArchivosNcProveedor } from "@/features/cxp/services";
 import { NuevaNotaCreditoFormFields } from "./NuevaNotaCreditoFormFields";
 import { buildNcPrefillFromCfdi } from "./ncFromCfdi";
-import {
-  esCruceNoConvertible,
-  montoNcEnMonedaFactura,
-} from "./ncMonedaProveedor";
+import { esCruceNoConvertible, montoNcEnMonedaFactura } from "./ncMonedaProveedor";
 import { NcProveedorAvisos } from "./NcProveedorAvisos";
 import { notifyError } from "@/lib/ui/appFeedback";
 import type {
@@ -41,7 +38,7 @@ export function DialogNotaCreditoProveedor({ open, onOpenChange, facturaId, mone
   const [fecha, setFecha] = useState(format(new Date(), "yyyy-MM-dd"));
   const [monto, setMonto] = useState("");
   const [moneda, setMoneda] = useState<MonedaNC>(monedaFactura);
-  const [tipoCambio, setTipoCambio] = useState("");
+  const [tipoCambio, setTipoCambio] = useState(""); // MXN por 1 unidad extranjera
   const [motivo, setMotivo] = useState<MotivoNC>("Bonificacion");
   const [descripcion, setDescripcion] = useState("");
   const [parsedCfdi, setParsedCfdi] = useState<CfdiParsedResponse | null>(null);
@@ -53,7 +50,6 @@ export function DialogNotaCreditoProveedor({ open, onOpenChange, facturaId, mone
   const montoNum = Number(monto);
   const tcNum = tipoCambio.trim() ? Number(tipoCambio) : null;
   const cruceInvalido = esCruceNoConvertible(moneda, monedaFactura);
-  // v13.779.0 · H8-B: el tope se compara SIEMPRE en la moneda de la factura.
   const montoEnFactura = montoNcEnMonedaFactura(montoNum, moneda, monedaFactura, tcNum);
   const excede = montoEnFactura !== null && montoEnFactura > saldoFactura + 0.01;
   const valido = Boolean(folio.trim()) && Boolean(fecha) && montoNum > 0 && !excede && !cruceInvalido;
