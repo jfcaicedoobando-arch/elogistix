@@ -39,12 +39,9 @@ DECLARE
   v_key text;
   v_val jsonb;
   v_elem jsonb;
-  v_llaves text[] := ARRAY[
-    'costoUSD','costoMXN','costoEUR','costo_usd','costo_mxn',
-    'profitUSD','profitMXN','profit_usd','profit_mxn',
-    'utilidadUSD','utilidadMXN',
-    'margen','margenUSD','margenMXN'
-  ];
+  v_prefijos text[] := ARRAY['costo','costos','profit','utilidad','margen','gastosoperativos'];
+  v_sensible boolean;
+  v_pref text;
 BEGIN
   IF p_in IS NULL THEN
     RETURN NULL;
@@ -54,7 +51,15 @@ BEGIN
     WHEN 'object' THEN
       v_out := '{}'::jsonb;
       FOR v_key, v_val IN SELECT key, value FROM jsonb_each(p_in) LOOP
-        IF v_key = ANY (v_llaves) THEN
+        v_sensible := false;
+        FOREACH v_pref IN ARRAY v_prefijos LOOP
+          IF lower(v_key) LIKE v_pref || '%' THEN
+            v_sensible := true;
+            EXIT;
+          END IF;
+        END LOOP;
+
+        IF v_sensible THEN
           v_out := v_out || jsonb_build_object(v_key, 'null'::jsonb);
         ELSE
           v_out := v_out || jsonb_build_object(v_key, public.enmascarar_costos_jsonb(v_val));
