@@ -14,7 +14,7 @@ import {
   montosCuadran,
   TOLERANCIA_CONCILIACION,
 } from "@/features/tesoreria/domain/conciliacionMonto";
-import { formatMoney } from "@/lib/utils/format";
+import { formatCurrency } from "@/lib/formatters/numbers";
 
 /**
  * N11: el importe del movimiento debe coincidir con el del pago. Se valida
@@ -36,7 +36,7 @@ async function assertMontosCuadran(movId: string, tipo: "cxc" | "cxp", pagoId: s
   if (montosCuadran(montoMov, montoPago)) return;
   throw new MovimientoVinculoError(
     "LC_MOVIMIENTO_MONTO_MISMATCH",
-    `El movimiento por ${formatMoney(montoMov, pago.moneda)} no coincide con el pago por ${formatMoney(montoPago, pago.moneda)} (tolerancia ${TOLERANCIA_CONCILIACION}). Registra un pago por el importe real o corrige el movimiento.`,
+    `El movimiento por ${formatCurrency(montoMov, pago.moneda)} no coincide con el pago por ${formatCurrency(montoPago, pago.moneda)} (tolerancia ${TOLERANCIA_CONCILIACION}). Registra un pago por el importe real o corrige el movimiento.`,
   );
 }
 
