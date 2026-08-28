@@ -1,4 +1,3 @@
-CREATE COLLATION public.lc_unicode_upper (provider = icu, locale = 'und');
 CREATE SCHEMA public;
 CREATE TYPE public.ambiente_facturapi AS ENUM (
     'sandbox',
@@ -503,6 +502,41 @@ BEGIN
     RAISE EXCEPTION 'LC_REFACT_FORBIDDEN: se requiere rol de administrador de la organización o un rol contable'
       USING ERRCODE = '42501';
   END IF;
+END;
+$$;
+CREATE FUNCTION public._assert_soft_delete_factura_sin_hijos() RETURNS trigger
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+BEGIN
+  IF NEW.deleted_at IS NULL OR OLD.deleted_at IS NOT NULL THEN
+    RETURN NEW;
+  END IF;
+  -- Sólo las facturas que nunca se emitieron pueden mandarse a la basura.
+  IF OLD.snapshot_emision IS NULL AND OLD.estado = 'Borrador' THEN
+    RETURN NEW;
+  END IF;
+  IF EXISTS (
+    SELECT 1 FROM public.pagos_factura p
+    WHERE p.factura_id = OLD.id AND p.deleted_at IS NULL
+  ) THEN
+    RAISE EXCEPTION 'LC_FACTURA_DELETE_CON_PAGOS: la factura % tiene pagos registrados; elimina o cancela los pagos antes de borrarla', OLD.numero
+      USING ERRCODE = 'P0001';
+  END IF;
+  IF EXISTS (
+    SELECT 1 FROM public.factura_notas_credito nc
+    WHERE nc.factura_id = OLD.id
+      AND nc.deleted_at IS NULL
+      AND nc.estado <> 'Cancelada'
+  ) THEN
+    RAISE EXCEPTION 'LC_FACTURA_DELETE_CON_NC: la factura % tiene notas de crédito vivas; cancélalas antes de borrarla', OLD.numero
+      USING ERRCODE = 'P0001';
+  END IF;
+  IF OLD.snapshot_emision IS NOT NULL AND OLD.estado <> 'Cancelada' THEN
+    RAISE EXCEPTION 'LC_FACTURA_DELETE_EMITIDA: la factura % ya fue emitida; cancélala en el SAT antes de borrarla', OLD.numero
+      USING ERRCODE = 'P0001';
+  END IF;
+  RETURN NEW;
 END;
 $$;
 CREATE FUNCTION public._assert_uuid_fiscal_single_write() RETURNS trigger
@@ -2069,10 +2103,17 @@ BEGIN
           AND concepto_costo_id IS NOT NULL
      )
   THEN
-    v_total_mxn := COALESCE(v_row.total,0) * CASE
-      WHEN v_row.moneda = 'MXN'::public.moneda THEN 1
-      ELSE COALESCE(NULLIF(v_row.tipo_cambio_usd,0), 1)
-    END;
+    -- Ola E1 · N-F3: antes `COALESCE(NULLIF(tipo_cambio_usd,0), 1)` valuaba una
+    -- factura en USD como si fuera MXN y saltaba el umbral sin justificación.
+    IF v_row.moneda = 'MXN'::public.moneda THEN
+      v_total_mxn := COALESCE(v_row.total,0);
+    ELSE
+      IF COALESCE(NULLIF(v_row.tipo_cambio_usd,0), 0) <= 0 THEN
+        RAISE EXCEPTION 'LC_CXP_TC_REQUERIDO: la factura está en % y no tiene tipo de cambio capturado; registra el T/C del DOF de la fecha de la factura antes de aprobar.',
+          v_row.moneda;
+      END IF;
+      v_total_mxn := COALESCE(v_row.total,0) * v_row.tipo_cambio_usd;
+    END IF;
     v_umbral := public.cxp_umbral_sin_vinculo(v_row.organization_id);
     IF v_total_mxn > v_umbral THEN
       RAISE EXCEPTION 'LC_CXP_SIN_RESPALDO_MONTO: La factura por % MXN no está ligada a un embarque ni a costos acordados y excede el umbral autorizado (%). Vincúlala al embarque o a sus conceptos de costo antes de aprobar.',
@@ -2591,7 +2632,17 @@ DECLARE
   v_fecha date;
 BEGIN
   IF NEW.moneda::text = 'MXN' THEN
+    -- M2-res: al volver a MXN el T/C heredado deja de aplicar.
+    IF TG_OP = 'UPDATE' AND OLD.moneda::text <> 'MXN' THEN
+      NEW.tipo_cambio := 1;
+    END IF;
     RETURN NEW;
+  END IF;
+  -- M2-res: si la moneda cambió, el T/C anterior no sirve: se recalcula.
+  IF TG_OP = 'UPDATE'
+     AND OLD.moneda::text IS DISTINCT FROM NEW.moneda::text
+     AND NEW.tipo_cambio IS NOT DISTINCT FROM OLD.tipo_cambio THEN
+    NEW.tipo_cambio := NULL;
   END IF;
   IF COALESCE(NEW.tipo_cambio, 0) > 1 THEN
     RETURN NEW;
@@ -2774,6 +2825,31 @@ BEGIN
   RETURN NEW;
 END;
 $$;
+CREATE FUNCTION public._nc_alerta_retenciones_pagadas() RETURNS trigger
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+DECLARE v_ret numeric;
+BEGIN
+  IF NEW.factura_id IS NULL THEN RETURN NEW; END IF;
+  IF NEW.estado::text NOT IN ('Aplicada','Timbrada') THEN RETURN NEW; END IF;
+  IF TG_OP = 'UPDATE' AND OLD.estado::text = NEW.estado::text THEN RETURN NEW; END IF;
+  SELECT COALESCE(SUM(COALESCE(p.ret_isr,0) + COALESCE(p.ret_iva,0)), 0)
+    INTO v_ret
+    FROM public.pagos_factura p
+   WHERE p.factura_id = NEW.factura_id AND p.deleted_at IS NULL;
+  IF v_ret > 0 THEN
+    INSERT INTO public.alertas_sistema (severity, source, message, payload, dedupe_key)
+    VALUES ('warning', 'retenciones_nc',
+            'Nota de crédito aplicada a una factura con pagos que ya declararon retenciones: revisa el prorrateo.',
+            jsonb_build_object('factura_id', NEW.factura_id, 'nota_credito_id', NEW.id,
+                               'retenciones_pagadas', v_ret),
+            'retenciones_nc:' || NEW.id::text)
+    ON CONFLICT DO NOTHING;
+  END IF;
+  RETURN NEW;
+END;
+$$;
 CREATE FUNCTION public._nc_aplicadas_moneda_factura(p_factura_id uuid) RETURNS numeric
     LANGUAGE sql STABLE
     SET search_path TO 'public'
@@ -2865,44 +2941,35 @@ BEGIN
   SELECT pf.moneda::text INTO v_moneda_factura
   FROM public.proveedor_facturas pf
   WHERE pf.id = NEW.proveedor_factura_id;
-
   IF v_moneda_factura IS NULL OR NEW.moneda::text = v_moneda_factura THEN
     NEW.tipo_cambio := NULL;
     RETURN NEW;
   END IF;
-
   IF NEW.moneda::text <> 'MXN' AND v_moneda_factura <> 'MXN' THEN
     RAISE EXCEPTION 'LC_NC_PROV_MONEDA_NO_CONVERTIBLE: no hay tipo de cambio cruzado entre % y %; captura la nota de crédito en % o en MXN',
       NEW.moneda, v_moneda_factura, v_moneda_factura
       USING ERRCODE = '22023';
   END IF;
-
   IF COALESCE(NEW.tipo_cambio, 0) > 1 THEN
     RETURN NEW;
   END IF;
-
   v_moneda_ext := CASE WHEN NEW.moneda::text = 'MXN' THEN v_moneda_factura ELSE NEW.moneda::text END;
   v_fecha := COALESCE(NEW.fecha, (now() AT TIME ZONE 'America/Mexico_City')::date);
-
   SELECT CASE
            WHEN v_moneda_ext = 'USD' THEN d.usd_mxn
            WHEN v_moneda_ext = 'EUR' THEN d.eur_mxn
          END
     INTO v_tc
   FROM public.tc_dof_vigente(v_fecha) d;
-
   IF COALESCE(v_tc, 0) <= 1 THEN
     RAISE EXCEPTION 'LC_NC_PROV_TC_REQUERIDO: falta tipo de cambio DOF para % al %; captúralo antes de registrar la nota de crédito',
       v_moneda_ext, v_fecha
       USING ERRCODE = '22023';
   END IF;
-
   NEW.tipo_cambio := v_tc;
   RETURN NEW;
 END;
 $$;
-
-
 CREATE FUNCTION public._normalizar_email() RETURNS trigger
     LANGUAGE plpgsql
     SET search_path TO 'public'
@@ -3289,6 +3356,23 @@ BEGIN
   RETURN NEW;
 END;
 $$;
+CREATE FUNCTION public._tracking_link_vigencia_maxima() RETURNS trigger
+    LANGUAGE plpgsql
+    SET search_path TO 'public'
+    AS $$
+DECLARE
+  v_base timestamptz := COALESCE(NEW.created_at, now());
+BEGIN
+  IF NEW.expires_at IS NULL THEN
+    NEW.expires_at := v_base + interval '30 days';
+  END IF;
+  IF NEW.expires_at > v_base + interval '90 days' THEN
+    RAISE EXCEPTION 'LC_TRACKING_VIGENCIA_EXCEDIDA: un enlace público de rastreo no puede durar más de 90 días.'
+      USING ERRCODE = 'check_violation';
+  END IF;
+  RETURN NEW;
+END;
+$$;
 CREATE FUNCTION public._trg_autocierre_por_liquidar() RETURNS trigger
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
@@ -3358,6 +3442,7 @@ CREATE FUNCTION public._validar_cronologia_evento_embarque() RETURNS trigger
 DECLARE
   v_zarpe timestamptz;
   v_arribo timestamptz;
+  v_creado timestamptz;
   v_reales text[] := ARRAY[
     'Zarpe','Arribo a Puerto','Descarga','Despacho Aduanal','Liberación','Entrega'
   ];
@@ -3367,6 +3452,18 @@ BEGIN
   END IF;
   IF NEW.tipo::text = ANY (v_reales) AND NEW.fecha > now() + interval '1 day' THEN
     RAISE EXCEPTION 'LC_EVENTO_FECHA_FUTURA: el evento "%" no puede registrarse con fecha futura.', NEW.tipo
+      USING ERRCODE = 'check_violation';
+  END IF;
+  -- M5-res: margen de 1 día para embarques capturados con historia previa
+  -- (el expediente se abre después de que el buque zarpó).
+  SELECT e.created_at INTO v_creado
+  FROM public.embarques e
+  WHERE e.id = NEW.embarque_id;
+  IF v_creado IS NOT NULL
+     AND NEW.tipo::text = ANY (v_reales)
+     AND NEW.fecha < (v_creado - interval '1 day') THEN
+    RAISE EXCEPTION 'LC_EVENTO_ANTERIOR_A_EMBARQUE: el evento "%" (%) es anterior a la creación del embarque (%).',
+      NEW.tipo, NEW.fecha, v_creado
       USING ERRCODE = 'check_violation';
   END IF;
   SELECT min(e.fecha) INTO v_zarpe
@@ -4522,16 +4619,14 @@ DECLARE
   v_uid uuid := auth.uid();
   v_email text;
   v_monto_convertido numeric(18,4);
+  v_monto_historico numeric(18,4);
+  v_tc_aplicacion numeric;
   v_autorizado boolean;
   v_cached jsonb;
 BEGIN
   IF v_uid IS NULL THEN
     RAISE EXCEPTION 'No autenticado';
   END IF;
-  -- BL-08: reclamo atómico de la llave de idempotencia (patrón
-  -- avanzar_estado_embarque). Reintento del mismo submit → la aplicación
-  -- original; ejecución aún en vuelo → rechazo claro. Sin llave (NULL) el
-  -- comportamiento es idéntico al anterior.
   v_cached := public.idempotency_claim(p_request_id, 'aplicar_anticipo_a_factura');
   IF v_cached IS NOT NULL THEN
     IF COALESCE((v_cached->>'__idempotency_pending')::boolean, false) THEN
@@ -4543,7 +4638,6 @@ BEGIN
     IF v_ap.id IS NOT NULL THEN
       RETURN v_ap;
     END IF;
-    -- Si la fila ya no existe (cleanup), continuar el flujo normal.
   END IF;
   SELECT EXISTS (
     SELECT 1 FROM public.user_roles ur
@@ -4557,9 +4651,6 @@ BEGIN
   IF p_monto IS NULL OR p_monto <= 0 THEN
     RAISE EXCEPTION 'LC_ANTICIPO_MONTO_INVALIDO: El monto a aplicar debe ser mayor a cero.';
   END IF;
-  -- Ola 4 · N31: FOR UPDATE serializa aplicaciones concurrentes del mismo
-  -- anticipo; la segunda transacción re-lee el saldo ya post-commit de la
-  -- primera y cae en LC_ANTICIPO_SIN_SALDO en vez de dejar saldo negativo.
   SELECT * INTO v_ant FROM public.anticipos_proveedor WHERE id = p_anticipo_id FOR UPDATE;
   IF v_ant.id IS NULL OR v_ant.deleted_at IS NOT NULL THEN
     RAISE EXCEPTION 'LC_ANTICIPO_NO_EXISTE: El anticipo no existe.';
@@ -4583,9 +4674,6 @@ BEGIN
   IF v_fact.estado_aprobacion <> 'aprobada' THEN
     RAISE EXCEPTION 'LC_ANTICIPO_FACTURA_INVALIDA: La factura debe estar aprobada antes de aplicar un anticipo.';
   END IF;
-  -- BL-03: la aprobación no basta — una factura Cancelada conservaba
-  -- estado_aprobacion='aprobada' (cancelar_factura_proveedor no lo
-  -- reseteaba antes de este parche) y admitía anticipos sobre saldo muerto.
   IF v_fact.estado = 'Cancelada'::public.estado_proveedor_factura THEN
     RAISE EXCEPTION 'LC_ANTICIPO_FACTURA_NO_VIVA: La factura está Cancelada y no admite anticipos.'
       USING ERRCODE = '23514';
@@ -4596,15 +4684,33 @@ BEGIN
   IF v_fact.proveedor_id IS DISTINCT FROM v_ant.proveedor_id THEN
     RAISE EXCEPTION 'LC_ANTICIPO_PROVEEDOR_MISMATCH: Anticipo y factura pertenecen a proveedores distintos.';
   END IF;
-  v_monto_convertido := public.convertir_monto_pago_a_factura(
-    p_monto, v_ant.moneda, v_ant.tipo_cambio_usd, v_fact.moneda, v_fact.tipo_cambio_usd);
+  -- N14: la conversión se valúa con la paridad DOF del día de la aplicación
+  -- (soporta EUR y el cruce USD/EUR). El T/C histórico del anticipo sólo sirve
+  -- para calcular y registrar el diferencial cambiario.
+  IF v_ant.moneda = v_fact.moneda THEN
+    v_monto_convertido := p_monto;
+    v_monto_historico := p_monto;
+  ELSE
+    v_monto_convertido := public.convertir_monto_dof(
+      p_monto, v_ant.moneda::text, v_fact.moneda::text, p_fecha_aplicacion);
+    BEGIN
+      v_monto_historico := public.convertir_monto_pago_a_factura(
+        p_monto, v_ant.moneda, v_ant.tipo_cambio_usd, v_fact.moneda, v_fact.tipo_cambio_usd);
+    EXCEPTION WHEN OTHERS THEN
+      v_monto_historico := NULL;
+    END;
+  END IF;
+  v_tc_aplicacion := CASE
+    WHEN v_ant.moneda = 'MXN'::public.moneda THEN v_ant.tipo_cambio_usd
+    ELSE COALESCE(public.tc_dof_moneda(p_fecha_aplicacion, v_ant.moneda::text), v_ant.tipo_cambio_usd)
+  END;
   INSERT INTO public.pagos_proveedor
     (organization_id, proveedor_factura_id, fecha_pago, monto, moneda,
      tipo_cambio_usd, metodo_pago, referencia, cuenta_bancaria_id, notas,
      created_by, es_anticipo_aplicado)
   VALUES
     (v_ant.organization_id, p_factura_id, p_fecha_aplicacion, p_monto, v_ant.moneda,
-     v_ant.tipo_cambio_usd,
+     v_tc_aplicacion,
      COALESCE(NULLIF(TRIM(v_ant.metodo_pago), ''), 'Transferencia'),
      COALESCE(v_ant.referencia,'') || ' (anticipo ' || v_ant.id::text || ')',
      v_ant.cuenta_bancaria_id, 'Aplicación de anticipo ' || v_ant.id::text,
@@ -4626,12 +4732,15 @@ BEGIN
             jsonb_build_object('anticipo_id', p_anticipo_id, 'factura_id', p_factura_id,
                                'monto', p_monto, 'moneda', v_ant.moneda,
                                'monto_convertido', v_monto_convertido,
+                               'tc_aplicacion_dof', v_tc_aplicacion,
+                               'monto_tc_historico', v_monto_historico,
+                               'diferencial_cambiario',
+                                 CASE WHEN v_monto_historico IS NULL THEN NULL
+                                      ELSE round(v_monto_convertido - v_monto_historico, 4) END,
                                'pago_id', v_pago.id));
   EXCEPTION WHEN OTHERS THEN
     RAISE WARNING 'bitacora insert failed en aplicar_anticipo_a_factura: % %', SQLSTATE, SQLERRM;
   END;
-  -- BL-08: almacena la referencia de la aplicación para los reintentos
-  -- con la misma llave (no-op cuando p_request_id viene NULL).
   PERFORM public.idempotency_store(p_request_id,
     jsonb_build_object('aplicacion_id', v_ap.id, 'pago_id', v_pago.id));
   RETURN v_ap;
@@ -5181,18 +5290,21 @@ CREATE FUNCTION public.assert_movimiento_pago_consistente() RETURNS trigger
 DECLARE
   v_pago_org uuid;
   v_pago_moneda text;
+  v_pago_monto numeric;
   v_cuenta_moneda text;
   v_vinculos int;
+  v_mov numeric;
+  c_tol constant numeric := 1.00; -- tolerancia en la moneda del movimiento
 BEGIN
-  -- Sólo puede estar vinculado a UN origen a la vez.
   v_vinculos :=
       (CASE WHEN NEW.pago_factura_id IS NOT NULL THEN 1 ELSE 0 END)
     + (CASE WHEN NEW.pago_proveedor_id IS NOT NULL THEN 1 ELSE 0 END)
     + (CASE WHEN NEW.anticipo_proveedor_id IS NOT NULL THEN 1 ELSE 0 END)
     + (CASE WHEN NEW.pago_proveedor_lote_id IS NOT NULL THEN 1 ELSE 0 END)
-    + (CASE WHEN NEW.pago_factura_lote_id IS NOT NULL THEN 1 ELSE 0 END);
+    + (CASE WHEN NEW.pago_factura_lote_id IS NOT NULL THEN 1 ELSE 0 END)
+    + (CASE WHEN NEW.traspaso_id IS NOT NULL THEN 1 ELSE 0 END);
   IF v_vinculos > 1 THEN
-    RAISE EXCEPTION 'LC_MOVIMIENTO_DOBLE_VINCULO: un movimiento no puede vincularse a más de un origen (pago de factura, pago de proveedor, lote de pago o anticipo)'
+    RAISE EXCEPTION 'LC_MOVIMIENTO_DOBLE_VINCULO: un movimiento no puede vincularse a más de un origen (pago de factura, pago de proveedor, lote de pago, anticipo o traspaso)'
       USING ERRCODE = 'P0001';
   END IF;
   IF NEW.cuenta_bancaria_id IS NOT NULL THEN
@@ -5201,7 +5313,8 @@ BEGIN
     WHERE id = NEW.cuenta_bancaria_id AND deleted_at IS NULL;
   END IF;
   IF NEW.pago_factura_id IS NOT NULL THEN
-    SELECT organization_id, moneda::text INTO v_pago_org, v_pago_moneda
+    SELECT organization_id, moneda::text, COALESCE(monto,0)
+      INTO v_pago_org, v_pago_moneda, v_pago_monto
     FROM public.pagos_factura
     WHERE id = NEW.pago_factura_id AND deleted_at IS NULL;
     IF v_pago_org IS NULL THEN
@@ -5217,9 +5330,17 @@ BEGIN
         v_pago_moneda, v_cuenta_moneda
         USING ERRCODE = 'P0001';
     END IF;
+    -- N11: cobro ⇒ abono en la cuenta.
+    v_mov := GREATEST(COALESCE(NEW.abono,0), COALESCE(NEW.cargo,0));
+    IF v_mov > 0 AND v_pago_monto > 0 AND abs(v_mov - v_pago_monto) > c_tol THEN
+      RAISE EXCEPTION 'LC_MOVIMIENTO_MONTO_MISMATCH: el movimiento por % no coincide con el pago por % (tolerancia %)',
+        v_mov, v_pago_monto, c_tol
+        USING ERRCODE = 'P0001';
+    END IF;
   END IF;
   IF NEW.pago_proveedor_id IS NOT NULL THEN
-    SELECT organization_id, moneda::text INTO v_pago_org, v_pago_moneda
+    SELECT organization_id, moneda::text, COALESCE(monto,0)
+      INTO v_pago_org, v_pago_moneda, v_pago_monto
     FROM public.pagos_proveedor
     WHERE id = NEW.pago_proveedor_id AND deleted_at IS NULL;
     IF v_pago_org IS NULL THEN
@@ -5233,6 +5354,12 @@ BEGIN
     IF v_cuenta_moneda IS NOT NULL AND v_pago_moneda IS DISTINCT FROM v_cuenta_moneda THEN
       RAISE EXCEPTION 'LC_MOVIMIENTO_DIVISA_MISMATCH: la moneda del pago (%) no coincide con la cuenta bancaria (%)',
         v_pago_moneda, v_cuenta_moneda
+        USING ERRCODE = 'P0001';
+    END IF;
+    v_mov := GREATEST(COALESCE(NEW.cargo,0), COALESCE(NEW.abono,0));
+    IF v_mov > 0 AND v_pago_monto > 0 AND abs(v_mov - v_pago_monto) > c_tol THEN
+      RAISE EXCEPTION 'LC_MOVIMIENTO_MONTO_MISMATCH: el movimiento por % no coincide con el pago por % (tolerancia %)',
+        v_mov, v_pago_monto, c_tol
         USING ERRCODE = 'P0001';
     END IF;
   END IF;
@@ -5926,11 +6053,15 @@ BEGIN
   IF NEW.deleted_at IS NOT NULL AND OLD.deleted_at IS NULL THEN
     RETURN NEW;
   END IF;
-  -- OLA 1 · C8: la identidad fiscal (UUID SAT y artefactos del PAC) sólo puede
-  -- escribirla el servidor (webhook/edge con credencial de servicio).
+  -- OLA 1 · C8 + Ola E1 · C8-res: la identidad fiscal (UUID SAT, id del PAC,
+  -- artefactos XML/PDF y fecha de timbrado) sólo puede escribirla el servidor
+  -- (webhook/edge con credencial de servicio).
   IF auth.role() IS DISTINCT FROM 'service_role' THEN
     IF NEW.uuid_fiscal IS DISTINCT FROM OLD.uuid_fiscal
      OR NEW.facturapi_id IS DISTINCT FROM OLD.facturapi_id
+     OR NEW.factura_xml_url IS DISTINCT FROM OLD.factura_xml_url
+     OR NEW.factura_pdf_url IS DISTINCT FROM OLD.factura_pdf_url
+     OR NEW.timbrado_en IS DISTINCT FROM OLD.timbrado_en
     THEN
       RAISE EXCEPTION 'factura_inmutable: la identidad fiscal de la factura % no puede modificarse desde la aplicación.', OLD.numero
         USING ERRCODE = 'check_violation';
@@ -6154,17 +6285,40 @@ CREATE FUNCTION public.calc_pago_retenciones() RETURNS trigger
 DECLARE
   v_fac_subtotal numeric; v_fac_iva numeric;
   v_fac_ret_isr numeric; v_fac_ret_iva numeric;
-  v_base numeric; v_ratio numeric; v_monto numeric;
+  v_ncs numeric; v_base numeric; v_ratio numeric; v_monto numeric;
+  v_prev_isr numeric; v_prev_iva numeric; v_prev_monto numeric;
 BEGIN
   IF COALESCE(NEW.ret_isr,0) > 0 OR COALESCE(NEW.ret_iva,0) > 0 THEN RETURN NEW; END IF;
   SELECT COALESCE(subtotal,0), COALESCE(iva,0), COALESCE(ret_isr,0), COALESCE(ret_iva,0)
     INTO v_fac_subtotal, v_fac_iva, v_fac_ret_isr, v_fac_ret_iva
     FROM public.facturas WHERE id = NEW.factura_id;
-  v_base := v_fac_subtotal + v_fac_iva - v_fac_ret_iva - v_fac_ret_isr;
+  IF COALESCE(v_fac_ret_isr,0) = 0 AND COALESCE(v_fac_ret_iva,0) = 0 THEN
+    RETURN NEW;
+  END IF;
+  -- N10: la base debe ser neta de las NC ya aplicadas (misma moneda de la
+  -- factura); antes se prorrateaba contra el total bruto y las retenciones
+  -- sumaban más de lo retenido realmente.
+  v_ncs := COALESCE(public.nc_aplicadas_en_moneda_factura(NEW.factura_id), 0);
+  v_base := v_fac_subtotal + v_fac_iva - v_fac_ret_iva - v_fac_ret_isr - v_ncs;
   -- FIX-R4-05: si monto_aplicado_factura aún no llegó (otro trigger BEFORE lo poblará),
   -- usar NEW.monto como base para prorratear las retenciones.
   v_monto := COALESCE(NULLIF(NEW.monto_aplicado_factura,0), NEW.monto);
-  IF v_base > 0 AND COALESCE(v_monto,0) > 0 THEN
+  IF v_base <= 0 OR COALESCE(v_monto,0) <= 0 THEN
+    RETURN NEW;
+  END IF;
+  SELECT COALESCE(SUM(COALESCE(p.ret_isr,0)),0),
+         COALESCE(SUM(COALESCE(p.ret_iva,0)),0),
+         COALESCE(SUM(COALESCE(NULLIF(p.monto_aplicado_factura,0), p.monto)),0)
+    INTO v_prev_isr, v_prev_iva, v_prev_monto
+    FROM public.pagos_factura p
+   WHERE p.factura_id = NEW.factura_id
+     AND p.deleted_at IS NULL
+     AND p.id IS DISTINCT FROM NEW.id;
+  IF v_prev_monto + v_monto >= v_base - 0.01 THEN
+    -- Pago liquidador: absorbe el residuo de centavos del prorrateo.
+    NEW.ret_isr := GREATEST(ROUND(v_fac_ret_isr - v_prev_isr, 2), 0);
+    NEW.ret_iva := GREATEST(ROUND(v_fac_ret_iva - v_prev_iva, 2), 0);
+  ELSE
     v_ratio := v_monto / v_base;
     NEW.ret_isr := ROUND(v_fac_ret_isr * v_ratio, 2);
     NEW.ret_iva := ROUND(v_fac_ret_iva * v_ratio, 2);
@@ -6759,7 +6913,8 @@ CREATE TABLE public.anticipos_proveedor (
     updated_at timestamp with time zone DEFAULT now() NOT NULL,
     embarque_id uuid,
     CONSTRAINT anticipos_proveedor_estado_check CHECK ((estado = ANY (ARRAY['disponible'::text, 'aplicado_parcial'::text, 'aplicado_total'::text, 'cancelado'::text]))),
-    CONSTRAINT anticipos_proveedor_monto_check CHECK ((monto > (0)::numeric))
+    CONSTRAINT anticipos_proveedor_monto_check CHECK ((monto > (0)::numeric)),
+    CONSTRAINT anticipos_proveedor_saldo_rango_check CHECK (((saldo_disponible IS NULL) OR ((saldo_disponible >= (0)::numeric) AND (saldo_disponible <= (monto + 0.01)))))
 );
 ALTER TABLE ONLY public.anticipos_proveedor FORCE ROW LEVEL SECURITY;
 CREATE FUNCTION public.cancelar_anticipo_proveedor(p_id uuid, p_motivo text) RETURNS public.anticipos_proveedor
@@ -8422,6 +8577,26 @@ BEGIN
   RETURN jsonb_build_object('cliente_id', v_cliente_id, 'oportunidad_id', v_op_id, 'creado', true);
 END;
 $$;
+CREATE FUNCTION public.convertir_monto_dof(p_monto numeric, p_moneda_origen text, p_moneda_destino text, p_fecha date) RETURNS numeric
+    LANGUAGE plpgsql STABLE SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+DECLARE v_o numeric; v_d numeric;
+BEGIN
+  IF p_monto IS NULL THEN RETURN NULL; END IF;
+  IF UPPER(COALESCE(p_moneda_origen,'MXN')) = UPPER(COALESCE(p_moneda_destino,'MXN')) THEN
+    RETURN p_monto;
+  END IF;
+  v_o := public.tc_dof_moneda(p_fecha, p_moneda_origen);
+  v_d := public.tc_dof_moneda(p_fecha, p_moneda_destino);
+  IF v_o IS NULL OR v_d IS NULL OR v_o <= 0 OR v_d <= 0 THEN
+    RAISE EXCEPTION 'LC_SIN_TC_DOF: no hay tipo de cambio DOF para % o % al %.',
+      p_moneda_origen, p_moneda_destino, p_fecha
+      USING ERRCODE = '22023';
+  END IF;
+  RETURN round(p_monto * v_o / v_d, 4);
+END;
+$$;
 CREATE FUNCTION public.convertir_monto_pago_a_factura(p_monto numeric, p_moneda_pago public.moneda, p_tc_pago numeric, p_moneda_fact public.moneda, p_tc_fact numeric) RETURNS numeric
     LANGUAGE plpgsql IMMUTABLE
     SET search_path TO 'public'
@@ -9669,6 +9844,7 @@ DECLARE
   v_tc numeric;
   v_ocupados int;
   v_actualizados int;
+  v_ajenos int;
 BEGIN
   IF p_concepto_ids IS NULL OR array_length(p_concepto_ids, 1) IS NULL THEN
     RAISE EXCEPTION 'Debe seleccionar al menos un concepto';
@@ -9679,10 +9855,36 @@ BEGIN
     v_org := current_user_org_id();
   END IF;
   PERFORM public._assert_writer(v_org);
+  -- Ola E1 · C5: el embarque debe existir en la organización y coincidir con
+  -- el cliente recibido; antes se confiaba en los argumentos del cliente.
+  IF NOT EXISTS (
+    SELECT 1 FROM public.embarques e
+     WHERE e.id = p_embarque_id
+       AND e.organization_id = v_org
+       AND e.deleted_at IS NULL
+       AND (p_cliente_id IS NULL OR e.cliente_id = p_cliente_id)
+  ) THEN
+    RAISE EXCEPTION 'LC_PROFORMA_EMBARQUE_INVALIDO: el embarque no existe en tu organización o no corresponde al cliente indicado'
+      USING ERRCODE = 'P0001';
+  END IF;
   -- Bloquea los conceptos y valida que estén libres antes de crear la proforma.
   PERFORM 1 FROM public.conceptos_venta
    WHERE id = ANY(p_concepto_ids) AND organization_id = v_org
    FOR UPDATE;
+  -- Ola E1 · C5: ningún concepto puede venir de otro embarque ni estar borrado.
+  SELECT COUNT(*) INTO v_ajenos
+  FROM unnest(p_concepto_ids) AS s(id)
+  WHERE NOT EXISTS (
+    SELECT 1 FROM public.conceptos_venta cv
+     WHERE cv.id = s.id
+       AND cv.organization_id = v_org
+       AND cv.embarque_id = p_embarque_id
+       AND cv.deleted_at IS NULL
+  );
+  IF v_ajenos > 0 THEN
+    RAISE EXCEPTION 'LC_CONCEPTOS_AJENOS: % concepto(s) no pertenecen a este embarque o fueron eliminados; recarga la pantalla', v_ajenos
+      USING ERRCODE = 'P0001';
+  END IF;
   SELECT COUNT(*) INTO v_ocupados
   FROM public.conceptos_venta
   WHERE id = ANY(p_concepto_ids)
@@ -9700,7 +9902,8 @@ BEGIN
       UPDATE public.conceptos_venta
       SET aplica_iva = v_override.aplica
       WHERE id = v_override.concepto_id::uuid
-        AND organization_id = v_org;
+        AND organization_id = v_org
+        AND embarque_id = p_embarque_id;
     END LOOP;
   END IF;
   SELECT
@@ -9746,6 +9949,7 @@ BEGIN
   SET estado_facturacion = 'en_proforma', proforma_id = v_proforma.id
   WHERE id = ANY(p_concepto_ids)
     AND organization_id = v_org
+    AND embarque_id = p_embarque_id
     AND proforma_id IS NULL
     AND COALESCE(estado_facturacion, 'pendiente') = 'pendiente';
   GET DIAGNOSTICS v_actualizados = ROW_COUNT;
@@ -10643,6 +10847,20 @@ CREATE FUNCTION public.is_org_member(p_org uuid) RETURNS boolean
   SELECT COALESCE(public.current_user_org_id() = p_org, false)
       OR COALESCE(public.has_role(auth.uid(), 'super_admin'::app_role), false);
 $$;
+CREATE FUNCTION public.monto_pago_en_moneda_factura(p_monto numeric, p_moneda_pago text, p_tc_pago numeric, p_moneda_factura text) RETURNS numeric
+    LANGUAGE plpgsql IMMUTABLE
+    SET search_path TO 'public'
+    AS $$
+BEGIN
+  IF p_monto IS NULL THEN RETURN NULL; END IF;
+  IF p_moneda_pago = p_moneda_factura THEN RETURN p_monto; END IF;
+  IF COALESCE(p_tc_pago, 0) <= 0 THEN RETURN NULL; END IF;
+  IF p_moneda_pago = 'MXN' THEN RETURN round(p_monto / p_tc_pago, 4); END IF;
+  IF p_moneda_factura = 'MXN' THEN RETURN round(p_monto * p_tc_pago, 4); END IF;
+  -- Cruce USD<->EUR: pagos_proveedor no almacena TC cruzado; se excluye.
+  RETURN NULL;
+END;
+$$;
 CREATE TABLE public.pagos_proveedor (
     id uuid DEFAULT gen_random_uuid() NOT NULL,
     organization_id uuid DEFAULT public.current_user_org_id() NOT NULL,
@@ -10694,9 +10912,9 @@ CREATE TABLE public.proveedor_notas_credito (
     archivo_pdf_url text,
     uuid_fiscal text,
     uuid_estatus_sat text,
-    uuid_verificado_fecha timestamp with time zone
-,
-    tipo_cambio numeric);
+    uuid_verificado_fecha timestamp with time zone,
+    tipo_cambio numeric
+);
 CREATE VIEW public.v_proveedor_facturas_saldo WITH (security_invoker='true') AS
  SELECT pf.id AS proveedor_factura_id,
     pf.organization_id,
@@ -10714,7 +10932,6 @@ CREATE VIEW public.v_proveedor_facturas_saldo WITH (security_invoker='true') AS
           WHERE ((nc.proveedor_factura_id = pf.id) AND (nc.estado = 'Aplicada'::public.estado_nota_credito_proveedor) AND (nc.deleted_at IS NULL))), (0)::numeric)) AS saldo
    FROM public.proveedor_facturas pf
   WHERE (pf.deleted_at IS NULL);
-
 CREATE VIEW public.cxp_alertas_vencimiento WITH (security_invoker='on') AS
  SELECT pf.id AS proveedor_factura_id,
     pf.organization_id,
@@ -10877,7 +11094,6 @@ DECLARE
   v_meses text[] := ARRAY['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 BEGIN
   v_nombre_mes := v_meses[extract(month from v_inicio_sig)::int] || ' ' || extract(year from v_inicio_sig)::text;
-
   RETURN (
     WITH embarques_base AS (
       SELECT e.id, e.expediente, e.cliente_nombre, e.cliente_id, e.modo::text, e.tipo::text,
@@ -12865,11 +13081,6 @@ BEGIN
     RAISE EXCEPTION 'LC_ORG_FORBIDDEN: el pago pertenece a otra organizacion'
       USING ERRCODE = '42501';
   END IF;
-  -- Ola 8 + FIX B-6: el rol financiero se valida contra la membresía en la
-  -- organización del pago, con la lista EXACTA de es_escritor_financiero
-  -- {super_admin, admin, admin_org, contador, tesorero, ejecutivo_cobranza}
-  -- y SIN expansión de jerarquía: `auxiliar_contable` queda fuera por
-  -- decisión conservadora.
   IF NOT public.has_any_role_in_org_exact(v_uid,
        ARRAY['super_admin','admin','admin_org','contador','tesorero','ejecutivo_cobranza']::public.app_role[],
        v_pago.organization_id) THEN
@@ -12879,9 +13090,6 @@ BEGIN
   UPDATE public.pagos_proveedor
      SET deleted_at = now(), deleted_by = v_uid
    WHERE id = _pago_id AND deleted_at IS NULL;
-  -- BUG-07 (auditoría 2026-08-18): si el pago venía de un anticipo, la
-  -- aplicación debe revertirse en la MISMA transacción; el trigger
-  -- `trg_anticipo_saldo` recalcula saldo_disponible y estado del anticipo.
   WITH rev AS (
     UPDATE public.anticipos_aplicaciones
        SET deleted_at = now(), deleted_by = v_uid, updated_at = now()
@@ -12890,11 +13098,13 @@ BEGIN
     RETURNING 1
   )
   SELECT count(*) INTO v_anticipos FROM rev;
+  -- Ola E1 · N21: sólo los movimientos GENERADOS por el pago (hash_dedupe) se
+  -- dan de baja; los movimientos bancarios reales del estado de cuenta se
+  -- desvinculan más abajo (nunca se borran).
   WITH baja AS (
     UPDATE public.bbva_movimientos
        SET deleted_at = now(), deleted_by = v_uid
      WHERE deleted_at IS NULL
-       AND (pago_proveedor_id = _pago_id OR hash_dedupe = 'pago-' || _pago_id::text)
        AND hash_dedupe = 'pago-' || _pago_id::text
     RETURNING 1
   )
@@ -14114,9 +14324,6 @@ BEGIN
          f.organization_id,
          f.numero::text,
          f.serie::text,
-         -- BUG-2026-08-25: `facturas.folio` no existe; el folio fiscal es
-         -- `folio_fiscal` (la referencia anterior rompía el estado de cuenta
-         -- por correo con error 42703).
          f.folio_fiscal::text,
          f.cliente_id,
          f.cliente_nombre::text,
@@ -14126,9 +14333,8 @@ BEGIN
            ELSE (COALESCE(f.total, 0)
              - COALESCE((SELECT SUM(p.monto_aplicado_factura) FROM public.pagos_factura p
                           WHERE p.factura_id = f.id AND p.deleted_at IS NULL), 0)
-             - COALESCE((SELECT SUM(nc.monto) FROM public.factura_notas_credito nc
-                          WHERE nc.factura_id = f.id AND nc.deleted_at IS NULL
-                            AND nc.estado = 'Aplicada'), 0))::numeric
+             -- Ola E1 · C1-res: antes `SUM(nc.monto)` en crudo mezclaba monedas.
+             - public._nc_aplicadas_moneda_factura(f.id))::numeric
          END AS saldo,
          f.moneda::text,
          f.estado::text,
@@ -15292,7 +15498,9 @@ BEGIN
     COALESCE(SUM(ROUND(
         COALESCE(c.cantidad, 1) * COALESCE(c.precio_unitario, 0)
         * COALESCE(c.tasa_iva_aplicada,
-                   CASE WHEN c.tipo_iva = 'gravado_16' THEN 0.16 ELSE 0 END),
+                   CASE WHEN c.tipo_iva = 'gravado_16' THEN 0.16
+                        WHEN c.tipo_iva = 'gravado_8'  THEN 0.08
+                        ELSE 0 END),
         2)), 0),
     COALESCE(SUM(COALESCE(c.monto_ret_isr, 0)), 0),
     COALESCE(SUM(COALESCE(c.monto_ret_iva, 0)), 0)
@@ -16827,20 +17035,6 @@ BEGIN
       'viewer_a_customer_service', v_ur_viewer
     )
   );
-END;
-$$;
-CREATE FUNCTION public.monto_pago_en_moneda_factura(p_monto numeric, p_moneda_pago text, p_tc_pago numeric, p_moneda_factura text) RETURNS numeric
-    LANGUAGE plpgsql IMMUTABLE
-    SET search_path TO 'public'
-    AS $$
-BEGIN
-  IF p_monto IS NULL THEN RETURN NULL; END IF;
-  IF p_moneda_pago = p_moneda_factura THEN RETURN p_monto; END IF;
-  IF COALESCE(p_tc_pago, 0) <= 0 THEN RETURN NULL; END IF;
-  IF p_moneda_pago = 'MXN' THEN RETURN round(p_monto / p_tc_pago, 4); END IF;
-  IF p_moneda_factura = 'MXN' THEN RETURN round(p_monto * p_tc_pago, 4); END IF;
-  -- Cruce USD<->EUR: pagos_proveedor no almacena TC cruzado; se excluye.
-  RETURN NULL;
 END;
 $$;
 CREATE FUNCTION public.move_to_dlq(source_queue text, dlq_name text, message_id bigint, payload jsonb) RETURNS bigint
@@ -19555,9 +19749,24 @@ CREATE FUNCTION public.puede_ver_costos_cotizacion(_user_id uuid DEFAULT auth.ui
   SELECT _user_id IS NOT NULL AND public.has_any_role_efectivo(
     _user_id,
     ARRAY['admin','admin_org','super_admin','gerente_comercial','gerente_visor',
-          'gerente_operaciones','ejecutivo_pricing','vendedor','coordinador_logistico',
+          'gerente_operaciones','ejecutivo_pricing','coordinador_logistico',
           'operador','customer_service','contador','tesorero','auxiliar_contable']::app_role[]
   );
+$$;
+CREATE FUNCTION public.puede_ver_costos_cotizacion_propia(_cotizacion_id uuid, _user_id uuid DEFAULT auth.uid()) RETURNS boolean
+    LANGUAGE sql STABLE SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+  SELECT _user_id IS NOT NULL
+     AND _cotizacion_id IS NOT NULL
+     AND public.has_any_role_efectivo(_user_id, ARRAY['vendedor']::app_role[])
+     AND EXISTS (
+       SELECT 1
+       FROM public.cotizaciones c
+       WHERE c.id = _cotizacion_id
+         AND c.created_by = _user_id
+         AND c.organization_id = public.current_user_org_id()
+     );
 $$;
 CREATE FUNCTION public.puede_ver_costos_dashboard(_user_id uuid DEFAULT auth.uid()) RETURNS boolean
     LANGUAGE sql STABLE SECURITY DEFINER
@@ -22830,25 +23039,21 @@ BEGIN
   IF v_oid IS NULL THEN
     RAISE EXCEPTION 'LC_ORG_SIN_CONTEXTO: no hay organización activa' USING ERRCODE = '42501';
   END IF;
-
   SELECT * INTO v_f
   FROM public.proveedor_facturas
   WHERE id = p_factura_id
     AND deleted_at IS NULL
     AND organization_id = v_oid
     AND estado <> 'Cancelada';
-
   IF v_f.id IS NULL THEN
     RETURN NULL;
   END IF;
-
   SELECT COALESCE(SUM(public.monto_pago_en_moneda_factura(pp.monto, pp.moneda::text, pp.tipo_cambio_usd, v_f.moneda::text)), 0),
          BOOL_OR(pp.moneda::text <> v_f.moneda::text AND COALESCE(pp.tipo_cambio_usd, 0) <= 0)
     INTO v_pagado, v_incompleto
   FROM public.pagos_proveedor pp
   WHERE pp.proveedor_factura_id = p_factura_id
     AND pp.deleted_at IS NULL;
-
   -- Ola 17 · H8-B: la NC se valúa en la moneda de la factura con su TC DOF.
   SELECT COALESCE(SUM(public.monto_pago_en_moneda_factura(nc.monto, nc.moneda::text, nc.tipo_cambio, v_f.moneda::text)), 0),
          BOOL_OR(nc.moneda::text <> v_f.moneda::text AND COALESCE(nc.tipo_cambio, 0) <= 0)
@@ -22857,7 +23062,6 @@ BEGIN
   WHERE nc.proveedor_factura_id = p_factura_id
     AND nc.deleted_at IS NULL
     AND nc.estado = 'Aplicada';
-
   RETURN jsonb_build_object(
     'factura_id', p_factura_id,
     'moneda', v_f.moneda::text,
@@ -23115,15 +23319,31 @@ CREATE FUNCTION public.seed_presupuesto_categorias(p_organization_id uuid) RETUR
     AS $$
 DECLARE
   v_existing INTEGER;
+  v_org uuid;
 BEGIN
+  -- v13.782.1 — `pg_has_role(current_user,'service_role','MEMBER')` cubre los
+  -- callers de mantenimiento (postgres/superuser, replay de migraciones y las
+  -- suites RLS del CI). `authenticated` NO es miembro de service_role, así que
+  -- el candado multi-tenant para la app queda intacto.
+  IF public.has_role(auth.uid(), 'super_admin'::app_role)
+     OR COALESCE(auth.role()::text, '') = 'service_role'
+     OR pg_has_role(current_user, 'service_role', 'MEMBER') THEN
+    v_org := p_organization_id;
+  ELSE
+    v_org := public.current_user_org_id();
+    IF v_org IS NULL OR p_organization_id IS DISTINCT FROM v_org THEN
+      RAISE EXCEPTION 'LC_ORG_FORBIDDEN: no puedes sembrar categorías de otra organización'
+        USING ERRCODE = '42501';
+    END IF;
+  END IF;
   SELECT COUNT(*) INTO v_existing
   FROM public.presupuesto_categorias
-  WHERE organization_id = p_organization_id;
+  WHERE organization_id = v_org;
   IF v_existing > 0 THEN RETURN; END IF;
   INSERT INTO public.presupuesto_categorias (organization_id, nombre, tipo_contable, orden, activa) VALUES
-    (p_organization_id, 'Costos directos de embarque (COGS)', 'CostoDirectoEmbarque', 10, true),
-    (p_organization_id, 'Gastos de administración',           'Administracion',        20, true),
-    (p_organization_id, 'Gastos de venta',                    'Venta',                 30, true);
+    (v_org, 'Costos directos de embarque (COGS)', 'CostoDirectoEmbarque', 10, true),
+    (v_org, 'Gastos de administración',           'Administracion',        20, true),
+    (v_org, 'Gastos de venta',                    'Venta',                 30, true);
 END;
 $$;
 CREATE FUNCTION public.seleccionar_lote_sat_semanal(p_max_orgs integer DEFAULT 5) RETURNS TABLE(organization_id uuid)
@@ -24096,6 +24316,26 @@ CREATE FUNCTION public.tc_dof_cobertura_faltante() RETURNS TABLE(tabla text, doc
   WHERE d.organization_id = public.current_user_org_id()
     AND t.origen = 'sin_tc'
   ORDER BY d.fecha NULLS FIRST, d.tabla;
+$$;
+CREATE FUNCTION public.tc_dof_moneda(p_fecha date, p_moneda text) RETURNS numeric
+    LANGUAGE sql STABLE SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+  SELECT CASE
+    WHEN UPPER(COALESCE(p_moneda,'MXN')) = 'MXN' THEN 1::numeric
+    ELSE (
+      SELECT CASE WHEN UPPER(p_moneda) = 'USD' THEN NULLIF(d.usd_mxn, 0)
+                  WHEN UPPER(p_moneda) = 'EUR' THEN NULLIF(d.eur_mxn, 0)
+                  ELSE NULL END
+        FROM public.tipos_cambio_dof d
+       WHERE d.fecha <= p_fecha
+         AND CASE WHEN UPPER(p_moneda) = 'USD' THEN NULLIF(d.usd_mxn,0)
+                  WHEN UPPER(p_moneda) = 'EUR' THEN NULLIF(d.eur_mxn,0)
+                  ELSE NULL END IS NOT NULL
+       ORDER BY d.fecha DESC
+       LIMIT 1
+    )
+  END;
 $$;
 CREATE FUNCTION public.tc_dof_upsert_manual(_fecha date, _usd numeric, _eur numeric DEFAULT NULL::numeric) RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
@@ -25464,7 +25704,8 @@ CREATE TABLE public.bbva_movimientos (
     anticipo_proveedor_id uuid,
     pago_proveedor_lote_id uuid,
     pago_factura_lote_id uuid,
-    traspaso_id uuid
+    traspaso_id uuid,
+    CONSTRAINT bbva_movimientos_cargo_abono_check CHECK (((cargo >= (0)::numeric) AND (abono >= (0)::numeric) AND ((((cargo > (0)::numeric))::integer + ((abono > (0)::numeric))::integer) <= 1)))
 );
 ALTER TABLE ONLY public.bbva_movimientos FORCE ROW LEVEL SECURITY;
 CREATE TABLE public.bitacora_actividad (
@@ -25495,7 +25736,7 @@ CREATE TABLE public.catalogo_claves_sat (
     nombre_unidad text,
     CONSTRAINT catalogo_claves_sat_clave_len CHECK ((length(TRIM(BOTH FROM clave_sat)) >= 6)),
     CONSTRAINT catalogo_claves_sat_patron_len CHECK ((length(TRIM(BOTH FROM patron)) > 0)),
-    CONSTRAINT catalogo_claves_sat_tipo_iva_chk CHECK ((tipo_iva = ANY (ARRAY['gravado_16'::text, 'tasa_0'::text, 'exento'::text])))
+    CONSTRAINT catalogo_claves_sat_tipo_iva_chk CHECK ((tipo_iva = ANY (ARRAY['gravado_16'::text, 'gravado_8'::text, 'tasa_0'::text, 'exento'::text])))
 );
 CREATE TABLE public.cierre_embarque_log (
     id uuid DEFAULT gen_random_uuid() NOT NULL,
@@ -25649,7 +25890,7 @@ CREATE TABLE public.conceptos_factura (
     updated_at timestamp with time zone DEFAULT now(),
     CONSTRAINT conceptos_factura_cantidad_pos CHECK ((cantidad >= 1)),
     CONSTRAINT conceptos_factura_precio_nonneg CHECK ((precio_unitario >= (0)::numeric)),
-    CONSTRAINT conceptos_factura_tipo_iva_check CHECK ((tipo_iva = ANY (ARRAY['gravado_16'::text, 'tasa_0'::text, 'exento'::text]))),
+    CONSTRAINT conceptos_factura_tipo_iva_check CHECK ((tipo_iva = ANY (ARRAY['gravado_16'::text, 'gravado_8'::text, 'tasa_0'::text, 'exento'::text]))),
     CONSTRAINT conceptos_factura_total_nonneg CHECK ((total >= (0)::numeric))
 );
 CREATE TABLE public.conceptos_venta (
@@ -26412,14 +26653,14 @@ CREATE TABLE public.embarques (
     CONSTRAINT embarques_volumen_nonneg CHECK ((volumen_m3 >= (0)::numeric))
 );
 CREATE VIEW public.embarques_interno_v WITH (security_invoker='true') AS
- SELECT id,
-    organization_id,
-    cerrado_snapshot,
-    tarifa_delta_jsonb,
-    reabierto_motivo,
-    created_by_email
+ SELECT e.id,
+    e.organization_id,
+    e.cerrado_snapshot,
+    e.tarifa_delta_jsonb,
+    e.reabierto_motivo,
+    e.created_by_email
    FROM public.embarques_internos_src() e(id, organization_id, cerrado_snapshot, tarifa_delta_jsonb, reabierto_motivo, created_by_email)
-  WHERE (public.is_org_member(organization_id) AND (NOT public.has_role(( SELECT auth.uid() AS uid), 'cliente'::public.app_role)) AND (NOT public.has_role(( SELECT auth.uid() AS uid), 'agente_carga'::public.app_role)));
+  WHERE (public.is_org_member(e.organization_id) AND (NOT public.has_role(( SELECT auth.uid() AS uid), 'cliente'::public.app_role)) AND (NOT public.has_role(( SELECT auth.uid() AS uid), 'agente_carga'::public.app_role)));
 CREATE TABLE public.eventos_embarque (
     id uuid DEFAULT gen_random_uuid() NOT NULL,
     embarque_id uuid NOT NULL,
@@ -27044,7 +27285,7 @@ CREATE TABLE public.tracking_links (
     embarque_id uuid NOT NULL,
     organization_id uuid DEFAULT public.current_user_org_id() NOT NULL,
     created_by uuid DEFAULT auth.uid() NOT NULL,
-    expires_at timestamp with time zone,
+    expires_at timestamp with time zone DEFAULT (now() + '30 days'::interval) NOT NULL,
     created_at timestamp with time zone DEFAULT now()
 );
 CREATE TABLE public.tracking_webhook_log (
@@ -27107,7 +27348,7 @@ CREATE VIEW public.v_pagos_rep_pendientes WITH (security_invoker='on') AS
     f.cliente_id,
     f.embarque_id,
     (((date_trunc('month'::text, (pf.fecha_pago)::timestamp with time zone) + '1 mon'::interval) + '4 days'::interval))::date AS fecha_limite_rep,
-    ((((date_trunc('month'::text, (pf.fecha_pago)::timestamp with time zone) + '1 mon'::interval) + '4 days'::interval))::date - CURRENT_DATE) AS dias_restantes
+    ((((date_trunc('month'::text, (pf.fecha_pago)::timestamp with time zone) + '1 mon'::interval) + '4 days'::interval))::date - ((now() AT TIME ZONE 'America/Mexico_City'::text))::date) AS dias_restantes
    FROM (public.pagos_factura pf
      JOIN public.facturas f ON (((f.id = pf.factura_id) AND (f.deleted_at IS NULL))))
   WHERE ((pf.estado_rep = 'Pendiente'::text) AND (pf.deleted_at IS NULL) AND (f.metodo_pago = 'PPD'::text));
@@ -27570,9 +27811,7 @@ CREATE INDEX idx_cliente_documentos_cliente ON public.cliente_documentos USING b
 CREATE INDEX idx_cliente_documentos_org ON public.cliente_documentos USING btree (organization_id) WHERE (deleted_at IS NULL);
 CREATE INDEX idx_clientes_deleted_at ON public.clientes USING btree (deleted_at) WHERE (deleted_at IS NOT NULL);
 CREATE INDEX idx_clientes_nombre_trgm ON public.clientes USING gin (nombre extensions.gin_trgm_ops);
-CREATE INDEX idx_clientes_nombre_trgm ON public.clientes USING gin (nombre extensions.gin_trgm_ops);
 CREATE INDEX idx_clientes_org ON public.clientes USING btree (organization_id);
-CREATE INDEX idx_clientes_rfc_trgm ON public.clientes USING gin (rfc extensions.gin_trgm_ops);
 CREATE INDEX idx_clientes_rfc_trgm ON public.clientes USING gin (rfc extensions.gin_trgm_ops);
 CREATE INDEX idx_cobranza_seg_factura ON public.cobranza_seguimiento USING btree (factura_id);
 CREATE INDEX idx_cobranza_seg_org_fecha ON public.cobranza_seguimiento USING btree (organization_id, fecha DESC);
@@ -27623,17 +27862,14 @@ CREATE INDEX idx_cotizacion_versiones_org ON public.cotizacion_versiones USING b
 CREATE INDEX idx_cotizaciones_agente_id ON public.cotizaciones USING btree (agente_id);
 CREATE INDEX idx_cotizaciones_cliente_id ON public.cotizaciones USING btree (cliente_id);
 CREATE INDEX idx_cotizaciones_cliente_trgm ON public.cotizaciones USING gin (cliente_nombre extensions.gin_trgm_ops);
-CREATE INDEX idx_cotizaciones_cliente_trgm ON public.cotizaciones USING gin (cliente_nombre extensions.gin_trgm_ops);
 CREATE INDEX idx_cotizaciones_created_by ON public.cotizaciones USING btree (created_by);
 CREATE INDEX idx_cotizaciones_deleted_at ON public.cotizaciones USING btree (deleted_at) WHERE (deleted_at IS NOT NULL);
 CREATE INDEX idx_cotizaciones_duplicada_de ON public.cotizaciones USING btree (duplicada_de_id) WHERE (duplicada_de_id IS NOT NULL);
-CREATE INDEX idx_cotizaciones_folio_trgm ON public.cotizaciones USING gin (folio extensions.gin_trgm_ops);
 CREATE INDEX idx_cotizaciones_folio_trgm ON public.cotizaciones USING gin (folio extensions.gin_trgm_ops);
 CREATE INDEX idx_cotizaciones_naviera_id ON public.cotizaciones USING btree (naviera_id);
 CREATE INDEX idx_cotizaciones_oportunidad ON public.cotizaciones USING btree (oportunidad_id);
 CREATE INDEX idx_cotizaciones_org ON public.cotizaciones USING btree (organization_id);
 CREATE INDEX idx_cotizaciones_org_tipo_doc ON public.cotizaciones USING btree (organization_id, tipo_documento);
-CREATE INDEX idx_cotizaciones_prospecto_trgm ON public.cotizaciones USING gin (prospecto_empresa extensions.gin_trgm_ops);
 CREATE INDEX idx_cotizaciones_prospecto_trgm ON public.cotizaciones USING gin (prospecto_empresa extensions.gin_trgm_ops);
 CREATE INDEX idx_cotizaciones_tarifa_id ON public.cotizaciones USING btree (tarifa_id);
 CREATE INDEX idx_crm_act_entidad ON public.crm_actividades USING btree (entidad_tipo, entidad_id);
@@ -27680,21 +27916,16 @@ CREATE INDEX idx_embarque_contenedores_org ON public.embarque_contenedores USING
 CREATE INDEX idx_embarque_garantias_contenedor_deleted_at ON public.embarque_garantias_contenedor USING btree (deleted_at) WHERE (deleted_at IS NOT NULL);
 CREATE INDEX idx_embarques_agente_id ON public.embarques USING btree (agente_id);
 CREATE INDEX idx_embarques_bl_master_trgm ON public.embarques USING gin (bl_master extensions.gin_trgm_ops);
-CREATE INDEX idx_embarques_bl_master_trgm ON public.embarques USING gin (bl_master extensions.gin_trgm_ops);
 CREATE INDEX idx_embarques_cliente_id ON public.embarques USING btree (cliente_id);
 CREATE INDEX idx_embarques_cliente_nombre_trgm ON public.embarques USING gin (cliente_nombre extensions.gin_trgm_ops);
-CREATE INDEX idx_embarques_cliente_nombre_trgm ON public.embarques USING gin (cliente_nombre extensions.gin_trgm_ops);
-CREATE INDEX idx_embarques_contenedor_trgm ON public.embarques USING gin (contenedor extensions.gin_trgm_ops);
 CREATE INDEX idx_embarques_contenedor_trgm ON public.embarques USING gin (contenedor extensions.gin_trgm_ops);
 CREATE INDEX idx_embarques_cotizacion_id ON public.embarques USING btree (cotizacion_id);
 CREATE INDEX idx_embarques_deleted_at ON public.embarques USING btree (deleted_at) WHERE (deleted_at IS NOT NULL);
-CREATE INDEX idx_embarques_descripcion_trgm ON public.embarques USING gin (descripcion_mercancia extensions.gin_trgm_ops);
 CREATE INDEX idx_embarques_descripcion_trgm ON public.embarques USING gin (descripcion_mercancia extensions.gin_trgm_ops);
 CREATE INDEX idx_embarques_estado ON public.embarques USING btree (estado);
 CREATE INDEX idx_embarques_estado_admin_pendiente ON public.embarques USING btree (organization_id, estado) WHERE ((estado = ANY (ARRAY['Entregado'::public.estado_embarque, 'EIR'::public.estado_embarque])) AND (deleted_at IS NULL));
 CREATE INDEX idx_embarques_eta ON public.embarques USING btree (eta);
 CREATE INDEX idx_embarques_etd ON public.embarques USING btree (etd);
-CREATE INDEX idx_embarques_expediente_trgm ON public.embarques USING gin (expediente extensions.gin_trgm_ops);
 CREATE INDEX idx_embarques_expediente_trgm ON public.embarques USING gin (expediente extensions.gin_trgm_ops);
 CREATE INDEX idx_embarques_facturado_historico ON public.embarques USING btree (facturado_historico) WHERE (facturado_historico = true);
 CREATE INDEX idx_embarques_modo ON public.embarques USING btree (modo);
@@ -27726,12 +27957,10 @@ CREATE INDEX idx_facturas_cancellation_pending ON public.facturas USING btree (o
 CREATE INDEX idx_facturas_cliente ON public.facturas USING btree (cliente_id);
 CREATE INDEX idx_facturas_cliente_estado ON public.facturas USING btree (cliente_id, estado) WHERE (estado = ANY (ARRAY['Emitida'::public.estado_factura, 'Vencida'::public.estado_factura, 'Parcialmente pagada'::public.estado_factura, 'Pagada'::public.estado_factura]));
 CREATE INDEX idx_facturas_cliente_trgm ON public.facturas USING gin (cliente_nombre extensions.gin_trgm_ops);
-CREATE INDEX idx_facturas_cliente_trgm ON public.facturas USING gin (cliente_nombre extensions.gin_trgm_ops);
 CREATE INDEX idx_facturas_cotizacion_id ON public.facturas USING btree (cotizacion_id);
 CREATE INDEX idx_facturas_deleted_at ON public.facturas USING btree (deleted_at) WHERE (deleted_at IS NOT NULL);
 CREATE INDEX idx_facturas_embarque ON public.facturas USING btree (embarque_id);
 CREATE INDEX idx_facturas_facturapi_pending ON public.facturas USING btree (organization_id, facturapi_claim_at) WHERE (facturapi_id ~~ 'PENDING:%'::text);
-CREATE INDEX idx_facturas_numero_trgm ON public.facturas USING gin (numero extensions.gin_trgm_ops);
 CREATE INDEX idx_facturas_numero_trgm ON public.facturas USING gin (numero extensions.gin_trgm_ops);
 CREATE INDEX idx_facturas_org ON public.facturas USING btree (organization_id);
 CREATE INDEX idx_facturas_org_estado ON public.facturas USING btree (organization_id, estado);
@@ -27818,8 +28047,6 @@ CREATE INDEX idx_proveedor_notas_credito_org ON public.proveedor_notas_credito U
 CREATE INDEX idx_proveedor_notas_credito_uuid_fiscal ON public.proveedor_notas_credito USING btree (uuid_fiscal) WHERE (uuid_fiscal IS NOT NULL);
 CREATE INDEX idx_proveedores_deleted_at ON public.proveedores USING btree (deleted_at) WHERE (deleted_at IS NOT NULL);
 CREATE INDEX idx_proveedores_nombre_trgm ON public.proveedores USING gin (nombre extensions.gin_trgm_ops);
-CREATE INDEX idx_proveedores_nombre_trgm ON public.proveedores USING gin (nombre extensions.gin_trgm_ops);
-CREATE INDEX idx_proveedores_rfc_trgm ON public.proveedores USING gin (rfc extensions.gin_trgm_ops);
 CREATE INDEX idx_proveedores_rfc_trgm ON public.proveedores USING gin (rfc extensions.gin_trgm_ops);
 CREATE INDEX idx_provisioning_log_accion ON public.provisioning_log USING btree (accion, created_at DESC);
 CREATE INDEX idx_provisioning_log_org ON public.provisioning_log USING btree (organization_id, created_at DESC);
@@ -27840,6 +28067,7 @@ CREATE INDEX idx_tracking_externo_shipment_id ON public.tracking_externo USING b
 CREATE INDEX idx_tracking_intentos_embarque ON public.tracking_intentos USING btree (embarque_id, created_at DESC);
 CREATE INDEX idx_tracking_intentos_org ON public.tracking_intentos USING btree (organization_id);
 CREATE INDEX idx_tracking_links_embarque ON public.tracking_links USING btree (embarque_id);
+CREATE INDEX idx_tracking_links_expires_at ON public.tracking_links USING btree (expires_at);
 CREATE INDEX idx_tracking_webhook_log_event_type ON public.tracking_webhook_log USING btree (event_type);
 CREATE INDEX idx_tracking_webhook_log_processed ON public.tracking_webhook_log USING btree (processed) WHERE (processed = false);
 CREATE INDEX idx_tracking_webhook_log_received_at ON public.tracking_webhook_log USING btree (received_at DESC);
@@ -27974,6 +28202,10 @@ CREATE TRIGGER trg_embarque_transicion_valida BEFORE UPDATE OF estado ON public.
 CREATE TRIGGER trg_embarques_cancelacion_cxc_cxp BEFORE UPDATE OF estado ON public.embarques FOR EACH ROW EXECUTE FUNCTION public.embarques_assert_cancelacion_sin_cxc_cxp();
 CREATE TRIGGER trg_embarques_entregado_demoras AFTER UPDATE OF estado ON public.embarques FOR EACH ROW EXECUTE FUNCTION public.trg_recalcular_demoras_al_entregar();
 CREATE TRIGGER trg_embarques_freeze_eta_original BEFORE INSERT OR UPDATE ON public.embarques FOR EACH ROW EXECUTE FUNCTION public.embarques_freeze_eta_original();
+CREATE TRIGGER trg_embarques_org_agente BEFORE INSERT OR UPDATE OF agente_id ON public.embarques FOR EACH ROW EXECUTE FUNCTION public._assert_padre_misma_org('agente_id', 'costeo_agentes');
+CREATE TRIGGER trg_embarques_org_cliente BEFORE INSERT OR UPDATE OF cliente_id ON public.embarques FOR EACH ROW EXECUTE FUNCTION public._assert_padre_misma_org('cliente_id', 'clientes');
+CREATE TRIGGER trg_embarques_org_cotizacion BEFORE INSERT OR UPDATE OF cotizacion_id ON public.embarques FOR EACH ROW EXECUTE FUNCTION public._assert_padre_misma_org('cotizacion_id', 'cotizaciones');
+CREATE TRIGGER trg_embarques_org_tarifa BEFORE INSERT OR UPDATE OF tarifa_id ON public.embarques FOR EACH ROW EXECUTE FUNCTION public._assert_padre_misma_org('tarifa_id', 'costeo_tarifas');
 CREATE TRIGGER trg_embarques_protect_creator BEFORE UPDATE ON public.embarques FOR EACH ROW EXECUTE FUNCTION public.embarques_protect_creator();
 CREATE TRIGGER trg_embarques_sembrar_tc_dof BEFORE INSERT ON public.embarques FOR EACH ROW EXECUTE FUNCTION public._embarques_sembrar_tc_dof();
 CREATE TRIGGER trg_embarques_sync_espejos BEFORE INSERT OR UPDATE OF cliente_id, naviera_id, agente_id ON public.embarques FOR EACH ROW EXECUTE FUNCTION public.trg_embarques_sync_espejos();
@@ -27983,7 +28215,9 @@ CREATE TRIGGER trg_entrante_meta_no_verificada BEFORE INSERT OR UPDATE ON public
 CREATE TRIGGER trg_entrantes_promover_por_liquidar AFTER INSERT OR UPDATE ON public.embarque_facturas_entrantes FOR EACH ROW EXECUTE FUNCTION public._trg_promover_por_liquidar();
 CREATE TRIGGER trg_eventos_embarque_cronologia BEFORE INSERT OR UPDATE OF fecha, tipo ON public.eventos_embarque FOR EACH ROW EXECUTE FUNCTION public._validar_cronologia_evento_embarque();
 CREATE TRIGGER trg_factura_cancelada_comisiones AFTER UPDATE OF estado ON public.facturas FOR EACH ROW EXECUTE FUNCTION public.tg_factura_cancelada_comisiones();
+CREATE TRIGGER trg_factura_soft_delete_guard BEFORE UPDATE OF deleted_at ON public.facturas FOR EACH ROW EXECUTE FUNCTION public._assert_soft_delete_factura_sin_hijos();
 CREATE TRIGGER trg_factura_tc_dof_obligatorio BEFORE INSERT ON public.facturas FOR EACH ROW EXECUTE FUNCTION public._factura_tc_dof_obligatorio();
+CREATE TRIGGER trg_factura_tc_dof_obligatorio_upd BEFORE UPDATE OF moneda ON public.facturas FOR EACH ROW EXECUTE FUNCTION public._factura_tc_dof_obligatorio();
 CREATE TRIGGER trg_factura_tc_extranjera_obligatorio BEFORE INSERT ON public.facturas FOR EACH ROW EXECUTE FUNCTION public.trg_factura_tc_extranjera_obligatorio();
 CREATE TRIGGER trg_facturapi_credenciales_updated_at BEFORE UPDATE ON public.facturapi_credenciales FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 CREATE TRIGGER trg_facturas_estado_a_embarques AFTER UPDATE OF estado ON public.facturas FOR EACH ROW WHEN ((old.estado IS DISTINCT FROM new.estado)) EXECUTE FUNCTION public.trg_facturas_estado_a_embarques();
@@ -28035,8 +28269,9 @@ CREATE TRIGGER trg_liberar_folio_proveedor_factura AFTER UPDATE OF deleted_at ON
 CREATE TRIGGER trg_liq_com_updated BEFORE UPDATE ON public.liquidaciones_comision FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 CREATE TRIGGER trg_log_role_change_om AFTER UPDATE OF role ON public.organization_members FOR EACH ROW EXECUTE FUNCTION public._log_role_change_om();
 CREATE TRIGGER trg_log_role_change_ur AFTER UPDATE OF role ON public.user_roles FOR EACH ROW EXECUTE FUNCTION public._log_role_change_ur();
-CREATE TRIGGER trg_movimiento_pago_consistente BEFORE INSERT OR UPDATE OF pago_factura_id, pago_proveedor_id, cuenta_bancaria_id, organization_id ON public.bbva_movimientos FOR EACH ROW EXECUTE FUNCTION public.assert_movimiento_pago_consistente();
+CREATE TRIGGER trg_movimiento_pago_consistente BEFORE INSERT OR UPDATE OF pago_factura_id, pago_proveedor_id, cuenta_bancaria_id, organization_id, anticipo_proveedor_id, pago_proveedor_lote_id, pago_factura_lote_id, traspaso_id, cargo, abono ON public.bbva_movimientos FOR EACH ROW EXECUTE FUNCTION public.assert_movimiento_pago_consistente();
 CREATE TRIGGER trg_navieras_propaga_nombre AFTER UPDATE OF name ON public.navieras FOR EACH ROW EXECUTE FUNCTION public.trg_navieras_propaga_nombre();
+CREATE TRIGGER trg_nc_alerta_retenciones AFTER INSERT OR UPDATE OF estado ON public.factura_notas_credito FOR EACH ROW EXECUTE FUNCTION public._nc_alerta_retenciones_pagadas();
 CREATE TRIGGER trg_nc_cliente_moneda_convertible BEFORE INSERT OR UPDATE OF estado, moneda, tipo_cambio ON public.factura_notas_credito FOR EACH ROW EXECUTE FUNCTION public.guard_nc_cliente_moneda_convertible();
 CREATE TRIGGER trg_nc_cliente_recalcular_comisiones AFTER INSERT OR UPDATE OF estado, monto, deleted_at ON public.factura_notas_credito FOR EACH ROW EXECUTE FUNCTION public._nc_cliente_recalcular_comisiones();
 CREATE TRIGGER trg_nc_cliente_transicion BEFORE INSERT OR UPDATE ON public.factura_notas_credito FOR EACH ROW EXECUTE FUNCTION public.guard_nc_cliente_transicion();
@@ -28048,6 +28283,8 @@ CREATE TRIGGER trg_nc_prov_tc_convertible BEFORE INSERT OR UPDATE OF monto, mone
 CREATE TRIGGER trg_notas_credito_prov_recalcular_estado AFTER INSERT OR DELETE OR UPDATE ON public.proveedor_notas_credito FOR EACH ROW EXECUTE FUNCTION public.tg_recalcular_estado_factura_proveedor();
 CREATE TRIGGER trg_notif_cli_embarque_estado AFTER UPDATE OF estado ON public.embarques FOR EACH ROW EXECUTE FUNCTION public.notif_cli_on_embarque_estado();
 CREATE TRIGGER trg_notificar_asignacion_hallazgo AFTER INSERT OR UPDATE OF responsable_id ON public.auditoria_revisiones FOR EACH ROW EXECUTE FUNCTION public.notificar_asignacion_hallazgo();
+CREATE TRIGGER trg_org_anticipos_embarque_id BEFORE INSERT OR UPDATE OF embarque_id, organization_id ON public.anticipos_proveedor FOR EACH ROW EXECUTE FUNCTION public._assert_padre_misma_org('embarque_id', 'embarques');
+CREATE TRIGGER trg_org_anticipos_proveedor_id BEFORE INSERT OR UPDATE OF proveedor_id, organization_id ON public.anticipos_proveedor FOR EACH ROW EXECUTE FUNCTION public._assert_padre_misma_org('proveedor_id', 'proveedores');
 CREATE TRIGGER trg_org_conceptos_costo_contenedor_id BEFORE INSERT OR UPDATE OF contenedor_id, organization_id ON public.conceptos_costo FOR EACH ROW EXECUTE FUNCTION public._assert_padre_misma_org('contenedor_id', 'embarque_contenedores');
 CREATE TRIGGER trg_org_conceptos_costo_embarque_id BEFORE INSERT OR UPDATE OF embarque_id, organization_id ON public.conceptos_costo FOR EACH ROW EXECUTE FUNCTION public._assert_padre_misma_org('embarque_id', 'embarques');
 CREATE TRIGGER trg_org_conceptos_costo_proveedor_id BEFORE INSERT OR UPDATE OF proveedor_id, organization_id ON public.conceptos_costo FOR EACH ROW EXECUTE FUNCTION public._assert_padre_misma_org('proveedor_id', 'proveedores');
@@ -28069,6 +28306,9 @@ CREATE TRIGGER trg_org_facturas_sustituye_a BEFORE INSERT OR UPDATE OF sustituye
 CREATE TRIGGER trg_org_pagos_factura_embarque_id BEFORE INSERT OR UPDATE OF embarque_id, organization_id ON public.pagos_factura FOR EACH ROW EXECUTE FUNCTION public._assert_padre_misma_org('embarque_id', 'embarques');
 CREATE TRIGGER trg_org_pagos_factura_factura_id BEFORE INSERT OR UPDATE OF factura_id, organization_id ON public.pagos_factura FOR EACH ROW EXECUTE FUNCTION public._assert_padre_misma_org('factura_id', 'facturas');
 CREATE TRIGGER trg_org_pagos_proveedor_proveedor_factura_id BEFORE INSERT OR UPDATE OF proveedor_factura_id, organization_id ON public.pagos_proveedor FOR EACH ROW EXECUTE FUNCTION public._assert_padre_misma_org('proveedor_factura_id', 'proveedor_facturas');
+CREATE TRIGGER trg_org_pfc_concepto_costo_id BEFORE INSERT OR UPDATE OF concepto_costo_id, organization_id ON public.proveedor_facturas_conceptos FOR EACH ROW EXECUTE FUNCTION public._assert_padre_misma_org('concepto_costo_id', 'conceptos_costo');
+CREATE TRIGGER trg_org_pfc_proveedor_factura_id BEFORE INSERT OR UPDATE OF proveedor_factura_id, organization_id ON public.proveedor_facturas_conceptos FOR EACH ROW EXECUTE FUNCTION public._assert_padre_misma_org('proveedor_factura_id', 'proveedor_facturas');
+CREATE TRIGGER trg_org_pnc_proveedor_factura_id BEFORE INSERT OR UPDATE OF proveedor_factura_id, organization_id ON public.proveedor_notas_credito FOR EACH ROW EXECUTE FUNCTION public._assert_padre_misma_org('proveedor_factura_id', 'proveedor_facturas');
 CREATE TRIGGER trg_org_proformas_cliente_id BEFORE INSERT OR UPDATE OF cliente_id, organization_id ON public.proformas FOR EACH ROW EXECUTE FUNCTION public._assert_padre_misma_org('cliente_id', 'clientes');
 CREATE TRIGGER trg_org_proformas_consolidada_en BEFORE INSERT OR UPDATE OF consolidada_en, organization_id ON public.proformas FOR EACH ROW EXECUTE FUNCTION public._assert_padre_misma_org('consolidada_en', 'proformas');
 CREATE TRIGGER trg_org_proformas_embarque_id BEFORE INSERT OR UPDATE OF embarque_id, organization_id ON public.proformas FOR EACH ROW EXECUTE FUNCTION public._assert_padre_misma_org('embarque_id', 'embarques');
@@ -28136,6 +28376,7 @@ CREATE TRIGGER trg_sync_user_roles_om_upd AFTER UPDATE OF role ON public.organiz
 CREATE TRIGGER trg_tipos_cambio_dof_updated_at BEFORE UPDATE ON public.tipos_cambio_dof FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 CREATE TRIGGER trg_touch_auditoria_revisiones BEFORE UPDATE ON public.auditoria_revisiones FOR EACH ROW EXECUTE FUNCTION public.touch_auditoria_revisiones();
 CREATE TRIGGER trg_tracking_externo_updated BEFORE UPDATE ON public.tracking_externo FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+CREATE TRIGGER trg_tracking_link_vigencia BEFORE INSERT OR UPDATE OF expires_at ON public.tracking_links FOR EACH ROW EXECUTE FUNCTION public._tracking_link_vigencia_maxima();
 CREATE TRIGGER trg_traspasos_bancarios_updated BEFORE UPDATE ON public.traspasos_bancarios FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 CREATE TRIGGER trg_uuid_fiscal_single_write BEFORE UPDATE OF uuid_fiscal ON public.facturas FOR EACH ROW EXECUTE FUNCTION public._assert_uuid_fiscal_single_write();
 CREATE TRIGGER trg_validar_snooze_auditoria BEFORE INSERT OR UPDATE OF snoozed_until, snooze_motivo ON public.auditoria_revisiones FOR EACH ROW EXECUTE FUNCTION public.validar_snooze_auditoria();
@@ -28499,7 +28740,7 @@ ALTER TABLE ONLY public.proformas
 ALTER TABLE ONLY public.proformas
     ADD CONSTRAINT proformas_consolidada_en_fkey FOREIGN KEY (consolidada_en) REFERENCES public.proformas(id) ON DELETE SET NULL;
 ALTER TABLE ONLY public.proformas
-    ADD CONSTRAINT proformas_embarque_id_fkey FOREIGN KEY (embarque_id) REFERENCES public.embarques(id) ON DELETE CASCADE;
+    ADD CONSTRAINT proformas_embarque_id_fkey FOREIGN KEY (embarque_id) REFERENCES public.embarques(id) ON DELETE RESTRICT;
 ALTER TABLE ONLY public.proformas
     ADD CONSTRAINT proformas_factura_id_fkey FOREIGN KEY (factura_id) REFERENCES public.facturas(id) ON DELETE SET NULL;
 ALTER TABLE ONLY public.proformas
@@ -28647,9 +28888,7 @@ CREATE POLICY "Compras puede insertar documentos de proveedor" ON public.proveed
 CREATE POLICY "Crear plantillas en la propia org" ON public.cotizacion_plantillas FOR INSERT TO authenticated WITH CHECK (((usuario_id = ( SELECT auth.uid() AS uid)) AND (EXISTS ( SELECT 1
    FROM public.organization_members m
   WHERE ((m.organization_id = cotizacion_plantillas.organization_id) AND (m.user_id = ( SELECT auth.uid() AS uid)))))));
-CREATE POLICY "Editar plantillas propias o admin/gerente de la org" ON public.cotizacion_plantillas FOR UPDATE TO authenticated USING (((EXISTS ( SELECT 1
-   FROM public.organization_members m
-  WHERE ((m.organization_id = cotizacion_plantillas.organization_id) AND (m.user_id = ( SELECT auth.uid() AS uid))))) AND ((usuario_id = ( SELECT auth.uid() AS uid)) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'admin'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'admin_org'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'gerente_comercial'::public.app_role) AS has_role))));
+CREATE POLICY "Editar plantillas propias o admin/gerente de la org" ON public.cotizacion_plantillas FOR UPDATE TO authenticated USING ((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id))) WITH CHECK ((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)));
 CREATE POLICY "Eliminar plantillas propias o admin/gerente de la org" ON public.cotizacion_plantillas FOR DELETE TO authenticated USING (((EXISTS ( SELECT 1
    FROM public.organization_members m
   WHERE ((m.organization_id = cotizacion_plantillas.organization_id) AND (m.user_id = ( SELECT auth.uid() AS uid))))) AND ((usuario_id = ( SELECT auth.uid() AS uid)) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'admin'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'admin_org'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'gerente_comercial'::public.app_role) AS has_role))));
@@ -28907,7 +29146,7 @@ CREATE POLICY "Tenant read clientes" ON public.clientes FOR SELECT TO authentica
 CREATE POLICY "Tenant read conceptos_costo" ON public.conceptos_costo FOR SELECT TO authenticated USING ((((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) AND ( SELECT public.has_any_role(( SELECT auth.uid() AS uid), ARRAY['viewer'::public.app_role]) AS has_any_role)));
 CREATE POLICY "Tenant read conceptos_venta" ON public.conceptos_venta FOR SELECT TO authenticated USING ((((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) AND ( SELECT public.has_any_role(( SELECT auth.uid() AS uid), ARRAY['viewer'::public.app_role]) AS has_any_role)));
 CREATE POLICY "Tenant read configuracion" ON public.configuracion FOR SELECT TO authenticated USING (((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)));
-CREATE POLICY "Tenant read cotizacion_costos" ON public.cotizacion_costos FOR SELECT TO authenticated USING ((((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) AND ( SELECT public.puede_ver_costos_cotizacion(( SELECT auth.uid() AS uid)) AS puede_ver_costos_cotizacion)));
+CREATE POLICY "Tenant read cotizacion_costos" ON public.cotizacion_costos FOR SELECT TO authenticated USING ((((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) AND (( SELECT public.puede_ver_costos_cotizacion(( SELECT auth.uid() AS uid)) AS puede_ver_costos_cotizacion) OR public.puede_ver_costos_cotizacion_propia(cotizacion_id, ( SELECT auth.uid() AS uid)))));
 CREATE POLICY "Tenant read crm_comentarios_oportunidad" ON public.crm_comentarios_oportunidad FOR SELECT TO authenticated USING (((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)));
 CREATE POLICY "Tenant read crm_cuotas_vendedor" ON public.crm_cuotas_vendedor FOR SELECT TO authenticated USING (((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)));
 CREATE POLICY "Tenant read crm_etapa_criterios" ON public.crm_etapa_criterios FOR SELECT TO authenticated USING (((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)));
@@ -29031,7 +29270,7 @@ ALTER TABLE public.clientes ENABLE ROW LEVEL SECURITY;
 CREATE POLICY cobranza_seg_delete_org ON public.cobranza_seguimiento FOR DELETE TO authenticated USING (((organization_id = public.current_user_org_id()) AND ((usuario_id = ( SELECT auth.uid() AS uid)) OR public.has_role(( SELECT auth.uid() AS uid), 'admin_org'::public.app_role) OR public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role))));
 CREATE POLICY cobranza_seg_insert_org ON public.cobranza_seguimiento FOR INSERT TO authenticated WITH CHECK (((organization_id = public.current_user_org_id()) AND (public.has_role(( SELECT auth.uid() AS uid), 'contador'::public.app_role) OR public.has_role(( SELECT auth.uid() AS uid), 'ejecutivo_cobranza'::public.app_role) OR public.has_role(( SELECT auth.uid() AS uid), 'admin_org'::public.app_role) OR public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role))));
 CREATE POLICY cobranza_seg_select_org ON public.cobranza_seguimiento FOR SELECT TO authenticated USING (((organization_id = public.current_user_org_id()) AND (public.has_role(( SELECT auth.uid() AS uid), 'contador'::public.app_role) OR public.has_role(( SELECT auth.uid() AS uid), 'tesorero'::public.app_role) OR public.has_role(( SELECT auth.uid() AS uid), 'ejecutivo_cobranza'::public.app_role) OR public.has_role(( SELECT auth.uid() AS uid), 'admin_org'::public.app_role) OR public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) OR public.has_role(( SELECT auth.uid() AS uid), 'gerente_operaciones'::public.app_role) OR public.has_role(( SELECT auth.uid() AS uid), 'gerente_visor'::public.app_role))));
-CREATE POLICY cobranza_seg_update_org ON public.cobranza_seguimiento FOR UPDATE TO authenticated USING (((organization_id = public.current_user_org_id()) AND ((usuario_id = ( SELECT auth.uid() AS uid)) OR public.has_role(( SELECT auth.uid() AS uid), 'admin_org'::public.app_role) OR public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role))));
+CREATE POLICY cobranza_seg_update_org ON public.cobranza_seguimiento FOR UPDATE TO authenticated USING ((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id))) WITH CHECK ((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)));
 ALTER TABLE public.cobranza_seguimiento ENABLE ROW LEVEL SECURITY;
 CREATE POLICY com_dev_admin_full ON public.comisiones_devengadas TO authenticated USING ((((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) AND (( SELECT public.has_role(( SELECT auth.uid() AS uid), 'admin'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)))) WITH CHECK ((((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) AND (( SELECT public.has_role(( SELECT auth.uid() AS uid), 'admin'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role))));
 CREATE POLICY com_dev_self_read ON public.comisiones_devengadas FOR SELECT TO authenticated USING (((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) AND (vendedora_id = ( SELECT auth.uid() AS uid))));
@@ -29253,6 +29492,9 @@ GRANT ALL ON FUNCTION public._assert_receptor_fiscal_valido(p_cliente_id uuid) T
 REVOKE ALL ON FUNCTION public._assert_refacturador(p_org uuid) FROM PUBLIC;
 GRANT ALL ON FUNCTION public._assert_refacturador(p_org uuid) TO authenticated;
 GRANT ALL ON FUNCTION public._assert_refacturador(p_org uuid) TO service_role;
+REVOKE ALL ON FUNCTION public._assert_soft_delete_factura_sin_hijos() FROM PUBLIC;
+GRANT ALL ON FUNCTION public._assert_soft_delete_factura_sin_hijos() TO authenticated;
+GRANT ALL ON FUNCTION public._assert_soft_delete_factura_sin_hijos() TO service_role;
 REVOKE ALL ON FUNCTION public._assert_uuid_fiscal_single_write() FROM PUBLIC;
 GRANT ALL ON FUNCTION public._assert_uuid_fiscal_single_write() TO service_role;
 REVOKE ALL ON FUNCTION public._assert_writer(p_org uuid) FROM PUBLIC;
@@ -29370,6 +29612,8 @@ GRANT ALL ON FUNCTION public._log_role_change_om() TO service_role;
 REVOKE ALL ON FUNCTION public._log_role_change_ur() FROM PUBLIC;
 GRANT ALL ON FUNCTION public._log_role_change_ur() TO authenticated;
 GRANT ALL ON FUNCTION public._log_role_change_ur() TO service_role;
+REVOKE ALL ON FUNCTION public._nc_alerta_retenciones_pagadas() FROM PUBLIC;
+GRANT ALL ON FUNCTION public._nc_alerta_retenciones_pagadas() TO service_role;
 REVOKE ALL ON FUNCTION public._nc_aplicadas_moneda_factura(p_factura_id uuid) FROM PUBLIC;
 GRANT ALL ON FUNCTION public._nc_aplicadas_moneda_factura(p_factura_id uuid) TO authenticated;
 GRANT ALL ON FUNCTION public._nc_aplicadas_moneda_factura(p_factura_id uuid) TO service_role;
@@ -29378,8 +29622,6 @@ GRANT ALL ON FUNCTION public._nc_cliente_recalcular_comisiones() TO authenticate
 GRANT ALL ON FUNCTION public._nc_cliente_recalcular_comisiones() TO service_role;
 REVOKE ALL ON FUNCTION public._nc_prov_tc_moneda_convertible() FROM PUBLIC;
 GRANT ALL ON FUNCTION public._nc_prov_tc_moneda_convertible() TO service_role;
-
-
 REVOKE ALL ON FUNCTION public._normalizar_email() FROM PUBLIC;
 GRANT ALL ON FUNCTION public._normalizar_email() TO authenticated;
 GRANT ALL ON FUNCTION public._normalizar_email() TO service_role;
@@ -29415,6 +29657,8 @@ REVOKE ALL ON FUNCTION public._seed_demo_limpiar_financiero() FROM PUBLIC;
 GRANT ALL ON FUNCTION public._seed_demo_limpiar_financiero() TO service_role;
 REVOKE ALL ON FUNCTION public._sync_user_roles_desde_membership() FROM PUBLIC;
 GRANT ALL ON FUNCTION public._sync_user_roles_desde_membership() TO service_role;
+GRANT ALL ON FUNCTION public._tracking_link_vigencia_maxima() TO authenticated;
+GRANT ALL ON FUNCTION public._tracking_link_vigencia_maxima() TO service_role;
 REVOKE ALL ON FUNCTION public._trg_autocierre_por_liquidar() FROM PUBLIC;
 GRANT ALL ON FUNCTION public._trg_autocierre_por_liquidar() TO authenticated;
 GRANT ALL ON FUNCTION public._trg_autocierre_por_liquidar() TO service_role;
@@ -29540,16 +29784,13 @@ REVOKE ALL ON FUNCTION public.auditoria_embarques_org(p_organization_id uuid) FR
 GRANT ALL ON FUNCTION public.auditoria_embarques_org(p_organization_id uuid) TO authenticated;
 GRANT ALL ON FUNCTION public.auditoria_embarques_org(p_organization_id uuid) TO service_role;
 REVOKE ALL ON FUNCTION public.auditoria_pfc_huerfanos() FROM PUBLIC;
-GRANT ALL ON FUNCTION public.auditoria_pfc_huerfanos() TO authenticated;
 GRANT ALL ON FUNCTION public.auditoria_pfc_huerfanos() TO service_role;
 REVOKE ALL ON FUNCTION public.avanzar_estado_embarque(p_embarque_id uuid, p_nuevo_estado text, p_usuario_email text, p_tipo_evento text, p_descripcion_evento text, p_request_id uuid) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.avanzar_estado_embarque(p_embarque_id uuid, p_nuevo_estado text, p_usuario_email text, p_tipo_evento text, p_descripcion_evento text, p_request_id uuid) TO authenticated;
 GRANT ALL ON FUNCTION public.avanzar_estado_embarque(p_embarque_id uuid, p_nuevo_estado text, p_usuario_email text, p_tipo_evento text, p_descripcion_evento text, p_request_id uuid) TO service_role;
 REVOKE ALL ON FUNCTION public.backfill_conceptos_venta_facturados() FROM PUBLIC;
-GRANT ALL ON FUNCTION public.backfill_conceptos_venta_facturados() TO authenticated;
 GRANT ALL ON FUNCTION public.backfill_conceptos_venta_facturados() TO service_role;
 REVOKE ALL ON FUNCTION public.backfill_proformas_aceptadas() FROM PUBLIC;
-GRANT ALL ON FUNCTION public.backfill_proformas_aceptadas() TO authenticated;
 GRANT ALL ON FUNCTION public.backfill_proformas_aceptadas() TO service_role;
 REVOKE ALL ON FUNCTION public.backfill_tc_dof_documentos(_simulacion boolean) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.backfill_tc_dof_documentos(_simulacion boolean) TO authenticated;
@@ -29682,6 +29923,9 @@ GRANT ALL ON FUNCTION public.convertir_a_mxn(_monto numeric, _moneda text, _tc_u
 REVOKE ALL ON FUNCTION public.convertir_lead_rpc(p_lead_id uuid, p_crear_cliente boolean, p_cliente_id uuid, p_nombre_oportunidad text, p_monto_estimado numeric, p_moneda text, p_fecha_estimada_cierre date) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.convertir_lead_rpc(p_lead_id uuid, p_crear_cliente boolean, p_cliente_id uuid, p_nombre_oportunidad text, p_monto_estimado numeric, p_moneda text, p_fecha_estimada_cierre date) TO authenticated;
 GRANT ALL ON FUNCTION public.convertir_lead_rpc(p_lead_id uuid, p_crear_cliente boolean, p_cliente_id uuid, p_nombre_oportunidad text, p_monto_estimado numeric, p_moneda text, p_fecha_estimada_cierre date) TO service_role;
+REVOKE ALL ON FUNCTION public.convertir_monto_dof(p_monto numeric, p_moneda_origen text, p_moneda_destino text, p_fecha date) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.convertir_monto_dof(p_monto numeric, p_moneda_origen text, p_moneda_destino text, p_fecha date) TO authenticated;
+GRANT ALL ON FUNCTION public.convertir_monto_dof(p_monto numeric, p_moneda_origen text, p_moneda_destino text, p_fecha date) TO service_role;
 REVOKE ALL ON FUNCTION public.convertir_monto_pago_a_factura(p_monto numeric, p_moneda_pago public.moneda, p_tc_pago numeric, p_moneda_fact public.moneda, p_tc_fact numeric) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.convertir_monto_pago_a_factura(p_monto numeric, p_moneda_pago public.moneda, p_tc_pago numeric, p_moneda_fact public.moneda, p_tc_fact numeric) TO authenticated;
 GRANT ALL ON FUNCTION public.convertir_monto_pago_a_factura(p_monto numeric, p_moneda_pago public.moneda, p_tc_pago numeric, p_moneda_fact public.moneda, p_tc_fact numeric) TO service_role;
@@ -29814,6 +30058,9 @@ GRANT ALL ON FUNCTION public.cxp_aging_proveedores(p_org uuid, p_fecha date) TO 
 REVOKE ALL ON FUNCTION public.is_org_member(p_org uuid) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.is_org_member(p_org uuid) TO authenticated;
 GRANT ALL ON FUNCTION public.is_org_member(p_org uuid) TO service_role;
+REVOKE ALL ON FUNCTION public.monto_pago_en_moneda_factura(p_monto numeric, p_moneda_pago text, p_tc_pago numeric, p_moneda_factura text) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.monto_pago_en_moneda_factura(p_monto numeric, p_moneda_pago text, p_tc_pago numeric, p_moneda_factura text) TO authenticated;
+GRANT ALL ON FUNCTION public.monto_pago_en_moneda_factura(p_monto numeric, p_moneda_pago text, p_tc_pago numeric, p_moneda_factura text) TO service_role;
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.pagos_proveedor TO authenticated;
 GRANT ALL ON TABLE public.pagos_proveedor TO service_role;
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.proveedor_notas_credito TO authenticated;
@@ -30201,9 +30448,6 @@ GRANT ALL ON FUNCTION public.migrar_roles_legacy_dry_run() TO service_role;
 REVOKE ALL ON FUNCTION public.migrar_roles_legacy_ejecutar() FROM PUBLIC;
 GRANT ALL ON FUNCTION public.migrar_roles_legacy_ejecutar() TO authenticated;
 GRANT ALL ON FUNCTION public.migrar_roles_legacy_ejecutar() TO service_role;
-REVOKE ALL ON FUNCTION public.monto_pago_en_moneda_factura(p_monto numeric, p_moneda_pago text, p_tc_pago numeric, p_moneda_factura text) FROM PUBLIC;
-GRANT ALL ON FUNCTION public.monto_pago_en_moneda_factura(p_monto numeric, p_moneda_pago text, p_tc_pago numeric, p_moneda_factura text) TO authenticated;
-GRANT ALL ON FUNCTION public.monto_pago_en_moneda_factura(p_monto numeric, p_moneda_pago text, p_tc_pago numeric, p_moneda_factura text) TO service_role;
 REVOKE ALL ON FUNCTION public.move_to_dlq(source_queue text, dlq_name text, message_id bigint, payload jsonb) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.move_to_dlq(source_queue text, dlq_name text, message_id bigint, payload jsonb) TO service_role;
 REVOKE ALL ON FUNCTION public.nc_aplicadas_en_moneda_factura(p_factura_id uuid) FROM PUBLIC;
@@ -30275,7 +30519,6 @@ REVOKE ALL ON FUNCTION public.profit_por_embarque() FROM PUBLIC;
 GRANT ALL ON FUNCTION public.profit_por_embarque() TO authenticated;
 GRANT ALL ON FUNCTION public.profit_por_embarque() TO service_role;
 REVOKE ALL ON FUNCTION public.promover_embarque_por_liquidar(p_embarque_id uuid) FROM PUBLIC;
-GRANT ALL ON FUNCTION public.promover_embarque_por_liquidar(p_embarque_id uuid) TO authenticated;
 GRANT ALL ON FUNCTION public.promover_embarque_por_liquidar(p_embarque_id uuid) TO service_role;
 REVOKE ALL ON FUNCTION public.proveedor_estado_cuenta(p_proveedor_id uuid) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.proveedor_estado_cuenta(p_proveedor_id uuid) TO authenticated;
@@ -30309,6 +30552,9 @@ GRANT ALL ON FUNCTION public.puede_escribir_cotizaciones(_user_id uuid) TO servi
 REVOKE ALL ON FUNCTION public.puede_ver_costos_cotizacion(_user_id uuid) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.puede_ver_costos_cotizacion(_user_id uuid) TO authenticated;
 GRANT ALL ON FUNCTION public.puede_ver_costos_cotizacion(_user_id uuid) TO service_role;
+REVOKE ALL ON FUNCTION public.puede_ver_costos_cotizacion_propia(_cotizacion_id uuid, _user_id uuid) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.puede_ver_costos_cotizacion_propia(_cotizacion_id uuid, _user_id uuid) TO authenticated;
+GRANT ALL ON FUNCTION public.puede_ver_costos_cotizacion_propia(_cotizacion_id uuid, _user_id uuid) TO service_role;
 REVOKE ALL ON FUNCTION public.puede_ver_costos_dashboard(_user_id uuid) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.puede_ver_costos_dashboard(_user_id uuid) TO authenticated;
 GRANT ALL ON FUNCTION public.puede_ver_costos_dashboard(_user_id uuid) TO service_role;
@@ -30597,6 +30843,9 @@ GRANT ALL ON FUNCTION public.sync_pago_factura_embarque() TO service_role;
 REVOKE ALL ON FUNCTION public.tc_dof_cobertura_faltante() FROM PUBLIC;
 GRANT ALL ON FUNCTION public.tc_dof_cobertura_faltante() TO authenticated;
 GRANT ALL ON FUNCTION public.tc_dof_cobertura_faltante() TO service_role;
+REVOKE ALL ON FUNCTION public.tc_dof_moneda(p_fecha date, p_moneda text) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.tc_dof_moneda(p_fecha date, p_moneda text) TO authenticated;
+GRANT ALL ON FUNCTION public.tc_dof_moneda(p_fecha date, p_moneda text) TO service_role;
 REVOKE ALL ON FUNCTION public.tc_dof_upsert_manual(_fecha date, _usd numeric, _eur numeric) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.tc_dof_upsert_manual(_fecha date, _usd numeric, _eur numeric) TO authenticated;
 GRANT ALL ON FUNCTION public.tc_dof_upsert_manual(_fecha date, _usd numeric, _eur numeric) TO service_role;
@@ -31118,4 +31367,4 @@ GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.v_saldos_cuentas_bancarias TO 
 GRANT ALL ON TABLE public.v_saldos_cuentas_bancarias TO service_role;
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.vendedora_config TO authenticated;
 GRANT ALL ON TABLE public.vendedora_config TO service_role;
-ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public GRANT ALL ON FUNCTIONS TO authenticated;
+ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public GRANT ALL ON FUNCTIONS  TO authenticated;
