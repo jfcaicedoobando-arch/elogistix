@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.774.0] - 2026-08-27
+### Corregido
+- **Ola 6 — Utilidad por cliente ya no mezcla monedas (auditoría 3 · M1)**. El detalle del cliente sumaba pesos y dólares en la misma bolsa y rotulaba el total como USD (100 USD + 100 MXN = "200 USD"). Ahora Facturado, Por cobrar y Utilidad se muestran **en MXN**, convirtiendo cada factura con su propio tipo de cambio.
+- **Sin tipo de cambio no se inventa**: las facturas en moneda extranjera sin T/C confiable se excluyen del total y se avisa cuántas fueron, en lugar de sumarse como si 1 USD = 1 MXN.
+- **`profit_por_cliente` reforzada**: antes dividía entre el T/C del embarque sin defensa, así que los conceptos en pesos de embarques sin T/C desaparecían del cálculo. Ahora resuelve el T/C con respaldo del DOF de la fecha del embarque, entrega también los importes en pesos y reporta cuántos embarques quedaron sin T/C.
+
 ## [13.773.0] - 2026-08-27
 ### Seguridad
 - **Ola 5 — Los costos y la utilidad ya no salen del servidor para quien no debe verlos (auditoría 3 · C9)**. Antes la UI sólo *ocultaba* las columnas de costo y utilidad a perfiles comerciales, pero la respuesta del tablero seguía trayendo las cifras (visibles en la red). Ahora el propio servidor las devuelve vacías.
