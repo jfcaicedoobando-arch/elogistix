@@ -36,6 +36,17 @@ DECLARE
 BEGIN
   INSERT INTO public.organizations (id, nombre) VALUES (v_org, 'TEST FIX3 CRM');
 
+  -- v13.777.9: user_roles referencia auth.users; sembramos los usuarios en
+  -- modo best-effort (en CI sin GoTrue el FK no existe y el bloque es un no-op).
+  BEGIN
+    INSERT INTO auth.users (id, email) VALUES
+      (v_vend_a, 'fix3-crm-vend-a@test.local'),
+      (v_vend_b, 'fix3-crm-vend-b@test.local'),
+      (v_gerente, 'fix3-crm-gerente@test.local')
+    ON CONFLICT (id) DO NOTHING;
+  EXCEPTION WHEN OTHERS THEN NULL;
+  END;
+
   -- Membresías (el espejo membresía→user_roles replica los roles de ventas).
   INSERT INTO public.organization_members (organization_id, user_id, role) VALUES
     (v_org, v_vend_a, 'vendedor'),

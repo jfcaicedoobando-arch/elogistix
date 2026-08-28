@@ -47,6 +47,17 @@ BEGIN
   -- Seed base (como postgres, sin RLS)
   INSERT INTO public.organizations(id, nombre) VALUES
     (org_a, 'TEST OLA8 A'), (org_b, 'TEST OLA8 B');
+  -- v13.777.9: user_roles referencia auth.users; siembra best-effort.
+  BEGIN
+    INSERT INTO auth.users(id, email) VALUES
+      (contador_a, 'ola8-contador-a@test.local'),
+      (aux_a,      'ola8-aux-a@test.local'),
+      (contador_b, 'ola8-contador-b@test.local'),
+      (super_u,    'ola8-super@test.local'),
+      (legacy_u,   'ola8-legacy@test.local')
+    ON CONFLICT (id) DO NOTHING;
+  EXCEPTION WHEN OTHERS THEN NULL;
+  END;
   -- Membresías (el trigger _sync_user_roles_desde_membership espeja a
   -- user_roles, igual que en producción).
   INSERT INTO public.organization_members(organization_id, user_id, role) VALUES
