@@ -15,12 +15,6 @@ BEGIN
     RAISE EXCEPTION 'N5 REGRESIÓN: falta trg_movimiento_pago_consistente';
   END IF;
 
-  FOREACH v_def IN ARRAY ARRAY[v_def] LOOP NULL; END LOOP;
-
-  SELECT pg_get_triggerdef(t.oid) INTO v_def
-  FROM pg_trigger t JOIN pg_class c ON c.oid = t.tgrelid
-  WHERE c.relname = 'bbva_movimientos' AND t.tgname = 'trg_movimiento_pago_consistente';
-
   IF v_def NOT LIKE '%anticipo_proveedor_id%'
      OR v_def NOT LIKE '%pago_proveedor_lote_id%'
      OR v_def NOT LIKE '%pago_factura_lote_id%'
