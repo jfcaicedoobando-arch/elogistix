@@ -141,8 +141,16 @@ BEGIN
   -- QA-R2: el portal NO debe ver registros en papelera (deleted_at)
   -- ════════════════════════════════════════════════════════════════════════
   PERFORM pg_temp.as_postgres();
+  -- v13.782.1 — el guard N7 (`_assert_soft_delete_factura_sin_hijos`) prohíbe
+  -- mandar a papelera una factura con pagos vigentes o emitida sin cancelar:
+  -- replicamos el camino real (quitar pagos + cancelar) antes del soft-delete,
+  -- que es lo único que verifica esta sección.
+  DELETE FROM public.pagos_factura WHERE factura_id = fac_a;
+  UPDATE public.facturas SET estado = 'Cancelada' WHERE id = fac_a;
   UPDATE public.facturas            SET deleted_at = now() WHERE id = fac_a;
+
   UPDATE public.documentos_embarque SET deleted_at = now() WHERE id = doc_a;
+
 
   PERFORM pg_temp.as_user(portal_a);
   SELECT count(*) INTO visible FROM public.facturas WHERE id = fac_a;

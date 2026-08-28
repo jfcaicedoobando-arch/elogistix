@@ -27,6 +27,7 @@ DECLARE
   org_b   uuid := gen_random_uuid();
   cli_a   uuid := gen_random_uuid();
   cli_b   uuid := gen_random_uuid();
+  cli_bb  uuid := gen_random_uuid();  -- cliente de org_b (embarque del agente)
   u_cli   uuid := gen_random_uuid();  -- usuario portal cliente (cliente A)
   u_ope   uuid := gen_random_uuid();  -- staff operador org A (control)
   u_agt   uuid := gen_random_uuid();  -- usuario portal agente (org B)
@@ -43,7 +44,10 @@ BEGIN
 
   INSERT INTO public.clientes(id, organization_id, nombre, rfc, email) VALUES
     (cli_a, org_a, 'Cliente FIX3 A', 'XAXX010101E10', 'fix3a@test.local'),
-    (cli_b, org_a, 'Cliente FIX3 B', 'XAXX010101E11', 'fix3b@test.local');
+    (cli_b, org_a, 'Cliente FIX3 B', 'XAXX010101E11', 'fix3b@test.local'),
+    -- v13.782.1 — el embarque del agente vive en org_b; su cliente debe ser de
+    -- la MISMA org (trigger `_assert_padre_misma_org` de la Ola E1).
+    (cli_bb, org_b, 'Cliente FIX3 B-org', 'XAXX010101E12', 'fix3bb@test.local');
 
   -- Los FK de user_roles/client_users apuntan a auth.users: se siembran los
   -- tres usuarios de prueba (mismo patrón que aging_nc_deleted_at.sql).
@@ -96,7 +100,7 @@ BEGIN
   INSERT INTO public.agente_users(user_id, agente_id, organization_id) VALUES
     (u_agt, agt_b, org_b);
   INSERT INTO public.embarques(id, organization_id, cliente_id, expediente, estado, modo, tipo, agente_id) VALUES
-    (emb_ag, org_b, cli_a, 'ELGGG00001', 'Confirmado', 'Marítimo', 'Importación', agt_b);
+    (emb_ag, org_b, cli_bb, 'ELGGG00001', 'Confirmado', 'Marítimo', 'Importación', agt_b);
   INSERT INTO public.notas_embarque(id, organization_id, embarque_id, tipo, contenido, usuario) VALUES
     (gen_random_uuid(), org_b, emb_ag, 'cambio_estado', 'Estado: Borrador → Confirmado', 'ops@elogistix.mx'),
     (gen_random_uuid(), org_b, emb_ag, 'nota',          'Comentario interno del staff',  'ops@elogistix.mx'),
