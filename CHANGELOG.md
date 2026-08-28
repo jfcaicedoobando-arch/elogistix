@@ -1,5 +1,13 @@
 # Changelog
 
+## [13.782.0] - 2026-08-28
+### Corregido
+- **Ola E2/E3 · Sub-ola D · Retenciones (N10)**: el prorrateo de retenciones por pago se calcula sobre la base **neta de notas de crédito** y el pago que liquida la factura absorbe el residuo de centavos, así la suma de los pagos cuadra exacto con la factura (como repartir un pastel y dejar la última rebanada del tamaño que sobró, no un pedazo de más).
+- **Ola E2/E3 · Sub-ola D · Aviso de revisión**: si entra una NC a una factura cuyos pagos ya declararon retenciones, se genera alerta `retenciones_nc` para que contabilidad revise.
+- **Ola E2/E3 · Sub-ola D · Anticipos a proveedor (N14)**: la aplicación de anticipos usa la paridad DOF del **día de la aplicación** (USD y EUR, incluido el cruce USD↔EUR con `convertir_monto_dof`) y guarda el diferencial cambiario en la bitácora; sin T/C oficial se bloquea con `LC_SIN_TC_DOF`.
+- **Ola E2/E3 · Sub-ola D · Presupuesto vs Real (N9)**: las notas de crédito de proveedor se valúan con su propio tipo de cambio (EUR/MXN cuando aplica) en lugar de heredar el T/C del dólar de la factura padre.
+- **Guards**: nuevo `supabase/tests/ola_e2_d_guards.sql` y pruebas `vsRealDomain.ncEur.test.ts`.
+
 ## [13.781.1] - 2026-08-28
 ### Corregido
 - **Ola E2 · Sub-ola B · Facturación multi-moneda (M2-res)**: si una factura en borrador cambia de moneda, el tipo de cambio se recalcula con el DOF de su fecha (o bloquea con `LC_FACTURA_SIN_TC_DOF`) y vuelve a 1 al regresar a MXN. Antes el T/C viejo se quedaba pegado, como cambiar la etiqueta de una caja sin cambiar lo que trae dentro.

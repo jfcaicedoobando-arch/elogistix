@@ -115,6 +115,7 @@ export function FacturaManualConceptosTable({ conceptos, moneda, onChange }: Pro
                     <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="gravado_16">IVA 16%</SelectItem>
+                      <SelectItem value="gravado_8">IVA 8% (frontera)</SelectItem>
                       <SelectItem value="tasa_0">Tasa 0%</SelectItem>
                       <SelectItem value="exento">Exento</SelectItem>
                     </SelectContent>

@@ -20,6 +20,8 @@ export function calcularParcialidad(
   pagoId: string,
   totalFactura: number,
   montoAplicado: number,
+  /** N1 — notas de crédito aplicadas antes de este pago, en moneda del DR. */
+  ncAplicadas = 0,
 ): ParcialidadInfo {
   let acumuladoAntes = 0;
   let numParcialidad = 1;
@@ -28,7 +30,7 @@ export function calcularParcialidad(
     acumuladoAntes += Number(pp.monto_aplicado_factura ?? 0);
     numParcialidad += 1;
   }
-  const saldoAnt = round2(totalFactura - acumuladoAntes);
+  const saldoAnt = round2(totalFactura - acumuladoAntes - Number(ncAplicadas ?? 0));
   const impPagado = Number(montoAplicado ?? 0);
   return { numParcialidad, saldoAnt, impPagado, saldoInsoluto: round2(saldoAnt - impPagado) };
 }

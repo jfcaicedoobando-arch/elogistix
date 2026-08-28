@@ -11,6 +11,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { TASA_IVA, subtotalLinea, sumarMontos } from "@/lib/financial/financialUtils";
 import type { TipoIvaConcepto } from "@/features/facturacion/services/conceptosFacturaCrud";
+import { TASA_IVA_FRONTERA } from "@/features/facturacion/services/conceptosFacturaShared";
 import { addDaysIso } from "@/lib/date/dateOnly";
 import { parseCantidadFiscal } from "@/lib/domain/facturaConceptos";
 import { registrarActividad } from "@/services/bitacora/registrar";
@@ -57,6 +58,7 @@ function vencimiento(yyyyMmDd: string, days: number): string {
 function tasaAplicada(tipo: TipoIvaConcepto | undefined, tasaGlobal: number): number | null {
   const t = tipo ?? "gravado_16";
   if (t === "gravado_16") return tasaGlobal;
+  if (t === "gravado_8") return TASA_IVA_FRONTERA;
   if (t === "tasa_0") return 0;
   return null; // exento
 }
