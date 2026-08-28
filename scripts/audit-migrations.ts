@@ -18,6 +18,8 @@
  *      (idempotencia). NB: Postgres no soporta `CREATE POLICY IF NOT EXISTS`
  *      antes de PG16; se acepta también `DROP POLICY IF EXISTS ... ; CREATE POLICY`.
  *  H5  Prohibido `DROP TABLE public.*` sin `IF EXISTS`.
+ *  H9  Prohibido parchear funciones por texto (`replace(pg_get_functiondef(...))`).
+ *      Regla dura: aplica también a legacy (auditoría 3 · M6).
  *  H6  Toda `CREATE OR REPLACE FUNCTION public.<f>(...) ... SECURITY DEFINER`
  *      DEBE ir acompañada en el mismo archivo de:
  *        - `REVOKE ALL ON FUNCTION public.<f>(<args>) FROM PUBLIC` (o `FROM PUBLIC, anon`)
@@ -283,6 +285,24 @@ export function scanFile(file: string, body: string, auditPostBaseline = true): 
   // H8 (FIX-F964) — backfills que usan funciones con guard multi-tenant.
   out.push(...scanBackfillTenantGuard(file, body));
 
+  // H9 (auditoría 3 · M6) — prohibido parchear funciones por texto con
+  // `replace(pg_get_functiondef(...))`. Ese patrón deja el cuerpo real de la
+  // función dependiendo del estado previo de la BD, así que una base limpia y
+  // producción divergen en silencio (causa raíz del hallazgo C1). Regla dura:
+  // aplica también a legacy. Toda función se re-emite completa con
+  // `CREATE OR REPLACE FUNCTION`.
+  if (/replace\s*\(\s*pg_get_functiondef/i.test(body)) {
+    out.push({
+      file,
+      check: "H9",
+      detail:
+        "parcheo textual de función con replace(pg_get_functiondef(...)); re-emitir CREATE OR REPLACE FUNCTION completo",
+    });
+  }
+
+  return out;
+
+
   return out;
 }
 
@@ -300,7 +320,9 @@ function main() {
     if (!isPostBaseline) {
       // Legacy: sólo evaluamos H6 regla dura (GRANT EXECUTE ... TO PUBLIC).
       const body = fs.readFileSync(path.join(MIG_DIR, f), "utf8");
-      const legacy = scanFile(f, body, false).filter((v) => v.check === "H6");
+      const legacy = scanFile(f, body, false).filter(
+        (v) => v.check === "H6" || v.check === "H9",
+      );
       violations.push(...legacy);
       continue;
     }
