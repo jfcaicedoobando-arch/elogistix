@@ -9,10 +9,22 @@ describe("restarNotasCreditoCxP · multi-moneda", () => {
   it("usa la paridad propia de la NC en EUR", () => {
     const real = new Map<string, number>([["cat-1", 100_000]]);
     const rows: NcCxPRow[] = [
-      { categoria_presupuesto_id: "cat-1", monto: 100, moneda: "EUR", tipo_cambio_usd: 21 },
+      {
+        categoria_presupuesto_id: "cat-1", monto: 100, moneda: "EUR",
+        tipo_cambio_usd: 21, paridad_propia: true,
+      },
     ];
     expect(restarNotasCreditoCxP(rows, real)).toBe(0);
     expect(real.get("cat-1")).toBe(100_000 - 2_100);
+  });
+
+  it("excluye la NC en EUR cuya paridad se heredó de la factura en USD", () => {
+    const real = new Map<string, number>([["cat-1", 100_000]]);
+    const rows: NcCxPRow[] = [
+      { categoria_presupuesto_id: "cat-1", monto: 100, moneda: "EUR", tipo_cambio_usd: 21 },
+    ];
+    expect(restarNotasCreditoCxP(rows, real)).toBe(1);
+    expect(real.get("cat-1")).toBe(100_000);
   });
 
   it("excluye la NC extranjera sin paridad y la reporta", () => {
@@ -23,6 +35,7 @@ describe("restarNotasCreditoCxP · multi-moneda", () => {
     expect(restarNotasCreditoCxP(rows, real)).toBe(1);
     expect(real.get("cat-1")).toBe(5_000);
   });
+
 
   it("resta 1:1 las NC en pesos", () => {
     const real = new Map<string, number>([["cat-1", 1_000]]);

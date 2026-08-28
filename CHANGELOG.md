@@ -1,5 +1,18 @@
 # Changelog
 
+## [13.788.0] - 2026-09-03
+### Seguridad
+- **N6 residual**: `seed_presupuesto_categorias` la podía ejecutar cualquier usuario autenticado. Ahora exige rol administrativo (`public.es_admin_catalogo`) y conserva el candado multi-tenant; el mantenimiento (`service_role`, replay de migraciones, suites del CI) sigue permitido.
+
+### Correcciones
+- **M1 residual**: `public.profit_por_cliente` no descontaba las notas de crédito de cliente, así que la venta y la utilidad salían infladas. Ahora resta el canon `nc_aplicadas_en_moneda_factura` de las facturas activas ligadas al embarque, convertido a MXN con el T/C del embarque, y excluye facturas canceladas o en papelera.
+- **N9**: el comparativo Presupuesto vs Real valuaba gastos y notas de crédito en EUR con el tipo de cambio del dólar (CxP sólo guarda `tipo_cambio_usd`). `convertirAMxn` ahora rechaza esa valuación cruzada: el renglón se excluye del real y se reporta en el contador "sin T/C" para que se vea la advertencia en pantalla.
+
+### Interno
+- Migración `20260828195805_...` (N6 + M1), nuevo guard `supabase/tests/backlog_v4_profit_nc_y_seed_rol.sql` en el manifiesto, pruebas de multi-moneda para gastos y NC de CxP, y `baseline.sql` + manifiesto de releases (1159 migraciones) sincronizados.
+
+
+
 ## [13.787.2] - 2026-08-28
 ### Correcciones
 - **Guard `ola_e2_a_guards` en rojo (N15)**. La migración `20260902000100_qa_r2_etapa1_guards.sql` reescribió `public.embarques_assert_cancelacion_sin_cxc_cxp()` y en el camino borró los dos candados de la Ola E2: no dejar cancelar un embarque con proformas vivas (`LC_CANCEL_CON_PROFORMA`) ni con facturas de cliente en Borrador (`LC_CANCEL_CON_FACTURA_BORRADOR`). Como esa migración es posterior en el orden de replay, ganaba ella.
