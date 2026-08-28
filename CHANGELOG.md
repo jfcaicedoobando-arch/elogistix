@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.791.3] - 2026-08-28
+### CI
+- Power of 10: divididos `vsRealDomain.ts` (222 → se extrae `vsRealGastos.ts` con la conversión a MXN de gastos/NCs) y `DevolverAnticipoDialog.tsx` (213 → se extrae el hook `useDevolverAnticipoForm`); el guard de archivos >200 líneas vuelve a verde.
+- Cobertura LC_*: mensajes amigables para `LC_ANTICIPO_FECHA_INVALIDA`, `LC_ANTICIPO_FECHA_REQUERIDA`, `LC_ANTICIPO_MONTO_EXCEDE_SALDO`, `LC_ANTICIPO_YA_DEVUELTO` (devolución N13) y `LC_ROL_FORBIDDEN` (seed de categorías de presupuesto).
+
 ## [13.791.2] - 2026-08-28
 ### CI
 - Regenerado `supabase/schema/baseline.sql` con Postgres 17.9 sobre base limpia (1162 migraciones): incorpora la devolución de anticipos (N13), el candado `FOR UPDATE` en notas de crédito de proveedor y `_bitacora_cambio_financiero()`.
