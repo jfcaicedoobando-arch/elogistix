@@ -132,5 +132,3 @@ export function CxpFiltrosSheetFields(props: Props) {
     </div>
   );
 }
-
-export { ESTATUS };
