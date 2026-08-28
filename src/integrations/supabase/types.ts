@@ -9766,12 +9766,14 @@ export type Database = {
       cxp_umbral_sin_vinculo: { Args: { p_org: string }; Returns: number }
       cxp_umbral_sin_vinculo_actual: { Args: never; Returns: number }
       dashboard_details: { Args: never; Returns: Json }
+      dashboard_details_datos: { Args: never; Returns: Json }
       dashboard_facturacion_kpis: {
         Args: { p_fallback_usd?: number; p_meses?: number }
         Returns: Json
       }
       dashboard_stats: { Args: never; Returns: Json }
       dashboard_summary: { Args: never; Returns: Json }
+      dashboard_summary_datos: { Args: never; Returns: Json }
       default_user_org_id: { Args: never; Returns: string }
       delete_email: {
         Args: { message_id: number; queue_name: string }
@@ -9950,6 +9952,7 @@ export type Database = {
         Args: { p_cotizacion_id: string }
         Returns: undefined
       }
+      enmascarar_costos_jsonb: { Args: { p_in: Json }; Returns: Json }
       enqueue_email: {
         Args: { payload: Json; queue_name: string }
         Returns: number
@@ -10604,6 +10607,10 @@ export type Database = {
         Returns: boolean
       }
       puede_ver_costos_cotizacion: {
+        Args: { _user_id?: string }
+        Returns: boolean
+      }
+      puede_ver_costos_dashboard: {
         Args: { _user_id?: string }
         Returns: boolean
       }
