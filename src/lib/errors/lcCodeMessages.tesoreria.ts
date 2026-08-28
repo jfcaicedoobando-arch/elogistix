@@ -124,4 +124,17 @@ export const LC_CODE_MESSAGES_TESORERIA: Record<string, string> = {
   // FIX3 · M-4 — guard de fecha del cobro/pago contra la emisión del CFDI.
   LC_PAGO_FECHA_PREVIA_EMISION:
     "La fecha del pago no puede ser anterior a la fecha de emisión de la factura.",
+  // ── Ola E4 · candados de inmutabilidad bancaria y de comisiones ──
+  LC_MOVIMIENTO_INMUTABLE:
+    "El importe, la fecha y la cuenta de un movimiento bancario no se pueden editar. Cancela el movimiento y captúralo de nuevo.",
+  LC_MOVIMIENTO_TRANSICION_INVALIDA:
+    "Ese cambio de estado de conciliación no está permitido. Regresa el movimiento a Pendiente primero.",
+  LC_LIQUIDACION_TRANSICION_INVALIDA:
+    "Ese cambio de estado de la liquidación no está permitido.",
+  LC_LIQUIDACION_CANCELADA_INMUTABLE:
+    "Una liquidación cancelada ya no se puede modificar. Genera una liquidación nueva.",
+  LC_COMISION_DELETE_PROHIBIDO:
+    "Las comisiones y liquidaciones no se borran: usa la cancelación oficial para dejar rastro.",
+  LC_SIN_TC_DOF:
+    "No hay tipo de cambio DOF publicado para esa fecha y moneda. Captura o actualiza el tipo de cambio antes de continuar.",
 };
