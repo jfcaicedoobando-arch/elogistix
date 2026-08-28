@@ -7,8 +7,10 @@ import {
   registrarAnticipo,
   aplicarAnticipo,
   cancelarAnticipo,
+  devolverAnticipo,
   vincularAnticipoEmbarque,
   type RegistrarAnticipoInput,
+  type DevolverAnticipoInput,
 } from "@/features/anticipos-proveedor/services/anticiposProveedorService";
 
 
@@ -62,6 +64,24 @@ export function useCancelarAnticipo() {
     successTitle: "Anticipo cancelado",
     errorTitle: "No se pudo cancelar el anticipo",
     errorMethod: "ANTICIPOS_PROVEEDOR_CANCELAR",
+  });
+}
+
+/**
+ * N13 · devolución simple del anticipo (el proveedor regresó el dinero).
+ * Invalida tesorería porque la devolución genera un ingreso por conciliar.
+ */
+export function useDevolverAnticipo() {
+  return useMutationWithFeedback({
+    mutationFn: (v: DevolverAnticipoInput) => devolverAnticipo(v),
+    invalidate: [
+      anticiposProveedorKeys.all,
+      queryKeys.proveedores.all,
+      queryKeys.tesoreria.all,
+    ],
+    successTitle: "Devolución registrada",
+    errorTitle: "No se pudo registrar la devolución",
+    errorMethod: "ANTICIPOS_PROVEEDOR_DEVOLVER",
   });
 }
 

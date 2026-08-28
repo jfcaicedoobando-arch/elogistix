@@ -2,7 +2,7 @@
  * Definición de columnas de la tabla /anticipos-proveedor.
  * Extraído de `AnticiposProveedor.tsx` (v13.317.9).
  */
-import { MoreHorizontal, Ban, Link2, Ship } from "lucide-react";
+import { MoreHorizontal, Ban, Link2, Ship, Undo2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
@@ -25,6 +25,7 @@ interface Options {
   canEditFinance: boolean;
   onAplicar: (row: AnticipoProveedorRow) => void;
   onCancelar: (row: AnticipoProveedorRow) => void;
+  onDevolver: (row: AnticipoProveedorRow) => void;
   onVincularEmbarque: (row: AnticipoProveedorRow) => void;
 }
 
@@ -55,11 +56,12 @@ function EstadoCell({ value }: { value: string }) {
   if (value === "aplicado_parcial") return <ToneBadge tone="warning">Parcial</ToneBadge>;
   if (value === "aplicado_total") return <ToneBadge tone="neutral">Aplicado</ToneBadge>;
   if (value === "cancelado") return <ToneBadge tone="destructive">Cancelado</ToneBadge>;
+  if (value === "devuelto") return <ToneBadge tone="warning">Devuelto</ToneBadge>;
   return <ToneBadge tone="neutral">{value}</ToneBadge>;
 }
 
 export function buildAnticipoColumns({
-  canEditFinance, onAplicar, onCancelar, onVincularEmbarque,
+  canEditFinance, onAplicar, onCancelar, onDevolver, onVincularEmbarque,
 }: Options) {
   return [
     {
@@ -105,6 +107,9 @@ export function buildAnticipoColumns({
         const row = info.row.original;
         const canApply = row.estado === "disponible" || row.estado === "aplicado_parcial";
         const canCancel = row.estado === "disponible";
+        // N13: sólo tiene sentido devolver lo que aún queda sin aplicar.
+        const canDevolver =
+          (row.estado === "disponible" || row.estado === "aplicado_parcial") && row.disponible > 0;
         return (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -124,6 +129,12 @@ export function buildAnticipoColumns({
                 onClick={() => onVincularEmbarque(row)}
               >
                 <Ship className="mr-2 h-4 w-4" /> Vincular embarque
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                disabled={!canDevolver || !canEditFinance}
+                onClick={() => onDevolver(row)}
+              >
+                <Undo2 className="mr-2 h-4 w-4" /> Registrar devolución
               </DropdownMenuItem>
               <DropdownMenuItem
                 className="text-destructive"

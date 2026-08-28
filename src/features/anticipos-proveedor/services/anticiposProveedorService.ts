@@ -11,19 +11,22 @@ import {
   registrarAnticipo,
   aplicarAnticipo,
   cancelarAnticipo,
+  devolverAnticipo,
   vincularAnticipoEmbarque,
   type Anticipo,
   type AnticipoAplicacion,
   type RegistrarAnticipoInput,
+  type DevolverAnticipoInput,
 } from "@/features/cxp/services";
 
 export {
   registrarAnticipo,
   aplicarAnticipo,
   cancelarAnticipo,
+  devolverAnticipo,
   vincularAnticipoEmbarque,
 };
-export type { Anticipo, AnticipoAplicacion, RegistrarAnticipoInput };
+export type { Anticipo, AnticipoAplicacion, RegistrarAnticipoInput, DevolverAnticipoInput };
 
 /** Fila de la bandeja de anticipos, con proveedor y expediente ya resueltos. */
 export type AnticipoConProveedor = Anticipo & {

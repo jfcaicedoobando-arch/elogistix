@@ -117,3 +117,51 @@ export async function cancelarAnticipo(id: string, motivo: string): Promise<Anti
   // SAFE-CAST: RPC devuelve fila de anticipos_proveedor (validado por schema DB).
   return data as unknown as Anticipo;
 }
+
+export interface DevolverAnticipoInput {
+  id: string;
+  /** Monto que el proveedor regresó, en la moneda del anticipo. */
+  monto: number;
+  /** Fecha del depósito de regreso (ISO YYYY-MM-DD). */
+  fecha: string;
+  /** Cuenta bancaria donde entró el dinero. */
+  cuentaBancariaId: string;
+  referencia?: string | null;
+  motivo: string;
+}
+
+/**
+ * N13 · devolución simple: el proveedor nos regresó el dinero.
+ *
+ * No es lo mismo que cancelar (eso es "lo registré por error" y borra el
+ * movimiento bancario): aquí el pago sí ocurrió, así que el anticipo queda
+ * `devuelto` con saldo cero y el reembolso entra al banco por conciliar.
+ */
+export async function devolverAnticipo(input: DevolverAnticipoInput): Promise<Anticipo> {
+  assertUuid(input.id, "INVALID_ID");
+  assertUuid(input.cuentaBancariaId, "INVALID_ID");
+  if (!Number.isFinite(input.monto) || input.monto <= 0) {
+    throw new AnticipoError("LC_ANTICIPO_MONTO_INVALIDO", "El monto devuelto debe ser mayor a cero.");
+  }
+  if (!input.fecha) {
+    throw new AnticipoError("LC_ANTICIPO_FECHA_REQUERIDA", "Indica la fecha de la devolución.");
+  }
+  const motivo = (input.motivo ?? "").trim();
+  if (motivo.length < 3) {
+    throw new AnticipoError(
+      "LC_ANTICIPO_MOTIVO_REQUERIDO",
+      "Indica el motivo de la devolución (al menos 3 caracteres).",
+    );
+  }
+  const { data, error } = await supabase.rpc("devolver_anticipo_proveedor", {
+    p_id: input.id,
+    p_monto: input.monto,
+    p_fecha: input.fecha,
+    p_cuenta_bancaria_id: input.cuentaBancariaId,
+    p_referencia: input.referencia?.trim() || undefined,
+    p_motivo: motivo,
+  });
+  if (error) throw mapApiError(error);
+  // SAFE-CAST: RPC devuelve fila de anticipos_proveedor (validado por schema DB).
+  return data as unknown as Anticipo;
+}

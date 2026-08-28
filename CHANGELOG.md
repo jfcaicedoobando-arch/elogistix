@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.791.0] - 2026-09-04
+### Anticipos a proveedor · devolución (N13)
+- Nueva acción **Registrar devolución** en la bandeja de anticipos: cuando el proveedor regresa el dinero, el anticipo queda en estado `devuelto` con saldo cero y el reembolso entra a tesorería como ingreso por conciliar (no se toca el pago original ni las aplicaciones ya hechas).
+- RPC `devolver_anticipo_proveedor` con bloqueo de fila, validación de rol/tenant y tope al saldo disponible; `_recalc_anticipo_saldo` respeta el estado `devuelto`.
+- Filtro y etiqueta `Devuelto` en la lista de anticipos.
+
 ## [13.790.0] - 2026-09-04
 ### Seguridad y finanzas (backlog v5 · pendientes reales)
 - **M3-res** — `_assert_email_unico_org` ya no bloquea altas cuando el correo viene vacío. Auditado el "duplicado" real (`betoazaver@hotmail.com`): son dos razones sociales del mismo dueño (persona física + su empresa), así que **no** se crea índice único de email; el identificador único por organización sigue siendo el RFC (`clientes_org_rfc_unique`).
