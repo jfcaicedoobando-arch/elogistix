@@ -20,9 +20,10 @@ import { useDocumentTitle } from "@/hooks/shared";
 
 export default function Proveedores() {
   useDocumentTitle("Proveedores");
-  const [search, setSearch] = useState("");
-  const [origen, setOrigen] = useState<OrigenFiltro>("todos");
-  const [tipoFiltro, setTipoFiltro] = useState<TipoFiltro>("todos");
+  // M8 (Ola 8): filtros del directorio en la URL (link compartible).
+  const [search, setSearch] = useTextoUrl("q");
+  const [origen, setOrigen] = useFiltroUrl<OrigenFiltro>("origen", ORIGENES_FILTRO, "todos");
+  const [tipoFiltro, setTipoFiltro] = useTextoUrl("tipo", "todos") as readonly [TipoFiltro, (v: TipoFiltro) => void];
   const [nuevoOpen, setNuevoOpen] = useState(false);
   // Atajo desde la captura de facturas de proveedor: ?nuevo=1&rfc=&nombre=
   const [searchParams, setSearchParams] = useSearchParams();
