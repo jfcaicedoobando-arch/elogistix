@@ -170,7 +170,12 @@ BEGIN
   PERFORM pg_temp.as_user(operador_a);
 
   -- TEST 10: operador NO puede DELETE factura de otra org
-  DELETE FROM public.facturas WHERE id = fac_b;
+  BEGIN
+    DELETE FROM public.facturas WHERE id = fac_b;
+  EXCEPTION
+    WHEN insufficient_privilege THEN NULL;
+  END;
+
   PERFORM pg_temp.as_postgres();
   SELECT count(*) INTO visible FROM public.facturas WHERE id = fac_b;
   PERFORM pg_temp.assert(visible = 1, 'operador_a NO debe poder DELETE factura de org_b');
