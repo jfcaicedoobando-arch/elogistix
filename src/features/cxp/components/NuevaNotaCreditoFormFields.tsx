@@ -54,14 +54,21 @@ interface Props {
   onDescripcionChange: (v: string) => void;
   monedaFactura: MonedaNC;
   saldoFactura: number;
+  moneda: MonedaNC;
+  onMonedaChange: (v: MonedaNC) => void;
+  tipoCambio: string;
+  onTipoCambioChange: (v: string) => void;
 }
+
+const MONEDAS: MonedaNC[] = ["MXN", "USD", "EUR"];
 
 export function NuevaNotaCreditoFormFields({
   mode, onModeChange, parsedCfdi, onCfdiParsed,
   folio, onFolioChange, fecha, onFechaChange, monto, onMontoChange,
   motivo, onMotivoChange, descripcion, onDescripcionChange,
-  monedaFactura, saldoFactura,
+  monedaFactura, saldoFactura, moneda, onMonedaChange, tipoCambio, onTipoCambioChange,
 }: Props) {
+  const monedaExtranjera = moneda === "MXN" ? monedaFactura : moneda;
   return (
     <div className="rounded-lg border bg-muted/30">
       <div className="flex border-b">
@@ -83,13 +90,42 @@ export function NuevaNotaCreditoFormFields({
             <DatePickerMx value={fecha} onChange={onFechaChange} className="w-full" />
           </div>
         </div>
-        <div className="space-y-1.5 mt-3">
-          <Label htmlFor="nc-monto">Monto ({monedaFactura}) *</Label>
-          <Input
-            id="nc-monto" type="number" step="0.01" min="0.01" max={saldoFactura}
-            value={monto} onChange={(e) => onMontoChange(e.target.value)} placeholder="0.00"
-          />
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
+          <div className="space-y-1.5">
+            <Label htmlFor="nc-monto">Monto *</Label>
+            <Input
+              id="nc-monto" type="number" step="0.01" min="0.01"
+              max={moneda === monedaFactura ? saldoFactura : undefined}
+              value={monto} onChange={(e) => onMontoChange(e.target.value)} placeholder="0.00"
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Moneda de la NC *</Label>
+            <Select value={moneda} onValueChange={(v) => onMonedaChange(v as MonedaNC)}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {MONEDAS.map((m) => (
+                  <SelectItem key={m} value={m}>
+                    {m}{m === monedaFactura ? " (moneda de la factura)" : ""}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
+        {moneda !== monedaFactura && (
+          <div className="space-y-1.5 mt-3">
+            <Label htmlFor="nc-tc">Tipo de cambio (MXN por 1 {monedaExtranjera})</Label>
+            <Input
+              id="nc-tc" type="number" step="0.0001" min="0"
+              value={tipoCambio} onChange={(e) => onTipoCambioChange(e.target.value)}
+              placeholder="Ej. 18.5000"
+            />
+            <p className="text-label text-muted-foreground">
+              Si lo dejas vacío se usa el tipo de cambio del DOF de la fecha de la NC.
+            </p>
+          </div>
+        )}
         <div className="space-y-1.5 mt-3">
           <Label>Motivo *</Label>
           <Select value={motivo} onValueChange={(v) => onMotivoChange(v as MotivoNC)}>
