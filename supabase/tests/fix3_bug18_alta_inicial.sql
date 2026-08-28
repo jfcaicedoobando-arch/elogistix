@@ -36,6 +36,12 @@ DECLARE
   v_sin_permiso text[];
 BEGIN
   INSERT INTO public.organizations (id, nombre) VALUES (v_org, 'TEST FIX3 BUG18');
+  -- v13.777.9: user_roles referencia auth.users; siembra best-effort.
+  BEGIN
+    INSERT INTO auth.users (id, email) VALUES (v_actor, 'fix3-bug18-actor@test.local')
+    ON CONFLICT (id) DO NOTHING;
+  EXCEPTION WHEN OTHERS THEN NULL;
+  END;
   INSERT INTO public.clientes (id, organization_id, nombre, email) VALUES (v_cli, v_org, 'Cliente FIX3', 'fix3-bug18@test.mx');
   INSERT INTO public.embarques (id, organization_id, cliente_id, modo, tipo)
   VALUES (v_emb, v_org, v_cli, 'Marítimo', 'Importación');

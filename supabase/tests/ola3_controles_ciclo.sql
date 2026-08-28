@@ -35,7 +35,7 @@ BEGIN
   VALUES (v_org, 'CLIENTE OLA3', '', 'ola3-ciclo@test.mx') RETURNING id INTO v_cli;
 
   INSERT INTO public.embarques (organization_id, cliente_id, expediente, modo, tipo)
-  VALUES (v_org, v_cli, 'ELO3X00001', 'Aéreo'::public.modo_transporte,
+  VALUES (v_org, v_cli, 'ELOLA00001', 'Aéreo'::public.modo_transporte,
           'Importación'::public.tipo_operacion)
   RETURNING id INTO v_emb;
 
