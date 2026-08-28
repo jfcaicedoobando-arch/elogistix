@@ -35,6 +35,9 @@ INSERT INTO _ci_service_role_only (fn) VALUES
   ('public._cotizaciones_bloquear_envio_sin_oportunidad()'),
   ('public._crear_embarque_replicar_conceptos(uuid, uuid, uuid, uuid[], jsonb)'),
   ('public._crm_vincular_cotizacion_core(uuid, jsonb, uuid, uuid, text, uuid)'),
+  -- Helper interno del flujo de aprobación CxP (SECURITY DEFINER, corre como
+  -- dueño); no debe ser ejecutable directo por authenticated (Ola A 2026-08-28).
+  ('public._cxp_validar_aprobacion(uuid, text)'),
   -- Cálculo interno de los tableros: sólo lo invocan las RPC DEFINER
   -- dashboard_summary()/dashboard_details() (enmascaran costos por rol).
   ('public._dashboard_details_calc()'),
