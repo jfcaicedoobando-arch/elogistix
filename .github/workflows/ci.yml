@@ -387,7 +387,10 @@ jobs:
         if: steps.changes.outputs.run == 'true'
         uses: denoland/setup-deno@22d081ff2d3a40755e97629de92e3bcbfa7cf2ed # v2.0.5
         with:
-          deno-version: v1.46.x
+          # v13.785.0 — Deno 2.x: el runtime de las Edge Functions en el backend
+          # ya es Deno 2. Mantener 1.46 en CI validaba contra un runtime distinto
+          # al de producción (mismo problema que teníamos con Postgres 15 vs 17).
+          deno-version: v2.6.x
 
       - name: Cache Deno deps
         if: steps.changes.outputs.run == 'true'
