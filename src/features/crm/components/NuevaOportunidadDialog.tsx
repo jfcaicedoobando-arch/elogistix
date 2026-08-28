@@ -76,7 +76,7 @@ export default function NuevaOportunidadDialog({ open, onOpenChange, oportunidad
       });
     }
     try {
-      const payload = buildOportunidadFormPayload(form, esGanada);
+      const payload = buildOportunidadFormPayload(form, esGanada, isEdit);
       if (isEdit && oportunidad) {
         await actualizar.mutateAsync({ id: oportunidad.id, patch: payload });
         crmToast.success("Oportunidad actualizada");

@@ -9,21 +9,34 @@ import type { OportunidadFormState } from "@/features/crm/domain/oportunidadForm
 
 const opt = (v: number) => (v > 0 ? v : null);
 
-function bloqueOrigen(form: OportunidadFormState) {
+/**
+ * En EDICIÓN el origen es de sólo lectura: una oportunidad convertida desde
+ * lead puede tener `lead_id` Y `cliente_id` (cliente del directorio). No se
+ * debe borrar ese vínculo al guardar otros campos.
+ */
+function bloqueOrigen(form: OportunidadFormState, esEdicion: boolean) {
   if (form.origen_tipo === "prospecto") {
-    return { lead_id: form.lead_id, cliente_id: null, cliente_nombre: "" };
+    return {
+      lead_id: form.lead_id,
+      cliente_id: esEdicion ? (form.cliente_id ?? null) : null,
+      cliente_nombre: esEdicion ? (form.cliente_nombre ?? "") : "",
+    };
   }
   return {
-    lead_id: null,
+    lead_id: esEdicion ? (form.lead_id ?? null) : null,
     cliente_id: form.cliente_id,
     cliente_nombre: form.cliente_nombre,
   };
 }
 
-export function buildOportunidadFormPayload(form: OportunidadFormState, esGanada: boolean) {
+export function buildOportunidadFormPayload(
+  form: OportunidadFormState,
+  esGanada: boolean,
+  esEdicion = false,
+) {
   return {
     nombre: form.nombre,
-    ...bloqueOrigen(form),
+    ...bloqueOrigen(form, esEdicion),
     etapa_id: form.etapa_id,
     monto_estimado: form.monto_estimado,
     moneda: form.moneda,
