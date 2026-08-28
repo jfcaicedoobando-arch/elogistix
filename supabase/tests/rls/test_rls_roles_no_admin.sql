@@ -219,10 +219,18 @@ BEGIN
   PERFORM pg_temp.as_user(cli_user);
 
   -- TEST 15: cliente NO puede DELETE facturas
-  DELETE FROM public.facturas WHERE id = fac_a;
+  -- v13.777.10: además de RLS, `authenticated` ya no tiene el GRANT DELETE
+  -- sobre facturas (borrado físico prohibido), así que el intento puede
+  -- fallar con insufficient_privilege; ambos desenlaces son correctos.
+  BEGIN
+    DELETE FROM public.facturas WHERE id = fac_a;
+  EXCEPTION
+    WHEN insufficient_privilege THEN NULL;
+  END;
   PERFORM pg_temp.as_postgres();
   SELECT count(*) INTO visible FROM public.facturas WHERE id = fac_a;
   PERFORM pg_temp.assert(visible = 1, 'cliente NO debe poder DELETE facturas');
+
 
   PERFORM pg_temp.as_postgres();
   RAISE NOTICE 'RLS ROLES NO-ADMIN: todas las aserciones pasaron';
