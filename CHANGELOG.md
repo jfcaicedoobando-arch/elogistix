@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.777.11] - 2026-08-28
+### Corregido
+- **CI de pruebas unitarias en verde (4 suites)**: `cierre.test.ts` no simulaba el segundo `.order("id")` del desempate estable (L1) ni en la consulta principal ni en el fallback de bitácora; `facturaManual.test.ts` no mockeaba `supabase.rpc` y seguía esperando un `DELETE` físico en lugar del rollback por `soft_delete_record`; `ComprasPorAprobar.test.tsx` no exportaba `useFiltroUrl`/`useTextoUrl` en el mock de `@/hooks/shared`.
+- **Mensajes amigables `LC_*`**: se añadió `lcCodeMessages.clientes.ts` (5 códigos de la importación masiva de clientes) y `LC_FACTURA_SIN_TC_DOF` al catálogo financiero, cerrando el guard `lcCodeCoverage`.
+
 ## [13.777.10] - 2026-08-28
 ### Corregido
 - **Suite RLS 34/34 en verde**: `test_rls_roles_no_admin.sql` toleraba sólo el bloqueo por política; ahora también acepta `insufficient_privilege` en los tres intentos de `DELETE` sobre `public.facturas` (viewer, operador cross-tenant y cliente), porque `authenticated` ya no tiene ese `GRANT` (borrado físico prohibido). En `test_rls_rpc_org_scope_linter.sql` se retiró `nc_aplicadas_en_moneda_factura` de la whitelist congelada: al volverse `service_role-only` dejó de ser candidata y la entrada quedó muerta.

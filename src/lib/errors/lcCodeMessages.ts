@@ -14,6 +14,7 @@ import { LC_CODE_MESSAGES_COBRANZA } from "./lcCodeMessages.cobranza";
 import { LC_CODE_MESSAGES_TRASPASOS } from "./lcCodeMessages.traspasos";
 import { LC_CODE_MESSAGES_REFACTURACION } from "./lcCodeMessages.refacturacion";
 import { LC_CODE_MESSAGES_CRM } from "./lcCodeMessages.crm";
+import { LC_CODE_MESSAGES_CLIENTES } from "./lcCodeMessages.clientes";
 
 export const LC_CODE_MESSAGES: Record<string, string> = {
   ...LC_CODE_MESSAGES_OPERATIVO,
@@ -24,4 +25,5 @@ export const LC_CODE_MESSAGES: Record<string, string> = {
   ...LC_CODE_MESSAGES_TRASPASOS,
   ...LC_CODE_MESSAGES_REFACTURACION,
   ...LC_CODE_MESSAGES_CRM,
+  ...LC_CODE_MESSAGES_CLIENTES,
 };
