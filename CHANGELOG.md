@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.777.8] - 2026-08-28
+### Corregido
+- **Candado CI `service_role-only`**: la migración `20260902003000` (fix numeric/integer de RPCs de embarques) reemitió `_crear_embarque_replicar_conceptos` con `GRANT EXECUTE` a `authenticated`, reabriendo una función interna. Nueva migración `20260902005000_ci_service_role_only_recierre_embarques.sql` (ordenada después del fix, para que el replay desde cero termine igual que prod) que revoca a `PUBLIC`/`anon`/`authenticated` y deja sólo `service_role`. Manifiesto: 1133 migraciones.
+
 ## [13.777.7] - 2026-08-28
 ### Corregido
 - **CI (tests, coverage y audits) en verde**: `TesoreriaConciliacion.test.tsx` monta `NuqsTestingAdapter` (la página lee el filtro `estado` de la URL); `TesoreriaConciliacion.tsx` baja de 200 líneas extrayendo `useImportarEstadoCuenta`; candado M6 de soft-delete actualizado tras mover `conciliarConPago` a `conciliacionVincular.ts`; tipografía semántica y `EmptyStateInline` en los componentes nuevos de CRM; marcadores `SAFE-CAST` en `cliente/services/{crud,importLote}.ts`; baseline del ratchet de iconos recontado.
