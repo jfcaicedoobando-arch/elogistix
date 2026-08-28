@@ -43,11 +43,12 @@ function today(): string {
 }
 
 export default function ComprasPagos() {
-  const [desde, setDesde] = useState<string>(firstOfMonth());
-  const [hasta, setHasta] = useState<string>(today());
-  const [moneda, setMoneda] = useState<MonedaFiltro>("todas");
-  const [metodoPago, setMetodoPago] = useState<string>("todos");
-  const [search, setSearch] = useState("");
+  // M8 (Ola 8): filtros en la URL → el listado se puede compartir por link.
+  const [desde, setDesde] = useTextoUrl("desde", firstOfMonth());
+  const [hasta, setHasta] = useTextoUrl("hasta", today());
+  const [moneda, setMoneda] = useFiltroUrl<MonedaFiltro>("moneda", MONEDAS_FILTRO, "todas");
+  const [metodoPago, setMetodoPago] = useTextoUrl("metodo", "todos");
+  const [search, setSearch] = useTextoUrl("q");
 
   const { data: rows = [], isLoading, isError, refetch } = useQuery({
     queryKey: compras.pagosGlobal({ desde, hasta, moneda, metodoPago, search }),
