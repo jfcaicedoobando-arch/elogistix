@@ -64,6 +64,16 @@ for bin in docker psql; do
   command -v "$bin" >/dev/null 2>&1 || { echo "❌ '$bin' no está en PATH." >&2; exit 127; }
 done
 
+# El contenedor de pruebas corre Postgres 17: pg_dump se niega a respaldar un
+# servidor más nuevo que él ("server version mismatch"). Avisamos temprano.
+if command -v pg_dump >/dev/null 2>&1; then
+  PGDUMP_MAJOR="$(pg_dump --version | sed -nE 's/.* ([0-9]+)(\.[0-9]+)?.*/\1/p')"
+  if [ -n "${PGDUMP_MAJOR:-}" ] && [ "$PGDUMP_MAJOR" -lt 17 ]; then
+    echo "⚠️  pg_dump $PGDUMP_MAJOR es más viejo que el servidor (17): instala postgresql-client-17 si vas a usar --snapshot." >&2
+  fi
+fi
+
+
 export PGHOST=127.0.0.1 PGPORT="$PORT" PGUSER=postgres PGPASSWORD=postgres PGDATABASE=postgres
 PSQL=(psql -v ON_ERROR_STOP=1 -X -q)
 
