@@ -14,6 +14,7 @@ import { DataTable } from "@/components/shared/DataTable";
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 import { useCuentasBancarias } from "@/features/tesoreria/hooks";
 import { useLibroPagos } from "@/features/tesoreria/hooks/useLibroPagos";
+import { useFiltrosLibroPagosUrl } from "@/features/tesoreria/hooks/useFiltrosLibroPagosUrl";
 import {
   FILTROS_LIBRO_PAGOS_INICIALES, VISTA_LABELS, filtrarPagos, metodosDisponibles,
   monedasDisponibles, totalesLibroPagos,
@@ -33,8 +34,8 @@ import { LibroPagosExportButtons } from "./_sections/LibroPagosExportButtons";
 export default function TesoreriaPagos() {
   useDocumentTitle("Tesorería · Pagos");
   const { data: cuentasRaw = [] } = useCuentasBancarias();
-  const [rango, setRango] = useState<RangoPagos>(() => rangoMesPagos());
-  const [filtros, setFiltros] = useState<FiltrosLibroPagos>(FILTROS_LIBRO_PAGOS_INICIALES);
+  // M8 (Ola 8): periodo y filtros viven en la URL (enlace compartible).
+  const { rango, setRango, filtros, actualizarFiltros } = useFiltrosLibroPagosUrl();
   const [pagoAbierto, setPagoAbierto] = useState<RefPago | null>(null);
 
   const { data: libro, isLoading, isError, refetch } = useLibroPagos(rango.desde, rango.hasta);
@@ -49,9 +50,6 @@ export default function TesoreriaPagos() {
   const visibles = useMemo(() => filtrarPagos(pagos, filtros), [pagos, filtros]);
   const totales = useMemo(() => totalesLibroPagos(visibles), [visibles]);
   const columns = useMemo(() => libroPagosColumns(), []);
-
-  const actualizarFiltros = (patch: Partial<FiltrosLibroPagos>) =>
-    setFiltros((prev) => ({ ...prev, ...patch }));
 
   return (
     <PageContainer>
