@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.783.1] - 2026-08-28
+### Corregido
+- **CI · candado service_role-only**: se sincronizó la lista canónica con las funciones internas de la Ola E4 (`_es_rol_interno`, `_bbva_guard_update`, `_liquidacion_guard_estado`, `_prohibir_delete_comisiones`). El check pasa de nuevo con 57 funciones y sin drift.
+
 ## [13.783.0] - 2026-08-28
 ### Seguridad
 - **Ola E4 · Anticipos de proveedor (N3)**: se cerró la puerta trasera de la API. Los anticipos y sus aplicaciones ya sólo se pueden crear, aplicar y cancelar por las RPC oficiales (que sí generan el movimiento bancario y la bitácora); desde la app quedan en modo lectura. El cargo bancario ya no puede quedar huérfano: borrar un anticipo con movimiento ligado está bloqueado (`ON DELETE RESTRICT`).

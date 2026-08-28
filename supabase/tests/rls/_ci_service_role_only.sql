@@ -31,6 +31,10 @@ INSERT INTO _ci_service_role_only (fn) VALUES
   ('public._assert_uuid_fiscal_single_write()'),
   ('public._audit_embarques_agregar(jsonb, jsonb)'),
   ('public._audit_embarques_umbrales(uuid)'),
+  -- Triggers de candados financieros (Ola E4): sólo los dispara el motor.
+  ('public._bbva_guard_update()'),
+  ('public._liquidacion_guard_estado()'),
+  ('public._prohibir_delete_comisiones()'),
   ('public._cotizaciones_bloquear_auto_aceptacion()'),
   ('public._cotizaciones_bloquear_envio_sin_oportunidad()'),
   ('public._crear_embarque_replicar_conceptos(uuid, uuid, uuid, uuid[], jsonb)'),
@@ -42,6 +46,8 @@ INSERT INTO _ci_service_role_only (fn) VALUES
   -- dashboard_summary()/dashboard_details() (enmascaran costos por rol).
   ('public._dashboard_details_calc()'),
   ('public._dashboard_summary_calc()'),
+  -- Helper de rol interno (Ola E4): sólo lo usan RPC/policies DEFINER.
+  ('public._es_rol_interno()'),
   -- Trigger de alerta de retenciones vs NC (Sub-ola D): sólo lo dispara el trigger.
   ('public._nc_alerta_retenciones_pagadas()'),
   ('public._nc_prov_tc_moneda_convertible()'),
