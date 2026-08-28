@@ -33,6 +33,8 @@ INSERT INTO _ci_service_role_only (fn) VALUES
   ('public._audit_embarques_umbrales(uuid)'),
   -- Triggers de candados financieros (Ola E4): sólo los dispara el motor.
   ('public._bbva_guard_update()'),
+  -- Bitácora financiera (N19): trigger interno, nunca lo llama un cliente.
+  ('public._bitacora_cambio_financiero()'),
   ('public._liquidacion_guard_estado()'),
   ('public._prohibir_delete_comisiones()'),
   ('public._cotizaciones_bloquear_auto_aceptacion()'),
