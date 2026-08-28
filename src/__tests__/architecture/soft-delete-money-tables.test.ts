@@ -26,9 +26,16 @@ const CASOS: Array<{ file: string; tabla: string; minOcurrencias: number }> = [
     minOcurrencias: 1,
   },
   {
+    // v13.777.7 — `conciliarConPago` salió a conciliacionVincular.ts (límite de
+    // 200 líneas): aquí quedan la deduplicación de importación y el listado.
     file: "src/features/tesoreria/services/conciliacion.ts",
     tabla: "bbva_movimientos",
-    minOcurrencias: 3,
+    minOcurrencias: 2,
+  },
+  {
+    file: "src/features/tesoreria/services/conciliacionVincular.ts",
+    tabla: "bbva_movimientos",
+    minOcurrencias: 2,
   },
   {
     // desconciliar/ignorar salieron a este archivo por el límite de 200 líneas.

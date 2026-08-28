@@ -4,6 +4,7 @@
  */
 import { Link } from "react-router-dom";
 import { Briefcase, Plus } from "lucide-react";
+import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -36,11 +37,14 @@ export default function OportunidadesDelProspecto({ leadId, canEdit, onNuevaOpor
       </CardHeader>
       <CardContent>
         {isLoading ? (
-          <p className="text-body-sm text-muted-foreground">Cargando oportunidades…</p>
+          <EmptyStateInline loading message="Cargando oportunidades…" density="compact" />
         ) : oportunidades.length === 0 ? (
-          <p className="text-body-sm text-muted-foreground">
-            Aún no hay oportunidades para este prospecto. Crea una para llevar el negocio al pipeline.
-          </p>
+          <EmptyStateInline
+            icon={Briefcase}
+            message="Aún no hay oportunidades para este prospecto."
+            hint="Crea una para llevar el negocio al pipeline."
+            density="compact"
+          />
         ) : (
           <ul className="divide-y divide-border">
             {oportunidades.map((o) => (

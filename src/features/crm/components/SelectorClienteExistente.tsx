@@ -43,7 +43,7 @@ export default function SelectorClienteExistente({
           ))}
         </SelectContent>
       </Select>
-      <p className="text-xs text-muted-foreground">
+      <p className="text-label text-muted-foreground">
         El alta de clientes se hace en el módulo de Clientes, con RFC, CP y régimen fiscal.{" "}
         <Link to="/clientes" className="inline-flex items-center gap-1 underline">
           Dar de alta cliente <ExternalLink className="h-3 w-3" />

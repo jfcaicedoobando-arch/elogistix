@@ -72,7 +72,7 @@ export function OpcionesCliente({
 export function AyudaOrigen({ esProspecto }: { esProspecto: boolean }) {
   const destino = esProspecto ? "/crm/prospectos" : "/clientes";
   return (
-    <p className="text-xs text-muted-foreground">
+    <p className="text-label text-muted-foreground">
       {esProspecto
         ? "Sólo aparecen prospectos calificados. "
         : "Clientes ya dados de alta con RFC y régimen fiscal. "}

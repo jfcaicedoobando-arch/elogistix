@@ -52,7 +52,7 @@ export default function LeadEtapaProspectoAviso({ estado, canAltaCliente }: Prop
             Dar de alta como cliente
           </Button>
         ) : (
-          <p className="text-xs">
+          <p className="text-label">
             Tu rol no puede dar de alta clientes. Solicítalo a un administrador o al
             área de operaciones.
           </p>

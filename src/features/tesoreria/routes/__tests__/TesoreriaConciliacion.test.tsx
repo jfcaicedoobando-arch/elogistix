@@ -13,6 +13,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
+import { NuqsTestingAdapter } from "nuqs/adapters/testing";
 import type { ReactNode } from "react";
 
 const mockUseCuentasBancarias = vi.fn();
@@ -64,12 +65,17 @@ const movimientos = [
 ];
 
 function renderPage() {
+  // v13.777.7 — la página lee el filtro `estado` de la URL con nuqs
+  // (`useFiltroUrl`), así que necesita el adapter de pruebas además del router.
   return render(
-    <MemoryRouter>
-      <TesoreriaConciliacion />
-    </MemoryRouter>,
+    <NuqsTestingAdapter>
+      <MemoryRouter>
+        <TesoreriaConciliacion />
+      </MemoryRouter>
+    </NuqsTestingAdapter>,
   );
 }
+
 
 function seleccionarCuenta() {
   const [selectCuenta] = screen.getAllByTestId("mock-select");

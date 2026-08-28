@@ -67,6 +67,7 @@ export async function createCliente(cliente: TablesInsert<"clientes">) {
   // valida la completitud fiscal cuando el cliente lleva RFC. El INSERT
   // directo a la tabla ya no está permitido para usuarios de la app.
   const filas = (await unwrap(
+    // SAFE-CAST: el payload ya pasó `clienteInsertSchema`; la RPC recibe jsonb.
     supabase.rpc("crear_clientes", { p_clientes: [payload] as unknown as Json }),
   )) as Cliente[] | null;
   const creado = filas?.[0];
