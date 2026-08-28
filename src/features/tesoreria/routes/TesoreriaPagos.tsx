@@ -16,13 +16,10 @@ import { useCuentasBancarias } from "@/features/tesoreria/hooks";
 import { useLibroPagos } from "@/features/tesoreria/hooks/useLibroPagos";
 import { useFiltrosLibroPagosUrl } from "@/features/tesoreria/hooks/useFiltrosLibroPagosUrl";
 import {
-  FILTROS_LIBRO_PAGOS_INICIALES, VISTA_LABELS, filtrarPagos, metodosDisponibles,
+  VISTA_LABELS, filtrarPagos, metodosDisponibles,
   monedasDisponibles, totalesLibroPagos,
-  type FiltrosLibroPagos, type VistaLibroPagos,
+  type VistaLibroPagos,
 } from "@/features/tesoreria/domain/libroPagos";
-import {
-  rangoMesPagos, type RangoPagos,
-} from "@/features/tesoreria/domain/libroPagosRangos";
 import { etiquetaCuenta } from "@/features/anticipos-proveedor/domain/etiquetaCuenta";
 import { DetallePagoSheet } from "@/features/tesoreria/components/DetallePagoSheet";
 import { refPagoDeLibro, type RefPago } from "@/features/tesoreria/domain/pagoDetalle";
