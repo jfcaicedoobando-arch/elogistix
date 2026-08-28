@@ -1,7 +1,8 @@
 /**
  * /compras/notas-credito — Ola E. Listado global de notas de crédito de proveedor.
  */
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
+import { useFiltroUrl, useTextoUrl } from "@/hooks/shared";
 import { useQuery } from "@tanstack/react-query";
 import { compras } from "../queryKeys";
 import { ReceiptText, Download, Banknote, Coins, ListFilter } from "lucide-react";
