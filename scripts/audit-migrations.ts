@@ -18,6 +18,8 @@
  *      (idempotencia). NB: Postgres no soporta `CREATE POLICY IF NOT EXISTS`
  *      antes de PG16; se acepta también `DROP POLICY IF EXISTS ... ; CREATE POLICY`.
  *  H5  Prohibido `DROP TABLE public.*` sin `IF EXISTS`.
+ *  H9  Prohibido parchear funciones por texto (`replace(pg_get_functiondef(...))`).
+ *      Regla dura: aplica también a legacy (auditoría 3 · M6).
  *  H6  Toda `CREATE OR REPLACE FUNCTION public.<f>(...) ... SECURITY DEFINER`
  *      DEBE ir acompañada en el mismo archivo de:
  *        - `REVOKE ALL ON FUNCTION public.<f>(<args>) FROM PUBLIC` (o `FROM PUBLIC, anon`)
@@ -318,7 +320,9 @@ function main() {
     if (!isPostBaseline) {
       // Legacy: sólo evaluamos H6 regla dura (GRANT EXECUTE ... TO PUBLIC).
       const body = fs.readFileSync(path.join(MIG_DIR, f), "utf8");
-      const legacy = scanFile(f, body, false).filter((v) => v.check === "H6");
+      const legacy = scanFile(f, body, false).filter(
+        (v) => v.check === "H6" || v.check === "H9",
+      );
       violations.push(...legacy);
       continue;
     }
