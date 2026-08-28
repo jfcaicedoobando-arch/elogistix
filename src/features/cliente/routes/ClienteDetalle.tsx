@@ -89,9 +89,11 @@ export default function ClienteDetalle() {
         embarques={embarquesCliente.length}
         cotizaciones={cotizacionesCliente.length}
         contactos={contarContactos(contactos.length, cliente.contacto)}
-        facturadoUSD={financials?.facturadoUSD ?? 0}
-        pendienteUSD={financials?.pendienteUSD ?? 0}
-        profitUSD={financials?.profitUSD ?? 0}
+        facturadoMXN={financials?.facturadoMXN ?? 0}
+        pendienteMXN={financials?.pendienteMXN ?? 0}
+        profitMXN={financials?.profitMXN ?? 0}
+        facturasSinTc={financials?.facturasSinTc ?? 0}
+        embarquesSinTc={financials?.embarquesSinTc ?? 0}
       />
 
       <ClienteDetalleTabs

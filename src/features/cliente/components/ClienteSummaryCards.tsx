@@ -7,9 +7,12 @@ interface Props {
   embarques: number;
   cotizaciones: number;
   contactos: number;
-  facturadoUSD: number;
-  pendienteUSD: number;
-  profitUSD: number;
+  facturadoMXN: number;
+  pendienteMXN: number;
+  profitMXN: number;
+  /** Facturas/embarques excluidos por falta de tipo de cambio confiable (Ola 6 · M1). */
+  facturasSinTc?: number;
+  embarquesSinTc?: number;
 }
 
 /**
@@ -21,8 +24,26 @@ interface Props {
  * v13.302.3: migrado al `KpiCard` canónico (`iconVariant="chip"`).
  * v13.571.0: migrado a `KpiStrip` (carrusel en móvil, 3 columnas en desktop)
  * para que la franja se comporte igual que la del detalle de proveedor.
+ * v13.773.1 (Ola 6 · M1): los importes están en MXN convertidos con el TC de
+ * cada documento — antes se rotulaban USD sumando monedas distintas. Cuando hay
+ * documentos sin TC confiable se avisa en el subtítulo en lugar de callarlo.
  */
-export default function ClienteSummaryCards({ embarques, cotizaciones, contactos, facturadoUSD, pendienteUSD, profitUSD }: Props) {
+export default function ClienteSummaryCards({
+  embarques,
+  cotizaciones,
+  contactos,
+  facturadoMXN,
+  pendienteMXN,
+  profitMXN,
+  facturasSinTc = 0,
+  embarquesSinTc = 0,
+}: Props) {
+  const avisoFacturas = facturasSinTc > 0
+    ? ` · ${facturasSinTc} sin tipo de cambio (excluida${facturasSinTc === 1 ? "" : "s"})`
+    : "";
+  const avisoEmbarques = embarquesSinTc > 0
+    ? ` · ${embarquesSinTc} embarque${embarquesSinTc === 1 ? "" : "s"} sin tipo de cambio`
+    : "";
   const items: Array<{
     label: string;
     value: string;
@@ -36,25 +57,25 @@ export default function ClienteSummaryCards({ embarques, cotizaciones, contactos
     { label: "Contactos", value: String(contactos), sublabel: "Exportadores / importadores", icon: Users, variant: "success" },
     {
       label: "Facturado",
-      value: formatCurrencyCompact(facturadoUSD, "USD"),
-      sublabel: "Total emitido (USD)",
-      tooltip: formatCurrency(facturadoUSD, "USD"),
+      value: formatCurrencyCompact(facturadoMXN, "MXN"),
+      sublabel: `Total emitido (MXN)${avisoFacturas}`,
+      tooltip: formatCurrency(facturadoMXN, "MXN"),
       icon: DollarSign,
       variant: "secondary",
     },
     {
       label: "Por cobrar",
-      value: formatCurrencyCompact(pendienteUSD, "USD"),
-      sublabel: "Saldo pendiente (USD)",
-      tooltip: formatCurrency(pendienteUSD, "USD"),
+      value: formatCurrencyCompact(pendienteMXN, "MXN"),
+      sublabel: `Saldo pendiente (MXN)${avisoFacturas}`,
+      tooltip: formatCurrency(pendienteMXN, "MXN"),
       icon: AlertCircle,
       variant: "warning",
     },
     {
       label: "Utilidad",
-      value: formatCurrencyCompact(profitUSD, "USD"),
-      sublabel: "Utilidad acumulada (USD)",
-      tooltip: formatCurrency(profitUSD, "USD"),
+      value: formatCurrencyCompact(profitMXN, "MXN"),
+      sublabel: `Utilidad acumulada (MXN)${avisoEmbarques}`,
+      tooltip: formatCurrency(profitMXN, "MXN"),
       icon: TrendingUp,
       variant: "success",
     },
