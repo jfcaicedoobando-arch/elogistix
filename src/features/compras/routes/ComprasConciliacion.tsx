@@ -29,13 +29,16 @@ import { ConciliacionDetalleSheet } from "./_sections/ConciliacionDetalleSheet";
 import type { EmbarqueConciliacion } from "@/features/compras/services/conciliacionEmbarques";
 import { ErrorState } from "@/components/shared/states/ErrorState";
 
-type EstadoFiltro = EstadoConciliacion | "todos";
-type MonedaFiltro = "todas" | "MXN" | "USD";
+const ESTADOS_FILTRO = ["todos", "sin_facturar", "parcial", "completa"] as const;
+type EstadoFiltro = (typeof ESTADOS_FILTRO)[number] & (EstadoConciliacion | "todos");
+const MONEDAS_FILTRO = ["todas", "MXN", "USD"] as const;
+type MonedaFiltro = (typeof MONEDAS_FILTRO)[number];
 
 export default function ComprasConciliacion() {
-  const [estado, setEstado] = useState<EstadoFiltro>("todos");
-  const [moneda, setMoneda] = useState<MonedaFiltro>("todas");
-  const [search, setSearch] = useState("");
+  // M8 (Ola 8): filtros en la URL → el listado se puede compartir por link.
+  const [estado, setEstado] = useFiltroUrl<EstadoFiltro>("estado", ESTADOS_FILTRO, "todos");
+  const [moneda, setMoneda] = useFiltroUrl<MonedaFiltro>("moneda", MONEDAS_FILTRO, "todas");
+  const [search, setSearch] = useTextoUrl("q");
   const [detalle, setDetalle] = useState<EmbarqueConciliacion | null>(null);
 
   const { data: rows = [], isLoading, isError, refetch } = useQuery({
