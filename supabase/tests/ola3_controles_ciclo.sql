@@ -113,13 +113,13 @@ BEGIN
   RETURNING id INTO v_pf;
 
   INSERT INTO public.conceptos_venta (organization_id, embarque_id, descripcion,
-                                      cantidad, precio_unitario, moneda, aplica_iva,
+                                      cantidad, precio_unitario, total, moneda, aplica_iva,
                                       proforma_id)
-  VALUES (v_org, v_emb, 'Flete OLA3', 1, 500, 'USD'::public.moneda, true, v_pf)
+  VALUES (v_org, v_emb, 'Flete OLA3', 1, 500, 500, 'USD'::public.moneda, true, v_pf)
   RETURNING id INTO v_cv;
 
   BEGIN
-    UPDATE public.conceptos_venta SET precio_unitario = 900 WHERE id = v_cv;
+    UPDATE public.conceptos_venta SET precio_unitario = 900, total = 900 WHERE id = v_cv;
     RAISE EXCEPTION 'OLA3 FALLA: se permitió editar un concepto ya proformado';
   EXCEPTION WHEN OTHERS THEN
     v_err := SQLERRM;
