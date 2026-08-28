@@ -1,5 +1,6 @@
 /** Bandeja /compras/por-aprobar — Ola C: facturas bajo flujo de aprobación. */
 import { useMemo, useState } from "react";
+import { useFiltroUrl, useTextoUrl } from "@/hooks/shared";
 import { useNavigate } from "react-router-dom";
 import { ShieldCheck, ClipboardCheck, CheckCircle2, XCircle } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
