@@ -16,6 +16,7 @@ import { useAnticiposProveedor, type AnticipoProveedorRow } from "../hooks/useAn
 import { RegistrarAnticipoDialog } from "../components/RegistrarAnticipoDialog";
 import { AplicarAnticipoDialog } from "../components/AplicarAnticipoDialog";
 import { CancelarAnticipoDialog } from "../components/CancelarAnticipoDialog";
+import { DevolverAnticipoDialog } from "../components/DevolverAnticipoDialog";
 import { VincularEmbarqueAnticipoDialog } from "../components/VincularEmbarqueAnticipoDialog";
 
 import { usePermissions, useTextoUrl } from "@/hooks/shared";
@@ -35,6 +36,7 @@ export default function AnticiposProveedor() {
   const [openRegistrar, setOpenRegistrar] = useState(false);
   const [anticipoParaAplicar, setAnticipoParaAplicar] = useState<AnticipoProveedorRow | null>(null);
   const [anticipoParaCancelar, setAnticipoParaCancelar] = useState<AnticipoProveedorRow | null>(null);
+  const [anticipoParaDevolver, setAnticipoParaDevolver] = useState<AnticipoProveedorRow | null>(null);
   const [anticipoParaVincular, setAnticipoParaVincular] = useState<AnticipoProveedorRow | null>(null);
 
   const { data, isLoading, isError, refetch } = useAnticiposProveedor({
@@ -51,6 +53,7 @@ export default function AnticiposProveedor() {
         canEditFinance,
         onAplicar: setAnticipoParaAplicar,
         onCancelar: setAnticipoParaCancelar,
+        onDevolver: setAnticipoParaDevolver,
         onVincularEmbarque: setAnticipoParaVincular,
       }),
     [canEditFinance],
@@ -90,6 +93,7 @@ export default function AnticiposProveedor() {
                   <SelectItem value="aplicado_parcial">Aplicado parcial</SelectItem>
                   <SelectItem value="aplicado_total">Aplicado total</SelectItem>
                   <SelectItem value="cancelado">Cancelado</SelectItem>
+                  <SelectItem value="devuelto">Devuelto</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -174,6 +178,12 @@ export default function AnticiposProveedor() {
         open={!!anticipoParaCancelar}
         onOpenChange={(o) => !o && setAnticipoParaCancelar(null)}
         anticipo={anticipoParaCancelar}
+      />
+
+      <DevolverAnticipoDialog
+        open={!!anticipoParaDevolver}
+        onOpenChange={(o) => !o && setAnticipoParaDevolver(null)}
+        anticipo={anticipoParaDevolver}
       />
 
       <VincularEmbarqueAnticipoDialog
