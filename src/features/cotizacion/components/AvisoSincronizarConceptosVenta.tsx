@@ -31,6 +31,9 @@ function aFilaLocal(c: CostoCotizacion): FilaCostoLocal {
     costo_unitario: Number(c.costo_unitario) || 0,
     precio_venta: Number(c.precio_venta ?? 0) || 0,
     unidad_medida: c.unidad_medida ?? "",
+    // Los comentarios del costo viajan al concepto de venta y al PDF.
+    notas: c.notas ?? undefined,
+
   };
 }
 
