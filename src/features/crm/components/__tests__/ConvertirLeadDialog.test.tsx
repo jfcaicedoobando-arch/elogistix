@@ -58,7 +58,7 @@ describe("ConvertirLeadDialog · regresión SIN_CLIENTE", () => {
     mocks.mutateAsync.mockReset();
   });
 
-  it("renderiza sin lanzar ReferenceError por SIN_CLIENTE", () => {
+  it("renderiza el diálogo sin lanzar ReferenceError por SIN_CLIENTE", () => {
     expect(() => renderDialog()).not.toThrow();
     expect(screen.getByText("Convertir lead")).toBeTruthy();
   });
