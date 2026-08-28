@@ -29457,6 +29457,7 @@ REVOKE ALL ON FUNCTION public.move_to_dlq(source_queue text, dlq_name text, mess
 GRANT ALL ON FUNCTION public.move_to_dlq(source_queue text, dlq_name text, message_id bigint, payload jsonb) TO service_role;
 REVOKE ALL ON FUNCTION public.nc_aplicadas_en_moneda_factura(p_factura_id uuid) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.nc_aplicadas_en_moneda_factura(p_factura_id uuid) TO service_role;
+GRANT ALL ON FUNCTION public.nc_aplicadas_en_moneda_factura(p_factura_id uuid) TO authenticated;
 REVOKE ALL ON FUNCTION public.notif_cli_on_embarque_estado() FROM PUBLIC;
 GRANT ALL ON FUNCTION public.notif_cli_on_embarque_estado() TO authenticated;
 GRANT ALL ON FUNCTION public.notif_cli_on_embarque_estado() TO service_role;

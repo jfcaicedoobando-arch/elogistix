@@ -68,7 +68,6 @@ INSERT INTO _ci_service_role_only (fn) VALUES
   ('public.handle_new_user_signup()'),
   ('public.marcar_facturas_vencidas()'),
   ('public.move_to_dlq(text, text, bigint, jsonb)'),
-  ('public.nc_aplicadas_en_moneda_factura(uuid)'),
   ('public.notificar_uuid_cancelado_sat(uuid, jsonb)'),
   ('public.read_email_batch(text, integer, integer)'),
   ('public.registrar_comision_pendiente(uuid, uuid, text, text, text, text)'),

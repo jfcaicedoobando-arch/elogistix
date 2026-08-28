@@ -109,7 +109,17 @@ DECLARE
     'recalcular_estado_liquidacion_concepto',
     'recalcular_estado_liquidacion_factura',
     'recompute_embarque_tiene_proforma',
-    'resolver_sin_comision'
+    'resolver_sin_comision',
+    -- ── F. Helpers de visibilidad por rol efectivo (v13.773.0, enmascarado
+    --    de costos) y los wrappers de tablero que los usan. Los helpers
+    --    delegan en `has_any_role_efectivo`, que SÍ resuelve membresía por
+    --    org; los wrappers sólo llaman a `*_datos()` (service_role-only y
+    --    anclados) y enmascaran el jsonb según el rol. No leen tablas tenant.
+    'puede_ver_costos_cotizacion',
+    'puede_ver_costos_dashboard',
+    'puede_ver_dashboard_direccion',
+    'dashboard_summary',
+    'dashboard_details'
   ];
 BEGIN
   -- Funciones SECURITY DEFINER ejecutables por authenticated SIN ancla tenant.
