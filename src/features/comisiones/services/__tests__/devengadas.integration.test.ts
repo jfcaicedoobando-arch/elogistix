@@ -79,6 +79,7 @@ describe("B.3.4 flujo Comisión devengada → Liquidación (KPIs)", () => {
       devengado_mes_mxn: 0,
       pendiente_liquidar_mxn: 0,
       liquidado_mes_mxn: 0,
+      por_recuperar_mxn: 0,
     });
   });
 
@@ -91,6 +92,7 @@ describe("B.3.4 flujo Comisión devengada → Liquidación (KPIs)", () => {
       devengado_mes_mxn: 0,
       pendiente_liquidar_mxn: 0,
       liquidado_mes_mxn: 0,
+      por_recuperar_mxn: 0,
     });
   });
 

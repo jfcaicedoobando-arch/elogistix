@@ -46,10 +46,13 @@ export function FacturaPagosSection({
   const [previewRep, setPreviewRep] = useState<{ id: string; label: string } | null>(null);
 
   // A1: canon único `@/lib/financial/saldoFactura` (descuenta pagos y NC aplicadas).
+  // Auditoría 2026-08-28 · Hallazgo 4: el estado entra al cálculo (facturas
+  // terminales no pueden mostrar saldo por cobrar).
   const { saldo, pagado: totalPagado, liquidada: sinSaldo } = calcularSaldoFactura(
     totalFactura,
     pagos,
     notasAplicadas,
+    estadoFactura,
   );
   const liquidada = sinSaldo && pagos.length > 0;
 

@@ -144,20 +144,35 @@ export interface KPIsComisiones {
   devengado_mes_mxn: number;
   pendiente_liquidar_mxn: number;
   liquidado_mes_mxn: number;
+  /** Comisiones ya pagadas cuyo respaldo se canceló/acreditó: deuda a recuperar. */
+  por_recuperar_mxn: number;
 }
 
-export function calcularKPIsComisiones(items: ComisionDevengada[]): KPIsComisiones {
-  const mesActual = ymMx();
-  let dev = 0, pend = 0, liq = 0;
+/**
+ * Auditoría 2026-08-28:
+ * - Hallazgo 6: el "devengado del mes" debe medirse contra el periodo que el
+ *   usuario está consultando, no contra el mes de hoy (al ver un mes pasado el
+ *   KPI daba 0).
+ * - Hallazgo 1: se expone `por_recuperar_mxn` para que la deuda por comisiones
+ *   pagadas de más deje de ser invisible.
+ */
+export function calcularKPIsComisiones(
+  items: ComisionDevengada[],
+  periodo?: string,
+): KPIsComisiones {
+  const mesRef = periodo || ymMx();
+  let dev = 0, pend = 0, liq = 0, porRecuperar = 0;
   for (const it of items) {
     const mes = ymMx(new Date(it.created_at));
-    if (mes === mesActual && it.estado !== "Cancelada") dev += it.comision_mxn;
+    if (mes === mesRef && it.estado !== "Cancelada") dev += it.comision_mxn;
     if (it.estado === "Devengada") pend += it.comision_mxn;
-    if (it.estado === "Liquidada" && mes === mesActual) liq += it.comision_mxn;
+    if (it.estado === "Liquidada" && mes === mesRef) liq += it.comision_mxn;
+    if (it.estado === "Por recuperar") porRecuperar += it.comision_mxn;
   }
   return {
     devengado_mes_mxn: dev,
     pendiente_liquidar_mxn: pend,
     liquidado_mes_mxn: liq,
+    por_recuperar_mxn: porRecuperar,
   };
 }

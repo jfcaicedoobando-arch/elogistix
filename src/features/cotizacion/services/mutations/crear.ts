@@ -41,7 +41,15 @@ export async function crearCotizacion(input: CreateCotizacionInput): Promise<Cot
   // vigencia (antes se usaba siempre hoy + días y el PDF mostraba otra fecha).
   const base = parseLocalMx(hoyMx());
   base.setUTCDate(base.getUTCDate() + input.vigencia_dias);
-  const fechaVigencia = input.validez_propuesta ?? isoUtcDay(base);
+  const calculada = isoUtcDay(base);
+  // Auditoría 2026-08-28 · Hallazgo 7: la "Validez propuesta" manual no se
+  // validaba. Una fecha ya vencida generaba cotizaciones imposibles de aceptar.
+  if (input.validez_propuesta && input.validez_propuesta < hoyMx()) {
+    throw new Error(
+      "LC_VIGENCIA_PASADA: la validez propuesta ya venció; captura una fecha de hoy en adelante.",
+    );
+  }
+  const fechaVigencia = input.validez_propuesta ?? calculada;
   const payload = buildCotizacionInsertPayload(input, folio, fechaVigencia);
 
 

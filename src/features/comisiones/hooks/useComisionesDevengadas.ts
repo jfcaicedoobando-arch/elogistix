@@ -33,7 +33,8 @@ export function useComisionesDevengadas(filtros: FetchComisionesFiltros = {}) {
     staleTime: 30_000,
   });
 
-  const base = useMemo(() => calcularKPIsComisiones(q.data ?? []), [q.data]);
+  // Hallazgo 6: el KPI se mide contra el periodo consultado, no contra hoy.
+  const base = useMemo(() => calcularKPIsComisiones(q.data ?? [], periodo), [q.data, periodo]);
   const kpis = useMemo(
     () => ({ ...base, liquidado_mes_mxn: liquidado.data ?? 0 }),
     [base, liquidado.data],

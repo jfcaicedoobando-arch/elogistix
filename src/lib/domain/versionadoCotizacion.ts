@@ -10,6 +10,9 @@
  * - real:         monto efectivamente registrado en `conceptos_costo`.
  */
 
+import { convertirMxn, type TiposCambio } from "@/lib/financial/convertir";
+import { roundMoney } from "@/lib/financial/financialUtils";
+
 export type ClasificacionVarianza = "dentro_rango" | "alerta" | "critica";
 
 export interface UmbralesVarianza {
@@ -48,6 +51,10 @@ export interface ResumenReconciliacion3C {
   total_real: number;
   delta_cot_vs_real: DeltaPair;
   clasificacion: ClasificacionVarianza;
+  /** Moneda de los totales: SIEMPRE MXN (los renglones se normalizan). */
+  moneda_total: "MXN";
+  /** Renglones excluidos por falta de tipo de cambio para su moneda. */
+  filas_sin_tipo_cambio: number;
 }
 
 /** % absoluto entre dos montos. base=0 → 0 si actual=0, sino 100. */
@@ -98,13 +105,39 @@ export function construirFilaReconciliacion(
   };
 }
 
+/**
+ * Auditoría 2026-08-28 · Hallazgo 3: los renglones vienen agrupados por
+ * (concepto, moneda), así que sumarlos en crudo mezclaba USD, MXN y EUR en un
+ * mismo total (y la UI lo rotulaba "USD"). Ahora TODO se normaliza a MXN con el
+ * TC del embarque; un renglón en moneda extranjera sin TC se excluye y se
+ * reporta en `filas_sin_tipo_cambio` en lugar de sumarse como si fueran pesos.
+ */
 export function construirResumen(
   filas: FilaReconciliacion3C[],
   umbrales: UmbralesVarianza = UMBRALES_DEFAULT,
+  tc: TiposCambio = {},
 ): ResumenReconciliacion3C {
-  const total_cotizado = filas.reduce((s, f) => s + f.cotizado, 0);
-  const total_refrescado = filas.reduce((s, f) => s + f.refrescado, 0);
-  const total_real = filas.reduce((s, f) => s + f.real, 0);
+  let total_cotizado = 0;
+  let total_refrescado = 0;
+  let total_real = 0;
+  let filas_sin_tipo_cambio = 0;
+
+  for (const f of filas) {
+    const cot = convertirMxn(f.cotizado, f.moneda, tc);
+    const refr = convertirMxn(f.refrescado, f.moneda, tc);
+    const real = convertirMxn(f.real, f.moneda, tc);
+    if (cot.mxn === null || refr.mxn === null || real.mxn === null) {
+      filas_sin_tipo_cambio += 1;
+      continue;
+    }
+    total_cotizado += cot.mxn;
+    total_refrescado += refr.mxn;
+    total_real += real.mxn;
+  }
+
+  total_cotizado = roundMoney(total_cotizado);
+  total_refrescado = roundMoney(total_refrescado);
+  total_real = roundMoney(total_real);
   const delta = calcularDelta(total_cotizado, total_real);
   return {
     total_cotizado,
@@ -112,6 +145,8 @@ export function construirResumen(
     total_real,
     delta_cot_vs_real: delta,
     clasificacion: clasificarVarianza(delta.pct, umbrales),
+    moneda_total: "MXN",
+    filas_sin_tipo_cambio,
   };
 }
 

@@ -33,7 +33,7 @@ describe("Fase O — Validación de aprobación CxP", () => {
 
   it("declara la función `_cxp_validar_aprobacion(uuid)` como SECURITY DEFINER", () => {
     expect(sql).toMatch(
-      /CREATE OR REPLACE FUNCTION public\._cxp_validar_aprobacion\(p_factura_id uuid(, p_justificacion text DEFAULT NULL)?\)[\s\S]*?SECURITY DEFINER/,
+      /CREATE OR REPLACE FUNCTION public\._cxp_validar_aprobacion\(\s*p_factura_id uuid(,\s*p_justificacion text DEFAULT NULL::text)?\s*\)[\s\S]*?SECURITY DEFINER/,
     );
   });
 
@@ -64,7 +64,10 @@ describe("Fase O — Validación de aprobación CxP", () => {
     expect(sql).toMatch(/uuid_verificado/);
   });
 
-  it("revoca EXECUTE de PUBLIC/anon y otorga a authenticated + service_role", () => {
+  // Auditoría 2026-08-28 · Hallazgo 2: `_cxp_validar_aprobacion` es un helper
+  // interno; sólo lo invoca `aprobar_factura_proveedor` (SECURITY DEFINER, corre
+  // como dueño). Por eso `authenticated` ya NO tiene EXECUTE.
+  it("revoca EXECUTE de PUBLIC/anon/authenticated y otorga sólo a service_role", () => {
     expect(sql).toMatch(
       /REVOKE ALL ON FUNCTION public\._cxp_validar_aprobacion\(uuid(, text)?\) FROM PUBLIC/,
     );
@@ -73,7 +76,10 @@ describe("Fase O — Validación de aprobación CxP", () => {
     );
 
     expect(sql).toMatch(
-      /GRANT EXECUTE ON FUNCTION public\._cxp_validar_aprobacion\(uuid(, text)?\) TO authenticated, service_role/,
+      /REVOKE ALL ON FUNCTION public\._cxp_validar_aprobacion\(uuid(, text)?\) FROM authenticated/,
+    );
+    expect(sql).toMatch(
+      /GRANT EXECUTE ON FUNCTION public\._cxp_validar_aprobacion\(uuid(, text)?\) TO service_role/,
     );
   });
 

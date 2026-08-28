@@ -136,7 +136,9 @@ export const LC_CODE_MESSAGES_PAGOS: Record<string, string> = {
   LC_CXP_FOLIO_DUPLICADO:
     "Ya existe una factura de proveedor con ese folio interno. Recarga la lista y vuelve a guardar.",
   LC_CXP_SOBRECOSTO:
-    "Lo facturado por el proveedor excede el costo comprometido del embarque en más del 5%. Revisa los conceptos vinculados o ajusta el costo antes de aprobar.",
+    "Lo facturado por el proveedor para ese concepto excede el costo comprometido en más del 5% (contando todas las facturas ligadas a ese costo). Revisa los conceptos vinculados o ajusta el costo antes de aprobar.",
+  LC_CXP_SIN_TC:
+    "No hay tipo de cambio para comparar el costo con la factura, así que no pudo validarse el sobrecosto de ese concepto. Captura el tipo de cambio del embarque o de la factura.",
   LC_FACTURA_DELETE_PROHIBIDO:
     "Las facturas no se borran: cancélala o emite una nota de crédito para dejar el rastro fiscal.",
   // ── Ola 4 · respaldo mínimo al aprobar CxP (three-way match) ───────────

@@ -70,11 +70,26 @@ describe("construirResumen", () => {
       construirFilaReconciliacion({ concepto: "A", moneda: "USD", cotizado: 100, refrescado: 100, real: 110 }),
       construirFilaReconciliacion({ concepto: "B", moneda: "USD", cotizado: 200, refrescado: 210, real: 220 }),
     ];
-    const r = construirResumen(filas);
+    // v13.778.0: los totales se normalizan a MXN; con T/C 1 el resultado es igual.
+    const r = construirResumen(filas, undefined, { usd_mxn: 1 });
     expect(r.total_cotizado).toBe(300);
     expect(r.total_real).toBe(330);
+    expect(r.moneda_total).toBe("MXN");
+    expect(r.filas_sin_tipo_cambio).toBe(0);
     expect(r.delta_cot_vs_real.pct).toBe(10);
     expect(r.clasificacion).toBe("alerta");
+  });
+});
+
+describe("construirResumen sin tipo de cambio", () => {
+  it("excluye los renglones no convertibles y los reporta", () => {
+    const filas = [
+      construirFilaReconciliacion({ concepto: "A", moneda: "USD", cotizado: 100, refrescado: 100, real: 110 }),
+      construirFilaReconciliacion({ concepto: "B", moneda: "MXN", cotizado: 200, refrescado: 200, real: 200 }),
+    ];
+    const r = construirResumen(filas);
+    expect(r.total_cotizado).toBe(200);
+    expect(r.filas_sin_tipo_cambio).toBe(1);
   });
 });
 
