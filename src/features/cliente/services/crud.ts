@@ -1,5 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
-import type { Tables, TablesInsert } from "@/integrations/supabase/types";
+import type { Json, Tables, TablesInsert } from "@/integrations/supabase/types";
 import { unwrap } from "@/lib/supabase/response";
 import { normalizarRazonSocial } from "@/lib/text/razonSocial";
 import { registrarActividad } from "@/services/bitacora/registrar";
@@ -63,9 +63,14 @@ export {
 export async function createCliente(cliente: TablesInsert<"clientes">) {
   parseOrThrow(clienteInsertSchema, cliente, "Cliente");
   const payload = { ...cliente, nombre: normalizarRazonSocial(cliente.nombre) };
-  const creado = (await unwrap(
-    supabase.from("clientes").insert(payload).select().single(),
-  )) as Cliente;
+  // M4 (auditoría 3-3): el alta va por la RPC canónica `crear_clientes`, que
+  // valida la completitud fiscal cuando el cliente lleva RFC. El INSERT
+  // directo a la tabla ya no está permitido para usuarios de la app.
+  const filas = (await unwrap(
+    supabase.rpc("crear_clientes", { p_clientes: [payload] as unknown as Json }),
+  )) as Cliente[] | null;
+  const creado = filas?.[0];
+  if (!creado) throw new Error("No se pudo dar de alta el cliente.");
   await registrarActividad({
     modulo: "clientes",
     accion: "crear",

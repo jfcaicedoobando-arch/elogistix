@@ -7,7 +7,7 @@
  * guardados para que el usuario sepa dónde quedó la carga.
  */
 import { supabase } from "@/integrations/supabase/client";
-import type { Tables, TablesInsert } from "@/integrations/supabase/types";
+import type { Json, Tables, TablesInsert } from "@/integrations/supabase/types";
 import { normalizarRazonSocial } from "@/lib/text/razonSocial";
 import { IMPORT_LOTE_TAMANO } from "@/lib/csv/importLimits";
 import { getErrorMessage } from "@/lib/errors";
@@ -23,7 +23,9 @@ export async function createClientesLote(
     const lote = clientes
       .slice(i, i + IMPORT_LOTE_TAMANO)
       .map((c) => ({ ...c, nombre: normalizarRazonSocial(c.nombre) }));
-    const { data, error } = await supabase.from("clientes").insert(lote).select();
+    const { data, error } = await supabase.rpc("crear_clientes", {
+      p_clientes: lote as unknown as Json,
+    });
     if (error) {
       throw new Error(
         `Se importaron ${creados.length} de ${clientes.length} clientes; el siguiente lote falló: ${getErrorMessage(error)}`,
