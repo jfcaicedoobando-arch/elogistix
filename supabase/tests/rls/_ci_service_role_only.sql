@@ -31,6 +31,10 @@ INSERT INTO _ci_service_role_only (fn) VALUES
   ('public._assert_uuid_fiscal_single_write()'),
   ('public._audit_embarques_agregar(jsonb, jsonb)'),
   ('public._audit_embarques_umbrales(uuid)'),
+  -- Triggers de candados financieros (Ola E4): sólo los dispara el motor.
+  ('public._bbva_guard_update()'),
+  ('public._liquidacion_guard_estado()'),
+  ('public._prohibir_delete_comisiones()'),
   ('public._cotizaciones_bloquear_auto_aceptacion()'),
   ('public._cotizaciones_bloquear_envio_sin_oportunidad()'),
   ('public._crear_embarque_replicar_conceptos(uuid, uuid, uuid, uuid[], jsonb)'),
