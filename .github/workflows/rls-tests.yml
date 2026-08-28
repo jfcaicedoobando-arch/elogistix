@@ -674,7 +674,7 @@ jobs:
         run: |
           set -euo pipefail
           # pg_dump se ejecuta DENTRO del contenedor de la imagen pinneada:
-          # el pg_dump del runner (v16) formatea distinto al del servidor (15.8)
+          # el pg_dump del runner formatea distinto al del servidor (17.6)
           # y produciría diffs falsos contra la baseline generada en local.
           container=$(docker ps --filter "ancestor=${POSTGRES_IMAGE}" --format '{{.Names}}' | head -1)
           if [ -z "$container" ]; then
@@ -697,7 +697,7 @@ jobs:
         run: |
           set -uo pipefail
           # Bootstrap: la baseline sólo puede generarse con el pg_dump de la
-          # imagen Postgres pinneada (15.8). Mientras no exista el archivo
+          # imagen Postgres pinneada (17.6). Mientras no exista el archivo
           # committeado, este job avisa y publica el snapshot como artifact en
           # vez de reprobar el pipeline: no hay nada contra qué comparar todavía.
           if [ ! -f "$BASELINE" ]; then

@@ -59,7 +59,7 @@ instrucciones. Dos caminos:
 ## Notas de determinismo
 
 - `pg_dump` corre **dentro** del contenedor de la imagen Postgres pinneada
-  (15.8, mismo digest en CI y en local). Un `pg_dump` v16 del runner formatea
+  (17.6, mismo digest en CI y en local). Un `pg_dump` de otra versión formatea
   distinto y generaría diffs falsos.
 - El snapshot elimina líneas volátiles: comentarios, `SET` de sesión,
   `ALTER ... OWNER TO` y líneas en blanco.
