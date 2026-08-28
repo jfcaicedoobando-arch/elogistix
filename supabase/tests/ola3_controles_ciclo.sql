@@ -58,10 +58,11 @@ BEGIN
     IF v_err NOT LIKE '%LC_PERIODO_CERRADO%' THEN RAISE; END IF;
   END;
 
+  -- v13.777.9: facturas_totales_consistentes exige subtotal + iva = total.
   INSERT INTO public.facturas (organization_id, cliente_id, embarque_id, numero,
-                               fecha_emision, moneda, subtotal, total)
+                               fecha_emision, moneda, subtotal, iva, total)
   VALUES (v_org, v_cli, v_emb, 'OLA3-ABIERTA', DATE '2026-03-10',
-          'MXN'::public.moneda, 100, 116)
+          'MXN'::public.moneda, 100, 16, 116)
   RETURNING id INTO v_fac;
 
   -- ── 2) Mover la fecha hacia el periodo cerrado ─────────────────────────
