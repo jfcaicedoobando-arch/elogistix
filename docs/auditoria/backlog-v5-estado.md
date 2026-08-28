@@ -47,3 +47,17 @@ El backlog v5 afirma cosas que hoy no son ciertas:
 4. N19 (bitácora financiera).
 5. L3 (detalle de importación).
 6. N14 y N13 — requieren decisión de producto.
+
+## Cierre (v13.790.0)
+
+| Hallazgo | Resultado |
+|---|---|
+| M3-res | Cerrado sin índice único: el "duplicado" son dos razones sociales del mismo dueño; el RFC es el identificador único real. El trigger de email ya tolera vacíos. |
+| M6 | Cerrado: `cartera_pendiente()` usa `_nc_aplicadas_moneda_factura`. |
+| N18 | Cerrado: `FOR UPDATE` en aprobación de NC de proveedor y cancelación de anticipo. |
+| N19 | Cerrado: bitácora financiera con triggers en embarques, facturas, BBVA y comisiones. |
+| C3-res | Cerrado: `proveedor_notas_credito` no tiene `proveedor_id`; el candado por factura es suficiente. |
+| C9 | Cerrado: paridad SQL/TS sobre `created_by`; expuesto `canViewCostsOfCotizacion`. |
+| L3 | Cerrado: la importación reporta el rango de filas no guardadas. |
+| N13 | Abierto por decisión de producto (devolución de anticipo / saldo a favor). |
+| N14 | Abierto: anticipos en EUR (requiere paridad EUR/MXN oficial). |
