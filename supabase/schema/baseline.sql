@@ -18695,8 +18695,6 @@ CREATE FUNCTION public.profit_por_cliente(_fecha_desde date DEFAULT NULL::date, 
       e.id,
       e.cliente_id,
       e.cliente_nombre,
-      -- TC del embarque; si falta o es 0, el DOF vigente a la fecha del
-      -- embarque (ETA, o ETD/creación si no hay ETA).
       COALESCE(
         NULLIF(e.tipo_cambio_usd, 0),
         (SELECT d.usd_mxn FROM public.tc_dof_vigente(COALESCE(e.eta, e.etd, e.created_at::date)) d)
@@ -18724,6 +18722,27 @@ CREATE FUNCTION public.profit_por_cliente(_fecha_desde date DEFAULT NULL::date, 
     WHERE cv.deleted_at IS NULL
     GROUP BY cv.embarque_id
   ),
+  -- M1 residual: notas de crédito aplicadas por embarque, convertidas a MXN
+  -- con el mismo TC resuelto del embarque. Canon único:
+  -- nc_aplicadas_en_moneda_factura (delegación a _nc_aplicadas_moneda_factura).
+  ncs AS (
+    SELECT
+      fe.embarque_id,
+      SUM(
+        COALESCE(
+          public.a_mxn(
+            public.nc_aplicadas_en_moneda_factura(f.id),
+            f.moneda::text, b.tc_usd, b.tc_eur
+          ), 0)
+      ) AS nc_mxn
+    FROM public.factura_embarques fe
+    JOIN base b ON b.id = fe.embarque_id
+    JOIN public.facturas f ON f.id = fe.factura_id
+    WHERE fe.activa IS TRUE
+      AND f.deleted_at IS NULL
+      AND f.estado <> 'Cancelada'::estado_factura
+    GROUP BY fe.embarque_id
+  ),
   costos AS (
     SELECT
       cc.embarque_id,
@@ -18735,32 +18754,43 @@ CREATE FUNCTION public.profit_por_cliente(_fecha_desde date DEFAULT NULL::date, 
     JOIN base b ON b.id = cc.embarque_id
     WHERE cc.deleted_at IS NULL
     GROUP BY cc.embarque_id
+  ),
+  neto AS (
+    SELECT
+      b.id,
+      b.cliente_id,
+      b.cliente_nombre,
+      b.tc_usd,
+      GREATEST(COALESCE(v.venta_mxn, 0) - COALESCE(nc.nc_mxn, 0), 0) AS venta_mxn,
+      COALESCE(c.costo_mxn, 0) AS costo_mxn,
+      COALESCE(v.venta_sin_tc, 0) AS venta_sin_tc,
+      COALESCE(c.costo_sin_tc, 0) AS costo_sin_tc
+    FROM base b
+    LEFT JOIN ventas v ON v.embarque_id = b.id
+    LEFT JOIN costos c ON c.embarque_id = b.id
+    LEFT JOIN ncs   nc ON nc.embarque_id = b.id
   )
   SELECT
-    b.cliente_id,
-    MAX(b.cliente_nombre) AS cliente_nombre,
-    COUNT(DISTINCT b.id) AS total_embarques,
-    -- USD equivalente: se deriva del MXN con el mismo TC resuelto, sin
-    -- colapsar nunca a 1 (política anti "TC=1 silencioso").
+    n.cliente_id,
+    MAX(n.cliente_nombre) AS cliente_nombre,
+    COUNT(DISTINCT n.id) AS total_embarques,
     COALESCE(SUM(
-      CASE WHEN COALESCE(b.tc_usd, 0) > 0
-        THEN round(COALESCE(v.venta_mxn, 0) / b.tc_usd, 4) END
+      CASE WHEN COALESCE(n.tc_usd, 0) > 0
+        THEN round(n.venta_mxn / n.tc_usd, 4) END
     ), 0) AS venta_usd,
     COALESCE(SUM(
-      CASE WHEN COALESCE(b.tc_usd, 0) > 0
-        THEN round(COALESCE(c.costo_mxn, 0) / b.tc_usd, 4) END
+      CASE WHEN COALESCE(n.tc_usd, 0) > 0
+        THEN round(n.costo_mxn / n.tc_usd, 4) END
     ), 0) AS costo_usd,
-    COALESCE(SUM(COALESCE(v.venta_mxn, 0)), 0) AS venta_mxn,
-    COALESCE(SUM(COALESCE(c.costo_mxn, 0)), 0) AS costo_mxn,
-    COUNT(DISTINCT b.id) FILTER (
-      WHERE COALESCE(b.tc_usd, 0) <= 0
-         OR COALESCE(v.venta_sin_tc, 0) > 0
-         OR COALESCE(c.costo_sin_tc, 0) > 0
+    COALESCE(SUM(n.venta_mxn), 0) AS venta_mxn,
+    COALESCE(SUM(n.costo_mxn), 0) AS costo_mxn,
+    COUNT(DISTINCT n.id) FILTER (
+      WHERE COALESCE(n.tc_usd, 0) <= 0
+         OR n.venta_sin_tc > 0
+         OR n.costo_sin_tc > 0
     ) AS embarques_sin_tc
-  FROM base b
-  LEFT JOIN ventas v ON v.embarque_id = b.id
-  LEFT JOIN costos c ON c.embarque_id = b.id
-  GROUP BY b.cliente_id;
+  FROM neto n
+  GROUP BY n.cliente_id;
 $$;
 CREATE FUNCTION public.profit_por_embarque() RETURNS TABLE(embarque_id uuid, venta_mxn numeric, costo_mxn numeric, venta_mxn_from_usd numeric, costo_mxn_from_usd numeric, venta_mxn_from_eur numeric, costo_mxn_from_eur numeric, venta_mxn_native numeric, costo_mxn_native numeric, venta_usd numeric, costo_usd numeric, tipo_cambio_usd numeric, tipo_cambio_eur numeric)
     LANGUAGE sql STABLE SECURITY DEFINER
@@ -23416,26 +23446,35 @@ CREATE FUNCTION public.seed_presupuesto_categorias(p_organization_id uuid) RETUR
 DECLARE
   v_existing INTEGER;
   v_org uuid;
+  v_mantenimiento boolean;
 BEGIN
-  -- v13.782.1 — `pg_has_role(current_user,'service_role','MEMBER')` cubre los
-  -- callers de mantenimiento (postgres/superuser, replay de migraciones y las
-  -- suites RLS del CI). `authenticated` NO es miembro de service_role, así que
-  -- el candado multi-tenant para la app queda intacto.
-  IF public.has_role(auth.uid(), 'super_admin'::app_role)
+  -- `pg_has_role(current_user,'service_role','MEMBER')` cubre los callers de
+  -- mantenimiento (postgres/superuser, replay de migraciones y suites RLS del
+  -- CI). `authenticated` NO es miembro de service_role.
+  v_mantenimiento := public.has_role(auth.uid(), 'super_admin'::app_role)
      OR COALESCE(auth.role()::text, '') = 'service_role'
-     OR pg_has_role(current_user, 'service_role', 'MEMBER') THEN
+     OR pg_has_role(current_user, 'service_role', 'MEMBER');
+
+  IF v_mantenimiento THEN
     v_org := p_organization_id;
   ELSE
+    -- Guard de rol: espejo de presupuesto_categorias_admin_insert.
+    IF NOT public.es_admin_catalogo(auth.uid()) THEN
+      RAISE EXCEPTION 'LC_ROL_FORBIDDEN: solo un administrador puede sembrar las categorías de presupuesto'
+        USING ERRCODE = '42501';
+    END IF;
     v_org := public.current_user_org_id();
     IF v_org IS NULL OR p_organization_id IS DISTINCT FROM v_org THEN
       RAISE EXCEPTION 'LC_ORG_FORBIDDEN: no puedes sembrar categorías de otra organización'
         USING ERRCODE = '42501';
     END IF;
   END IF;
+
   SELECT COUNT(*) INTO v_existing
   FROM public.presupuesto_categorias
   WHERE organization_id = v_org;
   IF v_existing > 0 THEN RETURN; END IF;
+
   INSERT INTO public.presupuesto_categorias (organization_id, nombre, tipo_contable, orden, activa) VALUES
     (v_org, 'Costos directos de embarque (COGS)', 'CostoDirectoEmbarque', 10, true),
     (v_org, 'Gastos de administración',           'Administracion',        20, true),
