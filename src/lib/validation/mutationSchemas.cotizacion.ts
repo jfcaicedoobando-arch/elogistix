@@ -4,6 +4,7 @@
  */
 import { z } from "zod";
 import { nonEmpty, uuidSchema } from "./mutationSchemas.shared";
+import { MONTO_MAX, CANTIDAD_MAX } from "./limitesNumericos";
 
 /**
  * B-23: topes de magnitud. No convertimos los objetos a `.strict()` a propósito
@@ -11,7 +12,6 @@ import { nonEmpty, uuidSchema } from "./mutationSchemas.shared";
  * acotamos los números para que un dedazo (o un `NaN`/`Infinity`) no escriba
  * importes absurdos en la base.
  */
-import { MONTO_MAX, CANTIDAD_MAX } from "./limitesNumericos";
 
 const montoSchema = (label: string) =>
   z
