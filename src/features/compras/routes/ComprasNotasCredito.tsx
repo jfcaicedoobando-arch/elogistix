@@ -40,11 +40,12 @@ function today(): string {
 }
 
 export default function ComprasNotasCredito() {
-  const [desde, setDesde] = useState<string>(firstOfYear());
-  const [hasta, setHasta] = useState<string>(today());
-  const [moneda, setMoneda] = useState<MonedaFiltro>("todas");
-  const [estado, setEstado] = useState<EstadoFiltro>("todos");
-  const [search, setSearch] = useState("");
+  // M8 (Ola 8): filtros en la URL → el listado se puede compartir por link.
+  const [desde, setDesde] = useTextoUrl("desde", firstOfYear());
+  const [hasta, setHasta] = useTextoUrl("hasta", today());
+  const [moneda, setMoneda] = useFiltroUrl<MonedaFiltro>("moneda", MONEDAS_FILTRO, "todas");
+  const [estado, setEstado] = useFiltroUrl<EstadoFiltro>("estado", ESTADOS_FILTRO, "todos");
+  const [search, setSearch] = useTextoUrl("q");
 
   const { data: rows = [], isLoading, isError, refetch } = useQuery({
     queryKey: compras.notasCreditoGlobal({ desde, hasta, moneda, estado, search }),
