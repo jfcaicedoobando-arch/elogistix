@@ -32,7 +32,8 @@ import { RANGO_DESDE_LABEL, RANGO_HASTA_LABEL } from "@/lib/ui/rangoFechasCopy";
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 import { ErrorState } from "@/components/shared/states/ErrorState";
 
-type MonedaFiltro = "todas" | "MXN" | "USD";
+const MONEDAS_FILTRO = ["todas", "MXN", "USD"] as const;
+type MonedaFiltro = (typeof MONEDAS_FILTRO)[number];
 
 function firstOfMonth(): string {
   const d = new Date();
