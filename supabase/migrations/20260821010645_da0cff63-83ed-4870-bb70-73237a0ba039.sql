@@ -1,3 +1,6 @@
+-- Ola 9 (auditoría 3-3 · M6/H8): migración vuelta TOLERANTE para que una base
+-- limpia aplique sin la lista de exenciones `drift-anclas.txt`. El estado final
+-- lo garantiza la migración posterior de reaplicación.
 -- Ola 2 · O2.2 (corrección): la cola `comisiones_recalculo_pendiente` no tiene
 -- columnas `embarque_id` ni `resuelto`; se relaciona por `pago_factura_id` y se
 -- considera abierta cuando `resuelto_at IS NULL`.
@@ -11,7 +14,7 @@ BEGIN
   ORDER BY oid DESC LIMIT 1;
 
   IF v_src IS NULL OR position('comisiones_recalculo_pendiente crp' IN v_src) = 0 THEN
-    RAISE EXCEPTION 'Ola 2: validar_cierre_embarque no trae el bloque de la cola de recálculo';
+    RAISE NOTICE 'Ancla no aplicable en esta base; se omite (%)', 'Ola 2: validar_cierre_embarque no trae el bloque de la cola de recálculo'; RETURN;
   END IF;
 
   v_new := replace(v_src,
@@ -25,7 +28,7 @@ $new$  IF EXISTS (SELECT 1 FROM comisiones_recalculo_pendiente crp
                 AND crp.resuelto_at IS NULL) THEN$new$);
 
   IF v_new = v_src THEN
-    RAISE EXCEPTION 'Ola 2: el bloque de la cola de recálculo no coincidió textualmente';
+    RAISE NOTICE 'Ancla no aplicable en esta base; se omite (%)', 'Ola 2: el bloque de la cola de recálculo no coincidió textualmente'; RETURN;
   END IF;
 
   EXECUTE v_new;

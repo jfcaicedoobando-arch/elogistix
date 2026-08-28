@@ -27,6 +27,8 @@ export async function fetchEventosEmbarque(embarqueId: string): Promise<EventoEm
     .select(EVENTO_COLS).is("deleted_at", null)
     .eq('embarque_id', embarqueId)
     .order('fecha', { ascending: false })
+    // L1 (auditoría 3-3): desempate estable.
+    .order('id', { ascending: false })
     // B-24: tabla append-only; sin límite la query crece sin tope.
     .limit(EVENTOS_LIMIT);
   if (error) throw error;

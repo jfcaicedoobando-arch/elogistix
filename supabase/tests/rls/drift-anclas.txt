@@ -1,38 +1,13 @@
-# Migraciones exentas del radar de drift por estar escritas con "anclas de
-# texto" (parchan la definición viva con `replace(pg_get_functiondef(...))`).
+# Lista de migraciones exentas del radar de drift.
 #
-# Por qué existe esta lista: una migración anclada sólo aplica si el texto de la
-# función en ese punto de la historia coincide byte a byte. En una base limpia
-# la definición previa puede venir de otra migración con formato distinto, así
-# que la ancla no encuentra su bloque y la migración aborta — aunque el estado
-# final de producción sea correcto.
+# Ola 9 (auditoría 3-3 · H8): la lista quedó VACÍA a propósito. Las cuatro
+# migraciones que antes vivían aquí se volvieron tolerantes (las anclas de
+# texto que no coinciden emiten NOTICE y se omiten; los objetos que nacen en
+# migraciones posteriores se instalan bajo `IF EXISTS`), así que una base limpia
+# aplica las 1100+ migraciones sin excepciones.
 #
-# Regla: sólo se agrega una migración aquí cuando existe una migración POSTERIOR
-# de reaplicación (sin anclas, o con anclas tolerantes + asserts finales) que
-# garantiza el estado final en base limpia. El archivo NO es un permiso para
-# escribir migraciones ancladas nuevas: úsense `CREATE OR REPLACE` completos.
+# REGLA: no se agregan migraciones nuevas a este archivo. Toda migración que
+# cambie una función debe usar un `CREATE OR REPLACE FUNCTION` completo — está
+# prohibido parchear definiciones con `replace(pg_get_functiondef(...))`.
 #
 # Un nombre de archivo por línea (basename), sin rutas.
-
-# Ola 1 · parte 2 (parche a las RPC de lote). Estado final garantizado por
-# 20260821005333_170f9c71-77e8-4f8d-8669-bfdb924110c2.sql.
-20260821002652_60e70c49-9d28-49cd-a629-5170126f188f.sql
-
-# Ola 2 · O2.2 (parche por texto a validar_cierre_embarque). Estado final
-# garantizado por 20260826003000_ola2_comisiones_espejo.sql.
-20260821010645_da0cff63-83ed-4870-bb70-73237a0ba039.sql
-
-# Reparación de drift (v13.747.x): instala trg_cotizaciones_guard_en_operacion,
-# pero la función public.cotizaciones_guard_en_operacion() nace en una migración
-# POSTERIOR (20260901001400), así que en base limpia aborta. Estado final
-# garantizado por 20260901001400_qa_remediacion_selectiva.sql (reaplica
-# assert_nc_fecha_valida, conceptos_factura_assert_borrador, eerr_resumen_anual
-# y la función + trigger del guard) y 20260902001000_qa_r2_r04_portal_papelera.sql.
-20260827010526_7dabf435-2f49-4759-969e-c451be0d8ec8.sql
-
-# H6 (v13.762.8): revoca permisos de public.cotizaciones_guard_en_operacion(),
-# función que nace en la migración POSTERIOR 20260901001400, así que en base
-# limpia aborta. Estado final garantizado por
-# 20260902003000_fix_numericeger_rpc_embarques.sql, que reinstala las RPC y
-# repite el mismo REVOKE.
-20260827020732_cccb6c49-6410-4d1d-9689-3292ffd2bdda.sql

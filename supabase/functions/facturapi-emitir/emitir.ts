@@ -49,7 +49,11 @@ export async function claimFactura(supabase: SupabaseClient, facturaId: string):
     .is("facturapi_id", null)
     .select("id")
     .maybeSingle();
-  if (claimErr) return jsonResponse({ error: "claim_failed", detail: claimErr.message }, 500);
+  if (claimErr) {
+    // L2 (auditoría 3-3): el detalle sólo va a logs; al cliente un código estable.
+    console.error("claim_failed", { facturaId, code: claimErr.code });
+    return jsonResponse({ error: "claim_failed", message: "No se pudo reservar la factura para timbrar. Intenta de nuevo." }, 500);
+  }
   if (!claimed) return jsonResponse({ error: "ya_timbrada", message: "Otro usuario ya está timbrando esta factura." }, 409);
   const release = async () => { await supabase.from("facturas").update({ facturapi_id: null, facturapi_claim_at: null }).eq("id", facturaId).eq("facturapi_id", claimTag); };
   return { claimTag, claimAt, release };

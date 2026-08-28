@@ -9454,6 +9454,44 @@ export type Database = {
         Args: { p_ajustes: Json; p_factura_id: string }
         Returns: Json
       }
+      crear_clientes: {
+        Args: { p_clientes: Json }
+        Returns: {
+          ciudad: string
+          codigo_postal: string | null
+          contacto: string
+          cp: string
+          created_at: string
+          deleted_at: string | null
+          deleted_by: string | null
+          dias_credito: number | null
+          direccion: string
+          email: string
+          email_cc_default: string[] | null
+          email_destinatarios_default: string[] | null
+          estado: string
+          forma_pago_default: string | null
+          id: string
+          limite_credito_mxn: number | null
+          metodo_pago_default: string | null
+          nombre: string
+          organization_id: string
+          regimen_fiscal: string | null
+          requiere_autorizacion_cotizacion: boolean
+          requiere_autorizacion_proforma: boolean
+          rfc: string
+          sin_comision: boolean
+          telefono: string
+          updated_at: string
+          uso_cfdi_default: string | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "clientes"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       crear_embarque_borrador_core: {
         Args: { p_cotizacion_id: string }
         Returns: string

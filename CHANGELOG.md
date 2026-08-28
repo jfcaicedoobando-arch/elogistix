@@ -1,5 +1,17 @@
 # Changelog
 
+## [13.777.0] - 2026-08-28
+### Agregado
+- **Ola 9 — Cierre de la auditoría 3 (M2, M4, C1b, L1, L2, H8)**.
+- **Tipo de cambio oficial obligatorio (M2)**: toda factura en dólares o euros nace con el tipo de cambio del DOF de su fecha de emisión. Si no hay tipo de cambio publicado para esa fecha, el sistema ya no deja crear la factura (`LC_FACTURA_SIN_TC_DOF`) en lugar de asumir un 1:1 que distorsionaba la utilidad.
+- **Alta de clientes controlada (M4)**: el alta pasa por la función canónica `crear_clientes`, que valida rol, organización y completitud fiscal (RFC, régimen y código postal cuando el cliente lleva RFC). Se quitó el permiso de alta directa a la tabla, así que ya no existen atajos que se salten las validaciones. La importación masiva usa el mismo camino.
+
+### Cambiado
+- **Un solo saldo de factura (C1b)**: el reporte de antigüedad de cartera dejó de calcular las notas de crédito por su cuenta y ahora usa la misma fuente que el estado de la factura y los cobros, con la conversión de moneda correcta.
+- **Paginación estable (L1)**: bitácora del embarque, eventos de tracking y validación de cierre ordenan con un desempate por identificador, para que ninguna fila se repita ni se pierda entre páginas.
+- **Errores sin filtraciones (L2)**: al timbrar, los detalles técnicos de la base de datos se quedan en los logs; el usuario recibe un mensaje claro y un código estable.
+- **Migraciones sin excepciones (H8)**: las cuatro migraciones que requerían exención se volvieron tolerantes y la lista `drift-anclas.txt` quedó vacía, así una base limpia se reconstruye completa.
+
 ## [13.776.1] - 2026-08-28
 ### Agregado
 - **Ola 8 — Deep linking de filtros (auditoría 3 · M8)**: nuevos hooks compartidos `useFiltroUrl` / `useTextoUrl` (`src/hooks/shared/useFiltroUrl.ts`) que guardan los filtros de listados en la URL. Ahora se puede compartir un link con los filtros aplicados, el botón atrás los respeta y un refresh no los pierde.
