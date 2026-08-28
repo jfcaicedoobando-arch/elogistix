@@ -8,13 +8,12 @@ import { type ColumnDef } from "@/components/shared/DataTable";
 import type { CotizacionListItem } from "@/features/cotizacion/hooks";
 import { renderEstadoVigencia } from "./columnsParts/estadoVigenciaCell";
 import { formatFechaHora } from "@/lib/formatters";
-import {
-  moneyColumn,
-  actionsColumn,
-} from "@/components/shared/dataTable/columnBuilders";
+import { actionsColumn } from "@/components/shared/dataTable/columnBuilders";
+import { Hint } from "@/components/shared/Hint";
 import { Trash2, Copy } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { normalizarSubtotalMxn } from "@/features/cotizacion/domain/ordenSubtotalMxn";
+import { normalizarSubtotalesMxn } from "@/features/cotizacion/domain/subtotalesPorMoneda";
+import { SubtotalCotizacionCell, subtotalesDeFila } from "./columnsParts/subtotalCell";
 import { COL_W } from "@/components/shared/dataTable/columnWidths";
 
 export interface BuildParams {
