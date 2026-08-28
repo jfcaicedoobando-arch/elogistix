@@ -18,7 +18,7 @@ import { AplicarAnticipoDialog } from "../components/AplicarAnticipoDialog";
 import { CancelarAnticipoDialog } from "../components/CancelarAnticipoDialog";
 import { VincularEmbarqueAnticipoDialog } from "../components/VincularEmbarqueAnticipoDialog";
 
-import { usePermissions } from "@/hooks/shared";
+import { usePermissions, useTextoUrl } from "@/hooks/shared";
 import { useProveedoresLite } from "@/features/proveedor/hooks";
 import { PageSkeleton } from "@/components/shared/skeletons";
 import EmptyState from "@/components/empty/EmptyState";
