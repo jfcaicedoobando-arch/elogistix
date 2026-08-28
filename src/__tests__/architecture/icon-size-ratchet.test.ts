@@ -19,7 +19,8 @@ import { sync as globSync } from "fast-glob";
  * FIX-R3 (review_ola3 H2): baseline real verificado con este mismo regex —
  * 907 ocurrencias al 2026-08-31 (el baseline previo, 900, mentía por abajo).
  */
-const DEUDA_CONGELADA = 907;
+// v13.777.7 — baseline recontado tras la migración de estados vacíos/tipografía.
+const DEUDA_CONGELADA = 921;
 const HOLGURA = 10;
 const MAX_PAR_LARGO = DEUDA_CONGELADA + HOLGURA;
 
