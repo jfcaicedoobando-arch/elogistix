@@ -14,7 +14,7 @@ import { CAP_POSTGREST } from "@/constants/queryCaps";
 // usamos para decidir si una cotización tiene costos cargados o sigue
 // "Sin costos" (v13.29.0).
 export const COTIZACION_LIST_COLUMNS =
-  "id, folio, cliente_id, cliente_nombre, es_prospecto, prospecto_empresa, modo, origen, destino, subtotal, moneda, estado, fecha_vigencia, created_at, descripcion_mercancia, tipo_documento, vigencia_desde, vigencia_hasta, sin_desglose_costos, estado_revalidacion, origen_portal, tarifa_id, embarque_id, cotizacion_costos(count), costeo_tarifas:tarifa_id(vigente_hasta)" as const;
+  "id, folio, cliente_id, cliente_nombre, es_prospecto, prospecto_empresa, modo, origen, destino, subtotal, moneda, estado, fecha_vigencia, created_at, descripcion_mercancia, conceptos_venta, tipo_documento, vigencia_desde, vigencia_hasta, sin_desglose_costos, estado_revalidacion, origen_portal, tarifa_id, embarque_id, cotizacion_costos(count), costeo_tarifas:tarifa_id(vigente_hasta)" as const;
 
 export const COTIZACION_ACEPTADA_COLUMNS =
   "id, folio, cliente_id, cliente_nombre, modo, tipo, incoterm, descripcion_mercancia, tipo_carga, tipo_contenedor, peso_kg, volumen_m3, piezas, operador, origen, destino, notas" as const;
