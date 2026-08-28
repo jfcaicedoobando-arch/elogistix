@@ -23,19 +23,21 @@ import type { Moneda } from "@/features/facturacion/types";
 
 const TIPO_IVA_LABEL: Record<TipoIvaConcepto, string> = {
   gravado_16: "IVA 16%",
+  gravado_8: "IVA 8% (frontera)",
   tasa_0: "Tasa 0%",
   exento: "Exento",
 };
 
 const TIPO_IVA_SHORT: Record<TipoIvaConcepto, string> = {
   gravado_16: "16%",
+  gravado_8: "8%",
   tasa_0: "0%",
   exento: "Exento",
 };
 
 function IvaBadge({ tipo }: { tipo: TipoIvaConcepto }) {
   const variant: "default" | "secondary" | "outline" =
-    tipo === "gravado_16" ? "default" : tipo === "tasa_0" ? "secondary" : "outline";
+    tipo === "gravado_16" || tipo === "gravado_8" ? "default" : tipo === "tasa_0" ? "secondary" : "outline";
   return <Badge variant={variant}>{TIPO_IVA_SHORT[tipo]}</Badge>;
 }
 
@@ -126,6 +128,7 @@ export function FormRow({ draft, setDraft, onCancel, onSave, busy }: FormProps) 
           <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
           <SelectContent>
             <SelectItem value="gravado_16">{TIPO_IVA_LABEL.gravado_16}</SelectItem>
+            <SelectItem value="gravado_8">{TIPO_IVA_LABEL.gravado_8}</SelectItem>
             <SelectItem value="tasa_0">{TIPO_IVA_LABEL.tasa_0}</SelectItem>
             <SelectItem value="exento">{TIPO_IVA_LABEL.exento}</SelectItem>
           </SelectContent>

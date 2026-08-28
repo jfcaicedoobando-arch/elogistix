@@ -20,6 +20,8 @@ import { calcularParcialidad, factorIvaFacturaOriginal, resolverReferenciasEmbar
 import { persistirRepTimbrado } from "./persistir.ts";
 import { jsonResponse, makeJson } from "../_shared/response.ts";
 import { calcularRetencionesDr, MSG_RETENCIONES_NO_SOPORTADAS } from "./retencionesDr.ts";
+import { MSG_IVA_MULTITASA, resolverTrasladoDr } from "./trasladoDr.ts";
+import { ncAplicadasEnMonedaFactura } from "./ncDr.ts";
 import { esReTimbradoPermitido, tomarClaimRep } from "./claimRep.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
@@ -100,13 +102,25 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir-rep", async (req) => {
   // el REP siempre lleve el desglose de impuestos que exige el SAT/Facturapi.
   const { data: conceptosIva } = await supabase
     .from("conceptos_factura")
-    .select("tipo_iva, tasa_ret_isr, tasa_ret_iva")
+    .select("tipo_iva, tasa_iva_aplicada, tasa_ret_isr, tasa_ret_iva")
     .eq("factura_id", factura.id)
     .is("deleted_at", null);
-  const factorIvaFactura = factorIvaFacturaOriginal(
+  const factorIvaFallback = factorIvaFacturaOriginal(
     tasaIvaFactura,
     (conceptosIva ?? []).map((c) => (c as { tipo_iva?: string | null }).tipo_iva),
   );
+
+  // Ola E3 · N2 — traslado por grupo de tasa desde los renglones. Con mezcla
+  // de tasas se rechaza el timbrado en vez de declarar una tasa promedio.
+  const traslado = resolverTrasladoDr(conceptosIva as Array<{ tipo_iva?: string | null; tasa_iva_aplicada?: number | null }>);
+  if (traslado === null) {
+    await supabase.from("pagos_factura")
+      .update({ estado_rep: "Error", rep_error: MSG_IVA_MULTITASA })
+      .eq("id", pago.id);
+    return json({ error: "iva_multitasa", message: MSG_IVA_MULTITASA }, 422);
+  }
+  const tasaIvaDr = traslado === "sin_conceptos" ? tasaIvaFactura : traslado.tasa;
+  const factorIvaFactura = traslado === "sin_conceptos" ? factorIvaFallback : traslado.factor;
 
   // Ola 12 · R3P-19 — retenciones del CFDI relacionado. Mezcla de tasas por
   // impuesto ⇒ bloqueo claro ANTES del claim (reintentable tras corregir).
@@ -146,8 +160,22 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir-rep", async (req) => {
     .order("created_at", { ascending: true });
   if (ppErr) return json({ error: "pagos_query_failed", detail: ppErr.message }, 500);
 
+  // Ola E3 · N1 — notas de crédito aplicadas antes de este pago.
+  const { data: ncsFactura, error: ncErr } = await supabase
+    .from("factura_notas_credito")
+    .select("monto, moneda, tipo_cambio, estado, fecha_emision, deleted_at")
+    .eq("factura_id", factura.id)
+    .is("deleted_at", null);
+  if (ncErr) return json({ error: "nc_query_failed", detail: ncErr.message }, 500);
+  const ncAntes = ncAplicadasEnMonedaFactura(
+    ncsFactura,
+    String(factura.moneda ?? "MXN"),
+    Number(factura.tipo_cambio ?? 1),
+    typeof pago.fecha_pago === "string" ? pago.fecha_pago : null,
+  );
+
   const { numParcialidad, saldoAnt, impPagado, saldoInsoluto } = calcularParcialidad(
-    pagosPrev, pago.id, Number(factura.total ?? 0), Number(pago.monto_aplicado_factura ?? 0),
+    pagosPrev, pago.id, Number(factura.total ?? 0), Number(pago.monto_aplicado_factura ?? 0), ncAntes,
   );
 
   // v13.208.0 — Referencias del embarque vinculado a la factura (con fallback a snapshot).
@@ -180,7 +208,7 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir-rep", async (req) => {
       imp_pagado: impPagado,
       imp_saldo_insoluto: saldoInsoluto,
       metodo_pago: "PPD",
-      tasa_iva: tasaIvaFactura,
+      tasa_iva: tasaIvaDr,
       factor_iva: factorIvaFactura,
       retenciones: retencionesDr,
       subtotal_factura: Number(factura.subtotal ?? 0),

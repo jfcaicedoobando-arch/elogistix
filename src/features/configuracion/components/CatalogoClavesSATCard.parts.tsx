@@ -32,6 +32,7 @@ export function EditRow({ draft, setDraft, onCancel, onSave, busy, valid }: Edit
           <SelectTrigger><SelectValue /></SelectTrigger>
           <SelectContent>
             <SelectItem value="gravado_16">IVA 16%</SelectItem>
+            <SelectItem value="gravado_8">IVA 8% (frontera)</SelectItem>
             <SelectItem value="tasa_0">IVA 0%</SelectItem>
             <SelectItem value="exento">Exento</SelectItem>
           </SelectContent>

@@ -5,10 +5,12 @@
  */
 import type { ConceptoManualInput } from "@/features/facturacion/services/facturaManual";
 import type { TipoIvaConcepto } from "@/features/facturacion/services/conceptosFacturaCrud";
+import { TASA_IVA_FRONTERA } from "@/features/facturacion/services/conceptosFacturaShared";
 import { subtotalLinea, calcularIVA, roundMoney } from "@/lib/financial/financialUtils";
 
 function tasaDeTipo(tipo: TipoIvaConcepto, tasaIva: number): number {
   if (tipo === "gravado_16") return tasaIva;
+  if (tipo === "gravado_8") return TASA_IVA_FRONTERA;
   if (tipo === "tasa_0") return 0;
   return 0; // exento no aporta IVA
 }

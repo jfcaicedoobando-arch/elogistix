@@ -9312,6 +9312,15 @@ export type Database = {
         }
         Returns: Json
       }
+      convertir_monto_dof: {
+        Args: {
+          p_fecha: string
+          p_moneda_destino: string
+          p_moneda_origen: string
+          p_monto: number
+        }
+        Returns: number
+      }
       convertir_monto_pago_a_factura: {
         Args: {
           p_moneda_fact: Database["public"]["Enums"]["moneda"]
@@ -11152,6 +11161,10 @@ export type Database = {
           moneda: string
           tabla: string
         }[]
+      }
+      tc_dof_moneda: {
+        Args: { p_fecha: string; p_moneda: string }
+        Returns: number
       }
       tc_dof_upsert_manual: {
         Args: { _eur?: number; _fecha: string; _usd: number }
