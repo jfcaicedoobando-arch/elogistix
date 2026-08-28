@@ -1,5 +1,14 @@
 # Changelog
 
+## [13.775.0] - 2026-08-28
+### Agregado
+- **Ola 7 — Validaciones de captura (auditoría 3 · M3, M5, M7)**.
+- **Correos sin duplicados (M3)**: los correos de clientes y contactos se guardan siempre en minúsculas y sin espacios; al capturar o editar, el sistema avisa si ese correo ya lo tiene otro cliente/contacto activo de la misma organización (`LC_EMAIL_DUPLICADO`). Los duplicados históricos no se tocan.
+- **Cronología de eventos de embarque (M5)**: se rechazan eventos ya ocurridos con fecha futura (`LC_EVENTO_FECHA_FUTURA`) y órdenes imposibles —arribo, descarga, despacho, liberación o entrega antes del zarpe, y entrega antes del arribo— (`LC_EVENTO_ORDEN_INVALIDO`).
+- **Topes numéricos (M7)**: nuevo módulo `src/lib/validation/limitesNumericos.ts` como fuente única de `MONTO_MAX` (999,999,999.99) y `CANTIDAD_MAX` (1,000,000); aplicado a los inputs de costo unitario y cantidad de cotización.
+
+
+
 ## [13.774.0] - 2026-08-27
 ### Corregido
 - **Ola 6 — Utilidad por cliente ya no mezcla monedas (auditoría 3 · M1)**. El detalle del cliente sumaba pesos y dólares en la misma bolsa y rotulaba el total como USD (100 USD + 100 MXN = "200 USD"). Ahora Facturado, Por cobrar y Utilidad se muestran **en MXN**, convirtiendo cada factura con su propio tipo de cambio.
