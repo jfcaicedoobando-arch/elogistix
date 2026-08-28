@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.777.7] - 2026-08-28
+### Corregido
+- **CI (tests, coverage y audits) en verde**: `TesoreriaConciliacion.test.tsx` monta `NuqsTestingAdapter` (la página lee el filtro `estado` de la URL); `TesoreriaConciliacion.tsx` baja de 200 líneas extrayendo `useImportarEstadoCuenta`; candado M6 de soft-delete actualizado tras mover `conciliarConPago` a `conciliacionVincular.ts`; tipografía semántica y `EmptyStateInline` en los componentes nuevos de CRM; marcadores `SAFE-CAST` en `cliente/services/{crud,importLote}.ts`; baseline del ratchet de iconos recontado.
+
 ## [13.777.6] - 2026-08-28
 ### Corregido
 - **Suite RLS completa en verde (34/34)**: `nc_aplicadas_en_moneda_factura` recupera `EXECUTE` para `authenticated` (la consume `cartera_pendiente()`, que es SECURITY INVOKER) y sale de la lista canónica service_role-only; whitelist documentada del linter org-scope para los helpers de visibilidad por rol y los wrappers de tablero; seeds de prueba de CRM (origen obligatorio en oportunidades) y de clientes (`email` NOT NULL) actualizados.
