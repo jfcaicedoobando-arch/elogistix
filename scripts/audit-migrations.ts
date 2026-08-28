@@ -283,6 +283,24 @@ export function scanFile(file: string, body: string, auditPostBaseline = true): 
   // H8 (FIX-F964) — backfills que usan funciones con guard multi-tenant.
   out.push(...scanBackfillTenantGuard(file, body));
 
+  // H9 (auditoría 3 · M6) — prohibido parchear funciones por texto con
+  // `replace(pg_get_functiondef(...))`. Ese patrón deja el cuerpo real de la
+  // función dependiendo del estado previo de la BD, así que una base limpia y
+  // producción divergen en silencio (causa raíz del hallazgo C1). Regla dura:
+  // aplica también a legacy. Toda función se re-emite completa con
+  // `CREATE OR REPLACE FUNCTION`.
+  if (/replace\s*\(\s*pg_get_functiondef/i.test(body)) {
+    out.push({
+      file,
+      check: "H9",
+      detail:
+        "parcheo textual de función con replace(pg_get_functiondef(...)); re-emitir CREATE OR REPLACE FUNCTION completo",
+    });
+  }
+
+  return out;
+
+
   return out;
 }
 
