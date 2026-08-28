@@ -26,12 +26,14 @@ DROP TABLE IF EXISTS pg_temp._ci_service_role_only;
 CREATE TEMP TABLE _ci_service_role_only (fn text);
 INSERT INTO _ci_service_role_only (fn) VALUES
   ('public._assert_concepto_no_proformado()'),
+  ('public._assert_padre_misma_org()'),
   ('public._assert_periodo_abierto()'),
   ('public._assert_uuid_fiscal_single_write()'),
   ('public._audit_embarques_agregar(jsonb, jsonb)'),
   ('public._audit_embarques_umbrales(uuid)'),
   ('public._cotizaciones_bloquear_auto_aceptacion()'),
   ('public._cotizaciones_bloquear_envio_sin_oportunidad()'),
+  ('public._crear_embarque_replicar_conceptos(uuid, uuid, uuid, uuid[], jsonb)'),
   ('public._crm_vincular_cotizacion_core(uuid, jsonb, uuid, uuid, text, uuid)'),
   -- Cálculo interno de los tableros: sólo lo invocan las RPC DEFINER
   -- dashboard_summary()/dashboard_details() (enmascaran costos por rol).
@@ -40,6 +42,7 @@ INSERT INTO _ci_service_role_only (fn) VALUES
   ('public._recalc_estado_proveedor_factura(uuid)'),
   ('public._reprocesar_comisiones_org(uuid)'),
   ('public._seed_demo_limpiar_financiero()'),
+  ('public._sync_user_roles_desde_membership()'),
   ('public.adjuntar_xml_entrante_verificado(uuid, uuid, text, text, text, text, text, text, date, numeric, text, numeric)'),
 
   -- RPC vieja del buzón CxP (M-7): cerrada a todos en migraciones; el
