@@ -95,6 +95,13 @@ export const LC_CODE_MESSAGES_PAGOS: Record<string, string> = {
     "El proveedor del anticipo no coincide con el de la factura.",
   LC_ANTICIPO_PROVEEDOR_NO_EXISTE: "El proveedor del anticipo no existe.",
   LC_ANTICIPO_PROVEEDOR_OTRA_ORG: "El proveedor pertenece a otra organización.",
+  // N13 · devolución simple de anticipos (v13.791.0).
+  LC_ANTICIPO_YA_DEVUELTO: "Este anticipo ya tiene una devolución registrada.",
+  LC_ANTICIPO_MONTO_EXCEDE_SALDO:
+    "La devolución no puede ser mayor al saldo disponible del anticipo.",
+  LC_ANTICIPO_FECHA_REQUERIDA: "Indica la fecha de la devolución.",
+  LC_ANTICIPO_FECHA_INVALIDA:
+    "La devolución no puede ser anterior a la fecha del anticipo.",
   // Conceptos de facturas de proveedor (edición manual, v13.629.x).
   LC_CONCEPTOS_FISCALES:
     "Los conceptos vienen del XML del proveedor y no se pueden editar. Vuelve a cargar el XML si necesitas corregirlos.",

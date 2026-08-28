@@ -13,6 +13,7 @@ export const LC_CODE_MESSAGES_OPERATIVO_AUTH: Record<string, string> = {
     "Ese rol ya no se usa. Asigna uno del catálogo actual (por ejemplo, admin_org o coordinador_logistico).",
   LC_ROL_PLATAFORMA_NO_PERMITIDO:
     "El rol de super administrador es de plataforma: no puede asignarse dentro de una organización.",
+  LC_ROL_FORBIDDEN: "No tienes el rol necesario para realizar esta acción.",
   LC_FORBIDDEN_FACTURA_PROVEEDOR_DELETE:
     "No tienes permisos para eliminar facturas de proveedor.",
   LC_ORG_FORBIDDEN: "Este recurso pertenece a otra organización.",
