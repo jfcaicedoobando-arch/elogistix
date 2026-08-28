@@ -1,5 +1,16 @@
 # Changelog
 
+## [13.790.0] - 2026-09-04
+### Seguridad y finanzas (backlog v5 · pendientes reales)
+- **M3-res** — `_assert_email_unico_org` ya no bloquea altas cuando el correo viene vacío. Auditado el "duplicado" real (`betoazaver@hotmail.com`): son dos razones sociales del mismo dueño (persona física + su empresa), así que **no** se crea índice único de email; el identificador único por organización sigue siendo el RFC (`clientes_org_rfc_unique`).
+- **M6** — `cartera_pendiente()` ya no reimplementa la conversión de notas de crédito: usa el helper canónico `_nc_aplicadas_moneda_factura`.
+- **N18** — `aprobar_nota_credito_proveedor` y `cancelar_anticipo_proveedor` toman bloqueo de fila (`FOR UPDATE`), así el doble clic no aplica el movimiento dos veces.
+- **N19** — nueva bitácora financiera (`_bitacora_cambio_financiero`) con disparadores en `embarques`, `facturas`, `bbva_movimientos` y `comisiones_devengadas`: quedan registrados los cambios de monto, tipo de cambio y cliente. La función está revocada para `anon` y `authenticated` (FIX-45).
+- **C3-res / C9** — cerrados tras auditoría: `proveedor_notas_credito` no tiene `proveedor_id`, el candado por `proveedor_factura_id` es suficiente; y el criterio de "cotización propia" (`created_by`) ya coincide entre SQL y frontend, ahora expuesto como `canViewCostsOfCotizacion`.
+
+### Mejoras
+- **L3** — la importación masiva ahora dice exactamente qué filas del archivo no se guardaron ("Faltan las filas 3 a 4"), no sólo el conteo.
+
 ## [13.789.0] - 2026-08-28
 ### Mejoras
 - **Captura de factura de proveedor**: el chip del encabezado mostraba el total **con IVA** como cifra grande, pero todo el cuadre de costos del ERP (barra de conceptos y el trigger `_cxp_validar_aprobacion`) corre sobre el subtotal sin impuestos, así que los capturistas comparaban contra la cifra equivocada. Ahora la cifra principal es `Subtotal <moneda>` y el total con IVA queda debajo como referencia secundaria.
