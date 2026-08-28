@@ -1,5 +1,5 @@
--- Fuente canónica de public.dashboard_details() (Ola 6 · O6-SCHEMA).
--- 1:1 con supabase/migrations/20260818090000_ola5_rg42_dashboards_valuacion_canon.sql.
+-- Fuente canónica del cálculo del tablero de dirección.
+-- 1:1 con supabase/migrations/20260902008000_ola17_demoras_mx_nc_prov_tc.sql.
 -- Ola 5 · RG4-2 (N41/N45): valuación por moneda propia del gasto.
 -- Al modificar: edita ESTE archivo y genera la migración con el mismo cuerpo.
 
@@ -10,12 +10,15 @@ CREATE OR REPLACE FUNCTION public.dashboard_details_datos()
  SET search_path TO 'public'
 AS $function$
 DECLARE
-  v_hoy date := current_date;
+  -- Ola 17 · H8-A: el servidor corre en UTC; el tablero debe razonar en hora
+  -- de México o los días de demora se adelantan a partir de las 18:00 CDMX.
+  v_hoy date := (now() AT TIME ZONE 'America/Mexico_City')::date;
   v_inicio_mes date := date_trunc('month', v_hoy)::date;
   v_fin_mes date := (date_trunc('month', v_hoy) + interval '1 month' - interval '1 day')::date;
   v_inicio_sig date := (date_trunc('month', v_hoy) + interval '1 month')::date;
   v_fin_sig date := (date_trunc('month', v_hoy) + interval '2 months' - interval '1 day')::date;
-  v_dias_libres int := 7;
+  -- Fallback SÓLO cuando la naviera no tiene condiciones capturadas.
+  v_dias_libres_fallback int := 7;
   v_nombre_mes text;
   v_meses text[] := ARRAY['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 BEGIN
@@ -28,6 +31,7 @@ BEGIN
              e.puerto_origen, e.puerto_destino,
              e.aeropuerto_origen, e.aeropuerto_destino,
              e.ciudad_origen, e.ciudad_destino, e.contenedor, e.created_at,
+             e.naviera, e.organization_id,
              e.tipo_cambio_usd, e.tipo_cambio_eur,
         CASE
           -- Ola 4 · N10 (guard B-033): preservar Borrador.
@@ -49,10 +53,44 @@ BEGIN
     profit AS (SELECT * FROM profit_por_embarque()),
     -- Ola 4 · N10 (B-033): Borrador ya no cuenta como activo operativo.
     activos AS (SELECT * FROM embarques_base WHERE estado_real NOT IN ('Borrador','EIR','Por liquidar','Cerrado','Cancelado')),
+    -- Ola 17 · H8-A: los días de demora se calculan con la MISMA base que
+    -- factura calcular_demoras_embarque: fecha real de descarga (evento o
+    -- contenedor) y días libres reales (override del contenedor → condiciones
+    -- de la naviera → fallback). La ETA sólo se usa como estimación.
+    demoras_ctx AS (
+      SELECT a.id,
+        (SELECT min((ev.fecha AT TIME ZONE 'America/Mexico_City')::date)
+           FROM eventos_embarque ev
+          WHERE ev.embarque_id = a.id AND ev.tipo = 'Descarga' AND ev.deleted_at IS NULL) AS fecha_desc_evento,
+        (SELECT min(ec.fecha_descarga)
+           FROM embarque_contenedores ec
+          WHERE ec.embarque_id = a.id AND ec.deleted_at IS NULL) AS fecha_desc_cont,
+        (SELECT max(ec.dias_libres_override)
+           FROM embarque_contenedores ec
+          WHERE ec.embarque_id = a.id AND ec.deleted_at IS NULL
+            AND ec.dias_libres_override IS NOT NULL) AS dias_libres_cont,
+        (SELECT cnc.dias_libres_demoras_default
+           FROM costeo_navieras_condiciones cnc
+           JOIN navieras n ON n.id = cnc.naviera_id
+          WHERE cnc.organization_id = a.organization_id
+            AND a.naviera IS NOT NULL
+            AND lower(n.name) = lower(a.naviera)
+          LIMIT 1) AS dias_libres_naviera
+      FROM activos a
+      WHERE a.estado_real = 'Arribo'
+    ),
+    demoras_calc AS (
+      SELECT a.*,
+        COALESCE(c.fecha_desc_evento, c.fecha_desc_cont, a.eta) AS fecha_base,
+        (c.fecha_desc_evento IS NOT NULL OR c.fecha_desc_cont IS NOT NULL) AS base_real,
+        COALESCE(c.dias_libres_cont, c.dias_libres_naviera, v_dias_libres_fallback) AS dias_libres
+      FROM activos a
+      JOIN demoras_ctx c ON c.id = a.id
+    ),
     alertas_src AS (
-      SELECT a.* FROM activos a
-      WHERE a.estado_real = 'Arribo' AND a.eta IS NOT NULL AND (v_hoy - a.eta) >= v_dias_libres
-      ORDER BY (v_hoy - a.eta) DESC LIMIT 15
+      SELECT d.* FROM demoras_calc d
+      WHERE d.fecha_base IS NOT NULL AND (v_hoy - d.fecha_base) >= d.dias_libres
+      ORDER BY ((v_hoy - d.fecha_base) - d.dias_libres) DESC LIMIT 15
     ),
     alertas AS (
       SELECT jsonb_agg(jsonb_build_object(
@@ -63,8 +101,11 @@ BEGIN
         'aeropuerto_origen', a.aeropuerto_origen, 'aeropuerto_destino', a.aeropuerto_destino,
         'ciudad_origen', a.ciudad_origen, 'ciudad_destino', a.ciudad_destino,
         'contenedor', a.contenedor, 'created_at', a.created_at,
-        'diasDesdeEta', (v_hoy - a.eta),
-        'diasDemora', (v_hoy - a.eta) - v_dias_libres
+        'diasDesdeEta', COALESCE(v_hoy - a.eta, 0),
+        'diasLibres', a.dias_libres,
+        'baseDemora', CASE WHEN a.base_real THEN 'real' ELSE 'estimada' END,
+        'fechaBaseDemora', a.fecha_base,
+        'diasDemora', (v_hoy - a.fecha_base) - a.dias_libres
       )) AS val FROM alertas_src a
     ),
     proximos_src AS (
