@@ -5,7 +5,8 @@
  * método de pago, moneda y búsqueda por folio/proveedor/referencia.
  * KPIs de total pagado (MXN, USD) y conteo. Exporta a CSV.
  */
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
+import { useFiltroUrl, useTextoUrl } from "@/hooks/shared";
 import { useQuery } from "@tanstack/react-query";
 import { compras } from "../queryKeys";
 import { Landmark, Download, Banknote, Coins, ListFilter } from "lucide-react";
