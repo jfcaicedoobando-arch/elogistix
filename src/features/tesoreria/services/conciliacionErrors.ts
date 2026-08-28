@@ -13,6 +13,8 @@ export class MovimientoVinculoError extends Error {
       | "LC_MOVIMIENTO_DOBLE_VINCULO"
       | "LC_MOVIMIENTO_PAGO_INEXISTENTE"
       | "LC_MOVIMIENTO_YA_VINCULADO"
+      | "LC_MOVIMIENTO_INMUTABLE"
+      | "LC_MOVIMIENTO_TRANSICION_INVALIDA"
       | "LC_MOVIMIENTO_MONTO_MISMATCH",
     message: string,
   ) {
