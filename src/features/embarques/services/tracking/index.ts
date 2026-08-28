@@ -94,18 +94,30 @@ export function esTrackingLinkVigente(link: TrackingLinkRow, ahora: number = Dat
   return new Date(link.expires_at).getTime() > ahora;
 }
 
+/** N26: vigencias permitidas para una liga pública (la BD topa en 90 días). */
+export const TRACKING_LINK_DIAS_DEFAULT = 30;
+export const TRACKING_LINK_DIAS_MAX = 90;
+
+function vigenciaPorDefecto(dias: number): string {
+  return new Date(Date.now() + dias * 86_400_000).toISOString();
+}
+
 export async function createTrackingLink(params: {
   embarqueId: string;
   expiresAt?: string | null;
 }): Promise<TrackingLinkRow> {
+  // N26 (Ola E2 · B): ninguna liga pública puede ser eterna; si no llega
+  // vigencia se usan 30 días (como un gafete de visitante que caduca).
+  const expiresAt = params.expiresAt || vigenciaPorDefecto(TRACKING_LINK_DIAS_DEFAULT);
   const { data, error } = await supabase
     .from("tracking_links")
     .insert({
       embarque_id: params.embarqueId,
-      expires_at: params.expiresAt || null,
+      expires_at: expiresAt,
     })
     .select()
     .single();
+
   if (error) throw error;
   await registrarBitacoraEmbarque({
     accion: "Creó liga de tracking público de embarque",

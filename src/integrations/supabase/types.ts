@@ -7980,7 +7980,7 @@ export type Database = {
           created_at: string | null
           created_by: string
           embarque_id: string
-          expires_at: string | null
+          expires_at: string
           id: string
           organization_id: string
           token: string
@@ -7989,7 +7989,7 @@ export type Database = {
           created_at?: string | null
           created_by?: string
           embarque_id: string
-          expires_at?: string | null
+          expires_at?: string
           id?: string
           organization_id?: string
           token?: string
@@ -7998,7 +7998,7 @@ export type Database = {
           created_at?: string | null
           created_by?: string
           embarque_id?: string
-          expires_at?: string | null
+          expires_at?: string
           id?: string
           organization_id?: string
           token?: string
@@ -10652,6 +10652,10 @@ export type Database = {
       }
       puede_ver_costos_cotizacion: {
         Args: { _user_id?: string }
+        Returns: boolean
+      }
+      puede_ver_costos_cotizacion_propia: {
+        Args: { _cotizacion_id: string; _user_id?: string }
         Returns: boolean
       }
       puede_ver_costos_dashboard: {

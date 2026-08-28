@@ -41,9 +41,10 @@ export function ProveedoresImportDialog({ open, onOpenChange }: Props) {
       ]}
       templateFileName="plantilla-proveedores.csv"
       mapRows={(rows) => mapProveedorRows(rows, organizationId)}
-      onCommit={async (payloads) => {
+      onCommit={async (payloads, reportarProgreso) => {
         // N-05 (QA r2): un INSERT por lote de 200 filas (no uno por fila).
-        await insertProveedoresLote(payloads);
+        // L3: se reporta el avance por lote para informar cortes parciales.
+        await insertProveedoresLote(payloads, reportarProgreso);
         registrarActividad.mutate({
           accion: "crear",
           modulo: "proveedores",
