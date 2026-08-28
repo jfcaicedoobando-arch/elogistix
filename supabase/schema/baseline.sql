@@ -269,7 +269,6 @@ BEGIN
   IF current_setting('app.bypass_cierre', true) = 'on' THEN
     RETURN COALESCE(NEW, OLD);
   END IF;
-
   IF TG_OP = 'DELETE' THEN
     IF OLD.proforma_id IS NOT NULL THEN
       RAISE EXCEPTION
@@ -278,7 +277,6 @@ BEGIN
     END IF;
     RETURN OLD;
   END IF;
-
   IF OLD.proforma_id IS NOT NULL
      AND (NEW.descripcion       IS DISTINCT FROM OLD.descripcion
        OR NEW.cantidad          IS DISTINCT FROM OLD.cantidad
@@ -290,7 +288,6 @@ BEGIN
       'LC_CONCEPTO_PROFORMADO: el concepto ya está incluido en una proforma; libéralo de la proforma antes de editarlo'
       USING ERRCODE = 'P0001';
   END IF;
-
   RETURN NEW;
 END;
 $$;
@@ -309,7 +306,6 @@ BEGIN
   IF TG_OP = 'UPDATE' AND OLD.email IS NOT DISTINCT FROM NEW.email THEN
     RETURN NEW;
   END IF;
-
   IF TG_TABLE_NAME = 'clientes' THEN
     SELECT count(*) INTO v_dup
     FROM public.clientes c
@@ -325,12 +321,10 @@ BEGIN
       AND c.id <> NEW.id
       AND lower(btrim(coalesce(c.email, ''))) = NEW.email;
   END IF;
-
   IF v_dup > 0 THEN
     RAISE EXCEPTION 'LC_EMAIL_DUPLICADO: el correo % ya está registrado en esta organización.', NEW.email
       USING ERRCODE = 'unique_violation';
   END IF;
-
   RETURN NEW;
 END;
 $$;
@@ -417,7 +411,6 @@ BEGIN
   RETURN NEW;
 END;
 $_$;
-
 CREATE FUNCTION public._assert_periodo_abierto() RETURNS trigger
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
@@ -431,33 +424,27 @@ BEGIN
   IF current_setting('app.bypass_cierre_periodo', true) = '1' THEN
     RETURN NEW;
   END IF;
-
   v_new := NULLIF(to_jsonb(NEW) ->> v_col, '')::date;
-
   IF TG_OP = 'UPDATE' THEN
     v_old := NULLIF(to_jsonb(OLD) ->> v_col, '')::date;
     IF v_new IS NOT DISTINCT FROM v_old THEN
       RETURN NEW;  -- la fecha no cambió: los recálculos de estado siguen libres
     END IF;
   END IF;
-
   v_cierre := public.cierre_periodo_fecha(NEW.organization_id);
   IF v_cierre IS NULL THEN
     RETURN NEW;
   END IF;
-
   IF v_new IS NOT NULL AND v_new <= v_cierre THEN
     RAISE EXCEPTION
       'LC_PERIODO_CERRADO: el periodo contable está cerrado hasta el %; la fecha % no es válida',
       v_cierre, v_new USING ERRCODE = 'P0001';
   END IF;
-
   IF v_old IS NOT NULL AND v_old <= v_cierre THEN
     RAISE EXCEPTION
       'LC_PERIODO_CERRADO: el periodo contable está cerrado hasta el %; no se puede mover la fecha % de un registro ya cerrado',
       v_cierre, v_old USING ERRCODE = 'P0001';
   END IF;
-
   RETURN NEW;
 END;
 $$;
@@ -2582,6 +2569,36 @@ BEGIN
   RETURN NEW;
 END;
 $$;
+CREATE FUNCTION public._factura_tc_dof_obligatorio() RETURNS trigger
+    LANGUAGE plpgsql
+    SET search_path TO 'public'
+    AS $$
+DECLARE
+  v_tc numeric;
+  v_fecha date;
+BEGIN
+  IF NEW.moneda::text = 'MXN' THEN
+    RETURN NEW;
+  END IF;
+  IF COALESCE(NEW.tipo_cambio, 0) > 1 THEN
+    RETURN NEW;
+  END IF;
+  v_fecha := COALESCE(NEW.fecha_emision, (now() AT TIME ZONE 'America/Mexico_City')::date);
+  SELECT CASE
+           WHEN NEW.moneda::text = 'USD' THEN d.usd_mxn
+           WHEN NEW.moneda::text = 'EUR' THEN d.eur_mxn
+         END
+    INTO v_tc
+  FROM public.tc_dof_vigente(v_fecha) d;
+  IF COALESCE(v_tc, 0) <= 1 THEN
+    RAISE EXCEPTION 'LC_FACTURA_SIN_TC_DOF: no hay tipo de cambio DOF para % al %; captúralo antes de generar la factura',
+      NEW.moneda, v_fecha
+      USING ERRCODE = '22023';
+  END IF;
+  NEW.tipo_cambio := v_tc;
+  RETURN NEW;
+END;
+$$;
 CREATE FUNCTION public._garantia_congelar_monto_trg() RETURNS trigger
     LANGUAGE plpgsql
     SET search_path TO 'public'
@@ -2656,41 +2673,6 @@ BEGIN
         USING ERRCODE = 'check_violation';
     END IF;
   END IF;
-  RETURN NEW;
-END;
-$$;
-CREATE FUNCTION public._factura_tc_dof_obligatorio()
-RETURNS trigger
-LANGUAGE plpgsql
-SET search_path TO 'public'
-AS $$
-DECLARE
-  v_tc numeric;
-  v_fecha date;
-BEGIN
-  IF NEW.moneda::text = 'MXN' THEN
-    RETURN NEW;
-  END IF;
-  IF COALESCE(NEW.tipo_cambio, 0) > 1 THEN
-    RETURN NEW;
-  END IF;
-
-  v_fecha := COALESCE(NEW.fecha_emision, (now() AT TIME ZONE 'America/Mexico_City')::date);
-
-  SELECT CASE
-           WHEN NEW.moneda::text = 'USD' THEN d.usd_mxn
-           WHEN NEW.moneda::text = 'EUR' THEN d.eur_mxn
-         END
-    INTO v_tc
-  FROM public.tc_dof_vigente(v_fecha) d;
-
-  IF COALESCE(v_tc, 0) <= 1 THEN
-    RAISE EXCEPTION 'LC_FACTURA_SIN_TC_DOF: no hay tipo de cambio DOF para % al %; captúralo antes de generar la factura',
-      NEW.moneda, v_fecha
-      USING ERRCODE = '22023';
-  END IF;
-
-  NEW.tipo_cambio := v_tc;
   RETURN NEW;
 END;
 $$;
@@ -3319,26 +3301,22 @@ BEGIN
   IF NEW.deleted_at IS NOT NULL THEN
     RETURN NEW;
   END IF;
-
   IF NEW.tipo::text = ANY (v_reales) AND NEW.fecha > now() + interval '1 day' THEN
     RAISE EXCEPTION 'LC_EVENTO_FECHA_FUTURA: el evento "%" no puede registrarse con fecha futura.', NEW.tipo
       USING ERRCODE = 'check_violation';
   END IF;
-
   SELECT min(e.fecha) INTO v_zarpe
   FROM public.eventos_embarque e
   WHERE e.embarque_id = NEW.embarque_id
     AND e.deleted_at IS NULL
     AND e.id <> NEW.id
     AND e.tipo = 'Zarpe';
-
   IF v_zarpe IS NOT NULL
      AND NEW.tipo::text IN ('Arribo a Puerto','Descarga','Despacho Aduanal','Liberación','Entrega')
      AND NEW.fecha < v_zarpe THEN
     RAISE EXCEPTION 'LC_EVENTO_ORDEN_INVALIDO: "%" no puede ser anterior al zarpe (%).', NEW.tipo, v_zarpe
       USING ERRCODE = 'check_violation';
   END IF;
-
   IF NEW.tipo::text = 'Entrega' THEN
     SELECT min(e.fecha) INTO v_arribo
     FROM public.eventos_embarque e
@@ -3346,13 +3324,11 @@ BEGIN
       AND e.deleted_at IS NULL
       AND e.id <> NEW.id
       AND e.tipo = 'Arribo a Puerto';
-
     IF v_arribo IS NOT NULL AND NEW.fecha < v_arribo THEN
       RAISE EXCEPTION 'LC_EVENTO_ORDEN_INVALIDO: la entrega no puede ser anterior al arribo (%).', v_arribo
         USING ERRCODE = 'check_violation';
     END IF;
   END IF;
-
   RETURN NEW;
 END;
 $$;
@@ -8188,7 +8164,6 @@ BEGIN
     SELECT * INTO v_nueva FROM public.proformas WHERE id = (v_cached->>'id')::uuid;
     IF FOUND THEN RETURN v_nueva; END IF;
   END IF;
-
   v_caller_org := public.current_user_org_id();
   IF public.has_role(auth.uid(), 'super_admin'::app_role) THEN
     v_org_efectiva := p_organization_id;
@@ -8196,18 +8171,15 @@ BEGIN
     v_org_efectiva := v_caller_org;
   END IF;
   PERFORM public._assert_writer(v_org_efectiva);
-
   IF p_proforma_ids IS NULL OR array_length(p_proforma_ids, 1) IS NULL OR array_length(p_proforma_ids, 1) < 2 THEN
     RAISE EXCEPTION 'Selecciona al menos 2 proformas para consolidar';
   END IF;
-
   SELECT count(*) INTO v_count
   FROM public.proformas
   WHERE id = ANY(p_proforma_ids) AND organization_id = v_org_efectiva;
   IF v_count <> array_length(p_proforma_ids, 1) THEN
     RAISE EXCEPTION 'Una o más proformas no existen o no pertenecen a la organización';
   END IF;
-
   -- Ola 3: la consolidación no puede cruzar embarques.
   IF EXISTS (
     SELECT 1 FROM public.proformas
@@ -8218,15 +8190,12 @@ BEGIN
       'LC_PROFORMA_EMBARQUE_AJENO: todas las proformas a consolidar deben pertenecer al mismo embarque'
       USING ERRCODE = 'P0001';
   END IF;
-
   SELECT
     COALESCE(SUM(subtotal_usd), 0), COALESCE(SUM(iva_usd), 0), COALESCE(SUM(total_usd), 0),
     COALESCE(SUM(subtotal_mxn), 0), COALESCE(SUM(iva_mxn), 0), COALESCE(SUM(total_mxn), 0)
   INTO v_subtotal_usd, v_iva_usd, v_total_usd, v_subtotal_mxn, v_iva_mxn, v_total_mxn
   FROM public.proformas WHERE id = ANY(p_proforma_ids);
-
   v_numero := public.generar_numero_proforma(v_org_efectiva);
-
   INSERT INTO public.proformas (
     numero, embarque_id, cliente_id, cliente_nombre, expediente, bl_master,
     subtotal_usd, iva_usd, total_usd, subtotal_mxn, iva_mxn, total_mxn,
@@ -8239,7 +8208,6 @@ BEGIN
     p_operador, p_dias_credito, v_org_efectiva,
     'aprobada', true, p_proforma_ids, p_tasa_iva
   ) RETURNING * INTO v_nueva;
-
   INSERT INTO public.proforma_conceptos_consolidados (
     proforma_id, embarque_id, contenedor, tipo_contenedor,
     descripcion, cantidad, precio_unitario, total, moneda, aplica_iva, iva,
@@ -8264,11 +8232,9 @@ BEGIN
     COALESCE(NULLIF(ec.numero_contenedor, ''), NULLIF(e.contenedor, ''), 'Sin contenedor'),
     COALESCE(NULLIF(ec.tipo_contenedor, ''), NULLIF(e.tipo_contenedor, '')),
     cv.descripcion, cv.precio_unitario, cv.moneda, cv.aplica_iva;
-
   UPDATE public.proformas
   SET estado_revision = 'consolidada', consolidada_en = v_nueva.id
   WHERE id = ANY(p_proforma_ids);
-
   -- v13.301.69 FIX BUG 2: repuntar conceptos_venta a la proforma consolidada
   -- para que sync_conceptos_venta_facturado propague correctamente al
   -- facturar/cancelar. Bypass defensivo de los guards internos.
@@ -8279,7 +8245,6 @@ BEGIN
      AND organization_id = v_org_efectiva
      AND deleted_at IS NULL;
   PERFORM set_config('app.bypass_cierre', 'off', true);
-
   PERFORM public.idempotency_store(p_request_id, jsonb_build_object('id', v_nueva.id));
   RETURN v_nueva;
 END;
@@ -8977,7 +8942,6 @@ BEGIN
   IF current_setting('app.cotizacion_sync', true) = '1' THEN
     RETURN NEW;
   END IF;
-
   IF (OLD.estado IN ('En operación'::public.estado_cotizacion,
                      'Aceptada'::public.estado_cotizacion)
       OR OLD.embarque_id IS NOT NULL)
@@ -8988,7 +8952,6 @@ BEGIN
       'LC_COTIZACION_INMUTABLE: la cotización ya fue aceptada o está en operación; sus importes y conceptos no pueden cambiar (usa una nueva versión)'
       USING ERRCODE = 'P0001';
   END IF;
-
   RETURN NEW;
 END;
 $$;
@@ -9519,7 +9482,6 @@ BEGIN
     RAISE EXCEPTION 'LC_CLIENTE_LOTE_EXCEDIDO: máximo 1000 clientes por llamada'
       USING ERRCODE = '22023';
   END IF;
-
   IF NOT (
     public.has_any_role(v_uid, ARRAY['admin'::public.app_role, 'admin_org'::public.app_role,
                                      'operador'::public.app_role, 'contador'::public.app_role,
@@ -9528,22 +9490,18 @@ BEGIN
     RAISE EXCEPTION 'LC_CLIENTE_SIN_PERMISO: tu rol no puede dar de alta clientes'
       USING ERRCODE = '42501';
   END IF;
-
   v_org := public.current_user_org_id();
   IF v_org IS NULL THEN
     RAISE EXCEPTION 'LC_CLIENTE_SIN_ORG: no hay organización activa'
       USING ERRCODE = '22023';
   END IF;
-
   FOR v_row IN SELECT * FROM jsonb_array_elements(p_clientes) LOOP
     v_nombre := btrim(COALESCE(v_row->>'nombre', ''));
     IF v_nombre = '' THEN
       RAISE EXCEPTION 'LC_CLIENTE_SIN_NOMBRE: la razón social es obligatoria'
         USING ERRCODE = '22023';
     END IF;
-
     v_rfc := upper(btrim(COALESCE(v_row->>'rfc', '')));
-
     -- Cliente facturable = trae RFC propio. Entonces el CFDI necesita datos
     -- fiscales completos desde el alta, no al momento de timbrar.
     IF v_rfc <> '' AND v_rfc NOT IN ('XEXX010101000', 'XAXX010101000') THEN
@@ -9555,7 +9513,6 @@ BEGIN
           USING ERRCODE = '22023';
       END IF;
     END IF;
-
     INSERT INTO public.clientes (
       organization_id, nombre, rfc, direccion, ciudad, estado, cp, contacto,
       telefono, email, regimen_fiscal, uso_cfdi_default, dias_credito,
@@ -9580,10 +9537,8 @@ BEGIN
       COALESCE((v_row->>'requiere_autorizacion_cotizacion')::boolean, false),
       COALESCE((v_row->>'requiere_autorizacion_proforma')::boolean, false)
     ) RETURNING id INTO v_id;
-
     v_ids := array_append(v_ids, v_id);
   END LOOP;
-
   INSERT INTO public.bitacora_actividad (
     organization_id, usuario_id, usuario_email, accion, modulo,
     entidad_id, entidad_nombre, detalles
@@ -9593,7 +9548,6 @@ BEGIN
     (SELECT nombre FROM public.clientes WHERE id = v_ids[1]),
     jsonb_build_object('cantidad', array_length(v_ids, 1))
   );
-
   RETURN QUERY SELECT * FROM public.clientes WHERE id = ANY(v_ids);
 END;
 $$;
@@ -9942,28 +9896,22 @@ BEGIN
   IF auth.uid() IS NULL THEN
     RAISE EXCEPTION 'LC_NO_AUTENTICADO';
   END IF;
-
   SELECT * INTO v_lead
   FROM public.crm_leads
   WHERE id = p_lead_id AND deleted_at IS NULL
   FOR UPDATE;
-
   IF v_lead.id IS NULL THEN
     RAISE EXCEPTION 'LC_LEAD_NO_ENCONTRADO';
   END IF;
-
   IF NOT public.is_org_member(v_lead.organization_id) THEN
     RAISE EXCEPTION 'LC_ORG_AJENA';
   END IF;
-
   IF NOT public.has_role(auth.uid(), 'vendedor'::public.app_role) THEN
     RAISE EXCEPTION 'LC_LEAD_SIN_PERMISO_CALIFICAR';
   END IF;
-
   IF v_lead.estado::text IN ('Descalificado', 'Convertido') THEN
     RAISE EXCEPTION 'LC_LEAD_ESTADO_NO_CALIFICABLE';
   END IF;
-
   -- Idempotente: recalificar un prospecto no es error (doble click / retry).
   IF v_lead.estado::text IN ('Prospecto', 'Pendiente de alta') THEN
     RETURN jsonb_build_object(
@@ -9972,7 +9920,6 @@ BEGIN
       'calificado', false
     );
   END IF;
-
   -- Perfil comercial mínimo (ICP) para poder cotizar.
   IF COALESCE(NULLIF(TRIM(v_lead.sector), ''), NULL) IS NULL THEN
     v_faltantes := v_faltantes || 'sector';
@@ -9995,19 +9942,15 @@ BEGIN
   IF COALESCE(NULLIF(TRIM(v_lead.proveedor_actual), ''), NULL) IS NULL THEN
     v_faltantes := v_faltantes || 'proveedor_actual';
   END IF;
-
   IF array_length(v_faltantes, 1) IS NOT NULL THEN
     RAISE EXCEPTION 'LC_LEAD_PERFIL_INCOMPLETO: %', array_to_string(v_faltantes, ',');
   END IF;
-
   SELECT email INTO v_email FROM auth.users WHERE id = auth.uid();
-
   UPDATE public.crm_leads
      SET estado = 'Prospecto'::public.crm_lead_estado,
          estatus_icp = 'calificado',
          updated_at = now()
    WHERE id = v_lead.id;
-
   INSERT INTO public.bitacora_actividad (
     organization_id, usuario_id, usuario_email, accion, modulo,
     entidad_id, entidad_nombre, detalles
@@ -10016,7 +9959,6 @@ BEGIN
     'crm_calificar_prospecto', 'crm', v_lead.id, COALESCE(v_lead.empresa, ''),
     jsonb_build_object('estado_anterior', v_lead.estado, 'estado_nuevo', 'Prospecto')
   );
-
   RETURN jsonb_build_object(
     'lead_id', v_lead.id,
     'estado', 'Prospecto',
@@ -13645,7 +13587,6 @@ BEGIN
   IF p_in IS NULL THEN
     RETURN NULL;
   END IF;
-
   CASE jsonb_typeof(p_in)
     WHEN 'object' THEN
       v_out := '{}'::jsonb;
@@ -13657,7 +13598,6 @@ BEGIN
             EXIT;
           END IF;
         END LOOP;
-
         IF v_sensible THEN
           v_out := v_out || jsonb_build_object(v_key, 'null'::jsonb);
         ELSE
