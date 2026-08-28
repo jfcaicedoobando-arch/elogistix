@@ -24,6 +24,7 @@ export async function createClientesLote(
       .slice(i, i + IMPORT_LOTE_TAMANO)
       .map((c) => ({ ...c, nombre: normalizarRazonSocial(c.nombre) }));
     const { data, error } = await supabase.rpc("crear_clientes", {
+      // SAFE-CAST: filas ya validadas por el importador; la RPC recibe jsonb.
       p_clientes: lote as unknown as Json,
     });
     if (error) {
