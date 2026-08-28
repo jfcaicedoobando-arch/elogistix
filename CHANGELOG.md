@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.777.12] - 2026-08-28
+### Corregido
+- **`supabase/schema/baseline.sql` sincronizado con el replay de migraciones**: el snapshot congelado no incluía `_cotizaciones_validar_prospecto` (candados prospecto/cliente en cotizaciones), la nueva firma `_cxp_validar_aprobacion(p_factura_id, p_justificacion)` con el three-way match mínimo (Ola 4 · H2), el fallback DOF de EUR (FIX BL-11) en los tableros, el comentario del rediseño CRM en la promoción de leads ni los helpers de seed demo. Se portaron los 48 bloques semánticos pendientes y se verificó recargando el baseline en una base limpia (sin errores) y comparando el dump contra el replay de las 1140 migraciones.
+
 ## [13.777.11] - 2026-08-28
 ### Corregido
 - **CI de pruebas unitarias en verde (4 suites)**: `cierre.test.ts` no simulaba el segundo `.order("id")` del desempate estable (L1) ni en la consulta principal ni en el fallback de bitácora; `facturaManual.test.ts` no mockeaba `supabase.rpc` y seguía esperando un `DELETE` físico en lugar del rollback por `soft_delete_record`; `ComprasPorAprobar.test.tsx` no exportaba `useFiltroUrl`/`useTextoUrl` en el mock de `@/hooks/shared`.
