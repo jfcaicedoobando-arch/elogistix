@@ -298,11 +298,9 @@ CREATE FUNCTION public._assert_email_unico_org() RETURNS trigger
 DECLARE
   v_dup int;
 BEGIN
-  IF NEW.email IS NULL OR NEW.deleted_at IS NOT NULL THEN
+  IF NEW.email IS NULL OR btrim(NEW.email) = '' OR NEW.deleted_at IS NOT NULL THEN
     RETURN NEW;
   END IF;
-  -- Sólo validamos cuando el correo cambia (o es un registro nuevo):
-  -- los duplicados históricos quedan intactos.
   IF TG_OP = 'UPDATE' AND OLD.email IS NOT DISTINCT FROM NEW.email THEN
     RETURN NEW;
   END IF;
@@ -312,14 +310,14 @@ BEGIN
     WHERE c.organization_id = NEW.organization_id
       AND c.deleted_at IS NULL
       AND c.id <> NEW.id
-      AND lower(btrim(coalesce(c.email, ''))) = NEW.email;
+      AND lower(btrim(coalesce(c.email, ''))) = lower(btrim(NEW.email));
   ELSE
     SELECT count(*) INTO v_dup
     FROM public.contactos_cliente c
     WHERE c.organization_id = NEW.organization_id
       AND c.deleted_at IS NULL
       AND c.id <> NEW.id
-      AND lower(btrim(coalesce(c.email, ''))) = NEW.email;
+      AND lower(btrim(coalesce(c.email, ''))) = lower(btrim(NEW.email));
   END IF;
   IF v_dup > 0 THEN
     RAISE EXCEPTION 'LC_EMAIL_DUPLICADO: el correo % ya está registrado en esta organización.', NEW.email
@@ -1225,6 +1223,45 @@ BEGIN
       NEW.conciliado_por := NULL;
     END IF;
   END IF;
+  RETURN NEW;
+END;
+$$;
+CREATE FUNCTION public._bitacora_cambio_financiero() RETURNS trigger
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+DECLARE
+  v_old jsonb := to_jsonb(OLD);
+  v_new jsonb := to_jsonb(NEW);
+  v_diff jsonb := '{}'::jsonb;
+  v_col text;
+  v_modulo text := TG_ARGV[0];
+  v_nombre text;
+  v_org uuid;
+  i int;
+BEGIN
+  FOR i IN 1 .. (array_length(TG_ARGV, 1) - 1) LOOP
+    v_col := TG_ARGV[i];
+    IF (v_new -> v_col) IS DISTINCT FROM (v_old -> v_col) THEN
+      v_diff := v_diff || jsonb_build_object(
+        v_col, jsonb_build_object('antes', v_old -> v_col, 'despues', v_new -> v_col));
+    END IF;
+  END LOOP;
+  IF v_diff = '{}'::jsonb THEN
+    RETURN NEW;
+  END IF;
+  v_org := NULLIF(v_new ->> 'organization_id', '')::uuid;
+  v_nombre := COALESCE(v_new ->> 'numero', v_new ->> 'expediente',
+                       v_new ->> 'folio_interno', v_new ->> 'referencia', '');
+  PERFORM public.registrar_bitacora(
+    v_modulo,
+    'cambio_financiero_' || TG_TABLE_NAME,
+    NEW.id,
+    v_nombre,
+    jsonb_build_object('tabla', TG_TABLE_NAME, 'cambios', v_diff),
+    v_org,
+    auth.uid()
+  );
   RETURN NEW;
 END;
 $$;
@@ -3142,8 +3179,8 @@ DECLARE
 BEGIN
   SELECT * INTO v_row FROM public.anticipos_proveedor WHERE id = p_anticipo_id;
   IF v_row.id IS NULL THEN RETURN; END IF;
-  -- Respeta cancelado y soft-deleted.
-  IF v_row.estado = 'cancelado' OR v_row.deleted_at IS NOT NULL THEN RETURN; END IF;
+  -- Respeta cancelado, devuelto (N13) y soft-deleted.
+  IF v_row.estado IN ('cancelado','devuelto') OR v_row.deleted_at IS NOT NULL THEN RETURN; END IF;
   SELECT COALESCE(SUM(monto_aplicado),0) INTO v_aplicado
     FROM public.anticipos_aplicaciones
     WHERE anticipo_id = p_anticipo_id
@@ -5062,21 +5099,26 @@ CREATE FUNCTION public.aprobar_nota_credito_proveedor(_nc_id uuid) RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
+DECLARE
+  v_estado public.estado_nota_credito_proveedor;
 BEGIN
   IF NOT (has_role(auth.uid(),'admin') OR has_role(auth.uid(),'super_admin')) THEN
     RAISE EXCEPTION 'No autorizado';
+  END IF;
+  -- N18: serializa dos llamadas concurrentes sobre la misma nota.
+  SELECT estado INTO v_estado
+  FROM public.proveedor_notas_credito
+  WHERE id = _nc_id AND organization_id = public.org_scope()
+  FOR UPDATE;
+  IF NOT FOUND OR v_estado <> 'Borrador' THEN
+    RAISE EXCEPTION 'Nota de crédito no encontrada o no está en Borrador';
   END IF;
   UPDATE public.proveedor_notas_credito
   SET estado = 'Aprobada',
       aprobada_por = auth.uid(),
       aprobada_at = now(),
       updated_at = now()
-  WHERE id = _nc_id
-    AND estado = 'Borrador'
-    AND (organization_id = public.org_scope());
-  IF NOT FOUND THEN
-    RAISE EXCEPTION 'Nota de crédito no encontrada o no está en Borrador';
-  END IF;
+  WHERE id = _nc_id;
 END;
 $$;
 CREATE FUNCTION public.archivar_version_cotizacion(p_cotizacion_id uuid, p_motivo text DEFAULT NULL::text) RETURNS integer
@@ -6989,7 +7031,11 @@ CREATE TABLE public.anticipos_proveedor (
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     updated_at timestamp with time zone DEFAULT now() NOT NULL,
     embarque_id uuid,
-    CONSTRAINT anticipos_proveedor_estado_check CHECK ((estado = ANY (ARRAY['disponible'::text, 'aplicado_parcial'::text, 'aplicado_total'::text, 'cancelado'::text]))),
+    devuelto_at timestamp with time zone,
+    devuelto_by uuid,
+    monto_devuelto numeric(18,4),
+    motivo_devolucion text,
+    CONSTRAINT anticipos_proveedor_estado_check CHECK ((estado = ANY (ARRAY['disponible'::text, 'aplicado_parcial'::text, 'aplicado_total'::text, 'cancelado'::text, 'devuelto'::text]))),
     CONSTRAINT anticipos_proveedor_monto_check CHECK ((monto > (0)::numeric)),
     CONSTRAINT anticipos_proveedor_saldo_rango_check CHECK (((saldo_disponible IS NULL) OR ((saldo_disponible >= (0)::numeric) AND (saldo_disponible <= (monto + 0.01)))))
 );
@@ -7020,10 +7066,10 @@ BEGIN
   IF COALESCE(trim(p_motivo),'') = '' OR length(trim(p_motivo)) < 3 THEN
     RAISE EXCEPTION 'LC_ANTICIPO_MOTIVO_REQUERIDO: Debes indicar un motivo de cancelación.';
   END IF;
-  -- Ola 4 · N31: FOR UPDATE cierra la carrera cancelar-vs-aplicar sobre el
-  -- mismo anticipo (antes ambas transacciones podían leer estado/saldo
-  -- previos al commit de la otra).
-  SELECT * INTO v_row FROM public.anticipos_proveedor WHERE id = p_id AND deleted_at IS NULL FOR UPDATE;
+  -- N18: candado de fila antes de validar estado (doble clic / doble pestaña).
+  SELECT * INTO v_row FROM public.anticipos_proveedor
+   WHERE id = p_id AND deleted_at IS NULL
+   FOR UPDATE;
   IF v_row.id IS NULL THEN
     RAISE EXCEPTION 'LC_ANTICIPO_NO_EXISTE: El anticipo no existe.';
   END IF;
@@ -11959,6 +12005,107 @@ BEGIN
     GET DIAGNOSTICS v_inserted = ROW_COUNT;
   END LOOP;
   RETURN v_inserted;
+END;
+$$;
+CREATE FUNCTION public.devolver_anticipo_proveedor(p_id uuid, p_monto numeric, p_fecha date, p_cuenta_bancaria_id uuid, p_referencia text DEFAULT NULL::text, p_motivo text DEFAULT NULL::text) RETURNS public.anticipos_proveedor
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+DECLARE
+  v_row public.anticipos_proveedor;
+  v_uid uuid := auth.uid();
+  v_email text;
+  v_autorizado boolean;
+  v_cuenta_org uuid;
+BEGIN
+  IF v_uid IS NULL THEN
+    RAISE EXCEPTION 'No autenticado';
+  END IF;
+  SELECT EXISTS (
+    SELECT 1 FROM public.user_roles ur
+    WHERE ur.user_id = v_uid
+      AND ur.role::text = ANY (ARRAY['admin','admin_org','super_admin','contador','tesorero'])
+  ) INTO v_autorizado;
+  IF NOT v_autorizado THEN
+    RAISE EXCEPTION 'LC_ANTICIPO_SIN_ROL: Sólo administradores, contabilidad o tesorería pueden registrar devoluciones de anticipo.'
+      USING ERRCODE = '42501';
+  END IF;
+  IF COALESCE(trim(p_motivo),'') = '' OR length(trim(p_motivo)) < 3 THEN
+    RAISE EXCEPTION 'LC_ANTICIPO_MOTIVO_REQUERIDO: Debes indicar el motivo de la devolución.';
+  END IF;
+  -- N18: candado de fila antes de validar estado (doble clic / doble pestaña).
+  SELECT * INTO v_row FROM public.anticipos_proveedor
+   WHERE id = p_id AND deleted_at IS NULL
+   FOR UPDATE;
+  IF v_row.id IS NULL THEN
+    RAISE EXCEPTION 'LC_ANTICIPO_NO_EXISTE: El anticipo no existe.';
+  END IF;
+  IF v_row.organization_id IS DISTINCT FROM public.current_user_org_id()
+     AND NOT public.has_role(v_uid, 'super_admin'::app_role) THEN
+    RAISE EXCEPTION 'LC_ANTICIPO_OTRA_ORG: El anticipo pertenece a otra organización.'
+      USING ERRCODE = '42501';
+  END IF;
+  IF v_row.estado = 'cancelado' THEN
+    RAISE EXCEPTION 'LC_ANTICIPO_YA_CANCELADO: El anticipo está cancelado; no puede devolverse.';
+  END IF;
+  IF v_row.estado = 'devuelto' THEN
+    RAISE EXCEPTION 'LC_ANTICIPO_YA_DEVUELTO: Este anticipo ya tiene una devolución registrada.';
+  END IF;
+  IF p_monto IS NULL OR p_monto <= 0 THEN
+    RAISE EXCEPTION 'LC_ANTICIPO_MONTO_INVALIDO: El monto devuelto debe ser mayor a cero.';
+  END IF;
+  IF p_monto > COALESCE(v_row.saldo_disponible,0) + 0.01 THEN
+    RAISE EXCEPTION 'LC_ANTICIPO_MONTO_EXCEDE_SALDO: La devolución (%) excede el saldo disponible (%).',
+      p_monto, COALESCE(v_row.saldo_disponible,0);
+  END IF;
+  IF p_fecha IS NULL THEN
+    RAISE EXCEPTION 'LC_ANTICIPO_FECHA_REQUERIDA: Indica la fecha de la devolución.';
+  END IF;
+  IF p_fecha < v_row.fecha_anticipo THEN
+    RAISE EXCEPTION 'LC_ANTICIPO_FECHA_INVALIDA: La devolución no puede ser anterior a la fecha del anticipo (%).',
+      v_row.fecha_anticipo;
+  END IF;
+  SELECT cb.organization_id INTO v_cuenta_org
+    FROM public.cuentas_bancarias cb
+   WHERE cb.id = p_cuenta_bancaria_id;
+  IF v_cuenta_org IS NULL THEN
+    RAISE EXCEPTION 'LC_ANTICIPO_CUENTA_REQUERIDA: Selecciona la cuenta bancaria donde entró el dinero.';
+  END IF;
+  IF v_cuenta_org IS DISTINCT FROM v_row.organization_id THEN
+    RAISE EXCEPTION 'LC_ANTICIPO_CUENTA_OTRA_ORG: La cuenta bancaria pertenece a otra organización.'
+      USING ERRCODE = '42501';
+  END IF;
+  UPDATE public.anticipos_proveedor
+    SET estado = 'devuelto',
+        saldo_disponible = 0,
+        monto_devuelto = p_monto,
+        motivo_devolucion = trim(p_motivo),
+        devuelto_at = now(),
+        devuelto_by = v_uid,
+        updated_at = now()
+    WHERE id = p_id
+    RETURNING * INTO v_row;
+  INSERT INTO public.bbva_movimientos
+    (organization_id, cuenta_bancaria_id, fecha, concepto, referencia,
+     cargo, abono, estado_conciliacion, anticipo_proveedor_id, importado_por, importado_en)
+  VALUES
+    (v_row.organization_id, p_cuenta_bancaria_id, p_fecha,
+     'Devolución de anticipo ' || v_row.id::text, NULLIF(trim(COALESCE(p_referencia,'')),''),
+     0, p_monto, 'Pendiente'::public.estado_conciliacion, v_row.id, v_uid, now());
+  BEGIN
+    SELECT email INTO v_email FROM auth.users WHERE id = v_uid;
+    INSERT INTO public.bitacora_actividad
+      (organization_id, usuario_id, usuario_email, accion, modulo, entidad_id, entidad_nombre, detalles)
+    VALUES (v_row.organization_id, v_uid, COALESCE(v_email,''), 'devolver_anticipo_proveedor', 'cxp',
+            v_row.id, 'Anticipo ' || v_row.id::text,
+            jsonb_build_object('motivo', trim(p_motivo), 'monto_devuelto', p_monto,
+                               'moneda', v_row.moneda, 'fecha', p_fecha,
+                               'cuenta_bancaria_id', p_cuenta_bancaria_id,
+                               'referencia', p_referencia));
+  EXCEPTION WHEN OTHERS THEN
+    RAISE WARNING 'bitacora insert failed en devolver_anticipo_proveedor: % %', SQLSTATE, SQLERRM;
+  END;
+  RETURN v_row;
 END;
 $$;
 CREATE FUNCTION public.direccion_totales(p_desde date) RETURNS jsonb
@@ -23454,7 +23601,6 @@ BEGIN
   v_mantenimiento := public.has_role(auth.uid(), 'super_admin'::app_role)
      OR COALESCE(auth.role()::text, '') = 'service_role'
      OR pg_has_role(current_user, 'service_role', 'MEMBER');
-
   IF v_mantenimiento THEN
     v_org := p_organization_id;
   ELSE
@@ -23469,12 +23615,10 @@ BEGIN
         USING ERRCODE = '42501';
     END IF;
   END IF;
-
   SELECT COUNT(*) INTO v_existing
   FROM public.presupuesto_categorias
   WHERE organization_id = v_org;
   IF v_existing > 0 THEN RETURN; END IF;
-
   INSERT INTO public.presupuesto_categorias (organization_id, nombre, tipo_contable, orden, activa) VALUES
     (v_org, 'Costos directos de embarque (COGS)', 'CostoDirectoEmbarque', 10, true),
     (v_org, 'Gastos de administración',           'Administracion',        20, true),
@@ -28254,6 +28398,10 @@ CREATE TRIGGER trg_anticipo_saldo AFTER INSERT OR DELETE OR UPDATE ON public.ant
 CREATE TRIGGER trg_auditoria_revisiones_updated_at BEFORE UPDATE ON public.auditoria_revisiones FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 CREATE TRIGGER trg_bbva_guard_update BEFORE UPDATE ON public.bbva_movimientos FOR EACH ROW EXECUTE FUNCTION public._bbva_guard_update();
 CREATE TRIGGER trg_bitacora_facturas_estado AFTER UPDATE OF estado ON public.facturas FOR EACH ROW EXECUTE FUNCTION public._bitacora_facturas_estado();
+CREATE TRIGGER trg_bitacora_fin_bbva AFTER UPDATE OF cargo, abono, fecha ON public.bbva_movimientos FOR EACH ROW EXECUTE FUNCTION public._bitacora_cambio_financiero('tesoreria', 'cargo', 'abono', 'fecha');
+CREATE TRIGGER trg_bitacora_fin_comisiones AFTER UPDATE OF porcentaje_aplicado, comision_mxn, estado ON public.comisiones_devengadas FOR EACH ROW EXECUTE FUNCTION public._bitacora_cambio_financiero('cxp', 'porcentaje_aplicado', 'comision_mxn', 'estado');
+CREATE TRIGGER trg_bitacora_fin_embarques AFTER UPDATE OF tipo_cambio_usd, tipo_cambio_eur, cliente_id ON public.embarques FOR EACH ROW EXECUTE FUNCTION public._bitacora_cambio_financiero('embarques', 'tipo_cambio_usd', 'tipo_cambio_eur', 'cliente_id');
+CREATE TRIGGER trg_bitacora_fin_facturas AFTER UPDATE OF cliente_id, subtotal, total, moneda, tipo_cambio ON public.facturas FOR EACH ROW EXECUTE FUNCTION public._bitacora_cambio_financiero('facturacion', 'cliente_id', 'subtotal', 'total', 'moneda', 'tipo_cambio');
 CREATE TRIGGER trg_bitacora_normalizar_modulo BEFORE INSERT OR UPDATE OF modulo ON public.bitacora_actividad FOR EACH ROW EXECUTE FUNCTION public._bitacora_normalizar_modulo();
 CREATE TRIGGER trg_bloquear_cierre BEFORE INSERT OR DELETE OR UPDATE ON public.conceptos_costo FOR EACH ROW EXECUTE FUNCTION public.tg_bloquear_si_embarque_cerrado();
 CREATE TRIGGER trg_bloquear_cierre BEFORE INSERT OR DELETE OR UPDATE ON public.conceptos_venta FOR EACH ROW EXECUTE FUNCTION public.tg_bloquear_si_embarque_cerrado();
@@ -29650,6 +29798,8 @@ GRANT ALL ON FUNCTION public._auditoria_embarques_org_base(p_organization_id uui
 GRANT ALL ON FUNCTION public._auditoria_embarques_org_base(p_organization_id uuid) TO service_role;
 REVOKE ALL ON FUNCTION public._bbva_guard_update() FROM PUBLIC;
 GRANT ALL ON FUNCTION public._bbva_guard_update() TO service_role;
+REVOKE ALL ON FUNCTION public._bitacora_cambio_financiero() FROM PUBLIC;
+GRANT ALL ON FUNCTION public._bitacora_cambio_financiero() TO service_role;
 REVOKE ALL ON FUNCTION public._bitacora_facturas_estado() FROM PUBLIC;
 GRANT ALL ON FUNCTION public._bitacora_facturas_estado() TO authenticated;
 GRANT ALL ON FUNCTION public._bitacora_facturas_estado() TO service_role;
@@ -30252,6 +30402,9 @@ GRANT ALL ON FUNCTION public.delete_email(queue_name text, message_id bigint) TO
 REVOKE ALL ON FUNCTION public.detectar_alertas_app_logs() FROM PUBLIC;
 GRANT ALL ON FUNCTION public.detectar_alertas_app_logs() TO authenticated;
 GRANT ALL ON FUNCTION public.detectar_alertas_app_logs() TO service_role;
+REVOKE ALL ON FUNCTION public.devolver_anticipo_proveedor(p_id uuid, p_monto numeric, p_fecha date, p_cuenta_bancaria_id uuid, p_referencia text, p_motivo text) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.devolver_anticipo_proveedor(p_id uuid, p_monto numeric, p_fecha date, p_cuenta_bancaria_id uuid, p_referencia text, p_motivo text) TO authenticated;
+GRANT ALL ON FUNCTION public.devolver_anticipo_proveedor(p_id uuid, p_monto numeric, p_fecha date, p_cuenta_bancaria_id uuid, p_referencia text, p_motivo text) TO service_role;
 REVOKE ALL ON FUNCTION public.direccion_totales(p_desde date) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.direccion_totales(p_desde date) TO authenticated;
 GRANT ALL ON FUNCTION public.direccion_totales(p_desde date) TO service_role;
