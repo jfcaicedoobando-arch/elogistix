@@ -7252,6 +7252,7 @@ export type Database = {
           motivo: Database["public"]["Enums"]["motivo_nota_credito_proveedor"]
           organization_id: string
           proveedor_factura_id: string
+          tipo_cambio: number | null
           updated_at: string
           uuid_estatus_sat: string | null
           uuid_fiscal: string | null
@@ -7276,6 +7277,7 @@ export type Database = {
           motivo?: Database["public"]["Enums"]["motivo_nota_credito_proveedor"]
           organization_id?: string
           proveedor_factura_id: string
+          tipo_cambio?: number | null
           updated_at?: string
           uuid_estatus_sat?: string | null
           uuid_fiscal?: string | null
@@ -7300,6 +7302,7 @@ export type Database = {
           motivo?: Database["public"]["Enums"]["motivo_nota_credito_proveedor"]
           organization_id?: string
           proveedor_factura_id?: string
+          tipo_cambio?: number | null
           updated_at?: string
           uuid_estatus_sat?: string | null
           uuid_fiscal?: string | null

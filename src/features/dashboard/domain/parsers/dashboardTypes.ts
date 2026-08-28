@@ -27,6 +27,12 @@ export interface EmbarqueConEstado {
 export interface AlertaDemora extends EmbarqueConEstado {
   diasDemora: number;
   diasDesdeEta: number;
+  /** Días libres reales aplicados (contenedor → naviera → fallback 7). */
+  diasLibres?: number;
+  /** `real` = fecha de descarga capturada; `estimada` = se usó la ETA. */
+  baseDemora?: "real" | "estimada";
+  /** Fecha desde la que se cuentan los días libres (ISO `yyyy-MM-dd`). */
+  fechaBaseDemora?: string | null;
 }
 
 export interface ProximoArribo extends EmbarqueConEstado {

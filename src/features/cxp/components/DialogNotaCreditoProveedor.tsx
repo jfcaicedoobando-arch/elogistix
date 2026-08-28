@@ -15,6 +15,8 @@ import { useOrgFilter } from "@/hooks/shared";
 import { subirArchivosNcProveedor } from "@/features/cxp/services";
 import { NuevaNotaCreditoFormFields } from "./NuevaNotaCreditoFormFields";
 import { buildNcPrefillFromCfdi } from "./ncFromCfdi";
+import { esCruceNoConvertible, montoNcEnMonedaFactura } from "./ncMonedaProveedor";
+import { NcProveedorAvisos } from "./NcProveedorAvisos";
 import { notifyError } from "@/lib/ui/appFeedback";
 import type {
   MotivoNotaCreditoProveedor as MotivoNC,
@@ -35,6 +37,8 @@ export function DialogNotaCreditoProveedor({ open, onOpenChange, facturaId, mone
   const [folio, setFolio] = useState("");
   const [fecha, setFecha] = useState(format(new Date(), "yyyy-MM-dd"));
   const [monto, setMonto] = useState("");
+  const [moneda, setMoneda] = useState<MonedaNC>(monedaFactura);
+  const [tipoCambio, setTipoCambio] = useState(""); // MXN por 1 unidad extranjera
   const [motivo, setMotivo] = useState<MotivoNC>("Bonificacion");
   const [descripcion, setDescripcion] = useState("");
   const [parsedCfdi, setParsedCfdi] = useState<CfdiParsedResponse | null>(null);
@@ -44,14 +48,19 @@ export function DialogNotaCreditoProveedor({ open, onOpenChange, facturaId, mone
   const { organizationId } = useOrgFilter();
 
   const montoNum = Number(monto);
-  const excede = montoNum > saldoFactura + 0.01;
-  const valido = folio.trim() && fecha && montoNum > 0 && !excede;
+  const tcNum = tipoCambio.trim() ? Number(tipoCambio) : null;
+  const cruceInvalido = esCruceNoConvertible(moneda, monedaFactura);
+  const montoEnFactura = montoNcEnMonedaFactura(montoNum, moneda, monedaFactura, tcNum);
+  const excede = montoEnFactura !== null && montoEnFactura > saldoFactura + 0.01;
+  const valido = Boolean(folio.trim()) && Boolean(fecha) && montoNum > 0 && !excede && !cruceInvalido;
 
   const reset = () => {
     setMode("manual");
     setFolio("");
     setFecha(format(new Date(), "yyyy-MM-dd"));
     setMonto("");
+    setMoneda(monedaFactura);
+    setTipoCambio("");
     setMotivo("Bonificacion");
     setDescripcion("");
     setParsedCfdi(null);
@@ -69,6 +78,7 @@ export function DialogNotaCreditoProveedor({ open, onOpenChange, facturaId, mone
     setFolio(prefill.folio);
     setFecha(prefill.fecha);
     setMonto(prefill.monto);
+    if (prefill.moneda) setMoneda(prefill.moneda);
     setDescripcion(prefill.descripcion);
     setUuidFiscal(prefill.uuidFiscal);
     setParsedCfdi(data);
@@ -81,7 +91,8 @@ export function DialogNotaCreditoProveedor({ open, onOpenChange, facturaId, mone
       folio_nc: folio.trim(),
       fecha,
       monto: montoNum,
-      moneda: monedaFactura,
+      moneda,
+      tipo_cambio: tcNum,
       motivo,
       descripcion,
       estado: "Borrador" as const,
@@ -166,13 +177,20 @@ export function DialogNotaCreditoProveedor({ open, onOpenChange, facturaId, mone
         onDescripcionChange={setDescripcion}
         monedaFactura={monedaFactura}
         saldoFactura={saldoFactura}
+        moneda={moneda}
+        onMonedaChange={setMoneda}
+        tipoCambio={tipoCambio}
+        onTipoCambioChange={setTipoCambio}
       />
 
-      {excede && (
-        <div className="rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-body-sm text-destructive">
-          El monto de la nota de crédito excede el saldo pendiente de la factura.
-        </div>
-      )}
+      <NcProveedorAvisos
+        cruceInvalido={cruceInvalido}
+        moneda={moneda}
+        monedaFactura={monedaFactura}
+        montoNum={montoNum}
+        montoEnFactura={montoEnFactura}
+        excede={excede}
+      />
     </FormDialogShell>
   );
 }

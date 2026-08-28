@@ -2,14 +2,12 @@
   "$schema": "./audit-rpc-columns-allowlist.schema.json",
   "note": "Hallazgos preexistentes detectados por scripts/audit-rpc-columns.ts. Cada entrada es una referencia [function|view] <nombre> <alias>.<columna> que apunta a una columna inexistente. Al arreglar la RPC/vista, eliminar la entrada correspondiente. El script NO fallará CI mientras la entrada esté aquí, pero SÍ fallará ante cualquier nueva regresión.",
   "allow": [
-    "function:facturas_cartera_cliente:f.folio",
     "function:proveedor_estado_cuenta:cc.expediente",
     "function:proveedor_estado_cuenta:cc.cliente_nombre",
     "function:proveedor_estado_cuenta_movimientos:f.folio_interno",
     "function:proveedor_estado_cuenta_movimientos:f.folio_proveedor"
   ],
   "reasons": {
-    "function:facturas_cartera_cliente:f.folio": "Falso positivo: `f` es un CTE local, no la tabla public.facturas.",
     "function:proveedor_estado_cuenta:cc.expediente": "Falso positivo: `cc` es el CTE de conceptos enriquecidos (WITH cc AS ...), no public.conceptos_costo.",
     "function:proveedor_estado_cuenta:cc.cliente_nombre": "Falso positivo: `cc` es el CTE de conceptos enriquecidos (WITH cc AS ...), no public.conceptos_costo.",
     "function:proveedor_estado_cuenta_movimientos:f.folio_interno": "Falso positivo: `f` es un CTE local sobre proveedor_facturas, no public.facturas.",

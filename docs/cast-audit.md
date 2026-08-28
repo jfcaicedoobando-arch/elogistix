@@ -5,17 +5,17 @@ Auditoría automática de los `as` casts en `src/`. Generado por
 
 ## Resumen
 
-Total de `as` casts detectados: **3215**
+Total de `as` casts detectados: **3221**
 
 | Categoría | Peso | Cantidad | % |
 |-----------|------|----------|---|
 | SAFE      | 0 | 956     | 29.7% |
-| LOW       | 1 | 151      | 4.7% |
-| MEDIUM    | 2 | 2107   | 65.5% |
-| HIGH      | 3 | 1     | 0.0% |
+| LOW       | 1 | 152      | 4.7% |
+| MEDIUM    | 2 | 2113   | 65.6% |
+| HIGH      | 3 | 0     | 0.0% |
 | CRITICAL  | 4 | 0 | 0.0% |
 
-**Lectura clave:** los casts a accionar son los **HIGH + CRITICAL** = 1 (~0.0%). El resto es seguro o aceptable bajo política.
+**Lectura clave:** los casts a accionar son los **HIGH + CRITICAL** = 0 (~0.0%). El resto es seguro o aceptable bajo política.
 
 ## Definición de categorías
 
@@ -47,12 +47,7 @@ Total de `as` casts detectados: **3215**
 
 ## Top-30 casts más riesgosos (HIGH + CRITICAL)
 
-### 1. [HIGH] `src/features/cliente/services/importLote.ts:27`
-
-```ts
-p_clientes: lote as unknown as Json,
-```
-
+_Ningún cast HIGH o CRITICAL detectado._
 
 ## Roadmap
 

@@ -1,8 +1,8 @@
--- Fuente canónica del cálculo del tablero de dirección.
--- 1:1 con supabase/migrations/20260902008000_ola17_demoras_mx_nc_prov_tc.sql.
--- Ola 5 · RG4-2 (N41/N45): valuación por moneda propia del gasto.
--- Al modificar: edita ESTE archivo y genera la migración con el mismo cuerpo.
+-- Ola 17 · Hallazgo 8: (A) días de demora del tablero alineados con la
+-- facturación (fecha real de descarga + días libres reales, en hora de México)
+-- y (B) notas de crédito de proveedor con tipo de cambio DOF y conversión.
 
+-- ───────────────────────── A) Tablero de dirección ─────────────────────────
 CREATE OR REPLACE FUNCTION public.dashboard_details_datos()
  RETURNS jsonb
  LANGUAGE plpgsql
@@ -289,8 +289,158 @@ END;
 $function$;
 
 -- H6: permisos explícitos (idempotente), patrón FIX-H6-12.
-
--- Ola 5 (C9): el cuerpo es interno; la RPC pública `dashboard_details()` lo envuelve
--- y enmascara costos/utilidad según el rol (ver dashboard_rpc_costos.sql).
-REVOKE ALL ON FUNCTION public.dashboard_details_datos() FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.dashboard_details_datos() FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.dashboard_details_datos() FROM anon;
+REVOKE ALL ON FUNCTION public.dashboard_details_datos() FROM authenticated;
 GRANT EXECUTE ON FUNCTION public.dashboard_details_datos() TO service_role;
+
+-- ─────────────── B) NC de proveedor: tipo de cambio y conversión ───────────────
+ALTER TABLE public.proveedor_notas_credito
+  ADD COLUMN IF NOT EXISTS tipo_cambio numeric;
+
+COMMENT ON COLUMN public.proveedor_notas_credito.tipo_cambio IS
+  'Ola 17 H8-B: MXN por 1 unidad de moneda extranjera (convención mexicana). Obligatorio cuando la NC está en moneda distinta a la factura; se ancla al DOF de la fecha de la NC.';
+
+CREATE OR REPLACE FUNCTION public._nc_prov_tc_moneda_convertible()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO 'public'
+AS $function$
+DECLARE
+  v_moneda_factura text;
+  v_moneda_ext text;
+  v_fecha date;
+  v_tc numeric;
+BEGIN
+  SELECT pf.moneda::text INTO v_moneda_factura
+  FROM public.proveedor_facturas pf
+  WHERE pf.id = NEW.proveedor_factura_id;
+
+  IF v_moneda_factura IS NULL OR NEW.moneda::text = v_moneda_factura THEN
+    NEW.tipo_cambio := NULL;
+    RETURN NEW;
+  END IF;
+
+  IF NEW.moneda::text <> 'MXN' AND v_moneda_factura <> 'MXN' THEN
+    RAISE EXCEPTION 'LC_NC_PROV_MONEDA_NO_CONVERTIBLE: no hay tipo de cambio cruzado entre % y %; captura la nota de crédito en % o en MXN',
+      NEW.moneda, v_moneda_factura, v_moneda_factura
+      USING ERRCODE = '22023';
+  END IF;
+
+  IF COALESCE(NEW.tipo_cambio, 0) > 1 THEN
+    RETURN NEW;
+  END IF;
+
+  v_moneda_ext := CASE WHEN NEW.moneda::text = 'MXN' THEN v_moneda_factura ELSE NEW.moneda::text END;
+  v_fecha := COALESCE(NEW.fecha, (now() AT TIME ZONE 'America/Mexico_City')::date);
+
+  SELECT CASE
+           WHEN v_moneda_ext = 'USD' THEN d.usd_mxn
+           WHEN v_moneda_ext = 'EUR' THEN d.eur_mxn
+         END
+    INTO v_tc
+  FROM public.tc_dof_vigente(v_fecha) d;
+
+  IF COALESCE(v_tc, 0) <= 1 THEN
+    RAISE EXCEPTION 'LC_NC_PROV_TC_REQUERIDO: falta tipo de cambio DOF para % al %; captúralo antes de registrar la nota de crédito',
+      v_moneda_ext, v_fecha
+      USING ERRCODE = '22023';
+  END IF;
+
+  NEW.tipo_cambio := v_tc;
+  RETURN NEW;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public._nc_prov_tc_moneda_convertible() FROM PUBLIC;
+REVOKE ALL ON FUNCTION public._nc_prov_tc_moneda_convertible() FROM anon;
+REVOKE ALL ON FUNCTION public._nc_prov_tc_moneda_convertible() FROM authenticated;
+GRANT EXECUTE ON FUNCTION public._nc_prov_tc_moneda_convertible() TO service_role;
+
+DROP TRIGGER IF EXISTS trg_nc_prov_tc_convertible ON public.proveedor_notas_credito;
+CREATE TRIGGER trg_nc_prov_tc_convertible
+  BEFORE INSERT OR UPDATE OF monto, moneda, tipo_cambio, fecha, proveedor_factura_id
+  ON public.proveedor_notas_credito
+  FOR EACH ROW EXECUTE FUNCTION public._nc_prov_tc_moneda_convertible();
+
+-- Saldo: la NC se convierte a la moneda de la factura (nunca 1:1 silencioso).
+CREATE OR REPLACE VIEW public.v_proveedor_facturas_saldo WITH (security_invoker='true') AS
+ SELECT pf.id AS proveedor_factura_id,
+    pf.organization_id,
+    pf.total,
+    COALESCE(( SELECT sum(pp.monto_en_moneda_factura) AS sum
+           FROM public.pagos_proveedor pp
+          WHERE ((pp.proveedor_factura_id = pf.id) AND (pp.deleted_at IS NULL))), (0)::numeric) AS pagado,
+    COALESCE(( SELECT sum(public.monto_pago_en_moneda_factura(nc.monto, nc.moneda::text, nc.tipo_cambio, pf.moneda::text)) AS sum
+           FROM public.proveedor_notas_credito nc
+          WHERE ((nc.proveedor_factura_id = pf.id) AND (nc.estado = 'Aplicada'::public.estado_nota_credito_proveedor) AND (nc.deleted_at IS NULL))), (0)::numeric) AS notas_credito_aplicadas,
+    ((pf.total - COALESCE(( SELECT sum(pp.monto_en_moneda_factura) AS sum
+           FROM public.pagos_proveedor pp
+          WHERE ((pp.proveedor_factura_id = pf.id) AND (pp.deleted_at IS NULL))), (0)::numeric)) - COALESCE(( SELECT sum(public.monto_pago_en_moneda_factura(nc.monto, nc.moneda::text, nc.tipo_cambio, pf.moneda::text)) AS sum
+           FROM public.proveedor_notas_credito nc
+          WHERE ((nc.proveedor_factura_id = pf.id) AND (nc.estado = 'Aplicada'::public.estado_nota_credito_proveedor) AND (nc.deleted_at IS NULL))), (0)::numeric)) AS saldo
+   FROM public.proveedor_facturas pf
+  WHERE (pf.deleted_at IS NULL);
+
+CREATE OR REPLACE FUNCTION public.saldo_factura_proveedor(p_factura_id uuid)
+RETURNS jsonb
+LANGUAGE plpgsql
+STABLE SECURITY DEFINER
+SET search_path TO 'public'
+AS $function$
+DECLARE
+  v_oid uuid := public.current_user_org_id();
+  v_f public.proveedor_facturas;
+  v_pagado numeric;
+  v_nc numeric;
+  v_incompleto boolean;
+  v_nc_incompleto boolean;
+BEGIN
+  IF v_oid IS NULL THEN
+    RAISE EXCEPTION 'LC_ORG_SIN_CONTEXTO: no hay organización activa' USING ERRCODE = '42501';
+  END IF;
+
+  SELECT * INTO v_f
+  FROM public.proveedor_facturas
+  WHERE id = p_factura_id
+    AND deleted_at IS NULL
+    AND organization_id = v_oid
+    AND estado <> 'Cancelada';
+
+  IF v_f.id IS NULL THEN
+    RETURN NULL;
+  END IF;
+
+  SELECT COALESCE(SUM(public.monto_pago_en_moneda_factura(pp.monto, pp.moneda::text, pp.tipo_cambio_usd, v_f.moneda::text)), 0),
+         BOOL_OR(pp.moneda::text <> v_f.moneda::text AND COALESCE(pp.tipo_cambio_usd, 0) <= 0)
+    INTO v_pagado, v_incompleto
+  FROM public.pagos_proveedor pp
+  WHERE pp.proveedor_factura_id = p_factura_id
+    AND pp.deleted_at IS NULL;
+
+  -- Ola 17 · H8-B: la NC se valúa en la moneda de la factura con su TC DOF.
+  SELECT COALESCE(SUM(public.monto_pago_en_moneda_factura(nc.monto, nc.moneda::text, nc.tipo_cambio, v_f.moneda::text)), 0),
+         BOOL_OR(nc.moneda::text <> v_f.moneda::text AND COALESCE(nc.tipo_cambio, 0) <= 0)
+    INTO v_nc, v_nc_incompleto
+  FROM public.proveedor_notas_credito nc
+  WHERE nc.proveedor_factura_id = p_factura_id
+    AND nc.deleted_at IS NULL
+    AND nc.estado = 'Aplicada';
+
+  RETURN jsonb_build_object(
+    'factura_id', p_factura_id,
+    'moneda', v_f.moneda::text,
+    'total', COALESCE(v_f.total, 0),
+    'pagado', ROUND(v_pagado, 2),
+    'nc_aplicada', ROUND(v_nc, 2),
+    'saldo', ROUND(GREATEST(COALESCE(v_f.total, 0) - v_pagado - v_nc, 0), 2),
+    'flujo_incompleto', COALESCE(v_incompleto, false) OR COALESCE(v_nc_incompleto, false)
+  );
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.saldo_factura_proveedor(uuid) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.saldo_factura_proveedor(uuid) FROM anon;
+GRANT EXECUTE ON FUNCTION public.saldo_factura_proveedor(uuid) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.saldo_factura_proveedor(uuid) TO service_role;
