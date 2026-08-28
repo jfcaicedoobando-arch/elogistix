@@ -1,5 +1,14 @@
 # Changelog
 
+## [13.782.1] - 2026-08-28
+### Corregido
+- **CI · Suites RLS**: whitelist de `tc_dof_moneda` y `convertir_monto_dof` en el linter de alcance por organización (son catálogos globales de tipo de cambio, no tienen dueño), y `seed_presupuesto_categorias` vuelve a poder sembrar categorías en CI al aceptar miembros de `service_role`.
+- **CI · Guards conductuales**: los fixtures cross-tenant se alinearon con el nuevo candado `_assert_padre_misma_org` (Ola E1): el embarque del agente usa un cliente de su propia organización y el guard de cotizaciones acepta tanto `LC_COTIZACION_OTRA_ORG` como `LC_ORG_CRUZADA`.
+- **CI · Papelera**: la suite del portal cancela y limpia pagos antes del borrado lógico, respetando el candado `LC_FACTURA_DELETE_*`.
+- **Baseline de esquema**: regenerada con las 1150 migraciones (incluye Sub-olas D y E1).
+
+
+
 ## [13.782.0] - 2026-08-28
 ### Corregido
 - **Ola E2/E3 · Sub-ola D · Retenciones (N10)**: el prorrateo de retenciones por pago se calcula sobre la base **neta de notas de crédito** y el pago que liquida la factura absorbe el residuo de centavos, así la suma de los pagos cuadra exacto con la factura (como repartir un pastel y dejar la última rebanada del tamaño que sobró, no un pedazo de más).
