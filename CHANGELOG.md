@@ -2,6 +2,7 @@
 
 ## [13.783.1] - 2026-08-28
 ### Corregido
+- **CI · espejos y manifiesto**: se re-sincronizó el espejo canónico de `_factura_tc_dof_obligatorio` con la migración vigente (recálculo de T/C al cambiar de moneda) y se actualizó `migration-manifest.json` a 1157 migraciones.
 - **CI · candado service_role-only**: se sincronizó la lista canónica con las funciones internas de la Ola E4 (`_es_rol_interno`, `_bbva_guard_update`, `_liquidacion_guard_estado`, `_prohibir_delete_comisiones`). El check pasa de nuevo con 57 funciones y sin drift.
 
 ## [13.783.0] - 2026-08-28

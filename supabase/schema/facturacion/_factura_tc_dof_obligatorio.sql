@@ -13,8 +13,20 @@ DECLARE
   v_fecha date;
 BEGIN
   IF NEW.moneda::text = 'MXN' THEN
+    -- M2-res: al volver a MXN el T/C heredado deja de aplicar.
+    IF TG_OP = 'UPDATE' AND OLD.moneda::text <> 'MXN' THEN
+      NEW.tipo_cambio := 1;
+    END IF;
     RETURN NEW;
   END IF;
+
+  -- M2-res: si la moneda cambió, el T/C anterior no sirve: se recalcula.
+  IF TG_OP = 'UPDATE'
+     AND OLD.moneda::text IS DISTINCT FROM NEW.moneda::text
+     AND NEW.tipo_cambio IS NOT DISTINCT FROM OLD.tipo_cambio THEN
+    NEW.tipo_cambio := NULL;
+  END IF;
+
   IF COALESCE(NEW.tipo_cambio, 0) > 1 THEN
     RETURN NEW;
   END IF;
@@ -42,4 +54,9 @@ $function$;
 DROP TRIGGER IF EXISTS trg_factura_tc_dof_obligatorio ON public.facturas;
 CREATE TRIGGER trg_factura_tc_dof_obligatorio
 BEFORE INSERT ON public.facturas
+FOR EACH ROW EXECUTE FUNCTION public._factura_tc_dof_obligatorio();
+
+DROP TRIGGER IF EXISTS trg_factura_tc_dof_obligatorio_upd ON public.facturas;
+CREATE TRIGGER trg_factura_tc_dof_obligatorio_upd
+BEFORE UPDATE OF moneda ON public.facturas
 FOR EACH ROW EXECUTE FUNCTION public._factura_tc_dof_obligatorio();
