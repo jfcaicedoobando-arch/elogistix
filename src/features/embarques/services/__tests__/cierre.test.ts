@@ -103,7 +103,7 @@ describe("cierre service", () => {
       const selectFn = vi.fn().mockReturnValue({ eq: eqFn });
       // Bitácora fallback chain: select -> eq -> eq -> order
       const bitacoraOrder = vi.fn().mockResolvedValue({ data: [], error: null });
-      const bitacoraEq2 = vi.fn().mockReturnValue({ order: bitacoraOrder });
+      const bitacoraEq2 = vi.fn().mockReturnValue({ order: () => ({ order: bitacoraOrder }) });
       const bitacoraEq1 = vi.fn().mockReturnValue({ eq: bitacoraEq2 });
       const bitacoraSelect = vi.fn().mockReturnValue({ eq: bitacoraEq1 });
       mockedFrom.mockImplementation((tabla: string) => {
@@ -125,7 +125,7 @@ describe("cierre service", () => {
       const bitacoraOrder = vi.fn().mockResolvedValue({ data: null, error: null });
       mockedFrom.mockImplementation((tabla: string) => {
         if (tabla === "bitacora_actividad") {
-          return { select: () => ({ eq: () => ({ eq: () => ({ order: bitacoraOrder }) }) }) };
+          return { select: () => ({ eq: () => ({ eq: () => ({ order: () => ({ order: bitacoraOrder }) }) }) }) };
         }
         return { select: () => ({ eq: () => ({ order: () => ({ order: orderFn }) }) }) };
       });
