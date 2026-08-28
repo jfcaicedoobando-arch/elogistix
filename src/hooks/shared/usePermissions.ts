@@ -30,6 +30,7 @@ import {
   ADJUNTAR_XML_FACTURA_ENTRANTE,
   TENANT_ADMINS,
   hasRole as has,
+  puedeVerCostosCotizacion,
 } from "./permissionMatrix";
 
 /**
@@ -43,7 +44,7 @@ import {
  * consumidores existentes.
  */
 export function usePermissions() {
-  const { role, effectiveRole } = useAuth();
+  const { role, effectiveRole, user } = useAuth();
   const roleStr = effectiveRole as AppRole | null;
 
   const canAdminTenant = has(TENANT_ADMINS, roleStr);
@@ -55,6 +56,17 @@ export function usePermissions() {
   const canViewFinancials = has(FINANCE_VIEWERS, roleStr);
   // QA B-07: costo/utilidad/margen ocultos para roles comerciales.
   const canViewCosts = has(COST_VIEWERS, roleStr);
+  /**
+   * C9 — costo/margen de UNA cotización concreta.
+   *
+   * Espejo EXACTO de `public.puede_ver_costos_cotizacion_propia()`: el criterio
+   * de "cotización propia" es `created_by = usuario actual`, ni el vendedor
+   * asignado ni el dueño de la oportunidad. Si cambia la función SQL hay que
+   * cambiar esto también.
+   */
+  const canViewCostsOfCotizacion = (createdBy: string | null | undefined): boolean =>
+    puedeVerCostosCotizacion(roleStr, !!createdBy && !!user?.id && createdBy === user.id);
+
   const canEditSales = has(SALES, roleStr);
   const canCotizarSinDesglose = has(COTIZAR_SIN_DESGLOSE, roleStr);
   // v13.303.26 — `canCrearEmbarqueLibre` eliminado.
@@ -102,6 +114,7 @@ export function usePermissions() {
     isOperador,
     canViewFinancials,
     canViewCosts,
+    canViewCostsOfCotizacion,
     role: effectiveRole,
     canAdminTenant,
     canAdminCuentasBancarias,

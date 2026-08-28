@@ -86,17 +86,28 @@ export function useBulkImport<T>({ mapRows, onCommit, onSuccess }: UseBulkImport
       onSuccess?.(payloads.length);
     } catch (e) {
       const detalle = e instanceof Error ? e.message : "Error al importar.";
-      // L3: el corte parcial es la información que el usuario necesita para
-      // reintentar sólo lo que faltó (como saber en qué página se atoró).
+      // L3: además del corte parcial, decimos EXACTAMENTE en qué fila del CSV
+      // se atoró. Analogía: no basta decir "se imprimieron 40 hojas", hay que
+      // decir "se atoró en la hoja 41" para volver a meter sólo esas.
+      const pendientes = preview.valid.slice(guardados);
+      const primeraFallida = pendientes[0]?.rowNumber;
+      const ultimaFallida = pendientes[pendientes.length - 1]?.rowNumber;
+      const rango =
+        primeraFallida === undefined
+          ? ""
+          : primeraFallida === ultimaFallida
+            ? ` Falta la fila ${primeraFallida} del archivo.`
+            : ` Faltan las filas ${primeraFallida} a ${ultimaFallida} del archivo.`;
       setError(
         guardados > 0
-          ? `${detalle} Se guardaron ${guardados} de ${preview.valid.length} registros; vuelve a cargar sólo las filas restantes.`
-          : detalle,
+          ? `${detalle} Se guardaron ${guardados} de ${preview.valid.length} registros.${rango}`
+          : `${detalle}${rango}`,
       );
       setParcialCount(guardados);
       if (guardados > 0) onSuccess?.(guardados);
       setStep("preview");
     }
+
   };
 
   return {
