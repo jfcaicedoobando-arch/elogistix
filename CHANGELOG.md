@@ -6,6 +6,7 @@
 - **Ola E1 · Integridad financiera (N-F3, C1-res, N22, N24)**: una factura en moneda extranjera sin tipo de cambio DOF ya no se aprueba (antes se valuaba 1:1, como si el dólar costara un peso); la cartera de cliente convierte las notas de crédito a la moneda de la factura; `bbva_movimientos` obliga a que un registro sea cargo **o** abono, nunca ambos ni negativo, y el saldo de anticipos de proveedor nunca puede ser negativo ni mayor al monto original.
 - **Ola E1 · Fechas y limpieza (N12, N21, N23, C8-res)**: los días restantes de REP se calculan con hora de Ciudad de México; al eliminar un pago de proveedor se dan de baja correctamente los movimientos bancarios generados; la función de tipos de cambio responde 400 ante fechas imposibles (`2023-02-31`) en lugar de devolver el tipo de cambio de hoy; y tras el timbrado, XML, PDF y fecha de timbrado quedan inmutables desde la app.
 - **Guards**: nuevo `supabase/tests/ola_e1_guards.sql` (triggers, permisos, `WITH CHECK`, CHECKs y espejos) y pruebas unitarias de `validarCargoAbono` y de validación de fechas civiles.
+- **Higiene de repositorio**: espejos canónicos y manifiesto sincronizados (1150 migraciones), re-emisión con timestamp posterior de `eliminar_pago_proveedor`, `_cxp_validar_aprobacion` (con su REVOKE/GRANT) y `v_proveedor_facturas_saldo`; mensajes amigables para los códigos `LC_*` nuevos; `ncFromCfdi` usa el alias central `Moneda` y las props de `NuevaNotaCreditoFormFields` se agruparon en `origen`/`datos`/`divisa`.
 
 ## [13.779.0] - 2026-08-28
 ### Corregido
