@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.778.1] - 2026-08-28
+### Corregido
+- **CI en verde tras la Ola A (13.778.0)**: los espejos canónicos de `generar_liquidacion_comision` y `_cxp_validar_aprobacion` quedaron alineados byte a byte con las migraciones vigentes (`20260828031423`, `20260828031517`) —el guardrail `audit:replay-mirror` exige que en replay limpio el espejo y la migración digan lo mismo— y el manifiesto de release se sincronizó con las 1142 migraciones en disco.
+
 ## [13.778.0] - 2026-08-28
 ### Corregido
 - **Comisiones "Por recuperar" ahora se descuentan (antes se perdían)**: `generar_liquidacion_comision` sólo sumaba `Devengada`, así que una comisión ya pagada cuya factura se canceló o se acreditó quedaba huérfana y la empresa la pagaba dos veces. Ahora se descuentan de la liquidación del periodo (de la más antigua a la más reciente, sólo hasta donde alcance el devengo), quedan marcadas y ligadas a esa liquidación con nota, y el remanente sigue pendiente para la siguiente.
