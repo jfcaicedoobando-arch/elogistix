@@ -4,6 +4,7 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import { run } from "@/lib/supabase/response";
+import { mapConciliacionError, MovimientoVinculoError } from "./conciliacionErrors";
 import {
   bitacoraDesconciliarMovimiento,
   bitacoraIgnorarMovimiento,
