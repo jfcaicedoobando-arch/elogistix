@@ -10994,22 +10994,22 @@ CREATE TABLE public.proveedor_notas_credito (
     tipo_cambio numeric
 );
 CREATE VIEW public.v_proveedor_facturas_saldo WITH (security_invoker='true') AS
- SELECT pf.id AS proveedor_factura_id,
-    pf.organization_id,
-    pf.total,
+ SELECT id AS proveedor_factura_id,
+    organization_id,
+    total,
     COALESCE(( SELECT sum(pp.monto_en_moneda_factura) AS sum
            FROM public.pagos_proveedor pp
           WHERE ((pp.proveedor_factura_id = pf.id) AND (pp.deleted_at IS NULL))), (0)::numeric) AS pagado,
     COALESCE(( SELECT sum(public.monto_pago_en_moneda_factura(nc.monto, (nc.moneda)::text, nc.tipo_cambio, (pf.moneda)::text)) AS sum
            FROM public.proveedor_notas_credito nc
           WHERE ((nc.proveedor_factura_id = pf.id) AND (nc.estado = 'Aplicada'::public.estado_nota_credito_proveedor) AND (nc.deleted_at IS NULL))), (0)::numeric) AS notas_credito_aplicadas,
-    ((pf.total - COALESCE(( SELECT sum(pp.monto_en_moneda_factura) AS sum
+    ((total - COALESCE(( SELECT sum(pp.monto_en_moneda_factura) AS sum
            FROM public.pagos_proveedor pp
           WHERE ((pp.proveedor_factura_id = pf.id) AND (pp.deleted_at IS NULL))), (0)::numeric)) - COALESCE(( SELECT sum(public.monto_pago_en_moneda_factura(nc.monto, (nc.moneda)::text, nc.tipo_cambio, (pf.moneda)::text)) AS sum
            FROM public.proveedor_notas_credito nc
           WHERE ((nc.proveedor_factura_id = pf.id) AND (nc.estado = 'Aplicada'::public.estado_nota_credito_proveedor) AND (nc.deleted_at IS NULL))), (0)::numeric)) AS saldo
    FROM public.proveedor_facturas pf
-  WHERE (pf.deleted_at IS NULL);
+  WHERE (deleted_at IS NULL);
 CREATE VIEW public.cxp_alertas_vencimiento WITH (security_invoker='on') AS
  SELECT pf.id AS proveedor_factura_id,
     pf.organization_id,
@@ -26732,14 +26732,14 @@ CREATE TABLE public.embarques (
     CONSTRAINT embarques_volumen_nonneg CHECK ((volumen_m3 >= (0)::numeric))
 );
 CREATE VIEW public.embarques_interno_v WITH (security_invoker='true') AS
- SELECT e.id,
-    e.organization_id,
-    e.cerrado_snapshot,
-    e.tarifa_delta_jsonb,
-    e.reabierto_motivo,
-    e.created_by_email
+ SELECT id,
+    organization_id,
+    cerrado_snapshot,
+    tarifa_delta_jsonb,
+    reabierto_motivo,
+    created_by_email
    FROM public.embarques_internos_src() e(id, organization_id, cerrado_snapshot, tarifa_delta_jsonb, reabierto_motivo, created_by_email)
-  WHERE (public.is_org_member(e.organization_id) AND (NOT public.has_role(( SELECT auth.uid() AS uid), 'cliente'::public.app_role)) AND (NOT public.has_role(( SELECT auth.uid() AS uid), 'agente_carga'::public.app_role)));
+  WHERE (public.is_org_member(organization_id) AND (NOT public.has_role(( SELECT auth.uid() AS uid), 'cliente'::public.app_role)) AND (NOT public.has_role(( SELECT auth.uid() AS uid), 'agente_carga'::public.app_role)));
 CREATE TABLE public.eventos_embarque (
     id uuid DEFAULT gen_random_uuid() NOT NULL,
     embarque_id uuid NOT NULL,
@@ -31453,4 +31453,4 @@ GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.v_saldos_cuentas_bancarias TO 
 GRANT ALL ON TABLE public.v_saldos_cuentas_bancarias TO service_role;
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.vendedora_config TO authenticated;
 GRANT ALL ON TABLE public.vendedora_config TO service_role;
-ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public GRANT ALL ON FUNCTIONS  TO authenticated;
+ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public GRANT ALL ON FUNCTIONS TO authenticated;
