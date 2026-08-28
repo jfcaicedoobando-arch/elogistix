@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.779.0] - 2026-08-28
+### Corregido
+- **Días de demora del tablero alineados con la facturación (hallazgo 8-A)**: `dashboard_details_datos` ya no asume ETA + 7 días libres en UTC; usa la fecha real de descarga (evento de tracking o contenedor), los días libres reales (override del contenedor → condiciones de la naviera → fallback 7) y calcula el "hoy" en hora de Ciudad de México. Era como medir la estadía de un coche con el reloj de otro país y una tarifa inventada: por las tardes el tablero cobraba un día extra y no coincidía con lo que factura `calcular_demoras_embarque`. Cada alerta indica si su base es real o estimada.
+- **Notas de crédito de proveedor en otra moneda (hallazgo 8-B)**: `proveedor_notas_credito` gana `tipo_cambio` (MXN por 1 USD/EUR) con anclaje automático al DOF de la fecha de la NC (`trg_nc_prov_tc_convertible`), se bloquea el cruce USD↔EUR (`LC_NC_PROV_MONEDA_NO_CONVERTIBLE`) y tanto `v_proveedor_facturas_saldo` como `saldo_factura_proveedor` convierten la NC a la moneda de la factura. Antes una NC de $1,000 MXN borraba 1,000 USD de deuda: como pagar una cuenta en dólares con billetes de pesos y que la caja no notara la diferencia. El modal de captura ya permite elegir moneda y tipo de cambio, y muestra el equivalente contra el saldo.
+
 ## [13.778.2] - 2026-08-28
 ### Corregido
 - **Candado CI service_role-only sincronizado**: `public._cxp_validar_aprobacion(uuid, text)` quedó registrada en `supabase/tests/rls/_ci_service_role_only.sql`. Es como avisar al portero que hay un cuarto nuevo con llave: la migración ya la cerró con REVOKE, pero la lista canónica no la conocía y el candado bidireccional la marcaba como faltante.
