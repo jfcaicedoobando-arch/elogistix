@@ -18,8 +18,8 @@ BEGIN
   VALUES ('TEST RECHAZO CXP', 'TRC000000XX0', 'basico', true)
   RETURNING id INTO v_org;
 
-  INSERT INTO public.clientes (organization_id, nombre, rfc)
-  VALUES (v_org, 'CLIENTE RECHAZO', '') RETURNING id INTO v_cli;
+  INSERT INTO public.clientes (organization_id, nombre, rfc, email)
+  VALUES (v_org, 'CLIENTE RECHAZO', '', 'cxp-rechazo@test.mx') RETURNING id INTO v_cli;
 
   INSERT INTO public.embarques (organization_id, cliente_id, expediente, modo, tipo)
   VALUES (v_org, v_cli, 'ELIMP09901', 'Marítimo'::public.modo_transporte,

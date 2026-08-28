@@ -87,8 +87,8 @@ BEGIN
   END IF;
 
   -- 3) Ligar un cliente existente de la misma organización sí funciona.
-  INSERT INTO public.clientes (organization_id, nombre, rfc, cp, regimen_fiscal)
-  VALUES (v_org, 'CLIENTE OLA6 COMPLETO', 'CLO260821AB2', '04360', '601')
+  INSERT INTO public.clientes (organization_id, nombre, rfc, cp, regimen_fiscal, email)
+  VALUES (v_org, 'CLIENTE OLA6 COMPLETO', 'CLO260821AB2', '04360', '601', 'ola6-completo@test.mx')
   RETURNING id INTO v_cli;
 
   INSERT INTO public.crm_leads (organization_id, empresa, estado)
@@ -103,8 +103,8 @@ BEGIN
   END IF;
 
   -- 4) Un cliente de otra organización no puede ligarse.
-  INSERT INTO public.clientes (organization_id, nombre, rfc)
-  VALUES (v_org_ajena, 'CLIENTE AJENO OLA6', 'CAJ260821AB3')
+  INSERT INTO public.clientes (organization_id, nombre, rfc, email)
+  VALUES (v_org_ajena, 'CLIENTE AJENO OLA6', 'CAJ260821AB3', 'ola6-ajeno@test.mx')
   RETURNING id INTO v_cli_ajeno;
 
   INSERT INTO public.crm_leads (organization_id, empresa, estado)

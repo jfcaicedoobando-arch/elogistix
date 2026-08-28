@@ -22,8 +22,8 @@ BEGIN;
 INSERT INTO public.organizations (id, nombre)
 VALUES ('ee5ee5ee-0000-4000-8000-000000000010', 'Test FIX3 Fecha Pago');
 
-INSERT INTO public.clientes (id, organization_id, nombre)
-VALUES ('ee5ee5ee-0000-4000-8000-000000000011', 'ee5ee5ee-0000-4000-8000-000000000010', 'Cliente FIX3');
+INSERT INTO public.clientes (id, organization_id, nombre, email)
+VALUES ('ee5ee5ee-0000-4000-8000-000000000011', 'ee5ee5ee-0000-4000-8000-000000000010', 'Cliente FIX3', 'fix3-pago-fecha@test.mx');
 
 -- Factura emitida HOY (para CASO 1/2/3) y factura emitida hace 10 días (CASO 4).
 INSERT INTO public.facturas (id, organization_id, numero, cliente_id, subtotal, iva, total, moneda, tipo_cambio, estado, fecha_emision)

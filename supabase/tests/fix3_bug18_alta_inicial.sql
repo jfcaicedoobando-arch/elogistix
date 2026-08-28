@@ -36,7 +36,7 @@ DECLARE
   v_sin_permiso text[];
 BEGIN
   INSERT INTO public.organizations (id, nombre) VALUES (v_org, 'TEST FIX3 BUG18');
-  INSERT INTO public.clientes (id, organization_id, nombre) VALUES (v_cli, v_org, 'Cliente FIX3');
+  INSERT INTO public.clientes (id, organization_id, nombre, email) VALUES (v_cli, v_org, 'Cliente FIX3', 'fix3-bug18@test.mx');
   INSERT INTO public.embarques (id, organization_id, cliente_id, modo, tipo)
   VALUES (v_emb, v_org, v_cli, 'Marítimo', 'Importación');
   -- Actor de plataforma: super_admin es el único rol global no deprecado que

@@ -68,8 +68,8 @@ END $$;
 INSERT INTO public.organizations (id, nombre)
 VALUES ('ff6ff6ff-0000-4000-8000-000000000010', 'Test FIX3 updated_at');
 
-INSERT INTO public.clientes (id, organization_id, nombre)
-VALUES ('ff6ff6ff-0000-4000-8000-000000000011', 'ff6ff6ff-0000-4000-8000-000000000010', 'Cliente FIX3');
+INSERT INTO public.clientes (id, organization_id, nombre, email)
+VALUES ('ff6ff6ff-0000-4000-8000-000000000011', 'ff6ff6ff-0000-4000-8000-000000000010', 'Cliente FIX3', 'fix3-updated-at@test.mx');
 
 INSERT INTO public.embarques (id, organization_id, cliente_id, modo, tipo)
 VALUES ('ff6ff6ff-0000-4000-8000-000000000020', 'ff6ff6ff-0000-4000-8000-000000000010',

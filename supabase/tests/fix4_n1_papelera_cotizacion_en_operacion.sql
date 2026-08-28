@@ -36,7 +36,7 @@ DECLARE
   v_emb_link uuid;
 BEGIN
   INSERT INTO public.organizations (id, nombre) VALUES (v_org, 'TEST FIX4 N1');
-  INSERT INTO public.clientes (id, organization_id, nombre) VALUES (v_cli, v_org, 'Cliente N1');
+  INSERT INTO public.clientes (id, organization_id, nombre, email) VALUES (v_cli, v_org, 'Cliente N1', 'fix4-n1@test.mx');
 
   INSERT INTO public.cotizaciones (id, organization_id, cliente_id, estado, folio, modo, tipo, conceptos_venta)
   VALUES (v_cot,  v_org, v_cli, 'Aceptada'::public.estado_cotizacion, 'COT-FIX4-N1-1',

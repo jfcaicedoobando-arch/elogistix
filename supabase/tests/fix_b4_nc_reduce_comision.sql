@@ -32,8 +32,8 @@ BEGIN;
 INSERT INTO public.organizations (id, nombre)
 VALUES ('bb4b4b4b-0000-4000-8000-000000000010', 'Test B4 NC Comisión');
 
-INSERT INTO public.clientes (id, organization_id, nombre)
-VALUES ('bb4b4b4b-0000-4000-8000-000000000011', 'bb4b4b4b-0000-4000-8000-000000000010', 'Cliente B4');
+INSERT INTO public.clientes (id, organization_id, nombre, email)
+VALUES ('bb4b4b4b-0000-4000-8000-000000000011', 'bb4b4b4b-0000-4000-8000-000000000010', 'Cliente B4', 'fix-b4@test.mx');
 
 INSERT INTO public.embarques (id, organization_id, cliente_id, modo, tipo, vendedora_id, tipo_cambio_usd)
 VALUES ('bb4b4b4b-0000-4000-8000-000000000020', 'bb4b4b4b-0000-4000-8000-000000000010',
