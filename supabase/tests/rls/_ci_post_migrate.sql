@@ -110,6 +110,19 @@ END $$;
 
 
 -- ============================================================================
+-- Ola 1 C6: re-cierre del DELETE físico de facturas.
+-- El `GRANT ... DELETE ON ALL TABLES` de arriba (necesario en el Postgres bare
+-- de CI) reinstala el privilegio que la migración de la Ola 1 revocó. Se cierra
+-- de nuevo aquí para que CI sea fiel a prod: las facturas sólo se cancelan.
+-- ============================================================================
+DO $$
+BEGIN
+  IF to_regclass('public.facturas') IS NOT NULL THEN
+    EXECUTE 'REVOKE DELETE ON public.facturas FROM authenticated, anon';
+  END IF;
+END $$;
+
+-- ============================================================================
 -- Triggers de comisiones.
 --
 -- Antes se dropeaba `trg_pago_factura_comision_ins` aquí para evitar un bug
