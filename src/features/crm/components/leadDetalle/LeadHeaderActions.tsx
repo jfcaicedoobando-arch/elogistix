@@ -9,6 +9,7 @@
  */
 import { BadgeCheck, Briefcase, Repeat, Trash2, UserCheck } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import LeadAccionesEtapa from "./LeadAccionesEtapa";
 import { Button } from "@/components/ui/button";
 import type { CrmLeadEstado } from "@/features/crm/hooks";
 
@@ -47,23 +48,16 @@ export default function LeadHeaderActions({
   return (
     <div className="flex gap-2">
       {estado === "Convertido" ? <Badge variant="outline">Convertido</Badge> : null}
-      {mostrarTomar && onTomar && (
-        <Button variant="default" onClick={onTomar} disabled={tomando}>
-          <UserCheck className="h-4 w-4 mr-1" />
-          {tomando ? "Tomando…" : "Tomar lead"}
-        </Button>
-      )}
-      {mostrarCalificar && onCalificar && (
-        <Button variant="default" onClick={onCalificar} disabled={calificando}>
-          <BadgeCheck className="h-4 w-4 mr-1" />
-          {calificando ? "Calificando…" : "Calificar como prospecto"}
-        </Button>
-      )}
-      {mostrarNuevaOportunidad && onNuevaOportunidad && (
-        <Button variant="default" onClick={onNuevaOportunidad}>
-          <Briefcase className="h-4 w-4 mr-1" /> Nueva oportunidad
-        </Button>
-      )}
+      <LeadAccionesEtapa
+        mostrarTomar={mostrarTomar}
+        onTomar={onTomar}
+        tomando={tomando}
+        mostrarCalificar={mostrarCalificar}
+        onCalificar={onCalificar}
+        calificando={calificando}
+        mostrarNuevaOportunidad={mostrarNuevaOportunidad}
+        onNuevaOportunidad={onNuevaOportunidad}
+      />
       {canEdit && (
         <Button variant="outline" onClick={onConvertir}>
           <Repeat className="h-4 w-4 mr-1" />
