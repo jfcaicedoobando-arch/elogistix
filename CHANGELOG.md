@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.777.3] - 2026-08-28
+### Corregido
+- **CI candado service_role-only**: se sincronizó `supabase/tests/rls/_ci_service_role_only.sql` con las 13 funciones internas nuevas (tableros, cierre de periodo, guardas de organización/periodo/UUID fiscal, demo y réplica de conceptos). La prueba vuelve a pasar sin drift.
+
 ## [13.777.2] - 2026-08-28
 ### Verificado
 - **Cierre de la auditoría 3-4**: se revisaron los 26 hallazgos del reporte nuevo contra la base y el código reales. Todos los críticos y altos ya estaban corregidos en las olas anteriores (el reporte se hizo sobre una versión previa): las llaves de organización en las cuatro tablas financieras (H6) ya existen y están validadas, y los filtros de Embarques, Clientes y Cotizaciones ya se guardan en la liga (H8/M8) —verificado en el navegador—.

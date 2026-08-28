@@ -25,14 +25,26 @@
 DROP TABLE IF EXISTS pg_temp._ci_service_role_only;
 CREATE TEMP TABLE _ci_service_role_only (fn text);
 INSERT INTO _ci_service_role_only (fn) VALUES
+  ('public._assert_concepto_no_proformado()'),
+  ('public._assert_padre_misma_org()'),
+  ('public._assert_periodo_abierto()'),
+  ('public._assert_uuid_fiscal_single_write()'),
   ('public._audit_embarques_agregar(jsonb, jsonb)'),
   ('public._audit_embarques_umbrales(uuid)'),
   ('public._cotizaciones_bloquear_auto_aceptacion()'),
   ('public._cotizaciones_bloquear_envio_sin_oportunidad()'),
+  ('public._crear_embarque_replicar_conceptos(uuid, uuid, uuid, uuid[], jsonb)'),
   ('public._crm_vincular_cotizacion_core(uuid, jsonb, uuid, uuid, text, uuid)'),
+  -- Cálculo interno de los tableros: sólo lo invocan las RPC DEFINER
+  -- dashboard_summary()/dashboard_details() (enmascaran costos por rol).
+  ('public._dashboard_details_calc()'),
+  ('public._dashboard_summary_calc()'),
   ('public._recalc_estado_proveedor_factura(uuid)'),
   ('public._reprocesar_comisiones_org(uuid)'),
+  ('public._seed_demo_limpiar_financiero()'),
+  ('public._sync_user_roles_desde_membership()'),
   ('public.adjuntar_xml_entrante_verificado(uuid, uuid, text, text, text, text, text, text, date, numeric, text, numeric)'),
+
   -- RPC vieja del buzón CxP (M-7): cerrada a todos en migraciones; el
   -- re-cierre la mantiene así (grant a service_role por compatibilidad con
   -- el post_migrate previo a FIX4).
@@ -40,13 +52,18 @@ INSERT INTO _ci_service_role_only (fn) VALUES
   ('public.assert_pago_sin_rep_vivo_delete()'),
   ('public.calc_pago_retenciones()'),
   ('public.calcular_comision_pago()'),
+  ('public.cierre_periodo_fecha(uuid)'),
   ('public.comision_embarques_de_factura(uuid)'),
   ('public.crm_backfill_cotizaciones_sin_oportunidad()'),
   ('public.cron_try_lock(text, integer, text)'),
   ('public.cron_unlock(text)'),
+  ('public.dashboard_details_datos()'),
+  ('public.dashboard_summary_datos()'),
   ('public.delete_email(text, bigint)'),
   ('public.email_send_log_touch(text, text, text, text, text)'),
   ('public.enqueue_email(text, jsonb)'),
+  ('public.ensure_demo_membership(uuid)'),
+
   -- Función trigger de auth.users: la ejecuta el trigger, nunca un cliente.
   ('public.handle_new_user_signup()'),
   ('public.marcar_facturas_vencidas()'),
