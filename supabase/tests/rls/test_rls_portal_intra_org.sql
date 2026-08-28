@@ -145,6 +145,10 @@ BEGIN
   -- mandar a papelera una factura con pagos vigentes o emitida sin cancelar:
   -- replicamos el camino real (quitar pagos + cancelar) antes del soft-delete,
   -- que es lo único que verifica esta sección.
+  -- v13.784.0 — la Ola E4 pasó `comisiones_devengadas.pago_factura_id` a
+  -- ON DELETE RESTRICT: hay que soltar la comisión antes de borrar el pago.
+  DELETE FROM public.comisiones_devengadas
+   WHERE pago_factura_id IN (SELECT id FROM public.pagos_factura WHERE factura_id = fac_a);
   DELETE FROM public.pagos_factura WHERE factura_id = fac_a;
   UPDATE public.facturas SET estado = 'Cancelada' WHERE id = fac_a;
   UPDATE public.facturas            SET deleted_at = now() WHERE id = fac_a;
