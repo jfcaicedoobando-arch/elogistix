@@ -7,6 +7,7 @@
  * Un click en una fila lleva al detalle del embarque para operar los conceptos.
  */
 import { useMemo, useState } from "react";
+import { useFiltroUrl, useTextoUrl } from "@/hooks/shared";
 import { useQuery } from "@tanstack/react-query";
 import { compras } from "../queryKeys";
 import { GitCompare, AlertTriangle, CheckCircle2, Clock } from "lucide-react";
