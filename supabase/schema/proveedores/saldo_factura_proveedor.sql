@@ -17,6 +17,7 @@ DECLARE
   v_pagado numeric;
   v_nc numeric;
   v_incompleto boolean;
+  v_nc_incompleto boolean;
 BEGIN
   IF v_oid IS NULL THEN
     RAISE EXCEPTION 'LC_ORG_SIN_CONTEXTO: no hay organización activa' USING ERRCODE = '42501';
@@ -40,7 +41,10 @@ BEGIN
   WHERE pp.proveedor_factura_id = p_factura_id
     AND pp.deleted_at IS NULL;
 
-  SELECT COALESCE(SUM(nc.monto), 0) INTO v_nc
+  -- Ola 17 · H8-B: la NC se valúa en la moneda de la factura con su TC DOF.
+  SELECT COALESCE(SUM(public.monto_pago_en_moneda_factura(nc.monto, nc.moneda::text, nc.tipo_cambio, v_f.moneda::text)), 0),
+         BOOL_OR(nc.moneda::text <> v_f.moneda::text AND COALESCE(nc.tipo_cambio, 0) <= 0)
+    INTO v_nc, v_nc_incompleto
   FROM public.proveedor_notas_credito nc
   WHERE nc.proveedor_factura_id = p_factura_id
     AND nc.deleted_at IS NULL
@@ -53,7 +57,7 @@ BEGIN
     'pagado', ROUND(v_pagado, 2),
     'nc_aplicada', ROUND(v_nc, 2),
     'saldo', ROUND(GREATEST(COALESCE(v_f.total, 0) - v_pagado - v_nc, 0), 2),
-    'flujo_incompleto', COALESCE(v_incompleto, false)
+    'flujo_incompleto', COALESCE(v_incompleto, false) OR COALESCE(v_nc_incompleto, false)
   );
 END;
 $function$;
