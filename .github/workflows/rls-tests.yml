@@ -41,6 +41,9 @@ concurrency:
 env:
   # Pinneado por digest para evitar drift entre runs.
   # Equivale a postgres:17.9 (linux/amd64).
+  # IMPORTANTE: al subir esta imagen hay que subir también la mayor del cliente
+  # en .github/actions/setup-pg-client (input `version`, hoy 17). El runner
+  # ubuntu-24.04 trae pg_dump 16, que aborta contra un servidor 17.
   POSTGRES_IMAGE: postgres@sha256:66b6a97eac1771fc78bd201b918b4253859f436c6913aeede97bd5366cce89ae
 
 jobs:
