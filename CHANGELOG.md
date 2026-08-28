@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.782.2] - 2026-08-28
+### Cambiado
+- **CI · GitHub Actions**: actualizadas a su última versión *dentro de la misma línea mayor* (sin cambios de comportamiento, como cambiar el aceite y no el motor), siempre ancladas por SHA: `actions/checkout` v6.1.0, `actions/cache` v5.1.0, `denoland/setup-deno` v2.0.5, `github/codeql-action` v4.37.9, `dorny/paths-filter` v3.0.4 y `actions/dependency-review-action` v4.9.0. Se dejan pendientes los saltos mayores (checkout v7, cache v6, github-script v9, paths-filter v4, dependency-review v5) porque cambian el runtime a Node 24 / ESM.
+### Corregido
+- **Baseline de esquema**: la collation `lc_unicode_upper` se colocó en el orden que emite el `pg_dump` de CI (justo después de `CREATE SCHEMA public`).
+
 ## [13.782.1] - 2026-08-28
 ### Corregido
 - **CI · Suites RLS**: whitelist de `tc_dof_moneda` y `convertir_monto_dof` en el linter de alcance por organización (son catálogos globales de tipo de cambio, no tienen dueño), y `seed_presupuesto_categorias` vuelve a poder sembrar categorías en CI al aceptar miembros de `service_role`.
