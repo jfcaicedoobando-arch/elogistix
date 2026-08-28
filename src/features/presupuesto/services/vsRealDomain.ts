@@ -43,6 +43,7 @@ export type CxpRow = {
   /** BL-07: base SIN IVA; los presupuestos se capturan como gasto neto. */
   subtotal: number | string;
   moneda: string | null;
+  /** Paridad MXN por 1 USD (única columna de T/C que existe en CxP). */
   tipo_cambio_usd: number | string | null;
 };
 /** BL-07: NC de proveedor aplicada (monto + TC heredado de la factura padre). */
@@ -51,7 +52,14 @@ export type NcCxPRow = {
   monto: number | string;
   moneda: string | null;
   tipo_cambio_usd: number | string | null;
+  /**
+   * N9: true cuando la paridad viene de la NC misma (por lo tanto corresponde a
+   * SU moneda). Si es false/omitido, la paridad se heredó de la factura padre y
+   * sólo es válida para USD.
+   */
+  paridad_propia?: boolean;
 };
+
 export type LiqRow = { total_mxn: number | string; periodo: string };
 export type CatRow = { id: string; nombre: string };
 
