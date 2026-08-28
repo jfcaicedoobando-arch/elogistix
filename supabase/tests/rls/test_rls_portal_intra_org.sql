@@ -146,11 +146,15 @@ BEGIN
   -- replicamos el camino real (quitar pagos + cancelar) antes del soft-delete,
   -- que es lo único que verifica esta sección.
   -- v13.784.0 — la Ola E4 pasó `comisiones_devengadas.pago_factura_id` a
-  -- ON DELETE RESTRICT: hay que soltar la comisión antes de borrar el pago.
-  UPDATE public.comisiones_devengadas
-     SET pago_factura_id = NULL
+  -- ON DELETE RESTRICT y prohibió borrar comisiones. Esta limpieza es sólo de
+  -- fixture (no es el camino de negocio), así que se hace con
+  -- `session_replication_role = replica` para saltar los triggers y se
+  -- restaura de inmediato antes de seguir con las aserciones.
+  PERFORM set_config('session_replication_role', 'replica', true);
+  DELETE FROM public.comisiones_devengadas
    WHERE pago_factura_id IN (SELECT id FROM public.pagos_factura WHERE factura_id = fac_a);
   DELETE FROM public.pagos_factura WHERE factura_id = fac_a;
+  PERFORM set_config('session_replication_role', 'origin', true);
   UPDATE public.facturas SET estado = 'Cancelada' WHERE id = fac_a;
   UPDATE public.facturas            SET deleted_at = now() WHERE id = fac_a;
 
