@@ -1,6 +1,11 @@
 # Changelog
 
+## [13.791.2] - 2026-08-28
+### CI
+- Regenerado `supabase/schema/baseline.sql` con Postgres 17.9 sobre base limpia (1162 migraciones): incorpora la devolución de anticipos (N13), el candado `FOR UPDATE` en notas de crédito de proveedor y `_bitacora_cambio_financiero()`.
+
 ## [13.791.1] - 2026-08-28
+
 ### CI
 - Registrado `public._bitacora_cambio_financiero()` en la lista canónica service_role-only: el candado bidireccional de CI ya pasa (58 funciones sin drift).
 
