@@ -3,7 +3,11 @@
  *
  * v13.422.0 — Sustituye la banda fija de 4 KPIs: recupera alto útil y elimina
  * la celda ambigua que mostraba "IEPS" o "Retenciones" en el mismo lugar.
+ * v13.789.0 — La cifra principal es el SUBTOTAL (sin impuestos): todo el cuadre
+ * de costos del ERP (barra de conceptos y trigger `_cxp_validar_aprobacion`)
+ * corre sobre esa base. El total con IVA queda como referencia secundaria.
  */
+
 import { ChevronDown } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { formatCurrency } from "@/lib/formatters";
