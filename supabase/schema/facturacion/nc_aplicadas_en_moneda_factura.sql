@@ -44,6 +44,5 @@ BEGIN
 END;
 $function$;
 
-REVOKE ALL ON FUNCTION public.nc_aplicadas_en_moneda_factura(uuid) FROM PUBLIC;
-REVOKE ALL ON FUNCTION public.nc_aplicadas_en_moneda_factura(uuid) FROM anon;
-GRANT EXECUTE ON FUNCTION public.nc_aplicadas_en_moneda_factura(uuid) TO authenticated, service_role;
+REVOKE ALL ON FUNCTION public.nc_aplicadas_en_moneda_factura(uuid) FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.nc_aplicadas_en_moneda_factura(uuid) TO service_role;

@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.777.5] - 2026-08-28
+### Corregido
+- **CI candado service_role-only (dirección A)**: la re-emisión de espejos había reabierto `EXECUTE` a `authenticated` en `public._crear_embarque_replicar_conceptos` y `public.nc_aplicadas_en_moneda_factura`. Nueva migración de re-cierre (sólo `service_role`), archivos canónicos y `baseline.sql` alineados; manifiesto en 1131 migraciones.
+
 ## [13.777.4] - 2026-08-28
 ### Corregido
 - **CI verde en `audit:tests`, `audit:replay-mirror` y `audit:manifest`**: título de prueba duplicado renombrado en `ConvertirLeadDialog.test.tsx`; espejo `_cxp_validar_aprobacion` sincronizado con la firma vigente (con justificación); nueva migración `20260902004000_replay_mirror_reemision_canonica.sql` que re-emite `nc_aplicadas_en_moneda_factura`, `cartera_pendiente`, `dashboard_summary_datos` y `dashboard_details_datos` para que un replay limpio quede igual a producción; manifiesto actualizado a 1130 migraciones.

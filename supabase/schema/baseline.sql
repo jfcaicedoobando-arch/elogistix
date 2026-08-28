@@ -28576,7 +28576,6 @@ GRANT ALL ON FUNCTION public._cotizaciones_sync_vigencia() TO authenticated;
 GRANT ALL ON FUNCTION public._cotizaciones_sync_vigencia() TO service_role;
 REVOKE ALL ON FUNCTION public._crear_embarque_replicar_conceptos(p_cotizacion_id uuid, p_embarque_id uuid, p_org uuid, p_target_ids uuid[], p_conceptos_venta jsonb) FROM PUBLIC;
 GRANT ALL ON FUNCTION public._crear_embarque_replicar_conceptos(p_cotizacion_id uuid, p_embarque_id uuid, p_org uuid, p_target_ids uuid[], p_conceptos_venta jsonb) TO service_role;
-GRANT ALL ON FUNCTION public._crear_embarque_replicar_conceptos(p_cotizacion_id uuid, p_embarque_id uuid, p_org uuid, p_target_ids uuid[], p_conceptos_venta jsonb) TO authenticated;
 REVOKE ALL ON FUNCTION public._crm_actividad_toca_oportunidad() FROM PUBLIC;
 GRANT ALL ON FUNCTION public._crm_actividad_toca_oportunidad() TO authenticated;
 GRANT ALL ON FUNCTION public._crm_actividad_toca_oportunidad() TO service_role;
