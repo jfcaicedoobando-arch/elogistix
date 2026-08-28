@@ -114444,7 +114444,6 @@
       "20260828011755_afe0166c-66d4-4999-9de6-4830df2027b3.sql",
       "20260828014617_dd6c8201-90ab-47d1-91fa-36e38a0c58bb.sql",
       "20260828015807_2068aa43-8b11-48d1-8f5a-212408bad384.sql",
-      "20260828020849_934b39e8-136b-4982-93c3-8bf07ad092e1.sql",
       "20260829000100_rev5_espejo_notif_rechazo_y_rol_proforma.sql",
       "20260830000100_fix_b6_espejo_pilotos_listas_explicitas.sql",
       "20260831000100_fix3_m6_espejo_adjuntar_xml_verificado.sql",
@@ -114470,7 +114469,8 @@
       "20260902002000_nc_fecha_tolerante_utc.sql",
       "20260902002100_nc_fecha_formato_baseline.sql",
       "20260902003000_fix_numericeger_rpc_embarques.sql",
-      "20260902004000_replay_mirror_reemision_canonica.sql"
+      "20260902004000_replay_mirror_reemision_canonica.sql",
+      "20260902005000_ci_service_role_only_recierre_embarques.sql"
     ]
   }
 }
