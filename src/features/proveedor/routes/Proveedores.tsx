@@ -1,4 +1,7 @@
 import { useEffect, useState } from "react";
+import { useFiltroUrl, useTextoUrl } from "@/hooks/shared";
+
+const ORIGENES_FILTRO = ["todos", "Nacional", "Extranjero"] as const;
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Truck, Plus, Upload } from "lucide-react";
 import { FloatingActionButton } from "@/components/shared/FloatingActionButton";
