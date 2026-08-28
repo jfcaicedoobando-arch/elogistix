@@ -44,6 +44,14 @@ export const LC_CODE_MESSAGES_OPERATIVO_OPERACIONES: Record<string, string> = {
     "La tarifa cambió o venció. Revalida la cotización antes de continuar.",
   LC_RESPUESTA_INVALIDA: "La respuesta del cliente no es válida.",
 
+  // ── Ola 7 · cronología de eventos de embarque ──────────────────────────
+  LC_EVENTO_FECHA_FUTURA:
+    "Ese evento ya ocurrido no puede llevar fecha futura. Corrige la fecha del evento.",
+  LC_EVENTO_ORDEN_INVALIDO:
+    "El orden de los eventos no es posible (por ejemplo, entrega antes del arribo o arribo antes del zarpe). Revisa las fechas.",
+
   // ── Cliente / catálogos ────────────────────────────────────────────────
   LC_CLIENTE_NOMBRE_REQUERIDO: "El nombre del cliente es obligatorio.",
+  LC_EMAIL_DUPLICADO:
+    "Ese correo ya está registrado en otro cliente o contacto de tu organización. Usa uno distinto o edita el registro existente.",
 };
