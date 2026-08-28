@@ -28,6 +28,17 @@ function etiquetaDemora(dias: number): { badge: string; titulo: string } {
   return { badge: `${dias}d`, titulo: `${dias} ${dias === 1 ? "día" : "días"} de demora` };
 }
 
+/**
+ * v13.779.0 · El conteo usa la fecha real de descarga y los días libres de la
+ * naviera. Cuando aún no hay descarga capturada, se estima con la ETA y hay que
+ * decirlo: es la diferencia entre el tablero y lo que se factura.
+ */
+function detalleBase(e: AlertaDemora): string {
+  const libres = e.diasLibres ?? 7;
+  const base = e.baseDemora === "real" ? "descarga real" : "ETA (estimado)";
+  return `${libres} ${libres === 1 ? "día libre" : "días libres"} · base: ${base}`;
+}
+
 
 export const AlertasDemoraCard = memo(function AlertasDemoraCard({ alertas, isLoading }: Props) {
   const navigate = useNavigate();
@@ -47,7 +58,7 @@ export const AlertasDemoraCard = memo(function AlertasDemoraCard({ alertas, isLo
               {...activableConTeclado(() => navigate(`/embarques/${e.id}`))}
               className={`flex items-center gap-3 rounded-lg border p-3 cursor-pointer hover:bg-muted/50 transition-colors ${FOCUS_RING}`}
             >
-              <Hint label={etiquetaDemora(e.diasDemora).titulo}>
+              <Hint label={`${etiquetaDemora(e.diasDemora).titulo} — ${detalleBase(e)}`}>
                 <div
                   className={`shrink-0 h-9 w-9 rounded-full flex items-center justify-center text-label font-bold text-primary-foreground ${
                     e.diasDemora >= 5 ? "bg-destructive" : "bg-warning"
@@ -61,6 +72,9 @@ export const AlertasDemoraCard = memo(function AlertasDemoraCard({ alertas, isLo
                 <p className="text-body font-medium truncate">{e.expediente}</p>
                 <p className="text-body-sm text-muted-foreground truncate">
                   {toTitleCase(e.cliente_nombre)}
+                  {e.baseDemora === "estimada" && (
+                    <span className="ml-1.5 text-label text-warning">· estimado por ETA</span>
+                  )}
                 </p>
               </div>
         <ArrowRight className="h-4 w-4 text-muted-foreground shrink-0" />
