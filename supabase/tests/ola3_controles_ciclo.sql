@@ -90,10 +90,11 @@ BEGIN
   END;
 
   -- ── 3) Cotización aceptada inmutable ───────────────────────────────────
+  -- v13.777.9: cotizaciones no tiene columna total (se deriva de conceptos).
   INSERT INTO public.cotizaciones (organization_id, cliente_id, folio, estado,
-                                   moneda, subtotal, total)
+                                   moneda, subtotal)
   VALUES (v_org, v_cli, 'COT-OLA3-0001', 'Aceptada'::public.estado_cotizacion,
-          'USD'::public.moneda, 1000, 1160)
+          'USD'::public.moneda, 1000)
   RETURNING id INTO v_cot;
 
   BEGIN
