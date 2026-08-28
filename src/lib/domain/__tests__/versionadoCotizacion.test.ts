@@ -71,7 +71,7 @@ describe("construirResumen", () => {
       construirFilaReconciliacion({ concepto: "B", moneda: "USD", cotizado: 200, refrescado: 210, real: 220 }),
     ];
     // v13.778.0: los totales se normalizan a MXN; con T/C 1 el resultado es igual.
-    const r = construirResumen(filas, undefined, { usd_mxn: 1 });
+    const r = construirResumen(filas, undefined, { usd: 1 });
     expect(r.total_cotizado).toBe(300);
     expect(r.total_real).toBe(330);
     expect(r.moneda_total).toBe("MXN");
