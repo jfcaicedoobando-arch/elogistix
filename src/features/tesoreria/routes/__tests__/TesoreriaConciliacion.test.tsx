@@ -64,12 +64,17 @@ const movimientos = [
 ];
 
 function renderPage() {
+  // v13.777.7 — la página lee el filtro `estado` de la URL con nuqs
+  // (`useFiltroUrl`), así que necesita el adapter de pruebas además del router.
   return render(
-    <MemoryRouter>
-      <TesoreriaConciliacion />
-    </MemoryRouter>,
+    <NuqsTestingAdapter>
+      <MemoryRouter>
+        <TesoreriaConciliacion />
+      </MemoryRouter>
+    </NuqsTestingAdapter>,
   );
 }
+
 
 function seleccionarCuenta() {
   const [selectCuenta] = screen.getAllByTestId("mock-select");
