@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.777.13] - 2026-08-28
+### Corregido
+- **`baseline.sql` regenerado desde el replay real (fin del drift de formato)**: el snapshot traía bloques escritos a mano (líneas en blanco dentro de los cuerpos, encabezados `RETURNS ...` en renglón aparte en `cartera_pendiente`, `crear_clientes`, `is_org_member`, `vincular_anticipo_embarque`, `_factura_tc_dof_obligatorio`) y una definición duplicada de `crear_clientes`, cosas que `pg_dump` nunca emite; el guard de esquema fallaba por formato, no por estructura. Ahora el baseline es exactamente el dump normalizado del replay de las 1140 migraciones (510 funciones, 423 políticas, 296 triggers, 119 tablas, 7 vistas, 1438 grants), verificado recargándolo en base limpia sin errores.
+
 ## [13.777.12] - 2026-08-28
 ### Corregido
 - **`supabase/schema/baseline.sql` sincronizado con el replay de migraciones**: el snapshot congelado no incluía `_cotizaciones_validar_prospecto` (candados prospecto/cliente en cotizaciones), la nueva firma `_cxp_validar_aprobacion(p_factura_id, p_justificacion)` con el three-way match mínimo (Ola 4 · H2), el fallback DOF de EUR (FIX BL-11) en los tableros, el comentario del rediseño CRM en la promoción de leads ni los helpers de seed demo. Se portaron los 48 bloques semánticos pendientes y se verificó recargando el baseline en una base limpia (sin errores) y comparando el dump contra el replay de las 1140 migraciones.
