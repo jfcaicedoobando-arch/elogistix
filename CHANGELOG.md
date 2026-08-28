@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.777.1] - 2026-08-28
+### Agregado
+- **Candado contra parches de texto en migraciones (auditoría 3 · M6)**: la auditoría de migraciones ahora rechaza cualquier migración que modifique una función con `replace(pg_get_functiondef(...))` (regla H9, aplica también al histórico). Ese patrón hacía que el código real de una función dependiera del estado previo de la base, así que una base nueva y producción podían quedar distintas sin que nadie lo notara —causa raíz del error de notas de crédito multi-moneda—. Desde ahora toda función se vuelve a escribir completa.
+
 ## [13.777.0] - 2026-08-28
 ### Agregado
 - **Ola 9 — Cierre de la auditoría 3 (M2, M4, C1b, L1, L2, H8)**.
