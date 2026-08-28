@@ -8555,6 +8555,7 @@ export type Database = {
         Args: { p_estado: string; p_modo: string }
         Returns: string[]
       }
+      _es_rol_interno: { Args: never; Returns: boolean }
       _log_provisioning_step: {
         Args: {
           p_accion: string

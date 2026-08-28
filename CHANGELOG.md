@@ -1,5 +1,13 @@
 # Changelog
 
+## [13.783.0] - 2026-08-28
+### Seguridad
+- **Ola E4 · Anticipos de proveedor (N3)**: se cerró la puerta trasera de la API. Los anticipos y sus aplicaciones ya sólo se pueden crear, aplicar y cancelar por las RPC oficiales (que sí generan el movimiento bancario y la bitácora); desde la app quedan en modo lectura. El cargo bancario ya no puede quedar huérfano: borrar un anticipo con movimiento ligado está bloqueado (`ON DELETE RESTRICT`).
+- **Ola E4 · Movimientos bancarios (N4)**: los importes (cargo/abono/saldo), la fecha y la cuenta de un movimiento son inmutables (`LC_MOVIMIENTO_INMUTABLE`), y se agregó máquina de estados de conciliación: Pendiente → Conciliado/Ignorado y regreso sólo a Pendiente (`LC_MOVIMIENTO_TRANSICION_INVALIDA`). También se valida que la cuenta bancaria sea de la misma organización. Es como un talonario de banco: se anota y ya no se borronea, sólo se cancela y se vuelve a anotar.
+- **Ola E4 · Comisiones y liquidaciones (N8)**: sin escritura directa desde la app (sólo generar / registrar pago / cancelar). Una liquidación Pagada sólo puede pasar a Cancelada y una Cancelada queda cerrada (`LC_LIQUIDACION_TRANSICION_INVALIDA`); el borrado físico está prohibido (`LC_COMISION_DELETE_PROHIBIDO`) y se añadieron CHECK de signo en `comision_mxn`, `porcentaje_aplicado` y `total_mxn`.
+- **Ola E4 · Cascadas financieras (N20)**: `CASCADE → RESTRICT` en `bbva_movimientos.cuenta_bancaria_id`, `pagos_factura.factura_id`, `factura_notas_credito.factura_id` y `comisiones_devengadas.factura_id / pago_factura_id`. Borrar una cuenta o una factura ya no arrastra el historial de conciliación, pagos ni comisiones.
+
+
 ## [13.782.2] - 2026-08-28
 ### Cambiado
 - **CI · GitHub Actions**: actualizadas a su última versión *dentro de la misma línea mayor* (sin cambios de comportamiento, como cambiar el aceite y no el motor), siempre ancladas por SHA: `actions/checkout` v6.1.0, `actions/cache` v5.1.0, `denoland/setup-deno` v2.0.5, `github/codeql-action` v4.37.9, `dorny/paths-filter` v3.0.4 y `actions/dependency-review-action` v4.9.0. Se dejan pendientes los saltos mayores (checkout v7, cache v6, github-script v9, paths-filter v4, dependency-review v5) porque cambian el runtime a Node 24 / ESM.
