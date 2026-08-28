@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.784.0] - 2026-08-28
+### Infraestructura
+- **CI · PostgreSQL 17**: el pipeline de base de datos ahora se valida contra Postgres **17.9** (mismo tren mayor que la base real, que corre 17.6) en lugar de 15.8. Se actualizó el digest pinneado en los 7 servicios de `.github/workflows/rls-tests.yml` y en `scripts/db/local-verify.sh`, y se invalidó la cache del snapshot (`rls-snapshot-pg17.9-…`). Antes revisábamos los planos con una regla distinta a la de la obra: ahora CI y producción usan la misma.
+- **CI · baseline de esquema**: se regeneró `supabase/schema/baseline.sql` con `pg_dump` 17 tras replicar las 1157 migraciones en base limpia. Los únicos cambios son de formato propio de la versión (vistas con columnas calificadas por alias y espaciado en `ALTER DEFAULT PRIVILEGES`); no hay cambios de esquema.
+- **Docs**: `docs/ops/baseline-esquema.md` y `scripts/db/schema-snapshot.sh` documentan ahora 17.9 como versión de referencia para generar la baseline.
+
 ## [13.783.1] - 2026-08-28
 ### Corregido
 - **CI · baseline de esquema**: se regeneró `supabase/schema/baseline.sql` (Postgres 15) con los candados de la Ola E4 (triggers `_bbva_guard_update`, `_liquidacion_guard_estado`, `_prohibir_delete_comisiones`, helper `_es_rol_interno`, CHECKs de montos y FKs RESTRICT).
