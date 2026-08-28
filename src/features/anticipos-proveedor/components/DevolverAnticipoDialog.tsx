@@ -5,7 +5,7 @@
  * proveedor te deposite de vuelta lo que le sobró: el pago sí ocurrió, así que
  * conservamos el movimiento original y damos entrada al reembolso.
  */
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Undo2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -47,20 +47,27 @@ export function DevolverAnticipoDialog({ open, onOpenChange, anticipo }: Props) 
 
   const disponible = anticipo?.disponible ?? 0;
   const moneda = anticipo?.moneda ?? "MXN";
-  const cuentasDeMoneda = cuentas.filter((c) => c.moneda === moneda);
+  const cuentasDeMoneda = useMemo(
+    () => cuentas.filter((c) => c.moneda === moneda),
+    [cuentas, moneda],
+  );
 
-  // Al abrir se propone devolver todo el saldo con fecha de hoy y la primera
-  // cuenta de la misma moneda: el caso normal es "me regresaron el remanente".
+  // Al abrir se propone devolver todo el saldo con fecha de hoy.
   useEffect(() => {
     if (!open || !anticipo) return;
-    setMonto(disponible > 0 ? disponible : null);
+    setMonto(anticipo.disponible > 0 ? anticipo.disponible : null);
     setFecha(hoyMx());
-    setCuentaId(cuentasDeMoneda[0]?.id ?? "");
+    setCuentaId("");
     setReferencia("");
     setMotivo("");
-    // cuentasDeMoneda se recalcula en cada render; basta la primera opción al abrir.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, anticipo?.id]);
+  }, [open, anticipo]);
+
+  // La cuenta se sugiere aparte porque el catálogo puede llegar después de
+  // abrir el diálogo; sólo se rellena si el usuario aún no eligió una.
+  useEffect(() => {
+    if (!open) return;
+    setCuentaId((actual) => actual || (cuentasDeMoneda[0]?.id ?? ""));
+  }, [open, cuentasDeMoneda]);
 
   const excede = (monto ?? 0) > disponible + 0.01;
 
