@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.777.9] - 2026-08-28
+### Corregido
+- **Suite de guards conductuales 58/58**: se cerraron los últimos 3 fallos. `ola3_controles_ciclo.sql` se alineó al esquema vigente (factura con `iva` para el check de totales, `cotizaciones` sin columna `total` y con `modo`/`tipo`, proforma con `expediente`, concepto de venta con `total` y apagado explícito de `app.bypass_cierre` que un helper previo dejaba encendido). `_ci_post_migrate.sql` re-cierra el `DELETE` sobre `public.facturas` para `authenticated`/`anon` (el `GRANT ... ON ALL TABLES` del Postgres bare de CI lo reinstalaba y anulaba el candado C6 de la Ola 1).
+- **Replay desde cero: candado de cotización aceptada**: la re-emisión de espejos `20260902003000` regresó `public.cotizaciones_guard_en_operacion()` a la versión previa (sólo `En operación`, `LC_COTIZACION_EN_OPERACION`). Se actualizó el espejo canónico `supabase/schema/cotizaciones/guards_operacion.sql` y se añadió `20260902007000_cotizacion_inmutable_recierre.sql` para volver a emitir el cuerpo vigente (`LC_COTIZACION_INMUTABLE`: una cotización **Aceptada** también es inmutable en importes, moneda y conceptos).
+
 ## [13.777.8] - 2026-08-28
 ### Corregido
 - **Candado CI `service_role-only`**: la migración `20260902003000` (fix numeric/integer de RPCs de embarques) reemitió `_crear_embarque_replicar_conceptos` con `GRANT EXECUTE` a `authenticated`, reabriendo una función interna. Nueva migración `20260902005000_ci_service_role_only_recierre_embarques.sql` (ordenada después del fix, para que el replay desde cero termine igual que prod) que revoca a `PUBLIC`/`anon`/`authenticated` y deja sólo `service_role`. Manifiesto: 1133 migraciones.
