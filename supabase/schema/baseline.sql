@@ -1,5 +1,5 @@
-CREATE SCHEMA public;
 CREATE COLLATION public.lc_unicode_upper (provider = icu, locale = 'und');
+CREATE SCHEMA public;
 CREATE TYPE public.ambiente_facturapi AS ENUM (
     'sandbox',
     'live'
@@ -9455,99 +9455,6 @@ BEGIN
   RETURN v_embarque_id;
 END;
 $$;
-CREATE FUNCTION public.crear_clientes(p_clientes jsonb)
-RETURNS SETOF public.clientes
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path TO 'public'
-AS $$
-DECLARE
-  v_uid uuid := auth.uid();
-  v_org uuid;
-  v_row jsonb;
-  v_rfc text;
-  v_nombre text;
-  v_ids uuid[] := ARRAY[]::uuid[];
-  v_id uuid;
-BEGIN
-  IF p_clientes IS NULL OR jsonb_typeof(p_clientes) <> 'array'
-     OR jsonb_array_length(p_clientes) = 0 THEN
-    RAISE EXCEPTION 'LC_CLIENTE_PAYLOAD_INVALIDO: se esperaba un arreglo de clientes'
-      USING ERRCODE = '22023';
-  END IF;
-  IF jsonb_array_length(p_clientes) > 1000 THEN
-    RAISE EXCEPTION 'LC_CLIENTE_LOTE_EXCEDIDO: máximo 1000 clientes por llamada'
-      USING ERRCODE = '22023';
-  END IF;
-  IF NOT (
-    public.has_any_role(v_uid, ARRAY['admin'::public.app_role, 'admin_org'::public.app_role,
-                                     'operador'::public.app_role, 'contador'::public.app_role,
-                                     'super_admin'::public.app_role])
-  ) THEN
-    RAISE EXCEPTION 'LC_CLIENTE_SIN_PERMISO: tu rol no puede dar de alta clientes'
-      USING ERRCODE = '42501';
-  END IF;
-  v_org := public.current_user_org_id();
-  IF v_org IS NULL THEN
-    RAISE EXCEPTION 'LC_CLIENTE_SIN_ORG: no hay organización activa'
-      USING ERRCODE = '22023';
-  END IF;
-  FOR v_row IN SELECT * FROM jsonb_array_elements(p_clientes) LOOP
-    v_nombre := btrim(COALESCE(v_row->>'nombre', ''));
-    IF v_nombre = '' THEN
-      RAISE EXCEPTION 'LC_CLIENTE_SIN_NOMBRE: la razón social es obligatoria'
-        USING ERRCODE = '22023';
-    END IF;
-    v_rfc := upper(btrim(COALESCE(v_row->>'rfc', '')));
-    -- Cliente facturable = trae RFC propio. Entonces el CFDI necesita datos
-    -- fiscales completos desde el alta, no al momento de timbrar.
-    IF v_rfc <> '' AND v_rfc NOT IN ('XEXX010101000', 'XAXX010101000') THEN
-      IF btrim(COALESCE(v_row->>'regimen_fiscal', '')) = ''
-         OR btrim(COALESCE(v_row->>'uso_cfdi_default', '')) = ''
-         OR btrim(COALESCE(v_row->>'cp', '')) = ''
-         OR btrim(COALESCE(v_row->>'direccion', '')) = '' THEN
-        RAISE EXCEPTION 'LC_CLIENTE_FISCAL_INCOMPLETO: % lleva RFC, así que necesita régimen fiscal, uso de CFDI, código postal y dirección', v_nombre
-          USING ERRCODE = '22023';
-      END IF;
-    END IF;
-    INSERT INTO public.clientes (
-      organization_id, nombre, rfc, direccion, ciudad, estado, cp, contacto,
-      telefono, email, regimen_fiscal, uso_cfdi_default, dias_credito,
-      limite_credito_mxn, sin_comision,
-      requiere_autorizacion_cotizacion, requiere_autorizacion_proforma
-    ) VALUES (
-      v_org,
-      v_nombre,
-      NULLIF(v_rfc, ''),
-      NULLIF(btrim(COALESCE(v_row->>'direccion', '')), ''),
-      NULLIF(btrim(COALESCE(v_row->>'ciudad', '')), ''),
-      NULLIF(btrim(COALESCE(v_row->>'estado', '')), ''),
-      NULLIF(btrim(COALESCE(v_row->>'cp', '')), ''),
-      NULLIF(btrim(COALESCE(v_row->>'contacto', '')), ''),
-      NULLIF(btrim(COALESCE(v_row->>'telefono', '')), ''),
-      NULLIF(lower(btrim(COALESCE(v_row->>'email', ''))), ''),
-      NULLIF(btrim(COALESCE(v_row->>'regimen_fiscal', '')), ''),
-      NULLIF(btrim(COALESCE(v_row->>'uso_cfdi_default', '')), ''),
-      COALESCE((v_row->>'dias_credito')::int, 0),
-      NULLIF(v_row->>'limite_credito_mxn', '')::numeric,
-      COALESCE((v_row->>'sin_comision')::boolean, false),
-      COALESCE((v_row->>'requiere_autorizacion_cotizacion')::boolean, false),
-      COALESCE((v_row->>'requiere_autorizacion_proforma')::boolean, false)
-    ) RETURNING id INTO v_id;
-    v_ids := array_append(v_ids, v_id);
-  END LOOP;
-  INSERT INTO public.bitacora_actividad (
-    organization_id, usuario_id, usuario_email, accion, modulo,
-    entidad_id, entidad_nombre, detalles
-  ) VALUES (
-    v_org, v_uid, (SELECT email FROM auth.users WHERE id = v_uid),
-    'cliente.alta', 'clientes', v_ids[1],
-    (SELECT nombre FROM public.clientes WHERE id = v_ids[1]),
-    jsonb_build_object('cantidad', array_length(v_ids, 1))
-  );
-  RETURN QUERY SELECT * FROM public.clientes WHERE id = ANY(v_ids);
-END;
-$$;
 CREATE FUNCTION public.crear_embarque_completo(p_embarque jsonb, p_conceptos_venta jsonb DEFAULT '[]'::jsonb, p_conceptos_costo jsonb DEFAULT '[]'::jsonb, p_documentos jsonb DEFAULT '[]'::jsonb, p_request_id uuid DEFAULT NULL::uuid) RETURNS jsonb
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
@@ -13568,51 +13475,6 @@ BEGIN
   RETURN NEW;
 END;
 $$;
-CREATE FUNCTION public.enmascarar_costos_jsonb(p_in jsonb) RETURNS jsonb
-    LANGUAGE plpgsql IMMUTABLE
-    SET search_path TO 'public'
-    AS $$
-DECLARE
-  v_out jsonb;
-  v_key text;
-  v_val jsonb;
-  v_elem jsonb;
-  v_prefijos text[] := ARRAY['costo','costos','profit','utilidad','margen','gastosoperativos'];
-  v_sensible boolean;
-  v_pref text;
-BEGIN
-  IF p_in IS NULL THEN
-    RETURN NULL;
-  END IF;
-  CASE jsonb_typeof(p_in)
-    WHEN 'object' THEN
-      v_out := '{}'::jsonb;
-      FOR v_key, v_val IN SELECT key, value FROM jsonb_each(p_in) LOOP
-        v_sensible := false;
-        FOREACH v_pref IN ARRAY v_prefijos LOOP
-          IF lower(v_key) LIKE v_pref || '%' THEN
-            v_sensible := true;
-            EXIT;
-          END IF;
-        END LOOP;
-        IF v_sensible THEN
-          v_out := v_out || jsonb_build_object(v_key, 'null'::jsonb);
-        ELSE
-          v_out := v_out || jsonb_build_object(v_key, public.enmascarar_costos_jsonb(v_val));
-        END IF;
-      END LOOP;
-      RETURN v_out;
-    WHEN 'array' THEN
-      v_out := '[]'::jsonb;
-      FOR v_elem IN SELECT value FROM jsonb_array_elements(p_in) LOOP
-        v_out := v_out || jsonb_build_array(public.enmascarar_costos_jsonb(v_elem));
-      END LOOP;
-      RETURN v_out;
-    ELSE
-      RETURN p_in;
-  END CASE;
-END;
-$$;
 CREATE FUNCTION public.enforce_cotizacion_obligatoria() RETURNS trigger
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
@@ -13752,6 +13614,51 @@ BEGIN
       v_sev, COALESCE(v_res->>'max_delta_pct','0')
       USING ERRCODE = 'P0001';
   END IF;
+END;
+$$;
+CREATE FUNCTION public.enmascarar_costos_jsonb(p_in jsonb) RETURNS jsonb
+    LANGUAGE plpgsql IMMUTABLE
+    SET search_path TO 'public'
+    AS $$
+DECLARE
+  v_out jsonb;
+  v_key text;
+  v_val jsonb;
+  v_elem jsonb;
+  v_prefijos text[] := ARRAY['costo','costos','profit','utilidad','margen','gastosoperativos'];
+  v_sensible boolean;
+  v_pref text;
+BEGIN
+  IF p_in IS NULL THEN
+    RETURN NULL;
+  END IF;
+  CASE jsonb_typeof(p_in)
+    WHEN 'object' THEN
+      v_out := '{}'::jsonb;
+      FOR v_key, v_val IN SELECT key, value FROM jsonb_each(p_in) LOOP
+        v_sensible := false;
+        FOREACH v_pref IN ARRAY v_prefijos LOOP
+          IF lower(v_key) LIKE v_pref || '%' THEN
+            v_sensible := true;
+            EXIT;
+          END IF;
+        END LOOP;
+        IF v_sensible THEN
+          v_out := v_out || jsonb_build_object(v_key, 'null'::jsonb);
+        ELSE
+          v_out := v_out || jsonb_build_object(v_key, public.enmascarar_costos_jsonb(v_val));
+        END IF;
+      END LOOP;
+      RETURN v_out;
+    WHEN 'array' THEN
+      v_out := '[]'::jsonb;
+      FOR v_elem IN SELECT value FROM jsonb_array_elements(p_in) LOOP
+        v_out := v_out || jsonb_build_array(public.enmascarar_costos_jsonb(v_elem));
+      END LOOP;
+      RETURN v_out;
+    ELSE
+      RETURN p_in;
+  END CASE;
 END;
 $$;
 CREATE FUNCTION public.enqueue_email(queue_name text, payload jsonb) RETURNS bigint
@@ -27500,7 +27407,9 @@ CREATE INDEX idx_cliente_documentos_cliente ON public.cliente_documentos USING b
 CREATE INDEX idx_cliente_documentos_org ON public.cliente_documentos USING btree (organization_id) WHERE (deleted_at IS NULL);
 CREATE INDEX idx_clientes_deleted_at ON public.clientes USING btree (deleted_at) WHERE (deleted_at IS NOT NULL);
 CREATE INDEX idx_clientes_nombre_trgm ON public.clientes USING gin (nombre extensions.gin_trgm_ops);
+CREATE INDEX idx_clientes_nombre_trgm ON public.clientes USING gin (nombre extensions.gin_trgm_ops);
 CREATE INDEX idx_clientes_org ON public.clientes USING btree (organization_id);
+CREATE INDEX idx_clientes_rfc_trgm ON public.clientes USING gin (rfc extensions.gin_trgm_ops);
 CREATE INDEX idx_clientes_rfc_trgm ON public.clientes USING gin (rfc extensions.gin_trgm_ops);
 CREATE INDEX idx_cobranza_seg_factura ON public.cobranza_seguimiento USING btree (factura_id);
 CREATE INDEX idx_cobranza_seg_org_fecha ON public.cobranza_seguimiento USING btree (organization_id, fecha DESC);
@@ -27551,14 +27460,17 @@ CREATE INDEX idx_cotizacion_versiones_org ON public.cotizacion_versiones USING b
 CREATE INDEX idx_cotizaciones_agente_id ON public.cotizaciones USING btree (agente_id);
 CREATE INDEX idx_cotizaciones_cliente_id ON public.cotizaciones USING btree (cliente_id);
 CREATE INDEX idx_cotizaciones_cliente_trgm ON public.cotizaciones USING gin (cliente_nombre extensions.gin_trgm_ops);
+CREATE INDEX idx_cotizaciones_cliente_trgm ON public.cotizaciones USING gin (cliente_nombre extensions.gin_trgm_ops);
 CREATE INDEX idx_cotizaciones_created_by ON public.cotizaciones USING btree (created_by);
 CREATE INDEX idx_cotizaciones_deleted_at ON public.cotizaciones USING btree (deleted_at) WHERE (deleted_at IS NOT NULL);
 CREATE INDEX idx_cotizaciones_duplicada_de ON public.cotizaciones USING btree (duplicada_de_id) WHERE (duplicada_de_id IS NOT NULL);
+CREATE INDEX idx_cotizaciones_folio_trgm ON public.cotizaciones USING gin (folio extensions.gin_trgm_ops);
 CREATE INDEX idx_cotizaciones_folio_trgm ON public.cotizaciones USING gin (folio extensions.gin_trgm_ops);
 CREATE INDEX idx_cotizaciones_naviera_id ON public.cotizaciones USING btree (naviera_id);
 CREATE INDEX idx_cotizaciones_oportunidad ON public.cotizaciones USING btree (oportunidad_id);
 CREATE INDEX idx_cotizaciones_org ON public.cotizaciones USING btree (organization_id);
 CREATE INDEX idx_cotizaciones_org_tipo_doc ON public.cotizaciones USING btree (organization_id, tipo_documento);
+CREATE INDEX idx_cotizaciones_prospecto_trgm ON public.cotizaciones USING gin (prospecto_empresa extensions.gin_trgm_ops);
 CREATE INDEX idx_cotizaciones_prospecto_trgm ON public.cotizaciones USING gin (prospecto_empresa extensions.gin_trgm_ops);
 CREATE INDEX idx_cotizaciones_tarifa_id ON public.cotizaciones USING btree (tarifa_id);
 CREATE INDEX idx_crm_act_entidad ON public.crm_actividades USING btree (entidad_tipo, entidad_id);
@@ -27605,16 +27517,21 @@ CREATE INDEX idx_embarque_contenedores_org ON public.embarque_contenedores USING
 CREATE INDEX idx_embarque_garantias_contenedor_deleted_at ON public.embarque_garantias_contenedor USING btree (deleted_at) WHERE (deleted_at IS NOT NULL);
 CREATE INDEX idx_embarques_agente_id ON public.embarques USING btree (agente_id);
 CREATE INDEX idx_embarques_bl_master_trgm ON public.embarques USING gin (bl_master extensions.gin_trgm_ops);
+CREATE INDEX idx_embarques_bl_master_trgm ON public.embarques USING gin (bl_master extensions.gin_trgm_ops);
 CREATE INDEX idx_embarques_cliente_id ON public.embarques USING btree (cliente_id);
 CREATE INDEX idx_embarques_cliente_nombre_trgm ON public.embarques USING gin (cliente_nombre extensions.gin_trgm_ops);
+CREATE INDEX idx_embarques_cliente_nombre_trgm ON public.embarques USING gin (cliente_nombre extensions.gin_trgm_ops);
+CREATE INDEX idx_embarques_contenedor_trgm ON public.embarques USING gin (contenedor extensions.gin_trgm_ops);
 CREATE INDEX idx_embarques_contenedor_trgm ON public.embarques USING gin (contenedor extensions.gin_trgm_ops);
 CREATE INDEX idx_embarques_cotizacion_id ON public.embarques USING btree (cotizacion_id);
 CREATE INDEX idx_embarques_deleted_at ON public.embarques USING btree (deleted_at) WHERE (deleted_at IS NOT NULL);
+CREATE INDEX idx_embarques_descripcion_trgm ON public.embarques USING gin (descripcion_mercancia extensions.gin_trgm_ops);
 CREATE INDEX idx_embarques_descripcion_trgm ON public.embarques USING gin (descripcion_mercancia extensions.gin_trgm_ops);
 CREATE INDEX idx_embarques_estado ON public.embarques USING btree (estado);
 CREATE INDEX idx_embarques_estado_admin_pendiente ON public.embarques USING btree (organization_id, estado) WHERE ((estado = ANY (ARRAY['Entregado'::public.estado_embarque, 'EIR'::public.estado_embarque])) AND (deleted_at IS NULL));
 CREATE INDEX idx_embarques_eta ON public.embarques USING btree (eta);
 CREATE INDEX idx_embarques_etd ON public.embarques USING btree (etd);
+CREATE INDEX idx_embarques_expediente_trgm ON public.embarques USING gin (expediente extensions.gin_trgm_ops);
 CREATE INDEX idx_embarques_expediente_trgm ON public.embarques USING gin (expediente extensions.gin_trgm_ops);
 CREATE INDEX idx_embarques_facturado_historico ON public.embarques USING btree (facturado_historico) WHERE (facturado_historico = true);
 CREATE INDEX idx_embarques_modo ON public.embarques USING btree (modo);
@@ -27646,10 +27563,12 @@ CREATE INDEX idx_facturas_cancellation_pending ON public.facturas USING btree (o
 CREATE INDEX idx_facturas_cliente ON public.facturas USING btree (cliente_id);
 CREATE INDEX idx_facturas_cliente_estado ON public.facturas USING btree (cliente_id, estado) WHERE (estado = ANY (ARRAY['Emitida'::public.estado_factura, 'Vencida'::public.estado_factura, 'Parcialmente pagada'::public.estado_factura, 'Pagada'::public.estado_factura]));
 CREATE INDEX idx_facturas_cliente_trgm ON public.facturas USING gin (cliente_nombre extensions.gin_trgm_ops);
+CREATE INDEX idx_facturas_cliente_trgm ON public.facturas USING gin (cliente_nombre extensions.gin_trgm_ops);
 CREATE INDEX idx_facturas_cotizacion_id ON public.facturas USING btree (cotizacion_id);
 CREATE INDEX idx_facturas_deleted_at ON public.facturas USING btree (deleted_at) WHERE (deleted_at IS NOT NULL);
 CREATE INDEX idx_facturas_embarque ON public.facturas USING btree (embarque_id);
 CREATE INDEX idx_facturas_facturapi_pending ON public.facturas USING btree (organization_id, facturapi_claim_at) WHERE (facturapi_id ~~ 'PENDING:%'::text);
+CREATE INDEX idx_facturas_numero_trgm ON public.facturas USING gin (numero extensions.gin_trgm_ops);
 CREATE INDEX idx_facturas_numero_trgm ON public.facturas USING gin (numero extensions.gin_trgm_ops);
 CREATE INDEX idx_facturas_org ON public.facturas USING btree (organization_id);
 CREATE INDEX idx_facturas_org_estado ON public.facturas USING btree (organization_id, estado);
@@ -27736,6 +27655,8 @@ CREATE INDEX idx_proveedor_notas_credito_org ON public.proveedor_notas_credito U
 CREATE INDEX idx_proveedor_notas_credito_uuid_fiscal ON public.proveedor_notas_credito USING btree (uuid_fiscal) WHERE (uuid_fiscal IS NOT NULL);
 CREATE INDEX idx_proveedores_deleted_at ON public.proveedores USING btree (deleted_at) WHERE (deleted_at IS NOT NULL);
 CREATE INDEX idx_proveedores_nombre_trgm ON public.proveedores USING gin (nombre extensions.gin_trgm_ops);
+CREATE INDEX idx_proveedores_nombre_trgm ON public.proveedores USING gin (nombre extensions.gin_trgm_ops);
+CREATE INDEX idx_proveedores_rfc_trgm ON public.proveedores USING gin (rfc extensions.gin_trgm_ops);
 CREATE INDEX idx_proveedores_rfc_trgm ON public.proveedores USING gin (rfc extensions.gin_trgm_ops);
 CREATE INDEX idx_provisioning_log_accion ON public.provisioning_log USING btree (accion, created_at DESC);
 CREATE INDEX idx_provisioning_log_org ON public.provisioning_log USING btree (organization_id, created_at DESC);
