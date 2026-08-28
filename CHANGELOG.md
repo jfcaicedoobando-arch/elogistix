@@ -1,5 +1,13 @@
 # Changelog
 
+## [13.781.0] - 2026-08-28
+### Corregido
+- **Ola E2 · Sub-ola A · Tesorería (N5, N11)**: el guardián de `bbva_movimientos` ahora se dispara con **todas** las columnas de vínculo (anticipos, lotes de cobro/pago, traspasos) y valida que el importe del movimiento coincida con el del pago (tolerancia de 1.00). Antes un depósito de $100 podía "pagar" una factura de $10,000 y el pago desaparecía de pendientes: como poner un recibo de mil pesos en el folder de una deuda de cien mil y dar la cuenta por cerrada.
+- **Ola E2 · Sub-ola A · Aislamiento (C3-res)**: `proveedor_facturas_conceptos`, `proveedor_notas_credito` y `anticipos_proveedor` validan por trigger que su documento padre sea de la misma organización.
+- **Ola E2 · Sub-ola A · Facturas (N7)**: no se puede borrar lógicamente una factura emitida que tenga pagos o notas de crédito vivas (`LC_FACTURA_DELETE_CON_PAGOS`, `LC_FACTURA_DELETE_CON_NC`, `LC_FACTURA_DELETE_EMITIDA`).
+- **Ola E2 · Sub-ola A · Cancelación de embarque (N15)**: se bloquea la cancelación si hay proformas vivas o facturas en borrador (`LC_CANCEL_CON_PROFORMA`, `LC_CANCEL_CON_FACTURA_BORRADOR`) y la relación proforma→embarque pasó a `ON DELETE RESTRICT`.
+- **Guards y pruebas**: nuevo `supabase/tests/ola_e2_a_guards.sql` y pruebas unitarias de `conciliacionMonto`.
+
 ## [13.780.1] - 2026-08-28
 ### Corregido
 - **CRM · Editar oportunidad ya no borra el cliente vinculado**: al guardar cambios en una oportunidad nacida de un lead convertido se conservan `cliente_id`/`cliente_nombre` (y el `lead_id`). Antes era como actualizar el monto de un expediente y que se cayera la etiqueta con el nombre del cliente.

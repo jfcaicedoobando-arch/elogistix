@@ -12,7 +12,8 @@ export class MovimientoVinculoError extends Error {
       | "LC_MOVIMIENTO_DIVISA_MISMATCH"
       | "LC_MOVIMIENTO_DOBLE_VINCULO"
       | "LC_MOVIMIENTO_PAGO_INEXISTENTE"
-      | "LC_MOVIMIENTO_YA_VINCULADO",
+      | "LC_MOVIMIENTO_YA_VINCULADO"
+      | "LC_MOVIMIENTO_MONTO_MISMATCH",
     message: string,
   ) {
     super(message);
@@ -34,6 +35,7 @@ export function mapConciliacionError(err: { code?: string; message?: string } | 
     "LC_MOVIMIENTO_DIVISA_MISMATCH",
     "LC_MOVIMIENTO_DOBLE_VINCULO",
     "LC_MOVIMIENTO_PAGO_INEXISTENTE",
+    "LC_MOVIMIENTO_MONTO_MISMATCH",
   ] as const) {
     if (msg.includes(code)) {
       const detalle = msg.split(":").slice(1).join(":").trim() || msg;

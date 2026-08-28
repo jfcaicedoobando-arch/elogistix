@@ -11,6 +11,10 @@ export const LC_CODE_MESSAGES_TESORERIA: Record<string, string> = {
     "La factura tiene un complemento de pago (REP) vivo. Cancela primero el REP para continuar.",
   LC_MOVIMIENTO_YA_VINCULADO:
     "El movimiento bancario ya está vinculado a otro pago. Desvincúlalo antes de reutilizarlo.",
+  // Ola E2 · A (N11): el importe del movimiento debe coincidir con el del pago.
+  LC_MOVIMIENTO_MONTO_MISMATCH:
+    "El importe del movimiento bancario no coincide con el del pago. Registra un pago por el importe real del movimiento o corrige el movimiento antes de conciliar.",
+
 
   // ── Tesorería · cuentas bancarias / ejecución de pago (Q-15.2) ─────────
   LC_CUENTA_NO_EXISTE: "La cuenta bancaria no existe o fue eliminada.",

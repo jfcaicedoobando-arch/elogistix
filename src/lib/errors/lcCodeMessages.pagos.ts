@@ -121,6 +121,19 @@ export const LC_CODE_MESSAGES_PAGOS: Record<string, string> = {
     "No puedes cancelar el embarque: tiene facturas de cliente con saldo. Cancela o sustituye esas facturas antes de cancelar el embarque.",
   LC_CANCEL_CON_CXP:
     "No puedes cancelar el embarque: tiene facturas de proveedor activas. Cancélalas antes de cancelar el embarque.",
+  // Ola E2 · A (N15): proformas y facturas en borrador colgadas del embarque.
+  LC_CANCEL_CON_FACTURA_BORRADOR:
+    "No puedes cancelar el embarque: tiene facturas de cliente en borrador. Elimínalas antes de cancelar el embarque.",
+  LC_CANCEL_CON_PROFORMA:
+    "No puedes cancelar el embarque: tiene proformas vivas. Cancélalas o elimínalas antes de cancelar el embarque.",
+  // Ola E2 · A (N7): borrado lógico de facturas con documentos hijos vivos.
+  LC_FACTURA_DELETE_CON_PAGOS:
+    "La factura tiene pagos registrados. Elimina o cancela esos pagos antes de borrarla.",
+  LC_FACTURA_DELETE_CON_NC:
+    "La factura tiene notas de crédito vivas. Cancélalas antes de borrar la factura.",
+  LC_FACTURA_DELETE_EMITIDA:
+    "La factura ya fue emitida: cancélala ante el SAT antes de borrarla del sistema.",
+
   LC_FACTURA_INMUTABLE:
     "La factura ya está timbrada: sus datos fiscales y conceptos no se pueden modificar. Emite una nota de crédito o una sustitución.",
   LC_NC_FECHA_INVALIDA:
