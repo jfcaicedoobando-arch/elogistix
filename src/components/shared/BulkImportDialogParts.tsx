@@ -15,6 +15,8 @@ interface BodyProps<T> {
   fileName: string | null;
   error: string | null;
   insertedCount: number;
+  /** L3: registros ya guardados cuando la carga se interrumpió a la mitad. */
+  parcialCount?: number;
   templateHeaders: readonly string[];
   onDownloadTemplate: () => void;
   onPick: () => void;
@@ -22,7 +24,7 @@ interface BodyProps<T> {
 }
 
 export function BulkImportBody<T>({
-  step, preview, fileName, error, insertedCount, templateHeaders,
+  step, preview, fileName, error, insertedCount, parcialCount = 0, templateHeaders,
   onDownloadTemplate, onPick, onReset,
 }: BodyProps<T>) {
   if (step === "upload") {
@@ -36,7 +38,15 @@ export function BulkImportBody<T>({
     );
   }
   if (step === "preview" && preview) {
-    return <PreviewStep fileName={fileName} preview={preview} error={error} onReset={onReset} />;
+    return (
+      <PreviewStep
+        fileName={fileName}
+        preview={preview}
+        error={error}
+        parcialCount={parcialCount}
+        onReset={onReset}
+      />
+    );
   }
   if (step === "committing") {
     return (

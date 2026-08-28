@@ -13,7 +13,12 @@ type Step = "upload" | "preview" | "committing" | "done";
 
 interface UseBulkImportArgs<T> {
   mapRows: (rows: Record<string, string>[]) => ImportPreview<T>;
-  onCommit: (payloads: T[]) => Promise<void>;
+  /**
+   * L3 (Ola E2 · B): recibe `reportarProgreso` para informar cuántas filas
+   * quedaron guardadas. Si un lote falla a la mitad, el usuario ve el corte
+   * exacto en vez de un "error" opaco que lo hace re-subir todo el archivo.
+   */
+  onCommit: (payloads: T[], reportarProgreso?: (insertados: number) => void) => Promise<void>;
   onSuccess?: (insertedCount: number) => void;
 }
 
@@ -23,6 +28,7 @@ export function useBulkImport<T>({ mapRows, onCommit, onSuccess }: UseBulkImport
   const [preview, setPreview] = useState<ImportPreview<T> | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [insertedCount, setInsertedCount] = useState(0);
+  const [parcialCount, setParcialCount] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const reset = (): void => {
@@ -31,8 +37,10 @@ export function useBulkImport<T>({ mapRows, onCommit, onSuccess }: UseBulkImport
     setPreview(null);
     setError(null);
     setInsertedCount(0);
+    setParcialCount(0);
     if (inputRef.current) inputRef.current.value = "";
   };
+
 
   const handleFile = async (file: File): Promise<void> => {
     setError(null);
@@ -65,22 +73,37 @@ export function useBulkImport<T>({ mapRows, onCommit, onSuccess }: UseBulkImport
     if (!preview || preview.valid.length === 0) return;
     setStep("committing");
     setError(null);
+    setParcialCount(0);
+    let guardados = 0;
     try {
       const payloads = preview.valid.map((v) => v.payload);
-      await onCommit(payloads);
+      await onCommit(payloads, (n) => {
+        guardados = n;
+        setParcialCount(n);
+      });
       setInsertedCount(payloads.length);
       setStep("done");
       onSuccess?.(payloads.length);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Error al importar.");
+      const detalle = e instanceof Error ? e.message : "Error al importar.";
+      // L3: el corte parcial es la información que el usuario necesita para
+      // reintentar sólo lo que faltó (como saber en qué página se atoró).
+      setError(
+        guardados > 0
+          ? `${detalle} Se guardaron ${guardados} de ${preview.valid.length} registros; vuelve a cargar sólo las filas restantes.`
+          : detalle,
+      );
+      setParcialCount(guardados);
+      if (guardados > 0) onSuccess?.(guardados);
       setStep("preview");
     }
   };
 
   return {
-    step, fileName, preview, error, insertedCount, inputRef,
+    step, fileName, preview, error, insertedCount, parcialCount, inputRef,
     reset, handleFile, handleCommit,
   };
+
 }
 
 export type { Step };

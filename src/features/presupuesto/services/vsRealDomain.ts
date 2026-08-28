@@ -3,7 +3,6 @@
  * Se extraen de `vsReal.ts` para respetar el límite de 200 líneas por archivo
  * (Power of 10) y poder testear la agregación sin tocar la red.
  */
-import { isoUtcDay } from "@/lib/date/mx";
 
 export interface FilaVsReal {
   categoria_id: string;
@@ -56,12 +55,24 @@ export type NcCxPRow = {
 export type LiqRow = { total_mxn: number | string; periodo: string };
 export type CatRow = { id: string; nombre: string };
 
-/** Último día del periodo `YYYY-MM` en ISO (UTC). */
+/**
+ * Último día del periodo `YYYY-MM` en formato `YYYY-MM-DD`.
+ *
+ * N27 (Ola E2 · B): cálculo puro por componentes de calendario. Antes se creaba
+ * un `Date` local y se leía en UTC, así que en zonas UTC+ el "último día" se
+ * corría al día anterior (como leer el calendario de otro país).
+ */
 export function ultimoDia(periodo: string): string {
   const [y, m] = periodo.split("-").map(Number);
-  const d = new Date(y, m, 0);
-  return isoUtcDay(d);
+  const dias = [31, esBisiesto(y) ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+  const ultimo = dias[m - 1] ?? 31;
+  return `${y}-${String(m).padStart(2, "0")}-${String(ultimo).padStart(2, "0")}`;
 }
+
+function esBisiesto(anio: number): boolean {
+  return (anio % 4 === 0 && anio % 100 !== 0) || anio % 400 === 0;
+}
+
 
 export function mapPresupuestoPorCategoria(rows: PresupRow[], periodo: string): Map<string, number> {
   const out = new Map<string, number>();

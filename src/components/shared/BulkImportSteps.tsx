@@ -38,6 +38,7 @@ export function UploadStep({ templateHeaders, onDownloadTemplate, onPick, error 
         </Alert>
       )}
     </div>
+
   );
 }
 
@@ -45,10 +46,12 @@ interface PreviewStepProps<T> {
   fileName: string | null;
   preview: ImportPreview<T>;
   error: string | null;
+  /** L3: registros guardados antes de que la carga se interrumpiera. */
+  parcialCount?: number;
   onReset: () => void;
 }
 
-export function PreviewStep<T>({ fileName, preview, error }: PreviewStepProps<T>) {
+export function PreviewStep<T>({ fileName, preview, error, parcialCount = 0 }: PreviewStepProps<T>) {
   const { valid, invalid } = preview;
   return (
     <div className="space-y-4">
@@ -113,6 +116,15 @@ export function PreviewStep<T>({ fileName, preview, error }: PreviewStepProps<T>
       {error && (
         <Alert variant="destructive">
           <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
+
+      {parcialCount > 0 && (
+        <Alert>
+          <AlertDescription>
+            Ya se guardaron {parcialCount} de {valid.length} registros. Vuelve a
+            cargar un archivo con las filas restantes para no duplicar.
+          </AlertDescription>
         </Alert>
       )}
     </div>

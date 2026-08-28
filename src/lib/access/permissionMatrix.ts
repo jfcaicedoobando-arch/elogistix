@@ -55,10 +55,32 @@ export const FINANCE_VIEWERS: readonly AppRole[] = [
  * `FINANCE_VIEWERS` habilita la vista financiera (venta, cobranza), pero los
  * roles puramente comerciales (`vendedor`, `ejecutivo_pricing`) no deben ver el
  * costo del proveedor ni la utilidad: sólo el lado de venta.
+ *
+ * C9 (Ola E2 · B) — excepción de producto: el `vendedor` SÍ ve el costo y el
+ * margen de las cotizaciones que él creó (usa `puedeVerCostosCotizacion`).
+ * Espejo en la base de datos: `public.puede_ver_costos_cotizacion()` y
+ * `public.puede_ver_costos_cotizacion_propia()`; al cambiar esta lista hay que
+ * cambiar también esas funciones.
  */
 export const COST_VIEWERS: readonly AppRole[] = FINANCE_VIEWERS.filter(
   (r) => r !== "vendedor" && r !== "ejecutivo_pricing",
 );
+
+/**
+ * C9 — ¿este usuario ve costo/margen de una cotización concreta?
+ *
+ * Analogía: el vendedor puede abrir el sobre de costos de los expedientes que
+ * él armó, pero no los de sus compañeros.
+ */
+export function puedeVerCostosCotizacion(
+  rol: AppRole | null,
+  esCotizacionPropia: boolean,
+): boolean {
+  if (!rol) return false;
+  if (COST_VIEWERS.includes(rol)) return true;
+  return rol === "vendedor" && esCotizacionPropia;
+}
+
 
 
 

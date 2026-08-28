@@ -1,5 +1,15 @@
 # Changelog
 
+## [13.781.1] - 2026-08-28
+### Corregido
+- **Ola E2 · Sub-ola B · Facturación multi-moneda (M2-res)**: si una factura en borrador cambia de moneda, el tipo de cambio se recalcula con el DOF de su fecha (o bloquea con `LC_FACTURA_SIN_TC_DOF`) y vuelve a 1 al regresar a MXN. Antes el T/C viejo se quedaba pegado, como cambiar la etiqueta de una caja sin cambiar lo que trae dentro.
+- **Ola E2 · Sub-ola B · Cronología de eventos (M5-res)**: un evento de seguimiento ya no puede quedar antes de la creación del embarque (`LC_EVENTO_ANTERIOR_A_EMBARQUE`, con un día de margen).
+- **Ola E2 · Sub-ola B · Tracking público (N26)**: los enlaces de rastreo tienen vigencia obligatoria (30 días por omisión, máximo 90: `LC_TRACKING_VIGENCIA_EXCEDIDA`) e índice de expirados. Ya no existen ligas eternas.
+- **Ola E2 · Sub-ola B · Presupuesto (N27)**: `ultimoDia` calcula el fin de mes con aritmética de calendario, sin corrimiento por zona horaria.
+- **Ola E2 · Sub-ola B · Importación CSV (L3)**: si un lote falla, el diálogo informa cuántos registros quedaron guardados y pide recargar sólo las filas restantes.
+- **Ola E2 · Sub-ola B · Limpieza (L4)**: guard de regresión que fija el IVA de facturas convertidas por línea (`conceptos_factura`) y prohíbe reintroducir un cálculo con tasa global.
+- **Guards**: nuevo `supabase/tests/ola_e2_b_guards.sql`.
+
 ## [13.781.0] - 2026-08-28
 ### Corregido
 - **Ola E2 · Sub-ola A · Tesorería (N5, N11)**: el guardián de `bbva_movimientos` ahora se dispara con **todas** las columnas de vínculo (anticipos, lotes de cobro/pago, traspasos) y valida que el importe del movimiento coincida con el del pago (tolerancia de 1.00). Antes un depósito de $100 podía "pagar" una factura de $10,000 y el pago desaparecía de pendientes: como poner un recibo de mil pesos en el folder de una deuda de cien mil y dar la cuenta por cerrada.

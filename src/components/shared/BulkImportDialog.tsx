@@ -32,8 +32,12 @@ export interface BulkImportDialogProps<T> {
   templateExampleRow?: string[];
   templateFileName: string;
   mapRows: (rows: Record<string, string>[]) => ImportPreview<T>;
-  /** Inserta los payloads válidos. Debe lanzar si falla. */
-  onCommit: (payloads: T[]) => Promise<void>;
+  /**
+   * Inserta los payloads válidos. Debe lanzar si falla.
+   * L3: puede llamar `reportarProgreso(n)` por lote para que el diálogo
+   * indique cuántos registros quedaron guardados si algo falla a la mitad.
+   */
+  onCommit: (payloads: T[], reportarProgreso?: (insertados: number) => void) => Promise<void>;
   onSuccess?: (insertedCount: number) => void;
 }
 
@@ -58,7 +62,7 @@ export function BulkImportDialog<T>({
   onSuccess,
 }: BulkImportDialogProps<T>) {
   const {
-    step, fileName, preview, error, insertedCount, inputRef,
+    step, fileName, preview, error, insertedCount, parcialCount, inputRef,
     reset, handleFile, handleCommit,
   } = useBulkImport<T>({ mapRows, onCommit, onSuccess });
 
@@ -96,6 +100,7 @@ export function BulkImportDialog<T>({
         fileName={fileName}
         error={error}
         insertedCount={insertedCount}
+        parcialCount={parcialCount}
         templateHeaders={templateHeaders}
         onDownloadTemplate={onDownloadTemplate}
         onPick={() => inputRef.current?.click()}

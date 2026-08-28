@@ -167,9 +167,10 @@ export default function Clientes() {
         ]}
         templateFileName="plantilla-clientes.csv"
         mapRows={(rows) => mapClienteRows(rows, organizationId)}
-        onCommit={async (payloads) => {
+        onCommit={async (payloads, reportarProgreso) => {
           // N-05 (QA r2): un INSERT por lote de 200 filas (no uno por fila).
-          await createClientesLote(payloads);
+          // L3: se reporta el avance por lote para informar cortes parciales.
+          await createClientesLote(payloads, reportarProgreso);
           registrarActividad.mutate({
             accion: "crear",
             modulo: "clientes",

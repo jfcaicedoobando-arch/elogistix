@@ -49,6 +49,13 @@ export const LC_CODE_MESSAGES_OPERATIVO_OPERACIONES: Record<string, string> = {
     "Ese evento ya ocurrido no puede llevar fecha futura. Corrige la fecha del evento.",
   LC_EVENTO_ORDEN_INVALIDO:
     "El orden de los eventos no es posible (por ejemplo, entrega antes del arribo o arribo antes del zarpe). Revisa las fechas.",
+  // Ola E2 · B (M5-res)
+  LC_EVENTO_ANTERIOR_A_EMBARQUE:
+    "La fecha del evento es anterior a la creación del embarque. Corrige la fecha o captura el embarque con su fecha real.",
+  LC_TRACKING_VIGENCIA_EXCEDIDA:
+    "Un enlace público de rastreo puede durar máximo 90 días. Elige una vigencia menor.",
+
+
 
   // ── Cliente / catálogos ────────────────────────────────────────────────
   LC_CLIENTE_NOMBRE_REQUERIDO: "El nombre del cliente es obligatorio.",
