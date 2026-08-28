@@ -1,13 +1,15 @@
--- Fuente canónica de public._cxp_validar_aprobacion(uuid, text).
--- 1:1 con supabase/migrations/20260827224436_426fa39b-ab98-40b6-b31d-89ce1b2b660f.sql
--- (Ola 4 · H2 three-way match: exige justificación y respeta el umbral por organización).
--- Al modificar: edita ESTE archivo y genera la migración con el mismo cuerpo.
+-- Espejo canónico de public._cxp_validar_aprobacion
+-- Fuente vigente (mayor timestamp): 20260828031517_0e0f9955-6582-4a0c-a870-fff2ee41918a.sql
+-- Vigilado por `bun run audit:replay-mirror` y `audit:schema-functions`.
 
-CREATE OR REPLACE FUNCTION public._cxp_validar_aprobacion(p_factura_id uuid, p_justificacion text DEFAULT NULL)
- RETURNS void
- LANGUAGE plpgsql
- SECURITY DEFINER
- SET search_path TO 'public'
+CREATE OR REPLACE FUNCTION public._cxp_validar_aprobacion(
+  p_factura_id uuid,
+  p_justificacion text DEFAULT NULL::text
+)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO 'public'
 AS $function$
 DECLARE
   v_row public.proveedor_facturas;
@@ -20,11 +22,9 @@ DECLARE
   v_emb_org uuid;
   v_origen text;
   v_tiene_xml_lineas boolean;
-  v_suma_vinculada numeric(18,4);
-  v_comprometido numeric(18,4);
-  v_sobrecosto numeric(18,4);
   v_total_mxn numeric(18,4);
   v_umbral numeric;
+  v_c record;
 BEGIN
   SELECT * INTO v_row FROM public.proveedor_facturas WHERE id = p_factura_id;
   IF v_row.id IS NULL OR v_row.deleted_at IS NOT NULL THEN
@@ -57,9 +57,6 @@ BEGIN
     RAISE EXCEPTION 'LC_CXP_SIN_CONCEPTOS: Captura los conceptos de la factura antes de aprobar.';
   END IF;
 
-  -- Tolerancia de redondeo: medio centavo por unidad de cantidad (el precio
-  -- unitario del CFDI viene redondeado a 2 decimales y el error se multiplica
-  -- por la cantidad). Mínimo 1 centavo. Un error real de captura sigue fallando.
   v_tolerancia := GREATEST(0.01, 0.005 * COALESCE(v_suma_cantidades,0));
 
   v_diferencia := ABS(COALESCE(v_row.subtotal,0) - v_suma_conceptos);
@@ -71,35 +68,53 @@ BEGIN
       to_char(v_tolerancia,              'FM999,999,999,990.00');
   END IF;
 
-  -- QA B-15: lo facturado en conceptos vinculados no debe exceder lo
-  -- comprometido en conceptos_costo (tolerancia 0.02; umbral duro 5%).
-  SELECT COALESCE(SUM(pfc.monto * COALESCE(NULLIF(pfc.cantidad,0),1)), 0),
-         COALESCE(SUM(cc.monto), 0)
-    INTO v_suma_vinculada, v_comprometido
-    FROM public.proveedor_facturas_conceptos pfc
-    JOIN public.conceptos_costo cc
-      ON cc.id = pfc.concepto_costo_id AND cc.deleted_at IS NULL
-   WHERE pfc.proveedor_factura_id = p_factura_id
-     AND pfc.concepto_costo_id IS NOT NULL;
-
-  v_sobrecosto := v_suma_vinculada - v_comprometido;
-  IF v_sobrecosto > 0.02 THEN
-    IF v_comprometido > 0 AND v_sobrecosto > v_comprometido * 0.05 THEN
-      RAISE EXCEPTION 'LC_CXP_SOBRECOSTO: Lo facturado (%) excede lo comprometido (%) en %; revisa los conceptos vinculados antes de aprobar.',
-        to_char(v_suma_vinculada, 'FM999,999,999,990.00'),
-        to_char(v_comprometido,   'FM999,999,999,990.00'),
-        to_char(v_sobrecosto,     'FM999,999,999,990.00');
-    ELSE
-      RAISE WARNING 'LC_CXP_SOBRECOSTO: lo facturado (%) excede lo comprometido (%) en % (<= 5%%, se aprueba con advertencia).',
-        to_char(v_suma_vinculada, 'FM999,999,999,990.00'),
-        to_char(v_comprometido,   'FM999,999,999,990.00'),
-        to_char(v_sobrecosto,     'FM999,999,999,990.00');
+  -- Tope de sobrecosto POR CONCEPTO, sumando todas las facturas vivas ligadas
+  -- a ese concepto y normalizando ambos lados a MXN.
+  FOR v_c IN
+    SELECT cc.id,
+           cc.concepto,
+           public.a_mxn_doc(cc.monto, cc.moneda::text, v_row.fecha_emision,
+                            NULL, emb.tipo_cambio_usd) AS comprometido_mxn,
+           (
+             SELECT COALESCE(SUM(
+                      public.a_mxn_doc(p2.monto * COALESCE(NULLIF(p2.cantidad,0),1),
+                                       pf2.moneda::text, pf2.fecha_emision,
+                                       pf2.tipo_cambio_usd, emb.tipo_cambio_usd)
+                    ), 0)
+               FROM public.proveedor_facturas_conceptos p2
+               JOIN public.proveedor_facturas pf2 ON pf2.id = p2.proveedor_factura_id
+              WHERE p2.concepto_costo_id = cc.id
+                AND pf2.deleted_at IS NULL
+                AND pf2.estado <> 'Cancelada'::public.estado_proveedor_factura
+                AND COALESCE(pf2.estado_aprobacion::text, 'pendiente') <> 'rechazada'
+           ) AS facturado_mxn
+      FROM public.proveedor_facturas_conceptos pfc
+      JOIN public.conceptos_costo cc
+        ON cc.id = pfc.concepto_costo_id AND cc.deleted_at IS NULL
+      LEFT JOIN public.embarques emb ON emb.id = cc.embarque_id
+     WHERE pfc.proveedor_factura_id = p_factura_id
+       AND pfc.concepto_costo_id IS NOT NULL
+     GROUP BY cc.id, cc.concepto, cc.monto, cc.moneda, emb.tipo_cambio_usd
+  LOOP
+    IF v_c.comprometido_mxn IS NULL THEN
+      RAISE WARNING 'LC_CXP_SIN_TC: el concepto "%" no tiene tipo de cambio para comparar; se omite el control de sobrecosto.', v_c.concepto;
+      CONTINUE;
     END IF;
-  END IF;
 
-  -- Ola 4 (H2): three-way match mínimo. Sin embarque ni un solo concepto ligado
-  -- a costo acordado no hay nada contra qué contrastar: se exige justificación
-  -- escrita y, por arriba del umbral de la organización, se rechaza.
+    IF v_c.facturado_mxn - v_c.comprometido_mxn > 0.02
+       AND v_c.comprometido_mxn > 0
+       AND (v_c.facturado_mxn - v_c.comprometido_mxn) > v_c.comprometido_mxn * 0.05 THEN
+      RAISE EXCEPTION 'LC_CXP_SOBRECOSTO: el concepto "%" ya tiene facturado % MXN contra % MXN comprometidos (incluyendo otras facturas del mismo costo). Revisa la vinculación antes de aprobar.',
+        v_c.concepto,
+        to_char(v_c.facturado_mxn,    'FM999,999,999,990.00'),
+        to_char(v_c.comprometido_mxn, 'FM999,999,999,990.00');
+    ELSIF v_c.facturado_mxn - v_c.comprometido_mxn > 0.02 THEN
+      RAISE WARNING 'LC_CXP_SOBRECOSTO: el concepto "%" excede lo comprometido en % MXN (<= 5%%, se aprueba con advertencia).',
+        v_c.concepto,
+        to_char(v_c.facturado_mxn - v_c.comprometido_mxn, 'FM999,999,999,990.00');
+    END IF;
+  END LOOP;
+
   IF v_row.embarque_id IS NULL
      AND NOT EXISTS (
        SELECT 1 FROM public.proveedor_facturas_conceptos
@@ -148,6 +163,3 @@ BEGIN
   END IF;
 END;
 $function$;
-
-REVOKE ALL ON FUNCTION public._cxp_validar_aprobacion(uuid, text) FROM PUBLIC, anon;
-GRANT EXECUTE ON FUNCTION public._cxp_validar_aprobacion(uuid, text) TO authenticated, service_role;
