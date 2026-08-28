@@ -1,3 +1,4 @@
+import { MONTO_MAX } from "@/lib/validation/limitesNumericos";
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -83,7 +84,7 @@ export default function TablaCostosDetalle({ filas, filasMoneda, moneda, title, 
                       </TableCell>
                       <TableCell className="text-right">
                         {canEdit ? (
-                          <Input type="number" value={fila.costo_unitario || ""} onChange={e => onUpdate(globalIdx, "costo_unitario", e.target.value)} className="h-8 text-body text-right tabular-nums w-28 ml-auto" min={0} step={0.01} aria-label={`Costo unitario de ${fila.concepto}`} />
+                          <Input type="number" value={fila.costo_unitario || ""} onChange={e => onUpdate(globalIdx, "costo_unitario", e.target.value)} className="h-8 text-body text-right tabular-nums w-28 ml-auto" min={0} max={MONTO_MAX} step={0.01} aria-label={`Costo unitario de ${fila.concepto}`} />
                         ) : <span className="text-body tabular-nums">{formatCurrency(fila.costo_unitario, moneda)}</span>}
                       </TableCell>
                       <TableCell className="text-right text-body tabular-nums whitespace-nowrap">

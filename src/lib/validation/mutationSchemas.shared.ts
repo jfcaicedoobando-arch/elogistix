@@ -35,9 +35,12 @@ export const rfcSchema = z
   .or(z.literal(""))
   .or(z.null());
 
+// Ola 7 (M3): el correo se normaliza (minúsculas, sin espacios) para que la
+// unicidad por organización en base de datos sea consistente.
 export const emailSchema = z
   .string()
   .trim()
+  .toLowerCase()
   .max(254, "Correo: máximo 254 caracteres.")
   .email("Correo: formato inválido.")
   .optional()

@@ -11,8 +11,7 @@ import { nonEmpty, uuidSchema } from "./mutationSchemas.shared";
  * acotamos los números para que un dedazo (o un `NaN`/`Infinity`) no escriba
  * importes absurdos en la base.
  */
-const MONTO_MAX = 999_999_999.99;
-const CANTIDAD_MAX = 1_000_000;
+import { MONTO_MAX, CANTIDAD_MAX } from "./limitesNumericos";
 
 const montoSchema = (label: string) =>
   z

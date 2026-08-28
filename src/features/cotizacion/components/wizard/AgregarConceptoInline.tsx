@@ -9,6 +9,7 @@
  * Al aceptar, invoca `onAgregar(moneda, prefill)` — el hook padre calcula el
  * total con IVA con base en la tasa configurada.
  */
+import { CANTIDAD_MAX } from "@/lib/validation/limitesNumericos";
 import { useState } from "react";
 import { MoneyInput } from "@/components/shared/MoneyInput";
 import { Plus } from "lucide-react";
@@ -130,6 +131,7 @@ export function AgregarConceptoInline({
               id="aci-cant"
               type="number"
               min={1}
+              max={CANTIDAD_MAX}
               step="0.01"
               value={cantidad}
               onChange={(e) => setCantidad(Number(e.target.value) || 0)}
