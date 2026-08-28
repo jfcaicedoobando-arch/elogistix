@@ -42,6 +42,9 @@ INSERT INTO _ci_service_role_only (fn) VALUES
   -- dashboard_summary()/dashboard_details() (enmascaran costos por rol).
   ('public._dashboard_details_calc()'),
   ('public._dashboard_summary_calc()'),
+  -- Trigger de alerta de retenciones vs NC (Sub-ola D): sólo lo dispara el trigger.
+  ('public._nc_alerta_retenciones_pagadas()'),
+  ('public._nc_prov_tc_moneda_convertible()'),
   ('public._recalc_estado_proveedor_factura(uuid)'),
   ('public._reprocesar_comisiones_org(uuid)'),
   ('public._seed_demo_limpiar_financiero()'),
@@ -53,6 +56,10 @@ INSERT INTO _ci_service_role_only (fn) VALUES
   -- el post_migrate previo a FIX4).
   ('public.adjuntar_xml_factura_entrante(uuid, text, text, text, text, text, text, date, numeric, text)'),
   ('public.assert_pago_sin_rep_vivo_delete()'),
+  -- Auditorías/backfills internos: los corre soporte con service_role.
+  ('public.auditoria_pfc_huerfanos()'),
+  ('public.backfill_conceptos_venta_facturados()'),
+  ('public.backfill_proformas_aceptadas()'),
   ('public.calc_pago_retenciones()'),
   ('public.calcular_comision_pago()'),
   ('public.cierre_periodo_fecha(uuid)'),
@@ -73,6 +80,7 @@ INSERT INTO _ci_service_role_only (fn) VALUES
   ('public.move_to_dlq(text, text, bigint, jsonb)'),
   ('public.nc_aplicadas_en_moneda_factura(uuid)'),
   ('public.notificar_uuid_cancelado_sat(uuid, jsonb)'),
+  ('public.promover_embarque_por_liquidar(uuid)'),
   ('public.read_email_batch(text, integer, integer)'),
   ('public.registrar_comision_pendiente(uuid, uuid, text, text, text, text)'),
   ('public.reprocesar_comisiones_job()'),

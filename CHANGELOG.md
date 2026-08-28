@@ -6,7 +6,7 @@
 - **Ola E2/E3 · Sub-ola D · Aviso de revisión**: si entra una NC a una factura cuyos pagos ya declararon retenciones, se genera alerta `retenciones_nc` para que contabilidad revise.
 - **Ola E2/E3 · Sub-ola D · Anticipos a proveedor (N14)**: la aplicación de anticipos usa la paridad DOF del **día de la aplicación** (USD y EUR, incluido el cruce USD↔EUR con `convertir_monto_dof`) y guarda el diferencial cambiario en la bitácora; sin T/C oficial se bloquea con `LC_SIN_TC_DOF`.
 - **Ola E2/E3 · Sub-ola D · Presupuesto vs Real (N9)**: las notas de crédito de proveedor se valúan con su propio tipo de cambio (EUR/MXN cuando aplica) en lugar de heredar el T/C del dólar de la factura padre.
-- **Guards**: nuevo `supabase/tests/ola_e2_d_guards.sql` y pruebas `vsRealDomain.ncEur.test.ts`.
+- **Guards**: nuevo `supabase/tests/ola_e2_d_guards.sql`, pruebas `vsRealDomain.ncEur.test.ts` y sincronización de `_ci_service_role_only.sql` (53 funciones internas).
 
 ## [13.781.1] - 2026-08-28
 ### Corregido
