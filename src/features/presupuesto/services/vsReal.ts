@@ -132,13 +132,13 @@ function mapNcsCxP(data: unknown[]): NcCxPRow[] {
       categoria_presupuesto_id: (pf.categoria_presupuesto_id as string | null) ?? null,
       monto: r.monto as number | string,
       moneda: (r.moneda as string | null) ?? null,
-      // N9: la NC trae su propia paridad (MXN por 1 USD/EUR). Sólo se hereda la
-      // de la factura padre cuando ambas comparten moneda; antes una NC en EUR
-      // se valuaba con el T/C del dólar de la factura.
+      // N9: la NC trae su propia paridad (MXN por 1 USD/EUR) y manda sobre la
+      // de la factura padre; antes una NC en EUR se valuaba con el T/C del
+      // dólar heredado. Sólo se hereda cuando la NC no capturó paridad.
       tipo_cambio_usd: (r.tipo_cambio as number | string | null)
-        ?? (((pf.moneda as string | null) ?? "MXN") === ((r.moneda as string | null) ?? "MXN")
-              ? (pf.tipo_cambio_usd as number | string | null) ?? null
-              : null),
+        ?? (pf.tipo_cambio_usd as number | string | null)
+        ?? null,
+
     };
   });
 }
