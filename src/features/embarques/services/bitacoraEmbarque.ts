@@ -23,6 +23,8 @@ export async function fetchBitacoraEmbarque(
     .select(BITACORA_COLUMNS)
     .or(orFilter)
     .order("created_at", { ascending: false })
+    // L1 (auditoría 3-3): desempate estable para que la paginación no repita filas.
+    .order("id", { ascending: false })
     .limit(limite);
   if (error) throw error;
   return (data ?? []) as EntradaBitacora[];

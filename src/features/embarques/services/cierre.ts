@@ -82,7 +82,9 @@ export async function fetchCierreLog(embarqueId: string): Promise<CierreLogEntry
     .from("cierre_embarque_log" as never)
     .select("id, embarque_id, accion, usuario_id, motivo, snapshot, created_at")
     .eq("embarque_id", embarqueId)
-    .order("created_at", { ascending: false });
+    .order("created_at", { ascending: false })
+    // L1 (auditoría 3-3): desempate estable.
+    .order("id", { ascending: false });
   if (error) throw new Error(error.message);
   const principal = (((data as unknown) as CierreLogEntry[]) ?? []).map((e) => ({
     ...e,
@@ -96,7 +98,9 @@ export async function fetchCierreLog(embarqueId: string): Promise<CierreLogEntry
     .select("id, usuario_id, usuario_email, accion, detalles, created_at")
     .eq("entidad_id", embarqueId)
     .eq("accion", "cambiar_estado")
-    .order("created_at", { ascending: false });
+    .order("created_at", { ascending: false })
+    // L1 (auditoría 3-3): desempate estable.
+    .order("id", { ascending: false });
 
   const fallback: CierreLogEntry[] = [];
   for (const row of (bitacora ?? []) as Array<{
