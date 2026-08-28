@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.777.2] - 2026-08-28
+### Verificado
+- **Cierre de la auditoría 3-4**: se revisaron los 26 hallazgos del reporte nuevo contra la base y el código reales. Todos los críticos y altos ya estaban corregidos en las olas anteriores (el reporte se hizo sobre una versión previa): las llaves de organización en las cuatro tablas financieras (H6) ya existen y están validadas, y los filtros de Embarques, Clientes y Cotizaciones ya se guardan en la liga (H8/M8) —verificado en el navegador—.
+- **Aceptados sin acción** con justificación en `docs/auditoria/cierre-auditoria-3-4.md`: L4 (código muerto de IVA, resultado correcto), H8 (reset completo de migraciones en CI, ya cubierto por la regla H9) y la variante de índice único de correos de M3 (ya resuelta por trigger).
+
 ## [13.777.1] - 2026-08-28
 ### Agregado
 - **Candado contra parches de texto en migraciones (auditoría 3 · M6)**: la auditoría de migraciones ahora rechaza cualquier migración que modifique una función con `replace(pg_get_functiondef(...))` (regla H9, aplica también al histórico). Ese patrón hacía que el código real de una función dependiera del estado previo de la base, así que una base nueva y producción podían quedar distintas sin que nadie lo notara —causa raíz del error de notas de crédito multi-moneda—. Desde ahora toda función se vuelve a escribir completa.
