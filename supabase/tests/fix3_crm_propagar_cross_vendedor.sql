@@ -60,9 +60,9 @@ BEGIN
   INSERT INTO public.crm_etapas_pipeline (id, organization_id, nombre, tipo, orden, activa)
   VALUES (v_etapa, v_org, 'Cierre FIX3', 'abierta'::public.crm_etapa_tipo, 1, true);
 
-  INSERT INTO public.clientes (id, organization_id, nombre) VALUES
-    (v_cli_1, v_org, 'Cliente Uno FIX3'),
-    (v_cli_2, v_org, 'Cliente Dos FIX3');
+  INSERT INTO public.clientes (id, organization_id, nombre, email) VALUES
+    (v_cli_1, v_org, 'Cliente Uno FIX3', 'fix3-cli-1@test.local'),
+    (v_cli_2, v_org, 'Cliente Dos FIX3', 'fix3-cli-2@test.local');
 
   INSERT INTO public.crm_oportunidades (id, organization_id, nombre, etapa_id, vendedor_id)
   VALUES (v_op_b, v_org, 'OP del vendedor B', v_etapa, v_vend_b),

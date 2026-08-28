@@ -71,8 +71,8 @@ BEGIN
     (super_u, 'super_admin'),
     (legacy_u, 'contador');
 
-  INSERT INTO public.clientes(id, organization_id, nombre) VALUES
-    (cliente_a, org_a, 'CLIENTE OLA8 A');
+  INSERT INTO public.clientes(id, organization_id, nombre, email) VALUES
+    (cliente_a, org_a, 'CLIENTE OLA8 A', 'ola8-cliente-a@test.local');
 
   -- =========================================================================
   -- TEST 1: membresía directa

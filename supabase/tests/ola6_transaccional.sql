@@ -10,6 +10,9 @@ DECLARE
   v_res jsonb;
   v_lead uuid;
   v_etapa uuid;
+  v_etapa_a3 uuid;
+  v_lead_a3 uuid;
+  v_op_a3 uuid;
   v_op1 uuid;
   v_op2 uuid;
   v_emb uuid;
@@ -31,17 +34,31 @@ BEGIN
 
   ----------------------------------------------------------------------------
   -- A3: reactivar_cotizacion_rpc
+  -- v13.777.9: enviar (o reactivar a 'Enviada') exige oportunidad del CRM,
+  -- así que sembramos etapa + lead calificado + oportunidad de apoyo.
   ----------------------------------------------------------------------------
+  INSERT INTO public.crm_etapas_pipeline (organization_id, nombre, tipo, orden, activa)
+  VALUES (v_org, 'Prospección OLA6 A3', 'abierta'::public.crm_etapa_tipo, 1, true)
+  RETURNING id INTO v_etapa_a3;
+
+  INSERT INTO public.crm_leads (organization_id, empresa, estado)
+  VALUES (v_org, 'LEAD OLA6 A3', 'Calificado'::public.crm_lead_estado)
+  RETURNING id INTO v_lead_a3;
+
+  INSERT INTO public.crm_oportunidades (organization_id, nombre, etapa_id, lead_id, valor_estimado, moneda)
+  VALUES (v_org, 'OP OLA6 A3', v_etapa_a3, v_lead_a3, 1000, 'MXN')
+  RETURNING id INTO v_op_a3;
+
   INSERT INTO public.cotizaciones (
     organization_id, estado, estado_anterior, folio, modo, tipo, conceptos_venta,
-    es_prospecto, prospecto_empresa
+    es_prospecto, prospecto_empresa, oportunidad_id
   ) VALUES (
     v_org, 'Vencida'::public.estado_cotizacion, 'Enviada'::public.estado_cotizacion,
     'COT-OLA6-0001', 'Marítimo'::public.modo_transporte, 'Importación'::public.tipo_operacion,
     '[{"descripcion":"FLETE OLA6","cantidad":1,"precio_unitario":1000,"moneda":"USD","aplica_iva":false}]'::jsonb,
     -- v13.777.9: la segmentación comercial exige cliente ligado fuera de
     -- borrador; esta cotización es de prospecto (M3 la convierte a cliente).
-    true, 'PROSPECTO OLA6'
+    true, 'PROSPECTO OLA6', v_op_a3
   ) RETURNING id INTO v_cot;
 
   v_estado := public.reactivar_cotizacion_rpc(v_cot);
@@ -106,7 +123,7 @@ BEGIN
   IF v_op2 <> v_op1 THEN
     RAISE EXCEPTION 'OLA6 M4 FAIL: la reconversión duplicó la oportunidad';
   END IF;
-  IF (SELECT count(*) FROM public.crm_oportunidades WHERE organization_id = v_org) <> 1 THEN
+  IF (SELECT count(*) FROM public.crm_oportunidades WHERE lead_id = v_lead) <> 1 THEN
     RAISE EXCEPTION 'OLA6 M4 FAIL: hay oportunidades duplicadas';
   END IF;
 
