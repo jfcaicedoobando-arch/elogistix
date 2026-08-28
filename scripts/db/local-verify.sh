@@ -23,8 +23,8 @@ set -uo pipefail
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 cd "$ROOT"
 
-# Misma imagen pinneada que .github/workflows/rls-tests.yml (postgres 15.8).
-PG_IMAGE="postgres@sha256:2c0d947901cfeaee8121e4f2f60fc55a4d1d6835708a21c9c70fec8eaf3f3dcb"
+# Misma imagen pinneada que .github/workflows/rls-tests.yml (postgres 17.6).
+PG_IMAGE="postgres@sha256:b86568d3e0fe1dfaeff52714f9da36f206a30e4c49131b82bf96982d78627409"
 CONTAINER="elogistix-verify-db"
 
 PORT=55432
