@@ -25,7 +25,7 @@ import { useDevolverAnticipo } from "@/features/anticipos-proveedor/hooks/useAnt
 import { useCuentasBancarias } from "@/features/tesoreria/hooks";
 import { etiquetaCuenta } from "@/features/anticipos-proveedor/domain/etiquetaCuenta";
 import { formatCurrency } from "@/lib/formatters";
-import { hoyIsoMx } from "@/lib/date/mx";
+import { hoyMx } from "@/lib/date/mx";
 import { notifyWarning } from "@/lib/ui/appFeedback";
 import type { AnticipoProveedorRow } from "@/features/anticipos-proveedor/hooks/useAnticiposProveedor";
 
@@ -53,7 +53,7 @@ export function DevolverAnticipoDialog({ open, onOpenChange, anticipo }: Props) 
   useEffect(() => {
     if (!open || !anticipo) return;
     setMonto(disponible > 0 ? disponible : null);
-    setFecha(hoyIsoMx());
+    setFecha(hoyMx());
     setCuentaId(cuentasDeMoneda[0]?.id ?? "");
     setReferencia("");
     setMotivo("");
