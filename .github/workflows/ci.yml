@@ -48,13 +48,13 @@ jobs:
       backend: ${{ steps.filter.outputs.backend }}
     steps:
       - name: Checkout
-        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
 
       - name: Filter paths
         id: filter
-        uses: dorny/paths-filter@0e4a8c6effa4802afeda77dc8d303f8176d7dfad # v3.0.4
+        uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4.0.3
         with:
           # En push a main `base` queda vacío → compara contra el commit previo.
           # Si el evento no permite diffear, `paths-filter` marca todo como
@@ -93,7 +93,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           # v13.322.1 (GHA-audit H4) — no se hace push/fetch autenticado.
           persist-credentials: false
@@ -104,7 +104,7 @@ jobs:
       - name: Cache ESLint
         # v13.303.5 — Cache de resultados de ESLint entre corridas.
         # Key incluye el hash de la config: si cambian reglas, se invalida.
-        uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5.1.0
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: node_modules/.cache/eslint
           key: ${{ runner.os }}-eslint-${{ hashFiles('eslint.config.js', 'bun.lock') }}
@@ -127,7 +127,7 @@ jobs:
     timeout-minutes: 8
     steps:
       - name: Checkout
-        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           # v13.322.1 (GHA-audit H4) — no se hace push/fetch autenticado.
           persist-credentials: false
@@ -136,7 +136,7 @@ jobs:
         uses: ./.github/actions/setup-bun
 
       - name: Cache tsc incremental
-        uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5.1.0
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: node_modules/.cache/tsc
           key: ${{ runner.os }}-tsc-${{ hashFiles('tsconfig*.json', 'bun.lock') }}
@@ -173,7 +173,7 @@ jobs:
     timeout-minutes: 8
     steps:
       - name: Checkout
-        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           # v13.322.1 (GHA-audit H4) — no se hace push/fetch autenticado.
           persist-credentials: false
@@ -195,7 +195,7 @@ jobs:
     timeout-minutes: 8
     steps:
       - name: Checkout
-        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           # v13.322.1 (GHA-audit H4) — no se hace push/fetch autenticado.
           persist-credentials: false
@@ -297,7 +297,7 @@ jobs:
     timeout-minutes: 10
     steps:
       - name: Checkout
-        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           # v13.322.1 (GHA-audit H4) — no se hace push/fetch autenticado.
           persist-credentials: false
@@ -356,7 +356,7 @@ jobs:
     timeout-minutes: 10
     steps:
       - name: Checkout
-        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           # v13.322.1 (GHA-audit H4) — este job SÍ hace `git fetch origin` del
           # base SHA para el gate de paths, así que conserva credenciales.
@@ -391,7 +391,7 @@ jobs:
 
       - name: Cache Deno deps
         if: steps.changes.outputs.run == 'true'
-        uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5.1.0
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: |
             ~/.cache/deno
@@ -435,7 +435,7 @@ jobs:
         total: [10]
     steps:
       - name: Checkout
-        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           # v13.322.1 (GHA-audit H4) — no se hace push/fetch autenticado.
           persist-credentials: false
@@ -447,7 +447,7 @@ jobs:
       # blobs viejos entre runs y, si el shard se cancelaba por timeout, el step
       # de upload subía un blob obsoleto que ensuciaba el merge de coverage.
       - name: Cache Vitest transform
-        uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5.1.0
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: |
             node_modules/.vitest
@@ -496,7 +496,7 @@ jobs:
     timeout-minutes: 10
     steps:
       - name: Checkout
-        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           # v13.322.1 (GHA-audit H4) — no se hace push/fetch autenticado.
           persist-credentials: false
