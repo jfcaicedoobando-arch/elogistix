@@ -42,6 +42,8 @@ INSERT INTO _ci_service_role_only (fn) VALUES
   -- dashboard_summary()/dashboard_details() (enmascaran costos por rol).
   ('public._dashboard_details_calc()'),
   ('public._dashboard_summary_calc()'),
+  -- Helper de rol interno (Ola E4): sólo lo usan RPC/policies DEFINER.
+  ('public._es_rol_interno()'),
   -- Trigger de alerta de retenciones vs NC (Sub-ola D): sólo lo dispara el trigger.
   ('public._nc_alerta_retenciones_pagadas()'),
   ('public._nc_prov_tc_moneda_convertible()'),
