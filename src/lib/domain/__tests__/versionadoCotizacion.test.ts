@@ -67,11 +67,11 @@ describe("construirFilaReconciliacion", () => {
 describe("construirResumen", () => {
   it("suma totales y clasifica por delta agregado", () => {
     const filas = [
-      construirFilaReconciliacion({ concepto: "A", moneda: "USD", cotizado: 100, refrescado: 100, real: 110 }),
-      construirFilaReconciliacion({ concepto: "B", moneda: "USD", cotizado: 200, refrescado: 210, real: 220 }),
+      construirFilaReconciliacion({ concepto: "A", moneda: "MXN", cotizado: 100, refrescado: 100, real: 110 }),
+      construirFilaReconciliacion({ concepto: "B", moneda: "MXN", cotizado: 200, refrescado: 210, real: 220 }),
     ];
-    // v13.778.0: los totales se normalizan a MXN; con T/C 1 el resultado es igual.
-    const r = construirResumen(filas, undefined, { usd: 1 });
+    // v13.778.0: los totales se normalizan a MXN (aquí ya vienen en pesos).
+    const r = construirResumen(filas, undefined, {});
     expect(r.total_cotizado).toBe(300);
     expect(r.total_real).toBe(330);
     expect(r.moneda_total).toBe("MXN");
@@ -81,7 +81,18 @@ describe("construirResumen", () => {
   });
 });
 
-describe("construirResumen sin tipo de cambio", () => {
+describe("construirResumen multimoneda", () => {
+  it("normaliza USD a MXN con el T/C del embarque", () => {
+    const filas = [
+      construirFilaReconciliacion({ concepto: "A", moneda: "USD", cotizado: 100, refrescado: 100, real: 110 }),
+      construirFilaReconciliacion({ concepto: "B", moneda: "MXN", cotizado: 500, refrescado: 500, real: 500 }),
+    ];
+    const r = construirResumen(filas, undefined, { usd: 17 });
+    expect(r.total_cotizado).toBe(2200);
+    expect(r.total_real).toBe(2370);
+    expect(r.filas_sin_tipo_cambio).toBe(0);
+  });
+
   it("excluye los renglones no convertibles y los reporta", () => {
     const filas = [
       construirFilaReconciliacion({ concepto: "A", moneda: "USD", cotizado: 100, refrescado: 100, real: 110 }),
