@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.777.4] - 2026-08-28
+### Corregido
+- **CI verde en `audit:tests`, `audit:replay-mirror` y `audit:manifest`**: título de prueba duplicado renombrado en `ConvertirLeadDialog.test.tsx`; espejo `_cxp_validar_aprobacion` sincronizado con la firma vigente (con justificación); nueva migración `20260902004000_replay_mirror_reemision_canonica.sql` que re-emite `nc_aplicadas_en_moneda_factura`, `cartera_pendiente`, `dashboard_summary_datos` y `dashboard_details_datos` para que un replay limpio quede igual a producción; manifiesto actualizado a 1130 migraciones.
+
 ## [13.777.3] - 2026-08-28
 ### Corregido
 - **CI candado service_role-only**: se sincronizó `supabase/tests/rls/_ci_service_role_only.sql` con las 13 funciones internas nuevas (tableros, cierre de periodo, guardas de organización/periodo/UUID fiscal, demo y réplica de conceptos). La prueba vuelve a pasar sin drift.
