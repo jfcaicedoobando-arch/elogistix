@@ -45,28 +45,35 @@ export function TotalesChipDesglose({
           className="rounded-lg border bg-card px-3 py-1.5 text-right transition-colors hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
           <span className="flex items-center gap-1 text-label font-bold uppercase tracking-tight text-muted-foreground">
-            Total {moneda}
+            Subtotal {moneda}
             <ChevronDown className="h-3 w-3" aria-hidden />
           </span>
           <span className="block text-base font-semibold tabular-nums leading-tight">
-            {formatCurrency(total, moneda)}
+            {formatCurrency(subtotal, moneda)}
+          </span>
+          <span className="block text-label tabular-nums leading-tight text-muted-foreground">
+            Total con IVA {formatCurrency(total, moneda)}
           </span>
         </button>
       </PopoverTrigger>
-      <PopoverContent align="end" className="w-56 space-y-1.5">
+      <PopoverContent align="end" className="w-60 space-y-1.5">
         <p className="text-overline font-semibold">
           Desglose
         </p>
-        <Renglon label="Subtotal" value={formatCurrency(subtotal, moneda)} />
+        <Renglon label="Subtotal" value={formatCurrency(subtotal, moneda)} fuerte />
         <Renglon label="IVA" value={formatCurrency(iva, moneda)} />
         {ieps > 0 && <Renglon label="IEPS" value={formatCurrency(ieps, moneda)} />}
         {retenciones > 0 && (
           <Renglon label="Retenciones" value={`− ${formatCurrency(retenciones, moneda)}`} />
         )}
         <div className="border-t pt-1.5">
-          <Renglon label={`Total ${moneda}`} value={formatCurrency(total, moneda)} fuerte />
+          <Renglon label={`Total con IVA ${moneda}`} value={formatCurrency(total, moneda)} />
         </div>
+        <p className="border-t pt-1.5 text-label text-muted-foreground">
+          Las conciliaciones de costo se hacen sobre el subtotal (sin impuestos).
+        </p>
       </PopoverContent>
     </Popover>
   );
 }
+
