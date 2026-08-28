@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.791.1] - 2026-08-28
+### CI
+- Registrado `public._bitacora_cambio_financiero()` en la lista canónica service_role-only: el candado bidireccional de CI ya pasa (58 funciones sin drift).
+
 ## [13.791.0] - 2026-09-04
 ### Anticipos a proveedor · devolución (N13)
 - Nueva acción **Registrar devolución** en la bandeja de anticipos: cuando el proveedor regresa el dinero, el anticipo queda en estado `devuelto` con saldo cero y el reembolso entra a tesorería como ingreso por conciliar (no se toca el pago original ni las aplicaciones ya hechas).
