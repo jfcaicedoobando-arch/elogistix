@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.777.10] - 2026-08-28
+### Corregido
+- **Suite RLS 34/34 en verde**: `test_rls_roles_no_admin.sql` toleraba sólo el bloqueo por política; ahora también acepta `insufficient_privilege` en los tres intentos de `DELETE` sobre `public.facturas` (viewer, operador cross-tenant y cliente), porque `authenticated` ya no tiene ese `GRANT` (borrado físico prohibido). En `test_rls_rpc_org_scope_linter.sql` se retiró `nc_aplicadas_en_moneda_factura` de la whitelist congelada: al volverse `service_role-only` dejó de ser candidata y la entrada quedó muerta.
+
 ## [13.777.9] - 2026-08-28
 ### Corregido
 - **Suite de guards conductuales 58/58**: se cerraron los últimos 3 fallos. `ola3_controles_ciclo.sql` se alineó al esquema vigente (factura con `iva` para el check de totales, `cotizaciones` sin columna `total` y con `modo`/`tipo`, proforma con `expediente`, concepto de venta con `total` y apagado explícito de `app.bypass_cierre` que un helper previo dejaba encendido). `_ci_post_migrate.sql` re-cierra el `DELETE` sobre `public.facturas` para `authenticated`/`anon` (el `GRANT ... ON ALL TABLES` del Postgres bare de CI lo reinstalaba y anulaba el candado C6 de la Ola 1).
