@@ -30,6 +30,7 @@ import {
   ADJUNTAR_XML_FACTURA_ENTRANTE,
   TENANT_ADMINS,
   hasRole as has,
+  puedeVerCostosCotizacion,
 } from "./permissionMatrix";
 
 /**
@@ -113,6 +114,7 @@ export function usePermissions() {
     isOperador,
     canViewFinancials,
     canViewCosts,
+    canViewCostsOfCotizacion,
     role: effectiveRole,
     canAdminTenant,
     canAdminCuentasBancarias,
