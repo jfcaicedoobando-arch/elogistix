@@ -10,7 +10,7 @@
 #   bash scripts/db/schema-snapshot.sh out.sql               # a archivo
 #   bash scripts/db/schema-snapshot.sh out.sql <contenedor>  # pg_dump DENTRO del contenedor
 #
-# IMPORTANTE: el baseline del repo se genera con pg_dump 17.6 (contenedor pinneado).
+# IMPORTANTE: el baseline del repo se genera con pg_dump 17.9 (contenedor pinneado).
 # Un pg_dump de otra versión formatea distinto (p. ej. 15 no califica columnas
 # de vistas con su alias) y produce diff falso: usá siempre el contenedor.
 #

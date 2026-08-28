@@ -40,8 +40,8 @@ concurrency:
 
 env:
   # Pinneado por digest para evitar drift entre runs.
-  # Equivale a postgres:17.6 (linux/amd64).
-  POSTGRES_IMAGE: postgres@sha256:b86568d3e0fe1dfaeff52714f9da36f206a30e4c49131b82bf96982d78627409
+  # Equivale a postgres:17.9 (linux/amd64).
+  POSTGRES_IMAGE: postgres@sha256:66b6a97eac1771fc78bd201b918b4253859f436c6913aeede97bd5366cce89ae
 
 jobs:
   rls:
@@ -51,7 +51,7 @@ jobs:
 
     services:
       postgres:
-        image: postgres@sha256:b86568d3e0fe1dfaeff52714f9da36f206a30e4c49131b82bf96982d78627409
+        image: postgres@sha256:66b6a97eac1771fc78bd201b918b4253859f436c6913aeede97bd5366cce89ae
         env:
           POSTGRES_PASSWORD: postgres
           POSTGRES_DB: postgres
@@ -130,7 +130,7 @@ jobs:
           # propio workflow (pinneo de imagen Postgres incluido).
           # v13.x (GHA-audit A3) — incluye supabase/schema/**: es trigger del
           # workflow y debe invalidar el snapshot igual que las migraciones.
-          key: rls-snapshot-pg17.6-${{ hashFiles('supabase/migrations/**', 'supabase/tests/rls/_ci_*.sql', 'supabase/tests/*.sql', 'supabase/schema/**', '.github/workflows/rls-tests.yml') }}
+          key: rls-snapshot-pg17.9-${{ hashFiles('supabase/migrations/**', 'supabase/tests/rls/_ci_*.sql', 'supabase/tests/*.sql', 'supabase/schema/**', '.github/workflows/rls-tests.yml') }}
 
       - name: Bootstrap (stubs auth/storage/cron/net/pgmq)
         if: steps.snapshot-cache.outputs.cache-hit != 'true'
@@ -288,7 +288,7 @@ jobs:
 
     services:
       postgres:
-        image: postgres@sha256:b86568d3e0fe1dfaeff52714f9da36f206a30e4c49131b82bf96982d78627409
+        image: postgres@sha256:66b6a97eac1771fc78bd201b918b4253859f436c6913aeede97bd5366cce89ae
         env:
           POSTGRES_PASSWORD: postgres
           POSTGRES_DB: postgres
@@ -418,7 +418,7 @@ jobs:
 
     services:
       postgres:
-        image: postgres@sha256:b86568d3e0fe1dfaeff52714f9da36f206a30e4c49131b82bf96982d78627409
+        image: postgres@sha256:66b6a97eac1771fc78bd201b918b4253859f436c6913aeede97bd5366cce89ae
         env:
           POSTGRES_PASSWORD: postgres
           POSTGRES_DB: postgres
@@ -510,7 +510,7 @@ jobs:
 
     services:
       postgres:
-        image: postgres@sha256:b86568d3e0fe1dfaeff52714f9da36f206a30e4c49131b82bf96982d78627409
+        image: postgres@sha256:66b6a97eac1771fc78bd201b918b4253859f436c6913aeede97bd5366cce89ae
         env:
           POSTGRES_PASSWORD: postgres
           POSTGRES_DB: postgres
@@ -627,7 +627,7 @@ jobs:
 
     services:
       postgres:
-        image: postgres@sha256:b86568d3e0fe1dfaeff52714f9da36f206a30e4c49131b82bf96982d78627409
+        image: postgres@sha256:66b6a97eac1771fc78bd201b918b4253859f436c6913aeede97bd5366cce89ae
         env:
           POSTGRES_PASSWORD: postgres
           POSTGRES_DB: postgres
@@ -674,7 +674,7 @@ jobs:
         run: |
           set -euo pipefail
           # pg_dump se ejecuta DENTRO del contenedor de la imagen pinneada:
-          # el pg_dump del runner formatea distinto al del servidor (17.6)
+          # el pg_dump del runner formatea distinto al del servidor (17.9)
           # y produciría diffs falsos contra la baseline generada en local.
           container=$(docker ps --filter "ancestor=${POSTGRES_IMAGE}" --format '{{.Names}}' | head -1)
           if [ -z "$container" ]; then
@@ -697,7 +697,7 @@ jobs:
         run: |
           set -uo pipefail
           # Bootstrap: la baseline sólo puede generarse con el pg_dump de la
-          # imagen Postgres pinneada (17.6). Mientras no exista el archivo
+          # imagen Postgres pinneada (17.9). Mientras no exista el archivo
           # committeado, este job avisa y publica el snapshot como artifact en
           # vez de reprobar el pipeline: no hay nada contra qué comparar todavía.
           if [ ! -f "$BASELINE" ]; then
@@ -822,7 +822,7 @@ jobs:
 
     services:
       postgres:
-        image: postgres@sha256:b86568d3e0fe1dfaeff52714f9da36f206a30e4c49131b82bf96982d78627409
+        image: postgres@sha256:66b6a97eac1771fc78bd201b918b4253859f436c6913aeede97bd5366cce89ae
         env:
           POSTGRES_PASSWORD: postgres
           POSTGRES_DB: postgres
