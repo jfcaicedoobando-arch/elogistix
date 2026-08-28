@@ -7,6 +7,7 @@ import {
   rangoUltimosDias,
   FALLBACK,
   resolverFecha,
+  esFechaCivilValida,
   msHastaMedianocheMx,
 } from "./index.ts";
 import { isoDiaMexico } from "../_shared/banxicoDof.ts";
@@ -225,4 +226,25 @@ Deno.test("resolverFecha: fechaIso es el día civil MX y se propaga", async () =
   const r = await resolverFecha(new Request("https://example.com/"));
   assertEquals(r.esHoy, true);
   assertEquals(r.fechaIso, isoDiaMexico(new Date()));
+});
+
+// ── Ola E1 · N23: fechas civiles imposibles ─────────────────
+
+Deno.test("esFechaCivilValida: rechaza 2023-02-31 y acepta 2024-02-29", () => {
+  assertEquals(esFechaCivilValida("2023-02-31"), false);
+  assertEquals(esFechaCivilValida("2024-02-29"), true);
+  assertEquals(esFechaCivilValida("2024-13-01"), false);
+  assertEquals(esFechaCivilValida("hoy"), false);
+});
+
+Deno.test("resolverFecha: marca invalida cuando la fecha no existe", async () => {
+  const r = await resolverFecha(new Request("https://example.com/?fecha=2023-02-31"));
+  assertEquals(r.invalida, true);
+  assertEquals(r.fechaSolicitada, null);
+});
+
+Deno.test("resolverFecha: una fecha pasada válida no se marca invalida", async () => {
+  const r = await resolverFecha(new Request("https://example.com/?fecha=2024-02-29"));
+  assertEquals(r.invalida, false);
+  assertEquals(r.fechaIso, "2024-02-29");
 });

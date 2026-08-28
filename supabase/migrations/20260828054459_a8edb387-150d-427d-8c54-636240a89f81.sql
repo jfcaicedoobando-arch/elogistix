@@ -1,9 +1,9 @@
--- Espejo canónico de public._cxp_validar_aprobacion
--- Fuente vigente (mayor timestamp): 20260828054459_a8edb387-150d-427d-8c54-636240a89f81.sql
--- Vigilado por `bun run audit:replay-mirror` y `audit:schema-functions`.
--- Ola E1 · N-F3: sin T/C válido la factura extranjera sin vínculo NO se valúa
--- 1:1 contra el umbral; se bloquea con LC_CXP_TC_REQUERIDO.
+-- =========================================================================
+-- Ola E1 · Bloque 2 — Integridad financiera (N-F3, C1-res, N22, N24)
+-- =========================================================================
 
+-- N-F3: sin T/C válido, la factura extranjera sin vínculo NO se compara contra
+-- el umbral asumiendo 1:1 — se bloquea la aprobación.
 CREATE OR REPLACE FUNCTION public._cxp_validar_aprobacion(p_factura_id uuid, p_justificacion text DEFAULT NULL::text)
  RETURNS void
  LANGUAGE plpgsql
@@ -170,3 +170,77 @@ BEGIN
   END IF;
 END;
 $function$;
+
+-- C1-res: el estado de cuenta usa el canon multimoneda de notas de crédito.
+CREATE OR REPLACE FUNCTION public.facturas_cartera_cliente(p_cliente_id uuid, p_desde date DEFAULT NULL::date, p_hasta date DEFAULT NULL::date)
+ RETURNS TABLE(id uuid, organization_id uuid, numero text, serie text, folio text, cliente_id uuid, cliente_nombre text, total numeric, saldo numeric, moneda text, estado text, fecha_emision date, fecha_vencimiento date)
+ LANGUAGE plpgsql
+ STABLE SECURITY DEFINER
+ SET search_path TO 'public'
+AS $function$
+DECLARE
+  v_org uuid;
+  v_uid uuid := auth.uid();
+  v_caller_org uuid;
+BEGIN
+  SELECT c.organization_id INTO v_org
+  FROM public.clientes c WHERE c.id = p_cliente_id AND c.deleted_at IS NULL;
+  IF v_org IS NULL THEN RETURN; END IF;
+
+  -- Fail-closed para usuarios finales de otra organización.
+  IF v_uid IS NOT NULL
+     AND COALESCE(auth.role()::text, '') <> 'service_role'
+     AND NOT public.has_role(v_uid, 'super_admin'::app_role) THEN
+    v_caller_org := public.current_user_org_id();
+    IF v_caller_org IS NULL OR v_org IS DISTINCT FROM v_caller_org THEN
+      RETURN;
+    END IF;
+  END IF;
+
+  RETURN QUERY
+  SELECT f.id,
+         f.organization_id,
+         f.numero::text,
+         f.serie::text,
+         f.folio_fiscal::text,
+         f.cliente_id,
+         f.cliente_nombre::text,
+         COALESCE(f.total, 0)::numeric,
+         CASE
+           WHEN f.estado::text = 'Pagada' THEN 0::numeric
+           ELSE (COALESCE(f.total, 0)
+             - COALESCE((SELECT SUM(p.monto_aplicado_factura) FROM public.pagos_factura p
+                          WHERE p.factura_id = f.id AND p.deleted_at IS NULL), 0)
+             -- Ola E1 · C1-res: antes `SUM(nc.monto)` en crudo mezclaba monedas.
+             - public._nc_aplicadas_moneda_factura(f.id))::numeric
+         END AS saldo,
+         f.moneda::text,
+         f.estado::text,
+         f.fecha_emision,
+         f.fecha_vencimiento
+  FROM public.facturas f
+  WHERE f.cliente_id = p_cliente_id
+    AND f.deleted_at IS NULL
+    AND f.estado NOT IN ('Borrador', 'Cancelada', 'Sustituida')
+    AND (p_desde IS NULL OR f.fecha_emision >= p_desde)
+    AND (p_hasta IS NULL OR f.fecha_emision <= p_hasta)
+  ORDER BY f.fecha_emision;
+END;
+$function$;
+
+-- N22: un movimiento bancario es cargo O abono, nunca ambos ni negativo.
+ALTER TABLE public.bbva_movimientos
+  DROP CONSTRAINT IF EXISTS bbva_movimientos_cargo_abono_check;
+ALTER TABLE public.bbva_movimientos
+  ADD CONSTRAINT bbva_movimientos_cargo_abono_check
+  CHECK (
+    cargo >= 0 AND abono >= 0
+    AND ((cargo > 0)::int + (abono > 0)::int) <= 1
+  );
+
+-- N24: el saldo disponible de un anticipo vive entre 0 y el monto original.
+ALTER TABLE public.anticipos_proveedor
+  DROP CONSTRAINT IF EXISTS anticipos_proveedor_saldo_rango_check;
+ALTER TABLE public.anticipos_proveedor
+  ADD CONSTRAINT anticipos_proveedor_saldo_rango_check
+  CHECK (saldo_disponible IS NULL OR (saldo_disponible >= 0 AND saldo_disponible <= monto + 0.01));

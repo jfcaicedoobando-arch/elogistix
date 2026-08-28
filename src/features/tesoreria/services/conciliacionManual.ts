@@ -18,10 +18,32 @@ export interface MovimientoManualPayload {
   userId: string | null;
 }
 
+/**
+ * Ola E1 · N22: un movimiento bancario es cargo O abono, nunca ambos, y nunca
+ * negativo. La base lo bloquea con un CHECK; aquí avisamos con un mensaje claro
+ * antes de mandar el insert.
+ */
+export function validarCargoAbono(cargo: number, abono: number): string | null {
+  if (!Number.isFinite(cargo) || !Number.isFinite(abono)) {
+    return "Captura importes numéricos válidos.";
+  }
+  if (cargo < 0 || abono < 0) return "Los importes no pueden ser negativos.";
+  if (cargo > 0 && abono > 0) {
+    return "Un movimiento es cargo o abono, no los dos: deja uno de los dos importes en cero.";
+  }
+  if (cargo === 0 && abono === 0) {
+    return "Captura el importe del cargo o del abono.";
+  }
+  return null;
+}
+
 export async function registrarMovimientoManual(
   input: MovimientoManualPayload,
 ): Promise<void> {
+  const invalido = validarCargoAbono(input.cargo, input.abono);
+  if (invalido) throw new Error(invalido);
   const hashDedupe = `manual-${crypto.randomUUID()}`;
+
   await run(
     supabase.from("bbva_movimientos").insert({
       cuenta_bancaria_id: input.cuentaBancariaId,

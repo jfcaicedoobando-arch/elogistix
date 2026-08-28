@@ -3,6 +3,7 @@
  * proveedor. Mantiene `DialogNotaCreditoProveedor` dentro del límite Power of 10.
  */
 import type { CfdiParsedResponse } from "@/features/cxp/services";
+import type { Moneda } from "@/types/db";
 
 export interface NcPrefillValues {
   folio: string;
@@ -12,10 +13,10 @@ export interface NcPrefillValues {
   descripcion: string;
   tipoComprobante: string;
   /** Moneda declarada en el CFDI; la NC ya no se asume en la moneda de la factura. */
-  moneda: "MXN" | "USD" | "EUR" | null;
+  moneda: Moneda | null;
 }
 
-function normalizarMoneda(valor: string | null | undefined): "MXN" | "USD" | "EUR" | null {
+function normalizarMoneda(valor: string | null | undefined): Moneda | null {
   const m = (valor ?? "").trim().toUpperCase();
   return m === "MXN" || m === "USD" || m === "EUR" ? m : null;
 }

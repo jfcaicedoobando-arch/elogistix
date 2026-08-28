@@ -1,0 +1,1 @@
+ALTER VIEW public.v_pagos_rep_pendientes SET (security_invoker = on);

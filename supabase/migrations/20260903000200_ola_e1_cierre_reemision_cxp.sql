@@ -1,8 +1,12 @@
--- Espejo canónico de public._cxp_validar_aprobacion
--- Fuente vigente (mayor timestamp): 20260828054459_a8edb387-150d-427d-8c54-636240a89f81.sql
--- Vigilado por `bun run audit:replay-mirror` y `audit:schema-functions`.
--- Ola E1 · N-F3: sin T/C válido la factura extranjera sin vínculo NO se valúa
--- 1:1 contra el umbral; se bloquea con LC_CXP_TC_REQUERIDO.
+-- =========================================================================
+-- Ola E1 · Cierre — re-emisión canónica con timestamp posterior
+--   · `_cxp_validar_aprobacion` (N-F3) se re-emite CON su higiene de permisos
+--     (REVOKE PUBLIC/anon/authenticated + GRANT service_role), que vivía en
+--     20260828031517 y quedaba "detrás" de la migración de la Ola E1.
+--   · `v_proveedor_facturas_saldo` se re-emite con `SUM(...)` explícito
+--     (misma semántica) para que el guardrail Fase L lea la definición vigente.
+-- Ambas definiciones son idénticas en semántica a lo ya aplicado en la base.
+-- =========================================================================
 
 CREATE OR REPLACE FUNCTION public._cxp_validar_aprobacion(p_factura_id uuid, p_justificacion text DEFAULT NULL::text)
  RETURNS void
@@ -170,3 +174,27 @@ BEGIN
   END IF;
 END;
 $function$;
+
+
+REVOKE ALL ON FUNCTION public._cxp_validar_aprobacion(uuid, text) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public._cxp_validar_aprobacion(uuid, text) FROM anon;
+REVOKE ALL ON FUNCTION public._cxp_validar_aprobacion(uuid, text) FROM authenticated;
+GRANT EXECUTE ON FUNCTION public._cxp_validar_aprobacion(uuid, text) TO service_role;
+
+CREATE OR REPLACE VIEW public.v_proveedor_facturas_saldo WITH (security_invoker='true') AS
+ SELECT pf.id AS proveedor_factura_id,
+    pf.organization_id,
+    pf.total,
+    COALESCE(( SELECT SUM(pp.monto_en_moneda_factura) AS sum
+           FROM public.pagos_proveedor pp
+          WHERE ((pp.proveedor_factura_id = pf.id) AND (pp.deleted_at IS NULL))), (0)::numeric) AS pagado,
+    COALESCE(( SELECT SUM(public.monto_pago_en_moneda_factura(nc.monto, nc.moneda::text, nc.tipo_cambio, pf.moneda::text)) AS sum
+           FROM public.proveedor_notas_credito nc
+          WHERE ((nc.proveedor_factura_id = pf.id) AND (nc.estado = 'Aplicada'::public.estado_nota_credito_proveedor) AND (nc.deleted_at IS NULL))), (0)::numeric) AS notas_credito_aplicadas,
+    ((pf.total - COALESCE(( SELECT SUM(pp.monto_en_moneda_factura) AS sum
+           FROM public.pagos_proveedor pp
+          WHERE ((pp.proveedor_factura_id = pf.id) AND (pp.deleted_at IS NULL))), (0)::numeric)) - COALESCE(( SELECT SUM(public.monto_pago_en_moneda_factura(nc.monto, nc.moneda::text, nc.tipo_cambio, pf.moneda::text)) AS sum
+           FROM public.proveedor_notas_credito nc
+          WHERE ((nc.proveedor_factura_id = pf.id) AND (nc.estado = 'Aplicada'::public.estado_nota_credito_proveedor) AND (nc.deleted_at IS NULL))), (0)::numeric)) AS saldo
+   FROM public.proveedor_facturas pf
+  WHERE (pf.deleted_at IS NULL);
