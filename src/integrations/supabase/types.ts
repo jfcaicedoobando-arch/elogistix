@@ -180,6 +180,8 @@ export type Database = {
           cuenta_bancaria_id: string | null
           deleted_at: string | null
           deleted_by: string | null
+          devuelto_at: string | null
+          devuelto_by: string | null
           embarque_id: string | null
           estado: string
           fecha_anticipo: string
@@ -187,7 +189,9 @@ export type Database = {
           metodo_pago: string | null
           moneda: Database["public"]["Enums"]["moneda"]
           monto: number
+          monto_devuelto: number | null
           motivo_cancelacion: string | null
+          motivo_devolucion: string | null
           notas: string | null
           organization_id: string
           proveedor_id: string
@@ -202,6 +206,8 @@ export type Database = {
           cuenta_bancaria_id?: string | null
           deleted_at?: string | null
           deleted_by?: string | null
+          devuelto_at?: string | null
+          devuelto_by?: string | null
           embarque_id?: string | null
           estado?: string
           fecha_anticipo?: string
@@ -209,7 +215,9 @@ export type Database = {
           metodo_pago?: string | null
           moneda?: Database["public"]["Enums"]["moneda"]
           monto: number
+          monto_devuelto?: number | null
           motivo_cancelacion?: string | null
+          motivo_devolucion?: string | null
           notas?: string | null
           organization_id: string
           proveedor_id: string
@@ -224,6 +232,8 @@ export type Database = {
           cuenta_bancaria_id?: string | null
           deleted_at?: string | null
           deleted_by?: string | null
+          devuelto_at?: string | null
+          devuelto_by?: string | null
           embarque_id?: string | null
           estado?: string
           fecha_anticipo?: string
@@ -231,7 +241,9 @@ export type Database = {
           metodo_pago?: string | null
           moneda?: Database["public"]["Enums"]["moneda"]
           monto?: number
+          monto_devuelto?: number | null
           motivo_cancelacion?: string | null
+          motivo_devolucion?: string | null
           notas?: string | null
           organization_id?: string
           proveedor_id?: string
@@ -9027,6 +9039,8 @@ export type Database = {
           cuenta_bancaria_id: string | null
           deleted_at: string | null
           deleted_by: string | null
+          devuelto_at: string | null
+          devuelto_by: string | null
           embarque_id: string | null
           estado: string
           fecha_anticipo: string
@@ -9034,7 +9048,9 @@ export type Database = {
           metodo_pago: string | null
           moneda: Database["public"]["Enums"]["moneda"]
           monto: number
+          monto_devuelto: number | null
           motivo_cancelacion: string | null
+          motivo_devolucion: string | null
           notas: string | null
           organization_id: string
           proveedor_id: string
@@ -9831,6 +9847,48 @@ export type Database = {
         Returns: boolean
       }
       detectar_alertas_app_logs: { Args: never; Returns: number }
+      devolver_anticipo_proveedor: {
+        Args: {
+          p_cuenta_bancaria_id: string
+          p_fecha: string
+          p_id: string
+          p_monto: number
+          p_motivo?: string
+          p_referencia?: string
+        }
+        Returns: {
+          created_at: string
+          created_by: string | null
+          cuenta_bancaria_id: string | null
+          deleted_at: string | null
+          deleted_by: string | null
+          devuelto_at: string | null
+          devuelto_by: string | null
+          embarque_id: string | null
+          estado: string
+          fecha_anticipo: string
+          id: string
+          metodo_pago: string | null
+          moneda: Database["public"]["Enums"]["moneda"]
+          monto: number
+          monto_devuelto: number | null
+          motivo_cancelacion: string | null
+          motivo_devolucion: string | null
+          notas: string | null
+          organization_id: string
+          proveedor_id: string
+          referencia: string | null
+          saldo_disponible: number
+          tipo_cambio_usd: number | null
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "anticipos_proveedor"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       direccion_totales: { Args: { p_desde: string }; Returns: Json }
       duplicar_cotizacion: { Args: { p_id: string }; Returns: string }
       duplicar_embarque_completo: {
@@ -10816,6 +10874,8 @@ export type Database = {
           cuenta_bancaria_id: string | null
           deleted_at: string | null
           deleted_by: string | null
+          devuelto_at: string | null
+          devuelto_by: string | null
           embarque_id: string | null
           estado: string
           fecha_anticipo: string
@@ -10823,7 +10883,9 @@ export type Database = {
           metodo_pago: string | null
           moneda: Database["public"]["Enums"]["moneda"]
           monto: number
+          monto_devuelto: number | null
           motivo_cancelacion: string | null
+          motivo_devolucion: string | null
           notas: string | null
           organization_id: string
           proveedor_id: string
@@ -11224,6 +11286,8 @@ export type Database = {
           cuenta_bancaria_id: string | null
           deleted_at: string | null
           deleted_by: string | null
+          devuelto_at: string | null
+          devuelto_by: string | null
           embarque_id: string | null
           estado: string
           fecha_anticipo: string
@@ -11231,7 +11295,9 @@ export type Database = {
           metodo_pago: string | null
           moneda: Database["public"]["Enums"]["moneda"]
           monto: number
+          monto_devuelto: number | null
           motivo_cancelacion: string | null
+          motivo_devolucion: string | null
           notas: string | null
           organization_id: string
           proveedor_id: string
