@@ -4,6 +4,7 @@
 export * from '@/features/auditoria/hooks/useBitacora';
 export * from '@/features/search/hooks/useGlobalSearch';
 export * from './useDebounce';
+export * from './useFiltroUrl';
 export * from './useListPageState';
 export * from './useOrgFilter';
 export * from './useOrgActiva';
