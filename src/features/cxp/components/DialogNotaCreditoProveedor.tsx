@@ -161,26 +161,19 @@ export function DialogNotaCreditoProveedor({ open, onOpenChange, facturaId, mone
       </div>
 
       <NuevaNotaCreditoFormFields
-        mode={mode}
-        onModeChange={setMode}
-        parsedCfdi={parsedCfdi}
-        onCfdiParsed={handleCfdiParsed}
-        folio={folio}
-        onFolioChange={setFolio}
-        fecha={fecha}
-        onFechaChange={setFecha}
-        monto={monto}
-        onMontoChange={setMonto}
-        motivo={motivo}
-        onMotivoChange={setMotivo}
-        descripcion={descripcion}
-        onDescripcionChange={setDescripcion}
-        monedaFactura={monedaFactura}
-        saldoFactura={saldoFactura}
-        moneda={moneda}
-        onMonedaChange={setMoneda}
-        tipoCambio={tipoCambio}
-        onTipoCambioChange={setTipoCambio}
+        origen={{ mode, onModeChange: setMode, parsedCfdi, onCfdiParsed: handleCfdiParsed }}
+        datos={{
+          folio, onFolioChange: setFolio,
+          fecha, onFechaChange: setFecha,
+          monto, onMontoChange: setMonto,
+          motivo, onMotivoChange: setMotivo,
+          descripcion, onDescripcionChange: setDescripcion,
+        }}
+        divisa={{
+          monedaFactura, saldoFactura,
+          moneda, onMonedaChange: setMoneda,
+          tipoCambio, onTipoCambioChange: setTipoCambio,
+        }}
       />
 
       <NcProveedorAvisos

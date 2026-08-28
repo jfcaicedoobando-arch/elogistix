@@ -37,11 +37,16 @@ export function TabButton({ active, onClick, children }: {
   );
 }
 
-interface Props {
+/** Captura por XML vs manual. */
+interface OrigenNc {
   mode: "manual" | "cfdi";
   onModeChange: (mode: "manual" | "cfdi") => void;
   parsedCfdi: CfdiParsedResponse | null;
   onCfdiParsed: (data: CfdiParsedResponse, files: { xml: File; pdf: File | null }) => void;
+}
+
+/** Datos base de la nota de crédito. */
+interface DatosNc {
   folio: string;
   onFolioChange: (v: string) => void;
   fecha: string;
@@ -52,6 +57,10 @@ interface Props {
   onMotivoChange: (v: MotivoNC) => void;
   descripcion: string;
   onDescripcionChange: (v: string) => void;
+}
+
+/** Moneda de la NC y su tipo de cambio contra la factura. */
+interface MonedaNcProps {
   monedaFactura: MonedaNC;
   saldoFactura: number;
   moneda: MonedaNC;
@@ -60,14 +69,23 @@ interface Props {
   onTipoCambioChange: (v: string) => void;
 }
 
+interface Props {
+  origen: OrigenNc;
+  datos: DatosNc;
+  divisa: MonedaNcProps;
+}
+
 const MONEDAS: MonedaNC[] = ["MXN", "USD", "EUR"];
 
-export function NuevaNotaCreditoFormFields({
-  mode, onModeChange, parsedCfdi, onCfdiParsed,
-  folio, onFolioChange, fecha, onFechaChange, monto, onMontoChange,
-  motivo, onMotivoChange, descripcion, onDescripcionChange,
-  monedaFactura, saldoFactura, moneda, onMonedaChange, tipoCambio, onTipoCambioChange,
-}: Props) {
+export function NuevaNotaCreditoFormFields({ origen, datos, divisa }: Props) {
+  const { mode, onModeChange, parsedCfdi, onCfdiParsed } = origen;
+  const {
+    folio, onFolioChange, fecha, onFechaChange, monto, onMontoChange,
+    motivo, onMotivoChange, descripcion, onDescripcionChange,
+  } = datos;
+  const {
+    monedaFactura, saldoFactura, moneda, onMonedaChange, tipoCambio, onTipoCambioChange,
+  } = divisa;
   const monedaExtranjera = moneda === "MXN" ? monedaFactura : moneda;
   return (
     <div className="rounded-lg border bg-muted/30">
