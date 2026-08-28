@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.780.1] - 2026-08-28
+### Corregido
+- **CRM · Editar oportunidad ya no borra el cliente vinculado**: al guardar cambios en una oportunidad nacida de un lead convertido se conservan `cliente_id`/`cliente_nombre` (y el `lead_id`). Antes era como actualizar el monto de un expediente y que se cayera la etiqueta con el nombre del cliente.
+
 ## [13.780.0] - 2026-08-28
 ### Corregido
 - **Ola E1 · Aislamiento entre organizaciones (C4, C5, N6, N16)**: `embarques` valida por trigger que cliente, cotización, agente y tarifa sean de la misma organización; `crear_proforma_atomica` rechaza conceptos de otro embarque/cliente o ya borrados (`LC_CONCEPTOS_AJENOS`); las funciones de mantenimiento global dejaron de ser ejecutables por la app (sólo `service_role`) y las políticas de edición de `cobranza_seguimiento` y `cotizacion_plantillas` ganaron `WITH CHECK`. Era como tener puertas entre oficinas vecinas que sólo se revisaban al entrar, no al salir.
