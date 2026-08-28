@@ -4,8 +4,9 @@
  * Cancelar es romper el cheque antes de entregarlo; devolver es que el
  * proveedor te deposite de vuelta lo que le sobró: el pago sí ocurrió, así que
  * conservamos el movimiento original y damos entrada al reembolso.
+ *
+ * El estado y las validaciones viven en `useDevolverAnticipoForm.ts`.
  */
-import { useEffect, useMemo, useState } from "react";
 import { Undo2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,12 +23,9 @@ import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { FormDialogSection } from "@/components/shared/FormDialogSection";
 import { MoneyInput } from "@/components/shared/MoneyInput";
 import { DatePickerMx } from "@/components/ui/date-picker-mx";
-import { useDevolverAnticipo } from "@/features/anticipos-proveedor/hooks/useAnticipoProveedorMutations";
-import { useCuentasBancarias } from "@/features/tesoreria/hooks";
+import { useDevolverAnticipoForm } from "@/features/anticipos-proveedor/hooks/useDevolverAnticipoForm";
 import { etiquetaCuenta } from "@/features/anticipos-proveedor/domain/etiquetaCuenta";
 import { formatCurrency } from "@/lib/formatters";
-import { hoyMx } from "@/lib/date/mx";
-import { notifyWarning } from "@/lib/ui/appFeedback";
 import type { AnticipoProveedorRow } from "@/features/anticipos-proveedor/hooks/useAnticiposProveedor";
 
 interface Props {
@@ -37,77 +35,7 @@ interface Props {
 }
 
 export function DevolverAnticipoDialog({ open, onOpenChange, anticipo }: Props) {
-  const devolver = useDevolverAnticipo();
-  const { data: cuentas = [] } = useCuentasBancarias(true);
-  const [monto, setMonto] = useState<number | null>(null);
-  const [fecha, setFecha] = useState("");
-  const [cuentaId, setCuentaId] = useState("");
-  const [referencia, setReferencia] = useState("");
-  const [motivo, setMotivo] = useState("");
-
-  const disponible = anticipo?.disponible ?? 0;
-  const moneda = anticipo?.moneda ?? "MXN";
-  const cuentasDeMoneda = useMemo(
-    () => cuentas.filter((c) => c.moneda === moneda),
-    [cuentas, moneda],
-  );
-
-  // Al abrir se propone devolver todo el saldo con fecha de hoy.
-  useEffect(() => {
-    if (!open || !anticipo) return;
-    setMonto(anticipo.disponible > 0 ? anticipo.disponible : null);
-    setFecha(hoyMx());
-    setCuentaId("");
-    setReferencia("");
-    setMotivo("");
-  }, [open, anticipo]);
-
-  // La cuenta se sugiere aparte porque el catálogo puede llegar después de
-  // abrir el diálogo; sólo se rellena si el usuario aún no eligió una.
-  useEffect(() => {
-    if (!open) return;
-    setCuentaId((actual) => actual || (cuentasDeMoneda[0]?.id ?? ""));
-  }, [open, cuentasDeMoneda]);
-
-  const excede = (monto ?? 0) > disponible + 0.01;
-
-  const handleConfirm = async () => {
-    if (!anticipo) return;
-    if (!monto || monto <= 0 || excede) {
-      notifyWarning(undefined, {
-        title: "Revisa el monto",
-        description: `La devolución debe ser mayor a cero y no puede exceder el saldo disponible (${formatCurrency(disponible, moneda)}).`,
-      });
-      return;
-    }
-    if (!fecha) {
-      notifyWarning(undefined, { title: "Falta la fecha", description: "Indica cuándo entró el depósito." });
-      return;
-    }
-    if (!cuentaId) {
-      notifyWarning(undefined, {
-        title: "Falta la cuenta",
-        description: "Selecciona la cuenta bancaria donde entró el dinero.",
-      });
-      return;
-    }
-    if (motivo.trim().length < 3) {
-      notifyWarning(undefined, {
-        title: "Indica un motivo",
-        description: "Escribe el motivo de la devolución (al menos 3 caracteres).",
-      });
-      return;
-    }
-    await devolver.mutateAsync({
-      id: anticipo.id,
-      monto,
-      fecha,
-      cuentaBancariaId: cuentaId,
-      referencia: referencia.trim() || null,
-      motivo: motivo.trim(),
-    });
-    onOpenChange(false);
-  };
+  const f = useDevolverAnticipoForm({ open, anticipo, onOpenChange });
 
   if (!anticipo) return null;
 
@@ -127,11 +55,11 @@ export function DevolverAnticipoDialog({ open, onOpenChange, anticipo }: Props) 
       size="md"
       footer={
         <>
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={devolver.isPending}>
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={f.isPending}>
             Volver
           </Button>
-          <Button onClick={() => void handleConfirm()} disabled={devolver.isPending}>
-            {devolver.isPending ? "Registrando…" : "Registrar devolución"}
+          <Button onClick={() => void f.handleConfirm()} disabled={f.isPending}>
+            {f.isPending ? "Registrando…" : "Registrar devolución"}
           </Button>
         </>
       }
@@ -142,43 +70,43 @@ export function DevolverAnticipoDialog({ open, onOpenChange, anticipo }: Props) 
             <Label htmlFor="dev-monto">Monto devuelto</Label>
             <MoneyInput
               id="dev-monto"
-              value={monto}
-              onChange={setMonto}
-              currency={moneda}
-              max={disponible}
-              aria-invalid={excede}
+              value={f.monto}
+              onChange={f.setMonto}
+              currency={f.moneda}
+              max={f.disponible}
+              aria-invalid={f.excede}
             />
-            <p className={excede ? "text-xs text-destructive" : "text-xs text-muted-foreground"}>
-              Saldo disponible: {formatCurrency(disponible, moneda)}
+            <p className={f.excede ? "text-xs text-destructive" : "text-xs text-muted-foreground"}>
+              Saldo disponible: {formatCurrency(f.disponible, f.moneda)}
             </p>
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="dev-fecha">Fecha de la devolución</Label>
             <DatePickerMx
               id="dev-fecha"
-              value={fecha}
-              onChange={setFecha}
+              value={f.fecha}
+              onChange={f.setFecha}
               min={anticipo.fecha_anticipo ?? undefined}
               aria-label="Fecha de la devolución"
             />
           </div>
           <div className="space-y-1.5 sm:col-span-2">
             <Label htmlFor="dev-cuenta">Cuenta bancaria donde entró el dinero</Label>
-            <Select value={cuentaId} onValueChange={setCuentaId}>
+            <Select value={f.cuentaId} onValueChange={f.setCuentaId}>
               <SelectTrigger id="dev-cuenta">
-                <SelectValue placeholder={`Selecciona una cuenta en ${moneda}`} />
+                <SelectValue placeholder={`Selecciona una cuenta en ${f.moneda}`} />
               </SelectTrigger>
               <SelectContent>
-                {cuentasDeMoneda.map((c) => (
+                {f.cuentasDeMoneda.map((c) => (
                   <SelectItem key={c.id} value={c.id}>
                     {etiquetaCuenta(c)}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
-            {cuentasDeMoneda.length === 0 && (
+            {f.cuentasDeMoneda.length === 0 && (
               <p className="text-xs text-destructive">
-                No hay cuentas bancarias activas en {moneda}. Regístrala en Tesorería antes de
+                No hay cuentas bancarias activas en {f.moneda}. Regístrala en Tesorería antes de
                 continuar.
               </p>
             )}
@@ -187,8 +115,8 @@ export function DevolverAnticipoDialog({ open, onOpenChange, anticipo }: Props) 
             <Label htmlFor="dev-referencia">Referencia bancaria (opcional)</Label>
             <Input
               id="dev-referencia"
-              value={referencia}
-              onChange={(e) => setReferencia(e.target.value)}
+              value={f.referencia}
+              onChange={(e) => f.setReferencia(e.target.value)}
               placeholder="Ej. SPEI 4821990"
             />
           </div>
@@ -201,8 +129,8 @@ export function DevolverAnticipoDialog({ open, onOpenChange, anticipo }: Props) 
           <Textarea
             id="dev-motivo"
             rows={3}
-            value={motivo}
-            onChange={(e) => setMotivo(e.target.value)}
+            value={f.motivo}
+            onChange={(e) => f.setMotivo(e.target.value)}
             placeholder="Ej. El servicio no se realizó; el proveedor reembolsó el remanente."
           />
         </div>
