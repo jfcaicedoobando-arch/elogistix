@@ -32,6 +32,7 @@ DECLARE
   v_cli_2 uuid := 'aa7aa7aa-0000-4000-8000-000000000032';
   v_op_b uuid := 'aa7aa7aa-0000-4000-8000-000000000041';
   v_op_b2 uuid := 'aa7aa7aa-0000-4000-8000-000000000042';
+  v_lead_fix3 uuid := 'aa7aa7aa-0000-4000-8000-000000000051';
   v_res jsonb;
 BEGIN
   INSERT INTO public.organizations (id, nombre) VALUES (v_org, 'TEST FIX3 CRM');
@@ -66,9 +67,13 @@ BEGIN
 
   -- v13.777.9: CRM Fase 2 exige origen (lead calificado o cliente) en la
   -- oportunidad; las de prueba nacen ligadas al cliente uno.
-  INSERT INTO public.crm_oportunidades (id, organization_id, nombre, etapa_id, vendedor_id, cliente_id)
-  VALUES (v_op_b, v_org, 'OP del vendedor B', v_etapa, v_vend_b, v_cli_1),
-         (v_op_b2, v_org, 'OP2 del vendedor B', v_etapa, v_vend_b, v_cli_1);
+  INSERT INTO public.crm_leads (id, organization_id, empresa, estado)
+  VALUES (v_lead_fix3, v_org, 'LEAD FIX3', 'Calificado'::public.crm_lead_estado)
+  ON CONFLICT (id) DO NOTHING;
+
+  INSERT INTO public.crm_oportunidades (id, organization_id, nombre, etapa_id, vendedor_id, lead_id)
+  VALUES (v_op_b, v_org, 'OP del vendedor B', v_etapa, v_vend_b, v_lead_fix3),
+         (v_op_b2, v_org, 'OP2 del vendedor B', v_etapa, v_vend_b, v_lead_fix3);
 
   -- ----------------------------------------------------------
   -- CASO 1: vendedor A intenta propagar la oportunidad de B → 42501.
