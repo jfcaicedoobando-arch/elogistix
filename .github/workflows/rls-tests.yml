@@ -74,6 +74,9 @@ jobs:
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Cliente de Postgres 17 (paridad con la imagen pinneada)
+        uses: ./.github/actions/setup-pg-client
+
         with:
           # v13.322.1 (GHA-audit H4) — no se hace push/fetch autenticado.
           persist-credentials: false
@@ -311,6 +314,9 @@ jobs:
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Cliente de Postgres 17 (paridad con la imagen pinneada)
+        uses: ./.github/actions/setup-pg-client
+
         with:
           # v13.322.1 (GHA-audit H4) — no se hace push/fetch autenticado.
           persist-credentials: false
@@ -441,6 +447,9 @@ jobs:
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Cliente de Postgres 17 (paridad con la imagen pinneada)
+        uses: ./.github/actions/setup-pg-client
+
         with:
           persist-credentials: false
 
@@ -533,6 +542,9 @@ jobs:
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Cliente de Postgres 17 (paridad con la imagen pinneada)
+        uses: ./.github/actions/setup-pg-client
+
         with:
           persist-credentials: false
 
@@ -651,6 +663,9 @@ jobs:
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Cliente de Postgres 17 (paridad con la imagen pinneada)
+        uses: ./.github/actions/setup-pg-client
+
         with:
           persist-credentials: false
 
@@ -845,6 +860,9 @@ jobs:
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Cliente de Postgres 17 (paridad con la imagen pinneada)
+        uses: ./.github/actions/setup-pg-client
+
         with:
           persist-credentials: false
 
