@@ -35,7 +35,7 @@ jobs:
         # 13.162.0 — Endurecido de `high` a `moderate`. Multi-tenant + fiscal +
         # payments justifica bajar el umbral. Si aparecen falsos positivos,
         # agregar el CVE/ID a `allow-ghsas` con justificación en el comentario.
-        uses: actions/dependency-review-action@67d4f4bd7a9b17a0db54d2a7519187c65e339de8 # v4.5.0
+        uses: actions/dependency-review-action@2031cfc080254a8a887f58cffee85186f0e49e48 # v4.9.0
         with:
           fail-on-severity: moderate
           # v13.322.1 (GHA-audit H5) — Sólo dependencias de runtime bloquean;
