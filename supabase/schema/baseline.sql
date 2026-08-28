@@ -294,6 +294,46 @@ BEGIN
   RETURN NEW;
 END;
 $$;
+CREATE FUNCTION public._assert_email_unico_org() RETURNS trigger
+    LANGUAGE plpgsql
+    SET search_path TO 'public'
+    AS $$
+DECLARE
+  v_dup int;
+BEGIN
+  IF NEW.email IS NULL OR NEW.deleted_at IS NOT NULL THEN
+    RETURN NEW;
+  END IF;
+  -- Sólo validamos cuando el correo cambia (o es un registro nuevo):
+  -- los duplicados históricos quedan intactos.
+  IF TG_OP = 'UPDATE' AND OLD.email IS NOT DISTINCT FROM NEW.email THEN
+    RETURN NEW;
+  END IF;
+
+  IF TG_TABLE_NAME = 'clientes' THEN
+    SELECT count(*) INTO v_dup
+    FROM public.clientes c
+    WHERE c.organization_id = NEW.organization_id
+      AND c.deleted_at IS NULL
+      AND c.id <> NEW.id
+      AND lower(btrim(coalesce(c.email, ''))) = NEW.email;
+  ELSE
+    SELECT count(*) INTO v_dup
+    FROM public.contactos_cliente c
+    WHERE c.organization_id = NEW.organization_id
+      AND c.deleted_at IS NULL
+      AND c.id <> NEW.id
+      AND lower(btrim(coalesce(c.email, ''))) = NEW.email;
+  END IF;
+
+  IF v_dup > 0 THEN
+    RAISE EXCEPTION 'LC_EMAIL_DUPLICADO: el correo % ya está registrado en esta organización.', NEW.email
+      USING ERRCODE = 'unique_violation';
+  END IF;
+
+  RETURN NEW;
+END;
+$$;
 CREATE FUNCTION public._assert_facturapi_admin(p_org_id uuid) RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
@@ -2714,6 +2754,17 @@ BEGIN
       END;
     END IF;
   END LOOP;
+  RETURN NEW;
+END;
+$$;
+CREATE FUNCTION public._normalizar_email() RETURNS trigger
+    LANGUAGE plpgsql
+    SET search_path TO 'public'
+    AS $$
+BEGIN
+  IF NEW.email IS NOT NULL THEN
+    NEW.email := NULLIF(lower(btrim(NEW.email)), '');
+  END IF;
   RETURN NEW;
 END;
 $$;
