@@ -87,9 +87,14 @@ DECLARE
     'a_mxn_doc',
     'tc_dof_vigente',
     'tc_para_documento',
+    -- v13.782.0 (Sub-ola D): helpers de paridad DOF; leen sólo el catálogo
+    -- global de tipos de cambio (tabla no-tenant) y reciben importes/fechas.
+    'tc_dof_moneda',
+    'convertir_monto_dof',
     'calcular_costo_demoras',
     'saldo_cuenta_bancaria',
     'idempotency_store',
+
     -- ── E. Deuda real por-ID: reciben el ID de un documento que el caller
     --    obtuvo vía RLS y operan sobre él sin re-validar la org. Es la clase
     --    que este linter congela; migrar a ancla tenant explícita una por una.

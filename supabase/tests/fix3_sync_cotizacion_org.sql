@@ -69,8 +69,12 @@ BEGIN
     RAISE EXCEPTION 'FIX3 SYNC FAIL: el vínculo cross-tenant NO fue rechazado';
   EXCEPTION
     WHEN check_violation THEN
-      IF SQLERRM NOT LIKE 'LC_COTIZACION_OTRA_ORG%' THEN
-        RAISE EXCEPTION 'FIX3 SYNC FAIL: se esperaba LC_COTIZACION_OTRA_ORG y vino: %', SQLERRM;
+      -- v13.782.1 — la Ola E1 añadió `_assert_padre_misma_org` sobre
+      -- embarques: puede disparar antes con LC_ORG_CRUZADA. Ambos mensajes
+      -- son rechazos cross-tenant válidos para este caso.
+      IF SQLERRM NOT LIKE 'LC_COTIZACION_OTRA_ORG%'
+         AND SQLERRM NOT LIKE 'LC_ORG_CRUZADA%' THEN
+        RAISE EXCEPTION 'FIX3 SYNC FAIL: se esperaba LC_COTIZACION_OTRA_ORG/LC_ORG_CRUZADA y vino: %', SQLERRM;
       END IF;
   END;
 
@@ -79,7 +83,7 @@ BEGIN
   PERFORM pg_temp.assert(
     v_estado = 'Aceptada'::public.estado_cotizacion AND v_emb_link IS NULL,
     'CASO 1: la cotización de la org B fue modificada por el intento cross-tenant');
-  RAISE NOTICE 'CASO 1 OK · vínculo cross-tenant rechazado (LC_COTIZACION_OTRA_ORG).';
+  RAISE NOTICE 'CASO 1 OK · vínculo cross-tenant rechazado (LC_COTIZACION_OTRA_ORG / LC_ORG_CRUZADA).';
 
   -- ----------------------------------------------------------
   -- CASO 2: vínculo mismo-org → embarque_id asignado + En operación
