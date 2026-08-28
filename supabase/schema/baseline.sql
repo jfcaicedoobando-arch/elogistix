@@ -13683,6 +13683,24 @@ BEGIN
       RAISE EXCEPTION 'LC_CANCEL_CON_CXP: cancela las facturas de proveedor antes de cancelar el embarque'
         USING ERRCODE = 'P0001';
     END IF;
+    -- N15: facturas de cliente en Borrador y proformas vivas.
+    IF EXISTS (
+      SELECT 1 FROM public.facturas f
+      WHERE f.embarque_id = NEW.id
+        AND f.deleted_at IS NULL
+        AND f.estado = 'Borrador'
+    ) THEN
+      RAISE EXCEPTION 'LC_CANCEL_CON_FACTURA_BORRADOR: elimina las facturas en borrador del embarque antes de cancelarlo'
+        USING ERRCODE = 'P0001';
+    END IF;
+    IF EXISTS (
+      SELECT 1 FROM public.proformas p
+      WHERE p.embarque_id = NEW.id
+        AND p.deleted_at IS NULL
+    ) THEN
+      RAISE EXCEPTION 'LC_CANCEL_CON_PROFORMA: cancela o elimina las proformas del embarque antes de cancelarlo'
+        USING ERRCODE = 'P0001';
+    END IF;
   END IF;
   RETURN NEW;
 END
