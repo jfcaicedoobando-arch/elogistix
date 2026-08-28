@@ -251,10 +251,14 @@ BEGIN
   IF v_sqlstate = '00000' THEN
     RAISE EXCEPTION 'CASO 7 FALLÓ: pago cross-tenant fue aceptado';
   END IF;
-  IF v_sqlstate <> '23514' OR v_msg NOT LIKE 'LC_TENANT_MISMATCH%' THEN
-    RAISE EXCEPTION 'CASO 7 FALLÓ: se esperaba LC_TENANT_MISMATCH/23514, vino % / %', v_sqlstate, v_msg;
+  -- v13.777.9: los FK compuestos por org (Ola 2) rechazan el cruce ANTES del
+  -- guard de pago, con LC_ORG_CRUZADA. Cualquiera de los dos candados es
+  -- aceptable: lo importante es que el pago cross-tenant no entre.
+  IF v_sqlstate <> '23514'
+     OR (v_msg NOT LIKE 'LC_TENANT_MISMATCH%' AND v_msg NOT LIKE 'LC_ORG_CRUZADA%') THEN
+    RAISE EXCEPTION 'CASO 7 FALLÓ: se esperaba LC_TENANT_MISMATCH/LC_ORG_CRUZADA con 23514, vino % / %', v_sqlstate, v_msg;
   END IF;
-  RAISE NOTICE 'CASO 7 OK: tenant mismatch rechazado con LC_TENANT_MISMATCH';
+  RAISE NOTICE 'CASO 7 OK: tenant mismatch rechazado (%)', v_msg;
 END
 $caso7$ LANGUAGE plpgsql;
 

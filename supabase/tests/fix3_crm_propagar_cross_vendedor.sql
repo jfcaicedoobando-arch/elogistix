@@ -32,9 +32,21 @@ DECLARE
   v_cli_2 uuid := 'aa7aa7aa-0000-4000-8000-000000000032';
   v_op_b uuid := 'aa7aa7aa-0000-4000-8000-000000000041';
   v_op_b2 uuid := 'aa7aa7aa-0000-4000-8000-000000000042';
+  v_lead_fix3 uuid := 'aa7aa7aa-0000-4000-8000-000000000051';
   v_res jsonb;
 BEGIN
   INSERT INTO public.organizations (id, nombre) VALUES (v_org, 'TEST FIX3 CRM');
+
+  -- v13.777.9: user_roles referencia auth.users; sembramos los usuarios en
+  -- modo best-effort (en CI sin GoTrue el FK no existe y el bloque es un no-op).
+  BEGIN
+    INSERT INTO auth.users (id, email) VALUES
+      (v_vend_a, 'fix3-crm-vend-a@test.local'),
+      (v_vend_b, 'fix3-crm-vend-b@test.local'),
+      (v_gerente, 'fix3-crm-gerente@test.local')
+    ON CONFLICT (id) DO NOTHING;
+  EXCEPTION WHEN OTHERS THEN NULL;
+  END;
 
   -- Membresías (el espejo membresía→user_roles replica los roles de ventas).
   INSERT INTO public.organization_members (organization_id, user_id, role) VALUES
@@ -49,13 +61,19 @@ BEGIN
   INSERT INTO public.crm_etapas_pipeline (id, organization_id, nombre, tipo, orden, activa)
   VALUES (v_etapa, v_org, 'Cierre FIX3', 'abierta'::public.crm_etapa_tipo, 1, true);
 
-  INSERT INTO public.clientes (id, organization_id, nombre) VALUES
-    (v_cli_1, v_org, 'Cliente Uno FIX3'),
-    (v_cli_2, v_org, 'Cliente Dos FIX3');
+  INSERT INTO public.clientes (id, organization_id, nombre, email) VALUES
+    (v_cli_1, v_org, 'Cliente Uno FIX3', 'fix3-cli-1@test.local'),
+    (v_cli_2, v_org, 'Cliente Dos FIX3', 'fix3-cli-2@test.local');
 
-  INSERT INTO public.crm_oportunidades (id, organization_id, nombre, etapa_id, vendedor_id)
-  VALUES (v_op_b, v_org, 'OP del vendedor B', v_etapa, v_vend_b),
-         (v_op_b2, v_org, 'OP2 del vendedor B', v_etapa, v_vend_b);
+  -- v13.777.9: CRM Fase 2 exige origen (lead calificado o cliente) en la
+  -- oportunidad; las de prueba nacen ligadas al cliente uno.
+  INSERT INTO public.crm_leads (id, organization_id, empresa, estado)
+  VALUES (v_lead_fix3, v_org, 'LEAD FIX3', 'Calificado'::public.crm_lead_estado)
+  ON CONFLICT (id) DO NOTHING;
+
+  INSERT INTO public.crm_oportunidades (id, organization_id, nombre, etapa_id, vendedor_id, lead_id)
+  VALUES (v_op_b, v_org, 'OP del vendedor B', v_etapa, v_vend_b, v_lead_fix3),
+         (v_op_b2, v_org, 'OP2 del vendedor B', v_etapa, v_vend_b, v_lead_fix3);
 
   -- ----------------------------------------------------------
   -- CASO 1: vendedor A intenta propagar la oportunidad de B → 42501.

@@ -1,14 +1,7 @@
--- Fuente canónica de public.cartera_pendiente() (Ola 6 · O6-SCHEMA).
--- 1:1 con supabase/migrations/20260813230758_55fd47bb-2d11-4849-9db5-14215387682a.sql.
--- Firma vigente: 16 columnas (factura_id … cancellation_status). NO renombrar columnas de salida (42P13).
--- v13.592.0: se agregó cancellation_status para excluir del cobro en lote las
--- facturas con cancelación en trámite ante el SAT (LC_FACTURA_EN_CANCELACION).
--- Al modificar: edita ESTE archivo y genera la migración con el mismo cuerpo.
-
--- v13.777.9 (FIX3/M1): las notas de crédito se calculan EN LÍNEA con la misma
--- cascada de conversión del canon, para que la función corra bajo RLS nativo y
--- el helper public.nc_aplicadas_en_moneda_factura quede cerrado a service_role
--- (era un oráculo cross-tenant al estar expuesto a authenticated).
+-- v13.777.9 · FIX3/M1: cartera_pendiente calcula las NC en línea (bajo RLS)
+-- para poder volver a cerrar public.nc_aplicadas_en_moneda_factura(uuid) a
+-- service_role. Misma cascada de conversión que el helper (si falta TC no se
+-- resta: preferimos saldo mayor a dar por pagada una factura que no lo está).
 
 CREATE OR REPLACE FUNCTION public.cartera_pendiente()
 RETURNS TABLE(factura_id uuid, numero text, cliente_id uuid, cliente_nombre text,
@@ -67,3 +60,9 @@ REVOKE ALL ON FUNCTION public.cartera_pendiente() FROM PUBLIC;
 REVOKE ALL ON FUNCTION public.cartera_pendiente() FROM anon;
 GRANT EXECUTE ON FUNCTION public.cartera_pendiente() TO authenticated;
 GRANT EXECUTE ON FUNCTION public.cartera_pendiente() TO service_role;
+
+-- Helper interno: vuelve a quedar cerrado a service_role.
+REVOKE ALL ON FUNCTION public.nc_aplicadas_en_moneda_factura(uuid) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.nc_aplicadas_en_moneda_factura(uuid) FROM anon;
+REVOKE ALL ON FUNCTION public.nc_aplicadas_en_moneda_factura(uuid) FROM authenticated;
+GRANT EXECUTE ON FUNCTION public.nc_aplicadas_en_moneda_factura(uuid) TO service_role;

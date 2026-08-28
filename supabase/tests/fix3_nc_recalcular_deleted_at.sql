@@ -28,8 +28,8 @@ BEGIN;
 INSERT INTO public.organizations (id, nombre)
 VALUES ('dd4dd4dd-0000-4000-8000-000000000010', 'Test FIX3 NC Recalc');
 
-INSERT INTO public.clientes (id, organization_id, nombre)
-VALUES ('dd4dd4dd-0000-4000-8000-000000000011', 'dd4dd4dd-0000-4000-8000-000000000010', 'Cliente FIX3');
+INSERT INTO public.clientes (id, organization_id, nombre, email)
+VALUES ('dd4dd4dd-0000-4000-8000-000000000011', 'dd4dd4dd-0000-4000-8000-000000000010', 'Cliente FIX3', 'fix3-nc-recalc@test.mx');
 
 INSERT INTO public.embarques (id, organization_id, cliente_id, modo, tipo, vendedora_id, tipo_cambio_usd)
 VALUES ('dd4dd4dd-0000-4000-8000-000000000020', 'dd4dd4dd-0000-4000-8000-000000000010',

@@ -27,9 +27,9 @@ BEGIN
   INSERT INTO public.organization_members (organization_id, user_id, role)
   VALUES (v_org, v_uid, 'contador') ON CONFLICT DO NOTHING;
 
-  INSERT INTO public.clientes (id, organization_id, nombre)
-  VALUES (v_cli, v_org, 'Cliente Ola4 N7'),
-         ('c7777777-7777-7777-7777-777777777777', v_org, 'Cliente Ola4 N8')
+  INSERT INTO public.clientes (id, organization_id, nombre, email)
+  VALUES (v_cli, v_org, 'Cliente Ola4 N7', 'ola4-n7@test.mx'),
+         ('c7777777-7777-7777-7777-777777777777', v_org, 'Cliente Ola4 N8', 'ola4-n8@test.mx')
   ON CONFLICT (id) DO NOTHING;
 
   -- N7: un embarque con 2 ventas y 3 costos → no debe haber fan-out.
@@ -150,8 +150,8 @@ BEGIN
   ON CONFLICT (id) DO NOTHING;
   INSERT INTO public.organization_members (organization_id, user_id, role)
   VALUES (v_org_n10, v_uid_n10, 'contador') ON CONFLICT DO NOTHING;
-  INSERT INTO public.clientes (id, organization_id, nombre)
-  VALUES (v_cli_n10, v_org_n10, 'Cliente Ola4 N10') ON CONFLICT (id) DO NOTHING;
+  INSERT INTO public.clientes (id, organization_id, nombre, email)
+  VALUES (v_cli_n10, v_org_n10, 'Cliente Ola4 N10', 'ola4-n10@test.mx') ON CONFLICT (id) DO NOTHING;
 
   INSERT INTO public.embarques (
     id, organization_id, cliente_id, expediente, modo, tipo, estado, etd, eta

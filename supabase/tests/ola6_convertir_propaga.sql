@@ -40,7 +40,7 @@ BEGIN
     organization_id, empresa, estado,
     rfc, direccion, cp, entidad_federativa, sector, origen, destino
   ) VALUES (
-    v_org, 'LEAD FISCAL OLA6', 'Nuevo'::public.crm_lead_estado,
+    v_org, 'LEAD FISCAL OLA6', 'Calificado'::public.crm_lead_estado,
     'PROS260821AB1', 'Av. Siempre Viva 742', '04360', 'Ciudad de México',
     'Manufactura', 'Veracruz', 'Lázaro Cárdenas'
   ) RETURNING id INTO v_lead;
@@ -87,12 +87,12 @@ BEGIN
   END IF;
 
   -- 3) Ligar un cliente existente de la misma organización sí funciona.
-  INSERT INTO public.clientes (organization_id, nombre, rfc, cp, regimen_fiscal)
-  VALUES (v_org, 'CLIENTE OLA6 COMPLETO', 'CLO260821AB2', '04360', '601')
+  INSERT INTO public.clientes (organization_id, nombre, rfc, cp, regimen_fiscal, email)
+  VALUES (v_org, 'CLIENTE OLA6 COMPLETO', 'CLO260821AB2', '04360', '601', 'ola6-completo@test.mx')
   RETURNING id INTO v_cli;
 
   INSERT INTO public.crm_leads (organization_id, empresa, estado)
-  VALUES (v_org, 'LEAD LIGA OLA6', 'Nuevo'::public.crm_lead_estado)
+  VALUES (v_org, 'LEAD LIGA OLA6', 'Calificado'::public.crm_lead_estado)
   RETURNING id INTO v_lead2;
 
   v_res := public.convertir_lead_rpc(v_lead2, false, v_cli, 'OP LIGADA OLA6', 500, 'MXN', NULL);
@@ -103,12 +103,12 @@ BEGIN
   END IF;
 
   -- 4) Un cliente de otra organización no puede ligarse.
-  INSERT INTO public.clientes (organization_id, nombre, rfc)
-  VALUES (v_org_ajena, 'CLIENTE AJENO OLA6', 'CAJ260821AB3')
+  INSERT INTO public.clientes (organization_id, nombre, rfc, email)
+  VALUES (v_org_ajena, 'CLIENTE AJENO OLA6', 'CAJ260821AB3', 'ola6-ajeno@test.mx')
   RETURNING id INTO v_cli_ajeno;
 
   INSERT INTO public.crm_leads (organization_id, empresa, estado)
-  VALUES (v_org, 'LEAD AJENO OLA6', 'Nuevo'::public.crm_lead_estado)
+  VALUES (v_org, 'LEAD AJENO OLA6', 'Calificado'::public.crm_lead_estado)
   RETURNING id INTO v_lead2;
 
   BEGIN

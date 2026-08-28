@@ -7,11 +7,11 @@ BEGIN;
 DO $$
 BEGIN
   -- B-15: la validación de aprobación compara contra lo comprometido.
-  IF pg_get_functiondef('public._cxp_validar_aprobacion(uuid)'::regprocedure)
+  IF pg_get_functiondef('public._cxp_validar_aprobacion(uuid,text)'::regprocedure)
        NOT LIKE '%LC_CXP_SOBRECOSTO%' THEN
     RAISE EXCEPTION 'B-15 FAIL: falta el candado de sobrecosto en la aprobación de CxP';
   END IF;
-  IF pg_get_functiondef('public._cxp_validar_aprobacion(uuid)'::regprocedure)
+  IF pg_get_functiondef('public._cxp_validar_aprobacion(uuid,text)'::regprocedure)
        NOT LIKE '%conceptos_costo%' THEN
     RAISE EXCEPTION 'B-15 FAIL: la aprobación no cruza contra conceptos_costo';
   END IF;

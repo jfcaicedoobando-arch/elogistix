@@ -132,6 +132,12 @@ BEGIN
   INSERT INTO public.organizations(id, nombre) VALUES (v_org, 'FIX3 COT Org');
   INSERT INTO public.clientes(id, organization_id, nombre, rfc, email) VALUES
     (v_cli, v_org, 'Cliente FIX3 COT', 'XAXX010101E21', 'fix3cot@test.local');
+  -- v13.777.9: client_users referencia auth.users; siembra best-effort.
+  BEGIN
+    INSERT INTO auth.users(id, email) VALUES (v_u, 'fix3-portal-rpcs@test.local')
+    ON CONFLICT (id) DO NOTHING;
+  EXCEPTION WHEN OTHERS THEN NULL;
+  END;
   INSERT INTO public.client_users(user_id, cliente_id, organization_id) VALUES
     (v_u, v_cli, v_org);
 

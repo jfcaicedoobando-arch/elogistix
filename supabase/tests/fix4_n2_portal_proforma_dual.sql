@@ -42,7 +42,7 @@ DECLARE
   v_bit integer;
 BEGIN
   INSERT INTO public.organizations (id, nombre) VALUES (v_org, 'TEST FIX4 N2');
-  INSERT INTO public.clientes (id, organization_id, nombre) VALUES (v_cli, v_org, 'Cliente N2');
+  INSERT INTO public.clientes (id, organization_id, nombre, email) VALUES (v_cli, v_org, 'Cliente N2', 'fix4-n2@test.mx');
 
   INSERT INTO public.proformas (
     id, organization_id, cliente_id, numero, cliente_nombre, expediente,

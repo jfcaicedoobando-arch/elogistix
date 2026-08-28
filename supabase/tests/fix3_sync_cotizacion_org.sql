@@ -44,8 +44,9 @@ DECLARE
 BEGIN
   INSERT INTO public.organizations (id, nombre) VALUES
     (v_org_a, 'TEST FIX3 SYNC A'), (v_org_b, 'TEST FIX3 SYNC B');
-  INSERT INTO public.clientes (id, organization_id, nombre) VALUES
-    (v_cli_a, v_org_a, 'Cliente A'), (v_cli_b, v_org_b, 'Cliente B');
+  INSERT INTO public.clientes (id, organization_id, nombre, email) VALUES
+    (v_cli_a, v_org_a, 'Cliente A', 'sync-cot-a@test.mx'),
+    (v_cli_b, v_org_b, 'Cliente B', 'sync-cot-b@test.mx');
 
   INSERT INTO public.cotizaciones (id, organization_id, cliente_id, estado, folio, modo, tipo, conceptos_venta)
   VALUES (v_cot_b, v_org_b, v_cli_b, 'Aceptada'::public.estado_cotizacion, 'COT-FIX3-B1',

@@ -1,8 +1,8 @@
--- Fuente canónica de public.cotizaciones_guard_en_operacion() + su trigger.
--- v13.777.9: el espejo estaba congelado en la versión previa (sólo
--- 'En operación' / LC_COTIZACION_EN_OPERACION) y una re-emisión de espejos
--- regresaba el candado en un replay desde cero. Este archivo refleja el cuerpo
--- vigente en la base real: la cotización ACEPTADA también es inmutable.
+-- v13.777.9 · Recierre de replay: la re-emisión de espejos (20260902003000)
+-- regresó public.cotizaciones_guard_en_operacion() a la versión previa, que sólo
+-- blindaba 'En operación'. La base real ya tiene el candado ampliado (una
+-- cotización ACEPTADA también es inmutable en importes y conceptos), así que se
+-- re-emite aquí, después, para que un replay desde cero coincida.
 CREATE OR REPLACE FUNCTION public.cotizaciones_guard_en_operacion()
 RETURNS trigger
 LANGUAGE plpgsql

@@ -31,11 +31,11 @@ BEGIN
   INSERT INTO public.organization_members (organization_id, user_id, role)
   VALUES (v_org, v_uid, 'admin_org'::public.app_role) ON CONFLICT DO NOTHING;
 
-  INSERT INTO public.clientes (organization_id, nombre, rfc)
-  VALUES (v_org, 'CLIENTE OLA3', '') RETURNING id INTO v_cli;
+  INSERT INTO public.clientes (organization_id, nombre, rfc, email)
+  VALUES (v_org, 'CLIENTE OLA3', '', 'ola3-ciclo@test.mx') RETURNING id INTO v_cli;
 
   INSERT INTO public.embarques (organization_id, cliente_id, expediente, modo, tipo)
-  VALUES (v_org, v_cli, 'ELO3X00001', 'Aéreo'::public.modo_transporte,
+  VALUES (v_org, v_cli, 'ELOLA00001', 'Aéreo'::public.modo_transporte,
           'Importación'::public.tipo_operacion)
   RETURNING id INTO v_emb;
 
@@ -58,10 +58,11 @@ BEGIN
     IF v_err NOT LIKE '%LC_PERIODO_CERRADO%' THEN RAISE; END IF;
   END;
 
+  -- v13.777.9: facturas_totales_consistentes exige subtotal + iva = total.
   INSERT INTO public.facturas (organization_id, cliente_id, embarque_id, numero,
-                               fecha_emision, moneda, subtotal, total)
+                               fecha_emision, moneda, subtotal, iva, total)
   VALUES (v_org, v_cli, v_emb, 'OLA3-ABIERTA', DATE '2026-03-10',
-          'MXN'::public.moneda, 100, 116)
+          'MXN'::public.moneda, 100, 16, 116)
   RETURNING id INTO v_fac;
 
   -- ── 2) Mover la fecha hacia el periodo cerrado ─────────────────────────
@@ -89,10 +90,12 @@ BEGIN
   END;
 
   -- ── 3) Cotización aceptada inmutable ───────────────────────────────────
+  -- v13.777.9: cotizaciones no tiene columna total (se deriva de conceptos).
   INSERT INTO public.cotizaciones (organization_id, cliente_id, folio, estado,
-                                   moneda, subtotal, total)
+                                   moneda, subtotal, modo, tipo)
   VALUES (v_org, v_cli, 'COT-OLA3-0001', 'Aceptada'::public.estado_cotizacion,
-          'USD'::public.moneda, 1000, 1160)
+          'USD'::public.moneda, 1000,
+          'Marítimo'::public.modo_transporte, 'Importación'::public.tipo_operacion)
   RETURNING id INTO v_cot;
 
   BEGIN
@@ -104,18 +107,22 @@ BEGIN
   END;
 
   -- ── 4) Concepto de venta ya proformado ─────────────────────────────────
-  INSERT INTO public.proformas (organization_id, embarque_id, cliente_id, cliente_nombre, numero)
-  VALUES (v_org, v_emb, v_cli, 'CLIENTE OLA3', 'PF-OLA3-0001')
+  INSERT INTO public.proformas (organization_id, embarque_id, cliente_id, cliente_nombre,
+                                numero, expediente)
+  VALUES (v_org, v_emb, v_cli, 'CLIENTE OLA3', 'PF-OLA3-0001', 'ELOLA00001')
   RETURNING id INTO v_pf;
 
   INSERT INTO public.conceptos_venta (organization_id, embarque_id, descripcion,
-                                      cantidad, precio_unitario, moneda, aplica_iva,
+                                      cantidad, precio_unitario, total, moneda, aplica_iva,
                                       proforma_id)
-  VALUES (v_org, v_emb, 'Flete OLA3', 1, 500, 'USD'::public.moneda, true, v_pf)
+  VALUES (v_org, v_emb, 'Flete OLA3', 1, 500, 500, 'USD'::public.moneda, true, v_pf)
   RETURNING id INTO v_cv;
 
+  -- v13.777.9: algún helper previo dejó app.bypass_cierre='on' en la transacción;
+  -- se apaga para que el candado de concepto proformado sí evalúe.
+  PERFORM set_config('app.bypass_cierre', 'off', true);
   BEGIN
-    UPDATE public.conceptos_venta SET precio_unitario = 900 WHERE id = v_cv;
+    UPDATE public.conceptos_venta SET precio_unitario = 900, total = 900 WHERE id = v_cv;
     RAISE EXCEPTION 'OLA3 FALLA: se permitió editar un concepto ya proformado';
   EXCEPTION WHEN OTHERS THEN
     v_err := SQLERRM;

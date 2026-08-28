@@ -49,8 +49,8 @@ BEGIN
   VALUES (v_cuenta, v_org, 'Cuenta Ola4 Indices') ON CONFLICT (id) DO NOTHING;
 
   -- El trigger assert_movimiento_pago_consistente exige un pago vivo real.
-  INSERT INTO public.clientes (id, organization_id, nombre)
-  VALUES ('d3333333-3333-3333-3333-333333333333', v_org, 'Cliente Ola4 Indices')
+  INSERT INTO public.clientes (id, organization_id, nombre, email)
+  VALUES ('d3333333-3333-3333-3333-333333333333', v_org, 'Cliente Ola4 Indices', 'ola4-indices@test.mx')
   ON CONFLICT (id) DO NOTHING;
   INSERT INTO public.facturas (
     id, organization_id, cliente_id, cliente_nombre, numero, expediente,

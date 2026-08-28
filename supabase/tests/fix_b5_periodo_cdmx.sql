@@ -71,8 +71,8 @@ INSERT INTO public.organization_members (organization_id, user_id, role)
 VALUES ('bb5b5b5b-0000-4000-8000-000000000010', 'bb5b5b5b-0000-4000-8000-000000000099', 'admin_org'::public.app_role)
 ON CONFLICT DO NOTHING;
 
-INSERT INTO public.clientes (id, organization_id, nombre)
-VALUES ('bb5b5b5b-0000-4000-8000-000000000011', 'bb5b5b5b-0000-4000-8000-000000000010', 'Cliente B5');
+INSERT INTO public.clientes (id, organization_id, nombre, email)
+VALUES ('bb5b5b5b-0000-4000-8000-000000000011', 'bb5b5b5b-0000-4000-8000-000000000010', 'Cliente B5', 'fix-b5@test.mx');
 
 INSERT INTO public.embarques (id, organization_id, cliente_id, modo, tipo, vendedora_id, tipo_cambio_usd)
 VALUES ('bb5b5b5b-0000-4000-8000-000000000020', 'bb5b5b5b-0000-4000-8000-000000000010',

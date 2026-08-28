@@ -31,8 +31,8 @@ BEGIN
 
 
 
-  INSERT INTO public.clientes (organization_id, nombre, rfc)
-  VALUES (v_org, 'CLIENTE PAGO CERRADO', '') RETURNING id INTO v_cli;
+  INSERT INTO public.clientes (organization_id, nombre, rfc, email)
+  VALUES (v_org, 'CLIENTE PAGO CERRADO', '', 'cxp-pago-cerrado@test.mx') RETURNING id INTO v_cli;
 
   INSERT INTO public.embarques (organization_id, cliente_id, expediente, modo, tipo)
   VALUES (v_org, v_cli, 'ELIMP09911', 'Marítimo'::public.modo_transporte,
