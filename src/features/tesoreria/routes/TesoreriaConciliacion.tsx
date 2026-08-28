@@ -28,6 +28,11 @@ import type { RefPago } from "@/features/tesoreria/domain/pagoDetalle";
 import { MovimientoManualDialog } from "./_sections/MovimientoManualDialog";
 import { ConciliacionToolbar } from "./_sections/ConciliacionToolbar";
 import { usePermissions } from "@/hooks/shared/usePermissions";
+import { useFiltroUrl } from "@/hooks/shared/useFiltroUrl";
+
+const ESTADOS_MOVIMIENTO = ["Pendiente", "Conciliado", "Ignorado", "todos"] as const;
+
+
 
 export default function TesoreriaConciliacion() {
   const { data: cuentas = [] } = useCuentasBancarias();
