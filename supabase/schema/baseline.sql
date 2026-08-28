@@ -29376,6 +29376,10 @@ GRANT ALL ON FUNCTION public._nc_aplicadas_moneda_factura(p_factura_id uuid) TO 
 REVOKE ALL ON FUNCTION public._nc_cliente_recalcular_comisiones() FROM PUBLIC;
 GRANT ALL ON FUNCTION public._nc_cliente_recalcular_comisiones() TO authenticated;
 GRANT ALL ON FUNCTION public._nc_cliente_recalcular_comisiones() TO service_role;
+REVOKE ALL ON FUNCTION public._nc_prov_tc_moneda_convertible() FROM PUBLIC;
+GRANT ALL ON FUNCTION public._nc_prov_tc_moneda_convertible() TO service_role;
+
+
 REVOKE ALL ON FUNCTION public._normalizar_email() FROM PUBLIC;
 GRANT ALL ON FUNCTION public._normalizar_email() TO authenticated;
 GRANT ALL ON FUNCTION public._normalizar_email() TO service_role;
