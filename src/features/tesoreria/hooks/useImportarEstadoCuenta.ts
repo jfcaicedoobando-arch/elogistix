@@ -10,7 +10,7 @@ import { parseEstadoCuentaBBVA } from "@/features/tesoreria/domain/import/bbva";
 import { useImportarMovimientos } from "@/features/tesoreria/hooks";
 
 interface Resultado {
-  fileRef: RefObject<HTMLInputElement>;
+  fileRef: RefObject<HTMLInputElement | null>;
   handleFile: (e: ChangeEvent<HTMLInputElement>) => Promise<void>;
   importando: boolean;
 }
