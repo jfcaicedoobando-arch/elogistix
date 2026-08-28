@@ -105,6 +105,10 @@ DECLARE
     'embarque_operativo_completo',
     'enforce_revalidacion_sin_cambios',
     'liberar_conceptos_de_proforma',
+    -- Suma NCs de UNA factura por ID; la ejecuta `cartera_pendiente()`
+    -- (SECURITY INVOKER), así que authenticated necesita EXECUTE: la tenancy
+    -- la garantiza el caller vía RLS sobre facturas.
+    'nc_aplicadas_en_moneda_factura',
     'recalcular_cobro_embarques',
     'recalcular_estado_liquidacion_concepto',
     'recalcular_estado_liquidacion_factura',
