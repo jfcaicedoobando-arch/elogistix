@@ -27,8 +27,9 @@ import { AnticiposKpis } from "./_sections/AnticiposKpis";
 
 export default function AnticiposProveedor() {
   const { canEditFinance } = usePermissions();
-  const [estado, setEstado] = useState<string>("todos");
-  const [proveedorId, setProveedorId] = useState<string>("todos");
+  // M8 (Ola 8): filtros en la URL (link compartible).
+  const [estado, setEstado] = useTextoUrl("estado", "todos");
+  const [proveedorId, setProveedorId] = useTextoUrl("proveedor", "todos");
   const [soloSinEmbarque, setSoloSinEmbarque] = useState(false);
 
   const [openRegistrar, setOpenRegistrar] = useState(false);
