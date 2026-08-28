@@ -36,7 +36,7 @@ export function buildOportunidadFormPayload(
 ) {
   return {
     nombre: form.nombre,
-    ...bloqueOrigen(form),
+    ...bloqueOrigen(form, esEdicion),
     etapa_id: form.etapa_id,
     monto_estimado: form.monto_estimado,
     moneda: form.moneda,
