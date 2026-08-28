@@ -130,7 +130,14 @@ BEGIN
   PERFORM pg_temp.as_user(viewer_a);
 
   -- TEST 6: viewer NO puede DELETE
-  DELETE FROM public.facturas WHERE id = fac_a;
+  -- v13.777.10: `authenticated` ya no tiene GRANT DELETE sobre facturas
+  -- (borrado físico prohibido); insufficient_privilege también es "bloqueado".
+  BEGIN
+    DELETE FROM public.facturas WHERE id = fac_a;
+  EXCEPTION
+    WHEN insufficient_privilege THEN NULL;
+  END;
+
   PERFORM pg_temp.as_postgres();
   SELECT count(*) INTO visible FROM public.facturas WHERE id = fac_a;
   PERFORM pg_temp.assert(visible = 1, 'viewer_a NO debe poder DELETE facturas');
