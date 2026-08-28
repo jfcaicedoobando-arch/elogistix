@@ -7021,13 +7021,10 @@ BEGIN
    WHERE id = p_documento_id;
 END;
 $$;
-CREATE FUNCTION public.cartera_pendiente()
-RETURNS TABLE(factura_id uuid, numero text, cliente_id uuid, cliente_nombre text,
-  embarque_id uuid, expediente text,
-  fecha_emision date, fecha_vencimiento date, dias_vencido integer,
-  moneda text, total numeric, pagado numeric, saldo numeric,
-  ultimo_contacto date, estado text, cancellation_status text)
-LANGUAGE sql STABLE SET search_path TO 'public' AS $$
+CREATE FUNCTION public.cartera_pendiente() RETURNS TABLE(factura_id uuid, numero text, cliente_id uuid, cliente_nombre text, embarque_id uuid, expediente text, fecha_emision date, fecha_vencimiento date, dias_vencido integer, moneda text, total numeric, pagado numeric, saldo numeric, ultimo_contacto date, estado text, cancellation_status text)
+    LANGUAGE sql STABLE
+    SET search_path TO 'public'
+    AS $$
   WITH base AS (
     SELECT f.id, f.numero, f.cliente_id, f.embarque_id, f.fecha_emision,
       f.fecha_vencimiento, f.moneda::text AS moneda, f.total,
@@ -10729,22 +10726,22 @@ CREATE TABLE public.proveedor_notas_credito (
     uuid_verificado_fecha timestamp with time zone
 );
 CREATE VIEW public.v_proveedor_facturas_saldo WITH (security_invoker='true') AS
- SELECT pf.id AS proveedor_factura_id,
-    pf.organization_id,
-    pf.total,
+ SELECT id AS proveedor_factura_id,
+    organization_id,
+    total,
     COALESCE(( SELECT sum(pp.monto_en_moneda_factura) AS sum
            FROM public.pagos_proveedor pp
           WHERE ((pp.proveedor_factura_id = pf.id) AND (pp.deleted_at IS NULL))), (0)::numeric) AS pagado,
     COALESCE(( SELECT sum(nc.monto) AS sum
            FROM public.proveedor_notas_credito nc
           WHERE ((nc.proveedor_factura_id = pf.id) AND (nc.estado = 'Aplicada'::public.estado_nota_credito_proveedor) AND (nc.deleted_at IS NULL))), (0)::numeric) AS notas_credito_aplicadas,
-    ((pf.total - COALESCE(( SELECT sum(pp.monto_en_moneda_factura) AS sum
+    ((total - COALESCE(( SELECT sum(pp.monto_en_moneda_factura) AS sum
            FROM public.pagos_proveedor pp
           WHERE ((pp.proveedor_factura_id = pf.id) AND (pp.deleted_at IS NULL))), (0)::numeric)) - COALESCE(( SELECT sum(nc.monto) AS sum
            FROM public.proveedor_notas_credito nc
           WHERE ((nc.proveedor_factura_id = pf.id) AND (nc.estado = 'Aplicada'::public.estado_nota_credito_proveedor) AND (nc.deleted_at IS NULL))), (0)::numeric)) AS saldo
    FROM public.proveedor_facturas pf
-  WHERE (pf.deleted_at IS NULL);
+  WHERE (deleted_at IS NULL);
 CREATE VIEW public.cxp_alertas_vencimiento WITH (security_invoker='on') AS
  SELECT pf.id AS proveedor_factura_id,
     pf.organization_id,
@@ -26345,14 +26342,14 @@ CREATE TABLE public.embarques (
     CONSTRAINT embarques_volumen_nonneg CHECK ((volumen_m3 >= (0)::numeric))
 );
 CREATE VIEW public.embarques_interno_v WITH (security_invoker='true') AS
- SELECT e.id,
-    e.organization_id,
-    e.cerrado_snapshot,
-    e.tarifa_delta_jsonb,
-    e.reabierto_motivo,
-    e.created_by_email
+ SELECT id,
+    organization_id,
+    cerrado_snapshot,
+    tarifa_delta_jsonb,
+    reabierto_motivo,
+    created_by_email
    FROM public.embarques_internos_src() e(id, organization_id, cerrado_snapshot, tarifa_delta_jsonb, reabierto_motivo, created_by_email)
-  WHERE (public.is_org_member(e.organization_id) AND (NOT public.has_role(( SELECT auth.uid() AS uid), 'cliente'::public.app_role)) AND (NOT public.has_role(( SELECT auth.uid() AS uid), 'agente_carga'::public.app_role)));
+  WHERE (public.is_org_member(organization_id) AND (NOT public.has_role(( SELECT auth.uid() AS uid), 'cliente'::public.app_role)) AND (NOT public.has_role(( SELECT auth.uid() AS uid), 'agente_carga'::public.app_role)));
 CREATE TABLE public.eventos_embarque (
     id uuid DEFAULT gen_random_uuid() NOT NULL,
     embarque_id uuid NOT NULL,
@@ -27827,9 +27824,9 @@ CREATE TRIGGER trg_catalogo_claves_sat_updated_at BEFORE UPDATE ON public.catalo
 CREATE TRIGGER trg_cerrar_entrantes_por_uuid AFTER INSERT OR UPDATE OF uuid_fiscal, deleted_at ON public.proveedor_facturas FOR EACH ROW EXECUTE FUNCTION public._cerrar_entrantes_por_uuid();
 CREATE TRIGGER trg_cliente_documentos_updated_at BEFORE UPDATE ON public.cliente_documentos FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 CREATE TRIGGER trg_clientes_email_unico BEFORE INSERT OR UPDATE OF email ON public.clientes FOR EACH ROW EXECUTE FUNCTION public._assert_email_unico_org();
-CREATE TRIGGER trg_clientes_normalizar_email BEFORE INSERT OR UPDATE OF email ON public.clientes FOR EACH ROW EXECUTE FUNCTION public._normalizar_email();
 CREATE TRIGGER trg_clientes_nombre_mayusculas BEFORE INSERT OR UPDATE OF nombre ON public.clientes FOR EACH ROW EXECUTE FUNCTION public._normalizar_razon_social();
 CREATE TRIGGER trg_clientes_normaliza_campos BEFORE INSERT OR UPDATE OF nombre, email, rfc ON public.clientes FOR EACH ROW EXECUTE FUNCTION public.trg_clientes_normaliza_campos();
+CREATE TRIGGER trg_clientes_normalizar_email BEFORE INSERT OR UPDATE OF email ON public.clientes FOR EACH ROW EXECUTE FUNCTION public._normalizar_email();
 CREATE TRIGGER trg_clientes_propaga_nombre AFTER UPDATE OF nombre ON public.clientes FOR EACH ROW EXECUTE FUNCTION public.trg_clientes_propaga_nombre();
 CREATE TRIGGER trg_clientes_sync_cp BEFORE INSERT OR UPDATE ON public.clientes FOR EACH ROW EXECUTE FUNCTION public.clientes_sync_cp();
 CREATE TRIGGER trg_cobranza_seg_updated_at BEFORE UPDATE ON public.cobranza_seguimiento FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
@@ -27841,6 +27838,8 @@ CREATE TRIGGER trg_conceptos_factura_rollup AFTER INSERT OR DELETE OR UPDATE ON 
 CREATE TRIGGER trg_congelar_factura BEFORE INSERT OR UPDATE ON public.facturas FOR EACH ROW EXECUTE FUNCTION public.congelar_factura_al_emitir();
 CREATE TRIGGER trg_congelar_proforma BEFORE INSERT OR UPDATE ON public.proformas FOR EACH ROW EXECUTE FUNCTION public.congelar_proforma_al_aprobar();
 CREATE TRIGGER trg_cont_promover_por_liquidar AFTER INSERT OR UPDATE ON public.embarque_contenedores FOR EACH ROW EXECUTE FUNCTION public._trg_promover_por_liquidar();
+CREATE TRIGGER trg_contactos_cliente_email_unico BEFORE INSERT OR UPDATE OF email ON public.contactos_cliente FOR EACH ROW EXECUTE FUNCTION public._assert_email_unico_org();
+CREATE TRIGGER trg_contactos_cliente_normalizar_email BEFORE INSERT OR UPDATE OF email ON public.contactos_cliente FOR EACH ROW EXECUTE FUNCTION public._normalizar_email();
 CREATE TRIGGER trg_contenedor_demoras_recalc AFTER UPDATE OF fecha_descarga, fecha_devolucion, dias_libres_override ON public.embarque_contenedores FOR EACH ROW EXECUTE FUNCTION public.trg_recalcular_demoras_contenedor();
 CREATE TRIGGER trg_costeo_agentes_updated BEFORE UPDATE ON public.costeo_agentes FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 CREATE TRIGGER trg_costeo_demoras_tarifa_sync_org BEFORE INSERT OR UPDATE OF naviera_condicion_id ON public.costeo_naviera_demoras_tarifa FOR EACH ROW EXECUTE FUNCTION public.trg_costeo_demoras_tarifa_sync_org();
@@ -27852,8 +27851,6 @@ CREATE TRIGGER trg_costeo_tarifas_agente_force_borrador BEFORE INSERT OR UPDATE 
 CREATE TRIGGER trg_costeo_tarifas_estado_derivado BEFORE INSERT OR UPDATE OF estado, vigente_desde, vigente_hasta ON public.costeo_tarifas FOR EACH ROW EXECUTE FUNCTION public.trg_costeo_tarifas_estado_derivado();
 CREATE TRIGGER trg_costeo_tarifas_marcar_reemplazadas AFTER INSERT OR UPDATE OF estado, estado_aprobacion ON public.costeo_tarifas FOR EACH ROW EXECUTE FUNCTION public.costeo_tarifas_marcar_reemplazadas();
 CREATE TRIGGER trg_costeo_tarifas_updated BEFORE UPDATE ON public.costeo_tarifas FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
-CREATE TRIGGER trg_contactos_cliente_email_unico BEFORE INSERT OR UPDATE OF email ON public.contactos_cliente FOR EACH ROW EXECUTE FUNCTION public._assert_email_unico_org();
-CREATE TRIGGER trg_contactos_cliente_normalizar_email BEFORE INSERT OR UPDATE OF email ON public.contactos_cliente FOR EACH ROW EXECUTE FUNCTION public._normalizar_email();
 CREATE TRIGGER trg_cotizacion_acepta_oportunidad AFTER INSERT OR UPDATE OF estado ON public.cotizaciones FOR EACH ROW EXECUTE FUNCTION public.crm_marcar_oportunidad_ganada();
 CREATE TRIGGER trg_cotizacion_cierra_oportunidad AFTER INSERT OR UPDATE OF estado, embarque_id ON public.cotizaciones FOR EACH ROW EXECUTE FUNCTION public.crm_cierra_oportunidad_desde_cotizacion();
 CREATE TRIGGER trg_cotizacion_plantillas_updated_at BEFORE UPDATE ON public.cotizacion_plantillas FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
@@ -29387,11 +29384,6 @@ GRANT ALL ON FUNCTION public.agente_aprobar_tarifa(_tarifa_id uuid, _estado text
 GRANT ALL ON FUNCTION public.agente_aprobar_tarifa(_tarifa_id uuid, _estado text, _motivo text) TO service_role;
 GRANT ALL ON FUNCTION public.alertas_sistema_pending_count() TO authenticated;
 GRANT ALL ON FUNCTION public.alertas_sistema_pending_count() TO service_role;
-REVOKE ALL ON FUNCTION public.cierre_periodo_actual() FROM PUBLIC;
-GRANT ALL ON FUNCTION public.cierre_periodo_actual() TO authenticated;
-GRANT ALL ON FUNCTION public.cierre_periodo_actual() TO service_role;
-REVOKE ALL ON FUNCTION public.cierre_periodo_fecha(p_org uuid) FROM PUBLIC;
-GRANT ALL ON FUNCTION public.cierre_periodo_fecha(p_org uuid) TO service_role;
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.anticipos_aplicaciones TO authenticated;
 GRANT ALL ON TABLE public.anticipos_aplicaciones TO service_role;
 REVOKE ALL ON FUNCTION public.aplicar_anticipo_a_factura(p_anticipo_id uuid, p_factura_id uuid, p_monto numeric, p_fecha_aplicacion date, p_request_id uuid) FROM PUBLIC;
@@ -29550,6 +29542,11 @@ REVOKE ALL ON FUNCTION public.check_ratelimit(p_key text, p_window_seconds integ
 GRANT ALL ON FUNCTION public.check_ratelimit(p_key text, p_window_seconds integer, p_max integer) TO authenticated;
 GRANT ALL ON FUNCTION public.check_ratelimit(p_key text, p_window_seconds integer, p_max integer) TO anon;
 GRANT ALL ON FUNCTION public.check_ratelimit(p_key text, p_window_seconds integer, p_max integer) TO service_role;
+REVOKE ALL ON FUNCTION public.cierre_periodo_actual() FROM PUBLIC;
+GRANT ALL ON FUNCTION public.cierre_periodo_actual() TO authenticated;
+GRANT ALL ON FUNCTION public.cierre_periodo_actual() TO service_role;
+REVOKE ALL ON FUNCTION public.cierre_periodo_fecha(p_org uuid) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.cierre_periodo_fecha(p_org uuid) TO service_role;
 REVOKE ALL ON FUNCTION public.clear_facturapi_api_key(p_org_id uuid, p_ambiente text) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.clear_facturapi_api_key(p_org_id uuid, p_ambiente text) TO authenticated;
 GRANT ALL ON FUNCTION public.clear_facturapi_api_key(p_org_id uuid, p_ambiente text) TO service_role;
@@ -29560,8 +29557,6 @@ GRANT ALL ON FUNCTION public.clientes_listado(p_organization_id uuid, p_search t
 GRANT ALL ON FUNCTION public.clientes_listado(p_organization_id uuid, p_search text, p_offset integer, p_limit integer) TO service_role;
 GRANT ALL ON FUNCTION public.clientes_sync_cp() TO authenticated;
 GRANT ALL ON FUNCTION public.clientes_sync_cp() TO service_role;
-GRANT ALL ON FUNCTION public.crear_clientes(p_clientes jsonb) TO authenticated;
-GRANT ALL ON FUNCTION public.crear_clientes(p_clientes jsonb) TO service_role;
 REVOKE ALL ON FUNCTION public.cobranza_agregados(p_cliente_id uuid, p_moneda text) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.cobranza_agregados(p_cliente_id uuid, p_moneda text) TO authenticated;
 GRANT ALL ON FUNCTION public.cobranza_agregados(p_cliente_id uuid, p_moneda text) TO service_role;
@@ -29855,9 +29850,6 @@ GRANT ALL ON FUNCTION public.embarques_listado(p_organization_id uuid, p_search 
 GRANT ALL ON FUNCTION public.embarques_listado(p_organization_id uuid, p_search text, p_modo text, p_cliente_id uuid, p_operador text, p_proforma text, p_fecha_desde date, p_fecha_hasta date, p_sort_by text, p_sort_dir text, p_offset integer, p_limit integer) TO service_role;
 GRANT ALL ON FUNCTION public.embarques_protect_creator() TO authenticated;
 GRANT ALL ON FUNCTION public.embarques_protect_creator() TO service_role;
-REVOKE ALL ON FUNCTION public.enmascarar_costos_jsonb(p_in jsonb) FROM PUBLIC;
-GRANT ALL ON FUNCTION public.enmascarar_costos_jsonb(p_in jsonb) TO authenticated;
-GRANT ALL ON FUNCTION public.enmascarar_costos_jsonb(p_in jsonb) TO service_role;
 REVOKE ALL ON FUNCTION public.enforce_cotizacion_obligatoria() FROM PUBLIC;
 GRANT ALL ON FUNCTION public.enforce_cotizacion_obligatoria() TO authenticated;
 GRANT ALL ON FUNCTION public.enforce_cotizacion_obligatoria() TO service_role;
@@ -29874,6 +29866,9 @@ GRANT ALL ON FUNCTION public.enforce_proforma_no_soft_delete_facturada() TO serv
 REVOKE ALL ON FUNCTION public.enforce_revalidacion_sin_cambios(p_cotizacion_id uuid) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.enforce_revalidacion_sin_cambios(p_cotizacion_id uuid) TO authenticated;
 GRANT ALL ON FUNCTION public.enforce_revalidacion_sin_cambios(p_cotizacion_id uuid) TO service_role;
+REVOKE ALL ON FUNCTION public.enmascarar_costos_jsonb(p_in jsonb) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.enmascarar_costos_jsonb(p_in jsonb) TO authenticated;
+GRANT ALL ON FUNCTION public.enmascarar_costos_jsonb(p_in jsonb) TO service_role;
 REVOKE ALL ON FUNCTION public.enqueue_email(queue_name text, payload jsonb) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.enqueue_email(queue_name text, payload jsonb) TO service_role;
 REVOKE ALL ON FUNCTION public.ensure_demo_membership(_user_id uuid) FROM PUBLIC;
@@ -31035,4 +31030,4 @@ GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.v_saldos_cuentas_bancarias TO 
 GRANT ALL ON TABLE public.v_saldos_cuentas_bancarias TO service_role;
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.vendedora_config TO authenticated;
 GRANT ALL ON TABLE public.vendedora_config TO service_role;
-ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public GRANT ALL ON FUNCTIONS  TO authenticated;
+ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public GRANT ALL ON FUNCTIONS TO authenticated;
