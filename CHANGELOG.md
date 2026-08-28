@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.787.2] - 2026-08-28
+### Correcciones
+- **Guard `ola_e2_a_guards` en rojo (N15)**. La migración `20260902000100_qa_r2_etapa1_guards.sql` reescribió `public.embarques_assert_cancelacion_sin_cxc_cxp()` y en el camino borró los dos candados de la Ola E2: no dejar cancelar un embarque con proformas vivas (`LC_CANCEL_CON_PROFORMA`) ni con facturas de cliente en Borrador (`LC_CANCEL_CON_FACTURA_BORRADOR`). Como esa migración es posterior en el orden de replay, ganaba ella.
+- Nueva migración `20260903000300_ola_e2_n15_restaurar_candados_cancelacion.sql` (timestamp posterior a la que causó la regresión) que restaura la función completa y re-crea `trg_embarques_cancelacion_cxc_cxp`.
+- `supabase/schema/baseline.sql` y el manifiesto de releases sincronizados.
+
 ## [13.787.1] - 2026-08-28
 ### Correcciones
 - **CI rls-tests: `pg_dump: server version mismatch`**. El Postgres de pruebas ya corre 17.9, pero el runner `ubuntu-24.04` trae el cliente 16.15 y `pg_dump` se niega a respaldar un servidor más nuevo, así que el paso "Dump prepared database" abortaba y con él toda la suite RLS.
