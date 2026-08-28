@@ -1,3 +1,6 @@
+-- Ola 9 (auditoría 3-3 · M6/H8): migración vuelta TOLERANTE para que una base
+-- limpia aplique sin la lista de exenciones `drift-anclas.txt`. El estado final
+-- lo garantiza la migración posterior de reaplicación.
 CREATE OR REPLACE FUNCTION public._crear_embarque_replicar_conceptos(p_cotizacion_id uuid, p_embarque_id uuid, p_org uuid, p_target_ids uuid[], p_conceptos_venta jsonb) RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public', 'pg_catalog'
@@ -93,7 +96,16 @@ $$;
 REVOKE ALL ON FUNCTION public._crear_embarque_replicar_conceptos(uuid, uuid, uuid, uuid[], jsonb) FROM PUBLIC;
 REVOKE ALL ON FUNCTION public.actualizar_embarque_completo(uuid, jsonb, jsonb, jsonb, uuid, timestamp with time zone) FROM PUBLIC;
 REVOKE ALL ON FUNCTION public.crear_embarque_completo(jsonb, jsonb, jsonb, jsonb, uuid) FROM PUBLIC;
-REVOKE ALL ON FUNCTION public.cotizaciones_guard_en_operacion() FROM PUBLIC;
+DO $revoke_guard$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace
+    WHERE n.nspname = 'public' AND p.proname = 'cotizaciones_guard_en_operacion'
+  ) THEN
+    REVOKE ALL ON FUNCTION public.cotizaciones_guard_en_operacion() FROM PUBLIC;
+  END IF;
+END
+$revoke_guard$;
 
 ALTER TABLE public.conceptos_venta DROP CONSTRAINT IF EXISTS conceptos_venta_total_calc;
 ALTER TABLE public.conceptos_venta

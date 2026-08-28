@@ -1,3 +1,6 @@
+-- Ola 9 (auditoría 3-3 · M6/H8): migración vuelta TOLERANTE para que una base
+-- limpia aplique sin la lista de exenciones `drift-anclas.txt`. El estado final
+-- lo garantiza la migración posterior de reaplicación.
 CREATE OR REPLACE FUNCTION public.assert_nc_fecha_valida()
 RETURNS trigger
 LANGUAGE plpgsql
@@ -53,10 +56,21 @@ CREATE TRIGGER trg_conceptos_factura_assert_borrador
 BEFORE INSERT OR UPDATE OR DELETE ON public.conceptos_factura
 FOR EACH ROW EXECUTE FUNCTION public.conceptos_factura_assert_borrador();
 
-DROP TRIGGER IF EXISTS trg_cotizaciones_guard_en_operacion ON public.cotizaciones;
-CREATE TRIGGER trg_cotizaciones_guard_en_operacion
-BEFORE UPDATE ON public.cotizaciones
-FOR EACH ROW EXECUTE FUNCTION public.cotizaciones_guard_en_operacion();
+DO $guard_trg$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace
+    WHERE n.nspname = 'public' AND p.proname = 'cotizaciones_guard_en_operacion'
+  ) THEN
+    DROP TRIGGER IF EXISTS trg_cotizaciones_guard_en_operacion ON public.cotizaciones;
+    CREATE TRIGGER trg_cotizaciones_guard_en_operacion
+    BEFORE UPDATE ON public.cotizaciones
+    FOR EACH ROW EXECUTE FUNCTION public.cotizaciones_guard_en_operacion();
+  ELSE
+    RAISE NOTICE 'cotizaciones_guard_en_operacion() aún no existe; el trigger lo instala la migración posterior';
+  END IF;
+END
+$guard_trg$;
 
 -- Fuente canónica de public.eerr_resumen_anual.
 CREATE OR REPLACE FUNCTION public.eerr_resumen_anual(p_year integer, p_fuente text DEFAULT 'embarques'::text)

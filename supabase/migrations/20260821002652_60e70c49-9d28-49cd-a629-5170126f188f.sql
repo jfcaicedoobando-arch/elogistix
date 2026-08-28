@@ -1,3 +1,6 @@
+-- Ola 9 (auditoría 3-3 · M6/H8): migración vuelta TOLERANTE para que una base
+-- limpia aplique sin la lista de exenciones `drift-anclas.txt`. El estado final
+-- lo garantiza la migración posterior de reaplicación.
 -- Ola 1 · parte 2: parches puntuales a las RPC de lote (1:1 con las fuentes
 -- canónicas supabase/schema/facturacion/registrar_pago_cliente_lote.sql y
 -- supabase/schema/cxp/registrar_pago_proveedor_lote.sql).
@@ -19,7 +22,7 @@ $new$      - public.nc_aplicadas_en_moneda_factura(f.id),$new$
   );
 
   IF v_new = v_src THEN
-    RAISE EXCEPTION 'Ola 1: no se encontró el bloque de notas de crédito en registrar_pago_cliente_lote';
+    RAISE NOTICE 'Ancla no aplicable en esta base; se omite (%)', 'Ola 1: no se encontró el bloque de notas de crédito en registrar_pago_cliente_lote'; RETURN;
   END IF;
 
   EXECUTE v_new;
@@ -48,7 +51,7 @@ $new$  -- Validar renglones y calcular total.
   );
 
   IF v_new = v_src THEN
-    RAISE EXCEPTION 'Ola 1: no se encontró el loop de validación en registrar_pago_proveedor_lote';
+    RAISE NOTICE 'Ancla no aplicable en esta base; se omite (%)', 'Ola 1: no se encontró el loop de validación en registrar_pago_proveedor_lote'; RETURN;
   END IF;
 
   v_src := v_new;
@@ -62,7 +65,7 @@ $new$      AND pf.organization_id = v_org
   );
 
   IF v_new = v_src THEN
-    RAISE EXCEPTION 'Ola 1: no se encontró el SELECT de proveedor_facturas en registrar_pago_proveedor_lote';
+    RAISE NOTICE 'Ancla no aplicable en esta base; se omite (%)', 'Ola 1: no se encontró el SELECT de proveedor_facturas en registrar_pago_proveedor_lote'; RETURN;
   END IF;
 
   EXECUTE v_new;
