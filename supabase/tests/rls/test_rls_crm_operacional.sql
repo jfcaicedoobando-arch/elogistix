@@ -94,12 +94,16 @@ BEGIN
   -- =========================================================================
   -- TEST 3: crm_oportunidades — aislamiento
   -- =========================================================================
+  -- v13.777.6 — Fase 2 del rediseño CRM: `_crm_oportunidad_requiere_origen`
+  -- exige origen (cliente_id o lead_id calificado). Se ancla al cliente de la
+  -- misma org para no romper el candado de origen.
   INSERT INTO public.crm_oportunidades(
-    id, organization_id, nombre, cliente_nombre, vendedor_email, etapa_id,
+    id, organization_id, nombre, cliente_id, cliente_nombre, vendedor_email, etapa_id,
     monto_estimado, moneda, probabilidad, modo, tipo_carga, origen, destino, notas
   ) VALUES
-    (op_a, org_a, 'Op A', 'Cli CRM A', 'v@a.mx', etapa_a, 100000, 'MXN', 30, 'Marítimo', 'FCL', 'CN', 'MX', ''),
-    (op_b, org_b, 'Op B', 'Cli CRM B', 'v@b.mx', etapa_b, 200000, 'USD', 50, 'Aéreo', 'General', 'US', 'MX', '');
+    (op_a, org_a, 'Op A', cli_a, 'Cli CRM A', 'v@a.mx', etapa_a, 100000, 'MXN', 30, 'Marítimo', 'FCL', 'CN', 'MX', ''),
+    (op_b, org_b, 'Op B', cli_b, 'Cli CRM B', 'v@b.mx', etapa_b, 200000, 'USD', 50, 'Aéreo', 'General', 'US', 'MX', '');
+
 
   PERFORM pg_temp.as_user(user_a);
   SELECT COUNT(*) INTO visible FROM public.crm_oportunidades WHERE id IN (op_a, op_b);

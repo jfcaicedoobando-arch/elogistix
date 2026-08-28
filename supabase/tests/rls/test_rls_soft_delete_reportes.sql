@@ -61,8 +61,9 @@ BEGIN
   INSERT INTO public.user_roles(user_id, role) VALUES (u_admin, 'admin_org')
   ON CONFLICT DO NOTHING;
 
-  INSERT INTO public.clientes(id, organization_id, nombre)
-  VALUES (cli_a, org_a, 'Cliente SoftDelete');
+  -- v13.777.6 — `clientes.email` es NOT NULL desde la Ola 7.
+  INSERT INTO public.clientes(id, organization_id, nombre, email)
+  VALUES (cli_a, org_a, 'Cliente SoftDelete', 'softdelete@test.local');
 
   -- `proveedores_categoria_check` exige tipo cuando la categoría es Logistico.
   INSERT INTO public.proveedores(id, organization_id, nombre, categoria, tipo)

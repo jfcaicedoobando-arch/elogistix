@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.777.6] - 2026-08-28
+### Corregido
+- **Suite RLS completa en verde (34/34)**: `nc_aplicadas_en_moneda_factura` recupera `EXECUTE` para `authenticated` (la consume `cartera_pendiente()`, que es SECURITY INVOKER) y sale de la lista canónica service_role-only; whitelist documentada del linter org-scope para los helpers de visibilidad por rol y los wrappers de tablero; seeds de prueba de CRM (origen obligatorio en oportunidades) y de clientes (`email` NOT NULL) actualizados.
+
 ## [13.777.5] - 2026-08-28
 ### Corregido
 - **CI candado service_role-only (dirección A)**: la re-emisión de espejos había reabierto `EXECUTE` a `authenticated` en `public._crear_embarque_replicar_conceptos` y `public.nc_aplicadas_en_moneda_factura`. Nueva migración de re-cierre (sólo `service_role`), archivos canónicos y `baseline.sql` alineados; manifiesto en 1131 migraciones.

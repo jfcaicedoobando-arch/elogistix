@@ -70,10 +70,12 @@ BEGIN
   -- No se siembra public.user_roles: estas policies resuelven el permiso por
   -- organization_members y sólo consultan has_role para 'super_admin'.
 
-  INSERT INTO public.clientes(id, organization_id, nombre) VALUES
-    (cli_a,  org_a, 'Cliente Refact A'),
-    (cli_a2, org_a, 'Cliente Refact A destino'),
-    (cli_b,  org_b, 'Cliente Refact B');
+  -- v13.777.6 — `clientes.email` es NOT NULL desde la Ola 7 (normalización
+  -- de correos); las inserciones de prueba deben traerlo.
+  INSERT INTO public.clientes(id, organization_id, nombre, email) VALUES
+    (cli_a,  org_a, 'Cliente Refact A',         'refact.a@test.local'),
+    (cli_a2, org_a, 'Cliente Refact A destino', 'refact.a2@test.local'),
+    (cli_b,  org_b, 'Cliente Refact B',         'refact.b@test.local');
 
   -- fac_a lleva UUID fiscal: T10-T12 le registran un REP y el guard
   -- `LC_REP_FACTURA_SIN_TIMBRAR` exige factura timbrada.
