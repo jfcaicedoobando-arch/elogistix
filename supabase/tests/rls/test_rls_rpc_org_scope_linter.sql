@@ -105,10 +105,10 @@ DECLARE
     'embarque_operativo_completo',
     'enforce_revalidacion_sin_cambios',
     'liberar_conceptos_de_proforma',
-    -- Suma NCs de UNA factura por ID. service_role-only (v13.777.9):
-    -- `cartera_pendiente()` calcula la cascada en línea bajo RLS, así que
-    -- ningún cliente la ejecuta directo; sólo callers DEFINER internos.
-    'nc_aplicadas_en_moneda_factura',
+    -- v13.777.10: `nc_aplicadas_en_moneda_factura` salió de la whitelist:
+    -- ya no es ejecutable por `authenticated` (service_role-only), así que
+    -- el linter dejó de considerarla candidata.
+
     'recalcular_cobro_embarques',
     'recalcular_estado_liquidacion_concepto',
     'recalcular_estado_liquidacion_factura',
