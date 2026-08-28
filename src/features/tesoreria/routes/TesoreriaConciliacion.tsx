@@ -28,6 +28,11 @@ import type { RefPago } from "@/features/tesoreria/domain/pagoDetalle";
 import { MovimientoManualDialog } from "./_sections/MovimientoManualDialog";
 import { ConciliacionToolbar } from "./_sections/ConciliacionToolbar";
 import { usePermissions } from "@/hooks/shared/usePermissions";
+import { useFiltroUrl } from "@/hooks/shared/useFiltroUrl";
+
+const ESTADOS_MOVIMIENTO = ["Pendiente", "Conciliado", "Ignorado", "todos"] as const;
+
+
 
 export default function TesoreriaConciliacion() {
   const { data: cuentas = [] } = useCuentasBancarias();
@@ -42,7 +47,12 @@ export default function TesoreriaConciliacion() {
       return next;
     }, { replace: true });
   };
-  const [estado, setEstado] = useState<"Pendiente" | "Conciliado" | "Ignorado" | "todos">("Pendiente");
+  // M8 (Ola 8): el estado del movimiento también viaja en la URL.
+  const [estado, setEstado] = useFiltroUrl<"Pendiente" | "Conciliado" | "Ignorado" | "todos">(
+    "estado",
+    ESTADOS_MOVIMIENTO,
+    "Pendiente",
+  );
   const [sel, setSel] = useState<MovimientoBBVA | null>(null);
   const [refPago, setRefPago] = useState<RefPago | null>(null);
   const [manualOpen, setManualOpen] = useState(false);

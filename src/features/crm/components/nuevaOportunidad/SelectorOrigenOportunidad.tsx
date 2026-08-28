@@ -9,18 +9,18 @@
  * `_crm_oportunidad_requiere_origen` la rechaza.
  */
 import { useState } from "react";
-import { Check, ChevronsUpDown, ExternalLink } from "lucide-react";
-import { Link } from "react-router-dom";
+import { ChevronsUpDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
-  Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList,
+  Command, CommandEmpty, CommandGroup, CommandInput, CommandList,
 } from "@/components/ui/command";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useProspectosForSelect } from "@/features/crm/hooks";
 import { cn } from "@/lib/utils";
+import { OpcionesProspecto, OpcionesCliente, AyudaOrigen } from "./SelectorOrigenOpciones";
 import type { OportunidadOrigenTipo } from "@/features/crm/domain/oportunidadFormState";
 
 interface ClienteOption {
@@ -107,59 +107,26 @@ export default function SelectorOrigenOportunidad({
                 {isLoading && esProspecto ? "Buscando…" : "Sin resultados"}
               </CommandEmpty>
               <CommandGroup>
-                {esProspecto
-                  ? prospectos.map((p) => (
-                      <CommandItem
-                        key={p.id}
-                        value={p.id}
-                        onSelect={() => {
-                          onProspecto({
-                            id: p.id,
-                            empresa: p.empresa,
-                            vendedorId: p.vendedor_id,
-                            vendedorEmail: p.vendedor_email,
-                          });
-                          setOpen(false);
-                        }}
-                      >
-                        <Check className={cn("mr-2 h-4 w-4", leadId === p.id ? "opacity-100" : "opacity-0")} />
-                        <span className="truncate">{p.empresa}</span>
-                        <Badge variant="outline" className="ml-auto">{p.estado}</Badge>
-                      </CommandItem>
-                    ))
-                  : clientes.map((c) => (
-                      <CommandItem
-                        key={c.id}
-                        value={c.nombre}
-                        onSelect={() => { onCliente(c); setOpen(false); }}
-                      >
-                        <Check className={cn("mr-2 h-4 w-4", clienteId === c.id ? "opacity-100" : "opacity-0")} />
-                        <span className="truncate">{c.nombre}</span>
-                      </CommandItem>
-                    ))}
+                {esProspecto ? (
+                  <OpcionesProspecto
+                    prospectos={prospectos}
+                    leadId={leadId}
+                    onProspecto={(p) => { onProspecto(p); setOpen(false); }}
+                  />
+                ) : (
+                  <OpcionesCliente
+                    clientes={clientes}
+                    clienteId={clienteId}
+                    onCliente={(c) => { onCliente(c); setOpen(false); }}
+                  />
+                )}
               </CommandGroup>
             </CommandList>
           </Command>
         </PopoverContent>
       </Popover>
 
-      <p className="text-xs text-muted-foreground">
-        {esProspecto ? (
-          <>
-            Sólo aparecen prospectos calificados.{" "}
-            <Link to="/crm/prospectos" className="inline-flex items-center gap-1 underline">
-              Ver prospectos <ExternalLink className="h-3 w-3" />
-            </Link>
-          </>
-        ) : (
-          <>
-            Clientes ya dados de alta con RFC y régimen fiscal.{" "}
-            <Link to="/clientes" className="inline-flex items-center gap-1 underline">
-              Ver clientes <ExternalLink className="h-3 w-3" />
-            </Link>
-          </>
-        )}
-      </p>
+      <AyudaOrigen esProspecto={esProspecto} />
     </div>
   );
 }

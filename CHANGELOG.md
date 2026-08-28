@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.776.0] - 2026-08-28
+### Agregado
+- **Ola 8 — Deep linking de filtros (auditoría 3 · M8)**: nuevos hooks compartidos `useFiltroUrl` / `useTextoUrl` (`src/hooks/shared/useFiltroUrl.ts`) que guardan los filtros de listados en la URL. Ahora se puede compartir un link con los filtros aplicados, el botón atrás los respeta y un refresh no los pierde.
+- Migrados a filtros en URL: Compras › Pagos (rango de fechas, moneda, método, búsqueda), Compras › Notas de crédito, Compras › Conciliación, Compras › Por aprobar (pestaña + búsqueda), Proveedores (búsqueda, origen, tipo), Anticipos a proveedor (estado, proveedor) y Tesorería › Conciliación (estado del movimiento).
+
 ## [13.775.0] - 2026-08-28
 ### Agregado
 - **Ola 7 — Validaciones de captura (auditoría 3 · M3, M5, M7)**.

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useFiltroUrl, useTextoUrl } from "@/hooks/shared";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Truck, Plus, Upload } from "lucide-react";
 import { FloatingActionButton } from "@/components/shared/FloatingActionButton";
@@ -18,11 +19,14 @@ import { ProveedoresImportDialog } from "../components/ProveedoresImportDialog";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { useDocumentTitle } from "@/hooks/shared";
 
+const ORIGENES_FILTRO = ["todos", "Nacional", "Extranjero"] as const;
+
 export default function Proveedores() {
   useDocumentTitle("Proveedores");
-  const [search, setSearch] = useState("");
-  const [origen, setOrigen] = useState<OrigenFiltro>("todos");
-  const [tipoFiltro, setTipoFiltro] = useState<TipoFiltro>("todos");
+  // M8 (Ola 8): filtros del directorio en la URL (link compartible).
+  const [search, setSearch] = useTextoUrl("q");
+  const [origen, setOrigen] = useFiltroUrl<OrigenFiltro>("origen", ORIGENES_FILTRO, "todos");
+  const [tipoFiltro, setTipoFiltro] = useTextoUrl("tipo", "todos") as readonly [TipoFiltro, (v: TipoFiltro) => void];
   const [nuevoOpen, setNuevoOpen] = useState(false);
   // Atajo desde la captura de facturas de proveedor: ?nuevo=1&rfc=&nombre=
   const [searchParams, setSearchParams] = useSearchParams();

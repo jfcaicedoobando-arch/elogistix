@@ -18,7 +18,7 @@ import { AplicarAnticipoDialog } from "../components/AplicarAnticipoDialog";
 import { CancelarAnticipoDialog } from "../components/CancelarAnticipoDialog";
 import { VincularEmbarqueAnticipoDialog } from "../components/VincularEmbarqueAnticipoDialog";
 
-import { usePermissions } from "@/hooks/shared";
+import { usePermissions, useTextoUrl } from "@/hooks/shared";
 import { useProveedoresLite } from "@/features/proveedor/hooks";
 import { PageSkeleton } from "@/components/shared/skeletons";
 import EmptyState from "@/components/empty/EmptyState";
@@ -27,8 +27,9 @@ import { AnticiposKpis } from "./_sections/AnticiposKpis";
 
 export default function AnticiposProveedor() {
   const { canEditFinance } = usePermissions();
-  const [estado, setEstado] = useState<string>("todos");
-  const [proveedorId, setProveedorId] = useState<string>("todos");
+  // M8 (Ola 8): filtros en la URL (link compartible).
+  const [estado, setEstado] = useTextoUrl("estado", "todos");
+  const [proveedorId, setProveedorId] = useTextoUrl("proveedor", "todos");
   const [soloSinEmbarque, setSoloSinEmbarque] = useState(false);
 
   const [openRegistrar, setOpenRegistrar] = useState(false);

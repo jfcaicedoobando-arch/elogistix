@@ -5,7 +5,8 @@
  * método de pago, moneda y búsqueda por folio/proveedor/referencia.
  * KPIs de total pagado (MXN, USD) y conteo. Exporta a CSV.
  */
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
+import { useFiltroUrl, useTextoUrl } from "@/hooks/shared";
 import { useQuery } from "@tanstack/react-query";
 import { compras } from "../queryKeys";
 import { Landmark, Download, Banknote, Coins, ListFilter } from "lucide-react";
@@ -32,7 +33,8 @@ import { RANGO_DESDE_LABEL, RANGO_HASTA_LABEL } from "@/lib/ui/rangoFechasCopy";
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 import { ErrorState } from "@/components/shared/states/ErrorState";
 
-type MonedaFiltro = "todas" | "MXN" | "USD";
+const MONEDAS_FILTRO = ["todas", "MXN", "USD"] as const;
+type MonedaFiltro = (typeof MONEDAS_FILTRO)[number];
 
 function firstOfMonth(): string {
   const d = new Date();
@@ -43,11 +45,12 @@ function today(): string {
 }
 
 export default function ComprasPagos() {
-  const [desde, setDesde] = useState<string>(firstOfMonth());
-  const [hasta, setHasta] = useState<string>(today());
-  const [moneda, setMoneda] = useState<MonedaFiltro>("todas");
-  const [metodoPago, setMetodoPago] = useState<string>("todos");
-  const [search, setSearch] = useState("");
+  // M8 (Ola 8): filtros en la URL → el listado se puede compartir por link.
+  const [desde, setDesde] = useTextoUrl("desde", firstOfMonth());
+  const [hasta, setHasta] = useTextoUrl("hasta", today());
+  const [moneda, setMoneda] = useFiltroUrl<MonedaFiltro>("moneda", MONEDAS_FILTRO, "todas");
+  const [metodoPago, setMetodoPago] = useTextoUrl("metodo", "todos");
+  const [search, setSearch] = useTextoUrl("q");
 
   const { data: rows = [], isLoading, isError, refetch } = useQuery({
     queryKey: compras.pagosGlobal({ desde, hasta, moneda, metodoPago, search }),

@@ -19,6 +19,48 @@ function contarContactos(secundarios: number, principal?: string | null): number
   return secundarios + (principal && principal.trim() ? 1 : 0);
 }
 
+
+type ClienteRow = NonNullable<ReturnType<typeof useClienteDetalleController>["cliente"]>;
+
+/** Datos fiscales/crédito que consume el header. */
+function mapHeader(cliente: ClienteRow) {
+  return {
+    id: cliente.id,
+    nombre: cliente.nombre,
+    rfc: cliente.rfc,
+    direccion: cliente.direccion,
+    ciudad: cliente.ciudad,
+    estado: cliente.estado,
+    regimen_fiscal: cliente.regimen_fiscal,
+    dias_credito: cliente.dias_credito,
+    limite_credito_mxn: cliente.limite_credito_mxn,
+    requiere_autorizacion_cotizacion: leerFlagAutorizacion(cliente, "requiere_autorizacion_cotizacion"),
+    requiere_autorizacion_proforma: leerFlagAutorizacion(cliente, "requiere_autorizacion_proforma"),
+  };
+}
+
+/** Valores del formulario de edición (sin nulos para los inputs). */
+function mapFormulario(cliente: ClienteRow) {
+  return {
+    nombre: cliente.nombre,
+    rfc: cliente.rfc,
+    direccion: cliente.direccion,
+    ciudad: cliente.ciudad,
+    estado: cliente.estado,
+    cp: cliente.cp,
+    contacto: cliente.contacto,
+    email: cliente.email,
+    telefono: cliente.telefono,
+    regimen_fiscal: cliente.regimen_fiscal ?? "",
+    uso_cfdi_default: cliente.uso_cfdi_default ?? "",
+    dias_credito: cliente.dias_credito ?? null,
+    limite_credito_mxn: cliente.limite_credito_mxn ?? null,
+    sin_comision: Boolean(cliente.sin_comision),
+    requiere_autorizacion_cotizacion: leerFlagAutorizacion(cliente, "requiere_autorizacion_cotizacion"),
+    requiere_autorizacion_proforma: leerFlagAutorizacion(cliente, "requiere_autorizacion_proforma"),
+  };
+}
+
 export default function ClienteDetalle() {
   const { id } = useParams<{ id: string }>();
   const {
@@ -67,19 +109,7 @@ export default function ClienteDetalle() {
   return (
     <PageContainer>
       <ClienteDetalleHeader
-        cliente={{
-          id: cliente.id,
-          nombre: cliente.nombre,
-          rfc: cliente.rfc,
-          direccion: cliente.direccion,
-          ciudad: cliente.ciudad,
-          estado: cliente.estado,
-          regimen_fiscal: cliente.regimen_fiscal,
-          dias_credito: cliente.dias_credito,
-          limite_credito_mxn: cliente.limite_credito_mxn,
-          requiere_autorizacion_cotizacion: leerFlagAutorizacion(cliente, "requiere_autorizacion_cotizacion"),
-          requiere_autorizacion_proforma: leerFlagAutorizacion(cliente, "requiere_autorizacion_proforma"),
-        }}
+        cliente={mapHeader(cliente)}
         canEdit={canEdit}
         onBack={() => navigate("/clientes")}
         onEdit={() => setEditClienteOpen(true)}
@@ -111,24 +141,7 @@ export default function ClienteDetalle() {
       />
 
       <ClienteDetalleDialogs
-        cliente={{
-          nombre: cliente.nombre,
-          rfc: cliente.rfc,
-          direccion: cliente.direccion,
-          ciudad: cliente.ciudad,
-          estado: cliente.estado,
-          cp: cliente.cp,
-          contacto: cliente.contacto,
-          email: cliente.email,
-          telefono: cliente.telefono,
-          regimen_fiscal: cliente.regimen_fiscal ?? "",
-          uso_cfdi_default: cliente.uso_cfdi_default ?? "",
-          dias_credito: cliente.dias_credito ?? null,
-          limite_credito_mxn: cliente.limite_credito_mxn ?? null,
-          sin_comision: Boolean(cliente.sin_comision),
-          requiere_autorizacion_cotizacion: leerFlagAutorizacion(cliente, "requiere_autorizacion_cotizacion"),
-          requiere_autorizacion_proforma: leerFlagAutorizacion(cliente, "requiere_autorizacion_proforma"),
-        }}
+        cliente={mapFormulario(cliente)}
         contactDialogOpen={contactDialogOpen}
         setContactDialogOpen={setContactDialogOpen}
         editingContacto={editingContacto}

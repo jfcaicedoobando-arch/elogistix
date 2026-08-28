@@ -1,5 +1,6 @@
 /** Bandeja /compras/por-aprobar — Ola C: facturas bajo flujo de aprobación. */
 import { useMemo, useState } from "react";
+import { useFiltroUrl, useTextoUrl } from "@/hooks/shared";
 import { useNavigate } from "react-router-dom";
 import { ShieldCheck, ClipboardCheck, CheckCircle2, XCircle } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
@@ -20,13 +21,15 @@ import { ComprasPorAprobarEmptyState } from "./ComprasPorAprobar.emptyState";
 import { ComprasPorAprobarBulkBar } from "./ComprasPorAprobar.bulkBar";
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 
-type AprobacionFiltro = "pendiente" | "aprobada" | "rechazada";
+const APROBACION_FILTROS = ["pendiente", "aprobada", "rechazada"] as const;
+type AprobacionFiltro = (typeof APROBACION_FILTROS)[number];
 
 export default function ComprasPorAprobar() {
   const { canAprobarFacturaProveedor } = usePermissions();
   const navigate = useNavigate();
-  const [aprobacion, setAprobacion] = useState<AprobacionFiltro>("pendiente");
-  const [search, setSearch] = useState("");
+  // M8 (Ola 8): pestaña y búsqueda viven en la URL (link compartible).
+  const [aprobacion, setAprobacion] = useFiltroUrl<AprobacionFiltro>("estado", APROBACION_FILTROS, "pendiente");
+  const [search, setSearch] = useTextoUrl("q");
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [confirmOpen, setConfirmOpen] = useState(false);
   const { aprobar, isRunning, progreso } = useAprobarFacturasLote();
