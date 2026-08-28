@@ -97,7 +97,8 @@ describe("cierre service", () => {
         data: [{ id: "log-1", embarque_id: "emb-4", accion: "cerrar", usuario_id: "u1", motivo: null, snapshot: {}, created_at: "2026-06-17T00:00:00Z" }],
         error: null,
       });
-      const eqFn = vi.fn().mockReturnValue({ order: orderFn });
+      // L1: la consulta principal desempata con un segundo .order("id").
+      const eqFn = vi.fn().mockReturnValue({ order: () => ({ order: orderFn }) });
       const selectFn = vi.fn().mockReturnValue({ eq: eqFn });
       // Bitácora fallback chain: select -> eq -> eq -> order
       const bitacoraOrder = vi.fn().mockResolvedValue({ data: [], error: null });
@@ -124,7 +125,7 @@ describe("cierre service", () => {
         if (tabla === "bitacora_actividad") {
           return { select: () => ({ eq: () => ({ eq: () => ({ order: bitacoraOrder }) }) }) };
         }
-        return { select: () => ({ eq: () => ({ order: orderFn }) }) };
+        return { select: () => ({ eq: () => ({ order: () => ({ order: orderFn }) }) }) };
       });
       const log = await fetchCierreLog("emb-5");
       expect(log).toEqual([]);

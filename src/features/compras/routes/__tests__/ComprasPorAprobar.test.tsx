@@ -26,6 +26,11 @@ vi.mock("@/features/cxp/hooks", () => ({
 }));
 vi.mock("@/hooks/shared", () => ({
   usePermissions: () => ({ canEdit: true }),
+  useFiltroUrl: <T,>(_clave: string, _validos: readonly T[], porDefecto: T) => [
+    porDefecto,
+    vi.fn(),
+  ],
+  useTextoUrl: (_clave: string, porDefecto = "") => [porDefecto, vi.fn()],
 }));
 
 import ComprasPorAprobar from "../ComprasPorAprobar";

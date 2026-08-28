@@ -72,4 +72,7 @@ export const LC_CODE_MESSAGES_FINANCIERO: Record<string, string> = {
   LC_NC_PROV_TRANSICION_INVALIDA:
     "La nota de crédito no puede pasar a ese estado desde el actual.",
 
+  LC_FACTURA_SIN_TC_DOF:
+    "No hay tipo de cambio DOF publicado para esa moneda y fecha. Captúralo antes de generar la factura.",
+
 };

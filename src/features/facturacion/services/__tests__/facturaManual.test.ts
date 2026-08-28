@@ -1,10 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-const { from, deleteEq } = vi.hoisted(() => ({
+const { from, deleteEq, rpc } = vi.hoisted(() => ({
   from: vi.fn(),
+  rpc: vi.fn().mockResolvedValue({ error: null }),
   deleteEq: vi.fn().mockResolvedValue({ error: null }),
 }));
-vi.mock("@/integrations/supabase/client", () => ({ supabase: { from } }));
+vi.mock("@/integrations/supabase/client", () => ({ supabase: { from, rpc } }));
 
 import { crearFacturaManual } from "../facturaManual";
 
@@ -103,7 +104,7 @@ describe("crearFacturaManual", () => {
   it("rollback: borra factura si falla insert de conceptos", async () => {
     errConc = { message: "no" };
     await expect(crearFacturaManual(baseInput)).rejects.toThrow(/Error al crear conceptos: no/);
-    expect(deleteEq).toHaveBeenCalledWith("id", "F-1");
+    expect(rpc).toHaveBeenCalledWith("soft_delete_record", { _table: "facturas", _id: "F-1" });
   });
 
   it("FIX-17 — totales cuadran al centavo con montos difíciles (0.1, 33.333, 1/3)", async () => {
