@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.778.2] - 2026-08-28
+### Corregido
+- **Candado CI service_role-only sincronizado**: `public._cxp_validar_aprobacion(uuid, text)` quedó registrada en `supabase/tests/rls/_ci_service_role_only.sql`. Es como avisar al portero que hay un cuarto nuevo con llave: la migración ya la cerró con REVOKE, pero la lista canónica no la conocía y el candado bidireccional la marcaba como faltante.
+
 ## [13.778.1] - 2026-08-28
 ### Corregido
 - **CI en verde tras la Ola A (13.778.0)**: los espejos canónicos de `generar_liquidacion_comision` y `_cxp_validar_aprobacion` quedaron alineados byte a byte con las migraciones vigentes (`20260828031423`, `20260828031517`) —el guardrail `audit:replay-mirror` exige que en replay limpio el espejo y la migración digan lo mismo— y el manifiesto de release se sincronizó con las 1142 migraciones en disco.
