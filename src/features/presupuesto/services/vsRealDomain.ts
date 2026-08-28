@@ -73,8 +73,6 @@ export function mapPresupuestoPorCategoria(rows: PresupRow[], periodo: string): 
   return out;
 }
 
-export type { GastosAgregados as GastosAgregadosVsReal };
-
 export function aplicarLiquidacionesComisiones(
   realPorCat: Map<string, number>,
   cats: CatRow[],
