@@ -1,21 +1,21 @@
-# Cast Audit — generado 2026-08-25
+# Cast Audit — generado 2026-08-28
 
 Auditoría automática de los `as` casts en `src/`. Generado por
 `scripts/audit-casts.ts`. Para regenerar: `bun scripts/audit-casts.ts`.
 
 ## Resumen
 
-Total de `as` casts detectados: **3149**
+Total de `as` casts detectados: **3215**
 
 | Categoría | Peso | Cantidad | % |
 |-----------|------|----------|---|
-| SAFE      | 0 | 933     | 29.6% |
-| LOW       | 1 | 145      | 4.6% |
-| MEDIUM    | 2 | 2071   | 65.8% |
-| HIGH      | 3 | 0     | 0.0% |
+| SAFE      | 0 | 956     | 29.7% |
+| LOW       | 1 | 151      | 4.7% |
+| MEDIUM    | 2 | 2107   | 65.5% |
+| HIGH      | 3 | 1     | 0.0% |
 | CRITICAL  | 4 | 0 | 0.0% |
 
-**Lectura clave:** los casts a accionar son los **HIGH + CRITICAL** = 0 (~0.0%). El resto es seguro o aceptable bajo política.
+**Lectura clave:** los casts a accionar son los **HIGH + CRITICAL** = 1 (~0.0%). El resto es seguro o aceptable bajo política.
 
 ## Definición de categorías
 
@@ -43,11 +43,16 @@ Total de `as` casts detectados: **3149**
 | 12 | `src/features/facturacion/services/pagos/__tests__/pagosFactura.test.ts` | 10 | 18 | 1 | 0 | 9 | 0 | 0 |
 | 13 | `src/test/setup.ts` | 9 | 18 | 0 | 0 | 9 | 0 | 0 |
 | 14 | `src/features/dashboard/direccion/services/loaders.ts` | 9 | 17 | 0 | 1 | 8 | 0 | 0 |
-| 15 | `src/features/costeo/services/navieraCondiciones.ts` | 8 | 16 | 0 | 0 | 8 | 0 | 0 |
+| 15 | `src/features/configuracion/index.ts` | 8 | 16 | 0 | 0 | 8 | 0 | 0 |
 
 ## Top-30 casts más riesgosos (HIGH + CRITICAL)
 
-_Ningún cast HIGH o CRITICAL detectado._
+### 1. [HIGH] `src/features/cliente/services/importLote.ts:27`
+
+```ts
+p_clientes: lote as unknown as Json,
+```
+
 
 ## Roadmap
 
