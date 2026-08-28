@@ -3,7 +3,7 @@
 -- Ola 5 · RG4-2 (N41/N45): valuación por moneda propia del gasto.
 -- Al modificar: edita ESTE archivo y genera la migración con el mismo cuerpo.
 
-CREATE OR REPLACE FUNCTION public.dashboard_details()
+CREATE OR REPLACE FUNCTION public.dashboard_details_datos()
  RETURNS jsonb
  LANGUAGE plpgsql
  STABLE SECURITY DEFINER
@@ -249,5 +249,7 @@ $function$;
 
 -- H6: permisos explícitos (idempotente), patrón FIX-H6-12.
 
-REVOKE ALL ON FUNCTION public.dashboard_details() FROM PUBLIC, anon;
-GRANT EXECUTE ON FUNCTION public.dashboard_details() TO authenticated, service_role;
+-- Ola 5 (C9): el cuerpo es interno; la RPC pública `dashboard_details()` lo envuelve
+-- y enmascara costos/utilidad según el rol (ver dashboard_rpc_costos.sql).
+REVOKE ALL ON FUNCTION public.dashboard_details_datos() FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.dashboard_details_datos() TO service_role;

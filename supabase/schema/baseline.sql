@@ -10376,6 +10376,20 @@ CREATE FUNCTION public.dashboard_details() RETURNS jsonb
     LANGUAGE plpgsql STABLE SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
+DECLARE
+  v_out jsonb;
+BEGIN
+  v_out := public.dashboard_details_datos();
+  IF NOT public.puede_ver_costos_dashboard(auth.uid()) THEN
+    v_out := public.enmascarar_costos_jsonb(v_out);
+  END IF;
+  RETURN v_out;
+END;
+$$;
+CREATE FUNCTION public.dashboard_details_datos() RETURNS jsonb
+    LANGUAGE plpgsql STABLE SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
 BEGIN
   IF auth.role() IS DISTINCT FROM 'service_role'
      AND NOT public.puede_ver_dashboard_direccion(auth.uid()) THEN
@@ -10669,6 +10683,20 @@ BEGIN
 END;
 $$;
 CREATE FUNCTION public.dashboard_summary() RETURNS jsonb
+    LANGUAGE plpgsql STABLE SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+DECLARE
+  v_out jsonb;
+BEGIN
+  v_out := public.dashboard_summary_datos();
+  IF NOT public.puede_ver_costos_dashboard(auth.uid()) THEN
+    v_out := public.enmascarar_costos_jsonb(v_out);
+  END IF;
+  RETURN v_out;
+END;
+$$;
+CREATE FUNCTION public.dashboard_summary_datos() RETURNS jsonb
     LANGUAGE plpgsql STABLE SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -12678,6 +12706,53 @@ BEGIN
     NEW.created_by := OLD.created_by;
   END IF;
   RETURN NEW;
+END;
+$$;
+CREATE FUNCTION public.enmascarar_costos_jsonb(p_in jsonb) RETURNS jsonb
+    LANGUAGE plpgsql IMMUTABLE
+    SET search_path TO 'public'
+    AS $$
+DECLARE
+  v_out jsonb;
+  v_key text;
+  v_val jsonb;
+  v_elem jsonb;
+  v_prefijos text[] := ARRAY['costo','costos','profit','utilidad','margen','gastosoperativos'];
+  v_sensible boolean;
+  v_pref text;
+BEGIN
+  IF p_in IS NULL THEN
+    RETURN NULL;
+  END IF;
+
+  CASE jsonb_typeof(p_in)
+    WHEN 'object' THEN
+      v_out := '{}'::jsonb;
+      FOR v_key, v_val IN SELECT key, value FROM jsonb_each(p_in) LOOP
+        v_sensible := false;
+        FOREACH v_pref IN ARRAY v_prefijos LOOP
+          IF lower(v_key) LIKE v_pref || '%' THEN
+            v_sensible := true;
+            EXIT;
+          END IF;
+        END LOOP;
+
+        IF v_sensible THEN
+          v_out := v_out || jsonb_build_object(v_key, 'null'::jsonb);
+        ELSE
+          v_out := v_out || jsonb_build_object(v_key, public.enmascarar_costos_jsonb(v_val));
+        END IF;
+      END LOOP;
+      RETURN v_out;
+    WHEN 'array' THEN
+      v_out := '[]'::jsonb;
+      FOR v_elem IN SELECT value FROM jsonb_array_elements(p_in) LOOP
+        v_out := v_out || jsonb_build_array(public.enmascarar_costos_jsonb(v_elem));
+      END LOOP;
+      RETURN v_out;
+    ELSE
+      RETURN p_in;
+  END CASE;
 END;
 $$;
 CREATE FUNCTION public.enforce_cotizacion_obligatoria() RETURNS trigger
@@ -18503,6 +18578,17 @@ CREATE FUNCTION public.puede_ver_costos_cotizacion(_user_id uuid DEFAULT auth.ui
     ARRAY['admin','admin_org','super_admin','gerente_comercial','gerente_visor',
           'gerente_operaciones','ejecutivo_pricing','vendedor','coordinador_logistico',
           'operador','customer_service','contador','tesorero','auxiliar_contable']::app_role[]
+  );
+$$;
+CREATE FUNCTION public.puede_ver_costos_dashboard(_user_id uuid DEFAULT auth.uid()) RETURNS boolean
+    LANGUAGE sql STABLE SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+  SELECT _user_id IS NOT NULL AND public.has_any_role_efectivo(
+    _user_id,
+    ARRAY['admin','admin_org','super_admin','gerente_operaciones','gerente_visor',
+          'gerente_comercial','contador','tesorero','auxiliar_contable',
+          'ejecutivo_cobranza']::app_role[]
   );
 $$;
 CREATE FUNCTION public.puede_ver_dashboard_direccion(_user_id uuid DEFAULT auth.uid()) RETURNS boolean
@@ -27859,7 +27945,6 @@ CREATE POLICY "Tenant view catalogo_claves_sat" ON public.catalogo_claves_sat FO
 CREATE POLICY "Tenant viewer clientes" ON public.clientes FOR SELECT TO authenticated USING ((((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) AND ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'viewer'::public.app_role) AS has_role)));
 CREATE POLICY "Tenant viewer conceptos_factura" ON public.conceptos_factura FOR SELECT TO authenticated USING ((((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) AND ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'viewer'::public.app_role) AS has_role)));
 CREATE POLICY "Tenant viewer contactos_cliente" ON public.contactos_cliente FOR SELECT TO authenticated USING ((((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) AND ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'viewer'::public.app_role) AS has_role)));
-CREATE POLICY "Tenant viewer cotizacion_costos" ON public.cotizacion_costos FOR SELECT TO authenticated USING ((((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) AND ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'viewer'::public.app_role) AS has_role)));
 CREATE POLICY "Tenant viewer cotizaciones" ON public.cotizaciones FOR SELECT TO authenticated USING ((((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) AND ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'viewer'::public.app_role) AS has_role)));
 CREATE POLICY "Tenant viewer crm_actividades" ON public.crm_actividades FOR SELECT TO authenticated USING ((((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) AND ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'viewer'::public.app_role) AS has_role)));
 CREATE POLICY "Tenant viewer crm_leads" ON public.crm_leads FOR SELECT TO authenticated USING ((((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) AND ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'viewer'::public.app_role) AS has_role)));
@@ -28716,6 +28801,8 @@ GRANT ALL ON FUNCTION public.cxp_por_pagar() TO service_role;
 REVOKE ALL ON FUNCTION public.dashboard_details() FROM PUBLIC;
 GRANT ALL ON FUNCTION public.dashboard_details() TO authenticated;
 GRANT ALL ON FUNCTION public.dashboard_details() TO service_role;
+REVOKE ALL ON FUNCTION public.dashboard_details_datos() FROM PUBLIC;
+GRANT ALL ON FUNCTION public.dashboard_details_datos() TO service_role;
 REVOKE ALL ON FUNCTION public.dashboard_facturacion_kpis(p_meses integer, p_fallback_usd numeric) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.dashboard_facturacion_kpis(p_meses integer, p_fallback_usd numeric) TO authenticated;
 GRANT ALL ON FUNCTION public.dashboard_facturacion_kpis(p_meses integer, p_fallback_usd numeric) TO service_role;
@@ -28725,6 +28812,8 @@ GRANT ALL ON FUNCTION public.dashboard_stats() TO service_role;
 REVOKE ALL ON FUNCTION public.dashboard_summary() FROM PUBLIC;
 GRANT ALL ON FUNCTION public.dashboard_summary() TO authenticated;
 GRANT ALL ON FUNCTION public.dashboard_summary() TO service_role;
+REVOKE ALL ON FUNCTION public.dashboard_summary_datos() FROM PUBLIC;
+GRANT ALL ON FUNCTION public.dashboard_summary_datos() TO service_role;
 REVOKE ALL ON FUNCTION public.default_user_org_id() FROM PUBLIC;
 GRANT ALL ON FUNCTION public.default_user_org_id() TO authenticated;
 GRANT ALL ON FUNCTION public.default_user_org_id() TO service_role;
@@ -28809,6 +28898,9 @@ GRANT ALL ON FUNCTION public.embarques_listado(p_organization_id uuid, p_search 
 GRANT ALL ON FUNCTION public.embarques_listado(p_organization_id uuid, p_search text, p_modo text, p_cliente_id uuid, p_operador text, p_proforma text, p_fecha_desde date, p_fecha_hasta date, p_sort_by text, p_sort_dir text, p_offset integer, p_limit integer) TO service_role;
 GRANT ALL ON FUNCTION public.embarques_protect_creator() TO authenticated;
 GRANT ALL ON FUNCTION public.embarques_protect_creator() TO service_role;
+REVOKE ALL ON FUNCTION public.enmascarar_costos_jsonb(p_in jsonb) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.enmascarar_costos_jsonb(p_in jsonb) TO authenticated;
+GRANT ALL ON FUNCTION public.enmascarar_costos_jsonb(p_in jsonb) TO service_role;
 REVOKE ALL ON FUNCTION public.enforce_cotizacion_obligatoria() FROM PUBLIC;
 GRANT ALL ON FUNCTION public.enforce_cotizacion_obligatoria() TO authenticated;
 GRANT ALL ON FUNCTION public.enforce_cotizacion_obligatoria() TO service_role;
@@ -29175,6 +29267,9 @@ GRANT ALL ON FUNCTION public.puede_escribir_cotizaciones(_user_id uuid) TO servi
 REVOKE ALL ON FUNCTION public.puede_ver_costos_cotizacion(_user_id uuid) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.puede_ver_costos_cotizacion(_user_id uuid) TO authenticated;
 GRANT ALL ON FUNCTION public.puede_ver_costos_cotizacion(_user_id uuid) TO service_role;
+REVOKE ALL ON FUNCTION public.puede_ver_costos_dashboard(_user_id uuid) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.puede_ver_costos_dashboard(_user_id uuid) TO authenticated;
+GRANT ALL ON FUNCTION public.puede_ver_costos_dashboard(_user_id uuid) TO service_role;
 REVOKE ALL ON FUNCTION public.puede_ver_dashboard_direccion(_user_id uuid) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.puede_ver_dashboard_direccion(_user_id uuid) TO authenticated;
 GRANT ALL ON FUNCTION public.puede_ver_dashboard_direccion(_user_id uuid) TO service_role;

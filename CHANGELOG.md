@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.773.0] - 2026-08-27
+### Seguridad
+- **Ola 5 — Los costos y la utilidad ya no salen del servidor para quien no debe verlos (auditoría 3 · C9)**. Antes la UI sólo *ocultaba* las columnas de costo y utilidad a perfiles comerciales, pero la respuesta del tablero seguía trayendo las cifras (visibles en la red). Ahora el propio servidor las devuelve vacías.
+- **Regla única de visibilidad**: nueva función `public.puede_ver_costos_dashboard()`, espejo de `COST_VIEWERS` (dirección, gerencias, contabilidad, tesorería y cobranza). `vendedor`, `ejecutivo_pricing` y `viewer` quedan fuera.
+- **Enmascarado en el servidor**: `dashboard_details()` y `dashboard_summary()` pasan a ser envolturas; el cálculo vive en `dashboard_details_datos()` / `dashboard_summary_datos()` (sólo internas) y el resultado se filtra con `public.enmascarar_costos_jsonb()`, que anula por prefijo cualquier campo de costo, utilidad, profit, margen o gastos operativos, conservando el shape del JSON.
+- **`viewer` deja de leer costos de cotización**: se eliminó la policy `Tenant viewer cotizacion_costos`, que contradecía `puede_ver_costos_cotizacion()`.
+
 ## [13.772.1] - 2026-08-27
 ### Mantenimiento
 - **Higiene de código (Power of 10)**: se dividieron los cuatro archivos que superaban 200 líneas — filtros del listado de cotizaciones, filtros secundarios de la página, acciones de la ficha de lead y campos de ruta del formulario de oportunidad. Sin cambios de comportamiento.
