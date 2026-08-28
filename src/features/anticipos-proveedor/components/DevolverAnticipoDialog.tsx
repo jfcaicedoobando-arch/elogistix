@@ -18,7 +18,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { FormDialogShell, FormDialogSection } from "@/components/shared/FormDialogShell";
+import { FormDialogShell } from "@/components/shared/FormDialogShell";
+import { FormDialogSection } from "@/components/shared/FormDialogSection";
 import { MoneyInput } from "@/components/shared/MoneyInput";
 import { DatePickerMx } from "@/components/ui/date-picker-mx";
 import { useDevolverAnticipo } from "@/features/anticipos-proveedor/hooks/useAnticipoProveedorMutations";
