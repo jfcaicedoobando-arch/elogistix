@@ -5,6 +5,9 @@
 - **CI · PostgreSQL 17**: el pipeline de base de datos ahora se valida contra Postgres **17.9** (mismo tren mayor que la base real, que corre 17.6) en lugar de 15.8. Se actualizó el digest pinneado en los 7 servicios de `.github/workflows/rls-tests.yml` y en `scripts/db/local-verify.sh`, y se invalidó la cache del snapshot (`rls-snapshot-pg17.9-…`). Antes revisábamos los planos con una regla distinta a la de la obra: ahora CI y producción usan la misma.
 - **CI · baseline de esquema**: se regeneró `supabase/schema/baseline.sql` con `pg_dump` 17 tras replicar las 1157 migraciones en base limpia. Los únicos cambios son de formato propio de la versión (vistas con columnas calificadas por alias y espaciado en `ALTER DEFAULT PRIVILEGES`); no hay cambios de esquema.
 - **Docs**: `docs/ops/baseline-esquema.md` y `scripts/db/schema-snapshot.sh` documentan ahora 17.9 como versión de referencia para generar la baseline.
+### Corregido
+- **Test `test_rls_portal_intra_org`**: la limpieza de fixture chocaba con los candados de la Ola E4 (`comisiones_devengadas` con FK RESTRICT y borrado prohibido). Ahora esa limpieza —que no es camino de negocio— se hace con `session_replication_role = replica` acotado y se restaura antes de las aserciones. Suite en verde (12 aserciones).
+- **Validación en Postgres 17**: se replicaron las 1157 migraciones en base limpia y corrieron las 34 suites RLS y los 59 guards conductuales bloqueantes; todo en verde.
 
 ## [13.783.1] - 2026-08-28
 ### Corregido
