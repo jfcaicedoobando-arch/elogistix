@@ -411,7 +411,11 @@ jobs:
         # functions en CI (el typecheck de la app vive en el job `typecheck`).
         run: |
           readarray -t tests < <(find supabase/functions -name '*_test.ts' ! -name 'smoke_test.ts')
+          # v13.785.0 — `--node-modules-dir=none`: con Deno 2 y un package.json en
+          # la raíz del repo, Deno intenta resolver los `npm:` contra node_modules
+          # (que es de la app, no de las edges). Forzamos el caché global.
           deno test \
+            --node-modules-dir=none \
             --allow-env \
             --allow-net \
             --allow-read \

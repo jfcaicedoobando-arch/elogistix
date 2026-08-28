@@ -113,6 +113,7 @@ jobs:
           VITE_SUPABASE_PUBLISHABLE_KEY: ${{ env.ANON_KEY }}
         run: |
           deno test \
+            --node-modules-dir=none \
             --allow-net \
             --allow-env \
             --allow-read \
