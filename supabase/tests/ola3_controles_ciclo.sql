@@ -107,8 +107,9 @@ BEGIN
   END;
 
   -- ── 4) Concepto de venta ya proformado ─────────────────────────────────
-  INSERT INTO public.proformas (organization_id, embarque_id, cliente_id, cliente_nombre, numero)
-  VALUES (v_org, v_emb, v_cli, 'CLIENTE OLA3', 'PF-OLA3-0001')
+  INSERT INTO public.proformas (organization_id, embarque_id, cliente_id, cliente_nombre,
+                                numero, expediente)
+  VALUES (v_org, v_emb, v_cli, 'CLIENTE OLA3', 'PF-OLA3-0001', 'ELOLA00001')
   RETURNING id INTO v_pf;
 
   INSERT INTO public.conceptos_venta (organization_id, embarque_id, descripcion,
