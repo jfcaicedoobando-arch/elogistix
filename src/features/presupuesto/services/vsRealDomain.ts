@@ -6,7 +6,6 @@
  * La conversión a MXN de gastos y NCs de proveedor vive en `vsRealGastos.ts`.
  */
 
-import type { GastosAgregados } from "./vsRealGastos";
 export type { CxpRow, NcCxPRow, GastosAgregados } from "./vsRealGastos";
 export { agregarGastosCxP, restarNotasCreditoCxP } from "./vsRealGastos";
 
