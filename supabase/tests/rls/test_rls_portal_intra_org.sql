@@ -147,7 +147,8 @@ BEGIN
   -- que es lo único que verifica esta sección.
   -- v13.784.0 — la Ola E4 pasó `comisiones_devengadas.pago_factura_id` a
   -- ON DELETE RESTRICT: hay que soltar la comisión antes de borrar el pago.
-  DELETE FROM public.comisiones_devengadas
+  UPDATE public.comisiones_devengadas
+     SET pago_factura_id = NULL
    WHERE pago_factura_id IN (SELECT id FROM public.pagos_factura WHERE factura_id = fac_a);
   DELETE FROM public.pagos_factura WHERE factura_id = fac_a;
   UPDATE public.facturas SET estado = 'Cancelada' WHERE id = fac_a;
