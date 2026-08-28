@@ -67,3 +67,6 @@ supabase/tests/ola1_guards_c6_c7_c8.sql
 supabase/tests/ola2_fk_compuestas_org.sql
 supabase/tests/ola3_controles_ciclo.sql
 supabase/tests/ola_e1_guards.sql
+supabase/tests/ola_e2_a_guards.sql
+supabase/tests/ola_e2_b_guards.sql
+supabase/tests/ola_e2_d_guards.sql
