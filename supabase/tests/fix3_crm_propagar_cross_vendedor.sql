@@ -64,9 +64,11 @@ BEGIN
     (v_cli_1, v_org, 'Cliente Uno FIX3', 'fix3-cli-1@test.local'),
     (v_cli_2, v_org, 'Cliente Dos FIX3', 'fix3-cli-2@test.local');
 
-  INSERT INTO public.crm_oportunidades (id, organization_id, nombre, etapa_id, vendedor_id)
-  VALUES (v_op_b, v_org, 'OP del vendedor B', v_etapa, v_vend_b),
-         (v_op_b2, v_org, 'OP2 del vendedor B', v_etapa, v_vend_b);
+  -- v13.777.9: CRM Fase 2 exige origen (lead calificado o cliente) en la
+  -- oportunidad; las de prueba nacen ligadas al cliente uno.
+  INSERT INTO public.crm_oportunidades (id, organization_id, nombre, etapa_id, vendedor_id, cliente_id)
+  VALUES (v_op_b, v_org, 'OP del vendedor B', v_etapa, v_vend_b, v_cli_1),
+         (v_op_b2, v_org, 'OP2 del vendedor B', v_etapa, v_vend_b, v_cli_1);
 
   -- ----------------------------------------------------------
   -- CASO 1: vendedor A intenta propagar la oportunidad de B → 42501.

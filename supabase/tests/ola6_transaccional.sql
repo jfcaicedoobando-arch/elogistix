@@ -45,7 +45,7 @@ BEGIN
   VALUES (v_org, 'LEAD OLA6 A3', 'Calificado'::public.crm_lead_estado)
   RETURNING id INTO v_lead_a3;
 
-  INSERT INTO public.crm_oportunidades (organization_id, nombre, etapa_id, lead_id, valor_estimado, moneda)
+  INSERT INTO public.crm_oportunidades (organization_id, nombre, etapa_id, lead_id, monto_estimado, moneda)
   VALUES (v_org, 'OP OLA6 A3', v_etapa_a3, v_lead_a3, 1000, 'MXN')
   RETURNING id INTO v_op_a3;
 
