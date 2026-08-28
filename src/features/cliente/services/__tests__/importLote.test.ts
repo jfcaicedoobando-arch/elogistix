@@ -2,8 +2,10 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 
 const { insertMock } = vi.hoisted(() => ({ insertMock: vi.fn() }));
 
+// M4 (auditoría 3-3): el alta va por la RPC canónica `crear_clientes`.
+
 vi.mock("@/integrations/supabase/client", () => ({
-  supabase: { from: () => ({ insert: insertMock }) },
+  supabase: { rpc: (_fn: string, args: { p_clientes: unknown[] }) => insertMock(args.p_clientes) },
 }));
 vi.mock("@/lib/text/razonSocial", () => ({
   normalizarRazonSocial: (s: string) => s.trim().toUpperCase(),
@@ -18,8 +20,9 @@ function filas(n: number) {
 
 beforeEach(() => {
   insertMock.mockReset();
-  insertMock.mockImplementation((lote: { nombre: string }[]) => ({
-    select: async () => ({ data: lote.map((c, i) => ({ id: `c${i}`, ...c })), error: null }),
+  insertMock.mockImplementation(async (lote: { nombre: string }[]) => ({
+    data: lote.map((c, i) => ({ id: `c${i}`, ...c })),
+    error: null,
   }));
 });
 
@@ -41,11 +44,13 @@ describe("createClientesLote", () => {
   });
 
   it("reporta cuántos clientes se alcanzaron a guardar cuando un lote falla", async () => {
-    insertMock.mockImplementationOnce((lote: unknown[]) => ({
-      select: async () => ({ data: lote.map(() => ({ id: "x" })), error: null }),
+    insertMock.mockImplementationOnce(async (lote: unknown[]) => ({
+      data: lote.map(() => ({ id: "x" })),
+      error: null,
     }));
-    insertMock.mockImplementationOnce(() => ({
-      select: async () => ({ data: null, error: { message: "RFC duplicado" } }),
+    insertMock.mockImplementationOnce(async () => ({
+      data: null,
+      error: { message: "RFC duplicado" },
     }));
     await expect(createClientesLote(filas(IMPORT_LOTE_TAMANO + 3))).rejects.toThrow(
       `Se importaron ${IMPORT_LOTE_TAMANO} de ${IMPORT_LOTE_TAMANO + 3} clientes`,

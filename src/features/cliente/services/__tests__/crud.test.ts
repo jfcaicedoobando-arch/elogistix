@@ -18,21 +18,23 @@ const validInsert = {
 beforeEach(() => { mock.tableCalls.length = 0; mock.rpcCalls.length = 0; mock.resetResults(); });
 
 describe("createCliente", () => {
-  it("happy path: inserta y devuelve data", async () => {
-    mock.setTableResult("clientes", { data: { id: "c-1", ...validInsert }, error: null });
+  // M4 (auditoría 3-3): el alta ya no hace INSERT directo; usa la RPC canónica.
+  it("happy path: llama a la RPC crear_clientes y devuelve el cliente", async () => {
+    mock.setRpcResult("crear_clientes", { data: [{ id: "c-1", ...validInsert }], error: null });
     const r = await createCliente(validInsert);
     expect(r.id).toBe("c-1");
-    expect(mock.tableCalls[0]?.ops).toContain("insert");
+    expect(mock.rpcCalls[0]?.fn).toBe("crear_clientes");
+    expect(mock.tableCalls).toHaveLength(0);
   });
 
-  it("propaga error de supabase al crear cliente", async () => {
-    mock.setTableResult("clientes", { data: null, error: { message: "RLS denied" } });
+  it("propaga error de la RPC al crear cliente", async () => {
+    mock.setRpcResult("crear_clientes", { data: null, error: { message: "LC_CLIENTE_FISCAL_INCOMPLETO" } });
     await expect(createCliente(validInsert)).rejects.toThrow();
   });
 
-  it("zod: nombre vacío lanza antes del insert", async () => {
+  it("zod: nombre vacío lanza antes de llamar a la RPC", async () => {
     await expect(createCliente({ ...validInsert, nombre: "" })).rejects.toThrow();
-    expect(mock.tableCalls).toHaveLength(0);
+    expect(mock.rpcCalls).toHaveLength(0);
   });
 });
 
