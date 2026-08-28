@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.786.0] - 2026-08-28
+### Infraestructura
+- **CI · Bun 1.4.0**: la composite `setup-bun` sube el pin de `1.3.3` a **1.4.0** (última estable) y se refresca la clave de cache de `node_modules` (`bun1.4.0`). Verificado en local con Bun 1.4.0: `bun install --frozen-lockfile` sin cambios de lockfile, `lint` y `build` en verde.
+
 ## [13.785.0] - 2026-08-28
 ### Infraestructura
 - **CI · Deno 2**: los jobs `edge-functions` (`ci.yml`) y `user-management-smoke` (`post-deploy-smoke.yml`) pasan de `deno-version: v1.46.x` a `v2.6.x`. Las Edge Functions ya corren sobre Deno 2 en el backend, así que probábamos con un motor distinto al de producción (misma divergencia que Postgres 15 vs 17). Se añadió `--node-modules-dir=none` a los dos `deno test`: con Deno 2 y un `package.json` en la raíz, Deno intentaba resolver los `npm:` de las edges contra el `node_modules` de la app. Validado en local con Deno 2.6.10: **545 tests verdes, 0 fallos**.
