@@ -118,7 +118,7 @@ BEGIN
   VALUES (v_org, v_emb, 'Flete OLA3', 1, 500, 500, 'USD'::public.moneda, true, v_pf)
   RETURNING id INTO v_cv;
 
-  RAISE NOTICE 'DEBUG cv proforma_id=%', (SELECT proforma_id FROM public.conceptos_venta WHERE id=v_cv);
+  RAISE NOTICE 'DEBUG cv proforma_id=% bypass=%', (SELECT proforma_id FROM public.conceptos_venta WHERE id=v_cv), current_setting('app.bypass_cierre', true);
   BEGIN
     UPDATE public.conceptos_venta SET precio_unitario = 900, total = 900 WHERE id = v_cv;
     RAISE EXCEPTION 'OLA3 FALLA: se permitió editar un concepto ya proformado';
