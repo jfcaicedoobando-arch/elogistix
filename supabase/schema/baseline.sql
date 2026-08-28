@@ -2852,6 +2852,57 @@ BEGIN
   RETURN NEW;
 END;
 $$;
+CREATE FUNCTION public._nc_prov_tc_moneda_convertible() RETURNS trigger
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+DECLARE
+  v_moneda_factura text;
+  v_moneda_ext text;
+  v_fecha date;
+  v_tc numeric;
+BEGIN
+  SELECT pf.moneda::text INTO v_moneda_factura
+  FROM public.proveedor_facturas pf
+  WHERE pf.id = NEW.proveedor_factura_id;
+
+  IF v_moneda_factura IS NULL OR NEW.moneda::text = v_moneda_factura THEN
+    NEW.tipo_cambio := NULL;
+    RETURN NEW;
+  END IF;
+
+  IF NEW.moneda::text <> 'MXN' AND v_moneda_factura <> 'MXN' THEN
+    RAISE EXCEPTION 'LC_NC_PROV_MONEDA_NO_CONVERTIBLE: no hay tipo de cambio cruzado entre % y %; captura la nota de crédito en % o en MXN',
+      NEW.moneda, v_moneda_factura, v_moneda_factura
+      USING ERRCODE = '22023';
+  END IF;
+
+  IF COALESCE(NEW.tipo_cambio, 0) > 1 THEN
+    RETURN NEW;
+  END IF;
+
+  v_moneda_ext := CASE WHEN NEW.moneda::text = 'MXN' THEN v_moneda_factura ELSE NEW.moneda::text END;
+  v_fecha := COALESCE(NEW.fecha, (now() AT TIME ZONE 'America/Mexico_City')::date);
+
+  SELECT CASE
+           WHEN v_moneda_ext = 'USD' THEN d.usd_mxn
+           WHEN v_moneda_ext = 'EUR' THEN d.eur_mxn
+         END
+    INTO v_tc
+  FROM public.tc_dof_vigente(v_fecha) d;
+
+  IF COALESCE(v_tc, 0) <= 1 THEN
+    RAISE EXCEPTION 'LC_NC_PROV_TC_REQUERIDO: falta tipo de cambio DOF para % al %; captúralo antes de registrar la nota de crédito',
+      v_moneda_ext, v_fecha
+      USING ERRCODE = '22023';
+  END IF;
+
+  NEW.tipo_cambio := v_tc;
+  RETURN NEW;
+END;
+$$;
+
+
 CREATE FUNCTION public._normalizar_email() RETURNS trigger
     LANGUAGE plpgsql
     SET search_path TO 'public'
@@ -10644,24 +10695,26 @@ CREATE TABLE public.proveedor_notas_credito (
     uuid_fiscal text,
     uuid_estatus_sat text,
     uuid_verificado_fecha timestamp with time zone
-);
+,
+    tipo_cambio numeric);
 CREATE VIEW public.v_proveedor_facturas_saldo WITH (security_invoker='true') AS
- SELECT id AS proveedor_factura_id,
-    organization_id,
-    total,
+ SELECT pf.id AS proveedor_factura_id,
+    pf.organization_id,
+    pf.total,
     COALESCE(( SELECT sum(pp.monto_en_moneda_factura) AS sum
            FROM public.pagos_proveedor pp
           WHERE ((pp.proveedor_factura_id = pf.id) AND (pp.deleted_at IS NULL))), (0)::numeric) AS pagado,
-    COALESCE(( SELECT sum(nc.monto) AS sum
+    COALESCE(( SELECT sum(public.monto_pago_en_moneda_factura(nc.monto, (nc.moneda)::text, nc.tipo_cambio, (pf.moneda)::text)) AS sum
            FROM public.proveedor_notas_credito nc
           WHERE ((nc.proveedor_factura_id = pf.id) AND (nc.estado = 'Aplicada'::public.estado_nota_credito_proveedor) AND (nc.deleted_at IS NULL))), (0)::numeric) AS notas_credito_aplicadas,
-    ((total - COALESCE(( SELECT sum(pp.monto_en_moneda_factura) AS sum
+    ((pf.total - COALESCE(( SELECT sum(pp.monto_en_moneda_factura) AS sum
            FROM public.pagos_proveedor pp
-          WHERE ((pp.proveedor_factura_id = pf.id) AND (pp.deleted_at IS NULL))), (0)::numeric)) - COALESCE(( SELECT sum(nc.monto) AS sum
+          WHERE ((pp.proveedor_factura_id = pf.id) AND (pp.deleted_at IS NULL))), (0)::numeric)) - COALESCE(( SELECT sum(public.monto_pago_en_moneda_factura(nc.monto, (nc.moneda)::text, nc.tipo_cambio, (pf.moneda)::text)) AS sum
            FROM public.proveedor_notas_credito nc
           WHERE ((nc.proveedor_factura_id = pf.id) AND (nc.estado = 'Aplicada'::public.estado_nota_credito_proveedor) AND (nc.deleted_at IS NULL))), (0)::numeric)) AS saldo
    FROM public.proveedor_facturas pf
-  WHERE (deleted_at IS NULL);
+  WHERE (pf.deleted_at IS NULL);
+
 CREATE VIEW public.cxp_alertas_vencimiento WITH (security_invoker='on') AS
  SELECT pf.id AS proveedor_factura_id,
     pf.organization_id,
@@ -10811,16 +10864,20 @@ CREATE FUNCTION public.dashboard_details_datos() RETURNS jsonb
     SET search_path TO 'public'
     AS $$
 DECLARE
-  v_hoy date := current_date;
+  -- Ola 17 · H8-A: el servidor corre en UTC; el tablero debe razonar en hora
+  -- de México o los días de demora se adelantan a partir de las 18:00 CDMX.
+  v_hoy date := (now() AT TIME ZONE 'America/Mexico_City')::date;
   v_inicio_mes date := date_trunc('month', v_hoy)::date;
   v_fin_mes date := (date_trunc('month', v_hoy) + interval '1 month' - interval '1 day')::date;
   v_inicio_sig date := (date_trunc('month', v_hoy) + interval '1 month')::date;
   v_fin_sig date := (date_trunc('month', v_hoy) + interval '2 months' - interval '1 day')::date;
-  v_dias_libres int := 7;
+  -- Fallback SÓLO cuando la naviera no tiene condiciones capturadas.
+  v_dias_libres_fallback int := 7;
   v_nombre_mes text;
   v_meses text[] := ARRAY['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 BEGIN
   v_nombre_mes := v_meses[extract(month from v_inicio_sig)::int] || ' ' || extract(year from v_inicio_sig)::text;
+
   RETURN (
     WITH embarques_base AS (
       SELECT e.id, e.expediente, e.cliente_nombre, e.cliente_id, e.modo::text, e.tipo::text,
@@ -10828,6 +10885,7 @@ BEGIN
              e.puerto_origen, e.puerto_destino,
              e.aeropuerto_origen, e.aeropuerto_destino,
              e.ciudad_origen, e.ciudad_destino, e.contenedor, e.created_at,
+             e.naviera, e.organization_id,
              e.tipo_cambio_usd, e.tipo_cambio_eur,
         CASE
           -- Ola 4 · N10 (guard B-033): preservar Borrador.
@@ -10849,10 +10907,44 @@ BEGIN
     profit AS (SELECT * FROM profit_por_embarque()),
     -- Ola 4 · N10 (B-033): Borrador ya no cuenta como activo operativo.
     activos AS (SELECT * FROM embarques_base WHERE estado_real NOT IN ('Borrador','EIR','Por liquidar','Cerrado','Cancelado')),
+    -- Ola 17 · H8-A: los días de demora se calculan con la MISMA base que
+    -- factura calcular_demoras_embarque: fecha real de descarga (evento o
+    -- contenedor) y días libres reales (override del contenedor → condiciones
+    -- de la naviera → fallback). La ETA sólo se usa como estimación.
+    demoras_ctx AS (
+      SELECT a.id,
+        (SELECT min((ev.fecha AT TIME ZONE 'America/Mexico_City')::date)
+           FROM eventos_embarque ev
+          WHERE ev.embarque_id = a.id AND ev.tipo = 'Descarga' AND ev.deleted_at IS NULL) AS fecha_desc_evento,
+        (SELECT min(ec.fecha_descarga)
+           FROM embarque_contenedores ec
+          WHERE ec.embarque_id = a.id AND ec.deleted_at IS NULL) AS fecha_desc_cont,
+        (SELECT max(ec.dias_libres_override)
+           FROM embarque_contenedores ec
+          WHERE ec.embarque_id = a.id AND ec.deleted_at IS NULL
+            AND ec.dias_libres_override IS NOT NULL) AS dias_libres_cont,
+        (SELECT cnc.dias_libres_demoras_default
+           FROM costeo_navieras_condiciones cnc
+           JOIN navieras n ON n.id = cnc.naviera_id
+          WHERE cnc.organization_id = a.organization_id
+            AND a.naviera IS NOT NULL
+            AND lower(n.name) = lower(a.naviera)
+          LIMIT 1) AS dias_libres_naviera
+      FROM activos a
+      WHERE a.estado_real = 'Arribo'
+    ),
+    demoras_calc AS (
+      SELECT a.*,
+        COALESCE(c.fecha_desc_evento, c.fecha_desc_cont, a.eta) AS fecha_base,
+        (c.fecha_desc_evento IS NOT NULL OR c.fecha_desc_cont IS NOT NULL) AS base_real,
+        COALESCE(c.dias_libres_cont, c.dias_libres_naviera, v_dias_libres_fallback) AS dias_libres
+      FROM activos a
+      JOIN demoras_ctx c ON c.id = a.id
+    ),
     alertas_src AS (
-      SELECT a.* FROM activos a
-      WHERE a.estado_real = 'Arribo' AND a.eta IS NOT NULL AND (v_hoy - a.eta) >= v_dias_libres
-      ORDER BY (v_hoy - a.eta) DESC LIMIT 15
+      SELECT d.* FROM demoras_calc d
+      WHERE d.fecha_base IS NOT NULL AND (v_hoy - d.fecha_base) >= d.dias_libres
+      ORDER BY ((v_hoy - d.fecha_base) - d.dias_libres) DESC LIMIT 15
     ),
     alertas AS (
       SELECT jsonb_agg(jsonb_build_object(
@@ -10863,8 +10955,11 @@ BEGIN
         'aeropuerto_origen', a.aeropuerto_origen, 'aeropuerto_destino', a.aeropuerto_destino,
         'ciudad_origen', a.ciudad_origen, 'ciudad_destino', a.ciudad_destino,
         'contenedor', a.contenedor, 'created_at', a.created_at,
-        'diasDesdeEta', (v_hoy - a.eta),
-        'diasDemora', (v_hoy - a.eta) - v_dias_libres
+        'diasDesdeEta', COALESCE(v_hoy - a.eta, 0),
+        'diasLibres', a.dias_libres,
+        'baseDemora', CASE WHEN a.base_real THEN 'real' ELSE 'estimada' END,
+        'fechaBaseDemora', a.fecha_base,
+        'diasDemora', (v_hoy - a.fecha_base) - a.dias_libres
       )) AS val FROM alertas_src a
     ),
     proximos_src AS (
@@ -22730,30 +22825,39 @@ DECLARE
   v_pagado numeric;
   v_nc numeric;
   v_incompleto boolean;
+  v_nc_incompleto boolean;
 BEGIN
   IF v_oid IS NULL THEN
     RAISE EXCEPTION 'LC_ORG_SIN_CONTEXTO: no hay organización activa' USING ERRCODE = '42501';
   END IF;
+
   SELECT * INTO v_f
   FROM public.proveedor_facturas
   WHERE id = p_factura_id
     AND deleted_at IS NULL
     AND organization_id = v_oid
     AND estado <> 'Cancelada';
+
   IF v_f.id IS NULL THEN
     RETURN NULL;
   END IF;
+
   SELECT COALESCE(SUM(public.monto_pago_en_moneda_factura(pp.monto, pp.moneda::text, pp.tipo_cambio_usd, v_f.moneda::text)), 0),
          BOOL_OR(pp.moneda::text <> v_f.moneda::text AND COALESCE(pp.tipo_cambio_usd, 0) <= 0)
     INTO v_pagado, v_incompleto
   FROM public.pagos_proveedor pp
   WHERE pp.proveedor_factura_id = p_factura_id
     AND pp.deleted_at IS NULL;
-  SELECT COALESCE(SUM(nc.monto), 0) INTO v_nc
+
+  -- Ola 17 · H8-B: la NC se valúa en la moneda de la factura con su TC DOF.
+  SELECT COALESCE(SUM(public.monto_pago_en_moneda_factura(nc.monto, nc.moneda::text, nc.tipo_cambio, v_f.moneda::text)), 0),
+         BOOL_OR(nc.moneda::text <> v_f.moneda::text AND COALESCE(nc.tipo_cambio, 0) <= 0)
+    INTO v_nc, v_nc_incompleto
   FROM public.proveedor_notas_credito nc
   WHERE nc.proveedor_factura_id = p_factura_id
     AND nc.deleted_at IS NULL
     AND nc.estado = 'Aplicada';
+
   RETURN jsonb_build_object(
     'factura_id', p_factura_id,
     'moneda', v_f.moneda::text,
@@ -22761,7 +22865,7 @@ BEGIN
     'pagado', ROUND(v_pagado, 2),
     'nc_aplicada', ROUND(v_nc, 2),
     'saldo', ROUND(GREATEST(COALESCE(v_f.total, 0) - v_pagado - v_nc, 0), 2),
-    'flujo_incompleto', COALESCE(v_incompleto, false)
+    'flujo_incompleto', COALESCE(v_incompleto, false) OR COALESCE(v_nc_incompleto, false)
   );
 END;
 $$;
@@ -27940,6 +28044,7 @@ CREATE TRIGGER trg_nc_fecha_valida BEFORE INSERT OR UPDATE OF factura_id, fecha_
 CREATE TRIGGER trg_nc_no_delete BEFORE DELETE ON public.factura_notas_credito FOR EACH ROW EXECUTE FUNCTION public.reject_delete('LC_NC_INMUTABLE: cancele la NC en lugar de eliminarla');
 CREATE TRIGGER trg_nc_no_excede_saldo BEFORE INSERT OR UPDATE ON public.factura_notas_credito FOR EACH ROW EXECUTE FUNCTION public.assert_nc_no_excede_saldo();
 CREATE TRIGGER trg_nc_prov_estado_machine BEFORE INSERT OR UPDATE OF estado ON public.proveedor_notas_credito FOR EACH ROW EXECUTE FUNCTION public.enforce_nc_proveedor_estado_transicion();
+CREATE TRIGGER trg_nc_prov_tc_convertible BEFORE INSERT OR UPDATE OF monto, moneda, tipo_cambio, fecha, proveedor_factura_id ON public.proveedor_notas_credito FOR EACH ROW EXECUTE FUNCTION public._nc_prov_tc_moneda_convertible();
 CREATE TRIGGER trg_notas_credito_prov_recalcular_estado AFTER INSERT OR DELETE OR UPDATE ON public.proveedor_notas_credito FOR EACH ROW EXECUTE FUNCTION public.tg_recalcular_estado_factura_proveedor();
 CREATE TRIGGER trg_notif_cli_embarque_estado AFTER UPDATE OF estado ON public.embarques FOR EACH ROW EXECUTE FUNCTION public.notif_cli_on_embarque_estado();
 CREATE TRIGGER trg_notificar_asignacion_hallazgo AFTER INSERT OR UPDATE OF responsable_id ON public.auditoria_revisiones FOR EACH ROW EXECUTE FUNCTION public.notificar_asignacion_hallazgo();
