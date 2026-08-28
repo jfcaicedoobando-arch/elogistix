@@ -141,9 +141,13 @@ BEGIN
 
     -- BUG-17: recalcular desde el `total` guardado del renglón (pcc.total en
     -- consolidadas), no desde cantidad*precio_unitario que puede diverger.
+    -- L4 (auditoría 3): IVA por renglón redondeado a 2 decimales, igual que
+    -- `guard_factura_totales_conceptos` y que el frontend. Antes se sumaba el
+    -- IVA sin redondear por línea y el trigger sobrescribía el resultado
+    -- (código muerto que confundía cualquier revisión fiscal).
     SELECT
       COALESCE(SUM(total), 0),
-      COALESCE(SUM(total * COALESCE(tasa_iva_aplicada, 0)), 0)
+      COALESCE(SUM(round(total * COALESCE(tasa_iva_aplicada, 0), 2)), 0)
     INTO v_subtotal_mxn, v_iva_mxn
     FROM public.conceptos_factura
     WHERE factura_id = v_factura_mxn_id AND deleted_at IS NULL;
@@ -203,9 +207,13 @@ BEGIN
 
     -- BUG-17: recalcular desde el `total` guardado del renglón (pcc.total en
     -- consolidadas), no desde cantidad*precio_unitario que puede diverger.
+    -- L4 (auditoría 3): IVA por renglón redondeado a 2 decimales, igual que
+    -- `guard_factura_totales_conceptos` y que el frontend. Antes se sumaba el
+    -- IVA sin redondear por línea y el trigger sobrescribía el resultado
+    -- (código muerto que confundía cualquier revisión fiscal).
     SELECT
       COALESCE(SUM(total), 0),
-      COALESCE(SUM(total * COALESCE(tasa_iva_aplicada, 0)), 0)
+      COALESCE(SUM(round(total * COALESCE(tasa_iva_aplicada, 0), 2)), 0)
     INTO v_subtotal_usd, v_iva_usd
     FROM public.conceptos_factura
     WHERE factura_id = v_factura_usd_id AND deleted_at IS NULL;
