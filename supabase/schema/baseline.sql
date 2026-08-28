@@ -1,4 +1,6 @@
 CREATE SCHEMA public;
+CREATE COLLATION public.lc_unicode_upper (provider = icu, locale = 'und');
+
 CREATE TYPE public.ambiente_facturapi AS ENUM (
     'sandbox',
     'live'
