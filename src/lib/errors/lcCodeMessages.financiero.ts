@@ -75,4 +75,15 @@ export const LC_CODE_MESSAGES_FINANCIERO: Record<string, string> = {
   LC_FACTURA_SIN_TC_DOF:
     "No hay tipo de cambio DOF publicado para esa moneda y fecha. Captúralo antes de generar la factura.",
 
+  LC_CXP_TC_REQUERIDO:
+    "Falta el tipo de cambio DOF de la factura en moneda extranjera. Captúralo antes de aprobarla.",
+  LC_NC_PROV_TC_REQUERIDO:
+    "Captura el tipo de cambio (MXN por 1 USD/EUR) de la nota de crédito o deja que se use el DOF de su fecha.",
+  LC_NC_PROV_MONEDA_NO_CONVERTIBLE:
+    "No se puede aplicar una nota de crédito en esa moneda a esta factura. Usa la misma moneda o MXN.",
+  LC_CONCEPTOS_AJENOS:
+    "Algunos conceptos no pertenecen a este embarque o cliente, o fueron eliminados. Vuelve a seleccionarlos.",
+  LC_PROFORMA_EMBARQUE_INVALIDO:
+    "El embarque de la proforma no es válido o no pertenece a tu organización.",
+
 };
