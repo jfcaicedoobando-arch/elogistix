@@ -43,6 +43,7 @@ export async function fetchSegurosEmbarque(embarqueId: string): Promise<SeguroEm
       .from("seguros_embarque")
       .select(COLUMNS)
       .eq("embarque_id", embarqueId)
+      .is("deleted_at", null)
       .order("vigencia_desde", { ascending: false }),
     [],
   );

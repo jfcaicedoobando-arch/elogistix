@@ -50,21 +50,25 @@ async function loadEmbarquesPorIds(ids: string[]): Promise<EmbarqueER[]> {
     supabase
       .from("embarques")
       .select("id, modo, tipo_cambio_usd, tipo_cambio_eur")
-      .in("id", ids),
+      .in("id", ids)
+      .is("deleted_at", null),
     [],
   );
   return mapEmbarqueERRows(data);
 }
 
-async function loadEmbarquesPorExpedientes(exps: string[]): Promise<Map<string, EmbarqueER>> {
+async function loadEmbarquesPorExpedientes(
+  exps: string[],
+  organizationId: string | null,
+): Promise<Map<string, EmbarqueER>> {
   if (exps.length === 0) return new Map();
-  const data = await unwrapOr(
-    supabase
-      .from("embarques")
-      .select("id, modo, tipo_cambio_usd, tipo_cambio_eur, expediente")
-      .in("expediente", exps),
-    [],
-  );
+  let q = supabase
+    .from("embarques")
+    .select("id, modo, tipo_cambio_usd, tipo_cambio_eur, expediente")
+    .in("expediente", exps)
+    .is("deleted_at", null);
+  if (organizationId) q = q.eq("organization_id", organizationId);
+  const data = await unwrapOr(q, []);
   const map = new Map<string, EmbarqueER>();
   for (const e of mapEmbarqueERConExpediente(data)) {
     if (e.expediente) map.set(e.expediente, e);
@@ -126,6 +130,7 @@ async function modoPorFacturaDeNotas(
   ncs: NotaCreditoRow[],
   facturas: FacturaRow[],
   embPorExp: Map<string, EmbarqueER>,
+  organizationId: string | null,
 ): Promise<Map<string, string>> {
   const out = new Map<string, string>();
   const idsNc = Array.from(new Set(ncs.map((n) => n.factura_id).filter(Boolean)));
@@ -154,7 +159,9 @@ async function modoPorFacturaDeNotas(
     ),
   );
   const extra: Map<string, EmbarqueER> =
-    expsFaltantes.length > 0 ? await loadEmbarquesPorExpedientes(expsFaltantes) : new Map();
+    expsFaltantes.length > 0
+      ? await loadEmbarquesPorExpedientes(expsFaltantes, organizationId)
+      : new Map();
 
   for (const [facturaId, exp] of expPorFactura) {
     if (!exp) continue;
@@ -177,11 +184,11 @@ export async function fetchEstadoResultadosDevengado(p: Params): Promise<EstadoR
   const exps = Array.from(new Set(facturas.map((f) => f.expediente).filter(Boolean) as string[]));
   const embIds = Array.from(new Set(pfacts.map((f) => f.embarque_id).filter(Boolean) as string[]));
   const [embPorExp, embPorId] = await Promise.all([
-    loadEmbarquesPorExpedientes(exps),
+    loadEmbarquesPorExpedientes(exps, p.organizationId),
     loadEmbarquesPorIds(embIds),
   ]);
 
-  const modoNc = await modoPorFacturaDeNotas(ncs, facturas, embPorExp);
+  const modoNc = await modoPorFacturaDeNotas(ncs, facturas, embPorExp, p.organizationId);
 
   const ventasBucket = { embarques: [] as EmbarqueER[], ventas: [] as ConceptoVentaER[] };
   ingresosDeFacturas(facturas, embPorExp, ventasBucket, tc);

@@ -84,7 +84,8 @@ export async function cuentaTieneMovimientos(id: string): Promise<boolean> {
   const { count, error } = await supabase
     .from("bbva_movimientos")
     .select("id", { count: "exact", head: true })
-    .eq("cuenta_bancaria_id", id);
+    .eq("cuenta_bancaria_id", id)
+    .is("deleted_at", null);
   if (error) throw error;
   return (count ?? 0) > 0;
 }
