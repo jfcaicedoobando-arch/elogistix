@@ -7,7 +7,7 @@ import { CotizacionesKpis } from "@/features/cotizacion/components/CotizacionesK
 import { Card, CardContent } from "@/components/ui/card";
 import { ResponsiveDataTable } from "@/components/shared/dataTable/ResponsiveDataTable";
 import { CotizacionMobileCard } from "@/features/cotizacion/components/CotizacionMobileCard";
-import { subtotalesDeFila } from "@/features/cotizacion/components/columnsParts/subtotalCell";
+import { subtotalesDeFila } from "@/features/cotizacion/components/columnsParts/subtotalesDeFila";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { Seo } from "@/components/shared/Seo";

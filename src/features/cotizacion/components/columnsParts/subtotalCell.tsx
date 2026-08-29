@@ -4,16 +4,12 @@
  * antes sólo se veía el monto de la columna plana `subtotal` (una sola moneda).
  */
 import { formatCurrency } from "@/lib/formatters";
-import { subtotalesPorMoneda, type SubtotalMoneda } from "@/features/cotizacion/domain/subtotalesPorMoneda";
+import { subtotalesDeFila } from "./subtotalesDeFila";
 
 interface FilaSubtotal {
   conceptos_venta?: unknown;
   subtotal?: number | null;
   moneda?: string | null;
-}
-
-export function subtotalesDeFila(fila: FilaSubtotal): SubtotalMoneda[] {
-  return subtotalesPorMoneda(fila.conceptos_venta, fila.subtotal, fila.moneda);
 }
 
 export function SubtotalCotizacionCell({ cotizacion }: { cotizacion: FilaSubtotal }) {
