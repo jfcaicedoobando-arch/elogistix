@@ -31,6 +31,9 @@ export async function fetchLiquidacionesPendientes(
     .from("liquidaciones_comision")
     .select("id, vendedora_id, periodo, total_mxn, fecha_pago, created_at").is("deleted_at", null)
     .is("fecha_pago", null)
+    // A-8 (re-fix v15): una liquidación cancelada ya no es una salida de dinero
+    // proyectada; sin este filtro el flujo mostraba pagos que nunca ocurrirán.
+    .neq("estado", "Cancelada")
     .limit(CAP_LISTA);
   if (organizationId) q = q.eq("organization_id", organizationId);
   const { data, error } = await q;

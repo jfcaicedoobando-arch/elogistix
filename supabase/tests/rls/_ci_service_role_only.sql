@@ -27,6 +27,8 @@ CREATE TEMP TABLE _ci_service_role_only (fn text);
 INSERT INTO _ci_service_role_only (fn) VALUES
   ('public._assert_concepto_no_proformado()'),
   ('public._assert_padre_misma_org()'),
+  -- v15 (M-14): banda de plausibilidad del T/C en pagos CxC/CxP.
+  ('public._assert_tc_banda()'),
   ('public._assert_periodo_abierto()'),
   ('public._assert_uuid_fiscal_single_write()'),
   ('public._audit_embarques_agregar(jsonb, jsonb)'),
@@ -58,6 +60,9 @@ INSERT INTO _ci_service_role_only (fn) VALUES
   ('public._assert_pago_pue_exhibicion_unica()'),
   ('public._nc_prov_tc_moneda_convertible()'),
   ('public._recalc_estado_proveedor_factura(uuid)'),
+  ('public._recompute_totales_embarque(uuid)'),
+  -- v15 (M-15): exposición de crédito sin checks de sesión (la usa el timbrado).
+  ('public.credito_en_uso_mxn(uuid)'),
   ('public._reprocesar_comisiones_org(uuid)'),
   ('public._seed_demo_limpiar_financiero()'),
   ('public._sync_user_roles_desde_membership()'),

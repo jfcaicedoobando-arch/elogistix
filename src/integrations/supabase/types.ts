@@ -8476,6 +8476,10 @@ export type Database = {
         Returns: undefined
       }
       _assert_internal_reader: { Args: { p_org: string }; Returns: undefined }
+      _assert_medidas_embarque: {
+        Args: { p_embarque: Json }
+        Returns: undefined
+      }
       _assert_receptor_fiscal_valido: {
         Args: { p_cliente_id: string }
         Returns: undefined
@@ -9637,6 +9641,7 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      credito_en_uso_mxn: { Args: { p_cliente_id: string }; Returns: number }
       crm_autorizar_margen: {
         Args: { _margen_pct: number; _oportunidad_id: string }
         Returns: undefined

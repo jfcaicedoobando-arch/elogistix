@@ -20,6 +20,7 @@ import { getFacturapiClient } from "../_shared/facturapiClient.ts";
 import { jsonResponse, makeJson } from "../_shared/response.ts";
 import { loadFactura, validarTipoCambio, claimFactura, resolverSustitucion, emitirYActualizar } from "./emitir.ts";
 import { cargarContexto } from "./contexto.ts";
+import { validarLimiteCredito, validarTotalPositivo } from "./credito.ts";
 import type { FacturaRow } from "./types.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
@@ -62,6 +63,14 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir", async (req) => {
 
   const tcCheck = validarTipoCambio(factura);
   if (tcCheck) return tcCheck;
+
+  // B-11: nada de CFDI en $0.
+  const totalCheck = validarTotalPositivo(factura as FacturaRow);
+  if (totalCheck) return totalCheck;
+
+  // M-15: el límite de crédito se valida SIEMPRE aquí, no sólo en el diálogo.
+  const creditoCheck = await validarLimiteCredito(supabase, factura as FacturaRow, userData.user.id);
+  if (creditoCheck) return creditoCheck;
 
   // REF-06: validar TODO antes de clamar (patrón facturapi-emitir-nota-credito).
   // Antes el claim se tomaba aquí y las salidas de getFacturapiClient /

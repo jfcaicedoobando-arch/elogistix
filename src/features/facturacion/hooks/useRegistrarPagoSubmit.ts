@@ -4,6 +4,7 @@
  * del componente por debajo del límite del linter.
  */
 import { useState } from "react";
+import { validarTcMxn } from "@/lib/financial/tcBanda";
 import { useQueryClient } from "@tanstack/react-query";
 import { notifySuccess, notifyError, notifyWarning, notifyInfo } from "@/lib/ui/appFeedback";
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
@@ -79,6 +80,19 @@ export function useRegistrarPagoSubmit(onSuccess: () => void) {
         title: "No hay tipo de cambio disponible",
         description:
           "No se pudo obtener el tipo de cambio para convertir el pago a la moneda de la factura. Espera unos segundos y vuelve a intentar.",
+        method: "ON_ERROR",
+        errorCode: ERROR_CODES.VALIDATION_FAILED,
+      });
+      return;
+    }
+    // M-14 (re-fix v15): si el pago se convierte a otra moneda, el T/C debe
+    // caer en la banda de plausibilidad (pesos por divisa, 5-40).
+    const tcFueraDeBanda =
+      args.tipoCambio !== 1 ? validarTcMxn(args.tipoCambio) : null;
+    if (tcFueraDeBanda) {
+      notifyError(undefined, {
+        title: "Tipo de cambio no plausible",
+        description: tcFueraDeBanda,
         method: "ON_ERROR",
         errorCode: ERROR_CODES.VALIDATION_FAILED,
       });

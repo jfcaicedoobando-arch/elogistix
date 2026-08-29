@@ -31,7 +31,9 @@ export type ReglaAuditoria =
   // AUD-2 (v13.288.0) — Fallback explícito cuando falta el tipo de cambio
   | "tipo_cambio_faltante"
   // M-10 (auditoría v14) — total de línea ≠ cantidad × precio
-  | "venta_total_descuadrado";
+  | "venta_total_descuadrado"
+  // M-10 (re-auditoría v15) — carátula del embarque ≠ suma de contenedores
+  | "contenedores_totales_descuadrados";
 
 export type SeveridadAuditoria = "critico" | "alto" | "medio";
 

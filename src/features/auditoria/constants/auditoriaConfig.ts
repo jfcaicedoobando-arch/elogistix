@@ -170,6 +170,13 @@ export const REGLA_INFO: Record<ReglaAuditoria, ReglaInfo> = {
       "Embarques con conceptos en USD o EUR que no tienen tipo de cambio capturado. El margen no se calcula hasta corregir el TC.",
     icon: Scale,
   },
+  contenedores_totales_descuadrados: {
+    shortLabel: "Totales vs contenedores",
+    label: "Totales del embarque no cuadran con sus contenedores",
+    description:
+      "El peso o las piezas de la carátula del embarque no coinciden con la suma de sus contenedores. Revisa cuál de los dos está mal capturado.",
+    icon: Scale,
+  },
   venta_total_descuadrado: {
     shortLabel: "Venta descuadrada",
     label: "Total de venta no cuadra con conceptos",
@@ -194,6 +201,7 @@ export const REGLAS_ORDEN: ReglaAuditoria[] = [
   "contenedor_fechas_incompletas",
   "margen_bajo",
   "venta_total_descuadrado",
+  "contenedores_totales_descuadrados",
   "proforma_inconsistente",
   "proforma_vencida",
   "proforma_borrador_abandonada",
