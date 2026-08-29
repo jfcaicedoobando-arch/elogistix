@@ -43,4 +43,14 @@ describe("calcularTotalMxn (FE-12)", () => {
     expect(res.tcFaltante).toBe(true);
     expect(res.mxn).toBe(0);
   });
+
+  it("A-11: aplica el 8% de IVA frontera a conceptos gravado_8", () => {
+    const res = calcularTotalMxn(
+      [concepto({ cantidad: 1, precio_unitario: 100, tipo_iva: "gravado_8" })],
+      "MXN",
+      1,
+      0.16,
+    );
+    expect(res.mxn).toBeCloseTo(108, 2);
+  });
 });
