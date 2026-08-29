@@ -1,6 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { unwrapOr, run } from "@/lib/supabase/response";
 import { registrarActividad } from "@/services/bitacora/registrar";
+import { tramosSeSolapan, vigenciasSeSolapan } from "@/features/costeo/utils/demorasTramos";
 
 export interface DemoraVentaTarifa {
   id: string;
@@ -40,6 +41,19 @@ export async function crearDemoraVenta(input: DemoraVentaTarifaInput): Promise<v
   }
   if (!(input.monto_por_dia_usd >= 0)) {
     throw new Error("El monto por día no puede ser negativo.");
+  }
+  // B-19: revalida anti-solape en el servicio (defensa en profundidad; la UI
+  // ya valida en `validarSinSolape`, reutilizamos las mismas funciones puras).
+  const existentes = await fetchDemorasVenta();
+  const solapada = existentes.find((t) =>
+    t.tipo_contenedor_id === input.tipo_contenedor_id &&
+    tramosSeSolapan(t, input) &&
+    vigenciasSeSolapan(t.vigente_desde, t.vigente_hasta, input.vigente_desde, input.vigente_hasta),
+  );
+  if (solapada) {
+    throw new Error(
+      `El tramo se solapa con uno existente (días ${solapada.desde_dia}–${solapada.hasta_dia ?? "∞"} en vigencias traslapadas). Ajusta el rango o la vigencia.`,
+    );
   }
   await run(supabase.from("costeo_demoras_venta_tarifa").insert(input));
   await registrarActividad({

@@ -33,7 +33,7 @@ import { ErrorState } from "@/components/shared/states/ErrorState";
 
 const ESTADOS_FILTRO = ["todos", "sin_facturar", "parcial", "completa"] as const;
 type EstadoFiltro = (typeof ESTADOS_FILTRO)[number] & (EstadoConciliacion | "todos");
-const MONEDAS_FILTRO = ["todas", "MXN", "USD"] as const;
+const MONEDAS_FILTRO = ["todas", "MXN", "USD", "EUR"] as const;
 type MonedaFiltro = (typeof MONEDAS_FILTRO)[number];
 
 export default function ComprasConciliacion() {
@@ -66,7 +66,10 @@ export default function ComprasConciliacion() {
     const pendienteUsd = rows
       .filter((r) => r.moneda === "USD")
       .reduce((a, r) => a + r.pendiente, 0);
-    return { sinFacturar, parcial, completa, pendienteMxn, pendienteUsd };
+    const pendienteEur = rows
+      .filter((r) => r.moneda === "EUR")
+      .reduce((a, r) => a + r.pendiente, 0);
+    return { sinFacturar, parcial, completa, pendienteMxn, pendienteUsd, pendienteEur };
   }, [rows]);
 
   const columns = useMemo(() => buildConciliacionColumns(), []);
@@ -80,12 +83,13 @@ export default function ComprasConciliacion() {
         description="Presupuesto (conceptos de costo) vs facturación real de proveedor por embarque."
       />
 
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
         <KpiCard label="Sin facturar" value={kpis.sinFacturar} icon={AlertTriangle} variant="destructive" />
         <KpiCard label="Parciales" value={kpis.parcial} icon={Clock} variant="warning" />
         <KpiCard label="Conciliadas" value={kpis.completa} icon={CheckCircle2} variant="success" />
         <KpiCard label="Pendiente MXN" value={formatCurrency(kpis.pendienteMxn, "MXN")} />
         <KpiCard label="Pendiente USD" value={formatCurrency(kpis.pendienteUsd, "USD")} />
+        <KpiCard label="Pendiente EUR" value={formatCurrency(kpis.pendienteEur, "EUR")} />
 
       </div>
 
@@ -112,6 +116,7 @@ export default function ComprasConciliacion() {
                   <SelectItem value="todas">Todas</SelectItem>
                   <SelectItem value="MXN">MXN</SelectItem>
                   <SelectItem value="USD">USD</SelectItem>
+                  <SelectItem value="EUR">EUR</SelectItem>
                 </SelectContent>
               </Select>
             </div>

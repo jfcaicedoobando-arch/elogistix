@@ -10,6 +10,7 @@ import { useTasaIVA } from "@/features/catalogos/hooks/useTasaIVA";
 import { useCrearFacturaManual } from "@/features/facturacion/hooks/useCrearFacturaManual";
 import { useClientesFiscalOpts, type ClienteFiscalOpt } from "@/features/facturacion/hooks/useClientesFiscalOpts";
 import { calcularTotalMxn } from "@/features/facturacion/utils/calcularTotalMxn";
+import { sumarSubtotales } from "@/lib/financial/financialUtils";
 import { useValidarLimiteCredito, registrarExcesoCredito, type ValidarLimiteResultado } from "@/features/cliente/hooks/useValidarLimiteCredito";
 import { todayLocalISO } from "@/lib/date/today";
 import { notifyError } from "@/lib/ui/appFeedback";
@@ -96,7 +97,11 @@ export function useFacturaManualForm(open: boolean, onClose?: () => void) {
   const conceptosValidos = conceptos.every(
     (c) => c.descripcion.trim().length > 0 && Number(c.cantidad) > 0 && Number(c.precio_unitario) >= 0,
   );
-  const puedeGuardar = !!cliente && conceptosValidos && fiscal.tipoCambio > 0;
+  // B-11: una factura con total 0 (todos los conceptos a $0) no es facturable.
+  const totalEstimado = sumarSubtotales(conceptos, (c) => ({
+    cantidad: Number(c.cantidad), precioUnitario: Number(c.precio_unitario),
+  }));
+  const puedeGuardar = !!cliente && conceptosValidos && fiscal.tipoCambio > 0 && totalEstimado > 0;
   const puedeTimbrar = puedeGuardar && !clienteIncompleto;
   const faltantesTimbrar = useFaltantesTimbrar(cliente, conceptosValidos, fiscal);
 

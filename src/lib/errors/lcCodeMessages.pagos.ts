@@ -30,6 +30,8 @@ export const LC_CODE_MESSAGES_PAGOS: Record<string, string> = {
   LC_PAGO_MONTO_INVALIDO: "El monto del pago no es válido.",
   LC_PAGO_TC_REQUERIDO:
     "Captura el tipo de cambio del día para registrar este pago en divisa distinta a la factura.",
+  LC_PAGO_TC_FACTURA_REQUERIDO:
+    "La factura en divisa necesita su tipo de cambio para poder recibir un pago en otra moneda.",
   // Ola 11 · RNF-10
   LC_CUENTA_MONEDA_CON_MOVIMIENTOS:
     "La cuenta ya tiene movimientos registrados: la moneda no se puede cambiar.",

@@ -81,20 +81,31 @@ BEGIN
   RAISE NOTICE 'CASO 5 OK: TC=0 → LC_PAGO_TC_REQUERIDO (22023)';
 END $$;
 
--- CASO 6: cruce no soportado (EUR) → 22023 LC_PAGO_CRUCE_NO_SOPORTADO
+-- CASO 6: cruce con EUR (M-2, auditoría v14) → pivote en MXN, ya no se rechaza.
 DO $$
-DECLARE v_state text; v_msg text;
+DECLARE v_res numeric; v_state text; v_msg text;
 BEGIN
+  -- EUR→MXN: usa el TC del pago (MXN por EUR).
+  v_res := public.convertir_monto_pago_a_factura(1000, 'EUR', 21, 'MXN', 1);
+  IF v_res IS DISTINCT FROM 21000.0000 THEN
+    RAISE EXCEPTION 'CASO 6 FALLÓ: EUR→MXN esperado 21000, vino %', v_res;
+  END IF;
+  -- EUR→USD: pivote MXN (1000*21) y luego / TC de la factura (19.5).
+  v_res := public.convertir_monto_pago_a_factura(1000, 'EUR', 21, 'USD', 19.5);
+  IF round(v_res, 2) IS DISTINCT FROM round(21000::numeric / 19.5, 2) THEN
+    RAISE EXCEPTION 'CASO 6 FALLÓ: EUR→USD esperado %, vino %', round(21000::numeric / 19.5, 2), v_res;
+  END IF;
+  -- Sin TC de la factura destino: error mapeado, no cruce silencioso.
   BEGIN
-    PERFORM public.convertir_monto_pago_a_factura(1000, 'EUR', 21, 'MXN', 1);
+    PERFORM public.convertir_monto_pago_a_factura(1000, 'EUR', 21, 'USD', NULL);
     v_state := '00000';
   EXCEPTION WHEN OTHERS THEN
     GET STACKED DIAGNOSTICS v_state = RETURNED_SQLSTATE, v_msg = MESSAGE_TEXT;
   END;
-  IF v_state <> '22023' OR v_msg NOT LIKE 'LC_PAGO_CRUCE_NO_SOPORTADO%' THEN
-    RAISE EXCEPTION 'CASO 6 FALLÓ: esperado 22023/LC_PAGO_CRUCE_NO_SOPORTADO, vino % / %', v_state, v_msg;
+  IF v_state <> '22023' OR v_msg NOT LIKE 'LC_PAGO_TC_FACTURA_REQUERIDO%' THEN
+    RAISE EXCEPTION 'CASO 6 FALLÓ: esperado 22023/LC_PAGO_TC_FACTURA_REQUERIDO, vino % / %', v_state, v_msg;
   END IF;
-  RAISE NOTICE 'CASO 6 OK: cruce EUR → LC_PAGO_CRUCE_NO_SOPORTADO (22023)';
+  RAISE NOTICE 'CASO 6 OK: cruces con EUR pivotean en MXN y exigen TC de la factura';
 END $$;
 
 -- CASO 7: monto NULL → NULL (no excepción)

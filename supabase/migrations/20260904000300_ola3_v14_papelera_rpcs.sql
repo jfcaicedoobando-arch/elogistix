@@ -172,3 +172,8 @@ BEGIN
   RETURN v_resp;
 END;
 $function$;
+-- H6: candados de ejecución (idempotentes, espejo del estado en producción).
+REVOKE ALL ON FUNCTION public.sugerir_embarques_para_proveedor(uuid, uuid, integer) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.sugerir_embarques_para_proveedor(uuid, uuid, integer) TO authenticated, service_role;
+REVOKE ALL ON FUNCTION public.reabrir_embarque(uuid, text, text, uuid) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.reabrir_embarque(uuid, text, text, uuid) TO authenticated, service_role;

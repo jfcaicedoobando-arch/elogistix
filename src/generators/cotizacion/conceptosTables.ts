@@ -1,5 +1,5 @@
 import type { ConceptoVentaCotizacion } from '@/features/cotizacion/types';
-import { calcularIVA, resolverTasaConcepto, sumarSubtotales, sumarMontos } from '@/lib/financial/financialUtils';
+import { calcularIVA, resolverTasaConcepto, sumarSubtotales, sumarMontos, subtotalLinea } from '@/lib/financial/financialUtils';
 
 export interface ConceptosTotales {
   subtotalUSD: number;
@@ -32,11 +32,11 @@ export function calcularTotales(
   const getter = (c: ConceptoVentaCotizacion) => ({ cantidad: c.cantidad, precioUnitario: c.precio_unitario });
   const subtotalUSD = sumarSubtotales(usd, getter);
   const ivaUSD = sumarMontos(
-    usd.map((c) => calcularIVA(c.cantidad * c.precio_unitario, resolverTasaConcepto(c, tasaIvaGlobal))),
+    usd.map((c) => calcularIVA(subtotalLinea(c.cantidad, c.precio_unitario), resolverTasaConcepto(c, tasaIvaGlobal))),
   );
   const subtotalMXN = sumarSubtotales(mxn, getter);
   const ivaMXN = sumarMontos(
-    mxn.map((c) => calcularIVA(c.cantidad * c.precio_unitario, resolverTasaConcepto(c, tasaIvaGlobal))),
+    mxn.map((c) => calcularIVA(subtotalLinea(c.cantidad, c.precio_unitario), resolverTasaConcepto(c, tasaIvaGlobal))),
   );
   return {
     subtotalUSD,

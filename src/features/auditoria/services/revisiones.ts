@@ -3,27 +3,19 @@ import type { AuditoriaRevision, HallazgoAuditoria } from "@/features/auditoria/
 import { run, unwrap, unwrapOr } from "@/lib/supabase/response";
 import { registrarActividad } from "@/services/bitacora/registrar";
 
-/** Ventana por defecto para listar revisiones (días). Cubre snooze máx (30d) +
- *  ventana de auditoría reciente. Configurable vía `desdeIso`. */
-const DEFAULT_VENTANA_DIAS = 90;
 const ROW_LIMIT = 5000;
 
-export interface FetchRevisionesOpts {
-  /** ISO timestamp inicio (inclusive). Default: hoy - 90 días en UTC. */
-  desdeIso?: string;
-}
-
-export async function fetchAuditoriaRevisiones(
-  opts: FetchRevisionesOpts = {},
-): Promise<AuditoriaRevision[]> {
-  const desdeIso =
-    opts.desdeIso ??
-    new Date(Date.now() - DEFAULT_VENTANA_DIAS * 86_400_000).toISOString();
+/**
+ * M-7: sin filtro de ventana `created_at`. La deduplicación de hallazgos es
+ * por `detalle_hash` (no por fecha) — con el filtro `>= hoy-90d` anterior, un
+ * hallazgo revisado hace más de 90 días "desaparecía" de esta lista y volvía
+ * a mostrarse como pendiente aunque ya tuviera una revisión registrada.
+ */
+export async function fetchAuditoriaRevisiones(): Promise<AuditoriaRevision[]> {
   const data = await unwrapOr(
     supabase
       .from("auditoria_revisiones")
       .select("*")
-      .gte("created_at", desdeIso)
       .order("created_at", { ascending: false })
       .limit(ROW_LIMIT),
     [],

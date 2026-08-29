@@ -6,6 +6,7 @@
  */
 import { toCsv } from "@/lib/csv/serializeCsv";
 import { formatFechaDia } from "@/lib/formatters";
+import { todayLocalISO } from "@/lib/date/today";
 import { downloadCsvWithFeedback } from "@/lib/ui/notifyCsvExport";
 import type { CrmLeadRow } from "@/features/crm/domain/leads/constants";
 import type { CrmOportunidadRow } from "@/features/crm/types/oportunidades";
@@ -51,9 +52,9 @@ export function buildOportunidadesCsv(rows: CrmOportunidadRow[]): string {
   );
 }
 
-/** Sufijo de archivo con la fecha del día (YYYY-MM-DD). */
+/** Sufijo de archivo con la fecha del día en hora local (YYYY-MM-DD). */
 export function sufijoFechaArchivo(hoy: Date = new Date()): string {
-  return hoy.toISOString().slice(0, 10);
+  return todayLocalISO(hoy);
 }
 
 export function exportarLeadsCsv(rows: CrmLeadRow[]): void {

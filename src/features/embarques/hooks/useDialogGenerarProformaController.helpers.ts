@@ -2,7 +2,7 @@
  * Helpers puros de `useDialogGenerarProformaController`.
  * Sin React. Aíslan cálculo de totales y estado inicial al abrir el diálogo.
  */
-import { calcularIVA, resolverTasaConcepto, sumarSubtotales, sumarMontos } from "@/lib/financial/financialUtils";
+import { calcularIVA, resolverTasaConcepto, sumarSubtotales, sumarMontos, subtotalLinea } from "@/lib/financial/financialUtils";
 import {
   filtrarPorContenedor,
   type FiltroContenedor,
@@ -40,13 +40,13 @@ export function calcularTotalesProforma(
   const subtotal_usd = sumarSubtotales(usd, getter);
   const iva_usd = sumarMontos(
     usd.map((c) => (ivaPorConcepto[c.id]
-      ? calcularIVA(Number(c.cantidad) * Number(c.precio_unitario), resolverTasaConcepto(c, tasaIva))
+      ? calcularIVA(subtotalLinea(Number(c.cantidad), Number(c.precio_unitario)), resolverTasaConcepto(c, tasaIva))
       : 0)),
   );
 
   const subtotal_mxn = sumarSubtotales(mxn, getter);
   const iva_mxn = sumarMontos(
-    mxn.map((c) => calcularIVA(Number(c.cantidad) * Number(c.precio_unitario), resolverTasaConcepto(c, tasaIva))),
+    mxn.map((c) => calcularIVA(subtotalLinea(Number(c.cantidad), Number(c.precio_unitario)), resolverTasaConcepto(c, tasaIva))),
   );
 
   return {

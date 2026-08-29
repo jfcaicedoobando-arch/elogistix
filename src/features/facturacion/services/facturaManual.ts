@@ -121,6 +121,11 @@ export async function crearFacturaManual(input: CrearFacturaManualInput): Promis
   const iva = sumarMontos(lineas.map((l) => l.ivaLinea));
   const total = sumarMontos([subtotal, iva]);
 
+  // B-11 — una factura con total $0 no es facturable (todos los conceptos en $0).
+  if (total <= 0) {
+    throw new Error("El total de la factura debe ser mayor a $0. Revisa los precios unitarios de los conceptos.");
+  }
+
   const numeroProvisional = generarFolioBorrador();
 
   const { data: factura, error: errFact } = await supabase
