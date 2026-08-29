@@ -252,9 +252,18 @@ if [ "$REUSE" != "1" ]; then
   done
   ok "$total migraciones aplicadas"
 
+  # Orden idéntico a CI: el candado bidireccional corre ANTES del GRANT masivo
+  # de _ci_post_migrate.sql (si no, los REVOKE faltantes quedan tapados).
+  step "Candado service_role-only (bidireccional)"
+  run_sql supabase/tests/rls/_ci_check_service_role_only.sql service_role_only || {
+    echo "   → agregá la función con firma completa a supabase/tests/rls/_ci_service_role_only.sql" >&2
+    exit 1
+  }
+
   step "Post-migrate + verificación de cobertura RLS"
   run_sql supabase/tests/rls/_ci_post_migrate.sql post_migrate || exit 1
   run_sql supabase/tests/rls/_ci_verify_rls.sql verify_rls || exit 1
+
 
   step "Guardia de integridad de esquema"
   if psql -X -q -A -t -f scripts/db/integrity-guard.sql > "$LOGDIR/integrity.log" 2>&1 \
