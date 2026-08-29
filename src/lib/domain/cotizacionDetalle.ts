@@ -3,7 +3,7 @@
  * Extracted from useCotizacionDetalleState to keep the hook focused on orchestration.
  */
 import type { ConceptoVentaCotizacion } from "@/features/cotizacion/types";
-import { calcularIVA, resolverTasaConcepto, sumarSubtotales, sumarMontos } from "@/lib/financial/financialUtils";
+import { calcularIVA, resolverTasaConcepto, sumarSubtotales, sumarMontos, subtotalLinea } from "@/lib/financial/financialUtils";
 import { logger } from "@/lib/observability/logger";
 import { parseNumeroFiscal } from "@/lib/domain/facturaConceptos";
 
@@ -105,7 +105,7 @@ export function calcularTotalesConceptos(
   const totalUSD = sumarMontos(conceptosVentaUSD.map((c) => c.total));
   const subtotalMXN = sumarSubtotales(conceptosVentaMXN, (c) => ({ cantidad: c.cantidad, precioUnitario: c.precio_unitario }));
   const ivaMXN = sumarMontos(
-    conceptosVentaMXN.map((c) => calcularIVA(c.cantidad * c.precio_unitario, resolverTasaConcepto(c, tasaIva))),
+    conceptosVentaMXN.map((c) => calcularIVA(subtotalLinea(c.cantidad, c.precio_unitario), resolverTasaConcepto(c, tasaIva))),
   );
   const totalMXN = subtotalMXN + ivaMXN;
   return { conceptosVentaUSD, conceptosVentaMXN, totalUSD, subtotalMXN, ivaMXN, totalMXN };
@@ -128,7 +128,7 @@ export function calcularDesgloseMoneda(
     conceptos.map((c) => {
       const tieneTasaFila = c.tasa_iva_aplicada != null && Number.isFinite(Number(c.tasa_iva_aplicada));
       const tasaFila = ivaSiempre && !tieneTasaFila ? tasaIva : resolverTasaConcepto(c, tasaIva);
-      return calcularIVA(c.cantidad * c.precio_unitario, tasaFila);
+      return calcularIVA(subtotalLinea(c.cantidad, c.precio_unitario), tasaFila);
     }),
   );
   return { subtotal, iva, total: subtotal + iva };
