@@ -36,6 +36,11 @@ export interface StoredDraft {
   /** Etiquetas de lo que NO se pudo restaurar (drafts legacy sin estos campos,
    *  o el archivo MSDS que nunca se persiste por no ser serializable). */
   noRestaurado: string[];
+  /** M-12 (v14-2): identificador de la pestaña que escribió el borrador.
+   *  Sirve para detectar que OTRA pestaña sobrescribió el draft (evento
+   *  `storage`) y avisar en vez de perder captura en silencio. Ausente en
+   *  drafts legacy (se tratan como de otra pestaña desconocida). */
+  tabId?: string;
 }
 
 /** Campos `Date` del form que se pierden al pasar por JSON.stringify. */
