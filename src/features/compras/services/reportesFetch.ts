@@ -14,7 +14,7 @@ export interface FacturaLite {
    * no tiene subtotal se usa el total como último recurso.
    */
   total: number;
-  moneda: "MXN" | "USD" | "EUR";
+  moneda: Moneda;
   proveedor_id: string | null;
   proveedor_nombre: string | null;
   tipo_cambio_usd: number | null;
@@ -40,7 +40,7 @@ export async function fetchFacturasReporte(
   // SAFE-CAST: PostgREST devuelve `proveedores` como relación anidada.
   const raw = (data ?? []) as unknown as Array<{
     id: string; fecha_emision: string | null; subtotal: string | number | null; total: string | number;
-    moneda: "MXN" | "USD" | "EUR"; proveedor_id: string | null;
+    moneda: Moneda; proveedor_id: string | null;
     tipo_cambio_usd: number | null;
     proveedores: { nombre: string | null } | null;
   }>;

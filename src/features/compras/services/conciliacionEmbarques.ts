@@ -23,7 +23,7 @@ export interface EmbarqueConciliacion {
   expediente: string;
   cliente_nombre: string | null;
   estado: string | null;
-  moneda: "MXN" | "USD" | "EUR";
+  moneda: Moneda;
   presupuestado: number;
   pagado: number;
   pendiente: number;
@@ -35,7 +35,7 @@ export interface EmbarqueConciliacion {
 
 export interface FiltrosConciliacion {
   estado?: EstadoConciliacion | "todos";
-  moneda?: "MXN" | "USD" | "EUR";
+  moneda?: Moneda;
   search?: string;
   organizationId?: string | null;
 }
@@ -43,7 +43,7 @@ export interface FiltrosConciliacion {
 interface RowConcepto {
   embarque_id: string;
   monto: string | number;
-  moneda: "MXN" | "USD" | "EUR";
+  moneda: Moneda;
   estado_liquidacion: "Pendiente" | "Pagado" | string;
   embarques: {
     expediente: string | null;
