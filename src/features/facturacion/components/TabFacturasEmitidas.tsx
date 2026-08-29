@@ -1,5 +1,6 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Download, ChevronDown, Receipt } from "lucide-react";
+import { DialogDescargarZipMes } from "@/features/facturacion/components/DialogDescargarZipMes";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
@@ -42,6 +43,7 @@ interface Props {
 export function TabFacturasEmitidas({ filtros: f, tabla: t, acciones: a }: Props) {
   const { canEmitirFactura } = usePermissions();
   const selection = useRowSelection();
+  const [zipMesOpen, setZipMesOpen] = useState(false);
   const columnsConSeleccion = useMemo(
     () => [buildSelectionColumn<Factura>(), ...t.columns],
     [t.columns],
@@ -127,6 +129,9 @@ export function TabFacturasEmitidas({ filtros: f, tabla: t, acciones: a }: Props
                 <DropdownMenuItem onClick={a.exportarLayoutContable} title="Layout contable con RFC, subtotal, IVA y total">
                   Layout contable
                 </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setZipMesOpen(true)} title="Paquete PDF+XML de todos los CFDI del mes, generado por el PAC">
+                  ZIP del mes (PAC)
+                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
@@ -174,6 +179,8 @@ export function TabFacturasEmitidas({ filtros: f, tabla: t, acciones: a }: Props
       </Card>
 
       <FacturasEmitidasFooter facturas={t.facturasFiltradas} />
+
+      <DialogDescargarZipMes open={zipMesOpen} onOpenChange={setZipMesOpen} />
     </>
   );
 }

@@ -47,6 +47,14 @@ Como `admin_org` o `super_admin`:
 2. En la tarjeta de configuración cambia el ambiente a **Producción**.
 3. Avísale a la organización: a partir de ese momento todo timbrado es real.
 
+## Capacidades del PAC disponibles (aún no implementadas en Libre Carga)
+Revisión del GitHub de FacturApi el 2026-08-29:
+- **Complemento de Leyendas Fiscales** (documentado en facturapi-docs).
+- **Rescue CFDI**: recuperación de CFDI emitidos fuera de FacturApi.
+- **Borradores de retenciones** (SDK 4.19.0): no emitimos retenciones hoy.
+- **Status 202** (timbrado asíncrono): hoy timbramos en síncrono; si el PAC
+  empieza a responder 202 habrá que ajustar los flujos de timbrado.
+
 ## Errores comunes
 | Código | Causa | Acción |
 |---|---|---|
