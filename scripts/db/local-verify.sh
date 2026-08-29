@@ -37,6 +37,8 @@ RUN_BEHAVIORAL=1
 ONLY_SCHEMA=0
 SNAPSHOT_OUT=""
 SUITES_ARG=""
+BACKEND="auto"          # auto | docker | local
+
 
 
 # Suite mínima: cubre aislamiento multi-tenant, dinero, roles y anon.
