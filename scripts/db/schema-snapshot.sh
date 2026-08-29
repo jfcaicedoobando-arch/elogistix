@@ -49,6 +49,9 @@ dump() {
   fi
 }
 
+TMP_OUT="$(mktemp)"
+trap 'rm -f "$TMP_OUT"' EXIT
+
 dump | sed -E \
   -e '/^--/d' \
   -e '/^SET /d' \
@@ -56,4 +59,25 @@ dump | sed -E \
   -e '/^ALTER .* OWNER TO /d' \
   -e '/^\\(un)?restrict /d' \
   -e '/^[[:space:]]*$/d' \
-  > "$OUT"
+  > "$TMP_OUT"
+
+# --- Paridad ICU ---------------------------------------------------------
+# `public.lc_unicode_upper` se crea con provider=icu y su migración la envuelve
+# en un EXCEPTION handler: en un Postgres compilado SIN ICU (el del sandbox) la
+# collation simplemente no nace y el snapshot saldría con una línea de menos que
+# el de CI, produciendo un diff falso. Si el repo la declara y el dump no la
+# trae, la reinsertamos justo después de `CREATE SCHEMA public;` (idempotente).
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+COLLATION_LINE="CREATE COLLATION public.lc_unicode_upper (provider = icu, locale = 'und');"
+if ! grep -qF 'CREATE COLLATION public.lc_unicode_upper' "$TMP_OUT" \
+   && grep -rqlF 'CREATE COLLATION public.lc_unicode_upper' "$REPO_ROOT/supabase/migrations" 2>/dev/null; then
+  awk -v line="$COLLATION_LINE" '
+    { print }
+    !done && $0 == "CREATE SCHEMA public;" { print line; done = 1 }
+  ' "$TMP_OUT" > "$TMP_OUT.icu"
+  mv "$TMP_OUT.icu" "$TMP_OUT"
+  echo "ℹ️  ICU ausente en este servidor: se reinsertó lc_unicode_upper para mantener paridad con CI." >&2
+fi
+
+cat "$TMP_OUT" > "$OUT"
+
