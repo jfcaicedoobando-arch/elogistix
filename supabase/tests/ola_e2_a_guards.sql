@@ -3,6 +3,11 @@
 -- Se ejecuta con psql contra la base de CI.
 -- ==========================================================================
 
+-- Decisiones de negocio vigentes (fuente única; ver el archivo para el porqué).
+\ir _decisiones_negocio.sql
+
+
+
 -- N5 · el trigger de consistencia debe escuchar TODAS las columnas de vínculo.
 DO $$
 DECLARE v_def text;
