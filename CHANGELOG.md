@@ -1,5 +1,14 @@
 # Changelog
 
+## [13.805.0] - 2026-08-29
+
+- **Ola 7 · Auditoría v14-2 (cierre de las 5 decisiones de producto)**.
+- **B-4 (PUE)**: candado en base de datos + bloqueo en el diálogo de cobro: una factura PUE sólo admite liquidación total (tolerancia 5 centavos); para abonos parciales el flujo correcto es PPD.
+- **B-3 (Three-way match)**: documentado en `docs/flujo-cxp-aprobacion.md` — el match de CxP es de 2 vías por diseño (factura vs. costo registrado); no hay módulo de recepciones.
+- **M-12 (Cotizaciones)**: el autoguardado estampa un `tabId` por pestaña; si otra pestaña sobrescribe el borrador, se muestra un aviso en vez de perder captura en silencio.
+- **M-13 (Embarques)**: el wizard “Nuevo embarque” ahora tiene borrador con autoguardado (debounce 800 ms, TTL 24 h, clave por usuario+organización), banner de restauración, aviso de conflicto entre pestañas y limpieza al crear el embarque y al cerrar sesión. Los adjuntos (MSDS/documentos) nunca se persisten: se avisa que deben resubirse.
+- **M-15 (Límite de crédito)**: el exceso de crédito pasa de fail-open a fail-closed — sólo gerencia/finanzas (admin, admin_org, contador, tesorero, gerente_operaciones, gerente_comercial, super_admin) puede autorizar “continuar de todas formas”; el resto de roles queda bloqueado con mensaje orientativo.
+
 ## [13.804.0] - 2026-08-29
 
 - **Ola 6 · Auditoría v14 (técnicos de bajo riesgo)**.
