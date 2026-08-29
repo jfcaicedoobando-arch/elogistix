@@ -90,7 +90,7 @@ describe("EC-10 · avisos de tipo de cambio de respaldo", () => {
     render(
       <TopProveedoresCard
         isLoading={false}
-        rows={[{ nombre: "Naviera X", mxn: 0, usd: 900, count: 2, mxnEquiv: 15525 }]}
+        rows={[{ nombre: "Naviera X", mxn: 0, usd: 900, eur: 0, count: 2, mxnEquiv: 15525 }]}
       />,
     );
     expect(screen.getByText(/Orden calculado con tipo de cambio estimado/)).toBeInTheDocument();
@@ -101,7 +101,7 @@ describe("EC-10 · avisos de tipo de cambio de respaldo", () => {
     render(
       <TopProveedoresCard
         isLoading={false}
-        rows={[{ nombre: "Local S.A.", mxn: 5000, usd: 0, count: 1, mxnEquiv: 5000 }]}
+        rows={[{ nombre: "Local S.A.", mxn: 5000, usd: 0, eur: 0, count: 1, mxnEquiv: 5000 }]}
       />,
     );
     expect(screen.queryByText(/Orden calculado con tipo de cambio estimado/)).not.toBeInTheDocument();
