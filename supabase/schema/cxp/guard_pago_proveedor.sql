@@ -15,7 +15,6 @@ DECLARE
   v_fact_moneda public.moneda;
   v_fact_tc     numeric;
   v_fact_total  numeric;
-  -- BL-03: estado y papelera de la factura para el guard de vida.
   v_fact_estado public.estado_proveedor_factura;
   v_fact_deleted timestamptz;
   v_ncs         numeric;
@@ -27,9 +26,6 @@ BEGIN
     RETURN NEW;
   END IF;
 
-  -- BL-03 (espejo FIX-63 de CxC): un UPDATE que NO toca el dinero (p. ej.
-  -- conciliación o notas) es mantenimiento documental, no un pago nuevo;
-  -- debe pasar aunque la factura se haya cancelado después.
   IF TG_OP = 'UPDATE' THEN
     v_solo_metadatos := (
       NEW.proveedor_factura_id IS NOT DISTINCT FROM OLD.proveedor_factura_id
@@ -54,7 +50,6 @@ BEGIN
       USING ERRCODE = 'P0002';
   END IF;
 
-  -- BL-03: una factura Cancelada o en papelera no admite pagos (paridad CxC).
   IF v_fact_estado = 'Cancelada'::public.estado_proveedor_factura
      OR v_fact_deleted IS NOT NULL THEN
     RAISE EXCEPTION 'LC_PAGO_PROV_FACTURA_NO_VIVA: la factura de proveedor está % y no admite pagos',
@@ -62,8 +57,21 @@ BEGIN
       USING ERRCODE = '23514';
   END IF;
 
-  NEW.monto_en_moneda_factura := public.convertir_monto_pago_a_factura(
-    NEW.monto, NEW.moneda, NEW.tipo_cambio_usd, v_fact_moneda, v_fact_tc);
+  -- F3: los pagos directos siguen exigiendo captura MXN<->USD. Cuando el pago
+  -- nace de una APLICACIÓN DE ANTICIPO, la RPC ya valuó con paridad DOF del
+  -- día (soporta EUR y cruces); el guard respeta esa valuación.
+  BEGIN
+    NEW.monto_en_moneda_factura := public.convertir_monto_pago_a_factura(
+      NEW.monto, NEW.moneda, NEW.tipo_cambio_usd, v_fact_moneda, v_fact_tc);
+  EXCEPTION WHEN OTHERS THEN
+    IF COALESCE(NEW.es_anticipo_aplicado, false) THEN
+      NEW.monto_en_moneda_factura := public.convertir_monto_dof(
+        NEW.monto, NEW.moneda::text, v_fact_moneda::text,
+        COALESCE(NEW.fecha_pago, CURRENT_DATE));
+    ELSE
+      RAISE;
+    END IF;
+  END;
 
   IF NEW.moneda = 'MXN'::public.moneda
      AND v_fact_moneda = 'USD'::public.moneda
@@ -75,20 +83,21 @@ BEGIN
      AND v_fact_moneda = 'MXN'::public.moneda
      AND NEW.tipo_cambio_usd IS NOT NULL AND NEW.tipo_cambio_usd > 0
      AND v_fact_tc IS NOT NULL AND v_fact_tc > 0 THEN
-    -- BL-15: cruce inverso (pago USD → factura MXN). La pérdida/ganancia
-    -- cambiaria es (USD pagados) × (TC_pago − TC_factura), en MXN.
     NEW.diferencia_cambiaria_mxn :=
       ROUND(NEW.monto * (NEW.tipo_cambio_usd - v_fact_tc), 2);
   ELSE
     NEW.diferencia_cambiaria_mxn := NULL;
   END IF;
 
-  -- Saldo disponible para ESTA fila (los demás pagos vivos ya se excluyen abajo).
-  SELECT COALESCE(SUM(monto),0) INTO v_ncs
-    FROM public.proveedor_notas_credito
-   WHERE proveedor_factura_id = NEW.proveedor_factura_id
-     AND deleted_at IS NULL
-     AND estado::text = 'Aplicada';
+  -- F4: misma conversión canónica que la vista v_proveedor_facturas_saldo.
+  SELECT COALESCE(SUM(
+           public.monto_pago_en_moneda_factura(
+             nc.monto, nc.moneda::text, nc.tipo_cambio, v_fact_moneda::text)), 0)
+    INTO v_ncs
+    FROM public.proveedor_notas_credito nc
+   WHERE nc.proveedor_factura_id = NEW.proveedor_factura_id
+     AND nc.deleted_at IS NULL
+     AND nc.estado::text = 'Aplicada';
 
   SELECT COALESCE(SUM(monto_en_moneda_factura),0) INTO v_pagos
     FROM public.pagos_proveedor
@@ -98,7 +107,6 @@ BEGIN
 
   v_saldo := v_fact_total - v_ncs - v_pagos;
 
-  -- Validación directa (válida para INSERT y UPDATE: v_pagos ya excluye NEW.id).
   IF COALESCE(NEW.monto_en_moneda_factura,0) > v_saldo + 0.005 THEN
     RAISE EXCEPTION
       'LC_PAGO_EXCEDE_SALDO: pago % excede el saldo disponible % de la factura de proveedor',
