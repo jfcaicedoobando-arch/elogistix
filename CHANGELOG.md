@@ -1,5 +1,14 @@
 # Changelog
 
+## [13.807.0] - 2026-08-29
+
+- **Ola 9 · Remediación v15 (cierre)**.
+- **N-3 (Filtro de organización)**: las pantallas de Compras (Reportes, Pagos, Notas de crédito, Conciliación) esperan a que el contexto de organización resuelva antes de consultar, evitando un instante de datos sin filtrar.
+- **N-2 (Bloqueo optimista)**: sincronizar conceptos de venta desde costos lee el sello `updated_at` justo antes de escribir; si otra sesión guardó en medio, avisa del conflicto en vez de pisar los cambios.
+- **B-12 (Medidas negativas)**: candado en base de datos — embarques y contenedores no aceptan peso, volumen ni piezas negativos.
+- **M-14 (Tipo de cambio)**: el candado de banda 5–40 se corrigió para funcionar en pagos de clientes y de proveedores, y ya no marca error cuando el pago va en la misma moneda que la factura (factor 1 legítimo).
+- **R-2 (Drift de esquema)**: se registraron en migraciones las funciones de las Olas 7 y 8 que sólo existían en la base, se eliminó la sobrecarga ambigua de `crear_embarque_completo` y se regeneró `baseline.sql`. Nuevo guard `ola8_v15_candados`. `db:postcheck` en verde (65/65 guards + suites RLS).
+
 ## [13.806.0] - 2026-08-29
 
 - **Ola 8 · Remediación v15 (candados server-side)**.
