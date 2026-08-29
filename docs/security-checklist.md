@@ -33,8 +33,16 @@ order by c.relrowsecurity asc, tabla;
 - Tablas de catálogo público (ej. `puertos`, `navieras`, `planes`,
   `configuracion_global`) pueden tener RLS activado con policy de `SELECT true`.
 
+**Estado 2026-08-29:** 119/119 tablas con RLS, 416 políticas, 0 tablas con RLS
+sin políticas, y 92 tablas con la capa `RESTRICTIVE` de tenant activo
+(`rls_tenant_scope_ok`) que acota también a los `super_admin`. Detalle y queries
+de reauditoría en `docs/rls-multitenant-audit.md`.
+
 **Acción si falla:** crear migración que haga `ALTER TABLE ... ENABLE ROW LEVEL
-SECURITY` y agregar policies de tenant (`organization_id = current_user_org_id()`).
+SECURITY` y agregar policies de tenant (`organization_id = current_user_org_id()`
+o `EXISTS` sobre `organization_members`), envolviendo `auth.uid()` en un
+sub-select para que se evalúe una vez por query.
+
 
 ## 2. Funciones `SECURITY DEFINER` — `search_path` fijo
 
