@@ -1,25 +1,33 @@
-# Auditoría RLS Multitenant — 2026-06-08 (v12.61.11)
+# Auditoría RLS Multitenant — 2026-08-29 (v13.793.0)
 
-Resultado de la auditoría completa de Row-Level Security en `public`.
+Resultado de la auditoría de Row-Level Security en el esquema `public`,
+verificada contra el estado **vivo** de la base (`pg_class`, `pg_policies`).
 Complementa `docs/security-checklist.md` y debe reejecutarse al menos
-trimestralmente o tras cualquier `CREATE TABLE` en el esquema `public`.
+trimestralmente o tras cualquier `CREATE TABLE` en `public`.
+
+## Números duros (estado vivo)
+
+| Métrica | Valor |
+|---|---|
+| Tablas en `public` | 119 |
+| Tablas con RLS activado | 119 (100 %) |
+| Tablas con RLS y **cero** políticas | 0 |
+| Políticas totales | 416 |
+| Políticas `RESTRICTIVE` | 93, sobre 92 tablas |
+| Tablas con `organization_id` | 101 |
+| Tablas con `organization_id` sin filtro de tenant | 0 |
 
 ## Patrón canónico
 
 El aislamiento por organización **NO** usa `current_setting('app.current_org_id')`
-(eso requeriría que cada request setee un GUC, cosa que el cliente Supabase
-no hace). Se usa la función `SECURITY DEFINER`:
+(eso requeriría que cada request setee un GUC, cosa que el cliente Supabase no
+hace). Hoy conviven cuatro formas equivalentes y aceptadas de derivar el tenant,
+todas `SECURITY DEFINER` o sub-selects sobre la membresía:
 
-```sql
-public.current_user_org_id() RETURNS uuid
--- Lee user_organization_members del auth.uid() actual.
-```
-
-Toda política multitenant filtra con:
-
-```sql
-USING (organization_id = current_user_org_id() OR has_role(auth.uid(), 'super_admin'))
-```
+1. `current_user_org_id()` — primera membresía del `auth.uid()` actual.
+2. `EXISTS (SELECT 1 FROM organization_members m WHERE m.organization_id = <tabla>.organization_id AND m.user_id = (SELECT auth.uid()))` — patrón preferido en módulos nuevos (costeo, envíos, plantillas).
+3. `is_org_admin(auth.uid(), organization_id)` — cuando la lectura es sólo para administradores de la organización (`app_logs`, `role_change_log`).
+4. `current_agente_id()` / `current_agente_org()` — portal de agentes de carga.
 
 El portal cliente usa un patrón distinto pero seguro:
 
@@ -27,84 +35,82 @@ El portal cliente usa un patrón distinto pero seguro:
 USING (has_role(auth.uid(), 'cliente') AND cliente_id IN (SELECT current_user_client_ids()))
 ```
 
-`cliente_id` está atado a una sola organización, así que no se requiere el
-filtro adicional de org (y añadirlo rompería el portal porque los contactos
-no son miembros de `user_organization_members`).
+`cliente_id` está atado a una sola organización, así que no se requiere el filtro
+adicional de org (y añadirlo rompería el portal porque los contactos no son
+miembros de `organization_members`).
 
-## Matriz auditada (67 tablas en `public`)
+## Capa RESTRICTIVE (scope de tenant activo)
 
-### Tablas de dominio con `organization_id` — 53 ✅
+Desde la ola de hardening multi-tenant, 92 tablas críticas llevan además una
+política **RESTRICTIVE**:
 
-`embarques`, `cotizaciones`, `clientes`, `facturas`, `proformas`,
-`conceptos_venta`, `conceptos_costo`, `conceptos_factura`, `cotizacion_costos`,
-`documentos_embarque`, `embarque_contenedores`, `eventos_embarque`,
-`notas_embarque`, `pagos_factura`, `pagos_proveedor`, `proveedores`,
-`proveedor_facturas`, `proveedor_facturas_conceptos`, `proveedor_notas_credito`,
-`factura_notas_credito`, `factura_series`, `proforma_conceptos_consolidados`,
-`contactos_cliente`, `client_users`, `notificaciones_cliente`,
-`crm_leads`, `crm_oportunidades`, `crm_actividades`,
-`crm_comentarios_oportunidad`, `crm_cuotas_vendedor`, `crm_etapas_pipeline`,
-`crm_motivos_perdida`, `crm_plantillas_mensaje`, `cuentas_bancarias`,
-`bbva_movimientos`, `presupuesto_categorias`, `presupuesto_mensual`,
-`comisiones_devengadas`, `liquidaciones_comision`, `vendedora_config`,
-`auditoria_snapshots`, `auditoria_revisiones`, `auditoria_comentarios`,
-`bitacora_actividad`, `app_logs`, `configuracion`, `tracking_links`,
-`tracking_intentos`, `tracking_externo`, `organization_members`,
-`idempotency_keys`, `_backup_merge_embarques_20260602`.
+```sql
+USING ((NOT (SELECT has_role((SELECT auth.uid()), 'super_admin')))
+       OR rls_tenant_scope_ok(organization_id))
+```
 
-Todas con RLS activado y al menos una política con filtro por
-`organization_id` y/o por `cliente_id` (portal). Casos especiales:
+Efecto: un `super_admin` sólo ve/escribe la organización que tiene activa en
+`super_admin_org_activa` (Platform Console). Al ser RESTRICTIVE se aplica en
+`AND` con las permisivas, así que ninguna política permisiva puede saltarla.
 
-| Tabla | Notas |
+## Optimización de rendimiento (InitPlan)
+
+Las políticas envuelven `auth.uid()` y `has_role(...)` en sub-selects
+(`(SELECT auth.uid())`) para que Postgres las evalúe **una vez por query**
+(InitPlan) y no una vez por fila. Al escribir una política nueva hay que
+respetar ese patrón; de lo contrario el linter de rendimiento la marca.
+
+## Tablas sin `organization_id` — 18 (correcto por diseño)
+
+| Grupo | Justificación |
 |---|---|
-| `notificaciones_internas` | **12.61.11**: añadido `AND organization_id = current_user_org_id()` redundante en SELECT/UPDATE |
-| `crm_notificaciones` | **12.61.11**: idem |
-| `bitacora_actividad` | INSERT con `WITH CHECK (usuario_id = auth.uid())` — validado |
-| `app_logs` | Solo admins ven logs de su org |
-| Tablas `crm_*` con `vendedora_id` | Doble filtro: org + propiedad del vendedor cuando aplica |
-
-### Tablas sin `organization_id` — 14 (correcto por diseño)
-
-| Tabla | Justificación |
-|---|---|
-| `puertos`, `navieras`, `tipos_contenedor`, `planes` | Catálogos públicos compartidos (SELECT abierto, INSERT/UPDATE solo super_admin) |
-| `configuracion_global` | Config compartida read-only para autenticados |
-| `organizations` | Listado controlado por membresía vía `user_organization_members` |
-| `user_roles` | Asignaciones globales; lectura vía `has_role()` SECURITY DEFINER |
-| `email_send_log`, `email_send_state`, `email_unsubscribe_tokens`, `suppressed_emails` | `service_role` only — accesos exclusivos de edge functions |
-| `ratelimit_buckets` | Sin políticas RLS abiertas; acceso solo desde backend |
+| `puertos`, `navieras`, `tipos_contenedor`, `planes`, `configuracion_global` | Catálogos/config compartidos: `SELECT` abierto a autenticados, escritura sólo `super_admin` |
+| `organizations`, `user_roles`, `user_organization_members` | Se resuelven vía membresía / `has_role()` `SECURITY DEFINER` |
+| `email_send_log`, `email_send_state`, `email_unsubscribe_tokens`, `suppressed_emails`, `ratelimit_buckets` | `service_role` only — acceso exclusivo de edge functions |
 | `tracking_webhook_log` | Append-only de webhooks externos |
 | `alertas_sistema` | Anuncios globales |
-| `_backup_merge_fk_remap_20260602` | Snapshot histórico, sin acceso desde la app |
-
-## Cobertura
-
-- 67/67 tablas con RLS activado ✅
-- 53/53 tablas con `organization_id` con al menos una política tenant-aware ✅
-- 0 tablas con `organization_id` sin filtro de org o cliente_id ✅
+| Tablas `_backup_*` | Snapshots históricos, sin acceso desde la app |
 
 ## Cómo reauditar
 
-```bash
-psql -c "
+Detecta tablas con `organization_id` cuya lectura no filtre por tenant en
+ninguna de las cuatro formas aceptadas:
+
+```sql
 WITH pub AS (
-  SELECT c.relname AS tabla,
-    EXISTS (SELECT 1 FROM information_schema.columns ic
-            WHERE ic.table_schema='public' AND ic.table_name=c.relname AND ic.column_name='organization_id') AS has_org
-  FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace
-  WHERE n.nspname='public' AND c.relkind='r'
+  SELECT c.relname AS tabla
+  FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace
+  WHERE n.nspname = 'public' AND c.relkind = 'r'
+    AND EXISTS (SELECT 1 FROM information_schema.columns ic
+                WHERE ic.table_schema = 'public' AND ic.table_name = c.relname
+                  AND ic.column_name = 'organization_id')
 )
-SELECT p.tabla, p.has_org,
-  (SELECT count(*) FROM pg_policies pp WHERE pp.schemaname='public' AND pp.tablename=p.tabla
-     AND pp.cmd IN ('SELECT','ALL')
-     AND (pp.qual ILIKE '%current_user_org_id%' OR pp.qual ILIKE '%current_user_client_ids%' OR pp.qual ILIKE '%has_role%' OR pp.qual ILIKE '%deleted_at%' OR pp.qual='true')) AS scoped
-FROM pub p WHERE p.has_org AND
-  (SELECT count(*) FROM pg_policies pp WHERE pp.schemaname='public' AND pp.tablename=p.tabla
-     AND pp.cmd IN ('SELECT','ALL')
-     AND (pp.qual ILIKE '%current_user_org_id%' OR pp.qual ILIKE '%current_user_client_ids%')) = 0
-ORDER BY p.tabla;"
+SELECT p.tabla
+FROM pub p
+WHERE (SELECT count(*) FROM pg_policies pp
+       WHERE pp.schemaname = 'public' AND pp.tablename = p.tabla
+         AND pp.cmd IN ('SELECT','ALL')
+         AND (pp.qual ILIKE '%current_user_org_id%'
+           OR pp.qual ILIKE '%current_user_client_ids%'
+           OR pp.qual ILIKE '%organization_members%'
+           OR pp.qual ILIKE '%is_org_admin%'
+           OR pp.qual ILIKE '%current_agente_org%')) = 0
+ORDER BY 1;
 ```
 
-El query debe devolver 0 filas. Si aparece alguna, esa tabla tiene
-`organization_id` pero ninguna política lo usa — añadir filtro de tenant
-inmediatamente.
+El query debe devolver 0 filas. Complementos:
+
+```sql
+-- Tablas con RLS pero sin ninguna política (quedan cerradas y rompen la app)
+SELECT c.relname FROM pg_class c
+JOIN pg_namespace n ON n.oid = c.relnamespace
+WHERE n.nspname='public' AND c.relkind='r' AND c.relrowsecurity
+  AND NOT EXISTS (SELECT 1 FROM pg_policies p
+                  WHERE p.schemaname='public' AND p.tablename=c.relname);
+
+-- Cobertura de la capa RESTRICTIVE de tenant activo
+SELECT count(DISTINCT tablename) FROM pg_policies
+WHERE schemaname='public' AND permissive='RESTRICTIVE';
+```
+
+La suite `supabase/tests/rls/` (ver su `README.md`) cubre estos invariantes en CI.

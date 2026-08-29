@@ -5,6 +5,9 @@ Plataforma SaaS multi-tenant para agentes de carga (freight forwarders) en Méxi
 > **Versión actual**: ver `src/constants/appVersion.ts` y el [`CHANGELOG.md`](./CHANGELOG.md).
 > **Arquitectura y convenciones**: [`ARCHITECTURE.md`](./ARCHITECTURE.md).
 > **Documentación de dominio**: [`docs/auditoria.md`](./docs/auditoria.md), [`docs/tables.md`](./docs/tables.md).
+> **Diseño**: [`docs/design-system.md`](./docs/design-system.md).
+> **Seguridad**: [`docs/security-checklist.md`](./docs/security-checklist.md), [`docs/rls-multitenant-audit.md`](./docs/rls-multitenant-audit.md), [`docs/riesgos-aceptados.md`](./docs/riesgos-aceptados.md).
+> **Histórico de cambios pre-v13**: [`docs/changelog-archive.md`](./docs/changelog-archive.md).
 
 ---
 

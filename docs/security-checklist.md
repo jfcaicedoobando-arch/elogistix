@@ -1,8 +1,13 @@
-# Security Checklist — elogistix
+# Security Checklist — Libre Carga
 
 Documento operativo para revisar periódicamente la postura de seguridad del backend
 (Lovable Cloud / Supabase). Pensado para correrse trimestralmente o tras cambios
 mayores de schema.
+
+**Última revisión:** 2026-08-29 (v13.793.0) · complementa
+[`docs/rls-multitenant-audit.md`](./rls-multitenant-audit.md) y
+[`docs/riesgos-aceptados.md`](./riesgos-aceptados.md).
+
 
 ## 1. Cobertura de RLS en `public`
 
@@ -28,8 +33,16 @@ order by c.relrowsecurity asc, tabla;
 - Tablas de catálogo público (ej. `puertos`, `navieras`, `planes`,
   `configuracion_global`) pueden tener RLS activado con policy de `SELECT true`.
 
+**Estado 2026-08-29:** 119/119 tablas con RLS, 416 políticas, 0 tablas con RLS
+sin políticas, y 92 tablas con la capa `RESTRICTIVE` de tenant activo
+(`rls_tenant_scope_ok`) que acota también a los `super_admin`. Detalle y queries
+de reauditoría en `docs/rls-multitenant-audit.md`.
+
 **Acción si falla:** crear migración que haga `ALTER TABLE ... ENABLE ROW LEVEL
-SECURITY` y agregar policies de tenant (`organization_id = current_user_org_id()`).
+SECURITY` y agregar policies de tenant (`organization_id = current_user_org_id()`
+o `EXISTS` sobre `organization_members`), envolviendo `auth.uid()` en un
+sub-select para que se evalúe una vez por query.
+
 
 ## 2. Funciones `SECURITY DEFINER` — `search_path` fijo
 
@@ -48,22 +61,31 @@ order by funcion;
 
 ## 3. Edge functions — superficie expuesta
 
-Endpoints actuales y su modelo de auth:
+Hoy existen **48 funciones**. El canon es `verify_jwt = true` (default) +
+`wrapEdgeHandler` + `authenticateRequest`; sólo **6** están declaradas con
+`verify_jwt = false` en `supabase/config.toml` y cada una valida por su cuenta:
 
-| Función | `verify_jwt` | Validación interna | Notas |
-|---|---|---|---|
-| `tracking-public` | false | token (32 hex) + `expires_at` | Público por diseño |
-| `parse-csf` | false | ninguna (sólo lee PDF, no escribe BD) | Reenvía a Lovable AI Gateway. **No parsea XML** → sin XXE |
-| `exchange-rates` | false | ninguna | Cache pública, `AbortController` 5s + fallback |
-| `create-user` | false | `authenticate()` + `checkAdminAccess()` | Service role sólo dentro de la función |
-| `delete-user` | false | `authenticate()` + `checkAdminAccess()` | idem |
-| `list-users` | false | `authenticate()` + `checkAdminAccess()` | idem |
-| `invite-client-user` | false | `authenticate()` interna | idem |
-| `auditoria-snapshot-daily` | false | cron-only (sin browser) | Service role |
-| `auditoria-weekly-digest` | false | cron-only (sin browser) | Service role |
+| Función pública | Validación interna | Notas |
+|---|---|---|
+| `auth-email-hook` | secreto de hook de Supabase Auth | Lo invoca Auth, no el browser |
+| `facturapi-webhook` | firma/secreto del proveedor + idempotencia | Receptor de timbrado |
+| `handle-email-suppression` | secreto de webhook del proveedor de correo | — |
+| `handle-email-unsubscribe` | token de un solo uso (`email_unsubscribe_tokens`) | Enlace en el correo |
+| `preview-transactional-email` | sólo render de plantilla, no toca BD | Sin datos de tenant |
+| `sentry-tunnel` | proxy de telemetría, sin lectura de BD | Rate limit por IP |
 
-**Aceptable:** todo endpoint con efectos de escritura sensibles ejecuta
-`authenticate()` antes de cualquier query.
+**Aceptable:**
+- Todo endpoint con efectos de escritura sensibles ejecuta `authenticateRequest()`
+  antes de cualquier query (39 funciones ya usan el wrapper compartido).
+- Cada `verify_jwt = false` nuevo debe justificarse aquí en el mismo PR.
+
+**Verificación rápida:**
+
+```bash
+grep -c 'verify_jwt = false' supabase/config.toml   # debe seguir en 6
+rg -l 'wrapEdgeHandler|authenticateRequest' supabase/functions --glob '!_shared' | wc -l
+```
+
 
 ## 4. CORS
 
@@ -86,16 +108,22 @@ Si baja de eso, regenerar default con `encode(gen_random_bytes(32), 'hex')`.
 
 ## 6. Política Lovable
 
-- **No** se implementa rate limiting backend (no hay primitivas estables en la
-  plataforma). Mitigación para endpoints públicos: tokens fuertes + expiración
-  + opción de revocar desde el detalle del embarque.
+- **Sí** hay rate limiting propio: tabla `ratelimit_buckets` + helper compartido,
+  usado hoy en 21 funciones (tope por identidad y tope global por función). La
+  limitación conocida del bucket por IP (`x-forwarded-for` falsificable) está
+  documentada como riesgo aceptado **RN-EC-4** en `docs/riesgos-aceptados.md`.
+- Mitigación para endpoints públicos: tokens fuertes + expiración + opción de
+  revocar desde el detalle del embarque.
 - La `VITE_SUPABASE_PUBLISHABLE_KEY` es **clave pública** (anon) y vive en el
   bundle del cliente. Su exposición no es una vulnerabilidad: el control de
   acceso real lo dan las policies RLS.
+- `SUPABASE_SERVICE_ROLE_KEY` y la contraseña de la base **no** son accesibles en
+  Lovable Cloud; nunca se piden ni se registran en logs.
 
 ## 7. Auditoría de secretos en frontend
 
-**Última revisión:** 2026-06-08  
+**Última revisión:** 2026-08-29 (patrones sin hallazgos nuevos desde 2026-06-08)  
+
 **Alcance:** todo el repositorio `src/` + `supabase/functions/` + archivos de configuración.
 
 ### Patrones auditados

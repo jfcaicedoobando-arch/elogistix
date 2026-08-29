@@ -1,17 +1,17 @@
-# Cast Audit — generado 2026-08-28
+# Cast Audit — generado 2026-08-29
 
 Auditoría automática de los `as` casts en `src/`. Generado por
 `scripts/audit-casts.ts`. Para regenerar: `bun scripts/audit-casts.ts`.
 
 ## Resumen
 
-Total de `as` casts detectados: **3221**
+Total de `as` casts detectados: **3226**
 
 | Categoría | Peso | Cantidad | % |
 |-----------|------|----------|---|
-| SAFE      | 0 | 956     | 29.7% |
-| LOW       | 1 | 152      | 4.7% |
-| MEDIUM    | 2 | 2113   | 65.6% |
+| SAFE      | 0 | 959     | 29.7% |
+| LOW       | 1 | 153      | 4.7% |
+| MEDIUM    | 2 | 2114   | 65.5% |
 | HIGH      | 3 | 0     | 0.0% |
 | CRITICAL  | 4 | 0 | 0.0% |
 
@@ -51,4 +51,4 @@ _Ningún cast HIGH o CRITICAL detectado._
 
 ## Roadmap
 
-Ver [`docs/strict-mode-roadmap.md`](./strict-mode-roadmap.md) para el plan de 4 fases hacia `strictNullChecks: true`.
+Ver [`docs/strict-mode-roadmap.md`](./strict-mode-roadmap.md) (cerrado) para el histórico de cómo se llegó a `strict: true`.
