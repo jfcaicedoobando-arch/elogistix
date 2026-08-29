@@ -5,7 +5,11 @@
 import { AlertTriangle } from "lucide-react";
 import { ConfirmActionDialog } from "@/components/shared/dialogs/ConfirmActionDialog";
 import { formatCurrency } from "@/lib/formatters";
-import type { ValidarLimiteResultado } from "@/features/cliente/hooks/useValidarLimiteCredito";
+import { useAuth } from "@/lib/contexts/AuthContext";
+import {
+  puedeExcederCredito,
+  type ValidarLimiteResultado,
+} from "@/features/cliente/hooks/useValidarLimiteCredito";
 
 function fmtMxn(v: number): string {
   return formatCurrency(v, "MXN");
@@ -19,6 +23,9 @@ interface Props {
 }
 
 export function CreditoExcesoConfirmDialog({ alerta, clienteNombre, onOpenChange, onConfirm }: Props) {
+  // M-15 (v14-2): fail-closed — sólo gerencia/finanzas puede autorizar el exceso.
+  const { effectiveRole, orgRole, role } = useAuth();
+  const puedeExceder = puedeExcederCredito(effectiveRole ?? orgRole ?? role);
   const limite = alerta?.exposicion.limiteMxn ?? 0;
   const enUso = alerta?.exposicion.enUsoMxn ?? 0;
   const totalProy = alerta?.totalProyectadoMxn ?? 0;
@@ -34,6 +41,7 @@ export function CreditoExcesoConfirmDialog({ alerta, clienteNombre, onOpenChange
       confirmLabel="Continuar de todas formas"
       cancelLabel="Cancelar"
       size="md"
+      confirmDisabled={!puedeExceder}
       onConfirm={onConfirm}
       description={alerta ? (
         <div className="space-y-1 text-body">
@@ -44,9 +52,16 @@ export function CreditoExcesoConfirmDialog({ alerta, clienteNombre, onOpenChange
           <p className="text-muted-foreground">
             Límite: {fmtMxn(limite)} · En uso: {fmtMxn(enUso)} · Nueva: {fmtMxn(nueva)}
           </p>
-          <p className="text-body-sm text-muted-foreground pt-2">
-            Se registrará en bitácora que continuaste a pesar del exceso.
-          </p>
+          {puedeExceder ? (
+            <p className="text-body-sm text-muted-foreground pt-2">
+              Se registrará en bitácora que continuaste a pesar del exceso.
+            </p>
+          ) : (
+            <p className="text-body-sm pt-2 font-medium text-destructive">
+              Tu rol no puede autorizar excesos de crédito. Pide a gerencia o finanzas
+              que confirme la operación.
+            </p>
+          )}
         </div>
       ) : null}
     />
