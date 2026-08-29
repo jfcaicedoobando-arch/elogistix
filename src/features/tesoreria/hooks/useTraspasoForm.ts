@@ -5,6 +5,8 @@
 import { useEffect, useMemo, useState } from "react";
 import type { Tables } from "@/integrations/supabase/types";
 import { roundMoney } from "@/lib/financial/financialUtils";
+import { parInvolucraMxn, validarTcMxn } from "@/lib/financial/tcBanda";
+
 import { hoyMx } from "@/lib/date/mx";
 import { useTcDofPorFecha } from "@/features/catalogos/hooks/useTcDofPorFecha";
 import { multiplicadorOrigenDestino, parTc, type MonedaTc } from "@/features/tesoreria/domain/tcPar";
