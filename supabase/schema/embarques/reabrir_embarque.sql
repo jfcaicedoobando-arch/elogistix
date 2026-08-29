@@ -32,7 +32,8 @@ BEGIN
   SELECT organization_id, estado::text
     INTO v_org_id, v_estado_actual
     FROM embarques
-   WHERE id = p_embarque_id;
+   WHERE id = p_embarque_id
+     AND deleted_at IS NULL;
   IF v_org_id IS NULL THEN
     RAISE EXCEPTION 'Embarque no encontrado';
   END IF;
