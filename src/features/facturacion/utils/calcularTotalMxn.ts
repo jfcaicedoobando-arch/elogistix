@@ -1,5 +1,5 @@
 import { aMxn } from "@/lib/financial/convertir";
-import { sumarSubtotales, subtotalLinea, calcularIVA, roundMoney } from "@/lib/financial/financialUtils";
+import { calcularTotalesConceptos } from "@/features/facturacion/utils/totalesConceptos";
 import type { ConceptoManualInput } from "@/features/facturacion/services/facturaManual";
 import type { Moneda } from "@/types/db";
 
@@ -14,6 +14,10 @@ export interface TotalFacturaMxn {
  * Total en MXN de una factura manual, considerando IVA por concepto y moneda.
  * FIX C6: la conversión pasa por el canon único; ya no se multiplica por 1
  * cuando falta el tipo de cambio.
+ * A-11: delega el cálculo de subtotal/IVA a `calcularTotalesConceptos`, el
+ * helper canónico compartido con el resumen de facturación — incluye el 8%
+ * de IVA frontera (`gravado_8`), que antes se perdía porque sólo se
+ * reconocía `gravado_16`.
  */
 export function calcularTotalMxn(
   conceptos: ConceptoManualInput[],
@@ -21,21 +25,7 @@ export function calcularTotalMxn(
   tipoCambio: number,
   tasaIva: number,
 ): TotalFacturaMxn {
-  // FE-12: canon currency.js — subtotal por línea redondeado antes de acumular
-  // e IVA por línea con el mismo redondeo, para que la validación de crédito
-  // coincida centavo a centavo con el total que se persiste/timbra.
-  const subtotal = sumarSubtotales(conceptos, (c) => ({
-    cantidad: Number(c.cantidad) || 0,
-    precioUnitario: Number(c.precio_unitario) || 0,
-  }));
-  const conIva = roundMoney(
-    conceptos.reduce((acc, c) => {
-      const base = subtotalLinea(Number(c.cantidad) || 0, Number(c.precio_unitario) || 0);
-      const iva = c.tipo_iva === "gravado_16" ? calcularIVA(base, tasaIva) : 0;
-      return acc + base + iva;
-    }, 0),
-  );
-  const total = conIva || subtotal;
-  const conv = aMxn(total, moneda, tipoCambio);
+  const { subtotal, total } = calcularTotalesConceptos(conceptos, tasaIva);
+  const conv = aMxn(total || subtotal, moneda, tipoCambio);
   return { mxn: conv.monto, tcFaltante: !conv.completo };
 }
