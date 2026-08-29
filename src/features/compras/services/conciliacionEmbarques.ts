@@ -13,6 +13,7 @@
  *  - Separa por moneda (MXN / USD) porque no se pueden sumar entre sí.
  *  - Ordena por mayor pendiente descendente.
  */
+import type { Moneda } from "@/types/db";
 import { supabase } from "@/integrations/supabase/client";
 import { CAP_REPORTE_AMPLIO } from "@/constants/queryCaps";
 

@@ -1,6 +1,7 @@
 /**
  * Fetch + tipos para el reporte de compras — extraídos en v13.182.0 (Wave 2).
  */
+import type { Moneda } from "@/types/db";
 import { supabase } from "@/integrations/supabase/client";
 import { CAP_REPORTE } from "@/constants/queryCaps";
 
