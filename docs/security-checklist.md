@@ -61,22 +61,31 @@ order by funcion;
 
 ## 3. Edge functions — superficie expuesta
 
-Endpoints actuales y su modelo de auth:
+Hoy existen **48 funciones**. El canon es `verify_jwt = true` (default) +
+`wrapEdgeHandler` + `authenticateRequest`; sólo **6** están declaradas con
+`verify_jwt = false` en `supabase/config.toml` y cada una valida por su cuenta:
 
-| Función | `verify_jwt` | Validación interna | Notas |
-|---|---|---|---|
-| `tracking-public` | false | token (32 hex) + `expires_at` | Público por diseño |
-| `parse-csf` | false | ninguna (sólo lee PDF, no escribe BD) | Reenvía a Lovable AI Gateway. **No parsea XML** → sin XXE |
-| `exchange-rates` | false | ninguna | Cache pública, `AbortController` 5s + fallback |
-| `create-user` | false | `authenticate()` + `checkAdminAccess()` | Service role sólo dentro de la función |
-| `delete-user` | false | `authenticate()` + `checkAdminAccess()` | idem |
-| `list-users` | false | `authenticate()` + `checkAdminAccess()` | idem |
-| `invite-client-user` | false | `authenticate()` interna | idem |
-| `auditoria-snapshot-daily` | false | cron-only (sin browser) | Service role |
-| `auditoria-weekly-digest` | false | cron-only (sin browser) | Service role |
+| Función pública | Validación interna | Notas |
+|---|---|---|
+| `auth-email-hook` | secreto de hook de Supabase Auth | Lo invoca Auth, no el browser |
+| `facturapi-webhook` | firma/secreto del proveedor + idempotencia | Receptor de timbrado |
+| `handle-email-suppression` | secreto de webhook del proveedor de correo | — |
+| `handle-email-unsubscribe` | token de un solo uso (`email_unsubscribe_tokens`) | Enlace en el correo |
+| `preview-transactional-email` | sólo render de plantilla, no toca BD | Sin datos de tenant |
+| `sentry-tunnel` | proxy de telemetría, sin lectura de BD | Rate limit por IP |
 
-**Aceptable:** todo endpoint con efectos de escritura sensibles ejecuta
-`authenticate()` antes de cualquier query.
+**Aceptable:**
+- Todo endpoint con efectos de escritura sensibles ejecuta `authenticateRequest()`
+  antes de cualquier query (39 funciones ya usan el wrapper compartido).
+- Cada `verify_jwt = false` nuevo debe justificarse aquí en el mismo PR.
+
+**Verificación rápida:**
+
+```bash
+grep -c 'verify_jwt = false' supabase/config.toml   # debe seguir en 6
+rg -l 'wrapEdgeHandler|authenticateRequest' supabase/functions --glob '!_shared' | wc -l
+```
+
 
 ## 4. CORS
 
