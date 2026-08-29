@@ -15,3 +15,16 @@
 
 ## Pendiente
 - [ ] B-21 Tracking automático naviera (gap de alcance, evaluar)
+
+## YAGNI · Ola 10 (v13.808.0)
+
+Hecho:
+- Composite action `restore-rls-snapshot` (des-duplica 4 jobs de `rls-tests.yml`).
+- Retiro de `backfill-cxp-buzon` (edge function de un solo uso) y de la RPC `reconciliar_conceptos_facturados_legacy`.
+- `purge_app_logs_old()` agendada en cron (01:30 CDMX) y cerrada a service_role.
+
+Pendiente (decisión de producto):
+- `auditoria-snapshot-daily`: existe la función pero no está agendada — programar o retirar.
+- `tracking_externo` / `tracking_intentos`: mantener sólo si se hace B-21 (Terminal49); si no, retirar.
+- Redirects legacy de rutas: retirar cuando haya analítica de uso real.
+- Flag `inline` de `ProtectedRoute`: simplificar (un solo consumidor real).
