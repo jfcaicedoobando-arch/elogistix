@@ -12,6 +12,7 @@ import { useUpdateCotizacion } from "@/features/cotizacion/hooks";
 import { buildConceptosFromCostos } from "@/features/cotizacion/domain/cotizacion";
 import { costosSinConcepto } from "@/features/cotizacion/domain/cotizacionVentaSync";
 import { fromDb } from "@/lib/supabase/cast";
+import { fetchCotizacionUpdatedAt } from "@/features/cotizacion/services/updatedAt";
 import type { CostoCotizacion, FilaCostoLocal } from "@/features/cotizacion/types";
 
 interface Props {
@@ -60,9 +61,14 @@ export function AvisoSincronizarConceptosVenta({ cotizacionId, costos, tasaIva, 
     }
     const subtotalUSD = usd.reduce((s, c) => s + (Number(c.total) || 0), 0);
     try {
+      // N-2: bloqueo optimista. Se lee el sello `updated_at` justo antes de
+      // escribir; si otra sesión guardó la cotización en medio, el UPDATE no
+      // toca nada y se avisa del conflicto en vez de pisar esos cambios.
+      const expectedUpdatedAt = await fetchCotizacionUpdatedAt(cotizacionId);
       await update.mutateAsync({
         id: cotizacionId,
         data: fromDb({ conceptos_venta: conceptos, subtotal: subtotalUSD }),
+        expectedUpdatedAt,
       });
       notifySuccess(undefined, { title: "Conceptos de venta sincronizados desde los costos" });
     } catch (err: unknown) {

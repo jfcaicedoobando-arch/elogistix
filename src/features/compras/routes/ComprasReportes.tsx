@@ -42,11 +42,13 @@ function today(): string { return todayLocalISO(); }
 export default function ComprasReportes() {
   const [desde, setDesde] = useState<string>(firstOfYear());
   const [hasta, setHasta] = useState<string>(today());
-  const { organizationId } = useOrgFilter();
+  const { organizationId, orgListo } = useOrgFilter();
 
   const { data: rows = [], isLoading, isError, refetch } = useQuery({
     queryKey: [...compras.reportes({ desde, hasta }), organizationId],
     queryFn: () => fetchFacturasReporte(desde, hasta, organizationId),
+    // N-3: no consultar hasta que el contexto de organización resolvió.
+    enabled: orgListo,
   });
 
   const { data: rates } = useQuery({
