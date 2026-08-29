@@ -24,7 +24,27 @@ Suites adicionales:
 - `test_rls_tarifas_y_costeo.sql` — `costeo_rutas`, `costeo_tarifas` (incluye intento de UPDATE cruzado bloqueado y verificación de no fuga de `flete_base`), `proveedor_notas_credito` (monto contable nunca visible), `auditoria_revisiones` (detalle de cumplimiento aislado) (8 aserciones).
 - `test_rls_roles_no_admin.sql` — matriz `{viewer, operador, cliente}` × `{SELECT, INSERT, UPDATE, DELETE}` sobre `facturas`, `pagos_factura`, `embarques`, `cotizaciones` (15 aserciones). Cubre el gap "todas las suites previas solo probaban `admin`".
 
+## Checklist al tocar la base (evita ~90% de los rojos de CI)
+
+Cierre obligatorio de toda migración — un solo comando, corre lo mismo que CI
+(funciona con Docker **o** con `initdb` local, se autodetecta):
+
+```sh
+bun run db:postcheck          # regenera la baseline si el esquema cambió
+bun run db:postcheck -- --check   # modo CI: sólo compara, no escribe
+```
+
+Los cuatro rojos típicos y su arreglo en una línea:
+
+| Job en rojo | Causa | Arreglo |
+|---|---|---|
+| `schema-baseline` | migración nueva sin regenerar la foto del esquema | `bun run db:postcheck` (o `bun run db:baseline:update`) y committear `supabase/schema/baseline.sql` |
+| Candado `service_role-only` | función `SECURITY DEFINER` interna sin `REVOKE` o sin entrada en la lista | agregar el `REVOKE` en la migración **y** la firma en `_ci_service_role_only.sql` |
+| `rls-guards` | un guard congela una decisión de negocio anterior | actualizar la decisión en `supabase/tests/_decisiones_negocio.sql` (fuente única) |
+| Suite `test_rls_*` | fixture con montos/estados que chocan con una guarda nueva | ajustar el fixture de la suite, nunca relajar la guarda |
+
 ## Catálogos únicos (no duplicar listas)
+
 
 | Archivo | Qué centraliza | Consumidores |
 |---|---|---|
