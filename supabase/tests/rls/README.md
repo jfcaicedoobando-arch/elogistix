@@ -29,22 +29,21 @@ Suites adicionales:
 | Archivo | Qué centraliza | Consumidores |
 |---|---|---|
 | `_ci_exempt_tables.sql` | Tablas exentas: `sin-rls` y `sin-filtro-tenant` | `_ci_verify_rls.sql`, `test_rls_policy_linter.sql` |
-| `_ci_service_role_only.sql` | Funciones sólo para `service_role` (**generado**: ver abajo) | `_ci_post_migrate.sql`, `_ci_check_service_role_only.sql`, `fix4_service_role_only_grants.sql` |
+| `_ci_service_role_only.sql` | Funciones sólo para `service_role` (lista curada a mano) | `_ci_post_migrate.sql`, `_ci_check_service_role_only.sql`, `fix4_service_role_only_grants.sql` |
 
-### `_ci_service_role_only.sql` es un archivo GENERADO
+### `_ci_service_role_only.sql` se mantiene a mano
 
-No se edita a mano. Se regenera desde el esquema real con:
+Es una lista **curada**, con comentarios que explican por qué cada función es
+interna. Al agregar una función `SECURITY DEFINER` sólo para `service_role`:
 
-```bash
-# Con PGHOST/PGUSER/... apuntando a la base con las migraciones aplicadas
-# (y antes de _ci_post_migrate.sql si es un Postgres bare de CI):
-scripts/db/gen-service-role-only.sh
-```
+1. incluye su `REVOKE ... FROM anon, authenticated` en la misma migración, y
+2. añade su entrada (con firma completa) a este archivo en la misma PR.
 
-El generador (`scripts/db/gen-service-role-only.sh`) deriva la lista de
-`pg_proc`: toda función `public` que `service_role` ejecuta y
-`public`/`anon`/`authenticated` no. El CI corre `--check` tras aplicar
-migraciones y falla si la PR no regeneró el archivo.
+El candado bidireccional `_ci_check_service_role_only.sql` corre en CI y falla
+si falta el `REVOKE`, si hay una función del patrón fuera de la lista o si una
+entrada quedó obsoleta. No se autogenera a propósito: derivarla del esquema
+haría que una función que pierde su `REVOKE` desapareciera de la lista sola y
+el candado se pondría verde ocultando la regresión.
 | `../_catalogo_columnas_internas.sql` | Columnas internas de `embarques` (PnL/PII) | `_ci_post_migrate.sql`, `fix2_embarques_interno_y_nc.sql`, `embarques_listado_sin_select_estrella.sql` |
 
 Prohibido copiar estas listas dentro de una suite: si se duplican, una columna
