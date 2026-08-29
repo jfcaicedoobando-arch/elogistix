@@ -66,7 +66,7 @@ function setData(hallazgos: HallazgoAuditoria[], revisiones?: Map<string, Audito
       ventas_sin_facturar: 0, margen_negativo: 0, margen_bajo: 0,
       venta_sin_costo: 0, costo_sin_venta: 0, proforma_vencida: 0,
       proforma_borrador_abandonada: 0, proforma_inconsistente: 0,
-      embarque_huerfano: 0, factura_sin_timbrar: 0, rep_pendiente: 0, factura_cancelada_sin_sustitucion: 0, cxc_vencida: 0, cxp_por_capturar_estancada: 0, cxp_vencida: 0, contenedor_datos_incompletos: 0, contenedor_fechas_incompletas: 0, tipo_cambio_faltante: 0, costos_repetidos: 0,
+      embarque_huerfano: 0, factura_sin_timbrar: 0, rep_pendiente: 0, factura_cancelada_sin_sustitucion: 0, cxc_vencida: 0, cxp_por_capturar_estancada: 0, cxp_vencida: 0, contenedor_datos_incompletos: 0, contenedor_fechas_incompletas: 0, tipo_cambio_faltante: 0, costos_repetidos: 0, venta_total_descuadrado: 0,
     },
     hallazgos,
   };
