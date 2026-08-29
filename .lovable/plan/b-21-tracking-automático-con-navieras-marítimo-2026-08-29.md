@@ -23,25 +23,32 @@ Un puente entre la naviera y el expediente, listo para encender cuando exista la
 ## Detalles técnicos
 
 **Base de datos (una migración)**
+
 - `tracking_externo`: agregar `webhook_secret_hash` no; en su lugar añadir columnas faltantes si aplica (`ultimo_error_at`), y trigger `updated_at` ya existe. Confirmar policies actuales (staff admin/operador) sirven para lectura desde UI.
 - Nueva RPC `tracking_registrar_evento_externo(p_embarque_id, p_provider_event_id, p_tipo, p_descripcion, p_ubicacion, p_fecha, p_eta_nueva)`: `SECURITY DEFINER`, sólo `service_role`. Inserta en `eventos_embarque` de forma idempotente por `provider_event_id`, actualiza `eta` del embarque cuando llega y escribe en `bitacora_actividad`. Respeta soft-delete y embarque cerrado (no escribe).
 - Nueva RPC `tracking_embarques_por_sincronizar(p_limite)` para el proceso nocturno (marítimos activos con suscripción `activo`, ordenados por `last_synced_at` más antiguo).
 - Guard SQL nuevo en `supabase/tests/` + entrada en `_guards_manifest.txt`, y baseline regenerada (`bun run db:postcheck`).
 
 **Edge functions**
+
 - `tracking-suscribir`: valida JWT + rol staff, valida entrada con Zod (BL/booking/contenedor + SCAC), llama al proveedor, hace upsert en `tracking_externo` y registra el intento en `tracking_intentos`. Devuelve error de negocio legible cuando el proveedor rechaza la referencia.
 - `tracking-webhook`: sin JWT, verifica firma del proveedor (secreto compartido), guarda en `tracking_webhook_log` (dedupe por `provider` + `event_id`), mapea el payload a eventos y llama la RPC con `service_role`. Responde 200 siempre que el evento quede persistido, para que el proveedor no reintente en bucle.
 - `tracking-sync-nocturno`: cron diario, candado en `cron_locks`, lotes acotados, escribe intentos y `last_synced_at`.
 - Mapeo proveedor → dominio en `supabase/functions/_shared/tracking/` (puro y testeable).
 
 **Frontend**
+
 - `src/features/embarques/services/tracking/suscripcion.ts` — llamadas a las edges e `useTrackingSuscripcion` / `useTrackingIntentos` (react-query, keys en `queryKeys.ts`).
 - `TrackingSuscripcionCard.tsx` (activar / estado / desactivar) y `TrackingIntentosList.tsx`, integrados en el tab Tracking junto a `TrackingNavieraActions` (que se conserva como camino manual).
 - Los eventos automáticos se distinguen en el timeline con `usuario = "Tracking automático"` y un badge.
 - Bandera derivada del estado de configuración devuelto por la edge; sin key ⇒ tarjeta en modo informativo.
 
 **Secreto requerido**
+
 - `TERMINAL49_API_KEY` y `TRACKING_WEBHOOK_SECRET`: se piden al aplicar el plan; hasta que existan, el módulo queda inactivo por diseño.
 
 **Cierre**
+
 - Tests unitarios del mapeo de eventos y del hook; guard SQL verde; `db:postcheck` verde con baseline regenerada; `APP_VERSION` + `CHANGELOG.md`; `roadmap.md` marca B-21 como hecho.
+
+No hagas nada. Merjo no lo implementamos.
