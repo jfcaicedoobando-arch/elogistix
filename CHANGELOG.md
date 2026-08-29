@@ -1,5 +1,13 @@
 # Changelog
 
+## [13.797.1] - 2026-08-29
+
+- **CI en verde (4 jobs)**: arreglados los rojos de `lint`, `knip`, `audits` y `tests` del run 90058425499.
+- `facturapi-descargar-zip`: extraídos `validarPeriodo` y `generarZip` del handler (complejidad 24 → bajo el límite de 16) y registrada la función en los candados de cobertura Sentry (`sentry-edge-coverage` + `sentry-edge-wrapping`).
+- `COST_VIEWERS` ahora copia `FINANCE_VIEWERS` (`[...]`) en vez de re-exportar el mismo binding: elimina el hallazgo `duplicates` de knip sin cambiar la decisión C9.
+- Espejos de esquema `cxp/guard_pago_proveedor.sql` y `facturacion/duplicar_factura_para_refacturacion.sql` sincronizados con la migración vigente `20260829012327` (replay reparado).
+- `migration-manifest.json` regenerado con las 1164 migraciones.
+
 ## [13.797.0] - 2026-08-29
 
 - **Verificación de base sin Docker**: `scripts/db/local-verify.sh` gana `--backend local` (autodetectado) que levanta Postgres 17 con `initdb`/`pg_ctl`; `db:verify`, `db:verify:all` y `db:baseline:update` ya funcionan en entornos sin Docker. Corregido un `local` fuera de función que dejaba `exentas` sin definir.

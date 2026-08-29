@@ -3,10 +3,10 @@
 -- emisión en lugar de heredar el TC de la factura original.
 
 CREATE OR REPLACE FUNCTION public.duplicar_factura_para_refacturacion(p_caso_id uuid)
-RETURNS uuid
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path = public
+ RETURNS uuid
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public'
 AS $function$
 DECLARE
   v_c public.refacturaciones%ROWTYPE;
@@ -18,7 +18,8 @@ DECLARE
   v_tc_nuevo numeric;
   v_factor numeric;
 BEGIN
-  SELECT * INTO v_c FROM public.refacturaciones WHERE id = p_caso_id;
+  -- N18: FOR UPDATE serializa la duplicación del mismo caso (doble clic).
+  SELECT * INTO v_c FROM public.refacturaciones WHERE id = p_caso_id FOR UPDATE;
   IF NOT FOUND THEN
     RAISE EXCEPTION 'LC_REFACT_CASO_NO_ENCONTRADO' USING ERRCODE = 'P0002';
   END IF;
@@ -48,9 +49,6 @@ BEGIN
       USING ERRCODE = 'P0001';
   END IF;
 
-  -- BUG-08 (auditoría 2026-08-18): el CFDI de sustitución se timbra HOY, así
-  -- que el tipo de cambio debe ser el DOF vigente a la nueva fecha de emisión,
-  -- no el heredado de la factura original.
   IF v_old.moneda::text = 'MXN' THEN
     v_tc_nuevo := v_old.tipo_cambio;
   ELSE
@@ -59,7 +57,7 @@ BEGIN
       INTO v_tc_nuevo
     FROM public.tc_dof_vigente(CURRENT_DATE) d;
     IF v_tc_nuevo IS NULL OR v_tc_nuevo <= 1 THEN
-      v_tc_nuevo := NULL;  -- sin DOF: el timbrado exige capturarlo a mano.
+      v_tc_nuevo := NULL;
     END IF;
   END IF;
 
