@@ -120,6 +120,27 @@ export default function NuevoEmbarque() {
   return (
     <FormProvider {...w.methods}>
       <CotizacionVinculadaProvider cotizacion={w.cotizacionVinculada}>
+      {banderaBorrador && draftDetectado && (
+        <DraftRestoreBanner
+          savedAt={draftDetectado.savedAt}
+          onRestore={handleRestore}
+          onDiscard={handleDiscard}
+        />
+      )}
+      {conflictoExterno && (
+        <Alert className="border-warning/40 bg-warning/5 mb-4">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertDescription className="text-body-sm flex items-center justify-between gap-2">
+            <span>
+              <strong>Tienes este wizard abierto en otra pestaña</strong> y acaba de guardar
+              cambios ahí. Para no mezclar capturas, trabaja en una sola pestaña.
+            </span>
+            <Button type="button" variant="ghost" size="sm" onClick={descartarConflicto}>
+              Entendido
+            </Button>
+          </AlertDescription>
+        </Alert>
+      )}
       <EmbarqueWizardLayout
         title="Nuevo embarque"
         subtitle="Completa los datos para registrar un embarque"
@@ -130,7 +151,7 @@ export default function NuevoEmbarque() {
         isPending={w.isPending}
         saveLabel="Crear embarque"
         onBack={() => navigate("/embarques")}
-        onFinish={w.handleFinish}
+        onFinish={() => { void handleFinishConLimpieza(); }}
         validateStep={(step) => w.validateStep(step)}
         // RFE-06 (Ola 11): dirty real de react-hook-form — capturar el paso 1
         // y salir ahora SÍ avisa. La heurística por paso se conserva como red
