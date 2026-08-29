@@ -101,9 +101,13 @@ export function useFacturaManualForm(open: boolean, onClose?: () => void) {
   const totalEstimado = sumarSubtotales(conceptos, (c) => ({
     cantidad: Number(c.cantidad), precioUnitario: Number(c.precio_unitario),
   }));
-  const puedeGuardar = !!cliente && conceptosValidos && fiscal.tipoCambio > 0 && totalEstimado > 0;
+  // M-14: banda de plausibilidad del T/C (sólo cuando la factura no es en MXN).
+  const tcFueraDeBanda = fiscal.moneda === "MXN" ? null : validarTcMxn(fiscal.tipoCambio);
+  const puedeGuardar =
+    !!cliente && conceptosValidos && fiscal.tipoCambio > 0 && totalEstimado > 0 && !tcFueraDeBanda;
   const puedeTimbrar = puedeGuardar && !clienteIncompleto;
   const faltantesTimbrar = useFaltantesTimbrar(cliente, conceptosValidos, fiscal);
+
 
   const reset = () => {
     setClienteId("");
