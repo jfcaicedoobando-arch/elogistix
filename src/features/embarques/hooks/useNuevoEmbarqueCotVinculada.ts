@@ -74,9 +74,21 @@ export function useNuevoEmbarqueCotVinculada({
 
   useCotizacionHydration({ onPrevincular: handleVincularCotizacion });
 
+  // M-13 (v14-2): restauración de borrador. Vincula la cotización SIN
+  // hidratar conceptos — el draft ya trae la captura del usuario y la
+  // hidratación la pisaría (race con el fetch de costos).
+  const restaurarVinculacion = useCallback(
+    (cot: CotizacionRow) => {
+      setCotizacionVinculada(cot);
+      form.vincularCotizacion(cot);
+    },
+    [form],
+  );
+
   return {
     cotizacionVinculada,
     handleVincularCotizacion,
     handleDesvincularCotizacion,
+    restaurarVinculacion,
   };
 }

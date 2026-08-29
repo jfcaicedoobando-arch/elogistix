@@ -160,6 +160,11 @@ export function useNuevoEmbarqueWizard() {
     cotizacionVinculada: cotVinc.cotizacionVinculada,
     handleVincularCotizacion: cotVinc.handleVincularCotizacion,
     handleDesvincularCotizacion: cotVinc.handleDesvincularCotizacion,
+    restaurarVinculacion: cotVinc.restaurarVinculacion,
+    // M-13: setters a granel para restaurar borradores (los add/update uno-a-uno
+    // no sirven para rehidratar N conceptos de golpe).
+    setConceptosVenta: conceptos.setConceptosVenta,
+    setConceptosCosto: conceptos.setConceptosCosto,
     modoExpediente: expediente.modoExpediente,
     expedienteSeleccionado: expediente.expedienteSeleccionado,
     handleModoExpedienteChange: expediente.handleModoExpedienteChange,
