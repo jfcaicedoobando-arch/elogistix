@@ -341,26 +341,10 @@ jobs:
             echo "nota: si no hay archivos suite-*.log, la step de suites no llegó a correr."
           } > .rls-logs/00-manifiesto.txt
 
-      - name: Download database snapshot
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
-        with:
-          name: rls-db-snapshot
-          path: .rls-snapshot/
+      - name: Cliente de Postgres 17 + restore del snapshot
+        uses: ./.github/actions/restore-rls-snapshot
 
-      - name: Create Supabase roles before restore
-        # El snapshot incluye policies con `TO authenticated/anon/service_role`;
-        # pg_restore falla con "role does not exist" si esos roles no están
-        # creados en la BD destino (vanilla Postgres no los trae).
-        # v13.514.0 — La lista vive en `_ci_roles.sql` (antes: 5 copias inline).
-        run: $PSQL -f supabase/tests/rls/_ci_roles.sql
 
-      - name: Restore database snapshot
-        run: |
-          # pg_restore es ~10x más rápido que rehacer bootstrap+migrations.
-          # Restauramos GRANTs (sin --no-privileges) para que SET ROLE
-          # authenticated en las suites pueda leer/escribir sus tablas.
-          pg_restore --no-owner --dbname=postgres \
-            .rls-snapshot/db.dump
 
 
 
