@@ -8,6 +8,7 @@ import {
   embarqueInsertSchema,
   parseOrThrow,
 } from "@/lib/validation/mutationSchemas";
+import type { ContenedorBorrador } from '@/features/embarques/types/contenedor';
 import { toEmbarqueBloqueadoError } from "./embarqueBloqueadoError";
 import { registrarBitacoraEmbarque } from "./bitacoraEmbarques";
 export { EmbarqueBloqueadoError, type MotivosBloqueoEmbarque } from "./embarqueBloqueadoError";

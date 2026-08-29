@@ -5,7 +5,6 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import type { Tables, TablesInsert } from '@/integrations/supabase/types';
 import { queryKeys } from '@/lib/query';
 import { crearEmbarqueRpc, duplicarEmbarqueRpc } from '@/features/embarques/services';
-import { crearMuchos } from '@/features/embarques/services/contenedores';
 import { fromDb } from "@/lib/supabase/cast";
 import { newRequestId } from "@/lib/idempotency";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
