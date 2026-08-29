@@ -280,7 +280,10 @@ fi
 if [ -n "$SNAPSHOT_OUT" ]; then
   step "Generando snapshot de esquema → $SNAPSHOT_OUT"
   mkdir -p "$(dirname "$SNAPSHOT_OUT")"
-  if bash scripts/db/schema-snapshot.sh "$SNAPSHOT_OUT" "$CONTAINER" 2> "$LOGDIR/snapshot.log"; then
+  # Backend local: pg_dump del PATH (ya es 17.x, validado arriba).
+  snap_container=""
+  [ "$BACKEND" = "docker" ] && snap_container="$CONTAINER"
+  if bash scripts/db/schema-snapshot.sh "$SNAPSHOT_OUT" "$snap_container" 2> "$LOGDIR/snapshot.log"; then
     ok "snapshot ($(wc -l < "$SNAPSHOT_OUT") líneas)"
   else
     fail "no se pudo generar el snapshot — ver $LOGDIR/snapshot.log"
