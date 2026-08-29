@@ -49,6 +49,9 @@ const WRAPPED_COVERAGE = [
   "supabase/functions/facturapi-webhook/index.ts",
   "supabase/functions/facturapi-descargar/index.ts",
   "supabase/functions/facturapi-enviar-email/index.ts",
+  // 13.794.0 — Paquete ZIP mensual de CFDI (cierre contable)
+  "supabase/functions/facturapi-descargar-zip/index.ts",
+
   "supabase/functions/facturapi-emitir-nota-credito/index.ts",
   // 13.149.1 — Envío branded de facturas (PDF+XML) al cliente
   "supabase/functions/enviar-factura-email/index.ts",
