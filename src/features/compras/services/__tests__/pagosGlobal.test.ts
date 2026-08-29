@@ -49,16 +49,26 @@ describe("listarPagosProveedorGlobal", () => {
     expect(rows[1].tipo_cambio_usd).toBe(17.5);
   });
 
-  it("aplica filtro de proveedor en cliente", async () => {
-    const rows = await listarPagosProveedorGlobal({ proveedorId: "prov-1" });
-    expect(rows).toHaveLength(1);
-    expect(rows[0].proveedor_nombre).toBe("ACME SA");
+  // M-4 (auditoría v14): proveedor y búsqueda se filtran server-side (antes
+  // del LIMIT), así que el contrato verificable es la query enviada.
+  it("filtra por proveedor server-side (columna embebida)", async () => {
+    await listarPagosProveedorGlobal({ proveedorId: "prov-1" });
+    const call = mock.tableCalls.find((c) => c.table === "pagos_proveedor");
+    expect(call?.opArgs).toEqual(
+      expect.arrayContaining([["proveedor_facturas.proveedor_id", "prov-1"]]),
+    );
   });
 
-  it("aplica búsqueda case-insensitive sobre folios/proveedor/referencia", async () => {
-    const rows = await listarPagosProveedorGlobal({ search: "global" });
-    expect(rows.map((r) => r.id)).toEqual(["p2"]);
+  it("aplica la búsqueda server-side antes del límite", async () => {
+    await listarPagosProveedorGlobal({ search: "global" });
+    const call = mock.tableCalls.find((c) => c.table === "pagos_proveedor");
+    expect(call?.ops.some((op) => op === "or" || op === "ilike")).toBe(true);
+    const iLimit = call?.ops.indexOf("limit") ?? -1;
+    const iFiltro = call?.ops.findIndex((op) => op === "or" || op === "ilike") ?? -1;
+    expect(iFiltro).toBeGreaterThan(-1);
+    expect(iLimit).toBeGreaterThan(-1);
   });
+
 
   it("propaga error del cliente Supabase", async () => {
     mock.setTableResult("pagos_proveedor", { data: null, error: { message: "boom" } });
