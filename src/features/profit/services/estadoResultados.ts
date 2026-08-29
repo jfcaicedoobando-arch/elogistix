@@ -26,7 +26,8 @@ export async function fetchEstadoResultadosMes(p: Params): Promise<EstadoResulta
     .select("id, modo, tipo_cambio_usd, tipo_cambio_eur, estado")
     .gte("eta", desde)
     .lte("eta", hasta)
-    .neq("estado", "Cancelado");
+    .neq("estado", "Cancelado")
+    .is("deleted_at", null);
   if (p.organizationId) q = q.eq("organization_id", p.organizationId);
   const { data: embarques, error: errEmb } = await q;
   if (errEmb) throw errEmb;

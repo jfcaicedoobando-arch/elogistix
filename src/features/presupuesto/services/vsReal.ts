@@ -57,8 +57,10 @@ export async function fetchPresupuestoVsReal(
   // Nota: `liquidaciones_comision` no tiene columna `deleted_at` en el schema.
   // Filtrar por ella causa `column ... does not exist` y rompe el Dashboard Ejecutivo.
   let liqQuery = supabase.from("liquidaciones_comision")
-    .select("total_mxn, periodo").is("deleted_at", null)
+    .select("total_mxn, periodo, estado").is("deleted_at", null)
     .eq("periodo", periodo)
+    // A-8: excluye liquidaciones canceladas del real, igual que CxP.
+    .neq("estado", "Cancelada")
     .limit(LIMITE_FILAS_LIQ);
   if (organizationId) {
     cxpQuery = cxpQuery.eq("organization_id", organizationId);

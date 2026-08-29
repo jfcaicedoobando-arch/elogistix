@@ -7,6 +7,8 @@ export async function fetchEmbarquesCliente(clienteId: string) {
       "id, expediente, modo, tipo, estado, etd, eta, puerto_origen, puerto_destino, aeropuerto_origen, aeropuerto_destino, ciudad_origen, ciudad_destino, cliente_nombre",
     )
     .eq("cliente_id", clienteId)
+    // M-16: sólo embarques vivos en el detalle del cliente.
+    .is("deleted_at", null)
     .order("created_at", { ascending: false });
   if (error) throw error;
   return data ?? [];
