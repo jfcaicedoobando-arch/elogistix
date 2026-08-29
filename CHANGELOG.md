@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.795.0] - 2026-08-29
+### Documentación
+- Segunda pasada de limpieza documental: borrados `docs/ui-audit/99-resumen.md`, `.lovable/tablet-audit-report.md`, `.lovable/audit-erp-completeness.md`, `reports/coverage-report.md` (congelado en v12.64.1), `reports/strict-mode-baseline.md`, `docs/crm-mapeo-hunter.md` y `remotion/CLAUDE.md`.
+- `docs/ola14-replay-mirror-saldo.md` sincronizado con el baseline vivo: 8 entradas (no 14), con la lista de las ya saldadas y el siguiente lote.
+- `.lovable/audit-todos.md`, `docs/ops/purga-env-git.md` y `docs/pre-ads-checklist.md` con fecha de última verificación; `docs/cast-audit.md` marcado como artefacto generado.
+- `CHANGELOG.md` recortado de 2.2 MB a ~380 KB: las entradas `13.0.0` → `13.499.3` se archivaron en `docs/changelog-archive-v13.md`. Planes archivados agrupados por mes en `.lovable/plan/2026-08/`.
+
 ## [13.794.0] - 2026-08-29
 ### Facturación
 - Nuevo "ZIP del mes (PAC)" en Facturas Emitidas → Exportar: descarga un paquete ZIP con el PDF y XML de todas las facturas, notas de crédito y REPs emitidos en el mes, generado del lado de FacturApi (métodos `invoices.*ZipRequest`). Pensado para la entrega mensual al contador. Nueva edge function `facturapi-descargar-zip` (multi-tenant vía `getFacturapiClient`, roles de consulta fiscal, con polling hasta que el PAC termina de ensamblar el paquete).
