@@ -82,8 +82,6 @@ export const LC_CODE_MESSAGES_FINANCIERO: Record<string, string> = {
 
   LC_CXP_TC_REQUERIDO:
     "Falta el tipo de cambio DOF de la factura en moneda extranjera. Captúralo antes de aprobarla.",
-  LC_NC_PROV_TC_REQUERIDO:
-    "Captura el tipo de cambio (MXN por 1 USD/EUR) de la nota de crédito o deja que se use el DOF de su fecha.",
   LC_NC_PROV_MONEDA_NO_CONVERTIBLE:
     "No se puede aplicar una nota de crédito en esa moneda a esta factura. Usa la misma moneda o MXN.",
   LC_CONCEPTOS_AJENOS:
