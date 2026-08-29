@@ -1,6 +1,20 @@
-import { useEffect } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { FormProvider } from "react-hook-form";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
+import { useAuth } from "@/lib/contexts/AuthContext";
+import { useOrgActiva } from "@/hooks/shared/useOrgActiva";
+import { DraftRestoreBanner } from "@/features/cotizacion/components/wizard/DraftRestoreBanner";
+import { useEmbarqueDraftAutosave } from "@/features/embarques/hooks/wizard/useEmbarqueDraftAutosave";
+import {
+  loadEmbarqueDraft,
+  clearEmbarqueDraft,
+  embarqueDraftTieneContenido,
+  EMBARQUE_DRAFT_NO_RESTAURADO,
+} from "@/features/embarques/hooks/wizard/embarqueDraftStorage";
+import { notifyWarning } from "@/lib/ui/appFeedback";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { AlertTriangle } from "lucide-react";
 import { EmbarqueWizardLayout } from "@/features/embarques/components/EmbarqueWizardLayout";
 import { StepDatosGenerales } from "@/features/embarques/components/StepDatosGenerales";
 import { StepDatosRuta } from "@/features/embarques/components/StepDatosRuta";
