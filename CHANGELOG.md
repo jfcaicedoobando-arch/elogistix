@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.792.2] - 2026-08-29
+### CI
+- Corregido warning `react-refresh/only-export-components` en `subtotalCell.tsx`: se extrajo `subtotalesDeFila` a su propio archivo y se actualizaron los imports en `cotizacionesColumns.tsx` y `Cotizaciones.tsx`.
+
 ## [13.792.1] - 2026-08-29
 ### UX de errores
 - Errores de dominio esperados (marcados `expected: true`, p. ej. `BuzonDuplicadoError` al subir una factura ya registrada al buzón CxP) ahora se muestran como aviso amable (toast warning con el mensaje de negocio) en vez del diálogo de error con "Ver detalles" y reporte. `reportCaughtError` también los omite como defensa en profundidad. Cubierto con tests en `appFeedback.test.ts`.
