@@ -30,6 +30,8 @@ export interface CrearEmbarqueRpcInput {
   conceptosVenta: Omit<TablesInsert<'conceptos_venta'>, 'embarque_id'>[];
   conceptosCosto: Omit<TablesInsert<'conceptos_costo'>, 'embarque_id'>[];
   documentos: Omit<TablesInsert<'documentos_embarque'>, 'embarque_id'>[];
+  /** M-11: contenedores hijos, insertados en la MISMA transacción del alta. */
+  contenedores?: ContenedorBorrador[];
   /** Idempotency key (A.3): si llega el mismo id dos veces, no se duplica. */
   requestId?: string;
 }
@@ -43,6 +45,7 @@ export async function crearEmbarqueRpc(input: CrearEmbarqueRpcInput): Promise<{ 
       p_conceptos_costo: toDbJson(input.conceptosCosto),
       p_documentos: toDbJson(input.documentos),
       p_request_id: input.requestId,
+      p_contenedores: toDbJson(input.contenedores ?? []),
     }),
   );
   rpcIdSchema.parse(data); // valida en runtime; lanza ZodError si shape inválido
