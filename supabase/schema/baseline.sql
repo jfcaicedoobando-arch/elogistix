@@ -353,6 +353,24 @@ BEGIN
   END IF;
 END;
 $$;
+CREATE FUNCTION public._assert_fecha_pago_no_previa() RETURNS trigger
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+DECLARE
+  v_emision date;
+BEGIN
+  IF NEW.deleted_at IS NOT NULL OR NEW.fecha_pago IS NULL OR NEW.factura_id IS NULL THEN
+    RETURN NEW;
+  END IF;
+  SELECT f.fecha_emision INTO v_emision FROM public.facturas f WHERE f.id = NEW.factura_id;
+  IF v_emision IS NOT NULL AND NEW.fecha_pago < v_emision THEN
+    RAISE EXCEPTION 'LC_PAGO_FECHA_PREVIA: la fecha del pago (%) no puede ser anterior a la emisión de la factura (%).',
+      NEW.fecha_pago, v_emision USING ERRCODE = '22023';
+  END IF;
+  RETURN NEW;
+END;
+$$;
 CREATE FUNCTION public._assert_internal_reader(p_org uuid) RETURNS void
     LANGUAGE plpgsql STABLE SECURITY DEFINER
     SET search_path TO 'public'
@@ -895,7 +913,7 @@ BEGIN
     JOIN conceptos_venta cv ON cv.embarque_id = e.id AND cv.deleted_at IS NULL
     WHERE cv.moneda::text IN ('USD','EUR')
       AND (
-        (cv.moneda::text = 'USD' AND COALESCE(NULLIF(e.tipo_cambio_usd,0),0) = 0)
+        (cv.moneda::text = 'USD' AND COALESCE(NULLIF(CASE WHEN e.tipo_cambio_usd > 1 THEN e.tipo_cambio_usd END,0),0) = 0)
         OR (cv.moneda::text = 'EUR' AND COALESCE(NULLIF(e.tipo_cambio_eur,0),0) = 0)
       )
     GROUP BY e.id, e.expediente, e.cliente_nombre, e.modo, e.estado, e.eta
@@ -908,7 +926,7 @@ BEGIN
     JOIN conceptos_costo cc ON cc.embarque_id = e.id AND cc.deleted_at IS NULL
     WHERE cc.moneda::text IN ('USD','EUR')
       AND (
-        (cc.moneda::text = 'USD' AND COALESCE(NULLIF(e.tipo_cambio_usd,0),0) = 0)
+        (cc.moneda::text = 'USD' AND COALESCE(NULLIF(CASE WHEN e.tipo_cambio_usd > 1 THEN e.tipo_cambio_usd END,0),0) = 0)
         OR (cc.moneda::text = 'EUR' AND COALESCE(NULLIF(e.tipo_cambio_eur,0),0) = 0)
       )
     GROUP BY e.id, e.expediente, e.cliente_nombre, e.modo, e.estado, e.eta
@@ -943,13 +961,13 @@ BEGIN
   ventas_mxn AS (
     SELECT cv.embarque_id,
            SUM(cv.total * CASE
-             WHEN cv.moneda::text = 'USD' THEN NULLIF(e.tipo_cambio_usd,0)
+             WHEN cv.moneda::text = 'USD' THEN NULLIF(CASE WHEN e.tipo_cambio_usd > 1 THEN e.tipo_cambio_usd END,0)
              WHEN cv.moneda::text = 'EUR' THEN NULLIF(e.tipo_cambio_eur,0)
              ELSE 1
            END) AS total_mxn,
            COUNT(*) AS n,
            bool_or(
-             (cv.moneda::text = 'USD' AND COALESCE(NULLIF(e.tipo_cambio_usd,0),0) = 0)
+             (cv.moneda::text = 'USD' AND COALESCE(NULLIF(CASE WHEN e.tipo_cambio_usd > 1 THEN e.tipo_cambio_usd END,0),0) = 0)
              OR (cv.moneda::text = 'EUR' AND COALESCE(NULLIF(e.tipo_cambio_eur,0),0) = 0)
            ) AS tc_incompleto
     FROM conceptos_venta cv
@@ -960,13 +978,13 @@ BEGIN
   costos_mxn AS (
     SELECT cc.embarque_id,
            SUM(cc.monto * CASE
-             WHEN cc.moneda::text = 'USD' THEN NULLIF(e.tipo_cambio_usd,0)
+             WHEN cc.moneda::text = 'USD' THEN NULLIF(CASE WHEN e.tipo_cambio_usd > 1 THEN e.tipo_cambio_usd END,0)
              WHEN cc.moneda::text = 'EUR' THEN NULLIF(e.tipo_cambio_eur,0)
              ELSE 1
            END) AS total_mxn,
            COUNT(*) AS n,
            bool_or(
-             (cc.moneda::text = 'USD' AND COALESCE(NULLIF(e.tipo_cambio_usd,0),0) = 0)
+             (cc.moneda::text = 'USD' AND COALESCE(NULLIF(CASE WHEN e.tipo_cambio_usd > 1 THEN e.tipo_cambio_usd END,0),0) = 0)
              OR (cc.moneda::text = 'EUR' AND COALESCE(NULLIF(e.tipo_cambio_eur,0),0) = 0)
            ) AS tc_incompleto
     FROM conceptos_costo cc
@@ -8816,25 +8834,43 @@ CREATE FUNCTION public.convertir_monto_pago_a_factura(p_monto numeric, p_moneda_
     LANGUAGE plpgsql IMMUTABLE
     SET search_path TO 'public'
     AS $$
-DECLARE v_tc numeric;
+DECLARE
+  v_tc numeric;
+  v_tc_fact numeric;
+  v_mxn numeric;
 BEGIN
   IF p_monto IS NULL THEN RETURN NULL; END IF;
   IF p_moneda_pago = p_moneda_fact THEN RETURN p_monto; END IF;
+  -- Ruta histórica MXN<->USD: idéntica (usa el TC del pago).
   IF (p_moneda_pago = 'MXN' AND p_moneda_fact = 'USD')
      OR (p_moneda_pago = 'USD' AND p_moneda_fact = 'MXN') THEN
     v_tc := NULLIF(p_tc_pago, 0);
     IF v_tc IS NULL OR v_tc <= 0 THEN
       RAISE EXCEPTION 'LC_PAGO_TC_REQUERIDO: capture el tipo de cambio del pago (%->%)',
-        p_moneda_pago, p_moneda_fact
-        USING ERRCODE = '22023';
+        p_moneda_pago, p_moneda_fact USING ERRCODE = '22023';
     END IF;
     IF p_moneda_pago = 'MXN' THEN RETURN round(p_monto / v_tc, 4);
     ELSE                          RETURN round(p_monto * v_tc, 4);
     END IF;
   END IF;
-  RAISE EXCEPTION 'LC_PAGO_CRUCE_NO_SOPORTADO: conversion % -> % no soportada.',
-    p_moneda_pago, p_moneda_fact
-    USING ERRCODE = '22023';
+  -- M-2: cruces con EUR (EUR<->MXN, EUR<->USD) pivotean en MXN.
+  IF p_moneda_pago = 'MXN' THEN
+    v_mxn := p_monto;
+  ELSE
+    v_tc := NULLIF(p_tc_pago, 0);
+    IF v_tc IS NULL OR v_tc <= 0 THEN
+      RAISE EXCEPTION 'LC_PAGO_TC_REQUERIDO: capture el tipo de cambio del pago (%->%)',
+        p_moneda_pago, p_moneda_fact USING ERRCODE = '22023';
+    END IF;
+    v_mxn := p_monto * v_tc;
+  END IF;
+  IF p_moneda_fact = 'MXN' THEN RETURN round(v_mxn, 4); END IF;
+  v_tc_fact := NULLIF(p_tc_fact, 0);
+  IF v_tc_fact IS NULL OR v_tc_fact <= 0 THEN
+    RAISE EXCEPTION 'LC_PAGO_TC_FACTURA_REQUERIDO: la factura en % necesita tipo de cambio para recibir un pago en %.',
+      p_moneda_fact, p_moneda_pago USING ERRCODE = '22023';
+  END IF;
+  RETURN round(v_mxn / v_tc_fact, 4);
 END;
 $$;
 CREATE TABLE public.facturas (
@@ -14374,10 +14410,27 @@ $$;
 CREATE FUNCTION public.estado_cuenta_agregados(p_cliente_ids uuid[], p_desde date DEFAULT NULL::date, p_hasta date DEFAULT NULL::date) RETURNS jsonb
     LANGUAGE plpgsql STABLE SECURITY DEFINER
     SET search_path TO 'public'
-    AS $$
+    AS $_$
 DECLARE
   v_result jsonb;
+  v_org uuid := public.org_scope();
+  v_es_cliente boolean;
 BEGIN
+  -- M-9 (v14): los usuarios con rol cliente no son miembros de organización
+  -- (org_scope() = NULL) y los KPIs salían en $0. El alcance se deriva de los
+  -- clientes ligados al usuario.
+  IF v_org IS NULL THEN
+    SELECT EXISTS (SELECT 1 FROM public.client_users cu WHERE cu.user_id = auth.uid()) INTO v_es_cliente;
+    IF NOT v_es_cliente THEN
+      RAISE EXCEPTION 'LC_ESTADO_CUENTA_SIN_ACCESO: sin organización activa ni cliente ligado';
+    END IF;
+    IF EXISTS (
+      SELECT 1 FROM unnest(COALESCE(p_cliente_ids, ARRAY[]::uuid[])) AS x(id)
+      WHERE x.id NOT IN (SELECT public.current_user_client_ids())
+    ) THEN
+      RAISE EXCEPTION 'LC_ESTADO_CUENTA_SIN_ACCESO: cliente fuera de tu alcance';
+    END IF;
+  END IF;
   WITH cartera AS (
     SELECT
       f.id,
@@ -14401,7 +14454,7 @@ BEGIN
     WHERE f.deleted_at IS NULL
       AND f.estado IN ('Emitida', 'Parcialmente pagada', 'Vencida', 'Pagada')
       AND f.cliente_id = ANY(p_cliente_ids)
-      AND (f.organization_id = public.org_scope())
+      AND (v_org IS NULL OR f.organization_id = v_org)
       AND (p_desde IS NULL OR f.fecha_emision >= p_desde)
       AND (p_hasta IS NULL OR f.fecha_emision <= p_hasta)
   ),
@@ -14420,7 +14473,7 @@ BEGIN
     WHERE pf.deleted_at IS NULL
       AND f.deleted_at IS NULL
       AND f.cliente_id = ANY(p_cliente_ids)
-      AND (f.organization_id = public.org_scope())
+      AND (v_org IS NULL OR f.organization_id = v_org)
       AND (p_desde IS NULL OR f.fecha_emision >= p_desde)
       AND (p_hasta IS NULL OR f.fecha_emision <= p_hasta)
   )
@@ -14436,7 +14489,7 @@ BEGIN
   ) INTO v_result;
   RETURN v_result;
 END;
-$$;
+$_$;
 CREATE FUNCTION public.estado_cuenta_bancario(p_cuenta_bancaria_id uuid, p_desde date, p_hasta date) RETURNS jsonb
     LANGUAGE plpgsql STABLE SECURITY DEFINER
     SET search_path TO 'public'
@@ -17646,6 +17699,7 @@ BEGIN
   FROM public.facturas f
   WHERE f.cliente_id = p_cliente_id
     AND f.organization_id = v_org
+    AND f.deleted_at IS NULL
     AND f.uuid_fiscal IS NOT NULL
   ORDER BY f.fecha_emision DESC NULLS LAST, f.created_at DESC
   LIMIT 1;
@@ -17657,7 +17711,7 @@ BEGIN
   )
     INTO v_last_cc
   FROM public.factura_envios fe
-  JOIN public.facturas f ON f.id = fe.factura_id
+  JOIN public.facturas f ON f.id = fe.factura_id AND f.deleted_at IS NULL
   WHERE f.cliente_id = p_cliente_id
     AND fe.organization_id = v_org
     AND fe.estado = 'enviado'
@@ -17668,7 +17722,7 @@ BEGIN
   SELECT ARRAY(
     SELECT DISTINCT lower(d->>'email')
     FROM public.factura_envios fe
-    JOIN public.facturas f ON f.id = fe.factura_id
+    JOIN public.facturas f ON f.id = fe.factura_id AND f.deleted_at IS NULL
     CROSS JOIN LATERAL jsonb_array_elements(fe.destinatarios) d
     WHERE f.cliente_id = p_cliente_id
       AND fe.organization_id = v_org
@@ -17676,7 +17730,7 @@ BEGIN
       AND fe.created_at = (
         SELECT max(fe2.created_at)
         FROM public.factura_envios fe2
-        JOIN public.facturas f2 ON f2.id = fe2.factura_id
+        JOIN public.facturas f2 ON f2.id = fe2.factura_id AND f2.deleted_at IS NULL
         WHERE f2.cliente_id = p_cliente_id
           AND fe2.organization_id = v_org
           AND fe2.estado = 'enviado'
@@ -22482,6 +22536,7 @@ DECLARE
   v_folio text;
   v_org_eff uuid;
   v_id uuid;
+  v_saldo_origen numeric;
   v_concepto text := COALESCE(NULLIF(TRIM(p_concepto), ''), 'Traspaso entre cuentas propias');
 BEGIN
   IF p_cuenta_origen_id = p_cuenta_destino_id THEN
@@ -22513,6 +22568,14 @@ BEGIN
     END IF;
     v_tc := p_tipo_cambio;
     v_monto_destino := ROUND(p_monto_origen * v_tc, 2);
+  END IF;
+  -- B-6 (v14): monto + comisión no pueden exceder el saldo de la cuenta origen.
+  v_saldo_origen := public.saldo_cuenta_bancaria(p_cuenta_origen_id);
+  IF v_saldo_origen IS NOT NULL
+     AND ROUND(p_monto_origen, 2) + ROUND(v_comision, 2) > ROUND(v_saldo_origen, 2) + 0.005 THEN
+    RAISE EXCEPTION 'LC_TRASPASO_SALDO_INSUFICIENTE: el saldo de la cuenta origen (%) no cubre el traspaso más la comisión (%).',
+      ROUND(v_saldo_origen, 2), ROUND(p_monto_origen, 2) + ROUND(v_comision, 2)
+      USING ERRCODE = '22023';
   END IF;
   v_org_eff := COALESCE(v_org, v_origen.organization_id);
   v_folio := public.siguiente_folio_traspaso(v_org_eff);
@@ -28487,7 +28550,7 @@ CREATE UNIQUE INDEX uq_bbva_movimientos_hash_dedupe_vivo ON public.bbva_movimien
 CREATE UNIQUE INDEX uq_bbva_movimientos_pago_factura ON public.bbva_movimientos USING btree (pago_factura_id) WHERE ((pago_factura_id IS NOT NULL) AND (deleted_at IS NULL));
 CREATE UNIQUE INDEX uq_bbva_movimientos_pago_proveedor ON public.bbva_movimientos USING btree (pago_proveedor_id) WHERE ((pago_proveedor_id IS NOT NULL) AND (deleted_at IS NULL));
 CREATE UNIQUE INDEX uq_cotizaciones_embarque_id ON public.cotizaciones USING btree (embarque_id) WHERE (embarque_id IS NOT NULL);
-CREATE UNIQUE INDEX uq_cotizaciones_org_folio ON public.cotizaciones USING btree (organization_id, folio);
+CREATE UNIQUE INDEX uq_cotizaciones_org_folio ON public.cotizaciones USING btree (organization_id, folio) WHERE (deleted_at IS NULL);
 CREATE UNIQUE INDEX uq_efe_org_hash_vivo ON public.embarque_facturas_entrantes USING btree (organization_id, archivo_hash) WHERE (deleted_at IS NULL);
 CREATE UNIQUE INDEX uq_efe_org_xml_hash_vivo ON public.embarque_facturas_entrantes USING btree (organization_id, xml_hash) WHERE ((xml_hash IS NOT NULL) AND (deleted_at IS NULL));
 CREATE UNIQUE INDEX uq_efe_uuid_fiscal ON public.embarque_facturas_entrantes USING btree (organization_id, upper(btrim(uuid_fiscal))) WHERE ((uuid_fiscal IS NOT NULL) AND (deleted_at IS NULL));
@@ -28500,7 +28563,7 @@ CREATE UNIQUE INDEX uq_facturas_sustituye_a_viva ON public.facturas USING btree 
 CREATE UNIQUE INDEX uq_liquidaciones_comision_org_vendedora_periodo ON public.liquidaciones_comision USING btree (organization_id, vendedora_id, periodo);
 CREATE UNIQUE INDEX uq_proveedor_contactos_principal ON public.proveedor_contactos USING btree (proveedor_id) WHERE (es_principal AND (deleted_at IS NULL));
 CREATE UNIQUE INDEX uq_refacturaciones_original_abierta ON public.refacturaciones USING btree (factura_original_id) WHERE (estado = 'abierto'::text);
-CREATE UNIQUE INDEX uq_traspasos_folio_org ON public.traspasos_bancarios USING btree (organization_id, folio);
+CREATE UNIQUE INDEX uq_traspasos_folio_org ON public.traspasos_bancarios USING btree (organization_id, folio) WHERE (deleted_at IS NULL);
 CREATE UNIQUE INDEX ux_clientes_email_org ON public.clientes USING btree (organization_id, lower(btrim(email))) WHERE ((deleted_at IS NULL) AND (email IS NOT NULL) AND (btrim(email) <> ''::text));
 CREATE UNIQUE INDEX ux_proveedor_facturas_uuid_fiscal_org ON public.proveedor_facturas USING btree (organization_id, upper(btrim(uuid_fiscal))) WHERE ((uuid_fiscal IS NOT NULL) AND (deleted_at IS NULL));
 CREATE TRIGGER costeo_tarifas_match_agente_org_trg BEFORE INSERT OR UPDATE OF organization_id, agente_id ON public.costeo_tarifas FOR EACH ROW EXECUTE FUNCTION public.costeo_tarifas_match_agente_org();
@@ -28722,6 +28785,7 @@ CREATE TRIGGER trg_org_proveedor_facturas_embarque_id BEFORE INSERT OR UPDATE OF
 CREATE TRIGGER trg_org_proveedor_facturas_proveedor_id BEFORE INSERT OR UPDATE OF proveedor_id, organization_id ON public.proveedor_facturas FOR EACH ROW EXECUTE FUNCTION public._assert_padre_misma_org('proveedor_id', 'proveedores');
 CREATE TRIGGER trg_pago_factura_comision_ins AFTER INSERT OR UPDATE ON public.pagos_factura FOR EACH ROW EXECUTE FUNCTION public.trg_pago_factura_comision();
 CREATE TRIGGER trg_pago_factura_rep_viva BEFORE INSERT OR UPDATE OF uuid_rep, estado_rep, facturapi_rep_id ON public.pagos_factura FOR EACH ROW WHEN (((new.uuid_rep IS NOT NULL) OR (new.facturapi_rep_id IS NOT NULL))) EXECUTE FUNCTION public.assert_factura_viva_para_rep();
+CREATE TRIGGER trg_pago_fecha_no_previa BEFORE INSERT OR UPDATE OF fecha_pago, factura_id ON public.pagos_factura FOR EACH ROW EXECUTE FUNCTION public._assert_fecha_pago_no_previa();
 CREATE TRIGGER trg_pago_proveedor_factura_viva BEFORE INSERT OR UPDATE ON public.pagos_proveedor FOR EACH ROW WHEN ((new.deleted_at IS NULL)) EXECUTE FUNCTION public.assert_proveedor_factura_viva_para_pago();
 CREATE TRIGGER trg_pago_sin_rep_vivo BEFORE UPDATE OF deleted_at ON public.pagos_factura FOR EACH ROW WHEN (((new.deleted_at IS NOT NULL) AND (old.deleted_at IS NULL))) EXECUTE FUNCTION public.assert_pago_sin_rep_vivo();
 CREATE TRIGGER trg_pago_sin_rep_vivo_delete BEFORE DELETE ON public.pagos_factura FOR EACH ROW EXECUTE FUNCTION public.assert_pago_sin_rep_vivo_delete();
@@ -29879,6 +29943,8 @@ GRANT ALL ON FUNCTION public._assert_email_unico_org() TO service_role;
 REVOKE ALL ON FUNCTION public._assert_facturapi_admin(p_org_id uuid) FROM PUBLIC;
 GRANT ALL ON FUNCTION public._assert_facturapi_admin(p_org_id uuid) TO authenticated;
 GRANT ALL ON FUNCTION public._assert_facturapi_admin(p_org_id uuid) TO service_role;
+REVOKE ALL ON FUNCTION public._assert_fecha_pago_no_previa() FROM PUBLIC;
+GRANT ALL ON FUNCTION public._assert_fecha_pago_no_previa() TO service_role;
 REVOKE ALL ON FUNCTION public._assert_internal_reader(p_org uuid) FROM PUBLIC;
 GRANT ALL ON FUNCTION public._assert_internal_reader(p_org uuid) TO authenticated;
 GRANT ALL ON FUNCTION public._assert_internal_reader(p_org uuid) TO service_role;
