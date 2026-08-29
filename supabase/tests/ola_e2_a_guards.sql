@@ -97,21 +97,23 @@ SELECT 'ola_e2_a_guards OK' AS resultado;
 
 -- ==========================================================================
 -- Ola E2 · Sub-ola B — C9: costos de cotización por rol y propiedad.
--- Decisión vigente (v13.796.0): gerencia, finanzas y ventas ven costos; el rol
--- `vendedor` está incluido globalmente y `_propia` se conserva como candado
--- adicional para escenarios de propiedad.
+-- La lista de roles NO se repite aquí: viene de
+-- pg_temp.decision_roles_costos_cotizacion() en _decisiones_negocio.sql.
 -- ==========================================================================
 DO $$
-DECLARE v_src text; v_pol text;
+DECLARE v_src text; v_pol text; v_rol text;
 BEGIN
   SELECT prosrc INTO v_src FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace
   WHERE n.nspname = 'public' AND p.proname = 'puede_ver_costos_cotizacion';
   IF v_src IS NULL OR v_src NOT LIKE '%has_any_role_efectivo%' THEN
     RAISE EXCEPTION 'C9 REGRESIÓN: puede_ver_costos_cotizacion debe resolverse por roles efectivos';
   END IF;
-  IF v_src NOT LIKE '%''vendedor''%' THEN
-    RAISE EXCEPTION 'C9 REGRESIÓN: puede_ver_costos_cotizacion debe incluir el rol vendedor (ventas ve costos)';
-  END IF;
+  FOREACH v_rol IN ARRAY pg_temp.decision_roles_costos_cotizacion() LOOP
+    IF v_src NOT LIKE '%''' || v_rol || '''%' THEN
+      RAISE EXCEPTION 'C9 REGRESIÓN: puede_ver_costos_cotizacion debe incluir el rol % (ver supabase/tests/_decisiones_negocio.sql)', v_rol;
+    END IF;
+  END LOOP;
+
 
   IF NOT EXISTS (
     SELECT 1 FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace
