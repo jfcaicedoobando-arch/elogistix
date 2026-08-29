@@ -1,9 +1,15 @@
 /**
  * Listado global de notas de crédito de proveedor (Ola E — /compras/notas-credito).
+ *
+ * A-9/M-4 (auditoría v14): `organizationId` se aplica explícito como
+ * defensa en profundidad y `proveedorId`/`search` se resuelven server-side
+ * antes del `.limit()` para no perder resultados en silencio.
  */
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
 import { CAP_POSTGREST } from "@/constants/queryCaps";
+import { assertNotTruncated } from "@/lib/supabase/assertNotTruncated";
+import { resolverFacturaIdsPorBusqueda } from "./facturaSearchHelper";
 
 export interface NotaCreditoRow {
   id: string;
@@ -32,6 +38,7 @@ export interface ListarNotasFiltros {
 
 export async function listarNotasCreditoGlobal(
   filtros: ListarNotasFiltros = {},
+  organizationId?: string | null,
 ): Promise<NotaCreditoRow[]> {
   let q = supabase
     .from("proveedor_notas_credito")
@@ -49,13 +56,25 @@ export async function listarNotasCreditoGlobal(
     .order("fecha", { ascending: false })
     .limit(CAP_POSTGREST);
 
+  if (organizationId) q = q.eq("organization_id", organizationId);
   if (filtros.desde) q = q.gte("fecha", filtros.desde);
   if (filtros.hasta) q = q.lte("fecha", filtros.hasta);
   if (filtros.estado) q = q.eq("estado", filtros.estado);
   if (filtros.moneda) q = q.eq("moneda", filtros.moneda);
+  if (filtros.proveedorId) q = q.eq("proveedor_facturas.proveedor_id", filtros.proveedorId);
+
+  if (filtros.search) {
+    const term = filtros.search.trim();
+    const like = `%${term}%`;
+    const ids = await resolverFacturaIdsPorBusqueda(term);
+    q = ids.length > 0
+      ? q.or(`folio_nc.ilike.${like},descripcion.ilike.${like},proveedor_factura_id.in.(${ids.join(",")})`)
+      : q.or(`folio_nc.ilike.${like},descripcion.ilike.${like}`);
+  }
 
   const { data, error } = await q;
   if (error) throw error;
+  assertNotTruncated(data, CAP_POSTGREST, "compras.notasCreditoGlobal");
 
   // SAFE-CAST: relación anidada.
   const raw = (data ?? []) as unknown as Array<{
@@ -76,7 +95,7 @@ export async function listarNotasCreditoGlobal(
     } | null;
   }>;
 
-  let rows: NotaCreditoRow[] = raw.map((r) => ({
+  return raw.map((r) => ({
     id: r.id,
     folio_nc: r.folio_nc,
     fecha: r.fecha,
@@ -91,17 +110,4 @@ export async function listarNotasCreditoGlobal(
     proveedor_id: r.proveedor_facturas?.proveedor_id ?? null,
     proveedor_nombre: r.proveedor_facturas?.proveedores?.nombre ?? null,
   }));
-
-  if (filtros.proveedorId) {
-    rows = rows.filter((r) => r.proveedor_id === filtros.proveedorId);
-  }
-  if (filtros.search) {
-    const s = filtros.search.trim().toLowerCase();
-    rows = rows.filter((r) =>
-      [r.folio_nc, r.factura_folio_interno, r.factura_folio_proveedor, r.proveedor_nombre, r.descripcion]
-        .filter(Boolean)
-        .some((v) => String(v).toLowerCase().includes(s)),
-    );
-  }
-  return rows;
 }

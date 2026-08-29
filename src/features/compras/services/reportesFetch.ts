@@ -14,8 +14,12 @@ export interface FacturaLite {
   tipo_cambio_usd: number | null;
 }
 
-export async function fetchFacturasReporte(desde: string, hasta: string): Promise<FacturaLite[]> {
-  const { data, error } = await supabase
+export async function fetchFacturasReporte(
+  desde: string,
+  hasta: string,
+  organizationId?: string | null,
+): Promise<FacturaLite[]> {
+  let q = supabase
     .from("proveedor_facturas")
     .select("id, fecha_emision, total, moneda, proveedor_id, tipo_cambio_usd, proveedores(nombre)")
     .is("deleted_at", null)
@@ -24,6 +28,8 @@ export async function fetchFacturasReporte(desde: string, hasta: string): Promis
     .lte("fecha_emision", hasta)
     .order("fecha_emision", { ascending: true })
     .limit(CAP_REPORTE);
+  if (organizationId) q = q.eq("organization_id", organizationId);
+  const { data, error } = await q;
   if (error) throw error;
   // SAFE-CAST: PostgREST devuelve `proveedores` como relación anidada.
   const raw = (data ?? []) as unknown as Array<{

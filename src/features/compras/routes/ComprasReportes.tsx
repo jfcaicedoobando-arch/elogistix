@@ -4,6 +4,7 @@
  * proveedor filtrado por fechas de emisión.
  */
 import { useMemo, useState } from "react";
+import { useOrgFilter } from "@/hooks/shared/useOrgFilter";
 import { useQuery } from "@tanstack/react-query";
 import { compras } from "../queryKeys";
 import {
@@ -41,10 +42,11 @@ function today(): string { return todayLocalISO(); }
 export default function ComprasReportes() {
   const [desde, setDesde] = useState<string>(firstOfYear());
   const [hasta, setHasta] = useState<string>(today());
+  const { organizationId } = useOrgFilter();
 
   const { data: rows = [], isLoading, isError, refetch } = useQuery({
-    queryKey: compras.reportes({ desde, hasta }),
-    queryFn: () => fetchFacturasReporte(desde, hasta),
+    queryKey: [...compras.reportes({ desde, hasta }), organizationId],
+    queryFn: () => fetchFacturasReporte(desde, hasta, organizationId),
   });
 
   const { data: rates } = useQuery({
