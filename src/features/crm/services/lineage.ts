@@ -38,6 +38,7 @@ export async function fetchLeadLineage(leadId: string): Promise<LeadOportunidadR
       .from("crm_oportunidades")
       .select("id, nombre, monto_estimado, moneda, probabilidad, fecha_estimada_cierre")
       .eq("lead_id", leadId)
+      .is("deleted_at", null)
       .order("created_at", { ascending: false }),
     [],
   );

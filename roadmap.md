@@ -16,5 +16,5 @@ N9/F6/F7, M6, N-F4, N13-res, M7-res, L4-res, N-F2.
 - [ ] Generador automático de `_ci_service_role_only.sql` desde esquema real (script + integración CI)
 - [x] Ola 1 v14 (C-1 doble IVA, C-2/A-10/M-6 snapshots)
 - [x] Ola 2 v14: org_scope en KPIs (A-2/M-5), org explícita en Compras (A-9), filtros server-side (M-4)
-- [x] Ola 3 v14 (parcial): A-3, A-8, A-11, M-3, M-16 · pendientes A-4, M-17, B-1
+- [x] Ola 3 v14 completa: A-3, A-4, A-8, A-11, M-3, M-16, M-17, B-1 + bajos B-13/B-14/B-15
 - [x] Typecheck del preview en verde (fixtures TopProveedorRow con eur)
