@@ -58,8 +58,13 @@ export const FINANCE_VIEWERS: readonly AppRole[] = [
  *
  * Espejo en la base de datos: `public.puede_ver_costos_cotizacion()`; al
  * cambiar esta lista hay que cambiar también esa función.
+ *
+ * Se copia la lista (no se re-exporta el mismo binding) para que los dos
+ * conceptos —"ve finanzas" y "ve costos"— sigan siendo nombres distintos si en
+ * el futuro divergen, y para no dejar un export duplicado (knip `duplicates`).
  */
-export const COST_VIEWERS: readonly AppRole[] = FINANCE_VIEWERS;
+export const COST_VIEWERS: readonly AppRole[] = [...FINANCE_VIEWERS];
+
 
 /**
  * C9 — ¿este usuario ve costo/margen de una cotización?
