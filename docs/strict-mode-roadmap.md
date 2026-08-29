@@ -1,23 +1,28 @@
-# Strict Mode Roadmap
+# Strict Mode Roadmap — CERRADO
 
-Plan para activar `strictNullChecks` (y eventualmente `strict: true`) en
-TypeScript sin romper el build.
+> ✅ **Objetivo cumplido.** Documento histórico: conserva el plan de 4 fases que
+> llevó al proyecto a TypeScript estricto. Actualizado el 2026-08-29 (v13.793.0).
 
-## Estado actual
+## Estado actual (verificado contra `tsconfig.app.json`)
 
-- `strict`, `strictNullChecks`, `noImplicitAny` → **off** en `tsconfig.app.json`.
-- `noUnusedLocals`, `noUnusedParameters`, `noFallthroughCasesInSwitch` → **on** (PR-3).
-- ~720 `as` casts (refresh 11.59.1). Distribución: 37 HIGH+CRITICAL (~5.1 %),
-  411 MEDIUM (~57 %, mayoría en mappers DB↔dominio y servicios nuevos del
-  Bloque A), resto SAFE/LOW. El crecimiento vs. 458 (mayo 8) viene de los
-  servicios migrados desde hooks que ahora portan los casts de Tables<>.
+- `strict: true` ✅ · `strictNullChecks: true` ✅ · `noImplicitAny` (incluido en
+  `strict`) ✅ · `noUnusedLocals`, `noUnusedParameters`,
+  `noFallthroughCasesInSwitch` ✅.
+- `tsconfig.json` también fija `strictNullChecks: true`.
+- Auditoría de casts vigente: **3226 `as` casts · 0 HIGH · 0 CRITICAL**
+  (`bun scripts/audit-casts.ts` → `docs/cast-audit.md`).
+- CI falla si aparece un cast HIGH/CRITICAL sin marcador `// SAFE-CAST:`.
 
-## Por qué no activamos `strictNullChecks` ya
+Lo único que queda vivo de este documento es la **política para nuevos casts**
+(más abajo); el resto es registro histórico de las fases A–E.
 
-Activarlo hoy reportaría ~800 errores reales. La mayoría no son bugs — son
-casos donde un cast `as X` está enmascarando un valor potencialmente nulo o
-indefinido. Hay que **bajar la deuda primero** para que el flag sea útil y no
-una sopa de errores que invitan a más casts.
+## Por qué no activamos `strictNullChecks` de golpe (histórico)
+
+Activarlo en su momento reportaría ~800 errores reales. La mayoría no eran bugs
+— eran casos donde un cast `as X` enmascaraba un valor potencialmente nulo o
+indefinido. Se bajó la deuda primero para que el flag fuera útil y no una sopa
+de errores que invitan a más casts.
+
 
 ## Roadmap (4 fases)
 
