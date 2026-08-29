@@ -13,7 +13,8 @@ import { Hint } from "@/components/shared/Hint";
 import { Trash2, Copy } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { normalizarSubtotalesMxn } from "@/features/cotizacion/domain/subtotalesPorMoneda";
-import { SubtotalCotizacionCell, subtotalesDeFila } from "./columnsParts/subtotalCell";
+import { SubtotalCotizacionCell } from "./columnsParts/subtotalCell";
+import { subtotalesDeFila } from "./columnsParts/subtotalesDeFila";
 import { COL_W } from "@/components/shared/dataTable/columnWidths";
 
 export interface BuildParams {
