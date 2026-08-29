@@ -1,5 +1,18 @@
 # Changelog
 
+## [13.796.0] - 2026-08-29
+### Finanzas · Ronda v3 (remediación selectiva de auditoría)
+- **F1 (crítico)**: la devolución de anticipos a proveedor fallaba siempre — el abono en `bbva_movimientos` se insertaba sin `hash_dedupe` (NOT NULL) y toda la operación hacía rollback. Ya registra correctamente.
+- **F2**: la devolución de anticipo ahora es sólo por el saldo completo (decisión de negocio): una parcial hacía desaparecer el remanente sin asiento contable. El monto queda fijo en el diálogo y la RPC lo exige (`LC_ANTICIPO_DEVOLUCION_TOTAL`).
+- **F3**: la aplicación de anticipos en EUR y en cruce MXN→factura USD ya no se bloquea: se valúa con la paridad DOF del día de la aplicación (el anticipo MXN no guarda paridad histórica). El guard de pagos respeta la valuación cuando el pago nace de un anticipo.
+- **F4**: los candados `guard_pago_proveedor` y `guard_proveedor_factura_total` sumaban notas de crédito en crudo sin convertir moneda; ahora usan la conversión canónica y ya no dejan pasar sobrepagos cuando la NC está en otra moneda.
+- **F5**: nuevo candado `trg_nc_prov_tope_saldo`: una nota de crédito de proveedor aplicada ya no puede exceder el saldo real de la factura (`LC_NC_PROV_EXCEDE_SALDO`).
+- **N18**: `duplicar_factura_para_refacturacion` bloquea el caso con `FOR UPDATE`: un doble clic ya no genera dos borradores.
+- **N22**: el CHECK de `bbva_movimientos` pasa de `<= 1` a `= 1`: un movimiento no puede quedar con cargo y abono en cero (movimiento fantasma).
+- **M3**: índice único `ux_clientes_email_org`: ya no pueden existir dos clientes activos con el mismo correo en una organización. Se limpiaron los 2 duplicados históricos de la org demo (el registro más antiguo quedó con marcador `duplicado-…@pendiente.local`).
+- **C9**: costos y márgenes de cotizaciones ahora los ven gerencia, finanzas y ventas (todos); se elimina la regla de "sólo cotizaciones propias" del vendedor. Alineados `puede_ver_costos_cotizacion()` (SQL), `COST_VIEWERS` y tests.
+- Seguridad: `REVOKE EXECUTE` a `anon`/`authenticated` en el nuevo trigger `_assert_nc_prov_no_excede_saldo` (lint 0028).
+
 ## [13.795.0] - 2026-08-29
 ### Documentación
 - Segunda pasada de limpieza documental: borrados `docs/ui-audit/99-resumen.md`, `.lovable/tablet-audit-report.md`, `.lovable/audit-erp-completeness.md`, `reports/coverage-report.md` (congelado en v12.64.1), `reports/strict-mode-baseline.md`, `docs/crm-mapeo-hunter.md` y `remotion/CLAUDE.md`.

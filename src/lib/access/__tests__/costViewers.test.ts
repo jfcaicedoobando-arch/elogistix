@@ -7,45 +7,48 @@ import {
   puedeVerCostosCotizacion,
 } from "@/lib/access/permissionMatrix";
 
-/** QA B-07 — los roles comerciales no deben ver costo/utilidad/margen. */
-describe("COST_VIEWERS (QA B-07)", () => {
-  it("excluye vendedor y ejecutivo_pricing", () => {
-    expect(hasRole(COST_VIEWERS, "vendedor")).toBe(false);
-    expect(hasRole(COST_VIEWERS, "ejecutivo_pricing")).toBe(false);
+/** C9 (decisión 2026-08-29) — gerencia, finanzas y ventas: TODOS ven costos. */
+describe("COST_VIEWERS (C9)", () => {
+  it("incluye ventas (vendedor y ejecutivo_pricing)", () => {
+    expect(hasRole(COST_VIEWERS, "vendedor")).toBe(true);
+    expect(hasRole(COST_VIEWERS, "ejecutivo_pricing")).toBe(true);
   });
 
-  it("mantiene finanzas, dirección y administradores", () => {
-    for (const rol of ["super_admin", "admin_org", "admin", "contador", "tesorero", "gerente_operaciones"] as const) {
+  it("mantiene finanzas, gerencia y administradores", () => {
+    for (const rol of [
+      "super_admin",
+      "admin_org",
+      "admin",
+      "contador",
+      "tesorero",
+      "gerente_operaciones",
+      "gerente_comercial",
+      "gerente_visor",
+    ] as const) {
       expect(hasRole(COST_VIEWERS, rol)).toBe(true);
     }
   });
 
-  it("es un subconjunto de FINANCE_VIEWERS", () => {
-    for (const rol of COST_VIEWERS) {
-      expect(FINANCE_VIEWERS).toContain(rol);
-    }
-    expect(COST_VIEWERS.length).toBeLessThan(FINANCE_VIEWERS.length);
+  it("es exactamente FINANCE_VIEWERS", () => {
+    expect(COST_VIEWERS).toEqual(FINANCE_VIEWERS);
   });
 });
 
-/** C9 (Ola E2 · B) — el vendedor sólo ve costos de SUS cotizaciones. */
 describe("puedeVerCostosCotizacion (C9)", () => {
-  it("permite al vendedor ver costos de su propia cotización", () => {
+  it("el vendedor ve costos de cualquier cotización, propia o ajena", () => {
     expect(puedeVerCostosCotizacion("vendedor", true)).toBe(true);
+    expect(puedeVerCostosCotizacion("vendedor", false)).toBe(true);
   });
 
-  it("niega al vendedor los costos de una cotización ajena", () => {
-    expect(puedeVerCostosCotizacion("vendedor", false)).toBe(false);
-  });
-
-  it("no abre la puerta a ejecutivo_pricing por ser dueño", () => {
-    expect(puedeVerCostosCotizacion("ejecutivo_pricing", true)).toBe(false);
-  });
-
-  it("los roles de COST_VIEWERS ven costos de cualquier cotización", () => {
+  it("los roles de finanzas y gerencia ven costos de cualquier cotización", () => {
     for (const rol of ["admin", "contador", "gerente_operaciones"] as const) {
       expect(puedeVerCostosCotizacion(rol, false)).toBe(true);
     }
+  });
+
+  it("los roles operativos siguen sin ver costos", () => {
+    expect(puedeVerCostosCotizacion("operador", true)).toBe(false);
+    expect(puedeVerCostosCotizacion("coordinador_logistico", true)).toBe(false);
   });
 
   it("sin rol no ve costos", () => {
