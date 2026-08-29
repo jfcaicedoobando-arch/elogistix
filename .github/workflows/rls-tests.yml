@@ -212,6 +212,15 @@ jobs:
         if: steps.snapshot-cache.outputs.cache-hit != 'true'
         run: $PSQL -f supabase/tests/rls/_ci_check_service_role_only.sql
 
+      - name: "Lista service_role-only sincronizada con el esquema"
+        # El archivo _ci_service_role_only.sql es GENERADO por
+        # scripts/db/gen-service-role-only.sh a partir del esquema real
+        # (pg_proc + privilegios EXECUTE). Este paso lo regenera en memoria
+        # y falla si la PR no lo actualizó, para que la lista nunca se
+        # desincronice del esquema.
+        if: steps.snapshot-cache.outputs.cache-hit != 'true'
+        run: scripts/db/gen-service-role-only.sh --check
+
       - name: Post-migrate (drop auth.users FKs para CI)
         if: steps.snapshot-cache.outputs.cache-hit != 'true'
         run: $PSQL -f supabase/tests/rls/_ci_post_migrate.sql
