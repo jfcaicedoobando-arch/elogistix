@@ -1,8 +1,8 @@
 /**
  * facturapiClient — Devuelve una instancia del SDK oficial `facturapi`
- * (v4.18.0) ya configurada para la organización dada.
+ * (v4.20.0) ya configurada para la organización dada.
  *
- * Carga el SDK vía import ESTÁTICO `npm:facturapi@4.18.0` y cachea el cliente
+ * Carga el SDK vía import ESTÁTICO `npm:facturapi@4.20.0` y cachea el cliente
  * por API key para evitar reinstanciar en invocaciones encadenadas dentro de
  * la misma instancia del runtime.
  *
@@ -12,15 +12,18 @@
  * Sólo este módulo puede importar `npm:facturapi`. Las edge functions deben
  * usar `getFacturapiClient(supabase, organizationId)`.
  *
+ * v13.794.0: bump 4.18.0 → 4.20.0 (métodos `invoices.*ZipRequest` para la
+ * descarga ZIP mensual y fix de tipado `property_tax_account` como arreglo).
+ *
  * NOTA: antes usábamos `import()` dinámico con la spec en variable
- * (`const sdkSpec = "npm:facturapi@4.18.0"; import(sdkSpec)`). Deno Edge
+ * (`const sdkSpec = "npm:facturapi@4.20.0"; import(sdkSpec)`). Deno Edge
  * Runtime construye el grafo de paquetes npm SOLO a partir de imports
  * estáticos: al ser dinámico, el paquete no quedaba registrado y el boot
- * fallaba con `Could not find constraint 'facturapi@4.18.0' in the list of
+ * fallaba con `Could not find constraint 'facturapi@4.20.0' in the list of
  * packages.`, tirando todo request con "Edge Function returned a non-2xx".
  */
 // @ts-ignore -- el paquete `facturapi` no publica typings compatibles con Deno.
-import FacturapiDefault from "npm:facturapi@4.18.0";
+import FacturapiDefault from "npm:facturapi@4.20.0";
 import { resolveFacturapiKey, type FacturapiResolveResult, type SupabaseLike } from "./facturapiAuth.ts";
 
 // El SDK `facturapi` no exporta tipos accesibles desde el typecheck de
