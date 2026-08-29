@@ -65,6 +65,8 @@ entrada quedó obsoleta. No se autogenera a propósito: derivarla del esquema
 haría que una función que pierde su `REVOKE` desapareciera de la lista sola y
 el candado se pondría verde ocultando la regresión.
 | `../_catalogo_columnas_internas.sql` | Columnas internas de `embarques` (PnL/PII) | `_ci_post_migrate.sql`, `fix2_embarques_interno_y_nc.sql`, `embarques_listado_sin_select_estrella.sql` |
+| `../_decisiones_negocio.sql` | Decisiones de negocio que los guards congelan (roles con acceso a costos, tolerancia DOF, devolución total) | `ola_e2_a_guards.sql` |
+
 
 Prohibido copiar estas listas dentro de una suite: si se duplican, una columna
 o tabla nueva queda auditada en un archivo y ciega en el otro.
