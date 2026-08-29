@@ -2,7 +2,7 @@
 -- Helper privado (Bloque 3.2 · god-function split) usado por
 -- crear_embarque_borrador_core para replicar cotizacion_costos y
 -- conceptos_venta en el embarque recién creado.
--- Regenerada 1:1 desde supabase/migrations/20260819100000_fix_proveedor_conceptos_costo.sql
+-- Regenerada 1:1 desde supabase/migrations/20260904000100_ola1_v14_c1_doble_iva_c2_snapshots.sql
 -- (resolución de proveedor por nombre/alias + prorrateo con cuadre de centavos).
 -- Ver supabase/schema/README.md.
 
@@ -19,6 +19,7 @@ DECLARE
   v_cant  numeric;
   v_total numeric;
   v_pu    numeric;
+  v_tasa  numeric;
   v_base  numeric;
   v_n     integer;
   v_parte numeric;
@@ -83,21 +84,27 @@ BEGIN
   IF jsonb_typeof(p_conceptos_venta) = 'array' THEN
     FOR v_venta IN SELECT * FROM jsonb_array_elements(p_conceptos_venta) LOOP
       IF COALESCE(trim(v_venta->>'descripcion'), '') <> '' THEN
-        v_cant  := GREATEST(COALESCE((v_venta->>'cantidad')::numeric, 1), 1);
-        v_total := ROUND(COALESCE((v_venta->>'total')::numeric, 0), 2);
-        v_pu    := COALESCE((v_venta->>'precio_unitario')::numeric, 0);
+        v_cant := GREATEST(COALESCE((v_venta->>'cantidad')::numeric, 1), 1);
+        v_pu   := COALESCE((v_venta->>'precio_unitario')::numeric, 0);
+        v_tasa := GREATEST(COALESCE((v_venta->>'tasa_iva_aplicada')::numeric, 0), 0);
 
-        IF ABS(v_total - ROUND(v_cant::numeric * v_pu, 2)) > 0.01 THEN
-          v_pu := ROUND(v_total / v_cant::numeric, 6);
+        -- C-1: la base gravable se DERIVA del unitario capturado. Fallback sólo
+        -- si no hay unitario: se desinfla el `total` (que viene con IVA).
+        IF v_pu = 0 THEN
+          v_total := ROUND(COALESCE((v_venta->>'total')::numeric, 0) / (1 + v_tasa), 2);
+          v_pu    := ROUND(v_total / v_cant, 6);
         END IF;
+        v_total := ROUND(v_cant * v_pu, 2);
 
         INSERT INTO public.conceptos_venta (
-          embarque_id, descripcion, cantidad, precio_unitario, moneda, aplica_iva, total, organization_id
+          embarque_id, descripcion, cantidad, precio_unitario, moneda,
+          aplica_iva, tasa_iva_aplicada, total, organization_id
         )
         VALUES (
           p_embarque_id, v_venta->>'descripcion', v_cant, v_pu,
           CASE WHEN v_venta->>'moneda' = 'USD' THEN 'USD'::moneda ELSE 'MXN'::moneda END,
-          COALESCE((v_venta->>'aplica_iva')::boolean, false),
+          COALESCE((v_venta->>'aplica_iva')::boolean, v_tasa > 0),
+          v_tasa,
           v_total, p_org
         );
       END IF;
@@ -106,6 +113,5 @@ BEGIN
 END;
 $$;
 
--- Permisos (1:1 con la migración 20260819100000):
 REVOKE ALL ON FUNCTION public._crear_embarque_replicar_conceptos(uuid, uuid, uuid, uuid[], jsonb) FROM PUBLIC, anon, authenticated;
 GRANT EXECUTE ON FUNCTION public._crear_embarque_replicar_conceptos(uuid, uuid, uuid, uuid[], jsonb) TO service_role;
