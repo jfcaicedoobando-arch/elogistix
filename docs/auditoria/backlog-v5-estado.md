@@ -59,5 +59,11 @@ El backlog v5 afirma cosas que hoy no son ciertas:
 | C3-res | Cerrado: `proveedor_notas_credito` no tiene `proveedor_id`; el candado por factura es suficiente. |
 | C9 | Cerrado: paridad SQL/TS sobre `created_by`; expuesto `canViewCostsOfCotizacion`. |
 | L3 | Cerrado: la importación reporta el rango de filas no guardadas. |
-| N13 | Abierto por decisión de producto (devolución de anticipo / saldo a favor). |
-| N14 | Abierto: anticipos en EUR (requiere paridad EUR/MXN oficial). |
+| N13 | **Cerrado (v13.791.0)**: existe la RPC `devolver_anticipo_proveedor` (devolución simple que deja el saldo a favor en cero) + diálogo `DevolverAnticipoDialog` con su hook `useDevolverAnticipoForm`. |
+| N14 | Abierto: anticipos en EUR (requiere paridad EUR/MXN oficial). Registrado como riesgo de alcance, no como bug. |
+
+## Estado consolidado (v13.793.0)
+
+**44 de 45 hallazgos cerrados.** Único abierto: **N14** (anticipos en EUR),
+pendiente de decisión de producto sobre la fuente oficial de paridad EUR/MXN.
+
