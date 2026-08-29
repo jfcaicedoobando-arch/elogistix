@@ -5,6 +5,8 @@
 import { useEffect, useMemo, useState } from "react";
 import type { Tables } from "@/integrations/supabase/types";
 import { roundMoney } from "@/lib/financial/financialUtils";
+import { parInvolucraMxn, validarTcMxn } from "@/lib/financial/tcBanda";
+
 import { hoyMx } from "@/lib/date/mx";
 import { useTcDofPorFecha } from "@/features/catalogos/hooks/useTcDofPorFecha";
 import { multiplicadorOrigenDestino, parTc, type MonedaTc } from "@/features/tesoreria/domain/tcPar";
@@ -96,8 +98,16 @@ export function useTraspasoForm(open: boolean, cuentas: Cuenta[]) {
     if (!mismoMoneda && (!state.tcQuote || state.tcQuote <= 0)) {
       return "Captura el tipo de cambio para cuentas de distinta moneda.";
     }
+    // M-14: si el par incluye MXN, el T/C implícito en pesos por divisa debe
+    // caer en banda (5–40). Atrapa dedazos tipo 1.84 o 184 pesos por dólar.
+    if (!mismoMoneda && par && parInvolucraMxn(par.base, par.quote) && state.tcQuote > 0) {
+      const mxnPorDivisa = par.quote === "MXN" ? state.tcQuote : 1 / state.tcQuote;
+      const fueraDeBanda = validarTcMxn(roundMoney(mxnPorDivisa));
+      if (fueraDeBanda) return fueraDeBanda;
+    }
     return null;
-  }, [state, origen, destino, mismoMoneda]);
+  }, [state, origen, destino, mismoMoneda, par]);
+
 
   return {
     state,

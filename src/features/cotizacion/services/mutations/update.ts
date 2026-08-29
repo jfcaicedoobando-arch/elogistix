@@ -37,11 +37,16 @@ export async function updateCotizacion(
     updatePayload.incoterm = data.incoterm as TablesInsert<"cotizaciones">["incoterm"];
   if (data.moneda) updatePayload.moneda = data.moneda as TablesInsert<"cotizaciones">["moneda"];
   let query = supabase.from("cotizaciones").update(updatePayload).eq("id", id);
+  // B-8: `null` es un valor legítimo de `updated_at` (fila nunca modificada) y
+  // debe seguir protegiendo. Sólo `undefined` significa "sin bloqueo optimista".
+  const conGuard = expectedUpdatedAt !== undefined;
   if (expectedUpdatedAt) query = query.eq("updated_at", expectedUpdatedAt);
+  else if (conGuard) query = query.is("updated_at", null);
   const { data: filas, error } = await query.select("updated_at");
   if (error) throw error;
   if (!filas || filas.length === 0) {
-    if (expectedUpdatedAt) throw conflictoConcurrenciaError();
+    if (conGuard) throw conflictoConcurrenciaError();
+
     throw new Error(
       "No se guardaron los cambios de la cotización: no tienes permiso o la cotización ya no existe.",
     );

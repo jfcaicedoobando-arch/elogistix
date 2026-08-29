@@ -11,6 +11,8 @@ import { useCrearFacturaManual } from "@/features/facturacion/hooks/useCrearFact
 import { useClientesFiscalOpts, type ClienteFiscalOpt } from "@/features/facturacion/hooks/useClientesFiscalOpts";
 import { calcularTotalMxn } from "@/features/facturacion/utils/calcularTotalMxn";
 import { sumarSubtotales } from "@/lib/financial/financialUtils";
+import { validarTcMxn } from "@/lib/financial/tcBanda";
+
 import { useValidarLimiteCredito, registrarExcesoCredito, type ValidarLimiteResultado } from "@/features/cliente/hooks/useValidarLimiteCredito";
 import { todayLocalISO } from "@/lib/date/today";
 import { notifyError } from "@/lib/ui/appFeedback";
@@ -101,9 +103,13 @@ export function useFacturaManualForm(open: boolean, onClose?: () => void) {
   const totalEstimado = sumarSubtotales(conceptos, (c) => ({
     cantidad: Number(c.cantidad), precioUnitario: Number(c.precio_unitario),
   }));
-  const puedeGuardar = !!cliente && conceptosValidos && fiscal.tipoCambio > 0 && totalEstimado > 0;
+  // M-14: banda de plausibilidad del T/C (sólo cuando la factura no es en MXN).
+  const tcFueraDeBanda = fiscal.moneda === "MXN" ? null : validarTcMxn(fiscal.tipoCambio);
+  const puedeGuardar =
+    !!cliente && conceptosValidos && fiscal.tipoCambio > 0 && totalEstimado > 0 && !tcFueraDeBanda;
   const puedeTimbrar = puedeGuardar && !clienteIncompleto;
   const faltantesTimbrar = useFaltantesTimbrar(cliente, conceptosValidos, fiscal);
+
 
   const reset = () => {
     setClienteId("");
@@ -193,7 +199,9 @@ export function useFacturaManualForm(open: boolean, onClose?: () => void) {
     clienteIncompleto,
     puedeGuardar,
     puedeTimbrar,
-    faltantesTimbrar,
+    faltantesTimbrar: tcFueraDeBanda ? [...faltantesTimbrar, "tipo de cambio plausible"] : faltantesTimbrar,
+    tcFueraDeBanda,
+
     handleSubmit,
     onConfirmarExceso,
     isPending: crear.isPending,

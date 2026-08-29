@@ -1,6 +1,13 @@
 # Changelog
 
+## [13.803.0] - 2026-08-29
+
+- **Ola 6 · Auditoría v14 (cierre frontend)**.
+- **B-8 (Cotizaciones)**: el bloqueo optimista ya distingue `undefined` (sin guard) de `null` (fila nunca modificada); antes una cotización con `updated_at` nulo se guardaba sin protección de concurrencia.
+- **M-14 (T/C plausible)**: nueva banda compartida `tcBanda.ts` (5–40 MXN por divisa). La factura manual no se guarda ni timbra y el traspaso no se envía cuando el T/C capturado está fuera de banda (atrapa dedazos tipo 1.84 o 184 pesos por dólar).
+
 ## [13.801.0] - 2026-08-29
+
 
 - **CI verde tras la Ola 4 (auditoría v14)**.
 - **B-9 (duplicado)**: se elimina el trigger `trg_pago_fecha_no_previa` y su función; la regla "pago anterior a la emisión" ya la aplica `assert_factura_viva_para_pago` con `LC_PAGO_FECHA_PREVIA_EMISION` (un solo mensaje para el usuario).
