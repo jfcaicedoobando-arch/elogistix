@@ -1,21 +1,23 @@
 #!/usr/bin/env bash
-# db:verify — levanta un Postgres local (Docker), aplica TODAS las migraciones
-# y corre una suite SQL/RLS mínima de verificación. Sirve para detectar fallos
-# antes de pushear, sin esperar el workflow `rls-tests` de GitHub Actions.
+# db:verify — levanta un Postgres efímero (Docker o `initdb` local), aplica
+# TODAS las migraciones y corre una suite SQL/RLS mínima de verificación. Sirve
+# para detectar fallos antes de pushear, sin esperar el workflow `rls-tests`.
 #
 # Uso:
 #   bun run db:verify                       # base limpia + migraciones + suite mínima
 #   bun run db:verify -- --suites isolation,financiero
 #   bun run db:verify -- --all              # TODAS las suites test_rls_*.sql
-#   bun run db:verify -- --reuse            # no recrea el contenedor (rápido)
-#   bun run db:verify -- --keep             # deja el contenedor arriba al terminar
+#   bun run db:verify -- --reuse            # no recrea la base (rápido)
+#   bun run db:verify -- --keep             # deja el servidor arriba al terminar
 #   bun run db:verify -- --port 55433       # otro puerto local
 #   bun run db:verify -- --no-behavioral    # omite supabase/tests/*.sql
 #   bun run db:verify -- --only-schema      # sólo migraciones + guardias (sin suites)
 #   bun run db:verify -- --snapshot supabase/schema/baseline.sql
+#   bun run db:verify -- --backend local    # fuerza `initdb` (sin Docker)
 #
-# Requisitos: docker + psql (+ pg_dump para --snapshot) en PATH.
+# Requisitos: psql 17 + (docker) o (initdb/pg_ctl 17) en PATH; pg_dump para --snapshot.
 # Salida: logs en .db-verify-logs/<timestamp>/ y resumen al final.
+
 
 
 set -uo pipefail
