@@ -65,6 +65,7 @@ interface RawDraftShape {
   cotizacionId?: unknown;
   currentStep?: unknown;
   costosInternos?: unknown;
+  tabId?: unknown;
 }
 
 /** El archivo MSDS nunca sobrevive a `JSON.stringify`; siempre se avisa. */
@@ -108,6 +109,7 @@ export function loadDraft(userId: string, organizationId?: string | null): Store
       currentStep: typeof bag.currentStep === "number" && bag.currentStep >= 1 ? bag.currentStep : 1,
       costosInternos: Array.isArray(bag.costosInternos) ? (bag.costosInternos as FilaCostoLocal[]) : [],
       noRestaurado,
+      tabId: typeof bag.tabId === "string" ? bag.tabId : undefined,
     };
     reviveDateFields(parsed.values);
     return parsed;
