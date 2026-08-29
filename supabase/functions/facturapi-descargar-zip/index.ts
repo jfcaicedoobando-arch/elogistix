@@ -77,6 +77,67 @@ async function aArrayBuffer(data: unknown): Promise<ArrayBuffer> {
   throw new Error("zip_formato_desconocido");
 }
 
+/** Valida el periodo solicitado. Devuelve el error de captura o el periodo listo. */
+function validarPeriodo(
+  body: ReqBody,
+): { error: { error: string; message?: string }; status: number } | { year: number; month: number } {
+  const year = Number(body.year);
+  const month = Number(body.month);
+  if (!body.organization_id) return { error: { error: "organization_id_required" }, status: 400 };
+  if (!Number.isInteger(year) || year < 2020 || year > 2100) {
+    return { error: { error: "year_invalido", message: "year debe estar entre 2020 y 2100" }, status: 400 };
+  }
+  if (!Number.isInteger(month) || month < 1 || month > 12) {
+    return { error: { error: "month_invalido", message: "month debe estar entre 1 y 12" }, status: 400 };
+  }
+  return { year, month };
+}
+
+/**
+ * Solicita el ZIP al PAC, espera a que termine de ensamblarlo y devuelve los
+ * bytes. Separado del handler para mantener la complejidad acotada (EF-lint).
+ */
+async function generarZip(
+  invoices: InvoicesZipApi,
+  year: number,
+  month: number,
+): Promise<{ error: { error: string; message?: string; estado?: string }; status: number } | { bytes: ArrayBuffer }> {
+  // 1. Solicitar el ZIP (idempotente: el PAC reutiliza una solicitud
+  //    existente con los mismos criterios).
+  const solicitud = await withFacturapiTimeout(
+    "createZipRequest",
+    invoices.createZipRequest({ year, month, issuer_type: "issuing", invoice_types: ["I", "E", "P"] }),
+  );
+  if (!solicitud?.id) {
+    return {
+      error: { error: "zip_sin_id", message: "FacturApi no devolvió el identificador de la solicitud ZIP." },
+      status: 502,
+    };
+  }
+
+  // 2. Esperar a que el PAC termine de ensamblar el paquete.
+  let estado = solicitud.status ?? "pending";
+  for (let intento = 0; intento < POLL_MAX_INTENTOS && estado !== "finished"; intento++) {
+    await esperar(POLL_INTERVALO_MS);
+    const actual = await withFacturapiTimeout("retrieveZipRequest", invoices.retrieveZipRequest(solicitud.id));
+    estado = actual.status ?? estado;
+  }
+  if (estado !== "finished") {
+    return {
+      error: {
+        error: "zip_no_listo",
+        message: "FacturApi sigue generando el paquete. Espera un minuto y vuelve a intentar.",
+        estado,
+      },
+      status: 409,
+    };
+  }
+
+  // 3. Descargar el binario ya terminado.
+  const binario = await withFacturapiTimeout("downloadZipRequest", invoices.downloadZipRequest(solicitud.id));
+  return { bytes: await aArrayBuffer(binario) };
+}
+
 Deno.serve(wrapEdgeHandler("facturapi-descargar-zip", async (req) => {
   // EF-10: endpoints con JWT usan CORS de whitelist (guía _shared/cors.ts).
   const preflight = handlePreflightStrict(req);
@@ -95,19 +156,13 @@ Deno.serve(wrapEdgeHandler("facturapi-descargar-zip", async (req) => {
   if (userErr || !userData.user) return json({ error: "unauthorized" }, 401);
 
   const body = (await req.json().catch(() => ({}))) as ReqBody;
-  const year = Number(body.year);
-  const month = Number(body.month);
-  if (!body.organization_id) return json({ error: "organization_id_required" }, 400);
-  if (!Number.isInteger(year) || year < 2020 || year > 2100) {
-    return json({ error: "year_invalido", message: "year debe estar entre 2020 y 2100" }, 400);
-  }
-  if (!Number.isInteger(month) || month < 1 || month > 12) {
-    return json({ error: "month_invalido", message: "month debe estar entre 1 y 12" }, 400);
-  }
+  const periodo = validarPeriodo(body);
+  if ("error" in periodo) return json(periodo.error, periodo.status);
 
   // La descarga mensual es un paquete contable: se limita a roles de consulta
   // fiscal (admin/contador/tesorería/cobranza), no a operativos.
-  if (!(await authorizeOrgRole(supabase, userData.user.id, body.organization_id, ROLES_CONSULTA_FISCAL))) {
+  const orgId = body.organization_id as string;
+  if (!(await authorizeOrgRole(supabase, userData.user.id, orgId, ROLES_CONSULTA_FISCAL))) {
     return json({ error: "forbidden" }, 403);
   }
 
@@ -117,7 +172,7 @@ Deno.serve(wrapEdgeHandler("facturapi-descargar-zip", async (req) => {
   const adminClient = createClient(SUPABASE_URL, SERVICE_KEY, { auth: { persistSession: false } });
   const resolved = await getFacturapiClient(
     adminClient as unknown as Parameters<typeof getFacturapiClient>[0],
-    body.organization_id,
+    orgId,
   );
   if (!resolved.ok) {
     return json({ error: resolved.data.error, message: resolved.data.message }, resolved.data.status);
@@ -126,45 +181,16 @@ Deno.serve(wrapEdgeHandler("facturapi-descargar-zip", async (req) => {
   const invoices = (resolved.data.client as { invoices: InvoicesZipApi }).invoices;
 
   try {
-    // 1. Solicitar el ZIP (idempotente: el PAC reutiliza una solicitud
-    //    existente con los mismos criterios).
-    const solicitud = await withFacturapiTimeout(
-      "createZipRequest",
-      invoices.createZipRequest({
-        year,
-        month,
-        issuer_type: "issuing",
-        invoice_types: ["I", "E", "P"],
-      }),
-    );
-    if (!solicitud?.id) return json({ error: "zip_sin_id", message: "FacturApi no devolvió el identificador de la solicitud ZIP." }, 502);
+    const zip = await generarZip(invoices, periodo.year, periodo.month);
+    if ("error" in zip) return json(zip.error, zip.status);
 
-    // 2. Esperar a que el PAC termine de ensamblar el paquete.
-    let estado = solicitud.status ?? "pending";
-    for (let intento = 0; intento < POLL_MAX_INTENTOS && estado !== "finished"; intento++) {
-      await esperar(POLL_INTERVALO_MS);
-      const actual = await withFacturapiTimeout("retrieveZipRequest", invoices.retrieveZipRequest(solicitud.id));
-      estado = actual.status ?? estado;
-    }
-    if (estado !== "finished") {
-      return json({
-        error: "zip_no_listo",
-        message: "FacturApi sigue generando el paquete. Espera un minuto y vuelve a intentar.",
-        estado,
-      }, 409);
-    }
-
-    // 3. Descargar el binario ya terminado.
-    const binario = await withFacturapiTimeout("downloadZipRequest", invoices.downloadZipRequest(solicitud.id));
-    const bytes = await aArrayBuffer(binario);
-    const mm = String(month).padStart(2, "0");
-
-    return new Response(bytes, {
+    const mm = String(periodo.month).padStart(2, "0");
+    return new Response(zip.bytes, {
       status: 200,
       headers: {
         ...buildCors(req),
         "Content-Type": "application/zip",
-        "Content-Disposition": `attachment; filename="cfdis-${year}-${mm}.zip"`,
+        "Content-Disposition": `attachment; filename="cfdis-${periodo.year}-${mm}.zip"`,
         "Access-Control-Expose-Headers": "Content-Disposition",
         "Cache-Control": "private, max-age=0, no-store",
       },
@@ -182,3 +208,4 @@ Deno.serve(wrapEdgeHandler("facturapi-descargar-zip", async (req) => {
     }, 502);
   }
 }));
+
