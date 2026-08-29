@@ -23,7 +23,7 @@ export interface EmbarqueConciliacion {
   expediente: string;
   cliente_nombre: string | null;
   estado: string | null;
-  moneda: "MXN" | "USD";
+  moneda: "MXN" | "USD" | "EUR";
   presupuestado: number;
   pagado: number;
   pendiente: number;
@@ -35,7 +35,7 @@ export interface EmbarqueConciliacion {
 
 export interface FiltrosConciliacion {
   estado?: EstadoConciliacion | "todos";
-  moneda?: "MXN" | "USD";
+  moneda?: "MXN" | "USD" | "EUR";
   search?: string;
   organizationId?: string | null;
 }
@@ -43,7 +43,7 @@ export interface FiltrosConciliacion {
 interface RowConcepto {
   embarque_id: string;
   monto: string | number;
-  moneda: "MXN" | "USD";
+  moneda: "MXN" | "USD" | "EUR";
   estado_liquidacion: "Pendiente" | "Pagado" | string;
   embarques: {
     expediente: string | null;
@@ -85,7 +85,9 @@ function agrupar(rows: RowConcepto[]): EmbarqueConciliacion[] {
     acc.presupuestado += monto;
     acc.conceptos_total += 1;
     if (r.estado_liquidacion === "Pagado") acc.pagado += monto;
-    else acc.conceptos_pendientes += 1;
+    // B-18: sólo se cuentan como "pendientes" los conceptos con ese estado
+    // explícito, no cualquier estado distinto de "Pagado" (alinea con el docstring).
+    if (r.estado_liquidacion === "Pendiente") acc.conceptos_pendientes += 1;
   }
   return Array.from(map.values());
 }
