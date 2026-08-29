@@ -45,8 +45,21 @@ export function usePagoProveedorCampos(
   const pagoEditarRef = useRef(pagoEditar);
   pagoEditarRef.current = pagoEditar;
 
+  // A-6 (auditoría v14): espejo del patrón FE-02 de CxC. El diálogo invalida
+  // la query de la factura al abrirse (B-037); si el refetch trae un objeto
+  // nuevo (saldo actualizado por otro usuario), el efecto de precarga se
+  // re-ejecutaba y PISABA lo que el usuario ya había capturado. Se inicializa
+  // una sola vez por apertura (llave = open + factura.id + pagoEditarId).
+  const initializedForRef = useRef<string | null>(null);
+  const initKey = factura ? `${factura as { id?: string }.id ?? "sin-id"}:${pagoEditarId ?? "nuevo"}` : null;
+
   useEffect(() => {
-    if (!factura || !open) return;
+    if (!factura || !open || !initKey) {
+      initializedForRef.current = null;
+      return;
+    }
+    if (initializedForRef.current === initKey) return;
+    initializedForRef.current = initKey;
     const pago = pagoEditarRef.current;
     const v = pago
       ? valoresInicialesEdicion(pago)
