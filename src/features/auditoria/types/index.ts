@@ -29,7 +29,9 @@ export type ReglaAuditoria =
   | "contenedor_datos_incompletos"
   | "contenedor_fechas_incompletas"
   // AUD-2 (v13.288.0) — Fallback explícito cuando falta el tipo de cambio
-  | "tipo_cambio_faltante";
+  | "tipo_cambio_faltante"
+  // M-10 (auditoría v14) — total de línea ≠ cantidad × precio
+  | "venta_total_descuadrado";
 
 export type SeveridadAuditoria = "critico" | "alto" | "medio";
 

@@ -28,6 +28,7 @@ export const REGLA_SHORT_LABELS: Record<ReglaAuditoria, string> = {
   contenedor_datos_incompletos: "Contenedor sin peso/volumen",
   contenedor_fechas_incompletas: "Contenedor sin fechas",
   tipo_cambio_faltante: "Tipo de cambio faltante",
+  venta_total_descuadrado: "Total de venta descuadrado",
 };
 
 export function reglaShortLabel(regla: ReglaAuditoria): string {

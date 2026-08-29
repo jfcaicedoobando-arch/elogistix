@@ -5,7 +5,6 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import type { Tables, TablesInsert } from '@/integrations/supabase/types';
 import { queryKeys } from '@/lib/query';
 import { crearEmbarqueRpc, duplicarEmbarqueRpc } from '@/features/embarques/services';
-import { crearMuchos } from '@/features/embarques/services/contenedores';
 import { fromDb } from "@/lib/supabase/cast";
 import { newRequestId } from "@/lib/idempotency";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
@@ -31,12 +30,10 @@ export function useCreateEmbarque() {
   return useMutation({
     mutationFn: async (input: CreateEmbarqueInput) => {
       const requestId = input.requestId ?? newRequestId();
-      const { contenedores, ...rest } = input;
-      const result = await crearEmbarqueRpc({ ...rest, requestId });
-      // Insertar contenedores hijos (no bloqueante para el embarque, pero sí lanza si falla).
-      if (contenedores && contenedores.length > 0) {
-        await crearMuchos(result.id, contenedores);
-      }
+      // M-11 (auditoría v14): los contenedores viajan DENTRO de la RPC, así el
+      // alta es atómica. Antes iban en una segunda llamada: si fallaba, el
+      // embarque quedaba creado sin contenedores.
+      const result = await crearEmbarqueRpc({ ...input, requestId });
       return fromDb<EmbarqueRow>({ id: result.id });
     },
     onSuccess: () => {

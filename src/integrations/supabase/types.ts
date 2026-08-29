@@ -8591,6 +8591,10 @@ export type Database = {
         Args: { p_factura_id: string }
         Returns: undefined
       }
+      _recompute_totales_embarque: {
+        Args: { p_embarque_id: string }
+        Returns: undefined
+      }
       _refact_reps_bloqueantes: {
         Args: { p_factura_id: string }
         Returns: {
@@ -9534,16 +9538,28 @@ export type Database = {
         }
         Returns: string
       }
-      crear_embarque_completo: {
-        Args: {
-          p_conceptos_costo?: Json
-          p_conceptos_venta?: Json
-          p_documentos?: Json
-          p_embarque: Json
-          p_request_id?: string
-        }
-        Returns: Json
-      }
+      crear_embarque_completo:
+        | {
+            Args: {
+              p_conceptos_costo?: Json
+              p_conceptos_venta?: Json
+              p_documentos?: Json
+              p_embarque: Json
+              p_request_id?: string
+            }
+            Returns: Json
+          }
+        | {
+            Args: {
+              p_conceptos_costo?: Json
+              p_conceptos_venta?: Json
+              p_contenedores?: Json
+              p_documentos?: Json
+              p_embarque: Json
+              p_request_id?: string
+            }
+            Returns: Json
+          }
       crear_proforma_atomica: {
         Args: {
           p_bl_master: string
