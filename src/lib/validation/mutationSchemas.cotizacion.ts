@@ -48,6 +48,26 @@ const cotizacionBaseSchema = z.object({
     .min(1, "Vigencia: mínimo 1 día.")
     .max(365, "Vigencia: máximo 365 días."),
   subtotal: montoSchema("Subtotal"),
+  // B-12: la BD tiene CHECK >= 0 en estas columnas; validamos aquí para dar un
+  // mensaje claro en vez del error crudo de Postgres (23514).
+  peso_kg: z
+    .number()
+    .finite("Peso (kg): debe ser un número válido.")
+    .nonnegative("Peso (kg): no puede ser negativo.")
+    .optional()
+    .nullable(),
+  volumen_m3: z
+    .number()
+    .finite("Volumen (m³): debe ser un número válido.")
+    .nonnegative("Volumen (m³): no puede ser negativo.")
+    .optional()
+    .nullable(),
+  piezas: z
+    .number()
+    .finite("Piezas: debe ser un número válido.")
+    .nonnegative("Piezas: no puede ser negativo.")
+    .optional()
+    .nullable(),
 }).passthrough();
 
 export const cotizacionDraftInputSchema = cotizacionBaseSchema.extend({
