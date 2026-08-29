@@ -1,4 +1,4 @@
-# RPC Sync Audit — 2026-08-28
+# RPC Sync Audit — 2026-08-29
 
 Detecta funciones plpgsql que reciben una lista de hijos, insertan nuevos y al final
 borran (soft o duro) todo lo que no está en la lista original — sin agregar los ids
