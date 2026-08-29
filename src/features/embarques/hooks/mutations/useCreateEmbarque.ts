@@ -31,12 +31,10 @@ export function useCreateEmbarque() {
   return useMutation({
     mutationFn: async (input: CreateEmbarqueInput) => {
       const requestId = input.requestId ?? newRequestId();
-      const { contenedores, ...rest } = input;
-      const result = await crearEmbarqueRpc({ ...rest, requestId });
-      // Insertar contenedores hijos (no bloqueante para el embarque, pero sí lanza si falla).
-      if (contenedores && contenedores.length > 0) {
-        await crearMuchos(result.id, contenedores);
-      }
+      // M-11 (auditoría v14): los contenedores viajan DENTRO de la RPC, así el
+      // alta es atómica. Antes iban en una segunda llamada: si fallaba, el
+      // embarque quedaba creado sin contenedores.
+      const result = await crearEmbarqueRpc({ ...input, requestId });
       return fromDb<EmbarqueRow>({ id: result.id });
     },
     onSuccess: () => {
