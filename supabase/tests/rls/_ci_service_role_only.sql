@@ -52,6 +52,8 @@ INSERT INTO _ci_service_role_only (fn) VALUES
   ('public._es_rol_interno()'),
   -- Trigger de alerta de retenciones vs NC (Sub-ola D): sólo lo dispara el trigger.
   ('public._nc_alerta_retenciones_pagadas()'),
+  -- Trigger F5 (ronda 3): tope de saldo en NCs de proveedor; sólo el trigger.
+  ('public._assert_nc_prov_no_excede_saldo()'),
   ('public._nc_prov_tc_moneda_convertible()'),
   ('public._recalc_estado_proveedor_factura(uuid)'),
   ('public._reprocesar_comisiones_org(uuid)'),

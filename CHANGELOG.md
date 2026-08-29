@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.796.1] - 2026-08-29
+
+- Fix CI: se agregó `_assert_nc_prov_no_excede_saldo()` (trigger F5) a la lista canónica `_ci_service_role_only.sql`; el candado bidireccional queda en verde (59 funciones).
+
 ## [13.796.0] - 2026-08-29
 ### Finanzas · Ronda v3 (remediación selectiva de auditoría)
 - **F1 (crítico)**: la devolución de anticipos a proveedor fallaba siempre — el abono en `bbva_movimientos` se insertaba sin `hash_dedupe` (NOT NULL) y toda la operación hacía rollback. Ya registra correctamente.
