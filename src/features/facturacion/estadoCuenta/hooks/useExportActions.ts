@@ -6,6 +6,7 @@ import { useState, useCallback } from "react";
 import { generarEstadoCuentaPdf } from "@/generators/estadoCuentaPdf";
 import { exportToCsv } from "@/generators/exportCsv";
 import { formatDate } from "@/lib/formatters";
+import { todayLocalISO } from "@/lib/date/today";
 import { fetchClienteFichaEstadoCuenta } from "../services/clienteFicha";
 import { notifyError, notifySuccess, notifyWarning } from "@/lib/ui/appFeedback";
 import type { FacturaEstadoCuenta } from "../services/estadoCuenta";
@@ -81,7 +82,7 @@ export function useExportActions(clienteIds: string[], rows: ReadonlyArray<Factu
     setBusy("csv");
     try {
       exportToCsv(
-        `estado-de-cuenta-${new Date().toISOString().slice(0, 10)}.csv`,
+        `estado-de-cuenta-${todayLocalISO()}.csv`,
         CSV_COLUMNS,
         buildCsvRows(rows),
       );
