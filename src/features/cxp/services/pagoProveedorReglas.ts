@@ -4,6 +4,7 @@
  */
 import type { ValidarPagoInput, FacturaPagoInfo } from "./pagoProveedorValidaciones";
 import { tieneMasDeDosDecimales, TC_MAX } from "./pagoProveedorValidaciones";
+import { parInvolucraMxn, validarTcMxn } from "@/lib/financial/tcBanda";
 
 const TC_MIN = 0.01;
 
@@ -31,6 +32,13 @@ export function validarTipoCambio(a: ValidarPagoInput, factura: FacturaPagoInfo)
   }
   if (a.tcNum !== null && (a.tcNum < TC_MIN || a.tcNum > TC_MAX)) {
     return `El tipo de cambio debe estar entre ${TC_MIN} y ${TC_MAX}`;
+  }
+  // M-14 (re-fix v15): cuando el par involucra MXN el T/C son pesos por
+  // divisa, así que aplica la banda de plausibilidad (5-40). Atrapa dedazos
+  // tipo 1.85 o 185 antes de que contaminen el P&L.
+  if (a.tcNum !== null && parInvolucraMxn(a.moneda, factura.moneda)) {
+    const fueraDeBanda = validarTcMxn(a.tcNum);
+    if (fueraDeBanda) return fueraDeBanda;
   }
   return null;
 }
