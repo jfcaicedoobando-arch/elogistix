@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.796.4] - 2026-08-29
+
+- `supabase/schema/baseline.sql` regenerado (replay de las 1164 migraciones en Postgres 17.9 limpio + `_ci_bootstrap`/`_ci_drift`/`_ci_post_migrate`): incorpora las remediaciones F1–F5, N18 y C9 (trigger `_assert_nc_prov_no_excede_saldo`, `ux_clientes_email_org`, CHECK cargo/abono exclusivo, roles con acceso a costos). El job `schema-baseline` vuelve a verde.
+
 ## [13.796.3] - 2026-08-29
 
 - Guard `ola_e2_a_guards` (C9) actualizado a la decisión vigente: gerencia, finanzas y ventas ven costos de cotización, por lo que `vendedor` sí debe estar en `puede_ver_costos_cotizacion`. El guard viejo exigía lo contrario y dejaba el job `rls-guards` en rojo (62/63).

@@ -379,6 +379,66 @@ BEGIN
   END IF;
 END;
 $$;
+CREATE FUNCTION public._assert_nc_prov_no_excede_saldo() RETURNS trigger
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+DECLARE
+  v_total  numeric;
+  v_moneda text;
+  v_pagado numeric;
+  v_otras  numeric;
+  v_esta   numeric;
+  v_saldo  numeric;
+BEGIN
+  IF NEW.estado::text <> 'Aplicada' OR NEW.deleted_at IS NOT NULL THEN
+    RETURN NEW;
+  END IF;
+  IF TG_OP = 'UPDATE'
+     AND OLD.estado::text = 'Aplicada'
+     AND OLD.monto IS NOT DISTINCT FROM NEW.monto
+     AND OLD.moneda IS NOT DISTINCT FROM NEW.moneda
+     AND OLD.tipo_cambio IS NOT DISTINCT FROM NEW.tipo_cambio
+     AND OLD.deleted_at IS NULL THEN
+    RETURN NEW;
+  END IF;
+  SELECT pf.total, pf.moneda::text
+    INTO v_total, v_moneda
+    FROM public.proveedor_facturas pf
+   WHERE pf.id = NEW.proveedor_factura_id
+   FOR UPDATE;
+  IF v_total IS NULL THEN
+    RETURN NEW;
+  END IF;
+  v_esta := public.monto_pago_en_moneda_factura(
+    NEW.monto, NEW.moneda::text, NEW.tipo_cambio, v_moneda);
+  IF v_esta IS NULL THEN
+    RAISE EXCEPTION 'LC_NC_PROV_TC_REQUERIDO: no se pudo convertir la nota de crédito a la moneda de la factura; captura el tipo de cambio'
+      USING ERRCODE = '22023';
+  END IF;
+  SELECT COALESCE(SUM(COALESCE(pp.monto_en_moneda_factura, pp.monto)), 0)
+    INTO v_pagado
+    FROM public.pagos_proveedor pp
+   WHERE pp.proveedor_factura_id = NEW.proveedor_factura_id
+     AND pp.deleted_at IS NULL;
+  SELECT COALESCE(SUM(
+           public.monto_pago_en_moneda_factura(
+             nc.monto, nc.moneda::text, nc.tipo_cambio, v_moneda)), 0)
+    INTO v_otras
+    FROM public.proveedor_notas_credito nc
+   WHERE nc.proveedor_factura_id = NEW.proveedor_factura_id
+     AND nc.deleted_at IS NULL
+     AND nc.estado::text = 'Aplicada'
+     AND nc.id <> NEW.id;
+  v_saldo := COALESCE(v_total,0) - v_pagado - v_otras;
+  IF v_esta > v_saldo + 0.01 THEN
+    RAISE EXCEPTION 'LC_NC_PROV_EXCEDE_SALDO: la nota de crédito (%) excede el saldo disponible (%) de la factura de proveedor',
+      round(v_esta, 2), round(v_saldo, 2)
+      USING ERRCODE = '23514';
+  END IF;
+  RETURN NEW;
+END;
+$$;
 CREATE FUNCTION public._assert_padre_misma_org() RETURNS trigger
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
@@ -4798,9 +4858,6 @@ BEGIN
   IF v_fact.proveedor_id IS DISTINCT FROM v_ant.proveedor_id THEN
     RAISE EXCEPTION 'LC_ANTICIPO_PROVEEDOR_MISMATCH: Anticipo y factura pertenecen a proveedores distintos.';
   END IF;
-  -- N14: la conversión se valúa con la paridad DOF del día de la aplicación
-  -- (soporta EUR y el cruce USD/EUR). El T/C histórico del anticipo sólo sirve
-  -- para calcular y registrar el diferencial cambiario.
   IF v_ant.moneda = v_fact.moneda THEN
     v_monto_convertido := p_monto;
     v_monto_historico := p_monto;
@@ -4814,8 +4871,12 @@ BEGIN
       v_monto_historico := NULL;
     END;
   END IF;
+  -- F3: el anticipo MXN no tiene tipo_cambio_usd; si la factura está en otra
+  -- moneda el pago debe llevar la paridad DOF del día de la aplicación.
   v_tc_aplicacion := CASE
-    WHEN v_ant.moneda = 'MXN'::public.moneda THEN v_ant.tipo_cambio_usd
+    WHEN v_ant.moneda = v_fact.moneda THEN v_ant.tipo_cambio_usd
+    WHEN v_ant.moneda = 'MXN'::public.moneda THEN
+      COALESCE(public.tc_dof_moneda(p_fecha_aplicacion, v_fact.moneda::text), v_ant.tipo_cambio_usd)
     ELSE COALESCE(public.tc_dof_moneda(p_fecha_aplicacion, v_ant.moneda::text), v_ant.tipo_cambio_usd)
   END;
   INSERT INTO public.pagos_proveedor
@@ -12033,7 +12094,6 @@ BEGIN
   IF COALESCE(trim(p_motivo),'') = '' OR length(trim(p_motivo)) < 3 THEN
     RAISE EXCEPTION 'LC_ANTICIPO_MOTIVO_REQUERIDO: Debes indicar el motivo de la devolución.';
   END IF;
-  -- N18: candado de fila antes de validar estado (doble clic / doble pestaña).
   SELECT * INTO v_row FROM public.anticipos_proveedor
    WHERE id = p_id AND deleted_at IS NULL
    FOR UPDATE;
@@ -12057,6 +12117,12 @@ BEGIN
   IF p_monto > COALESCE(v_row.saldo_disponible,0) + 0.01 THEN
     RAISE EXCEPTION 'LC_ANTICIPO_MONTO_EXCEDE_SALDO: La devolución (%) excede el saldo disponible (%).',
       p_monto, COALESCE(v_row.saldo_disponible,0);
+  END IF;
+  -- F2 (decisión 2026-08-29): sólo devolución TOTAL. Una parcial dejaba el
+  -- remanente fuera del sistema (saldo forzado a 0 sin asiento contable).
+  IF p_monto < COALESCE(v_row.saldo_disponible,0) - 0.01 THEN
+    RAISE EXCEPTION 'LC_ANTICIPO_DEVOLUCION_TOTAL: La devolución debe ser por el saldo completo (%); no se permiten devoluciones parciales.',
+      COALESCE(v_row.saldo_disponible,0);
   END IF;
   IF p_fecha IS NULL THEN
     RAISE EXCEPTION 'LC_ANTICIPO_FECHA_REQUERIDA: Indica la fecha de la devolución.';
@@ -12085,13 +12151,17 @@ BEGIN
         updated_at = now()
     WHERE id = p_id
     RETURNING * INTO v_row;
+  -- F1: hash_dedupe es NOT NULL; sin él el INSERT lanzaba 23502 y toda la
+  -- devolución hacía rollback.
   INSERT INTO public.bbva_movimientos
     (organization_id, cuenta_bancaria_id, fecha, concepto, referencia,
-     cargo, abono, estado_conciliacion, anticipo_proveedor_id, importado_por, importado_en)
+     cargo, abono, estado_conciliacion, anticipo_proveedor_id, importado_por, importado_en,
+     hash_dedupe)
   VALUES
     (v_row.organization_id, p_cuenta_bancaria_id, p_fecha,
      'Devolución de anticipo ' || v_row.id::text, NULLIF(trim(COALESCE(p_referencia,'')),''),
-     0, p_monto, 'Pendiente'::public.estado_conciliacion, v_row.id, v_uid, now());
+     0, p_monto, 'Pendiente'::public.estado_conciliacion, v_row.id, v_uid, now(),
+     'devolucion-' || v_row.id::text);
   BEGIN
     SELECT email INTO v_email FROM auth.users WHERE id = v_uid;
     INSERT INTO public.bitacora_actividad
@@ -12337,7 +12407,8 @@ DECLARE
   v_tc_nuevo numeric;
   v_factor numeric;
 BEGIN
-  SELECT * INTO v_c FROM public.refacturaciones WHERE id = p_caso_id;
+  -- N18: FOR UPDATE serializa la duplicación del mismo caso (doble clic).
+  SELECT * INTO v_c FROM public.refacturaciones WHERE id = p_caso_id FOR UPDATE;
   IF NOT FOUND THEN
     RAISE EXCEPTION 'LC_REFACT_CASO_NO_ENCONTRADO' USING ERRCODE = 'P0002';
   END IF;
@@ -12361,9 +12432,6 @@ BEGIN
     RAISE EXCEPTION 'LC_REFACT_TC_REQUERIDO: la factura original en % no tiene tipo de cambio', v_old.moneda
       USING ERRCODE = 'P0001';
   END IF;
-  -- BUG-08 (auditoría 2026-08-18): el CFDI de sustitución se timbra HOY, así
-  -- que el tipo de cambio debe ser el DOF vigente a la nueva fecha de emisión,
-  -- no el heredado de la factura original.
   IF v_old.moneda::text = 'MXN' THEN
     v_tc_nuevo := v_old.tipo_cambio;
   ELSE
@@ -12372,7 +12440,7 @@ BEGIN
       INTO v_tc_nuevo
     FROM public.tc_dof_vigente(CURRENT_DATE) d;
     IF v_tc_nuevo IS NULL OR v_tc_nuevo <= 1 THEN
-      v_tc_nuevo := NULL;  -- sin DOF: el timbrado exige capturarlo a mano.
+      v_tc_nuevo := NULL;
     END IF;
   END IF;
   v_new_numero := v_old.numero || '-RF';
@@ -15821,7 +15889,6 @@ DECLARE
   v_fact_moneda public.moneda;
   v_fact_tc     numeric;
   v_fact_total  numeric;
-  -- BL-03: estado y papelera de la factura para el guard de vida.
   v_fact_estado public.estado_proveedor_factura;
   v_fact_deleted timestamptz;
   v_ncs         numeric;
@@ -15832,9 +15899,6 @@ BEGIN
   IF NEW.deleted_at IS NOT NULL THEN
     RETURN NEW;
   END IF;
-  -- BL-03 (espejo FIX-63 de CxC): un UPDATE que NO toca el dinero (p. ej.
-  -- conciliación o notas) es mantenimiento documental, no un pago nuevo;
-  -- debe pasar aunque la factura se haya cancelado después.
   IF TG_OP = 'UPDATE' THEN
     v_solo_metadatos := (
       NEW.proveedor_factura_id IS NOT DISTINCT FROM OLD.proveedor_factura_id
@@ -15856,15 +15920,27 @@ BEGIN
     RAISE EXCEPTION 'LC_FACTURA_PROV_NO_ENCONTRADA: factura % no existe', NEW.proveedor_factura_id
       USING ERRCODE = 'P0002';
   END IF;
-  -- BL-03: una factura Cancelada o en papelera no admite pagos (paridad CxC).
   IF v_fact_estado = 'Cancelada'::public.estado_proveedor_factura
      OR v_fact_deleted IS NOT NULL THEN
     RAISE EXCEPTION 'LC_PAGO_PROV_FACTURA_NO_VIVA: la factura de proveedor está % y no admite pagos',
       CASE WHEN v_fact_deleted IS NOT NULL THEN 'en la papelera' ELSE 'Cancelada' END
       USING ERRCODE = '23514';
   END IF;
-  NEW.monto_en_moneda_factura := public.convertir_monto_pago_a_factura(
-    NEW.monto, NEW.moneda, NEW.tipo_cambio_usd, v_fact_moneda, v_fact_tc);
+  -- F3: los pagos directos siguen exigiendo captura MXN<->USD. Cuando el pago
+  -- nace de una APLICACIÓN DE ANTICIPO, la RPC ya valuó con paridad DOF del
+  -- día (soporta EUR y cruces); el guard respeta esa valuación.
+  BEGIN
+    NEW.monto_en_moneda_factura := public.convertir_monto_pago_a_factura(
+      NEW.monto, NEW.moneda, NEW.tipo_cambio_usd, v_fact_moneda, v_fact_tc);
+  EXCEPTION WHEN OTHERS THEN
+    IF COALESCE(NEW.es_anticipo_aplicado, false) THEN
+      NEW.monto_en_moneda_factura := public.convertir_monto_dof(
+        NEW.monto, NEW.moneda::text, v_fact_moneda::text,
+        COALESCE(NEW.fecha_pago, CURRENT_DATE));
+    ELSE
+      RAISE;
+    END IF;
+  END;
   IF NEW.moneda = 'MXN'::public.moneda
      AND v_fact_moneda = 'USD'::public.moneda
      AND NEW.tipo_cambio_usd IS NOT NULL AND NEW.tipo_cambio_usd > 0
@@ -15875,26 +15951,26 @@ BEGIN
      AND v_fact_moneda = 'MXN'::public.moneda
      AND NEW.tipo_cambio_usd IS NOT NULL AND NEW.tipo_cambio_usd > 0
      AND v_fact_tc IS NOT NULL AND v_fact_tc > 0 THEN
-    -- BL-15: cruce inverso (pago USD → factura MXN). La pérdida/ganancia
-    -- cambiaria es (USD pagados) × (TC_pago − TC_factura), en MXN.
     NEW.diferencia_cambiaria_mxn :=
       ROUND(NEW.monto * (NEW.tipo_cambio_usd - v_fact_tc), 2);
   ELSE
     NEW.diferencia_cambiaria_mxn := NULL;
   END IF;
-  -- Saldo disponible para ESTA fila (los demás pagos vivos ya se excluyen abajo).
-  SELECT COALESCE(SUM(monto),0) INTO v_ncs
-    FROM public.proveedor_notas_credito
-   WHERE proveedor_factura_id = NEW.proveedor_factura_id
-     AND deleted_at IS NULL
-     AND estado::text = 'Aplicada';
+  -- F4: misma conversión canónica que la vista v_proveedor_facturas_saldo.
+  SELECT COALESCE(SUM(
+           public.monto_pago_en_moneda_factura(
+             nc.monto, nc.moneda::text, nc.tipo_cambio, v_fact_moneda::text)), 0)
+    INTO v_ncs
+    FROM public.proveedor_notas_credito nc
+   WHERE nc.proveedor_factura_id = NEW.proveedor_factura_id
+     AND nc.deleted_at IS NULL
+     AND nc.estado::text = 'Aplicada';
   SELECT COALESCE(SUM(monto_en_moneda_factura),0) INTO v_pagos
     FROM public.pagos_proveedor
    WHERE proveedor_factura_id = NEW.proveedor_factura_id
      AND deleted_at IS NULL
      AND id <> COALESCE(NEW.id, '00000000-0000-0000-0000-000000000000'::uuid);
   v_saldo := v_fact_total - v_ncs - v_pagos;
-  -- Validación directa (válida para INSERT y UPDATE: v_pagos ya excluye NEW.id).
   IF COALESCE(NEW.monto_en_moneda_factura,0) > v_saldo + 0.005 THEN
     RAISE EXCEPTION
       'LC_PAGO_EXCEDE_SALDO: pago % excede el saldo disponible % de la factura de proveedor',
@@ -15926,7 +16002,10 @@ BEGIN
     FROM public.pagos_proveedor pp
     WHERE pp.proveedor_factura_id = NEW.id
       AND pp.deleted_at IS NULL;
-    SELECT COALESCE(SUM(nc.monto), 0)
+    -- F4: NCs convertidas a la moneda de la factura.
+    SELECT COALESCE(SUM(
+             public.monto_pago_en_moneda_factura(
+               nc.monto, nc.moneda::text, nc.tipo_cambio, NEW.moneda::text)), 0)
       INTO v_ncs
     FROM public.proveedor_notas_credito nc
     WHERE nc.proveedor_factura_id = NEW.id
@@ -20021,9 +20100,10 @@ CREATE FUNCTION public.puede_ver_costos_cotizacion(_user_id uuid DEFAULT auth.ui
     AS $$
   SELECT _user_id IS NOT NULL AND public.has_any_role_efectivo(
     _user_id,
-    ARRAY['admin','admin_org','super_admin','gerente_comercial','gerente_visor',
-          'gerente_operaciones','ejecutivo_pricing','coordinador_logistico',
-          'operador','customer_service','contador','tesorero','auxiliar_contable']::app_role[]
+    ARRAY['admin','admin_org','super_admin',
+          'gerente_operaciones','gerente_comercial','gerente_visor',
+          'contador','tesorero','auxiliar_contable','ejecutivo_cobranza',
+          'vendedor','ejecutivo_pricing']::app_role[]
   );
 $$;
 CREATE FUNCTION public.puede_ver_costos_cotizacion_propia(_cotizacion_id uuid, _user_id uuid DEFAULT auth.uid()) RETURNS boolean
@@ -25984,7 +26064,7 @@ CREATE TABLE public.bbva_movimientos (
     pago_proveedor_lote_id uuid,
     pago_factura_lote_id uuid,
     traspaso_id uuid,
-    CONSTRAINT bbva_movimientos_cargo_abono_check CHECK (((cargo >= (0)::numeric) AND (abono >= (0)::numeric) AND ((((cargo > (0)::numeric))::integer + ((abono > (0)::numeric))::integer) <= 1)))
+    CONSTRAINT bbva_movimientos_cargo_abono_check CHECK (((cargo >= (0)::numeric) AND (abono >= (0)::numeric) AND ((((cargo > (0)::numeric))::integer + ((abono > (0)::numeric))::integer) = 1)))
 );
 ALTER TABLE ONLY public.bbva_movimientos FORCE ROW LEVEL SECURITY;
 CREATE TABLE public.bitacora_actividad (
@@ -28386,6 +28466,7 @@ CREATE UNIQUE INDEX uq_liquidaciones_comision_org_vendedora_periodo ON public.li
 CREATE UNIQUE INDEX uq_proveedor_contactos_principal ON public.proveedor_contactos USING btree (proveedor_id) WHERE (es_principal AND (deleted_at IS NULL));
 CREATE UNIQUE INDEX uq_refacturaciones_original_abierta ON public.refacturaciones USING btree (factura_original_id) WHERE (estado = 'abierto'::text);
 CREATE UNIQUE INDEX uq_traspasos_folio_org ON public.traspasos_bancarios USING btree (organization_id, folio);
+CREATE UNIQUE INDEX ux_clientes_email_org ON public.clientes USING btree (organization_id, lower(btrim(email))) WHERE ((deleted_at IS NULL) AND (email IS NOT NULL) AND (btrim(email) <> ''::text));
 CREATE UNIQUE INDEX ux_proveedor_facturas_uuid_fiscal_org ON public.proveedor_facturas USING btree (organization_id, upper(btrim(uuid_fiscal))) WHERE ((uuid_fiscal IS NOT NULL) AND (deleted_at IS NULL));
 CREATE TRIGGER costeo_tarifas_match_agente_org_trg BEFORE INSERT OR UPDATE OF organization_id, agente_id ON public.costeo_tarifas FOR EACH ROW EXECUTE FUNCTION public.costeo_tarifas_match_agente_org();
 CREATE TRIGGER embarques_set_fechas_originales BEFORE INSERT ON public.embarques FOR EACH ROW EXECUTE FUNCTION public.set_embarque_fechas_originales();
@@ -28566,6 +28647,7 @@ CREATE TRIGGER trg_nc_no_delete BEFORE DELETE ON public.factura_notas_credito FO
 CREATE TRIGGER trg_nc_no_excede_saldo BEFORE INSERT OR UPDATE ON public.factura_notas_credito FOR EACH ROW EXECUTE FUNCTION public.assert_nc_no_excede_saldo();
 CREATE TRIGGER trg_nc_prov_estado_machine BEFORE INSERT OR UPDATE OF estado ON public.proveedor_notas_credito FOR EACH ROW EXECUTE FUNCTION public.enforce_nc_proveedor_estado_transicion();
 CREATE TRIGGER trg_nc_prov_tc_convertible BEFORE INSERT OR UPDATE OF monto, moneda, tipo_cambio, fecha, proveedor_factura_id ON public.proveedor_notas_credito FOR EACH ROW EXECUTE FUNCTION public._nc_prov_tc_moneda_convertible();
+CREATE TRIGGER trg_nc_prov_tope_saldo BEFORE INSERT OR UPDATE ON public.proveedor_notas_credito FOR EACH ROW EXECUTE FUNCTION public._assert_nc_prov_no_excede_saldo();
 CREATE TRIGGER trg_notas_credito_prov_recalcular_estado AFTER INSERT OR DELETE OR UPDATE ON public.proveedor_notas_credito FOR EACH ROW EXECUTE FUNCTION public.tg_recalcular_estado_factura_proveedor();
 CREATE TRIGGER trg_notif_cli_embarque_estado AFTER UPDATE OF estado ON public.embarques FOR EACH ROW EXECUTE FUNCTION public.notif_cli_on_embarque_estado();
 CREATE TRIGGER trg_notificar_asignacion_hallazgo AFTER INSERT OR UPDATE OF responsable_id ON public.auditoria_revisiones FOR EACH ROW EXECUTE FUNCTION public.notificar_asignacion_hallazgo();
@@ -29765,6 +29847,8 @@ GRANT ALL ON FUNCTION public._assert_facturapi_admin(p_org_id uuid) TO service_r
 REVOKE ALL ON FUNCTION public._assert_internal_reader(p_org uuid) FROM PUBLIC;
 GRANT ALL ON FUNCTION public._assert_internal_reader(p_org uuid) TO authenticated;
 GRANT ALL ON FUNCTION public._assert_internal_reader(p_org uuid) TO service_role;
+REVOKE ALL ON FUNCTION public._assert_nc_prov_no_excede_saldo() FROM PUBLIC;
+GRANT ALL ON FUNCTION public._assert_nc_prov_no_excede_saldo() TO service_role;
 REVOKE ALL ON FUNCTION public._assert_padre_misma_org() FROM PUBLIC;
 GRANT ALL ON FUNCTION public._assert_padre_misma_org() TO service_role;
 REVOKE ALL ON FUNCTION public._assert_periodo_abierto() FROM PUBLIC;
