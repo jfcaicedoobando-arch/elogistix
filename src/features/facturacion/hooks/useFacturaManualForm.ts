@@ -197,7 +197,9 @@ export function useFacturaManualForm(open: boolean, onClose?: () => void) {
     clienteIncompleto,
     puedeGuardar,
     puedeTimbrar,
-    faltantesTimbrar,
+    faltantesTimbrar: tcFueraDeBanda ? [...faltantesTimbrar, "tipo de cambio plausible"] : faltantesTimbrar,
+    tcFueraDeBanda,
+
     handleSubmit,
     onConfirmarExceso,
     isPending: crear.isPending,
