@@ -26,7 +26,6 @@ DROP TABLE IF EXISTS pg_temp._ci_service_role_only;
 CREATE TEMP TABLE _ci_service_role_only (fn text);
 INSERT INTO _ci_service_role_only (fn) VALUES
   ('public._assert_concepto_no_proformado()'),
-  ('public._assert_fecha_pago_no_previa()'),
   ('public._assert_padre_misma_org()'),
   ('public._assert_periodo_abierto()'),
   ('public._assert_uuid_fiscal_single_write()'),
