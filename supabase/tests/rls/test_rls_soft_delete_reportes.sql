@@ -203,9 +203,12 @@ BEGIN
 
   -- NC aplicada sobre la factura de proveedor BORRADA: no debe bajar costos.
   -- El trigger de transición exige nacer en Borrador y avanzar por pasos.
+  -- Monto 300 = saldo disponible (subtotal 1000 − pago 700): la guarda F5
+  -- `_assert_nc_prov_no_excede_saldo` bloquea NCs que exceden el saldo, y
+  -- este caso mide el reporte, no el tope de saldo.
   INSERT INTO public.proveedor_notas_credito(organization_id, proveedor_factura_id, folio_nc,
                                              fecha, monto, moneda, estado)
-  VALUES (org_a, pfac_borr, 'SD-NCP-1', v_hoy, 700, 'MXN', 'Borrador')
+  VALUES (org_a, pfac_borr, 'SD-NCP-1', v_hoy, 300, 'MXN', 'Borrador')
   RETURNING id INTO ncp_borr;
 
   UPDATE public.proveedor_notas_credito SET estado = 'Aprobada' WHERE id = ncp_borr;

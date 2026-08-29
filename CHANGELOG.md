@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.796.2] - 2026-08-29
+
+- Fix CI: se eliminó el generador `scripts/db/gen-service-role-only.sh` y su paso `--check` en `rls-tests`. Derivar la lista `_ci_service_role_only.sql` del esquema era un riesgo de seguridad: una función que pierde su `REVOKE` desaparecía sola de la lista y el candado quedaba verde ocultando la regresión. La lista vuelve a ser curada a mano (con sus comentarios) y el candado bidireccional sigue siendo la única fuente de verdad.
+- Suite RLS `soft_delete_reportes`: el fixture aplicaba una NC de proveedor de 700 sobre un saldo de 300 y la nueva guarda F5 la bloqueaba; el monto se ajustó a 300 (el caso mide el reporte, no el tope de saldo).
+- Replay local de migraciones: se confirmó que las 22 "migraciones legacy" que fallaban eran un artefacto del runner local (faltaba el paso `_ci_drift.sql`). Con el flujo real del CI las 1164 migraciones aplican en base limpia sin exenciones nuevas y las 34 suites RLS pasan (candados service_role-only, drift, cobertura RLS e integridad en verde).
+
 ## [13.796.1] - 2026-08-29
 
 - Fix CI: se agregó `_assert_nc_prov_no_excede_saldo()` (trigger F5) a la lista canónica `_ci_service_role_only.sql`; el candado bidireccional queda en verde (59 funciones).
