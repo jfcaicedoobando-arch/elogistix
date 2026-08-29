@@ -164,9 +164,9 @@ export default function ComprasReportes() {
 
       <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
         <KpiCard label="Facturas en el período" value={String(numFacturas)} icon={TrendingUp} />
-        <KpiCard label="Total MXN" value={formatCurrency(totalMxn, "MXN")} icon={Banknote} />
-        <KpiCard label="Total USD" value={formatCurrency(totalUsd, "USD")} icon={Coins} />
-        <KpiCard label="Total EUR" value={formatCurrency(totalEur, "EUR")} icon={Coins} />
+        <KpiCard label="Subtotal MXN (sin IVA)" value={formatCurrency(totalMxn, "MXN")} icon={Banknote} />
+        <KpiCard label="Subtotal USD (sin IVA)" value={formatCurrency(totalUsd, "USD")} icon={Coins} />
+        <KpiCard label="Subtotal EUR (sin IVA)" value={formatCurrency(totalEur, "EUR")} icon={Coins} />
       </div>
 
       <TopProveedoresCard isLoading={isLoading} rows={topProveedores} />
