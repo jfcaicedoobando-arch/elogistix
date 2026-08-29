@@ -71,26 +71,41 @@ export async function importarMovimientos(
   // VIVOS y se inserta el resto; un hash en papelera ya NO bloquea la
   // re-importación. Una carrera entre importaciones simultáneas sigue
   // protegida por el índice (23505 → error visible, no duplicado silencioso).
+  // A-7 (auditoría v14): con ~10k movimientos, un `.in()` con 10k hashes SHA-1
+  // (~410 KB en query string) revienta contra el proxy (400/414) y el insert
+  // masivo puede exceder límites de payload. Select e insert van troceados.
+  const CHUNK = 500;
+  const trocear = <T,>(arr: T[]): T[][] => {
+    const out: T[][] = [];
+    for (let i = 0; i < arr.length; i += CHUNK) out.push(arr.slice(i, i + CHUNK));
+    return out;
+  };
+
   const hashes = payload.map((p) => p.hash_dedupe as string);
-  const existentes = await unwrapOr(
-    supabase
-      .from("bbva_movimientos")
-      .select("hash_dedupe")
-      .eq("cuenta_bancaria_id", cuentaBancariaId)
-      .is("deleted_at", null)
-      .in("hash_dedupe", hashes),
-    [] as { hash_dedupe: string }[],
-  );
-  const vistos = new Set(existentes.map((e) => e.hash_dedupe));
+  const vistos = new Set<string>();
+  for (const trozo of trocear(hashes)) {
+    const existentes = await unwrapOr(
+      supabase
+        .from("bbva_movimientos")
+        .select("hash_dedupe")
+        .eq("cuenta_bancaria_id", cuentaBancariaId)
+        .is("deleted_at", null)
+        .in("hash_dedupe", trozo),
+      [] as { hash_dedupe: string }[],
+    );
+    // Sin límite implícito: cada trozo devuelve a lo sumo CHUNK filas, así que
+    // el max-rows de PostgREST (1000) no puede truncar la deduplicación.
+    for (const e of existentes) vistos.add(e.hash_dedupe);
+  }
   const nuevosPayload = payload.filter((p) => !vistos.has(p.hash_dedupe as string));
-  const data =
-    nuevosPayload.length === 0
-      ? []
-      : await unwrapOr(
-          supabase.from("bbva_movimientos").insert(nuevosPayload).select("id"),
-          [] as { id: string }[],
-        );
-  const nuevos = data.length;
+  let nuevos = 0;
+  for (const trozo of trocear(nuevosPayload)) {
+    const data = await unwrapOr(
+      supabase.from("bbva_movimientos").insert(trozo).select("id"),
+      [] as { id: string }[],
+    );
+    nuevos += data.length;
+  }
   const duplicados = movimientos.length - nuevos;
   await bitacoraImportarMovimientos(cuentaBancariaId, movimientos.length, nuevos, duplicados);
   return { total: movimientos.length, nuevos, duplicados };
