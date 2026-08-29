@@ -127,6 +127,11 @@ export const LC_CODE_MESSAGES_TESORERIA: Record<string, string> = {
   // FIX3 · M-4 — guard de fecha del cobro/pago contra la emisión del CFDI.
   LC_PAGO_FECHA_PREVIA_EMISION:
     "La fecha del pago no puede ser anterior a la fecha de emisión de la factura.",
+  // B-4 (v14-2) — PUE de una sola exhibición.
+  LC_PAGO_PUE_EXHIBICION_UNICA:
+    "Esta factura es PUE (una sola exhibición) y ya tiene un pago registrado. Cancela el pago previo si fue un error.",
+  LC_PAGO_PUE_DEBE_LIQUIDAR_TOTAL:
+    "Esta factura es PUE: registra el cobro por el total en una sola exhibición. Si el cliente abona, cambia la factura a PPD.",
   // ── Ola E4 · candados de inmutabilidad bancaria y de comisiones ──
   LC_MOVIMIENTO_INMUTABLE:
     "El importe, la fecha y la cuenta de un movimiento bancario no se pueden editar. Cancela el movimiento y captúralo de nuevo.",

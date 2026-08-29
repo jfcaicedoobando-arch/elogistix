@@ -54,6 +54,8 @@ INSERT INTO _ci_service_role_only (fn) VALUES
   ('public._nc_alerta_retenciones_pagadas()'),
   -- Trigger F5 (ronda 3): tope de saldo en NCs de proveedor; sólo el trigger.
   ('public._assert_nc_prov_no_excede_saldo()'),
+  -- Trigger B-4 (v14-2): PUE de una sola exhibición; sólo lo dispara el trigger.
+  ('public._assert_pago_pue_exhibicion_unica()'),
   ('public._nc_prov_tc_moneda_convertible()'),
   ('public._recalc_estado_proveedor_factura(uuid)'),
   ('public._reprocesar_comisiones_org(uuid)'),
