@@ -34,6 +34,7 @@ const reglaToTab: Record<ReglaAuditoria, string> = {
   contenedor_fechas_incompletas: "resumen",
   tipo_cambio_faltante: "financiero",
   venta_total_descuadrado: "financiero",
+  contenedores_totales_descuadrados: "resumen",
 };
 
 interface Props {

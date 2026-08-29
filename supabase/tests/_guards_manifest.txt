@@ -71,3 +71,4 @@ supabase/tests/ola_e2_a_guards.sql
 supabase/tests/ola_e2_b_guards.sql
 supabase/tests/ola_e2_d_guards.sql
 supabase/tests/backlog_v4_profit_nc_y_seed_rol.sql
+supabase/tests/ola7_v15_reabrir_y_tc.sql
