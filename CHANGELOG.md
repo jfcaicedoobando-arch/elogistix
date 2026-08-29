@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.796.3] - 2026-08-29
+
+- Guard `ola_e2_a_guards` (C9) actualizado a la decisión vigente: gerencia, finanzas y ventas ven costos de cotización, por lo que `vendedor` sí debe estar en `puede_ver_costos_cotizacion`. El guard viejo exigía lo contrario y dejaba el job `rls-guards` en rojo (62/63).
+
 ## [13.796.2] - 2026-08-29
 
 - Fix CI: se eliminó el generador `scripts/db/gen-service-role-only.sh` y su paso `--check` en `rls-tests`. Derivar la lista `_ci_service_role_only.sql` del esquema era un riesgo de seguridad: una función que pierde su `REVOKE` desaparecía sola de la lista y el candado quedaba verde ocultando la regresión. La lista vuelve a ser curada a mano (con sus comentarios) y el candado bidireccional sigue siendo la única fuente de verdad.
