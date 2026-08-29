@@ -36,7 +36,7 @@ export function FooterAcciones({
 
 
 export function NotasPago({
-  esPpdTimbrada, monedaPago, monedaFactura, montoNum, montoAplicado, tipoCambio, excede, saldo, tcBloqueado, tcRespaldo, cruceNoSoportado, errorFecha,
+  esPpdTimbrada, monedaPago, monedaFactura, montoNum, montoAplicado, tipoCambio, excede, saldo, tcBloqueado, tcRespaldo, cruceNoSoportado, errorFecha, pueIncompleto,
 }: {
   esPpdTimbrada: boolean;
   monedaPago: string;
@@ -54,6 +54,8 @@ export function NotasPago({
   cruceNoSoportado?: boolean;
   /** FE-03 / UIA-06: fecha de pago inválida (futura o previa a la emisión). */
   errorFecha?: string | null;
+  /** B-4 (v14-2): factura PUE capturada por menos del saldo total. */
+  pueIncompleto?: boolean;
 }) {
   const mostrarConversion = monedaPago !== monedaFactura && montoNum > 0;
   return (
@@ -94,6 +96,15 @@ export function NotasPago({
                 segundos; si el problema persiste, contacta a soporte.
               </>
             )}
+          </AlertDescription>
+        </Alert>
+      )}
+      {pueIncompleto && (
+        <Alert className="border-warning/40 bg-warning/5">
+          <AlertDescription className="text-body-sm">
+            Esta factura es <strong>PUE</strong> (pago en una sola exhibición): el cobro debe
+            liquidar el <strong>saldo total</strong>. Si el cliente abona parcialmente, cambia la
+            factura a <strong>PPD</strong>.
           </AlertDescription>
         </Alert>
       )}
