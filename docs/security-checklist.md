@@ -1,8 +1,13 @@
-# Security Checklist — elogistix
+# Security Checklist — Libre Carga
 
 Documento operativo para revisar periódicamente la postura de seguridad del backend
 (Lovable Cloud / Supabase). Pensado para correrse trimestralmente o tras cambios
 mayores de schema.
+
+**Última revisión:** 2026-08-29 (v13.793.0) · complementa
+[`docs/rls-multitenant-audit.md`](./rls-multitenant-audit.md) y
+[`docs/riesgos-aceptados.md`](./riesgos-aceptados.md).
+
 
 ## 1. Cobertura de RLS en `public`
 
