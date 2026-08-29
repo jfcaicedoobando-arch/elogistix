@@ -1,5 +1,15 @@
 # Changelog
 
+## [13.799.0] - 2026-08-29
+
+- **Olas 2 y 3 · Auditoría v14 (altos y medios)**.
+- **A-2 / M-5 (multi-tenant e impersonación)**: `cobranza_agregados`, `dashboard_facturacion_kpis`, `direccion_totales`, `eerr_resumen_anual`, `busqueda_global` y `sidebar_alert_counts` usan `public.org_scope()` en vez de `current_user_org_id() OR super_admin`; un super admin impersonando ya no ve la suma de todas las organizaciones. De paso, `sidebar_alert_counts` filtra `deleted_at IS NULL`.
+- **A-9 / M-4 (Compras)**: pagos, notas de crédito, reportes y conciliación pasan `organization_id` explícito (defensa en profundidad) y los filtros de proveedor/búsqueda se resuelven server-side antes del `LIMIT` con `assertNotTruncated` (ya no desaparecen resultados en silencio).
+- **A-3 / M-16**: Profit (estado de resultados) y embarques del cliente excluyen registros borrados (`deleted_at IS NULL`).
+- **A-8**: el comparativo presupuesto vs real ignora liquidaciones canceladas.
+- **A-11**: `calcularTotalMxn` reconoce el IVA de frontera (8%) al delegar en el helper canónico de conceptos.
+- **M-3**: reportes de Compras soportan EUR (KPI, gráfica y CSV) con conversión a MXN.
+
 ## [13.798.0] - 2026-08-29
 
 - **Ola 1 · Auditoría v14 (críticos)**.

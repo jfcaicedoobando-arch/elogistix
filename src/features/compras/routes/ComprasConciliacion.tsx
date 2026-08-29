@@ -8,6 +8,7 @@
  */
 import { useMemo, useState } from "react";
 import { useFiltroUrl, useTextoUrl } from "@/hooks/shared";
+import { useOrgFilter } from "@/hooks/shared/useOrgFilter";
 import { useQuery } from "@tanstack/react-query";
 import { compras } from "../queryKeys";
 import { GitCompare, AlertTriangle, CheckCircle2, Clock } from "lucide-react";
@@ -41,14 +42,16 @@ export default function ComprasConciliacion() {
   const [moneda, setMoneda] = useFiltroUrl<MonedaFiltro>("moneda", MONEDAS_FILTRO, "todas");
   const [search, setSearch] = useTextoUrl("q");
   const [detalle, setDetalle] = useState<EmbarqueConciliacion | null>(null);
+  const { organizationId } = useOrgFilter();
 
   const { data: rows = [], isLoading, isError, refetch } = useQuery({
-    queryKey: compras.conciliacionEmbarques({ estado, moneda, search }),
+    queryKey: [...compras.conciliacionEmbarques({ estado, moneda, search }), organizationId],
     queryFn: () =>
       listarConciliacionEmbarques({
         estado: estado === "todos" ? "todos" : estado,
         moneda: moneda === "todas" ? undefined : moneda,
         search: search.trim() || undefined,
+        organizationId,
       }),
     staleTime: 30_000,
   });

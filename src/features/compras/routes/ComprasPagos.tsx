@@ -7,6 +7,7 @@
  */
 import { useMemo } from "react";
 import { useFiltroUrl, useTextoUrl } from "@/hooks/shared";
+import { useOrgFilter } from "@/hooks/shared/useOrgFilter";
 import { useQuery } from "@tanstack/react-query";
 import { compras } from "../queryKeys";
 import { Landmark, Download, Banknote, Coins, ListFilter } from "lucide-react";
@@ -51,17 +52,21 @@ export default function ComprasPagos() {
   const [moneda, setMoneda] = useFiltroUrl<MonedaFiltro>("moneda", MONEDAS_FILTRO, "todas");
   const [metodoPago, setMetodoPago] = useTextoUrl("metodo", "todos");
   const [search, setSearch] = useTextoUrl("q");
+  const { organizationId } = useOrgFilter();
 
   const { data: rows = [], isLoading, isError, refetch } = useQuery({
-    queryKey: compras.pagosGlobal({ desde, hasta, moneda, metodoPago, search }),
+    queryKey: [...compras.pagosGlobal({ desde, hasta, moneda, metodoPago, search }), organizationId],
     queryFn: () =>
-      listarPagosProveedorGlobal({
-        desde,
-        hasta,
-        moneda: moneda === "todas" ? undefined : moneda,
-        metodoPago: metodoPago === "todos" ? undefined : metodoPago,
-        search: search.trim() || undefined,
-      }),
+      listarPagosProveedorGlobal(
+        {
+          desde,
+          hasta,
+          moneda: moneda === "todas" ? undefined : moneda,
+          metodoPago: metodoPago === "todos" ? undefined : metodoPago,
+          search: search.trim() || undefined,
+        },
+        organizationId,
+      ),
   });
 
   const metodosDisponibles = useMemo(() => {

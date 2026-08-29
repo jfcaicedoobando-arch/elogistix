@@ -6,7 +6,7 @@ CREATE OR REPLACE FUNCTION public.eerr_resumen_anual(p_year integer, p_fuente te
  SET search_path TO 'public'
 AS $function$
 DECLARE
-  v_org uuid := public.current_user_org_id();
+  v_org uuid := public.org_scope();
 BEGIN
   IF v_org IS NULL THEN
     RAISE EXCEPTION 'LC_ORG_FORBIDDEN: usuario sin organizacion activa' USING ERRCODE='42501';

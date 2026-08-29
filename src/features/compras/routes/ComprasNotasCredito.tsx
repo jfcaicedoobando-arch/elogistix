@@ -3,6 +3,7 @@
  */
 import { useMemo } from "react";
 import { useFiltroUrl, useTextoUrl } from "@/hooks/shared";
+import { useOrgFilter } from "@/hooks/shared/useOrgFilter";
 import { useQuery } from "@tanstack/react-query";
 import { compras } from "../queryKeys";
 import { ReceiptText, Download, Banknote, Coins, ListFilter } from "lucide-react";
@@ -49,17 +50,21 @@ export default function ComprasNotasCredito() {
   const [moneda, setMoneda] = useFiltroUrl<MonedaFiltro>("moneda", MONEDAS_FILTRO, "todas");
   const [estado, setEstado] = useFiltroUrl<EstadoFiltro>("estado", ESTADOS_FILTRO, "todos");
   const [search, setSearch] = useTextoUrl("q");
+  const { organizationId } = useOrgFilter();
 
   const { data: rows = [], isLoading, isError, refetch } = useQuery({
-    queryKey: compras.notasCreditoGlobal({ desde, hasta, moneda, estado, search }),
+    queryKey: [...compras.notasCreditoGlobal({ desde, hasta, moneda, estado, search }), organizationId],
     queryFn: () =>
-      listarNotasCreditoGlobal({
-        desde,
-        hasta,
-        moneda: moneda === "todas" ? undefined : moneda,
-        estado: estado === "todos" ? undefined : estado,
-        search: search.trim() || undefined,
-      }),
+      listarNotasCreditoGlobal(
+        {
+          desde,
+          hasta,
+          moneda: moneda === "todas" ? undefined : moneda,
+          estado: estado === "todos" ? undefined : estado,
+          search: search.trim() || undefined,
+        },
+        organizationId,
+      ),
   });
 
   const totalMxn = rows

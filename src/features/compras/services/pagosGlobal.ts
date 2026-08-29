@@ -3,10 +3,17 @@
  *
  * Devuelve pagos con datos del proveedor y de la factura asociada,
  * filtrables por rango de fechas, proveedor y método de pago.
+ *
+ * A-9/M-4 (auditoría v14): `organizationId` se aplica explícito como
+ * defensa en profundidad (la impersonación de super admin es client-side)
+ * y `proveedorId`/`search` se resuelven server-side antes del `.limit()`
+ * para no perder resultados en silencio.
  */
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
 import { CAP_POSTGREST } from "@/constants/queryCaps";
+import { assertNotTruncated } from "@/lib/supabase/assertNotTruncated";
+import { resolverFacturaIdsPorBusqueda } from "./facturaSearchHelper";
 
 export interface PagoProveedorRow {
   id: string;
@@ -36,6 +43,7 @@ export interface ListarPagosFiltros {
 
 export async function listarPagosProveedorGlobal(
   filtros: ListarPagosFiltros = {},
+  organizationId?: string | null,
 ): Promise<PagoProveedorRow[]> {
   let q = supabase
     .from("pagos_proveedor")
@@ -53,13 +61,27 @@ export async function listarPagosProveedorGlobal(
     .order("fecha_pago", { ascending: false })
     .limit(CAP_POSTGREST);
 
+  if (organizationId) q = q.eq("organization_id", organizationId);
   if (filtros.desde) q = q.gte("fecha_pago", filtros.desde);
   if (filtros.hasta) q = q.lte("fecha_pago", filtros.hasta);
   if (filtros.metodoPago) q = q.eq("metodo_pago", filtros.metodoPago);
   if (filtros.moneda) q = q.eq("moneda", filtros.moneda);
+  // Filtro por embebido: PostgREST soporta columnas de un `!inner` embebido
+  // directamente como filtro de igualdad de la tabla raíz.
+  if (filtros.proveedorId) q = q.eq("proveedor_facturas.proveedor_id", filtros.proveedorId);
+
+  if (filtros.search) {
+    const term = filtros.search.trim();
+    const like = `%${term}%`;
+    const ids = await resolverFacturaIdsPorBusqueda(term);
+    q = ids.length > 0
+      ? q.or(`referencia.ilike.${like},proveedor_factura_id.in.(${ids.join(",")})`)
+      : q.ilike("referencia", like);
+  }
 
   const { data, error } = await q;
   if (error) throw error;
+  assertNotTruncated(data, CAP_POSTGREST, "compras.pagosGlobal");
 
   // SAFE-CAST: PostgREST devuelve la relación como objeto anidado.
   const raw = (data ?? []) as unknown as Array<{
@@ -81,7 +103,7 @@ export async function listarPagosProveedorGlobal(
     } | null;
   }>;
 
-  let rows: PagoProveedorRow[] = raw.map((r) => ({
+  return raw.map((r) => ({
     id: r.id,
     fecha_pago: r.fecha_pago,
     monto: Number(r.monto ?? 0),
@@ -99,22 +121,4 @@ export async function listarPagosProveedorGlobal(
     proveedor_id: r.proveedor_facturas?.proveedor_id ?? null,
     proveedor_nombre: r.proveedor_facturas?.proveedores?.nombre ?? null,
   }));
-
-  if (filtros.proveedorId) {
-    rows = rows.filter((r) => r.proveedor_id === filtros.proveedorId);
-  }
-  if (filtros.search) {
-    const s = filtros.search.trim().toLowerCase();
-    rows = rows.filter((r) =>
-      [
-        r.factura_folio_interno,
-        r.factura_folio_proveedor,
-        r.proveedor_nombre,
-        r.referencia,
-      ]
-        .filter(Boolean)
-        .some((v) => String(v).toLowerCase().includes(s)),
-    );
-  }
-  return rows;
 }

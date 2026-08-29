@@ -12,6 +12,7 @@ export interface TopProveedorRow {
   nombre: string;
   mxn: number;
   usd: number;
+  eur: number;
   count: number;
   mxnEquiv: number;
 }
@@ -60,6 +61,7 @@ export function TopProveedoresCard({ isLoading, rows }: Props) {
                 <div className="flex gap-4 tabular-nums text-xs">
                   {p.mxn > 0 && <span>{formatCurrency(p.mxn, "MXN")}</span>}
                   {p.usd > 0 && <span>{formatCurrency(p.usd, "USD")}</span>}
+                  {p.eur > 0 && <span>{formatCurrency(p.eur, "EUR")}</span>}
                 </div>
               </div>
             ))}

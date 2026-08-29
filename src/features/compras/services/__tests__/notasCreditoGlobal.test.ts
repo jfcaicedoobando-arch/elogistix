@@ -45,17 +45,22 @@ describe("listarNotasCreditoGlobal", () => {
     });
   });
 
-  it("filtra por proveedorId en cliente", async () => {
-    const rows = await listarNotasCreditoGlobal({ proveedorId: "prov-2" });
-    expect(rows).toHaveLength(1);
-    expect(rows[0].id).toBe("nc2");
+  // M-4 (auditoría v14): filtros server-side antes del LIMIT.
+  it("filtra por proveedor server-side (columna embebida)", async () => {
+    await listarNotasCreditoGlobal({ proveedorId: "prov-2" });
+    const call = mock.tableCalls.find((c) => c.table === "proveedor_notas_credito");
+    expect(call?.opArgs).toEqual(
+      expect.arrayContaining([["proveedor_facturas.proveedor_id", "prov-2"]]),
+    );
   });
 
-  it("aplica búsqueda case-insensitive", async () => {
-    const rows = await listarNotasCreditoGlobal({ search: "duplicada" });
-    expect(rows).toHaveLength(1);
-    expect(rows[0].id).toBe("nc2");
+  it("aplica la búsqueda server-side antes del límite", async () => {
+    await listarNotasCreditoGlobal({ search: "duplicada" });
+    const call = mock.tableCalls.find((c) => c.table === "proveedor_notas_credito");
+    expect(call?.ops.some((op) => op === "or" || op === "ilike")).toBe(true);
+    expect(call?.ops).toContain("limit");
   });
+
 
   it("propaga error del cliente Supabase (notas de crédito)", async () => {
     mock.setTableResult("proveedor_notas_credito", { data: null, error: { message: "boom" } });

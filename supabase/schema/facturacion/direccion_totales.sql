@@ -22,7 +22,7 @@ BEGIN
       -- del dashboard de Dirección.
       AND e.estado <> 'Cancelado'
       AND (e.cerrado_at >= p_desde OR e.eta >= p_desde)
-      AND (e.organization_id = current_user_org_id() OR has_role(auth.uid(), 'super_admin'))
+      AND e.organization_id = public.org_scope()
   ),
   ventas AS (
     SELECT cv.moneda::text AS moneda, SUM(cv.total) AS total
@@ -42,7 +42,7 @@ BEGIN
     WHERE f.deleted_at IS NULL
       AND f.estado IN ('Emitida', 'Parcialmente pagada', 'Vencida', 'Pagada')
       AND f.fecha_emision >= p_desde
-      AND (f.organization_id = current_user_org_id() OR has_role(auth.uid(), 'super_admin'))
+      AND f.organization_id = public.org_scope()
     GROUP BY f.moneda
   ),
   cobrado AS (
@@ -52,7 +52,7 @@ BEGIN
     WHERE pf.deleted_at IS NULL
       AND f.deleted_at IS NULL
       AND pf.fecha_pago >= p_desde
-      AND (pf.organization_id = current_user_org_id() OR has_role(auth.uid(), 'super_admin'))
+      AND pf.organization_id = public.org_scope()
     GROUP BY f.moneda
   )
   SELECT jsonb_build_object(
