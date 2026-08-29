@@ -60,7 +60,7 @@ El backlog v5 afirma cosas que hoy no son ciertas:
 | C9 | Cerrado: paridad SQL/TS sobre `created_by`; expuesto `canViewCostsOfCotizacion`. |
 | L3 | Cerrado: la importación reporta el rango de filas no guardadas. |
 | N13 | **Cerrado (v13.791.0)**: existe la RPC `devolver_anticipo_proveedor` (devolución simple que deja el saldo a favor en cero) + diálogo `DevolverAnticipoDialog` con su hook `useDevolverAnticipoForm`. |
-| N14 | Abierto: anticipos en EUR (requiere paridad EUR/MXN oficial). Registrado como riesgo de alcance, no como bug. |
+| N14 | Cerrado (v13.796.0): la aplicación de anticipos se valúa con la paridad DOF del día; EUR y cruces MXN↔USD ya no se bloquean. |
 
 ## Estado consolidado (v13.793.0)
 

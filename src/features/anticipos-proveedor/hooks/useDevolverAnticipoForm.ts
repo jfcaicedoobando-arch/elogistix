@@ -52,14 +52,17 @@ export function useDevolverAnticipoForm({ open, anticipo, onOpenChange }: Args) 
     setCuentaId((actual) => actual || (cuentasDeMoneda[0]?.id ?? ""));
   }, [open, cuentasDeMoneda]);
 
+  // F2 (decisión 2026-08-29): sólo devolución TOTAL. El monto queda fijo al
+  // saldo disponible; una parcial haría desaparecer el remanente sin asiento.
   const excede = (monto ?? 0) > disponible + 0.01;
+  const esParcial = (monto ?? 0) < disponible - 0.01;
 
   const handleConfirm = async () => {
     if (!anticipo) return;
-    if (!monto || monto <= 0 || excede) {
+    if (!monto || monto <= 0 || excede || esParcial) {
       notifyWarning(undefined, {
         title: "Revisa el monto",
-        description: `La devolución debe ser mayor a cero y no puede exceder el saldo disponible (${formatCurrency(disponible, moneda)}).`,
+        description: `La devolución debe ser por el saldo completo (${formatCurrency(disponible, moneda)}); no se permiten devoluciones parciales.`,
       });
       return;
     }
