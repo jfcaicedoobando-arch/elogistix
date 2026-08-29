@@ -1,5 +1,15 @@
 # Changelog
 
+## [13.806.0] - 2026-08-29
+
+- **Ola 8 · Remediación v15 (candados server-side)**.
+- **M-15 (Crédito)**: el límite de crédito ahora se valida en el servidor al timbrar (`facturapi-emitir`), no sólo en el diálogo. Si la factura rebasa el límite responde 409 y sólo los roles de dirección/finanzas pueden emitir por encima; si la exposición no se puede calcular, no se timbra (fail-closed).
+- **B-11 (Facturas en $0)**: el timbrado rechaza facturas con total 0 desde el servidor.
+- **M-3 (Reportes de Compras)**: los reportes y KPIs de Compras pasan a subtotal (costo sin IVA) para cuadrar con Presupuesto vs Real; las tarjetas se etiquetan “Subtotal … (sin IVA)”.
+- **M-14 (Tipo de cambio)**: banda de plausibilidad (5–40 MXN por divisa) en los diálogos de pago de factura y de pago a proveedor.
+- **A-8 (Tesorería)**: el flujo proyectado ya no incluye liquidaciones de comisión canceladas.
+- **M-10 (Auditoría)**: nueva regla `contenedores_totales_descuadrados` (peso/volumen/piezas del embarque vs. suma de contenedores) y etiqueta de `venta_total_descuadrado` unificada.
+
 ## [13.805.0] - 2026-08-29
 
 - **Ola 7 · Auditoría v14-2 (cierre de las 5 decisiones de producto)**.
