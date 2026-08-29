@@ -13,10 +13,12 @@ import type { FacturaRow } from "./types.ts";
 
 /**
  * Roles que pueden emitir por arriba del límite de crédito. Espejo de
- * `ROLES_OVERRIDE_CREDITO` en el frontend (`src/lib/access/creditoOverride.ts`).
+ * `ROLES_OVERRIDE_CREDITO` en
+ * `src/features/cliente/hooks/useValidarLimiteCredito.ts`. Mantener sincronizada.
  */
 export const ROLES_OVERRIDE_CREDITO: readonly string[] = [
-  "super_admin", "admin", "admin_org", "contador", "tesorero", "gerente_comercial",
+  "super_admin", "admin", "admin_org", "contador", "tesorero",
+  "gerente_operaciones", "gerente_comercial",
 ];
 
 const MXN_POR_DEFECTO = 1;
