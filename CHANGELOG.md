@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.794.0] - 2026-08-29
+### Facturación
+- Nuevo "ZIP del mes (PAC)" en Facturas Emitidas → Exportar: descarga un paquete ZIP con el PDF y XML de todas las facturas, notas de crédito y REPs emitidos en el mes, generado del lado de FacturApi (métodos `invoices.*ZipRequest`). Pensado para la entrega mensual al contador. Nueva edge function `facturapi-descargar-zip` (multi-tenant vía `getFacturapiClient`, roles de consulta fiscal, con polling hasta que el PAC termina de ensamblar el paquete).
+- SDK FacturApi actualizado de 4.18.0 a 4.20.0 (descarga ZIP + fix de tipado `property_tax_account`).
+
 ## [13.793.0] - 2026-08-29
 ### Documentación
 - Limpieza de documentación: eliminados >25 archivos MD obsoletos (fix packs cerrados, auditorías visuales/arquitectura de versiones previas) y sus capturas; `docs/` bajó de 1.9 MB a ~173 KB. También se borró `scripts/ga-gate.sh` (anclado a v12).
