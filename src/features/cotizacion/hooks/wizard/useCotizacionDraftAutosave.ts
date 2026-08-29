@@ -12,7 +12,7 @@
  *
  * Consumido por `NuevaCotizacion` + `DraftRestoreBanner`.
  */
-import { useEffect, useRef, useCallback } from "react";
+import { useEffect, useRef, useCallback, useState } from "react";
 import type { UseFormReturn } from "react-hook-form";
 import { safeLocalStorage } from "@/lib/browserStorage";
 import type { CotizacionFormValues } from "@/features/cotizacion/domain/mappers/cotizacionForm";
@@ -90,6 +90,11 @@ export function useCotizacionDraftAutosave({ form, userId, organizationId = null
   costosRef.current = costosInternos;
   const pausedRef = useRef<boolean>(paused);
   pausedRef.current = paused;
+  // M-12 (v14-2): identidad estable de ESTA pestaña; se estampa en cada
+  // escritura del draft para que el listener `storage` distinga escrituras
+  // propias de las de otra pestaña (antes: last-write-wins silencioso).
+  const tabIdRef = useRef<string>(crypto.randomUUID());
+  const [conflictoExterno, setConflictoExterno] = useState(false);
 
   const clear = useCallback(() => {
     clearDraft(userId, organizationId);
@@ -103,6 +108,7 @@ export function useCotizacionDraftAutosave({ form, userId, organizationId = null
     currentStep: stepRef.current,
     costosInternos: costosRef.current,
     noRestaurado: [],
+    tabId: tabIdRef.current,
   }), []);
 
   const persist = useCallback((values: CotizacionFormValues) => {
