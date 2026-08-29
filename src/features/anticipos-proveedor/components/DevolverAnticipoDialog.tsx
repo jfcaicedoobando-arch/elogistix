@@ -74,10 +74,11 @@ export function DevolverAnticipoDialog({ open, onOpenChange, anticipo }: Props) 
               onChange={f.setMonto}
               currency={f.moneda}
               max={f.disponible}
+              disabled
               aria-invalid={f.excede}
             />
-            <p className={f.excede ? "text-xs text-destructive" : "text-xs text-muted-foreground"}>
-              Saldo disponible: {formatCurrency(f.disponible, f.moneda)}
+            <p className="text-xs text-muted-foreground">
+              La devolución es por el saldo completo: {formatCurrency(f.disponible, f.moneda)}.
             </p>
           </div>
           <div className="space-y-1.5">

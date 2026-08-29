@@ -50,35 +50,30 @@ export const FINANCE_VIEWERS: readonly AppRole[] = [
 ];
 
 /**
- * QA B-07 — Roles que pueden ver COSTO, utilidad y margen.
+ * Roles que pueden ver COSTO, utilidad y margen.
  *
- * `FINANCE_VIEWERS` habilita la vista financiera (venta, cobranza), pero los
- * roles puramente comerciales (`vendedor`, `ejecutivo_pricing`) no deben ver el
- * costo del proveedor ni la utilidad: sólo el lado de venta.
+ * C9 (decisión 2026-08-29): gerencia, finanzas y ventas — TODOS ven costos y
+ * márgenes de cualquier cotización. Se elimina la excepción de "sólo las
+ * cotizaciones propias" para el vendedor.
  *
- * C9 (Ola E2 · B) — excepción de producto: el `vendedor` SÍ ve el costo y el
- * margen de las cotizaciones que él creó (usa `puedeVerCostosCotizacion`).
- * Espejo en la base de datos: `public.puede_ver_costos_cotizacion()` y
- * `public.puede_ver_costos_cotizacion_propia()`; al cambiar esta lista hay que
- * cambiar también esas funciones.
+ * Espejo en la base de datos: `public.puede_ver_costos_cotizacion()`; al
+ * cambiar esta lista hay que cambiar también esa función.
  */
-export const COST_VIEWERS: readonly AppRole[] = FINANCE_VIEWERS.filter(
-  (r) => r !== "vendedor" && r !== "ejecutivo_pricing",
-);
+export const COST_VIEWERS: readonly AppRole[] = FINANCE_VIEWERS;
 
 /**
- * C9 — ¿este usuario ve costo/margen de una cotización concreta?
+ * C9 — ¿este usuario ve costo/margen de una cotización?
  *
- * Analogía: el vendedor puede abrir el sobre de costos de los expedientes que
- * él armó, pero no los de sus compañeros.
+ * Desde v13.796.0 la visibilidad depende sólo del rol (gerencia, finanzas y
+ * ventas); ya no importa quién creó la cotización. Se conserva el segundo
+ * parámetro por compatibilidad con los llamadores existentes.
  */
 export function puedeVerCostosCotizacion(
   rol: AppRole | null,
-  esCotizacionPropia: boolean,
+  _esCotizacionPropia?: boolean,
 ): boolean {
   if (!rol) return false;
-  if (COST_VIEWERS.includes(rol)) return true;
-  return rol === "vendedor" && esCotizacionPropia;
+  return COST_VIEWERS.includes(rol);
 }
 
 
