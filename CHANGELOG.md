@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.793.0] - 2026-08-29
+### Documentación
+- Limpieza de documentación: eliminados >25 archivos MD obsoletos (fix packs cerrados, auditorías visuales/arquitectura de versiones previas) y sus capturas; `docs/` bajó de 1.9 MB a ~173 KB. También se borró `scripts/ga-gate.sh` (anclado a v12).
+- Actualizados con estado vivo: `docs/rls-multitenant-audit.md` (119/119 tablas con RLS, 93 políticas RESTRICTIVE), `docs/security-checklist.md` (48 edge functions, 6 con `verify_jwt = false`, rate limiting propio), `docs/riesgos-aceptados.md` (V-14 → 39 call-sites, RN-3 → 12 constraints NOT VALID) y `docs/strict-mode-roadmap.md` (cerrado: `strict: true` ya activo).
+- `CHANGELOG.md` recortado: el histórico previo a `13.0.0` se archivó en `docs/changelog-archive.md`. Índice de documentación ampliado en `README.md`.
+
+
 ## [13.792.2] - 2026-08-29
 ### CI
 - Corregido warning `react-refresh/only-export-components` en `subtotalCell.tsx`: se extrajo `subtotalesDeFila` a su propio archivo y se actualizaron los imports en `cotizacionesColumns.tsx` y `Cotizaciones.tsx`.
