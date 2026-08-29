@@ -321,8 +321,6 @@ jobs:
           # v13.322.1 (GHA-audit H4) — no se hace push/fetch autenticado.
           persist-credentials: false
 
-      - name: Cliente de Postgres 17 (paridad con la imagen pinneada)
-        uses: ./.github/actions/setup-pg-client
 
       # v13.709.1 — El artifact de logs avisaba "No files were found" cuando la
       # step de suites no llegaba a correr (p. ej. falla el restore del dump):
