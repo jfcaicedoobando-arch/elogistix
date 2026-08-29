@@ -6353,33 +6353,33 @@ CREATE FUNCTION public.busqueda_global(termino text, limite integer DEFAULT 5) R
            OR e.bl_master ILIKE '%' || termino || '%'
            OR e.bl_house  ILIKE '%' || termino || '%')
       AND e.deleted_at IS NULL
-      AND (e.organization_id = current_user_org_id() OR has_role(auth.uid(), 'super_admin'))
+      AND e.organization_id = public.org_scope()
     ORDER BY e.expediente, e.created_at ASC
     LIMIT limite)
    UNION ALL
    (SELECT cl.id, cl.nombre AS label, cl.rfc AS sublabel, 'cliente'::text AS tipo, '/clientes/' || cl.id AS url
     FROM clientes cl WHERE (cl.nombre ILIKE '%' || termino || '%' OR cl.rfc ILIKE '%' || termino || '%')
       AND cl.deleted_at IS NULL
-      AND (cl.organization_id = current_user_org_id() OR has_role(auth.uid(), 'super_admin'))
+      AND cl.organization_id = public.org_scope()
     LIMIT limite)
    UNION ALL
    (SELECT p.id, p.nombre AS label, p.rfc AS sublabel, 'proveedor'::text AS tipo, '/proveedores/' || p.id AS url
     FROM proveedores p WHERE (p.nombre ILIKE '%' || termino || '%' OR p.rfc ILIKE '%' || termino || '%')
       -- Ola 4 · N48: filtro que faltaba (las demás ramas ya lo tenían).
       AND p.deleted_at IS NULL
-      AND (p.organization_id = current_user_org_id() OR has_role(auth.uid(), 'super_admin'))
+      AND p.organization_id = public.org_scope()
     LIMIT limite)
    UNION ALL
    (SELECT f.id, f.numero AS label, f.cliente_nombre AS sublabel, 'factura'::text AS tipo, '/facturacion/' || f.id AS url
     FROM facturas f WHERE (f.numero ILIKE '%' || termino || '%' OR f.cliente_nombre ILIKE '%' || termino || '%')
       AND f.deleted_at IS NULL
-      AND (f.organization_id = current_user_org_id() OR has_role(auth.uid(), 'super_admin'))
+      AND f.organization_id = public.org_scope()
     LIMIT limite)
    UNION ALL
    (SELECT c.id, c.folio AS label, c.cliente_nombre AS sublabel, 'cotizacion'::text AS tipo, '/cotizaciones/' || c.id AS url
     FROM cotizaciones c WHERE (c.folio ILIKE '%' || termino || '%' OR c.cliente_nombre ILIKE '%' || termino || '%' OR c.prospecto_empresa ILIKE '%' || termino || '%')
       AND c.deleted_at IS NULL
-      AND (c.organization_id = current_user_org_id() OR has_role(auth.uid(), 'super_admin'))
+      AND c.organization_id = public.org_scope()
     LIMIT limite)
    UNION ALL
    (SELECT pr.id, pr.numero AS label,
@@ -6391,7 +6391,7 @@ CREATE FUNCTION public.busqueda_global(termino text, limite integer DEFAULT 5) R
            OR pr.cliente_nombre ILIKE '%' || termino || '%'
            OR pr.expediente ILIKE '%' || termino || '%')
       AND pr.deleted_at IS NULL
-      AND (pr.organization_id = current_user_org_id() OR has_role(auth.uid(), 'super_admin'))
+      AND pr.organization_id = public.org_scope()
     LIMIT limite)
    UNION ALL
    -- B-062: matchear también por folio_interno (FI-…) — es el folio que la UI
@@ -6416,7 +6416,7 @@ CREATE FUNCTION public.busqueda_global(termino text, limite integer DEFAULT 5) R
            OR pf.folio_interno ILIKE '%' || termino || '%'
            OR pf.proveedor_nombre ILIKE '%' || termino || '%'
            OR pv.rfc ILIKE '%' || termino || '%')
-      AND (pf.organization_id = current_user_org_id() OR has_role(auth.uid(), 'super_admin'))
+      AND pf.organization_id = public.org_scope()
     LIMIT limite);
 $$;
 CREATE FUNCTION public.calc_cancelacion_vence(p_solicitada timestamp with time zone) RETURNS timestamp with time zone
@@ -8071,7 +8071,7 @@ BEGIN
     ) nc ON true
     WHERE f.deleted_at IS NULL
       AND f.estado IN ('Emitida', 'Parcialmente pagada', 'Vencida')
-      AND (f.organization_id = public.org_scope())
+      AND f.organization_id = public.org_scope()
       AND (p_cliente_id IS NULL OR f.cliente_id = p_cliente_id)
       AND (p_moneda IS NULL OR f.moneda::text = p_moneda)
   )
@@ -11602,7 +11602,7 @@ BEGIN
     WHERE f.deleted_at IS NULL
       AND f.estado IN ('Emitida', 'Parcialmente pagada', 'Vencida', 'Pagada')
       AND f.fecha_emision >= v_desde
-      AND (f.organization_id = public.org_scope())
+      AND f.organization_id = public.org_scope()
   ),
   fact_mes AS (
     SELECT mes, SUM(total_mxn) AS facturado_mxn FROM fact WHERE total_mxn IS NOT NULL GROUP BY mes
@@ -11621,7 +11621,7 @@ BEGIN
     WHERE pf.deleted_at IS NULL
       AND f.deleted_at IS NULL
       AND pf.fecha_pago >= v_desde
-      AND (pf.organization_id = public.org_scope())
+      AND pf.organization_id = public.org_scope()
   ),
   pagos_mes AS (
     SELECT mes, SUM(cobrado_mxn) AS cobrado_mxn FROM pagos WHERE cobrado_mxn IS NOT NULL GROUP BY mes
@@ -12223,7 +12223,7 @@ BEGIN
       -- del dashboard de Dirección.
       AND e.estado <> 'Cancelado'
       AND (e.cerrado_at >= p_desde OR e.eta >= p_desde)
-      AND (e.organization_id = current_user_org_id() OR has_role(auth.uid(), 'super_admin'))
+      AND e.organization_id = public.org_scope()
   ),
   ventas AS (
     SELECT cv.moneda::text AS moneda, SUM(cv.total) AS total
@@ -12243,7 +12243,7 @@ BEGIN
     WHERE f.deleted_at IS NULL
       AND f.estado IN ('Emitida', 'Parcialmente pagada', 'Vencida', 'Pagada')
       AND f.fecha_emision >= p_desde
-      AND (f.organization_id = current_user_org_id() OR has_role(auth.uid(), 'super_admin'))
+      AND f.organization_id = public.org_scope()
     GROUP BY f.moneda
   ),
   cobrado AS (
@@ -12253,7 +12253,7 @@ BEGIN
     WHERE pf.deleted_at IS NULL
       AND f.deleted_at IS NULL
       AND pf.fecha_pago >= p_desde
-      AND (pf.organization_id = current_user_org_id() OR has_role(auth.uid(), 'super_admin'))
+      AND pf.organization_id = public.org_scope()
     GROUP BY f.moneda
   )
   SELECT jsonb_build_object(
@@ -12658,7 +12658,7 @@ CREATE FUNCTION public.eerr_resumen_anual(p_year integer, p_fuente text DEFAULT 
     SET search_path TO 'public'
     AS $$
 DECLARE
-  v_org uuid := public.current_user_org_id();
+  v_org uuid := public.org_scope();
 BEGIN
   IF v_org IS NULL THEN
     RAISE EXCEPTION 'LC_ORG_FORBIDDEN: usuario sin organizacion activa' USING ERRCODE='42501';
@@ -23978,11 +23978,11 @@ CREATE FUNCTION public.sidebar_alert_counts() RETURNS TABLE(embarques_demora big
     AS $$
   SELECT
     (SELECT count(*) FROM embarques e
-     WHERE e.deleted_at IS NULL               -- FIX C5
-       AND e.eta IS NOT NULL
+     WHERE e.eta IS NOT NULL
+       AND e.deleted_at IS NULL
        AND (current_date - e.eta) >= 7
        AND CASE
-         WHEN e.estado IN ('Arribo','En Aduana','Entregado','EIR','Por liquidar','Cerrado') THEN e.estado::text
+         WHEN e.estado IN ('Arribo','En Aduana','Entregado','EIR','Cerrado') THEN e.estado::text
          WHEN e.modo = 'Marítimo' AND e.tipo = 'Importación'
               AND e.etd IS NOT NULL AND e.eta IS NOT NULL THEN
            CASE
@@ -23993,20 +23993,21 @@ CREATE FUNCTION public.sidebar_alert_counts() RETURNS TABLE(embarques_demora big
            END
          ELSE e.estado::text
        END = 'Arribo'
-       AND (e.organization_id = public.org_scope())
+       AND e.organization_id = public.org_scope()
     ) AS embarques_demora,
     (SELECT count(*) FROM facturas f
-     WHERE f.deleted_at IS NULL               -- FIX C5
-       AND f.estado = 'Vencida'
-       AND (f.organization_id = public.org_scope())
+     WHERE f.estado = 'Vencida'
+       AND f.deleted_at IS NULL
+       AND f.organization_id = public.org_scope()
     ) AS facturas_vencidas,
     (SELECT count(*) FROM embarque_garantias_contenedor g
      JOIN embarques e ON e.id = g.embarque_id
-     WHERE e.deleted_at IS NULL               -- FIX C5 (garantías sin deleted_at: filtra el padre)
-       AND g.estado = 'depositado'
+     WHERE g.estado = 'depositado'
+       AND g.deleted_at IS NULL
+       AND e.deleted_at IS NULL
        AND g.fecha_deposito IS NOT NULL
        AND (current_date - g.fecha_deposito) > 30
-       AND (e.organization_id = public.org_scope())
+       AND e.organization_id = public.org_scope()
     ) AS garantias_atoradas;
 $$;
 CREATE FUNCTION public.siguiente_folio_cotizacion() RETURNS text
