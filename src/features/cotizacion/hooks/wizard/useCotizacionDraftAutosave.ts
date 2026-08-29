@@ -80,6 +80,10 @@ export function draftTieneContenido(values: CotizacionFormValues, costos: FilaCo
 export function useCotizacionDraftAutosave({ form, userId, organizationId = null, enabled, cotizacionId, currentStep, costosInternos, paused = false }: Params): {
   clear: () => void;
   flush: () => void;
+  /** M-12: true cuando OTRA pestaña sobrescribió el borrador de este wizard. */
+  conflictoExterno: boolean;
+  /** M-12: el usuario ya vio el aviso; se reactiva si hay otra escritura externa. */
+  descartarConflicto: () => void;
 } {
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const cotIdRef = useRef<string | null>(cotizacionId);
