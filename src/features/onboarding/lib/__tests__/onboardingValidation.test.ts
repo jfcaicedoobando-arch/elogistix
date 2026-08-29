@@ -23,7 +23,7 @@ describe("validateOnboarding (B-20 · RFC con formato SAT)", () => {
   it("rechaza longitudes válidas pero con estructura inválida", () => {
     // 12-13 caracteres ya no basta: debe cumplir letras + fecha + homoclave.
     expect(validateOnboarding({ ...base, rfc: "123456789012" }).ok).toBe(false);
-    expect(validateOnboarding({ ...base, rfc: "ABC990103XY4" }).ok).toBe(false); // mes 99
+    expect(validateOnboarding({ ...base, rfc: "ABC019932XY4" }).ok).toBe(false); // mes 99
     expect(validateOnboarding({ ...base, rfc: "ABC010232XY4" }).ok).toBe(false); // día 32
     expect(validateOnboarding({ ...base, rfc: "ABC010203X!" }).ok).toBe(false); // homoclave inválida
   });
