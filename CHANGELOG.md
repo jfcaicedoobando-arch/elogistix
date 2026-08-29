@@ -1,5 +1,13 @@
 # Changelog
 
+## [13.800.0] - 2026-08-29
+
+- **Ola 3 · Auditoría v14 (cierre) + bajos de papelera**.
+- **A-4 (Profit devengado)**: el EERR devengado resuelve embarques por expediente filtrando `organization_id` y `deleted_at IS NULL`; dos organizaciones con el mismo expediente ya no se cruzan T/C ni modo de transporte.
+- **M-17 (Compras)**: `sugerir_embarques_para_proveedor` excluye embarques en papelera en las 3 ramas del UNION.
+- **B-1 (Embarques)**: `reabrir_embarque` sólo opera sobre embarques vivos (`deleted_at IS NULL`).
+- **B-13 / B-14 / B-15**: lineage de leads (oportunidades), seguros del embarque y conteo de movimientos bancarios excluyen registros borrados.
+
 ## [13.799.0] - 2026-08-29
 
 - **Olas 2 y 3 · Auditoría v14 (altos y medios)**.
