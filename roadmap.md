@@ -1,20 +1,15 @@
 # Roadmap
 
-## En curso — Ronda v3 · Remediación selectiva (bugs F1–F5, N18, N22, M3, C9)
-- [ ] Migración SQL: F1/F2 (devolución anticipo), F3 (cruce multi-moneda), F4 (guards NC), F5 (tope NC proveedor), N18 (lock refacturación), N22 (CHECK =1), M3 (índice único email), C9 (roles costos)
-- [ ] Front F2: monto de devolución fijo (sólo total) en DevolverAnticipoDialog
-- [ ] Front C9: alinear permissionMatrix (COST_VIEWERS = gerencia + finanzas + ventas) + actualizar costViewers.test.ts
-- [ ] Mensajes LC_ANTICIPO_DEVOLUCION_TOTAL y LC_NC_PROV_EXCEDE_SALDO
-- [ ] Test guards SQL (supabase/tests) + registro en manifiesto
-- [ ] Responder al usuario: resumen de bugs corregidos (pregunta en chat)
-- [ ] Bump APP_VERSION + CHANGELOG
+## Auditoría v14-2 (40 hallazgos)
+- [x] Olas 1–4 (críticos, altos, medios/bajos masivos) — v13.798–13.801
+- [x] Ola 5 y 6 parcial (A-1, A-6, A-7, M-8, M-10, B-10, M-11) — v13.802
+- [x] Ola 6 frontend (B-8, M-14) — v13.803
+- [x] Técnicos bajo riesgo: B-17, B-19 (verificados ya cubiertos), B-20 (RFC SAT) — v13.804
 
-## Pendiente (decidido NO hacer en esta ronda)
-N9/F6/F7, M6, N-F4, N13-res, M7-res, L4-res, N-F2.
-# Roadmap
-- [ ] Correr suite RLS completa localmente (Postgres efímero)
-- [ ] Generador automático de `_ci_service_role_only.sql` desde esquema real (script + integración CI)
-- [x] Ola 1 v14 (C-1 doble IVA, C-2/A-10/M-6 snapshots)
-- [x] Ola 2 v14: org_scope en KPIs (A-2/M-5), org explícita en Compras (A-9), filtros server-side (M-4)
-- [x] Ola 3 v14 completa: A-3, A-4, A-8, A-11, M-3, M-16, M-17, B-1 + bajos B-13/B-14/B-15
-- [x] Typecheck del preview en verde (fixtures TopProveedorRow con eur)
+## Pendiente — decisiones de producto (5)
+- [ ] M-12 Autosave cotización: conflicto entre pestañas
+- [ ] M-13 Wizard embarque sin borrador/autosave
+- [ ] M-15 Límite de crédito: fail-open, override, ausente en timbrado masivo
+- [ ] B-3 Three-way match (no existe modelo de recepciones)
+- [ ] B-4 PUE admite abonos parciales
+- [ ] B-21 Tracking automático naviera (gap de alcance, evaluar)
