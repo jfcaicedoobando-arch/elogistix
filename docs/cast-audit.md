@@ -51,4 +51,4 @@ _Ningún cast HIGH o CRITICAL detectado._
 
 ## Roadmap
 
-Ver [`docs/strict-mode-roadmap.md`](./strict-mode-roadmap.md) para el plan de 4 fases hacia `strictNullChecks: true`.
+Ver [`docs/strict-mode-roadmap.md`](./strict-mode-roadmap.md) (cerrado) para el histórico de cómo se llegó a `strict: true`.
