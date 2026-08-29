@@ -1678,6 +1678,7 @@ DECLARE
   v_cant  numeric;
   v_total numeric;
   v_pu    numeric;
+  v_tasa  numeric;
   v_base  numeric;
   v_n     integer;
   v_parte numeric;
@@ -1738,19 +1739,25 @@ BEGIN
   IF jsonb_typeof(p_conceptos_venta) = 'array' THEN
     FOR v_venta IN SELECT * FROM jsonb_array_elements(p_conceptos_venta) LOOP
       IF COALESCE(trim(v_venta->>'descripcion'), '') <> '' THEN
-        v_cant  := GREATEST(COALESCE((v_venta->>'cantidad')::numeric, 1), 1);
-        v_total := ROUND(COALESCE((v_venta->>'total')::numeric, 0), 2);
-        v_pu    := COALESCE((v_venta->>'precio_unitario')::numeric, 0);
-        IF ABS(v_total - ROUND(v_cant::numeric * v_pu, 2)) > 0.01 THEN
-          v_pu := ROUND(v_total / v_cant::numeric, 6);
+        v_cant := GREATEST(COALESCE((v_venta->>'cantidad')::numeric, 1), 1);
+        v_pu   := COALESCE((v_venta->>'precio_unitario')::numeric, 0);
+        v_tasa := GREATEST(COALESCE((v_venta->>'tasa_iva_aplicada')::numeric, 0), 0);
+        -- C-1: la base gravable se DERIVA del unitario capturado. Fallback sólo
+        -- si no hay unitario: se desinfla el `total` (que viene con IVA).
+        IF v_pu = 0 THEN
+          v_total := ROUND(COALESCE((v_venta->>'total')::numeric, 0) / (1 + v_tasa), 2);
+          v_pu    := ROUND(v_total / v_cant, 6);
         END IF;
+        v_total := ROUND(v_cant * v_pu, 2);
         INSERT INTO public.conceptos_venta (
-          embarque_id, descripcion, cantidad, precio_unitario, moneda, aplica_iva, total, organization_id
+          embarque_id, descripcion, cantidad, precio_unitario, moneda,
+          aplica_iva, tasa_iva_aplicada, total, organization_id
         )
         VALUES (
           p_embarque_id, v_venta->>'descripcion', v_cant, v_pu,
           CASE WHEN v_venta->>'moneda' = 'USD' THEN 'USD'::moneda ELSE 'MXN'::moneda END,
-          COALESCE((v_venta->>'aplica_iva')::boolean, false),
+          COALESCE((v_venta->>'aplica_iva')::boolean, v_tasa > 0),
+          v_tasa,
           v_total, p_org
         );
       END IF;
@@ -5813,50 +5820,72 @@ CREATE FUNCTION public.auditoria_capturar_snapshot(p_organization_id uuid) RETUR
     SET search_path TO 'public'
     AS $$
 DECLARE
+  v_reporte jsonb;
   v_total int := 0;
-  v_pend int := 0;
-  v_crit int := 0;
-  v_alto int := 0;
-  v_med int := 0;
+  v_pend  int := 0;
+  v_crit  int := 0;
+  v_alto  int := 0;
+  v_med   int := 0;
+  v_suma  int := 0;
   v_score int := 100;
+  v_por_regla jsonb := '{}'::jsonb;
   v_id uuid;
 BEGIN
   IF NOT (
-    has_role(auth.uid(), 'super_admin'::app_role)
+    COALESCE(auth.role(), '') = 'service_role'
+    OR has_role(auth.uid(), 'super_admin'::app_role)
     OR is_org_admin(auth.uid(), p_organization_id)
     OR has_org_role(auth.uid(), p_organization_id, 'admin'::app_role)
     OR has_org_role(auth.uid(), p_organization_id, 'operador'::app_role)
   ) THEN
     RAISE EXCEPTION 'No autorizado para capturar snapshot de esta organización';
   END IF;
-  -- Calcular agregados directos por org (versión simplificada del RPC principal,
-  -- contando hallazgos críticos sin recalcular toda la lógica financiera).
-  SELECT COUNT(*) INTO v_total
-  FROM auditoria_revisiones
-  WHERE organization_id = p_organization_id;
-  SELECT COUNT(*) INTO v_pend
-  FROM auditoria_revisiones
-  WHERE organization_id = p_organization_id
-    AND estado_revision <> 'revisado';
-  -- Para criticos/altos/medios necesitamos llamar la RPC principal — sólo
-  -- funciona si el caller pertenece a la org. Si no, dejamos en cero (caso
-  -- super_admin sin pertenencia).
-  IF current_user_org_id() = p_organization_id THEN
-    SELECT
-      COALESCE((r->'por_severidad'->>'critico')::int, 0),
-      COALESCE((r->'por_severidad'->>'alto')::int, 0),
-      COALESCE((r->'por_severidad'->>'medio')::int, 0),
-      COALESCE((r->>'total_hallazgos')::int, 0)
-    INTO v_crit, v_alto, v_med, v_total
-    FROM (SELECT auditoria_embarques_org() AS r) x;
+  -- A-10: siempre por la org objetivo (la RPC ya es SECURITY DEFINER).
+  v_reporte := public.auditoria_embarques_org(p_organization_id);
+  v_total := COALESCE((v_reporte->>'total_hallazgos')::int, 0);
+  -- M-6: pendientes = hallazgos sin revisión registrada (misma llave que el
+  -- frontend: embarque_id + regla + detalle).
+  WITH hallazgos AS (
+    SELECT je.value AS j
+      FROM jsonb_array_elements(COALESCE(v_reporte->'hallazgos', '[]'::jsonb)) je
+  ), pendientes AS (
+    SELECT h.j
+      FROM hallazgos h
+     WHERE NOT EXISTS (
+       SELECT 1
+         FROM public.auditoria_revisiones r
+        WHERE r.organization_id = p_organization_id
+          AND r.embarque_id = (h.j->>'embarque_id')::uuid
+          AND r.regla = (h.j->>'regla')
+          AND r.detalle = (h.j->>'detalle')
+     )
+  )
+  SELECT
+    COUNT(*)::int,
+    COUNT(*) FILTER (WHERE j->>'severidad' = 'critico')::int,
+    COUNT(*) FILTER (WHERE j->>'severidad' = 'alto')::int,
+    COUNT(*) FILTER (WHERE j->>'severidad' = 'medio')::int,
+    COALESCE(jsonb_object_agg(regla, cnt) FILTER (WHERE regla IS NOT NULL), '{}'::jsonb)
+    INTO v_pend, v_crit, v_alto, v_med, v_por_regla
+    FROM (
+      SELECT p.j,
+             (p.j->>'regla') AS regla,
+             COUNT(*) OVER (PARTITION BY (p.j->>'regla'))::int AS cnt
+        FROM pendientes p
+    ) x;
+  -- Higiene (espejo de `calcularScore` con riesgoMxn = 0).
+  v_suma := v_crit * 5 + v_alto * 2 + v_med * 1;
+  IF v_pend = 0 THEN
+    v_score := 100;
+  ELSE
+    v_score := GREATEST(0, 100 - LEAST(100, v_suma * 2));
   END IF;
-  v_score := GREATEST(0, 100 - LEAST(100, (v_crit * 5 + v_alto * 2 + v_med * 1) * 2));
   INSERT INTO auditoria_snapshots (
     organization_id, fecha, total_hallazgos, total_pendientes,
     criticos, altos, medios, score, por_regla
   ) VALUES (
     p_organization_id, CURRENT_DATE, v_total, GREATEST(0, v_pend),
-    v_crit, v_alto, v_med, v_score, '{}'::jsonb
+    v_crit, v_alto, v_med, v_score, COALESCE(v_por_regla, '{}'::jsonb)
   )
   ON CONFLICT (organization_id, fecha) DO UPDATE SET
     total_hallazgos  = EXCLUDED.total_hallazgos,
@@ -5864,7 +5893,8 @@ BEGIN
     criticos = EXCLUDED.criticos,
     altos    = EXCLUDED.altos,
     medios   = EXCLUDED.medios,
-    score    = EXCLUDED.score
+    score    = EXCLUDED.score,
+    por_regla = EXCLUDED.por_regla
   RETURNING id INTO v_id;
   RETURN v_id;
 END;
