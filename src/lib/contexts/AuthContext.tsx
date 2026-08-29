@@ -135,6 +135,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // que los preloads de abajo) para no acoplar lib/contexts → features.
     const { clearAllDrafts } = await import("@/features/cotizacion/hooks/wizard/cotizacionDraftStorage");
     clearAllDrafts();
+    // M-13 (v14-2): misma política para el borrador del wizard de embarque.
+    const { clearAllEmbarqueDrafts } = await import("@/features/embarques/hooks/wizard/embarqueDraftStorage");
+    clearAllEmbarqueDrafts();
     // La copia persistida del query cache (lc-query-cache-v1) tampoco queda.
     clearPersistedQueryCache();
   }, [userId, clearLoginAudit, resetProfile, queryClient]);

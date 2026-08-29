@@ -36,6 +36,11 @@ export interface StoredDraft {
   /** Etiquetas de lo que NO se pudo restaurar (drafts legacy sin estos campos,
    *  o el archivo MSDS que nunca se persiste por no ser serializable). */
   noRestaurado: string[];
+  /** M-12 (v14-2): identificador de la pestaña que escribió el borrador.
+   *  Sirve para detectar que OTRA pestaña sobrescribió el draft (evento
+   *  `storage`) y avisar en vez de perder captura en silencio. Ausente en
+   *  drafts legacy (se tratan como de otra pestaña desconocida). */
+  tabId?: string;
 }
 
 /** Campos `Date` del form que se pierden al pasar por JSON.stringify. */
@@ -60,6 +65,7 @@ interface RawDraftShape {
   cotizacionId?: unknown;
   currentStep?: unknown;
   costosInternos?: unknown;
+  tabId?: unknown;
 }
 
 /** El archivo MSDS nunca sobrevive a `JSON.stringify`; siempre se avisa. */
@@ -103,6 +109,7 @@ export function loadDraft(userId: string, organizationId?: string | null): Store
       currentStep: typeof bag.currentStep === "number" && bag.currentStep >= 1 ? bag.currentStep : 1,
       costosInternos: Array.isArray(bag.costosInternos) ? (bag.costosInternos as FilaCostoLocal[]) : [],
       noRestaurado,
+      tabId: typeof bag.tabId === "string" ? bag.tabId : undefined,
     };
     reviveDateFields(parsed.values);
     return parsed;

@@ -63,6 +63,8 @@ export interface DerivadosPago {
   /** Cruce USD↔EUR: la BD no lo convierte (LC_PAGO_CRUCE_NO_SOPORTADO). */
   cruceNoSoportado: boolean;
   errorFecha: string | null;
+  /** B-4 (v14-2): factura PUE con cobro menor al saldo (PUE = una exhibición). */
+  pueIncompleto: boolean;
   invalido: boolean;
 }
 
@@ -76,6 +78,8 @@ export function derivarEstadoPago(a: {
   fechaEmision?: string | null;
   saldo: number;
   rates: RatesTc | undefined;
+  /** B-4: método de pago de la factura; `PUE` exige liquidar en una exhibición. */
+  metodoPagoFactura?: string | null;
 }): DerivadosPago {
   const montoNum = Number(a.monto) || 0;
   const tcPago = tcParaPago(a.monedaPago, a.monedaFactura, a.rates);
@@ -99,6 +103,10 @@ export function derivarEstadoPago(a: {
   const tcBloqueado = tcRespaldo || cruceNoSoportado || tcPago === null;
   // FE-03 / UIA-06: fecha futura o anterior a la emisión distorsiona REP y aging.
   const errorFecha = validarFechaPago(a.fecha, a.hoy, a.fechaEmision);
+  // B-4 (v14-2): PUE no admite abonos — el cobro debe liquidar el saldo
+  // (misma tolerancia de 5 centavos que el trigger `_assert_pago_pue_exhibicion_unica`).
+  const pueIncompleto =
+    a.metodoPagoFactura === "PUE" && montoAplicado > 0 && montoAplicado < a.saldo - 0.05;
   return {
     montoNum,
     montoAplicado,
@@ -108,6 +116,7 @@ export function derivarEstadoPago(a: {
     tcRespaldo,
     cruceNoSoportado,
     errorFecha,
-    invalido: montoNum <= 0 || excede || tcBloqueado || errorFecha !== null,
+    pueIncompleto,
+    invalido: montoNum <= 0 || excede || tcBloqueado || errorFecha !== null || pueIncompleto,
   };
 }

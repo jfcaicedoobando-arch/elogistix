@@ -91,7 +91,8 @@ export function useNuevoEmbarqueWizard() {
   // P3: marca de tiempo de inicio del wizard para medir duración end-to-end.
   const wizardStartedAt = useRef<number>(Date.now());
 
-  const handleFinish = async () => {
+  // Devuelve true sólo si el embarque se creó (M-13: para limpiar el borrador).
+  const handleFinish = async (): Promise<boolean> => {
     // v13.303.26 — guard defense-in-depth: sin cotización vinculada abortamos
     // antes del orquestador para evitar bypasses por errores parcheados/saltados.
     if (!cotVinc.cotizacionVinculada?.id) {
@@ -102,19 +103,19 @@ export function useNuevoEmbarqueWizard() {
         method: "USE_NUEVO_EMBARQUE_WIZARD",
         errorCode: ERROR_CODES.VALIDATION_FAILED,
       });
-      return;
+      return false;
     }
 
 
     for (const step of [1, 2, 3, 4]) {
       if (!validateStep(step)) {
         setCurrentStep(step);
-        return;
+        return false;
       }
     }
 
     const values = methods.getValues();
-    await orchestrator.submit({
+    const ok = await orchestrator.submit({
       values,
       modoExpediente: expediente.modoExpediente,
       expedienteSeleccionado: expediente.expedienteSeleccionado,
@@ -142,6 +143,7 @@ export function useNuevoEmbarqueWizard() {
         attributes: { modo: String(values.modo ?? "desconocido") },
       });
     } catch { /* best-effort */ }
+    return ok === true;
   };
 
   return {
@@ -160,6 +162,11 @@ export function useNuevoEmbarqueWizard() {
     cotizacionVinculada: cotVinc.cotizacionVinculada,
     handleVincularCotizacion: cotVinc.handleVincularCotizacion,
     handleDesvincularCotizacion: cotVinc.handleDesvincularCotizacion,
+    restaurarVinculacion: cotVinc.restaurarVinculacion,
+    // M-13: setters a granel para restaurar borradores (los add/update uno-a-uno
+    // no sirven para rehidratar N conceptos de golpe).
+    setConceptosVenta: conceptos.setConceptosVenta,
+    setConceptosCosto: conceptos.setConceptosCosto,
     modoExpediente: expediente.modoExpediente,
     expedienteSeleccionado: expediente.expedienteSeleccionado,
     handleModoExpedienteChange: expediente.handleModoExpedienteChange,

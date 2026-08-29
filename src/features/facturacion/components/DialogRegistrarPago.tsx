@@ -105,7 +105,7 @@ export function DialogRegistrarPago({ open, onOpenChange, factura }: Props) {
   if (!factura) return null;
 
   const {
-    montoNum, montoAplicado, tipoCambio, excede, tcBloqueado, tcRespaldo, cruceNoSoportado, errorFecha, invalido,
+    montoNum, montoAplicado, tipoCambio, excede, tcBloqueado, tcRespaldo, cruceNoSoportado, errorFecha, pueIncompleto, invalido,
   } = derivarEstadoPago({
       monto: values.monto,
       monedaPago: values.moneda,
@@ -115,6 +115,7 @@ export function DialogRegistrarPago({ open, onOpenChange, factura }: Props) {
       fechaEmision: factura.fechaEmision,
       saldo,
       rates,
+      metodoPagoFactura: factura.metodoPago,
     });
 
   const esPpdTimbrada = factura.metodoPago === "PPD" && !!factura.uuidFiscal;
@@ -191,6 +192,7 @@ export function DialogRegistrarPago({ open, onOpenChange, factura }: Props) {
           tcRespaldo={tcRespaldo}
           cruceNoSoportado={cruceNoSoportado}
           errorFecha={errorFecha}
+          pueIncompleto={pueIncompleto}
         />
       </form>
     </FormDialogShell>

@@ -26,6 +26,7 @@ export const reglaLabel: Record<ReglaAuditoria, string> = {
   contenedor_datos_incompletos: "Contenedor sin peso/volumen",
   contenedor_fechas_incompletas: "Contenedor sin fechas",
   tipo_cambio_faltante: "Tipo de cambio faltante",
+  venta_total_descuadrado: "Venta total descuadrada",
 };
 
 export const reglaToTab: Record<ReglaAuditoria, string> = {
@@ -51,6 +52,7 @@ export const reglaToTab: Record<ReglaAuditoria, string> = {
   contenedor_datos_incompletos: "resumen",
   contenedor_fechas_incompletas: "resumen",
   tipo_cambio_faltante: "financiero",
+  venta_total_descuadrado: "financiero",
 };
 
 export const severidadConfig: Record<

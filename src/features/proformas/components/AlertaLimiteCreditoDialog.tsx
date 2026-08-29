@@ -5,7 +5,11 @@
 import { AlertTriangle } from "lucide-react";
 import { ConfirmActionDialog } from "@/components/shared/dialogs/ConfirmActionDialog";
 import { formatCurrency } from "@/lib/formatters";
-import type { ValidarLimiteResultado } from "@/features/cliente/hooks/useValidarLimiteCredito";
+import { useAuth } from "@/lib/contexts/AuthContext";
+import {
+  puedeExcederCredito,
+  type ValidarLimiteResultado,
+} from "@/features/cliente/hooks/useValidarLimiteCredito";
 
 interface Props {
   resultado: ValidarLimiteResultado | null;
@@ -22,6 +26,9 @@ function fmtMxn(v: number): string {
 export function AlertaLimiteCreditoDialog({
   resultado, clienteNombre, montoNuevaFactura, onOpenChange, onConfirm,
 }: Props) {
+  // M-15 (v14-2): fail-closed — sólo gerencia/finanzas puede autorizar el exceso.
+  const { effectiveRole, orgRole, role } = useAuth();
+  const puedeExceder = puedeExcederCredito(effectiveRole ?? orgRole ?? role);
   return (
     <ConfirmActionDialog
       open={!!resultado}
@@ -31,6 +38,7 @@ export function AlertaLimiteCreditoDialog({
       confirmLabel="Facturar de todas formas"
       cancelLabel="Cancelar"
       size="md"
+      confirmDisabled={!puedeExceder}
       onConfirm={onConfirm}
       description={resultado ? (
         <div className="space-y-1 text-body">
@@ -41,9 +49,16 @@ export function AlertaLimiteCreditoDialog({
           <p className="text-muted-foreground">
             Límite: {fmtMxn(resultado.exposicion.limiteMxn ?? 0)} · En uso: {fmtMxn(resultado.exposicion.enUsoMxn)} · Nueva factura: {fmtMxn(montoNuevaFactura)}
           </p>
-          <p className="text-body-sm text-muted-foreground pt-2">
-            Se registrará en bitácora que continuaste a pesar del exceso.
-          </p>
+          {puedeExceder ? (
+            <p className="text-body-sm text-muted-foreground pt-2">
+              Se registrará en bitácora que continuaste a pesar del exceso.
+            </p>
+          ) : (
+            <p className="text-body-sm pt-2 font-medium text-destructive">
+              Tu rol no puede autorizar excesos de crédito. Pide a gerencia o finanzas
+              que confirme la operación.
+            </p>
+          )}
         </div>
       ) : null}
     />

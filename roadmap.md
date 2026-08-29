@@ -6,10 +6,12 @@
 - [x] Ola 6 frontend (B-8, M-14) — v13.803
 - [x] Técnicos bajo riesgo: B-17, B-19 (verificados ya cubiertos), B-20 (RFC SAT) — v13.804
 
-## Pendiente — decisiones de producto (5)
-- [ ] M-12 Autosave cotización: conflicto entre pestañas
-- [ ] M-13 Wizard embarque sin borrador/autosave
-- [ ] M-15 Límite de crédito: fail-open, override, ausente en timbrado masivo
-- [ ] B-3 Three-way match (no existe modelo de recepciones)
-- [ ] B-4 PUE admite abonos parciales
+## Decisiones de producto (cerradas en v13.805)
+- [x] M-12 Conflicto entre pestañas en autosave de cotización (tabId + aviso)
+- [x] M-13 Borrador 24 h en wizard de embarque (autosave + restauración + conflicto)
+- [x] M-15 Límite de crédito fail-closed con override por rol (gerencia/finanzas)
+- [x] B-3 Three-way match documentado como 2 vías por diseño (docs/flujo-cxp-aprobacion.md)
+- [x] B-4 PUE: sólo liquidación total (trigger BD + bloqueo UI)
+
+## Pendiente
 - [ ] B-21 Tracking automático naviera (gap de alcance, evaluar)

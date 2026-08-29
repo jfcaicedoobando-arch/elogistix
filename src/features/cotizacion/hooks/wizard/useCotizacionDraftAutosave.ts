@@ -12,7 +12,7 @@
  *
  * Consumido por `NuevaCotizacion` + `DraftRestoreBanner`.
  */
-import { useEffect, useRef, useCallback } from "react";
+import { useEffect, useRef, useCallback, useState } from "react";
 import type { UseFormReturn } from "react-hook-form";
 import { safeLocalStorage } from "@/lib/browserStorage";
 import type { CotizacionFormValues } from "@/features/cotizacion/domain/mappers/cotizacionForm";
@@ -80,6 +80,10 @@ export function draftTieneContenido(values: CotizacionFormValues, costos: FilaCo
 export function useCotizacionDraftAutosave({ form, userId, organizationId = null, enabled, cotizacionId, currentStep, costosInternos, paused = false }: Params): {
   clear: () => void;
   flush: () => void;
+  /** M-12: true cuando OTRA pestaña sobrescribió el borrador de este wizard. */
+  conflictoExterno: boolean;
+  /** M-12: el usuario ya vio el aviso; se reactiva si hay otra escritura externa. */
+  descartarConflicto: () => void;
 } {
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const cotIdRef = useRef<string | null>(cotizacionId);
@@ -90,6 +94,11 @@ export function useCotizacionDraftAutosave({ form, userId, organizationId = null
   costosRef.current = costosInternos;
   const pausedRef = useRef<boolean>(paused);
   pausedRef.current = paused;
+  // M-12 (v14-2): identidad estable de ESTA pestaña; se estampa en cada
+  // escritura del draft para que el listener `storage` distinga escrituras
+  // propias de las de otra pestaña (antes: last-write-wins silencioso).
+  const tabIdRef = useRef<string>(crypto.randomUUID());
+  const [conflictoExterno, setConflictoExterno] = useState(false);
 
   const clear = useCallback(() => {
     clearDraft(userId, organizationId);
@@ -103,6 +112,7 @@ export function useCotizacionDraftAutosave({ form, userId, organizationId = null
     currentStep: stepRef.current,
     costosInternos: costosRef.current,
     noRestaurado: [],
+    tabId: tabIdRef.current,
   }), []);
 
   const persist = useCallback((values: CotizacionFormValues) => {
@@ -150,5 +160,30 @@ export function useCotizacionDraftAutosave({ form, userId, organizationId = null
     persist(form.getValues());
   }, [enabled, form, cotizacionId, persist]);
 
-  return { clear, flush };
+  // M-12 (v14-2): el evento `storage` sólo se dispara en las OTRAS pestañas,
+  // así que si el draft cambió y su `tabId` no es el nuestro, otra pestaña
+  // está capturando el mismo wizard: avisamos para que el usuario decida en
+  // cuál seguir (antes: el último en escribir ganaba en silencio).
+  useEffect(() => {
+    if (!enabled || typeof window === "undefined") return;
+    const key = draftKey(userId, organizationId);
+    const onStorage = (e: StorageEvent) => {
+      if (e.key !== key || !e.newValue) return;
+      try {
+        const parsed: unknown = JSON.parse(e.newValue);
+        const tabAjena =
+          parsed && typeof parsed === "object" &&
+          (parsed as { tabId?: unknown }).tabId !== tabIdRef.current;
+        if (tabAjena) setConflictoExterno(true);
+      } catch {
+        // JSON ajeno/corrupto: no es conflicto accionable.
+      }
+    };
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
+  }, [enabled, userId, organizationId]);
+
+  const descartarConflicto = useCallback(() => setConflictoExterno(false), []);
+
+  return { clear, flush, conflictoExterno, descartarConflicto };
 }
