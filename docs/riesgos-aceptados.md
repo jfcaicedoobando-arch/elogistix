@@ -3,6 +3,9 @@
 Registro de riesgos conocidos que se decidieron aceptar (con su mitigación), para
 que una auditoría futura no los reporte como hallazgos nuevos.
 
+**Última revisión:** 2026-08-29 (v13.793.0). Cifras verificadas contra el estado
+vivo del repo y de la base.
+
 ## RN-EC-4 · Rate limit por IP con `x-forwarded-for` (Ola 5, 2026-08)
 
 **Riesgo.** Las Edge Functions derivan la identidad del cliente de la cabecera
@@ -24,7 +27,7 @@ valor y obtener una cuota nueva por cada IP inventada.
 (formularios web, tracking anónimo), ese endpoint debe pasar a un rate limit con
 identidad no falsificable (token firmado o captcha) antes de publicarse.
 
-## V-14 · `formatFechaEs` sigue en 56 call-sites
+## V-14 · `formatFechaEs` sigue en 39 call-sites (34 archivos)
 
 Deprecado, congelado por ratchet (`formatfechaes-deprecado.test.ts`). Migración
 progresiva a `formatFechaDia`; no bloquea release porque el comportamiento de
@@ -51,9 +54,10 @@ RLS por tenant.
 **Cuándo revisar.** Si la plataforma expone configuración de buckets, fijar
 15 MB y la lista blanca de MIME (PDF/JPG/PNG/XLSX/DOCX/XML).
 
-## RN-3 · 11 constraints en estado `NOT VALID` (O1.16)
+## RN-3 · 12 constraints en estado `NOT VALID` (O1.16)
 
-Existen 11 restricciones creadas con `NOT VALID`: validan los datos nuevos pero
+Existen 12 restricciones creadas con `NOT VALID` (conteo vivo de
+`pg_constraint.convalidated = false` al 2026-08-29): validan los datos nuevos pero
 no los históricos.
 
 **Por qué se acepta.** Validarlas requiere depurar datos previos a los candados
