@@ -39,9 +39,10 @@ export default function NuevoEmbarque() {
   const [searchParams] = useSearchParams();
   // B-013 (v13.320.34): política tarifa-first honra tanto state como query
   // param `?fromCotizacion=…` (el diálogo post-guardado usa querystring).
-  const llegaConCotizacion =
-    Boolean((location.state as { cotizacionPrevinculadaId?: string } | null)?.cotizacionPrevinculadaId)
-    || Boolean(searchParams.get("fromCotizacion"));
+  const cotizacionEntranteId =
+    (location.state as { cotizacionPrevinculadaId?: string } | null)?.cotizacionPrevinculadaId
+    ?? searchParams.get("fromCotizacion");
+  const llegaConCotizacion = Boolean(cotizacionEntranteId);
 
   useEffect(() => {
     if (!llegaConCotizacion) {
