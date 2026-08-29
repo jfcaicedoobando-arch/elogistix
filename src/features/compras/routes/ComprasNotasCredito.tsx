@@ -50,7 +50,7 @@ export default function ComprasNotasCredito() {
   const [moneda, setMoneda] = useFiltroUrl<MonedaFiltro>("moneda", MONEDAS_FILTRO, "todas");
   const [estado, setEstado] = useFiltroUrl<EstadoFiltro>("estado", ESTADOS_FILTRO, "todos");
   const [search, setSearch] = useTextoUrl("q");
-  const { organizationId } = useOrgFilter();
+  const { organizationId, orgListo } = useOrgFilter();
 
   const { data: rows = [], isLoading, isError, refetch } = useQuery({
     queryKey: [...compras.notasCreditoGlobal({ desde, hasta, moneda, estado, search }), organizationId],
@@ -65,6 +65,8 @@ export default function ComprasNotasCredito() {
         },
         organizationId,
       ),
+    // N-3: no consultar hasta que el contexto de organización resolvió.
+    enabled: orgListo,
   });
 
   const totalMxn = rows

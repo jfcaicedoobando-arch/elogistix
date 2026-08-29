@@ -52,7 +52,7 @@ export default function ComprasPagos() {
   const [moneda, setMoneda] = useFiltroUrl<MonedaFiltro>("moneda", MONEDAS_FILTRO, "todas");
   const [metodoPago, setMetodoPago] = useTextoUrl("metodo", "todos");
   const [search, setSearch] = useTextoUrl("q");
-  const { organizationId } = useOrgFilter();
+  const { organizationId, orgListo } = useOrgFilter();
 
   const { data: rows = [], isLoading, isError, refetch } = useQuery({
     queryKey: [...compras.pagosGlobal({ desde, hasta, moneda, metodoPago, search }), organizationId],
@@ -67,6 +67,8 @@ export default function ComprasPagos() {
         },
         organizationId,
       ),
+    // N-3: no consultar hasta que el contexto de organización resolvió.
+    enabled: orgListo,
   });
 
   const metodosDisponibles = useMemo(() => {

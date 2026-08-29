@@ -42,7 +42,7 @@ export default function ComprasConciliacion() {
   const [moneda, setMoneda] = useFiltroUrl<MonedaFiltro>("moneda", MONEDAS_FILTRO, "todas");
   const [search, setSearch] = useTextoUrl("q");
   const [detalle, setDetalle] = useState<EmbarqueConciliacion | null>(null);
-  const { organizationId } = useOrgFilter();
+  const { organizationId, orgListo } = useOrgFilter();
 
   const { data: rows = [], isLoading, isError, refetch } = useQuery({
     queryKey: [...compras.conciliacionEmbarques({ estado, moneda, search }), organizationId],
@@ -53,6 +53,8 @@ export default function ComprasConciliacion() {
         search: search.trim() || undefined,
         organizationId,
       }),
+    // N-3: no consultar hasta que el contexto de organización resolvió.
+    enabled: orgListo,
     staleTime: 30_000,
   });
 
