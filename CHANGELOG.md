@@ -8,6 +8,7 @@
 - **M-12 (Cotizaciones)**: el autoguardado estampa un `tabId` por pestaña; si otra pestaña sobrescribe el borrador, se muestra un aviso en vez de perder captura en silencio.
 - **M-13 (Embarques)**: el wizard “Nuevo embarque” ahora tiene borrador con autoguardado (debounce 800 ms, TTL 24 h, clave por usuario+organización), banner de restauración, aviso de conflicto entre pestañas y limpieza al crear el embarque y al cerrar sesión. Los adjuntos (MSDS/documentos) nunca se persisten: se avisa que deben resubirse.
 - **M-15 (Límite de crédito)**: el exceso de crédito pasa de fail-open a fail-closed — sólo gerencia/finanzas (admin, admin_org, contador, tesorero, gerente_operaciones, gerente_comercial, super_admin) puede autorizar “continuar de todas formas”; el resto de roles queda bloqueado con mensaje orientativo.
+- **Fix typecheck**: la regla de auditoría `venta_total_descuadrado` (M-10) se agregó a los mapas del módulo de auditoría (config, tabla, agregados ejecutivos y tests) para cerrar los errores TS2741/TS2322.
 
 ## [13.804.0] - 2026-08-29
 
