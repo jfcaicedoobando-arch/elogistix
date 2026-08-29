@@ -55,6 +55,25 @@ export function useValidarLimiteCredito() {
   );
 }
 
+/**
+ * M-15 (v14-2): fail-closed con override por rol. Exceder el límite de
+ * crédito deja de ser un "confirm" universal: sólo gerencia y finanzas
+ * pueden autorizar la excepción; el resto de roles queda bloqueado.
+ */
+const ROLES_OVERRIDE_CREDITO: ReadonlySet<string> = new Set([
+  "super_admin",
+  "admin",
+  "admin_org",
+  "contador",
+  "tesorero",
+  "gerente_operaciones",
+  "gerente_comercial",
+]);
+
+export function puedeExcederCredito(rol: string | null | undefined): boolean {
+  return !!rol && ROLES_OVERRIDE_CREDITO.has(rol);
+}
+
 /** Registra en bitácora que el operador continuó a pesar del exceso de crédito. */
 export async function registrarExcesoCredito(params: {
   clienteId: string;
