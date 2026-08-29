@@ -100,6 +100,9 @@ export const LC_CODE_MESSAGES_TESORERIA: Record<string, string> = {
     "Una de las facturas del lote está cancelada o eliminada y no admite pagos. Retírala del reparto.",
   LC_ANTICIPO_EN_PROCESO:
     "Esta aplicación de anticipo ya está en proceso. Espera unos segundos y verifica antes de reintentar.",
+  // Ronda v3 · F2 — la devolución de anticipo debe ser por el saldo completo.
+  LC_ANTICIPO_DEVOLUCION_TOTAL:
+    "La devolución debe ser por el saldo completo del anticipo; no se permiten devoluciones parciales.",
   LC_ANTICIPO_FACTURA_NO_VIVA:
     "La factura está cancelada o eliminada y no admite aplicación de anticipos.",
   LC_PAGO_PROGRAMADO_EN_PROCESO:

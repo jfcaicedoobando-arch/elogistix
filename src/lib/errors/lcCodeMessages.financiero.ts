@@ -30,6 +30,11 @@ export const LC_CODE_MESSAGES_FINANCIERO: Record<string, string> = {
   LC_NC_INMUTABLE: "La nota de crédito ya fue emitida y no puede modificarse.",
   LC_NC_EXCEDE_SALDO:
     "El monto de la nota de crédito excede el saldo disponible de la factura.",
+  // Ronda v3 · F5 — tope de saldo en notas de crédito de proveedor.
+  LC_NC_PROV_EXCEDE_SALDO:
+    "La nota de crédito excede el saldo disponible de la factura de proveedor.",
+  LC_NC_PROV_TC_REQUERIDO:
+    "No se pudo convertir la nota de crédito a la moneda de la factura; captura el tipo de cambio.",
 
   // ── Facturas de proveedor (CxP) ────────────────────────────────────────
   LC_FACTURA_PROVEEDOR_NOT_FOUND: "La factura de proveedor no existe.",
