@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.804.0] - 2026-08-29
+
+- **Ola 6 · Auditoría v14 (técnicos de bajo riesgo)**.
+- **B-20 (Onboarding)**: el RFC se valida con la estructura oficial del SAT (letras + fecha AAMMDD plausible + homoclave), no sólo por longitud, y es obligatorio cuando la organización captura datos fiscales (puede omitirse marcando “omitir datos fiscales”).
+- Verificado: **B-17** (folios únicos parciales que ignoran la papelera) y **B-19** (anti-solape de tramos de demoras revalidado en el servicio, no sólo en la UI) ya quedaron cubiertos en la migración `20260829070153` y en `demorasVenta.ts`.
+
 ## [13.803.0] - 2026-08-29
 
 - **Ola 6 · Auditoría v14 (cierre frontend)**.
