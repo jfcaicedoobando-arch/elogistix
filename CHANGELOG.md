@@ -1,5 +1,13 @@
 # Changelog
 
+## [13.797.0] - 2026-08-29
+
+- **Verificación de base sin Docker**: `scripts/db/local-verify.sh` gana `--backend local` (autodetectado) que levanta Postgres 17 con `initdb`/`pg_ctl`; `db:verify`, `db:verify:all` y `db:baseline:update` ya funcionan en entornos sin Docker. Corregido un `local` fuera de función que dejaba `exentas` sin definir.
+- **Nuevo `bun run db:postcheck`**: cierre único para todo cambio de base — migraciones en base limpia, candado `service_role-only`, `_ci_post_migrate`/`_ci_verify_rls`, guardia de integridad, regeneración de `supabase/schema/baseline.sql`, 63 guards conductuales y suite RLS mínima (`--check` para modo CI). Verificado en verde de punta a punta (1164 migraciones, baseline sin drift).
+- **Paridad ICU en snapshots**: `schema-snapshot.sh` reinserta `lc_unicode_upper` cuando el servidor local no trae ICU, para que la baseline generada en local sea idéntica a la de CI (antes había que editarla a mano).
+- **Decisiones de negocio con fuente única**: nuevo `supabase/tests/_decisiones_negocio.sql` (roles con acceso a costos C9, tolerancia DOF, devolución total de anticipos); `ola_e2_a_guards.sql` lo consume en vez de repetir la lista de roles.
+- **Docs**: `supabase/tests/rls/README.md` documenta el checklist "al tocar la base" con los cuatro rojos típicos de CI y su arreglo.
+
 ## [13.796.4] - 2026-08-29
 
 - `supabase/schema/baseline.sql` regenerado (replay de las 1164 migraciones en Postgres 17.9 limpio + `_ci_bootstrap`/`_ci_drift`/`_ci_post_migrate`): incorpora las remediaciones F1–F5, N18 y C9 (trigger `_assert_nc_prov_no_excede_saldo`, `ux_clientes_email_org`, CHECK cargo/abono exclusivo, roles con acceso a costos). El job `schema-baseline` vuelve a verde.
