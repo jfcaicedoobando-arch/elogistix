@@ -92,14 +92,20 @@ SELECT 'ola_e2_a_guards OK' AS resultado;
 
 -- ==========================================================================
 -- Ola E2 · Sub-ola B — C9: costos de cotización por rol y propiedad.
+-- Decisión vigente (v13.796.0): gerencia, finanzas y ventas ven costos; el rol
+-- `vendedor` está incluido globalmente y `_propia` se conserva como candado
+-- adicional para escenarios de propiedad.
 -- ==========================================================================
 DO $$
 DECLARE v_src text; v_pol text;
 BEGIN
   SELECT prosrc INTO v_src FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace
   WHERE n.nspname = 'public' AND p.proname = 'puede_ver_costos_cotizacion';
-  IF v_src IS NULL OR v_src LIKE '%''vendedor''%' THEN
-    RAISE EXCEPTION 'C9 REGRESIÓN: puede_ver_costos_cotizacion no debe incluir el rol vendedor sin condición de propiedad';
+  IF v_src IS NULL OR v_src NOT LIKE '%has_any_role_efectivo%' THEN
+    RAISE EXCEPTION 'C9 REGRESIÓN: puede_ver_costos_cotizacion debe resolverse por roles efectivos';
+  END IF;
+  IF v_src NOT LIKE '%''vendedor''%' THEN
+    RAISE EXCEPTION 'C9 REGRESIÓN: puede_ver_costos_cotizacion debe incluir el rol vendedor (ventas ve costos)';
   END IF;
 
   IF NOT EXISTS (
@@ -112,9 +118,10 @@ BEGIN
   SELECT pg_get_expr(pol.polqual, pol.polrelid) INTO v_pol
   FROM pg_policy pol JOIN pg_class c ON c.oid = pol.polrelid
   WHERE c.relname = 'cotizacion_costos' AND pol.polname = 'Tenant read cotizacion_costos';
-  IF v_pol IS NULL OR v_pol NOT LIKE '%puede_ver_costos_cotizacion_propia%' THEN
-    RAISE EXCEPTION 'C9 REGRESIÓN: la policy de lectura de cotizacion_costos no contempla al vendedor dueño';
+  IF v_pol IS NULL OR v_pol NOT LIKE '%puede_ver_costos_cotizacion%' THEN
+    RAISE EXCEPTION 'C9 REGRESIÓN: la policy de lectura de cotizacion_costos no usa el helper de costos';
   END IF;
 END $$;
+
 
 SELECT 'ola_e2_b_guards OK' AS resultado;
