@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.792.1] - 2026-08-29
+### UX de errores
+- Errores de dominio esperados (marcados `expected: true`, p. ej. `BuzonDuplicadoError` al subir una factura ya registrada al buzón CxP) ahora se muestran como aviso amable (toast warning con el mensaje de negocio) en vez del diálogo de error con "Ver detalles" y reporte. `reportCaughtError` también los omite como defensa en profundidad. Cubierto con tests en `appFeedback.test.ts`.
+
 ## [13.792.0] - 2026-08-28
 ### Cotizaciones
 - Listado: la columna Subtotal ahora muestra un renglón por moneda en cotizaciones mixtas (antes sólo se veía el monto de una moneda, p. ej. COT-217/218 ocultaban los USD). El orden sigue usando el equivalente en MXN, ahora sumando ambas monedas.

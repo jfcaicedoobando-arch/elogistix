@@ -137,4 +137,37 @@ describe("appFeedback (sonner)", () => {
     expect(m.error).toHaveBeenCalled();
     expect(reportCaughtErrorMock).toHaveBeenCalledTimes(1);
   });
+
+  // v13.792.1 — errores de dominio esperados (`expected: true`, p. ej.
+  // BuzonDuplicadoError): aviso amable, sin "Ver detalles" y sin Sentry.
+  it("notifyError con error expected:true emite warning amable sin detalles ni Sentry", () => {
+    const err = Object.assign(
+      new Error("Este archivo ya fue capturado como factura de proveedor."),
+      { expected: true },
+    );
+    notifyError(undefined, {
+      title: "No se pudo subir la factura",
+      error: err,
+      method: "SUBIR_FACTURA_ENTRANTE",
+    });
+    expect(m.error).not.toHaveBeenCalled();
+    expect(m.warning).toHaveBeenCalledWith(
+      "No se pudo subir la factura",
+      expect.objectContaining({
+        description: "Este archivo ya fue capturado como factura de proveedor.",
+        action: undefined,
+      }),
+    );
+    expect(reportCaughtErrorMock).not.toHaveBeenCalled();
+  });
+
+  it("notifyError sin expected mantiene el flujo de error con detalles", () => {
+    notifyError(undefined, {
+      title: "No se pudo subir la factura",
+      error: new Error("boom"),
+      method: "SUBIR_FACTURA_ENTRANTE",
+    });
+    expect(m.warning).not.toHaveBeenCalled();
+    expect(m.error).toHaveBeenCalled();
+  });
 });

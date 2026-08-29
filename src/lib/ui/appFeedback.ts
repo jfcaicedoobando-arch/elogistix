@@ -26,6 +26,7 @@ import { buildErrorReport } from "./errorReport";
 import { openErrorReport } from "@/lib/diagnostics/errorDetailsStore";
 import { reportCaughtError } from "@/lib/observability/reportCaughtError";
 import { shouldAttachDetails } from "./appFeedback.details";
+import { notifyWarning } from "./appFeedback.notices";
 import { shouldReportToSentry } from "./appFeedback.sentry";
 import { sanitizeToastText } from "./sanitizeToastText";
 import { computeToastDedupeKey, shouldSuppressDuplicateToast } from "./appFeedback.dedupe";
@@ -92,6 +93,18 @@ export function notifyError(_toast: AnyToastFn | undefined, opts: ErrorNotifyOpt
   const description = sanitizeToastText(
     descOpt ?? message ?? (errors ? Object.values(errors)[0] : undefined),
   );
+
+  // v13.792.1 — Errores de dominio ESPERADOS (`expected: true`, p. ej.
+  // `BuzonDuplicadoError` del buzón CxP): no son fallas, son validaciones de
+  // negocio. Se muestran como aviso amable con el mensaje del error, SIN
+  // "Ver detalles" (no hay nada que depurar) y SIN reporte a Sentry.
+  if ((error as { expected?: unknown } | null | undefined)?.expected === true) {
+    notifyWarning(undefined, {
+      title: sanitizeToastText(title) ?? "Aviso",
+      description: description ?? (error instanceof Error ? sanitizeToastText(error.message) : undefined),
+    });
+    return;
+  }
 
   // R-07: el título también puede venir de `err.message` con HTML crudo.
   const computedTitle =

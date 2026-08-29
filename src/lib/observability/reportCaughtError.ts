@@ -135,6 +135,9 @@ export function reportCaughtError(
   const classified = classifyError(err);
 
   // Skip: validaciones de negocio esperadas (mem plan Sentry 13.302.7 + 13.308.6).
+  // v13.792.1 — defensa en profundidad: cualquier error marcado `expected: true`
+  // (p. ej. BuzonDuplicadoError) nunca llega a Sentry aunque otra ruta lo llame.
+  if ((err as { expected?: unknown } | null | undefined)?.expected === true) return;
   const errMessage = (err as { message?: unknown } | null | undefined)?.message;
   const errName = (err as { name?: unknown } | null | undefined)?.name;
   if (isExpectedBusinessError(
