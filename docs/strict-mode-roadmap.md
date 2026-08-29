@@ -111,9 +111,12 @@ pagaron la deuda con anticipación: la activación final fue casi trivial.
       (EditarCotizacion, NuevaCotizacion, Proveedores). Pospuesto: el
       costo de refactorizar firmas para satisfacer contravariancia
       exacta no compensa el beneficio en estos 3 sitios.
-- **Configuración estable final**: strictNullChecks ✅, noImplicitAny ✅,
-  noUnusedLocals ✅, noUnusedParameters ✅, noFallthroughCasesInSwitch ✅,
-  strict ❌ (strictFunctionTypes/strictBindCallApply/alwaysStrict off).
+- **Configuración estable final (2026-08-29)**: strictNullChecks ✅,
+  noImplicitAny ✅, noUnusedLocals ✅, noUnusedParameters ✅,
+  noFallthroughCasesInSwitch ✅ y **`strict: true` ✅** — los 3 casos de
+  contravariancia pendientes se resolvieron después, así que hoy el proyecto
+  compila con `strict` completo.
+
 
 ## Política para nuevos casts (vigente desde este PR)
 
