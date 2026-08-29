@@ -55,6 +55,68 @@ export default function NuevoEmbarque() {
 
   const w = useNuevoEmbarqueWizard();
 
+  // ── M-13 (v14-2): borrador con TTL 24 h, espejo del wizard de cotización ──
+  const { user } = useAuth();
+  const { organizationId } = useOrgActiva();
+  const userId = user?.id ?? "";
+  const [restaurando, setRestaurando] = useState(false);
+  const [banderaBorrador, setBanderaBorrador] = useState(false);
+
+  const { clear: clearBorrador, conflictoExterno, descartarConflicto } = useEmbarqueDraftAutosave({
+    form: w.methods,
+    userId,
+    organizationId,
+    enabled: llegaConCotizacion,
+    currentStep: w.currentStep,
+    conceptosVenta: w.conceptosVenta,
+    conceptosCosto: w.conceptosCosto,
+    cotizacionVinculadaId: w.cotizacionVinculada?.id ?? null,
+    paused: restaurando,
+  });
+
+  // Sólo se ofrece restaurar si el borrador pertenece a la misma cotización
+  // de entrada (o a ninguna): mezclar cotizaciones corrompería la captura.
+  const draftDetectado = useMemo(() => {
+    const draft = userId ? loadEmbarqueDraft(userId, organizationId) : null;
+    if (!draft) return null;
+    if (draft.cotizacionVinculadaId && draft.cotizacionVinculadaId !== cotizacionEntranteId) return null;
+    return embarqueDraftTieneContenido(draft.values, draft.conceptosVenta, draft.conceptosCosto) ? draft : null;
+  }, [userId, organizationId, cotizacionEntranteId]);
+
+  useEffect(() => {
+    if (draftDetectado) setBanderaBorrador(true);
+  }, [draftDetectado]);
+
+  const handleRestore = useCallback(() => {
+    if (!draftDetectado) return;
+    // Congelamos el autosave mientras RHF aplica el reset (mismo patrón R-09).
+    setRestaurando(true);
+    w.methods.reset(draftDetectado.values);
+    w.setCurrentStep(draftDetectado.currentStep);
+    if (draftDetectado.conceptosVenta.length > 0) w.setConceptosVenta(draftDetectado.conceptosVenta);
+    if (draftDetectado.conceptosCosto.length > 0) w.setConceptosCosto(draftDetectado.conceptosCosto);
+    if (draftDetectado.cotizacionVinculadaId) {
+      const cot = w.cotizacionesAceptadas.find((c) => c.id === draftDetectado.cotizacionVinculadaId);
+      if (cot) w.restaurarVinculacion(cot);
+    }
+    notifyWarning(undefined, {
+      title: "Borrador restaurado parcialmente",
+      description: `No se pudo recuperar: ${EMBARQUE_DRAFT_NO_RESTAURADO.join("; ")}.`,
+    });
+    setBanderaBorrador(false);
+    setTimeout(() => setRestaurando(false), 0);
+  }, [draftDetectado, w]);
+
+  const handleDiscard = useCallback(() => {
+    clearEmbarqueDraft(userId, organizationId);
+    setBanderaBorrador(false);
+  }, [userId, organizationId]);
+
+  const handleFinishConLimpieza = useCallback(async () => {
+    const ok = await w.handleFinish();
+    if (ok) clearBorrador();
+  }, [w, clearBorrador]);
+
   return (
     <FormProvider {...w.methods}>
       <CotizacionVinculadaProvider cotizacion={w.cotizacionVinculada}>
