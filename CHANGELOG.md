@@ -1,5 +1,14 @@
 # Changelog
 
+## [13.801.0] - 2026-08-29
+
+- **CI verde tras la Ola 4 (auditoría v14)**.
+- **B-9 (duplicado)**: se elimina el trigger `trg_pago_fecha_no_previa` y su función; la regla "pago anterior a la emisión" ya la aplica `assert_factura_viva_para_pago` con `LC_PAGO_FECHA_PREVIA_EMISION` (un solo mensaje para el usuario).
+- **M-2 (cruce EUR)**: el guard `convertir_monto_pago.sql` fija el nuevo comportamiento (pivote en MXN) y exige T/C de la factura destino; se agrega el mensaje `LC_PAGO_TC_FACTURA_REQUERIDO` al catálogo de errores.
+- **H6**: candados `REVOKE`/`GRANT EXECUTE` explícitos para `sugerir_embarques_para_proveedor` y `reabrir_embarque`.
+- Manifiesto (1169 migraciones) y `baseline.sql` regenerados; `db:postcheck` en verde (63/63 guards + 6 suites RLS).
+
+
 ## [13.800.0] - 2026-08-29
 
 - **Ola 3 · Auditoría v14 (cierre) + bajos de papelera**.
