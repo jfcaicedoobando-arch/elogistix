@@ -353,24 +353,6 @@ BEGIN
   END IF;
 END;
 $$;
-CREATE FUNCTION public._assert_fecha_pago_no_previa() RETURNS trigger
-    LANGUAGE plpgsql SECURITY DEFINER
-    SET search_path TO 'public'
-    AS $$
-DECLARE
-  v_emision date;
-BEGIN
-  IF NEW.deleted_at IS NOT NULL OR NEW.fecha_pago IS NULL OR NEW.factura_id IS NULL THEN
-    RETURN NEW;
-  END IF;
-  SELECT f.fecha_emision INTO v_emision FROM public.facturas f WHERE f.id = NEW.factura_id;
-  IF v_emision IS NOT NULL AND NEW.fecha_pago < v_emision THEN
-    RAISE EXCEPTION 'LC_PAGO_FECHA_PREVIA: la fecha del pago (%) no puede ser anterior a la emisión de la factura (%).',
-      NEW.fecha_pago, v_emision USING ERRCODE = '22023';
-  END IF;
-  RETURN NEW;
-END;
-$$;
 CREATE FUNCTION public._assert_internal_reader(p_org uuid) RETURNS void
     LANGUAGE plpgsql STABLE SECURITY DEFINER
     SET search_path TO 'public'
@@ -28785,7 +28767,6 @@ CREATE TRIGGER trg_org_proveedor_facturas_embarque_id BEFORE INSERT OR UPDATE OF
 CREATE TRIGGER trg_org_proveedor_facturas_proveedor_id BEFORE INSERT OR UPDATE OF proveedor_id, organization_id ON public.proveedor_facturas FOR EACH ROW EXECUTE FUNCTION public._assert_padre_misma_org('proveedor_id', 'proveedores');
 CREATE TRIGGER trg_pago_factura_comision_ins AFTER INSERT OR UPDATE ON public.pagos_factura FOR EACH ROW EXECUTE FUNCTION public.trg_pago_factura_comision();
 CREATE TRIGGER trg_pago_factura_rep_viva BEFORE INSERT OR UPDATE OF uuid_rep, estado_rep, facturapi_rep_id ON public.pagos_factura FOR EACH ROW WHEN (((new.uuid_rep IS NOT NULL) OR (new.facturapi_rep_id IS NOT NULL))) EXECUTE FUNCTION public.assert_factura_viva_para_rep();
-CREATE TRIGGER trg_pago_fecha_no_previa BEFORE INSERT OR UPDATE OF fecha_pago, factura_id ON public.pagos_factura FOR EACH ROW EXECUTE FUNCTION public._assert_fecha_pago_no_previa();
 CREATE TRIGGER trg_pago_proveedor_factura_viva BEFORE INSERT OR UPDATE ON public.pagos_proveedor FOR EACH ROW WHEN ((new.deleted_at IS NULL)) EXECUTE FUNCTION public.assert_proveedor_factura_viva_para_pago();
 CREATE TRIGGER trg_pago_sin_rep_vivo BEFORE UPDATE OF deleted_at ON public.pagos_factura FOR EACH ROW WHEN (((new.deleted_at IS NOT NULL) AND (old.deleted_at IS NULL))) EXECUTE FUNCTION public.assert_pago_sin_rep_vivo();
 CREATE TRIGGER trg_pago_sin_rep_vivo_delete BEFORE DELETE ON public.pagos_factura FOR EACH ROW EXECUTE FUNCTION public.assert_pago_sin_rep_vivo_delete();
@@ -29943,8 +29924,6 @@ GRANT ALL ON FUNCTION public._assert_email_unico_org() TO service_role;
 REVOKE ALL ON FUNCTION public._assert_facturapi_admin(p_org_id uuid) FROM PUBLIC;
 GRANT ALL ON FUNCTION public._assert_facturapi_admin(p_org_id uuid) TO authenticated;
 GRANT ALL ON FUNCTION public._assert_facturapi_admin(p_org_id uuid) TO service_role;
-REVOKE ALL ON FUNCTION public._assert_fecha_pago_no_previa() FROM PUBLIC;
-GRANT ALL ON FUNCTION public._assert_fecha_pago_no_previa() TO service_role;
 REVOKE ALL ON FUNCTION public._assert_internal_reader(p_org uuid) FROM PUBLIC;
 GRANT ALL ON FUNCTION public._assert_internal_reader(p_org uuid) TO authenticated;
 GRANT ALL ON FUNCTION public._assert_internal_reader(p_org uuid) TO service_role;
