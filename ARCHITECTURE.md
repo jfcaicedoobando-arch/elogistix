@@ -463,6 +463,5 @@ Auditorías vigentes con seguimiento abierto:
 | Documento | Alcance |
 |---|---|
 | [`docs/auditoria/backlog-v5-estado.md`](./docs/auditoria/backlog-v5-estado.md) | Backlog QA v5 — estado verificado hallazgo por hallazgo |
-| [`docs/ui-audit/99-resumen.md`](./docs/ui-audit/99-resumen.md) | Resumen consolidado de la auditoría visual (capas 0→3) |
 | [`docs/riesgos-aceptados.md`](./docs/riesgos-aceptados.md) | Riesgos aceptados con justificación |
 

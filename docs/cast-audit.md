@@ -1,7 +1,9 @@
 # Cast Audit — generado 2026-08-29
 
-Auditoría automática de los `as` casts en `src/`. Generado por
-`scripts/audit-casts.ts`. Para regenerar: `bun scripts/audit-casts.ts`.
+> **Artefacto generado — no editar a mano.** Se regenera con
+> `bun scripts/audit-casts.ts`; cualquier edición manual se pierde.
+
+Auditoría automática de los `as` casts en `src/`.
 
 ## Resumen
 

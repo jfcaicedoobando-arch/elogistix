@@ -8,6 +8,8 @@ Objetivo: dejar los cimientos para poder empezar a invertir en Google Ads y Meta
 
 Leyenda: 🟢 Listo · 🟡 Recomendado · 🔴 Bloqueador para gastar en ads
 
+> Última revisión: 2026-08-29 (v13.795.0). Los 🔴 (GA4 y Meta Pixel) siguen abiertos: requieren los IDs del cliente.
+
 ---
 
 ## Captura de leads

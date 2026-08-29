@@ -1,6 +1,6 @@
 # P3 — Sacar `.env` del historial de Git
 
-**Estado:** pendiente de ejecución manual. Lovable no puede reescribir el historial del repositorio desde el chat, así que estos pasos se corren en tu máquina.
+**Estado:** pendiente de ejecución manual. Última verificación del contenido de `.env`: **2026-08-29 (v13.795.0)** — sigue conteniendo sólo las 6 variables públicas listadas abajo, ninguna credencial privada. Lovable no puede reescribir el historial del repositorio desde el chat, así que estos pasos se corren en tu máquina.
 
 **Analogía:** `.gitignore` es como cerrar la puerta de la bodega: evita que entren cajas nuevas. Pero la caja que ya está adentro sigue ahí hasta que alguien la saca. Este documento es el instructivo para sacarla.
 
