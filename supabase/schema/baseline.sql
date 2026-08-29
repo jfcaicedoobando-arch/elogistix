@@ -20293,7 +20293,8 @@ BEGIN
   SELECT organization_id, estado::text
     INTO v_org_id, v_estado_actual
     FROM embarques
-   WHERE id = p_embarque_id;
+   WHERE id = p_embarque_id
+     AND deleted_at IS NULL;
   IF v_org_id IS NULL THEN
     RAISE EXCEPTION 'Embarque no encontrado';
   END IF;
@@ -24456,6 +24457,7 @@ BEGIN
       100 AS score
     FROM public.embarques e
     WHERE e.organization_id = _organization_id
+      AND e.deleted_at IS NULL
       AND e.estado NOT IN ('Cerrado','Cancelado','Entregado')
       AND (
         lower(coalesce(e.agente,'')) = _prov_nombre
@@ -24472,6 +24474,7 @@ BEGIN
     JOIN public.costeo_tarifas t ON t.id = e.tarifa_id_aplicada
     JOIN public.costeo_agentes a ON a.id = t.agente_id
     WHERE e.organization_id = _organization_id
+      AND e.deleted_at IS NULL
       AND e.estado NOT IN ('Cerrado','Cancelado','Entregado')
       AND a.proveedor_id = _proveedor_id
     UNION ALL
@@ -24484,6 +24487,7 @@ BEGIN
     JOIN public.costeo_navieras_condiciones nc
       ON nc.naviera_id = t.naviera_id AND nc.organization_id = e.organization_id
     WHERE e.organization_id = _organization_id
+      AND e.deleted_at IS NULL
       AND e.estado NOT IN ('Cerrado','Cancelado','Entregado')
       AND nc.proveedor_id = _proveedor_id
   )
