@@ -56,6 +56,10 @@ BEGIN
 
   UPDATE embarques
      SET estado = 'Por liquidar'::estado_embarque,
+         -- M-1 (auditoría v14): el snapshot del cierre deja de ser vigente al reabrir.
+         cerrado_snapshot = NULL,
+         pnl_base = NULL,
+         calculo_snapshot = NULL,
          reabierto_at = now(),
          reabierto_por = auth.uid(),
          reabierto_motivo = v_motivo,
