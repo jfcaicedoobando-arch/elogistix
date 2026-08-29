@@ -1,5 +1,15 @@
 # Changelog
 
+## [13.798.0] - 2026-08-29
+
+- **Ola 1 · Auditoría v14 (críticos)**.
+- **C-1 doble IVA cotización→embarque**: `_crear_embarque_replicar_conceptos` ya no reescribe `precio_unitario` a partir del `total` con IVA; la base gravable se deriva de `cantidad × precio_unitario` y se replica `tasa_iva_aplicada`. Sin backfill: sólo aplica a embarques nuevos.
+- **C-2 cron de snapshots**: `auditoria_capturar_snapshot` acepta `service_role` (el cron ya no falla por autorización).
+- **A-10**: el snapshot se calcula siempre con `auditoria_embarques_org(p_organization_id)`, no con la org activa del caller (adiós ceros y score 100 ficticio).
+- **M-6**: `total_pendientes` cuenta hallazgos sin revisión (llave `embarque_id|regla|detalle`), `por_regla` se llena y el score usa la misma fórmula de higiene que la pantalla ejecutiva.
+- Ola 0 (verificación de los 40 hallazgos) completada: 37 confirmados, 1 ya corregido (A-5, `guard_pago_proveedor` ya usa `FOR UPDATE`), 2 decisiones de producto (B-2, B-21).
+
+
 ## [13.797.1] - 2026-08-29
 
 - **CI en verde (4 jobs)**: arreglados los rojos de `lint`, `knip`, `audits` y `tests` del run 90058425499.
