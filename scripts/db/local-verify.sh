@@ -222,9 +222,10 @@ if [ "$REUSE" != "1" ]; then
   # Paridad con CI (.github/workflows/rls-tests.yml): las migraciones legacy
   # exentas y las "ancladas por texto" no aplican en base limpia; su estado
   # final lo garantiza una migración posterior de reaplicación.
-  local exentas=" 20260729035825 20260812090000 "
-  local ancladas
+  # (`local` sólo es válido dentro de funciones: aquí van variables normales.)
+  exentas=" 20260729035825 20260812090000 "
   ancladas="$(grep -vE '^\s*(#|$)' supabase/tests/rls/drift-anclas.txt 2>/dev/null || true)"
+
   for f in $(printf '%s\n' supabase/migrations/*.sql | LC_ALL=C sort); do
     base="$(basename "$f")"
     echo "▶ $base" >> "$migr_log"
