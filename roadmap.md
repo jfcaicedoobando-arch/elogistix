@@ -11,3 +11,6 @@
 
 ## Pendiente (decidido NO hacer en esta ronda)
 N9/F6/F7, M6, N-F4, N13-res, M7-res, L4-res, N-F2.
+# Roadmap
+- [ ] Correr suite RLS completa localmente (Postgres efímero)
+- [ ] Generador automático de `_ci_service_role_only.sql` desde esquema real (script + integración CI)
