@@ -16,6 +16,7 @@ import {
 type Moneda = Database["public"]["Enums"]["moneda"];
 
 interface FacturaBase {
+  id: string;
   saldo: number;
   moneda: Moneda;
   tipo_cambio_usd?: number | null;
@@ -51,7 +52,7 @@ export function usePagoProveedorCampos(
   // re-ejecutaba y PISABA lo que el usuario ya había capturado. Se inicializa
   // una sola vez por apertura (llave = open + factura.id + pagoEditarId).
   const initializedForRef = useRef<string | null>(null);
-  const initKey = factura ? `${factura as { id?: string }.id ?? "sin-id"}:${pagoEditarId ?? "nuevo"}` : null;
+  const initKey = factura ? `${factura.id}:${pagoEditarId ?? "nuevo"}` : null;
 
   useEffect(() => {
     if (!factura || !open || !initKey) {
@@ -73,7 +74,7 @@ export function usePagoProveedorCampos(
     setNotas(v.notas);
     setDiffMxn(v.diffMxn);
     if (pago) setCuentaId(v.cuentaId);
-  }, [factura, open, hoy, pagoEditarId]);
+  }, [factura, open, hoy, pagoEditarId, initKey]);
 
   return {
     fecha, setFecha, monto, setMonto, moneda, setMoneda, tc, setTc,
