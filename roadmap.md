@@ -1,6 +1,8 @@
 # Roadmap
 
-## Completado
-- [x] CI: archivos >200 líneas fuera de allowlist — divididos `vsRealDomain.ts` (→ `vsRealGastos.ts`) y `DevolverAnticipoDialog.tsx` (→ hook `useDevolverAnticipoForm`)
-- [x] CI: mensajes amigables para LC_ANTICIPO_FECHA_INVALIDA / _REQUERIDA, LC_ANTICIPO_MONTO_EXCEDE_SALDO, LC_ANTICIPO_YA_DEVUELTO y LC_ROL_FORBIDDEN
-- [x] Suites de arquitectura, audit-report y lcCodeCoverage en verde (63 tests); versión 13.791.3 + CHANGELOG
+## En curso
+- [ ] Actualizar `docs/rls-multitenant-audit.md` contra el estado vivo de la base (RESTRICTIVE + InitPlan)
+
+## Pendiente
+- [ ] Retirar de `scripts/ga-gate.sh` los chequeos del release 12 (`rc-qa-checklist`, `rc-perf`, `release-notes-12.0`, `ga-cutover`)
+- [ ] Archivar el histórico pre-v13 de `CHANGELOG.md` en `docs/changelog-archive.md`
