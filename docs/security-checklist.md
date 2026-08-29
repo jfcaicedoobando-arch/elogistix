@@ -108,16 +108,22 @@ Si baja de eso, regenerar default con `encode(gen_random_bytes(32), 'hex')`.
 
 ## 6. Política Lovable
 
-- **No** se implementa rate limiting backend (no hay primitivas estables en la
-  plataforma). Mitigación para endpoints públicos: tokens fuertes + expiración
-  + opción de revocar desde el detalle del embarque.
+- **Sí** hay rate limiting propio: tabla `ratelimit_buckets` + helper compartido,
+  usado hoy en 21 funciones (tope por identidad y tope global por función). La
+  limitación conocida del bucket por IP (`x-forwarded-for` falsificable) está
+  documentada como riesgo aceptado **RN-EC-4** en `docs/riesgos-aceptados.md`.
+- Mitigación para endpoints públicos: tokens fuertes + expiración + opción de
+  revocar desde el detalle del embarque.
 - La `VITE_SUPABASE_PUBLISHABLE_KEY` es **clave pública** (anon) y vive en el
   bundle del cliente. Su exposición no es una vulnerabilidad: el control de
   acceso real lo dan las policies RLS.
+- `SUPABASE_SERVICE_ROLE_KEY` y la contraseña de la base **no** son accesibles en
+  Lovable Cloud; nunca se piden ni se registran en logs.
 
 ## 7. Auditoría de secretos en frontend
 
-**Última revisión:** 2026-06-08  
+**Última revisión:** 2026-08-29 (patrones sin hallazgos nuevos desde 2026-06-08)  
+
 **Alcance:** todo el repositorio `src/` + `supabase/functions/` + archivos de configuración.
 
 ### Patrones auditados
