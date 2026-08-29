@@ -143,6 +143,7 @@ export function useNuevoEmbarqueWizard() {
         attributes: { modo: String(values.modo ?? "desconocido") },
       });
     } catch { /* best-effort */ }
+    return ok === true;
   };
 
   return {
