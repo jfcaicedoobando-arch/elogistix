@@ -1,5 +1,13 @@
 # Changelog
 
+## [13.808.0] - 2026-08-29
+
+- **Ola 10 · YAGNI (simplificación sin tocar candados)**.
+- **CI**: los 4 jobs de `rls-tests.yml` que restauraban el snapshot de base repetían los mismos 4 pasos; ahora usan una única acción compartida `restore-rls-snapshot`.
+- **Retiro de código muerto**: se elimina la edge function `backfill-cxp-buzon` (backfill de un solo uso, ya ejecutado, sin llamador en la app ni en cron) y la RPC `reconciliar_conceptos_facturados_legacy` (sin consumidores).
+- **Retención de bitácoras técnicas**: `purge_app_logs_old()` quedó realmente agendada en cron (01:30 CDMX) y su ejecución se cerró a procesos internos; antes existía la rutina pero nunca se programó y `app_logs` crecía sin límite.
+- Baseline de esquema y lista canónica de funciones internas sincronizados.
+
 ## [13.807.0] - 2026-08-29
 
 - **Ola 9 · Remediación v15 (cierre)**.

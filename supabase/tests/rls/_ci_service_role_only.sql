@@ -98,6 +98,8 @@ INSERT INTO _ci_service_role_only (fn) VALUES
   ('public.nc_aplicadas_en_moneda_factura(uuid)'),
   ('public.notificar_uuid_cancelado_sat(uuid, jsonb)'),
   ('public.promover_embarque_por_liquidar(uuid)'),
+  -- v13.808.0 (YAGNI Ola 10): retención de app_logs; sólo la corre el cron.
+  ('public.purge_app_logs_old()'),
   ('public.read_email_batch(text, integer, integer)'),
   ('public.registrar_comision_pendiente(uuid, uuid, text, text, text, text)'),
   ('public.reprocesar_comisiones_job()'),

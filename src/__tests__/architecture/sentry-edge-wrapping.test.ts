@@ -63,7 +63,6 @@ const CRITICAL = [
   "supabase/functions/cxc-recordatorio-enviar/index.ts",
   "supabase/functions/cxc-estado-cuenta-enviar/index.ts",
   // 13.430.1 — Mantenimiento CxP y verificación SAT en lote
-  "supabase/functions/backfill-cxp-buzon/index.ts",
   "supabase/functions/verificar-sat-lote/index.ts",
   // 13.710.0 — Verificación SAT semanal (cron) para CFDI cancelados
   "supabase/functions/verificar-sat-semanal/index.ts",
