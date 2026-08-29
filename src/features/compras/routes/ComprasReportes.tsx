@@ -26,6 +26,7 @@ import { toCSV } from "@/lib/io/csv";
 import { notifySuccess, notifyError } from "@/lib/ui/appFeedback";
 import { fetchFacturasReporte } from "@/features/compras/services/reportesFetch";
 import { fetchExchangeRates } from "@/features/catalogos/services";
+import { aMxn } from "@/lib/financial/convertir";
 import { todayLocalISO } from "@/lib/date/today";
 import { DatePickerMx } from "@/components/ui/date-picker-mx";
 import { RANGO_DESDE_LABEL, RANGO_HASTA_LABEL } from "@/lib/ui/rangoFechasCopy";
@@ -54,27 +55,32 @@ export default function ComprasReportes() {
 
   const totalMxn = rows.filter((r) => r.moneda === "MXN").reduce((a, r) => a + r.total, 0);
   const totalUsd = rows.filter((r) => r.moneda === "USD").reduce((a, r) => a + r.total, 0);
+  const totalEur = rows.filter((r) => r.moneda === "EUR").reduce((a, r) => a + r.total, 0);
   const numFacturas = rows.length;
 
   const tcDof = rates?.usdMxn;
+  const tcEurDof = rates?.eurMxn;
 
   // Top proveedores — agrupamos por proveedor y moneda.
   const topProveedores = useMemo(() => {
-    const map = new Map<string, { nombre: string; mxn: number; usd: number; count: number; mxnEquiv: number }>();
+    const map = new Map<string, { nombre: string; mxn: number; usd: number; eur: number; count: number; mxnEquiv: number }>();
     for (const r of rows) {
       const key = r.proveedor_id ?? r.proveedor_nombre ?? "—";
-      const cur = map.get(key) ?? { nombre: r.proveedor_nombre ?? "—", mxn: 0, usd: 0, count: 0, mxnEquiv: 0 };
+      const cur = map.get(key) ?? { nombre: r.proveedor_nombre ?? "—", mxn: 0, usd: 0, eur: 0, count: 0, mxnEquiv: 0 };
       cur.count += 1;
-      
-      const tc = r.tipo_cambio_usd || tcDof || 0;
-      const equiv = r.moneda === "MXN" ? r.total : (tc > 0 ? r.total * tc : 0);
-      
-      if (r.moneda === "MXN") cur.mxn += r.total; else cur.usd += r.total;
-      
-      // Solo sumamos al equivalente si tenemos un TC confiable (factura o DOF).
-      // Si tc es 0, no sumamos al equivalente para evitar distorsiones.
+
+      // M-3: la conversión pasa por el canon único (`aMxn`); EUR usa su
+      // propio tipo de cambio en vez de compartir el del USD.
+      const tcMoneda = r.moneda === "USD" ? (r.tipo_cambio_usd || tcDof) : tcEurDof;
+      const equiv = r.moneda === "MXN" ? r.total : aMxn(r.total, r.moneda, tcMoneda).monto;
+
+      if (r.moneda === "MXN") cur.mxn += r.total;
+      else if (r.moneda === "USD") cur.usd += r.total;
+      else cur.eur += r.total;
+
+      // Sólo sumamos al equivalente si hubo un TC confiable (factura o DOF).
       cur.mxnEquiv += equiv;
-      
+
       map.set(key, cur);
     }
     
@@ -85,16 +91,18 @@ export default function ComprasReportes() {
         return b.mxnEquiv - a.mxnEquiv;
       })
       .slice(0, 10);
-  }, [rows, tcDof]);
+  }, [rows, tcDof, tcEurDof]);
 
   // Evolución mensual (YYYY-MM) por moneda.
   const evolucion = useMemo(() => {
-    const map = new Map<string, { mes: string; mxn: number; usd: number }>();
+    const map = new Map<string, { mes: string; mxn: number; usd: number; eur: number }>();
     for (const r of rows) {
       if (!r.fecha_emision) continue;
       const mes = r.fecha_emision.slice(0, 7);
-      const cur = map.get(mes) ?? { mes, mxn: 0, usd: 0 };
-      if (r.moneda === "MXN") cur.mxn += r.total; else cur.usd += r.total;
+      const cur = map.get(mes) ?? { mes, mxn: 0, usd: 0, eur: 0 };
+      if (r.moneda === "MXN") cur.mxn += r.total;
+      else if (r.moneda === "USD") cur.usd += r.total;
+      else cur.eur += r.total;
       map.set(mes, cur);
     }
     return Array.from(map.values()).sort((a, b) => a.mes.localeCompare(b.mes));
@@ -108,6 +116,7 @@ export default function ComprasReportes() {
           facturas: p.count,
           total_mxn: p.mxn,
           total_usd: p.usd,
+          total_eur: p.eur,
           total_equivalente_mxn: p.mxnEquiv,
         })),
       );
@@ -151,10 +160,11 @@ export default function ComprasReportes() {
       {/* EC-10: aviso cuando el T/C usado para los equivalentes es de respaldo. */}
       <TipoCambioFallbackBanner />
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
         <KpiCard label="Facturas en el período" value={String(numFacturas)} icon={TrendingUp} />
         <KpiCard label="Total MXN" value={formatCurrency(totalMxn, "MXN")} icon={Banknote} />
         <KpiCard label="Total USD" value={formatCurrency(totalUsd, "USD")} icon={Coins} />
+        <KpiCard label="Total EUR" value={formatCurrency(totalEur, "EUR")} icon={Coins} />
       </div>
 
       <TopProveedoresCard isLoading={isLoading} rows={topProveedores} />
@@ -177,12 +187,13 @@ export default function ComprasReportes() {
                   <YAxis fontSize={11} />
                   <RTooltip
                     formatter={(v: number, name: string) =>
-                      [formatCurrency(v, name === "usd" ? "USD" : "MXN"), name.toUpperCase()]
+                      [formatCurrency(v, name === "usd" ? "USD" : name === "eur" ? "EUR" : "MXN"), name.toUpperCase()]
                     }
                   />
                   <Legend />
                   <Bar dataKey="mxn" name="MXN" fill="hsl(var(--primary))" />
                   <Bar dataKey="usd" name="USD" fill="hsl(var(--accent))" />
+                  <Bar dataKey="eur" name="EUR" fill="hsl(var(--warning))" />
                 </BarChart>
               </ResponsiveContainer>
             </div>
