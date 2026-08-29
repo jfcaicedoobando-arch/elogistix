@@ -20,9 +20,8 @@ Deno.test("B-3: la guarda usa rol de captura CxP y check_ratelimit fail-closed",
   assert(src.includes("rate_limit_unavailable"), "sin contador debe fallar cerrado");
 });
 
-Deno.test("B-2: el backfill de CxP filtra por organización", async () => {
-  const src = await Deno.readTextFile(
-    new URL("../backfill-cxp-buzon/backfill.ts", import.meta.url),
-  );
-  assert(src.includes('query.eq("organization_id", organizationId)'));
-});
+// B-2 (el backfill de CxP filtraba por organización): la edge function
+// `backfill-cxp-buzon` se retiró en v13.808.0 (YAGNI · Ola 10) porque era un
+// backfill de un solo uso ya ejecutado y sin consumidor en la app ni en cron.
+// El aislamiento por organización del buzón CxP sigue cubierto por las suites
+// RLS de `embarque_facturas_entrantes`.
