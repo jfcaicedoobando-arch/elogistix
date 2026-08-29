@@ -11,6 +11,8 @@ import { useCrearFacturaManual } from "@/features/facturacion/hooks/useCrearFact
 import { useClientesFiscalOpts, type ClienteFiscalOpt } from "@/features/facturacion/hooks/useClientesFiscalOpts";
 import { calcularTotalMxn } from "@/features/facturacion/utils/calcularTotalMxn";
 import { sumarSubtotales } from "@/lib/financial/financialUtils";
+import { validarTcMxn } from "@/lib/financial/tcBanda";
+
 import { useValidarLimiteCredito, registrarExcesoCredito, type ValidarLimiteResultado } from "@/features/cliente/hooks/useValidarLimiteCredito";
 import { todayLocalISO } from "@/lib/date/today";
 import { notifyError } from "@/lib/ui/appFeedback";
