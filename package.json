@@ -54,6 +54,7 @@
     "db:verify": "bash scripts/db/local-verify.sh",
     "db:verify:all": "bash scripts/db/local-verify.sh --all",
     "db:baseline:update": "bash scripts/db/local-verify.sh --only-schema --snapshot supabase/schema/baseline.sql",
+    "db:postcheck": "bash scripts/db/postcheck.sh",
     "db:release-manifest:update": "tsx scripts/audit-release-manifest.ts --update",
     "db:baseline:check": "bash scripts/db/local-verify.sh --only-schema --snapshot /tmp/schema.actual.sql && diff -u supabase/schema/baseline.sql /tmp/schema.actual.sql",
     "audit:all": "bun run audit:no-env && bun run audit:arch && bun run audit:casts && bun run audit:tests && bun run audit:rpc-sync && bun run audit:schema && bun run audit:rpc-columns && bun run audit:migrations && bun run audit:schema-functions && bun run audit:replay-mirror && bun run audit:manifest && bun run audit:sonner && bun run audit:soft-delete && bun run audit:report",

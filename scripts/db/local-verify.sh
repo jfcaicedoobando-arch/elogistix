@@ -1,21 +1,23 @@
 #!/usr/bin/env bash
-# db:verify — levanta un Postgres local (Docker), aplica TODAS las migraciones
-# y corre una suite SQL/RLS mínima de verificación. Sirve para detectar fallos
-# antes de pushear, sin esperar el workflow `rls-tests` de GitHub Actions.
+# db:verify — levanta un Postgres efímero (Docker o `initdb` local), aplica
+# TODAS las migraciones y corre una suite SQL/RLS mínima de verificación. Sirve
+# para detectar fallos antes de pushear, sin esperar el workflow `rls-tests`.
 #
 # Uso:
 #   bun run db:verify                       # base limpia + migraciones + suite mínima
 #   bun run db:verify -- --suites isolation,financiero
 #   bun run db:verify -- --all              # TODAS las suites test_rls_*.sql
-#   bun run db:verify -- --reuse            # no recrea el contenedor (rápido)
-#   bun run db:verify -- --keep             # deja el contenedor arriba al terminar
+#   bun run db:verify -- --reuse            # no recrea la base (rápido)
+#   bun run db:verify -- --keep             # deja el servidor arriba al terminar
 #   bun run db:verify -- --port 55433       # otro puerto local
 #   bun run db:verify -- --no-behavioral    # omite supabase/tests/*.sql
 #   bun run db:verify -- --only-schema      # sólo migraciones + guardias (sin suites)
 #   bun run db:verify -- --snapshot supabase/schema/baseline.sql
+#   bun run db:verify -- --backend local    # fuerza `initdb` (sin Docker)
 #
-# Requisitos: docker + psql (+ pg_dump para --snapshot) en PATH.
+# Requisitos: psql 17 + (docker) o (initdb/pg_ctl 17) en PATH; pg_dump para --snapshot.
 # Salida: logs en .db-verify-logs/<timestamp>/ y resumen al final.
+
 
 
 set -uo pipefail
@@ -35,6 +37,8 @@ RUN_BEHAVIORAL=1
 ONLY_SCHEMA=0
 SNAPSHOT_OUT=""
 SUITES_ARG=""
+BACKEND="auto"          # auto | docker | local
+
 
 
 # Suite mínima: cubre aislamiento multi-tenant, dinero, roles y anon.
@@ -51,6 +55,8 @@ while [ $# -gt 0 ]; do
     --only-schema)    ONLY_SCHEMA=1; RUN_BEHAVIORAL=0 ;;
     --snapshot)       SNAPSHOT_OUT="${2:-}"; shift ;;
     --snapshot=*)     SNAPSHOT_OUT="${1#--snapshot=}" ;;
+    --backend)        BACKEND="${2:-}"; shift ;;
+    --backend=*)      BACKEND="${1#--backend=}" ;;
 
     --port)           PORT="${2:-}"; shift ;;
     --port=*)         PORT="${1#--port=}" ;;
@@ -60,11 +66,30 @@ while [ $# -gt 0 ]; do
   shift
 done
 
-for bin in docker psql; do
-  command -v "$bin" >/dev/null 2>&1 || { echo "❌ '$bin' no está en PATH." >&2; exit 127; }
-done
+command -v psql >/dev/null 2>&1 || { echo "❌ 'psql' no está en PATH." >&2; exit 127; }
 
-# El contenedor de pruebas corre Postgres 17: pg_dump se niega a respaldar un
+# ---------- 0) Backend: Docker o Postgres local (initdb) ----------
+# El sandbox de Lovable NO tiene Docker: sin este fallback nadie puede correr
+# `db:verify` ni regenerar la baseline antes de pushear, y CI se convierte en el
+# primer lugar donde se descubre el problema.
+docker_usable() {
+  command -v docker >/dev/null 2>&1 && docker info >/dev/null 2>&1
+}
+case "$BACKEND" in
+  auto)   if docker_usable; then BACKEND=docker; else BACKEND=local; fi ;;
+  docker) docker_usable || { echo "❌ Docker no está disponible (usá --backend local)." >&2; exit 127; } ;;
+  local)  : ;;
+  *)      echo "❌ --backend inválido: $BACKEND (docker|local|auto)" >&2; exit 2 ;;
+esac
+
+if [ "$BACKEND" = "local" ]; then
+  for bin in initdb pg_ctl; do
+    command -v "$bin" >/dev/null 2>&1 || {
+      echo "❌ '$bin' no está en PATH (necesario para --backend local)." >&2; exit 127; }
+  done
+fi
+
+# El servidor de pruebas es Postgres 17: pg_dump se niega a respaldar un
 # servidor más nuevo que él ("server version mismatch"). Avisamos temprano.
 if command -v pg_dump >/dev/null 2>&1; then
   PGDUMP_MAJOR="$(pg_dump --version | sed -nE 's/.* ([0-9]+)(\.[0-9]+)?.*/\1/p')"
@@ -75,28 +100,58 @@ fi
 
 
 export PGHOST=127.0.0.1 PGPORT="$PORT" PGUSER=postgres PGPASSWORD=postgres PGDATABASE=postgres
+export PGSSLMODE=disable
 PSQL=(psql -v ON_ERROR_STOP=1 -X -q)
 
 LOGDIR=".db-verify-logs/$(date +%Y%m%d-%H%M%S)"
 mkdir -p "$LOGDIR"
 
-cleanup() {
-  if [ "$KEEP" = "1" ]; then
-    echo "ℹ️  contenedor '$CONTAINER' sigue arriba (puerto $PORT). Bajalo con: docker rm -f $CONTAINER"
-  else
-    docker rm -f "$CONTAINER" >/dev/null 2>&1 || true
-  fi
+# Postgres se niega a correr como root; en el sandbox (uid 0) delegamos a un
+# usuario sin privilegios con setpriv.
+PGDATA_DIR="$ROOT/.db-verify-logs/pgdata-$PORT"
+PGSOCK_DIR="${TMPDIR:-/tmp}/db-verify-sock-$PORT"
+RUNAS=()
+if [ "$(id -u)" = "0" ]; then
+  command -v setpriv >/dev/null 2>&1 || {
+    echo "❌ corriendo como root y sin 'setpriv': Postgres no arranca como root." >&2; exit 127; }
+  RUNAS=(setpriv --reuid=1000 --regid=1000 --clear-groups)
+fi
+
+pg_local_ready() { pg_isready -q -h 127.0.0.1 -p "$PORT" >/dev/null 2>&1; }
+
+pg_local_stop() {
+  [ -d "$PGDATA_DIR" ] || return 0
+  "${RUNAS[@]}" pg_ctl -D "$PGDATA_DIR" -m immediate -w stop >/dev/null 2>&1 || true
 }
-trap cleanup EXIT
 
-step() { printf '\n\033[1m▶ %s\033[0m\n' "$1"; }
-fail() { printf '\033[31m❌ %s\033[0m\n' "$1" >&2; }
-ok()   { printf '\033[32m✓ %s\033[0m\n' "$1"; }
+pg_local_up() {
+  if [ "$REUSE" = "1" ] && pg_local_ready; then
+    step "Reusando Postgres local (127.0.0.1:$PORT)"
+    return 0
+  fi
+  step "Levantando Postgres efímero con initdb (127.0.0.1:$PORT)"
+  pg_local_stop
+  rm -rf "$PGDATA_DIR"
+  mkdir -p "$PGDATA_DIR" "$PGSOCK_DIR"
+  if [ "${#RUNAS[@]}" -gt 0 ]; then
+    chown -R 1000:1000 "$PGDATA_DIR" "$PGSOCK_DIR" "$LOGDIR"
+  fi
+  "${RUNAS[@]}" initdb -D "$PGDATA_DIR" -U postgres --auth=trust --encoding=UTF8 \
+    > "$LOGDIR/initdb.log" 2>&1 || {
+      fail "initdb falló — ver $LOGDIR/initdb.log"; tail -n 20 "$LOGDIR/initdb.log" >&2; exit 1; }
+  "${RUNAS[@]}" pg_ctl -D "$PGDATA_DIR" -l "$LOGDIR/postgres.log" -w \
+    -o "-p $PORT -c listen_addresses=127.0.0.1 -k $PGSOCK_DIR -c fsync=off -c full_page_writes=off" \
+    start > "$LOGDIR/pgctl.log" 2>&1 || {
+      fail "Postgres no arrancó — ver $LOGDIR/postgres.log"; tail -n 20 "$LOGDIR/postgres.log" >&2; exit 1; }
+  pg_local_ready || { fail "Postgres no respondió en 127.0.0.1:$PORT"; exit 1; }
+  ok "Postgres listo (local)"
+}
 
-# ---------- 1) Postgres local ----------
-if [ "$REUSE" = "1" ] && docker ps --format '{{.Names}}' | grep -qx "$CONTAINER"; then
-  step "Reusando Postgres existente ($CONTAINER:$PORT)"
-else
+pg_docker_up() {
+  if [ "$REUSE" = "1" ] && docker ps --format '{{.Names}}' | grep -qx "$CONTAINER"; then
+    step "Reusando Postgres existente ($CONTAINER:$PORT)"
+    return 0
+  fi
   step "Levantando Postgres efímero ($CONTAINER:$PORT)"
   docker rm -f "$CONTAINER" >/dev/null 2>&1 || true
   docker run -d --name "$CONTAINER" \
@@ -110,8 +165,35 @@ else
   done
   docker exec "$CONTAINER" pg_isready -U postgres >/dev/null 2>&1 || {
     fail "Postgres no respondió a tiempo"; docker logs --tail 40 "$CONTAINER"; exit 1; }
-  ok "Postgres listo"
+  ok "Postgres listo (docker)"
+}
+
+cleanup() {
+  if [ "$KEEP" = "1" ]; then
+    if [ "$BACKEND" = "docker" ]; then
+      echo "ℹ️  contenedor '$CONTAINER' sigue arriba (puerto $PORT). Bajalo con: docker rm -f $CONTAINER"
+    else
+      echo "ℹ️  Postgres local sigue arriba (puerto $PORT). Bajalo con: pg_ctl -D $PGDATA_DIR -m immediate stop"
+    fi
+  elif [ "$BACKEND" = "docker" ]; then
+    docker rm -f "$CONTAINER" >/dev/null 2>&1 || true
+  else
+    pg_local_stop
+  fi
+}
+trap cleanup EXIT
+
+step() { printf '\n\033[1m▶ %s\033[0m\n' "$1"; }
+fail() { printf '\033[31m❌ %s\033[0m\n' "$1" >&2; }
+ok()   { printf '\033[32m✓ %s\033[0m\n' "$1"; }
+
+# ---------- 1) Postgres efímero ----------
+if [ "$BACKEND" = "docker" ]; then
+  pg_docker_up
+else
+  pg_local_up
 fi
+
 
 run_sql() { # run_sql <archivo> <nombre-log>
   local file="$1" name="$2"
@@ -140,9 +222,10 @@ if [ "$REUSE" != "1" ]; then
   # Paridad con CI (.github/workflows/rls-tests.yml): las migraciones legacy
   # exentas y las "ancladas por texto" no aplican en base limpia; su estado
   # final lo garantiza una migración posterior de reaplicación.
-  local exentas=" 20260729035825 20260812090000 "
-  local ancladas
+  # (`local` sólo es válido dentro de funciones: aquí van variables normales.)
+  exentas=" 20260729035825 20260812090000 "
   ancladas="$(grep -vE '^\s*(#|$)' supabase/tests/rls/drift-anclas.txt 2>/dev/null || true)"
+
   for f in $(printf '%s\n' supabase/migrations/*.sql | LC_ALL=C sort); do
     base="$(basename "$f")"
     echo "▶ $base" >> "$migr_log"
@@ -169,9 +252,18 @@ if [ "$REUSE" != "1" ]; then
   done
   ok "$total migraciones aplicadas"
 
+  # Orden idéntico a CI: el candado bidireccional corre ANTES del GRANT masivo
+  # de _ci_post_migrate.sql (si no, los REVOKE faltantes quedan tapados).
+  step "Candado service_role-only (bidireccional)"
+  run_sql supabase/tests/rls/_ci_check_service_role_only.sql service_role_only || {
+    echo "   → agregá la función con firma completa a supabase/tests/rls/_ci_service_role_only.sql" >&2
+    exit 1
+  }
+
   step "Post-migrate + verificación de cobertura RLS"
   run_sql supabase/tests/rls/_ci_post_migrate.sql post_migrate || exit 1
   run_sql supabase/tests/rls/_ci_verify_rls.sql verify_rls || exit 1
+
 
   step "Guardia de integridad de esquema"
   if psql -X -q -A -t -f scripts/db/integrity-guard.sql > "$LOGDIR/integrity.log" 2>&1 \
@@ -188,7 +280,10 @@ fi
 if [ -n "$SNAPSHOT_OUT" ]; then
   step "Generando snapshot de esquema → $SNAPSHOT_OUT"
   mkdir -p "$(dirname "$SNAPSHOT_OUT")"
-  if bash scripts/db/schema-snapshot.sh "$SNAPSHOT_OUT" "$CONTAINER" 2> "$LOGDIR/snapshot.log"; then
+  # Backend local: pg_dump del PATH (ya es 17.x, validado arriba).
+  snap_container=""
+  [ "$BACKEND" = "docker" ] && snap_container="$CONTAINER"
+  if bash scripts/db/schema-snapshot.sh "$SNAPSHOT_OUT" "$snap_container" 2> "$LOGDIR/snapshot.log"; then
     ok "snapshot ($(wc -l < "$SNAPSHOT_OUT") líneas)"
   else
     fail "no se pudo generar el snapshot — ver $LOGDIR/snapshot.log"
