@@ -160,5 +160,30 @@ export function useCotizacionDraftAutosave({ form, userId, organizationId = null
     persist(form.getValues());
   }, [enabled, form, cotizacionId, persist]);
 
-  return { clear, flush };
+  // M-12 (v14-2): el evento `storage` sólo se dispara en las OTRAS pestañas,
+  // así que si el draft cambió y su `tabId` no es el nuestro, otra pestaña
+  // está capturando el mismo wizard: avisamos para que el usuario decida en
+  // cuál seguir (antes: el último en escribir ganaba en silencio).
+  useEffect(() => {
+    if (!enabled || typeof window === "undefined") return;
+    const key = draftKey(userId, organizationId);
+    const onStorage = (e: StorageEvent) => {
+      if (e.key !== key || !e.newValue) return;
+      try {
+        const parsed: unknown = JSON.parse(e.newValue);
+        const tabAjena =
+          parsed && typeof parsed === "object" &&
+          (parsed as { tabId?: unknown }).tabId !== tabIdRef.current;
+        if (tabAjena) setConflictoExterno(true);
+      } catch {
+        // JSON ajeno/corrupto: no es conflicto accionable.
+      }
+    };
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
+  }, [enabled, userId, organizationId]);
+
+  const descartarConflicto = useCallback(() => setConflictoExterno(false), []);
+
+  return { clear, flush, conflictoExterno, descartarConflicto };
 }
