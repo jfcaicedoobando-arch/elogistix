@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.811.0] - 2026-08-30
+
+- **Ola 3 · crédito fail-closed y boundary de timbrado del lado del servidor**.
+- **Límite de crédito fail-closed real** (`facturapi-emitir/credito.ts`): si falla la lectura del cliente ya no se continúa al PAC — se responde 503 `credito_no_verificable`; si el cliente no existe, 404 `cliente_not_found`. Límite NULL/0 sigue significando "sin límite configurado".
+- **Boundary de documentos timbrables**: `facturapi-emitir` sólo timbra facturas vivas en `Borrador`/`Por timbrar` (nuevo 409 `estado_no_timbrable`) y `claimFactura` repite el guard de vivo + estado en el UPDATE atómico para cerrar la carrera entre load y claim. `facturapi-emitir-nota-credito` excluye papelera en `loadNc`/`loadFactura`, valida `Borrador`/`Aprobada` en `preloadNcContext` y repite el guard en `claimNotaCredito`: Timbrada/Aplicada/Cancelada y registros borrados nunca llegan a FacturAPI.
+- **Tests**: `facturapi-emitir/credito_test.ts`, `facturapi-emitir/emitir_estado_test.ts` y casos nuevos en `facturapi-emitir-nota-credito/data_test.ts` (16 pruebas Deno en verde).
+
 ## [13.810.0] - 2026-08-30
 
 - **Ola 2 · EUR fuera de la venta y banda fiscal de tipo de cambio**.
