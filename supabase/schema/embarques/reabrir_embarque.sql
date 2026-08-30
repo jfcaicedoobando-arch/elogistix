@@ -1,7 +1,6 @@
--- Fuente canónica de public.reabrir_embarque
--- Regenerada desde DB (v13.749.0, B-06: actor derivado de la sesión; p_usuario_email se ignora).
--- Cada cambio DEBE actualizarse aquí en el mismo PR que la migración correspondiente.
--- Ver supabase/schema/README.md.
+-- Espejo canónico de public.reabrir_embarque
+-- Fuente vigente (mayor timestamp): 20260906000000_ola1_reabrir_y_cancelar_liquidacion.sql
+-- Vigilado por `bun run audit:replay-mirror` y `audit:schema-functions`.
 
 CREATE OR REPLACE FUNCTION public.reabrir_embarque(p_embarque_id uuid, p_usuario_email text, p_motivo text, p_request_id uuid DEFAULT NULL::uuid)
  RETURNS jsonb
@@ -54,12 +53,12 @@ BEGIN
   PERFORM set_config('app.bypass_cierre','on', true);
   PERFORM set_config('app.bypass_transicion','on', true);
 
+  -- A-1 (Ola 1): `embarques` sólo tiene `cerrado_snapshot`. `pnl_base` y
+  -- `calculo_snapshot` viven en `comisiones_devengadas` (ver UPDATE abajo);
+  -- escribirlos aquí rompía la reapertura con 42703.
   UPDATE embarques
      SET estado = 'Por liquidar'::estado_embarque,
-         -- M-1 (auditoría v14): el snapshot del cierre deja de ser vigente al reabrir.
          cerrado_snapshot = NULL,
-         pnl_base = NULL,
-         calculo_snapshot = NULL,
          reabierto_at = now(),
          reabierto_por = auth.uid(),
          reabierto_motivo = v_motivo,
@@ -70,6 +69,8 @@ BEGIN
 
   UPDATE comisiones_devengadas
      SET definitiva = false,
+         pnl_base = NULL,
+         calculo_snapshot = NULL,
          updated_at = now()
    WHERE embarque_id = p_embarque_id;
 
@@ -97,6 +98,4 @@ BEGIN
   PERFORM public.idempotency_store(p_request_id, v_resp);
   RETURN v_resp;
 END;
-$function$
-
-;
+$function$;
