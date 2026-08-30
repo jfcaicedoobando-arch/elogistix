@@ -134,7 +134,6 @@ export function StepCostosPrecios(props: Props) {
           mixtoIdx={ventaMixtoIdx}
           embarqueId={embarqueId}
           tcUSD={tcUSD}
-          tcEUR={tcEUR}
           update={updateConceptoVenta}
           remove={removeConceptoVenta}
           onAdd={addConceptoVenta}

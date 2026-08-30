@@ -79,7 +79,6 @@ interface VentasCardProps {
   mixtoIdx: Set<number>;
   embarqueId?: string;
   tcUSD: number;
-  tcEUR: number;
   update: (id: number, field: keyof ConceptoVentaRow, value: string | number | boolean | null) => void;
   remove: (id: number) => void;
   onAdd: () => void;
@@ -108,7 +107,6 @@ export function VentasCard(p: VentasCardProps) {
               showContenedorCol={p.showContenedorCol}
               embarqueId={p.embarqueId}
               tcUSD={p.tcUSD}
-              tcEUR={p.tcEUR}
               disableRemove={p.conceptos.length <= 1}
               update={p.update}
               remove={p.remove}

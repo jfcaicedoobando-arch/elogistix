@@ -21,7 +21,6 @@ interface Props {
   showContenedorCol: boolean;
   embarqueId?: string;
   tcUSD: number;
-  tcEUR: number;
   disableRemove: boolean;
   update: (id: number, field: keyof ConceptoVentaRow, value: string | number | boolean | null) => void;
   remove: (id: number) => void;
@@ -29,7 +28,7 @@ interface Props {
 
 export function FilaVentaPrecio({
   venta, totalUSD, esMixta, cols, showContenedorCol,
-  embarqueId, tcUSD, tcEUR, disableRemove, update, remove,
+  embarqueId, tcUSD, disableRemove, update, remove,
 }: Props) {
   return (
     <div className={`grid ${cols} gap-2 items-center`}>
@@ -67,7 +66,7 @@ export function FilaVentaPrecio({
               <AlertTriangle className="h-4 w-4 text-warning shrink-0" aria-label="Conversión FX aplicada" />
             </TooltipTrigger>
             <TooltipContent>
-              Conv. {venta.moneda}→USD @ TC {venta.moneda === 'EUR' ? tcEUR : tcUSD}
+              Conv. {venta.moneda}→USD @ TC {tcUSD}
             </TooltipContent>
           </Tooltip>
         )}
