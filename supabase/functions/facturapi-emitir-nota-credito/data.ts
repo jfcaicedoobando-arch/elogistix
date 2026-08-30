@@ -43,14 +43,25 @@ interface ClienteRow {
   uso_cfdi_default: string | null;
 }
 
+/**
+ * Ola 3 · B — Estados de NC realmente timbrables: la tabla del detalle sólo
+ * ofrece "Timbrar" en `Borrador`, y la máquina canónica
+ * (`guard_nc_cliente_transicion`) permite además `Aprobada → Timbrada`
+ * (legado). Timbrada/Aplicada/Cancelada nunca llegan a FacturAPI.
+ */
+export const ESTADOS_NC_TIMBRABLES: readonly string[] = ["Borrador", "Aprobada"];
+
 export async function loadNc(supabase: SupabaseLike, id: string): Promise<NcRow | null> {
   const { data } = await supabase
     .from("factura_notas_credito")
     .select("id, factura_id, organization_id, serie, uso_cfdi, forma_pago, moneda, tipo_cambio, conceptos, facturapi_id, estado")
     .eq("id", id)
+    // Ola 3 · B: una NC en papelera no es timbrable ni por llamada directa.
+    .is("deleted_at", null)
     .maybeSingle();
   return (data as NcRow | null) ?? null;
 }
+
 
 export async function loadFactura(supabase: SupabaseLike, id: string): Promise<FacturaRow | null> {
   const { data } = await supabase

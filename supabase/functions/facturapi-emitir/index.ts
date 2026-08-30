@@ -18,7 +18,7 @@ import { resolveFacturapiKey } from "../_shared/facturapiAuth.ts";
 import { authorizeOrgRole, ROLES_EMISOR_FISCAL } from "../_shared/auth.ts";
 import { getFacturapiClient } from "../_shared/facturapiClient.ts";
 import { jsonResponse, makeJson } from "../_shared/response.ts";
-import { loadFactura, validarTipoCambio, claimFactura, resolverSustitucion, emitirYActualizar } from "./emitir.ts";
+import { loadFactura, validarEstadoTimbrable, validarTipoCambio, claimFactura, resolverSustitucion, emitirYActualizar } from "./emitir.ts";
 import { cargarContexto } from "./contexto.ts";
 import { validarLimiteCredito, validarTotalPositivo } from "./credito.ts";
 import type { FacturaRow } from "./types.ts";
@@ -56,6 +56,10 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir", async (req) => {
   const factura = await loadFactura(supabase, body.factura_id);
   if (factura instanceof Response) return factura;
   if (factura.facturapi_id) return json({ error: "ya_timbrada", message: "Esta factura ya fue timbrada en Facturapi." }, 409);
+
+  // Ola 3 · B: estado timbrable ANTES de credenciales/contexto/claim/PAC.
+  const estadoCheck = validarEstadoTimbrable(factura as FacturaRow);
+  if (estadoCheck) return estadoCheck;
 
   if (!(await authorizeOrgRole(supabase, userData.user.id, factura.organization_id, ROLES_EMISOR_FISCAL))) {
     return json({ error: "forbidden" }, 403);
