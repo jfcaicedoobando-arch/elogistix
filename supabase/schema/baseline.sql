@@ -9298,7 +9298,7 @@ $$;
 CREATE FUNCTION public.consolidar_proformas(p_embarque_id uuid, p_cliente_id uuid, p_cliente_nombre text, p_expediente text, p_bl_master text, p_operador text, p_dias_credito integer, p_organization_id uuid, p_proforma_ids uuid[], p_tasa_iva numeric DEFAULT 0.16, p_request_id uuid DEFAULT NULL::uuid) RETURNS public.proformas
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
-    AS $$
+    AS $_$
 DECLARE
   v_nueva          public.proformas;
   v_cached         jsonb;
@@ -9312,6 +9312,7 @@ DECLARE
   v_subtotal_mxn   numeric := 0;
   v_iva_mxn        numeric := 0;
   v_total_mxn      numeric := 0;
+  v_no_soportados  int;
 BEGIN
   v_cached := public.idempotency_claim(p_request_id, 'consolidar_proformas');
   IF v_cached IS NOT NULL THEN
@@ -9342,6 +9343,18 @@ BEGIN
   ) THEN
     RAISE EXCEPTION
       'LC_PROFORMA_EMBARQUE_AJENO: todas las proformas a consolidar deben pertenecer al mismo embarque'
+      USING ERRCODE = 'P0001';
+  END IF;
+  -- Ola 2 · A: guard equivalente al de crear_proforma_atomica sobre los
+  -- conceptos subyacentes (una moneda no soportada consolidaba en $0).
+  SELECT COUNT(*) INTO v_no_soportados
+  FROM public.conceptos_venta cv
+  WHERE cv.proforma_id = ANY(p_proforma_ids)
+    AND cv.organization_id = v_org_efectiva
+    AND cv.deleted_at IS NULL
+    AND cv.moneda NOT IN ('MXN', 'USD');
+  IF v_no_soportados > 0 THEN
+    RAISE EXCEPTION 'LC_MONEDA_VENTA_NO_SOPORTADA: % concepto(s) de venta tienen una moneda no soportada; sólo se puede facturar en MXN o USD', v_no_soportados
       USING ERRCODE = 'P0001';
   END IF;
   v_numero := public.generar_numero_proforma(v_org_efectiva);
@@ -9425,7 +9438,7 @@ BEGIN
   PERFORM public.idempotency_store(p_request_id, jsonb_build_object('id', v_nueva.id));
   RETURN v_nueva;
 END;
-$$;
+$_$;
 CREATE FUNCTION public.convertir_a_mxn(_monto numeric, _moneda text, _tc_usd numeric, _tc_eur numeric) RETURNS numeric
     LANGUAGE plpgsql IMMUTABLE
     SET search_path TO 'public'
@@ -10828,7 +10841,7 @@ $$;
 CREATE FUNCTION public.crear_proforma_atomica(p_organization_id uuid, p_embarque_id uuid, p_cliente_id uuid, p_cliente_nombre text, p_expediente text, p_bl_master text, p_concepto_ids uuid[], p_subtotal_usd numeric, p_iva_usd numeric, p_total_usd numeric, p_subtotal_mxn numeric, p_iva_mxn numeric, p_total_mxn numeric, p_notas text, p_operador text, p_dias_credito integer, p_tasa_iva numeric, p_iva_overrides jsonb DEFAULT '{}'::jsonb) RETURNS public.proformas
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
-    AS $$
+    AS $_$
 DECLARE
   v_numero text;
   v_proforma public.proformas;
@@ -10842,6 +10855,7 @@ DECLARE
   v_ocupados int;
   v_actualizados int;
   v_ajenos int;
+  v_no_soportados int;
 BEGIN
   IF p_concepto_ids IS NULL OR array_length(p_concepto_ids, 1) IS NULL THEN
     RAISE EXCEPTION 'Debe seleccionar al menos un concepto';
@@ -10880,6 +10894,17 @@ BEGIN
   );
   IF v_ajenos > 0 THEN
     RAISE EXCEPTION 'LC_CONCEPTOS_AJENOS: % concepto(s) no pertenecen a este embarque o fueron eliminados; recarga la pantalla', v_ajenos
+      USING ERRCODE = 'P0001';
+  END IF;
+  -- Ola 2 · A: EUR (o cualquier moneda fuera de MXN/USD) no es soportado en
+  -- venta; antes se proformaba y facturaba en $0 en silencio.
+  SELECT COUNT(*) INTO v_no_soportados
+  FROM public.conceptos_venta
+  WHERE id = ANY(p_concepto_ids)
+    AND organization_id = v_org
+    AND moneda NOT IN ('MXN', 'USD');
+  IF v_no_soportados > 0 THEN
+    RAISE EXCEPTION 'LC_MONEDA_VENTA_NO_SOPORTADA: % concepto(s) de venta tienen una moneda no soportada; sólo se puede facturar en MXN o USD', v_no_soportados
       USING ERRCODE = 'P0001';
   END IF;
   SELECT COUNT(*) INTO v_ocupados
@@ -10956,7 +10981,7 @@ BEGIN
   END IF;
   RETURN v_proforma;
 END;
-$$;
+$_$;
 CREATE FUNCTION public.credito_en_uso_mxn(p_cliente_id uuid) RETURNS numeric
     LANGUAGE sql STABLE SECURITY DEFINER
     SET search_path TO 'public'
@@ -27038,6 +27063,7 @@ CREATE TABLE public.conceptos_venta (
     updated_at timestamp with time zone DEFAULT now(),
     CONSTRAINT conceptos_venta_cantidad_pos CHECK ((cantidad >= (1)::numeric)),
     CONSTRAINT conceptos_venta_estado_facturacion_check CHECK ((estado_facturacion = ANY (ARRAY['pendiente'::text, 'en_proforma'::text, 'facturado'::text]))),
+    CONSTRAINT conceptos_venta_moneda_soportada CHECK ((moneda = ANY (ARRAY['MXN'::public.moneda, 'USD'::public.moneda]))),
     CONSTRAINT conceptos_venta_origen_check CHECK ((origen = ANY (ARRAY['manual'::text, 'demoras_auto'::text, 'cotizacion'::text, 'costeo_tarifa'::text]))),
     CONSTRAINT conceptos_venta_precio_nonneg CHECK ((precio_unitario >= (0)::numeric)),
     CONSTRAINT conceptos_venta_tasa_iva_chk CHECK (((tasa_iva_aplicada >= (0)::numeric) AND (tasa_iva_aplicada <= (1)::numeric))),
