@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.809.0] - 2026-08-30
+
+- **Ola 1 · dos bugs confirmados de la auditoría (sólo esas dos funciones)**.
+- **Reabrir embarque ya no truena**: `reabrir_embarque` intentaba limpiar `pnl_base` y `calculo_snapshot` en `embarques`, columnas que sólo existen en `comisiones_devengadas` (fallaba con 42703 y la foto del cálculo nunca se borraba). Ahora se limpian ahí, junto con `definitiva = false`.
+- **Cancelar liquidación no revive deudas**: `cancelar_liquidacion_comision` devolvía TODAS las comisiones de la liquidación a `Devengada`, incluidas las recuperaciones que esa liquidación había descontado (riesgo de doble pago). Ahora las ordinarias vuelven a `Devengada` y las recuperaciones aplicadas a `Por recuperar`.
+- **Guards**: el guard M-1 pasa a ser estructural contra el esquema vivo (detecta cualquier columna inexistente asignada en el UPDATE de `embarques`) y se agrega `supabase/tests/ola1_comisiones_ciclo_recuperacion.sql`, test comportamental del ciclo generar → recuperar → cancelar.
+
 ## [13.808.0] - 2026-08-29
 
 - **Ola 10 · YAGNI (simplificación sin tocar candados)**.
