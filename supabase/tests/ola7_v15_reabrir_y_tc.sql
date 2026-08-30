@@ -14,19 +14,55 @@ BEGIN;
 DO $$
 DECLARE
   d text;
+  seg_emb text;
+  seg_com text;
+  col text;
+  faltantes text[] := '{}';
 BEGIN
-  -- ── M-1 ────────────────────────────────────────────────────────────────
+  -- ── M-1 / OLA 1 A-1 ────────────────────────────────────────────────────
+  -- Guard ESTRUCTURAL contra el esquema vivo: cada columna asignada en el
+  -- UPDATE de `embarques` debe existir en `embarques`, y la limpieza de la
+  -- foto de comisiones (`pnl_base`, `calculo_snapshot`, `definitiva`) debe
+  -- vivir en el UPDATE de `comisiones_devengadas`. Así una redefinición que
+  -- vuelva a escribir `pnl_base` en `embarques` falla en CI y no en runtime
+  -- con 42703.
   d := pg_get_functiondef('public.reabrir_embarque(uuid,text,text,uuid)'::regprocedure);
-  IF position('cerrado_snapshot = NULL' in d) = 0 THEN
+
+  seg_emb := substring(d from 'UPDATE embarques[^;]*;');
+  IF seg_emb IS NULL THEN
+    RAISE EXCEPTION 'M-1 REGRESION: reabrir_embarque ya no actualiza embarques';
+  END IF;
+  IF position('cerrado_snapshot = NULL' in seg_emb) = 0 THEN
     RAISE EXCEPTION 'M-1 REGRESION: reabrir_embarque no limpia cerrado_snapshot';
   END IF;
-  IF position('pnl_base = NULL' in d) = 0
-     OR position('calculo_snapshot = NULL' in d) = 0 THEN
+
+  FOR col IN
+    SELECT DISTINCT m[1]
+    FROM regexp_matches(seg_emb, '([a-z_]+)\s*=\s*', 'g') AS m
+  LOOP
+    IF col NOT IN ('id') AND NOT EXISTS (
+      SELECT 1 FROM information_schema.columns
+       WHERE table_schema = 'public' AND table_name = 'embarques' AND column_name = col
+    ) THEN
+      faltantes := faltantes || col;
+    END IF;
+  END LOOP;
+  IF array_length(faltantes, 1) > 0 THEN
+    RAISE EXCEPTION 'M-1 REGRESION: reabrir_embarque asigna columnas inexistentes en embarques: %', faltantes;
+  END IF;
+
+  seg_com := substring(d from 'UPDATE comisiones_devengadas[^;]*;');
+  IF seg_com IS NULL THEN
+    RAISE EXCEPTION 'M-1 REGRESION: reabrir_embarque no actualiza comisiones_devengadas';
+  END IF;
+  IF position('pnl_base = NULL' in seg_com) = 0
+     OR position('calculo_snapshot = NULL' in seg_com) = 0 THEN
     RAISE EXCEPTION 'M-1 REGRESION: reabrir_embarque no limpia pnl_base/calculo_snapshot de comisiones';
   END IF;
-  IF position('definitiva = false' in d) = 0 THEN
+  IF position('definitiva = false' in seg_com) = 0 THEN
     RAISE EXCEPTION 'M-1 REGRESION: reabrir_embarque no revierte definitiva en comisiones';
   END IF;
+
 
   -- ── N-1 ────────────────────────────────────────────────────────────────
   d := pg_get_functiondef('public._crear_embarque_replicar_conceptos(uuid,uuid,uuid,uuid[],jsonb)'::regprocedure);
