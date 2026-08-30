@@ -14,11 +14,13 @@
  * Mock mínimo del builder encadenado de supabase-js (sin red).
  */
 import { assert, assertEquals } from "https://deno.land/std@0.224.0/assert/mod.ts";
-import { claimNotaCredito, preloadNcContext, type SupabaseLike } from "./data.ts";
+import { claimNotaCredito, preloadNcContext, ESTADOS_NC_TIMBRABLES, type SupabaseLike } from "./data.ts";
 
 /** Simula una tabla en memoria con soporte de `.update().eq().is().select().maybeSingle()`. */
-function makeFakeSupabase(row: { id: string; facturapi_id: string | null }): SupabaseLike {
-  const state = { ...row };
+function makeFakeSupabase(
+  row: { id: string; facturapi_id: string | null; estado?: string; deleted_at?: string | null },
+): SupabaseLike {
+  const state = { estado: "Borrador", deleted_at: null as string | null, ...row };
   // RTC-01: sin la aserción sobre el literal, `this` queda bien inferido y
   // `_patch` se declara explícitamente (antes `this` colapsaba a `{}`).
   const builder = {
@@ -36,6 +38,13 @@ function makeFakeSupabase(row: { id: string; facturapi_id: string | null }): Sup
     },
     is(col: string, val: null) {
       if (col === "facturapi_id" && state.facturapi_id !== val) this._matchesIsNull = false;
+      // Ola 3 · B: el claim exige registro vivo.
+      if (col === "deleted_at" && state.deleted_at !== val) this._matchesIsNull = false;
+      return this;
+    },
+    in(col: string, vals: readonly string[]) {
+      // Ola 3 · B: el claim exige estado timbrable.
+      if (col === "estado" && !vals.includes(state.estado)) this._matchesIsNull = false;
       return this;
     },
     select() {
@@ -90,6 +99,7 @@ Deno.test("preloadNcContext: rechaza con ya_timbrada si facturapi_id ya está to
         return {
           select: () => ({
             eq: () => ({
+              is: () => ({
               maybeSingle: async () => ({
                 data: {
                   id: "nc-4",
@@ -106,6 +116,7 @@ Deno.test("preloadNcContext: rechaza con ya_timbrada si facturapi_id ya está to
                 },
                 error: null,
               }),
+              }),
             }),
           }),
         };
@@ -120,4 +131,57 @@ Deno.test("preloadNcContext: rechaza con ya_timbrada si facturapi_id ya está to
     assertEquals(result.status, 409);
     assertEquals((result.body as { error: string }).error, "ya_timbrada");
   }
+});
+
+Deno.test("claimNotaCredito: una NC en estado no timbrable (Timbrada) no puede reclamarse", async () => {
+  const supabase = makeFakeSupabase({ id: "nc-5", facturapi_id: null, estado: "Timbrada" });
+  const claim = await claimNotaCredito(supabase, "nc-5");
+  assert(!claim.ok);
+  if (!claim.ok) assertEquals(claim.status, 409);
+});
+
+Deno.test("claimNotaCredito: una NC en papelera no puede reclamarse", async () => {
+  const supabase = makeFakeSupabase({ id: "nc-6", facturapi_id: null, deleted_at: "2026-01-01T00:00:00Z" });
+  const claim = await claimNotaCredito(supabase, "nc-6");
+  assert(!claim.ok);
+  if (!claim.ok) assertEquals(claim.status, 409);
+});
+
+Deno.test("ESTADOS_NC_TIMBRABLES: sólo Borrador y Aprobada (legado) llegan al PAC", () => {
+  assertEquals([...ESTADOS_NC_TIMBRABLES], ["Borrador", "Aprobada"]);
+});
+
+Deno.test("preloadNcContext: estado no timbrable => 409 estado_no_timbrable antes de FacturAPI", async () => {
+  for (const estado of ["Timbrada", "Aplicada", "Cancelada"]) {
+    const supabase = {
+      from: () => ({
+        select: () => ({
+          eq: () => ({
+            is: () => ({
+              maybeSingle: async () => ({
+                data: {
+                  id: "nc-7", factura_id: "f-1", organization_id: "org-1", serie: "A",
+                  uso_cfdi: null, forma_pago: null, moneda: null, tipo_cambio: null,
+                  conceptos: [], facturapi_id: null, estado,
+                },
+                error: null,
+              }),
+            }),
+          }),
+        }),
+      }),
+    } as unknown as SupabaseLike;
+    const result = await preloadNcContext(supabase, "nc-7");
+    assert(!result.ok);
+    if (!result.ok) {
+      assertEquals(result.status, 409);
+      assertEquals((result.body as { error: string }).error, "estado_no_timbrable");
+    }
+  }
+});
+
+Deno.test("loadNc/loadFactura excluyen papelera (deleted_at IS NULL)", async () => {
+  const source = await Deno.readTextFile(new URL("./data.ts", import.meta.url));
+  const occurrences = source.split('.is("deleted_at", null)').length - 1;
+  assert(occurrences >= 3, `esperaba >=3 guards de papelera, hay ${occurrences}`);
 });
