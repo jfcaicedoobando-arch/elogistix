@@ -8071,9 +8071,18 @@ BEGIN
     RAISE EXCEPTION 'LC_LIQUIDACION_PAGADA_NO_CANCELABLE: La liquidación ya fue pagada; registra el ajuste en la siguiente liquidación.'
       USING ERRCODE = '42501';
   END IF;
+  -- A-2 (Ola 1): comisiones ORDINARIAS de la liquidación vuelven a devengarse.
   UPDATE public.comisiones_devengadas
      SET estado = 'Devengada', liquidacion_id = NULL, updated_at = now()
-   WHERE liquidacion_id = p_liquidacion_id;
+   WHERE liquidacion_id = p_liquidacion_id
+     AND estado = 'Liquidada';
+  -- A-2 (Ola 1): las RECUPERACIONES que esta liquidación descontó quedaron
+  -- marcadas 'Cancelada'. Al cancelar la liquidación la deuda sigue viva:
+  -- regresan a 'Por recuperar', no a 'Devengada' (eso las volvía pagables).
+  UPDATE public.comisiones_devengadas
+     SET estado = 'Por recuperar', liquidacion_id = NULL, updated_at = now()
+   WHERE liquidacion_id = p_liquidacion_id
+     AND estado = 'Cancelada';
   UPDATE public.liquidaciones_comision
      SET estado = 'Cancelada',
          cancelada_at = now(),
@@ -21133,11 +21142,12 @@ BEGIN
   END IF;
   PERFORM set_config('app.bypass_cierre','on', true);
   PERFORM set_config('app.bypass_transicion','on', true);
+  -- A-1 (Ola 1): `embarques` sólo tiene `cerrado_snapshot`. `pnl_base` y
+  -- `calculo_snapshot` viven en `comisiones_devengadas` (ver UPDATE abajo);
+  -- escribirlos aquí rompía la reapertura con 42703.
   UPDATE embarques
      SET estado = 'Por liquidar'::estado_embarque,
          cerrado_snapshot = NULL,
-         pnl_base = NULL,
-         calculo_snapshot = NULL,
          reabierto_at = now(),
          reabierto_por = auth.uid(),
          reabierto_motivo = v_motivo,
@@ -21146,6 +21156,8 @@ BEGIN
   PERFORM set_config('app.bypass_transicion','off', true);
   UPDATE comisiones_devengadas
      SET definitiva = false,
+         pnl_base = NULL,
+         calculo_snapshot = NULL,
          updated_at = now()
    WHERE embarque_id = p_embarque_id;
   PERFORM set_config('app.bypass_cierre','off', true);
