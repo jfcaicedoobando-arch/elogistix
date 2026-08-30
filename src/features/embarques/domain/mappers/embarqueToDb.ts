@@ -19,6 +19,7 @@ import {
   incotermSchema,
   tipoServicioMaritimoSchema,
   monedaSchema,
+  monedaVentaSchema,
 } from "./embarquePayloadSchemas";
 
 type ContactoRow = Pick<Tables<"contactos_cliente">, "id" | "nombre" | "tipo" | "pais">;
@@ -162,7 +163,7 @@ export function buildConceptosVentaPayload(conceptosVenta: ConceptoVentaLocal[])
       descripcion: v.concepto,
       cantidad: v.cantidad,
       precio_unitario: v.precioUnitario,
-      moneda: monedaSchema.parse(v.moneda),
+      moneda: monedaVentaSchema.parse(v.moneda),
       total: subtotalLinea(v.cantidad, v.precioUnitario),
       contenedor_id: v.contenedorId ?? null,
     }));
