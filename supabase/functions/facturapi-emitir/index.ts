@@ -20,7 +20,6 @@ import { getFacturapiClient } from "../_shared/facturapiClient.ts";
 import { jsonResponse, makeJson } from "../_shared/response.ts";
 import { loadFactura, validarFacturaTimbrable, claimFactura, resolverSustitucion, emitirYActualizar } from "./emitir.ts";
 import { cargarContexto } from "./contexto.ts";
-import { validarLimiteCredito, validarTotalPositivo } from "./credito.ts";
 import type { FacturaRow } from "./types.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
