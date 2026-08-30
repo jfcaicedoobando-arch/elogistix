@@ -74,3 +74,4 @@ supabase/tests/backlog_v4_profit_nc_y_seed_rol.sql
 supabase/tests/ola7_v15_reabrir_y_tc.sql
 supabase/tests/ola8_v15_candados.sql
 supabase/tests/ola1_comisiones_ciclo_recuperacion.sql
+supabase/tests/ola2_moneda_venta.sql

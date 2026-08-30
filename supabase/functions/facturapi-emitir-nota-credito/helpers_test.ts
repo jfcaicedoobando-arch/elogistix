@@ -61,6 +61,25 @@ Deno.test("buildNcPayload arma type E, related y relationship 01", () => {
   assertEquals(p.items[0].product.taxes[0].rate, 0.16);
 });
 
+Deno.test("validateNcContext aplica la banda fiscal 5..40 en moneda extranjera", () => {
+  for (const tc of [1, 4.99, 40.01, NaN]) {
+    const ctx = baseCtx();
+    ctx.moneda = "USD";
+    ctx.tipo_cambio = tc;
+    assertEquals(
+      validateNcContext(ctx).some((i) => i.field === "tipo_cambio"),
+      true,
+      `TC ${String(tc)} debía bloquear`,
+    );
+  }
+  for (const tc of [5, 17.5, 40]) {
+    const ctx = baseCtx();
+    ctx.moneda = "USD";
+    ctx.tipo_cambio = tc;
+    assertEquals(validateNcContext(ctx).some((i) => i.field === "tipo_cambio"), false);
+  }
+});
+
 Deno.test("buildNcPayload incluye exchange sólo para moneda no MXN", () => {
   const ctx = baseCtx();
   ctx.moneda = "USD";
