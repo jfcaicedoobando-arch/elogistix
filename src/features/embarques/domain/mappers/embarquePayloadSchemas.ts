@@ -38,3 +38,10 @@ export const incotermSchema = z.enum([
 export const tipoServicioMaritimoSchema = z.enum(["FCL", "LCL"]);
 
 export const monedaSchema = z.enum(["MXN", "USD", "EUR"]);
+
+/**
+ * Ola 2 · A (YAGNI) — La VENTA sólo se soporta en MXN/USD: la proforma y la
+ * factura no tienen rama EUR y un concepto en euros terminaba facturándose en
+ * $0. Los COSTOS siguen usando `monedaSchema` (EUR permitido).
+ */
+export const monedaVentaSchema = z.enum(["MXN", "USD"]);

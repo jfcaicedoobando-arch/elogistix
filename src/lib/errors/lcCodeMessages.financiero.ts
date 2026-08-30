@@ -88,5 +88,7 @@ export const LC_CODE_MESSAGES_FINANCIERO: Record<string, string> = {
     "Algunos conceptos no pertenecen a este embarque o cliente, o fueron eliminados. Vuelve a seleccionarlos.",
   LC_PROFORMA_EMBARQUE_INVALIDO:
     "El embarque de la proforma no es válido o no pertenece a tu organización.",
+  LC_MONEDA_VENTA_NO_SOPORTADA:
+    "Los conceptos de venta sólo se pueden facturar en MXN o USD. Cambia la moneda de los conceptos antes de continuar.",
 
 };

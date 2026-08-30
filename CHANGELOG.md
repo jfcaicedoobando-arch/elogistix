@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.810.0] - 2026-08-30
+
+- **Ola 2 · EUR fuera de la venta y banda fiscal de tipo de cambio**.
+- **EUR ya no se puede capturar en conceptos de VENTA** (YAGNI): la proforma y la factura no tienen rama EUR, así que un concepto en euros se facturaba en $0 en silencio. Se quita EUR del selector de venta, el payload usa un `monedaVentaSchema` (MXN/USD) propio —los costos siguen con EUR— y `conceptos_venta` gana el CHECK `conceptos_venta_moneda_soportada`. `crear_proforma_atomica` y `consolidar_proformas` lanzan `LC_MONEDA_VENTA_NO_SOPORTADA` antes de crear o vincular nada.
+- **Tipo de cambio fiscal 5..40 MXN por divisa**: `facturapi-emitir` y `facturapi-emitir-nota-credito` ahora usan el helper compartido `_shared/tcBanda.ts` en lugar del criterio local `> 1`; null/NaN/1/4.99/40.01 bloquean el timbrado ANTES de llamar a FacturAPI y 5..40 pasan. MXN sigue sin requerir TC.
+- **Tests**: `supabase/tests/ola2_moneda_venta.sql` (constraint + guards de las RPCs), `_shared/tcBanda_test.ts`, banda en `facturapi-emitir-nota-credito/helpers_test.ts` y suite vitest de moneda de venta.
+
 ## [13.809.0] - 2026-08-30
 
 - **Ola 1 · dos bugs confirmados de la auditoría (sólo esas dos funciones)**.
