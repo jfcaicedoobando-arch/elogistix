@@ -7,6 +7,7 @@ import { type SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.45.0
 import { getFacturapiClient, describeFacturapiError, withFacturapiTimeout, FacturapiTimeoutError, type FacturapiClient } from "../_shared/facturapiClient.ts";
 import { registrarBitacoraEdge } from "../_shared/bitacora.ts";
 import { jsonResponse } from "../_shared/response.ts";
+import { validarTotalPositivo, validarLimiteCredito } from "./credito.ts";
 import { validarTcFiscal } from "../_shared/tcBanda.ts";
 import {
   FACTURAPI_BASE, buildFacturapiPayload,
@@ -65,6 +66,22 @@ export function validarTipoCambio(factura: FacturaRow): Response | null {
     return jsonResponse({ error: "tipo_cambio_requerido", message: problema }, 422);
   }
   return null;
+}
+
+/**
+ * Ola 3 · B — todas las validaciones previas al PAC en un solo boundary
+ * (estado timbrable → tipo de cambio → total > 0 → límite de crédito).
+ * Se agrupan aquí para que el handler quede lineal.
+ */
+export async function validarFacturaTimbrable(
+  supabase: SupabaseClient,
+  factura: FacturaRow,
+  userId: string,
+): Promise<Response | null> {
+  return validarEstadoTimbrable(factura)
+    ?? validarTipoCambio(factura)
+    ?? validarTotalPositivo(factura)
+    ?? (await validarLimiteCredito(supabase, factura, userId));
 }
 
 export async function claimFactura(supabase: SupabaseClient, facturaId: string): Promise<Claim | Response> {
