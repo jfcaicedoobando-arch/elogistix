@@ -18,9 +18,8 @@ import { resolveFacturapiKey } from "../_shared/facturapiAuth.ts";
 import { authorizeOrgRole, ROLES_EMISOR_FISCAL } from "../_shared/auth.ts";
 import { getFacturapiClient } from "../_shared/facturapiClient.ts";
 import { jsonResponse, makeJson } from "../_shared/response.ts";
-import { loadFactura, validarTipoCambio, claimFactura, resolverSustitucion, emitirYActualizar } from "./emitir.ts";
+import { loadFactura, validarFacturaTimbrable, claimFactura, resolverSustitucion, emitirYActualizar } from "./emitir.ts";
 import { cargarContexto } from "./contexto.ts";
-import { validarLimiteCredito, validarTotalPositivo } from "./credito.ts";
 import type { FacturaRow } from "./types.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
@@ -61,16 +60,10 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir", async (req) => {
     return json({ error: "forbidden" }, 403);
   }
 
-  const tcCheck = validarTipoCambio(factura);
-  if (tcCheck) return tcCheck;
-
-  // B-11: nada de CFDI en $0.
-  const totalCheck = validarTotalPositivo(factura as FacturaRow);
-  if (totalCheck) return totalCheck;
-
-  // M-15: el límite de crédito se valida SIEMPRE aquí, no sólo en el diálogo.
-  const creditoCheck = await validarLimiteCredito(supabase, factura as FacturaRow, userData.user.id);
-  if (creditoCheck) return creditoCheck;
+  // Ola 3 · B: estado timbrable + TC fiscal + total > 0 + límite de crédito,
+  // todo ANTES de credenciales/contexto/claim/PAC.
+  const previos = await validarFacturaTimbrable(supabase, factura as FacturaRow, userData.user.id);
+  if (previos) return previos;
 
   // REF-06: validar TODO antes de clamar (patrón facturapi-emitir-nota-credito).
   // Antes el claim se tomaba aquí y las salidas de getFacturapiClient /

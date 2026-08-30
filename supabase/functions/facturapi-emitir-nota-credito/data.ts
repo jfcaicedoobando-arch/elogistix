@@ -43,20 +43,33 @@ interface ClienteRow {
   uso_cfdi_default: string | null;
 }
 
+/**
+ * Ola 3 · B — Estados de NC realmente timbrables: la tabla del detalle sólo
+ * ofrece "Timbrar" en `Borrador`, y la máquina canónica
+ * (`guard_nc_cliente_transicion`) permite además `Aprobada → Timbrada`
+ * (legado). Timbrada/Aplicada/Cancelada nunca llegan a FacturAPI.
+ */
+export const ESTADOS_NC_TIMBRABLES: readonly string[] = ["Borrador", "Aprobada"];
+
 export async function loadNc(supabase: SupabaseLike, id: string): Promise<NcRow | null> {
   const { data } = await supabase
     .from("factura_notas_credito")
     .select("id, factura_id, organization_id, serie, uso_cfdi, forma_pago, moneda, tipo_cambio, conceptos, facturapi_id, estado")
     .eq("id", id)
+    // Ola 3 · B: una NC en papelera no es timbrable ni por llamada directa.
+    .is("deleted_at", null)
     .maybeSingle();
   return (data as NcRow | null) ?? null;
 }
+
 
 export async function loadFactura(supabase: SupabaseLike, id: string): Promise<FacturaRow | null> {
   const { data } = await supabase
     .from("facturas")
     .select("id, uuid_fiscal, cliente_id, rfc_cliente, uso_cfdi, forma_pago, embarque_id, expediente, referencia_bl")
     .eq("id", id)
+    // Ola 3 · B: no se timbra una NC contra una factura en papelera.
+    .is("deleted_at", null)
     .maybeSingle();
   return (data as FacturaRow | null) ?? null;
 }
@@ -160,6 +173,10 @@ export async function claimNotaCredito(supabase: SupabaseLike, notaCreditoId: st
     .update({ facturapi_id: claimTag, facturapi_claim_at: claimAt })
     .eq("id", notaCreditoId)
     .is("facturapi_id", null)
+    // Ola 3 · B: el claim repite el guard de vivo + estado timbrable para
+    // cerrar la carrera entre preload y claim.
+    .is("deleted_at", null)
+    .in("estado", ESTADOS_NC_TIMBRABLES)
     .select("id")
     .maybeSingle();
   if (claimErr) return { ok: false, status: 500, body: { error: "claim_failed", detail: claimErr.message } };
@@ -187,6 +204,10 @@ export async function preloadNcContext(
   const nc = await loadNc(supabase, notaCreditoId);
   if (!nc) return { ok: false, status: 404, body: { error: "nota_credito_not_found" } };
   if (nc.facturapi_id) return { ok: false, status: 409, body: { error: "ya_timbrada", message: "Esta nota de crédito ya fue timbrada." } };
+  // Ola 3 · B: boundary de estado server-side (Timbrada/Aplicada/Cancelada nunca al PAC).
+  if (!ESTADOS_NC_TIMBRABLES.includes(nc.estado)) {
+    return { ok: false, status: 409, body: { error: "estado_no_timbrable", message: `Esta nota de crédito está en estado "${nc.estado}" y ya no se puede timbrar.` } };
+  }
   const factura = await loadFactura(supabase, nc.factura_id);
   if (!factura) return { ok: false, status: 404, body: { error: "factura_not_found" } };
   if (!factura.uuid_fiscal) return { ok: false, status: 409, body: { error: "factura_sin_uuid", message: "La factura original no tiene UUID fiscal. Timbra la factura primero." } };
