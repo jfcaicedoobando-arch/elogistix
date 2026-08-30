@@ -7,6 +7,7 @@ import { type SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.45.0
 import { getFacturapiClient, describeFacturapiError, withFacturapiTimeout, FacturapiTimeoutError, type FacturapiClient } from "../_shared/facturapiClient.ts";
 import { registrarBitacoraEdge } from "../_shared/bitacora.ts";
 import { jsonResponse } from "../_shared/response.ts";
+import { validarTcFiscal } from "../_shared/tcBanda.ts";
 import {
   FACTURAPI_BASE, buildFacturapiPayload,
   type FacturaContext,

@@ -10,6 +10,7 @@ import {
   type ReferenciasEmbarque,
 } from "../_shared/referenciasEmbarque.ts";
 export type { ReferenciasEmbarque } from "../_shared/referenciasEmbarque.ts";
+import { validarTcFiscal } from "../_shared/tcBanda.ts";
 
 export interface ConceptoNC {
   descripcion: string;
@@ -106,17 +107,10 @@ export function validateNcContext(ctx: NotaCreditoContext): ValidationIssue[] {
   if (!ctx.uso_cfdi) issues.push({ field: "uso_cfdi", message: "Uso de CFDI requerido (usualmente G02 para NC)" });
   if (!ctx.forma_pago) issues.push({ field: "forma_pago", message: "Forma de pago SAT requerida" });
   if (!ctx.conceptos.length) issues.push({ field: "conceptos", message: "La nota de crédito no tiene conceptos" });
-  // Ola 4 · N19: mismo guard que el timbrado de facturas — sin TC confiable la
-  // NC se emitía con exchange=1 (USD tratado como MXN).
-  if (ctx.moneda !== "MXN") {
-    const tc = Number(ctx.tipo_cambio);
-    if (!Number.isFinite(tc) || tc <= 1) {
-      issues.push({
-        field: "tipo_cambio",
-        message: `Tipo de cambio inválido para ${ctx.moneda}: se requiere un valor mayor a 1`,
-      });
-    }
-  }
+  // Ola 2 · B: banda canónica compartida (5..40 MXN por divisa). Antes bastaba
+  // con "> 1", así que un 4.99 o un 100 timbraba importes en MXN equivocados.
+  const problemaTc = validarTcFiscal(ctx.moneda, ctx.tipo_cambio);
+  if (problemaTc) issues.push({ field: "tipo_cambio", message: problemaTc });
   ctx.conceptos.forEach((c, i) => {
     if (!c.clave_sat) issues.push({ field: `conceptos[${i}].clave_sat`, message: `Concepto "${c.descripcion}" sin clave SAT` });
     if (!c.clave_unidad) issues.push({ field: `conceptos[${i}].clave_unidad`, message: `Concepto "${c.descripcion}" sin clave de unidad` });
