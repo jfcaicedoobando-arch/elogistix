@@ -44,11 +44,27 @@ export async function validarLimiteCredito(
     .select("nombre, limite_credito_mxn")
     .eq("id", factura.cliente_id)
     .maybeSingle();
-  // Sin cliente o sin límite configurado no hay nada que validar (0/NULL = sin
-  // límite, como hoy en la UI).
-  if (error || !cliente) return null;
+  // Ola 3 · A — fail-closed real: si la lectura del cliente falla no se puede
+  // saber si hay límite, así que NO se timbra (antes se continuaba al PAC).
+  if (error) {
+    console.error("credito_cliente_read_failed", { clienteId: factura.cliente_id, code: error.code });
+    return jsonResponse({
+      error: "credito_no_verificable",
+      message: "No se pudo verificar el límite de crédito del cliente. Intenta de nuevo en unos segundos.",
+    }, 503);
+  }
+  // Cliente inexistente = dato roto, no "sin límite" (convención de la familia
+  // NC: 404 cliente_not_found).
+  if (!cliente) {
+    return jsonResponse({
+      error: "cliente_not_found",
+      message: "El cliente de la factura no existe o fue eliminado. Revisa la factura antes de timbrar.",
+    }, 404);
+  }
+  // 0/NULL = sin límite configurado (mismo criterio que la UI).
   const limite = Number(cliente.limite_credito_mxn ?? 0);
   if (!(limite > 0)) return null;
+
 
   const { data: enUso, error: errUso } = await supabase.rpc("credito_en_uso_mxn", {
     p_cliente_id: factura.cliente_id,
