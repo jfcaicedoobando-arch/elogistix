@@ -41,7 +41,9 @@ export function FilaVentaPrecio({
       <NumericInput decimals value={venta.precioUnitario} onChange={n => update(venta.id, 'precioUnitario', n)} className="text-body h-10" aria-label="Subtotal venta" />
       <Select value={venta.moneda} onValueChange={v => update(venta.id, 'moneda', v)}>
         <SelectTrigger className="text-body"><SelectValue /></SelectTrigger>
-        <SelectContent><SelectItem value="MXN">MXN</SelectItem><SelectItem value="USD">USD</SelectItem><SelectItem value="EUR">EUR</SelectItem></SelectContent>
+        {/* Ola 2 · A (YAGNI): la venta sólo se factura en MXN o USD. EUR sigue
+            disponible en costos/CxP, pero aquí terminaba facturándose en $0. */}
+        <SelectContent><SelectItem value="MXN">MXN</SelectItem><SelectItem value="USD">USD</SelectItem></SelectContent>
       </Select>
       {showContenedorCol && embarqueId && (
         <SelectContenedorConcepto
