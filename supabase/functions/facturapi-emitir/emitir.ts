@@ -20,14 +20,37 @@ export { cargarContexto } from "./contexto.ts";
 
 interface EmitirInput { supabase: SupabaseClient; facturapi: FacturapiClient; apiKey: string; ambiente: string; ctx: FacturaContext; factura: FacturaRow; facturaId: string; user: UserIdentity; claim: Claim }
 
+/**
+ * Ola 3 · B — Estados de factura realmente timbrables en el flujo actual:
+ * la bandeja "Por timbrar" lista borradores (`estado = Borrador`) y el enum
+ * `estado_factura` incluye además "Por timbrar". Emitida/Pagada/Parcialmente
+ * pagada/Vencida/Cancelada/Sustituida NUNCA se re-timbran.
+ */
+export const ESTADOS_FACTURA_TIMBRABLES: readonly string[] = ["Borrador", "Por timbrar"];
+
 export async function loadFactura(supabase: SupabaseClient, facturaId: string): Promise<FacturaRow | Response> {
   const { data: factura, error: fErr } = await supabase
     .from("facturas")
     .select("id, numero, serie, estado, moneda, tipo_cambio, uso_cfdi, forma_pago, metodo_pago, cliente_id, rfc_cliente, organization_id, facturapi_id, sustituye_a, embarque_id, expediente, referencia_bl, subtotal, total")
     .eq("id", facturaId)
+    // Ola 3 · B: una factura en papelera no es timbrable ni por llamada directa.
+    .is("deleted_at", null)
     .maybeSingle();
   if (fErr || !factura) return jsonResponse({ error: "factura_not_found", detail: fErr?.message }, 404);
   return factura as FacturaRow;
+}
+
+/**
+ * Ola 3 · B — boundary server-side: aunque la UI se equivoque, una llamada
+ * directa no puede timbrar una factura en un estado no timbrable.
+ */
+export function validarEstadoTimbrable(factura: FacturaRow): Response | null {
+  const estado = factura.estado ?? "";
+  if (ESTADOS_FACTURA_TIMBRABLES.includes(estado)) return null;
+  return jsonResponse({
+    error: "estado_no_timbrable",
+    message: `Esta factura está en estado "${estado}" y ya no se puede timbrar.`,
+  }, 409);
 }
 
 /**
@@ -52,6 +75,11 @@ export async function claimFactura(supabase: SupabaseClient, facturaId: string):
     .update({ facturapi_id: claimTag, facturapi_claim_at: claimAt })
     .eq("id", facturaId)
     .is("facturapi_id", null)
+    // Ola 3 · B: el claim repite el guard de vivo + estado timbrable, así la
+    // carrera entre load y claim (borrado o cambio de estado en medio) no
+    // termina en un CFDI.
+    .is("deleted_at", null)
+    .in("estado", ESTADOS_FACTURA_TIMBRABLES)
     .select("id")
     .maybeSingle();
   if (claimErr) {
@@ -59,10 +87,11 @@ export async function claimFactura(supabase: SupabaseClient, facturaId: string):
     console.error("claim_failed", { facturaId, code: claimErr.code });
     return jsonResponse({ error: "claim_failed", message: "No se pudo reservar la factura para timbrar. Intenta de nuevo." }, 500);
   }
-  if (!claimed) return jsonResponse({ error: "ya_timbrada", message: "Otro usuario ya está timbrando esta factura." }, 409);
+  if (!claimed) return jsonResponse({ error: "ya_timbrada", message: "Otro usuario ya está timbrando esta factura, o la factura dejó de ser timbrable." }, 409);
   const release = async () => { await supabase.from("facturas").update({ facturapi_id: null, facturapi_claim_at: null }).eq("id", facturaId).eq("facturapi_id", claimTag); };
   return { claimTag, claimAt, release };
 }
+
 
 export async function resolverSustitucion(supabase: SupabaseClient, factura: FacturaRow): Promise<string | Response | null> {
   if (!factura.sustituye_a) return null;
