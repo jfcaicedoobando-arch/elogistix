@@ -29,12 +29,16 @@ export async function loadFactura(supabase: SupabaseClient, facturaId: string): 
   return factura as FacturaRow;
 }
 
+/**
+ * Ola 2 · B — banda canónica compartida (5..40 MXN por divisa) en lugar del
+ * criterio local `> 1`, que dejaba pasar dedazos como 4.99 o 100.
+ * Se ejecuta ANTES de cualquier llamada a FacturAPI.
+ */
 export function validarTipoCambio(factura: FacturaRow): Response | null {
   const monedaFactura = factura.moneda ?? "MXN";
-  const tcFactura = factura.tipo_cambio == null ? null : Number(factura.tipo_cambio);
-  const tcInvalido = tcFactura == null || !Number.isFinite(tcFactura) || tcFactura <= 0 || tcFactura === 1;
-  if (monedaFactura !== "MXN" && tcInvalido) {
-    return jsonResponse({ error: "tipo_cambio_requerido", message: `Captura el tipo de cambio del día (DOF) antes de timbrar la factura en ${monedaFactura}.` }, 422);
+  const problema = validarTcFiscal(monedaFactura, factura.tipo_cambio);
+  if (problema) {
+    return jsonResponse({ error: "tipo_cambio_requerido", message: problema }, 422);
   }
   return null;
 }
