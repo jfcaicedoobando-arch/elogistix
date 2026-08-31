@@ -59,6 +59,8 @@ export function flattenCotizacionListRow(data: unknown): CotizacionListItem[] {
     ...r,
     cotizacion_costos_count: r.cotizacion_costos?.[0]?.count ?? 0,
     tarifa_vigente_hasta: r.costeo_tarifas?.vigente_hasta ?? null,
+    // SAFE-CAST: los embebidos `cotizacion_costos(count)` y `costeo_tarifas`
+    // no existen en el schema generado; ya quedaron aplanados arriba.
   })) as unknown as CotizacionListItem[];
 }
 

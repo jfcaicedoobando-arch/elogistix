@@ -108,6 +108,8 @@ export async function fetchCotizacionesPaginadas(
 
   let query = supabase
     .from("cotizaciones")
+    // SAFE-CAST: se estrecha el builder de supabase-js a la interfaz mínima
+    // (filtros + order + range) para poder compartir `aplicarFiltrosCotizaciones`.
     .select(COTIZACION_LIST_COLUMNS, { count: "exact" }) as unknown as FiltrableQuery & {
       order: (col: string, opts: { ascending: boolean }) => typeof query;
       range: (from: number, to: number) => Promise<{ data: unknown; count: number | null; error: unknown }>;

@@ -33,6 +33,7 @@ export function DialogEditarPagoProveedor({ open, onOpenChange, factura, pago }:
   const f = usePagoProveedorForm(factura, open, pago);
 
   // YG-04: hay cambios sin guardar que se perderían al cerrar el modal.
+  // SAFE-CAST: el helper puro sólo lee campos por nombre del form.
   const isDirty = pagoProveedorEditadoSucio(f as unknown as Record<string, unknown>, pago);
 
   const submit = async () => {
