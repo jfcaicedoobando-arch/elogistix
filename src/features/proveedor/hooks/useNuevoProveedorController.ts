@@ -17,7 +17,7 @@ import {
 } from "./useNuevoProveedorController.constants";
 import { mergeCsfPatch, procesarCsfUpload } from "./useNuevoProveedorController.csf";
 import { formInicialProveedor, type PrefillProveedor } from "./useNuevoProveedorController.prefill";
-import { preparePayload } from "./useNuevoProveedorController.helpers";
+import { preparePayload, faltantesPaso1Proveedor } from "./useNuevoProveedorController.helpers";
 import { notifyError } from "@/lib/ui/appFeedback";
 
 export {    type NuevoProveedorForm } from "./useNuevoProveedorController.constants";
@@ -60,39 +60,9 @@ export function useNuevoProveedorController(
   const isAgenteCarga = isLogistico && form.tipo === "Agente de Carga";
   const rfcLabel = form.origen_proveedor === "Extranjero" ? "Tax ID" : "RFC";
 
-  const isStep1Valid = (): boolean => {
-
-    // Chequeos comunes agrupados en una tabla de aserciones para bajar la
-    // complejidad ciclomática (antes 11, ahora 3).
-    const camposBase: boolean[] = [
-      Boolean(form.categoria),
-      Boolean(form.nombre.trim()),
-      Boolean(form.origen_proveedor),
-      Boolean(form.rfc.trim()),
-    ];
-    if (camposBase.some((ok) => !ok)) return false;
-    // `tipo` es obligatorio para TODO Logístico (nacional y extranjero).
-    // El CHECK `proveedores_categoria_check` exige tipo IS NOT NULL cuando
-    // categoria='Logistico'; permitir tipo=null aquí producía 23514 en BD.
-    if (isLogistico && (!form.tipo || (isAgenteCarga && !form.pais))) return false;
-    if (isGasto && !form.subtipo_gasto) return false;
-    return true;
-  };
-
-  /** YG-06: etiquetas de lo que falta para poder avanzar/guardar el alta. */
-  const faltantesStep1 = (): string[] => {
-    const items: string[] = [];
-    if (!form.categoria) items.push("categoría");
-    if (!form.nombre.trim()) items.push("nombre");
-    if (!form.origen_proveedor) items.push("origen (nacional/extranjero)");
-    if (!form.rfc.trim()) items.push(rfcLabel);
-    if (isLogistico && !form.tipo) items.push("tipo de proveedor logístico");
-    if (isLogistico && isAgenteCarga && !form.pais) items.push("país");
-    if (isGasto && !form.subtipo_gasto) items.push("subtipo de gasto");
-    return items;
-  };
-
-
+  // YG-06: una sola fuente de verdad para "qué falta" y para habilitar el botón.
+  const faltantesStep1 = faltantesPaso1Proveedor(form, rfcLabel);
+  const isStep1Valid = faltantesStep1.length === 0;
 
   const setField = <K extends keyof NuevoProveedorForm>(field: K, value: NuevoProveedorForm[K]) =>
     setForm((prev) => {
@@ -136,7 +106,7 @@ export function useNuevoProveedorController(
   };
 
   const handleNext = () => {
-    if (!isStep1Valid()) return;
+    if (!isStep1Valid) return;
     const lista = form.origen_proveedor === "Extranjero" ? DOCS_EXTRANJERO : DOCS_NACIONAL;
     setDocumentos(lista.map((nombre) => ({ nombre, adjuntado: false })));
     setStep(2);
@@ -200,8 +170,8 @@ export function useNuevoProveedorController(
     rfcLabel,
     rfcDuplicado,
     saving,
-    isStep1Valid: isStep1Valid(),
-    faltantesStep1: faltantesStep1(),
+    isStep1Valid,
+    faltantesStep1,
     isDirty,
     setField,
     setStep,
