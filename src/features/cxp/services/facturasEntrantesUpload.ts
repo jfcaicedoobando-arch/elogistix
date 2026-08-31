@@ -66,7 +66,11 @@ export async function adjuntarXmlFacturaEntrante(params: {
   // N36 (Ola 4): deduplicar el XML ANTES de subirlo (mismo hash vivo en otro
   // documento del buzón → rechazar con mensaje claro).
   const hashXml = await calcularHash(params.xml);
-  await validarNoDuplicadoEnBuzon(hashXml, params.organizationId, "xml_hash");
+  await validarNoDuplicadoEnBuzon(hashXml, params.organizationId, "xml_hash", {
+    uuidFiscal: params.meta?.uuid ?? null,
+    embarqueId: params.embarqueId,
+  });
+
   const subido = await subirArchivo(params.xml, {
     embarqueId: params.embarqueId,
     organizationId: params.organizationId,
