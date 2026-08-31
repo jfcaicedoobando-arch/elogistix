@@ -27,6 +27,7 @@ import { CfdiMetaPreview } from "@/features/embarques/components/entrantes/CfdiM
 import { NotaContabilidadCampo } from "@/features/embarques/components/entrantes/NotaContabilidadCampo";
 import { SeccionProveedorEntrante } from "@/features/embarques/components/entrantes/SeccionProveedorEntrante";
 import { VerificacionMontoEntrante } from "@/features/embarques/components/entrantes/VerificacionMontoEntrante";
+import { totalCfdiDetectado } from "@/features/embarques/components/entrantes/totalCfdiDetectado";
 import { AvisoDuplicadoBuzon } from "@/features/embarques/components/entrantes/AvisoDuplicadoBuzon";
 import { BuzonDuplicadoError } from "@/features/cxp/services/buzonDuplicado";
 
@@ -167,7 +168,7 @@ export function SubirFacturaEntranteDialog({ open, onOpenChange, embarqueId, org
           moneda={form.monedaDeclarada}
           onMonto={form.setMontoDeclarado}
           onMoneda={form.setMonedaDeclarada}
-          totalCfdi={form.meta?.subTotal ?? form.meta?.total ?? null}
+          totalCfdi={totalCfdiDetectado(form.meta)}
           costeadoPorMoneda={costos.data}
           cargandoCostos={costos.isLoading}
           proveedorElegido={Boolean(form.proveedor)}
