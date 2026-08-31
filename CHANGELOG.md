@@ -9,6 +9,7 @@
 - **YG-06 · Botones deshabilitados (P2)**: el alta de proveedor y la nota de crédito indican en línea qué falta para avanzar, guardar o timbrar, reutilizando el aviso de faltantes existente.
 - **YG-07 · Folios (P3)**: la búsqueda de folio de cotización excluye registros eliminados.
 - Power-of-10: la validación del paso 1 del alta de proveedor y la detección de cambios sin guardar (pago de proveedor, traspaso) se movieron a helpers puros para respetar los límites de tamaño y complejidad.
+- Cierre (revisión de commit): se eliminó la migración YG-02 duplicada con timestamp futuro (`20260908000000`); queda sólo `20260831211719`, con espejos canónicos y baseline de esquema regenerados. El baseline del auditor de migraciones bajó a `20260907000000`.
 - Pruebas: 5 guards SQL que insertaban clientes sin correo (requisito NOT NULL) quedaron corregidos; la verificación local de base vuelve a verde.
 
 ## [13.818.1] - 2026-08-31
