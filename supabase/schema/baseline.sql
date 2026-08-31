@@ -22916,14 +22916,7 @@ BEGIN
   IF v_uid IS NULL THEN
     RAISE EXCEPTION 'No autenticado' USING ERRCODE = '42501';
   END IF;
-  IF NOT EXISTS (
-    SELECT 1 FROM public.user_roles ur
-    WHERE ur.user_id = v_uid
-      AND ur.role::text = ANY (ARRAY['admin','admin_org','super_admin','contador','tesorero'])
-  ) THEN
-    RAISE EXCEPTION 'LC_LIQUIDACION_SIN_ROL: Sólo administración, contabilidad o tesorería pueden pagar liquidaciones.'
-      USING ERRCODE = '42501';
-  END IF;
+  -- YG-02: primero la fila (con candado), después la autorización por org.
   SELECT * INTO v_row FROM public.liquidaciones_comision
   WHERE id = p_liquidacion_id AND deleted_at IS NULL
   FOR UPDATE;
@@ -22933,6 +22926,14 @@ BEGIN
   IF v_row.organization_id IS DISTINCT FROM public.current_user_org_id()
      AND NOT public.has_role(v_uid,'super_admin'::app_role) THEN
     RAISE EXCEPTION 'LC_LIQUIDACION_OTRA_ORG: La liquidación pertenece a otra organización.';
+  END IF;
+  -- YG-02: rol financiero POR MEMBRESÍA en la org dueña de la liquidación,
+  -- lista exacta {admin, admin_org, super_admin, contador, tesorero}.
+  IF NOT public.has_any_role_in_org_exact(v_uid,
+       ARRAY['admin','admin_org','super_admin','contador','tesorero']::public.app_role[],
+       v_row.organization_id) THEN
+    RAISE EXCEPTION 'LC_LIQUIDACION_SIN_ROL: Sólo administración, contabilidad o tesorería pueden pagar liquidaciones.'
+      USING ERRCODE = '42501';
   END IF;
   IF v_row.estado = 'Cancelada' THEN
     RAISE EXCEPTION 'LC_LIQUIDACION_CANCELADA: La liquidación está cancelada; genera una nueva.'
