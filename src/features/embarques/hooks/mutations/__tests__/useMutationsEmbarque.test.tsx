@@ -77,20 +77,24 @@ describe("useCreateEmbarque", () => {
     expect(spy).toHaveBeenCalledWith({ queryKey: queryKeys.embarques.all });
   });
 
-  it("inserta contenedores hijos cuando se proveen", async () => {
+  it("envía los contenedores DENTRO de la RPC (alta atómica, M-11)", async () => {
     const { wrapper } = makeWrapper();
     const { result } = renderHook(() => useCreateEmbarque(), { wrapper });
+    const contenedores = [
+      { numero_contenedor: "A1", tipo_contenedor: "40HC", peso_kg: 0, volumen_m3: 0, piezas: 0 },
+    ];
     await result.current.mutateAsync({
       embarque: {} as never,
       conceptosVenta: [],
       conceptosCosto: [],
       documentos: [],
-      contenedores: [
-        { numero_contenedor: "A1", tipo_contenedor: "40HC", peso_kg: 0, volumen_m3: 0, piezas: 0 },
-      ] as never,
+      contenedores: contenedores as never,
     });
-    expect(crearMuchos).toHaveBeenCalledWith("emb-new", expect.any(Array));
+    expect(crearEmbarqueRpc).toHaveBeenCalledWith(expect.objectContaining({ contenedores }));
+    // Ya no hay segunda llamada: si fallara, el embarque quedaría sin contenedores.
+    expect(crearMuchos).not.toHaveBeenCalled();
   });
+
 
   it("usa el requestId provisto en vez de generar uno nuevo", async () => {
     const { wrapper } = makeWrapper();
