@@ -3,36 +3,18 @@
  * Extraídos para mantener el service ≤200 líneas (Power of 10 #4).
  * Sin Supabase, sin React: testeables en aislamiento.
  */
-import type { Tables } from "@/integrations/supabase/types";
 import type { FacturaCxP, EstatusCxP, FetchCxPFiltros } from "./proveedorFacturas";
 import { diasVencidos } from "@/lib/date/dateOnly";
+import type {
+  EstadoProveedorFactura,
+  Joined,
+  NotaCreditoCxpParcial,
+  PagoCxpParcial,
+} from "@/features/cxp/services/proveedorFacturas.types";
 
-type ProveedorFacturaRow = Tables<"proveedor_facturas">;
-type EstadoProveedorFactura = ProveedorFacturaRow["estado"];
+export { PROVEEDOR_FACTURAS_SELECT } from "@/features/cxp/services/proveedorFacturas.types";
+export type { Joined, PagoCxpParcial, NotaCreditoCxpParcial } from "@/features/cxp/services/proveedorFacturas.types";
 
-/** Select reutilizado por list + single fetch (evita duplicar el embed). */
-export const PROVEEDOR_FACTURAS_SELECT = `
-  id, proveedor_id, proveedor_nombre, embarque_id, folio_proveedor, folio_interno,
-  fecha_emision, fecha_vencimiento, moneda, subtotal, iva, ieps, retenciones, total,
-  estado, tipo_cambio_usd, rfc_proveedor, uuid_fiscal, dias_credito, notas,
-  estado_aprobacion, motivo_rechazo, categoria_presupuesto_id,
-  archivo_xml_url, archivo_pdf_url,
-  uuid_verificado, uuid_verificado_fecha, uuid_estatus_sat,
-  fecha_programada_pago,
-  fecha_cancelacion, motivo_cancelacion, cancelada_por, created_by,
-  pagos_proveedor(monto, monto_en_moneda_factura, deleted_at),
-  proveedor_notas_credito(monto, estado, deleted_at),
-  proveedores(origen_proveedor),
-  embarques(expediente),
-  presupuesto_categorias!categoria_presupuesto_id(nombre)
-` as const;
-
-/** Fila mínima de pago usada para saldar una factura de proveedor. */
-export type PagoCxpParcial = {
-  monto: number;
-  monto_en_moneda_factura: number | null;
-  deleted_at: string | null;
-};
 
 /**
  * C3: un pago puede estar en otra moneda que la factura (USD facturada, pagada
@@ -45,12 +27,6 @@ export function sumarPagosEnMonedaFactura(pagos: PagoCxpParcial[] | null): numbe
     .reduce((s, p) => s + Number(p.monto_en_moneda_factura ?? p.monto), 0);
 }
 
-/** Fila mínima de nota de crédito de proveedor usada para saldar. */
-export type NotaCreditoCxpParcial = {
-  monto: number;
-  estado: string;
-  deleted_at: string | null;
-};
 
 /**
  * A-2: canon de "NC que reducen el saldo" del lado cliente — sólo las
@@ -63,23 +39,6 @@ export function sumarNotasCreditoAplicadas(ncs: NotaCreditoCxpParcial[] | null):
     .reduce((s, n) => s + Number(n.monto), 0);
 }
 
-export type Joined = Pick<
-  ProveedorFacturaRow,
-  | "id" | "proveedor_id" | "proveedor_nombre" | "embarque_id" | "folio_proveedor" | "folio_interno"
-  | "fecha_emision" | "fecha_vencimiento" | "moneda" | "subtotal" | "iva" | "ieps" | "retenciones" | "total"
-  | "estado" | "tipo_cambio_usd" | "rfc_proveedor" | "uuid_fiscal" | "dias_credito" | "notas"
-  | "estado_aprobacion" | "motivo_rechazo" | "categoria_presupuesto_id"
-  | "archivo_xml_url" | "archivo_pdf_url"
-  | "uuid_verificado" | "uuid_verificado_fecha" | "uuid_estatus_sat"
-  | "fecha_programada_pago"
-  | "fecha_cancelacion" | "motivo_cancelacion" | "cancelada_por" | "created_by"
-> & {
-  pagos_proveedor: Array<PagoCxpParcial> | null;
-  proveedor_notas_credito: Array<NotaCreditoCxpParcial> | null;
-  proveedores: { origen_proveedor: "Nacional" | "Extranjero" | null } | null;
-  embarques: { expediente: string } | null;
-  presupuesto_categorias: { nombre: string } | null;
-};
 
 
 export function diasVencido(fechaVenc: string | null): number {
