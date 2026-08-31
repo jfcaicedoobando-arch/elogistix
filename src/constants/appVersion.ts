@@ -2,4 +2,4 @@
  * Versión de la aplicación. Se actualiza en cada cambio funcional junto con
  * `CHANGELOG.md` (raíz).
  */
-export const APP_VERSION = "13.813.0";
+export const APP_VERSION = "13.814.0";
