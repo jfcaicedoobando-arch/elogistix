@@ -44,21 +44,6 @@ interface Props {
 }
 
 
-/**
- * "Cancelar" del footer: usa el cierre guardado del `FormDialogShell` para que
- * respete la confirmación de descarte cuando hay captura sin guardar.
- */
-function BotonCancelarTarifa({
-  disabled,
-  onCerrarSinGuarda,
-}: { disabled: boolean; onCerrarSinGuarda: () => void }) {
-  const cerrar = useFormDialogCerrar();
-  return (
-    <Button type="button" variant="outline" onClick={cerrar ?? onCerrarSinGuarda} disabled={disabled}>
-      Cancelar
-    </Button>
-  );
-}
 
 
 export function TarifaForm({ open, onOpenChange, initial, tarifaId, agenteIdFijo, agenteNombreFijo, tituloOverride, rutasOverride }: Props) {
