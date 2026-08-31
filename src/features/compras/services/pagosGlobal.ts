@@ -14,6 +14,7 @@ import type { Tables } from "@/integrations/supabase/types";
 import { CAP_POSTGREST } from "@/constants/queryCaps";
 import { assertNotTruncated } from "@/lib/supabase/assertNotTruncated";
 import { resolverFacturaIdsPorBusqueda } from "./facturaSearchHelper";
+import { ilikePattern, orIlike } from "@/lib/search/ilike";
 
 export interface PagoProveedorRow {
   id: string;
@@ -72,11 +73,10 @@ export async function listarPagosProveedorGlobal(
 
   if (filtros.search) {
     const term = filtros.search.trim();
-    const like = `%${term}%`;
     const ids = await resolverFacturaIdsPorBusqueda(term);
     q = ids.length > 0
-      ? q.or(`referencia.ilike.${like},proveedor_factura_id.in.(${ids.join(",")})`)
-      : q.ilike("referencia", like);
+      ? q.or(`${orIlike(["referencia"], term)},proveedor_factura_id.in.(${ids.join(",")})`)
+      : q.ilike("referencia", ilikePattern(term));
   }
 
   const { data, error } = await q;

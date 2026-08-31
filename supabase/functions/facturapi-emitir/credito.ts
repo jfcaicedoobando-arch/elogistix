@@ -6,10 +6,28 @@
  * emitía factura aunque el cliente ya estuviera sobregirado. Aquí se valida
  * SIEMPRE, con override explícito para los roles de dirección/finanzas.
  */
-import { type SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { createClient, type SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { jsonResponse } from "../_shared/response.ts";
 import { authorizeOrgRole } from "../_shared/auth.ts";
 import type { FacturaRow } from "./types.ts";
+
+let adminSingleton: SupabaseClient | null = null;
+/**
+ * `credito_en_uso_mxn` está REVOKE FROM authenticated y GRANT sólo a
+ * service_role. El cliente del handler lleva el JWT del usuario en
+ * `Authorization`, así que PostgREST lo ejecuta como `authenticated` y la RPC
+ * devolvía permission denied → 503 credito_no_verificable siempre. Igual que
+ * en `_shared/facturapiAuth.ts`, usamos un cliente admin sin ese header.
+ * En tests no hay env vars → devolvemos null y se usa el cliente inyectado.
+ */
+function getAdminClient(): SupabaseClient | null {
+  if (adminSingleton) return adminSingleton;
+  const url = Deno.env.get("SUPABASE_URL");
+  const key = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  if (!url || !key) return null;
+  adminSingleton = createClient(url, key, { auth: { persistSession: false } });
+  return adminSingleton;
+}
 
 /**
  * Roles que pueden emitir por arriba del límite de crédito. Espejo de
@@ -66,7 +84,8 @@ export async function validarLimiteCredito(
   if (!(limite > 0)) return null;
 
 
-  const { data: enUso, error: errUso } = await supabase.rpc("credito_en_uso_mxn", {
+  const rpcClient = getAdminClient() ?? supabase;
+  const { data: enUso, error: errUso } = await rpcClient.rpc("credito_en_uso_mxn", {
     p_cliente_id: factura.cliente_id,
   });
   // M-15: fail-closed. Si no se puede calcular la exposición, no se timbra.
