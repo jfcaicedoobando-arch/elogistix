@@ -112,7 +112,7 @@ Deno.test("ncTotalEsCero permite montos positivos", () => {
 Deno.test("el guard de total $0 corre antes del claim y del PAC", async () => {
   const src = await Deno.readTextFile(new URL("./index.ts", import.meta.url));
   const iGuard = src.indexOf("ncTotalEsCero(ctx)");
-  const iClaim = src.indexOf("claimNotaCredito(supabase");
-  const iPac = src.indexOf("createNcInvoice(");
+  const iClaim = src.indexOf("await claimNotaCredito(");
+  const iPac = src.indexOf("await createNcInvoice(");
   assertEquals(iGuard > -1 && iClaim > iGuard && iPac > iGuard, true);
 });
