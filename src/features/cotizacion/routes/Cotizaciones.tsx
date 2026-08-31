@@ -69,6 +69,7 @@ export default function Cotizaciones() {
         actions={
           <CotizacionesPageActions
             canEdit={c.canEdit}
+            totalFiltrado={c.total}
             onExportar={c.exportar}
             onNueva={c.irANueva}
           />

@@ -7,6 +7,7 @@ import { CobranzaBlock } from "@/features/dashboard/finance/components/CobranzaB
 import { PagosCajaBlock } from "@/features/dashboard/finance/components/PagosCajaBlock";
 import { CierreAdminBlock } from "@/features/dashboard/finance/components/CierreAdminBlock";
 import { formatFechaLarga } from "@/lib/formatters";
+import { resolveDestinoPorPagar } from "@/features/dashboard/finance/destinoPorPagar";
 
 function getSaludo(): string {
   const h = new Date().getHours();
@@ -53,7 +54,7 @@ function toViewModel(dash: FinanceDash): FinanceViewModel {
 }
 
 export function FinanceDashboard() {
-  const { user } = useAuth();
+  const { user, effectiveRole } = useAuth();
   const dash = useFinanceDashboard();
 
   const { saludo, hoyStr } = useMemo(
@@ -82,6 +83,7 @@ export function FinanceDashboard() {
         vencidoMxn={vm.vencidoMxn}
         vencidoUsd={vm.vencidoUsd}
         porCapturar={vm.porCapturar}
+        porPagarTo={resolveDestinoPorPagar(effectiveRole)}
         loading={dash.isLoading}
       />
 

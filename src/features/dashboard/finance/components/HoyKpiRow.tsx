@@ -11,6 +11,8 @@ interface Props {
   vencidoUsd: number;
   porCapturar: number;
   loading: boolean;
+  /** Destino de la tarjeta "Por pagar" según los permisos del rol. */
+  porPagarTo?: string;
 }
 
 export function HoyKpiRow({
@@ -21,6 +23,7 @@ export function HoyKpiRow({
   vencidoUsd,
   porCapturar,
   loading,
+  porPagarTo = ROUTES.COMPRAS_POR_PAGAR,
 }: Props) {
   const vencidoTotal = vencidoMxn > 0 || vencidoUsd > 0;
   return (
@@ -39,7 +42,7 @@ export function HoyKpiRow({
         label="Por pagar"
         value={formatCurrencyCompact(porPagarMxn, "MXN")}
         sublabel={porPagarUsd > 0 ? `+ ${formatCurrency(porPagarUsd, "USD")}` : "Facturas proveedor"}
-        to={ROUTES.COMPRAS_POR_PAGAR}
+        to={porPagarTo}
         variant="info"
         loading={loading}
       />
