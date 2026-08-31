@@ -9,6 +9,7 @@ import { WizardTotalsBar } from "@/features/cotizacion/components/wizard/WizardT
 import { useCotizacionKeyboardShortcuts } from "@/features/cotizacion/hooks/wizard/useCotizacionKeyboardShortcuts";
 import { usePermissions } from "@/hooks/shared";
 import { useDirtyGuard } from "@/hooks/shared/useDirtyGuard";
+import { ejecutarSalidaWizard } from "@/features/cotizacion/components/wizard/salidaWizard";
 
 import { notifyError } from "@/lib/ui/appFeedback";
 const WIZARD_STEPS = [
@@ -98,11 +99,6 @@ export default function CotizacionWizardLayout({
 
   const mostrarTotales = w.currentStep === 2 || w.currentStep === 3;
 
-  // Ola C · #13: guarda de salida. Antes se podía navegar (sidebar, migas) con
-  // el wizard a medio capturar y se perdía todo sin aviso.
-  // RN-EC-5: el "Volver" del header era navegación programática y saltaba la
-  // guarda; ahora también pasa por confirmarSalida.
-  const { guardDialog, confirmarSalida } = useDirtyGuard(form.formState.isDirty && !isBusy);
   const handleBackHeader = useCallback(() => { confirmarSalida(onBack); }, [confirmarSalida, onBack]);
 
   // P1 (v13.294.0) — atajos de teclado del wizard.
