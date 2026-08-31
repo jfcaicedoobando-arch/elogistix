@@ -15,6 +15,7 @@ interface ConceptoVentaDb {
   precio_unitario: number | string;
   moneda: string;
   contenedor_id: string | null;
+  estado_facturacion?: string | null;
 }
 interface ConceptoCostoDb {
   id: string;
@@ -24,6 +25,7 @@ interface ConceptoCostoDb {
   monto: number | string;
   moneda: string;
   contenedor_id: string | null;
+  estado_liquidacion?: string | null;
 }
 
 interface Params<TForm extends FieldValues> {
@@ -45,8 +47,8 @@ interface Params<TForm extends FieldValues> {
   conceptosCostoDb: ConceptoCostoDb[];
   /** Catálogo de proveedores para resolver el nombre heredado → id. */
   proveedoresDb?: ReadonlyArray<ProveedorCatalogo>;
-  inicializarVenta: (rows: Array<{ id: number; dbId?: string | null; concepto: string; cantidad: number; precioUnitario: number; moneda: string; contenedorId: string | null }>) => void;
-  inicializarCosto: (rows: Array<{ id: number; dbId?: string | null; proveedorId: string; proveedorNombre?: string | null; concepto: string; monto: number; moneda: string; contenedorId: string | null }>) => void;
+  inicializarVenta: (rows: Array<{ id: number; dbId?: string | null; concepto: string; cantidad: number; precioUnitario: number; moneda: string; contenedorId: string | null; estadoFacturacion?: string | null }>) => void;
+  inicializarCosto: (rows: Array<{ id: number; dbId?: string | null; proveedorId: string; proveedorNombre?: string | null; concepto: string; monto: number; moneda: string; contenedorId: string | null; estadoLiquidacion?: string | null }>) => void;
   methods: UseFormReturn<TForm>;
 }
 
@@ -73,6 +75,9 @@ export function useHidratacionEditarEmbarque<TForm extends FieldValues>(p: Param
       precioUnitario: Number(v.precio_unitario),
       moneda: v.moneda,
       contenedorId: v.contenedor_id ?? null,
+      // Ola 5 — el estado viaja a la fila para bloquear la edición fantasma
+      // de conceptos ya facturados (la RPC los descarta en silencio).
+      estadoFacturacion: v.estado_facturacion ?? null,
     })));
     setHidratoVentaRef.current(true);
   }, [p.initialized, p.hidratoVenta, p.conceptosVentaDb]);
@@ -94,6 +99,7 @@ export function useHidratacionEditarEmbarque<TForm extends FieldValues>(p: Param
       monto: Number(c.monto),
       moneda: c.moneda,
       contenedorId: c.contenedor_id ?? null,
+      estadoLiquidacion: c.estado_liquidacion ?? null,
     })));
     setHidratoCostoRef.current(true);
   }, [p.initialized, p.hidratoCosto, p.conceptosCostoDb, proveedoresDb]);
