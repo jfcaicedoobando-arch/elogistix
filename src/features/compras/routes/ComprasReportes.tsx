@@ -27,7 +27,9 @@ import { toCSV } from "@/lib/io/csv";
 import { notifySuccess, notifyError } from "@/lib/ui/appFeedback";
 import { fetchFacturasReporte } from "@/features/compras/services/reportesFetch";
 import { fetchExchangeRates } from "@/features/catalogos/services";
-import { aMxn } from "@/lib/financial/convertir";
+import {
+  agruparEvolucionMensual, agruparTopProveedores,
+} from "@/features/compras/services/reportesAgregados";
 import { todayLocalISO } from "@/lib/date/today";
 import { DatePickerMx } from "@/components/ui/date-picker-mx";
 import { RANGO_DESDE_LABEL, RANGO_HASTA_LABEL } from "@/lib/ui/rangoFechasCopy";
