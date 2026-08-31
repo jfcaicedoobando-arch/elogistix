@@ -7,7 +7,7 @@
  * (Recibo Electrónico de Pago) vía `emitirRep`. La lógica de submit + auto-REP
  * vive en `useRegistrarPagoSubmit` para mantener este componente delgado.
  */
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 import { ArrowDownToLine } from "lucide-react";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { useExchangeRates } from "@/features/catalogos/hooks";
@@ -15,6 +15,7 @@ import { usePagosFactura } from "@/features/facturacion/hooks";
 import { useNotasCreditoAplicadas } from "@/features/facturacion/hooks/useSaldoFactura";
 import { calcularSaldoFactura } from "@/lib/financial/saldoFactura";
 import { useRegistrarPagoSubmit } from "@/features/facturacion/hooks/useRegistrarPagoSubmit";
+import { useRegistrarPagoInit } from "@/features/facturacion/hooks/useRegistrarPagoInit";
 import { PagoFormFields, type PagoFormValues } from "./PagoFormFields";
 import { useCuentasBancarias } from "@/features/tesoreria/hooks";
 import { ResumenSaldo, FooterAcciones, NotasPago } from "./DialogRegistrarPagoParts";
@@ -75,32 +76,7 @@ export function DialogRegistrarPago({ open, onOpenChange, factura }: Props) {
   );
 
 
-  // FE-02: inicializar una sola vez por apertura (open + factura.id). Antes las
-  // deps vivas (objeto factura nuevo en cada refetch, saldo derivado de queries)
-  // re-ejecutaban el efecto y borraban lo que el usuario ya había capturado.
-  const initializedForRef = useRef<string | null>(null);
-  // BL-14: UUID por apertura del dialog; todos los reintentos del MISMO
-  // submit comparten el id y el UNIQUE parcial de BD absorbe el duplicado.
-  const clientRequestIdRef = useRef<string | null>(null);
-  useEffect(() => {
-    if (!open || !factura) {
-      initializedForRef.current = null;
-      clientRequestIdRef.current = null;
-      return;
-    }
-    if (initializedForRef.current === factura.id) return;
-    initializedForRef.current = factura.id;
-    clientRequestIdRef.current = crypto.randomUUID();
-    setValues({
-      fecha: today(),
-      // EC-12: redondeo hacia ARRIBA al centavo. Con `toFixed` (al más
-      // cercano) el prefill podía quedar 1 centavo por debajo del saldo y
-      // dejar un residuo impagable (la factura nunca quedaba saldada).
-      monto: saldo > 0 ? (Math.ceil((saldo - 1e-9) * 100) / 100).toFixed(2) : "",
-      moneda: factura.moneda,
-      formaPago: "03", referencia: "", notas: "", cuentaBancariaId: "",
-    });
-  }, [open, factura, saldo]);
+  const clientRequestIdRef = useRegistrarPagoInit(open, factura, saldo, setValues);
 
   if (!factura) return null;
 

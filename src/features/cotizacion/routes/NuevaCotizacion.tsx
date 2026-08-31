@@ -15,9 +15,7 @@ import {
   draftTieneContenido,
 } from "@/features/cotizacion/hooks/wizard/useCotizacionDraftAutosave";
 import { notifyWarning } from "@/lib/ui/appFeedback";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
-import { AlertTriangle } from "lucide-react";
+import { ConflictoPestanaAlert } from "@/features/cotizacion/components/wizard/ConflictoPestanaAlert";
 import { DraftRestoreBanner } from "@/features/cotizacion/components/wizard/DraftRestoreBanner";
 import { CotizacionSuccessDialog } from "@/features/cotizacion/components/wizard/CotizacionSuccessDialog";
 import { GuardarPlantillaDialog } from "@/features/cotizacion/components/wizard/GuardarPlantillaDialog";
@@ -140,24 +138,7 @@ export default function NuevaCotizacion() {
         </PageContainer>
       )}
 
-      {/* M-12 (v14-2): otra pestaña está capturando el mismo wizard; avisar
-          en vez de dejar que el autoguardado se pise en silencio. */}
-      {conflictoExterno && (
-        <PageContainer noSpacing className="max-w-6xl pt-4">
-          <Alert className="border-warning/40 bg-warning/5">
-            <AlertTriangle className="h-4 w-4" />
-            <AlertDescription className="text-body-sm flex items-center justify-between gap-2">
-              <span>
-                <strong>Tienes este wizard abierto en otra pestaña</strong> y acaba de guardar
-                cambios ahí. Para no mezclar capturas, trabaja en una sola pestaña.
-              </span>
-              <Button type="button" variant="ghost" size="sm" onClick={descartarConflicto}>
-                Entendido
-              </Button>
-            </AlertDescription>
-          </Alert>
-        </PageContainer>
-      )}
+      {conflictoExterno && <ConflictoPestanaAlert onDescartar={descartarConflicto} />}
 
       {/* P2 (v13.295.0) — Empezar desde plantilla (sólo paso 1, sin cotización guardada). */}
       {w.currentStep === 1 && !w.cotizacionId && (

@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.817.3] - 2026-08-31
+- Power-of-10: se dividieron 9 archivos productivos que superaban 200 líneas (auditoría, factura manual, reportes de compras, cobro en lote, wizard de cotización, estado de resultados, helpers CxP y `DialogRegistrarPago`) extrayendo lógica pura, constantes y subcomponentes. Sin cambios de comportamiento; `architecture-baseline.test.ts` vuelve a verde.
+
 ## [13.817.2] - 2026-08-31
 - CI/FIX-H6-23: se re-aplicaron los permisos canónicos REVOKE/GRANT a funciones `SECURITY DEFINER` creadas en migraciones inmutables de Ola 7 v15, Ola 8 v15 y Ola 1 reabrir/cancelar. El baseline del auditor de migraciones se elevó a `20260908000000` para marcar esos archivos como legacy auditado.
 
