@@ -82,3 +82,27 @@ export function preparePayload(form: NuevoProveedorForm): PayloadValidado | Payl
   // SAFE-CAST: `soloColumnas` deja exactamente las columnas de la tabla.
   return { ok: true, payload: soloColumnas(conEnums) as TablesInsert<"proveedores"> };
 }
+
+/**
+ * Campos que faltan en el paso 1 del alta de proveedor (YG-06).
+ * Vive aquí (y no en el hook) para mantener el controller bajo 200 líneas y
+ * poder probar la validación como función pura.
+ */
+export function faltantesPaso1Proveedor(
+  form: NuevoProveedorForm,
+  rfcLabel: string,
+): string[] {
+  const isLogistico = form.categoria === "Logistico";
+  const isAgenteCarga = isLogistico && form.tipo === "Agente de Carga";
+  const items: string[] = [];
+  if (!form.categoria) items.push("categoría");
+  if (!form.nombre.trim()) items.push("nombre");
+  if (!form.origen_proveedor) items.push("origen (nacional/extranjero)");
+  if (!form.rfc.trim()) items.push(rfcLabel);
+  // `tipo` es obligatorio para TODO Logístico: el CHECK
+  // `proveedores_categoria_check` exige tipo IS NOT NULL en esa categoría.
+  if (isLogistico && !form.tipo) items.push("tipo de proveedor logístico");
+  if (isAgenteCarga && !form.pais) items.push("país");
+  if (form.categoria === "GastoOperativo" && !form.subtipo_gasto) items.push("subtipo de gasto");
+  return items;
+}
