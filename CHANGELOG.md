@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.812.0] - 2026-08-31
+
+- **Ola 4 · nota de crédito en $0 bloqueada del lado del servidor**: `validateNcContext` sólo exigía cantidad > 0 y precio >= 0, así que una NC con todos los precios en cero llegaba al PAC. Ahora `facturapi-emitir-nota-credito` calcula el total de los conceptos y responde 422 `nc_total_cero` antes del claim y de FacturAPI (espejo de `validarTotalPositivo` en facturas).
+- **Mensajes amigables para códigos `LC_*` ya emitidos**: `LC_TC_FUERA_DE_BANDA`, `LC_TRASPASO_SALDO_INSUFICIENTE`, `LC_PAGO_FECHA_PREVIA` y los guards de medidas del embarque (`LC_EMBARQUE_PESO_INVALIDO`, `LC_EMBARQUE_VOLUMEN_INVALIDO`, `LC_EMBARQUE_PIEZAS_INVALIDO`) dejan de mostrarse como error crudo de base de datos. El test de cobertura `lcCodeCoverage` queda en verde.
+
 ## [13.811.1] - 2026-08-31
 
 - **Fix crítico · timbrado con límite de crédito**: `credito_en_uso_mxn` sólo está otorgada a `service_role`, pero se llamaba con el cliente que lleva el JWT del usuario (rol `authenticated`), así que devolvía permission denied y todo cliente con límite configurado quedaba bloqueado con 503 `credito_no_verificable`. Ahora la RPC se ejecuta con un cliente admin (mismo patrón que `_shared/facturapiAuth.ts`).
