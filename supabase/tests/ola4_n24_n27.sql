@@ -28,8 +28,8 @@ BEGIN
   VALUES (v_org, v_uid, 'contador') ON CONFLICT DO NOTHING;
 
   -- Mismo cliente_id, cliente_nombre distinto entre embarques.
-  INSERT INTO public.clientes (id, organization_id, nombre)
-  VALUES (v_cli, v_org, 'ACME SA') ON CONFLICT (id) DO NOTHING;
+  INSERT INTO public.clientes (id, organization_id, nombre, email)
+  VALUES (v_cli, v_org, 'ACME SA', 'acme@test.local') ON CONFLICT (id) DO NOTHING;
 
   INSERT INTO public.embarques (id, organization_id, cliente_id, cliente_nombre, expediente, modo, tipo, eta, tipo_cambio_usd)
   VALUES
