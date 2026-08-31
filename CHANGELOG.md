@@ -8,7 +8,8 @@
 - **YG-05 · Mensajes de nota de crédito (P2)**: los errores internos `LC_*` ya no se muestran al usuario; se traduce el mensaje en español y el código crudo queda sólo en la bitácora técnica.
 - **YG-06 · Botones deshabilitados (P2)**: el alta de proveedor y la nota de crédito indican en línea qué falta para avanzar, guardar o timbrar, reutilizando el aviso de faltantes existente.
 - **YG-07 · Folios (P3)**: la búsqueda de folio de cotización excluye registros eliminados.
-- Power-of-10: la validación del paso 1 del alta de proveedor se movió a helpers puros para mantener el controlador bajo 200 líneas.
+- Power-of-10: la validación del paso 1 del alta de proveedor y la detección de cambios sin guardar (pago de proveedor, traspaso) se movieron a helpers puros para respetar los límites de tamaño y complejidad.
+- Pruebas: 5 guards SQL que insertaban clientes sin correo (requisito NOT NULL) quedaron corregidos; la verificación local de base vuelve a verde.
 
 ## [13.818.1] - 2026-08-31
 - **Corrección (Sentry JAVASCRIPT-REACT-1G / JAVASCRIPT-REACT-5M)**: el botón "Ver demo" del login fallaba con error 500 porque el sembrado de la cuenta demo creaba los embarques con fecha de hoy y luego insertaba eventos de rastreo de hasta 45 días atrás, rechazados por el guard `LC_EVENTO_ANTERIOR_A_EMBARQUE`. Ahora cada embarque demo se crea con la fecha de su zarpe (ETD), por lo que la historia sembrada es coherente. Verificado en base local: el sembrado corre sin error.
