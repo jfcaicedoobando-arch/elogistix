@@ -12887,16 +12887,6 @@ BEGIN
   RETURN v_org;
 END;
 $$;
-CREATE FUNCTION public.delete_email(queue_name text, message_id bigint) RETURNS boolean
-    LANGUAGE plpgsql SECURITY DEFINER
-    SET search_path TO 'public', 'pgmq'
-    AS $$
-BEGIN
-  RETURN pgmq.delete(queue_name, message_id);
-EXCEPTION WHEN undefined_table THEN
-  RETURN FALSE;
-END;
-$$;
 CREATE FUNCTION public.detectar_alertas_app_logs() RETURNS integer
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
@@ -15159,17 +15149,6 @@ BEGIN
     ELSE
       RETURN p_in;
   END CASE;
-END;
-$$;
-CREATE FUNCTION public.enqueue_email(queue_name text, payload jsonb) RETURNS bigint
-    LANGUAGE plpgsql SECURITY DEFINER
-    SET search_path TO 'public', 'pgmq'
-    AS $$
-BEGIN
-  RETURN pgmq.send(queue_name, payload);
-EXCEPTION WHEN undefined_table THEN
-  PERFORM pgmq.create(queue_name);
-  RETURN pgmq.send(queue_name, payload);
 END;
 $$;
 CREATE FUNCTION public.ensure_demo_membership(_user_id uuid) RETURNS void
@@ -18247,30 +18226,6 @@ BEGIN
   );
 END;
 $$;
-CREATE FUNCTION public.move_to_dlq(source_queue text, dlq_name text, message_id bigint, payload jsonb) RETURNS bigint
-    LANGUAGE plpgsql SECURITY DEFINER
-    SET search_path TO 'public', 'pgmq'
-    AS $$
-DECLARE new_id BIGINT;
-BEGIN
-  SELECT pgmq.send(dlq_name, payload) INTO new_id;
-  PERFORM pgmq.delete(source_queue, message_id);
-  RETURN new_id;
-EXCEPTION WHEN undefined_table THEN
-  BEGIN
-    PERFORM pgmq.create(dlq_name);
-  EXCEPTION WHEN OTHERS THEN
-    NULL;
-  END;
-  SELECT pgmq.send(dlq_name, payload) INTO new_id;
-  BEGIN
-    PERFORM pgmq.delete(source_queue, message_id);
-  EXCEPTION WHEN undefined_table THEN
-    NULL;
-  END;
-  RETURN new_id;
-END;
-$$;
 CREATE FUNCTION public.nc_aplicadas_en_moneda_factura(p_factura_id uuid) RETURNS numeric
     LANGUAGE plpgsql STABLE SECURITY DEFINER
     SET search_path TO 'public'
@@ -21287,17 +21242,6 @@ BEGIN
   IF v_filas = 0 THEN
     RAISE EXCEPTION 'LC_ENTRANTE_REACTIVAR_ESTADO: sólo un documento rechazado y sin factura vinculada puede volver a por capturar';
   END IF;
-END;
-$$;
-CREATE FUNCTION public.read_email_batch(queue_name text, batch_size integer, vt integer) RETURNS TABLE(msg_id bigint, read_ct integer, message jsonb)
-    LANGUAGE plpgsql SECURITY DEFINER
-    SET search_path TO 'public', 'pgmq'
-    AS $$
-BEGIN
-  RETURN QUERY SELECT r.msg_id, r.read_ct, r.message FROM pgmq.read(queue_name, vt, batch_size) r;
-EXCEPTION WHEN undefined_table THEN
-  PERFORM pgmq.create(queue_name);
-  RETURN;
 END;
 $$;
 CREATE FUNCTION public.reasignar_pago_factura(p_pago_id uuid, p_factura_destino_id uuid, p_caso_id uuid DEFAULT NULL::uuid, p_ordenante_nombre text DEFAULT NULL::text, p_ordenante_rfc text DEFAULT NULL::text) RETURNS uuid
@@ -30866,8 +30810,8 @@ REVOKE ALL ON FUNCTION public._validar_cronologia_evento_embarque() FROM PUBLIC;
 GRANT ALL ON FUNCTION public._validar_cronologia_evento_embarque() TO authenticated;
 GRANT ALL ON FUNCTION public._validar_cronologia_evento_embarque() TO service_role;
 REVOKE ALL ON FUNCTION public.a_mxn(p_monto numeric, p_moneda text, p_usd_mxn numeric, p_eur_mxn numeric) FROM PUBLIC;
-GRANT ALL ON FUNCTION public.a_mxn(p_monto numeric, p_moneda text, p_usd_mxn numeric, p_eur_mxn numeric) TO authenticated;
 GRANT ALL ON FUNCTION public.a_mxn(p_monto numeric, p_moneda text, p_usd_mxn numeric, p_eur_mxn numeric) TO service_role;
+GRANT ALL ON FUNCTION public.a_mxn(p_monto numeric, p_moneda text, p_usd_mxn numeric, p_eur_mxn numeric) TO authenticated;
 REVOKE ALL ON FUNCTION public.a_mxn_doc(_monto numeric, _moneda text, _fecha date, _tc_documento numeric, _tc_embarque numeric) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.a_mxn_doc(_monto numeric, _moneda text, _fecha date, _tc_documento numeric, _tc_embarque numeric) TO authenticated;
 GRANT ALL ON FUNCTION public.a_mxn_doc(_monto numeric, _moneda text, _fecha date, _tc_documento numeric, _tc_embarque numeric) TO service_role;
@@ -30975,8 +30919,8 @@ REVOKE ALL ON FUNCTION public.auditoria_embarques_org() FROM PUBLIC;
 GRANT ALL ON FUNCTION public.auditoria_embarques_org() TO authenticated;
 GRANT ALL ON FUNCTION public.auditoria_embarques_org() TO service_role;
 REVOKE ALL ON FUNCTION public.auditoria_embarques_org(p_organization_id uuid) FROM PUBLIC;
-GRANT ALL ON FUNCTION public.auditoria_embarques_org(p_organization_id uuid) TO authenticated;
 GRANT ALL ON FUNCTION public.auditoria_embarques_org(p_organization_id uuid) TO service_role;
+GRANT ALL ON FUNCTION public.auditoria_embarques_org(p_organization_id uuid) TO authenticated;
 REVOKE ALL ON FUNCTION public.auditoria_pfc_huerfanos() FROM PUBLIC;
 GRANT ALL ON FUNCTION public.auditoria_pfc_huerfanos() TO service_role;
 REVOKE ALL ON FUNCTION public.avanzar_estado_embarque(p_embarque_id uuid, p_nuevo_estado text, p_usuario_email text, p_tipo_evento text, p_descripcion_evento text, p_request_id uuid) FROM PUBLIC;
@@ -31041,8 +30985,8 @@ GRANT ALL ON FUNCTION public.cancelar_factura_proveedor(p_factura_id uuid, p_mot
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.liquidaciones_comision TO authenticated;
 GRANT ALL ON TABLE public.liquidaciones_comision TO service_role;
 REVOKE ALL ON FUNCTION public.cancelar_liquidacion_comision(p_liquidacion_id uuid, p_motivo text) FROM PUBLIC;
-GRANT ALL ON FUNCTION public.cancelar_liquidacion_comision(p_liquidacion_id uuid, p_motivo text) TO authenticated;
 GRANT ALL ON FUNCTION public.cancelar_liquidacion_comision(p_liquidacion_id uuid, p_motivo text) TO service_role;
+GRANT ALL ON FUNCTION public.cancelar_liquidacion_comision(p_liquidacion_id uuid, p_motivo text) TO authenticated;
 REVOKE ALL ON FUNCTION public.cancelar_traspaso_bancario(p_traspaso_id uuid, p_motivo text) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.cancelar_traspaso_bancario(p_traspaso_id uuid, p_motivo text) TO authenticated;
 GRANT ALL ON FUNCTION public.cancelar_traspaso_bancario(p_traspaso_id uuid, p_motivo text) TO service_role;
@@ -31170,8 +31114,8 @@ REVOKE ALL ON FUNCTION public.crear_embarque_borrador_desde_cotizacion(p_cotizac
 GRANT ALL ON FUNCTION public.crear_embarque_borrador_desde_cotizacion(p_cotizacion_id uuid, p_decision text, p_tarifa_id_aplicada uuid, p_delta_jsonb jsonb) TO authenticated;
 GRANT ALL ON FUNCTION public.crear_embarque_borrador_desde_cotizacion(p_cotizacion_id uuid, p_decision text, p_tarifa_id_aplicada uuid, p_delta_jsonb jsonb) TO service_role;
 REVOKE ALL ON FUNCTION public.crear_embarque_completo(p_embarque jsonb, p_conceptos_venta jsonb, p_conceptos_costo jsonb, p_documentos jsonb, p_request_id uuid, p_contenedores jsonb) FROM PUBLIC;
-GRANT ALL ON FUNCTION public.crear_embarque_completo(p_embarque jsonb, p_conceptos_venta jsonb, p_conceptos_costo jsonb, p_documentos jsonb, p_request_id uuid, p_contenedores jsonb) TO authenticated;
 GRANT ALL ON FUNCTION public.crear_embarque_completo(p_embarque jsonb, p_conceptos_venta jsonb, p_conceptos_costo jsonb, p_documentos jsonb, p_request_id uuid, p_contenedores jsonb) TO service_role;
+GRANT ALL ON FUNCTION public.crear_embarque_completo(p_embarque jsonb, p_conceptos_venta jsonb, p_conceptos_costo jsonb, p_documentos jsonb, p_request_id uuid, p_contenedores jsonb) TO authenticated;
 REVOKE ALL ON FUNCTION public.crear_garantia_contenedor() FROM PUBLIC;
 GRANT ALL ON FUNCTION public.crear_garantia_contenedor() TO authenticated;
 GRANT ALL ON FUNCTION public.crear_garantia_contenedor() TO service_role;
@@ -31300,8 +31244,6 @@ GRANT ALL ON FUNCTION public.dashboard_summary_datos() TO service_role;
 REVOKE ALL ON FUNCTION public.default_user_org_id() FROM PUBLIC;
 GRANT ALL ON FUNCTION public.default_user_org_id() TO authenticated;
 GRANT ALL ON FUNCTION public.default_user_org_id() TO service_role;
-REVOKE ALL ON FUNCTION public.delete_email(queue_name text, message_id bigint) FROM PUBLIC;
-GRANT ALL ON FUNCTION public.delete_email(queue_name text, message_id bigint) TO service_role;
 REVOKE ALL ON FUNCTION public.detectar_alertas_app_logs() FROM PUBLIC;
 GRANT ALL ON FUNCTION public.detectar_alertas_app_logs() TO authenticated;
 GRANT ALL ON FUNCTION public.detectar_alertas_app_logs() TO service_role;
@@ -31403,8 +31345,6 @@ GRANT ALL ON FUNCTION public.enforce_revalidacion_sin_cambios(p_cotizacion_id uu
 REVOKE ALL ON FUNCTION public.enmascarar_costos_jsonb(p_in jsonb) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.enmascarar_costos_jsonb(p_in jsonb) TO authenticated;
 GRANT ALL ON FUNCTION public.enmascarar_costos_jsonb(p_in jsonb) TO service_role;
-REVOKE ALL ON FUNCTION public.enqueue_email(queue_name text, payload jsonb) FROM PUBLIC;
-GRANT ALL ON FUNCTION public.enqueue_email(queue_name text, payload jsonb) TO service_role;
 REVOKE ALL ON FUNCTION public.ensure_demo_membership(_user_id uuid) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.ensure_demo_membership(_user_id uuid) TO service_role;
 REVOKE ALL ON FUNCTION public.es_admin_catalogo(_uid uuid) FROM PUBLIC;
@@ -31647,8 +31587,6 @@ GRANT ALL ON FUNCTION public.migrar_roles_legacy_dry_run() TO service_role;
 REVOKE ALL ON FUNCTION public.migrar_roles_legacy_ejecutar() FROM PUBLIC;
 GRANT ALL ON FUNCTION public.migrar_roles_legacy_ejecutar() TO authenticated;
 GRANT ALL ON FUNCTION public.migrar_roles_legacy_ejecutar() TO service_role;
-REVOKE ALL ON FUNCTION public.move_to_dlq(source_queue text, dlq_name text, message_id bigint, payload jsonb) FROM PUBLIC;
-GRANT ALL ON FUNCTION public.move_to_dlq(source_queue text, dlq_name text, message_id bigint, payload jsonb) TO service_role;
 REVOKE ALL ON FUNCTION public.nc_aplicadas_en_moneda_factura(p_factura_id uuid) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.nc_aplicadas_en_moneda_factura(p_factura_id uuid) TO service_role;
 REVOKE ALL ON FUNCTION public.notif_cli_on_embarque_estado() FROM PUBLIC;
@@ -31772,16 +31710,14 @@ REVOKE ALL ON FUNCTION public.purge_record(_table text, _id uuid) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.purge_record(_table text, _id uuid) TO authenticated;
 GRANT ALL ON FUNCTION public.purge_record(_table text, _id uuid) TO service_role;
 REVOKE ALL ON FUNCTION public.reabrir_embarque(p_embarque_id uuid, p_usuario_email text, p_motivo text, p_request_id uuid) FROM PUBLIC;
-GRANT ALL ON FUNCTION public.reabrir_embarque(p_embarque_id uuid, p_usuario_email text, p_motivo text, p_request_id uuid) TO authenticated;
 GRANT ALL ON FUNCTION public.reabrir_embarque(p_embarque_id uuid, p_usuario_email text, p_motivo text, p_request_id uuid) TO service_role;
+GRANT ALL ON FUNCTION public.reabrir_embarque(p_embarque_id uuid, p_usuario_email text, p_motivo text, p_request_id uuid) TO authenticated;
 REVOKE ALL ON FUNCTION public.reactivar_cotizacion_rpc(p_id uuid) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.reactivar_cotizacion_rpc(p_id uuid) TO authenticated;
 GRANT ALL ON FUNCTION public.reactivar_cotizacion_rpc(p_id uuid) TO service_role;
 REVOKE ALL ON FUNCTION public.reactivar_factura_entrante(p_documento_id uuid) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.reactivar_factura_entrante(p_documento_id uuid) TO authenticated;
 GRANT ALL ON FUNCTION public.reactivar_factura_entrante(p_documento_id uuid) TO service_role;
-REVOKE ALL ON FUNCTION public.read_email_batch(queue_name text, batch_size integer, vt integer) FROM PUBLIC;
-GRANT ALL ON FUNCTION public.read_email_batch(queue_name text, batch_size integer, vt integer) TO service_role;
 REVOKE ALL ON FUNCTION public.reasignar_pago_factura(p_pago_id uuid, p_factura_destino_id uuid, p_caso_id uuid, p_ordenante_nombre text, p_ordenante_rfc text) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.reasignar_pago_factura(p_pago_id uuid, p_factura_destino_id uuid, p_caso_id uuid, p_ordenante_nombre text, p_ordenante_rfc text) TO authenticated;
 GRANT ALL ON FUNCTION public.reasignar_pago_factura(p_pago_id uuid, p_factura_destino_id uuid, p_caso_id uuid, p_ordenante_nombre text, p_ordenante_rfc text) TO service_role;

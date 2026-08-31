@@ -180,25 +180,3 @@ EXCEPTION WHEN duplicate_object THEN NULL;
 END $$;
 
 CREATE INDEX IF NOT EXISTS idx_unsubscribe_tokens_token ON public.email_unsubscribe_tokens(token);
-
--- ============================================================
--- POST-MIGRATION STEPS (applied dynamically by setup_email_infra)
--- These steps contain project-specific secrets and URLs and
--- cannot be expressed as static SQL. They are applied via the
--- Supabase Management API (ExecuteSQL) each time the tool runs.
--- ============================================================
---
--- 1. VAULT SECRET
---    Stores (or updates) the Supabase service_role key in
---    vault as 'email_queue_service_role_key'.
---    Uses vault.create_secret / vault.update_secret (upsert).
---    To revert: DELETE FROM vault.secrets WHERE name = 'email_queue_service_role_key';
---
--- 2. CRON JOB (pg_cron)
---    Creates job 'process-email-queue' with a 5-second interval.
---    The job checks:
---      a) rate-limit cooldown (email_send_state.retry_after_until)
---      b) whether auth_emails or transactional_emails queues have messages
---    If conditions are met, it calls the process-email-queue Edge Function
---    via net.http_post using the vault-stored service_role key.
---    To revert: SELECT cron.unschedule('process-email-queue');

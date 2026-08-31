@@ -86,21 +86,17 @@ INSERT INTO _ci_service_role_only (fn) VALUES
   ('public.cron_unlock(text)'),
   ('public.dashboard_details_datos()'),
   ('public.dashboard_summary_datos()'),
-  ('public.delete_email(text, bigint)'),
   ('public.email_send_log_touch(text, text, text, text, text)'),
-  ('public.enqueue_email(text, jsonb)'),
   ('public.ensure_demo_membership(uuid)'),
 
   -- Función trigger de auth.users: la ejecuta el trigger, nunca un cliente.
   ('public.handle_new_user_signup()'),
   ('public.marcar_facturas_vencidas()'),
-  ('public.move_to_dlq(text, text, bigint, jsonb)'),
   ('public.nc_aplicadas_en_moneda_factura(uuid)'),
   ('public.notificar_uuid_cancelado_sat(uuid, jsonb)'),
   ('public.promover_embarque_por_liquidar(uuid)'),
   -- v13.808.0 (YAGNI Ola 10): retención de app_logs; sólo la corre el cron.
   ('public.purge_app_logs_old()'),
-  ('public.read_email_batch(text, integer, integer)'),
   ('public.registrar_comision_pendiente(uuid, uuid, text, text, text, text)'),
   ('public.reprocesar_comisiones_job()'),
   ('public.seed_demo_organization_core()'),
