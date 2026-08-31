@@ -8787,10 +8787,11 @@ BEGIN
       FROM pagos_factura pf
       WHERE pf.factura_id = f.id AND pf.deleted_at IS NULL
     ) pg ON true
+    -- Ola v16 (2): canon único `nc_aplicadas_en_moneda_factura` — la suma
+    -- cruda de `n.monto` mezclaba monedas (NC en USD restadas a facturas MXN)
+    -- y devolvía saldos y KPIs de cartera incorrectos.
     LEFT JOIN LATERAL (
-      SELECT SUM(n.monto) AS notas
-      FROM factura_notas_credito n
-      WHERE n.factura_id = f.id AND n.deleted_at IS NULL AND n.estado = 'Aplicada'
+      SELECT public.nc_aplicadas_en_moneda_factura(f.id) AS notas
     ) nc ON true
     WHERE f.deleted_at IS NULL
       AND f.estado IN ('Emitida', 'Parcialmente pagada', 'Vencida')
