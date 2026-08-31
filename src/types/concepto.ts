@@ -38,4 +38,10 @@ export interface ConceptoCostoLocal {
   moneda: string;
   /** Contenedor del embarque al que aplica el costo (null = General). */
   contenedorId?: string | null;
+  /**
+   * `conceptos_costo.estado_liquidacion` tal como viene de BD. Los costos ya
+   * pagados no son actualizables por la RPC de guardado.
+   */
+  estadoLiquidacion?: string | null;
 }
+
