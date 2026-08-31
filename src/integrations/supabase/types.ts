@@ -9009,6 +9009,20 @@ export type Database = {
           url: string
         }[]
       }
+      buzon_localizar_duplicado: {
+        Args: {
+          p_columna?: string
+          p_embarque_id?: string
+          p_hash?: string
+          p_uuid_fiscal?: string
+        }
+        Returns: {
+          caso: string
+          embarque_expediente: string
+          embarque_id: string
+          factura_id: string
+        }[]
+      }
       calc_cancelacion_vence: {
         Args: { p_solicitada: string }
         Returns: string
