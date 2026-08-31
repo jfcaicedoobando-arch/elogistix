@@ -68,7 +68,12 @@ describe("useNotaCreditoDraft · FIX-11 TC guard", () => {
 
     expect(mocks.crearNotaCredito).not.toHaveBeenCalled();
     const call = mocks.notifyError.mock.calls[0][1];
-    expect(String(call.description ?? "")).toContain("LC_TC_NO_DISPONIBLE");
+    // YG-05: el usuario ve el mensaje en español del catálogo, nunca el código
+    // interno `LC_*` (que sigue registrado en el logger para diagnóstico).
+    const descripcion = String(call.description ?? "");
+    expect(descripcion).toContain("tipo de cambio de la factura no está disponible");
+    expect(descripcion).not.toContain("LC_TC_NO_DISPONIBLE");
+
   });
 
   it("MXN no requiere TC (usa 1 implícito) y sí llama a crearNotaCredito", async () => {
