@@ -61,4 +61,12 @@ export const LC_CODE_MESSAGES_OPERATIVO_OPERACIONES: Record<string, string> = {
   LC_CLIENTE_NOMBRE_REQUERIDO: "El nombre del cliente es obligatorio.",
   LC_EMAIL_DUPLICADO:
     "Ese correo ya está registrado en otro cliente o contacto de tu organización. Usa uno distinto o edita el registro existente.",
+
+  // ── Ola 4 · medidas del embarque ───────────────────────────────────────
+  LC_EMBARQUE_PESO_INVALIDO:
+    "El peso no puede ser negativo. Captura el peso real de la carga en kilogramos.",
+  LC_EMBARQUE_VOLUMEN_INVALIDO:
+    "El volumen no puede ser negativo. Captura el volumen real de la carga en metros cúbicos.",
+  LC_EMBARQUE_PIEZAS_INVALIDO:
+    "Las piezas no pueden ser negativas. Captura cuántos bultos o piezas trae la carga.",
 };

@@ -168,6 +168,10 @@ export const LC_CODE_MESSAGES_PAGOS: Record<string, string> = {
     "Esta factura no está ligada a un embarque ni a costos acordados. Escribe la justificación del gasto (mínimo 10 caracteres) para poder aprobarla.",
   LC_CXP_SIN_RESPALDO_MONTO:
     "La factura excede el monto que puede aprobarse sin respaldo. Vincúlala al embarque o a sus conceptos de costo antes de aprobar (el límite se ajusta en Configuración → Compras).",
+
+  // ── Ola 4 · cronología de pagos ────────────────────────────────────────
+  LC_PAGO_FECHA_PREVIA:
+    "La fecha del pago es anterior a la emisión de la factura, así que el cobro no cuadra con el CFDI. Corrige la fecha del pago.",
 };
 
 
