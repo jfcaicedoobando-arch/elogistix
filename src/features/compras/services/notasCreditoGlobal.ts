@@ -10,6 +10,7 @@ import type { Tables } from "@/integrations/supabase/types";
 import { CAP_POSTGREST } from "@/constants/queryCaps";
 import { assertNotTruncated } from "@/lib/supabase/assertNotTruncated";
 import { resolverFacturaIdsPorBusqueda } from "./facturaSearchHelper";
+import { orIlike } from "@/lib/search/ilike";
 
 export interface NotaCreditoRow {
   id: string;
@@ -65,11 +66,11 @@ export async function listarNotasCreditoGlobal(
 
   if (filtros.search) {
     const term = filtros.search.trim();
-    const like = `%${term}%`;
     const ids = await resolverFacturaIdsPorBusqueda(term);
+    const orBase = orIlike(["folio_nc", "descripcion"], term);
     q = ids.length > 0
-      ? q.or(`folio_nc.ilike.${like},descripcion.ilike.${like},proveedor_factura_id.in.(${ids.join(",")})`)
-      : q.or(`folio_nc.ilike.${like},descripcion.ilike.${like}`);
+      ? q.or(`${orBase},proveedor_factura_id.in.(${ids.join(",")})`)
+      : q.or(orBase);
   }
 
   const { data, error } = await q;

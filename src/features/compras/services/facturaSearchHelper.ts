@@ -10,16 +10,17 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import { CAP_POSTGREST } from "@/constants/queryCaps";
+import { ilikePattern, orIlike } from "@/lib/search/ilike";
 
 export async function resolverFacturaIdsPorBusqueda(search: string): Promise<string[]> {
-  const like = `%${search}%`;
+  const like = ilikePattern(search);
 
   const [facturasRes, proveedoresRes] = await Promise.all([
     supabase
       .from("proveedor_facturas")
       .select("id")
       .is("deleted_at", null)
-      .or(`folio_interno.ilike.${like},folio_proveedor.ilike.${like}`)
+      .or(orIlike(["folio_interno", "folio_proveedor"], search))
       .limit(CAP_POSTGREST),
     supabase.from("proveedores").select("id").ilike("nombre", like).limit(CAP_POSTGREST),
   ]);
