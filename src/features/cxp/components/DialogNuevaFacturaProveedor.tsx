@@ -5,6 +5,7 @@
  * vinculación al embarque). Cada paso usa todo el ancho del modal para que la
  * tabla de conceptos y los campos dejen de aparecer truncados.
  */
+import { useCallback, useRef } from "react";
 import { FileSpreadsheet } from "lucide-react";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
 
@@ -22,7 +23,7 @@ import { useCuadreCaptura } from "@/features/cxp/hooks/useCuadreCaptura";
 import { useModoBuzonWiring } from "@/features/cxp/hooks/useModoBuzonWiring";
 import { useCapturaFacturaPasos } from "@/features/cxp/hooks/useCapturaFacturaPasos";
 import { pendientesDeCaptura } from "./pendientesDeCaptura";
-import { derivarMontos, hayCapturaFactura } from "./_sections/capturaDerivados";
+import { derivarMontos, hayCapturaFactura, conceptosConDatos } from "./_sections/capturaDerivados";
 
 import { useCapturaEntranteWiring } from "@/features/cxp/hooks/useCapturaEntranteWiring";
 import type { EmbarqueSeleccionado, EntranteParaCaptura } from "@/features/cxp/types";
@@ -54,11 +55,20 @@ function DialogNuevaFacturaProveedorForm({
 }: Props) {
   
   const cats = usePresupuestoCategorias(true);
+  // v13.819.3 — `ctlRef` permite que TODO cierre (incluido el del buzón tras
+  // guardar) resetee el wizard: si no, el borrador y los renglones vacíos
+  // sobrevivían y reaparecían en la siguiente apertura.
+  const ctlRef = useRef<{ reset: () => void } | null>(null);
+  const cerrarYLimpiar = useCallback(() => {
+    ctlRef.current?.reset();
+    onOpenChange(false);
+  }, [onOpenChange]);
   const wiring = useCapturaEntranteWiring({
     entrante, initialEmbarqueAdHoc, onCapturada,
-    onCerrar: () => onOpenChange(false),
+    onCerrar: cerrarYLimpiar,
   });
   const ctl = useNuevaFacturaProveedorForm(wiring.onDone, wiring.embarqueInicial);
+  ctlRef.current = ctl;
   const { autocarga, categoriaCogs, herencia } = useModoBuzonWiring({
     ctl, categorias: cats.data ?? [], entrante, abierto: open,
   });
@@ -72,7 +82,7 @@ function DialogNuevaFacturaProveedorForm({
     provId: ctl.values.provId,
     folio: ctl.values.folio,
     subtotal: sub,
-    conceptos: ctl.conceptosManuales.conceptos.length,
+    conceptos: conceptosConDatos(ctl.conceptosManuales.conceptos),
   });
   const { guardDialog } = useDirtyGuard(open && hayCaptura && !ctl.isPending);
 
@@ -101,7 +111,7 @@ function DialogNuevaFacturaProveedorForm({
       pasos={pasos}
       guardando={ctl.isPending}
       puedeGuardar={ctl.puedeGuardar}
-      onCancelar={() => onOpenChange(false)}
+      onCancelar={cerrarYLimpiar}
       onGuardar={() => void ctl.submit()}
     />
   );
@@ -111,7 +121,7 @@ function DialogNuevaFacturaProveedorForm({
     {guardDialog}
     <FormDialogShell
         open={open}
-        onOpenChange={(o) => { if (!o) ctl.reset(); onOpenChange(o); }}
+        onOpenChange={(o) => { if (!o) { ctl.reset(); } onOpenChange(o); }}
         icon={FileSpreadsheet}
         title="Capturar factura de proveedor"
         description={
@@ -151,7 +161,7 @@ function DialogNuevaFacturaProveedorForm({
           herencia={herencia}
           keyRenglonSospechoso={keyRenglonSospechoso}
           modoBuzon={modoBuzon}
-          onCerrar={() => onOpenChange(false)}
+          onCerrar={cerrarYLimpiar}
         />
 
     </FormDialogShell>

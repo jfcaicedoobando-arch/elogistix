@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.819.3] - 2026-08-31
+- **Capturar factura de proveedor (Compras › Facturas)**: "Cancelar" ya no descarta la captura en silencio. Con datos capturados, Cancelar, la X, Escape y el clic fuera pasan por la misma confirmación del resto de los formularios ("Descartar" / "Seguir capturando").
+- Al descartar, el asistente se limpia por completo (conceptos, archivos, campos y paso), así que la siguiente apertura empieza en blanco. Antes el borrador sobrevivía y los renglones de concepto vacíos se acumulaban en cada apertura.
+- Agregar un renglón de concepto vacío (sin descripción y en $0) ya **no** cuenta como captura: no dispara la confirmación al cerrar y no deja basura para la próxima vez. Un concepto con descripción o importe real sí protege la captura.
+- Sin cambios el diálogo cierra directo, y tras guardar con éxito cierra sin preguntar nada.
+
 ## [13.819.2] - 2026-08-31
 - **Factura de proveedor duplicada desde Costos del embarque**: al subir un XML/PDF ya capturado, el aviso ahora dice **dónde está** el documento en vez de mandar a "Compras › Facturas" (sección que roles como coordinador logístico no ven). Se distingue: ya registrada en este embarque, registrada en otro embarque de la organización (con su expediente), registrada en Compras sin embarque vinculado, pendiente de captura en el buzón, y duplicado de otra organización (mensaje genérico, sin revelar folios ni identificadores ajenos).
 - El origen de verdad es la nueva función de base `buzon_localizar_duplicado` (consulta, sin escrituras), que aplica el aislamiento entre organizaciones; el cliente ya no arma búsquedas propias. El conflicto viaja con código estable `BUZON_FACTURA_DUPLICADA` (409) y metadatos seguros.

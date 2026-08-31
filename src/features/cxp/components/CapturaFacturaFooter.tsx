@@ -6,11 +6,13 @@
 import { AlertCircle, ArrowLeft, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { CapturaPasos } from "@/features/cxp/hooks/useCapturaFacturaPasos";
+import { useFormDialogCerrar } from "@/components/shared/formDialogCloseContext";
 
 interface Props {
   pasos: CapturaPasos;
   guardando: boolean;
   puedeGuardar: boolean;
+  /** Fallback cuando el footer se usa fuera de un `FormDialogShell`. */
   onCancelar: () => void;
   onGuardar: () => void;
 }
@@ -18,6 +20,9 @@ interface Props {
 export function CapturaFacturaFooter({
   pasos, guardando, puedeGuardar, onCancelar, onGuardar,
 }: Props) {
+  // v13.819.3 — "Cancelar" pasa por el cierre guardado del shell: con captura
+  // real pide confirmación en vez de descartar en silencio.
+  const cerrarGuardado = useFormDialogCerrar();
   const delPaso = pasos.paso === 1
     ? pasos.pendientesPorPaso.documento
     : pasos.paso === 2
@@ -56,7 +61,7 @@ export function CapturaFacturaFooter({
         </Button>
       )}
 
-      <Button variant="outline" onClick={onCancelar} disabled={guardando}>
+      <Button type="button" variant="outline" onClick={cerrarGuardado ?? onCancelar} disabled={guardando}>
         Cancelar
       </Button>
 

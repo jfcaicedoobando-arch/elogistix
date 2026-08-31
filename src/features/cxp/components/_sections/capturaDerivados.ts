@@ -24,6 +24,22 @@ export function derivarMontos(values: {
   };
 }
 
+/**
+ * v13.819.3 — Conceptos con datos reales. Un renglón recién agregado (vacío y
+ * en $0) NO cuenta como captura: agregarlo por error no debe disparar la
+ * confirmación de descarte, y al cerrar se limpia para no acumular filas
+ * vacías entre aperturas.
+ */
+export function conceptosConDatos(
+  conceptos: ReadonlyArray<{ descripcion?: string | null; importe?: unknown; cantidad?: unknown }>,
+): number {
+  return conceptos.filter(
+    (c) =>
+      (c.descripcion ?? "").trim().length > 0 ||
+      (Number(c.importe) || 0) !== 0,
+  ).length;
+}
+
 /** FE-11: ¿hay captura suficiente para advertir antes de cerrar/navegar? */
 export function hayCapturaFactura(params: {
   provId?: string | null;
