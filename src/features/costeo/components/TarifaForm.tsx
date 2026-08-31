@@ -22,7 +22,7 @@ import {
   calcularErrores, camposFaltantes, computeGuardarLabel,
   computeValido, getTituloModal, esTarifaSucia,
 } from "./TarifaForm.helpers";
-import { useFormDialogCerrar } from "@/components/shared/formDialogCloseContext";
+import { BotonCancelarTarifa } from "./TarifaFormCancelar";
 
 import { formatUSD } from "@/lib/formatters";
 import { useTarifaSubmit } from "@/features/costeo/hooks/useTarifaSubmit";
