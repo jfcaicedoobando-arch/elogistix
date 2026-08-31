@@ -190,7 +190,10 @@ const MIG_DIR = path.resolve(process.cwd(), "supabase/migrations");
  *    `20260901002100` re-aplica los permisos (`REVOKE ALL … FROM PUBLIC, anon`
  *    + `GRANT EXECUTE … TO authenticated, service_role`); los archivos
  *    originales quedan como legacy auditado.
- *  - `20260908000000` — post-FIX-H6-23: las migraciones inmutables
+ *  - `20260907000000` — post-FIX-H6-23 (antes `20260908000000`; se bajó al
+ *    eliminar la migración duplicada YG-02 con timestamp futuro: la única
+ *    migración YG-02 vigente es `20260831211719`, que sí incluye el bloque
+ *    REVOKE/GRANT canónico y fue revisada a mano): las migraciones inmutables
  *    `20260905000100_ola7_v15_m1_m8_m10_n1.sql`,
  *    `20260905000200_ola8_v15_candados.sql` y
  *    `20260906000000_ola1_reabrir_y_cancelar_liquidacion.sql` crearon
@@ -198,7 +201,7 @@ const MIG_DIR = path.resolve(process.cwd(), "supabase/migrations");
  *    La migración correctiva re-aplica los permisos; los archivos originales
  *    quedan como legacy auditado.
  */
-const BASELINE = "20260908000000";
+const BASELINE = "20260907000000";
 
 
 

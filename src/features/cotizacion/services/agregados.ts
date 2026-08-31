@@ -19,6 +19,8 @@ type CountResponse = { count: number | null; error: unknown };
 function baseCountQuery(organizationId: string | null): CountableQuery {
   let q = supabase
     .from("cotizaciones")
+    // SAFE-CAST: el builder de supabase-js no expone un tipo estructural
+    // reutilizable; se estrecha a la interfaz mínima `CountableQuery`.
     .select("id", { count: "exact", head: true }) as unknown as CountableQuery;
   q = q.is("deleted_at", null);
   if (organizationId) q = q.eq("organization_id", organizationId);
@@ -31,6 +33,8 @@ async function count(
 ): Promise<number> {
   let q = baseCountQuery(organizationId);
   if (apply) q = apply(q);
+  // SAFE-CAST: `head: true` devuelve sólo count/error; el tipo genérico del
+  // builder no lo refleja.
   const { count: n, error } = (await q) as unknown as CountResponse;
   if (error) throw error;
   return n ?? 0;

@@ -1,14 +1,15 @@
 # Changelog
 
-## [13.819.0] - 2026-09-08
+## [13.819.0] - 2026-08-31
 - **YG-01 · Crédito en facturación (P1)**: al timbrar una factura en moneda distinta de MXN, el límite de crédito ya no se calcula nunca con tipo de cambio 1 implícito. Si el T/C es nulo, 0, 1 o cae fuera de la banda fiscal (5–40 MXN/USD), el timbrado responde 503 `credito_no_verificable` antes de calcular.
-- **YG-02 · Liquidaciones de comisiones (P1)**: `registrar_pago_liquidacion` y `cancelar_liquidacion_comision` cargan la liquidación con `FOR UPDATE` y autorizan el rol **dentro de la organización dueña del registro** (antes bastaba tener el rol en cualquier organización). Se conserva la excepción explícita de `super_admin`. Nueva migración, espejos canónicos y guard SQL cross-org.
-- **YG-03 · Listado de cotizaciones (P1)**: el listado dejó de traer un tope de 1000 filas para filtrar en el navegador. Búsqueda, estado, cliente, segmento, "sin costos", inactivas y "aceptadas sin embarque" se resuelven en el servidor; el total y la paginación vienen de la base y la exportación descarga todo lo filtrado por lotes, sin truncar.
+- **YG-02 · Liquidaciones de comisiones (P1)**: `registrar_pago_liquidacion` y `cancelar_liquidacion_comision` cargan la liquidación con `FOR UPDATE` y autorizan el rol **dentro de la organización dueña del registro** (antes bastaba tener el rol en cualquier organización). Se conserva la excepción explícita de `super_admin`. Nueva migración (`20260831211719`), espejos canónicos y guard SQL cross-org.
+- **YG-03 · Listado de cotizaciones (P1)**: el listado dejó de traer un tope de 1000 filas para filtrar en el navegador. Búsqueda, estado, cliente, segmento, "sin costos", inactivas y "aceptadas sin embarque" se resuelven en el servidor; el total y la paginación vienen de la base y la exportación descarga todo lo filtrado por lotes, sin truncar. El filtro "sin costos" también se resuelve en la base (sin pre-cargar ids topados a 1000 filas).
 - **YG-04 · Pérdida de captura (P2)**: los formularios largos (alta de proveedor, nota de crédito de cliente y de proveedor, facturas de proveedor, registro/edición de pagos, movimientos y traspasos bancarios) piden confirmación al cerrar con X, Escape o clic exterior si hay datos capturados, y dejan de avisar al guardar.
 - **YG-05 · Mensajes de nota de crédito (P2)**: los errores internos `LC_*` ya no se muestran al usuario; se traduce el mensaje en español y el código crudo queda sólo en la bitácora técnica.
 - **YG-06 · Botones deshabilitados (P2)**: el alta de proveedor y la nota de crédito indican en línea qué falta para avanzar, guardar o timbrar, reutilizando el aviso de faltantes existente.
 - **YG-07 · Folios (P3)**: la búsqueda de folio de cotización excluye registros eliminados.
 - Power-of-10: la validación del paso 1 del alta de proveedor y la detección de cambios sin guardar (pago de proveedor, traspaso) se movieron a helpers puros para respetar los límites de tamaño y complejidad.
+- Cierre (revisión de commit): se eliminó la migración YG-02 duplicada con timestamp futuro (`20260908000000`); queda sólo `20260831211719`, con espejos canónicos y baseline de esquema regenerados. El baseline del auditor de migraciones bajó a `20260907000000`.
 - Pruebas: 5 guards SQL que insertaban clientes sin correo (requisito NOT NULL) quedaron corregidos; la verificación local de base vuelve a verde.
 
 ## [13.818.1] - 2026-08-31
