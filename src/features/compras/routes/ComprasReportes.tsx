@@ -66,51 +66,14 @@ export default function ComprasReportes() {
   const tcEurDof = rates?.eurMxn;
 
   // Top proveedores — agrupamos por proveedor y moneda.
-  const topProveedores = useMemo(() => {
-    const map = new Map<string, { nombre: string; mxn: number; usd: number; eur: number; count: number; mxnEquiv: number }>();
-    for (const r of rows) {
-      const key = r.proveedor_id ?? r.proveedor_nombre ?? "—";
-      const cur = map.get(key) ?? { nombre: r.proveedor_nombre ?? "—", mxn: 0, usd: 0, eur: 0, count: 0, mxnEquiv: 0 };
-      cur.count += 1;
-
-      // M-3: la conversión pasa por el canon único (`aMxn`); EUR usa su
-      // propio tipo de cambio en vez de compartir el del USD.
-      const tcMoneda = r.moneda === "USD" ? (r.tipo_cambio_usd || tcDof) : tcEurDof;
-      const equiv = r.moneda === "MXN" ? r.total : aMxn(r.total, r.moneda, tcMoneda).monto;
-
-      if (r.moneda === "MXN") cur.mxn += r.total;
-      else if (r.moneda === "USD") cur.usd += r.total;
-      else cur.eur += r.total;
-
-      // Sólo sumamos al equivalente si hubo un TC confiable (factura o DOF).
-      cur.mxnEquiv += equiv;
-
-      map.set(key, cur);
-    }
-    
-    return Array.from(map.values())
-      .sort((a, b) => {
-        // Si no hay TC para alguno de los dos en sus facturas USD y no hay DOF,
-        // la comparación puede ser imperfecta, pero seguimos la instrucción.
-        return b.mxnEquiv - a.mxnEquiv;
-      })
-      .slice(0, 10);
-  }, [rows, tcDof, tcEurDof]);
+  const topProveedores = useMemo(
+    () => agruparTopProveedores(rows, tcDof, tcEurDof),
+    [rows, tcDof, tcEurDof],
+  );
 
   // Evolución mensual (YYYY-MM) por moneda.
-  const evolucion = useMemo(() => {
-    const map = new Map<string, { mes: string; mxn: number; usd: number; eur: number }>();
-    for (const r of rows) {
-      if (!r.fecha_emision) continue;
-      const mes = r.fecha_emision.slice(0, 7);
-      const cur = map.get(mes) ?? { mes, mxn: 0, usd: 0, eur: 0 };
-      if (r.moneda === "MXN") cur.mxn += r.total;
-      else if (r.moneda === "USD") cur.usd += r.total;
-      else cur.eur += r.total;
-      map.set(mes, cur);
-    }
-    return Array.from(map.values()).sort((a, b) => a.mes.localeCompare(b.mes));
-  }, [rows]);
+  const evolucion = useMemo(() => agruparEvolucionMensual(rows), [rows]);
+
 
   const handleExport = () => {
     try {
