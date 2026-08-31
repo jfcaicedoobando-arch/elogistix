@@ -8,7 +8,12 @@
 import { useMemo, useState } from "react";
 import { useTasaIVA } from "@/features/catalogos/hooks/useTasaIVA";
 import { useCrearFacturaManual } from "@/features/facturacion/hooks/useCrearFacturaManual";
-import { useClientesFiscalOpts, type ClienteFiscalOpt } from "@/features/facturacion/hooks/useClientesFiscalOpts";
+import { useClientesFiscalOpts } from "@/features/facturacion/hooks/useClientesFiscalOpts";
+import {
+  INITIAL_CONCEPTOS, INITIAL_FISCAL, serieForMoneda, useFaltantesTimbrar,
+} from "@/features/facturacion/hooks/facturaManualFormDefaults";
+
+export { serieForMoneda };
 import { calcularTotalMxn } from "@/features/facturacion/utils/calcularTotalMxn";
 import { sumarSubtotales } from "@/lib/financial/financialUtils";
 import { validarTcMxn } from "@/lib/financial/tcBanda";
@@ -19,44 +24,6 @@ import { notifyError } from "@/lib/ui/appFeedback";
 import type { ConceptoManualInput } from "@/features/facturacion/services/facturaManual";
 import type { DatosFiscalesValue } from "@/features/facturacion/components/FacturaManualDatosFiscales";
 import { useOrgActiva } from "@/hooks/shared/useOrgActiva";
-
-/**
- * Serie oficial por moneda. La numeración fiscal es responsabilidad del sistema
- * — nunca se deja al usuario porque contamina folios (ver v13.301.58).
- */
-export function serieForMoneda(m: DatosFiscalesValue["moneda"]): string {
-  if (m === "USD") return "SF43718";
-  if (m === "EUR") return "SF46410";
-  return "A";
-}
-
-const INITIAL_FISCAL: DatosFiscalesValue = {
-  serie: serieForMoneda("MXN"), fechaEmision: todayLocalISO(), diasCredito: 0, moneda: "MXN",
-  usoCfdi: "G03", formaPago: "99", metodoPago: "PPD", tipoCambio: 1,
-};
-
-const INITIAL_CONCEPTOS: ConceptoManualInput[] = [
-  { descripcion: "", cantidad: 1, precio_unitario: 0, clave_sat: "78101800", tipo_iva: "gravado_16" },
-];
-
-function useFaltantesTimbrar(
-  cliente: ClienteFiscalOpt | undefined,
-  conceptosValidos: boolean,
-  fiscal: DatosFiscalesValue,
-): string[] {
-  return useMemo(
-    () =>
-      [
-        !cliente && "cliente",
-        !conceptosValidos && "conceptos válidos",
-        
-        fiscal.tipoCambio <= 0 && "tipo de cambio",
-        cliente && (!cliente.rfc || !cliente.codigo_postal || !cliente.regimen_fiscal) &&
-          "datos fiscales del cliente (RFC · CP · régimen)",
-      ].filter((x): x is string => !!x),
-    [cliente, conceptosValidos, fiscal.tipoCambio],
-  );
-}
 
 export function useFacturaManualForm(open: boolean, onClose?: () => void) {
   const { organizationId } = useOrgActiva();
