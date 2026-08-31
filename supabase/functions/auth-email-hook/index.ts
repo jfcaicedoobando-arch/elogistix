@@ -1,21 +1,12 @@
 import * as React from 'npm:react@18.3.1'
 import { renderAsync } from 'npm:@react-email/components@0.0.22'
-import { parseEmailWebhookPayload } from 'npm:@lovable.dev/email-js'
-import { WebhookError, verifyWebhookRequest } from 'npm:@lovable.dev/webhooks-js'
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0'
-import { initSentryEdge, captureEdgeException } from '../_shared/sentry.ts'
-import {
-  EMAIL_SUBJECTS,
-  EMAIL_TEMPLATES,
-  SITE_NAME,
-  SENDER_DOMAIN,
-  ROOT_DOMAIN,
-  FROM_DOMAIN,
-} from './templates.ts'
-import { handlePreview } from './preview.ts'
-import { registrarPendiente } from './dedupe.ts'
-
-initSentryEdge('auth-email-hook')
+import { createAuthEmailHandler } from 'npm:@lovable.dev/email-js@0.1.0'
+import { SignupEmail } from '../_shared/email-templates/signup.tsx'
+import { InviteEmail } from '../_shared/email-templates/invite.tsx'
+import { MagicLinkEmail } from '../_shared/email-templates/magic-link.tsx'
+import { RecoveryEmail } from '../_shared/email-templates/recovery.tsx'
+import { EmailChangeEmail } from '../_shared/email-templates/email-change.tsx'
+import { ReauthenticationEmail } from '../_shared/email-templates/reauthentication.tsx'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -23,219 +14,173 @@ const corsHeaders = {
     'authorization, x-client-info, apikey, content-type, x-lovable-signature, x-lovable-timestamp, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 }
 
-/** REF-04: nunca loguear el email completo (PII). Conserva el dominio para diagnóstico. */
-function enmascararEmail(email: string): string {
-  const at = email.indexOf('@')
-  if (at <= 0) return '***'
-  return `***@${email.slice(at + 1)}`
+// Configuration
+const SITE_NAME = "Libre Carga"
+const SENDER_DOMAIN = "notify.librecarga.com"
+const ROOT_DOMAIN = "librecarga.com"
+const FROM_DOMAIN = "librecarga.com"
+const SITE_URL = `https://${ROOT_DOMAIN}`
+
+// Template mapping for preview mode
+const EMAIL_TEMPLATES: Record<string, React.ComponentType<Record<string, never>>> = {
+  signup: SignupEmail,
+  invite: InviteEmail,
+  magiclink: MagicLinkEmail,
+  recovery: RecoveryEmail,
+  email_change: EmailChangeEmail,
+  reauthentication: ReauthenticationEmail,
 }
 
-/** Payload del hook de correos de auth (v1). */
-interface AuthHookPayload {
-  version?: string
-  run_id?: string
-  data: {
-    action_type: string
-    email: string
-    url?: string
-    token?: string
-    old_email?: string
-    new_email?: string
-  }
-}
-
-
-
-/**
- * RTC-01: verificación + parseo del webhook extraídos del handler para bajar
- * su complejidad ciclomática (límite 16). Devuelve el payload o la respuesta
- * de error ya formada.
- */
-async function verificarYParsear(
-  req: Request,
-  apiKey: string,
-): Promise<{ payload: AuthHookPayload } | Response> {
-  try {
-    const verified = await verifyWebhookRequest({
-      req,
-      secret: apiKey,
-      parser: parseEmailWebhookPayload,
-    })
-    return { payload: verified.payload as AuthHookPayload }
-  } catch (error) {
-    return respuestaErrorWebhook(error)
-  }
-}
-
-/** Traduce un fallo de verificación/parseo a la respuesta HTTP correspondiente. */
-function respuestaErrorWebhook(error: unknown): Response {
-  const jsonHeaders = { ...corsHeaders, 'Content-Type': 'application/json' }
-  if (error instanceof WebhookError) {
-    const esFirma = error.code === 'invalid_signature' ||
-      error.code === 'missing_timestamp' ||
-      error.code === 'invalid_timestamp' ||
-      error.code === 'stale_timestamp'
-    if (esFirma) {
-      console.error('Invalid webhook signature', { error: error.message })
-      return new Response(JSON.stringify({ error: 'Invalid signature' }), { status: 401, headers: jsonHeaders })
-    }
-    if (error.code === 'invalid_payload' || error.code === 'invalid_json') {
-      console.error('Invalid webhook payload', { error: error.message })
-      return new Response(JSON.stringify({ error: 'Invalid webhook payload' }), { status: 400, headers: jsonHeaders })
-    }
-  }
-  console.error('Webhook verification failed', { error })
-  return new Response(JSON.stringify({ error: 'Invalid webhook payload' }), { status: 400, headers: jsonHeaders })
-}
-
-// Webhook handler - verifies signature and sends email
-async function handleWebhook(req: Request): Promise<Response> {
-  const apiKey = Deno.env.get('LOVABLE_API_KEY')
-
-  if (!apiKey) {
-    console.error('LOVABLE_API_KEY not configured')
-    return new Response(
-      JSON.stringify({ error: 'Server configuration error' }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    )
-  }
-
-  // Verify signature + timestamp, then parse payload (ver verificarYParsear).
-  const verificado = await verificarYParsear(req, apiKey)
-  if (verificado instanceof Response) return verificado
-  const payload = verificado.payload
-  const run_id = payload.run_id ?? ''
-
-  if (!run_id) {
-    console.error('Webhook payload missing run_id')
-    return new Response(
-      JSON.stringify({ error: 'Invalid webhook payload' }),
-      {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      }
-    )
-  }
-
-  if (payload.version !== '1') {
-    console.error('Unsupported payload version', { version: payload.version, run_id })
-    return new Response(
-      JSON.stringify({ error: `Unsupported payload version: ${payload.version}` }),
-      {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      }
-    )
-  }
-
-  // The email action type is in payload.data.action_type (e.g., "signup", "recovery")
-  // payload.type is the hook event type ("auth")
-  const emailType = payload.data.action_type
-  console.log('Received auth event', { emailType, email: enmascararEmail(payload.data.email), run_id })
-
-  const EmailTemplate = EMAIL_TEMPLATES[emailType]
-  if (!EmailTemplate) {
-    console.error('Unknown email type', { emailType, run_id })
-    return new Response(
-      JSON.stringify({ error: `Unknown email type: ${emailType}` }),
-      { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    )
-  }
-
-  // Build template props from payload.data (HookData structure)
-  const templateProps = {
+// Sample data for preview mode ONLY (not used in actual email sending).
+// URLs are baked in at scaffold time from the project's real data.
+// The sample email uses a fixed placeholder (RFC 6761 .test TLD) so the Go backend
+// can always find-and-replace it with the actual recipient when sending test emails,
+// even if the project's domain has changed since the template was scaffolded.
+const SAMPLE_PROJECT_URL = "https://elogistix.lovable.app"
+const SAMPLE_EMAIL = "user@example.test"
+const SAMPLE_DATA: Record<string, object> = {
+  signup: {
     siteName: SITE_NAME,
-    siteUrl: `https://${ROOT_DOMAIN}`,
-    recipient: payload.data.email,
-    confirmationUrl: payload.data.url,
-    token: payload.data.token,
-    email: payload.data.email,
-    oldEmail: payload.data.old_email,
-    newEmail: payload.data.new_email,
-  }
-
-  // Render React Email to HTML and plain text
-  const html = await renderAsync(React.createElement(EmailTemplate, templateProps))
-  const text = await renderAsync(React.createElement(EmailTemplate, templateProps), {
-    plainText: true,
-  })
-
-  // Enqueue email for async processing by the dispatcher (process-email-queue).
-  const supabase = createClient(
-    Deno.env.get('SUPABASE_URL')!,
-    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-  )
-
-  // REF-03: message_id determinista por run_id — el reintento del hook de
-  // Supabase Auth reutiliza el mismo run_id y NO debe re-encolar el correo ni
-  // duplicar filas en email_send_log (índice uq_email_send_log_message_id).
-  const messageId = `auth-${run_id}`
-
-  const dedupe = await registrarPendiente(supabase, {
-    messageId,
-    emailType,
-    recipient: payload.data.email,
-    runId: run_id,
-  })
-  // R3EF-03(a): fail-closed — sin fila en email_send_log no se puede
-  // deduplicar el reintento ni registrar el fallo del enqueue. El hook de
-  // Supabase Auth reintenta con el mismo run_id, así que el 500 es seguro.
-  if (dedupe.logError) {
-    await captureEdgeException(new Error('email_send_log upsert failed'), {
-      fn: 'auth-email-hook',
-      status_code: 500,
-      extra: { emailType, run_id },
-    })
-    return new Response(
-      JSON.stringify({ error: 'auth_email_log_unavailable' }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    )
-  }
-  if (dedupe.deduplicated) {
-    console.log('Auth email hook deduplicated', { emailType, run_id })
-    return new Response(
-      JSON.stringify({ success: true, queued: true, deduplicated: true }),
-      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    )
-  }
-
-  const { error: enqueueError } = await supabase.rpc('enqueue_email', {
-    queue_name: 'auth_emails',
-    payload: {
-      run_id,
-      message_id: messageId,
-      to: payload.data.email,
-      from: `${SITE_NAME} <noreply@${FROM_DOMAIN}>`,
-      sender_domain: SENDER_DOMAIN,
-      subject: EMAIL_SUBJECTS[emailType] || 'Notification',
-      html,
-      text,
-      purpose: 'transactional',
-      label: emailType,
-      queued_at: new Date().toISOString(),
-    },
-  })
-
-  if (enqueueError) {
-    console.error('Failed to enqueue auth email', { error: enqueueError, run_id, emailType })
-    // REF-03: marcar la MISMA fila como failed (antes se insertaba una segunda
-    // fila y la 'pending' quedaba huérfana para siempre).
-    await supabase.from('email_send_log')
-      .update({ status: 'failed', error_message: 'Failed to enqueue email' })
-      .eq('message_id', messageId)
-    return new Response(JSON.stringify({ error: 'Failed to enqueue email' }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    })
-  }
-
-  console.log('Auth email enqueued', { emailType, email: enmascararEmail(payload.data.email), run_id })
-
-  return new Response(
-    JSON.stringify({ success: true, queued: true }),
-    { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-  )
+    siteUrl: SAMPLE_PROJECT_URL,
+    recipient: SAMPLE_EMAIL,
+    confirmationUrl: SAMPLE_PROJECT_URL,
+  },
+  magiclink: {
+    siteName: SITE_NAME,
+    confirmationUrl: SAMPLE_PROJECT_URL,
+  },
+  recovery: {
+    siteName: SITE_NAME,
+    confirmationUrl: SAMPLE_PROJECT_URL,
+  },
+  invite: {
+    siteName: SITE_NAME,
+    siteUrl: SAMPLE_PROJECT_URL,
+    confirmationUrl: SAMPLE_PROJECT_URL,
+  },
+  email_change: {
+    siteName: SITE_NAME,
+    oldEmail: SAMPLE_EMAIL,
+    email: SAMPLE_EMAIL,
+    newEmail: SAMPLE_EMAIL,
+    confirmationUrl: SAMPLE_PROJECT_URL,
+  },
+  reauthentication: {
+    token: '123456',
+  },
 }
+
+// Preview endpoint handler - returns rendered HTML without sending email
+async function handlePreview(req: Request): Promise<Response> {
+  const previewCorsHeaders = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Headers': 'authorization, content-type',
+  }
+
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: previewCorsHeaders })
+  }
+
+  const apiKey = Deno.env.get('LOVABLE_API_KEY')
+  const authHeader = req.headers.get('Authorization')
+
+  if (!apiKey || authHeader !== `Bearer ${apiKey}`) {
+    return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+      status: 401,
+      headers: { ...previewCorsHeaders, 'Content-Type': 'application/json' },
+    })
+  }
+
+  let type: string
+  try {
+    const body = await req.json()
+    type = body.type
+  } catch (error) {
+    return new Response(JSON.stringify({ error: 'Invalid JSON in request body' }), {
+      status: 400,
+      headers: { ...previewCorsHeaders, 'Content-Type': 'application/json' },
+    })
+  }
+
+  const EmailTemplate = EMAIL_TEMPLATES[type]
+
+  if (!EmailTemplate) {
+    return new Response(JSON.stringify({ error: `Unknown email type: ${type}` }), {
+      status: 400,
+      headers: { ...previewCorsHeaders, 'Content-Type': 'application/json' },
+    })
+  }
+
+  const sampleData = SAMPLE_DATA[type] || {}
+  const html = await renderAsync(React.createElement(EmailTemplate, sampleData))
+
+  return new Response(html, {
+    status: 200,
+    headers: { ...previewCorsHeaders, 'Content-Type': 'text/html; charset=utf-8' },
+  })
+}
+
+// The SDK handler owns verification, dispatch, and retry semantics; this file
+// owns only the email decisions: subjects, templates, and per-type props.
+const handler = createAuthEmailHandler({
+  apiKey: Deno.env.get('LOVABLE_API_KEY')!,
+  from: `${SITE_NAME} <noreply@${FROM_DOMAIN}>`,
+  senderDomain: SENDER_DOMAIN,
+  sendUrl: Deno.env.get('LOVABLE_SEND_URL'),
+  emails: {
+    signup: {
+      subject: 'Confirma tu correo',
+      render: (data) =>
+        React.createElement(SignupEmail, {
+          siteName: SITE_NAME,
+          siteUrl: SITE_URL,
+          recipient: data.email,
+          confirmationUrl: data.url,
+        }),
+    },
+    invite: {
+      subject: 'Te invitaron a Libre Carga',
+      render: (data) =>
+        React.createElement(InviteEmail, {
+          siteName: SITE_NAME,
+          siteUrl: SITE_URL,
+          confirmationUrl: data.url,
+        }),
+    },
+    magiclink: {
+      subject: 'Tu enlace de acceso',
+      render: (data) =>
+        React.createElement(MagicLinkEmail, {
+          siteName: SITE_NAME,
+          confirmationUrl: data.url,
+        }),
+    },
+    recovery: {
+      subject: 'Restablece tu contraseña',
+      render: (data) =>
+        React.createElement(RecoveryEmail, {
+          siteName: SITE_NAME,
+          confirmationUrl: data.url,
+        }),
+    },
+    email_change: {
+      subject: 'Confirma tu nuevo correo',
+      render: (data) =>
+        React.createElement(EmailChangeEmail, {
+          siteName: SITE_NAME,
+          oldEmail: data.old_email ?? '',
+          email: data.email,
+          newEmail: data.new_email ?? '',
+          confirmationUrl: data.url,
+        }),
+    },
+    reauthentication: {
+      subject: 'Tu código de verificación',
+      render: (data) =>
+        React.createElement(ReauthenticationEmail, { token: data.token ?? '' }),
+    },
+  },
+})
 
 Deno.serve(async (req) => {
   const url = new URL(req.url)
@@ -250,17 +195,5 @@ Deno.serve(async (req) => {
     return handlePreview(req)
   }
 
-  // Main webhook handler
-  try {
-    return await handleWebhook(req)
-  } catch (error) {
-    console.error('Webhook handler error:', error)
-    // REF-04: reportar a Sentry y NO filtrar error.message al llamante (el
-    // mensaje crudo también termina en los logs de plataforma de Supabase Auth).
-    await captureEdgeException(error, { fn: 'auth-email-hook', status_code: 500 })
-    return new Response(JSON.stringify({ error: 'auth_email_hook_failed' }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    })
-  }
+  return handler(req)
 })

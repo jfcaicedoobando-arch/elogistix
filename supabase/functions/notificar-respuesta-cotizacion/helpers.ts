@@ -2,7 +2,9 @@
  * Helpers puros de `notificar-respuesta-cotizacion`. Extraídos para mantener
  * la complejidad ciclomática del handler ≤ 16 (ESLint).
  */
+import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { corsHeaders } from "../_shared/cors.ts";
+import { enviarEmailPlantilla } from "../_shared/enviarEmailPlantilla.ts";
 
 export interface ReqBody {
   cotizacion_id: string;
@@ -46,15 +48,10 @@ export interface Recipient {
   email: string;
 }
 
-export interface EmailInvoker {
-  invoke(
-    name: string,
-    options: { body: unknown },
-  ): Promise<{ error: { message: string } | null }>;
-}
+
 
 export interface SendArgs {
-  invoker: EmailInvoker;
+  invoker: SupabaseClient;
   recipients: Recipient[];
   cotizacionId: string;
   estado: "Aceptada" | "Rechazada";
@@ -69,22 +66,19 @@ export async function sendToRecipients(args: SendArgs) {
   const failures: Array<{ email: string; error: string }> = [];
   for (const r of args.recipients) {
     const idempotencyKey = `cotizacion-respuesta-${args.cotizacionId}-${args.estado}-${r.user_id}`;
-    const { error } = await args.invoker.invoke("send-transactional-email", {
-      body: {
-        templateName: "cotizacion-respuesta",
-        recipientEmail: r.email,
-        messageId: crypto.randomUUID(),
-        idempotencyKey,
-        templateData: {
-          folio: args.folio,
-          cliente: args.cliente,
-          estado: args.estado,
-          comentario: args.comentario,
-          enlace: args.enlace,
-        },
+    const envio = await enviarEmailPlantilla(args.invoker, {
+      templateName: "cotizacion-respuesta",
+      recipientEmail: r.email,
+      idempotencyKey,
+      templateData: {
+        folio: args.folio,
+        cliente: args.cliente,
+        estado: args.estado,
+        comentario: args.comentario,
+        enlace: args.enlace,
       },
     });
-    if (error) failures.push({ email: r.email, error: error.message });
+    if (!envio.ok) failures.push({ email: r.email, error: envio.error ?? "Error al enviar correo" });
     else sent += 1;
   }
   return { sent, failures };

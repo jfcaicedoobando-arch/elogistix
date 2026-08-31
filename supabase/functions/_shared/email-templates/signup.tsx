@@ -19,33 +19,38 @@ import { brand, button, container, footer, h1, link, main, text } from './styles
 interface SignupEmailProps {
   siteName: string
   siteUrl: string
+  recipient: string
   confirmationUrl: string
 }
 
 export const SignupEmail = ({
   siteName,
   siteUrl,
+  recipient,
   confirmationUrl,
 }: SignupEmailProps) => (
-  <Html lang="es-MX" dir="ltr">
+  <Html lang="es" dir="ltr">
     <Head />
-    <Preview>Confirma tu correo para entrar a {siteName}</Preview>
+    <Preview>Confirma tu correo en {siteName}</Preview>
     <Body style={main}>
       <Container style={container}>
         <Text style={brand}>{siteName}</Text>
         <Heading style={h1}>Confirma tu correo</Heading>
         <Text style={text}>
-          Ya casi terminas. Confirma tu correo para empezar a usar{' '}
+          Gracias por crear tu cuenta en{' '}
           <Link href={siteUrl} style={link}>
             <strong>{siteName}</strong>
           </Link>
           .
         </Text>
+        <Text style={text}>
+          Confirma tu dirección de correo ({recipient}) con el siguiente botón:
+        </Text>
         <Button style={button} href={confirmationUrl}>
-          Confirmar mi correo
+          Confirmar correo
         </Button>
         <Text style={footer}>
-          Si no creaste esta cuenta, puedes ignorar este correo.
+          Si no creaste esta cuenta, puedes ignorar este mensaje.
         </Text>
       </Container>
     </Body>

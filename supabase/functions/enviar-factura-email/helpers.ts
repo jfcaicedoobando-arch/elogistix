@@ -4,6 +4,7 @@
  */
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
 import { captureEdgeException } from "../_shared/sentry.ts";
+import { enviarEmailPlantilla } from "../_shared/enviarEmailPlantilla.ts";
 import { jsonResponse as _jsonResponse } from "../_shared/response.ts";
 import { FACTURAPI_BASE, basicAuthHeader } from '../_shared/facturapiAuth.ts';
 import { fetchOrgSlug } from '../_shared/orgSlug.ts';
@@ -155,30 +156,23 @@ export async function sendToRecipients(params: {
   timestamp: number;
 }): Promise<{ email: string; tipo: string; ok: boolean; error?: string }[]> {
   const { supabaseUrl, supabaseServiceKey, recipients, templateData, facturaId, timestamp } = params;
+  const admin = createClient(supabaseUrl, supabaseServiceKey);
   const resultados: { email: string; tipo: string; ok: boolean; error?: string }[] = [];
   for (const r of recipients) {
     const idem = `fac-${facturaId}-${timestamp}-${r.email}`;
-    try {
-      const resp = await fetch(`${supabaseUrl}/functions/v1/send-transactional-email`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${supabaseServiceKey}` },
-        body: JSON.stringify({
-          templateName: 'factura-enviada',
-          recipientEmail: r.email,
-          idempotencyKey: idem,
-          templateData: { ...templateData, contacto: r.nombre },
-        }),
-      });
-      const out = await resp.json().catch(() => ({}));
-      const ok = resp.ok && (out?.success !== false || out?.queued === true);
-      resultados.push({ email: r.email, tipo: r.tipo, ok, error: ok ? undefined : (out?.error ?? `HTTP ${resp.status}`) });
-    } catch (e) {
-      await captureEdgeException(e, {
+    const envio = await enviarEmailPlantilla(admin, {
+      templateName: 'factura-enviada',
+      recipientEmail: r.email,
+      idempotencyKey: idem,
+      templateData: { ...templateData, contacto: r.nombre },
+    });
+    if (!envio.ok && !envio.suprimido) {
+      await captureEdgeException(new Error(envio.error ?? 'Error al enviar correo'), {
         fn: 'enviar-factura-email',
         extra: { phase: 'send_recipient', recipient_index: resultados.length, recipient_type: r.tipo, factura_id: facturaId },
       });
-      resultados.push({ email: r.email, tipo: r.tipo, ok: false, error: (e as Error).message });
     }
+    resultados.push({ email: r.email, tipo: r.tipo, ok: envio.ok, error: envio.ok ? undefined : envio.error });
   }
   return resultados;
 }

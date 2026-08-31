@@ -22,32 +22,26 @@ interface InviteEmailProps {
   confirmationUrl: string
 }
 
-export const InviteEmail = ({
-  siteName,
-  siteUrl,
-  confirmationUrl,
-}: InviteEmailProps) => (
-  <Html lang="es-MX" dir="ltr">
+export const InviteEmail = ({ siteName, siteUrl, confirmationUrl }: InviteEmailProps) => (
+  <Html lang="es" dir="ltr">
     <Head />
-    <Preview>Te invitaron a {siteName}: activa tu cuenta</Preview>
+    <Preview>Te invitaron a {siteName}</Preview>
     <Body style={main}>
       <Container style={container}>
         <Text style={brand}>{siteName}</Text>
         <Heading style={h1}>Te invitaron a {siteName}</Heading>
         <Text style={text}>
-          Un administrador de{' '}
+          Recibiste una invitación para unirte a{' '}
           <Link href={siteUrl} style={link}>
             <strong>{siteName}</strong>
-          </Link>{' '}
-          te dio acceso a la plataforma. Da clic en el botón para activar tu
-          cuenta y crear tu contraseña.
+          </Link>
+          . Usa el botón para aceptarla y crear tu cuenta.
         </Text>
         <Button style={button} href={confirmationUrl}>
-          Activar mi cuenta
+          Aceptar invitación
         </Button>
         <Text style={footer}>
-          Esta invitación es personal y vence en unos días. Si no la esperabas,
-          puedes ignorar este correo.
+          Si no esperabas esta invitación, puedes ignorar este mensaje.
         </Text>
       </Container>
     </Body>

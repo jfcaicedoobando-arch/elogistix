@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.818.0] - 2026-08-31
+- **Correo**: el envío de correos (autenticación, cotizaciones, proformas, facturas, recordatorios y estados de cuenta CxC) pasó a la entrega administrada de la plataforma. Se eliminó la cola interna (`process-email-queue`, `send-transactional-email`, `handle-email-suppression`, `handle-email-unsubscribe`) y la baja de suscripción ahora la hospeda la plataforma (se retiró `/unsubscribe`).
+- Se agregó el receptor de eventos de entrega (rebote, queja, baja) que sigue registrando en `email_send_log` y `suppressed_emails` con los mismos estados; las tablas históricas se conservan intactas.
+- Base: la migración de infraestructura de cola se reemplazó por `20260604052500_email_data_tables.sql` (sólo las tablas de datos) y las sentencias heredadas sobre las funciones de cola quedaron blindadas con `to_regprocedure`. Baseline regenerado.
+
 ## [13.817.3] - 2026-08-31
 - Power-of-10: se dividieron 9 archivos productivos que superaban 200 líneas (auditoría, factura manual, reportes de compras, cobro en lote, wizard de cotización, estado de resultados, helpers CxP y `DialogRegistrarPago`) extrayendo lógica pura, constantes y subcomponentes. Sin cambios de comportamiento; `architecture-baseline.test.ts` vuelve a verde.
 

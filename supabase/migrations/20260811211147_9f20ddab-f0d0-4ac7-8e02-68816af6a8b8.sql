@@ -7,14 +7,46 @@
 
 REVOKE USAGE ON SCHEMA extensions FROM anon;
 
-REVOKE EXECUTE ON FUNCTION public.enqueue_email(text, jsonb) FROM authenticated, anon, PUBLIC;
-REVOKE EXECUTE ON FUNCTION public.read_email_batch(text, integer, integer) FROM authenticated, anon, PUBLIC;
-REVOKE EXECUTE ON FUNCTION public.delete_email(text, bigint) FROM authenticated, anon, PUBLIC;
-REVOKE EXECUTE ON FUNCTION public.move_to_dlq(text, text, bigint, jsonb) FROM authenticated, anon, PUBLIC;
-GRANT EXECUTE ON FUNCTION public.enqueue_email(text, jsonb) TO service_role;
-GRANT EXECUTE ON FUNCTION public.read_email_batch(text, integer, integer) TO service_role;
-GRANT EXECUTE ON FUNCTION public.delete_email(text, bigint) TO service_role;
-GRANT EXECUTE ON FUNCTION public.move_to_dlq(text, text, bigint, jsonb) TO service_role;
+DO $guard$ BEGIN
+  IF to_regprocedure('public.enqueue_email(text, jsonb)') IS NOT NULL THEN
+    EXECUTE 'REVOKE EXECUTE ON FUNCTION public.enqueue_email(text, jsonb) FROM authenticated, anon, PUBLIC';
+  END IF;
+END $guard$;
+DO $guard$ BEGIN
+  IF to_regprocedure('public.read_email_batch(text, integer, integer)') IS NOT NULL THEN
+    EXECUTE 'REVOKE EXECUTE ON FUNCTION public.read_email_batch(text, integer, integer) FROM authenticated, anon, PUBLIC';
+  END IF;
+END $guard$;
+DO $guard$ BEGIN
+  IF to_regprocedure('public.delete_email(text, bigint)') IS NOT NULL THEN
+    EXECUTE 'REVOKE EXECUTE ON FUNCTION public.delete_email(text, bigint) FROM authenticated, anon, PUBLIC';
+  END IF;
+END $guard$;
+DO $guard$ BEGIN
+  IF to_regprocedure('public.move_to_dlq(text, text, bigint, jsonb)') IS NOT NULL THEN
+    EXECUTE 'REVOKE EXECUTE ON FUNCTION public.move_to_dlq(text, text, bigint, jsonb) FROM authenticated, anon, PUBLIC';
+  END IF;
+END $guard$;
+DO $guard$ BEGIN
+  IF to_regprocedure('public.enqueue_email(text, jsonb)') IS NOT NULL THEN
+    EXECUTE 'GRANT EXECUTE ON FUNCTION public.enqueue_email(text, jsonb) TO service_role';
+  END IF;
+END $guard$;
+DO $guard$ BEGIN
+  IF to_regprocedure('public.read_email_batch(text, integer, integer)') IS NOT NULL THEN
+    EXECUTE 'GRANT EXECUTE ON FUNCTION public.read_email_batch(text, integer, integer) TO service_role';
+  END IF;
+END $guard$;
+DO $guard$ BEGIN
+  IF to_regprocedure('public.delete_email(text, bigint)') IS NOT NULL THEN
+    EXECUTE 'GRANT EXECUTE ON FUNCTION public.delete_email(text, bigint) TO service_role';
+  END IF;
+END $guard$;
+DO $guard$ BEGIN
+  IF to_regprocedure('public.move_to_dlq(text, text, bigint, jsonb)') IS NOT NULL THEN
+    EXECUTE 'GRANT EXECUTE ON FUNCTION public.move_to_dlq(text, text, bigint, jsonb) TO service_role';
+  END IF;
+END $guard$;
 
 DROP POLICY IF EXISTS "nav_events insert own org" ON public.nav_events;
 CREATE POLICY "nav_events insert own org" ON public.nav_events

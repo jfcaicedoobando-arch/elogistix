@@ -37,13 +37,8 @@ const WRAPPED_COVERAGE = [
   "supabase/functions/facturapi-cancelar/index.ts",
   "supabase/functions/facturapi-emitir-rep/index.ts",
   "supabase/functions/facturapi-cancelar-rep/index.ts",
-  "supabase/functions/send-transactional-email/index.ts",
-  "supabase/functions/process-email-queue/index.ts",
   "supabase/functions/enviar-cotizacion-email/index.ts",
   "supabase/functions/auditoria-weekly-digest/index.ts",
-  "supabase/functions/handle-email-suppression/index.ts",
-  "supabase/functions/handle-email-unsubscribe/index.ts",
-  "supabase/functions/preview-transactional-email/index.ts",
   "supabase/functions/exchange-rates/index.ts",
   "supabase/functions/parse-cfdi-xml/index.ts",
   "supabase/functions/facturapi-webhook/index.ts",
@@ -102,6 +97,13 @@ const SENTRY_EXEMPT = new Set<string>([
   // `email_send_log` con `status: failed`, que es la fuente de verdad para
   // soporte; envolverlo en Sentry sólo duplicaría el mismo evento.
   "supabase/functions/auth-email-hook/index.ts",
+  // handle-email-events: receptor scaffolded por la plataforma (firma
+  // verificada por el handler de Lovable). Los fallos de escritura ya se
+  // registran en consola y provocan reintento de la entrega.
+  "supabase/functions/handle-email-events/index.ts",
+  // preview-transactional-email: función scaffolded por la plataforma para
+  // previsualizar plantillas (sólo render, gated por LOVABLE_API_KEY).
+  "supabase/functions/preview-transactional-email/index.ts",
 ]);
 
 

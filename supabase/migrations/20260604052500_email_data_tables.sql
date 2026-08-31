@@ -1,25 +1,7 @@
--- Email infrastructure
--- Creates the queue system, send log, send state, suppression, and unsubscribe
--- tables used by both auth and transactional emails.
-
--- Extensions required for queue processing
-CREATE EXTENSION IF NOT EXISTS pg_net SCHEMA extensions;
-DO $$ BEGIN
-  IF NOT EXISTS (SELECT 1 FROM pg_extension WHERE extname = 'pg_cron') THEN
-    CREATE EXTENSION pg_cron;
-  END IF;
-END $$;
-CREATE EXTENSION IF NOT EXISTS supabase_vault;
-CREATE EXTENSION IF NOT EXISTS pgmq;
-
--- Create email queues (auth = high priority, transactional = normal)
--- Wrapped in DO blocks to handle "queue already exists" errors idempotently.
-DO $$ BEGIN PERFORM pgmq.create('auth_emails'); EXCEPTION WHEN OTHERS THEN NULL; END $$;
-DO $$ BEGIN PERFORM pgmq.create('transactional_emails'); EXCEPTION WHEN OTHERS THEN NULL; END $$;
-
--- Dead-letter queues for messages that exceed max retries
-DO $$ BEGIN PERFORM pgmq.create('auth_emails_dlq'); EXCEPTION WHEN OTHERS THEN NULL; END $$;
-DO $$ BEGIN PERFORM pgmq.create('transactional_emails_dlq'); EXCEPTION WHEN OTHERS THEN NULL; END $$;
+-- Tablas de datos de correo (bitácora de envíos, supresiones y tokens de baja).
+-- Reemplaza al scaffold heredado de cola: la entrega, reintentos, supresión y
+-- baja ahora los administra la plataforma; estas tablas se conservan porque son
+-- datos del usuario (historial de envíos y supresiones). Idempotente.
 
 -- Email send log table (audit trail for all send attempts)
 -- UPDATE is allowed for the service role so the suppression edge function
@@ -130,86 +112,6 @@ DO $$ BEGIN
 EXCEPTION WHEN duplicate_object THEN NULL;
 END $$;
 
--- RPC wrappers so Edge Functions can interact with pgmq via supabase.rpc()
--- (PostgREST only exposes functions in the public schema; pgmq functions are in the pgmq schema)
--- All wrappers auto-create the queue on undefined_table (42P01) so emails
--- are never lost if the queue was dropped (extension upgrade, restore, etc.).
-CREATE OR REPLACE FUNCTION public.enqueue_email(queue_name TEXT, payload JSONB)
-RETURNS BIGINT
-LANGUAGE plpgsql SECURITY DEFINER
-AS $$
-BEGIN
-  RETURN pgmq.send(queue_name, payload);
-EXCEPTION WHEN undefined_table THEN
-  PERFORM pgmq.create(queue_name);
-  RETURN pgmq.send(queue_name, payload);
-END;
-$$;
-
-CREATE OR REPLACE FUNCTION public.read_email_batch(queue_name TEXT, batch_size INT, vt INT)
-RETURNS TABLE(msg_id BIGINT, read_ct INT, message JSONB)
-LANGUAGE plpgsql SECURITY DEFINER
-AS $$
-BEGIN
-  RETURN QUERY SELECT r.msg_id, r.read_ct, r.message FROM pgmq.read(queue_name, vt, batch_size) r;
-EXCEPTION WHEN undefined_table THEN
-  PERFORM pgmq.create(queue_name);
-  RETURN;
-END;
-$$;
-
-CREATE OR REPLACE FUNCTION public.delete_email(queue_name TEXT, message_id BIGINT)
-RETURNS BOOLEAN
-LANGUAGE plpgsql SECURITY DEFINER
-AS $$
-BEGIN
-  RETURN pgmq.delete(queue_name, message_id);
-EXCEPTION WHEN undefined_table THEN
-  RETURN FALSE;
-END;
-$$;
-
-CREATE OR REPLACE FUNCTION public.move_to_dlq(
-  source_queue TEXT, dlq_name TEXT, message_id BIGINT, payload JSONB
-)
-RETURNS BIGINT
-LANGUAGE plpgsql SECURITY DEFINER
-AS $$
-DECLARE new_id BIGINT;
-BEGIN
-  SELECT pgmq.send(dlq_name, payload) INTO new_id;
-  PERFORM pgmq.delete(source_queue, message_id);
-  RETURN new_id;
-EXCEPTION WHEN undefined_table THEN
-  BEGIN
-    PERFORM pgmq.create(dlq_name);
-  EXCEPTION WHEN OTHERS THEN
-    NULL;
-  END;
-  SELECT pgmq.send(dlq_name, payload) INTO new_id;
-  BEGIN
-    PERFORM pgmq.delete(source_queue, message_id);
-  EXCEPTION WHEN undefined_table THEN
-    NULL;
-  END;
-  RETURN new_id;
-END;
-$$;
-
--- Restrict queue RPC wrappers to service_role only (SECURITY DEFINER runs as owner,
--- so without this any authenticated user could manipulate the email queues)
-REVOKE EXECUTE ON FUNCTION public.enqueue_email(TEXT, JSONB) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION public.enqueue_email(TEXT, JSONB) TO service_role;
-
-REVOKE EXECUTE ON FUNCTION public.read_email_batch(TEXT, INT, INT) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION public.read_email_batch(TEXT, INT, INT) TO service_role;
-
-REVOKE EXECUTE ON FUNCTION public.delete_email(TEXT, BIGINT) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION public.delete_email(TEXT, BIGINT) TO service_role;
-
-REVOKE EXECUTE ON FUNCTION public.move_to_dlq(TEXT, TEXT, BIGINT, JSONB) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION public.move_to_dlq(TEXT, TEXT, BIGINT, JSONB) TO service_role;
-
 -- Suppressed emails table (tracks unsubscribes, bounces, complaints)
 -- Append-only: no DELETE or UPDATE policies to prevent bypassing suppression.
 CREATE TABLE IF NOT EXISTS public.suppressed_emails (
@@ -278,25 +180,3 @@ EXCEPTION WHEN duplicate_object THEN NULL;
 END $$;
 
 CREATE INDEX IF NOT EXISTS idx_unsubscribe_tokens_token ON public.email_unsubscribe_tokens(token);
-
--- ============================================================
--- POST-MIGRATION STEPS (applied dynamically by setup_email_infra)
--- These steps contain project-specific secrets and URLs and
--- cannot be expressed as static SQL. They are applied via the
--- Supabase Management API (ExecuteSQL) each time the tool runs.
--- ============================================================
---
--- 1. VAULT SECRET
---    Stores (or updates) the Supabase service_role key in
---    vault as 'email_queue_service_role_key'.
---    Uses vault.create_secret / vault.update_secret (upsert).
---    To revert: DELETE FROM vault.secrets WHERE name = 'email_queue_service_role_key';
---
--- 2. CRON JOB (pg_cron)
---    Creates job 'process-email-queue' with a 5-second interval.
---    The job checks:
---      a) rate-limit cooldown (email_send_state.retry_after_until)
---      b) whether auth_emails or transactional_emails queues have messages
---    If conditions are met, it calls the process-email-queue Edge Function
---    via net.http_post using the vault-stored service_role key.
---    To revert: SELECT cron.unschedule('process-email-queue');

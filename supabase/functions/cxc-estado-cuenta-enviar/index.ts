@@ -3,6 +3,8 @@ import { z } from 'npm:zod@3.23.8';
 import { buildCors, handlePreflightStrict } from '../_shared/cors.ts';
 import { wrapEdgeHandler } from '../_shared/sentry.ts';
 import { authenticate } from '../_shared/auth.ts';
+import { enviarEmailPlantilla } from '../_shared/enviarEmailPlantilla.ts';
+
 import { DESTINATARIO_NO_PERMITIDO, emailPerteneceACliente } from '../_shared/destinatarioCliente.ts';
 import {
   calcularTotalesPorMoneda,
@@ -128,24 +130,16 @@ async function sendEstadoCuenta(
   templateData: Record<string, unknown>,
 ): Promise<void> {
   const messageId = `estado-cuenta-${templateData.cliente}-${Date.now()}`;
-  const sendUrl = `${supabaseUrl}/functions/v1/send-transactional-email`;
-  const sendResp = await fetch(sendUrl, {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${serviceRoleKey}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      templateName: 'estado-cuenta-cliente',
-      recipientEmail: destinatario,
-      messageId,
-      idempotencyKey: messageId,
-      templateData,
-    }),
+  const admin = createClient(supabaseUrl, serviceRoleKey);
+  const envio = await enviarEmailPlantilla(admin, {
+    templateName: 'estado-cuenta-cliente',
+    recipientEmail: destinatario,
+    messageId,
+    idempotencyKey: messageId,
+    templateData,
   });
-  const sendResult = await sendResp.json().catch(() => ({ error: 'No se pudo enviar el correo' }));
-  if (!sendResp.ok || !sendResult.success) {
-    throw new Error(`Error al enviar correo: ${sendResult.error ?? 'desconocido'}`);
+  if (!envio.ok) {
+    throw new Error(`Error al enviar correo: ${envio.error ?? 'desconocido'}`);
   }
 }
 
