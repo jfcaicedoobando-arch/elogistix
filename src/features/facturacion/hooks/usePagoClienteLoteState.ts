@@ -2,7 +2,7 @@
  * Estado, validación y envío del cobro en lote de cliente.
  * Mantiene el diálogo bajo el límite de complejidad y de líneas.
  */
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useCuentasBancarias } from "@/features/tesoreria/hooks";
 import { useTcDofPorFecha } from "@/features/catalogos/hooks/useTcDofPorFecha";
 import { usePagoClienteLote } from "@/features/facturacion/hooks/usePagoClienteLote";
@@ -93,9 +93,19 @@ export function usePagoClienteLoteState(a: Args) {
   // deduplica server-side.
   const [requestId, setRequestId] = useState(() => crypto.randomUUID());
 
-  // Al abrir: importe sugerido = saldo total, reparto FIFO por vencimiento.
+  // Ola v16 (3): inicializar UNA sola vez por apertura (mismo patrón que
+  // DialogRegistrarPago · FE-02). Antes cualquier refetch de `a.facturas`
+  // reconstruía el arreglo, re-ejecutaba este efecto, borraba la captura del
+  // usuario y regeneraba el `requestId`, rompiendo la idempotencia del
+  // reintento tras un timeout ambiguo.
+  const inicializadoRef = useRef(false);
   useEffect(() => {
-    if (!a.open) return;
+    if (!a.open) {
+      inicializadoRef.current = false;
+      return;
+    }
+    if (inicializadoRef.current) return;
+    inicializadoRef.current = true;
     setFecha(todayLocalISO());
     setTotal(String(saldoTotal));
     setFormaPago("03");

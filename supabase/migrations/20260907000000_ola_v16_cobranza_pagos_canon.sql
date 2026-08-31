@@ -1,3 +1,12 @@
+-- Ola v16 · Pulido Facturación → Cobranza → Pagos (sin features nuevas).
+--
+-- (1) reasignar_pago_factura: lock `FOR UPDATE` sobre el pago vivo + canon de
+--     NC convertidas + tolerancia de sobrepago unificada con el trigger (0.005).
+--     Fuente canónica: supabase/schema/facturacion/reasignar_pago_factura.sql
+-- (2) cobranza_listado / cobranza_agregados: usan
+--     public.nc_aplicadas_en_moneda_factura(f.id) en vez de SUM(n.monto).
+-- Ninguna firma cambia.
+
 CREATE OR REPLACE FUNCTION public.reasignar_pago_factura(
   p_pago_id uuid,
   p_factura_destino_id uuid,
@@ -142,4 +151,161 @@ $function$;
 REVOKE ALL ON FUNCTION public.reasignar_pago_factura(uuid, uuid, uuid, text, text) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION public.reasignar_pago_factura(uuid, uuid, uuid, text, text) TO authenticated, service_role;
 
--- 7) Cierre del caso: exige consistencia final.
+
+CREATE OR REPLACE FUNCTION public.cobranza_listado(
+  p_cliente_id uuid DEFAULT NULL,
+  p_moneda text DEFAULT NULL,
+  p_search text DEFAULT NULL,
+  p_estatus text DEFAULT NULL,
+  p_limit integer DEFAULT 2000
+)
+RETURNS TABLE(
+  id uuid,
+  numero text,
+  cliente_id uuid,
+  cliente_nombre text,
+  expediente text,
+  moneda text,
+  total numeric,
+  pagado numeric,
+  notas_credito_aplicadas numeric,
+  saldo numeric,
+  fecha_emision date,
+  fecha_vencimiento date,
+  dias_vencido integer,
+  estatus_cobranza text,
+  estado_factura text,
+  tipo_cambio numeric
+)
+LANGUAGE plpgsql
+STABLE
+SECURITY DEFINER
+SET search_path TO 'public'
+AS $$
+DECLARE
+  v_org uuid := public.org_scope();
+  v_limit integer := LEAST(GREATEST(COALESCE(p_limit, 2000), 1), 5000);
+BEGIN
+  IF v_org IS NULL THEN
+    RETURN;
+  END IF;
+
+  RETURN QUERY
+  WITH cartera AS (
+    SELECT
+      f.id,
+      f.numero,
+      f.cliente_id,
+      f.cliente_nombre,
+      f.expediente,
+      f.moneda::text AS moneda,
+      f.total,
+      COALESCE(pg.pagado, 0)::numeric AS pagado,
+      COALESCE(nc.notas, 0)::numeric AS notas,
+      GREATEST(0, f.total - COALESCE(pg.pagado, 0) - COALESCE(nc.notas, 0))::numeric AS saldo,
+      f.fecha_emision,
+      f.fecha_vencimiento,
+      ((now() AT TIME ZONE 'America/Mexico_City')::date - f.fecha_vencimiento)::integer AS dias_vencido,
+      f.estado::text AS estado_factura,
+      f.tipo_cambio
+    FROM facturas f
+    LEFT JOIN LATERAL (
+      SELECT SUM(pf.monto_aplicado_factura) AS pagado
+      FROM pagos_factura pf
+      WHERE pf.factura_id = f.id AND pf.deleted_at IS NULL
+    ) pg ON true
+    -- Ola v16 (2): canon único `nc_aplicadas_en_moneda_factura` — la suma
+    -- cruda de `n.monto` mezclaba monedas (NC en USD restadas a facturas MXN)
+    -- y devolvía saldos y KPIs de cartera incorrectos.
+    LEFT JOIN LATERAL (
+      SELECT public.nc_aplicadas_en_moneda_factura(f.id) AS notas
+    ) nc ON true
+    WHERE f.deleted_at IS NULL
+      AND f.estado IN ('Emitida', 'Parcialmente pagada', 'Vencida')
+      AND f.organization_id = v_org
+      AND (p_cliente_id IS NULL OR f.cliente_id = p_cliente_id)
+      AND (p_moneda IS NULL OR f.moneda::text = p_moneda)
+      AND (
+        p_search IS NULL OR p_search = ''
+        OR f.numero ILIKE '%' || p_search || '%'
+        OR f.cliente_nombre ILIKE '%' || p_search || '%'
+      )
+  ), clasificada AS (
+    SELECT c.*,
+      CASE
+        WHEN c.saldo <= 0.01 THEN 'Sin saldo'
+        WHEN c.dias_vencido > 0 THEN 'Vencida'
+        WHEN c.dias_vencido BETWEEN -7 AND 0 THEN 'Por vencer'
+        ELSE 'Vigente'
+      END AS estatus
+    FROM cartera c
+  )
+  SELECT
+    cl.id, cl.numero, cl.cliente_id, cl.cliente_nombre, cl.expediente,
+    cl.moneda, cl.total, cl.pagado, cl.notas, cl.saldo,
+    cl.fecha_emision, cl.fecha_vencimiento, cl.dias_vencido,
+    cl.estatus, cl.estado_factura, cl.tipo_cambio
+  FROM clasificada cl
+  WHERE p_estatus IS NULL OR p_estatus = '' OR p_estatus = 'todos'
+     OR cl.estatus = p_estatus
+  ORDER BY cl.fecha_vencimiento ASC
+  LIMIT v_limit;
+END;
+$$;
+
+REVOKE ALL ON FUNCTION public.cobranza_listado(uuid, text, text, text, integer) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.cobranza_listado(uuid, text, text, text, integer) FROM anon;
+GRANT EXECUTE ON FUNCTION public.cobranza_listado(uuid, text, text, text, integer) TO authenticated, service_role;
+
+CREATE OR REPLACE FUNCTION public.cobranza_agregados(
+  p_cliente_id uuid DEFAULT NULL,
+  p_moneda text DEFAULT NULL
+)
+RETURNS jsonb
+LANGUAGE plpgsql
+STABLE SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_result jsonb;
+BEGIN
+  WITH cartera AS (
+    SELECT
+      f.moneda::text AS moneda,
+      GREATEST(0, f.total - COALESCE(pg.pagado, 0) - COALESCE(nc.notas, 0)) AS saldo,
+      ((now() AT TIME ZONE 'America/Mexico_City')::date - f.fecha_vencimiento) AS dias_vencido
+    FROM facturas f
+    LEFT JOIN LATERAL (
+      SELECT SUM(pf.monto_aplicado_factura) AS pagado
+      FROM pagos_factura pf
+      WHERE pf.factura_id = f.id AND pf.deleted_at IS NULL
+    ) pg ON true
+    -- Ola v16 (2): canon único `nc_aplicadas_en_moneda_factura` — la suma
+    -- cruda de `n.monto` mezclaba monedas (NC en USD restadas a facturas MXN)
+    -- y devolvía saldos y KPIs de cartera incorrectos.
+    LEFT JOIN LATERAL (
+      SELECT public.nc_aplicadas_en_moneda_factura(f.id) AS notas
+    ) nc ON true
+    WHERE f.deleted_at IS NULL
+      AND f.estado IN ('Emitida', 'Parcialmente pagada', 'Vencida')
+      AND f.organization_id = public.org_scope()
+      AND (p_cliente_id IS NULL OR f.cliente_id = p_cliente_id)
+      AND (p_moneda IS NULL OR f.moneda::text = p_moneda)
+  )
+  SELECT jsonb_build_object(
+    'total_mxn',          COALESCE(SUM(saldo) FILTER (WHERE moneda = 'MXN' AND saldo > 0), 0),
+    'total_usd',          COALESCE(SUM(saldo) FILTER (WHERE moneda = 'USD' AND saldo > 0), 0),
+    'vencido_mxn',        COALESCE(SUM(saldo) FILTER (WHERE moneda = 'MXN' AND saldo > 0 AND dias_vencido > 0), 0),
+    'vencido_usd',        COALESCE(SUM(saldo) FILTER (WHERE moneda = 'USD' AND saldo > 0 AND dias_vencido > 0), 0),
+    'por_vencer_7d_mxn',  COALESCE(SUM(saldo) FILTER (WHERE moneda = 'MXN' AND saldo > 0 AND dias_vencido BETWEEN -7 AND 0), 0),
+    'por_vencer_7d_usd',  COALESCE(SUM(saldo) FILTER (WHERE moneda = 'USD' AND saldo > 0 AND dias_vencido BETWEEN -7 AND 0), 0),
+    'facturas_vencidas',  COUNT(*) FILTER (WHERE moneda IN ('MXN','USD') AND saldo > 0 AND dias_vencido > 0),
+    'facturas_con_saldo', COUNT(*) FILTER (WHERE saldo > 0)
+  ) INTO v_result
+  FROM cartera;
+  RETURN v_result;
+END;
+$$;
+
+REVOKE ALL ON FUNCTION public.cobranza_agregados(uuid, text) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.cobranza_agregados(uuid, text) TO authenticated;
