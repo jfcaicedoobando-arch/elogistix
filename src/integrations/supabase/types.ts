@@ -9852,10 +9852,6 @@ export type Database = {
       dashboard_summary: { Args: never; Returns: Json }
       dashboard_summary_datos: { Args: never; Returns: Json }
       default_user_org_id: { Args: never; Returns: string }
-      delete_email: {
-        Args: { message_id: number; queue_name: string }
-        Returns: boolean
-      }
       detectar_alertas_app_logs: { Args: never; Returns: number }
       devolver_anticipo_proveedor: {
         Args: {
@@ -9959,7 +9955,6 @@ export type Database = {
         Returns: Json
       }
       eliminar_proforma_rpc: { Args: { p_proforma_id: string }; Returns: Json }
-      email_queue_dispatch: { Args: never; Returns: undefined }
       email_send_log_touch: {
         Args: {
           p_error?: string
@@ -10072,10 +10067,6 @@ export type Database = {
         Returns: undefined
       }
       enmascarar_costos_jsonb: { Args: { p_in: Json }; Returns: Json }
-      enqueue_email: {
-        Args: { payload: Json; queue_name: string }
-        Returns: number
-      }
       ensure_demo_membership: { Args: { _user_id: string }; Returns: undefined }
       es_admin_catalogo: { Args: { _uid: string }; Returns: boolean }
       es_escritor_financiero: { Args: { _uid: string }; Returns: boolean }
@@ -10525,15 +10516,6 @@ export type Database = {
         }
         Returns: number
       }
-      move_to_dlq: {
-        Args: {
-          dlq_name: string
-          message_id: number
-          payload: Json
-          source_queue: string
-        }
-        Returns: number
-      }
       nc_aplicadas_en_moneda_factura: {
         Args: { p_factura_id: string }
         Returns: number
@@ -10767,14 +10749,6 @@ export type Database = {
       reactivar_factura_entrante: {
         Args: { p_documento_id: string }
         Returns: undefined
-      }
-      read_email_batch: {
-        Args: { batch_size: number; queue_name: string; vt: number }
-        Returns: {
-          message: Json
-          msg_id: number
-          read_ct: number
-        }[]
       }
       reasignar_pago_factura: {
         Args: {
