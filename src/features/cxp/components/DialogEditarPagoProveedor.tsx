@@ -19,7 +19,7 @@ import {
   usePagoProveedorForm,
   type PagoEditable,
 } from "@/features/cxp/hooks/usePagoProveedorForm";
-import { valoresInicialesEdicion } from "@/features/cxp/hooks/usePagoProveedorForm.editar";
+import { pagoProveedorEditadoSucio } from "@/features/cxp/hooks/usePagoProveedorForm.editar";
 
 interface Props {
   open: boolean;
@@ -32,20 +32,8 @@ export function DialogEditarPagoProveedor({ open, onOpenChange, factura, pago }:
   const actualizar = useActualizarPagoProveedor(factura?.id ?? "");
   const f = usePagoProveedorForm(factura, open, pago);
 
-  // YG-04: comparamos contra los valores originales del pago para saber si
-  // hay cambios sin guardar que se perderían al cerrar el modal.
-  const inicial = pago ? valoresInicialesEdicion(pago) : null;
-  const isDirty = !!inicial && (
-    f.fecha !== inicial.fecha ||
-    f.monto !== inicial.monto ||
-    f.moneda !== inicial.moneda ||
-    f.tc !== inicial.tc ||
-    f.metodo !== inicial.metodo ||
-    f.referencia !== inicial.referencia ||
-    f.notas !== inicial.notas ||
-    f.cuentaId !== inicial.cuentaId ||
-    f.diffMxn !== inicial.diffMxn
-  );
+  // YG-04: hay cambios sin guardar que se perderían al cerrar el modal.
+  const isDirty = pagoProveedorEditadoSucio(f as unknown as Record<string, unknown>, pago);
 
   const submit = async () => {
     if (!factura || !pago) return;
