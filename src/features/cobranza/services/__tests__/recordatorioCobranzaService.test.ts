@@ -70,6 +70,26 @@ describe("enviarRecordatorioCobranza", () => {
     ).rejects.toThrow("boom");
   });
 
+  it("A-3: usa el motivo del body de la Edge Function, no el mensaje técnico", async () => {
+    supabaseMock.functions.invoke.mockResolvedValue({
+      data: null,
+      error: {
+        message: "Edge Function returned a non-2xx status code",
+        context: new Response(
+          JSON.stringify({
+            error: "El correo no pertenece a los contactos del cliente.",
+            code: "DESTINATARIO_NO_PERMITIDO",
+          }),
+          { status: 400, headers: { "content-type": "application/json" } },
+        ),
+      },
+    });
+
+    await expect(
+      enviarRecordatorioCobranza({ facturaId: "fact-7", contactoEmail: "x@ajeno.com" }),
+    ).rejects.toThrow("El correo no pertenece a los contactos del cliente.");
+  });
+
   it("lanza mensaje genérico cuando ok es falso", async () => {
     supabaseMock.functions.invoke.mockResolvedValue({
       data: { ok: false },

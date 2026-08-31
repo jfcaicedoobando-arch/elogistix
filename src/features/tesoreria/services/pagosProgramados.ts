@@ -9,7 +9,12 @@
 import { supabase } from "@/integrations/supabase/client";
 import { unwrapOr } from "@/lib/supabase/response";
 import type { FacturaProgramable } from "@/features/tesoreria/domain/pagosProgramados";
-import { sumarPagosEnMonedaFactura, type PagoCxpParcial } from "@/features/cxp/services";
+import {
+  sumarPagosEnMonedaFactura,
+  sumarNotasCreditoAplicadas,
+  type PagoCxpParcial,
+  type NotaCreditoCxpParcial,
+} from "@/features/cxp/services";
 import { CAP_POSTGREST } from "@/constants/queryCaps";
 
 export interface FacturaProgramableRow extends FacturaProgramable {
@@ -28,13 +33,14 @@ interface RowCruda {
   estado: string;
   estado_aprobacion: string;
   pagos_proveedor: Array<PagoCxpParcial> | null;
+  proveedor_notas_credito: Array<NotaCreditoCxpParcial> | null;
 }
 
 export async function fetchPagosProgramables(): Promise<FacturaProgramableRow[]> {
   const rows = (await unwrapOr(
     supabase
       .from("proveedor_facturas")
-      .select("id, proveedor_nombre, folio_proveedor, fecha_vencimiento, fecha_programada_pago, moneda, total, estado, estado_aprobacion, pagos_proveedor(monto, monto_en_moneda_factura, deleted_at)")
+      .select("id, proveedor_nombre, folio_proveedor, fecha_vencimiento, fecha_programada_pago, moneda, total, estado, estado_aprobacion, pagos_proveedor(monto, monto_en_moneda_factura, deleted_at), proveedor_notas_credito(monto, estado, deleted_at)")
       .is("deleted_at", null)
       .neq("estado", "Cancelada")
       .order("fecha_vencimiento", { ascending: true, nullsFirst: false })
@@ -48,7 +54,11 @@ export async function fetchPagosProgramables(): Promise<FacturaProgramableRow[]>
   return rows
     .map((r) => {
       const pagado = sumarPagosEnMonedaFactura(r.pagos_proveedor);
-      const saldo = Math.max(0, Number(r.total) - pagado);
+      // A-2: el saldo programable debe restar las notas de crédito aplicadas,
+      // igual que `saldo_factura_proveedor` y el listado de CxP. Sin esto la
+      // bandeja proponía pagar más de lo que se debe.
+      const nc = sumarNotasCreditoAplicadas(r.proveedor_notas_credito);
+      const saldo = Math.max(0, Number(r.total) - pagado - nc);
       return {
         id: r.id,
         proveedor_nombre: r.proveedor_nombre,

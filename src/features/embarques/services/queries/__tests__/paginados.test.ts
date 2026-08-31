@@ -93,4 +93,20 @@ describe("fetchEmbarquesPaginados", () => {
     mock.setRpcResult("embarques_listado", { data: null, error: new Error("fail") });
     await expect(fetchEmbarquesPaginados({ page: 0, pageSize: 10 } as any)).rejects.toThrow("fail");
   });
+
+  it("A-4: escapa % y _ literales en la búsqueda", async () => {
+    mock.setRpcResult("embarques_listado", { data: [], error: null });
+
+    await fetchEmbarquesPaginados({
+      organizationId: "org-1",
+      search: "100%_a",
+      filterModo: "todos",
+      filterCliente: "todos",
+      filterOperador: "todos",
+      page: 0,
+      pageSize: 10,
+    } as any);
+
+    expect(mock.rpcCalls[0].args).toMatchObject({ p_search: "100\\%\\_a" });
+  });
 });

@@ -45,6 +45,24 @@ export function sumarPagosEnMonedaFactura(pagos: PagoCxpParcial[] | null): numbe
     .reduce((s, p) => s + Number(p.monto_en_moneda_factura ?? p.monto), 0);
 }
 
+/** Fila mínima de nota de crédito de proveedor usada para saldar. */
+export type NotaCreditoCxpParcial = {
+  monto: number;
+  estado: string;
+  deleted_at: string | null;
+};
+
+/**
+ * A-2: canon de "NC que reducen el saldo" del lado cliente — sólo las
+ * `Aplicada` y no eliminadas, igual que `public.saldo_factura_proveedor`.
+ * Reusado por el listado de CxP y por la bandeja de pagos programados.
+ */
+export function sumarNotasCreditoAplicadas(ncs: NotaCreditoCxpParcial[] | null): number {
+  return (ncs ?? [])
+    .filter((n) => !n.deleted_at && n.estado === "Aplicada")
+    .reduce((s, n) => s + Number(n.monto), 0);
+}
+
 export type Joined = Pick<
   ProveedorFacturaRow,
   | "id" | "proveedor_id" | "proveedor_nombre" | "embarque_id" | "folio_proveedor" | "folio_interno"
@@ -57,7 +75,7 @@ export type Joined = Pick<
   | "fecha_cancelacion" | "motivo_cancelacion" | "cancelada_por" | "created_by"
 > & {
   pagos_proveedor: Array<PagoCxpParcial> | null;
-  proveedor_notas_credito: Array<{ monto: number; estado: string; deleted_at: string | null }> | null;
+  proveedor_notas_credito: Array<NotaCreditoCxpParcial> | null;
   proveedores: { origen_proveedor: "Nacional" | "Extranjero" | null } | null;
   embarques: { expediente: string } | null;
   presupuesto_categorias: { nombre: string } | null;
@@ -130,9 +148,7 @@ function computeFlags(
 
 export function mapJoinedRow(f: Joined): FacturaCxP {
   const pagado = sumarPagosEnMonedaFactura(f.pagos_proveedor);
-  const nc = (f.proveedor_notas_credito ?? [])
-    .filter(n => !n.deleted_at && n.estado === "Aplicada")
-    .reduce((s, n) => s + Number(n.monto), 0);
+  const nc = sumarNotasCreditoAplicadas(f.proveedor_notas_credito);
   const total = Number(f.total);
   const saldo = Math.max(0, total - pagado - nc);
   const yaSaldada = f.estado === "Pagada" || saldo <= 0.01;

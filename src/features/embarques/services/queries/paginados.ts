@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
+import { escapeIlike } from "@/lib/search/ilike";
 
 type EmbarqueRow = Tables<"embarques">;
 
@@ -59,7 +60,9 @@ export async function fetchEmbarquesPaginados(
 
   const { data, error } = await supabase.rpc("embarques_listado", {
     p_organization_id: f.organizationId ?? undefined,
-    p_search: f.search || undefined,
+    // A-4: `embarques_listado` arma el patrón `%texto%` para ILIKE; sin
+    // escapar, un `%` o `_` tecleado por el usuario actúa como comodín.
+    p_search: f.search ? escapeIlike(f.search) : undefined,
     p_modo: f.filterModo !== "todos" ? f.filterModo : undefined,
     p_cliente_id: f.filterCliente !== "todos" ? f.filterCliente : undefined,
     p_operador: f.filterOperador !== "todos" ? f.filterOperador : undefined,

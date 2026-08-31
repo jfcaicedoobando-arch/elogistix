@@ -1,5 +1,13 @@
 # Changelog
 
+## [13.815.0] - 2026-08-31
+
+- **Fix · A-2 · saldo programable sin notas de crédito (Tesorería)**: `fetchPagosProgramables` calculaba `total - pagos` y proponía pagar más de lo debido cuando la factura tenía notas de crédito aplicadas. Ahora resta las NC con el mismo canon que `saldo_factura_proveedor` y el listado de CxP (helper compartido `sumarNotasCreditoAplicadas`).
+- **Fix · A-3 · recordatorios de cobranza con error técnico**: los fallos de la Edge Function (p. ej. destinatario fuera de los contactos del cliente) llegaban como "Edge Function returned a non-2xx status code". Ahora se lee el motivo del body con `parseFunctionError`.
+- **Fix · A-4 · búsqueda de embarques con comodines**: `%` y `_` tecleados por el usuario actuaban como comodines de ILIKE. El término se escapa con el helper existente `escapeIlike` antes de llamar a `embarques_listado`.
+- **Fix · A-5 · match de conceptos por posición**: cuando el nombre no coincidía, el P&L de la cotización emparejaba costo↔venta por índice y podía asignar el importe al concepto equivocado en silencio. Se eliminó el fallback posicional: sin coincidencia de nombre el costo queda sin venta emparejada.
+
+
 ## [13.814.0] - 2026-08-31
 
 - **Fix · "guardado" falso en embarques y cotizaciones**: los UPDATE directos de embarque (`embarqueDirectMutations`) y el cambio de estado de cotización (`updateEstadoCotizacion`) no revisaban las filas afectadas, así que un update filtrado por RLS o sobre un registro inexistente mostraba éxito y escribía bitácora sin cambiar nada. Ahora ambos usan `.select().maybeSingle()` y lanzan un error legible cuando afectan 0 filas; la bitácora sólo se escribe tras confirmar el cambio.

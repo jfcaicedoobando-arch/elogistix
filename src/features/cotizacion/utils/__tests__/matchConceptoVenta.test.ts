@@ -19,41 +19,29 @@ describe("normalizeConceptoNombre", () => {
 });
 
 describe("matchConceptoVenta", () => {
-  it("match exacto con distinto case/espacios NO consume posición del fallback", () => {
+  it("match exacto con distinto case/espacios", () => {
     const conceptos = [concepto("  Flete Maritimo  "), concepto("Maniobras")];
-    const fallback = { idx: 0 };
-    const r = matchConceptoVenta(conceptos, "flete maritimo", fallback);
-    expect(r?.descripcion).toBe("  Flete Maritimo  ");
-    expect(fallback.idx).toBe(0);
+    expect(matchConceptoVenta(conceptos, "flete maritimo")?.descripcion).toBe("  Flete Maritimo  ");
   });
 
-  it("sin match usa el fallback posicional y avanza el índice", () => {
+  it("A-5: sin match NO empareja por posición", () => {
     const conceptos = [concepto("A"), concepto("B")];
-    const fallback = { idx: 0 };
-    const r = matchConceptoVenta(conceptos, "no-existe", fallback);
-    expect(r?.descripcion).toBe("A");
-    expect(fallback.idx).toBe(1);
+    expect(matchConceptoVenta(conceptos, "no-existe")).toBeUndefined();
+    expect(matchConceptoVenta(conceptos, "otro-que-no-existe")).toBeUndefined();
   });
 
-  it("dos costos seguidos sin match consumen posiciones consecutivas", () => {
-    const conceptos = [concepto("A"), concepto("B")];
-    const fallback = { idx: 0 };
-    const r1 = matchConceptoVenta(conceptos, "x1", fallback);
-    const r2 = matchConceptoVenta(conceptos, "x2", fallback);
-    expect(r1?.descripcion).toBe("A");
-    expect(r2?.descripcion).toBe("B");
-    expect(fallback.idx).toBe(2);
+  it("A-5: conceptos reordenados siguen emparejando por nombre", () => {
+    const conceptos = [concepto("Maniobras"), concepto("Flete")];
+    expect(matchConceptoVenta(conceptos, "Flete")?.descripcion).toBe("Flete");
+    expect(matchConceptoVenta(conceptos, "Maniobras")?.descripcion).toBe("Maniobras");
   });
 
-  it("un match por nombre entre dos sin-match no consume posición", () => {
-    const conceptos = [concepto("A"), concepto("B"), concepto("Flete")];
-    const fallback = { idx: 0 };
-    const r1 = matchConceptoVenta(conceptos, "no-existe-1", fallback); // -> A (idx 0), fallback.idx=1
-    const r2 = matchConceptoVenta(conceptos, "flete", fallback); // match por nombre, no consume
-    const r3 = matchConceptoVenta(conceptos, "no-existe-2", fallback); // -> B (idx 1), fallback.idx=2
-    expect(r1?.descripcion).toBe("A");
-    expect(r2?.descripcion).toBe("Flete");
-    expect(r3?.descripcion).toBe("B");
-    expect(fallback.idx).toBe(2);
+  it("A-5: nombre renombrado queda sin emparejar (no toma el vecino)", () => {
+    const conceptos = [concepto("Flete marítimo consolidado"), concepto("Maniobras")];
+    expect(matchConceptoVenta(conceptos, "Flete")).toBeUndefined();
+  });
+
+  it("concepto vacío no empareja", () => {
+    expect(matchConceptoVenta([concepto("")], "   ")).toBeUndefined();
   });
 });
