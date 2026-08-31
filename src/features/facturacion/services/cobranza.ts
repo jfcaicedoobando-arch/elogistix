@@ -14,6 +14,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
 import { assertNotTruncated } from "@/lib/supabase/assertNotTruncated";
+import { escapeIlike } from "@/lib/search/ilike";
 
 // Re-export de agregados puros (extraídos a `cobranzaAggregates.ts` en 12.61.18).
 export {
@@ -98,7 +99,10 @@ export async function fetchCobranza(filtros: FetchCobranzaFilters = {}): Promise
     p_cliente_id: filtros.cliente_id ?? undefined,
     p_moneda: filtros.moneda && filtros.moneda !== "todas" ? filtros.moneda : undefined,
     p_estatus: filtros.estatus && filtros.estatus !== "todos" ? filtros.estatus : undefined,
-    p_search: filtros.search || undefined,
+    // Ola v16 (4): `cobranza_listado` arma el patrón `%term%`; sin escapar,
+    // un `%` o `_` tecleado por el usuario actuaba como comodín y traía
+    // facturas que no coinciden. Se envía el término como literal.
+    p_search: filtros.search ? escapeIlike(filtros.search) : undefined,
     p_limit: LIMITE_COBRANZA,
   });
   if (error) throw error;

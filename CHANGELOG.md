@@ -1,5 +1,14 @@
 # Changelog
 
+## [13.816.0] - 2026-08-31
+
+- **Fix · reasignación de pagos concurrente (`reasignar_pago_factura`)**: dos reasignaciones simultáneas del mismo pago (doble clic) leían la fila viva antes de que la otra la diera de baja y duplicaban el importe en la factura destino. Ahora el pago se lee con `SELECT ... FOR UPDATE` y se revalida tras el lock; la segunda recibe `LC_REFACT_PAGO_NO_ENCONTRADO`. Además el saldo destino usa el canon `nc_aplicadas_en_moneda_factura` y la tolerancia de sobrepago se unificó con el trigger (0.005).
+- **Fix · saldo de cobranza con notas de crédito en otra moneda**: `cobranza_listado` y `cobranza_agregados` sumaban `monto` crudo de las NC (restando dólares a facturas en pesos). Ahora usan la función canónica `nc_aplicadas_en_moneda_factura`, igual que `saldo_factura` y `cartera_pendiente`.
+- **Fix · captura perdida en Cobro en lote**: cualquier refetch de las facturas candidatas reiniciaba el formulario y regeneraba el `request_id`, rompiendo la idempotencia del reintento. El estado se inicializa una sola vez por apertura del diálogo (mismo patrón que `DialogRegistrarPago`).
+- **Fix · búsqueda de cobranza con comodines**: `%` y `_` tecleados por el usuario se escapan con `escapeIlike` antes de llamar a `cobranza_listado`.
+- **Fix · estado de cuenta con error técnico**: los fallos de la Edge Function se leen con `parseFunctionError` para mostrar el motivo real en lugar de "Edge Function returned a non-2xx status code".
+
+
 ## [13.815.0] - 2026-08-31
 
 - **Fix · A-2 · saldo programable sin notas de crédito (Tesorería)**: `fetchPagosProgramables` calculaba `total - pagos` y proponía pagar más de lo debido cuando la factura tenía notas de crédito aplicadas. Ahora resta las NC con el mismo canon que `saldo_factura_proveedor` y el listado de CxP (helper compartido `sumarNotasCreditoAplicadas`).

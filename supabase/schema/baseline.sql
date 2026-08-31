@@ -8847,10 +8847,11 @@ BEGIN
       FROM pagos_factura pf
       WHERE pf.factura_id = f.id AND pf.deleted_at IS NULL
     ) pg ON true
+    -- Ola v16 (2): canon único `nc_aplicadas_en_moneda_factura` — la suma
+    -- cruda de `n.monto` mezclaba monedas (NC en USD restadas a facturas MXN)
+    -- y devolvía saldos y KPIs de cartera incorrectos.
     LEFT JOIN LATERAL (
-      SELECT SUM(n.monto) AS notas
-      FROM factura_notas_credito n
-      WHERE n.factura_id = f.id AND n.deleted_at IS NULL AND n.estado = 'Aplicada'
+      SELECT public.nc_aplicadas_en_moneda_factura(f.id) AS notas
     ) nc ON true
     WHERE f.deleted_at IS NULL
       AND f.estado IN ('Emitida', 'Parcialmente pagada', 'Vencida')
@@ -21312,8 +21313,19 @@ DECLARE
   v_ord_nombre text := NULLIF(btrim(COALESCE(p_ordenante_nombre, '')), '');
   v_ord_rfc text := NULLIF(upper(btrim(COALESCE(p_ordenante_rfc, ''))), '');
 BEGIN
-  SELECT * INTO v_p FROM public.pagos_factura WHERE id = p_pago_id AND deleted_at IS NULL;
+  -- Ola v16 (1): dos reasignaciones simultáneas del MISMO pago (doble clic)
+  -- leían la fila viva antes de que la otra la marcara como eliminada y
+  -- duplicaban el importe en el destino. `FOR UPDATE` serializa a la segunda
+  -- transacción; al liberarse el lock Postgres reevalúa el predicado
+  -- `deleted_at IS NULL` y la segunda ya no encuentra el pago vivo.
+  SELECT * INTO v_p FROM public.pagos_factura
+   WHERE id = p_pago_id AND deleted_at IS NULL
+     FOR UPDATE;
   IF NOT FOUND THEN
+    RAISE EXCEPTION 'LC_REFACT_PAGO_NO_ENCONTRADO' USING ERRCODE = 'P0002';
+  END IF;
+  -- Revalidación explícita post-lock (defensa en profundidad).
+  IF v_p.deleted_at IS NOT NULL THEN
     RAISE EXCEPTION 'LC_REFACT_PAGO_NO_ENCONTRADO' USING ERRCODE = 'P0002';
   END IF;
   PERFORM public._assert_refacturador(v_p.organization_id);
@@ -21351,11 +21363,12 @@ BEGIN
   SELECT COALESCE(SUM(monto_aplicado_factura), 0) INTO v_pagado
   FROM public.pagos_factura
   WHERE factura_id = p_factura_destino_id AND deleted_at IS NULL;
-  SELECT COALESCE(SUM(monto), 0) INTO v_ncs
-  FROM public.factura_notas_credito
-  WHERE factura_id = p_factura_destino_id AND deleted_at IS NULL AND estado = 'Aplicada';
+  -- Ola v16 (1): canon único de NC convertidas a la moneda de la factura
+  -- (no sumar `monto` crudo, que mezcla monedas).
+  v_ncs := public.nc_aplicadas_en_moneda_factura(p_factura_destino_id);
   v_saldo := COALESCE(v_dest.total, 0) - v_pagado - v_ncs;
-  IF ROUND(v_p.monto_aplicado_factura, 2) > ROUND(v_saldo, 2) + 0.01 THEN
+  -- Tolerancia canónica del trigger de sobrepago: 0.005 (medio centavo).
+  IF ROUND(v_p.monto_aplicado_factura, 2) > ROUND(v_saldo, 2) + 0.005 THEN
     RAISE EXCEPTION 'LC_REFACT_SOBREPAGO: el pago (%) excede el saldo de la factura destino (%)',
       v_p.monto_aplicado_factura, v_saldo USING ERRCODE = 'P0001';
   END IF;

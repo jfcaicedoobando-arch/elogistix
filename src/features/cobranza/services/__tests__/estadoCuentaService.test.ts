@@ -95,4 +95,35 @@ describe("enviarEstadoCuentaEmail", () => {
       "No se pudo enviar el estado de cuenta",
     );
   });
+
+  it("Ola v16 (5): usa el motivo del body 4xx de la Edge Function, no el mensaje técnico", async () => {
+    supabaseMock.functions.invoke.mockResolvedValue({
+      data: null,
+      error: {
+        message: "Edge Function returned a non-2xx status code",
+        context: new Response(
+          JSON.stringify({ error: "El cliente no tiene contactos con correo." }),
+          { status: 400, headers: { "content-type": "application/json" } },
+        ),
+      },
+    });
+
+    await expect(enviarEstadoCuentaEmail({ clienteId: "cli-6" })).rejects.toThrow(
+      "El cliente no tiene contactos con correo.",
+    );
+  });
+
+  it("Ola v16 (5): cae al mensaje de transporte si el body no es JSON", async () => {
+    supabaseMock.functions.invoke.mockResolvedValue({
+      data: null,
+      error: {
+        message: "Edge Function returned a non-2xx status code",
+        context: new Response("<html>502</html>", { status: 502 }),
+      },
+    });
+
+    await expect(enviarEstadoCuentaEmail({ clienteId: "cli-7" })).rejects.toThrow(
+      "Edge Function returned a non-2xx status code",
+    );
+  });
 });
