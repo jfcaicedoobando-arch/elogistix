@@ -8,6 +8,7 @@ import { cotizacionRowDbSchema, cotizacionRowsDbSchema } from "./readSchemas";
 
 import { unwrap, unwrapOr } from "@/lib/supabase/response";
 import { CAP_POSTGREST } from "@/constants/queryCaps";
+import type { CotizacionListItem } from "./cotizacionListTypes";
 
 // ─── Columnas reutilizables ─────────────────────────────────────────────────
 // `cotizacion_costos(count)` agrega el conteo de filas relacionadas, que
@@ -38,6 +39,28 @@ export async function generarFolioCotizacion(): Promise<string> {
   return data;
 }
 
+
+
+// ─── Aplanado de fila de listado ────────────────────────────────────────────
+type RawListRow = Record<string, unknown> & {
+  cotizacion_costos?: Array<{ count: number }>;
+  costeo_tarifas?: { vigente_hasta?: string | null } | null;
+};
+
+/**
+ * Aplana `cotizacion_costos: [{count: N}]` → `cotizacion_costos_count: N` y
+ * `costeo_tarifas.vigente_hasta` → `tarifa_vigente_hasta`, tal como consumen
+ * las columnas del listado (`cotizacionesColumns.tsx`, `estadoVigenciaCell.tsx`).
+ * Usado por `fetchCotizacionesPaginadas` (YG-03).
+ */
+export function flattenCotizacionListRow(data: unknown): CotizacionListItem[] {
+  const rows = (data as RawListRow[] | null) ?? [];
+  return rows.map((r) => ({
+    ...r,
+    cotizacion_costos_count: r.cotizacion_costos?.[0]?.count ?? 0,
+    tarifa_vigente_hasta: r.costeo_tarifas?.vigente_hasta ?? null,
+  })) as unknown as CotizacionListItem[];
+}
 
 // ─── Queries ────────────────────────────────────────────────────────────────
 export async function fetchCotizaciones(organizationId: string | null) {
@@ -122,8 +145,16 @@ export async function fetchEmbarquesVinculados(cotizacionId: string) {
 
 /** Folio liviano de una cotización (para chips/links en otras vistas). */
 export async function fetchCotizacionFolio(cotizacionId: string): Promise<string | null> {
+  // YG-07: una cotización eliminada (soft-delete) no debe seguir mostrando su
+  // folio en chips/links de otras vistas.
   const data = await unwrap(
-    supabase.from("cotizaciones").select("folio").eq("id", cotizacionId).maybeSingle(),
+    supabase
+      .from("cotizaciones")
+      .select("folio")
+      .eq("id", cotizacionId)
+      .is("deleted_at", null)
+      .maybeSingle(),
   );
   return (data as { folio: string } | null)?.folio ?? null;
 }
+

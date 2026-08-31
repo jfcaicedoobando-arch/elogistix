@@ -34,7 +34,8 @@ export function useNuevoProveedorController(
   prefill?: PrefillProveedor,
 ) {
   const { organizationId } = useOrgFilter();
-  const [form, setForm] = useState<NuevoProveedorForm>(() => formInicialProveedor(prefill));
+  const initialForm = useState(() => formInicialProveedor(prefill))[0];
+  const [form, setForm] = useState<NuevoProveedorForm>(() => initialForm);
   const [saving, setSaving] = useState(false);
   const [step, setStep] = useState<1 | 2>(1);
   const [documentos, setDocumentos] = useState<DocumentoChecklist[]>([]);
@@ -77,6 +78,20 @@ export function useNuevoProveedorController(
     if (isGasto && !form.subtipo_gasto) return false;
     return true;
   };
+
+  /** YG-06: etiquetas de lo que falta para poder avanzar/guardar el alta. */
+  const faltantesStep1 = (): string[] => {
+    const items: string[] = [];
+    if (!form.categoria) items.push("categoría");
+    if (!form.nombre.trim()) items.push("nombre");
+    if (!form.origen_proveedor) items.push("origen (nacional/extranjero)");
+    if (!form.rfc.trim()) items.push(rfcLabel);
+    if (isLogistico && !form.tipo) items.push("tipo de proveedor logístico");
+    if (isLogistico && isAgenteCarga && !form.pais) items.push("país");
+    if (isGasto && !form.subtipo_gasto) items.push("subtipo de gasto");
+    return items;
+  };
+
 
 
   const setField = <K extends keyof NuevoProveedorForm>(field: K, value: NuevoProveedorForm[K]) =>
@@ -146,6 +161,8 @@ export function useNuevoProveedorController(
     onClose();
   };
 
+  const isDirty = JSON.stringify(form) !== JSON.stringify(initialForm) || documentos.some((d) => d.adjuntado);
+
   const handleSave = async () => {
 
     const validacion = preparePayload(form);
@@ -184,6 +201,8 @@ export function useNuevoProveedorController(
     rfcDuplicado,
     saving,
     isStep1Valid: isStep1Valid(),
+    faltantesStep1: faltantesStep1(),
+    isDirty,
     setField,
     setStep,
     handleCategoriaChange,

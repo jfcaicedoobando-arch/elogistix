@@ -1,15 +1,27 @@
-import { useMemo } from "react";
-import { useTableFilters } from "@/hooks/shared/useTableFilters";
-import { useCotizaciones } from "@/features/cotizacion/hooks/useCotizaciones";
+/**
+ * Controller de la página de listado de Cotizaciones.
+ *
+ * YG-03: la paginación, el orden, la búsqueda y los filtros se resuelven en el
+ * servidor (`services/paginados.ts`) y los KPIs/conteos con `count: "exact"`
+ * (`services/agregados.ts`). Antes se traían hasta 1000 filas (`CAP_POSTGREST`)
+ * y todo se filtraba/paginaba en memoria: con más de 1000 cotizaciones las más
+ * viejas desaparecían del listado, de los KPIs y del CSV.
+ */
+import { useQuery } from "@tanstack/react-query";
+import { useServerPagedList } from "@/hooks/shared/useServerPagedList";
+import { useOrgFilter } from "@/hooks/shared/useOrgFilter";
 import { useClientesForSelect } from "@/features/cliente/hooks/useClientes";
 import { usePermissions } from "@/hooks/shared/usePermissions";
+import { staleTimes } from "@/lib/query/staleTimes";
 import { useCotizacionActions } from "./useCotizacionActions";
 import {
-  esAceptadaSinEmbarque,
-  matchesCotizacionFilter,
-  useCotizacionKpis,
-  type SegmentoCotizacion,
-} from "./cotizacionesListFilters";
+  fetchCotizacionesPaginadas,
+  fetchTodasCotizacionesParaExportar,
+  SORT_KEY_TO_COLUMN,
+  type CotizacionesFiltrosSql,
+} from "@/features/cotizacion/services/paginados";
+import { fetchCotizacionAgregados } from "@/features/cotizacion/services/agregados";
+import type { CotizacionListItem, SegmentoCotizacion } from "@/features/cotizacion/services/cotizacionListTypes";
 
 export const ESTADOS_COTIZACION = [
   "Borrador",
@@ -24,18 +36,7 @@ export const ESTADOS_COTIZACION = [
 
 // re-export for backward-compat with prior single-file controller.
 export { useCotizacionActions };
-
-export type { CotizacionListItem, SegmentoCotizacion, CotizacionFilterParams } from "./cotizacionesListFilters";
-export {
-  matchesSearch,
-  esCotizacionInactivaOculta,
-  matchesSegmento,
-  esAceptadaSinEmbarque,
-  matchesCotizacionFilter,
-  useCotizacionKpis,
-} from "./cotizacionesListFilters";
-
-// ── Hook composer ───────────────────────────────────────────────────────────
+export type { CotizacionListItem, SegmentoCotizacion };
 
 const DEFAULT_FILTERS = {
   estado: "todos",
@@ -50,22 +51,44 @@ const DEFAULT_FILTERS = {
 
 type CotizacionFilters = Record<keyof typeof DEFAULT_FILTERS, string>;
 
-/**
- * Controller de la página de listado de Cotizaciones.
- * Ensambla queries + filtros/paginación + KPIs derivados + acciones de fila.
- *
- * v14: migrado a `useTableFilters` + `UnifiedFiltersBar`.
- */
+const SORTABLE_KEYS = Object.keys(SORT_KEY_TO_COLUMN);
+const KPIS_VACIOS = { total: 0, aceptadas: 0, rechazadas: 0, tasa: "0.0" };
+const CONTEOS_VACIOS = { clientes: 0, prospectos: 0, todas: 0 };
+
+function normalizarSegmento(valor: string): SegmentoCotizacion {
+  return valor === "prospectos" || valor === "todas" ? valor : "clientes";
+}
+
+function aFiltrosSql(
+  organizationId: string | null,
+  search: string,
+  filters: CotizacionFilters,
+): CotizacionesFiltrosSql {
+  return {
+    organizationId,
+    search,
+    filterEstado: filters.estado,
+    filterCliente: filters.cliente,
+    filterSinCostos: filters.sinCostos === "si",
+    incluirInactivas: filters.incluirInactivas === "si",
+    soloAceptadasSinEmbarque: filters.aceptadasSinEmbarque === "si",
+    segmento: normalizarSegmento(filters.segmento),
+  };
+}
+
 export function useCotizacionesPageController() {
   const { canEdit } = usePermissions();
-  // R-06: la vista necesita distinguir "sin resultados" de "la consulta falló".
-  const { data: cotizaciones = [], isLoading, isError, refetch } = useCotizaciones();
+  const { organizationId } = useOrgFilter();
   const { data: clientes = [] } = useClientesForSelect();
   const actions = useCotizacionActions();
 
-  const tf = useTableFilters<CotizacionFilters>({
+  const listQueryKey = ["cotizaciones", "paginadas", organizationId];
+  const lista = useServerPagedList<CotizacionListItem, CotizacionFilters>({
+    queryKey: listQueryKey,
     defaultFilters: { ...DEFAULT_FILTERS },
     defaultPageSize: 50,
+    defaultSort: { key: "fecha", dir: "desc" },
+    sortableKeys: SORTABLE_KEYS,
     filterLabels: {
       estado: "Estado",
       cliente: "Cliente",
@@ -75,87 +98,75 @@ export function useCotizacionesPageController() {
       // El segmento se controla con tabs propios, no como chip de filtro.
       segmento: "Segmento",
     },
+    fetcher: (args) =>
+      fetchCotizacionesPaginadas({
+        ...aFiltrosSql(organizationId, args.search, args.filters),
+        page: args.page,
+        pageSize: args.pageSize,
+        sortKey: args.sortKey,
+        sortDir: args.sortDir,
+      }),
   });
 
-  const filterEstado = tf.filters.estado;
-  const filterCliente = tf.filters.cliente;
-  const filterSinCostos = tf.filters.sinCostos === "si";
-  const incluirInactivas = tf.filters.incluirInactivas === "si";
-  const soloAceptadasSinEmbarque = tf.filters.aceptadasSinEmbarque === "si";
-  const segmento = (tf.filters.segmento === "prospectos" || tf.filters.segmento === "todas"
-    ? tf.filters.segmento
-    : "clientes") as SegmentoCotizacion;
+  const segmento = normalizarSegmento(lista.filters.segmento);
 
-  const filtered = useMemo(
-    () =>
-      cotizaciones.filter((c) =>
-        matchesCotizacionFilter(c, {
-          search: tf.search,
-          filterEstado,
-          filterCliente,
-          filterSinCostos,
-          incluirInactivas,
-          soloAceptadasSinEmbarque,
-          segmento,
-        }),
-      ),
-    [
-      cotizaciones, tf.search, filterEstado, filterCliente, filterSinCostos,
-      incluirInactivas, soloAceptadasSinEmbarque, segmento,
-    ],
-  );
+  const agregadosQueryKey = ["cotizaciones", "agregados", organizationId, segmento];
+  const { data: agregados } = useQuery({
+    queryKey: agregadosQueryKey,
+    queryFn: () => fetchCotizacionAgregados(organizationId, segmento),
+    staleTime: staleTimes.MEDIUM,
+  });
 
-  // Conteos por segmento para los tabs (ignoran el resto de filtros).
-  const segmentoConteos = useMemo(() => {
-    let clientes = 0;
-    let prospectos = 0;
-    for (const c of cotizaciones) {
-      if (c.es_prospecto === true) prospectos += 1;
-      else clientes += 1;
-    }
-    return { clientes, prospectos, todas: clientes + prospectos };
-  }, [cotizaciones]);
-
-  // O4.5(a): contador de la bandeja, independiente de los filtros visibles.
-  const totalAceptadasSinEmbarque = useMemo(
-    () => cotizaciones.filter(esAceptadaSinEmbarque).length,
-    [cotizaciones],
-  );
-
-
-  const { items: paginated, totalPages } = tf.paginate(filtered);
-  const kpis = useCotizacionKpis(cotizaciones, segmento);
+  const filtrosActuales = aFiltrosSql(organizationId, lista.search, lista.filters);
 
   return {
     // datos
-    isLoading,
-    isError,
-    refetch,
+    isLoading: lista.isLoading,
+    isError: !!lista.error,
+    refetch: lista.refetch,
     clientes,
-    paginated,
-    filtered,
-    kpis,
+    paginated: lista.rows,
+    /** Total del servidor (ya no es el largo del array en memoria). */
+    total: lista.count,
+    kpis: agregados?.kpis ?? KPIS_VACIOS,
     canEdit,
-    // filtros (compatibilidad)
-    search: tf.search, filterEstado,
-    filterCliente,
-    filterSinCostos,
-    incluirInactivas,
-    soloAceptadasSinEmbarque,
+    // filtros
+    search: lista.search,
+    filterEstado: lista.filters.estado,
+    filterCliente: lista.filters.cliente,
+    filterSinCostos: lista.filters.sinCostos === "si",
+    incluirInactivas: lista.filters.incluirInactivas === "si",
+    soloAceptadasSinEmbarque: lista.filters.aceptadasSinEmbarque === "si",
     segmento,
-    segmentoConteos,
-    totalAceptadasSinEmbarque,
-    page: tf.page, pageSize: tf.pageSize, totalPages,
-    setSearch: tf.setSearch, setFilter: tf.setFilter,
-    setPage: tf.setPage, setPageSize: tf.setPageSize,
+    segmentoConteos: agregados?.segmentoConteos ?? CONTEOS_VACIOS,
+    totalAceptadasSinEmbarque: agregados?.totalAceptadasSinEmbarque ?? 0,
+    page: lista.page,
+    pageSize: lista.pageSize,
+    totalPages: lista.totalPages,
+    setSearch: lista.setSearch,
+    setFilter: lista.setFilter,
+    setPage: lista.setPage,
+    setPageSize: lista.setPageSize,
+    controlledSort: lista.controlledSort,
+    setSort: lista.setSort,
+    pagination: lista.pagination,
     // UnifiedFiltersBar
-    activeChips: tf.activeChips, activeCount: tf.activeCount, resetAll: tf.resetAll,
+    activeChips: lista.activeChips,
+    activeCount: lista.activeCount,
+    resetAll: lista.resetAll,
     // acciones (delegadas a useCotizacionActions)
     cotizacionAEliminar: actions.cotizacionAEliminar,
-    setCotizacionAEliminar: actions.setCotizacionAEliminar, isDeleting: actions.isDeleting,
+    setCotizacionAEliminar: actions.setCotizacionAEliminar,
+    isDeleting: actions.isDeleting,
     confirmarEliminar: actions.confirmarEliminar,
-    exportar: () => actions.exportar(filtered),
-    irANueva: actions.irANueva, irAEditar: actions.irAEditar,
-    irADetalle: actions.irADetalle, prefetchCotizacion: actions.prefetchCotizacion,
+    /** YG-03: el CSV trae TODO lo filtrado (iterando por lotes), no la página. */
+    exportar: () =>
+      actions.exportar(() =>
+        fetchTodasCotizacionesParaExportar(filtrosActuales, lista.sortKey, lista.sortDir),
+      ),
+    irANueva: actions.irANueva,
+    irAEditar: actions.irAEditar,
+    irADetalle: actions.irADetalle,
+    prefetchCotizacion: actions.prefetchCotizacion,
   };
 }

@@ -52,6 +52,11 @@ export function DialogTraspasoCuentas({ open, onOpenChange, cuentas }: DialogTra
   const tipoCambioFinal = mismoMoneda ? 1 : (factorOrigenDestino ?? 0);
   const bloqueado = !!error || isPending || !(tipoCambioFinal > 0);
 
+  // YG-04: hay datos capturados que se perderían al cerrar el modal.
+  const isDirty =
+    !!state.origenId || !!state.destinoId || state.montoOrigen > 0 ||
+    state.comision > 0 || state.concepto.trim() !== "" || state.referencia.trim() !== "";
+
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -83,6 +88,7 @@ export function DialogTraspasoCuentas({ open, onOpenChange, cuentas }: DialogTra
       size="lg"
       formId={FORM_ID}
       onSubmit={handleSubmit}
+      isDirty={isDirty}
       footer={
         <FormDialogFooter
           formId={FORM_ID}

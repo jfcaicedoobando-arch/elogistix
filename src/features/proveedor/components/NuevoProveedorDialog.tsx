@@ -12,6 +12,7 @@ import { useNuevoProveedorController } from "@/features/proveedor/hooks";
 import type { PrefillProveedor } from "@/features/proveedor/hooks/useNuevoProveedorController.prefill";
 import { NuevoProveedorStep1 } from "./NuevoProveedorStep1";
 import { NuevoProveedorStep2 } from "./NuevoProveedorStep2";
+import { FaltantesHint } from "@/features/facturacion/components/FaltantesHint";
 
 interface Props {
   open: boolean;
@@ -45,13 +46,18 @@ export default function NuevoProveedorDialog({ open, onOpenChange, onSave, prefi
       size="xl"
       stepper={{ step: c.step, totalSteps: 2, labels: ["Identificación", "Datos bancarios"] }}
       headerAside={headerAside}
+      // YG-04: con datos capturados, cerrar por X/Escape/clic exterior pide confirmación.
+      isDirty={c.isDirty}
       footer={c.step === 1 ? (
-        <>
-          <Button variant="outline" onClick={c.resetAndClose}>Cancelar</Button>
-          <Button onClick={c.handleNext} disabled={!c.isStep1Valid}>
-            Siguiente <ArrowRight className="h-4 w-4 ml-1" />
-          </Button>
-        </>
+        <div className="flex w-full flex-wrap items-center gap-2">
+          {!c.isStep1Valid && <FaltantesHint items={c.faltantesStep1} className="mr-auto" />}
+          <div className="ml-auto flex flex-wrap items-center gap-2">
+            <Button variant="outline" onClick={c.resetAndClose}>Cancelar</Button>
+            <Button onClick={c.handleNext} disabled={!c.isStep1Valid}>
+              Siguiente <ArrowRight className="h-4 w-4 ml-1" />
+            </Button>
+          </div>
+        </div>
       ) : (
         <>
           <Button variant="outline" onClick={() => c.setStep(1)} disabled={c.saving}>

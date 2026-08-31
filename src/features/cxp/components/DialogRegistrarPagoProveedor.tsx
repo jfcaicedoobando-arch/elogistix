@@ -101,6 +101,10 @@ export function DialogRegistrarPagoProveedor({ open, onOpenChange, factura: fact
   const submitDisabled = registrar.isPending || validarPago() !== null;
   const submitTitle = computeSubmitTitle(noAprobada, f.bloqueadoPorTc, faltaCuenta);
 
+  // YG-04: hay datos capturados que se perderían si se cierra el modal.
+  const isDirty =
+    f.montoNum > 0 || f.referencia.trim() !== "" || f.notas.trim() !== "" || !!f.cuentaId;
+
 
   const footer = (
     <>
@@ -124,6 +128,7 @@ export function DialogRegistrarPagoProveedor({ open, onOpenChange, factura: fact
       description={factura ? `Aplica un pago contra el saldo pendiente de la factura seleccionada.` : undefined}
       size="2xl"
       footer={footer}
+      isDirty={isDirty}
     >
       {factura && <PagoFacturaHeaderInfo factura={factura} />}
 

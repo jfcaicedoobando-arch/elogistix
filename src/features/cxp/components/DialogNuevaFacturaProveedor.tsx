@@ -121,6 +121,8 @@ function DialogNuevaFacturaProveedorForm({
         }
         size="5xl"
         footer={footer}
+        // YG-04: con captura en curso, cerrar por X/Escape/clic exterior pide confirmación.
+        isDirty={hayCaptura}
         stepper={{ step: pasos.paso, totalSteps: pasos.totalPasos, labels: [...pasos.etiquetas] }}
         headerAside={
           <TotalesChipDesglose
