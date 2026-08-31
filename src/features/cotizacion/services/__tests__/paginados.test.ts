@@ -110,6 +110,39 @@ describe("fetchCotizacionesPaginadas", () => {
   });
 });
 
+describe("filtro Sin costos (YG-03)", () => {
+  it("filtra en el servidor y muestra una candidata más allá de la fila 1000 con count exacto", async () => {
+    // Fila 1200 del conjunto: con el viejo pre-filtrado topado a 1000 ids
+    // jamás llegaba al listado.
+    estado.respuestas.push({
+      data: [{ id: "c1200", folio: "COT-2021-1200", cotizacion_costos: [] }],
+      count: 1234,
+      error: null,
+    });
+    const res = await fetchCotizacionesPaginadas({
+      ...FILTROS,
+      filterSinCostos: true,
+      page: 24,
+      pageSize: 50,
+    });
+
+    // Una sola consulta: no hay pre-resolución de ids en el cliente.
+    expect(estado.llamadas).toHaveLength(1);
+    expect(estado.llamadas[0].table).toBe("cotizaciones");
+    // Nada de `.limit(...)` ni `.in("id", [...])` silenciosos.
+    expect(ops().some((o) => o.op === "limit")).toBe(false);
+    expect(ops().some((o) => o.op === "in")).toBe(false);
+    // El filtro viaja al servidor: flag + ausencia de costos embebidos.
+    expect(ops().some((o) => o.op === "eq" && o.args[0] === "sin_desglose_costos" && o.args[1] === true)).toBe(true);
+    expect(ops().some((o) => o.op === "is" && o.args[0] === "cotizacion_costos" && o.args[1] === null)).toBe(true);
+    expect(ops().find((o) => o.op === "range")?.args).toEqual([1200, 1249]);
+    // Count exacto del servidor y la fila candidata presente.
+    expect(res.count).toBe(1234);
+    expect(res.rows[0].folio).toBe("COT-2021-1200");
+    expect(res.rows[0].cotizacion_costos_count).toBe(0);
+  });
+});
+
 describe("fetchTodasCotizacionesParaExportar", () => {
   it("itera por lotes hasta traer TODO lo filtrado (2300 filas en 3 lotes)", async () => {
     estado.respuestas.push(

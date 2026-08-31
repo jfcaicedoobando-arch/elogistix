@@ -1,5 +1,5 @@
 -- Espejo canónico de public.cancelar_liquidacion_comision
--- Fuente vigente (mayor timestamp): 20260908000000_yg02_liquidaciones_rol_por_org.sql
+-- Fuente vigente (mayor timestamp): 20260831211719_782b01f9-bd93-4a02-adeb-50ea3c35d9c7.sql
 -- Vigilado por `bun run audit:replay-mirror` y `audit:schema-functions`.
 
 CREATE OR REPLACE FUNCTION public.cancelar_liquidacion_comision(p_liquidacion_id uuid, p_motivo text)
