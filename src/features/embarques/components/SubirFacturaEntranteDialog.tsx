@@ -8,7 +8,9 @@
  * v13.506.0 — El operador marca a qué conceptos de costo corresponde y confirma
  * con un resumen antes de enviar.
  */
+import { useState } from "react";
 import { Inbox } from "lucide-react";
+
 import { notifyError } from "@/lib/ui/appFeedback";
 import { Button } from "@/components/ui/button";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
