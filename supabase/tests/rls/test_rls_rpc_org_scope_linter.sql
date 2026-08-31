@@ -76,7 +76,6 @@ DECLARE
     --    infraestructura global (email, logs, webhooks), no documentos tenant.
     'email_queue_dispatch',
     'detectar_alertas_app_logs',
-    'purge_app_logs_old',
     'purgar_facturapi_webhook_eventos',
     'expirar_cotizaciones_job',
     'seed_demo_organization',

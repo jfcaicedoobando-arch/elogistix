@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.817.1] - 2026-08-31
+- CI: se quitó `purge_app_logs_old` de la whitelist del linter org-scope (ya no es ejecutable por `authenticated` desde la Ola 10 YAGNI); la suite `rpc_org_scope_linter` vuelve a verde.
+
 ## [13.817.0] - 2026-08-31
 - Timbrado: los errores de `facturapi-emitir` muestran mensaje en español (sesión expirada, sin permiso, factura no encontrada) en vez del slug técnico.
 - Lint/Power-of-10: se redujo la complejidad de `loadDraft`, `updateCotizacion`, `NuevoEmbarque` (pasos extraídos a `NuevoEmbarquePasos`) y la validación de `useTraspasoForm`, sin cambios de comportamiento.
