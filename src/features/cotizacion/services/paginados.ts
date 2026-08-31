@@ -6,7 +6,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { orIlike } from "@/lib/search/ilike";
 import { ESTADOS_INACTIVOS } from "@/features/cotizacion/domain/lifecycle";
-import { CAP_POSTGREST } from "@/constants/queryCaps";
 import { COTIZACION_LIST_COLUMNS, flattenCotizacionListRow } from "./queries";
 import type { CotizacionListItem, SegmentoCotizacion } from "./cotizacionListTypes";
 
@@ -48,37 +47,6 @@ export interface CotizacionesPaginadasResult {
   count: number;
 }
 
-/** UUID que jamás existe: fuerza un resultado vacío sin romper `.in(...)`. */
-const UUID_VACIO = "00000000-0000-0000-0000-000000000000";
-
-/**
- * "Sin costos" = `sin_desglose_costos = true` Y sin filas en `cotizacion_costos`.
- * PostgREST no permite filtrar el padre por el conteo de un recurso embebido,
- * así que se resuelve en dos pasos acotados (candidatas con el flag → cuáles
- * de esas ya tienen costos cargados) en vez de traer todo el listado.
- */
-async function resolveSinCostosIds(organizationId: string | null): Promise<string[]> {
-  let candidatas = supabase
-    .from("cotizaciones")
-    .select("id")
-    .eq("sin_desglose_costos", true)
-    .is("deleted_at", null);
-  if (organizationId) candidatas = candidatas.eq("organization_id", organizationId);
-  const { data, error } = await candidatas.limit(CAP_POSTGREST);
-  if (error) throw error;
-  const ids = (data ?? []).map((r) => r.id as string);
-  if (ids.length === 0) return [];
-
-  const { data: conCostos, error: errCostos } = await supabase
-    .from("cotizacion_costos")
-    .select("cotizacion_id")
-    .in("cotizacion_id", ids)
-    .limit(CAP_POSTGREST);
-  if (errCostos) throw errCostos;
-  const conCostosSet = new Set((conCostos ?? []).map((r) => r.cotizacion_id as string));
-  return ids.filter((id) => !conCostosSet.has(id));
-}
-
 interface FiltrableQuery {
   is(col: string, val: null): FiltrableQuery;
   eq(col: string, val: unknown): FiltrableQuery;
@@ -91,7 +59,6 @@ interface FiltrableQuery {
 export function aplicarFiltrosCotizaciones<T extends FiltrableQuery>(
   query: T,
   f: CotizacionesFiltrosSql,
-  sinCostosIds: string[] | null,
 ): T {
   let q = query.is("deleted_at", null);
   if (f.organizationId) q = q.eq("organization_id", f.organizationId) as T;
@@ -117,8 +84,14 @@ export function aplicarFiltrosCotizaciones<T extends FiltrableQuery>(
     }
   }
 
+  // YG-03: "Sin costos" = flag `sin_desglose_costos` Y cero filas en
+  // `cotizacion_costos`. Se resuelve 100% en el servidor filtrando por el
+  // recurso embebido (`cotizacion_costos=is.null`, left join de PostgREST),
+  // por lo que el conteo exacto y la paginación siguen siendo de la base.
+  // Antes se pre-resolvían los ids con dos consultas topadas a 1000 filas.
   if (f.filterSinCostos) {
-    q = q.in("id", sinCostosIds && sinCostosIds.length > 0 ? sinCostosIds : [UUID_VACIO]) as T;
+    q = q.eq("sin_desglose_costos", true) as T;
+    q = q.is("cotizacion_costos", null) as T;
   }
 
   return q as T;
@@ -127,8 +100,6 @@ export function aplicarFiltrosCotizaciones<T extends FiltrableQuery>(
 export async function fetchCotizacionesPaginadas(
   p: CotizacionesPaginadasParams,
 ): Promise<CotizacionesPaginadasResult> {
-  const sinCostosIds = p.filterSinCostos ? await resolveSinCostosIds(p.organizationId) : null;
-
   const sortColumn = SORTABLE_COTIZACION_COLUMNS.includes(
     SORT_KEY_TO_COLUMN[p.sortKey ?? ""] as SortableCotizacionColumn,
   )
@@ -142,7 +113,7 @@ export async function fetchCotizacionesPaginadas(
       range: (from: number, to: number) => Promise<{ data: unknown; count: number | null; error: unknown }>;
     };
 
-  query = aplicarFiltrosCotizaciones(query, p, sinCostosIds) as typeof query;
+  query = aplicarFiltrosCotizaciones(query, p) as typeof query;
 
   const from = p.page * p.pageSize;
   const to = from + p.pageSize - 1;
