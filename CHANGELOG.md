@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.817.2] - 2026-08-31
+- CI/FIX-H6-23: se re-aplicaron los permisos canónicos REVOKE/GRANT a funciones `SECURITY DEFINER` creadas en migraciones inmutables de Ola 7 v15, Ola 8 v15 y Ola 1 reabrir/cancelar. El baseline del auditor de migraciones se elevó a `20260908000000` para marcar esos archivos como legacy auditado.
+
 ## [13.817.1] - 2026-08-31
 - CI: se quitó `purge_app_logs_old` de la whitelist del linter org-scope (ya no es ejecutable por `authenticated` desde la Ola 10 YAGNI); la suite `rpc_org_scope_linter` vuelve a verde.
 
