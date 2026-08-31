@@ -20,8 +20,10 @@ import {
 import {
   buildInitialForm, calcularTotal, esFormValido,
   calcularErrores, camposFaltantes, computeGuardarLabel,
-  computeValido, getTituloModal,
+  computeValido, getTituloModal, esTarifaSucia,
 } from "./TarifaForm.helpers";
+import { useFormDialogCerrar } from "@/components/shared/formDialogCloseContext";
+
 import { formatUSD } from "@/lib/formatters";
 import { useTarifaSubmit } from "@/features/costeo/hooks/useTarifaSubmit";
 import type { TarifaInput, TarifaRecargoInput } from "@/features/costeo/services/tarifas";
