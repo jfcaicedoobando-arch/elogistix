@@ -37,7 +37,7 @@ const baseParams = {
   facturaId: "fact-1",
   saldoFactura: 10000,
   uuidFacturaOriginal: "UUID-1",
-  monedaFactura: "MXN",
+  monedaFactura: "MXN" as const,
   tipoCambioFactura: 1,
 };
 
