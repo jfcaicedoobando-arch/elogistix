@@ -91,4 +91,7 @@ export const LC_CODE_MESSAGES_FINANCIERO: Record<string, string> = {
   LC_MONEDA_VENTA_NO_SOPORTADA:
     "Los conceptos de venta sólo se pueden facturar en MXN o USD. Cambia la moneda de los conceptos antes de continuar.",
 
+
+  LC_TC_FUERA_DE_BANDA:
+    "El tipo de cambio está fuera de la banda razonable (5 a 40 pesos por divisa), normalmente por un error de captura. Corrígelo con el valor del DOF del día.",
 };

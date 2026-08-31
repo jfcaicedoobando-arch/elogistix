@@ -120,6 +120,24 @@ export function validateNcContext(ctx: NotaCreditoContext): ValidationIssue[] {
   return issues;
 }
 
+/**
+ * Ola 4 · A — total monetario de la NC (sin impuestos): base para bloquear las
+ * notas de crédito en $0. Espejo de `validarTotalPositivo` de facturapi-emitir:
+ * `validateNcContext` sólo exige cantidad > 0 y precio >= 0, así que una NC con
+ * todos los precios en 0 pasaba la validación local y llegaba al PAC.
+ */
+export function totalNcSinImpuestos(ctx: NotaCreditoContext): number {
+  return ctx.conceptos.reduce(
+    (acc, c) => acc + Number(c.cantidad ?? 0) * Number(c.precio_unitario ?? 0),
+    0,
+  );
+}
+
+/** `null` = puede continuar; si no, motivo del bloqueo (422 nc_total_cero). */
+export function ncTotalEsCero(ctx: NotaCreditoContext): boolean {
+  return !(totalNcSinImpuestos(ctx) > 0);
+}
+
 /** Ola 4 · N19: un concepto exento se timbra con factor "Exento", no "Tasa" 0. */
 export function buildTaxesNc(c: ConceptoNC) {
   const tipo = c.tipo_iva ?? (c.tasa_iva === 0 ? "tasa_0" : "gravado_16");

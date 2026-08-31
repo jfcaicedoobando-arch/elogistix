@@ -18,4 +18,7 @@ export const LC_CODE_MESSAGES_TRASPASOS: Record<string, string> = {
   LC_TRASPASO_TC_REQUERIDO:
     "Captura el tipo de cambio del día para traspasar entre cuentas de distinta moneda.",
   LC_TRASPASO_YA_CANCELADO: "El traspaso ya está cancelado.",
+
+  LC_TRASPASO_SALDO_INSUFICIENTE:
+    "El saldo de la cuenta de origen no alcanza para el traspaso más la comisión. Baja el monto o registra primero los depósitos pendientes.",
 };
