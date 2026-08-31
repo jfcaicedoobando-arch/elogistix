@@ -168,9 +168,15 @@ export function FormDialogShell({
           <div className="border-t bg-muted/30 px-6 py-3">{stickyBottom}</div>
         )}
 
-        <div className="border-t bg-background px-6 py-3 flex flex-wrap justify-end items-center gap-2">
-          {footer}
-        </div>
+        {/* El footer se envuelve en el contexto de cierre guardado: sus botones
+            (p.ej. "Cancelar") pueden usar `useFormDialogCerrar()` y respetar
+            la confirmación de descarte cuando hay captura. */}
+        <FormDialogCloseContext.Provider value={cerrarGuardado}>
+          <div className="border-t bg-background px-6 py-3 flex flex-wrap justify-end items-center gap-2">
+            {footer}
+          </div>
+        </FormDialogCloseContext.Provider>
+
 
         <ConfirmActionDialog
           open={confirmarDescartar}
