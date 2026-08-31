@@ -186,30 +186,4 @@ export const REGLA_INFO: Record<ReglaAuditoria, ReglaInfo> = {
   },
 };
 
-/** Orden canónico de presentación (mayor severidad operativa primero). */
-export const REGLAS_ORDEN: ReglaAuditoria[] = [
-  "factura_cancelada_sin_sustitucion",
-  "cxc_vencida",
-  "cxp_vencida",
-  "docs_pendientes_avanzado",
-  "ventas_sin_facturar",
-  "margen_negativo",
-  "factura_sin_timbrar",
-  "rep_pendiente",
-  "cxp_por_capturar_estancada",
-  "contenedor_datos_incompletos",
-  "contenedor_fechas_incompletas",
-  "margen_bajo",
-  "venta_total_descuadrado",
-  "contenedores_totales_descuadrados",
-  "proforma_inconsistente",
-  "proforma_vencida",
-  "proforma_borrador_abandonada",
-  "venta_sin_costo",
-  "costo_sin_venta",
-  "costos_repetidos",
-  "embarque_huerfano",
-  "docs_faltantes",
-  "fechas",
-  "tipo_cambio_faltante",
-];
+export { REGLAS_ORDEN } from "@/features/auditoria/constants/reglasOrden";
