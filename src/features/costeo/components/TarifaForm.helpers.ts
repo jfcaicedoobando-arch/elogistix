@@ -90,3 +90,20 @@ export function computeGuardarLabel({ pendiente, esEdicion, rutasCount }: { pend
   if (rutasCount > 1) return `Guardar ${rutasCount} tarifas`;
   return "Guardar tarifa";
 }
+
+/**
+ * ¿Hay captura sin guardar en el formulario de tarifa? Compara el estado actual
+ * contra la fotografía tomada al abrir el modal (incluye las rutas elegidas en
+ * el alta en lote). Alimenta el `isDirty` de `FormDialogShell` para no perder
+ * lo capturado al cerrar con X / Escape / clic fuera / Cancelar.
+ */
+export function esTarifaSucia(
+  form: TarifaInput,
+  baseline: TarifaInput,
+  rutaIds: string[],
+  rutaIdsBase: string[],
+): boolean {
+  const mismasRutas =
+    JSON.stringify([...rutaIds].sort()) === JSON.stringify([...rutaIdsBase].sort());
+  return !mismasRutas || JSON.stringify(form) !== JSON.stringify(baseline);
+}

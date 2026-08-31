@@ -10,12 +10,15 @@ import {
 
 interface CotizacionesPageActionsProps {
   canEdit: boolean;
+  /** Total filtrado en servidor: con 0 no hay nada que exportar. */
+  totalFiltrado?: number;
   onExportar: () => void;
   onNueva: () => void;
 }
 
 export function CotizacionesPageActions({
   canEdit,
+  totalFiltrado,
   onExportar,
   onNueva,
 }: CotizacionesPageActionsProps) {
@@ -26,7 +29,13 @@ export function CotizacionesPageActions({
           <Sparkles className="h-4 w-4 mr-2" /> Plantillas
         </Link>
       </Button>
-      <Button variant="outline" onClick={onExportar} className="hidden sm:inline-flex">
+      <Button
+        variant="outline"
+        onClick={onExportar}
+        disabled={totalFiltrado === 0}
+        title={totalFiltrado === 0 ? "No hay cotizaciones que exportar con los filtros actuales." : undefined}
+        className="hidden sm:inline-flex"
+      >
         <Download className="h-4 w-4 mr-2" /> Exportar CSV
       </Button>
       {/* v13.223.0 · Capa 3 Tranche A · 3.2: acciones secundarias primero,
@@ -57,9 +66,10 @@ export function CotizacionesPageActions({
               <Sparkles className="mr-2 h-4 w-4" /> Plantillas
             </Link>
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={onExportar}>
+          <DropdownMenuItem onClick={onExportar} disabled={totalFiltrado === 0}>
             <Download className="mr-2 h-4 w-4" /> Exportar CSV
           </DropdownMenuItem>
+
         </DropdownMenuContent>
       </DropdownMenu>
     </>

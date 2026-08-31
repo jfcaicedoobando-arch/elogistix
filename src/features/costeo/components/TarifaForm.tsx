@@ -20,8 +20,10 @@ import {
 import {
   buildInitialForm, calcularTotal, esFormValido,
   calcularErrores, camposFaltantes, computeGuardarLabel,
-  computeValido, getTituloModal,
+  computeValido, getTituloModal, esTarifaSucia,
 } from "./TarifaForm.helpers";
+import { BotonCancelarTarifa } from "./TarifaFormCancelar";
+
 import { formatUSD } from "@/lib/formatters";
 import { useTarifaSubmit } from "@/features/costeo/hooks/useTarifaSubmit";
 import type { TarifaInput, TarifaRecargoInput } from "@/features/costeo/services/tarifas";
@@ -42,6 +44,8 @@ interface Props {
 }
 
 
+
+
 export function TarifaForm({ open, onOpenChange, initial, tarifaId, agenteIdFijo, agenteNombreFijo, tituloOverride, rutasOverride }: Props) {
   const { data: agentesData = [] } = useCosteoAgentes();
   const { data: rutasData = [] } = useCosteoRutas();
@@ -57,14 +61,22 @@ export function TarifaForm({ open, onOpenChange, initial, tarifaId, agenteIdFijo
   );
   const [rutaIds, setRutaIds] = useState<string[]>(() => (initial?.ruta_id ? [initial.ruta_id] : []));
   const [intentoEnvio, setIntentoEnvio] = useState(false);
+  // Fotografía al abrir: base para detectar captura sin guardar.
+  const [baseline, setBaseline] = useState<{ form: TarifaInput; rutaIds: string[] }>(() => ({
+    form: buildInitialForm(agenteIdFijo ? { ...initial, agente_id: agenteIdFijo } : initial),
+    rutaIds: initial?.ruta_id ? [initial.ruta_id] : [],
+  }));
 
   const esEdicion = Boolean(tarifaId);
   const multiple = !esEdicion;
 
   useEffect(() => {
     if (open) {
-      setForm(buildInitialForm(agenteIdFijo ? { ...initial, agente_id: agenteIdFijo } : initial));
-      setRutaIds(initial?.ruta_id ? [initial.ruta_id] : []);
+      const inicial = buildInitialForm(agenteIdFijo ? { ...initial, agente_id: agenteIdFijo } : initial);
+      const rutasIniciales = initial?.ruta_id ? [initial.ruta_id] : [];
+      setForm(inicial);
+      setRutaIds(rutasIniciales);
+      setBaseline({ form: inicial, rutaIds: rutasIniciales });
       setIntentoEnvio(false);
     }
   }, [open, initial, agenteIdFijo]);
@@ -72,6 +84,8 @@ export function TarifaForm({ open, onOpenChange, initial, tarifaId, agenteIdFijo
   const total = useMemo(() => calcularTotal(form), [form]);
   const valido = computeValido(esFormValido(form, { skipRutaId: multiple }), multiple, rutaIds.length);
   const pendiente = [crear, crearMultiples, actualizar].some((m) => m.isPending);
+  const sucio = esTarifaSucia(form, baseline.form, rutaIds, baseline.rutaIds);
+
   // Errores siempre calculados para validación reactiva.
   const erroresLive = calcularErrores(form, rutaIds.length, multiple);
   // Sólo se pintan los campos en rojo después del primer intento (evita "mar de rojo" al abrir).
@@ -105,6 +119,9 @@ export function TarifaForm({ open, onOpenChange, initial, tarifaId, agenteIdFijo
       open={open}
       onOpenChange={onOpenChange}
       icon={Tag}
+      // Al guardar, `onSuccess` cierra con `onOpenChange(false)` directo: no
+      // pasa por la guarda y por tanto no advierte.
+      isDirty={sucio && !pendiente}
       title={getTituloModal(tituloOverride, esEdicion)}
       description={multiple
         ? "Captura la tarifa una sola vez y elige una o varias rutas para generarlas en lote."
@@ -122,7 +139,8 @@ export function TarifaForm({ open, onOpenChange, initial, tarifaId, agenteIdFijo
             {tooltipFaltantes ?? "Listo para guardar."}
           </p>
           <div className="flex gap-2">
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={pendiente}>Cancelar</Button>
+            <BotonCancelarTarifa disabled={pendiente} onCerrarSinGuarda={() => onOpenChange(false)} />
+
             <Button
               type="submit"
               form="tarifa-form"

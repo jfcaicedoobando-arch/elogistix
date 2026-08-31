@@ -3,7 +3,8 @@
  * Extraído de `SinAcceso.tsx` para mantener el límite de 200 líneas y aislar
  * la lógica de copy (fácil de auditar/traducir) de la maquetación general.
  */
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useCallback } from "react";
 import { Home, LifeBuoy, LogOut, RefreshCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { signOutCurrentSession } from "@/lib/auth/signOut";
@@ -49,6 +50,17 @@ export function SinAccesoMensaje(props: Omit<SinAccesoContentProps, "onRetry" | 
 }
 
 export function SinAccesoAcciones({ variant, esAdministrador, onRetry, retrying }: SinAccesoContentProps) {
+  const navigate = useNavigate();
+  /**
+   * v13.819.1 — Antes el signOut limpiaba la sesión pero la pantalla se quedaba
+   * en `/sin-acceso` con el mensaje genérico hasta navegar a mano. Ahora la
+   * salida es determinista: cerrar sesión aterriza en `/login`.
+   */
+  const cerrarSesion = useCallback(async () => {
+    await signOutCurrentSession();
+    navigate("/login", { replace: true });
+  }, [navigate]);
+
   if (variant === "error-carga") {
     return (
       <div className="flex flex-col gap-2 sm:flex-row sm:justify-center">
@@ -61,7 +73,7 @@ export function SinAccesoAcciones({ variant, esAdministrador, onRetry, retrying 
             <LifeBuoy className="mr-2 h-4 w-4" aria-hidden /> Ver ayuda
           </Link>
         </Button>
-        <Button variant="outline" onClick={() => void signOutCurrentSession()}>
+        <Button variant="outline" onClick={() => void cerrarSesion()}>
           <LogOut className="mr-2 h-4 w-4" aria-hidden /> Cerrar sesión
         </Button>
       </div>
@@ -91,7 +103,7 @@ export function SinAccesoAcciones({ variant, esAdministrador, onRetry, retrying 
       </Button>
       <Button
         variant={variant === "permiso-modulo" || esAdministrador ? "outline" : "default"}
-        onClick={() => void signOutCurrentSession()}
+        onClick={() => void cerrarSesion()}
       >
         <LogOut className="mr-2 h-4 w-4" aria-hidden /> Cerrar sesión
       </Button>
