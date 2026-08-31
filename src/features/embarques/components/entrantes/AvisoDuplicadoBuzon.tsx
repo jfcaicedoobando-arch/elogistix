@@ -10,7 +10,7 @@ import { Link } from "react-router-dom";
 import { AlertTriangle } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/lib/contexts/AuthContext";
 import { hasRouteAccess } from "@/lib/access/roleRouteMatrix";
 import type { UbicacionDuplicadoBuzon } from "@/features/cxp/services/buzonDuplicado";
 
