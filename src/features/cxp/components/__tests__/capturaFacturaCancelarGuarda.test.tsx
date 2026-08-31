@@ -94,7 +94,7 @@ describe("cierre guardado de la captura de factura de proveedor", () => {
 
   it("X con captura real pide confirmación", () => {
     render(<Arnes hayCaptura />);
-    fireEvent.click(screen.getByRole("button", { name: /close/i }));
+    fireEvent.click(screen.getByRole("button", { name: /cerrar/i }));
     expect(confirmacion()).toBeInTheDocument();
     expect(reset).not.toHaveBeenCalled();
   });
@@ -108,9 +108,10 @@ describe("cierre guardado de la captura de factura de proveedor", () => {
 
   it("clic exterior con captura real pide confirmación", () => {
     render(<Arnes hayCaptura />);
-    const overlay = document.querySelector("[data-radix-dialog-overlay], [data-state='open'][class*='fixed']");
-    fireEvent.pointerDown(overlay ?? document.body);
-    fireEvent.keyDown(document.body, { key: "Escape" }); // fallback determinista
+    // En jsdom Radix cierra por `onPointerDownOutside`: el clic fuera del
+    // contenido llega al body, que está fuera del diálogo.
+    fireEvent.pointerDown(document.body);
+    fireEvent.keyDown(document.body, { key: "Escape" });
     expect(confirmacion()).toBeInTheDocument();
   });
 
