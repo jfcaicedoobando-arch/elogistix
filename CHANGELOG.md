@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.819.2] - 2026-08-31
+- **Factura de proveedor duplicada desde Costos del embarque**: al subir un XML/PDF ya capturado, el aviso ahora dice **dónde está** el documento en vez de mandar a "Compras › Facturas" (sección que roles como coordinador logístico no ven). Se distingue: ya registrada en este embarque, registrada en otro embarque de la organización (con su expediente), registrada en Compras sin embarque vinculado, pendiente de captura en el buzón, y duplicado de otra organización (mensaje genérico, sin revelar folios ni identificadores ajenos).
+- El origen de verdad es la nueva función de base `buzon_localizar_duplicado` (consulta, sin escrituras), que aplica el aislamiento entre organizaciones; el cliente ya no arma búsquedas propias. El conflicto viaja con código estable `BUZON_FACTURA_DUPLICADA` (409) y metadatos seguros.
+- El aviso aparece en línea dentro del diálogo del buzón, con el botón **Ver embarque** sólo cuando el rol tiene acceso a embarques y el destino es otro embarque; nunca navega solo. Sin permiso se muestra el expediente y la orientación, sin enlace a una sección prohibida.
+- Se conservan sin cambios la subida de facturas nuevas, la deduplicación por hash y la traducción del resto de errores.
+
 ## [13.819.1] - 2026-08-31
 - **Cotización nueva (P2)**: en el paso 1 del wizard, "Cancelar" ya no descarta la captura en silencio; pide confirmación cuando hay datos escritos (igual que el "Volver" del encabezado) y no advierte si se guardó bien. En los pasos siguientes sigue funcionando como "Anterior", sin diálogo.
 - **Portal del agente · Nueva tarifa (P2)**: el botón "Cancelar" del diálogo pasa por la misma confirmación de cambios sin guardar que la X, Escape y el clic exterior; tras guardar deja de advertir.
