@@ -5,48 +5,41 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import { BUCKET_CXP_INBOX } from "@/features/cxp/services/facturasEntrantes.types";
+import {
+  BuzonDuplicadoError,
+  localizarDuplicadoBuzon,
+  mensajeDuplicadoBuzon,
+} from "@/features/cxp/services/buzonDuplicado";
 
-/**
- * Error de validación ESPERADA del buzón (documento duplicado). Se marca con
- * `expected = true` para que el aviso llegue al usuario pero no a Sentry.
- */
-export class BuzonDuplicadoError extends Error {
-  readonly expected = true;
-  constructor(message: string) {
-    super(message);
-    this.name = "BuzonDuplicadoError";
-  }
-}
+export { BuzonDuplicadoError };
 
 /**
  * v13.414.0 — Evita gemelos en el buzón: si ya hay un documento vivo con el
- * mismo hash (archivo principal o XML) en la organización, no se crea/adjunta
- * otro renglón.
+ * mismo hash (archivo principal o XML), no se crea/adjunta otro renglón.
+ * v13.819.2 — La ubicación del duplicado la resuelve la RPC canónica
+ * `buzon_localizar_duplicado` (origen de verdad, con aislamiento multi-org),
+ * y el error viaja con metadatos para que la UI ofrezca "Ver embarque".
  */
 export async function validarNoDuplicadoEnBuzon(
   hash: string,
   organizationId: string,
   columna: "archivo_hash" | "xml_hash" = "archivo_hash",
+  ctx?: { uuidFiscal?: string | null; embarqueId?: string | null },
 ): Promise<void> {
-  const { data, error } = await supabase
-    .from("embarque_facturas_entrantes")
-    .select("estado")
-    .eq("organization_id", organizationId)
-    .eq(columna, hash)
-    .is("deleted_at", null)
-    .limit(1);
-  if (error || !data || data.length === 0) return;
-  const esXml = columna === "xml_hash";
+  void organizationId; // el alcance por organización lo aplica la RPC.
+  const ubicacion = await localizarDuplicadoBuzon({
+    hash,
+    columna,
+    uuidFiscal: ctx?.uuidFiscal ?? null,
+    embarqueId: ctx?.embarqueId ?? null,
+  });
+  if (!ubicacion) return;
   throw new BuzonDuplicadoError(
-    data[0].estado === "capturada"
-      ? esXml
-        ? "Este XML ya fue capturado como factura de proveedor. Búscala en Compras › Facturas."
-        : "Este archivo ya fue capturado como factura de proveedor. Búscala en Compras › Facturas."
-      : esXml
-        ? "Este XML ya está en el buzón esperando captura. Abre el documento existente en vez de subirlo otra vez."
-        : "Este archivo ya está en el buzón esperando captura. Abre el documento existente en vez de subirlo otra vez.",
+    mensajeDuplicadoBuzon(ubicacion, columna === "xml_hash"),
+    ubicacion,
   );
 }
+
 
 
 /**
