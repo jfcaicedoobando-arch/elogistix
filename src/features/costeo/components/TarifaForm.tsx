@@ -59,14 +59,22 @@ export function TarifaForm({ open, onOpenChange, initial, tarifaId, agenteIdFijo
   );
   const [rutaIds, setRutaIds] = useState<string[]>(() => (initial?.ruta_id ? [initial.ruta_id] : []));
   const [intentoEnvio, setIntentoEnvio] = useState(false);
+  // Fotografía al abrir: base para detectar captura sin guardar.
+  const [baseline, setBaseline] = useState<{ form: TarifaInput; rutaIds: string[] }>(() => ({
+    form: buildInitialForm(agenteIdFijo ? { ...initial, agente_id: agenteIdFijo } : initial),
+    rutaIds: initial?.ruta_id ? [initial.ruta_id] : [],
+  }));
 
   const esEdicion = Boolean(tarifaId);
   const multiple = !esEdicion;
 
   useEffect(() => {
     if (open) {
-      setForm(buildInitialForm(agenteIdFijo ? { ...initial, agente_id: agenteIdFijo } : initial));
-      setRutaIds(initial?.ruta_id ? [initial.ruta_id] : []);
+      const inicial = buildInitialForm(agenteIdFijo ? { ...initial, agente_id: agenteIdFijo } : initial);
+      const rutasIniciales = initial?.ruta_id ? [initial.ruta_id] : [];
+      setForm(inicial);
+      setRutaIds(rutasIniciales);
+      setBaseline({ form: inicial, rutaIds: rutasIniciales });
       setIntentoEnvio(false);
     }
   }, [open, initial, agenteIdFijo]);
@@ -74,6 +82,8 @@ export function TarifaForm({ open, onOpenChange, initial, tarifaId, agenteIdFijo
   const total = useMemo(() => calcularTotal(form), [form]);
   const valido = computeValido(esFormValido(form, { skipRutaId: multiple }), multiple, rutaIds.length);
   const pendiente = [crear, crearMultiples, actualizar].some((m) => m.isPending);
+  const sucio = esTarifaSucia(form, baseline.form, rutaIds, baseline.rutaIds);
+
   // Errores siempre calculados para validación reactiva.
   const erroresLive = calcularErrores(form, rutaIds.length, multiple);
   // Sólo se pintan los campos en rojo después del primer intento (evita "mar de rojo" al abrir).
