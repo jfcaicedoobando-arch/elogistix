@@ -104,3 +104,17 @@ export function montoEnMonedaDeFactura(a: {
   if (a.monedaPago === "MXN" && a.tcNum) return a.monto / a.tcNum;
   return a.monto; // otros cruces: se valida en la RPC
 }
+
+/**
+ * YG-04: ¿hay cambios sin guardar en la edición de un pago de proveedor?
+ * Vive aquí como función pura para no inflar la complejidad del diálogo.
+ */
+export function pagoProveedorEditadoSucio(
+  actual: Record<string, unknown>,
+  pago: PagoEditable | null,
+): boolean {
+  if (!pago) return false;
+  const inicial = valoresInicialesEdicion(pago) as Record<string, unknown>;
+  const campos = ["fecha", "monto", "moneda", "tc", "metodo", "referencia", "notas", "cuentaId", "diffMxn"];
+  return campos.some((k) => actual[k] !== inicial[k]);
+}
