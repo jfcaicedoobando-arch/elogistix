@@ -135,3 +135,23 @@ describe("computeGuardarLabel", () => {
     expect(computeGuardarLabel({ pendiente: false, esEdicion: false, rutasCount: 1 })).toBe("Guardar tarifa");
   });
 });
+
+describe("esTarifaSucia", () => {
+  const base = buildInitialForm();
+
+  it("sin captura no está sucia", () => {
+    expect(esTarifaSucia({ ...base }, base, [], [])).toBe(false);
+  });
+
+  it("capturar Notas la marca sucia", () => {
+    expect(esTarifaSucia({ ...base, notas: "Sin trasbordo" }, base, [], [])).toBe(true);
+  });
+
+  it("elegir rutas la marca sucia", () => {
+    expect(esTarifaSucia({ ...base }, base, ["r1"], [])).toBe(true);
+  });
+
+  it("mismas rutas en otro orden no ensucian", () => {
+    expect(esTarifaSucia({ ...base }, base, ["r2", "r1"], ["r1", "r2"])).toBe(false);
+  });
+});
