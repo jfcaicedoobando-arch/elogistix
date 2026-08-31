@@ -37,9 +37,7 @@ export function useRegistrarPagoInit(
       moneda: factura.moneda,
       formaPago: "03", referencia: "", notas: "", cuentaBancariaId: "",
     });
-    // `setValues` viene de useState: estable entre renders.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, factura, saldo]);
+  }, [open, factura, saldo, setValues]);
 
   return clientRequestIdRef;
 }
