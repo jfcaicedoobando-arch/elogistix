@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.814.0] - 2026-08-31
+
+- **Fix · "guardado" falso en embarques y cotizaciones**: los UPDATE directos de embarque (`embarqueDirectMutations`) y el cambio de estado de cotización (`updateEstadoCotizacion`) no revisaban las filas afectadas, así que un update filtrado por RLS o sobre un registro inexistente mostraba éxito y escribía bitácora sin cambiar nada. Ahora ambos usan `.select().maybeSingle()` y lanzan un error legible cuando afectan 0 filas; la bitácora sólo se escribe tras confirmar el cambio.
+- **Fix · guardas de llegada real que se saltaban**: en `actualizarFechaLlegadaRealEmbarque`, si el pre-select fallaba o el embarque no existía se ignoraba el error y se ejecutaba el UPDATE sin validar ETD, re-marcado ni estado. Ahora aborta antes de evaluar cualquier regla.
+
+
 ## [13.813.0] - 2026-08-31
 
 - **Fix · edición fantasma de conceptos en el wizard de embarques**: `actualizar_embarque_completo` sólo actualiza ventas en `pendiente`/`en_proforma` y costos que no estén `Pagado`, pero la UI dejaba editar y borrar cualquier renglón y luego mostraba "guardado correctamente" aunque la RPC lo hubiera descartado. Ahora el estado (`estado_facturacion` / `estado_liquidacion`) viaja en la hidratación y las filas ya facturadas o pagadas se muestran en sólo lectura, con el motivo en el tooltip y el botón de borrar deshabilitado (nuevo helper `conceptoBloqueado` con pruebas unitarias).
