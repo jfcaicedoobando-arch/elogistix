@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.819.1] - 2026-08-31
+- **Cotización nueva (P2)**: en el paso 1 del wizard, "Cancelar" ya no descarta la captura en silencio; pide confirmación cuando hay datos escritos (igual que el "Volver" del encabezado) y no advierte si se guardó bien. En los pasos siguientes sigue funcionando como "Anterior", sin diálogo.
+- **Portal del agente · Nueva tarifa (P2)**: el botón "Cancelar" del diálogo pasa por la misma confirmación de cambios sin guardar que la X, Escape y el clic exterior; tras guardar deja de advertir.
+- **Tarjeta "Por pagar" del inicio (P1)**: el rol Contador ya no cae en "Sin acceso" al usarla. La bandeja `/compras/por-pagar` sigue siendo de tesorería/administración (no se ampliaron permisos): para Contador la tarjeta lleva al listado de facturas de proveedor, que ve en su menú y tiene el mismo significado en modo consulta.
+- **Cotizaciones (P3)**: "Exportar CSV" queda deshabilitado cuando los filtros no devuelven resultados, con la causa visible en el tooltip.
+- **Sin acceso (P3)**: "Cerrar sesión" ahora sí regresa a la pantalla de inicio de sesión en lugar de quedarse en el mensaje genérico.
+
 ## [13.819.0] - 2026-08-31
 - **YG-01 · Crédito en facturación (P1)**: al timbrar una factura en moneda distinta de MXN, el límite de crédito ya no se calcula nunca con tipo de cambio 1 implícito. Si el T/C es nulo, 0, 1 o cae fuera de la banda fiscal (5–40 MXN/USD), el timbrado responde 503 `credito_no_verificable` antes de calcular.
 - **YG-02 · Liquidaciones de comisiones (P1)**: `registrar_pago_liquidacion` y `cancelar_liquidacion_comision` cargan la liquidación con `FOR UPDATE` y autorizan el rol **dentro de la organización dueña del registro** (antes bastaba tener el rol en cualquier organización). Se conserva la excepción explícita de `super_admin`. Nueva migración (`20260831211719`), espejos canónicos y guard SQL cross-org.
