@@ -27,6 +27,8 @@ import { CfdiMetaPreview } from "@/features/embarques/components/entrantes/CfdiM
 import { NotaContabilidadCampo } from "@/features/embarques/components/entrantes/NotaContabilidadCampo";
 import { SeccionProveedorEntrante } from "@/features/embarques/components/entrantes/SeccionProveedorEntrante";
 import { VerificacionMontoEntrante } from "@/features/embarques/components/entrantes/VerificacionMontoEntrante";
+import { AvisoDuplicadoBuzon } from "@/features/embarques/components/entrantes/AvisoDuplicadoBuzon";
+import { BuzonDuplicadoError } from "@/features/cxp/services/buzonDuplicado";
 
 interface Props {
   open: boolean;
@@ -105,6 +107,14 @@ export function SubirFacturaEntranteDialog({ open, onOpenChange, embarqueId, org
         </>
       )}
     >
+      {duplicado && (
+        <AvisoDuplicadoBuzon
+          mensaje={duplicado.message}
+          ubicacion={duplicado.ubicacion}
+          embarqueActualId={embarqueId}
+        />
+      )}
+
       <SeccionArchivosEntrante
         pdf={form.pdf}
         xml={form.xml}
