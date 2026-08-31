@@ -4,15 +4,13 @@
  * O3 / S1-08) para tener UNA sola normalización y un solo lugar donde
  * leer el riesgo.
  *
- * RIESGO CONOCIDO: el match es por DESCRIPCIÓN normalizada (trim +
- * lowercase) porque `cotizacion_costos` no guarda referencia al concepto
- * de venta (los conceptos viven en el jsonb `cotizaciones.conceptos_venta`).
- * Si el usuario renombra un concepto después de capturar costos, el match
- * por nombre falla y se usa el fallback POSICIONAL: la venta puede
- * asignarse al costo equivocado silenciosamente (P&L y profit
- * distorsionados). El FIX A11 (tabla hija para `conceptos_venta`)
- * habilitará match por id estable; al aplicarlo, sustituir este helper
- * por un join por `concepto_venta_id` y eliminar el fallback posicional.
+ * A-5 (v13.815.0): se eliminó el fallback POSICIONAL. `cotizacion_costos` no
+ * guarda referencia al concepto de venta, así que el match es por DESCRIPCIÓN
+ * normalizada (trim + lowercase). Cuando el usuario renombra o reordena
+ * conceptos, antes se emparejaba por índice y la venta podía quedar asignada
+ * al costo equivocado en silencio (P&L y profit distorsionados). Hoy, si no
+ * hay coincidencia de nombre, el costo se queda SIN venta emparejada y la UI
+ * muestra el aviso de sincronización existente.
  */
 
 /** Normalización canónica para comparar nombres de concepto. */
@@ -21,19 +19,14 @@ export function normalizeConceptoNombre(s: string | null | undefined): string {
 }
 
 /**
- * Busca el concepto de venta que corresponde a un costo.
- * 1) match por descripción normalizada;
- * 2) fallback POSICIONAL (ver riesgo arriba): toma `conceptos[fallback.idx]`
- *    y avanza el índice SOLO cuando se usa el fallback — no cambiar este
- *    detalle sin migrar los costos ya persistidos.
+ * Busca el concepto de venta que corresponde a un costo por descripción
+ * normalizada. Devuelve `undefined` cuando no hay match (sin adivinar).
  */
 export function matchConceptoVenta<T extends { descripcion: string }>(
   conceptos: T[],
   concepto: string,
-  fallback: { idx: number },
 ): T | undefined {
   const objetivo = normalizeConceptoNombre(concepto);
-  const porNombre = conceptos.find((v) => normalizeConceptoNombre(v.descripcion) === objetivo);
-  if (porNombre) return porNombre;
-  return conceptos[fallback.idx++];
+  if (!objetivo) return undefined;
+  return conceptos.find((v) => normalizeConceptoNombre(v.descripcion) === objetivo);
 }
