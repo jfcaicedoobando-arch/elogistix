@@ -1,10 +1,13 @@
 /**
  * Ola 4 · N36: dedupe genérico (archivo_hash / xml_hash) contra vivos +
  * cleanup best-effort de storage cuando el insert/update posterior falla.
+ * v13.819.2: la ubicación del duplicado la resuelve la RPC canónica
+ * `buzon_localizar_duplicado` y viaja en el error para la UI.
  */
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
 const remove = vi.fn();
+const rpc = vi.fn();
 const selectChain = {
   select: vi.fn().mockReturnThis(),
   eq: vi.fn().mockReturnThis(),
@@ -16,6 +19,7 @@ const selectChain = {
 vi.mock("@/integrations/supabase/client", () => ({
   supabase: {
     from: () => selectChain,
+    rpc: (...args: unknown[]) => rpc(...args),
     storage: { from: () => ({ remove }) },
   },
 }));
@@ -26,51 +30,110 @@ const {
   esErrorUnicidad,
   limpiarArchivosHuerfanosSeguro,
 } = await import("@/features/cxp/services/facturasEntrantesDedupe");
+const { BuzonDuplicadoError, CODIGO_BUZON_DUPLICADO } = await import(
+  "@/features/cxp/services/buzonDuplicado"
+);
+
+function rpcDevuelve(fila: Record<string, unknown> | null) {
+  rpc.mockResolvedValue({ data: fila ? [fila] : [], error: null });
+}
+
+async function capturar(promesa: Promise<void>): Promise<InstanceType<typeof BuzonDuplicadoError>> {
+  try {
+    await promesa;
+  } catch (e) {
+    return e as InstanceType<typeof BuzonDuplicadoError>;
+  }
+  throw new Error("se esperaba BuzonDuplicadoError");
+}
 
 describe("validarNoDuplicadoEnBuzon", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-    selectChain.select.mockReturnThis();
-    selectChain.eq.mockReturnThis();
-    selectChain.is.mockReturnThis();
-  });
+  beforeEach(() => vi.clearAllMocks());
 
-  it("no lanza si no hay ningún documento vivo con ese hash", async () => {
-    selectChain.limit.mockResolvedValue({ data: [], error: null });
+  it("factura nueva: no lanza y no bloquea la subida", async () => {
+    rpcDevuelve(null);
     await expect(
       validarNoDuplicadoEnBuzon("hash-1", "org-1", "xml_hash"),
     ).resolves.toBeUndefined();
   });
 
-  it("lanza mensaje de XML ya capturado cuando columna es xml_hash y estado=capturada", async () => {
-    selectChain.limit.mockResolvedValue({ data: [{ estado: "capturada" }], error: null });
-    await expect(
-      validarNoDuplicadoEnBuzon("hash-1", "org-1", "xml_hash"),
-    ).rejects.toThrow(/Este XML ya fue capturado como factura de proveedor/i);
+  it("pasa hash, columna, uuid fiscal y embarque en curso a la RPC", async () => {
+    rpcDevuelve(null);
+    await validarNoDuplicadoEnBuzon("hash-1", "org-9", "xml_hash", {
+      uuidFiscal: "AAA-BBB",
+      embarqueId: "emb-1",
+    });
+    expect(rpc).toHaveBeenCalledWith("buzon_localizar_duplicado", {
+      p_hash: "hash-1",
+      p_columna: "xml_hash",
+      p_uuid_fiscal: "AAA-BBB",
+      p_embarque_id: "emb-1",
+    });
   });
 
-  it("lanza mensaje de XML en buzón esperando captura cuando estado no es capturada", async () => {
-    selectChain.limit.mockResolvedValue({ data: [{ estado: "por_capturar" }], error: null });
-    await expect(
-      validarNoDuplicadoEnBuzon("hash-1", "org-1", "xml_hash"),
-    ).rejects.toThrow(/Este XML ya está en el buzón esperando captura/i);
+  it("duplicada en el MISMO embarque", async () => {
+    rpcDevuelve({ caso: "mismo_embarque", factura_id: "fac-1", embarque_id: "emb-1" });
+    const err = await capturar(
+      validarNoDuplicadoEnBuzon("hash-1", "org-1", "archivo_hash", { embarqueId: "emb-1" }),
+    );
+    expect(err.message).toBe("Esta factura ya está registrada en este embarque.");
+    expect(err.code).toBe(CODIGO_BUZON_DUPLICADO);
+    expect(err.status).toBe(409);
+    expect(err.ubicacion.embarqueId).toBe("emb-1");
   });
 
-  it("consulta sólo documentos vivos (is deleted_at null) filtrando por organización", async () => {
-    selectChain.limit.mockResolvedValue({ data: [], error: null });
-    await validarNoDuplicadoEnBuzon("hash-1", "org-9", "xml_hash");
-    expect(selectChain.eq).toHaveBeenCalledWith("organization_id", "org-9");
-    expect(selectChain.eq).toHaveBeenCalledWith("xml_hash", "hash-1");
-    expect(selectChain.is).toHaveBeenCalledWith("deleted_at", null);
+  it("duplicada en OTRO embarque de la misma organización: incluye el folio", async () => {
+    rpcDevuelve({
+      caso: "otro_embarque",
+      factura_id: "fac-1",
+      embarque_id: "emb-2",
+      embarque_expediente: "EXP-0099",
+    });
+    const err = await capturar(
+      validarNoDuplicadoEnBuzon("hash-1", "org-1", "archivo_hash", { embarqueId: "emb-1" }),
+    );
+    expect(err.message).toBe("Esta factura ya está registrada en el embarque EXP-0099.");
+    expect(err.ubicacion.embarqueId).toBe("emb-2");
   });
 
-  it("no lanza si la consulta falla (fail-open best-effort)", async () => {
-    selectChain.limit.mockResolvedValue({ data: null, error: { message: "boom" } });
+  it("existente en Compras sin embarque vinculado", async () => {
+    rpcDevuelve({ caso: "sin_embarque", factura_id: "fac-1" });
+    const err = await capturar(validarNoDuplicadoEnBuzon("hash-1", "org-1"));
+    expect(err.message).toMatch(/ya está registrada en Compras, pero todavía no está vinculada/);
+    expect(err.ubicacion.embarqueId).toBeNull();
+  });
+
+  it("duplicado de otra organización: mensaje genérico y sin metadatos", async () => {
+    rpcDevuelve({ caso: "ajeno" });
+    const err = await capturar(validarNoDuplicadoEnBuzon("hash-1", "org-1"));
+    expect(err.message).toBe(
+      "Esta factura ya está registrada. Solicita a Operaciones que revise el documento.",
+    );
+    expect(err.ubicacion).toEqual({
+      caso: "ajeno",
+      facturaId: null,
+      embarqueId: null,
+      embarqueExpediente: null,
+    });
+  });
+
+  it("pendiente de captura en el buzón conserva el mensaje por tipo de archivo", async () => {
+    rpcDevuelve({ caso: "buzon_pendiente" });
+    const xml = await capturar(validarNoDuplicadoEnBuzon("hash-1", "org-1", "xml_hash"));
+    expect(xml.message).toMatch(/Este XML ya está en el buzón esperando captura/);
+    rpcDevuelve({ caso: "buzon_pendiente" });
+    const pdf = await capturar(validarNoDuplicadoEnBuzon("hash-1", "org-1"));
+    expect(pdf.message).toMatch(/Este archivo ya está en el buzón esperando captura/);
+  });
+
+  it("no lanza si la RPC falla (fail-open best-effort; el índice único protege)", async () => {
+    rpc.mockResolvedValue({ data: null, error: { message: "boom" } });
     await expect(
       validarNoDuplicadoEnBuzon("hash-1", "org-1"),
     ).resolves.toBeUndefined();
   });
 });
+
 
 describe("limpiarArchivosHuerfanos", () => {
   beforeEach(() => vi.clearAllMocks());
