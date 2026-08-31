@@ -19,10 +19,10 @@ import type { CapturaPasos } from "@/features/cxp/hooks/useCapturaFacturaPasos";
 const reset = vi.fn();
 const onOpenChange = vi.fn();
 
-function pasos(): CapturaPasos {
+function pasos(paso: 1 | 3 = 1): CapturaPasos {
   return {
-    paso: 1, totalPasos: 3, etiquetas: ["Documento", "Datos", "Vinculación"],
-    esUltimo: false, esPrimero: true,
+    paso, totalPasos: 3, etiquetas: ["Documento", "Datos", "Vinculación"],
+    esUltimo: paso === 3, esPrimero: paso === 1,
     irA: vi.fn(), siguiente: vi.fn(), anterior: vi.fn(),
     pendientesPorPaso: { documento: [], datos: [], vinculacion: [] },
     pendientesDeOtrosPasos: [],
@@ -30,7 +30,7 @@ function pasos(): CapturaPasos {
 }
 
 /** Arnés con el mismo cableado de cierre que `DialogNuevaFacturaProveedor`. */
-function Arnes({ hayCaptura }: { hayCaptura: boolean }) {
+function Arnes({ hayCaptura, paso = 1 }: { hayCaptura: boolean; paso?: 1 | 3 }) {
   const [open, setOpen] = useState(true);
   const cerrar = (o: boolean) => {
     if (!o) reset();
@@ -48,11 +48,13 @@ function Arnes({ hayCaptura }: { hayCaptura: boolean }) {
       isDirty={hayCaptura}
       footer={
         <CapturaFacturaFooter
-          pasos={pasos()}
+          pasos={pasos(paso)}
           guardando={false}
           puedeGuardar
           onCancelar={cerrarYLimpiar}
-          onGuardar={vi.fn()}
+          // Guardado exitoso: el controller resetea y cierra sin pasar por el
+          // shell, igual que `submit()` → `onDone` en el diálogo real.
+          onGuardar={cerrarYLimpiar}
         />
       }
     >
@@ -127,6 +129,18 @@ describe("cierre guardado de la captura de factura de proveedor", () => {
     render(<Arnes hayCaptura={false} />);
     fireEvent.keyDown(document.body, { key: "Escape" });
     expect(confirmacion()).toBeNull();
+    expect(onOpenChange).toHaveBeenCalledWith(false);
+  });
+});
+
+describe("guardado exitoso", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("tras guardar cierra y resetea sin mostrar la alerta de descarte", () => {
+    render(<Arnes hayCaptura paso={3} />);
+    fireEvent.click(screen.getByRole("button", { name: /guardar factura/i }));
+    expect(confirmacion()).toBeNull();
+    expect(reset).toHaveBeenCalledTimes(1);
     expect(onOpenChange).toHaveBeenCalledWith(false);
   });
 });
