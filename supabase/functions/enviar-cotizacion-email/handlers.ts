@@ -54,33 +54,25 @@ async function sendEmailsToRecipients(
   params: SendBatchParams,
 ): Promise<{ email: string; tipo: string; ok: boolean; error?: string }[]> {
   const { supabaseUrl, supabaseServiceKey, recipients, templateData, cotId, timestamp } = params;
+  const admin = createClient(supabaseUrl, supabaseServiceKey);
   const resultados: { email: string; tipo: string; ok: boolean; error?: string }[] = [];
   for (const r of recipients) {
     const idem = `cot-${cotId}-${timestamp}-${r.email}`;
-    try {
-      const resp = await fetch(`${supabaseUrl}/functions/v1/send-transactional-email`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${supabaseServiceKey}` },
-        body: JSON.stringify({
-          templateName: 'cotizacion-enviada',
-          recipientEmail: r.email,
-          idempotencyKey: idem,
-          templateData: { ...templateData, contacto: r.nombre },
-        }),
-      });
-      const out = await resp.json().catch(() => ({}));
-      const ok = resp.ok && (out?.success !== false || out?.queued === true);
-      resultados.push({ email: r.email, tipo: r.tipo, ok, error: ok ? undefined : (out?.error ?? `HTTP ${resp.status}`) });
-    } catch (e) {
-      // 13.114.20: antes los fallos de red por destinatario quedaban sólo en
-      // `resultados` (visibles para el caller pero no para ops). Capturamos
-      // por iteración con índice + tipo (to/cc), sin el email (PII).
-      await captureEdgeException(e, {
+    const envio = await enviarEmailPlantilla(admin, {
+      templateName: 'cotizacion-enviada',
+      recipientEmail: r.email,
+      idempotencyKey: idem,
+      templateData: { ...templateData, contacto: r.nombre },
+    });
+    if (!envio.ok && !envio.suprimido) {
+      // 13.114.20: los fallos por destinatario también van a Sentry, con índice
+      // y tipo (to/cc), sin el email (PII).
+      await captureEdgeException(new Error(envio.error ?? 'Error al enviar correo'), {
         fn: 'enviar-cotizacion-email',
         extra: { phase: 'send_recipient', recipient_index: resultados.length, recipient_type: r.tipo, cot_id: cotId },
       });
-      resultados.push({ email: r.email, tipo: r.tipo, ok: false, error: (e as Error).message });
     }
+    resultados.push({ email: r.email, tipo: r.tipo, ok: envio.ok, error: envio.ok ? undefined : envio.error });
   }
   return resultados;
 }

@@ -11,7 +11,6 @@ const ResetPassword = lazy(() => import("@/features/auth/routes/ResetPassword"))
 const NotFound = lazy(() => import("@/features/auth/routes/NotFound"));
 const SinAcceso = lazy(() => import("@/features/auth/routes/SinAcceso"));
 const TrackingPublico = lazy(() => import("@/features/auth/routes/TrackingPublico"));
-const Unsubscribe = lazy(() => import("@/features/auth/routes/Unsubscribe"));
 const HomeRoute = lazy(() => import("@/features/marketing/routes/HomeRoute"));
 const LogoPreview = lazy(() => import("@/features/marketing/routes/LogoPreview"));
 const Privacidad = lazy(() => import("@/features/legal/routes/Privacidad"));
@@ -30,7 +29,6 @@ export const publicRoutes = (
     <Route path="/reset-password" element={<ResetPassword />} />
     <Route path="/portal/login" element={<Navigate to="/login?audiencia=cliente" replace />} />
     <Route path="/tracking/:token" element={<TrackingPublico />} />
-    <Route path="/unsubscribe" element={<Unsubscribe />} />
     {/* UIB-07: vista QA del logo — sólo en dev; en producción cae al 404. */}
     {import.meta.env.DEV && <Route path="/logo-preview" element={<LogoPreview />} />}
     {/* VT-10: el centro de ayuda (FAQ) es público. */}

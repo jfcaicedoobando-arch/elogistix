@@ -17,15 +17,11 @@ import { brand, button, container, footer, h1, main, text } from './styles.ts'
 
 interface RecoveryEmailProps {
   siteName: string
-  siteUrl: string
   confirmationUrl: string
 }
 
-export const RecoveryEmail = ({
-  siteName,
-  confirmationUrl,
-}: RecoveryEmailProps) => (
-  <Html lang="es-MX" dir="ltr">
+export const RecoveryEmail = ({ siteName, confirmationUrl }: RecoveryEmailProps) => (
+  <Html lang="es" dir="ltr">
     <Head />
     <Preview>Restablece tu contraseña de {siteName}</Preview>
     <Body style={main}>
@@ -33,15 +29,15 @@ export const RecoveryEmail = ({
         <Text style={brand}>{siteName}</Text>
         <Heading style={h1}>Restablece tu contraseña</Heading>
         <Text style={text}>
-          Recibimos una solicitud para cambiar la contraseña de tu cuenta en{' '}
-          <strong>{siteName}</strong>. Da clic en el botón para crear una nueva.
+          Recibimos una solicitud para restablecer tu contraseña en {siteName}. Usa el
+          botón para elegir una nueva.
         </Text>
         <Button style={button} href={confirmationUrl}>
-          Crear nueva contraseña
+          Restablecer contraseña
         </Button>
         <Text style={footer}>
-          El enlace vence en una hora. Si no pediste el cambio, ignora este
-          correo: tu contraseña actual sigue funcionando.
+          Si no solicitaste el cambio, puedes ignorar este mensaje: tu contraseña no se
+          modificará.
         </Text>
       </Container>
     </Body>

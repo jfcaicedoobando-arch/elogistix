@@ -1,14 +1,12 @@
 import * as React from 'npm:react@18.3.1'
-import { wrapEdgeHandler, captureEdgeException } from "../_shared/sentry.ts"
 import { renderAsync } from 'npm:@react-email/components@0.0.22'
-import { corsHeaders } from "../_shared/cors.ts"
+import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors'
 import { TEMPLATES } from '../_shared/transactional-email-templates/registry.ts'
-import { isAuthorized, resolveSubject } from './helpers.ts'
 
 // Renders all registered templates with their previewData.
 // Gated by LOVABLE_API_KEY — only the Go API calls this.
 
-Deno.serve(wrapEdgeHandler("preview-transactional-email", async (req) => {
+Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
   }
@@ -25,7 +23,9 @@ Deno.serve(wrapEdgeHandler("preview-transactional-email", async (req) => {
   }
 
   // Verify the caller is authorized with LOVABLE_API_KEY
-  if (!isAuthorized(req.headers.get('Authorization'), apiKey)) {
+  const authHeader = req.headers.get('Authorization')
+  const token = authHeader?.replace(/^Bearer\s+/i, '')
+  if (token !== apiKey) {
     return new Response(JSON.stringify({ error: 'Unauthorized' }), {
       status: 401,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -61,7 +61,10 @@ Deno.serve(wrapEdgeHandler("preview-transactional-email", async (req) => {
       const html = await renderAsync(
         React.createElement(entry.component, entry.previewData)
       )
-      const resolvedSubject = resolveSubject(entry.subject, entry.previewData)
+      const resolvedSubject =
+        typeof entry.subject === 'function'
+          ? entry.subject(entry.previewData)
+          : entry.subject
 
       results.push({
         templateName: name,
@@ -74,12 +77,6 @@ Deno.serve(wrapEdgeHandler("preview-transactional-email", async (req) => {
       console.error('Failed to render template for preview', {
         template: name,
         error: err,
-      })
-      // 13.114.20: antes el loop sólo logueaba — no se sabía qué plantilla
-      // estaba rota. Capturamos por iteración con el `template_key` en extra.
-      await captureEdgeException(err, {
-        fn: 'preview-transactional-email',
-        extra: { phase: 'render_template', template_key: name },
       })
       results.push({
         templateName: name,
@@ -96,4 +93,4 @@ Deno.serve(wrapEdgeHandler("preview-transactional-email", async (req) => {
     status: 200,
     headers: { ...corsHeaders, 'Content-Type': 'application/json' },
   })
-}))
+})

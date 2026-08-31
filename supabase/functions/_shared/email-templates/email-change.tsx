@@ -17,19 +17,20 @@ import { brand, button, container, footer, h1, main, text } from './styles.ts'
 
 interface EmailChangeEmailProps {
   siteName: string
-  siteUrl: string
+  oldEmail: string
+  email: string
+  newEmail: string
   confirmationUrl: string
-  email?: string
-  newEmail?: string
 }
 
 export const EmailChangeEmail = ({
   siteName,
-  confirmationUrl,
+  oldEmail,
   email,
   newEmail,
+  confirmationUrl,
 }: EmailChangeEmailProps) => (
-  <Html lang="es-MX" dir="ltr">
+  <Html lang="es" dir="ltr">
     <Head />
     <Preview>Confirma tu nuevo correo en {siteName}</Preview>
     <Body style={main}>
@@ -37,21 +38,14 @@ export const EmailChangeEmail = ({
         <Text style={brand}>{siteName}</Text>
         <Heading style={h1}>Confirma tu nuevo correo</Heading>
         <Text style={text}>
-          Pediste cambiar el correo de tu cuenta en <strong>{siteName}</strong>
-          {email && newEmail ? (
-            <>
-              {' '}
-              de <strong>{email}</strong> a <strong>{newEmail}</strong>
-            </>
-          ) : null}
-          . Confirma el cambio para que puedas seguir entrando.
+          Recibimos una solicitud para cambiar el correo de tu cuenta en {siteName} de{' '}
+          <strong>{oldEmail || email}</strong> a <strong>{newEmail || email}</strong>.
         </Text>
         <Button style={button} href={confirmationUrl}>
-          Confirmar el cambio
+          Confirmar cambio
         </Button>
         <Text style={footer}>
-          Si no pediste este cambio, ignora este correo y avisa a tu
-          administrador.
+          Si no solicitaste este cambio, puedes ignorar este mensaje.
         </Text>
       </Container>
     </Body>

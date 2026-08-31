@@ -1,10 +1,11 @@
 // supabase/functions/enviar-proforma-email/index.ts
 // Envía una proforma al cliente por email con enlace al portal público.
-// Genera un token si no existe, encola el email vía send-transactional-email
+// Genera un token si no existe, envía el correo por la entrega administrada
 // y registra el envío en `proforma_envios`.
 import { createClient, SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
 import { wrapEdgeHandler, captureEdgeException } from '../_shared/sentry.ts';
 import { buildCors, handlePreflightStrict } from '../_shared/cors.ts';
+import { enviarEmailPlantilla } from '../_shared/enviarEmailPlantilla.ts';
 import { jsonResponse as _jsonResponse } from "../_shared/response.ts";
 
 // Alias local con firma (cors, data, status) para conservar los callsites de este handler.
@@ -69,24 +70,20 @@ interface EnvioContexto {
 
 async function enviarDestinatario(ctx: EnvioContexto, r: Recipient): Promise<EnvioResultado> {
   const idem = `proforma-${ctx.proformaId}-${ctx.timestamp}-${r.email}`;
-  try {
-    const resp = await fetch(`${ctx.url}/functions/v1/send-transactional-email`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${ctx.service}` },
-      body: JSON.stringify({
-        templateName: 'proforma-enviada',
-        recipientEmail: r.email,
-        idempotencyKey: idem,
-        templateData: { ...ctx.templateData, contacto: r.nombre },
-      }),
+  const admin = createClient(ctx.url, ctx.service);
+  const envio = await enviarEmailPlantilla(admin, {
+    templateName: 'proforma-enviada',
+    recipientEmail: r.email,
+    idempotencyKey: idem,
+    templateData: { ...ctx.templateData, contacto: r.nombre },
+  });
+  if (!envio.ok && !envio.suprimido) {
+    await captureEdgeException(new Error(envio.error ?? 'Error al enviar correo'), {
+      fn: 'enviar-proforma-email',
+      extra: { phase: 'send', recipient_type: r.tipo },
     });
-    const out = await resp.json().catch(() => ({}));
-    const ok = resp.ok && (out?.success !== false || out?.queued === true);
-    return { email: r.email, tipo: r.tipo, ok, error: ok ? undefined : (out?.error ?? `HTTP ${resp.status}`) };
-  } catch (e) {
-    await captureEdgeException(e, { fn: 'enviar-proforma-email', extra: { phase: 'send', recipient_type: r.tipo } });
-    return { email: r.email, tipo: r.tipo, ok: false, error: (e as Error).message };
   }
+  return { email: r.email, tipo: r.tipo, ok: envio.ok, error: envio.ok ? undefined : envio.error };
 }
 
 interface EntornoEdge { url: string; anon: string; service: string }
