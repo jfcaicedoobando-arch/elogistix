@@ -31,6 +31,34 @@ interface Props {
   remove: (id: number) => void;
 }
 
+/** Select de proveedor del renglón. Extraído para acotar la complejidad. */
+function SelectProveedorCosto({
+  costo, proveedoresDb, bloqueado, onChange,
+}: {
+  costo: ConceptoCostoRow;
+  proveedoresDb: Proveedor[];
+  bloqueado: boolean;
+  onChange: (id: string) => void;
+}) {
+  const nombreCatalogo = proveedoresDb.find(p => p.id === costo.proveedorId)?.nombre;
+  const heredado = costo.proveedorNombre?.trim() ?? '';
+  const sinCatalogo = !costo.proveedorId && heredado !== '';
+  return (
+    <Select value={costo.proveedorId} disabled={bloqueado} onValueChange={onChange}>
+      <SelectTrigger
+        className={`text-body ${sinCatalogo ? 'border-warning/60' : ''}`}
+        title={nombreCatalogo ?? heredado ?? undefined}
+      >
+        {/* v13.509.0 — Si el costo viene de cotización sólo con nombre, lo
+            mostramos como texto para que el operador lo confirme en vez de
+            ver el campo vacío. */}
+        <SelectValue placeholder={heredado || "Proveedor"} />
+      </SelectTrigger>
+      <SelectContent>{proveedoresDb.map(p => <SelectItem key={p.id} value={p.id}>{p.nombre}</SelectItem>)}</SelectContent>
+    </Select>
+  );
+}
+
 export function FilaCostoPrecio({
   costo, totalUSD, esMixta, proveedoresDb, cols, showContenedorCol,
   embarqueId, tcUSD, tcEUR, disableRemove, update, remove,
@@ -39,18 +67,13 @@ export function FilaCostoPrecio({
   const bloqueado = costoBloqueado(costo.estadoLiquidacion);
   return (
     <div className={`grid ${cols} gap-2 items-center`} title={bloqueado ? MOTIVO_COSTO_BLOQUEADO : undefined}>
-      <Select value={costo.proveedorId} disabled={bloqueado} onValueChange={v => update(costo.id, 'proveedorId', v)}>
-        <SelectTrigger
-          className={`text-body ${!costo.proveedorId && costo.proveedorNombre ? 'border-warning/60' : ''}`}
-          title={proveedoresDb.find(p => p.id === costo.proveedorId)?.nombre ?? costo.proveedorNombre ?? undefined}
-        >
-          {/* v13.509.0 — Si el costo viene de cotización sólo con nombre, lo
-              mostramos como texto para que el operador lo confirme en vez de
-              ver el campo vacío. */}
-          <SelectValue placeholder={costo.proveedorNombre?.trim() || "Proveedor"} />
-        </SelectTrigger>
-        <SelectContent>{proveedoresDb.map(p => <SelectItem key={p.id} value={p.id}>{p.nombre}</SelectItem>)}</SelectContent>
-      </Select>
+      <SelectProveedorCosto
+        costo={costo}
+        proveedoresDb={proveedoresDb}
+        bloqueado={bloqueado}
+        onChange={v => update(costo.id, 'proveedorId', v)}
+      />
+
       <ConceptoCatalogoSelect
         value={costo.concepto}
         disabled={bloqueado}
