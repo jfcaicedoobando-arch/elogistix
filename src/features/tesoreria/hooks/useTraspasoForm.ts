@@ -156,3 +156,12 @@ export function sugerirTcQuote(
   if (!base || !quote || base <= 0 || quote <= 0) return null;
   return Math.round((base / quote) * 10000) / 10000;
 }
+
+/** YG-04: ¿el traspaso tiene captura que se perdería al cerrar el diálogo? */
+export function traspasoSucio(state: TraspasoFormState): boolean {
+  const señales = [
+    !!state.origenId, !!state.destinoId, state.montoOrigen > 0,
+    state.comision > 0, state.concepto.trim() !== "", state.referencia.trim() !== "",
+  ];
+  return señales.some(Boolean);
+}
