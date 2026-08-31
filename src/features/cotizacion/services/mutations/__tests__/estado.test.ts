@@ -21,7 +21,7 @@ beforeEach(() => {
 
 describe("updateEstadoCotizacion", () => {
   it.each(ESTADOS_COTIZACION_VALIDOS)("happy path: acepta estado válido %s", async (estado) => {
-    mock.setTableResult("cotizaciones", { data: null, error: null });
+    mock.setTableResult("cotizaciones", { data: { id: "cot-1" }, error: null });
     await expect(updateEstadoCotizacion("cot-1", estado)).resolves.toBeUndefined();
     const call = findTableCall(mock, "cotizaciones");
     assertUpdatePayload(call, { estado });
@@ -34,7 +34,7 @@ describe("updateEstadoCotizacion", () => {
   });
 
   it("rechaza estado inválido SIN tocar la BD", async () => {
-    mock.setTableResult("cotizaciones", { data: null, error: null });
+    mock.setTableResult("cotizaciones", { data: { id: "cot-1" }, error: null });
     await expect(
       updateEstadoCotizacion("cot-1", "EstadoInexistente"),
     ).rejects.toThrow(/inválido/i);
@@ -47,7 +47,7 @@ describe("updateEstadoCotizacion", () => {
   });
 
   it("acepta embarqueId opcional y lo envía en el payload", async () => {
-    mock.setTableResult("cotizaciones", { data: null, error: null });
+    mock.setTableResult("cotizaciones", { data: { id: "cot-1" }, error: null });
     await updateEstadoCotizacion("cot-1", "En operación", "emb-123");
     assertUpdatePayload(findTableCall(mock, "cotizaciones"), {
       estado: "En operación",
@@ -55,8 +55,16 @@ describe("updateEstadoCotizacion", () => {
     });
   });
 
-  it("acepta embarqueId null para limpiar el vínculo", async () => {
+  // v13.814.0 (hallazgo 1): 0 filas afectadas = RLS o cotización inexistente.
+  it("lanza cuando el UPDATE afecta 0 filas", async () => {
     mock.setTableResult("cotizaciones", { data: null, error: null });
+    await expect(updateEstadoCotizacion("cot-1", "Aceptada")).rejects.toThrow(
+      /no tienes permiso o la cotización ya no existe/i,
+    );
+  });
+
+  it("acepta embarqueId null para limpiar el vínculo", async () => {
+    mock.setTableResult("cotizaciones", { data: { id: "cot-1" }, error: null });
     await updateEstadoCotizacion("cot-1", "Borrador", null);
     assertUpdatePayload(findTableCall(mock, "cotizaciones"), {
       estado: "Borrador",
