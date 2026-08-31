@@ -102,8 +102,11 @@ export function FormDialogShell({
     [isDirty, onOpenChange],
   );
 
+  const cerrarGuardado = useCallback(() => handleOpenChange(false), [handleOpenChange]);
+
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
+
       {/* v13.423.0 — En pantallas bajas (720-768 px) el modal usa casi todo el
 
           alto disponible: antes el cuerpo scrolleable quedaba en ~290 px. */}
