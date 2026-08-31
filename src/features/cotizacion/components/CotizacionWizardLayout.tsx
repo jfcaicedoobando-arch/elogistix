@@ -57,7 +57,23 @@ export default function CotizacionWizardLayout({
 
   const handleNext = useCallback(() => { void runProcessing(handleSiguiente); }, [runProcessing, handleSiguiente]);
   const handleSave = useCallback(() => { void runProcessing(handleGuardar); }, [runProcessing, handleGuardar]);
-  const handleBack = useCallback(() => { if (!isBusy) wHandleBack(); }, [isBusy, wHandleBack]);
+  // Ola C · #13: guarda de salida. Antes se podía navegar (sidebar, migas) con
+  // el wizard a medio capturar y se perdía todo sin aviso.
+  // RN-EC-5: el "Volver" del header era navegación programática y saltaba la
+  // guarda; ahora también pasa por confirmarSalida.
+  // v13.819.1: el botón "Cancelar" del paso 1 también navegaba directo al
+  // listado sin advertir de la captura pendiente.
+  const { guardDialog, confirmarSalida } = useDirtyGuard(form.formState.isDirty && !isBusy);
+  const handleBack = useCallback(
+    () => ejecutarSalidaWizard({
+      currentStep: w.currentStep,
+      isBusy,
+      retroceder: wHandleBack,
+      confirmarSalida,
+    }),
+    [w.currentStep, isBusy, wHandleBack, confirmarSalida],
+  );
+
   const handleConfirmSinDesglose = useCallback(() => {
     if (!canCotizarSinDesglose) {
       notifyError(undefined, { title: "Tu rol no autoriza cotizar sin desglose. Pide a un gerente o admin.", method: "FEATURES_COTIZACION_COMPONENTS_COTIZACIONWIZARDLAYOUT_1" });
