@@ -1,5 +1,5 @@
 -- Fuente canónica de public.buzon_localizar_duplicado(...).
--- 1:1 con supabase/migrations/20260831222500_buzon_duplicado_ubicacion.sql.
+-- 1:1 con supabase/migrations/20260831222623_b3e53e4f-0893-4d34-93a4-670f21fd159b.sql.
 --
 -- Origen de verdad de la deduplicación del buzón CxP: dado un hash de archivo
 -- (o de XML) y/o un UUID fiscal, dice si el documento ya existe y DÓNDE está,
