@@ -14,19 +14,13 @@ import type { LucideIcon } from "lucide-react";
 import { useCallback, useState } from "react";
 import type { FormEvent, ReactNode } from "react";
 import { cn } from "@/lib/utils";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { ConfirmActionDialog } from "@/components/shared/dialogs/ConfirmActionDialog";
 import { dialogSize } from "@/components/shared/utils/dialogTokens";
 import { useAutoFocusPrimerCampo } from "@/components/shared/utils/useAutoFocusPrimerCampo";
 import { FormDialogCloseContext } from "@/components/shared/formDialogCloseContext";
 
-import { FormDialogStepper } from "./FormDialogStepper";
+import { FormDialogHeaderBlock } from "./FormDialogHeaderBlock";
 
 
 type Size = keyof typeof dialogSize;
@@ -87,7 +81,6 @@ export function FormDialogShell({
   isDirty = false,
   children,
 }: Props) {
-  const showStepper = stepper !== undefined && stepper.totalSteps > 1;
   const enfocar = autoFocusFirstField ?? Boolean(formId);
   const bodyRef = useAutoFocusPrimerCampo(open, enfocar);
   const bodyClass = cn("flex-1 overflow-y-auto px-6 py-5 space-y-5", bodyClassName);
@@ -119,31 +112,13 @@ export function FormDialogShell({
         )}
       >
 
-        <DialogHeader className="px-6 pt-6 pb-4 border-b space-y-3">
-          <div className="flex items-start justify-between gap-4">
-            <div className="flex items-start gap-3 min-w-0">
-              <div className="shrink-0 h-10 w-10 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
-                <Icon className="h-5 w-5" />
-              </div>
-              <div className="min-w-0 space-y-0.5">
-                <DialogTitle>{title}</DialogTitle>
-                {description && (
-                  <DialogDescription className="text-body-sm text-muted-foreground leading-snug">
-                    {description}
-                  </DialogDescription>
-                )}
-              </div>
-            </div>
-            {headerAside && <div className="text-right shrink-0">{headerAside}</div>}
-          </div>
-          {showStepper && (
-            <FormDialogStepper
-              step={stepper!.step}
-              totalSteps={stepper!.totalSteps}
-              labels={stepper!.labels}
-            />
-          )}
-        </DialogHeader>
+        <FormDialogHeaderBlock
+          icon={Icon}
+          title={title}
+          description={description}
+          headerAside={headerAside}
+          stepper={stepper}
+        />
 
         {stickyTop && (
           <div className="border-b bg-muted/30 px-6 py-3">{stickyTop}</div>
