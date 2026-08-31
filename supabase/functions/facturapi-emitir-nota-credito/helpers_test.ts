@@ -1,5 +1,5 @@
 import { assertEquals } from "https://deno.land/std@0.224.0/assert/mod.ts";
-import { buildNcPayload, validateNcContext, type NotaCreditoContext } from "./helpers.ts";
+import { buildNcPayload, validateNcContext, ncTotalEsCero, totalNcSinImpuestos, type NotaCreditoContext } from "./helpers.ts";
 
 const baseCtx = (): NotaCreditoContext => ({
   serie: "NC",
@@ -88,4 +88,31 @@ Deno.test("buildNcPayload incluye exchange sólo para moneda no MXN", () => {
   assertEquals(p.exchange, 17.5);
   const p2 = buildNcPayload(baseCtx());
   assertEquals(p2.exchange, undefined);
+});
+
+// ── Ola 4 · A — NC en $0 no es timbrable ────────────────────────────────
+Deno.test("ncTotalEsCero bloquea conceptos con precio 0", () => {
+  const ctx = baseCtx();
+  ctx.conceptos = [
+    { ...ctx.conceptos[0], precio_unitario: 0 },
+    { ...ctx.conceptos[0], precio_unitario: 0, cantidad: 3 },
+  ];
+  assertEquals(totalNcSinImpuestos(ctx), 0);
+  assertEquals(ncTotalEsCero(ctx), true);
+  // La validación local por concepto no lo detecta (cantidad>0, precio>=0).
+  assertEquals(validateNcContext(ctx).length, 0);
+});
+
+Deno.test("ncTotalEsCero permite montos positivos", () => {
+  const ctx = baseCtx();
+  assertEquals(totalNcSinImpuestos(ctx), 500);
+  assertEquals(ncTotalEsCero(ctx), false);
+});
+
+Deno.test("el guard de total $0 corre antes del claim y del PAC", async () => {
+  const src = await Deno.readTextFile(new URL("./index.ts", import.meta.url));
+  const iGuard = src.indexOf("ncTotalEsCero(ctx)");
+  const iClaim = src.indexOf("claimNotaCredito(supabase");
+  const iPac = src.indexOf("createNcInvoice(");
+  assertEquals(iGuard > -1 && iClaim > iGuard && iPac > iGuard, true);
 });
