@@ -12,6 +12,7 @@ import { NumericInput } from "@/components/shared/NumericInput";
 import { SelectContenedorConcepto } from "@/features/embarques/components/conceptos/SelectContenedorConcepto";
 import { ConceptoCatalogoSelect } from "@/features/embarques/components/conceptos/ConceptoCatalogoSelect";
 import type { ConceptoVentaLocal as ConceptoVentaRow } from "@/types/concepto";
+import { ventaBloqueada, MOTIVO_VENTA_BLOQUEADA } from "@/features/embarques/domain/conceptoBloqueado";
 
 interface Props {
   venta: ConceptoVentaRow;
@@ -30,15 +31,20 @@ export function FilaVentaPrecio({
   venta, totalUSD, esMixta, cols, showContenedorCol,
   embarqueId, tcUSD, disableRemove, update, remove,
 }: Props) {
+  // Los conceptos ya facturados son descartados por la RPC de guardado, así
+  // que la fila se muestra en sólo lectura en vez de aceptar cambios que se
+  // perderían en silencio.
+  const bloqueado = ventaBloqueada(venta.estadoFacturacion);
   return (
-    <div className={`grid ${cols} gap-2 items-center`}>
+    <div className={`grid ${cols} gap-2 items-center`} title={bloqueado ? MOTIVO_VENTA_BLOQUEADA : undefined}>
       <ConceptoCatalogoSelect
         value={venta.concepto}
+        disabled={bloqueado}
         onChange={v => update(venta.id, 'concepto', v)}
       />
-      <NumericInput value={venta.cantidad} onChange={n => update(venta.id, 'cantidad', n)} className="text-body h-10" aria-label="Cantidad venta" />
-      <NumericInput decimals value={venta.precioUnitario} onChange={n => update(venta.id, 'precioUnitario', n)} className="text-body h-10" aria-label="Subtotal venta" />
-      <Select value={venta.moneda} onValueChange={v => update(venta.id, 'moneda', v)}>
+      <NumericInput value={venta.cantidad} disabled={bloqueado} onChange={n => update(venta.id, 'cantidad', n)} className="text-body h-10" aria-label="Cantidad venta" />
+      <NumericInput decimals value={venta.precioUnitario} disabled={bloqueado} onChange={n => update(venta.id, 'precioUnitario', n)} className="text-body h-10" aria-label="Subtotal venta" />
+      <Select value={venta.moneda} disabled={bloqueado} onValueChange={v => update(venta.id, 'moneda', v)}>
         <SelectTrigger className="text-body"><SelectValue /></SelectTrigger>
         {/* Ola 2 · A (YAGNI): la venta sólo se factura en MXN o USD. EUR sigue
             disponible en costos/CxP, pero aquí terminaba facturándose en $0. */}
@@ -48,6 +54,7 @@ export function FilaVentaPrecio({
         <SelectContenedorConcepto
           embarqueId={embarqueId}
           value={venta.contenedorId ?? null}
+          disabled={bloqueado}
           onChange={v => update(venta.id, 'contenedorId', v)}
           className="text-body"
         />
@@ -71,7 +78,7 @@ export function FilaVentaPrecio({
           </Tooltip>
         )}
       </div>
-      <Button variant="ghost" size="icon" className="min-h-11 min-w-11 md:h-8 md:w-8 md:min-h-0 md:min-w-0" onClick={() => remove(venta.id)} disabled={disableRemove} aria-label="Eliminar concepto de venta">
+      <Button variant="ghost" size="icon" className="min-h-11 min-w-11 md:h-8 md:w-8 md:min-h-0 md:min-w-0" onClick={() => remove(venta.id)} disabled={disableRemove || bloqueado} aria-label="Eliminar concepto de venta">
         <Trash2 className="h-4 w-4 text-destructive" />
       </Button>
     </div>
