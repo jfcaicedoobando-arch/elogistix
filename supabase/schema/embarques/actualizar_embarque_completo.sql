@@ -1,14 +1,13 @@
--- Fuente canónica de public.actualizar_embarque_completo
--- Regenerada 1:1 con supabase/migrations/20260819100000_fix_proveedor_conceptos_costo.sql
--- (incluye el guard v13.509.0 de proveedor_nombre: un nombre vacío ya no borra
--- el proveedor existente).
--- Cada cambio DEBE actualizarse aquí en el mismo PR que la migración correspondiente.
--- Ver supabase/schema/README.md.
+-- Espejo canónico de public.actualizar_embarque_completo
+-- Fuente vigente (mayor timestamp): 20260908000100_ola_p1_org_scope_credito_idempotencia.sql
+-- Vigilado por `bun run audit:replay-mirror` y `audit:schema-functions`.
 
-CREATE OR REPLACE FUNCTION public.actualizar_embarque_completo(p_embarque_id uuid, p_embarque jsonb, p_conceptos_venta jsonb DEFAULT '[]'::jsonb, p_conceptos_costo jsonb DEFAULT '[]'::jsonb, p_request_id uuid DEFAULT NULL::uuid, p_expected_updated_at timestamp with time zone DEFAULT NULL::timestamp with time zone) RETURNS jsonb
-    LANGUAGE plpgsql SECURITY DEFINER
-    SET search_path TO 'public'
-    AS $$
+CREATE OR REPLACE FUNCTION public.actualizar_embarque_completo(p_embarque_id uuid, p_embarque jsonb, p_conceptos_venta jsonb DEFAULT '[]'::jsonb, p_conceptos_costo jsonb DEFAULT '[]'::jsonb, p_request_id uuid DEFAULT NULL::uuid, p_expected_updated_at timestamp with time zone DEFAULT NULL::timestamp with time zone)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO 'public'
+AS $function$
 DECLARE
   v_org_id uuid;
   v_resp jsonb;
@@ -18,11 +17,10 @@ DECLARE
   v_incoming_costo_ids uuid[];
   v_new_id uuid;
   v_current_updated_at timestamptz;
+  v_cliente_actual uuid;
 BEGIN
-  v_resp := public.idempotency_claim(p_request_id, 'actualizar_embarque_completo');
-  IF v_resp IS NOT NULL THEN RETURN v_resp; END IF;
-  SELECT organization_id, updated_at
-    INTO v_org_id, v_current_updated_at
+  SELECT organization_id, updated_at, cliente_id
+    INTO v_org_id, v_current_updated_at, v_cliente_actual
     FROM embarques
    WHERE id = p_embarque_id
    FOR UPDATE;
@@ -37,6 +35,14 @@ BEGIN
               'client_expected_updated_at', p_expected_updated_at
             )::text;
   END IF;
+  PERFORM public._assert_relaciones_embarque(
+    v_org_id,
+    COALESCE(NULLIF(p_embarque->>'cliente_id','')::uuid, v_cliente_actual),
+    NULLIF(p_embarque->>'cotizacion_id','')::uuid,
+    p_conceptos_costo
+  );
+  v_resp := public.idempotency_claim(p_request_id, 'actualizar_embarque_completo');
+  IF v_resp IS NOT NULL THEN RETURN v_resp; END IF;
   UPDATE embarques SET
     cliente_id = COALESCE((p_embarque->>'cliente_id')::uuid, cliente_id),
     cliente_nombre = COALESCE(p_embarque->>'cliente_nombre', cliente_nombre),
@@ -169,12 +175,10 @@ BEGIN
      )
      AND NOT (id = ANY(v_incoming_costo_ids));
   v_resp := jsonb_build_object('ok', true, 'embarque_id', p_embarque_id);
-  -- v13.509.5 · firma real: idempotency_store(_key uuid, _response jsonb)
   PERFORM public.idempotency_store(p_request_id, v_resp);
   RETURN v_resp;
 END;
-$$;
+$function$;
 
--- Permisos (1:1 con la migración 20260819100000):
-REVOKE ALL ON FUNCTION public.actualizar_embarque_completo(uuid, jsonb, jsonb, jsonb, uuid, timestamp with time zone) FROM PUBLIC, anon;
-GRANT EXECUTE ON FUNCTION public.actualizar_embarque_completo(uuid, jsonb, jsonb, jsonb, uuid, timestamp with time zone) TO authenticated, service_role;
+REVOKE ALL ON FUNCTION public.actualizar_embarque_completo(uuid, jsonb, jsonb, jsonb, uuid, timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.actualizar_embarque_completo(uuid, jsonb, jsonb, jsonb, uuid, timestamptz) TO authenticated, service_role;
