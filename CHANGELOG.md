@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.811.1] - 2026-08-31
+
+- **Fix crítico · timbrado con límite de crédito**: `credito_en_uso_mxn` sólo está otorgada a `service_role`, pero se llamaba con el cliente que lleva el JWT del usuario (rol `authenticated`), así que devolvía permission denied y todo cliente con límite configurado quedaba bloqueado con 503 `credito_no_verificable`. Ahora la RPC se ejecuta con un cliente admin (mismo patrón que `_shared/facturapiAuth.ts`).
+- **Fix · buscador de Compras con comas o paréntesis**: pagos, notas de crédito y el resolver de facturas de proveedor ahora construyen los filtros con `orIlike`/`ilikePattern`, así que términos como "Acme, S.A. de C.V." dejan de romper el árbol lógico de PostgREST (error 400) y comodines `%`/`_` se tratan como literales.
+
 ## [13.811.0] - 2026-08-30
 
 - **Ola 3 · crédito fail-closed y boundary de timbrado del lado del servidor**.
