@@ -66,9 +66,10 @@ export function CotizacionesPageActions({
               <Sparkles className="mr-2 h-4 w-4" /> Plantillas
             </Link>
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={onExportar}>
+          <DropdownMenuItem onClick={onExportar} disabled={totalFiltrado === 0}>
             <Download className="mr-2 h-4 w-4" /> Exportar CSV
           </DropdownMenuItem>
+
         </DropdownMenuContent>
       </DropdownMenu>
     </>
