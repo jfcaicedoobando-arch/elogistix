@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.813.0] - 2026-08-31
+
+- **Fix · edición fantasma de conceptos en el wizard de embarques**: `actualizar_embarque_completo` sólo actualiza ventas en `pendiente`/`en_proforma` y costos que no estén `Pagado`, pero la UI dejaba editar y borrar cualquier renglón y luego mostraba "guardado correctamente" aunque la RPC lo hubiera descartado. Ahora el estado (`estado_facturacion` / `estado_liquidacion`) viaja en la hidratación y las filas ya facturadas o pagadas se muestran en sólo lectura, con el motivo en el tooltip y el botón de borrar deshabilitado (nuevo helper `conceptoBloqueado` con pruebas unitarias).
+
 ## [13.812.0] - 2026-08-31
 
 - **Ola 4 · nota de crédito en $0 bloqueada del lado del servidor**: `validateNcContext` sólo exigía cantidad > 0 y precio >= 0, así que una NC con todos los precios en cero llegaba al PAC. Ahora `facturapi-emitir-nota-credito` calcula el total de los conceptos y responde 422 `nc_total_cero` antes del claim y de FacturAPI (espejo de `validarTotalPositivo` en facturas).
