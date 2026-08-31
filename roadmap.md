@@ -28,3 +28,7 @@ Pendiente (decisión de producto):
 - `tracking_externo` / `tracking_intentos`: mantener sólo si se hace B-21 (Terminal49); si no, retirar.
 - Redirects legacy de rutas: retirar cuando haya analítica de uso real.
 - Flag `inline` de `ProtectedRoute`: simplificar (un solo consumidor real).
+
+## Pulido v13.817.0
+- [x] Hallazgo 6: mensajes en español MX en errores de `facturapi-emitir`
+- [x] Ola lint: complejidad en cotizacionDraftStorage, update.ts, NuevoEmbarque, useTraspasoForm

@@ -71,44 +71,57 @@ interface RawDraftShape {
 /** El archivo MSDS nunca sobrevive a `JSON.stringify`; siempre se avisa. */
 const AVISO_MSDS = "El archivo MSDS adjunto (si lo había) — vuelve a adjuntarlo";
 
+/** Valida shape mínimo y versión soportada del JSON crudo del draft. */
+function leerBag(raw: string): RawDraftShape | null {
+  const parsedUnknown: unknown = JSON.parse(raw);
+  if (!parsedUnknown || typeof parsedUnknown !== "object") return null;
+  const bag = parsedUnknown as RawDraftShape;
+  if (typeof bag.savedAt !== "number") return null;
+  // Aceptamos v1/v2 (legacy, sin paso/costos) y v3 (completo).
+  if (bag.version !== 1 && bag.version !== 2 && bag.version !== 3) return null;
+  return bag;
+}
+
+/**
+ * VF-17: frescura del borrador — inválido si expiró (>24 h) o si su timestamp
+ * está en el futuro más allá del sesgo de reloj (TZ/reloj desajustado generaba
+ * prompts fantasma de "guardado hace 2 min" en una sesión nueva).
+ */
+function esFresco(savedAt: number): boolean {
+  const ahora = Date.now();
+  return ahora - savedAt <= DRAFT_TTL_MS && savedAt <= ahora + CLOCK_SKEW_MS;
+}
+
+function avisosNoRestaurado(version: unknown): string[] {
+  const noRestaurado: string[] = [AVISO_MSDS];
+  if (version !== 3) {
+    noRestaurado.push("El paso del asistente en el que ibas — se reinicia en el Paso 1");
+    noRestaurado.push("Los costos internos capturados — tendrás que volver a agregarlos");
+  }
+  return noRestaurado;
+}
+
 export function loadDraft(userId: string, organizationId?: string | null): StoredDraft | null {
   const raw = safeLocalStorage.getItem(draftKey(userId, organizationId));
   if (!raw) return null;
   try {
-    const parsedUnknown: unknown = JSON.parse(raw);
-    if (!parsedUnknown || typeof parsedUnknown !== "object" || typeof (parsedUnknown as RawDraftShape).savedAt !== "number") {
-      return null;
-    }
-    const bag = parsedUnknown as RawDraftShape;
-    const versionRaw = bag.version;
-    // Aceptamos v1/v2 (legacy, sin paso/costos) y v3 (completo).
-    if (versionRaw !== 1 && versionRaw !== 2 && versionRaw !== 3) return null;
+    const bag = leerBag(raw);
+    if (!bag) return null;
     const savedAtNum = bag.savedAt as number;
-    // VF-17: frescura del borrador — se descarta si expiró (>24 h) o si su
-    // timestamp está en el futuro más allá del sesgo de reloj (TZ/reloj
-    // desajustado generaba prompts fantasma de "guardado hace 2 min" en una
-    // sesión nueva). La clave ya es por usuario (`draftKey(userId)`).
-    const ahora = Date.now();
-    if (ahora - savedAtNum > DRAFT_TTL_MS || savedAtNum > ahora + CLOCK_SKEW_MS) {
+    if (!esFresco(savedAtNum)) {
       safeLocalStorage.removeItem(draftKey(userId, organizationId));
       return null;
-    }
-
-    const noRestaurado: string[] = [AVISO_MSDS];
-    if (versionRaw !== 3) {
-      noRestaurado.push("El paso del asistente en el que ibas — se reinicia en el Paso 1");
-      noRestaurado.push("Los costos internos capturados — tendrás que volver a agregarlos");
     }
 
     // SAFE-CAST: shape mínimo validado + rehidratación de fechas.
     const parsed: StoredDraft = {
       version: 3,
-      savedAt: bag.savedAt as number,
+      savedAt: savedAtNum,
       cotizacionId: typeof bag.cotizacionId === "string" ? bag.cotizacionId : null,
       values: bag.values as CotizacionFormValues,
       currentStep: typeof bag.currentStep === "number" && bag.currentStep >= 1 ? bag.currentStep : 1,
       costosInternos: Array.isArray(bag.costosInternos) ? (bag.costosInternos as FilaCostoLocal[]) : [],
-      noRestaurado,
+      noRestaurado: avisosNoRestaurado(bag.version),
       tabId: typeof bag.tabId === "string" ? bag.tabId : undefined,
     };
     reviveDateFields(parsed.values);

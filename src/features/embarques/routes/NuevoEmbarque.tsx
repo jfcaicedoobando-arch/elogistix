@@ -16,10 +16,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { AlertTriangle } from "lucide-react";
 import { EmbarqueWizardLayout } from "@/features/embarques/components/EmbarqueWizardLayout";
-import { StepDatosGenerales } from "@/features/embarques/components/StepDatosGenerales";
-import { StepDatosRuta } from "@/features/embarques/components/StepDatosRuta";
-import { StepDocumentos } from "@/features/embarques/components/StepDocumentos";
-import { StepCostosPrecios } from "@/features/embarques/components/StepCostosPrecios";
+import { NuevoEmbarquePasos } from "@/features/embarques/components/NuevoEmbarquePasos";
 import { useNuevoEmbarqueWizard } from "@/features/embarques/hooks";
 import { CotizacionVinculadaProvider } from "@/features/embarques/hooks/useHeredadoCotizacion";
 
@@ -166,53 +163,7 @@ export default function NuevoEmbarque() {
           errorTitle="No se pudieron cargar los catálogos"
           errorDescription="Sin clientes, proveedores y cotizaciones no podemos abrir el wizard. Reintenta."
         >
-        {w.currentStep === 1 && (
-          <StepDatosGenerales
-            clientes={w.clientes}
-            clienteNombre={w.selectedCliente?.nombre || ""}
-            contactos={w.contactos}
-            onMsdsUpload={w.handleMsdsUpload}
-            errors={w.validationErrors[1] || {}}
-            cotizacionesAceptadas={w.cotizacionesAceptadas}
-            cotizacionVinculada={w.cotizacionVinculada}
-            onVincularCotizacion={w.handleVincularCotizacion}
-            onDesvincularCotizacion={w.handleDesvincularCotizacion}
-            modoExpediente={w.modoExpediente}
-            onModoExpedienteChange={w.handleModoExpedienteChange}
-            expedienteSeleccionado={w.expedienteSeleccionado}
-            onSeleccionarExpediente={w.handleSeleccionarExpediente}
-          />
-        )}
-        {w.currentStep === 2 && (
-          <StepDatosRuta
-            errors={w.validationErrors[2] || {}}
-            diasTransitoSugerencia={w.cotizacionVinculada?.tiempo_transito_dias ?? null}
-          />
-        )}
-        {w.currentStep === 3 && (
-          <StepDocumentos
-            documentos={w.getDocumentosChecklist(w.modo)}
-            onFileChange={w.setDocumentoArchivo}
-            errors={w.validationErrors[3] || {}}
-          />
-        )}
-        {w.currentStep === 4 && (
-          <StepCostosPrecios
-            conceptosVenta={w.conceptosVenta}
-            conceptosCosto={w.conceptosCosto}
-            proveedoresDb={w.proveedoresDb}
-            subtotalVenta={w.subtotalVenta}
-            totalCosto={w.totalCosto}
-            utilidadEstimada={w.utilidadEstimada}
-            updateConceptoVenta={w.updateConceptoVenta}
-            addConceptoVenta={w.addConceptoVenta}
-            removeConceptoVenta={w.removeConceptoVenta}
-            updateConceptoCosto={w.updateConceptoCosto}
-            addConceptoCosto={w.addConceptoCosto}
-            removeConceptoCosto={w.removeConceptoCosto}
-            errors={w.validationErrors[4] || {}}
-          />
-        )}
+        <NuevoEmbarquePasos w={w} />
         </AsyncBoundary>
       </EmbarqueWizardLayout>
       </CotizacionVinculadaProvider>

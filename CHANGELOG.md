@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.817.0] - 2026-08-31
+- Timbrado: los errores de `facturapi-emitir` muestran mensaje en español (sesión expirada, sin permiso, factura no encontrada) en vez del slug técnico.
+- Lint/Power-of-10: se redujo la complejidad de `loadDraft`, `updateCotizacion`, `NuevoEmbarque` (pasos extraídos a `NuevoEmbarquePasos`) y la validación de `useTraspasoForm`, sin cambios de comportamiento.
+
 ## [13.816.0] - 2026-08-31
 
 - **Fix · reasignación de pagos concurrente (`reasignar_pago_factura`)**: dos reasignaciones simultáneas del mismo pago (doble clic) leían la fila viva antes de que la otra la diera de baja y duplicaban el importe en la factura destino. Ahora el pago se lee con `SELECT ... FOR UPDATE` y se revalida tras el lock; la segunda recibe `LC_REFACT_PAGO_NO_ENCONTRADO`. Además el saldo destino usa el canon `nc_aplicadas_en_moneda_factura` y la tolerancia de sobrepago se unificó con el trigger (0.005).

@@ -36,10 +36,10 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir", async (req) => {
   const preflight = handlePreflightStrict(req);
   if (preflight) return preflight;
   const json = makeJson(req);
-  if (req.method !== "POST") return json({ error: "method_not_allowed" }, 405);
+  if (req.method !== "POST") return json({ error: "method_not_allowed", message: "Método no permitido." }, 405);
 
   const authHeader = req.headers.get("Authorization");
-  if (!authHeader) return json({ error: "unauthorized" }, 401);
+  if (!authHeader) return json({ error: "unauthorized", message: "Tu sesión expiró. Vuelve a iniciar sesión e intenta de nuevo." }, 401);
 
   const supabase = createClient(SUPABASE_URL, SERVICE_KEY, {
     global: { headers: { Authorization: authHeader } },
@@ -47,17 +47,17 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir", async (req) => {
   });
 
   const { data: userData, error: userErr } = await supabase.auth.getUser();
-  if (userErr || !userData.user) return json({ error: "unauthorized" }, 401);
+  if (userErr || !userData.user) return json({ error: "unauthorized", message: "Tu sesión expiró. Vuelve a iniciar sesión e intenta de nuevo." }, 401);
 
   const body = (await req.json().catch(() => ({}))) as ReqBody;
-  if (!body.factura_id) return json({ error: "factura_id_required" }, 400);
+  if (!body.factura_id) return json({ error: "factura_id_required", message: "No se recibió la factura a timbrar. Recarga la página e intenta de nuevo." }, 400);
 
   const factura = await loadFactura(supabase, body.factura_id);
   if (factura instanceof Response) return factura;
   if (factura.facturapi_id) return json({ error: "ya_timbrada", message: "Esta factura ya fue timbrada en Facturapi." }, 409);
 
   if (!(await authorizeOrgRole(supabase, userData.user.id, factura.organization_id, ROLES_EMISOR_FISCAL))) {
-    return json({ error: "forbidden" }, 403);
+    return json({ error: "forbidden", message: "Tu rol no tiene permiso para timbrar facturas de esta organización." }, 403);
   }
 
   // Ola 3 · B: estado timbrable + TC fiscal + total > 0 + límite de crédito,

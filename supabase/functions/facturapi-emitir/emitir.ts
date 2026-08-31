@@ -37,7 +37,7 @@ export async function loadFactura(supabase: SupabaseClient, facturaId: string): 
     // Ola 3 · B: una factura en papelera no es timbrable ni por llamada directa.
     .is("deleted_at", null)
     .maybeSingle();
-  if (fErr || !factura) return jsonResponse({ error: "factura_not_found", detail: fErr?.message }, 404);
+  if (fErr || !factura) return jsonResponse({ error: "factura_not_found", message: "No encontramos la factura (pudo eliminarse o moverse a la papelera).", detail: fErr?.message }, 404);
   return factura as FacturaRow;
 }
 
@@ -199,7 +199,7 @@ async function persistirFacturaTimbrada(
     .select("id")
     .maybeSingle();
 
-  if (updErr) return jsonResponse({ error: "db_update_failed", detail: updErr.message }, 500);
+  if (updErr) return jsonResponse({ error: "db_update_failed", message: "El CFDI se timbró pero no se pudo guardar en el sistema. Usa 'Recuperar timbrado' para sincronizarlo.", detail: updErr.message }, 500);
   if (!updRow) return jsonResponse({ error: "claim_perdido", message: "El claim de timbrado se perdió; verifica el estado en Facturapi.", facturapi_id: facturapiId, uuid }, 409);
 
   // Al timbrar una SUSTITUTA, dejar la relación bidireccional en la original.
