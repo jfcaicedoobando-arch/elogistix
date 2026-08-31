@@ -1,5 +1,5 @@
 -- Espejo canónico de public.cancelar_liquidacion_comision
--- Fuente vigente (mayor timestamp): 20260906000000_ola1_reabrir_y_cancelar_liquidacion.sql
+-- Fuente vigente (mayor timestamp): 20260908000000_yg02_liquidaciones_rol_por_org.sql
 -- Vigilado por `bun run audit:replay-mirror` y `audit:schema-functions`.
 
 CREATE OR REPLACE FUNCTION public.cancelar_liquidacion_comision(p_liquidacion_id uuid, p_motivo text)
@@ -17,20 +17,12 @@ BEGIN
     RAISE EXCEPTION 'No autenticado' USING ERRCODE = '42501';
   END IF;
 
-  IF NOT EXISTS (
-    SELECT 1 FROM public.user_roles ur
-    WHERE ur.user_id = v_uid
-      AND ur.role::text = ANY (ARRAY['admin','admin_org','super_admin','contador','tesorero'])
-  ) THEN
-    RAISE EXCEPTION 'LC_LIQUIDACION_SIN_ROL: Sólo administración, contabilidad o tesorería pueden cancelar liquidaciones.'
-      USING ERRCODE = '42501';
-  END IF;
-
   IF COALESCE(TRIM(p_motivo), '') = '' THEN
     RAISE EXCEPTION 'LC_LIQUIDACION_MOTIVO_REQUERIDO: Captura el motivo de la cancelación.'
       USING ERRCODE = '42501';
   END IF;
 
+  -- YG-02: primero la fila (con candado), después la autorización por org.
   SELECT * INTO v_row FROM public.liquidaciones_comision
   WHERE id = p_liquidacion_id AND deleted_at IS NULL
   FOR UPDATE;
@@ -42,6 +34,13 @@ BEGIN
   IF v_row.organization_id IS DISTINCT FROM public.current_user_org_id()
      AND NOT public.has_role(v_uid,'super_admin'::app_role) THEN
     RAISE EXCEPTION 'LC_LIQUIDACION_OTRA_ORG: La liquidación pertenece a otra organización.';
+  END IF;
+
+  IF NOT public.has_any_role_in_org_exact(v_uid,
+       ARRAY['admin','admin_org','super_admin','contador','tesorero']::public.app_role[],
+       v_row.organization_id) THEN
+    RAISE EXCEPTION 'LC_LIQUIDACION_SIN_ROL: Sólo administración, contabilidad o tesorería pueden cancelar liquidaciones.'
+      USING ERRCODE = '42501';
   END IF;
 
   IF v_row.estado = 'Cancelada' THEN
@@ -90,3 +89,7 @@ BEGIN
   RETURN v_row;
 END;
 $function$;
+
+REVOKE ALL ON FUNCTION public.cancelar_liquidacion_comision(uuid, text) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.cancelar_liquidacion_comision(uuid, text) FROM anon;
+GRANT EXECUTE ON FUNCTION public.cancelar_liquidacion_comision(uuid, text) TO authenticated, service_role;

@@ -18,8 +18,8 @@ BEGIN
   VALUES ('TEST NC UUID FISCAL', 'TNU000000XX0', 'basico', true)
   RETURNING id INTO v_org;
 
-  INSERT INTO public.clientes (organization_id, nombre, rfc)
-  VALUES (v_org, 'CLIENTE NC UUID', '') RETURNING id INTO v_cli;
+  INSERT INTO public.clientes (organization_id, nombre, rfc, email)
+  VALUES (v_org, 'CLIENTE NC UUID', '', 'cliente.nc.uuid@test.local') RETURNING id INTO v_cli;
 
   INSERT INTO public.embarques (organization_id, cliente_id, expediente, modo, tipo)
   VALUES (v_org, v_cli, 'ELIMP00901', 'Marítimo'::public.modo_transporte,

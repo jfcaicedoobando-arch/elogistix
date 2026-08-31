@@ -129,6 +129,11 @@ export function DialogRegistrarPago({ open, onOpenChange, factura }: Props) {
     <ResumenSaldo total={factura.total} pagado={totalPagado} saldo={saldo} moneda={factura.moneda} />
   );
 
+  // YG-04: hay datos capturados que se perderían al cerrar el modal.
+  const isDirty =
+    values.referencia.trim() !== "" || values.notas.trim() !== "" ||
+    montoNum !== Number(saldo.toFixed(2));
+
   const ocupado = isPending || timbrandoRep;
   const footer = (
     <FooterAcciones
@@ -150,6 +155,7 @@ export function DialogRegistrarPago({ open, onOpenChange, factura }: Props) {
       headerAside={headerAside}
       size="md"
       footer={footer}
+      isDirty={isDirty}
     >
       {/* v13.550.0 — `<form>` real: Enter en cualquier campo guarda el pago
           (el botón del footer envía este formulario vía `form={FORM_ID}`). */}

@@ -36,8 +36,8 @@ BEGIN
   INSERT INTO public.organization_members (organization_id, user_id, role)
   VALUES (v_org, v_uid_fin, 'contador'::public.app_role) ON CONFLICT DO NOTHING;
 
-  INSERT INTO public.clientes (organization_id, nombre, rfc)
-  VALUES (v_org, 'CLIENTE ROL FIN', '') RETURNING id INTO v_cli;
+  INSERT INTO public.clientes (organization_id, nombre, rfc, email)
+  VALUES (v_org, 'CLIENTE ROL FIN', '', 'cliente.rol.fin@test.local') RETURNING id INTO v_cli;
 
   INSERT INTO public.presupuesto_categorias (organization_id, nombre, orden, activa)
   VALUES (v_org, 'Costo directo TEST ROLFIN', 1, true) RETURNING id INTO v_cat;

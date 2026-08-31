@@ -14,6 +14,10 @@ export const cotizaciones = {
   },
   // P3 (v13.297.0): Versiones (snapshots inmutables) por cotización.
   versiones: (cotizacionId: string) => ['cotizacion_versiones', cotizacionId] as const,
+  // YG-03: listado paginado server-side + agregados (KPIs, conteos por segmento).
+  paged: (organizationId?: string | null) => ['cotizaciones', 'paged', organizationId] as const,
+  agregados: (organizationId?: string | null, segmento?: string) =>
+    ['cotizaciones', 'agregados', organizationId, segmento] as const,
 } as const;
 
 export const productosCatalogo = (organizationId?: string | null) =>

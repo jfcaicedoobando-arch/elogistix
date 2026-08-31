@@ -11,6 +11,7 @@ import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import type { ConceptoNotaCredito } from "@/features/facturacion/services/notasCredito";
 import { NotaCreditoCamposFiscales } from "./detalle/NotaCreditoCamposFiscales";
 import { NotaCreditoConceptosEditor } from "./detalle/NotaCreditoConceptosEditor";
+import { FaltantesHint } from "./FaltantesHint";
 import { useNotaCreditoDraft, makeConcepto } from "../hooks/useNotaCreditoDraft";
 import type { MonedaNotaCredito as Moneda } from "@/features/facturacion/types";
 
@@ -36,15 +37,18 @@ export function DialogCrearNotaCredito(props: Props) {
   } = props;
 
   const footer = (
-    <>
-      <Button variant="outline" onClick={() => onOpenChange(false)} disabled={s.guardando}>Cancelar</Button>
-      <Button variant="secondary" onClick={() => s.handleSubmit(false)} disabled={!s.puedeGuardar || s.guardando}>
-        Guardar borrador
-      </Button>
-      <Button onClick={() => s.handleSubmit(true)} disabled={!s.puedeTimbrar || s.guardando}>
-        {s.guardando ? "Procesando…" : "Guardar y timbrar"}
-      </Button>
-    </>
+    <div className="flex w-full flex-wrap items-center gap-2">
+      {!s.puedeTimbrar && <FaltantesHint items={s.faltantesTimbrar} className="mr-auto" />}
+      <div className="ml-auto flex flex-wrap items-center gap-2">
+        <Button variant="outline" onClick={() => onOpenChange(false)} disabled={s.guardando}>Cancelar</Button>
+        <Button variant="secondary" onClick={() => s.handleSubmit(false)} disabled={!s.puedeGuardar || s.guardando}>
+          Guardar borrador
+        </Button>
+        <Button onClick={() => s.handleSubmit(true)} disabled={!s.puedeTimbrar || s.guardando}>
+          {s.guardando ? "Procesando…" : "Guardar y timbrar"}
+        </Button>
+      </div>
+    </div>
   );
 
   return (
@@ -61,6 +65,8 @@ export function DialogCrearNotaCredito(props: Props) {
       }
       size="lg"
       footer={footer}
+      // YG-04: con descripción o conceptos capturados, cerrar pide confirmación.
+      isDirty={s.isDirty}
     >
       {s.facturaLiquidada && (
         <Alert variant="destructive">

@@ -17,7 +17,7 @@ import { FormDialogSection } from "@/components/shared/FormDialogSection";
 import { DatePickerMx } from "@/components/ui/date-picker-mx";
 import { MoneyInput } from "@/components/shared/MoneyInput";
 import { useRegistrarTraspaso } from "@/features/tesoreria/hooks/useTraspasos";
-import { useTraspasoForm } from "@/features/tesoreria/hooks/useTraspasoForm";
+import { useTraspasoForm, traspasoSucio } from "@/features/tesoreria/hooks/useTraspasoForm";
 import { etiquetaTc } from "@/features/tesoreria/domain/tcPar";
 
 import type { Tables } from "@/integrations/supabase/types";
@@ -52,6 +52,8 @@ export function DialogTraspasoCuentas({ open, onOpenChange, cuentas }: DialogTra
   const tipoCambioFinal = mismoMoneda ? 1 : (factorOrigenDestino ?? 0);
   const bloqueado = !!error || isPending || !(tipoCambioFinal > 0);
 
+  // YG-04: hay datos capturados que se perderían al cerrar el modal.
+  const isDirty = traspasoSucio(state);
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -83,6 +85,7 @@ export function DialogTraspasoCuentas({ open, onOpenChange, cuentas }: DialogTra
       size="lg"
       formId={FORM_ID}
       onSubmit={handleSubmit}
+      isDirty={isDirty}
       footer={
         <FormDialogFooter
           formId={FORM_ID}

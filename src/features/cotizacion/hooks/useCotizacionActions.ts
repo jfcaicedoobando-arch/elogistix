@@ -11,7 +11,7 @@ import { todayLocalISO } from "@/lib/date/today";
 
 export interface CotizacionExportRow {
   folio: string;
-  cliente_nombre: string;
+  cliente_nombre: string | null;
   modo: string;
   origen?: string | null;
   destino?: string | null;
@@ -44,7 +44,14 @@ export function useCotizacionActions() {
     setCotizacionAEliminar(null);
   };
 
-  const exportar = (filas: CotizacionExportRow[]) => {
+  /**
+   * YG-03: recibe un *loader* (no un array ya en memoria) porque el listado es
+   * server-side: el CSV debe incluir todo el resultado filtrado, trayéndolo por
+   * lotes en el momento de exportar.
+   */
+  const exportar = async (cargarFilas: () => Promise<CotizacionExportRow[]>) => {
+    const filas = await cargarFilas();
+
     exportToCsv(
       `cotizaciones_${todayLocalISO()}.csv`,
       [
@@ -59,7 +66,7 @@ export function useCotizacionActions() {
       ],
       filas.map((c) => ({
         folio: c.folio,
-        cliente: c.cliente_nombre,
+        cliente: c.cliente_nombre ?? "",
         modo: c.modo,
         ruta: `${c.origen || ""} → ${c.destino || ""}`,
         subtotal: c.subtotal,

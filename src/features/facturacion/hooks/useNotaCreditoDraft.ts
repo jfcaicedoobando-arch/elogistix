@@ -103,6 +103,23 @@ export function useNotaCreditoDraft(p: Params) {
     !!descripcion.trim() && conceptosValidos && monto > 0 && !excedeSaldo && !facturaLiquidada;
   const puedeTimbrar = puedeGuardar && !sinUuid;
 
+  // YG-06: etiquetas de lo que falta para poder guardar/timbrar la NC.
+  const faltantesGuardar = [
+    facturaLiquidada && "factura con saldo pendiente",
+    !descripcion.trim() && "descripción",
+    !conceptosValidos && "conceptos completos (descripción, cantidad y precio)",
+    monto <= 0 && "importe mayor a cero",
+    excedeSaldo && "monto dentro del saldo de la factura",
+  ].filter((x): x is string => !!x);
+  const faltantesTimbrar = sinUuid
+    ? [...faltantesGuardar, "UUID fiscal de la factura original"]
+    : faltantesGuardar;
+
+  // YG-04: hay algo capturado que se perdería si se cierra el modal.
+  const isDirty =
+    !!descripcion.trim() ||
+    conceptos.some((c) => c.descripcion.trim() !== "" || c.cantidad !== 1 || c.precio_unitario !== 0);
+
   const crearMut = useMutation({
     mutationFn: () => {
       // FIX-11: nunca sustituir TC ausente por 1 en monedas ≠ MXN — provoca cálculos MXN silenciosamente erróneos.
@@ -148,14 +165,18 @@ export function useNotaCreditoDraft(p: Params) {
       if (timbrarAhora && !sinUuid) await timbrar.mutateAsync(nueva.id);
       p.onOpenChange(false);
     } catch (err) {
-      const rawMsg = err instanceof Error ? err.message : "";
-      const description = rawMsg.startsWith("LC_") ? rawMsg : getErrorMessage(err);
+      // YG-05: el usuario nunca ve el código crudo `LC_*` (jerga interna); el
+      // catálogo de `getErrorMessage` lo traduce a español. El texto crudo
+      // queda sólo en observabilidad para diagnóstico.
+      const rawMsg = err instanceof Error ? err.message : String(err ?? "");
+      logger.warn("useNotaCreditoDraft", "handleSubmit failed", rawMsg);
       notifyError(undefined, {
         title: "No se pudo crear la nota de crédito",
-        description,
+        description: getErrorMessage(err),
         method: "ON_ERROR",
         errorCode: ERROR_CODES.VALIDATION_FAILED,
       });
+
 
     } finally {
       setGuardando(false);
@@ -168,5 +189,6 @@ export function useNotaCreditoDraft(p: Params) {
     conceptos, setConceptos,
     monto, excedeSaldo, facturaLiquidada, sinUuid,
     puedeGuardar, puedeTimbrar, guardando, handleSubmit,
+    faltantesGuardar, faltantesTimbrar, isDirty,
   };
 }

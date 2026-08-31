@@ -9,6 +9,7 @@
 import { createClient, type SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { jsonResponse } from "../_shared/response.ts";
 import { authorizeOrgRole } from "../_shared/auth.ts";
+import { validarTcFiscal, esMonedaNacional } from "../_shared/tcBanda.ts";
 import type { FacturaRow } from "./types.ts";
 
 let adminSingleton: SupabaseClient | null = null;
@@ -39,13 +40,10 @@ export const ROLES_OVERRIDE_CREDITO: readonly string[] = [
   "gerente_operaciones", "gerente_comercial",
 ];
 
-const MXN_POR_DEFECTO = 1;
-
 function totalEnMxn(factura: FacturaRow): number {
   const total = Number(factura.total ?? 0);
-  if ((factura.moneda ?? "MXN") === "MXN") return total;
-  const tc = Number(factura.tipo_cambio ?? 0);
-  return total * (tc > 1 ? tc : MXN_POR_DEFECTO);
+  if (esMonedaNacional(factura.moneda)) return total;
+  return total * Number(factura.tipo_cambio);
 }
 
 /**
@@ -83,6 +81,19 @@ export async function validarLimiteCredito(
   const limite = Number(cliente.limite_credito_mxn ?? 0);
   if (!(limite > 0)) return null;
 
+
+  // YG-01: un TC inválido para moneda != MXN subestimaba el límite de crédito
+  // (fallback de factor 1). Fail-closed: no se puede calcular la exposición
+  // real, así que no se timbra.
+  if (!esMonedaNacional(factura.moneda)) {
+    const mensajeTc = validarTcFiscal(factura.moneda, factura.tipo_cambio);
+    if (mensajeTc) {
+      return jsonResponse({
+        error: "credito_no_verificable",
+        message: `No se pudo verificar el límite de crédito del cliente: ${mensajeTc}`,
+      }, 503);
+    }
+  }
 
   const rpcClient = getAdminClient() ?? supabase;
   const { data: enUso, error: errUso } = await rpcClient.rpc("credito_en_uso_mxn", {

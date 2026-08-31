@@ -127,6 +127,8 @@ export function DialogEditarFacturaProveedor({ factura, onOpenChange }: Props) {
       description="Corrige folio, fechas o importes. El proveedor y el CFDI fiscal no se pueden cambiar."
       size="xl"
       footer={footer}
+      // YG-04: con cambios sin guardar, cerrar pide confirmación.
+      isDirty={ctl.hayCambios}
     >
       {ctl.isLoadingRow && (
         <div className="flex items-center justify-center py-12 text-body text-muted-foreground">

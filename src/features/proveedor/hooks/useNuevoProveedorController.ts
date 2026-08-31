@@ -17,7 +17,7 @@ import {
 } from "./useNuevoProveedorController.constants";
 import { mergeCsfPatch, procesarCsfUpload } from "./useNuevoProveedorController.csf";
 import { formInicialProveedor, type PrefillProveedor } from "./useNuevoProveedorController.prefill";
-import { preparePayload } from "./useNuevoProveedorController.helpers";
+import { preparePayload, faltantesPaso1Proveedor } from "./useNuevoProveedorController.helpers";
 import { notifyError } from "@/lib/ui/appFeedback";
 
 export {    type NuevoProveedorForm } from "./useNuevoProveedorController.constants";
@@ -34,7 +34,8 @@ export function useNuevoProveedorController(
   prefill?: PrefillProveedor,
 ) {
   const { organizationId } = useOrgFilter();
-  const [form, setForm] = useState<NuevoProveedorForm>(() => formInicialProveedor(prefill));
+  const initialForm = useState(() => formInicialProveedor(prefill))[0];
+  const [form, setForm] = useState<NuevoProveedorForm>(() => initialForm);
   const [saving, setSaving] = useState(false);
   const [step, setStep] = useState<1 | 2>(1);
   const [documentos, setDocumentos] = useState<DocumentoChecklist[]>([]);
@@ -59,25 +60,9 @@ export function useNuevoProveedorController(
   const isAgenteCarga = isLogistico && form.tipo === "Agente de Carga";
   const rfcLabel = form.origen_proveedor === "Extranjero" ? "Tax ID" : "RFC";
 
-  const isStep1Valid = (): boolean => {
-
-    // Chequeos comunes agrupados en una tabla de aserciones para bajar la
-    // complejidad ciclomática (antes 11, ahora 3).
-    const camposBase: boolean[] = [
-      Boolean(form.categoria),
-      Boolean(form.nombre.trim()),
-      Boolean(form.origen_proveedor),
-      Boolean(form.rfc.trim()),
-    ];
-    if (camposBase.some((ok) => !ok)) return false;
-    // `tipo` es obligatorio para TODO Logístico (nacional y extranjero).
-    // El CHECK `proveedores_categoria_check` exige tipo IS NOT NULL cuando
-    // categoria='Logistico'; permitir tipo=null aquí producía 23514 en BD.
-    if (isLogistico && (!form.tipo || (isAgenteCarga && !form.pais))) return false;
-    if (isGasto && !form.subtipo_gasto) return false;
-    return true;
-  };
-
+  // YG-06: una sola fuente de verdad para "qué falta" y para habilitar el botón.
+  const faltantesStep1 = faltantesPaso1Proveedor(form, rfcLabel);
+  const isStep1Valid = faltantesStep1.length === 0;
 
   const setField = <K extends keyof NuevoProveedorForm>(field: K, value: NuevoProveedorForm[K]) =>
     setForm((prev) => {
@@ -121,7 +106,7 @@ export function useNuevoProveedorController(
   };
 
   const handleNext = () => {
-    if (!isStep1Valid()) return;
+    if (!isStep1Valid) return;
     const lista = form.origen_proveedor === "Extranjero" ? DOCS_EXTRANJERO : DOCS_NACIONAL;
     setDocumentos(lista.map((nombre) => ({ nombre, adjuntado: false })));
     setStep(2);
@@ -145,6 +130,8 @@ export function useNuevoProveedorController(
     reset();
     onClose();
   };
+
+  const isDirty = JSON.stringify(form) !== JSON.stringify(initialForm) || documentos.some((d) => d.adjuntado);
 
   const handleSave = async () => {
 
@@ -183,7 +170,9 @@ export function useNuevoProveedorController(
     rfcLabel,
     rfcDuplicado,
     saving,
-    isStep1Valid: isStep1Valid(),
+    isStep1Valid,
+    faltantesStep1,
+    isDirty,
     setField,
     setStep,
     handleCategoriaChange,

@@ -12,6 +12,7 @@ supabase/tests/schema-invariants.sql
 supabase/tests/cxp_guard_sobrepago.sql
 supabase/tests/cxp_guard_aprobacion_directa.sql
 supabase/tests/fix45_anon_execute_whitelist.sql
+supabase/tests/yg02_comisiones_auth.sql
 supabase/tests/fix3_portal_rls_eventos_notas.sql
 supabase/tests/fix3_portal_rpcs.sql
 supabase/tests/aging_nc_deleted_at.sql

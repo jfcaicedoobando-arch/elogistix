@@ -18,14 +18,17 @@ export async function obtenerUsuarioActual(): Promise<AuthUserLite | null> {
 }
 
 export async function fetchCotizacionFolio(cotizacionId: string): Promise<string | null> {
+  // YG-07: mismo criterio que `services/queries.ts` — soft-deleted = inexistente.
   const { data, error } = await supabase
     .from("cotizaciones")
     .select("folio")
     .eq("id", cotizacionId)
+    .is("deleted_at", null)
     .maybeSingle();
   if (error) throw error;
   return data?.folio ?? null;
 }
+
 
 export interface BloqueoSinTarifaPayload {
   entidadNombre: string;

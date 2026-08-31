@@ -54,6 +54,10 @@ export function DialogNotaCreditoProveedor({ open, onOpenChange, facturaId, mone
   const excede = montoEnFactura !== null && montoEnFactura > saldoFactura + 0.01;
   const valido = Boolean(folio.trim()) && Boolean(fecha) && montoNum > 0 && !excede && !cruceInvalido;
 
+  // YG-04: hay datos capturados que se perderían al cerrar el modal.
+  const isDirty =
+    folio.trim() !== "" || monto.trim() !== "" || descripcion.trim() !== "" || parsedCfdi !== null;
+
   const reset = () => {
     setMode("manual");
     setFolio("");
@@ -148,6 +152,7 @@ export function DialogNotaCreditoProveedor({ open, onOpenChange, facturaId, mone
       description="Emite una NC contra el saldo pendiente de la factura seleccionada."
       size="lg"
       footer={footer}
+      isDirty={isDirty}
     >
       <div className="grid grid-cols-3 gap-2.5 -mt-1">
         <Kpi

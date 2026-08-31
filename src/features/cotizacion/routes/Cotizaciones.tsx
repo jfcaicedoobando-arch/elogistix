@@ -1,4 +1,6 @@
 import { useMemo, useDeferredValue } from "react";
+// YG-03: paginación/filtros server-side vía `useServerPagedList`, encapsulado
+// en `useCotizacionesPageController` (mismo primitivo que CRM/bandejas).
 import { useNavigate } from "react-router-dom";
 import { useDuplicarCotizacion } from "@/features/cotizacion/hooks/useCotizacionVersiones";
 import { Plus } from "lucide-react";
@@ -61,7 +63,8 @@ export default function Cotizaciones() {
       <Seo title="Cotizaciones · Libre Carga" description="Consulta, filtra y da seguimiento a tus cotizaciones." />
       <PageHeader
         title="Cotizaciones"
-        description={`${pluralizar(c.filtered.length, "cotización", { plural: "cotizaciones" })} ${c.filtered.length === 1 ? "encontrada" : "encontradas"}`}
+        description={`${pluralizar(c.total, "cotización", { plural: "cotizaciones" })} ${c.total === 1 ? "encontrada" : "encontradas"}`}
+
 
         actions={
           <CotizacionesPageActions
@@ -149,16 +152,10 @@ export default function Cotizaciones() {
                 esProspecto={r.es_prospecto === true}
               />
             )}
-            pagination={{
-              page: c.page,
-              totalPages: c.totalPages,
-              onPageChange: c.setPage,
-              pageSize: c.pageSize,
-              onPageSizeChange: (s: number) => { c.setPageSize(s); c.setPage(0); },
-              pageSizeOptions: [50, 100, 200, 500],
-              pageSizeLabels: { 500: "500" },
-              total: c.filtered.length,
-            }}
+            pagination={c.pagination}
+            controlledSort={c.controlledSort}
+            onSortChange={c.setSort}
+
           />
         </CardContent>
       </Card>

@@ -19,6 +19,7 @@ import {
   usePagoProveedorForm,
   type PagoEditable,
 } from "@/features/cxp/hooks/usePagoProveedorForm";
+import { pagoProveedorEditadoSucio } from "@/features/cxp/hooks/usePagoProveedorForm.editar";
 
 interface Props {
   open: boolean;
@@ -30,6 +31,9 @@ interface Props {
 export function DialogEditarPagoProveedor({ open, onOpenChange, factura, pago }: Props) {
   const actualizar = useActualizarPagoProveedor(factura?.id ?? "");
   const f = usePagoProveedorForm(factura, open, pago);
+
+  // YG-04: hay cambios sin guardar que se perderían al cerrar el modal.
+  const isDirty = pagoProveedorEditadoSucio(f as unknown as Record<string, unknown>, pago);
 
   const submit = async () => {
     if (!factura || !pago) return;
@@ -87,6 +91,7 @@ export function DialogEditarPagoProveedor({ open, onOpenChange, factura, pago }:
       description="Ajusta el pago registrado. Se validan montos, fechas, tipo de cambio y saldo antes de guardar."
       size="2xl"
       footer={footer}
+      isDirty={isDirty}
     >
       {factura && <PagoFacturaHeaderInfo factura={factura} />}
       <PagoProveedorFormBody factura={factura} {...f} />

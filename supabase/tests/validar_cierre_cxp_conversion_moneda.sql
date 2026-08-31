@@ -30,8 +30,8 @@ BEGIN
   INSERT INTO public.organization_members (organization_id, user_id, role)
   VALUES (v_org, v_uid, 'admin_org'::public.app_role) ON CONFLICT DO NOTHING;
 
-  INSERT INTO public.clientes (organization_id, nombre, rfc)
-  VALUES (v_org, 'CLIENTE CIERRE CONVERSION', '') RETURNING id INTO v_cli;
+  INSERT INTO public.clientes (organization_id, nombre, rfc, email)
+  VALUES (v_org, 'CLIENTE CIERRE CONVERSION', '', 'cierre.conversion@test.local') RETURNING id INTO v_cli;
 
   INSERT INTO public.embarques (organization_id, cliente_id, expediente, modo, tipo)
   VALUES (v_org, v_cli, 'ELCCX00001', 'Aéreo'::public.modo_transporte,
