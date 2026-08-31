@@ -117,6 +117,9 @@ export function TarifaForm({ open, onOpenChange, initial, tarifaId, agenteIdFijo
       open={open}
       onOpenChange={onOpenChange}
       icon={Tag}
+      // Al guardar, `onSuccess` cierra con `onOpenChange(false)` directo: no
+      // pasa por la guarda y por tanto no advierte.
+      isDirty={sucio && !pendiente}
       title={getTituloModal(tituloOverride, esEdicion)}
       description={multiple
         ? "Captura la tarifa una sola vez y elige una o varias rutas para generarlas en lote."
@@ -134,7 +137,8 @@ export function TarifaForm({ open, onOpenChange, initial, tarifaId, agenteIdFijo
             {tooltipFaltantes ?? "Listo para guardar."}
           </p>
           <div className="flex gap-2">
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={pendiente}>Cancelar</Button>
+            <BotonCancelarTarifa disabled={pendiente} onCerrarSinGuarda={() => onOpenChange(false)} />
+
             <Button
               type="submit"
               form="tarifa-form"
