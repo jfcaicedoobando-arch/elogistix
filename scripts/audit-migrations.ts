@@ -190,8 +190,15 @@ const MIG_DIR = path.resolve(process.cwd(), "supabase/migrations");
  *    `20260901002100` re-aplica los permisos (`REVOKE ALL … FROM PUBLIC, anon`
  *    + `GRANT EXECUTE … TO authenticated, service_role`); los archivos
  *    originales quedan como legacy auditado.
+ *  - `20260908000000` — post-FIX-H6-23: las migraciones inmutables
+ *    `20260905000100_ola7_v15_m1_m8_m10_n1.sql`,
+ *    `20260905000200_ola8_v15_candados.sql` y
+ *    `20260906000000_ola1_reabrir_y_cancelar_liquidacion.sql` crearon
+ *    funciones `SECURITY DEFINER` sin el bloque REVOKE/GRANT canónico.
+ *    La migración correctiva re-aplica los permisos; los archivos originales
+ *    quedan como legacy auditado.
  */
-const BASELINE = "20260901002100";
+const BASELINE = "20260908000000";
 
 
 
