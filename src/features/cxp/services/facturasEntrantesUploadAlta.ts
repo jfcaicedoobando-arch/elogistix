@@ -120,14 +120,31 @@ export async function subirArchivosDelBuzon(input: SubirFacturaEntranteInput): P
   // mensaje claro del buzón en vez de un error técnico del almacenamiento.
   const archivoPrincipal = (input.pdf ?? input.xml) as File;
   const hashPrincipal = await calcularHash(archivoPrincipal);
-  await validarNoDuplicadoEnBuzon(hashPrincipal, input.organizationId);
+  // v13.819.2 — se pasa el UUID fiscal y el embarque en curso para que la RPC
+  // pueda decir DÓNDE quedó el duplicado (este embarque, otro, o Compras).
+  const ctxDuplicado = {
+    uuidFiscal: input.meta?.uuid ?? null,
+    embarqueId: input.embarqueId,
+  };
+  await validarNoDuplicadoEnBuzon(
+    hashPrincipal,
+    input.organizationId,
+    "archivo_hash",
+    ctxDuplicado,
+  );
 
   // N36 (Ola 4): el XML acompañante también se deduplica (antes nunca se
   // validaba su hash y podía acompañar varios documentos).
   const hashXmlAcompanante = input.pdf && input.xml ? await calcularHash(input.xml) : null;
   if (hashXmlAcompanante) {
-    await validarNoDuplicadoEnBuzon(hashXmlAcompanante, input.organizationId, "xml_hash");
+    await validarNoDuplicadoEnBuzon(
+      hashXmlAcompanante,
+      input.organizationId,
+      "xml_hash",
+      ctxDuplicado,
+    );
   }
+
 
   const principal = await subirArchivo(archivoPrincipal, input, hashPrincipal);
   const xmlSubido = input.pdf && input.xml

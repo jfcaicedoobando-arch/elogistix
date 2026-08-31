@@ -8,7 +8,9 @@
  * v13.506.0 — El operador marca a qué conceptos de costo corresponde y confirma
  * con un resumen antes de enviar.
  */
+import { useState } from "react";
 import { Inbox } from "lucide-react";
+
 import { notifyError } from "@/lib/ui/appFeedback";
 import { Button } from "@/components/ui/button";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
@@ -25,6 +27,9 @@ import { CfdiMetaPreview } from "@/features/embarques/components/entrantes/CfdiM
 import { NotaContabilidadCampo } from "@/features/embarques/components/entrantes/NotaContabilidadCampo";
 import { SeccionProveedorEntrante } from "@/features/embarques/components/entrantes/SeccionProveedorEntrante";
 import { VerificacionMontoEntrante } from "@/features/embarques/components/entrantes/VerificacionMontoEntrante";
+import { totalCfdiDetectado } from "@/features/embarques/components/entrantes/totalCfdiDetectado";
+import { AvisoDuplicadoBuzon } from "@/features/embarques/components/entrantes/AvisoDuplicadoBuzon";
+import { BuzonDuplicadoError } from "@/features/cxp/services/buzonDuplicado";
 
 interface Props {
   open: boolean;
@@ -39,8 +44,14 @@ export function SubirFacturaEntranteDialog({ open, onOpenChange, embarqueId, org
   const costos = useCostosProveedorEmbarque(embarqueId, form.proveedor?.id);
   const conceptos = useConceptosProveedorEmbarque(embarqueId, form.proveedor?.id);
 
+  // v13.819.2 — el conflicto de duplicado se muestra en línea (con su ubicación
+  // y el CTA al embarque) en vez de sólo un toast que manda a una sección
+  // que el operador puede no tener.
+  const [duplicado, setDuplicado] = useState<BuzonDuplicadoError | null>(null);
+
   const cerrar = () => {
     form.limpiar();
+    setDuplicado(null);
     onOpenChange(false);
   };
 
@@ -48,6 +59,7 @@ export function SubirFacturaEntranteDialog({ open, onOpenChange, embarqueId, org
     // EC-8: sin try/catch, un fallo de storage o de red dejaba una promesa
     // rechazada sin manejar y el usuario no veía nada (el diálogo se quedaba
     // "pensando").
+    setDuplicado(null);
     try {
       await subir.mutateAsync({
         pdf: form.pdf,
@@ -67,6 +79,10 @@ export function SubirFacturaEntranteDialog({ open, onOpenChange, embarqueId, org
       });
       cerrar();
     } catch (error) {
+      if (error instanceof BuzonDuplicadoError) {
+        setDuplicado(error);
+        return;
+      }
       notifyError(undefined, {
         title: "No se pudo subir la factura al buzón",
         error,
@@ -74,6 +90,7 @@ export function SubirFacturaEntranteDialog({ open, onOpenChange, embarqueId, org
       });
     }
   };
+
 
   return (
     <FormDialogShell
@@ -91,6 +108,14 @@ export function SubirFacturaEntranteDialog({ open, onOpenChange, embarqueId, org
         </>
       )}
     >
+      {duplicado && (
+        <AvisoDuplicadoBuzon
+          mensaje={duplicado.message}
+          ubicacion={duplicado.ubicacion}
+          embarqueActualId={embarqueId}
+        />
+      )}
+
       <SeccionArchivosEntrante
         pdf={form.pdf}
         xml={form.xml}
@@ -143,7 +168,7 @@ export function SubirFacturaEntranteDialog({ open, onOpenChange, embarqueId, org
           moneda={form.monedaDeclarada}
           onMonto={form.setMontoDeclarado}
           onMoneda={form.setMonedaDeclarada}
-          totalCfdi={form.meta?.subTotal ?? form.meta?.total ?? null}
+          totalCfdi={totalCfdiDetectado(form.meta)}
           costeadoPorMoneda={costos.data}
           cargandoCostos={costos.isLoading}
           proveedorElegido={Boolean(form.proveedor)}

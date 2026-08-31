@@ -83,8 +83,8 @@ export async function localizarDuplicadoBuzon(params: {
   const { data, error } = await supabase.rpc("buzon_localizar_duplicado", {
     p_hash: params.hash,
     p_columna: params.columna,
-    p_uuid_fiscal: params.uuidFiscal ?? null,
-    p_embarque_id: params.embarqueId ?? null,
+    p_uuid_fiscal: params.uuidFiscal ?? undefined,
+    p_embarque_id: params.embarqueId ?? undefined,
   });
   if (error) return null;
   const fila = (data ?? [])[0];
