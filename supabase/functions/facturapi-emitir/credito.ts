@@ -84,7 +84,8 @@ export async function validarLimiteCredito(
   if (!(limite > 0)) return null;
 
 
-  const { data: enUso, error: errUso } = await supabase.rpc("credito_en_uso_mxn", {
+  const rpcClient = getAdminClient() ?? supabase;
+  const { data: enUso, error: errUso } = await rpcClient.rpc("credito_en_uso_mxn", {
     p_cliente_id: factura.cliente_id,
   });
   // M-15: fail-closed. Si no se puede calcular la exposición, no se timbra.
