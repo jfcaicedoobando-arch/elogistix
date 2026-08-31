@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.818.1] - 2026-08-31
+- **Corrección (Sentry JAVASCRIPT-REACT-1G / JAVASCRIPT-REACT-5M)**: el botón "Ver demo" del login fallaba con error 500 porque el sembrado de la cuenta demo creaba los embarques con fecha de hoy y luego insertaba eventos de rastreo de hasta 45 días atrás, rechazados por el guard `LC_EVENTO_ANTERIOR_A_EMBARQUE`. Ahora cada embarque demo se crea con la fecha de su zarpe (ETD), por lo que la historia sembrada es coherente. Verificado en base local: el sembrado corre sin error.
+
 ## [13.818.0] - 2026-08-31
 - **Correo**: el envío de correos (autenticación, cotizaciones, proformas, facturas, recordatorios y estados de cuenta CxC) pasó a la entrega administrada de la plataforma. Se eliminó la cola interna (`process-email-queue`, `send-transactional-email`, `handle-email-suppression`, `handle-email-unsubscribe`) y la baja de suscripción ahora la hospeda la plataforma (se retiró `/unsubscribe`).
 - Se agregó el receptor de eventos de entrega (rebote, queja, baja) que sigue registrando en `email_send_log` y `suppressed_emails` con los mismos estados; las tablas históricas se conservan intactas.
