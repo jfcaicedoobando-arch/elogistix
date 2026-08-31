@@ -43,11 +43,21 @@ export async function updateEstadoCotizacion(
   if (embarqueId !== undefined) {
     update.embarque_id = embarqueId;
   }
-  const { error } = await supabase
+  // v13.814.0 (hallazgo 1): un UPDATE filtrado por RLS o sobre un id
+  // inexistente no da error, devuelve 0 filas. La bitácora sólo se escribe
+  // después de confirmar que la fila cambió.
+  const { data, error } = await supabase
     .from("cotizaciones")
     .update(update)
-    .eq("id", id);
+    .eq("id", id)
+    .select("id")
+    .maybeSingle();
   if (error) throw error;
+  if (!data) {
+    throw new Error(
+      "No se pudo cambiar el estado de la cotización: no tienes permiso o la cotización ya no existe.",
+    );
+  }
   await registrarActividad({
     modulo: "cotizaciones",
     accion: "cambiar_estado",
