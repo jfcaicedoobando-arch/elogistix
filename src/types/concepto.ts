@@ -13,7 +13,14 @@ export interface ConceptoVentaLocal {
   moneda: string;
   /** Contenedor del embarque al que aplica el concepto (null = General). */
   contenedorId?: string | null;
+  /**
+   * `conceptos_venta.estado_facturacion` tal como viene de BD. La RPC de
+   * guardado ignora los renglones ya facturados, así que la UI lo usa para
+   * bloquear la fila en vez de fingir un guardado exitoso.
+   */
+  estadoFacturacion?: string | null;
 }
+
 
 export interface ConceptoCostoLocal {
   id: number;
