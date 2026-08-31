@@ -1,5 +1,15 @@
 # Changelog
 
+## [13.819.0] - 2026-09-08
+- **YG-01 · Crédito en facturación (P1)**: al timbrar una factura en moneda distinta de MXN, el límite de crédito ya no se calcula nunca con tipo de cambio 1 implícito. Si el T/C es nulo, 0, 1 o cae fuera de la banda fiscal (5–40 MXN/USD), el timbrado responde 503 `credito_no_verificable` antes de calcular.
+- **YG-02 · Liquidaciones de comisiones (P1)**: `registrar_pago_liquidacion` y `cancelar_liquidacion_comision` cargan la liquidación con `FOR UPDATE` y autorizan el rol **dentro de la organización dueña del registro** (antes bastaba tener el rol en cualquier organización). Se conserva la excepción explícita de `super_admin`. Nueva migración, espejos canónicos y guard SQL cross-org.
+- **YG-03 · Listado de cotizaciones (P1)**: el listado dejó de traer un tope de 1000 filas para filtrar en el navegador. Búsqueda, estado, cliente, segmento, "sin costos", inactivas y "aceptadas sin embarque" se resuelven en el servidor; el total y la paginación vienen de la base y la exportación descarga todo lo filtrado por lotes, sin truncar.
+- **YG-04 · Pérdida de captura (P2)**: los formularios largos (alta de proveedor, nota de crédito de cliente y de proveedor, facturas de proveedor, registro/edición de pagos, movimientos y traspasos bancarios) piden confirmación al cerrar con X, Escape o clic exterior si hay datos capturados, y dejan de avisar al guardar.
+- **YG-05 · Mensajes de nota de crédito (P2)**: los errores internos `LC_*` ya no se muestran al usuario; se traduce el mensaje en español y el código crudo queda sólo en la bitácora técnica.
+- **YG-06 · Botones deshabilitados (P2)**: el alta de proveedor y la nota de crédito indican en línea qué falta para avanzar, guardar o timbrar, reutilizando el aviso de faltantes existente.
+- **YG-07 · Folios (P3)**: la búsqueda de folio de cotización excluye registros eliminados.
+- Power-of-10: la validación del paso 1 del alta de proveedor se movió a helpers puros para mantener el controlador bajo 200 líneas.
+
 ## [13.818.1] - 2026-08-31
 - **Corrección (Sentry JAVASCRIPT-REACT-1G / JAVASCRIPT-REACT-5M)**: el botón "Ver demo" del login fallaba con error 500 porque el sembrado de la cuenta demo creaba los embarques con fecha de hoy y luego insertaba eventos de rastreo de hasta 45 días atrás, rechazados por el guard `LC_EVENTO_ANTERIOR_A_EMBARQUE`. Ahora cada embarque demo se crea con la fecha de su zarpe (ETD), por lo que la historia sembrada es coherente. Verificado en base local: el sembrado corre sin error.
 
