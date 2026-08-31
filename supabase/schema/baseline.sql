@@ -24258,27 +24258,27 @@ BEGIN
     id, organization_id, expediente, cliente_id, cliente_nombre, modo, tipo, shipper, consignatario,
     descripcion_mercancia, peso_kg, volumen_m3, piezas, incoterm, estado, operador,
     puerto_origen, puerto_destino, naviera, bl_master, contenedor, tipo_contenedor,
-    etd, eta, tipo_carga
+    etd, eta, tipo_carga, created_at
   ) VALUES (
     gen_random_uuid(), v_org, 'DEMO-2026-001', v_cli1, 'Importadora del Pacífico S.A. de C.V.',
     'Marítimo'::modo_transporte, 'Importación'::tipo_operacion,
     'Shenzhen Electronics Co.', 'Importadora del Pacífico S.A. de C.V.',
     'Electrónica de consumo', 18500, 58.4, 1200, 'FOB'::incoterm, 'En Tránsito'::estado_embarque, 'Demo Operador',
     'CNSHA', 'MXZLO', 'MAEU', 'MAEU123456789', 'MSCU7788990', '40HC',
-    CURRENT_DATE - 12, CURRENT_DATE + 6, 'Carga General'
+    CURRENT_DATE - 12, CURRENT_DATE + 6, 'Carga General', (CURRENT_DATE - 12)::timestamptz
   ) RETURNING id INTO v_emb1;
   INSERT INTO public.embarques (
     id, organization_id, expediente, cliente_id, cliente_nombre, modo, tipo, shipper, consignatario,
     descripcion_mercancia, peso_kg, volumen_m3, piezas, incoterm, estado, operador,
     puerto_origen, puerto_destino, naviera, bl_master, contenedor, tipo_contenedor,
-    etd, eta, fecha_llegada_real, tipo_carga
+    etd, eta, fecha_llegada_real, tipo_carga, created_at
   ) VALUES (
     gen_random_uuid(), v_org, 'DEMO-2026-002', v_cli2, 'Textiles Monterrey S.A.',
     'Marítimo'::modo_transporte, 'Importación'::tipo_operacion,
     'Guangzhou Textile Ltd.', 'Textiles Monterrey S.A.',
     'Telas sintéticas en rollos', 22000, 65.0, 850, 'CIF'::incoterm, 'Llegada'::estado_embarque, 'Demo Operador',
     'CNNGB', 'MXLZC', 'CMDU', 'CMDU987654321', 'TGHU4455667', '40HQ',
-    CURRENT_DATE - 28, CURRENT_DATE - 2, NULL, 'Carga General'
+    CURRENT_DATE - 28, CURRENT_DATE - 2, NULL, 'Carga General', (CURRENT_DATE - 28)::timestamptz
   ) RETURNING id INTO v_emb2;
   INSERT INTO public.embarques (
     id, organization_id, expediente, cliente_id, cliente_nombre, modo, tipo, shipper, consignatario,
@@ -24297,14 +24297,14 @@ BEGIN
     id, organization_id, expediente, cliente_id, cliente_nombre, modo, tipo, shipper, consignatario,
     descripcion_mercancia, peso_kg, volumen_m3, piezas, incoterm, estado, operador,
     puerto_origen, puerto_destino, naviera, bl_master, contenedor, tipo_contenedor,
-    etd, eta, fecha_llegada_real, tipo_carga
+    etd, eta, fecha_llegada_real, tipo_carga, created_at
   ) VALUES (
     gen_random_uuid(), v_org, 'DEMO-2026-004', v_cli1, 'Importadora del Pacífico S.A. de C.V.',
     'Marítimo'::modo_transporte, 'Importación'::tipo_operacion,
     'Qingdao Steel Group', 'Importadora del Pacífico S.A. de C.V.',
     'Perfiles de acero estructural', 26500, 32.0, 12, 'FOB'::incoterm, 'Entregado'::estado_embarque, 'Demo Operador',
     'CNTAO', 'MXZLO', 'HLCU', 'HLCU555000111', 'HLBU2233445', '20GP',
-    CURRENT_DATE - 45, CURRENT_DATE - 18, CURRENT_DATE - 16, 'Carga General'
+    CURRENT_DATE - 45, CURRENT_DATE - 18, CURRENT_DATE - 16, 'Carga General', (CURRENT_DATE - 45)::timestamptz
   ) RETURNING id INTO v_emb4;
   INSERT INTO public.eventos_embarque (organization_id, embarque_id, fecha, tipo, descripcion, ubicacion, usuario)
   VALUES
