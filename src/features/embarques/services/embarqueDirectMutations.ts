@@ -11,13 +11,34 @@ import { registrarBitacoraEmbarque } from "./bitacoraEmbarques";
 
 type EmbarqueInsert = TablesInsert<'embarques'>;
 
+/**
+ * v13.814.0 (Ola Cotización→Embarque, hallazgo 1): un UPDATE bloqueado por RLS
+ * o sobre un id inexistente NO devuelve error en PostgREST — devuelve 0 filas.
+ * Sin esta verificación la UI mostraba "guardado" y la bitácora registraba un
+ * cambio que nunca ocurrió. Devuelve sólo cuando la fila fue afectada.
+ */
+async function actualizarEmbarqueVerificado(
+  embarqueId: string,
+  patch: Partial<EmbarqueInsert>,
+): Promise<void> {
+  const { data, error } = await supabase
+    .from('embarques')
+    .update(patch)
+    .eq('id', embarqueId)
+    .select('id')
+    .maybeSingle();
+  if (error) throw error;
+  if (!data) {
+    throw new Error(
+      "No se guardaron los cambios del embarque: no tienes permiso o el embarque ya no existe.",
+    );
+  }
+}
+
 export async function actualizarEstadoEmbarque(embarqueId: string, estado: string): Promise<void> {
-  await run(
-    supabase
-      .from('embarques')
-      .update({ estado: estado as EmbarqueInsert['estado'] })
-      .eq('id', embarqueId),
-  );
+  await actualizarEmbarqueVerificado(embarqueId, {
+    estado: estado as EmbarqueInsert['estado'],
+  });
   await registrarBitacoraEmbarque({
     accion: "Actualizó estado de embarque",
     entidadId: embarqueId,
@@ -50,11 +71,19 @@ export async function actualizarFechaLlegadaRealEmbarque(
   embarqueId: string,
   fechaIso: string,
 ): Promise<void> {
-  const { data: current } = await supabase
+  // v13.814.0 (hallazgo 2): si el pre-select falla o el embarque no existe,
+  // antes se ignoraba el error y todas las guardas de negocio se saltaban.
+  const { data: current, error: errorCurrent } = await supabase
     .from('embarques')
     .select('estado, etd, fecha_llegada_real')
     .eq('id', embarqueId)
     .maybeSingle();
+  if (errorCurrent) throw errorCurrent;
+  if (!current) {
+    throw new Error(
+      "No se encontró el embarque para marcar la llegada real: no tienes permiso o ya no existe.",
+    );
+  }
   if (current?.fecha_llegada_real) {
     throw new Error("Este embarque ya tiene una fecha de llegada real capturada.");
   }
@@ -73,7 +102,7 @@ export async function actualizarFechaLlegadaRealEmbarque(
     : false;
   const patch: Partial<EmbarqueInsert> = { fecha_llegada_real: fechaIso };
   if (debeAvanzar) patch.estado = 'Arribo' as EmbarqueInsert['estado'];
-  await run(supabase.from('embarques').update(patch).eq('id', embarqueId));
+  await actualizarEmbarqueVerificado(embarqueId, patch);
   await registrarBitacoraEmbarque({
     accion: "Actualizó fecha de llegada real de embarque",
     entidadId: embarqueId,
@@ -90,7 +119,7 @@ export async function actualizarEtaEmbarque(
   embarqueId: string,
   nuevaEta: string,
 ): Promise<void> {
-  await run(supabase.from('embarques').update({ eta: nuevaEta }).eq('id', embarqueId));
+  await actualizarEmbarqueVerificado(embarqueId, { eta: nuevaEta });
   await registrarBitacoraEmbarque({
     accion: "Actualizó ETA de embarque",
     entidadId: embarqueId,
@@ -131,12 +160,7 @@ export async function actualizarTipoCambioUsdEmbarque(
   if (!Number.isFinite(tipoCambioUsd) || tipoCambioUsd <= 0) {
     throw new Error("El tipo de cambio debe ser un número mayor a cero.");
   }
-  await run(
-    supabase
-      .from('embarques')
-      .update({ tipo_cambio_usd: tipoCambioUsd })
-      .eq('id', embarqueId),
-  );
+  await actualizarEmbarqueVerificado(embarqueId, { tipo_cambio_usd: tipoCambioUsd });
   await registrarBitacoraEmbarque({
     accion: "Actualizó tipo de cambio USD de embarque",
     entidadId: embarqueId,
