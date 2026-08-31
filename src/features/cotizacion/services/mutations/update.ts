@@ -9,6 +9,26 @@ import type { CotizacionInsert } from "./payloadBuilders";
 
 type CotizacionUpdate = Partial<CotizacionInsert>;
 
+/**
+ * Normaliza el payload de UPDATE: JSON de conceptos/dimensiones, enums y la
+ * vigencia derivada de la validez propuesta. Extraído de `updateCotizacion`
+ * (Power-of-10: complejidad ≤16).
+ */
+function construirPayloadUpdate(data: Partial<CreateCotizacionInput>): CotizacionUpdate {
+  const updatePayload = fromDb<CotizacionUpdate>({ ...data });
+  // Ola 18: la validez propuesta manda sobre la vigencia mostrada (detalle y
+  // PDF). El trigger `_cotizaciones_sync_vigencia` es la red de seguridad en BD.
+  if (data.validez_propuesta) updatePayload.fecha_vigencia = data.validez_propuesta;
+  if (data.conceptos_venta) updatePayload.conceptos_venta = toDbJson(data.conceptos_venta);
+  if (data.dimensiones_lcl) updatePayload.dimensiones_lcl = toDbJson(data.dimensiones_lcl);
+  if (data.dimensiones_aereas) updatePayload.dimensiones_aereas = toDbJson(data.dimensiones_aereas);
+  if (data.modo) updatePayload.modo = data.modo as TablesInsert<"cotizaciones">["modo"];
+  if (data.tipo) updatePayload.tipo = data.tipo as TablesInsert<"cotizaciones">["tipo"];
+  if (data.incoterm) updatePayload.incoterm = data.incoterm as TablesInsert<"cotizaciones">["incoterm"];
+  if (data.moneda) updatePayload.moneda = data.moneda as TablesInsert<"cotizaciones">["moneda"];
+  return updatePayload;
+}
+
 export async function updateCotizacion(
   id: string,
   data: Partial<CreateCotizacionInput>,
@@ -20,22 +40,7 @@ export async function updateCotizacion(
   expectedUpdatedAt?: string | null,
 ): Promise<string | null> {
   parseOrThrow(cotizacionUpdateSchema, data, "No se pudo actualizar la cotización");
-  const updatePayload = fromDb<CotizacionUpdate>({ ...data });
-  // Ola 18: la validez propuesta manda sobre la vigencia mostrada (detalle y
-  // PDF). Antes `fecha_vigencia` quedaba congelada en el cálculo del alta
-  // (emisión + 15 días) y divergía de la fecha capturada. El trigger
-  // `_cotizaciones_sync_vigencia` es la red de seguridad en BD.
-  if (data.validez_propuesta) updatePayload.fecha_vigencia = data.validez_propuesta;
-
-  if (data.conceptos_venta) updatePayload.conceptos_venta = toDbJson(data.conceptos_venta);
-  if (data.dimensiones_lcl) updatePayload.dimensiones_lcl = toDbJson(data.dimensiones_lcl);
-  if (data.dimensiones_aereas)
-    updatePayload.dimensiones_aereas = toDbJson(data.dimensiones_aereas);
-  if (data.modo) updatePayload.modo = data.modo as TablesInsert<"cotizaciones">["modo"];
-  if (data.tipo) updatePayload.tipo = data.tipo as TablesInsert<"cotizaciones">["tipo"];
-  if (data.incoterm)
-    updatePayload.incoterm = data.incoterm as TablesInsert<"cotizaciones">["incoterm"];
-  if (data.moneda) updatePayload.moneda = data.moneda as TablesInsert<"cotizaciones">["moneda"];
+  const updatePayload = construirPayloadUpdate(data);
   let query = supabase.from("cotizaciones").update(updatePayload).eq("id", id);
   // B-8: `null` es un valor legítimo de `updated_at` (fila nunca modificada) y
   // debe seguir protegiendo. Sólo `undefined` significa "sin bloqueo optimista".

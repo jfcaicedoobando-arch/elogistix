@@ -12,6 +12,7 @@ import { useTcDofPorFecha } from "@/features/catalogos/hooks/useTcDofPorFecha";
 import { multiplicadorOrigenDestino, parTc, type MonedaTc } from "@/features/tesoreria/domain/tcPar";
 
 type Cuenta = Tables<"cuentas_bancarias">;
+type ParTcLocal = { base: MonedaTc; quote: MonedaTc } | null;
 
 // BL-14: "hoy" siempre en zona de negocio CDMX, no en la TZ del navegador.
 const hoyIso = () => hoyMx();
@@ -43,6 +44,38 @@ const ESTADO_INICIAL: TraspasoFormState = {
   concepto: "",
   referencia: "",
 };
+
+/**
+ * M-14: si el par incluye MXN, el T/C implícito en pesos por divisa debe caer
+ * en banda (5–40). Atrapa dedazos tipo 1.84 o 184 pesos por dólar.
+ */
+function validarTcPar(par: ParTcLocal, tcQuote: number): string | null {
+  if (!par || !parInvolucraMxn(par.base, par.quote) || tcQuote <= 0) return null;
+  const mxnPorDivisa = par.quote === "MXN" ? tcQuote : 1 / tcQuote;
+  return validarTcMxn(roundMoney(mxnPorDivisa));
+}
+
+/** Validación pura del traspaso. Extraída del `useMemo` (complejidad ≤16). */
+function validarTraspaso(
+  state: TraspasoFormState,
+  origen: Cuenta | undefined,
+  destino: Cuenta | undefined,
+  mismoMoneda: boolean,
+  par: ParTcLocal,
+): string | null {
+  if (!state.origenId || !state.destinoId) return "Selecciona ambas cuentas.";
+  if (state.origenId === state.destinoId) return "La cuenta origen y destino deben ser distintas.";
+  if (!state.montoOrigen || state.montoOrigen <= 0) return "El monto debe ser mayor a cero.";
+  if (!origen?.activa || !destino?.activa) return "Ambas cuentas deben estar activas.";
+  // FE-07: fecha del traspaso obligatoria y nunca futura.
+  if (!state.fecha) return "Captura la fecha del traspaso.";
+  if (state.fecha > hoyIso()) return "La fecha del traspaso no puede ser futura.";
+  if (mismoMoneda) return null;
+  if (!state.tcQuote || state.tcQuote <= 0) {
+    return "Captura el tipo de cambio para cuentas de distinta moneda.";
+  }
+  return validarTcPar(par, state.tcQuote);
+}
 
 export function useTraspasoForm(open: boolean, cuentas: Cuenta[]) {
   const [state, setState] = useState<TraspasoFormState>({ ...ESTADO_INICIAL, fecha: hoyIso() });
@@ -87,27 +120,10 @@ export function useTraspasoForm(open: boolean, cuentas: Cuenta[]) {
     return roundMoney(state.montoOrigen * factorOrigenDestino);
   }, [state.montoOrigen, factorOrigenDestino]);
 
-  const error = useMemo(() => {
-    if (!state.origenId || !state.destinoId) return "Selecciona ambas cuentas.";
-    if (state.origenId === state.destinoId) return "La cuenta origen y destino deben ser distintas.";
-    if (!state.montoOrigen || state.montoOrigen <= 0) return "El monto debe ser mayor a cero.";
-    if (!origen?.activa || !destino?.activa) return "Ambas cuentas deben estar activas.";
-    // FE-07: fecha del traspaso obligatoria y nunca futura.
-    if (!state.fecha) return "Captura la fecha del traspaso.";
-    if (state.fecha > hoyIso()) return "La fecha del traspaso no puede ser futura.";
-    if (!mismoMoneda && (!state.tcQuote || state.tcQuote <= 0)) {
-      return "Captura el tipo de cambio para cuentas de distinta moneda.";
-    }
-    // M-14: si el par incluye MXN, el T/C implícito en pesos por divisa debe
-    // caer en banda (5–40). Atrapa dedazos tipo 1.84 o 184 pesos por dólar.
-    if (!mismoMoneda && par && parInvolucraMxn(par.base, par.quote) && state.tcQuote > 0) {
-      const mxnPorDivisa = par.quote === "MXN" ? state.tcQuote : 1 / state.tcQuote;
-      const fueraDeBanda = validarTcMxn(roundMoney(mxnPorDivisa));
-      if (fueraDeBanda) return fueraDeBanda;
-    }
-    return null;
-  }, [state, origen, destino, mismoMoneda, par]);
-
+  const error = useMemo(
+    () => validarTraspaso(state, origen, destino, !!mismoMoneda, par),
+    [state, origen, destino, mismoMoneda, par],
+  );
 
   return {
     state,
@@ -123,8 +139,6 @@ export function useTraspasoForm(open: boolean, cuentas: Cuenta[]) {
     fechaTcDof: tcDof?.fecha ?? null,
   };
 }
-
-type ParTcLocal = { base: MonedaTc; quote: MonedaTc } | null;
 
 /**
  * Convierte el TC DOF (base MXN) a la cotización del par en convención
