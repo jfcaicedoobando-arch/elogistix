@@ -11,7 +11,7 @@ import { wrapEdgeHandler } from "../_shared/sentry.ts";
 import { resolveFacturapiKey } from "../_shared/facturapiAuth.ts";
 import { authorizeOrgRole, ROLES_EMISOR_FISCAL } from "../_shared/auth.ts";
 import { getFacturapiClient, describeFacturapiError, extractFacturapiMessage, withFacturapiTimeout, FacturapiTimeoutError } from "../_shared/facturapiClient.ts";
-import { buildNcPayload, validateNcContext } from "./helpers.ts";
+import { buildNcPayload, validateNcContext, ncTotalEsCero } from "./helpers.ts";
 import { preloadNcContext, buildNcContextFromRows, claimNotaCredito } from "./data.ts";
 import { respaldarXmlTimbrado } from "../_shared/respaldarXmlTimbrado.ts";
 import { registrarBitacoraEdge } from "../_shared/bitacora.ts";
@@ -109,6 +109,16 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir-nota-credito", async (req) => {
   const ctx = buildNcContextFromRows(nc, factura, cliente, email, referencias);
   const issues = validateNcContext(ctx);
   if (issues.length > 0) return json({ error: "validation_failed", issues }, 422);
+
+  // Ola 4 · A — una NC en $0 no es timbrable (el SAT la rechaza y en la
+  // práctica es captura incompleta). Se valida ANTES del claim y del PAC.
+  if (ncTotalEsCero(ctx)) {
+    return json({
+      error: "nc_total_cero",
+      message: "La nota de crédito tiene un total de $0. Revisa los conceptos (cantidad y precio) antes de timbrar.",
+    }, 422);
+  }
+
 
   // Ola 4 · N1: claim atómico ANTES de timbrar (patrón facturapi-emitir).
   // Se toma DESPUÉS de validar para no tener que liberarlo en el 422.
