@@ -19,7 +19,7 @@
 // edge function nunca recibía la invocación — síntoma: `FunctionsFetchError`
 // con `lastStatus: null` sólo en el dominio custom (preview no lo dispara).
 const ALLOW_HEADERS =
-  "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version, sentry-trace, baggage";
+  "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version, sentry-trace, baggage, x-organization-id";
 
 const ALLOW_METHODS = "GET, POST, OPTIONS";
 const MAX_AGE = "86400";
