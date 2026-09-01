@@ -105,10 +105,10 @@ Deno.test("R4EF-06/facturas: el index llama al helper ANTES de responder (estruc
   // Persistido ⇒ 202 con contrato pending/uncertain; no persistido ⇒ 504.
   assertStringIncludes(rama, "marca.persisted");
   assertStringIncludes(rama, "uncertain: true");
-  assertStringIncludes(rama, "202");
-  assertStringIncludes(rama, "504");
-  const i202 = rama.indexOf("202");
-  const i504 = rama.indexOf("504");
+  assertStringIncludes(rama, "\n          202,\n");
+  assertStringIncludes(rama, "\n        504,\n");
+  const i202 = rama.indexOf("\n          202,\n");
+  const i504 = rama.indexOf("\n        504,\n");
   assert(i202 < i504, "el 202 (aceptada) debe evaluarse antes del 504 (error)");
 });
 
