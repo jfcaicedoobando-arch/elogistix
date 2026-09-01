@@ -1,5 +1,13 @@
 # Changelog
 
+## [13.822.1] - 2026-09-01
+### Conciliador de cancelaciones · presupuesto de tiempo (P1-3b)
+- **Corte por tiempo real, no sólo por número de documentos**: la corrida del cron `facturapi-reconciliar-cancelaciones` ahora tiene un presupuesto monotónico de 95 s (límite de runtime asumido: 150 s). Antes de iniciar cada documento se comprueba el presupuesto; lo que no alcanza a iniciarse queda intacto para la corrida siguiente en vez de morir a medias con el mutex ocupado.
+- **Equidad preservada**: el barrido recorre un plan intercalado (round-robin) entre organizaciones y entre facturas, notas de crédito y REP, así que cortar por tiempo no favorece a una familia ni a una organización.
+- **Resumen honesto**: se agrega `diferidos` al resumen; los documentos diferidos por presupuesto no se cuentan como errores.
+- **Timeout por consulta**: `invoices.retrieve` baja de 15 s a 12 s en el cron para que una consulta iniciada al filo del presupuesto no rebase el margen de respuesta y liberación del lock.
+- **Cursor sólo de documentos iniciados**: `reconciliacion_checked_at` / `rep_reconciliacion_checked_at` se marcan únicamente en documentos que sí se procesaron.
+
 ## [13.822.0] - 2026-09-01
 ### Ola P0/P1 · Seguridad, compilación y multimoneda
 - **Envío de facturas por correo (P0-1)**: `facturapi-enviar-email` vuelve a compilar y es deployable; se expone `resolverDestinatarioAutorizado` y se limpian campos muertos de la bitácora.
