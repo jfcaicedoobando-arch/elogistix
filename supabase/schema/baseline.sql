@@ -7211,6 +7211,7 @@ BEGIN
   IF v_hash IS NULL AND v_uuid IS NULL THEN
     RETURN;
   END IF;
+  -- 1) Documento vivo del buzón con el mismo hash (o el mismo UUID fiscal).
   SELECT * INTO v_doc
     FROM public.embarque_facturas_entrantes d
    WHERE d.deleted_at IS NULL
@@ -7233,7 +7234,15 @@ BEGIN
     END IF;
     SELECT * INTO v_fac FROM public.proveedor_facturas f
       WHERE f.id = v_doc.proveedor_factura_id AND f.deleted_at IS NULL;
+    -- v13.821.7: relación corrupta cross-org (el documento apunta a una
+    -- factura de OTRA organización) → 'ajeno' genérico, nunca se expone.
+    IF v_fac.id IS NOT NULL AND NOT (v_super OR v_fac.organization_id = v_org) THEN
+      RETURN QUERY SELECT 'ajeno'::text, NULL::uuid, NULL::uuid, NULL::text;
+      RETURN;
+    END IF;
   END IF;
+  -- 2) Factura de proveedor ya capturada con el mismo UUID fiscal, incluso si
+  --    su documento del buzón ya no existe (caso 'sin_embarque').
   IF v_fac.id IS NULL AND v_uuid IS NOT NULL THEN
     SELECT * INTO v_fac FROM public.proveedor_facturas f
       WHERE f.deleted_at IS NULL AND upper(btrim(f.uuid_fiscal)) = v_uuid
@@ -7245,6 +7254,8 @@ BEGIN
   END IF;
   IF v_fac.id IS NULL THEN
     IF v_doc.id IS NOT NULL THEN
+      -- Documento capturado cuya factura ya no existe: se trata como duplicado
+      -- sin ubicación en vez de dejar pasar un gemelo.
       RETURN QUERY SELECT 'sin_embarque'::text, NULL::uuid, NULL::uuid, NULL::text;
     END IF;
     RETURN;
@@ -7254,9 +7265,17 @@ BEGIN
     RETURN QUERY SELECT 'sin_embarque'::text, v_fac.id, NULL::uuid, NULL::text;
     RETURN;
   END IF;
+  -- v13.821.7: el embarque debe existir Y pertenecer a la misma org (o
+  -- llamante super_admin) ANTES de devolver factura_id/embarque_id/folio. Si
+  -- `proveedor_facturas.embarque_id` quedó apuntando a un embarque ajeno
+  -- (relación corrupta), no se expone nada: 'ajeno' genérico.
   SELECT e.expediente INTO v_exp FROM public.embarques e
     WHERE e.id = v_emb_id AND e.deleted_at IS NULL
       AND (v_super OR e.organization_id = v_org);
+  IF NOT FOUND THEN
+    RETURN QUERY SELECT 'ajeno'::text, NULL::uuid, NULL::uuid, NULL::text;
+    RETURN;
+  END IF;
   IF p_embarque_id IS NOT NULL AND v_emb_id = p_embarque_id THEN
     RETURN QUERY SELECT 'mismo_embarque'::text, v_fac.id, v_emb_id, v_exp;
   ELSE

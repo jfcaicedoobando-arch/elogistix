@@ -8,6 +8,7 @@ import { FileMinus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
+import { FormDialogCancelarBoton } from "@/components/shared/FormDialogCancelarBoton";
 import type { ConceptoNotaCredito } from "@/features/facturacion/services/notasCredito";
 import { NotaCreditoCamposFiscales } from "./detalle/NotaCreditoCamposFiscales";
 import { NotaCreditoConceptosEditor } from "./detalle/NotaCreditoConceptosEditor";
@@ -40,7 +41,9 @@ export function DialogCrearNotaCredito(props: Props) {
     <div className="flex w-full flex-wrap items-center gap-2">
       {!s.puedeTimbrar && <FaltantesHint items={s.faltantesTimbrar} className="mr-auto" />}
       <div className="ml-auto flex flex-wrap items-center gap-2">
-        <Button variant="outline" onClick={() => onOpenChange(false)} disabled={s.guardando}>Cancelar</Button>
+        {/* v13.821.7 — Cancelar pasa por el cierre guardado del shell: con
+            captura sin guardar pide confirmación en vez de descartar directo. */}
+        <FormDialogCancelarBoton onCancelar={() => onOpenChange(false)} disabled={s.guardando} />
         <Button variant="secondary" onClick={() => s.handleSubmit(false)} disabled={!s.puedeGuardar || s.guardando}>
           Guardar borrador
         </Button>

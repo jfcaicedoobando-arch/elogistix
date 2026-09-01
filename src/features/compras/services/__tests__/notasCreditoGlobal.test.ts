@@ -6,7 +6,7 @@ const mock = await vi.hoisted(async () => {
 });
 vi.mock("@/integrations/supabase/client", () => ({ supabase: mock.supabase }));
 
-import { listarNotasCreditoGlobal } from "../notasCreditoGlobal";
+import { listarNotasCreditoGlobal, listarNotasCreditoGlobalPagina } from "../notasCreditoGlobal";
 
 const SAMPLE = [
   {
@@ -58,9 +58,19 @@ describe("listarNotasCreditoGlobal", () => {
     await listarNotasCreditoGlobal({ search: "duplicada" });
     const call = mock.tableCalls.find((c) => c.table === "proveedor_notas_credito");
     expect(call?.ops.some((op) => op === "or" || op === "ilike")).toBe(true);
-    expect(call?.ops).toContain("limit");
+    expect(call?.ops).toContain("range");
   });
 
+
+  // P2-9 (v13.821.7): paginación real, sin tope silencioso a 1000.
+  it("devuelve count exacto y respeta el rango pedido", async () => {
+    mock.setTableResult("proveedor_notas_credito", { data: SAMPLE, error: null, count: 2300 } as never);
+    const pagina = await listarNotasCreditoGlobalPagina({}, null, { from: 2200, to: 2299 });
+    expect(pagina.count).toBe(2300);
+    const call = mock.tableCalls.find((c) => c.table === "proveedor_notas_credito");
+    const iRange = call!.ops.indexOf("range");
+    expect(call!.opArgs[iRange]).toEqual([2200, 2299]);
+  });
 
   it("propaga error del cliente Supabase (notas de crédito)", async () => {
     mock.setTableResult("proveedor_notas_credito", { data: null, error: { message: "boom" } });

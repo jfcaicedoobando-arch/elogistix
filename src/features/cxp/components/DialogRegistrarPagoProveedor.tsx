@@ -13,6 +13,7 @@ import { ArrowUpFromLine } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Hint } from "@/components/shared/Hint";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
+import { FormDialogCancelarBoton } from "@/components/shared/FormDialogCancelarBoton";
 import { useRegistrarPagoProveedor, useFacturaProveedor } from "@/features/cxp/hooks";
 import type { FacturaCxP } from "@/features/cxp/services";
 import { PagoFacturaHeaderInfo } from "./PagoProveedorBits";
@@ -108,9 +109,9 @@ export function DialogRegistrarPagoProveedor({ open, onOpenChange, factura: fact
 
   const footer = (
     <>
-      <Button variant="outline" onClick={() => onOpenChange(false)} disabled={registrar.isPending}>
-        Cancelar
-      </Button>
+      {/* v13.821.7 — Cancelar pasa por el cierre guardado del shell: con
+          captura en curso pide confirmación en vez de descartar directo. */}
+      <FormDialogCancelarBoton onCancelar={() => onOpenChange(false)} disabled={registrar.isPending} />
       <Hint label={submitTitle}>
         <Button onClick={submit} disabled={submitDisabled} loading={registrar.isPending}>
           {registrar.isPending ? "Guardando…" : "Registrar pago"}

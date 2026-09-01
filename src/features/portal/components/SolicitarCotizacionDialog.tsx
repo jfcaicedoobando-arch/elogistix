@@ -1,8 +1,8 @@
 /**
  * Diálogo del portal para que el cliente solicite una cotización.
  * Sólo captura ruta y datos mínimos: el equipo comercial cotiza con tarifa.
+ * v13.821.7
  */
-import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FileText, Send } from "lucide-react";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
@@ -27,6 +27,9 @@ import {
   leerSolicitudPreferencias,
 } from "@/features/portal/domain/solicitudPreferencias";
 import { COPY_VALIDACION } from "@/lib/copy/publicoCopy";
+import { FaltantesHint } from "@/features/facturacion/components/FaltantesHint";
+import { useFormDialogCerrar } from "@/components/shared/formDialogCloseContext";
+import { useSolicitudCotizacionForm } from "@/features/portal/hooks/useSolicitudCotizacionForm";
 
 interface Props {
   open: boolean;
@@ -40,36 +43,19 @@ const TIPOS_EMBARQUE = ["FCL", "LCL", "Aéreo", "Terrestre"] as const;
 export function SolicitarCotizacionDialog({ open, onOpenChange, clienteId, clienteIds }: Props) {
   const navigate = useNavigate();
   const solicitar = useSolicitarCotizacion(clienteIds);
-  // P2-6.7: se recuerda la última elección del cliente en lugar de forzar
-  // siempre Marítimo / Importación / FCL.
-  const prefsIniciales = leerSolicitudPreferencias();
-  const [modo, setModo] = useState<ModoTransporte>(prefsIniciales.modo as ModoTransporte);
-  const [tipo, setTipo] = useState<TipoOperacion>(prefsIniciales.tipo as TipoOperacion);
-  const [tipoEmbarque, setTipoEmbarque] = useState<string>(prefsIniciales.tipoEmbarque);
-  const [origen, setOrigen] = useState("");
-  const [destino, setDestino] = useState("");
-  const [mercancia, setMercancia] = useState("");
-  const [notas, setNotas] = useState("");
-  // RUX-07: los errores/hints de obligatoriedad sólo se muestran tras el
-  // primer intento de envío, nunca en campos vírgenes.
-  const [intentoEnvio, setIntentoEnvio] = useState(false);
+  const cerrar = useFormDialogCerrar();
 
-  const puedeEnviar = Boolean(clienteId) && origen.trim().length > 0 && destino.trim().length > 0;
-
-  const reset = () => {
-    const prefs = leerSolicitudPreferencias();
-    setModo(prefs.modo as ModoTransporte);
-    setTipo(prefs.tipo as TipoOperacion);
-    setTipoEmbarque(prefs.tipoEmbarque);
-    setOrigen("");
-    setDestino("");
-    setMercancia("");
-    setNotas("");
-    setIntentoEnvio(false);
-  };
+  const f = useSolicitudCotizacionForm(clienteId);
+  const {
+    modo, setModo, tipo, setTipo, tipoEmbarque, setTipoEmbarque,
+    origen, setOrigen, destino, setDestino, mercancia, setMercancia, notas, setNotas,
+    intentoEnvio, origenVacio, destinoVacio, puedeEnviar, isDirty, faltantes, reset,
+  } = f;
 
   const handleSubmit = async () => {
+    f.setIntentoEnvio(true);
     if (!puedeEnviar || !clienteId) return;
+
     try {
       const res = await solicitar.mutateAsync({
         clienteId,
@@ -102,15 +88,24 @@ export function SolicitarCotizacionDialog({ open, onOpenChange, clienteId, clien
   return (
     <FormDialogShell
       open={open}
-      onOpenChange={(abierto) => { if (!abierto) reset(); onOpenChange(abierto); }}
+      onOpenChange={(abierto) => {
+        if (!abierto) reset();
+        onOpenChange(abierto);
+      }}
       icon={FileText}
       title="Solicitar cotización"
       description="Cuéntanos la ruta y tu carga; te enviaremos una propuesta."
       size="lg"
+      isDirty={isDirty}
       footer={
         <>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
-          <Button onClick={handleSubmit} disabled={!puedeEnviar} loading={solicitar.isPending}>
+          {intentoEnvio && !puedeEnviar && (
+            <FaltantesHint items={faltantes} className="mr-auto" />
+          )}
+          <Button variant="outline" onClick={() => (cerrar ? cerrar() : onOpenChange(false))}>
+            Cancelar
+          </Button>
+          <Button onClick={handleSubmit} loading={solicitar.isPending}>
             {!solicitar.isPending && <Send className="h-4 w-4 mr-1" />}
             {solicitar.isPending ? "Enviando…" : "Enviar solicitud"}
           </Button>
@@ -151,17 +146,17 @@ export function SolicitarCotizacionDialog({ open, onOpenChange, clienteId, clien
         <div className="space-y-1.5">
           <Label htmlFor="solicitud-origen">Origen <span className="text-destructive">*</span></Label>
           <Input id="solicitud-origen" value={origen} onChange={(e) => setOrigen(e.target.value)}
-            placeholder="Shanghái, China" aria-invalid={intentoEnvio && origen.trim() === ""} />
-          {intentoEnvio && origen.trim() === "" && (
-            <p className="text-body-sm text-muted-foreground">{COPY_VALIDACION.requerido("el origen")}</p>
+            placeholder="Shanghái, China" aria-invalid={intentoEnvio && origenVacio} />
+          {intentoEnvio && origenVacio && (
+            <p className="text-body-sm text-destructive">{COPY_VALIDACION.requerido("el origen")}</p>
           )}
         </div>
         <div className="space-y-1.5">
           <Label htmlFor="solicitud-destino">Destino <span className="text-destructive">*</span></Label>
           <Input id="solicitud-destino" value={destino} onChange={(e) => setDestino(e.target.value)}
-            placeholder="Manzanillo, México" aria-invalid={intentoEnvio && destino.trim() === ""} />
-          {intentoEnvio && destino.trim() === "" && (
-            <p className="text-body-sm text-muted-foreground">{COPY_VALIDACION.requerido("el destino")}</p>
+            placeholder="Manzanillo, México" aria-invalid={intentoEnvio && destinoVacio} />
+          {intentoEnvio && destinoVacio && (
+            <p className="text-body-sm text-destructive">{COPY_VALIDACION.requerido("el destino")}</p>
           )}
         </div>
       </FormDialogSection>
@@ -180,7 +175,7 @@ export function SolicitarCotizacionDialog({ open, onOpenChange, clienteId, clien
       </FormDialogSection>
 
       {intentoEnvio && !puedeEnviar && (
-        <p className="text-body-sm text-muted-foreground">{COPY_VALIDACION.camposObligatorios}</p>
+        <p className="text-body-sm text-destructive font-medium">{COPY_VALIDACION.camposObligatorios}</p>
       )}
     </FormDialogShell>
   );

@@ -15,6 +15,7 @@ import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { FormDialogSection } from "@/components/shared/FormDialogSection";
 import { FormDialogFooter } from "@/components/shared/FormDialogFooter";
 import { notifySuccess, notifyError } from "@/lib/ui/appFeedback";
+import { getErrorMessage } from "@/lib/errors";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { useCrearOportunidad, useEtapasPipeline } from "@/features/crm/hooks";
 import { useClientesForSelect } from "@/features/cliente/hooks";
@@ -65,7 +66,7 @@ export default function QuickCreateOportunidadDialog({ open, onOpenChange, onCre
       onCreated(r.id);
     } catch (e) {
       notifyError(undefined, {
-        title: e instanceof Error ? e.message : "No se pudo crear la oportunidad",
+        title: "No se pudo crear la oportunidad", description: getErrorMessage(e),
         error: e,
         method: "FEATURES_CRM_COMPONENTS_QUICKCREATE_QUICKCREATEOPORTUNIDADDIALOG_3",
       });
