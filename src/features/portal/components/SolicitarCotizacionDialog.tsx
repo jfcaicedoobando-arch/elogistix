@@ -1,8 +1,9 @@
 /**
  * Diálogo del portal para que el cliente solicite una cotización.
  * Sólo captura ruta y datos mínimos: el equipo comercial cotiza con tarifa.
- * v13.821.7
+ * v13.823.12 — la empresa solicitante se elige explícitamente (multicliente).
  */
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FileText, Send } from "lucide-react";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
@@ -27,6 +28,11 @@ import { COPY_VALIDACION } from "@/lib/copy/publicoCopy";
 import { FaltantesHint } from "@/features/facturacion/components/FaltantesHint";
 import { useFormDialogCerrar } from "@/components/shared/formDialogCloseContext";
 import { useSolicitudCotizacionForm } from "@/features/portal/hooks/useSolicitudCotizacionForm";
+import { SolicitanteSelect } from "@/features/portal/components/SolicitanteSelect";
+import {
+  seleccionInicial,
+  type ClienteSolicitante,
+} from "@/features/portal/domain/clientesSolicitantes";
 
 interface Props {
   open: boolean;
@@ -85,7 +91,7 @@ export function SolicitarCotizacionDialog({ open, onOpenChange, clientes }: Prop
         title: "Solicitud enviada",
         description: `Registramos tu solicitud ${res.folio}. Nuestro equipo te enviará la cotización.`,
       });
-      reset();
+      resetTodo();
       onOpenChange(false);
       navigate("/portal/cotizaciones");
     } catch (error: unknown) {
@@ -102,7 +108,7 @@ export function SolicitarCotizacionDialog({ open, onOpenChange, clientes }: Prop
     <FormDialogShell
       open={open}
       onOpenChange={(abierto) => {
-        if (!abierto) reset();
+        if (!abierto) resetTodo();
         onOpenChange(abierto);
       }}
       icon={FileText}
@@ -118,13 +124,20 @@ export function SolicitarCotizacionDialog({ open, onOpenChange, clientes }: Prop
           <Button variant="outline" onClick={() => (cerrar ? cerrar() : onOpenChange(false))}>
             Cancelar
           </Button>
-          <Button onClick={handleSubmit} loading={solicitar.isPending}>
+          <Button onClick={handleSubmit} loading={solicitar.isPending} disabled={!clienteId}>
             {!solicitar.isPending && <Send className="h-4 w-4 mr-1" />}
             {solicitar.isPending ? "Enviando…" : "Enviar solicitud"}
           </Button>
         </>
       }
     >
+      <SolicitanteSelect
+        clientes={clientes}
+        value={clienteId}
+        onChange={setClienteId}
+        intentoEnvio={intentoEnvio}
+      />
+
       <FormDialogSection title="Servicio">
         <div className="space-y-1.5">
           <Label htmlFor="solicitud-modo">Modo de transporte</Label>
