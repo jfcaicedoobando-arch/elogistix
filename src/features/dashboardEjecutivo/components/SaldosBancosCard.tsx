@@ -67,18 +67,15 @@ export function SaldosBancosCard({ cuentas }: Props) {
           emptyMessage="Sin cuentas activas."
           footer={() => (
             <>
-              <TableRow className="font-semibold">
-                <TableCell>Total MXN</TableCell>
-                <TableCell className="text-right tabular-nums">{formatCurrency(totalMxn, "MXN")}</TableCell>
-              </TableRow>
-              {totalUsd > 0 && (
-                <TableRow className="font-semibold">
-                  <TableCell>Total USD</TableCell>
-                  <TableCell className="text-right tabular-nums">{formatCurrency(totalUsd, "USD")}</TableCell>
+              {totales.map((t) => (
+                <TableRow key={t.moneda} className="font-semibold">
+                  <TableCell>{`Total ${t.moneda}`}</TableCell>
+                  <TableCell className="text-right tabular-nums">{formatCurrency(t.total, t.moneda)}</TableCell>
                 </TableRow>
-              )}
+              ))}
             </>
           )}
+
         />
       </CardContent>
     </Card>
