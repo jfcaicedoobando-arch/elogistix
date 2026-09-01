@@ -14,7 +14,7 @@ import { wrapEdgeHandler } from "../_shared/sentry.ts";
 
 import { resolveFacturapiKey } from "../_shared/facturapiAuth.ts";
 import { authorizeOrgRole, ROLES_EMISOR_FISCAL } from "../_shared/auth.ts";
-import { getFacturapiClient, withFacturapiTimeout, FacturapiTimeoutError } from "../_shared/facturapiClient.ts";
+import { getFacturapiClient, withFacturapiTimeout, FacturapiTimeoutError, FACTURAPI_CANCEL_TIMEOUT_MS } from "../_shared/facturapiClient.ts";
 import { validateCancelacionInput, type CancelacionInput } from "./helpers.ts";
 import { handleDescargarAcusePdf, handleDescargarAcuseXml } from "./acuseHandlers.ts";
 import { jsonResponse, makeJson } from "../_shared/response.ts";
