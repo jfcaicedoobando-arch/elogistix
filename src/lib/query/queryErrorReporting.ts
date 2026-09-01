@@ -118,7 +118,7 @@ export function reportQueryError(
       .catch(() => undefined);
     return;
   }
-  const { error: normalized, pgTags } = normalizeForSentry(err);
+  const { error: normalized, pgTags } = normalizeForSentry(err, rootKey);
   const tags: Record<string, string> = { feature: "react_query", kind, ...pgTags };
   if (rootKey) tags[kind === "query" ? "query_root" : "mutation_root"] = rootKey.slice(0, 64);
   if (opKey && kind === "mutation") tags.mutation_op = opKey.slice(0, 64);
