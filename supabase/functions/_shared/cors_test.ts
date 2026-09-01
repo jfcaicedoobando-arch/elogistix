@@ -100,3 +100,16 @@ Deno.test("buildCors: permite headers de Sentry desde librecarga.com", () => {
   assert(c["Access-Control-Allow-Headers"].includes("sentry-trace"));
   assert(c["Access-Control-Allow-Headers"].includes("baggage"));
 });
+
+Deno.test("preflight permite x-organization-id (contrato CxP)", () => {
+  // v13.823.4: la organización objetivo viaja en header para autorizar antes
+  // de leer el multipart; sin este header en el preflight el navegador cancela.
+  const res = handlePreflightStrict(req("https://librecarga.com", "OPTIONS"));
+  assert(res);
+  assert(
+    res!.headers.get("Access-Control-Allow-Headers")!.includes(
+      "x-organization-id",
+    ),
+  );
+  assert(corsHeaders["Access-Control-Allow-Headers"].includes("x-organization-id"));
+});

@@ -15,3 +15,19 @@ Deno.test("aiHelpers expone la API consumida por index.ts", () => {
 Deno.test("parser expone parseCfdi", () => {
   assert(typeof parser.parseCfdi === "function");
 });
+
+Deno.test("v13.823.4: autoriza por header ANTES de leer el multipart", async () => {
+  const src = await Deno.readTextFile(new URL("./index.ts", import.meta.url));
+  const idxAuth = src.indexOf("await autorizarCxp(");
+  const idxForm = src.indexOf("await req.formData()");
+  const idxEntrada = src.indexOf("await validarEntrada(");
+  assert(idxAuth > 0 && idxForm > 0);
+  assert(idxAuth < idxEntrada, "la guarda corre antes de validarEntrada");
+  assert(src.includes("leerOrgHeader(req)"), "org objetivo desde header");
+  assert(
+    !src.includes('form.get("organization_id")'),
+    "ya no se confía en el organization_id del multipart",
+  );
+  assert(src.includes("content-length"), "conserva el corte por Content-Length");
+  assert(src.includes("file.size > MAX_BYTES"), "conserva el tope real");
+});
