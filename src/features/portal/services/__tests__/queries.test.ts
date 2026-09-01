@@ -152,9 +152,13 @@ describe("portal/queries", () => {
   });
 
   it("fetchPortalClientUsers: consulta tabla client_users", async () => {
-    mock.setTableResult("client_users", { data: [{ id: "u1" }], error: null });
+    mock.setTableResult("client_users", { data: [{ id: "u1", cliente_id: "cli-1", clientes: { nombre: "Aceros del Norte" } }], error: null });
     const r = await fetchPortalClientUsers();
-    expect(r).toEqual([{ id: "u1" }]);
+    // Se conserva la fila completa y se agrega el nombre legible del cliente
+    // (el join va por RLS): la UI ya no muestra UUIDs ni adivina la empresa.
+    expect(r).toEqual([
+      { id: "u1", cliente_id: "cli-1", clientes: { nombre: "Aceros del Norte" }, cliente_nombre: "Aceros del Norte" },
+    ]);
   });
 
   it("fetchPortalClienteName: maneja usuario no logueado y datos nulos", async () => {

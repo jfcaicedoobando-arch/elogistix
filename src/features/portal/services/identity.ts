@@ -28,7 +28,7 @@ export async function fetchPortalClientUsers(): Promise<PortalClientUser[]> {
   // SAFE-CAST: el select incluye todas las columnas más el embed `clientes`.
   return (rows as unknown as Array<Record<string, unknown>>).map((r) => ({
     ...r,
-    cliente_id: String(r.cliente_id),
+    cliente_id: typeof r.cliente_id === "string" ? r.cliente_id : "",
     cliente_nombre: fromDb(r.clientes ?? null, nombreNullableSchema)?.nombre ?? null,
   })) as PortalClientUser[];
 }
