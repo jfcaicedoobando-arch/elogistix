@@ -84,3 +84,15 @@ Deno.test("caso feliz: documento propio, por capturar y ruta canónica", () => {
     { ok: true },
   );
 });
+
+Deno.test("index autoriza la org derivada del documento antes de descargar Storage", async () => {
+  const src = await Deno.readTextFile(new URL("./index.ts", import.meta.url));
+  const idxDocumento = src.indexOf('.from("embarque_facturas_entrantes")');
+  const idxAutoriza = src.indexOf("await autorizarCxp(");
+  const idxDescarga = src.indexOf("await descargarYParsear(");
+  assertEquals(idxDocumento > 0, true);
+  assertEquals(idxDocumento < idxAutoriza, true);
+  assertEquals(idxAutoriza < idxDescarga, true);
+  assertEquals(src.includes("organizationId: documento.organization_id"), true);
+  assertEquals(src.includes("organization_id: input"), false);
+});
