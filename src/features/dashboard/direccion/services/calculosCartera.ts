@@ -4,7 +4,7 @@ import { format } from "date-fns";
  * Extraído de `calculos.ts` para respetar el límite de 200 líneas por archivo.
  */
 import { calcularMargen, calcularUtilidad } from "@/lib/financial/financialUtils";
-import { mxnFactura } from "./mxn";
+import { mxnFactura, type TcFallbacks } from "./mxn";
 import { calcularSaldosCarteraMxn } from "./saldoCartera";
 
 import type { EmbarqueEstadoRow, FacturaRow, NotaCreditoRow, PagoRow } from "./loaders";
@@ -17,9 +17,9 @@ const TOLERANCIA_SALDO_MXN = 0.5;
 
 
 export function calcularAntiguedad(
-  facturas: FacturaRow[], pagos: PagoRow[], fallbackUsd: number, hoy: Date, ncs: NotaCreditoRow[] = [],
+  facturas: FacturaRow[], pagos: PagoRow[], fallbacks: TcFallbacks, hoy: Date, ncs: NotaCreditoRow[] = [],
 ): BucketAntiguedad[] {
-  const saldo = calcularSaldosCarteraMxn(facturas, pagos, ncs, fallbackUsd);
+  const saldo = calcularSaldosCarteraMxn(facturas, pagos, ncs, fallbacks);
   const buckets: Record<BucketAntiguedad["bucket"], BucketAntiguedad> = {
     "Corriente": { bucket: "Corriente", monto_mxn: 0, facturas: 0 },
     "1-30": { bucket: "1-30", monto_mxn: 0, facturas: 0 },
@@ -50,11 +50,13 @@ export interface CalcularHeroParams {
   pagosCartera?: PagoRow[];
   ncsCartera?: NotaCreditoRow[];
   antiguedad: BucketAntiguedad[];
-  fallbackUsd: number; hoy: Date; mesActual: string; mesPrev: string;
+  /** Tipos de cambio de respaldo por moneda (USD/EUR). */
+  fallbacks: TcFallbacks;
+  hoy: Date; mesActual: string; mesPrev: string;
 }
 
 export function calcularHero(params: CalcularHeroParams): HeroKpis {
-  const { aggs, facturas, facturasCartera, antiguedad, fallbackUsd, hoy, mesActual, mesPrev } = params;
+  const { aggs, facturas, facturasCartera, antiguedad, fallbacks, hoy, mesActual, mesPrev } = params;
   const cur = aggs.filter((a) => a.mes === mesActual);
   const prev = aggs.filter((a) => a.mes === mesPrev);
   const v = cur.reduce((s, a) => s + a.venta, 0);
@@ -63,9 +65,9 @@ export function calcularHero(params: CalcularHeroParams): HeroKpis {
   const cP = prev.reduce((s, a) => s + a.costo, 0);
   const facturado = facturas
     .filter((f) => f.estado !== "Cancelada" && f.fecha_emision.slice(0, 7) === mesActual)
-    .reduce((s, f) => s + mxnFactura(Number(f.total ?? 0), f.moneda, f.tipo_cambio, fallbackUsd), 0);
+    .reduce((s, f) => s + mxnFactura(Number(f.total ?? 0), f.moneda, f.tipo_cambio, fallbacks), 0);
   const saldos = calcularSaldosCarteraMxn(
-    facturasCartera, params.pagosCartera ?? [], params.ncsCartera ?? [], fallbackUsd,
+    facturasCartera, params.pagosCartera ?? [], params.ncsCartera ?? [], fallbacks,
   );
   const vencidas = facturasCartera.filter((f) => {
     if (f.estado === "Cancelada" || f.estado === "Pagada") return false;

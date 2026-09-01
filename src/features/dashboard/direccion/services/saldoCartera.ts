@@ -11,7 +11,7 @@
  *    una conversión cruzada, la NC aporta 0 (no se inventa fallback).
  * Sólo el saldo NETO resultante se convierte a MXN con el TC de la factura.
  */
-import { mxnFactura } from "./mxn";
+import { mxnFactura, type TcFallbacks } from "./mxn";
 import type { FacturaRow, NotaCreditoRow, PagoRow } from "./loaders";
 
 type MonedaLike = string | null | undefined;
@@ -61,7 +61,7 @@ export function calcularSaldosCarteraMxn(
   facturas: readonly FacturaRow[],
   pagos: readonly PagoRow[],
   ncs: readonly NotaCreditoRow[],
-  fallbackUsd: number,
+  fallbacks: TcFallbacks,
 ): Map<string, number> {
   const pagosPorFactura = agrupar(pagos);
   const ncsPorFactura = agrupar(ncs);
@@ -69,7 +69,7 @@ export function calcularSaldosCarteraMxn(
   for (const f of facturas) {
     if (f.estado === "Cancelada") continue;
     const neto = saldoEnMonedaFactura(f, pagosPorFactura.get(f.id) ?? [], ncsPorFactura.get(f.id) ?? []);
-    saldos.set(f.id, mxnFactura(neto, f.moneda, f.tipo_cambio, fallbackUsd));
+    saldos.set(f.id, mxnFactura(neto, f.moneda, f.tipo_cambio, fallbacks));
   }
   return saldos;
 }
