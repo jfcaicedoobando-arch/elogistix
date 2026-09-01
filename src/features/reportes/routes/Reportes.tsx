@@ -94,22 +94,31 @@ export default function Reportes() {
         onModoChange={setModo}
       />
 
-      {isError && (
-        <ErrorState className="mb-4" onRetry={() => void refetch()} />
+      {/* Ramas mutuamente excluyentes: error → contenido. En error no se
+          muestran skeletons ni tarjetas con cifras en cero. */}
+      {isError ? (
+        <ErrorState
+          className="mb-4"
+          title="No se pudo cargar la rentabilidad"
+          description="Revisa tu conexión y vuelve a intentar; los filtros se conservan."
+          onRetry={() => void refetch()}
+        />
+      ) : (
+        <>
+          <ReportesKpiCards kpis={kpis} isLoading={isLoading} />
+
+          <Suspense fallback={<ChartSkeleton height={300} />}>
+            <ReportesTopChart data={top10} isLoading={isLoading} />
+          </Suspense>
+          <ReportesTablaClientes
+            data={sorted}
+            isLoading={isLoading}
+            sortField={sortField}
+            sortDir={sortDir}
+            onSort={handleSort}
+          />
+        </>
       )}
-
-      <ReportesKpiCards kpis={kpis} isLoading={isLoading} />
-
-      <Suspense fallback={<ChartSkeleton height={300} />}>
-        <ReportesTopChart data={top10} isLoading={isLoading} />
-      </Suspense>
-      <ReportesTablaClientes
-        data={sorted}
-        isLoading={isLoading}
-        sortField={sortField}
-        sortDir={sortDir}
-        onSort={handleSort}
-      />
     </PageContainer>
   );
 }

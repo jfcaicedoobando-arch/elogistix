@@ -8,6 +8,7 @@ import { PagosCajaBlock } from "@/features/dashboard/finance/components/PagosCaj
 import { CierreAdminBlock } from "@/features/dashboard/finance/components/CierreAdminBlock";
 import { formatFechaLarga } from "@/lib/formatters";
 import { resolveDestinoPorPagar } from "@/features/dashboard/finance/destinoPorPagar";
+import { ErrorState } from "@/components/shared/states/ErrorState";
 
 function getSaludo(): string {
   const h = new Date().getHours();
