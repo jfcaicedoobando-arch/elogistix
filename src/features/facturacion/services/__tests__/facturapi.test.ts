@@ -70,6 +70,18 @@ describe("facturapi service", () => {
     await expect(cancelarFacturapi("f1", "02")).resolves.toMatchObject({ sustituida: false });
   });
 
+  it("cancelarFacturapi propaga uncertain del 202 de timeout", async () => {
+    invoke.mockResolvedValueOnce({
+      data: { ok: true, pending: true, uncertain: true, cancellation_status: "verifying", message: "verificando" },
+      error: null,
+    });
+    await expect(cancelarFacturapi("f1", "02")).resolves.toMatchObject({
+      pending: true,
+      uncertain: true,
+      cancellation_status: "verifying",
+    });
+  });
+
   it("cancelarFacturapi propaga error de transporte y de data.error", async () => {
     invoke.mockResolvedValueOnce({ data: null, error: { message: "boom" } });
     await expect(cancelarFacturapi("f1", "02")).rejects.toThrow("boom");

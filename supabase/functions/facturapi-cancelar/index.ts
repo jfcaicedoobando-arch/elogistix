@@ -14,7 +14,7 @@ import { wrapEdgeHandler } from "../_shared/sentry.ts";
 
 import { resolveFacturapiKey } from "../_shared/facturapiAuth.ts";
 import { authorizeOrgRole, ROLES_EMISOR_FISCAL } from "../_shared/auth.ts";
-import { getFacturapiClient, withFacturapiTimeout, FacturapiTimeoutError } from "../_shared/facturapiClient.ts";
+import { getFacturapiClient, withFacturapiTimeout, FacturapiTimeoutError, FACTURAPI_CANCEL_TIMEOUT_MS } from "../_shared/facturapiClient.ts";
 import { validateCancelacionInput, type CancelacionInput } from "./helpers.ts";
 import { handleDescargarAcusePdf, handleDescargarAcuseXml } from "./acuseHandlers.ts";
 import { jsonResponse, makeJson } from "../_shared/response.ts";
@@ -150,11 +150,12 @@ Deno.serve(wrapEdgeHandler("facturapi-cancelar", async (req) => {
     cancelResp = await withFacturapiTimeout(
       "invoices.cancel",
       facturapi.invoices.cancel(factura.facturapi_id, cancelPayload),
+      FACTURAPI_CANCEL_TIMEOUT_MS,
     ) as FapiCancelResponse;
   } catch (err) {
     if (err instanceof FacturapiTimeoutError) {
       // REF-01: dejar la fila en `verifying` para que el cron la reconcilie.
-      await marcarTimeoutCancelacion({
+      const marca = await marcarTimeoutCancelacion({
         supabase,
         facturaId: factura_id,
         organizationId: factura.organization_id,
@@ -164,11 +165,36 @@ Deno.serve(wrapEdgeHandler("facturapi-cancelar", async (req) => {
         op: err.op,
         timeoutMs: err.timeoutMs,
       });
+      // v13.821.6 — Si el estado quedó persistido como pending/verifying, la
+      // solicitud está ACEPTADA con resultado incierto: el cron y "Verificar
+      // estatus" la resuelven. Responder 504 hacía que la UI comunicara un
+      // fallo definitivo y ofreciera reintentar, lo cual es inseguro.
+      if (marca.persisted) {
+        return json(
+          {
+            ok: true,
+            pending: true,
+            uncertain: true,
+            cancellation_status: marca.cancellationStatus,
+            message:
+              "La solicitud fue enviada, pero FacturApi tardó en confirmar. Estamos verificando el estado; no vuelvas a cancelarla.",
+          },
+          202,
+        );
+      }
+      // Sin `verifying` persistido nadie reconciliará: error observable.
       return json(
-        { error: "facturapi_timeout", op: err.op, timeout_ms: err.timeoutMs, message: err.message },
+        {
+          error: "facturapi_timeout",
+          op: err.op,
+          timeout_ms: err.timeoutMs,
+          persisted: false,
+          message: err.message,
+        },
         504,
       );
     }
+
 
     return await handleCancelFailure({
       err,

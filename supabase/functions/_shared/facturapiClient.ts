@@ -166,6 +166,15 @@ export function __resetFacturapiClientCacheForTests(): void {
  */
 export const FACTURAPI_SDK_TIMEOUT_MS = 30_000;
 
+/**
+ * v13.821.6 — Timeout SÓLO para `invoices.cancel`: al vencer, la edge todavía
+ * tiene que persistir `cancellation_status='verifying'`, escribir bitácora y
+ * responder 202 antes del límite de ejecución. Con 30 s no quedaba margen y el
+ * usuario veía un error rojo aunque la solicitud sí llegó al SAT.
+ */
+export const FACTURAPI_CANCEL_TIMEOUT_MS = 22_000;
+
+
 export class FacturapiTimeoutError extends Error {
   readonly status = 504;
   readonly op: string;

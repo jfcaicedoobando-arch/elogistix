@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.821.6] - 2026-09-08
+- **Cancelación de CFDI con timeout de FacturApi**: si FacturApi tarda en confirmar pero la solicitud ya quedó registrada como `verifying`, la Edge `facturapi-cancelar` responde 202 `{ pending, uncertain }` en lugar de 504. La UI muestra un aviso informativo ("estamos verificando el estado; no vuelvas a cancelarla"), refresca la factura y ya NO ofrece reintentar la cancelación; el reconciliador automático y "Verificar estatus" resuelven el resultado real. Si no se pudo persistir el estado, se sigue devolviendo error 5xx observable.
+- **Timeout dedicado**: `invoices.cancel` usa 22 s (`FACTURAPI_CANCEL_TIMEOUT_MS`) para dejar margen a persistir el estado y responder antes del límite de ejecución. Los demás timeouts del SDK no cambian.
+
 ## [13.821.5] - 2026-09-08
 - **Exportar CSV de cotizaciones (accesibilidad)**: el botón deshabilitado ya no usa el atributo nativo `title` (prohibido por la auditoría de arquitectura); la causa se expone como descripción accesible con `aria-describedby`.
 - **Timbrado**: se restaura la llamada literal `facturapi.invoices.create(payload)` en `facturapi-emitir` (estrechando el tipo del SDK antes del `try`), que los guards de Deno verifican para asegurar que el SDK sólo se invoque ahí.

@@ -55,7 +55,20 @@ export function useCancelarFactura() {
     mutationFn: (vars: CancelarVars) =>
       cancelarFacturapi(vars.facturaId, vars.motivo, vars.sustituyeUuid, vars.sustituidaPorFacturaId),
     onSuccess: (res) => {
-      if (res.pending) {
+      if (res.uncertain) {
+        // v13.821.6 — FacturApi tardó en confirmar, pero la solicitud quedó
+        // registrada como `verifying`. Es éxito informativo: NO ofrecemos
+        // reintentar (reenviar la cancelación con resultado incierto es
+        // inseguro); la acción permitida es "Verificar estatus" en el detalle.
+        notifyInfo(undefined, {
+          title: "Cancelación enviada · verificando",
+          description:
+            (res.message
+              ?? "La solicitud fue enviada, pero FacturApi tardó en confirmar. Estamos verificando el estado; no vuelvas a cancelarla.")
+            + " Usa “Verificar estatus” en el detalle de la factura para consultar el resultado.",
+          duration: 15000,
+        });
+      } else if (res.pending) {
         // Silencio positivo SAT (regla 2.7.1.34 RMF): el receptor tiene hasta
         // 72 h hábiles para aceptar/rechazar. NO decimos "cancelado".
         notifyInfo(undefined, {
@@ -67,6 +80,7 @@ export function useCancelarFactura() {
       } else {
         notifySuccess(undefined, { title: res.sustituida ? "CFDI sustituido" : "CFDI cancelado" });
       }
+
       qc.invalidateQueries({ queryKey: facturasKeys.all });
       invalidateHuecoFacturacion(qc);
       // M-1: una factura cancelada deja de ser cobrable en cartera/aging.
