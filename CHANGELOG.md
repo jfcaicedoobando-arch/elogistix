@@ -1,6 +1,13 @@
 # Changelog
 
+## [13.823.8] - 2026-09-01
+### Divisas no soportadas fuera de los KPIs de Dirección (sólo local)
+- `mxnFactura` y `toMxn` normalizan la moneda y aceptan únicamente MXN/USD/EUR. Antes delegaban en `aMxn`, que acepta cualquier divisa si trae `tipo_cambio` directo válido: `mxnFactura(100, "JPY", 3, …)` sumaba 300 MXN a los KPIs. Ahora una divisa fuera del catálogo del tablero aporta 0 aun con TC directo. `aMxn` (canon global) no cambia.
+- Pruebas nuevas: JPY con TC directo válido ⇒ 0 en `mxnFactura` y en `toMxn`.
+- Sin deploy, publish, Edge deploy, migraciones o SQL remoto, secretos ni cambios de datos.
+
 ## [13.823.7] - 2026-09-01
+
 ### Precisión de moneda y fecha de negocio en Dirección (sólo local)
 - **Fallback de TC por moneda**: `mxnFactura` recibe ahora `{ usd, eur }` en vez de un único `fallbackUsd`. MXN = 1; USD/EUR usan el TC de la factura y, si falta, el fallback de SU moneda; una divisa desconocida o sin fallback propio aporta 0 en vez de valuarse con el TC del dólar (antes una factura EUR sin TC salía en MXN con el TC USD: cifra creíble pero falsa). `useDireccionKpis` propaga `usdMxn` y `eurMxn` desde `useExchangeRates` y ambos entran en la `queryKey` para invalidar bien; `saldoCartera` convierte el saldo neto con el fallback de su moneda y `facturado_mes_mxn` sigue el mismo contrato.
 - **Mes de negocio en America/Mexico_City**: `mxn.ts` sustituye la semántica UTC (`ym`/`inicioMesUtc`) por `mesNegocio` (= `ymMx`) y `mesMasOffset`, aritmética mensual pura sobre `YYYY-MM`. `ventanaDireccionDesdeIso` devuelve el primer día del mes de hace 5 meses, date-only y sin depender de la TZ del runner; `calcularMargen6m`, `fetchDireccionKpis` y el pulso (`arribos_7d`, demoras) usan el día/mes de México. Antes el tablero cambiaba de mes a las 18:00 CDMX.
