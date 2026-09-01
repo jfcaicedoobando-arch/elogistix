@@ -38,6 +38,23 @@ describe("useCotizacionUpdateGuard", () => {
     expect((mutateAsync.mock.calls as unknown as [{ expectedUpdatedAt: string | null }][])[0]?.[0]).toMatchObject({ expectedUpdatedAt: null });
   });
 
+  it("siembra el sello con el updated_at de la cotización recién creada", async () => {
+    const mutateAsync = vi.fn(async () => undefined);
+    const crear = vi.fn(async () => ({ id: "cot1", updated_at: "2026-09-01T20:07:23Z" }));
+    const { result } = renderHook(() =>
+      useCotizacionUpdateGuard({ mutateAsync, isPending: false }, undefined, {
+        mutateAsync: crear,
+        isPending: false,
+      }),
+    );
+    // SAFE-CAST: el input real del insert no aporta a esta aserción.
+    await result.current.crearCotizacion?.mutateAsync({} as never);
+    await result.current.mutateAsync(VARS);
+    expect((mutateAsync.mock.calls as unknown as [{ expectedUpdatedAt: string | null }][])[0]?.[0]).toMatchObject({
+      expectedUpdatedAt: "2026-09-01T20:07:23Z",
+    });
+  });
+
   it("propaga isPending de la mutación subyacente", () => {
     const { result } = renderHook(() =>
       useCotizacionUpdateGuard({ mutateAsync: vi.fn(), isPending: true }, null),
