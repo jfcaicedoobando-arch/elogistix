@@ -180,4 +180,29 @@ describe("useCancelarRep", () => {
     expect(notifyError.mock.calls[0]![1].description).toContain("no autorizado");
     qc.clear();
   });
+
+  it("uncertain: aviso informativo, invalida cache y no ofrece reintentar", async () => {
+    cancelarRep.mockResolvedValue({
+      ok: true,
+      uncertain: true,
+      pending: true,
+      cancellation_status: "verifying",
+      message: "FacturApi tardó en responder.",
+    });
+    const qc = new QueryClient({ defaultOptions: { mutations: { retry: false } } });
+    const spy = vi.spyOn(qc, "invalidateQueries");
+    const { result } = renderHook(() => useCancelarRep("fac-1"), { wrapper: wrapper(qc) });
+
+    result.current.mutate({ pagoId: "p-uncertain", motivo: "02" });
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+
+    expect(toastSuccess).not.toHaveBeenCalled();
+    expect(notifyInfo).toHaveBeenCalledWith(undefined, expect.objectContaining({
+      title: "Cancelación del REP enviada · verificando",
+      description: "FacturApi tardó en responder.",
+    }));
+    expect(notifyInfo.mock.calls[0]![1].description).not.toMatch(/reintent/i);
+    expect(spy).toHaveBeenCalledWith({ queryKey: ["pagos_factura", "fac-1"] });
+    qc.clear();
+  });
 });

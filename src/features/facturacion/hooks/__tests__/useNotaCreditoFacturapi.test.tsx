@@ -18,9 +18,11 @@ vi.mock("@/features/facturacion/services/notasCreditoFacturapi", () => ({
   timbrarNotaCreditoFacturapi: (...a: unknown[]) => timbrarNotaCreditoFacturapi(...a),
   cancelarNotaCreditoFacturapi: (...a: unknown[]) => cancelarNotaCreditoFacturapi(...a),
 }));
+const notifyInfo = vi.fn();
 vi.mock("@/lib/ui/appFeedback", () => ({
   notifyError: (...a: unknown[]) => notifyError(...a),
   notifySuccess: (_t: unknown, opts: { title: string }) => toastSuccess(opts?.title),
+  notifyInfo: (...a: unknown[]) => notifyInfo(...a),
 }));
 
 import {
@@ -40,6 +42,7 @@ beforeEach(() => {
   cancelarNotaCreditoFacturapi.mockReset();
   toastSuccess.mockReset();
   notifyError.mockReset();
+  notifyInfo.mockReset();
 });
 
 describe("useTimbrarNotaCredito", () => {
@@ -97,6 +100,30 @@ describe("useCancelarNotaCredito", () => {
     await waitFor(() => expect(result.current.isError).toBe(true));
 
     expect(notifyError.mock.calls[0]![1].description).toContain("cancel fail");
+    qc.clear();
+  });
+
+  it("uncertain: aviso informativo, invalida cache y no ofrece reintentar", async () => {
+    cancelarNotaCreditoFacturapi.mockResolvedValue({
+      ok: true,
+      uncertain: true,
+      pending: true,
+      message: "FacturApi tardó en responder.",
+    });
+    const qc = new QueryClient({ defaultOptions: { mutations: { retry: false } } });
+    const spy = vi.spyOn(qc, "invalidateQueries");
+    const { result } = renderHook(() => useCancelarNotaCredito("fac-2"), { wrapper: wrapper(qc) });
+
+    result.current.mutate({ notaCreditoId: "nc-11", motivo: "02" });
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+
+    expect(toastSuccess).not.toHaveBeenCalled();
+    expect(notifyInfo).toHaveBeenCalledWith(undefined, expect.objectContaining({
+      title: "Cancelación de la NC enviada · verificando",
+      description: "FacturApi tardó en responder.",
+    }));
+    expect(notifyInfo.mock.calls[0]![1].description).not.toMatch(/reintent/i);
+    expect(spy).toHaveBeenCalledWith({ queryKey: facturasKeys.notasCredito("fac-2") });
     qc.clear();
   });
 });
