@@ -27,6 +27,7 @@ export function useFlujoProyectado(dias = 90) {
         dias,
         organizationId: organizationId ?? null,
         tipoCambioUsd: tcQ.data?.usdMxn,
+        tipoCambioEur: tcQ.data?.eurMxn,
         tipoCambioFecha: tcQ.data?.fechaAplicada ?? null,
       }),
     enabled: ready && !!organizationId,

@@ -21,14 +21,34 @@ describe("computeCliente360Totals", () => {
       ],
       tipos,
     );
-    expect(r.totalAbierto).toBe(1500);
-    expect(r.totalGanado).toBe(2500 + 800);
+    expect(r).toHaveLength(1);
+    expect(r[0].moneda).toBe("MXN");
+    expect(r[0].totalAbierto).toBe(1500);
+    expect(r[0].totalGanado).toBe(2500 + 800);
   });
 
-  it("devuelve ceros para input vacío", () => {
-    expect(computeCliente360Totals([], tipos)).toEqual({
-      totalAbierto: 0,
-      totalGanado: 0,
-    });
+  it("devuelve arreglo vacío para input vacío", () => {
+    expect(computeCliente360Totals([], tipos)).toEqual([]);
+  });
+
+  it("separa totales por moneda sin mezclarlos (100k MXN + 10k USD + importe EUR)", () => {
+    const r = computeCliente360Totals(
+      [
+        { etapa_id: "abierta", monto_estimado: 100000, valor_real: null, moneda: "MXN" },
+        { etapa_id: "abierta", monto_estimado: 10000, valor_real: null, moneda: "USD" },
+        { etapa_id: "ganada", monto_estimado: 5000, valor_real: 4800, moneda: "EUR" },
+      ],
+      tipos,
+    );
+    expect(r).toHaveLength(3);
+    const mxn = r.find((x) => x.moneda === "MXN")!;
+    const usd = r.find((x) => x.moneda === "USD")!;
+    const eur = r.find((x) => x.moneda === "EUR")!;
+    expect(mxn.totalAbierto).toBe(100000);
+    expect(mxn.totalGanado).toBe(0);
+    expect(usd.totalAbierto).toBe(10000);
+    expect(usd.totalGanado).toBe(0);
+    expect(eur.totalAbierto).toBe(0);
+    expect(eur.totalGanado).toBe(4800);
   });
 });

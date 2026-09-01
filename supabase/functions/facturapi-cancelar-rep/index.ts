@@ -10,7 +10,7 @@ import { wrapEdgeHandler } from "../_shared/sentry.ts";
 
 import { resolveFacturapiKey } from "../_shared/facturapiAuth.ts";
 import { authorizeOrgRole, ROLES_COBRANZA_FISCAL } from "../_shared/auth.ts";
-import { getFacturapiClient, describeFacturapiError, withFacturapiTimeout, FacturapiTimeoutError } from "../_shared/facturapiClient.ts";
+import { getFacturapiClient, describeFacturapiError, withFacturapiTimeout, FacturapiTimeoutError, FACTURAPI_CANCEL_TIMEOUT_MS } from "../_shared/facturapiClient.ts";
 import { registrarBitacoraEdge } from "../_shared/bitacora.ts";
 import { jsonResponse, makeJson } from "../_shared/response.ts";
 import { marcarTimeoutCancelacionRep } from "./timeoutCancelacionRep.ts";
@@ -111,11 +111,15 @@ Deno.serve(wrapEdgeHandler("facturapi-cancelar-rep", async (req) => {
     const cancelPayload: { motive: string; substitution?: string } = { motive: body.motivo };
     if (sustituyeFacturapiId) cancelPayload.substitution = sustituyeFacturapiId;
     // EF-05: timeout defensivo — el webhook/cron reconcilian el estado real.
-    cancelResp = await withFacturapiTimeout("invoices.cancel", facturapi.invoices.cancel(objetivoFacturapiId, cancelPayload)) as FapiCancelResponse;
+    cancelResp = await withFacturapiTimeout(
+      "invoices.cancel",
+      facturapi.invoices.cancel(objetivoFacturapiId, cancelPayload),
+      FACTURAPI_CANCEL_TIMEOUT_MS,
+    ) as FapiCancelResponse;
   } catch (err) {
     if (err instanceof FacturapiTimeoutError) {
       // R3EF-01: marcar verifying para que el cron adopte la fila (patrón REF-01).
-      await marcarTimeoutCancelacionRep({
+      const marca = await marcarTimeoutCancelacionRep({
         supabase,
         pagoId: pago.id,
         organizationId: pago.organization_id,
@@ -125,7 +129,34 @@ Deno.serve(wrapEdgeHandler("facturapi-cancelar-rep", async (req) => {
         op: err.op,
         timeoutMs: err.timeoutMs,
       });
-      return json({ error: "facturapi_timeout", op: err.op, timeout_ms: err.timeoutMs, message: err.message }, 504);
+      // v13.821.6 (P1-2) — Si `verifying` quedó persistido, la solicitud está
+      // ACEPTADA con resultado incierto: el cron y "Actualizar estado" la
+      // resuelven. Responder 504 comunicaba un fallo definitivo e invitaba a
+      // reintentar, lo cual es inseguro.
+      if (marca.persisted) {
+        return json(
+          {
+            ok: true,
+            pending: true,
+            uncertain: true,
+            cancellation_status: marca.cancellationStatus,
+            message:
+              "La solicitud fue enviada, pero FacturApi tardó en confirmar. Estamos verificando el estado del REP; no vuelvas a cancelarlo.",
+          },
+          202,
+        );
+      }
+      // Sin `verifying` persistido nadie reconciliará: error observable.
+      return json(
+        {
+          error: "facturapi_timeout",
+          op: err.op,
+          timeout_ms: err.timeoutMs,
+          persisted: false,
+          message: err.message,
+        },
+        504,
+      );
     }
     const { status, detail } = describeFacturapiError(err);
     await registrarBitacoraEdge(supabase, {

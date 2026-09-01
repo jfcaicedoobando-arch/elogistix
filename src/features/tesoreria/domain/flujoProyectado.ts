@@ -5,8 +5,9 @@
  */
 import { parseDateOnlyLocal, formatDateOnlyLocal } from "@/lib/date/dateOnly";
 import { aMxn } from "@/lib/financial/convertir";
-import type { CobranzaRow, CxpRow, LiquidacionRow, ResumenCuenta } from "./resumen";
+import type { CobranzaRow, CxpRow, LiquidacionRow, ResumenCuenta, TasasCambio } from "./resumen";
 import { sumarSaldosCuentas } from "./resumen";
+import { tcDeMoneda } from "./resumenHelpers";
 import { Exclusiones, aplicarCobranza, aplicarCxp, aplicarLiquidaciones } from "./flujoProyectado.aplicadores";
 
 export interface DetalleFlujo {
@@ -44,6 +45,8 @@ export interface FlujoProyectado {
   excluido_por_moneda: Record<string, number>;
   /** Q-06: TC USD→MXN vigente usado para convertir (si lo hubo). */
   tipo_cambio_usd?: number | null;
+  /** P1-7: TC EUR→MXN vigente usado para convertir (si lo hubo). */
+  tipo_cambio_eur?: number | null;
   /** Q-06: fecha (YYYY-MM-DD) del TC DOF aplicado. */
   tipo_cambio_fecha?: string | null;
 }
@@ -78,6 +81,25 @@ export function toMxn(monto: number, moneda: string, tc: number | undefined): nu
   return aMxn(monto, moneda, tc).monto;
 }
 
+/**
+ * P1-7 — Registra en `exclusiones` las cuentas cuya moneda no tiene TC válido,
+ * para que la UI marque el saldo consolidado como incompleto.
+ */
+function registrarCuentasSinTc(
+  cuentas: ResumenCuenta[],
+  tasas: TasasCambio,
+  exclusiones: Exclusiones,
+): void {
+  exclusiones.incompleto = true;
+  for (const c of cuentas) {
+    const moneda = (c.moneda ?? "MXN").toUpperCase();
+    if (moneda === "MXN") continue;
+    if (!aMxn(c.saldo, moneda, tcDeMoneda(moneda, tasas)).completo) {
+      exclusiones.registrar(c.saldo, moneda);
+    }
+  }
+}
+
 export function calcularFlujoProyectado(args: {
   cuentas: ResumenCuenta[];
   cobranza: CobranzaRow[];
@@ -91,6 +113,8 @@ export function calcularFlujoProyectado(args: {
    * inicial del flujo proyectado.
    */
   tipoCambioUsd?: number;
+  /** P1-7 — Tipo de cambio EUR→MXN, mismo tratamiento que `tipoCambioUsd`. */
+  tipoCambioEur?: number;
   /** Q-06: fecha (YYYY-MM-DD) del TC DOF aplicado, sólo para exhibir en UI. */
   tipoCambioFecha?: string | null;
 }): FlujoProyectado {
@@ -116,19 +140,13 @@ export function calcularFlujoProyectado(args: {
 
   const exclusiones = new Exclusiones();
 
-  // Q-06: mismo canon (`aMxn`) que el resumen para el saldo inicial de cuentas.
-  const { total: saldoInicial, incompleto: saldoInicialIncompleto, porMoneda: saldoInicialExcluido } =
-    sumarSaldosCuentas(args.cuentas, args.tipoCambioUsd);
-  if (saldoInicialIncompleto) {
-    exclusiones.incompleto = true;
-    for (const c of args.cuentas) {
-      const moneda = (c.moneda ?? "MXN").toUpperCase();
-      if (moneda === "MXN") continue;
-      const conv = aMxn(c.saldo, moneda, moneda === "USD" ? args.tipoCambioUsd : undefined);
-      if (!conv.completo) exclusiones.registrar(c.saldo, moneda);
-    }
-  }
-  void saldoInicialExcluido;
+  const tasas: TasasCambio = { usdMxn: args.tipoCambioUsd, eurMxn: args.tipoCambioEur };
+
+  // Q-06/P1-7: mismo canon (`aMxn`) que el resumen para el saldo inicial de
+  // cuentas, cubriendo todas las monedas del canon (no sólo USD).
+  const { total: saldoInicial, incompleto: saldoInicialIncompleto } =
+    sumarSaldosCuentas(args.cuentas, tasas);
+  if (saldoInicialIncompleto) registrarCuentasSinTc(args.cuentas, tasas, exclusiones);
 
   const inWindow = (iso: string | null): SemanaFlujo | null => {
     if (!iso) return null;
@@ -163,6 +181,7 @@ export function calcularFlujoProyectado(args: {
     saldo_incompleto: exclusiones.incompleto,
     excluido_por_moneda: exclusiones.porMoneda,
     tipo_cambio_usd: args.tipoCambioUsd ?? null,
+    tipo_cambio_eur: args.tipoCambioEur ?? null,
     tipo_cambio_fecha: args.tipoCambioFecha ?? null,
   };
 }

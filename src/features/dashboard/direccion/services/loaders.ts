@@ -97,6 +97,34 @@ export async function loadFacturas(orgId: string | null, desdeIso: string) {
   return { facturas: (facturas ?? []) as FacturaRow[], pagos: (pagos ?? []) as PagoRow[] };
 }
 
+/**
+ * P1-6: la cartera abierta (aging/vencido) debe incluir TODA factura viva con
+ * saldo potencial > 0, sin importar cuándo se emitió — el loader de tendencia
+ * (`loadFacturas`, ventana de 6 meses) borraba facturas abiertas más viejas.
+ * Estados abiertos alineados con `cartera_pendiente()` (canon SQL).
+ */
+const ESTADOS_CARTERA_ABIERTA = ["Emitida", "Vencida", "Parcialmente pagada"] as const;
+
+export async function loadCarteraAbierta(orgId: string | null): Promise<{
+  facturas: FacturaRow[]; pagos: PagoRow[];
+}> {
+  let qF = supabase.from("facturas")
+    .select("id, total, moneda, tipo_cambio, fecha_emision, fecha_vencimiento, estado, cliente_id, timbrado_en, uuid_fiscal, acuse_cancelacion_status")
+    .in("estado", ESTADOS_CARTERA_ABIERTA).is("deleted_at", null).limit(LIMITE_FACTURAS);
+  if (orgId) qF = qF.eq("organization_id", orgId);
+  const { data: facturas, error } = await qF;
+  if (error) throw error;
+  assertNotTruncated(facturas, LIMITE_FACTURAS, "direccion.loadCarteraAbierta");
+  const ids = (facturas ?? []).map((f) => f.id);
+  if (ids.length === 0) return { facturas: [] as FacturaRow[], pagos: [] as PagoRow[] };
+  const { data: pagos, error: e2 } = await supabase.from("pagos_factura")
+    .select("factura_id, monto_aplicado_factura, moneda, tipo_cambio, fecha_pago")
+    .in("factura_id", ids).is("deleted_at", null).limit(LIMITE_PAGOS);
+  if (e2) throw e2;
+  assertNotTruncated(pagos, LIMITE_PAGOS, "direccion.loadCarteraAbiertaPagos");
+  return { facturas: (facturas ?? []) as FacturaRow[], pagos: (pagos ?? []) as PagoRow[] };
+}
+
 export async function loadEmbarquesActivos(orgId: string | null): Promise<EmbarqueEstadoRow[]> {
   let q = supabase.from("embarques")
     .select("estado, eta")

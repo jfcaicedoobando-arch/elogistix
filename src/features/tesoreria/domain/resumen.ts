@@ -10,12 +10,12 @@
 
 export type {
   ResumenCuenta,
-  
   TopItem,
   ResumenTesoreria,
   CobranzaRow,
   CxpRow,
   LiquidacionRow,
+  TasasCambio,
 } from "./resumen.types";
 import { aMxn } from "@/lib/financial/convertir";
 import type {
@@ -23,6 +23,7 @@ import type {
   ResumenTesoreria,
   CobranzaRow,
   CxpRow,
+  TasasCambio,
 } from "./resumen.types";
 
 
@@ -37,6 +38,8 @@ export function calcularResumenTesoreria(args: {
    * proporciona, se usa `1` (compatibilidad con callers que no manejan TC).
    */
   tipoCambioUsd?: number;
+  /** P1-7 — Tipo de cambio EUR→MXN, mismo tratamiento que `tipoCambioUsd`. */
+  tipoCambioEur?: number;
   /** Q-06: fecha (YYYY-MM-DD) del TC DOF aplicado, sólo para exhibir en UI. */
   tipoCambioFecha?: string | null;
 }): ResumenTesoreria {
@@ -46,17 +49,12 @@ export function calcularResumenTesoreria(args: {
   limite.setDate(limite.getDate() + 30);
   const enVentana = (iso: string | null) =>
     !!iso && new Date(iso + "T00:00:00") <= limite;
-  // UIA-03: sin TC confiable NO se asume 1:1 — la porción en USD queda
-  // excluida de los totales MXN y se reporta vía `flujo_incompleto`.
-  const tc =
-    typeof args.tipoCambioUsd === "number" && args.tipoCambioUsd > 1 ? args.tipoCambioUsd : 0;
-  const tcConfiable = tc > 0;
 
-  const flujo = calcularFlujo(args.cobranza, args.cxp, enVentana, tc);
-  flujo.flujo_incompleto =
-    !tcConfiable && (flujo.por_cobrar_usd > 0 || flujo.por_pagar_usd > 0);
-  const vencidasCobranza = sumarVencidas(args.cobranza, (f) => f.estatus_cobranza, tc);
-  const vencidasCxp = sumarVencidas(args.cxp, (f) => f.estatus, tc);
+  const tasas: TasasCambio = { usdMxn: args.tipoCambioUsd, eurMxn: args.tipoCambioEur };
+
+  const flujo = calcularFlujo(args.cobranza, args.cxp, enVentana, tasas);
+  const vencidasCobranza = sumarVencidas(args.cobranza, (f) => f.estatus_cobranza, tasas);
+  const vencidasCxp = sumarVencidas(args.cxp, (f) => f.estatus, tasas);
 
   const top_deudores = agruparTop(args.cobranza, {
     filtro: (f) => f.saldo > 0 && f.estatus_cobranza === "Vencida",
@@ -74,7 +72,7 @@ export function calcularResumenTesoreria(args: {
   });
 
   const { total: saldo_bancos_mxn, incompleto: saldo_bancos_incompleto, porMoneda: saldos_por_moneda } =
-    sumarSaldosCuentas(args.cuentas, args.tipoCambioUsd);
+    sumarSaldosCuentas(args.cuentas, tasas);
 
   return {
     cuentas: args.cuentas,
@@ -85,6 +83,7 @@ export function calcularResumenTesoreria(args: {
     saldo_bancos_incompleto,
     saldos_por_moneda,
     tipo_cambio_usd: args.tipoCambioUsd ?? null,
+    tipo_cambio_eur: args.tipoCambioEur ?? null,
     tipo_cambio_fecha: args.tipoCambioFecha ?? null,
     cartera_vencida_total_mxn: vencidasCobranza.total_mxn,
     cartera_vencida_count: vencidasCobranza.count,
@@ -94,13 +93,15 @@ export function calcularResumenTesoreria(args: {
 }
 
 /**
- * Q-06 · Suma saldos de cuentas convirtiendo divisas con `aMxn` (canon único).
- * Sin TC confiable, la cuenta en divisa extranjera NO se suma a `total`
- * (queda marcada en `incompleto` y su monto nominal en `porMoneda`).
+ * Q-06/P1-7 · Suma saldos de cuentas convirtiendo divisas con `aMxn` (canon
+ * único). Sin TC confiable para la moneda de la cuenta, ésta NO se suma a
+ * `total` (queda marcada en `incompleto` y su monto nominal en `porMoneda`).
+ * Antes sólo se resolvía el TC de USD; una cuenta EUR con TC válido quedaba
+ * excluida siempre porque se le pasaba `undefined` a `aMxn`.
  */
 export function sumarSaldosCuentas(
   cuentas: ResumenCuenta[],
-  tipoCambioUsd?: number,
+  tasas: TasasCambio,
 ): { total: number; incompleto: boolean; porMoneda: Record<string, number> } {
   let total = 0;
   let incompleto = false;
@@ -108,11 +109,11 @@ export function sumarSaldosCuentas(
   for (const c of cuentas) {
     const moneda = (c.moneda ?? "MXN").toUpperCase();
     porMoneda[moneda] = (porMoneda[moneda] ?? 0) + c.saldo;
-    const conv = aMxn(c.saldo, moneda, moneda === "USD" ? tipoCambioUsd : undefined);
+    const conv = aMxn(c.saldo, moneda, tcDeMoneda(moneda, tasas));
     if (conv.completo) total += conv.monto;
     else incompleto = true;
   }
   return { total, incompleto, porMoneda };
 }
 
-import { calcularFlujo, sumarVencidas, agruparTop } from "./resumenHelpers";
+import { calcularFlujo, sumarVencidas, agruparTop, tcDeMoneda } from "./resumenHelpers";

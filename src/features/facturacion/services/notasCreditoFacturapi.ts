@@ -33,8 +33,14 @@ export async function cancelarNotaCreditoFacturapi(
   notaCreditoId: string,
   motivo: MotivoCancelacionSat,
   sustituyeUuid?: string,
-): Promise<{ pending: boolean; message?: string }> {
-  const { data, error } = await supabase.functions.invoke<{ ok?: boolean; pending?: boolean; error?: string; message?: string }>(
+): Promise<{ pending: boolean; uncertain: boolean; message?: string }> {
+  const { data, error } = await supabase.functions.invoke<{
+    ok?: boolean;
+    pending?: boolean;
+    uncertain?: boolean;
+    error?: string;
+    message?: string;
+  }>(
     "facturapi-cancelar-nota-credito",
     { body: { nota_credito_id: notaCreditoId, motivo, sustituye_uuid: sustituyeUuid } },
   );
@@ -42,5 +48,7 @@ export async function cancelarNotaCreditoFacturapi(
   if (data?.error) throw new Error(data.message ?? data.error);
   // Ola 4 · N4: la cancelación puede quedar pendiente de aceptación del
   // receptor; el hook lo comunica en el toast.
-  return { pending: data?.pending ?? false, message: data?.message };
+  // v13.821.6 (P1-2): `uncertain` marca un timeout con `verifying` persistido
+  // (resultado incierto, NO reintentar), mismo contrato que REP/facturas.
+  return { pending: data?.pending ?? false, uncertain: data?.uncertain === true, message: data?.message };
 }

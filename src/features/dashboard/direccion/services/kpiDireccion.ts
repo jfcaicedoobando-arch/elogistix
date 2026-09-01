@@ -2,7 +2,7 @@
  * Orquestador: dispara loaders en paralelo y aplica cálculos puros.
  */
 import { inicioMesUtc, ym, ventanaDireccionDesdeIso } from "./mxn";
-import { loadEmbarques, loadEmbarquesActivos, loadFacturas } from "./loaders";
+import { loadCarteraAbierta, loadEmbarques, loadEmbarquesActivos, loadFacturas } from "./loaders";
 import {
   agregarEmbarques, calcularAntiguedad, calcularHero, calcularMargen6m,
   calcularMargenPorModo, calcularPulso, calcularTopClientes,
@@ -18,16 +18,24 @@ export async function fetchDireccionKpis(
   const mesActual = ym(base);
   const mesPrev = ym(new Date(Date.UTC(base.getUTCFullYear(), base.getUTCMonth() - 1, 1)));
 
-  const [embarquesData, facturasData, activos] = await Promise.all([
+  // P1-6: la tendencia/facturado sigue acotada a 6 meses (`loadFacturas`), pero
+  // la cartera abierta (aging + vencido) usa `loadCarteraAbierta`, SIN ventana
+  // de fechas — de lo contrario una factura viva más vieja desaparece del
+  // aging y del total vencido sin haberse cobrado.
+  const [embarquesData, facturasData, carteraAbierta, activos] = await Promise.all([
     loadEmbarques(orgId, desdeIso),
     loadFacturas(orgId, desdeIso),
+    loadCarteraAbierta(orgId),
     loadEmbarquesActivos(orgId),
   ]);
 
   const aggs = agregarEmbarques(embarquesData.embarques, embarquesData.ventas, embarquesData.costos);
-  const antiguedad = calcularAntiguedad(facturasData.facturas, facturasData.pagos, fallbackUsdMxn, hoy);
+  const antiguedad = calcularAntiguedad(carteraAbierta.facturas, carteraAbierta.pagos, fallbackUsdMxn, hoy);
   return {
-    hero: calcularHero({ aggs, facturas: facturasData.facturas, antiguedad, fallbackUsd: fallbackUsdMxn, hoy, mesActual, mesPrev }),
+    hero: calcularHero({
+      aggs, facturas: facturasData.facturas, facturasCartera: carteraAbierta.facturas,
+      antiguedad, fallbackUsd: fallbackUsdMxn, hoy, mesActual, mesPrev,
+    }),
     margen_6m: calcularMargen6m(aggs, hoy),
     margen_por_modo: calcularMargenPorModo(aggs.filter((a) => a.mes === mesActual)),
     antiguedad,

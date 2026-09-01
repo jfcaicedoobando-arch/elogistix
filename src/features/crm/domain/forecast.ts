@@ -9,18 +9,25 @@ export type EtapaTipo = "abierta" | "ganada" | "perdida";
 export interface ForecastBucket {
   key: string;
   label: string;
+  moneda: string;
   pipeline: number;
   ponderado: number;
   ganado: number;
   count: number;
 }
 
-export interface ForecastResumen {
-  porMes: ForecastBucket[];
-  porVendedor: ForecastBucket[];
+export interface ForecastTotalesMoneda {
+  moneda: string;
   totalPipeline: number;
   totalPonderado: number;
   totalGanado: number;
+}
+
+export interface ForecastResumen {
+  porMes: ForecastBucket[];
+  porVendedor: ForecastBucket[];
+  /** Totales sin mezclar monedas: no hay TC histórico canónico. */
+  totalesPorMoneda: ForecastTotalesMoneda[];
 }
 
 export interface OportunidadRow {
@@ -29,6 +36,7 @@ export interface OportunidadRow {
   fecha_estimada_cierre: string | null;
   vendedor_email: string | null;
   etapa_id: string | null;
+  moneda?: string | null;
 }
 
 const MESES = [
@@ -56,9 +64,7 @@ export function computeForecast(
 ): ForecastResumen {
   const mes = new Map<string, ForecastBucket>();
   const vend = new Map<string, ForecastBucket>();
-  let totalPipeline = 0;
-  let totalPonderado = 0;
-  let totalGanado = 0;
+  const totales = new Map<string, ForecastTotalesMoneda>();
 
   for (const r of rows) {
     const monto = Number(r.monto_estimado ?? 0) || 0;
@@ -67,20 +73,23 @@ export function computeForecast(
     const tipo = r.etapa_id ? etapaTipos.get(r.etapa_id) : undefined;
     const { abierta, ganada } = classifyEtapa(tipo);
     const delta = { abierta, ganada, monto, ponderado };
+    const moneda = r.moneda || "MXN";
 
+    const t = totales.get(moneda) ?? { moneda, totalPipeline: 0, totalPonderado: 0, totalGanado: 0 };
     if (abierta) {
-      totalPipeline += monto;
-      totalPonderado += ponderado;
+      t.totalPipeline += monto;
+      t.totalPonderado += ponderado;
     }
-    if (ganada) totalGanado += monto;
+    if (ganada) t.totalGanado += monto;
+    totales.set(moneda, t);
 
-    const mk = mesKey(r.fecha_estimada_cierre);
-    const mb = mes.get(mk) ?? makeBucket(mk, mesLabel(mk));
+    const mk = `${mesKey(r.fecha_estimada_cierre)}|${moneda}`;
+    const mb = mes.get(mk) ?? { ...makeBucket(mk, mesLabel(mesKey(r.fecha_estimada_cierre))), moneda };
     applyDelta(mb, delta);
     mes.set(mk, mb);
 
-    const vk = r.vendedor_email || "Sin asignar";
-    const vb = vend.get(vk) ?? makeBucket(vk, vk);
+    const vk = `${r.vendedor_email || "Sin asignar"}|${moneda}`;
+    const vb = vend.get(vk) ?? { ...makeBucket(vk, r.vendedor_email || "Sin asignar"), moneda };
     applyDelta(vb, delta);
     vend.set(vk, vb);
   }
@@ -88,9 +97,7 @@ export function computeForecast(
   return {
     porMes: Array.from(mes.values()).sort((a, b) => a.key.localeCompare(b.key)),
     porVendedor: Array.from(vend.values()).sort((a, b) => b.ponderado - a.ponderado),
-    totalPipeline,
-    totalPonderado,
-    totalGanado,
+    totalesPorMoneda: Array.from(totales.values()).sort((a, b) => a.moneda.localeCompare(b.moneda)),
   };
 }
 

@@ -30,6 +30,17 @@ function row(partial: Partial<OportunidadRow> = {}): OportunidadRow {
   };
 }
 
+function totalesDe(r: ReturnType<typeof computeForecast>, moneda = "MXN") {
+  return (
+    r.totalesPorMoneda.find((t) => t.moneda === moneda) ?? {
+      moneda,
+      totalPipeline: 0,
+      totalPonderado: 0,
+      totalGanado: 0,
+    }
+  );
+}
+
 describe("mesKey / mesLabel", () => {
   it("formatea fechas válidas como YYYY-MM", () => {
     expect(mesKey("2026-01-15")).toBe("2026-01");
@@ -49,11 +60,9 @@ describe("mesKey / mesLabel", () => {
 });
 
 describe("computeForecast", () => {
-  it("regresa ceros cuando no hay filas", () => {
+  it("regresa vacío cuando no hay filas", () => {
     const r = computeForecast([], etapaTipos);
-    expect(r.totalPipeline).toBe(0);
-    expect(r.totalPonderado).toBe(0);
-    expect(r.totalGanado).toBe(0);
+    expect(r.totalesPorMoneda).toEqual([]);
     expect(r.porMes).toEqual([]);
     expect(r.porVendedor).toEqual([]);
   });
@@ -67,9 +76,10 @@ describe("computeForecast", () => {
       ],
       etapaTipos,
     );
-    expect(r.totalPipeline).toBe(1500);
-    expect(r.totalPonderado).toBe(1000 * 0.5 + 500 * 0.8);
-    expect(r.totalGanado).toBe(0);
+    const t = totalesDe(r);
+    expect(t.totalPipeline).toBe(1500);
+    expect(t.totalPonderado).toBe(1000 * 0.5 + 500 * 0.8);
+    expect(t.totalGanado).toBe(0);
   });
 
   it("suma ganado sólo para etapas ganadas (usa monto_estimado)", () => {
@@ -80,8 +90,9 @@ describe("computeForecast", () => {
       ],
       etapaTipos,
     );
-    expect(r.totalGanado).toBe(2000);
-    expect(r.totalPipeline).toBe(0);
+    const t = totalesDe(r);
+    expect(t.totalGanado).toBe(2000);
+    expect(t.totalPipeline).toBe(0);
   });
 
   it("agrupa por mes y por vendedor, con 'Sin asignar' como fallback", () => {
@@ -93,10 +104,10 @@ describe("computeForecast", () => {
       ],
       etapaTipos,
     );
-    expect(r.porMes.map((b) => b.key)).toEqual(["2026-06", "2026-07"]);
-    const ana = r.porVendedor.find((v) => v.key === "ana@x.com")!;
+    expect(r.porMes.map((b) => b.key)).toEqual(["2026-06|MXN", "2026-07|MXN"]);
+    const ana = r.porVendedor.find((v) => v.key === "ana@x.com|MXN")!;
     expect(ana.count).toBe(2);
-    expect(r.porVendedor.find((v) => v.key === "Sin asignar")!.count).toBe(1);
+    expect(r.porVendedor.find((v) => v.key === "Sin asignar|MXN")!.count).toBe(1);
   });
 
   it("ordena vendedores por ponderado descendente", () => {
@@ -108,7 +119,7 @@ describe("computeForecast", () => {
       ],
       etapaTipos,
     );
-    expect(r.porVendedor.map((v) => v.key)).toEqual([
+    expect(r.porVendedor.map((v) => v.label)).toEqual([
       "high@x.com", "mid@x.com", "low@x.com",
     ]);
   });
@@ -121,8 +132,34 @@ describe("computeForecast", () => {
       ],
       etapaTipos,
     );
-    expect(r.totalPipeline).toBe(1500);
-    expect(r.totalPonderado).toBe(1500 * 0.4);
+    const t = totalesDe(r);
+    expect(t.totalPipeline).toBe(1500);
+    expect(t.totalPonderado).toBe(1500 * 0.4);
+  });
+
+  it("separa totales por moneda: 100k MXN + 10k USD + importe EUR no se mezclan", () => {
+    const r = computeForecast(
+      [
+        row({ monto_estimado: 100000, probabilidad: 100, etapa_id: "abierta-1", moneda: "MXN" }),
+        row({ monto_estimado: 10000, probabilidad: 100, etapa_id: "abierta-1", moneda: "USD" }),
+        row({ monto_estimado: 5000, probabilidad: 100, etapa_id: "ganada-1", moneda: "EUR" }),
+      ],
+      etapaTipos,
+    );
+    expect(r.totalesPorMoneda).toHaveLength(3);
+    expect(totalesDe(r, "MXN").totalPipeline).toBe(100000);
+    expect(totalesDe(r, "USD").totalPipeline).toBe(10000);
+    expect(totalesDe(r, "EUR").totalGanado).toBe(5000);
+    expect(totalesDe(r, "USD").totalGanado).toBe(0);
+  });
+
+  it("con más de 50 oportunidades calcula totales completos por moneda", () => {
+    const filas: OportunidadRow[] = Array.from({ length: 60 }, (_, i) =>
+      row({ monto_estimado: 100, probabilidad: 100, etapa_id: "abierta-1", moneda: "MXN", vendedor_email: `v${i}@x.com` }),
+    );
+    const r = computeForecast(filas, etapaTipos);
+    expect(totalesDe(r, "MXN").totalPipeline).toBe(6000);
+    expect(r.porVendedor).toHaveLength(60);
   });
 });
 

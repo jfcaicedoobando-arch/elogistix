@@ -12,42 +12,17 @@ import { PageHeader } from "@/components/shared/PageHeader";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { KpiStrip } from "@/components/shared/KpiStrip";
 import { CargaGuard } from "@/components/shared/states/CargaGuard";
-import { formatCurrency, formatCurrencyCompact, porcentajeEntero } from "@/lib/formatters";
-import { useCrmInicioVM, useForecast, useReportesCRM } from "@/features/crm/hooks";
+import { formatCurrencyCompact, porcentajeEntero } from "@/lib/formatters";
+import { useCrmInicioVM, useReportesCRM } from "@/features/crm/hooks";
 import LeaderboardVendedores from "@/features/crm/components/LeaderboardVendedores";
+import { CrmForecastMesKpis } from "@/features/crm/components/CrmForecastMesKpis";
+import { CrmStatStripItem as StatStripItem } from "@/features/crm/components/CrmStatStripItem";
 import { useDocumentTitle } from "@/hooks/shared";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 import { Hint } from "@/components/shared/Hint";
 
 import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/components/ui/table";
 import { DetailTableHead } from "@/components/shared/DetailTable";
-function StatStripItem({
-  icon: Icon,
-  label,
-  value,
-  valueTooltip,
-}: {
-  icon: typeof Target;
-  label: string;
-  value: string | number;
-  /** Valor completo cuando `value` viene en notación compacta (MXN 304.4K). */
-  valueTooltip?: string;
-}) {
-  return (
-    <Card className="flex items-center gap-3 px-4 h-14 rounded-md sm:rounded-none sm:border-0 sm:border-r last:sm:border-r-0 sm:shadow-none">
-      <Icon className="h-4 w-4 text-muted-foreground shrink-0" />
-      <div className="min-w-0">
-        <div className="text-label text-muted-foreground truncate">{label}</div>
-        <Hint label={valueTooltip}>
-          <div className="text-base font-semibold tabular-nums truncate">
-            {value}
-          </div>
-        </Hint>
-      </div>
-    </Card>
-  );
-}
-
 const v = (loading: boolean, n: number | undefined): string | number => (loading ? "…" : (n ?? 0));
 const fmt = (n: number) => formatCurrencyCompact(n, "MXN");
 
@@ -134,8 +109,6 @@ export default function CrmDashboard() {
   useDocumentTitle('Resumen ejecutivo CRM');
   const vm = useCrmInicioVM();
   const { isLoading, isError, refetch } = vm;
-  const { data: forecast, isLoading: loadingForecast } = useForecast();
-  const f = forecast ?? { totalPipeline: 0, totalPonderado: 0, totalGanado: 0 };
 
   return (
     <PageContainer>
@@ -158,34 +131,7 @@ export default function CrmDashboard() {
           <StatStripItem icon={TrendingUp} label="Pipeline ponderado" value={isLoading ? "…" : formatCurrencyCompact(vm.kpis.pipelinePonderado, "MXN")} />
         </KpiStrip>
 
-        {/* Ola 9 — antes eran KpiCard grandes sin contexto junto a la tira de
-            arriba: dos lenguajes visuales de KPI en la misma pantalla. Ahora
-            comparten la tira canónica y llevan encabezado que las explica. */}
-        <section className="space-y-2">
-          <SectionHeading as="h2" variant="overline">
-            Forecast del mes
-          </SectionHeading>
-          <KpiStrip desktopCols={3} className="sm:border sm:rounded-md sm:bg-card sm:overflow-hidden sm:gap-0">
-            <StatStripItem
-              icon={TrendingUp}
-              label="Pipeline"
-              value={loadingForecast ? "…" : fmt(f.totalPipeline)}
-              valueTooltip={formatCurrency(f.totalPipeline, "MXN")}
-            />
-            <StatStripItem
-              icon={Target}
-              label="Ponderado"
-              value={loadingForecast ? "…" : fmt(f.totalPonderado)}
-              valueTooltip={formatCurrency(f.totalPonderado, "MXN")}
-            />
-            <StatStripItem
-              icon={Trophy}
-              label="Ganado"
-              value={loadingForecast ? "…" : fmt(f.totalGanado)}
-              valueTooltip={formatCurrency(f.totalGanado, "MXN")}
-            />
-          </KpiStrip>
-        </section>
+        <CrmForecastMesKpis />
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <EmbudoCard />

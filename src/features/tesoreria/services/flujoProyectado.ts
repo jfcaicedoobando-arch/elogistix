@@ -48,6 +48,7 @@ export async function fetchFlujoProyectado(args: {
   dias?: number;
   organizationId?: string | null;
   tipoCambioUsd?: number;
+  tipoCambioEur?: number;
   tipoCambioFecha?: string | null;
 }): Promise<FlujoProyectado> {
   const liquidaciones = await fetchLiquidacionesPendientes(args.organizationId);
@@ -58,6 +59,7 @@ export async function fetchFlujoProyectado(args: {
     liquidaciones,
     dias: args.dias ?? 90,
     tipoCambioUsd: args.tipoCambioUsd,
+    tipoCambioEur: args.tipoCambioEur,
     tipoCambioFecha: args.tipoCambioFecha,
   });
 }

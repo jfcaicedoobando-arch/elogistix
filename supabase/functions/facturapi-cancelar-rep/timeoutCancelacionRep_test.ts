@@ -10,18 +10,26 @@ import { assert, assertEquals, assertStringIncludes } from "https://deno.land/st
 import { marcarTimeoutCancelacionRep } from "./timeoutCancelacionRep.ts";
 
 /** Cliente Supabase falso: registra la cadena from/update/eq/or/insert. */
-function crearClienteFalso() {
+function crearClienteFalso(updateRows: unknown[] | null = null, estadoActual = "none") {
   const llamadas: Array<{ tabla: string; metodo: string; args: unknown[] }> = [];
   const cliente = {
     from(tabla: string) {
+      let esUpdate = false;
       const builder: Record<string, unknown> = {};
       for (const m of ["update", "insert", "select", "eq", "is", "or"]) {
         builder[m] = (...args: unknown[]) => {
+          if (m === "update") esUpdate = true;
           llamadas.push({ tabla, metodo: m, args });
+          if (m === "select" && esUpdate) {
+            return Promise.resolve({ data: updateRows, error: null });
+          }
           return builder;
         };
       }
-      // El builder es thenable: `await cliente.from(t).update(...).eq(...)...`
+      builder.maybeSingle = () => {
+        llamadas.push({ tabla, metodo: "maybeSingle", args: [] });
+        return Promise.resolve({ data: { rep_cancellation_status: estadoActual }, error: null });
+      };
       builder.then = (resolve: (v: unknown) => unknown, reject: (e: unknown) => unknown) =>
         Promise.resolve({ data: null, error: null }).then(resolve, reject);
       return builder;
@@ -74,7 +82,19 @@ Deno.test("R4EF-06/REP: bitácora facturapi_rep_cancelar_timeout con op y timeou
   assertEquals(row.accion, "facturapi_rep_cancelar_timeout");
   assertEquals(row.modulo, "facturacion");
   assertEquals(row.entidad_id, "pago-1");
-  assertEquals(row.detalles, { op: "invoices.cancel", timeout_ms: 15_000 });
+  assertEquals(row.detalles, { op: "invoices.cancel", timeout_ms: 15_000, motivo: "02", persisted: false, cancellation_status: "none" });
+});
+
+Deno.test("v13.821.6/REP: si verifying quedó persistido, res.persisted=true", async () => {
+  const { cliente } = crearClienteFalso([{ id: "pago-1", rep_cancellation_status: "verifying" }]);
+  const res = await marcarTimeoutCancelacionRep({ supabase: cliente, ...PARAMS });
+  assertEquals(res, { persisted: true, cancellationStatus: "verifying" });
+});
+
+Deno.test("v13.821.6/REP: si NO se pudo persistir, res.persisted=false", async () => {
+  const { cliente } = crearClienteFalso([], "none");
+  const res = await marcarTimeoutCancelacionRep({ supabase: cliente, ...PARAMS });
+  assertEquals(res, { persisted: false, cancellationStatus: "none" });
 });
 
 Deno.test("R4EF-06/REP: el index llama al helper ANTES de responder 504 (estructural)", async () => {
@@ -83,5 +103,6 @@ Deno.test("R4EF-06/REP: el index llama al helper ANTES de responder 504 (estruct
   const iRama = src.indexOf("err instanceof FacturapiTimeoutError");
   const iHelper = src.indexOf("marcarTimeoutCancelacionRep({", iRama);
   assert(iRama >= 0 && iHelper > iRama, "la rama de timeout debe marcar verifying");
-  assertStringIncludes(src.slice(iHelper, iHelper + 900), "504");
+  assertStringIncludes(src.slice(iHelper, iHelper + 1400), "202");
+  assertStringIncludes(src.slice(iHelper, iHelper + 1400), "504");
 });

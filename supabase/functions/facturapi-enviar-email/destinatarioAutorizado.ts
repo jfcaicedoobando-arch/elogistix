@@ -85,7 +85,7 @@ export type DestinatarioOk = { email: string; emailDistintoSugerido: boolean };
  * error o el email final. Extraído del handler para mantener la complejidad
  * ciclomática bajo el límite del lint.
  */
-async function resolverDestinatarioAutorizado(args: {
+export async function resolverDestinatarioAutorizado(args: {
   supabase: SbClient;
   json: (body: unknown, status?: number) => Response;
   userId: string;

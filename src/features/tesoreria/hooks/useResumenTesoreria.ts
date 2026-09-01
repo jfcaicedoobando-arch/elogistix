@@ -30,6 +30,7 @@ export function useResumenTesoreria(): {
         cobranza: cobranzaQ.data!,
         cxp: cxpQ.data!,
         tipoCambioUsd: tcQ.data?.usdMxn,
+        tipoCambioEur: tcQ.data?.eurMxn,
         tipoCambioFecha: tcQ.data?.fechaAplicada ?? null,
       })
     : undefined;

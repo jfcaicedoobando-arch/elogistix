@@ -68,6 +68,7 @@ export async function fetchResumenTesoreria(args: {
   cxp: CxpRow[];
   organizationId?: string | null;
   tipoCambioUsd?: number;
+  tipoCambioEur?: number;
   tipoCambioFecha?: string | null;
   cuentas?: ResumenCuenta[];
 }): Promise<ResumenTesoreria> {
@@ -77,6 +78,7 @@ export async function fetchResumenTesoreria(args: {
     cobranza: args.cobranza,
     cxp: args.cxp,
     tipoCambioUsd: args.tipoCambioUsd,
+    tipoCambioEur: args.tipoCambioEur,
     tipoCambioFecha: args.tipoCambioFecha,
   });
 }

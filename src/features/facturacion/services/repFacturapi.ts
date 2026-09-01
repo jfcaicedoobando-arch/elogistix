@@ -67,6 +67,8 @@ export type MotivoCancelacionSat = "01" | "02" | "03" | "04";
 export interface CancelarRepResult {
   ok: boolean;
   pending: boolean;
+  /** true → timeout con `verifying` persistido: resultado incierto, NO reintentar. */
+  uncertain: boolean;
   cancellation_status: string;
   message: string | null;
 }
@@ -79,6 +81,7 @@ export async function cancelarRep(
   const { data, error } = await supabase.functions.invoke<{
     ok?: boolean;
     pending?: boolean;
+    uncertain?: boolean;
     cancellation_status?: string;
     message?: string;
   } & EdgeErrorBody>(
@@ -97,6 +100,7 @@ export async function cancelarRep(
   return {
     ok: data?.ok === true,
     pending: data?.pending === true,
+    uncertain: data?.uncertain === true,
     cancellation_status: data?.cancellation_status ?? "accepted",
     message: data?.message ?? null,
   };

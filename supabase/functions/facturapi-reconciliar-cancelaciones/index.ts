@@ -11,6 +11,7 @@ import { registrarBitacoraEdge } from "../_shared/bitacora.ts";
 import { jsonResponse } from "../_shared/response.ts";
 import { tomarCronLock, soltarCronLock } from "../_shared/cronLock.ts";
 import { validarRequest, cargarPendientes, type Pendientes } from "./entrada.ts";
+import { marcarRevisado } from "./cursor.ts";
 import { reconcileOneRep } from "./reps.ts";
 import {
   descargarAcuse,
@@ -112,6 +113,17 @@ async function reconcileOne(ctx: ReconcileCtx, factura: FacturaPendiente): Promi
   const { supabase, facturapi, apiKey, orgId, resumen } = ctx;
   resumen.revisadas++;
   try {
+    return await reconcileOneInner(ctx, factura);
+  } finally {
+    // P1-3: marca el cursor SIEMPRE (accepted/no_change/error) para que el
+    // siguiente barrido no vuelva a priorizar este documento sobre el resto.
+    await marcarRevisado(supabase, "facturas", "reconciliacion_checked_at", factura.id, new Date().toISOString());
+  }
+}
+
+async function reconcileOneInner(ctx: ReconcileCtx, factura: FacturaPendiente): Promise<void> {
+  const { supabase, facturapi, apiKey, orgId, resumen } = ctx;
+  try {
     const remote = await withFacturapiTimeout(
       "invoices.retrieve",
       facturapi.invoices.retrieve(factura.facturapi_id),
@@ -195,6 +207,15 @@ async function applyAcceptedNc(
 async function reconcileOneNc(ctx: ReconcileCtx, nc: NotaCreditoPendiente): Promise<void> {
   const { supabase, facturapi, apiKey, orgId, resumen } = ctx;
   resumen.revisadas++;
+  try {
+    return await reconcileOneNcInner(ctx, nc);
+  } finally {
+    await marcarRevisado(supabase, "factura_notas_credito", "reconciliacion_checked_at", nc.id, new Date().toISOString());
+  }
+}
+
+async function reconcileOneNcInner(ctx: ReconcileCtx, nc: NotaCreditoPendiente): Promise<void> {
+  const { supabase, facturapi, apiKey, orgId, resumen } = ctx;
   try {
     const remote = await withFacturapiTimeout(
       "invoices.retrieve",
