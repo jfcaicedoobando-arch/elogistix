@@ -65,6 +65,20 @@ export function FinanceDashboard() {
   const nombre = firstName(user?.email, "");
   const vm = toViewModel(dash);
 
+  // Si una fuente crítica (CxC/CxP/tesorería) falló, no renderizamos tarjetas:
+  // un KPI en 0 se leería como cifra real. Una sola rama de error con retry.
+  if (dash.isError) {
+    return (
+      <div className="space-y-4 sm:space-y-6">
+        <ErrorState
+          title="No se pudieron cargar las cifras financieras"
+          description={dash.error?.message ?? "Intenta de nuevo en unos segundos."}
+          onRetry={dash.refetch}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4 sm:space-y-6">
       <FinanceHeader
