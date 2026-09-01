@@ -72,6 +72,7 @@ describe("useDashboardEjecutivo — máquina de estados", () => {
   });
 
   it("retry reintenta la dependencia fallida además del snapshot", () => {
+    mockFetch.mockResolvedValue({ periodo: "2026-09" });
     mockCxp.mockReturnValue(dep({ data: undefined, error: new Error("x"), refetch: refetchCxp }));
     const { result } = renderHook(() => useDashboardEjecutivo("2026-09"), { wrapper: createWrapper() });
     void result.current.refetch();
