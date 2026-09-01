@@ -73,10 +73,13 @@ describe("subirFacturaEntrante", () => {
     selectChain.in.mockReturnThis();
     insertChain.select.mockReturnThis();
     upload.mockResolvedValue({ error: null });
+    // El dedupe vive en la RPC `buzon_localizar_duplicado`: sin duplicado por
+    // defecto (v13.821.2).
+    rpcMock.mockResolvedValue({ data: [], error: null });
   });
 
   it("detecta el duplicado sin tocar el almacenamiento", async () => {
-    selectChain.limit.mockResolvedValue({ data: [{ estado: "por_capturar" }], error: null });
+    rpcMock.mockResolvedValue({ data: [{ caso: "buzon_pendiente" }], error: null });
 
     await expect(
       subirFacturaEntrante({ ...INPUT_BASE, pdf: archivo(), xml: null }),
