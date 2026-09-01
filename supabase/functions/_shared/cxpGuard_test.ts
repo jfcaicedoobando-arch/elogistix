@@ -2,7 +2,7 @@
  * Ola P2 — Pruebas deterministas de la guarda compartida de CxP:
  * membresía, rol, rate limit por usuario/organización y fail-CLOSED.
  */
-// deno-lint-ignore no-import-prefix
+// deno-lint-ignore-file no-import-prefix
 import {
   assert,
   assertEquals,
