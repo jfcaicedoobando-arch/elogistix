@@ -5,12 +5,23 @@ import { format } from "date-fns";
  */
 import { calcularMargen, calcularUtilidad } from "@/lib/financial/financialUtils";
 import { mxnFactura } from "./mxn";
-import type { EmbarqueEstadoRow, FacturaRow, PagoRow } from "./loaders";
+import type { EmbarqueEstadoRow, FacturaRow, NotaCreditoRow, PagoRow } from "./loaders";
 import type { BucketAntiguedad, HeroKpis, PulsoKpis } from "./tipos";
 import type { EmbarqueAgg } from "./calculos";
 import { diasVencidos } from "@/lib/date/dateOnly";
 
-export function calcularAntiguedad(facturas: FacturaRow[], pagos: PagoRow[], fallbackUsd: number, hoy: Date): BucketAntiguedad[] {
+/** Tolerancia de saldo (MXN) para considerar una factura cubierta. */
+const TOLERANCIA_SALDO_MXN = 0.5;
+
+/**
+ * Saldo MXN equivalente por factura, con el canon único de Cobranza:
+ *   saldo = total − Σ pagos aplicados − Σ NC realmente aplicadas
+ * (ver `cobranza_listado` / `nc_aplicadas_en_moneda_factura`). Las NC en
+ * borrador, canceladas o eliminadas NO restan: el loader ya las filtra.
+ */
+export function calcularSaldosCarteraMxn(
+  facturas: FacturaRow[], pagos: PagoRow[], ncs: NotaCreditoRow[], fallbackUsd: number,
+): Map<string, number> {
   const saldo = new Map<string, number>();
   for (const f of facturas) {
     if (f.estado === "Cancelada") continue;
@@ -20,6 +31,17 @@ export function calcularAntiguedad(facturas: FacturaRow[], pagos: PagoRow[], fal
     const s = saldo.get(p.factura_id); if (s === undefined) continue;
     saldo.set(p.factura_id, s - mxnFactura(Number(p.monto_aplicado_factura ?? 0), p.moneda, p.tipo_cambio, fallbackUsd));
   }
+  for (const nc of ncs) {
+    const s = saldo.get(nc.factura_id); if (s === undefined) continue;
+    saldo.set(nc.factura_id, s - mxnFactura(Number(nc.monto ?? 0), nc.moneda, nc.tipo_cambio, fallbackUsd));
+  }
+  return saldo;
+}
+
+export function calcularAntiguedad(
+  facturas: FacturaRow[], pagos: PagoRow[], fallbackUsd: number, hoy: Date, ncs: NotaCreditoRow[] = [],
+): BucketAntiguedad[] {
+  const saldo = calcularSaldosCarteraMxn(facturas, pagos, ncs, fallbackUsd);
   const buckets: Record<BucketAntiguedad["bucket"], BucketAntiguedad> = {
     "Corriente": { bucket: "Corriente", monto_mxn: 0, facturas: 0 },
     "1-30": { bucket: "1-30", monto_mxn: 0, facturas: 0 },
@@ -28,13 +50,14 @@ export function calcularAntiguedad(facturas: FacturaRow[], pagos: PagoRow[], fal
   };
   for (const f of facturas) {
     const s = saldo.get(f.id) ?? 0;
-    if (s <= 0.5) continue;
+    if (s <= TOLERANCIA_SALDO_MXN) continue;
     const dias = f.fecha_vencimiento ? diasVencidos(f.fecha_vencimiento, hoy) : 0;
     const key: BucketAntiguedad["bucket"] = dias <= 0 ? "Corriente" : dias <= 30 ? "1-30" : dias <= 60 ? "31-60" : "+60";
     buckets[key].monto_mxn += s; buckets[key].facturas += 1;
   }
   return [buckets.Corriente, buckets["1-30"], buckets["31-60"], buckets["+60"]];
 }
+
 
 export interface CalcularHeroParams {
   aggs: EmbarqueAgg[]; facturas: FacturaRow[];
