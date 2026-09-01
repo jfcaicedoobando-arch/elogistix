@@ -2,14 +2,20 @@
  * parse-cfdi-xml — Parsea un XML CFDI 4.0 mexicano y sugiere categoría via AI.
  *
  * Seguridad:
- *  - Requiere JWT válido.
- *  - Rechaza no-XML, >2 MB, DOCTYPE (XXE), o CFDI != 4.0.
+ *  - Requiere JWT válido + membresía de organización + rol de captura CxP y
+ *    rate limit persistente (Ola P2, `_shared/cxpGuard.ts`): antes cualquier
+ *    sesión autenticada — incluidos portal cliente y la cuenta demo — podía
+ *    consumir la cuota de IA del servidor.
+ *  - Rechaza no-XML, >2 MB (corte temprano por Content-Length), DOCTYPE (XXE),
+ *    o CFDI != 4.0.
+ *  - El string crudo de `categorias` tiene tope explícito ANTES de JSON.parse.
  *  - El parser es regex puro, sin DOM. La AI sólo recibe descripciones de
  *    conceptos + nombres de categorías para sugerir matcheo.
  */
 import { handlePreflightStrict, buildCors } from "../_shared/cors.ts";
 import { jsonResponse, errorResponse } from "../_shared/response.ts";
 import { authenticate } from "../_shared/auth.ts";
+import { autorizarCxp } from "../_shared/cxpGuard.ts";
 import { createLogger } from "../_shared/logger.ts";
 import { captureEdgeException, debeReportarStatus, wrapEdgeHandler } from "../_shared/sentry.ts";
 import { parseCfdi } from "../_shared/cfdiParser.ts";
@@ -25,6 +31,18 @@ import {
 // también a Sentry server-side, no sólo el "Failed to fetch" del browser.
 
 const MAX_BYTES = 2 * 1024 * 1024;
+/** Margen para el overhead del multipart (boundary + headers de la parte). */
+const MAX_CONTENT_LENGTH = MAX_BYTES + 256 * 1024;
+/**
+ * Tope del string crudo de `categorias` ANTES de JSON.parse: 50 categorías
+ * (el recorte que ya aplica `parseCategoriasJson`) con UUID + nombre largo
+ * caben de sobra en 32 KiB.
+ */
+export const MAX_CATEGORIAS_CHARS = 32 * 1024;
+/** Topes de uso de IA por usuario y por organización (ventana de 1 h). */
+const RL_USUARIO = { windowSeconds: 3600, max: 40 } as const;
+const RL_ORG = { windowSeconds: 3600, max: 200 } as const;
+
 
 const TOOL_DEF = {
   type: "function",
@@ -132,12 +150,31 @@ async function sugerirCategoria(
   return { result, outcome, latency_ms, status_code };
 }
 
-async function handle(req: Request, cors: HeadersInit, log: ReturnType<typeof createLogger>) {
-  await authenticate(req);
+async function handle(req: Request, cors: Record<string, string>, log: ReturnType<typeof createLogger>) {
+  const auth = await authenticate(req, log);
+  const autorizacion = await autorizarCxp(auth, cors, log, {
+    fn: "parse-cfdi-xml",
+    rlUsuario: RL_USUARIO,
+    rlOrg: RL_ORG,
+    mensaje429: "Demasiadas solicitudes de parseo de XML. Intenta más tarde.",
+  });
+  if (!autorizacion.ok) return autorizacion.res;
+
   // @ts-expect-error Deno
   const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
 
-  const form = await req.formData();
+  // Ola P2: corte por Content-Length ANTES de bufferar el multipart.
+  const contentLength = Number(req.headers.get("content-length") ?? "0");
+  if (Number.isFinite(contentLength) && contentLength > MAX_CONTENT_LENGTH) {
+    return errorResponse("El XML excede 2 MB", 413, cors);
+  }
+
+  let form: FormData;
+  try {
+    form = await req.formData();
+  } catch {
+    return errorResponse("No se pudo leer el archivo enviado", 400, cors);
+  }
   const file = form.get("file") as File | null;
   const categoriasJson = form.get("categorias") as string | null;
 
@@ -145,6 +182,11 @@ async function handle(req: Request, cors: HeadersInit, log: ReturnType<typeof cr
   if (file.size > MAX_BYTES) return errorResponse("El XML excede 2 MB", 413, cors);
   const isXml = file.type.includes("xml") || file.name.toLowerCase().endsWith(".xml");
   if (!isXml) return errorResponse("Solo se aceptan archivos XML", 400, cors);
+
+  // Ola P2: tope explícito al string crudo ANTES de JSON.parse.
+  if (categoriasJson && categoriasJson.length > MAX_CATEGORIAS_CHARS) {
+    return errorResponse("El catálogo de categorías enviado es demasiado grande", 413, cors);
+  }
 
   const text = await file.text();
   let cfdi;
@@ -156,6 +198,7 @@ async function handle(req: Request, cors: HeadersInit, log: ReturnType<typeof cr
   }
 
   const categorias: Categoria[] = parseCategoriasJson(categoriasJson);
+
 
   let aiResult: AiCallResult;
   if (LOVABLE_API_KEY) {

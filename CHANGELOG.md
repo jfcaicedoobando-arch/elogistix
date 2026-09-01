@@ -1,5 +1,13 @@
 # Changelog
 
+## [13.823.0] - 2026-09-01
+### Ola P2 · Seguridad de Edge Functions (superficie pública y de IA)
+- **`parse-cfdi-xml` con guarda de CxP**: exige membresía de organización, rol con permiso de captura CxP y rate limit persistente fail-closed (por usuario y por organización), igual que `parse-invoice-pdf`. Además corta temprano por `Content-Length` (~2.2 MB) y acota el catálogo de categorías a 32 KiB.
+- **Guarda compartida `_shared/cxpGuard.ts`**: se extrae la lógica de autorización + rate limit de CxP para no duplicarla en tres funciones; `parse-invoice-pdf/guardas.ts` ahora delega en ella.
+- **`facturapi-webhook` con cuerpo acotado**: endpoint público sin JWT por diseño; ahora lee el body en streaming con tope real de 256 KiB (`MAX_WEBHOOK_BYTES`), responde 413 si se excede y calcula el HMAC sobre los bytes exactos aceptados.
+- **`facturapi-reconciliar-cancelaciones`**: la comparación de `X-Cron-Secret` usa `timingSafeEqual` y es fail-closed si falta el secreto o el header.
+- **`adjuntar-xml-entrante` autoriza antes de tocar Storage**: aplica la guarda de CxP y valida que el documento del buzón exista, pertenezca a la organización del actor, esté `por_capturar` y que el `xml_path` caiga en su prefijo canónico `{org}/{embarque}/` antes de descargar con la llave de servicio. "No existe" y "es de otra organización" devuelven el mismo 404 para no servir de oráculo.
+
 ## [13.822.1] - 2026-09-01
 ### Conciliador de cancelaciones · presupuesto de tiempo (P1-3b)
 - **Corte por tiempo real, no sólo por número de documentos**: la corrida del cron `facturapi-reconciliar-cancelaciones` ahora tiene un presupuesto monotónico de 95 s (límite de runtime asumido: 150 s). Antes de iniciar cada documento se comprueba el presupuesto; lo que no alcanza a iniciarse queda intacto para la corrida siguiente en vez de morir a medias con el mutex ocupado.

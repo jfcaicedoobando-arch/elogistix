@@ -228,7 +228,7 @@ export function mapEventToReceiptPatch(ev: FacturapiWebhookEvent): MappedReceipt
 }
 
 /** HMAC-SHA256 hex del body con el secret. Usa Web Crypto (disponible en Deno). */
-export async function computeSignature(rawBody: string, secret: string): Promise<string> {
+export async function computeSignatureBytes(bytes: Uint8Array, secret: string): Promise<string> {
   const enc = new TextEncoder();
   const key = await crypto.subtle.importKey(
     "raw",
@@ -237,10 +237,69 @@ export async function computeSignature(rawBody: string, secret: string): Promise
     false,
     ["sign"],
   );
-  const sig = await crypto.subtle.sign("HMAC", key, enc.encode(rawBody));
+  const sig = await crypto.subtle.sign("HMAC", key, bytes as unknown as BufferSource);
   return Array.from(new Uint8Array(sig))
     .map((b) => b.toString(16).padStart(2, "0"))
     .join("");
+}
+
+export async function computeSignature(rawBody: string, secret: string): Promise<string> {
+  return await computeSignatureBytes(new TextEncoder().encode(rawBody), secret);
+}
+
+/**
+ * Ola P2 — Tope conservador del body del webhook (endpoint PÚBLICO, sin JWT
+ * por diseño). Los eventos de FacturApi pesan unos pocos KiB; 256 KiB deja
+ * margen holgado sin permitir que un atacante materialice memoria ilimitada
+ * antes de validar la firma HMAC.
+ */
+export const MAX_WEBHOOK_BYTES = 256 * 1024;
+
+export type CuerpoAcotado =
+  | { ok: true; bytes: Uint8Array; raw: string }
+  | { ok: false; motivo: "too_large" | "unreadable" };
+
+/**
+ * Lee el body en streaming abortando en cuanto se supera `max`. No confía en
+ * `Content-Length` (puede faltar o mentir): el corte real lo hace el conteo de
+ * bytes leídos. Devuelve además los bytes exactos aceptados para el HMAC.
+ */
+export async function leerCuerpoAcotado(
+  req: Request,
+  max: number = MAX_WEBHOOK_BYTES,
+): Promise<CuerpoAcotado> {
+  const declarado = Number(req.headers.get("content-length") ?? "");
+  if (Number.isFinite(declarado) && declarado > max) return { ok: false, motivo: "too_large" };
+
+  const body = req.body;
+  if (!body) return { ok: true, bytes: new Uint8Array(0), raw: "" };
+
+  const reader = body.getReader();
+  const trozos: Uint8Array[] = [];
+  let total = 0;
+  try {
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      if (!value) continue;
+      total += value.byteLength;
+      if (total > max) {
+        await reader.cancel().catch(() => undefined);
+        return { ok: false, motivo: "too_large" };
+      }
+      trozos.push(value);
+    }
+  } catch {
+    return { ok: false, motivo: "unreadable" };
+  }
+
+  const bytes = new Uint8Array(total);
+  let offset = 0;
+  for (const t of trozos) {
+    bytes.set(t, offset);
+    offset += t.byteLength;
+  }
+  return { ok: true, bytes, raw: new TextDecoder("utf-8").decode(bytes) };
 }
 
 /** Comparación constante en tiempo para evitar timing attacks. */

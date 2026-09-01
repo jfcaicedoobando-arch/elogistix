@@ -4,22 +4,37 @@
  *
  * Flujo:
  *  1. JWT válido (el actor se toma del token, nunca del body).
- *  2. Descarga el XML de Storage con service_role y verifica su SHA-256.
- *  3. Re-parsea el CFDI (`_shared/cfdiParser.ts`) — esa es la verdad fiscal.
- *  4. Si lo declarado por el cliente difiere → 409 LC_XML_METADATA_MISMATCH.
- *  5. Escribe vía `adjuntar_xml_entrante_verificado` (sólo service_role).
+ *  2. Ola P2: membresía de organización + rol de captura CxP + rate limit.
+ *  3. Ola P2: se lee el documento del buzón y se exige que pertenezca a la
+ *     organización del actor, esté `por_capturar` y que `xml_path` caiga en su
+ *     prefijo canónico — TODO antes de tocar Storage con service_role.
+ *  4. Descarga el XML de Storage con service_role y verifica su SHA-256.
+ *  5. Re-parsea el CFDI (`_shared/cfdiParser.ts`) — esa es la verdad fiscal.
+ *  6. Si lo declarado por el cliente difiere → 409 LC_XML_METADATA_MISMATCH.
+ *  7. Escribe vía `adjuntar_xml_entrante_verificado` (sólo service_role), que
+ *     conserva sus propias validaciones como segunda defensa contra TOCTOU.
  */
 import { handlePreflightStrict, buildCors } from "../_shared/cors.ts";
 import { jsonResponse, errorResponse } from "../_shared/response.ts";
-import { authenticate } from "../_shared/auth.ts";
+import { authenticate, type AuthContext } from "../_shared/auth.ts";
+import { autorizarCxp } from "../_shared/cxpGuard.ts";
 import { createLogger } from "../_shared/logger.ts";
 import { captureEdgeException, wrapEdgeHandler } from "../_shared/sentry.ts";
 import { parseCfdi } from "../_shared/cfdiParser.ts";
 import { discrepanciasMeta, metaDesdeCfdi, sha256Hex } from "./verificacion.ts";
+import {
+  respuestaRechazo,
+  validarDocumento,
+  type DocumentoBuzon,
+} from "./autorizacion.ts";
 
 const BUCKET = "cxp-inbox";
 const MAX_BYTES = 2 * 1024 * 1024;
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+/** Topes de uso por usuario y por organización (ventana de 1 h). */
+const RL_USUARIO = { windowSeconds: 3600, max: 60 } as const;
+const RL_ORG = { windowSeconds: 3600, max: 300 } as const;
+
 
 interface Cuerpo {
   documento_id?: unknown;
@@ -46,6 +61,42 @@ function leerCuerpo(body: Cuerpo) {
   return { documentoId, xmlPath, xmlNombre, xmlHash, declarado: body.declarado ?? null };
 }
 
+/**
+ * Lee el documento del buzón y valida organización, estado y ruta antes de
+ * cualquier acceso a Storage con service_role. Devuelve la Response de rechazo
+ * o `null` si el acceso es legítimo.
+ */
+async function verificarAcceso(args: {
+  adminClient: AuthContext["adminClient"];
+  documentoId: string;
+  xmlPath: string;
+  orgId: string;
+  userId: string;
+  cors: Record<string, string>;
+  log: ReturnType<typeof createLogger>;
+}): Promise<Response | null> {
+  const { data: docRow } = await args.adminClient
+    .from("embarque_facturas_entrantes")
+    .select("id, organization_id, embarque_id, estado")
+    .eq("id", args.documentoId)
+    .is("deleted_at", null)
+    .maybeSingle();
+
+  const chequeo = validarDocumento({
+    documento: (docRow as DocumentoBuzon | null) ?? null,
+    orgActor: args.orgId,
+    xmlPath: args.xmlPath,
+  });
+  if (chequeo.ok) return null;
+
+  const { status, mensaje } = respuestaRechazo(chequeo.motivo);
+  args.log.finish(status, chequeo.motivo, {
+    user_id: args.userId,
+    organization_id: args.orgId,
+  });
+  return errorResponse(mensaje, status, args.cors);
+}
+
 Deno.serve(
   wrapEdgeHandler("adjuntar-xml-entrante", async (req: Request) => {
     const preflight = handlePreflightStrict(req);
@@ -54,13 +105,36 @@ Deno.serve(
     const log = createLogger(req, "adjuntar-xml-entrante");
 
     try {
-      const { userId, adminClient } = await authenticate(req, log);
+      const auth = await authenticate(req, log);
+      const { userId, adminClient } = auth;
+      const autorizacion = await autorizarCxp(auth, cors, log, {
+        fn: "adjuntar-xml-entrante",
+        rlUsuario: RL_USUARIO,
+        rlOrg: RL_ORG,
+        mensaje429: "Demasiadas solicitudes de adjuntar XML. Intenta más tarde.",
+      });
+      if (!autorizacion.ok) return autorizacion.res;
+
       const datos = leerCuerpo((await req.json()) as Cuerpo);
+
+      // Ola P2: validar documento + ruta ANTES de descargar con service_role.
+      const rechazo = await verificarAcceso({
+        adminClient,
+        documentoId: datos.documentoId,
+        xmlPath: datos.xmlPath,
+        orgId: autorizacion.orgId,
+        userId,
+        cors,
+        log,
+      });
+      if (rechazo) return rechazo;
+
 
       const { data: archivo, error: dlError } = await adminClient.storage
         .from(BUCKET)
         .download(datos.xmlPath);
       if (dlError || !archivo) throw new Error("400:LC_XML_NO_ENCONTRADO: el XML no está en el buzón");
+
 
       const bytes = await archivo.arrayBuffer();
       if (bytes.byteLength > MAX_BYTES) throw new Error("400:LC_XML_DEMASIADO_GRANDE: el XML excede 2 MB");
@@ -112,7 +186,7 @@ Deno.serve(
       return jsonResponse({ ok: true, meta: servidor }, 200, cors);
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
-      const match = /^(400|401|403|409):(.*)$/s.exec(msg);
+      const match = /^(400|401|403|404|409|413):(.*)$/s.exec(msg);
       if (match) {
         const status = Number(match[1]);
         log.finish(status, "rechazado");
