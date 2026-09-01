@@ -6,6 +6,7 @@ import { PageContainer } from "@/components/shared/PageContainer";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { DashboardSkeleton } from "@/components/shared/skeletons";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 import { AlertTriangle } from "lucide-react";
 import { useDireccionKpis } from "@/features/dashboard/direccion/hooks/useDireccionKpis";
 import { useDireccionTotales } from "@/features/dashboard/direccion/hooks/useDireccionTotales";
@@ -20,7 +21,7 @@ import { useDocumentTitle } from "@/hooks/shared";
 
 export default function DireccionDashboard() {
   useDocumentTitle("Panel");
-  const { data, isLoading, error } = useDireccionKpis();
+  const { data, isLoading, error, refetch } = useDireccionKpis();
   const { data: totales, isLoading: totalesLoading, desdeIso } = useDireccionTotales();
 
   return (
@@ -32,16 +33,32 @@ export default function DireccionDashboard() {
 
       <TipoCambioFallbackBanner />
 
-      {error && (
+      {/* Máquina de estados mutuamente excluyente: loading → error → data.
+          En error no se ve skeleton ni contenido viejo como si fuera actual. */}
+      {isLoading ? (
+        <DashboardSkeleton kpis={3} showHeader={false} />
+      ) : error ? (
         <Alert variant="destructive">
           <AlertTriangle className="h-4 w-4" />
           <AlertTitle>No se pudieron cargar los KPIs</AlertTitle>
-          <AlertDescription>{(error as Error).message}</AlertDescription>
+          <AlertDescription className="space-y-3">
+            <p>{(error as Error).message}</p>
+            <Button variant="outline" size="sm" onClick={() => { void refetch(); }}>
+              Reintentar
+            </Button>
+          </AlertDescription>
         </Alert>
-      )}
-
-      {isLoading || !data ? (
-        <DashboardSkeleton kpis={3} showHeader={false} />
+      ) : !data ? (
+        <Alert>
+          <AlertTriangle className="h-4 w-4" />
+          <AlertTitle>Sin información</AlertTitle>
+          <AlertDescription className="space-y-3">
+            <p>Todavía no hay datos suficientes para calcular los KPIs.</p>
+            <Button variant="outline" size="sm" onClick={() => { void refetch(); }}>
+              Reintentar
+            </Button>
+          </AlertDescription>
+        </Alert>
       ) : (
         <>
           <HeroCards hero={data.hero} />
