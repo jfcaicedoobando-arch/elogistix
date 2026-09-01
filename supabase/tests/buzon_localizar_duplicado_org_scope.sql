@@ -52,10 +52,10 @@ BEGIN
   VALUES (v_org_b, 'CLIENTE DEDUPE B', '', 'dedupe-b@test.mx') RETURNING id INTO v_cli_b;
 
   INSERT INTO public.embarques (organization_id, cliente_id, expediente, modo, tipo)
-  VALUES (v_org_a, v_cli_a, 'ELIMPDEDA1', 'Marítimo'::public.modo_transporte, 'Importación'::public.tipo_operacion)
+  VALUES (v_org_a, v_cli_a, 'ELDDA9001', 'Marítimo'::public.modo_transporte, 'Importación'::public.tipo_operacion)
   RETURNING id INTO v_emb_a;
   INSERT INTO public.embarques (organization_id, cliente_id, expediente, modo, tipo)
-  VALUES (v_org_b, v_cli_b, 'ELIMPDEDB1', 'Marítimo'::public.modo_transporte, 'Importación'::public.tipo_operacion)
+  VALUES (v_org_b, v_cli_b, 'ELDDB9001', 'Marítimo'::public.modo_transporte, 'Importación'::public.tipo_operacion)
   RETURNING id INTO v_emb_b;
 
   INSERT INTO public.presupuesto_categorias (organization_id, nombre, orden, activa, tipo_contable)
