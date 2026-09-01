@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.821.3] - 2026-09-01
+- **Trigger de alta restaurado en bases limpias**: el squash se generó con `pg_dump --schema=public`, así que el trigger `on_auth_user_created` (que corona al primer usuario y crea su organización) se quedaba fuera y las suites de aprovisionamiento fallaban. Ahora el squash lo recrea y `_ci_post_migrate.sql` siembra un usuario centinela con `super_admin`, para que ninguna suite se corone por accidente.
+- **Tablero: el mes se calcula en hora de México**: `dashboard_summary_datos()` usaba `current_date` (UTC), así que a partir de las 18:00 hora de México brincaba al mes siguiente y dejaba de sumar los gastos operativos y los arribos del día. Ahora usa el mismo canon horario (CDMX) que el detalle del tablero y los periodos fiscales.
+- **Linter de org-scope**: `idempotency_store` salió de la whitelist — desde la Ola P1 ancla por organización, así que la entrada muerta ya sólo generaba ruido.
+- Suite completa (`db:verify --all` y `db:postcheck`) en verde y baseline de esquema regenerada.
+
 ## [13.821.2] - 2026-09-01
 - **CI `ci:fast` más rápido y estricto**: vitest arranca primero (con `--maxWorkers` acotado a los cores disponibles menos 2 para no pelear con ESLint/TSC), las auditorías ligeras corren fusionadas, los flags `--only/--skip` fallan si nombran una tarea inexistente y se conservan sólo los 5 directorios de log más recientes.
 - **Mock compartido de Supabase**: `createSupabaseMock()` ya expone `auth.getUser/getSession` y `storage.remove`. Antes los tests de servicios que sellan `user_id` o limpian archivos morían con "Cannot read properties of undefined (reading 'getUser')" en vez de probar la regla de negocio.

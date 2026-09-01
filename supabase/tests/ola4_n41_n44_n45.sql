@@ -26,12 +26,18 @@ DECLARE
   v_cli uuid := 'c6666666-6666-6666-6666-666666666666';
   v_prov uuid := 'c7777777-7777-7777-7777-777777777777';
   v_cat uuid := 'c8888888-8888-8888-8888-888888888888';
-  v_hoy date := current_date;
+  -- v13.821.3: el tablero razona en hora de México (dashboard_details_datos);
+  -- con `current_date` (UTC) el fixture caía en otro mes entre 18:00 y 24:00
+  -- CDMX y el embarque del "mes siguiente" quedaba fuera del rango.
+  v_hoy date := (now() AT TIME ZONE 'America/Mexico_City')::date;
 BEGIN
   INSERT INTO public.organizations (id, nombre) VALUES (v_org, 'Test Org Ola4 N41N44N45')
   ON CONFLICT (id) DO NOTHING;
 
-  INSERT INTO auth.users (id, email) VALUES (v_uid, 'ola4-n41@test.mx')
+  -- v13.821.3: `skip_auto_org` evita que el trigger de alta corone al
+  -- primer usuario como super_admin en una base limpia (rompía los roles).
+  INSERT INTO auth.users (id, email, raw_user_meta_data)
+  VALUES (v_uid, 'ola4-n41@test.mx', '{"skip_auto_org":"true"}'::jsonb)
   ON CONFLICT (id) DO NOTHING;
   INSERT INTO public.organization_members (organization_id, user_id, role)
   VALUES (v_org, v_uid, 'admin_org') ON CONFLICT DO NOTHING;

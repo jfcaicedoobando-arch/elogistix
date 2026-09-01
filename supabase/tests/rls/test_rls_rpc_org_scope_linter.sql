@@ -92,7 +92,8 @@ DECLARE
     'convertir_monto_dof',
     'calcular_costo_demoras',
     'saldo_cuenta_bancaria',
-    'idempotency_store',
+    -- v13.821.3: idempotency_store salió de la whitelist — desde la Ola P1
+    -- ancla por organización (PK compuesta), así que ya no es deuda.
 
     -- ── E. Deuda real por-ID: reciben el ID de un documento que el caller
     --    obtuvo vía RLS y operan sobre él sin re-validar la org. Es la clase

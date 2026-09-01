@@ -153,3 +153,30 @@ BEGIN
     EXECUTE 'REVOKE DELETE ON public.idempotency_keys FROM authenticated';
   END IF;
 END $$;
+
+-- ============================================================================
+-- v13.821.3 · Centinela de bootstrap super_admin.
+--
+-- El trigger `on_auth_user_created` (restaurado en el squash) corona como
+-- super_admin al PRIMER usuario cuando `public.user_roles` está vacía. En una
+-- base de pruebas recién creada eso convertía al primer usuario de cada suite
+-- en super_admin y rompía las aserciones de rol/organización.
+--
+-- Sembramos un usuario centinela con su rol para que la corona ya esté puesta,
+-- igual que en producción. Las suites que prueban el bootstrap en sí (p. ej.
+-- fix4_signup_bootstrap_lock) vacían `user_roles` dentro de su transacción.
+-- ============================================================================
+DO $$
+DECLARE
+  v_uid uuid := '00000000-0000-4000-8000-00000000ce41';
+BEGIN
+  IF to_regclass('auth.users') IS NULL OR to_regclass('public.user_roles') IS NULL THEN
+    RETURN;
+  END IF;
+  INSERT INTO auth.users (id, email, raw_user_meta_data)
+  VALUES (v_uid, 'ci-centinela@test.local', '{"skip_auto_org":"true"}'::jsonb)
+  ON CONFLICT (id) DO NOTHING;
+  INSERT INTO public.user_roles (user_id, role)
+  VALUES (v_uid, 'super_admin'::public.app_role)
+  ON CONFLICT DO NOTHING;
+END $$;

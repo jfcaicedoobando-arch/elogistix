@@ -48,7 +48,10 @@ DECLARE
 BEGIN
   -- ── Seed (como postgres, bypass RLS) ─────────────────────────────────────
   BEGIN
-    INSERT INTO auth.users(id, email) VALUES (u_admin, 'sd-admin@test.local')
+    -- v13.821.3: `skip_auto_org` evita que el trigger de alta corone al
+    -- primer usuario como super_admin en una base limpia (rompía los roles).
+    INSERT INTO auth.users(id, email, raw_user_meta_data)
+    VALUES (u_admin, 'sd-admin@test.local', '{"skip_auto_org":"true"}'::jsonb)
     ON CONFLICT (id) DO NOTHING;
   EXCEPTION WHEN OTHERS THEN
     NULL;  -- CI sin GoTrue.
