@@ -55,13 +55,43 @@ done
 # ---------- Definición de tareas (arreglo ordenado) ----------
 # Formato: "name|comando..."
 # NOTA: mantener este set MÍNIMO. Para el suite completo usar CI real.
+#
+# v13.821.2 (optimización):
+#   - `vitest` va primera: es la tarea más larga, así arranca sin esperar slot.
+#   - `audit:migrations` + `audit:sonner` se fusionan en `audits`: ambas duran
+#     ~1-3s y cada una pagaba su propio arranque de bun/tsx.
+#   - se limita el pool de workers de vitest para que no compita con
+#     eslint/tsc por los mismos núcleos (antes se peleaban por todos).
+CORES="$( (nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null) || echo 4 )"
+VITEST_WORKERS=$(( CORES > 4 ? CORES - 2 : 2 ))
+
 TASKS=(
+  "vitest|bun run test:fast --reporter=dot --bail=1 --maxWorkers=$VITEST_WORKERS"
   "lint|bun run lint --max-warnings 0"
   "typecheck|bun run typecheck"
-  "migrations|bun run audit:migrations"
-  "sonner|bun run audit:sonner"
-  "vitest|bun run test:fast --reporter=dot --bail=1"
+  "audits|bun run audit:migrations && bun run audit:sonner"
 )
+
+ALL_NAMES=""
+for entry in "${TASKS[@]}"; do ALL_NAMES="$ALL_NAMES,${entry%%|*}"; done
+ALL_NAMES="$ALL_NAMES,"
+
+# Un nombre mal escrito en --only/--skip antes se ignoraba en silencio y el
+# script terminaba en verde sin haber corrido lo que pedías.
+validar_nombres() {
+  local lista="$1" flag="$2" name
+  [ -n "$lista" ] || return 0
+  IFS=',' read -r -a _pedidos <<< "$lista"
+  for name in "${_pedidos[@]}"; do
+    [ -n "$name" ] || continue
+    if [[ "$ALL_NAMES" != *",${name},"* ]]; then
+      echo "❌ $flag: tarea desconocida '$name'. Disponibles:${ALL_NAMES%,}" >&2
+      exit 2
+    fi
+  done
+}
+validar_nombres "$ONLY" "--only"
+validar_nombres "$SKIP" "--skip"
 
 # Aplicar --only / --skip
 filter_tasks() {
@@ -82,10 +112,17 @@ if [ "${#TASKS[@]}" -eq 0 ]; then
   exit 2
 fi
 
+
 # ---------- Setup logs ----------
 STAMP="$(date +%Y%m%d-%H%M%S)"
 LOG_DIR="$ROOT/.ci-fast-logs/$STAMP"
 mkdir -p "$LOG_DIR"
+# Sólo se conservan los logs de corridas en rojo; podamos los más viejos para
+# que el directorio no crezca sin límite (se quedan las 5 corridas recientes).
+ls -1dt "$ROOT/.ci-fast-logs"/*/ 2>/dev/null | tail -n +6 | while read -r vieja; do
+  rm -rf "$vieja"
+done
+
 
 # ---------- Trap: mata hijos si cancelan / fallan ----------
 CHILD_PIDS=()

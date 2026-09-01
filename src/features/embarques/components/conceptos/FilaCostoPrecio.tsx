@@ -47,7 +47,7 @@ function SelectProveedorCosto({
     <Select value={costo.proveedorId} disabled={bloqueado} onValueChange={onChange}>
       <SelectTrigger
         className={`text-body ${sinCatalogo ? 'border-warning/60' : ''}`}
-        title={nombreCatalogo ?? heredado ?? undefined}
+        aria-label={nombreCatalogo || heredado || 'Proveedor'}
       >
         {/* v13.509.0 — Si el costo viene de cotización sólo con nombre, lo
             mostramos como texto para que el operador lo confirme en vez de
@@ -66,7 +66,8 @@ export function FilaCostoPrecio({
   // Un costo ya pagado no es actualizable por la RPC de guardado.
   const bloqueado = costoBloqueado(costo.estadoLiquidacion);
   return (
-    <div className={`grid ${cols} gap-2 items-center`} title={bloqueado ? MOTIVO_COSTO_BLOQUEADO : undefined}>
+    <div className={`grid ${cols} gap-2 items-center`}>
+      {bloqueado && <span className="sr-only">{MOTIVO_COSTO_BLOQUEADO}</span>}
       <SelectProveedorCosto
         costo={costo}
         proveedoresDb={proveedoresDb}

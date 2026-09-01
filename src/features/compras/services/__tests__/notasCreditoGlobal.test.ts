@@ -46,7 +46,7 @@ describe("listarNotasCreditoGlobal", () => {
   });
 
   // M-4 (auditoría v14): filtros server-side antes del LIMIT.
-  it("filtra por proveedor server-side (columna embebida)", async () => {
+  it("notas de crédito: filtra por proveedor server-side (columna embebida)", async () => {
     await listarNotasCreditoGlobal({ proveedorId: "prov-2" });
     const call = mock.tableCalls.find((c) => c.table === "proveedor_notas_credito");
     expect(call?.opArgs).toEqual(
@@ -54,7 +54,7 @@ describe("listarNotasCreditoGlobal", () => {
     );
   });
 
-  it("aplica la búsqueda server-side antes del límite", async () => {
+  it("notas de crédito: aplica la búsqueda server-side antes del límite", async () => {
     await listarNotasCreditoGlobal({ search: "duplicada" });
     const call = mock.tableCalls.find((c) => c.table === "proveedor_notas_credito");
     expect(call?.ops.some((op) => op === "or" || op === "ilike")).toBe(true);

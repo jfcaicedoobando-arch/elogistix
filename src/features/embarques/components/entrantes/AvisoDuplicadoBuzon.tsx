@@ -12,7 +12,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { hasRouteAccess } from "@/lib/access/roleRouteMatrix";
-import type { UbicacionDuplicadoBuzon } from "@/features/cxp/services/buzonDuplicado";
+import type { UbicacionDuplicadoBuzon } from "@/features/cxp";
 
 interface Props {
   mensaje: string;
@@ -40,7 +40,7 @@ export function AvisoDuplicadoBuzon({ mensaje, ubicacion, embarqueActualId }: Pr
             <Link to={destino}>Ver embarque</Link>
           </Button>
         ) : ubicacion.caso === "otro_embarque" && ubicacion.embarqueExpediente ? (
-          <p className="text-xs">
+          <p className="text-label">
             Pide a Operaciones que revise el embarque {ubicacion.embarqueExpediente}.
           </p>
         ) : null}
