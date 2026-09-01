@@ -178,6 +178,9 @@ export function useNuevaFacturaProveedorForm(
     const res = await runSubmit({
       values, total, userId: user?.id, organizationId,
       pendingCfdi, cfdiConceptos: conceptosAPersistir, vinculos, embarqueAdHoc,
+      // v13.820.5 — Si la captura viene del buzón, la factura hereda el embarque
+      // del documento aunque el usuario no marque conceptos.
+      embarqueOrigenId: initialEmbarqueAdHoc?.embarqueId ?? null,
       crearMutateAsync: crear.mutateAsync,
       setFolioError: () => setErrors((e) => ({ ...e, folio: "Ya existe una factura viva con este folio y fecha para el proveedor. Si es un documento distinto, corrige el folio o la fecha de emisión." })),
     });

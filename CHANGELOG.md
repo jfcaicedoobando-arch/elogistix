@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.820.5] - 2026-09-08
+- **Factura de proveedor desde el buzón**: si la captura viene de un documento del buzón CxP, la factura hereda el embarque del documento aunque el usuario no marque conceptos de costo. Antes quedaba "sin embarque" (caso FP-000195, ya vinculada a ELIMP00292).
+
+
+
 ## [13.820.4] - 2026-08-31
 - **Checklist de cierre**: el paso "Recibimos la factura de cada proveedor" ya reconoce los costos ligados a una factura de proveedor vigente aunque esa factura se haya capturado directo desde Costos (sin pasar por el buzón). Antes un embarque con todos sus costos facturados seguía marcando "faltan facturas del proveedor" y no podía cerrarse.
 

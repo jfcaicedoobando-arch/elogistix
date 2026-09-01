@@ -95,9 +95,11 @@ interface BuildPayloadParams {
   userId: string | undefined;
   pendingCfdi: PendingCfdi | null;
   vinculos: Record<string, VinculoLinea>;
+  /** v13.820.5 — Embarque de origen (buzón CxP) cuando la captura no marcó vínculos. */
+  embarqueOrigenId?: string | null;
 }
 
-export function buildPayload({ values, total, userId, pendingCfdi, vinculos }: BuildPayloadParams) {
+export function buildPayload({ values, total, userId, pendingCfdi, vinculos, embarqueOrigenId }: BuildPayloadParams) {
   return {
     proveedor_id: values.provId,
     proveedor_nombre: values.provNombre,
@@ -118,7 +120,7 @@ export function buildPayload({ values, total, userId, pendingCfdi, vinculos }: B
     created_by: userId,
     uuid_fiscal: pendingCfdi?.uuid ?? null,
     rfc_proveedor: pendingCfdi?.rfcEmisor ?? null,
-    embarque_id: embarqueIdUnico(vinculos),
+    embarque_id: embarqueIdUnico(vinculos) ?? embarqueOrigenId ?? null,
     origen_carga: (pendingCfdi?.origen ?? "manual") as OrigenCarga,
   };
 }

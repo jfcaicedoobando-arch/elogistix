@@ -86,6 +86,8 @@ interface RunSubmitParams {
   cfdiConceptos: ReadonlyArray<CfdiConceptoParsed>;
   vinculos: Record<string, VinculoLinea>;
   embarqueAdHoc: EmbarqueSeleccionado | null;
+  /** v13.820.5 — Embarque del documento del buzón CxP (herencia si no hay vínculos). */
+  embarqueOrigenId?: string | null;
   crearMutateAsync: (payload: ReturnType<typeof buildPayload>) => Promise<{ id?: string } | null | undefined>;
   setFolioError: () => void;
 }
@@ -133,7 +135,7 @@ export async function runSubmit(p: RunSubmitParams): Promise<ResultadoSubmit> {
 
   try {
     const created = await p.crearMutateAsync(
-      buildPayload({ values: p.values, total: p.total, userId: p.userId, pendingCfdi: p.pendingCfdi, vinculos: p.vinculos }),
+      buildPayload({ values: p.values, total: p.total, userId: p.userId, pendingCfdi: p.pendingCfdi, vinculos: p.vinculos, embarqueOrigenId: p.embarqueOrigenId }),
     );
     let sideResult = {};
     if (created?.id) {
