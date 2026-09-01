@@ -54,8 +54,22 @@ export function useFinanceDashboard() {
     ejecutivoQ.isLoading ||
     huecoQ.isLoading;
 
+  // Fuentes críticas: si CxC/CxP/tesorería fallan, los KPIs no pueden mostrar 0
+  // como cifra real. El error se propaga para que la vista muestre una sola
+  // rama de error con retry, en vez de un cero silencioso.
+  const error = (cobranzaQ.error ?? cxpQ.error ?? tesoreriaQ.error ?? null) as Error | null;
+
+  const refetch = () => {
+    void cobranzaQ.refetch();
+    void cxpQ.refetch();
+    tesoreriaQ.refetch();
+  };
+
   return {
     isLoading,
+    error,
+    isError: Boolean(error),
+    refetch,
     cobranzaKpis: cobranzaQ.kpis,
     cxpKpis: cxpQ.kpis,
     tesoreria: tesoreriaQ.data,
