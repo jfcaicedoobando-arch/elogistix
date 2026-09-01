@@ -1,6 +1,7 @@
 /**
  * Ola P2 — Pruebas de la validación de documento/ruta previa a Storage.
  */
+// deno-lint-ignore no-import-prefix
 import { assertEquals } from "https://deno.land/std@0.224.0/assert/mod.ts";
 import {
   type DocumentoBuzon,

@@ -2,6 +2,7 @@
  * Ola P2 — Pruebas deterministas de la guarda compartida de CxP:
  * membresía, rol, rate limit por usuario/organización y fail-CLOSED.
  */
+// deno-lint-ignore no-import-prefix
 import {
   assert,
   assertEquals,
@@ -24,11 +25,9 @@ function fakeAuth(opts: FakeOpts): AuthContext {
   const globalRoles = opts.globalRoles ?? [];
   const adminClient = {
     from(tabla: string) {
-      let columnas = "";
       const filtros: Record<string, string> = {};
       const chain = {
-        select(cols: string) {
-          columnas = cols;
+        select(_cols: string) {
           return chain;
         },
         eq(col: string, val: string) {
