@@ -27,6 +27,7 @@ import { useAutoTcEffect } from "./useNuevaFacturaProveedorForm.tcEffect";
 import { puedeContinuarSubmit, puedeContinuarTope } from "./useNuevaFacturaProveedorForm.guard";
 import { calcularTopeVinculacion } from "@/features/cxp/utils/topeVinculacion";
 import { detectarCfdiDuplicado, type FacturaExistentePorUuid } from "./useNuevaFacturaProveedorForm.dup";
+import { editarConceptoIa, eliminarConceptoIa } from "@/features/cxp/utils/conceptosIa";
 export function useNuevaFacturaProveedorForm(
   onDone: (facturaId?: string | null) => void,
   initialEmbarqueAdHoc?: EmbarqueSeleccionado | null,
