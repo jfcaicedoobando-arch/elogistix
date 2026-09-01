@@ -171,11 +171,13 @@ Deno.serve(
       const autorizacion = await autorizarCxp(auth, cors, log, {
         organizationId: documento.organization_id,
         fn: "adjuntar-xml-entrante",
+        rolesPermitidos: ROLES_ADJUNTAR_XML_ENTRANTE,
         rlUsuario: RL_USUARIO,
         rlOrg: RL_ORG,
         mensaje429:
           "Demasiadas solicitudes de adjuntar XML. Intenta más tarde.",
       });
+
       if (!autorizacion.ok) {
         if (autorizacion.res.status !== 403) return autorizacion.res;
         await autorizacion.res.body?.cancel();
