@@ -2,8 +2,7 @@
 -- Helper privado (Bloque 3.2 · god-function split) usado por
 -- crear_embarque_borrador_core para replicar cotizacion_costos y
 -- conceptos_venta en el embarque recién creado.
--- Regenerada 1:1 desde supabase/migrations/20260904000100_ola1_v14_c1_doble_iva_c2_snapshots.sql
--- (resolución de proveedor por nombre/alias + prorrateo con cuadre de centavos).
+-- Regenerada 1:1 desde la definición vigente (migración 20260905000100, regla N-1).
 -- Ver supabase/schema/README.md.
 
 CREATE OR REPLACE FUNCTION public._crear_embarque_replicar_conceptos(p_cotizacion_id uuid, p_embarque_id uuid, p_org uuid, p_target_ids uuid[], p_conceptos_venta jsonb)
@@ -11,7 +10,7 @@ CREATE OR REPLACE FUNCTION public._crear_embarque_replicar_conceptos(p_cotizacio
  LANGUAGE plpgsql
  SECURITY DEFINER
  SET search_path TO 'public', 'pg_catalog'
-AS $$
+AS $function$
 DECLARE
   v_costo public.cotizacion_costos%ROWTYPE;
   v_cid   uuid;
@@ -84,7 +83,7 @@ BEGIN
   IF jsonb_typeof(p_conceptos_venta) = 'array' THEN
     FOR v_venta IN SELECT * FROM jsonb_array_elements(p_conceptos_venta) LOOP
       IF COALESCE(trim(v_venta->>'descripcion'), '') <> '' THEN
-        v_cant := GREATEST(COALESCE((v_venta->>'cantidad')::numeric, 1), 1);
+        v_cant := COALESCE(NULLIF((v_venta->>'cantidad')::numeric, 0), 1);
         v_pu   := COALESCE((v_venta->>'precio_unitario')::numeric, 0);
         v_tasa := GREATEST(COALESCE((v_venta->>'tasa_iva_aplicada')::numeric, 0), 0);
 
@@ -111,7 +110,8 @@ BEGIN
     END LOOP;
   END IF;
 END;
-$$;
+$function$
+;
 
 REVOKE ALL ON FUNCTION public._crear_embarque_replicar_conceptos(uuid, uuid, uuid, uuid[], jsonb) FROM PUBLIC, anon, authenticated;
 GRANT EXECUTE ON FUNCTION public._crear_embarque_replicar_conceptos(uuid, uuid, uuid, uuid[], jsonb) TO service_role;
