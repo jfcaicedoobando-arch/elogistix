@@ -1,5 +1,15 @@
 # Changelog
 
+## [13.823.14] - 2026-09-01
+### Operaciones vuelve a poder subir facturas al buzón del embarque (sólo local)
+- **Causa**: `adjuntar-xml-entrante` autorizaba con `ROLES_CAPTURA_CXP` (administración/contabilidad), mientras la UI (`SUBIR_FACTURA_ENTRANTE_EMBARQUE`) y la RPC `adjuntar_xml_factura_entrante` sí admiten a operaciones. Con rol `coordinador_logistico` el archivo se guardaba y el último paso (verificar el XML server-side) devolvía 403 "Requiere un rol con permiso de captura CxP".
+- **Corrección**: nueva lista server-side `ROLES_ADJUNTAR_XML_ENTRANTE` (unión de operaciones + contabilidad + administración) y opción `rolesPermitidos` en `autorizarCxp`, que por omisión sigue siendo `ROLES_CAPTURA_CXP`. Sólo `adjuntar-xml-entrante` la usa; el parseo con IA (`parse-cfdi-xml`, `parse-invoice-pdf`) no cambia, y la autorización sigue corriendo antes de tocar Storage.
+- **Mensaje** más claro en el cliente cuando el rol realmente no alcanza.
+- Pruebas: Deno para operaciones/contabilidad/portales con cada lista, e invariante que obliga a que la lista del servidor coincida con `ADJUNTAR_XML_FACTURA_ENTRANTE` de la UI.
+- Sin publish, migraciones o SQL remoto, secretos ni cambios de datos. Requiere desplegar `adjuntar-xml-entrante` para surtir efecto en producción.
+
+
+
 ## [13.823.13] - 2026-09-01
 ### CI verde: higiene de pruebas, manifiesto, baseline de soft-delete y tope de líneas (sólo local)
 - **Título duplicado**: la prueba de lotes del portal del agente repetía literalmente el título de la de CxP; ahora dice de qué módulo es.
