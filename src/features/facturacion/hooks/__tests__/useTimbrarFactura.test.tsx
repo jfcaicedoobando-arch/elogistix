@@ -18,6 +18,8 @@ const notifySuccess = vi.fn((_t: unknown, opts: { title: string; description?: s
   else toastSuccess(opts.title);
 });
 const notifyError = vi.fn();
+const notifyInfo = vi.fn();
+const notifyWarning = vi.fn();
 
 vi.mock("sonner", () => ({
   toast: {
@@ -44,6 +46,8 @@ vi.mock("@/features/facturacion/services/facturapi", () => {
 vi.mock("@/lib/ui/appFeedback", () => ({
   notifySuccess: (...a: unknown[]) => notifySuccess(...(a as [unknown, { title: string; description?: string }])),
   notifyError: (...a: unknown[]) => notifyError(...a),
+  notifyInfo: (...a: unknown[]) => notifyInfo(...a),
+  notifyWarning: (...a: unknown[]) => notifyWarning(...a),
 }));
 
 import { useTimbrarFactura, useCancelarFactura } from "../useTimbrarFactura";
@@ -61,6 +65,8 @@ beforeEach(() => {
   toastSuccess.mockReset();
   notifySuccess.mockClear();
   notifyError.mockReset();
+  notifyInfo.mockReset();
+  notifyWarning.mockReset();
 });
 
 describe("useTimbrarFactura", () => {
@@ -126,6 +132,37 @@ describe("useCancelarFactura", () => {
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
     expect(toastSuccess).toHaveBeenCalledWith("CFDI cancelado");
+    qc.clear();
+  });
+
+  // v13.821.6 — Timeout de `invoices.cancel` con `verifying` ya persistido: la
+  // edge responde 202 { pending, uncertain } y la UI debe informar (no error) y
+  // NO ofrecer reintentar la cancelación.
+  it("rama uncertain=true → aviso informativo, invalida cache y sin reintento", async () => {
+    cancelarFacturapi.mockResolvedValue({
+      sustituida: false,
+      pending: true,
+      uncertain: true,
+      cancellation_status: "verifying",
+      message: "La solicitud fue enviada, pero FacturApi tardó en confirmar.",
+    });
+    const qc = new QueryClient({ defaultOptions: { mutations: { retry: false } } });
+    const spy = vi.spyOn(qc, "invalidateQueries");
+    const { result } = renderHook(() => useCancelarFactura(), { wrapper: wrapper(qc) });
+
+    result.current.mutate({ facturaId: "f-9", motivo: "02" });
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+
+    expect(notifyInfo).toHaveBeenCalledTimes(1);
+    const opts = notifyInfo.mock.calls[0]![1] as { title: string; description: string };
+    expect(opts.title).toContain("verificando");
+    expect(opts.description).toContain("Verificar estatus");
+    expect(notifyError).not.toHaveBeenCalled();
+    expect(notifyWarning).not.toHaveBeenCalled();
+    expect(toastSuccess).not.toHaveBeenCalled();
+    expect(spy).toHaveBeenCalledWith({ queryKey: facturasKeys.all });
+    // No reintenta la cancelación por su cuenta.
+    expect(cancelarFacturapi).toHaveBeenCalledTimes(1);
     qc.clear();
   });
 
