@@ -107,6 +107,7 @@ export async function fetchCotizacionesPaginadas(
     : "created_at";
 
   let query = supabase
+    // SOFT-DELETE-OK: `aplicarFiltrosCotizaciones` aplica `.is("deleted_at", null)`.
     .from("cotizaciones")
     // SAFE-CAST: se estrecha el builder de supabase-js a la interfaz mínima
     // (filtros + order + range) para poder compartir `aplicarFiltrosCotizaciones`.
