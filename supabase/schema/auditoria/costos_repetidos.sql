@@ -67,7 +67,8 @@ BEGIN
   -- Delegar a la variante con parámetro (que ahora también valida).
   RETURN public.auditoria_embarques_org(v_caller_org);
 END;
-$function$;
+$function$
+;
 
 CREATE OR REPLACE FUNCTION public.auditoria_embarques_org(p_organization_id uuid)
  RETURNS jsonb
@@ -687,7 +688,8 @@ BEGIN
 
   RETURN v_result;
 END;
-$function$;
+$function$
+;
 
 REVOKE ALL ON FUNCTION public.auditoria_embarques_org(uuid) FROM PUBLIC;
 REVOKE ALL ON FUNCTION public.auditoria_embarques_org(uuid) FROM anon;
