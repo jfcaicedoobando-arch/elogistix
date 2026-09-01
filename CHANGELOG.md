@@ -1,5 +1,14 @@
 # Changelog
 
+## [13.823.11] - 2026-09-01
+### CxP ya no pierde facturas después de la fila 200 (sólo local)
+- **Servicio**: `fetchFacturasCxP` eliminaba silenciosamente todo lo posterior a la fila 200 (un solo `.range(0,199)`), y los filtros derivados (estatus/origen) se aplicaban sobre ese recorte: una factura cuya única coincidencia estaba después decía "sin resultados" y los KPIs salían incompletos. Ahora se leen lotes consecutivos de 1000 hasta recibir un lote incompleto, con orden determinista (`fecha_vencimiento` asc, nulls last, desempate por `id`) para no omitir ni duplicar filas entre rangos. El error de cualquier lote se propaga: nunca se devuelve un resultado parcial como completo.
+- **Contrato intacto**: sigue siendo `Promise<FacturaCxP[]>`. Se quitaron `page`/`pageSize` de `FetchCxPFiltros` (prometían paginación server-side inexistente) y las llamadas que pasaban `pageSize: 500`.
+- **Servidor**: `estado_aprobacion` se filtra en Postgres (columna directa, misma semántica) para transferir menos filas; estatus y origen siguen resolviéndose en memoria sobre el conjunto completo.
+- **Pantalla**: una sola paginación real (data completa filtrada → slice de página, `totalPages`/`total` desde `data.length`). Una página fuera de rango (deep link viejo o menos resultados tras filtrar) se acota a la última en vez de mostrar una tabla vacía engañosa. Se conservan búsqueda, inclusión de canceladas al buscar/filtrar, deep links, exportación y permisos.
+- Pruebas nuevas: 250 facturas devuelven 250; 2100 con la misma fecha se leen en 3 lotes sin duplicados; filtros de estatus/origen/aprobación con la única coincidencia después de la 200; KPIs sobre el total; canceladas; error en lote posterior; y en la pantalla: factura 201 en la página 3, `total`/`totalPages` completos, página fuera de rango acotada, KPIs sobre el conjunto completo.
+- Sin deploy, publish, Edge deploy, migraciones o SQL remoto, secretos ni cambios de datos.
+
 ## [13.823.10] - 2026-09-01
 ### Estados de carga/error mutuamente excluyentes en tableros y reportes (sólo local)
 - **Dashboard Ejecutivo**: `useDashboardEjecutivo` compone el error de CxC/CxP como error del tablero. Antes, si una dependencia fallaba, el snapshot quedaba deshabilitado y React Query v5 lo reportaba `pending` sin error ni carga: pantalla en blanco permanente. Ahora `isLoading` suma la carga real de las dependencias (sin confundir "pending deshabilitado" con cargando) y el retry reintenta la fuente fallida además del snapshot. La página renderiza exactamente una rama: loading → error → vacío → data.
