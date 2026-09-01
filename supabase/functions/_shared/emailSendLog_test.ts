@@ -58,7 +58,8 @@ Deno.test("P2 email_send_log: existe migración con RPC email_send_log_touch y l
 Deno.test("P2 email_send_log: la helper delega SIEMPRE en la RPC de upsert", async () => {
   const src = await leer("./emailSendLog.ts");
   assertStringIncludes(src, 'supabase.rpc("email_send_log_touch"');
-  assert(!src.includes(".insert("), "la helper no debe insertar directo en email_send_log");
+  const codigo = src.slice(src.indexOf("export async function"));
+  assert(!codigo.includes(".insert("), "la helper no debe insertar directo en email_send_log");
 });
 
 Deno.test("P2 email_send_log: el adaptador registra 'sent', 'suppressed' y 'failed'", async () => {

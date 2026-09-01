@@ -6,7 +6,13 @@
  */
 import { assert, assertStringIncludes } from "https://deno.land/std@0.224.0/assert/mod.ts";
 
-const src = await Deno.readTextFile(new URL("./index.ts", import.meta.url));
+const srcIndex = await Deno.readTextFile(new URL("./index.ts", import.meta.url));
+// v13.823.1: la ramificación del resultado vive en `resultadoCancelacion.ts`
+// (límite de 200 líneas). Las guardas estructurales miran ambos archivos.
+const srcResultado = await Deno.readTextFile(
+  new URL("./resultadoCancelacion.ts", import.meta.url),
+);
+const src = `${srcIndex}\n${srcResultado}`;
 
 Deno.test("N5: substitution usa el facturapi_rep_id (ObjectId) del REP sustituto, no el UUID SAT", () => {
   assertStringIncludes(src, "sustituyeFacturapiId");
@@ -29,8 +35,8 @@ Deno.test("N5: sólo marca estado_rep=Cancelado cuando rep_cancellation_status=a
 });
 
 Deno.test("cancelación repetida pendiente es idempotente y no vuelve a llamar al proveedor", () => {
-  const guardIdx = src.indexOf('["pending", "verifying"].includes');
-  const cancelIdx = src.indexOf('facturapi.invoices.cancel');
+  const guardIdx = srcIndex.indexOf('["pending", "verifying"].includes');
+  const cancelIdx = srcIndex.indexOf('facturapi.invoices.cancel');
   assert(guardIdx >= 0, "debe reconocer solicitudes pendientes o en verificación");
   assert(guardIdx < cancelIdx, "el guard debe ejecutarse antes de solicitar otra cancelación");
   assertStringIncludes(src, "La solicitud de cancelación del REP ya está en verificación ante el SAT.");
