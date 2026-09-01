@@ -74,6 +74,14 @@ describe("updateCotizacion", () => {
     ).rejects.toThrow(/LC_CONFLICTO_CONCURRENCIA|modific/i);
   });
 
+  it("sin sello no filtra por updated_at (la fila siempre trae firma en BD)", async () => {
+    mock.setTableResult("cotizaciones", { data: [{ updated_at: "2026-09-02T10:00:00Z" }], error: null });
+    await updateCotizacion("cot-1", { notas: "x" }, null);
+    expect(mock.tableCalls[0]?.ops).not.toContain("is");
+    const eqArgs = (mock.tableCalls[0]?.opArgs ?? []).filter((_, i) => mock.tableCalls[0]?.ops[i] === "eq");
+    expect(eqArgs).toEqual([["id", "cot-1"]]);
+  });
+
   it("avisa de permisos cuando 0 filas y no hubo sello esperado", async () => {
     mock.setTableResult("cotizaciones", { data: [], error: null });
     await expect(updateCotizacion("cot-1", { notas: "x" })).rejects.toThrow(/permiso/i);
