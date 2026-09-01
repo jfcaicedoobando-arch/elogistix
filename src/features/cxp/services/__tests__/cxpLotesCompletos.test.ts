@@ -180,7 +180,7 @@ describe("fetchFacturasCxP — lectura completa por lotes", () => {
     const rows = await fetchFacturasCxP({});
     const kpis = calcularKPIsCxP(rows);
     // 250 × 100 MXN, no 200 × 100.
-    expect(kpis.porPagarMxn).toBeCloseTo(25_000, 2);
+    expect(kpis.por_pagar_mxn).toBeCloseTo(25_000, 2);
   });
 
   it("sigue excluyendo canceladas por defecto e incluyéndolas al buscar", async () => {
