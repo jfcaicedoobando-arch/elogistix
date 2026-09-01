@@ -9819,6 +9819,7 @@ CREATE TABLE public.facturas (
     cancelacion_solicitada_en timestamp with time zone,
     cancelacion_vence_en timestamp with time zone,
     facturapi_claim_at timestamp with time zone,
+    reconciliacion_checked_at timestamp with time zone,
     CONSTRAINT facturas_cancelacion_motivo_sat CHECK (((cancelacion_motivo IS NULL) OR (cancelacion_motivo = ANY (ARRAY['01'::text, '02'::text, '03'::text, '04'::text])))),
     CONSTRAINT facturas_cancellation_status_check CHECK ((cancellation_status = ANY (ARRAY['none'::text, 'verifying'::text, 'pending'::text, 'accepted'::text, 'rejected'::text, 'expired'::text]))),
     CONSTRAINT facturas_iva_nonneg CHECK ((iva >= (0)::numeric)),
@@ -28040,6 +28041,7 @@ CREATE TABLE public.factura_notas_credito (
     acuse_cancelacion_xml text,
     acuse_cancelacion_fecha timestamp with time zone,
     acuse_cancelacion_status text,
+    reconciliacion_checked_at timestamp with time zone,
     CONSTRAINT factura_notas_credito_monto_check CHECK ((monto > (0)::numeric)),
     CONSTRAINT factura_notas_credito_tipo_cambio_check CHECK ((tipo_cambio > (0)::numeric))
 );
@@ -28228,6 +28230,7 @@ CREATE TABLE public.pagos_factura (
     ordenante_rfc text,
     refacturacion_id uuid,
     client_request_id uuid,
+    rep_reconciliacion_checked_at timestamp with time zone,
     CONSTRAINT pagos_factura_estado_rep_check CHECK ((estado_rep = ANY (ARRAY['NoAplica'::text, 'Pendiente'::text, 'Timbrado'::text, 'Cancelado'::text, 'Error'::text]))),
     CONSTRAINT pagos_factura_monto_aplicado_factura_check CHECK ((monto_aplicado_factura > (0)::numeric)),
     CONSTRAINT pagos_factura_monto_check CHECK ((monto > (0)::numeric)),
@@ -29246,6 +29249,7 @@ CREATE INDEX idx_factura_envios_factura ON public.factura_envios USING btree (fa
 CREATE INDEX idx_factura_envios_org ON public.factura_envios USING btree (organization_id);
 CREATE INDEX idx_factura_notas_credito_factura ON public.factura_notas_credito USING btree (factura_id) WHERE (deleted_at IS NULL);
 CREATE INDEX idx_factura_notas_credito_org_estado ON public.factura_notas_credito USING btree (organization_id, estado) WHERE (deleted_at IS NULL);
+CREATE INDEX idx_factura_notas_credito_reconciliacion_cursor ON public.factura_notas_credito USING btree (reconciliacion_checked_at) WHERE (cancellation_status = ANY (ARRAY['pending'::text, 'verifying'::text]));
 CREATE INDEX idx_factura_notas_credito_uuid_fiscal ON public.factura_notas_credito USING btree (uuid_fiscal) WHERE (uuid_fiscal IS NOT NULL);
 CREATE INDEX idx_factura_recordatorios_factura ON public.factura_recordatorios USING btree (factura_id, created_at DESC);
 CREATE INDEX idx_factura_recordatorios_org ON public.factura_recordatorios USING btree (organization_id, created_at DESC);
@@ -29266,6 +29270,7 @@ CREATE INDEX idx_facturas_org_estado ON public.facturas USING btree (organizatio
 CREATE INDEX idx_facturas_org_estado_vencimiento ON public.facturas USING btree (organization_id, estado, fecha_vencimiento) WHERE (deleted_at IS NULL);
 CREATE INDEX idx_facturas_org_vencimiento ON public.facturas USING btree (organization_id, fecha_vencimiento) WHERE (estado <> 'Pagada'::public.estado_factura);
 CREATE INDEX idx_facturas_proforma_id ON public.facturas USING btree (proforma_id);
+CREATE INDEX idx_facturas_reconciliacion_cursor ON public.facturas USING btree (reconciliacion_checked_at) WHERE (cancellation_status = ANY (ARRAY['pending'::text, 'verifying'::text]));
 CREATE INDEX idx_facturas_serie ON public.facturas USING btree (serie_id);
 CREATE INDEX idx_facturas_sustituida_por ON public.facturas USING btree (sustituida_por) WHERE (sustituida_por IS NOT NULL);
 CREATE INDEX idx_facturas_sustituye_a ON public.facturas USING btree (sustituye_a) WHERE (sustituye_a IS NOT NULL);
@@ -29299,6 +29304,7 @@ CREATE INDEX idx_pagos_factura_lote_id ON public.pagos_factura USING btree (lote
 CREATE INDEX idx_pagos_factura_lote_org_fecha ON public.pagos_factura_lote USING btree (organization_id, fecha_pago DESC);
 CREATE INDEX idx_pagos_factura_org_fecha ON public.pagos_factura USING btree (organization_id, fecha_pago) WHERE (deleted_at IS NULL);
 CREATE INDEX idx_pagos_factura_rep_pending ON public.pagos_factura USING btree (organization_id, facturapi_rep_claim_at) WHERE (facturapi_rep_id ~~ 'PENDING:%'::text);
+CREATE INDEX idx_pagos_factura_rep_reconciliacion_cursor ON public.pagos_factura USING btree (rep_reconciliacion_checked_at) WHERE (rep_cancellation_status = ANY (ARRAY['pending'::text, 'verifying'::text]));
 CREATE INDEX idx_pagos_factura_uuid_rep ON public.pagos_factura USING btree (uuid_rep) WHERE (uuid_rep IS NOT NULL);
 CREATE INDEX idx_pagos_proveedor_cuenta ON public.pagos_proveedor USING btree (cuenta_bancaria_id);
 CREATE INDEX idx_pagos_proveedor_factura ON public.pagos_proveedor USING btree (proveedor_factura_id);

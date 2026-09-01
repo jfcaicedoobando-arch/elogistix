@@ -5,8 +5,18 @@
  * La tabla guarda el NOMBRE del secret donde vive la API key; la key real
  * vive como secret de Supabase (`FACTURAPI_KEY_<ORG>_SANDBOX|LIVE`).
  *
- * Compatibilidad hacia atrás: si la org no tiene fila en `facturapi_credenciales`
- * pero existe el secret global `FACTURAPI_KEY`, se usa ese (modo legacy).
+ * P1-4: fail-closed por organización. Si la org no tiene fila en
+ * `facturapi_credenciales`, YA NO se cae al secret global `FACTURAPI_KEY`
+ * para cualquier organización (riesgo de mezclar cuenta/folios entre
+ * tenants). El único fallback permitido es para la organización legacy
+ * exacta declarada en el secret `LEGACY_FACTURAPI_ORG_ID` (una sola org,
+ * documentada aquí: es la organización que usaba FacturApi antes de que
+ * existiera `facturapi_credenciales` multi-tenant). Ninguna otra
+ * organización puede usar ese fallback.
+ *
+ * El mensaje de error devuelto al cliente es genérico en español y NUNCA
+ * incluye nombres de secrets ni detalles internos; esos detalles sólo se
+ * registran en logs del servidor (`console.error`).
  *
  * Uso típico en una edge function:
  *
@@ -75,26 +85,40 @@ export type FacturapiResolveResult =
   | { ok: true; data: FacturapiResolved }
   | { ok: false; data: FacturapiResolveError };
 
-function legacyFallback(): FacturapiResolveResult {
-  const legacy = Deno.env.get("FACTURAPI_KEY") ?? "";
-  if (legacy) {
-    return {
-      ok: true,
-      data: {
-        apiKey: legacy,
-        ambiente: "sandbox",
-        baseUrl: FACTURAPI_BASE,
-        facturapiOrgId: null,
-        legacy: true,
-      },
-    };
+const GENERIC_NOT_CONFIGURED_MSG =
+  "Esta organización no tiene FacturApi configurado. Ve a Configuración → Facturación electrónica.";
+
+/**
+ * Única excepción fail-closed: si `organizationId` coincide EXACTAMENTE con
+ * el secret `LEGACY_FACTURAPI_ORG_ID`, se permite usar el secret global
+ * `FACTURAPI_KEY`. Cualquier otra organización sin fila en
+ * `facturapi_credenciales` recibe un error genérico (fail-closed).
+ */
+function legacyFallback(organizationId: string): FacturapiResolveResult {
+  const legacyOrgId = Deno.env.get("LEGACY_FACTURAPI_ORG_ID") ?? "";
+  if (legacyOrgId && organizationId === legacyOrgId) {
+    const legacy = Deno.env.get("FACTURAPI_KEY") ?? "";
+    if (legacy) {
+      return {
+        ok: true,
+        data: {
+          apiKey: legacy,
+          ambiente: "sandbox",
+          baseUrl: FACTURAPI_BASE,
+          facturapiOrgId: null,
+          legacy: true,
+        },
+      };
+    }
+    console.error("[facturapiAuth] LEGACY_FACTURAPI_ORG_ID configurado pero FACTURAPI_KEY ausente", {
+      organizationId,
+    });
   }
   return {
     ok: false,
     data: {
       error: "org_facturapi_not_configured",
-      message:
-        "Esta organización no tiene FacturApi configurado. Ve a Configuración → Facturación electrónica.",
+      message: GENERIC_NOT_CONFIGURED_MSG,
       status: 412,
     },
   };
@@ -160,7 +184,7 @@ export async function resolveFacturapiKey(
     .eq("organization_id", organizationId)
     .maybeSingle();
 
-  if (!cred) return legacyFallback();
+  if (!cred) return legacyFallback(organizationId);
 
   const ambiente: FacturapiAmbiente = cred.ambiente === "live" ? "live" : "sandbox";
   const vaultId = ambiente === "live" ? cred.api_key_live_vault_id : cred.api_key_sandbox_vault_id;
@@ -181,11 +205,14 @@ export async function resolveFacturapiKey(
 
   const secretName = resolveSecretName(cred, ambiente);
   if (!secretName) {
+    console.error("[facturapiAuth] org sin secret_name asignado para su ambiente", {
+      organizationId, ambiente,
+    });
     return {
       ok: false,
       data: {
         error: "org_facturapi_not_configured",
-        message: `Falta la API key (${ambiente}) de FacturApi para esta organización.`,
+        message: GENERIC_NOT_CONFIGURED_MSG,
         status: 412,
       },
     };
@@ -193,11 +220,15 @@ export async function resolveFacturapiKey(
 
   const apiKey = Deno.env.get(secretName) ?? "";
   if (!apiKey) {
+    // No revelar el nombre del secret al cliente; sólo en logs de servidor.
+    console.error("[facturapiAuth] secret configurado en BD pero ausente en el entorno", {
+      organizationId, ambiente, secretName,
+    });
     return {
       ok: false,
       data: {
         error: "missing_facturapi_key",
-        message: `El secret ${secretName} no está configurado en el proyecto.`,
+        message: "FacturApi no está disponible en este momento para esta organización.",
         status: 500,
       },
     };

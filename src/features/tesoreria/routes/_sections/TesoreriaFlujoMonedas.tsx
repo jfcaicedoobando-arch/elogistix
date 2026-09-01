@@ -27,6 +27,10 @@ export function TesoreriaFlujoMonedas({ flujo }: Props) {
   const renglones: Renglon[] = [
     { moneda: "MXN", cobrar: flujo.por_cobrar_mxn, pagar: flujo.por_pagar_mxn },
     { moneda: "USD", cobrar: flujo.por_cobrar_usd, pagar: flujo.por_pagar_usd },
+    // P1-7: fila EUR (antes ausente, la porción EUR se perdía en el total MXN).
+    ...(flujo.por_cobrar_eur !== 0 || flujo.por_pagar_eur !== 0
+      ? [{ moneda: "EUR", cobrar: flujo.por_cobrar_eur, pagar: flujo.por_pagar_eur }]
+      : []),
   ];
 
   return (

@@ -67,7 +67,7 @@ Deno.test("R4EF-06/NC: bitácora facturapi_nc_cancelar_timeout con op y timeout_
   const row = bit!.args[0] as Record<string, unknown>;
   assertEquals(row.accion, "facturapi_nc_cancelar_timeout");
   assertEquals(row.modulo, "facturacion");
-  assertEquals(row.detalles, { op: "invoices.cancel", timeout_ms: 15_000 });
+  assertEquals(row.detalles, { op: "invoices.cancel", timeout_ms: 15_000, motivo: "02", persisted: false, cancellation_status: "none" });
 });
 
 Deno.test("R4EF-06/NC: el index llama al helper ANTES de responder 504 (estructural)", async () => {
@@ -76,5 +76,6 @@ Deno.test("R4EF-06/NC: el index llama al helper ANTES de responder 504 (estructu
   const iRama = src.indexOf("err instanceof FacturapiTimeoutError");
   const iHelper = src.indexOf("marcarTimeoutCancelacionNc({", iRama);
   assert(iRama >= 0 && iHelper > iRama, "la rama de timeout debe marcar verifying");
-  assertStringIncludes(src.slice(iHelper, iHelper + 900), "504");
+  assertStringIncludes(src.slice(iHelper, iHelper + 1400), "202");
+  assertStringIncludes(src.slice(iHelper, iHelper + 1400), "504");
 });

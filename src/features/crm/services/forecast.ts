@@ -29,7 +29,7 @@ export async function fetchForecast(desde?: string, hasta?: string): Promise<For
   const etapaTipos = await fetchEtapaTipos();
   let q = supabase
     .from("crm_oportunidades")
-    .select("id, monto_estimado, probabilidad, fecha_estimada_cierre, vendedor_email, etapa_id")
+    .select("id, monto_estimado, probabilidad, fecha_estimada_cierre, vendedor_email, etapa_id, moneda")
     .is("deleted_at", null);
   if (desde) q = q.gte("fecha_estimada_cierre", desde);
   if (hasta) q = q.lte("fecha_estimada_cierre", hasta);

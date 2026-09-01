@@ -10,7 +10,9 @@ export interface FacturaPendiente {
   facturapi_id: string;
   cancellation_status: string;
   sustituida_por: string | null;
+  reconciliacion_checked_at?: string | null;
 }
+
 
 export interface FapiInvoiceStatus {
   status?: string;
@@ -156,6 +158,7 @@ export interface NotaCreditoPendiente {
   organization_id: string;
   facturapi_id: string;
   cancellation_status: string;
+  reconciliacion_checked_at?: string | null;
 }
 
 /**
@@ -209,6 +212,7 @@ export interface RepPendiente {
   organization_id: string;
   facturapi_rep_id: string;
   rep_cancellation_status: string;
+  rep_reconciliacion_checked_at?: string | null;
 }
 
 /**

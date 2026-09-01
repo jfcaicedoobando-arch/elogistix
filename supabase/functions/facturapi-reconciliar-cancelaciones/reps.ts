@@ -18,6 +18,7 @@ import {
   type RepPendiente,
   type Resumen,
 } from "./reconcile.ts";
+import { marcarRevisado } from "./cursor.ts";
 
 interface RepCtx {
   supabase: SupabaseClient;
@@ -53,6 +54,23 @@ async function applyAcceptedRep(
 export async function reconcileOneRep(ctx: RepCtx, rep: RepPendiente): Promise<void> {
   const { supabase, facturapi, orgId, resumen } = ctx;
   resumen.revisadas++;
+  try {
+    return await reconcileOneRepInner(ctx, rep);
+  } finally {
+    // P1-3: marca el cursor SIEMPRE (accepted/no_change/error) — espejo de
+    // reconcileOne/reconcileOneNc en index.ts.
+    await marcarRevisado(
+      supabase,
+      "pagos_factura",
+      "rep_reconciliacion_checked_at",
+      rep.id,
+      new Date().toISOString(),
+    );
+  }
+}
+
+async function reconcileOneRepInner(ctx: RepCtx, rep: RepPendiente): Promise<void> {
+  const { supabase, facturapi, orgId, resumen } = ctx;
   try {
     // R3EF-02 (Ola 12): 15 s — igual que las familias factura/NC en index.ts.
     const remote = await withFacturapiTimeout(

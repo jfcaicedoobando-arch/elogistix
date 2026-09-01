@@ -23,41 +23,54 @@ import CrmForecastMensualChart from "@/features/crm/components/analitica/CrmFore
 
 import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/components/ui/table";
 import { DetailTableHead } from "@/components/shared/DetailTable";
-const fmt = (n: number) => formatCurrencyCompact(n, "MXN");
-
 function ForecastPanel() {
   const { data, isLoading, isError, refetch } = useForecast();
-  const f = data ?? { porMes: [], porVendedor: [], totalPipeline: 0, totalPonderado: 0, totalGanado: 0 };
+  const totales = data?.totalesPorMoneda ?? [];
+  const porMes = data?.porMes ?? [];
+  const porVendedor = data?.porVendedor ?? [];
   if (isError) return <ErrorState onRetry={() => void refetch()} />;
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <KpiCard label="Pipeline" value={fmt(f.totalPipeline)} loading={isLoading} />
-        <KpiCard label="Ponderado" value={fmt(f.totalPonderado)} loading={isLoading} />
-        <KpiCard label="Ganado" value={fmt(f.totalGanado)} loading={isLoading} variant="success" />
+        {totales.length === 0 ? (
+          <>
+            <KpiCard label="Pipeline" value={formatCurrencyCompact(0, "MXN")} loading={isLoading} />
+            <KpiCard label="Ponderado" value={formatCurrencyCompact(0, "MXN")} loading={isLoading} />
+            <KpiCard label="Ganado" value={formatCurrencyCompact(0, "MXN")} loading={isLoading} variant="success" />
+          </>
+        ) : (
+          totales.map((t) => (
+            <div key={t.moneda} className="grid grid-cols-3 gap-4 col-span-1 md:col-span-3">
+              <KpiCard label={`Pipeline (${t.moneda})`} value={formatCurrencyCompact(t.totalPipeline, t.moneda)} loading={isLoading} />
+              <KpiCard label={`Ponderado (${t.moneda})`} value={formatCurrencyCompact(t.totalPonderado, t.moneda)} loading={isLoading} />
+              <KpiCard label={`Ganado (${t.moneda})`} value={formatCurrencyCompact(t.totalGanado, t.moneda)} loading={isLoading} variant="success" />
+            </div>
+          ))
+        )}
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <Card>
           <CardHeader className="pb-2"><CardTitle>Por mes</CardTitle></CardHeader>
           <CardContent className="space-y-4">
-            <CrmForecastMensualChart porMes={f.porMes} isLoading={isLoading} />
+            <CrmForecastMensualChart porMes={porMes} isLoading={isLoading} />
             <div className="overflow-x-auto">
 
             <Table className="w-full text-body">
               <TableHeader><TableRow className="text-body-sm text-muted-foreground border-b">
-                <DetailTableHead>Mes</DetailTableHead><DetailTableHead className="text-right">Pipeline</DetailTableHead><DetailTableHead className="text-right">Ponderado</DetailTableHead><DetailTableHead className="text-right">Ganado</DetailTableHead><DetailTableHead className="text-right">#</DetailTableHead>
+                <DetailTableHead>Mes</DetailTableHead><DetailTableHead>Moneda</DetailTableHead><DetailTableHead className="text-right">Pipeline</DetailTableHead><DetailTableHead className="text-right">Ponderado</DetailTableHead><DetailTableHead className="text-right">Ganado</DetailTableHead><DetailTableHead className="text-right">#</DetailTableHead>
               </TableRow></TableHeader>
               <TableBody>
-                {f.porMes.map((b) => (
+                {porMes.map((b) => (
                   <TableRow key={b.key} className="border-b">
                     <TableCell>{b.label}</TableCell>
-                    <TableCell className="text-right tabular-nums">{fmt(b.pipeline)}</TableCell>
-                    <TableCell className="text-right tabular-nums">{fmt(b.ponderado)}</TableCell>
-                    <TableCell className="text-right tabular-nums">{fmt(b.ganado)}</TableCell>
+                    <TableCell>{b.moneda}</TableCell>
+                    <TableCell className="text-right tabular-nums">{formatCurrencyCompact(b.pipeline, b.moneda)}</TableCell>
+                    <TableCell className="text-right tabular-nums">{formatCurrencyCompact(b.ponderado, b.moneda)}</TableCell>
+                    <TableCell className="text-right tabular-nums">{formatCurrencyCompact(b.ganado, b.moneda)}</TableCell>
                     <TableCell className="text-right">{b.count}</TableCell>
                   </TableRow>
                 ))}
-                {f.porMes.length === 0 && <TableRow><TableCell colSpan={5}><EmptyStateInline icon={BarChart3} message="Sin datos" density="compact" /></TableCell></TableRow>}
+                {porMes.length === 0 && <TableRow><TableCell colSpan={6}><EmptyStateInline icon={BarChart3} message="Sin datos" density="compact" /></TableCell></TableRow>}
               </TableBody>
             </Table>
             </div>
@@ -69,19 +82,20 @@ function ForecastPanel() {
             <div className="overflow-x-auto">
             <Table className="w-full text-body">
               <TableHeader><TableRow className="text-body-sm text-muted-foreground border-b">
-                <DetailTableHead>Vendedor</DetailTableHead><DetailTableHead className="text-right">Pipeline</DetailTableHead><DetailTableHead className="text-right">Ponderado</DetailTableHead><DetailTableHead className="text-right">Ganado</DetailTableHead><DetailTableHead className="text-right">#</DetailTableHead>
+                <DetailTableHead>Vendedor</DetailTableHead><DetailTableHead>Moneda</DetailTableHead><DetailTableHead className="text-right">Pipeline</DetailTableHead><DetailTableHead className="text-right">Ponderado</DetailTableHead><DetailTableHead className="text-right">Ganado</DetailTableHead><DetailTableHead className="text-right">#</DetailTableHead>
               </TableRow></TableHeader>
               <TableBody>
-                {f.porVendedor.map((b) => (
+                {porVendedor.map((b) => (
                   <TableRow key={b.key} className="border-b">
                     <TableCell>{b.label}</TableCell>
-                    <TableCell className="text-right tabular-nums">{fmt(b.pipeline)}</TableCell>
-                    <TableCell className="text-right tabular-nums">{fmt(b.ponderado)}</TableCell>
-                    <TableCell className="text-right tabular-nums">{fmt(b.ganado)}</TableCell>
+                    <TableCell>{b.moneda}</TableCell>
+                    <TableCell className="text-right tabular-nums">{formatCurrencyCompact(b.pipeline, b.moneda)}</TableCell>
+                    <TableCell className="text-right tabular-nums">{formatCurrencyCompact(b.ponderado, b.moneda)}</TableCell>
+                    <TableCell className="text-right tabular-nums">{formatCurrencyCompact(b.ganado, b.moneda)}</TableCell>
                     <TableCell className="text-right">{b.count}</TableCell>
                   </TableRow>
                 ))}
-                {f.porVendedor.length === 0 && <TableRow><TableCell colSpan={5}><EmptyStateInline icon={BarChart3} message="Sin datos" density="compact" /></TableCell></TableRow>}
+                {porVendedor.length === 0 && <TableRow><TableCell colSpan={6}><EmptyStateInline icon={BarChart3} message="Sin datos" density="compact" /></TableCell></TableRow>}
               </TableBody>
             </Table>
             </div>

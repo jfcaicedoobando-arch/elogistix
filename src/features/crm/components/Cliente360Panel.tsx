@@ -27,7 +27,7 @@ export default function Cliente360Panel({ clienteId }: Props) {
 
   if (isLoading) return <EmptyStateInline loading message="Cargando datos CRM…" />;
 
-  const d = data ?? { oportunidades: [], totalAbierto: 0, totalGanado: 0, ultimaCotizacion: null, ultimoEmbarque: null };
+  const d = data ?? { oportunidades: [], totales: [], ultimaCotizacion: null, ultimoEmbarque: null };
 
   const columns: ColumnDef<Cliente360Oportunidad, unknown>[] = defineColumns<Cliente360Oportunidad>([
     { id: "nombre", header: "Nombre", meta: { width: COL_W.texto, className: "font-medium" }, cell: ({ row }) => row.original.nombre },
@@ -48,8 +48,19 @@ export default function Cliente360Panel({ clienteId }: Props) {
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <KpiCard label="Pipeline abierto" value={formatCurrencyCompact(d.totalAbierto, "MXN")} />
-        <KpiCard label="Negocio ganado" value={formatCurrencyCompact(d.totalGanado, "MXN")} />
+        {d.totales.length === 0 ? (
+          <>
+            <KpiCard label="Pipeline abierto" value={formatCurrencyCompact(0, "MXN")} />
+            <KpiCard label="Negocio ganado" value={formatCurrencyCompact(0, "MXN")} />
+          </>
+        ) : (
+          d.totales.map((t) => (
+            <div key={t.moneda} className="grid grid-cols-2 gap-4 col-span-1 md:col-span-2">
+              <KpiCard label={`Pipeline abierto (${t.moneda})`} value={formatCurrencyCompact(t.totalAbierto, t.moneda)} />
+              <KpiCard label={`Negocio ganado (${t.moneda})`} value={formatCurrencyCompact(t.totalGanado, t.moneda)} />
+            </div>
+          ))
+        )}
       </div>
 
       <Card>

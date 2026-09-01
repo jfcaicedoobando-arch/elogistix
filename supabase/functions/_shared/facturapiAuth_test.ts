@@ -37,6 +37,7 @@ function cleanupEnv() {
   Deno.env.delete("FACTURAPI_KEY");
   Deno.env.delete("FACTURAPI_KEY_ORG1_SANDBOX");
   Deno.env.delete("FACTURAPI_KEY_ORG1_LIVE");
+  Deno.env.delete("LEGACY_FACTURAPI_ORG_ID");
 }
 
 Deno.test("resolveFacturapiKey: usa secret sandbox cuando ambiente=sandbox", async () => {
@@ -85,14 +86,74 @@ Deno.test("resolveFacturapiKey: 412 si la org no tiene fila ni FACTURAPI_KEY glo
   assertEquals(res.data.status, 412);
 });
 
-Deno.test("resolveFacturapiKey: fallback legacy a FACTURAPI_KEY global", async () => {
+Deno.test("resolveFacturapiKey: SIN LEGACY_FACTURAPI_ORG_ID, ninguna org usa FACTURAPI_KEY global (fail-closed)", async () => {
   cleanupEnv();
   Deno.env.set("FACTURAPI_KEY", "sk_legacy_999");
   const sb = makeSupabase(null);
   const res = await resolveFacturapiKey(sb, "org-1");
-  if (!res.ok) throw new Error("esperaba ok (legacy)");
-  assertEquals(res.data.apiKey, "sk_legacy_999");
-  assertEquals(res.data.legacy, true);
+  if (res.ok) throw new Error("esperaba error (fail-closed)");
+  assertEquals(res.data.error, "org_facturapi_not_configured");
+  assertEquals(res.data.status, 412);
+  cleanupEnv();
+});
+
+Deno.test("resolveFacturapiKey: legacy SÓLO aplica con coincidencia EXACTA de LEGACY_FACTURAPI_ORG_ID", async () => {
+  cleanupEnv();
+  Deno.env.set("FACTURAPI_KEY", "sk_legacy_999");
+  Deno.env.set("LEGACY_FACTURAPI_ORG_ID", "org-legacy");
+  const sb = makeSupabase(null);
+
+  const okRes = await resolveFacturapiKey(sb, "org-legacy");
+  if (!okRes.ok) throw new Error("esperaba ok (legacy exacto)");
+  assertEquals(okRes.data.apiKey, "sk_legacy_999");
+  assertEquals(okRes.data.legacy, true);
+
+  const otraOrg = await resolveFacturapiKey(sb, "org-otra-distinta");
+  if (otraOrg.ok) throw new Error("otra org NUNCA debe usar el fallback legacy");
+  assertEquals(otraOrg.data.error, "org_facturapi_not_configured");
+  cleanupEnv();
+});
+
+Deno.test("resolveFacturapiKey: dos orgs — la configurada usa su key propia, la otra jamás toca la global", async () => {
+  cleanupEnv();
+  Deno.env.set("FACTURAPI_KEY", "sk_global_never_used");
+  Deno.env.set("FACTURAPI_KEY_ORG1_SANDBOX", "sk_org1_own_key");
+  const sbOrg1 = makeSupabase({
+    ambiente: "sandbox",
+    api_key_sandbox_secret_name: "FACTURAPI_KEY_ORG1_SANDBOX",
+    api_key_live_secret_name: null,
+    api_key_sandbox_vault_id: null,
+    api_key_live_vault_id: null,
+    facturapi_org_id: "fapi_org_1",
+  });
+  const resOrg1 = await resolveFacturapiKey(sbOrg1, "org-1");
+  if (!resOrg1.ok) throw new Error("esperaba ok");
+  assertEquals(resOrg1.data.apiKey, "sk_org1_own_key");
+  assertEquals(resOrg1.data.legacy, false);
+
+  const sbOrgSinConfig = makeSupabase(null);
+  const resOrg2 = await resolveFacturapiKey(sbOrgSinConfig, "org-2-sin-config");
+  if (resOrg2.ok) throw new Error("esperaba error (fail-closed, sin LEGACY_FACTURAPI_ORG_ID que coincida)");
+  assertEquals(resOrg2.data.error, "org_facturapi_not_configured");
+  cleanupEnv();
+});
+
+Deno.test("resolveFacturapiKey: mensaje al cliente es genérico y no expone nombres de secrets", async () => {
+  cleanupEnv();
+  const sb = makeSupabase({
+    ambiente: "sandbox",
+    api_key_sandbox_secret_name: "FACTURAPI_KEY_ORG1_SANDBOX",
+    api_key_live_secret_name: null,
+    api_key_sandbox_vault_id: null,
+    api_key_live_vault_id: null,
+    facturapi_org_id: null,
+  });
+  const res = await resolveFacturapiKey(sb, "org-1");
+  if (res.ok) throw new Error("esperaba error");
+  assertEquals(res.data.error, "missing_facturapi_key");
+  if (res.data.message.includes("FACTURAPI_KEY_ORG1_SANDBOX")) {
+    throw new Error("el mensaje al cliente no debe exponer el nombre del secret");
+  }
   cleanupEnv();
 });
 
@@ -110,6 +171,7 @@ Deno.test("resolveFacturapiKey: 500 si el secret name existe en la tabla pero el
   if (res.ok) throw new Error("esperaba error");
   assertEquals(res.data.error, "missing_facturapi_key");
   assertEquals(res.data.status, 500);
+  cleanupEnv();
 });
 
 Deno.test("resolveFacturapiKey: 412 cuando el ambiente activo no tiene secret_name asignado", async () => {
@@ -126,6 +188,7 @@ Deno.test("resolveFacturapiKey: 412 cuando el ambiente activo no tiene secret_na
   if (res.ok) throw new Error("esperaba error");
   assertEquals(res.data.error, "org_facturapi_not_configured");
   assertEquals(res.data.status, 412);
+  cleanupEnv();
 });
 
 Deno.test("resolveFacturapiKey: usa RPC vault cuando vault_id está presente", async () => {

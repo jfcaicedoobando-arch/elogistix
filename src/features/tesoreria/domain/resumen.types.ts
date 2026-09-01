@@ -14,19 +14,31 @@ export interface ResumenCuenta {
 export interface FlujoMes {
   por_cobrar_mxn: number;
   por_cobrar_usd: number;
+  /** P1-7 — porción EUR del flujo por cobrar (antes se perdía dentro de `_mxn`). */
+  por_cobrar_eur: number;
   por_pagar_mxn: number;
   por_pagar_usd: number;
+  /** P1-7 — porción EUR del flujo por pagar. */
+  por_pagar_eur: number;
   flujo_neto_mxn: number;
   flujo_neto_usd: number;
+  flujo_neto_eur: number;
   /**
-   * v13.300.49 — Totales convertidos a MXN usando el tipo de cambio USD del
-   * agregador. Los KPIs DSO/DPO deben consumir estos campos, NO los `_mxn`
-   * puros (que descartan la porción en USD).
+   * v13.300.49 — Totales convertidos a MXN usando el tipo de cambio del
+   * agregador (todas las monedas presentes). Los KPIs DSO/DPO deben consumir
+   * estos campos, NO los `_mxn` puros (que descartan la porción extranjera).
    */
   por_cobrar_total_mxn: number;
   por_pagar_total_mxn: number;
-  /** UIA-03: `true` cuando hay saldos USD excluidos del total por falta de TC confiable. */
+  /** UIA-03/P1-7: `true` cuando hay saldos en divisa extranjera excluidos del
+   *  total por falta de TC confiable para esa moneda. */
   flujo_incompleto: boolean;
+}
+
+/** P1-7 — canon único de tasas de cambio a MXN que consume el dominio Tesorería. */
+export interface TasasCambio {
+  usdMxn?: number | null;
+  eurMxn?: number | null;
 }
 
 export interface TopItem {
@@ -52,6 +64,8 @@ export interface ResumenTesoreria {
   saldos_por_moneda: Record<string, number>;
   /** Q-06: TC USD→MXN vigente usado para convertir (si lo hubo). */
   tipo_cambio_usd?: number | null;
+  /** P1-7: TC EUR→MXN vigente usado para convertir (si lo hubo). */
+  tipo_cambio_eur?: number | null;
   /** Q-06: fecha (YYYY-MM-DD) del TC DOF aplicado. */
   tipo_cambio_fecha?: string | null;
   /** v13.300.49 — Cartera vencida completa (sin truncar a Top-5). */

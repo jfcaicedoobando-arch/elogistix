@@ -135,7 +135,7 @@ export default function CrmDashboard() {
   const vm = useCrmInicioVM();
   const { isLoading, isError, refetch } = vm;
   const { data: forecast, isLoading: loadingForecast } = useForecast();
-  const f = forecast ?? { totalPipeline: 0, totalPonderado: 0, totalGanado: 0 };
+  const totalesPorMoneda = forecast?.totalesPorMoneda ?? [];
 
   return (
     <PageContainer>
@@ -165,26 +165,46 @@ export default function CrmDashboard() {
           <SectionHeading as="h2" variant="overline">
             Forecast del mes
           </SectionHeading>
-          <KpiStrip desktopCols={3} className="sm:border sm:rounded-md sm:bg-card sm:overflow-hidden sm:gap-0">
-            <StatStripItem
-              icon={TrendingUp}
-              label="Pipeline"
-              value={loadingForecast ? "…" : fmt(f.totalPipeline)}
-              valueTooltip={formatCurrency(f.totalPipeline, "MXN")}
-            />
-            <StatStripItem
-              icon={Target}
-              label="Ponderado"
-              value={loadingForecast ? "…" : fmt(f.totalPonderado)}
-              valueTooltip={formatCurrency(f.totalPonderado, "MXN")}
-            />
-            <StatStripItem
-              icon={Trophy}
-              label="Ganado"
-              value={loadingForecast ? "…" : fmt(f.totalGanado)}
-              valueTooltip={formatCurrency(f.totalGanado, "MXN")}
-            />
-          </KpiStrip>
+          {loadingForecast ? (
+            <KpiStrip desktopCols={3} className="sm:border sm:rounded-md sm:bg-card sm:overflow-hidden sm:gap-0">
+              <StatStripItem icon={TrendingUp} label="Pipeline" value="…" />
+              <StatStripItem icon={Target} label="Ponderado" value="…" />
+              <StatStripItem icon={Trophy} label="Ganado" value="…" />
+            </KpiStrip>
+          ) : totalesPorMoneda.length === 0 ? (
+            <KpiStrip desktopCols={3} className="sm:border sm:rounded-md sm:bg-card sm:overflow-hidden sm:gap-0">
+              <StatStripItem icon={TrendingUp} label="Pipeline" value={fmt(0)} />
+              <StatStripItem icon={Target} label="Ponderado" value={fmt(0)} />
+              <StatStripItem icon={Trophy} label="Ganado" value={fmt(0)} />
+            </KpiStrip>
+          ) : (
+            totalesPorMoneda.map((t) => (
+              <KpiStrip
+                key={t.moneda}
+                desktopCols={3}
+                className="sm:border sm:rounded-md sm:bg-card sm:overflow-hidden sm:gap-0"
+              >
+                <StatStripItem
+                  icon={TrendingUp}
+                  label={`Pipeline (${t.moneda})`}
+                  value={formatCurrencyCompact(t.totalPipeline, t.moneda)}
+                  valueTooltip={formatCurrency(t.totalPipeline, t.moneda)}
+                />
+                <StatStripItem
+                  icon={Target}
+                  label={`Ponderado (${t.moneda})`}
+                  value={formatCurrencyCompact(t.totalPonderado, t.moneda)}
+                  valueTooltip={formatCurrency(t.totalPonderado, t.moneda)}
+                />
+                <StatStripItem
+                  icon={Trophy}
+                  label={`Ganado (${t.moneda})`}
+                  value={formatCurrencyCompact(t.totalGanado, t.moneda)}
+                  valueTooltip={formatCurrency(t.totalGanado, t.moneda)}
+                />
+              </KpiStrip>
+            ))
+          )}
         </section>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">

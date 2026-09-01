@@ -163,9 +163,6 @@ Deno.serve(wrapEdgeHandler("facturapi-enviar-email", async (req) => {
       entidadId: target.data.entidadId,
       detalles: {
         email_enviado: email,
-        email_sugerido: resolucion.emailSugerido,
-        fuente_email: resolucion.fuente,
-        override_manual: overrideManual,
         email_distinto_sugerido: emailDistintoSugerido,
         tipo: target.data.tipo,
         status: fapiRes.status,
@@ -188,13 +185,9 @@ Deno.serve(wrapEdgeHandler("facturapi-enviar-email", async (req) => {
     entidadId: target.data.entidadId,
     detalles: {
       email_enviado: email,
-      email_sugerido: resolucion.emailSugerido,
-      fuente_email: resolucion.fuente,
-      override_manual: overrideManual,
       email_distinto_sugerido: emailDistintoSugerido,
       tipo: target.data.tipo,
     },
-
   });
 
   return json({ ok: true, enviado_a: email });

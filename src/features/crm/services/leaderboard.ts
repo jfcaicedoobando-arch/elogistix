@@ -6,18 +6,21 @@ const LIMITE_OPS_MES = 5000;
 
 export interface LeaderboardRow {
   vendedor: string;
+  /** Nunca se mezclan monedas: cada fila representa un vendedor+moneda. */
+  moneda: string;
   cuota: number;
   cerrado: number;
   avance: number;
 }
 
 export interface LeaderboardRawData {
-  cuotas: Array<{ vendedor_email: string | null; cuota_monto: number | null }>;
+  cuotas: Array<{ vendedor_email: string | null; cuota_monto: number | null; moneda?: string | null }>;
   ops: Array<{
     vendedor_email: string | null;
     valor_real: number | null;
     monto_estimado: number | null;
     etapa_id: string;
+    moneda?: string | null;
   }>;
   etapas: Array<{ id: string; tipo: string }>;
 }
@@ -30,12 +33,12 @@ export async function fetchLeaderboardRaw(
   const [cuotasR, opsR, etapasR] = await Promise.all([
     supabase
       .from("crm_cuotas_vendedor")
-      .select("vendedor_email, cuota_monto, anio, mes")
+      .select("vendedor_email, cuota_monto, moneda, anio, mes")
       .eq("anio", anio)
       .eq("mes", mes),
     supabase
       .from("crm_oportunidades")
-      .select("vendedor_email, valor_real, monto_estimado, etapa_id, fecha_cierre_real")
+      .select("vendedor_email, valor_real, monto_estimado, moneda, etapa_id, fecha_cierre_real")
       .is("deleted_at", null)
       .gte("fecha_cierre_real", inicioMesISO)
       .limit(LIMITE_OPS_MES), // defensivo: oportunidades cerradas del mes por org
@@ -52,26 +55,35 @@ export async function fetchLeaderboardRaw(
   };
 }
 
-/** Lógica pura, testeable: agrega cuotas/ops por vendedor y calcula avance. */
+/**
+ * Lógica pura, testeable: agrega cuotas/ops por vendedor y moneda (sin
+ * mezclar monedas distintas: no hay TC histórico canónico) y calcula avance.
+ */
 export function computeLeaderboard(raw: LeaderboardRawData): LeaderboardRow[] {
   const tipoEtapa = new Map(raw.etapas.map((e) => [e.id, e.tipo]));
-  const cerradoMap = new Map<string, number>();
+  const cerradoMap = new Map<string, number>(); // key = `${vendedor}|${moneda}`
   for (const o of raw.ops) {
     if (tipoEtapa.get(o.etapa_id) !== "ganada") continue;
-    const k = o.vendedor_email || "Sin asignar";
+    const vendedor = o.vendedor_email || "Sin asignar";
+    const moneda = o.moneda || "MXN";
     const monto = Number(o.valor_real ?? o.monto_estimado ?? 0);
+    const k = `${vendedor}|${moneda}`;
     cerradoMap.set(k, (cerradoMap.get(k) ?? 0) + monto);
   }
   const cuotaMap = new Map<string, number>();
   for (const c of raw.cuotas) {
-    cuotaMap.set(c.vendedor_email || "Sin asignar", Number(c.cuota_monto ?? 0));
+    const vendedor = c.vendedor_email || "Sin asignar";
+    const moneda = c.moneda || "MXN";
+    const k = `${vendedor}|${moneda}`;
+    cuotaMap.set(k, (cuotaMap.get(k) ?? 0) + Number(c.cuota_monto ?? 0));
   }
-  const todos = new Set<string>([...cerradoMap.keys(), ...cuotaMap.keys()]);
-  const filas: LeaderboardRow[] = Array.from(todos).map((vendedor) => {
-    const cuota = cuotaMap.get(vendedor) ?? 0;
-    const cerrado = cerradoMap.get(vendedor) ?? 0;
+  const todasLasClaves = new Set<string>([...cerradoMap.keys(), ...cuotaMap.keys()]);
+  const filas: LeaderboardRow[] = Array.from(todasLasClaves).map((k) => {
+    const [vendedor, moneda] = k.split("|");
+    const cuota = cuotaMap.get(k) ?? 0;
+    const cerrado = cerradoMap.get(k) ?? 0;
     const avance = cuota > 0 ? Math.min(100, Math.round((cerrado / cuota) * 100)) : 0;
-    return { vendedor, cuota, cerrado, avance };
+    return { vendedor, moneda, cuota, cerrado, avance };
   });
-  return filas.sort((a, b) => b.cerrado - a.cerrado);
+  return filas.sort((a, b) => a.moneda.localeCompare(b.moneda) || b.cerrado - a.cerrado);
 }

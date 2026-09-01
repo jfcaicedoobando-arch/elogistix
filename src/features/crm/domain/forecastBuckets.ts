@@ -15,8 +15,8 @@ export function classifyEtapa(tipo: EtapaTipo | undefined): { abierta: boolean; 
   return { abierta: tipo === "abierta", ganada: tipo === "ganada" };
 }
 
-export function makeBucket(key: string, label: string): ForecastBucket {
-  return { key, label, pipeline: 0, ponderado: 0, ganado: 0, count: 0 };
+export function makeBucket(key: string, label: string, moneda: string): ForecastBucket {
+  return { key, label, moneda, pipeline: 0, ponderado: 0, ganado: 0, count: 0 };
 }
 
 export function applyDelta(b: ForecastBucket, d: BucketDelta): void {

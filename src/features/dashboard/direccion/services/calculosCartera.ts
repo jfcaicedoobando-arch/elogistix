@@ -37,12 +37,19 @@ export function calcularAntiguedad(facturas: FacturaRow[], pagos: PagoRow[], fal
 }
 
 export interface CalcularHeroParams {
-  aggs: EmbarqueAgg[]; facturas: FacturaRow[]; antiguedad: BucketAntiguedad[];
+  aggs: EmbarqueAgg[]; facturas: FacturaRow[];
+  /**
+   * P1-6: universo de cartera ABIERTA (toda factura viva con saldo
+   * potencial > 0, sin ventana de fechas) — separado de `facturas` (ventana
+   * de 6 meses) para no borrar del vencido/aging facturas más viejas.
+   */
+  facturasCartera: FacturaRow[];
+  antiguedad: BucketAntiguedad[];
   fallbackUsd: number; hoy: Date; mesActual: string; mesPrev: string;
 }
 
 export function calcularHero(params: CalcularHeroParams): HeroKpis {
-  const { aggs, facturas, antiguedad, fallbackUsd, hoy, mesActual, mesPrev } = params;
+  const { aggs, facturas, facturasCartera, antiguedad, fallbackUsd, hoy, mesActual, mesPrev } = params;
   const cur = aggs.filter((a) => a.mes === mesActual);
   const prev = aggs.filter((a) => a.mes === mesPrev);
   const v = cur.reduce((s, a) => s + a.venta, 0);
@@ -52,7 +59,7 @@ export function calcularHero(params: CalcularHeroParams): HeroKpis {
   const facturado = facturas
     .filter((f) => f.estado !== "Cancelada" && f.fecha_emision.slice(0, 7) === mesActual)
     .reduce((s, f) => s + mxnFactura(Number(f.total ?? 0), f.moneda, f.tipo_cambio, fallbackUsd), 0);
-  const vencidas = facturas.filter((f) => {
+  const vencidas = facturasCartera.filter((f) => {
     if (f.estado === "Cancelada" || f.estado === "Pagada") return false;
     if (!f.fecha_vencimiento) return false;
     return new Date(`${f.fecha_vencimiento}T00:00:00Z`).getTime() < hoy.getTime();

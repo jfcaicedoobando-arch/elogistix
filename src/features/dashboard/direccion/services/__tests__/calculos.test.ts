@@ -253,7 +253,7 @@ describe("calcularHero", () => {
       factura({ id: "f4", estado: "Pendiente", fecha_emision: "2026-01-05", fecha_vencimiento: null }),
     ];
     const out = calcularHero({
-      aggs, facturas, antiguedad: [
+      aggs, facturas, facturasCartera: facturas, antiguedad: [
         { bucket: "Corriente", monto_mxn: 100, facturas: 1 },
         { bucket: "1-30", monto_mxn: 200, facturas: 1 },
       ], fallbackUsd: 18, hoy, mesActual: "2026-01", mesPrev: "2025-12",
@@ -271,9 +271,28 @@ describe("calcularHero", () => {
       factura({ id: "f1", estado: "Pendiente", fecha_vencimiento: "2020-01-01", cliente_id: null }),
     ];
     const out = calcularHero({
-      aggs: [], facturas, antiguedad: [], fallbackUsd: 18, hoy, mesActual: "2026-01", mesPrev: "2025-12",
+      aggs: [], facturas, facturasCartera: facturas, antiguedad: [], fallbackUsd: 18, hoy, mesActual: "2026-01", mesPrev: "2025-12",
     });
     expect(out.cartera_vencida_clientes).toBe(0);
+  });
+
+  it("P1-6: usa facturasCartera (sin ventana) para vencidas, no facturas (ventana 6m)", () => {
+    // Factura pendiente de 7+ meses: ya no aparece en `facturas` (ventana de
+    // tendencia), pero sí en `facturasCartera` (universo abierto sin filtro
+    // de fecha). El hero debe reflejarla en cartera vencida sin contaminar
+    // `facturado_mes_mxn`, que sólo mira `facturas`.
+    const facturaVieja = factura({
+      id: "f-vieja", estado: "Vencida", fecha_emision: "2025-06-01",
+      fecha_vencimiento: "2025-06-15", cliente_id: "c-vieja",
+    });
+    const out = calcularHero({
+      aggs: [], facturas: [], facturasCartera: [facturaVieja],
+      antiguedad: [{ bucket: "+60", monto_mxn: 1000, facturas: 1 }],
+      fallbackUsd: 18, hoy, mesActual: "2026-01", mesPrev: "2025-12",
+    });
+    expect(out.cartera_vencida_mxn).toBe(1000);
+    expect(out.cartera_vencida_clientes).toBe(1);
+    expect(out.facturado_mes_mxn).toBe(0);
   });
 });
 

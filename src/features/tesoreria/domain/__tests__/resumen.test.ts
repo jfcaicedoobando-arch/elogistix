@@ -145,3 +145,37 @@ describe("calcularResumenTesoreria — Q-06 sin TC confiable", () => {
     expect(r.tipo_cambio_fecha).toBe("2026-06-14");
   });
 });
+
+describe("calcularResumenTesoreria — P1-7 EUR", () => {
+  const HOY3 = new Date("2026-06-15T00:00:00");
+
+  it("MXN+USD+EUR con TC completo: suma correcta y no marca incompleto", () => {
+    const mix: ResumenCuenta[] = [
+      { id: "c1", alias: "MXN", banco: "BBVA", moneda: "MXN", saldo: 100_000 },
+      { id: "c2", alias: "USD", banco: "BBVA", moneda: "USD", saldo: 1_000 },
+      { id: "c3", alias: "EUR", banco: "BBVA", moneda: "EUR", saldo: 500 },
+    ];
+    const r = calcularResumenTesoreria({
+      cuentas: mix, cobranza: [], cxp: [], hoy: HOY3,
+      tipoCambioUsd: 20, tipoCambioEur: 22,
+    });
+    expect(r.saldo_bancos_mxn).toBe(100_000 + 1_000 * 20 + 500 * 22);
+    expect(r.saldo_bancos_incompleto).toBe(false);
+    expect(r.saldos_por_moneda.EUR).toBe(500);
+    expect(r.tipo_cambio_eur).toBe(22);
+  });
+
+  it("EUR sin TC: marca incompleto y no suma mal el EUR", () => {
+    const mix: ResumenCuenta[] = [
+      { id: "c1", alias: "MXN", banco: "BBVA", moneda: "MXN", saldo: 100_000 },
+      { id: "c2", alias: "EUR", banco: "BBVA", moneda: "EUR", saldo: 500 },
+    ];
+    const r = calcularResumenTesoreria({
+      cuentas: mix, cobranza: [], cxp: [], hoy: HOY3, tipoCambioUsd: 20,
+    });
+    expect(r.saldo_bancos_mxn).toBe(100_000);
+    expect(r.saldo_bancos_incompleto).toBe(true);
+    expect(r.saldos_por_moneda.EUR).toBe(500);
+    expect(r.tipo_cambio_eur ?? null).toBe(null);
+  });
+});
