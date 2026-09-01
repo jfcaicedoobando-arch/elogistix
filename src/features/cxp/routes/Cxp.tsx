@@ -49,9 +49,12 @@ export default function Cxp() {
   const colVis = useColumnVisibility("cxp-facturas-columns", CXP_COL_DEFAULTS);
 
   const totalPages = Math.max(1, Math.ceil(data.length / f.pageSize));
+  // Una página fuera de rango (deep link viejo, o menos resultados tras
+  // filtrar) mostraba una tabla vacía aunque hubiera coincidencias.
+  const pageActual = Math.min(f.page, totalPages - 1);
   const pageData = useMemo(
-    () => data.slice(f.page * f.pageSize, (f.page + 1) * f.pageSize),
-    [data, f.page, f.pageSize],
+    () => data.slice(pageActual * f.pageSize, (pageActual + 1) * f.pageSize),
+    [data, pageActual, f.pageSize],
   );
 
   return (
