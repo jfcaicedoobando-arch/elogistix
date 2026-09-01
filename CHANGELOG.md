@@ -1,5 +1,13 @@
 # Changelog
 
+## [13.823.7] - 2026-09-01
+### Precisión de moneda y fecha de negocio en Dirección (sólo local)
+- **Fallback de TC por moneda**: `mxnFactura` recibe ahora `{ usd, eur }` en vez de un único `fallbackUsd`. MXN = 1; USD/EUR usan el TC de la factura y, si falta, el fallback de SU moneda; una divisa desconocida o sin fallback propio aporta 0 en vez de valuarse con el TC del dólar (antes una factura EUR sin TC salía en MXN con el TC USD: cifra creíble pero falsa). `useDireccionKpis` propaga `usdMxn` y `eurMxn` desde `useExchangeRates` y ambos entran en la `queryKey` para invalidar bien; `saldoCartera` convierte el saldo neto con el fallback de su moneda y `facturado_mes_mxn` sigue el mismo contrato.
+- **Mes de negocio en America/Mexico_City**: `mxn.ts` sustituye la semántica UTC (`ym`/`inicioMesUtc`) por `mesNegocio` (= `ymMx`) y `mesMasOffset`, aritmética mensual pura sobre `YYYY-MM`. `ventanaDireccionDesdeIso` devuelve el primer día del mes de hace 5 meses, date-only y sin depender de la TZ del runner; `calcularMargen6m`, `fetchDireccionKpis` y el pulso (`arribos_7d`, demoras) usan el día/mes de México. Antes el tablero cambiaba de mes a las 18:00 CDMX.
+- **Vencimiento con criterio único**: `calcularHero` deja de usar `T00:00:00Z` y aplica `diasVencidos(fecha_vencimiento, hoy) > 0`, igual que el aging: una factura que vence HOY no cuenta como vencida ni en monto ni en clientes.
+- **`src/lib/date/today.ts`**: `todayLocalISO` delega en `hoyMx` y `todayLocalISOPlus` suma días date-only sobre `parseLocalMx`, así que ya no dependen de la zona del navegador.
+- Sin deploy, publish, Edge deploy, migraciones o SQL remoto, secretos ni cambios de datos.
+
 ## [13.823.6] - 2026-09-01
 ### Canon exacto de saldo en cartera de Dirección (sólo local)
 - **Nuevo helper puro `saldoCartera.ts`**: el saldo se calcula EN MONEDA DE FACTURA y sólo el neto se valúa a MXN con el TC de la factura (o el fallback vigente).
