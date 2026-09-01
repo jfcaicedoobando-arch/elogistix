@@ -1,5 +1,15 @@
 # Changelog
 
+## [13.823.10] - 2026-09-01
+### Estados de carga/error mutuamente excluyentes en tableros y reportes (sólo local)
+- **Dashboard Ejecutivo**: `useDashboardEjecutivo` compone el error de CxC/CxP como error del tablero. Antes, si una dependencia fallaba, el snapshot quedaba deshabilitado y React Query v5 lo reportaba `pending` sin error ni carga: pantalla en blanco permanente. Ahora `isLoading` suma la carga real de las dependencias (sin confundir "pending deshabilitado" con cargando) y el retry reintenta la fuente fallida además del snapshot. La página renderiza exactamente una rama: loading → error → vacío → data.
+- **Dashboard Finanzas**: `useFinanceDashboard` ya no se traga los errores de CxC/CxP/tesorería; los propaga (`error`, `isError`, `refetch`). `FinanceDashboard` muestra `ErrorState` con retry en vez de tarjetas con KPIs en 0, que se leían como cifras reales.
+- **Dashboard Dirección**: el cuerpo pasa a máquina de estados excluyente (loading → error → vacío → data). Antes podían coexistir la alerta de error y el skeleton.
+- **Reportes**: el error excluye KPIs, gráfica y tabla, y el botón Reintentar recarga la fuente.
+- Pruebas nuevas: Ejecutivo (CxC/CxP pending ⇒ loading; error de cada fuente ⇒ error visible sin blank/skeleton; retry sobre la fuente fallida; dependencias listas ⇒ data), Finanzas (cada fuente crítica fallando ⇒ error visible y ninguna tarjeta en 0 + retry), Dirección y Reportes (una sola rama por estado).
+- Sin deploy, publish, Edge deploy, migraciones o SQL remoto, secretos ni cambios de datos.
+
+
 ## [13.823.9] - 2026-09-01
 ### Integridad CRM: soft-delete por URL y Undo falso a "Perdida" (sólo local)
 - `getLead` y `getOportunidad` ahora exigen `deleted_at IS NULL`. Antes un lead/oportunidad eliminado seguía abriendo su detalle si se conservaba el UUID en la URL (las listas sí filtraban). Con `null` las rutas ya muestran "no encontrado" sin acciones ni datos residuales.
