@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.821.0] - 2026-09-01
+- **Squash de migraciones (CI y verificación local)**: el historial hasta `20260908000300` quedó consolidado en `supabase/schema/squash/baseline_squash_v13_821_0.sql`, verificado byte a byte contra `supabase/schema/baseline.sql`. Las bases limpias (CI y `bun run db:verify`) aplican ese archivo y luego sólo las migraciones posteriores al corte de `supabase/schema/squash/cutoff.env` (fuente única compartida). Los 1193 archivos históricos se conservan en `supabase/migrations/` como bitácora auditable —ya están aplicados en producción y no se re-ejecutan—, así que nada cambia en la base productiva.
+- **CI más simple**: se eliminaron el paso `_ci_drift.sql`, las exenciones `MIGRACIONES_EXENTAS`/`drift-anclas.txt` y el job "Drift radar" completo: el squash ya representa el estado real, por lo que cualquier migración nueva debe aplicar en limpio sin parches.
+
 ## [13.820.7] - 2026-09-01
 - **Inicio (tablero)**: los roles operativos (coordinador logístico, operador, vendedor, customer service, agente de carga) veían "No pudimos cargar la información" en `/inicio` por el error `LC_DASHBOARD_SIN_PERMISO`. El resumen del tablero volvió a su cuerpo canónico: responde a todos los roles internos y sólo enmascara costo, utilidad y margen para quien no puede verlos (ese enmascarado ya lo hacía la RPC pública).
 
