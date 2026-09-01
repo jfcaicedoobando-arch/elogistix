@@ -22,7 +22,6 @@ import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/components/ui/table";
 import { DetailTableHead } from "@/components/shared/DetailTable";
 const v = (loading: boolean, n: number | undefined): string | number => (loading ? "…" : (n ?? 0));
-const fmt = (n: number) => formatCurrencyCompact(n, "MXN");
 
 function EmbudoCard() {
   const { data, isLoading } = useReportesCRM();
@@ -89,9 +88,9 @@ function ForecastMesCard() {
             <TableBody>
               {porMes.map((b) => (
                 <TableRow key={b.key} className="border-b last:border-0">
-                  <TableCell>{b.label}</TableCell>
-                  <TableCell className="text-right tabular-nums">{fmt(b.ponderado)}</TableCell>
-                  <TableCell className="text-right tabular-nums">{fmt(b.ganado)}</TableCell>
+                  <TableCell>{`${b.label} (${b.moneda})`}</TableCell>
+                  <TableCell className="text-right tabular-nums">{formatCurrencyCompact(b.ponderado, b.moneda)}</TableCell>
+                  <TableCell className="text-right tabular-nums">{formatCurrencyCompact(b.ganado, b.moneda)}</TableCell>
                   <TableCell className="text-right tabular-nums">{b.count}</TableCell>
                 </TableRow>
               ))}
