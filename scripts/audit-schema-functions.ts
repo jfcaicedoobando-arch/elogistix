@@ -14,6 +14,8 @@ const ROOT = process.cwd();
 const SCHEMA_DIR = path.join(ROOT, "supabase", "schema");
 /** `baseline.sql` es un dump completo del esquema, no una función canónica. */
 const EXENTOS = new Set<string>(["supabase/schema/baseline.sql"]);
+/** `schema/squash/*.sql` son dumps consolidados del esquema, no funciones. */
+const DIRS_EXENTOS = ["supabase/schema/squash/"];
 
 function listarSql(dir: string, acc: string[] = []): string[] {
   for (const entry of fs.readdirSync(dir)) {
@@ -25,7 +27,10 @@ function listarSql(dir: string, acc: string[] = []): string[] {
 }
 
 const archivos = listarSql(SCHEMA_DIR).filter(
-  (f) => !EXENTOS.has(path.relative(ROOT, f).split(path.sep).join("/")),
+  (f) => {
+    const rel = path.relative(ROOT, f).split(path.sep).join("/");
+    return !EXENTOS.has(rel) && !DIRS_EXENTOS.some((d) => rel.startsWith(d));
+  },
 );
 const violaciones: string[] = [];
 for (const file of archivos) {
