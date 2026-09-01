@@ -39,6 +39,27 @@ export function isExpectedBusinessError(err: unknown): boolean {
 }
 
 /**
+ * Construye título y `error_kind` para un error sin mensaje (red o petición
+ * cancelada). Extraído de `normalizeForSentry` para acotar su complejidad.
+ */
+function describirErrorSinMensaje(
+  rootKey: string | undefined,
+  status: unknown,
+): { kind: "offline" | "network"; message: string } {
+  const offline = typeof navigator !== "undefined" && navigator.onLine === false;
+  const partes: string[] = [];
+  if (rootKey) partes.push(`consulta: ${rootKey}`);
+  if (typeof status === "number") partes.push(`HTTP ${status}`);
+  const base = offline
+    ? "Sin conexión: la petición no llegó al servidor"
+    : "Fallo de red o petición cancelada (respuesta sin mensaje)";
+  return {
+    kind: offline ? "offline" : "network",
+    message: partes.length > 0 ? `${base} (${partes.join(", ")})` : base,
+  };
+}
+
+/**
  * Convierte errores crudos de PostgREST (objetos planos con `code`, `details`,
  * `hint`, `message`) en `Error` reales para que Sentry agrupe por mensaje en
  * vez de titular "Object captured as exception with keys: …" o "M".
@@ -70,18 +91,9 @@ function normalizeForSentry(
     return { error: new Error(mensajeOriginal, { cause: err }), pgTags };
   }
 
-  const offline = typeof navigator !== "undefined" && navigator.onLine === false;
-  pgTags.error_kind = offline ? "offline" : "network";
-  const detalle = [
-    rootKey ? `consulta: ${rootKey}` : undefined,
-    typeof e.status === "number" ? `HTTP ${e.status}` : undefined,
-  ]
-    .filter(Boolean)
-    .join(", ");
-  const base = offline
-    ? "Sin conexión: la petición no llegó al servidor"
-    : "Fallo de red o petición cancelada (respuesta sin mensaje)";
-  const message = detalle ? `${base} (${detalle})` : base;
+  const clasificado = describirErrorSinMensaje(rootKey, e.status);
+  pgTags.error_kind = clasificado.kind;
+  const message = clasificado.message;
   return { error: new Error(message, { cause: err }), pgTags };
 }
 
