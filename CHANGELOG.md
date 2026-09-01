@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.823.15] - 2026-09-01
+### Cotización nueva: ya no aparece "otro usuario modificó este registro" (sólo local)
+- **Causa**: el wizard arrancaba el bloqueo optimista con sello `null` en cotizaciones nuevas, pero la base firma la fila al insertarla (`updated_at = created_at`). Al segundo guardado del mismo usuario el sello no coincidía y se lanzaba `LC_CONFLICTO_CONCURRENCIA` (reportado en COT-P-2026-0001, /cotizaciones/nueva paso 1).
+- **Corrección**: `useCotizacionUpdateGuard` también envuelve `crearCotizacion` y siembra el sello con el `updated_at` de la fila creada; `updateCotizacion` deja de filtrar `.is("updated_at", null)` (rama imposible) y sin sello guarda sin bloqueo optimista. La protección contra ediciones de otra sesión se conserva.
+- Pruebas: sello sembrado tras crear y `UPDATE` sin sello sin filtro de `updated_at`.
+- Sin migraciones, deploy, publish, secretos ni cambios de datos.
+
 ## [13.823.14] - 2026-09-01
 ### Operaciones vuelve a poder subir facturas al buzón del embarque (sólo local)
 - **Causa**: `adjuntar-xml-entrante` autorizaba con `ROLES_CAPTURA_CXP` (administración/contabilidad), mientras la UI (`SUBIR_FACTURA_ENTRANTE_EMBARQUE`) y la RPC `adjuntar_xml_factura_entrante` sí admiten a operaciones. Con rol `coordinador_logistico` el archivo se guardaba y el último paso (verificar el XML server-side) devolvía 403 "Requiere un rol con permiso de captura CxP".
