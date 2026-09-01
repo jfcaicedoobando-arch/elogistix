@@ -180,6 +180,21 @@ export const ROLES_CAPTURA_CXP: readonly string[] = [
 ];
 
 /**
+ * Adjuntar/verificar el XML de un documento del buzón del embarque. Operaciones
+ * entrega los PDF/XML del agente y contabilidad los captura después, así que la
+ * lista es la UNIÓN de ambas. Espejo server-side de
+ * `ADJUNTAR_XML_FACTURA_ENTRANTE` (`src/lib/access/permissionMatrix.operaciones.ts`)
+ * y de la RPC `adjuntar_xml_factura_entrante`. Mantener sincronizada: sin
+ * `operador` / `coordinador_logistico` la subida desde el embarque fallaba con
+ * 403 después de guardar el archivo.
+ */
+export const ROLES_ADJUNTAR_XML_ENTRANTE: readonly string[] = [
+  "super_admin", "admin", "admin_org", "operador", "coordinador_logistico",
+  "gerente_operaciones", "contador", "auxiliar_contable",
+];
+
+
+/**
  * R2 · W-05 — Escritura/envío de cotizaciones. Espejo server-side del helper
  * SQL `public.puede_escribir_cotizaciones` (v13.750.0). Mantener sincronizada:
  * si un rol puede editar la cotización en BD, debe poder enviarla por correo.
