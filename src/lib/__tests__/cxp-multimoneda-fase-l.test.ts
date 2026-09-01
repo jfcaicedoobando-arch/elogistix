@@ -12,6 +12,21 @@ import path from "node:path";
 
 const MIG_DIR = path.resolve(__dirname, "../../../supabase/migrations");
 
+/** Esquema vigente (fuente de verdad del estado final, post-squash). */
+const BASELINE = fs.readFileSync(
+  path.resolve(__dirname, "../../../supabase/schema/baseline.sql"),
+  "utf8",
+);
+
+/** Cuerpo de una función tal como existe hoy en la base. */
+function leerFuncionCanonica(nombre: string): string {
+  const inicio = BASELINE.indexOf(`CREATE FUNCTION public.${nombre}(`);
+  expect(inicio, `no existe public.${nombre} en baseline.sql`).toBeGreaterThan(-1);
+  const fin = BASELINE.indexOf("\n$$;", inicio);
+  return BASELINE.slice(inicio, fin);
+}
+
+
 function readLatestContaining(marker: string): string {
   const files = fs.readdirSync(MIG_DIR).filter((f) => f.endsWith(".sql")).sort().reverse();
   for (const f of files) {
