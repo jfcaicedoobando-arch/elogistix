@@ -30,12 +30,16 @@ export async function fetchDireccionKpis(
   ]);
 
   const aggs = agregarEmbarques(embarquesData.embarques, embarquesData.ventas, embarquesData.costos);
-  const antiguedad = calcularAntiguedad(carteraAbierta.facturas, carteraAbierta.pagos, fallbackUsdMxn, hoy);
+  const antiguedad = calcularAntiguedad(
+    carteraAbierta.facturas, carteraAbierta.pagos, fallbackUsdMxn, hoy, carteraAbierta.ncs,
+  );
   return {
     hero: calcularHero({
       aggs, facturas: facturasData.facturas, facturasCartera: carteraAbierta.facturas,
+      pagosCartera: carteraAbierta.pagos, ncsCartera: carteraAbierta.ncs,
       antiguedad, fallbackUsd: fallbackUsdMxn, hoy, mesActual, mesPrev,
     }),
+
     margen_6m: calcularMargen6m(aggs, hoy),
     margen_por_modo: calcularMargenPorModo(aggs.filter((a) => a.mes === mesActual)),
     antiguedad,
