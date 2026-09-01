@@ -4,7 +4,7 @@
  * `tipo_cambio` se valuaba con el TC del dólar (cifra creíble pero falsa).
  */
 import { describe, it, expect } from "vitest";
-import { fallbackDeMoneda, mesMasOffset, mxnFactura, ventanaDireccionDesdeIso } from "../mxn";
+import { fallbackDeMoneda, mesMasOffset, mxnFactura, toMxn, ventanaDireccionDesdeIso } from "../mxn";
 
 describe("mxnFactura: fallback por moneda", () => {
   it("MXN no depende de fallbacks", () => {
