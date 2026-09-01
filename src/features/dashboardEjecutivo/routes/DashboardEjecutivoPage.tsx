@@ -89,22 +89,29 @@ export default function DashboardEjecutivoPage() {
         </CardContent>
       </Card>
 
-      {isLoading && (
+      {/* Máquina de estados: loading → error → empty → data. Exactamente una
+          rama se renderiza; nunca pantalla en blanco. */}
+      {isLoading ? (
         <div className="space-y-3">
           <KpiGridSkeleton count={6} heightClass="h-24" desktopCols={6} />
           <ChartSkeleton height={256} />
         </div>
-      )}
-
-      {error && (
+      ) : error ? (
         <ErrorStateInline
           message={(error as Error).message}
           onRetry={() => { void refetch(); }}
           retrying={isFetching}
         />
-      )}
-
-      {data?.tcEsFallback && (
+      ) : !data ? (
+        <ErrorStateInline
+          title="Sin información para el periodo"
+          message="No hay datos consolidados para el periodo seleccionado."
+          onRetry={() => { void refetch(); }}
+          retrying={isFetching}
+        />
+      ) : (
+        <>
+      {data.tcEsFallback && (
         <Alert variant="warning">
           <AlertTriangle className="h-4 w-4" />
           <AlertTitle>Tipo de cambio no disponible</AlertTitle>
