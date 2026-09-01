@@ -18,12 +18,13 @@ interface Props {
 const ORDEN_MONEDAS = ["MXN", "USD", "EUR"];
 
 /** P1-7: totales por CADA moneda realmente presente en las cuentas activas.
- *  Antes el footer estaba fijo a MXN/USD y una cuenta EUR no sumaba en ningún total. */
+ *  Antes el footer estaba fijo a MXN/USD y una cuenta EUR no sumaba en ningún
+ *  total; tampoco se inventa un "Total MXN 0" cuando no hay cuentas MXN. */
 function totalesPorMoneda(cuentas: ResumenCuenta[]): Array<{ moneda: string; total: number }> {
   const por = new Map<string, number>();
   for (const c of cuentas) por.set(c.moneda, (por.get(c.moneda) ?? 0) + c.saldo);
-  if (!por.has("MXN")) por.set("MXN", 0);
   return Array.from(por.entries())
+
     .map(([moneda, total]) => ({ moneda, total }))
     .sort((a, b) => {
       const ia = ORDEN_MONEDAS.indexOf(a.moneda);
