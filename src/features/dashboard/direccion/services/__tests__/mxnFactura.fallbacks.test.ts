@@ -4,7 +4,7 @@
  * `tipo_cambio` se valuaba con el TC del dólar (cifra creíble pero falsa).
  */
 import { describe, it, expect } from "vitest";
-import { fallbackDeMoneda, mesMasOffset, mxnFactura, ventanaDireccionDesdeIso } from "../mxn";
+import { fallbackDeMoneda, mesMasOffset, mxnFactura, toMxn, ventanaDireccionDesdeIso } from "../mxn";
 
 describe("mxnFactura: fallback por moneda", () => {
   it("MXN no depende de fallbacks", () => {
@@ -37,6 +37,19 @@ describe("mxnFactura: fallback por moneda", () => {
     expect(mxnFactura(100, "JPY", null, { usd: 18, eur: 22 })).toBe(0);
     expect(fallbackDeMoneda("JPY", { usd: 18, eur: 22 })).toBeNull();
   });
+
+  it("divisa desconocida CON TC directo válido tampoco entra (JPY)", () => {
+    expect(mxnFactura(100, "JPY", 3, { usd: 18, eur: 22 })).toBe(0);
+    expect(mxnFactura(100, "jpy", 3, {})).toBe(0);
+    expect(mxnFactura(100, "GBP", 25, { usd: 18 })).toBe(0);
+  });
+
+  it("toMxn ignora divisas fuera de MXN/USD/EUR aunque haya TC", () => {
+    expect(toMxn(100, "JPY", 18, 22)).toBe(0);
+    expect(toMxn(100, "usd", 18, 22)).toBeCloseTo(1800, 2);
+    expect(toMxn(100, "eur", 18, 22)).toBeCloseTo(2200, 2);
+  });
+
 
   it("fallbackDeMoneda entrega el TC de la moneda pedida", () => {
     expect(fallbackDeMoneda("USD", { usd: 18, eur: 22 })).toBe(18);
