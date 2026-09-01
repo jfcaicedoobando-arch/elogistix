@@ -24,7 +24,7 @@ interface Props {
   onEliminar: () => void;
 }
 
-const fmt2 = (n: number) => (Number(n) || 0).toFixed(2);
+const fmt2 = (n: number | null | undefined) => (Number(n) || 0).toFixed(2);
 
 export function CfdiConceptoIaRow({
   indice, concepto, linea, moneda, hayIeps, onEditar, onEliminar,
@@ -90,7 +90,7 @@ export function CfdiConceptoIaRow({
       </TableCell>
       {hayIeps && (
         <TableCell className="text-right whitespace-nowrap">
-          {formatCurrency(linea.ieps, moneda)}
+          {formatCurrency(Number(linea.ieps) || 0, moneda)}
         </TableCell>
       )}
       <TableCell className="text-right font-semibold whitespace-nowrap">
