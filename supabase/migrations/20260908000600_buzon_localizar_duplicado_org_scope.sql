@@ -1,3 +1,6 @@
+-- OLA P2-1: buzon_localizar_duplicado revalida organization_id en cada salto
+-- de la relación documento→factura→embarque antes de exponer ids/folio.
+-- Ver supabase/schema/cxp/buzon_localizar_duplicado.sql (fuente canónica).
 -- Fuente canónica de public.buzon_localizar_duplicado(...).
 -- 1:1 con supabase/migrations/20260908000600_buzon_localizar_duplicado_org_scope.sql.
 --

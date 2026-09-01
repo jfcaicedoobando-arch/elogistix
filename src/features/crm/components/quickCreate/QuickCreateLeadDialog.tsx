@@ -16,6 +16,7 @@ import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { FormDialogSection } from "@/components/shared/FormDialogSection";
 import { FormDialogFooter } from "@/components/shared/FormDialogFooter";
 import { notifySuccess, notifyError } from "@/lib/ui/appFeedback";
+import { getErrorMessage } from "@/lib/errors";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { useCrearLead } from "@/features/crm/hooks";
 
@@ -57,7 +58,7 @@ export default function QuickCreateLeadDialog({ open, onOpenChange, onCreated, o
       onCreated(r.id);
     } catch (e) {
       notifyError(undefined, {
-        title: e instanceof Error ? e.message : "No se pudo crear el lead",
+        title: "No se pudo crear el lead", description: getErrorMessage(e),
         error: e,
         method: "FEATURES_CRM_COMPONENTS_QUICKCREATE_QUICKCREATELEADDIALOG_2",
       });

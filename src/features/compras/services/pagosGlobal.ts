@@ -11,8 +11,6 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
-import { CAP_POSTGREST } from "@/constants/queryCaps";
-import { assertNotTruncated } from "@/lib/supabase/assertNotTruncated";
 import { resolverFacturaIdsPorBusqueda } from "./facturaSearchHelper";
 import { ilikePattern, orIlike } from "@/lib/search/ilike";
 
@@ -42,10 +40,24 @@ export interface ListarPagosFiltros {
   search?: string;
 }
 
-export async function listarPagosProveedorGlobal(
+/** P2-9: tamaño de página al recorrer el histórico completo (sin tope silencioso). */
+const CHUNK = 1000;
+const MAX_CHUNKS = 20;
+
+export interface PaginaPagos {
+  rows: PagoProveedorRow[];
+  count: number;
+}
+
+/**
+ * P2-9 (v13.821.7): una sola página con `count` exacto. Antes se pedía todo
+ * con `.limit(1000)` y se lanzaba error al truncar; ahora se pagina de verdad.
+ */
+export async function listarPagosProveedorGlobalPagina(
   filtros: ListarPagosFiltros = {},
   organizationId?: string | null,
-): Promise<PagoProveedorRow[]> {
+  range: { from: number; to: number } = { from: 0, to: CHUNK - 1 },
+): Promise<PaginaPagos> {
   let q = supabase
     .from("pagos_proveedor")
     .select(
@@ -57,10 +69,11 @@ export async function listarPagosProveedorGlobal(
         proveedores(nombre)
       )
       `,
+      { count: "exact" },
     )
     .is("deleted_at", null)
     .order("fecha_pago", { ascending: false })
-    .limit(CAP_POSTGREST);
+    .range(range.from, range.to);
 
   if (organizationId) q = q.eq("organization_id", organizationId);
   if (filtros.desde) q = q.gte("fecha_pago", filtros.desde);
@@ -79,9 +92,8 @@ export async function listarPagosProveedorGlobal(
       : q.ilike("referencia", ilikePattern(term));
   }
 
-  const { data, error } = await q;
+  const { data, error, count } = await q;
   if (error) throw error;
-  assertNotTruncated(data, CAP_POSTGREST, "compras.pagosGlobal");
 
   // SAFE-CAST: PostgREST devuelve la relación como objeto anidado.
   const raw = (data ?? []) as unknown as Array<{
@@ -103,7 +115,7 @@ export async function listarPagosProveedorGlobal(
     } | null;
   }>;
 
-  return raw.map((r) => ({
+  const rows: PagoProveedorRow[] = raw.map((r) => ({
     id: r.id,
     fecha_pago: r.fecha_pago,
     monto: Number(r.monto ?? 0),
@@ -121,4 +133,28 @@ export async function listarPagosProveedorGlobal(
     proveedor_id: r.proveedor_facturas?.proveedor_id ?? null,
     proveedor_nombre: r.proveedor_facturas?.proveedores?.nombre ?? null,
   }));
+
+  return { rows, count: count ?? rows.length };
+}
+
+/**
+ * Recorre todas las páginas (tope defensivo de 20k filas) para KPIs y CSV.
+ * Mantiene la firma histórica: devuelve el arreglo completo.
+ */
+export async function listarPagosProveedorGlobal(
+  filtros: ListarPagosFiltros = {},
+  organizationId?: string | null,
+): Promise<PagoProveedorRow[]> {
+  const todas: PagoProveedorRow[] = [];
+  for (let i = 0; i < MAX_CHUNKS; i++) {
+    const from = i * CHUNK;
+    const { rows, count } = await listarPagosProveedorGlobalPagina(
+      filtros,
+      organizationId,
+      { from, to: from + CHUNK - 1 },
+    );
+    todas.push(...rows);
+    if (rows.length < CHUNK || todas.length >= count) break;
+  }
+  return todas;
 }

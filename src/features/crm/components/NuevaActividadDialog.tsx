@@ -3,7 +3,7 @@
  * Usado por QuickAddMenu y por cualquier flujo que necesite crear una tarea.
  * Migrado a `FormDialogShell` (v13.121.0).
  */
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { ClipboardList } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,14 +16,14 @@ import {
 } from "@/components/ui/select";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { notifyError } from "@/lib/ui/appFeedback";
+import { getErrorMessage } from "@/lib/errors";
 import { crmToast } from "@/features/crm/lib/crmToast";
 import {
   ACTIVIDAD_TIPOS, useCrearActividad,
   type CrmActividadTipo, type CrmEntidadTipo,
 } from "@/features/crm/hooks";
-import { useLeads } from "@/features/crm/hooks";
-import { useOportunidades } from "@/features/crm/hooks";
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
+import { LeadComboboxCrm, OportunidadComboboxCrm } from "@/features/crm/components/comboboxes/EntidadComboboxCrm";
 
 interface Props {
   open: boolean;
@@ -42,19 +42,6 @@ export default function NuevaActividadDialog({ open, onOpenChange, defaultEntida
   const [fecha, setFecha] = useState("");
   const [contactoEfectivo, setContactoEfectivo] = useState(false);
   const [reunionCalificada, setReunionCalificada] = useState(false);
-
-  const { data: leadsData } = useLeads({ pageSize: 100 });
-  const { data: opsData } = useOportunidades({ pageSize: 200 });
-
-  const opciones = useMemo(() => {
-    if (entidadTipo === "lead") {
-      return (leadsData?.data ?? []).map((l) => ({ id: l.id, label: l.empresa }));
-    }
-    if (entidadTipo === "oportunidad") {
-      return (opsData?.data ?? []).map((o) => ({ id: o.id, label: o.nombre }));
-    }
-    return [];
-  }, [entidadTipo, leadsData, opsData]);
 
   const reset = () => {
     setAsunto(""); setDesc(""); setFecha("");
@@ -81,7 +68,7 @@ export default function NuevaActividadDialog({ open, onOpenChange, defaultEntida
       onOpenChange(false);
       onCreated?.(res.id);
     } catch (e) {
-      notifyError(undefined, { title: "No se pudo crear", description: e instanceof Error ? e.message : undefined, error: e, method: "HANDLE_SUBMIT" });
+      notifyError(undefined, { title: "No se pudo crear", description: getErrorMessage(e), error: e, method: "HANDLE_SUBMIT" });
     }
   };
 
@@ -118,15 +105,11 @@ export default function NuevaActividadDialog({ open, onOpenChange, defaultEntida
           </div>
           <div className="space-y-1">
             <Label>{entidadTipo === "lead" ? "Lead" : "Oportunidad"}</Label>
-            <Select value={entidadId || undefined} onValueChange={setEntidadId}>
-              <SelectTrigger><SelectValue placeholder="Selecciona…" /></SelectTrigger>
-              <SelectContent>
-                {opciones.map((o) => (
-                  <SelectItem key={o.id} value={o.id}>{o.label}</SelectItem>
-                ))}
-                {opciones.length === 0 && <div className="p-2 text-body-sm text-muted-foreground">Sin registros</div>}
-              </SelectContent>
-            </Select>
+            {entidadTipo === "lead" ? (
+              <LeadComboboxCrm value={entidadId} onChange={(id) => setEntidadId(id)} />
+            ) : (
+              <OportunidadComboboxCrm value={entidadId} onChange={(id) => setEntidadId(id)} />
+            )}
           </div>
         </div>
       )}

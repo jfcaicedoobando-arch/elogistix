@@ -10,6 +10,7 @@
 import { exportToCsv } from "@/generators/exportCsv";
 import { fetchLayoutContableData, type FacturaListItem } from "@/features/facturacion/services";
 import { todayLocalISO } from "@/lib/date/today";
+import { notifyWarning } from "@/lib/ui/appFeedback";
 
 const HEADERS = [
   { key: "folio", label: "Folio" },
@@ -41,10 +42,29 @@ export async function exportarLayoutContable(facturas: FacturaListItem[]): Promi
     facturas.map((f) => f.id),
   );
 
+  // v13.821.7 — Avisar si hay facturas en moneda extranjera con TC inválido (null/0/1).
+  const invalidas = full.filter((f) => f.moneda !== "MXN" && (!f.tipo_cambio || Number(f.tipo_cambio) <= 1));
+  if (invalidas.length > 0) {
+    notifyWarning(undefined, {
+      title: "Tipo de cambio inválido",
+      description: `Hay ${invalidas.length} factura(s) en moneda extranjera con tipo de cambio 1 o vacío. La celda quedará vacía.`,
+    });
+  }
+
   const csvRows = full.map((f) => {
     const subtotal = Number(f.subtotal ?? 0);
     const iva = Number(f.iva ?? 0);
     const total = Number(f.total ?? subtotal + iva);
+
+    // v13.821.7 — Para MXN permitimos 1; para USD/EUR con TC inválido queda vacío.
+    let tcStr = "";
+    const tc = Number(f.tipo_cambio ?? 0);
+    if (f.moneda === "MXN") {
+      tcStr = (tc || 1).toFixed(4);
+    } else if (tc > 1) {
+      tcStr = tc.toFixed(4);
+    }
+
     return {
       folio: f.numero,
       fecha_emision: f.fecha_emision,
@@ -56,7 +76,7 @@ export async function exportarLayoutContable(facturas: FacturaListItem[]): Promi
       iva: iva.toFixed(2),
       total: total.toFixed(2),
       moneda: f.moneda,
-      tipo_cambio: Number(f.tipo_cambio ?? 1).toFixed(4),
+      tipo_cambio: tcStr,
       forma_pago: "", // a definir por el contador (01, 03, 04...)
       metodo_pago: "PUE", // default Pago en una exhibición
       uso_cfdi: "G03", // default Gastos en general

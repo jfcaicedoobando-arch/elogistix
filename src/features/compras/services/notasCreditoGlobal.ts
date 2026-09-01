@@ -7,8 +7,6 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
-import { CAP_POSTGREST } from "@/constants/queryCaps";
-import { assertNotTruncated } from "@/lib/supabase/assertNotTruncated";
 import { resolverFacturaIdsPorBusqueda } from "./facturaSearchHelper";
 import { orIlike } from "@/lib/search/ilike";
 
@@ -37,10 +35,21 @@ export interface ListarNotasFiltros {
   search?: string;
 }
 
-export async function listarNotasCreditoGlobal(
+/** P2-9: página al recorrer el histórico completo (sin tope silencioso). */
+const CHUNK = 1000;
+const MAX_CHUNKS = 20;
+
+export interface PaginaNotasCredito {
+  rows: NotaCreditoRow[];
+  count: number;
+}
+
+/** P2-9 (v13.821.7): página real con `count` exacto en vez de `.limit(1000)`. */
+export async function listarNotasCreditoGlobalPagina(
   filtros: ListarNotasFiltros = {},
   organizationId?: string | null,
-): Promise<NotaCreditoRow[]> {
+  range: { from: number; to: number } = { from: 0, to: CHUNK - 1 },
+): Promise<PaginaNotasCredito> {
   let q = supabase
     .from("proveedor_notas_credito")
     .select(
@@ -52,10 +61,11 @@ export async function listarNotasCreditoGlobal(
         proveedores(nombre)
       )
       `,
+      { count: "exact" },
     )
     .is("deleted_at", null)
     .order("fecha", { ascending: false })
-    .limit(CAP_POSTGREST);
+    .range(range.from, range.to);
 
   if (organizationId) q = q.eq("organization_id", organizationId);
   if (filtros.desde) q = q.gte("fecha", filtros.desde);
@@ -73,9 +83,8 @@ export async function listarNotasCreditoGlobal(
       : q.or(orBase);
   }
 
-  const { data, error } = await q;
+  const { data, error, count } = await q;
   if (error) throw error;
-  assertNotTruncated(data, CAP_POSTGREST, "compras.notasCreditoGlobal");
 
   // SAFE-CAST: relación anidada.
   const raw = (data ?? []) as unknown as Array<{
@@ -96,7 +105,7 @@ export async function listarNotasCreditoGlobal(
     } | null;
   }>;
 
-  return raw.map((r) => ({
+  const rows: NotaCreditoRow[] = raw.map((r) => ({
     id: r.id,
     folio_nc: r.folio_nc,
     fecha: r.fecha,
@@ -111,4 +120,25 @@ export async function listarNotasCreditoGlobal(
     proveedor_id: r.proveedor_facturas?.proveedor_id ?? null,
     proveedor_nombre: r.proveedor_facturas?.proveedores?.nombre ?? null,
   }));
+
+  return { rows, count: count ?? rows.length };
+}
+
+/** Recorre todas las páginas (tope defensivo 20k) para KPIs y exportación CSV. */
+export async function listarNotasCreditoGlobal(
+  filtros: ListarNotasFiltros = {},
+  organizationId?: string | null,
+): Promise<NotaCreditoRow[]> {
+  const todas: NotaCreditoRow[] = [];
+  for (let i = 0; i < MAX_CHUNKS; i++) {
+    const from = i * CHUNK;
+    const { rows, count } = await listarNotasCreditoGlobalPagina(
+      filtros,
+      organizationId,
+      { from, to: from + CHUNK - 1 },
+    );
+    todas.push(...rows);
+    if (rows.length < CHUNK || todas.length >= count) break;
+  }
+  return todas;
 }

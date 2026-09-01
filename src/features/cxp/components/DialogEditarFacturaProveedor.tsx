@@ -8,6 +8,7 @@
 import { AlertTriangle, ShieldAlert, FileSpreadsheet } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
+import { FormDialogCancelarBoton } from "@/components/shared/FormDialogCancelarBoton";
 import { formatCurrency } from "@/lib/formatters";
 import { usePresupuestoCategorias } from "@/features/presupuesto/hooks";
 import { useEditarFacturaProveedorForm } from "@/features/cxp/hooks";
@@ -111,7 +112,9 @@ export function DialogEditarFacturaProveedor({ factura, onOpenChange }: Props) {
 
   const footer = (
     <>
-      <Button variant="outline" onClick={() => onOpenChange(false)} disabled={ctl.isPending}>Cancelar</Button>
+      {/* v13.821.7 — Cancelar pasa por el cierre guardado del shell: con
+          cambios sin guardar pide confirmación en vez de descartar directo. */}
+      <FormDialogCancelarBoton onCancelar={() => onOpenChange(false)} disabled={ctl.isPending} />
       <Button onClick={ctl.submit} disabled={!ctl.hayCambios || !ctl.values} loading={ctl.isPending}>
         {ctl.isPending ? "Guardando…" : "Guardar cambios"}
       </Button>
