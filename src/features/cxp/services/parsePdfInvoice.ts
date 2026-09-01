@@ -86,22 +86,33 @@ async function invokeOnce(
   }
 }
 
+/**
+ * Un `FunctionsFetchError` / "Failed to fetch" significa que la petición nunca
+ * salió del dispositivo: es red local, no caída del servicio (Sentry -5T).
+ */
+function esFallaDeRed(last: Attempt | null, online: boolean): boolean {
+  const sinRespuesta = last?.phase === "request" && last?.status === null;
+  if (!sinRespuesta) return false;
+  if (last?.cause instanceof FunctionsFetchError) return true;
+  if (!online) return true;
+  return /failed to fetch|network|load failed/i.test(last?.message ?? "");
+}
+
+function mensajeAmigable(last: Attempt | null, fallaDeRed: boolean, serviceUnavailable: boolean): string {
+  if (fallaDeRed) {
+    return "No pudimos contactar al servidor desde este dispositivo. Revisa tu conexión (Wi-Fi o datos) e intenta de nuevo, o usa el tab de \"Captura manual\".";
+  }
+  if (serviceUnavailable) {
+    return "El servicio de captura por IA no está disponible en este momento. Puedes usar el tab de \"Captura manual\" o intentar de nuevo en unos segundos.";
+  }
+  return last?.message ?? "No se pudo procesar el PDF con IA";
+}
+
 function buildFailure(file: File, last: Attempt | null, latencyMs: number): CfdiUploadError {
   const online = typeof navigator !== "undefined" ? navigator.onLine : true;
   const serviceUnavailable = last?.phase === "request" && last?.status === null;
-  // 13.823.16 (Sentry -5T) · distinguir la red del dispositivo (móvil/tablet)
-  // de una falla real del servicio: `FunctionsFetchError` / "Failed to fetch"
-  // significa que la petición nunca llegó al servidor.
-  const fallaDeRed =
-    serviceUnavailable &&
-    (last?.cause instanceof FunctionsFetchError ||
-      /failed to fetch|network|load failed/i.test(last?.message ?? "") ||
-      !online);
-  const friendlyMessage = fallaDeRed
-    ? "No pudimos contactar al servidor desde este dispositivo. Revisa tu conexión (Wi-Fi o datos) e intenta de nuevo, o usa el tab de \"Captura manual\"."
-    : serviceUnavailable
-    ? "El servicio de captura por IA no está disponible en este momento. Puedes usar el tab de \"Captura manual\" o intentar de nuevo en unos segundos."
-    : (last?.message ?? "No se pudo procesar el PDF con IA");
+  const fallaDeRed = esFallaDeRed(last, online);
+  const friendlyMessage = mensajeAmigable(last, fallaDeRed, serviceUnavailable);
 
   const err = new CfdiUploadError(
     friendlyMessage,

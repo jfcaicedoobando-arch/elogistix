@@ -39,16 +39,6 @@ export function isExpectedBusinessError(err: unknown): boolean {
 }
 
 /**
- * Convierte errores crudos de PostgREST (objetos planos con `code`, `details`,
- * `hint`, `message`) en `Error` reales para que Sentry agrupe por mensaje en
- * vez de titular "Object captured as exception with keys: …" o "M".
- * Devuelve también tags derivados (`pg_code`, `error_kind`).
- *
- * 13.823.16 (Sentry -5N/-5P) · un error sin mensaje ya no se titula
- * "unknown error": se clasifica como fallo de red / petición cancelada y se
- * incluye la consulta afectada para que el issue sea accionable y agrupe bien.
- */
-/**
  * Construye título y `error_kind` para un error sin mensaje (red o petición
  * cancelada). Extraído de `normalizeForSentry` para acotar su complejidad.
  */
@@ -69,6 +59,16 @@ function describirErrorSinMensaje(
   };
 }
 
+/**
+ * Convierte errores crudos de PostgREST (objetos planos con `code`, `details`,
+ * `hint`, `message`) en `Error` reales para que Sentry agrupe por mensaje en
+ * vez de titular "Object captured as exception with keys: …" o "M".
+ * Devuelve también tags derivados (`pg_code`, `error_kind`).
+ *
+ * 13.823.16 (Sentry -5N/-5P) · un error sin mensaje ya no se titula
+ * "unknown error": se clasifica como fallo de red / petición cancelada y se
+ * incluye la consulta afectada para que el issue sea accionable y agrupe bien.
+ */
 function normalizeForSentry(
   err: unknown,
   rootKey?: string,
