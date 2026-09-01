@@ -25,7 +25,7 @@
  */
 
 // @ts-nocheck — Este archivo se compila en runtime Deno (Edge Function), no en el bundle web.
-import * as React from 'npm:react@19.2.8';
+import * as React from 'npm:react@18.3.1';
 import {
   Body, Container, Head, Heading, Html, Preview, Section, Text, Button,
 } from 'npm:@react-email/components@0.0.22';

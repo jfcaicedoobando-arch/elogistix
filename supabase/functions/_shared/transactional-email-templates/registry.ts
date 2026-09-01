@@ -1,7 +1,7 @@
 // Registro central de plantillas transaccionales.
 // Cada plantilla registrada queda disponible para `send-transactional-email`
 // mediante su `templateName`.
-import type * as React from 'npm:react@19.2.8';
+import type * as React from 'npm:react@18.3.1';
 
 export interface TemplateEntry {
   // Cada plantilla define su propio shape de props; aquí lo dejamos abierto
