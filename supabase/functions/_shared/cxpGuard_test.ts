@@ -8,6 +8,7 @@ import {
   assertEquals,
 } from "https://deno.land/std@0.224.0/assert/mod.ts";
 import { autorizarCxp, leerOrgHeader, ORG_HEADER } from "./cxpGuard.ts";
+import { ROLES_ADJUNTAR_XML_ENTRANTE } from "./auth.ts";
 import {
   CORS,
   fakeAuth,
@@ -130,4 +131,53 @@ Deno.test("leerOrgHeader lee x-organization-id y recorta espacios", () => {
   });
   assertEquals(leerOrgHeader(req), ORG_B);
   assertEquals(leerOrgHeader(new Request("https://x.test/fn")), "");
+});
+
+Deno.test("buzón del embarque: operaciones autorizada con ROLES_ADJUNTAR_XML_ENTRANTE", async () => {
+  for (const rol of ["operador", "coordinador_logistico", "gerente_operaciones"]) {
+    const conAdjuntar = await autorizarCxp(
+      fakeAuth({ memberships: { [ORG_B]: rol } }),
+      CORS,
+      log,
+      { ...OPTS, rolesPermitidos: ROLES_ADJUNTAR_XML_ENTRANTE },
+    );
+    assert(conAdjuntar.ok, `${rol} debe poder adjuntar el XML del buzón`);
+    if (conAdjuntar.ok) assertEquals(conAdjuntar.orgId, ORG_B);
+
+    const conCaptura = await autorizarCxp(
+      fakeAuth({ memberships: { [ORG_B]: rol } }),
+      CORS,
+      log,
+      OPTS,
+    );
+    if (rol === "gerente_operaciones") {
+      assert(conCaptura.ok, "gerente_operaciones sí captura CxP");
+    } else {
+      assert(!conCaptura.ok, `${rol} no debe pasar la guarda de captura CxP`);
+      if (!conCaptura.ok) assertEquals(conCaptura.res.status, 403);
+    }
+  }
+});
+
+Deno.test("adjuntar XML: contabilidad conserva el permiso y los portales no", async () => {
+  const opts = { ...OPTS, rolesPermitidos: ROLES_ADJUNTAR_XML_ENTRANTE };
+  for (const rol of ["contador", "auxiliar_contable", "admin_org"]) {
+    const r = await autorizarCxp(
+      fakeAuth({ memberships: { [ORG_B]: rol } }),
+      CORS,
+      log,
+      opts,
+    );
+    assert(r.ok, `${rol} debe poder adjuntar`);
+  }
+  for (const rol of ["cliente", "agente_carga", "vendedor", "tesorero"]) {
+    const r = await autorizarCxp(
+      fakeAuth({ memberships: { [ORG_B]: rol } }),
+      CORS,
+      log,
+      opts,
+    );
+    assert(!r.ok, `${rol} no debe poder adjuntar`);
+    if (!r.ok) assertEquals(r.res.status, 403);
+  }
 });
