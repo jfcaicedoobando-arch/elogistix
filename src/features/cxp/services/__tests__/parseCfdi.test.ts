@@ -26,6 +26,7 @@ import {
 
 const xmlFile = () =>
   new File(["<cfdi/>"], "factura.xml", { type: "application/xml" });
+const organizationId = "22222222-2222-4222-8222-222222222222";
 
 beforeEach(() => {
   supabaseMock.auth.getSession.mockResolvedValue({
@@ -42,13 +43,15 @@ describe("parseCfdiXml", () => {
     const payload = { cfdi: { uuid: "abc" }, ai: { categoria_id: null, notas: "" } };
     supabaseMock.functions.invoke.mockResolvedValue({ data: payload, error: null });
 
-    const result = await parseCfdiXml(xmlFile(), [{ id: "c1", nombre: "Fletes" }]);
+    const result = await parseCfdiXml(xmlFile(), [{ id: "c1", nombre: "Fletes" }], organizationId);
 
     expect(result).toEqual(payload);
     expect(supabaseMock.functions.invoke).toHaveBeenCalledWith(
       "parse-cfdi-xml",
       expect.objectContaining({ body: expect.any(FormData) }),
     );
+    const body = supabaseMock.functions.invoke.mock.calls[0][1].body as FormData;
+    expect(body.get("organization_id")).toBe(organizationId);
   });
 
   it("envuelve FunctionsHttpError como CfdiUploadError fase 'response' con status", async () => {
@@ -59,7 +62,7 @@ describe("parseCfdiXml", () => {
     const httpError = new FunctionsHttpError(fakeResponse);
     supabaseMock.functions.invoke.mockResolvedValue({ data: null, error: httpError });
 
-    await expect(parseCfdiXml(xmlFile(), [])).rejects.toMatchObject({
+    await expect(parseCfdiXml(xmlFile(), [], organizationId)).rejects.toMatchObject({
       name: "CfdiUploadError",
       context: { phase: "response", lastStatus: 400 },
     });
@@ -74,7 +77,7 @@ describe("parseCfdiXml", () => {
       const fetchError = new FunctionsFetchError(new TypeError("Failed to fetch"));
       supabaseMock.functions.invoke.mockResolvedValue({ data: null, error: fetchError });
 
-      const promise = parseCfdiXml(xmlFile(), []).catch((e) => e);
+      const promise = parseCfdiXml(xmlFile(), [], organizationId).catch((e) => e);
       await vi.runAllTimersAsync();
       const caught = await promise;
 
@@ -88,7 +91,7 @@ describe("parseCfdiXml", () => {
 
   it("falla si no hay sesión activa", async () => {
     supabaseMock.auth.getSession.mockResolvedValueOnce({ data: { session: null } });
-    await expect(parseCfdiXml(xmlFile(), [])).rejects.toThrow();
+    await expect(parseCfdiXml(xmlFile(), [], organizationId)).rejects.toThrow();
     expect(supabaseMock.functions.invoke).not.toHaveBeenCalled();
   });
 });

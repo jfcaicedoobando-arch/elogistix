@@ -21,6 +21,9 @@ vi.mock("@/lib/ui/appFeedback", () => ({
   notifyError: (...a: unknown[]) => notifyError(...a),
   notifySuccess: (_t: unknown, opts: { title: string }) => toastSuccess(opts.title),
 }));
+vi.mock("@/hooks/shared/useOrgActiva", () => ({
+  useOrgActiva: () => ({ organizationId: "22222222-2222-4222-8222-222222222222" }),
+}));
 vi.mock("@/features/cxp/services", async () => {
   const actual = await vi.importActual<typeof import("@/features/cxp/services/parseCfdi.types")>(
     "@/features/cxp/services/parseCfdi.types",
@@ -82,7 +85,11 @@ describe("useCargaCfdi", () => {
     const xml = makeXml(50);
     act(() => result.current.handleXml(xml));
     await act(async () => { await result.current.procesar(); });
-    expect(parseCfdiXml).toHaveBeenCalledWith(xml, categorias);
+    expect(parseCfdiXml).toHaveBeenCalledWith(
+      xml,
+      categorias,
+      "22222222-2222-4222-8222-222222222222",
+    );
     expect(onParsed).toHaveBeenCalledWith(data, { xml, pdf: null });
     expect(toastSuccess).toHaveBeenCalledWith("CFDI procesado");
     expect(result.current.loading).toBe(false);

@@ -14,6 +14,7 @@ import { invokeParseCfdiOnce } from "../parseCfdi.invoke";
 
 const file = new File(["<x/>"], "test.xml", { type: "application/xml" });
 const categorias = [{ id: "c1", nombre: "Fletes" }];
+const organizationId = "22222222-2222-4222-8222-222222222222";
 
 function fakeResponse(status: number, body?: unknown): Response {
   return new Response(body ? JSON.stringify(body) : null, {
@@ -29,17 +30,18 @@ describe("invokeParseCfdiOnce", () => {
 
   it("retorna ok=true con la data cuando la función responde correctamente", async () => {
     invokeMock.mockResolvedValueOnce({ data: { cfdi: { uuid: "u1" } }, error: null });
-    const r = await invokeParseCfdiOnce(file, categorias);
+    const r = await invokeParseCfdiOnce(file, categorias, organizationId);
     expect(r.ok).toBe(true);
     if (r.ok) expect(r.data.cfdi.uuid).toBe("u1");
     // FormData fresco con file + categorias serializadas
     const call = invokeMock.mock.calls[0];
     expect(call[0]).toBe("parse-cfdi-xml");
+    expect((call[1].body as FormData).get("organization_id")).toBe(organizationId);
   });
 
   it("retorna EmptyResponse cuando no hay error ni data", async () => {
     invokeMock.mockResolvedValueOnce({ data: null, error: null });
-    const r = await invokeParseCfdiOnce(file, categorias);
+    const r = await invokeParseCfdiOnce(file, categorias, organizationId);
     expect(r.ok).toBe(false);
     if (!r.ok) {
       expect(r.errorName).toBe("EmptyResponse");
@@ -52,7 +54,7 @@ describe("invokeParseCfdiOnce", () => {
   it("mapea FunctionsHttpError 500 como retryable phase=response", async () => {
     const httpErr = new FunctionsHttpError(fakeResponse(500, { error: "boom-server" }));
     invokeMock.mockResolvedValueOnce({ data: null, error: httpErr });
-    const r = await invokeParseCfdiOnce(file, categorias);
+    const r = await invokeParseCfdiOnce(file, categorias, organizationId);
     expect(r.ok).toBe(false);
     if (!r.ok) {
       expect(r.errorName).toBe("FunctionsHttpError");
@@ -66,7 +68,7 @@ describe("invokeParseCfdiOnce", () => {
   it("mapea FunctionsHttpError 400 como NO retryable", async () => {
     const httpErr = new FunctionsHttpError(fakeResponse(400, { error: "mal formato" }));
     invokeMock.mockResolvedValueOnce({ data: null, error: httpErr });
-    const r = await invokeParseCfdiOnce(file, categorias);
+    const r = await invokeParseCfdiOnce(file, categorias, organizationId);
     expect(r.ok).toBe(false);
     if (!r.ok) {
       expect(r.retryable).toBe(false);
@@ -79,7 +81,7 @@ describe("invokeParseCfdiOnce", () => {
     const resp = new Response("not-json", { status: 503 });
     const httpErr = new FunctionsHttpError(resp);
     invokeMock.mockResolvedValueOnce({ data: null, error: httpErr });
-    const r = await invokeParseCfdiOnce(file, categorias);
+    const r = await invokeParseCfdiOnce(file, categorias, organizationId);
     expect(r.ok).toBe(false);
     if (!r.ok) {
       expect(r.message).toMatch(/HTTP 503/);
@@ -90,7 +92,7 @@ describe("invokeParseCfdiOnce", () => {
   it("mapea FunctionsRelayError como preflight retryable", async () => {
     const relayErr = Object.assign(Object.create(FunctionsRelayError.prototype), { message: "blocked" });
     invokeMock.mockResolvedValueOnce({ data: null, error: relayErr });
-    const r = await invokeParseCfdiOnce(file, categorias);
+    const r = await invokeParseCfdiOnce(file, categorias, organizationId);
     expect(r.ok).toBe(false);
     if (!r.ok) {
       expect(r.errorName).toBe("FunctionsRelayError");
@@ -103,7 +105,7 @@ describe("invokeParseCfdiOnce", () => {
   it("mapea FunctionsFetchError como request retryable", async () => {
     const fetchErr = Object.assign(Object.create(FunctionsFetchError.prototype), { message: "net" });
     invokeMock.mockResolvedValueOnce({ data: null, error: fetchErr });
-    const r = await invokeParseCfdiOnce(file, categorias);
+    const r = await invokeParseCfdiOnce(file, categorias, organizationId);
     expect(r.ok).toBe(false);
     if (!r.ok) {
       expect(r.errorName).toBe("FunctionsFetchError");
@@ -117,7 +119,7 @@ describe("invokeParseCfdiOnce", () => {
     const e = new Error("custom-fail");
     e.name = "WeirdError";
     invokeMock.mockResolvedValueOnce({ data: null, error: e });
-    const r = await invokeParseCfdiOnce(file, categorias);
+    const r = await invokeParseCfdiOnce(file, categorias, organizationId);
     expect(r.ok).toBe(false);
     if (!r.ok) {
       expect(r.errorName).toBe("WeirdError");
@@ -129,7 +131,7 @@ describe("invokeParseCfdiOnce", () => {
 
   it("atrapa rechazos del invoke (throw) y los mapea", async () => {
     invokeMock.mockRejectedValueOnce(new Error("thrown"));
-    const r = await invokeParseCfdiOnce(file, categorias);
+    const r = await invokeParseCfdiOnce(file, categorias, organizationId);
     expect(r.ok).toBe(false);
     if (!r.ok) {
       expect(r.message).toBe("thrown");

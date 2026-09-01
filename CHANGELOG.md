@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.823.3] - 2026-09-01
+- **Hotfix local de autorización CxP**: el rate limit sólo autoriza respuestas estrictas `{ ok: true }`; respuestas nulas o malformadas fallan con 503. Los parsers usan la organización activa explícita y `adjuntar-xml-entrante` deriva el tenant desde el documento antes de autorizar o descargar Storage. Cambio probado únicamente en local, sin deploy, publish, migraciones/SQL remoto, secretos ni datos.
+
 ## [13.823.2] - 2026-09-01
 ### Pruebas Deno del CI en verde (sin cambios funcionales)
 - **Guardas de correo actualizadas**: `emailSendLog_test.ts` y `redact_test.ts` apuntaban a `send-transactional-email`, `process-email-queue` y `handle-email-unsubscribe`, retiradas al migrar a la entrega administrada de Lovable (v13.818.0). Ahora validan el pipeline vigente (`_shared/enviarEmailPlantilla.ts`, `_shared/emailSendLog.ts`, `handle-email-events`): upsert obligatorio vía RPC `email_send_log_touch`, registro de `sent`/`suppressed`/`failed` y cero correos crudos en `console.*`.

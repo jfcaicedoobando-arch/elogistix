@@ -27,8 +27,10 @@ export async function autorizarYLimitar(
   auth: AuthContext,
   cors: Cors,
   log: Log,
+  organizationId: string,
 ): Promise<Response | null> {
   const r = await autorizarCxp(auth, cors, log, {
+    organizationId,
     fn: "parse-invoice-pdf",
     rlUsuario: RL_USUARIO,
     rlOrg: RL_ORG,

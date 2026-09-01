@@ -8,6 +8,7 @@ import { parsePdfInvoice } from "@/features/cxp/services/parsePdfInvoice";
 import { CfdiUploadError } from "@/features/cxp/services/parseCfdi";
 import type { CfdiParsedResponse } from "@/features/cxp/services";
 import { notifyError } from "@/lib/ui/appFeedback";
+import { useOrgActiva } from "@/hooks/shared/useOrgActiva";
 
 interface Args {
   categorias: { id: string; nombre: string }[];
@@ -18,6 +19,7 @@ const MAX_PDF_BYTES = 10 * 1024 * 1024;
 const CLIENT_TIMEOUT_MS = 60_000;
 
 export function useCargaPdfIa({ categorias, onParsed }: Args) {
+  const { organizationId } = useOrgActiva();
   const [pdf, setPdf] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -43,14 +45,14 @@ export function useCargaPdfIa({ categorias, onParsed }: Args) {
   }, []);
 
   const procesar = useCallback(async () => {
-    if (!pdf) return;
+    if (!pdf || !organizationId) return;
     setLoading(true);
     let timeoutId: ReturnType<typeof setTimeout> | undefined;
     try {
       const timeoutPromise = new Promise<never>((_, reject) => {
         timeoutId = setTimeout(() => reject(new Error("CLIENT_TIMEOUT")), CLIENT_TIMEOUT_MS);
       });
-      const data = await Promise.race([parsePdfInvoice(pdf, categorias), timeoutPromise]);
+      const data = await Promise.race([parsePdfInvoice(pdf, categorias, organizationId), timeoutPromise]);
       const consumerResult = await onParsed(data, { pdf });
       if (consumerResult !== false) {
         notifySuccess(undefined, { title: "Factura procesada por IA — revisa los datos antes de guardar" });
@@ -71,7 +73,7 @@ export function useCargaPdfIa({ categorias, onParsed }: Args) {
       if (timeoutId) clearTimeout(timeoutId);
       setLoading(false);
     }
-  }, [pdf, categorias, onParsed]);
+  }, [pdf, categorias, onParsed, organizationId]);
 
   return { pdf, loading, setPdf, reset, handlePdf, procesar };
 }
