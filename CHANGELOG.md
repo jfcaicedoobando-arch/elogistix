@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.823.2] - 2026-09-01
+### Pruebas Deno del CI en verde (sin cambios funcionales)
+- **Guardas de correo actualizadas**: `emailSendLog_test.ts` y `redact_test.ts` apuntaban a `send-transactional-email`, `process-email-queue` y `handle-email-unsubscribe`, retiradas al migrar a la entrega administrada de Lovable (v13.818.0). Ahora validan el pipeline vigente (`_shared/enviarEmailPlantilla.ts`, `_shared/emailSendLog.ts`, `handle-email-events`): upsert obligatorio vía RPC `email_send_log_touch`, registro de `sent`/`suppressed`/`failed` y cero correos crudos en `console.*`.
+- **`react-dom` anclado a 18.3.1**: el peer de `@react-email/render@0.0.17` no quedaba fijado y Deno lo resolvía a react-dom 19, con el error "Incompatible React versions" al cargar las plantillas de correo (rompía `enviar-factura-email/helpers_test.ts` y el render real). Se agrega el pin explícito en `send-email.ts`.
+- **`facturapi-cancelar-rep/index_test.ts`**: las guardas N5 leen también `resultadoCancelacion.ts`, donde vive la ramificación desde v13.823.1.
+
 ## [13.823.1] - 2026-09-01
 ### Higiene de código y CI (sin cambios funcionales)
 - **Código muerto eliminado**: se retiran ~45 exports y tipos sin uso detectados por `knip strict` (barrels de servicios de auth, catálogos, configuración, operaciones, reportes y búsqueda; `useCotizaciones` sustituido por paginación server-side; `TRACKING_LINK_DIAS_MAX`; helpers de `tcPar`, `porVencer` y `errors/concurrencia` que ya no se consumían).
