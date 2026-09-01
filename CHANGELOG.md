@@ -1,5 +1,14 @@
 # Changelog
 
+## [13.823.19] - 2026-09-01
+### Fix: carga de facturas con IA bloqueada por CORS
+- **Síntoma**: al procesar un PDF de proveedor con IA aparecía "No pudimos contactar al servidor desde este dispositivo", sin ninguna petición ni llamada a Gemini en los logs de la función.
+- **Causa**: la app envía el header `x-organization-id` (ola P2 de seguridad), pero las funciones publicadas `parse-invoice-pdf` y `parse-cfdi-xml` seguían con la versión anterior de `_shared/cors.ts`, que no lo listaba en `Access-Control-Allow-Headers`; el navegador cancelaba el POST en el preflight.
+- **Fix**: redespliegue de `parse-invoice-pdf` y `parse-cfdi-xml` con el código actual. Preflight verificado: ambas devuelven ya `x-organization-id` en `Access-Control-Allow-Headers`.
+- **Regla operativa**: cualquier cambio en `supabase/functions/_shared/cors.ts` (o en cualquier módulo de `_shared/`) obliga a redesplegar TODAS las funciones que lo importan, no sólo la que se tocó.
+- Sin migraciones, SQL remoto, secretos ni cambios de datos.
+
+
 ## [13.823.18] - 2026-09-01
 ### Optimización de CI y HMR (sólo local)
 - **Preview más ágil en Lovable**: `vite.config.ts` ignora ahora `**/*.test.ts(x)`, `__tests__`, `coverage`, `dist`, `.git`, `.lovable`, `reports` y `node_modules` en el watcher de desarrollo. Evita recargas completas al guardar tests y reduce trabajo del dev server.
