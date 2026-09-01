@@ -9,7 +9,7 @@ vi.mock("@/features/crm/domain/oportunidadPayload", () => ({
   buildOportunidadInsertPayload: vi.fn((_i: unknown, _u: unknown) => ({ nombre: "Test", etapa_id: "e-1" })),
 }));
 
-import { crearOportunidad, actualizarOportunidad, moverEtapaOportunidad, eliminarOportunidad } from "../oportunidades";
+import { crearOportunidad, actualizarOportunidad, moverEtapaOportunidad, eliminarOportunidad, getOportunidad } from "../oportunidades";
 
 beforeEach(() => { mock.tableCalls.length = 0; });
 
