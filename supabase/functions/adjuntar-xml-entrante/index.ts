@@ -4,9 +4,9 @@
  *
  * Flujo:
  *  1. JWT válido (el actor se toma del token, nunca del body).
- *  2. Ola P2: membresía de organización + rol de captura CxP + rate limit.
- *  3. Ola P2: se lee el documento del buzón y se exige que pertenezca a la
- *     organización del actor, esté `por_capturar` y que `xml_path` caiga en su
+ *  2. Se lee el documento del buzón para derivar su organización objetivo.
+ *  3. Ola P2: se autoriza al actor para ESA organización, se exige estado
+ *     `por_capturar` y que `xml_path` caiga en su
  *     prefijo canónico — TODO antes de tocar Storage con service_role.
  *  4. Descarga el XML de Storage con service_role y verifica su SHA-256.
  *  5. Re-parsea el CFDI (`_shared/cfdiParser.ts`) — esa es la verdad fiscal.
@@ -66,25 +66,16 @@ function leerCuerpo(body: Cuerpo) {
  * cualquier acceso a Storage con service_role. Devuelve la Response de rechazo
  * o `null` si el acceso es legítimo.
  */
-async function verificarAcceso(args: {
-  adminClient: AuthContext["adminClient"];
-  documentoId: string;
+function verificarAcceso(args: {
+  documento: DocumentoBuzon;
   xmlPath: string;
-  orgId: string;
   userId: string;
   cors: Record<string, string>;
   log: ReturnType<typeof createLogger>;
-}): Promise<Response | null> {
-  const { data: docRow } = await args.adminClient
-    .from("embarque_facturas_entrantes")
-    .select("id, organization_id, embarque_id, estado")
-    .eq("id", args.documentoId)
-    .is("deleted_at", null)
-    .maybeSingle();
-
+}): Response | null {
   const chequeo = validarDocumento({
-    documento: (docRow as DocumentoBuzon | null) ?? null,
-    orgActor: args.orgId,
+    documento: args.documento,
+    orgActor: args.documento.organization_id,
     xmlPath: args.xmlPath,
   });
   if (chequeo.ok) return null;
@@ -92,7 +83,7 @@ async function verificarAcceso(args: {
   const { status, mensaje } = respuestaRechazo(chequeo.motivo);
   args.log.finish(status, chequeo.motivo, {
     user_id: args.userId,
-    organization_id: args.orgId,
+    organization_id: args.documento.organization_id,
   });
   return errorResponse(mensaje, status, args.cors);
 }
@@ -136,22 +127,35 @@ Deno.serve(
     try {
       const auth = await authenticate(req, log);
       const { userId, adminClient } = auth;
+      const datos = leerCuerpo((await req.json()) as Cuerpo);
+      const { data: docRow, error: docError } = await adminClient
+        .from("embarque_facturas_entrantes")
+        .select("id, organization_id, embarque_id, estado")
+        .eq("id", datos.documentoId)
+        .is("deleted_at", null)
+        .maybeSingle();
+      const documento = docError ? null : (docRow as DocumentoBuzon | null);
+      if (!documento) {
+        log.finish(404, "no_encontrado", { user_id: userId });
+        return errorResponse("LC_NO_ENCONTRADO: el documento del buzón no existe", 404, cors);
+      }
       const autorizacion = await autorizarCxp(auth, cors, log, {
+        organizationId: documento.organization_id,
         fn: "adjuntar-xml-entrante",
         rlUsuario: RL_USUARIO,
         rlOrg: RL_ORG,
         mensaje429: "Demasiadas solicitudes de adjuntar XML. Intenta más tarde.",
       });
-      if (!autorizacion.ok) return autorizacion.res;
-
-      const datos = leerCuerpo((await req.json()) as Cuerpo);
+      if (!autorizacion.ok) {
+        if (autorizacion.res.status !== 403) return autorizacion.res;
+        await autorizacion.res.body?.cancel();
+        return errorResponse("LC_NO_ENCONTRADO: el documento del buzón no existe", 404, cors);
+      }
 
       // Ola P2: validar documento + ruta ANTES de descargar con service_role.
-      const rechazo = await verificarAcceso({
-        adminClient,
-        documentoId: datos.documentoId,
+      const rechazo = verificarAcceso({
+        documento,
         xmlPath: datos.xmlPath,
-        orgId: autorizacion.orgId,
         userId,
         cors,
         log,

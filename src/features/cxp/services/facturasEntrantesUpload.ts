@@ -41,7 +41,6 @@ export async function subirFacturaEntrante(input: SubirFacturaEntranteInput): Pr
 
   await verificarMetadatosDelAlta({
     documentoId,
-    organizationId: input.organizationId,
     xml: xmlSubido ?? (input.xml && !input.pdf ? principal : null),
     meta: input.meta ?? null,
     nombreArchivo: archivoPrincipal.name,

@@ -49,11 +49,19 @@ async function checkRateLimit(
   tope: TopeRateLimit,
 ): Promise<Response | null> {
   const { auth, cors, log, fn, mensaje429 } = ctx;
-  const { data: rl, error: rlErr } = await auth.adminClient.rpc("check_ratelimit", {
-    p_key: llave,
-    p_window_seconds: tope.windowSeconds,
-    p_max: tope.max,
-  });
+  let rl: unknown;
+  let rlErr: { message: string } | null;
+  try {
+    const respuesta = await auth.adminClient.rpc("check_ratelimit", {
+      p_key: llave,
+      p_window_seconds: tope.windowSeconds,
+      p_max: tope.max,
+    });
+    rl = respuesta.data;
+    rlErr = respuesta.error;
+  } catch (error) {
+    rlErr = { message: error instanceof Error ? error.message : "unknown error" };
+  }
   if (rlErr) {
     await captureEdgeException(new Error(`check_ratelimit failed: ${rlErr.message}`), {
       fn,

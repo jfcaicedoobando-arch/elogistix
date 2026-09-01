@@ -157,7 +157,10 @@ async function sugerirCategoria(
 async function validarEntrada(
   req: Request,
   cors: Record<string, string>,
-): Promise<{ ok: true; file: File; categoriasJson: string | null } | { ok: false; res: Response }> {
+): Promise<
+  { ok: true; file: File; categoriasJson: string | null; organizationId: string } |
+  { ok: false; res: Response }
+> {
   const contentLength = Number(req.headers.get("content-length") ?? "0");
   if (Number.isFinite(contentLength) && contentLength > MAX_CONTENT_LENGTH) {
     return { ok: false, res: errorResponse("El XML excede 2 MB", 413, cors) };
