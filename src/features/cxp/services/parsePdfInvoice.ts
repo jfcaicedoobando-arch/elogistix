@@ -122,7 +122,9 @@ function buildFailure(file: File, last: Attempt | null, latencyMs: number): Cfdi
     op: "parse_invoice_pdf",
     phase: err.context.phase,
     functionName: "parse-invoice-pdf",
-  }, { pdf_size: file.size, latency_ms: latencyMs, service_unavailable: serviceUnavailable, ...err.context });
+    error_kind: fallaDeRed ? "network" : undefined,
+  }, { pdf_size: file.size, latency_ms: latencyMs, service_unavailable: serviceUnavailable, network_failure: fallaDeRed, ...err.context });
+
   return err;
 }
 
