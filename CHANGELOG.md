@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.823.21] - 2026-09-01
+### Mejora: corregir los conceptos que la IA extrae de un PDF antes de guardar
+- **Síntoma**: al capturar una factura de proveedor desde un PDF, la IA agregaba renglones de más y la tabla de conceptos era sólo lectura: había que guardar mal y corregir después.
+- **Fix**: en el paso 1 del asistente, cuando el origen es "PDF con IA", cada renglón es editable (descripción, cantidad, importe, IVA) y se puede eliminar. El desglose que viene de un XML CFDI sigue siendo sólo lectura (garantía fiscal).
+- Nuevos helpers puros `editarConceptoIa` / `eliminarConceptoIa` con pruebas unitarias.
+
 ## [13.823.20] - 2026-09-01
 ### Fix: el badge del sidebar contaba demoras que ya estaban en "Por liquidar"
 - **Síntoma**: el tooltip de Embarques decía "39 con demora" mientras el panel de alertas de la pantalla mostraba sólo 2.

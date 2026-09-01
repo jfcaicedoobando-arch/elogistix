@@ -77,7 +77,13 @@ export function PasoDocumento({
         />
       )}
 
-      <CfdiConceptosPreview conceptos={ctl.cfdiConceptos} moneda={ctl.values.moneda} />
+      {/* v13.823.21 — el desglose propuesto por IA sí se corrige aquí; el del XML CFDI no. */}
+      <CfdiConceptosPreview
+        conceptos={ctl.cfdiConceptos}
+        moneda={ctl.values.moneda}
+        onEditar={ctl.pendingCfdi?.origen === "pdf_ia" ? ctl.editarConceptoIa : undefined}
+        onEliminar={ctl.pendingCfdi?.origen === "pdf_ia" ? ctl.eliminarConceptoIa : undefined}
+      />
 
       <ConceptosManualesSection
         oculta={ctl.cfdiConceptos.length > 0}
