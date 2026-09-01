@@ -2,7 +2,10 @@
  * Ola P2 — Pruebas deterministas de la guarda compartida de CxP:
  * membresía, rol, rate limit por usuario/organización y fail-CLOSED.
  */
-import { assert, assertEquals } from "https://deno.land/std@0.224.0/assert/mod.ts";
+import {
+  assert,
+  assertEquals,
+} from "https://deno.land/std@0.224.0/assert/mod.ts";
 import { autorizarCxp } from "./cxpGuard.ts";
 import type { AuthContext } from "./auth.ts";
 
@@ -39,18 +42,26 @@ function fakeAuth(opts: FakeOpts): AuthContext {
         maybeSingle(): Promise<{ data: unknown; error: null }> {
           if (tabla === "organization_members") {
             const rolOrg = memberships[filtros.organization_id];
-            return Promise.resolve({ data: rolOrg ? { role: rolOrg } : null, error: null });
+            return Promise.resolve({
+              data: rolOrg ? { role: rolOrg } : null,
+              error: null,
+            });
           }
           if (tabla === "user_roles" && filtros.role === "super_admin") {
             return Promise.resolve({
-              data: globalRoles.includes("super_admin") ? { role: "super_admin" } : null,
+              data: globalRoles.includes("super_admin")
+                ? { role: "super_admin" }
+                : null,
               error: null,
             });
           }
           if (tabla === "user_roles" && filtros.roles) {
             const permitidos = filtros.roles.split(",");
             const role = globalRoles.find((r) => permitidos.includes(r));
-            return Promise.resolve({ data: role ? { role } : null, error: null });
+            return Promise.resolve({
+              data: role ? { role } : null,
+              error: null,
+            });
           }
           return Promise.resolve({ data: null, error: null });
         },
@@ -63,9 +74,13 @@ function fakeAuth(opts: FakeOpts): AuthContext {
       return Promise.resolve(r);
     },
   };
-  return { userId: "u-1", authHeader: "Bearer x", anonClient: adminClient, adminClient } as unknown as AuthContext;
+  return {
+    userId: "u-1",
+    authHeader: "Bearer x",
+    anonClient: adminClient,
+    adminClient,
+  } as unknown as AuthContext;
 }
-
 
 const log = {
   info: () => undefined,
@@ -87,7 +102,12 @@ const OPTS = {
 };
 
 Deno.test("usuario sólo de A intentando operar B: 403", async () => {
-  const r = await autorizarCxp(fakeAuth({ memberships: { [ORG_A]: "contador" } }), CORS, log, OPTS);
+  const r = await autorizarCxp(
+    fakeAuth({ memberships: { [ORG_A]: "contador" } }),
+    CORS,
+    log,
+    OPTS,
+  );
   assert(!r.ok);
   if (r.ok) return;
   assertEquals(r.res.status, 403);
@@ -97,7 +117,12 @@ Deno.test("usuario sólo de A intentando operar B: 403", async () => {
 
 Deno.test("rol sin permiso CxP: 403 (operador y roles de portal)", async () => {
   for (const rol of ["operador", "cliente", "agente_carga", "vendedor"]) {
-    const r = await autorizarCxp(fakeAuth({ memberships: { [ORG_B]: rol } }), CORS, log, OPTS);
+    const r = await autorizarCxp(
+      fakeAuth({ memberships: { [ORG_B]: rol } }),
+      CORS,
+      log,
+      OPTS,
+    );
     assert(!r.ok, `${rol} no debe pasar la guarda`);
     if (!r.ok) assertEquals(r.res.status, 403);
   }
@@ -105,7 +130,12 @@ Deno.test("rol sin permiso CxP: 403 (operador y roles de portal)", async () => {
 
 Deno.test("rol con permiso CxP y contador disponible: autoriza y devuelve la org", async () => {
   for (const rol of ["contador", "auxiliar_contable", "admin_org"]) {
-    const r = await autorizarCxp(fakeAuth({ memberships: { [ORG_B]: rol } }), CORS, log, OPTS);
+    const r = await autorizarCxp(
+      fakeAuth({ memberships: { [ORG_B]: rol } }),
+      CORS,
+      log,
+      OPTS,
+    );
     assert(r.ok, `${rol} debe pasar la guarda`);
     if (r.ok) assertEquals(r.orgId, ORG_B);
   }
@@ -113,21 +143,44 @@ Deno.test("rol con permiso CxP y contador disponible: autoriza y devuelve la org
 
 Deno.test("multiempresa A/B usa la organización activa B aunque A sea primera", async () => {
   llamadasRpc.length = 0;
-  const r = await autorizarCxp(fakeAuth({ memberships: { [ORG_A]: "contador", [ORG_B]: "contador" } }), CORS, log, OPTS);
+  const r = await autorizarCxp(
+    fakeAuth({ memberships: { [ORG_A]: "contador", [ORG_B]: "contador" } }),
+    CORS,
+    log,
+    OPTS,
+  );
   assert(r.ok);
-  assert(llamadasRpc.some((x) => String(x.args.p_key).includes(`:org:${ORG_B}`)));
-  assert(!llamadasRpc.some((x) => String(x.args.p_key).includes(`:org:${ORG_A}`)));
+  assert(
+    llamadasRpc.some((x) => String(x.args.p_key).includes(`:org:${ORG_B}`)),
+  );
+  assert(
+    !llamadasRpc.some((x) => String(x.args.p_key).includes(`:org:${ORG_A}`)),
+  );
 });
 
 Deno.test("super_admin vigente autoriza B sin membresía convencional", async () => {
-  const r = await autorizarCxp(fakeAuth({ globalRoles: ["super_admin"] }), CORS, log, OPTS);
+  const r = await autorizarCxp(
+    fakeAuth({ globalRoles: ["super_admin"] }),
+    CORS,
+    log,
+    OPTS,
+  );
   assert(r.ok);
   if (r.ok) assertEquals(r.orgId, ORG_B);
 });
 
 Deno.test("organizationId ausente o inválido: 400 fail-closed", async () => {
-  for (const organizationId of ["", "org-b", "11111111-1111-1111-1111-111111111111"]) {
-    const r = await autorizarCxp(fakeAuth({}), CORS, log, { ...OPTS, organizationId });
+  for (
+    const organizationId of [
+      "",
+      "org-b",
+      "11111111-1111-1111-1111-111111111111",
+    ]
+  ) {
+    const r = await autorizarCxp(fakeAuth({}), CORS, log, {
+      ...OPTS,
+      organizationId,
+    });
     assert(!r.ok);
     if (!r.ok) assertEquals(r.res.status, 400);
   }
@@ -193,7 +246,10 @@ Deno.test("contador de rate limit caído: fail-CLOSED con 503", async () => {
 Deno.test("rate limit nulo o malformado: 503; sólo ok booleano es válido", async () => {
   for (const data of [null, {}, { ok: "true" }, [], { ok: 1 }]) {
     const r = await autorizarCxp(
-      fakeAuth({ memberships: { [ORG_B]: "contador" }, rpc: () => ({ data, error: null }) }),
+      fakeAuth({
+        memberships: { [ORG_B]: "contador" },
+        rpc: () => ({ data, error: null }),
+      }),
       CORS,
       log,
       OPTS,

@@ -12,18 +12,22 @@
  *  - El parser es regex puro, sin DOM. La AI sólo recibe descripciones de
  *    conceptos + nombres de categorías para sugerir matcheo.
  */
-import { handlePreflightStrict, buildCors } from "../_shared/cors.ts";
-import { jsonResponse, errorResponse } from "../_shared/response.ts";
+import { buildCors, handlePreflightStrict } from "../_shared/cors.ts";
+import { errorResponse, jsonResponse } from "../_shared/response.ts";
 import { authenticate } from "../_shared/auth.ts";
 import { autorizarCxp } from "../_shared/cxpGuard.ts";
 import { createLogger } from "../_shared/logger.ts";
-import { captureEdgeException, debeReportarStatus, wrapEdgeHandler } from "../_shared/sentry.ts";
+import {
+  captureEdgeException,
+  debeReportarStatus,
+  wrapEdgeHandler,
+} from "../_shared/sentry.ts";
 import { parseCfdi } from "../_shared/cfdiParser.ts";
 import {
+  type Categoria,
   fallbackResult,
   parseCategoriasJson,
   parseToolCallResponse,
-  type Categoria,
 } from "./aiHelpers.ts";
 
 // 13.114.5: `wrapEdgeHandler` reemplaza `initSentryEdge` + try/catch manual
@@ -43,7 +47,6 @@ export const MAX_CATEGORIAS_CHARS = 32 * 1024;
 const RL_USUARIO = { windowSeconds: 3600, max: 40 } as const;
 const RL_ORG = { windowSeconds: 3600, max: 200 } as const;
 
-
 const TOOL_DEF = {
   type: "function",
   function: {
@@ -52,8 +55,14 @@ const TOOL_DEF = {
     parameters: {
       type: "object",
       properties: {
-        categoria_id: { type: "string", description: "ID exacto de la categoría más adecuada, o vacío" },
-        notas: { type: "string", description: "Resumen breve (máx 200 chars) de los conceptos" },
+        categoria_id: {
+          type: "string",
+          description: "ID exacto de la categoría más adecuada, o vacío",
+        },
+        notas: {
+          type: "string",
+          description: "Resumen breve (máx 200 chars) de los conceptos",
+        },
       },
       required: ["categoria_id", "notas"],
       additionalProperties: false,
@@ -61,7 +70,13 @@ const TOOL_DEF = {
   },
 };
 
-type AiOutcome = "ok" | "http_error" | "timeout" | "network_error" | "parse_error" | "skipped";
+type AiOutcome =
+  | "ok"
+  | "http_error"
+  | "timeout"
+  | "network_error"
+  | "parse_error"
+  | "skipped";
 
 interface AiCallResult {
   result: { categoria_id: string | null; notas: string };
@@ -78,12 +93,21 @@ async function sugerirCategoria(
 ): Promise<AiCallResult> {
   const t0 = performance.now();
   if (categorias.length === 0 || conceptos.length === 0) {
-    return { result: fallbackResult(conceptos), outcome: "skipped", latency_ms: 0, status_code: null };
+    return {
+      result: fallbackResult(conceptos),
+      outcome: "skipped",
+      latency_ms: 0,
+      status_code: null,
+    };
   }
   // Sólo mandamos las primeras 30 descripciones al LLM: ya son suficientes
   // para sugerir categoría y evita inflar prompt/latencia en CFDIs con >30 líneas.
   const conceptosPrompt = conceptos.slice(0, 30);
-  const prompt = `Categorías disponibles (id | nombre):\n${categorias.map(c => `${c.id} | ${c.nombre}`).join("\n")}\n\nConceptos de la factura:\n${conceptosPrompt.map(c => `- ${c.descripcion}`).join("\n")}\n\nElige el id de la categoría que mejor matchea. Si nada matchea claramente, devuelve cadena vacía en categoria_id.`;
+  const prompt = `Categorías disponibles (id | nombre):\n${
+    categorias.map((c) => `${c.id} | ${c.nombre}`).join("\n")
+  }\n\nConceptos de la factura:\n${
+    conceptosPrompt.map((c) => `- ${c.descripcion}`).join("\n")
+  }\n\nElige el id de la categoría que mejor matchea. Si nada matchea claramente, devuelve cadena vacía en categoria_id.`;
 
   let status_code: number | null = null;
   let outcome: AiOutcome = "ok";
@@ -97,24 +121,37 @@ async function sugerirCategoria(
   // ~3s aun con AI Gateway caído.
   const timeoutId = setTimeout(() => controller.abort(), 2000);
   try {
-    const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-      signal: controller.signal,
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash-lite",
-        messages: [
-          { role: "system", content: "Eres un asistente contable mexicano. Responde sólo vía tool call." },
-          { role: "user", content: prompt },
-        ],
-        tools: [TOOL_DEF],
-        tool_choice: { type: "function", function: { name: "sugerir" } },
-      }),
-    });
+    const res = await fetch(
+      "https://ai.gateway.lovable.dev/v1/chat/completions",
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          "Content-Type": "application/json",
+        },
+        signal: controller.signal,
+        body: JSON.stringify({
+          model: "google/gemini-2.5-flash-lite",
+          messages: [
+            {
+              role: "system",
+              content:
+                "Eres un asistente contable mexicano. Responde sólo vía tool call.",
+            },
+            { role: "user", content: prompt },
+          ],
+          tools: [TOOL_DEF],
+          tool_choice: { type: "function", function: { name: "sugerir" } },
+        }),
+      },
+    );
     status_code = res.status;
     if (!res.ok) {
       outcome = "http_error";
-      result = { categoria_id: null, notas: conceptos[0]?.descripcion?.slice(0, 200) ?? "" };
+      result = {
+        categoria_id: null,
+        notas: conceptos[0]?.descripcion?.slice(0, 200) ?? "",
+      };
     } else {
       const parsed = parseToolCallResponse(await res.json(), categorias);
       if (!parsed) {
@@ -158,8 +195,13 @@ async function validarEntrada(
   req: Request,
   cors: Record<string, string>,
 ): Promise<
-  { ok: true; file: File; categoriasJson: string | null; organizationId: string } |
-  { ok: false; res: Response }
+  | {
+    ok: true;
+    file: File;
+    categoriasJson: string | null;
+    organizationId: string;
+  }
+  | { ok: false; res: Response }
 > {
   const contentLength = Number(req.headers.get("content-length") ?? "0");
   if (Number.isFinite(contentLength) && contentLength > MAX_CONTENT_LENGTH) {
@@ -170,30 +212,54 @@ async function validarEntrada(
   try {
     form = await req.formData();
   } catch {
-    return { ok: false, res: errorResponse("No se pudo leer el archivo enviado", 400, cors) };
+    return {
+      ok: false,
+      res: errorResponse("No se pudo leer el archivo enviado", 400, cors),
+    };
   }
   const file = form.get("file") as File | null;
   const categoriasJson = form.get("categorias") as string | null;
   const organizationId = form.get("organization_id");
 
-  if (!file) return { ok: false, res: errorResponse("Falta archivo XML", 400, cors) };
-  if (typeof organizationId !== "string" || !organizationId) {
-    return { ok: false, res: errorResponse("organization_id requerido", 400, cors) };
+  if (!file) {
+    return { ok: false, res: errorResponse("Falta archivo XML", 400, cors) };
   }
-  if (file.size > MAX_BYTES) return { ok: false, res: errorResponse("El XML excede 2 MB", 413, cors) };
-  const isXml = file.type.includes("xml") || file.name.toLowerCase().endsWith(".xml");
-  if (!isXml) return { ok: false, res: errorResponse("Solo se aceptan archivos XML", 400, cors) };
+  if (typeof organizationId !== "string" || !organizationId) {
+    return {
+      ok: false,
+      res: errorResponse("organization_id requerido", 400, cors),
+    };
+  }
+  if (file.size > MAX_BYTES) {
+    return { ok: false, res: errorResponse("El XML excede 2 MB", 413, cors) };
+  }
+  const isXml = file.type.includes("xml") ||
+    file.name.toLowerCase().endsWith(".xml");
+  if (!isXml) {
+    return {
+      ok: false,
+      res: errorResponse("Solo se aceptan archivos XML", 400, cors),
+    };
+  }
 
   if (categoriasJson && categoriasJson.length > MAX_CATEGORIAS_CHARS) {
     return {
       ok: false,
-      res: errorResponse("El catálogo de categorías enviado es demasiado grande", 413, cors),
+      res: errorResponse(
+        "El catálogo de categorías enviado es demasiado grande",
+        413,
+        cors,
+      ),
     };
   }
   return { ok: true, file, categoriasJson, organizationId };
 }
 
-async function handle(req: Request, cors: Record<string, string>, log: ReturnType<typeof createLogger>) {
+async function handle(
+  req: Request,
+  cors: Record<string, string>,
+  log: ReturnType<typeof createLogger>,
+) {
   const auth = await authenticate(req, log);
   const entrada = await validarEntrada(req, cors);
   if (!entrada.ok) return entrada.res;
@@ -222,13 +288,20 @@ async function handle(req: Request, cors: Record<string, string>, log: ReturnTyp
 
   const categorias: Categoria[] = parseCategoriasJson(categoriasJson);
 
-
   let aiResult: AiCallResult;
   if (LOVABLE_API_KEY) {
-    aiResult = await sugerirCategoria(LOVABLE_API_KEY, cfdi.conceptos, categorias, log);
+    aiResult = await sugerirCategoria(
+      LOVABLE_API_KEY,
+      cfdi.conceptos,
+      categorias,
+      log,
+    );
   } else {
     aiResult = {
-      result: { categoria_id: null, notas: cfdi.conceptos[0]?.descripcion?.slice(0, 200) ?? "" },
+      result: {
+        categoria_id: null,
+        notas: cfdi.conceptos[0]?.descripcion?.slice(0, 200) ?? "",
+      },
       outcome: "skipped",
       latency_ms: 0,
       status_code: null,
@@ -236,7 +309,10 @@ async function handle(req: Request, cors: Record<string, string>, log: ReturnTyp
   }
 
   log.finish(200, "cfdi parseado", {
-    payload: { ai_outcome: aiResult.outcome, ai_latency_ms: aiResult.latency_ms },
+    payload: {
+      ai_outcome: aiResult.outcome,
+      ai_latency_ms: aiResult.latency_ms,
+    },
   });
   return jsonResponse({ cfdi, ai: aiResult.result }, 200, cors);
 }
@@ -252,10 +328,18 @@ Deno.serve(wrapEdgeHandler("parse-cfdi-xml", async (req) => {
     const message = e instanceof Error ? e.message : "Error desconocido";
     const [code, ...rest] = message.split(":");
     const status = /^\d+$/.test(code) ? parseInt(code) : 500;
-    log.error("parse-cfdi-xml falló", { status_code: status, payload: { error: message } });
+    log.error("parse-cfdi-xml falló", {
+      status_code: status,
+      payload: { error: message },
+    });
     // 13.114.20: capturar también 4xx inesperados (consistente con
     // user-management / auditoria-explicar-hallazgo desde 13.114.19).
-    if (debeReportarStatus(status)) await captureEdgeException(e, { fn: "parse-cfdi-xml", status_code: status });
+    if (debeReportarStatus(status)) {
+      await captureEdgeException(e, {
+        fn: "parse-cfdi-xml",
+        status_code: status,
+      });
+    }
     return errorResponse(rest.join(":") || message, status, cors);
   }
 }));

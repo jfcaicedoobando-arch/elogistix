@@ -12,17 +12,21 @@
  *  - Tope de 10 MB: corte por `Content-Length` antes de parsear el multipart
  *    y revalidación con el tamaño real del archivo.
  */
-import { handlePreflightStrict, buildCors } from "../_shared/cors.ts";
-import { jsonResponse, errorResponse } from "../_shared/response.ts";
+import { buildCors, handlePreflightStrict } from "../_shared/cors.ts";
+import { errorResponse, jsonResponse } from "../_shared/response.ts";
 import { authenticate } from "../_shared/auth.ts";
 import { createLogger } from "../_shared/logger.ts";
-import { captureEdgeException, debeReportarStatus, wrapEdgeHandler } from "../_shared/sentry.ts";
+import {
+  captureEdgeException,
+  debeReportarStatus,
+  wrapEdgeHandler,
+} from "../_shared/sentry.ts";
 import { autorizarYLimitar } from "./guardas.ts";
 import {
   callGeminiExtract,
+  type Categoria,
   mapGeminiToCfdiShape,
   parseCategoriasJson,
-  type Categoria,
 } from "./extract.ts";
 
 const MAX_BYTES = 10 * 1024 * 1024;
@@ -37,7 +41,14 @@ const MAX_CONTENT_LENGTH = MAX_BYTES + 512 * 1024;
 async function leerPdfDelRequest(
   req: Request,
   cors: Record<string, string>,
-): Promise<Response | { file: File; base64: string; categoriasJson: string | null; organizationId: string }> {
+): Promise<
+  Response | {
+    file: File;
+    base64: string;
+    categoriasJson: string | null;
+    organizationId: string;
+  }
+> {
   // Sentry JAVASCRIPT-REACT-57: sin `content-type: multipart/form-data`,
   // `req.formData()` lanza "Missing content type" y se reportaba como 500.
   const contentType = req.headers.get("content-type") ?? "";
@@ -65,8 +76,11 @@ async function leerPdfDelRequest(
   if (typeof organizationId !== "string" || !organizationId) {
     return errorResponse("organization_id requerido", 400, cors);
   }
-  if (file.size > MAX_BYTES) return errorResponse("El PDF excede 10 MB", 413, cors);
-  const isPdf = file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf");
+  if (file.size > MAX_BYTES) {
+    return errorResponse("El PDF excede 10 MB", 413, cors);
+  }
+  const isPdf = file.type === "application/pdf" ||
+    file.name.toLowerCase().endsWith(".pdf");
   if (!isPdf) return errorResponse("Solo se aceptan archivos PDF", 400, cors);
 
   const buf = new Uint8Array(await file.arrayBuffer());
@@ -79,16 +93,27 @@ async function leerPdfDelRequest(
   return { file, base64: btoa(bin), categoriasJson, organizationId };
 }
 
-async function handle(req: Request, cors: Record<string, string>, log: ReturnType<typeof createLogger>) {
+async function handle(
+  req: Request,
+  cors: Record<string, string>,
+  log: ReturnType<typeof createLogger>,
+) {
   const auth = await authenticate(req, log);
   const leido = await leerPdfDelRequest(req, cors);
   if (leido instanceof Response) return leido;
-  const rechazo = await autorizarYLimitar(auth, cors, log, leido.organizationId);
+  const rechazo = await autorizarYLimitar(
+    auth,
+    cors,
+    log,
+    leido.organizationId,
+  );
   if (rechazo) return rechazo;
 
   // @ts-expect-error Deno
   const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-  if (!LOVABLE_API_KEY) return errorResponse("Falta LOVABLE_API_KEY en el servidor", 500, cors);
+  if (!LOVABLE_API_KEY) {
+    return errorResponse("Falta LOVABLE_API_KEY en el servidor", 500, cors);
+  }
 
   const { file, base64, categoriasJson } = leido;
 
@@ -108,9 +133,16 @@ async function handle(req: Request, cors: Record<string, string>, log: ReturnTyp
     const status = err.status ?? 502;
     log.error("gemini_extract_failed", {
       status_code: status,
-      payload: { event: "gemini_extract_failed", error: err.message ?? "unknown" },
+      payload: {
+        event: "gemini_extract_failed",
+        error: err.message ?? "unknown",
+      },
     });
-    return errorResponse(err.message ?? "La IA no pudo procesar el PDF", status, cors);
+    return errorResponse(
+      err.message ?? "La IA no pudo procesar el PDF",
+      status,
+      cors,
+    );
   }
   const latency_ms = Math.round(performance.now() - t0);
 
@@ -139,8 +171,16 @@ Deno.serve(wrapEdgeHandler("parse-invoice-pdf", async (req) => {
     const message = e instanceof Error ? e.message : "Error desconocido";
     const [code, ...rest] = message.split(":");
     const status = /^\d+$/.test(code) ? parseInt(code) : 500;
-    log.error("parse-invoice-pdf falló", { status_code: status, payload: { error: message } });
-    if (debeReportarStatus(status)) await captureEdgeException(e, { fn: "parse-invoice-pdf", status_code: status });
+    log.error("parse-invoice-pdf falló", {
+      status_code: status,
+      payload: { error: message },
+    });
+    if (debeReportarStatus(status)) {
+      await captureEdgeException(e, {
+        fn: "parse-invoice-pdf",
+        status_code: status,
+      });
+    }
     return errorResponse(rest.join(":") || message, status, cors);
   }
 }));
