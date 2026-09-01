@@ -1,5 +1,16 @@
 # Changelog
 
+## [13.823.16] - 2026-09-01
+### Errores de Sentry: diagnóstico accionable en vez de "unknown error" (sólo local)
+- **Causa** (JAVASCRIPT-REACT-5N / -5P): una consulta fallida (`embarques → dependencias-financieras`) devolvió un error sin mensaje y el normalizador lo titulaba `unknown error`, generando dos issues del mismo evento sin pista de la consulta afectada.
+- **Corrección**: `queryErrorReporting` clasifica los errores sin mensaje como red/offline (`error_kind`, `http_status`) e incluye la consulta en el título del issue.
+- **Causa** (JAVASCRIPT-REACT-5T): en móvil, un `FunctionsFetchError: Failed to fetch` se mostraba como "el servicio de captura por IA no está disponible" aunque la petición nunca salió del dispositivo.
+- **Corrección**: `parsePdfInvoice` distingue falla de conexión del dispositivo y lo etiqueta (`network_failure`).
+- Triage sin código: -5S y -5R ya corregidos (13.823.15 / 13.823.14), -5Q es timeout externo de FacturApi ya manejado, LIFTGO-1 pertenece a otra aplicación.
+- Pruebas: normalización sin mensaje (online/offline), mensaje real preservado y mensajes de falla del PDF IA.
+- Sin migraciones, deploy, publish, secretos ni cambios de datos.
+
+
 ## [13.823.15] - 2026-09-01
 ### Cotización nueva: ya no aparece "otro usuario modificó este registro" (sólo local)
 - **Causa**: el wizard arrancaba el bloqueo optimista con sello `null` en cotizaciones nuevas, pero la base firma la fila al insertarla (`updated_at = created_at`). Al segundo guardado del mismo usuario el sello no coincidía y se lanzaba `LC_CONFLICTO_CONCURRENCIA` (reportado en COT-P-2026-0001, /cotizaciones/nueva paso 1).

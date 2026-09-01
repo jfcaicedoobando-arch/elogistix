@@ -87,16 +87,28 @@ async function invokeOnce(
 }
 
 function buildFailure(file: File, last: Attempt | null, latencyMs: number): CfdiUploadError {
+  const online = typeof navigator !== "undefined" ? navigator.onLine : true;
   const serviceUnavailable = last?.phase === "request" && last?.status === null;
-  const friendlyMessage = serviceUnavailable
+  // 13.823.16 (Sentry -5T) · distinguir la red del dispositivo (móvil/tablet)
+  // de una falla real del servicio: `FunctionsFetchError` / "Failed to fetch"
+  // significa que la petición nunca llegó al servidor.
+  const fallaDeRed =
+    serviceUnavailable &&
+    (last?.cause instanceof FunctionsFetchError ||
+      /failed to fetch|network|load failed/i.test(last?.message ?? "") ||
+      !online);
+  const friendlyMessage = fallaDeRed
+    ? "No pudimos contactar al servidor desde este dispositivo. Revisa tu conexión (Wi-Fi o datos) e intenta de nuevo, o usa el tab de \"Captura manual\"."
+    : serviceUnavailable
     ? "El servicio de captura por IA no está disponible en este momento. Puedes usar el tab de \"Captura manual\" o intentar de nuevo en unos segundos."
     : (last?.message ?? "No se pudo procesar el PDF con IA");
+
   const err = new CfdiUploadError(
     friendlyMessage,
     {
       attemptCount: MAX_ATTEMPTS,
       latencyMs,
-      online: typeof navigator !== "undefined" ? navigator.onLine : true,
+      online,
       xmlSize: file.size,
       xmlName: file.name,
       lastStatus: last?.status ?? null,
@@ -110,7 +122,9 @@ function buildFailure(file: File, last: Attempt | null, latencyMs: number): Cfdi
     op: "parse_invoice_pdf",
     phase: err.context.phase,
     functionName: "parse-invoice-pdf",
-  }, { pdf_size: file.size, latency_ms: latencyMs, service_unavailable: serviceUnavailable, ...err.context });
+    error_kind: fallaDeRed ? "network" : undefined,
+  }, { pdf_size: file.size, latency_ms: latencyMs, service_unavailable: serviceUnavailable, network_failure: fallaDeRed, ...err.context });
+
   return err;
 }
 

@@ -42,21 +42,49 @@ export function isExpectedBusinessError(err: unknown): boolean {
  * Convierte errores crudos de PostgREST (objetos planos con `code`, `details`,
  * `hint`, `message`) en `Error` reales para que Sentry agrupe por mensaje en
  * vez de titular "Object captured as exception with keys: …" o "M".
- * Devuelve también tags derivados (`pg_code`).
+ * Devuelve también tags derivados (`pg_code`, `error_kind`).
+ *
+ * 13.823.16 (Sentry -5N/-5P) · un error sin mensaje ya no se titula
+ * "unknown error": se clasifica como fallo de red / petición cancelada y se
+ * incluye la consulta afectada para que el issue sea accionable y agrupe bien.
  */
-function normalizeForSentry(err: unknown): { error: unknown; pgTags: Record<string, string> } {
-  if (err instanceof Error || !err || typeof err !== "object") {
+function normalizeForSentry(
+  err: unknown,
+  rootKey?: string,
+): { error: unknown; pgTags: Record<string, string> } {
+  const sinMensaje =
+    err instanceof Error
+      ? err.message.length === 0
+      : Boolean(err) && typeof err === "object" &&
+        typeof (err as { message?: unknown }).message !== "string";
+  if ((err instanceof Error && !sinMensaje) || !err || typeof err !== "object") {
     return { error: err, pgTags: {} };
   }
-  const e = err as { code?: unknown; message?: unknown; details?: unknown; hint?: unknown };
-  const message = typeof e.message === "string" && e.message.length > 0
-    ? e.message
-    : "unknown error";
-  const normalized = new Error(message, { cause: err });
+  const e = err as { code?: unknown; message?: unknown; status?: unknown };
   const pgTags: Record<string, string> = {};
   if (typeof e.code === "string") pgTags.pg_code = e.code;
-  return { error: normalized, pgTags };
+  if (typeof e.status === "number") pgTags.http_status = String(e.status);
+
+  const mensajeOriginal = typeof e.message === "string" ? e.message : "";
+  if (mensajeOriginal.length > 0) {
+    return { error: new Error(mensajeOriginal, { cause: err }), pgTags };
+  }
+
+  const offline = typeof navigator !== "undefined" && navigator.onLine === false;
+  pgTags.error_kind = offline ? "offline" : "network";
+  const detalle = [
+    rootKey ? `consulta: ${rootKey}` : undefined,
+    typeof e.status === "number" ? `HTTP ${e.status}` : undefined,
+  ]
+    .filter(Boolean)
+    .join(", ");
+  const base = offline
+    ? "Sin conexión: la petición no llegó al servidor"
+    : "Fallo de red o petición cancelada (respuesta sin mensaje)";
+  const message = detalle ? `${base} (${detalle})` : base;
+  return { error: new Error(message, { cause: err }), pgTags };
 }
+
 
 /**
  * Reporta a Sentry los errores que React Query rescata en su pipeline
@@ -90,7 +118,7 @@ export function reportQueryError(
       .catch(() => undefined);
     return;
   }
-  const { error: normalized, pgTags } = normalizeForSentry(err);
+  const { error: normalized, pgTags } = normalizeForSentry(err, rootKey);
   const tags: Record<string, string> = { feature: "react_query", kind, ...pgTags };
   if (rootKey) tags[kind === "query" ? "query_root" : "mutation_root"] = rootKey.slice(0, 64);
   if (opKey && kind === "mutation") tags.mutation_op = opKey.slice(0, 64);
