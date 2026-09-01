@@ -85,6 +85,13 @@ export function useNuevaFacturaProveedorForm(
     if (errors[k]) setErrors((e) => ({ ...e, [k]: undefined }));
   };
 
+  // v13.823.21 — Corrección de los conceptos que propuso la IA sobre un PDF
+  // (sólo origen `pdf_ia`; el desglose del XML CFDI no se toca).
+  const editarConceptoIaLinea = (idx: number, patch: Partial<CfdiConceptoParsed>) =>
+    setCfdiConceptos((prev) => editarConceptoIa(prev, idx, patch));
+  const eliminarConceptoIaLinea = (idx: number) =>
+    setCfdiConceptos((prev) => eliminarConceptoIa(prev, idx));
+
   const obtenerDofManual = () => {
     if (values.moneda === "MXN") return;
     if (!isFechaEmisionValida(values.emision)) return;
