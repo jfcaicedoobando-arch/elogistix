@@ -42,11 +42,11 @@ export async function updateCotizacion(
   parseOrThrow(cotizacionUpdateSchema, data, "No se pudo actualizar la cotización");
   const updatePayload = construirPayloadUpdate(data);
   let query = supabase.from("cotizaciones").update(updatePayload).eq("id", id);
-  // B-8: `null` es un valor legítimo de `updated_at` (fila nunca modificada) y
-  // debe seguir protegiendo. Sólo `undefined` significa "sin bloqueo optimista".
-  const conGuard = expectedUpdatedAt !== undefined;
+  // v13.823.15: la base firma la fila al insertarla, así que `updated_at` nunca
+  // es `null`. La rama `.is("updated_at", null)` sólo producía conflictos
+  // falsos: sin sello (null/undefined) se guarda sin bloqueo optimista.
+  const conGuard = !!expectedUpdatedAt;
   if (expectedUpdatedAt) query = query.eq("updated_at", expectedUpdatedAt);
-  else if (conGuard) query = query.is("updated_at", null);
   const { data: filas, error } = await query.select("updated_at");
   if (error) throw error;
   if (!filas || filas.length === 0) {
@@ -56,6 +56,7 @@ export async function updateCotizacion(
       "No se guardaron los cambios de la cotización: no tienes permiso o la cotización ya no existe.",
     );
   }
+
   await registrarActividad({
     modulo: "cotizaciones",
     accion: "editar_cotizacion",
