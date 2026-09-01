@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.821.1] - 2026-09-01
+- **Suite de pruebas (limpieza)**: la guard SQL `supabase/tests/ola_p1_guards.sql` quedó registrada en `supabase/tests/_guards_manifest.txt`, así que ahora CI la ejecuta de verdad (8 aserciones P1-1…P1-4 verificadas en verde localmente) en lugar de existir como cobertura ficticia.
+- **Guardrail Fase L**: dejó de exigir el error `LC_PAGO_CRUCE_NO_SOPORTADO`, eliminado cuando los cruces con EUR empezaron a pivotear en MXN (M-2, Ola 4 · v14). Ahora valida el contrato vigente (`LC_PAGO_TC_REQUERIDO`, `LC_PAGO_TC_FACTURA_REQUERIDO`, `IMMUTABLE` y privilegios) leyendo `supabase/schema/baseline.sql`, la fuente de verdad del esquema.
+- **Guardrail Fase I**: la validación de tipo de cambio ya no vive como `tcFactura === 1` dentro de `facturapi-emitir`, sino en la banda fiscal compartida (`_shared/tcBanda.ts`, 5–40 MXN por divisa). El test ahora prueba el comportamiento de esa banda y que `facturapi-emitir` responda 422 `tipo_cambio_requerido`.
+
 ## [13.821.0] - 2026-09-01
 - **Squash de migraciones (CI y verificación local)**: el historial hasta `20260908000300` quedó consolidado en `supabase/schema/squash/baseline_squash_v13_821_0.sql`, verificado byte a byte contra `supabase/schema/baseline.sql`. Las bases limpias (CI y `bun run db:verify`) aplican ese archivo y luego sólo las migraciones posteriores al corte de `supabase/schema/squash/cutoff.env` (fuente única compartida). Los 1193 archivos históricos se conservan en `supabase/migrations/` como bitácora auditable —ya están aplicados en producción y no se re-ejecutan—, así que nada cambia en la base productiva.
 - **CI más simple**: se eliminaron el paso `_ci_drift.sql`, las exenciones `MIGRACIONES_EXENTAS`/`drift-anclas.txt` y el job "Drift radar" completo: el squash ya representa el estado real, por lo que cualquier migración nueva debe aplicar en limpio sin parches.
