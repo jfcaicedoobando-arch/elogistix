@@ -96,7 +96,6 @@ export function esTrackingLinkVigente(link: TrackingLinkRow, ahora: number = Dat
 
 /** N26: vigencias permitidas para una liga pública (la BD topa en 90 días). */
 export const TRACKING_LINK_DIAS_DEFAULT = 30;
-export const TRACKING_LINK_DIAS_MAX = 90;
 
 function vigenciaPorDefecto(dias: number): string {
   return new Date(Date.now() + dias * 86_400_000).toISOString();

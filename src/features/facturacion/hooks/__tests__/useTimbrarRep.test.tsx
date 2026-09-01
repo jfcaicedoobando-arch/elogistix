@@ -181,7 +181,7 @@ describe("useCancelarRep", () => {
     qc.clear();
   });
 
-  it("uncertain: aviso informativo, invalida cache y no ofrece reintentar", async () => {
+  it("REP uncertain: aviso informativo, invalida cache y no ofrece reintentar", async () => {
     cancelarRep.mockResolvedValue({
       ok: true,
       uncertain: true,

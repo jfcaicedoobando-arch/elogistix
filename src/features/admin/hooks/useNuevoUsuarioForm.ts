@@ -6,7 +6,7 @@
 import { useMemo, useState } from "react";
 import type { AppRole } from "@/types/appRole";
 import { PASSWORD_MIN } from "@/lib/passwords/policy";
-import { esEmailValido } from "./emailUsuario";
+import { esEmailValido } from "@/features/admin/components/usuario/emailUsuario";
 
 export const DEFAULT_ROLE: AppRole = "customer_service";
 

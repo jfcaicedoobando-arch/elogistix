@@ -51,7 +51,7 @@ export interface PaginaPagos {
 
 /**
  * P2-9 (v13.821.7): una sola página con `count` exacto. Antes se pedía todo
- * con `.limit(1000)` y se lanzaba error al truncar; ahora se pagina de verdad.
+ * con el tope duro de PostgREST y se lanzaba error al truncar; ahora se pagina de verdad.
  */
 export async function listarPagosProveedorGlobalPagina(
   filtros: ListarPagosFiltros = {},

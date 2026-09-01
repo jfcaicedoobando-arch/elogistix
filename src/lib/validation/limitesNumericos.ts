@@ -12,9 +12,3 @@ export const MONTO_MAX = 999_999_999.99;
 
 /** Cantidad máxima de piezas/unidades en un concepto. */
 export const CANTIDAD_MAX = 1_000_000;
-
-/** Mensaje reutilizable para el tope de importes. */
-export const MSG_MONTO_MAX = "excede el máximo permitido (999,999,999.99)";
-
-/** Mensaje reutilizable para el tope de cantidades. */
-export const MSG_CANTIDAD_MAX = "excede el máximo permitido (1,000,000)";

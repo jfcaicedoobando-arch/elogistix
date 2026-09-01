@@ -22,8 +22,6 @@ export const CLIENTE_DETAIL_COLUMNS =
 export {
   fetchClientesPaginados,
   fetchClientesForSelect,
-  type FetchClientesPaginadosParams,
-  type ClienteListItem,
 } from "./listado";
 
 // ============================================================

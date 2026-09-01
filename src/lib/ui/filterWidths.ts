@@ -28,4 +28,3 @@ export const FILTRO_ANCHO = {
   lgAuto: "w-full sm:w-auto sm:min-w-56",
 } as const;
 
-export type FiltroAncho = keyof typeof FILTRO_ANCHO;

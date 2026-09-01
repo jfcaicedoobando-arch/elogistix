@@ -44,7 +44,7 @@ export interface PaginaNotasCredito {
   count: number;
 }
 
-/** P2-9 (v13.821.7): página real con `count` exacto en vez de `.limit(1000)`. */
+/** P2-9 (v13.821.7): página real con `count` exacto en vez del tope duro de PostgREST. */
 export async function listarNotasCreditoGlobalPagina(
   filtros: ListarNotasFiltros = {},
   organizationId?: string | null,

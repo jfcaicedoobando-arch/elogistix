@@ -6,8 +6,7 @@
  * tipos en `catalogosTypes.ts`, para que importar un tipo no arrastre el
  * cliente de base de datos.
  */
-export type { Naviera, Puerto, TipoContenedor, ExchangeRates } from "./catalogosTypes";
-export { LIMITE_CATALOGOS } from "./catalogosTypes";
+export type { Naviera, Puerto, TipoContenedor } from "./catalogosTypes";
 export { fetchNavieras, insertNaviera, setNavieraActivo, deleteNaviera, updateNaviera } from "./navieras";
 export { fetchPuertos, insertPuerto, setPuertoActivo, deletePuerto } from "./puertos";
 export {
