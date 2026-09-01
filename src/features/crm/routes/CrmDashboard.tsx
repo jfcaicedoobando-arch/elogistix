@@ -5,26 +5,23 @@
  * viven en /crm/mi-dia. El desglose completo (motivos de pérdida, conversión
  * por fuente, tablas largas) sigue en /crm/analitica.
  */
-import { Activity, Filter, Target, TrendingUp, Trophy, Users } from "lucide-react";
+import { Activity, Filter, Target, TrendingUp, Users } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { SectionHeading } from "@/components/shared/SectionHeading";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { KpiStrip } from "@/components/shared/KpiStrip";
 import { CargaGuard } from "@/components/shared/states/CargaGuard";
 import { formatCurrencyCompact, porcentajeEntero } from "@/lib/formatters";
-import { useCrmInicioVM, useReportesCRM } from "@/features/crm/hooks";
+import { useCrmInicioVM, useForecast, useReportesCRM } from "@/features/crm/hooks";
 import LeaderboardVendedores from "@/features/crm/components/LeaderboardVendedores";
 import { CrmForecastMesKpis } from "@/features/crm/components/CrmForecastMesKpis";
 import { CrmStatStripItem as StatStripItem } from "@/features/crm/components/CrmStatStripItem";
 import { useDocumentTitle } from "@/hooks/shared";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
-import { Hint } from "@/components/shared/Hint";
 
 import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/components/ui/table";
 import { DetailTableHead } from "@/components/shared/DetailTable";
 const v = (loading: boolean, n: number | undefined): string | number => (loading ? "…" : (n ?? 0));
-const fmt = (n: number) => formatCurrencyCompact(n, "MXN");
 
 function EmbudoCard() {
   const { data, isLoading } = useReportesCRM();
@@ -91,9 +88,9 @@ function ForecastMesCard() {
             <TableBody>
               {porMes.map((b) => (
                 <TableRow key={b.key} className="border-b last:border-0">
-                  <TableCell>{b.label}</TableCell>
-                  <TableCell className="text-right tabular-nums">{fmt(b.ponderado)}</TableCell>
-                  <TableCell className="text-right tabular-nums">{fmt(b.ganado)}</TableCell>
+                  <TableCell>{`${b.label} (${b.moneda})`}</TableCell>
+                  <TableCell className="text-right tabular-nums">{formatCurrencyCompact(b.ponderado, b.moneda)}</TableCell>
+                  <TableCell className="text-right tabular-nums">{formatCurrencyCompact(b.ganado, b.moneda)}</TableCell>
                   <TableCell className="text-right tabular-nums">{b.count}</TableCell>
                 </TableRow>
               ))}

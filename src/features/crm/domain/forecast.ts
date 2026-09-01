@@ -84,12 +84,12 @@ export function computeForecast(
     totales.set(moneda, t);
 
     const mk = `${mesKey(r.fecha_estimada_cierre)}|${moneda}`;
-    const mb = mes.get(mk) ?? { ...makeBucket(mk, mesLabel(mesKey(r.fecha_estimada_cierre))), moneda };
+    const mb = mes.get(mk) ?? makeBucket(mk, mesLabel(mesKey(r.fecha_estimada_cierre)), moneda);
     applyDelta(mb, delta);
     mes.set(mk, mb);
 
     const vk = `${r.vendedor_email || "Sin asignar"}|${moneda}`;
-    const vb = vend.get(vk) ?? { ...makeBucket(vk, r.vendedor_email || "Sin asignar"), moneda };
+    const vb = vend.get(vk) ?? makeBucket(vk, r.vendedor_email || "Sin asignar", moneda);
     applyDelta(vb, delta);
     vend.set(vk, vb);
   }

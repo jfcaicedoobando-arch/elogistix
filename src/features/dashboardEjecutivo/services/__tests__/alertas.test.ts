@@ -31,9 +31,9 @@ const flujo = (saldoFinal: number, semanas: SemanaFlujo[] = []): FlujoProyectado
 const tesoreria = (over: Partial<ResumenTesoreria> = {}): ResumenTesoreria => ({
   cuentas: [],
   flujo: {
-    por_cobrar_mxn: 0, por_cobrar_usd: 0,
-    por_pagar_mxn: 0, por_pagar_usd: 0,
-    flujo_neto_mxn: 0, flujo_neto_usd: 0,
+    por_cobrar_mxn: 0, por_cobrar_usd: 0, por_cobrar_eur: 0,
+    por_pagar_mxn: 0, por_pagar_usd: 0, por_pagar_eur: 0,
+    flujo_neto_mxn: 0, flujo_neto_usd: 0, flujo_neto_eur: 0,
     por_cobrar_total_mxn: 0, por_pagar_total_mxn: 0,
     flujo_incompleto: false,
   },
