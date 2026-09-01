@@ -18,6 +18,7 @@ export async function fetchReferenciasEmbarque(
     .from("embarques")
     .select("expediente, bl_master, bl_house")
     .eq("id", embarqueId)
+    .is("deleted_at", null)
     .maybeSingle();
   if (error || !data) return null;
   return {
