@@ -109,7 +109,6 @@ async function handle(
   );
   if (rechazo) return rechazo;
 
-  // @ts-expect-error Deno
   const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
   if (!LOVABLE_API_KEY) {
     return errorResponse("Falta LOVABLE_API_KEY en el servidor", 500, cors);

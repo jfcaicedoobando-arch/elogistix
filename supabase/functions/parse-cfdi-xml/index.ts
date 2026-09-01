@@ -172,7 +172,7 @@ async function sugerirCategoria(
   }
 
   const latency_ms = Math.round(performance.now() - t0);
-  const logFn = outcome === "ok" || outcome === "skipped" ? log.info : log.warn;
+  const logFn = outcome === "ok" ? log.info : log.warn;
   logFn("ai_gateway_call", {
     status_code,
     latency_ms,
@@ -272,7 +272,6 @@ async function handle(
   });
   if (!autorizacion.ok) return autorizacion.res;
 
-  // @ts-expect-error Deno
   const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
 
   const { file, categoriasJson } = entrada;

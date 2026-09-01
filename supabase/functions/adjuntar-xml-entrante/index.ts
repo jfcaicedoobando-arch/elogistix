@@ -249,7 +249,7 @@ Deno.serve(
         log.finish(status, "rechazado");
         return errorResponse(match[2], status, cors);
       }
-      captureEdgeException(e, { funcion: "adjuntar-xml-entrante" });
+      await captureEdgeException(e, { fn: "adjuntar-xml-entrante" });
       log.finish(500, "error");
       return errorResponse(msg, 500, cors);
     }
