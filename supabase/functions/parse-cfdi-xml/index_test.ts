@@ -18,10 +18,10 @@ Deno.test("parser expone parseCfdi", () => {
 
 Deno.test("v13.823.4: autoriza por header ANTES de leer el multipart", async () => {
   const src = await Deno.readTextFile(new URL("./index.ts", import.meta.url));
-  const idxAuth = src.indexOf("await autorizarCxp(");
-  const idxForm = src.indexOf("await req.formData()");
-  const idxEntrada = src.indexOf("await validarEntrada(");
-  assert(idxAuth > 0 && idxForm > 0);
+  const handle = src.slice(src.indexOf("async function handle("));
+  const idxAuth = handle.indexOf("await autorizarCxp(");
+  const idxEntrada = handle.indexOf("await validarEntrada(");
+  assert(idxAuth > 0 && idxEntrada > 0);
   assert(idxAuth < idxEntrada, "la guarda corre antes de validarEntrada");
   assert(src.includes("leerOrgHeader(req)"), "org objetivo desde header");
   assert(

@@ -33,18 +33,18 @@ Deno.test("B-3: la guarda usa rol de captura CxP y check_ratelimit fail-closed",
 
 Deno.test("v13.823.4: guarda por header antes de formData/arrayBuffer/base64", async () => {
   const src = await Deno.readTextFile(new URL("./index.ts", import.meta.url));
-  const idxGuard = src.indexOf("await autorizarYLimitar(");
-  const idxLeer = src.indexOf("await leerPdfDelRequest(");
-  const idxForm = src.indexOf("await req.formData()");
-  const idxBuf = src.indexOf("await file.arrayBuffer()");
-  const idxB64 = src.indexOf("btoa(bin)");
-  assert(idxGuard > 0);
-  assert(idxGuard < idxLeer, "la guarda corre antes de leer el PDF");
-  assert(idxGuard < idxForm && idxGuard < idxBuf && idxGuard < idxB64);
+  // El orden se evalúa dentro del handler: `leerPdfDelRequest` (que hace
+  // formData/arrayBuffer/base64) debe invocarse DESPUÉS de la guarda.
+  const handle = src.slice(src.indexOf("async function handle("));
+  const idxGuard = handle.indexOf("await autorizarYLimitar(");
+  const idxLeer = handle.indexOf("await leerPdfDelRequest(");
+  assert(idxGuard > 0 && idxLeer > 0);
+  assert(idxGuard < idxLeer, "la guarda debe correr antes de leer el PDF");
   assert(src.includes("leerOrgHeader(req)"), "org objetivo desde header");
   assert(
     !src.includes('form.get("organization_id")'),
     "ya no se confía en el organization_id del multipart",
   );
   assert(src.includes("content-length") && src.includes("MAX_BYTES"));
+  assert(src.includes("await file.arrayBuffer()") && src.includes("btoa(bin)"));
 });
