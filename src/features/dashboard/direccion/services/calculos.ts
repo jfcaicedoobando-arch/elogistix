@@ -2,14 +2,13 @@
  * Cálculos puros del Dashboard Dirección — sin I/O, sin React, testeables.
  */
 import { calcularMargen, calcularUtilidad } from "@/lib/financial/financialUtils";
-import { inicioMesUtc, toMxn, ym } from "./mxn";
+import { HORIZONTE_MESES_DIRECCION, mesMasOffset, mesNegocio, toMxn } from "./mxn";
 import type {
   ConceptoCostoRow, ConceptoVentaRow, EmbarqueRow,
 } from "./loaders";
 import type { MargenMes, MargenModo, TopCliente } from "./tipos";
 
 
-const HORIZONTE_MESES = 6;
 
 export interface EmbarqueAgg {
   venta: number; costo: number; modo: string;
@@ -74,11 +73,12 @@ export function agregarEmbarques(
 }
 
 export function calcularMargen6m(aggs: EmbarqueAgg[], hoy: Date): MargenMes[] {
-  const base = inicioMesUtc(hoy);
+  // P1 fecha de negocio: la serie se arma con aritmética mensual pura sobre el
+  // mes de México, no con meses UTC (antes cambiaba de mes a las 18:00 CDMX).
+  const mesActual = mesNegocio(hoy);
   const out: MargenMes[] = [];
-  for (let i = HORIZONTE_MESES - 1; i >= 0; i--) {
-    const d = new Date(Date.UTC(base.getUTCFullYear(), base.getUTCMonth() - i, 1));
-    const key = ym(d);
+  for (let i = HORIZONTE_MESES_DIRECCION - 1; i >= 0; i--) {
+    const key = mesMasOffset(mesActual, -i);
     const rel = aggs.filter((a) => a.mes === key);
     const v = rel.reduce((s, a) => s + a.venta, 0);
     const c = rel.reduce((s, a) => s + a.costo, 0);

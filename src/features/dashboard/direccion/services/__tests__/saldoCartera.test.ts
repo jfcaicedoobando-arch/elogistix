@@ -7,6 +7,7 @@
  */
 import { describe, it, expect } from "vitest";
 import { calcularSaldosCarteraMxn, ncEnMonedaFactura, saldoEnMonedaFactura } from "../saldoCartera";
+import type { TcFallbacks } from "../mxn";
 import type { FacturaRow, NotaCreditoRow, PagoRow } from "../loaders";
 
 function factura(over: Partial<FacturaRow> = {}): FacturaRow {
@@ -23,8 +24,8 @@ function pago(over: Partial<PagoRow>): PagoRow {
 function nc(over: Partial<NotaCreditoRow>): NotaCreditoRow {
   return { factura_id: "f1", monto: 0, moneda: "MXN", tipo_cambio: null, ...over };
 }
-const saldoMxn = (f: FacturaRow, pagos: PagoRow[], ncs: NotaCreditoRow[], fallbackUsd = 18): number =>
-  calcularSaldosCarteraMxn([f], pagos, ncs, fallbackUsd).get(f.id) ?? 0;
+const saldoMxn = (f: FacturaRow, pagos: PagoRow[], ncs: NotaCreditoRow[], fallbacks: TcFallbacks = { usd: 18, eur: 22 }): number =>
+  calcularSaldosCarteraMxn([f], pagos, ncs, fallbacks).get(f.id) ?? 0;
 
 describe("pagos: monto_aplicado_factura ya viene en moneda de factura", () => {
   it("factura USD 100 @20; pago MXN con monto_aplicado_factura 50 => saldo MXN 1000", () => {
@@ -103,6 +104,6 @@ describe("NC en moneda de factura (espejo de nc_aplicadas_en_moneda_factura)", (
 
   it("factura cancelada no entra en el mapa de saldos", () => {
     const f = factura({ estado: "Cancelada" });
-    expect(calcularSaldosCarteraMxn([f], [], [], 18).has(f.id)).toBe(false);
+    expect(calcularSaldosCarteraMxn([f], [], [], { usd: 18 }).has(f.id)).toBe(false);
   });
 });

@@ -184,7 +184,7 @@ describe("calcularAntiguedad", () => {
   const hoy = new Date(Date.UTC(2026, 1, 1)); // 2026-02-01
 
   it("ignora facturas canceladas", () => {
-    const out = calcularAntiguedad([factura({ estado: "Cancelada" })], [], 18, hoy);
+    const out = calcularAntiguedad([factura({ estado: "Cancelada" })], [], { usd: 18 }, hoy);
     expect(out.every((b) => b.facturas === 0)).toBe(true);
   });
 
@@ -192,7 +192,7 @@ describe("calcularAntiguedad", () => {
     const out = calcularAntiguedad(
       [factura({ id: "f1", total: 1000, fecha_vencimiento: "2026-01-01" })],
       [{ factura_id: "f1", monto_aplicado_factura: 1000, moneda: "MXN", tipo_cambio: null, fecha_pago: "2026-01-05" }],
-      18, hoy,
+      { usd: 18 }, hoy,
     );
     // saldo <= 0.5 -> se ignora
     expect(out.reduce((s, b) => s + b.facturas, 0)).toBe(0);
@@ -202,37 +202,37 @@ describe("calcularAntiguedad", () => {
     const out = calcularAntiguedad(
       [factura({ id: "f1", estado: "Cancelada" })],
       [{ factura_id: "f-inexistente", monto_aplicado_factura: 10, moneda: "MXN", tipo_cambio: null, fecha_pago: "2026-01-05" }],
-      18, hoy,
+      { usd: 18 }, hoy,
     );
     expect(out.reduce((s, b) => s + b.facturas, 0)).toBe(0);
   });
 
   it("clasifica bucket Corriente cuando dias <= 0", () => {
-    const out = calcularAntiguedad([factura({ fecha_vencimiento: "2026-02-10" })], [], 18, hoy);
+    const out = calcularAntiguedad([factura({ fecha_vencimiento: "2026-02-10" })], [], { usd: 18 }, hoy);
     const corriente = out.find((b) => b.bucket === "Corriente")!;
     expect(corriente.facturas).toBe(1);
   });
 
   it("clasifica bucket 1-30", () => {
-    const out = calcularAntiguedad([factura({ fecha_vencimiento: "2026-01-15" })], [], 18, hoy);
+    const out = calcularAntiguedad([factura({ fecha_vencimiento: "2026-01-15" })], [], { usd: 18 }, hoy);
     const b = out.find((x) => x.bucket === "1-30")!;
     expect(b.facturas).toBe(1);
   });
 
   it("clasifica bucket 31-60", () => {
-    const out = calcularAntiguedad([factura({ fecha_vencimiento: "2025-12-15" })], [], 18, hoy);
+    const out = calcularAntiguedad([factura({ fecha_vencimiento: "2025-12-15" })], [], { usd: 18 }, hoy);
     const b = out.find((x) => x.bucket === "31-60")!;
     expect(b.facturas).toBe(1);
   });
 
   it("clasifica bucket +60", () => {
-    const out = calcularAntiguedad([factura({ fecha_vencimiento: "2025-10-01" })], [], 18, hoy);
+    const out = calcularAntiguedad([factura({ fecha_vencimiento: "2025-10-01" })], [], { usd: 18 }, hoy);
     const b = out.find((x) => x.bucket === "+60")!;
     expect(b.facturas).toBe(1);
   });
 
   it("usa hoy como venc cuando fecha_vencimiento es null", () => {
-    const out = calcularAntiguedad([factura({ fecha_vencimiento: null })], [], 18, hoy);
+    const out = calcularAntiguedad([factura({ fecha_vencimiento: null })], [], { usd: 18 }, hoy);
     const corriente = out.find((b) => b.bucket === "Corriente")!;
     expect(corriente.facturas).toBe(1);
   });
@@ -256,7 +256,7 @@ describe("calcularHero", () => {
       aggs, facturas, facturasCartera: facturas, antiguedad: [
         { bucket: "Corriente", monto_mxn: 100, facturas: 1 },
         { bucket: "1-30", monto_mxn: 200, facturas: 1 },
-      ], fallbackUsd: 18, hoy, mesActual: "2026-01", mesPrev: "2025-12",
+      ], fallbacks: { usd: 18 }, hoy, mesActual: "2026-01", mesPrev: "2025-12",
     });
     expect(out.venta_mxn).toBe(1000);
     expect(out.costo_mxn).toBe(600);
@@ -271,7 +271,7 @@ describe("calcularHero", () => {
       factura({ id: "f1", estado: "Pendiente", fecha_vencimiento: "2020-01-01", cliente_id: null }),
     ];
     const out = calcularHero({
-      aggs: [], facturas, facturasCartera: facturas, antiguedad: [], fallbackUsd: 18, hoy, mesActual: "2026-01", mesPrev: "2025-12",
+      aggs: [], facturas, facturasCartera: facturas, antiguedad: [], fallbacks: { usd: 18 }, hoy, mesActual: "2026-01", mesPrev: "2025-12",
     });
     expect(out.cartera_vencida_clientes).toBe(0);
   });
@@ -288,7 +288,7 @@ describe("calcularHero", () => {
     const out = calcularHero({
       aggs: [], facturas: [], facturasCartera: [facturaVieja],
       antiguedad: [{ bucket: "+60", monto_mxn: 1000, facturas: 1 }],
-      fallbackUsd: 18, hoy, mesActual: "2026-01", mesPrev: "2025-12",
+      fallbacks: { usd: 18 }, hoy, mesActual: "2026-01", mesPrev: "2025-12",
     });
     expect(out.cartera_vencida_mxn).toBe(1000);
     expect(out.cartera_vencida_clientes).toBe(1);

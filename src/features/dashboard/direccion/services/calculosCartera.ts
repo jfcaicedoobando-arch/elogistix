@@ -1,10 +1,9 @@
-import { format } from "date-fns";
 /**
  * Cálculos de cartera y KPIs de cabecera/pulso del Dashboard Dirección.
  * Extraído de `calculos.ts` para respetar el límite de 200 líneas por archivo.
  */
 import { calcularMargen, calcularUtilidad } from "@/lib/financial/financialUtils";
-import { mxnFactura } from "./mxn";
+import { diaNegocio, mxnFactura, type TcFallbacks } from "./mxn";
 import { calcularSaldosCarteraMxn } from "./saldoCartera";
 
 import type { EmbarqueEstadoRow, FacturaRow, NotaCreditoRow, PagoRow } from "./loaders";
@@ -17,9 +16,9 @@ const TOLERANCIA_SALDO_MXN = 0.5;
 
 
 export function calcularAntiguedad(
-  facturas: FacturaRow[], pagos: PagoRow[], fallbackUsd: number, hoy: Date, ncs: NotaCreditoRow[] = [],
+  facturas: FacturaRow[], pagos: PagoRow[], fallbacks: TcFallbacks, hoy: Date, ncs: NotaCreditoRow[] = [],
 ): BucketAntiguedad[] {
-  const saldo = calcularSaldosCarteraMxn(facturas, pagos, ncs, fallbackUsd);
+  const saldo = calcularSaldosCarteraMxn(facturas, pagos, ncs, fallbacks);
   const buckets: Record<BucketAntiguedad["bucket"], BucketAntiguedad> = {
     "Corriente": { bucket: "Corriente", monto_mxn: 0, facturas: 0 },
     "1-30": { bucket: "1-30", monto_mxn: 0, facturas: 0 },
@@ -50,11 +49,13 @@ export interface CalcularHeroParams {
   pagosCartera?: PagoRow[];
   ncsCartera?: NotaCreditoRow[];
   antiguedad: BucketAntiguedad[];
-  fallbackUsd: number; hoy: Date; mesActual: string; mesPrev: string;
+  /** Tipos de cambio de respaldo por moneda (USD/EUR). */
+  fallbacks: TcFallbacks;
+  hoy: Date; mesActual: string; mesPrev: string;
 }
 
 export function calcularHero(params: CalcularHeroParams): HeroKpis {
-  const { aggs, facturas, facturasCartera, antiguedad, fallbackUsd, hoy, mesActual, mesPrev } = params;
+  const { aggs, facturas, facturasCartera, antiguedad, fallbacks, hoy, mesActual, mesPrev } = params;
   const cur = aggs.filter((a) => a.mes === mesActual);
   const prev = aggs.filter((a) => a.mes === mesPrev);
   const v = cur.reduce((s, a) => s + a.venta, 0);
@@ -63,15 +64,16 @@ export function calcularHero(params: CalcularHeroParams): HeroKpis {
   const cP = prev.reduce((s, a) => s + a.costo, 0);
   const facturado = facturas
     .filter((f) => f.estado !== "Cancelada" && f.fecha_emision.slice(0, 7) === mesActual)
-    .reduce((s, f) => s + mxnFactura(Number(f.total ?? 0), f.moneda, f.tipo_cambio, fallbackUsd), 0);
+    .reduce((s, f) => s + mxnFactura(Number(f.total ?? 0), f.moneda, f.tipo_cambio, fallbacks), 0);
   const saldos = calcularSaldosCarteraMxn(
-    facturasCartera, params.pagosCartera ?? [], params.ncsCartera ?? [], fallbackUsd,
+    facturasCartera, params.pagosCartera ?? [], params.ncsCartera ?? [], fallbacks,
   );
   const vencidas = facturasCartera.filter((f) => {
     if (f.estado === "Cancelada" || f.estado === "Pagada") return false;
     if (!f.fecha_vencimiento) return false;
     if ((saldos.get(f.id) ?? 0) <= TOLERANCIA_SALDO_MXN) return false;
-    return new Date(`${f.fecha_vencimiento}T00:00:00Z`).getTime() < hoy.getTime();
+    // P2: mismo criterio que el aging — vencer HOY no es estar vencida.
+    return diasVencidos(f.fecha_vencimiento, hoy) > 0;
   });
   const clientes = new Set(vencidas.map((f) => f.cliente_id).filter(Boolean));
 
@@ -103,8 +105,8 @@ export function calcularPulso(
       const etaDia = r.eta.slice(0, 10);
       // FE-04: día local MX; con `toISOString()` los KPIs cambiaban de día a
       // las 18:00 (UTC−6).
-      const hoyDia = format(hoy, "yyyy-MM-dd");
-      const en7dDia = format(en7d, "yyyy-MM-dd");
+      const hoyDia = diaNegocio(hoy);
+      const en7dDia = diaNegocio(en7d);
       if (etaDia >= hoyDia && etaDia <= en7dDia) arribos_7d += 1;
       const diasRetraso = diasVencidos(etaDia, hoyDia);
       // Ola 4 · N21: sólo demora tras los días libres del canon (>7), no

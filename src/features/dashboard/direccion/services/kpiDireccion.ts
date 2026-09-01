@@ -1,7 +1,7 @@
 /**
  * Orquestador: dispara loaders en paralelo y aplica cálculos puros.
  */
-import { inicioMesUtc, ym, ventanaDireccionDesdeIso } from "./mxn";
+import { mesMasOffset, mesNegocio, ventanaDireccionDesdeIso, type TcFallbacks } from "./mxn";
 import { loadCarteraAbierta, loadEmbarques, loadEmbarquesActivos, loadFacturas } from "./loaders";
 import {
   agregarEmbarques, calcularAntiguedad, calcularHero, calcularMargen6m,
@@ -10,13 +10,12 @@ import {
 import type { DireccionKpis } from "./tipos";
 
 export async function fetchDireccionKpis(
-  orgId: string | null, fallbackUsdMxn: number, hoy: Date = new Date(),
+  orgId: string | null, fallbacks: TcFallbacks, hoy: Date = new Date(),
 ): Promise<DireccionKpis> {
-  const base = inicioMesUtc(hoy);
   const desdeIso = ventanaDireccionDesdeIso(hoy);
-
-  const mesActual = ym(base);
-  const mesPrev = ym(new Date(Date.UTC(base.getUTCFullYear(), base.getUTCMonth() - 1, 1)));
+  // Mes de negocio en America/Mexico_City (no UTC).
+  const mesActual = mesNegocio(hoy);
+  const mesPrev = mesMasOffset(mesActual, -1);
 
   // P1-6: la tendencia/facturado sigue acotada a 6 meses (`loadFacturas`), pero
   // la cartera abierta (aging + vencido) usa `loadCarteraAbierta`, SIN ventana
@@ -31,13 +30,13 @@ export async function fetchDireccionKpis(
 
   const aggs = agregarEmbarques(embarquesData.embarques, embarquesData.ventas, embarquesData.costos);
   const antiguedad = calcularAntiguedad(
-    carteraAbierta.facturas, carteraAbierta.pagos, fallbackUsdMxn, hoy, carteraAbierta.ncs,
+    carteraAbierta.facturas, carteraAbierta.pagos, fallbacks, hoy, carteraAbierta.ncs,
   );
   return {
     hero: calcularHero({
       aggs, facturas: facturasData.facturas, facturasCartera: carteraAbierta.facturas,
       pagosCartera: carteraAbierta.pagos, ncsCartera: carteraAbierta.ncs,
-      antiguedad, fallbackUsd: fallbackUsdMxn, hoy, mesActual, mesPrev,
+      antiguedad, fallbacks, hoy, mesActual, mesPrev,
     }),
 
     margen_6m: calcularMargen6m(aggs, hoy),
