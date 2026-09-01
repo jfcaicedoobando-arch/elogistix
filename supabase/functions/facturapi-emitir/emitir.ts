@@ -126,14 +126,15 @@ async function createInvoiceInFacturapi(
   input: EmitirInput,
   payload: ReturnType<typeof buildFacturapiPayload>,
 ): Promise<FapiInvoice | Response> {
-  const { supabase, facturapi, factura, facturaId, user, claim } = input;
+  const { supabase, factura, facturaId, user, claim } = input;
+  const facturapi = input.facturapi as { invoices: { create: (p: unknown) => Promise<unknown> } };
   try {
     // FIX-04/32 — timeout defensivo: si FacturApi cuelga devolvemos 504 en vez
     // de dejar la Edge Function ocupada 150 s.
     // El SDK se modela como `object` (no publica typings para Deno): se
-    // estrecha aquí al único método que usamos en lugar de castear el detalle.
-    const api = facturapi as { invoices: { create: (p: unknown) => Promise<unknown> } };
-    return await withFacturapiTimeout("invoices.create", api.invoices.create(payload)) as FapiInvoice;
+    // estrecha arriba al único método que usamos en lugar de castear el detalle.
+    return await withFacturapiTimeout("invoices.create", facturapi.invoices.create(payload)) as FapiInvoice;
+
   } catch (err) {
     if (err instanceof FacturapiTimeoutError) {
       // EF-02 (auditoría): en timeout NO liberamos el claim. Si FacturApi sí
