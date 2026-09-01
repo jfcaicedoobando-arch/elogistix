@@ -71,7 +71,8 @@ export default function PortalDashboard() {
           primer frame; sólo el cuerpo de datos se sustituye por el esqueleto. */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex-1">
-          <PortalWelcomeCard clienteName={clienteName} contactoName={contactoName} orgName={orgName} />
+          {/* Con varias empresas no se afirma el nombre de una sola. */}
+          <PortalWelcomeCard clienteName={clientes.length === 1 ? clienteName : null} contactoName={contactoName} orgName={orgName} />
         </div>
         <Button className="sm:self-stretch" onClick={() => setSolicitudAbierta(true)}>
           <Plus className="h-4 w-4 mr-1" aria-hidden /> Solicitar cotización
