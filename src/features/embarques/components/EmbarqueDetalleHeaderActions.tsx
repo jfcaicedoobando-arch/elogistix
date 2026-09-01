@@ -60,16 +60,20 @@ interface Props {
   acciones: AccionesEmbarqueCallbacks;
 }
 
-const ESTADOS_TERMINALES = ["Entregado", "EIR", "Por liquidar", "Cerrado", "Cancelado"];
+// v13.820.3: la UI se alinea al guard del RPC `eliminar_embarque`: sólo
+// `Cerrado`/`Cancelado` bloquean el borrado por estado; las dependencias
+// fiscales las valida la base de datos.
+const ESTADOS_BLOQUEAN_BORRADO = ["Cerrado", "Cancelado"];
 const ESTADOS_CANCELABLES = ["Borrador", "Confirmado", "En Tránsito", "Llegada", "En Aduana", "Arribo"];
 
 /** Lint (complejidad): derivaciones de estado fuera del componente. */
 function derivarEstadoAcciones(estadoVisual: string) {
   return {
-    esTerminal: ESTADOS_TERMINALES.includes(estadoVisual),
+    esTerminal: ESTADOS_BLOQUEAN_BORRADO.includes(estadoVisual),
     puedeCancelar: ESTADOS_CANCELABLES.includes(estadoVisual),
   };
 }
+
 
 export function EmbarqueDetalleHeaderActions({
   contexto, estado, cierre, acciones,
