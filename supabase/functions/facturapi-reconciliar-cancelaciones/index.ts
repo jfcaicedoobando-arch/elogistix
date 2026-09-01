@@ -3,6 +3,11 @@
  * `cancellation_status` de cada factura marcada como `pending`/`verifying`
  * y sincroniza la BD. Se dispara cada 30 min via pg_cron/pg_net.
  * Idempotente y seguro de reintentar.
+ *
+ * P1-3b: la corrida tiene presupuesto de wall-time (`presupuesto.ts`) y recorre
+ * un plan intercalado por organización y familia (`plan.ts`), ejecutado por
+ * `ejecutar.ts`. Los documentos que no alcanzan a iniciarse quedan intactos
+ * (`resumen.diferidos`) y son los primeros de la corrida siguiente.
  */
 import { createClient, SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { wrapEdgeHandler, captureEdgeException } from "../_shared/sentry.ts";
@@ -10,35 +15,24 @@ import { getFacturapiClient, withFacturapiTimeout } from "../_shared/facturapiCl
 import { registrarBitacoraEdge } from "../_shared/bitacora.ts";
 import { jsonResponse } from "../_shared/response.ts";
 import { tomarCronLock, soltarCronLock } from "../_shared/cronLock.ts";
-import { validarRequest, cargarPendientes, type Pendientes } from "./entrada.ts";
+import { validarRequest, cargarPendientes } from "./entrada.ts";
 import { marcarRevisado } from "./cursor.ts";
 import { reconcileOneRep } from "./reps.ts";
+import { reconcileOneNc } from "./ncs.ts";
+import { planificarTareas } from "./plan.ts";
+import { crearPresupuesto, CRON_RETRIEVE_TIMEOUT_MS } from "./presupuesto.ts";
+import { ejecutarPlan, type ReconcileCtx, type ClienteResuelto, type RetrieveClient } from "./ejecutar.ts";
 import {
   descargarAcuse,
   resolveNextAction,
-  resolveNextActionNc,
-  agruparPorOrg,
-  nuevoResumen,
   acumularOutcome,
   type FacturaPendiente,
-  type NotaCreditoPendiente,
-  type RepPendiente,
   type FapiInvoiceStatus,
-  type Resumen,
 } from "./reconcile.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const CRON_SECRET = Deno.env.get("CRON_SECRET");
-
-/**
- * R3EF-02 (Ola 12): timeout por llamada al SDK en el barrido del cron.
- * 15 s (no los 30 s default de `withFacturapiTimeout`): con cientos de
- * pendientes por corrida, un retrieve colgado truncaría el lote entero.
- * El catch EF-12 deja la fila en pending/verifying → reintento en 30 min.
- */
-const CRON_RETRIEVE_TIMEOUT_MS = 15_000;
-
 
 /**
  * Limpia sólo los punteros `factura_id`/`factura_secundaria_id`.
@@ -101,23 +95,16 @@ async function applyAccepted(
   return true;
 }
 
-interface ReconcileCtx {
-  supabase: SupabaseClient;
-  facturapi: { invoices: { retrieve: (id: string) => Promise<unknown> } };
-  apiKey: string;
-  orgId: string;
-  resumen: Resumen;
-}
-
 async function reconcileOne(ctx: ReconcileCtx, factura: FacturaPendiente): Promise<void> {
-  const { supabase, facturapi, apiKey, orgId, resumen } = ctx;
-  resumen.revisadas++;
+  ctx.resumen.revisadas++;
   try {
     return await reconcileOneInner(ctx, factura);
   } finally {
     // P1-3: marca el cursor SIEMPRE (accepted/no_change/error) para que el
     // siguiente barrido no vuelva a priorizar este documento sobre el resto.
-    await marcarRevisado(supabase, "facturas", "reconciliacion_checked_at", factura.id, new Date().toISOString());
+    // Sólo se llega aquí en documentos realmente INICIADOS: los diferidos por
+    // presupuesto no pasan por `reconcileOne` y conservan su cursor.
+    await marcarRevisado(ctx.supabase, "facturas", "reconciliacion_checked_at", factura.id, new Date().toISOString());
   }
 }
 
@@ -173,134 +160,15 @@ async function reconcileOneInner(ctx: ReconcileCtx, factura: FacturaPendiente): 
   }
 }
 
-
-/** EF-03: cierra una NC cuya cancelación el SAT aceptó asíncronamente (acuse + bitácora). */
-async function applyAcceptedNc(
-  supabase: SupabaseClient,
-  nc: NotaCreditoPendiente,
-  patchBase: Record<string, unknown>,
-  apiKey: string,
-  orgId: string,
-): Promise<boolean> {
-  const acuse = await descargarAcuse(nc.facturapi_id, apiKey);
-  const patch = {
-    ...patchBase,
-    acuse_cancelacion_xml: acuse.xml,
-    acuse_cancelacion_fecha: acuse.xml ? new Date().toISOString() : null,
-    acuse_cancelacion_status: acuse.status,
+async function resolverCliente(supabase: SupabaseClient, orgId: string): Promise<ClienteResuelto> {
+  const resolved = await getFacturapiClient(supabase, orgId);
+  if (!resolved.ok) return { ok: false };
+  return {
+    ok: true,
+    // SAFE-CAST: el SDK `facturapi` no expone typings; sólo se usa invoices.retrieve.
+    client: resolved.data.client as unknown as RetrieveClient,
+    apiKey: resolved.data.apiKey,
   };
-  const { error: upErr } = await supabase.from("factura_notas_credito").update(patch).eq("id", nc.id);
-  if (upErr) return false;
-
-  await registrarBitacoraEdge(supabase, {
-    organizationId: orgId,
-    usuarioId: null,
-    modulo: "facturacion",
-    accion: "facturapi_nc_cancelada_async",
-    entidadId: nc.id,
-    detalles: { via: "cron_reconciliacion", cancellation_status: "accepted" },
-  });
-  return true;
-}
-
-/** EF-03: espejo de reconcileOne para factura_notas_credito. */
-async function reconcileOneNc(ctx: ReconcileCtx, nc: NotaCreditoPendiente): Promise<void> {
-  const { supabase, facturapi, apiKey, orgId, resumen } = ctx;
-  resumen.revisadas++;
-  try {
-    return await reconcileOneNcInner(ctx, nc);
-  } finally {
-    await marcarRevisado(supabase, "factura_notas_credito", "reconciliacion_checked_at", nc.id, new Date().toISOString());
-  }
-}
-
-async function reconcileOneNcInner(ctx: ReconcileCtx, nc: NotaCreditoPendiente): Promise<void> {
-  const { supabase, facturapi, apiKey, orgId, resumen } = ctx;
-  try {
-    const remote = await withFacturapiTimeout(
-      "invoices.retrieve",
-      facturapi.invoices.retrieve(nc.facturapi_id),
-      CRON_RETRIEVE_TIMEOUT_MS,
-    ) as FapiInvoiceStatus;
-    const decision = resolveNextActionNc(remote, nc, new Date().toISOString());
-
-    if (decision.outcome === "no_change") {
-      resumen.sin_cambio++;
-      return;
-    }
-
-    if (decision.outcome === "accepted") {
-      const ok = await applyAcceptedNc(supabase, nc, decision.patch, apiKey, orgId);
-      if (!ok) { resumen.errores++; return; }
-      resumen.aceptadas++;
-      return;
-    }
-
-    // rejected / expired / transition
-    await supabase.from("factura_notas_credito").update(decision.patch).eq("id", nc.id);
-    if (decision.outcome === "rejected" || decision.outcome === "expired") {
-      await registrarBitacoraEdge(supabase, {
-        organizationId: orgId,
-        usuarioId: null,
-        modulo: "facturacion",
-        accion: "facturapi_nc_cancelacion_no_aceptada",
-        entidadId: nc.id,
-        detalles: { via: "cron_reconciliacion", cancellation_status: decision.outcome },
-      });
-    }
-    acumularOutcome(resumen, decision.outcome);
-  } catch (_err) {
-    resumen.errores++;
-    // EF-12: no tragar el error — sin id un fallo sistemático (API key rotada,
-    // red) sólo movía un contador invisible.
-    console.error("[reconciliar-cancelaciones] error", {
-      entidad: "nc",
-      id: nc.id,
-      error: _err instanceof Error ? _err.message : String(_err),
-    });
-    await captureEdgeException(_err, {
-      fn: "facturapi-reconciliar-cancelaciones",
-      organization_id: orgId,
-      extra: { nota_credito_id: nc.id, facturapi_id: nc.facturapi_id },
-    });
-  }
-}
-
-
-
-
-/** Reconcilia lote por lote agrupando por organización (un cliente FacturApi por org). */
-async function reconciliarPorOrg(supabase: SupabaseClient, pendientes: Pendientes): Promise<Resumen> {
-  const resumen = nuevoResumen();
-  const porOrg = agruparPorOrg(pendientes.facturas);
-  const ncPorOrg = agruparPorOrg(pendientes.notasCredito as unknown as FacturaPendiente[]);
-  const repPorOrg = agruparPorOrg(pendientes.reps as unknown as FacturaPendiente[]);
-  // Unir las llaves de los mapas para resolver el cliente una sola vez por org.
-  const orgIds = new Set<string>([...porOrg.keys(), ...ncPorOrg.keys(), ...repPorOrg.keys()]);
-
-  for (const orgId of orgIds) {
-    const lote = porOrg.get(orgId) ?? [];
-    const loteNc = (ncPorOrg.get(orgId) ?? []) as unknown as NotaCreditoPendiente[];
-    const loteRep = (repPorOrg.get(orgId) ?? []) as unknown as RepPendiente[];
-    const resolved = await getFacturapiClient(supabase, orgId);
-    if (!resolved.ok) {
-      resumen.errores += lote.length + loteNc.length + loteRep.length;
-      continue;
-    }
-    const ctx: ReconcileCtx = {
-      supabase, facturapi: resolved.data.client, apiKey: resolved.data.apiKey, orgId, resumen,
-    };
-    for (const factura of lote) {
-      await reconcileOne(ctx, factura);
-    }
-    for (const nc of loteNc) {
-      await reconcileOneNc(ctx, nc);
-    }
-    for (const rep of loteRep) {
-      await reconcileOneRep(ctx, rep);
-    }
-  }
-  return resumen;
 }
 
 Deno.serve(wrapEdgeHandler("facturapi-reconciliar-cancelaciones", async (req) => {
@@ -319,10 +187,14 @@ Deno.serve(wrapEdgeHandler("facturapi-reconciliar-cancelaciones", async (req) =>
     const pendientes = await cargarPendientes(supabase);
     if (!pendientes.ok) return pendientes.res;
 
-    const resumen = await reconciliarPorOrg(supabase, pendientes.data);
+    const resumen = await ejecutarPlan(planificarTareas(pendientes.data), {
+      supabase,
+      presupuesto: crearPresupuesto(),
+      resolverCliente: (orgId) => resolverCliente(supabase, orgId),
+      procesar: { factura: reconcileOne, nc: reconcileOneNc, rep: reconcileOneRep },
+    });
     return jsonResponse({ ok: true, resumen });
   } finally {
     if (lock === "tomado") await soltarCronLock(supabase, "facturapi-reconciliar-cancelaciones");
   }
 }));
-
