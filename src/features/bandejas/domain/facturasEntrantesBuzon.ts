@@ -12,7 +12,7 @@ import { importeEntrante } from "./facturasEntrantesImporte";
 import type { FilaBuzon, TonoAntiguedad } from "./facturasEntrantesTipos";
 
 export type { FilaBuzon, TonoAntiguedad } from "./facturasEntrantesTipos";
-export { importeEntrante, type ImporteEntranteInfo } from "./facturasEntrantesImporte";
+export { importeEntrante } from "./facturasEntrantesImporte";
 
 /** Umbral (en días) a partir del cual el documento se considera atrasado. */
 export const DIAS_ATRASO_BUZON = 3;

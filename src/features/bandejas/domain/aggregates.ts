@@ -12,7 +12,6 @@ import {
   estaPorVencer,
   esVencidoPorDias,
   esVencidoPorDiasParaVencer,
-  DIAS_POR_VENCER_CXC,
 } from "@/lib/domain/vencimiento";
 import { aMxn } from "@/lib/financial/convertir";
 
@@ -97,8 +96,6 @@ export function resumirCartera(rows: CarteraPendienteRow[]): CarteraSummary {
  * cero = vence hoy, negativo = aún le quedan días.
  */
 export type UrgenciaCartera = "accionable" | "vencidas" | "por_vencer" | "todas";
-
-export { DIAS_POR_VENCER_CXC };
 
 export function matchesUrgencia(diasVencido: number, urgencia: UrgenciaCartera): boolean {
   switch (urgencia) {

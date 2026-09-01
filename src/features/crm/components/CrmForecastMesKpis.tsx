@@ -63,4 +63,3 @@ export function CrmForecastMesKpis() {
   );
 }
 
-export default CrmForecastMesKpis;

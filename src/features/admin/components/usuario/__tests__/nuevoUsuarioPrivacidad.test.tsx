@@ -58,7 +58,7 @@ describe("privacidad de credenciales en NuevoUsuarioDialog", () => {
     expect(passwordInput()).toHaveValue("");
   });
 
-  it("sin cambios, Escape cierra directo sin alerta", () => {
+  it("alta de usuario sin cambios: Escape cierra directo sin alerta", () => {
     render(<Wrapper />);
     fireEvent.keyDown(document.body, { key: "Escape" });
     expect(screen.queryByText("¿Descartar los cambios?")).toBeNull();

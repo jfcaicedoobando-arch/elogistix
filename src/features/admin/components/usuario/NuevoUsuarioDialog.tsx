@@ -12,7 +12,7 @@ import { NuevoUsuarioCredencialesSection } from "./NuevoUsuarioCredencialesSecti
 import { NuevoUsuarioAccesoSection } from "./NuevoUsuarioAccesoSection";
 import { PASSWORD_MIN } from "@/lib/passwords/policy";
 import { normalizarEmail, esEmailValido } from "./emailUsuario";
-import { useNuevoUsuarioForm } from "./useNuevoUsuarioForm";
+import { useNuevoUsuarioForm } from "../../hooks/useNuevoUsuarioForm";
 
 interface Props {
   open: boolean;

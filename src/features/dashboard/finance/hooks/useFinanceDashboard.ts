@@ -13,8 +13,6 @@ import { esFacturaPorPagar } from "@/features/cxp/services";
 import { esCxcVencida } from "@/lib/domain/vencimiento";
 import { resumirAgingMxn, type ResumenAgingMxn } from "@/features/dashboard/finance/domain/carteraAging";
 
-export type { AgingMxn } from "@/features/dashboard/finance/domain/carteraAging";
-
 export function useFinanceDashboard() {
   const cobranzaQ = useCobranza({});
   const cxpQ = useFacturasCxP({});

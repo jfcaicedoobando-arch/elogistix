@@ -132,11 +132,6 @@ export const fleteLclManualSchema = z
 
 // ── Paso 2 · Costos internos ─────────────────────────────────────────────────
 
-export interface Paso2Input {
-  totalCostos: number;
-  renglonesSinConcepto: number;
-}
-
 export const costosPaso2Schema = z
   .object({
     totalCostos: z.number(),

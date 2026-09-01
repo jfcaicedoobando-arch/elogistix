@@ -150,6 +150,42 @@ async function sugerirCategoria(
   return { result, outcome, latency_ms, status_code };
 }
 
+/**
+ * Ola P2 · valida tamaño, tipo y catálogo del multipart antes de parsear.
+ * Devuelve el archivo o la respuesta de error ya lista.
+ */
+async function validarEntrada(
+  req: Request,
+  cors: Record<string, string>,
+): Promise<{ ok: true; file: File; categoriasJson: string | null } | { ok: false; res: Response }> {
+  const contentLength = Number(req.headers.get("content-length") ?? "0");
+  if (Number.isFinite(contentLength) && contentLength > MAX_CONTENT_LENGTH) {
+    return { ok: false, res: errorResponse("El XML excede 2 MB", 413, cors) };
+  }
+
+  let form: FormData;
+  try {
+    form = await req.formData();
+  } catch {
+    return { ok: false, res: errorResponse("No se pudo leer el archivo enviado", 400, cors) };
+  }
+  const file = form.get("file") as File | null;
+  const categoriasJson = form.get("categorias") as string | null;
+
+  if (!file) return { ok: false, res: errorResponse("Falta archivo XML", 400, cors) };
+  if (file.size > MAX_BYTES) return { ok: false, res: errorResponse("El XML excede 2 MB", 413, cors) };
+  const isXml = file.type.includes("xml") || file.name.toLowerCase().endsWith(".xml");
+  if (!isXml) return { ok: false, res: errorResponse("Solo se aceptan archivos XML", 400, cors) };
+
+  if (categoriasJson && categoriasJson.length > MAX_CATEGORIAS_CHARS) {
+    return {
+      ok: false,
+      res: errorResponse("El catálogo de categorías enviado es demasiado grande", 413, cors),
+    };
+  }
+  return { ok: true, file, categoriasJson };
+}
+
 async function handle(req: Request, cors: Record<string, string>, log: ReturnType<typeof createLogger>) {
   const auth = await authenticate(req, log);
   const autorizacion = await autorizarCxp(auth, cors, log, {
@@ -163,30 +199,9 @@ async function handle(req: Request, cors: Record<string, string>, log: ReturnTyp
   // @ts-expect-error Deno
   const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
 
-  // Ola P2: corte por Content-Length ANTES de bufferar el multipart.
-  const contentLength = Number(req.headers.get("content-length") ?? "0");
-  if (Number.isFinite(contentLength) && contentLength > MAX_CONTENT_LENGTH) {
-    return errorResponse("El XML excede 2 MB", 413, cors);
-  }
-
-  let form: FormData;
-  try {
-    form = await req.formData();
-  } catch {
-    return errorResponse("No se pudo leer el archivo enviado", 400, cors);
-  }
-  const file = form.get("file") as File | null;
-  const categoriasJson = form.get("categorias") as string | null;
-
-  if (!file) return errorResponse("Falta archivo XML", 400, cors);
-  if (file.size > MAX_BYTES) return errorResponse("El XML excede 2 MB", 413, cors);
-  const isXml = file.type.includes("xml") || file.name.toLowerCase().endsWith(".xml");
-  if (!isXml) return errorResponse("Solo se aceptan archivos XML", 400, cors);
-
-  // Ola P2: tope explícito al string crudo ANTES de JSON.parse.
-  if (categoriasJson && categoriasJson.length > MAX_CATEGORIAS_CHARS) {
-    return errorResponse("El catálogo de categorías enviado es demasiado grande", 413, cors);
-  }
+  const entrada = await validarEntrada(req, cors);
+  if (!entrada.ok) return entrada.res;
+  const { file, categoriasJson } = entrada;
 
   const text = await file.text();
   let cfdi;

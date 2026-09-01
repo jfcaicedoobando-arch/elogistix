@@ -5,9 +5,4 @@
  * tesorería y el dashboard compartan el mismo predicado. Este módulo se queda
  * como puerta de entrada del feature de facturación (compatibilidad de imports).
  */
-export {
-  DIAS_POR_VENCER_CXC,
-  estaPorVencer,
-  esVencidoPorDias,
-  esCxcVencida,
-} from "@/lib/domain/vencimiento";
+export { estaPorVencer } from "@/lib/domain/vencimiento";

@@ -9,12 +9,6 @@ import { translatePostgresError } from "./pgErrorCodes";
 import { traducirMensajeSat } from "./facturapiError";
 
 export { translateLcCode, stripLcCode } from "./lcCodes";
-export {
-  LC_CONFLICTO_CONCURRENCIA,
-  MENSAJE_CONFLICTO_CONCURRENCIA,
-  conflictoConcurrenciaError,
-  esConflictoConcurrencia,
-} from "./concurrencia";
 
 const FRIENDLY_ERROR_MESSAGES: Array<{ match: RegExp; message: string }> = [
   {

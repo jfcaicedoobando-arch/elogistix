@@ -23,11 +23,6 @@ import { useAuth } from "@/lib/contexts/AuthContext";
 import { useClienteAutorizacion } from "@/features/cliente/hooks/useClienteAutorizacion";
 import type { CotizacionDetalleContenidoProps as Props } from "./cotizacionDetalleContenido.types";
 
-export type {
-  CotizacionDetalleTotales,
-  CotizacionDetalleDialogos,
-} from "./cotizacionDetalleContenido.types";
-
 /** Renderiza el cuerpo de la vista de detalle (todo lo que va bajo el header). */
 export function CotizacionDetalleContenido({
   cotizacion, id, canEdit, effectiveRole, embarquesVinculados, envios,

@@ -7,9 +7,5 @@ export {
   parTc,
   multiplicadorOrigenDestino,
   etiquetaTc,
-  etiquetaTcContraMxn,
-  ayudaTcContraMxn,
-  TC_PLACEHOLDER_MXN,
   type MonedaTc,
-  type ParTc,
 } from "@/lib/financial/tcPar";

@@ -8,11 +8,6 @@ export function useCotizacionesAceptadas() {
   return useQuery(cotizacionQueries.aceptadas(organizationId));
 }
 
-export function useCotizaciones() {
-  const { organizationId } = useOrgFilter();
-  return useQuery(cotizacionQueries.list(organizationId));
-}
-
 export function useCotizacion(id: string | undefined) {
   return useQuery<CotizacionRow | null>({
     ...cotizacionQueries.detail(id ?? ''),

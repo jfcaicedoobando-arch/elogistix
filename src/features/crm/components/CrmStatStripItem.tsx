@@ -33,4 +33,3 @@ export function CrmStatStripItem({
   );
 }
 
-export default CrmStatStripItem;

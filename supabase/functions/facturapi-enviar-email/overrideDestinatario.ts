@@ -7,7 +7,6 @@
  * organización. Ahora un destinatario que NO pertenece al cliente ni al
  * dominio corporativo del emisor exige un rol con responsabilidad de envío.
  */
-// @ts-expect-error Deno remote import
 import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { authorizeOrgRole } from "../_shared/auth.ts";
 import { destinatariosNoPermitidos, dominioDeEmail } from "../_shared/destinatarioCliente.ts";

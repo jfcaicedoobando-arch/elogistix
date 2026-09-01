@@ -78,3 +78,4 @@ supabase/tests/ola1_comisiones_ciclo_recuperacion.sql
 supabase/tests/ola2_moneda_venta.sql
 supabase/tests/ola_v16_cobranza_pagos.sql
 supabase/tests/ola_p1_guards.sql
+supabase/tests/buzon_localizar_duplicado_org_scope.sql
