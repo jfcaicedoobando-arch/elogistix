@@ -38,13 +38,20 @@ export function CotizacionesPageActions({
           onClick={onExportar}
           disabled={totalFiltrado === 0}
           // Un botón deshabilitado no dispara el tooltip de Radix (no recibe
-          // eventos de puntero): el `title` nativo es el único aviso visible.
-          title={totalFiltrado === 0 ? SIN_EXPORTAR : undefined}
+          // eventos de puntero): dejamos la causa como descripción accesible
+          // (sin `title` nativo, prohibido por la auditoría de arquitectura).
+          aria-describedby={totalFiltrado === 0 ? "exportar-csv-motivo" : undefined}
           className="hidden sm:inline-flex"
         >
           <Download className="h-4 w-4 mr-2" /> Exportar CSV
         </Button>
       </Hint>
+      {totalFiltrado === 0 && (
+        <span id="exportar-csv-motivo" className="sr-only">
+          {SIN_EXPORTAR}
+        </span>
+      )}
+
       {/* v13.223.0 · Capa 3 Tranche A · 3.2: acciones secundarias primero,
           primary (`Nueva cotización`) pegado al borde derecho (Fitts's law). */}
       {canEdit && (

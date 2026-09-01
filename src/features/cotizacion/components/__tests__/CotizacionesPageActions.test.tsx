@@ -20,10 +20,11 @@ describe("CotizacionesPageActions · Exportar CSV", () => {
   it("con cero resultados queda deshabilitado y explica la causa", () => {
     const { boton, onExportar } = montar(0);
     expect(boton).toBeDisabled();
-    expect(boton).toHaveAttribute(
-      "title",
-      "No hay cotizaciones que exportar con los filtros actuales.",
-    );
+    expect(boton).toHaveAttribute("aria-describedby", "exportar-csv-motivo");
+    expect(
+      screen.getByText("No hay cotizaciones que exportar con los filtros actuales."),
+    ).toBeInTheDocument();
+
     fireEvent.click(boton);
     expect(onExportar).not.toHaveBeenCalled();
   });
