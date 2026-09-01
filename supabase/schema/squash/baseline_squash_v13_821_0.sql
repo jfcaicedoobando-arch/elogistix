@@ -32861,3 +32861,17 @@ BEGIN
   );
 END
 $CRONALL$;
+
+
+--
+-- v13.821.3 — Trigger de alta de usuarios (esquema `auth`).
+--
+-- El squash se generó con `pg_dump --schema=public`, así que el trigger que
+-- corona al primer usuario y provisiona su membresía se quedó fuera y las
+-- bases limpias arrancaban sin él (producción sí lo tiene, creado por
+-- 20260616232751). Se recrea aquí de forma idempotente.
+--
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+CREATE TRIGGER on_auth_user_created
+  AFTER INSERT ON auth.users
+  FOR EACH ROW EXECUTE FUNCTION public.handle_new_user_signup();

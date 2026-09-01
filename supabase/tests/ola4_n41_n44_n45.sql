@@ -26,7 +26,10 @@ DECLARE
   v_cli uuid := 'c6666666-6666-6666-6666-666666666666';
   v_prov uuid := 'c7777777-7777-7777-7777-777777777777';
   v_cat uuid := 'c8888888-8888-8888-8888-888888888888';
-  v_hoy date := current_date;
+  -- v13.821.3: el tablero razona en hora de México (dashboard_details_datos);
+  -- con `current_date` (UTC) el fixture caía en otro mes entre 18:00 y 24:00
+  -- CDMX y el embarque del "mes siguiente" quedaba fuera del rango.
+  v_hoy date := (now() AT TIME ZONE 'America/Mexico_City')::date;
 BEGIN
   INSERT INTO public.organizations (id, nombre) VALUES (v_org, 'Test Org Ola4 N41N44N45')
   ON CONFLICT (id) DO NOTHING;
