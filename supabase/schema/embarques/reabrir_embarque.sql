@@ -1,12 +1,12 @@
 -- Espejo canónico de public.reabrir_embarque
--- Fuente vigente (mayor timestamp): 20260906000000_ola1_reabrir_y_cancelar_liquidacion.sql
+-- Fuente vigente (mayor timestamp): 20260908000100_ola_p1_org_scope_credito_idempotencia.sql
 -- Vigilado por `bun run audit:replay-mirror` y `audit:schema-functions`.
 
 CREATE OR REPLACE FUNCTION public.reabrir_embarque(p_embarque_id uuid, p_usuario_email text, p_motivo text, p_request_id uuid DEFAULT NULL::uuid)
- RETURNS jsonb
- LANGUAGE plpgsql
- SECURITY DEFINER
- SET search_path TO 'public'
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO 'public'
 AS $function$
 DECLARE
   v_org_id uuid;
@@ -17,12 +17,8 @@ DECLARE
   v_actor_id uuid := auth.uid();
   v_actor_email text;
 BEGIN
-  -- B-06: identidad no falsificable. `p_usuario_email` se ignora.
   SELECT email INTO v_actor_email FROM auth.users WHERE id = v_actor_id;
   v_actor_email := COALESCE(v_actor_email, 'usuario:' || COALESCE(v_actor_id::text, 'desconocido'));
-
-  v_resp := public.idempotency_claim(p_request_id, 'reabrir_embarque');
-  IF v_resp IS NOT NULL THEN RETURN v_resp; END IF;
 
   IF v_motivo IS NULL OR length(v_motivo) < 20 THEN
     RAISE EXCEPTION 'Motivo de reapertura requerido (mínimo 20 caracteres)';
@@ -50,12 +46,12 @@ BEGIN
     RAISE EXCEPTION 'Solo embarques en estado Cerrado pueden reabrirse (estado actual: %)', v_estado_actual;
   END IF;
 
+  v_resp := public.idempotency_claim(p_request_id, 'reabrir_embarque');
+  IF v_resp IS NOT NULL THEN RETURN v_resp; END IF;
+
   PERFORM set_config('app.bypass_cierre','on', true);
   PERFORM set_config('app.bypass_transicion','on', true);
 
-  -- A-1 (Ola 1): `embarques` sólo tiene `cerrado_snapshot`. `pnl_base` y
-  -- `calculo_snapshot` viven en `comisiones_devengadas` (ver UPDATE abajo);
-  -- escribirlos aquí rompía la reapertura con 42703.
   UPDATE embarques
      SET estado = 'Por liquidar'::estado_embarque,
          cerrado_snapshot = NULL,
@@ -99,3 +95,6 @@ BEGIN
   RETURN v_resp;
 END;
 $function$;
+
+REVOKE ALL ON FUNCTION public.reabrir_embarque(uuid, text, text, uuid) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.reabrir_embarque(uuid, text, text, uuid) TO authenticated, service_role;

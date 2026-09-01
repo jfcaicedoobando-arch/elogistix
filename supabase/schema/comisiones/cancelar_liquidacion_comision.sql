@@ -1,12 +1,12 @@
 -- Espejo canónico de public.cancelar_liquidacion_comision
--- Fuente vigente (mayor timestamp): 20260831211719_782b01f9-bd93-4a02-adeb-50ea3c35d9c7.sql
+-- Fuente vigente (mayor timestamp): 20260908000100_ola_p1_org_scope_credito_idempotencia.sql
 -- Vigilado por `bun run audit:replay-mirror` y `audit:schema-functions`.
 
 CREATE OR REPLACE FUNCTION public.cancelar_liquidacion_comision(p_liquidacion_id uuid, p_motivo text)
- RETURNS public.liquidaciones_comision
- LANGUAGE plpgsql
- SECURITY DEFINER
- SET search_path TO 'public'
+RETURNS public.liquidaciones_comision
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO 'public'
 AS $function$
 DECLARE
   v_uid uuid := auth.uid();
@@ -22,7 +22,6 @@ BEGIN
       USING ERRCODE = '42501';
   END IF;
 
-  -- YG-02: primero la fila (con candado), después la autorización por org.
   SELECT * INTO v_row FROM public.liquidaciones_comision
   WHERE id = p_liquidacion_id AND deleted_at IS NULL
   FOR UPDATE;
@@ -52,15 +51,11 @@ BEGIN
       USING ERRCODE = '42501';
   END IF;
 
-  -- A-2 (Ola 1): comisiones ORDINARIAS de la liquidación vuelven a devengarse.
   UPDATE public.comisiones_devengadas
      SET estado = 'Devengada', liquidacion_id = NULL, updated_at = now()
    WHERE liquidacion_id = p_liquidacion_id
      AND estado = 'Liquidada';
 
-  -- A-2 (Ola 1): las RECUPERACIONES que esta liquidación descontó quedaron
-  -- marcadas 'Cancelada'. Al cancelar la liquidación la deuda sigue viva:
-  -- regresan a 'Por recuperar', no a 'Devengada' (eso las volvía pagables).
   UPDATE public.comisiones_devengadas
      SET estado = 'Por recuperar', liquidacion_id = NULL, updated_at = now()
    WHERE liquidacion_id = p_liquidacion_id
@@ -90,6 +85,5 @@ BEGIN
 END;
 $function$;
 
-REVOKE ALL ON FUNCTION public.cancelar_liquidacion_comision(uuid, text) FROM PUBLIC;
-REVOKE ALL ON FUNCTION public.cancelar_liquidacion_comision(uuid, text) FROM anon;
+REVOKE ALL ON FUNCTION public.cancelar_liquidacion_comision(uuid, text) FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.cancelar_liquidacion_comision(uuid, text) TO authenticated, service_role;

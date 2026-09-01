@@ -1,5 +1,14 @@
 # Changelog
 
+## [13.820.0] - 2026-08-31
+- **Liquidaciones de comisión**: cancelar una liquidación vuelve a exigir el rol financiero **en la organización dueña** de la liquidación (antes bastaba tenerlo registrado en cualquier organización; una migración posterior había revertido el candado). La liquidación se bloquea primero y luego se autoriza, así que dos cancelaciones simultáneas no se cruzan.
+- **Crédito del cliente al timbrar**: el crédito en uso ahora convierte cada nota de crédito a la moneda de su factura antes de restarla, así que una NC en dólares sobre una factura en pesos (o al revés) deja de subestimar o inflar la exposición. Si una factura extranjera viva no tiene tipo de cambio válido (vacío, cero, 1 o fuera de la banda 5–40), el timbrado se detiene con "crédito no verificable" en vez de asumir paridad 1:1.
+- **Claves de idempotencia**: la identidad de cada clave ahora es clave + organización + usuario, y se valida que el reintento corresponda a la misma operación. Dos organizaciones (o dos usuarios) que reusen la misma clave ya no se pisan respuestas ni se bloquean entre sí; reusarla para otra operación se rechaza con error explícito. `anon` perdió todo acceso directo a la tabla y `authenticated` ya no puede borrar claves.
+- **Crear y editar embarque**: cliente, cotización y proveedores de los costos se validan contra la organización del usuario y deben estar vivos antes de escribir nada; la cotización además debe estar aceptada o en operación. Antes un identificador ajeno podía quedar guardado en el embarque.
+- En todas las operaciones anteriores la autorización se resuelve **antes** de reclamar la clave de idempotencia, para que un intento sin permiso no consuma la clave del usuario legítimo.
+- Cobertura: nueva suite conductual `supabase/tests/ola_p1_guards.sql` (aritmética multimoneda del crédito, fail-closed de tipo de cambio, aislamiento de idempotencia y rechazos entre organizaciones).
+
+
 ## [13.819.3] - 2026-08-31
 - **Capturar factura de proveedor (Compras › Facturas)**: "Cancelar" ya no descarta la captura en silencio. Con datos capturados, Cancelar, la X, Escape y el clic fuera pasan por la misma confirmación del resto de los formularios ("Descartar" / "Seguir capturando").
 - Al descartar, el asistente se limpia por completo (conceptos, archivos, campos y paso), así que la siguiente apertura empieza en blanco. Antes el borrador sobrevivía y los renglones de concepto vacíos se acumulaban en cada apertura.

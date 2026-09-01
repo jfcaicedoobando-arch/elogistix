@@ -139,3 +139,17 @@ END $$;
 -- ============================================================================
 DROP POLICY IF EXISTS "_ci_stub_deny_all" ON public.tracking_externo;
 
+
+-- ============================================================================
+-- Ola P1 (P1-3): re-cierre de los grants directos de `idempotency_keys`.
+-- El `GRANT ... ON ALL TABLES` de arriba reinstala lo que la migración
+-- 20260908000100 revocó: `anon` no debe tocar la tabla y `authenticated` no
+-- debe poder borrar claves (sólo se escriben vía idempotency_claim/store).
+-- ============================================================================
+DO $$
+BEGIN
+  IF to_regclass('public.idempotency_keys') IS NOT NULL THEN
+    EXECUTE 'REVOKE ALL ON public.idempotency_keys FROM anon';
+    EXECUTE 'REVOKE DELETE ON public.idempotency_keys FROM authenticated';
+  END IF;
+END $$;

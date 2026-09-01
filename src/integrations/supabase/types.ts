@@ -8485,6 +8485,15 @@ export type Database = {
         Returns: undefined
       }
       _assert_refacturador: { Args: { p_org: string }; Returns: undefined }
+      _assert_relaciones_embarque: {
+        Args: {
+          p_cliente_id: string
+          p_conceptos_costo: Json
+          p_cotizacion_id: string
+          p_org: string
+        }
+        Returns: undefined
+      }
       _assert_writer: { Args: { p_org: string }; Returns: undefined }
       _assert_writer_cotizacion: { Args: { p_org: string }; Returns: undefined }
       _audit_costos_repetidos: {
