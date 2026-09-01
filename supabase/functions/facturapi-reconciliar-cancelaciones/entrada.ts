@@ -21,6 +21,7 @@ import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.45.0
 import { corsHeaders } from "../_shared/cors.ts";
 import { captureEdgeMessage } from "../_shared/sentry.ts";
 import { jsonResponse } from "../_shared/response.ts";
+import { timingSafeEqual } from "../_shared/timingSafe.ts";
 import type { FacturaPendiente, NotaCreditoPendiente, RepPendiente } from "./reconcile.ts";
 
 /**
@@ -47,7 +48,10 @@ export function validarRequest(req: Request, cronSecret: string | undefined): Re
     return jsonResponse({ error: "method_not_allowed" }, 405);
   }
   // M8: endpoint cron-only — mismo patrón que rep-retry-nocturno.
-  if (!cronSecret || req.headers.get("X-Cron-Secret") !== cronSecret) {
+  // Ola P2: comparación constante en tiempo y fail-CLOSED si falta el secreto
+  // en el servidor o el header en el request.
+  const header = req.headers.get("X-Cron-Secret");
+  if (!cronSecret || !header || !timingSafeEqual(header, cronSecret)) {
     return jsonResponse({ error: "unauthorized" }, 401);
   }
   return null;

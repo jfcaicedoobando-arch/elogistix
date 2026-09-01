@@ -11,7 +11,9 @@ import { corsHeaders } from "../_shared/cors.ts";
 import { wrapEdgeHandler, captureEdgeMessage } from "../_shared/sentry.ts";
 import {
   computeEventKey,
-  computeSignature,
+  computeSignatureBytes,
+  leerCuerpoAcotado,
+  MAX_WEBHOOK_BYTES,
   mapEventToFacturaPatch,
   mapEventToReceiptPatch,
   safeEqual,
@@ -155,11 +157,14 @@ async function despacharEvento(
 }
 
 
-/** Verifica firma y parsea el evento. Devuelve Response en caso de rechazo. */
+/**
+ * Verifica firma sobre los BYTES exactos aceptados y parsea el evento.
+ * Devuelve Response en caso de rechazo.
+ */
 async function validarEvento(
-  rawBody: string, signature: string, secret: string,
+  bytes: Uint8Array, rawBody: string, signature: string, secret: string,
 ): Promise<FacturapiWebhookEvent | Response> {
-  const expected = await computeSignature(rawBody, secret);
+  const expected = await computeSignatureBytes(bytes, secret);
   if (!signature || !safeEqual(signature, expected)) {
     return jsonResponse({ error: "invalid_signature" }, 401);
   }
@@ -187,9 +192,18 @@ Deno.serve(wrapEdgeHandler("facturapi-webhook", async (req) => {
     .maybeSingle();
   if (!cred?.webhook_secret) return jsonResponse({ error: "webhook_not_configured" }, 412);
 
-  const rawBody = await req.text();
+  // Ola P2: endpoint público (verify_jwt=false por diseño). Nunca materializar
+  // un body ilimitado antes de validar el HMAC: lectura acotada con corte real
+  // por bytes leídos, además del rechazo temprano por Content-Length.
+  const cuerpo = await leerCuerpoAcotado(req, MAX_WEBHOOK_BYTES);
+  if (!cuerpo.ok) {
+    return cuerpo.motivo === "too_large"
+      ? jsonResponse({ error: "payload_too_large" }, 413)
+      : jsonResponse({ error: "invalid_body" }, 400);
+  }
+
   const event = await validarEvento(
-    rawBody, req.headers.get("facturapi-signature") ?? "", cred.webhook_secret,
+    cuerpo.bytes, cuerpo.raw, req.headers.get("facturapi-signature") ?? "", cred.webhook_secret,
   );
   if (event instanceof Response) return event;
 
@@ -197,7 +211,7 @@ Deno.serve(wrapEdgeHandler("facturapi-webhook", async (req) => {
   // UNIQUE (organization_id, event_id) convierte el 23505 en "ya procesado/en
   // progreso" — dos entregas concurrentes ya no pasan ambas el SELECT. Si el
   // procesamiento falla (no-2xx) se borra la fila para que el retry reprocese.
-  const eventKey = await computeEventKey(rawBody, event);
+  const eventKey = await computeEventKey(cuerpo.raw, event);
   const { error: dedupeErr } = await supabase
     .from("facturapi_webhook_eventos")
     .insert({
