@@ -96,12 +96,13 @@ export async function invokeParseCfdiOnce(
   const formData = new FormData();
   formData.append("file", file);
   formData.append("categorias", JSON.stringify(categorias));
-  formData.append("organization_id", organizationId);
 
   try {
     const { data, error } = await supabase.functions.invoke<CfdiParsedResponse>(
       "parse-cfdi-xml",
-      { body: formData },
+      // La organización objetivo viaja en header para que la edge function
+      // autorice antes de leer el multipart.
+      { body: formData, headers: { "x-organization-id": organizationId } },
     );
     if (error) return mapError(error);
     if (!data) {
