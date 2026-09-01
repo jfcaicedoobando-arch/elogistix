@@ -43,17 +43,29 @@ describe("Fase I — tipo de cambio obligatorio en facturas extranjeras", () => 
     expect(sql).toMatch(/UPDATE public\.facturas[\s\S]*SET tipo_cambio\s*=\s*NULL[\s\S]*moneda\s*<>\s*'MXN'/);
   });
 
-  it("edge function facturapi-emitir rechaza TC === 1 para moneda no-MXN", () => {
-    // v13.303.3 modularizó `facturapi-emitir`: la validación vive en `emitir.ts`
-    // / `helpers.ts`. Concatenamos todos los .ts de la carpeta para no acoplar
-    // la guarda al layout de archivos.
-    const dir = path.resolve(__dirname, "../../../supabase/functions/facturapi-emitir");
-    const body = fs
-      .readdirSync(dir)
-      .filter((f) => f.endsWith(".ts") && !f.endsWith("_test.ts") && !f.endsWith(".test.ts"))
-      .map((f) => fs.readFileSync(path.join(dir, f), "utf8"))
-      .join("\n");
-    expect(body).toMatch(/tcFactura\s*===\s*1/);
-    expect(body).toMatch(/tipo_cambio_requerido/);
+  it("la banda fiscal compartida rechaza TC = 1 para moneda no-MXN", async () => {
+    // v13.821.1 — La validación dejó de ser un `tcFactura === 1` escrito dentro
+    // de `facturapi-emitir`: hoy vive en la banda canónica compartida
+    // (`_shared/tcBanda.ts`, 5..40 MXN por divisa), que también cubre TC = 1.
+    // Se prueba el comportamiento, no el texto.
+    const { validarTcFiscal, TC_MXN_MIN, TC_MXN_MAX } = await import(
+      "../../../supabase/functions/_shared/tcBanda.ts"
+    );
+    expect(validarTcFiscal("MXN", 1)).toBeNull();
+    expect(validarTcFiscal("USD", 1)).toMatch(/tipo de cambio inválido/i);
+    expect(validarTcFiscal("USD", null)).toMatch(/tipo de cambio inválido/i);
+    expect(validarTcFiscal("USD", TC_MXN_MIN - 0.01)).not.toBeNull();
+    expect(validarTcFiscal("USD", TC_MXN_MAX + 0.01)).not.toBeNull();
+    expect(validarTcFiscal("USD", 18.5)).toBeNull();
+  });
+
+  it("facturapi-emitir usa la banda y responde 422 tipo_cambio_requerido", () => {
+    const emitir = fs.readFileSync(
+      path.resolve(__dirname, "../../../supabase/functions/facturapi-emitir/emitir.ts"),
+      "utf8",
+    );
+    expect(emitir).toMatch(/validarTcFiscal\(\s*monedaFactura,\s*factura\.tipo_cambio\s*\)/);
+    expect(emitir).toMatch(/error:\s*"tipo_cambio_requerido"[\s\S]{0,120}422/);
   });
 });
+
