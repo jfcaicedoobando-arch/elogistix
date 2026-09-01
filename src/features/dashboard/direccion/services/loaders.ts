@@ -49,6 +49,11 @@ export type PagoRow = {
   factura_id: string; monto_aplicado_factura: number | null; moneda: string;
   tipo_cambio: number | null; fecha_pago: string;
 };
+/** NC de cliente APLICADAS (canon de Cobranza): restan del saldo de la factura. */
+export type NotaCreditoRow = {
+  factura_id: string; monto: number | null; moneda: string; tipo_cambio: number | null;
+};
+
 export type EmbarqueEstadoRow = { estado: string | null; eta: string | null };
 
 export async function loadEmbarques(orgId: string | null, desdeIso: string): Promise<{
