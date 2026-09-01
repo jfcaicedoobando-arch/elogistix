@@ -38,13 +38,10 @@ export type MotivoCancelacionSat = "01" | "02" | "03" | "04";
 export interface CancelarFacturapiResult {
   /** true → cancelación aceptada terminal, sustitución consolidada. */
   sustituida: boolean;
-  /** true → SAT devolvió `pending`/`verifying`; el receptor tiene hasta 72 h. */
-  pending: boolean;
-  /** true → timeout con `verifying` ya persistido: incierto, NO reintentar. */
-  uncertain?: boolean;
+  pending: boolean; // SAT `pending`/`verifying`: el receptor tiene hasta 72 h
+  uncertain?: boolean; // timeout con `verifying` persistido: incierto, NO reintentar
 
-  /** Estado remoto textual: accepted | pending | verifying | rejected | expired | none. */
-  cancellation_status?: string;
+  cancellation_status?: string; // accepted|pending|verifying|rejected|expired|none
   /** ISO con la fecha estimada de vencimiento del silencio positivo. */
   vence_en?: string | null;
   /** Mensaje humano listo para toast. */
