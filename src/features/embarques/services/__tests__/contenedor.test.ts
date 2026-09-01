@@ -13,7 +13,8 @@ describe("actualizarContenedorEmbarque", () => {
     await expect(
       actualizarContenedorEmbarque("emb-1", "MSCU1234567"),
     ).resolves.toBeUndefined();
-    const call = mock.tableCalls[mock.tableCalls.length - 1];
+    // La bitácora escribe después: buscamos la escritura al embarque.
+    const call = [...mock.tableCalls].reverse().find((c) => c.table === "embarques");
     expect(call?.table).toBe("embarques");
     expect(call?.ops).toEqual(expect.arrayContaining(["update", "eq"]));
   });

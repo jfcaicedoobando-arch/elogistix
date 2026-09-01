@@ -105,6 +105,20 @@ export const LC_CODE_MESSAGES_OPERATIVO_GENERICOS: Record<string, string> = {
     "El usuario elegido ya pertenece a una organización. Elige otro o retíralo primero de la actual.",
   LC_VALIDACION:
     "La validación no pasó. Revisa los motivos indicados y corrige la información antes de continuar.",
+  LC_ARG_INVALIDO:
+    "Los datos enviados no son válidos. Revisa la información y vuelve a intentarlo.",
+  LC_CREDITO_TC_INVALIDO:
+    "Falta el tipo de cambio de una factura en moneda extranjera, así que no podemos calcular el crédito usado. Captura el tipo de cambio e inténtalo de nuevo.",
+  LC_EMB_CLIENTE_INVALIDO:
+    "El cliente seleccionado no existe o pertenece a otra organización.",
+  LC_EMB_COTIZACION_CLIENTE:
+    "La cotización pertenece a otro cliente. Verifica el cliente del embarque.",
+  LC_EMB_COTIZACION_INVALIDA:
+    "La cotización seleccionada no existe o pertenece a otra organización.",
+  LC_EMB_PROVEEDOR_INVALIDO:
+    "El proveedor seleccionado no existe o pertenece a otra organización.",
+  LC_IDEMPOTENCIA_FN_DISTINTA:
+    "Esa clave de operación ya se usó en otro proceso. Recarga la página y vuelve a intentarlo.",
   LC_DELETED_AT_INMUTABLE:
     "No se puede cambiar directamente el estado de borrado del registro. Usa las acciones de eliminar o restaurar de la papelera.",
   LC_RESTORE_DIRECTO:

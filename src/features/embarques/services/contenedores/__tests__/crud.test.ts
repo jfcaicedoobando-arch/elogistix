@@ -56,7 +56,7 @@ describe("crearMuchos", () => {
       { numero_contenedor: "A2", tipo_contenedor: "40HC", peso_kg: 1, volumen_m3: 1, piezas: 1 },
     ] as never);
     expect(result).toHaveLength(2);
-    const call = mock.tableCalls[mock.tableCalls.length - 1];
+    const call = [...mock.tableCalls].reverse().find((c) => c.table === "embarque_contenedores");
     expect(call?.ops).toEqual(expect.arrayContaining(["insert", "select"]));
   });
 });

@@ -1,5 +1,13 @@
 # Changelog
 
+## [13.821.4] - 2026-09-08
+- **Timbrado: errores de FacturApi con tipos correctos**: la Edge Function `facturapi-emitir` ya no castea el SDK "a ciegas"; se estrecha al método que usa y reutiliza `extractFacturapiMessage` para el mensaje en español. Antes el CI de Deno fallaba al compilar.
+- **Exportar CSV de cotizaciones**: el botón deshabilitado vuelve a explicar por qué (aviso nativo `title`), porque un botón deshabilitado no dispara el tooltip.
+- **Mensajes amigables completos**: se agregaron los 7 códigos `LC_*` que faltaban (argumento inválido, tipo de cambio de crédito, cliente/cotización/proveedor de embarque, idempotencia), así que el usuario deja de ver códigos crudos.
+- **Estado de resultados devengado**: la consulta de expedientes ahora excluye facturas canceladas o sustituidas, igual que el resto de la reportería.
+- **Cierre de embarque (LCL)**: se reemite el cuerpo vigente de `validar_cierre_embarque` como migración nueva para que el orden de replay quede correcto. Sin cambios de comportamiento: la base ya validaba fechas de contenedor sólo en marítimo FCL.
+- **Auditorías del CI**: el archivo consolidado del squash queda exento de los auditores de funciones/espejos, el manifiesto se compara contra la versión actual (las entradas históricas son bitácora) y los tests de servicios buscan la escritura por tabla en lugar de asumir que es la última.
+
 ## [13.821.3] - 2026-09-01
 - **Trigger de alta restaurado en bases limpias**: el squash se generó con `pg_dump --schema=public`, así que el trigger `on_auth_user_created` (que corona al primer usuario y crea su organización) se quedaba fuera y las suites de aprovisionamiento fallaban. Ahora el squash lo recrea y `_ci_post_migrate.sql` siembra un usuario centinela con `super_admin`, para que ninguna suite se corone por accidente.
 - **Tablero: el mes se calcula en hora de México**: `dashboard_summary_datos()` usaba `current_date` (UTC), así que a partir de las 18:00 hora de México brincaba al mes siguiente y dejaba de sumar los gastos operativos y los arribos del día. Ahora usa el mismo canon horario (CDMX) que el detalle del tablero y los periodos fiscales.

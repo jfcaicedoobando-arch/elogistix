@@ -107,7 +107,7 @@ export async function fetchCotizacionesPaginadas(
     : "created_at";
 
   let query = supabase
-    .from("cotizaciones")
+    .from("cotizaciones") // SOFT-DELETE-OK: el filtro vive en `aplicarFiltrosCotizaciones`.
     // SAFE-CAST: se estrecha el builder de supabase-js a la interfaz mínima
     // (filtros + order + range) para poder compartir `aplicarFiltrosCotizaciones`.
     .select(COTIZACION_LIST_COLUMNS, { count: "exact" }) as unknown as FiltrableQuery & {

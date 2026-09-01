@@ -9,6 +9,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
+const SIN_EXPORTAR = "No hay cotizaciones que exportar con los filtros actuales.";
+
 interface CotizacionesPageActionsProps {
   canEdit: boolean;
   /** Total filtrado en servidor: con 0 no hay nada que exportar. */
@@ -30,11 +32,14 @@ export function CotizacionesPageActions({
           <Sparkles className="h-4 w-4 mr-2" /> Plantillas
         </Link>
       </Button>
-      <Hint label={totalFiltrado === 0 ? "No hay cotizaciones que exportar con los filtros actuales." : ""}>
+      <Hint label={totalFiltrado === 0 ? SIN_EXPORTAR : ""}>
         <Button
           variant="outline"
           onClick={onExportar}
           disabled={totalFiltrado === 0}
+          // Un botón deshabilitado no dispara el tooltip de Radix (no recibe
+          // eventos de puntero): el `title` nativo es el único aviso visible.
+          title={totalFiltrado === 0 ? SIN_EXPORTAR : undefined}
           className="hidden sm:inline-flex"
         >
           <Download className="h-4 w-4 mr-2" /> Exportar CSV

@@ -24,7 +24,8 @@ describe("createCliente", () => {
     const r = await createCliente(validInsert);
     expect(r.id).toBe("c-1");
     expect(mock.rpcCalls[0]?.fn).toBe("crear_clientes");
-    expect(mock.tableCalls).toHaveLength(0);
+    // El alta no hace INSERT a `clientes` (sólo la RPC); la bitácora sí escribe.
+    expect(mock.tableCalls.filter((c) => c.table === "clientes")).toHaveLength(0);
   });
 
   it("propaga error de la RPC al crear cliente", async () => {
@@ -61,6 +62,7 @@ describe("updateCliente", () => {
 
   it("zod: email malformado lanza antes del update", async () => {
     await expect(updateCliente("c-1", { email: "not-an-email" })).rejects.toThrow();
-    expect(mock.tableCalls).toHaveLength(0);
+    // El alta no hace INSERT a `clientes` (sólo la RPC); la bitácora sí escribe.
+    expect(mock.tableCalls.filter((c) => c.table === "clientes")).toHaveLength(0);
   });
 });

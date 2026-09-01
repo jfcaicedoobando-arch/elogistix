@@ -4,7 +4,7 @@
  * La carga del contexto fiscal vive en `contexto.ts`.
  */
 import { type SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
-import { getFacturapiClient, describeFacturapiError, withFacturapiTimeout, FacturapiTimeoutError, type FacturapiClient } from "../_shared/facturapiClient.ts";
+import { getFacturapiClient, describeFacturapiError, extractFacturapiMessage, withFacturapiTimeout, FacturapiTimeoutError, type FacturapiClient } from "../_shared/facturapiClient.ts";
 import { registrarBitacoraEdge } from "../_shared/bitacora.ts";
 import { jsonResponse } from "../_shared/response.ts";
 import { validarTotalPositivo, validarLimiteCredito } from "./credito.ts";
@@ -130,7 +130,10 @@ async function createInvoiceInFacturapi(
   try {
     // FIX-04/32 — timeout defensivo: si FacturApi cuelga devolvemos 504 en vez
     // de dejar la Edge Function ocupada 150 s.
-    return await withFacturapiTimeout("invoices.create", facturapi.invoices.create(payload)) as FapiInvoice;
+    // El SDK se modela como `object` (no publica typings para Deno): se
+    // estrecha aquí al único método que usamos en lugar de castear el detalle.
+    const api = facturapi as { invoices: { create: (p: unknown) => Promise<unknown> } };
+    return await withFacturapiTimeout("invoices.create", api.invoices.create(payload)) as FapiInvoice;
   } catch (err) {
     if (err instanceof FacturapiTimeoutError) {
       // EF-02 (auditoría): en timeout NO liberamos el claim. Si FacturApi sí
@@ -152,7 +155,7 @@ async function createInvoiceInFacturapi(
       accion: "facturapi_emitir_failed", entidadId: facturaId, entidadNombre: factura.numero ?? "",
       detalles: { status, response: detail },
     });
-    const message = (detail && typeof detail === "object" && "message" in (detail as Record<string, unknown>) && typeof (detail as Record<string, unknown>).message === "string") ? (detail as Record<string, string>).message : `FacturApi respondió ${status}`;
+    const message = extractFacturapiMessage(detail, status);
     return jsonResponse({ error: "facturapi_error", status, detail, message }, 502);
   }
 }

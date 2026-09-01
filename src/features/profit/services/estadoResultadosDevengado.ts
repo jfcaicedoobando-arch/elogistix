@@ -27,6 +27,7 @@ import {
   type ConceptoCostoER,
 } from "@/features/profit/domain/estadoResultados";
 import type { FacturaRow, NotaCreditoRow } from "@/lib/mappers/estadoResultadosRows";
+import { FACTURA_ESTADOS_VIVOS } from "@/lib/domain/estadosFactura";
 import {
   fetchFacturasMes,
   fetchNotasCreditoMes,
@@ -64,7 +65,10 @@ async function modoPorFacturaDeNotas(
   const faltantes = idsNc.filter((id) => !expPorFactura.has(id));
   if (faltantes.length > 0) {
     const data = await unwrapOr(supabase.from("facturas")
-      .select("id, expediente").in("id", faltantes).is("deleted_at", null), []);
+      .select("id, expediente").in("id", faltantes)
+      // Reportería devengada: sólo facturas vivas (excluye Cancelada/Sustituida).
+      .in("estado", [...FACTURA_ESTADOS_VIVOS])
+      .is("deleted_at", null), []);
 
     for (const row of data as { id: string; expediente: string | null }[]) {
       expPorFactura.set(row.id, row.expediente ?? null);

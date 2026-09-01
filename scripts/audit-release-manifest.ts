@@ -45,7 +45,17 @@ if (process.argv.includes("--update")) {
   process.exit(0);
 }
 
-const enManifest = new Set(Object.values(manifest).flatMap((r) => r.migrations));
+// Se compara SÓLO contra la entrada de la versión actual: las entradas
+// históricas son bitácora inmutable y pueden citar archivos que después se
+// renombraron o retiraron (p.ej. la infraestructura de correo legacy).
+const versionActual = leerAppVersion();
+const entradaActual = manifest[versionActual];
+if (!entradaActual) {
+  console.error(`❌ migration-manifest.json no tiene entrada para APP_VERSION ${versionActual}.`);
+  console.error("Corre `bun run db:release-manifest:update` y commitea el manifest.");
+  process.exit(1);
+}
+const enManifest = new Set(entradaActual.migrations);
 const faltan = enDisco.filter((f) => !enManifest.has(f));
 const sobran = [...enManifest].filter((f) => !enDisco.includes(f));
 if (faltan.length > 0 || sobran.length > 0) {

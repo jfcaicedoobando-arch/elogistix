@@ -26542,7 +26542,10 @@ BEGIN
   END IF;
   SELECT EXISTS (SELECT 1 FROM embarque_contenedores
     WHERE embarque_id=p_embarque_id AND deleted_at IS NULL) INTO v_tiene_contenedores;
-  IF v_tiene_contenedores THEN
+  -- v13.820.6: las fechas de descarga/devolución sólo aplican a contenedores
+  -- completos (Marítimo FCL). En LCL (caja compartida) y otros modos no hay
+  -- contenedor que descargar/devolver, aunque existan filas de agrupación.
+  IF v_tiene_contenedores AND v_emb.modo='Marítimo' AND COALESCE(v_emb.tipo_carga,'') ILIKE 'FCL%' THEN
     SELECT COUNT(*), COALESCE(array_agg(id), ARRAY[]::uuid[]) INTO v_cont_sin_fechas, v_cont_fechas_ids
     FROM embarque_contenedores WHERE embarque_id=p_embarque_id AND deleted_at IS NULL
       AND (fecha_descarga IS NULL OR fecha_devolucion IS NULL);
