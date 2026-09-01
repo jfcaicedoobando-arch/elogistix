@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.823.9] - 2026-09-01
+### Integridad CRM: soft-delete por URL y Undo falso a "Perdida" (sólo local)
+- `getLead` y `getOportunidad` ahora exigen `deleted_at IS NULL`. Antes un lead/oportunidad eliminado seguía abriendo su detalle si se conservaba el UUID en la URL (las listas sí filtraban). Con `null` las rutas ya muestran "no encontrado" sin acciones ni datos residuales.
+- `useMoverOportunidadEtapa` ya no ofrece Undo cuando la etapa destino es tipo `perdida`: esa transición cancela actividades pendientes y el Undo sólo restauraba etapa/probabilidad/cierre, dejando una oportunidad abierta con sus tareas canceladas. El Undo se conserva en transiciones sin efectos irreversibles.
+- Pruebas nuevas: filtro `deleted_at` en ambos getters; destino perdida no llama `showUndoToast` y sólo ejecuta un movimiento tras confirmar el motivo; transición ordinaria sí ofrece Undo.
+- Sin deploy, publish, Edge deploy, migraciones o SQL remoto, secretos ni cambios de datos.
+
 ## [13.823.8] - 2026-09-01
 ### Divisas no soportadas fuera de los KPIs de Dirección (sólo local)
 - `mxnFactura` y `toMxn` normalizan la moneda y aceptan únicamente MXN/USD/EUR. Antes delegaban en `aMxn`, que acepta cualquier divisa si trae `tipo_cambio` directo válido: `mxnFactura(100, "JPY", 3, …)` sumaba 300 MXN a los KPIs. Ahora una divisa fuera del catálogo del tablero aporta 0 aun con TC directo. `aMxn` (canon global) no cambia.
