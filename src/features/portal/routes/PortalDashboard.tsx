@@ -1,5 +1,5 @@
 import { PortalPageShell } from "@/features/portal/components/layout/PortalPageShell";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DashboardSkeleton } from "@/components/shared/skeletons";
