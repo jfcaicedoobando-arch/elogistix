@@ -43,8 +43,15 @@ export async function listOportunidades(p: ListOportunidadesParams): Promise<{ d
 }
 
 export async function getOportunidad(id: string): Promise<CrmOportunidadRow | null> {
+  // Soft-delete: el detalle por URL directa tampoco puede resolver una
+  // oportunidad eliminada (la ruta muestra "no encontrada" con `null`).
   return unwrap(
-    supabase.from("crm_oportunidades").select(COLS).eq("id", id).maybeSingle(),
+    supabase
+      .from("crm_oportunidades")
+      .select(COLS)
+      .eq("id", id)
+      .is("deleted_at", null)
+      .maybeSingle(),
   ) as Promise<CrmOportunidadRow | null>;
 }
 
