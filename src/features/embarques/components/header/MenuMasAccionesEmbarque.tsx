@@ -102,6 +102,18 @@ export function MenuMasAccionesEmbarque(props: {
                 Eliminar deshabilitado: hay CxC/CxP pendientes.
               </div>
             )}
+            {esTerminal && canEliminarEmbarque && (
+              <div className="px-2 py-1.5 text-label text-muted-foreground">
+                Eliminar no disponible: el embarque está en un estado final
+                (Entregado, EIR, Por liquidar, Cerrado o Cancelado).
+              </div>
+            )}
+            {!canEliminarEmbarque && (
+              <div className="px-2 py-1.5 text-label text-muted-foreground">
+                Tu rol no permite eliminar embarques.
+              </div>
+            )}
+
           </DropdownMenuContent>
         </DropdownMenu>
   );
