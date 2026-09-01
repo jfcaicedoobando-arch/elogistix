@@ -40,6 +40,8 @@ export interface NotaCreditoRow {
   pdf_url: string | null;
   xml_url: string | null;
   ambiente: "sandbox" | "live" | null;
+  /** v13.821.6 (P1-2): bloquea una segunda cancelación mientras el SAT verifica. */
+  cancellation_status?: string | null;
 }
 
 /**
@@ -101,7 +103,8 @@ export function FacturaNotasCreditoTable(props: Props) {
       cell: ({ row }) => {
         const n = row.original;
         const timbrada = n.estado === "Timbrada" || n.estado === "Aplicada";
-        const cancelable = n.estado === "Timbrada";
+        const enVerificacion = ["pending", "verifying"].includes((n.cancellation_status ?? "").toLowerCase());
+        const cancelable = n.estado === "Timbrada" && !enVerificacion;
         const puedeTimbrar = n.estado === "Borrador" && !!uuidFacturaOriginal;
         return (
           <div className="flex justify-end items-center gap-1">
@@ -138,15 +141,18 @@ export function FacturaNotasCreditoTable(props: Props) {
                 <Stamp className="h-3.5 w-3.5 mr-1" /> Timbrar
               </Button>
             )}
-            {canEdit && cancelable && (
-              <Hint label="Cancelar NC">
-                <Button
-                  variant="ghost" size="icon" className="min-h-11 min-w-11 md:h-7 md:w-7 md:min-h-0 md:min-w-0"
-                  aria-label="Cancelar NC"
-                  onClick={() => onCancelar(n.id)}
-                >
-                  <XCircle className="h-3.5 w-3.5 text-destructive" />
-                </Button>
+            {canEdit && n.estado === "Timbrada" && (
+              <Hint label={enVerificacion ? "El SAT está verificando la cancelación" : "Cancelar NC"}>
+                <span>
+                  <Button
+                    variant="ghost" size="icon" className="min-h-11 min-w-11 md:h-7 md:w-7 md:min-h-0 md:min-w-0"
+                    aria-label="Cancelar NC"
+                    disabled={!cancelable}
+                    onClick={() => onCancelar(n.id)}
+                  >
+                    <XCircle className="h-3.5 w-3.5 text-destructive" />
+                  </Button>
+                </span>
               </Hint>
             )}
           </div>

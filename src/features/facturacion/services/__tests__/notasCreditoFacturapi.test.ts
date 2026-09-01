@@ -42,4 +42,25 @@ describe("notasCreditoFacturapi service", () => {
     invoke.mockResolvedValueOnce({ data: { error: "NO", message: "no" }, error: null });
     await expect(cancelarNotaCreditoFacturapi("nc1", "02")).rejects.toThrow("no");
   });
+
+  it("cancelar propaga uncertain=true (timeout con verifying persistido)", async () => {
+    invoke.mockResolvedValueOnce({
+      data: { ok: true, pending: true, uncertain: true, message: "verificando" },
+      error: null,
+    });
+    await expect(cancelarNotaCreditoFacturapi("nc1", "02")).resolves.toEqual({
+      pending: true,
+      uncertain: true,
+      message: "verificando",
+    });
+  });
+
+  it("cancelar normaliza uncertain ausente a false", async () => {
+    invoke.mockResolvedValueOnce({ data: { ok: true, pending: false }, error: null });
+    await expect(cancelarNotaCreditoFacturapi("nc1", "02")).resolves.toEqual({
+      pending: false,
+      uncertain: false,
+      message: undefined,
+    });
+  });
 });

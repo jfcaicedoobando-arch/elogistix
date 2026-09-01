@@ -46,6 +46,7 @@ describe("repFacturapi service", () => {
     await expect(cancelarRep("p1", "01", "UUID")).resolves.toEqual({
       ok: true,
       pending: false,
+      uncertain: false,
       cancellation_status: "accepted",
       message: null,
     });
@@ -67,8 +68,29 @@ describe("repFacturapi service", () => {
     await expect(cancelarRep("p1", "02")).resolves.toEqual({
       ok: true,
       pending: true,
+      uncertain: false,
       cancellation_status: "verifying",
       message: "Cancelación enviada al SAT.",
+    });
+  });
+
+  it("cancelarRep propaga uncertain=true (timeout con verifying persistido)", async () => {
+    invoke.mockResolvedValueOnce({
+      data: {
+        ok: true,
+        pending: true,
+        uncertain: true,
+        cancellation_status: "verifying",
+        message: "La solicitud fue enviada, pero FacturApi tardó en confirmar.",
+      },
+      error: null,
+    });
+    await expect(cancelarRep("p1", "02")).resolves.toEqual({
+      ok: true,
+      pending: true,
+      uncertain: true,
+      cancellation_status: "verifying",
+      message: "La solicitud fue enviada, pero FacturApi tardó en confirmar.",
     });
   });
 

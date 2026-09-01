@@ -69,7 +69,17 @@ export function useCancelarRep(facturaId?: string) {
     mutationFn: (vars: { pagoId: string; motivo: MotivoCancelacionSat; sustituyeUuid?: string }) =>
       cancelarRep(vars.pagoId, vars.motivo, vars.sustituyeUuid),
     onSuccess: (resultado) => {
-      if (resultado.pending || ["pending", "verifying"].includes(resultado.cancellation_status)) {
+      if (resultado.uncertain) {
+        // v13.821.6 (P1-2) — timeout con `verifying` persistido: éxito
+        // informativo, NO se ofrece reintentar (reenviar la cancelación con
+        // resultado incierto es inseguro); "Actualizar estado" resuelve.
+        notifyInfo(undefined, {
+          title: "Cancelación del REP enviada · verificando",
+          description: resultado.message
+            ?? "La solicitud fue enviada, pero FacturApi tardó en confirmar. Estamos verificando el estado; no vuelvas a cancelarlo.",
+          duration: 15000,
+        });
+      } else if (resultado.pending || ["pending", "verifying"].includes(resultado.cancellation_status)) {
         notifyInfo(undefined, {
           title: "Solicitud de cancelación enviada",
           description: resultado.message ?? "El SAT está verificando la cancelación del REP.",
