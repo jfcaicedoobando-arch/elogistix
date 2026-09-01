@@ -177,8 +177,9 @@ export async function autorizarCxp(
     auth.adminClient,
     auth.userId,
     orgId,
-    ROLES_CAPTURA_CXP,
+    opts.rolesPermitidos ?? ROLES_CAPTURA_CXP,
   );
+
   if (!okRol) {
     log.finish(403, "forbidden_role", {
       user_id: auth.userId,
