@@ -16,7 +16,7 @@ import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import { sync as globSync } from "fast-glob";
 
-const DEUDA_CONGELADA = 13;
+const DEUDA_CONGELADA = 11; // v13.823.7: `calcularPulso` pasó a `diaNegocio` (hoyMx).
 const HOLGURA = 4;
 const MAX_USOS = DEUDA_CONGELADA + HOLGURA;
 
