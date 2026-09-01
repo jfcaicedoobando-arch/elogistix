@@ -1,5 +1,13 @@
 # Changelog
 
+## [13.823.17] - 2026-09-01
+### Ola 1 de cierre para publicación (sólo local)
+- **Build limpio de producción**: `verify-html-bundle` validaba `dist/index.html` leyéndolo del disco en `closeBundle`, así que un build sin `dist` previo fallaba ("dist/index.html no existe") y un `dist` viejo podía aprobarse. Ahora valida el `index.html` emitido por la compilación en `writeBundle` (OutputBundle en memoria): exige `div#root` y un script bajo `/assets/`.
+- **CxP mostraba error como "sin datos"**: en `Cxp.tsx` la rama de cero filas sin filtros no excluía `isError`, así que un lote fallido montaba `CxpEmptyState` y el "Reintentar" quedaba inaccesible. Se agregó máquina de estados excluyente (loading/error/empty/data): en error se muestra `ErrorStateInline` con Reintentar y se ocultan KPIs y tabla.
+- **Typecheck en Windows**: `VsRealSort.tsx` y `vsRealSort.ts` colisionaban (TS1149/TS1261). El componente se renombró a `VsRealSortableHeader.tsx` y se actualizó su import.
+- Pruebas: `verifyHtmlBundle` (output válido, falta index/root/script) y `cxpEstados` (error+retry, loading, empty real, empty con filtros, data).
+- Sin migraciones, deploy, publish, secretos ni cambios de datos.
+
 ## [13.823.16] - 2026-09-01
 ### Errores de Sentry: diagnóstico accionable en vez de "unknown error" (sólo local)
 - **Causa** (JAVASCRIPT-REACT-5N / -5P): una consulta fallida (`embarques → dependencias-financieras`) devolvió un error sin mensaje y el normalizador lo titulaba `unknown error`, generando dos issues del mismo evento sin pista de la consulta afectada.

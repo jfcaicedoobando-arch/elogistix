@@ -25,6 +25,7 @@ import type { FacturaCxP } from "@/features/cxp/services";
 import { ROUTES } from "@/constants/routes";
 import { exportarCxpCsv } from "@/features/cxp/routes/_helpers/exportarCxpCsv";
 import { CxpEmptyState } from "@/features/cxp/components/CxpEmptyState";
+import { ErrorStateInline } from "@/components/empty/ErrorStateInline";
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 import { EstadoFacturaCxPCell } from "@/features/cxp/components/EstadoFacturaCxPCell";
 import { MoneyCell } from "@/components/shared/MoneyCell";
@@ -57,6 +58,17 @@ export default function Cxp() {
     [data, pageActual, f.pageSize],
   );
 
+  // Máquina de estados excluyente: antes un error de carga dejaba `data` en []
+  // y se montaba el empty state, ocultando el botón "Reintentar".
+  const estado: "loading" | "error" | "empty" | "data" = isLoading
+    ? "loading"
+    : isError
+      ? "error"
+      : data.length === 0 && !f.hayFiltros
+        ? "empty"
+        : "data";
+
+
   return (
     <PageContainer width="wide">
       <PageHeader
@@ -79,7 +91,7 @@ export default function Cxp() {
         }
       />
 
-      <CxpKpiCards kpis={kpis} data={data} />
+      {estado !== "error" && <CxpKpiCards kpis={kpis} data={data} />}
 
       <Card>
         <CardContent className="p-4 space-y-3">
@@ -108,7 +120,13 @@ export default function Cxp() {
 
       <Card>
         <CardContent className="p-0">
-          {!isLoading && data.length === 0 && !f.hayFiltros ? (
+          {estado === "error" ? (
+            <ErrorStateInline
+              message="No pudimos cargar las facturas de proveedor. Revisa tu conexión e inténtalo de nuevo."
+              onRetry={() => refetch()}
+              className="m-4"
+            />
+          ) : estado === "empty" ? (
             <CxpEmptyState canEdit={canCapturarFacturaProveedor} onCapturar={() => f.setOpenNueva(true)} />
           ) : (
             <TooltipProvider delayDuration={200}>

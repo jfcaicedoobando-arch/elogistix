@@ -1,40 +1,28 @@
 import { defineConfig, type Plugin } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
-import fs from "fs";
 import { componentTagger } from "lovable-tagger";
 import { visualizer } from "rollup-plugin-visualizer";
 import { sentryVitePlugin } from "@sentry/vite-plugin";
 import { readAppVersion } from "./scripts/lib/readAppVersion";
+import { verificarHtmlBundle, type SalidaBundle } from "./scripts/lib/verifyHtmlBundle";
 
 /**
- * Verifica que `dist/index.html` contenga el bundle JS antes de terminar el
- * build. Evita publicaciones con HTML vacío (pantalla en blanco en prod).
+ * Verifica que el `index.html` emitido por ESTA compilación contenga el bundle
+ * JS. Se usa `writeBundle` con el `OutputBundle` en memoria (no se lee `dist/`),
+ * así un build limpio no falla por timing ni aprueba un `dist` obsoleto.
  */
 function verifyHtmlBundlePlugin(): Plugin {
   return {
     name: "verify-html-bundle",
     apply: "build",
-    closeBundle() {
-      const htmlPath = path.resolve(__dirname, "dist/index.html");
-      if (!fs.existsSync(htmlPath)) {
-        throw new Error(
-          "[verify-html-bundle] dist/index.html no existe. Build inválido.",
-        );
-      }
-      const html = fs.readFileSync(htmlPath, "utf-8");
-      const scriptRegex = /<script[^>]+src=["'][^"']*\/assets\/[^"']+\.js["'][^>]*>/i;
-      const hasRootDiv = /<div\s+id=["']root["']\s*>/i.test(html);
-      const hasScript = scriptRegex.test(html);
-      if (!hasRootDiv || !hasScript) {
-        throw new Error(
-          "[verify-html-bundle] dist/index.html no contiene <div id=root> o <script src=/assets/*.js>. Publicación abortada para evitar pantalla en blanco.",
-        );
-      }
+    writeBundle(_options, bundle) {
+      verificarHtmlBundle(bundle as unknown as Record<string, SalidaBundle>);
       console.log("[verify-html-bundle] OK — index.html contiene bundle JS.");
     },
   };
 }
+
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {

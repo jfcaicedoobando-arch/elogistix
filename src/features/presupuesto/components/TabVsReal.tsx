@@ -28,7 +28,7 @@ import { ErrorStateInline } from "@/components/empty/ErrorStateInline";
 import { usePdfExport } from "@/hooks/shared";
 import { Table, TableHeader, TableBody } from "@/components/ui/table";
 import { DetailTableRow } from "@/components/shared/DetailTable";
-import { ThSort } from "./VsRealSort";
+import { ThSort } from "./VsRealSortableHeader";
 import { ordenarFilas, type SortKey, type SortDir } from "./vsRealSort";
 import { AvisoGastosSinTc, VsRealCuerpo } from "./VsRealCuerpo";
 
