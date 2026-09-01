@@ -26,7 +26,7 @@ afterEach(() => {
 });
 
 describe("loadDraft", () => {
-  it("devuelve null cuando no hay nada guardado", () => {
+  it("autosave de cotización: devuelve null cuando no hay nada guardado", () => {
     expect(loadDraft(USER)).toBeNull();
   });
 
@@ -37,7 +37,7 @@ describe("loadDraft", () => {
     expect(window.localStorage.getItem(draftKey(USER))).toBeNull();
   });
 
-  it("devuelve null si el JSON está corrupto", () => {
+  it("autosave de cotización: devuelve null si el JSON está corrupto", () => {
     window.localStorage.setItem(draftKey(USER), "{ no-json");
     expect(loadDraft(USER)).toBeNull();
   });
