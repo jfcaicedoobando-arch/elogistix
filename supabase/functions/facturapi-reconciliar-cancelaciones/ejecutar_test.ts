@@ -76,13 +76,14 @@ const pendientes = (p: Partial<Pendientes>): Pendientes => ({
 
 Deno.test("ejecutor: corta por presupuesto y reporta diferidos (no errores)", async () => {
   const plan = planificarTareas(pendientes({ facturas: ["f1", "f2", "f3", "f4", "f5"].map((i) => factura(i)) }));
-  // El reloj avanza 10 ms por lectura y el presupuesto es 25 ms → arranca 3.
+  // El reloj avanza 10 ms por lectura y el presupuesto es 25 ms → arranca 2
+  // documentos y el tercer chequeo (30 ms) ya corta.
   const espia = armarDeps(25, relojIncremental(10));
   const resumen = await ejecutarPlan(plan, espia.deps);
 
-  assertEquals(espia.iniciados, ["f1", "f2", "f3"]);
-  assertEquals(resumen.revisadas, 3);
-  assertEquals(resumen.diferidos, 2);
+  assertEquals(espia.iniciados, ["f1", "f2"]);
+  assertEquals(resumen.revisadas, 2);
+  assertEquals(resumen.diferidos, 3);
   assertEquals(resumen.errores, 0);
 });
 
@@ -91,7 +92,8 @@ Deno.test("ejecutor: los diferidos quedan intactos (sin marcar cursor)", async (
   const espia = armarDeps(15, relojIncremental(10));
   await ejecutarPlan(plan, espia.deps);
 
-  assertEquals(espia.cursores, ["f1", "f2"]);
+  assertEquals(espia.cursores, ["f1"]);
+  assert(!espia.cursores.includes("f2"));
   assert(!espia.cursores.includes("f3"));
   assert(!espia.cursores.includes("f4"));
 });
@@ -123,7 +125,8 @@ Deno.test("ejecutor: una familia grande no consume el turno de las otras al cort
     notasCredito: [nc("n1")],
     reps: [rep("r1")],
   }));
-  const espia = armarDeps(25, relojIncremental(10));
+  // Presupuesto para 4 documentos: alcanzan las 3 familias antes del corte.
+  const espia = armarDeps(45, relojIncremental(10));
   await ejecutarPlan(plan, espia.deps);
 
   assert(espia.iniciados.includes("n1"));
