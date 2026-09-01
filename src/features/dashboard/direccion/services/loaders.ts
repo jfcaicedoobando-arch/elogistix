@@ -8,6 +8,8 @@ import { assertNotTruncated } from "@/lib/supabase/assertNotTruncated";
 const LIMITE_EMBARQUES = 3000;
 const LIMITE_FACTURAS = 10000;
 const LIMITE_PAGOS = 20000;
+const LIMITE_NOTAS_CREDITO = 20000;
+
 
 /** Totales por moneda del dashboard de Dirección (jsonb de `direccion_totales`, C3c). */
 export interface DireccionTotales {
