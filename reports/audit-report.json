@@ -1,17 +1,17 @@
 {
-  "version": "13.792.2",
-  "generatedAt": "2026-08-29T00:19:19.026Z",
+  "version": "13.823.17",
+  "generatedAt": "2026-09-01T21:55:11.367Z",
   "arch": {
     "hooksContextsDirectImports": [],
     "componentsPagesDirectImports": [],
     "oversized": []
   },
   "casts": {
-    "total": 3226,
+    "total": 3329,
     "bySeverity": {
-      "SAFE": 959,
-      "LOW": 153,
-      "MEDIUM": 2114,
+      "SAFE": 975,
+      "LOW": 160,
+      "MEDIUM": 2194,
       "HIGH": 0,
       "CRITICAL": 0
     },
@@ -20,6 +20,16 @@
         "file": "src/features/embarques/services/cierre.ts",
         "total": 17,
         "weight": 30
+      },
+      {
+        "file": "src/features/cotizacion/services/paginados.ts",
+        "total": 17,
+        "weight": 29
+      },
+      {
+        "file": "src/features/dashboard/direccion/services/loaders.ts",
+        "total": 16,
+        "weight": 29
       },
       {
         "file": "src/features/cxp/services/__tests__/proveedorFacturas.helpers.test.ts",
@@ -47,22 +57,12 @@
         "weight": 20
       },
       {
-        "file": "src/features/cotizacion/hooks/wizard/cotizacionDraftStorage.ts",
-        "total": 10,
-        "weight": 19
-      },
-      {
         "file": "src/lib/mappers/genericPayloadMapper.ts",
         "total": 11,
         "weight": 19
       },
       {
         "file": "src/features/cotizacion/hooks/__tests__/usePaso1SectionStatus.test.tsx",
-        "total": 9,
-        "weight": 18
-      },
-      {
-        "file": "src/features/cotizacion/hooks/wizard/__tests__/useCotizacionWizardSteps.test.tsx",
         "total": 9,
         "weight": 18
       }
@@ -72,10 +72,10 @@
     "violations": []
   },
   "fromDb": {
-    "total": 49,
-    "conSchema": 12,
+    "total": 50,
+    "conSchema": 13,
     "sinSchema": 37,
-    "ratio": 0.245,
+    "ratio": 0.26,
     "porFeature": {
       "admin": 6,
       "auditoria": 1,

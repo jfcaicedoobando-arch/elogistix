@@ -1,6 +1,6 @@
-# Audit Report — 13.792.2
+# Audit Report — 13.823.17
 
-Generado: 2026-08-29T00:19:19.026Z
+Generado: 2026-09-01T21:55:11.367Z
 
 ## Resumen
 
@@ -9,9 +9,9 @@ Generado: 2026-08-29T00:19:19.026Z
 | Capa (Supabase directo en hooks/contexts) | ✅ | 0 archivos |
 | Capa (Supabase directo en components/pages) | ✅ | 0 archivos |
 | Power-of-10 (>200 líneas) | ✅ | 0 archivos |
-| Casts HIGH + CRITICAL | ✅ | 0 / 3226 |
+| Casts HIGH + CRITICAL | ✅ | 0 / 3329 |
 | Higiene de tests | ✅ | 0 violaciones |
-| Adopción zod en `fromDb` | ⚠️ | 12/49 validados (25%) |
+| Adopción zod en `fromDb` | ⚠️ | 13/50 validados (26%) |
 
 ## Arquitectura
 
@@ -26,13 +26,13 @@ Generado: 2026-08-29T00:19:19.026Z
 
 ## Casts
 
-Total: **3226** — HIGH: **0**, CRITICAL: **0**
+Total: **3329** — HIGH: **0**, CRITICAL: **0**
 
 | Severidad | Cantidad |
 |---|---:|
-| SAFE | 959 |
-| LOW | 153 |
-| MEDIUM | 2114 |
+| SAFE | 975 |
+| LOW | 160 |
+| MEDIUM | 2194 |
 | HIGH | 0 |
 | CRITICAL | 0 |
 
@@ -41,19 +41,19 @@ Total: **3226** — HIGH: **0**, CRITICAL: **0**
 | # | Archivo | Total | Peso |
 |---|---|---:|---:|
 | 1 | `src/features/embarques/services/cierre.ts` | 17 | 30 |
-| 2 | `src/features/cxp/services/__tests__/proveedorFacturas.helpers.test.ts` | 14 | 28 |
-| 3 | `src/features/cotizacion/components/seccionRuta/__tests__/aplicarTarifa.test.ts` | 13 | 26 |
-| 4 | `src/features/embarques/domain/mappers/__tests__/embarqueToDb.test.ts` | 14 | 26 |
-| 5 | `src/features/cotizacion/services/__tests__/informativa.test.ts` | 10 | 20 |
-| 6 | `src/features/portal/services/__tests__/queries.test.ts` | 11 | 20 |
-| 7 | `src/features/cotizacion/hooks/wizard/cotizacionDraftStorage.ts` | 10 | 19 |
-| 8 | `src/lib/mappers/genericPayloadMapper.ts` | 11 | 19 |
-| 9 | `src/features/cotizacion/hooks/__tests__/usePaso1SectionStatus.test.tsx` | 9 | 18 |
-| 10 | `src/features/cotizacion/hooks/wizard/__tests__/useCotizacionWizardSteps.test.tsx` | 9 | 18 |
+| 2 | `src/features/cotizacion/services/paginados.ts` | 17 | 29 |
+| 3 | `src/features/dashboard/direccion/services/loaders.ts` | 16 | 29 |
+| 4 | `src/features/cxp/services/__tests__/proveedorFacturas.helpers.test.ts` | 14 | 28 |
+| 5 | `src/features/cotizacion/components/seccionRuta/__tests__/aplicarTarifa.test.ts` | 13 | 26 |
+| 6 | `src/features/embarques/domain/mappers/__tests__/embarqueToDb.test.ts` | 14 | 26 |
+| 7 | `src/features/cotizacion/services/__tests__/informativa.test.ts` | 10 | 20 |
+| 8 | `src/features/portal/services/__tests__/queries.test.ts` | 11 | 20 |
+| 9 | `src/lib/mappers/genericPayloadMapper.ts` | 11 | 19 |
+| 10 | `src/features/cotizacion/hooks/__tests__/usePaso1SectionStatus.test.tsx` | 9 | 18 |
 
 ## Boundaries de datos (`fromDb`)
 
-Call sites validados con zod: **12** de **49** (25%).
+Call sites validados con zod: **13** de **50** (26%).
 
 Casts crudos `fromDb<T>()` pendientes por feature:
 

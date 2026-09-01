@@ -193,6 +193,10 @@ jobs:
     name: Architecture & audits
     runs-on: ubuntu-24.04
     timeout-minutes: 8
+    needs: changes
+    # R13.823.17 — Saltar audits irrelevantes cuando el diff no toca un área.
+    # En push a main corremos todo; en PRs dependemos de `changes`.
+    if: always() && (needs.changes.outputs.frontend == 'true' || needs.changes.outputs.backend == 'true' || github.event_name == 'push')
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -204,72 +208,29 @@ jobs:
         id: setup-bun
         uses: ./.github/actions/setup-bun
 
-      # v13.303.5 — Los audits son procesos tsx independientes: paralelizamos.
-      # v13.309.36 (FIX-R2-04) — Añadidos `audit:schema` y `audit:migrations`
-      # para que los guardrails documentados en migrations-hygiene.md sí corran.
-      # v13.322.1 (GHA-audit A2) — `audit:rpc-sync`, `audit:rpc-columns` y
-      # `audit:sonner` existían en package.json pero NINGÚN workflow los
-      # invocaba: guardrails muertos. Se cablean aquí, en paralelo.
-      # v13.572.0 (R3TC-04) — `audit:rpc-columns` sale de este job: requiere BD
-      # viva (PG*) y este workflow no la tiene, así que era un no-op silencioso.
-      # El script ahora FALLA si corre con CI=true sin PGHOST; ejecútalo donde
-      # haya BD (local con Supabase levantado, o un job nightly con Postgres).
-      - name: Audits en paralelo (arch + casts + tests + schema + migrations + rpc + sonner)
-        run: |
-          set -e
-          bun run audit:arch       > /tmp/audit-arch.log       2>&1 &
-          A=$!
-          bun run audit:casts      > /tmp/audit-casts.log      2>&1 &
-          C=$!
-          bun run audit:tests      > /tmp/audit-tests.log      2>&1 &
-          T=$!
-          bun run audit:schema     > /tmp/audit-schema.log     2>&1 &
-          S=$!
-          bun run audit:migrations > /tmp/audit-migrations.log 2>&1 &
-          M=$!
-          bun run audit:schema-functions > /tmp/audit-schema-functions.log 2>&1 &
-          F=$!
-          # v13.600.0 (R4BD-01/R4BD-03) — espejo == migración de mayor timestamp.
-          bun run audit:replay-mirror > /tmp/audit-replay-mirror.log 2>&1 &
-          P=$!
-          bun run audit:manifest   > /tmp/audit-manifest.log   2>&1 &
-          V=$!
-          bun run audit:rpc-sync    > /tmp/audit-rpc-sync.log    2>&1 &
-          R=$!
-          bun run audit:sonner      > /tmp/audit-sonner.log      2>&1 &
-          N=$!
-           # v13.603.0 (R5TC-02) — ningún secreto server-side ni .env sombra.
-           bun run audit:no-env      > /tmp/audit-no-env.log      2>&1 &
-           E=$!
-           # v13.758.0 (D-01b) — ninguna lista/contador/buscador nuevo puede
-           # leer tablas con borrado lógico sin filtrar `deleted_at`.
-           bun run audit:soft-delete > /tmp/audit-soft-delete.log 2>&1 &
-           D=$!
-          fail=0
-          wait $A || { echo '❌ audit:arch';       cat /tmp/audit-arch.log;       fail=1; }
-          wait $C || { echo '❌ audit:casts';      cat /tmp/audit-casts.log;      fail=1; }
-          wait $T || { echo '❌ audit:tests';      cat /tmp/audit-tests.log;      fail=1; }
-          wait $S || { echo '❌ audit:schema';     cat /tmp/audit-schema.log;     fail=1; }
-          wait $M || { echo '❌ audit:migrations'; cat /tmp/audit-migrations.log; fail=1; }
-          wait $F || { echo '❌ audit:schema-functions'; cat /tmp/audit-schema-functions.log; fail=1; }
-          wait $P || { echo '❌ audit:replay-mirror'; cat /tmp/audit-replay-mirror.log; fail=1; }
-          wait $V || { echo '❌ audit:manifest';   cat /tmp/audit-manifest.log;   fail=1; }
-          wait $R || { echo '❌ audit:rpc-sync';    cat /tmp/audit-rpc-sync.log;    fail=1; }
-          wait $N || { echo '❌ audit:sonner';      cat /tmp/audit-sonner.log;      fail=1; }
-           wait $E || { echo '❌ audit:no-env';      cat /tmp/audit-no-env.log;      fail=1; }
-           wait $D || { echo '❌ audit:soft-delete'; cat /tmp/audit-soft-delete.log; fail=1; }
-           exit $fail
+      # R13.823.17 — El script condicional decide qué audits corren según el
+      # diff. Así un PR frontend no espera `rpc-sync`, `schema`, etc.; un PR
+      # backend no espera `arch`/`casts`/`tests`. `release-manifest` corre
+      # siempre porque valida el APP_VERSION de cualquier cambio.
+      - name: Audits condicionales por área
+        env:
+          FRONTEND_CHANGED: ${{ needs.changes.outputs.frontend }}
+          BACKEND_CHANGED: ${{ needs.changes.outputs.backend }}
+          GITHUB_REF: ${{ github.ref }}
+        run: bash scripts/run-audits-conditional.sh
 
       # v13.322.1 (GHA-audit A4) — Los architecture gating tests se excluyen
       # del matrix de Vitest cuando se corre con `--shard` (ver
       # vitest.config.ts) y se corren SÓLO aquí, con un gate visible y con
       # nombre propio. Antes el comentario decía eso pero la exclusión no
       # existía: corrían dos veces.
+      # R13.823.17 — Sólo relevantes para cambios frontend (o push a main).
       - name: Architecture gating tests (oversized, casts, layers, shadow folders)
+        if: needs.changes.outputs.frontend == 'true' || github.event_name == 'push'
         run: bunx vitest run src/lib/__tests__/architecture.test.ts src/lib/__tests__/architecture-baseline.test.ts src/__tests__/audit-report.test.ts src/__tests__/audit-casts-classifier.test.ts
 
       - name: Architecture & cast report
-        if: always() && steps.setup-bun.outcome == 'success'
+        if: always() && steps.setup-bun.outcome == 'success' && (needs.changes.outputs.frontend == 'true' || github.event_name == 'push')
         run: bun run audit:report
 
       - name: PR summary (audit report)
@@ -591,6 +552,7 @@ jobs:
       - name: Verify all required jobs succeeded
         env:
           FRONTEND_CHANGED: ${{ needs.changes.outputs.frontend }}
+          BACKEND_CHANGED: ${{ needs.changes.outputs.backend }}
           CHANGES_RESULT: ${{ needs.changes.result }}
         run: |
           # Falla si cualquier job requerido falló o fue cancelado.
@@ -600,6 +562,9 @@ jobs:
           # v13.514.0 — `skipped` SÓLO se acepta en los jobs gateados por
           # `changes` y SÓLO cuando el diff no tocó frontend. Cualquier otro
           # `skipped` sigue siendo una falla (gate anti-skip-silencioso).
+          # R13.823.17 — `audits` también se salta legítimamente cuando el diff
+          # no toca frontend ni backend (imposible con paths-ignore actuales, pero
+          # se deja como salvaguarda).
           if [ "$CHANGES_RESULT" != "success" ]; then
             echo "::error::El job changes no terminó en success ($CHANGES_RESULT); no se puede evaluar el gate."
             exit 1
@@ -625,6 +590,12 @@ jobs:
                   continue
                 fi
                 ;;
+              audits)
+                if [ "$result" = "skipped" ] && [ "$FRONTEND_CHANGED" != "true" ] && [ "$BACKEND_CHANGED" != "true" ]; then
+                  echo "  ↳ omitido legítimamente: el diff no toca frontend ni backend."
+                  continue
+                fi
+                ;;
             esac
             fail=1
           done
@@ -633,4 +604,5 @@ jobs:
             exit 1
           fi
           echo "Todos los jobs requeridos pasaron."
+
 
