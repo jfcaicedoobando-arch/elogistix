@@ -44,6 +44,22 @@ export default defineConfig(({ mode }) => {
     hmr: {
       overlay: false,
     },
+    // R13.823.17 · Reducir carga del watcher en dev: ignorar tests, coverage,
+    // dist, logs y metadatos que no afectan el runtime del preview. Esto evita
+    // recargas innecesarias al guardar archivos de test y acelera HMR.
+    watch: {
+      ignored: [
+        "**/*.test.ts",
+        "**/*.test.tsx",
+        "**/__tests__/**",
+        "**/coverage/**",
+        "**/dist/**",
+        "**/.git/**",
+        "**/.lovable/**",
+        "**/reports/**",
+        "**/node_modules/**",
+      ],
+    },
   },
   plugins: [
     react(),
