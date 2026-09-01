@@ -108,7 +108,7 @@ function buildFailure(file: File, last: Attempt | null, latencyMs: number): Cfdi
     {
       attemptCount: MAX_ATTEMPTS,
       latencyMs,
-      online: typeof navigator !== "undefined" ? navigator.onLine : true,
+      online,
       xmlSize: file.size,
       xmlName: file.name,
       lastStatus: last?.status ?? null,
