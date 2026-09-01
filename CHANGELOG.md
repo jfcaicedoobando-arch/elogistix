@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.823.13] - 2026-09-01
+### CI verde: higiene de pruebas, manifiesto, baseline de soft-delete y tope de líneas (sólo local)
+- **Título duplicado**: la prueba de lotes del portal del agente repetía literalmente el título de la de CxP; ahora dice de qué módulo es.
+- **Manifiesto de release** regenerado para `13.823.13` (`db:release-manifest:update`) y **baseline de soft-delete** actualizada: las dos lecturas de CRM (`crm_leads`, `crm_oportunidades`) ya corregidas salieron de la deuda.
+- **Tope de 250 líneas (lint)**: `parse-cfdi-xml/index.ts` movió la llamada opcional al AI Gateway a `parse-cfdi-xml/sugerirCategoria.ts`, y las pruebas de la guarda de CxP se separaron en `cxpGuardFixtures.ts` + `cxpGuard_test.ts` (membresía/rol) y `cxpGuardRateLimit_test.ts`. Sólo movimiento de código: la autorización sigue corriendo antes de leer el multipart y los 26 tests Deno pasan.
+- Sin deploy, publish, Edge deploy, migraciones o SQL remoto, secretos ni cambios de datos.
+
 ## [13.823.12] - 2026-09-01
 ### Portal: la solicitud ya no se atribuye a la empresa equivocada y el historial del agente no se corta (sólo local)
 - **Solicitud multicliente**: `PortalDashboard` y `PortalCotizaciones` pasaban `clienteIds[0]`, así que un usuario ligado a varias empresas mandaba la solicitud a la primera de la lista sin saberlo. Ahora el diálogo recibe todas las empresas autorizadas: con una sola se preselecciona (cero fricción) y con varias hay selector obligatorio con nombre legible, botón de envío deshabilitado hasta elegir y la elección se limpia al cerrar. Sin empresas vinculadas se explica el motivo y no se envía. La validación de pertenencia (`useSolicitarCotizacion` con todos los ids) queda intacta.

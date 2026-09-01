@@ -1,6 +1,6 @@
 /**
- * Ola P2 — Pruebas deterministas de la guarda compartida de CxP:
- * membresía, rol, rate limit por usuario/organización y fail-CLOSED.
+ * Ola P2 — Pruebas deterministas de la guarda compartida de CxP: membresía,
+ * rol y organización objetivo. El rate limit vive en cxpGuardRateLimit_test.ts.
  */
 // deno-lint-ignore-file no-import-prefix
 import {
@@ -8,97 +8,16 @@ import {
   assertEquals,
 } from "https://deno.land/std@0.224.0/assert/mod.ts";
 import { autorizarCxp, leerOrgHeader, ORG_HEADER } from "./cxpGuard.ts";
-import type { AuthContext } from "./auth.ts";
+import {
+  CORS,
+  fakeAuth,
+  llamadasRpc,
+  log,
+  ORG_A,
+  ORG_B,
+  OPTS,
+} from "./cxpGuardFixtures.ts";
 
-type RpcResp = { data: unknown; error: { message: string } | null };
-
-interface FakeOpts {
-  memberships?: Record<string, string>;
-  globalRoles?: string[];
-  rpc?: (name: string, args: Record<string, unknown>) => RpcResp;
-}
-
-const llamadasRpc: { name: string; args: Record<string, unknown> }[] = [];
-
-function fakeAuth(opts: FakeOpts): AuthContext {
-  const memberships = opts.memberships ?? {};
-  const globalRoles = opts.globalRoles ?? [];
-  const adminClient = {
-    from(tabla: string) {
-      const filtros: Record<string, string> = {};
-      const chain = {
-        select(_cols: string) {
-          return chain;
-        },
-        eq(col: string, val: string) {
-          filtros[col] = val;
-          return chain;
-        },
-        in(_col: string, values: string[]) {
-          filtros.roles = values.join(",");
-          return chain;
-        },
-        maybeSingle(): Promise<{ data: unknown; error: null }> {
-          if (tabla === "organization_members") {
-            const rolOrg = memberships[filtros.organization_id];
-            return Promise.resolve({
-              data: rolOrg ? { role: rolOrg } : null,
-              error: null,
-            });
-          }
-          if (tabla === "user_roles" && filtros.role === "super_admin") {
-            return Promise.resolve({
-              data: globalRoles.includes("super_admin")
-                ? { role: "super_admin" }
-                : null,
-              error: null,
-            });
-          }
-          if (tabla === "user_roles" && filtros.roles) {
-            const permitidos = filtros.roles.split(",");
-            const role = globalRoles.find((r) => permitidos.includes(r));
-            return Promise.resolve({
-              data: role ? { role } : null,
-              error: null,
-            });
-          }
-          return Promise.resolve({ data: null, error: null });
-        },
-      };
-      return chain;
-    },
-    rpc(name: string, args: Record<string, unknown>) {
-      llamadasRpc.push({ name, args });
-      const r = opts.rpc?.(name, args) ?? { data: { ok: true }, error: null };
-      return Promise.resolve(r);
-    },
-  };
-  return {
-    userId: "u-1",
-    authHeader: "Bearer x",
-    anonClient: adminClient,
-    adminClient,
-  } as unknown as AuthContext;
-}
-
-const log = {
-  info: () => undefined,
-  warn: () => undefined,
-  error: () => undefined,
-  setUserId: () => undefined,
-  setOrganizationId: () => undefined,
-  finish: () => undefined,
-} as unknown as Parameters<typeof autorizarCxp>[2];
-
-const CORS = { "Access-Control-Allow-Origin": "*" };
-const ORG_A = "11111111-1111-4111-8111-111111111111";
-const ORG_B = "22222222-2222-4222-8222-222222222222";
-const OPTS = {
-  organizationId: ORG_B,
-  fn: "prueba-cxp",
-  rlUsuario: { windowSeconds: 3600, max: 5 },
-  rlOrg: { windowSeconds: 3600, max: 10 },
-};
 
 Deno.test("usuario sólo de A intentando operar B: 403", async () => {
   const r = await autorizarCxp(
@@ -211,80 +130,4 @@ Deno.test("leerOrgHeader lee x-organization-id y recorta espacios", () => {
   });
   assertEquals(leerOrgHeader(req), ORG_B);
   assertEquals(leerOrgHeader(new Request("https://x.test/fn")), "");
-});
-
-Deno.test("rate limit por usuario: 429 con Retry-After", async () => {
-  const r = await autorizarCxp(
-    fakeAuth({
-      memberships: { [ORG_B]: "contador" },
-      rpc: (_n, args) =>
-        String(args.p_key).includes(":user:")
-          ? { data: { ok: false, retry_after: 42 }, error: null }
-          : { data: { ok: true }, error: null },
-    }),
-    CORS,
-    log,
-    OPTS,
-  );
-  assert(!r.ok);
-  if (r.ok) return;
-  assertEquals(r.res.status, 429);
-  assertEquals(r.res.headers.get("Retry-After"), "42");
-  await r.res.json();
-});
-
-Deno.test("rate limit por organización: 429 aunque el usuario tenga cupo", async () => {
-  const r = await autorizarCxp(
-    fakeAuth({
-      memberships: { [ORG_B]: "contador" },
-      rpc: (_n, args) =>
-        String(args.p_key).includes(":org:")
-          ? { data: { ok: false }, error: null }
-          : { data: { ok: true }, error: null },
-    }),
-    CORS,
-    log,
-    OPTS,
-  );
-  assert(!r.ok);
-  if (!r.ok) {
-    assertEquals(r.res.status, 429);
-    await r.res.json();
-  }
-});
-
-Deno.test("contador de rate limit caído: fail-CLOSED con 503", async () => {
-  const r = await autorizarCxp(
-    fakeAuth({
-      memberships: { [ORG_B]: "contador" },
-      rpc: () => ({ data: null, error: { message: "boom" } }),
-    }),
-    CORS,
-    log,
-    OPTS,
-  );
-  assert(!r.ok);
-  if (!r.ok) {
-    assertEquals(r.res.status, 503);
-    assertEquals((await r.res.json()).error, "rate_limit_unavailable");
-  }
-});
-
-Deno.test("rate limit nulo o malformado: 503; sólo ok booleano es válido", async () => {
-  for (const data of [null, {}, { ok: "true" }, [], { ok: 1 }]) {
-    const r = await autorizarCxp(
-      fakeAuth({
-        memberships: { [ORG_B]: "contador" },
-        rpc: () => ({ data, error: null }),
-      }),
-      CORS,
-      log,
-      OPTS,
-    );
-    assert(!r.ok);
-    if (!r.ok) {
-      assertEquals(r.res.status, 503);
-      assertEquals((await r.res.json()).error, "rate_limit_unavailable");
-    }
-  }
 });
