@@ -1,10 +1,5 @@
--- Fuente canónica de public.validar_cierre_embarque
--- Regenerada desde DB. Cada cambio DEBE actualizarse aquí en el mismo PR que la migración correspondiente.
--- Ver supabase/schema/README.md.
--- v13.381.1: paso 1 incluye costos sin proveedor; paso 2 falla con buzón vacío + costos sin factura.
--- N-BL-01 (v13.666.0): pagado CxP convertido a la moneda de la factura con
--- monto_pago_en_moneda_factura; fail-closed (pago sin TC se excluye y se reporta
--- en pagos_sin_tipo_cambio), consistente con saldo_factura_proveedor.
+-- v13.820.4: la evidencia de factura de proveedor acepta costos ligados a una
+-- factura de proveedor vigente aunque no haya pasado por el buzón.
 CREATE OR REPLACE FUNCTION public.validar_cierre_embarque(p_embarque_id uuid)
  RETURNS jsonb
  LANGUAGE plpgsql
@@ -282,3 +277,6 @@ BEGIN
   RETURN jsonb_build_object('puede_cerrar', v_puede, 'checks', v_checks);
 END $function$
 ;
+
+REVOKE ALL ON FUNCTION public.validar_cierre_embarque(uuid) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.validar_cierre_embarque(uuid) TO authenticated, service_role;

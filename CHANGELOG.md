@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.820.4] - 2026-08-31
+- **Checklist de cierre**: el paso "Recibimos la factura de cada proveedor" ya reconoce los costos ligados a una factura de proveedor vigente aunque esa factura se haya capturado directo desde Costos (sin pasar por el buzón). Antes un embarque con todos sus costos facturados seguía marcando "faltan facturas del proveedor" y no podía cerrarse.
+
 ## [13.820.3] - 2026-08-31
 - **Eliminar embarque**: la pantalla se alineó con la regla real de la base de datos: ahora se puede eliminar un embarque en `Entregado`, `EIR` o `Por liquidar` si no tiene facturas, cuentas por pagar, pagos, comisiones ni proformas ligadas. Sólo `Cerrado` y `Cancelado` siguen bloqueados por estado.
 
