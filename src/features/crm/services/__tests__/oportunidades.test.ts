@@ -9,7 +9,7 @@ vi.mock("@/features/crm/domain/oportunidadPayload", () => ({
   buildOportunidadInsertPayload: vi.fn((_i: unknown, _u: unknown) => ({ nombre: "Test", etapa_id: "e-1" })),
 }));
 
-import { crearOportunidad, actualizarOportunidad, moverEtapaOportunidad, eliminarOportunidad } from "../oportunidades";
+import { crearOportunidad, actualizarOportunidad, moverEtapaOportunidad, eliminarOportunidad, getOportunidad } from "../oportunidades";
 
 beforeEach(() => { mock.tableCalls.length = 0; });
 
@@ -78,5 +78,17 @@ describe("eliminarOportunidad", () => {
     mock.setTableResult("crm_oportunidades", { data: {}, error: null });
     await expect(eliminarOportunidad("op-1", "u-1")).resolves.toBeUndefined();
     expect(mock.tableCalls[0]?.ops).toContain("update");
+  });
+});
+
+describe("getOportunidad", () => {
+  it("exige deleted_at null: una oportunidad eliminada no resuelve por URL", async () => {
+    mock.setTableResult("crm_oportunidades", { data: null, error: null });
+    const res = await getOportunidad("op-borrada");
+    expect(res).toBeNull();
+    const call = mock.tableCalls.find((c) => c.table === "crm_oportunidades");
+    const isIdx = call?.ops.indexOf("is") ?? -1;
+    expect(isIdx).toBeGreaterThanOrEqual(0);
+    expect(call?.opArgs[isIdx]).toEqual(["deleted_at", null]);
   });
 });

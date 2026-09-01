@@ -47,10 +47,13 @@ export async function listLeads(filtros: LeadFiltros): Promise<LeadsResultado> {
 }
 
 export async function getLead(id: string): Promise<CrmLeadRow | null> {
+  // Un lead eliminado (soft-delete) no debe resolver su detalle aunque se
+  // conserve el UUID en la URL: la ruta trata `null` como "no encontrado".
   const { data, error } = await supabase
     .from("crm_leads")
     .select(LEAD_COLUMNS)
     .eq("id", id)
+    .is("deleted_at", null)
     .maybeSingle();
   if (error) throw error;
   return (data ?? null) as CrmLeadRow | null;

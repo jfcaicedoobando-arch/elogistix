@@ -86,4 +86,12 @@ describe("crm/leads/queries", () => {
     const res = await getLead("lead-7");
     expect(res?.empresa).toBe("ACME");
   });
+  it("11 — getLead: exige deleted_at null (soft-delete no resuelve por URL)", async () => {
+    mock.setTableResult(TABLE, { data: null, error: null });
+    await getLead("lead-borrado");
+    const call = mock.tableCalls[0];
+    const isIdx = call.ops.indexOf("is");
+    expect(isIdx).toBeGreaterThanOrEqual(0);
+    expect(call.opArgs[isIdx]).toEqual(["deleted_at", null]);
+  });
 });

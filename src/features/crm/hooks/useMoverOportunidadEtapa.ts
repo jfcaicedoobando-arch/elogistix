@@ -71,19 +71,24 @@ export function useMoverOportunidadEtapa({ etapas, oportunidades }: Params) {
           ...resolverLimpiezaCierre(etapaDestino, etapaOrigen),
           ...(motivoPerdidaId ? { motivo_perdida_id: motivoPerdidaId } : {}),
         });
-        const { showUndoToast } = await import("@/features/crm/hooks/useUndoToast");
-        showUndoToast("Etapa actualizada", async () => {
-          if (!etapaPrev) return;
-          // Ola 4 · N49: el Undo aplica la misma limpieza con origen/destino
-          // invertidos (p. ej. deshacer abierta→ganada limpia el cierre real
-          // que resolverCierreGanada acababa de escribir).
-          await mover.mutateAsync({
-            id,
-            etapa_id: etapaPrev,
-            probabilidad: probPrev,
-            ...resolverLimpiezaCierre(etapaOrigen, etapaDestino),
+        // El destino "perdida" cancela/completa actividades pendientes: el Undo
+        // no puede revivirlas, así que no se ofrece (evita Undo falso que dejaría
+        // una oportunidad abierta con sus tareas canceladas).
+        if (etapaDestino?.tipo !== "perdida") {
+          const { showUndoToast } = await import("@/features/crm/hooks/useUndoToast");
+          showUndoToast("Etapa actualizada", async () => {
+            if (!etapaPrev) return;
+            // Ola 4 · N49: el Undo aplica la misma limpieza con origen/destino
+            // invertidos (p. ej. deshacer abierta→ganada limpia el cierre real
+            // que resolverCierreGanada acababa de escribir).
+            await mover.mutateAsync({
+              id,
+              etapa_id: etapaPrev,
+              probabilidad: probPrev,
+              ...resolverLimpiezaCierre(etapaOrigen, etapaDestino),
+            });
           });
-        });
+        }
         // Disciplina de pipeline: al avanzar a una etapa ABIERTA se pide el
         // próximo paso (ninguna oportunidad viva sin siguiente acción).
         if (etapaDestino?.tipo === "abierta" && op) {
