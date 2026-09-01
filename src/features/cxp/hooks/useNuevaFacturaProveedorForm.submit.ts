@@ -135,7 +135,7 @@ export async function runSubmit(p: RunSubmitParams): Promise<ResultadoSubmit> {
 
   try {
     const created = await p.crearMutateAsync(
-      buildPayload({ values: p.values, total: p.total, userId: p.userId, pendingCfdi: p.pendingCfdi, vinculos: p.vinculos }),
+      buildPayload({ values: p.values, total: p.total, userId: p.userId, pendingCfdi: p.pendingCfdi, vinculos: p.vinculos, embarqueOrigenId: p.embarqueOrigenId }),
     );
     let sideResult = {};
     if (created?.id) {
