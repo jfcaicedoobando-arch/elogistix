@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.823.18] - 2026-09-01
+### Optimización de CI y HMR (sólo local)
+- **Preview más ágil en Lovable**: `vite.config.ts` ignora ahora `**/*.test.ts(x)`, `__tests__`, `coverage`, `dist`, `.git`, `.lovable`, `reports` y `node_modules` en el watcher de desarrollo. Evita recargas completas al guardar tests y reduce trabajo del dev server.
+- **Audits condicionales en CI**: nuevo `scripts/run-audits-conditional.sh`. En PRs que sólo tocan frontend se omiten los audits de backend (`schema`, `migrations`, `rpc-sync`, etc.); en PRs de backend se omiten los de frontend (`arch`, `casts`, `tests`, etc.). `release-manifest` sigue corriendo siempre. En push a `main` se ejecuta el set completo.
+- `.github/workflows/ci.yml` aprovecha las salidas del job `changes` para pasar `FRONTEND_CHANGED`/`BACKEND_CHANGED` al script. El aggregator `ci-success` acepta `audits=skipped` cuando el diff no toca ninguna de las dos áreas.
+- Sin migraciones, deploy, publish, secretos ni cambios de datos.
+
 ## [13.823.17] - 2026-09-01
 ### Ola 1 de cierre para publicación (sólo local)
 - **Build limpio de producción**: `verify-html-bundle` validaba `dist/index.html` leyéndolo del disco en `closeBundle`, así que un build sin `dist` previo fallaba ("dist/index.html no existe") y un `dist` viejo podía aprobarse. Ahora valida el `index.html` emitido por la compilación en `writeBundle` (OutputBundle en memoria): exige `div#root` y un script bajo `/assets/`.
