@@ -101,7 +101,11 @@ BEGIN
     'detalle', jsonb_build_object('pendientes', v_ent_pendientes, 'dias_max', v_ent_dias_max,
       'buzon_vacio', v_ent_vacio, 'costos_sin_factura', v_costos_sin_factura)));
 
-  -- Evidencia: cada proveedor con costos debe tener al menos un archivo en el buzón.
+  -- Evidencia: cada proveedor con costos debe tener al menos un archivo en el
+  -- buzón. v13.820.4: un costo ya ligado a una factura de proveedor vigente
+  -- cuenta como evidencia aunque la factura no haya entrado por el buzón
+  -- (captura directa desde Costos); antes el paso 1 quedaba pendiente para
+  -- siempre pese a que el paso 3 estaba completo.
   SELECT COUNT(*), COALESCE(array_agg(nombre ORDER BY nombre), ARRAY[]::text[])
     INTO v_prov_sin_evidencia, v_prov_nombres
     FROM (
@@ -114,13 +118,24 @@ BEGIN
             WHERE efe.embarque_id=p_embarque_id AND efe.deleted_at IS NULL
               AND efe.proveedor_id=cc.proveedor_id
               AND COALESCE(efe.estado,'por_capturar')<>'rechazada')
+         AND NOT EXISTS (
+           SELECT 1 FROM proveedor_facturas_conceptos pfc
+           JOIN proveedor_facturas pf3 ON pf3.id=pfc.proveedor_factura_id
+            WHERE pfc.concepto_costo_id=cc.id
+              AND pf3.deleted_at IS NULL AND pf3.estado<>'Cancelada')
       UNION
       SELECT 'Costos sin proveedor asignado' AS nombre
        WHERE EXISTS (
          SELECT 1 FROM conceptos_costo cc2
           WHERE cc2.embarque_id=p_embarque_id AND cc2.deleted_at IS NULL
-            AND cc2.proveedor_id IS NULL)
+            AND cc2.proveedor_id IS NULL
+            AND NOT EXISTS (
+              SELECT 1 FROM proveedor_facturas_conceptos pfc2
+              JOIN proveedor_facturas pf4 ON pf4.id=pfc2.proveedor_factura_id
+               WHERE pfc2.concepto_costo_id=cc2.id
+                 AND pf4.deleted_at IS NULL AND pf4.estado<>'Cancelada'))
     ) faltantes;
+
   v_ok := (v_prov_sin_evidencia=0); v_puede := v_puede AND v_ok;
   v_checks := v_checks || jsonb_build_array(jsonb_build_object(
     'regla','facturas_entrantes_evidencia','ok',v_ok,
