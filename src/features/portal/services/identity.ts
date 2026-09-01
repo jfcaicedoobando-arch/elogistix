@@ -9,8 +9,28 @@ const contactoNullableSchema = z.object({ contacto: z.string().nullable() }).nul
 
 const PORTAL_LIST_MAX = 500;
 
-export async function fetchPortalClientUsers() {
-  return unwrapOr(supabase.from("client_users").select("*").limit(PORTAL_LIST_MAX), []);
+/**
+ * Vinculación usuario↔cliente del portal, con el nombre legible del cliente.
+ * El join va por RLS: sólo devuelve los clientes que el usuario puede ver.
+ */
+export interface PortalClientUser {
+  cliente_id: string;
+  cliente_nombre: string | null;
+  organization_id?: string | null;
+  user_id?: string | null;
+}
+
+export async function fetchPortalClientUsers(): Promise<PortalClientUser[]> {
+  const rows = await unwrapOr(
+    supabase.from("client_users").select("*, clientes(nombre)").limit(PORTAL_LIST_MAX),
+    [],
+  );
+  // SAFE-CAST: el select incluye todas las columnas más el embed `clientes`.
+  return (rows as unknown as Array<Record<string, unknown>>).map((r) => ({
+    ...r,
+    cliente_id: String(r.cliente_id),
+    cliente_nombre: fromDb(r.clientes ?? null, nombreNullableSchema)?.nombre ?? null,
+  })) as PortalClientUser[];
 }
 
 export async function fetchPortalClienteName(): Promise<string | null> {
