@@ -9,6 +9,7 @@ import { notifySuccess } from "@/lib/ui/appFeedback";
 import { parseCfdiXml, type CfdiParsedResponse } from "@/features/cxp/services";
 import { CfdiUploadError } from "@/features/cxp/services/parseCfdi";
 import { notifyError } from "@/lib/ui/appFeedback";
+import { useOrgActiva } from "@/hooks/shared/useOrgActiva";
 
 interface UseCargaCfdiArgs {
   categorias: { id: string; nombre: string }[];
@@ -19,6 +20,7 @@ const MAX_XML_BYTES = 2 * 1024 * 1024;
 const CLIENT_TIMEOUT_MS = 15_000;
 
 export function useCargaCfdi({ categorias, onParsed }: UseCargaCfdiArgs) {
+  const { organizationId } = useOrgActiva();
   const [xml, setXml] = useState<File | null>(null);
   const [pdf, setPdf] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
@@ -48,14 +50,14 @@ export function useCargaCfdi({ categorias, onParsed }: UseCargaCfdiArgs) {
   }, []);
 
   const procesar = useCallback(async () => {
-    if (!xml) return;
+    if (!xml || !organizationId) return;
     setLoading(true);
     let timeoutId: ReturnType<typeof setTimeout> | undefined;
     try {
       const timeoutPromise = new Promise<never>((_, reject) => {
         timeoutId = setTimeout(() => reject(new Error("CLIENT_TIMEOUT")), CLIENT_TIMEOUT_MS);
       });
-      const data = await Promise.race([parseCfdiXml(xml, categorias), timeoutPromise]);
+      const data = await Promise.race([parseCfdiXml(xml, categorias, organizationId), timeoutPromise]);
       // Esperamos al consumidor: si detecta problemas (cuadre fiscal, RFC, etc.)
       // devuelve `false` y suprimimos el toast de éxito para no contradecir su
       // propio toast de error.
@@ -102,7 +104,7 @@ export function useCargaCfdi({ categorias, onParsed }: UseCargaCfdiArgs) {
       if (timeoutId) clearTimeout(timeoutId);
       setLoading(false);
     }
-  }, [xml, pdf, categorias, onParsed]);
+  }, [xml, pdf, categorias, onParsed, organizationId]);
 
   return { xml, pdf, loading, setXml, setPdf, reset, handleXml, procesar };
 }

@@ -90,11 +90,13 @@ async function mapError(error: unknown): Promise<InvokeAttemptFail> {
 export async function invokeParseCfdiOnce(
   file: File,
   categorias: { id: string; nombre: string }[],
+  organizationId: string,
 ): Promise<InvokeAttempt> {
   // FormData fresco por intento: el body se consume al enviar.
   const formData = new FormData();
   formData.append("file", file);
   formData.append("categorias", JSON.stringify(categorias));
+  formData.append("organization_id", organizationId);
 
   try {
     const { data, error } = await supabase.functions.invoke<CfdiParsedResponse>(

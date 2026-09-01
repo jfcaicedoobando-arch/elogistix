@@ -11,6 +11,7 @@ import { parsePdfInvoice } from "@/features/cxp/services/parsePdfInvoice";
 import { descargarArchivoEntranteComoFile } from "@/features/cxp/services/capturaEntrante";
 import type { EntranteParaCaptura } from "@/features/cxp/types";
 import { getErrorMessage } from "@/lib/errors";
+import { useOrgActiva } from "@/hooks/shared/useOrgActiva";
 
 export type EstadoAutocarga = "idle" | "cargando" | "listo" | "error";
 
@@ -23,6 +24,7 @@ interface Args {
 }
 
 export function useAutocargaEntrante({ entrante, abierto, categorias, onCfdiParsed, onPdfParsed }: Args) {
+  const { organizationId } = useOrgActiva();
   const [estado, setEstado] = useState<EstadoAutocarga>("idle");
   const [mensaje, setMensaje] = useState<string | null>(null);
   const procesadoRef = useRef<string | null>(null);
@@ -30,7 +32,7 @@ export function useAutocargaEntrante({ entrante, abierto, categorias, onCfdiPars
   cbRef.current = { onCfdiParsed, onPdfParsed, categorias };
 
   useEffect(() => {
-    if (!abierto || !entrante) return;
+    if (!abierto || !entrante || !organizationId) return;
     if (procesadoRef.current === entrante.id) return;
     procesadoRef.current = entrante.id;
     let cancelado = false;
@@ -47,7 +49,7 @@ export function useAutocargaEntrante({ entrante, abierto, categorias, onCfdiPars
           const pdf = entrante.archivoPath.toLowerCase().endsWith(".pdf")
             ? await descargarArchivoEntranteComoFile(entrante.archivoPath, entrante.nombreArchivo)
             : null;
-          const data = await parseCfdiXml(xml, cbRef.current.categorias);
+          const data = await parseCfdiXml(xml, cbRef.current.categorias, organizationId);
           if (cancelado) return;
           await cbRef.current.onCfdiParsed(data, { xml, pdf });
         } else {
@@ -55,7 +57,7 @@ export function useAutocargaEntrante({ entrante, abierto, categorias, onCfdiPars
             entrante.archivoPath,
             entrante.nombreArchivo,
           );
-          const data = await parsePdfInvoice(pdf, cbRef.current.categorias);
+          const data = await parsePdfInvoice(pdf, cbRef.current.categorias, organizationId);
           if (cancelado) return;
           await cbRef.current.onPdfParsed(data, { pdf });
         }
@@ -69,7 +71,7 @@ export function useAutocargaEntrante({ entrante, abierto, categorias, onCfdiPars
 
     void correr();
     return () => { cancelado = true; };
-  }, [abierto, entrante]);
+  }, [abierto, entrante, organizationId]);
 
   useEffect(() => {
     if (!abierto) {

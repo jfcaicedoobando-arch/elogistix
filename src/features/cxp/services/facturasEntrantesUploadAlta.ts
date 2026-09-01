@@ -82,6 +82,7 @@ export async function errorGuardadoEntrante(
  */
 export async function verificarMetadatosDelAlta(params: {
   documentoId: string;
+  organizationId: string;
   xml: ArchivoSubido | null;
   meta: CfdiXmlMeta | null;
   nombreArchivo: string;

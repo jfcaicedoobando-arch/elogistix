@@ -59,6 +59,7 @@ function buildErrorMessage(ctx: CfdiUploadErrorContext, innerMsg: string): strin
 export async function parseCfdiXml(
   file: File,
   categorias: { id: string; nombre: string }[],
+  organizationId: string,
 ): Promise<CfdiParsedResponse> {
   Sentry.addBreadcrumb({
     category: "cfdi",
@@ -81,7 +82,7 @@ export async function parseCfdiXml(
 
       for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
         attemptCount = attempt;
-        const result = await invokeParseCfdiOnce(file, categorias);
+        const result = await invokeParseCfdiOnce(file, categorias, organizationId);
         if (result.ok) {
           Sentry.addBreadcrumb({
             category: "cfdi",

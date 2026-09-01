@@ -45,10 +45,12 @@ async function invokeOnce(
   file: File,
   categorias: { id: string; nombre: string }[],
   token: string,
+  organizationId: string,
 ): Promise<Attempt> {
   const fd = new FormData();
   fd.append("file", file);
   fd.append("categorias", JSON.stringify(categorias));
+  fd.append("organization_id", organizationId);
   try {
     const { data, error } = await supabase.functions.invoke<CfdiParsedResponse>(
       "parse-invoice-pdf",
@@ -110,13 +112,14 @@ function buildFailure(file: File, last: Attempt | null, latencyMs: number): Cfdi
 async function invokeWithRetry(
   file: File,
   categorias: { id: string; nombre: string }[],
+  organizationId: string,
 ): Promise<{ data: CfdiParsedResponse; latencyMs: number; attempts: number }> {
   const t0 = performance.now();
   let last: Attempt | null = null;
   for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
     const token = await ensureFreshSession(attempt > 1);
     if (!token) throw new Error(AUTH_ERROR_MESSAGES.csfSessionRequired);
-    const r = await invokeOnce(file, categorias, token);
+    const r = await invokeOnce(file, categorias, token, organizationId);
     if (r.ok && r.data) {
       return { data: r.data, latencyMs: Math.round(performance.now() - t0), attempts: attempt };
     }
@@ -131,6 +134,7 @@ async function invokeWithRetry(
 export async function parsePdfInvoice(
   file: File,
   categorias: { id: string; nombre: string }[],
+  organizationId: string,
 ): Promise<CfdiParsedResponse> {
   Sentry.addBreadcrumb({
     category: "pdf_ia",
@@ -139,7 +143,7 @@ export async function parsePdfInvoice(
     data: { pdf_size: file.size, pdf_name: file.name, categorias_count: categorias.length },
   });
 
-  const { data, latencyMs, attempts } = await invokeWithRetry(file, categorias);
+  const { data, latencyMs, attempts } = await invokeWithRetry(file, categorias, organizationId);
   Sentry.addBreadcrumb({
     category: "pdf_ia",
     message: "parse_invoice_pdf.ok",

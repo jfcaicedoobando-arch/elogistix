@@ -18,6 +18,7 @@ import { captureEdgeException } from "./sentry.ts";
 
 type Log = ReturnType<typeof createLogger>;
 type Cors = Record<string, string>;
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 export interface TopeRateLimit {
   windowSeconds: number;
@@ -25,6 +26,8 @@ export interface TopeRateLimit {
 }
 
 export interface OpcionesCxpGuard {
+  /** Organización objetivo explícita; nunca se infiere de la primera membresía. */
+  organizationId: string;
   /** Nombre de la función (prefijo de las llaves de rate limit y de Sentry). */
   fn: string;
   /** Tope por usuario. Omitir para no aplicarlo. */
@@ -60,8 +63,21 @@ async function checkRateLimit(
     log.finish(503, "rate_limit_unavailable", { user_id: auth.userId });
     return errorResponse("rate_limit_unavailable", 503, cors);
   }
-  const rlResult = rl as { ok?: boolean; retry_after?: number } | null;
-  if (rlResult?.ok === false) {
+  const esObjeto = typeof rl === "object" && rl !== null && !Array.isArray(rl);
+  const rlResult = esObjeto ? rl as Record<string, unknown> : null;
+  const okValido = rlResult?.ok === true || rlResult?.ok === false;
+  const retryValido = rlResult?.ok !== false || rlResult.retry_after === undefined ||
+    (typeof rlResult.retry_after === "number" && Number.isFinite(rlResult.retry_after) && rlResult.retry_after >= 0);
+  if (!okValido || !retryValido) {
+    await captureEdgeException(new Error("check_ratelimit returned an invalid response"), {
+      fn,
+      status_code: 503,
+      extra: { llave },
+    });
+    log.finish(503, "rate_limit_unavailable", { user_id: auth.userId });
+    return errorResponse("rate_limit_unavailable", 503, cors);
+  }
+  if (rlResult.ok === false) {
     log.finish(429, "rate_limited", { user_id: auth.userId, payload: { llave } });
     return jsonResponse({ error: mensaje429 }, 429, {
       ...cors,
@@ -81,16 +97,10 @@ export async function autorizarCxp(
   log: Log,
   opts: OpcionesCxpGuard,
 ): Promise<ResultadoCxpGuard> {
-  const { data: membership } = await auth.adminClient
-    .from("organization_members")
-    .select("organization_id")
-    .eq("user_id", auth.userId)
-    .limit(1)
-    .maybeSingle();
-  const orgId = (membership as { organization_id?: string } | null)?.organization_id;
-  if (!orgId) {
-    log.finish(403, "no_membership", { user_id: auth.userId });
-    return { ok: false, res: errorResponse("Tu usuario no pertenece a ninguna organización", 403, cors) };
+  const orgId = opts.organizationId;
+  if (!UUID_RE.test(orgId)) {
+    log.finish(400, "invalid_organization", { user_id: auth.userId });
+    return { ok: false, res: errorResponse("organization_id inválido", 400, cors) };
   }
 
   const okRol = await authorizeOrgRole(auth.adminClient, auth.userId, orgId, ROLES_CAPTURA_CXP);

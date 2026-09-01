@@ -37,7 +37,7 @@ const MAX_CONTENT_LENGTH = MAX_BYTES + 512 * 1024;
 async function leerPdfDelRequest(
   req: Request,
   cors: Record<string, string>,
-): Promise<Response | { file: File; base64: string; categoriasJson: string | null }> {
+): Promise<Response | { file: File; base64: string; categoriasJson: string | null; organizationId: string }> {
   // Sentry JAVASCRIPT-REACT-57: sin `content-type: multipart/form-data`,
   // `req.formData()` lanza "Missing content type" y se reportaba como 500.
   const contentType = req.headers.get("content-type") ?? "";
@@ -59,8 +59,12 @@ async function leerPdfDelRequest(
   }
   const file = form.get("file") as File | null;
   const categoriasJson = form.get("categorias") as string | null;
+  const organizationId = form.get("organization_id");
 
   if (!file) return errorResponse("Falta archivo PDF", 400, cors);
+  if (typeof organizationId !== "string" || !organizationId) {
+    return errorResponse("organization_id requerido", 400, cors);
+  }
   if (file.size > MAX_BYTES) return errorResponse("El PDF excede 10 MB", 413, cors);
   const isPdf = file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf");
   if (!isPdf) return errorResponse("Solo se aceptan archivos PDF", 400, cors);
@@ -72,20 +76,20 @@ async function leerPdfDelRequest(
   for (let i = 0; i < buf.length; i += chunk) {
     bin += String.fromCharCode(...buf.subarray(i, i + chunk));
   }
-  return { file, base64: btoa(bin), categoriasJson };
+  return { file, base64: btoa(bin), categoriasJson, organizationId };
 }
 
 async function handle(req: Request, cors: Record<string, string>, log: ReturnType<typeof createLogger>) {
   const auth = await authenticate(req, log);
-  const rechazo = await autorizarYLimitar(auth, cors, log);
+  const leido = await leerPdfDelRequest(req, cors);
+  if (leido instanceof Response) return leido;
+  const rechazo = await autorizarYLimitar(auth, cors, log, leido.organizationId);
   if (rechazo) return rechazo;
 
   // @ts-expect-error Deno
   const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
   if (!LOVABLE_API_KEY) return errorResponse("Falta LOVABLE_API_KEY en el servidor", 500, cors);
 
-  const leido = await leerPdfDelRequest(req, cors);
-  if (leido instanceof Response) return leido;
   const { file, base64, categoriasJson } = leido;
 
   const categorias: Categoria[] = parseCategoriasJson(categoriasJson);

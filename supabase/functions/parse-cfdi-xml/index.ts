@@ -171,8 +171,12 @@ async function validarEntrada(
   }
   const file = form.get("file") as File | null;
   const categoriasJson = form.get("categorias") as string | null;
+  const organizationId = form.get("organization_id");
 
   if (!file) return { ok: false, res: errorResponse("Falta archivo XML", 400, cors) };
+  if (typeof organizationId !== "string" || !organizationId) {
+    return { ok: false, res: errorResponse("organization_id requerido", 400, cors) };
+  }
   if (file.size > MAX_BYTES) return { ok: false, res: errorResponse("El XML excede 2 MB", 413, cors) };
   const isXml = file.type.includes("xml") || file.name.toLowerCase().endsWith(".xml");
   if (!isXml) return { ok: false, res: errorResponse("Solo se aceptan archivos XML", 400, cors) };
@@ -183,12 +187,15 @@ async function validarEntrada(
       res: errorResponse("El catálogo de categorías enviado es demasiado grande", 413, cors),
     };
   }
-  return { ok: true, file, categoriasJson };
+  return { ok: true, file, categoriasJson, organizationId };
 }
 
 async function handle(req: Request, cors: Record<string, string>, log: ReturnType<typeof createLogger>) {
   const auth = await authenticate(req, log);
+  const entrada = await validarEntrada(req, cors);
+  if (!entrada.ok) return entrada.res;
   const autorizacion = await autorizarCxp(auth, cors, log, {
+    organizationId: entrada.organizationId,
     fn: "parse-cfdi-xml",
     rlUsuario: RL_USUARIO,
     rlOrg: RL_ORG,
@@ -199,8 +206,6 @@ async function handle(req: Request, cors: Record<string, string>, log: ReturnTyp
   // @ts-expect-error Deno
   const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
 
-  const entrada = await validarEntrada(req, cors);
-  if (!entrada.ok) return entrada.res;
   const { file, categoriasJson } = entrada;
 
   const text = await file.text();
