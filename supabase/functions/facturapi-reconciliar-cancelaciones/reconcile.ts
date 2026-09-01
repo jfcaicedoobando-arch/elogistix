@@ -138,10 +138,12 @@ export interface Resumen {
   expiradas: number;
   sin_cambio: number;
   errores: number;
+  /** P1-3b: documentos NO iniciados por corte de presupuesto de wall-time. */
+  diferidos: number;
 }
 
 export function nuevoResumen(): Resumen {
-  return { revisadas: 0, aceptadas: 0, rechazadas: 0, expiradas: 0, sin_cambio: 0, errores: 0 };
+  return { revisadas: 0, aceptadas: 0, rechazadas: 0, expiradas: 0, sin_cambio: 0, errores: 0, diferidos: 0 };
 }
 
 export function acumularOutcome(resumen: Resumen, outcome: ResolvedPatch["outcome"]): void {

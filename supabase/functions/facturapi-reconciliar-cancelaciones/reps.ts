@@ -11,6 +11,7 @@ import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.45.0
 import { captureEdgeException } from "../_shared/sentry.ts";
 import { registrarBitacoraEdge } from "../_shared/bitacora.ts";
 import { withFacturapiTimeout } from "../_shared/facturapiClient.ts";
+import { CRON_RETRIEVE_TIMEOUT_MS } from "./presupuesto.ts";
 import {
   acumularOutcome,
   resolveNextActionRep,
@@ -57,8 +58,8 @@ export async function reconcileOneRep(ctx: RepCtx, rep: RepPendiente): Promise<v
   try {
     return await reconcileOneRepInner(ctx, rep);
   } finally {
-    // P1-3: marca el cursor SIEMPRE (accepted/no_change/error) — espejo de
-    // reconcileOne/reconcileOneNc en index.ts.
+    // P1-3: marca el cursor SIEMPRE (accepted/no_change/error) — sólo se llega
+    // aquí en documentos realmente INICIADOS (los diferidos no entran).
     await marcarRevisado(
       supabase,
       "pagos_factura",
@@ -72,11 +73,11 @@ export async function reconcileOneRep(ctx: RepCtx, rep: RepPendiente): Promise<v
 async function reconcileOneRepInner(ctx: RepCtx, rep: RepPendiente): Promise<void> {
   const { supabase, facturapi, orgId, resumen } = ctx;
   try {
-    // R3EF-02 (Ola 12): 15 s — igual que las familias factura/NC en index.ts.
+    // P1-3b: timeout compartido (12 s) con las familias factura/NC.
     const remote = await withFacturapiTimeout(
       "invoices.retrieve",
       facturapi.invoices.retrieve(rep.facturapi_rep_id),
-      15_000,
+      CRON_RETRIEVE_TIMEOUT_MS,
     ) as FapiInvoiceStatus;
     const decision = resolveNextActionRep(remote, rep, new Date().toISOString());
 
