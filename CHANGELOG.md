@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.820.3] - 2026-08-31
+- **Eliminar embarque**: la pantalla se alineó con la regla real de la base de datos: ahora se puede eliminar un embarque en `Entregado`, `EIR` o `Por liquidar` si no tiene facturas, cuentas por pagar, pagos, comisiones ni proformas ligadas. Sólo `Cerrado` y `Cancelado` siguen bloqueados por estado.
+
 ## [13.820.2] - 2026-08-31
 - **Eliminar embarque**: el menú "Más acciones" ahora explica por qué la opción no aparece (estado final del embarque, CxC/CxP pendientes o rol sin permiso) en lugar de dejar el hueco sin mensaje.
 
