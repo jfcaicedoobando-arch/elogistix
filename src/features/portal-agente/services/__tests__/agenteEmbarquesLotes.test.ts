@@ -82,7 +82,7 @@ describe("fetchAgenteEmbarques — historial completo", () => {
     expect(estado.rangos.length).toBeGreaterThanOrEqual(3);
   });
 
-  it("un error en un lote posterior se propaga (nada parcial como completo)", async () => {
+  it("embarques del agente: un error en un lote posterior se propaga (nada parcial como completo)", async () => {
     estado.filas = generar(1500, () => null);
     estado.errorEnLote = 1;
     await expect(fetchAgenteEmbarques()).rejects.toMatchObject({ message: "lote roto" });
