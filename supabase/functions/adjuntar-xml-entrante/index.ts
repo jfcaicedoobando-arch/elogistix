@@ -129,28 +129,8 @@ Deno.serve(
       });
       if (rechazo) return rechazo;
 
+      const servidor = await descargarYParsear(adminClient, datos.xmlPath, datos.xmlHash);
 
-      const { data: archivo, error: dlError } = await adminClient.storage
-        .from(BUCKET)
-        .download(datos.xmlPath);
-      if (dlError || !archivo) throw new Error("400:LC_XML_NO_ENCONTRADO: el XML no está en el buzón");
-
-
-      const bytes = await archivo.arrayBuffer();
-      if (bytes.byteLength > MAX_BYTES) throw new Error("400:LC_XML_DEMASIADO_GRANDE: el XML excede 2 MB");
-
-      const hashReal = await sha256Hex(bytes);
-      if (hashReal !== datos.xmlHash.toLowerCase()) {
-        throw new Error("409:LC_XML_HASH_MISMATCH: el archivo en el buzón no coincide con el declarado");
-      }
-
-      let servidor;
-      try {
-        servidor = metaDesdeCfdi(parseCfdi(new TextDecoder("utf-8").decode(bytes)));
-      } catch (e) {
-        const detalle = e instanceof Error ? e.message : String(e);
-        throw new Error(`400:LC_XML_INVALIDO: ${detalle}`, { cause: e });
-      }
 
       const fallos = discrepanciasMeta(datos.declarado, servidor);
       if (fallos.length > 0) {
