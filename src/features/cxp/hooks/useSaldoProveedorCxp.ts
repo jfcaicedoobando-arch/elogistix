@@ -22,7 +22,7 @@ export function useSaldoProveedorCxp(
     queryKey: cxpKeys.facturasAbiertasProveedor(
       proveedorId ? `${proveedorId}:${moneda ?? "todas"}` : null,
     ),
-    queryFn: () => fetchFacturasCxP({ proveedor_id: proveedorId ?? undefined, pageSize: 500 }),
+    queryFn: () => fetchFacturasCxP({ proveedor_id: proveedorId ?? undefined }),
     enabled: enabled && Boolean(proveedorId),
     staleTime: 15_000,
     select: (rows): SaldoAbiertoProveedor => {

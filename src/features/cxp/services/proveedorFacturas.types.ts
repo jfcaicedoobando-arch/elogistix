@@ -106,9 +106,6 @@ export interface FetchCxPFiltros {
   categoria_presupuesto_id?: string;
   fecha_desde?: string;
   fecha_hasta?: string;
-  /** α.1 — Paginación server-side. Default page=1, pageSize=200. Cap defensivo pageSize<=1000. */
-  page?: number;
-  pageSize?: number;
 }
 
 /** Select reutilizado por list + single fetch (evita duplicar el embed). */

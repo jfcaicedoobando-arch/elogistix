@@ -25,9 +25,12 @@ export type {
 
 
 
-/** α.1 — Default y cap defensivo para la paginación. */
-const CXP_PAGE_SIZE_DEFAULT = 200;
-const CXP_PAGE_SIZE_MAX = 1000;
+/**
+ * Tamaño de lote de lectura. NO es un cap: `fetchFacturasCxP` pide lotes
+ * consecutivos hasta recibir uno incompleto, así que el resultado siempre
+ * contiene todas las filas que cumplen los filtros.
+ */
+const CXP_BATCH_SIZE = 1000;
 
 /**
  * v13.501.0 — Antes se excluían las canceladas SIEMPRE, así que el filtro
@@ -37,17 +40,6 @@ const CXP_PAGE_SIZE_MAX = 1000;
  */
 export function incluirCanceladasCxP(filtros: FetchCxPFiltros): boolean {
   return filtros.estatus === "Cancelada" || Boolean(filtros.search?.trim());
-}
-
-/** Rango `.range()` a partir de page/pageSize con cap defensivo. */
-function rangoCxP(filtros: FetchCxPFiltros): [number, number] {
-  const page = Math.max(1, Math.floor(Number(filtros.page ?? 1)));
-  const pageSize = Math.min(
-    CXP_PAGE_SIZE_MAX,
-    Math.max(1, Math.floor(Number(filtros.pageSize ?? CXP_PAGE_SIZE_DEFAULT))),
-  );
-  const from = (page - 1) * pageSize;
-  return [from, from + pageSize - 1];
 }
 
 interface QueryFiltrable<Q> {
@@ -69,6 +61,11 @@ function aplicarFiltrosServidor<Q extends QueryFiltrable<Q>>(q: Q, filtros: Fetc
     out = out.eq("categoria_presupuesto_id", filtros.categoria_presupuesto_id);
   }
   if (filtros.moneda && filtros.moneda !== "todas") out = out.eq("moneda", filtros.moneda);
+  // `estado_aprobacion` es columna directa: filtrarla en servidor no altera la
+  // semántica de `aplicarFiltrosCliente` y reduce filas transferidas.
+  if (filtros.aprobacion && filtros.aprobacion !== "todos") {
+    out = out.eq("estado_aprobacion", filtros.aprobacion);
+  }
   if (filtros.fecha_desde) out = out.gte("fecha_emision", filtros.fecha_desde);
   if (filtros.fecha_hasta) out = out.lte("fecha_emision", filtros.fecha_hasta);
   if (filtros.search) {
@@ -77,24 +74,43 @@ function aplicarFiltrosServidor<Q extends QueryFiltrable<Q>>(q: Q, filtros: Fetc
   return out;
 }
 
+/**
+ * Lee TODAS las facturas que cumplen los filtros resolubles por servidor.
+ *
+ * Antes esta función pedía un solo `.range()` de 200 filas y luego aplicaba
+ * los filtros derivados (estatus/origen) en memoria: las facturas posteriores
+ * a la 200 nunca se veían, un filtro cuya única coincidencia estaba después
+ * decía "sin resultados" y los KPIs salían incompletos. Ahora recorre lotes
+ * consecutivos hasta recibir uno incompleto, con orden determinista
+ * (`fecha_vencimiento`, desempate por `id`) para no omitir ni duplicar filas
+ * entre rangos cuando varias comparten fecha.
+ */
+async function leerTodosLosLotes(filtros: FetchCxPFiltros): Promise<Joined[]> {
+  const acumulado: Joined[] = [];
+  for (let offset = 0; ; offset += CXP_BATCH_SIZE) {
+    const base = supabase
+      .from("proveedor_facturas")
+      .select(PROVEEDOR_FACTURAS_SELECT)
+      .is("deleted_at", null)
+      .order("fecha_vencimiento", { ascending: true, nullsFirst: false })
+      .order("id", { ascending: true })
+      .range(offset, offset + CXP_BATCH_SIZE - 1);
+
+    const { data, error } = await aplicarFiltrosServidor(base, filtros);
+    // El error de cualquier lote se propaga: nunca devolvemos un resultado
+    // parcial como si fuera completo.
+    if (error) throw error;
+    // SAFE-CAST: `Joined` modela el shape del select con embeds; Supabase devuelve unknown.
+    const lote = (data as unknown as Joined[] | null) ?? [];
+    acumulado.push(...lote);
+    if (lote.length < CXP_BATCH_SIZE) return acumulado;
+  }
+}
+
 export async function fetchFacturasCxP(filtros: FetchCxPFiltros = {}): Promise<FacturaCxP[]> {
-  // α.1 — Antes había .limit(CAP_REPORTE) hardcoded → con 30 facturas/día se llenaba
-  // en ~67 días y las nuevas dejaban de aparecer. Ahora paginado con .range().
-  const [from, to] = rangoCxP(filtros);
-
-  const base = supabase
-    .from("proveedor_facturas")
-    .select(PROVEEDOR_FACTURAS_SELECT)
-    .is("deleted_at", null)
-    .order("fecha_vencimiento", { ascending: true, nullsFirst: false })
-    .range(from, to);
-
-  const { data, error } = await aplicarFiltrosServidor(base, filtros);
-  if (error) throw error;
-
-  // SAFE-CAST: tipo `Joined` modela el shape del select con embeds; Supabase devuelve unknown.
-  const rows = ((data as unknown as Joined[] | null) ?? []).map(mapJoinedRow);
-
+  const rows = (await leerTodosLosLotes(filtros)).map(mapJoinedRow);
+  // Los filtros derivados (estatus/origen) se aplican sobre el conjunto
+  // completo, no sobre el primer lote.
   return aplicarFiltrosCliente(rows, filtros);
 }
 
