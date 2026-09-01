@@ -45,6 +45,7 @@ export async function fetchEmbarquesParaHueco(
     .select(
       "id, expediente, cliente_nombre, operador, etd, eta, bl_master, bl_house, tipo_cambio_usd, tipo_cambio_eur",
     )
+    .is("deleted_at", null)
     .not("eta", "is", null)
     .gte("eta", HUECO_ETA_CORTE_ISO)
     .lte("eta", limiteEtaIso)

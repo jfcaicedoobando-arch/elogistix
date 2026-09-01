@@ -27,6 +27,7 @@ export async function fetchEmbarquesMes(
     .select(
       "id, expediente, cliente_nombre, operador, eta, contenedor, tipo_cambio_usd, tipo_cambio_eur, tiene_proforma",
     )
+    .is("deleted_at", null)
     .gte("eta", desde)
     .lte("eta", hasta)
     // Excluir embarques cancelados — alineado con Estado de Resultados

@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.823.22] - 2026-09-01
+### Fix: Facturación mostraba embarques ya eliminados
+- **Síntoma**: en Facturación aparecían expedientes borrados (p. ej. ELIMP00274/ELIMP00275).
+- **Causa**: `fetchEmbarquesParaHueco`, `fetchEmbarquesMes` y `fetchReferenciasEmbarque` no filtraban `deleted_at IS NULL`.
+- **Fix**: se agregó el filtro de borrado lógico en las tres lecturas (las referencias de un embarque eliminado ya no se propagan al CFDI) + pruebas de regresión.
+
+
 ## [13.823.21] - 2026-09-01
 ### Mejora: corregir los conceptos que la IA extrae de un PDF antes de guardar
 - **Síntoma**: al capturar una factura de proveedor desde un PDF, la IA agregaba renglones de más y la tabla de conceptos era sólo lectura: había que guardar mal y corregir después.
