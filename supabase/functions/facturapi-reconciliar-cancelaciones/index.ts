@@ -21,7 +21,7 @@ import { reconcileOneRep } from "./reps.ts";
 import { reconcileOneNc } from "./ncs.ts";
 import { planificarTareas } from "./plan.ts";
 import { crearPresupuesto, CRON_RETRIEVE_TIMEOUT_MS } from "./presupuesto.ts";
-import { ejecutarPlan, type ReconcileCtx, type ClienteResuelto } from "./ejecutar.ts";
+import { ejecutarPlan, type ReconcileCtx, type ClienteResuelto, type RetrieveClient } from "./ejecutar.ts";
 import {
   descargarAcuse,
   resolveNextAction,
@@ -165,7 +165,8 @@ async function resolverCliente(supabase: SupabaseClient, orgId: string): Promise
   if (!resolved.ok) return { ok: false };
   return {
     ok: true,
-    client: resolved.data.client as ClienteResuelto extends { client: infer C } ? C : never,
+    // SAFE-CAST: el SDK `facturapi` no expone typings; sólo se usa invoices.retrieve.
+    client: resolved.data.client as unknown as RetrieveClient,
     apiKey: resolved.data.apiKey,
   };
 }
