@@ -42,6 +42,20 @@ export type ResultadoCxpGuard =
   | { ok: true; orgId: string }
   | { ok: false; res: Response };
 
+type RateLimitResult = { ok: boolean; retry_after?: number };
+
+function parseRateLimitResult(value: unknown): RateLimitResult | null {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) return null;
+  const result = value as Record<string, unknown>;
+  if (result.ok !== true && result.ok !== false) return null;
+  if (result.ok === false && result.retry_after !== undefined) {
+    if (typeof result.retry_after !== "number" || !Number.isFinite(result.retry_after) || result.retry_after < 0) {
+      return null;
+    }
+  }
+  return { ok: result.ok, ...(typeof result.retry_after === "number" ? { retry_after: result.retry_after } : {}) };
+}
+
 /** Rate limit fail-CLOSED vía RPC `check_ratelimit`. */
 async function checkRateLimit(
   ctx: { auth: AuthContext; cors: Cors; log: Log; fn: string; mensaje429: string },
@@ -71,12 +85,8 @@ async function checkRateLimit(
     log.finish(503, "rate_limit_unavailable", { user_id: auth.userId });
     return errorResponse("rate_limit_unavailable", 503, cors);
   }
-  const esObjeto = typeof rl === "object" && rl !== null && !Array.isArray(rl);
-  const rlResult = esObjeto ? rl as Record<string, unknown> : null;
-  const okValido = rlResult?.ok === true || rlResult?.ok === false;
-  const retryValido = rlResult?.ok !== false || rlResult.retry_after === undefined ||
-    (typeof rlResult.retry_after === "number" && Number.isFinite(rlResult.retry_after) && rlResult.retry_after >= 0);
-  if (!okValido || !retryValido) {
+  const rlResult = parseRateLimitResult(rl);
+  if (!rlResult) {
     await captureEdgeException(new Error("check_ratelimit returned an invalid response"), {
       fn,
       status_code: 503,
