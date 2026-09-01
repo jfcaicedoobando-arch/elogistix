@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.820.6] - 2026-09-08
+- **Cierre de embarques LCL**: el checklist de cierre ya no exige "Fechas de descarga y devolución capturadas" en embarques que no son Marítimo FCL (LCL, aéreo, terrestre). En LCL el contenedor es compartido y no hay descarga/devolución que capturar, aunque exista la fila de agrupación en Contenedores; la regla ahora sólo aplica a contenedor completo, igual que "Datos de contenedores completos".
+
+
 ## [13.820.5] - 2026-09-08
 - **Factura de proveedor desde el buzón**: si la captura viene de un documento del buzón CxP, la factura hereda el embarque del documento aunque el usuario no marque conceptos de costo. Antes quedaba "sin embarque" (caso FP-000195, ya vinculada a ELIMP00292).
 
