@@ -50,8 +50,9 @@ describe("parseCfdiXml", () => {
       "parse-cfdi-xml",
       expect.objectContaining({ body: expect.any(FormData) }),
     );
-    const body = supabaseMock.functions.invoke.mock.calls[0][1].body as FormData;
-    expect(body.get("organization_id")).toBe(organizationId);
+    const opciones = supabaseMock.functions.invoke.mock.calls[0][1];
+    expect(opciones.headers["x-organization-id"]).toBe(organizationId);
+    expect((opciones.body as FormData).get("organization_id")).toBeNull();
   });
 
   it("envuelve FunctionsHttpError como CfdiUploadError fase 'response' con status", async () => {

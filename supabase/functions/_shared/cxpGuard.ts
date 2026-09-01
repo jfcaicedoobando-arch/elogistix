@@ -19,11 +19,21 @@ import {
 } from "./auth.ts";
 import type { createLogger } from "./logger.ts";
 import { captureEdgeException } from "./sentry.ts";
+import { esUuid } from "./uuid.ts";
+
+/**
+ * Header del contrato cliente↔edge para la organización objetivo. Se usa un
+ * header (no FormData) para poder autorizar ANTES de bufferar el multipart.
+ */
+export const ORG_HEADER = "x-organization-id";
+
+/** Lee la organización objetivo del header; `""` si viene ausente. */
+export function leerOrgHeader(req: Request): string {
+  return (req.headers.get(ORG_HEADER) ?? "").trim();
+}
 
 type Log = ReturnType<typeof createLogger>;
 type Cors = Record<string, string>;
-const UUID_RE =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 export interface TopeRateLimit {
   windowSeconds: number;
@@ -148,7 +158,7 @@ export async function autorizarCxp(
   opts: OpcionesCxpGuard,
 ): Promise<ResultadoCxpGuard> {
   const orgId = opts.organizationId;
-  if (!UUID_RE.test(orgId)) {
+  if (!esUuid(orgId)) {
     log.finish(400, "invalid_organization", { user_id: auth.userId });
     return {
       ok: false,

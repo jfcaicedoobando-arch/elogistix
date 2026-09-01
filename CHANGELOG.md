@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.823.4] - 2026-09-01
+- **Autorización CxP antes del cuerpo del request**: la organización objetivo viaja ahora en el header `X-Organization-Id` (agregado a la whitelist CORS) y `parse-cfdi-xml` / `parse-invoice-pdf` ejecutan `autorizarCxp` inmediatamente después de autenticar, ANTES de `req.formData()`, `file.arrayBuffer()`, la conversión base64 y cualquier llamada a IA. Se conservan los cortes por `Content-Length` y los topes reales de tamaño; ya no se confía en el `organization_id` del multipart.
+- **UUID tolerado por el sistema**: la validación pasa a `_shared/uuid.ts` (8-4-4-4-12 hex, sin exigir versión ni variante RFC), de modo que la organización principal real `00000000-0000-0000-0000-000000000001` deja de ser rechazada con 400. Cambio probado únicamente en local, sin deploy, publish, migraciones/SQL remoto, secretos ni datos.
+
 ## [13.823.3] - 2026-09-01
 - **Hotfix local de autorización CxP**: el rate limit sólo autoriza respuestas estrictas `{ ok: true }`; respuestas nulas o malformadas fallan con 503. Los parsers usan la organización activa explícita y `adjuntar-xml-entrante` deriva el tenant desde el documento antes de autorizar o descargar Storage. Cambio probado únicamente en local, sin deploy, publish, migraciones/SQL remoto, secretos ni datos.
 

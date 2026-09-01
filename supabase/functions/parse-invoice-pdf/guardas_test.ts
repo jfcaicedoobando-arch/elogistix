@@ -30,3 +30,21 @@ Deno.test("B-3: la guarda usa rol de captura CxP y check_ratelimit fail-closed",
 // backfill de un solo uso ya ejecutado y sin consumidor en la app ni en cron.
 // El aislamiento por organización del buzón CxP sigue cubierto por las suites
 // RLS de `embarque_facturas_entrantes`.
+
+Deno.test("v13.823.4: guarda por header antes de formData/arrayBuffer/base64", async () => {
+  const src = await Deno.readTextFile(new URL("./index.ts", import.meta.url));
+  // El orden se evalúa dentro del handler: `leerPdfDelRequest` (que hace
+  // formData/arrayBuffer/base64) debe invocarse DESPUÉS de la guarda.
+  const handle = src.slice(src.indexOf("async function handle("));
+  const idxGuard = handle.indexOf("await autorizarYLimitar(");
+  const idxLeer = handle.indexOf("await leerPdfDelRequest(");
+  assert(idxGuard > 0 && idxLeer > 0);
+  assert(idxGuard < idxLeer, "la guarda debe correr antes de leer el PDF");
+  assert(src.includes("leerOrgHeader(req)"), "org objetivo desde header");
+  assert(
+    !src.includes('form.get("organization_id")'),
+    "ya no se confía en el organization_id del multipart",
+  );
+  assert(src.includes("content-length") && src.includes("MAX_BYTES"));
+  assert(src.includes("await file.arrayBuffer()") && src.includes("btoa(bin)"));
+});

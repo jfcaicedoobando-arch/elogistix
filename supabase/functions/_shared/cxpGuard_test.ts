@@ -7,7 +7,7 @@ import {
   assert,
   assertEquals,
 } from "https://deno.land/std@0.224.0/assert/mod.ts";
-import { autorizarCxp } from "./cxpGuard.ts";
+import { autorizarCxp, leerOrgHeader, ORG_HEADER } from "./cxpGuard.ts";
 import type { AuthContext } from "./auth.ts";
 
 type RpcResp = { data: unknown; error: { message: string } | null };
@@ -173,7 +173,8 @@ Deno.test("organizationId ausente o inválido: 400 fail-closed", async () => {
     const organizationId of [
       "",
       "org-b",
-      "11111111-1111-1111-1111-111111111111",
+      "11111111-1111-4111-8111-11111111111",
+      "zzzzzzzz-1111-4111-8111-111111111111",
     ]
   ) {
     const r = await autorizarCxp(fakeAuth({}), CORS, log, {
@@ -183,6 +184,33 @@ Deno.test("organizationId ausente o inválido: 400 fail-closed", async () => {
     assert(!r.ok);
     if (!r.ok) assertEquals(r.res.status, 400);
   }
+});
+
+Deno.test("ORG_HEADER es el header del contrato compartido", () => {
+  assertEquals(ORG_HEADER, "x-organization-id");
+});
+
+Deno.test("acepta el UUID nil-style de la organización principal real", async () => {
+  // v13.823.4: el regex anterior exigía versión [1-5] y variante RFC, lo que
+  // rechazaba con 400 a la organización principal real y rompía la captura.
+  const ORG_PRINCIPAL = "00000000-0000-0000-0000-000000000001";
+  const r = await autorizarCxp(
+    fakeAuth({ memberships: { [ORG_PRINCIPAL]: "contador" } }),
+    CORS,
+    log,
+    { ...OPTS, organizationId: ORG_PRINCIPAL },
+  );
+  assert(r.ok);
+  if (r.ok) assertEquals(r.orgId, ORG_PRINCIPAL);
+});
+
+Deno.test("leerOrgHeader lee x-organization-id y recorta espacios", () => {
+  const req = new Request("https://x.test/fn", {
+    method: "POST",
+    headers: { "x-organization-id": ` ${ORG_B} ` },
+  });
+  assertEquals(leerOrgHeader(req), ORG_B);
+  assertEquals(leerOrgHeader(new Request("https://x.test/fn")), "");
 });
 
 Deno.test("rate limit por usuario: 429 con Retry-After", async () => {

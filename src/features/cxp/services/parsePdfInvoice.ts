@@ -50,11 +50,16 @@ async function invokeOnce(
   const fd = new FormData();
   fd.append("file", file);
   fd.append("categorias", JSON.stringify(categorias));
-  fd.append("organization_id", organizationId);
   try {
     const { data, error } = await supabase.functions.invoke<CfdiParsedResponse>(
       "parse-invoice-pdf",
-      { body: fd, headers: { Authorization: `Bearer ${token}` } },
+      {
+        body: fd,
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "x-organization-id": organizationId,
+        },
+      },
     );
     if (error) {
       if (error instanceof FunctionsHttpError) {
