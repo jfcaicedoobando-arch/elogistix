@@ -47,11 +47,13 @@ DECLARE
 BEGIN
   -- ── Seed (como postgres, bypass RLS) ─────────────────────────────────────
   BEGIN
-    INSERT INTO auth.users(id, email) VALUES
-      (u_tesorero, 's05-tesorero@test.local'),
-      (u_cobranza, 's05-cobranza@test.local'),
-      (u_auxiliar, 's05-auxiliar@test.local'),
-      (u_org_b,    's05-orgb@test.local')
+    -- v13.821.3: `skip_auto_org` evita que el trigger de alta corone al
+    -- primer usuario como super_admin en una base limpia (rompía los roles).
+    INSERT INTO auth.users(id, email, raw_user_meta_data) VALUES
+      (u_tesorero, 's05-tesorero@test.local', '{"skip_auto_org":"true"}'::jsonb),
+      (u_cobranza, 's05-cobranza@test.local', '{"skip_auto_org":"true"}'::jsonb),
+      (u_auxiliar, 's05-auxiliar@test.local', '{"skip_auto_org":"true"}'::jsonb),
+      (u_org_b,    's05-orgb@test.local',     '{"skip_auto_org":"true"}'::jsonb)
     ON CONFLICT (id) DO NOTHING;
   EXCEPTION WHEN OTHERS THEN
     NULL;  -- CI sin GoTrue: los FK contra auth.users ya no existen.

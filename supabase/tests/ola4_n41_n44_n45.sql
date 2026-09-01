@@ -34,7 +34,10 @@ BEGIN
   INSERT INTO public.organizations (id, nombre) VALUES (v_org, 'Test Org Ola4 N41N44N45')
   ON CONFLICT (id) DO NOTHING;
 
-  INSERT INTO auth.users (id, email) VALUES (v_uid, 'ola4-n41@test.mx')
+  -- v13.821.3: `skip_auto_org` evita que el trigger de alta corone al
+  -- primer usuario como super_admin en una base limpia (rompía los roles).
+  INSERT INTO auth.users (id, email, raw_user_meta_data)
+  VALUES (v_uid, 'ola4-n41@test.mx', '{"skip_auto_org":"true"}'::jsonb)
   ON CONFLICT (id) DO NOTHING;
   INSERT INTO public.organization_members (organization_id, user_id, role)
   VALUES (v_org, v_uid, 'admin_org') ON CONFLICT DO NOTHING;
