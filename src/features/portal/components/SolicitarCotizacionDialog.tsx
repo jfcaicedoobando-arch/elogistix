@@ -45,7 +45,9 @@ export function SolicitarCotizacionDialog({ open, onOpenChange, clientes }: Prop
   // Con una sola empresa se preselecciona en cuanto cargan los vínculos; con
   // varias nunca se preselecciona (evita atribuir la solicitud a la equivocada).
   const [clienteId, setClienteId] = useState(() => seleccionInicial(clientes));
-  useEffect(() => setClienteId(seleccionInicial(clientes)), [clientes]);
+  // También al cerrar: reabrir en multicliente exige elegir de nuevo, así una
+  // selección vieja no manda la solicitud a la empresa equivocada.
+  useEffect(() => setClienteId(seleccionInicial(clientes)), [clientes, open]);
 
   const f = useSolicitudCotizacionForm(clienteId || undefined);
   const {
