@@ -42,7 +42,7 @@ export const sidebar = {
 
 export const direccion = {
   kpis: (organizationId?: string | null, fallbackUsd?: number, fallbackEur?: number) =>
-    ['dashboard', 'direccion', organizationId, fallbackTc] as const,
+    ['dashboard', 'direccion', organizationId, fallbackUsd ?? null, fallbackEur ?? null] as const,
   /** FIX C3c: totales por moneda agregados en el servidor. */
   totales: (organizationId?: string | null, desdeIso?: string) =>
     ['dashboard', 'direccion', 'totales', organizationId, desdeIso ?? null] as const,
