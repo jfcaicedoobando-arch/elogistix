@@ -56,8 +56,16 @@ export function useCotizacionWizardForm({ navigate, toast, userEmail, clientes, 
   // N-06 (QA r2): todas las escrituras del wizard viajan con el `updated_at`
   // leído al abrir la cotización; si otra sesión la modificó, el guardado se
   // rechaza con LC_CONFLICTO_CONCURRENCIA en vez de pisar cambios ajenos.
-  const updateGuardado = useCotizacionUpdateGuard(updateCotizacion, initialData?.updated_at);
-  const mutationsGuardadas = { ...mutations, updateCotizacion: updateGuardado };
+  // v13.823.15: al CREAR también se siembra el sello con el `updated_at` de la
+  // fila nueva; sin eso el segundo guardado del mismo usuario daba un conflicto
+  // falso (la base firma la fila al insertarla).
+  const updateGuardado = useCotizacionUpdateGuard(updateCotizacion, initialData?.updated_at, crearCotizacion);
+  const mutationsGuardadas = {
+    ...mutations,
+    updateCotizacion: updateGuardado,
+    crearCotizacion: updateGuardado.crearCotizacion ?? crearCotizacion,
+  };
+
 
   const form = useForm<CotizacionFormValues>({
     defaultValues: buildCotizacionDefaultValues(initialData),
