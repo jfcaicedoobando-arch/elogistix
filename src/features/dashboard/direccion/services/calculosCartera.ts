@@ -67,6 +67,10 @@ export interface CalcularHeroParams {
    * de 6 meses) para no borrar del vencido/aging facturas más viejas.
    */
   facturasCartera: FacturaRow[];
+  /** Pagos y NC aplicadas de la cartera abierta: sin ellos una factura ya
+   *  cubierta seguía contando como cliente con vencido. */
+  pagosCartera?: PagoRow[];
+  ncsCartera?: NotaCreditoRow[];
   antiguedad: BucketAntiguedad[];
   fallbackUsd: number; hoy: Date; mesActual: string; mesPrev: string;
 }
@@ -82,12 +86,17 @@ export function calcularHero(params: CalcularHeroParams): HeroKpis {
   const facturado = facturas
     .filter((f) => f.estado !== "Cancelada" && f.fecha_emision.slice(0, 7) === mesActual)
     .reduce((s, f) => s + mxnFactura(Number(f.total ?? 0), f.moneda, f.tipo_cambio, fallbackUsd), 0);
+  const saldos = calcularSaldosCarteraMxn(
+    facturasCartera, params.pagosCartera ?? [], params.ncsCartera ?? [], fallbackUsd,
+  );
   const vencidas = facturasCartera.filter((f) => {
     if (f.estado === "Cancelada" || f.estado === "Pagada") return false;
     if (!f.fecha_vencimiento) return false;
+    if ((saldos.get(f.id) ?? 0) <= TOLERANCIA_SALDO_MXN) return false;
     return new Date(`${f.fecha_vencimiento}T00:00:00Z`).getTime() < hoy.getTime();
   });
   const clientes = new Set(vencidas.map((f) => f.cliente_id).filter(Boolean));
+
   const vencidoTotal = antiguedad.filter((b) => b.bucket !== "Corriente").reduce((s, b) => s + b.monto_mxn, 0);
   return {
     utilidad_mxn: calcularUtilidad(v, c), venta_mxn: v, costo_mxn: c,
