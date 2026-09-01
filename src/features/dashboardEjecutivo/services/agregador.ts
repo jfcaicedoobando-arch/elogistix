@@ -135,14 +135,21 @@ export async function fetchDashboardEjecutivo(
   // convertir a MXN los saldos y flujos en USD.
   // P4: reutilizamos `cuentas` (ya fetched arriba) en vez de re-fetch dentro
   // de fetchResumenTesoreria; P8-lite: paralelizamos tesoreria/flujo.
+  // P1-7 (v13.823.5): además del USD se propaga el TC EUR y su fecha. Si el EUR
+  // es estimado (fallback) NO se envía: el dominio marca el saldo/flujo como
+  // incompleto y conserva el importe nominal por moneda, en vez de valuar EUR
+  // con un TC inventado o excluirlo en silencio.
+  const tipoCambioEur = tipoCambio.eurEsFallback === true ? undefined : tipoCambio.eurMxn;
+  const tipoCambioFecha = tipoCambio.fechaAplicada ?? null;
   const [tesoreria, flujo] = await Promise.all([
     fetchResumenTesoreria({
-      cobranza, cxp, organizationId, tipoCambioUsd, cuentas,
+      cobranza, cxp, organizationId, tipoCambioUsd, tipoCambioEur, tipoCambioFecha, cuentas,
     }),
     fetchFlujoProyectado({
-      cuentas, cobranza, cxp, dias: 28, organizationId, tipoCambioUsd,
+      cuentas, cobranza, cxp, dias: 28, organizationId, tipoCambioUsd, tipoCambioEur, tipoCambioFecha,
     }),
   ]);
+
 
   const base = { periodo, eerrPeriodo, eerr12m, tesoreria, flujo, presupuesto, tipoCambioUsd, tcEsFallback };
   const kpis = calcularKPIsEjecutivos(base, eerrPrev.totalIngresos.total, eerrPrev);
