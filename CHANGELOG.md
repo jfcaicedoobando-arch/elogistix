@@ -1,5 +1,13 @@
 # Changelog
 
+## [13.823.1] - 2026-09-01
+### Higiene de código y CI (sin cambios funcionales)
+- **Código muerto eliminado**: se retiran ~45 exports y tipos sin uso detectados por `knip strict` (barrels de servicios de auth, catálogos, configuración, operaciones, reportes y búsqueda; `useCotizaciones` sustituido por paginación server-side; `TRACKING_LINK_DIAS_MAX`; helpers de `tcPar`, `porVencer` y `errors/concurrencia` que ya no se consumían).
+- **Power of 10**: `facturapi-cancelar-rep/index.ts` baja de 200 líneas extrayendo `resolverResultadoCancelacion.ts`, y `parse-cfdi-xml` extrae `validarEntrada()` para bajar la complejidad ciclomática de `handle` de 18 a ≤16.
+- **Estructura**: `useNuevoUsuarioForm` se mueve a `src/features/admin/hooks/`.
+- **Tests**: se corrigen títulos duplicados en `nuevoUsuarioPrivacidad` y `useTimbrarRep`; se registra la suite `buzon_localizar_duplicado_org_scope.sql` en el manifiesto de guards; se evitan falsos positivos de `queryCaps` en comentarios de servicios globales de CxP.
+- **Manifiesto de release**: `migration-manifest.json` se sincroniza (1199 migraciones) para la versión vigente.
+
 ## [13.823.0] - 2026-09-01
 ### Ola P2 · Seguridad de Edge Functions (superficie pública y de IA)
 - **`parse-cfdi-xml` con guarda de CxP**: exige membresía de organización, rol con permiso de captura CxP y rate limit persistente fail-closed (por usuario y por organización), igual que `parse-invoice-pdf`. Además corta temprano por `Content-Length` (~2.2 MB) y acota el catálogo de categorías a 32 KiB.
