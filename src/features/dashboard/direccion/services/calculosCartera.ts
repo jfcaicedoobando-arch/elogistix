@@ -5,6 +5,8 @@ import { format } from "date-fns";
  */
 import { calcularMargen, calcularUtilidad } from "@/lib/financial/financialUtils";
 import { mxnFactura } from "./mxn";
+import { calcularSaldosCarteraMxn } from "./saldoCartera";
+
 import type { EmbarqueEstadoRow, FacturaRow, NotaCreditoRow, PagoRow } from "./loaders";
 import type { BucketAntiguedad, HeroKpis, PulsoKpis } from "./tipos";
 import type { EmbarqueAgg } from "./calculos";
