@@ -97,6 +97,35 @@ async function verificarAcceso(args: {
   return errorResponse(mensaje, status, args.cors);
 }
 
+/**
+ * Descarga el XML del buzón con service_role, verifica su SHA-256 contra lo
+ * declarado y re-parsea el CFDI (verdad fiscal). Devuelve los metadatos del
+ * servidor y el hash real verificado.
+ */
+async function descargarYParsear(
+  adminClient: AuthContext["adminClient"],
+  xmlPath: string,
+  xmlHashDeclarado: string,
+) {
+  const { data: archivo, error: dlError } = await adminClient.storage.from(BUCKET).download(xmlPath);
+  if (dlError || !archivo) throw new Error("400:LC_XML_NO_ENCONTRADO: el XML no está en el buzón");
+
+  const bytes = await archivo.arrayBuffer();
+  if (bytes.byteLength > MAX_BYTES) throw new Error("400:LC_XML_DEMASIADO_GRANDE: el XML excede 2 MB");
+
+  const hashReal = await sha256Hex(bytes);
+  if (hashReal !== xmlHashDeclarado.toLowerCase()) {
+    throw new Error("409:LC_XML_HASH_MISMATCH: el archivo en el buzón no coincide con el declarado");
+  }
+
+  try {
+    return { servidor: metaDesdeCfdi(parseCfdi(new TextDecoder("utf-8").decode(bytes))), hashReal };
+  } catch (e) {
+    const detalle = e instanceof Error ? e.message : String(e);
+    throw new Error(`400:LC_XML_INVALIDO: ${detalle}`, { cause: e });
+  }
+}
+
 Deno.serve(
   wrapEdgeHandler("adjuntar-xml-entrante", async (req: Request) => {
     const preflight = handlePreflightStrict(req);
@@ -129,7 +158,7 @@ Deno.serve(
       });
       if (rechazo) return rechazo;
 
-      const servidor = await descargarYParsear(adminClient, datos.xmlPath, datos.xmlHash);
+      const { servidor, hashReal } = await descargarYParsear(adminClient, datos.xmlPath, datos.xmlHash);
 
 
       const fallos = discrepanciasMeta(datos.declarado, servidor);
