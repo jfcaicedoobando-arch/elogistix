@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.820.1] - 2026-08-31
+- **Consistencia repositorio ↔ base**: los archivos canónicos de `a_mxn`, `_crear_embarque_replicar_conceptos` y los wrappers de auditoría de embarques se regeneraron 1:1 desde la definición vigente, así que ya reflejan las reglas M-8/M-10/N-1 y no reintroducirían versiones viejas en un replay limpio. Se re-emitió sin cambios de comportamiento la regla interna de costos repetidos (ahora sólo ejecutable por el backend) y se sincronizó su candado en CI. Sin cambios visibles para el usuario.
+
 ## [13.820.0] - 2026-08-31
 - **Liquidaciones de comisión**: cancelar una liquidación vuelve a exigir el rol financiero **en la organización dueña** de la liquidación (antes bastaba tenerlo registrado en cualquier organización; una migración posterior había revertido el candado). La liquidación se bloquea primero y luego se autoriza, así que dos cancelaciones simultáneas no se cruzan.
 - **Crédito del cliente al timbrar**: el crédito en uso ahora convierte cada nota de crédito a la moneda de su factura antes de restarla, así que una NC en dólares sobre una factura en pesos (o al revés) deja de subestimar o inflar la exposición. Si una factura extranjera viva no tiene tipo de cambio válido (vacío, cero, 1 o fuera de la banda 5–40), el timbrado se detiene con "crédito no verificable" en vez de asumir paridad 1:1.
