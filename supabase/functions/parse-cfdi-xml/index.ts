@@ -15,7 +15,7 @@
 import { buildCors, handlePreflightStrict } from "../_shared/cors.ts";
 import { errorResponse, jsonResponse } from "../_shared/response.ts";
 import { authenticate } from "../_shared/auth.ts";
-import { autorizarCxp } from "../_shared/cxpGuard.ts";
+import { autorizarCxp, leerOrgHeader } from "../_shared/cxpGuard.ts";
 import { createLogger } from "../_shared/logger.ts";
 import {
   captureEdgeException,
@@ -199,7 +199,6 @@ async function validarEntrada(
     ok: true;
     file: File;
     categoriasJson: string | null;
-    organizationId: string;
   }
   | { ok: false; res: Response }
 > {
@@ -219,16 +218,9 @@ async function validarEntrada(
   }
   const file = form.get("file") as File | null;
   const categoriasJson = form.get("categorias") as string | null;
-  const organizationId = form.get("organization_id");
 
   if (!file) {
     return { ok: false, res: errorResponse("Falta archivo XML", 400, cors) };
-  }
-  if (typeof organizationId !== "string" || !organizationId) {
-    return {
-      ok: false,
-      res: errorResponse("organization_id requerido", 400, cors),
-    };
   }
   if (file.size > MAX_BYTES) {
     return { ok: false, res: errorResponse("El XML excede 2 MB", 413, cors) };
@@ -252,7 +244,7 @@ async function validarEntrada(
       ),
     };
   }
-  return { ok: true, file, categoriasJson, organizationId };
+  return { ok: true, file, categoriasJson };
 }
 
 async function handle(
@@ -261,16 +253,19 @@ async function handle(
   log: ReturnType<typeof createLogger>,
 ) {
   const auth = await authenticate(req, log);
-  const entrada = await validarEntrada(req, cors);
-  if (!entrada.ok) return entrada.res;
+  // La autorización corre ANTES de tocar el body: así un usuario autenticado
+  // sin rol no puede forzar la materialización del multipart.
   const autorizacion = await autorizarCxp(auth, cors, log, {
-    organizationId: entrada.organizationId,
+    organizationId: leerOrgHeader(req),
     fn: "parse-cfdi-xml",
     rlUsuario: RL_USUARIO,
     rlOrg: RL_ORG,
     mensaje429: "Demasiadas solicitudes de parseo de XML. Intenta más tarde.",
   });
   if (!autorizacion.ok) return autorizacion.res;
+
+  const entrada = await validarEntrada(req, cors);
+  if (!entrada.ok) return entrada.res;
 
   const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
 
