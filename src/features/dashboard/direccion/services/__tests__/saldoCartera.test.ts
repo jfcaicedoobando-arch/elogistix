@@ -23,8 +23,8 @@ function pago(over: Partial<PagoRow>): PagoRow {
 function nc(over: Partial<NotaCreditoRow>): NotaCreditoRow {
   return { factura_id: "f1", monto: 0, moneda: "MXN", tipo_cambio: null, ...over };
 }
-const saldoMxn = (f: FacturaRow, pagos: PagoRow[], ncs: NotaCreditoRow[], fallbackUsd = 18): number =>
-  calcularSaldosCarteraMxn([f], pagos, ncs, fallbackUsd).get(f.id) ?? 0;
+const saldoMxn = (f: FacturaRow, pagos: PagoRow[], ncs: NotaCreditoRow[], fallbacks: TcFallbacks = { usd: 18 }): number =>
+  calcularSaldosCarteraMxn([f], pagos, ncs, fallbacks).get(f.id) ?? 0;
 
 describe("pagos: monto_aplicado_factura ya viene en moneda de factura", () => {
   it("factura USD 100 @20; pago MXN con monto_aplicado_factura 50 => saldo MXN 1000", () => {

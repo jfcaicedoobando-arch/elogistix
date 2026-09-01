@@ -32,40 +32,40 @@ function totalVencido(buckets: ReturnType<typeof calcularAntiguedad>): number {
 
 describe("aging de Dirección con notas de crédito", () => {
   it("resta pagos y NC aplicadas: 1000 − 200 − 300 = 500", () => {
-    const out = calcularAntiguedad([factura()], [pago(200)], 18, HOY, [nc(300)]);
+    const out = calcularAntiguedad([factura()], [pago(200)], { usd: 18 }, HOY, [nc(300)]);
     expect(totalVencido(out)).toBeCloseTo(500, 2);
     expect(out.find((b) => b.bucket === "1-30")!.facturas).toBe(1);
   });
 
   it("sin NC el saldo es total − pagos (no hay doble descuento)", () => {
-    const out = calcularAntiguedad([factura()], [pago(200)], 18, HOY, []);
+    const out = calcularAntiguedad([factura()], [pago(200)], { usd: 18 }, HOY, []);
     expect(totalVencido(out)).toBeCloseTo(800, 2);
   });
 
   it("una factura totalmente cubierta por pagos + NC sale del aging", () => {
-    const out = calcularAntiguedad([factura()], [pago(400)], 18, HOY, [nc(600)]);
+    const out = calcularAntiguedad([factura()], [pago(400)], { usd: 18 }, HOY, [nc(600)]);
     expect(out.reduce((s, b) => s + b.facturas, 0)).toBe(0);
     expect(totalVencido(out)).toBe(0);
   });
 
   it("una NC que cubre el total completo deja la factura fuera", () => {
-    const out = calcularAntiguedad([factura()], [], 18, HOY, [nc(1000)]);
+    const out = calcularAntiguedad([factura()], [], { usd: 18 }, HOY, [nc(1000)]);
     expect(out.reduce((s, b) => s + b.facturas, 0)).toBe(0);
   });
 
   it("NC de otra factura no afecta el saldo", () => {
-    const out = calcularAntiguedad([factura()], [], 18, HOY, [nc(500, { factura_id: "otra" })]);
+    const out = calcularAntiguedad([factura()], [], { usd: 18 }, HOY, [nc(500, { factura_id: "otra" })]);
     expect(totalVencido(out)).toBeCloseTo(1000, 2);
   });
 
   it("convierte NC en USD al equivalente MXN de la factura", () => {
-    const out = calcularAntiguedad([factura()], [], 18, HOY, [nc(10, { moneda: "USD", tipo_cambio: 20 })]);
+    const out = calcularAntiguedad([factura()], [], { usd: 18 }, HOY, [nc(10, { moneda: "USD", tipo_cambio: 20 })]);
     expect(totalVencido(out)).toBeCloseTo(800, 2);
   });
 
   it("mantiene facturas antiguas sin ventana de seis meses", () => {
     const out = calcularAntiguedad(
-      [factura({ fecha_emision: "2024-01-01", fecha_vencimiento: "2024-02-01" })], [], 18, HOY, [nc(300)],
+      [factura({ fecha_emision: "2024-01-01", fecha_vencimiento: "2024-02-01" })], [], { usd: 18 }, HOY, [nc(300)],
     );
     expect(out.find((b) => b.bucket === "+60")!.monto_mxn).toBeCloseTo(700, 2);
   });
@@ -73,7 +73,7 @@ describe("aging de Dirección con notas de crédito", () => {
 
 describe("calcularHero: clientes con cartera vencida", () => {
   const heroBase = {
-    aggs: [], facturas: [], fallbackUsd: 18, hoy: HOY,
+    aggs: [], facturas: [], fallbacks: { usd: 18 }, hoy: HOY,
     mesActual: "2026-02", mesPrev: "2026-01",
   };
 
@@ -81,7 +81,7 @@ describe("calcularHero: clientes con cartera vencida", () => {
     const facturasCartera = [factura()];
     const pagosCartera = [pago(400)];
     const ncsCartera = [nc(600)];
-    const antiguedad = calcularAntiguedad(facturasCartera, pagosCartera, 18, HOY, ncsCartera);
+    const antiguedad = calcularAntiguedad(facturasCartera, pagosCartera, { usd: 18 }, HOY, ncsCartera);
     const hero = calcularHero({ ...heroBase, facturasCartera, pagosCartera, ncsCartera, antiguedad });
     expect(hero.cartera_vencida_clientes).toBe(0);
     expect(hero.cartera_vencida_mxn).toBe(0);
@@ -90,7 +90,7 @@ describe("calcularHero: clientes con cartera vencida", () => {
   it("cuenta al cliente cuando queda saldo tras la NC", () => {
     const facturasCartera = [factura()];
     const ncsCartera = [nc(300)];
-    const antiguedad = calcularAntiguedad(facturasCartera, [], 18, HOY, ncsCartera);
+    const antiguedad = calcularAntiguedad(facturasCartera, [], { usd: 18 }, HOY, ncsCartera);
     const hero = calcularHero({ ...heroBase, facturasCartera, pagosCartera: [], ncsCartera, antiguedad });
     expect(hero.cartera_vencida_clientes).toBe(1);
     expect(hero.cartera_vencida_mxn).toBeCloseTo(700, 2);

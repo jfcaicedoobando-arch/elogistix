@@ -1,10 +1,9 @@
-import { format } from "date-fns";
 /**
  * Cálculos de cartera y KPIs de cabecera/pulso del Dashboard Dirección.
  * Extraído de `calculos.ts` para respetar el límite de 200 líneas por archivo.
  */
 import { calcularMargen, calcularUtilidad } from "@/lib/financial/financialUtils";
-import { mxnFactura, type TcFallbacks } from "./mxn";
+import { diaNegocio, mxnFactura, type TcFallbacks } from "./mxn";
 import { calcularSaldosCarteraMxn } from "./saldoCartera";
 
 import type { EmbarqueEstadoRow, FacturaRow, NotaCreditoRow, PagoRow } from "./loaders";
@@ -106,8 +105,8 @@ export function calcularPulso(
       const etaDia = r.eta.slice(0, 10);
       // FE-04: día local MX; con `toISOString()` los KPIs cambiaban de día a
       // las 18:00 (UTC−6).
-      const hoyDia = format(hoy, "yyyy-MM-dd");
-      const en7dDia = format(en7d, "yyyy-MM-dd");
+      const hoyDia = diaNegocio(hoy);
+      const en7dDia = diaNegocio(en7d);
       if (etaDia >= hoyDia && etaDia <= en7dDia) arribos_7d += 1;
       const diasRetraso = diasVencidos(etaDia, hoyDia);
       // Ola 4 · N21: sólo demora tras los días libres del canon (>7), no
