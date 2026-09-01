@@ -23,6 +23,7 @@ import { PortalProximosArribosCard } from "@/features/portal/components/dashboar
 import { PortalFacturacionPendienteCard } from "@/features/portal/components/dashboard/PortalFacturacionPendienteCard";
 import { PortalEmbarquesRecientesCard } from "@/features/portal/components/dashboard/PortalEmbarquesRecientesCard";
 import { useDocumentTitle } from "@/hooks/shared";
+import { opcionesSolicitante } from "@/features/portal/domain/clientesSolicitantes";
 import { ErrorState } from "@/components/shared/states/ErrorState";
 
 export default function PortalDashboard() {
@@ -32,7 +33,10 @@ export default function PortalDashboard() {
   const { data: clienteName } = usePortalClienteName();
   const { data: contactoName } = usePortalContactoNombre();
   const { data: orgName } = usePortalOrgName();
-  const clienteIds = clientUsers.map((cu) => cu.cliente_id);
+  // Opciones autorizadas con nombre legible: la solicitud ya no se atribuye
+  // en silencio al primer cliente del usuario.
+  const clientes = useMemo(() => opcionesSolicitante(clientUsers), [clientUsers]);
+  const clienteIds = useMemo(() => clientes.map((c) => c.id), [clientes]);
   const { data: embarques = [], isLoading: loadingEmb, isError: errorEmb, refetch: refetchEmb } = usePortalEmbarques(clienteIds);
   const { data: cotizaciones = [], isLoading: loadingCot, isError: errorCot, refetch: refetchCot } = usePortalCotizaciones(clienteIds);
   // B-068/B-076: la tarjeta de Facturación Pendiente se alimenta del MISMO
@@ -78,8 +82,7 @@ export default function PortalDashboard() {
       <SolicitarCotizacionDialog
         open={solicitudAbierta}
         onOpenChange={setSolicitudAbierta}
-        clienteId={clienteIds[0]}
-        clienteIds={clienteIds}
+        clientes={clientes}
       />
 
       {cargando ? (
