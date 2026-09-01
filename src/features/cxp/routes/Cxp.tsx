@@ -130,7 +130,7 @@ export default function Cxp() {
                   colVis.setVisibility(next);
                 }}
                 pagination={{
-                  page: f.page,
+                  page: pageActual,
                   totalPages,
                   onPageChange: f.setPage,
                   pageSize: f.pageSize,
