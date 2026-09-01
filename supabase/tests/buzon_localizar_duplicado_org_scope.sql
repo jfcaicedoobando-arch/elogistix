@@ -52,10 +52,10 @@ BEGIN
   VALUES (v_org_b, 'CLIENTE DEDUPE B', '', 'dedupe-b@test.mx') RETURNING id INTO v_cli_b;
 
   INSERT INTO public.embarques (organization_id, cliente_id, expediente, modo, tipo)
-  VALUES (v_org_a, v_cli_a, 'ELIMPDEDA1', 'Marítimo'::public.modo_transporte, 'Importación'::public.tipo_operacion)
+  VALUES (v_org_a, v_cli_a, 'ELDDA9001', 'Marítimo'::public.modo_transporte, 'Importación'::public.tipo_operacion)
   RETURNING id INTO v_emb_a;
   INSERT INTO public.embarques (organization_id, cliente_id, expediente, modo, tipo)
-  VALUES (v_org_b, v_cli_b, 'ELIMPDEDB1', 'Marítimo'::public.modo_transporte, 'Importación'::public.tipo_operacion)
+  VALUES (v_org_b, v_cli_b, 'ELDDB9001', 'Marítimo'::public.modo_transporte, 'Importación'::public.tipo_operacion)
   RETURNING id INTO v_emb_b;
 
   INSERT INTO public.presupuesto_categorias (organization_id, nombre, orden, activa, tipo_contable)
@@ -93,6 +93,10 @@ BEGIN
   -- CASO CORRUPTO #2: factura de la org A cuyo `embarque_id` quedó apuntando
   -- al embarque de la org B (para probarlo aislado, sin documento del buzón,
   -- usamos un UUID fiscal propio).
+  -- El guard `_assert_padre_misma_org` impide crear esta corrupción por vías
+  -- normales; se desactiva sólo para SEMBRAR el caso histórico que la RPC debe
+  -- seguir cubriendo.
+  ALTER TABLE public.proveedor_facturas DISABLE TRIGGER trg_org_proveedor_facturas_embarque_id;
   INSERT INTO public.proveedor_facturas (
     organization_id, proveedor_id, folio_proveedor, categoria_presupuesto_id,
     folio_interno, embarque_id, subtotal, total, moneda, estado, estado_aprobacion,
@@ -102,6 +106,7 @@ BEGIN
     'USD'::public.moneda, 'Vigente'::public.estado_proveedor_factura, 'aprobada',
     'UUID-CORRUPTO-0002'
   ) RETURNING id INTO v_fact_a_huerfana;
+  ALTER TABLE public.proveedor_facturas ENABLE TRIGGER trg_org_proveedor_facturas_embarque_id;
 END
 $fixture$ LANGUAGE plpgsql;
 

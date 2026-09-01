@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.823.20] - 2026-09-01
+### Fix: el badge del sidebar contaba demoras que ya estaban en "Por liquidar"
+- **Síntoma**: el tooltip de Embarques decía "39 con demora" mientras el panel de alertas de la pantalla mostraba sólo 2.
+- **Causa**: `sidebar_alert_counts()` no incluía `Por liquidar` en la lista de estados reales, así que a esos embarques marítimos de importación les recalculaba el estado efectivo como `Arribo` y los contaba como demora (además de contarlos ya como cierre administrativo). `embarques_alertas_ids()` sí lo excluía.
+- **Fix**: se agregó `Por liquidar` a la lista de estados reales en `sidebar_alert_counts()`. Ambos conteos coinciden de nuevo.
+
 ## [13.823.19] - 2026-09-01
 ### Fix: carga de facturas con IA bloqueada por CORS
 - **Síntoma**: al procesar un PDF de proveedor con IA aparecía "No pudimos contactar al servidor desde este dispositivo", sin ninguna petición ni llamada a Gemini en los logs de la función.
