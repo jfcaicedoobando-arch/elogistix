@@ -122,8 +122,6 @@ export default function DashboardEjecutivoPage() {
         </Alert>
       )}
 
-      {data && (
-        <>
           <BandaKPIs
             kpis={data.kpis}
             topDeudores={data.topDeudores}
