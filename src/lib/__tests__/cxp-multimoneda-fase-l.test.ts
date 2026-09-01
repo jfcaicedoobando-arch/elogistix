@@ -33,18 +33,32 @@ describe("Fase L — Multi-moneda CxP", () => {
     );
   });
 
-  it("existe la función de conversión con guard MXN↔USD y rechazo de EUR cruzado", () => {
-    const sql = readLatestContaining("CREATE OR REPLACE FUNCTION public.convertir_monto_pago_a_factura");
-    expect(sql).toMatch(/LC_PAGO_TC_REQUERIDO/);
-    expect(sql).toMatch(/LC_PAGO_CRUCE_NO_SOPORTADO/);
-    // GRANT restringido
-    expect(sql).toMatch(
-      /GRANT EXECUTE ON FUNCTION public\.convertir_monto_pago_a_factura[\s\S]*TO authenticated, service_role/,
+  it("la conversión canónica exige T/C del pago y pivotea cruces en MXN", () => {
+    // v13.821.1 — Antes se leía "la última migración que redefine la función" y
+    // se exigía `LC_PAGO_CRUCE_NO_SOPORTADO`, error que dejó de existir cuando
+    // M-2 (Ola 4 · v14) habilitó los cruces con EUR pivoteando en MXN. La fuente
+    // de verdad del estado vigente es `supabase/schema/baseline.sql`.
+    const cuerpo = leerFuncionCanonica("convertir_monto_pago_a_factura");
+    expect(cuerpo).toMatch(/LC_PAGO_TC_REQUERIDO/);
+    // Cruce que pivotea en MXN: si la factura no es MXN necesita su propio T/C.
+    expect(cuerpo).toMatch(/LC_PAGO_TC_FACTURA_REQUERIDO/);
+    // Ya no existe el rechazo de cruces: se convierte vía MXN.
+    expect(cuerpo).not.toMatch(/LC_PAGO_CRUCE_NO_SOPORTADO/);
+    expect(cuerpo).toMatch(/IMMUTABLE/);
+
+    // Privilegios vigentes (los emite pg_dump al final del baseline).
+    expect(BASELINE).toMatch(
+      /REVOKE ALL ON FUNCTION public\.convertir_monto_pago_a_factura\([^)]*\) FROM PUBLIC;/,
     );
-    expect(sql).toMatch(
-      /REVOKE ALL ON FUNCTION public\.convertir_monto_pago_a_factura[\s\S]*FROM PUBLIC/,
-    );
+    for (const rol of ["authenticated", "service_role"]) {
+      expect(BASELINE).toMatch(
+        new RegExp(
+          `GRANT ALL ON FUNCTION public\\.convertir_monto_pago_a_factura\\([^)]*\\) TO ${rol};`,
+        ),
+      );
+    }
   });
+
 
   it("registra trigger BEFORE INSERT/UPDATE que puebla la columna", () => {
     // v13.309.35+ (FIX-R2-01): el trigger de conversión se consolidó con el guard
