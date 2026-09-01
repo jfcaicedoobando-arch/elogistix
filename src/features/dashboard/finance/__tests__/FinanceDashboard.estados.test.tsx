@@ -5,6 +5,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
+import { createWrapper } from "@/test/utils/queryWrapper";
 
 const { mockDash } = vi.hoisted(() => ({ mockDash: vi.fn() }));
 
@@ -34,10 +35,13 @@ const OK = {
 };
 
 function renderDash() {
+  const Wrapper = createWrapper();
   return render(
-    <MemoryRouter>
-      <FinanceDashboard />
-    </MemoryRouter>,
+    <Wrapper>
+      <MemoryRouter>
+        <FinanceDashboard />
+      </MemoryRouter>
+    </Wrapper>,
   );
 }
 
