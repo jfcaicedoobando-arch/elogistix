@@ -19,4 +19,5 @@ AS $function$
     WHEN p_moneda = 'EUR' AND COALESCE(p_eur_mxn, 0) > 1 THEN round(p_monto * p_eur_mxn, 4)
     ELSE NULL
   END
-$function$;
+$function$
+;
