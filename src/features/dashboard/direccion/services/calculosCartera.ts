@@ -73,7 +73,8 @@ export function calcularHero(params: CalcularHeroParams): HeroKpis {
     if (f.estado === "Cancelada" || f.estado === "Pagada") return false;
     if (!f.fecha_vencimiento) return false;
     if ((saldos.get(f.id) ?? 0) <= TOLERANCIA_SALDO_MXN) return false;
-    return new Date(`${f.fecha_vencimiento}T00:00:00Z`).getTime() < hoy.getTime();
+    // P2: mismo criterio que el aging — vencer HOY no es estar vencida.
+    return diasVencidos(f.fecha_vencimiento, hoy) > 0;
   });
   const clientes = new Set(vencidas.map((f) => f.cliente_id).filter(Boolean));
 
