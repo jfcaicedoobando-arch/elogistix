@@ -142,36 +142,34 @@ jobs:
         if: steps.snapshot-cache.outputs.cache-hit != 'true'
         run: $PSQL -f supabase/tests/rls/_ci_bootstrap.sql
 
-      - name: Drift fixes (tablas/columnas creadas manualmente en prod)
+      - name: Cargar corte del squash (fuente única)
         if: steps.snapshot-cache.outputs.cache-hit != 'true'
-        run: $PSQL -f supabase/tests/rls/_ci_drift.sql
+        run: grep -E '^[A-Za-z_][A-Za-z0-9_]*=' supabase/schema/squash/cutoff.env >> "$GITHUB_ENV"
 
-      - name: Apply migrations
+      - name: Apply baseline squash
         if: steps.snapshot-cache.outputs.cache-hit != 'true'
-        env:
-          # Migraciones legacy que NO aplican en base limpia y cuyo estado
-          # final garantiza una migración posterior (mismas exenciones que el
-          # radar de drift, `DRIFT_CORTE`). Los archivos de supabase/migrations
-          # son inmutables, por eso la exención vive aquí.
-          #  - 20260729035825: FIX C5 parchea por texto definiciones vigentes
-          #    (estado final en FIX C5-b).
-          #  - 20260812090000: Ola 4 N41/N44/N45 intentaba renombrar las
-          #    columnas de salida de `cartera_pendiente()` con CREATE OR
-          #    REPLACE (`cannot change return type of existing function`);
-          #    estado final en 20260810203738 y 20260810203939.
-          #  - Además se exime cualquier basename listado en
-          #    supabase/tests/rls/drift-anclas.txt (migraciones ancladas por
-          #    texto con reaplicación posterior garantizada).
-          MIGRACIONES_EXENTAS: "20260729035825 20260812090000"
+        # El historial hasta SQUASH_CUTOFF está consolidado en un solo archivo
+        # (idéntico, byte a byte, al esquema que producían las 1193 migraciones).
+        run: |
+          set -uo pipefail
+          sed -E \
+            -e 's/^[[:space:]]+CREATE EXTENSION[[:space:]]+(IF NOT EXISTS[[:space:]]+)?(pg_cron|pg_net|pgmq|supabase_vault)[^;]*;/    PERFORM 1; -- [ci] stubbed \2/I' \
+            -e 's/^CREATE EXTENSION[[:space:]]+(IF NOT EXISTS[[:space:]]+)?(pg_cron|pg_net|pgmq|supabase_vault)[^;]*;/SELECT 1; -- [ci] stubbed \2/I' \
+            "$SQUASH_FILE" | $PSQL --single-transaction
+
+      - name: Apply migrations (posteriores al corte)
+        if: steps.snapshot-cache.outputs.cache-hit != 'true'
         run: |
           set -uo pipefail
           shopt -s nullglob
-          ANCLADAS=$(grep -vE '^\s*(#|$)' supabase/tests/rls/drift-anclas.txt || true)
           # --single-transaction: si una migración falla a la mitad, hace
           # rollback completo del archivo (ON_ERROR_STOP=1). Evita estado
           # parcial de objetos creados antes del error.
           for f in $(printf '%s\n' supabase/migrations/*.sql | LC_ALL=C sort); do
             base=$(basename "$f")
+            ts="${base%%_*}"
+            # Historial ya consolidado en el squash: no se re-ejecuta.
+            [[ "$ts" > "$SQUASH_CUTOFF" ]] || continue
             echo "▶ $base"
             if sed -E \
               -e 's/^[[:space:]]+CREATE EXTENSION[[:space:]]+(IF NOT EXISTS[[:space:]]+)?(pg_cron|pg_net|pgmq|supabase_vault)[^;]*;/    PERFORM 1; -- [ci] stubbed \2/I' \
@@ -179,25 +177,10 @@ jobs:
               "$f" | $PSQL --single-transaction; then
               continue
             fi
-            ts="${base%%_*}"
-            if [[ " $MIGRACIONES_EXENTAS " == *" $ts "* ]]; then
-              echo "::warning file=$f::migración legacy exenta (no aplica en base limpia; estado final en migración posterior)"
-              continue
-            fi
-            if printf '%s\n' "$ANCLADAS" | grep -qxF "$base"; then
-              echo "↷ $base: migración anclada omitida; estado final cubierto por reaplicación posterior" | tee -a /tmp/migraciones-ancladas.log
-              continue
-            fi
-            echo "::error file=$f::la migración no aplica en una base limpia"
+            echo "::error file=$f::la migración no aplica sobre el baseline squash"
             exit 1
           done
-          if [ -s /tmp/migraciones-ancladas.log ]; then
-            {
-              echo "### Migraciones ancladas conocidas"
-              echo ""
-              sed 's/^/- /' /tmp/migraciones-ancladas.log
-            } >> "$GITHUB_STEP_SUMMARY"
-          fi
+
 
 
 
@@ -760,113 +743,3 @@ jobs:
             exit 1
           fi
           echo "✓ Suites RLS, guards conductuales y baseline de esquema en verde (o omitidas)"
-
-
-
-
-  migration-clean-apply:
-    name: Drift radar — migraciones sin _ci_drift
-    runs-on: ubuntu-24.04
-    timeout-minutes: 15
-    # Sólo falla con drift NUEVO (migraciones posteriores al corte histórico).
-    # La deuda anterior al corte se reporta como notice, no como warning.
-
-
-    services:
-      postgres:
-        image: postgres@sha256:66b6a97eac1771fc78bd201b918b4253859f436c6913aeede97bd5366cce89ae
-        env:
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: postgres
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd="pg_isready -U postgres"
-          --health-interval=5s
-          --health-timeout=5s
-          --health-retries=10
-          --shm-size=256m
-
-    env:
-      PGHOST: localhost
-      PGPORT: 5432
-      PGUSER: postgres
-      PGPASSWORD: postgres
-      PGDATABASE: postgres
-      PSQL: psql -v ON_ERROR_STOP=1 -X -q
-
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-
-      - name: Cliente de Postgres 17 (paridad con la imagen pinneada)
-        uses: ./.github/actions/setup-pg-client
-
-      - name: Bootstrap (stubs auth/storage/cron/net/pgmq)
-        run: $PSQL -f supabase/tests/rls/_ci_bootstrap.sql
-
-      # Corte histórico: todo lo anterior es deuda congelada (se informa, no
-      # rompe). Todo lo posterior DEBE aplicar sobre una base limpia.
-      #
-      # v13.514.0 — El valor ya NO se escribe aquí: vive en
-      # `supabase/tests/rls/drift-corte.env` como fuente única, para que no haya
-      # dos literales que puedan divergir.
-      - name: Cargar corte de drift (fuente única)
-        run: grep -E '^[A-Za-z_][A-Za-z0-9_]*=' supabase/tests/rls/drift-corte.env >> "$GITHUB_ENV"
-
-      - name: Apply migrations SIN parches de drift
-        id: apply
-        run: |
-
-          set -uo pipefail
-          shopt -s nullglob
-          legacy=0
-          nuevas=""
-          # Exentas documentadas (migraciones ancladas por texto con
-          # reaplicación posterior que garantiza el estado final).
-          ancladas=$(grep -vE '^\s*(#|$)' supabase/tests/rls/drift-anclas.txt || true)
-          for f in $(printf '%s\n' supabase/migrations/*.sql | LC_ALL=C sort); do
-            base=$(basename "$f")
-            if ! sed -E \
-              -e 's/^[[:space:]]+CREATE EXTENSION[[:space:]]+(IF NOT EXISTS[[:space:]]+)?(pg_cron|pg_net|pgmq|supabase_vault)[^;]*;/    PERFORM 1; -- [ci] stubbed \2/I' \
-              -e 's/^CREATE EXTENSION[[:space:]]+(IF NOT EXISTS[[:space:]]+)?(pg_cron|pg_net|pgmq|supabase_vault)[^;]*;/SELECT 1; -- [ci] stubbed \2/I' \
-              "$f" | $PSQL --single-transaction > /tmp/mig.log 2>&1; then
-              if printf '%s\n' "$ancladas" | grep -Fxq "$base"; then
-                echo "↷ $base: migración anclada exenta; estado final cubierto por reaplicación posterior"
-                legacy=$((legacy + 1))
-                echo "- \`$base\` (anclada, exenta)" >> /tmp/legacy.md
-              elif [[ "${base%%_*}" < "$DRIFT_CORTE" ]]; then
-                legacy=$((legacy + 1))
-                echo "- \`$base\`" >> /tmp/legacy.md
-              else
-                echo "::error file=$f::drift NUEVO — la migración no aplica en una base limpia"
-                echo "--- últimas 20 líneas de $base ---"
-                tail -n 20 /tmp/mig.log
-                nuevas="$nuevas $base"
-
-              fi
-            fi
-          done
-          {
-            echo "## Drift radar — migraciones aplicadas en limpio"
-            echo ""
-            if [ -n "$nuevas" ]; then
-              echo "❌ Drift NUEVO (posterior al corte $DRIFT_CORTE):"
-              for m in $nuevas; do echo "- \`$m\`"; done
-              echo ""
-              echo "Acción: escribir la migración real que cree esas columnas/tablas."
-            else
-              echo "✓ Sin drift nuevo. Nada posterior al corte $DRIFT_CORTE quedó fuera del historial."
-            fi
-            if [ "$legacy" -gt 0 ]; then
-              echo ""
-              echo "<details><summary>Deuda histórica congelada ($legacy migraciones previas al corte)</summary>"
-              echo ""
-              cat /tmp/legacy.md
-              echo ""
-              echo "</details>"
-            fi
-          } >> "$GITHUB_STEP_SUMMARY"
-          [ -z "$nuevas" ]
-

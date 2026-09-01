@@ -29,6 +29,11 @@ cd "$ROOT"
 PG_IMAGE="postgres@sha256:66b6a97eac1771fc78bd201b918b4253859f436c6913aeede97bd5366cce89ae"
 CONTAINER="elogistix-verify-db"
 
+# Punto de partida de toda base limpia: historial consolidado (squash) + corte.
+# Fuente única compartida con .github/workflows/rls-tests.yml.
+# shellcheck disable=SC1091
+. supabase/schema/squash/cutoff.env
+
 PORT=55432
 REUSE=0
 KEEP=0
@@ -36,6 +41,7 @@ RUN_ALL=0
 RUN_BEHAVIORAL=1
 ONLY_SCHEMA=0
 SNAPSHOT_OUT=""
+SNAPSHOT_PRE_OUT=""
 SUITES_ARG=""
 BACKEND="auto"          # auto | docker | local
 
@@ -55,6 +61,8 @@ while [ $# -gt 0 ]; do
     --only-schema)    ONLY_SCHEMA=1; RUN_BEHAVIORAL=0 ;;
     --snapshot)       SNAPSHOT_OUT="${2:-}"; shift ;;
     --snapshot=*)     SNAPSHOT_OUT="${1#--snapshot=}" ;;
+    --snapshot-pre)   SNAPSHOT_PRE_OUT="${2:-}"; shift ;;
+    --snapshot-pre=*) SNAPSHOT_PRE_OUT="${1#--snapshot-pre=}" ;;
     --backend)        BACKEND="${2:-}"; shift ;;
     --backend=*)      BACKEND="${1#--backend=}" ;;
 
@@ -211,46 +219,68 @@ if [ "$REUSE" != "1" ]; then
   step "Bootstrap (stubs auth/storage/cron/net/pgmq)"
   run_sql supabase/tests/rls/_ci_bootstrap.sql bootstrap || exit 1
 
-  step "Drift fixes"
-  run_sql supabase/tests/rls/_ci_drift.sql drift || exit 1
+  # Neutraliza las extensiones que no existen en la imagen/sandbox, igual que CI.
+  stub_ext() {
+    sed -E \
+      -e 's/^[[:space:]]+CREATE EXTENSION[[:space:]]+(IF NOT EXISTS[[:space:]]+)?(pg_cron|pg_net|pgmq|supabase_vault)[^;]*;/    PERFORM 1; -- [ci] stubbed \2/I' \
+      -e 's/^CREATE EXTENSION[[:space:]]+(IF NOT EXISTS[[:space:]]+)?(pg_cron|pg_net|pgmq|supabase_vault)[^;]*;/SELECT 1; -- [ci] stubbed \2/I' \
+      "$1"
+  }
 
-  step "Aplicando migraciones (base limpia)"
+  # Squash: el historial hasta SQUASH_CUTOFF está consolidado en un archivo.
+  # Las bases limpias parten de ahí; las migraciones históricas se conservan en
+  # supabase/migrations/ como bitácora, pero ya no se re-ejecutan.
+  step "Aplicando baseline squash"
+  squash_log="$LOGDIR/squash.log"
+  if stub_ext "$SQUASH_FILE" | "${PSQL[@]}" --single-transaction > "$squash_log" 2>&1; then
+    ok "squash aplicado ($(basename "$SQUASH_FILE"), corte $SQUASH_CUTOFF)"
+  else
+    fail "el baseline squash no aplica en base limpia — ver $squash_log"
+    tail -n 30 "$squash_log" >&2
+    exit 1
+  fi
+
+  step "Aplicando migraciones posteriores al corte"
   shopt -s nullglob
   migr_log="$LOGDIR/migrations.log"
   : > "$migr_log"
   total=0
-  # Paridad con CI (.github/workflows/rls-tests.yml): las migraciones legacy
-  # exentas y las "ancladas por texto" no aplican en base limpia; su estado
-  # final lo garantiza una migración posterior de reaplicación.
-  # (`local` sólo es válido dentro de funciones: aquí van variables normales.)
-  exentas=" 20260729035825 20260812090000 "
-  ancladas="$(grep -vE '^\s*(#|$)' supabase/tests/rls/drift-anclas.txt 2>/dev/null || true)"
-
   for f in $(printf '%s\n' supabase/migrations/*.sql | LC_ALL=C sort); do
     base="$(basename "$f")"
+    ts="${base%%_*}"
+    # Historial ya consolidado en el squash: no se re-ejecuta.
+    [ "$ts" \> "$SQUASH_CUTOFF" ] || continue
     echo "▶ $base" >> "$migr_log"
-    # Las extensiones que no existen en la imagen oficial se neutralizan,
-    # igual que en CI, para que la migración aplique en base limpia.
-    if sed -E \
-        -e 's/^[[:space:]]+CREATE EXTENSION[[:space:]]+(IF NOT EXISTS[[:space:]]+)?(pg_cron|pg_net|pgmq|supabase_vault)[^;]*;/    PERFORM 1; -- [ci] stubbed \2/I' \
-        -e 's/^CREATE EXTENSION[[:space:]]+(IF NOT EXISTS[[:space:]]+)?(pg_cron|pg_net|pgmq|supabase_vault)[^;]*;/SELECT 1; -- [ci] stubbed \2/I' \
-        "$f" | "${PSQL[@]}" --single-transaction >> "$migr_log" 2>&1; then
+    if stub_ext "$f" | "${PSQL[@]}" --single-transaction >> "$migr_log" 2>&1; then
       total=$((total + 1))
       continue
     fi
-    if [[ "$exentas" == *" ${base%%_*} "* ]]; then
-      echo "↷ $base: migración legacy exenta (estado final en migración posterior)"
-      continue
-    fi
-    if printf '%s\n' "$ancladas" | grep -qxF "$base"; then
-      echo "↷ $base: migración anclada omitida (reaplicación posterior garantiza el estado)"
-      continue
-    fi
-    fail "migración '$base' no aplica en base limpia — ver $migr_log"
+
+    fail "migración '$base' no aplica sobre el squash — ver $migr_log"
     tail -n 30 "$migr_log" >&2
     exit 1
   done
-  ok "$total migraciones aplicadas"
+  ok "$total migraciones nuevas aplicadas"
+
+
+  # Snapshot ANTES de _ci_post_migrate.sql: es el estado que producen sólo las
+  # migraciones del repo (sin los GRANT masivos de CI). Es la fuente correcta
+  # para consolidar (squash) el historial en una sola migración base.
+  if [ -n "$SNAPSHOT_PRE_OUT" ]; then
+    step "Snapshot pre-post-migrate → $SNAPSHOT_PRE_OUT"
+    mkdir -p "$(dirname "$SNAPSHOT_PRE_OUT")"
+    snap_pre_container=""
+    [ "$BACKEND" = "docker" ] && snap_pre_container="$CONTAINER"
+    if bash scripts/db/schema-snapshot.sh "$SNAPSHOT_PRE_OUT" "$snap_pre_container" 2> "$LOGDIR/snapshot-pre.log"; then
+      ok "snapshot-pre ($(wc -l < "$SNAPSHOT_PRE_OUT") líneas)"
+    else
+      fail "no se pudo generar el snapshot-pre — ver $LOGDIR/snapshot-pre.log"
+      cat "$LOGDIR/snapshot-pre.log" >&2
+      exit 1
+    fi
+  fi
+
+
 
   # Orden idéntico a CI: el candado bidireccional corre ANTES del GRANT masivo
   # de _ci_post_migrate.sql (si no, los REVOKE faltantes quedan tapados).
