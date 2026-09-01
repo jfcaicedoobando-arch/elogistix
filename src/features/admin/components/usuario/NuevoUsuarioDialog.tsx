@@ -11,7 +11,7 @@ import { Switch } from "@/components/ui/switch";
 import { NuevoUsuarioCredencialesSection } from "./NuevoUsuarioCredencialesSection";
 import { NuevoUsuarioAccesoSection } from "./NuevoUsuarioAccesoSection";
 import { PASSWORD_MIN } from "@/lib/passwords/policy";
-import { normalizarEmail } from "./emailUsuario";
+import { normalizarEmail, esEmailValido } from "./emailUsuario";
 import { useNuevoUsuarioForm, DEFAULT_ROLE } from "./useNuevoUsuarioForm";
 
 interface Props {
