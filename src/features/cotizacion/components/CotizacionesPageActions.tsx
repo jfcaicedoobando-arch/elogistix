@@ -1,6 +1,7 @@
 import { Plus, MoreHorizontal, Download, Sparkles } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { Hint } from "@/components/shared/Hint";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -29,15 +30,16 @@ export function CotizacionesPageActions({
           <Sparkles className="h-4 w-4 mr-2" /> Plantillas
         </Link>
       </Button>
-      <Button
-        variant="outline"
-        onClick={onExportar}
-        disabled={totalFiltrado === 0}
-        title={totalFiltrado === 0 ? "No hay cotizaciones que exportar con los filtros actuales." : undefined}
-        className="hidden sm:inline-flex"
-      >
-        <Download className="h-4 w-4 mr-2" /> Exportar CSV
-      </Button>
+      <Hint label={totalFiltrado === 0 ? "No hay cotizaciones que exportar con los filtros actuales." : ""}>
+        <Button
+          variant="outline"
+          onClick={onExportar}
+          disabled={totalFiltrado === 0}
+          className="hidden sm:inline-flex"
+        >
+          <Download className="h-4 w-4 mr-2" /> Exportar CSV
+        </Button>
+      </Hint>
       {/* v13.223.0 · Capa 3 Tranche A · 3.2: acciones secundarias primero,
           primary (`Nueva cotización`) pegado al borde derecho (Fitts's law). */}
       {canEdit && (

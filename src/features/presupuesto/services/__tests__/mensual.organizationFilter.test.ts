@@ -19,7 +19,7 @@ import { fetchPresupuestoMensualAnio } from "../mensual";
 describe("fetchPresupuestoMensualAnio · organization filter", () => {
   beforeEach(() => { mockRef.current = createSupabaseMock(); });
 
-  it("aplica .eq(organization_id, ...) cuando se pasa organizationId", async () => {
+  it("presupuesto mensual: aplica .eq(organization_id, ...) cuando se pasa organizationId", async () => {
     mockRef.current!.setTableResult("presupuesto_mensual", { data: [], error: null });
     await fetchPresupuestoMensualAnio(2026, "org-1");
     const call = mockRef.current!.tableCalls.find((c) => c.table === "presupuesto_mensual");
@@ -28,7 +28,7 @@ describe("fetchPresupuestoMensualAnio · organization filter", () => {
     expect(eqCalls).toContainEqual(["organization_id", "org-1"]);
   });
 
-  it("no agrega .eq(organization_id) cuando organizationId es null/undefined", async () => {
+  it("presupuesto mensual: no agrega .eq(organization_id) cuando organizationId es null/undefined", async () => {
     mockRef.current!.setTableResult("presupuesto_mensual", { data: [], error: null });
     await fetchPresupuestoMensualAnio(2026);
     const call = mockRef.current!.tableCalls.find((c) => c.table === "presupuesto_mensual");

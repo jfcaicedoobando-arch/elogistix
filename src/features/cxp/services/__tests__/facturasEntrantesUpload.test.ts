@@ -73,10 +73,13 @@ describe("subirFacturaEntrante", () => {
     selectChain.in.mockReturnThis();
     insertChain.select.mockReturnThis();
     upload.mockResolvedValue({ error: null });
+    // El dedupe vive en la RPC `buzon_localizar_duplicado`: sin duplicado por
+    // defecto (v13.821.2).
+    rpcMock.mockResolvedValue({ data: [], error: null });
   });
 
   it("detecta el duplicado sin tocar el almacenamiento", async () => {
-    selectChain.limit.mockResolvedValue({ data: [{ estado: "por_capturar" }], error: null });
+    rpcMock.mockResolvedValue({ data: [{ caso: "buzon_pendiente" }], error: null });
 
     await expect(
       subirFacturaEntrante({ ...INPUT_BASE, pdf: archivo(), xml: null }),
@@ -96,14 +99,14 @@ describe("subirFacturaEntrante", () => {
   });
 
   it("N36: rechaza si el XML acompañante ya existe vivo (xml_hash), sin subir nada", async () => {
-    // Primer .limit() = validación del principal (PDF, ok); segundo = XML (duplicado).
-    selectChain.limit
+    // Primera consulta RPC = principal (PDF, ok); segunda = XML (duplicado).
+    rpcMock
       .mockResolvedValueOnce({ data: [], error: null })
-      .mockResolvedValueOnce({ data: [{ estado: "capturada" }], error: null });
+      .mockResolvedValueOnce({ data: [{ caso: "buzon_pendiente" }], error: null });
 
     await expect(
       subirFacturaEntrante({ ...INPUT_BASE, pdf: archivo("f.pdf"), xml: archivo("f.xml", "text/xml") }),
-    ).rejects.toThrow(/Este XML ya fue capturado/i);
+    ).rejects.toThrow(/Este XML ya está en el buzón/i);
     expect(upload).not.toHaveBeenCalled();
   });
 
@@ -164,7 +167,7 @@ describe("adjuntarXmlFacturaEntrante", () => {
   });
 
   it("N36: rechaza si el XML ya está vivo en otro documento del buzón", async () => {
-    selectChain.limit.mockResolvedValue({ data: [{ estado: "por_capturar" }], error: null });
+    rpcMock.mockResolvedValue({ data: [{ caso: "buzon_pendiente" }], error: null });
 
     await expect(
       adjuntarXmlFacturaEntrante({

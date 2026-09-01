@@ -89,8 +89,20 @@ export function createSupabaseMock() {
     storage: {
       from: vi.fn(() => ({
         upload: vi.fn().mockResolvedValue({ error: null }),
+        remove: vi.fn().mockResolvedValue({ error: null }),
       })),
     },
+    // v13.821.2 — Varios servicios sellan `user_id` leyendo la sesión; sin
+    // esto los tests fallaban con "Cannot read properties of undefined
+    // (reading 'getUser')" en vez de probar la regla de negocio.
+    auth: {
+      getUser: vi.fn().mockResolvedValue({ data: { user: { id: "u1" } }, error: null }),
+      getSession: vi.fn().mockResolvedValue({
+        data: { session: { user: { id: "u1" }, access_token: "t" } },
+        error: null,
+      }),
+    },
+
   };
 
   /**

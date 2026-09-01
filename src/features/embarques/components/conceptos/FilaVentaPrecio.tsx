@@ -36,7 +36,8 @@ export function FilaVentaPrecio({
   // perderían en silencio.
   const bloqueado = ventaBloqueada(venta.estadoFacturacion);
   return (
-    <div className={`grid ${cols} gap-2 items-center`} title={bloqueado ? MOTIVO_VENTA_BLOQUEADA : undefined}>
+    <div className={`grid ${cols} gap-2 items-center`}>
+      {bloqueado && <span className="sr-only">{MOTIVO_VENTA_BLOQUEADA}</span>}
       <ConceptoCatalogoSelect
         value={venta.concepto}
         disabled={bloqueado}

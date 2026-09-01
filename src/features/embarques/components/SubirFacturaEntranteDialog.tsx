@@ -29,7 +29,7 @@ import { SeccionProveedorEntrante } from "@/features/embarques/components/entran
 import { VerificacionMontoEntrante } from "@/features/embarques/components/entrantes/VerificacionMontoEntrante";
 import { totalCfdiDetectado } from "@/features/embarques/components/entrantes/totalCfdiDetectado";
 import { AvisoDuplicadoBuzon } from "@/features/embarques/components/entrantes/AvisoDuplicadoBuzon";
-import { BuzonDuplicadoError } from "@/features/cxp/services/buzonDuplicado";
+import { BuzonDuplicadoError } from "@/features/cxp";
 
 interface Props {
   open: boolean;

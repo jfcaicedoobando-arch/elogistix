@@ -68,7 +68,11 @@ describe("insertEventoEmbarque", () => {
         usuario: "op@demo.com",
       }),
     ).resolves.toBeUndefined();
-    const insertCall = mock.tableCalls[mock.tableCalls.length - 1];
+    // v13.821.2 — Con sesión mockeada el servicio también escribe bitácora;
+    // se busca explícitamente la llamada a eventos_embarque.
+    const insertCall = mock.tableCalls.find(
+      (c) => c.table === "eventos_embarque" && c.ops.includes("insert"),
+    );
     expect(insertCall?.table).toBe("eventos_embarque");
     expect(insertCall?.ops).toContain("insert");
   });

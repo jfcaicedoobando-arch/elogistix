@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.821.2] - 2026-09-01
+- **CI `ci:fast` más rápido y estricto**: vitest arranca primero (con `--maxWorkers` acotado a los cores disponibles menos 2 para no pelear con ESLint/TSC), las auditorías ligeras corren fusionadas, los flags `--only/--skip` fallan si nombran una tarea inexistente y se conservan sólo los 5 directorios de log más recientes.
+- **Mock compartido de Supabase**: `createSupabaseMock()` ya expone `auth.getUser/getSession` y `storage.remove`. Antes los tests de servicios que sellan `user_id` o limpian archivos morían con "Cannot read properties of undefined (reading 'getUser')" en vez de probar la regla de negocio.
+- **Tests del buzón CxP**: los casos de duplicado ahora simulan la RPC canónica `buzon_localizar_duplicado` (fuente de verdad desde v13.819.2) en vez de la consulta directa a la tabla, y esperan los mensajes vigentes. `lint`, `typecheck`, auditorías y las 1233 pruebas quedan en verde.
+
 ## [13.821.1] - 2026-09-01
 - **Suite de pruebas (limpieza)**: la guard SQL `supabase/tests/ola_p1_guards.sql` quedó registrada en `supabase/tests/_guards_manifest.txt`, así que ahora CI la ejecuta de verdad (8 aserciones P1-1…P1-4 verificadas en verde localmente) en lugar de existir como cobertura ficticia.
 - **Guardrail Fase L**: dejó de exigir el error `LC_PAGO_CRUCE_NO_SOPORTADO`, eliminado cuando los cruces con EUR empezaron a pivotear en MXN (M-2, Ola 4 · v14). Ahora valida el contrato vigente (`LC_PAGO_TC_REQUERIDO`, `LC_PAGO_TC_FACTURA_REQUERIDO`, `IMMUTABLE` y privilegios) leyendo `supabase/schema/baseline.sql`, la fuente de verdad del esquema.

@@ -18,7 +18,7 @@ import { fetchFacturasReporte } from "../reportesFetch";
 describe("fetchFacturasReporte · organization filter", () => {
   beforeEach(() => { mockRef.current = createSupabaseMock(); });
 
-  it("aplica .eq(organization_id, ...) cuando se pasa organizationId", async () => {
+  it("reportes de compras: aplica .eq(organization_id, ...) cuando se pasa organizationId", async () => {
     mockRef.current!.setTableResult("proveedor_facturas", { data: [], error: null });
     await fetchFacturasReporte("2026-01-01", "2026-01-31", "org-1");
     const call = mockRef.current!.tableCalls.find((c) => c.table === "proveedor_facturas");
@@ -27,7 +27,7 @@ describe("fetchFacturasReporte · organization filter", () => {
     expect(eqCalls).toContainEqual(["organization_id", "org-1"]);
   });
 
-  it("no agrega .eq(organization_id) cuando organizationId es null/undefined", async () => {
+  it("reportes de compras: no agrega .eq(organization_id) cuando organizationId es null/undefined", async () => {
     mockRef.current!.setTableResult("proveedor_facturas", { data: [], error: null });
     await fetchFacturasReporte("2026-01-01", "2026-01-31");
     const call = mockRef.current!.tableCalls.find((c) => c.table === "proveedor_facturas");

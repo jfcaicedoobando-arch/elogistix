@@ -6,7 +6,7 @@ import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import type { AppRole } from "@/types/appRole";
-import type { UbicacionDuplicadoBuzon } from "@/features/cxp/services/buzonDuplicado";
+import type { UbicacionDuplicadoBuzon } from "@/features/cxp";
 
 const rol = vi.hoisted(() => ({ actual: "coordinador_logistico" as AppRole }));
 

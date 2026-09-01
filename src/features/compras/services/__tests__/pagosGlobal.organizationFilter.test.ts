@@ -18,7 +18,7 @@ import { listarPagosProveedorGlobal } from "../pagosGlobal";
 describe("listarPagosProveedorGlobal · organization filter", () => {
   beforeEach(() => { mockRef.current = createSupabaseMock(); });
 
-  it("aplica .eq(organization_id, ...) cuando se pasa organizationId", async () => {
+  it("pagos globales: aplica .eq(organization_id, ...) cuando se pasa organizationId", async () => {
     mockRef.current!.setTableResult("pagos_proveedor", { data: [], error: null });
     await listarPagosProveedorGlobal({}, "org-1");
     const call = mockRef.current!.tableCalls.find((c) => c.table === "pagos_proveedor");
@@ -27,7 +27,7 @@ describe("listarPagosProveedorGlobal · organization filter", () => {
     expect(eqCalls).toContainEqual(["organization_id", "org-1"]);
   });
 
-  it("no agrega .eq(organization_id) cuando organizationId es null/undefined", async () => {
+  it("pagos globales: no agrega .eq(organization_id) cuando organizationId es null/undefined", async () => {
     mockRef.current!.setTableResult("pagos_proveedor", { data: [], error: null });
     await listarPagosProveedorGlobal({});
     const call = mockRef.current!.tableCalls.find((c) => c.table === "pagos_proveedor");

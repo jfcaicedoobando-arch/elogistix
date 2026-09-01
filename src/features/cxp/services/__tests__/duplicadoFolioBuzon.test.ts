@@ -49,20 +49,22 @@ describe("subirFacturaEntrante — dedupe del buzón", () => {
   beforeEach(() => { mock.tableCalls.length = 0; });
 
   it("bloquea el gemelo pendiente de captura", async () => {
-    mock.setTableResult("embarque_facturas_entrantes", {
-      data: [{ estado: "por_capturar" }], error: null,
+    // v13.821.2 — El dedupe ya no lee la tabla: la ubicación la resuelve la
+    // RPC canónica `buzon_localizar_duplicado` (v13.819.2).
+    mock.setRpcResult("buzon_localizar_duplicado", {
+      data: [{ caso: "buzon_pendiente" }], error: null,
     });
     await expect(subirFacturaEntrante({
       pdf: archivo(), xml: null, embarqueId: "e1", organizationId: "o1",
     })).rejects.toThrow(/ya está en el buzón/i);
   });
 
-  it("avisa cuando el archivo ya fue capturado como factura", async () => {
-    mock.setTableResult("embarque_facturas_entrantes", {
-      data: [{ estado: "capturada" }], error: null,
+  it("avisa cuando el archivo ya fue capturado como factura del embarque", async () => {
+    mock.setRpcResult("buzon_localizar_duplicado", {
+      data: [{ caso: "mismo_embarque", factura_id: "f9" }], error: null,
     });
     await expect(subirFacturaEntrante({
       pdf: archivo(), xml: null, embarqueId: "e1", organizationId: "o1",
-    })).rejects.toThrow(/ya fue capturado/i);
+    })).rejects.toThrow(/ya está registrada en este embarque/i);
   });
 });

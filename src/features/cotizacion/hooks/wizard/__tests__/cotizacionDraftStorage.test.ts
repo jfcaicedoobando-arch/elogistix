@@ -47,7 +47,7 @@ describe("loadDraft (cotizacionDraftStorage)", () => {
     expect(loadDraft(USER)).toBeNull();
   });
 
-  it("devuelve null si savedAt no es number", () => {
+  it("devuelve null si savedAt del borrador de cotización no es number", () => {
     window.localStorage.setItem(
       draftKey(USER),
       JSON.stringify({ version: 3, savedAt: "no-es-numero", values: {} }),

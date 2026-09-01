@@ -18,7 +18,7 @@ import { listarNotasCreditoGlobal } from "../notasCreditoGlobal";
 describe("listarNotasCreditoGlobal · organization filter", () => {
   beforeEach(() => { mockRef.current = createSupabaseMock(); });
 
-  it("aplica .eq(organization_id, ...) cuando se pasa organizationId", async () => {
+  it("notas de crédito: aplica .eq(organization_id, ...) cuando se pasa organizationId", async () => {
     mockRef.current!.setTableResult("proveedor_notas_credito", { data: [], error: null });
     await listarNotasCreditoGlobal({}, "org-1");
     const call = mockRef.current!.tableCalls.find((c) => c.table === "proveedor_notas_credito");
@@ -27,7 +27,7 @@ describe("listarNotasCreditoGlobal · organization filter", () => {
     expect(eqCalls).toContainEqual(["organization_id", "org-1"]);
   });
 
-  it("no agrega .eq(organization_id) cuando organizationId es null/undefined", async () => {
+  it("notas de crédito: no agrega .eq(organization_id) cuando organizationId es null/undefined", async () => {
     mockRef.current!.setTableResult("proveedor_notas_credito", { data: [], error: null });
     await listarNotasCreditoGlobal({});
     const call = mockRef.current!.tableCalls.find((c) => c.table === "proveedor_notas_credito");
