@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.821.5] - 2026-09-08
+- **Exportar CSV de cotizaciones (accesibilidad)**: el botón deshabilitado ya no usa el atributo nativo `title` (prohibido por la auditoría de arquitectura); la causa se expone como descripción accesible con `aria-describedby`.
+- **Timbrado**: se restaura la llamada literal `facturapi.invoices.create(payload)` en `facturapi-emitir` (estrechando el tipo del SDK antes del `try`), que los guards de Deno verifican para asegurar que el SDK sólo se invoque ahí.
+
 ## [13.821.4] - 2026-09-08
 - **Timbrado: errores de FacturApi con tipos correctos**: la Edge Function `facturapi-emitir` ya no castea el SDK "a ciegas"; se estrecha al método que usa y reutiliza `extractFacturapiMessage` para el mensaje en español. Antes el CI de Deno fallaba al compilar.
 - **Exportar CSV de cotizaciones**: el botón deshabilitado vuelve a explicar por qué (aviso nativo `title`), porque un botón deshabilitado no dispara el tooltip.
