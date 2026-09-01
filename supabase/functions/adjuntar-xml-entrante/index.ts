@@ -16,8 +16,13 @@
  */
 import { buildCors, handlePreflightStrict } from "../_shared/cors.ts";
 import { errorResponse, jsonResponse } from "../_shared/response.ts";
-import { type AuthContext, authenticate } from "../_shared/auth.ts";
+import {
+  type AuthContext,
+  authenticate,
+  ROLES_ADJUNTAR_XML_ENTRANTE,
+} from "../_shared/auth.ts";
 import { autorizarCxp } from "../_shared/cxpGuard.ts";
+
 import { createLogger } from "../_shared/logger.ts";
 import { captureEdgeException, wrapEdgeHandler } from "../_shared/sentry.ts";
 import { parseCfdi } from "../_shared/cfdiParser.ts";
