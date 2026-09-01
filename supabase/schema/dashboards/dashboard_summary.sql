@@ -1,5 +1,7 @@
 -- Fuente canónica de public.dashboard_summary() (Ola 6 · O6-SCHEMA).
--- 1:1 con supabase/migrations/20260820120500_fix_bl11_dashboard_summary_eur_dof.sql.
+-- v13.820.7: se restaura el cuerpo real (la BD había quedado con un wrapper que
+-- bloqueaba a roles operativos con LC_DASHBOARD_SIN_PERMISO) y se alinea v_hoy a
+-- America/Mexico_City igual que dashboard_details_datos (Ola 17 · H8-A).
 -- FIX BL-11: fallback EUR → tipos_cambio_dof cuando no hay TC de embarque.
 -- Al modificar: edita ESTE archivo y genera la migración con el mismo cuerpo.
 
@@ -10,7 +12,7 @@ CREATE OR REPLACE FUNCTION public.dashboard_summary_datos()
  SET search_path TO 'public'
 AS $function$
 DECLARE
-  v_hoy date := current_date;
+  v_hoy date := (now() AT TIME ZONE 'America/Mexico_City')::date;
   v_inicio_mes date := date_trunc('month', v_hoy)::date;
   v_fin_mes date := (date_trunc('month', v_hoy) + interval '1 month' - interval '1 day')::date;
   v_inicio_sig date := (date_trunc('month', v_hoy) + interval '1 month')::date;
