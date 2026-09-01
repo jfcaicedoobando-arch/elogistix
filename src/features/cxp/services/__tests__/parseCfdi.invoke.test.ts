@@ -36,7 +36,11 @@ describe("invokeParseCfdiOnce", () => {
     // FormData fresco con file + categorias serializadas
     const call = invokeMock.mock.calls[0];
     expect(call[0]).toBe("parse-cfdi-xml");
-    expect((call[1].body as FormData).get("organization_id")).toBe(organizationId);
+    expect((call[1].body as FormData).get("file")).toBeInstanceOf(File);
+    // v13.823.4: la organización viaja en header (no en el multipart) para que
+    // la edge function autorice antes de bufferar el archivo.
+    expect(call[1].headers["x-organization-id"]).toBe(organizationId);
+    expect((call[1].body as FormData).get("organization_id")).toBeNull();
   });
 
   it("retorna EmptyResponse cuando no hay error ni data", async () => {
