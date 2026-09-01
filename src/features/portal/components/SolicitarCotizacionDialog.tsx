@@ -31,23 +31,39 @@ import { useSolicitudCotizacionForm } from "@/features/portal/hooks/useSolicitud
 interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  clienteId?: string;
-  clienteIds: string[];
+  /** Empresas autorizadas para el usuario (RLS). Con una sola se preselecciona. */
+  clientes: ClienteSolicitante[];
 }
 
 const TIPOS_EMBARQUE = ["FCL", "LCL", "Aéreo", "Terrestre"] as const;
 
-export function SolicitarCotizacionDialog({ open, onOpenChange, clienteId, clienteIds }: Props) {
+export function SolicitarCotizacionDialog({ open, onOpenChange, clientes }: Props) {
   const navigate = useNavigate();
+  // La mutación sigue recibiendo TODOS los ids autorizados: la validación y la
+  // invalidación de caché no se debilitan por la elección de la UI.
+  const clienteIds = useMemo(() => clientes.map((c) => c.id), [clientes]);
   const solicitar = useSolicitarCotizacion(clienteIds);
   const cerrar = useFormDialogCerrar();
 
-  const f = useSolicitudCotizacionForm(clienteId);
+  const inicial = seleccionInicial(clientes);
+  const [clienteId, setClienteId] = useState(inicial);
+  // Con una sola empresa se preselecciona en cuanto cargan los vínculos; con
+  // varias nunca se preselecciona (evita atribuir la solicitud a la equivocada).
+  useEffect(() => setClienteId(seleccionInicial(clientes)), [clientes]);
+
+  const f = useSolicitudCotizacionForm(clienteId || undefined);
   const {
     modo, setModo, tipo, setTipo, tipoEmbarque, setTipoEmbarque,
     origen, setOrigen, destino, setDestino, mercancia, setMercancia, notas, setNotas,
     intentoEnvio, origenVacio, destinoVacio, puedeEnviar, isDirty, faltantes, reset,
   } = f;
+
+  /** Al cerrar se limpia también la empresa elegida: reabrir con varias
+   *  empresas exige elegir de nuevo. */
+  const resetTodo = () => {
+    reset();
+    setClienteId(seleccionInicial(clientes));
+  };
 
   const handleSubmit = async () => {
     f.setIntentoEnvio(true);
