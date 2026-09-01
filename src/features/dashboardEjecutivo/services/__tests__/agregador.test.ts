@@ -120,6 +120,10 @@ describe("dashboardEjecutivo/agregador", () => {
       dias: 28,
       organizationId: "org-1",
       tipoCambioUsd: 17.5,
+      // v13.823.5: el TC EUR (y su fecha) viajan junto al USD.
+      tipoCambioEur: 18,
+      tipoCambioFecha: null,
+
     });
   });
 
