@@ -22,10 +22,7 @@ import { MODOS, TIPOS, type ModoTransporte, type TipoOperacion } from "@/constan
 import { useSolicitarCotizacion } from "@/features/portal/hooks/useSolicitarCotizacion";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { getErrorMessage } from "@/lib/errors";
-import {
-  guardarSolicitudPreferencias,
-  leerSolicitudPreferencias,
-} from "@/features/portal/domain/solicitudPreferencias";
+import { guardarSolicitudPreferencias } from "@/features/portal/domain/solicitudPreferencias";
 import { COPY_VALIDACION } from "@/lib/copy/publicoCopy";
 import { FaltantesHint } from "@/features/facturacion/components/FaltantesHint";
 import { useFormDialogCerrar } from "@/components/shared/formDialogCloseContext";

@@ -12,7 +12,7 @@ import { NuevoUsuarioCredencialesSection } from "./NuevoUsuarioCredencialesSecti
 import { NuevoUsuarioAccesoSection } from "./NuevoUsuarioAccesoSection";
 import { PASSWORD_MIN } from "@/lib/passwords/policy";
 import { normalizarEmail, esEmailValido } from "./emailUsuario";
-import { useNuevoUsuarioForm, DEFAULT_ROLE } from "./useNuevoUsuarioForm";
+import { useNuevoUsuarioForm } from "./useNuevoUsuarioForm";
 
 interface Props {
   open: boolean;
@@ -33,7 +33,7 @@ export default function NuevoUsuarioDialog({
   const {
     email, setEmail, password, setPassword, showPassword, setShowPassword,
     role, setRole, orgId, setOrgId, porInvitacion, setPorInvitacion,
-    touched, setTouched, emailError, passwordError, isDirty, reset,
+    setTouched, emailError, passwordError, isDirty, reset,
   } = useNuevoUsuarioForm();
   const createUser = useCreateUser();
   const { data: orgs = [] } = useOrganizationsList(open && showOrgSelector);
