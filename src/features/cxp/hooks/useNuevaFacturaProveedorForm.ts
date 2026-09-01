@@ -194,6 +194,7 @@ export function useNuevaFacturaProveedorForm(
   };
   return {
     values, errors, mode, setMode, total, pendingCfdi, cfdiConceptos, askCrearProv, setAskCrearProv,
+    editarConceptoIa: editarConceptoIaLinea, eliminarConceptoIa: eliminarConceptoIaLinea,
     handleChange, handleProveedor, handleCfdiParsed, handlePdfIaParsed,
     vinculos, toggleVinculo, setVinculoMonto, aplicarSugerencias, limpiarVinculos,
     conceptosManuales: manuales, cuadreManual, cfdiDuplicado, topeVinculacion,
