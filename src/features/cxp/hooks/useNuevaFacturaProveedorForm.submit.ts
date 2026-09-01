@@ -86,6 +86,8 @@ interface RunSubmitParams {
   cfdiConceptos: ReadonlyArray<CfdiConceptoParsed>;
   vinculos: Record<string, VinculoLinea>;
   embarqueAdHoc: EmbarqueSeleccionado | null;
+  /** v13.820.5 — Embarque del documento del buzón CxP (herencia si no hay vínculos). */
+  embarqueOrigenId?: string | null;
   crearMutateAsync: (payload: ReturnType<typeof buildPayload>) => Promise<{ id?: string } | null | undefined>;
   setFolioError: () => void;
 }
