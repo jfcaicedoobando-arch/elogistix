@@ -7,6 +7,7 @@ import { parseDateOnlyLocal, formatDateOnlyLocal } from "@/lib/date/dateOnly";
 import { aMxn } from "@/lib/financial/convertir";
 import type { CobranzaRow, CxpRow, LiquidacionRow, ResumenCuenta, TasasCambio } from "./resumen";
 import { sumarSaldosCuentas } from "./resumen";
+import { tcDeMoneda } from "./resumenHelpers";
 import { Exclusiones, aplicarCobranza, aplicarCxp, aplicarLiquidaciones } from "./flujoProyectado.aplicadores";
 
 export interface DetalleFlujo {
@@ -80,6 +81,25 @@ export function toMxn(monto: number, moneda: string, tc: number | undefined): nu
   return aMxn(monto, moneda, tc).monto;
 }
 
+/**
+ * P1-7 — Registra en `exclusiones` las cuentas cuya moneda no tiene TC válido,
+ * para que la UI marque el saldo consolidado como incompleto.
+ */
+function registrarCuentasSinTc(
+  cuentas: ResumenCuenta[],
+  tasas: TasasCambio,
+  exclusiones: Exclusiones,
+): void {
+  exclusiones.incompleto = true;
+  for (const c of cuentas) {
+    const moneda = (c.moneda ?? "MXN").toUpperCase();
+    if (moneda === "MXN") continue;
+    if (!aMxn(c.saldo, moneda, tcDeMoneda(moneda, tasas)).completo) {
+      exclusiones.registrar(c.saldo, moneda);
+    }
+  }
+}
+
 export function calcularFlujoProyectado(args: {
   cuentas: ResumenCuenta[];
   cobranza: CobranzaRow[];
@@ -126,15 +146,7 @@ export function calcularFlujoProyectado(args: {
   // cuentas, cubriendo todas las monedas del canon (no sólo USD).
   const { total: saldoInicial, incompleto: saldoInicialIncompleto } =
     sumarSaldosCuentas(args.cuentas, tasas);
-  if (saldoInicialIncompleto) {
-    exclusiones.incompleto = true;
-    for (const c of args.cuentas) {
-      const moneda = (c.moneda ?? "MXN").toUpperCase();
-      if (moneda === "MXN") continue;
-      const conv = aMxn(c.saldo, moneda, moneda === "USD" ? tasas.usdMxn ?? undefined : moneda === "EUR" ? tasas.eurMxn ?? undefined : undefined);
-      if (!conv.completo) exclusiones.registrar(c.saldo, moneda);
-    }
-  }
+  if (saldoInicialIncompleto) registrarCuentasSinTc(args.cuentas, tasas, exclusiones);
 
   const inWindow = (iso: string | null): SemanaFlujo | null => {
     if (!iso) return null;
