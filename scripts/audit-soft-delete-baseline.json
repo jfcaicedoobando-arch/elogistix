@@ -8,8 +8,6 @@
     "src/features/cotizacion/services/datosFiscalesProspecto.ts::crm_leads",
     "src/features/cotizacion/services/datosFiscalesProspecto.ts::crm_oportunidades",
     "src/features/cotizacion/services/envios.ts::clientes",
-    "src/features/cotizacion/services/queries.ts::cotizaciones",
-    "src/features/cotizacion/services/wizard/paso1Crm.ts::cotizaciones",
     "src/features/crm/services/automatizacionesEtapa.ts::crm_etapas_pipeline",
     "src/features/crm/services/automatizacionesEtapa.ts::crm_oportunidades",
     "src/features/crm/services/etapas.ts::crm_etapas_pipeline",
