@@ -19,12 +19,18 @@ vi.mock("@/features/dashboard/direccion/components/TipoCambioFallbackBanner", ()
 import DireccionDashboard from "../DireccionDashboard";
 
 const DATA = {
-  hero: { utilidad_mxn: 1, cartera_mxn: 2, meta_pct: 3 },
+  hero: {
+    utilidad_mxn: 1, venta_mxn: 2, costo_mxn: 1, margen_pct: 50, margen_pct_prev: 40,
+    cartera_vencida_mxn: 0, cartera_vencida_clientes: 0, facturado_mes_mxn: 0,
+  },
   margen_6m: [],
   margen_por_modo: [],
   antiguedad: [],
   top_clientes: [],
-  pulso: { embarques_mes: 0 },
+  pulso: {
+    embarques_activos: 0, embarques_por_estado: [], arribos_7d: 0, demoras: 0,
+    documentos_vencidos: null, cfdi_timbrados_mes: 0, acuses_pendientes: 0,
+  },
 };
 
 function renderPage() {
