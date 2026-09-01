@@ -4,6 +4,10 @@
  * message_id (revienta uq_email_send_log_message_id con 23505 silencioso y
  * deja filas zombie en 'pending').
  *
+ * v13.823.2: el pipeline de cola propio (`send-transactional-email` +
+ * `process-email-queue`) se retiró al migrar a la entrega administrada de
+ * Lovable (v13.818.0). La guarda ahora apunta al adaptador vigente.
+ *
  * Run: deno test --no-check --allow-read supabase/functions/_shared/emailSendLog_test.ts
  */
 import { assert, assertStringIncludes } from "https://deno.land/std@0.224.0/assert/mod.ts";
@@ -14,10 +18,8 @@ async function leer(archivo: string): Promise<string> {
 
 // Pipeline de estados post-pending: todos deben pasar por la RPC de upsert.
 const PIPELINE = [
-  "../send-transactional-email/index.ts",
-  "../process-email-queue/processItem.ts",
-  "../process-email-queue/queueAuth.ts",
-  "../process-email-queue/messageProcessor.ts",
+  "./enviarEmailPlantilla.ts",
+  "./emailSendLog.ts",
 ];
 
 for (const archivo of PIPELINE) {
@@ -53,16 +55,16 @@ Deno.test("P2 email_send_log: existe migración con RPC email_send_log_touch y l
   assertStringIncludes(src, "TO service_role");
 });
 
-Deno.test("P2 email_send_log: la cola cuenta reintentos con la columna intentos", async () => {
-  const src = await leer("../process-email-queue/queueProcessor.ts");
-  assertStringIncludes(src, "intentos");
+Deno.test("P2 email_send_log: la helper delega SIEMPRE en la RPC de upsert", async () => {
+  const src = await leer("./emailSendLog.ts");
+  assertStringIncludes(src, 'supabase.rpc("email_send_log_touch"');
+  const codigo = src.slice(src.indexOf("export async function"));
+  assert(!codigo.includes(".insert("), "la helper no debe insertar directo en email_send_log");
 });
 
-Deno.test("P2 email_send_log: send-transactional-email registra 'failed' tras error de enqueue", async () => {
-  const src = await leer("../send-transactional-email/index.ts");
-  const idxEnqueue = src.indexOf("if (enqueueError)");
-  assert(idxEnqueue > 0);
-  const bloque = src.slice(idxEnqueue, idxEnqueue + 900);
-  assertStringIncludes(bloque, "registrarEstadoEmail");
-  assertStringIncludes(bloque, "status: 'failed'");
+Deno.test("P2 email_send_log: el adaptador registra 'sent', 'suppressed' y 'failed'", async () => {
+  const src = await leer("./enviarEmailPlantilla.ts");
+  for (const estado of ['status: "sent"', 'status: "suppressed"', 'status: "failed"']) {
+    assertStringIncludes(src, estado);
+  }
 });

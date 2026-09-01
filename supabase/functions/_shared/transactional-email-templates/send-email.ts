@@ -1,4 +1,9 @@
 import * as React from 'npm:react@18.3.1'
+// El peer `react-dom` de @react-email/render@0.0.17 (rango ^18.2.0) no queda
+// fijado por el lockfile de Deno y se resolvía a react-dom@19, lo que rompía
+// el render con "Incompatible React versions". Este pin explícito lo ancla a
+// la misma línea 18.3.1 que `react`.
+import 'npm:react-dom@18.3.1'
 import { renderAsync } from 'npm:@react-email/components@0.0.22'
 import { EmailAPIError, sendLovableEmail } from 'npm:@lovable.dev/email-js@0.1.0'
 import { TEMPLATES } from './registry.ts'
