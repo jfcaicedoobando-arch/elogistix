@@ -34,6 +34,7 @@ INSERT INTO _ci_service_role_only (fn) VALUES
   ('public._assert_tc_banda()'),
   ('public._assert_periodo_abierto()'),
   ('public._assert_uuid_fiscal_single_write()'),
+  ('public._audit_costos_repetidos(uuid)'),
   ('public._audit_embarques_agregar(jsonb, jsonb)'),
   ('public._audit_embarques_umbrales(uuid)'),
   -- Triggers de candados financieros (Ola E4): sólo los dispara el motor.
