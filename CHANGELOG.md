@@ -1,5 +1,15 @@
 # Changelog
 
+## [13.822.0] - 2026-09-01
+### Ola P0/P1 · Seguridad, compilación y multimoneda
+- **Envío de facturas por correo (P0-1)**: `facturapi-enviar-email` vuelve a compilar y es deployable; se expone `resolverDestinatarioAutorizado` y se limpian campos muertos de la bitácora.
+- **Cancelaciones inciertas de REP y notas de crédito (P1-2)**: si FacturApi no confirma pero el estado quedó persistido como `verifying`, ambas Edge Functions responden 202 `{ ok, pending, uncertain, cancellation_status }` en lugar de un error definitivo. La UI muestra un aviso informativo, refresca y bloquea una segunda cancelación mientras el estado sea `pending`/`verifying`.
+- **Conciliador de cancelaciones (P1-3)**: se agregan cursores `..._checked_at` y un presupuesto global con recorrido round-robin entre facturas, REP y notas de crédito, así que ningún tipo de documento vuelve a quedarse sin revisar por falta de tiempo. El cursor se marca incluso cuando un elemento falla.
+- **Segregación fiscal por organización (P1-4)**: la resolución de credenciales de FacturApi es fail-closed por organización; el fallback heredado queda restringido a una única organización explícita.
+- **CRM multimoneda (P1-5)**: pipeline, forecast, leaderboard y Cliente 360 dejan de sumar monedas distintas y de etiquetar todo como MXN; los totales se presentan separados por moneda y ya no se truncan a los primeros registros visibles.
+- **Cartera de Dirección (P1-6)**: la cartera abierta ya no se recorta a 6 meses (eso aplica sólo a la tendencia), así que la antigüedad refleja el total real por cobrar.
+- **Tesorería en EUR (P1-7)**: los saldos, flujos y vencidos en EUR se convierten con su propio tipo de cambio; sin TC confiable el monto no se suma y el consolidado se marca como incompleto.
+
 ## [13.821.6] - 2026-09-08
 - **Cancelación de CFDI con timeout de FacturApi**: si FacturApi tarda en confirmar pero la solicitud ya quedó registrada como `verifying`, la Edge `facturapi-cancelar` responde 202 `{ pending, uncertain }` en lugar de 504. La UI muestra un aviso informativo ("estamos verificando el estado; no vuelvas a cancelarla"), refresca la factura y ya NO ofrece reintentar la cancelación; el reconciliador automático y "Verificar estatus" resuelven el resultado real. Si no se pudo persistir el estado, se sigue devolviendo error 5xx observable.
 - **Timeout dedicado**: `invoices.cancel` usa 22 s (`FACTURAPI_CANCEL_TIMEOUT_MS`) para dejar margen a persistir el estado y responder antes del límite de ejecución. Los demás timeouts del SDK no cambian.
