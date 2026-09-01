@@ -12,14 +12,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { MODOS, TIPOS, type ModoTransporte, type TipoOperacion } from "@/constants/wizardConstants";
 import { useSolicitarCotizacion } from "@/features/portal/hooks/useSolicitarCotizacion";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { getErrorMessage } from "@/lib/errors";
@@ -29,6 +21,7 @@ import { FaltantesHint } from "@/features/facturacion/components/FaltantesHint";
 import { useFormDialogCerrar } from "@/components/shared/formDialogCloseContext";
 import { useSolicitudCotizacionForm } from "@/features/portal/hooks/useSolicitudCotizacionForm";
 import { SolicitanteSelect } from "@/features/portal/components/SolicitanteSelect";
+import { SolicitudServicioFields } from "@/features/portal/components/SolicitudServicioFields";
 import {
   seleccionInicial,
   type ClienteSolicitante,
@@ -40,8 +33,6 @@ interface Props {
   /** Empresas autorizadas para el usuario (RLS). Con una sola se preselecciona. */
   clientes: ClienteSolicitante[];
 }
-
-const TIPOS_EMBARQUE = ["FCL", "LCL", "Aéreo", "Terrestre"] as const;
 
 export function SolicitarCotizacionDialog({ open, onOpenChange, clientes }: Props) {
   const navigate = useNavigate();
@@ -137,35 +128,11 @@ export function SolicitarCotizacionDialog({ open, onOpenChange, clientes }: Prop
         intentoEnvio={intentoEnvio}
       />
 
-      <FormDialogSection title="Servicio">
-        <div className="space-y-1.5">
-          <Label htmlFor="solicitud-modo">Modo de transporte</Label>
-          <Select value={modo} onValueChange={(v) => setModo(v as ModoTransporte)}>
-            <SelectTrigger id="solicitud-modo"><SelectValue /></SelectTrigger>
-            <SelectContent>
-              {MODOS.map((m) => <SelectItem key={m} value={m}>{m}</SelectItem>)}
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="space-y-1.5">
-          <Label htmlFor="solicitud-tipo">Tipo de operación</Label>
-          <Select value={tipo} onValueChange={(v) => setTipo(v as TipoOperacion)}>
-            <SelectTrigger id="solicitud-tipo"><SelectValue /></SelectTrigger>
-            <SelectContent>
-              {TIPOS.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="space-y-1.5">
-          <Label htmlFor="solicitud-embarque">Tipo de embarque</Label>
-          <Select value={tipoEmbarque} onValueChange={setTipoEmbarque}>
-            <SelectTrigger id="solicitud-embarque"><SelectValue /></SelectTrigger>
-            <SelectContent>
-              {TIPOS_EMBARQUE.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
-            </SelectContent>
-          </Select>
-        </div>
-      </FormDialogSection>
+      <SolicitudServicioFields
+        modo={modo} setModo={setModo}
+        tipo={tipo} setTipo={setTipo}
+        tipoEmbarque={tipoEmbarque} setTipoEmbarque={setTipoEmbarque}
+      />
 
       <FormDialogSection title="Ruta" description="Puerto, aeropuerto o ciudad.">
         <div className="space-y-1.5">
