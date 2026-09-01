@@ -614,6 +614,54 @@ BEGIN
   END IF;
 END;
 $$;
+CREATE FUNCTION public._assert_relaciones_embarque(p_org uuid, p_cliente_id uuid, p_cotizacion_id uuid, p_conceptos_costo jsonb) RETURNS void
+    LANGUAGE plpgsql STABLE
+    SET search_path TO 'public'
+    AS $$
+DECLARE
+  v_cot record;
+  v_prov uuid;
+BEGIN
+  IF p_cliente_id IS NOT NULL AND NOT EXISTS (
+    SELECT 1 FROM public.clientes c
+     WHERE c.id = p_cliente_id AND c.organization_id = p_org AND c.deleted_at IS NULL
+  ) THEN
+    RAISE EXCEPTION 'LC_EMB_CLIENTE_INVALIDO: el cliente no existe en tu organización o fue eliminado.'
+      USING ERRCODE = '42501';
+  END IF;
+  IF p_cotizacion_id IS NOT NULL THEN
+    SELECT id, cliente_id, estado INTO v_cot
+      FROM public.cotizaciones
+     WHERE id = p_cotizacion_id AND organization_id = p_org AND deleted_at IS NULL;
+    IF v_cot.id IS NULL THEN
+      RAISE EXCEPTION 'LC_EMB_COTIZACION_INVALIDA: la cotización no existe en tu organización o fue eliminada.'
+        USING ERRCODE = '42501';
+    END IF;
+    IF p_cliente_id IS NOT NULL AND v_cot.cliente_id IS NOT NULL
+       AND v_cot.cliente_id <> p_cliente_id THEN
+      RAISE EXCEPTION 'LC_EMB_COTIZACION_CLIENTE: la cotización pertenece a otro cliente.'
+        USING ERRCODE = '42501';
+    END IF;
+    IF v_cot.estado NOT IN ('Aceptada'::estado_cotizacion, 'En operación'::estado_cotizacion) THEN
+      RAISE EXCEPTION 'LC_COT_ESTADO_INVALIDO: la cotización debe estar Aceptada o En operación (actual: %)', v_cot.estado
+        USING ERRCODE = 'P0001';
+    END IF;
+  END IF;
+  FOR v_prov IN
+    SELECT DISTINCT NULLIF(elem->>'proveedor_id', '')::uuid
+      FROM jsonb_array_elements(COALESCE(p_conceptos_costo, '[]'::jsonb)) elem
+     WHERE NULLIF(elem->>'proveedor_id', '') IS NOT NULL
+  LOOP
+    IF NOT EXISTS (
+      SELECT 1 FROM public.proveedores pr
+       WHERE pr.id = v_prov AND pr.organization_id = p_org AND pr.deleted_at IS NULL
+    ) THEN
+      RAISE EXCEPTION 'LC_EMB_PROVEEDOR_INVALIDO: un proveedor de los costos no existe en tu organización o fue eliminado.'
+        USING ERRCODE = '42501';
+    END IF;
+  END LOOP;
+END;
+$$;
 CREATE FUNCTION public._assert_soft_delete_factura_sin_hijos() RETURNS trigger
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
@@ -4334,11 +4382,10 @@ DECLARE
   v_incoming_costo_ids uuid[];
   v_new_id uuid;
   v_current_updated_at timestamptz;
+  v_cliente_actual uuid;
 BEGIN
-  v_resp := public.idempotency_claim(p_request_id, 'actualizar_embarque_completo');
-  IF v_resp IS NOT NULL THEN RETURN v_resp; END IF;
-  SELECT organization_id, updated_at
-    INTO v_org_id, v_current_updated_at
+  SELECT organization_id, updated_at, cliente_id
+    INTO v_org_id, v_current_updated_at, v_cliente_actual
     FROM embarques
    WHERE id = p_embarque_id
    FOR UPDATE;
@@ -4353,6 +4400,14 @@ BEGIN
               'client_expected_updated_at', p_expected_updated_at
             )::text;
   END IF;
+  PERFORM public._assert_relaciones_embarque(
+    v_org_id,
+    COALESCE(NULLIF(p_embarque->>'cliente_id','')::uuid, v_cliente_actual),
+    NULLIF(p_embarque->>'cotizacion_id','')::uuid,
+    p_conceptos_costo
+  );
+  v_resp := public.idempotency_claim(p_request_id, 'actualizar_embarque_completo');
+  IF v_resp IS NOT NULL THEN RETURN v_resp; END IF;
   UPDATE embarques SET
     cliente_id = COALESCE((p_embarque->>'cliente_id')::uuid, cliente_id),
     cliente_nombre = COALESCE(p_embarque->>'cliente_nombre', cliente_nombre),
@@ -4485,7 +4540,6 @@ BEGIN
      )
      AND NOT (id = ANY(v_incoming_costo_ids));
   v_resp := jsonb_build_object('ok', true, 'embarque_id', p_embarque_id);
-  -- v13.509.5 · firma real: idempotency_store(_key uuid, _response jsonb)
   PERFORM public.idempotency_store(p_request_id, v_resp);
   RETURN v_resp;
 END;
@@ -8119,14 +8173,6 @@ BEGIN
   IF v_uid IS NULL THEN
     RAISE EXCEPTION 'No autenticado' USING ERRCODE = '42501';
   END IF;
-  IF NOT EXISTS (
-    SELECT 1 FROM public.user_roles ur
-    WHERE ur.user_id = v_uid
-      AND ur.role::text = ANY (ARRAY['admin','admin_org','super_admin','contador','tesorero'])
-  ) THEN
-    RAISE EXCEPTION 'LC_LIQUIDACION_SIN_ROL: Sólo administración, contabilidad o tesorería pueden cancelar liquidaciones.'
-      USING ERRCODE = '42501';
-  END IF;
   IF COALESCE(TRIM(p_motivo), '') = '' THEN
     RAISE EXCEPTION 'LC_LIQUIDACION_MOTIVO_REQUERIDO: Captura el motivo de la cancelación.'
       USING ERRCODE = '42501';
@@ -8141,6 +8187,12 @@ BEGIN
      AND NOT public.has_role(v_uid,'super_admin'::app_role) THEN
     RAISE EXCEPTION 'LC_LIQUIDACION_OTRA_ORG: La liquidación pertenece a otra organización.';
   END IF;
+  IF NOT public.has_any_role_in_org_exact(v_uid,
+       ARRAY['admin','admin_org','super_admin','contador','tesorero']::public.app_role[],
+       v_row.organization_id) THEN
+    RAISE EXCEPTION 'LC_LIQUIDACION_SIN_ROL: Sólo administración, contabilidad o tesorería pueden cancelar liquidaciones.'
+      USING ERRCODE = '42501';
+  END IF;
   IF v_row.estado = 'Cancelada' THEN
     RETURN v_row;
   END IF;
@@ -8148,14 +8200,10 @@ BEGIN
     RAISE EXCEPTION 'LC_LIQUIDACION_PAGADA_NO_CANCELABLE: La liquidación ya fue pagada; registra el ajuste en la siguiente liquidación.'
       USING ERRCODE = '42501';
   END IF;
-  -- A-2 (Ola 1): comisiones ORDINARIAS de la liquidación vuelven a devengarse.
   UPDATE public.comisiones_devengadas
      SET estado = 'Devengada', liquidacion_id = NULL, updated_at = now()
    WHERE liquidacion_id = p_liquidacion_id
      AND estado = 'Liquidada';
-  -- A-2 (Ola 1): las RECUPERACIONES que esta liquidación descontó quedaron
-  -- marcadas 'Cancelada'. Al cancelar la liquidación la deuda sigue viva:
-  -- regresan a 'Por recuperar', no a 'Devengada' (eso las volvía pagables).
   UPDATE public.comisiones_devengadas
      SET estado = 'Por recuperar', liquidacion_id = NULL, updated_at = now()
    WHERE liquidacion_id = p_liquidacion_id
@@ -10775,11 +10823,17 @@ DECLARE
   cv jsonb; cc jsonb; doc jsonb; ct jsonb;
 BEGIN
   PERFORM public._assert_medidas_embarque(p_embarque);
-  v_resp := public.idempotency_claim(p_request_id, 'crear_embarque_completo');
-  IF v_resp IS NOT NULL THEN RETURN v_resp; END IF;
   v_org_id := current_user_org_id();
   IF v_org_id IS NULL THEN RAISE EXCEPTION 'No organization context for caller'; END IF;
   PERFORM public._assert_writer(v_org_id);
+  PERFORM public._assert_relaciones_embarque(
+    v_org_id,
+    NULLIF(p_embarque->>'cliente_id','')::uuid,
+    NULLIF(p_embarque->>'cotizacion_id','')::uuid,
+    p_conceptos_costo
+  );
+  v_resp := public.idempotency_claim(p_request_id, 'crear_embarque_completo');
+  IF v_resp IS NOT NULL THEN RETURN v_resp; END IF;
   INSERT INTO embarques (
     id, expediente, cliente_id, cliente_nombre, modo, tipo,
     shipper, consignatario, incoterm, descripcion_mercancia,
@@ -10836,9 +10890,6 @@ BEGIN
       CASE WHEN NULLIF(doc->>'archivo','') IS NOT NULL THEN 'Recibido'::estado_documento ELSE 'Pendiente'::estado_documento END,
       v_org_id);
   END LOOP;
-  -- M-11 (auditoría v14): los contenedores viajaban en una segunda llamada
-  -- desde el cliente; si esa llamada fallaba quedaba un embarque FCL sin
-  -- contenedores. Ahora entran en la MISMA transacción que el embarque.
   FOR ct IN SELECT * FROM jsonb_array_elements(COALESCE(p_contenedores, '[]'::jsonb)) LOOP
     INSERT INTO embarque_contenedores (
       embarque_id, numero_contenedor, tipo_contenedor, bl_house,
@@ -11062,36 +11113,42 @@ BEGIN
 END;
 $_$;
 CREATE FUNCTION public.credito_en_uso_mxn(p_cliente_id uuid) RETURNS numeric
-    LANGUAGE sql STABLE SECURITY DEFINER
+    LANGUAGE plpgsql STABLE SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
-  WITH fc AS (
-    SELECT f.id, f.total, f.moneda::text AS moneda, COALESCE(NULLIF(f.tipo_cambio, 0), 1) AS tc
-    FROM public.facturas f
-    WHERE f.cliente_id = p_cliente_id
-      AND f.deleted_at IS NULL
-      AND f.estado::text IN ('Emitida', 'Vencida', 'Parcialmente pagada')
-  ),
-  pagos AS (
-    SELECT p.factura_id, COALESCE(SUM(p.monto_aplicado_factura), 0) AS pagado
-    FROM public.pagos_factura p
-    WHERE p.deleted_at IS NULL AND p.factura_id IN (SELECT id FROM fc)
-    GROUP BY p.factura_id
-  ),
-  ncs AS (
-    SELECT n.factura_id, COALESCE(SUM(n.monto), 0) AS nc
-    FROM public.factura_notas_credito n
-    WHERE n.deleted_at IS NULL AND n.estado::text = 'Aplicada'
-      AND n.factura_id IN (SELECT id FROM fc)
-    GROUP BY n.factura_id
-  )
-  SELECT ROUND(COALESCE(SUM(
-    GREATEST(0, COALESCE(fc.total, 0) - COALESCE(p.pagado, 0) - COALESCE(n.nc, 0))
-      * CASE WHEN fc.moneda = 'MXN' THEN 1 ELSE fc.tc END
-  ), 0), 2)
-  FROM fc
-  LEFT JOIN pagos p ON p.factura_id = fc.id
-  LEFT JOIN ncs n ON n.factura_id = fc.id
+DECLARE
+  v_total numeric := 0;
+  v_saldo numeric;
+  f record;
+BEGIN
+  FOR f IN
+    SELECT id, COALESCE(total, 0) AS total, moneda::text AS moneda, tipo_cambio AS tc
+      FROM public.facturas
+     WHERE cliente_id = p_cliente_id
+       AND deleted_at IS NULL
+       AND estado::text IN ('Emitida', 'Vencida', 'Parcialmente pagada')
+  LOOP
+    SELECT GREATEST(
+             0,
+             f.total
+               - COALESCE((SELECT SUM(p.monto_aplicado_factura)
+                             FROM public.pagos_factura p
+                            WHERE p.factura_id = f.id AND p.deleted_at IS NULL), 0)
+               - public.nc_aplicadas_en_moneda_factura(f.id)
+           )
+      INTO v_saldo;
+    IF f.moneda = 'MXN' THEN
+      v_total := v_total + v_saldo;
+    ELSIF v_saldo > 0 THEN
+      IF f.tc IS NULL OR f.tc < 5 OR f.tc > 40 THEN
+        RAISE EXCEPTION 'LC_CREDITO_TC_INVALIDO: la factura % está en % con un tipo de cambio no válido (%); no se puede calcular el crédito en uso.', f.id, f.moneda, COALESCE(f.tc, 0)
+          USING ERRCODE = '22023';
+      END IF;
+      v_total := v_total + (v_saldo * f.tc);
+    END IF;
+  END LOOP;
+  RETURN ROUND(COALESCE(v_total, 0), 2);
+END;
 $$;
 CREATE FUNCTION public.crm_autorizar_margen(_oportunidad_id uuid, _margen_pct numeric) RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
@@ -17392,23 +17449,43 @@ CREATE FUNCTION public.idempotency_claim(_key uuid, _fn text) RETURNS jsonb
 DECLARE
   v_inserted boolean;
   v_existing jsonb;
+  v_fn_existente text;
   v_org uuid;
+  v_user uuid;
 BEGIN
   IF _key IS NULL THEN RETURN NULL; END IF;
-  v_org := current_user_org_id();
+  v_org := COALESCE(current_user_org_id(), '00000000-0000-0000-0000-000000000000'::uuid);
+  v_user := COALESCE(auth.uid(), '00000000-0000-0000-0000-000000000000'::uuid);
   INSERT INTO public.idempotency_keys(key, organization_id, user_id, fn, hits)
-  VALUES (_key, COALESCE(v_org, '00000000-0000-0000-0000-000000000000'::uuid), auth.uid(), _fn, 0)
-  ON CONFLICT (key) DO UPDATE SET hits = public.idempotency_keys.hits + 1
-  RETURNING (xmax = 0), response INTO v_inserted, v_existing;
+  VALUES (_key, v_org, v_user, _fn, 0)
+  ON CONFLICT (key, organization_id, user_id) DO UPDATE
+    SET hits = public.idempotency_keys.hits + 1
+  RETURNING (xmax = 0), response, fn INTO v_inserted, v_existing, v_fn_existente;
   IF v_inserted THEN RETURN NULL; END IF;
+  IF v_fn_existente IS DISTINCT FROM _fn THEN
+    RAISE EXCEPTION 'LC_IDEMPOTENCIA_FN_DISTINTA: el identificador de la operación ya se usó en otra operación (%). Reintenta generando uno nuevo.', v_fn_existente
+      USING ERRCODE = '22023';
+  END IF;
   RETURN COALESCE(v_existing, jsonb_build_object('__idempotency_pending', true));
 END;
 $$;
 CREATE FUNCTION public.idempotency_store(_key uuid, _response jsonb) RETURNS void
-    LANGUAGE sql SECURITY DEFINER
+    LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
-  UPDATE public.idempotency_keys SET response = _response WHERE key = _key;
+DECLARE
+  v_org uuid;
+  v_user uuid;
+BEGIN
+  IF _key IS NULL THEN RETURN; END IF;
+  v_org := COALESCE(current_user_org_id(), '00000000-0000-0000-0000-000000000000'::uuid);
+  v_user := COALESCE(auth.uid(), '00000000-0000-0000-0000-000000000000'::uuid);
+  UPDATE public.idempotency_keys
+     SET response = _response
+   WHERE key = _key
+     AND organization_id = v_org
+     AND user_id = v_user;
+END;
 $$;
 CREATE FUNCTION public.is_demo_user(_user_id uuid) RETURNS boolean
     LANGUAGE sql STABLE SECURITY DEFINER
@@ -21173,11 +21250,8 @@ DECLARE
   v_actor_id uuid := auth.uid();
   v_actor_email text;
 BEGIN
-  -- B-06: identidad no falsificable. `p_usuario_email` se ignora.
   SELECT email INTO v_actor_email FROM auth.users WHERE id = v_actor_id;
   v_actor_email := COALESCE(v_actor_email, 'usuario:' || COALESCE(v_actor_id::text, 'desconocido'));
-  v_resp := public.idempotency_claim(p_request_id, 'reabrir_embarque');
-  IF v_resp IS NOT NULL THEN RETURN v_resp; END IF;
   IF v_motivo IS NULL OR length(v_motivo) < 20 THEN
     RAISE EXCEPTION 'Motivo de reapertura requerido (mínimo 20 caracteres)';
   END IF;
@@ -21199,11 +21273,10 @@ BEGIN
   IF v_estado_actual <> 'Cerrado' THEN
     RAISE EXCEPTION 'Solo embarques en estado Cerrado pueden reabrirse (estado actual: %)', v_estado_actual;
   END IF;
+  v_resp := public.idempotency_claim(p_request_id, 'reabrir_embarque');
+  IF v_resp IS NOT NULL THEN RETURN v_resp; END IF;
   PERFORM set_config('app.bypass_cierre','on', true);
   PERFORM set_config('app.bypass_transicion','on', true);
-  -- A-1 (Ola 1): `embarques` sólo tiene `cerrado_snapshot`. `pnl_base` y
-  -- `calculo_snapshot` viven en `comisiones_devengadas` (ver UPDATE abajo);
-  -- escribirlos aquí rompía la reapertura con 42703.
   UPDATE embarques
      SET estado = 'Por liquidar'::estado_embarque,
          cerrado_snapshot = NULL,
@@ -28804,7 +28877,7 @@ ALTER TABLE public.facturas
 ALTER TABLE ONLY public.folio_secuencias
     ADD CONSTRAINT folio_secuencias_pkey PRIMARY KEY (organization_id, tipo);
 ALTER TABLE ONLY public.idempotency_keys
-    ADD CONSTRAINT idempotency_keys_pkey PRIMARY KEY (key);
+    ADD CONSTRAINT idempotency_keys_pkey PRIMARY KEY (key, organization_id, user_id);
 ALTER TABLE ONLY public.liquidaciones_comision
     ADD CONSTRAINT liquidaciones_comision_pkey PRIMARY KEY (id);
 ALTER TABLE ONLY public.nav_events
@@ -30694,6 +30767,8 @@ GRANT ALL ON FUNCTION public._assert_receptor_fiscal_valido(p_cliente_id uuid) T
 REVOKE ALL ON FUNCTION public._assert_refacturador(p_org uuid) FROM PUBLIC;
 GRANT ALL ON FUNCTION public._assert_refacturador(p_org uuid) TO authenticated;
 GRANT ALL ON FUNCTION public._assert_refacturador(p_org uuid) TO service_role;
+REVOKE ALL ON FUNCTION public._assert_relaciones_embarque(p_org uuid, p_cliente_id uuid, p_cotizacion_id uuid, p_conceptos_costo jsonb) FROM PUBLIC;
+GRANT ALL ON FUNCTION public._assert_relaciones_embarque(p_org uuid, p_cliente_id uuid, p_cotizacion_id uuid, p_conceptos_costo jsonb) TO service_role;
 REVOKE ALL ON FUNCTION public._assert_soft_delete_factura_sin_hijos() FROM PUBLIC;
 GRANT ALL ON FUNCTION public._assert_soft_delete_factura_sin_hijos() TO authenticated;
 GRANT ALL ON FUNCTION public._assert_soft_delete_factura_sin_hijos() TO service_role;
@@ -30708,7 +30783,6 @@ REVOKE ALL ON FUNCTION public._assert_writer_cotizacion(p_org uuid) FROM PUBLIC;
 GRANT ALL ON FUNCTION public._assert_writer_cotizacion(p_org uuid) TO authenticated;
 GRANT ALL ON FUNCTION public._assert_writer_cotizacion(p_org uuid) TO service_role;
 REVOKE ALL ON FUNCTION public._audit_costos_repetidos(p_organization_id uuid) FROM PUBLIC;
-GRANT ALL ON FUNCTION public._audit_costos_repetidos(p_organization_id uuid) TO authenticated;
 GRANT ALL ON FUNCTION public._audit_costos_repetidos(p_organization_id uuid) TO service_role;
 REVOKE ALL ON FUNCTION public._audit_embarques_agregar(p_hallazgos jsonb, p_umbrales jsonb) FROM PUBLIC;
 GRANT ALL ON FUNCTION public._audit_embarques_agregar(p_hallazgos jsonb, p_umbrales jsonb) TO service_role;
@@ -32493,8 +32567,7 @@ GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.facturapi_webhook_eventos TO a
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.facturapi_webhook_eventos TO authenticated;
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.folio_secuencias TO authenticated;
 GRANT ALL ON TABLE public.folio_secuencias TO service_role;
-GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.idempotency_keys TO anon;
-GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.idempotency_keys TO authenticated;
+GRANT SELECT,INSERT,UPDATE ON TABLE public.idempotency_keys TO authenticated;
 GRANT ALL ON TABLE public.idempotency_keys TO service_role;
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.nav_events TO authenticated;
 GRANT ALL ON TABLE public.nav_events TO service_role;
