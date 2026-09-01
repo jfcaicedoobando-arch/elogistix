@@ -51,10 +51,9 @@ export function SolicitarCotizacionDialog({ open, onOpenChange, clientes }: Prop
   const solicitar = useSolicitarCotizacion(clienteIds);
   const cerrar = useFormDialogCerrar();
 
-  const inicial = seleccionInicial(clientes);
-  const [clienteId, setClienteId] = useState(inicial);
   // Con una sola empresa se preselecciona en cuanto cargan los vínculos; con
   // varias nunca se preselecciona (evita atribuir la solicitud a la equivocada).
+  const [clienteId, setClienteId] = useState(() => seleccionInicial(clientes));
   useEffect(() => setClienteId(seleccionInicial(clientes)), [clientes]);
 
   const f = useSolicitudCotizacionForm(clienteId || undefined);
