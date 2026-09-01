@@ -192,7 +192,7 @@ describe("calcularAntiguedad", () => {
     const out = calcularAntiguedad(
       [factura({ id: "f1", total: 1000, fecha_vencimiento: "2026-01-01" })],
       [{ factura_id: "f1", monto_aplicado_factura: 1000, moneda: "MXN", tipo_cambio: null, fecha_pago: "2026-01-05" }],
-      18, hoy,
+      { usd: 18 }, hoy,
     );
     // saldo <= 0.5 -> se ignora
     expect(out.reduce((s, b) => s + b.facturas, 0)).toBe(0);
@@ -202,7 +202,7 @@ describe("calcularAntiguedad", () => {
     const out = calcularAntiguedad(
       [factura({ id: "f1", estado: "Cancelada" })],
       [{ factura_id: "f-inexistente", monto_aplicado_factura: 10, moneda: "MXN", tipo_cambio: null, fecha_pago: "2026-01-05" }],
-      18, hoy,
+      { usd: 18 }, hoy,
     );
     expect(out.reduce((s, b) => s + b.facturas, 0)).toBe(0);
   });

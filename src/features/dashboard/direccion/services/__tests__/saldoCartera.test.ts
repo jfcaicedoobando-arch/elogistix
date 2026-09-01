@@ -104,6 +104,6 @@ describe("NC en moneda de factura (espejo de nc_aplicadas_en_moneda_factura)", (
 
   it("factura cancelada no entra en el mapa de saldos", () => {
     const f = factura({ estado: "Cancelada" });
-    expect(calcularSaldosCarteraMxn([f], [], [], 18).has(f.id)).toBe(false);
+    expect(calcularSaldosCarteraMxn([f], [], [], { usd: 18 }).has(f.id)).toBe(false);
   });
 });
