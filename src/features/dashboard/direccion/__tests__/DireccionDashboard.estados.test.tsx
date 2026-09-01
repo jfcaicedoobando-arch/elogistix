@@ -22,7 +22,7 @@ const DATA = {
   hero: { utilidad_mxn: 1, cartera_mxn: 2, meta_pct: 3 },
   margen_6m: [],
   margen_por_modo: [],
-  antiguedad: { buckets: [] },
+  antiguedad: [],
   top_clientes: [],
   pulso: { embarques_mes: 0 },
 };
