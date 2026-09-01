@@ -40,6 +40,12 @@ export interface CancelarFacturapiResult {
   sustituida: boolean;
   /** true → SAT devolvió `pending`/`verifying`; el receptor tiene hasta 72 h. */
   pending: boolean;
+  /**
+   * true → FacturApi no confirmó a tiempo (timeout) pero la solicitud quedó
+   * registrada como `verifying`: resultado incierto ya persistido. NO se debe
+   * reintentar la cancelación; el reconciliador y "Verificar estatus" resuelven.
+   */
+  uncertain?: boolean;
   /** Estado remoto textual: accepted | pending | verifying | rejected | expired | none. */
   cancellation_status?: string;
   /** ISO con la fecha estimada de vencimiento del silencio positivo. */
@@ -97,6 +103,7 @@ export async function cancelarFacturapi(
       ok?: boolean;
       sustituida?: boolean;
       pending?: boolean;
+      uncertain?: boolean;
       cancellation_status?: string;
       vence_en?: string | null;
       message?: string;
@@ -119,6 +126,7 @@ export async function cancelarFacturapi(
   return {
     sustituida: !!data?.sustituida,
     pending: !!data?.pending,
+    uncertain: !!data?.uncertain,
     cancellation_status: data?.cancellation_status,
     vence_en: data?.vence_en ?? null,
     message: data?.message,
