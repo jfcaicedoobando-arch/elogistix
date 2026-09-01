@@ -32,9 +32,13 @@ export function mensajeErrorAdjuntarXml(raw: string): string {
   if (raw.includes("LC_XML_DEMASIADO_GRANDE")) {
     return "El XML excede el tamaño permitido (2 MB).";
   }
+  if (raw.includes("permiso de captura CxP")) {
+    return "Tu rol no permite adjuntar el XML de este documento. Pide a contabilidad que lo complete.";
+  }
   if (raw.includes("LC_FORBIDDEN") || raw.includes("LC_NO_AUTORIZADO")) {
     return "Tu rol no permite adjuntar el XML de este documento.";
   }
+
   if (raw.includes("LC_ESTADO_INVALIDO")) {
     return "El documento ya fue capturado o no está disponible.";
   }
