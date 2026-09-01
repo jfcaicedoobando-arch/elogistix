@@ -4,7 +4,7 @@
  * (Cotización, Proforma, Factura). Garantiza mismo header con logo,
  * mismo footer y misma tipografía sin duplicar estilos por template.
  */
-import * as React from 'npm:react@18.3.1';
+import * as React from 'npm:react@19.2.8';
 import {
   Body, Container, Head, Heading, Hr, Html, Img, Preview, Section, Text,
 } from 'npm:@react-email/components@0.0.22';

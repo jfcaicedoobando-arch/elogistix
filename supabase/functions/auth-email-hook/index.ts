@@ -1,4 +1,4 @@
-import * as React from 'npm:react@18.3.1'
+import * as React from 'npm:react@19.2.8'
 import { renderAsync } from 'npm:@react-email/components@0.0.22'
 import { createAuthEmailHandler } from 'npm:@lovable.dev/email-js@0.1.0'
 import { SignupEmail } from '../_shared/email-templates/signup.tsx'

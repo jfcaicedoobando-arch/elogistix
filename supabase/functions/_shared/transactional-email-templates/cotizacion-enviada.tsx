@@ -1,5 +1,5 @@
 // @ts-nocheck — Runtime Deno (Edge Function), no bundle web.
-import * as React from 'npm:react@18.3.1';
+import * as React from 'npm:react@19.2.8';
 import { Button, Section, Text } from 'npm:@react-email/components@0.0.22';
 import type { TemplateEntry } from './registry.ts';
 import { EmailLayout, EmailRow, EmailMensaje } from './_layout/EmailLayout.tsx';
