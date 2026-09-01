@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.823.5] - 2026-09-01
+### Exactitud financiera (YAGNI, sólo local)
+- **Cartera/aging de Dirección con notas de crédito**: `loadCarteraAbierta` ahora trae también las NC de cliente **aplicadas y vigentes** (`estado = 'Aplicada'`, `deleted_at IS NULL`) y `calcularAntiguedad`/`calcularHero` aplican el canon de Cobranza `saldo = total − pagos − NC aplicadas` (mismo criterio que `cobranza_listado` / `nc_aplicadas_en_moneda_factura`). Las NC en borrador, aprobadas, timbradas, canceladas o eliminadas no restan; una factura cubierta por pagos + NC desaparece del aging y del total/conteo de cartera vencida. Se conserva la cobertura de facturas antiguas (sin ventana de 6 meses) y la conversión a MXN equivalente por moneda.
+- **EUR completo en el Dashboard Ejecutivo**: el agregador propaga `tipoCambioEur` y `tipoCambioFecha` junto al USD a `fetchResumenTesoreria` y `fetchFlujoProyectado`; si el TC EUR es estimado (fallback) no se envía, de modo que el dominio marca el saldo/flujo como incompleto y conserva el importe nominal en vez de excluirlo en silencio o valuarlo en cero. `SaldosBancosCard` calcula un total por cada moneda realmente presente (MXN, USD, EUR y cualquier otra), en lugar del footer fijo MXN/USD.
+- Sin deploy, publish, migraciones o SQL remoto, secretos ni cambios de datos.
+
 ## [13.823.4] - 2026-09-01
 - **Autorización CxP antes del cuerpo del request**: la organización objetivo viaja ahora en el header `X-Organization-Id` (agregado a la whitelist CORS) y `parse-cfdi-xml` / `parse-invoice-pdf` ejecutan `autorizarCxp` inmediatamente después de autenticar, ANTES de `req.formData()`, `file.arrayBuffer()`, la conversión base64 y cualquier llamada a IA. Se conservan los cortes por `Content-Length` y los topes reales de tamaño; ya no se confía en el `organization_id` del multipart.
 - **UUID tolerado por el sistema**: la validación pasa a `_shared/uuid.ts` (8-4-4-4-12 hex, sin exigir versión ni variante RFC), de modo que la organización principal real `00000000-0000-0000-0000-000000000001` deja de ser rechazada con 400. Cambio probado únicamente en local, sin deploy, publish, migraciones/SQL remoto, secretos ni datos.
