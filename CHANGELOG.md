@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.820.2] - 2026-08-31
+- **Eliminar embarque**: el menú "Más acciones" ahora explica por qué la opción no aparece (estado final del embarque, CxC/CxP pendientes o rol sin permiso) en lugar de dejar el hueco sin mensaje.
+
+
+
 ## [13.820.1] - 2026-08-31
 - **Consistencia repositorio ↔ base**: los archivos canónicos de `a_mxn`, `_crear_embarque_replicar_conceptos` y los wrappers de auditoría de embarques se regeneraron 1:1 desde la definición vigente, así que ya reflejan las reglas M-8/M-10/N-1 y no reintroducirían versiones viejas en un replay limpio. Se re-emitió sin cambios de comportamiento la regla interna de costos repetidos (ahora sólo ejecutable por el backend) y se sincronizó su candado en CI. Sin cambios visibles para el usuario.
 
