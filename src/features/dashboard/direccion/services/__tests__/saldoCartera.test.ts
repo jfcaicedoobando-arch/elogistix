@@ -7,6 +7,7 @@
  */
 import { describe, it, expect } from "vitest";
 import { calcularSaldosCarteraMxn, ncEnMonedaFactura, saldoEnMonedaFactura } from "../saldoCartera";
+import type { TcFallbacks } from "../mxn";
 import type { FacturaRow, NotaCreditoRow, PagoRow } from "../loaders";
 
 function factura(over: Partial<FacturaRow> = {}): FacturaRow {
@@ -23,7 +24,7 @@ function pago(over: Partial<PagoRow>): PagoRow {
 function nc(over: Partial<NotaCreditoRow>): NotaCreditoRow {
   return { factura_id: "f1", monto: 0, moneda: "MXN", tipo_cambio: null, ...over };
 }
-const saldoMxn = (f: FacturaRow, pagos: PagoRow[], ncs: NotaCreditoRow[], fallbacks: TcFallbacks = { usd: 18 }): number =>
+const saldoMxn = (f: FacturaRow, pagos: PagoRow[], ncs: NotaCreditoRow[], fallbacks: TcFallbacks = { usd: 18, eur: 22 }): number =>
   calcularSaldosCarteraMxn([f], pagos, ncs, fallbacks).get(f.id) ?? 0;
 
 describe("pagos: monto_aplicado_factura ya viene en moneda de factura", () => {
