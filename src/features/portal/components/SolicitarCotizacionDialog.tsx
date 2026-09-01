@@ -1,8 +1,9 @@
 /**
  * Diálogo del portal para que el cliente solicite una cotización.
  * Sólo captura ruta y datos mínimos: el equipo comercial cotiza con tarifa.
- * v13.821.7
+ * v13.823.12 — la empresa solicitante se elige explícitamente (multicliente).
  */
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FileText, Send } from "lucide-react";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
@@ -11,14 +12,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { MODOS, TIPOS, type ModoTransporte, type TipoOperacion } from "@/constants/wizardConstants";
 import { useSolicitarCotizacion } from "@/features/portal/hooks/useSolicitarCotizacion";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { getErrorMessage } from "@/lib/errors";
@@ -27,27 +20,48 @@ import { COPY_VALIDACION } from "@/lib/copy/publicoCopy";
 import { FaltantesHint } from "@/features/facturacion/components/FaltantesHint";
 import { useFormDialogCerrar } from "@/components/shared/formDialogCloseContext";
 import { useSolicitudCotizacionForm } from "@/features/portal/hooks/useSolicitudCotizacionForm";
+import { SolicitanteSelect } from "@/features/portal/components/SolicitanteSelect";
+import { SolicitudServicioFields } from "@/features/portal/components/SolicitudServicioFields";
+import {
+  seleccionInicial,
+  type ClienteSolicitante,
+} from "@/features/portal/domain/clientesSolicitantes";
 
 interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  clienteId?: string;
-  clienteIds: string[];
+  /** Empresas autorizadas para el usuario (RLS). Con una sola se preselecciona. */
+  clientes: ClienteSolicitante[];
 }
 
-const TIPOS_EMBARQUE = ["FCL", "LCL", "Aéreo", "Terrestre"] as const;
-
-export function SolicitarCotizacionDialog({ open, onOpenChange, clienteId, clienteIds }: Props) {
+export function SolicitarCotizacionDialog({ open, onOpenChange, clientes }: Props) {
   const navigate = useNavigate();
+  // La mutación sigue recibiendo TODOS los ids autorizados: la validación y la
+  // invalidación de caché no se debilitan por la elección de la UI.
+  const clienteIds = useMemo(() => clientes.map((c) => c.id), [clientes]);
   const solicitar = useSolicitarCotizacion(clienteIds);
   const cerrar = useFormDialogCerrar();
 
-  const f = useSolicitudCotizacionForm(clienteId);
+  // Con una sola empresa se preselecciona en cuanto cargan los vínculos; con
+  // varias nunca se preselecciona (evita atribuir la solicitud a la equivocada).
+  const [clienteId, setClienteId] = useState(() => seleccionInicial(clientes));
+  // También al cerrar: reabrir en multicliente exige elegir de nuevo, así una
+  // selección vieja no manda la solicitud a la empresa equivocada.
+  useEffect(() => setClienteId(seleccionInicial(clientes)), [clientes, open]);
+
+  const f = useSolicitudCotizacionForm(clienteId || undefined);
   const {
     modo, setModo, tipo, setTipo, tipoEmbarque, setTipoEmbarque,
     origen, setOrigen, destino, setDestino, mercancia, setMercancia, notas, setNotas,
     intentoEnvio, origenVacio, destinoVacio, puedeEnviar, isDirty, faltantes, reset,
   } = f;
+
+  /** Al cerrar se limpia también la empresa elegida: reabrir con varias
+   *  empresas exige elegir de nuevo. */
+  const resetTodo = () => {
+    reset();
+    setClienteId(seleccionInicial(clientes));
+  };
 
   const handleSubmit = async () => {
     f.setIntentoEnvio(true);
@@ -69,7 +83,7 @@ export function SolicitarCotizacionDialog({ open, onOpenChange, clienteId, clien
         title: "Solicitud enviada",
         description: `Registramos tu solicitud ${res.folio}. Nuestro equipo te enviará la cotización.`,
       });
-      reset();
+      resetTodo();
       onOpenChange(false);
       navigate("/portal/cotizaciones");
     } catch (error: unknown) {
@@ -86,7 +100,7 @@ export function SolicitarCotizacionDialog({ open, onOpenChange, clienteId, clien
     <FormDialogShell
       open={open}
       onOpenChange={(abierto) => {
-        if (!abierto) reset();
+        if (!abierto) resetTodo();
         onOpenChange(abierto);
       }}
       icon={FileText}
@@ -102,42 +116,25 @@ export function SolicitarCotizacionDialog({ open, onOpenChange, clienteId, clien
           <Button variant="outline" onClick={() => (cerrar ? cerrar() : onOpenChange(false))}>
             Cancelar
           </Button>
-          <Button onClick={handleSubmit} loading={solicitar.isPending}>
+          <Button onClick={handleSubmit} loading={solicitar.isPending} disabled={!clienteId}>
             {!solicitar.isPending && <Send className="h-4 w-4 mr-1" />}
             {solicitar.isPending ? "Enviando…" : "Enviar solicitud"}
           </Button>
         </>
       }
     >
-      <FormDialogSection title="Servicio">
-        <div className="space-y-1.5">
-          <Label htmlFor="solicitud-modo">Modo de transporte</Label>
-          <Select value={modo} onValueChange={(v) => setModo(v as ModoTransporte)}>
-            <SelectTrigger id="solicitud-modo"><SelectValue /></SelectTrigger>
-            <SelectContent>
-              {MODOS.map((m) => <SelectItem key={m} value={m}>{m}</SelectItem>)}
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="space-y-1.5">
-          <Label htmlFor="solicitud-tipo">Tipo de operación</Label>
-          <Select value={tipo} onValueChange={(v) => setTipo(v as TipoOperacion)}>
-            <SelectTrigger id="solicitud-tipo"><SelectValue /></SelectTrigger>
-            <SelectContent>
-              {TIPOS.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="space-y-1.5">
-          <Label htmlFor="solicitud-embarque">Tipo de embarque</Label>
-          <Select value={tipoEmbarque} onValueChange={setTipoEmbarque}>
-            <SelectTrigger id="solicitud-embarque"><SelectValue /></SelectTrigger>
-            <SelectContent>
-              {TIPOS_EMBARQUE.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
-            </SelectContent>
-          </Select>
-        </div>
-      </FormDialogSection>
+      <SolicitanteSelect
+        clientes={clientes}
+        value={clienteId}
+        onChange={setClienteId}
+        intentoEnvio={intentoEnvio}
+      />
+
+      <SolicitudServicioFields
+        modo={modo} setModo={setModo}
+        tipo={tipo} setTipo={setTipo}
+        tipoEmbarque={tipoEmbarque} setTipoEmbarque={setTipoEmbarque}
+      />
 
       <FormDialogSection title="Ruta" description="Puerto, aeropuerto o ciudad.">
         <div className="space-y-1.5">

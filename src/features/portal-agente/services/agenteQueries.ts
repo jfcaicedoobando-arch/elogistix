@@ -94,15 +94,39 @@ export interface AgenteEmbarqueRow {
   eta: string | null;
 }
 
+const AGENTE_EMBARQUES_SELECT =
+  "id, expediente, modo, estado, bl_master, puerto_origen, puerto_destino, etd, eta";
+
+/**
+ * Tamaño de lote de lectura. NO es un cap: se piden lotes consecutivos hasta
+ * recibir uno incompleto, así que el historial siempre llega completo.
+ */
+const AGENTE_BATCH_SIZE = 1000;
+
+/**
+ * Historial de embarques visibles para el agente (filtrado por RLS).
+ *
+ * Antes terminaba en `.limit(200)`: los embarques 201+ desaparecían sin aviso
+ * y el agente creía que su historial acababa ahí. Ahora se leen lotes
+ * consecutivos con orden determinista (`etd` desc, nulls last, desempate por
+ * `id`) para no omitir ni duplicar filas cuando varias comparten ETD. El error
+ * de cualquier lote se propaga: nunca se devuelve un resultado parcial como
+ * si fuera completo.
+ */
 export async function fetchAgenteEmbarques(): Promise<AgenteEmbarqueRow[]> {
-  const data = await unwrapOr(
-    supabase
+  const acumulado: AgenteEmbarqueRow[] = [];
+  for (let offset = 0; ; offset += AGENTE_BATCH_SIZE) {
+    const { data, error } = await supabase
       .from("embarques")
-      .select("id, expediente, modo, estado, bl_master, puerto_origen, puerto_destino, etd, eta").is("deleted_at", null)
+      .select(AGENTE_EMBARQUES_SELECT)
+      .is("deleted_at", null)
       .order("etd", { ascending: false, nullsFirst: false })
-      .limit(200),
-    [],
-  );
-  // SAFE-CAST: select explícito coincide 1:1 con AgenteEmbarqueRow.
-  return data as unknown as AgenteEmbarqueRow[];
+      .order("id", { ascending: true })
+      .range(offset, offset + AGENTE_BATCH_SIZE - 1);
+    if (error) throw error;
+    // SAFE-CAST: select explícito coincide 1:1 con AgenteEmbarqueRow.
+    const lote = (data as unknown as AgenteEmbarqueRow[] | null) ?? [];
+    acumulado.push(...lote);
+    if (lote.length < AGENTE_BATCH_SIZE) return acumulado;
+  }
 }

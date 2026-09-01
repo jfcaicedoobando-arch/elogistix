@@ -15,11 +15,15 @@ import { useState, useMemo } from "react";
 import { useTasaIVA } from "@/features/catalogos/hooks/useTasaIVA";
 import { PORTAL_COTIZACION_ESTADOS_VISIBLES } from "@/features/portal/services/queries";
 import { useDocumentTitle } from "@/hooks/shared";
+import { opcionesSolicitante } from "@/features/portal/domain/clientesSolicitantes";
 
 export default function PortalCotizaciones() {
   useDocumentTitle('Mis Cotizaciones');
   const { data: clientUsers = [] } = usePortalClientUsers();
-  const clienteIds = clientUsers.map((cu) => cu.cliente_id);
+  // Opciones autorizadas con nombre legible: la solicitud ya no se atribuye
+  // en silencio al primer cliente del usuario.
+  const clientes = useMemo(() => opcionesSolicitante(clientUsers), [clientUsers]);
+  const clienteIds = useMemo(() => clientes.map((c) => c.id), [clientes]);
   const {
     data: cotizaciones = [], isLoading, isError, refetch,
   } = usePortalCotizaciones(clienteIds);
@@ -83,8 +87,7 @@ export default function PortalCotizaciones() {
       <SolicitarCotizacionDialog
         open={solicitudAbierta}
         onOpenChange={setSolicitudAbierta}
-        clienteId={clienteIds[0]}
-        clienteIds={clienteIds}
+        clientes={clientes}
       />
 
       <PortalFiltersBar

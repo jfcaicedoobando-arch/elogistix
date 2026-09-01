@@ -1,5 +1,13 @@
 # Changelog
 
+## [13.823.12] - 2026-09-01
+### Portal: la solicitud ya no se atribuye a la empresa equivocada y el historial del agente no se corta (sólo local)
+- **Solicitud multicliente**: `PortalDashboard` y `PortalCotizaciones` pasaban `clienteIds[0]`, así que un usuario ligado a varias empresas mandaba la solicitud a la primera de la lista sin saberlo. Ahora el diálogo recibe todas las empresas autorizadas: con una sola se preselecciona (cero fricción) y con varias hay selector obligatorio con nombre legible, botón de envío deshabilitado hasta elegir y la elección se limpia al cerrar. Sin empresas vinculadas se explica el motivo y no se envía. La validación de pertenencia (`useSolicitarCotizacion` con todos los ids) queda intacta.
+- **Nombres**: `fetchPortalClientUsers` trae `clientes(nombre)` por RLS y expone `cliente_nombre`; la UI no muestra UUIDs.
+- **Historial del agente**: `fetchAgenteEmbarques` terminaba en `.limit(200)` y desaparecían los embarques 201+. Ahora se leen lotes consecutivos de 1000 hasta uno incompleto, con orden determinista (`etd` desc, nulls last, desempate por `id`); el error de cualquier lote se propaga. Contrato sin cambios.
+- Pruebas nuevas: opciones/preselección del solicitante, 1 vs 2 vs 0 empresas, atribución exacta al elegir la segunda, reset al reabrir; y 250 embarques completos, 2100 con ETD igual sin duplicados, error en lote posterior.
+- Sin deploy, publish, Edge deploy, migraciones o SQL remoto, secretos ni cambios de datos.
+
 ## [13.823.11] - 2026-09-01
 ### CxP ya no pierde facturas después de la fila 200 (sólo local)
 - **Servicio**: `fetchFacturasCxP` eliminaba silenciosamente todo lo posterior a la fila 200 (un solo `.range(0,199)`), y los filtros derivados (estatus/origen) se aplicaban sobre ese recorte: una factura cuya única coincidencia estaba después decía "sin resultados" y los KPIs salían incompletos. Ahora se leen lotes consecutivos de 1000 hasta recibir un lote incompleto, con orden determinista (`fecha_vencimiento` asc, nulls last, desempate por `id`) para no omitir ni duplicar filas entre rangos. El error de cualquier lote se propaga: nunca se devuelve un resultado parcial como completo.
