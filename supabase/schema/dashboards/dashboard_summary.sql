@@ -12,7 +12,10 @@ CREATE OR REPLACE FUNCTION public.dashboard_summary_datos()
  SET search_path TO 'public'
 AS $function$
 DECLARE
-  v_hoy date := current_date;
+  -- v13.821.3: mismo canon horario que dashboard_details_datos y el resto de
+  -- los periodos fiscales (CDMX). Con `current_date` (UTC) el tablero saltaba
+  -- de mes a las 18:00 hora de México y dejaba de sumar los gastos del día.
+  v_hoy date := (now() AT TIME ZONE 'America/Mexico_City')::date;
   v_inicio_mes date := date_trunc('month', v_hoy)::date;
   v_fin_mes date := (date_trunc('month', v_hoy) + interval '1 month' - interval '1 day')::date;
   v_inicio_sig date := (date_trunc('month', v_hoy) + interval '1 month')::date;
