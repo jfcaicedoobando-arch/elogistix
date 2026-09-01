@@ -6,6 +6,7 @@ import { PageContainer } from "@/components/shared/PageContainer";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { DashboardSkeleton } from "@/components/shared/skeletons";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 import { AlertTriangle } from "lucide-react";
 import { useDireccionKpis } from "@/features/dashboard/direccion/hooks/useDireccionKpis";
 import { useDireccionTotales } from "@/features/dashboard/direccion/hooks/useDireccionTotales";
@@ -20,7 +21,7 @@ import { useDocumentTitle } from "@/hooks/shared";
 
 export default function DireccionDashboard() {
   useDocumentTitle("Panel");
-  const { data, isLoading, error } = useDireccionKpis();
+  const { data, isLoading, error, refetch } = useDireccionKpis();
   const { data: totales, isLoading: totalesLoading, desdeIso } = useDireccionTotales();
 
   return (
