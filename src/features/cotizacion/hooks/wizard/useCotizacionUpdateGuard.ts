@@ -6,6 +6,12 @@
  * guardado no se aplica y se avisa (LC_CONFLICTO_CONCURRENCIA). Tras cada
  * guardado propio la hora se refresca, así los pasos siguientes del mismo
  * usuario no se bloquean entre sí.
+ *
+ * v13.823.15: en una cotización NUEVA el sello arrancaba en `null`, pero la
+ * base de datos sí firma la fila al crearla (`updated_at = created_at`). El
+ * segundo guardado del mismo usuario comparaba "sin firma" contra la firma real
+ * y fallaba con un conflicto falso. Ahora el sello se siembra con el
+ * `updated_at` que devuelve el INSERT.
  */
 import { useCallback, useRef } from "react";
 import type { CreateCotizacionInput } from "@/features/cotizacion/types";
@@ -17,15 +23,26 @@ export interface UpdateCotizacionMutation {
   isPending: boolean;
 }
 
+export interface CrearCotizacionMutation<TRow extends { id: string }> {
+  mutateAsync: (d: CreateCotizacionInput) => Promise<TRow>;
+  isPending: boolean;
+}
+
 export interface GuardedUpdateMutation {
   mutateAsync: (d: UpdateVars) => Promise<unknown>;
   isPending: boolean;
 }
 
-export function useCotizacionUpdateGuard(
+export interface CotizacionUpdateGuard<TRow extends { id: string }> {
+  updateCotizacion: GuardedUpdateMutation;
+  crearCotizacion: CrearCotizacionMutation<TRow>;
+}
+
+export function useCotizacionUpdateGuard<TRow extends { id: string; updated_at?: string | null }>(
   updateCotizacion: UpdateCotizacionMutation,
   initialUpdatedAt: string | null | undefined,
-): GuardedUpdateMutation {
+  crearCotizacion?: CrearCotizacionMutation<TRow>,
+): GuardedUpdateMutation & { crearCotizacion?: CrearCotizacionMutation<TRow> } {
   const expectedRef = useRef<string | null>(initialUpdatedAt ?? null);
 
   const mutateAsync = useCallback(
@@ -39,5 +56,22 @@ export function useCotizacionUpdateGuard(
     [updateCotizacion],
   );
 
-  return { mutateAsync, isPending: updateCotizacion.isPending };
+  const crearGuardado = useCallback(
+    async (input: CreateCotizacionInput): Promise<TRow> => {
+      // El INSERT no puede tener conflicto: sólo siembra el sello real de la
+      // fila recién creada para los guardados siguientes del mismo usuario.
+      const row = await (crearCotizacion as CrearCotizacionMutation<TRow>).mutateAsync(input);
+      expectedRef.current = row?.updated_at ?? null;
+      return row;
+    },
+    [crearCotizacion],
+  );
+
+  return {
+    mutateAsync,
+    isPending: updateCotizacion.isPending,
+    ...(crearCotizacion
+      ? { crearCotizacion: { mutateAsync: crearGuardado, isPending: crearCotizacion.isPending } }
+      : {}),
+  };
 }
