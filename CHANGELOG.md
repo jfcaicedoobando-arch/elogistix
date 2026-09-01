@@ -1,5 +1,14 @@
 # Changelog
 
+## [13.823.6] - 2026-09-01
+### Canon exacto de saldo en cartera de Dirección (sólo local)
+- **Nuevo helper puro `saldoCartera.ts`**: el saldo se calcula EN MONEDA DE FACTURA y sólo el neto se valúa a MXN con el TC de la factura (o el fallback vigente).
+  - `pagos_factura.monto_aplicado_factura` ya viene convertido a moneda de factura por `tg_pagos_factura_monto_convertido`, así que **ya no se reconvierte** con la moneda/TC del pago (antes había doble conversión cuando pago y factura diferían de moneda).
+  - Las NC de cliente se convierten con las reglas exactas de `public.nc_aplicadas_en_moneda_factura`: misma moneda usa el monto nominal; MXN←divisa usa el TC de la NC; divisa←MXN usa el TC de la factura; divisa←divisa exige ambos TC. Si falta un TC requerido la NC aporta 0, sin fallback inventado y sin doble descuento.
+- `calcularAntiguedad` y `calcularHero` consumen el helper único; no se agregó una tercera semántica ni se tocó la base de datos.
+- **UI**: `SaldosBancosCard` ya no inserta un "Total MXN 0" artificial; el footer lista únicamente las monedas presentes (una organización sólo con EUR muestra sólo Total EUR).
+- Sin deploy, publish, migraciones o SQL remoto, secretos ni cambios de datos.
+
 ## [13.823.5] - 2026-09-01
 ### Exactitud financiera (YAGNI, sólo local)
 - **Cartera/aging de Dirección con notas de crédito**: `loadCarteraAbierta` ahora trae también las NC de cliente **aplicadas y vigentes** (`estado = 'Aplicada'`, `deleted_at IS NULL`) y `calcularAntiguedad`/`calcularHero` aplican el canon de Cobranza `saldo = total − pagos − NC aplicadas` (mismo criterio que `cobranza_listado` / `nc_aplicadas_en_moneda_factura`). Las NC en borrador, aprobadas, timbradas, canceladas o eliminadas no restan; una factura cubierta por pagos + NC desaparece del aging y del total/conteo de cartera vencida. Se conserva la cobertura de facturas antiguas (sin ventana de 6 meses) y la conversión a MXN equivalente por moneda.

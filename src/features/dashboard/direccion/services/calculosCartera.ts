@@ -5,6 +5,8 @@ import { format } from "date-fns";
  */
 import { calcularMargen, calcularUtilidad } from "@/lib/financial/financialUtils";
 import { mxnFactura } from "./mxn";
+import { calcularSaldosCarteraMxn } from "./saldoCartera";
+
 import type { EmbarqueEstadoRow, FacturaRow, NotaCreditoRow, PagoRow } from "./loaders";
 import type { BucketAntiguedad, HeroKpis, PulsoKpis } from "./tipos";
 import type { EmbarqueAgg } from "./calculos";
@@ -13,30 +15,6 @@ import { diasVencidos } from "@/lib/date/dateOnly";
 /** Tolerancia de saldo (MXN) para considerar una factura cubierta. */
 const TOLERANCIA_SALDO_MXN = 0.5;
 
-/**
- * Saldo MXN equivalente por factura, con el canon único de Cobranza:
- *   saldo = total − Σ pagos aplicados − Σ NC realmente aplicadas
- * (ver `cobranza_listado` / `nc_aplicadas_en_moneda_factura`). Las NC en
- * borrador, canceladas o eliminadas NO restan: el loader ya las filtra.
- */
-export function calcularSaldosCarteraMxn(
-  facturas: FacturaRow[], pagos: PagoRow[], ncs: NotaCreditoRow[], fallbackUsd: number,
-): Map<string, number> {
-  const saldo = new Map<string, number>();
-  for (const f of facturas) {
-    if (f.estado === "Cancelada") continue;
-    saldo.set(f.id, mxnFactura(Number(f.total ?? 0), f.moneda, f.tipo_cambio, fallbackUsd));
-  }
-  for (const p of pagos) {
-    const s = saldo.get(p.factura_id); if (s === undefined) continue;
-    saldo.set(p.factura_id, s - mxnFactura(Number(p.monto_aplicado_factura ?? 0), p.moneda, p.tipo_cambio, fallbackUsd));
-  }
-  for (const nc of ncs) {
-    const s = saldo.get(nc.factura_id); if (s === undefined) continue;
-    saldo.set(nc.factura_id, s - mxnFactura(Number(nc.monto ?? 0), nc.moneda, nc.tipo_cambio, fallbackUsd));
-  }
-  return saldo;
-}
 
 export function calcularAntiguedad(
   facturas: FacturaRow[], pagos: PagoRow[], fallbackUsd: number, hoy: Date, ncs: NotaCreditoRow[] = [],
