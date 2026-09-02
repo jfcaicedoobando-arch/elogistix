@@ -66,8 +66,8 @@ export async function reabrirEmbarque(
   motivo: string,
   /** @deprecated B-06: ignorado; el actor se deriva de la sesión en la BD. */
   _usuarioEmail?: string,
-): Promise<void> {
-  const { error } = await supabase.rpc("reabrir_embarque" as never, {
+): Promise<{ pendiente: boolean }> {
+  const { data, error } = await supabase.rpc("reabrir_embarque" as never, {
     p_embarque_id: embarqueId,
     // B-06: la RPC ignora este valor (era falsificable desde el cliente).
     p_usuario_email: "",
@@ -75,6 +75,10 @@ export async function reabrirEmbarque(
     p_request_id: crypto.randomUUID(),
   } as never);
   if (error) throw new Error(error.message);
+  // v13.823.47 — un claim de idempotencia en vuelo (`__idempotency_pending`)
+  // NO reabrió el embarque: el caller no debe anunciarlo como éxito.
+  const bag = data && typeof data === "object" ? (data as Record<string, unknown>) : {};
+  return { pendiente: bag.__idempotency_pending === true };
 }
 
 export async function fetchCierreLog(embarqueId: string): Promise<CierreLogEntry[]> {
