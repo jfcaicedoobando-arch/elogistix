@@ -30,6 +30,11 @@ export function FloatingActionButton({
   onClick, icon, label, showLabel = false, className,
 }: FloatingActionButtonProps) {
   return (
+    <>
+      {/* v13.823.25: reserva de espacio para que el FAB no tape el último
+          renglón de la lista en móvil. */}
+      <div aria-hidden className="md:hidden h-20" />
+
     <button
       type="button"
       onClick={onClick}
