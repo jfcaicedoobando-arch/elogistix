@@ -27,7 +27,9 @@ export function resolveTipoContenedorNombre(
   if (!v) return fallback;
 
   if (UUID_RE.test(v)) {
-    const match = catalogo.find((t) => t.id === v);
+    const match =
+      catalogo.find((t) => t.id === v) ??
+      catalogo.find((t) => t.idsEquivalentes?.includes(v));
     return match?.name ?? match?.code ?? fallback;
   }
 
