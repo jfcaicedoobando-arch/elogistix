@@ -14,9 +14,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
 import {
-  LEAD_ESTADOS,
+  LEAD_ESTADOS_MANUALES,
+  LEAD_ESTADO_DERIVADO_AYUDA,
   LEAD_FUENTES,
+  esEstadoDerivado,
   type CrmLeadEstado,
   type CrmLeadFuente,
 } from "@/features/crm/hooks";
