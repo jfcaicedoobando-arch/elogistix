@@ -81,7 +81,7 @@ BEGIN
     (v_org_a, v_stale, 'customer_service'),
     (v_org_a, v_fresh, 'vendedor'),
     (v_org_a, v_gerente, 'gerente_comercial'),
-    (v_org_a, v_operador, 'operador'),
+    (v_org_a, v_operador, 'coordinador_logistico'),
     (v_org_b, v_user_b, 'admin_org');
 
   -- Roles globales deliberadamente desalineados con la membresía.
@@ -89,7 +89,7 @@ BEGIN
     (v_vend, 'vendedor'), (v_vend2, 'vendedor'),
     (v_stale, 'vendedor'),            -- credencial "de otra sucursal"
     (v_fresh, 'customer_service'),    -- rol global viejo, membership vendedor
-    (v_gerente, 'gerente_comercial'), (v_operador, 'operador'),
+    (v_gerente, 'gerente_comercial'), (v_operador, 'coordinador_logistico'),
     (v_user_b, 'admin_org')
   ON CONFLICT (user_id) DO UPDATE SET role = EXCLUDED.role;
 
