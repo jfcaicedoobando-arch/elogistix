@@ -46,7 +46,7 @@ const icpCompleto = {
   proveedor_actual: "Otro forwarder",
 };
 
-describe("useLeadEditForm", () => {
+describe("useLeadEditForm · gate de prospecto", () => {
   it("inicializa el correo desde la fila persistida", () => {
     const { result } = renderHook(() => useLeadEditForm(leadBase));
     expect(result.current.form.email).toBe("qa-codex-comercial@example.com");

@@ -1,35 +1,38 @@
--- Espejo canónico de public.crear_embarque_completo
--- Fuente vigente (mayor timestamp): 20260908000100_ola_p1_org_scope_credito_idempotencia.sql
--- Vigilado por `bun run audit:replay-mirror` y `audit:schema-functions`.
+-- Fuente canónica. Espejo 1:1 de la migración v13.823.32 (ola de pulido CxP/cotización→embarque/CRM).
+-- Al modificar: edita ESTE archivo y genera la migración con el mismo cuerpo.
 
 CREATE OR REPLACE FUNCTION public.crear_embarque_completo(p_embarque jsonb, p_conceptos_venta jsonb DEFAULT '[]'::jsonb, p_conceptos_costo jsonb DEFAULT '[]'::jsonb, p_documentos jsonb DEFAULT '[]'::jsonb, p_request_id uuid DEFAULT NULL::uuid, p_contenedores jsonb DEFAULT '[]'::jsonb)
 RETURNS jsonb
 LANGUAGE plpgsql
 SECURITY DEFINER
-SET search_path TO 'public'
-AS $function$
+SET search_path = public
+AS $$
 DECLARE
   nuevo_id uuid := gen_random_uuid();
   v_org_id uuid; v_resp jsonb;
+  v_cot_id uuid;
   cv jsonb; cc jsonb; doc jsonb; ct jsonb;
 BEGIN
   PERFORM public._assert_medidas_embarque(p_embarque);
   v_org_id := current_user_org_id();
   IF v_org_id IS NULL THEN RAISE EXCEPTION 'No organization context for caller'; END IF;
   PERFORM public._assert_writer(v_org_id);
+  v_cot_id := NULLIF(p_embarque->>'cotizacion_id','')::uuid;
   PERFORM public._assert_relaciones_embarque(
     v_org_id,
     NULLIF(p_embarque->>'cliente_id','')::uuid,
-    NULLIF(p_embarque->>'cotizacion_id','')::uuid,
+    v_cot_id,
     p_conceptos_costo
   );
+  -- Una cotización sólo puede producir un embarque vivo (bloqueo FOR UPDATE).
+  PERFORM public._assert_cotizacion_convertible(v_cot_id, v_org_id);
   v_resp := public.idempotency_claim(p_request_id, 'crear_embarque_completo');
   IF v_resp IS NOT NULL THEN RETURN v_resp; END IF;
   INSERT INTO embarques (
     id, expediente, cliente_id, cliente_nombre, modo, tipo,
     shipper, consignatario, incoterm, descripcion_mercancia,
     peso_kg, volumen_m3, piezas,
-    puerto_origen, puerto_destino, naviera, agente,
+    puerto_origen, puerto_destino, naviera, agente, naviera_id, agente_id,
     bl_master, bl_house, tipo_servicio, contenedor, tipo_contenedor,
     aeropuerto_origen, aeropuerto_destino, aerolinea,
     mawb, hawb, ciudad_origen, ciudad_destino,
@@ -48,6 +51,7 @@ BEGIN
     COALESCE((p_embarque->>'piezas')::int,0),
     p_embarque->>'puerto_origen', p_embarque->>'puerto_destino',
     p_embarque->>'naviera', p_embarque->>'agente',
+    NULLIF(p_embarque->>'naviera_id','')::uuid, NULLIF(p_embarque->>'agente_id','')::uuid,
     p_embarque->>'bl_master', p_embarque->>'bl_house',
     CASE WHEN p_embarque->>'tipo_servicio' IS NOT NULL THEN (p_embarque->>'tipo_servicio')::tipo_servicio_maritimo END,
     p_embarque->>'contenedor', p_embarque->>'tipo_contenedor',
@@ -62,7 +66,7 @@ BEGIN
     COALESCE(p_embarque->>'tipo_carga','Carga General'),
     p_embarque->>'msds_archivo', COALESCE(p_embarque->>'operador',''),
     v_org_id,
-    CASE WHEN p_embarque->>'cotizacion_id' IS NOT NULL AND p_embarque->>'cotizacion_id' <> '' THEN (p_embarque->>'cotizacion_id')::uuid END
+    v_cot_id
   );
   FOR cv IN SELECT * FROM jsonb_array_elements(p_conceptos_venta) LOOP
     INSERT INTO conceptos_venta (embarque_id, descripcion, cantidad, precio_unitario, moneda, total, organization_id)
@@ -103,7 +107,4 @@ BEGIN
   PERFORM public.idempotency_store(p_request_id, v_resp);
   RETURN v_resp;
 END;
-$function$;
-
-REVOKE ALL ON FUNCTION public.crear_embarque_completo(jsonb, jsonb, jsonb, jsonb, uuid, jsonb) FROM PUBLIC, anon;
-GRANT EXECUTE ON FUNCTION public.crear_embarque_completo(jsonb, jsonb, jsonb, jsonb, uuid, jsonb) TO authenticated, service_role;
+$$;

@@ -13,7 +13,13 @@ import {
 
 beforeEach(() => {
   mock.tableCalls.length = 0;
+  mock.resetResults();
 });
+
+/** Sin borrador previo para la oportunidad (primera consulta a `cotizaciones`). */
+function sinBorradorPrevio() {
+  mock.setTableResultOnce("cotizaciones", { data: null, error: null });
+}
 
 const opBase = {
   id: "op1",
@@ -25,7 +31,8 @@ const opBase = {
 
 describe("insertCotizacionDesdeOportunidad", () => {
   it("inserta payload con datos de la oportunidad y devuelve id", async () => {
-    mock.setTableResult("cotizaciones", { data: { id: "cot1" }, error: null });
+    sinBorradorPrevio();
+    mock.setTableResult("cotizaciones", { data: { id: "cot1", folio: "F-1" }, error: null });
     const r = await insertCotizacionDesdeOportunidad({
       folio: "F-1", modo: "Marítimo",
       oportunidad: opBase, operador: "u@x.com",
@@ -41,7 +48,8 @@ describe("insertCotizacionDesdeOportunidad", () => {
   });
 
   it("marca es_prospecto=true cuando cliente_id es null", async () => {
-    mock.setTableResult("cotizaciones", { data: { id: "cot2" }, error: null });
+    sinBorradorPrevio();
+    mock.setTableResult("cotizaciones", { data: { id: "cot2", folio: "F-2" }, error: null });
     await insertCotizacionDesdeOportunidad({
       folio: "F-2", modo: "Aéreo",
       oportunidad: { ...opBase, cliente_id: null }, operador: "u@x.com",
@@ -51,7 +59,8 @@ describe("insertCotizacionDesdeOportunidad", () => {
   });
 
   it("convierte nulls de origen/destino/cliente_nombre a string vacío", async () => {
-    mock.setTableResult("cotizaciones", { data: { id: "c" }, error: null });
+    sinBorradorPrevio();
+    mock.setTableResult("cotizaciones", { data: { id: "c", folio: "F" }, error: null });
     await insertCotizacionDesdeOportunidad({
       folio: "F", modo: "Marítimo",
       oportunidad: { id: "o", cliente_id: "x", cliente_nombre: null, origen: null, destino: null },
@@ -63,7 +72,17 @@ describe("insertCotizacionDesdeOportunidad", () => {
     expect(payload.destino).toBe("");
   });
 
+  it("v13.823.32: reutiliza el borrador vivo de la oportunidad en lugar de duplicar", async () => {
+    mock.setTableResult("cotizaciones", { data: { id: "cot-prev", folio: "F-PREV" }, error: null });
+    const r = await insertCotizacionDesdeOportunidad({
+      folio: "F-NUEVO", modo: "Marítimo", oportunidad: opBase, operador: "u@x.com",
+    });
+    expect(r).toEqual({ id: "cot-prev", folio: "F-PREV", reutilizada: true });
+    expect(mock.getMutationPayload("cotizaciones", "insert")).toBeFalsy();
+  });
+
   it("cotizacionDesdeOportunidad: propaga error de supabase", async () => {
+    sinBorradorPrevio();
     mock.setTableResult("cotizaciones", { data: null, error: new Error("db") });
     await expect(insertCotizacionDesdeOportunidad({
       folio: "F", modo: "Marítimo", oportunidad: opBase, operador: "u",
@@ -73,12 +92,17 @@ describe("insertCotizacionDesdeOportunidad", () => {
 
 describe("actualizarEtapaOportunidad", () => {
   it("envía update con etapa_id y probabilidad y filtra por id", async () => {
-    mock.setTableResult("crm_oportunidades", { data: null, error: null });
+    mock.setTableResult("crm_oportunidades", { data: { id: "op1" }, error: null });
     await actualizarEtapaOportunidad("op1", "et2", 75);
     const payload = mock.getMutationPayload("crm_oportunidades", "update") as Record<string, unknown>;
     expect(payload).toEqual({ etapa_id: "et2", probabilidad: 75 });
     const call = mock.tableCalls.find(c => c.table === "crm_oportunidades");
     expect(call?.ops).toContain("eq");
+  });
+
+  it("v13.823.32: 0 filas (RLS/eliminada) no se reporta como éxito", async () => {
+    mock.setTableResult("crm_oportunidades", { data: null, error: null });
+    await expect(actualizarEtapaOportunidad("op1", "et2", 75)).rejects.toThrow(/no tienes permiso/);
   });
 
   it("cotizacionDesdeOportunidad: propaga error al crear cotización", async () => {

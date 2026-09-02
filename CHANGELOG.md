@@ -1,5 +1,19 @@
 # Changelog
 
+## [13.823.32] - 2026-09-02
+### Pagos a proveedor atómicos, una cotización un embarque y CRM por conjunto
+- **Programación de pagos (P1)**: la fecha programada se fija con una operación de servidor mínima que valida la organización de la factura y roles exactos (admin, admin de organización, tesorero, contador, super admin). Antes el guardado directo lo bloqueaba justo para Tesorería y lo permitía a roles que no deberían programar.
+- **Registro de pago transaccional e idempotente (P1)**: el pago y su movimiento bancario se graban en una sola transacción. Reintentar el mismo envío devuelve el pago ya creado y le repara el movimiento si faltaba, en lugar de fallar con un error de duplicado o dejar la factura pagada sin salida bancaria.
+- **Ejecutar pago programado (P1)**: exige el rol autorizado dentro de la organización de la factura (no en cualquiera), que exista programación previa y que la fecha esté entre la emisión y hoy.
+- **Naviera y agente del embarque (P1)**: el alta completa de embarques ya guarda los identificadores de naviera y agente, no sólo sus nombres.
+- **Una cotización, un embarque (P1)**: el selector de alta sólo ofrece cotizaciones Aceptadas sin embarque, la creación bloquea la cotización y valida estado/organización, y un índice único impide dos embarques vivos para la misma cotización. La edición sigue mostrando su cotización vinculada.
+- **Aceptar cotización (P1)**: requiere rol autorizado dentro de la organización y conserva la separación de funciones (quien la creó no la acepta salvo administración).
+- **Etapa de la oportunidad por conjunto (P1)**: la etapa se deriva de todas las cotizaciones vivas con precedencia En operación/Aceptada > Enviada > Perdida (sólo si todas están rechazadas). Rechazar una alternativa ya no marca como perdida una oportunidad ganada.
+- **Cotizar desde oportunidad sin duplicados (P1)**: si ya existe un borrador para la oportunidad se reutiliza; si falla el cambio de etapa se avisa sin anunciar fracaso ni crear una segunda cotización.
+- **Sin éxitos falsos (P2)**: editar, mover o eliminar una oportunidad detecta cuando no se afectó ninguna fila y avisa en lugar de registrar bitácora falsa; si la actividad automática al crear una oportunidad falla, la oportunidad se conserva con una advertencia accionable.
+- **Historial de tarifa intacto (P2)**: repetir la conversión de una cotización ya convertida no sobrescribe la decisión ni el snapshot de tarifa originales.
+
+
 ## [13.823.31] - 2026-09-02
 ### CxP sin dependencia del SAT y CRM sin fallas silenciosas
 - **Factura extranjera/manual aprobable (P1)**: `requiereValidacionSat` es ahora el predicado canónico (origen del proveedor + CFDI real, no se infiere por UUID). En `/compras/por-aprobar` una factura de proveedor extranjero o de captura manual se selecciona y aprueba con el flujo normal (rol, confirmación y auditoría intactos), muestra el chip "SAT: No aplica" con la explicación y no cuenta para "Validar en SAT".

@@ -31,15 +31,32 @@ export function createSupabaseMock() {
   const tableCalls: TableCall[] = [];
   const rpcCalls: Array<{ fn: string; args: unknown }> = [];
 
+  const tableQueues = new Map<string, Resp[]>();
+
   function setTableResult(table: string, res: Resp) { tableResults.set(table, res); }
+  /**
+   * v13.823.32: resultado de un solo uso. Necesario para servicios que hacen
+   * dos consultas a la MISMA tabla (p. ej. buscar borrador existente y luego
+   * insertar). Se consumen en orden antes del resultado fijo.
+   */
+  function setTableResultOnce(table: string, res: Resp) {
+    const q = tableQueues.get(table) ?? [];
+    q.push(res);
+    tableQueues.set(table, q);
+  }
   function setRpcResult(fn: string, res: Resp) { rpcResults.set(fn, res); }
   function resetResults() {
     tableResults.clear();
     rpcResults.clear();
+    tableQueues.clear();
   }
 
   function makeChain(table: string, ops: string[], opArgs: unknown[][]) {
-    const res = tableResults.get(table) ?? { data: [], error: null };
+    const queued = tableQueues.get(table);
+    const res = (queued && queued.length ? queued.shift()! : tableResults.get(table)) ?? {
+      data: [],
+      error: null,
+    };
     const chain: Record<string, unknown> = {};
     const passthrough = (label: string) => (...args: unknown[]) => {
       ops.push(label);
@@ -121,7 +138,7 @@ export function createSupabaseMock() {
     return null;
   }
 
-  return { supabase, setTableResult, setRpcResult, resetResults, tableCalls, rpcCalls, getMutationPayload };
+  return { supabase, setTableResult, setTableResultOnce, setRpcResult, resetResults, tableCalls, rpcCalls, getMutationPayload };
 }
 
 /**

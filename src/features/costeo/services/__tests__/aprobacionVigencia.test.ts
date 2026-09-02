@@ -32,7 +32,7 @@ describe("aprobarTarifaVerificada", () => {
 
   it("no aprueba si falla la lectura de la vigencia", async () => {
     single.mockResolvedValue({ data: null, error: { message: "network" } });
-    await expect(aprobarTarifaVerificada("t1")).rejects.toBeTruthy();
+    await expect(aprobarTarifaVerificada("t1")).rejects.toMatchObject({ message: "network" });
     expect(rpc).not.toHaveBeenCalled();
   });
 

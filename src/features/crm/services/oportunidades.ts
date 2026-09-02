@@ -3,7 +3,8 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import { orIlike } from "@/lib/search/ilike";
-import { unwrap, run } from "@/lib/supabase/response";
+import { unwrap } from "@/lib/supabase/response";
+import type { TablesUpdate } from "@/integrations/supabase/types";
 import { registrarActividad } from "@/services/bitacora/registrar";
 import { buildOportunidadInsertPayload } from "@/features/crm/domain/oportunidadPayload";
 export type { CrmOportunidadRow, Moneda, OportunidadInput } from "@/features/crm/types/oportunidades";
@@ -58,25 +59,58 @@ export async function getOportunidad(id: string): Promise<CrmOportunidadRow | nu
 export async function crearOportunidad(
   input: OportunidadInput,
   user: { id?: string; email?: string } | null,
-): Promise<{ id: string }> {
+): Promise<{ id: string; avisoActividad: string | null }> {
   const payload = buildOportunidadInsertPayload(input, user);
   const creada = (await unwrap(
     supabase.from("crm_oportunidades").insert(payload).select("id").single(),
   )) as { id: string };
-  await registrarActividad({
-    modulo: "crm",
-    accion: "crear_oportunidad",
-    entidadId: creada.id,
-    entidadNombre: input.nombre ?? "",
-  });
-  return creada;
+  // v13.823.32: la oportunidad YA existe. Si el registro automático de
+  // actividad/bitácora falla, no la perdemos ni anunciamos fracaso: se
+  // devuelve un aviso accionable para la UI.
+  let avisoActividad: string | null = null;
+  try {
+    await registrarActividad({
+      modulo: "crm",
+      accion: "crear_oportunidad",
+      entidadId: creada.id,
+      entidadNombre: input.nombre ?? "",
+    });
+  } catch (err) {
+    avisoActividad = err instanceof Error ? err.message : "Error desconocido";
+  }
+  return { id: creada.id, avisoActividad };
+}
+
+
+/**
+ * v13.823.32: un UPDATE filtrado por RLS o sobre una oportunidad ya eliminada
+ * NO da error, devuelve 0 filas. Antes mostrábamos éxito y escribíamos bitácora
+ * de un cambio que nunca ocurrió. Ahora se exige la fila afectada.
+ */
+async function actualizarOportunidadFilas(
+  id: string,
+  patch: TablesUpdate<"crm_oportunidades">,
+): Promise<void> {
+  const { data, error } = await supabase
+    .from("crm_oportunidades")
+    .update(patch)
+    .eq("id", id)
+    .is("deleted_at", null)
+    .select("id")
+    .maybeSingle();
+  if (error) throw error;
+  if (!data) {
+    throw new Error(
+      "No se pudo guardar la oportunidad: no tienes permiso o la oportunidad ya no existe.",
+    );
+  }
 }
 
 export async function actualizarOportunidad(input: {
   id: string;
   patch: Partial<OportunidadInput & { motivo_perdida_id?: string | null; fecha_cierre_real?: string | null }>;
 }): Promise<void> {
-  await run(supabase.from("crm_oportunidades").update(input.patch).eq("id", input.id));
+  await actualizarOportunidadFilas(input.id, input.patch);
   await registrarActividad({
     modulo: "crm",
     accion: "editar_oportunidad",
@@ -109,7 +143,7 @@ export async function moverEtapaOportunidad(input: {
   if (input.fecha_cierre_real !== undefined) patch.fecha_cierre_real = input.fecha_cierre_real;
   if (input.valor_real !== undefined) patch.valor_real = input.valor_real;
   if (input.motivo_perdida_id !== undefined) patch.motivo_perdida_id = input.motivo_perdida_id;
-  await run(supabase.from("crm_oportunidades").update(patch).eq("id", input.id));
+  await actualizarOportunidadFilas(input.id, patch);
   await registrarActividad({
     modulo: "crm",
     accion: "mover_etapa_oportunidad",
@@ -119,15 +153,14 @@ export async function moverEtapaOportunidad(input: {
 }
 
 export async function eliminarOportunidad(id: string, userId: string | null): Promise<void> {
-  await run(
-    supabase
-      .from("crm_oportunidades")
-      .update({ deleted_at: new Date().toISOString(), deleted_by: userId })
-      .eq("id", id),
-  );
+  await actualizarOportunidadFilas(id, {
+    deleted_at: new Date().toISOString(),
+    deleted_by: userId,
+  });
   await registrarActividad({
     modulo: "crm",
     accion: "eliminar_oportunidad",
     entidadId: id,
   });
 }
+

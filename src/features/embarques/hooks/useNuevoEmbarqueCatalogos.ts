@@ -16,10 +16,19 @@ export function useNuevoEmbarqueCatalogos() {
   const qProveedores = useProveedoresForSelect();
   const qCotizaciones = useCotizacionesAceptadas();
 
+  // v13.823.32: en el ALTA sólo se ofrecen cotizaciones `Aceptada` y sin
+  // embarque vinculado. Antes también aparecían las `En operación` (ya
+  // convertidas), y elegirlas generaba un segundo embarque para la misma
+  // cotización. La pantalla de EDICIÓN usa la lista completa.
+  const disponiblesParaAlta = (qCotizaciones.data ?? []).filter(
+    (cot) => cot.estado === "Aceptada" && !cot.embarque_id,
+  );
+
   return {
     clientes: qClientes.data ?? [],
     proveedoresDb: qProveedores.data ?? [],
-    cotizacionesAceptadas: qCotizaciones.data ?? [],
+    cotizacionesAceptadas: disponiblesParaAlta,
+
     catalogosCargando:
       qClientes.isLoading || qProveedores.isLoading || qCotizaciones.isLoading,
     catalogosError:

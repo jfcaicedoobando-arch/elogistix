@@ -10,6 +10,8 @@ import { listarPagosProveedor, registrarPagoProveedor, eliminarPagoProveedor, Pa
 describe("pagosProveedor service", () => {
   beforeEach(() => {
     mock.tableCalls.length = 0;
+    mock.rpcCalls.length = 0;
+    mock.resetResults();
   });
 
   it("listarPagosProveedor filtra por facturaId", async () => {
@@ -19,8 +21,9 @@ describe("pagosProveedor service", () => {
     expect(call?.ops).toContain("eq");
   });
 
-  it("registrarPagoProveedor inserta payload con organization_id heredado del padre (recalculo lo hace el trigger)", async () => {
-    mock.setTableResult("pagos_proveedor", { data: { id: "p1" }, error: null });
+  it("v13.823.32: registrarPagoProveedor delega en la RPC atómica y devuelve el pago creado", async () => {
+    mock.setTableResult("pagos_proveedor", { data: { id: "p1", organization_id: "org-1" }, error: null });
+    mock.setRpcResult("registrar_pago_proveedor_atomico", { data: { pago_id: "p1", movimiento_id: "m1" }, error: null });
     mock.setTableResult("proveedor_facturas", { data: { organization_id: "org-1", estado_aprobacion: "aprobada" }, error: null });
     mock.setRpcResult("current_user_org_id", { data: "org-1", error: null });
 
@@ -36,15 +39,15 @@ describe("pagosProveedor service", () => {
     const res = await registrarPagoProveedor(input, "u1");
     expect(res.id).toBe("p1");
 
-    const payload = mock.getMutationPayload("pagos_proveedor", "insert") as Record<string, unknown> | null;
-    expect(payload).toBeTruthy();
-    expect(payload).toMatchObject({
-      organization_id: "org-1",
-      proveedor_factura_id: "f1",
-      fecha_pago: "2024-01-01",
-      monto: 100,
-      moneda: "MXN",
-      metodo_pago: "Transferencia",
+    // Ya no hay INSERT directo desde el cliente: todo va por la RPC.
+    expect(mock.getMutationPayload("pagos_proveedor", "insert")).toBeFalsy();
+    const rpc = mock.rpcCalls.find(c => c.fn === "registrar_pago_proveedor_atomico");
+    expect(rpc?.args).toMatchObject({
+      p_factura_id: "f1",
+      p_fecha_pago: "2024-01-01",
+      p_monto: 100,
+      p_moneda: "MXN",
+      p_metodo_pago: "Transferencia",
     });
     expect(mock.tableCalls.some(c => c.table === "v_proveedor_facturas_saldo")).toBe(false);
   });
@@ -77,16 +80,16 @@ describe("pagosProveedor service", () => {
   it("R.4 · Bug 24: mapea LC_PAGO_SIN_APROBACION del trigger BD al error tipado", async () => {
     mock.setTableResult("proveedor_facturas", { data: { organization_id: "org-1", estado_aprobacion: "aprobada" }, error: null });
     mock.setRpcResult("current_user_org_id", { data: "org-1", error: null });
-    mock.setTableResult("pagos_proveedor", { data: null, error: { message: "LC_PAGO_SIN_APROBACION: la factura F-1 está en estado pendiente" } });
+    mock.setRpcResult("registrar_pago_proveedor_atomico", { data: null, error: { message: "LC_PAGO_SIN_APROBACION: la factura F-1 está en estado pendiente" } });
     await expect(
       registrarPagoProveedor({ proveedor_factura_id: "f1", fecha_pago: "2024-01-01", monto: 10, moneda: "MXN", tipo_cambio_usd: 1, metodo_pago: "T" } as Parameters<typeof registrarPagoProveedor>[0], "u1"),
     ).rejects.toBeInstanceOf(PagoRequiereAprobacionError);
   });
 
-  it("lanza error si falla insercion de pago", async () => {
+  it("lanza error si falla el registro del pago", async () => {
     mock.setTableResult("proveedor_facturas", { data: { organization_id: "org-1", estado_aprobacion: "aprobada" }, error: null });
     mock.setRpcResult("current_user_org_id", { data: "org-1", error: null });
-    mock.setTableResult("pagos_proveedor", { data: null, error: new Error("insert failed") });
+    mock.setRpcResult("registrar_pago_proveedor_atomico", { data: null, error: new Error("insert failed") });
     await expect(
       registrarPagoProveedor({ proveedor_factura_id: "f1" } as Parameters<typeof registrarPagoProveedor>[0], "u1"),
     ).rejects.toThrow("insert failed");
