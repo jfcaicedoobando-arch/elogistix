@@ -23,6 +23,7 @@ vi.mock("@/features/costeo/hooks/useTopTarifas", () => ({
 }));
 
 import { BuscarTarifaDialog } from "../BuscarTarifaDialog";
+import { createWrapper } from "@/test/utils/queryWrapper";
 
 const initial = {
   puertoOrigenId: "11111111-1111-1111-1111-111111111111",
@@ -43,7 +44,7 @@ describe("BuscarTarifaDialog — estado error vs empty-state excluyente", () => 
       refetch: vi.fn(),
       isRefetching: false,
     });
-    render(<BuscarTarifaDialog open onOpenChange={() => {}} initial={initial} />);
+    render(<BuscarTarifaDialog open onOpenChange={() => {}} initial={initial} />, { wrapper: createWrapper() });
     expect(screen.getByRole("alert")).toBeInTheDocument();
     expect(screen.getByText("No pudimos cargar la información")).toBeInTheDocument();
     expect(screen.queryByText(/No hay tarifas vigentes/i)).not.toBeInTheDocument();
@@ -58,7 +59,7 @@ describe("BuscarTarifaDialog — estado error vs empty-state excluyente", () => 
       refetch: vi.fn(),
       isRefetching: false,
     });
-    render(<BuscarTarifaDialog open onOpenChange={() => {}} initial={initial} />);
+    render(<BuscarTarifaDialog open onOpenChange={() => {}} initial={initial} />, { wrapper: createWrapper() });
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
     expect(screen.getByText(/No hay tarifas vigentes/i)).toBeInTheDocument();
   });
@@ -72,7 +73,7 @@ describe("BuscarTarifaDialog — estado error vs empty-state excluyente", () => 
       refetch,
       isRefetching: false,
     });
-    render(<BuscarTarifaDialog open onOpenChange={() => {}} initial={initial} />);
+    render(<BuscarTarifaDialog open onOpenChange={() => {}} initial={initial} />, { wrapper: createWrapper() });
     fireEvent.click(screen.getByRole("button", { name: /reintentar/i }));
     expect(refetch).toHaveBeenCalled();
   });
