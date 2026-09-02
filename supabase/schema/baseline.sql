@@ -31742,7 +31742,6 @@ GRANT ALL ON FUNCTION public._crm_validar_motivo_perdida() TO service_role;
 REVOKE ALL ON FUNCTION public._crm_vincular_cotizacion_core(p_cotizacion_id uuid, p_prospecto jsonb, p_lead_id uuid, p_oportunidad_id uuid, p_actor_email text, p_actor_id uuid) FROM PUBLIC;
 GRANT ALL ON FUNCTION public._crm_vincular_cotizacion_core(p_cotizacion_id uuid, p_prospecto jsonb, p_lead_id uuid, p_oportunidad_id uuid, p_actor_email text, p_actor_id uuid) TO service_role;
 REVOKE ALL ON FUNCTION public._cuenta_bancaria_guard_baja() FROM PUBLIC;
-GRANT ALL ON FUNCTION public._cuenta_bancaria_guard_baja() TO authenticated;
 GRANT ALL ON FUNCTION public._cuenta_bancaria_guard_baja() TO service_role;
 REVOKE ALL ON FUNCTION public._cxp_anchor_fase_o() FROM PUBLIC;
 GRANT ALL ON FUNCTION public._cxp_anchor_fase_o() TO authenticated;

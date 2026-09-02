@@ -32,6 +32,8 @@ INSERT INTO _ci_service_role_only (fn) VALUES
 
   -- v15 (M-14): banda de plausibilidad del T/C en pagos CxC/CxP.
   ('public._assert_tc_banda()'),
+  -- Trigger de tesorería: impide dar de baja cuentas con movimientos.
+  ('public._cuenta_bancaria_guard_baja()'),
   ('public._assert_periodo_abierto()'),
   -- Lectura bloqueada (FOR KEY SHARE) del estado del embarque: sólo la usan
   -- los triggers SECURITY DEFINER de bloqueo por cierre.
