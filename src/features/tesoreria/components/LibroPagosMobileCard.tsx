@@ -29,8 +29,8 @@ export function LibroPagosMobileCard({ row }: { row: PagoLibro }) {
       <MoneyCell
         label="Monto"
         value={formatCurrency(row.monto, row.moneda)}
-        highlight
-        className={`shrink-0 w-28 ${esEntrada(row) ? "text-success" : "text-destructive"}`}
+        highlight={esEntrada(row)}
+        className="shrink-0 w-28"
       />
     </div>
   );

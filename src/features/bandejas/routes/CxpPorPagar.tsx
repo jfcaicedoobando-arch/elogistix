@@ -19,12 +19,13 @@ import { CxpPorPagarKpis } from "./_sections/CxpPorPagarKpis";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { CargaGuard } from "@/components/shared/states/CargaGuard";
-import { DataTable } from "@/components/shared/DataTable";
+import { ResponsiveDataTable } from "@/components/shared/dataTable/ResponsiveDataTable";
 import { useClientPagedList } from "@/hooks/shared/useClientPagedList";
 import { buildCxpPorPagarColumns, type CxpRow } from "./_sections/cxpPorPagarColumns";
 import { useProgramarPagoLote } from "@/features/cxp/hooks";
 import { todayLocalISO } from "@/lib/date/today";
 import { CxpPorPagarFiltersBar } from "@/features/bandejas/components/CxpPorPagarFiltersBar";
+import { CxpPorPagarMobileCard } from "@/features/bandejas/components/CxpPorPagarMobileCard";
 import { usePermissions } from "@/hooks/shared/usePermissions";
 import {
   CXP_FILTERS_DEFAULTS,
@@ -148,7 +149,7 @@ export default function CxpPorPagar() {
 
       <Card>
         <CardContent className="p-0">
-          <DataTable<CxpRow>
+          <ResponsiveDataTable<CxpRow>
             columns={columns}
             data={paged.rows}
             rowKey={(r) => r.factura_id}
@@ -165,6 +166,7 @@ export default function CxpPorPagar() {
             rowSelection={canPagarProveedor ? rowSelection : undefined}
             onRowSelectionChange={canPagarProveedor ? setRowSelection : undefined}
             enableRowSelection={canPagarProveedor}
+            mobileCard={(r) => <CxpPorPagarMobileCard row={r} />}
           />
         </CardContent>
       </Card>
