@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.823.46] - 2026-09-02
+### Pruebas RLS: candado y fixture al día
+- Se registró `_factura_serie_folio_monotonico()` en la lista canónica de funciones sólo para el motor (`service_role`), que quedó desincronizada al agregar el trigger de folios.
+- La prueba `ola4_n41_n44_n45` ahora siembra el tipo de cambio DOF del día antes de emitir facturas en dólares, como ya exige el candado fiscal.
+
 ## [13.823.45] - 2026-09-02
 ### Manifiesto de migraciones: entrada faltante y poda de historial
 - Se registró la entrada de la versión vigente en `supabase/releases/migration-manifest.json` (1221 migraciones), con lo que `audit:manifest` vuelve a verde.
