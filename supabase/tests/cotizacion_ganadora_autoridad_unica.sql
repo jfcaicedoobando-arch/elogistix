@@ -195,9 +195,12 @@ BEGIN
   PERFORM pg_temp.espera_lc(
     format('UPDATE public.cotizaciones SET oportunidad_id = %L WHERE id = %L', v_op3, v_c1),
     'LC_COTIZACION_GANADORA_INMUTABLE', 'F cambio de oportunidad');
+  -- El cambio de organización lo ataja antes el guard de tenencia
+  -- `_cotizacion_oportunidad_misma_org` (corre antes que `zz_`): basta con que
+  -- quede bloqueado con un LC de dominio, no importa cuál de los dos gana.
   PERFORM pg_temp.espera_lc(
     format('UPDATE public.cotizaciones SET organization_id = %L WHERE id = %L', v_org_b, v_c1),
-    'LC_COTIZACION_GANADORA_INMUTABLE', 'F cambio de organización');
+    'LC_OPORTUNIDAD_AJENA', 'F cambio de organización');
   PERFORM pg_temp.assert(
     (SELECT oportunidad_id FROM public.cotizaciones WHERE id = v_c1) = v_op1,
     'F: la fila conserva su oportunidad original');
