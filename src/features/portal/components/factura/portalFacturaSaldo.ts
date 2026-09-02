@@ -32,13 +32,18 @@ export function derivarSaldoPortal(
   numNotasVisibles: number,
 ): PortalSaldoDerivado {
   const terminal = estadoFactura === "Pagada" || estadoFactura === "Cancelada";
+  const num = (v: number | null | undefined): number => v ?? 0;
   return {
-    totalPagado: resumen?.pagado ?? 0,
-    totalNc: resumen?.notasCredito ?? 0,
-    saldo: terminal ? 0 : resumen?.saldo ?? 0,
-    liquidada: terminal || (resumen?.liquidada ?? false),
-    hayMovimientos: (resumen?.numPagos ?? 0) > 0 || (resumen?.numNotas ?? 0) > 0,
+    totalPagado: num(resumen?.pagado),
+    totalNc: num(resumen?.notasCredito),
+    saldo: terminal ? 0 : num(resumen?.saldo),
+    liquidada: terminal || num2bool(resumen?.liquidada),
+    hayMovimientos: num(resumen?.numPagos) > 0 || num(resumen?.numNotas) > 0,
     listaTruncada:
       numPagosVisibles >= PORTAL_RELATED_MAX || numNotasVisibles >= PORTAL_RELATED_MAX,
   };
+}
+
+function num2bool(v: boolean | null | undefined): boolean {
+  return v === true;
 }
