@@ -1,5 +1,15 @@
 # Changelog
 
+## [13.823.50] - 2026-09-02
+### Pulido de CRM: origen de oportunidades y notas que no se perdían
+- **Nueva oportunidad rápida**: ahora se elige el origen (cliente o prospecto calificado) y el botón "Crear" está apagado hasta elegirlo; antes se ofrecía "Sin cliente" y el servidor rechazaba el alta.
+- **Próximo paso**: al abrir el diálogo para otra oportunidad ya toma la oportunidad correcta (antes mostraba el nombre nuevo pero guardaba la anterior).
+- **Notas de actividades**: completar una actividad sin escribir resultado ya no borra el texto que había, y al cerrar una oportunidad como perdida se conservan las notas del usuario.
+- **Probabilidad**: mover a "Ganada" deja 100% y a "Perdida" deja 0%, aun si alguien había puesto un valor a mano.
+- **Motivo de pérdida**: se retiró el campo "Detalle" que nunca se guardaba en ningún lado.
+- **Mis actividades**: se corrigieron actividades antiguas que tenían el correo del responsable pero no su usuario, así el listado "Mías" y el contador de vencidas muestran lo mismo.
+- **Nuevo prospecto**: el segundo y siguientes prospectos de la sesión también quedan asignados a quien los captura.
+
 ## [13.823.49] - 2026-09-02
 ### Pulido de CRM y pantallas de 1280x720
 - **Filtros de Oportunidades**: en computadora, abrir los filtros ya no abre además el panel de celular (antes salían dos paneles y dos botones "Limpiar").
