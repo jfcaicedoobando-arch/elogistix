@@ -60,7 +60,7 @@ describe("crm/leads/mutations (extra)", () => {
   });
 
   it("06 — updateLead: realiza update + eq con id correcto", async () => {
-    mock.setTableResult(TABLE, { data: null, error: null });
+    mock.setTableResult(TABLE, { data: { id: "lead-1" }, error: null });
     await updateLead("lead-42", { empresa: "Nueva Empresa" });
     const call = mock.tableCalls[0];
     expect(call.ops).toContain("update");
@@ -74,7 +74,7 @@ describe("crm/leads/mutations (extra)", () => {
   });
 
   it("08 — softDeleteLead: incluye deleted_at con timestamp ISO fijo", async () => {
-    mock.setTableResult(TABLE, { data: null, error: null });
+    mock.setTableResult(TABLE, { data: { id: "lead-1" }, error: null });
     await softDeleteLead("lead-5", "u-1");
     const p = mock.getMutationPayload(TABLE, "update") as Record<string, unknown>;
     expect(p.deleted_at).toBe("2026-06-13T12:00:00.000Z");
@@ -82,7 +82,7 @@ describe("crm/leads/mutations (extra)", () => {
   });
 
   it("09 — softDeleteLead: deleted_by es null cuando userId es null", async () => {
-    mock.setTableResult(TABLE, { data: null, error: null });
+    mock.setTableResult(TABLE, { data: { id: "lead-1" }, error: null });
     await softDeleteLead("lead-6", null);
     const p = mock.getMutationPayload(TABLE, "update") as Record<string, unknown>;
     expect(p.deleted_by).toBeNull();
