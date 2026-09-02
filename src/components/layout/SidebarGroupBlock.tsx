@@ -89,11 +89,22 @@ function SidebarGroupBlockBase({
                 asChild
                 isActive={active}
                 tooltip={{
-                  children: item.title,
+                  children:
+                    badge > 0 ? (
+                      <span className="flex flex-col gap-0.5">
+                        <span>{item.title}</span>
+                        <span className="text-2xs font-normal opacity-80">
+                          {item.badgeHint ?? `${badge} alerta${pluralS(badge)} activa${pluralS(badge)}`}
+                        </span>
+                      </span>
+                    ) : (
+                      item.title
+                    ),
                   className:
                     "bg-sidebar text-sidebar-foreground border-sidebar-border shadow-overlay font-medium",
                   sideOffset: 8,
                 }}
+
                 className={cn(
                   "relative",
                   active &&
@@ -112,23 +123,19 @@ function SidebarGroupBlockBase({
                 >
                   <span className="relative shrink-0">
                     <item.icon className="h-4 w-4" />
+                    {/* VB-41: en el rail colapsado el badge numérico no cabe;
+                        se sustituye por UN solo dot sobre la esquina del icono
+                        (v13.823.23: antes se pintaban dos dots). El desglose
+                        viaja en el tooltip del propio botón. */}
                     {collapsed && badge > 0 && (
                       <span
                         aria-label={`${badge} alerta${pluralS(badge)} activa${pluralS(badge)}`}
-                        className="absolute -right-0.5 -top-0.5 h-1.5 w-1.5 rounded-full bg-destructive"
+                        className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full bg-destructive ring-1 ring-sidebar"
                       />
                     )}
                   </span>
                   {!collapsed && <span className="flex-1 truncate">{item.title}</span>}
-                  {/* VB-41: en el rail colapsado el badge numérico no cabe;
-                      se sustituye por un dot sobre la esquina del icono para
-                      no perder la señal de atención. */}
-                  {badge > 0 && collapsed && (
-                    <span
-                      aria-label={`${badge} alertas`}
-                      className="absolute top-1 right-1 h-2 w-2 rounded-full bg-destructive"
-                    />
-                  )}
+
                   {badge > 0 && !collapsed && (
                     <Tooltip>
                       <TooltipTrigger asChild>

@@ -6,9 +6,17 @@
  * se vean y se usen igual.
  */
 import { useMemo, useState } from "react";
-import { FileText } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { FileText, X } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 import { TooltipProvider } from "@/components/ui/tooltip";
+
 import { DataTable, defineColumns } from "@/components/shared/DataTable";
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 import { ToneBadge } from "@/components/shared/ToneBadge";
@@ -129,13 +137,18 @@ export function CxcAgingDrillDownDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className={`${dialogSize["4xl"]} p-0 gap-0 max-h-[90vh] overflow-y-auto`}>
+      {/* v13.823.23 — Mismo patrón que el drill-down de CxP: encabezado y
+          footer fijos, sólo la tabla hace scroll. */}
+      <DialogContent className={`${dialogSize["4xl"]} max-h-[90vh] flex flex-col gap-0 p-0`}>
         <TooltipProvider>
-          <DialogHeader className="px-6 py-4 border-b">
+          <DialogHeader className="px-6 py-4 border-b bg-muted/30 space-y-1">
             <DialogTitle className="flex items-center gap-2">
-              <FileText className="h-4 w-4 text-accent" />
+              <FileText className="h-4 w-4 text-accent" aria-hidden />
               Facturas con saldo · {cliente?.cliente_nombre ?? ""}
             </DialogTitle>
+            <DialogDescription>
+              Facturas abiertas del cliente en la cubeta de antigüedad seleccionada.
+            </DialogDescription>
           </DialogHeader>
 
           {cliente && <CxcAgingKpiRow cliente={cliente} />}
@@ -148,7 +161,7 @@ export function CxcAgingDrillDownDialog({
             exportCount={filtradas.length}
           />
 
-          <div className="p-0">
+          <div className="flex-1 overflow-y-auto">
             <DataTable<FacturaCobranza>
               columns={columns}
               data={filtradas}
@@ -163,8 +176,15 @@ export function CxcAgingDrillDownDialog({
               density={TABLE_DENSITY.embebida}
             />
           </div>
+
+          <div className="px-6 py-3 border-t flex justify-end bg-background">
+            <Button variant="outline" onClick={() => onOpenChange(false)}>
+              <X className="h-4 w-4 mr-1" /> Cerrar
+            </Button>
+          </div>
         </TooltipProvider>
       </DialogContent>
     </Dialog>
   );
+
 }

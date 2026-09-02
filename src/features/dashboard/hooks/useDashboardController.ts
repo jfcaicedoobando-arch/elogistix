@@ -8,6 +8,8 @@ import { useAuth } from "@/lib/contexts/AuthContext";
 import { usePermissions } from "@/hooks/shared";
 import { useDashboardData, ESTADOS_FILTRO } from "@/features/dashboard/hooks";
 import { formatFechaLarga } from "@/lib/formatters/dates";
+import { saludoMx } from "@/lib/ui/saludo";
+
 
 export type DashboardScope = "todos" | "mios";
 
@@ -15,11 +17,9 @@ export type DashboardScope = "todos" | "mios";
 const ESTADOS_LLEGADO = ["Arribo", "En Aduana", "Entregado", "EIR", "Por liquidar", "Cerrado"] as const;
 
 function getSaludo(): string {
-  const h = new Date().getHours();
-  if (h < 12) return "Buenos días";
-  if (h < 19) return "Buenas tardes";
-  return "Buenas noches";
+  return saludoMx();
 }
+
 
 function firstName(email: string | null | undefined): string {
   if (!email) return "";

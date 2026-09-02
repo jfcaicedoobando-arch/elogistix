@@ -40,10 +40,8 @@ export function Layout() {
         <div className="flex-1 flex flex-col min-w-0">
           <header className="sticky top-0 z-40 h-11 sm:h-12 flex items-center gap-2 sm:gap-3 border-b border-border/60 bg-card/95 px-3 sm:px-6 shrink-0 backdrop-blur supports-[backdrop-filter]:bg-card/80">
             {isMobile ? (
-              <SidebarTrigger
-                className="shrink-0 h-11 w-11"
-                aria-label="Colapsar o expandir menú"
-              />
+              <SidebarTrigger className="shrink-0 h-11 w-11" />
+
             ) : (
               <Tooltip delayDuration={300}>
                 <TooltipTrigger asChild>

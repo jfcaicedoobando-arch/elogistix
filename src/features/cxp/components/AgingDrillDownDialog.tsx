@@ -8,8 +8,9 @@
 import { useMemo, useState } from "react";
 import { FileText, X, AlertTriangle } from "lucide-react";
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle,
+  Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
+
 import { Button } from "@/components/ui/button";
 
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -117,10 +118,14 @@ export function AgingDrillDownDialog({ proveedor, open, onOpenChange, cubetaInic
                 </span>
               )}
             </div>
+            <DialogDescription>
+              Facturas abiertas del proveedor en la cubeta de antigüedad seleccionada.
+            </DialogDescription>
             {proveedor && (
               <p className="text-body-sm text-muted-foreground">{proveedor.proveedor_nombre}</p>
             )}
           </DialogHeader>
+
 
           {proveedor && (
             <AgingActionBar

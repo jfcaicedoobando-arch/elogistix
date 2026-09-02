@@ -9,13 +9,12 @@ import { CierreAdminBlock } from "@/features/dashboard/finance/components/Cierre
 import { formatFechaLarga } from "@/lib/formatters";
 import { resolveDestinoPorPagar } from "@/features/dashboard/finance/destinoPorPagar";
 import { ErrorState } from "@/components/shared/states/ErrorState";
+import { saludoMx } from "@/lib/ui/saludo";
 
 function getSaludo(): string {
-  const h = new Date().getHours();
-  if (h < 12) return "Buenos días";
-  if (h < 19) return "Buenas tardes";
-  return "Buenas noches";
+  return saludoMx();
 }
+
 
 function getHoyStr(): string {
   return formatFechaLarga(new Date());
