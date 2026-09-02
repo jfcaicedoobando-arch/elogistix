@@ -34,9 +34,10 @@ export function FormDialogStepper({ step, totalSteps, labels, className }: Props
         })}
       </div>
       <span className="text-overline font-medium shrink-0">
-        Paso {step}/{totalSteps}
+        Paso {step} de {totalSteps}
         {labels?.[step - 1] && <span className="ml-1 normal-case text-foreground/70">· {labels[step - 1]}</span>}
       </span>
+
     </div>
   );
 }
