@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.823.29] - 2026-09-02
+### Portal del agente: tarifas usables en celular
+- **/agente/tarifas en móvil (<md)**: la lista se presenta como tarjetas (mismo patrón que Garantías) con ruta, naviera, contenedor, flete base, vigencia, estado con la advertencia de vigencia vencida, motivo de rechazo y el menú de acciones. Se elimina la tabla de ~1294 px que provocaba scroll horizontal de toda la página a 390 px.
+- **Desktop sin cambios**: se conserva la tabla completa con todas sus columnas y ordenamiento.
+
 ## [13.823.28] - 2026-09-02
 ### Tarifas: KPI honesto y aprobación verificada contra la base
 - **KPI Operaciones**: la tarjeta ahora se llama "Tarifas pendientes" con sublabel "Requieren revisión" ("Sin pendientes" en 0), porque el conteo incluye borradores con vigencia vencida que hay que revisar/renovar y no sólo aprobar. Se conserva el conteo y el enlace filtrado.
