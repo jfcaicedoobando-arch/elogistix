@@ -24,7 +24,7 @@ export function EstadoBadge({ estado }: { estado: string }) {
 }
 
 /** Badge + aviso de vigencia vencida para filas de `AgenteTarifas`. */
-function EstadoConVigencia({ t }: { t: AgenteTarifaRow }) {
+export function EstadoConVigencia({ t }: { t: AgenteTarifaRow }) {
   const { advertencia } = resolverEstadoVigenciaTarifa({
     estadoAprobacion: t.estado_aprobacion,
     estado: t.estado,
@@ -149,43 +149,46 @@ export function buildAgenteTarifasColumns(deps: AgenteTarifasColumnsDeps): Colum
       id: "acciones",
       header: "",
       meta: { width: "w-12", align: "right" },
-      cell: ({ row }) => {
-        const t = row.original;
-        const editable = t.estado_aprobacion === "borrador" || t.estado_aprobacion === "rechazada";
-        const { vencida } = resolverEstadoVigenciaTarifa({
-          estadoAprobacion: t.estado_aprobacion,
-          estado: t.estado,
-          vigenteHasta: t.vigente_hasta,
-          hoy: todayLocalISO(),
-        });
-        const etiquetaEditar = t.estado_aprobacion === "rechazada"
-          ? "Corregir y reenviar"
-          : vencida
-            ? "Editar (vigencia vencida — actualízala)"
-            : "Editar";
-        return (
-          <div onClick={(e) => e.stopPropagation()}>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" aria-label={`Acciones de la tarifa ${t.puerto_origen_nombre} → ${t.puerto_destino_nombre}`}>
-                  <MoreHorizontal className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem
-                  disabled={!editable}
-                  onClick={() => onEditar(t)}
-                >
-                  {etiquetaEditar}
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => onDuplicar(t)}>
-                  Duplicar como nueva
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        );
-      },
+      cell: ({ row }) => (
+        <AgenteTarifaAcciones t={row.original} onEditar={onEditar} onDuplicar={onDuplicar} />
+      ),
     },
   ]);
+}
+
+/** Menú de acciones de una tarifa (compartido entre tabla desktop y tarjeta móvil). */
+export function AgenteTarifaAcciones({
+  t, onEditar, onDuplicar,
+}: { t: AgenteTarifaRow } & AgenteTarifasColumnsDeps) {
+  const editable = t.estado_aprobacion === "borrador" || t.estado_aprobacion === "rechazada";
+  const { vencida } = resolverEstadoVigenciaTarifa({
+    estadoAprobacion: t.estado_aprobacion,
+    estado: t.estado,
+    vigenteHasta: t.vigente_hasta,
+    hoy: todayLocalISO(),
+  });
+  const etiquetaEditar = t.estado_aprobacion === "rechazada"
+    ? "Corregir y reenviar"
+    : vencida
+      ? "Editar (vigencia vencida — actualízala)"
+      : "Editar";
+  return (
+    <div onClick={(e) => e.stopPropagation()}>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" size="icon" aria-label={`Acciones de la tarifa ${t.puerto_origen_nombre} → ${t.puerto_destino_nombre}`}>
+            <MoreHorizontal className="h-4 w-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuItem disabled={!editable} onClick={() => onEditar(t)}>
+            {etiquetaEditar}
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => onDuplicar(t)}>
+            Duplicar como nueva
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
+  );
 }
