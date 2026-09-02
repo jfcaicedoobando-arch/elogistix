@@ -65,23 +65,43 @@ async function updateConfigItems(
   const results = await Promise.all(
     items.map((item) => {
       if (table === "configuracion") {
+        // Ronda YAGNI · defecto 5: en organizaciones nuevas la fila de la clave
+        // no existe, así que el UPDATE afectaba 0 filas y la UI decía "guardado"
+        // sin persistir nada. Con upsert se crea la fila del tenant, y el
+        // `select` permite detectar el caso de 0 filas afectadas.
         return supabase
           .from("configuracion")
-          .update({ valor: item.valor as Json })
-          .eq("categoria", item.categoria)
-          .eq("clave", item.clave)
-          .eq("organization_id", orgId as string);
+          .upsert(
+            {
+              organization_id: orgId as string,
+              categoria: item.categoria,
+              clave: item.clave,
+              valor: item.valor as Json,
+            },
+            { onConflict: "organization_id,categoria,clave" },
+          )
+          .select("id");
       }
       return supabase
         .from("configuracion_global")
         .update({ valor: item.valor as Json })
         .eq("categoria", item.categoria)
-        .eq("clave", item.clave);
+        .eq("clave", item.clave)
+        .select("id");
     }),
   );
 
   const firstError = results.find((r) => r.error);
   if (firstError?.error) throw firstError.error;
+  // Fail-closed: si la RLS o una clave inexistente dejan 0 filas escritas, no
+  // reportamos éxito.
+  const vacio = results.findIndex((r) => (r.data ?? []).length === 0);
+  if (vacio >= 0) {
+    const it = items[vacio];
+    throw new Error(
+      `No se pudo guardar la configuración "${it.categoria}.${it.clave}": no se escribió ningún registro (revisa tus permisos).`,
+    );
+  }
   await registrarActividad({
     modulo: "configuracion",
     accion: table === "configuracion_global" ? "editar_configuracion_global" : "editar_configuracion",
