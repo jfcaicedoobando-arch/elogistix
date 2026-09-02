@@ -3,7 +3,7 @@
  * Viven en un módulo aparte para no romper el Fast Refresh del archivo de
  * componentes (`GlobalSearch.partes.tsx`).
  */
-import { Ship, Users, Truck, FileSpreadsheet, ClipboardList, Receipt } from "lucide-react";
+import { Ship, Users, Truck, FileSpreadsheet, ClipboardList, Receipt, Compass } from "lucide-react";
 
 /**
  * Icono de la fila: gris apagado en reposo y azul de acento cuando la fila está
@@ -20,6 +20,7 @@ export const typeIcons = {
   factura_proveedor: Receipt,
   cotizacion: ClipboardList,
   proforma: FileSpreadsheet,
+  pagina: Compass,
 };
 
 export const typeLabels = {
@@ -30,4 +31,5 @@ export const typeLabels = {
   factura_proveedor: "Facturas de proveedor",
   cotizacion: "Cotizaciones",
   proforma: "Proformas",
+  pagina: "Páginas",
 };

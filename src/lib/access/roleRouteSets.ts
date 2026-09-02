@@ -50,7 +50,7 @@ export const CLIENTES_ROLES: AppRole[] = [
 ];
 export const COSTEO_ROLES: AppRole[] = [
   ...ADMINS, "vendedor", "operador", "coordinador_logistico", "ejecutivo_pricing",
-  "gerente_comercial",
+  "gerente_comercial", "gerente_operaciones",
 ];
 export const COMISIONES_ROLES: AppRole[] = [
   ...ADMINS, "contador", "tesorero", "gerente_comercial", "gerente_operaciones", "gerente_visor",

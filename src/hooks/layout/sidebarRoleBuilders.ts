@@ -131,6 +131,7 @@ const buildGerenteOperaciones: Builder = ({ crmItems, sistemaItems }) => [
   { label: "Inicio", items: SIDEBAR_DASHBOARD_ITEMS },
   { label: "Operación", items: [...filterOperacion(["/cotizaciones", "/embarques"]), ...crmItems] },
   { label: "Ventas (CxC)", items: filterVentas(["/facturacion", "/proformas?estado=aceptada", "/proformas", "/cobranza", "/comisiones", "/cobranza/aging", "/clientes"]) },
+  { label: "Costeo", items: SIDEBAR_COSTEO_ITEMS },
   { label: "Compras (CxP)", items: filterCompras(COMPRAS_READ_ONLY) },
   { label: "Dinero", items: SIDEBAR_DINERO_ITEMS },
   { label: "Análisis", items: SIDEBAR_ANALISIS_ITEMS },
