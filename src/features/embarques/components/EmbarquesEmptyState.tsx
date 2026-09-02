@@ -12,7 +12,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import EmptyState from "@/components/empty/EmptyState";
 import { OrgContextoHint } from "@/components/shared/OrgContextoHint";
 import { usePermissions } from "@/hooks/shared/usePermissions";
-import { hasRouteAccess } from "@/lib/access/permissionMatrix";
+import { hasRouteAccess } from "@/lib/access/roleRouteMatrix";
 
 interface Props {
   canEdit: boolean;
