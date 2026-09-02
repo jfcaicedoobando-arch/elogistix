@@ -333,4 +333,229 @@ BEGIN
 END;
 $$;
 
+-- ===== E) v13.823.61 · organización ACTIVA, ACL exacta y Papelera =====
+--
+-- Nota de fixture: los roles legacy 'operador' y 'viewer' están bloqueados por
+-- `trg_bloquear_rol_legacy_om`, así que el "operador real" se siembra con su
+-- equivalente moderno `coordinador_logistico` y el "viewer real" con
+-- `customer_service`. Ambos entran por la policy de lectura in-org.
+DO $$
+DECLARE
+  v_org_a uuid := 'c1c1c1c1-0000-4000-8000-00000000000a';
+  v_org_b uuid := 'c1c1c1c1-0000-4000-8000-00000000000b';
+  v_multi uuid := 'c1c1c1c1-0000-4000-8000-000000000101';  -- miembro de A y B
+  v_oper uuid := 'c1c1c1c1-0000-4000-8000-000000000102';   -- operador moderno
+  v_viewer uuid := 'c1c1c1c1-0000-4000-8000-000000000103';  -- viewer moderno
+  v_super uuid := 'c1c1c1c1-0000-4000-8000-000000000104';
+  v_lead_a uuid := 'c1c1c1c1-0000-4000-8000-000000000201';
+  v_lead_b uuid := 'c1c1c1c1-0000-4000-8000-000000000202';
+  v_lead_soft uuid := 'c1c1c1c1-0000-4000-8000-000000000203';
+BEGIN
+  INSERT INTO auth.users(id, email) VALUES
+    (v_multi, 'e-multi@test.local'), (v_oper, 'e-oper@test.local'),
+    (v_viewer, 'e-viewer@test.local'), (v_super, 'e-super@test.local');
+
+  INSERT INTO public.organizations (id, nombre) VALUES
+    (v_org_a, 'TEST ORG ACTIVA A'), (v_org_b, 'TEST ORG ACTIVA B');
+
+  -- created_at explícito: `default_user_org_id()` ordena por created_at y luego
+  -- por organization_id, así que A queda determinísticamente como la ACTIVA.
+  INSERT INTO public.organization_members (organization_id, user_id, role, created_at) VALUES
+    (v_org_a, v_multi, 'gerente_comercial', now() - interval '2 day'),
+    (v_org_b, v_multi, 'admin_org',         now() - interval '1 day'),
+    (v_org_a, v_oper, 'coordinador_logistico', now()),
+    (v_org_a, v_viewer, 'customer_service', now());
+
+  INSERT INTO public.user_roles (user_id, role) VALUES
+    (v_multi, 'gerente_comercial'), (v_oper, 'coordinador_logistico'),
+    (v_viewer, 'customer_service'), (v_super, 'super_admin')
+  ON CONFLICT (user_id) DO UPDATE SET role = EXCLUDED.role;
+
+  INSERT INTO public.super_admin_org_activa (user_id, organization_id)
+  VALUES (v_super, v_org_a);
+
+  INSERT INTO public.crm_leads (id, organization_id, empresa, estado) VALUES
+    (v_lead_a, v_org_a, 'Lead org A', 'Contactado'),
+    (v_lead_b, v_org_b, 'Lead org B', 'Contactado'),
+    (v_lead_soft, v_org_a, 'Lead a papelera', 'Contactado');
+
+  -- E1 · multimembresía: con A activa, B no existe para el usuario.
+  PERFORM pg_temp.as_user(v_multi);
+  PERFORM pg_temp.assert(
+    (SELECT count(*) FROM public.crm_leads WHERE id = v_lead_a) = 1,
+    'E1: el usuario debe leer los leads de su organización ACTIVA (A)');
+  PERFORM pg_temp.assert(
+    (SELECT count(*) FROM public.crm_leads WHERE organization_id = v_org_b) = 0,
+    'E1b: la organización no activa (B) no debe ser visible aunque haya membresía');
+
+  -- E2 · tampoco escribe en B (0 filas) ni puede mover A → B (WITH CHECK).
+  UPDATE public.crm_leads SET empresa = 'B tocada' WHERE id = v_lead_b;
+  PERFORM pg_temp.espera_lc(
+    format('UPDATE public.crm_leads SET organization_id = %L WHERE id = %L', v_org_b, v_lead_a),
+    'row-level security', 'E2 mover lead de la org activa a la no activa');
+  PERFORM pg_temp.as_postgres();
+  PERFORM pg_temp.assert(
+    (SELECT empresa FROM public.crm_leads WHERE id = v_lead_b) = 'Lead org B',
+    'E2b: la organización no activa no debe poder modificarse (verificado desde postgres)');
+  PERFORM pg_temp.assert(
+    (SELECT organization_id FROM public.crm_leads WHERE id = v_lead_a) = v_org_a,
+    'E2c: organization_id no puede reasignarse desde el cliente');
+
+  -- E3 · operador y viewer reales: leen in-org, no escriben.
+  PERFORM pg_temp.as_user(v_oper);
+  PERFORM pg_temp.assert(
+    (SELECT count(*) FROM public.crm_leads WHERE id = v_lead_a) = 1,
+    'E3: el operador debe leer los leads de su organización');
+  UPDATE public.crm_leads SET empresa = 'Operador manda' WHERE id = v_lead_a;
+  PERFORM pg_temp.as_user(v_viewer);
+  PERFORM pg_temp.assert(
+    (SELECT count(*) FROM public.crm_leads WHERE id = v_lead_a) = 1,
+    'E3b: el viewer debe leer los leads de su organización');
+  UPDATE public.crm_leads SET empresa = 'Viewer manda' WHERE id = v_lead_a;
+  PERFORM pg_temp.as_postgres();
+  PERFORM pg_temp.assert(
+    (SELECT empresa FROM public.crm_leads WHERE id = v_lead_a) = 'Lead org A',
+    'E3c: ni operador ni viewer pueden escribir leads (verificado desde postgres)');
+
+  -- E4 · super admin: sólo su org_scope activo (A), nunca B.
+  PERFORM pg_temp.as_user(v_super);
+  PERFORM pg_temp.assert(
+    (SELECT count(*) FROM public.crm_leads WHERE id = v_lead_a) = 1,
+    'E4: el super admin debe operar su organización activa');
+  PERFORM pg_temp.assert(
+    (SELECT count(*) FROM public.crm_leads WHERE organization_id = v_org_b) = 0,
+    'E4b: el super admin no debe ver organizaciones fuera de su org_scope');
+
+  -- E5 · Papelera: DELETE físico prohibido por ACL; soft-delete permitido.
+  PERFORM pg_temp.as_user(v_multi);
+  PERFORM pg_temp.espera_lc(
+    format('DELETE FROM public.crm_leads WHERE id = %L', v_lead_soft),
+    'permission denied', 'E5 borrado físico de leads');
+  UPDATE public.crm_leads
+     SET deleted_at = now(), deleted_by = v_multi
+   WHERE id = v_lead_soft;
+  PERFORM pg_temp.as_postgres();
+  PERFORM pg_temp.assert(
+    (SELECT count(*) FROM public.crm_leads WHERE id = v_lead_soft) = 1,
+    'E5b: el borrado físico no debe haber ocurrido');
+  PERFORM pg_temp.assert(
+    (SELECT deleted_at FROM public.crm_leads WHERE id = v_lead_soft) IS NOT NULL,
+    'E5c: la eliminación de la app debe seguir funcionando como soft-delete');
+END;
+$$;
+
+-- ===== F) ACL exacta de tabla y de RPCs (sin búsqueda de strings) =====
+DO $$
+DECLARE
+  v_privs text[];
+  v_esperado text[] := ARRAY['INSERT','SELECT','UPDATE'];
+  r record;
+  v_n integer;
+BEGIN
+  -- F1 · authenticated: exactamente SELECT/INSERT/UPDATE.
+  SELECT array_agg(DISTINCT a.privilege_type ORDER BY a.privilege_type)
+    INTO v_privs
+    FROM aclexplode((SELECT relacl FROM pg_class WHERE oid = 'public.crm_leads'::regclass)) a
+   WHERE pg_get_userbyid(a.grantee) = 'authenticated';
+  PERFORM pg_temp.assert(v_privs = v_esperado,
+    format('F1: authenticated debe tener sólo SELECT/INSERT/UPDATE sobre crm_leads (tiene %s)', v_privs));
+  PERFORM pg_temp.assert(
+    NOT has_table_privilege('authenticated', 'public.crm_leads', 'DELETE'),
+    'F1b: authenticated no debe tener DELETE sobre crm_leads');
+  PERFORM pg_temp.assert(
+    NOT has_table_privilege('authenticated', 'public.crm_leads', 'TRUNCATE'),
+    'F1c: authenticated no debe tener TRUNCATE sobre crm_leads');
+  PERFORM pg_temp.assert(
+    NOT has_table_privilege('authenticated', 'public.crm_leads', 'REFERENCES'),
+    'F1d: authenticated no debe tener REFERENCES sobre crm_leads');
+  PERFORM pg_temp.assert(
+    NOT has_table_privilege('authenticated', 'public.crm_leads', 'TRIGGER'),
+    'F1e: authenticated no debe tener TRIGGER sobre crm_leads');
+
+  -- F2 · anon y PUBLIC sin nada; service_role con el contrato de backend.
+  PERFORM pg_temp.assert(
+    NOT EXISTS (
+      SELECT 1 FROM aclexplode((SELECT relacl FROM pg_class WHERE oid = 'public.crm_leads'::regclass)) a
+       WHERE a.grantee = 0 OR pg_get_userbyid(a.grantee) = 'anon'),
+    'F2: ni PUBLIC ni anon deben tener privilegios sobre crm_leads');
+  PERFORM pg_temp.assert(
+    has_table_privilege('service_role', 'public.crm_leads', 'SELECT')
+    AND has_table_privilege('service_role', 'public.crm_leads', 'INSERT')
+    AND has_table_privilege('service_role', 'public.crm_leads', 'UPDATE')
+    AND has_table_privilege('service_role', 'public.crm_leads', 'DELETE'),
+    'F2b: service_role debe conservar el acceso completo de backend');
+
+  -- F3 · las dos RPCs de leads: exactamente dos, owner postgres, DEFINER,
+  -- search_path=public, EXECUTE para authenticated/service_role y nunca
+  -- para PUBLIC/anon (vía aclexplode / has_function_privilege).
+  SELECT count(*) INTO v_n
+    FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace
+   WHERE n.nspname = 'public'
+     AND p.proname IN ('crm_calificar_prospecto', 'crm_tomar_lead');
+  PERFORM pg_temp.assert(v_n = 2,
+    format('F3: deben existir exactamente 2 RPCs de leads (hay %s)', v_n));
+
+  FOR r IN
+    SELECT p.oid, p.proname, p.prosecdef, p.proconfig, p.proacl,
+           pg_get_userbyid(p.proowner) AS owner
+      FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace
+     WHERE n.nspname = 'public'
+       AND p.proname IN ('crm_calificar_prospecto', 'crm_tomar_lead')
+  LOOP
+    PERFORM pg_temp.assert(r.owner = 'postgres',
+      format('F3a: %s debe pertenecer a postgres (owner=%s)', r.proname, r.owner));
+    PERFORM pg_temp.assert(r.prosecdef,
+      format('F3b: %s debe ser SECURITY DEFINER', r.proname));
+    PERFORM pg_temp.assert('search_path=public' = ANY (COALESCE(r.proconfig, ARRAY[]::text[])),
+      format('F3c: %s debe fijar search_path=public', r.proname));
+    PERFORM pg_temp.assert(r.proacl IS NOT NULL,
+      format('F3d: %s no puede quedarse con la ACL por defecto (PUBLIC ejecuta)', r.proname));
+    PERFORM pg_temp.assert(
+      NOT EXISTS (
+        SELECT 1 FROM aclexplode(r.proacl) a
+         WHERE a.grantee = 0 OR pg_get_userbyid(a.grantee) = 'anon'),
+      format('F3e: %s no debe conceder EXECUTE a PUBLIC ni anon', r.proname));
+    PERFORM pg_temp.assert(
+      EXISTS (
+        SELECT 1 FROM aclexplode(r.proacl) a
+         WHERE pg_get_userbyid(a.grantee) = 'authenticated' AND a.privilege_type = 'EXECUTE'),
+      format('F3f: %s debe conceder EXECUTE a authenticated', r.proname));
+    PERFORM pg_temp.assert(
+      EXISTS (
+        SELECT 1 FROM aclexplode(r.proacl) a
+         WHERE pg_get_userbyid(a.grantee) = 'service_role' AND a.privilege_type = 'EXECUTE'),
+      format('F3g: %s debe conceder EXECUTE a service_role', r.proname));
+  END LOOP;
+
+  -- F4 · toda policy permisiva impone la organización ACTIVA y ninguna es FOR ALL.
+  PERFORM pg_temp.assert(
+    NOT EXISTS (
+      SELECT 1 FROM pg_policy
+       WHERE polrelid = 'public.crm_leads'::regclass
+         AND polpermissive
+         AND (position('is_org_member' in
+               COALESCE(pg_get_expr(polqual, polrelid), '')
+               || COALESCE(pg_get_expr(polwithcheck, polrelid), '')) = 0)),
+    'F4: toda policy permisiva de crm_leads debe exigir is_org_member(organization_id)');
+  PERFORM pg_temp.assert(
+    NOT EXISTS (
+      SELECT 1 FROM pg_policy
+       WHERE polrelid = 'public.crm_leads'::regclass
+         AND polpermissive AND polcmd = '*'),
+    'F4b: ninguna policy permisiva de crm_leads debe ser FOR ALL (evita DELETE futuro)');
+  PERFORM pg_temp.assert(
+    NOT EXISTS (
+      SELECT 1 FROM pg_policy
+       WHERE polrelid = 'public.crm_leads'::regclass
+         AND polpermissive AND polcmd = 'd'),
+    'F4c: ninguna policy permisiva debe autorizar DELETE físico de leads');
+  PERFORM pg_temp.assert(
+    position('operador' in (
+      SELECT pg_get_expr(polqual, polrelid) FROM pg_policy
+       WHERE polrelid = 'public.crm_leads'::regclass
+         AND polname = 'Lectura in-org crm_leads')) > 0,
+    'F4d: la lectura in-org debe incluir el rol operador explícitamente');
+END;
+$$;
+
 ROLLBACK;
