@@ -28,6 +28,9 @@ export const LC_CODE_MESSAGES_CRM: Record<string, string> = {
     "El cliente pertenece a otra organización, no puedes usarlo aquí.",
   LC_CRM_LEAD_AJENO:
     "El prospecto pertenece a otra organización, no puedes usarlo aquí.",
+  LC_CRM_ACTIVIDAD_ENTIDAD_AJENA:
+    "El registro al que quieres ligar la actividad no existe, fue eliminado o pertenece a otra organización.",
+
   // ── Ola 1-3 · calificación de leads y cotizaciones de prospecto ────────
   LC_LEAD_ESTADO_NO_CALIFICABLE:
     "El lead no está en un estado que permita calificarlo. Contáctalo y actualiza su estado antes de calificarlo como prospecto.",
