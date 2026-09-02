@@ -112,7 +112,8 @@ export function BuscarTarifaDialog({
   }, [open, initial?.puertoOrigenId, initial?.puertoDestinoId, initial?.tipoContenedorId]);
 
   const {
-    data: tarifas = [], isFetching, error, refetch, isRefetching, tipoContenedorIds,
+    data: tarifas = [], isFetching, error, refetch, isRefetching,
+    tipoContenedorIds = [],
   } = useTopTarifas({
     puertoOrigenId: origen,
     puertoDestinoId: destino,
