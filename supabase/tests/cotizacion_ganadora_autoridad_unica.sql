@@ -110,8 +110,14 @@ BEGIN
   -- ===== A) Primera aceptación =====
   UPDATE public.cotizaciones SET estado = 'Aceptada' WHERE id = v_c1;
 
-  SELECT * INTO r FROM public.crm_oportunidades WHERE id = v_op1;
-  PERFORM pg_temp.assert(r.etapa_id = v_et_ga_a, 'A: la oportunidad debe quedar en la etapa ganada');
+  -- El alta de la organización siembra un pipeline por omisión, así que la
+  -- etapa ganada elegida puede ser la sembrada: se valida el TIPO, no el id.
+  SELECT o.*, e.tipo AS etapa_tipo INTO r
+    FROM public.crm_oportunidades o
+    JOIN public.crm_etapas_pipeline e ON e.id = o.etapa_id
+   WHERE o.id = v_op1;
+  PERFORM pg_temp.assert(r.etapa_tipo = 'ganada'::crm_etapa_tipo,
+    'A: la oportunidad debe quedar en una etapa ganada');
   PERFORM pg_temp.assert(r.probabilidad = 100, 'A: la probabilidad debe quedar en 100');
   PERFORM pg_temp.assert(r.valor_real = 1000, 'A: valor_real debe tomar el subtotal de la ganadora');
   PERFORM pg_temp.assert(r.cotizacion_ganadora_id = v_c1, 'A: debe sellarse la cotización ganadora');
@@ -176,7 +182,9 @@ BEGIN
     format('UPDATE public.cotizaciones SET estado = ''Aceptada'' WHERE id = %L', v_c3),
     'LC_OPORTUNIDAD_PERDIDA_REQUIERE_REAPERTURA', 'E oportunidad perdida');
   PERFORM pg_temp.assert(
-    (SELECT etapa_id FROM public.crm_oportunidades WHERE id = v_op2) = v_et_pe_a,
+    (SELECT e.tipo FROM public.crm_oportunidades o
+       JOIN public.crm_etapas_pipeline e ON e.id = o.etapa_id
+      WHERE o.id = v_op2) = 'perdida'::crm_etapa_tipo,
     'E: la oportunidad perdida no cambia de etapa');
 
   -- ===== F) Inmutabilidad de la ganadora =====
@@ -197,7 +205,8 @@ BEGIN
 
   -- ===== G) Papelera conserva la historia =====
   UPDATE public.cotizaciones SET deleted_at = now() WHERE id = v_c1;
-  SELECT * INTO r FROM public.crm_oportunidades WHERE id = v_op1;
+  SELECT o.*, NULL::crm_etapa_tipo AS etapa_tipo INTO r
+    FROM public.crm_oportunidades o WHERE o.id = v_op1;
   PERFORM pg_temp.assert(r.cotizacion_ganadora_id = v_c1, 'G: la Papelera conserva la ganadora');
   PERFORM pg_temp.assert(r.valor_real = 1500, 'G: la Papelera conserva valor_real');
 
