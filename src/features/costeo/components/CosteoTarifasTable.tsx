@@ -43,7 +43,7 @@ export function CosteoTarifasTable({ tarifas, isLoading, onEditar, onDuplicar, o
       aprobarPending: aprobar.isPending,
       reactivarPending: reactivar.isPending,
       onEditar, onDuplicar, onEliminar,
-      onAprobar: (id) => aprobar.mutate(id),
+      onAprobar: (id, vigenteHasta) => aprobar.mutate({ id, vigenteHasta }),
       onRechazar: (id) => setRechazandoId(id),
       onReactivar: (id) => reactivar.mutate(id),
     }),

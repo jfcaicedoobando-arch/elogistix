@@ -22,12 +22,19 @@ function readViewMode(): ViewMode {
   return safeLocalStorage.getItem(STORAGE_KEYS.tarifasViewMode) === "tabla" ? "tabla" : "agrupada";
 }
 
+function readAprobacionFromUrl(value: string | null): AprobacionFiltro {
+  return value === "borrador" || value === "vigente" || value === "rechazada" ? value : DEFAULT_APROB;
+}
+
 export function useCosteoTarifasPageState() {
   const [searchParams, setSearchParams] = useSearchParams();
   const rutaIdFromUrl = searchParams.get("ruta") ?? undefined;
 
   const [estado, setEstado] = useState<EstadoFiltro>(DEFAULT_ESTADO);
-  const [aprobacion, setAprobacion] = useState<AprobacionFiltro>(DEFAULT_APROB);
+  // Alcance B: `?aprobacion=borrador` (link desde el KPI de Operaciones) preselecciona el filtro.
+  const [aprobacion, setAprobacion] = useState<AprobacionFiltro>(() =>
+    readAprobacionFromUrl(searchParams.get("aprobacion")),
+  );
   const [agenteId, setAgenteId] = useState<string>("todos");
   const [tipoId, setTipoId] = useState<string>("todos");
   const [busqueda, setBusqueda] = useState("");

@@ -9,10 +9,11 @@ import { ChartSkeleton } from "@/components/shared/ChartSkeleton";
 import { MAX_CONTENEDORES, type PeriodoFiltro } from "@/features/operaciones/hooks";
 import { formatCurrency, formatCurrencyCompact } from "@/lib/formatters";
 import { KpiCard } from "@/components/shared/KpiCard";
+import { KpiErrorCard } from "@/features/operaciones/components/KpiErrorCard";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { DesempenoOperadores } from "@/features/operaciones/components/DesempenoOperadores";
 import { useOperacionesPageController } from "@/features/operaciones/hooks";
-import { useCotizacionesPendientesReaprobacion } from "@/features/cotizacion/hooks/usePendientesReaprobacion";
+import { useTarifasPendientesAprobacion } from "@/features/costeo/hooks/useTarifasPendientesAprobacion";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { CargaGuard } from "@/components/shared/states/CargaGuard";
 
@@ -30,7 +31,12 @@ export default function Operaciones() {
     creadasEsteMes, llegadasEsteMes,
     balancePct, contPct, totalAlertas,
   } = useOperacionesPageController();
-  const { data: pendientesReaprob = 0 } = useCotizacionesPendientesReaprobacion();
+  const {
+    data: tarifasPendientes,
+    isLoading: isLoadingTarifasPendientes,
+    isError: isErrorTarifasPendientes,
+    refetch: refetchTarifasPendientes,
+  } = useTarifasPendientesAprobacion();
 
   function renderTendenciaChart() {
     if (isLoading) return <ChartSkeleton height={260} />;
@@ -74,15 +80,20 @@ export default function Operaciones() {
         {/* VB-28: la moneda ya la muestra el valor ("USD …"); no duplicarla en el label. */}
         <KpiCard label="Utilidad" value={formatCurrencyCompact(global.totalProfit, "USD")} valueTooltip={formatCurrency(global.totalProfit, "USD")} icon={TrendingUp} variant="success" iconVariant="chip" loading={isLoading} />
         <KpiCard label="Alertas" value={totalAlertas} sublabel={totalAlertas > 0 ? `${global.totalCriticos} críticos · ${global.totalEnPuerto} en puerto` : "Sin alertas"} icon={AlertTriangle} variant="destructive" iconVariant="chip" loading={isLoading} />
-        <KpiCard
-          label="Tarifas a re-aprobar"
-          value={pendientesReaprob}
-          sublabel={pendientesReaprob > 0 ? "Cotizaciones esperando ventas" : "Al día"}
-          icon={RefreshCw}
-          variant={pendientesReaprob > 0 ? "destructive" : "info"}
-          iconVariant="chip"
-          loading={isLoading}
-        />
+        {isErrorTarifasPendientes ? (
+          <KpiErrorCard onRetry={() => refetchTarifasPendientes()} />
+        ) : (
+          <KpiCard
+            label="Tarifas por aprobar"
+            value={tarifasPendientes ?? 0}
+            sublabel={(tarifasPendientes ?? 0) > 0 ? "Esperando primera aprobación" : "Al día"}
+            icon={RefreshCw}
+            variant={(tarifasPendientes ?? 0) > 0 ? "destructive" : "info"}
+            iconVariant="chip"
+            loading={isLoading || isLoadingTarifasPendientes}
+            to="/costeo/tarifas?aprobacion=borrador"
+          />
+        )}
       </div>
 
       <DesempenoOperadores operadores={operadores} isLoading={isLoading} />

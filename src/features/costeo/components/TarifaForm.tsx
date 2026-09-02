@@ -133,27 +133,29 @@ export function TarifaForm({ open, onOpenChange, initial, tarifaId, agenteIdFijo
           <div className="text-kpi text-foreground tabular-nums">{formatUSD(total)}</div>
         </div>
       }
+      // El resumen de campos faltantes vive en el cuerpo desplazable (ver
+      // abajo): en pantallas angostas (≤390px) el footer sólo trae botones,
+      // así ninguno de los dos se comprime ni se corta.
       footer={
-        <div className="flex w-full items-center justify-between gap-3">
-          <p className="text-body-sm text-muted-foreground" aria-live="polite">
-            {tooltipFaltantes ?? "Listo para guardar."}
-          </p>
-          <div className="flex gap-2">
-            <BotonCancelarTarifa disabled={pendiente} onCerrarSinGuarda={() => onOpenChange(false)} />
+        <div className="flex w-full justify-end gap-2">
+          <BotonCancelarTarifa disabled={pendiente} onCerrarSinGuarda={() => onOpenChange(false)} />
 
-            <Button
-              type="submit"
-              form="tarifa-form"
-              disabled={!valido}
-              aria-busy={pendiente || undefined}
-              title={pendiente ? "Guardando…" : tooltipFaltantes} loading={pendiente}>
-              {guardarLabel}
-            </Button>
-          </div>
+          <Button
+            type="submit"
+            form="tarifa-form"
+            disabled={!valido}
+            aria-busy={pendiente || undefined}
+            aria-describedby={tooltipFaltantes ? "tarifa-form-resumen" : undefined}
+            title={pendiente ? "Guardando…" : tooltipFaltantes} loading={pendiente}>
+            {guardarLabel}
+          </Button>
         </div>
       }
     >
       <form id="tarifa-form" onSubmit={guardar} className="space-y-4">
+        <p id="tarifa-form-resumen" className="text-body-sm text-muted-foreground" aria-live="polite">
+          {tooltipFaltantes ?? "Listo para guardar."}
+        </p>
         <EntidadesFields form={form} setForm={setForm} agentes={agentes} navieras={navieras} errores={errores} agenteIdFijo={agenteIdFijo} agenteNombreFijo={agenteNombreFijo} />
         <RutaTipoFields
           form={form}

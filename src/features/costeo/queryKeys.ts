@@ -10,6 +10,8 @@ export const costeo = {
     list: (organizationId: string | null | undefined, filters: unknown = {}) =>
       ["costeo", "tarifas", organizationId, filters] as const,
     recargos: (tarifaId: string) => ["costeo", "tarifa-recargos", tarifaId] as const,
+    pendientesAprobacion: (organizationId: string | null | undefined) =>
+      ["costeo", "tarifas", "pendientes-aprobacion", organizationId] as const,
     resumen: (ids: readonly string[]) => ["tarifas", "resumen", ids] as const,
     top: (params: {
       organizationId: string | null | undefined;

@@ -4,6 +4,9 @@
  *
  * Ola 2 · RN-3: el color lo resuelve el `statusRegistry` (dominio
  * `tarifa_maritima`); aquí sólo se decide QUÉ estado mostrar.
+ *
+ * FIX vigencia: un borrador con `vigente_hasta` vencida ya no se muestra
+ * como "Pendiente" a secas — se avisa con un texto visible (no sólo tooltip).
  */
 import {
   Tooltip, TooltipContent, TooltipProvider, TooltipTrigger,
@@ -11,6 +14,7 @@ import {
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import type { CosteoTarifaEstado } from "@/features/costeo/types";
 import { todayLocalISO } from "@/lib/date/today";
+import { resolverEstadoVigenciaTarifa } from "@/features/costeo/utils/vigenciaTarifa";
 
 interface Props {
   estado: CosteoTarifaEstado;
@@ -19,24 +23,26 @@ interface Props {
   motivo?: string | null;
 }
 
-/** Estado canónico del dominio `tarifa_maritima`. */
-function resolverEstadoTarifa(props: Props): string {
-  const ap = props.estadoAprobacion ?? "vigente";
-  const hoy = todayLocalISO();
-  const vencida = props.vigenteHasta < hoy;
-
-  if (ap === "rechazada") return "Rechazada";
-  if (ap === "borrador") return "Pendiente";
-  if (props.estado === "reemplazada") return "Reemplazada";
-  if (vencida || props.estado === "vencida") return "Vencida";
-  return "Vigente";
-}
-
 export function TarifaEstadoUnificado(props: Props) {
-  const estado = resolverEstadoTarifa(props);
-  const badge = <StatusBadge domain="tarifa_maritima" status={estado} />;
+  const { estadoCanonico, advertencia } = resolverEstadoVigenciaTarifa({
+    estadoAprobacion: props.estadoAprobacion,
+    estado: props.estado,
+    vigenteHasta: props.vigenteHasta,
+    hoy: todayLocalISO(),
+  });
 
-  if (estado !== "Rechazada" || !props.motivo) return badge;
+  const badge = <StatusBadge domain="tarifa_maritima" status={estadoCanonico} />;
+
+  if (advertencia) {
+    return (
+      <div className="flex flex-col gap-0.5">
+        {badge}
+        <span className="text-label text-warning">{advertencia}</span>
+      </div>
+    );
+  }
+
+  if (estadoCanonico !== "Rechazada" || !props.motivo) return badge;
 
   return (
     <TooltipProvider>

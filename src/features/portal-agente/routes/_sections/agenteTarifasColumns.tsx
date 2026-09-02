@@ -14,11 +14,30 @@ import type { TarifaInput, TarifaRecargoInput } from "@/features/costeo/services
 import type { AgenteTarifaRow } from "@/features/portal-agente/services";
 import { formatNumber } from "@/lib/formatters/numbers";
 import { formatDate } from "@/lib/formatters";
+import { todayLocalISO } from "@/lib/date/today";
+import { resolverEstadoVigenciaTarifa } from "@/features/costeo/utils/vigenciaTarifa";
 
 export function EstadoBadge({ estado }: { estado: string }) {
   // Capitaliza estado ("vigente" → "Vigente") para casar con DOMAIN_STATUSES.tarifa_maritima.
   const canonical = estado.charAt(0).toUpperCase() + estado.slice(1);
   return <StatusBadge domain="tarifa_maritima" status={canonical} />;
+}
+
+/** Badge + aviso de vigencia vencida para filas de `AgenteTarifas`. */
+function EstadoConVigencia({ t }: { t: AgenteTarifaRow }) {
+  const { advertencia } = resolverEstadoVigenciaTarifa({
+    estadoAprobacion: t.estado_aprobacion,
+    estado: t.estado,
+    vigenteHasta: t.vigente_hasta,
+    hoy: todayLocalISO(),
+  });
+  if (!advertencia) return <EstadoBadge estado={t.estado_aprobacion} />;
+  return (
+    <div className="flex flex-col gap-0.5">
+      <EstadoBadge estado={t.estado_aprobacion} />
+      <span className="text-xs text-warning">{advertencia}</span>
+    </div>
+  );
 }
 
 export function toInitial(t: AgenteTarifaRow, recargos: TarifaRecargoInput[] = []): Partial<TarifaInput> {
@@ -124,7 +143,7 @@ export function buildAgenteTarifasColumns(deps: AgenteTarifasColumnsDeps): Colum
       header: "Estado",
       accessorFn: (t) => t.estado_aprobacion,
       enableSorting: true,
-      cell: ({ row }) => <EstadoBadge estado={row.original.estado_aprobacion} />,
+      cell: ({ row }) => <EstadoConVigencia t={row.original} />,
     },
     {
       id: "acciones",
@@ -133,6 +152,17 @@ export function buildAgenteTarifasColumns(deps: AgenteTarifasColumnsDeps): Colum
       cell: ({ row }) => {
         const t = row.original;
         const editable = t.estado_aprobacion === "borrador" || t.estado_aprobacion === "rechazada";
+        const { vencida } = resolverEstadoVigenciaTarifa({
+          estadoAprobacion: t.estado_aprobacion,
+          estado: t.estado,
+          vigenteHasta: t.vigente_hasta,
+          hoy: todayLocalISO(),
+        });
+        const etiquetaEditar = t.estado_aprobacion === "rechazada"
+          ? "Corregir y reenviar"
+          : vencida
+            ? "Editar (vigencia vencida — actualízala)"
+            : "Editar";
         return (
           <div onClick={(e) => e.stopPropagation()}>
             <DropdownMenu>
@@ -146,7 +176,7 @@ export function buildAgenteTarifasColumns(deps: AgenteTarifasColumnsDeps): Colum
                   disabled={!editable}
                   onClick={() => onEditar(t)}
                 >
-                  {t.estado_aprobacion === "rechazada" ? "Corregir y reenviar" : "Editar"}
+                  {etiquetaEditar}
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => onDuplicar(t)}>
                   Duplicar como nueva
