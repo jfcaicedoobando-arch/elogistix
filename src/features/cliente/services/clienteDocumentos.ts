@@ -6,7 +6,7 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import { unwrap, unwrapOr, run } from "@/lib/supabase/response";
-import { uploadFile, getSignedUrl, deleteFile } from "@/services/storage";
+import { uploadFile, getSignedUrl } from "@/services/storage";
 import { limpiarBlobBestEffort } from "@/lib/documentoStorage";
 import { logClientError } from "@/services/observability/logClientError";
 import { registrarActividad } from "@/services/bitacora/registrar";
