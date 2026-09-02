@@ -18,6 +18,14 @@ import { RevalidacionRequeridaError } from "@/features/cotizacion/domain/revalid
 
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 
+/**
+ * Estados cuya etapa CRM sigue sincronizándose desde el cliente. Los estados
+ * terminales (`Aceptada`, `En operación`) y `Rechazada` los gobierna la base de
+ * datos: sincronizarlos aquí duplicaba escrituras y podía perder la oportunidad.
+ */
+const ESTADOS_SYNC_CLIENTE = ["Enviada"];
+
+
 
 /**
  * Hook focalizado en las acciones (mutations + handlers + diálogos) del detalle de cotización.
