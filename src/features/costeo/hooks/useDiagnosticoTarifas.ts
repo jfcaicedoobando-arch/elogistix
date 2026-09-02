@@ -5,7 +5,11 @@ import {
   type DiagnosticoTarifas,
 } from "@/features/costeo/services/diagnosticoTarifas";
 import { todayLocalISO } from "@/lib/date/today";
-import { isValidUuid } from "@/features/costeo/hooks/useTopTarifas";
+
+const UUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+const esUuid = (v: string | undefined): v is string => !!v && UUID_RE.test(v);
 
 export interface UseDiagnosticoTarifasParams {
   puertoOrigenId?: string;
@@ -23,8 +27,8 @@ export function useDiagnosticoTarifas(p: UseDiagnosticoTarifasParams) {
   const { organizationId } = useOrganization();
   const hoy = todayLocalISO();
   const idsOk =
-    isValidUuid(p.puertoOrigenId) &&
-    isValidUuid(p.puertoDestinoId) &&
+    esUuid(p.puertoOrigenId) &&
+    esUuid(p.puertoDestinoId) &&
     p.tipoContenedorIds.length > 0;
 
   const query = useQuery<DiagnosticoTarifas>({
