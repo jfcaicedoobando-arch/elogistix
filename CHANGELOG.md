@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.823.24] - 2026-09-02
+### Pulido: tira de estados del inicio en tablet
+- **Síntoma**: en tablet (≈768 px) las etiquetas de la tira de estados se cortaban ("Por liqui…") y no había señal de que la tira siguiera desplazándose.
+- **Fix**: la etiqueta ahora envuelve en dos renglones (`text-balance`, sin `truncate`) y el fade del borde derecho se mantiene hasta `lg`, donde la tira ya entra completa. Los iconos se alinean arriba para que los renglones extra no descuadren la fila.
+
+
+
 ## [13.823.23] - 2026-09-02
 ### Pulido: sidebar, saludo de tableros y modales de antigüedad
 - **Sidebar**: en modo colapsado se pintaban **dos** puntos rojos por la misma alerta; ahora es uno solo y el tooltip del ítem incluye el desglose (`badgeHint`), que antes sólo existía expandido.
