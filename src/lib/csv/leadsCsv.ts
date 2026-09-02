@@ -127,7 +127,8 @@ export function mapLeadCsvRows(matrix: string[][]): ParsedLeadRow[] {
       if (!field) return;
       assignLeadField(r, field, (cols[i] ?? "").trim());
     });
-    if (!r.empresa) r.__error = "Empresa requerida";
+    // No pisamos el error de estado derivado si ya se marcó en la celda.
+    if (!r.empresa && !r.__error) r.__error = "Empresa requerida";
     return r;
   });
 }
