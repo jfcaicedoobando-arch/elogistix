@@ -138,7 +138,7 @@ export function createSupabaseMock() {
     return null;
   }
 
-  return { supabase, setTableResult, setRpcResult, resetResults, tableCalls, rpcCalls, getMutationPayload };
+  return { supabase, setTableResult, setTableResultOnce, setRpcResult, resetResults, tableCalls, rpcCalls, getMutationPayload };
 }
 
 /**
