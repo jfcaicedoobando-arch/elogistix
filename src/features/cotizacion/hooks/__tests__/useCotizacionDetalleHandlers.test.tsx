@@ -89,22 +89,33 @@ beforeEach(() => {
 });
 
 describe("useCotizacionDetalleHandlers", () => {
-  it("handleCambiarEstado actualiza estado y sincroniza etapa CRM", async () => {
+  it("handleCambiarEstado sincroniza la etapa CRM en estados no terminales", async () => {
     actualizarEstadoMutateAsync.mockResolvedValue(undefined);
     sincronizarEtapaMock.mockResolvedValue(undefined);
     const { result } = renderHook(() => useCotizacionDetalleHandlers(cot()), { wrapper: createWrapper() });
-    await act(async () => { await result.current.handleCambiarEstado("aceptada"); });
-    expect(actualizarEstadoMutateAsync).toHaveBeenCalledWith({ id: "cot-1", estado: "aceptada" });
-    expect(sincronizarEtapaMock).toHaveBeenCalledWith({ oportunidadId: "opp-1", estadoCotizacion: "aceptada" });
+    await act(async () => { await result.current.handleCambiarEstado("Enviada"); });
+    expect(actualizarEstadoMutateAsync).toHaveBeenCalledWith({ id: "cot-1", estado: "Enviada" });
+    expect(sincronizarEtapaMock).toHaveBeenCalledWith({ oportunidadId: "opp-1", estadoCotizacion: "Enviada" });
     // v13.359.1 — el toast lo emite el hook de mutación, no el handler.
     expect(notifySuccessMock).not.toHaveBeenCalled();
   });
+
+  it.each(["Aceptada", "En operación", "Rechazada"])(
+    "handleCambiarEstado NO sincroniza desde el cliente en %s (autoridad de la BD)",
+    async (estado) => {
+      actualizarEstadoMutateAsync.mockResolvedValue(undefined);
+      const { result } = renderHook(() => useCotizacionDetalleHandlers(cot()), { wrapper: createWrapper() });
+      await act(async () => { await result.current.handleCambiarEstado(estado); });
+      expect(actualizarEstadoMutateAsync).toHaveBeenCalledWith({ id: "cot-1", estado });
+      expect(sincronizarEtapaMock).not.toHaveBeenCalled();
+    },
+  );
 
   it("handleCambiarEstado swallow-ea fallas CRM pero NO bloquea el éxito", async () => {
     actualizarEstadoMutateAsync.mockResolvedValue(undefined);
     sincronizarEtapaMock.mockRejectedValue(new Error("crm down"));
     const { result } = renderHook(() => useCotizacionDetalleHandlers(cot()), { wrapper: createWrapper() });
-    await act(async () => { await result.current.handleCambiarEstado("rechazada"); });
+    await act(async () => { await result.current.handleCambiarEstado("Enviada"); });
     expect(notifyErrorMock).not.toHaveBeenCalled();
   });
 
