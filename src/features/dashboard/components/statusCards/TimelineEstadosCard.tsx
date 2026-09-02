@@ -64,14 +64,15 @@ export function TimelineEstadosCard({ conteoPorEstado, isLoading }: Props) {
                     )}
                   </div>
 
-                  {/* E-15: la etiqueta se trunca en pantallas angostas
-                      ("Confirm…"); Hint expone el nombre completo del
-                      estado como texto accesible (foco y hover/tap). */}
+                  {/* E-15 / v13.823.24: la etiqueta ya no se corta ("Por liqui…");
+                      envuelve en dos renglones y conserva el Hint con el nombre
+                      completo para foco y hover/tap. */}
                   <Hint label={estado}>
-                    <span className="text-label sm:text-label font-medium mt-0.5 text-muted-foreground text-center truncate max-w-full px-1 cursor-help">
+                    <span className="text-label font-medium mt-0.5 text-muted-foreground text-center leading-tight text-balance px-0.5 cursor-help">
                       {estado}
                     </span>
                   </Hint>
+
 
                   {idx < ESTADOS_FILTRO.length - 1 && (
                     <div className="absolute top-5 sm:top-6 left-full w-full flex items-center justify-center pointer-events-none">
