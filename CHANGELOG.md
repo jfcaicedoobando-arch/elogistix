@@ -1,5 +1,17 @@
 # Changelog
 
+## [13.823.57] - 2026-09-02
+### Una sola autoridad cierra la oportunidad cuando se acepta la cotización
+- **Cierre en un solo paso**: antes tres reglas automáticas competían al aceptar una cotización, como tres personas escribiendo en la misma libreta al mismo tiempo: a veces la oportunidad quedaba ganada pero sin apuntar cuál cotización ganó, sin la nota de auditoría o sin avisar al vendedor. Ahora una única regla hace todo junto y en el mismo movimiento: etapa ganada, probabilidad 100%, fecha de cierre, monto real, cotización ganadora, una sola nota de auditoría y un solo aviso.
+- **Sin duplicados**: reintentar la aceptación o pasar la cotización a "En operación" no vuelve a auditar ni a notificar, y no altera el monto ya registrado.
+- **Una ganadora por oportunidad**: si ya hay una cotización ganadora viva, otra no puede tomar su lugar; además la ganadora no puede cambiarse de oportunidad ni de empresa, con un índice de respaldo en la base.
+- **Oportunidad perdida**: hay que reabrirla explícitamente antes de aceptarle una cotización.
+- **Papelera con memoria**: enviar la cotización ganadora a la papelera conserva la historia de la oportunidad (monto, ganadora y auditoría).
+- **Historia intacta**: el único caso histórico (folio COT-2026-0123) se enlazó usando su fotografía guardada de la versión aceptada, conservando su monto real de 1,798.48 en lugar del subtotal vivo, sin generar avisos tardíos.
+- **Menos manos en el pastel desde la app**: la pantalla de cotizaciones ya sólo sincroniza la etapa al enviar; aceptar, operar o rechazar queda a cargo de la base, y al cambiar el estado se refrescan oportunidades, Higiene y el tablero.
+- **Variante cerrada**: revertir una cotización aceptada a borrador seguía prohibido por las reglas de estado; en lugar de habilitar ese atajo se dejó documentado y probado que está bloqueado (la re-cotización se hace con una versión nueva).
+- **Pruebas**: nueva suite SQL con dos empresas para primera aceptación, reintento, segunda ganadora, oportunidad perdida, inmutabilidad, papelera, índice y permisos de la función; más invariantes de esquema y pruebas de interfaz.
+
 ## [13.823.56] - 2026-09-02
 ### Actividades sólo sobre registros propios, reloj de seguimiento honesto e Higiene fresca
 - **Actividades bien ligadas**: una actividad sólo puede colgarse de un prospecto, oportunidad, cliente o contacto que exista, esté vivo y sea de la misma empresa; también al intentar cambiar la empresa o el registro ligado. El mensaje es el mismo en todos los casos para no revelar si ese registro existe en otra empresa (como un portero que dice "no está en la lista" sin contar de quién es la lista). La regla aplica igual a procesos internos.
