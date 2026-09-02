@@ -84,9 +84,9 @@ export default function Operaciones() {
           <KpiErrorCard onRetry={() => refetchTarifasPendientes()} />
         ) : (
           <KpiCard
-            label="Tarifas por aprobar"
+            label="Tarifas pendientes"
             value={tarifasPendientes ?? 0}
-            sublabel={(tarifasPendientes ?? 0) > 0 ? "Esperando primera aprobación" : "Al día"}
+            sublabel={(tarifasPendientes ?? 0) > 0 ? "Requieren revisión" : "Sin pendientes"}
             icon={RefreshCw}
             variant={(tarifasPendientes ?? 0) > 0 ? "destructive" : "info"}
             iconVariant="chip"

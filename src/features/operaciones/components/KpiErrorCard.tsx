@@ -11,7 +11,7 @@ interface KpiErrorCardProps {
   label?: string;
 }
 
-export function KpiErrorCard({ onRetry, label = "Tarifas por aprobar" }: KpiErrorCardProps) {
+export function KpiErrorCard({ onRetry, label = "Tarifas pendientes" }: KpiErrorCardProps) {
   return (
     <Card className="border-destructive/30 bg-destructive/5 flex flex-col justify-center gap-2 p-4">
       <div className="flex items-center gap-2 text-destructive">
