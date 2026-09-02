@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import type { LucideIcon } from "lucide-react";
 import type { ColumnDef, OnChangeFn, RowSelectionState, VisibilityState } from "@tanstack/react-table";
 import { useNavigate } from "react-router-dom";
 import { DataTable } from "@/components/shared/DataTable";
@@ -69,6 +70,9 @@ interface Props<T> {
   hoverable?: boolean;
   bordered?: boolean;
   tableClassName?: string;
+  /** Sólo-desktop: empty state built-in de `DataTable`, ignorado en la vista de tarjetas. */
+  emptyHint?: string;
+  emptyIcon?: ReactNode | LucideIcon;
 }
 
 export function ResponsiveDataTable<T>(props: Props<T>) {

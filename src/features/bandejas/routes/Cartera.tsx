@@ -17,10 +17,9 @@ import { Inbox } from "lucide-react";
 import { useCarteraPage } from "@/features/bandejas/hooks/useCarteraPage";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { PageContainer } from "@/components/shared/PageContainer";
-import { AsyncBoundary } from "@/components/shared/states/AsyncBoundary";
-import { DataTable } from "@/components/shared/DataTable";
+import { ResponsiveDataTable } from "@/components/shared/dataTable/ResponsiveDataTable";
 import { UnifiedFiltersBar } from "@/components/shared/filters/UnifiedFiltersBar";
-import { CarteraMobileList } from "./_sections/CarteraMobileList";
+import { CarteraMobileCard } from "@/features/bandejas/components/CarteraMobileCard";
 import { CarteraKpis } from "./_sections/CarteraKpis";
 import { DatePickerMx } from "@/components/ui/date-picker-mx";
 import { DialogRecordatorioCobranza, type FacturaRecordatorio } from "@/features/cobranza/components/DialogRecordatorioCobranza";
@@ -138,23 +137,12 @@ export default function Cartera() {
         onClearAll={paged.resetAll}
       />
 
-      {/* Mobile: lista de tarjetas (sm:hidden). Las cifras nunca quedan cortadas. */}
-      <div className="sm:hidden">
-        <AsyncBoundary
-          isLoading={isLoading}
-          isError={isError}
-          onRetry={refetch}
-          skeleton={<CarteraMobileList rows={[]} isLoading />}
-          errorTitle="No se pudo cargar la cartera"
-        >
-          <CarteraMobileList rows={paged.rows} isLoading={false} />
-        </AsyncBoundary>
-      </div>
-
-      {/* Desktop / tablet: DataTable unificada con orden + paginación server-tagged. */}
-      <Card className="hidden sm:block">
+      {/* v13.823.25: ResponsiveDataTable unifica desktop y móvil (antes:
+          DataTable + CarteraMobileList duplicados) y evita el desbordamiento
+          horizontal en plegables (~692px). */}
+      <Card>
         <CardContent className="p-0">
-          <DataTable
+          <ResponsiveDataTable
             columns={columns}
             data={paged.rows}
             rowKey={(r) => r.factura_id}
@@ -172,6 +160,7 @@ export default function Cartera() {
             emptyHint="¡Todo cobrado!"
             rowSelection={canRegistrarCobro ? rowSelection : undefined}
             onRowSelectionChange={canRegistrarCobro ? setRowSelection : undefined}
+            mobileCard={(r) => <CarteraMobileCard row={r} />}
           />
         </CardContent>
       </Card>
