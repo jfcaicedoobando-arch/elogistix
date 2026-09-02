@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { notifySuccess } from "@/lib/ui/appFeedback";
+import { notifySuccess, notifyWarning } from "@/lib/ui/appFeedback";
 import { notifyError } from "@/lib/ui/appFeedback";
+
 import {
   cerrarEmbarque,
   fetchCierreLog,
