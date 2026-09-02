@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.823.33] - 2026-09-02
+### Cancelaciones al día y conceptos de IA sin importes cruzados
+- **Sincronización automática de cancelaciones (alta)**: se aplicó a la base publicada el campo de "última revisión" que el proceso automático necesitaba. Antes fallaba en cada corrida (cada ~30 min) y una factura cancelada ante el SAT podía seguir apareciendo como activa en facturación y cobranza.
+- **Borrar un concepto extraído por IA (media)**: al eliminar un renglón, los recuadros de cantidad, importe e IVA de los renglones que suben de posición ya muestran sus propios valores; antes conservaban los del renglón borrado y podían guardarse cifras equivocadas.
+
 ## [13.823.32] - 2026-09-02
 ### Pagos a proveedor atómicos, una cotización un embarque y CRM por conjunto
 - **Programación de pagos (P1)**: la fecha programada se fija con una operación de servidor mínima que valida la organización de la factura y roles exactos (admin, admin de organización, tesorero, contador, super admin). Antes el guardado directo lo bloqueaba justo para Tesorería y lo permitía a roles que no deberían programar.
