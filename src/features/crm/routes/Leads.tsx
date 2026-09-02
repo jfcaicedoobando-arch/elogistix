@@ -8,7 +8,7 @@
  *
  * Sin botón "Nuevo lead" propio (vive en QuickAddMenu del header global).
  */
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 
 import { Card, CardContent } from "@/components/ui/card";
 import {
