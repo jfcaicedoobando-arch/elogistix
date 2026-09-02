@@ -9,7 +9,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PageHeader } from "@/components/shared/PageHeader";
-import { DataTable } from "@/components/shared/DataTable";
+import { ResponsiveDataTable } from "@/components/shared/dataTable/ResponsiveDataTable";
 import { useAgenteTarifas } from "@/features/portal-agente/hooks";
 import { AgenteTarifaForm } from "@/features/portal-agente/components/AgenteTarifaForm";
 import { Plus, FileSpreadsheet } from "lucide-react";
@@ -20,6 +20,7 @@ import {
   buildAgenteTarifasColumns,
   toInitial,
 } from "./_sections/agenteTarifasColumns";
+import { AgenteTarifaCard } from "./_sections/AgenteTarifaCard";
 import { todayLocalISO } from "@/lib/date/today";
 import { ErrorState } from "@/components/shared/states/ErrorState";
 
@@ -115,12 +116,19 @@ export default function AgenteTarifas() {
       {isError ? (
         <ErrorState onRetry={() => void refetch()} />
       ) : (
-      <DataTable<AgenteTarifaRow>
+      <ResponsiveDataTable<AgenteTarifaRow>
         columns={columns}
         data={filtradas}
         rowKey={(t) => t.id}
         isLoading={isLoading}
         emptyMessage="No hay tarifas para este filtro."
+        mobileCard={(t) => (
+          <AgenteTarifaCard
+            t={t}
+            onEditar={(x) => setEditor({ open: true, modo: "editar", tarifaId: x.id, initial: toInitial(x) })}
+            onDuplicar={(x) => { void handleDuplicar(x); }}
+          />
+        )}
       />
       )}
 
