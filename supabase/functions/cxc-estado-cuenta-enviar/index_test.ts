@@ -65,3 +65,12 @@ Deno.test("defecto 9: un miembro de otra organización no pasa", async () => {
   });
   assertEquals(await authorizeOrgRole(client as never, "u1", "org-2", ROLES_COBRANZA_FISCAL), false);
 });
+
+Deno.test("defecto 9: la clave del envío es estable (sin Date.now)", async () => {
+  const { messageIdEstadoCuenta } = await import("./index.ts");
+  const a = messageIdEstadoCuenta("cli-1", "2026-01-01", "2026-01-31", "Ana@Cliente.com");
+  const b = messageIdEstadoCuenta("cli-1", "2026-01-01", "2026-01-31", "ana@cliente.com");
+  assertEquals(a, b);
+  assert(!src.includes("Date.now()"), "el message_id sigue dependiendo del reloj");
+  assertStringIncludes(src, "yaEnviado");
+});
