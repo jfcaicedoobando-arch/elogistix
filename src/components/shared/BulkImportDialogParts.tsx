@@ -17,6 +17,8 @@ interface BodyProps<T> {
   insertedCount: number;
   /** L3: registros ya guardados cuando la carga se interrumpió a la mitad. */
   parcialCount?: number;
+  /** Defecto 4: filas omitidas por ya existir o repetirse en el archivo. */
+  omitidosCount?: number;
   templateHeaders: readonly string[];
   onDownloadTemplate: () => void;
   onPick: () => void;
@@ -24,8 +26,8 @@ interface BodyProps<T> {
 }
 
 export function BulkImportBody<T>({
-  step, preview, fileName, error, insertedCount, parcialCount = 0, templateHeaders,
-  onDownloadTemplate, onPick, onReset,
+  step, preview, fileName, error, insertedCount, parcialCount = 0, omitidosCount = 0,
+  templateHeaders, onDownloadTemplate, onPick, onReset,
 }: BodyProps<T>) {
   if (step === "upload") {
     return (
@@ -63,6 +65,12 @@ export function BulkImportBody<T>({
         <p className="text-base font-medium">
           {insertedCount} registro{insertedCount === 1 ? "" : "s"} importado{insertedCount === 1 ? "" : "s"} correctamente.
         </p>
+        {omitidosCount > 0 && (
+          <p className="text-body-sm text-muted-foreground max-w-md">
+            Se omitieron {omitidosCount} fila{omitidosCount === 1 ? "" : "s"} porque
+            ya existían o estaban repetidas en el archivo.
+          </p>
+        )}
       </div>
     );
   }

@@ -44,12 +44,13 @@ export function ProveedoresImportDialog({ open, onOpenChange }: Props) {
       onCommit={async (payloads, reportarProgreso) => {
         // N-05 (QA r2): un INSERT por lote de 200 filas (no uno por fila).
         // L3: se reporta el avance por lote para informar cortes parciales.
-        await insertProveedoresLote(payloads, reportarProgreso);
+        const { creados, omitidos } = await insertProveedoresLote(payloads, reportarProgreso);
         registrarActividad.mutate({
           accion: "crear",
           modulo: "proveedores",
-          entidad_nombre: `Importación CSV (${payloads.length})`,
+          entidad_nombre: `Importación CSV (${creados.length})`,
         });
+        return { creados: creados.length, omitidos };
       }}
       onSuccess={(n) => {
         queryClient.invalidateQueries({ queryKey: queryKeys.proveedores.all });

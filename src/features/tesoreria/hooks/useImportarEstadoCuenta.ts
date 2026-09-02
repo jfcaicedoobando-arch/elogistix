@@ -32,7 +32,20 @@ export function useImportarEstadoCuenta(cuentaId: string): Resultado {
     }
     try {
       notifyInfo(undefined, { title: "Procesando archivo…" });
-      const movimientos = await parseEstadoCuentaBBVA(file);
+      const { movimientos, ilegibles, sinImporte } = await parseEstadoCuentaBBVA(file);
+      // Defecto 3: si el parser no pudo leer filas, NO se importa nada. Antes
+      // se descartaban en silencio y el saldo quedaba incompleto.
+      if (ilegibles.length > 0) {
+        const detalle = ilegibles
+          .slice(0, 3)
+          .map((f) => `fila ${f.fila}: ${f.motivo}`)
+          .join("; ");
+        notifyError(undefined, {
+          title: `No se importó nada: ${ilegibles.length} filas ilegibles (${detalle}). Corrígelas y vuelve a cargar el archivo.`,
+          method: "PAGES_TESORERIA_TESORERIACONCILIACION_4",
+        });
+        return;
+      }
       if (movimientos.length === 0) {
         notifyError(undefined, {
           title: "No se encontraron movimientos válidos",
@@ -41,8 +54,9 @@ export function useImportarEstadoCuenta(cuentaId: string): Resultado {
         return;
       }
       const res = await importar.mutateAsync({ cuentaId, movimientos });
+      const omitidas = sinImporte > 0 ? ` · ${sinImporte} filas sin importe omitidas` : "";
       notifySuccess(undefined, {
-        title: `Importados ${res.nuevos} nuevos / ${res.duplicados} duplicados ignorados`,
+        title: `Importados ${res.nuevos} nuevos / ${res.duplicados} duplicados ignorados${omitidas}`,
       });
     } catch (err) {
       notifyError(undefined, {

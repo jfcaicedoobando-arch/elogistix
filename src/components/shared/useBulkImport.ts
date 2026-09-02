@@ -18,8 +18,21 @@ interface UseBulkImportArgs<T> {
    * quedaron guardadas. Si un lote falla a la mitad, el usuario ve el corte
    * exacto en vez de un "error" opaco que lo hace re-subir todo el archivo.
    */
-  onCommit: (payloads: T[], reportarProgreso?: (insertados: number) => void) => Promise<void>;
+  onCommit: (
+    payloads: T[],
+    reportarProgreso?: (insertados: number) => void,
+  ) => Promise<void | ResumenCommit>;
   onSuccess?: (insertedCount: number) => void;
+}
+
+/**
+ * Defecto 4: `onCommit` puede devolver el conteo REAL guardado y cuántas filas
+ * se omitieron por duplicado, para no afirmar "importados N" cuando la base
+ * omitió algunas.
+ */
+export interface ResumenCommit {
+  creados: number;
+  omitidos: number;
 }
 
 export function useBulkImport<T>({ mapRows, onCommit, onSuccess }: UseBulkImportArgs<T>) {
@@ -29,6 +42,7 @@ export function useBulkImport<T>({ mapRows, onCommit, onSuccess }: UseBulkImport
   const [error, setError] = useState<string | null>(null);
   const [insertedCount, setInsertedCount] = useState(0);
   const [parcialCount, setParcialCount] = useState(0);
+  const [omitidosCount, setOmitidosCount] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const reset = (): void => {
@@ -38,6 +52,7 @@ export function useBulkImport<T>({ mapRows, onCommit, onSuccess }: UseBulkImport
     setError(null);
     setInsertedCount(0);
     setParcialCount(0);
+    setOmitidosCount(0);
     if (inputRef.current) inputRef.current.value = "";
   };
 
@@ -77,13 +92,16 @@ export function useBulkImport<T>({ mapRows, onCommit, onSuccess }: UseBulkImport
     let guardados = 0;
     try {
       const payloads = preview.valid.map((v) => v.payload);
-      await onCommit(payloads, (n) => {
+      const resumen = await onCommit(payloads, (n) => {
         guardados = n;
         setParcialCount(n);
       });
-      setInsertedCount(payloads.length);
+      // Defecto 4: el conteo mostrado es el real devuelto por el servicio.
+      const creados = resumen ? resumen.creados : payloads.length;
+      setInsertedCount(creados);
+      setOmitidosCount(resumen ? resumen.omitidos : 0);
       setStep("done");
-      onSuccess?.(payloads.length);
+      onSuccess?.(creados);
     } catch (e) {
       const detalle = e instanceof Error ? e.message : "Error al importar.";
       // L3: además del corte parcial, decimos EXACTAMENTE en qué fila del CSV
@@ -111,8 +129,8 @@ export function useBulkImport<T>({ mapRows, onCommit, onSuccess }: UseBulkImport
   };
 
   return {
-    step, fileName, preview, error, insertedCount, parcialCount, inputRef,
-    reset, handleFile, handleCommit,
+    step, fileName, preview, error, insertedCount, parcialCount, omitidosCount,
+    inputRef, reset, handleFile, handleCommit,
   };
 
 }

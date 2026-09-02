@@ -17,7 +17,7 @@
  * (3 pasos visibles: Cargar → Revisar → Confirmar). Cero cambios en lógica.
  */
 import { Upload } from "lucide-react";
-import { useBulkImport, type Step } from "@/components/shared/useBulkImport";
+import { useBulkImport, type Step, type ResumenCommit } from "@/components/shared/useBulkImport";
 import { BulkImportBody, BulkImportFooter } from "@/components/shared/BulkImportDialogParts";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { downloadCsvTemplate } from "@/lib/csv/downloadCsvTemplate";
@@ -37,7 +37,10 @@ export interface BulkImportDialogProps<T> {
    * L3: puede llamar `reportarProgreso(n)` por lote para que el diálogo
    * indique cuántos registros quedaron guardados si algo falla a la mitad.
    */
-  onCommit: (payloads: T[], reportarProgreso?: (insertados: number) => void) => Promise<void>;
+  onCommit: (
+    payloads: T[],
+    reportarProgreso?: (insertados: number) => void,
+  ) => Promise<void | ResumenCommit>;
   onSuccess?: (insertedCount: number) => void;
 }
 
@@ -62,8 +65,8 @@ export function BulkImportDialog<T>({
   onSuccess,
 }: BulkImportDialogProps<T>) {
   const {
-    step, fileName, preview, error, insertedCount, parcialCount, inputRef,
-    reset, handleFile, handleCommit,
+    step, fileName, preview, error, insertedCount, parcialCount, omitidosCount,
+    inputRef, reset, handleFile, handleCommit,
   } = useBulkImport<T>({ mapRows, onCommit, onSuccess });
 
   const handleOpenChange = (next: boolean): void => {
@@ -101,6 +104,7 @@ export function BulkImportDialog<T>({
         error={error}
         insertedCount={insertedCount}
         parcialCount={parcialCount}
+        omitidosCount={omitidosCount}
         templateHeaders={templateHeaders}
         onDownloadTemplate={onDownloadTemplate}
         onPick={() => inputRef.current?.click()}

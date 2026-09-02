@@ -51,8 +51,10 @@ export async function fetchPortalEmbarque(id: string) {
   );
 }
 
+// Defecto 5: `unwrap` (no `unwrapOr`) para que un error de red/RLS llegue a la
+// UI como error y no como "este embarque no tiene eventos".
 export async function fetchPortalEventos(embarqueId: string) {
-  return unwrapOr(
+  const rows = await unwrap(
     supabase
       .from("eventos_embarque")
       .select(PORTAL_EVENTO_COLUMNS)
@@ -61,12 +63,12 @@ export async function fetchPortalEventos(embarqueId: string) {
       .is("deleted_at", null)
       .order("fecha", { ascending: false })
       .limit(PORTAL_RELATED_MAX),
-    [],
   );
+  return rows ?? [];
 }
 
 export async function fetchPortalDocumentos(embarqueId: string) {
-  return unwrapOr(
+  const rows = await unwrap(
     supabase
       .from("documentos_embarque")
       .select(PORTAL_DOCUMENTO_COLUMNS)
@@ -75,8 +77,8 @@ export async function fetchPortalDocumentos(embarqueId: string) {
       .is("deleted_at", null)
       .order("created_at", { ascending: true })
       .limit(PORTAL_RELATED_MAX),
-    [],
   );
+  return rows ?? [];
 }
 
 // Estados visibles para clientes en el portal. Borrador, Vencida y Cancelada se
