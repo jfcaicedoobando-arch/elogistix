@@ -98,8 +98,7 @@ function DoubleConfirmInner({
           className={dialogSize.sm}
           aria-busy={isPending}
           onEscapeKeyDown={(e) => { if (isPending) e.preventDefault(); }}
-          onPointerDownOutside={(e) => { if (isPending) e.preventDefault(); }}
-          onInteractOutside={(e) => { if (isPending) e.preventDefault(); }}
+          onInteractOutside={(e: Event) => { if (isPending) e.preventDefault(); }}
         >
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2">
