@@ -50,20 +50,21 @@ export default function QuickCreateOportunidadDialog({ open, onOpenChange, onCre
   const etapaInicial = useMemo(() => etapas.find((e) => e.orden === 1) ?? etapas[0], [etapas]);
   const origenListo = origenTipo === "cliente" ? !!clienteId : !!leadId;
 
+  /** Devuelve el mensaje de validación, o null si el formulario es válido. */
+  const validar = (): string | null => {
+    if (!nombre.trim()) return "Nombre requerido";
+    if (!etapaInicial) return "Configura el pipeline primero";
+    if (!origenListo) return "Elige un prospecto o un cliente";
+    return null;
+  };
+
   const submit = async () => {
+    const invalido = validar();
+    if (invalido) {
+      notifyError(undefined, { title: invalido, method: "FEATURES_CRM_COMPONENTS_QUICKCREATE_QUICKCREATEOPORTUNIDADDIALOG_1" });
+      return;
+    }
     const n = nombre.trim();
-    if (!n) {
-      notifyError(undefined, { title: "Nombre requerido", method: "FEATURES_CRM_COMPONENTS_QUICKCREATE_QUICKCREATEOPORTUNIDADDIALOG_1" });
-      return;
-    }
-    if (!etapaInicial) {
-      notifyError(undefined, { title: "Configura el pipeline primero", method: "FEATURES_CRM_COMPONENTS_QUICKCREATE_QUICKCREATEOPORTUNIDADDIALOG_2" });
-      return;
-    }
-    if (!origenListo) {
-      notifyError(undefined, { title: "Elige un prospecto o un cliente", method: "FEATURES_CRM_COMPONENTS_QUICKCREATE_QUICKCREATEOPORTUNIDADDIALOG_4" });
-      return;
-    }
     const cliente = clientes.find((c) => c.id === clienteId);
     try {
       const r = await crear.mutateAsync({
@@ -71,9 +72,9 @@ export default function QuickCreateOportunidadDialog({ open, onOpenChange, onCre
         cliente_id: origenTipo === "cliente" ? (cliente?.id ?? null) : null,
         cliente_nombre: origenTipo === "cliente" ? (cliente?.nombre ?? "") : leadNombre,
         lead_id: origenTipo === "prospecto" ? leadId : null,
-        etapa_id: etapaInicial.id,
+        etapa_id: etapaInicial!.id,
         moneda: "MXN",
-        probabilidad: etapaInicial.probabilidad_default ?? 10,
+        probabilidad: etapaInicial!.probabilidad_default ?? 10,
         vendedor_id: user?.id ?? null,
         vendedor_email: user?.email ?? "",
       });
