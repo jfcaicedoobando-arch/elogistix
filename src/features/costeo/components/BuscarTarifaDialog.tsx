@@ -43,11 +43,12 @@ interface ResultadosBodyProps {
   onElegir?: (row: TopTarifaRow) => void;
   onOpenChange: (v: boolean) => void;
   selectLabel?: string;
+  diagnostico?: DiagnosticoTarifas;
 }
 
 function ResultadosBody({
   origen, destino, tipo, isFetching, tarifas, error, onRetry, isRefetching,
-  onElegir, onOpenChange, selectLabel,
+  onElegir, onOpenChange, selectLabel, diagnostico,
 }: ResultadosBodyProps) {
   if (!origen || !destino || !tipo) {
     return (
