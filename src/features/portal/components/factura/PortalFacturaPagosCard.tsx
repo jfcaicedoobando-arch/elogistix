@@ -38,17 +38,11 @@ export default function PortalFacturaPagosCard({
   const { data: resumen, isLoading: loadingResumen } =
     usePortalResumenSaldoFactura(facturaId);
 
-  const terminal = estadoFactura === "Pagada" || estadoFactura === "Cancelada";
-  const totalPagado = resumen?.pagado ?? 0;
-  const totalNc = resumen?.notasCredito ?? 0;
-  const saldo = terminal ? 0 : resumen?.saldo ?? 0;
-  const liquidada = terminal || (resumen?.liquidada ?? false);
-  const hayMovimientos = (resumen?.numPagos ?? 0) > 0 || (resumen?.numNotas ?? 0) > 0;
-  // Las listas sí están topadas: se avisa cuando hay más movimientos que los
-  // mostrados, para que el cliente no crea que el detalle está completo.
-  const listaTruncada =
-    pagos.length >= PORTAL_RELATED_MAX || notasCredito.length >= PORTAL_RELATED_MAX;
+  const { totalPagado, totalNc, saldo, liquidada, hayMovimientos, listaTruncada } =
+    derivarSaldoPortal(resumen, estadoFactura, pagos.length, notasCredito.length);
   const cargando = isLoading || loadingNc || loadingResumen;
+  const sinPagos = !cargando && pagos.length === 0;
+  const conPagos = !cargando && pagos.length > 0;
 
   return (
     <Card>
