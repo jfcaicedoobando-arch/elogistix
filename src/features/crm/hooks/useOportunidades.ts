@@ -65,6 +65,7 @@ export function useCrearOportunidad() {
     mutationFn: (input: OportunidadInput) => crearOportunidad(input, user),
     onSuccess: (data) => {
       qc.invalidateQueries({ queryKey: queryKeys.crm.oportunidades.all });
+      qc.invalidateQueries({ queryKey: queryKeys.crm.higiene.all });
       qc.invalidateQueries({ queryKey: queryKeys.crm.kpis });
       qc.invalidateQueries({ queryKey: queryKeys.crm.dashboardAll });
       notifySuccess(undefined, {
@@ -87,6 +88,7 @@ export function useActualizarOportunidad() {
     mutationFn: actualizarOportunidad,
     onSuccess: (_d, vars) => {
       qc.invalidateQueries({ queryKey: queryKeys.crm.oportunidades.all });
+      qc.invalidateQueries({ queryKey: queryKeys.crm.higiene.all });
       qc.invalidateQueries({ queryKey: queryKeys.crm.oportunidades.detail(vars.id) });
       qc.invalidateQueries({ queryKey: queryKeys.crm.kpis });
     },
@@ -103,6 +105,7 @@ export function useEliminarOportunidad() {
     mutationFn: (id: string) => eliminarOportunidad(id, user?.id ?? null),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.crm.oportunidades.all });
+      qc.invalidateQueries({ queryKey: queryKeys.crm.higiene.all });
       notifySuccess(undefined, { title: "Oportunidad eliminada" });
     },
     onError: (error: Error) => {
