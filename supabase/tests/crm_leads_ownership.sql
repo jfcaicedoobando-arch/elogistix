@@ -1,5 +1,5 @@
 -- =============================================================
--- crm_leads_ownership.sql · v13.823.60
+-- crm_leads_ownership.sql · v13.823.61
 --
 -- Congela la autorización y el ownership de leads:
 --   A) crm_calificar_prospecto: rol EFECTIVO en la organización del lead
@@ -9,7 +9,10 @@
 --   C) RLS crm_leads: gestión in-org escribe, vendedor sólo su propio lead,
 --      operador/viewer leen pero no escriben, cross-org bloqueado, y ni
 --      organization_id ni vendedor_id pueden reasignarse a lo propio.
---   D) Invariantes de definición y ACL de las dos RPCs.
+--   D) Invariantes de definición y ACL de las dos RPCs, y topología exacta
+--      de las policies de crm_leads (separadas por comando en v13.823.61).
+--   E) Organización ACTIVA, roles de lectura y Papelera (soft-delete).
+--   F) ACL exacta de la tabla y metadatos de las RPCs.
 --
 -- Ejecución manual:
 --   psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1 -f supabase/tests/crm_leads_ownership.sql
