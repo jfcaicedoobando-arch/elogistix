@@ -444,6 +444,12 @@ jobs:
           LOG_DIR: /tmp/guards-logs-radar
         run: bash scripts/ci/run-guards.sh
 
+      - name: Concurrencia de dos sesiones — cotización ganadora única
+        # v13.823.58 — no cabe en las suites SQL (una sola transacción
+        # BEGIN…ROLLBACK): necesita dos conexiones compitiendo por la misma
+        # oportunidad. El script commitea su fixture y lo limpia siempre.
+        run: bash scripts/ci/concurrencia-cotizacion-ganadora.sh
+
       - name: Subir logs de guards
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1

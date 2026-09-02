@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.823.58] - 2026-09-02
+### Aceptar una cotización dos veces ya no falla
+- **Reintento seguro**: si al aceptar una cotización se pierde la respuesta (internet inestable) y vuelves a intentarlo, ahora recibes éxito en lugar de un error. Es como volver a preguntar "¿ya quedó?" en vez de intentar firmar otra vez: no se reescribe la fecha ni el usuario de aceptación, ni el monto, ni la auditoría, ni el aviso al vendedor.
+- **Se detiene si algo no cuadra**: si la oportunidad ya tiene otra cotización ganadora, avisa del conflicto; si el enlace quedó incompleto, lo reporta para revisión manual en vez de "arreglarlo" en silencio.
+- **Etiqueta correcta en el historial**: la rutina que enlazó oportunidades ganadas antiguas usando su fotografía guardada ahora sella el número y la fecha de esa misma fotografía. Revisión previa: 0 registros afectados hoy.
+- **Más pruebas, menos falsos verdes**: la suite de la cotización ganadora ahora usa un vendedor real (exige exactamente un aviso), un embarque real, la llamada doble a la operación de aceptar y verifica el índice de respaldo y el disparador con sus datos exactos. Se agregó además una prueba de dos sesiones simultáneas que corre en GitHub Actions.
+
 ## [13.823.57] - 2026-09-02
 ### Una sola autoridad cierra la oportunidad cuando se acepta la cotización
 - **Cierre en un solo paso**: antes tres reglas automáticas competían al aceptar una cotización, como tres personas escribiendo en la misma libreta al mismo tiempo: a veces la oportunidad quedaba ganada pero sin apuntar cuál cotización ganó, sin la nota de auditoría o sin avisar al vendedor. Ahora una única regla hace todo junto y en el mismo movimiento: etapa ganada, probabilidad 100%, fecha de cierre, monto real, cotización ganadora, una sola nota de auditoría y un solo aviso.

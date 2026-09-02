@@ -75,6 +75,10 @@ export const LC_CODE_MESSAGES_CRM: Record<string, string> = {
   // v13.823.57 · autoridad única cotización terminal → oportunidad ganada.
   LC_COTIZACION_GANADORA_EXISTE:
     "Esta oportunidad ya tiene una cotización ganadora. Recarga la pantalla: sólo una cotización puede quedar aceptada o en operación por oportunidad.",
+  // v13.823.58 · la cotización ya está aceptada pero su enlace con la
+  // oportunidad quedó incompleto: no se repara en automático.
+  LC_COTIZACION_ACEPTACION_INCONSISTENTE:
+    "La cotización ya está aceptada, pero su enlace con la oportunidad quedó incompleto. Avisa a soporte: requiere revisión manual, no se corrige en automático.",
   LC_COTIZACION_GANADORA_INMUTABLE:
     "La cotización ganadora no puede cambiar de oportunidad ni de organización.",
   LC_OPORTUNIDAD_PERDIDA_REQUIERE_REAPERTURA:

@@ -265,7 +265,8 @@ BEGIN
     RAISE EXCEPTION E'schema-invariants: triggers competidores resucitados: %', missing;
   END IF;
 
-  -- 4) v13.823.57 · timing/eventos del trigger canónico + índice parcial.
+  -- 4) v13.823.57/58 · timing, eventos y columnas exactas del trigger canónico
+  --    + metadatos exactos del índice parcial de respaldo.
   IF NOT EXISTS (
     SELECT 1
     FROM pg_trigger t
@@ -275,19 +276,39 @@ BEGIN
       AND (t.tgtype & 2) = 2       -- BEFORE
       AND (t.tgtype & 4) = 4       -- INSERT
       AND (t.tgtype & 16) = 16     -- UPDATE
+      AND (t.tgtype & 8) = 0       -- sin DELETE
       AND (t.tgtype & 1) = 1       -- FOR EACH ROW
+      AND (
+        SELECT string_agg(a.attname, ',' ORDER BY a.attname)
+          FROM unnest(t.tgattr::int[]) AS col(attnum)
+          JOIN pg_attribute a ON a.attrelid = t.tgrelid AND a.attnum = col.attnum
+      ) = 'deleted_at,embarque_id,estado,oportunidad_id,organization_id'
   ) THEN
-    RAISE EXCEPTION 'schema-invariants: zz_crm_cerrar_oportunidad_desde_cotizacion debe ser BEFORE INSERT OR UPDATE FOR EACH ROW';
+    RAISE EXCEPTION 'schema-invariants: zz_crm_cerrar_oportunidad_desde_cotizacion debe ser BEFORE INSERT OR UPDATE OF (estado, embarque_id, oportunidad_id, organization_id, deleted_at) FOR EACH ROW';
   END IF;
 
   IF NOT EXISTS (
-    SELECT 1 FROM pg_indexes
-     WHERE schemaname = 'public'
-       AND tablename = 'cotizaciones'
-       AND indexname = 'ux_cotizaciones_ganadora_viva_por_oportunidad'
+    SELECT 1
+    FROM pg_class ic
+    JOIN pg_index i ON i.indexrelid = ic.oid
+    JOIN pg_namespace n ON n.oid = ic.relnamespace
+    WHERE n.nspname = 'public'
+      AND ic.relname = 'ux_cotizaciones_ganadora_viva_por_oportunidad'
+      AND i.indisunique
+      AND (
+        SELECT string_agg(a.attname, ',' ORDER BY k.ord)
+          FROM unnest(i.indkey::int[]) WITH ORDINALITY AS k(attnum, ord)
+          JOIN pg_attribute a ON a.attrelid = i.indrelid AND a.attnum = k.attnum
+      ) = 'organization_id,oportunidad_id'
+      AND pg_get_expr(i.indpred, i.indrelid) ILIKE '%deleted_at IS NULL%'
+      AND pg_get_expr(i.indpred, i.indrelid) ILIKE '%oportunidad_id IS NOT NULL%'
+      AND pg_get_expr(i.indpred, i.indrelid) ILIKE '%Aceptada%'
+      AND pg_get_expr(i.indpred, i.indrelid) ILIKE '%En operación%'
+      AND pg_get_expr(i.indpred, i.indrelid) NOT ILIKE '%Enviada%'
   ) THEN
-    RAISE EXCEPTION 'schema-invariants: falta el índice único parcial ux_cotizaciones_ganadora_viva_por_oportunidad';
+    RAISE EXCEPTION 'schema-invariants: ux_cotizaciones_ganadora_viva_por_oportunidad debe ser UNIQUE (organization_id, oportunidad_id) WHERE deleted_at IS NULL AND oportunidad_id IS NOT NULL AND estado IN (Aceptada, En operación)';
   END IF;
+
 
 
   RAISE NOTICE 'schema-invariants OK — % triggers + % funciones verificados',

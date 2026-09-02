@@ -1,8 +1,9 @@
--- Fuente canónica. Espejo 1:1 de la migración v13.823.58
--- (reintento idempotente: `sin_cambios` + fallo cerrado ante enlace ganador
--- inconsistente, sobre la autoridad única cotización→oportunidad de v13.823.57).
--- Al modificar: edita ESTE archivo y genera la migración con el mismo cuerpo.
+-- v13.823.58 · Microcorrección forward-only del lote de ganadora.
+-- Preflight read-only: 0 filas afectadas por el sello del backfill legacy
+-- (ninguna cotización terminal viva con version_aceptada/aceptada_en faltante
+-- o distinta del último snapshot). No se inventa DML sobre datos vivos.
 
+-- ── 1) Reintento realmente idempotente en aceptar_cotizacion_version ───────
 CREATE OR REPLACE FUNCTION public.aceptar_cotizacion_version(p_cotizacion_id uuid)
 RETURNS jsonb
 LANGUAGE plpgsql
@@ -132,3 +133,64 @@ $$;
 
 REVOKE ALL ON FUNCTION public.aceptar_cotizacion_version(uuid) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION public.aceptar_cotizacion_version(uuid) TO authenticated, service_role;
+
+-- ── 2) Sello coherente con el snapshot en el backfill legacy ───────────────
+-- La rutina de v13.823.57 eligió el snapshot MÁS RECIENTE para el monto cuando
+-- `version_aceptada` era NULL, pero luego selló `version_aceptada = version`
+-- (la versión viva): eso etiqueta una foto con el número de otra. Aquí se
+-- corrige el sello usando `version_num`/`created_at` del snapshot elegido.
+-- Nunca se usa el subtotal vivo. Idempotente y seguro en replay.
+DO $bf$
+DECLARE
+  r record;
+  v_snap record;
+  v_filas int := 0;
+BEGIN
+  FOR r IN
+    SELECT DISTINCT
+           b.organization_id,
+           b.entidad_id AS op_id,
+           (b.detalles -> 'after' ->> 'cotizacion_ganadora_id')::uuid AS cot_id
+      FROM public.bitacora_actividad b
+     WHERE b.accion = 'oportunidad_ganada_backfill'
+       AND b.detalles ->> 'fuente_monto' = 'snapshot_mas_reciente'
+       AND (b.detalles -> 'after' ->> 'cotizacion_ganadora_id') IS NOT NULL
+  LOOP
+    SELECT v.version_num, v.created_at
+      INTO v_snap
+      FROM public.cotizacion_versiones v
+     WHERE v.cotizacion_id = r.cot_id
+     ORDER BY v.version_num DESC
+     LIMIT 1;
+
+    CONTINUE WHEN v_snap.version_num IS NULL;
+
+    UPDATE public.cotizaciones c
+       SET version_aceptada = v_snap.version_num,
+           aceptada_en = v_snap.created_at,
+           updated_at = now()
+     WHERE c.id = r.cot_id
+       AND c.organization_id = r.organization_id
+       -- sólo si el sello vigente proviene de la versión viva (incoherente)
+       AND c.version_aceptada = c.version
+       AND c.version_aceptada IS DISTINCT FROM v_snap.version_num;
+
+    IF FOUND THEN
+      v_filas := v_filas + 1;
+      INSERT INTO public.bitacora_actividad (
+        organization_id, modulo, accion, entidad_id, entidad_nombre,
+        usuario_id, usuario_email, detalles
+      ) VALUES (
+        r.organization_id, 'crm', 'oportunidad_ganada_backfill_sello_corregido',
+        r.op_id, '', NULL, '',
+        jsonb_build_object('cotizacion_id', r.cot_id,
+                           'version_aceptada', v_snap.version_num,
+                           'aceptada_en', v_snap.created_at,
+                           'fuente', 'snapshot_mas_reciente')
+      );
+    END IF;
+  END LOOP;
+
+  RAISE NOTICE 'v13.823.58 backfill sello coherente: % filas corregidas', v_filas;
+END
+$bf$;
