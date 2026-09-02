@@ -61,20 +61,28 @@ export function buildSelectionColumn({
             }}
           />
         );
+        const motivo = motivoBloqueo ?? "No puedes aprobar esta factura.";
         return (
-          <div onClick={(e) => e.stopPropagation()} className="flex items-center justify-center">
-            {bloqueada ? (
+          <div onClick={(e) => e.stopPropagation()} className="flex items-center justify-center gap-1">
+            {checkbox}
+            {bloqueada && (
+              // Un checkbox deshabilitado no dispara el Tooltip (pointer-events),
+              // así que el motivo vive en un botón enfocable + texto para
+              // lectores de pantalla: nunca un checkbox mudo.
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <span>{checkbox}</span>
+                  <button
+                    type="button"
+                    aria-label={`Por qué no se puede aprobar: ${motivo}`}
+                    className="text-muted-foreground hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none rounded-sm"
+                  >
+                    <Info className="h-3.5 w-3.5" />
+                  </button>
                 </TooltipTrigger>
-                <TooltipContent className="max-w-xs">
-                  {motivoBloqueo ?? "No puedes aprobar esta factura."}
-                </TooltipContent>
+                <TooltipContent className="max-w-xs">{motivo}</TooltipContent>
               </Tooltip>
-            ) : (
-              checkbox
             )}
+            {bloqueada && <span className="sr-only">{motivo}</span>}
           </div>
         );
       },
