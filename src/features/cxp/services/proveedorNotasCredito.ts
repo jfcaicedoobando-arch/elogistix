@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Tables, TablesInsert } from "@/integrations/supabase/types";
 import { registrarActividad } from "@/services/bitacora/registrar";
 import { unwrapOr } from "@/lib/supabase/response";
+import { conflictoConcurrenciaError } from "@/lib/errors/concurrencia";
 
 export type NotaCreditoProveedor = Tables<"proveedor_notas_credito">;
 
@@ -81,26 +82,37 @@ export async function crearNotaCreditoProveedor(
   return data;
 }
 
+/**
+ * Aplica una transición de estado y devuelve `true` sólo si el UPDATE afectó
+ * una fila real. Con `.select("id").maybeSingle()` detectamos el caso en que
+ * el WHERE no encontró nada (estado ya cambió por otra petición, id de otra
+ * organización por RLS, o carrera entre pestañas) sin que Supabase lo
+ * reporte como error — antes eso se interpretaba como éxito silencioso.
+ */
 async function updateEstado(
   id: string,
   estado: NotaCreditoProveedor["estado"],
   extra: Partial<NotaCreditoProveedor> = {},
-): Promise<void> {
-  const { error } = await supabase
+): Promise<boolean> {
+  const { data, error } = await supabase
     .from("proveedor_notas_credito")
     .update({ estado, ...extra })
-    .eq("id", id);
+    .eq("id", id)
+    .select("id")
+    .maybeSingle();
   if (error) {
     const mapped = mapEstadoError(error);
     if (mapped) throw mapped;
     throw error;
   }
+  return data !== null;
 }
 
 export async function aprobarNotaCredito(id: string): Promise<void> {
-  await updateEstado(id, "Aprobada", {
+  const actualizo = await updateEstado(id, "Aprobada", {
     aprobada_at: new Date().toISOString(),
   });
+  if (!actualizo) throw conflictoConcurrenciaError();
   await registrarActividad({
     modulo: "cxp",
     accion: "aprobar_nota_credito",
@@ -110,15 +122,8 @@ export async function aprobarNotaCredito(id: string): Promise<void> {
 
 export async function aplicarNotaCredito(id: string): Promise<void> {
   // Reintento defensivo: si la NC no se movió al estado terminal aún, la BD bloqueará.
-  const { error } = await supabase
-    .from("proveedor_notas_credito")
-    .update({ estado: "Aplicada" })
-    .eq("id", id);
-  if (error) {
-    const mapped = mapEstadoError(error);
-    if (mapped) throw mapped;
-    throw error;
-  }
+  const actualizo = await updateEstado(id, "Aplicada");
+  if (!actualizo) throw conflictoConcurrenciaError();
   await registrarActividad({
     modulo: "cxp",
     accion: "aplicar_nota_credito",
@@ -127,15 +132,8 @@ export async function aplicarNotaCredito(id: string): Promise<void> {
 }
 
 export async function cancelarNotaCredito(id: string): Promise<void> {
-  const { error } = await supabase
-    .from("proveedor_notas_credito")
-    .update({ estado: "Cancelada" })
-    .eq("id", id);
-  if (error) {
-    const mapped = mapEstadoError(error);
-    if (mapped) throw mapped;
-    throw error;
-  }
+  const actualizo = await updateEstado(id, "Cancelada");
+  if (!actualizo) throw conflictoConcurrenciaError();
   await registrarActividad({
     modulo: "cxp",
     accion: "cancelar_nota_credito",
