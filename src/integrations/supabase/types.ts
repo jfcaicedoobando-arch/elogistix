@@ -8658,6 +8658,10 @@ export type Database = {
         Returns: boolean
       }
       _seed_demo_limpiar_financiero: { Args: never; Returns: undefined }
+      _tipo_iva_desde_tasa: {
+        Args: { _aplica_iva: boolean; _tasa: number }
+        Returns: string
+      }
       a_mxn: {
         Args: {
           p_eur_mxn: number
@@ -9970,6 +9974,10 @@ export type Database = {
         }
       }
       direccion_totales: { Args: { p_desde: string }; Returns: Json }
+      dof_dias_habiles_entre: {
+        Args: { _desde: string; _hasta: string }
+        Returns: number
+      }
       duplicar_cotizacion: { Args: { p_id: string }; Returns: string }
       duplicar_embarque_completo: {
         Args: {

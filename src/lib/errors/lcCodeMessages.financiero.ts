@@ -85,6 +85,10 @@ export const LC_CODE_MESSAGES_FINANCIERO: Record<string, string> = {
 
   LC_FACTURA_SIN_TC_DOF:
     "No hay tipo de cambio DOF publicado para esa moneda y fecha. Captúralo antes de generar la factura.",
+  LC_FACTURA_TC_DOF_OBSOLETO:
+    "El tipo de cambio DOF más reciente está demasiado atrasado para esta fecha. Sincroniza o captura el tipo de cambio del día antes de facturar.",
+  LC_IVA_TASA_NO_SOPORTADA:
+    "Un concepto tiene una tasa de IVA distinta de 0%, 8% o 16%. Corrígela antes de facturar.",
 
   LC_CXP_TC_REQUERIDO:
     "Falta el tipo de cambio DOF de la factura en moneda extranjera. Captúralo antes de aprobarla.",

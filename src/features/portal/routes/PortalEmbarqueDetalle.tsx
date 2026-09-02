@@ -22,6 +22,7 @@ import { useRegisterBreadcrumbLabel } from "@/lib/contexts/BreadcrumbContext";
 import { useDocumentTitle } from "@/hooks/shared";
 import { useVolver } from "@/hooks/shared/useVolver";
 import { ErrorState } from "@/components/shared/states/ErrorState";
+import { ErrorStateInline } from "@/components/empty/ErrorStateInline";
 import { Hint } from "@/components/shared/Hint";
 
 export default function PortalEmbarqueDetalle() {
@@ -33,7 +34,11 @@ export default function PortalEmbarqueDetalle() {
     isError,
     refetch,
     eventos,
+    eventosError,
+    refetchEventos,
     documentos,
+    documentosError,
+    refetchDocumentos,
     estadoVisual,
     currentStepIndex,
     diasParaEta,
@@ -158,11 +163,27 @@ export default function PortalEmbarqueDetalle() {
         </TabsContent>
 
         <TabsContent value="tracking" className="space-y-4">
-          <PortalEmbarqueTimeline eventos={eventos} />
+          {/* Defecto 5: un fallo de carga se muestra como error con reintento,
+              nunca como una línea de tiempo vacía. */}
+          {eventosError ? (
+            <ErrorStateInline
+              message="No pudimos cargar la línea de tiempo de este embarque."
+              onRetry={() => void refetchEventos()}
+            />
+          ) : (
+            <PortalEmbarqueTimeline eventos={eventos} />
+          )}
         </TabsContent>
 
         <TabsContent value="documentos">
-          <PortalEmbarqueDocumentos documentos={documentos} />
+          {documentosError ? (
+            <ErrorStateInline
+              message="No pudimos cargar los documentos de este embarque."
+              onRetry={() => void refetchDocumentos()}
+            />
+          ) : (
+            <PortalEmbarqueDocumentos documentos={documentos} />
+          )}
         </TabsContent>
       </Tabs>
     </PortalPageShell>

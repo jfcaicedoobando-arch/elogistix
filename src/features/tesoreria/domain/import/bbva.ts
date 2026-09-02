@@ -12,6 +12,10 @@
  *    evitar duplicados al re-importar el mismo periodo. N32 (Ola 4): la 2ª+
  *    ocurrencia del mismo hash DENTRO del archivo recibe sufijo ordinal
  *    determinista, para no colapsar movimientos reales idénticos.
+ *
+ * Defecto 3: devuelve además las filas descartadas (`ilegibles`) y el conteo de
+ * filas sin importe, para que la UI nunca afirme una importación completa
+ * sobre un archivo parcialmente leído.
  */
 import {
   HEADERS_ABONO,
@@ -22,22 +26,21 @@ import {
   HEADERS_SALDO,
   findColIdx,
   norm,
-  parseFecha,
-  parseMonto,
-  sha1,
 } from "./bbva.parsers";
+import { sha1 } from "./bbva.parsers";
+import { clasificarFila, type ColIdx, type FilaDescartada, type MovimientoParseado } from "./bbva.filas";
 import { leerArchivoTexto } from "@/lib/io/readFileText";
 import Papa from "papaparse";
 import { logger } from "@/lib/observability/logger";
 
-export interface MovimientoParseado {
-  fecha: string;             // ISO YYYY-MM-DD
-  concepto: string;
-  referencia: string;
-  cargo: number;
-  abono: number;
-  saldo: number | null;
-  hash_dedupe: string;
+export type { MovimientoParseado, FilaDescartada };
+
+export interface ResultadoParseoBbva {
+  movimientos: MovimientoParseado[];
+  /** Filas con dato ilegible: bloquean la importación. */
+  ilegibles: FilaDescartada[];
+  /** Filas legibles sin cargo ni abono (subtotales, saldos informativos). */
+  sinImporte: number;
 }
 
 function findHeaderRow(rows: string[][]): number {
@@ -71,50 +74,6 @@ function detectarFormatoMmDd(rows: string[][], colFecha: number, desdeFila: numb
   return total > 0 && sospechosas > total / 2;
 }
 
-interface ColIdx { fecha: number; conc: number; ref: number; cargo: number; abono: number; saldo: number }
-
-function parseMontosRow(row: unknown[], idx: ColIdx):
-  | { cargo: number; abono: number; saldo: number | null }
-  | null {
-  const cargoRaw = idx.cargo >= 0 ? parseMonto(row[idx.cargo]) : 0;
-  const abonoRaw = idx.abono >= 0 ? parseMonto(row[idx.abono]) : 0;
-  if (Number.isNaN(cargoRaw) || Number.isNaN(abonoRaw)) {
-    logger.warn("bbva", "fila descartada: monto no parseable", { row });
-    return null;
-  }
-  const saldoRaw = idx.saldo >= 0 ? row[idx.saldo] : null;
-  const saldoNum = saldoRaw == null || saldoRaw === "" ? null : parseMonto(saldoRaw);
-  const saldo = saldoNum == null || Number.isNaN(saldoNum) ? null : saldoNum;
-  return { cargo: cargoRaw, abono: abonoRaw, saldo };
-}
-
-async function rowToMovimiento(
-  row: unknown[],
-  idx: ColIdx,
-  numFila?: number,
-): Promise<MovimientoParseado | null> {
-  if (!row || row.every((c) => c == null || String(c).trim() === "")) return null;
-  const fecha = parseFecha(row[idx.fecha]);
-  if (!fecha) {
-    // N33 (Ola 4): antes se descartaba en silencio y sin identificar la fila.
-    logger.warn("bbva", "fila descartada: fecha inválida o ilegible", {
-      fila: numFila,
-      valor: String(row[idx.fecha] ?? ""),
-    });
-    return null;
-  }
-  const concepto = String(row[idx.conc] ?? "").trim();
-  const referencia = idx.ref >= 0 ? String(row[idx.ref] ?? "").trim() : "";
-  const montos = parseMontosRow(row, idx);
-  if (!montos) return null;
-  const { cargo, abono, saldo } = montos;
-  if (cargo === 0 && abono === 0) return null;
-  const hash = await sha1([fecha, concepto, referencia, cargo, abono].join("|"));
-  return { fecha, concepto, referencia, cargo, abono, saldo, hash_dedupe: hash };
-}
-
-
-
 /**
  * N32 (Ola 4): dos movimientos reales idénticos el mismo día (comisión + IVA,
  * dos nóminas del mismo importe con referencia vacía) generaban el mismo
@@ -143,7 +102,7 @@ async function desambiguarColisiones(
   return movimientos;
 }
 
-async function filasAMovimientos(rows: string[][]): Promise<MovimientoParseado[]> {
+async function filasAMovimientos(rows: string[][]): Promise<ResultadoParseoBbva> {
   const headerIdx = findHeaderRow(rows);
   if (headerIdx < 0) {
     throw new Error("No se encontraron encabezados FECHA / DESCRIPCION / CARGO en el archivo BBVA.");
@@ -164,14 +123,21 @@ async function filasAMovimientos(rows: string[][]): Promise<MovimientoParseado[]
     );
   }
   const movimientos: MovimientoParseado[] = [];
+  const ilegibles: FilaDescartada[] = [];
+  let sinImporte = 0;
   for (let r = headerIdx + 1; r < rows.length; r++) {
-    const m = await rowToMovimiento(rows[r], idx, r + 1);
-    if (m) movimientos.push(m);
+    const res = await clasificarFila(rows[r], idx, r + 1);
+    if (res.tipo === "ok") movimientos.push(res.movimiento);
+    else if (res.tipo === "ilegible") ilegibles.push(res.descarte);
+    else if (res.tipo === "sin_importe") sinImporte++;
   }
-  return desambiguarColisiones(movimientos);
+  if (ilegibles.length > 0) {
+    logger.warn("bbva", "filas ilegibles en el archivo", { total: ilegibles.length });
+  }
+  return { movimientos: await desambiguarColisiones(movimientos), ilegibles, sinImporte };
 }
 
-export async function parseEstadoCuentaBBVA(file: File): Promise<MovimientoParseado[]> {
+export async function parseEstadoCuentaBBVA(file: File): Promise<ResultadoParseoBbva> {
   const isCsv = file.name.toLowerCase().endsWith(".csv") || file.type.includes("csv");
   if (isCsv) {
     // N34 (Ola 4): tolera Windows-1252 (estados de cuenta Net Cash en es-MX).
@@ -189,4 +155,3 @@ export async function parseEstadoCuentaBBVA(file: File): Promise<MovimientoParse
   const rows = XLSX.utils.sheet_to_json<unknown[]>(sheet, { header: 1, defval: "", raw: true }) as unknown as string[][];
   return filasAMovimientos(rows);
 }
-

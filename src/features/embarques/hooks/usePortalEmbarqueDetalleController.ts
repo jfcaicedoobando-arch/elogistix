@@ -30,8 +30,20 @@ export const PORTAL_EMBARQUE_PROGRESS_STEPS: ProgressStep[] = [
  */
 export function usePortalEmbarqueDetalleController(id: string | undefined) {
   const { data: embarque, isLoading, isError, refetch } = usePortalEmbarque(id);
-  const { data: eventos = [] } = usePortalEventos(id);
-  const { data: documentos = [] } = usePortalDocumentos(id);
+  // Defecto 5: eventos y documentos exponen su propio estado de error para que
+  // un fallo de carga no se vea como "no hay nada" en la pestaña.
+  const {
+    data: eventos = [],
+    isError: eventosError,
+    isLoading: eventosLoading,
+    refetch: refetchEventos,
+  } = usePortalEventos(id);
+  const {
+    data: documentos = [],
+    isError: documentosError,
+    isLoading: documentosLoading,
+    refetch: refetchDocumentos,
+  } = usePortalDocumentos(id);
 
   const estadoVisual = useMemo(() => {
     if (!embarque) return null;
@@ -77,7 +89,13 @@ export function usePortalEmbarqueDetalleController(id: string | undefined) {
     isError,
     refetch,
     eventos,
+    eventosError,
+    eventosLoading,
+    refetchEventos,
     documentos,
+    documentosError,
+    documentosLoading,
+    refetchDocumentos,
     estadoVisual,
     currentStepIndex,
     diasParaEta,
