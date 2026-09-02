@@ -36,6 +36,7 @@ DECLARE
   v_prov uuid := '2b2b2b2b-2b2b-2b2b-2b2b-2b2b2b2b2b2b';
   v_emb uuid := '2c2c2c2c-2c2c-2c2c-2c2c-2c2c2c2c2c2c';
   v_fact uuid := '2d2d2d2d-2d2d-2d2d-2d2d-2d2d2d2d2d2d';
+  v_cli uuid := '2e2e2e2e-2e2e-2e2e-2e2e-2e2e2e2e2e2e';
   v_cat uuid;
 BEGIN
   INSERT INTO public.organizations (id, nombre)
@@ -47,8 +48,12 @@ BEGIN
           'Transportista'::public.tipo_proveedor, 'Logistico'::public.categoria_proveedor)
   ON CONFLICT (id) DO NOTHING;
 
-  INSERT INTO public.embarques (id, organization_id, expediente, estado)
-  VALUES (v_emb, v_org, 'ELATO0001', 'Confirmado')
+  INSERT INTO public.clientes (id, organization_id, nombre)
+  VALUES (v_cli, v_org, 'Cliente Atómico')
+  ON CONFLICT (id) DO NOTHING;
+
+  INSERT INTO public.embarques (id, organization_id, cliente_id, expediente, estado)
+  VALUES (v_emb, v_org, v_cli, 'ELATO0001', 'Confirmado')
   ON CONFLICT (id) DO NOTHING;
 
   INSERT INTO public.presupuesto_categorias (organization_id, nombre)

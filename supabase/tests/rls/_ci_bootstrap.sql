@@ -37,6 +37,11 @@ LANGUAGE sql STABLE AS $$
   SELECT coalesce(nullif(current_setting('request.jwt.claims', true), '')::jsonb, '{}'::jsonb)
 $$;
 
+CREATE OR REPLACE FUNCTION auth.email() RETURNS text
+LANGUAGE sql STABLE AS $$
+  SELECT nullif(nullif(current_setting('request.jwt.claims', true), '')::jsonb->>'email', '')
+$$;
+
 CREATE OR REPLACE FUNCTION auth.role() RETURNS text
 LANGUAGE sql STABLE AS $$
   SELECT coalesce(nullif(current_setting('request.jwt.claims', true), '')::jsonb->>'role', 'anon')
