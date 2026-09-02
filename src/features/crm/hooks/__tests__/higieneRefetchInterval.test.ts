@@ -4,7 +4,9 @@
  */
 import { describe, it, expect, vi } from "vitest";
 
-const useQuery = vi.hoisted(() => vi.fn(() => ({ data: undefined })));
+const useQuery = vi.hoisted(() =>
+  vi.fn((_opciones: { refetchInterval?: number }) => ({ data: undefined })),
+);
 
 vi.mock("@tanstack/react-query", () => ({
   useQuery,
@@ -27,14 +29,12 @@ describe("refetchInterval de Higiene", () => {
   it("el resumen se refresca cada 60 s", () => {
     useQuery.mockClear();
     useHigieneResumen();
-    const opciones = useQuery.mock.calls[0][0] as unknown as { refetchInterval?: number };
-    expect(opciones.refetchInterval).toBe(60_000);
+    expect(useQuery.mock.calls[0]?.[0]?.refetchInterval).toBe(60_000);
   });
 
   it("el detalle de oportunidades se refresca cada 60 s", () => {
     useQuery.mockClear();
     useHigieneOportunidades();
-    const opciones = useQuery.mock.calls[0][0] as unknown as { refetchInterval?: number };
-    expect(opciones.refetchInterval).toBe(60_000);
+    expect(useQuery.mock.calls[0]?.[0]?.refetchInterval).toBe(60_000);
   });
 });
