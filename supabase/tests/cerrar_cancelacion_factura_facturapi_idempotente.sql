@@ -43,9 +43,9 @@ BEGIN
   RETURNING id INTO v_emb;
 
   INSERT INTO public.proformas (
-    organization_id, cliente_id, cliente_nombre, embarque_id, expediente, numero, estado_proforma
+    organization_id, cliente_id, cliente_nombre, embarque_id, expediente, numero, estado_proforma, estado_cliente
   ) VALUES (
-    v_org, v_cli, 'CLIENTE CIERRE', v_emb, 'ELCIE0001', 'PF-CIERRE-0001', 'facturada'
+    v_org, v_cli, 'CLIENTE CIERRE', v_emb, 'ELCIE0001', 'PF-CIERRE-0001', 'facturada', 'aceptada'
   ) RETURNING id INTO v_pf;
 
   INSERT INTO public.facturas (
