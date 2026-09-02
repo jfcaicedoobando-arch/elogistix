@@ -74,6 +74,59 @@ function rangoMesMx(periodo?: string): { desde: string; hasta: string } | null {
   return { desde: desde.toISOString(), hasta: hasta.toISOString() };
 }
 
+/** Filtros compartidos entre el listado (con cap) y la lectura de KPIs (completa). */
+interface FiltrableQuery<Q> {
+  eq(col: string, val: string): Q;
+  gte(col: string, val: string): Q;
+  lt(col: string, val: string): Q;
+}
+
+function aplicarFiltros<Q extends FiltrableQuery<Q>>(q: Q, filtros: FetchComisionesFiltros): Q {
+  let out = q;
+  if (filtros.vendedora_id && filtros.vendedora_id !== "todas") {
+    out = out.eq("vendedora_id", filtros.vendedora_id);
+  }
+  if (filtros.estado && filtros.estado !== "todos") {
+    out = out.eq("estado", filtros.estado);
+  }
+  const rango = rangoMesMx(filtros.periodo);
+  if (rango) out = out.gte("created_at", rango.desde).lt("created_at", rango.hasta);
+  return out;
+}
+
+/** Fila mínima para KPIs: sólo lo que `calcularKPIsComisiones` necesita. */
+export type ComisionKpiRow = Pick<ComisionDevengada, "created_at" | "estado" | "comision_mxn">;
+
+/**
+ * Ronda YAGNI · defecto 3: los KPIs de comisiones se calculaban sobre la lista
+ * visible (tope de 500 filas), así que "devengado del mes", "pendiente por
+ * liquidar" y "por recuperar" se quedaban cortos sin avisar. Esta lectura es
+ * ligera (3 columnas) y COMPLETA por páginas, con los mismos filtros.
+ */
+export async function fetchComisionesKpiRows(
+  filtros: FetchComisionesFiltros = {},
+): Promise<ComisionKpiRow[]> {
+  const filas = await leerTodasLasPaginas<{
+    created_at: string; estado: EstadoComision; comision_mxn: number | string;
+  }>("comisiones.kpis", (desde, hasta) =>
+    aplicarFiltros(
+      supabase
+        .from("comisiones_devengadas")
+        .select("created_at, estado, comision_mxn")
+        .is("deleted_at", null),
+      filtros,
+    )
+      .order("created_at", { ascending: false })
+      .order("id", { ascending: true })
+      .range(desde, hasta),
+  );
+  return filas.map((r) => ({
+    created_at: r.created_at,
+    estado: r.estado,
+    comision_mxn: Number(r.comision_mxn),
+  }));
+}
+
 export async function fetchComisionesDevengadas(
   filtros: FetchComisionesFiltros = {},
 ): Promise<ComisionDevengada[]> {
