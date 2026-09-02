@@ -230,10 +230,13 @@ Deno.test("index.ts: el dedupe es INSERT-first (reserva antes de procesar)", () 
 
 Deno.test("index.ts: si el procesamiento falla se libera la reserva de dedupe", () => {
   assertStringIncludes(webhookIndexSource, "if (!result.ok) {");
+  // El borrado vive en el helper `liberarReserva`; el guard debe invocarlo.
+  assertStringIncludes(webhookIndexSource, "async function liberarReserva");
   const idxGuard = webhookIndexSource.indexOf("if (!result.ok) {");
-  const idxDelete = webhookIndexSource.indexOf(".delete()", idxGuard);
-  assert(idxDelete > idxGuard, "el borrado de la reserva debe ir dentro del guard de fallo");
+  const idxLiberar = webhookIndexSource.indexOf("await liberarReserva(", idxGuard);
+  assert(idxLiberar > idxGuard, "la liberación de la reserva debe ir dentro del guard de fallo");
 });
+
 
 
 Deno.test("index.ts: 'Emitida' es el único estado usado para invoice.status_updated valid (nunca 'Timbrada')", () => {
