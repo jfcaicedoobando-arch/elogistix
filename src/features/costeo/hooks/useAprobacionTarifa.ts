@@ -4,10 +4,8 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query";
 import { notifySuccess } from "@/lib/ui/appFeedback";
-import { aprobarTarifa, rechazarTarifa, reactivarTarifa } from "@/features/costeo/services/aprobacion";
+import { aprobarTarifaVerificada, rechazarTarifa, reactivarTarifa } from "@/features/costeo/services/aprobacion";
 import { notifyError } from "@/lib/ui/appFeedback";
-import { puedeAprobarTarifa, MENSAJE_VIGENCIA_VENCIDA } from "@/features/costeo/utils/vigenciaTarifa";
-import { todayLocalISO } from "@/lib/date/today";
 
 function describeError(e: unknown): string {
   if (e instanceof Error) return e.message;
@@ -23,14 +21,9 @@ export function useAprobacionTarifa() {
   };
 
   const aprobar = useMutation({
-    // Guard de negocio en la capa de acción: ninguna ruta de UI puede aprobar
-    // una tarifa cuya vigencia ya venció, aunque siga en 'borrador'.
-    mutationFn: ({ id, vigenteHasta }: { id: string; vigenteHasta: string }) => {
-      if (!puedeAprobarTarifa({ vigenteHasta, hoy: todayLocalISO() })) {
-        return Promise.reject(new Error(MENSAJE_VIGENCIA_VENCIDA));
-      }
-      return aprobarTarifa(id);
-    },
+    // Guard de negocio en la capa de servicio: relee la vigencia por id (la
+    // fila de la UI puede estar obsoleta) y sólo entonces aprueba.
+    mutationFn: ({ id }: { id: string }) => aprobarTarifaVerificada(id),
     onSuccess: () => { invalidate(); notifySuccess(undefined, { title: "Tarifa aprobada — ahora está vigente." }); },
     onError: (e: unknown) => notifyError(undefined, {
       title: `No se pudo aprobar: ${describeError(e)}`,

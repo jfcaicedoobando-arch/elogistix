@@ -28,7 +28,7 @@ function renderPage() {
   return render(<MemoryRouter><Operaciones /></MemoryRouter>);
 }
 
-describe("Operaciones - tarjeta Tarifas por aprobar", () => {
+describe("Operaciones - tarjeta Tarifas pendientes", () => {
   beforeEach(() => mockUseTarifasPendientes.mockReset());
 
   it("muestra 5 y enlaza a /costeo/tarifas?aprobacion=borrador", () => {
@@ -37,8 +37,10 @@ describe("Operaciones - tarjeta Tarifas por aprobar", () => {
     });
     renderPage();
     expect(screen.getByText("5")).toBeInTheDocument();
-    const link = screen.getByText("Tarifas por aprobar").closest("a");
+    const link = screen.getByText("Tarifas pendientes").closest("a");
     expect(link).toHaveAttribute("href", "/costeo/tarifas?aprobacion=borrador");
+    // La semántica NO promete "aprobables": incluye vencidas que hay que revisar/renovar.
+    expect(screen.getByText("Requieren revisión")).toBeInTheDocument();
   });
 
   it("en error muestra reintentar y NO muestra 0", () => {
@@ -48,7 +50,7 @@ describe("Operaciones - tarjeta Tarifas por aprobar", () => {
     renderPage();
     expect(screen.getByText("No se pudo cargar")).toBeInTheDocument();
     expect(screen.getByText("Reintentar")).toBeInTheDocument();
-    expect(screen.queryByText("Tarifas por aprobar")?.closest("a")).toBeNull();
+    expect(screen.queryByText("Tarifas pendientes")?.closest("a")).toBeNull();
   });
 
   it("en loading no muestra 0", () => {
