@@ -2,6 +2,7 @@
  * Hook controller para DialogNuevaFacturaProveedor.
  * Orquesta estado del formulario, parseo CFDI, validación y submit.
  */
+import { useRef } from "react";
 import type { VinculosState } from "./useNuevaFacturaProveedorForm.vinculos";
 import { crearAccionesVinculos } from "./useNuevaFacturaProveedorForm.acciones";
 import { useAuth } from "@/lib/contexts/AuthContext";
@@ -30,6 +31,7 @@ export function useNuevaFacturaProveedorForm(
   const { organizationId } = useOrgFilter();
   const crear = useCrearFacturaProveedor();
   const manuales = useConceptosManuales();
+  const manualTcRef = useRef(false);
   const s = useFacturaFormState(initialEmbarqueAdHoc);
   const {
     values, setValues, errors, setErrors, mode, setMode,
