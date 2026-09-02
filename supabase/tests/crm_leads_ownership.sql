@@ -1,5 +1,5 @@
 -- =============================================================
--- crm_leads_ownership.sql · v13.823.60
+-- crm_leads_ownership.sql · v13.823.61
 --
 -- Congela la autorización y el ownership de leads:
 --   A) crm_calificar_prospecto: rol EFECTIVO en la organización del lead
@@ -9,7 +9,10 @@
 --   C) RLS crm_leads: gestión in-org escribe, vendedor sólo su propio lead,
 --      operador/viewer leen pero no escriben, cross-org bloqueado, y ni
 --      organization_id ni vendedor_id pueden reasignarse a lo propio.
---   D) Invariantes de definición y ACL de las dos RPCs.
+--   D) Invariantes de definición y ACL de las dos RPCs, y topología exacta
+--      de las policies de crm_leads (separadas por comando en v13.823.61).
+--   E) Organización ACTIVA, roles de lectura y Papelera (soft-delete).
+--   F) ACL exacta de la tabla y metadatos de las RPCs.
 --
 -- Ejecución manual:
 --   psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1 -f supabase/tests/crm_leads_ownership.sql
@@ -299,23 +302,53 @@ BEGIN
        WHERE pg_get_userbyid(a.grantee) = 'anon'),
     'D: anon no debe tener privilegios sobre crm_leads');
 
+  -- v13.823.61: comparación del CONJUNTO COMPLETO (nombre|comando) de las
+  -- policies permisivas, no un `IN` que ignora extras ni nombres obsoletos.
   PERFORM pg_temp.assert(
-    (SELECT count(*) FROM pg_policy
+    (SELECT array_agg(polname || '|' || polcmd::text ORDER BY polname)
+       FROM pg_policy
       WHERE polrelid = 'public.crm_leads'::regclass
-        AND polname IN ('Gestion leads in-org select crm_leads',
-                        'Gestion leads in-org insert crm_leads',
-                        'Gestion leads in-org update crm_leads',
-                        'Vendedor own select crm_leads',
-                        'Vendedor own insert crm_leads',
-                        'Vendedor own update crm_leads',
-                        'Vendedor bolsa crm_leads', 'Lectura in-org crm_leads')) = 8,
-    'D: crm_leads debe tener las 8 policies permisivas in-org por comando');
+        AND polpermissive)
+    = ARRAY[
+        'Gestion leads in-org insert crm_leads|a',
+        'Gestion leads in-org select crm_leads|r',
+        'Gestion leads in-org update crm_leads|w',
+        'Lectura in-org crm_leads|r',
+        'Vendedor bolsa crm_leads|r',
+        'Vendedor own insert crm_leads|a',
+        'Vendedor own select crm_leads|r',
+        'Vendedor own update crm_leads|w'
+      ],
+    format('D: topología exacta de policies permisivas alterada (actual=%s)',
+      (SELECT array_agg(polname || '|' || polcmd::text ORDER BY polname)
+         FROM pg_policy
+        WHERE polrelid = 'public.crm_leads'::regclass AND polpermissive)));
+
+  -- Conteo por comando: 4 SELECT, 2 INSERT, 2 UPDATE, 0 DELETE, 0 ALL.
+  PERFORM pg_temp.assert(
+    (SELECT count(*) FILTER (WHERE polcmd = 'r') = 4
+        AND count(*) FILTER (WHERE polcmd = 'a') = 2
+        AND count(*) FILTER (WHERE polcmd = 'w') = 2
+        AND count(*) FILTER (WHERE polcmd = 'd') = 0
+        AND count(*) FILTER (WHERE polcmd = '*') = 0
+       FROM pg_policy
+      WHERE polrelid = 'public.crm_leads'::regclass AND polpermissive),
+    'D: los comandos permisivos deben ser 4 SELECT / 2 INSERT / 2 UPDATE / 0 DELETE / 0 ALL');
+
+  -- Los nombres previos a la separación por comando no deben reaparecer.
+  PERFORM pg_temp.assert(
+    NOT EXISTS (
+      SELECT 1 FROM pg_policy
+       WHERE polrelid = 'public.crm_leads'::regclass
+         AND polname IN ('Gestion leads in-org crm_leads', 'Vendedor own crm_leads')),
+    'D: las policies FOR ALL obsoletas no deben volver');
 
   PERFORM pg_temp.assert(
     (SELECT polcmd FROM pg_policy
       WHERE polrelid = 'public.crm_leads'::regclass
         AND polname = 'Vendedor bolsa crm_leads') = 'r',
     'D: la bolsa común debe ser sólo lectura (la toma pasa por la RPC)');
+
 
   PERFORM pg_temp.assert(
     NOT EXISTS (
