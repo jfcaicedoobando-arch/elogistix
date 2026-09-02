@@ -14,6 +14,17 @@ export function hoyMx(base: Date = new Date()): string {
   return new Intl.DateTimeFormat("en-CA", { timeZone: TZ }).format(base);
 }
 
+/** Hora (0-23) en zona CDMX. Para saludos y cortes por hora de negocio. */
+export function horaMx(base: Date = new Date()): number {
+  const h = new Intl.DateTimeFormat("en-GB", {
+    timeZone: TZ,
+    hour: "2-digit",
+    hour12: false,
+  }).format(base);
+  return Number(h === "24" ? "0" : h);
+}
+
+
 /** YYYY-MM en zona CDMX. */
 export function ymMx(base: Date = new Date()): string {
   return new Intl.DateTimeFormat("en-CA", {
