@@ -1,55 +1,41 @@
 /**
  * Hook controller para el formulario de edición de un Lead CRM.
  * Extraído de `pages/crm/LeadDetalle.tsx` (Power of 10: componente ≤200 LOC).
+ *
+ * v13.823.31 — El formulario se DERIVA de la fila persistida (fuente canónica
+ * `toLeadEditForm`) más los campos que el usuario tocó. Así el input "Correo"
+ * nunca aparece vacío cuando la BD sí tiene correo, y guardar sólo envía los
+ * campos editados (editar Notas no puede borrar el correo).
  */
 import { useEffect, useMemo, useState } from "react";
 import { isLeadDirty } from "@/features/crm/domain/leadEditDirty";
-import { type LeadEditForm, EMPTY_LEAD_EDIT_FORM as EMPTY_FORM } from "@/types/crm/leadEditForm";
-import type { CrmLeadEstado, CrmLeadFuente } from "@/features/crm/domain/leads/constants";
+import { toLeadEditForm, patchLeadEdit, type LeadEditSource } from "@/features/crm/domain/leads/editForm";
+import { type LeadEditForm } from "@/types/crm/leadEditForm";
 
 export type { LeadEditForm };
 
-interface LeadLike {
-  empresa: string;
-  contacto: string | null;
-  email: string | null;
-  telefono: string | null;
-  ciudad: string | null;
-  pais: string | null;
-  fuente: CrmLeadFuente;
-  estado: CrmLeadEstado;
-  score: number | null;
-  interes_modo: string | null;
-  notas: string | null;
-}
+export function useLeadEditForm(lead: (LeadEditSource & { id?: string }) | undefined | null) {
+  const [tocados, setTocados] = useState<Partial<LeadEditForm>>({});
+  const leadId = lead?.id;
 
-export function useLeadEditForm(lead: LeadLike | undefined | null) {
-  const [form, setForm] = useState<LeadEditForm>(EMPTY_FORM);
-
+  // Cambiar de lead (otra ficha) descarta la edición en curso; un refetch del
+  // mismo lead conserva lo que el usuario está escribiendo.
   useEffect(() => {
-    if (!lead) return;
-    setForm({
-      empresa: lead.empresa ?? "",
-      contacto: lead.contacto ?? "",
-      email: lead.email ?? "",
-      telefono: lead.telefono ?? "",
-      ciudad: lead.ciudad ?? "",
-      pais: lead.pais ?? "",
-      fuente: lead.fuente,
-      estado: lead.estado,
-      score: lead.score ?? 3,
-      interes_modo: lead.interes_modo ?? "",
-      notas: lead.notas ?? "",
-    });
-  }, [lead]);
+    setTocados({});
+  }, [leadId]);
+
+  const base = useMemo(() => toLeadEditForm(lead), [lead]);
+  const form = useMemo<LeadEditForm>(() => ({ ...base, ...tocados }), [base, tocados]);
 
   const set = <K extends keyof LeadEditForm>(k: K, v: LeadEditForm[K]) =>
-    setForm((f) => ({ ...f, [k]: v }));
+    setTocados((t) => ({ ...t, [k]: v }));
+
+  const patch = useMemo(() => patchLeadEdit(base, tocados), [base, tocados]);
 
   const dirty = useMemo(() => {
     if (!lead) return false;
     return isLeadDirty(lead, form);
   }, [lead, form]);
 
-  return { form, set, dirty };
+  return { form, set, dirty, patch, reset: () => setTocados({}) };
 }
