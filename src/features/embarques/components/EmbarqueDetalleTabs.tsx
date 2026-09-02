@@ -53,7 +53,9 @@ export function EmbarqueDetalleTabs({
       {/* v13.139.18 (F-04 auditoría 3): 11 tabs desbordaban a 2ª línea con
           flex-wrap. Cambiamos a scroll horizontal nativo con scrollbar fino
           para mantener todas las tabs en una sola fila sin partir el header. */}
-      <div className="w-full overflow-x-auto pb-1 [scrollbar-width:thin] [scrollbar-color:hsl(var(--muted-foreground)/0.4)_transparent]">
+      {/* v13.823.25 (fold 692px): máscara de degradado en el borde derecho para
+          que se vea que la tira de tabs continúa (se desactiva en lg+). */}
+      <div className="w-full overflow-x-auto pb-1 [scrollbar-width:thin] [scrollbar-color:hsl(var(--muted-foreground)/0.4)_transparent] [mask-image:linear-gradient(to_right,black_0,black_calc(100%-24px),transparent_100%)] lg:[mask-image:none]">
         <TabsList className="gap-1 inline-flex w-max flex-nowrap" data-testid="embarque-detalle-tabs">
           <TabsTrigger value="resumen" data-testid="tab-resumen" className="whitespace-nowrap">Resumen</TabsTrigger>
           <TabsTrigger value="tracking" data-testid="tab-tracking" className="whitespace-nowrap">Tracking</TabsTrigger>

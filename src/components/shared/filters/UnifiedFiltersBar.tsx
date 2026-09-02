@@ -10,8 +10,10 @@ import SearchInput from "@/components/shared/SearchInput";
 import { MobileFiltersSheet } from "@/components/shared/MobileFiltersSheet";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { useIsMobile } from "@/hooks/shared";
 import { cn } from "@/lib/utils";
 import type { ChipItem } from "@/hooks/shared/useTableFilters";
+
 
 export interface UnifiedFiltersBarProps {
   search: string;
@@ -39,32 +41,42 @@ export function UnifiedFiltersBar({
   className,
 }: UnifiedFiltersBarProps) {
   const [sheetOpen, setSheetOpen] = useState(false);
+  const isMobile = useIsMobile();
+
   const hasChips = chips.length > 0 || Boolean(search);
 
   return (
     <div className={cn("space-y-2", className)}>
       <div className="flex flex-wrap items-center gap-2">
         {/* VB-29: max-w-sm (384px) para que placeholders largos tipo
-            "Buscar por expediente, cliente o mercancía…" no se trunquen. */}
-        <div className="min-w-0 flex-1 sm:max-w-sm">
+            "Buscar por expediente, cliente o mercancía…" no se trunquen.
+            v13.823.25 (fold 692px): en móvil el buscador ocupa el renglón
+            completo y los selects `primary` se mueven al panel de filtros. */}
+        <div className="w-full min-w-0 flex-1 md:w-auto md:max-w-sm">
           <SearchInput
             value={search}
             onChange={onSearchChange}
             placeholder={searchPlaceholder}
           />
         </div>
-        {primary ? <div className="flex flex-wrap items-center gap-2">{primary}</div> : null}
-        {secondary ? (
+        {primary && !isMobile ? (
+          <div className="flex flex-wrap items-center gap-2">{primary}</div>
+        ) : null}
+        {primary || secondary ? (
           <MobileFiltersSheet
             open={sheetOpen}
             onOpenChange={setSheetOpen}
             activeCount={activeCount}
             onClearAll={onClearAll}
           >
+            {isMobile && primary ? (
+              <div className="space-y-3">{primary}</div>
+            ) : null}
             {secondary}
           </MobileFiltersSheet>
         ) : null}
       </div>
+
       {hasChips ? (
         <div className="flex flex-wrap items-center gap-1.5">
           {search ? (

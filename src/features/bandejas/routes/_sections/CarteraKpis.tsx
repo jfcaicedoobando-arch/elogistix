@@ -51,22 +51,25 @@ export function CarteraKpis(p: Props) {
   return (
     <div className="space-y-3">
     <TipoCambioFallbackBanner />
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+    {/* v13.823.25: grid-cols-2 en móvil (antes 1 columna, tarjetas muy anchas
+        y con mucho espacio vacío en plegables ~692px). Header/content
+        compactos sólo <md; desktop (md:grid-cols-3) queda intacto. */}
+    <div className="grid grid-cols-2 md:grid-cols-3 gap-2 md:gap-4">
       <Card>
-        <CardHeader className="pb-2"><CardTitle>Facturas en foco</CardTitle></CardHeader>
-        <CardContent className="text-kpi">{p.totalFacturas}</CardContent>
+        <CardHeader className="p-3 pb-1 md:p-6 md:pb-2"><CardTitle className="text-label md:text-card-title">Facturas en foco</CardTitle></CardHeader>
+        <CardContent className="p-3 pt-0 md:p-6 md:pt-0 text-body-sm md:text-kpi">{p.totalFacturas}</CardContent>
       </Card>
       <Card>
-        <CardHeader className="pb-2"><CardTitle>Saldo total</CardTitle></CardHeader>
-        <CardContent>
-          <div className="text-kpi tabular-nums">{formatNativos(p.saldosNativos)}</div>
+        <CardHeader className="p-3 pb-1 md:p-6 md:pb-2"><CardTitle className="text-label md:text-card-title">Saldo total</CardTitle></CardHeader>
+        <CardContent className="p-3 pt-0 md:p-6 md:pt-0">
+          <div className="text-body-sm md:text-kpi tabular-nums">{formatNativos(p.saldosNativos)}</div>
           <Equivalencia saldos={p.saldosNativos} eq={p.eqTotal} />
         </CardContent>
       </Card>
-      <Card>
-        <CardHeader className="pb-2"><CardTitle>Vencido ({p.vencidasCount})</CardTitle></CardHeader>
-        <CardContent>
-          <div className="text-kpi text-destructive tabular-nums">
+      <Card className="col-span-2 md:col-span-1">
+        <CardHeader className="p-3 pb-1 md:p-6 md:pb-2"><CardTitle className="text-label md:text-card-title">Vencido ({p.vencidasCount})</CardTitle></CardHeader>
+        <CardContent className="p-3 pt-0 md:p-6 md:pt-0">
+          <div className="text-body-sm md:text-kpi text-destructive tabular-nums">
             {formatNativos(p.vencidoNativo)}
           </div>
           <Equivalencia saldos={p.vencidoNativo} eq={p.eqVencido} />

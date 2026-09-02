@@ -10,7 +10,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { useDocumentTitle } from "@/hooks/shared";
-import { DataTable } from "@/components/shared/DataTable";
+import { ResponsiveDataTable } from "@/components/shared/dataTable/ResponsiveDataTable";
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 import { useCuentasBancarias } from "@/features/tesoreria/hooks";
 import { useLibroPagos } from "@/features/tesoreria/hooks/useLibroPagos";
@@ -24,6 +24,7 @@ import { etiquetaCuenta } from "@/features/anticipos-proveedor/domain/etiquetaCu
 import { DetallePagoSheet } from "@/features/tesoreria/components/DetallePagoSheet";
 import { refPagoDeLibro, type RefPago } from "@/features/tesoreria/domain/pagoDetalle";
 import { libroPagosColumns } from "./_sections/libroPagosColumns";
+import { LibroPagosMobileCard } from "@/features/tesoreria/components/LibroPagosMobileCard";
 import { LibroPagosToolbar } from "./_sections/LibroPagosToolbar";
 import { LibroPagosKpis } from "./_sections/LibroPagosKpis";
 import { LibroPagosExportButtons } from "./_sections/LibroPagosExportButtons";
@@ -83,7 +84,7 @@ export default function TesoreriaPagos() {
         <p className="px-1 text-body-sm text-muted-foreground">
           {visibles.length} de {pagos.length} pagos del periodo
         </p>
-        <DataTable
+        <ResponsiveDataTable
           columns={columns}
           data={visibles}
           rowKey={(p) => `${p.tipo}-${p.id}`}
@@ -97,6 +98,7 @@ export default function TesoreriaPagos() {
           onRowClick={(p) => setPagoAbierto(refPagoDeLibro(p))}
           getRowAriaLabel={(p) => `Ver detalle del pago de ${p.contraparte ?? "la contraparte"}`}
           emptyMessage="No hay pagos registrados con estos filtros."
+          mobileCard={(p) => <LibroPagosMobileCard row={p} />}
         />
       </div>
 

@@ -18,14 +18,18 @@ interface Props {
 export function CxpPorPagarKpis({ totalFacturas, resumen }: Props) {
   const { saldoMXN, porMoneda, faltaTipoCambio, vencidas } = resumen;
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+    // v13.823.25 (fold 692px): 2 columnas en móvil; "Saldo total" abarca el
+    // renglón completo porque lleva desglose por moneda y avisos de TC.
+    <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
       <KpiCard label="Facturas vigentes" value={totalFacturas} icon={FileText} />
       <KpiCard
         label="Saldo total"
         value={formatCurrency(saldoMXN, "MXN")}
         icon={Wallet}
         valueTooltip={formatCurrency(saldoMXN, "MXN")}
+        className="col-span-2 md:col-span-1"
       >
+
         <div className="mt-1 flex flex-wrap gap-x-2 gap-y-0.5 text-label text-muted-foreground">
           {porMoneda.MXN > 0 && <span>{formatCurrencyCompact(porMoneda.MXN, "MXN")}</span>}
           {porMoneda.USD > 0 && <span>· {formatCurrencyCompact(porMoneda.USD, "USD")}</span>}

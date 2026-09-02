@@ -1,5 +1,14 @@
 # Changelog
 
+## [13.823.25] - 2026-09-02
+### Uso en celular plegable (692×764): shell, tablas y KPIs
+- **Shell**: `PageHeader` ya no deja un renglón de acciones vacío por debajo de `md`; el buscador de `UnifiedFiltersBar` ocupa todo el ancho y los filtros pasan al panel lateral; las tiras de tabs (detalle de embarque, bandejas) indican con degradado/apilado que hay más contenido.
+- **Tablas**: Cobranza, Antigüedad CxC, CxP Por pagar, Compras Por aprobar y Tesorería Pagos usan tarjetas en móvil (`ResponsiveDataTable`), eliminando el scroll horizontal.
+- **Montos**: las tarjetas móviles mostraban "USD 3,48…" por un ancho fijo de la caja de saldo; ahora la caja crece con el monto y trunca el texto largo de la izquierda.
+- **KPIs**: dos columnas en móvil en CxP Por pagar y Cobranza; el botón de cerrar de los modales cumple 44×44 px.
+
+
+
 ## [13.823.24] - 2026-09-02
 ### Pulido: tira de estados del inicio en tablet
 - **Síntoma**: en tablet (≈768 px) las etiquetas de la tira de estados se cortaban ("Por liqui…") y no había señal de que la tira siguiera desplazándose.

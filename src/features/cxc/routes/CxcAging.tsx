@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/select";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { PageContainer } from "@/components/shared/PageContainer";
-import { DataTable } from "@/components/shared/DataTable";
+import { ResponsiveDataTable } from "@/components/shared/dataTable/ResponsiveDataTable";
 import { CargaGuard } from "@/components/shared/states/CargaGuard";
 
 import { buildCxcAgingColumns } from "@/features/cxc/components/cxcAgingColumns";
@@ -31,6 +31,7 @@ import {
   CUBETAS_AGING, CUBETA_LABELS_LARGAS, CUBETA_TONO_KPI, type CubetaAging,
 } from "@/lib/aging/buckets";
 import { AgingKpiBucket } from "@/components/shared/kpi/AgingKpiBucket";
+import { CxcAgingMobileCard } from "@/features/cxc/components/CxcAgingMobileCard";
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 import { Link } from "react-router-dom";
 
@@ -154,7 +155,8 @@ export default function CxcAging() {
 
       <Card>
         <CardContent className="p-0">
-          <DataTable<CxcAgingRow>
+          {/* v13.823.25: ResponsiveDataTable evita el desbordamiento horizontal en móvil/plegable. */}
+          <ResponsiveDataTable<CxcAgingRow>
             columns={columns}
             data={paged.rows}
             isLoading={paged.isLoading}
@@ -170,6 +172,7 @@ export default function CxcAging() {
             striped
             hoverable
             density={TABLE_DENSITY.embebida}
+            mobileCard={(r) => <CxcAgingMobileCard row={r} />}
           />
         </CardContent>
       </Card>

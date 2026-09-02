@@ -7,7 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { CargaGuard } from "@/components/shared/states/CargaGuard";
-import { DataTable } from "@/components/shared/DataTable";
+import { ResponsiveDataTable } from "@/components/shared/dataTable/ResponsiveDataTable";
 import SearchInput from "@/components/shared/SearchInput";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { formatCurrency } from "@/lib/formatters";
@@ -20,6 +20,7 @@ import { ConfirmarAprobacionLoteDialog } from "./ComprasPorAprobar.confirmDialog
 import { ComprasPorAprobarEmptyState } from "./ComprasPorAprobar.emptyState";
 import { ComprasPorAprobarBulkBar } from "./ComprasPorAprobar.bulkBar";
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
+import { ComprasPorAprobarMobileCard } from "@/features/compras/components/ComprasPorAprobarMobileCard";
 
 const APROBACION_FILTROS = ["pendiente", "aprobada", "rechazada"] as const;
 type AprobacionFiltro = (typeof APROBACION_FILTROS)[number];
@@ -157,7 +158,7 @@ export default function ComprasPorAprobar() {
           {!isLoading && rows.length === 0 ? (
             <ComprasPorAprobarEmptyState aprobacion={aprobacion} />
           ) : (
-            <DataTable
+            <ResponsiveDataTable
               columns={columns}
               data={rows}
               isLoading={isLoading}
@@ -166,6 +167,7 @@ export default function ComprasPorAprobar() {
               density={TABLE_DENSITY.embebida}
               initialSort={{ key: "vencimiento", dir: "asc" }}
               onRowClick={(fact) => navigate(`/compras/facturas/${fact.id}`)}
+              mobileCard={(f) => <ComprasPorAprobarMobileCard row={f} />}
             />
           )}
         </CardContent>

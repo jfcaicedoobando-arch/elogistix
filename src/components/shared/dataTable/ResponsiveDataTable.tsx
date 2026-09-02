@@ -1,10 +1,12 @@
 import type { ReactNode } from "react";
+import type { LucideIcon } from "lucide-react";
 import type { ColumnDef, OnChangeFn, RowSelectionState, VisibilityState } from "@tanstack/react-table";
 import { useNavigate } from "react-router-dom";
 import { DataTable } from "@/components/shared/DataTable";
 import { ErrorStateInline } from "@/components/empty/ErrorStateInline";
 import PaginationControls from "@/components/shared/PaginationControls";
 import { Skeleton, SkeletonGroup } from "@/components/ui/skeleton";
+
 import { Inbox } from "lucide-react";
 import { useIsMobile } from "@/hooks/shared";
 import { handleRowClick, handleRowKeyDown } from "./rowNav";
@@ -17,9 +19,10 @@ import type {
 /**
  * ResponsiveDataTable — wrapper sobre DataTable.
  *
- * En pantallas `<sm` (móvil 20:9 / iPhone) renderiza una lista de tarjetas
- * táctiles construidas con `mobileCard(row)`. En `≥sm` delega 100% en
- * `DataTable`.
+ * En pantallas `<md` (útil también en plegables de ~692px, ver `useIsMobile()`
+ * = max-width 767px) renderiza una lista de tarjetas táctiles construidas con
+ * `mobileCard(row)`. En `≥md` delega 100% en `DataTable`.
+
  *
  * v13.200.0: `getRowHref` es reconocido tanto en desktop (fila navegable)
  * como en mobile (tarjeta navegable con teclado + Ctrl+click).
@@ -37,6 +40,7 @@ interface Props<T> {
   isError?: boolean;
   onRetry?: () => void;
   emptyMessage?: string;
+
   /** Nodo custom para el empty state (CTA accionable). Si se define, reemplaza `emptyMessage`. */
   emptyState?: ReactNode;
   onRowClick?: (item: T) => void;
@@ -68,6 +72,9 @@ interface Props<T> {
   hoverable?: boolean;
   bordered?: boolean;
   tableClassName?: string;
+  /** Sólo-desktop: empty state built-in de `DataTable`, ignorado en la vista de tarjetas. */
+  emptyHint?: string;
+  emptyIcon?: ReactNode | LucideIcon;
 }
 
 export function ResponsiveDataTable<T>(props: Props<T>) {

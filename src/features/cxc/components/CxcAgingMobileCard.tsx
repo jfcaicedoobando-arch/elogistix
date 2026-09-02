@@ -1,12 +1,13 @@
 /**
- * Tarjeta móvil del listado de antigüedad de saldos de CxP.
- * Extraída de `CxpAging.tsx` para respetar el límite de 200 líneas (Power of 10).
+ * Tarjeta móvil del listado de antigüedad de saldos de CxC.
+ * v13.823.25: extraída al migrar `CxcAging.tsx` de `DataTable` a
+ * `ResponsiveDataTable`, siguiendo el patrón de `CxpAgingMobileCard`.
  */
 import { MoneyCell } from "@/components/shared/MoneyCell";
 import { formatCurrency } from "@/lib/formatters";
-import type { CxpAgingRow } from "@/features/cxp/services/cxpAging";
+import type { CxcAgingRow } from "@/features/cxc/services/cxcAging";
 
-function peorCubetaLabel(r: CxpAgingRow): string {
+function peorCubetaLabel(r: CxcAgingRow): string {
   if (r.mas_90 > 0) return "+90 días";
   if (r.d_61_90 > 0) return "61-90 días";
   if (r.d_31_60 > 0) return "31-60 días";
@@ -14,11 +15,11 @@ function peorCubetaLabel(r: CxpAgingRow): string {
   return "Vigente";
 }
 
-export function CxpAgingMobileCard({ row }: { row: CxpAgingRow }) {
+export function CxcAgingMobileCard({ row }: { row: CxcAgingRow }) {
   return (
     <div className="flex items-start justify-between gap-2">
       <div className="min-w-0 flex-1 space-y-1">
-        <div className="font-semibold text-body truncate">{row.proveedor_nombre}</div>
+        <div className="font-semibold text-body truncate">{row.cliente_nombre}</div>
         <div className="text-body-sm text-muted-foreground">
           {row.num_facturas} factura{row.num_facturas === 1 ? "" : "s"}
         </div>

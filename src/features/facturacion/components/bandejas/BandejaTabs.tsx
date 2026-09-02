@@ -72,15 +72,18 @@ export function BandejaTabs() {
   const groups: GroupId[] = ["preparar", "cobrar", "historico"];
 
   return (
-    <TabsList variant="underline" className="border-b-0 h-auto flex flex-wrap items-stretch gap-0">
+    // v13.823.25 (fold 692px): en móvil cada grupo ocupa su propio renglón para
+    // que los rótulos ("Preparar", "Cobrar", "Histórico") no queden sueltos.
+    <TabsList variant="underline" className="border-b-0 h-auto flex flex-col items-stretch gap-1 md:flex-row md:flex-wrap md:items-stretch md:gap-0">
       {groups.map((group, gIdx) => {
         const defs = DEFS.filter((d) => d.group === group);
         return (
           <div key={group} className="flex items-stretch">
             {gIdx > 0 && (
-              <span aria-hidden className="mx-2 self-center h-6 w-px bg-border" />
+              <span aria-hidden className="mx-2 hidden self-center h-6 w-px bg-border md:block" />
             )}
-            <div className="flex flex-col">
+            <div className="flex min-w-0 flex-1 flex-col">
+
               <span className="px-3 pt-0.5 text-2xs font-semibold uppercase tracking-wider text-muted-foreground/70">
                 {GROUP_LABELS[group]}
               </span>

@@ -39,18 +39,20 @@ export function CapturaFacturaFooter({
           </p>
         )}
         {pasos.pendientesDeOtrosPasos.length > 0 && (
-          <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-body-sm text-muted-foreground">
+          <div className="flex flex-wrap items-center gap-x-2 text-body-sm text-muted-foreground">
             {pasos.pendientesDeOtrosPasos.map((p) => (
               <button
                 key={p.texto}
                 type="button"
                 onClick={() => pasos.irA(p.paso)}
-                className="underline-offset-4 hover:underline hover:text-foreground"
+                /* v13.823.25: altura mínima táctil de 36px en móvil. */
+                className="inline-flex min-h-9 items-center underline-offset-4 hover:underline hover:text-foreground"
               >
                 {p.texto} (paso {p.paso})
               </button>
             ))}
           </div>
+
         )}
       </div>
 
