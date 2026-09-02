@@ -71,4 +71,15 @@ export const LC_CODE_MESSAGES_CRM: Record<string, string> = {
   // FIX3 · P3 — vínculo cotización↔embarque acotado a la organización.
   LC_COTIZACION_OTRA_ORG:
     "La cotización pertenece a otra organización; no puede vincularse a este embarque.",
+
+  // v13.823.57 · autoridad única cotización terminal → oportunidad ganada.
+  LC_COTIZACION_GANADORA_EXISTE:
+    "Esta oportunidad ya tiene una cotización ganadora. Recarga la pantalla: sólo una cotización puede quedar aceptada o en operación por oportunidad.",
+  LC_COTIZACION_GANADORA_INMUTABLE:
+    "La cotización ganadora no puede cambiar de oportunidad ni de organización.",
+  LC_OPORTUNIDAD_PERDIDA_REQUIERE_REAPERTURA:
+    "La oportunidad está marcada como perdida. Reábrela explícitamente antes de aceptar una cotización.",
+  LC_CRM_SIN_ETAPA_GANADA:
+    "Configura una etapa ganada activa en el pipeline antes de aceptar cotizaciones.",
 };
+
