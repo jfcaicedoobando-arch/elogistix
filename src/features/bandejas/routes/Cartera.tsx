@@ -51,7 +51,6 @@ export default function Cartera() {
     vencidoNativo,
     eqTotal,
     eqVencido,
-    isLoading,
     isError,
     refetch,
     columns,

@@ -39,6 +39,10 @@ interface Props<T> {
   isError?: boolean;
   onRetry?: () => void;
   emptyMessage?: string;
+  /** Sólo-desktop: pista y icono del empty state de `DataTable`. */
+  emptyHint?: string;
+  emptyIcon?: ReactNode;
+
   /** Nodo custom para el empty state (CTA accionable). Si se define, reemplaza `emptyMessage`. */
   emptyState?: ReactNode;
   onRowClick?: (item: T) => void;
