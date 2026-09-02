@@ -97,28 +97,19 @@ export default function OportunidadFormFields({
       <div className="space-y-1">
         <Label htmlFor="op-etapa">Etapa *</Label>
         {/*
-          v13.823.51 — en edición la etapa es de sólo lectura: moverla debe pasar
-          por la acción canónica del pipeline (Kanban/detalle), que exige motivo
-          de pérdida y fuerza la probabilidad terminal.
+          v13.823.52 — la etapa SIEMPRE es de sólo lectura: al crear se usa la
+          primera etapa abierta (nunca Ganada/Perdida) y moverla después debe
+          pasar por la acción canónica del pipeline (Kanban/detalle), que exige
+          motivo de pérdida y fuerza la probabilidad terminal.
         */}
-        {isEdit ? (
-          <Input id="op-etapa" value={etapas.find((e) => e.id === form.etapa_id)?.nombre ?? "—"} readOnly disabled />
-        ) : (
-          <Select
-            value={form.etapa_id}
-            onValueChange={(v) => {
-              set("etapa_id", v);
-              const et = etapas.find((e) => e.id === v);
-              if (et) set("probabilidad", et.probabilidad_default);
-            }}
-          >
-            <SelectTrigger id="op-etapa"><SelectValue placeholder="Etapa…" /></SelectTrigger>
-            <SelectContent>
-              {etapas.map((e) => <SelectItem key={e.id} value={e.id}>{e.nombre}</SelectItem>)}
-            </SelectContent>
-          </Select>
-        )}
+        <Input
+          id="op-etapa"
+          value={etapas.find((e) => e.id === form.etapa_id)?.nombre ?? "—"}
+          readOnly
+          disabled
+        />
       </div>
+
       <div className="space-y-1">
         <Label htmlFor="op-monto-estimado">Monto estimado</Label>
         <MoneyInput

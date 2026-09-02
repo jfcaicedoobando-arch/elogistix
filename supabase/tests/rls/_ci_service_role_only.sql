@@ -38,6 +38,7 @@ INSERT INTO _ci_service_role_only (fn) VALUES
   ('public._cotizacion_oportunidad_misma_org()'),
   ('public._crm_actividad_entidad_misma_org()'),
   ('public._crm_probabilidad_terminal()'),
+  ('public._crm_oportunidad_etapa_motivo_misma_org()'),
   ('public._assert_periodo_abierto()'),
   -- Lectura bloqueada (FOR KEY SHARE) del estado del embarque: sólo la usan
   -- los triggers SECURITY DEFINER de bloqueo por cierre.
