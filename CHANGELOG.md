@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.823.28] - 2026-09-02
+### Tarifas: KPI honesto y aprobación verificada contra la base
+- **KPI Operaciones**: la tarjeta ahora se llama "Tarifas pendientes" con sublabel "Requieren revisión" ("Sin pendientes" en 0), porque el conteo incluye borradores con vigencia vencida que hay que revisar/renovar y no sólo aprobar. Se conserva el conteo y el enlace filtrado.
+- **Guard de aprobación**: antes de aprobar, el servicio relee `vigente_hasta` de la tarifa por id y aplica el corte con el día de negocio México; si la lectura falla, no aprueba. Ya no se confía en la fecha que envía la fila de la UI.
+
 ## [13.823.27] - 2026-09-02
 ### Agente → Gerente de Operaciones: descubribilidad, vigencia y navieras
 - **Costeo visible para gerente_operaciones**: sección en sidebar (Tarifas, Agentes, Navieras) y destinos en búsqueda global sólo cuando el rol tiene acceso.
