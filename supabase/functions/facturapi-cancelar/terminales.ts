@@ -7,7 +7,6 @@ import { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { registrarBitacoraEdge } from "../_shared/bitacora.ts";
 import { jsonResponse } from "../_shared/response.ts";
 import { descargarAcuseCancelacion } from "./descargarAcuse.ts";
-import { revertirProformasCancelacion } from "./cancelacion.ts";
 
 interface CtxBase {
   supabase: SupabaseClient;
@@ -87,42 +86,29 @@ export async function handleAceptada(ctx: CtxBase & {
   cancelStatusHint?: string;
 }): Promise<Response> {
   const acuse = await descargarAcuseCancelacion(ctx.facturapiId, ctx.apiKey);
-  const updatePayload: Record<string, unknown> = {
-    estado: ctx.esSustitucion ? "Sustituida" : "Cancelada",
-    cancellation_status: "accepted",
-    cancelacion_motivo: ctx.motivo,
-    cancelado_en: ctx.nowIso,
-    cancelacion_solicitada_en: ctx.nowIso,
-    acuse_cancelacion_xml: acuse.xml,
-    acuse_cancelacion_fecha: acuse.xml ? ctx.nowIso : null,
-    acuse_cancelacion_status: acuse.status,
-  };
-  if (ctx.esSustitucion) updatePayload.sustituida_por = ctx.sustituidaPorFacturaId;
 
-  const { error: updErr } = await ctx.supabase
-    .from("facturas")
-    .update(updatePayload)
-    .eq("id", ctx.facturaId);
-  if (updErr) return jsonResponse({ error: "db_update_failed", detail: updErr.message }, 500);
-
-  // Marcar los vínculos con embarques como inactivos (conserva historial).
-  await ctx.supabase
-    .from("factura_embarques")
-    .update({ activa: false })
-    .eq("factura_id", ctx.facturaId);
-
-  // Liberar la proforma si ya no quedan facturas vivas apuntando a ella.
-  // Aplica también en sustitución (motivo 01): si la sustituta también se
-  // canceló, la proforma vuelve a estar disponible para re-facturar.
-  const { data: proformaLiberada } = await ctx.supabase.rpc(
-    "revertir_proforma_al_cancelar_sustitucion",
-    { p_factura_id: ctx.facturaId },
+  // El cierre de estado (Cancelada/Sustituida) + factura_embarques + proforma
+  // vive en la RPC compartida con facturapi-webhook; aquí sólo se persisten
+  // los campos propios del acuse descargado de forma síncrona.
+  const { data: cierre, error: rpcErr } = await ctx.supabase.rpc(
+    "cerrar_cancelacion_factura_facturapi",
+    {
+      p_factura_id: ctx.facturaId,
+      p_sustituida_por_factura_id: ctx.esSustitucion ? ctx.sustituidaPorFacturaId : null,
+      p_motivo: ctx.motivo,
+    },
   );
+  if (rpcErr) return jsonResponse({ error: "cerrar_cancelacion_failed", detail: rpcErr.message }, 500);
 
-  // Compatibilidad con flujo legacy (columnas proformas.factura_id/factura_secundaria_id).
-  const proformasRevertidas = ctx.esSustitucion
-    ? []
-    : await revertirProformasCancelacion(ctx.supabase, ctx.facturaId);
+  const { error: acuseErr } = await ctx.supabase
+    .from("facturas")
+    .update({
+      acuse_cancelacion_xml: acuse.xml,
+      acuse_cancelacion_fecha: acuse.xml ? ctx.nowIso : null,
+      acuse_cancelacion_status: acuse.status,
+    })
+    .eq("id", ctx.facturaId);
+  if (acuseErr) return jsonResponse({ error: "db_update_failed", detail: acuseErr.message }, 500);
 
   await registrarBitacoraEdge(ctx.supabase, {
     organizationId: ctx.organizationId,
@@ -136,8 +122,7 @@ export async function handleAceptada(ctx: CtxBase & {
       cancellation_status: "accepted",
       sustituye_uuid: ctx.sustituyeUuid ?? null,
       sustituida_por_factura_id: ctx.sustituidaPorFacturaId,
-      proformas_revertidas: proformasRevertidas,
-      proforma_liberada: proformaLiberada ?? null,
+      cierre,
     },
   });
 

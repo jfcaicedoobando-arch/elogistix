@@ -29,7 +29,7 @@ export function useRentabilidadClientes(filtros: FiltrosRentabilidad) {
   );
 
   const kpis = useMemo(
-    () => data?.kpis ?? { totalClientes: 0, revenue: 0, profit: 0, margenProm: 0 },
+    () => data?.kpis ?? { totalClientes: 0, revenue: 0, profit: 0, margenProm: 0, embarquesSinTc: 0 },
     [data],
   );
 

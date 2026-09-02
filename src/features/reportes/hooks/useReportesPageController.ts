@@ -104,7 +104,19 @@ export function useReportesPageController() {
     }
   };
 
+  const hayEmbarquesSinTc = kpis.embarquesSinTc > 0;
+
   const handleExport = () => {
+    if (hayEmbarquesSinTc) {
+      notifyWarning(undefined, {
+        title: "Exportación bloqueada",
+        description:
+          "Hay embarques sin tipo de cambio resuelto: las cifras de rentabilidad están " +
+          "incompletas. Resuelve el tipo de cambio antes de exportar un reporte exacto.",
+        id: "reportes-export-sin-tc",
+      });
+      return;
+    }
     exportToCsv(
       "rentabilidad_clientes.csv",
       [
@@ -120,6 +132,16 @@ export function useReportesPageController() {
   };
 
   const handleExportPdf = () => {
+    if (hayEmbarquesSinTc) {
+      notifyWarning(undefined, {
+        title: "Exportación bloqueada",
+        description:
+          "Hay embarques sin tipo de cambio resuelto: las cifras de rentabilidad están " +
+          "incompletas. Resuelve el tipo de cambio antes de exportar un reporte exacto.",
+        id: "reportes-export-sin-tc",
+      });
+      return;
+    }
     void runPdfExport(async () => {
       const mod: { generarRentabilidadPdf: typeof GenerarRentabilidadPdfFn } = await import(
         "@/generators/rentabilidadPdf"
@@ -162,6 +184,7 @@ export function useReportesPageController() {
     handleExport,
     handleExportPdf,
     isExportingPdf,
-    canExport: sorted.length > 0,
+    canExport: sorted.length > 0 && !hayEmbarquesSinTc,
+    hayEmbarquesSinTc,
   };
 }

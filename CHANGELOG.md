@@ -1,5 +1,16 @@
 # Changelog
 
+## [13.823.34] - 2026-09-02
+### Ronda de endurecimiento: tesorería, cancelaciones, costos y datos de usuarios
+- **Cancelación fiscal con un solo cierre (P1)**: cuando el SAT acepta la cancelación, el estado final (Cancelada o Sustituida), el desvínculo de embarques y la liberación de la proforma se hacen en una sola rutina de servidor, igual desde el aviso automático que desde la app. Repetir el aviso ya no altera nada.
+- **Traspasos entre cuentas propias (P1)**: se bloquean las dos cuentas antes de validar el saldo, así dos traspasos al mismo tiempo no pueden sobregirar la cuenta; y se rechaza un traspaso con fecha anterior al corte de saldo inicial, que antes se registraba sin afectar el saldo.
+- **Costo de embarque ligado a factura de proveedor (P1)**: el costo y su vínculo con la factura se guardan juntos o no se guardan; reintentar el mismo envío ya no duplica el costo ni deja costos "fantasma" marcados como pagados.
+- **Reposición del mismo documento de embarque (P2)**: volver a subir un archivo que ya se había reemplazado vuelve a sincronizarse con la fila real y avisa si el guardado no alcanzó ningún registro, en vez de quedarse con datos viejos.
+- **Conciliación de embarques completa (P1)**: se leen todos los conceptos por lotes, con tope explícito; si el resultado se pasa del tope, se avisa en vez de mostrar una cifra parcial como total.
+- **Rentabilidad incompleta señalada (P2)**: si algún embarque no pudo convertirse a pesos por falta de tipo de cambio, los reportes lo advierten y la exportación queda marcada, en lugar de presentar la utilidad como exacta.
+- **Roles asignables (P2)**: el administrador de la organización ya puede asignar auxiliar contable y ejecutivo de cobranza; antes aparecían en pantalla pero el servidor los rechazaba.
+- **Datos de usuarios protegidos (P2)**: el listado completo (correo y último acceso) queda sólo para roles administrativos; los módulos operativos usan un listado mínimo de nombres.
+
 ## [13.823.33] - 2026-09-02
 ### Cancelaciones al día y conceptos de IA sin importes cruzados
 - **Sincronización automática de cancelaciones (alta)**: se aplicó a la base publicada el campo de "última revisión" que el proceso automático necesitaba. Antes fallaba en cada corrida (cada ~30 min) y una factura cancelada ante el SAT podía seguir apareciendo como activa en facturación y cobranza.

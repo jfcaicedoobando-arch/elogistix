@@ -12,10 +12,18 @@
  *  - Ignora conceptos con `deleted_at IS NOT NULL`.
  *  - Separa por moneda (MXN / USD) porque no se pueden sumar entre sí.
  *  - Ordena por mayor pendiente descendente.
+ *
+ * DEFECTO 6 (P1): antes se pedía un único `.limit(CAP_REPORTE_AMPLIO)` y la UI
+ * presentaba los KPIs (sumas por moneda) como TOTALES. Con más de 5000
+ * conceptos activos el corte era silencioso: los KPIs y la lista quedaban
+ * incompletos sin ningún aviso. Ahora se leen lotes consecutivos hasta uno
+ * incompleto (mismo patrón que `fetchFacturasCxP`) y, si se alcanza el tope
+ * duro `CAP_LOTES_DURO`, se lanza explícitamente en vez de mostrar un parcial.
  */
 import type { Moneda } from "@/types/db";
 import { supabase } from "@/integrations/supabase/client";
-import { CAP_REPORTE_AMPLIO } from "@/constants/queryCaps";
+import { CAP_LOTES_DURO } from "@/constants/queryCaps";
+import { ResultadoTruncadoError } from "@/lib/supabase/assertNotTruncated";
 
 export type EstadoConciliacion = "sin_facturar" | "parcial" | "completa";
 
@@ -42,6 +50,7 @@ export interface FiltrosConciliacion {
 }
 
 interface RowConcepto {
+  id: string;
   embarque_id: string;
   monto: string | number;
   moneda: Moneda;
@@ -52,6 +61,9 @@ interface RowConcepto {
     estado: string | null;
   } | null;
 }
+
+/** Tamaño de lote de lectura; NO es un cap — se pide en lotes hasta agotar. */
+const LOTE = 1000;
 
 function clasificar(cobertura: number, pagado: number): EstadoConciliacion {
   if (pagado <= 0) return "sin_facturar";
@@ -118,25 +130,45 @@ function aplicarFiltrosCliente(
   return out;
 }
 
+/**
+ * Lee TODOS los `conceptos_costo` activos que cumplan los filtros de
+ * servidor, recorriendo lotes consecutivos (orden determinista por `id`)
+ * hasta recibir uno incompleto. Si el acumulado alcanza `CAP_LOTES_DURO`,
+ * falla explícitamente: nunca se suma dinero sobre un subconjunto.
+ */
+async function leerTodosLosConceptos(filtros: FiltrosConciliacion): Promise<RowConcepto[]> {
+  const acumulado: RowConcepto[] = [];
+  for (let offset = 0; ; offset += LOTE) {
+    let q = supabase
+      .from("conceptos_costo")
+      .select(
+        "id, embarque_id, monto, moneda, estado_liquidacion, embarques!inner(expediente, cliente_nombre, estado)",
+      )
+      .is("deleted_at", null)
+      .order("id", { ascending: true })
+      .range(offset, offset + LOTE - 1);
+
+    if (filtros.organizationId) q = q.eq("organization_id", filtros.organizationId);
+    if (filtros.moneda) q = q.eq("moneda", filtros.moneda);
+
+    const { data, error } = await q;
+    // El error de cualquier lote se propaga: nunca se devuelve un resultado
+    // parcial como si fuera completo.
+    if (error) throw error;
+    // SAFE-CAST: modelo definido por el select con embed !inner.
+    const lote = (data as unknown as RowConcepto[] | null) ?? [];
+    acumulado.push(...lote);
+    if (acumulado.length >= CAP_LOTES_DURO) {
+      throw new ResultadoTruncadoError("compras.conciliacionEmbarques", CAP_LOTES_DURO);
+    }
+    if (lote.length < LOTE) return acumulado;
+  }
+}
+
 export async function listarConciliacionEmbarques(
   filtros: FiltrosConciliacion = {},
 ): Promise<EmbarqueConciliacion[]> {
-  let q = supabase
-    .from("conceptos_costo")
-    .select(
-      "embarque_id, monto, moneda, estado_liquidacion, embarques!inner(expediente, cliente_nombre, estado)",
-    )
-    .is("deleted_at", null)
-    .limit(CAP_REPORTE_AMPLIO);
-
-  if (filtros.organizationId) q = q.eq("organization_id", filtros.organizationId);
-  if (filtros.moneda) q = q.eq("moneda", filtros.moneda);
-
-  const { data, error } = await q;
-  if (error) throw error;
-
-  // SAFE-CAST: modelo definido por el select con embed !inner.
-  const rows = ((data as unknown as RowConcepto[] | null) ?? []);
+  const rows = await leerTodosLosConceptos(filtros);
   const agregados = agrupar(rows).map(derivarMetricas);
   const filtrados = aplicarFiltrosCliente(agregados, filtros);
   filtrados.sort((a, b) => b.pendiente - a.pendiente);

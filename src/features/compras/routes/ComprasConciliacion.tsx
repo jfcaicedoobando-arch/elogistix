@@ -30,6 +30,7 @@ import { buildConciliacionColumns } from "./_sections/conciliacionColumns";
 import { ConciliacionDetalleSheet } from "./_sections/ConciliacionDetalleSheet";
 import type { EmbarqueConciliacion } from "@/features/compras/services/conciliacionEmbarques";
 import { ErrorState } from "@/components/shared/states/ErrorState";
+import { ResultadoTruncadoError } from "@/lib/supabase/assertNotTruncated";
 
 const ESTADOS_FILTRO = ["todos", "sin_facturar", "parcial", "completa"] as const;
 type EstadoFiltro = (typeof ESTADOS_FILTRO)[number] & (EstadoConciliacion | "todos");
@@ -44,7 +45,7 @@ export default function ComprasConciliacion() {
   const [detalle, setDetalle] = useState<EmbarqueConciliacion | null>(null);
   const { organizationId, orgListo } = useOrgFilter();
 
-  const { data: rows = [], isLoading, isError, refetch } = useQuery({
+  const { data: rows = [], isLoading, isError, error, refetch } = useQuery({
     queryKey: [...compras.conciliacionEmbarques({ estado, moneda, search }), organizationId],
     queryFn: () =>
       listarConciliacionEmbarques({
@@ -133,7 +134,15 @@ export default function ComprasConciliacion() {
           </div>
 
           {isError ? (
-            <ErrorState onRetry={() => void refetch()} />
+            error instanceof ResultadoTruncadoError ? (
+              <ErrorState
+                onRetry={() => void refetch()}
+                title="Conciliación con demasiados registros para mostrarse completa"
+                description="Hay más conceptos de costo de los que este reporte puede leer de forma segura. Aplica filtros (moneda, estado, cliente) para acotar el resultado; nunca se muestra un total parcial."
+              />
+            ) : (
+              <ErrorState onRetry={() => void refetch()} />
+            )
           ) : (
           <DataTable
             columns={columns}

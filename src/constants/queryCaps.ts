@@ -22,3 +22,10 @@ export const CAP_REPORTE = 2000;
 
 /** Conciliaciones y barridos históricos amplios (varios periodos). */
 export const CAP_REPORTE_AMPLIO = 5000;
+
+/**
+ * Tope duro de lectura por lotes para barridos que ya no pueden aceptar un
+ * corte silencioso (p. ej. conciliación de embarques): si se alcanza, la
+ * consulta debe fallar explícitamente en vez de mostrar un total parcial.
+ */
+export const CAP_LOTES_DURO = 50_000;
