@@ -1,5 +1,14 @@
 # Changelog
 
+## [13.823.49] - 2026-09-02
+### Pulido de CRM y pantallas de 1280x720
+- **Filtros de Oportunidades**: en computadora, abrir los filtros ya no abre además el panel de celular (antes salían dos paneles y dos botones "Limpiar").
+- **Actividades vencidas**: el atajo "vencidas" ahora filtra en el servidor, así que el contador y las páginas coinciden con lo que se ve.
+- **Oportunidades**: etapa, vendedor, rango de cierre y monto mínimo se aplican sobre todas las oportunidades (antes sólo sobre las primeras 500) y la exportación a CSV incluye todas las coincidencias.
+- **Guardados que no guardaban**: editar o eliminar leads y completar/posponer/anotar actividades avisan error si el cambio no se aplicó, en lugar de mostrar un éxito falso.
+- **Avisos duplicados**: registrar o completar una actividad y mover una oportunidad muestran un solo mensaje.
+- **Accesibilidad y detalles**: el botón "+" de actividad se anuncia a lectores de pantalla, la tabla de Leads deja ver el Score en pantallas de 1280 px, el atajo de búsqueda muestra "Ctrl+K" en Windows y los contadores dicen "1 actividad" / "N actividades".
+
 ## [13.823.48] - 2026-09-02
 ### Sincronización de base: correcciones que faltaban aplicar
 - **Cierre de embarques**: cerrar y reabrir un embarque ahora valida el rol en la organización dueña del embarque (el arreglo existía en el repositorio pero nunca se había aplicado a la base) y se cierra la carrera que permitía colar conceptos durante el cierre.
