@@ -23,7 +23,7 @@ import { ERROR_CODES } from "@/lib/domain/errorCatalog";
  * terminales (`Aceptada`, `En operación`) y `Rechazada` los gobierna la base de
  * datos: sincronizarlos aquí duplicaba escrituras y podía perder la oportunidad.
  */
-const ESTADOS_SYNC_CLIENTE = ["Enviada"];
+const ESTADOS_SYNC_CLIENTE = ["Enviada", "Solicitada"];
 
 
 
