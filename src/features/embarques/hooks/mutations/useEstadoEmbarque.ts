@@ -173,7 +173,7 @@ export function useReabrirEmbarque() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async ({ embarqueId, usuarioEmail, motivo, requestId }: { embarqueId: string; usuarioEmail: string; motivo: string; requestId?: string }) => {
-      await reabrirEmbarqueRpc({
+      return await reabrirEmbarqueRpc({
         embarqueId,
         usuarioEmail,
         motivo,
@@ -181,13 +181,17 @@ export function useReabrirEmbarque() {
       });
     },
 
-    onSuccess: (_r, vars) => {
+    onSuccess: (resultado, vars) => {
+      // v13.823.47 — un claim de idempotencia en vuelo no reabrió nada en ESTA
+      // llamada: no invalidamos caché para no pintar un estado inexistente.
+      if (resultado.pendiente) return;
       queryClient.invalidateQueries({ queryKey: queryKeys.embarques.all });
       queryClient.invalidateQueries({ queryKey: queryKeys.embarques.detail(vars.embarqueId) });
       queryClient.invalidateQueries({ queryKey: queryKeys.embarques.notas(vars.embarqueId) });
       queryClient.invalidateQueries({ queryKey: queryKeys.embarques.eventos(vars.embarqueId) });
       queryClient.invalidateQueries({ queryKey: queryKeys.auditoria.embarques });
     },
+
     // Toasts (éxito y error) manejados por el caller para evitar doble notificación.
     onError: () => {
       // No-op intencional: el caller maneja el toast de error.
