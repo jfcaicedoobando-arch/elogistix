@@ -3,7 +3,7 @@
  * Sólo se usa cuando el documento vino de un PDF procesado con IA: permite
  * corregir la descripción, cantidad, importe e IVA, o borrar el renglón de más.
  */
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -32,6 +32,25 @@ export function CfdiConceptoIaRow({
   const [cantidadTxt, setCantidadTxt] = useState(String(linea.cantidad));
   const [importeTxt, setImporteTxt] = useState(fmt2(linea.monto));
   const [ivaTxt, setIvaTxt] = useState(fmt2(linea.iva));
+
+  // v13.823.33: al borrar un renglón, React reutiliza esta instancia para el
+  // renglón que ocupa ahora el mismo índice. Sin esta resincronización los
+  // recuadros conservaban los importes del renglón eliminado (y al salir del
+  // campo los volvían a guardar). Sólo se reescribe el texto cuando el valor
+  // capturado difiere realmente del dato, así no estorba mientras se escribe.
+  useEffect(() => {
+    if (parseMonto(cantidadTxt, 1, { puntoDeMiles: false }) !== Number(linea.cantidad)) {
+      setCantidadTxt(String(linea.cantidad));
+    }
+  }, [linea.cantidad, cantidadTxt]);
+
+  useEffect(() => {
+    if (parseMonto(importeTxt, 0) !== Number(linea.monto)) setImporteTxt(fmt2(linea.monto));
+  }, [linea.monto, importeTxt]);
+
+  useEffect(() => {
+    if (parseMonto(ivaTxt, 0) !== Number(linea.iva)) setIvaTxt(fmt2(linea.iva));
+  }, [linea.iva, ivaTxt]);
 
   return (
     <TableRow className="border-t odd:bg-background even:bg-muted/20 align-top">

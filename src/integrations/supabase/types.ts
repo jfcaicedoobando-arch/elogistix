@@ -4962,6 +4962,7 @@ export type Database = {
           motivo: Database["public"]["Enums"]["motivo_nota_credito"]
           organization_id: string
           pdf_url: string | null
+          reconciliacion_checked_at: string | null
           serie: string | null
           timbrado_en: string | null
           timbrado_por: string | null
@@ -5004,6 +5005,7 @@ export type Database = {
           motivo?: Database["public"]["Enums"]["motivo_nota_credito"]
           organization_id?: string
           pdf_url?: string | null
+          reconciliacion_checked_at?: string | null
           serie?: string | null
           timbrado_en?: string | null
           timbrado_por?: string | null
@@ -5046,6 +5048,7 @@ export type Database = {
           motivo?: Database["public"]["Enums"]["motivo_nota_credito"]
           organization_id?: string
           pdf_url?: string | null
+          reconciliacion_checked_at?: string | null
           serie?: string | null
           timbrado_en?: string | null
           timbrado_por?: string | null
@@ -5293,6 +5296,7 @@ export type Database = {
           organization_id: string
           origen: Database["public"]["Enums"]["origen_factura"]
           proforma_id: string | null
+          reconciliacion_checked_at: string | null
           referencia_bl: string | null
           ret_isr: number
           ret_iva: number
@@ -5353,6 +5357,7 @@ export type Database = {
           organization_id?: string
           origen?: Database["public"]["Enums"]["origen_factura"]
           proforma_id?: string | null
+          reconciliacion_checked_at?: string | null
           referencia_bl?: string | null
           ret_isr?: number
           ret_iva?: number
@@ -5413,6 +5418,7 @@ export type Database = {
           organization_id?: string
           origen?: Database["public"]["Enums"]["origen_factura"]
           proforma_id?: string | null
+          reconciliacion_checked_at?: string | null
           referencia_bl?: string | null
           ret_isr?: number
           ret_iva?: number
@@ -5935,6 +5941,7 @@ export type Database = {
           rep_error: string | null
           rep_motivo_cancel: string | null
           rep_pdf_url: string | null
+          rep_reconciliacion_checked_at: string | null
           rep_xml_backup_path: string | null
           rep_xml_url: string | null
           ret_isr: number
@@ -5982,6 +5989,7 @@ export type Database = {
           rep_error?: string | null
           rep_motivo_cancel?: string | null
           rep_pdf_url?: string | null
+          rep_reconciliacion_checked_at?: string | null
           rep_xml_backup_path?: string | null
           rep_xml_url?: string | null
           ret_isr?: number
@@ -6029,6 +6037,7 @@ export type Database = {
           rep_error?: string | null
           rep_motivo_cancel?: string | null
           rep_pdf_url?: string | null
+          rep_reconciliacion_checked_at?: string | null
           rep_xml_backup_path?: string | null
           rep_xml_url?: string | null
           ret_isr?: number
@@ -9437,6 +9446,7 @@ export type Database = {
           organization_id: string
           origen: Database["public"]["Enums"]["origen_factura"]
           proforma_id: string | null
+          reconciliacion_checked_at: string | null
           referencia_bl: string | null
           ret_isr: number
           ret_iva: number
