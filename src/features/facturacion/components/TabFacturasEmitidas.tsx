@@ -11,12 +11,13 @@ import { DatePickerMx } from "@/components/ui/date-picker-mx";
 import { FILTRO_ANCHO } from "@/lib/ui/filterWidths";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { DataTable } from "@/components/shared/DataTable";
+import { ResponsiveDataTable } from "@/components/shared/dataTable/ResponsiveDataTable";
 import { useRowSelection } from "@/components/shared/dataTable/useRowSelection";
 import { buildSelectionColumn } from "@/components/shared/dataTable/buildSelectionColumn";
 import { UnifiedFiltersBar } from "@/components/shared/filters/UnifiedFiltersBar";
 import { FacturasMasivasToolbar } from "@/features/facturacion/components/FacturasMasivasToolbar";
 import { FacturasEmitidasFooter } from "@/features/facturacion/components/FacturasEmitidasFooter";
+import { FacturaEmitidaMobileCard } from "@/features/facturacion/components/FacturaEmitidaMobileCard";
 import EmptyState from "@/components/empty/EmptyState";
 import { usePermissions } from "@/hooks/shared";
 import type { Factura } from "@/features/facturacion/routes/facturacionColumns";
@@ -145,7 +146,7 @@ export function TabFacturasEmitidas({ filtros: f, tabla: t, acciones: a }: Props
 
       <Card>
         <CardContent className="p-0">
-          <DataTable
+          <ResponsiveDataTable
             columns={columnsConSeleccion}
             data={t.data}
             isLoading={t.isLoading}
@@ -174,6 +175,7 @@ export function TabFacturasEmitidas({ filtros: f, tabla: t, acciones: a }: Props
               pageSizeOptions: [50, 100, 200, 500],
               pageSizeLabels: { 500: "500" }, total: t.totalFacturas,
             }}
+            mobileCard={(f) => <FacturaEmitidaMobileCard factura={f} />}
           />
         </CardContent>
       </Card>

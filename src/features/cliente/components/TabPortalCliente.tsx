@@ -1,7 +1,9 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
+import { defineColumns, type ColumnDef } from "@/components/shared/DataTable";
+import { ResponsiveDataTable } from "@/components/shared/dataTable/ResponsiveDataTable";
+import { ClientUserMobileCard } from "@/features/cliente/components/ClientUserMobileCard";
 import { UserPlus, Trash2, Globe, Mail } from "lucide-react";
 import { formatDate } from "@/lib/formatters";
 import {
@@ -156,12 +158,22 @@ export default function TabPortalCliente({ clienteId, organizationId, canEdit }:
           {isLoading ? (
             <EmptyStateInline loading message="Cargando…" className="py-4" />
           ) : (
-            <DataTable
+            <ResponsiveDataTable
               columns={cols}
               data={clientUsers}
               rowKey={(cu) => cu.id}
               emptyMessage="No hay usuarios con acceso al portal para este cliente."
               density={TABLE_DENSITY.embebida}
+              mobileCard={(cu) => (
+                <ClientUserMobileCard
+                  usuario={cu}
+                  canEdit={canEdit}
+                  onResend={handleResend}
+                  onRevoke={handleRevoke}
+                  resendPending={resendMutation.isPending}
+                  revokePending={revokeMutation.isPending}
+                />
+              )}
             />
           )}
         </CardContent>

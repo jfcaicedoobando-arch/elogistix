@@ -6,7 +6,13 @@
  * verificando y una segunda cancelación es insegura).
  */
 import { describe, it, expect, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render as rtlRender, screen } from "@testing-library/react";
+import { MemoryRouter } from "react-router-dom";
+import type { ReactElement } from "react";
+
+// v13.823.26: `ResponsiveDataTable` usa `useNavigate`, así que el render de
+// prueba necesita un Router.
+const render = (ui: ReactElement) => rtlRender(<MemoryRouter>{ui}</MemoryRouter>);
 import { FacturaNotasCreditoTable, type NotaCreditoRow } from "../FacturaNotasCreditoTable";
 
 function baseNota(overrides: Partial<NotaCreditoRow> = {}): NotaCreditoRow {

@@ -10,7 +10,9 @@ import { ErrorStateInline } from "@/components/empty/ErrorStateInline";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { CardSkeleton } from "@/components/shared/skeletons";
-import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
+import { defineColumns, type ColumnDef } from "@/components/shared/DataTable";
+import { ResponsiveDataTable } from "@/components/shared/dataTable/ResponsiveDataTable";
+import { DocumentoClienteMobileCard } from "@/features/cliente/components/DocumentoClienteMobileCard";
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 import EmptyState from "@/components/empty/EmptyState";
 import DoubleConfirmDeleteDialog from "@/components/shared/DoubleConfirmDeleteDialog";
@@ -117,12 +119,19 @@ export function ClienteDocumentosTab({
             </Button>
           )}
         </CardHeader>
-        <CardContent className="p-0 overflow-x-auto">
-          <DataTable
+        <CardContent className="p-0">
+          <ResponsiveDataTable
             columns={cols}
             data={documentos}
             rowKey={(d) => d.id}
             density={TABLE_DENSITY.embebida}
+            mobileCard={(d) => (
+              <DocumentoClienteMobileCard
+                doc={d}
+                onDescargar={(doc) => void descargar(doc)}
+                onEliminar={canEdit ? (doc) => setPorBorrar(doc) : undefined}
+              />
+            )}
             emptyState={
               <div className="p-6">
                 <EmptyState

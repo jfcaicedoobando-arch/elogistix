@@ -17,7 +17,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { TooltipProvider } from "@/components/ui/tooltip";
 
-import { DataTable, defineColumns } from "@/components/shared/DataTable";
+import { defineColumns } from "@/components/shared/DataTable";
+import { ResponsiveDataTable } from "@/components/shared/dataTable/ResponsiveDataTable";
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 import { ToneBadge } from "@/components/shared/ToneBadge";
 import { dialogSize } from "@/components/shared/utils/dialogTokens";
@@ -29,6 +30,7 @@ import { formatCurrency, formatDate } from "@/lib/formatters";
 import { todayLocalISO } from "@/lib/date/today";
 import { downloadCsvWithFeedback } from "@/lib/ui/notifyCsvExport";
 import { CxcAgingActionBar, CxcAgingKpiRow } from "./CxcAgingDrillDownDialog.parts";
+import { CxcAgingDrillDownMobileCard } from "./CxcAgingDrillDownMobileCard";
 
 interface Props {
   cliente: CxcAgingRow | null;
@@ -162,7 +164,7 @@ export function CxcAgingDrillDownDialog({
           />
 
           <div className="flex-1 overflow-y-auto">
-            <DataTable<FacturaCobranza>
+            <ResponsiveDataTable<FacturaCobranza>
               columns={columns}
               data={filtradas}
               isLoading={isLoading}
@@ -174,6 +176,7 @@ export function CxcAgingDrillDownDialog({
               striped
               hoverable
               density={TABLE_DENSITY.embebida}
+              mobileCard={(row) => <CxcAgingDrillDownMobileCard row={row} />}
             />
           </div>
 

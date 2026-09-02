@@ -2,12 +2,14 @@ import { Pencil, Trash2, Plus, Users, UserX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
+import { ResponsiveDataTable } from "@/components/shared/dataTable/ResponsiveDataTable";
+import { defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import type { Tables, Enums } from "@/types/db";
 import { toTitleCase, correctSpanishPlace } from "@/lib/formatters";
 import EmptyState from "@/components/empty/EmptyState";
 import { COL_W } from "@/components/shared/dataTable/columnWidths";
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
+import { ContactoMobileCard } from "@/features/cliente/components/ContactoMobileCard";
 type ContactoCliente = Tables<'contactos_cliente'>;
 type TipoContacto = Enums<'tipo_contacto'>;
 
@@ -57,12 +59,15 @@ export default function TablaContactos({ contactos, isLoading, canEdit, onAdd, o
 
   function renderBody() {
     return (
-      <DataTable
+      <ResponsiveDataTable
         columns={columns}
         data={contactos}
         isLoading={isLoading}
         rowKey={(c) => c.id}
         density={TABLE_DENSITY.embebida}
+        mobileCard={(c) => (
+          <ContactoMobileCard contacto={c} canEdit={canEdit} onEdit={onEdit} onDelete={onDelete} />
+        )}
         emptyState={
           <div className="p-6">
             <EmptyState

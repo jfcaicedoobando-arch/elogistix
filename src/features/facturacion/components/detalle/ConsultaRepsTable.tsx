@@ -3,12 +3,14 @@
  * timbrado de la factura, incluidos los ya cancelados.
  */
 import { Badge } from "@/components/ui/badge";
-import { DataTable, defineColumns } from "@/components/shared/DataTable";
+import { defineColumns } from "@/components/shared/DataTable";
+import { ResponsiveDataTable } from "@/components/shared/dataTable/ResponsiveDataTable";
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 import { formatCurrency } from "@/lib/formatters/numbers";
 import { formatDate } from "@/lib/formatters/dates";
 import type { ConsultarFacturapiRep } from "@/features/facturacion/services/facturapi";
 import { ConsultaSatBadge } from "./ConsultaSatBadge";
+import { ConsultaRepsMobileCard } from "./ConsultaRepsMobileCard";
 
 function estadoLocal(rep: ConsultarFacturapiRep): string {
   const cs = (rep.rep_cancellation_status ?? "none").toLowerCase();
@@ -75,12 +77,13 @@ export function ConsultaRepsTable({ reps }: { reps: ConsultarFacturapiRep[] | un
       <div className="px-3 py-2 text-body-sm font-semibold text-muted-foreground uppercase border-b">
         XML de los REP timbrados ({reps.length})
       </div>
-      <DataTable
+      <ResponsiveDataTable
         columns={columnas}
         data={reps}
         rowKey={(rep) => rep.pago_id}
         density={TABLE_DENSITY.embebida}
         tableClassName="w-full"
+        mobileCard={(row) => <ConsultaRepsMobileCard row={row} />}
       />
     </div>
   );

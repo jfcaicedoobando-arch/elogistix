@@ -2,12 +2,13 @@
  * Bloque del reporte de cartera: KPIs por cubeta + tabla de facturas.
  */
 import { Card, CardContent } from "@/components/ui/card";
-import { DataTable } from "@/components/shared/DataTable";
+import { ResponsiveDataTable } from "@/components/shared/dataTable/ResponsiveDataTable";
 import { SectionHeading } from "@/components/shared/SectionHeading";
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 import { formatCurrency } from "@/lib/formatters";
 import { cn } from "@/lib/utils";
 import { carteraColumns } from "@/features/reportes/cartera/components/carteraColumns";
+import { CarteraBloqueMobileCard } from "./CarteraBloqueMobileCard";
 import {
   BUCKET_AGING_LABELS,
   type FilaCartera,
@@ -63,7 +64,7 @@ export function CarteraBloque({
         ))}
       </div>
 
-      <DataTable
+      <ResponsiveDataTable
         columns={carteraColumns(etiquetaContraparte)}
         data={filas}
         rowKey={(f) => f.id}
@@ -74,6 +75,9 @@ export function CarteraBloque({
         isError={isError}
         onRetry={onRetry}
         emptyMessage="Sin saldos pendientes con estos filtros."
+        mobileCard={(row) => (
+          <CarteraBloqueMobileCard row={row} etiquetaContraparte={etiquetaContraparte} />
+        )}
       />
     </section>
   );

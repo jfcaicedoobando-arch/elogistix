@@ -3,7 +3,7 @@ import { Download, Receipt, X } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { DataTable } from "@/components/shared/DataTable";
+import { ResponsiveDataTable } from "@/components/shared/dataTable/ResponsiveDataTable";
 import { exportToCsv } from "@/generators/exportCsv";
 import { useTabProformasController, type FiltroEstadoProforma } from "@/features/facturacion/hooks";
 import { buildProformasColumns } from "./proformasColumns";
@@ -16,6 +16,7 @@ import { CargaGuard } from "@/components/shared/states/CargaGuard";
 import { mensajeVacioProformas } from "./proformasEmptyCopy";
 import { ProformasEmptyState } from "./proformasEmpty";
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
+import { ProformaMobileCard } from "./ProformaMobileCard";
 
 
 export function TabProformas({ isInRange, estadoInicial }: {
@@ -132,7 +133,7 @@ export function TabProformas({ isInRange, estadoInicial }: {
 
       <Card>
         <CardContent className="p-0">
-          <DataTable
+          <ResponsiveDataTable
             key={c.filtroEstado}
             columns={columns}
             data={c.paginated}
@@ -161,6 +162,7 @@ export function TabProformas({ isInRange, estadoInicial }: {
               pageSizeLabels: { 500: "500" },
               total: c.filtered.length,
             }}
+            mobileCard={(p) => <ProformaMobileCard proforma={p} />}
           />
         </CardContent>
       </Card>

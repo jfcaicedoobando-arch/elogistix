@@ -3,7 +3,13 @@
  * pero no hay pagos ni notas de crédito que lo respalden.
  */
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render as rtlRender, screen } from "@testing-library/react";
+import { MemoryRouter } from "react-router-dom";
+import type { ReactElement } from "react";
+
+// v13.823.26: `ResponsiveDataTable` usa `useNavigate`, así que el render de
+// prueba necesita un Router.
+const render = (ui: ReactElement) => rtlRender(<MemoryRouter>{ui}</MemoryRouter>);
 import { FacturaPagosSection } from "../detalle/FacturaPagosSection";
 
 const pagosMock = vi.fn();
@@ -19,7 +25,10 @@ vi.mock("@/features/facturacion/hooks/useSaldoFactura", () => ({
 }));
 vi.mock("@/hooks/shared", () => ({
   useRegistrarActividad: () => ({ mutate: vi.fn() }),
+  // v13.823.26: la tabla de pagos ahora es responsiva y consulta el breakpoint.
+  useIsMobile: () => false,
 }));
+
 vi.mock("@/features/facturacion/components/DialogPreviewCfdiPdf", () => ({
   DialogPreviewCfdiPdf: () => null,
 }));

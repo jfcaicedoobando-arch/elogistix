@@ -2,12 +2,14 @@
  * Tabla de notas de crédito ligadas a una factura. Extraída de
  * FacturaNotasCreditoSeccion para mantener el archivo ≤ 200 líneas.
  * Migrada a `DataTable` (Ola F, punto 8) con `TABLE_DENSITY.embebida`.
+ * Migrada a `ResponsiveDataTable` para eliminar scroll horizontal en móvil.
  */
 import { useState } from "react";
 import { Mail, XCircle, Stamp, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Hint } from "@/components/shared/Hint";
-import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
+import { defineColumns, type ColumnDef } from "@/components/shared/DataTable";
+import { ResponsiveDataTable } from "@/components/shared/dataTable/ResponsiveDataTable";
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 import { COL_W } from "@/components/shared/dataTable/columnWidths";
 import { formatCurrency, formatDate } from "@/lib/formatters";
@@ -16,6 +18,7 @@ import { AmbienteBadge } from "@/features/facturacion/components/AmbienteBadge";
 import { DialogPreviewCfdiPdf } from "@/features/facturacion/components/DialogPreviewCfdiPdf";
 import { CfdiEstadoBadge, type CfdiEstadoTono } from "@/features/facturacion/components/CfdiEstadoBadge";
 import type { EstadoNotaCredito } from "@/features/facturacion/services/notasCredito";
+import { FacturaNotasCreditoMobileCard } from "./FacturaNotasCreditoMobileCard";
 
 const ESTADO_TONO: Record<EstadoNotaCredito, CfdiEstadoTono> = {
   Borrador: "borrador",
@@ -163,12 +166,24 @@ export function FacturaNotasCreditoTable(props: Props) {
 
   return (
     <>
-      <DataTable
+      <ResponsiveDataTable
         columns={columns}
         data={notas}
         rowKey={(n) => n.id}
         density={TABLE_DENSITY.embebida}
         emptyMessage="Sin notas de crédito."
+        mobileCard={(row) => (
+          <FacturaNotasCreditoMobileCard
+            row={row}
+            canEdit={canEdit}
+            uuidFacturaOriginal={uuidFacturaOriginal}
+            timbrando={timbrando}
+            onTimbrar={onTimbrar}
+            onEmail={onEmail}
+            onCancelar={onCancelar}
+            onPreview={setPreviewNc}
+          />
+        )}
       />
       <DialogPreviewCfdiPdf
         open={!!previewNc}
