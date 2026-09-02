@@ -11,6 +11,7 @@ import {
 } from "@/features/cxp/services";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { traducirErrorPagoProveedor } from "@/features/cxp/services/pagosProveedorErrors";
+import { invalidateProfitDependencies } from "@/features/profit/hooks/invalidateProfitDependencies";
 
 export function usePagosProveedor(facturaId: string | null | undefined) {
   return useQuery({
@@ -36,6 +37,9 @@ export function useRegistrarPagoProveedor() {
       qc.invalidateQueries({ queryKey: queryKeys.proveedores.all });
       // B-2: refrescar la bandeja "CxP por pagar" y su badge de conteo.
       qc.invalidateQueries({ queryKey: queryKeys.bandejas.all });
+      // Defecto 6 (v13.823.43): Dirección y Dashboard Ejecutivo leen los mismos
+      // pagos; antes seguían mostrando el pulso financiero anterior.
+      invalidateProfitDependencies(qc);
       // Los toasts de éxito y error los emite `DialogRegistrarPagoProveedor`
       // (única vía UI actual). Se omiten aquí para evitar el doble toast
       // reportado en 13.218.2 (Karol, registro de pago).
@@ -56,6 +60,9 @@ export function useEliminarPagoProveedor(facturaId: string) {
       qc.invalidateQueries({ queryKey: queryKeys.proveedores.all });
       // B-2: refrescar la bandeja "CxP por pagar" y su badge de conteo.
       qc.invalidateQueries({ queryKey: queryKeys.bandejas.all });
+      // Defecto 6 (v13.823.43): Dirección y Dashboard Ejecutivo leen los mismos
+      // pagos; antes seguían mostrando el pulso financiero anterior.
+      invalidateProfitDependencies(qc);
       notifySuccess(undefined, { title: "Pago a proveedor eliminado" });
     },
     onError: (error: Error) => {
@@ -82,6 +89,9 @@ export function useActualizarPagoProveedor(facturaId: string) {
       qc.invalidateQueries({ queryKey: queryKeys.proveedores.all });
       // B-2: refrescar la bandeja "CxP por pagar" y su badge de conteo.
       qc.invalidateQueries({ queryKey: queryKeys.bandejas.all });
+      // Defecto 6 (v13.823.43): Dirección y Dashboard Ejecutivo leen los mismos
+      // pagos; antes seguían mostrando el pulso financiero anterior.
+      invalidateProfitDependencies(qc);
       qc.invalidateQueries({ queryKey: queryKeys.bitacora.all });
     },
     onError: (error: Error) => {

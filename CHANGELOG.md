@@ -1,5 +1,14 @@
 # Changelog
 
+## [13.823.43] - 2026-09-02
+### Pulido operativo: menos clics engañosos y folios protegidos
+- **Eliminaciones irreversibles**: mientras la eliminación está en curso el diálogo ya no se puede cerrar con Escape, clic fuera o Cancelar; muestra "Eliminando… no cierres esta ventana".
+- **Buzón de facturas**: durante la subida del archivo la ventana permanece abierta y conserva lo capturado hasta tener resultado.
+- **Solicitud de cotización del portal**: el botón Enviar ya no queda bloqueado; al enviar se señalan los campos faltantes con mensajes accesibles.
+- **Folios de facturación**: la base de datos rechaza bajar el folio actual de una serie y cambiar prefijo/folio inicial de series que ya tienen facturas.
+- **Tracking**: los botones "Actualizar ETA" y "Marcar llegada real" ahora muestran foco visible al navegar con teclado.
+- **Tableros**: registrar, editar o borrar pagos (cliente y proveedor) refresca también el Dashboard de Dirección y el Ejecutivo.
+
 ## [13.823.42] - 2026-09-02
 ### Totales completos: sin cifras cortadas ni errores disfrazados de cero
 - **Dashboard de Dirección**: la venta, el costo y el margen ya se calculan con TODOS los conceptos del periodo (antes se sumaban como si fueran el total sólo los primeros 1,000).

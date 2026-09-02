@@ -22,6 +22,7 @@ import { useFormDialogCerrar } from "@/components/shared/formDialogCloseContext"
 import { useSolicitudCotizacionForm } from "@/features/portal/hooks/useSolicitudCotizacionForm";
 import { SolicitanteSelect } from "@/features/portal/components/SolicitanteSelect";
 import { SolicitudServicioFields } from "@/features/portal/components/SolicitudServicioFields";
+import { SolicitudRutaFields } from "@/features/portal/components/SolicitudRutaFields";
 import {
   seleccionInicial,
   type ClienteSolicitante,
@@ -116,7 +117,9 @@ export function SolicitarCotizacionDialog({ open, onOpenChange, clientes }: Prop
           <Button variant="outline" onClick={() => (cerrar ? cerrar() : onOpenChange(false))}>
             Cancelar
           </Button>
-          <Button onClick={handleSubmit} loading={solicitar.isPending} disabled={!clienteId}>
+          {/* Defecto 3: el botón sólo se bloquea mientras se envía. Así el
+              handler puede activar `intentoEnvio` y anunciar qué falta. */}
+          <Button onClick={handleSubmit} loading={solicitar.isPending} disabled={solicitar.isPending}>
             {!solicitar.isPending && <Send className="h-4 w-4 mr-1" />}
             {solicitar.isPending ? "Enviando…" : "Enviar solicitud"}
           </Button>
@@ -136,24 +139,12 @@ export function SolicitarCotizacionDialog({ open, onOpenChange, clientes }: Prop
         tipoEmbarque={tipoEmbarque} setTipoEmbarque={setTipoEmbarque}
       />
 
-      <FormDialogSection title="Ruta" description="Puerto, aeropuerto o ciudad.">
-        <div className="space-y-1.5">
-          <Label htmlFor="solicitud-origen">Origen <span className="text-destructive">*</span></Label>
-          <Input id="solicitud-origen" value={origen} onChange={(e) => setOrigen(e.target.value)}
-            placeholder="Shanghái, China" aria-invalid={intentoEnvio && origenVacio} />
-          {intentoEnvio && origenVacio && (
-            <p className="text-body-sm text-destructive">{COPY_VALIDACION.requerido("el origen")}</p>
-          )}
-        </div>
-        <div className="space-y-1.5">
-          <Label htmlFor="solicitud-destino">Destino <span className="text-destructive">*</span></Label>
-          <Input id="solicitud-destino" value={destino} onChange={(e) => setDestino(e.target.value)}
-            placeholder="Manzanillo, México" aria-invalid={intentoEnvio && destinoVacio} />
-          {intentoEnvio && destinoVacio && (
-            <p className="text-body-sm text-destructive">{COPY_VALIDACION.requerido("el destino")}</p>
-          )}
-        </div>
-      </FormDialogSection>
+      <SolicitudRutaFields
+        origen={origen} setOrigen={setOrigen}
+        destino={destino} setDestino={setDestino}
+        intentoEnvio={intentoEnvio}
+        origenVacio={origenVacio} destinoVacio={destinoVacio}
+      />
 
       <FormDialogSection title="Carga" cols={1}>
         <div className="space-y-1.5">
@@ -169,7 +160,7 @@ export function SolicitarCotizacionDialog({ open, onOpenChange, clientes }: Prop
       </FormDialogSection>
 
       {intentoEnvio && !puedeEnviar && (
-        <p className="text-body-sm text-destructive font-medium">{COPY_VALIDACION.camposObligatorios}</p>
+        <p role="alert" className="text-body-sm text-destructive font-medium">{COPY_VALIDACION.camposObligatorios}</p>
       )}
     </FormDialogShell>
   );
