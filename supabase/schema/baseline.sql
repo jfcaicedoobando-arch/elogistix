@@ -261,6 +261,79 @@ CREATE TYPE public.tipo_servicio_maritimo AS ENUM (
     'FCL',
     'LCL'
 );
+CREATE FUNCTION public._asegurar_movimiento_pago_proveedor(p_pago_id uuid) RETURNS uuid
+    LANGUAGE plpgsql
+    SET search_path TO 'public'
+    AS $$
+DECLARE
+  v_pago       public.pagos_proveedor;
+  v_cuenta_mon text;
+  v_cargo      numeric;
+  v_concepto   text;
+  v_mov_id     uuid;
+BEGIN
+  SELECT id INTO v_mov_id
+    FROM public.bbva_movimientos
+   WHERE pago_proveedor_id = p_pago_id AND deleted_at IS NULL
+   LIMIT 1;
+  IF v_mov_id IS NOT NULL THEN
+    RETURN v_mov_id;
+  END IF;
+  SELECT * INTO v_pago
+    FROM public.pagos_proveedor
+   WHERE id = p_pago_id AND deleted_at IS NULL;
+  IF v_pago.id IS NULL THEN
+    RAISE EXCEPTION 'LC_MOVIMIENTO_PAGO_INEXISTENTE: el pago de proveedor no existe o está eliminado' USING ERRCODE = 'P0001';
+  END IF;
+  IF v_pago.cuenta_bancaria_id IS NULL THEN
+    RETURN NULL; -- pago sin cuenta bancaria: no hay salida de efectivo que registrar
+  END IF;
+  SELECT moneda::text INTO v_cuenta_mon
+    FROM public.cuentas_bancarias
+   WHERE id = v_pago.cuenta_bancaria_id AND deleted_at IS NULL;
+  IF v_cuenta_mon IS NULL THEN
+    RAISE EXCEPTION 'LC_MOVIMIENTO_SIN_CUENTA: la cuenta bancaria del pago no existe o está dada de baja' USING ERRCODE = 'P0001';
+  END IF;
+  -- El movimiento SIEMPRE se registra en la moneda de la cuenta; nunca 1:1
+  -- silencioso cross-moneda (clase BL-04).
+  v_cargo := v_pago.monto;
+  IF v_cuenta_mon IS DISTINCT FROM v_pago.moneda::text THEN
+    IF COALESCE(v_pago.tipo_cambio_usd, 0) <= 0 THEN
+      RAISE EXCEPTION 'LC_PAGO_TC_REQUERIDO: el pago es en % y la cuenta en %, pero el pago no tiene tipo de cambio registrado',
+        v_pago.moneda, v_cuenta_mon USING ERRCODE = 'P0001';
+    END IF;
+    IF v_pago.moneda::text = 'USD' AND v_cuenta_mon = 'MXN' THEN
+      v_cargo := v_pago.monto * v_pago.tipo_cambio_usd;
+    ELSIF v_pago.moneda::text = 'MXN' AND v_cuenta_mon = 'USD' THEN
+      v_cargo := v_pago.monto / v_pago.tipo_cambio_usd;
+    END IF;
+  END IF;
+  SELECT 'Pago prov. '
+         || COALESCE(NULLIF(pf.folio_proveedor, ''), NULLIF(pf.folio_interno, ''), 's/folio')
+         || ' — ' || COALESCE(pr.nombre, pf.proveedor_nombre, 'proveedor')
+    INTO v_concepto
+  FROM public.proveedor_facturas pf
+  LEFT JOIN public.proveedores pr ON pr.id = pf.proveedor_id
+  WHERE pf.id = v_pago.proveedor_factura_id;
+  INSERT INTO public.bbva_movimientos (
+    organization_id, cuenta_bancaria_id, fecha, concepto, referencia,
+    cargo, abono, hash_dedupe, estado_conciliacion, pago_proveedor_id,
+    conciliado_por, conciliado_at, importado_por
+  ) VALUES (
+    v_pago.organization_id, v_pago.cuenta_bancaria_id, v_pago.fecha_pago,
+    COALESCE(v_concepto, 'Pago a proveedor'), COALESCE(v_pago.referencia, ''),
+    ROUND(v_cargo, 2), 0, 'pago-' || p_pago_id::text, 'Conciliado', p_pago_id,
+    auth.uid(), now(), auth.uid()
+  )
+  ON CONFLICT (hash_dedupe) DO NOTHING
+  RETURNING id INTO v_mov_id;
+  IF v_mov_id IS NULL THEN
+    SELECT id INTO v_mov_id FROM public.bbva_movimientos
+     WHERE hash_dedupe = 'pago-' || p_pago_id::text LIMIT 1;
+  END IF;
+  RETURN v_mov_id;
+END;
+$$;
 CREATE FUNCTION public._assert_concepto_no_proformado() RETURNS trigger
     LANGUAGE plpgsql
     SET search_path TO 'public'
@@ -3985,13 +4058,34 @@ DECLARE
   v_version INT; v_org UUID; v_folio TEXT;
   v_estado_actual TEXT; v_vigencia DATE;
   v_cliente_id UUID; v_requiere BOOLEAN; v_origen TEXT;
+  v_creado_por UUID;
+  v_uid UUID := auth.uid();
+  v_admin BOOLEAN;
 BEGIN
-  SELECT version, organization_id, folio, estado::text, fecha_vigencia, cliente_id
-    INTO v_version, v_org, v_folio, v_estado_actual, v_vigencia, v_cliente_id
-    FROM cotizaciones WHERE id = p_cotizacion_id;
+  SELECT version, organization_id, folio, estado::text, fecha_vigencia, cliente_id, created_by
+    INTO v_version, v_org, v_folio, v_estado_actual, v_vigencia, v_cliente_id, v_creado_por
+    FROM cotizaciones WHERE id = p_cotizacion_id AND deleted_at IS NULL;
   IF v_version IS NULL THEN RAISE EXCEPTION 'Cotización no encontrada' USING ERRCODE='P0002'; END IF;
-  IF NOT EXISTS (SELECT 1 FROM organization_members WHERE organization_id=v_org AND user_id=auth.uid()) THEN
-    RAISE EXCEPTION 'No autorizado' USING ERRCODE='42501';
+  v_admin := public.has_role(v_uid, 'super_admin'::app_role)
+    OR EXISTS (
+      SELECT 1 FROM public.organization_members om
+       WHERE om.organization_id = v_org AND om.user_id = v_uid
+         AND om.role::text = ANY (ARRAY['admin','admin_org'])
+    );
+  -- Rol autorizado dentro de la organización (antes bastaba ser miembro).
+  IF NOT (
+    v_admin
+    OR EXISTS (
+      SELECT 1 FROM public.organization_members om
+       WHERE om.organization_id = v_org AND om.user_id = v_uid
+         AND om.role::text = ANY (ARRAY['gerente_comercial','vendedor','operador','gerente_operaciones'])
+    )
+  ) THEN
+    RAISE EXCEPTION 'LC_NO_AUTORIZADO: tu rol no puede aceptar cotizaciones en esta organización' USING ERRCODE='42501';
+  END IF;
+  -- Segregación de funciones: quien la creó no la acepta (salvo admin).
+  IF v_creado_por IS NOT NULL AND v_uid IS NOT NULL AND v_creado_por = v_uid AND NOT v_admin THEN
+    RAISE EXCEPTION 'LC_SOD_VIOLATION: quien creó la cotización no puede aceptarla' USING ERRCODE='42501';
   END IF;
   IF v_vigencia IS NOT NULL AND v_vigencia < CURRENT_DATE THEN
     RAISE EXCEPTION 'LC_COT_VENCIDA: la cotización venció el %, extienda la vigencia antes de aceptar', v_vigencia USING ERRCODE='P0001';
@@ -11015,7 +11109,7 @@ CREATE FUNCTION public.crear_embarque_borrador_desde_cotizacion(p_cotizacion_id 
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
-DECLARE v_embarque_id UUID; v_cot public.cotizaciones%ROWTYPE;
+DECLARE v_embarque_id UUID; v_cot public.cotizaciones%ROWTYPE; v_ya_decidido BOOLEAN;
 BEGIN
   IF p_decision NOT IN ('sin_cambios','mantenida_por_operaciones','refrescada','sustituida','reaprobada_ventas') THEN
     RAISE EXCEPTION 'Decisión de tarifa inválida: %', p_decision USING ERRCODE='P0001';
@@ -11026,27 +11120,33 @@ BEGIN
   END IF;
   v_embarque_id := public.crear_embarque_borrador_core(p_cotizacion_id);
   SELECT * INTO v_cot FROM public.cotizaciones WHERE id=p_cotizacion_id;
-  UPDATE public.embarques
-     SET tarifa_id_original=v_cot.tarifa_id,
-         tarifa_id_aplicada=COALESCE(p_tarifa_id_aplicada, v_cot.tarifa_id),
-         tarifa_delta_jsonb=p_delta_jsonb,
-         tarifa_decision=p_decision,
-         tarifa_revalidada_en=now(),
-         tarifa_revalidada_por=auth.uid()
-   WHERE id=v_embarque_id;
-  IF p_decision <> 'sin_cambios' AND v_cot.estado_revalidacion='pendiente_reaprobacion' THEN
-    UPDATE public.cotizaciones
-       SET estado_revalidacion='reaprobada', revalidacion_resuelta_en=now(), updated_at=now()
-     WHERE id=p_cotizacion_id;
+  -- v13.823.32: repetir la conversión (el core devuelve el embarque ya
+  -- existente) NO debe pisar el snapshot/decisión histórica de tarifa.
+  SELECT tarifa_decision IS NOT NULL INTO v_ya_decidido
+    FROM public.embarques WHERE id = v_embarque_id;
+  IF NOT COALESCE(v_ya_decidido, false) THEN
+    UPDATE public.embarques
+       SET tarifa_id_original=v_cot.tarifa_id,
+           tarifa_id_aplicada=COALESCE(p_tarifa_id_aplicada, v_cot.tarifa_id),
+           tarifa_delta_jsonb=p_delta_jsonb,
+           tarifa_decision=p_decision,
+           tarifa_revalidada_en=now(),
+           tarifa_revalidada_por=auth.uid()
+     WHERE id=v_embarque_id;
+    IF p_decision <> 'sin_cambios' AND v_cot.estado_revalidacion='pendiente_reaprobacion' THEN
+      UPDATE public.cotizaciones
+         SET estado_revalidacion='reaprobada', revalidacion_resuelta_en=now(), updated_at=now()
+       WHERE id=p_cotizacion_id;
+    END IF;
+    INSERT INTO public.bitacora_actividad (organization_id, usuario_id, usuario_email, modulo, accion, entidad_id, entidad_nombre, detalles)
+      SELECT v_cot.organization_id, auth.uid(),
+        COALESCE((SELECT email FROM auth.users WHERE id=auth.uid()),''),
+        'Embarques','tarifa_decision_aplicada', v_embarque_id, v_cot.folio,
+        jsonb_build_object('decision',p_decision,
+          'tarifa_id_original',v_cot.tarifa_id,
+          'tarifa_id_aplicada',COALESCE(p_tarifa_id_aplicada, v_cot.tarifa_id),
+          'delta',p_delta_jsonb);
   END IF;
-  INSERT INTO public.bitacora_actividad (organization_id, usuario_id, usuario_email, modulo, accion, entidad_id, entidad_nombre, detalles)
-    SELECT v_cot.organization_id, auth.uid(),
-      COALESCE((SELECT email FROM auth.users WHERE id=auth.uid()),''),
-      'Embarques','tarifa_decision_aplicada', v_embarque_id, v_cot.folio,
-      jsonb_build_object('decision',p_decision,
-        'tarifa_id_original',v_cot.tarifa_id,
-        'tarifa_id_aplicada',COALESCE(p_tarifa_id_aplicada, v_cot.tarifa_id),
-        'delta',p_delta_jsonb);
   RETURN v_embarque_id;
 END;
 $$;
@@ -14085,7 +14185,6 @@ CREATE FUNCTION public.ejecutar_pago_programado(p_factura_id uuid, p_cuenta_banc
     AS $$
 DECLARE
   v_uid uuid := auth.uid();
-  v_autorizado boolean;
   v_org uuid;
   v_factura public.proveedor_facturas;
   v_cuenta public.cuentas_bancarias;
@@ -14098,8 +14197,6 @@ BEGIN
   IF v_uid IS NULL THEN
     RAISE EXCEPTION 'No autenticado';
   END IF;
-  -- BL-04: reclamo atómico de la llave de idempotencia. Reintento del mismo
-  -- submit → respuesta almacenada; ejecución aún en vuelo → rechazo claro.
   v_cached := public.idempotency_claim(p_request_id, 'ejecutar_pago_programado');
   IF v_cached IS NOT NULL THEN
     IF COALESCE((v_cached->>'__idempotency_pending')::boolean, false) THEN
@@ -14107,14 +14204,6 @@ BEGIN
         USING ERRCODE = '42501';
     END IF;
     RETURN v_cached;
-  END IF;
-  SELECT EXISTS (
-    SELECT 1 FROM public.user_roles ur
-    WHERE ur.user_id = v_uid
-      AND ur.role::text = ANY (ARRAY['admin','admin_org','super_admin','tesorero'])
-  ) INTO v_autorizado;
-  IF NOT v_autorizado THEN
-    RAISE EXCEPTION 'LC_SOD_VIOLATION: Tu rol no puede ejecutar pagos programados.';
   END IF;
   IF p_monto IS NULL OR p_monto <= 0 THEN
     RAISE EXCEPTION 'LC_PAGO_MONTO_INVALIDO: El monto del pago no es válido.';
@@ -14127,13 +14216,29 @@ BEGIN
     RAISE EXCEPTION 'LC_CXP_NO_EXISTE: La factura de proveedor no existe o fue eliminada.';
   END IF;
   v_org := v_factura.organization_id;
-  IF NOT public.has_role(v_uid, 'super_admin'::app_role)
-     AND NOT EXISTS (
-       SELECT 1 FROM public.organization_members om
-        WHERE om.organization_id = v_org AND om.user_id = v_uid
-     )
-  THEN
-    RAISE EXCEPTION 'LC_CXP_EMBARQUE_ORG_MISMATCH: La factura pertenece a otra organización.';
+  -- Rol EXACTO dentro de la organización de la factura (antes bastaba tener
+  -- el rol en CUALQUIER organización).
+  IF NOT (
+    public.has_role(v_uid, 'super_admin'::app_role)
+    OR EXISTS (
+      SELECT 1 FROM public.organization_members om
+       WHERE om.organization_id = v_org
+         AND om.user_id = v_uid
+         AND om.role::text = ANY (ARRAY['admin','admin_org','tesorero'])
+    )
+  ) THEN
+    RAISE EXCEPTION 'LC_SOD_VIOLATION: Tu rol no puede ejecutar pagos programados en esta organización.'
+      USING ERRCODE = '42501';
+  END IF;
+  IF v_factura.fecha_programada_pago IS NULL THEN
+    RAISE EXCEPTION 'LC_PAGO_SIN_PROGRAMACION: la factura no tiene fecha programada de pago; prográmala antes de ejecutarla.'
+      USING ERRCODE = 'P0001';
+  END IF;
+  IF p_fecha IS NULL
+     OR (v_factura.fecha_emision IS NOT NULL AND p_fecha < v_factura.fecha_emision)
+     OR p_fecha > CURRENT_DATE THEN
+    RAISE EXCEPTION 'LC_PAGO_FECHA_INVALIDA: la fecha del pago (%) debe estar entre la emisión (%) y hoy (%).',
+      p_fecha, v_factura.fecha_emision, CURRENT_DATE USING ERRCODE = 'P0001';
   END IF;
   SELECT * INTO v_cuenta
     FROM public.cuentas_bancarias
@@ -14149,9 +14254,6 @@ BEGIN
     RAISE EXCEPTION 'LC_PAGO_MONEDA_CUENTA_MISMATCH: La moneda de la cuenta (%) no coincide con la de la factura (%).',
       v_cuenta.moneda, v_factura.moneda;
   END IF;
-  -- BL-04: cálculo alineado al canon de estado_cuenta_bancario (antes sumaba
-  -- movimientos borrados y anteriores al corte del saldo inicial → doble
-  -- conteo). La cuenta ya está bloqueada FOR UPDATE.
   v_saldo_cuenta := public.saldo_cuenta_bancaria(v_cuenta.id);
   IF p_monto > v_saldo_cuenta + 0.005 THEN
     RAISE EXCEPTION 'LC_CUENTA_SALDO_INSUFICIENTE: El saldo de la cuenta (%) es insuficiente para pagar %.',
@@ -14184,8 +14286,6 @@ BEGIN
     'movimiento_id', v_mov_id,
     'saldo_cuenta_restante', v_saldo_cuenta - p_monto
   );
-  -- BL-04: almacena la respuesta para los reintentos con la misma llave
-  -- (no-op cuando p_request_id viene NULL).
   PERFORM public.idempotency_store(p_request_id, v_resp);
   RETURN v_resp;
 END;
@@ -20323,6 +20423,49 @@ CREATE FUNCTION public.profit_por_embarque() RETURNS TABLE(embarque_id uuid, ven
       OR COALESCE(c.costo_usd_raw, 0) > 0 OR COALESCE(c.costo_eur_raw, 0) > 0 OR COALESCE(c.costo_mxn_raw, 0) > 0
     );
 $$;
+CREATE FUNCTION public.programar_pago_proveedor(p_factura_id uuid, p_fecha date DEFAULT NULL::date) RETURNS uuid
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+DECLARE
+  v_uid      uuid := auth.uid();
+  v_factura  public.proveedor_facturas;
+BEGIN
+  IF v_uid IS NULL THEN
+    RAISE EXCEPTION 'LC_NO_AUTENTICADO: inicia sesión para programar el pago' USING ERRCODE = '42501';
+  END IF;
+  SELECT * INTO v_factura
+    FROM public.proveedor_facturas
+   WHERE id = p_factura_id AND deleted_at IS NULL
+   FOR UPDATE;
+  IF v_factura.id IS NULL THEN
+    RAISE EXCEPTION 'LC_CXP_NO_EXISTE: la factura de proveedor no existe o fue eliminada' USING ERRCODE = 'P0001';
+  END IF;
+  -- Roles EXACTOS y dentro de la organización de la factura (sin jerarquías).
+  IF NOT (
+    public.has_role(v_uid, 'super_admin'::app_role)
+    OR EXISTS (
+      SELECT 1 FROM public.organization_members om
+       WHERE om.organization_id = v_factura.organization_id
+         AND om.user_id = v_uid
+         AND om.role::text = ANY (ARRAY['admin','admin_org','tesorero','contador'])
+    )
+  ) THEN
+    RAISE EXCEPTION 'LC_SOD_VIOLATION: tu rol no puede programar pagos en esta organización' USING ERRCODE = '42501';
+  END IF;
+  IF v_factura.estado = 'Cancelada'::estado_proveedor_factura THEN
+    RAISE EXCEPTION 'LC_CXP_CANCELADA: no se puede programar el pago de una factura cancelada' USING ERRCODE = 'P0001';
+  END IF;
+  IF p_fecha IS NOT NULL AND v_factura.fecha_emision IS NOT NULL AND p_fecha < v_factura.fecha_emision THEN
+    RAISE EXCEPTION 'LC_CXP_FECHA_PROGRAMADA_INVALIDA: la fecha programada (%) no puede ser anterior a la emisión (%)',
+      p_fecha, v_factura.fecha_emision USING ERRCODE = 'P0001';
+  END IF;
+  UPDATE public.proveedor_facturas
+     SET fecha_programada_pago = p_fecha, updated_at = now()
+   WHERE id = p_factura_id;
+  RETURN p_factura_id;
+END;
+$$;
 CREATE FUNCTION public.promover_embarque_por_liquidar(p_embarque_id uuid) RETURNS boolean
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
@@ -23371,6 +23514,58 @@ BEGIN
   RETURN v_row;
 END;
 $$;
+CREATE FUNCTION public.registrar_pago_proveedor_atomico(p_factura_id uuid, p_fecha_pago date, p_monto numeric, p_moneda text, p_metodo_pago text, p_referencia text DEFAULT ''::text, p_cuenta_bancaria_id uuid DEFAULT NULL::uuid, p_notas text DEFAULT ''::text, p_tipo_cambio_usd numeric DEFAULT NULL::numeric, p_diferencia_cambiaria_mxn numeric DEFAULT NULL::numeric, p_client_request_id uuid DEFAULT NULL::uuid) RETURNS jsonb
+    LANGUAGE plpgsql
+    SET search_path TO 'public'
+    AS $$
+DECLARE
+  v_org      uuid;
+  v_pago_id  uuid;
+  v_mov_id   uuid;
+  v_reintento boolean := false;
+BEGIN
+  IF p_client_request_id IS NOT NULL THEN
+    SELECT id INTO v_pago_id
+      FROM public.pagos_proveedor
+     WHERE client_request_id = p_client_request_id
+       AND deleted_at IS NULL;
+    IF v_pago_id IS NOT NULL THEN
+      -- Reintento del mismo submit: devolvemos el pago ya creado y
+      -- aseguramos (reparamos) su movimiento bancario. Nunca 23505.
+      v_mov_id := public._asegurar_movimiento_pago_proveedor(v_pago_id);
+      RETURN jsonb_build_object('pago_id', v_pago_id, 'movimiento_id', v_mov_id, 'reintento', true);
+    END IF;
+  END IF;
+  SELECT organization_id INTO v_org
+    FROM public.proveedor_facturas
+   WHERE id = p_factura_id AND deleted_at IS NULL;
+  IF v_org IS NULL THEN
+    RAISE EXCEPTION 'LC_CXP_NO_EXISTE: la factura de proveedor no existe o fue eliminada' USING ERRCODE = 'P0001';
+  END IF;
+  BEGIN
+    INSERT INTO public.pagos_proveedor (
+      organization_id, proveedor_factura_id, fecha_pago, monto, moneda,
+      tipo_cambio_usd, metodo_pago, referencia, cuenta_bancaria_id, notas,
+      diferencia_cambiaria_mxn, client_request_id, created_by
+    ) VALUES (
+      v_org, p_factura_id, p_fecha_pago, p_monto, p_moneda::moneda,
+      NULLIF(COALESCE(p_tipo_cambio_usd, 0), 0), p_metodo_pago, COALESCE(p_referencia, ''),
+      p_cuenta_bancaria_id, COALESCE(p_notas, ''), p_diferencia_cambiaria_mxn,
+      p_client_request_id, auth.uid()
+    )
+    RETURNING id INTO v_pago_id;
+  EXCEPTION WHEN unique_violation THEN
+    -- Carrera con otro submit de la misma llave: el pago SÍ quedó creado.
+    SELECT id INTO v_pago_id
+      FROM public.pagos_proveedor
+     WHERE client_request_id = p_client_request_id AND deleted_at IS NULL;
+    IF v_pago_id IS NULL THEN RAISE; END IF;
+    v_reintento := true;
+  END;
+  v_mov_id := public._asegurar_movimiento_pago_proveedor(v_pago_id);
+  RETURN jsonb_build_object('pago_id', v_pago_id, 'movimiento_id', v_mov_id, 'reintento', v_reintento);
+END;
+$$;
 CREATE FUNCTION public.registrar_pago_proveedor_lote(p_payload jsonb) RETURNS uuid
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
@@ -25134,7 +25329,7 @@ CREATE FUNCTION public.sidebar_alert_counts() RETURNS TABLE(embarques_demora big
        AND e.deleted_at IS NULL
        AND (current_date - e.eta) >= 7
        AND CASE
-         WHEN e.estado IN ('Arribo','En Aduana','Entregado','EIR','Cerrado') THEN e.estado::text
+         WHEN e.estado IN ('Arribo','En Aduana','Entregado','EIR','Por liquidar','Cerrado') THEN e.estado::text
          WHEN e.modo = 'Marítimo' AND e.tipo = 'Importación'
               AND e.etd IS NOT NULL AND e.eta IS NOT NULL THEN
            CASE
@@ -29305,6 +29500,7 @@ CREATE UNIQUE INDEX conceptos_costo_client_request_id_key ON public.conceptos_co
 CREATE UNIQUE INDEX contenedores_bl_house_unico ON public.embarque_contenedores USING btree (embarque_id, bl_house) WHERE ((bl_house IS NOT NULL) AND (bl_house <> ''::text) AND (deleted_at IS NULL) AND (organization_id <> '00000000-0000-0000-0000-000000000001'::uuid));
 CREATE UNIQUE INDEX contenedores_numero_unico ON public.embarque_contenedores USING btree (organization_id, numero_contenedor) WHERE ((numero_contenedor IS NOT NULL) AND (numero_contenedor <> ''::text) AND (deleted_at IS NULL) AND (organization_id <> '00000000-0000-0000-0000-000000000001'::uuid));
 CREATE UNIQUE INDEX documentos_embarque_unico_por_nombre ON public.documentos_embarque USING btree (embarque_id, nombre) WHERE (deleted_at IS NULL);
+CREATE UNIQUE INDEX embarques_cotizacion_unica_viva ON public.embarques USING btree (cotizacion_id) WHERE ((cotizacion_id IS NOT NULL) AND (deleted_at IS NULL));
 CREATE UNIQUE INDEX embarques_expediente_org_unico ON public.embarques USING btree (organization_id, expediente) WHERE (deleted_at IS NULL);
 CREATE UNIQUE INDEX facturas_numero_org_unico ON public.facturas USING btree (organization_id, numero) WHERE ((deleted_at IS NULL) AND (numero IS NOT NULL));
 CREATE UNIQUE INDEX facturas_uuid_fiscal_unico ON public.facturas USING btree (organization_id, uuid_fiscal) WHERE ((uuid_fiscal IS NOT NULL) AND (deleted_at IS NULL));
@@ -31032,6 +31228,9 @@ CREATE POLICY vendedora_config_self_read ON public.vendedora_config FOR SELECT T
 GRANT USAGE ON SCHEMA public TO anon;
 GRANT USAGE ON SCHEMA public TO authenticated;
 GRANT USAGE ON SCHEMA public TO service_role;
+REVOKE ALL ON FUNCTION public._asegurar_movimiento_pago_proveedor(p_pago_id uuid) FROM PUBLIC;
+GRANT ALL ON FUNCTION public._asegurar_movimiento_pago_proveedor(p_pago_id uuid) TO authenticated;
+GRANT ALL ON FUNCTION public._asegurar_movimiento_pago_proveedor(p_pago_id uuid) TO service_role;
 REVOKE ALL ON FUNCTION public._assert_concepto_no_proformado() FROM PUBLIC;
 GRANT ALL ON FUNCTION public._assert_concepto_no_proformado() TO service_role;
 REVOKE ALL ON FUNCTION public._assert_cotizacion_convertible(p_cotizacion_id uuid, p_org uuid) FROM PUBLIC;
@@ -32112,6 +32311,9 @@ GRANT ALL ON FUNCTION public.profit_por_cliente(_fecha_desde date, _fecha_hasta 
 REVOKE ALL ON FUNCTION public.profit_por_embarque() FROM PUBLIC;
 GRANT ALL ON FUNCTION public.profit_por_embarque() TO authenticated;
 GRANT ALL ON FUNCTION public.profit_por_embarque() TO service_role;
+REVOKE ALL ON FUNCTION public.programar_pago_proveedor(p_factura_id uuid, p_fecha date) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.programar_pago_proveedor(p_factura_id uuid, p_fecha date) TO authenticated;
+GRANT ALL ON FUNCTION public.programar_pago_proveedor(p_factura_id uuid, p_fecha date) TO service_role;
 REVOKE ALL ON FUNCTION public.promover_embarque_por_liquidar(p_embarque_id uuid) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.promover_embarque_por_liquidar(p_embarque_id uuid) TO service_role;
 REVOKE ALL ON FUNCTION public.proveedor_estado_cuenta(p_proveedor_id uuid) FROM PUBLIC;
@@ -32248,6 +32450,9 @@ GRANT ALL ON FUNCTION public.registrar_pago_cliente_lote(p_payload jsonb) TO ser
 REVOKE ALL ON FUNCTION public.registrar_pago_liquidacion(p_liquidacion_id uuid, p_fecha_pago date, p_metodo_pago text, p_referencia text, p_notas text) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.registrar_pago_liquidacion(p_liquidacion_id uuid, p_fecha_pago date, p_metodo_pago text, p_referencia text, p_notas text) TO authenticated;
 GRANT ALL ON FUNCTION public.registrar_pago_liquidacion(p_liquidacion_id uuid, p_fecha_pago date, p_metodo_pago text, p_referencia text, p_notas text) TO service_role;
+REVOKE ALL ON FUNCTION public.registrar_pago_proveedor_atomico(p_factura_id uuid, p_fecha_pago date, p_monto numeric, p_moneda text, p_metodo_pago text, p_referencia text, p_cuenta_bancaria_id uuid, p_notas text, p_tipo_cambio_usd numeric, p_diferencia_cambiaria_mxn numeric, p_client_request_id uuid) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.registrar_pago_proveedor_atomico(p_factura_id uuid, p_fecha_pago date, p_monto numeric, p_moneda text, p_metodo_pago text, p_referencia text, p_cuenta_bancaria_id uuid, p_notas text, p_tipo_cambio_usd numeric, p_diferencia_cambiaria_mxn numeric, p_client_request_id uuid) TO authenticated;
+GRANT ALL ON FUNCTION public.registrar_pago_proveedor_atomico(p_factura_id uuid, p_fecha_pago date, p_monto numeric, p_moneda text, p_metodo_pago text, p_referencia text, p_cuenta_bancaria_id uuid, p_notas text, p_tipo_cambio_usd numeric, p_diferencia_cambiaria_mxn numeric, p_client_request_id uuid) TO service_role;
 REVOKE ALL ON FUNCTION public.registrar_pago_proveedor_lote(p_payload jsonb) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.registrar_pago_proveedor_lote(p_payload jsonb) TO authenticated;
 GRANT ALL ON FUNCTION public.registrar_pago_proveedor_lote(p_payload jsonb) TO service_role;
