@@ -1,5 +1,15 @@
 # Changelog
 
+## [13.823.56] - 2026-09-02
+### Actividades sólo sobre registros propios, reloj de seguimiento honesto e Higiene fresca
+- **Actividades bien ligadas**: una actividad sólo puede colgarse de un prospecto, oportunidad, cliente o contacto que exista, esté vivo y sea de la misma empresa; también al intentar cambiar la empresa o el registro ligado. El mensaje es el mismo en todos los casos para no revelar si ese registro existe en otra empresa (como un portero que dice "no está en la lista" sin contar de quién es la lista). La regla aplica igual a procesos internos.
+- **Reloj de seguimiento**: la oportunidad se "rejuvenece" sólo cuando se agenda una actividad nueva o cuando de verdad se marca como completada. Editar notas, cambiar el resultado o posponerla ya no borra el retraso acumulado.
+- **Seguimiento oportuno**: el porcentaje cuenta como cumplidas únicamente las oportunidades con próxima actividad agendada y no vencida.
+- **Sin muestra, sin calificación**: cuando no hay oportunidades abiertas, Higiene muestra "Sin datos" y un guion en lugar de un 0% que parecería mal desempeño.
+- **Tablero al día**: Higiene se recalcula al crear, completar, posponer o editar actividades y al mover o editar oportunidades, y se refresca solo cada minuto para que los vencimientos por reloj aparezcan con la pantalla abierta.
+- **Datos legados reportados, no modificados**: una actividad histórica ligada a un prospecto ya eliminado se conservó intacta; el candado nuevo aplica sólo hacia adelante.
+- **Pruebas**: nueva suite SQL con dos empresas para los cuatro tipos de vínculo, el reloj de movimiento, el caso contractual de higiene e invariantes del candado; más pruebas de interfaz y de refresco del tablero.
+
 ## [13.823.55] - 2026-09-02
 ### Microcorrección: sesión real al convertir prospectos y pruebas sin falsos verdes
 - **Sesión real**: la conversión de prospectos ahora identifica correctamente quién llama. Antes, la comprobación mirada desde dentro de la función veía siempre al dueño de la función (como revisar tu propia credencial en el espejo), así que no distinguía a un usuario firmado de un proceso interno. Ahora sólo se permite sin usuario firmado cuando la llamada viene del sistema; cualquier otra llamada sin sesión se rechaza antes de leer o tocar datos.
