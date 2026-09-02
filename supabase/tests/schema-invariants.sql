@@ -243,6 +243,53 @@ BEGIN
     RAISE EXCEPTION E'schema-invariants: funciones faltantes: %', missing;
   END IF;
 
+  -- 3) v13.823.57 · los triggers competidores deben estar AUSENTES.
+  SELECT array_agg(k)
+    INTO missing
+  FROM unnest(ARRAY[
+    'trg_cotizacion_acepta_oportunidad',
+    'trg_cotizacion_cierra_oportunidad',
+    'trg_crm_set_valor_real_on_aceptada'
+  ]) k
+  WHERE EXISTS (
+    SELECT 1
+    FROM pg_trigger t
+    JOIN pg_class c ON c.oid = t.tgrelid
+    JOIN pg_namespace n ON n.oid = c.relnamespace
+    WHERE NOT t.tgisinternal
+      AND n.nspname = 'public'
+      AND c.relname = 'cotizaciones'
+      AND t.tgname = k
+  );
+  IF missing IS NOT NULL AND array_length(missing, 1) > 0 THEN
+    RAISE EXCEPTION E'schema-invariants: triggers competidores resucitados: %', missing;
+  END IF;
+
+  -- 4) v13.823.57 · timing/eventos del trigger canónico + índice parcial.
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_trigger t
+    JOIN pg_class c ON c.oid = t.tgrelid
+    WHERE c.relname = 'cotizaciones'
+      AND t.tgname = 'zz_crm_cerrar_oportunidad_desde_cotizacion'
+      AND (t.tgtype & 2) = 2       -- BEFORE
+      AND (t.tgtype & 4) = 4       -- INSERT
+      AND (t.tgtype & 16) = 16     -- UPDATE
+      AND (t.tgtype & 1) = 1       -- FOR EACH ROW
+  ) THEN
+    RAISE EXCEPTION 'schema-invariants: zz_crm_cerrar_oportunidad_desde_cotizacion debe ser BEFORE INSERT OR UPDATE FOR EACH ROW';
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_indexes
+     WHERE schemaname = 'public'
+       AND tablename = 'cotizaciones'
+       AND indexname = 'ux_cotizaciones_ganadora_viva_por_oportunidad'
+  ) THEN
+    RAISE EXCEPTION 'schema-invariants: falta el índice único parcial ux_cotizaciones_ganadora_viva_por_oportunidad';
+  END IF;
+
+
   RAISE NOTICE 'schema-invariants OK — % triggers + % funciones verificados',
     array_length(expected_triggers, 1),
     array_length(expected_functions, 1);
