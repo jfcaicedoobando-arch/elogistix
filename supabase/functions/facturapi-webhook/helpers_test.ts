@@ -259,10 +259,10 @@ Deno.test("index.ts: los eventos invoice.* se intentan como factura antes que co
 Deno.test("index.ts: *_not_found libera la reserva y responde 503 reintentable", () => {
   assertStringIncludes(webhookIndexSource, 'ignored === "factura_not_found" || ignored === "pago_not_found"');
   const idxGuard = webhookIndexSource.indexOf('ignored === "factura_not_found" || ignored === "pago_not_found"');
-  const idxDelete = webhookIndexSource.indexOf(".delete()", idxGuard);
-  assert(idxDelete > idxGuard, "debe liberar la reserva antes de pedir el reintento");
-  const idx503 = webhookIndexSource.indexOf("503", idxGuard);
-  assert(idx503 > idxDelete, "debe responder 503 (reintentable) tras liberar la reserva");
+  const idxLiberar = webhookIndexSource.indexOf("await liberarReserva(", idxGuard);
+  assert(idxLiberar > idxGuard, "debe liberar la reserva antes de pedir el reintento");
+  const idx503 = webhookIndexSource.indexOf("503", idxLiberar);
+  assert(idx503 > idxLiberar, "debe responder 503 (reintentable) tras liberar la reserva");
   assertStringIncludes(webhookIndexSource, '"target_not_found"');
 });
 
@@ -270,11 +270,12 @@ Deno.test("index.ts: un duplicado real sigue devolviendo 200 idempotente", () =>
   // La reserva sólo se libera en fallo o *_not_found; el 23505 responde ok.
   assertStringIncludes(webhookIndexSource, 'ignored: "duplicate_event"');
   const idxDup = webhookIndexSource.indexOf('ignored: "duplicate_event"');
-  const idxDelDespues = webhookIndexSource.indexOf(".delete()", idxDup);
   const idxDespachar = webhookIndexSource.indexOf("await despacharEvento(supabase, orgId, event)");
   assert(
     idxDup < idxDespachar,
     "el corto circuito por duplicado ocurre antes de procesar (sin borrar la reserva)",
   );
-  assert(idxDelDespues > idxDespachar, "no se borra la reserva en la rama de duplicado");
+  const idxLiberarDespues = webhookIndexSource.indexOf("await liberarReserva(", idxDespachar);
+  assert(idxLiberarDespues > idxDespachar, "no se libera la reserva en la rama de duplicado");
 });
+
