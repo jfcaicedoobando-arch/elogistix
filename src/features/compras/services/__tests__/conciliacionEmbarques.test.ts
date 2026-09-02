@@ -104,7 +104,7 @@ describe("listarConciliacionEmbarques — lectura completa por lotes", () => {
     await expect(listarConciliacionEmbarques({})).rejects.toBeInstanceOf(ResultadoTruncadoError);
   });
 
-  it("un error en un lote posterior se propaga (nada parcial como completo)", async () => {
+  it("conciliación: un error en un lote posterior se propaga (nada parcial como completo)", async () => {
     estado.filas = generar(2500);
     estado.errorEnLote = 1; // el segundo lote falla
     await expect(listarConciliacionEmbarques({})).rejects.toMatchObject({ message: "lote roto" });
