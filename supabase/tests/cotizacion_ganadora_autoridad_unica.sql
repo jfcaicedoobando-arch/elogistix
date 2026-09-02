@@ -151,7 +151,7 @@ BEGIN
 
   -- Embarque real para la propagación de `embarque_ganador_id`.
   INSERT INTO public.embarques (id, organization_id, cliente_id, expediente, modo, tipo, estado)
-  VALUES (v_emb, v_org_a, v_cli_a, 'ELTCOT0001', 'Marítimo'::public.modo_transporte,
+  VALUES (v_emb, v_org_a, v_cli_a, 'ELTCO0001', 'Marítimo'::public.modo_transporte,
           'Importación'::public.tipo_operacion, 'En Tránsito'::public.estado_embarque);
 
   -- ===== A) Primera aceptación =====
