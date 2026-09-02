@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { parseLeadsCsv, mapLeadCsvRows } from "../leadsCsv";
+import { parseLeadsCsv, mapLeadCsvRows, LEAD_CSV_ESTADO_DERIVADO_ERROR } from "../leadsCsv";
 
 describe("parseLeadsCsv", () => {
   it("parsea filas simples", () => {
@@ -33,16 +33,36 @@ describe("mapLeadCsvRows", () => {
     expect(r[0].__error).toBe("Empresa requerida");
   });
 
-  it("usa defaults para fuente/estado/score inválidos", () => {
+  it("usa defaults para fuente/score inválidos", () => {
     const r = mapLeadCsvRows([
-      ["empresa","fuente","estado","score"],
-      ["Acme","invent","invent","99"],
+      ["empresa","fuente","score"],
+      ["Acme","invent","99"],
     ]);
     expect(r[0].fuente).toBe("Otro");
     expect(r[0].estado).toBe("Nuevo");
     expect(r[0].score).toBe(3);
     expect(r[0].__error).toBeUndefined();
   });
+
+  // v13.823.62: el CSV sólo acepta los estados manuales.
+  it("acepta estados manuales y marca error en estados del ERP", () => {
+    const ok = mapLeadCsvRows([["empresa","estado"],["Acme","Contactado"]]);
+    expect(ok[0].estado).toBe("Contactado");
+    expect(ok[0].__error).toBeUndefined();
+
+    for (const derivado of ["Calificado", "Prospecto", "Pendiente de alta", "Convertido", "invent"]) {
+      const r = mapLeadCsvRows([["empresa","estado"],["Acme", derivado]]);
+      expect(r[0].__error).toBe(LEAD_CSV_ESTADO_DERIVADO_ERROR);
+      expect(r[0].estado).toBe("Nuevo");
+    }
+  });
+
+  it("estado vacío usa Nuevo sin error", () => {
+    const r = mapLeadCsvRows([["empresa","estado"],["Acme",""]]);
+    expect(r[0].estado).toBe("Nuevo");
+    expect(r[0].__error).toBeUndefined();
+  });
+
 
   it("acepta alias de headers (company, correo, teléfono)", () => {
     const r = mapLeadCsvRows([

@@ -8,14 +8,16 @@
  *    y viven en /crm/prospectos.
  *  - `Convertido`: ya existe como cliente oficial; sale del embudo.
  */
-import type { CrmLeadEstado } from "./constants";
+import { LEAD_ESTADOS_MANUALES, type CrmLeadEstado } from "./constants";
 import { toLeadIcpForm, type LeadIcpSource } from "./icp";
 
-export const LEAD_ESTADOS_ETAPA_LEAD: CrmLeadEstado[] = [
-  "Nuevo",
-  "Contactado",
-  "Descalificado",
-];
+/**
+ * v13.823.62: deriva de la lista de estados MANUALES (fuente única) en vez de
+ * duplicar los tres nombres. La etapa "Lead" es exactamente lo que una persona
+ * puede capturar a mano.
+ */
+export const LEAD_ESTADOS_ETAPA_LEAD: CrmLeadEstado[] = [...LEAD_ESTADOS_MANUALES];
+
 
 export const LEAD_ESTADOS_ETAPA_PROSPECTO: CrmLeadEstado[] = [
   "Calificado",

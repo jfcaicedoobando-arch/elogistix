@@ -38,6 +38,8 @@ export const LC_CODE_MESSAGES_CRM: Record<string, string> = {
     "Faltan datos del perfil comercial del lead (sector, mercancía, rutas, volumen, frecuencia, dolor/problema y proveedor actual). Complétalos antes de calificarlo.",
   LC_LEAD_SIN_ASIGNAR:
     "Este lead todavía no tiene vendedor asignado. Tómalo o pide que te lo asignen antes de calificarlo.",
+  LC_LEAD_ESTADO_DERIVADO:
+    "Ese estado lo administra el ERP: se asigna al calificar, cotizar o convertir el lead. A mano sólo puedes usar Nuevo, Contactado o Descalificado.",
   LC_LEAD_SIN_PERMISO_CALIFICAR:
     "No tienes permiso para calificar leads como prospectos. Pídelo a tu gerente comercial.",
   LC_COT_CLIENTE_REQUERIDO:

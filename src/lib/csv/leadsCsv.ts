@@ -5,7 +5,7 @@
  * Extraído de `components/crm/ImportarLeadsCsvDialog.tsx` en 11.60.0 (Bloque B2).
  */
 import {
-  LEAD_ESTADOS,
+  LEAD_ESTADOS_MANUALES,
   LEAD_FUENTES,
   type CrmLeadEstado,
   type CrmLeadFuente,
@@ -71,8 +71,19 @@ function parseFuente(val: string): CrmLeadFuente {
   return (LEAD_FUENTES as readonly string[]).includes(val) ? (val as CrmLeadFuente) : "Otro";
 }
 
-function parseEstado(val: string): CrmLeadEstado {
-  return (LEAD_ESTADOS as readonly string[]).includes(val) ? (val as CrmLeadEstado) : "Nuevo";
+/**
+ * v13.823.62 — el CSV sólo puede traer estados MANUALES. Vacío → "Nuevo";
+ * un estado administrado por el ERP (o desconocido) marca la fila como error.
+ */
+export const LEAD_CSV_ESTADO_DERIVADO_ERROR =
+  "Estado administrado por el ERP; usa Nuevo, Contactado o Descalificado";
+
+function parseEstado(val: string): { estado: CrmLeadEstado; error?: string } {
+  if (val === "") return { estado: "Nuevo" };
+  if ((LEAD_ESTADOS_MANUALES as readonly string[]).includes(val)) {
+    return { estado: val as CrmLeadEstado };
+  }
+  return { estado: "Nuevo", error: LEAD_CSV_ESTADO_DERIVADO_ERROR };
 }
 
 const LEAD_STRING_SETTERS: Partial<Record<keyof ParsedLeadRow, (r: ParsedLeadRow, v: string) => void>> = {
@@ -92,7 +103,12 @@ function assignLeadField(
 ): void {
   if (field === "score") { row.score = parseScore(val); return; }
   if (field === "fuente") { row.fuente = parseFuente(val); return; }
-  if (field === "estado") { row.estado = parseEstado(val); return; }
+  if (field === "estado") {
+    const { estado, error } = parseEstado(val);
+    row.estado = estado;
+    if (error) row.__error = error;
+    return;
+  }
   LEAD_STRING_SETTERS[field]?.(row, val);
 }
 
@@ -111,7 +127,8 @@ export function mapLeadCsvRows(matrix: string[][]): ParsedLeadRow[] {
       if (!field) return;
       assignLeadField(r, field, (cols[i] ?? "").trim());
     });
-    if (!r.empresa) r.__error = "Empresa requerida";
+    // No pisamos el error de estado derivado si ya se marcó en la celda.
+    if (!r.empresa && !r.__error) r.__error = "Empresa requerida";
     return r;
   });
 }

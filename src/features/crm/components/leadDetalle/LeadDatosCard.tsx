@@ -14,9 +14,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
 import {
-  LEAD_ESTADOS,
+  LEAD_ESTADOS_MANUALES,
+  LEAD_ESTADO_DERIVADO_AYUDA,
   LEAD_FUENTES,
+  esEstadoDerivado,
   type CrmLeadEstado,
   type CrmLeadFuente,
 } from "@/features/crm/hooks";
@@ -78,12 +81,22 @@ export default function LeadDatosCard({ form, set, canEdit, dirty, isSaving, onS
           </div>
           <div className="space-y-1">
             <Label>Estado</Label>
-            <Select value={form.estado} onValueChange={(v) => set("estado", v as CrmLeadEstado)} disabled={!canEdit}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                {LEAD_ESTADOS.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-              </SelectContent>
-            </Select>
+            {esEstadoDerivado(form.estado) ? (
+              // v13.823.62: estado administrado por el ERP → sólo lectura.
+              <div className="flex h-10 items-center gap-2">
+                <Badge variant="outline">{form.estado}</Badge>
+                <span className="text-body-sm text-muted-foreground">
+                  {LEAD_ESTADO_DERIVADO_AYUDA}
+                </span>
+              </div>
+            ) : (
+              <Select value={form.estado} onValueChange={(v) => set("estado", v as CrmLeadEstado)} disabled={!canEdit}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {LEAD_ESTADOS_MANUALES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            )}
           </div>
           <div className="space-y-1">
             <Label htmlFor="lead-datos-score">Score (1-5)</Label>

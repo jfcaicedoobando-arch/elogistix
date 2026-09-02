@@ -1,5 +1,13 @@
 # Changelog
 
+## [13.823.62] - 2026-09-02
+### El estado del lead deja de ser una etiqueta libre
+- **Estados manuales vs. estados del ERP**: a mano sólo se pueden usar *Nuevo*, *Contactado* y *Descalificado*. *Calificado*, *Prospecto*, *Pendiente de alta* y *Convertido* los pone el sistema al calificar, cotizar o convertir el lead.
+- **Ficha del lead**: si el lead ya está en un estado del ERP, se muestra como etiqueta de sólo lectura con la nota "Este estado lo actualiza el ERP"; el selector de estado sólo ofrece los tres manuales.
+- **Alta y cambios masivos**: el formulario de nuevo lead y la barra de selección múltiple ya sólo ofrecen los tres estados manuales.
+- **Importación CSV**: una fila con un estado del ERP queda marcada como error y no se importa, con el aviso "Estado administrado por el ERP; usa Nuevo, Contactado o Descalificado". Si la columna va vacía se sigue usando *Nuevo*.
+- **Candado real en la base**: un intento directo de poner o quitar a mano un estado del ERP se rechaza con un aviso claro; guardar otros datos de un lead ya calificado o convertido sigue funcionando.
+
 ## [13.823.60] - 2026-09-02
 ### Los leads sólo los gestiona quien de verdad puede
 - **Llave de la sucursal correcta**: varias decisiones sobre leads miraban una credencial general del usuario, no su puesto dentro de la empresa que está abierta. Ahora se valida el puesto dentro de la organización del lead: una credencial vieja de otra empresa ya no abre la puerta.
