@@ -102,11 +102,8 @@ function filtrarPorPais<T extends PuertoLite>(puertos: T[], paises: string[]): T
   return puertos.filter((p) => paises.includes(String(p.country ?? "")));
 }
 
-export function BuscarTarifaDialog({
-  open, onOpenChange, onElegir, selectLabel, initial,
-}: Props) {
-  const { data: puertos = [] } = usePuertos();
-  const { data: tipos = [] } = useTiposContenedor();
+/** Filtros del buscador; se resetean al abrir con los valores iniciales. */
+function useFiltrosTarifa(open: boolean, initial: Props["initial"]) {
   const [origen, setOrigen] = useState(initial?.puertoOrigenId ?? "");
   const [destino, setDestino] = useState(initial?.puertoDestinoId ?? "");
   const [tipo, setTipo] = useState(initial?.tipoContenedorId ?? "");
@@ -119,6 +116,17 @@ export function BuscarTarifaDialog({
       setTipo(initial?.tipoContenedorId ?? "");
     }
   }, [open, initial?.puertoOrigenId, initial?.puertoDestinoId, initial?.tipoContenedorId]);
+
+  return { origen, setOrigen, destino, setDestino, tipo, setTipo, fecha, setFecha };
+}
+
+export function BuscarTarifaDialog({
+  open, onOpenChange, onElegir, selectLabel, initial,
+}: Props) {
+  const { data: puertos = [] } = usePuertos();
+  const { data: tipos = [] } = useTiposContenedor();
+  const { origen, setOrigen, destino, setDestino, tipo, setTipo, fecha, setFecha } =
+    useFiltrosTarifa(open, initial);
 
   const {
     data: tarifas = [], isFetching, error, refetch, isRefetching,
