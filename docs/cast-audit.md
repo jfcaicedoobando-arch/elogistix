@@ -10,12 +10,12 @@ Total de `as` casts detectados: **3391**
 | Categoría | Peso | Cantidad | % |
 |-----------|------|----------|---|
 | SAFE      | 0 | 990     | 29.2% |
-| LOW       | 1 | 164      | 4.8% |
+| LOW       | 1 | 165      | 4.9% |
 | MEDIUM    | 2 | 2236   | 65.9% |
-| HIGH      | 3 | 1     | 0.0% |
+| HIGH      | 3 | 0     | 0.0% |
 | CRITICAL  | 4 | 0 | 0.0% |
 
-**Lectura clave:** los casts a accionar son los **HIGH + CRITICAL** = 1 (~0.0%). El resto es seguro o aceptable bajo política.
+**Lectura clave:** los casts a accionar son los **HIGH + CRITICAL** = 0 (~0.0%). El resto es seguro o aceptable bajo política.
 
 ## Definición de categorías
 
@@ -47,12 +47,7 @@ Total de `as` casts detectados: **3391**
 
 ## Top-30 casts más riesgosos (HIGH + CRITICAL)
 
-### 1. [HIGH] `src/features/portal/components/factura/PortalFacturaPagosCard.tsx:78`
-
-```ts
-notasCredito={notasCredito as unknown as PortalNotaCreditoFila[]}
-```
-
+_Ningún cast HIGH o CRITICAL detectado._
 
 ## Roadmap
 

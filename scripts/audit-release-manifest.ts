@@ -32,11 +32,18 @@ function leerAppVersion(): string {
   return m[1];
 }
 
+// Cuántas versiones se conservan en el manifest. Cada entrada lista ~1.2k
+// migraciones, así que el archivo crece ~70 KB por release; sin poda superaba
+// el límite de 10 MB por archivo del repositorio.
+const MAX_VERSIONES = 3;
+
 if (process.argv.includes("--update")) {
   const version = leerAppVersion();
   manifest[version] = { migrations: enDisco };
   const ordenado: Manifest = Object.fromEntries(
-    Object.entries(manifest).sort(([a], [b]) => a.localeCompare(b, "en", { numeric: true })),
+    Object.entries(manifest)
+      .sort(([a], [b]) => a.localeCompare(b, "en", { numeric: true }))
+      .slice(-MAX_VERSIONES),
   );
   // El manifest actual va con indentación de 2 espacios y SIN newline final;
   // se conserva el formato para que el diff del update sea sólo la nueva llave.
@@ -44,6 +51,7 @@ if (process.argv.includes("--update")) {
   console.log(`✅ Manifest actualizado: ${version} → ${enDisco.length} migraciones.`);
   process.exit(0);
 }
+
 
 // Se compara SÓLO contra la entrada de la versión actual: las entradas
 // históricas son bitácora inmutable y pueden citar archivos que después se

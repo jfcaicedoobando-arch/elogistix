@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.823.45] - 2026-09-02
+### Manifiesto de migraciones: entrada faltante y poda de historial
+- Se registró la entrada de la versión vigente en `supabase/releases/migration-manifest.json` (1221 migraciones), con lo que `audit:manifest` vuelve a verde.
+- El manifiesto ahora conserva sólo las últimas 3 versiones: cada entrada lista todas las migraciones y el archivo ya rozaba el límite de 10 MB por archivo del repositorio.
+
+
+
 ## [13.823.44] - 2026-09-02
 ### Higiene de CI: pruebas y auditorías en verde
 - **Mensajes en español**: se agregaron textos amigables para los códigos de folio de serie (`LC_FOLIO_NO_REGRESIVO`, `LC_SERIE_INMUTABLE`).
