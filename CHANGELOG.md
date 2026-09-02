@@ -1,5 +1,13 @@
 # Changelog
 
+## [13.823.42] - 2026-09-02
+### Totales completos: sin cifras cortadas ni errores disfrazados de cero
+- **Dashboard de Dirección**: la venta, el costo y el margen ya se calculan con TODOS los conceptos del periodo (antes se sumaban como si fueran el total sólo los primeros 1,000).
+- **Dashboard de CRM**: el pipeline, el embudo y los mejores tratos consideran todas las oportunidades abiertas; si la consulta falla, el tablero avisa y ofrece reintentar en vez de mostrar ceros.
+- **Comisiones devengadas**: los indicadores (devengado, pendiente por liquidar y por recuperar) se calculan sobre el total del periodo, no sobre las 500 filas visibles.
+- **Pagos programados de Tesorería**: la bandeja lee todas las facturas por pagar y muestra estado de error con reintento cuando la consulta falla.
+- **Configuración de empresa**: en organizaciones nuevas los datos ya se guardan de verdad; si no se escribe ningún registro, la app avisa en lugar de decir "guardado".
+
 ## [13.823.41] - 2026-09-02
 ### Higiene de código (sin cambios funcionales)
 - **Portal del cliente**: la tarjeta de pagos y notas de crédito se dividió en piezas más pequeñas (pagos, notas de crédito y totales); se ve y calcula exactamente igual.
