@@ -23,10 +23,16 @@ const MENSAJE_BITACORA: Record<RazonSupresion, string> = {
   unsubscribe: 'Recipient unsubscribed',
 }
 
+/**
+ * Ronda YAGNI · defecto 10 — el rebote/queja/baja actualiza el envío ORIGINAL
+ * (correlación por `message_id` del proveedor). `event_id` sólo sirve para
+ * trazas y como respaldo cuando el evento no trae `message_id`.
+ */
 async function registrarResultado(
   recipient: string,
   razon: RazonSupresion,
   eventId: string,
+  providerMessageId?: string,
 ): Promise<void> {
   const email = recipient.toLowerCase()
 
@@ -43,15 +49,16 @@ async function registrarResultado(
     throw new Error('suppressed_emails write failed')
   }
 
-  const { error: bitacoraError } = await admin.from('email_send_log').insert({
-    message_id: eventId,
-    template_name: 'system',
-    recipient_email: email,
-    status: ESTADO_BITACORA[razon],
-    error_message: MENSAJE_BITACORA[razon],
-    metadata: null,
+  // Upsert por message_id: si el envío original existe queda en 'bounced' /
+  // 'complained' / 'suppressed'; si no llegó a registrarse se crea la fila.
+  const { error: bitacoraError } = await admin.rpc('email_send_log_touch', {
+    p_message_id: providerMessageId || eventId,
+    p_template: 'system',
+    p_recipient: email,
+    p_status: ESTADO_BITACORA[razon],
+    p_error: MENSAJE_BITACORA[razon],
   })
-  if (bitacoraError && bitacoraError.code !== '23505') {
+  if (bitacoraError) {
     console.error('No se pudo registrar el evento en la bitácora', {
       event_id: eventId,
       code: bitacoraError.code,
@@ -65,13 +72,13 @@ const handler = createEmailWebhookHandler({
   apiKey: Deno.env.get('LOVABLE_API_KEY')!,
   on: {
     'email.bounced': async (event) => {
-      await registrarResultado(event.data.recipient, 'bounce', event.event_id)
+      await registrarResultado(event.data.recipient, 'bounce', event.event_id, event.data.message_id)
     },
     'email.complaint': async (event) => {
-      await registrarResultado(event.data.recipient, 'complaint', event.event_id)
+      await registrarResultado(event.data.recipient, 'complaint', event.event_id, event.data.message_id)
     },
     'email.unsubscribed': async (event) => {
-      await registrarResultado(event.data.recipient, 'unsubscribe', event.event_id)
+      await registrarResultado(event.data.recipient, 'unsubscribe', event.event_id, event.data.message_id)
     },
   },
 })
