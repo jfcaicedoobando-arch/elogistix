@@ -6,7 +6,7 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables, TablesInsert, TablesUpdate } from "@/integrations/supabase/types";
-import { unwrap, unwrapOr, run } from "@/lib/supabase/response";
+import { unwrap, unwrapOr } from "@/lib/supabase/response";
 import { primeraFila } from "@/lib/supabase/primeraFila";
 import { conflictoConcurrenciaError } from "@/lib/errors/concurrencia";
 import { registrarActividad } from "@/services/bitacora/registrar";
@@ -90,13 +90,30 @@ export async function cuentaTieneMovimientos(id: string): Promise<boolean> {
   return (count ?? 0) > 0;
 }
 
+/**
+ * Ronda YAGNI · defecto 3 — el guard real vive en el trigger
+ * `trg_cuenta_bancaria_guard_baja`: una cuenta con movimientos no puede darse
+ * de baja. Aquí sólo se exige fila afectada (0 filas = nada eliminado) y se
+ * traduce el error del servidor a español.
+ */
 export async function eliminarCuenta(id: string, userId: string | null) {
-  await run(
-    supabase
-      .from("cuentas_bancarias")
-      .update({ deleted_at: new Date().toISOString(), deleted_by: userId, activa: false })
-      .eq("id", id),
-  );
+  const { data, error } = await supabase
+    .from("cuentas_bancarias")
+    .update({ deleted_at: new Date().toISOString(), deleted_by: userId, activa: false })
+    .eq("id", id)
+    .select("id")
+    .maybeSingle();
+  if (error) {
+    if (error.message.includes("LC_CUENTA_CON_MOVIMIENTOS")) {
+      throw new Error(
+        "La cuenta tiene movimientos bancarios registrados: no puede eliminarse ni desactivarse.",
+      );
+    }
+    throw error;
+  }
+  if (!data) {
+    throw new Error("No se eliminó la cuenta: ya no existe o no tienes permiso.");
+  }
   await registrarActividad({
     modulo: "tesoreria",
     accion: "eliminar_cuenta_bancaria",
