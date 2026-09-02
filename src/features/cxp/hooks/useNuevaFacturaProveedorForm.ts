@@ -37,7 +37,7 @@ export function useNuevaFacturaProveedorForm(
     cfdiDuplicado, setCfdiDuplicado, askCrearProv, setAskCrearProv,
     vinculos, setVinculos, embarqueAdHoc, setEmbarqueAdHoc,
     tcOrigen, setTcOrigen, tcFechaAplicada, setTcFechaAplicada,
-    manualTcRef, tcDof, total,
+    tcDof, total,
   } = s;
 
   const handleChange = <K extends keyof FacturaFormValues>(k: K, v: FacturaFormValues[K]) => {

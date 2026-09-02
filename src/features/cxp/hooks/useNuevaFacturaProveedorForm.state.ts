@@ -27,7 +27,6 @@ export function useFacturaFormState(initialEmbarqueAdHoc?: EmbarqueSeleccionado 
   );
   const [tcOrigen, setTcOrigen] = useState<TcOrigen>("vacio");
   const [tcFechaAplicada, setTcFechaAplicada] = useState<string | undefined>();
-  const manualTcRef = useRef(false);
   const tcDof = useTcDofPorFecha((r) => {
     setValues((p) => ({ ...p, tc: String(r.tipoCambio) }));
     setTcOrigen("dof");
@@ -47,6 +46,6 @@ export function useFacturaFormState(initialEmbarqueAdHoc?: EmbarqueSeleccionado 
     cfdiDuplicado, setCfdiDuplicado, askCrearProv, setAskCrearProv,
     vinculos, setVinculos, embarqueAdHoc, setEmbarqueAdHoc,
     tcOrigen, setTcOrigen, tcFechaAplicada, setTcFechaAplicada,
-    manualTcRef, tcDof, total,
+    tcDof, total,
   };
 }
