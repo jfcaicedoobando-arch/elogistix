@@ -54,12 +54,18 @@ export function useCrearOportunidad() {
   const { user } = useAuth();
   return useMutation({
     mutationFn: (input: OportunidadInput) => crearOportunidad(input, user),
-    onSuccess: () => {
+    onSuccess: (data) => {
       qc.invalidateQueries({ queryKey: queryKeys.crm.oportunidades.all });
       qc.invalidateQueries({ queryKey: queryKeys.crm.kpis });
       qc.invalidateQueries({ queryKey: queryKeys.crm.dashboardAll });
-      notifySuccess(undefined, { title: "Oportunidad creada" });
+      notifySuccess(undefined, {
+        title: "Oportunidad creada",
+        description: data.avisoActividad
+          ? `La actividad automática no se registró: ${data.avisoActividad}. Regístrala manualmente si la necesitas.`
+          : undefined,
+      });
     },
+
     onError: (error: Error) => {
       notifyError(undefined, { title: "No se pudo crear oportunidad", description: getErrorMessage(error), error, method: "CREATE_OPORTUNIDAD" });
     },
