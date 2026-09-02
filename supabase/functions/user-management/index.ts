@@ -27,6 +27,7 @@ import {
   handleCreate,
   handleDelete,
   handleList,
+  handleListNombres,
   handleInviteClient,
   handleListClients,
 } from "./handlers.ts";
@@ -38,6 +39,7 @@ initSentryEdge("user-management");
 
 export type Action =
   | "list"
+  | "list-nombres"
   | "create"
   | "invite"
   | "reset-password"
@@ -50,6 +52,7 @@ export type Action =
 
 const ACTIONS = new Set<Action>([
   "list",
+  "list-nombres",
   "create",
   "invite",
   "reset-password",
@@ -73,6 +76,7 @@ type AdminArg = Parameters<typeof handleList>[1];
 /** Acciones que requieren resolver el nivel de administrador del caller. */
 const ACCIONES_ADMIN = new Set<Action>([
   "list",
+  "list-nombres",
   "create",
   "invite",
   "reset-password",
@@ -84,6 +88,7 @@ const ACCIONES_ADMIN = new Set<Action>([
 
 const HANDLERS: Record<Action, (ctx: Ctx, admin: AdminArg) => Promise<Response>> = {
   list: handleList,
+  "list-nombres": handleListNombres,
   create: handleCreate,
   invite: handleInvite,
   "reset-password": handleResetPassword,
@@ -108,7 +113,7 @@ Deno.serve(async (req) => {
     if (!action) {
       log.finish(400, "invalid_action", { user_id: callerId });
       return errorResponse(
-        "action inválida. Use: list | create | invite | reset-password | delete | invite-client | list-clients | invite-agente | list-agentes | list-portal-emails",
+        "action inválida. Use: list | list-nombres | create | invite | reset-password | delete | invite-client | list-clients | invite-agente | list-agentes | list-portal-emails",
         400,
         cors,
       );

@@ -69,6 +69,21 @@ export async function uploadDocumentoEmbarque(
   const parsedClaim = idempotencyClaimSchema.safeParse(claim);
   if (parsedClaim.success && isCachedClaim(parsedClaim.data)) {
     const c = parsedClaim.data;
+    // Ciclo A→B→A (bug reportado): el claim cacheado puede quedar apuntando a
+    // un `path` distinto del que ya trae la fila (p.ej. tras un rollback
+    // manual del `archivo`). Si difieren, sincronizamos la fila antes de
+    // devolver `cached: true`, para no dejarla desalineada silenciosamente.
+    if (c.path !== actual?.archivo) {
+      const { data: resynced, error: errResync } = await supabase
+        .from('documentos_embarque')
+        .update({ archivo: c.path, estado: 'Recibido' as DocumentoEstado })
+        .eq('id', docId)
+        .select('id');
+      if (errResync) throw errResync;
+      if (!resynced || resynced.length === 0) {
+        throw new Error('No se pudo sincronizar el documento con la respuesta cacheada (sin permisos o el documento ya no existe).');
+      }
+    }
     return { path: c.path, fileName: c.fileName ?? file.name, cached: true };
   }
 

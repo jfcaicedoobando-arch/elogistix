@@ -1,16 +1,16 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-const { mock, mockAvailableUsers } = await vi.hoisted(async () => {
+const { mock, mockNombresUsuarios } = await vi.hoisted(async () => {
   const { createSupabaseMock } = await import("@/services/__tests__/_supabaseChainMock");
   return {
     mock: createSupabaseMock(),
-    mockAvailableUsers: vi.fn(),
+    mockNombresUsuarios: vi.fn(),
   };
 });
 
 vi.mock("@/integrations/supabase/client", () => ({ supabase: mock.supabase }));
 vi.mock("@/features/admin/services/usuario/availableUsers", () => ({
-  fetchAvailableUsers: mockAvailableUsers,
+  fetchNombresUsuarios: mockNombresUsuarios,
 }));
 
 import { 
@@ -27,25 +27,25 @@ describe("vendedoras service", () => {
   beforeEach(() => {
     mock.tableCalls.length = 0;
     mock.resetResults();
-    mockAvailableUsers.mockReset();
+    mockNombresUsuarios.mockReset();
   });
 
-  it("fetchVendedorasConfig: mezcla con emails y maneja errores de usuarios", async () => {
+  it("fetchVendedorasConfig: mezcla con nombres y maneja errores de usuarios", async () => {
     // 1. Success
     mock.setTableResult("vendedora_config", { data: [{ user_id: "u1", porcentaje_default: 5 }], error: null });
-    mockAvailableUsers.mockResolvedValueOnce([{ id: "u1", email: "u1@test.com" }]);
+    mockNombresUsuarios.mockResolvedValueOnce([{ id: "u1", full_name: "Ana Uno" }]);
     const res = await fetchVendedorasConfig();
-    expect(res[0].email).toBe("u1@test.com");
+    expect(res[0].nombre).toBe("Ana Uno");
 
-    // 2. buildEmailMap empty ids
+    // 2. buildNombreMap empty ids
     mock.setTableResult("vendedora_config", { data: [], error: null });
     expect(await fetchVendedorasConfig()).toEqual([]);
 
-    // 3. fetchAvailableUsers fails (buildEmailMap catch)
+    // 3. fetchNombresUsuarios falla (buildNombreMap catch)
     mock.setTableResult("vendedora_config", { data: [{ user_id: "u1" }], error: null });
-    mockAvailableUsers.mockRejectedValueOnce(new Error("fail"));
+    mockNombresUsuarios.mockRejectedValueOnce(new Error("fail"));
     const resFail = await fetchVendedorasConfig();
-    expect(resFail[0].email).toBe(UNRESOLVED_EMAIL);
+    expect(resFail[0].nombre).toBe(UNRESOLVED_EMAIL);
   });
 
   it("upsertVendedoraConfig: hace upsert", async () => {
@@ -70,14 +70,14 @@ describe("vendedoras service", () => {
       ], 
       error: null 
     });
-    mockAvailableUsers.mockResolvedValue([
-      { id: "u1", email: "b@test.com" },
-      { id: "u2", email: "a@test.com" }
+    mockNombresUsuarios.mockResolvedValue([
+      { id: "u1", full_name: "Beto" },
+      { id: "u2", full_name: "Ana" }
     ]);
     const res = await fetchUsuariosVendedores();
     expect(res.length).toBe(2);
-    expect(res[0].email).toBe("a@test.com"); // Sorted by name (which is email here)
-    expect(res[1].email).toBe("b@test.com");
+    expect(res[0].nombre).toBe("Ana"); // Ordenado por nombre
+    expect(res[1].nombre).toBe("Beto");
   });
 
   it("fetchEmbarquesSinVendedora: consulta embarques filtrando nulos", async () => {

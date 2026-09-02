@@ -1,18 +1,20 @@
 /**
  * Handler `list`: listado de usuarios con scope por organización.
  * Extraído de `handlers.ts` para respetar Power-of-10.
+ *
+ * v-defecto10: `action=list` (con email/last_sign_in/email_confirmed) queda
+ * restringido a roles administrativos (admin, admin_org, super_admin). Los
+ * roles operativos que sólo necesitan resolver nombres usan `list-nombres`
+ * (ver `listNombresHandler.ts`), que no expone email ni señales de sesión.
  */
 import { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { jsonResponse, errorResponse } from "../_shared/response.ts";
 import type { HandlerCtx, AdminAccess } from "./types.ts";
 
-const ALLOWED_ROLES = new Set([
-  "admin", "admin_org", "operador", "coordinador_logistico",
-  "ejecutivo_pricing", "gerente_operaciones", "super_admin",
-]);
+const ALLOWED_ROLES = new Set(["admin", "admin_org", "super_admin"]);
 
 /** Fila de auth expuesta al cliente (Q-05b incluye señales de invitación). */
-interface AuthUserRow {
+export interface AuthUserRow {
   id: string;
   email: string;
   created_at: string;
@@ -40,15 +42,19 @@ export async function resolveOrgScope(
   return orgId;
 }
 
-/** Verifica si el usuario tiene alguno de los roles habilitados para listar usuarios. */
-async function tieneRolPermitido(adminClient: SupabaseClient, callerId: string): Promise<boolean> {
+/** Verifica si el usuario tiene alguno de los roles del conjunto dado. */
+export async function tieneAlgunRol(
+  adminClient: SupabaseClient,
+  callerId: string,
+  allowedRoles: Set<string>,
+): Promise<boolean> {
   const { data: rolesData } = await adminClient.from("user_roles").select("role").eq("user_id", callerId);
   const { data: orgRoles } = await adminClient.from("organization_members").select("role").eq("user_id", callerId);
   const roles = [
     ...((rolesData ?? []) as Array<{ role: string }>).map((r) => r.role),
     ...((orgRoles ?? []) as Array<{ role: string }>).map((r) => r.role),
   ];
-  return roles.some((r) => ALLOWED_ROLES.has(r));
+  return roles.some((r) => allowedRoles.has(r));
 }
 
 /**
@@ -56,7 +62,7 @@ async function tieneRolPermitido(adminClient: SupabaseClient, callerId: string):
  * así que los usuarios fuera de la primera página quedaban sin correo
  * ("sin resolver") en la tabla de /usuarios. Recorremos todas las páginas.
  */
-async function listarTodosLosUsuarios(
+export async function listarTodosLosUsuarios(
   adminClient: SupabaseClient,
 ): Promise<AuthUserRow[]> {
   const baseRows: AuthUserRow[] = [];
@@ -91,7 +97,7 @@ async function listarTodosLosUsuarios(
 }
 
 /** Filtra el listado global a sólo los miembros de la organización dada. */
-async function filtrarPorOrganizacion(
+export async function filtrarPorOrganizacion(
   adminClient: SupabaseClient,
   orgId: string,
   baseRows: AuthUserRow[],
@@ -107,10 +113,10 @@ async function filtrarPorOrganizacion(
 export async function handleList(ctx: HandlerCtx, admin: AdminAccess): Promise<Response> {
   const { cors, log, callerId, adminClient } = ctx;
 
-  const allowed = await tieneRolPermitido(adminClient, callerId);
+  const allowed = await tieneAlgunRol(adminClient, callerId, ALLOWED_ROLES);
   if (!allowed) {
     log.finish(403, "role_not_allowed", { user_id: callerId });
-    return errorResponse("Solo admins/operadores pueden listar usuarios", 403, cors);
+    return errorResponse("Solo administradores pueden listar usuarios", 403, cors);
   }
 
   let orgId: string | null;

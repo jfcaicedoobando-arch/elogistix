@@ -36,7 +36,7 @@ describe('reportes/index', () => {
     });
     const result = await fetchReportesResumen({});
     expect(mockRef.current!.rpcCalls[0]?.fn).toBe('reportes_resumen');
-    expect(result).toEqual({ clientes: [], kpis: { totalClientes: 0, revenue: 0, profit: 0, margenProm: 0 } });
+    expect(result).toEqual({ clientes: [], kpis: { totalClientes: 0, revenue: 0, profit: 0, margenProm: 0, embarquesSinTc: 0 } });
   });
 
   it('fetchReportesResumen convierte strings numéricos a number', async () => {

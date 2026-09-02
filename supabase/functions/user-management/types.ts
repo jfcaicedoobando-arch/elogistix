@@ -52,6 +52,8 @@ export const ASSIGNABLE_BY_ORG_ADMIN = new Set<string>([
   "coordinador_logistico",
   "ejecutivo_pricing",
   "contador",
+  "auxiliar_contable",
+  "ejecutivo_cobranza",
   "tesorero",
   "vendedor",
   "customer_service",

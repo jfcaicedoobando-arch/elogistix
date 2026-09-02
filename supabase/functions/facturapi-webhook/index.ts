@@ -115,13 +115,29 @@ async function handleFacturaEvent(
     delete patch.cancelacion_solicitada_en;
     delete patch.cancelacion_vence_en;
   }
-  if (Object.keys(patch).length === 0) return jsonResponse({ ok: true, ignored: "estado_ya_avanzado" });
+  // El cierre de una cancelación aceptada (estado Cancelada/Sustituida +
+  // factura_embarques + proforma) vive en la RPC compartida con
+  // facturapi-cancelar; NO se persiste el patch crudo con
+  // `cancellation_status=accepted` para no duplicar/desincronizar la lógica.
+  if (patch.cancellation_status === "accepted") {
+    const { error: rpcErr } = await supabase.rpc("cerrar_cancelacion_factura_facturapi", {
+      p_factura_id: factura.id,
+    });
+    if (rpcErr) return jsonResponse({ error: "cerrar_cancelacion_failed", detail: rpcErr.message }, 500);
+    delete patch.estado;
+    delete patch.cancellation_status;
+    delete patch.cancelado_en;
+    delete patch.cancelacion_solicitada_en;
+    delete patch.cancelacion_vence_en;
+  }
 
-  const { error: updErr } = await supabase
-    .from("facturas")
-    .update(patch)
-    .eq("id", factura.id);
-  if (updErr) return jsonResponse({ error: "db_update_failed", detail: updErr.message }, 500);
+  if (Object.keys(patch).length > 0) {
+    const { error: updErr } = await supabase
+      .from("facturas")
+      .update(patch)
+      .eq("id", factura.id);
+    if (updErr) return jsonResponse({ error: "db_update_failed", detail: updErr.message }, 500);
+  }
 
   await registrarBitacoraEdge(supabase, {
     organizationId: orgId,

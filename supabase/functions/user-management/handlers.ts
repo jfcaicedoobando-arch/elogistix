@@ -8,4 +8,5 @@ export type { HandlerCtx, AdminAccess } from "./types.ts";
 export { validateCreatePayload, handleCreate } from "./createHandler.ts";
 export { handleDelete } from "./deleteHandler.ts";
 export { handleList, resolveOrgScope } from "./listHandler.ts";
+export { handleListNombres } from "./listNombresHandler.ts";
 export { resolveRedirectTo, handleInviteClient, handleListClients } from "./clientHandlers.ts";

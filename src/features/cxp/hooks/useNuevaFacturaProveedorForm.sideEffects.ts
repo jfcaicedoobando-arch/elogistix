@@ -133,6 +133,9 @@ export async function vincularSafe(params: {
         moneda: values.moneda,
         folio: values.folio.trim(),
         fechaEmision: values.emision,
+        // Idempotencia: si el submit se reintenta (doble clic, retry de red)
+        // la RPC atómica devuelve el concepto ya creado en vez de duplicarlo.
+        clientRequestId: crypto.randomUUID(),
       });
       return { conceptoAdHocExpediente: embarqueAdHoc.expediente };
     } catch (e) {

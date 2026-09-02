@@ -33,14 +33,18 @@ export async function fetchReportesResumen(filtros: RentabilidadFiltros): Promis
       p_modo: filtros.modo ?? undefined,
     }),
   );
-  const raw = (data ?? { clientes: [], kpis: { totalClientes: 0, revenue: 0, profit: 0, margenProm: 0 } }) as {
+  const raw = (data ?? { clientes: [], kpis: { totalClientes: 0, revenue: 0, profit: 0, margenProm: 0, embarquesSinTc: 0 } }) as {
     clientes?: Array<{
       cliente_id: string; cliente_nombre: string;
       total_embarques: number | string;
       venta_usd: number | string; costo_usd: number | string;
       profit_usd: number | string; margen: number | string;
+      embarques_sin_tc: number | string;
     }>;
-    kpis?: { totalClientes: number | string; revenue: number | string; profit: number | string; margenProm: number | string };
+    kpis?: {
+      totalClientes: number | string; revenue: number | string; profit: number | string;
+      margenProm: number | string; embarquesSinTc?: number | string;
+    };
   };
   const clientes: ResumenClienteRow[] = (raw.clientes ?? []).map((c) => ({
     cliente_id: c.cliente_id,
@@ -50,8 +54,9 @@ export async function fetchReportesResumen(filtros: RentabilidadFiltros): Promis
     costo_usd: Number(c.costo_usd),
     profit_usd: Number(c.profit_usd),
     margen: Number(c.margen),
+    embarques_sin_tc: Number(c.embarques_sin_tc ?? 0),
   }));
-  const k = raw.kpis ?? { totalClientes: 0, revenue: 0, profit: 0, margenProm: 0 };
+  const k = raw.kpis ?? { totalClientes: 0, revenue: 0, profit: 0, margenProm: 0, embarquesSinTc: 0 };
   return {
     clientes,
     kpis: {
@@ -59,6 +64,7 @@ export async function fetchReportesResumen(filtros: RentabilidadFiltros): Promis
       revenue: Number(k.revenue),
       profit: Number(k.profit),
       margenProm: Number(k.margenProm),
+      embarquesSinTc: Number(k.embarquesSinTc ?? 0),
     },
   };
 }

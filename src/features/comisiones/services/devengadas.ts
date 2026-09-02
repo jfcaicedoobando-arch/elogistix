@@ -4,7 +4,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
 import { ymMx } from "@/lib/date/mx";
-import { fetchAvailableUsers } from "@/features/admin/services/usuario/availableUsers";
+import { fetchNombresUsuarios } from "@/features/admin/services/usuario/availableUsers";
 import { CAP_LISTA } from "@/constants/queryCaps";
 
 export type ComisionDevengadaRow = Tables<"comisiones_devengadas">;
@@ -42,18 +42,19 @@ type Joined = ComisionDevengadaRow & {
 };
 
 /**
- * B4 (Ola 7): los nombres/correos de las vendedoras no viven en una tabla
- * (se resuelven vía edge function `user-management`). Se resuelven en un solo
- * viaje y de forma best-effort: si falla, la columna muestra "—".
+ * B4 (Ola 7): los nombres de las vendedoras no viven en una tabla (se
+ * resuelven vía edge function `user-management`, acción `list-nombres` —
+ * defecto 10: sin email ni señales de sesión). Se resuelven en un solo viaje
+ * y de forma best-effort: si falla, la columna muestra "—".
  */
 async function buildNombreVendedoraMap(ids: string[]): Promise<Record<string, string>> {
   const unicos = [...new Set(ids)];
   if (unicos.length === 0) return {};
   try {
-    const users = await fetchAvailableUsers();
+    const users = await fetchNombresUsuarios();
     const map: Record<string, string> = {};
     for (const u of users) {
-      if (unicos.includes(u.id)) map[u.id] = u.email;
+      if (unicos.includes(u.id) && u.full_name) map[u.id] = u.full_name;
     }
     return map;
   } catch {

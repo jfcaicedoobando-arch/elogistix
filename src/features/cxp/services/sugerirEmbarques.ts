@@ -99,48 +99,43 @@ interface CrearConceptoYVincularInput {
 
 /**
  * Crea un concepto_costo "ad-hoc" en el embarque y registra el vínculo con la
- * factura de proveedor. Marca el concepto como Pagado de una vez porque el
- * monto fue capturado contra la factura completa (no es presupuesto previo).
+ * factura de proveedor en UNA sola transacción (RPC
+ * `crear_concepto_costo_y_vincular_atomico`). Marca el concepto como Pagado
+ * de una vez porque el monto fue capturado contra la factura completa (no es
+ * presupuesto previo). `clientRequestId` es opcional: si se repite la
+ * llamada con el mismo valor, la RPC devuelve el registro ya creado en vez
+ * de duplicarlo o fallar (defecto 5: costo + vínculo no eran atómicos).
  */
 export async function crearConceptoCostoYVincular(
-  input: CrearConceptoYVincularInput,
+  input: CrearConceptoYVincularInput & { clientRequestId?: string },
 ): Promise<{ conceptoId: string }> {
-  const { data: cc, error: errCc } = await supabase
-    .from("conceptos_costo")
-    .insert([{
-      embarque_id: input.embarqueId,
-      organization_id: input.organizationId,
-      proveedor_id: input.proveedorId,
-      proveedor_nombre: input.proveedorNombre,
-      concepto: input.concepto,
-      monto: input.monto,
-      moneda: input.moneda as Moneda,
-      estado_liquidacion: "Pagado",
-      fecha_pago: input.fechaEmision,
-      referencia_pago: input.folio,
-    }])
-    .select("id")
-    .single();
-  if (errCc) throw errCc;
+  const { data, error } = await supabase.rpc("crear_concepto_costo_y_vincular_atomico", {
+    p_factura_id: input.facturaId,
+    p_embarque_id: input.embarqueId,
+    p_proveedor_id: input.proveedorId,
+    p_proveedor_nombre: input.proveedorNombre,
+    p_concepto: input.concepto,
+    p_monto: input.monto,
+    p_moneda: input.moneda as Moneda,
+    p_folio: input.folio,
+    p_fecha_emision: input.fechaEmision,
+    p_client_request_id: input.clientRequestId,
+  });
+  if (error) throw error;
 
-  const { error: errLink } = await supabase
-    .from("proveedor_facturas_conceptos")
-    .insert({
-      proveedor_factura_id: input.facturaId,
-      organization_id: input.organizationId,
-      concepto_costo_id: cc.id,
-      descripcion: input.concepto,
-      cantidad: 1,
-      monto: input.monto,
-    });
-  if (errLink) throw errLink;
+  const resultado = data as { concepto_id: string; pfc_id: string | null; reintento: boolean };
 
   await registrarActividad({
     modulo: "cxp",
     accion: "vincular_embarque_sugerido",
     entidadId: input.facturaId,
-    detalles: { embarqueId: input.embarqueId, conceptoId: cc.id, monto: input.monto },
+    detalles: {
+      embarqueId: input.embarqueId,
+      conceptoId: resultado.concepto_id,
+      monto: input.monto,
+      reintento: resultado.reintento,
+    },
   });
 
-  return { conceptoId: cc.id };
+  return { conceptoId: resultado.concepto_id };
 }

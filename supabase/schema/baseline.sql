@@ -8371,6 +8371,78 @@ CREATE FUNCTION public.cartera_pendiente() RETURNS TABLE(factura_id uuid, numero
   ORDER BY b.fecha_vencimiento ASC NULLS LAST
   LIMIT 500
 $$;
+CREATE FUNCTION public.cerrar_cancelacion_factura_facturapi(p_factura_id uuid, p_sustituida_por_factura_id uuid DEFAULT NULL::uuid, p_motivo text DEFAULT NULL::text) RETURNS jsonb
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+DECLARE
+  v_uid uuid := auth.uid();
+  v_org uuid;
+  v_estado_actual public.estado_factura;
+  v_cancellation_status_actual text;
+  v_sustituida_por uuid;
+  v_estado_final public.estado_factura;
+  v_now timestamptz := now();
+  v_ya_cerrada boolean;
+BEGIN
+  IF p_factura_id IS NULL THEN
+    RAISE EXCEPTION 'LC_FACTURA_REQUERIDA: falta el identificador de la factura' USING ERRCODE = '22023';
+  END IF;
+  SELECT organization_id, estado, cancellation_status, sustituida_por
+    INTO v_org, v_estado_actual, v_cancellation_status_actual, v_sustituida_por
+    FROM public.facturas
+   WHERE id = p_factura_id
+   FOR UPDATE;
+  IF v_org IS NULL THEN
+    RAISE EXCEPTION 'LC_FACTURA_NO_EXISTE: la factura no existe' USING ERRCODE = 'P0002';
+  END IF;
+  IF auth.role() IS DISTINCT FROM 'service_role' THEN
+    IF v_uid IS NULL THEN
+      RAISE EXCEPTION 'LC_NO_AUTORIZADO: sesión requerida' USING ERRCODE = '42501';
+    END IF;
+    IF public.is_org_member(v_org) IS NOT TRUE THEN
+      RAISE EXCEPTION 'LC_ORG_FORBIDDEN: la factura pertenece a otra organización' USING ERRCODE = '42501';
+    END IF;
+    IF public.has_role(v_uid, 'super_admin'::public.app_role) IS NOT TRUE
+       AND public.has_any_role_in_org(v_uid, ARRAY['admin','admin_org','contador']::public.app_role[], v_org) IS NOT TRUE THEN
+      RAISE EXCEPTION 'LC_ROL_INSUFICIENTE: necesitas un rol fiscal para cerrar la cancelación' USING ERRCODE = '42501';
+    END IF;
+  END IF;
+  v_ya_cerrada := v_estado_actual IN ('Cancelada'::public.estado_factura, 'Sustituida'::public.estado_factura)
+    AND v_cancellation_status_actual = 'accepted';
+  v_sustituida_por := COALESCE(p_sustituida_por_factura_id, v_sustituida_por);
+  v_estado_final := CASE WHEN v_sustituida_por IS NOT NULL
+    THEN 'Sustituida'::public.estado_factura
+    ELSE 'Cancelada'::public.estado_factura END;
+  UPDATE public.facturas
+     SET estado = v_estado_final,
+         cancellation_status = 'accepted',
+         cancelacion_motivo = COALESCE(p_motivo, cancelacion_motivo),
+         cancelado_en = COALESCE(cancelado_en, v_now),
+         cancelacion_solicitada_en = COALESCE(cancelacion_solicitada_en, v_now),
+         sustituida_por = v_sustituida_por
+   WHERE id = p_factura_id;
+  UPDATE public.factura_embarques
+     SET activa = false
+   WHERE factura_id = p_factura_id AND activa = true;
+  -- Compatibilidad legacy: sólo para cancelación pura (NO sustitución), igual
+  -- que el camino síncrono anterior (revertirProformasCancelacion).
+  IF v_estado_final = 'Cancelada'::public.estado_factura THEN
+    UPDATE public.proformas
+       SET factura_id = CASE WHEN factura_id = p_factura_id THEN NULL ELSE factura_id END,
+           factura_secundaria_id = CASE WHEN factura_secundaria_id = p_factura_id THEN NULL ELSE factura_secundaria_id END
+     WHERE factura_id = p_factura_id OR factura_secundaria_id = p_factura_id;
+  END IF;
+  -- Libera/revierte la proforma si ya no quedan facturas vivas apuntando a ella.
+  PERFORM public.revertir_proforma_al_cancelar_sustitucion(p_factura_id);
+  RETURN jsonb_build_object(
+    'factura_id', p_factura_id,
+    'estado', v_estado_final::text,
+    'sustituida_por_factura_id', v_sustituida_por,
+    'ya_cerrada', v_ya_cerrada
+  );
+END;
+$$;
 CREATE FUNCTION public.cerrar_caso_refacturacion(p_caso_id uuid, p_cancelar boolean DEFAULT false) RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
@@ -10601,6 +10673,111 @@ BEGIN
     jsonb_build_object('cantidad', array_length(v_ids, 1))
   );
   RETURN QUERY SELECT * FROM public.clientes WHERE id = ANY(v_ids);
+END;
+$$;
+CREATE FUNCTION public.crear_concepto_costo_y_vincular_atomico(p_factura_id uuid, p_embarque_id uuid, p_proveedor_id uuid, p_proveedor_nombre text, p_concepto text, p_monto numeric, p_moneda text, p_folio text, p_fecha_emision date, p_client_request_id uuid DEFAULT NULL::uuid) RETURNS jsonb
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+DECLARE
+  v_uid          uuid := auth.uid();
+  v_org_factura  uuid;
+  v_org_embarque uuid;
+  v_rol          public.app_role;
+  v_concepto_id  uuid;
+  v_pfc_id       uuid;
+  c_permitidos   public.app_role[] := ARRAY[
+    'admin', 'super_admin', 'admin_org', 'contador', 'auxiliar_contable', 'tesorero'
+  ]::public.app_role[];
+BEGIN
+  -- Idempotencia: si ya se procesó este client_request_id, devolvemos lo
+  -- creado (nunca fallamos con 23505 en un reintento legítimo).
+  IF p_client_request_id IS NOT NULL THEN
+    SELECT id INTO v_concepto_id
+      FROM public.conceptos_costo
+     WHERE client_request_id = p_client_request_id
+       AND deleted_at IS NULL;
+    IF v_concepto_id IS NOT NULL THEN
+      SELECT id INTO v_pfc_id
+        FROM public.proveedor_facturas_conceptos
+       WHERE concepto_costo_id = v_concepto_id
+       LIMIT 1;
+      RETURN jsonb_build_object(
+        'concepto_id', v_concepto_id, 'pfc_id', v_pfc_id, 'reintento', true
+      );
+    END IF;
+  END IF;
+  SELECT organization_id INTO v_org_factura
+    FROM public.proveedor_facturas
+   WHERE id = p_factura_id AND deleted_at IS NULL;
+  IF v_org_factura IS NULL THEN
+    RAISE EXCEPTION 'LC_CXP_FACTURA_NO_EXISTE: la factura de proveedor no existe o fue eliminada'
+      USING ERRCODE = 'P0001';
+  END IF;
+  SELECT organization_id INTO v_org_embarque
+    FROM public.embarques
+   WHERE id = p_embarque_id AND deleted_at IS NULL;
+  IF v_org_embarque IS NULL THEN
+    RAISE EXCEPTION 'LC_CXP_EMBARQUE_NO_EXISTE: el embarque no existe o fue eliminado'
+      USING ERRCODE = 'P0001';
+  END IF;
+  IF v_org_factura IS DISTINCT FROM v_org_embarque THEN
+    RAISE EXCEPTION 'LC_CXP_ORG_MISMATCH: la factura y el embarque pertenecen a organizaciones distintas'
+      USING ERRCODE = 'P0001';
+  END IF;
+  IF v_uid IS NOT NULL AND auth.role() <> 'service_role' THEN
+    v_rol := public.rol_efectivo(v_uid, v_org_factura);
+    IF NOT (v_rol = ANY (c_permitidos)
+            OR public.has_role(v_uid, 'admin'::app_role)
+            OR public.has_role(v_uid, 'super_admin'::app_role)
+            OR public.has_role(v_uid, 'admin_org'::app_role)
+            OR public.has_role(v_uid, 'contador'::app_role)
+            OR public.has_role(v_uid, 'auxiliar_contable'::app_role)
+            OR public.has_role(v_uid, 'tesorero'::app_role)) THEN
+      RAISE EXCEPTION 'LC_CXP_ROL_NO_AUTORIZADO: tu rol no puede vincular costos de factura de proveedor'
+        USING ERRCODE = '42501';
+    END IF;
+    IF v_org_factura IS DISTINCT FROM public.current_user_org_id()
+       AND NOT public.has_role(v_uid, 'super_admin'::app_role) THEN
+      RAISE EXCEPTION 'LC_CXP_ORG_MISMATCH: la factura pertenece a otra organización'
+        USING ERRCODE = 'P0001';
+    END IF;
+  END IF;
+  BEGIN
+    INSERT INTO public.conceptos_costo (
+      embarque_id, organization_id, proveedor_id, proveedor_nombre, concepto,
+      monto, moneda, estado_liquidacion, fecha_pago, referencia_pago,
+      client_request_id
+    ) VALUES (
+      p_embarque_id, v_org_factura, p_proveedor_id, p_proveedor_nombre, p_concepto,
+      p_monto, p_moneda::moneda, 'Pagado'::estado_liquidacion, p_fecha_emision, p_folio,
+      p_client_request_id
+    )
+    RETURNING id INTO v_concepto_id;
+  EXCEPTION WHEN unique_violation THEN
+    -- Carrera con otro submit de la misma llave: reutiliza lo ya creado.
+    SELECT id INTO v_concepto_id
+      FROM public.conceptos_costo
+     WHERE client_request_id = p_client_request_id AND deleted_at IS NULL;
+    IF v_concepto_id IS NULL THEN RAISE; END IF;
+    SELECT id INTO v_pfc_id
+      FROM public.proveedor_facturas_conceptos
+     WHERE concepto_costo_id = v_concepto_id
+     LIMIT 1;
+    RETURN jsonb_build_object(
+      'concepto_id', v_concepto_id, 'pfc_id', v_pfc_id, 'reintento', true
+    );
+  END;
+  INSERT INTO public.proveedor_facturas_conceptos (
+    proveedor_factura_id, organization_id, concepto_costo_id, descripcion,
+    cantidad, monto
+  ) VALUES (
+    p_factura_id, v_org_factura, v_concepto_id, p_concepto, 1, p_monto
+  )
+  RETURNING id INTO v_pfc_id;
+  RETURN jsonb_build_object(
+    'concepto_id', v_concepto_id, 'pfc_id', v_pfc_id, 'reintento', false
+  );
 END;
 $$;
 CREATE FUNCTION public.crear_embarque_borrador_core(p_cotizacion_id uuid) RETURNS uuid
@@ -23380,6 +23557,7 @@ DECLARE
   v_org_eff uuid;
   v_id uuid;
   v_saldo_origen numeric;
+  v_fecha_min_corte date;
   v_concepto text := COALESCE(NULLIF(TRIM(p_concepto), ''), 'Traspaso entre cuentas propias');
 BEGIN
   IF p_cuenta_origen_id = p_cuenta_destino_id THEN
@@ -23402,6 +23580,24 @@ BEGIN
   IF NOT v_origen.activa OR NOT v_destino.activa THEN
     RAISE EXCEPTION 'LC_TRASPASO_CUENTA_INACTIVA: ambas cuentas deben estar activas';
   END IF;
+  -- Defecto 3: p_fecha no puede ser anterior al corte de saldo inicial de
+  -- ninguna de las dos cuentas; si no, el movimiento queda conciliado sin
+  -- afectar el saldo (o afectando sólo una pierna).
+  v_fecha_min_corte := GREATEST(v_origen.fecha_saldo_inicial, v_destino.fecha_saldo_inicial);
+  IF p_fecha < v_fecha_min_corte THEN
+    RAISE EXCEPTION 'LC_TRASPASO_FECHA_ANTERIOR_CORTE: la fecha del traspaso (%) es anterior a la fecha de corte de saldo inicial de alguna cuenta (mínimo permitido: %). Corrige la fecha del traspaso o la fecha de corte de la cuenta.',
+      p_fecha, v_fecha_min_corte
+      USING ERRCODE = '22023';
+  END IF;
+  -- Defecto 2: bloquea ambas cuentas en orden determinista (por id
+  -- ascendente) antes de calcular/validar el saldo, para que dos
+  -- traspasos concurrentes desde la misma cuenta origen no lean el mismo
+  -- saldo disponible. El orden fijo evita deadlocks cuando dos traspasos
+  -- cruzan origen/destino entre sí.
+  PERFORM id FROM public.cuentas_bancarias
+    WHERE id IN (p_cuenta_origen_id, p_cuenta_destino_id)
+    ORDER BY id
+    FOR UPDATE;
   IF v_origen.moneda = v_destino.moneda THEN
     v_tc := 1;
     v_monto_destino := ROUND(p_monto_origen, 2);
@@ -23413,6 +23609,9 @@ BEGIN
     v_monto_destino := ROUND(p_monto_origen * v_tc, 2);
   END IF;
   -- B-6 (v14): monto + comisión no pueden exceder el saldo de la cuenta origen.
+  -- Se recalcula DESPUÉS de tomar el candado (FOR UPDATE de arriba), así que
+  -- ve el saldo ya actualizado por cualquier traspaso concurrente que haya
+  -- comitteado mientras esta transacción esperaba el lock.
   v_saldo_origen := COALESCE(public.saldo_cuenta_bancaria(p_cuenta_origen_id), 0);
   IF ROUND(p_monto_origen, 2) + ROUND(v_comision, 2) > ROUND(v_saldo_origen, 2) + 0.005 THEN
     RAISE EXCEPTION 'LC_TRASPASO_SALDO_INSUFICIENTE: el saldo de la cuenta origen (%) no cubre el traspaso más la comisión (%).',
@@ -23497,7 +23696,8 @@ BEGIN
       CASE WHEN venta_usd > 0
            THEN ((venta_usd - costo_usd) / venta_usd) * 100
            ELSE 0
-      END AS margen
+      END AS margen,
+      embarques_sin_tc
     FROM base
   )
   SELECT
@@ -23510,7 +23710,8 @@ BEGIN
         CASE WHEN COALESCE(sum(c.venta_usd),0) > 0
              THEN ((sum(c.venta_usd) - sum(c.costo_usd)) / sum(c.venta_usd)) * 100
              ELSE 0
-        END
+        END,
+      'embarquesSinTc', COALESCE(sum(c.embarques_sin_tc), 0)
     )
   INTO v_rows, v_kpis
   FROM calc c;
@@ -27159,6 +27360,7 @@ CREATE TABLE public.conceptos_costo (
     tasa_iva_aplicada numeric(5,4) DEFAULT 0.16 NOT NULL,
     origen text DEFAULT 'manual'::text NOT NULL,
     updated_at timestamp with time zone DEFAULT now(),
+    client_request_id uuid,
     CONSTRAINT conceptos_costo_monto_signo CHECK (((monto >= (0)::numeric) OR (origen = 'ajuste_factura_proveedor'::text))),
     CONSTRAINT conceptos_costo_origen_check CHECK ((origen = ANY (ARRAY['manual'::text, 'demoras_auto'::text, 'cotizacion'::text, 'costeo_tarifa'::text, 'ajuste_factura_proveedor'::text]))),
     CONSTRAINT conceptos_costo_tasa_iva_chk CHECK (((tasa_iva_aplicada >= (0)::numeric) AND (tasa_iva_aplicada <= (1)::numeric)))
@@ -29054,6 +29256,7 @@ CREATE UNIQUE INDEX comisiones_excepciones_cliente_uq ON public.comisiones_excep
 CREATE UNIQUE INDEX comisiones_excepciones_embarque_uq ON public.comisiones_excepciones USING btree (organization_id, vendedora_id, embarque_id) WHERE ((embarque_id IS NOT NULL) AND (deleted_at IS NULL));
 CREATE INDEX comisiones_recalculo_pendiente_abiertos_idx ON public.comisiones_recalculo_pendiente USING btree (organization_id) WHERE (resuelto_at IS NULL);
 CREATE UNIQUE INDEX comisiones_recalculo_pendiente_pago_etapa_key ON public.comisiones_recalculo_pendiente USING btree (pago_factura_id, etapa) WHERE (resuelto_at IS NULL);
+CREATE UNIQUE INDEX conceptos_costo_client_request_id_key ON public.conceptos_costo USING btree (client_request_id) WHERE (client_request_id IS NOT NULL);
 CREATE UNIQUE INDEX contenedores_bl_house_unico ON public.embarque_contenedores USING btree (embarque_id, bl_house) WHERE ((bl_house IS NOT NULL) AND (bl_house <> ''::text) AND (deleted_at IS NULL) AND (organization_id <> '00000000-0000-0000-0000-000000000001'::uuid));
 CREATE UNIQUE INDEX contenedores_numero_unico ON public.embarque_contenedores USING btree (organization_id, numero_contenedor) WHERE ((numero_contenedor IS NOT NULL) AND (numero_contenedor <> ''::text) AND (deleted_at IS NULL) AND (organization_id <> '00000000-0000-0000-0000-000000000001'::uuid));
 CREATE UNIQUE INDEX documentos_embarque_unico_por_nombre ON public.documentos_embarque USING btree (embarque_id, nombre) WHERE (deleted_at IS NULL);
@@ -31196,6 +31399,9 @@ GRANT ALL ON FUNCTION public.capturar_factura_entrante(p_documento_id uuid, p_fa
 REVOKE ALL ON FUNCTION public.cartera_pendiente() FROM PUBLIC;
 GRANT ALL ON FUNCTION public.cartera_pendiente() TO authenticated;
 GRANT ALL ON FUNCTION public.cartera_pendiente() TO service_role;
+REVOKE ALL ON FUNCTION public.cerrar_cancelacion_factura_facturapi(p_factura_id uuid, p_sustituida_por_factura_id uuid, p_motivo text) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.cerrar_cancelacion_factura_facturapi(p_factura_id uuid, p_sustituida_por_factura_id uuid, p_motivo text) TO authenticated;
+GRANT ALL ON FUNCTION public.cerrar_cancelacion_factura_facturapi(p_factura_id uuid, p_sustituida_por_factura_id uuid, p_motivo text) TO service_role;
 REVOKE ALL ON FUNCTION public.cerrar_caso_refacturacion(p_caso_id uuid, p_cancelar boolean) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.cerrar_caso_refacturacion(p_caso_id uuid, p_cancelar boolean) TO authenticated;
 GRANT ALL ON FUNCTION public.cerrar_caso_refacturacion(p_caso_id uuid, p_cancelar boolean) TO service_role;
@@ -31307,6 +31513,9 @@ GRANT ALL ON TABLE public.clientes TO service_role;
 REVOKE ALL ON FUNCTION public.crear_clientes(p_clientes jsonb) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.crear_clientes(p_clientes jsonb) TO authenticated;
 GRANT ALL ON FUNCTION public.crear_clientes(p_clientes jsonb) TO service_role;
+REVOKE ALL ON FUNCTION public.crear_concepto_costo_y_vincular_atomico(p_factura_id uuid, p_embarque_id uuid, p_proveedor_id uuid, p_proveedor_nombre text, p_concepto text, p_monto numeric, p_moneda text, p_folio text, p_fecha_emision date, p_client_request_id uuid) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.crear_concepto_costo_y_vincular_atomico(p_factura_id uuid, p_embarque_id uuid, p_proveedor_id uuid, p_proveedor_nombre text, p_concepto text, p_monto numeric, p_moneda text, p_folio text, p_fecha_emision date, p_client_request_id uuid) TO authenticated;
+GRANT ALL ON FUNCTION public.crear_concepto_costo_y_vincular_atomico(p_factura_id uuid, p_embarque_id uuid, p_proveedor_id uuid, p_proveedor_nombre text, p_concepto text, p_monto numeric, p_moneda text, p_folio text, p_fecha_emision date, p_client_request_id uuid) TO service_role;
 REVOKE ALL ON FUNCTION public.crear_embarque_borrador_core(p_cotizacion_id uuid) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.crear_embarque_borrador_core(p_cotizacion_id uuid) TO service_role;
 GRANT ALL ON FUNCTION public.crear_embarque_borrador_core(p_cotizacion_id uuid) TO authenticated;

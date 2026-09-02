@@ -1246,6 +1246,7 @@ export type Database = {
       }
       conceptos_costo: {
         Row: {
+          client_request_id: string | null
           concepto: string
           contenedor_id: string | null
           created_at: string
@@ -1267,6 +1268,7 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          client_request_id?: string | null
           concepto: string
           contenedor_id?: string | null
           created_at?: string
@@ -1288,6 +1290,7 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          client_request_id?: string | null
           concepto?: string
           contenedor_id?: string | null
           created_at?: string
@@ -9176,6 +9179,14 @@ export type Database = {
           ultimo_contacto: string
         }[]
       }
+      cerrar_cancelacion_factura_facturapi: {
+        Args: {
+          p_factura_id: string
+          p_motivo?: string
+          p_sustituida_por_factura_id?: string
+        }
+        Returns: Json
+      }
       cerrar_caso_refacturacion: {
         Args: { p_cancelar?: boolean; p_caso_id: string }
         Returns: undefined
@@ -9569,6 +9580,21 @@ export type Database = {
           isOneToOne: false
           isSetofReturn: true
         }
+      }
+      crear_concepto_costo_y_vincular_atomico: {
+        Args: {
+          p_client_request_id?: string
+          p_concepto: string
+          p_embarque_id: string
+          p_factura_id: string
+          p_fecha_emision: string
+          p_folio: string
+          p_moneda: string
+          p_monto: number
+          p_proveedor_id: string
+          p_proveedor_nombre: string
+        }
+        Returns: Json
       }
       crear_embarque_borrador_core: {
         Args: { p_cotizacion_id: string }

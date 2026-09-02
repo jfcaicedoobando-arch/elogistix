@@ -15,6 +15,7 @@ import {
 describe("sugerirEmbarques service", () => {
   beforeEach(() => {
     mock.tableCalls.length = 0;
+    mock.rpcCalls.length = 0;
   });
 
   describe("sugerirEmbarquesParaProveedor", () => {
@@ -79,42 +80,52 @@ describe("sugerirEmbarques service", () => {
       moneda: "MXN",
       folio: "F-100",
       fechaEmision: "2026-03-10",
+      clientRequestId: "req-1",
     };
 
-    it("inserta concepto y vínculo, retorna conceptoId", async () => {
-      mock.setTableResult("conceptos_costo", { data: { id: "cc1" }, error: null });
-      mock.setTableResult("proveedor_facturas_conceptos", { data: null, error: null });
+    it("llama la RPC atómica con los parámetros esperados y retorna conceptoId", async () => {
+      mock.setRpcResult("crear_concepto_costo_y_vincular_atomico", {
+        data: { concepto_id: "cc1", pfc_id: "pfc1", reintento: false },
+        error: null,
+      });
       const r = await crearConceptoCostoYVincular(input);
       expect(r.conceptoId).toBe("cc1");
-      const cc = mock.getMutationPayload("conceptos_costo", "insert") as Record<string, unknown>[] | null;
-      expect(cc).toBeTruthy();
-      expect(cc?.[0]).toMatchObject({
-        embarque_id: "e1",
-        organization_id: "org-1",
-        proveedor_id: "p1",
-        monto: 1000,
-        moneda: "MXN",
-        estado_liquidacion: "Pagado",
-        referencia_pago: "F-100",
-      });
-      const link = mock.getMutationPayload("proveedor_facturas_conceptos", "insert") as Record<string, unknown> | null;
-      expect(link).toMatchObject({
-        proveedor_factura_id: "f1",
-        concepto_costo_id: "cc1",
-        monto: 1000,
-        cantidad: 1,
+      const call = mock.rpcCalls.find((c) => c.fn === "crear_concepto_costo_y_vincular_atomico");
+      expect(call?.args).toMatchObject({
+        p_factura_id: "f1",
+        p_embarque_id: "e1",
+        p_proveedor_id: "p1",
+        p_monto: 1000,
+        p_moneda: "MXN",
+        p_folio: "F-100",
+        p_client_request_id: "req-1",
       });
     });
 
-    it("propaga error al crear concepto", async () => {
-      mock.setTableResult("conceptos_costo", { data: null, error: { message: "x" } });
-      await expect(crearConceptoCostoYVincular(input)).rejects.toMatchObject({ message: "x" });
+    it("un reintento con el mismo client_request_id devuelve el registro ya creado sin duplicar", async () => {
+      mock.setRpcResult("crear_concepto_costo_y_vincular_atomico", {
+        data: { concepto_id: "cc1", pfc_id: "pfc1", reintento: false },
+        error: null,
+      });
+      const primero = await crearConceptoCostoYVincular(input);
+
+      mock.setRpcResult("crear_concepto_costo_y_vincular_atomico", {
+        data: { concepto_id: "cc1", pfc_id: "pfc1", reintento: true },
+        error: null,
+      });
+      const segundo = await crearConceptoCostoYVincular(input);
+
+      expect(segundo.conceptoId).toBe(primero.conceptoId);
+      const llamadas = mock.rpcCalls.filter((c) => c.fn === "crear_concepto_costo_y_vincular_atomico");
+      expect(llamadas).toHaveLength(2);
     });
 
-    it("propaga error al insertar vínculo", async () => {
-      mock.setTableResult("conceptos_costo", { data: { id: "cc1" }, error: null });
-      mock.setTableResult("proveedor_facturas_conceptos", { data: null, error: { message: "linkfail" } });
-      await expect(crearConceptoCostoYVincular(input)).rejects.toMatchObject({ message: "linkfail" });
+    it("propaga el error de Supabase de la RPC", async () => {
+      mock.setRpcResult("crear_concepto_costo_y_vincular_atomico", {
+        data: null,
+        error: { message: "boom" },
+      });
+      await expect(crearConceptoCostoYVincular(input)).rejects.toMatchObject({ message: "boom" });
     });
   });
 });

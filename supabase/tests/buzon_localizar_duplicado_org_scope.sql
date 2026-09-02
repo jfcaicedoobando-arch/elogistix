@@ -165,8 +165,9 @@ END
 $caso2$;
 
 -- -------------------------------------------------------------
--- CASO 3 (control): la factura viva de la org B es completamente normal
--- (embarque propio); consultada por su propietaria devuelve datos reales.
+-- CASO 3 (control): el UUID fiscal existe en la org A. Los índices únicos de
+-- uuid_fiscal son globales, así que la org B SÍ debe enterarse de que está
+-- ocupado ('ajeno'), pero SIN ids ni folio de la otra organización.
 -- -------------------------------------------------------------
 DO $caso3$
 DECLARE
@@ -174,6 +175,7 @@ DECLARE
   v_org_b uuid := '22222222-bbbb-2222-2222-222222222222';
   v_caso text;
   v_fac_id uuid;
+  v_emb_id uuid;
 BEGIN
   INSERT INTO auth.users (id, email) VALUES (v_uid_b, 'dedupe-org-b@test.mx')
   ON CONFLICT (id) DO NOTHING;
@@ -182,17 +184,16 @@ BEGIN
 
   PERFORM set_config('request.jwt.claims', jsonb_build_object('sub', v_uid_b)::text, true);
 
-  SELECT caso, factura_id INTO v_caso, v_fac_id
+  SELECT caso, factura_id, embarque_id INTO v_caso, v_fac_id, v_emb_id
     FROM public.buzon_localizar_duplicado(NULL, 'archivo_hash', 'UUID-CORRUPTO-0001', NULL);
 
   PERFORM set_config('request.jwt.claims', NULL, true);
 
-  -- El documento del buzón (org A) NO es visible para la org B con este UUID
-  -- fiscal porque ninguna factura de la org B lo tiene: no hay duplicado.
-  IF v_caso IS NOT NULL THEN
-    RAISE EXCEPTION 'CASO 3 FALLÓ: esperaba NULL (sin duplicado visible), obtuvo caso=%', v_caso;
+  IF v_caso IS DISTINCT FROM 'ajeno' OR v_fac_id IS NOT NULL OR v_emb_id IS NOT NULL THEN
+    RAISE EXCEPTION 'CASO 3 FALLÓ: esperaba ajeno sin ids, obtuvo caso=% factura_id=% embarque_id=%',
+      v_caso, v_fac_id, v_emb_id;
   END IF;
-  RAISE NOTICE 'CASO 3 OK: control sin falsos positivos cross-org';
+  RAISE NOTICE 'CASO 3 OK: duplicado de otra org se reporta como ajeno sin filtrar ids';
 END
 $caso3$;
 

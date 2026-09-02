@@ -38,3 +38,22 @@ export async function fetchAvailableUsersSinMembresia(): Promise<UserOption[]> {
   const asignados = new Set((miembros ?? []).map((m) => m.user_id as string));
   return users.filter((u) => !asignados.has(u.id));
 }
+
+export interface NombreUsuario {
+  id: string;
+  full_name: string | null;
+}
+
+/**
+ * Catálogo mínimo `{ id, full_name }` vía `user-management` action
+ * `list-nombres` — sin email ni señales de sesión. Usado por roles
+ * operativos (comisiones, auditoría) que sólo necesitan resolver nombres.
+ */
+export async function fetchNombresUsuarios(): Promise<NombreUsuario[]> {
+  const { data, error } = await supabase.functions.invoke("user-management", {
+    body: { action: "list-nombres" },
+  });
+  if (error) throw error;
+  return Array.isArray(data) ? (data as NombreUsuario[]) : [];
+}
+

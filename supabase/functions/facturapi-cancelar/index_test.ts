@@ -33,14 +33,14 @@ Deno.test("facturapi-cancelar: registra fallo en bitacora_actividad si Facturapi
   assertStringIncludes(bundleSource, "facturapi_cancelada");
 });
 
-Deno.test("facturapi-cancelar: actualiza estado=Cancelada Y registra motivo (no parcial)", () => {
-  // Si sólo se cambia estado sin motivo, perdemos trazabilidad SAT.
-  // Acepta el ternario `esSustitucion ? "Sustituida" : "Cancelada"` introducido en 13.137.9.
-  const estadoIdx = bundleSource.search(/estado:\s*(?:(?:ctx\.)?esSustitucion\s*\?\s*"Sustituida"\s*:\s*)?"Cancelada"/);
-  const motIdx = bundleSource.search(/cancelacion_motivo:\s*(?:ctx\.)?motivo/);
-  const fechaIdx = bundleSource.indexOf("cancelado_en:");
-  assertEquals(estadoIdx >= 0 && motIdx >= 0 && fechaIdx >= 0, true,
-    "Update debe incluir estado + motivo + fecha juntos");
+Deno.test("facturapi-cancelar: el cierre (estado + motivo) se delega a la RPC compartida", () => {
+  // Desde la migración a `cerrar_cancelacion_factura_facturapi`, terminales.ts
+  // ya NO arma el patch estado/motivo/cancelado_en a mano: invoca la RPC
+  // pasándole el motivo, y ésta decide Cancelada/Sustituida.
+  assertStringIncludes(terminalesSource, "cerrar_cancelacion_factura_facturapi");
+  const rpcIdx = terminalesSource.indexOf("cerrar_cancelacion_factura_facturapi");
+  const bloque = terminalesSource.slice(rpcIdx, rpcIdx + 300);
+  assertStringIncludes(bloque, "p_motivo: ctx.motivo");
 });
 
 

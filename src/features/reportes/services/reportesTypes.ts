@@ -25,6 +25,8 @@ export interface ResumenClienteRow {
   costo_usd: number;
   profit_usd: number;
   margen: number;
+  /** DEFECTO 8: embarques de este cliente con al menos un concepto sin TC. */
+  embarques_sin_tc: number;
 }
 
 export interface ReportesResumenKpis {
@@ -32,6 +34,12 @@ export interface ReportesResumenKpis {
   revenue: number;
   profit: number;
   margenProm: number;
+  /**
+   * DEFECTO 8: total de embarques con al menos un concepto de venta/costo sin
+   * tipo de cambio resuelto. Si es > 0, `revenue`/`profit`/`margenProm` NO son
+   * cifras exactas: la UI y la exportación deben marcarlas como incompletas.
+   */
+  embarquesSinTc: number;
 }
 
 export interface ReportesResumen {

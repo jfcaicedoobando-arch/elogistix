@@ -5,7 +5,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables, TablesInsert, TablesUpdate } from "@/integrations/supabase/types";
 import { unwrapOr, run } from "@/lib/supabase/response";
-import { fetchAvailableUsers } from "@/features/admin/services/usuario/availableUsers";
+import { fetchNombresUsuarios } from "@/features/admin/services/usuario/availableUsers";
 import { UNRESOLVED_EMAIL } from "@/features/admin/services/usuario";
 import { registrarActividad } from "@/services/bitacora/registrar";
 
@@ -18,13 +18,14 @@ export interface VendedoraConfig extends VendedoraConfigRow {
 
 export interface UsuarioVendedor { id: string; nombre: string; email: string }
 
-async function buildEmailMap(ids: string[]): Promise<Record<string, string>> {
+/** Mapa id → nombre (no hay email disponible desde `list-nombres`). */
+async function buildNombreMap(ids: string[]): Promise<Record<string, string>> {
   if (ids.length === 0) return {};
   try {
-    const users = await fetchAvailableUsers();
+    const users = await fetchNombresUsuarios();
     const map: Record<string, string> = {};
     for (const u of users) {
-      if (ids.includes(u.id)) map[u.id] = u.email;
+      if (ids.includes(u.id) && u.full_name) map[u.id] = u.full_name;
     }
     return map;
   } catch {
@@ -45,7 +46,7 @@ export async function fetchVendedorasConfig(): Promise<VendedoraConfig[]> {
       .limit(200),
     [],
   )) as VendedoraConfigRow[];
-  const map = await buildEmailMap(configs.map((c) => c.user_id));
+  const map = await buildNombreMap(configs.map((c) => c.user_id));
   return configs.map((c) => ({
     ...c,
     nombre: map[c.user_id] ?? UNRESOLVED_EMAIL,
@@ -94,7 +95,7 @@ export async function fetchUsuariosVendedores(): Promise<UsuarioVendedor[]> {
   const rows = (data as Array<{ user_id: string; role: string }>)
     .filter((r) => r.role === "vendedor" || r.role === "admin");
   const ids = Array.from(new Set(rows.map((r) => r.user_id)));
-  const map = await buildEmailMap(ids);
+  const map = await buildNombreMap(ids);
   return ids.map((id) => ({
     id,
     nombre: map[id] ?? UNRESOLVED_EMAIL,

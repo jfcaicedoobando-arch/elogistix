@@ -1,4 +1,4 @@
-import { Users, DollarSign, TrendingUp, Percent, type LucideIcon } from "lucide-react";
+import { Users, DollarSign, TrendingUp, Percent, AlertTriangle, type LucideIcon } from "lucide-react";
 import { KpiCard, type KpiVariant } from "@/components/shared/KpiCard";
 import { formatCurrency, formatCurrencyCompact } from "@/lib/formatters";
 
@@ -7,6 +7,7 @@ interface Kpis {
   revenue: number;
   profit: number;
   margenProm: number;
+  embarquesSinTc: number;
 }
 
 /**
@@ -22,19 +23,36 @@ export default function ReportesKpiCards({ kpis, isLoading }: { kpis: Kpis; isLo
   ];
 
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-      {cards.map((k) => (
-        <KpiCard
-          key={k.label}
-          label={k.label}
-          value={k.value}
-          valueTooltip={k.tooltip}
-          icon={k.icon}
-          variant={k.variant}
-          iconVariant="chip"
-          loading={isLoading}
-        />
-      ))}
+    <div className="space-y-3">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {cards.map((k) => (
+          <KpiCard
+            key={k.label}
+            label={k.label}
+            value={k.value}
+            valueTooltip={k.tooltip}
+            icon={k.icon}
+            variant={k.variant}
+            iconVariant="chip"
+            loading={isLoading}
+          />
+        ))}
+      </div>
+      {!isLoading && kpis.embarquesSinTc > 0 ? (
+        <div
+          role="alert"
+          className="flex items-start gap-2 rounded-md border border-warning/40 bg-warning/10 px-3 py-2 text-body-sm text-warning"
+        >
+          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
+          <span>
+            {kpis.embarquesSinTc === 1
+              ? "Hay 1 embarque sin tipo de cambio resuelto."
+              : `Hay ${kpis.embarquesSinTc} embarques sin tipo de cambio resuelto.`}{" "}
+            Las cifras de venta, utilidad y margen mostradas están INCOMPLETAS: no se sumó
+            correctamente ese embarque. No representan el total exacto.
+          </span>
+        </div>
+      ) : null}
     </div>
   );
 }

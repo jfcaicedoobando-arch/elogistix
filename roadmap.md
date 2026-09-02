@@ -1,11 +1,14 @@
-# Roadmap — Optimización móvil/plegable (692×764) · v13.823.26
+# Roadmap ronda YAGNI post v13.823.32
 
-- [x] Ola 1 · Shell: PageHeader, filtros, tabs con degradado, tap targets 44px, espacio bajo el FAB
-- [x] Ola 2a · Cobranza/Compras/Tesorería: Cartera, Antigüedad CxC, CxP Por pagar, Compras Por aprobar, Tesorería Pagos
-- [x] Ola 2b · Clientes (lista, detalle, contactos, documentos, portal), Facturación (emitidas, proformas, proyección), detalle de factura (pagos, NC, REPs), drill-down de antigüedad y reporte de cartera
-- [x] Ola 3 · KPIs en 2 columnas (<md) y montos sin truncar en tarjetas
-- [x] Verificación: sin scroll horizontal a 692px, typecheck/lint/tests en verde, APP_VERSION + CHANGELOG
-- [ ] Ola 4 (a medir) · Barrido del resto de tablas de escritorio (embarques, compras/conciliación, tesorería, admin, CRM, costeo)
-
-## Ola Agente → Gerente de Operaciones (v13.823.27)
-- [x] Cerrar errores de typecheck del preview antes de finalizar (build-errors.log).
+- [x] 1 Cierre idempotente de cancelación/sustitución FacturApi (RPC compartida + webhook + camino síncrono)
+- [x] 2 Traspasos: FOR UPDATE en cuentas origen/destino
+- [x] 3 Traspasos: rechazo de fecha anterior al corte
+- [ ] 4 Reposición A→B→A de documento de embarque
+- [ ] 5 Costo + vínculo de factura atómicos (RPC)
+- [x] 6 Conciliación de embarques sin truncar a 5000
+- [x] 7 Cartera de Dirección con todas las facturas abiertas (ya estaba corregido)
+- [ ] 8 Rentabilidad sin TC: advertencia + exportación marcada (pruebas pendientes)
+- [ ] 9 Roles asignables por admin_org: paridad UI/backend
+- [ ] 10 action=list sólo administrativo + list-nombres mínimo
+- [ ] Cierre: aplicar migraciones, manifiesto, typecheck/lint/tests, versión y changelog
+- [ ] Errores de typecheck del preview en verde antes de terminar
