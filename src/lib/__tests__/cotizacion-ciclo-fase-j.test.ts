@@ -41,6 +41,18 @@ describe("Fase J — ciclo de cotización", () => {
     expect(sqlAceptar).toMatch(/FOR UPDATE/);
   });
 
+  // v13.823.58 — reintento idempotente: la segunda llamada devuelve éxito con
+  // `sin_cambios=true` y no reescribe sellos; un enlace ganador inconsistente
+  // falla cerrado en lugar de "repararse" solo.
+  it("aceptar_cotizacion_version soporta reintento idempotente", () => {
+    expect(sqlAceptar).toMatch(/v_estado_actual IN \('Aceptada','En operación'\)/);
+    expect(sqlAceptar).toMatch(/'sin_cambios', true/);
+    expect(sqlAceptar).toMatch(/'sin_cambios',false/);
+    expect(sqlAceptar).toMatch(/LC_COTIZACION_ACEPTACION_INCONSISTENTE/);
+    expect(sqlAceptar).toMatch(/LC_COTIZACION_GANADORA_EXISTE/);
+  });
+
+
   it("la autoridad única asigna valor_real y fecha de cierre en el primer cierre", () => {
     expect(sqlCrm).toMatch(/valor_real\s*=\s*NEW\.subtotal/);
     expect(sqlCrm).toMatch(/fecha_cierre_real\s*=\s*v_hoy/);
