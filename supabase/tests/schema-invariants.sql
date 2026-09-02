@@ -51,9 +51,12 @@ DECLARE
     'costeo_tarifas|trg_costeo_tarifas_updated',
     'cotizacion_costos|update_cotizacion_costos_updated_at',
     'cotizacion_plantillas|trg_cotizacion_plantillas_updated_at',
-    'cotizaciones|trg_cotizacion_acepta_oportunidad',
-    'cotizaciones|trg_cotizacion_cierra_oportunidad',
-    'cotizaciones|trg_crm_set_valor_real_on_aceptada',
+    -- v13.823.57: los tres triggers competidores
+    -- (trg_cotizacion_acepta_oportunidad, trg_cotizacion_cierra_oportunidad,
+    -- trg_crm_set_valor_real_on_aceptada) fueron retirados y reemplazados por
+    -- zz_crm_cerrar_oportunidad_desde_cotizacion. Ver bloques 3 y 4.
+    'cotizaciones|zz_crm_cerrar_oportunidad_desde_cotizacion',
+
     'cotizaciones|trg_guard_estado_cotizacion',
     'cotizaciones|trg_snapshot_cotizacion_al_enviar',
     'cotizaciones|trg_validate_cotizacion_informativa',
