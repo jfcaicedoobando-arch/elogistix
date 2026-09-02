@@ -76,8 +76,12 @@ DECLARE
   v_h2 uuid := 'bb22bb22-0000-4000-8000-000000000702';
   v_h3 uuid := 'bb22bb22-0000-4000-8000-000000000703';
   v_act uuid;
-  v_mov_a timestamptz;
-  v_mov_b timestamptz;
+  -- El reloj se mide por versión de fila (ctid): dentro de una transacción
+  -- now() es constante, así que comparar timestamps no distingue "se tocó la
+  -- oportunidad" de "no se tocó". Un UPDATE sí crea una nueva versión de fila.
+  v_ver_a tid;
+  v_ver_b tid;
+
   v_n integer;
   v_ins text;
   r record;
