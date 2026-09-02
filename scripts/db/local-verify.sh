@@ -240,17 +240,19 @@ if [ "$REUSE" != "1" ]; then
     exit 1
   fi
 
-  step "Aplicando migraciones posteriores al corte"
+  step "Aplicando migraciones no consolidadas en el squash"
   shopt -s nullglob
   migr_log="$LOGDIR/migrations.log"
   : > "$migr_log"
   total=0
   for f in $(printf '%s\n' supabase/migrations/*.sql | LC_ALL=C sort); do
     base="$(basename "$f")"
-    ts="${base%%_*}"
-    # Historial ya consolidado en el squash: no se re-ejecuta.
-    [ "$ts" \> "$SQUASH_CUTOFF" ] || continue
+    # El corte por timestamp no basta: hay migraciones creadas DESPUÉS del
+    # squash con timestamp anterior al corte. La fuente de verdad es el
+    # inventario de archivos realmente incluidos en el squash.
+    grep -qxF "$base" "$SQUASH_INCLUDED" && continue
     echo "▶ $base" >> "$migr_log"
+
     if stub_ext "$f" | "${PSQL[@]}" --single-transaction >> "$migr_log" 2>&1; then
       total=$((total + 1))
       continue
