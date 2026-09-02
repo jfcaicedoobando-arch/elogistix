@@ -108,7 +108,9 @@ describe("<DoubleConfirmDeleteDialog />", () => {
     fireEvent.change(screen.getByPlaceholderText("ELIMINAR"), {
       target: { value: "ELIMINAR" },
     });
-    expect(screen.getByText(/eliminando/i)).toBeInTheDocument();
+    // Defecto 1: además del botón, se muestra el aviso "Eliminando… no cierres".
+    expect(screen.getAllByText(/eliminando/i).length).toBeGreaterThan(0);
+    expect(screen.getByRole("status")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /eliminando/i })).toBeDisabled();
   });
 
