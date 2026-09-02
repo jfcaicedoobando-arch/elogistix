@@ -12,7 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Settings2, FileSignature, Info, ShieldCheck } from "lucide-react";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { PageHeader } from "@/components/shared/PageHeader";
-import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
+import { defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { sortByString, sortByNumber } from "@/components/shared/dataTable/sortingFns";
 import {
   useCondicionesNaviera,
