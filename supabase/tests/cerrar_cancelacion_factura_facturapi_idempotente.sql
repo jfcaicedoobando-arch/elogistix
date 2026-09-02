@@ -9,6 +9,8 @@
 --
 -- Ejecución manual:
 --   psql "$SUPABASE_DB_URL" -f supabase/tests/cerrar_cancelacion_factura_facturapi_idempotente.sql
+BEGIN;
+
 DO $$
 DECLARE
   v_org uuid;
@@ -113,15 +115,8 @@ BEGIN
 
   PERFORM set_config('request.jwt.claims', NULL, true);
 
-  DELETE FROM public.factura_embarques WHERE organization_id = v_org;
-  DELETE FROM public.facturas WHERE organization_id = v_org;
-  DELETE FROM public.proformas WHERE organization_id = v_org;
-  DELETE FROM public.embarques WHERE organization_id = v_org;
-  DELETE FROM public.clientes WHERE organization_id = v_org;
-  DELETE FROM public.organization_members WHERE organization_id = v_org;
-  DELETE FROM public.bitacora_actividad WHERE organization_id = v_org;
-  DELETE FROM public.organizations WHERE id = v_org;
-  DELETE FROM auth.users WHERE id = v_uid;
-
+  -- Limpieza: todo el test corre en una transacción con ROLLBACK.
   RAISE NOTICE 'OK: cerrar_cancelacion_factura_facturapi idempotente (Cancelada/Sustituida).';
 END $$;
+
+ROLLBACK;
