@@ -1,18 +1,13 @@
 /**
  * Helper compartido para el ciclo de vida de blobs de expedientes
  * documentales (cliente/proveedor). El commit en base de datos determina
- * el éxito de la operación; la limpieza de storage es siempre best-effort
- * y sólo se registra (nunca revierte una referencia ya confirmada ni
- * enmascara el error original de un fallo previo).
+ * el éxito de la operación; la limpieza de storage es siempre best-effort:
+ * se registra (console.warn) pero nunca revierte una referencia ya
+ * confirmada ni enmascara el error original de un fallo previo.
  */
 import { deleteFile } from "@/services/storage";
 
-/**
- * Borra un blob de storage sin propagar el error si falla. Se usa tanto
- * para limpiar el archivo nuevo cuando el INSERT/UPDATE posterior falla,
- * como para limpiar el blob anterior cuando un reemplazo/borrado ya quedó
- * confirmado en base de datos.
- */
+/** Borra un blob de storage sin propagar el error si falla; sólo lo registra. */
 export async function limpiarBlobBestEffort(path: string, contexto: string): Promise<void> {
   try {
     await deleteFile(path);
@@ -22,9 +17,9 @@ export async function limpiarBlobBestEffort(path: string, contexto: string): Pro
 }
 
 /**
- * Reemplazo documental: cuando el UPDATE que fija el nuevo `archivo` ya
- * quedó confirmado, el blob anterior se limpia en best-effort y sólo si
- * difiere del nuevo path. Nunca revierte la referencia ya guardada.
+ * Reemplazo documental: una vez confirmado el UPDATE que fija el nuevo
+ * `archivo`, limpia en best-effort el blob anterior sólo si difiere del
+ * nuevo path (evita borrar el archivo que sigue en uso).
  */
 export async function limpiarBlobAnteriorTrasReemplazo(
   oldPath: string,
