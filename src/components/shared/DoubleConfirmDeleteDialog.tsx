@@ -94,11 +94,11 @@ function DoubleConfirmInner({
 
       {/* Paso 2 */}
       <AlertDialog open={paso2} onOpenChange={(v) => { if (!v) close(); }}>
+        {/* Defecto 1: el bloqueo de cierre vive en `close()`; Radix enruta
+            Escape y clic exterior por `onOpenChange`, así que basta con eso. */}
         <AlertDialogContent
           className={dialogSize.sm}
           aria-busy={isPending}
-          onEscapeKeyDown={(e) => { if (isPending) e.preventDefault(); }}
-          onInteractOutside={(e: Event) => { if (isPending) e.preventDefault(); }}
         >
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2">
