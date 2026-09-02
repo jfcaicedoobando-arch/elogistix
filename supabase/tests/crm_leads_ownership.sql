@@ -304,9 +304,14 @@ BEGIN
   PERFORM pg_temp.assert(
     (SELECT count(*) FROM pg_policy
       WHERE polrelid = 'public.crm_leads'::regclass
-        AND polname IN ('Gestion leads in-org crm_leads', 'Vendedor own crm_leads',
-                        'Vendedor bolsa crm_leads', 'Lectura in-org crm_leads')) = 4,
-    'D: crm_leads debe tener las 4 policies permisivas in-org');
+        AND polname IN ('Gestion leads in-org select crm_leads',
+                        'Gestion leads in-org insert crm_leads',
+                        'Gestion leads in-org update crm_leads',
+                        'Vendedor own select crm_leads',
+                        'Vendedor own insert crm_leads',
+                        'Vendedor own update crm_leads',
+                        'Vendedor bolsa crm_leads', 'Lectura in-org crm_leads')) = 8,
+    'D: crm_leads debe tener las 8 policies permisivas in-org por comando');
 
   PERFORM pg_temp.assert(
     (SELECT polcmd FROM pg_policy
@@ -320,7 +325,9 @@ BEGIN
        WHERE polrelid = 'public.crm_leads'::regclass
          AND polpermissive
          AND polcmd <> 'r'
-         AND position('has_any_role_in_org' in COALESCE(pg_get_expr(polqual, polrelid), '')) = 0),
+         AND position('has_any_role_in_org' in
+               COALESCE(pg_get_expr(polqual, polrelid), '')
+               || COALESCE(pg_get_expr(polwithcheck, polrelid), '')) = 0),
     'D: ninguna policy de escritura puede autorizar sin has_any_role_in_org');
 
   PERFORM pg_temp.assert(
