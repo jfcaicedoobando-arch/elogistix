@@ -52,8 +52,9 @@ BEGIN
   VALUES (v_cli, v_org, 'Cliente Atómico', 'cliente.atomico@test.mx')
   ON CONFLICT (id) DO NOTHING;
 
-  INSERT INTO public.embarques (id, organization_id, cliente_id, expediente, estado)
-  VALUES (v_emb, v_org, v_cli, 'ELATO0001', 'Confirmado')
+  INSERT INTO public.embarques (id, organization_id, cliente_id, expediente, estado, modo, tipo)
+  VALUES (v_emb, v_org, v_cli, 'ELATO0001', 'Confirmado',
+          'Marítimo'::public.modo_transporte, 'Importación'::public.tipo_operacion)
   ON CONFLICT (id) DO NOTHING;
 
   INSERT INTO public.presupuesto_categorias (organization_id, nombre)
