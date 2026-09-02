@@ -1,11 +1,25 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-const { insertMock } = vi.hoisted(() => ({ insertMock: vi.fn() }));
+const { insertMock, existentesMock } = vi.hoisted(() => ({
+  insertMock: vi.fn(),
+  existentesMock: vi.fn(),
+}));
 
 // M4 (auditoría 3-3): el alta va por la RPC canónica `crear_clientes`.
+// Defecto 4: antes del alta se consultan las claves ya existentes (`from`).
 
 vi.mock("@/integrations/supabase/client", () => ({
-  supabase: { rpc: (_fn: string, args: { p_clientes: unknown[] }) => insertMock(args.p_clientes) },
+  supabase: {
+    rpc: (_fn: string, args: { p_clientes: unknown[] }) => insertMock(args.p_clientes),
+    from: () => {
+      const chain = {
+        select: () => chain,
+        is: () => chain,
+        in: () => existentesMock(),
+      };
+      return chain;
+    },
+  },
 }));
 vi.mock("@/lib/text/razonSocial", () => ({
   normalizarRazonSocial: (s: string) => s.trim().toUpperCase(),
@@ -20,6 +34,8 @@ function filas(n: number) {
 
 beforeEach(() => {
   insertMock.mockReset();
+  existentesMock.mockReset();
+  existentesMock.mockImplementation(async () => ({ data: [], error: null }));
   insertMock.mockImplementation(async (lote: { nombre: string }[]) => ({
     data: lote.map((c, i) => ({ id: `c${i}`, ...c })),
     error: null,
@@ -28,7 +44,7 @@ beforeEach(() => {
 
 describe("createClientesLote", () => {
   it("agrupa en lotes de IMPORT_LOTE_TAMANO con un solo insert por lote", async () => {
-    const creados = await createClientesLote(filas(IMPORT_LOTE_TAMANO + 5));
+    const { creados } = await createClientesLote(filas(IMPORT_LOTE_TAMANO + 5));
     expect(insertMock).toHaveBeenCalledTimes(2);
     expect((insertMock.mock.calls[0] as unknown as [unknown[]])[0]).toHaveLength(
       IMPORT_LOTE_TAMANO,
@@ -58,7 +74,24 @@ describe("createClientesLote", () => {
   });
 
   it("no llama a la base cuando no hay filas", async () => {
-    expect(await createClientesLote([])).toEqual([]);
+    expect(await createClientesLote([])).toEqual({ creados: [], omitidos: 0 });
     expect(insertMock).not.toHaveBeenCalled();
+  });
+
+  it("omite las filas cuyo cliente ya existe (defecto 4)", async () => {
+    existentesMock.mockImplementation(async () => ({
+      data: [{ nombre: "CLIENTE 0", rfc: null }],
+      error: null,
+    }));
+    const { creados, omitidos } = await createClientesLote(filas(3));
+    expect(omitidos).toBe(1);
+    expect(creados).toHaveLength(2);
+  });
+
+  it("omite duplicados repetidos dentro del mismo archivo", async () => {
+    const dup = [{ nombre: "ACME" }, { nombre: " acme " }] as never[];
+    const { creados, omitidos } = await createClientesLote(dup);
+    expect(omitidos).toBe(1);
+    expect(creados).toHaveLength(1);
   });
 });
