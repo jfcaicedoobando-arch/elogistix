@@ -24,7 +24,7 @@ export function EstadoBadge({ estado }: { estado: string }) {
 }
 
 /** Badge + aviso de vigencia vencida para filas de `AgenteTarifas`. */
-function EstadoConVigencia({ t }: { t: AgenteTarifaRow }) {
+export function EstadoConVigencia({ t }: { t: AgenteTarifaRow }) {
   const { advertencia } = resolverEstadoVigenciaTarifa({
     estadoAprobacion: t.estado_aprobacion,
     estado: t.estado,
