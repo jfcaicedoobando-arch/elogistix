@@ -5,6 +5,7 @@
  * Extraído de `LeadDetalle.tsx` para respetar el límite de 200 líneas
  * (Power of 10).
  */
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { notifyError } from "@/lib/ui/appFeedback";
 import { crmToast } from "@/features/crm/lib/crmToast";
@@ -26,18 +27,24 @@ interface LeadMinimo {
 export function useLeadDetalleAcciones(
   id: string | undefined,
   lead: (LeadMinimo & Record<string, unknown>) | undefined,
-  form: LeadEditForm,
+  /** Sólo los campos editados: guardar Notas no debe pisar el resto. */
+  patch: Partial<LeadEditForm>,
 ) {
   const navigate = useNavigate();
   const actualizar = useActualizarLead();
   const eliminar = useEliminarLead();
   const tomar = useTomarLead();
   const calificar = useCalificarProspecto();
+  const [faltantesGate, setFaltantesGate] = useState<string[]>([]);
 
   const handleSave = async () => {
     if (!id) return;
+    if (Object.keys(patch).length === 0) {
+      crmToast.success("No hay cambios por guardar");
+      return;
+    }
     try {
-      await actualizar.mutateAsync({ id, patch: form });
+      await actualizar.mutateAsync({ id, patch });
       crmToast.success("Cambios guardados");
     } catch (e) {
       notifyError(undefined, {
@@ -70,16 +77,14 @@ export function useLeadDetalleAcciones(
    * para no gastar un viaje al servidor.
    */
   const handleCalificar = () => {
-    if (!lead) return;
+    // Doble clic idempotente: mientras corre la RPC no se reintenta.
+    if (!lead || calificar.isPending) return;
     const faltantes = faltantesGateProspecto(lead as Parameters<typeof faltantesGateProspecto>[0]);
     if (faltantes.length > 0) {
-      notifyError(undefined, {
-        title: "Falta completar el perfil comercial",
-        description: `Captura en el perfil ICP: ${faltantes.join(", ")}.`,
-        method: "GATE_PROSPECTO",
-      });
+      setFaltantesGate(faltantes);
       return;
     }
+    setFaltantesGate([]);
     calificar.mutate(lead.id);
   };
 
@@ -94,6 +99,8 @@ export function useLeadDetalleAcciones(
     handleDelete,
     handleCalificar,
     handleTomar,
+    faltantesGate,
+    cerrarGate: () => setFaltantesGate([]),
     guardando: actualizar.isPending,
     eliminando: eliminar.isPending,
     tomando: tomar.isPending,

@@ -13,6 +13,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { formatCurrency } from "@/lib/formatters";
 import { usePermissions } from "@/hooks/shared";
 import { useFacturasCxP, useAprobarFacturasLote, useVerificarSatLote } from "@/features/cxp/hooks";
+import { esValidableEnSat } from "@/features/cxp/domain/validacionSat";
 import { KpiCard } from "@/components/shared/KpiCard";
 import { sumaMxn, sumaUsd } from "./ComprasPorAprobar.helpers";
 import { useColumnasPorAprobar } from "./ComprasPorAprobar.useColumnas";
@@ -61,12 +62,11 @@ export default function ComprasPorAprobar() {
   const totalSelMxn = sumaMxn(seleccionadas);
   const totalSelUsd = sumaUsd(seleccionadas);
 
-  // Solo los CFDI nacionales con UUID se pueden consultar en el SAT.
+  // Sólo los CFDI (proveedor nacional, con UUID) se consultan en el SAT.
+  // Las facturas extranjeras o de captura manual no dependen del SAT y se
+  // aprueban normalmente: ver `requiereValidacionSat`.
   const validablesSat = useMemo(
-    () =>
-      seleccionadas
-        .filter((f) => f.proveedor_origen !== "Extranjero" && !!f.uuid_fiscal)
-        .map((f) => f.id),
+    () => seleccionadas.filter((f) => esValidableEnSat(f)).map((f) => f.id),
     [seleccionadas],
   );
 

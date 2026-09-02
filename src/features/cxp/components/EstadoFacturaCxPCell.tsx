@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/tooltip";
 import { formatCurrency, formatFechaEs } from "@/lib/formatters";
 const fmtMoney = (n: number, currency: string) => formatCurrency(n, currency);
+import { motivoSatNoAplica } from "@/features/cxp/domain/validacionSat";
 import type { FacturaCxP } from "@/features/cxp/services";
 
 interface Props {
@@ -62,6 +63,10 @@ function tooltipDetails(f: FacturaCxP): string[] {
   if (f.flags.ncAplicada) {
     lines.push(`Nota(s) de crédito aplicada(s): ${fmtMoney(f.notas_credito, f.moneda)}.`);
   }
+  const satNoAplica = motivoSatNoAplica(f);
+  if (satNoAplica) {
+    lines.push(satNoAplica);
+  }
   if (f.flags.satVerificada && f.uuid_verificado_fecha) {
     const fecha = formatFechaEs(f.uuid_verificado_fecha);
     lines.push(`CFDI verificado en SAT el ${fecha}.`);
@@ -91,6 +96,8 @@ export function EstadoFacturaCxPCell({ factura: f, variant = "tabla" }: Props) {
   }
   if (f.flags.satVerificada) {
     chips.push({ key: "sat", label: "SAT validado", tone: "success" });
+  } else if (motivoSatNoAplica(f)) {
+    chips.push({ key: "sat-na", label: "SAT: No aplica", tone: "neutral" });
   }
   if (f.fecha_programada_pago && f.estatus !== "Pagada" && f.estatus !== "Cancelada") {
     chips.push({
