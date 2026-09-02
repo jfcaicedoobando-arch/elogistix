@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.823.31] - 2026-09-02
+### CxP sin dependencia del SAT y CRM sin fallas silenciosas
+- **Factura extranjera/manual aprobable (P1)**: `requiereValidacionSat` es ahora el predicado canónico (origen del proveedor + CFDI real, no se infiere por UUID). En `/compras/por-aprobar` una factura de proveedor extranjero o de captura manual se selecciona y aprueba con el flujo normal (rol, confirmación y auditoría intactos), muestra el chip "SAT: No aplica" con la explicación y no cuenta para "Validar en SAT".
+- **Sin checkbox mudo (P1)**: cuando la selección está bloqueada (p. ej. segregación de funciones) se muestra un botón enfocable con el motivo y texto para lectores de pantalla.
+- **Calificar como prospecto (P1/P2)**: si faltan campos del Perfil ICP se abre un diálogo accesible con la lista de faltantes y un CTA que lleva al Perfil ICP; con el perfil completo se ejecuta la transición y el doble clic es idempotente. Ya no depende de un toast que podía quedar deduplicado.
+- **Correo del lead consistente (P2)**: el formulario de la ficha se deriva del dato persistido (una sola fuente canónica para el mailto y el input) y al guardar sólo viajan los campos editados, así que editar Notas ya no puede borrar el correo.
+
 ## [13.823.30] - 2026-09-02
 ### Tarifas: contenedores duplicados y estados vacíos honestos
 - **Contenedores duplicados (P1)**: el selector de tipo de contenedor colapsa los registros equivalentes (mismo tamaño y categoría con IDs distintos) en una sola opción, y la búsqueda Top 3 consulta todos los IDs del grupo. Elegir cualquiera de las variantes ya devuelve la misma tarifa; la vista de administración sigue viendo todos los registros para poder desactivar el duplicado.
