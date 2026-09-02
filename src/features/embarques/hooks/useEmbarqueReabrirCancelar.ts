@@ -30,25 +30,38 @@ export function useEmbarqueReabrirCancelar(
   const handleReabrir = useCallback(async (motivo: string) => {
     if (!embarque || !id) return;
     try {
-      await reabrirEmbarque.mutateAsync({
+      const resultado = await reabrirEmbarque.mutateAsync({
         embarqueId: id,
         usuarioEmail,
         motivo,
         requestId: reqIdReabrir.get(),
       });
+      // v13.823.47 — `pendiente` = otro request con la MISMA llave está
+      // ejecutando la reapertura. No es éxito: no se resetea la llave (para
+      // reintentar con ella), no se escribe bitácora y se avisa al usuario.
+      if (resultado.pendiente) {
+        notifyWarning(undefined, {
+          title: "Reapertura en proceso",
+          description: "La solicitud anterior aún se está procesando. Espera unos segundos y vuelve a intentar.",
+        });
+        return;
+      }
       reqIdReabrir.reset();
-      registrarActividad.mutate({
-        accion: "reabrir_embarque",
-        modulo: "embarques",
-        entidad_id: id,
-        entidad_nombre: labelExpediente(embarque.expediente, embarque.id),
-        detalles: { estado_anterior: "Cerrado", estado_nuevo: "Entregado", motivo },
-      });
+      if (!resultado.replay) {
+        registrarActividad.mutate({
+          accion: "reabrir_embarque",
+          modulo: "embarques",
+          entidad_id: id,
+          entidad_nombre: labelExpediente(embarque.expediente, embarque.id),
+          detalles: { estado_anterior: "Cerrado", estado_nuevo: "Entregado", motivo },
+        });
+      }
 
       notifySuccess(undefined, {
         title: "Embarque reabierto",
         description: "Ahora puedes generar la proforma o ajustar facturación.",
       });
+
     } catch (err: unknown) {
       notifyError(undefined, {
         title: "Error al reabrir embarque",

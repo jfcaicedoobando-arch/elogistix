@@ -36,6 +36,11 @@ describe("useEditarProveedorController", () => {
       result.current.handleSave();
     });
     
-    expect(onSave).toHaveBeenCalledWith("1", expect.objectContaining({ nombre: "New Name" }));
+    expect(onSave).toHaveBeenCalledWith(
+      "1",
+      expect.objectContaining({ nombre: "New Name" }),
+      undefined,
+      undefined,
+    );
   });
 });
