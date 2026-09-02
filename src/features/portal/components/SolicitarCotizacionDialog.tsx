@@ -22,6 +22,7 @@ import { useFormDialogCerrar } from "@/components/shared/formDialogCloseContext"
 import { useSolicitudCotizacionForm } from "@/features/portal/hooks/useSolicitudCotizacionForm";
 import { SolicitanteSelect } from "@/features/portal/components/SolicitanteSelect";
 import { SolicitudServicioFields } from "@/features/portal/components/SolicitudServicioFields";
+import { SolicitudRutaFields } from "@/features/portal/components/SolicitudRutaFields";
 import {
   seleccionInicial,
   type ClienteSolicitante,
@@ -138,30 +139,12 @@ export function SolicitarCotizacionDialog({ open, onOpenChange, clientes }: Prop
         tipoEmbarque={tipoEmbarque} setTipoEmbarque={setTipoEmbarque}
       />
 
-      <FormDialogSection title="Ruta" description="Puerto, aeropuerto o ciudad.">
-        <div className="space-y-1.5">
-          <Label htmlFor="solicitud-origen">Origen <span className="text-destructive">*</span></Label>
-          <Input id="solicitud-origen" value={origen} onChange={(e) => setOrigen(e.target.value)}
-            placeholder="Shanghái, China" aria-invalid={intentoEnvio && origenVacio}
-            aria-describedby={intentoEnvio && origenVacio ? "solicitud-origen-error" : undefined} />
-          {intentoEnvio && origenVacio && (
-            <p id="solicitud-origen-error" role="alert" className="text-body-sm text-destructive">
-              {COPY_VALIDACION.requerido("el origen")}
-            </p>
-          )}
-        </div>
-        <div className="space-y-1.5">
-          <Label htmlFor="solicitud-destino">Destino <span className="text-destructive">*</span></Label>
-          <Input id="solicitud-destino" value={destino} onChange={(e) => setDestino(e.target.value)}
-            placeholder="Manzanillo, México" aria-invalid={intentoEnvio && destinoVacio}
-            aria-describedby={intentoEnvio && destinoVacio ? "solicitud-destino-error" : undefined} />
-          {intentoEnvio && destinoVacio && (
-            <p id="solicitud-destino-error" role="alert" className="text-body-sm text-destructive">
-              {COPY_VALIDACION.requerido("el destino")}
-            </p>
-          )}
-        </div>
-      </FormDialogSection>
+      <SolicitudRutaFields
+        origen={origen} setOrigen={setOrigen}
+        destino={destino} setDestino={setDestino}
+        intentoEnvio={intentoEnvio}
+        origenVacio={origenVacio} destinoVacio={destinoVacio}
+      />
 
       <FormDialogSection title="Carga" cols={1}>
         <div className="space-y-1.5">
