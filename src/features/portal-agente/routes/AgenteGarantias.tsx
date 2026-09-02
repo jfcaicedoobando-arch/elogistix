@@ -14,7 +14,6 @@ import {
   useNavierasCatalogo,
 } from "@/features/costeo/hooks/useNavieraCondiciones";
 import { NavieraCondicionesDialog } from "@/features/costeo/components/NavieraCondicionesDialog";
-import { CartaGarantiaBadge } from "@/components/shared/CartaGarantiaBadge";
 import { combinarFilasNaviera, type FilaNaviera } from "@/features/costeo/types/filaNaviera";
 import { useDocumentTitle } from "@/hooks/shared";
 import { ErrorState } from "@/components/shared/states/ErrorState";

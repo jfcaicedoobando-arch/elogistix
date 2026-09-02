@@ -9,7 +9,7 @@ interface Props {
   fechaProgramada: string;
   onFechaChange: (fecha: string) => void;
   isRunning: boolean;
-  progreso: number;
+  progreso: { hecho: number; total: number } | null;
   onConfirmarProgramar: () => void;
 
   lote: LotePagoSeleccion | null;
