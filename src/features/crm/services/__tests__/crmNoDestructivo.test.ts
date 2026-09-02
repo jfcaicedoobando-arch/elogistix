@@ -57,14 +57,19 @@ describe("cancelarActividadesPerdida", () => {
     responsableId: "u1", responsableEmail: "v@x.com", userId: "u1",
   };
 
-  it("no sobrescribe resultados existentes y sólo rellena los vacíos", async () => {
+  it("cierra todas las pendientes en un solo UPDATE y nunca toca resultado", async () => {
     mock.setTableResult("crm_actividades", { data: [], error: null });
     await cancelarActividadesPerdida(ctx);
     const ups = updates();
-    expect(ups).toHaveLength(2);
-    // Primer UPDATE: filas con resultado → sólo cierra la actividad.
+    // v13.823.51 — un único UPDATE: la variante de dos pasos podía dejar media
+    // lista abierta si el segundo fallaba.
+    expect(ups).toHaveLength(1);
+    expect(ups[0]).toHaveProperty("fecha_completada");
     expect(ups[0]).not.toHaveProperty("resultado");
-    // Segundo UPDATE: filas sin resultado → deja constancia de la cancelación.
-    expect(ups[1].resultado).toContain("cancelada");
+  });
+
+  it("propaga el error del UPDATE (no declara éxito silencioso)", async () => {
+    mock.setTableResult("crm_actividades", { data: null, error: { message: "boom" } });
+    await expect(cancelarActividadesPerdida(ctx)).rejects.toBeTruthy();
   });
 });

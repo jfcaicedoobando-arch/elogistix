@@ -54,4 +54,26 @@ describe("listActividades — vencidas", () => {
     });
     expect(state.lts).toEqual([]);
   });
+
+  it("falla cerrado: sin userId no consulta toda la organización", async () => {
+    // v13.823.51 — antes devolvía "Mías" del equipo completo mientras la sesión
+    // resolvía al usuario.
+    const r = await listActividades({
+      search: "", tipo: "todos", estado: "pendientes", responsable: "mias",
+      page: 0, pageSize: 100, vencidas: true,
+    });
+    expect(r).toEqual({ data: [], count: 0 });
+    expect(state.ors).toEqual([]);
+    expect(state.lts).toEqual([]);
+  });
+
+  it("el ID es autoritativo: el correo sólo aplica si responsable_id es NULL", async () => {
+    await listActividades({
+      search: "", tipo: "todos", estado: "todas", responsable: "mias",
+      page: 0, pageSize: 100, userId: "u-1", userEmail: "yo@x.com",
+    });
+    expect(state.ors[0]).toBe(
+      "responsable_id.eq.u-1,and(responsable_id.is.null,responsable_email.eq.yo@x.com)",
+    );
+  });
 });

@@ -34,6 +34,10 @@ INSERT INTO _ci_service_role_only (fn) VALUES
   ('public._assert_tc_banda()'),
   -- Trigger de tesorería: impide dar de baja cuentas con movimientos.
   ('public._cuenta_bancaria_guard_baja()'),
+  -- v13.823.51 · candados multiempresa CRM + probabilidad terminal.
+  ('public._cotizacion_oportunidad_misma_org()'),
+  ('public._crm_actividad_entidad_misma_org()'),
+  ('public._crm_probabilidad_terminal()'),
   ('public._assert_periodo_abierto()'),
   -- Lectura bloqueada (FOR KEY SHARE) del estado del embarque: sólo la usan
   -- los triggers SECURITY DEFINER de bloqueo por cierre.

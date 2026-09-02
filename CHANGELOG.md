@@ -1,5 +1,15 @@
 # Changelog
 
+## [13.823.51] - 2026-09-02
+### Candados por empresa en CRM y correcciones de la tanda anterior
+- **Nueva oportunidad rápida**: la lista de prospectos ya no incluye a los que fueron convertidos en cliente y la oportunidad se queda con el vendedor dueño del prospecto (antes se reasignaba a quien la capturaba).
+- **Próximo paso / nueva actividad**: al abrir el diálogo para otra oportunidad se limpia todo el borrador anterior (tipo, asunto, descripción, fecha y casillas), y el buscador ya no muestra el nombre de una selección que se limpió.
+- **Mis actividades**: si la sesión aún no identifica al usuario, el listado sale vacío en lugar de mostrar las del equipo; el correo sólo se usa como respaldo en actividades antiguas que no tienen usuario asignado.
+- **Oportunidad perdida**: las actividades pendientes se cierran en una sola operación (antes podía quedar media lista abierta) y ahora se avisa si la automatización falla.
+- **Aislamiento entre empresas**: una cotización sólo puede ligarse a una oportunidad viva de la misma empresa y una actividad sólo a un prospecto u oportunidad viva de la misma empresa; las automatizaciones también validan la empresa.
+- **Probabilidad**: la regla de 100% al ganar y 0% al perder ahora la garantiza la base de datos por cualquier camino; en la edición de una oportunidad la etapa es de sólo lectura (se mueve desde el embudo, que pide el motivo de pérdida).
+- **Permisos**: el botón "Calificar como prospecto" sólo aparece a quienes el servidor sí autoriza (ventas, gerencia comercial y administración).
+
 ## [13.823.50] - 2026-09-02
 ### Pulido de CRM: origen de oportunidades y notas que no se perdían
 - **Nueva oportunidad rápida**: ahora se elige el origen (cliente o prospecto calificado) y el botón "Crear" está apagado hasta elegirlo; antes se ofrecía "Sin cliente" y el servidor rechazaba el alta.

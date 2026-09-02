@@ -34,7 +34,7 @@ import { formatFechaEs } from "@/lib/formatters/dates";
 
 export default function LeadDetalle() {
   const { id } = useParams<{ id: string }>();
-  const { canEdit, canTomarLead } = usePermissions();
+  const { canEdit, canTomarLead, canCalificarProspecto } = usePermissions();
   const volver = useVolver(ROUTES.CRM_LEADS);
   const { data: lead, isLoading } = useLead(id);
   useDocumentTitle(lead ? `Lead · ${lead.empresa}` : "Lead");
@@ -101,7 +101,7 @@ export default function LeadDetalle() {
             mostrarTomar={canTomarLead && !lead.vendedor_id && lead.estado !== "Convertido"}
             onTomar={handleTomar}
             tomando={tomando}
-            mostrarCalificar={canEdit && puedeCalificarse(lead.estado)}
+            mostrarCalificar={canCalificarProspecto && puedeCalificarse(lead.estado)}
             onCalificar={handleCalificar}
             calificando={calificando}
             mostrarNuevaOportunidad={canEdit && esProspecto(lead.estado)}

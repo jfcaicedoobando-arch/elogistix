@@ -74,32 +74,61 @@ function ComboboxBase({
   );
 }
 
+/** Metadatos del lead seleccionado (dueño canónico del prospecto). */
+export interface LeadComboboxMeta {
+  vendedor_id: string | null;
+  vendedor_email: string;
+}
+
 interface ComboProps {
   value: string;
   onChange: (id: string, label: string) => void;
   placeholder?: string;
 }
 
+/**
+ * v13.823.51 — la etiqueta interna sobrevivía a un `value` externo limpiado o
+ * cambiado: el botón seguía mostrando el nombre anterior. Se sincroniza.
+ */
+function useEtiquetaSincronizada(value: string) {
+  const [selectedLabel, setSelectedLabel] = useState("");
+  const [labelDeId, setLabelDeId] = useState("");
+  const etiqueta = value && labelDeId === value ? selectedLabel : "";
+  const registrar = (id: string, label: string) => { setLabelDeId(id); setSelectedLabel(label); };
+  return { etiqueta, registrar };
+}
+
 /** Selector de Lead con búsqueda server-side (no carga la lista completa). */
 export function LeadComboboxCrm({
   value, onChange, placeholder = "Selecciona un lead…", estadoIn,
-}: ComboProps & { estadoIn?: CrmLeadEstado[] }) {
+}: Omit<ComboProps, "onChange"> & {
+  estadoIn?: CrmLeadEstado[];
+  onChange: (id: string, label: string, meta?: LeadComboboxMeta) => void;
+}) {
   const [search, setSearch] = useState("");
-  const [selectedLabel, setSelectedLabel] = useState("");
+  const { etiqueta, registrar } = useEtiquetaSincronizada(value);
   const debounced = useDebouncedValue(search, 300);
   const { data, isFetching } = useLeads({ search: debounced, pageSize: 30, estadoIn });
-  const opciones: Opcion[] = (data?.data ?? []).map((l) => ({ id: l.id, label: l.empresa }));
+  const filas = data?.data ?? [];
+  const opciones: Opcion[] = filas.map((l) => ({ id: l.id, label: l.empresa }));
   return (
     <ComboboxBase
       value={value}
-      selectedLabel={selectedLabel}
+      selectedLabel={etiqueta}
       placeholder={placeholder}
       emptyLabel="Sin leads con ese nombre."
       opciones={opciones}
       isLoading={isFetching}
       search={search}
       onSearchChange={setSearch}
-      onSelect={(o) => { setSelectedLabel(o.label); onChange(o.id, o.label); }}
+      onSelect={(o) => {
+        registrar(o.id, o.label);
+        const fila = filas.find((l) => l.id === o.id);
+        onChange(o.id, o.label, {
+          vendedor_id: fila?.vendedor_id ?? null,
+          vendedor_email: fila?.vendedor_email ?? "",
+        });
+      }}
     />
   );
 }
@@ -107,21 +136,21 @@ export function LeadComboboxCrm({
 /** Selector de Oportunidad con búsqueda server-side. */
 export function OportunidadComboboxCrm({ value, onChange, placeholder = "Selecciona una oportunidad…" }: ComboProps) {
   const [search, setSearch] = useState("");
-  const [selectedLabel, setSelectedLabel] = useState("");
+  const { etiqueta, registrar } = useEtiquetaSincronizada(value);
   const debounced = useDebouncedValue(search, 300);
   const { data, isFetching } = useOportunidades({ search: debounced, pageSize: 30 });
   const opciones: Opcion[] = (data?.data ?? []).map((o) => ({ id: o.id, label: o.nombre }));
   return (
     <ComboboxBase
       value={value}
-      selectedLabel={selectedLabel}
+      selectedLabel={etiqueta}
       placeholder={placeholder}
       emptyLabel="Sin oportunidades con ese nombre."
       opciones={opciones}
       isLoading={isFetching}
       search={search}
       onSearchChange={setSearch}
-      onSelect={(o) => { setSelectedLabel(o.label); onChange(o.id, o.label); }}
+      onSelect={(o) => { registrar(o.id, o.label); onChange(o.id, o.label); }}
     />
   );
 }

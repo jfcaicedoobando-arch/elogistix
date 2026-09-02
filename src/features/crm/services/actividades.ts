@@ -37,18 +37,51 @@ export interface ListActividadesParams {
   vencidas?: boolean;
 }
 
-// B-055: las actividades pueden tener solo responsable_email (sin id); el
-// filtro "mías" debe cubrir ambas llaves.
-// B-24: `quoteOrValue` protege el `.or()` de PostgREST — un valor con `,`, `(`,
-// `)` o `"` rompería el parser.
-const filtroResponsable = (userId: string, email?: string | null) =>
+/**
+ * B-055: hay actividades legadas con sólo `responsable_email` (sin id).
+ * v13.823.51 — el ID es autoritativo: el correo sólo desempata cuando
+ * `responsable_id IS NULL`. Antes `responsable_email.eq.X` bastaba, así que el
+ * correo se volvía identidad permanente y podía atribuir actividades ya
+ * reasignadas a otro usuario.
+ *
+ * B-24: `quoteOrValue` protege el `.or()` de PostgREST — un valor con `,`, `(`,
+ * `)` o `"` rompería el parser.
+ */
+export const filtroResponsable = (userId: string, email?: string | null) =>
   email
-    ? `responsable_id.eq.${userId},responsable_email.eq.${quoteOrValue(email)}`
+    ? `responsable_id.eq.${userId},and(responsable_id.is.null,responsable_email.eq.${quoteOrValue(email)})`
     : `responsable_id.eq.${userId}`;
+
+/** Resultado vacío: filtro personal sin sesión resuelta (falla cerrado). */
+const SIN_RESULTADOS = { data: [] as CrmActividadRow[], count: 0 };
+
+interface FiltrableQuery<T> {
+  or: (expr: string) => T;
+  is: (col: string, val: null) => T;
+  lt: (col: string, val: string) => T;
+}
+
+/**
+ * Filtro personal ("Mías") y atajo de vencidas. Extraído en v13.823.51 para
+ * mantener `listActividades` dentro del límite de complejidad.
+ */
+function aplicarResponsableYVencidas<T extends FiltrableQuery<T>>(q: T, p: ListActividadesParams): T {
+  let out = q;
+  if (p.responsable === "mias" && p.userId) out = out.or(filtroResponsable(p.userId, p.userEmail));
+  if (p.vencidas) {
+    out = out.is("fecha_completada", null).lt("fecha_programada", new Date().toISOString());
+    if (p.responsable !== "mias" && p.userId) out = out.or(filtroResponsable(p.userId, p.userEmail));
+  }
+  return out;
+}
 
 export async function listActividades(p: ListActividadesParams): Promise<{ data: CrmActividadRow[]; count: number }> {
   // Retiene el patrón manual: PostgREST devuelve `count` fuera de `data`,
   // así que `unwrap`/`unwrapOr` (que sólo mapean data) no aplica.
+  // v13.823.51 — falla cerrado: si el filtro personal (o el atajo de vencidas)
+  // está activo pero la sesión aún no resolvió el usuario, NO se consulta toda
+  // la organización; se devuelve vacío en lugar de "Mías" del equipo.
+  if ((p.responsable === "mias" || p.vencidas) && !p.userId) return SIN_RESULTADOS;
   const sortKey = p.sortKey ?? "fecha_programada";
   const sortDir = p.sortDir ?? "asc";
   let q = supabase
@@ -67,13 +100,10 @@ export async function listActividades(p: ListActividadesParams): Promise<{ data:
   // v13.823.50 — "Mías" usa la misma llave que el badge de vencidas
   // (`responsable_id` O `responsable_email`): hay filas históricas con sólo
   // email y el contador las incluía mientras la tabla las ocultaba.
-  if (p.responsable === "mias" && p.userId) q = q.or(filtroResponsable(p.userId, p.userEmail));
+
   if (p.entidadTipo) q = q.eq("entidad_tipo", p.entidadTipo);
   if (p.entidadId) q = q.eq("entidad_id", p.entidadId);
-  if (p.vencidas) {
-    q = q.is("fecha_completada", null).lt("fecha_programada", new Date().toISOString());
-    if (p.userId) q = q.or(filtroResponsable(p.userId, p.userEmail));
-  }
+  q = aplicarResponsableYVencidas(q, p);
   const from = p.page * p.pageSize;
   q = q.range(from, from + p.pageSize - 1);
   const { data, count, error } = await q;

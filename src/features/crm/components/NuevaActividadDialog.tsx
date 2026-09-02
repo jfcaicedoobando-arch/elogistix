@@ -45,20 +45,19 @@ export default function NuevaActividadDialog({ open, onOpenChange, defaultEntida
 
   // v13.823.50 — el estado se inicializaba sólo en el primer render: al reusar
   // el diálogo con otra oportunidad (A → cerrar → B) mostraba el nombre de B
-  // pero conservaba el id de A (o vacío). Se resincroniza al abrir/cambiar.
+  // pero conservaba el id de A (o vacío).
+  // v13.823.51 — además del vínculo se reinicia TODO el borrador (tipo, asunto,
+  // descripción, fecha y banderas de calidad): lo capturado para A no debe
+  // viajar a B.
   const defTipo = defaultEntidad?.tipo;
   const defId = defaultEntidad?.id;
   useEffect(() => {
     if (!open) return;
     setEntidadTipo(defTipo ?? "oportunidad");
     setEntidadId(defId ?? "");
-  }, [open, defTipo, defId]);
-
-  const reset = () => {
-    setAsunto(""); setDesc(""); setFecha("");
+    setTipo("tarea"); setAsunto(""); setDesc(""); setFecha("");
     setContactoEfectivo(false); setReunionCalificada(false);
-    if (!defaultEntidad) { setEntidadId(""); setEntidadTipo("oportunidad"); }
-  };
+  }, [open, defTipo, defId]);
 
   const handleSubmit = async () => {
     if (!entidadId) return notifyError(undefined, { title: "Selecciona la entidad", method: "HANDLE_SUBMIT", errorCode: ERROR_CODES.VALIDATION_FAILED });
@@ -75,7 +74,6 @@ export default function NuevaActividadDialog({ open, onOpenChange, defaultEntida
         reunion_calificada: reunionCalificada,
       });
       crmToast.success("Actividad creada");
-      reset();
       onOpenChange(false);
       onCreated?.(res.id);
     } catch (e) {
