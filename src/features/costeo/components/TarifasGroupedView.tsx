@@ -97,7 +97,7 @@ export function TarifasGroupedView({ tarifas, onEditar, onDuplicar, onEliminar }
                     onEditar={() => onEditar(t.id)}
                     onDuplicar={() => onDuplicar(t.id)}
                     onEliminar={() => onEliminar(t.id)}
-                    onAprobar={() => aprobar.mutate(t.id)}
+                    onAprobar={() => aprobar.mutate({ id: t.id, vigenteHasta: t.vigente_hasta })}
                     onRechazar={() => setRechazandoId(t.id)}
                     onReactivar={() => reactivar.mutate(t.id)}
                     pending={pending}

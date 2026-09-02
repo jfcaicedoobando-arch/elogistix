@@ -94,7 +94,7 @@ export default function AgenteEmbarques() {
         data={embarques}
         rowKey={(e) => e.id}
         isLoading={isLoading}
-        emptyMessage="Aún no hay embarques asignados a tu agente."
+        emptyMessage="Aún no hay embarques asignados a tu agente. Operaciones asigna embarques al agente cuando la cotización u operación lo vincula."
       />
       )}
 

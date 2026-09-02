@@ -13,6 +13,7 @@ export interface GlobalSearchResult {
     | "factura"
     | "factura_proveedor"
     | "cotizacion"
-    | "proforma";
+    | "proforma"
+    | "pagina";
   url: string;
 }

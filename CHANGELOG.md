@@ -1,5 +1,15 @@
 # Changelog
 
+## [13.823.27] - 2026-09-02
+### Agente → Gerente de Operaciones: descubribilidad, vigencia y navieras
+- **Costeo visible para gerente_operaciones**: sección en sidebar (Tarifas, Agentes, Navieras) y destinos en búsqueda global sólo cuando el rol tiene acceso.
+- **Dashboard Operaciones**: el KPI ahora cuenta tarifas realmente pendientes de aprobación, es clicable hacia `/costeo/tarifas?aprobacion=borrador` y muestra estado de error en lugar de un falso 0.
+- **Vigencia de tarifas**: se deriva "vencida" con el día de negocio México (vence hoy no está vencida), se avisa en la lista de operaciones y del agente, y se bloquea aprobar una tarifa vencida con mensaje visible.
+- **Navieras**: búsqueda por nombre, filtro Todos/Configuradas/Sin configurar y estados vacíos contextuales.
+- **Configurar naviera**: aviso explícito cuando falta el proveedor tipo Naviera — el agente sabe que Operaciones debe vincularlo; los roles con acceso ven CTA a `/compras/proveedores?tipo=Naviera&nuevo=1`.
+- **Móvil (390px)**: garantías del agente en tarjetas, nav con máscara de degradado y modal de nueva tarifa con el resumen de faltantes separado del footer.
+- **Embarques del agente**: el estado vacío explica que Operaciones asigna los embarques.
+
 ## [13.823.26] - 2026-09-02
 ### Celular plegable (692×764): cierre de la Ola 2 en clientes, facturas y cobranza
 - **Facturación**: facturas emitidas, proformas y proyección se ven como tarjetas en móvil (antes requerían scroll horizontal).

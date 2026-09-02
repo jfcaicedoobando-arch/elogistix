@@ -34,7 +34,7 @@ export interface TarifasColumnsDeps {
   onEditar: (id: string) => void;
   onDuplicar: (id: string) => void;
   onEliminar: (id: string) => void;
-  onAprobar: (id: string) => void;
+  onAprobar: (id: string, vigenteHasta: string) => void;
   onRechazar: (id: string) => void;
   onReactivar: (id: string) => void;
 }
@@ -175,7 +175,7 @@ export function buildTarifasColumns(deps: TarifasColumnsDeps): ColumnDef<TarifaR
             {ap === "borrador" && (
               <TarifaQuickApprovalButtons
                 variant="table"
-                onAprobar={() => onAprobar(t.id)}
+                onAprobar={() => onAprobar(t.id, t.vigente_hasta)}
                 onRechazar={() => onRechazar(t.id)}
                 disabled={aprobarPending || reactivarPending}
               />
@@ -185,7 +185,7 @@ export function buildTarifasColumns(deps: TarifasColumnsDeps): ColumnDef<TarifaR
               onEditar={() => onEditar(t.id)}
               onDuplicar={() => onDuplicar(t.id)}
               onEliminar={() => onEliminar(t.id)}
-              onAprobar={() => onAprobar(t.id)}
+              onAprobar={() => onAprobar(t.id, t.vigente_hasta)}
               onRechazar={() => onRechazar(t.id)}
               onReactivar={() => onReactivar(t.id)}
               disabled={aprobarPending || reactivarPending}

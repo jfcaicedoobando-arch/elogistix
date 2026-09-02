@@ -22,6 +22,7 @@ import type {
   NavieraCondicionInput,
 } from "@/features/costeo/types/navieraCondicion";
 import { rangoLabel } from "@/lib/ui/rangoFechasCopy";
+import { NavieraProveedorAlerta } from "@/features/costeo/components/NavieraProveedorAlerta";
 
 interface Props {
   navieraId: string;
@@ -80,22 +81,21 @@ export function NavieraCondicionForm({ navieraId, existente, onSaved }: Props) {
       onSubmit={(e) => { e.preventDefault(); submit(); }}
       className="space-y-4"
     >
-      <div>
-        <Label htmlFor="nav-proveedor">Proveedor vinculado *</Label>
-        <Select value={form.proveedor_id} onValueChange={(v) => setForm({ ...form, proveedor_id: v })}>
-          <SelectTrigger id="nav-proveedor"><SelectValue placeholder="Selecciona proveedor tipo 'Naviera'" /></SelectTrigger>
-          <SelectContent>
-            {proveedores.length === 0 && (
-              <SelectItem value="__empty" disabled>
-                Sin proveedores tipo "Naviera". Créalos en Directorio → Proveedores.
-              </SelectItem>
-            )}
-            {(proveedores as ProveedorOpcion[]).map((p) => (
-              <SelectItem key={p.id} value={p.id}>{p.nombre}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+      {proveedores.length === 0 ? (
+        <NavieraProveedorAlerta />
+      ) : (
+        <div>
+          <Label htmlFor="nav-proveedor">Proveedor vinculado *</Label>
+          <Select value={form.proveedor_id} onValueChange={(v) => setForm({ ...form, proveedor_id: v })}>
+            <SelectTrigger id="nav-proveedor"><SelectValue placeholder="Selecciona proveedor tipo 'Naviera'" /></SelectTrigger>
+            <SelectContent>
+              {(proveedores as ProveedorOpcion[]).map((p) => (
+                <SelectItem key={p.id} value={p.id}>{p.nombre}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
 
       <fieldset className="rounded-md border p-3 space-y-3">
         <legend className="text-body font-medium px-1">Carta Garantía</legend>

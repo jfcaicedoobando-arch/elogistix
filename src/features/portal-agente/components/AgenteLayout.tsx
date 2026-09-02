@@ -157,7 +157,7 @@ export default function AgenteLayout() {
           </div>
         )}
 
-        <nav className="md:hidden border-t bg-card/80 px-2 py-1 flex items-center gap-1 overflow-x-auto">
+        <nav className="md:hidden border-t bg-card/80 px-2 py-1 flex items-center gap-1 overflow-x-auto [mask-image:linear-gradient(to_right,black_0,black_calc(100%-20px),transparent_100%)]">
           {NAV.map((item) => {
             const active = isActive(item.href, location.pathname);
             return (
