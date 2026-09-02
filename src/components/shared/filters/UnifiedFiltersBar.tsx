@@ -41,6 +41,8 @@ export function UnifiedFiltersBar({
   className,
 }: UnifiedFiltersBarProps) {
   const [sheetOpen, setSheetOpen] = useState(false);
+  const isMobile = useIsMobile();
+
   const hasChips = chips.length > 0 || Boolean(search);
 
   return (
