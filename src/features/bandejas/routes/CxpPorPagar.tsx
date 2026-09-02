@@ -7,11 +7,8 @@
  */
 import { useMemo, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { Inbox, CalendarCheck, Layers } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { DialogPagoLoteProveedor } from "@/features/cxp";
+import { Inbox } from "lucide-react";
 
-import { ProgramarPagoDialog } from "./_sections/ProgramarPagoDialog";
 import { useCxpPorPagar } from "@/features/bandejas/hooks/useBandejas";
 import { resumirCxpPorPagar } from "@/features/bandejas/domain/aggregates";
 import { CxpPorPagarKpis } from "./_sections/CxpPorPagarKpis";
@@ -27,6 +24,8 @@ import { todayLocalISO } from "@/lib/date/today";
 import { CxpPorPagarFiltersBar } from "@/features/bandejas/components/CxpPorPagarFiltersBar";
 import { CxpPorPagarMobileCard } from "@/features/bandejas/components/CxpPorPagarMobileCard";
 import { usePermissions } from "@/hooks/shared/usePermissions";
+import { CxpPorPagarHeaderActions } from "./_sections/CxpPorPagarHeaderActions";
+import { CxpPorPagarDialogs } from "./_sections/CxpPorPagarDialogs";
 import {
   CXP_FILTERS_DEFAULTS,
   CXP_SORTERS,
@@ -91,31 +90,15 @@ export default function CxpPorPagar() {
         title="CxP — Por pagar"
         description="Facturas de proveedor vigentes con saldo. Programa y registra los pagos."
         actions={
-          canPagarProveedor && hasSelection && (
-            <div className="flex flex-wrap gap-2">
-              <Button onClick={() => setIsDialogOpen(true)} variant="outline">
-                <CalendarCheck className="h-4 w-4 mr-2" />
-                Programar pago ({selectedIds.length})
-              </Button>
-              <Button
-                onClick={() => setLoteOpen(true)}
-                disabled={!lote}
-                title={
-                  lote
-                    ? undefined
-                    : "Selecciona 2 o más facturas del mismo proveedor y la misma moneda"
-                }
-              >
-                <Layers className="h-4 w-4 mr-2" />
-                Pagar en lote ({selectedIds.length})
-              </Button>
-            </div>
-          )
+          <CxpPorPagarHeaderActions
+            visible={canPagarProveedor && hasSelection}
+            selectedCount={selectedIds.length}
+            loteDisponible={!!lote}
+            onProgramar={() => setIsDialogOpen(true)}
+            onPagarLote={() => setLoteOpen(true)}
+          />
         }
       />
-
-
-
 
       <CargaGuard
         isLoading={isLoading}
@@ -171,29 +154,20 @@ export default function CxpPorPagar() {
         </CardContent>
       </Card>
 
-      <ProgramarPagoDialog
-        open={isDialogOpen}
-        onOpenChange={setIsDialogOpen}
-        cantidad={selectedIds.length}
+      <CxpPorPagarDialogs
+        isDialogOpen={isDialogOpen}
+        onDialogOpenChange={setIsDialogOpen}
+        selectedCount={selectedIds.length}
         fechaProgramada={fechaProgramada}
         onFechaChange={setFechaProgramada}
         isRunning={isRunning}
         progreso={progreso}
-        onConfirmar={handleProgramar}
+        onConfirmarProgramar={handleProgramar}
+        lote={lote}
+        loteOpen={loteOpen}
+        onLoteOpenChange={setLoteOpen}
+        onLoteDone={() => setRowSelection({})}
       />
-
-      {lote && (
-        <DialogPagoLoteProveedor
-          open={loteOpen}
-          onOpenChange={setLoteOpen}
-          proveedorId={lote.proveedorId}
-          proveedorNombre={lote.proveedorNombre}
-          proveedorOrigen={lote.proveedorOrigen}
-          moneda={lote.moneda}
-          facturas={lote.facturas}
-          onDone={() => setRowSelection({})}
-        />
-      )}
       </CargaGuard>
 
     </PageContainer>

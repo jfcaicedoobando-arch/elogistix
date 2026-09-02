@@ -3,8 +3,7 @@
  * devolver la elegida al caller (usado en /costeo/buscar y en wizard cotización).
  * Migrado a FormDialogShell (Ola 2 — Costeo).
  */
-import { useEffect, useState } from "react";
-import { Search, MapPinned } from "lucide-react";
+import { Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { DatePickerMx } from "@/components/ui/date-picker-mx";
@@ -15,15 +14,12 @@ import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { usePuertos, useTiposContenedor } from "@/features/catalogos/hooks";
 import { useTopTarifas } from "@/features/costeo/hooks/useTopTarifas";
 import { useDiagnosticoTarifas } from "@/features/costeo/hooks/useDiagnosticoTarifas";
-import { TarifasSinResultado } from "./TarifasSinResultado";
-import type { DiagnosticoTarifas } from "@/features/costeo/services/diagnosticoTarifas";
-import { ErrorStateInline } from "@/components/empty/ErrorStateInline";
-import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
-import { TarifaResultCard } from "./TarifaResultCard";
-import { computeRankingMeta } from "@/features/costeo/utils/rankingLabels";
 import type { TopTarifaRow } from "@/features/costeo/types";
-import { todayLocalISO } from "@/lib/date/today";
-import { getErrorMessage } from "@/lib/errors";
+import { ResultadosBody } from "./BuscarTarifaDialog.ResultadosBody";
+import {
+  PAISES_CN, PAISES_MX, filtrarPorPais, useFiltrosTarifa,
+  type FiltrosTarifaInitial,
+} from "./BuscarTarifaDialog.helpers";
 
 interface Props {
   open: boolean;
@@ -31,93 +27,7 @@ interface Props {
   /** Si se provee, se muestra botón "Elegir" en cada card y se cierra al elegir. */
   onElegir?: (row: TopTarifaRow) => void;
   selectLabel?: string;
-  initial?: { puertoOrigenId?: string; puertoDestinoId?: string; tipoContenedorId?: string };
-}
-
-interface ResultadosBodyProps {
-  origen: string;
-  destino: string;
-  tipo: string;
-  isFetching: boolean;
-  tarifas: TopTarifaRow[];
-  error?: unknown;
-  onRetry?: () => void;
-  isRefetching?: boolean;
-  onElegir?: (row: TopTarifaRow) => void;
-  onOpenChange: (v: boolean) => void;
-  selectLabel?: string;
-  diagnostico?: DiagnosticoTarifas;
-}
-
-function ResultadosBody({
-  origen, destino, tipo, isFetching, tarifas, error, onRetry, isRefetching,
-  onElegir, onOpenChange, selectLabel, diagnostico,
-}: ResultadosBodyProps) {
-  if (!origen || !destino || !tipo) {
-    return (
-      <EmptyStateInline
-        icon={MapPinned}
-        message="Selecciona origen, destino y tipo de contenedor para ver tarifas."
-      />
-    );
-  }
-  if (isFetching) {
-    return <EmptyStateInline loading message="Buscando…" />;
-  }
-  if (error) {
-    return (
-      <ErrorStateInline
-        message={getErrorMessage(error)}
-        onRetry={onRetry}
-        retrying={isRefetching}
-      />
-    );
-  }
-  if (tarifas.length === 0) {
-    return <TarifasSinResultado diagnostico={diagnostico} />;
-  }
-  const meta = computeRankingMeta(tarifas);
-  return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 pt-3">
-      {tarifas.map((t, i) => (
-        <TarifaResultCard
-          key={t.id}
-          row={t}
-          rank={i + 1}
-          meta={meta[i]}
-          onElegir={onElegir ? (row) => { onElegir(row); onOpenChange(false); } : undefined}
-          selectLabel={selectLabel}
-        />
-      ))}
-    </div>
-  );
-}
-
-const PAISES_CN = ["CN", "China"];
-const PAISES_MX = ["MX", "Mexico", "México"];
-
-interface PuertoLite { country?: string | null }
-
-function filtrarPorPais<T extends PuertoLite>(puertos: T[], paises: string[]): T[] {
-  return puertos.filter((p) => paises.includes(String(p.country ?? "")));
-}
-
-/** Filtros del buscador; se resetean al abrir con los valores iniciales. */
-function useFiltrosTarifa(open: boolean, initial: Props["initial"]) {
-  const [origen, setOrigen] = useState(initial?.puertoOrigenId ?? "");
-  const [destino, setDestino] = useState(initial?.puertoDestinoId ?? "");
-  const [tipo, setTipo] = useState(initial?.tipoContenedorId ?? "");
-  const [fecha, setFecha] = useState(todayLocalISO());
-
-  useEffect(() => {
-    if (open) {
-      setOrigen(initial?.puertoOrigenId ?? "");
-      setDestino(initial?.puertoDestinoId ?? "");
-      setTipo(initial?.tipoContenedorId ?? "");
-    }
-  }, [open, initial?.puertoOrigenId, initial?.puertoDestinoId, initial?.tipoContenedorId]);
-
-  return { origen, setOrigen, destino, setDestino, tipo, setTipo, fecha, setFecha };
+  initial?: FiltrosTarifaInitial;
 }
 
 export function BuscarTarifaDialog({

@@ -729,6 +729,8 @@ export default tseslint.config(
       "src/features/facturacion/estadoCuenta/components/EstadoCuentaFilaFactura.tsx",
       "src/features/facturacion/estadoCuenta/components/EstadoCuentaGrupoMoneda.tsx",
       "src/features/facturacion/estadoCuenta/components/EstadoCuentaTableHead.tsx",
+      // Renglón editable de conceptos extraídos por IA (inputs por celda).
+      "src/features/cxp/components/CfdiConceptoIaRow.tsx",
       // Catálogos con toggles inline por fila (patrón switch-per-row).
       "src/features/configuracion/components/CatalogoClavesSATCard.tsx",
       "src/features/configuracion/components/CatalogoClavesSATCard.parts.tsx",

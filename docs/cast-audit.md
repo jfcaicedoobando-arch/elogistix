@@ -5,13 +5,13 @@ Auditoría automática de los `as` casts en `src/`. Generado por
 
 ## Resumen
 
-Total de `as` casts detectados: **3377**
+Total de `as` casts detectados: **3379**
 
 | Categoría | Peso | Cantidad | % |
 |-----------|------|----------|---|
-| SAFE      | 0 | 988     | 29.3% |
+| SAFE      | 0 | 988     | 29.2% |
 | LOW       | 1 | 161      | 4.8% |
-| MEDIUM    | 2 | 2228   | 66.0% |
+| MEDIUM    | 2 | 2230   | 66.0% |
 | HIGH      | 3 | 0     | 0.0% |
 | CRITICAL  | 4 | 0 | 0.0% |
 

@@ -82,3 +82,4 @@ supabase/tests/buzon_localizar_duplicado_org_scope.sql
 supabase/tests/traspaso_candados_v2.sql
 supabase/tests/cerrar_cancelacion_factura_facturapi_idempotente.sql
 supabase/tests/crear_concepto_costo_y_vincular_atomico.sql
+supabase/tests/embarque_ids_naviera_agente_y_cotizacion_unica.sql

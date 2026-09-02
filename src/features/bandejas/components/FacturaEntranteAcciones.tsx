@@ -48,32 +48,32 @@ export function FacturaEntranteAcciones({
       {editable && yaCapturado && (
         <Button size="sm" variant="outline" className="flex-1 md:flex-none" asChild>
           <Link to={`/compras/facturas/${facturaExistenteId}`}>
-            <Eye className="mr-2 h-4 w-4" />
+            <Eye className="mr-2 size-4" />
             {facturaExistenteCancelada ? "Ver factura cancelada" : "Ver factura"}
           </Link>
         </Button>
       )}
       {editable && !yaCapturado && (
         <Button size="sm" className="flex-1 md:flex-none" onClick={() => onCrearFactura(row)}>
-          <FilePlus2 className="mr-2 h-4 w-4" /> Capturar factura
+          <FilePlus2 className="mr-2 size-4" /> Capturar factura
         </Button>
       )}
 
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button size="icon" variant="ghost" aria-label="Más acciones">
-            <MoreHorizontal className="h-4 w-4" />
+            <MoreHorizontal className="size-4" />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           {/* v13.398.0 — "Ver" sale de la fila (el clic en la fila ya abre la previa). */}
           <DropdownMenuItem onClick={() => onVer(row)}>
-            <Eye className="mr-2 h-4 w-4" /> Ver documento
+            <Eye className="mr-2 size-4" /> Ver documento
           </DropdownMenuItem>
 
           {row.xml_path && (
             <DropdownMenuItem onClick={() => onVerXml(row)}>
-              <FileCode2 className="mr-2 h-4 w-4" /> Descargar XML
+              <FileCode2 className="mr-2 size-4" /> Descargar XML
             </DropdownMenuItem>
           )}
           <DropdownMenuItem asChild>
@@ -83,7 +83,7 @@ export function FacturaEntranteAcciones({
           </DropdownMenuItem>
           {editable && (
             <DropdownMenuItem onClick={() => onCapturar(row)}>
-              <CheckCircle2 className="mr-2 h-4 w-4" /> Vincular a factura existente
+              <CheckCircle2 className="mr-2 size-4" /> Vincular a factura existente
             </DropdownMenuItem>
           )}
           {editable && (
@@ -91,12 +91,12 @@ export function FacturaEntranteAcciones({
               className="text-destructive focus:text-destructive"
               onClick={() => onRechazar(row)}
             >
-              <XCircle className="mr-2 h-4 w-4" /> Rechazar
+              <XCircle className="mr-2 size-4" /> Rechazar
             </DropdownMenuItem>
           )}
           {onReactivar && row.estado === "rechazada" && !row.proveedor_factura_id && (
             <DropdownMenuItem onClick={() => onReactivar(row)}>
-              <RotateCcw className="mr-2 h-4 w-4" /> Devolver a por capturar
+              <RotateCcw className="mr-2 size-4" /> Devolver a por capturar
             </DropdownMenuItem>
           )}
         </DropdownMenuContent>

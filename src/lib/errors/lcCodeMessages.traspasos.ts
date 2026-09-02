@@ -21,4 +21,6 @@ export const LC_CODE_MESSAGES_TRASPASOS: Record<string, string> = {
 
   LC_TRASPASO_SALDO_INSUFICIENTE:
     "El saldo de la cuenta de origen no alcanza para el traspaso más la comisión. Baja el monto o registra primero los depósitos pendientes.",
+  LC_TRASPASO_FECHA_ANTERIOR_CORTE:
+    "La fecha del traspaso es anterior al último corte bancario conciliado de la cuenta. Usa una fecha posterior al corte.",
 };

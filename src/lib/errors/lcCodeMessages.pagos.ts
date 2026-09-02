@@ -172,6 +172,15 @@ export const LC_CODE_MESSAGES_PAGOS: Record<string, string> = {
   // ── Ola 4 · cronología de pagos ────────────────────────────────────────
   LC_PAGO_FECHA_PREVIA:
     "La fecha del pago es anterior a la emisión de la factura, así que el cobro no cuadra con el CFDI. Corrige la fecha del pago.",
+  // Ola v13.823.34 — CxP atómico y programación de pagos.
+  LC_CXP_CANCELADA: "La factura de proveedor está cancelada: no admite más movimientos.",
+  LC_CXP_ORG_MISMATCH:
+    "La factura de proveedor pertenece a otra organización. Recarga la página y vuelve a intentarlo.",
+  LC_CXP_ROL_NO_AUTORIZADO:
+    "Tu rol no tiene permiso para capturar o autorizar cuentas por pagar.",
+  LC_CXP_FECHA_PROGRAMADA_INVALIDA:
+    "La fecha programada de pago no es válida: no puede ser anterior a la emisión de la factura.",
+  LC_PAGO_FECHA_INVALIDA: "La fecha del pago no es válida.",
+  LC_PAGO_SIN_PROGRAMACION:
+    "El pago no tiene una programación asociada. Progámalo antes de ejecutarlo.",
 };
-
-

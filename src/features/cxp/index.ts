@@ -18,3 +18,11 @@ export {
   localizarDuplicadoBuzon,
 } from "./services/buzonDuplicado";
 export type { CasoDuplicadoBuzon, UbicacionDuplicadoBuzon } from "./services/buzonDuplicado";
+
+// Validación SAT de facturas de proveedor (consumido por Compras).
+export {
+  motivoSatNoAplica,
+  requiereValidacionSat,
+  esValidableEnSat,
+} from "./domain/validacionSat";
+export type { FacturaValidacionSat } from "./domain/validacionSat";

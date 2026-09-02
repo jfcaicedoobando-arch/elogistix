@@ -3,6 +3,7 @@
  * v13.779.0 · H8-B: la NC puede venir en moneda distinta a la factura, así que
  * hay que decir explícitamente cómo se está valuando contra el saldo.
  */
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { formatCurrency } from "@/lib/formatters";
 import type { MonedaNotaCreditoProveedor as MonedaNC } from "@/features/cxp/types";
 
@@ -27,17 +28,21 @@ export function NcProveedorAvisos({
   return (
     <>
       {cruceInvalido && (
-        <div className="rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-body-sm text-destructive">
-          No existe tipo de cambio entre {moneda} y {monedaFactura}. Captura la nota de crédito en{" "}
-          {monedaFactura} o en MXN.
-        </div>
+        <Alert variant="destructive" className="px-3 py-2">
+          <AlertDescription className="text-body-sm">
+            No existe tipo de cambio entre {moneda} y {monedaFactura}. Captura la nota de crédito en{" "}
+            {monedaFactura} o en MXN.
+          </AlertDescription>
+        </Alert>
       )}
 
       {otraMoneda && montoEnFactura === null && montoNum > 0 && (
-        <div className="rounded-md border border-warning/30 bg-warning/5 px-3 py-2 text-body-sm text-muted-foreground">
-          Al guardar se aplicará el tipo de cambio del DOF de la fecha de la NC para valuarla en{" "}
-          {monedaFactura}.
-        </div>
+        <Alert variant="warning" className="px-3 py-2">
+          <AlertDescription className="text-body-sm">
+            Al guardar se aplicará el tipo de cambio del DOF de la fecha de la NC para valuarla en{" "}
+            {monedaFactura}.
+          </AlertDescription>
+        </Alert>
       )}
 
       {otraMoneda && montoEnFactura !== null && (
@@ -47,9 +52,11 @@ export function NcProveedorAvisos({
       )}
 
       {excede && (
-        <div className="rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-body-sm text-destructive">
-          El monto de la nota de crédito excede el saldo pendiente de la factura.
-        </div>
+        <Alert variant="destructive" className="px-3 py-2">
+          <AlertDescription className="text-body-sm">
+            El monto de la nota de crédito excede el saldo pendiente de la factura.
+          </AlertDescription>
+        </Alert>
       )}
     </>
   );

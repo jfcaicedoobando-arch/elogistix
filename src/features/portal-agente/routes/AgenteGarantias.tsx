@@ -6,37 +6,26 @@
  * y abre el panel lateral con las condiciones.
  */
 import { useMemo, useState } from "react";
-import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Settings2, FileSignature, Info, ShieldCheck } from "lucide-react";
-import { FormDialogShell } from "@/components/shared/FormDialogShell";
+import { Info, ShieldCheck } from "lucide-react";
 import { PageHeader } from "@/components/shared/PageHeader";
-import { defineColumns, type ColumnDef } from "@/components/shared/DataTable";
-import { sortByString, sortByNumber } from "@/components/shared/dataTable/sortingFns";
 import {
   useCondicionesNaviera,
   useNavierasCatalogo,
 } from "@/features/costeo/hooks/useNavieraCondiciones";
-import { NavieraCondicionForm } from "@/features/costeo/components/NavieraCondicionForm";
-import { DemorasTarifaEditor } from "@/features/costeo/components/DemorasTarifaEditor";
-import { CartaGarantiaBadge } from "@/components/shared/CartaGarantiaBadge";
-import type { CosteoNavieraCondicion } from "@/features/costeo/types/navieraCondicion";
+import { NavieraCondicionesDialog } from "@/features/costeo/components/NavieraCondicionesDialog";
+import { combinarFilasNaviera, type FilaNaviera } from "@/features/costeo/types/filaNaviera";
 import { useDocumentTitle } from "@/hooks/shared";
-import { COL_W } from "@/components/shared/dataTable/columnWidths";
 import { ErrorState } from "@/components/shared/states/ErrorState";
 import { ResponsiveDataTable } from "@/components/shared/dataTable/ResponsiveDataTable";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 import { Ship, SearchX } from "lucide-react";
 import { NavieraFiltrosBar } from "@/features/costeo/components/NavieraFiltrosBar";
 import { filtrarNavieras, type EstadoNavieraFiltro } from "@/features/costeo/lib/navierasFiltro";
-
-interface FilaNaviera {
-  naviera_id: string;
-  naviera_nombre: string;
-  naviera_code: string;
-  condicion: CosteoNavieraCondicion | null;
-}
+import {
+  useAgenteGarantiasColumns,
+  AgenteGarantiaMobileCard,
+} from "@/features/portal-agente/hooks/useAgenteGarantiasColumns";
 
 export default function AgenteGarantias() {
   useDocumentTitle('Carta Garantía y Demoras');
@@ -46,15 +35,10 @@ export default function AgenteGarantias() {
   const [busqueda, setBusqueda] = useState("");
   const [estado, setEstado] = useState<EstadoNavieraFiltro>("todos");
 
-  const filas: FilaNaviera[] = useMemo(() => {
-    const mapa = new Map(condiciones.map((c) => [c.naviera_id, c]));
-    return navieras.map((n) => ({
-      naviera_id: n.id,
-      naviera_nombre: n.name,
-      naviera_code: n.code,
-      condicion: mapa.get(n.id) ?? null,
-    }));
-  }, [navieras, condiciones]);
+  const filas: FilaNaviera[] = useMemo(
+    () => combinarFilasNaviera(navieras, condiciones),
+    [navieras, condiciones],
+  );
 
   const filasFiltradas = useMemo(
     () => filtrarNavieras(filas, busqueda, estado),
@@ -66,58 +50,7 @@ export default function AgenteGarantias() {
     setEstado("todos");
   };
 
-  const columns = useMemo<ColumnDef<FilaNaviera, unknown>[]>(
-    () => defineColumns<FilaNaviera>([
-      {
-        id: "naviera",
-        header: "Naviera",
-        accessorFn: (f) => f.naviera_nombre,
-        sortingFn: sortByString((f) => f.naviera_nombre),
-        enableSorting: true,
-        meta: { sticky: true, className: "font-medium" },
-        cell: ({ row }) => row.original.naviera_nombre,
-      },
-      {
-        id: "scac",
-        header: "SCAC",
-        accessorFn: (f) => f.naviera_code,
-        meta: { className: "font-mono text-xs", width: COL_W.fecha },
-        cell: ({ row }) => row.original.naviera_code,
-      },
-      {
-        id: "carta",
-        header: "Carta garantía",
-        cell: ({ row }) => (
-          <CartaGarantiaBadge
-            tieneCarta={row.original.condicion?.tiene_carta_garantia ?? false}
-            vigenteHasta={row.original.condicion?.carta_garantia_vigente_hasta ?? null}
-          />
-        ),
-      },
-      {
-        id: "diaslibres",
-        header: "Días libres",
-        accessorFn: (f) => f.condicion?.dias_libres_demoras_default ?? null,
-        sortingFn: sortByNumber((f) => f.condicion?.dias_libres_demoras_default ?? null),
-        enableSorting: true,
-        meta: { align: "right", className: "tabular-nums" },
-        cell: ({ row }) => row.original.condicion?.dias_libres_demoras_default ?? "—",
-      },
-      {
-        id: "acciones",
-        header: "Acciones",
-        meta: { width: "w-32", align: "right" },
-        cell: ({ row }) => (
-          <div className="flex justify-end" onClick={(e) => e.stopPropagation()}>
-            <Button size="sm" variant="outline" onClick={() => setSeleccion(row.original)}>
-              <Settings2 className="h-4 w-4 mr-1" /> Configurar
-            </Button>
-          </div>
-        ),
-      },
-    ]),
-    [],
-  );
+  const columns = useAgenteGarantiasColumns(setSeleccion);
 
   return (
     <div className="space-y-6">
@@ -159,26 +92,7 @@ export default function AgenteGarantias() {
             isLoading={loadingNav || loadingCond}
             onRowClick={(f) => setSeleccion(f)}
             rowClassName={(f) => (seleccion?.naviera_id === f.naviera_id ? "bg-accent/40" : "")}
-            mobileCard={(f) => (
-              <div className="flex items-center justify-between gap-2 min-w-0">
-                <div className="min-w-0 flex-1 space-y-1">
-                  <div className="font-medium text-body truncate">{f.naviera_nombre}</div>
-                  <div className="text-label text-muted-foreground font-mono">{f.naviera_code}</div>
-                  <CartaGarantiaBadge
-                    tieneCarta={f.condicion?.tiene_carta_garantia ?? false}
-                    vigenteHasta={f.condicion?.carta_garantia_vigente_hasta ?? null}
-                  />
-                </div>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="shrink-0"
-                  onClick={(e) => { e.stopPropagation(); setSeleccion(f); }}
-                >
-                  <Settings2 className="h-4 w-4 mr-1" /> Configurar
-                </Button>
-              </div>
-            )}
+            mobileCard={(f) => <AgenteGarantiaMobileCard fila={f} onConfigurar={setSeleccion} />}
             emptyState={
               filas.length === 0 ? (
                 <EmptyStateInline icon={Ship} message="Sin navieras configuradas." />
@@ -194,48 +108,11 @@ export default function AgenteGarantias() {
         </>
       )}
 
-
-      <FormDialogShell
-        open={!!seleccion}
+      <NavieraCondicionesDialog
+        seleccion={seleccion}
         onOpenChange={(o) => !o && setSeleccion(null)}
-        icon={FileSignature}
-        title={seleccion ? `Condiciones — ${seleccion.naviera_nombre}` : "Condiciones"}
-        description="Carta garantía, días libres y tabulador de demoras por tipo de contenedor."
-        size="3xl"
-        footer={null}
-      >
-        {seleccion && (
-          <Tabs defaultValue="condiciones">
-            <TabsList>
-              <TabsTrigger value="condiciones">Condiciones</TabsTrigger>
-              <TabsTrigger
-                value="demoras"
-                disabled={!seleccion.condicion}
-                title={!seleccion.condicion ? "Primero guarda las condiciones generales" : undefined}
-              >
-                Tabulador de demoras
-              </TabsTrigger>
-            </TabsList>
-            <TabsContent value="condiciones" className="pt-4">
-              <NavieraCondicionForm
-                navieraId={seleccion.naviera_id}
-                navieraNombre={seleccion.naviera_nombre}
-                existente={seleccion.condicion}
-                onSaved={() => setSeleccion(null)}
-              />
-            </TabsContent>
-            <TabsContent value="demoras" className="pt-4">
-              {seleccion.condicion ? (
-                <DemorasTarifaEditor navieraCondicionId={seleccion.condicion.id} />
-              ) : (
-                <p className="text-sm text-muted-foreground">
-                  Primero guarda las condiciones generales para habilitar el tabulador.
-                </p>
-              )}
-            </TabsContent>
-          </Tabs>
-        )}
-      </FormDialogShell>
+        onSaved={() => setSeleccion(null)}
+      />
     </div>
   );
 }
