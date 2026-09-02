@@ -42,18 +42,15 @@ export function CfdiConceptoIaRow({
     if (parseMonto(cantidadTxt, 1, { puntoDeMiles: false }) !== Number(linea.cantidad)) {
       setCantidadTxt(String(linea.cantidad));
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [linea.cantidad]);
+  }, [linea.cantidad, cantidadTxt]);
 
   useEffect(() => {
     if (parseMonto(importeTxt, 0) !== Number(linea.monto)) setImporteTxt(fmt2(linea.monto));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [linea.monto]);
+  }, [linea.monto, importeTxt]);
 
   useEffect(() => {
     if (parseMonto(ivaTxt, 0) !== Number(linea.iva)) setIvaTxt(fmt2(linea.iva));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [linea.iva]);
+  }, [linea.iva, ivaTxt]);
 
   return (
     <TableRow className="border-t odd:bg-background even:bg-muted/20 align-top">
