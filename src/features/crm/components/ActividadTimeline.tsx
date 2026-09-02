@@ -13,7 +13,6 @@ import {
 } from "@/components/ui/select";
 import { notifyError } from "@/lib/ui/appFeedback";
 import { formatFechaHora } from "@/lib/formatters";
-import { crmToast } from "@/features/crm/lib/crmToast";
 import {
   useActividades, useCrearActividad, useCompletarActividad,
   ACTIVIDAD_TIPOS, type CrmActividadTipo, type CrmEntidadTipo,
@@ -38,12 +37,13 @@ export default function ActividadTimeline({ entidadTipo, entidadId }: Props) {
 
   const handleCrear = async () => {
     if (!asunto.trim()) return notifyError(undefined, { title: "Asunto requerido", method: "HANDLE_CREAR", errorCode: ERROR_CODES.VALIDATION_FAILED });
+    // v13.823.49 — el feedback (éxito y error) lo emite `useCrearActividad`;
+    // aquí sólo se limpia el formulario. Antes salían dos toasts por acción.
     try {
       await crear.mutateAsync({ tipo, asunto, descripcion: desc, entidad_tipo: entidadTipo, entidad_id: entidadId });
-      crmToast.success("Actividad registrada");
       setAsunto(""); setDesc("");
-    } catch (e) {
-      notifyError(undefined, { title: "Error", description: e instanceof Error ? e.message : undefined, error: e, method: "HANDLE_CREAR" });
+    } catch {
+      /* ya notificado por el hook */
     }
   };
 
@@ -59,8 +59,9 @@ export default function ActividadTimeline({ entidadTipo, entidadId }: Props) {
             </SelectContent>
           </Select>
           <Input aria-label="Asunto de la actividad" placeholder="Asunto…" value={asunto} onChange={(e) => setAsunto(e.target.value)} />
-          <Button onClick={handleCrear} disabled={crear.isPending} loading={crear.isPending}>
+          <Button aria-label="Agregar actividad" onClick={handleCrear} disabled={crear.isPending} loading={crear.isPending}>
             {!crear.isPending && <Plus className="h-4 w-4" />}
+            <span className="sr-only">Agregar actividad</span>
           </Button>
           <Textarea
             className="md:col-span-3"
@@ -93,7 +94,8 @@ export default function ActividadTimeline({ entidadTipo, entidadId }: Props) {
                       className="h-6 px-2 text-label"
                       // UX-13: sin disabled, doble clic disparaba la mutación dos veces.
                       disabled={completar.isPending}
-                      onClick={() => completar.mutateAsync({ id: a.id })}
+                      // El feedback lo emite `useCompletarActividad`.
+                      onClick={() => { void completar.mutateAsync({ id: a.id }).catch(() => {}); }}
                     >
                       <Check className="h-3 w-3 mr-1" /> Marcar completada
                     </Button>

@@ -2,7 +2,7 @@
  * Leads — mutaciones individuales (create/update/softDelete/tomar de la bolsa).
  */
 import { supabase } from "@/integrations/supabase/client";
-import { unwrap, run } from "@/lib/supabase/response";
+import { unwrap } from "@/lib/supabase/response";
 import { type LeadInput } from "@/features/crm/domain/leads/constants";
 import { buildLeadInsertPayload, type AuthLite } from "@/features/crm/domain/leads/leadPayload";
 import { registrarActividad } from "@/services/bitacora/registrar";
@@ -22,8 +22,30 @@ export async function createLead(input: LeadInput, user: AuthLite | null): Promi
   return creado;
 }
 
+/**
+ * v13.823.49 — un UPDATE filtrado por RLS o sobre un lead eliminado devuelve
+ * 0 filas SIN error; antes eso se reportaba como éxito.
+ */
+async function exigirFilaLead(
+  builder: PromiseLike<{ data: { id: string } | null; error: unknown }>,
+): Promise<void> {
+  const { data, error } = await builder;
+  if (error) throw error;
+  if (!data) {
+    throw new Error("No se pudo guardar el lead: no tienes permiso o el lead ya no existe.");
+  }
+}
+
 export async function updateLead(id: string, patch: Partial<LeadInput>): Promise<void> {
-  await run(supabase.from("crm_leads").update(patch).eq("id", id));
+  await exigirFilaLead(
+    supabase
+      .from("crm_leads")
+      .update(patch)
+      .eq("id", id)
+      .is("deleted_at", null)
+      .select("id")
+      .maybeSingle(),
+  );
   await registrarActividad({
     modulo: "crm",
     accion: "editar_lead",
@@ -33,11 +55,14 @@ export async function updateLead(id: string, patch: Partial<LeadInput>): Promise
 }
 
 export async function softDeleteLead(id: string, userId: string | null): Promise<void> {
-  await run(
+  await exigirFilaLead(
     supabase
       .from("crm_leads")
       .update({ deleted_at: new Date().toISOString(), deleted_by: userId })
-      .eq("id", id),
+      .eq("id", id)
+      .is("deleted_at", null)
+      .select("id")
+      .maybeSingle(),
   );
   await registrarActividad({
     modulo: "crm",

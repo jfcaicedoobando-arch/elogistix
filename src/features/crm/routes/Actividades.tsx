@@ -4,8 +4,9 @@
  * Migrado a `useServerPagedList` + `<UnifiedFiltersBar />`:
  *   - Todo el estado (búsqueda, tipo, estado, responsable, orden, paginación)
  *     vive en la URL vía nuqs (`?q=&tipo=&estado=&resp=&sort=&dir=&page=&ps=`).
- *   - Soporta el shortcut `?filtro=vencidas` que preconfigura pendientes+mías
- *     y filtra en cliente por `fecha_programada < now` sobre la página server.
+ *   - Soporta el shortcut `?filtro=vencidas`, que se resuelve SERVER-SIDE
+ *     (pendientes + mías + `fecha_programada < now`), así que el contador y la
+ *     paginación corresponden al conjunto vencido.
  */
 import { useEffect, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
@@ -32,6 +33,7 @@ import {
 import { PageHeader } from "@/components/shared/PageHeader";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { queryKeys } from "@/lib/query";
+import { pluralizar } from "@/lib/format/pluralizar";
 import { baseActividadColumns, actividadActionColumn } from "./actividadesColumns";
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 import { ErrorState } from "@/components/shared/states/ErrorState";
@@ -49,7 +51,7 @@ export default function Actividades() {
   const vencidasOnly = filtroParam === "vencidas";
 
   const list = useServerPagedList<CrmActividadRow, ActividadesFilters>({
-    queryKey: queryKeys.crm.actividades.paged(user?.id),
+    queryKey: [...queryKeys.crm.actividades.paged(user?.id), vencidasOnly ? "vencidas" : "todas"],
     defaultFilters: DEFAULTS,
     filterLabels: { tipo: "Tipo", estado: "Estado", responsable: "Responsable" },
     defaultPageSize: 100,
@@ -59,8 +61,11 @@ export default function Actividades() {
       const { data, count } = await listActividades({
         search,
         tipo: (filters.tipo as CrmActividadTipo | "todos") ?? "todos",
-        estado: (filters.estado as "pendientes" | "completadas" | "todas") ?? "pendientes",
-        responsable: (filters.responsable as "mias" | "todos") ?? "todos",
+        // v13.823.49 — `?filtro=vencidas` se resuelve en la consulta: pendientes,
+        // del responsable actual y con fecha programada anterior a ahora.
+        estado: vencidasOnly ? "pendientes" : ((filters.estado as "pendientes" | "completadas" | "todas") ?? "pendientes"),
+        responsable: vencidasOnly ? "mias" : ((filters.responsable as "mias" | "todos") ?? "todos"),
+        vencidas: vencidasOnly,
         page,
         pageSize,
         userId: user?.id,
@@ -81,10 +86,7 @@ export default function Actividades() {
     }
   }, [vencidasOnly]);
 
-  const now = Date.now();
-  const items = vencidasOnly
-    ? list.rows.filter((a) => a.fecha_programada && new Date(a.fecha_programada).getTime() < now)
-    : list.rows;
+  const items = list.rows;
   const columns = canEditCrm ? [...baseActividadColumns, actividadActionColumn] : baseActividadColumns;
 
   const limpiarFiltro = () => {
@@ -100,7 +102,7 @@ export default function Actividades() {
         description="Registro de llamadas, reuniones y tareas de seguimiento CRM"
       />
       <CrmSubheader
-        context={`${list.count} actividades`}
+        context={pluralizar(list.count, "actividad", { plural: "actividades" })}
         actions={vencidasOnly ? (
           <Button variant="outline" size="sm" onClick={limpiarFiltro} className="h-7">
             <X className="h-3 w-3 mr-1" /> Filtro: Vencidas

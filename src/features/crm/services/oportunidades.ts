@@ -4,6 +4,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { orIlike } from "@/lib/search/ilike";
 import { unwrap } from "@/lib/supabase/response";
+import { leerTodasLasPaginas } from "@/lib/supabase/paginado";
 import type { TablesUpdate } from "@/integrations/supabase/types";
 import { registrarActividad } from "@/services/bitacora/registrar";
 import { buildOportunidadInsertPayload } from "@/features/crm/domain/oportunidadPayload";
@@ -17,12 +18,42 @@ export interface ListOportunidadesParams {
   search: string;
   etapaId: string | "todas";
   vendedorId: string | "todos";
+  /**
+   * v13.823.49 — antes el rango de cierre y el monto mínimo se filtraban en
+   * memoria sobre las primeras 500 filas, así que el listado (y la exportación)
+   * omitían coincidencias posteriores.
+   */
+  cierreDesde?: string;
+  cierreHasta?: string;
+  montoMin?: number | null;
   page: number;
   pageSize: number;
 }
 
+/** Aplica los filtros de negocio a un builder de `crm_oportunidades`. */
+function aplicarFiltrosOportunidades<T extends {
+  or: (f: string) => T; eq: (c: string, v: string) => T;
+  gte: (c: string, v: string | number) => T; lte: (c: string, v: string | number) => T;
+  not: (c: string, op: string, v: null) => T;
+}>(q: T, p: ListOportunidadesParams): T {
+  let out = q;
+  if (p.search.trim()) out = out.or(orIlike(["nombre", "cliente_nombre"], p.search));
+  if (p.etapaId !== "todas") out = out.eq("etapa_id", p.etapaId);
+  if (p.vendedorId !== "todos") out = out.eq("vendedor_id", p.vendedorId);
+  if (p.cierreDesde) {
+    out = out.not("fecha_estimada_cierre", "is", null).gte("fecha_estimada_cierre", p.cierreDesde);
+  }
+  if (p.cierreHasta) {
+    out = out.not("fecha_estimada_cierre", "is", null).lte("fecha_estimada_cierre", p.cierreHasta);
+  }
+  if (typeof p.montoMin === "number" && Number.isFinite(p.montoMin)) {
+    out = out.gte("monto_estimado", p.montoMin);
+  }
+  return out;
+}
+
 export async function listOportunidades(p: ListOportunidadesParams): Promise<{ data: CrmOportunidadRow[]; count: number }> {
-  let q = supabase
+  const base = supabase
     .from("crm_oportunidades")
     .select(COLS, { count: "exact" })
     .is("deleted_at", null)
@@ -31,16 +62,32 @@ export async function listOportunidades(p: ListOportunidadesParams): Promise<{ d
     // filas cuando varias oportunidades comparten el mismo `created_at`.
     .order("id", { ascending: false });
 
-  if (p.search.trim()) {
-    q = q.or(orIlike(["nombre", "cliente_nombre"], p.search));
-  }
-  if (p.etapaId !== "todas") q = q.eq("etapa_id", p.etapaId);
-  if (p.vendedorId !== "todos") q = q.eq("vendedor_id", p.vendedorId);
   const from = p.page * p.pageSize;
-  q = q.range(from, from + p.pageSize - 1);
-  const { data, count, error } = await q;
+  const { data, count, error } = await aplicarFiltrosOportunidades(base, p)
+    .range(from, from + p.pageSize - 1);
   if (error) throw error;
   return { data: (data ?? []) as CrmOportunidadRow[], count: count ?? 0 };
+}
+
+/**
+ * v13.823.49 — lectura COMPLETA por lotes para la exportación CSV: respeta los
+ * mismos filtros del listado y no omite coincidencias más allá de la página.
+ */
+export async function listOportunidadesTodas(
+  p: Omit<ListOportunidadesParams, "page" | "pageSize">,
+): Promise<CrmOportunidadRow[]> {
+  const params: ListOportunidadesParams = { ...p, page: 0, pageSize: 0 };
+  return leerTodasLasPaginas<CrmOportunidadRow>("crm.oportunidades.export", (desde, hasta) =>
+    aplicarFiltrosOportunidades(
+      supabase
+        .from("crm_oportunidades")
+        .select(COLS)
+        .is("deleted_at", null)
+        .order("created_at", { ascending: false })
+        .order("id", { ascending: false }),
+      params,
+    ).range(desde, hasta) as unknown as PromiseLike<{ data: CrmOportunidadRow[] | null; error: { message: string } | null }>,
+  );
 }
 
 export async function getOportunidad(id: string): Promise<CrmOportunidadRow | null> {
