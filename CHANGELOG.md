@@ -1,5 +1,15 @@
 # Changelog
 
+## [13.823.26] - 2026-09-02
+### Celular plegable (692×764): cierre de la Ola 2 en clientes, facturas y cobranza
+- **Facturación**: facturas emitidas, proformas y proyección se ven como tarjetas en móvil (antes requerían scroll horizontal).
+- **Detalle de factura**: pagos, notas de crédito y REPs migrados a tarjetas, conservando acciones por renglón.
+- **Cobranza**: el drill-down de antigüedad de CxC y los bloques del reporte de cartera usan tarjetas en móvil.
+- **Clientes**: tablas del detalle (embarques/cotizaciones/facturas), contactos, documentos y usuarios del portal migradas a tarjetas.
+- Pruebas: se envolvieron los renders afectados en `MemoryRouter` y se completó el mock de `useIsMobile` (las tablas responsivas usan router y breakpoint).
+
+
+
 ## [13.823.25] - 2026-09-02
 ### Uso en celular plegable (692×764): shell, tablas y KPIs
 - **Shell**: `PageHeader` ya no deja un renglón de acciones vacío por debajo de `md`; el buscador de `UnifiedFiltersBar` ocupa todo el ancho y los filtros pasan al panel lateral; las tiras de tabs (detalle de embarque, bandejas) indican con degradado/apilado que hay más contenido.
