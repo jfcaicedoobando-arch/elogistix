@@ -238,7 +238,8 @@ async function runEnvio(
 
 
   const templateData = await buildTemplateData(cliente, facturas, userId, supabaseAdmin, input);
-  await sendEstadoCuenta(supabaseUrl, serviceRoleKey, destinatario, templateData);
+  const messageId = messageIdEstadoCuenta(cliente_id, fecha_desde, fecha_hasta, destinatario);
+  await sendEstadoCuenta(supabaseUrl, serviceRoleKey, destinatario, templateData, messageId);
   return corsJson({ ok: true, enviado_a: destinatario }, 200, req);
 }
 
