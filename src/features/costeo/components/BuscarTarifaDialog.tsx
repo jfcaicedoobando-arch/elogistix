@@ -4,7 +4,7 @@
  * Migrado a FormDialogShell (Ola 2 — Costeo).
  */
 import { useEffect, useState } from "react";
-import { Search, FileSearch, MapPinned } from "lucide-react";
+import { Search, MapPinned } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { DatePickerMx } from "@/components/ui/date-picker-mx";
@@ -14,6 +14,9 @@ import {
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { usePuertos, useTiposContenedor } from "@/features/catalogos/hooks";
 import { useTopTarifas } from "@/features/costeo/hooks/useTopTarifas";
+import { useDiagnosticoTarifas } from "@/features/costeo/hooks/useDiagnosticoTarifas";
+import { TarifasSinResultado } from "./TarifasSinResultado";
+import type { DiagnosticoTarifas } from "@/features/costeo/services/diagnosticoTarifas";
 import { ErrorStateInline } from "@/components/empty/ErrorStateInline";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 import { TarifaResultCard } from "./TarifaResultCard";
@@ -108,11 +111,20 @@ export function BuscarTarifaDialog({
     }
   }, [open, initial?.puertoOrigenId, initial?.puertoDestinoId, initial?.tipoContenedorId]);
 
-  const { data: tarifas = [], isFetching, error, refetch, isRefetching } = useTopTarifas({
+  const {
+    data: tarifas = [], isFetching, error, refetch, isRefetching, tipoContenedorIds,
+  } = useTopTarifas({
     puertoOrigenId: origen,
     puertoDestinoId: destino,
     tipoContenedorId: tipo,
     fecha,
+  });
+
+  const { diagnostico } = useDiagnosticoTarifas({
+    puertoOrigenId: origen,
+    puertoDestinoId: destino,
+    tipoContenedorIds,
+    enabled: !isFetching && !error && tarifas.length === 0,
   });
 
   const isCN = (c: string | null | undefined) => c === "CN" || c === "China";
@@ -182,6 +194,7 @@ export function BuscarTarifaDialog({
         error={error} onRetry={() => void refetch()} isRefetching={isRefetching}
         onElegir={onElegir} onOpenChange={onOpenChange}
         selectLabel={selectLabel}
+        diagnostico={diagnostico}
       />
     </FormDialogShell>
   );
