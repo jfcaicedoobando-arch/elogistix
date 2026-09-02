@@ -9,8 +9,8 @@
 --      sincroniza el embarque ganador, sin duplicar auditoría/notificación.
 --   C) Segunda cotización de la misma oportunidad: LC_COTIZACION_GANADORA_EXISTE
 --      y ninguna escritura parcial.
---   D) Re-cotizar y re-aceptar la misma ganadora: nuevo valor + auditoría
---      `oportunidad_ganada_revalorada`, sin segunda notificación.
+--   D) Re-cotizar revirtiendo el estado está cerrado por el guard de estados
+--      (LC_COT_TRANSICION_INVALIDA): la re-cotización usa versión nueva.
 --   E) Oportunidad perdida: LC_OPORTUNIDAD_PERDIDA_REQUIERE_REAPERTURA.
 --   F) La ganadora no puede cambiar de oportunidad ni de organización
 --      (LC_COTIZACION_GANADORA_INMUTABLE) ni apuntar cross-org
@@ -158,22 +158,18 @@ BEGIN
     (SELECT cotizacion_ganadora_id FROM public.crm_oportunidades WHERE id = v_op1) = v_c1,
     'C: la ganadora original se conserva');
 
-  -- ===== D) Re-cotizar y re-aceptar la misma ganadora =====
-  UPDATE public.cotizaciones SET estado = 'Borrador' WHERE id = v_c1;
-  UPDATE public.cotizaciones SET subtotal = 1500, version = 2 WHERE id = v_c1;
-  UPDATE public.cotizaciones SET estado = 'Aceptada' WHERE id = v_c1;
-
+  -- ===== D) Re-cotizar la ganadora: variante cerrada por el guard de estado =====
+  -- `guard_estado_cotizacion` no permite Aceptada/En operación → Borrador: la
+  -- re-cotización se hace con una versión nueva, nunca revirtiendo el estado.
+  -- Por eso la rama de revaloración del trigger sólo puede alcanzarse desde una
+  -- reactivación válida (Vencida/Archivada → Enviada → Aceptada) y aquí sólo se
+  -- congela que el atajo sigue bloqueado.
+  PERFORM pg_temp.espera_lc(
+    format('UPDATE public.cotizaciones SET estado = ''Borrador'' WHERE id = %L', v_c1),
+    'LC_COT_TRANSICION_INVALIDA', 'D reversión directa a Borrador');
   PERFORM pg_temp.assert(
-    (SELECT valor_real FROM public.crm_oportunidades WHERE id = v_op1) = 1500,
-    'D: re-aceptar actualiza el monto al nuevo subtotal');
-  PERFORM pg_temp.assert(
-    (SELECT count(*) FROM public.bitacora_actividad
-      WHERE entidad_id = v_op1 AND accion = 'oportunidad_ganada_revalorada') = 1,
-    'D: debe existir auditoría explícita del cambio de valor');
-  PERFORM pg_temp.assert(
-    (SELECT count(*) FROM public.crm_notificaciones
-      WHERE organization_id = v_org_a AND tipo = 'oportunidad_ganada') <= 1,
-    'D: no se duplica la notificación de oportunidad ganada');
+    (SELECT valor_real FROM public.crm_oportunidades WHERE id = v_op1) = 1000,
+    'D: el monto histórico se conserva');
 
   -- ===== B2) Aceptada → En operación: sólo sincroniza el embarque ganador =====
   UPDATE public.cotizaciones SET estado = 'En operación' WHERE id = v_c1;
@@ -182,7 +178,7 @@ BEGIN
       WHERE entidad_id = v_op1 AND accion = 'oportunidad_ganada_auto') = 1,
     'B2: pasar a En operación no duplica la auditoría');
   PERFORM pg_temp.assert(
-    (SELECT valor_real FROM public.crm_oportunidades WHERE id = v_op1) = 1500,
+    (SELECT valor_real FROM public.crm_oportunidades WHERE id = v_op1) = 1000,
     'B2: el monto histórico no cambia al pasar a En operación');
 
   -- ===== E) Oportunidad perdida =====
@@ -216,7 +212,7 @@ BEGIN
   SELECT o.*, NULL::crm_etapa_tipo AS etapa_tipo INTO r
     FROM public.crm_oportunidades o WHERE o.id = v_op1;
   PERFORM pg_temp.assert(r.cotizacion_ganadora_id = v_c1, 'G: la Papelera conserva la ganadora');
-  PERFORM pg_temp.assert(r.valor_real = 1500, 'G: la Papelera conserva valor_real');
+  PERFORM pg_temp.assert(r.valor_real = 1000, 'G: la Papelera conserva valor_real');
 
   -- ===== H) Índice parcial de respaldo =====
   PERFORM pg_temp.assert(
