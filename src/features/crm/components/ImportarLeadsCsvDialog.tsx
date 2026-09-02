@@ -50,7 +50,10 @@ export default function ImportarLeadsCsvDialog({ open, onOpenChange }: Props) {
     >
       <p className="text-body-sm text-muted-foreground">
         Columnas reconocidas: <code>empresa, contacto, email, telefono, ciudad, pais, fuente, estado, score, notas</code>.
-        La fila 1 debe contener los encabezados. Empresa es obligatoria.
+        La fila 1 debe contener los encabezados. Empresa es obligatoria. El campo{" "}
+        <code>estado</code> sólo acepta <code>Nuevo</code>, <code>Contactado</code> o{" "}
+        <code>Descalificado</code> (si va vacío se usa <code>Nuevo</code>); los estados
+        Calificado, Prospecto, Pendiente de alta y Convertido los administra el ERP.
       </p>
 
       <label className="flex items-center justify-center gap-2 border-2 border-dashed rounded-md p-6 cursor-pointer hover:bg-muted/30">

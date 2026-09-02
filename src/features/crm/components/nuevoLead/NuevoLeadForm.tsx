@@ -7,7 +7,7 @@ import {
 } from "@/components/ui/select";
 import VendedorSelect from "@/features/crm/components/VendedorSelect";
 import {
-  LEAD_ESTADOS, LEAD_FUENTES, type CrmLeadEstado, type CrmLeadFuente,
+  LEAD_ESTADOS_MANUALES, LEAD_FUENTES, type CrmLeadEstado, type CrmLeadFuente,
 } from "@/features/crm/hooks";
 
 export interface LeadFormState {
@@ -85,7 +85,8 @@ export function NuevoLeadForm({ form, setForm, autoActividad, setAutoActividad }
         <Select value={form.estado} onValueChange={(v) => set("estado", v as CrmLeadEstado)}>
           <SelectTrigger><SelectValue /></SelectTrigger>
           <SelectContent>
-            {LEAD_ESTADOS.filter((s) => s !== "Convertido").map((s) => (
+            {/* v13.823.62: sólo estados manuales; los derivados los pone el ERP. */}
+            {LEAD_ESTADOS_MANUALES.map((s) => (
               <SelectItem key={s} value={s}>{s}</SelectItem>
             ))}
           </SelectContent>

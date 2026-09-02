@@ -12,7 +12,7 @@ import { notifyError } from "@/lib/ui/appFeedback";
 import { crmToast } from "@/features/crm/lib/crmToast";
 import VendedorSelect from "@/features/crm/components/VendedorSelect";
 import {
-  LEAD_ESTADOS, useActualizarLeadsBulk, useEliminarLeadsBulk, type CrmLeadEstado,
+  LEAD_ESTADOS_MANUALES, useActualizarLeadsBulk, useEliminarLeadsBulk, type CrmLeadEstado,
 } from "@/features/crm/hooks";
 
 interface Props {
@@ -70,7 +70,8 @@ export default function LeadsBulkBar({ ids, onClear, onDone }: Props) {
           <SelectValue placeholder="Cambiar estado…" />
         </SelectTrigger>
         <SelectContent>
-          {LEAD_ESTADOS.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+          {/* v13.823.62: el cambio masivo sólo alcanza estados manuales. */}
+          {LEAD_ESTADOS_MANUALES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
         </SelectContent>
       </Select>
 
