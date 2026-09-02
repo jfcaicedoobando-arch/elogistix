@@ -55,9 +55,9 @@ describe("createLead", () => {
 
 describe("updateLead", () => {
   it("happy path: resuelve void", async () => {
-    mock.setTableResult("crm_leads", { data: null, error: null });
+    mock.setTableResult("crm_leads", { data: { id: "lead-1" }, error: null });
     await expect(updateLead("lead-1", { estado: "Contactado" })).resolves.toBeUndefined();
-    expect(mock.tableCalls[0]?.ops).toEqual(["update", "eq"]);
+    expect(mock.tableCalls[0]?.ops).toEqual(["update", "eq", "is", "select", "maybeSingle"]);
   });
 
   it("propaga error de Supabase al actualizar lead", async () => {
@@ -66,20 +66,20 @@ describe("updateLead", () => {
   });
 
   it("acepta patch vacío", async () => {
-    mock.setTableResult("crm_leads", { data: null, error: null });
+    mock.setTableResult("crm_leads", { data: { id: "lead-1" }, error: null });
     await expect(updateLead("lead-1", {})).resolves.toBeUndefined();
   });
 });
 
 describe("softDeleteLead", () => {
   it("hace update con deleted_at ISO y deleted_by", async () => {
-    mock.setTableResult("crm_leads", { data: null, error: null });
+    mock.setTableResult("crm_leads", { data: { id: "lead-1" }, error: null });
     await expect(softDeleteLead("lead-1", "usr-1")).resolves.toBeUndefined();
-    expect(mock.tableCalls[0]?.ops).toEqual(["update", "eq"]);
+    expect(mock.tableCalls[0]?.ops).toEqual(["update", "eq", "is", "select", "maybeSingle"]);
   });
 
   it("acepta userId null", async () => {
-    mock.setTableResult("crm_leads", { data: null, error: null });
+    mock.setTableResult("crm_leads", { data: { id: "lead-1" }, error: null });
     await expect(softDeleteLead("lead-1", null)).resolves.toBeUndefined();
   });
 
