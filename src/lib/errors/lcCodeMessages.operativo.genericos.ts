@@ -33,6 +33,8 @@ export const LC_CODE_MESSAGES_OPERATIVO_GENERICOS: Record<string, string> = {
     "Tu usuario aún no está vinculado a una empresa. Pide a tu ejecutivo que complete la vinculación.",
   LC_RUTA_REQUERIDA:
     "Indica el origen y el destino para poder continuar.",
+  LC_ESTADO_RESULTADOS_LIMITE_EXCEDIDO:
+    "El periodo tiene demasiados embarques o conceptos para calcularse de forma exacta en este momento. Contacta a soporte para revisarlo.",
 
   // ── Tipo de cambio DOF ────────────────────────────────────────────────
   LC_TC_DOF_FORBIDDEN:

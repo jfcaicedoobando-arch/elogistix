@@ -1,6 +1,8 @@
 -- Espejo canónico de public.reabrir_embarque
--- Fuente vigente (mayor timestamp): 20260908000100_ola_p1_org_scope_credito_idempotencia.sql
+-- Fuente vigente (mayor timestamp): 20260910000100_fix_cerrar_embarque_org_scope_y_lock_conceptos.sql
 -- Vigilado por `bun run audit:replay-mirror` y `audit:schema-functions`.
+-- DEFECTO 1 (consistencia): el check de admin ahora es org-scoped
+-- (has_any_role_in_org_exact) en vez de has_role() global.
 
 CREATE OR REPLACE FUNCTION public.reabrir_embarque(p_embarque_id uuid, p_usuario_email text, p_motivo text, p_request_id uuid DEFAULT NULL::uuid)
 RETURNS jsonb
@@ -33,9 +35,7 @@ BEGIN
     RAISE EXCEPTION 'Embarque no encontrado';
   END IF;
 
-  v_es_admin := public.has_role(auth.uid(), 'admin'::app_role)
-             OR public.has_role(auth.uid(), 'super_admin'::app_role)
-             OR public.has_role(auth.uid(), 'admin_org'::app_role);
+  v_es_admin := public.has_any_role_in_org_exact(v_actor_id, ARRAY['admin','admin_org']::app_role[], v_org_id);
   IF NOT v_es_admin THEN
     RAISE EXCEPTION 'Solo administradores pueden reabrir embarques cerrados';
   END IF;

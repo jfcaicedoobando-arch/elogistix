@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { assertEquals } from "https://deno.land/std@0.224.0/assert/mod.ts";
+import { assertEquals, assertStringIncludes } from "https://deno.land/std@0.224.0/assert/mod.ts";
 import { checkCronSecret } from "./index.ts";
 
 // ── CRON_SECRET guard ─────────────────────────────────────────
@@ -42,3 +42,13 @@ Deno.test("checkCronSecret: secret con caracteres especiales", () => {
   assertEquals(checkCronSecret(s, s + "x"), false);
 });
 
+
+/**
+ * Ronda YAGNI · defecto 10 — el cron ya no reporta 200 cuando alguna
+ * organización falla (el snapshot es idempotente, reintentar es seguro).
+ */
+Deno.test("defecto 10: el snapshot devuelve 500 si hay fallos por-org", async () => {
+  const src = await Deno.readTextFile(new URL("./index.ts", import.meta.url));
+  assertStringIncludes(src, "const status = fallos > 0 ? 500 : 200;");
+  assertStringIncludes(src, "ok: fallos === 0");
+});

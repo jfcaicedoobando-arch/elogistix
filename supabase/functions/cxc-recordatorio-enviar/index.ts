@@ -2,7 +2,7 @@ import { createClient, SupabaseClient } from 'https://esm.sh/@supabase/supabase-
 import { z } from 'npm:zod@3.23.8';
 import { buildCors, handlePreflightStrict } from '../_shared/cors.ts';
 import { wrapEdgeHandler } from '../_shared/sentry.ts';
-import { authenticate } from '../_shared/auth.ts';
+import { authenticate, authorizeOrgRole, ROLES_COBRANZA_FISCAL } from '../_shared/auth.ts';
 import { enviarEmailPlantilla } from '../_shared/enviarEmailPlantilla.ts';
 
 import { DESTINATARIO_NO_PERMITIDO, emailPerteneceACliente } from '../_shared/destinatarioCliente.ts';
@@ -80,16 +80,17 @@ async function loadFactura(
   return { factura: { ...(data as Omit<FacturaRecordatorio, 'saldo'>), saldo: Number(saldo ?? 0) }, error: null };
 }
 
-async function authorizeOrg(
+/**
+ * Ronda YAGNI · defecto 9 — la cobranza externa ya no depende de la mera
+ * membresía: exige rol exacto de cobranza/fiscal (`ROLES_COBRANZA_FISCAL`).
+ * `operador` y `viewer` reciben 403.
+ */
+function autorizarCobranza(
   adminClient: SupabaseClient,
   userId: string,
   organizationId: string,
 ): Promise<boolean> {
-  const [member, admin] = await Promise.all([
-    adminClient.from('organization_members').select('id').eq('user_id', userId).eq('organization_id', organizationId).maybeSingle(),
-    adminClient.from('user_roles').select('id').eq('user_id', userId).in('role', ['admin', 'super_admin']).maybeSingle(),
-  ]);
-  return !!member.data || !!admin.data;
+  return authorizeOrgRole(adminClient, userId, organizationId, ROLES_COBRANZA_FISCAL);
 }
 
 async function resolveDestinatario(
@@ -218,7 +219,7 @@ Deno.serve(wrapEdgeHandler('cxc-recordatorio-enviar', async (req) => {
     if (facturaError) throw new Error(`500:${facturaError}`);
     if (!factura) return corsJson({ error: 'Factura no encontrada' }, 404, req);
 
-    const autorizado = await authorizeOrg(supabaseAdmin, userId, factura.organization_id);
+    const autorizado = await autorizarCobranza(supabaseAdmin, userId, factura.organization_id);
     if (!autorizado) {
       return corsJson({ error: 'No autorizado para esta organización' }, 403, req);
     }

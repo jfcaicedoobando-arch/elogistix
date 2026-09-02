@@ -42,7 +42,7 @@ Top 10 funciones más redefinidas — capturadas 1:1 desde la BD el 2026-07-23:
 | `adjuntar_xml_factura_entrante(...)` | `cxp/adjuntar_xml_factura_entrante.sql` | `20260813031300_1f4a2b81-412f-49fb-b8dc-5fa802409b9b` |
 
 Otras fuentes canónicas presentes en el directorio (agregadas en olas
-anteriores y no listadas arriba): `tesoreria/registrar_traspaso_bancario.sql` (Ola 8 · candado FOR UPDATE + rechazo de fecha anterior al corte, `20260908001000_traspaso_lock_saldo_y_fecha_corte`), `auditoria/costos_repetidos.sql`,
+anteriores y no listadas arriba): `embarques/cerrar_embarque.sql` y `embarques/_assert_embarque_abierto_locked.sql` (20260910000100 · org-scope de `cerrar_embarque`/`reabrir_embarque` + candado FOR KEY SHARE compartido por los triggers de bloqueo de conceptos), `tesoreria/registrar_traspaso_bancario.sql` (Ola 8 · candado FOR UPDATE + rechazo de fecha anterior al corte, `20260908001000_traspaso_lock_saldo_y_fecha_corte`), `auditoria/costos_repetidos.sql`,
 `cotizaciones/trg_notificar_cotizacion_enviada.sql`,
 `cxp/cancelar_factura_proveedor.sql`, `cxp/guard_pago_proveedor.sql`,
 `embarques/_calcular_demoras_montos_contenedor.sql`,
@@ -52,7 +52,8 @@ anteriores y no listadas arriba): `tesoreria/registrar_traspaso_bancario.sql` (O
 `operaciones/operaciones_stats.sql`,
 `portal/portal_obtener_proforma_por_token.sql`,
 `proformas/_convertir_proformas_insertar_conceptos.sql`,
-`proveedores/proveedor_salud.sql`. Total en disco: 38 archivos `.sql`
+`proveedores/proveedor_salud.sql`,
+`auditoria/registrar_bitacora.sql` (DEFECTO 8 · `20260910000500_bitacora_no_falsificable.sql`: se revoca el INSERT directo del cliente sobre `bitacora_actividad`; la única vía de escritura para `authenticated` queda la RPC SECURITY DEFINER, que ya deriva usuario_id/email del servidor desde FIX BL-02). Total en disco: 39 archivos `.sql`
 (lo verifica `audit:schema-functions`).
 
 **`cartera_pendiente` — firma congelada:** 14 columnas de salida

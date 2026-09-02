@@ -110,6 +110,7 @@ DECLARE
     'organizations|trg_handle_new_organization',
     'pagos_factura|trg_pago_factura_comision_ins',
     'pagos_factura|trg_pago_factura_rep_viva',
+    'pagos_factura|trg_pago_no_altera_historia_rep',
     'pagos_factura|trg_pago_sin_rep_vivo',
     'pagos_factura|trg_pago_sin_rep_vivo_delete',
     'pagos_factura|trg_pagos_factura_autocierre',
@@ -160,6 +161,7 @@ DECLARE
     'assert_factura_viva_para_rep',
     'assert_movimiento_pago_consistente',
     'assert_nc_no_excede_saldo',
+    'assert_pago_no_altera_historia_rep',
     'assert_pago_sin_rep_vivo',
     -- Helpers extraídos en los splits de god functions (Sprint R2/R3) —
     -- protección anti-borrado: si una migración los dropea, el padre truena.

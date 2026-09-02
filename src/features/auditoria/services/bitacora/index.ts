@@ -96,16 +96,16 @@ export async function insertBitacora(entrada: {
   entidadNombre?: string;
   detalles?: Record<string, unknown>;
 }): Promise<void> {
-  const { error } = await supabase.from("bitacora_actividad").insert([
-    {
-      usuario_id: entrada.usuarioId,
-      usuario_email: entrada.usuarioEmail,
-      accion: entrada.accion,
-      modulo: entrada.modulo,
-      entidad_id: entrada.entidadId ?? null,
-      entidad_nombre: entrada.entidadNombre ?? "",
-      detalles: (entrada.detalles ?? {}) as Json,
-    },
-  ]);
+  // DEFECTO 8: el INSERT directo está REVOKE; la RPC ignora cualquier
+  // usuario_id/email que se le mande y usa siempre el del servidor.
+  void entrada.usuarioId;
+  void entrada.usuarioEmail;
+  const { error } = await supabase.rpc("registrar_bitacora", {
+    p_modulo: entrada.modulo,
+    p_accion: entrada.accion,
+    p_entidad_id: entrada.entidadId ?? null,
+    p_entidad_nombre: entrada.entidadNombre ?? "",
+    p_detalles: (entrada.detalles ?? {}) as Json,
+  });
   if (error) throw error;
 }
