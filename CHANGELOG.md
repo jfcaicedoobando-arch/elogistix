@@ -8,6 +8,7 @@
 - **Sin muestra, sin calificación**: cuando no hay oportunidades abiertas, Higiene muestra "Sin datos" y un guion en lugar de un 0% que parecería mal desempeño.
 - **Tablero al día**: Higiene se recalcula al crear, completar, posponer o editar actividades y al mover o editar oportunidades, y se refresca solo cada minuto para que los vencimientos por reloj aparezcan con la pantalla abierta.
 - **Datos legados reportados, no modificados**: una actividad histórica ligada a un prospecto ya eliminado se conservó intacta; el candado nuevo aplica sólo hacia adelante.
+- **Nota de reparación (test-only, misma versión)**: se retiró de la suite una lectura muerta a una variable no declarada (`v_mov_b`) que impedía compilar el archivo completo; la oportunidad ajena ya se verifica por versión de fila. No cambia lógica productiva ni la migración aplicada.
 - **Pruebas**: nueva suite SQL con dos empresas para los cuatro tipos de vínculo, el reloj de movimiento, el caso contractual de higiene e invariantes del candado; más pruebas de interfaz y de refresco del tablero.
 
 ## [13.823.55] - 2026-09-02
