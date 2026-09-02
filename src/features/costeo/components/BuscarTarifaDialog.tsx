@@ -71,13 +71,7 @@ function ResultadosBody({
     );
   }
   if (tarifas.length === 0) {
-    return (
-      <EmptyStateInline
-        icon={FileSearch}
-        message="No hay tarifas vigentes para esta combinación."
-        hint='Captura una nueva en "Tarifas marítimas".'
-      />
-    );
+    return <TarifasSinResultado diagnostico={diagnostico} />;
   }
   const meta = computeRankingMeta(tarifas);
   return (
