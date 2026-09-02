@@ -44,7 +44,11 @@ export function useCotizacionDetalleHandlers(cotizacion: CotizacionRow | undefin
     try {
       await actualizarEstado.mutateAsync({ id: cotizacion.id, estado });
       // El toast de éxito/error lo emite `useUpdateEstadoCotizacion` (evita doble toast).
-      if (cotizacion.oportunidad_id) {
+      // v13.823.57 — la BD es dueña de los estados terminales: el trigger
+      // `zz_crm_cerrar_oportunidad_desde_cotizacion` cierra la oportunidad al
+      // aceptar/operar. Rechazar tampoco pierde la oportunidad (puede haber
+      // otra alternativa viva). Sólo sincronizamos estados no terminales.
+      if (cotizacion.oportunidad_id && ESTADOS_SYNC_CLIENTE.includes(estado)) {
         try {
           await sincronizarEtapaPorEstadoCotizacion({
             oportunidadId: cotizacion.oportunidad_id,
@@ -58,6 +62,7 @@ export function useCotizacionDetalleHandlers(cotizacion: CotizacionRow | undefin
       // Notificado por el hook de mutación.
     }
   };
+
 
   /** Precarga contacto + datos fiscales del lead: el vendedor no recaptura nada. */
   const abrirDialogConvertir = async () => {
