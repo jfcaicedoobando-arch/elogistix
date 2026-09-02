@@ -12,7 +12,8 @@ const state: {
   isNull: Array<[string, unknown]>;
   notNull: [string, string, null] | null;
   range: [number, number] | null;
-} = { order: null, eqs: [], ilike: null, isNull: [], notNull: null, range: null };
+  ors: string[];
+} = { order: null, eqs: [], ilike: null, isNull: [], notNull: null, range: null, ors: [] };
 
 const builder: Record<string, unknown> = {
   select: vi.fn().mockReturnThis(),
@@ -31,6 +32,11 @@ const builder: Record<string, unknown> = {
   }),
   is: vi.fn((col: string, v: null) => {
     state.isNull.push([col, v]);
+    return builder;
+  }),
+  // v13.823.50 — "Mías" filtra por responsable_id O responsable_email.
+  or: vi.fn((expr: string) => {
+    state.ors.push(expr);
     return builder;
   }),
   not: vi.fn((col: string, op: string, v: null) => {
@@ -54,6 +60,7 @@ beforeEach(() => {
   state.isNull = [];
   state.notNull = null;
   state.range = null;
+  state.ors = [];
 });
 
 describe("listActividades — contrato server-side", () => {
@@ -83,13 +90,14 @@ describe("listActividades — contrato server-side", () => {
     expect(state.isNull.find(([k]) => k === "fecha_completada")).toBeUndefined();
   });
 
-  it("responsable=mias con userId agrega eq(responsable_id, userId)", async () => {
-    await listActividades({ ...base, responsable: "mias", userId: "usr-1" });
-    expect(state.eqs).toContainEqual(["responsable_id", "usr-1"]);
+  it("responsable=mias con userId filtra por responsable_id o correo", async () => {
+    await listActividades({ ...base, responsable: "mias", userId: "usr-1", userEmail: "v@x.com" });
+    expect(state.ors).toContainEqual("responsable_id.eq.usr-1,responsable_email.eq.v@x.com");
   });
 
   it("responsable=mias sin userId no agrega filtro", async () => {
     await listActividades({ ...base, responsable: "mias" });
+    expect(state.ors).toEqual([]);
     expect(state.eqs.find(([k]) => k === "responsable_id")).toBeUndefined();
   });
 

@@ -43,7 +43,8 @@ describe("listActividades — vencidas", () => {
     expect(state.lts[0]?.[0]).toBe("fecha_programada");
     expect(new Date(state.lts[0]![1]).getTime()).toBeLessThanOrEqual(Date.now());
     expect(state.isNull).toEqual(expect.arrayContaining([["fecha_completada", null]]));
-    expect(state.eqs).toEqual(expect.arrayContaining([["responsable_id", "u-1"]]));
+    // v13.823.50: el responsable se filtra por id O correo (filas históricas).
+    expect(state.ors.some((o) => o.includes("responsable_id.eq.u-1"))).toBe(true);
   });
 
   it("sin el flag no añade el filtro de vencidas", async () => {
