@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.823.30] - 2026-09-02
+### Tarifas: contenedores duplicados y estados vacíos honestos
+- **Contenedores duplicados (P1)**: el selector de tipo de contenedor colapsa los registros equivalentes (mismo tamaño y categoría con IDs distintos) en una sola opción, y la búsqueda Top 3 consulta todos los IDs del grupo. Elegir cualquiera de las variantes ya devuelve la misma tarifa; la vista de administración sigue viendo todos los registros para poder desactivar el duplicado.
+- **Top 3 con diagnóstico (P2)**: cuando no hay resultados, la búsqueda distingue "no hay tarifa", "existe pero está pendiente de aprobación" y "está vencida", en `/costeo/buscar` y en el buscador del wizard de cotización. Se conserva el bloqueo: sólo se pueden elegir tarifas vigentes y aprobadas.
+- **Embarques vacíos (P2)**: para roles que no crean embarques (p. ej. coordinador logístico) el estado vacío explica que se generan desde una cotización aprobada y ofrece ir a Cotizaciones cuando el rol tiene acceso.
+
 ## [13.823.29] - 2026-09-02
 ### Portal del agente: tarifas usables en celular
 - **/agente/tarifas en móvil (<md)**: la lista se presenta como tarjetas (mismo patrón que Garantías) con ruta, naviera, contenedor, flete base, vigencia, estado con la advertencia de vigencia vencida, motivo de rechazo y el menú de acciones. Se elimina la tabla de ~1294 px que provocaba scroll horizontal de toda la página a 390 px.

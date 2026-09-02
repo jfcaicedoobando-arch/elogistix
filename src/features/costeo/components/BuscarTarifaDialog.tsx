@@ -4,7 +4,7 @@
  * Migrado a FormDialogShell (Ola 2 — Costeo).
  */
 import { useEffect, useState } from "react";
-import { Search, FileSearch, MapPinned } from "lucide-react";
+import { Search, MapPinned } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { DatePickerMx } from "@/components/ui/date-picker-mx";
@@ -14,6 +14,9 @@ import {
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { usePuertos, useTiposContenedor } from "@/features/catalogos/hooks";
 import { useTopTarifas } from "@/features/costeo/hooks/useTopTarifas";
+import { useDiagnosticoTarifas } from "@/features/costeo/hooks/useDiagnosticoTarifas";
+import { TarifasSinResultado } from "./TarifasSinResultado";
+import type { DiagnosticoTarifas } from "@/features/costeo/services/diagnosticoTarifas";
 import { ErrorStateInline } from "@/components/empty/ErrorStateInline";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 import { TarifaResultCard } from "./TarifaResultCard";
@@ -43,11 +46,12 @@ interface ResultadosBodyProps {
   onElegir?: (row: TopTarifaRow) => void;
   onOpenChange: (v: boolean) => void;
   selectLabel?: string;
+  diagnostico?: DiagnosticoTarifas;
 }
 
 function ResultadosBody({
   origen, destino, tipo, isFetching, tarifas, error, onRetry, isRefetching,
-  onElegir, onOpenChange, selectLabel,
+  onElegir, onOpenChange, selectLabel, diagnostico,
 }: ResultadosBodyProps) {
   if (!origen || !destino || !tipo) {
     return (
@@ -70,13 +74,7 @@ function ResultadosBody({
     );
   }
   if (tarifas.length === 0) {
-    return (
-      <EmptyStateInline
-        icon={FileSearch}
-        message="No hay tarifas vigentes para esta combinación."
-        hint='Captura una nueva en "Tarifas marítimas".'
-      />
-    );
+    return <TarifasSinResultado diagnostico={diagnostico} />;
   }
   const meta = computeRankingMeta(tarifas);
   return (
@@ -95,11 +93,17 @@ function ResultadosBody({
   );
 }
 
-export function BuscarTarifaDialog({
-  open, onOpenChange, onElegir, selectLabel, initial,
-}: Props) {
-  const { data: puertos = [] } = usePuertos();
-  const { data: tipos = [] } = useTiposContenedor();
+const PAISES_CN = ["CN", "China"];
+const PAISES_MX = ["MX", "Mexico", "México"];
+
+interface PuertoLite { country?: string | null }
+
+function filtrarPorPais<T extends PuertoLite>(puertos: T[], paises: string[]): T[] {
+  return puertos.filter((p) => paises.includes(String(p.country ?? "")));
+}
+
+/** Filtros del buscador; se resetean al abrir con los valores iniciales. */
+function useFiltrosTarifa(open: boolean, initial: Props["initial"]) {
   const [origen, setOrigen] = useState(initial?.puertoOrigenId ?? "");
   const [destino, setDestino] = useState(initial?.puertoDestinoId ?? "");
   const [tipo, setTipo] = useState(initial?.tipoContenedorId ?? "");
@@ -113,17 +117,36 @@ export function BuscarTarifaDialog({
     }
   }, [open, initial?.puertoOrigenId, initial?.puertoDestinoId, initial?.tipoContenedorId]);
 
-  const { data: tarifas = [], isFetching, error, refetch, isRefetching } = useTopTarifas({
+  return { origen, setOrigen, destino, setDestino, tipo, setTipo, fecha, setFecha };
+}
+
+export function BuscarTarifaDialog({
+  open, onOpenChange, onElegir, selectLabel, initial,
+}: Props) {
+  const { data: puertos = [] } = usePuertos();
+  const { data: tipos = [] } = useTiposContenedor();
+  const { origen, setOrigen, destino, setDestino, tipo, setTipo, fecha, setFecha } =
+    useFiltrosTarifa(open, initial);
+
+  const {
+    data: tarifas = [], isFetching, error, refetch, isRefetching,
+    tipoContenedorIds = [],
+  } = useTopTarifas({
     puertoOrigenId: origen,
     puertoDestinoId: destino,
     tipoContenedorId: tipo,
     fecha,
   });
 
-  const isCN = (c: string | null | undefined) => c === "CN" || c === "China";
-  const isMX = (c: string | null | undefined) => c === "MX" || c === "Mexico" || c === "México";
-  const puertosCN = puertos.filter((p) => isCN(p.country));
-  const puertosMX = puertos.filter((p) => isMX(p.country));
+  const { diagnostico } = useDiagnosticoTarifas({
+    puertoOrigenId: origen,
+    puertoDestinoId: destino,
+    tipoContenedorIds,
+    enabled: !isFetching && !error && tarifas.length === 0,
+  });
+
+  const puertosCN = filtrarPorPais(puertos, PAISES_CN);
+  const puertosMX = filtrarPorPais(puertos, PAISES_MX);
   const puertosOrigenList = puertosCN.length ? puertosCN : puertos;
   const puertosDestinoList = puertosMX.length ? puertosMX : puertos;
 
@@ -187,6 +210,7 @@ export function BuscarTarifaDialog({
         error={error} onRetry={() => void refetch()} isRefetching={isRefetching}
         onElegir={onElegir} onOpenChange={onOpenChange}
         selectLabel={selectLabel}
+        diagnostico={diagnostico}
       />
     </FormDialogShell>
   );

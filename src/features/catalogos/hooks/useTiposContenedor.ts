@@ -7,10 +7,11 @@ import {
   deleteTipoContenedor,
   type TipoContenedor,
 } from "@/features/catalogos/services";
+import type { TipoContenedorCanonico } from "@/features/catalogos/utils/tiposContenedorCanonico";
 
 export type { TipoContenedor };
 
-const hooks = createCatalogHooks<TipoContenedor, { code: string; name: string }>({
+const hooks = createCatalogHooks<TipoContenedorCanonico, { code: string; name: string }>({
   keys: {
     invalidate: queryKeys.tiposContenedor.all,
     active: queryKeys.tiposContenedor.activos,
