@@ -35,7 +35,7 @@ export function CarteraMobileCard({ row }: { row: CarteraRow }) {
         label="Saldo"
         value={formatCurrency(Number(row.saldo), row.moneda)}
         highlight
-        className="shrink-0 w-28"
+        className="shrink-0 max-w-[48%]"
       />
     </div>
   );

@@ -30,7 +30,7 @@ export function CxpAgingMobileCard({ row }: { row: CxpAgingRow }) {
         label="Saldo total"
         value={formatCurrency(row.saldo_total, row.moneda)}
         highlight
-        className="shrink-0 w-28"
+        className="shrink-0 max-w-[48%]"
       />
     </div>
   );

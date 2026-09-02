@@ -25,7 +25,7 @@ export function ComprasPorAprobarMobileCard({ row }: { row: FacturaCxP }) {
         label="Total"
         value={formatCurrency(row.total, row.moneda)}
         highlight
-        className="shrink-0 w-28"
+        className="shrink-0 max-w-[48%]"
       />
     </div>
   );
