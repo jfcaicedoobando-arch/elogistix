@@ -167,7 +167,7 @@ BEGIN
   -- B3 · UPDATE de organization_id deja el origen fuera de la organización.
   PERFORM pg_temp.espera_lc(
     format('UPDATE public.crm_oportunidades SET organization_id = %L WHERE id = %L', v_org_b, v_op_a),
-    'LC_CRM_LEAD_AJENO', 'B3 cambio de organization_id');
+    'LC_ETAPA_AJENA', 'B3 cambio de organization_id');
 
   -- ===== C) criterios y cumplimiento =====
 
