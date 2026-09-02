@@ -93,6 +93,15 @@ function ResultadosBody({
   );
 }
 
+const PAISES_CN = ["CN", "China"];
+const PAISES_MX = ["MX", "Mexico", "México"];
+
+interface PuertoLite { country?: string | null }
+
+function filtrarPorPais<T extends PuertoLite>(puertos: T[], paises: string[]): T[] {
+  return puertos.filter((p) => paises.includes(String(p.country ?? "")));
+}
+
 export function BuscarTarifaDialog({
   open, onOpenChange, onElegir, selectLabel, initial,
 }: Props) {
