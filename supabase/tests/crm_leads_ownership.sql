@@ -305,7 +305,7 @@ BEGIN
   -- v13.823.61: comparación del CONJUNTO COMPLETO (nombre|comando) de las
   -- policies permisivas, no un `IN` que ignora extras ni nombres obsoletos.
   PERFORM pg_temp.assert(
-    (SELECT array_agg(polname || '|' || polcmd ORDER BY polname)
+    (SELECT array_agg(polname || '|' || polcmd::text ORDER BY polname)
        FROM pg_policy
       WHERE polrelid = 'public.crm_leads'::regclass
         AND polpermissive)
@@ -320,7 +320,7 @@ BEGIN
         'Vendedor own update crm_leads|w'
       ],
     format('D: topología exacta de policies permisivas alterada (actual=%s)',
-      (SELECT array_agg(polname || '|' || polcmd ORDER BY polname)
+      (SELECT array_agg(polname || '|' || polcmd::text ORDER BY polname)
          FROM pg_policy
         WHERE polrelid = 'public.crm_leads'::regclass AND polpermissive)));
 
