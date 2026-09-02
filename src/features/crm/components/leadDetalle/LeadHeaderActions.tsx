@@ -1,13 +1,16 @@
 /**
  * Acciones del header de la ficha de lead.
- * Soporta dos modos de conversión:
- *  - Click rápido → onConvertirRapido (Sheet con 3 campos)
- *  - Menú "Más campos →" dentro del Sheet → onConvertirAvanzado (Dialog clásico)
+ *
+ * v13.823.63: se retiró el flujo heredado "Convertir lead" (puerta lateral que
+ * podía crear oportunidad y marcar el lead como Convertido sin cliente). El
+ * único camino es el canónico: perfil → calificar → oportunidad → cotización
+ * aceptada → alta formal de cliente. Para leads históricos ya Convertidos sólo
+ * queda "Ver conversión", de SÓLO LECTURA (nunca abre un diálogo mutante).
  *
  * Ola 6 · O6.1: cuando el lead está sin asignar (bolsa común) y el usuario
  * tiene permiso de ventas, se ofrece "Tomar lead" (RPC crm_tomar_lead).
  */
-import { Repeat, Trash2 } from "lucide-react";
+import { ExternalLink, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import LeadAccionesEtapa from "./LeadAccionesEtapa";
 import { Button } from "@/components/ui/button";
@@ -16,8 +19,13 @@ import type { CrmLeadEstado } from "@/features/crm/hooks";
 interface Props {
   estado: CrmLeadEstado;
   canEdit: boolean;
-  onConvertir: () => void;
   onEliminar: () => void;
+  /**
+   * v13.823.63: sólo lectura. Se pasa únicamente cuando el lead está
+   * Convertido y existe un destino real (oportunidad o cliente). No depende de
+   * canEdit: consultar la conversión histórica no es una edición.
+   */
+  onVerConversion?: () => void;
   /** O6.1: el lead está en la bolsa (sin vendedor) y el usuario puede tomarlo. */
   mostrarTomar?: boolean;
   onTomar?: () => void;
@@ -34,8 +42,8 @@ interface Props {
 export default function LeadHeaderActions({
   estado,
   canEdit,
-  onConvertir,
   onEliminar,
+  onVerConversion,
   mostrarTomar = false,
   onTomar,
   tomando = false,
@@ -58,10 +66,9 @@ export default function LeadHeaderActions({
         mostrarNuevaOportunidad={mostrarNuevaOportunidad}
         onNuevaOportunidad={onNuevaOportunidad}
       />
-      {canEdit && (
-        <Button variant="outline" onClick={onConvertir}>
-          <Repeat className="h-4 w-4 mr-1" />
-          {estado === "Convertido" ? "Ver conversión" : "Convertir"}
+      {estado === "Convertido" && onVerConversion && (
+        <Button variant="outline" onClick={onVerConversion}>
+          <ExternalLink className="h-4 w-4 mr-1" /> Ver conversión
         </Button>
       )}
       {canEdit && (

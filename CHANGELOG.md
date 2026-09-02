@@ -1,5 +1,13 @@
 # Changelog
 
+## [13.823.63] - 2026-09-02
+### Se cierra la puerta lateral "Convertir lead"
+- **Una sola puerta**: el botón heredado *Convertir* desaparece de la ficha del lead para todos los roles. El camino válido es completar perfil → calificar → crear oportunidad → cotización aceptada → alta formal del cliente.
+- **Ya no se puede marcar "Convertido" sin cliente**: el atajo antiguo podía crear una oportunidad y dar el lead por convertido aunque no existiera cliente; eso ya no es posible.
+- **Historia intacta**: un lead histórico *Convertido* muestra la acción **Ver conversión**, de sólo lectura, que lleva a su oportunidad (o al cliente si no hay oportunidad). Si no hay destino, no aparece ningún botón roto y la información sigue visible en la tarjeta de linaje.
+- **Candado en la base**: la función interna del atajo ya no es ejecutable por los usuarios de la app; queda sólo para procesos internos privilegiados y con una nota que indica usar el flujo canónico.
+- **Publicar pronto**: hasta que se publique esta versión, el botón *Convertir* del sitio publicado anterior fallará (la función ya está revocada).
+
 ## [13.823.62] - 2026-09-02
 ### El estado del lead deja de ser una etiqueta libre
 - **Estados manuales vs. estados del ERP**: a mano sólo se pueden usar *Nuevo*, *Contactado* y *Descalificado*. *Calificado*, *Prospecto*, *Pendiente de alta* y *Convertido* los pone el sistema al calificar, cotizar o convertir el lead.
