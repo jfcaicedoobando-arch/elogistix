@@ -1,6 +1,6 @@
 import { DialogPagoLoteProveedor } from "@/features/cxp";
 import { ProgramarPagoDialog } from "./ProgramarPagoDialog";
-import type { LoteCxp } from "./cxpPorPagarList";
+import type { LotePagoSeleccion } from "./cxpPorPagarList";
 
 interface Props {
   isDialogOpen: boolean;
@@ -12,7 +12,7 @@ interface Props {
   progreso: number;
   onConfirmarProgramar: () => void;
 
-  lote: LoteCxp | null;
+  lote: LotePagoSeleccion | null;
   loteOpen: boolean;
   onLoteOpenChange: (open: boolean) => void;
   onLoteDone: () => void;
