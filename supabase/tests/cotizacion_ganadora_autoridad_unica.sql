@@ -316,11 +316,11 @@ BEGIN
     format('UPDATE public.cotizaciones SET oportunidad_id = %L WHERE id = %L', v_op_b, v_c2),
     'LC_OPORTUNIDAD_AJENA', 'F cross-org');
 
-  -- ===== K) Sello legacy coherente con el snapshot elegido =====
-  -- Legacy: versión viva 3, único snapshot version_num = 1. El sello incoherente
-  -- (version_aceptada = version viva) debe corregirse al número y fecha DEL
-  -- SNAPSHOT, nunca al subtotal/versión vivos. La sentencia es la misma que
-  -- aplica la migración v13.823.58.
+  -- ===== K) Sello legacy coherente con el snapshot elegido (v13.823.59) =====
+  -- Legacy: versión viva 3, único snapshot version_num = 1. El sello debe
+  -- tomar número Y fecha DEL MISMO snapshot (selección determinista), nunca el
+  -- subtotal/versión vivos. Se ejecuta la MISMA sentencia de la migración
+  -- v13.823.59 (alcance: auditoría de backfill + aceptada_por IS NULL).
   INSERT INTO public.cotizaciones (id, organization_id, folio, modo, tipo, cliente_id,
     oportunidad_id, estado, subtotal, version, version_aceptada, aceptada_en)
   VALUES (v_c5, v_org_a, 'TEST-COT-0005', 'Marítimo', 'Importación', v_cli_a,
@@ -333,21 +333,38 @@ BEGIN
      SET oportunidad_id = v_op5, estado = 'Aceptada', version_aceptada = 3, aceptada_en = now()
    WHERE id = v_c5;
   UPDATE public.crm_oportunidades SET valor_real = 1798.48 WHERE id = v_op5;
+  INSERT INTO public.bitacora_actividad (organization_id, modulo, accion, entidad_id,
+    entidad_nombre, usuario_id, usuario_email, detalles)
+  VALUES (v_org_a, 'crm', 'oportunidad_ganada_backfill', v_op5, '', NULL, '',
+          jsonb_build_object('fuente_monto', 'snapshot_mas_reciente',
+                             'after', jsonb_build_object('cotizacion_ganadora_id', v_c5)));
 
-  UPDATE public.cotizaciones c
-     SET version_aceptada = 1,
-         aceptada_en = v_snap_at,
-         updated_at = now()
-   WHERE c.id = v_c5
-     AND c.organization_id = v_org_a
-     AND c.version_aceptada = c.version
-     AND c.version_aceptada IS DISTINCT FROM 1;
-
+  -- K1) número incorrecto (3) → se corrige a la versión y fecha del snapshot.
+  PERFORM pg_temp.corregir_sello_backfill();
   SELECT version_aceptada, aceptada_en INTO v_sello FROM public.cotizaciones WHERE id = v_c5;
   PERFORM pg_temp.assert(v_sello.version_aceptada = 1,
-    'K: version_aceptada debe sellarse con el version_num del snapshot elegido');
+    'K1: version_aceptada debe sellarse con el version_num del snapshot elegido');
   PERFORM pg_temp.assert(v_sello.aceptada_en = v_snap_at,
-    'K: aceptada_en debe sellarse con el created_at del snapshot elegido');
+    'K1: aceptada_en debe sellarse con el created_at del snapshot elegido');
+
+  -- K2) número YA correcto pero fecha incorrecta → también se corrige.
+  UPDATE public.cotizaciones SET aceptada_en = now() WHERE id = v_c5;
+  PERFORM pg_temp.corregir_sello_backfill();
+  SELECT version_aceptada, aceptada_en INTO v_sello FROM public.cotizaciones WHERE id = v_c5;
+  PERFORM pg_temp.assert(v_sello.version_aceptada = 1,
+    'K2: version_aceptada se mantiene en el version_num del snapshot');
+  PERFORM pg_temp.assert(
+    v_sello.aceptada_en = (SELECT v.created_at FROM public.cotizacion_versiones v
+                            WHERE v.cotizacion_id = v_c5
+                            ORDER BY v.version_num DESC, v.created_at DESC LIMIT 1),
+    'K2: con la versión ya correcta, la fecha también debe venir del snapshot');
+
+  -- K3) idempotencia: un tercer paso no cambia nada.
+  PERFORM pg_temp.corregir_sello_backfill();
+  PERFORM pg_temp.assert(
+    (SELECT aceptada_en FROM public.cotizaciones WHERE id = v_c5) = v_sello.aceptada_en,
+    'K3: la corrección de sello es idempotente');
+
   PERFORM pg_temp.assert(
     (SELECT valor_real FROM public.crm_oportunidades WHERE id = v_op5) = 1798.48,
     'K: el monto histórico del snapshot se conserva (nunca el subtotal vivo)');
