@@ -3,6 +3,7 @@
  * vencida (antes sólo decía "Borrador" y parecía aprobable).
  */
 import { describe, it, expect, vi } from "vitest";
+import type { ReactElement } from "react";
 import { render, screen } from "@testing-library/react";
 import { buildAgenteTarifasColumns } from "../agenteTarifasColumns";
 import type { AgenteTarifaRow } from "@/features/portal-agente/services";
@@ -33,7 +34,7 @@ function renderEstado(vigenteHasta: string) {
   const cols = buildAgenteTarifasColumns({ onEditar: vi.fn(), onDuplicar: vi.fn() });
   const col = cols.find((c) => c.id === "estado");
   expect(col).toBeTruthy();
-  const cell = col?.cell as (ctx: { row: { original: AgenteTarifaRow } }) => JSX.Element;
+  const cell = col?.cell as (ctx: { row: { original: AgenteTarifaRow } }) => ReactElement;
   render(<>{cell({ row: { original: fila(vigenteHasta) } })}</>);
 }
 
