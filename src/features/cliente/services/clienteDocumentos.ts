@@ -7,6 +7,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { unwrap, unwrapOr, run } from "@/lib/supabase/response";
 import { uploadFile, getSignedUrl, deleteFile } from "@/services/storage";
+import { limpiarBlobBestEffort, limpiarBlobAnteriorTrasReemplazo } from "@/lib/documentoStorage";
 import { logClientError } from "@/services/observability/logClientError";
 import { registrarActividad } from "@/services/bitacora/registrar";
 import { slugArchivo } from "@/features/expediente/domain/expediente";
@@ -73,7 +74,8 @@ export async function subirDocumentoCliente(
     return fila as DocumentoCliente;
   } catch (e) {
     // Si falla el registro, no dejamos el archivo huérfano en el almacenamiento.
-    await deleteFile(path).catch(() => undefined);
+    // Best-effort: se limpia el blob nuevo y se relanza el error original sin enmascararlo.
+    await limpiarBlobBestEffort(path, "subirDocumentoCliente");
     throw e;
   }
 }
@@ -87,6 +89,9 @@ export async function eliminarDocumentoCliente(doc: {
   archivo: string;
 }): Promise<void> {
   const { data: sesion } = await supabase.auth.getUser();
+  // El commit del borrado lógico determina el éxito de la operación: una vez
+  // confirmado, la limpieza del blob y la bitácora son best-effort y no deben
+  // reportarse como error ni revertir la referencia ya guardada.
   await run(
     supabase
       .from("cliente_documentos")
@@ -96,28 +101,44 @@ export async function eliminarDocumentoCliente(doc: {
       })
       .eq("id", doc.id),
   );
-  // Mismo contrato que proveedor (R3FE-09): si storage falla se revierte el
-  // borrado lógico, se deja rastro y el error se propaga para notificar.
+
+  // La limpieza del blob se ejecuta aunque falle la bitácora posterior.
+  await limpiarBlobBestEffort(doc.archivo, `eliminarDocumentoCliente(${doc.id})`);
+
   try {
-    await deleteFile(doc.archivo);
-  } catch (e) {
-    await run(
-      supabase
-        .from("cliente_documentos")
-        .update({ deleted_at: null, deleted_by: null })
-        .eq("id", doc.id),
-    ).catch(() => undefined);
-    logClientError({
-      message: `Expediente cliente: fallo al borrar el archivo ${doc.archivo} (doc ${doc.id}); se revirtió el borrado lógico.`,
-    });
     await registrarActividad({
       modulo: "clientes",
-      accion: "eliminar_documento_cliente_storage_fallido",
+      accion: "eliminar_documento_cliente",
       entidadId: doc.id,
       entidadNombre: doc.archivo,
     });
-    throw e instanceof Error
-      ? e
-      : new Error("No se pudo borrar el archivo del almacenamiento.");
+  } catch (e) {
+    logClientError({
+      message: `Expediente cliente: fallo la bitácora al eliminar el documento ${doc.id}.`,
+    });
+    console.warn(`[clienteDocumentos] fallo la bitácora al eliminar doc ${doc.id}`, e);
   }
+}
+
+/**
+ * Reemplazo documental: fija el nuevo `archivo` vía UPDATE confirmado y,
+ * sólo tras el commit, limpia en best-effort el blob anterior si difiere
+ * del nuevo. La limpieza nunca revierte la referencia ya guardada.
+ */
+export async function reemplazarArchivoDocumentoCliente(doc: {
+  id: string;
+  oldPath: string;
+  newPath: string;
+}): Promise<void> {
+  await run(
+    supabase
+      .from("cliente_documentos")
+      .update({ archivo: doc.newPath })
+      .eq("id", doc.id),
+  );
+  await limpiarBlobAnteriorTrasReemplazo(
+    doc.oldPath,
+    doc.newPath,
+    `reemplazarArchivoDocumentoCliente(${doc.id})`,
+  );
 }
