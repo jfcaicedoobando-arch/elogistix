@@ -373,13 +373,15 @@ BEGIN
   PERFORM pg_temp.assert(r.es_unico IS TRUE, 'H: el índice de respaldo debe ser UNIQUE');
   PERFORM pg_temp.assert(r.columnas = 'organization_id,oportunidad_id',
     'H: el índice debe ser sobre (organization_id, oportunidad_id)');
-  PERFORM pg_temp.assert(r.predicado ILIKE '%deleted_at IS NULL%'
-    AND r.predicado ILIKE '%oportunidad_id IS NOT NULL%'
-    AND r.predicado ILIKE '%Aceptada%'
-    AND r.predicado ILIKE '%En operación%'
-    AND r.predicado NOT ILIKE '%Enviada%'
-    AND r.predicado NOT ILIKE '%Borrador%',
-    'H: el predicado debe cubrir exactamente las cotizaciones vivas terminales');
+  -- v13.823.59: comparación COMPLETA del predicado normalizado (los ILIKE
+  -- parciales aprobaban reglas distintas). Cualquier cambio de predicado
+  -- —agregar estados, quitar deleted_at, etc.— rompe esta aserción.
+  PERFORM pg_temp.assert(
+    regexp_replace(r.predicado, '\s+', ' ', 'g') =
+      '((deleted_at IS NULL) AND (oportunidad_id IS NOT NULL) AND '
+      || '(estado = ANY (ARRAY[''Aceptada''::estado_cotizacion, ''En operación''::estado_cotizacion])))',
+    'H: el predicado debe ser exactamente deleted_at IS NULL AND oportunidad_id IS NOT NULL '
+    || 'AND estado IN (Aceptada, En operación); recibido: ' || COALESCE(r.predicado, '<nulo>'));
 
   -- ===== I) Invariantes de la autoridad única =====
   SELECT p.prosecdef AS secdef, p.proconfig::text AS cfg, p.prosrc AS src
