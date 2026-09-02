@@ -6,6 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query";
 import {
   fetchComisionesDevengadas,
+  fetchComisionesKpiRows,
   fetchLiquidadoMxnPorMes,
   calcularKPIsComisiones,
   type FetchComisionesFiltros,
@@ -34,7 +35,15 @@ export function useComisionesDevengadas(filtros: FetchComisionesFiltros = {}) {
   });
 
   // Hallazgo 6: el KPI se mide contra el periodo consultado, no contra hoy.
-  const base = useMemo(() => calcularKPIsComisiones(q.data ?? [], periodo), [q.data, periodo]);
+  // Defecto 3: los KPIs ya NO se calculan sobre la lista visible (tope de 500
+  // filas), sino sobre una lectura completa y ligera con los mismos filtros.
+  const kpiRows = useQuery({
+    queryKey: queryKeys.comisiones.devengadas({ ...key, kpis: true }),
+    queryFn: () => fetchComisionesKpiRows(filtros),
+    staleTime: 30_000,
+  });
+
+  const base = useMemo(() => calcularKPIsComisiones(kpiRows.data ?? [], periodo), [kpiRows.data, periodo]);
   const kpis = useMemo(
     () => ({ ...base, liquidado_mes_mxn: liquidado.data ?? 0 }),
     [base, liquidado.data],
