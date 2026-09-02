@@ -102,6 +102,11 @@ export function usePermissions() {
   const canConfigurarCrm = has(CRM_CONFIG, roleStr);
   // Ola 6 (O6.1): tomar leads de la bolsa — espejo de crm_tomar_lead.
   const canTomarLead = has(CRM_TOMAR_LEAD, roleStr);
+  // v13.823.51 — "Calificar como prospecto" es espejo de `crm_calificar_prospecto`
+  // (has_role 'vendedor' → vendedor, gerente_comercial, admin_org, super_admin).
+  // Antes se mostraba con `canEdit`, así que un gerente de operaciones veía una
+  // acción que el servidor siempre rechazaba.
+  const canCalificarProspecto = has(CRM_TOMAR_LEAD, roleStr);
 
   return {
     canEdit,
@@ -109,6 +114,7 @@ export function usePermissions() {
     canEditCrm,
     canConfigurarCrm,
     canTomarLead,
+    canCalificarProspecto,
     isAdmin,
     isSuperAdmin,
     isOperador,

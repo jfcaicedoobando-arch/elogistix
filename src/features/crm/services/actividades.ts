@@ -37,18 +37,31 @@ export interface ListActividadesParams {
   vencidas?: boolean;
 }
 
-// B-055: las actividades pueden tener solo responsable_email (sin id); el
-// filtro "mías" debe cubrir ambas llaves.
-// B-24: `quoteOrValue` protege el `.or()` de PostgREST — un valor con `,`, `(`,
-// `)` o `"` rompería el parser.
-const filtroResponsable = (userId: string, email?: string | null) =>
+/**
+ * B-055: hay actividades legadas con sólo `responsable_email` (sin id).
+ * v13.823.51 — el ID es autoritativo: el correo sólo desempata cuando
+ * `responsable_id IS NULL`. Antes `responsable_email.eq.X` bastaba, así que el
+ * correo se volvía identidad permanente y podía atribuir actividades ya
+ * reasignadas a otro usuario.
+ *
+ * B-24: `quoteOrValue` protege el `.or()` de PostgREST — un valor con `,`, `(`,
+ * `)` o `"` rompería el parser.
+ */
+export const filtroResponsable = (userId: string, email?: string | null) =>
   email
-    ? `responsable_id.eq.${userId},responsable_email.eq.${quoteOrValue(email)}`
+    ? `responsable_id.eq.${userId},and(responsable_id.is.null,responsable_email.eq.${quoteOrValue(email)})`
     : `responsable_id.eq.${userId}`;
+
+/** Resultado vacío: filtro personal sin sesión resuelta (falla cerrado). */
+const SIN_RESULTADOS = { data: [] as CrmActividadRow[], count: 0 };
 
 export async function listActividades(p: ListActividadesParams): Promise<{ data: CrmActividadRow[]; count: number }> {
   // Retiene el patrón manual: PostgREST devuelve `count` fuera de `data`,
   // así que `unwrap`/`unwrapOr` (que sólo mapean data) no aplica.
+  // v13.823.51 — falla cerrado: si el filtro personal (o el atajo de vencidas)
+  // está activo pero la sesión aún no resolvió el usuario, NO se consulta toda
+  // la organización; se devuelve vacío en lugar de "Mías" del equipo.
+  if ((p.responsable === "mias" || p.vencidas) && !p.userId) return SIN_RESULTADOS;
   const sortKey = p.sortKey ?? "fecha_programada";
   const sortDir = p.sortDir ?? "asc";
   let q = supabase
@@ -68,11 +81,12 @@ export async function listActividades(p: ListActividadesParams): Promise<{ data:
   // (`responsable_id` O `responsable_email`): hay filas históricas con sólo
   // email y el contador las incluía mientras la tabla las ocultaba.
   if (p.responsable === "mias" && p.userId) q = q.or(filtroResponsable(p.userId, p.userEmail));
+
   if (p.entidadTipo) q = q.eq("entidad_tipo", p.entidadTipo);
   if (p.entidadId) q = q.eq("entidad_id", p.entidadId);
   if (p.vencidas) {
     q = q.is("fecha_completada", null).lt("fecha_programada", new Date().toISOString());
-    if (p.userId) q = q.or(filtroResponsable(p.userId, p.userEmail));
+    if (p.responsable !== "mias" && p.userId) q = q.or(filtroResponsable(p.userId, p.userEmail));
   }
   const from = p.page * p.pageSize;
   q = q.range(from, from + p.pageSize - 1);

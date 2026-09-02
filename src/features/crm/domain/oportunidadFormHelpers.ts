@@ -16,6 +16,7 @@ import {
 interface Etapa {
   id: string;
   probabilidad_default: number;
+  tipo?: string;
 }
 
 /** Origen inicial opcional (p. ej. al crear desde la ficha del prospecto). */
@@ -101,7 +102,9 @@ export function buildEmptyForNueva(
   user: User | null,
   origen?: OrigenInicial | null,
 ): OportunidadFormState {
-  const primera = etapas[0];
+  // v13.823.51 — una oportunidad nueva nace en la primera etapa ABIERTA (nunca
+  // en ganada/perdida, que exigen cierre real o motivo de pérdida).
+  const primera = etapas.find((e) => e.tipo === "abierta") ?? etapas[0];
   return {
     ...EMPTY_OPORTUNIDAD,
     etapa_id: primera?.id ?? "",

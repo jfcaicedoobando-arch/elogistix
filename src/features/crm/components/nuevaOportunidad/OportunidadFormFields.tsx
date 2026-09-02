@@ -96,19 +96,28 @@ export default function OportunidadFormFields({
       </div>
       <div className="space-y-1">
         <Label>Etapa *</Label>
-        <Select
-          value={form.etapa_id}
-          onValueChange={(v) => {
-            set("etapa_id", v);
-            const et = etapas.find((e) => e.id === v);
-            if (et) set("probabilidad", et.probabilidad_default);
-          }}
-        >
-          <SelectTrigger><SelectValue placeholder="Etapa…" /></SelectTrigger>
-          <SelectContent>
-            {etapas.map((e) => <SelectItem key={e.id} value={e.id}>{e.nombre}</SelectItem>)}
-          </SelectContent>
-        </Select>
+        {/*
+          v13.823.51 — en edición la etapa es de sólo lectura: moverla debe pasar
+          por la acción canónica del pipeline (Kanban/detalle), que exige motivo
+          de pérdida y fuerza la probabilidad terminal.
+        */}
+        {isEdit ? (
+          <Input value={etapas.find((e) => e.id === form.etapa_id)?.nombre ?? "—"} readOnly disabled />
+        ) : (
+          <Select
+            value={form.etapa_id}
+            onValueChange={(v) => {
+              set("etapa_id", v);
+              const et = etapas.find((e) => e.id === v);
+              if (et) set("probabilidad", et.probabilidad_default);
+            }}
+          >
+            <SelectTrigger><SelectValue placeholder="Etapa…" /></SelectTrigger>
+            <SelectContent>
+              {etapas.map((e) => <SelectItem key={e.id} value={e.id}>{e.nombre}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        )}
       </div>
       <div className="space-y-1">
         <Label htmlFor="op-monto-estimado">Monto estimado</Label>

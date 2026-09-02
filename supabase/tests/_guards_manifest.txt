@@ -90,3 +90,4 @@ supabase/tests/defecto8_bitacora_no_falsificable.sql
 supabase/tests/defecto5_lock_nc_saldo.sql
 supabase/tests/defecto6_rep_historia_inmutable.sql
 supabase/tests/ronda_yagni_portal_catalogos_tc.sql
+supabase/tests/crm_candados_multiempresa.sql

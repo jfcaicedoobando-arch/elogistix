@@ -41,4 +41,22 @@ describe("NuevaActividadDialog", () => {
       ),
     );
   });
+
+  it("no arrastra el borrador de A hacia B (v13.823.51)", async () => {
+    mutateAsync.mockClear();
+    const { rerender } = render(<NuevaActividadDialog {...props("op-A", "Op A")} />);
+    fireEvent.change(screen.getByLabelText(/Asunto/i), { target: { value: "Borrador de A" } });
+
+    rerender(<NuevaActividadDialog {...props("op-A", "Op A")} open={false} />);
+    rerender(<NuevaActividadDialog {...props("op-B", "Op B")} />);
+
+    expect((screen.getByLabelText(/Asunto/i) as HTMLInputElement).value).toBe("");
+    fireEvent.change(screen.getByLabelText(/Asunto/i), { target: { value: "Solo de B" } });
+    fireEvent.click(screen.getByRole("button", { name: "Crear" }));
+    await waitFor(() =>
+      expect(mutateAsync).toHaveBeenCalledWith(
+        expect.objectContaining({ entidad_id: "op-B", asunto: "Solo de B" }),
+      ),
+    );
+  });
 });

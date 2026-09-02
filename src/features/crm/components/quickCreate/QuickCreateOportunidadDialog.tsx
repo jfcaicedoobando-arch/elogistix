@@ -9,6 +9,10 @@
  * `cliente_id = null` + `lead_id = null`, combinación que el trigger
  * `_crm_oportunidad_requiere_origen` rechaza (`LC_OPORTUNIDAD_SIN_ORIGEN`).
  * Ahora hay que elegir un origen válido: prospecto calificado o cliente.
+ *
+ * v13.823.51: la lista de prospectos usa la definición canónica del embudo
+ * (`LEAD_ESTADOS_ETAPA_PROSPECTO`), que excluye `Convertido` — un lead ya
+ * convertido en cliente salió del embudo y no es origen válido.
  */
 import { useState, useMemo } from "react";
 import { Target } from "lucide-react";
@@ -25,7 +29,7 @@ import { useAuth } from "@/lib/contexts/AuthContext";
 import { useCrearOportunidad, useEtapasPipeline } from "@/features/crm/hooks";
 import { useClientesForSelect } from "@/features/cliente/hooks";
 import { LeadComboboxCrm } from "@/features/crm/components/comboboxes/EntidadComboboxCrm";
-import { LEAD_ESTADOS_ORIGEN_OPORTUNIDAD } from "@/features/crm/domain/leads/constants";
+import { LEAD_ESTADOS_ETAPA_PROSPECTO } from "@/features/crm/domain/leads/etapas";
 
 interface Props {
   open: boolean;
@@ -46,6 +50,16 @@ export default function QuickCreateOportunidadDialog({ open, onOpenChange, onCre
   const [clienteId, setClienteId] = useState("");
   const [leadId, setLeadId] = useState("");
   const [leadNombre, setLeadNombre] = useState("");
+  // v13.823.51 — el dueño canónico del prospecto (igual que el formulario
+  // completo): antes el quick create reasignaba la oportunidad a quien la
+  // capturaba, robándole el prospecto a su vendedor.
+  const [leadVendedorId, setLeadVendedorId] = useState<string | null>(null);
+  const [leadVendedorEmail, setLeadVendedorEmail] = useState("");
+
+  const limpiarOrigen = () => {
+    setClienteId(""); setLeadId(""); setLeadNombre("");
+    setLeadVendedorId(null); setLeadVendedorEmail("");
+  };
 
   const etapaInicial = useMemo(() => etapas.find((e) => e.orden === 1) ?? etapas[0], [etapas]);
   const origenListo = origenTipo === "cliente" ? !!clienteId : !!leadId;
@@ -75,14 +89,14 @@ export default function QuickCreateOportunidadDialog({ open, onOpenChange, onCre
         etapa_id: etapaInicial!.id,
         moneda: "MXN",
         probabilidad: etapaInicial!.probabilidad_default ?? 10,
-        vendedor_id: user?.id ?? null,
-        vendedor_email: user?.email ?? "",
+        vendedor_id: origenTipo === "prospecto" ? (leadVendedorId ?? user?.id ?? null) : (user?.id ?? null),
+        vendedor_email:
+          origenTipo === "prospecto" ? (leadVendedorEmail || user?.email || "") : (user?.email ?? ""),
       });
       notifySuccess(undefined, { title: "Oportunidad creada", duration: 2000 });
       setNombre("");
       setClienteId("");
-      setLeadId("");
-      setLeadNombre("");
+      limpiarOrigen();
       onOpenChange(false);
       onCreated(r.id);
     } catch (e) {
@@ -135,7 +149,7 @@ export default function QuickCreateOportunidadDialog({ open, onOpenChange, onCre
             <Label htmlFor="qc-oportunidad-origen">Origen *</Label>
             <Select
               value={origenTipo}
-              onValueChange={(v) => { setOrigenTipo(v as OrigenTipo); setClienteId(""); setLeadId(""); setLeadNombre(""); }}
+              onValueChange={(v) => { setOrigenTipo(v as OrigenTipo); limpiarOrigen(); }}
             >
               <SelectTrigger id="qc-oportunidad-origen"><SelectValue /></SelectTrigger>
               <SelectContent>
@@ -161,9 +175,13 @@ export default function QuickCreateOportunidadDialog({ open, onOpenChange, onCre
               <Label>Prospecto calificado *</Label>
               <LeadComboboxCrm
                 value={leadId}
-                estadoIn={LEAD_ESTADOS_ORIGEN_OPORTUNIDAD}
+                estadoIn={LEAD_ESTADOS_ETAPA_PROSPECTO}
                 placeholder="Selecciona un prospecto…"
-                onChange={(id, label) => { setLeadId(id); setLeadNombre(label); }}
+                onChange={(id, label, meta) => {
+                  setLeadId(id); setLeadNombre(label);
+                  setLeadVendedorId(meta?.vendedor_id ?? null);
+                  setLeadVendedorEmail(meta?.vendedor_email ?? "");
+                }}
               />
             </div>
           )}

@@ -93,34 +93,24 @@ export async function crearTareaGanada(ctx: AutomationCtx): Promise<void> {
 
 export async function cancelarActividadesPerdida(ctx: AutomationCtx): Promise<void> {
   if (ctx.etapa.tipo !== "perdida") return;
-  const ahora = new Date().toISOString();
-  const base = () =>
-    supabase
-      .from("crm_actividades")
-      .update({ fecha_completada: ahora })
-      .eq("entidad_tipo", "oportunidad")
-      .eq("entidad_id", ctx.op.id)
-      .is("fecha_completada", null);
-  // v13.823.50 — antes se pisaba `resultado` con el texto de cancelación,
-  // borrando las notas del usuario. Sólo se escribe donde está vacío.
-  // `neq("")` ya excluye NULL (comparación indeterminada en SQL).
-  const { error } = await base().neq("resultado", "");
-  const { error: errorVacias } = await supabase
+  // v13.823.51 — un solo UPDATE: la variante de dos pasos podía cerrar la mitad
+  // de la lista si el segundo fallaba. `resultado` no se toca nunca (la
+  // oportunidad perdida ya explica la causa) y el error se propaga.
+  const { error } = await supabase
     .from("crm_actividades")
-    .update({ fecha_completada: ahora, resultado: "cancelada (oportunidad perdida)" })
+    .update({ fecha_completada: new Date().toISOString() })
     .eq("entidad_tipo", "oportunidad")
     .eq("entidad_id", ctx.op.id)
-    .is("fecha_completada", null)
-    .or('resultado.is.null,resultado.eq.""');
-  if (!error && !errorVacias) {
-    await registrarActividad({
-      modulo: "crm",
-      accion: "cancelar_actividades_oportunidad_perdida",
-      entidadId: ctx.op.id,
-      entidadNombre: ctx.op.nombre,
-    });
-  }
+    .is("fecha_completada", null);
+  if (error) throw error;
+  await registrarActividad({
+    modulo: "crm",
+    accion: "cancelar_actividades_oportunidad_perdida",
+    entidadId: ctx.op.id,
+    entidadNombre: ctx.op.nombre,
+  });
 }
+
 
 export async function crearTareaSeguimiento(ctx: AutomationCtx): Promise<void> {
   if (ctx.etapa.tipo !== "abierta" || !ctx.etapa.crea_tarea_seguimiento || !ctx.responsableId) return;

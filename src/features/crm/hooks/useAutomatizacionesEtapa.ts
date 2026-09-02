@@ -8,7 +8,7 @@ import { logger } from "@/lib/observability/logger";
 import { queryKeys } from "@/lib/query";
 import { moverEtapaOportunidad } from "@/features/crm/services/oportunidades";
 import { runAutomatizaciones } from "@/features/crm/services/automatizacionesEtapa";
-import { notifyError } from "@/lib/ui/appFeedback";
+import { notifyError, notifyWarning } from "@/lib/ui/appFeedback";
 import { getErrorMessage } from "@/lib/errors";
 
 export function useMoverEtapaConAutomatizacion() {
@@ -24,7 +24,14 @@ export function useMoverEtapaConAutomatizacion() {
       try {
         await runAutomatizaciones(params.etapa_id, params.id, user?.id ?? null, user?.email ?? "");
       } catch (e) {
+        // v13.823.51 — la etapa ya cambió (no se revierte), pero el fallo de
+        // las automatizaciones deja de ser invisible: se reporta al usuario.
         logger.warn("[useMoverEtapaConAutomatizacion] automatizaciones fallaron:", e);
+        notifyWarning(undefined, {
+          title: "La etapa se actualizó, pero las automatizaciones fallaron",
+          description: getErrorMessage(e),
+          method: "MOVE_ETAPA_AUTOMATIZACIONES",
+        });
       }
       return { id: params.id };
     },
