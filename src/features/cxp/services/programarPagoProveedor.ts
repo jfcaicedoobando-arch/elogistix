@@ -1,7 +1,11 @@
 /**
  * Servicio Tesorería/CxP — programación de pago de una factura de proveedor.
- * Sólo escribe `proveedor_facturas.fecha_programada_pago` (Ola 2 · Item 2).
- * v13.188.0
+ *
+ * v13.823.32: el UPDATE directo a `proveedor_facturas` estaba bloqueado por RLS
+ * justo para el rol `tesorero` (dueño funcional de la pantalla) y en cambio lo
+ * permitía a roles que no deberían programar. Ahora se usa la RPC mínima
+ * `programar_pago_proveedor`, que valida organización de la factura + roles
+ * exactos (admin, admin_org, tesorero, contador, super_admin).
  */
 import { supabase } from "@/integrations/supabase/client";
 import { registrarActividad } from "@/services/bitacora/registrar";
@@ -11,10 +15,10 @@ export async function programarPagoProveedor(
   facturaId: string,
   fecha: string | null,
 ): Promise<void> {
-  const { error } = await supabase
-    .from("proveedor_facturas")
-    .update({ fecha_programada_pago: fecha })
-    .eq("id", facturaId);
+  const { error } = await supabase.rpc("programar_pago_proveedor", {
+    p_factura_id: facturaId,
+    p_fecha: fecha,
+  });
   if (error) throw error;
   const { data: factura } = await supabase
     .from("proveedor_facturas")
