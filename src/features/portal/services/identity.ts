@@ -22,7 +22,7 @@ export interface PortalClientUser {
 
 export async function fetchPortalClientUsers(): Promise<PortalClientUser[]> {
   const rows = await unwrapOr(
-    supabase.from("client_users").select("*, clientes(nombre)").limit(PORTAL_LIST_MAX),
+    supabase.from("client_users").select("*, clientes!client_users_cliente_id_fkey(nombre)").limit(PORTAL_LIST_MAX),
     [],
   );
   // SAFE-CAST: el select incluye todas las columnas más el embed `clientes`.
@@ -39,7 +39,7 @@ export async function fetchPortalClienteName(): Promise<string | null> {
   const data = await unwrap(
     supabase
       .from("client_users")
-      .select("cliente_id, clientes(nombre)")
+      .select("cliente_id, clientes!client_users_cliente_id_fkey(nombre)")
       .eq("user_id", user.id)
       .limit(1)
       .maybeSingle(),
@@ -55,7 +55,7 @@ export async function fetchPortalContactoNombre(): Promise<string | null> {
   const data = await unwrap(
     supabase
       .from("client_users")
-      .select("cliente_id, clientes(contacto)")
+      .select("cliente_id, clientes!client_users_cliente_id_fkey(contacto)")
       .eq("user_id", user.id)
       .limit(1)
       .maybeSingle(),
