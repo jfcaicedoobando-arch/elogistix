@@ -144,7 +144,7 @@ export default function LeadDetalle() {
       {esProspecto(lead.estado) && (
         <OportunidadesDelProspecto
           leadId={lead.id}
-          canEdit={canEdit}
+          canEdit={puedeGestionar}
           onNuevaOportunidad={() => setNuevaOportunidadOpen(true)}
         />
       )}
