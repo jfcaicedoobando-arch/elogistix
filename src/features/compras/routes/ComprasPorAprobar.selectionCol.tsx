@@ -3,6 +3,7 @@
  * aprobación en lote de facturas de proveedor. Extraído de
  * `ComprasPorAprobar.tsx` para respetar el límite de 200 líneas.
  */
+import { Info } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { defineColumns, type ColumnDef } from "@/components/shared/DataTable";
