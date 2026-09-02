@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.823.35] - 2026-09-02
+### Higiene de auditorías y candado de conversión de cotizaciones restaurado
+- **Candado recuperado**: una actualización posterior había borrado sin querer la validación que impide crear dos embarques desde la misma cotización; se re-emitió el cuerpo correcto para que una reconstrucción limpia de la base lo conserve.
+- **Auditorías de CI**: se corrigieron dos nombres inexistentes (`release-manifest`, `soft-delete-reads`) que hacían fallar la corrida completa aunque todo estuviera bien, y se quitó una entrada muerta del registro de divergencias.
+
+
+
 ## [13.823.34] - 2026-09-02
 ### Ronda de endurecimiento: tesorería, cancelaciones, costos y datos de usuarios
 - **Cancelación fiscal con un solo cierre (P1)**: cuando el SAT acepta la cancelación, el estado final (Cancelada o Sustituida), el desvínculo de embarques y la liberación de la proforma se hacen en una sola rutina de servidor, igual desde el aviso automático que desde la app. Repetir el aviso ya no altera nada.
