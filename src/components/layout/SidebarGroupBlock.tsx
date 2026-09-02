@@ -89,11 +89,22 @@ function SidebarGroupBlockBase({
                 asChild
                 isActive={active}
                 tooltip={{
-                  children: item.title,
+                  children:
+                    badge > 0 ? (
+                      <span className="flex flex-col gap-0.5">
+                        <span>{item.title}</span>
+                        <span className="text-2xs font-normal opacity-80">
+                          {item.badgeHint ?? `${badge} alerta${pluralS(badge)} activa${pluralS(badge)}`}
+                        </span>
+                      </span>
+                    ) : (
+                      item.title
+                    ),
                   className:
                     "bg-sidebar text-sidebar-foreground border-sidebar-border shadow-overlay font-medium",
                   sideOffset: 8,
                 }}
+
                 className={cn(
                   "relative",
                   active &&
