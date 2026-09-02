@@ -13,6 +13,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { formatCurrency } from "@/lib/formatters";
 import { usePermissions } from "@/hooks/shared";
 import { useFacturasCxP, useAprobarFacturasLote, useVerificarSatLote } from "@/features/cxp/hooks";
+import { esValidableEnSat } from "@/features/cxp/domain/validacionSat";
 import { KpiCard } from "@/components/shared/KpiCard";
 import { sumaMxn, sumaUsd } from "./ComprasPorAprobar.helpers";
 import { useColumnasPorAprobar } from "./ComprasPorAprobar.useColumnas";
