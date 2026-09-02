@@ -11,6 +11,11 @@ export interface TipoContenedorCatalogo {
   id: string;
   name: string;
   code?: string;
+  /**
+   * P1 (2026-09-02): el catálogo de selección colapsa duplicados; un valor
+   * guardado puede apuntar al ID legacy equivalente y debe seguir resolviéndose.
+   */
+  idsEquivalentes?: string[];
 }
 
 export function resolveTipoContenedorNombre(
