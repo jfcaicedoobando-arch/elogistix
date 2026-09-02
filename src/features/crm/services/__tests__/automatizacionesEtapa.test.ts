@@ -103,15 +103,19 @@ describe("cancelarActividadesPerdida", () => {
     await cancelarActividadesPerdida(ctx());
     expect(mock.tableCalls.length).toBe(0);
   });
-  it("hace update con resultado 'cancelada' para etapa perdida", async () => {
+  it("cierra las actividades pendientes de una etapa perdida", async () => {
     mock.setTableResult("crm_actividades", { data: null, error: null });
     await cancelarActividadesPerdida(ctx({ etapa: { ...baseEtapa, tipo: "perdida" } }));
+    // v13.823.50: el primer UPDATE sólo cierra (sin pisar `resultado`); el
+    // texto "cancelada" se escribe en el segundo, para filas sin resultado.
     const payload = mock.getMutationPayload("crm_actividades", "update") as Record<string, unknown>;
-    expect(payload.resultado).toContain("cancelada");
+    expect(payload).toHaveProperty("fecha_completada");
+    expect(payload).not.toHaveProperty("resultado");
     const call = mock.tableCalls.find(c => c.table === "crm_actividades");
     expect(call?.ops).toContain("is");
   });
 });
+
 
 describe("crearTareaSeguimiento", () => {
   it("no inserta si etapa no es abierta", async () => {

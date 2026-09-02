@@ -8,17 +8,25 @@ import type { CrmEtapaRow, CrmOportunidadRow } from "@/features/crm/hooks";
 /**
  * B-054: no pisar una probabilidad editada manualmente. Heurística: si la
  * probabilidad difiere del default de la etapa ORIGEN se asume manual.
+ *
+ * v13.823.50 — las etapas terminales son la excepción: ganada siempre 100 y
+ * perdida siempre 0, aunque hubiera probabilidad manual (antes una
+ * oportunidad ganada podía quedar en 70%).
  */
 export function resolverProbabilidad(
   op: CrmOportunidadRow | undefined,
   etapaOrigen: CrmEtapaRow | undefined,
   probDestinoDefault: number,
+  etapaDestino?: (CrmEtapaRow & { tipo?: string }) | undefined,
 ): number {
+  if (etapaDestino?.tipo === "ganada") return 100;
+  if (etapaDestino?.tipo === "perdida") return 0;
   if (!op || !etapaOrigen) return probDestinoDefault;
   const esManual =
     Number(op.probabilidad ?? 0) !== Number(etapaOrigen.probabilidad_default ?? 0);
   return esManual ? Number(op.probabilidad ?? 0) : probDestinoDefault;
 }
+
 
 /** B-034: soltar en etapa "ganada" captura el cierre real con defaults. */
 export function resolverCierreGanada(

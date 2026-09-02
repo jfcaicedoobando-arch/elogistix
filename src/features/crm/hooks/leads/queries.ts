@@ -10,11 +10,12 @@ export function useLeads(filtros: LeadFiltros = {}) {
     fuente = "todos",
     page = 0,
     pageSize = 25,
+    estadoIn,
   } = filtros;
   return useQuery<LeadsResultado>({
-    queryKey: queryKeys.crm.leads.list({ search, estado, fuente, page, pageSize }),
+    queryKey: queryKeys.crm.leads.list({ search, estado, fuente, page, pageSize, estadoIn }),
     placeholderData: keepPreviousData,
-    queryFn: () => listLeads({ search, estado, fuente, page, pageSize }),
+    queryFn: () => listLeads({ search, estado, fuente, page, pageSize, estadoIn }),
   });
 }
 

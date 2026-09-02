@@ -3,7 +3,7 @@
  * Usado por QuickAddMenu y por cualquier flujo que necesite crear una tarea.
  * Migrado a `FormDialogShell` (v13.121.0).
  */
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ClipboardList } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -42,6 +42,17 @@ export default function NuevaActividadDialog({ open, onOpenChange, defaultEntida
   const [fecha, setFecha] = useState("");
   const [contactoEfectivo, setContactoEfectivo] = useState(false);
   const [reunionCalificada, setReunionCalificada] = useState(false);
+
+  // v13.823.50 — el estado se inicializaba sólo en el primer render: al reusar
+  // el diálogo con otra oportunidad (A → cerrar → B) mostraba el nombre de B
+  // pero conservaba el id de A (o vacío). Se resincroniza al abrir/cambiar.
+  const defTipo = defaultEntidad?.tipo;
+  const defId = defaultEntidad?.id;
+  useEffect(() => {
+    if (!open) return;
+    setEntidadTipo(defTipo ?? "oportunidad");
+    setEntidadId(defId ?? "");
+  }, [open, defTipo, defId]);
 
   const reset = () => {
     setAsunto(""); setDesc(""); setFecha("");

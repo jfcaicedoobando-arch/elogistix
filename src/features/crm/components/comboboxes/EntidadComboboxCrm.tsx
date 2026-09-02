@@ -18,6 +18,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useDebouncedValue } from "@/lib/hooks/useDebouncedValue";
 import { useLeads, useOportunidades } from "@/features/crm/hooks";
+import type { CrmLeadEstado } from "@/features/crm/domain/leads/constants";
 
 interface Opcion { id: string; label: string; }
 
@@ -80,11 +81,13 @@ interface ComboProps {
 }
 
 /** Selector de Lead con búsqueda server-side (no carga la lista completa). */
-export function LeadComboboxCrm({ value, onChange, placeholder = "Selecciona un lead…" }: ComboProps) {
+export function LeadComboboxCrm({
+  value, onChange, placeholder = "Selecciona un lead…", estadoIn,
+}: ComboProps & { estadoIn?: CrmLeadEstado[] }) {
   const [search, setSearch] = useState("");
   const [selectedLabel, setSelectedLabel] = useState("");
   const debounced = useDebouncedValue(search, 300);
-  const { data, isFetching } = useLeads({ search: debounced, pageSize: 30 });
+  const { data, isFetching } = useLeads({ search: debounced, pageSize: 30, estadoIn });
   const opciones: Opcion[] = (data?.data ?? []).map((l) => ({ id: l.id, label: l.empresa }));
   return (
     <ComboboxBase

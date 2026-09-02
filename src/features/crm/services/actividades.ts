@@ -26,6 +26,7 @@ export interface ListActividadesParams {
   page: number;
   pageSize: number;
   userId?: string;
+  userEmail?: string | null;
   sortKey?: ActividadSortKey;
   sortDir?: "asc" | "desc";
   /**
@@ -35,6 +36,15 @@ export interface ListActividadesParams {
    */
   vencidas?: boolean;
 }
+
+// B-055: las actividades pueden tener solo responsable_email (sin id); el
+// filtro "mías" debe cubrir ambas llaves.
+// B-24: `quoteOrValue` protege el `.or()` de PostgREST — un valor con `,`, `(`,
+// `)` o `"` rompería el parser.
+const filtroResponsable = (userId: string, email?: string | null) =>
+  email
+    ? `responsable_id.eq.${userId},responsable_email.eq.${quoteOrValue(email)}`
+    : `responsable_id.eq.${userId}`;
 
 export async function listActividades(p: ListActividadesParams): Promise<{ data: CrmActividadRow[]; count: number }> {
   // Retiene el patrón manual: PostgREST devuelve `count` fuera de `data`,
@@ -54,12 +64,15 @@ export async function listActividades(p: ListActividadesParams): Promise<{ data:
   if (p.tipo !== "todos") q = q.eq("tipo", p.tipo);
   if (p.estado === "pendientes") q = q.is("fecha_completada", null);
   if (p.estado === "completadas") q = q.not("fecha_completada", "is", null);
-  if (p.responsable === "mias" && p.userId) q = q.eq("responsable_id", p.userId);
+  // v13.823.50 — "Mías" usa la misma llave que el badge de vencidas
+  // (`responsable_id` O `responsable_email`): hay filas históricas con sólo
+  // email y el contador las incluía mientras la tabla las ocultaba.
+  if (p.responsable === "mias" && p.userId) q = q.or(filtroResponsable(p.userId, p.userEmail));
   if (p.entidadTipo) q = q.eq("entidad_tipo", p.entidadTipo);
   if (p.entidadId) q = q.eq("entidad_id", p.entidadId);
   if (p.vencidas) {
     q = q.is("fecha_completada", null).lt("fecha_programada", new Date().toISOString());
-    if (p.userId) q = q.eq("responsable_id", p.userId);
+    if (p.userId) q = q.or(filtroResponsable(p.userId, p.userEmail));
   }
   const from = p.page * p.pageSize;
   q = q.range(from, from + p.pageSize - 1);
@@ -131,7 +144,12 @@ export async function completarActividad(input: { id: string; resultado?: string
   await exigirFilaActividad(
     supabase
       .from("crm_actividades")
-      .update({ fecha_completada: new Date().toISOString(), resultado: input.resultado ?? "" })
+      .update({
+        fecha_completada: new Date().toISOString(),
+        // v13.823.50 — sin `resultado` explícito NO se toca el texto ya
+        // capturado por el usuario (antes se sobrescribía con "").
+        ...(input.resultado !== undefined ? { resultado: input.resultado } : {}),
+      })
       .eq("id", input.id)
       .is("deleted_at", null)
       .select("id")
@@ -174,14 +192,6 @@ export async function actualizarActividadNotas(input: { id: string; resultado: s
 }
 
 
-// B-055: las actividades pueden tener solo responsable_email (sin id); el
-// filtro "mías" debe cubrir ambas llaves.
-// B-24: `quoteOrValue` protege el `.or()` de PostgREST — un valor con `,`, `(`,
-// `)` o `"` rompería el parser.
-const filtroResponsable = (userId: string, email?: string | null) =>
-  email
-    ? `responsable_id.eq.${userId},responsable_email.eq.${quoteOrValue(email)}`
-    : `responsable_id.eq.${userId}`;
 
 export async function countActividadesVencidas(userId: string, email?: string | null): Promise<number> {
   // `count` va fuera de `data` — mantenemos el patrón manual.

@@ -17,6 +17,18 @@ export const LEAD_ESTADOS: CrmLeadEstado[] = [
   "Convertido",
 ];
 
+/**
+ * v13.823.50 — el trigger `_crm_oportunidad_requiere_origen` rechaza como
+ * origen los leads en 'Nuevo', 'Contactado' o 'Descalificado'. La UI debe
+ * ofrecer sólo estos estados para no proponer opciones que el servidor rechaza.
+ */
+export const LEAD_ESTADOS_ORIGEN_OPORTUNIDAD: CrmLeadEstado[] = [
+  "Calificado",
+  "Prospecto",
+  "Pendiente de alta",
+  "Convertido",
+];
+
 export const LEAD_FUENTES: CrmLeadFuente[] = [
   "Web",
   "Referido",
