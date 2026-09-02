@@ -1,5 +1,13 @@
 # Changelog
 
+## [13.823.52] - 2026-09-02
+### Microcorrección de los candados por empresa en CRM
+- **Permisos internos**: las validaciones internas del CRM ya no son ejecutables por cualquier usuario (antes seguían abiertas al público por el permiso que PostgreSQL da por defecto); sólo el sistema las invoca.
+- **Etapa y motivo de pérdida por empresa**: una oportunidad sólo puede usar una etapa del embudo viva y activa de su propia empresa, y el motivo de pérdida debe ser un motivo vivo y activo de la misma empresa.
+- **Nueva oportunidad**: la etapa se muestra sólo de lectura y siempre es la primera etapa abierta; ya no se puede crear directamente en "Ganada" o "Perdida".
+- **Pruebas**: la suite SQL de candados por empresa quedó ejecutable (9 casos: cotización, actividad, etapa y motivo cross-org o inexistente, más probabilidad terminal).
+- **Datos legados reportados, no modificados**: queda 1 actividad activa ligada a prospecto borrado; 0 vínculos cross-org/inexistentes en los candados de cotización.
+
 ## [13.823.51] - 2026-09-02
 ### Candados por empresa en CRM y correcciones de la tanda anterior
 - **Nueva oportunidad rápida**: la lista de prospectos ya no incluye a los que fueron convertidos en cliente y la oportunidad se queda con el vendedor dueño del prospecto (antes se reasignaba a quien la capturaba).
