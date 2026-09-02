@@ -36,20 +36,32 @@ interface RowCruda {
   proveedor_notas_credito: Array<NotaCreditoCxpParcial> | null;
 }
 
+const SELECT_PROGRAMABLES =
+  "id, proveedor_nombre, folio_proveedor, fecha_vencimiento, fecha_programada_pago, moneda, total, estado, estado_aprobacion, pagos_proveedor(monto, monto_en_moneda_factura, deleted_at), proveedor_notas_credito(monto, estado, deleted_at)";
+
+/**
+ * Ronda YAGNI · defecto 4: antes se pedía `.limit(1000)` con `unwrapOr([])`, así
+ * que la factura 1001 no se veía ni se podía ejecutar y un error de consulta
+ * (o RLS) se mostraba como bandeja vacía. Ahora se leen TODAS las páginas y el
+ * error se propaga para que la ruta muestre reintento.
+ */
 export async function fetchPagosProgramables(): Promise<FacturaProgramableRow[]> {
-  const rows = (await unwrapOr(
-    supabase
-      .from("proveedor_facturas")
-      .select("id, proveedor_nombre, folio_proveedor, fecha_vencimiento, fecha_programada_pago, moneda, total, estado, estado_aprobacion, pagos_proveedor(monto, monto_en_moneda_factura, deleted_at), proveedor_notas_credito(monto, estado, deleted_at)")
-      .is("deleted_at", null)
-      .neq("estado", "Cancelada")
-      .order("fecha_vencimiento", { ascending: true, nullsFirst: false })
-      .limit(CAP_POSTGREST),
-    [] as RowCruda[],
+  const rows = (await leerTodasLasPaginas<unknown>(
+    "tesoreria.pagosProgramables",
+    (desde, hasta) =>
+      supabase
+        .from("proveedor_facturas")
+        .select(SELECT_PROGRAMABLES)
+        .is("deleted_at", null)
+        .neq("estado", "Cancelada")
+        .order("fecha_vencimiento", { ascending: true, nullsFirst: false })
+        .order("id", { ascending: true })
+        .range(desde, hasta),
+    { lote: CAP_POSTGREST },
     // SAFE-CAST: el select con join anidado `pagos_proveedor(...)` produce un
     // shape sintetizado por PostgREST que el tipo generado de Supabase no
     // captura; RowCruda declara sólo las columnas que consumimos aquí.
-  )) as unknown as RowCruda[];
+  )) as RowCruda[];
 
   return rows
     .map((r) => {
