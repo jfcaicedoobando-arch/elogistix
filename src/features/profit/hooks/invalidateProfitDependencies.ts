@@ -13,4 +13,7 @@ export function invalidateProfitDependencies(qc: QueryClient): void {
   qc.invalidateQueries({ queryKey: queryKeys.dashboardEjecutivo.all });
   qc.invalidateQueries({ queryKey: queryKeys.presupuesto.all });
   qc.invalidateQueries({ queryKey: queryKeys.profit.all });
+  // Defecto 6 (v13.823.43): el tablero de Dirección lee cartera/cobrado de las
+  // mismas tablas; sin esto conservaba cifras previas tras registrar un pago.
+  qc.invalidateQueries({ queryKey: queryKeys.direccion.all });
 }

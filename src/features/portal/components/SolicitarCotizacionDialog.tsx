@@ -116,7 +116,9 @@ export function SolicitarCotizacionDialog({ open, onOpenChange, clientes }: Prop
           <Button variant="outline" onClick={() => (cerrar ? cerrar() : onOpenChange(false))}>
             Cancelar
           </Button>
-          <Button onClick={handleSubmit} loading={solicitar.isPending} disabled={!clienteId}>
+          {/* Defecto 3: el botón sólo se bloquea mientras se envía. Así el
+              handler puede activar `intentoEnvio` y anunciar qué falta. */}
+          <Button onClick={handleSubmit} loading={solicitar.isPending} disabled={solicitar.isPending}>
             {!solicitar.isPending && <Send className="h-4 w-4 mr-1" />}
             {solicitar.isPending ? "Enviando…" : "Enviar solicitud"}
           </Button>
@@ -140,17 +142,23 @@ export function SolicitarCotizacionDialog({ open, onOpenChange, clientes }: Prop
         <div className="space-y-1.5">
           <Label htmlFor="solicitud-origen">Origen <span className="text-destructive">*</span></Label>
           <Input id="solicitud-origen" value={origen} onChange={(e) => setOrigen(e.target.value)}
-            placeholder="Shanghái, China" aria-invalid={intentoEnvio && origenVacio} />
+            placeholder="Shanghái, China" aria-invalid={intentoEnvio && origenVacio}
+            aria-describedby={intentoEnvio && origenVacio ? "solicitud-origen-error" : undefined} />
           {intentoEnvio && origenVacio && (
-            <p className="text-body-sm text-destructive">{COPY_VALIDACION.requerido("el origen")}</p>
+            <p id="solicitud-origen-error" role="alert" className="text-body-sm text-destructive">
+              {COPY_VALIDACION.requerido("el origen")}
+            </p>
           )}
         </div>
         <div className="space-y-1.5">
           <Label htmlFor="solicitud-destino">Destino <span className="text-destructive">*</span></Label>
           <Input id="solicitud-destino" value={destino} onChange={(e) => setDestino(e.target.value)}
-            placeholder="Manzanillo, México" aria-invalid={intentoEnvio && destinoVacio} />
+            placeholder="Manzanillo, México" aria-invalid={intentoEnvio && destinoVacio}
+            aria-describedby={intentoEnvio && destinoVacio ? "solicitud-destino-error" : undefined} />
           {intentoEnvio && destinoVacio && (
-            <p className="text-body-sm text-destructive">{COPY_VALIDACION.requerido("el destino")}</p>
+            <p id="solicitud-destino-error" role="alert" className="text-body-sm text-destructive">
+              {COPY_VALIDACION.requerido("el destino")}
+            </p>
           )}
         </div>
       </FormDialogSection>
@@ -169,7 +177,7 @@ export function SolicitarCotizacionDialog({ open, onOpenChange, clientes }: Prop
       </FormDialogSection>
 
       {intentoEnvio && !puedeEnviar && (
-        <p className="text-body-sm text-destructive font-medium">{COPY_VALIDACION.camposObligatorios}</p>
+        <p role="alert" className="text-body-sm text-destructive font-medium">{COPY_VALIDACION.camposObligatorios}</p>
       )}
     </FormDialogShell>
   );
