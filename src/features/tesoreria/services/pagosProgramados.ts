@@ -7,7 +7,7 @@
  * queda explícito en la UI.
  */
 import { supabase } from "@/integrations/supabase/client";
-import { unwrapOr } from "@/lib/supabase/response";
+import { leerTodasLasPaginas } from "@/lib/supabase/paginado";
 import type { FacturaProgramable } from "@/features/tesoreria/domain/pagosProgramados";
 import {
   sumarPagosEnMonedaFactura,
