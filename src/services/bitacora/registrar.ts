@@ -61,14 +61,15 @@ export async function registrarActividad(input: RegistrarActividadInput): Promis
     const user = session?.user;
     if (!user) return;
 
-    const { error } = await supabase.from("bitacora_actividad").insert({
-      usuario_id: user.id,
-      usuario_email: user.email ?? "",
-      accion: input.accion,
-      modulo: input.modulo,
-      entidad_id: input.entidadId ?? null,
-      entidad_nombre: input.entidadNombre ?? "",
-      detalles: (input.detalles ?? {}) as Json,
+    // DEFECTO 8: la escritura directa a `bitacora_actividad` está REVOKE para
+    // el cliente; sólo esta RPC (SECURITY DEFINER) puede insertar y deriva
+    // usuario_id/email del servidor, nunca de lo que mande el navegador.
+    const { error } = await supabase.rpc("registrar_bitacora", {
+      p_modulo: input.modulo,
+      p_accion: input.accion,
+      p_entidad_id: input.entidadId ?? null,
+      p_entidad_nombre: input.entidadNombre ?? "",
+      p_detalles: (input.detalles ?? {}) as Json,
     });
     if (error) {
       console.warn("[bitacora] registrar falló:", error.message);

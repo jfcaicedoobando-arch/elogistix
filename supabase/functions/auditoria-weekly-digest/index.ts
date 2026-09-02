@@ -10,6 +10,7 @@ import { wrapEdgeHandler, captureEdgeException } from "../_shared/sentry.ts"
 import { timingSafeEqual } from "../_shared/timingSafe.ts";
 import { buildCors, handlePreflightStrict } from "../_shared/cors.ts";
 import { createLogger } from "../_shared/logger.ts";
+import { registrarEstadoEmail } from "../_shared/emailSendLog.ts";
 
 const GATEWAY_URL = "https://connector-gateway.lovable.dev/resend";
 
@@ -73,7 +74,35 @@ export function buildHtml(orgNombre: string, reporte: ReporteRow): string {
 }
 
 interface OrgRow { id: string; nombre: string; }
-interface ProcessResult { org: string; destinatarios: number; enviado: boolean; dryRun?: boolean; error?: string; }
+interface ProcessResult { org: string; destinatarios: number; enviado: boolean; dryRun?: boolean; omitido?: boolean; error?: string; }
+
+/**
+ * Ronda YAGNI · defecto 10 — clave semanal estable (año-semana ISO en UTC).
+ * Permite deduplicar el digest: si el cron reintenta tras un 5xx, las orgs
+ * que ya recibieron el correo de esa semana se omiten.
+ */
+export function claveSemana(fecha: Date): string {
+  const d = new Date(Date.UTC(fecha.getUTCFullYear(), fecha.getUTCMonth(), fecha.getUTCDate()));
+  const dia = d.getUTCDay() || 7;
+  d.setUTCDate(d.getUTCDate() + 4 - dia);
+  const inicioAnio = Date.UTC(d.getUTCFullYear(), 0, 1);
+  const semana = Math.ceil(((d.getTime() - inicioAnio) / 86400000 + 1) / 7);
+  return `${d.getUTCFullYear()}-W${String(semana).padStart(2, "0")}`;
+}
+
+export function messageIdDigest(orgId: string, semana: string): string {
+  return `auditoria-digest-${orgId}-${semana}`;
+}
+
+async function yaEnviadoEstaSemana(admin: SupabaseClient, messageId: string): Promise<boolean> {
+  const { data } = await admin
+    .from("email_send_log")
+    .select("status")
+    .eq("message_id", messageId)
+    .eq("status", "sent")
+    .maybeSingle();
+  return !!data;
+}
 
 async function resolveAdminEmails(admin: SupabaseClient, orgId: string): Promise<string[]> {
   const { data: members } = await admin
@@ -96,9 +125,11 @@ interface SendDigestArgs {
   html: string;
   lovableKey: string;
   resendKey: string;
+  admin: SupabaseClient;
+  messageId: string;
 }
 
-async function sendDigest({ org, emails, html, lovableKey, resendKey }: SendDigestArgs): Promise<ProcessResult> {
+async function sendDigest({ org, emails, html, lovableKey, resendKey, admin, messageId }: SendDigestArgs): Promise<ProcessResult> {
   const res = await fetch(`${GATEWAY_URL}/emails`, {
     method: "POST",
     headers: {
@@ -113,12 +144,17 @@ async function sendDigest({ org, emails, html, lovableKey, resendKey }: SendDige
       html,
     }),
   });
-  return {
-    org: org.nombre,
-    destinatarios: emails.length,
-    enviado: res.ok,
-    error: res.ok ? undefined : await res.text(),
-  };
+  const error = res.ok ? undefined : await res.text();
+  // Defecto 10: deja constancia del intento para que el reintento del cron no
+  // duplique correos ya enviados.
+  await registrarEstadoEmail(admin, {
+    messageId,
+    templateName: "auditoria-weekly-digest",
+    recipientEmail: emails[0] ?? "",
+    status: res.ok ? "sent" : "failed",
+    errorMessage: error ?? null,
+  });
+  return { org: org.nombre, destinatarios: emails.length, enviado: res.ok, error };
 }
 
 async function processOrg(admin: SupabaseClient, org: OrgRow, lovableKey: string | undefined, resendKey: string | undefined): Promise<ProcessResult> {
@@ -136,12 +172,16 @@ async function processOrg(admin: SupabaseClient, org: OrgRow, lovableKey: string
   }
   const emails = await resolveAdminEmails(admin, org.id);
   if (emails.length === 0) return { org: org.nombre, destinatarios: 0, enviado: false };
+  const messageId = messageIdDigest(org.id, claveSemana(new Date()));
+  if (await yaEnviadoEstaSemana(admin, messageId)) {
+    return { org: org.nombre, destinatarios: emails.length, enviado: true, omitido: true };
+  }
   const html = buildHtml(org.nombre, (reporte ?? {}) as ReporteRow);
   if (!lovableKey || !resendKey) {
     console.log(`[auditoria-weekly-digest] DRY-RUN para ${org.nombre} (${emails.length} destinatarios)`);
     return { org: org.nombre, destinatarios: emails.length, enviado: false, dryRun: true };
   }
-  return sendDigest({ org, emails, html, lovableKey, resendKey });
+  return sendDigest({ org, emails, html, lovableKey, resendKey, admin, messageId });
 }
 
 function unauthorized(corsHeaders: Record<string, string>): Response {
@@ -180,10 +220,14 @@ Deno.serve(wrapEdgeHandler("auditoria-weekly-digest", async (req) => {
 
     const enviados = resultados.filter((r) => r.enviado).length;
     const dryRun = resultados.filter((r) => r.dryRun).length;
-    log.finish(200, "digest_run", { payload: { total: resultados.length, enviados, dryRun } });
-    return new Response(JSON.stringify({ ok: true, total: resultados.length, resultados }), {
+    // Defecto 10: un fallo por-org ya no se reporta como 200; el cron debe ver
+    // 500 para alertar y reintentar (el envío es idempotente por semana).
+    const fallos = resultados.filter((r) => r.error).length;
+    const status = fallos > 0 ? 500 : 200;
+    log.finish(status, "digest_run", { payload: { total: resultados.length, enviados, dryRun, fallos } });
+    return new Response(JSON.stringify({ ok: fallos === 0, total: resultados.length, fallos, resultados }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 200,
+      status,
     });
   } catch (err) {
     const msg = (err as Error).message;

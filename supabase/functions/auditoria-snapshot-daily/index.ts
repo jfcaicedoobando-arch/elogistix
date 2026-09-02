@@ -77,14 +77,19 @@ Deno.serve(async (req) => {
     }
 
     const fallos = resultados.filter((r) => !r.ok).length;
-    log.finish(200, "snapshot_run", {
+    // Ronda YAGNI · defecto 10: si alguna org falló, el cron debe recibir 500
+    // (antes siempre 200 y el fallo quedaba invisible). El snapshot es
+    // idempotente por UNIQUE(organization_id, fecha), así que reintentar es
+    // seguro y no duplica filas.
+    const status = fallos > 0 ? 500 : 200;
+    log.finish(status, "snapshot_run", {
       payload: { total: resultados.length, fallos },
     });
     return new Response(
-      JSON.stringify({ ok: true, total: resultados.length, resultados }),
+      JSON.stringify({ ok: fallos === 0, total: resultados.length, fallos, resultados }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 200,
+        status,
       },
     );
   } catch (err) {

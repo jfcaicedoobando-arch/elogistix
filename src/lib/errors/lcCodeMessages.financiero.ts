@@ -9,6 +9,12 @@ export const LC_CODE_MESSAGES_FINANCIERO: Record<string, string> = {
   LC_PERIODO_CERRADO:
     "El periodo contable ya está cerrado en esa fecha. Usa una fecha posterior al cierre " +
     "o pide a administración que reabra el periodo en Configuración → Facturación.",
+  LC_PERIODO_CERRADO_CAMPO:
+    "Ese registro pertenece a un periodo contable ya cerrado; sólo pueden cambiar campos " +
+    "calculados por el sistema (estado, timbrado, conciliación). Pide a administración que " +
+    "reabra el periodo si necesitas corregirlo.",
+  LC_CIERRE_MOTIVO_REQUERIDO:
+    "Para reabrir o retroceder el cierre de periodo debes capturar un motivo (mínimo 10 caracteres).",
   LC_UUID_FISCAL_INMUTABLE:
     "La factura ya tiene folio fiscal (UUID) asignado y no puede cambiarse.",
   LC_CONCEPTO_PROFORMADO:

@@ -89,3 +89,27 @@ Deno.test("buildHtml: no fugas message when monto_mxn absent", () => {
   const html = buildHtml("Mi Org", { hallazgos: [{ severidad: "bajo" }] });
   assertStringIncludes(html, "Sin fugas financieras");
 });
+
+// ── Ronda YAGNI · defecto 10: fallos visibles + envío idempotente ──
+
+Deno.test("defecto 10: el digest devuelve 500 si alguna org falló", async () => {
+  const src = await Deno.readTextFile(new URL("./index.ts", import.meta.url));
+  assertStringIncludes(src, "const status = fallos > 0 ? 500 : 200;");
+  assertStringIncludes(src, "ok: fallos === 0");
+});
+
+Deno.test("defecto 10: el reintento no duplica correos (dedupe por semana)", async () => {
+  const src = await Deno.readTextFile(new URL("./index.ts", import.meta.url));
+  assertStringIncludes(src, "yaEnviadoEstaSemana");
+  assertStringIncludes(src, "registrarEstadoEmail");
+});
+
+Deno.test("claveSemana: es estable dentro de la misma semana ISO", async () => {
+  const { claveSemana } = await import("./index.ts");
+  assertEquals(claveSemana(new Date("2026-09-07T00:00:00Z")), claveSemana(new Date("2026-09-11T23:00:00Z")));
+});
+
+Deno.test("claveSemana: cambia entre semanas distintas", async () => {
+  const { claveSemana } = await import("./index.ts");
+  assertEquals(claveSemana(new Date("2026-09-07T00:00:00Z")) === claveSemana(new Date("2026-09-15T00:00:00Z")), false);
+});

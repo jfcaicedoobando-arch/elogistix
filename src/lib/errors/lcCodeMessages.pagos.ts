@@ -63,6 +63,8 @@ export const LC_CODE_MESSAGES_PAGOS: Record<string, string> = {
   LC_REP_FACTURA_NO_VIVA: "La factura no admite recibo de pago en su estado actual.",
   LC_REP_FACTURA_SIN_TIMBRAR:
     "La factura debe estar timbrada antes de emitir un REP.",
+  LC_REP_HISTORIA_INMUTABLE:
+    "Este movimiento es anterior a un complemento de pago (REP) timbrado y vigente. Cancela y reemite los REP afectados antes de modificar la historia de cobros.",
 
   // ── Movimientos bancarios / conciliación ───────────────────────────────
   LC_MOVIMIENTO_PAGO_INEXISTENTE: "El pago referenciado no existe.",

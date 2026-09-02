@@ -114,3 +114,21 @@ export async function updateConfiguracionGlobalItems(
 ): Promise<void> {
   return updateConfigItems("configuracion_global", items);
 }
+
+// ── Cierre de periodo contable (RPC dedicada, con motivo + bitácora) ───────
+export async function actualizarCierrePeriodo(
+  orgId: string,
+  fecha: string | null,
+  motivo?: string,
+): Promise<void> {
+  const { supabase } = await import("@/integrations/supabase/client");
+  const { run } = await import("@/lib/supabase/response");
+  // SAFE-CAST: RPC nueva, types.ts pendiente de regenerar.
+  await run(
+    supabase.rpc("actualizar_cierre_periodo" as never, {
+      p_org: orgId,
+      p_fecha: fecha,
+      p_motivo: motivo ?? null,
+    } as never),
+  );
+}
