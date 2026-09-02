@@ -13,6 +13,7 @@ import type { ResultadoTopeVinculacion } from "@/features/cxp/utils/topeVinculac
 import type { ResultadoCuadre } from "@/features/cxp/utils/cuadreConceptos";
 import type { ConceptosManualesApi } from "./useConceptosManuales";
 import { runSubmit } from "./useNuevaFacturaProveedorForm.submit";
+import type { buildPayload } from "./useNuevaFacturaProveedorForm.helpers";
 import { puedeContinuarSubmit, puedeContinuarTope } from "./useNuevaFacturaProveedorForm.guard";
 
 export interface BuildSubmitDeps {
@@ -31,7 +32,7 @@ export interface BuildSubmitDeps {
   cuadreManual: ResultadoCuadre;
   manuales: ConceptosManualesApi;
   validate: () => boolean;
-  crearMutateAsync: (payload: ReturnType<typeof runSubmit> extends Promise<infer _R> ? unknown : never) => unknown;
+  crearMutateAsync: (payload: ReturnType<typeof buildPayload>) => Promise<{ id?: string } | null | undefined>;
   setFolioError: () => void;
   onSuccess: (facturaId?: string | null) => void;
 }
