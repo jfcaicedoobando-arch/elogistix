@@ -57,11 +57,12 @@ BEGIN
              WHERE t.tgrelid = 'public.crm_leads'::regclass
                AND t.tgname = 'trg_guard_crm_lead_estado_canonico'
                AND NOT t.tgisinternal
-               -- BEFORE (bit 1 de tgtype = 0) + INSERT (4) + UPDATE (16)
-               AND (t.tgtype & 1) = 0
+               -- ROW (1) + BEFORE (2) + INSERT (4) + UPDATE (16)
+               AND (t.tgtype & 1) = 1
+               AND (t.tgtype & 2) = 2
                AND (t.tgtype & 4) = 4
                AND (t.tgtype & 16) = 16),
-    'G3: el trigger debe ser BEFORE INSERT OR UPDATE en crm_leads');
+    'G3: el trigger debe ser BEFORE INSERT OR UPDATE FOR EACH ROW en crm_leads');
 
   PERFORM pg_temp.assert(
     (SELECT array_length(tgattr::int2[], 1) FROM pg_trigger
