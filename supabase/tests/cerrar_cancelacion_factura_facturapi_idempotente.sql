@@ -38,14 +38,14 @@ BEGIN
   VALUES (v_org, 'CLIENTE CIERRE', '', 'cierre-cancel@test.mx') RETURNING id INTO v_cli;
 
   INSERT INTO public.embarques (organization_id, cliente_id, expediente, modo, tipo)
-  VALUES (v_org, v_cli, 'CIERRE0001', 'Marítimo'::public.modo_transporte,
+  VALUES (v_org, v_cli, 'ELCIE0001', 'Marítimo'::public.modo_transporte,
           'Importación'::public.tipo_operacion)
   RETURNING id INTO v_emb;
 
   INSERT INTO public.proformas (
     organization_id, cliente_id, cliente_nombre, embarque_id, expediente, numero, estado_proforma
   ) VALUES (
-    v_org, v_cli, 'CLIENTE CIERRE', v_emb, 'CIERRE0001', 'PF-CIERRE-0001', 'facturada'
+    v_org, v_cli, 'CLIENTE CIERRE', v_emb, 'ELCIE0001', 'PF-CIERRE-0001', 'facturada'
   ) RETURNING id INTO v_pf;
 
   INSERT INTO public.facturas (

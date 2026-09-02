@@ -42,8 +42,9 @@ BEGIN
   VALUES (v_org, 'Test Org Concepto Atomico')
   ON CONFLICT (id) DO NOTHING;
 
-  INSERT INTO public.proveedores (id, organization_id, nombre, moneda_preferida)
-  VALUES (v_prov, v_org, 'Proveedor Atómico', 'MXN')
+  INSERT INTO public.proveedores (id, organization_id, nombre, moneda_preferida, tipo, categoria)
+  VALUES (v_prov, v_org, 'Proveedor Atómico', 'MXN',
+          'Transportista'::public.tipo_proveedor, 'Logistico'::public.categoria_proveedor)
   ON CONFLICT (id) DO NOTHING;
 
   INSERT INTO public.embarques (id, organization_id, expediente, estado)
