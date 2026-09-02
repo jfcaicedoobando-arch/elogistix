@@ -56,6 +56,10 @@ function DoubleConfirmInner({
   }, [open]);
 
   const close = () => {
+    // Defecto 1: mientras la eliminación está en curso NO se puede cerrar el
+    // diálogo (Escape, clic exterior, Cancelar). Antes el usuario podía creer
+    // que canceló una operación irreversible que seguía ejecutándose.
+    if (isPending) return;
     setPaso2(false);
     setConfirmText("");
     onOpenChange(false);
@@ -90,7 +94,13 @@ function DoubleConfirmInner({
 
       {/* Paso 2 */}
       <AlertDialog open={paso2} onOpenChange={(v) => { if (!v) close(); }}>
-        <AlertDialogContent className={dialogSize.sm}>
+        <AlertDialogContent
+          className={dialogSize.sm}
+          aria-busy={isPending}
+          onEscapeKeyDown={(e) => { if (isPending) e.preventDefault(); }}
+          onPointerDownOutside={(e) => { if (isPending) e.preventDefault(); }}
+          onInteractOutside={(e) => { if (isPending) e.preventDefault(); }}
+        >
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2">
               <AlertTriangle className="h-5 w-5 text-destructive" aria-hidden />
@@ -129,11 +139,17 @@ function DoubleConfirmInner({
               }}
               placeholder="ELIMINAR"
               autoComplete="off"
+              disabled={isPending}
               className="font-mono"
             />
           </div>
+          {isPending && (
+            <p role="status" aria-live="polite" className="text-body text-muted-foreground">
+              Eliminando… no cierres esta ventana.
+            </p>
+          )}
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogCancel disabled={isPending}>Cancelar</AlertDialogCancel>
             <AlertDialogAction
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               onClick={async (e) => {
