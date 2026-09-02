@@ -48,6 +48,15 @@ BEGIN
   VALUES (v_cli, v_org, 'Cliente Ola4 N41', 'XAXX010101000', 'ola4-n41@test.mx')
   ON CONFLICT (id) DO NOTHING;
 
+  -- Las facturas USD del fixture emiten con T/C 17 y el trigger
+  -- `_factura_tc_dof_obligatorio()` exige el DOF de la fecha de emisión, así
+  -- que se siembra con el mismo valor (todo el fixture se revierte).
+  INSERT INTO public.tipos_cambio_dof (fecha, usd_mxn, origen)
+  VALUES (v_hoy, 17, 'manual')
+  ON CONFLICT (fecha) DO UPDATE SET usd_mxn = 17;
+
+
+
   INSERT INTO public.proveedores (id, organization_id, nombre, categoria, subtipo_gasto)
   VALUES (v_prov, v_org, 'Prov Ola4 N41', 'GastoOperativo', 'Otros')
   ON CONFLICT (id) DO NOTHING;
