@@ -24,14 +24,15 @@ describe("notificacionesInternas", () => {
     await marcarLeida("n1");
     const call = mock.tableCalls.find((c) => c.table === "notificaciones_internas");
     expect(call?.ops).toContain("update");
-    const payload = (call?.payload ?? {}) as Record<string, unknown>;
+    const payload = (mock.getMutationPayload("notificaciones_internas", "update") ??
+      {}) as Record<string, unknown>;
     expect(Object.keys(payload).sort()).toEqual(CAMPOS_PERMITIDOS);
   });
 
   it("marcarTodasLeidas sólo actualiza leida y leida_at", async () => {
     await marcarTodasLeidas("u1");
-    const call = mock.tableCalls.find((c) => c.table === "notificaciones_internas");
-    const payload = (call?.payload ?? {}) as Record<string, unknown>;
+    const payload = (mock.getMutationPayload("notificaciones_internas", "update") ??
+      {}) as Record<string, unknown>;
     expect(Object.keys(payload).sort()).toEqual(CAMPOS_PERMITIDOS);
   });
 });
