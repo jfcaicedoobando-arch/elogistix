@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.823.36] - 2026-09-02
+### Reconstrucción de base: ya no se saltan migraciones
+- **Replay completo**: la reconstrucción limpia de la base decidía qué migraciones aplicar comparando fechas contra el corte del squash. Diez migraciones creadas después del squash traían fecha anterior al corte y se omitían en silencio (entre ellas el registro atómico de pagos a proveedor). Ahora se usa un inventario explícito de lo que sí está consolidado (`supabase/schema/squash/included.txt`), tanto en CI como en la verificación local.
+
 ## [13.823.35] - 2026-09-02
 ### Higiene de auditorías y candado de conversión de cotizaciones restaurado
 - **Candado recuperado**: una actualización posterior había borrado sin querer la validación que impide crear dos embarques desde la misma cotización; se re-emitió el cuerpo correcto para que una reconstrucción limpia de la base lo conserve.
