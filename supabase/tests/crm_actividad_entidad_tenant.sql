@@ -170,8 +170,6 @@ BEGIN
       format('A-%s: la organización ajena no debe recibir actividades', v_tipo));
   END LOOP;
 
-
-
   -- ===== A') UPDATE de las tres columnas vigiladas =====
   SELECT id INTO v_act FROM public.crm_actividades
    WHERE organization_id = v_org_a AND entidad_tipo = 'lead' AND entidad_id = v_lead_a;
