@@ -103,7 +103,7 @@ export default function NuevaOportunidadDialog({ open, onOpenChange, oportunidad
   const footer = (
     <>
       <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
-      <Button onClick={handleSubmit} loading={pending}>
+      <Button onClick={handleSubmit} loading={pending} disabled={!isEdit && !form.etapa_id}>
         {isEdit ? "Guardar cambios" : "Crear oportunidad"}
       </Button>
     </>

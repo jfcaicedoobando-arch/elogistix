@@ -78,7 +78,7 @@ describe("buildFromOportunidad", () => {
 describe("buildEmptyForNueva", () => {
   it("usa la primera etapa y su probabilidad default", () => {
     const out = buildEmptyForNueva(
-      [{ id: "et1", probabilidad_default: 25 }, { id: "et2", probabilidad_default: 50 }],
+      [{ id: "et1", probabilidad_default: 25, tipo: "abierta" }, { id: "et2", probabilidad_default: 50, tipo: "abierta" }],
       null,
     );
     expect(out).toMatchObject({ ...EMPTY_OPORTUNIDAD, etapa_id: "et1", probabilidad: 25 });
@@ -86,7 +86,7 @@ describe("buildEmptyForNueva", () => {
 
   it("incluye al usuario autenticado como vendedor", () => {
     const user = { id: "u1", email: "ops@lc.mx" } as unknown as User;
-    const out = buildEmptyForNueva([{ id: "et1", probabilidad_default: 10 }], user);
+    const out = buildEmptyForNueva([{ id: "et1", probabilidad_default: 10, tipo: "abierta" }], user);
     expect(out.vendedor_id).toBe("u1");
     expect(out.vendedor_email).toBe("ops@lc.mx");
   });

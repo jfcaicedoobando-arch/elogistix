@@ -97,14 +97,24 @@ function bloqueOrigenInicial(origen: OrigenInicial | null | undefined) {
   };
 }
 
+/** Mensaje único cuando el pipeline no tiene ninguna etapa abierta. */
+export const MSG_SIN_ETAPA_ABIERTA = "Configura al menos una etapa abierta en el pipeline";
+
+/**
+ * v13.823.53 — única fuente de la etapa inicial: la PRIMERA etapa `abierta`
+ * (la lista llega ordenada). Sin fallback a `etapas[0]`: si esa etapa fuera
+ * ganada/perdida se crearía una oportunidad terminal sin cierre ni motivo.
+ */
+export function primeraEtapaAbierta<T extends { tipo?: string }>(etapas: T[]): T | undefined {
+  return etapas.find((e) => e.tipo === "abierta");
+}
+
 export function buildEmptyForNueva(
   etapas: Etapa[],
   user: User | null,
   origen?: OrigenInicial | null,
 ): OportunidadFormState {
-  // v13.823.51 — una oportunidad nueva nace en la primera etapa ABIERTA (nunca
-  // en ganada/perdida, que exigen cierre real o motivo de pérdida).
-  const primera = etapas.find((e) => e.tipo === "abierta") ?? etapas[0];
+  const primera = primeraEtapaAbierta(etapas);
   return {
     ...EMPTY_OPORTUNIDAD,
     etapa_id: primera?.id ?? "",

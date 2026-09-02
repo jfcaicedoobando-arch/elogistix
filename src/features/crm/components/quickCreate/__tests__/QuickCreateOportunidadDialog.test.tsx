@@ -17,9 +17,12 @@ const estadosRecibidos: (string[] | undefined)[] = [];
 vi.mock("@/lib/contexts/AuthContext", () => ({
   useAuth: () => ({ user: { id: "u-actual", email: "actual@x.com" } }),
 }));
+// v13.823.53 — el pipeline del mock es configurable por prueba: la etapa
+// inicial debe ser la primera ABIERTA aunque una terminal ocupe el orden 1.
+const etapasMock: { id: string; orden: number; probabilidad_default: number; tipo: string }[] = [];
 vi.mock("@/features/crm/hooks", () => ({
   useCrearOportunidad: () => ({ mutateAsync, isPending: false }),
-  useEtapasPipeline: () => ({ data: [{ id: "e1", orden: 1, probabilidad_default: 20 }] }),
+  useEtapasPipeline: () => ({ data: etapasMock }),
 }));
 // Radix Select no es operable en jsdom: se sustituye por un <select> nativo.
 vi.mock("@/components/ui/select", () => ({
@@ -60,6 +63,11 @@ describe("QuickCreateOportunidadDialog", () => {
   it("ofrece sólo prospectos activos (sin Convertido) y conserva su vendedor", async () => {
     mutateAsync.mockClear();
     estadosRecibidos.length = 0;
+    etapasMock.length = 0;
+    etapasMock.push(
+      { id: "e-gan", orden: 1, probabilidad_default: 100, tipo: "ganada" },
+      { id: "e-ab", orden: 2, probabilidad_default: 20, tipo: "abierta" },
+    );
     render(
       <QuickCreateOportunidadDialog open onOpenChange={vi.fn()} onCreated={vi.fn()} onMore={vi.fn()} />,
     );
@@ -79,5 +87,28 @@ describe("QuickCreateOportunidadDialog", () => {
     const estados = estadosRecibidos.find(Boolean);
     expect(estados).toEqual([...LEAD_ESTADOS_ETAPA_PROSPECTO]);
     expect(estados).not.toContain("Convertido");
+    // La etapa terminal en orden 1 no puede ser la etapa inicial.
+    expect(payload.etapa_id).toBe("e-ab");
+    expect(payload.probabilidad).toBe(20);
+  });
+
+  it("sin etapas abiertas no permite crear y muestra el mensaje", async () => {
+    mutateAsync.mockClear();
+    etapasMock.length = 0;
+    etapasMock.push(
+      { id: "e-gan", orden: 1, probabilidad_default: 100, tipo: "ganada" },
+      { id: "e-per", orden: 2, probabilidad_default: 0, tipo: "perdida" },
+    );
+    render(
+      <QuickCreateOportunidadDialog open onOpenChange={vi.fn()} onCreated={vi.fn()} onMore={vi.fn()} />,
+    );
+
+    expect(
+      screen.getByText("Configura al menos una etapa abierta en el pipeline"),
+    ).toBeInTheDocument();
+    const crear = screen.getByRole("button", { name: "Crear" });
+    expect(crear).toBeDisabled();
+    fireEvent.click(crear);
+    await waitFor(() => expect(mutateAsync).not.toHaveBeenCalled());
   });
 });

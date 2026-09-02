@@ -6,6 +6,7 @@
  * excluyente — así el guard de base de datos nunca se ve forzado a rechazar.
  */
 import type { OportunidadFormState } from "@/features/crm/domain/oportunidadFormState";
+import { MSG_SIN_ETAPA_ABIERTA } from "@/features/crm/domain/oportunidadFormHelpers";
 
 const opt = (v: number) => (v > 0 ? v : null);
 
@@ -83,7 +84,9 @@ export function validarOportunidadForm(
         "Toda oportunidad nace de un prospecto calificado o de un cliente del directorio.",
     };
   }
-  if (!form.etapa_id) return { title: "Selecciona una etapa" };
+  // v13.823.53 — la etapa es de sólo lectura: si viene vacía es porque el
+  // pipeline no tiene etapas abiertas, no porque falte elegirla.
+  if (!form.etapa_id) return { title: MSG_SIN_ETAPA_ABIERTA };
   if (esGanada && !form.fecha_cierre_real) {
     return {
       title: "Captura la fecha de cierre real",
