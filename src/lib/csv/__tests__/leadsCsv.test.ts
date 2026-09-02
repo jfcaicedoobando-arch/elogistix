@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { parseLeadsCsv, mapLeadCsvRows } from "../leadsCsv";
+import { parseLeadsCsv, mapLeadCsvRows, LEAD_CSV_ESTADO_DERIVADO_ERROR } from "../leadsCsv";
 
 describe("parseLeadsCsv", () => {
   it("parsea filas simples", () => {
