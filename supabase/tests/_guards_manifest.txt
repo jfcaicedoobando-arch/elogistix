@@ -79,3 +79,6 @@ supabase/tests/ola2_moneda_venta.sql
 supabase/tests/ola_v16_cobranza_pagos.sql
 supabase/tests/ola_p1_guards.sql
 supabase/tests/buzon_localizar_duplicado_org_scope.sql
+supabase/tests/traspaso_candados_v2.sql
+supabase/tests/cerrar_cancelacion_factura_facturapi_idempotente.sql
+supabase/tests/crear_concepto_costo_y_vincular_atomico.sql
