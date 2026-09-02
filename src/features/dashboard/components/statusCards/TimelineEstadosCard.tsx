@@ -18,11 +18,13 @@ export function TimelineEstadosCard({ conteoPorEstado, isLoading }: Props) {
       <CardContent className="p-4 sm:p-6">
         {/* v13.301.64 · Auditoría 698×572: máscara de fade en el borde
             derecho para señalar que la tira es desplazable cuando el
-            contenedor es más angosto que 600px (entre sm y md). */}
+            contenedor es más angosto que la tira (v13.823.24: el fade se
+            mantiene hasta lg, porque en tablet la tira sigue desbordando). */}
         <div
-          className="overflow-x-auto -mx-1 px-1 [scrollbar-width:thin] [mask-image:linear-gradient(to_right,black_0,black_calc(100%-24px),transparent_100%)] md:[mask-image:none]"
+          className="overflow-x-auto -mx-1 px-1 [scrollbar-width:thin] [mask-image:linear-gradient(to_right,black_0,black_calc(100%-24px),transparent_100%)] lg:[mask-image:none]"
         >
-          <div className="flex items-center justify-between gap-2 sm:gap-3 min-w-[480px] sm:min-w-[600px] relative">
+          <div className="flex items-start justify-between gap-2 sm:gap-3 min-w-[480px] sm:min-w-[600px] relative">
+
             {/* Armonización global: la línea arcoíris (info→warning→success) se
                 sustituye por un separador neutro; el color se reserva para
                 estados semánticos (alertas, vencidos). */}
