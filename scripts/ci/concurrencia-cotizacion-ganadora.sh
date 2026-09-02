@@ -33,7 +33,8 @@
 set -euo pipefail
 
 APP_A='lc_conc_ganadora_a'
-ESPERA_MAX_S=30
+ESPERA_MAX_S=30      # timeout de la barrera
+LOCK_HOLD_S=5        # cuánto retiene A el lock tras su UPDATE
 
 PSQL_BASE=(psql -v ON_ERROR_STOP=1 -X -q -t -A)
 if [[ -n "${SUPABASE_DB_URL:-}" ]]; then
@@ -100,7 +101,7 @@ SQL
 SET application_name = '${APP_A}';
 BEGIN;
 UPDATE public.cotizaciones SET estado = 'Aceptada' WHERE id = '${C1}';
-SELECT pg_sleep(${ESPERA_MAX_S});
+SELECT pg_sleep(${LOCK_HOLD_S});
 COMMIT;
 SELECT 'A_OK';
 SQL
