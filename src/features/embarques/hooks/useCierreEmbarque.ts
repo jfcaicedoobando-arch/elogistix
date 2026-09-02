@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { notifySuccess } from "@/lib/ui/appFeedback";
+import { notifySuccess, notifyWarning } from "@/lib/ui/appFeedback";
 import { notifyError } from "@/lib/ui/appFeedback";
+
 import {
   cerrarEmbarque,
   fetchCierreLog,
@@ -62,10 +63,18 @@ export function useReabrirEmbarque(embarqueId: string) {
   return useMutation({
     mutationFn: (motivo: string) =>
       reabrirEmbarque(embarqueId, motivo, user?.email ?? ""),
-    onSuccess: () => {
+    onSuccess: (resultado) => {
+      if (resultado.pendiente) {
+        notifyWarning(undefined, {
+          title: "Reapertura en proceso",
+          description: "La solicitud anterior aún se está procesando. Espera unos segundos y vuelve a intentar.",
+        });
+        return;
+      }
       invalidarTodo(qc, embarqueId);
       notifySuccess(undefined, { title: "Embarque reabierto" });
     },
+
     onError: (e: Error) => notifyError(undefined, { title: e.message ?? "No se pudo reabrir el embarque", error: e, method: "FEATURES_EMBARQUES_HOOKS_USECIERREEMBARQUE_2" }),
   });
 }

@@ -6,7 +6,7 @@
  * compatibilidad con los imports existentes.
  */
 import { supabase } from "@/integrations/supabase/client";
-import { run, unwrap } from "@/lib/supabase/response";
+import { unwrap } from "@/lib/supabase/response";
 import { getErrorMessage } from "@/lib/errors";
 import { registrarBitacoraEmbarque } from "./bitacoraEmbarques";
 
@@ -82,10 +82,18 @@ export interface ReabrirEmbarqueInput {
  * v13.337.0 — el error de Postgrest (objeto plano, NO `Error`) se traduce con
  * `getErrorMessage`; antes se hacía `String(e)`, que producía el inútil
  * "[object Object]" tanto en el toast como en Sentry.
+ *
+ * v13.823.47 — devuelve `{ replay, pendiente }` con el MISMO contrato que
+ * `avanzarEstadoEmbarqueRpc`. Antes la función era `void`, así que un claim de
+ * idempotencia en vuelo (`__idempotency_pending`) se interpretaba como éxito:
+ * el caller mostraba "Embarque reabierto" y quemaba la llave sin que la
+ * reapertura hubiera ocurrido.
  */
-export async function reabrirEmbarqueRpc(input: ReabrirEmbarqueInput): Promise<void> {
+export async function reabrirEmbarqueRpc(
+  input: ReabrirEmbarqueInput,
+): Promise<AvanzarEstadoResultado> {
   try {
-    await run(
+    const data: unknown = await unwrap(
       supabase.rpc("reabrir_embarque", {
         p_embarque_id: input.embarqueId,
         // B-06: ignorado por la RPC; el actor real sale de la sesión.
@@ -94,6 +102,9 @@ export async function reabrirEmbarqueRpc(input: ReabrirEmbarqueInput): Promise<v
         p_request_id: input.requestId,
       }),
     );
+    const bag = data && typeof data === "object" ? (data as Record<string, unknown>) : {};
+    return { replay: bag.replay === true, pendiente: bag.__idempotency_pending === true };
+
 
   } catch (e) {
     const msg = getErrorMessage(e);

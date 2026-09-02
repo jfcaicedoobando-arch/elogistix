@@ -60,8 +60,17 @@ export function useProveedorMutations() {
   });
 
   const updateProveedorMutation = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: TablesUpdate<"proveedores"> }) =>
-      svcUpdate(id, data),
+    mutationFn: ({
+      id,
+      data,
+      expectedUpdatedAt,
+      organizationId,
+    }: {
+      id: string;
+      data: TablesUpdate<"proveedores">;
+      expectedUpdatedAt?: string | null;
+      organizationId?: string | null;
+    }) => svcUpdate(id, data, expectedUpdatedAt, organizationId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.proveedores.all });
       notifySuccess(undefined, { title: "Proveedor actualizado" });
@@ -85,8 +94,12 @@ export function useProveedorMutations() {
 
   return {
     addProveedor: addProveedorMutation.mutateAsync,
-    updateProveedor: (id: string, data: TablesUpdate<"proveedores">) =>
-      updateProveedorMutation.mutateAsync({ id, data }),
+    updateProveedor: (
+      id: string,
+      data: TablesUpdate<"proveedores">,
+      expectedUpdatedAt?: string | null,
+      organizationId?: string | null,
+    ) => updateProveedorMutation.mutateAsync({ id, data, expectedUpdatedAt, organizationId }),
     deleteProveedor: deleteProveedorMutation.mutateAsync,
     isAdding: addProveedorMutation.isPending,
     isUpdating: updateProveedorMutation.isPending,

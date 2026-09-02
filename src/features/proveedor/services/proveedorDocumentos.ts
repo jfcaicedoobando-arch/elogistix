@@ -6,7 +6,8 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import { unwrap, unwrapOr, run } from "@/lib/supabase/response";
-import { uploadFile, getSignedUrl, deleteFile } from "@/services/storage";
+import { uploadFile, getSignedUrl } from "@/services/storage";
+import { limpiarBlobBestEffort } from "@/lib/documentoStorage";
 import { logClientError } from "@/services/observability/logClientError";
 import { registrarActividad } from "@/services/bitacora/registrar";
 import { slugArchivo } from "@/features/expediente/domain/expediente";
@@ -76,7 +77,8 @@ export async function subirDocumentoProveedor(
     return fila as DocumentoProveedor;
   } catch (e) {
     // Si falla el registro, no dejamos el archivo huérfano en el almacenamiento.
-    await deleteFile(path).catch(() => undefined);
+    // Best-effort: se limpia el blob nuevo y se relanza el error original sin enmascararlo.
+    await limpiarBlobBestEffort(path, "subirDocumentoProveedor");
     throw e;
   }
 }
@@ -90,6 +92,9 @@ export async function eliminarDocumentoProveedor(doc: {
   archivo: string;
 }): Promise<void> {
   const { data: sesion } = await supabase.auth.getUser();
+  // El commit del borrado lógico determina el éxito de la operación: una vez
+  // confirmado, la limpieza del blob y la bitácora son best-effort y no deben
+  // reportarse como error ni revertir la referencia ya guardada.
   await run(
     supabase
       .from("proveedor_documentos")
@@ -99,31 +104,21 @@ export async function eliminarDocumentoProveedor(doc: {
       })
       .eq("id", doc.id),
   );
-  // R3FE-09 (Ola 12, clase RFE-10): el remove ya no se traga en silencio.
-  // Si storage falla se revierte el borrado lógico (la fila NO sale de la UI),
-  // se deja rastro y se propaga el error para que el hook notifique.
+
+  // La limpieza del blob se ejecuta aunque falle la bitácora posterior.
+  await limpiarBlobBestEffort(doc.archivo, `eliminarDocumentoProveedor(${doc.id})`);
+
   try {
-    await deleteFile(doc.archivo);
-  } catch (e) {
-    // Reversa best-effort: si también falla, la policy de lectura R3P-13
-    // (Sprint 03) ya excluye archivos de documentos con deleted_at.
-    await run(
-      supabase
-        .from("proveedor_documentos")
-        .update({ deleted_at: null, deleted_by: null })
-        .eq("id", doc.id),
-    ).catch(() => undefined);
-    logClientError({
-      message: `Expediente proveedor: fallo al borrar el archivo ${doc.archivo} (doc ${doc.id}); se revirtió el borrado lógico.`,
-    });
     await registrarActividad({
       modulo: "proveedores",
-      accion: "eliminar_documento_proveedor_storage_fallido",
+      accion: "eliminar_documento_proveedor",
       entidadId: doc.id,
       entidadNombre: doc.archivo,
     });
-    throw e instanceof Error
-      ? e
-      : new Error("No se pudo borrar el archivo del almacenamiento.");
+  } catch (e) {
+    logClientError({
+      message: `Expediente proveedor: fallo la bitácora al eliminar el documento ${doc.id}.`,
+    });
+    console.warn(`[proveedorDocumentos] fallo la bitácora al eliminar doc ${doc.id}`, e);
   }
 }

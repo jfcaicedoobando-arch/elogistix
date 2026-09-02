@@ -14,10 +14,17 @@ import {
   cancelarNotaCredito,
   NcProveedorTransicionInvalidaError,
 } from "../proveedorNotasCredito";
+import { esConflictoConcurrencia } from "@/lib/errors/concurrencia";
+import { registrarActividad } from "@/services/bitacora/registrar";
+
+vi.mock("@/services/bitacora/registrar", () => ({
+  registrarActividad: vi.fn().mockResolvedValue(undefined),
+}));
 
 describe("proveedorNotasCredito service", () => {
   beforeEach(() => {
     mock.tableCalls.length = 0;
+    vi.mocked(registrarActividad).mockClear();
   });
 
   it("fetchNotasCreditoFactura filtra y ordena desc", async () => {
@@ -48,13 +55,13 @@ describe("proveedorNotasCredito service", () => {
   });
 
   it("aplicarNotaCredito setea estado=Aplicada", async () => {
-    mock.setTableResult("proveedor_notas_credito", { data: null, error: null });
+    mock.setTableResult("proveedor_notas_credito", { data: { id: "nc1" }, error: null });
     await aplicarNotaCredito("nc1");
     expect(mock.getMutationPayload("proveedor_notas_credito", "update")).toMatchObject({ estado: "Aplicada" });
   });
 
   it("cancelarNotaCredito setea estado=Cancelada", async () => {
-    mock.setTableResult("proveedor_notas_credito", { data: null, error: null });
+    mock.setTableResult("proveedor_notas_credito", { data: { id: "nc1" }, error: null });
     await cancelarNotaCredito("nc1");
     expect(mock.getMutationPayload("proveedor_notas_credito", "update")).toMatchObject({ estado: "Cancelada" });
   });
@@ -77,7 +84,7 @@ describe("proveedorNotasCredito service", () => {
   });
 
   it("aprobarNotaCredito setea estado=Aprobada con timestamp", async () => {
-    mock.setTableResult("proveedor_notas_credito", { data: null, error: null });
+    mock.setTableResult("proveedor_notas_credito", { data: { id: "nc1" }, error: null });
     await aprobarNotaCredito("nc1");
     const payload = mock.getMutationPayload("proveedor_notas_credito", "update") as Record<string, unknown>;
     expect(payload.estado).toBe("Aprobada");
@@ -101,6 +108,27 @@ describe("proveedorNotasCredito service", () => {
     });
     const err = await cancelarNotaCredito("nc1").catch((e) => e);
     expect(err).toBeInstanceOf(NcProveedorTransicionInvalidaError);
+  });
+
+  it("aprobarNotaCredito lanza conflicto de concurrencia si el UPDATE no afecta filas (0 filas) y no registra actividad", async () => {
+    mock.setTableResult("proveedor_notas_credito", { data: null, error: null });
+    const err = await aprobarNotaCredito("nc1").catch((e) => e);
+    expect(esConflictoConcurrencia(err)).toBe(true);
+    expect(registrarActividad).not.toHaveBeenCalled();
+  });
+
+  it("aplicarNotaCredito lanza conflicto de concurrencia si el UPDATE no afecta filas (0 filas) y no registra actividad", async () => {
+    mock.setTableResult("proveedor_notas_credito", { data: null, error: null });
+    const err = await aplicarNotaCredito("nc1").catch((e) => e);
+    expect(esConflictoConcurrencia(err)).toBe(true);
+    expect(registrarActividad).not.toHaveBeenCalled();
+  });
+
+  it("cancelarNotaCredito lanza conflicto de concurrencia si el UPDATE no afecta filas (0 filas) y no registra actividad", async () => {
+    mock.setTableResult("proveedor_notas_credito", { data: null, error: null });
+    const err = await cancelarNotaCredito("nc1").catch((e) => e);
+    expect(esConflictoConcurrencia(err)).toBe(true);
+    expect(registrarActividad).not.toHaveBeenCalled();
   });
 
   it("crearNotaCreditoProveedor traduce LC_NC_PROV_INSERT_ESTADO_INVALIDO a error tipado (R.7)", async () => {

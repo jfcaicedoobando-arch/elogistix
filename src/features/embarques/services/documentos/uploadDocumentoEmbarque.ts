@@ -17,6 +17,10 @@ import {
 } from '@/features/embarques/services/idempotencyClaimSchema';
 import { sha256Hex, hexToUuid } from '@/features/embarques/services/documentos/idempotencyHash';
 import { registrarActividad } from '@/services/bitacora/registrar';
+import {
+  limpiarBlobBestEffort,
+  limpiarBlobAnteriorTrasReemplazo,
+} from '@/lib/documentoStorage';
 
 type DocumentoEstado = TablesInsert<'documentos_embarque'>['estado'];
 
@@ -90,26 +94,51 @@ export async function uploadDocumentoEmbarque(
   // 3) Upload y update de la fila. .select() detecta UPDATE de 0 filas (RLS,
   //    docId borrado, etc.) y fallamos explícitamente en vez de éxito silencioso.
   await uploadFile(path, file);
+  const anterior = actual?.archivo ?? null;
   const { data: updated, error } = await supabase
     .from('documentos_embarque')
     .update({ archivo: path, estado: 'Recibido' as DocumentoEstado })
     .eq('id', docId)
     .select('id');
-  if (error) throw error;
+  // v13.823.47 — si el blob ya subió pero el commit falla (error o 0 filas),
+  // el archivo nuevo quedaría huérfano en storage. Se limpia best-effort y se
+  // relanza el error ORIGINAL, sin enmascararlo.
+  if (error) {
+    await limpiarBlobBestEffort(path, 'upload_documento_embarque:commit_fallido');
+    throw error;
+  }
   if (!updated || updated.length === 0) {
+    await limpiarBlobBestEffort(path, 'upload_documento_embarque:cero_filas');
     throw new Error('No se pudo actualizar el documento (sin permisos o el documento ya no existe).');
   }
 
-  await supabase.rpc('idempotency_store', {
-    _key: requestId,
-    _response: { path, fileName: file.name } as never,
-  });
-  await registrarActividad({
-    modulo: 'documentos',
-    accion: 'subir_documento_embarque',
-    entidadId: docId,
-    entidadNombre: file.name,
-    detalles: { embarqueId },
-  });
+  // v13.823.47 — reemplazo documental: con el UPDATE ya confirmado, el blob
+  // anterior queda huérfano. Se borra best-effort y sólo si difiere del nuevo.
+  if (anterior) {
+    await limpiarBlobAnteriorTrasReemplazo(anterior, path, 'upload_documento_embarque:reemplazo');
+  }
+
+  // v13.823.47 — el commit del documento YA determinó el éxito: la
+  // idempotencia y la bitácora post-commit son best-effort y observables. Antes
+  // un fallo aquí mostraba error de una operación ya aplicada.
+  try {
+    await supabase.rpc('idempotency_store', {
+      _key: requestId,
+      _response: { path, fileName: file.name } as never,
+    });
+  } catch (e) {
+    console.warn('[uploadDocumentoEmbarque] no se pudo guardar la respuesta de idempotencia', e);
+  }
+  try {
+    await registrarActividad({
+      modulo: 'documentos',
+      accion: 'subir_documento_embarque',
+      entidadId: docId,
+      entidadNombre: file.name,
+      detalles: { embarqueId },
+    });
+  } catch (e) {
+    console.warn('[uploadDocumentoEmbarque] no se pudo registrar la bitácora del documento', e);
+  }
   return { path, fileName: file.name, cached: false };
 }

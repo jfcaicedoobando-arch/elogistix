@@ -10,6 +10,7 @@ import { normalizarRazonSocial } from "@/lib/text/razonSocial";
 import { ProveedorDuplicadoError, findProveedorByRfcEnOrg } from "./duplicadoRfc";
 import { bitacoraProveedor } from "./proveedoresBitacora";
 import { CAP_LISTA } from "@/constants/queryCaps";
+import { conflictoConcurrenciaError } from "@/lib/errors/concurrencia";
 
 type TipoProveedor = Enums<"tipo_proveedor">;
 type CategoriaProveedor = Enums<"categoria_proveedor">;
@@ -155,6 +156,14 @@ export async function insertProveedor(prov: TablesInsert<"proveedores">): Promis
 export async function updateProveedor(
   id: string,
   changes: TablesUpdate<"proveedores">,
+  /**
+   * Bloqueo optimista (mismo patrón que `cliente/services/crud.ts`):
+   * `updated_at` leído al abrir el formulario. Si la fila ya cambió, el
+   * UPDATE no toca ninguna fila y se lanza LC_CONFLICTO_CONCURRENCIA en vez
+   * de sobrescribir cambios ajenos (last-write-wins).
+   */
+  expectedUpdatedAt?: string | null,
+  organizationId?: string | null,
 ): Promise<void> {
   // P2-1 (R5): un UPDATE bloqueado por RLS o sobre un id inexistente NO devuelve
   // error en PostgREST — devuelve 0 filas. Sin este chequeo la UI mostraba
@@ -163,13 +172,12 @@ export async function updateProveedor(
     changes.nombre === undefined
       ? changes
       : { ...changes, nombre: normalizarRazonSocial(changes.nombre) };
-  const { data, error } = await supabase
-    .from("proveedores")
-    .update(payload)
-    .eq("id", id)
-    .select("id");
-  if (error) throw error;
-  if (!data || data.length === 0) {
+  let query = supabase.from("proveedores").update(payload).eq("id", id);
+  if (organizationId) query = query.eq("organization_id", organizationId);
+  if (expectedUpdatedAt) query = query.eq("updated_at", expectedUpdatedAt);
+  const data = await unwrap(query.select("id").maybeSingle());
+  if (!data) {
+    if (expectedUpdatedAt) throw conflictoConcurrenciaError();
     throw new Error("No se guardaron los cambios del proveedor: no tienes permiso o el proveedor ya no existe.");
   }
   await bitacoraProveedor("editar", id, typeof payload.nombre === "string" ? payload.nombre : "", {
