@@ -48,7 +48,7 @@ BEGIN
   ON CONFLICT (id) DO NOTHING;
 
   INSERT INTO public.embarques (id, organization_id, expediente, estado)
-  VALUES (v_emb, v_org, 'EXP-ATOM-1', 'ETD')
+  VALUES (v_emb, v_org, 'ELATO0001', 'ETD')
   ON CONFLICT (id) DO NOTHING;
 
   INSERT INTO public.presupuesto_categorias (organization_id, nombre)
