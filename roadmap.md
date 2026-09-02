@@ -8,4 +8,4 @@
 - [ ] Ola 4 (a medir) · Barrido del resto de tablas de escritorio (embarques, compras/conciliación, tesorería, admin, CRM, costeo)
 
 ## Ola Agente → Gerente de Operaciones (v13.823.27)
-- [ ] Cerrar errores de typecheck del preview antes de finalizar (build-errors.log).
+- [x] Cerrar errores de typecheck del preview antes de finalizar (build-errors.log).
