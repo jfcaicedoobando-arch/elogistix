@@ -101,63 +101,72 @@ function construirPayloadPago(
   };
 }
 
+/**
+ * v13.823.32: el pago y su movimiento bancario se graban en UNA transacción
+ * (`registrar_pago_proveedor_atomico`). Antes se insertaba el pago y después el
+ * movimiento: un fallo intermedio dejaba la factura pagada sin salida bancaria,
+ * y el reintento con el mismo `client_request_id` devolvía 23505 como falso
+ * fracaso. La RPC es idempotente: con la misma llave devuelve el pago ya creado
+ * y le asegura (repara) su movimiento.
+ */
 export async function registrarPagoProveedor(
   input: RegistrarPagoProveedorInput,
   userId: string | null,
 ): Promise<PagoProveedor> {
-  // Resolvemos la organización del padre para que el INSERT no dependa del
-  // default `current_user_org_id()` (que puede divergir bajo impersonación).
-  // Ver Sentry JAVASCRIPT-REACT-W.
-  const organizationId = await resolverOrgFactura(input.proveedor_factura_id);
-  const payload = construirPayloadPago(input, organizationId, userId);
+  // Resolvemos la organización del padre para validar pertenencia/aprobación
+  // antes de escribir. Ver Sentry JAVASCRIPT-REACT-W.
+  await resolverOrgFactura(input.proveedor_factura_id);
+  const tc = input.tipo_cambio_usd && input.tipo_cambio_usd > 0 ? input.tipo_cambio_usd : null;
 
-  const { data, error } = await supabase
-    .from("pagos_proveedor")
-    .insert(payload)
-    .select()
-    .single();
+  const { data: res, error } = await supabase.rpc("registrar_pago_proveedor_atomico", {
+    p_factura_id: input.proveedor_factura_id,
+    p_fecha_pago: input.fecha_pago,
+    p_monto: input.monto,
+    p_moneda: input.moneda,
+    p_metodo_pago: input.metodo_pago,
+    p_referencia: input.referencia ?? "",
+    p_cuenta_bancaria_id: input.cuenta_bancaria_id ?? null,
+    p_notas: input.notas ?? "",
+    p_tipo_cambio_usd: tc,
+    p_diferencia_cambiaria_mxn: input.diferencia_cambiaria_mxn ?? null,
+    p_client_request_id: input.client_request_id ?? null,
+  });
   if (error) {
     if (esErrorPagoSinAprobacion(error)) throw new PagoRequiereAprobacionError();
     throw error;
   }
-
-  // R6-N1: si el pago salió de una cuenta bancaria, generamos el movimiento
-  // conciliado para que /tesoreria refleje la salida de efectivo.
-  let movimientoCreado = false;
-  if (input.cuenta_bancaria_id) {
-    movimientoCreado = avisarMovimientoNoCreado(await crearMovimientoBancarioPago({
-      pagoId: data.id,
-      organizationId,
-      cuentaBancariaId: input.cuenta_bancaria_id,
-      facturaId: input.proveedor_factura_id,
-      fechaPago: input.fecha_pago,
-      monto: input.monto,
-      moneda: input.moneda,
-      tipoCambioUsd: input.tipo_cambio_usd,
-      referencia: input.referencia,
-      userId,
-    }));
+  const resultado = (res ?? {}) as { pago_id?: string; movimiento_id?: string | null };
+  if (!resultado.pago_id) {
+    throw new Error("No se pudo registrar el pago: la base de datos no devolvió el pago creado.");
   }
 
-  // Recalcular estado de la factura origen
-  await recalcularEstadoFactura(input.proveedor_factura_id);
+  const { data: pago, error: errPago } = await supabase
+    .from("pagos_proveedor")
+    .select(
+      "id, organization_id, proveedor_factura_id, fecha_pago, monto, moneda, tipo_cambio_usd, diferencia_cambiaria_mxn, metodo_pago, referencia, cuenta_bancaria_id, notas, created_by, created_at, updated_at, deleted_at, deleted_by",
+    )
+    .eq("id", resultado.pago_id)
+    .single();
+  if (errPago) throw errPago;
+
   await registrarActividad({
     modulo: "cxp",
     accion: "pagar",
     entidadId: input.proveedor_factura_id,
     detalles: detallesPagoRegistrado({
-      pagoId: data.id,
+      pagoId: resultado.pago_id,
       monto: input.monto,
       moneda: input.moneda,
       metodoPago: input.metodo_pago,
       referencia: input.referencia,
       cuentaBancariaId: input.cuenta_bancaria_id ?? null,
       tipoCambioUsd: input.tipo_cambio_usd,
-      movimientoCreado,
+      movimientoCreado: Boolean(resultado.movimiento_id),
     }),
   });
-  return data as PagoProveedor;
+  return pago as PagoProveedor;
 }
+
 
 export { eliminarPagoProveedor } from "./pagoProveedorEliminar";
 
