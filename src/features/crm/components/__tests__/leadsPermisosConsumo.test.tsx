@@ -9,7 +9,6 @@
  */
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 
 vi.mock("@/hooks/shared", () => ({ usePermissions: vi.fn() }));
@@ -68,17 +67,17 @@ describe("consumo de capacidades de leads", () => {
 
   it("QuickAddMenu oculta 'Importar leads CSV' sin gestión en lote", async () => {
     setPermisos({ canCrearLead: true, canGestionarLeadsEnLote: false });
-    render(<QuickAddMenu />, { wrapper: MemoryRouter });
-    await userEvent.click(screen.getByRole("button", { name: /nuevo/i }));
-    expect(screen.getByText("Nuevo lead")).toBeTruthy();
+    const { rerender } = render(<QuickAddMenu openTrigger={0} />, { wrapper: MemoryRouter });
+    rerender(<QuickAddMenu openTrigger={1} />);
+    expect(await screen.findByText("Nuevo lead")).toBeTruthy();
     expect(screen.queryByText(/importar leads csv/i)).toBeNull();
   });
 
   it("QuickAddMenu muestra 'Importar leads CSV' con gestión en lote", async () => {
     setPermisos({ canCrearLead: false, canGestionarLeadsEnLote: true });
-    render(<QuickAddMenu />, { wrapper: MemoryRouter });
-    await userEvent.click(screen.getByRole("button", { name: /nuevo/i }));
-    expect(screen.getByText(/importar leads csv/i)).toBeTruthy();
+    const { rerender } = render(<QuickAddMenu openTrigger={0} />, { wrapper: MemoryRouter });
+    rerender(<QuickAddMenu openTrigger={1} />);
+    expect(await screen.findByText(/importar leads csv/i)).toBeTruthy();
     expect(screen.queryByText("Nuevo lead")).toBeNull();
   });
 });
