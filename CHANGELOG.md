@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.823.37] - 2026-09-02
+### Higiene de código y mensajes de error en español
+- **Mensajes claros**: ocho errores de la base (cuentas por pagar, pagos programados, traspasos y conversión de cotizaciones) ya no se muestran con su clave técnica: ahora tienen texto en español que explica qué hacer.
+- **Archivos partidos**: seis pantallas/hooks que habían crecido de más (garantías del agente, costeo de navieras, buscar tarifa, alta de factura de proveedor, sidebar y CxP por pagar) se dividieron sin cambiar comportamiento.
+- **Detalles de interfaz**: el aviso de tipo de cambio en notas de crédito de proveedor usa el banner estándar, y el botón "Pagar en lote" muestra su explicación con tooltip accesible en lugar del `title` del navegador.
+
 ## [13.823.36] - 2026-09-02
 ### Reconstrucción de base: ya no se saltan migraciones
 - **Replay completo**: la reconstrucción limpia de la base decidía qué migraciones aplicar comparando fechas contra el corte del squash. Diez migraciones creadas después del squash traían fecha anterior al corte y se omitían en silencio (entre ellas el registro atómico de pagos a proveedor). Ahora se usa un inventario explícito de lo que sí está consolidado (`supabase/schema/squash/included.txt`), tanto en CI como en la verificación local.
