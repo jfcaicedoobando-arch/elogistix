@@ -8,13 +8,6 @@ import { FileSearch, Clock, CalendarX } from "lucide-react";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 import type { DiagnosticoTarifas } from "@/features/costeo/services/diagnosticoTarifas";
 
-const MENSAJES: Record<
-  DiagnosticoTarifas,
-  { icon: typeof FileSearch; message: string; hint: string }
-> = {
-  ninguda: undefined as never, // placeholder removido en tiempo de compilación
-} as never;
-
 export interface TarifasSinResultadoProps {
   diagnostico?: DiagnosticoTarifas;
 }
