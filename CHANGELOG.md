@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.823.41] - 2026-09-02
+### Higiene de código (sin cambios funcionales)
+- **Portal del cliente**: la tarjeta de pagos y notas de crédito se dividió en piezas más pequeñas (pagos, notas de crédito y totales); se ve y calcula exactamente igual.
+- **Webhook de facturación**: la lógica de control de duplicados y reintentos se extrajo a funciones dedicadas para simplificar el flujo.
+
 ## [13.823.40] - 2026-09-02
 ### Importaciones masivas y estado de cuenta BBVA sin pérdidas silenciosas
 - **Importación de clientes y proveedores**: antes de guardar se revisa qué registros ya existen (por RFC o razón social); las filas repetidas se omiten en lugar de duplicarse al reintentar un archivo que falló a la mitad.
