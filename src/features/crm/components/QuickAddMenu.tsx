@@ -35,7 +35,7 @@ type Quick = "lead" | "oportunidad" | "actividad" | null;
 
 export default function QuickAddMenu({ openTrigger, dialogTrigger }: QuickAddMenuProps = {}) {
   const navigate = useNavigate();
-  const { canEditCrm } = usePermissions();
+  const { canEditCrm, canCrearLead } = usePermissions();
   const [menuOpen, setMenuOpen] = useState(false);
   const [quick, setQuick] = useState<Quick>(null);
   const [leadOpen, setLeadOpen] = useState(false);
@@ -60,10 +60,13 @@ export default function QuickAddMenu({ openTrigger, dialogTrigger }: QuickAddMen
   useEffect(() => {
     if (!dialogTrigger || dialogTrigger.n === lastDialogTrigger.current) return;
     lastDialogTrigger.current = dialogTrigger.n;
+    if (dialogTrigger.kind === "lead" && !canCrearLead) return;
     setQuick(dialogTrigger.kind);
-  }, [dialogTrigger]);
+  }, [dialogTrigger, canCrearLead]);
 
   const abrirQuick = (kind: Exclude<Quick, null>) => {
+    // v13.823.60: el atajo "L" y el menú comparten el mismo candado de creación.
+    if (kind === "lead" && !canCrearLead) return;
     setMenuOpen(false);
     setQuick(kind);
   };
@@ -79,9 +82,11 @@ export default function QuickAddMenu({ openTrigger, dialogTrigger }: QuickAddMen
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-56">
-          <DropdownMenuItem onSelect={() => abrirQuick("lead")}>
-            <Users className="h-4 w-4 mr-2" /> Nuevo lead <span className="ml-auto text-label text-muted-foreground">L</span>
-          </DropdownMenuItem>
+          {canCrearLead && (
+            <DropdownMenuItem onSelect={() => abrirQuick("lead")}>
+              <Users className="h-4 w-4 mr-2" /> Nuevo lead <span className="ml-auto text-label text-muted-foreground">L</span>
+            </DropdownMenuItem>
+          )}
           <DropdownMenuItem onSelect={() => abrirQuick("oportunidad")}>
             <Target className="h-4 w-4 mr-2" /> Nueva oportunidad <span className="ml-auto text-label text-muted-foreground">O</span>
           </DropdownMenuItem>

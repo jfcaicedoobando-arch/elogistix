@@ -12,10 +12,11 @@ import { LEAD_ESTADOS_ETAPA_LEAD, esProspecto } from "@/features/crm/domain/lead
 import { COL_W } from "@/components/shared/dataTable/columnWidths";
 import { getErrorMessage } from "@/lib/errors";
 
-function EstadoCell({ lead }: { lead: CrmLeadRow }) {
+function EstadoCell({ lead, puedeGestionar }: { lead: CrmLeadRow; puedeGestionar: boolean }) {
   const actualizar = useActualizarLead();
   // Rediseño CRM: prospectos y convertidos ya no cambian de etapa desde la tabla.
-  if (lead.estado === "Convertido" || esProspecto(lead.estado)) {
+  // v13.823.60: quien no puede gestionar ESA fila ve badge, no selector.
+  if (!puedeGestionar || lead.estado === "Convertido" || esProspecto(lead.estado)) {
     // v13.681.0 · UI-1: color unificado por el statusRegistry (dominio lead).
     return <StatusBadge domain="lead" status={lead.estado} />;
   }
@@ -51,10 +52,11 @@ export function makeLeadsColumns(
   toggle: (id: string) => void,
   toggleAll: (rows: CrmLeadRow[]) => void,
   allRows: CrmLeadRow[],
+  puedeGestionarLead: (vendedorId: string | null | undefined) => boolean,
+  puedeSeleccionar: boolean,
 ): ColumnDef<CrmLeadRow, unknown>[] {
   const allSelected = allRows.length > 0 && allRows.every((r) => selected.has(r.id));
-  return defineColumns<CrmLeadRow>([
-    {
+  const columnaSeleccion: ColumnDef<CrmLeadRow, unknown> = {
       id: "sel", header: () => (
         <Checkbox checked={allSelected} onCheckedChange={() => toggleAll(allRows)} aria-label="Seleccionar todos" />
       ),
@@ -64,7 +66,9 @@ export function makeLeadsColumns(
           <Checkbox checked={selected.has(row.original.id)} onCheckedChange={() => toggle(row.original.id)} />
         </div>
       ),
-    },
+    };
+  return defineColumns<CrmLeadRow>([
+    ...(puedeSeleccionar ? [columnaSeleccion] : []),
     {
       id: "empresa", header: "Empresa",
       accessorFn: (l) => l.empresa, enableSorting: true,
@@ -77,7 +81,7 @@ export function makeLeadsColumns(
     { id: "fuente", header: "Fuente", meta: { width: COL_W.folio, className: "text-body-sm hidden xl:table-cell", headerClassName: "hidden xl:table-cell" }, cell: ({ row }) => row.original.fuente },
     {
       id: "estado", header: "Estado", meta: { width: COL_W.nombre },
-      cell: ({ row }) => <EstadoCell lead={row.original} />,
+      cell: ({ row }) => <EstadoCell lead={row.original} puedeGestionar={puedeGestionarLead(row.original.vendedor_id)} />,
     },
     { id: "score", header: "Score", meta: { width: COL_W.tiny, align: "center", className: "text-center text-body-sm tabular-nums" }, cell: ({ row }) => row.original.score },
   ]);

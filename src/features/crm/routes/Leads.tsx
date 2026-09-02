@@ -46,7 +46,7 @@ const DEFAULTS: LeadsFilters = { estado: "todos", fuente: "todos" };
 
 export default function Leads() {
   useDocumentTitle('Leads');
-  const { canEditCrm } = usePermissions();
+  const { canGestionarLead, canGestionarLeadsEnLote } = usePermissions();
   const [selected, setSelected] = useState<Set<string>>(new Set());
 
   const list = useServerPagedList<CrmLeadRow, LeadsFilters>({
@@ -86,8 +86,9 @@ export default function Leads() {
   });
   const clearSel = () => setSelected(new Set());
   const columns = useMemo(
-    () => makeLeadsColumns(selected, toggle, toggleAll, leads),
-    [selected, leads],
+    () => makeLeadsColumns(selected, toggle, toggleAll, leads, canGestionarLead, canGestionarLeadsEnLote),
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- canGestionarLead es estable por render de permisos
+    [selected, leads, canGestionarLeadsEnLote],
   );
 
   return (
@@ -113,7 +114,7 @@ export default function Leads() {
         }
       />
 
-      {canEditCrm && selected.size > 0 && (
+      {canGestionarLeadsEnLote && selected.size > 0 && (
         <LeadsBulkBar ids={Array.from(selected)} onClear={clearSel} onDone={clearSel} />
       )}
 
