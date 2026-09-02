@@ -1,5 +1,6 @@
 import { CalendarCheck, Layers } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Hint } from "@/components/shared/Hint";
 
 interface Props {
   visible: boolean;
@@ -25,21 +26,23 @@ export function CxpPorPagarHeaderActions({
   return (
     <div className="flex flex-wrap gap-2">
       <Button onClick={onProgramar} variant="outline">
-        <CalendarCheck className="h-4 w-4 mr-2" />
+        <CalendarCheck className="size-4 mr-2" />
         Programar pago ({selectedCount})
       </Button>
-      <Button
-        onClick={onPagarLote}
-        disabled={!loteDisponible}
-        title={
+      <Hint
+        label={
           loteDisponible
             ? undefined
             : "Selecciona 2 o más facturas del mismo proveedor y la misma moneda"
         }
       >
-        <Layers className="h-4 w-4 mr-2" />
-        Pagar en lote ({selectedCount})
-      </Button>
+        <span>
+          <Button onClick={onPagarLote} disabled={!loteDisponible}>
+            <Layers className="size-4 mr-2" />
+            Pagar en lote ({selectedCount})
+          </Button>
+        </span>
+      </Hint>
     </div>
   );
 }
