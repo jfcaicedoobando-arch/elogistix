@@ -33,6 +33,9 @@ INSERT INTO _ci_service_role_only (fn) VALUES
   -- v15 (M-14): banda de plausibilidad del T/C en pagos CxC/CxP.
   ('public._assert_tc_banda()'),
   ('public._assert_periodo_abierto()'),
+  -- Lectura bloqueada (FOR KEY SHARE) del estado del embarque: sólo la usan
+  -- los triggers SECURITY DEFINER de bloqueo por cierre.
+  ('public._assert_embarque_abierto_locked(uuid)'),
   ('public._assert_uuid_fiscal_single_write()'),
   ('public._audit_costos_repetidos(uuid)'),
   ('public._audit_embarques_agregar(jsonb, jsonb)'),
