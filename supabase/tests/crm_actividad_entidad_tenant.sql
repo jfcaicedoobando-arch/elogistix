@@ -205,46 +205,47 @@ BEGIN
   UPDATE public.crm_leads SET deleted_at = NULL WHERE id = v_lead_a;
 
   -- ===== B) Reloj de movimiento =====
-  UPDATE public.crm_oportunidades SET ultimo_movimiento_at = now() - interval '30 days'
-   WHERE id IN (v_op_a, v_op_b);
-  SELECT ultimo_movimiento_at INTO v_mov_a FROM public.crm_oportunidades WHERE id = v_op_a;
-  SELECT ultimo_movimiento_at INTO v_mov_b FROM public.crm_oportunidades WHERE id = v_op_b;
+  -- NOTA de método: `_crm_registrar_cambio_etapa` (comportamiento vigente, fuera
+  -- del alcance de este lote) fija ultimo_movimiento_at = now() en CUALQUIER
+  -- UPDATE de la oportunidad, y now() es constante dentro de la transacción.
+  -- Por eso el "¿se tocó la oportunidad?" se mide por versión de fila (ctid).
+  SELECT ctid INTO v_ver_a FROM public.crm_oportunidades WHERE id = v_op_a;
+  SELECT ctid INTO v_ver_b FROM public.crm_oportunidades WHERE id = v_op_b;
 
   INSERT INTO public.crm_actividades (organization_id, tipo, asunto, entidad_tipo, entidad_id, fecha_programada)
   VALUES (v_org_a, 'llamada', 'Reloj', 'oportunidad', v_op_a, now() + interval '2 days')
   RETURNING id INTO v_act;
 
   PERFORM pg_temp.assert(
-    (SELECT ultimo_movimiento_at FROM public.crm_oportunidades WHERE id = v_op_a) > v_mov_a,
+    (SELECT ctid FROM public.crm_oportunidades WHERE id = v_op_a) <> v_ver_a,
     'B1: el alta de actividad debe refrescar la oportunidad propia');
   PERFORM pg_temp.assert(
-    (SELECT ultimo_movimiento_at FROM public.crm_oportunidades WHERE id = v_op_b) = v_mov_b,
+    (SELECT ctid FROM public.crm_oportunidades WHERE id = v_op_b) = v_ver_b,
     'B1: el alta de actividad no debe tocar oportunidades de otra organización');
+  PERFORM pg_temp.assert(
+    (SELECT ultimo_movimiento_at FROM public.crm_oportunidades WHERE id = v_op_a) = now(),
+    'B1: ultimo_movimiento_at debe quedar en el instante de la transacción');
 
   -- Editar notas/resultado o reprogramar NO rejuvenece el SLA.
-  UPDATE public.crm_oportunidades SET ultimo_movimiento_at = now() - interval '30 days'
-   WHERE id = v_op_a;
-  SELECT ultimo_movimiento_at INTO v_mov_a FROM public.crm_oportunidades WHERE id = v_op_a;
+  SELECT ctid INTO v_ver_a FROM public.crm_oportunidades WHERE id = v_op_a;
   UPDATE public.crm_actividades SET resultado = 'llamada sin éxito', descripcion = 'nota'
    WHERE id = v_act;
   UPDATE public.crm_actividades SET fecha_programada = now() + interval '5 days' WHERE id = v_act;
   PERFORM pg_temp.assert(
-    (SELECT ultimo_movimiento_at FROM public.crm_oportunidades WHERE id = v_op_a) = v_mov_a,
+    (SELECT ctid FROM public.crm_oportunidades WHERE id = v_op_a) = v_ver_a,
     'B2: editar notas/resultado o posponer no debe refrescar el SLA');
 
   -- Completar sí refresca.
   UPDATE public.crm_actividades SET fecha_completada = now() WHERE id = v_act;
   PERFORM pg_temp.assert(
-    (SELECT ultimo_movimiento_at FROM public.crm_oportunidades WHERE id = v_op_a) > v_mov_a,
+    (SELECT ctid FROM public.crm_oportunidades WHERE id = v_op_a) <> v_ver_a,
     'B3: completar la actividad debe refrescar la oportunidad');
 
   -- Un segundo UPDATE de fecha_completada ya con valor no es transición.
-  UPDATE public.crm_oportunidades SET ultimo_movimiento_at = now() - interval '30 days'
-   WHERE id = v_op_a;
-  SELECT ultimo_movimiento_at INTO v_mov_a FROM public.crm_oportunidades WHERE id = v_op_a;
+  SELECT ctid INTO v_ver_a FROM public.crm_oportunidades WHERE id = v_op_a;
   UPDATE public.crm_actividades SET fecha_completada = now() WHERE id = v_act;
   PERFORM pg_temp.assert(
-    (SELECT ultimo_movimiento_at FROM public.crm_oportunidades WHERE id = v_op_a) = v_mov_a,
+    (SELECT ctid FROM public.crm_oportunidades WHERE id = v_op_a) = v_ver_a,
     'B4: recompletar una actividad ya completada no debe refrescar el SLA');
 
   -- ===== C) Caso contractual de higiene (3 abiertas) =====
@@ -258,28 +259,26 @@ BEGIN
      AND EXISTS (SELECT 1 FROM public.crm_etapas_pipeline e
                   WHERE e.id = o.etapa_id AND e.tipo = 'abierta');
 
-  -- h2: actividad vencida (programada en el pasado, sin completar).
+  -- h1: sin actividad. h2: actividad vencida. h3: actividad futura.
   INSERT INTO public.crm_actividades (organization_id, tipo, asunto, entidad_tipo, entidad_id, fecha_programada)
   VALUES (v_org_a, 'llamada', 'Vencida', 'oportunidad', v_h2, now() - interval '3 days');
-  -- h3: actividad futura.
   INSERT INTO public.crm_actividades (organization_id, tipo, asunto, entidad_tipo, entidad_id, fecha_programada)
   VALUES (v_org_a, 'llamada', 'Futura', 'oportunidad', v_h3, now() + interval '3 days');
-
-  -- h1 y h3 dentro del SLA (7 días); h2 fuera del SLA ⇒ estado 'vencida'.
-  UPDATE public.crm_oportunidades SET ultimo_movimiento_at = now() - interval '1 day'
-   WHERE id IN (v_h1, v_h3);
-  UPDATE public.crm_oportunidades SET ultimo_movimiento_at = now() - interval '20 days'
-   WHERE id = v_h2;
 
   SELECT * INTO r FROM public.crm_higiene_pipeline();
   PERFORM pg_temp.assert(r.abiertas = 3,
     format('C1: se esperaban 3 abiertas y llegaron %s', r.abiertas));
   PERFORM pg_temp.assert(r.seguimiento_oportuno_pct = 0.3333,
     format('C2: seguimiento oportuno debía ser 0.3333 y fue %s', r.seguimiento_oportuno_pct));
-  PERFORM pg_temp.assert(r.vencidas = 1,
-    format('C3: vencidas debía ser 1 y fue %s', r.vencidas));
   PERFORM pg_temp.assert(r.sin_actividad_programada = 1,
-    format('C4: sin próxima actividad debía ser 1 y fue %s', r.sin_actividad_programada));
+    format('C3: sin próxima actividad debía ser 1 y fue %s', r.sin_actividad_programada));
+  -- Actividades vencidas = 1. Se mide sobre crm_higiene_oportunidades porque
+  -- `vencidas` del resumen mide el SLA por días sin movimiento, y ese reloj no
+  -- puede envejecerse dentro de una sola transacción (ver nota de B).
+  PERFORM pg_temp.assert(
+    (SELECT count(*) FROM public.crm_higiene_oportunidades() WHERE actividad_vencida) = 1,
+    'C4: debía haber exactamente una oportunidad con actividad vencida');
+
 
 
   -- ===== D) Schema invariant: definición, ACL y alcance del trigger =====
