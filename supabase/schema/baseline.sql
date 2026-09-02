@@ -449,10 +449,6 @@ BEGIN
   IF p_embarque_id IS NULL THEN
     RETURN NULL;
   END IF;
-  -- FOR KEY SHARE es mutuamente exclusivo con el FOR UPDATE de
-  -- cerrar_embarque: si un cierre está en curso, esta lectura espera a que
-  -- termine (commit o rollback) antes de decidir si el embarque sigue
-  -- abierto, cerrando la ventana de carrera del DEFECTO 2.
   SELECT estado::text INTO v_estado
     FROM public.embarques
    WHERE id = p_embarque_id
@@ -6195,19 +6191,15 @@ DECLARE
   v_total_ncs_mxn numeric;
   v_tol_mxn numeric;
 BEGIN
-  -- Sólo restringe NCs vivas y aplicadas (borradores y canceladas se permiten).
   IF NEW.deleted_at IS NOT NULL OR NEW.estado::text NOT IN ('Aplicada','Emitida') THEN
     RETURN NEW;
   END IF;
-  -- Defecto 5: FOR UPDATE serializa las NC concurrentes de la misma factura.
-  -- La misma lectura bloqueada sirve para moneda/tipo_cambio/fecha_emision.
   SELECT f.moneda::text AS moneda, f.tipo_cambio, f.fecha_emision
     INTO v_fac
   FROM public.facturas f
   WHERE f.id = NEW.factura_id
     AND f.deleted_at IS NULL
   FOR UPDATE;
-  -- Factura inexistente o en papelera: fuera del alcance del candado.
   IF NOT FOUND THEN
     RETURN NEW;
   END IF;
@@ -6220,7 +6212,6 @@ BEGIN
     NEW.tipo_cambio,
     v_fac.tipo_cambio
   );
-  -- Fail-closed: sin tipo de cambio no se puede comparar dinero de forma segura.
   IF v_saldo_mxn IS NULL OR v_nc_nueva_mxn IS NULL THEN
     RAISE EXCEPTION 'LC_NC_SIN_TC: no hay tipo de cambio para validar la nota de crédito contra el saldo de la factura'
       USING ERRCODE = 'check_violation',
@@ -6246,7 +6237,6 @@ BEGIN
     AND nc.estado::text IN ('Aplicada','Emitida')
     AND nc.id <> COALESCE(NEW.id, '00000000-0000-0000-0000-000000000000'::uuid);
   v_total_ncs_mxn := v_ncs_previas_mxn + v_nc_nueva_mxn;
-  -- Tolerancia de un centavo expresada en la moneda de la factura.
   v_tol_mxn := GREATEST(
     0.01,
     COALESCE(public.a_mxn_doc(0.01, v_fac.moneda, v_fac.fecha_emision, v_fac.tipo_cambio, NULL), 0.01)
@@ -6300,8 +6290,6 @@ BEGIN
       OR (NEW.deleted_at IS DISTINCT FROM OLD.deleted_at)
       OR (NEW.created_at IS DISTINCT FROM OLD.created_at);
   ELSE
-    -- INSERT: sólo importa si nace viva (deleted_at NULL); un insert ya
-    -- borrado no toca la historia viva de nadie.
     IF NEW.deleted_at IS NOT NULL THEN
       RETURN NEW;
     END IF;
@@ -6311,8 +6299,6 @@ BEGIN
     v_row_ts := NEW.created_at;
     v_row_deleted := NULL;
   END IF;
-  -- Fila que ya estaba borrada (soft-delete previo): no forma parte de la
-  -- historia viva de ninguna factura, cualquier mutación es inocua para REP.
   IF TG_OP <> 'INSERT' AND v_row_deleted IS NOT NULL THEN
     IF TG_OP = 'DELETE' THEN RETURN OLD; ELSE RETURN NEW; END IF;
   END IF;
@@ -7455,8 +7441,6 @@ BEGIN
   IF current_setting('app.bypass_cierre', true) = 'on' THEN
     RETURN COALESCE(NEW, OLD);
   END IF;
-  -- DEFECTO 2: lectura bloqueada (FOR KEY SHARE) para no perder la carrera
-  -- contra el FOR UPDATE de cerrar_embarque.
   v_estado := public._assert_embarque_abierto_locked(COALESCE(NEW.embarque_id, OLD.embarque_id));
   IF v_estado = 'Cerrado' THEN
     IF TG_OP = 'UPDATE' AND NEW.deleted_at IS NOT NULL AND OLD.deleted_at IS NULL THEN
@@ -8993,7 +8977,6 @@ DECLARE
   v_is_admin boolean;
   v_forzado boolean := false;
   v_automatico boolean := COALESCE(current_setting('app.cierre_automatico', true), 'off') = 'on';
-  -- BL-09: cursor de recálculo de comisiones pendientes.
   v_pago_recalc uuid;
   v_recalculadas int := 0;
 BEGIN
@@ -9004,9 +8987,6 @@ BEGIN
   IF NOT FOUND THEN
     RAISE EXCEPTION 'Embarque no encontrado';
   END IF;
-  -- DEFECTO 1: el rol se valida EN LA ORG DEL EMBARQUE (v_emb.organization_id),
-  -- no de forma global. super_admin sigue autorizado globalmente por la
-  -- semántica ya embebida en has_any_role_in_org_exact.
   v_is_admin :=
     NOT v_automatico AND
     public.has_any_role_in_org_exact(v_uid, ARRAY['admin','admin_org']::app_role[], v_emb.organization_id);
@@ -9061,10 +9041,6 @@ BEGIN
          reabierto_motivo = NULL,
          updated_at = now()
    WHERE id = p_embarque_id;
-  -- BL-09: recalcular las comisiones del embarque que quedaron en 0 con nota
-  -- de pendiente (TC faltante / costos capturados tarde). La función es
-  -- idempotente y omite las ya 'Liquidada'. Un fallo individual no aborta el
-  -- cierre: queda WARNING y la nota sigue marcando la comisión como pendiente.
   FOR v_pago_recalc IN
     SELECT pf.id
       FROM pagos_factura pf
@@ -22032,9 +22008,6 @@ BEGIN
   IF v_org_id IS NULL THEN
     RAISE EXCEPTION 'Embarque no encontrado';
   END IF;
-  -- DEFECTO 1 (consistencia): antes usaba has_role() GLOBAL; ahora se exige
-  -- membresía admin/admin_org en LA ORG DEL EMBARQUE (super_admin sigue
-  -- autorizado globalmente, semántica embebida en has_any_role_in_org_exact).
   v_es_admin := public.has_any_role_in_org_exact(v_actor_id, ARRAY['admin','admin_org']::app_role[], v_org_id);
   IF NOT v_es_admin THEN
     RAISE EXCEPTION 'Solo administradores pueden reabrir embarques cerrados';
@@ -26621,7 +26594,6 @@ BEGIN
   IF v_emb_id IS NULL THEN
     RETURN COALESCE(NEW, OLD);
   END IF;
-  -- DEFECTO 2: lectura bloqueada (FOR KEY SHARE), misma razón que arriba.
   v_estado := public._assert_embarque_abierto_locked(v_emb_id);
   IF v_estado = 'Cerrado' THEN
     RAISE EXCEPTION 'Embarque cerrado: edición bloqueada (tabla %)', TG_TABLE_NAME
@@ -31660,7 +31632,6 @@ REVOKE ALL ON FUNCTION public._assert_email_unico_org() FROM PUBLIC;
 GRANT ALL ON FUNCTION public._assert_email_unico_org() TO authenticated;
 GRANT ALL ON FUNCTION public._assert_email_unico_org() TO service_role;
 REVOKE ALL ON FUNCTION public._assert_embarque_abierto_locked(p_embarque_id uuid) FROM PUBLIC;
-GRANT ALL ON FUNCTION public._assert_embarque_abierto_locked(p_embarque_id uuid) TO authenticated;
 GRANT ALL ON FUNCTION public._assert_embarque_abierto_locked(p_embarque_id uuid) TO service_role;
 REVOKE ALL ON FUNCTION public._assert_facturapi_admin(p_org_id uuid) FROM PUBLIC;
 GRANT ALL ON FUNCTION public._assert_facturapi_admin(p_org_id uuid) TO authenticated;
