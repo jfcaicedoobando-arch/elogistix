@@ -71,6 +71,7 @@ DECLARE
   v_c2 uuid := 'cc57cc57-0000-4000-8000-000000000402';
   v_c3 uuid := 'cc57cc57-0000-4000-8000-000000000403';
   v_emb uuid := 'cc57cc57-0000-4000-8000-000000000501';
+  v_motivo uuid := 'cc57cc57-0000-4000-8000-000000000601';
   r record;
 BEGIN
   -- ===== Fixture =====
@@ -87,11 +88,14 @@ BEGIN
   INSERT INTO public.clientes (id, organization_id, nombre, email) VALUES
     (v_cli_a, v_org_a, 'TEST Cliente COT A', 'cot-cli-a@test.local');
 
-  INSERT INTO public.crm_oportunidades (id, organization_id, nombre, etapa_id, cliente_id, probabilidad) VALUES
-    (v_op1, v_org_a, 'Op feliz', v_et_ab_a, v_cli_a, 20),
-    (v_op2, v_org_a, 'Op perdida', v_et_pe_a, v_cli_a, 0),
-    (v_op3, v_org_a, 'Op destino', v_et_ab_a, v_cli_a, 20),
-    (v_op_b, v_org_b, 'Op ajena', v_et_ab_b, NULL, 20);
+  INSERT INTO public.crm_motivos_perdida (id, organization_id, nombre) VALUES
+    (v_motivo, v_org_a, 'TEST Precio');
+
+  INSERT INTO public.crm_oportunidades (id, organization_id, nombre, etapa_id, cliente_id, probabilidad, motivo_perdida_id) VALUES
+    (v_op1, v_org_a, 'Op feliz', v_et_ab_a, v_cli_a, 20, NULL),
+    (v_op2, v_org_a, 'Op perdida', v_et_pe_a, v_cli_a, 0, v_motivo),
+    (v_op3, v_org_a, 'Op destino', v_et_ab_a, v_cli_a, 20, NULL),
+    (v_op_b, v_org_b, 'Op ajena', v_et_ab_b, NULL, 20, NULL);
 
   INSERT INTO public.cotizaciones (id, organization_id, folio, modo, tipo, cliente_id, oportunidad_id, estado, subtotal, version)
   VALUES
