@@ -48,8 +48,8 @@ BEGIN
           'Transportista'::public.tipo_proveedor, 'Logistico'::public.categoria_proveedor)
   ON CONFLICT (id) DO NOTHING;
 
-  INSERT INTO public.clientes (id, organization_id, nombre)
-  VALUES (v_cli, v_org, 'Cliente Atómico')
+  INSERT INTO public.clientes (id, organization_id, nombre, email)
+  VALUES (v_cli, v_org, 'Cliente Atómico', 'cliente.atomico@test.mx')
   ON CONFLICT (id) DO NOTHING;
 
   INSERT INTO public.embarques (id, organization_id, cliente_id, expediente, estado)
