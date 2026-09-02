@@ -1,20 +1,30 @@
 #!/usr/bin/env bash
 # =============================================================================
-# concurrencia-cotizacion-ganadora.sh · v13.823.58
+# concurrencia-cotizacion-ganadora.sh · v13.823.59
 #
 # Prueba de CONCURRENCIA REAL (dos sesiones) de la autoridad única
 # cotización terminal → oportunidad ganada.
 #
 # Escenario: dos sesiones aceptan cotizaciones DISTINTAS de la MISMA
-# oportunidad al mismo tiempo. Resultado obligatorio:
-#   - exactamente una cotización queda en estado terminal;
-#   - la otra falla con LC_COTIZACION_GANADORA_EXISTE (o con la violación del
-#     índice único parcial de respaldo, que es el mismo invariante);
+# oportunidad. Resultado obligatorio:
+#   - exactamente una cotización queda en estado terminal (C1, la de la sesión A);
+#   - la sesión B falla EXCLUSIVAMENTE con LC_COTIZACION_GANADORA_EXISTE
+#     (la violación cruda del índice único parcial NO cuenta: ese invariante se
+#     verifica por separado en supabase/tests/*);
 #   - la oportunidad queda con UNA sola `cotizacion_ganadora_id`, UNA auditoría
 #     de cierre y UNA notificación.
 #
 # No cabe en `supabase/tests/*.sql` (esas suites son una sola transacción
 # BEGIN…ROLLBACK). Aquí el fixture se COMMITEA y se limpia siempre al final.
+#
+# Coordinación DETERMINISTA (sin `sleep` a ciegas): la sesión A hace su UPDATE
+# y se queda dentro de la transacción en `pg_sleep`, identificada por
+# `application_name`. El script espera —con timeout acotado— a ver esa sesión
+# activa en `pg_stat_activity` Y a que el lock de fila sobre la oportunidad ya
+# esté tomado antes de arrancar la sesión B.
+#
+# SÓLO se ejecuta en GitHub Actions (workflow rls-tests.yml); nunca automático
+# dentro de Lovable.
 #
 # Uso:
 #   PGHOST=... PGUSER=... bash scripts/ci/concurrencia-cotizacion-ganadora.sh
@@ -22,21 +32,28 @@
 # =============================================================================
 set -euo pipefail
 
+APP_A='lc_conc_ganadora_a'
+ESPERA_MAX_S=30
+
 PSQL_BASE=(psql -v ON_ERROR_STOP=1 -X -q -t -A)
 if [[ -n "${SUPABASE_DB_URL:-}" ]]; then
   PSQL_BASE+=("${SUPABASE_DB_URL}")
 fi
 psql_run() { "${PSQL_BASE[@]}" "$@"; }
 
-ORG='ccc0ncc0-0000-4000-8000-00000000000a'
-CLI='ccc0ncc0-0000-4000-8000-000000000201'
-OP='ccc0ncc0-0000-4000-8000-000000000301'
-C1='ccc0ncc0-0000-4000-8000-000000000401'
-C2='ccc0ncc0-0000-4000-8000-000000000402'
-VEND='ccc0ncc0-0000-4000-8000-000000000801'
+# UUID de fixture: sólo dígitos hexadecimales, inequívocos (prefijo c0nc → c0c0).
+ORG='c0c0c0c0-0000-4000-8000-00000000000a'
+CLI='c0c0c0c0-0000-4000-8000-000000000201'
+OP='c0c0c0c0-0000-4000-8000-000000000301'
+C1='c0c0c0c0-0000-4000-8000-000000000401'
+C2='c0c0c0c0-0000-4000-8000-000000000402'
+VEND='c0c0c0c0-0000-4000-8000-000000000801'
+
+log_a="$(mktemp)"; log_b="$(mktemp)"
 
 limpiar() {
-  psql_run <<SQL || true
+  local rc=$?
+  psql_run >/dev/null 2>&1 <<SQL || true
 DELETE FROM public.crm_notificaciones WHERE organization_id = '${ORG}';
 DELETE FROM public.bitacora_actividad WHERE organization_id = '${ORG}';
 UPDATE public.crm_oportunidades SET cotizacion_ganadora_id = NULL WHERE organization_id = '${ORG}';
@@ -46,11 +63,16 @@ DELETE FROM public.crm_etapas_pipeline WHERE organization_id = '${ORG}';
 DELETE FROM public.clientes WHERE organization_id = '${ORG}';
 DELETE FROM public.organization_members WHERE organization_id = '${ORG}';
 DELETE FROM public.organizations WHERE id = '${ORG}';
+DELETE FROM public.user_roles WHERE user_id = '${VEND}';
+DELETE FROM auth.users WHERE id = '${VEND}';
 SQL
+  rm -f "$log_a" "$log_b"
+  return $rc
 }
 trap limpiar EXIT
 
-limpiar
+limpiar >/dev/null 2>&1 || true
+log_a="$(mktemp)"; log_b="$(mktemp)"
 
 # ── Fixture committeado ──────────────────────────────────────────────────────
 psql_run <<SQL
@@ -73,23 +95,53 @@ VALUES ('${C1}', '${ORG}', 'TEST-CONC-0001', 'Marítimo', 'Importación', '${CLI
        ('${C2}', '${ORG}', 'TEST-CONC-0002', 'Marítimo', 'Importación', '${CLI}', '${OP}', 'Enviada', 2000, 1);
 SQL
 
-log_a=$(mktemp); log_b=$(mktemp)
-
-# Sesión A: acepta C1 y retiene el lock de la oportunidad 3s antes de commitear.
+# ── Sesión A: acepta C1, retiene el lock y se anuncia por application_name ───
 ( psql_run > "$log_a" 2>&1 <<SQL
+SET application_name = '${APP_A}';
 BEGIN;
 UPDATE public.cotizaciones SET estado = 'Aceptada' WHERE id = '${C1}';
-SELECT pg_sleep(3);
+SELECT pg_sleep(${ESPERA_MAX_S});
 COMMIT;
 SELECT 'A_OK';
 SQL
 ) &
 pid_a=$!
 
-sleep 1
+# ── Barrera determinista: A ya escribió y tiene el lock de la oportunidad ────
+listo=0
+for _ in $(seq 1 $((ESPERA_MAX_S * 10))); do
+  estado=$(psql_run <<SQL
+SELECT (
+  EXISTS (
+    SELECT 1 FROM pg_stat_activity a
+     WHERE a.application_name = '${APP_A}'
+       AND a.query ILIKE '%pg_sleep%'
+       AND a.xact_start IS NOT NULL
+  )
+  AND EXISTS (
+    SELECT 1
+      FROM pg_locks l
+      JOIN pg_stat_activity a ON a.pid = l.pid
+     WHERE a.application_name = '${APP_A}'
+       AND l.locktype = 'transactionid'
+       AND l.granted
+  )
+)::text;
+SQL
+) || estado='error'
+  if [[ "$estado" == "t" ]]; then listo=1; break; fi
+  sleep 0.1
+done
 
-# Sesión B: intenta aceptar C2 de la misma oportunidad; debe bloquearse en el
-# lock y, al liberarse, fallar por ganadora existente.
+if [[ $listo -ne 1 ]]; then
+  echo "── sesión A ──"; cat "$log_a"
+  echo "FALLO: la sesión A no alcanzó la barrera (UPDATE + lock) en ${ESPERA_MAX_S}s" >&2
+  exit 1
+fi
+
+# ── Sesión B: intenta aceptar C2 de la misma oportunidad ─────────────────────
+# Se bloquea en el lock de A y, al liberarse, debe fallar por ganadora existente.
+rc_b=0
 set +e
 psql_run > "$log_b" 2>&1 <<SQL
 BEGIN;
@@ -98,17 +150,24 @@ COMMIT;
 SQL
 rc_b=$?
 set -e
-wait "$pid_a"
 
-echo "── sesión A ──"; cat "$log_a"
-echo "── sesión B ──"; cat "$log_b"
+# `wait` con set -e no debe ocultar la causa: se captura el rc de A.
+rc_a=0
+wait "$pid_a" || rc_a=$?
 
+echo "── sesión A (rc=${rc_a}) ──"; cat "$log_a"
+echo "── sesión B (rc=${rc_b}) ──"; cat "$log_b"
+
+if [[ $rc_a -ne 0 ]]; then
+  echo "FALLO: la sesión A (aceptación legítima) terminó con rc=${rc_a}" >&2
+  exit 1
+fi
 if [[ $rc_b -eq 0 ]]; then
   echo "FALLO: la sesión B aceptó una segunda cotización de la misma oportunidad" >&2
   exit 1
 fi
-if ! grep -qE 'LC_COTIZACION_GANADORA_EXISTE|ux_cotizaciones_ganadora_viva_por_oportunidad' "$log_b"; then
-  echo "FALLO: la sesión B falló por un motivo distinto al invariante de ganadora única" >&2
+if ! grep -q 'LC_COTIZACION_GANADORA_EXISTE' "$log_b"; then
+  echo "FALLO: la sesión B debía fallar con LC_COTIZACION_GANADORA_EXISTE" >&2
   exit 1
 fi
 
