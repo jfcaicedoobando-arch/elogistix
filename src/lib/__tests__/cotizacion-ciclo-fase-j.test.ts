@@ -1,14 +1,16 @@
 /**
- * Guardrail Fase J (v13.301.81) — ciclo de cotización correcto.
+ * Guardrail Fase J (v13.301.81, actualizado en v13.823.57) — ciclo de
+ * cotización correcto.
  *
  * Blinda:
  *  - `aceptar_cotizacion_version` valida `estado IN ('Borrador','Enviada')` y levanta
  *    `LC_COTIZACION_ESTADO_INVALIDO` para cualquier otro estado.
- *  - `crm_set_valor_real_on_aceptada` fija `valor_real = NEW.subtotal` incondicional
- *    (sin `COALESCE` que preserve el valor viejo) e igual para `fecha_cierre_real`.
- *  - Se registra bitácora `crm.oportunidad.valor_real_actualizado` cuando cambia el valor.
+ *  - v13.823.57: la autoridad única `crm_cerrar_oportunidad_desde_cotizacion`
+ *    fija `valor_real = NEW.subtotal` en el primer cierre y registra auditoría
+ *    del cambio de valor al re-aceptar (sin `EXCEPTION WHEN OTHERS`).
  *  - UI: `CotizacionDetalleSecciones` oculta "Re-cotizar" cuando `tieneEmbarquesVinculados`.
  */
+
 import { describe, it, expect } from "vitest";
 import fs from "node:fs";
 import path from "node:path";
