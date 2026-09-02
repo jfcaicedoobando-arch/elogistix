@@ -25,6 +25,11 @@ import type { CosteoNavieraCondicion } from "@/features/costeo/types/navieraCond
 import { useDocumentTitle } from "@/hooks/shared";
 import { COL_W } from "@/components/shared/dataTable/columnWidths";
 import { ErrorState } from "@/components/shared/states/ErrorState";
+import { ResponsiveDataTable } from "@/components/shared/dataTable/ResponsiveDataTable";
+import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
+import { Ship, SearchX } from "lucide-react";
+import { NavieraFiltrosBar } from "@/features/costeo/components/NavieraFiltrosBar";
+import { filtrarNavieras, type EstadoNavieraFiltro } from "@/features/costeo/lib/navierasFiltro";
 
 interface FilaNaviera {
   naviera_id: string;
@@ -38,6 +43,8 @@ export default function AgenteGarantias() {
   const { data: navieras = [], isLoading: loadingNav, isError: errorNav, refetch: refetchNav } = useNavierasCatalogo();
   const { data: condiciones = [], isLoading: loadingCond, isError: errorCond, refetch: refetchCond } = useCondicionesNaviera();
   const [seleccion, setSeleccion] = useState<FilaNaviera | null>(null);
+  const [busqueda, setBusqueda] = useState("");
+  const [estado, setEstado] = useState<EstadoNavieraFiltro>("todos");
 
   const filas: FilaNaviera[] = useMemo(() => {
     const mapa = new Map(condiciones.map((c) => [c.naviera_id, c]));
@@ -48,6 +55,16 @@ export default function AgenteGarantias() {
       condicion: mapa.get(n.id) ?? null,
     }));
   }, [navieras, condiciones]);
+
+  const filasFiltradas = useMemo(
+    () => filtrarNavieras(filas, busqueda, estado),
+    [filas, busqueda, estado],
+  );
+
+  const limpiarFiltros = () => {
+    setBusqueda("");
+    setEstado("todos");
+  };
 
   const columns = useMemo<ColumnDef<FilaNaviera, unknown>[]>(
     () => defineColumns<FilaNaviera>([
@@ -128,15 +145,53 @@ export default function AgenteGarantias() {
           }}
         />
       ) : (
-      <DataTable<FilaNaviera>
-        columns={columns}
-        data={filas}
-        rowKey={(f) => f.naviera_id}
-        isLoading={loadingNav || loadingCond}
-        onRowClick={(f) => setSeleccion(f)}
-        rowClassName={(f) => (seleccion?.naviera_id === f.naviera_id ? "bg-accent/40" : "")}
-        emptyMessage="Sin navieras configuradas."
-      />
+        <>
+          <NavieraFiltrosBar
+            busqueda={busqueda}
+            onBusquedaChange={setBusqueda}
+            estado={estado}
+            onEstadoChange={setEstado}
+          />
+          <ResponsiveDataTable<FilaNaviera>
+            columns={columns}
+            data={filasFiltradas}
+            rowKey={(f) => f.naviera_id}
+            isLoading={loadingNav || loadingCond}
+            onRowClick={(f) => setSeleccion(f)}
+            rowClassName={(f) => (seleccion?.naviera_id === f.naviera_id ? "bg-accent/40" : "")}
+            mobileCard={(f) => (
+              <div className="flex items-center justify-between gap-2 min-w-0">
+                <div className="min-w-0 flex-1 space-y-1">
+                  <div className="font-medium text-body truncate">{f.naviera_nombre}</div>
+                  <div className="text-label text-muted-foreground font-mono">{f.naviera_code}</div>
+                  <CartaGarantiaBadge
+                    tieneCarta={f.condicion?.tiene_carta_garantia ?? false}
+                    vigenteHasta={f.condicion?.carta_garantia_vigente_hasta ?? null}
+                  />
+                </div>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="shrink-0"
+                  onClick={(e) => { e.stopPropagation(); setSeleccion(f); }}
+                >
+                  <Settings2 className="h-4 w-4 mr-1" /> Configurar
+                </Button>
+              </div>
+            )}
+            emptyState={
+              filas.length === 0 ? (
+                <EmptyStateInline icon={Ship} message="Sin navieras configuradas." />
+              ) : (
+                <EmptyStateInline
+                  icon={SearchX}
+                  message="Sin resultados para tu búsqueda o filtro."
+                  action={{ label: "Limpiar filtros", onClick: limpiarFiltros }}
+                />
+              )
+            }
+          />
+        </>
       )}
 
 
