@@ -300,11 +300,10 @@ BEGIN
           FROM unnest(i.indkey::int[]) WITH ORDINALITY AS k(attnum, ord)
           JOIN pg_attribute a ON a.attrelid = i.indrelid AND a.attnum = k.attnum
       ) = 'organization_id,oportunidad_id'
-      AND pg_get_expr(i.indpred, i.indrelid) ILIKE '%deleted_at IS NULL%'
-      AND pg_get_expr(i.indpred, i.indrelid) ILIKE '%oportunidad_id IS NOT NULL%'
-      AND pg_get_expr(i.indpred, i.indrelid) ILIKE '%Aceptada%'
-      AND pg_get_expr(i.indpred, i.indrelid) ILIKE '%En operación%'
-      AND pg_get_expr(i.indpred, i.indrelid) NOT ILIKE '%Enviada%'
+      -- v13.823.59: predicado normalizado COMPLETO (no ILIKE parciales).
+      AND regexp_replace(pg_get_expr(i.indpred, i.indrelid), '\s+', ' ', 'g') =
+          '((deleted_at IS NULL) AND (oportunidad_id IS NOT NULL) AND '
+          || '(estado = ANY (ARRAY[''Aceptada''::estado_cotizacion, ''En operación''::estado_cotizacion])))'
   ) THEN
     RAISE EXCEPTION 'schema-invariants: ux_cotizaciones_ganadora_viva_por_oportunidad debe ser UNIQUE (organization_id, oportunidad_id) WHERE deleted_at IS NULL AND oportunidad_id IS NOT NULL AND estado IN (Aceptada, En operación)';
   END IF;
