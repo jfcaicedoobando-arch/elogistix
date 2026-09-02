@@ -211,7 +211,7 @@ export interface KPIsComisiones {
  *   pagadas de más deje de ser invisible.
  */
 export function calcularKPIsComisiones(
-  items: ComisionDevengada[],
+  items: ComisionKpiRow[],
   periodo?: string,
 ): KPIsComisiones {
   const mesRef = periodo || ymMx();
