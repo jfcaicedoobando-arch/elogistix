@@ -59,6 +59,8 @@ export async function fetchEstadoResultadosMes(p: Params): Promise<EstadoResulta
       .is("deleted_at", null)
       .order("id", { ascending: true });
     if (p.organizationId) q = q.eq("organization_id", p.organizationId);
+    // SAFE-CAST: el builder de Supabase no infiere el tipo de fila del select
+    // literal; las columnas pedidas coinciden 1:1 con EmbarqueER + estado.
     return q as unknown as Builder<EmbarqueER & { estado: string }>;
   });
 
@@ -73,6 +75,7 @@ export async function fetchEstadoResultadosMes(p: Params): Promise<EstadoResulta
       .select("embarque_id, descripcion, total, moneda")
       .in("embarque_id", ids)
       .is("deleted_at", null)
+      // SAFE-CAST: el select literal devuelve exactamente ConceptoVentaER.
       .order("id", { ascending: true }) as unknown as Builder<ConceptoVentaER>,
   );
 
@@ -82,6 +85,7 @@ export async function fetchEstadoResultadosMes(p: Params): Promise<EstadoResulta
       .select("embarque_id, concepto, monto, moneda")
       .in("embarque_id", ids)
       .is("deleted_at", null)
+      // SAFE-CAST: el select literal devuelve exactamente ConceptoCostoER.
       .order("id", { ascending: true }) as unknown as Builder<ConceptoCostoER>,
   );
 

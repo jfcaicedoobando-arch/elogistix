@@ -4,33 +4,26 @@
 -- Al modificar: edita ESTE archivo y genera la migración con el mismo cuerpo.
 
 CREATE OR REPLACE FUNCTION public._factura_tc_dof_obligatorio()
-RETURNS trigger
-LANGUAGE plpgsql
-SET search_path TO 'public'
+ RETURNS trigger
+ LANGUAGE plpgsql
+ SET search_path TO 'public'
 AS $function$
 DECLARE
   v_tc numeric;
   v_fecha date;
 BEGIN
+  -- Timbradas: inmutables por los guards fiscales existentes; no recalculamos.
+  IF TG_OP = 'UPDATE' AND OLD.uuid_fiscal IS NOT NULL THEN
+    RETURN NEW;
+  END IF;
+
   IF NEW.moneda::text = 'MXN' THEN
-    -- M2-res: al volver a MXN el T/C heredado deja de aplicar.
-    IF TG_OP = 'UPDATE' AND OLD.moneda::text <> 'MXN' THEN
-      NEW.tipo_cambio := 1;
-    END IF;
+    NEW.tipo_cambio := 1;
     RETURN NEW;
   END IF;
 
-  -- M2-res: si la moneda cambió, el T/C anterior no sirve: se recalcula.
-  IF TG_OP = 'UPDATE'
-     AND OLD.moneda::text IS DISTINCT FROM NEW.moneda::text
-     AND NEW.tipo_cambio IS NOT DISTINCT FROM OLD.tipo_cambio THEN
-    NEW.tipo_cambio := NULL;
-  END IF;
-
-  IF COALESCE(NEW.tipo_cambio, 0) > 1 THEN
-    RETURN NEW;
-  END IF;
-
+  -- El T/C NUNCA se toma de lo capturado: se resuelve del DOF vigente a la
+  -- fecha de emisión, así que un valor arbitrario u obsoleto no persiste.
   v_fecha := COALESCE(NEW.fecha_emision, (now() AT TIME ZONE 'America/Mexico_City')::date);
 
   SELECT CASE
@@ -58,5 +51,5 @@ FOR EACH ROW EXECUTE FUNCTION public._factura_tc_dof_obligatorio();
 
 DROP TRIGGER IF EXISTS trg_factura_tc_dof_obligatorio_upd ON public.facturas;
 CREATE TRIGGER trg_factura_tc_dof_obligatorio_upd
-BEFORE UPDATE OF moneda ON public.facturas
+BEFORE UPDATE OF moneda, fecha_emision, tipo_cambio ON public.facturas
 FOR EACH ROW EXECUTE FUNCTION public._factura_tc_dof_obligatorio();

@@ -5,17 +5,17 @@ Auditoría automática de los `as` casts en `src/`. Generado por
 
 ## Resumen
 
-Total de `as` casts detectados: **3379**
+Total de `as` casts detectados: **3390**
 
 | Categoría | Peso | Cantidad | % |
 |-----------|------|----------|---|
-| SAFE      | 0 | 988     | 29.2% |
-| LOW       | 1 | 161      | 4.8% |
-| MEDIUM    | 2 | 2230   | 66.0% |
-| HIGH      | 3 | 0     | 0.0% |
+| SAFE      | 0 | 990     | 29.2% |
+| LOW       | 1 | 161      | 4.7% |
+| MEDIUM    | 2 | 2236   | 66.0% |
+| HIGH      | 3 | 3     | 0.1% |
 | CRITICAL  | 4 | 0 | 0.0% |
 
-**Lectura clave:** los casts a accionar son los **HIGH + CRITICAL** = 0 (~0.0%). El resto es seguro o aceptable bajo política.
+**Lectura clave:** los casts a accionar son los **HIGH + CRITICAL** = 3 (~0.1%). El resto es seguro o aceptable bajo política.
 
 ## Definición de categorías
 
@@ -47,7 +47,24 @@ Total de `as` casts detectados: **3379**
 
 ## Top-30 casts más riesgosos (HIGH + CRITICAL)
 
-_Ningún cast HIGH o CRITICAL detectado._
+### 1. [HIGH] `src/features/profit/services/estadoResultados.ts:62`
+
+```ts
+return q as unknown as Builder<EmbarqueER & { estado: string }>;
+```
+
+### 2. [HIGH] `src/features/profit/services/estadoResultados.ts:76`
+
+```ts
+.order("id", { ascending: true }) as unknown as Builder<ConceptoVentaER>,
+```
+
+### 3. [HIGH] `src/features/profit/services/estadoResultados.ts:85`
+
+```ts
+.order("id", { ascending: true }) as unknown as Builder<ConceptoCostoER>,
+```
+
 
 ## Roadmap
 

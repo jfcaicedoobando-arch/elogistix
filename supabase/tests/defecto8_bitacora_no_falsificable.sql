@@ -28,7 +28,9 @@ BEGIN
     FROM pg_policies
    WHERE schemaname = 'public'
      AND tablename = 'bitacora_actividad'
-     AND cmd IN ('INSERT', 'ALL');
+     AND cmd IN ('INSERT', 'ALL')
+     -- Las RESTRICTIVE no otorgan nada: sólo acotan lo ya permitido.
+     AND permissive = 'PERMISSIVE';
   IF v_policies IS NOT NULL THEN
     RAISE EXCEPTION
       'DEFECTO 8 REGRESIÓN: quedan policies de escritura en bitacora_actividad: %', v_policies;
@@ -65,22 +67,32 @@ BEGIN
 END
 $chk$;
 
--- (d) el actor no se recibe por parámetro (se deriva de auth.uid())
+-- (d) el actor NO puede suplantarse: aunque la firma acepte p_usuario_id (lo
+-- usan las llamadas internas sin JWT), con un JWT de usuario la función pisa
+-- el actor con auth.uid() y el email lo lee de auth.users.
 DO $chk$
 DECLARE
-  v_args text;
+  v_src text;
 BEGIN
-  SELECT pg_get_function_identity_arguments(p.oid)
-    INTO v_args
+  SELECT p.prosrc
+    INTO v_src
     FROM pg_proc p
     JOIN pg_namespace n ON n.oid = p.pronamespace
    WHERE n.nspname = 'public'
      AND p.proname = 'registrar_bitacora'
+     AND pg_get_function_identity_arguments(p.oid) ILIKE '%p_usuario_id%'
    LIMIT 1;
 
-  IF v_args ILIKE '%usuario_id%' OR v_args ILIKE '%email%' THEN
+  IF v_src IS NULL THEN
+    RAISE EXCEPTION 'DEFECTO 8 REGRESIÓN: no existe la RPC registrar_bitacora esperada';
+  END IF;
+  IF v_src NOT LIKE '%v_uid := auth.uid();%' THEN
     RAISE EXCEPTION
-      'DEFECTO 8 REGRESIÓN: registrar_bitacora acepta actor por parámetro (%), se puede suplantar', v_args;
+      'DEFECTO 8 REGRESIÓN: registrar_bitacora no fuerza el actor a auth.uid() con JWT de usuario';
+  END IF;
+  IF v_src NOT LIKE '%SELECT email INTO v_email FROM auth.users%' THEN
+    RAISE EXCEPTION
+      'DEFECTO 8 REGRESIÓN: el email de la bitácora ya no se deriva de auth.users';
   END IF;
 END
 $chk$;

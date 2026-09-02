@@ -3,17 +3,18 @@ import { registrarActividad, MODULOS_BITACORA } from "../registrar";
 import { supabase } from "@/integrations/supabase/client";
 
 vi.mock("@/integrations/supabase/client", () => {
-  const insert = vi.fn().mockResolvedValue({ error: null });
-  const from = vi.fn().mockReturnValue({ insert });
+  const rpc = vi.fn().mockResolvedValue({ error: null });
   const session = { data: { session: { user: { id: "u-1", email: "a@b.com" } } } };
   const getSession = vi.fn().mockResolvedValue(session);
-  return { supabase: { from, auth: { getSession } } };
+  return { supabase: { rpc, auth: { getSession } } };
 });
 
 describe("registrarActividad", () => {
   beforeEach(() => vi.clearAllMocks());
 
-  it("inserta usando el shape correcto de columnas", async () => {
+  // DEFECTO 8: la bitácora ya no se inserta desde el cliente; se registra por
+  // la RPC `registrar_bitacora`, que deriva usuario_id/email del servidor.
+  it("registra por la RPC con el shape correcto de parámetros", async () => {
     await registrarActividad({
       modulo: "cxp",
       accion: "crear",
@@ -21,22 +22,21 @@ describe("registrarActividad", () => {
       entidadNombre: "FP-000001",
       detalles: { total: 100 },
     });
-    // SAFE-CAST: mock devuelve encadenables tipados internamente.
-    const insertCall = (supabase.from as unknown as { mock: { results: Array<{ value: { insert: { mock: { calls: unknown[][] } } } }> } })
-      .mock.results[0].value.insert.mock.calls[0][0];
-    expect(insertCall).toMatchObject({
-      usuario_id: "u-1",
-      usuario_email: "a@b.com",
-      modulo: "cxp",
-      accion: "crear",
-      entidad_id: "fp-1",
-      entidad_nombre: "FP-000001",
+    const rpc = supabase.rpc as unknown as ReturnType<typeof vi.fn>;
+    expect(rpc.mock.calls[0][0]).toBe("registrar_bitacora");
+    expect(rpc.mock.calls[0][1]).toMatchObject({
+      p_modulo: "cxp",
+      p_accion: "crear",
+      p_entidad_id: "fp-1",
+      p_entidad_nombre: "FP-000001",
     });
+    // El actor NO viaja desde el navegador: lo pone el servidor.
+    expect(Object.keys(rpc.mock.calls[0][1] as object)).not.toContain("p_usuario_id");
   });
 
   it("no lanza si supabase falla", async () => {
-    const insertMock = vi.fn().mockResolvedValue({ error: { message: "boom" } });
-    (supabase.from as unknown as ReturnType<typeof vi.fn>).mockReturnValueOnce({ insert: insertMock });
+    (supabase.rpc as unknown as ReturnType<typeof vi.fn>)
+      .mockResolvedValueOnce({ error: { message: "boom" } });
     await expect(
       registrarActividad({ modulo: "cxp", accion: "crear" }),
     ).resolves.toBeUndefined();

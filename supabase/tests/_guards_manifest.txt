@@ -87,3 +87,6 @@ supabase/tests/cerrar_embarque_org_scope_y_lock.sql
 supabase/tests/cierre_periodo_campos_derivados_trigger.sql
 supabase/tests/actualizar_cierre_periodo_rpc.sql
 supabase/tests/defecto8_bitacora_no_falsificable.sql
+supabase/tests/defecto5_lock_nc_saldo.sql
+supabase/tests/defecto6_rep_historia_inmutable.sql
+supabase/tests/ronda_yagni_portal_catalogos_tc.sql

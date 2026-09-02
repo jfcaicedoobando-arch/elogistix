@@ -359,3 +359,14 @@ $function$;
 
 REVOKE ALL ON FUNCTION public.reabrir_embarque(uuid, text, text, uuid) FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.reabrir_embarque(uuid, text, text, uuid) TO authenticated, service_role;
+
+-- H6 · permisos explícitos de las funciones SECURITY DEFINER de este archivo
+-- (idempotentes: reflejan los privilegios ya vigentes en la base).
+REVOKE ALL ON FUNCTION public.bloquear_conceptos_en_embarque_cerrado() FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.bloquear_conceptos_en_embarque_cerrado() TO authenticated, service_role;
+
+REVOKE ALL ON FUNCTION public.tg_bloquear_si_embarque_cerrado() FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.tg_bloquear_si_embarque_cerrado() TO authenticated, service_role;
+
+REVOKE ALL ON FUNCTION public.cerrar_embarque(uuid) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.cerrar_embarque(uuid) TO authenticated, service_role;

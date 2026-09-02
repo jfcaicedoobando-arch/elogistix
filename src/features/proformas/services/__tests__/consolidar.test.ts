@@ -35,7 +35,8 @@ describe("consolidarProformas", () => {
       requestId: "req-1",
     });
     expect(result).toEqual(row);
-    const call = mock.rpcCalls[mock.rpcCalls.length - 1]!;
+    // La bitácora también viaja por RPC (DEFECTO 8): busca la llamada del caso.
+    const call = mock.rpcCalls.findLast((c) => c.fn === "consolidar_proformas")!;
     expect(call.fn).toBe("consolidar_proformas");
     expect(call.args).toMatchObject({
       p_organization_id: "org-1",
@@ -52,7 +53,7 @@ describe("consolidarProformas", () => {
       ...base, blMaster: null, operador: null, diasCredito: null,
       proformaIds: ["a", "b"],
     });
-    expect(mock.rpcCalls[mock.rpcCalls.length - 1]?.args).toMatchObject({
+    expect(mock.rpcCalls.findLast((c) => c.fn === "consolidar_proformas")?.args).toMatchObject({
       p_bl_master: "", p_operador: "", p_dias_credito: 0,
     });
   });

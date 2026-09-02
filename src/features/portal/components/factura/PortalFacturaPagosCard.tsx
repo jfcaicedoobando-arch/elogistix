@@ -1,16 +1,18 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ListSkeleton } from "@/components/shared/states/ListSkeleton";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { formatCurrency, formatDate } from "@/lib/formatters";
 import {
   usePortalPagosFactura,
   usePortalNotasCreditoFactura,
+  usePortalResumenSaldoFactura,
 } from "@/features/portal/hooks";
-import { calcularSaldoFacturaPortal } from "@/features/portal/services";
+import { PORTAL_RELATED_MAX } from "@/features/portal/services/limits";
 import { FORMAS_PAGO_SAT, labelDeCatalogo } from "@/constants/catalogosSAT";
-import { CheckCircle2, Clock, FileText, FileCode2, Receipt } from "lucide-react";
+import { CheckCircle2, Clock, Receipt } from "lucide-react";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { PortalRepDownloadButtons } from "./PortalRepDownloadButtons";
 
 interface Props {
   facturaId: string;
@@ -29,12 +31,20 @@ export default function PortalFacturaPagosCard({
   const { data: pagos = [], isLoading } = usePortalPagosFactura(facturaId);
   const { data: notasCredito = [], isLoading: loadingNc } =
     usePortalNotasCreditoFactura(facturaId);
+  // Defecto 7: los KPI (pagos, NC, saldo) vienen del agregado completo en BD.
+  const { data: resumen, isLoading: loadingResumen } =
+    usePortalResumenSaldoFactura(facturaId);
 
-  // B-082: el saldo del portal descuenta pagos Y notas de crédito aplicadas.
-  const resumen = calcularSaldoFacturaPortal(totalFactura, pagos, notasCredito, estadoFactura);
-
-  const { pagado: totalPagado, notasCredito: totalNc, saldo, liquidada } = resumen;
-  const hayMovimientos = pagos.length > 0 || notasCredito.length > 0;
+  const terminal = estadoFactura === "Pagada" || estadoFactura === "Cancelada";
+  const totalPagado = resumen?.pagado ?? 0;
+  const totalNc = resumen?.notasCredito ?? 0;
+  const saldo = terminal ? 0 : resumen?.saldo ?? 0;
+  const liquidada = terminal || (resumen?.liquidada ?? false);
+  const hayMovimientos = (resumen?.numPagos ?? 0) > 0 || (resumen?.numNotas ?? 0) > 0;
+  // Las listas sí están topadas: se avisa cuando hay más movimientos que los
+  // mostrados, para que el cliente no crea que el detalle está completo.
+  const listaTruncada =
+    pagos.length >= PORTAL_RELATED_MAX || notasCredito.length >= PORTAL_RELATED_MAX;
 
   return (
     <Card>
@@ -48,7 +58,7 @@ export default function PortalFacturaPagosCard({
         )}
       </CardHeader>
       <CardContent className="space-y-3">
-        {isLoading || loadingNc ? (
+        {isLoading || loadingNc || loadingResumen ? (
           <ListSkeleton rows={2} />
         ) : pagos.length === 0 ? (
           <EmptyStateInline
@@ -69,24 +79,11 @@ export default function PortalFacturaPagosCard({
                     <p className="text-body-sm text-muted-foreground truncate">
                       {labelDeCatalogo(FORMAS_PAGO_SAT, p.forma_pago)}{p.referencia ? ` • ${p.referencia}` : ""}
                     </p>
-                    {(pRep.rep_pdf_url || pRep.rep_xml_url) && (
-                      <div className="mt-1.5 flex items-center gap-1.5">
-                        {pRep.rep_pdf_url && (
-                          <Button asChild size="sm" variant="outline">
-                            <a href={pRep.rep_pdf_url} target="_blank" rel="noopener noreferrer">
-                              <FileText className="h-4 w-4 mr-1" /> REP PDF
-                            </a>
-                          </Button>
-                        )}
-                        {pRep.rep_xml_url && (
-                          <Button asChild size="sm" variant="outline">
-                            <a href={pRep.rep_xml_url} target="_blank" rel="noopener noreferrer">
-                              <FileCode2 className="h-4 w-4 mr-1" /> REP XML
-                            </a>
-                          </Button>
-                        )}
-                      </div>
-                    )}
+                    <PortalRepDownloadButtons
+                      pagoId={p.id}
+                      tienePdf={!!pRep.rep_pdf_url}
+                      tieneXml={!!pRep.rep_xml_url}
+                    />
                   </div>
                   <div className="text-right shrink-0">
                     <p className="text-body font-bold tabular-nums">
@@ -123,6 +120,15 @@ export default function PortalFacturaPagosCard({
               ))}
             </ul>
           </div>
+        )}
+
+        {listaTruncada && (
+          <Alert>
+            <AlertDescription>
+              Se muestran los {PORTAL_RELATED_MAX} movimientos más recientes. Los totales y el
+              saldo de abajo sí consideran todos los movimientos de la factura.
+            </AlertDescription>
+          </Alert>
         )}
 
         <dl className="border-t pt-3 space-y-1.5 text-body">

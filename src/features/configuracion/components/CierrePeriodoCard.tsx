@@ -7,7 +7,6 @@
  * un cierre existente, y deja bitácora siempre.
  */
 import { useEffect, useState } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { FormField } from "@/components/shared/FormField";
@@ -16,10 +15,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Lock, Save, Unlock } from "lucide-react";
 import { useConfigValue } from "@/features/configuracion/hooks/useConfiguracion";
 import { useOrgActiva } from "@/hooks/shared/useOrgActiva";
-import { queryKeys } from "@/lib/query";
-import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
-import { getErrorMessage } from "@/lib/errors";
-import { actualizarCierrePeriodo } from "@/features/configuracion/services/configuracionClaves";
+import { useActualizarCierrePeriodo } from "@/features/configuracion/hooks/useActualizarCierrePeriodo";
 import { CierrePeriodoMotivoField, MOTIVO_MIN_LARGO } from "./CierrePeriodoMotivoField";
 
 const CATEGORIA = "contabilidad";
@@ -28,7 +24,6 @@ const CLAVE = "cierre_periodo_fecha";
 export default function CierrePeriodoCard() {
   const guardada = useConfigValue<string>(CATEGORIA, CLAVE, "");
   const { organizationId } = useOrgActiva();
-  const queryClient = useQueryClient();
 
   const [fecha, setFecha] = useState<string>("");
   const [motivo, setMotivo] = useState("");
@@ -44,21 +39,12 @@ export default function CierrePeriodoCard() {
   const esRetroceso = (nuevaFecha: string): boolean =>
     !!guardada && (!nuevaFecha || nuevaFecha < guardada);
 
-  const mutation = useMutation({
-    mutationFn: (nuevaFecha: string) => {
-      if (!organizationId) {
-        throw new Error("Selecciona una organización antes de guardar la configuración.");
-      }
-      return actualizarCierrePeriodo(organizationId, nuevaFecha || null, motivo || undefined);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.configuracion.all });
-      notifySuccess(undefined, { title: "Cierre de periodo actualizado" });
+  const mutation = useActualizarCierrePeriodo({
+    organizationId,
+    motivo,
+    onExito: () => {
       setMotivo("");
       setMotivoError(undefined);
-    },
-    onError: (error: Error) => {
-      notifyError(undefined, { title: "Error al guardar", description: getErrorMessage(error) });
     },
   });
 

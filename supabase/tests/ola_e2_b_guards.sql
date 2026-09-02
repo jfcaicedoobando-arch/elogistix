@@ -13,11 +13,18 @@ BEGIN
   IF v_def IS NULL OR v_def NOT LIKE '%UPDATE OF moneda%' THEN
     RAISE EXCEPTION 'M2-res REGRESIÓN: falta trigger de T/C DOF en UPDATE OF moneda: %', v_def;
   END IF;
+  -- Ronda YAGNI 2026-09-02: también debe reaccionar a la fecha de emisión y a
+  -- un intento de imponer el tipo de cambio a mano.
+  IF v_def NOT LIKE '%fecha_emision%' OR v_def NOT LIKE '%tipo_cambio%' THEN
+    RAISE EXCEPTION 'M2-res REGRESIÓN: el trigger de T/C DOF no cubre fecha_emision/tipo_cambio: %', v_def;
+  END IF;
 
   SELECT prosrc INTO v_src FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace
   WHERE n.nspname = 'public' AND p.proname = '_factura_tc_dof_obligatorio';
-  IF v_src IS NULL OR v_src NOT LIKE '%OLD.moneda%' THEN
-    RAISE EXCEPTION 'M2-res REGRESIÓN: _factura_tc_dof_obligatorio no compara OLD.moneda';
+  -- El T/C se resuelve SIEMPRE del DOF a la fecha de emisión: nunca se conserva
+  -- lo capturado, así que ya no hay comparación contra OLD.moneda.
+  IF v_src IS NULL OR v_src NOT LIKE '%tc_dof_vigente%' OR v_src NOT LIKE '%NEW.fecha_emision%' THEN
+    RAISE EXCEPTION 'M2-res REGRESIÓN: _factura_tc_dof_obligatorio no resuelve el DOF por fecha_emision';
   END IF;
 END $$;
 

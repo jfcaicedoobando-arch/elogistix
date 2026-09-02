@@ -32,7 +32,13 @@ BEGIN
   VALUES (v_cli, v_org, 'Test Cli NC Multimoneda', 'XAXX010101000', 'nc@test.mx')
   ON CONFLICT (id) DO NOTHING;
 
-  -- Factura USD 1,000 con TC del CFDI = 17 (no depende del DOF).
+  -- El T/C de la factura lo impone el DOF de su fecha de emisión, así que el
+  -- fixture siembra el DOF con el mismo 17 que asumen los casos (se revierte).
+  INSERT INTO public.tipos_cambio_dof (fecha, usd_mxn, origen)
+  VALUES (CURRENT_DATE - 5, 17, 'manual')
+  ON CONFLICT (fecha) DO UPDATE SET usd_mxn = 17;
+
+  -- Factura USD 1,000 con TC 17.
   INSERT INTO public.facturas
     (id, organization_id, cliente_id, cliente_nombre, numero,
      fecha_emision, fecha_vencimiento, moneda, tipo_cambio,
