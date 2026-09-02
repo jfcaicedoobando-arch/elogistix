@@ -128,10 +128,8 @@ export function BuscarTarifaDialog({
     enabled: !isFetching && !error && tarifas.length === 0,
   });
 
-  const isCN = (c: string | null | undefined) => c === "CN" || c === "China";
-  const isMX = (c: string | null | undefined) => c === "MX" || c === "Mexico" || c === "México";
-  const puertosCN = puertos.filter((p) => isCN(p.country));
-  const puertosMX = puertos.filter((p) => isMX(p.country));
+  const puertosCN = filtrarPorPais(puertos, PAISES_CN);
+  const puertosMX = filtrarPorPais(puertos, PAISES_MX);
   const puertosOrigenList = puertosCN.length ? puertosCN : puertos;
   const puertosDestinoList = puertosMX.length ? puertosMX : puertos;
 
