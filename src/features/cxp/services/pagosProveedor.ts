@@ -100,11 +100,11 @@ export async function registrarPagoProveedor(
     p_moneda: input.moneda,
     p_metodo_pago: input.metodo_pago,
     p_referencia: input.referencia ?? "",
-    p_cuenta_bancaria_id: input.cuenta_bancaria_id ?? null,
+    p_cuenta_bancaria_id: input.cuenta_bancaria_id ?? undefined,
     p_notas: input.notas ?? "",
-    p_tipo_cambio_usd: tc,
-    p_diferencia_cambiaria_mxn: input.diferencia_cambiaria_mxn ?? null,
-    p_client_request_id: input.client_request_id ?? null,
+    p_tipo_cambio_usd: tc ?? undefined,
+    p_diferencia_cambiaria_mxn: input.diferencia_cambiaria_mxn ?? undefined,
+    p_client_request_id: input.client_request_id ?? undefined,
   });
   if (error) {
     if (esErrorPagoSinAprobacion(error)) throw new PagoRequiereAprobacionError();
@@ -147,14 +147,3 @@ export { eliminarPagoProveedor } from "./pagoProveedorEliminar";
 
 
 
-/**
- * Fase N (v13.301.85): el recálculo del estado de la factura vive en un
- * trigger BD (`trg_pagos_proveedor_recalcular_estado` +
- * `trg_notas_credito_prov_recalcular_estado`). Ver
- * `_recalc_estado_proveedor_factura`. Se conserva `decidirEstadoFactura`
- * como helper puro para UI, pero el cliente ya no escribe `estado`.
- */
-async function recalcularEstadoFactura(_facturaId: string) {
-  // no-op: el trigger BD hace el recálculo de forma transaccional.
-  return;
-}

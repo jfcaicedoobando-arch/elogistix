@@ -3,7 +3,7 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import { orIlike } from "@/lib/search/ilike";
-import { unwrap, run } from "@/lib/supabase/response";
+import { unwrap } from "@/lib/supabase/response";
 import { registrarActividad } from "@/services/bitacora/registrar";
 import { buildOportunidadInsertPayload } from "@/features/crm/domain/oportunidadPayload";
 export type { CrmOportunidadRow, Moneda, OportunidadInput } from "@/features/crm/types/oportunidades";
@@ -88,7 +88,7 @@ export async function crearOportunidad(
  */
 async function actualizarOportunidadFilas(
   id: string,
-  patch: Record<string, unknown>,
+  patch: Parameters<ReturnType<typeof supabase.from<"crm_oportunidades">>["update"]>[0],
 ): Promise<void> {
   const { data, error } = await supabase
     .from("crm_oportunidades")

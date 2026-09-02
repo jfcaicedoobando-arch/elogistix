@@ -55,7 +55,7 @@ describe("sincronizarEtapaPorEstadoCotizacion", () => {
     await sincronizarEtapaPorEstadoCotizacion({ oportunidadId: "op-1", estadoCotizacion: "Rechazada" });
     const update = mock.tableCalls.find((c) => c.table === "crm_oportunidades");
     expect(update?.ops).toContain("update");
-    expect(JSON.stringify(update?.payload ?? {})).toContain("e-ganada");
+    expect(JSON.stringify(update?.opArgs ?? [])).toContain("e-ganada");
   });
 
   it("todas rechazadas → etapa perdida", async () => {
@@ -63,7 +63,7 @@ describe("sincronizarEtapaPorEstadoCotizacion", () => {
     mock.setTableResult("crm_oportunidades", { data: { id: "op-1" }, error: null });
     await sincronizarEtapaPorEstadoCotizacion({ oportunidadId: "op-1", estadoCotizacion: "Rechazada" });
     const update = mock.tableCalls.find((c) => c.table === "crm_oportunidades");
-    expect(JSON.stringify(update?.payload ?? {})).toContain("e-perdida");
+    expect(JSON.stringify(update?.opArgs ?? [])).toContain("e-perdida");
   });
 
   it("sin tipo derivable → no toca la oportunidad", async () => {

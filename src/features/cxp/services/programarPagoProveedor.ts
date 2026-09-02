@@ -17,7 +17,7 @@ export async function programarPagoProveedor(
 ): Promise<void> {
   const { error } = await supabase.rpc("programar_pago_proveedor", {
     p_factura_id: facturaId,
-    p_fecha: fecha,
+    p_fecha: fecha ?? undefined,
   });
   if (error) throw error;
   const { data: factura } = await supabase
