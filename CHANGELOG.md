@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.823.48] - 2026-09-02
+### Sincronización de base: correcciones que faltaban aplicar
+- **Cierre de embarques**: cerrar y reabrir un embarque ahora valida el rol en la organización dueña del embarque (el arreglo existía en el repositorio pero nunca se había aplicado a la base) y se cierra la carrera que permitía colar conceptos durante el cierre.
+- **Notas de crédito y pagos**: se aplicaron a la base el candado de saldo con bloqueo de factura y el guard que protege la historia de cobros frente a REP timbrados vigentes.
+- **Cierre de periodo contable**: la función controlada (rol financiero, motivo para reabrir y bitácora) ya está activa en la base.
+- **Ayudante interno de cierre**: sólo lo ejecuta el sistema, ya no los usuarios firmados (linter de alcance por organización en verde).
+
 ## [13.823.47] - 2026-09-02
 ### Ronda de integridad: cuentas, notificaciones y correos
 - **Cuentas bancarias**: una cuenta con movimientos registrados ya no puede desactivarse ni eliminarse (candado en el servidor) y el borrado exige fila afectada; antes podía "eliminarse" sin efecto real.
