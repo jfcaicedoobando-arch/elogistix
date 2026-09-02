@@ -12,6 +12,7 @@ import { useRecentPages } from "@/hooks/shared/useRecentPages";
 import { useDebouncedValue } from "@/lib/hooks";
 import { trackNavEvent } from "@/services/observability/trackNavEvent";
 import { useAuth } from "@/lib/contexts/AuthContext";
+import { buscarPaginas } from "@/features/search/domain/paginas";
 import {
   GlobalSearchAtajos,
   GlobalSearchCargando,
@@ -88,18 +89,23 @@ export function GlobalSearch() {
   }, [effectiveRole, navigate]);
 
   const deferredResults = useDeferredValue(results);
+  const paginas = useMemo(
+    () => buscarPaginas(debouncedQuery, effectiveRole),
+    [debouncedQuery, effectiveRole],
+  );
   const grouped = useMemo(
-    () => deferredResults.reduce<Record<string, SearchResult[]>>((acc, resultado) => {
+    () => [...deferredResults, ...paginas].reduce<Record<string, SearchResult[]>>((acc, resultado) => {
       (acc[resultado.type] = acc[resultado.type] || []).push(resultado);
       return acc;
     }, {}),
-    [deferredResults],
+    [deferredResults, paginas],
   );
 
   const showRecents = query.trim() === "" && recents.length > 0;
   /** En progreso: el debounce aún no dispara o la consulta está en vuelo. */
   const cargando =
     query.trim() !== "" && (buscando || query.trim() !== debouncedQuery.trim());
+
 
 
   return (
