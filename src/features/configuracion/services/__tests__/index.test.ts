@@ -48,16 +48,24 @@ describe("configuracion service", () => {
     expect(mock.tableCalls.find((c) => c.table === "configuracion")).toBeUndefined();
   });
 
-  it("updateConfiguracionByCategoriaClave hace update por item", async () => {
-    mock.setTableResult("configuracion", { data: null, error: null });
+  it("updateConfiguracionByCategoriaClave hace upsert por item (defecto 5)", async () => {
+    mock.setTableResult("configuracion", { data: [{ id: "c1" }], error: null });
     await updateConfiguracionByCategoriaClave("org1", [
       { categoria: "empresa", clave: "nombre", valor: "X" },
       { categoria: "empresa", clave: "rfc", valor: "Y" },
     ]);
     const calls = mock.tableCalls.filter((c) => c.table === "configuracion");
     expect(calls.length).toBe(2);
-    expect(calls[0].ops).toContain("update");
-    expect(calls[0].opArgs).toContainEqual(["organization_id", "org1"]);
+    expect(calls[0].ops).toContain("upsert");
+  });
+
+  it("updateConfiguracionByCategoriaClave falla si no se escribió ninguna fila (defecto 5)", async () => {
+    mock.setTableResult("configuracion", { data: [], error: null });
+    await expect(
+      updateConfiguracionByCategoriaClave("org1", [
+        { categoria: "empresa", clave: "nombre", valor: "X" },
+      ]),
+    ).rejects.toThrow(/no se escribió ningún registro/);
   });
 
   it("updateConfiguracionByCategoriaClave exige organizationId (Ola 4 · N11)", async () => {
@@ -69,12 +77,12 @@ describe("configuracion service", () => {
     expect(mock.tableCalls.filter((c) => c.table === "configuracion")).toHaveLength(0);
   });
 
-  it("updateConfiguracionByCategoriaClave filtra el update por organization_id (Ola 4 · N11)", async () => {
-    mock.setTableResult("configuracion", { data: null, error: null });
+  it("updateConfiguracionByCategoriaClave escribe el organization_id en el upsert (Ola 4 · N11)", async () => {
+    mock.setTableResult("configuracion", { data: [{ id: "c1" }], error: null });
     await updateConfiguracionByCategoriaClave("org-9", [
       { categoria: "empresa", clave: "nombre", valor: "Z" },
     ]);
     const call = mock.tableCalls.find((c) => c.table === "configuracion");
-    expect(call?.opArgs).toContainEqual(["organization_id", "org-9"]);
+    expect(JSON.stringify(call?.opArgs)).toContain("org-9");
   });
 });

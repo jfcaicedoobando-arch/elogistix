@@ -3,6 +3,8 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import { assertNotTruncated } from "@/lib/supabase/assertNotTruncated";
+import { leerTodasLasPaginas } from "@/lib/supabase/paginado";
+import { fetchInChunks } from "@/lib/supabase/chunkedIn";
 
 // FIX C3 (S6-06): caps explícitos verificados por assertNotTruncated.
 const LIMITE_EMBARQUES = 3000;
@@ -73,17 +75,44 @@ export async function loadEmbarques(orgId: string | null, desdeIso: string): Pro
   assertNotTruncated(embarques, LIMITE_EMBARQUES, "direccion.loadEmbarques");
   const ids = (embarques ?? []).map((e) => e.id);
   if (ids.length === 0) return { embarques: [], ventas: [], costos: [] };
-  const [ventasRes, costosRes] = await Promise.all([
-    supabase.from("conceptos_venta").select("embarque_id, total, moneda").in("embarque_id", ids).is("deleted_at", null),
-    supabase.from("conceptos_costo").select("embarque_id, monto, moneda").in("embarque_id", ids).is("deleted_at", null),
+  // Ronda YAGNI · defecto 1: antes ambas relaciones se pedían sin paginar, así
+  // que PostgREST devolvía como máximo `max-rows` (1000) filas SIN error y
+  // venta/costo/margen/top clientes se calculaban sobre un subconjunto mudo.
+  // Ahora se leen COMPLETAS por lotes de IDs + páginas, y un exceso real falla
+  // visible (ResultadoTruncadoError) en vez de mostrar un total equivocado.
+  const [ventas, costos] = await Promise.all([
+    loadConceptosVenta(ids),
+    loadConceptosCosto(ids),
   ]);
-  if (ventasRes.error) throw ventasRes.error;
-  if (costosRes.error) throw costosRes.error;
-  return {
-    embarques: (embarques ?? []) as EmbarqueRow[],
-    ventas: (ventasRes.data ?? []) as ConceptoVentaRow[],
-    costos: (costosRes.data ?? []) as ConceptoCostoRow[],
-  };
+  return { embarques: (embarques ?? []) as EmbarqueRow[], ventas, costos };
+}
+
+async function loadConceptosVenta(ids: string[]): Promise<ConceptoVentaRow[]> {
+  return fetchInChunks(ids, (lote) =>
+    leerTodasLasPaginas<ConceptoVentaRow>("direccion.conceptosVenta", (desde, hasta) =>
+      supabase
+        .from("conceptos_venta")
+        .select("embarque_id, total, moneda")
+        .in("embarque_id", lote)
+        .is("deleted_at", null)
+        .order("id", { ascending: true })
+        .range(desde, hasta),
+    ),
+  );
+}
+
+async function loadConceptosCosto(ids: string[]): Promise<ConceptoCostoRow[]> {
+  return fetchInChunks(ids, (lote) =>
+    leerTodasLasPaginas<ConceptoCostoRow>("direccion.conceptosCosto", (desde, hasta) =>
+      supabase
+        .from("conceptos_costo")
+        .select("embarque_id, monto, moneda")
+        .in("embarque_id", lote)
+        .is("deleted_at", null)
+        .order("id", { ascending: true })
+        .range(desde, hasta),
+    ),
+  );
 }
 
 export async function loadFacturas(orgId: string | null, desdeIso: string) {
