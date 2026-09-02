@@ -74,7 +74,7 @@ DECLARE
   v_c2 uuid := '2c2c2c2c-2c2c-2c2c-2c2c-2c2c2c2c2c2c';
 BEGIN
   PERFORM public.registrar_traspaso_bancario(
-    v_c1, v_c2, CURRENT_DATE - INTERVAL '1 day', 100, 1, 0,
+    v_c1, v_c2, (CURRENT_DATE - 1)::date, 100, 1, 0,
     'Traspaso con fecha anterior al corte', '', NULL
   );
   RAISE EXCEPTION 'CASO 2 FALLÓ: se permitió un traspaso con fecha anterior al corte de saldo inicial';
