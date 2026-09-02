@@ -25,7 +25,10 @@ vi.mock("@/features/facturacion/hooks/useSaldoFactura", () => ({
 }));
 vi.mock("@/hooks/shared", () => ({
   useRegistrarActividad: () => ({ mutate: vi.fn() }),
+  // v13.823.26: la tabla de pagos ahora es responsiva y consulta el breakpoint.
+  useIsMobile: () => false,
 }));
+
 vi.mock("@/features/facturacion/components/DialogPreviewCfdiPdf", () => ({
   DialogPreviewCfdiPdf: () => null,
 }));
