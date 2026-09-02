@@ -92,7 +92,7 @@ describe("listActividades — contrato server-side", () => {
 
   it("responsable=mias con userId filtra por responsable_id o correo", async () => {
     await listActividades({ ...base, responsable: "mias", userId: "usr-1", userEmail: "v@x.com" });
-    expect(state.ors).toContainEqual("responsable_id.eq.usr-1,responsable_email.eq.v@x.com");
+    expect(state.ors).toContainEqual("responsable_id.eq.usr-1,and(responsable_id.is.null,responsable_email.eq.v@x.com");
   });
 
   it("responsable=mias sin userId no agrega filtro", async () => {
