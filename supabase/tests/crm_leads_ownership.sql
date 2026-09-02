@@ -62,15 +62,13 @@ DECLARE
   v_res jsonb;
   v_n integer;
 BEGIN
-  BEGIN
-    INSERT INTO auth.users(id, email) VALUES
-      (v_vend, 'own-vend@test.local'), (v_vend2, 'own-vend2@test.local'),
-      (v_stale, 'own-stale@test.local'), (v_fresh, 'own-fresh@test.local'),
-      (v_gerente, 'own-ger@test.local'), (v_operador, 'own-oper@test.local'),
-      (v_user_b, 'own-b@test.local')
-    ON CONFLICT (id) DO NOTHING;
-  EXCEPTION WHEN OTHERS THEN NULL;  -- CI sin GoTrue
-  END;
+  -- Fixture indispensable: sin usuarios auth no hay sesión que probar, así que
+  -- NO se envuelve en WHEN OTHERS (tragaba el error y dejaba un falso rojo/verde).
+  INSERT INTO auth.users(id, email) VALUES
+    (v_vend, 'own-vend@test.local'), (v_vend2, 'own-vend2@test.local'),
+    (v_stale, 'own-stale@test.local'), (v_fresh, 'own-fresh@test.local'),
+    (v_gerente, 'own-ger@test.local'), (v_operador, 'own-oper@test.local'),
+    (v_user_b, 'own-b@test.local');
 
   INSERT INTO public.organizations (id, nombre) VALUES
     (v_org_a, 'TEST OWNERSHIP A'), (v_org_b, 'TEST OWNERSHIP B');
