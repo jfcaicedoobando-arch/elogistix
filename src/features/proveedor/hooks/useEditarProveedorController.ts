@@ -36,7 +36,12 @@ function normalizarProveedor(p: Proveedor): Proveedor {
 export function useEditarProveedorController(
   proveedor: Proveedor,
   open: boolean,
-  onSave: (id: string, data: TablesUpdate<"proveedores">) => void,
+  onSave: (
+    id: string,
+    data: TablesUpdate<"proveedores">,
+    expectedUpdatedAt?: string | null,
+    organizationId?: string | null,
+  ) => Promise<unknown>,
   onClose: () => void,
 ) {
   const [form, setForm] = useState<Proveedor>(() => normalizarProveedor(proveedor));
@@ -117,7 +122,9 @@ export function useEditarProveedorController(
     setForm((prev) => ({ ...prev, subtipo_gasto: valor as SubtipoGasto }));
   };
 
-  const handleSave = () => {
+  const [isSaving, setIsSaving] = useState(false);
+
+  const handleSave = async () => {
     if (!isValid) {
       setTouched({
         origen_proveedor: true,
@@ -132,8 +139,19 @@ export function useEditarProveedorController(
       });
       return;
     }
-    onSave(proveedor.id, form);
-    onClose();
+    // Q: el diálogo sólo debe cerrar tras confirmar el guardado. Si hay
+    // conflicto de concurrencia (u otro error), `onSave` rechaza la promesa
+    // (el toast lo emite `useProveedorMutations.onError`) y dejamos el
+    // formulario abierto para que el usuario reintente con datos frescos.
+    setIsSaving(true);
+    try {
+      await onSave(proveedor.id, form, proveedor.updated_at, proveedor.organization_id);
+      onClose();
+    } catch {
+      // Silencioso a propósito: el error ya se notificó vía toast.
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const fieldErrorMessage = (field: string): string | null =>
@@ -141,6 +159,7 @@ export function useEditarProveedorController(
 
   return {
     form,
+    isSaving,
     isLogistico,
     isGasto,
     isAgenteCarga,

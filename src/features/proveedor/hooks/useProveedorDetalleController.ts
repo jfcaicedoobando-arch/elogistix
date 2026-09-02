@@ -63,26 +63,31 @@ export function useProveedorDetalleController() {
 
   // NOTA (v13.320.63): los toasts de éxito/error de update y delete los emite
   // `useProveedorMutations`. No los repitas aquí o el usuario ve doble aviso.
-  const handleUpdate = useCallback(async (provId: string, data: Record<string, unknown>) => {
-    try {
-      const cambios = proveedor
-        ? diffFields(
-            proveedor,
-            data,
-            SENSITIVE_FIELDS.proveedor,
-          )
-        : [];
-      await updateProveedor(provId, data);
-      registrarActividad.mutate({
-        accion: "editar",
-        modulo: "proveedores",
-        entidad_id: provId,
-        entidad_nombre: (data.nombre as string) ?? proveedor?.nombre ?? "",
-        detalles: cambios.length > 0 ? { cambios } : undefined,
-      });
-    } catch {
-      // Silencioso a propósito: `useProveedorMutations.onError` ya notificó.
-    }
+  const handleUpdate = useCallback(async (
+    provId: string,
+    data: Record<string, unknown>,
+    expectedUpdatedAt?: string | null,
+    organizationId?: string | null,
+  ) => {
+    const cambios = proveedor
+      ? diffFields(
+          proveedor,
+          data,
+          SENSITIVE_FIELDS.proveedor,
+        )
+      : [];
+    // N-06: no atrapamos el error aquí — el diálogo (EditarProveedorDialog)
+    // necesita que la promesa se rechace para NO cerrarse ante un conflicto
+    // de concurrencia u otro fallo de guardado. El toast lo emite
+    // `useProveedorMutations.onError`.
+    await updateProveedor(provId, data, expectedUpdatedAt, organizationId);
+    registrarActividad.mutate({
+      accion: "editar",
+      modulo: "proveedores",
+      entidad_id: provId,
+      entidad_nombre: (data.nombre as string) ?? proveedor?.nombre ?? "",
+      detalles: cambios.length > 0 ? { cambios } : undefined,
+    });
   }, [updateProveedor, proveedor, registrarActividad]);
 
   const handleDelete = useCallback(async () => {

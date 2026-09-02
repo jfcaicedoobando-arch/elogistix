@@ -23,7 +23,12 @@ interface Props {
   proveedor: Proveedor;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSave: (id: string, data: TablesUpdate<"proveedores">) => void;
+  onSave: (
+    id: string,
+    data: TablesUpdate<"proveedores">,
+    expectedUpdatedAt?: string | null,
+    organizationId?: string | null,
+  ) => Promise<unknown>;
 }
 
 function FieldError({ message }: { message: string | null }) {
@@ -53,7 +58,9 @@ export default function EditarProveedorDialog({ proveedor, open, onOpenChange, o
       footer={(
         <>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
-          <Button onClick={c.handleSave} disabled={!c.isValid}>Guardar</Button>
+          <Button onClick={c.handleSave} disabled={!c.isValid || c.isSaving}>
+            {c.isSaving ? "Guardando..." : "Guardar"}
+          </Button>
         </>
       )}
     >
