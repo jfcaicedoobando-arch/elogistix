@@ -3,6 +3,8 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import { assertNotTruncated } from "@/lib/supabase/assertNotTruncated";
+import { leerTodasLasPaginas } from "@/lib/supabase/paginado";
+import { fetchInChunks } from "@/lib/supabase/chunkedIn";
 
 // FIX C3 (S6-06): caps explícitos verificados por assertNotTruncated.
 const LIMITE_EMBARQUES = 3000;
