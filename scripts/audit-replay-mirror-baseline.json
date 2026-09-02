@@ -22,11 +22,6 @@
       "migracion_vigente": "20260727175258_295ae563-e224-4072-9e4a-133355024b9c.sql"
     },
     {
-      "espejo": "supabase/schema/embarques/crear_embarque_borrador_desde_cotizacion.sql",
-      "funcion": "crear_embarque_borrador_desde_cotizacion",
-      "migracion_vigente": "20260722125515_b39b649e-d520-430e-904a-fbe9b180211c.sql"
-    },
-    {
       "espejo": "supabase/schema/facturacion/recalcular_estado_factura.sql",
       "funcion": "recalcular_estado_factura",
       "migracion_vigente": "20260725184833_cefe9d2d-98b6-47f0-ba83-0e49fc225e06.sql"
