@@ -1,5 +1,13 @@
 # Changelog
 
+## [13.823.44] - 2026-09-02
+### Higiene de CI: pruebas y auditorías en verde
+- **Mensajes en español**: se agregaron textos amigables para los códigos de folio de serie (`LC_FOLIO_NO_REGRESIVO`, `LC_SERIE_INMUTABLE`).
+- **Auditorías**: se resolvieron el título de prueba duplicado, el cast marcado como riesgoso en el portal y el falso positivo del tope de consultas en Tesorería.
+- **Pruebas**: se actualizaron las aserciones del webhook de FacturApi y el mock de llaves de consulta tras la refactorización previa.
+
+
+
 ## [13.823.43] - 2026-09-02
 ### Pulido operativo: menos clics engañosos y folios protegidos
 - **Eliminaciones irreversibles**: mientras la eliminación está en curso el diálogo ya no se puede cerrar con Escape, clic fuera o Cancelar; muestra "Eliminando… no cierres esta ventana".

@@ -104,4 +104,9 @@ export const LC_CODE_MESSAGES_FINANCIERO: Record<string, string> = {
 
   LC_TC_FUERA_DE_BANDA:
     "El tipo de cambio está fuera de la banda razonable (5 a 40 pesos por divisa), normalmente por un error de captura. Corrígelo con el valor del DOF del día.",
+
+  LC_FOLIO_NO_REGRESIVO:
+    "El folio de la serie no puede retroceder: ya se emitieron facturas con folios mayores.",
+  LC_SERIE_INMUTABLE:
+    "La serie ya tiene facturas emitidas: no se puede cambiar su prefijo ni su folio inicial.",
 };

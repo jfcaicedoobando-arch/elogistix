@@ -18,7 +18,7 @@ describe("leerTodasLasPaginas", () => {
     expect(rangos).toEqual([[0, 2], [3, 5], [6, 8]]);
   });
 
-  it("propaga el error de la consulta", async () => {
+  it("propaga el error de la consulta paginada", async () => {
     await expect(
       leerTodasLasPaginas("test", () => Promise.resolve({ data: null, error: { message: "boom" } })),
     ).rejects.toMatchObject({ message: "boom" });

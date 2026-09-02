@@ -230,10 +230,13 @@ Deno.test("index.ts: el dedupe es INSERT-first (reserva antes de procesar)", () 
 
 Deno.test("index.ts: si el procesamiento falla se libera la reserva de dedupe", () => {
   assertStringIncludes(webhookIndexSource, "if (!result.ok) {");
+  // El borrado vive en el helper `liberarReserva`; el guard debe invocarlo.
+  assertStringIncludes(webhookIndexSource, "async function liberarReserva");
   const idxGuard = webhookIndexSource.indexOf("if (!result.ok) {");
-  const idxDelete = webhookIndexSource.indexOf(".delete()", idxGuard);
-  assert(idxDelete > idxGuard, "el borrado de la reserva debe ir dentro del guard de fallo");
+  const idxLiberar = webhookIndexSource.indexOf("await liberarReserva(", idxGuard);
+  assert(idxLiberar > idxGuard, "la liberación de la reserva debe ir dentro del guard de fallo");
 });
+
 
 
 Deno.test("index.ts: 'Emitida' es el único estado usado para invoice.status_updated valid (nunca 'Timbrada')", () => {
@@ -254,12 +257,14 @@ Deno.test("index.ts: los eventos invoice.* se intentan como factura antes que co
 // Si el objeto local todavía no existe, el evento NO está procesado: debe
 // liberarse la reserva de dedupe y responder 503 para que FacturAPI reintente.
 Deno.test("index.ts: *_not_found libera la reserva y responde 503 reintentable", () => {
-  assertStringIncludes(webhookIndexSource, 'ignored === "factura_not_found" || ignored === "pago_not_found"');
-  const idxGuard = webhookIndexSource.indexOf('ignored === "factura_not_found" || ignored === "pago_not_found"');
-  const idxDelete = webhookIndexSource.indexOf(".delete()", idxGuard);
-  assert(idxDelete > idxGuard, "debe liberar la reserva antes de pedir el reintento");
-  const idx503 = webhookIndexSource.indexOf("503", idxGuard);
-  assert(idx503 > idxDelete, "debe responder 503 (reintentable) tras liberar la reserva");
+  const guardNotFound = 'ignored !== "factura_not_found" && ignored !== "pago_not_found"';
+  assertStringIncludes(webhookIndexSource, guardNotFound);
+  const idxGuard = webhookIndexSource.indexOf(guardNotFound);
+  const idxLiberar = webhookIndexSource.indexOf("await liberarReserva(", idxGuard);
+
+  assert(idxLiberar > idxGuard, "debe liberar la reserva antes de pedir el reintento");
+  const idx503 = webhookIndexSource.indexOf("503", idxLiberar);
+  assert(idx503 > idxLiberar, "debe responder 503 (reintentable) tras liberar la reserva");
   assertStringIncludes(webhookIndexSource, '"target_not_found"');
 });
 
@@ -267,11 +272,12 @@ Deno.test("index.ts: un duplicado real sigue devolviendo 200 idempotente", () =>
   // La reserva sólo se libera en fallo o *_not_found; el 23505 responde ok.
   assertStringIncludes(webhookIndexSource, 'ignored: "duplicate_event"');
   const idxDup = webhookIndexSource.indexOf('ignored: "duplicate_event"');
-  const idxDelDespues = webhookIndexSource.indexOf(".delete()", idxDup);
   const idxDespachar = webhookIndexSource.indexOf("await despacharEvento(supabase, orgId, event)");
   assert(
     idxDup < idxDespachar,
     "el corto circuito por duplicado ocurre antes de procesar (sin borrar la reserva)",
   );
-  assert(idxDelDespues > idxDespachar, "no se borra la reserva en la rama de duplicado");
+  const idxLiberarDespues = webhookIndexSource.indexOf("await liberarReserva(", idxDespachar);
+  assert(idxLiberarDespues > idxDespachar, "no se libera la reserva en la rama de duplicado");
 });
+

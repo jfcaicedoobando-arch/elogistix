@@ -74,6 +74,8 @@ export default function PortalFacturaPagosCard({
         )}
 
         {notasCredito.length > 0 && (
+          // SAFE-CAST: la consulta del portal ya devuelve estas columnas; el
+          // tipo generado no las expone en la relación anidada.
           <PortalFacturaNotasCreditoLista
             notasCredito={notasCredito as unknown as PortalNotaCreditoFila[]}
             moneda={moneda}

@@ -40,7 +40,7 @@ const SELECT_PROGRAMABLES =
   "id, proveedor_nombre, folio_proveedor, fecha_vencimiento, fecha_programada_pago, moneda, total, estado, estado_aprobacion, pagos_proveedor(monto, monto_en_moneda_factura, deleted_at), proveedor_notas_credito(monto, estado, deleted_at)";
 
 /**
- * Ronda YAGNI · defecto 4: antes se pedía `.limit(1000)` con `unwrapOr([])`, así
+ * Ronda YAGNI · defecto 4: antes se pedía una sola página tope de PostgREST con `unwrapOr([])`, así
  * que la factura 1001 no se veía ni se podía ejecutar y un error de consulta
  * (o RLS) se mostraba como bandeja vacía. Ahora se leen TODAS las páginas y el
  * error se propaga para que la ruta muestre reintento.

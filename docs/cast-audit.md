@@ -5,17 +5,17 @@ Auditoría automática de los `as` casts en `src/`. Generado por
 
 ## Resumen
 
-Total de `as` casts detectados: **3390**
+Total de `as` casts detectados: **3391**
 
 | Categoría | Peso | Cantidad | % |
 |-----------|------|----------|---|
 | SAFE      | 0 | 990     | 29.2% |
-| LOW       | 1 | 161      | 4.7% |
-| MEDIUM    | 2 | 2236   | 66.0% |
-| HIGH      | 3 | 3     | 0.1% |
+| LOW       | 1 | 164      | 4.8% |
+| MEDIUM    | 2 | 2236   | 65.9% |
+| HIGH      | 3 | 1     | 0.0% |
 | CRITICAL  | 4 | 0 | 0.0% |
 
-**Lectura clave:** los casts a accionar son los **HIGH + CRITICAL** = 3 (~0.1%). El resto es seguro o aceptable bajo política.
+**Lectura clave:** los casts a accionar son los **HIGH + CRITICAL** = 1 (~0.0%). El resto es seguro o aceptable bajo política.
 
 ## Definición de categorías
 
@@ -31,10 +31,10 @@ Total de `as` casts detectados: **3390**
 |---|---------|------:|-----:|-----:|----:|----:|-----:|-----:|
 | 1 | `src/features/embarques/services/cierre.ts` | 17 | 30 | 1 | 2 | 14 | 0 | 0 |
 | 2 | `src/features/cotizacion/services/paginados.ts` | 17 | 29 | 2 | 1 | 14 | 0 | 0 |
-| 3 | `src/features/dashboard/direccion/services/loaders.ts` | 16 | 29 | 1 | 1 | 14 | 0 | 0 |
-| 4 | `src/features/cxp/services/__tests__/proveedorFacturas.helpers.test.ts` | 14 | 28 | 0 | 0 | 14 | 0 | 0 |
-| 5 | `src/features/cotizacion/components/seccionRuta/__tests__/aplicarTarifa.test.ts` | 13 | 26 | 0 | 0 | 13 | 0 | 0 |
-| 6 | `src/features/embarques/domain/mappers/__tests__/embarqueToDb.test.ts` | 14 | 26 | 1 | 0 | 13 | 0 | 0 |
+| 3 | `src/features/cxp/services/__tests__/proveedorFacturas.helpers.test.ts` | 14 | 28 | 0 | 0 | 14 | 0 | 0 |
+| 4 | `src/features/cotizacion/components/seccionRuta/__tests__/aplicarTarifa.test.ts` | 13 | 26 | 0 | 0 | 13 | 0 | 0 |
+| 5 | `src/features/embarques/domain/mappers/__tests__/embarqueToDb.test.ts` | 14 | 26 | 1 | 0 | 13 | 0 | 0 |
+| 6 | `src/features/dashboard/direccion/services/loaders.ts` | 14 | 25 | 1 | 1 | 12 | 0 | 0 |
 | 7 | `src/features/cotizacion/services/__tests__/informativa.test.ts` | 10 | 20 | 0 | 0 | 10 | 0 | 0 |
 | 8 | `src/features/portal/services/__tests__/queries.test.ts` | 11 | 20 | 1 | 0 | 10 | 0 | 0 |
 | 9 | `src/lib/mappers/genericPayloadMapper.ts` | 11 | 19 | 1 | 1 | 9 | 0 | 0 |
@@ -47,22 +47,10 @@ Total de `as` casts detectados: **3390**
 
 ## Top-30 casts más riesgosos (HIGH + CRITICAL)
 
-### 1. [HIGH] `src/features/profit/services/estadoResultados.ts:62`
+### 1. [HIGH] `src/features/portal/components/factura/PortalFacturaPagosCard.tsx:78`
 
 ```ts
-return q as unknown as Builder<EmbarqueER & { estado: string }>;
-```
-
-### 2. [HIGH] `src/features/profit/services/estadoResultados.ts:76`
-
-```ts
-.order("id", { ascending: true }) as unknown as Builder<ConceptoVentaER>,
-```
-
-### 3. [HIGH] `src/features/profit/services/estadoResultados.ts:85`
-
-```ts
-.order("id", { ascending: true }) as unknown as Builder<ConceptoCostoER>,
+notasCredito={notasCredito as unknown as PortalNotaCreditoFila[]}
 ```
 
 
