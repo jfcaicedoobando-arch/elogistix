@@ -34,7 +34,6 @@
     "src/features/facturacion/services/pagos/eliminarPago.ts::pagos_factura",
     "src/features/facturacion/services/recalcularTotalesFactura.ts::facturas",
     "src/features/facturacion/services/refacturacion.ts::facturas",
-    "src/features/facturacion/services/referenciasEmbarque.ts::embarques",
     "src/features/facturacion/services/sustitucionEstado.ts::facturas",
     "src/features/portal/services/queries.ts::embarques"
   ]
