@@ -73,11 +73,21 @@ export async function actualizarEtapaOportunidad(
   etapaId: string,
   probabilidad: number,
 ): Promise<void> {
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from("crm_oportunidades")
     .update({ etapa_id: etapaId, probabilidad })
-    .eq("id", oportunidadId);
+    .eq("id", oportunidadId)
+    .is("deleted_at", null)
+    .select("id")
+    .maybeSingle();
   if (error) throw error;
+  // 0 filas (RLS o eliminada): no anunciamos un cambio de etapa que no ocurrió.
+  if (!data) {
+    throw new Error(
+      "No se pudo mover la etapa: no tienes permiso o la oportunidad ya no existe.",
+    );
+  }
+
   await registrarActividad({
     modulo: "crm",
     accion: "actualizar_etapa_oportunidad_desde_cotizacion",
