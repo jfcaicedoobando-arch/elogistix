@@ -157043,6 +157043,7 @@
       "20260908001050_traspaso_lock_saldo_y_fecha_corte.sql",
       "20260908001100_crear_concepto_costo_y_vincular_atomico.sql",
       "20260908001200_reportes_resumen_embarques_sin_tc.sql",
+      "20260909000050_replay_assert_cotizacion_convertible.sql",
       "20260909000100_replay_crear_embarque_completo_assert_convertible.sql"
     ]
   }
