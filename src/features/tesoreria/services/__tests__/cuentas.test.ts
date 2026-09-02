@@ -41,9 +41,22 @@ describe("cuentas service", () => {
   });
 
   it("eliminarCuenta hace soft delete", async () => {
-    mock.setTableResult("cuentas_bancarias", { data: [], error: null });
+    mock.setTableResult("cuentas_bancarias", { data: { id: "1" }, error: null });
     await eliminarCuenta("1", "u1");
     const call = mock.tableCalls.find(c => c.table === "cuentas_bancarias");
     expect(call?.ops).toContain("update");
+  });
+
+  it("eliminarCuenta falla si no se afectó ninguna fila (defecto 3)", async () => {
+    mock.setTableResult("cuentas_bancarias", { data: null, error: null });
+    await expect(eliminarCuenta("1", "u1")).rejects.toThrow(/no existe o no tienes permiso/);
+  });
+
+  it("eliminarCuenta traduce el guard de movimientos históricos (defecto 3)", async () => {
+    mock.setTableResult("cuentas_bancarias", {
+      data: null,
+      error: { message: "LC_CUENTA_CON_MOVIMIENTOS: la cuenta bancaria tiene movimientos" },
+    });
+    await expect(eliminarCuenta("1", "u1")).rejects.toThrow(/movimientos bancarios registrados/);
   });
 });
