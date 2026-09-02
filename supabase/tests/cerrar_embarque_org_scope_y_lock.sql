@@ -1,7 +1,7 @@
 -- =============================================================
 -- cerrar_embarque_org_scope_y_lock.sql
 --
--- Cubre el fix de 20260910000100_fix_cerrar_embarque_org_scope_y_lock_conceptos.sql:
+-- Cubre el fix de 20260911000100_replay_cerrar_reabrir_org_scope_helper_service_role.sql:
 --   · CASO 1 (negativo, cross-org): un admin_org de la Org A NO puede cerrar
 --     un embarque de la Org B (antes del fix, `has_role` global permitía a
 --     cualquier admin de CUALQUIER org forzar el cierre de embarques ajenos).

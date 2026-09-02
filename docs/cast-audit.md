@@ -5,13 +5,13 @@ Auditoría automática de los `as` casts en `src/`. Generado por
 
 ## Resumen
 
-Total de `as` casts detectados: **3391**
+Total de `as` casts detectados: **3395**
 
 | Categoría | Peso | Cantidad | % |
 |-----------|------|----------|---|
 | SAFE      | 0 | 990     | 29.2% |
 | LOW       | 1 | 165      | 4.9% |
-| MEDIUM    | 2 | 2236   | 65.9% |
+| MEDIUM    | 2 | 2240   | 66.0% |
 | HIGH      | 3 | 0     | 0.0% |
 | CRITICAL  | 4 | 0 | 0.0% |
 
@@ -29,7 +29,7 @@ Total de `as` casts detectados: **3391**
 
 | # | Archivo | Total | Peso | SAFE | LOW | MED | HIGH | CRIT |
 |---|---------|------:|-----:|-----:|----:|----:|-----:|-----:|
-| 1 | `src/features/embarques/services/cierre.ts` | 17 | 30 | 1 | 2 | 14 | 0 | 0 |
+| 1 | `src/features/embarques/services/cierre.ts` | 18 | 32 | 1 | 2 | 15 | 0 | 0 |
 | 2 | `src/features/cotizacion/services/paginados.ts` | 17 | 29 | 2 | 1 | 14 | 0 | 0 |
 | 3 | `src/features/cxp/services/__tests__/proveedorFacturas.helpers.test.ts` | 14 | 28 | 0 | 0 | 14 | 0 | 0 |
 | 4 | `src/features/cotizacion/components/seccionRuta/__tests__/aplicarTarifa.test.ts` | 13 | 26 | 0 | 0 | 13 | 0 | 0 |

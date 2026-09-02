@@ -8498,6 +8498,10 @@ export type Database = {
         Args: { p_cotizacion_id: string; p_org: string }
         Returns: undefined
       }
+      _assert_embarque_abierto_locked: {
+        Args: { p_embarque_id: string }
+        Returns: string
+      }
       _assert_facturapi_admin: {
         Args: { p_org_id: string }
         Returns: undefined
@@ -8716,6 +8720,10 @@ export type Database = {
           titulo: string
           usuario: string
         }[]
+      }
+      actualizar_cierre_periodo: {
+        Args: { p_fecha: string; p_motivo?: string; p_org: string }
+        Returns: undefined
       }
       actualizar_cotizacion_costos: {
         Args: { p_costos: Json; p_cotizacion_id: string; p_request_id?: string }
@@ -10037,6 +10045,7 @@ export type Database = {
         Returns: Json
       }
       eliminar_proforma_rpc: { Args: { p_proforma_id: string }; Returns: Json }
+      email_queue_dispatch: { Args: never; Returns: undefined }
       email_send_log_touch: {
         Args: {
           p_error?: string

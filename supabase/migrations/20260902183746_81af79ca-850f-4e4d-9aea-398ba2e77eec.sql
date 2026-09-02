@@ -1,35 +1,7 @@
--- =============================================================
--- 20260910000100_fix_cerrar_embarque_org_scope_y_lock_conceptos.sql
---
--- DEFECTO 1 (P0, cross-tenant): `cerrar_embarque` validaba roles con
--- `has_role` GLOBAL antes de conocer el embarque. Un coordinador/admin de la
--- org A con el UUID de un embarque de la org B podía cerrarlo (y forzar el
--- cierre si tenía rol admin en la org A). Arreglo: tras el
--- `SELECT ... FOR UPDATE`, se valida el rol EXACTO dentro de
--- `v_emb.organization_id` con `has_any_role_in_org_exact` (super_admin sigue
--- autorizado globalmente vía la semántica ya embebida en ese helper). No se
--- amplían permisos: los mismos 4 roles (admin, admin_org,
--- gerente_operaciones, coordinador_logistico) siguen siendo los únicos
--- autorizados, ahora evaluados en la org dueña del embarque.
--- `reabrir_embarque` tenía el mismo defecto en su check de admin global; se
--- corrige de forma consistente (sin ampliar permisos: admin/admin_org y
--- super_admin global, ahora org-scoped).
---
--- DEFECTO 2 (P1, carrera cierre vs conceptos): `cerrar_embarque` bloquea la
--- fila del embarque con FOR UPDATE, pero los triggers que validan "embarque
--- abierto" al insertar/editar en `conceptos_costo`/`conceptos_venta` (y otras
--- tablas hijas) leían `embarques.estado` sin candado, permitiendo que una
--- transacción insertara un concepto mientras otra cerraba el embarque, sin
--- quedar reflejado en el snapshot de cierre. Arreglo: se extrae el helper
--- `_assert_embarque_abierto_locked` que toma `FOR KEY SHARE` (compatible con
--- otras transacciones concurrentes que sólo leen, pero mutuamente exclusivo
--- con el `FOR UPDATE` de `cerrar_embarque`, y sin bloquear cascadas FK) y lee
--- el estado en esa misma lectura bloqueada. Los triggers
--- `bloquear_conceptos_en_embarque_cerrado` y `tg_bloquear_si_embarque_cerrado`
--- ahora usan ese helper.
--- =============================================================
+-- Replay remoto de 20260910000100_fix_cerrar_embarque_org_scope_y_lock_conceptos.sql
+-- (nunca se aplicó en la base: cerrar_embarque/reabrir_embarque seguían con
+-- validación de rol GLOBAL y los triggers leían el estado sin candado).
 
--- ---- DEFECTO 2: helper de lectura bloqueada del estado del embarque ----
 CREATE OR REPLACE FUNCTION public._assert_embarque_abierto_locked(p_embarque_id uuid)
 RETURNS text
 LANGUAGE plpgsql
@@ -42,10 +14,6 @@ BEGIN
   IF p_embarque_id IS NULL THEN
     RETURN NULL;
   END IF;
-  -- FOR KEY SHARE es mutuamente exclusivo con el FOR UPDATE de
-  -- cerrar_embarque: si un cierre está en curso, esta lectura espera a que
-  -- termine (commit o rollback) antes de decidir si el embarque sigue
-  -- abierto, cerrando la ventana de carrera del DEFECTO 2.
   SELECT estado::text INTO v_estado
     FROM public.embarques
    WHERE id = p_embarque_id
@@ -54,8 +22,10 @@ BEGIN
 END;
 $$;
 
-REVOKE ALL ON FUNCTION public._assert_embarque_abierto_locked(uuid) FROM PUBLIC, anon;
-GRANT EXECUTE ON FUNCTION public._assert_embarque_abierto_locked(uuid) TO authenticated, service_role;
+-- Helper interno: sólo lo invocan triggers SECURITY DEFINER (que corren como
+-- dueño), por lo que NO se expone a `authenticated` (linter org-scope).
+REVOKE ALL ON FUNCTION public._assert_embarque_abierto_locked(uuid) FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public._assert_embarque_abierto_locked(uuid) TO service_role;
 
 CREATE OR REPLACE FUNCTION public.bloquear_conceptos_en_embarque_cerrado() RETURNS trigger
     LANGUAGE plpgsql SECURITY DEFINER
@@ -67,8 +37,6 @@ BEGIN
   IF current_setting('app.bypass_cierre', true) = 'on' THEN
     RETURN COALESCE(NEW, OLD);
   END IF;
-  -- DEFECTO 2: lectura bloqueada (FOR KEY SHARE) para no perder la carrera
-  -- contra el FOR UPDATE de cerrar_embarque.
   v_estado := public._assert_embarque_abierto_locked(COALESCE(NEW.embarque_id, OLD.embarque_id));
   IF v_estado = 'Cerrado' THEN
     IF TG_OP = 'UPDATE' AND NEW.deleted_at IS NOT NULL AND OLD.deleted_at IS NULL THEN
@@ -106,7 +74,6 @@ BEGIN
   IF v_emb_id IS NULL THEN
     RETURN COALESCE(NEW, OLD);
   END IF;
-  -- DEFECTO 2: lectura bloqueada (FOR KEY SHARE), misma razón que arriba.
   v_estado := public._assert_embarque_abierto_locked(v_emb_id);
   IF v_estado = 'Cerrado' THEN
     RAISE EXCEPTION 'Embarque cerrado: edición bloqueada (tabla %)', TG_TABLE_NAME
@@ -116,7 +83,6 @@ BEGIN
 END;
 $$;
 
--- ---- DEFECTO 1: cerrar_embarque org-scoped ----
 CREATE OR REPLACE FUNCTION public.cerrar_embarque(p_embarque_id uuid) RETURNS jsonb
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
@@ -130,7 +96,6 @@ DECLARE
   v_is_admin boolean;
   v_forzado boolean := false;
   v_automatico boolean := COALESCE(current_setting('app.cierre_automatico', true), 'off') = 'on';
-  -- BL-09: cursor de recálculo de comisiones pendientes.
   v_pago_recalc uuid;
   v_recalculadas int := 0;
 BEGIN
@@ -141,9 +106,6 @@ BEGIN
   IF NOT FOUND THEN
     RAISE EXCEPTION 'Embarque no encontrado';
   END IF;
-  -- DEFECTO 1: el rol se valida EN LA ORG DEL EMBARQUE (v_emb.organization_id),
-  -- no de forma global. super_admin sigue autorizado globalmente por la
-  -- semántica ya embebida en has_any_role_in_org_exact.
   v_is_admin :=
     NOT v_automatico AND
     public.has_any_role_in_org_exact(v_uid, ARRAY['admin','admin_org']::app_role[], v_emb.organization_id);
@@ -198,10 +160,6 @@ BEGIN
          reabierto_motivo = NULL,
          updated_at = now()
    WHERE id = p_embarque_id;
-  -- BL-09: recalcular las comisiones del embarque que quedaron en 0 con nota
-  -- de pendiente (TC faltante / costos capturados tarde). La función es
-  -- idempotente y omite las ya 'Liquidada'. Un fallo individual no aborta el
-  -- cierre: queda WARNING y la nota sigue marcando la comisión como pendiente.
   FOR v_pago_recalc IN
     SELECT pf.id
       FROM pagos_factura pf
@@ -257,11 +215,6 @@ BEGIN
 END;
 $$;
 
-REVOKE ALL ON FUNCTION public.cerrar_embarque(p_embarque_id uuid) FROM PUBLIC;
-GRANT ALL ON FUNCTION public.cerrar_embarque(p_embarque_id uuid) TO authenticated;
-GRANT ALL ON FUNCTION public.cerrar_embarque(p_embarque_id uuid) TO service_role;
-
--- ---- DEFECTO 1 (consistencia): reabrir_embarque también era global ----
 CREATE OR REPLACE FUNCTION public.reabrir_embarque(p_embarque_id uuid, p_usuario_email text, p_motivo text, p_request_id uuid DEFAULT NULL::uuid)
 RETURNS jsonb
 LANGUAGE plpgsql
@@ -293,9 +246,6 @@ BEGIN
     RAISE EXCEPTION 'Embarque no encontrado';
   END IF;
 
-  -- DEFECTO 1 (consistencia): antes usaba has_role() GLOBAL; ahora se exige
-  -- membresía admin/admin_org en LA ORG DEL EMBARQUE (super_admin sigue
-  -- autorizado globalmente, semántica embebida en has_any_role_in_org_exact).
   v_es_admin := public.has_any_role_in_org_exact(v_actor_id, ARRAY['admin','admin_org']::app_role[], v_org_id);
   IF NOT v_es_admin THEN
     RAISE EXCEPTION 'Solo administradores pueden reabrir embarques cerrados';
@@ -360,8 +310,6 @@ $function$;
 REVOKE ALL ON FUNCTION public.reabrir_embarque(uuid, text, text, uuid) FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.reabrir_embarque(uuid, text, text, uuid) TO authenticated, service_role;
 
--- H6 · permisos explícitos de las funciones SECURITY DEFINER de este archivo
--- (idempotentes: reflejan los privilegios ya vigentes en la base).
 REVOKE ALL ON FUNCTION public.bloquear_conceptos_en_embarque_cerrado() FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.bloquear_conceptos_en_embarque_cerrado() TO authenticated, service_role;
 

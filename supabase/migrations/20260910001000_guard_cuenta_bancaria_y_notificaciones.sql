@@ -42,3 +42,6 @@ REVOKE INSERT, UPDATE, DELETE, TRUNCATE, REFERENCES ON public.notificaciones_int
 GRANT SELECT ON public.notificaciones_internas TO authenticated;
 GRANT UPDATE (leida, leida_at) ON public.notificaciones_internas TO authenticated;
 GRANT ALL ON public.notificaciones_internas TO service_role;
+
+-- H6: permisos explícitos del trigger (sólo el motor lo ejecuta).
+GRANT EXECUTE ON FUNCTION public._cuenta_bancaria_guard_baja() TO service_role;

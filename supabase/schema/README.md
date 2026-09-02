@@ -42,7 +42,7 @@ Top 10 funciones más redefinidas — capturadas 1:1 desde la BD el 2026-07-23:
 | `adjuntar_xml_factura_entrante(...)` | `cxp/adjuntar_xml_factura_entrante.sql` | `20260813031300_1f4a2b81-412f-49fb-b8dc-5fa802409b9b` |
 
 Otras fuentes canónicas presentes en el directorio (agregadas en olas
-anteriores y no listadas arriba): `embarques/cerrar_embarque.sql` y `embarques/_assert_embarque_abierto_locked.sql` (20260910000100 · org-scope de `cerrar_embarque`/`reabrir_embarque` + candado FOR KEY SHARE compartido por los triggers de bloqueo de conceptos), `tesoreria/registrar_traspaso_bancario.sql` (Ola 8 · candado FOR UPDATE + rechazo de fecha anterior al corte, `20260908001000_traspaso_lock_saldo_y_fecha_corte`), `auditoria/costos_repetidos.sql`,
+anteriores y no listadas arriba): `embarques/cerrar_embarque.sql` y `embarques/_assert_embarque_abierto_locked.sql` (20260911000100 · org-scope de `cerrar_embarque`/`reabrir_embarque` + candado FOR KEY SHARE compartido por los triggers de bloqueo de conceptos), `tesoreria/registrar_traspaso_bancario.sql` (Ola 8 · candado FOR UPDATE + rechazo de fecha anterior al corte, `20260908001000_traspaso_lock_saldo_y_fecha_corte`), `auditoria/costos_repetidos.sql`,
 `cotizaciones/trg_notificar_cotizacion_enviada.sql`,
 `cxp/cancelar_factura_proveedor.sql`, `cxp/guard_pago_proveedor.sql`,
 `embarques/_calcular_demoras_montos_contenedor.sql`,

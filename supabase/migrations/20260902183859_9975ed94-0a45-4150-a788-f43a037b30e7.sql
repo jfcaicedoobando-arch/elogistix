@@ -1,9 +1,6 @@
 -- Defecto 5 (P1): assert_nc_no_excede_saldo() no bloqueaba la factura al leer
 -- moneda/tipo_cambio/fecha_emision, así que dos NC concurrentes podían
 -- sobreacreditar (race condition clásica read-then-write sin lock).
--- Fix: SELECT ... FOR UPDATE de la factura antes de recalcular; serializa las
--- NC de la misma factura sin cambiar el resto de la lógica (tolerancias,
--- fail-closed sin TC).
 CREATE OR REPLACE FUNCTION public.assert_nc_no_excede_saldo() RETURNS trigger
     LANGUAGE plpgsql
     SET search_path TO 'public'
@@ -17,19 +14,15 @@ DECLARE
   v_total_ncs_mxn numeric;
   v_tol_mxn numeric;
 BEGIN
-  -- Sólo restringe NCs vivas y aplicadas (borradores y canceladas se permiten).
   IF NEW.deleted_at IS NOT NULL OR NEW.estado::text NOT IN ('Aplicada','Emitida') THEN
     RETURN NEW;
   END IF;
-  -- Defecto 5: FOR UPDATE serializa las NC concurrentes de la misma factura.
-  -- La misma lectura bloqueada sirve para moneda/tipo_cambio/fecha_emision.
   SELECT f.moneda::text AS moneda, f.tipo_cambio, f.fecha_emision
     INTO v_fac
   FROM public.facturas f
   WHERE f.id = NEW.factura_id
     AND f.deleted_at IS NULL
   FOR UPDATE;
-  -- Factura inexistente o en papelera: fuera del alcance del candado.
   IF NOT FOUND THEN
     RETURN NEW;
   END IF;
@@ -42,7 +35,6 @@ BEGIN
     NEW.tipo_cambio,
     v_fac.tipo_cambio
   );
-  -- Fail-closed: sin tipo de cambio no se puede comparar dinero de forma segura.
   IF v_saldo_mxn IS NULL OR v_nc_nueva_mxn IS NULL THEN
     RAISE EXCEPTION 'LC_NC_SIN_TC: no hay tipo de cambio para validar la nota de crédito contra el saldo de la factura'
       USING ERRCODE = 'check_violation',
@@ -68,7 +60,6 @@ BEGIN
     AND nc.estado::text IN ('Aplicada','Emitida')
     AND nc.id <> COALESCE(NEW.id, '00000000-0000-0000-0000-000000000000'::uuid);
   v_total_ncs_mxn := v_ncs_previas_mxn + v_nc_nueva_mxn;
-  -- Tolerancia de un centavo expresada en la moneda de la factura.
   v_tol_mxn := GREATEST(
     0.01,
     COALESCE(public.a_mxn_doc(0.01, v_fac.moneda, v_fac.fecha_emision, v_fac.tipo_cambio, NULL), 0.01)
@@ -88,16 +79,7 @@ BEGIN
 END;
 $$;
 
--- Defecto 6 (P1): el orden por fecha_pago/created_at de pagos_factura
--- determina la parcialidad y saldos impresos en los REP ya timbrados.
--- Este guard rechaza cualquier INSERT/UPDATE/DELETE sobre pagos_factura que
--- altere la historia (fecha, monto, factura destino o baja) anterior o igual
--- a un REP VIVO (timbrado y no cancelado) de esa misma factura.
--- Criterio de "REP vivo" reutilizado del resto del repo (assert_pago_sin_rep_vivo*,
--- reasignar_pago_factura, _refact_reps_bloqueantes): uuid_rep IS NOT NULL,
--- rep_cancelado_en IS NULL; aquí además exigimos estado_rep = 'Timbrado'
--- porque sólo un REP ya timbrado imprime saldos que se puedan invalidar
--- (un REP 'Pendiente' o 'Error' aún no tiene PDF/XML emitido al SAT).
+-- Defecto 6 (P1): historia de cobros inmutable frente a REP vivos.
 CREATE OR REPLACE FUNCTION public.assert_pago_no_altera_historia_rep() RETURNS trigger
     LANGUAGE plpgsql
     SET search_path TO 'public'
@@ -133,8 +115,6 @@ BEGIN
       OR (NEW.deleted_at IS DISTINCT FROM OLD.deleted_at)
       OR (NEW.created_at IS DISTINCT FROM OLD.created_at);
   ELSE
-    -- INSERT: sólo importa si nace viva (deleted_at NULL); un insert ya
-    -- borrado no toca la historia viva de nadie.
     IF NEW.deleted_at IS NOT NULL THEN
       RETURN NEW;
     END IF;
@@ -145,8 +125,6 @@ BEGIN
     v_row_deleted := NULL;
   END IF;
 
-  -- Fila que ya estaba borrada (soft-delete previo): no forma parte de la
-  -- historia viva de ninguna factura, cualquier mutación es inocua para REP.
   IF TG_OP <> 'INSERT' AND v_row_deleted IS NOT NULL THEN
     IF TG_OP = 'DELETE' THEN RETURN OLD; ELSE RETURN NEW; END IF;
   END IF;
