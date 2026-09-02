@@ -30,6 +30,7 @@ import { useCrearOportunidad, useEtapasPipeline } from "@/features/crm/hooks";
 import { useClientesForSelect } from "@/features/cliente/hooks";
 import { LeadComboboxCrm } from "@/features/crm/components/comboboxes/EntidadComboboxCrm";
 import { LEAD_ESTADOS_ETAPA_PROSPECTO } from "@/features/crm/domain/leads/etapas";
+import { primeraEtapaAbierta, MSG_SIN_ETAPA_ABIERTA } from "@/features/crm/domain/oportunidadFormHelpers";
 
 interface Props {
   open: boolean;
@@ -61,13 +62,16 @@ export default function QuickCreateOportunidadDialog({ open, onOpenChange, onCre
     setLeadVendedorId(null); setLeadVendedorEmail("");
   };
 
-  const etapaInicial = useMemo(() => etapas.find((e) => e.orden === 1) ?? etapas[0], [etapas]);
+  // v13.823.53 — sólo la primera etapa ABIERTA: antes se usaba `orden === 1`
+  // (o `etapas[0]`) sin mirar el tipo, así que un pipeline con una etapa
+  // terminal en la primera posición creaba oportunidades ganadas/perdidas.
+  const etapaInicial = useMemo(() => primeraEtapaAbierta(etapas), [etapas]);
   const origenListo = origenTipo === "cliente" ? !!clienteId : !!leadId;
 
   /** Devuelve el mensaje de validación, o null si el formulario es válido. */
   const validar = (): string | null => {
     if (!nombre.trim()) return "Nombre requerido";
-    if (!etapaInicial) return "Configura el pipeline primero";
+    if (!etapaInicial) return MSG_SIN_ETAPA_ABIERTA;
     if (!origenListo) return "Elige un prospecto o un cliente";
     return null;
   };
@@ -154,6 +158,9 @@ export default function QuickCreateOportunidadDialog({ open, onOpenChange, onCre
               placeholder="Importación China Q1"
             />
           </div>
+          {!etapaInicial && (
+            <p role="alert" className="text-body-sm text-destructive">{MSG_SIN_ETAPA_ABIERTA}</p>
+          )}
           <div className="space-y-1">
             <Label htmlFor="qc-oportunidad-origen">Origen *</Label>
             <Select
