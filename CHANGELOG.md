@@ -1,5 +1,16 @@
 # Changelog
 
+## [13.823.23] - 2026-09-02
+### Pulido: sidebar, saludo de tableros y modales de antigüedad
+- **Sidebar**: en modo colapsado se pintaban **dos** puntos rojos por la misma alerta; ahora es uno solo y el tooltip del ítem incluye el desglose (`badgeHint`), que antes sólo existía expandido.
+- **Sidebar**: el botón de colapsar tenía dos nombres accesibles distintos (móvil vs escritorio); se unificó a "Mostrar u ocultar la barra lateral".
+- **Tableros**: el saludo usaba la hora del navegador (`new Date().getHours()`), así que a las 18:00 CDMX podía decir "Buenas noches" o "Buenos días" según el equipo. Ahora usa `saludoMx()` + `horaMx()` (America/Mexico_City), compartido por el dashboard operativo y el financiero.
+- **Modales**: el drill-down de antigüedad de CxC hacía scroll de todo el diálogo (el encabezado se iba con el contenido y no había botón "Cerrar"); ahora usa el mismo patrón que CxP: encabezado y footer fijos, sólo la tabla scrollea.
+- **Accesibilidad**: los dos drill-downs de antigüedad ya tienen `DialogDescription` (Radix ya no advierte por descripción faltante).
+- **Copy**: el stepper de los modales decía "Paso 1/2" en pantalla y "Paso 1 de 2" al lector de pantalla; se unificó a "Paso 1 de 2".
+
+
+
 ## [13.823.22] - 2026-09-01
 ### Fix: Facturación mostraba embarques ya eliminados
 - **Síntoma**: en Facturación aparecían expedientes borrados (p. ej. ELIMP00274/ELIMP00275).

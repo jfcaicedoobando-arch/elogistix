@@ -118,10 +118,14 @@ export function AgingDrillDownDialog({ proveedor, open, onOpenChange, cubetaInic
                 </span>
               )}
             </div>
+            <DialogDescription>
+              Facturas abiertas del proveedor en la cubeta de antigüedad seleccionada.
+            </DialogDescription>
             {proveedor && (
               <p className="text-body-sm text-muted-foreground">{proveedor.proveedor_nombre}</p>
             )}
           </DialogHeader>
+
 
           {proveedor && (
             <AgingActionBar
