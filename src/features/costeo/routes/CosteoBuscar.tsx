@@ -15,13 +15,15 @@ import {
 } from "@/components/ui/select";
 import { usePuertos, useTiposContenedor } from "@/features/catalogos/hooks";
 import { useTopTarifas } from "@/features/costeo/hooks/useTopTarifas";
+import { useDiagnosticoTarifas } from "@/features/costeo/hooks/useDiagnosticoTarifas";
+import { TarifasSinResultado } from "@/features/costeo/components/TarifasSinResultado";
 import { TarifaResultCard } from "@/features/costeo/components/TarifaResultCard";
 import { computeRankingMeta } from "@/features/costeo/utils/rankingLabels";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { LoadingState } from "@/components/shared/states/LoadingState";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
-import { FileSearch, MapPinned } from "lucide-react";
+import { MapPinned } from "lucide-react";
 import { todayLocalISO } from "@/lib/date/today";
 
 export default function CosteoBuscar() {
@@ -32,11 +34,18 @@ export default function CosteoBuscar() {
   const [tipo, setTipo] = useState("");
   const [fecha, setFecha] = useState(todayLocalISO());
 
-  const { data: tarifas = [], isFetching } = useTopTarifas({
+  const { data: tarifas = [], isFetching, tipoContenedorIds } = useTopTarifas({
     puertoOrigenId: origen,
     puertoDestinoId: destino,
     tipoContenedorId: tipo,
     fecha,
+  });
+
+  const { diagnostico } = useDiagnosticoTarifas({
+    puertoOrigenId: origen,
+    puertoDestinoId: destino,
+    tipoContenedorIds,
+    enabled: !isFetching && tarifas.length === 0,
   });
 
   const puertosCN = puertos.filter(
@@ -123,11 +132,7 @@ export default function CosteoBuscar() {
         </Card>
       ) : tarifas.length === 0 ? (
         <Card>
-          <EmptyStateInline
-            icon={FileSearch}
-            message="No hay tarifas vigentes para esta combinación."
-            hint='Captura una nueva en "Tarifas marítimas".'
-          />
+          <TarifasSinResultado diagnostico={diagnostico} />
         </Card>
       ) : (
         (() => {
