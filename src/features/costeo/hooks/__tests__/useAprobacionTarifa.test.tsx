@@ -4,7 +4,6 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import { useAprobacionTarifa } from "../useAprobacionTarifa";
 import * as aprobacionService from "@/features/costeo/services/aprobacion";
-import { todayLocalISO } from "@/lib/date/today";
 
 vi.mock("@/lib/ui/appFeedback", () => ({
   notifySuccess: vi.fn(),
@@ -18,26 +17,26 @@ function wrapper({ children }: { children: ReactNode }) {
 
 afterEach(() => vi.restoreAllMocks());
 
-describe("useAprobacionTarifa — guard de vigencia", () => {
-  it("rechaza aprobar una tarifa con vigencia vencida sin llamar al servicio", async () => {
-    const spy = vi.spyOn(aprobacionService, "aprobarTarifa").mockResolvedValue(undefined);
+describe("useAprobacionTarifa — delega el guard de vigencia al servicio", () => {
+  it("no confía en la fila de la UI: sólo manda el id al servicio verificado", async () => {
+    const spy = vi.spyOn(aprobacionService, "aprobarTarifaVerificada").mockResolvedValue(undefined);
     const { result } = renderHook(() => useAprobacionTarifa(), { wrapper });
 
-    const ayer = "2000-01-01";
-    result.current.aprobar.mutate({ id: "t1", vigenteHasta: ayer });
-
-    await waitFor(() => expect(result.current.aprobar.isError).toBe(true));
-    expect(spy).not.toHaveBeenCalled();
-    expect(String(result.current.aprobar.error)).toContain("No puedes aprobar una tarifa con vigencia vencida");
-  });
-
-  it("permite aprobar una tarifa vigente", async () => {
-    const spy = vi.spyOn(aprobacionService, "aprobarTarifa").mockResolvedValue(undefined);
-    const { result } = renderHook(() => useAprobacionTarifa(), { wrapper });
-
-    result.current.aprobar.mutate({ id: "t1", vigenteHasta: todayLocalISO() });
+    result.current.aprobar.mutate({ id: "t1" });
 
     await waitFor(() => expect(result.current.aprobar.isSuccess).toBe(true));
     expect(spy).toHaveBeenCalledWith("t1");
+  });
+
+  it("propaga el mensaje visible cuando el servicio bloquea por vigencia vencida", async () => {
+    vi.spyOn(aprobacionService, "aprobarTarifaVerificada").mockRejectedValue(
+      new Error("No puedes aprobar una tarifa con vigencia vencida"),
+    );
+    const { result } = renderHook(() => useAprobacionTarifa(), { wrapper });
+
+    result.current.aprobar.mutate({ id: "t1" });
+
+    await waitFor(() => expect(result.current.aprobar.isError).toBe(true));
+    expect(String(result.current.aprobar.error)).toContain("vigencia vencida");
   });
 });
