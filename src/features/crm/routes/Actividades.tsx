@@ -69,6 +69,7 @@ export default function Actividades() {
         page,
         pageSize,
         userId: user?.id,
+        userEmail: user?.email,
         sortKey: (sortKey ?? "fecha_programada") as ActividadSortKey,
         sortDir: sortDir ?? "asc",
       });

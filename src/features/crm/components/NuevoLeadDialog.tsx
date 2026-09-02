@@ -3,7 +3,7 @@
  * Formulario simple — los campos avanzados se editan en LeadDetalle.
  * Migrado a `FormDialogShell` (v13.121.0).
  */
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { Target } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
@@ -39,9 +39,13 @@ const EMPTY: LeadFormState = {
 
 export default function NuevoLeadDialog({ open, onOpenChange, onCreated }: Props) {
   const { user } = useAuth();
-  const [form, setForm] = useState<LeadFormState>(() => ({
-    ...EMPTY, vendedor_id: user?.id ?? null, vendedor_email: user?.email ?? "",
-  }));
+  // v13.823.50 — al limpiar el formulario se volvía a `EMPTY` (sin vendedor),
+  // así que sólo el primer lead de la sesión quedaba asignado al usuario.
+  const formVacio = useCallback(
+    (): LeadFormState => ({ ...EMPTY, vendedor_id: user?.id ?? null, vendedor_email: user?.email ?? "" }),
+    [user?.id, user?.email],
+  );
+  const [form, setForm] = useState<LeadFormState>(formVacio);
   const [autoActividad, setAutoActividad] = useState(true);
   const crear = useCrearLead();
   const crearActividad = useCrearActividad();
@@ -67,7 +71,7 @@ export default function NuevoLeadDialog({ open, onOpenChange, onCreated }: Props
         }).catch(() => undefined);
       }
       crmToast.success("Lead creado");
-      setForm(EMPTY);
+      setForm(formVacio());
       onOpenChange(false);
       onCreated?.(r.id);
     } catch (e) {
@@ -81,7 +85,7 @@ export default function NuevoLeadDialog({ open, onOpenChange, onCreated }: Props
   };
 
   const handleOpenChange = (o: boolean) => {
-    if (!o) setForm(EMPTY);
+    if (!o) setForm(formVacio());
     onOpenChange(o);
   };
 

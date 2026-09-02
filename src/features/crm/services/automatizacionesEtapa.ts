@@ -93,16 +93,26 @@ export async function crearTareaGanada(ctx: AutomationCtx): Promise<void> {
 
 export async function cancelarActividadesPerdida(ctx: AutomationCtx): Promise<void> {
   if (ctx.etapa.tipo !== "perdida") return;
-  const { error } = await supabase
+  const ahora = new Date().toISOString();
+  const base = () =>
+    supabase
+      .from("crm_actividades")
+      .update({ fecha_completada: ahora })
+      .eq("entidad_tipo", "oportunidad")
+      .eq("entidad_id", ctx.op.id)
+      .is("fecha_completada", null);
+  // v13.823.50 — antes se pisaba `resultado` con el texto de cancelación,
+  // borrando las notas del usuario. Sólo se escribe donde está vacío.
+  // `neq("")` ya excluye NULL (comparación indeterminada en SQL).
+  const { error } = await base().neq("resultado", "");
+  const { error: errorVacias } = await supabase
     .from("crm_actividades")
-    .update({
-      fecha_completada: new Date().toISOString(),
-      resultado: "cancelada (oportunidad perdida)",
-    })
+    .update({ fecha_completada: ahora, resultado: "cancelada (oportunidad perdida)" })
     .eq("entidad_tipo", "oportunidad")
     .eq("entidad_id", ctx.op.id)
-    .is("fecha_completada", null);
-  if (!error) {
+    .is("fecha_completada", null)
+    .or('resultado.is.null,resultado.eq.""');
+  if (!error && !errorVacias) {
     await registrarActividad({
       modulo: "crm",
       accion: "cancelar_actividades_oportunidad_perdida",

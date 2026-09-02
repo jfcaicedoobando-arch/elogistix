@@ -54,7 +54,7 @@ export function useMoverOportunidadEtapa({ etapas, oportunidades }: Params) {
       const etapaDestino = etapas.find((e) => e.id === etapaId) as
         | (CrmEtapaRow & { tipo?: string })
         | undefined;
-      const probabilidad = resolverProbabilidad(op, etapaOrigen, prob);
+      const probabilidad = resolverProbabilidad(op, etapaOrigen, prob, etapaDestino);
 
       // Disciplina de pipeline: avisar (sin bloquear) si la etapa de origen
       // deja criterios de salida pendientes.

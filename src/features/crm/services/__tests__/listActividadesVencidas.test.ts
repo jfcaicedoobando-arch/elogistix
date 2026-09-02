@@ -9,13 +9,16 @@ const state: {
   eqs: Array<[string, string]>;
   isNull: Array<[string, unknown]>;
   lts: Array<[string, string]>;
-} = { eqs: [], isNull: [], lts: [] };
+  ors: string[];
+} = { eqs: [], isNull: [], lts: [], ors: [] };
 
 const builder: Record<string, unknown> = {
   select: vi.fn(() => builder),
   order: vi.fn(() => builder),
   ilike: vi.fn(() => builder),
   not: vi.fn(() => builder),
+  // v13.823.50 — "Mías"/vencidas usa `.or(responsable_id | responsable_email)`.
+  or: vi.fn((expr: string) => { state.ors.push(expr); return builder; }),
   eq: vi.fn((c: string, v: string) => { state.eqs.push([c, v]); return builder; }),
   is: vi.fn((c: string, v: unknown) => { state.isNull.push([c, v]); return builder; }),
   lt: vi.fn((c: string, v: string) => { state.lts.push([c, v]); return builder; }),
@@ -28,7 +31,7 @@ vi.mock("@/integrations/supabase/client", () => ({
 
 import { listActividades } from "@/features/crm/services/actividades";
 
-beforeEach(() => { state.eqs = []; state.isNull = []; state.lts = []; });
+beforeEach(() => { state.eqs = []; state.isNull = []; state.lts = []; state.ors = []; });
 
 describe("listActividades — vencidas", () => {
   it("filtra pendientes, del responsable y con fecha pasada", async () => {
@@ -40,7 +43,8 @@ describe("listActividades — vencidas", () => {
     expect(state.lts[0]?.[0]).toBe("fecha_programada");
     expect(new Date(state.lts[0]![1]).getTime()).toBeLessThanOrEqual(Date.now());
     expect(state.isNull).toEqual(expect.arrayContaining([["fecha_completada", null]]));
-    expect(state.eqs).toEqual(expect.arrayContaining([["responsable_id", "u-1"]]));
+    // v13.823.50: el responsable se filtra por id O correo (filas históricas).
+    expect(state.ors.some((o) => o.includes("responsable_id.eq.u-1"))).toBe(true);
   });
 
   it("sin el flag no añade el filtro de vencidas", async () => {

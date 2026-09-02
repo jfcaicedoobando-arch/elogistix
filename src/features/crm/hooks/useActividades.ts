@@ -60,7 +60,7 @@ export function useActividades(f: ActividadFiltros = {}) {
     queryKey: queryKeys.crm.actividades.list({ search, tipo, estado, responsable, entidadTipo, entidadId, page, pageSize, uid: user?.id }),
     placeholderData: keepPreviousData,
     queryFn: () =>
-      listActividades({ search, tipo, estado, responsable, entidadTipo, entidadId, page, pageSize, userId: user?.id }),
+      listActividades({ search, tipo, estado, responsable, entidadTipo, entidadId, page, pageSize, userId: user?.id, userEmail: user?.email }),
   });
 }
 
