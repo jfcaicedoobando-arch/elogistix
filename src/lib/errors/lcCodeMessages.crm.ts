@@ -36,6 +36,8 @@ export const LC_CODE_MESSAGES_CRM: Record<string, string> = {
     "El lead no está en un estado que permita calificarlo. Contáctalo y actualiza su estado antes de calificarlo como prospecto.",
   LC_LEAD_PERFIL_INCOMPLETO:
     "Faltan datos del perfil comercial del lead (empresa, contacto, servicio de interés). Complétalos antes de calificarlo.",
+  LC_LEAD_SIN_ASIGNAR:
+    "Este lead todavía no tiene vendedor asignado. Tómalo o pide que te lo asignen antes de calificarlo.",
   LC_LEAD_SIN_PERMISO_CALIFICAR:
     "No tienes permiso para calificar leads como prospectos. Pídelo a tu gerente comercial.",
   LC_COT_CLIENTE_REQUERIDO:

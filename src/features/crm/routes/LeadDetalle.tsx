@@ -34,7 +34,7 @@ import { formatFechaEs } from "@/lib/formatters/dates";
 
 export default function LeadDetalle() {
   const { id } = useParams<{ id: string }>();
-  const { canEdit, canTomarLead, canCalificarProspecto } = usePermissions();
+  const { canEdit, canTomarLead, canGestionarLead } = usePermissions();
   const volver = useVolver(ROUTES.CRM_LEADS);
   const { data: lead, isLoading } = useLead(id);
   useDocumentTitle(lead ? `Lead · ${lead.empresa}` : "Lead");
@@ -65,7 +65,12 @@ export default function LeadDetalle() {
     );
   }
 
+  // v13.823.60 — capacidad POR FILA: el servidor exige rol in-org y, para
+  // vendedor, `vendedor_id = auth.uid()`. `canEdit` global ya no decide.
+  const puedeGestionar = canGestionarLead(lead.vendedor_id);
+
   return (
+
     <PageContainer>
       <DetailHeader
         backTo={volver}
@@ -95,16 +100,16 @@ export default function LeadDetalle() {
         trailing={
           <LeadHeaderActions
             estado={lead.estado}
-            canEdit={canEdit}
+            canEdit={puedeGestionar}
             onConvertir={() => setConvertirSheetOpen(true)}
             onEliminar={() => setDeleteOpen(true)}
             mostrarTomar={canTomarLead && !lead.vendedor_id && lead.estado !== "Convertido"}
             onTomar={handleTomar}
             tomando={tomando}
-            mostrarCalificar={canCalificarProspecto && puedeCalificarse(lead.estado)}
+            mostrarCalificar={!!lead.vendedor_id && puedeGestionar && puedeCalificarse(lead.estado)}
             onCalificar={handleCalificar}
             calificando={calificando}
-            mostrarNuevaOportunidad={canEdit && esProspecto(lead.estado)}
+            mostrarNuevaOportunidad={puedeGestionar && esProspecto(lead.estado)}
             onNuevaOportunidad={() => setNuevaOportunidadOpen(true)}
           />
         }
@@ -116,15 +121,16 @@ export default function LeadDetalle() {
       <LeadDatosCard
         form={form}
         set={set}
-        canEdit={canEdit}
+        canEdit={puedeGestionar}
         dirty={dirty}
         isSaving={guardando}
         onSave={handleSave}
       />
 
       <div id="lead-perfil-icp">
-        <LeadIcpCard leadId={lead.id} lead={lead} canEdit={canEdit} />
+        <LeadIcpCard leadId={lead.id} lead={lead} canEdit={puedeGestionar} />
       </div>
+
 
       <LeadGateProspectoDialog
         open={faltantesGate.length > 0}

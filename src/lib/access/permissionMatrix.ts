@@ -133,15 +133,38 @@ export const CRM_CONFIG: readonly AppRole[] = [...TENANT_ADMINS, "gerente_comerc
 
 /**
  * Ola 6 (O6.1) — Roles que pueden tomar leads de la bolsa común. Espejo de
- * `public.crm_tomar_lead()` (has_role 'vendedor', migración 20260821144907) —
- * al cambiar esta lista hay que cambiar también esa RPC.
+ * `public.crm_tomar_lead()` (has_any_role_in_org 'vendedor'/'admin' en la
+ * organización del lead, v13.823.60) — al cambiar esta lista hay que cambiar
+ * también esa RPC.
  */
 export const CRM_TOMAR_LEAD: readonly AppRole[] = [
   "super_admin",
   "admin_org",
+  "admin",
   "gerente_comercial",
   "vendedor",
 ];
+
+/**
+ * v13.823.60 — Roles que gestionan CUALQUIER lead de su organización (editar,
+ * eliminar, calificar, lote). Espejo de la policy "Gestion leads in-org
+ * crm_leads" y de la autorización de `crm_calificar_prospecto`.
+ */
+export const CRM_GESTION_TODOS_LEADS: readonly AppRole[] = [
+  ...TENANT_ADMINS,
+  "gerente_comercial",
+];
+
+/**
+ * v13.823.60 — Roles que pueden crear leads. Espejo del WITH CHECK de las
+ * policies de escritura: gestión total in-org, o vendedor efectivo (que sólo
+ * puede insertar un lead propio).
+ */
+export const CRM_CREAR_LEAD: readonly AppRole[] = [
+  ...CRM_GESTION_TODOS_LEADS,
+  "vendedor",
+];
+
 
 export {
   ADMIN_CUENTAS_BANCARIAS,

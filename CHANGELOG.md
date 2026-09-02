@@ -1,5 +1,16 @@
 # Changelog
 
+## [13.823.60] - 2026-09-02
+### Los leads sólo los gestiona quien de verdad puede
+- **Llave de la sucursal correcta**: varias decisiones sobre leads miraban una credencial general del usuario, no su puesto dentro de la empresa que está abierta. Ahora se valida el puesto dentro de la organización del lead: una credencial vieja de otra empresa ya no abre la puerta.
+- **Calificar exige que el lead sea tuyo**: un vendedor sólo puede calificar el lead que tiene asignado; administración, dirección y gerencia comercial de esa misma organización pueden gestionar cualquier lead asignado.
+- **Lead sin dueño no se califica**: si nadie lo tiene asignado, primero hay que tomarlo o asignarlo (aviso claro en pantalla).
+- **Reintento honesto**: al reintentar la calificación de un lead ya calificado con el perfil comercial incompleto, ahora avisa qué falta en vez de decir "listo" sin hacer nada.
+- **Botones que sí funcionan**: editar, eliminar, calificar, "Nueva oportunidad", "Nuevo lead", el selector de estado de la tabla y la barra de acciones en lote sólo aparecen para quien realmente puede usarlos; los demás ven el estado como etiqueta.
+- **Lectura sí, escritura no**: operación y consulta conservan su lectura dentro de la organización, pero ya no escriben leads. El público anónimo perdió todo acceso a la tabla de leads.
+
+
+
 ## [13.823.59] - 2026-09-02
 ### Cierre de pendientes de la aceptación de cotizaciones
 - **Fecha y número de la misma fotografía**: en los registros antiguos enlazados por el respaldo histórico, si el número de versión ya era correcto pero la fecha venía de otro lado, quedaba una foto con la fecha de otra foto. Ahora se corrigen los dos datos juntos, tomados siempre de la misma fotografía guardada, y nunca se toca una aceptación hecha por una persona real. Revisión previa de sólo lectura: 0 registros afectados hoy.

@@ -36,8 +36,11 @@ export function mensajeErrorCalificar(error: unknown): string {
       ? `Falta completar el perfil comercial: ${campos}.`
       : "Falta completar el perfil comercial del lead.";
   }
+  if (msg.includes("LC_LEAD_SIN_ASIGNAR")) {
+    return "Este lead todavía no tiene vendedor asignado. Tómalo o pide que te lo asignen antes de calificarlo.";
+  }
   if (msg.includes("LC_LEAD_SIN_PERMISO_CALIFICAR")) {
-    return "No tienes permiso de ventas para calificar prospectos.";
+    return "No puedes calificar este lead: sólo su vendedor asignado o gerencia comercial de tu organización pueden hacerlo.";
   }
   if (msg.includes("LC_LEAD_ESTADO_NO_CALIFICABLE")) {
     return "Este lead ya fue descalificado o convertido en cliente.";

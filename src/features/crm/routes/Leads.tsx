@@ -8,7 +8,7 @@
  *
  * Sin botón "Nuevo lead" propio (vive en QuickAddMenu del header global).
  */
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -46,7 +46,7 @@ const DEFAULTS: LeadsFilters = { estado: "todos", fuente: "todos" };
 
 export default function Leads() {
   useDocumentTitle('Leads');
-  const { canEditCrm } = usePermissions();
+  const { canGestionarLead, canGestionarLeadsEnLote } = usePermissions();
   const [selected, setSelected] = useState<Set<string>>(new Set());
 
   const list = useServerPagedList<CrmLeadRow, LeadsFilters>({
@@ -74,21 +74,26 @@ export default function Leads() {
 
   const leads = list.rows;
 
-  const toggle = (id: string) => setSelected((s) => {
+  const toggle = useCallback((id: string) => setSelected((s) => {
     const n = new Set(s); if (n.has(id)) n.delete(id); else n.add(id); return n;
-  });
-  const toggleAll = (rows: CrmLeadRow[]) => setSelected((s) => {
+  }), []);
+  const toggleAll = useCallback((rows: CrmLeadRow[]) => setSelected((s) => {
     const allHere = rows.every((r) => s.has(r.id));
     const n = new Set(s);
     if (allHere) rows.forEach((r) => n.delete(r.id));
     else rows.forEach((r) => n.add(r.id));
     return n;
-  });
+  }), []);
   const clearSel = () => setSelected(new Set());
   const columns = useMemo(
-    () => makeLeadsColumns(selected, toggle, toggleAll, leads),
-    [selected, leads],
+    () =>
+      makeLeadsColumns(selected, toggle, toggleAll, leads, {
+        puedeGestionarLead: canGestionarLead,
+        puedeSeleccionar: canGestionarLeadsEnLote,
+      }),
+    [selected, leads, toggle, toggleAll, canGestionarLead, canGestionarLeadsEnLote],
   );
+
 
   return (
     <PageContainer width="wide">
@@ -113,7 +118,7 @@ export default function Leads() {
         }
       />
 
-      {canEditCrm && selected.size > 0 && (
+      {canGestionarLeadsEnLote && selected.size > 0 && (
         <LeadsBulkBar ids={Array.from(selected)} onClear={clearSel} onDone={clearSel} />
       )}
 

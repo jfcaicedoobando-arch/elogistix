@@ -11,7 +11,10 @@ import {
   COST_VIEWERS,
   COTIZAR_SIN_DESGLOSE,
   CRM_CONFIG,
+  CRM_CREAR_LEAD,
+  CRM_GESTION_TODOS_LEADS,
   CRM_TOMAR_LEAD,
+
   ELIMINAR_EMBARQUE,
   EMITIR_FACTURA_CLIENTE,
   EXPEDIENTE_ESCRITURA,
@@ -102,11 +105,17 @@ export function usePermissions() {
   const canConfigurarCrm = has(CRM_CONFIG, roleStr);
   // Ola 6 (O6.1): tomar leads de la bolsa — espejo de crm_tomar_lead.
   const canTomarLead = has(CRM_TOMAR_LEAD, roleStr);
-  // v13.823.51 — "Calificar como prospecto" es espejo de `crm_calificar_prospecto`
-  // (has_role 'vendedor' → vendedor, gerente_comercial, admin_org, super_admin).
-  // Antes se mostraba con `canEdit`, así que un gerente de operaciones veía una
-  // acción que el servidor siempre rechazaba.
-  const canCalificarProspecto = has(CRM_TOMAR_LEAD, roleStr);
+  /**
+   * v13.823.60 — ownership de leads. La base valida el rol EN la organización
+   * del lead y, para vendedor, que `vendedor_id = auth.uid()`; aquí sólo se
+   * refleja para no ofrecer acciones que el servidor rechaza.
+   */
+  const canGestionarTodosLosLeads = has(CRM_GESTION_TODOS_LEADS, roleStr);
+  const canGestionarLead = (vendedorId: string | null | undefined): boolean =>
+    canGestionarTodosLosLeads ||
+    (has(CRM_TOMAR_LEAD, roleStr) && !!vendedorId && !!user?.id && vendedorId === user.id);
+  const canCrearLead = has(CRM_CREAR_LEAD, roleStr);
+  const canGestionarLeadsEnLote = canGestionarTodosLosLeads;
 
   return {
     canEdit,
@@ -114,7 +123,11 @@ export function usePermissions() {
     canEditCrm,
     canConfigurarCrm,
     canTomarLead,
-    canCalificarProspecto,
+    canGestionarTodosLosLeads,
+    canGestionarLead,
+    canCrearLead,
+    canGestionarLeadsEnLote,
+
     isAdmin,
     isSuperAdmin,
     isOperador,
