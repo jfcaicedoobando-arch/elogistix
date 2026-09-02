@@ -7,7 +7,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { unwrap, unwrapOr, run } from "@/lib/supabase/response";
 import { uploadFile, getSignedUrl, deleteFile } from "@/services/storage";
-import { limpiarBlobBestEffort, limpiarBlobAnteriorTrasReemplazo } from "@/lib/documentoStorage";
+import { limpiarBlobBestEffort } from "@/lib/documentoStorage";
 import { logClientError } from "@/services/observability/logClientError";
 import { registrarActividad } from "@/services/bitacora/registrar";
 import { slugArchivo } from "@/features/expediente/domain/expediente";
@@ -118,27 +118,4 @@ export async function eliminarDocumentoCliente(doc: {
     });
     console.warn(`[clienteDocumentos] fallo la bitácora al eliminar doc ${doc.id}`, e);
   }
-}
-
-/**
- * Reemplazo documental: fija el nuevo `archivo` vía UPDATE confirmado y,
- * sólo tras el commit, limpia en best-effort el blob anterior si difiere
- * del nuevo. La limpieza nunca revierte la referencia ya guardada.
- */
-export async function reemplazarArchivoDocumentoCliente(doc: {
-  id: string;
-  oldPath: string;
-  newPath: string;
-}): Promise<void> {
-  await run(
-    supabase
-      .from("cliente_documentos")
-      .update({ archivo: doc.newPath })
-      .eq("id", doc.id),
-  );
-  await limpiarBlobAnteriorTrasReemplazo(
-    doc.oldPath,
-    doc.newPath,
-    `reemplazarArchivoDocumentoCliente(${doc.id})`,
-  );
 }

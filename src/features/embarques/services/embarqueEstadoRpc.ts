@@ -6,7 +6,7 @@
  * compatibilidad con los imports existentes.
  */
 import { supabase } from "@/integrations/supabase/client";
-import { run, unwrap } from "@/lib/supabase/response";
+import { unwrap } from "@/lib/supabase/response";
 import { getErrorMessage } from "@/lib/errors";
 import { registrarBitacoraEmbarque } from "./bitacoraEmbarques";
 
