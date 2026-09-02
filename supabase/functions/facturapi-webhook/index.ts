@@ -198,8 +198,7 @@ async function validarEvento(
  * Extraído del handler para respetar el límite de complejidad.
  */
 async function reservarEvento(
-  // deno-lint-ignore no-explicit-any
-  supabase: any, orgId: string, eventKey: string, event: FacturapiWebhookEvent,
+  supabase: SB, orgId: string, eventKey: string, event: FacturapiWebhookEvent,
 ): Promise<Response | null> {
   const { error: dedupeErr } = await supabase
     .from("facturapi_webhook_eventos")
@@ -232,8 +231,7 @@ async function reservarEvento(
   return null;
 }
 
-// deno-lint-ignore no-explicit-any
-async function liberarReserva(supabase: any, orgId: string, eventKey: string): Promise<void> {
+async function liberarReserva(supabase: SB, orgId: string, eventKey: string): Promise<void> {
   await supabase
     .from("facturapi_webhook_eventos")
     .delete()
@@ -250,8 +248,7 @@ async function liberarReserva(supabase: any, orgId: string, eventKey: string): P
  * y siguen siendo idempotentes.
  */
 async function reintentarSiDestinoAusente(
-  // deno-lint-ignore no-explicit-any
-  supabase: any, orgId: string, eventKey: string,
+  supabase: SB, orgId: string, eventKey: string,
   event: FacturapiWebhookEvent, result: Response,
 ): Promise<Response | null> {
   const cuerpoResultado = await result.clone().json().catch(() => null);
