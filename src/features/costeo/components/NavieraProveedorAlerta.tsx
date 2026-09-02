@@ -38,7 +38,7 @@ export function NavieraProveedorAlerta() {
                 Crear proveedor Naviera
               </Link>
             </Button>
-            <p className="text-xs opacity-75">
+            <p className="text-label opacity-75">
               Se abre en una pestaña nueva; al terminar, regresa a esta pestaña y vuelve a abrir
               la configuración de la naviera.
             </p>

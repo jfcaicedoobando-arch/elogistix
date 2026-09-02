@@ -68,19 +68,19 @@ function VisorToolbar({ url, nombreArchivo, ampliado, onToggleAmpliado }: {
       <div className="flex shrink-0 items-center gap-1">
         <Button size="sm" variant="ghost" onClick={onToggleAmpliado}>
           {ampliado
-            ? <><Minimize2 className="mr-1.5 h-4 w-4" aria-hidden /> Reducir</>
-            : <><Maximize2 className="mr-1.5 h-4 w-4" aria-hidden /> Ampliar</>}
+            ? <><Minimize2 className="mr-1.5 size-4" aria-hidden /> Reducir</>
+            : <><Maximize2 className="mr-1.5 size-4" aria-hidden /> Ampliar</>}
         </Button>
         {url && (
           <>
             <Button size="sm" variant="ghost" asChild>
               <a href={url} target="_blank" rel="noopener noreferrer">
-                <ExternalLink className="mr-1.5 h-4 w-4" aria-hidden /> Pestaña nueva
+                <ExternalLink className="mr-1.5 size-4" aria-hidden /> Pestaña nueva
               </a>
             </Button>
             <Button size="sm" variant="ghost" asChild>
               <a href={url} download={nombreArchivo ?? "documento.pdf"}>
-                <Download className="mr-1.5 h-4 w-4" aria-hidden /> Descargar
+                <Download className="mr-1.5 size-4" aria-hidden /> Descargar
               </a>
             </Button>
           </>
@@ -141,7 +141,7 @@ export function PreviaAcciones({
     <div className="flex flex-wrap gap-2 border-t bg-background pt-3">
       {row.xml_path && (
         <Button size="sm" variant="outline" onClick={() => onVerXml(row)}>
-          <FileCode2 className="mr-2 h-4 w-4" /> Descargar XML
+          <FileCode2 className="mr-2 size-4" /> Descargar XML
         </Button>
       )}
       <Button size="sm" variant="secondary" asChild>
@@ -152,13 +152,13 @@ export function PreviaAcciones({
       {procesable && (
         <>
           <Button size="sm" onClick={() => onCrearFactura(row)}>
-            <FilePlus2 className="mr-2 h-4 w-4" /> Capturar factura
+            <FilePlus2 className="mr-2 size-4" /> Capturar factura
           </Button>
           <Button size="sm" variant="outline" onClick={() => onCapturar(row)}>
-            <CheckCircle2 className="mr-2 h-4 w-4" /> Vincular a factura existente
+            <CheckCircle2 className="mr-2 size-4" /> Vincular a factura existente
           </Button>
           <Button size="sm" variant="ghost" onClick={() => onRechazar(row)}>
-            <XCircle className="mr-2 h-4 w-4 text-destructive" /> Rechazar
+            <XCircle className="mr-2 size-4 text-destructive" /> Rechazar
           </Button>
         </>
       )}

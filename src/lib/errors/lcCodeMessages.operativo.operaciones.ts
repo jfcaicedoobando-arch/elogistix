@@ -69,4 +69,6 @@ export const LC_CODE_MESSAGES_OPERATIVO_OPERACIONES: Record<string, string> = {
     "El volumen no puede ser negativo. Captura el volumen real de la carga en metros cúbicos.",
   LC_EMBARQUE_PIEZAS_INVALIDO:
     "Las piezas no pueden ser negativas. Captura cuántos bultos o piezas trae la carga.",
+  LC_COT_YA_TIENE_EMBARQUE:
+    "Esta cotización ya se convirtió en embarque. Abre el embarque existente en lugar de crear otro.",
 };
