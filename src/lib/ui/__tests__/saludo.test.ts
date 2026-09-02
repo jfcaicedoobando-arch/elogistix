@@ -11,7 +11,7 @@ describe("saludoMx", () => {
     // 2026-09-02T00:05:00Z === 2026-09-01 18:05 CDMX
     const instante = new Date("2026-09-02T00:05:00Z");
     expect(horaMx(instante)).toBe(18);
-    expect(saludoMx(instante)).toBe("Buenas noches");
+    expect(saludoMx(instante)).toBe("Buenas tardes");
   });
 
   it("cubre las tres bandas del día", () => {
