@@ -17,7 +17,7 @@ function row(overrides: Partial<CxpRow> = {}): CxpRow {
 describe("CxpPorPagarMobileCard", () => {
   it("muestra proveedor, folio y saldo con moneda", () => {
     render(<CxpPorPagarMobileCard row={row()} />);
-    expect(screen.getByText("Acme Sa De Cv")).toBeInTheDocument();
+    expect(screen.getByText("Acme SA de CV")).toBeInTheDocument();
     expect(screen.getByText("FP-1")).toBeInTheDocument();
     expect(screen.getByText(/\$1,?00\.00|100\.00/)).toBeInTheDocument();
   });

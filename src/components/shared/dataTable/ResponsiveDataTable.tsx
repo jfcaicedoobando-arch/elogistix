@@ -6,7 +6,6 @@ import { DataTable } from "@/components/shared/DataTable";
 import { ErrorStateInline } from "@/components/empty/ErrorStateInline";
 import PaginationControls from "@/components/shared/PaginationControls";
 import { Skeleton, SkeletonGroup } from "@/components/ui/skeleton";
-import type { LucideIcon } from "lucide-react";
 
 import { Inbox } from "lucide-react";
 import { useIsMobile } from "@/hooks/shared";
@@ -41,10 +40,6 @@ interface Props<T> {
   isError?: boolean;
   onRetry?: () => void;
   emptyMessage?: string;
-  /** Sólo-desktop: pista y icono del empty state de `DataTable`. */
-  emptyHint?: string;
-  emptyIcon?: ReactNode | LucideIcon;
-
 
   /** Nodo custom para el empty state (CTA accionable). Si se define, reemplaza `emptyMessage`. */
   emptyState?: ReactNode;

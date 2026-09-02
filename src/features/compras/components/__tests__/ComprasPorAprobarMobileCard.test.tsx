@@ -26,7 +26,7 @@ function factura(overrides: Partial<FacturaCxP> = {}): FacturaCxP {
 describe("ComprasPorAprobarMobileCard", () => {
   it("muestra proveedor, folio y total con moneda", () => {
     render(<ComprasPorAprobarMobileCard row={factura()} />);
-    expect(screen.getByText("Acme Sa De Cv")).toBeInTheDocument();
+    expect(screen.getByText("Acme SA de CV")).toBeInTheDocument();
     expect(screen.getByText("FP-1")).toBeInTheDocument();
     expect(screen.getByText(/100\.00/)).toBeInTheDocument();
   });
