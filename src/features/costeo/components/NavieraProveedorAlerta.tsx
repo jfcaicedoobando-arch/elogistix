@@ -31,7 +31,7 @@ export function NavieraProveedorAlerta() {
             </p>
             <Button asChild variant="outline" size="sm">
               <Link
-                to={`${ROUTES.COMPRAS_PROVEEDORES}?tipo=Naviera`}
+                to={`${ROUTES.COMPRAS_PROVEEDORES}?tipo=Naviera&nuevo=1`}
                 target="_blank"
                 rel="noopener noreferrer"
               >

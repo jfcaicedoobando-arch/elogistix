@@ -28,7 +28,7 @@ describe("useAprobacionTarifa — guard de vigencia", () => {
 
     await waitFor(() => expect(result.current.aprobar.isError).toBe(true));
     expect(spy).not.toHaveBeenCalled();
-    expect(result.current.aprobar.error?.message).toContain("No puedes aprobar una tarifa con vigencia vencida");
+    expect(String(result.current.aprobar.error)).toContain("No puedes aprobar una tarifa con vigencia vencida");
   });
 
   it("permite aprobar una tarifa vigente", async () => {

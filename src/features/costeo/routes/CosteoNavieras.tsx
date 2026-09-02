@@ -152,7 +152,7 @@ export default function CosteoNavieras() {
               data={filasFiltradas}
               rowKey={(f) => f.naviera_id}
               emptyState={
-                filas.length === 0 ? (
+                filas.length === 0 && !hayFiltrosActivos ? (
                   <EmptyStateInline
                     icon={Ship}
                     message="Aún no hay navieras en el catálogo de tu organización."
