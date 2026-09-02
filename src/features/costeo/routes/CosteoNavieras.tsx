@@ -24,7 +24,9 @@ import { NavieraQuickCreate } from "@/features/costeo/components/NavieraQuickCre
 import { COL_W } from "@/components/shared/dataTable/columnWidths";
 import { ErrorState } from "@/components/shared/states/ErrorState";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
-import { Ship } from "lucide-react";
+import { Ship, SearchX } from "lucide-react";
+import { NavieraFiltrosBar } from "@/features/costeo/components/NavieraFiltrosBar";
+import { filtrarNavieras, type EstadoNavieraFiltro } from "@/features/costeo/lib/navierasFiltro";
 
 interface FilaNaviera {
   naviera_id: string;
@@ -37,6 +39,8 @@ export default function CosteoNavieras() {
   const { data: navieras = [], isLoading: loadingNav, isError: errorNav, refetch: refetchNav } = useNavierasCatalogo();
   const { data: condiciones = [], isLoading: loadingCond, isError: errorCond, refetch: refetchCond } = useCondicionesNaviera();
   const [seleccion, setSeleccion] = useState<FilaNaviera | null>(null);
+  const [busqueda, setBusqueda] = useState("");
+  const [estado, setEstado] = useState<EstadoNavieraFiltro>("todos");
 
   const filas: FilaNaviera[] = useMemo(() => {
     const mapa = new Map(condiciones.map((c) => [c.naviera_id, c]));
@@ -47,6 +51,17 @@ export default function CosteoNavieras() {
       condicion: mapa.get(n.id) ?? null,
     }));
   }, [navieras, condiciones]);
+
+  const filasFiltradas = useMemo(
+    () => filtrarNavieras(filas, busqueda, estado),
+    [filas, busqueda, estado],
+  );
+
+  const hayFiltrosActivos = busqueda.trim() !== "" || estado !== "todos";
+  const limpiarFiltros = () => {
+    setBusqueda("");
+    setEstado("todos");
+  };
 
   const isLoading = loadingNav || loadingCond;
   const isError = errorNav || errorCond;
@@ -124,21 +139,37 @@ export default function CosteoNavieras() {
       ) : isLoading ? (
         <ListSkeleton rows={6} variant="table" />
       ) : (
-        <Card>
-          <DataTable<FilaNaviera>
-            columns={columns}
-            data={filas}
-            rowKey={(f) => f.naviera_id}
-            emptyState={
-              <EmptyStateInline
-                icon={Ship}
-                message="Aún no hay navieras en el catálogo de tu organización."
-              >
-                <NavieraQuickCreate variante="boton" onCreada={() => undefined} />
-              </EmptyStateInline>
-            }
+        <>
+          <NavieraFiltrosBar
+            busqueda={busqueda}
+            onBusquedaChange={setBusqueda}
+            estado={estado}
+            onEstadoChange={setEstado}
           />
-        </Card>
+          <Card>
+            <DataTable<FilaNaviera>
+              columns={columns}
+              data={filasFiltradas}
+              rowKey={(f) => f.naviera_id}
+              emptyState={
+                filas.length === 0 ? (
+                  <EmptyStateInline
+                    icon={Ship}
+                    message="Aún no hay navieras en el catálogo de tu organización."
+                  >
+                    <NavieraQuickCreate variante="boton" onCreada={() => undefined} />
+                  </EmptyStateInline>
+                ) : (
+                  <EmptyStateInline
+                    icon={SearchX}
+                    message="Sin resultados para tu búsqueda o filtro."
+                    action={{ label: "Limpiar filtros", onClick: limpiarFiltros }}
+                  />
+                )
+              }
+            />
+          </Card>
+        </>
       )}
 
       <FormDialogShell
