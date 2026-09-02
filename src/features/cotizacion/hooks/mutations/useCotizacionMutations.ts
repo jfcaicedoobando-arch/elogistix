@@ -75,8 +75,14 @@ export function useUpdateEstadoCotizacion() {
     onSuccess: (_r, vars) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.cotizaciones.detail(vars.id) });
       invalidatePortalMirrors(queryClient, { cotizacionId: vars.id });
+      // v13.823.57 — la BD cierra/actualiza la oportunidad al aceptar u operar
+      // la cotización: refrescamos CRM para no mostrar etapa/monto rancios.
+      queryClient.invalidateQueries({ queryKey: queryKeys.crm.oportunidades.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.crm.higiene.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.crm.dashboardAll });
       notifySuccess(undefined, { title: `Cotización ${vars.estado}` });
     },
+
   });
 }
 
