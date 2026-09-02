@@ -58,19 +58,28 @@ export async function getOportunidad(id: string): Promise<CrmOportunidadRow | nu
 export async function crearOportunidad(
   input: OportunidadInput,
   user: { id?: string; email?: string } | null,
-): Promise<{ id: string }> {
+): Promise<{ id: string; avisoActividad: string | null }> {
   const payload = buildOportunidadInsertPayload(input, user);
   const creada = (await unwrap(
     supabase.from("crm_oportunidades").insert(payload).select("id").single(),
   )) as { id: string };
-  await registrarActividad({
-    modulo: "crm",
-    accion: "crear_oportunidad",
-    entidadId: creada.id,
-    entidadNombre: input.nombre ?? "",
-  });
-  return creada;
+  // v13.823.32: la oportunidad YA existe. Si el registro automático de
+  // actividad/bitácora falla, no la perdemos ni anunciamos fracaso: se
+  // devuelve un aviso accionable para la UI.
+  let avisoActividad: string | null = null;
+  try {
+    await registrarActividad({
+      modulo: "crm",
+      accion: "crear_oportunidad",
+      entidadId: creada.id,
+      entidadNombre: input.nombre ?? "",
+    });
+  } catch (err) {
+    avisoActividad = err instanceof Error ? err.message : "Error desconocido";
+  }
+  return { id: creada.id, avisoActividad };
 }
+
 
 /**
  * v13.823.32: un UPDATE filtrado por RLS o sobre una oportunidad ya eliminada
