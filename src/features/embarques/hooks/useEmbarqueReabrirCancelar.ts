@@ -6,7 +6,7 @@ import {
   useReabrirEmbarque,
   type EmbarqueRow,
 } from "@/features/embarques/hooks/useEmbarques";
-import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
+import { notifyError, notifySuccess, notifyWarning } from "@/lib/ui/appFeedback";
 import { labelExpediente } from "@/lib/domain/labelExpediente";
 import { useStableRequestId } from "@/lib/idempotency";
 
