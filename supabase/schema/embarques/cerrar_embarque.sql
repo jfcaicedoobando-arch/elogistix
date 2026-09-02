@@ -1,5 +1,5 @@
 -- Espejo canónico de public.cerrar_embarque
--- Fuente vigente (mayor timestamp): 20260910000100_fix_cerrar_embarque_org_scope_y_lock_conceptos.sql
+-- Fuente vigente (mayor timestamp): 20260902183746_81af79ca-850f-4e4d-9aea-398ba2e77eec.sql
 -- Vigilado por `bun run audit:replay-mirror` y `audit:schema-functions`.
 -- DEFECTO 1 (P0, cross-tenant): el rol se valida EN LA ORG DEL EMBARQUE
 -- (v_emb.organization_id) tras el SELECT ... FOR UPDATE, no de forma global.

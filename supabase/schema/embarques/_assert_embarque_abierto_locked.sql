@@ -1,7 +1,7 @@
 -- Espejo canónico de public._assert_embarque_abierto_locked,
 -- public.bloquear_conceptos_en_embarque_cerrado y
 -- public.tg_bloquear_si_embarque_cerrado.
--- Fuente vigente (mayor timestamp): 20260910000100_fix_cerrar_embarque_org_scope_y_lock_conceptos.sql
+-- Fuente vigente (mayor timestamp): 20260902183746_81af79ca-850f-4e4d-9aea-398ba2e77eec.sql
 -- Vigilado por `bun run audit:replay-mirror` y `audit:schema-functions`.
 -- DEFECTO 2 (P1, carrera cierre vs conceptos): lectura FOR KEY SHARE del
 -- embarque, mutuamente exclusiva con el FOR UPDATE de cerrar_embarque.
@@ -26,8 +26,10 @@ BEGIN
 END;
 $$;
 
-REVOKE ALL ON FUNCTION public._assert_embarque_abierto_locked(uuid) FROM PUBLIC, anon;
-GRANT EXECUTE ON FUNCTION public._assert_embarque_abierto_locked(uuid) TO authenticated, service_role;
+-- Helper interno: sólo lo invocan triggers SECURITY DEFINER (que corren como
+-- dueño), por lo que NO se expone a `authenticated` (linter org-scope).
+REVOKE ALL ON FUNCTION public._assert_embarque_abierto_locked(uuid) FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public._assert_embarque_abierto_locked(uuid) TO service_role;
 
 CREATE OR REPLACE FUNCTION public.bloquear_conceptos_en_embarque_cerrado() RETURNS trigger
     LANGUAGE plpgsql SECURITY DEFINER

@@ -1,5 +1,5 @@
 -- Espejo canónico de public.reabrir_embarque
--- Fuente vigente (mayor timestamp): 20260910000100_fix_cerrar_embarque_org_scope_y_lock_conceptos.sql
+-- Fuente vigente (mayor timestamp): 20260902183746_81af79ca-850f-4e4d-9aea-398ba2e77eec.sql
 -- Vigilado por `bun run audit:replay-mirror` y `audit:schema-functions`.
 -- DEFECTO 1 (consistencia): el check de admin ahora es org-scoped
 -- (has_any_role_in_org_exact) en vez de has_role() global.
