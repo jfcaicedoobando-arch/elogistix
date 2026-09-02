@@ -3,6 +3,7 @@
  * Extraído de `NuevaOportunidadDialog.tsx`.
  */
 import { Input } from "@/components/ui/input";
+import { MSG_SIN_ETAPA_ABIERTA } from "@/features/crm/domain/oportunidadFormHelpers";
 import { MoneyInput } from "@/components/shared/MoneyInput";
 import { DatePickerMx } from "@/components/ui/date-picker-mx";
 import { Label } from "@/components/ui/label";
@@ -108,6 +109,10 @@ export default function OportunidadFormFields({
           readOnly
           disabled
         />
+        {/* v13.823.53 — sin etapas abiertas no se puede crear ni mostrar etapa. */}
+        {!form.etapa_id && (
+          <p role="alert" className="text-body-sm text-destructive">{MSG_SIN_ETAPA_ABIERTA}</p>
+        )}
       </div>
 
       <div className="space-y-1">
