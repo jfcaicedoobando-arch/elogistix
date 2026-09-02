@@ -21,6 +21,7 @@ import ActividadTimeline from "@/features/crm/components/ActividadTimeline";
 import LeadDatosCard from "@/features/crm/components/leadDetalle/LeadDatosCard";
 import LeadIcpCard from "@/features/crm/components/leadDetalle/LeadIcpCard";
 import LeadHeaderActions from "@/features/crm/components/leadDetalle/LeadHeaderActions";
+import LeadGateProspectoDialog from "@/features/crm/components/leadDetalle/LeadGateProspectoDialog";
 import LeadEtapaProspectoAviso from "@/features/crm/components/leadDetalle/LeadEtapaProspectoAviso";
 import OportunidadesDelProspecto from "@/features/crm/components/leadDetalle/OportunidadesDelProspecto";
 import NuevaOportunidadDialog from "@/features/crm/components/NuevaOportunidadDialog";
@@ -37,11 +38,12 @@ export default function LeadDetalle() {
   const volver = useVolver(ROUTES.CRM_LEADS);
   const { data: lead, isLoading } = useLead(id);
   useDocumentTitle(lead ? `Lead · ${lead.empresa}` : "Lead");
-  const { form, set, dirty } = useLeadEditForm(lead);
+  const { form, set, dirty, patch } = useLeadEditForm(lead);
   const {
     handleSave, handleDelete, handleCalificar, handleTomar,
     guardando, eliminando, tomando, calificando,
-  } = useLeadDetalleAcciones(id, lead ?? undefined, form);
+    faltantesGate, cerrarGate,
+  } = useLeadDetalleAcciones(id, lead ?? undefined, patch);
   const [convertirSheetOpen, setConvertirSheetOpen] = useState(false);
   const [convertirAvanzadoOpen, setConvertirAvanzadoOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -120,7 +122,18 @@ export default function LeadDetalle() {
         onSave={handleSave}
       />
 
-      <LeadIcpCard leadId={lead.id} lead={lead} canEdit={canEdit} />
+      <div id="lead-perfil-icp">
+        <LeadIcpCard leadId={lead.id} lead={lead} canEdit={canEdit} />
+      </div>
+
+      <LeadGateProspectoDialog
+        open={faltantesGate.length > 0}
+        onOpenChange={(v) => { if (!v) cerrarGate(); }}
+        faltantes={faltantesGate}
+        onIrAlPerfil={() => {
+          document.getElementById("lead-perfil-icp")?.scrollIntoView({ behavior: "smooth", block: "start" });
+        }}
+      />
 
       {esProspecto(lead.estado) && (
         <OportunidadesDelProspecto
