@@ -6,7 +6,7 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables, TablesInsert, TablesUpdate } from "@/integrations/supabase/types";
-import { unwrap, unwrapOr, run } from "@/lib/supabase/response";
+import { unwrap, unwrapOr } from "@/lib/supabase/response";
 import { primeraFila } from "@/lib/supabase/primeraFila";
 import { conflictoConcurrenciaError } from "@/lib/errors/concurrencia";
 import { registrarActividad } from "@/services/bitacora/registrar";
