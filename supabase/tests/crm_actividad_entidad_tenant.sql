@@ -170,8 +170,7 @@ BEGIN
       format('A-%s: la organización ajena no debe recibir actividades', v_tipo));
   END LOOP;
 
-  -- Entidad ajena intacta (la oportunidad de B no fue tocada).
-  SELECT ultimo_movimiento_at INTO v_mov_b FROM public.crm_oportunidades WHERE id = v_op_b;
+
 
   -- ===== A') UPDATE de las tres columnas vigiladas =====
   SELECT id INTO v_act FROM public.crm_actividades
