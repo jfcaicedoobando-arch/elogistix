@@ -52,9 +52,12 @@ export function makeLeadsColumns(
   toggle: (id: string) => void,
   toggleAll: (rows: CrmLeadRow[]) => void,
   allRows: CrmLeadRow[],
-  puedeGestionarLead: (vendedorId: string | null | undefined) => boolean,
-  puedeSeleccionar: boolean,
+  permisos: {
+    puedeGestionarLead: (vendedorId: string | null | undefined) => boolean;
+    puedeSeleccionar: boolean;
+  },
 ): ColumnDef<CrmLeadRow, unknown>[] {
+  const { puedeGestionarLead, puedeSeleccionar } = permisos;
   const allSelected = allRows.length > 0 && allRows.every((r) => selected.has(r.id));
   const columnaSeleccion: ColumnDef<CrmLeadRow, unknown> = {
       id: "sel", header: () => (

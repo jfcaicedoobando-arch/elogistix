@@ -86,9 +86,12 @@ export default function Leads() {
   });
   const clearSel = () => setSelected(new Set());
   const columns = useMemo(
-    () => makeLeadsColumns(selected, toggle, toggleAll, leads, canGestionarLead, canGestionarLeadsEnLote),
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- canGestionarLead es estable por render de permisos
-    [selected, leads, canGestionarLeadsEnLote],
+    () =>
+      makeLeadsColumns(selected, toggle, toggleAll, leads, {
+        puedeGestionarLead: canGestionarLead,
+        puedeSeleccionar: canGestionarLeadsEnLote,
+      }),
+    [selected, leads, toggle, toggleAll, canGestionarLead, canGestionarLeadsEnLote],
   );
 
   return (
