@@ -3678,7 +3678,10 @@
       "20260909000100_replay_crear_embarque_completo_assert_convertible.sql",
       "20260910000320_fix_periodo_cerrado_campos_derivados.sql",
       "20260910000500_bitacora_no_falsificable.sql",
-      "20260910001000_guard_cuenta_bancaria_y_notificaciones.sql"
+      "20260910001000_guard_cuenta_bancaria_y_notificaciones.sql",
+      "20260911000100_replay_cerrar_reabrir_org_scope_helper_service_role.sql",
+      "20260911000110_replay_actualizar_cierre_periodo.sql",
+      "20260911000120_replay_nc_saldo_lock_y_rep_historia.sql"
     ]
   }
 }
