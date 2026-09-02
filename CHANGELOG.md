@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.823.53] - 2026-09-02
+### Etapa inicial de una oportunidad nueva
+- **Siempre nace en la primera etapa abierta**: antes, si el embudo tenía "Ganada" o "Perdida" en la primera posición, la oportunidad nueva podía nacer cerrada (tanto en el alta rápida como en el formulario completo).
+- **Pipeline sin etapas abiertas**: el botón "Crear" queda apagado y se avisa "Configura al menos una etapa abierta en el pipeline", en lugar de intentar guardar y fallar con un mensaje confuso.
+
 ## [13.823.52] - 2026-09-02
 ### Microcorrección de los candados por empresa en CRM
 - **Permisos internos**: las validaciones internas del CRM ya no son ejecutables por cualquier usuario (antes seguían abiertas al público por el permiso que PostgreSQL da por defecto); sólo el sistema las invoca.
