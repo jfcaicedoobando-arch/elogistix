@@ -56,6 +56,9 @@ INSERT INTO _ci_service_role_only (fn) VALUES
   ('public._dashboard_summary_calc()'),
   -- Helper de rol interno (Ola E4): sólo lo usan RPC/policies DEFINER.
   ('public._es_rol_interno()'),
+  -- Trigger de folio monotónico por serie (v13.823.43): sólo lo dispara el trigger.
+  ('public._factura_serie_folio_monotonico()'),
+
   -- Trigger de alerta de retenciones vs NC (Sub-ola D): sólo lo dispara el trigger.
   ('public._nc_alerta_retenciones_pagadas()'),
   -- Trigger F5 (ronda 3): tope de saldo en NCs de proveedor; sólo el trigger.
