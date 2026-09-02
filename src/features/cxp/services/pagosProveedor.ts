@@ -86,7 +86,7 @@ async function resolverOrgFactura(facturaId: string): Promise<string> {
  */
 export async function registrarPagoProveedor(
   input: RegistrarPagoProveedorInput,
-  userId: string | null,
+  _userId: string | null,
 ): Promise<PagoProveedor> {
   // Resolvemos la organización del padre para validar pertenencia/aprobación
   // antes de escribir. Ver Sentry JAVASCRIPT-REACT-W.
