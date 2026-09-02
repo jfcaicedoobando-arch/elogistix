@@ -20,7 +20,7 @@ export interface BuildSubmitDeps {
   values: FacturaFormValues;
   total: number;
   userId?: string;
-  organizationId?: string | null;
+  organizationId?: string | null | undefined;
   pendingCfdi: PendingCfdi | null;
   cfdiConceptos: ReadonlyArray<CfdiConceptoParsed>;
   conceptosAPersistir: ReadonlyArray<CfdiConceptoParsed>;
@@ -68,7 +68,7 @@ export function crearSubmit(deps: BuildSubmitDeps): () => Promise<void> {
     }
 
     const res = await runSubmit({
-      values, total, userId, organizationId,
+      values, total, userId, organizationId: organizationId ?? null,
       pendingCfdi, cfdiConceptos: conceptosAPersistir, vinculos, embarqueAdHoc,
       // v13.820.5 — Si la captura viene del buzón, la factura hereda el embarque
       // del documento aunque el usuario no marque conceptos.
