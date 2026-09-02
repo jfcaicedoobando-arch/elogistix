@@ -7,6 +7,7 @@ import {
   usePortalResumenSaldoFactura,
 } from "@/features/portal/hooks";
 import { PORTAL_RELATED_MAX } from "@/features/portal/services/limits";
+import { derivarSaldoPortal } from "./portalFacturaSaldo";
 import { CheckCircle2, Clock, Receipt } from "lucide-react";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -57,13 +58,13 @@ export default function PortalFacturaPagosCard({
       </CardHeader>
       <CardContent className="space-y-3">
         {cargando && <ListSkeleton rows={2} />}
-        {!cargando && pagos.length === 0 && (
+        {sinPagos && (
           <EmptyStateInline
             icon={Receipt}
             message="Aún no se han registrado pagos para esta factura."
           />
         )}
-        {!cargando && pagos.length > 0 && (
+        {conPagos && (
           // SAFE-CAST: la consulta del portal ya devuelve estas columnas; el
           // tipo generado no incluye las URL del REP como opcionales.
           <PortalFacturaPagosLista
