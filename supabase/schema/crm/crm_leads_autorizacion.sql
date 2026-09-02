@@ -64,25 +64,25 @@ BEGIN
   -- Perfil comercial mínimo (ICP) ANTES del retorno idempotente: un retry con
   -- expediente incompleto debe avisar, no devolver éxito mudo.
   IF NULLIF(TRIM(COALESCE(v_lead.sector, '')), '') IS NULL THEN
-    v_faltantes := v_faltantes || 'sector';
+    v_faltantes := v_faltantes || 'sector'::text;
   END IF;
   IF NULLIF(TRIM(COALESCE(v_lead.mercancia, '')), '') IS NULL THEN
-    v_faltantes := v_faltantes || 'mercancia';
+    v_faltantes := v_faltantes || 'mercancia'::text;
   END IF;
   IF NULLIF(TRIM(COALESCE(v_lead.rutas, '')), '') IS NULL THEN
-    v_faltantes := v_faltantes || 'rutas';
+    v_faltantes := v_faltantes || 'rutas'::text;
   END IF;
   IF NULLIF(TRIM(COALESCE(v_lead.volumen, '')), '') IS NULL THEN
-    v_faltantes := v_faltantes || 'volumen';
+    v_faltantes := v_faltantes || 'volumen'::text;
   END IF;
   IF NULLIF(TRIM(COALESCE(v_lead.frecuencia, '')), '') IS NULL THEN
-    v_faltantes := v_faltantes || 'frecuencia';
+    v_faltantes := v_faltantes || 'frecuencia'::text;
   END IF;
   IF NULLIF(TRIM(COALESCE(v_lead.dolor_explicito, '')), '') IS NULL THEN
-    v_faltantes := v_faltantes || 'dolor_explicito';
+    v_faltantes := v_faltantes || 'dolor_explicito'::text;
   END IF;
   IF NULLIF(TRIM(COALESCE(v_lead.proveedor_actual, '')), '') IS NULL THEN
-    v_faltantes := v_faltantes || 'proveedor_actual';
+    v_faltantes := v_faltantes || 'proveedor_actual'::text;
   END IF;
 
   IF array_length(v_faltantes, 1) IS NOT NULL THEN
