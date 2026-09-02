@@ -14,6 +14,7 @@ import {
   type EmbudoRow,
 } from "@/features/crm/domain/dashboardAggregates";
 import { todayLocalISO } from "@/lib/date/today";
+import { leerTodasLasPaginas } from "@/lib/supabase/paginado";
 
 export interface CrmDashboardData {
   kpis: {
