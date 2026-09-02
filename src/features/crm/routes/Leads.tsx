@@ -74,16 +74,16 @@ export default function Leads() {
 
   const leads = list.rows;
 
-  const toggle = (id: string) => setSelected((s) => {
+  const toggle = useCallback((id: string) => setSelected((s) => {
     const n = new Set(s); if (n.has(id)) n.delete(id); else n.add(id); return n;
-  });
-  const toggleAll = (rows: CrmLeadRow[]) => setSelected((s) => {
+  }), []);
+  const toggleAll = useCallback((rows: CrmLeadRow[]) => setSelected((s) => {
     const allHere = rows.every((r) => s.has(r.id));
     const n = new Set(s);
     if (allHere) rows.forEach((r) => n.delete(r.id));
     else rows.forEach((r) => n.add(r.id));
     return n;
-  });
+  }), []);
   const clearSel = () => setSelected(new Set());
   const columns = useMemo(
     () =>
@@ -93,6 +93,7 @@ export default function Leads() {
       }),
     [selected, leads, toggle, toggleAll, canGestionarLead, canGestionarLeadsEnLote],
   );
+
 
   return (
     <PageContainer width="wide">
