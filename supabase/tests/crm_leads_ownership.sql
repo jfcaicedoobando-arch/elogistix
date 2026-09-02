@@ -340,6 +340,11 @@ $$;
 
 -- ===== E) v13.823.61 · organización ACTIVA, ACL exacta y Papelera =====
 --
+-- Nota de esquema (v13.823.61): `organization_members` tiene UNIQUE(user_id),
+-- así que la doble membresía real es imposible; el candado is_org_member se
+-- prueba con la organización ACTIVA + el org_scope del super admin, y se congela
+-- el índice único que garantiza «un usuario, una organización».
+--
 -- Nota de fixture: los roles legacy 'operador' y 'viewer' están bloqueados por
 -- `trg_bloquear_rol_legacy_om`, así que el "operador real" se siembra con su
 -- equivalente moderno `coordinador_logistico` y el "viewer real" con
@@ -348,7 +353,7 @@ DO $$
 DECLARE
   v_org_a uuid := 'c1c1c1c1-0000-4000-8000-00000000000a';
   v_org_b uuid := 'c1c1c1c1-0000-4000-8000-00000000000b';
-  v_multi uuid := 'c1c1c1c1-0000-4000-8000-000000000101';  -- miembro de A y B
+  v_multi uuid := 'c1c1c1c1-0000-4000-8000-000000000101';  -- gerente en A (org activa)
   v_oper uuid := 'c1c1c1c1-0000-4000-8000-000000000102';   -- operador moderno
   v_viewer uuid := 'c1c1c1c1-0000-4000-8000-000000000103';  -- viewer moderno
   v_super uuid := 'c1c1c1c1-0000-4000-8000-000000000104';
@@ -370,7 +375,6 @@ BEGIN
   -- por organization_id, así que A queda determinísticamente como la ACTIVA.
   INSERT INTO public.organization_members (organization_id, user_id, role, created_at) VALUES
     (v_org_a, v_multi, 'gerente_comercial', now() - interval '2 day'),
-    (v_org_b, v_multi, 'admin_org',         now() - interval '1 day'),
     (v_org_a, v_oper, 'coordinador_logistico', now()),
     (v_org_a, v_viewer, 'customer_service', now()),
     (v_org_a, v_vend, 'vendedor', now());
@@ -391,14 +395,24 @@ BEGIN
   INSERT INTO public.crm_leads (id, organization_id, empresa, estado, vendedor_id) VALUES
     (v_lead_vend, v_org_a, 'Lead del vendedor', 'Contactado', v_vend);
 
-  -- E1 · multimembresía: con A activa, B no existe para el usuario.
+  -- E0 · invariante de esquema: un usuario no puede pertenecer a dos orgs.
+  PERFORM pg_temp.assert(
+    EXISTS (SELECT 1 FROM pg_constraint
+             WHERE conrelid = 'public.organization_members'::regclass
+               AND contype = 'u'
+               AND conkey = ARRAY[(SELECT attnum FROM pg_attribute
+                                    WHERE attrelid = 'public.organization_members'::regclass
+                                      AND attname = 'user_id')]::smallint[]),
+    'E0: organization_members debe conservar UNIQUE(user_id) — la organización activa es única');
+
+  -- E1 · con A activa, la organización B no existe para el usuario.
   PERFORM pg_temp.as_user(v_multi);
   PERFORM pg_temp.assert(
     (SELECT count(*) FROM public.crm_leads WHERE id = v_lead_a) = 1,
     'E1: el usuario debe leer los leads de su organización ACTIVA (A)');
   PERFORM pg_temp.assert(
     (SELECT count(*) FROM public.crm_leads WHERE organization_id = v_org_b) = 0,
-    'E1b: la organización no activa (B) no debe ser visible aunque haya membresía');
+    'E1b: la organización ajena (B) no debe ser visible');
 
   -- E2 · tampoco escribe en B (0 filas) ni puede mover A → B (WITH CHECK).
   UPDATE public.crm_leads SET empresa = 'B tocada' WHERE id = v_lead_b;
