@@ -24,6 +24,10 @@ DECLARE
   v_cli_op uuid;
   v_err text;
 BEGIN
+  -- v13.823.55: convertir_lead_rpc exige sesión real. Esta suite corre como
+  -- postgres (sin uid), así que declara el claim de proceso interno.
+  PERFORM set_config('request.jwt.claims', json_build_object('role', 'service_role')::text, true);
+
   INSERT INTO public.organizations (nombre, rfc, plan, activo)
   VALUES ('TEST OLA6 PROPAGA', 'TO6200000XX0', 'basico', true)
   RETURNING id INTO v_org;

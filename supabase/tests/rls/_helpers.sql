@@ -58,10 +58,14 @@ LANGUAGE plpgsql AS $$
 DECLARE
   v_state text;
   v_msg   text;
+  v_permitido boolean := false;
 BEGIN
+  -- El RAISE de "no fue bloqueado" va FUERA del bloque EXCEPTION: si estuviera
+  -- dentro, su propio SQLSTATE (P0001 = raise_exception) lo atraparía el WHEN
+  -- de abajo y el helper aprobaría una sentencia permitida (falso verde).
   BEGIN
     EXECUTE _sql;
-    RAISE EXCEPTION 'RLS TEST FAIL: % — INSERT cruzado NO fue bloqueado', _msg;
+    v_permitido := true;
   EXCEPTION
     WHEN insufficient_privilege OR check_violation OR raise_exception THEN
       RETURN;
@@ -71,8 +75,30 @@ BEGIN
         v_msg   = MESSAGE_TEXT;
       RAISE EXCEPTION 'RLS TEST FIXTURE FAIL: % — INSERT falló por SQLSTATE % (%) — no es un bloqueo de RLS, revisa NOT NULL/FK del fixture', _msg, v_state, v_msg;
   END;
+
+  IF v_permitido THEN
+    RAISE EXCEPTION 'RLS TEST FAIL: % — INSERT cruzado NO fue bloqueado', _msg;
+  END IF;
 END;
 $$;
+
+-- Simula el claim de rol de servicio (sin `sub`): las RPC que autorizan a los
+-- procesos internos del backend lo usan vía auth.role().
+CREATE OR REPLACE FUNCTION pg_temp.as_service_role() RETURNS void
+LANGUAGE plpgsql AS $$
+BEGIN
+  PERFORM set_config('request.jwt.claims', json_build_object('role', 'service_role')::text, true);
+END;
+$$;
+
+-- Simula un JWT con role=authenticated pero SIN `sub` (sesión rota/expirada).
+CREATE OR REPLACE FUNCTION pg_temp.as_authenticated_sin_uid() RETURNS void
+LANGUAGE plpgsql AS $$
+BEGIN
+  PERFORM set_config('request.jwt.claims', json_build_object('role', 'authenticated')::text, true);
+END;
+$$;
+
 
 -- ============================================================================
 -- Fixture compartido: dos organizaciones + un admin en cada una.

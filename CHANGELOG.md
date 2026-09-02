@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.823.55] - 2026-09-02
+### Microcorrección: sesión real al convertir prospectos y pruebas sin falsos verdes
+- **Sesión real**: la conversión de prospectos ahora identifica correctamente quién llama. Antes, la comprobación mirada desde dentro de la función veía siempre al dueño de la función (como revisar tu propia credencial en el espejo), así que no distinguía a un usuario firmado de un proceso interno. Ahora sólo se permite sin usuario firmado cuando la llamada viene del sistema; cualquier otra llamada sin sesión se rechaza antes de leer o tocar datos.
+- **Etapa inicial**: la etapa de arranque debe estar abierta, activa, de la misma empresa y no eliminada.
+- **Pruebas sin falsos verdes**: los ayudantes de prueba se atrapaban a sí mismos y aprobaban operaciones que en realidad estaban permitidas (un guardia que se aplaudía solo). Ya sólo evalúan la operación probada, y se agregó un canario que falla a propósito si el ayudante vuelve a aprobar algo permitido.
+- **Cobertura**: sesión sin usuario, llamada del sistema, cliente de otra empresa/inexistente/eliminado, prospecto eliminado, etapa eliminada y cambios de empresa en cumplimientos y comentarios, verificando en cada rechazo que no queda ningún registro.
+
 ## [13.823.54] - 2026-09-02
 ### Candados de conversión de prospectos y vínculos por empresa en CRM
 - **Convertir prospecto**: exige sesión activa, pertenencia a la empresa y rol autorizado; un vendedor sólo puede convertir los prospectos asignados a él. La autorización se evalúa antes de tocar datos y el prospecto queda bloqueado durante la conversión (sigue siendo atómica e idempotente).
@@ -7,7 +14,7 @@
 - **Origen de la oportunidad**: el prospecto o cliente ligado debe existir, estar vivo y pertenecer a la misma empresa, incluso al cambiar la empresa de la oportunidad.
 - **Criterios de etapa y su cumplimiento**: sólo se pueden ligar criterios vivos y activos de la misma empresa que la etapa y la oportunidad.
 - **Comentarios de oportunidad**: sólo sobre oportunidades vivas de la misma empresa, y el aviso al vendedor se genera únicamente si la oportunidad sigue viva en esa empresa.
-- **Pruebas**: nueva suite SQL con 6 casos de autorización y 10 candados por empresa, registrada en los candados de CI.
+- **Pruebas**: nueva suite SQL que cubre la autorización de la conversión y los candados por empresa, registrada en los candados de CI.
 - **Datos legados reportados, no modificados**: 1 oportunidad borrada ligada a un prospecto borrado de su misma empresa; 0 vínculos cross-org en cliente, criterios, cumplimientos y comentarios.
 
 
