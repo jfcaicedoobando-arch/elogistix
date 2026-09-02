@@ -301,76 +301,21 @@ Deno.serve(wrapEdgeHandler("facturapi-webhook", async (req) => {
   );
   if (event instanceof Response) return event;
 
-  // EF-07 + FIX-22 + Ola 4 · N2 · Dedupe ATÓMICO (INSERT-first): el constraint
-  // UNIQUE (organization_id, event_id) convierte el 23505 en "ya procesado/en
-  // progreso" — dos entregas concurrentes ya no pasan ambas el SELECT. Si el
-  // procesamiento falla (no-2xx) se borra la fila para que el retry reprocese.
+  // Dedupe atómico: si el procesamiento falla (no-2xx) se libera la reserva
+  // para que el retry de FacturAPI reprocese el evento.
   const eventKey = await computeEventKey(cuerpo.raw, event);
-  const { error: dedupeErr } = await supabase
-    .from("facturapi_webhook_eventos")
-    .insert({
-      organization_id: orgId,
-      event_id: eventKey,
-      event_type: event.type,
-      payload: event as unknown as Record<string, unknown>,
-    });
-  if ((dedupeErr as { code?: string } | null)?.code === "23505") {
-    // Fase 7 · Alerta suave: FacturAPI reintenta ante 5xx, así que algunos
-    // duplicados son esperados; se envían como `info` para dashboard.
-    await captureEdgeMessage("facturapi_webhook_duplicate", "info", {
-      fn: "facturapi-webhook",
-      organization_id: orgId,
-      extra: { event_id: eventKey, event_type: event.type },
-    });
-    return jsonResponse({ ok: true, ignored: "duplicate_event", event_id: eventKey });
-  }
-  if (dedupeErr) {
-    // Sin la tabla de dedupe no podemos garantizar at-most-once: mejor 503
-    // (FacturAPI reintentará) que procesar sin protección.
-    await captureEdgeMessage("facturapi_webhook_dedupe_insert_failed", "warning", {
-      fn: "facturapi-webhook",
-      organization_id: orgId,
-      extra: { event_id: eventKey, event_type: event.type, detail: dedupeErr.message },
-    });
-    return jsonResponse({ error: "dedupe_unavailable" }, 503);
-  }
+  const reserva = await reservarEvento(supabase, orgId, eventKey, event);
+  if (reserva) return reserva;
 
   const result = await despacharEvento(supabase, orgId, event);
 
   if (!result.ok) {
-    // Liberar la reserva: el retry de FacturAPI debe poder reprocesar el evento.
-    await supabase
-      .from("facturapi_webhook_eventos")
-      .delete()
-      .eq("organization_id", orgId)
-      .eq("event_id", eventKey);
+    await liberarReserva(supabase, orgId, eventKey);
     return result;
   }
 
-  // Ronda YAGNI · defecto 5: un evento que llega ANTES de que exista el
-  // registro local (`*_not_found`) no está procesado. Antes se respondía 200 y
-  // la reserva de dedupe quedaba viva, así que el reintento devolvía
-  // `duplicate_event` para siempre y el evento se perdía. Ahora se libera la
-  // reserva y se responde 503 para que FacturAPI reintente. Los eventos ya
-  // completados conservan su reserva y siguen siendo idempotentes.
-  const cuerpoResultado = await result.clone().json().catch(() => null);
-  const ignored = (cuerpoResultado as { ignored?: string } | null)?.ignored;
-  if (ignored === "factura_not_found" || ignored === "pago_not_found") {
-    await supabase
-      .from("facturapi_webhook_eventos")
-      .delete()
-      .eq("organization_id", orgId)
-      .eq("event_id", eventKey);
-    await captureEdgeMessage("facturapi_webhook_target_not_found", "info", {
-      fn: "facturapi-webhook",
-      organization_id: orgId,
-      extra: { event_id: eventKey, event_type: event.type, ignored },
-    });
-    return jsonResponse(
-      { error: "target_not_found", retryable: true, event_id: eventKey },
-      503,
-    );
-  }
-
-  return result;
+  const reintento = await reintentarSiDestinoAusente(
+    supabase, orgId, eventKey, event, result,
+  );
+  return reintento ?? result;
 }));
