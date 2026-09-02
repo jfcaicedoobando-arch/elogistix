@@ -3,10 +3,8 @@
  * Incluye lógica de diferencia cambiaria cuando la factura es USD y el pago en MXN.
  */
 import { supabase } from "@/integrations/supabase/client";
-import type { TablesInsert } from "@/integrations/supabase/types";
 import { registrarActividad } from "@/services/bitacora/registrar";
-import { crearMovimientoBancarioPago } from "./pagoProveedorMovimiento";
-import { avisarMovimientoNoCreado } from "./pagoProveedorMovimientoAviso";
+
 import { detallesPagoRegistrado } from "./pagoProveedorBitacora";
 import type {
   PagoProveedor,
