@@ -20,7 +20,7 @@ import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 import { Ship, SearchX } from "lucide-react";
 import { NavieraFiltrosBar } from "@/features/costeo/components/NavieraFiltrosBar";
 import { filtrarNavieras, type EstadoNavieraFiltro } from "@/features/costeo/lib/navierasFiltro";
-import { useCosteoNavierasColumns } from "@/features/costeo/components/useCosteoNavierasColumns";
+import { useCosteoNavierasColumns } from "@/features/costeo/hooks/useCosteoNavierasColumns";
 
 export default function CosteoNavieras() {
   const { data: navieras = [], isLoading: loadingNav, isError: errorNav, refetch: refetchNav } = useNavierasCatalogo();
