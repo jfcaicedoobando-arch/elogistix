@@ -72,11 +72,35 @@ export async function crearOportunidad(
   return creada;
 }
 
+/**
+ * v13.823.32: un UPDATE filtrado por RLS o sobre una oportunidad ya eliminada
+ * NO da error, devuelve 0 filas. Antes mostrábamos éxito y escribíamos bitácora
+ * de un cambio que nunca ocurrió. Ahora se exige la fila afectada.
+ */
+async function actualizarOportunidadFilas(
+  id: string,
+  patch: Record<string, unknown>,
+): Promise<void> {
+  const { data, error } = await supabase
+    .from("crm_oportunidades")
+    .update(patch)
+    .eq("id", id)
+    .is("deleted_at", null)
+    .select("id")
+    .maybeSingle();
+  if (error) throw error;
+  if (!data) {
+    throw new Error(
+      "No se pudo guardar la oportunidad: no tienes permiso o la oportunidad ya no existe.",
+    );
+  }
+}
+
 export async function actualizarOportunidad(input: {
   id: string;
   patch: Partial<OportunidadInput & { motivo_perdida_id?: string | null; fecha_cierre_real?: string | null }>;
 }): Promise<void> {
-  await run(supabase.from("crm_oportunidades").update(input.patch).eq("id", input.id));
+  await actualizarOportunidadFilas(input.id, input.patch);
   await registrarActividad({
     modulo: "crm",
     accion: "editar_oportunidad",
@@ -109,7 +133,7 @@ export async function moverEtapaOportunidad(input: {
   if (input.fecha_cierre_real !== undefined) patch.fecha_cierre_real = input.fecha_cierre_real;
   if (input.valor_real !== undefined) patch.valor_real = input.valor_real;
   if (input.motivo_perdida_id !== undefined) patch.motivo_perdida_id = input.motivo_perdida_id;
-  await run(supabase.from("crm_oportunidades").update(patch).eq("id", input.id));
+  await actualizarOportunidadFilas(input.id, patch);
   await registrarActividad({
     modulo: "crm",
     accion: "mover_etapa_oportunidad",
@@ -119,15 +143,14 @@ export async function moverEtapaOportunidad(input: {
 }
 
 export async function eliminarOportunidad(id: string, userId: string | null): Promise<void> {
-  await run(
-    supabase
-      .from("crm_oportunidades")
-      .update({ deleted_at: new Date().toISOString(), deleted_by: userId })
-      .eq("id", id),
-  );
+  await actualizarOportunidadFilas(id, {
+    deleted_at: new Date().toISOString(),
+    deleted_by: userId,
+  });
   await registrarActividad({
     modulo: "crm",
     accion: "eliminar_oportunidad",
     entidadId: id,
   });
 }
+
