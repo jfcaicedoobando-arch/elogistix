@@ -360,7 +360,8 @@ DECLARE
 BEGIN
   INSERT INTO auth.users(id, email) VALUES
     (v_multi, 'e-multi@test.local'), (v_oper, 'e-oper@test.local'),
-    (v_viewer, 'e-viewer@test.local'), (v_super, 'e-super@test.local');
+    (v_viewer, 'e-viewer@test.local'), (v_super, 'e-super@test.local'),
+    (v_vend, 'e-vend@test.local');
 
   INSERT INTO public.organizations (id, nombre) VALUES
     (v_org_a, 'TEST ORG ACTIVA A'), (v_org_b, 'TEST ORG ACTIVA B');
@@ -371,11 +372,12 @@ BEGIN
     (v_org_a, v_multi, 'gerente_comercial', now() - interval '2 day'),
     (v_org_b, v_multi, 'admin_org',         now() - interval '1 day'),
     (v_org_a, v_oper, 'coordinador_logistico', now()),
-    (v_org_a, v_viewer, 'customer_service', now());
+    (v_org_a, v_viewer, 'customer_service', now()),
+    (v_org_a, v_vend, 'vendedor', now());
 
   INSERT INTO public.user_roles (user_id, role) VALUES
     (v_multi, 'gerente_comercial'), (v_oper, 'coordinador_logistico'),
-    (v_viewer, 'customer_service'), (v_super, 'super_admin')
+    (v_viewer, 'customer_service'), (v_super, 'super_admin'), (v_vend, 'vendedor')
   ON CONFLICT (user_id) DO UPDATE SET role = EXCLUDED.role;
 
   INSERT INTO public.super_admin_org_activa (user_id, organization_id)
@@ -385,6 +387,9 @@ BEGIN
     (v_lead_a, v_org_a, 'Lead org A', 'Contactado'),
     (v_lead_b, v_org_b, 'Lead org B', 'Contactado'),
     (v_lead_soft, v_org_a, 'Lead a papelera', 'Contactado');
+
+  INSERT INTO public.crm_leads (id, organization_id, empresa, estado, vendedor_id) VALUES
+    (v_lead_vend, v_org_a, 'Lead del vendedor', 'Contactado', v_vend);
 
   -- E1 · multimembresía: con A activa, B no existe para el usuario.
   PERFORM pg_temp.as_user(v_multi);
@@ -432,6 +437,18 @@ BEGIN
   PERFORM pg_temp.assert(
     (SELECT count(*) FROM public.crm_leads WHERE organization_id = v_org_b) = 0,
     'E4b: el super admin no debe ver organizaciones fuera de su org_scope');
+
+  -- E4c · vendedor: escribe su propio lead; la bolsa es sólo lectura.
+  PERFORM pg_temp.as_user(v_vend);
+  UPDATE public.crm_leads SET empresa = 'Vendedor edita' WHERE id = v_lead_vend;
+  UPDATE public.crm_leads SET empresa = 'Vendedor toma bolsa' WHERE id = v_lead_a;
+  PERFORM pg_temp.as_postgres();
+  PERFORM pg_temp.assert(
+    (SELECT empresa FROM public.crm_leads WHERE id = v_lead_vend) = 'Vendedor edita',
+    'E4c: el vendedor debe poder editar su propio lead tras separar las policies');
+  PERFORM pg_temp.assert(
+    (SELECT empresa FROM public.crm_leads WHERE id = v_lead_a) = 'Lead org A',
+    'E4d: la bolsa común sigue siendo sólo lectura');
 
   -- E5 · Papelera: DELETE físico prohibido por ACL; soft-delete permitido.
   PERFORM pg_temp.as_user(v_multi);
