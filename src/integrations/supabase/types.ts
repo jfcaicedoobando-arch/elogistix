@@ -8471,6 +8471,14 @@ export type Database = {
       }
     }
     Functions: {
+      _asegurar_movimiento_pago_proveedor: {
+        Args: { p_pago_id: string }
+        Returns: string
+      }
+      _assert_cotizacion_convertible: {
+        Args: { p_cotizacion_id: string; p_org: string }
+        Returns: undefined
+      }
       _assert_facturapi_admin: {
         Args: { p_org_id: string }
         Returns: undefined
@@ -10675,6 +10683,10 @@ export type Database = {
           venta_usd: number
         }[]
       }
+      programar_pago_proveedor: {
+        Args: { p_factura_id: string; p_fecha?: string }
+        Returns: string
+      }
       promover_embarque_por_liquidar: {
         Args: { p_embarque_id: string }
         Returns: boolean
@@ -10957,6 +10969,22 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      registrar_pago_proveedor_atomico: {
+        Args: {
+          p_client_request_id?: string
+          p_cuenta_bancaria_id?: string
+          p_diferencia_cambiaria_mxn?: number
+          p_factura_id: string
+          p_fecha_pago: string
+          p_metodo_pago: string
+          p_moneda: string
+          p_monto: number
+          p_notas?: string
+          p_referencia?: string
+          p_tipo_cambio_usd?: number
+        }
+        Returns: Json
       }
       registrar_pago_proveedor_lote: {
         Args: { p_payload: Json }
