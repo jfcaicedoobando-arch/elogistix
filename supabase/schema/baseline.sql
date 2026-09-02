@@ -1853,11 +1853,8 @@ BEGIN
     SELECT p_factura_id, pcc.descripcion, pcc.cantidad, pcc.precio_unitario,
            pcc.moneda, pcc.total, p_org,
            COALESCE(public.resolver_clave_sat(p_org, pcc.descripcion), '78101800'),
-           CASE
-             WHEN pcc.tasa_iva_aplicada IS NULL AND pcc.aplica_iva = false THEN 'exento'
-             WHEN COALESCE(pcc.tasa_iva_aplicada, 0.16) = 0 THEN 'tasa_0'
-             ELSE 'gravado_16'
-           END,
+           -- Defecto 1: 8% de frontera conserva su clasificación fiscal.
+           public._tipo_iva_desde_tasa(pcc.aplica_iva, pcc.tasa_iva_aplicada),
            CASE
              WHEN pcc.tasa_iva_aplicada IS NULL AND pcc.aplica_iva = false THEN NULL
              ELSE COALESCE(pcc.tasa_iva_aplicada, 0.16)
@@ -1878,11 +1875,7 @@ BEGIN
            -- igual que en la rama consolidada (pcc.total ya viene redondeado).
            cv.moneda, ROUND(cv.cantidad * cv.precio_unitario, 2), p_org,
            COALESCE(public.resolver_clave_sat(p_org, cv.descripcion), '78101800'),
-           CASE
-             WHEN cv.tasa_iva_aplicada IS NULL AND cv.aplica_iva = false THEN 'exento'
-             WHEN COALESCE(cv.tasa_iva_aplicada, 0.16) = 0 THEN 'tasa_0'
-             ELSE 'gravado_16'
-           END,
+           public._tipo_iva_desde_tasa(cv.aplica_iva, cv.tasa_iva_aplicada),
            CASE
              WHEN cv.tasa_iva_aplicada IS NULL AND cv.aplica_iva = false THEN NULL
              ELSE COALESCE(cv.tasa_iva_aplicada, 0.16)
@@ -2397,6 +2390,25 @@ BEGIN
     'oportunidad_id', v_op_id, 'lead_id', v_lead_id,
     'creado_lead', v_creado_lead, 'creado_oportunidad', true, 'ya_ligada', false
   );
+END;
+$$;
+CREATE FUNCTION public._cuenta_bancaria_guard_baja() RETURNS trigger
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO ''
+    AS $$
+DECLARE
+  v_baja boolean;
+BEGIN
+  v_baja := (NEW.deleted_at IS NOT NULL AND OLD.deleted_at IS NULL)
+         OR (NEW.activa IS FALSE AND OLD.activa IS TRUE);
+  IF v_baja AND EXISTS (
+    SELECT 1 FROM public.bbva_movimientos m
+     WHERE m.cuenta_bancaria_id = OLD.id
+  ) THEN
+    RAISE EXCEPTION 'LC_CUENTA_CON_MOVIMIENTOS: la cuenta bancaria tiene movimientos históricos y no puede darse de baja ni eliminarse.'
+      USING ERRCODE = 'check_violation';
+  END IF;
+  RETURN NEW;
 END;
 $$;
 CREATE FUNCTION public._cxp_anchor_fase_o() RETURNS void
@@ -3110,6 +3122,29 @@ CREATE FUNCTION public._es_rol_interno() RETURNS boolean
     AS $$
   SELECT current_user IN ('postgres', 'service_role', 'supabase_admin');
 $$;
+CREATE FUNCTION public._factura_serie_folio_monotonico() RETURNS trigger
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+DECLARE
+  v_tiene_facturas boolean;
+BEGIN
+  IF NEW.folio_actual < OLD.folio_actual THEN
+    RAISE EXCEPTION 'LC_FOLIO_NO_REGRESIVO: el folio de la serie % no puede retroceder (% -> %)',
+      OLD.codigo, OLD.folio_actual, NEW.folio_actual;
+  END IF;
+  IF NEW.prefijo IS DISTINCT FROM OLD.prefijo
+     OR NEW.folio_inicial IS DISTINCT FROM OLD.folio_inicial THEN
+    SELECT EXISTS (SELECT 1 FROM public.facturas f WHERE f.serie_id = OLD.id)
+      INTO v_tiene_facturas;
+    IF v_tiene_facturas THEN
+      RAISE EXCEPTION 'LC_SERIE_INMUTABLE: la serie % ya tiene facturas; no se puede cambiar su prefijo ni su folio inicial',
+        OLD.codigo;
+    END IF;
+  END IF;
+  RETURN NEW;
+END;
+$$;
 CREATE FUNCTION public._factura_tc_dof_obligatorio() RETURNS trigger
     LANGUAGE plpgsql
     SET search_path TO 'public'
@@ -3117,6 +3152,11 @@ CREATE FUNCTION public._factura_tc_dof_obligatorio() RETURNS trigger
 DECLARE
   v_tc numeric;
   v_fecha date;
+  v_fecha_dof date;
+  v_rezago int;
+  -- Tolerancia de días hábiles sin publicación (puentes oficiales, Semana
+  -- Santa). Más allá de esto el dato está obsoleto, no "pendiente".
+  c_max_rezago_habil constant int := 2;
 BEGIN
   -- Timbradas: inmutables por los guards fiscales existentes; no recalculamos.
   IF TG_OP = 'UPDATE' AND OLD.uuid_fiscal IS NOT NULL THEN
@@ -3129,15 +3169,23 @@ BEGIN
   -- El T/C NUNCA se toma de lo capturado: se resuelve del DOF vigente a la
   -- fecha de emisión, así que un valor arbitrario u obsoleto no persiste.
   v_fecha := COALESCE(NEW.fecha_emision, (now() AT TIME ZONE 'America/Mexico_City')::date);
-  SELECT CASE
+  SELECT d.fecha,
+         CASE
            WHEN NEW.moneda::text = 'USD' THEN d.usd_mxn
            WHEN NEW.moneda::text = 'EUR' THEN d.eur_mxn
          END
-    INTO v_tc
+    INTO v_fecha_dof, v_tc
   FROM public.tc_dof_vigente(v_fecha) d;
   IF COALESCE(v_tc, 0) <= 1 THEN
     RAISE EXCEPTION 'LC_FACTURA_SIN_TC_DOF: no hay tipo de cambio DOF para % al %; captúralo antes de generar la factura',
       NEW.moneda, v_fecha
+      USING ERRCODE = '22023';
+  END IF;
+  -- Defecto 2: el arrastre sólo se permite por días inhábiles.
+  v_rezago := public.dof_dias_habiles_entre(v_fecha_dof, v_fecha);
+  IF v_rezago > c_max_rezago_habil THEN
+    RAISE EXCEPTION 'LC_FACTURA_TC_DOF_OBSOLETO: el tipo de cambio DOF más reciente es del % (% días hábiles antes del %); sincroniza el DOF o captúralo antes de facturar',
+      v_fecha_dof, v_rezago, v_fecha
       USING ERRCODE = '22023';
   END IF;
   NEW.tipo_cambio := v_tc;
@@ -3938,6 +3986,29 @@ BEGIN
         AND public.user_roles.role IS DISTINCT FROM EXCLUDED.role;
   END IF;
   RETURN NEW;
+END;
+$$;
+CREATE FUNCTION public._tipo_iva_desde_tasa(_aplica_iva boolean, _tasa numeric) RETURNS text
+    LANGUAGE plpgsql IMMUTABLE
+    SET search_path TO 'public'
+    AS $$
+DECLARE
+  v_tasa numeric;
+BEGIN
+  -- Exento: el concepto declara explícitamente que no causa IVA.
+  IF _tasa IS NULL AND COALESCE(_aplica_iva, true) = false THEN
+    RETURN 'exento';
+  END IF;
+  v_tasa := ROUND(COALESCE(_tasa, 0.16), 4);
+  IF v_tasa = 0 THEN
+    RETURN 'tasa_0';
+  ELSIF v_tasa = 0.08 THEN
+    RETURN 'gravado_8';
+  ELSIF v_tasa = 0.16 THEN
+    RETURN 'gravado_16';
+  END IF;
+  RAISE EXCEPTION 'LC_IVA_TASA_NO_SOPORTADA: la tasa de IVA % no es facturable (permitidas: 0%%, 8%%, 16%%)', v_tasa
+    USING ERRCODE = '22023';
 END;
 $$;
 CREATE FUNCTION public._tracking_link_vigencia_maxima() RETURNS trigger
@@ -13834,6 +13905,14 @@ BEGIN
   ) INTO v_result;
   RETURN v_result;
 END;
+$$;
+CREATE FUNCTION public.dof_dias_habiles_entre(_desde date, _hasta date) RETURNS integer
+    LANGUAGE sql IMMUTABLE
+    SET search_path TO 'public'
+    AS $$
+  SELECT COALESCE(COUNT(*), 0)::int
+  FROM generate_series(_desde + 1, _hasta - 1, INTERVAL '1 day') AS g(d)
+  WHERE EXTRACT(ISODOW FROM g.d) < 6
 $$;
 CREATE FUNCTION public.duplicar_cotizacion(p_id uuid) RETURNS uuid
     LANGUAGE plpgsql SECURITY DEFINER
@@ -30282,6 +30361,7 @@ CREATE TRIGGER trg_crm_registrar_cambio_etapa BEFORE UPDATE ON public.crm_oportu
 CREATE TRIGGER trg_crm_set_valor_real_on_aceptada AFTER UPDATE ON public.cotizaciones FOR EACH ROW EXECUTE FUNCTION public.crm_set_valor_real_on_aceptada();
 CREATE TRIGGER trg_crm_sync_oportunidad_desde_cotizacion AFTER INSERT OR UPDATE OF subtotal, moneda, cliente_id, oportunidad_id ON public.cotizaciones FOR EACH ROW EXECUTE FUNCTION public._crm_sync_oportunidad_desde_cotizacion();
 CREATE TRIGGER trg_crm_validar_motivo_perdida BEFORE INSERT OR UPDATE OF etapa_id, motivo_perdida_id ON public.crm_oportunidades FOR EACH ROW EXECUTE FUNCTION public._crm_validar_motivo_perdida();
+CREATE TRIGGER trg_cuenta_bancaria_guard_baja BEFORE UPDATE ON public.cuentas_bancarias FOR EACH ROW EXECUTE FUNCTION public._cuenta_bancaria_guard_baja();
 CREATE TRIGGER trg_cuentas_bancarias_moneda_guard BEFORE UPDATE OF moneda ON public.cuentas_bancarias FOR EACH ROW EXECUTE FUNCTION public.guard_cuenta_bancaria_moneda();
 CREATE TRIGGER trg_cuentas_bancarias_updated BEFORE UPDATE ON public.cuentas_bancarias FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 CREATE TRIGGER trg_cxp_cancelacion_rol_financiero BEFORE UPDATE OF estado ON public.proveedor_facturas FOR EACH ROW EXECUTE FUNCTION public.guard_cxp_cancelacion_rol_financiero();
@@ -30308,6 +30388,7 @@ CREATE TRIGGER trg_entrante_meta_no_verificada BEFORE INSERT OR UPDATE ON public
 CREATE TRIGGER trg_entrantes_promover_por_liquidar AFTER INSERT OR UPDATE ON public.embarque_facturas_entrantes FOR EACH ROW EXECUTE FUNCTION public._trg_promover_por_liquidar();
 CREATE TRIGGER trg_eventos_embarque_cronologia BEFORE INSERT OR UPDATE OF fecha, tipo ON public.eventos_embarque FOR EACH ROW EXECUTE FUNCTION public._validar_cronologia_evento_embarque();
 CREATE TRIGGER trg_factura_cancelada_comisiones AFTER UPDATE OF estado ON public.facturas FOR EACH ROW EXECUTE FUNCTION public.tg_factura_cancelada_comisiones();
+CREATE TRIGGER trg_factura_serie_folio_monotonico BEFORE UPDATE ON public.factura_series FOR EACH ROW EXECUTE FUNCTION public._factura_serie_folio_monotonico();
 CREATE TRIGGER trg_factura_soft_delete_guard BEFORE UPDATE OF deleted_at ON public.facturas FOR EACH ROW EXECUTE FUNCTION public._assert_soft_delete_factura_sin_hijos();
 CREATE TRIGGER trg_factura_tc_dof_obligatorio BEFORE INSERT ON public.facturas FOR EACH ROW EXECUTE FUNCTION public._factura_tc_dof_obligatorio();
 CREATE TRIGGER trg_factura_tc_dof_obligatorio_upd BEFORE UPDATE OF moneda, fecha_emision, tipo_cambio ON public.facturas FOR EACH ROW EXECUTE FUNCTION public._factura_tc_dof_obligatorio();
@@ -31689,6 +31770,9 @@ GRANT ALL ON FUNCTION public._crm_validar_motivo_perdida() TO authenticated;
 GRANT ALL ON FUNCTION public._crm_validar_motivo_perdida() TO service_role;
 REVOKE ALL ON FUNCTION public._crm_vincular_cotizacion_core(p_cotizacion_id uuid, p_prospecto jsonb, p_lead_id uuid, p_oportunidad_id uuid, p_actor_email text, p_actor_id uuid) FROM PUBLIC;
 GRANT ALL ON FUNCTION public._crm_vincular_cotizacion_core(p_cotizacion_id uuid, p_prospecto jsonb, p_lead_id uuid, p_oportunidad_id uuid, p_actor_email text, p_actor_id uuid) TO service_role;
+REVOKE ALL ON FUNCTION public._cuenta_bancaria_guard_baja() FROM PUBLIC;
+GRANT ALL ON FUNCTION public._cuenta_bancaria_guard_baja() TO authenticated;
+GRANT ALL ON FUNCTION public._cuenta_bancaria_guard_baja() TO service_role;
 REVOKE ALL ON FUNCTION public._cxp_anchor_fase_o() FROM PUBLIC;
 GRANT ALL ON FUNCTION public._cxp_anchor_fase_o() TO authenticated;
 GRANT ALL ON FUNCTION public._cxp_anchor_fase_o() TO service_role;
@@ -31711,6 +31795,8 @@ GRANT ALL ON FUNCTION public._entrante_meta_cliente_no_verificada() TO authentic
 GRANT ALL ON FUNCTION public._entrante_meta_cliente_no_verificada() TO service_role;
 REVOKE ALL ON FUNCTION public._es_rol_interno() FROM PUBLIC;
 GRANT ALL ON FUNCTION public._es_rol_interno() TO service_role;
+REVOKE ALL ON FUNCTION public._factura_serie_folio_monotonico() FROM PUBLIC;
+GRANT ALL ON FUNCTION public._factura_serie_folio_monotonico() TO service_role;
 GRANT ALL ON FUNCTION public._factura_tc_dof_obligatorio() TO authenticated;
 GRANT ALL ON FUNCTION public._factura_tc_dof_obligatorio() TO service_role;
 GRANT ALL ON FUNCTION public._garantia_congelar_monto_trg() TO authenticated;
@@ -31787,6 +31873,9 @@ REVOKE ALL ON FUNCTION public._seed_demo_limpiar_financiero() FROM PUBLIC;
 GRANT ALL ON FUNCTION public._seed_demo_limpiar_financiero() TO service_role;
 REVOKE ALL ON FUNCTION public._sync_user_roles_desde_membership() FROM PUBLIC;
 GRANT ALL ON FUNCTION public._sync_user_roles_desde_membership() TO service_role;
+REVOKE ALL ON FUNCTION public._tipo_iva_desde_tasa(_aplica_iva boolean, _tasa numeric) FROM PUBLIC;
+GRANT ALL ON FUNCTION public._tipo_iva_desde_tasa(_aplica_iva boolean, _tasa numeric) TO authenticated;
+GRANT ALL ON FUNCTION public._tipo_iva_desde_tasa(_aplica_iva boolean, _tasa numeric) TO service_role;
 GRANT ALL ON FUNCTION public._tracking_link_vigencia_maxima() TO authenticated;
 GRANT ALL ON FUNCTION public._tracking_link_vigencia_maxima() TO service_role;
 REVOKE ALL ON FUNCTION public._trg_autocierre_por_liquidar() FROM PUBLIC;
@@ -32260,6 +32349,9 @@ GRANT ALL ON FUNCTION public.devolver_anticipo_proveedor(p_id uuid, p_monto nume
 REVOKE ALL ON FUNCTION public.direccion_totales(p_desde date) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.direccion_totales(p_desde date) TO authenticated;
 GRANT ALL ON FUNCTION public.direccion_totales(p_desde date) TO service_role;
+REVOKE ALL ON FUNCTION public.dof_dias_habiles_entre(_desde date, _hasta date) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.dof_dias_habiles_entre(_desde date, _hasta date) TO authenticated;
+GRANT ALL ON FUNCTION public.dof_dias_habiles_entre(_desde date, _hasta date) TO service_role;
 REVOKE ALL ON FUNCTION public.duplicar_cotizacion(p_id uuid) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.duplicar_cotizacion(p_id uuid) TO authenticated;
 GRANT ALL ON FUNCTION public.duplicar_cotizacion(p_id uuid) TO service_role;
@@ -33443,6 +33535,8 @@ GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.notificaciones_cliente TO auth
 GRANT ALL ON TABLE public.notificaciones_cliente TO service_role;
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.notificaciones_internas TO authenticated;
 GRANT ALL ON TABLE public.notificaciones_internas TO service_role;
+GRANT UPDATE(leida) ON TABLE public.notificaciones_internas TO authenticated;
+GRANT UPDATE(leida_at) ON TABLE public.notificaciones_internas TO authenticated;
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.organization_members TO anon;
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.organization_members TO authenticated;
 GRANT ALL ON TABLE public.organization_members TO service_role;
