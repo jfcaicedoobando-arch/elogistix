@@ -4,6 +4,7 @@
  */
 export * from "./queries";
 export * from "./facturaSaldo";
+export * from "./resumenSaldoFactura";
 export * from "./columns";
 export * from "./notificaciones";
 export * from "./perfil";

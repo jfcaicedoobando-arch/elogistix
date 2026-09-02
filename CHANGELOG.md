@@ -1,5 +1,21 @@
 # Changelog
 
+## [13.823.39] - 2026-09-02
+### Higiene posterior a la ronda de seguridad del portal
+- **Perfil del portal**: la nueva llave de integridad cliente/organización volvía ambigua la consulta del perfil y rompía la compilación; ahora la consulta indica explícitamente la relación correcta.
+- **Bitácora**: se actualizaron las pruebas al nuevo registro por función controlada (ya no se escribe desde el navegador).
+- **Cierre de periodo**: la lógica de guardado se movió a un hook, conforme a la regla de arquitectura del proyecto.
+
+## [13.823.38] - 2026-09-02
+### Seguridad del portal de cliente, catálogos y exactitud del tipo de cambio
+- **Acceso cruzado del portal (crítico)**: un vínculo de portal podía declarar una organización distinta a la del cliente real, abriendo datos de otra empresa. Ahora la base exige que la pareja cliente/organización coincida, la revocación pasa por una función controlada y el personal ya no puede escribir esos vínculos a mano.
+- **Catálogos globales**: navieras y puertos sólo los puede modificar el administrador de la plataforma; antes cualquier organización podía editar el catálogo que ven todas.
+- **Notificaciones del portal**: ya no se pueden crear avisos para clientes de otra organización, y sólo se aceptan enlaces internos del portal (se bloquean URLs externas de phishing).
+- **Tipo de cambio DOF**: en facturas sin timbrar el tipo de cambio se toma siempre del DOF de la fecha de emisión. Antes se podía guardar un valor arbitrario y, al mover la fecha, el tipo de cambio quedaba viejo.
+- **Timbrado/cancelación (webhook)**: un aviso que llegaba antes de que existiera la factura o el pago se descartaba y nunca se volvía a procesar. Ahora se libera el candado de duplicados y se pide el reintento, sin perder la protección contra avisos repetidos.
+- **Saldos en el portal**: el saldo de una factura se calcula en la base sobre todos los movimientos; antes se sumaba en pantalla con un máximo de 200 registros y podía mostrar saldos falsos. La lista visual avisa cuando está recortada.
+- **Descarga de complementos de pago**: los archivos del portal se descargan por el canal seguro de la aplicación en lugar de una dirección protegida directa.
+
 ## [13.823.37] - 2026-09-02
 ### Higiene de código y mensajes de error en español
 - **Mensajes claros**: ocho errores de la base (cuentas por pagar, pagos programados, traspasos y conversión de cotizaciones) ya no se muestran con su clave técnica: ahora tienen texto en español que explica qué hacer.

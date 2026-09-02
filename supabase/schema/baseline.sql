@@ -439,6 +439,27 @@ BEGIN
   RETURN NEW;
 END;
 $$;
+CREATE FUNCTION public._assert_embarque_abierto_locked(p_embarque_id uuid) RETURNS text
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+DECLARE
+  v_estado text;
+BEGIN
+  IF p_embarque_id IS NULL THEN
+    RETURN NULL;
+  END IF;
+  -- FOR KEY SHARE es mutuamente exclusivo con el FOR UPDATE de
+  -- cerrar_embarque: si un cierre está en curso, esta lectura espera a que
+  -- termine (commit o rollback) antes de decidir si el embarque sigue
+  -- abierto, cerrando la ventana de carrera del DEFECTO 2.
+  SELECT estado::text INTO v_estado
+    FROM public.embarques
+   WHERE id = p_embarque_id
+   FOR KEY SHARE;
+  RETURN v_estado;
+END;
+$$;
 CREATE FUNCTION public._assert_facturapi_admin(p_org_id uuid) RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
@@ -638,10 +659,12 @@ CREATE FUNCTION public._assert_periodo_abierto() RETURNS trigger
     SET search_path TO 'public'
     AS $$
 DECLARE
-  v_col    text := TG_ARGV[0];
-  v_cierre date;
-  v_new    date;
-  v_old    date;
+  v_col     text := TG_ARGV[0];
+  v_cierre  date;
+  v_new     date;
+  v_old     date;
+  v_allowed text[];
+  v_changed text[];
 BEGIN
   IF current_setting('app.bypass_cierre_periodo', true) = '1' THEN
     RETURN NEW;
@@ -649,23 +672,81 @@ BEGIN
   v_new := NULLIF(to_jsonb(NEW) ->> v_col, '')::date;
   IF TG_OP = 'UPDATE' THEN
     v_old := NULLIF(to_jsonb(OLD) ->> v_col, '')::date;
-    IF v_new IS NOT DISTINCT FROM v_old THEN
-      RETURN NEW;  -- la fecha no cambió: los recálculos de estado siguen libres
-    END IF;
   END IF;
   v_cierre := public.cierre_periodo_fecha(NEW.organization_id);
   IF v_cierre IS NULL THEN
     RETURN NEW;
   END IF;
-  IF v_new IS NOT NULL AND v_new <= v_cierre THEN
-    RAISE EXCEPTION
-      'LC_PERIODO_CERRADO: el periodo contable está cerrado hasta el %; la fecha % no es válida',
-      v_cierre, v_new USING ERRCODE = 'P0001';
+  -- El registro OLD (si existe) NO cae en periodo cerrado: sólo se bloquea
+  -- si la fecha NUEVA cae/entra en el periodo cerrado (INSERT, o UPDATE que
+  -- mueve la fecha hacia el periodo cerrado).
+  IF TG_OP <> 'UPDATE' OR v_old IS NULL OR v_old > v_cierre THEN
+    IF v_new IS NOT NULL AND v_new <= v_cierre THEN
+      RAISE EXCEPTION
+        'LC_PERIODO_CERRADO: el periodo contable está cerrado hasta el %; la fecha % no es válida',
+        v_cierre, v_new USING ERRCODE = 'P0001';
+    END IF;
+    RETURN NEW;
   END IF;
-  IF v_old IS NOT NULL AND v_old <= v_cierre THEN
+  -- El registro OLD cae dentro del periodo cerrado.
+  IF v_new IS DISTINCT FROM v_old THEN
     RAISE EXCEPTION
       'LC_PERIODO_CERRADO: el periodo contable está cerrado hasta el %; no se puede mover la fecha % de un registro ya cerrado',
       v_cierre, v_old USING ERRCODE = 'P0001';
+  END IF;
+  IF OLD.deleted_at IS NULL AND NEW.deleted_at IS NOT NULL THEN
+    RAISE EXCEPTION
+      'LC_PERIODO_CERRADO_CAMPO: el periodo contable está cerrado hasta el %; no se puede eliminar un registro de un periodo ya cerrado',
+      v_cierre USING ERRCODE = 'P0001';
+  END IF;
+  -- Sólo columnas derivadas/no financieras pueden seguir recalculándose
+  -- dentro de un periodo cerrado (estado calculado por triggers/RPC internos,
+  -- banderas de conciliación/SAT y columnas de timbrado/cancelación).
+  v_allowed := CASE TG_TABLE_NAME
+    WHEN 'facturas' THEN ARRAY[
+      'updated_at','estado','uuid_verificado','uuid_estatus_sat','uuid_verificado_fecha',
+      'reconciliacion_checked_at','timbrado_en','timbrado_por','facturapi_id',
+      'facturapi_claim_at','factura_pdf_url','factura_xml_url','factura_xml_backup_path',
+      'cancellation_status','cancelacion_solicitada_en','cancelacion_vence_en',
+      'acuse_cancelacion_xml','acuse_cancelacion_fecha','acuse_cancelacion_status',
+      'uuid_fiscal','folio_fiscal','serie','serie_id','ambiente','sustituida_por',
+      'enviada_cliente_at'
+    ]
+    WHEN 'proveedor_facturas' THEN ARRAY[
+      'updated_at','estado','estado_captura','uuid_verificado','uuid_verificado_fecha',
+      'uuid_estatus_sat'
+    ]
+    WHEN 'pagos_factura' THEN ARRAY[
+      'updated_at','facturapi_rep_id','uuid_rep','folio_rep','serie_rep','rep_pdf_url',
+      'rep_xml_url','estado_rep','timbrado_rep_en','timbrado_rep_por','rep_error',
+      'rep_cancelado_en','rep_motivo_cancel','ambiente','rep_xml_backup_path',
+      'rep_cancellation_status','facturapi_rep_claim_at','rep_cancelado_facturapi_id',
+      'rep_cancelado_uuid','rep_reconciliacion_checked_at'
+    ]
+    WHEN 'pagos_proveedor' THEN ARRAY['updated_at']
+    WHEN 'factura_notas_credito' THEN ARRAY[
+      'updated_at','estado','serie','folio_fiscal','facturapi_id','uuid_fiscal','pdf_url',
+      'xml_url','timbrado_en','timbrado_por','cancelado_en','cancelacion_motivo','ambiente',
+      'xml_backup_path','facturapi_claim_at','cancellation_status',
+      'cancelacion_solicitada_en','cancelacion_vence_en','acuse_cancelacion_xml',
+      'acuse_cancelacion_fecha','acuse_cancelacion_status','reconciliacion_checked_at'
+    ]
+    WHEN 'proveedor_notas_credito' THEN ARRAY[
+      'updated_at','estado','uuid_fiscal','uuid_estatus_sat','uuid_verificado_fecha',
+      'archivo_xml_url','archivo_pdf_url'
+    ]
+    ELSE ARRAY['updated_at']
+  END;
+  SELECT array_agg(n.key ORDER BY n.key) INTO v_changed
+  FROM jsonb_each(to_jsonb(NEW)) n
+  JOIN jsonb_each(to_jsonb(OLD)) o USING (key)
+  WHERE n.value IS DISTINCT FROM o.value
+    AND n.key <> v_col
+    AND NOT (n.key = ANY (v_allowed));
+  IF v_changed IS NOT NULL AND array_length(v_changed, 1) > 0 THEN
+    RAISE EXCEPTION
+      'LC_PERIODO_CERRADO_CAMPO: el periodo contable está cerrado hasta el %; no se pueden modificar los campos % de un registro de un periodo ya cerrado',
+      v_cierre, array_to_string(v_changed, ', ') USING ERRCODE = 'P0001';
   END IF;
   RETURN NEW;
 END;
@@ -3037,22 +3118,16 @@ DECLARE
   v_tc numeric;
   v_fecha date;
 BEGIN
+  -- Timbradas: inmutables por los guards fiscales existentes; no recalculamos.
+  IF TG_OP = 'UPDATE' AND OLD.uuid_fiscal IS NOT NULL THEN
+    RETURN NEW;
+  END IF;
   IF NEW.moneda::text = 'MXN' THEN
-    -- M2-res: al volver a MXN el T/C heredado deja de aplicar.
-    IF TG_OP = 'UPDATE' AND OLD.moneda::text <> 'MXN' THEN
-      NEW.tipo_cambio := 1;
-    END IF;
+    NEW.tipo_cambio := 1;
     RETURN NEW;
   END IF;
-  -- M2-res: si la moneda cambió, el T/C anterior no sirve: se recalcula.
-  IF TG_OP = 'UPDATE'
-     AND OLD.moneda::text IS DISTINCT FROM NEW.moneda::text
-     AND NEW.tipo_cambio IS NOT DISTINCT FROM OLD.tipo_cambio THEN
-    NEW.tipo_cambio := NULL;
-  END IF;
-  IF COALESCE(NEW.tipo_cambio, 0) > 1 THEN
-    RETURN NEW;
-  END IF;
+  -- El T/C NUNCA se toma de lo capturado: se resuelve del DOF vigente a la
+  -- fecha de emisión, así que un valor arbitrario u obsoleto no persiste.
   v_fecha := COALESCE(NEW.fecha_emision, (now() AT TIME ZONE 'America/Mexico_City')::date);
   SELECT CASE
            WHEN NEW.moneda::text = 'USD' THEN d.usd_mxn
@@ -3435,6 +3510,51 @@ BEGIN
   RETURN NEW;
 END;
 $$;
+CREATE FUNCTION public._notif_cliente_validar() RETURNS trigger
+    LANGUAGE plpgsql
+    SET search_path TO 'public'
+    AS $_$
+DECLARE
+  v_org uuid;
+BEGIN
+  SELECT c.organization_id INTO v_org
+  FROM public.clientes c WHERE c.id = NEW.cliente_id;
+  IF v_org IS NULL THEN
+    RAISE EXCEPTION 'LC_NOTIF_CLIENTE_INEXISTENTE: el cliente de la notificación no existe'
+      USING ERRCODE = '22023';
+  END IF;
+  IF NEW.organization_id IS DISTINCT FROM v_org THEN
+    RAISE EXCEPTION 'LC_NOTIF_CROSS_ORG: el cliente no pertenece a la organización de la notificación'
+      USING ERRCODE = '42501';
+  END IF;
+  IF NEW.embarque_id IS NOT NULL AND NOT EXISTS (
+    SELECT 1 FROM public.embarques e
+    WHERE e.id = NEW.embarque_id
+      AND e.organization_id = v_org
+      AND e.cliente_id = NEW.cliente_id
+  ) THEN
+    RAISE EXCEPTION 'LC_NOTIF_EMBARQUE_AJENO: el embarque referido no pertenece a ese cliente'
+      USING ERRCODE = '42501';
+  END IF;
+  IF NEW.factura_id IS NOT NULL AND NOT EXISTS (
+    SELECT 1 FROM public.facturas f
+    WHERE f.id = NEW.factura_id
+      AND f.organization_id = v_org
+      AND f.cliente_id = NEW.cliente_id
+  ) THEN
+    RAISE EXCEPTION 'LC_NOTIF_FACTURA_AJENA: la factura referida no pertenece a ese cliente'
+      USING ERRCODE = '42501';
+  END IF;
+  -- Allowlist: sólo rutas internas del portal (nunca URLs absolutas).
+  IF NEW.url IS NOT NULL AND NEW.url <> '' THEN
+    IF NEW.url !~ '^/portal(/[A-Za-z0-9._~-]+)*$' THEN
+      RAISE EXCEPTION 'LC_NOTIF_URL_NO_PERMITIDA: sólo se permiten enlaces internos del portal'
+        USING ERRCODE = '22023';
+    END IF;
+  END IF;
+  RETURN NEW;
+END;
+$_$;
 CREATE FUNCTION public._prohibir_delete_comisiones() RETURNS trigger
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
@@ -4420,6 +4540,56 @@ BEGIN
   FROM feed
   WHERE f_fecha IS NOT NULL
   ORDER BY f_fecha DESC;
+END;
+$$;
+CREATE FUNCTION public.actualizar_cierre_periodo(p_org uuid, p_fecha date, p_motivo text DEFAULT NULL::text) RETURNS void
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+DECLARE
+  v_uid       uuid := auth.uid();
+  v_anterior  date;
+  v_retroceso boolean;
+  v_motivo    text := NULLIF(btrim(COALESCE(p_motivo, '')), '');
+BEGIN
+  IF p_org IS NULL THEN
+    RAISE EXCEPTION 'LC_ORG_REQUERIDA: se requiere la organización' USING ERRCODE = 'P0001';
+  END IF;
+  IF public.has_any_role_in_org(
+       v_uid,
+       ARRAY['admin','admin_org','contador','tesorero','super_admin']::public.app_role[],
+       p_org
+     ) IS NOT TRUE THEN
+    RAISE EXCEPTION 'LC_ROL_INSUFICIENTE: necesitas un rol financiero o de administración para cambiar el cierre de periodo'
+      USING ERRCODE = '42501';
+  END IF;
+  v_anterior := public.cierre_periodo_fecha(p_org);
+  -- Retroceso: vaciar el cierre, o mover la fecha hacia atrás (reapertura).
+  v_retroceso := v_anterior IS NOT NULL
+                 AND (p_fecha IS NULL OR p_fecha < v_anterior);
+  IF v_retroceso AND (v_motivo IS NULL OR length(v_motivo) < 10) THEN
+    RAISE EXCEPTION 'LC_CIERRE_MOTIVO_REQUERIDO: para reabrir o retroceder el cierre de periodo debes capturar un motivo (mínimo 10 caracteres)'
+      USING ERRCODE = 'P0001';
+  END IF;
+  INSERT INTO public.configuracion (organization_id, categoria, clave, valor)
+  VALUES (p_org, 'contabilidad', 'cierre_periodo_fecha',
+          CASE WHEN p_fecha IS NULL THEN 'null'::jsonb ELSE to_jsonb(p_fecha::text) END)
+  ON CONFLICT (organization_id, categoria, clave)
+  DO UPDATE SET valor = EXCLUDED.valor;
+  PERFORM public.registrar_bitacora(
+    'configuracion',
+    'actualizar_cierre_periodo',
+    NULL,
+    'contabilidad.cierre_periodo_fecha',
+    jsonb_build_object(
+      'fecha_anterior', v_anterior,
+      'fecha_nueva', p_fecha,
+      'retroceso', v_retroceso,
+      'motivo', v_motivo
+    ),
+    p_org,
+    v_uid
+  );
 END;
 $$;
 CREATE FUNCTION public.actualizar_cotizacion_costos(p_cotizacion_id uuid, p_costos jsonb, p_request_id uuid DEFAULT NULL::uuid) RETURNS jsonb
@@ -5958,11 +6128,14 @@ BEGIN
   IF NEW.deleted_at IS NOT NULL OR NEW.estado::text NOT IN ('Aplicada','Emitida') THEN
     RETURN NEW;
   END IF;
+  -- Defecto 5: FOR UPDATE serializa las NC concurrentes de la misma factura.
+  -- La misma lectura bloqueada sirve para moneda/tipo_cambio/fecha_emision.
   SELECT f.moneda::text AS moneda, f.tipo_cambio, f.fecha_emision
     INTO v_fac
   FROM public.facturas f
   WHERE f.id = NEW.factura_id
-    AND f.deleted_at IS NULL;
+    AND f.deleted_at IS NULL
+  FOR UPDATE;
   -- Factura inexistente o en papelera: fuera del alcance del candado.
   IF NOT FOUND THEN
     RETURN NEW;
@@ -6017,6 +6190,86 @@ BEGIN
               'monto_intentado', NEW.monto,
               'moneda_nota_credito', COALESCE(NEW.moneda::text, v_fac.moneda)
             )::text;
+  END IF;
+  RETURN NEW;
+END;
+$$;
+CREATE FUNCTION public.assert_pago_no_altera_historia_rep() RETURNS trigger
+    LANGUAGE plpgsql
+    SET search_path TO 'public'
+    AS $$
+DECLARE
+  v_factura_id uuid;
+  v_row_id uuid;
+  v_row_fecha date;
+  v_row_ts timestamptz;
+  v_row_deleted timestamptz;
+  v_changed boolean := true;
+  v_boundary_fecha date;
+  v_boundary_ts timestamptz;
+BEGIN
+  IF TG_OP = 'DELETE' THEN
+    v_factura_id := OLD.factura_id;
+    v_row_id := OLD.id;
+    v_row_fecha := OLD.fecha_pago;
+    v_row_ts := OLD.created_at;
+    v_row_deleted := OLD.deleted_at;
+  ELSIF TG_OP = 'UPDATE' THEN
+    v_factura_id := OLD.factura_id;
+    v_row_id := OLD.id;
+    v_row_fecha := OLD.fecha_pago;
+    v_row_ts := OLD.created_at;
+    v_row_deleted := OLD.deleted_at;
+    v_changed := (NEW.fecha_pago IS DISTINCT FROM OLD.fecha_pago)
+      OR (NEW.monto IS DISTINCT FROM OLD.monto)
+      OR (NEW.monto_aplicado_factura IS DISTINCT FROM OLD.monto_aplicado_factura)
+      OR (NEW.moneda IS DISTINCT FROM OLD.moneda)
+      OR (NEW.tipo_cambio IS DISTINCT FROM OLD.tipo_cambio)
+      OR (NEW.factura_id IS DISTINCT FROM OLD.factura_id)
+      OR (NEW.deleted_at IS DISTINCT FROM OLD.deleted_at)
+      OR (NEW.created_at IS DISTINCT FROM OLD.created_at);
+  ELSE
+    -- INSERT: sólo importa si nace viva (deleted_at NULL); un insert ya
+    -- borrado no toca la historia viva de nadie.
+    IF NEW.deleted_at IS NOT NULL THEN
+      RETURN NEW;
+    END IF;
+    v_factura_id := NEW.factura_id;
+    v_row_id := NEW.id;
+    v_row_fecha := NEW.fecha_pago;
+    v_row_ts := NEW.created_at;
+    v_row_deleted := NULL;
+  END IF;
+  -- Fila que ya estaba borrada (soft-delete previo): no forma parte de la
+  -- historia viva de ninguna factura, cualquier mutación es inocua para REP.
+  IF TG_OP <> 'INSERT' AND v_row_deleted IS NOT NULL THEN
+    IF TG_OP = 'DELETE' THEN RETURN OLD; ELSE RETURN NEW; END IF;
+  END IF;
+  IF NOT v_changed THEN
+    RETURN NEW;
+  END IF;
+  SELECT pf.fecha_pago, pf.created_at
+    INTO v_boundary_fecha, v_boundary_ts
+  FROM public.pagos_factura pf
+  WHERE pf.factura_id = v_factura_id
+    AND pf.id <> v_row_id
+    AND pf.deleted_at IS NULL
+    AND pf.uuid_rep IS NOT NULL
+    AND pf.estado_rep = 'Timbrado'
+    AND pf.rep_cancelado_en IS NULL
+  ORDER BY pf.fecha_pago DESC, pf.created_at DESC
+  LIMIT 1;
+  IF v_boundary_fecha IS NOT NULL
+     AND (v_row_fecha, v_row_ts) <= (v_boundary_fecha, v_boundary_ts) THEN
+    RAISE EXCEPTION 'LC_REP_HISTORIA_INMUTABLE: este movimiento es anterior a un complemento de pago (REP) timbrado y vigente de la factura; cancela y reemite los REP afectados antes de modificar la historia de cobros'
+      USING ERRCODE = 'P0001',
+            HINT    = json_build_object(
+              'factura_id', v_factura_id,
+              'rep_fecha_pago', v_boundary_fecha
+            )::text;
+  END IF;
+  IF TG_OP = 'DELETE' THEN
+    RETURN OLD;
   END IF;
   RETURN NEW;
 END;
@@ -7131,9 +7384,9 @@ BEGIN
   IF current_setting('app.bypass_cierre', true) = 'on' THEN
     RETURN COALESCE(NEW, OLD);
   END IF;
-  SELECT estado::text INTO v_estado
-  FROM public.embarques
-  WHERE id = COALESCE(NEW.embarque_id, OLD.embarque_id);
+  -- DEFECTO 2: lectura bloqueada (FOR KEY SHARE) para no perder la carrera
+  -- contra el FOR UPDATE de cerrar_embarque.
+  v_estado := public._assert_embarque_abierto_locked(COALESCE(NEW.embarque_id, OLD.embarque_id));
   IF v_estado = 'Cerrado' THEN
     IF TG_OP = 'UPDATE' AND NEW.deleted_at IS NOT NULL AND OLD.deleted_at IS NULL THEN
       RETURN NEW;
@@ -8676,20 +8929,21 @@ BEGIN
   IF v_uid IS NULL AND NOT v_automatico THEN
     RAISE EXCEPTION 'No autenticado';
   END IF;
-  v_is_admin :=
-    has_role(v_uid,'super_admin') OR
-    has_role(v_uid,'admin') OR
-    has_role(v_uid,'admin_org');
-  IF NOT v_automatico AND NOT (
-    v_is_admin OR
-    has_role(v_uid,'gerente_operaciones') OR
-    has_role(v_uid,'coordinador_logistico')
-  ) THEN
-    RAISE EXCEPTION 'No autorizado para cerrar embarques. Esta acción es responsabilidad del coordinador logístico.';
-  END IF;
   SELECT * INTO v_emb FROM embarques WHERE id = p_embarque_id FOR UPDATE;
   IF NOT FOUND THEN
     RAISE EXCEPTION 'Embarque no encontrado';
+  END IF;
+  -- DEFECTO 1: el rol se valida EN LA ORG DEL EMBARQUE (v_emb.organization_id),
+  -- no de forma global. super_admin sigue autorizado globalmente por la
+  -- semántica ya embebida en has_any_role_in_org_exact.
+  v_is_admin :=
+    NOT v_automatico AND
+    public.has_any_role_in_org_exact(v_uid, ARRAY['admin','admin_org']::app_role[], v_emb.organization_id);
+  IF NOT v_automatico AND NOT (
+    v_is_admin OR
+    public.has_any_role_in_org_exact(v_uid, ARRAY['gerente_operaciones','coordinador_logistico']::app_role[], v_emb.organization_id)
+  ) THEN
+    RAISE EXCEPTION 'No autorizado para cerrar embarques. Esta acción es responsabilidad del coordinador logístico.';
   END IF;
   IF v_emb.estado::text = 'Cerrado' THEN
     RAISE EXCEPTION 'El embarque ya está cerrado';
@@ -12225,7 +12479,12 @@ CREATE FUNCTION public.current_user_client_ids() RETURNS SETOF uuid
     LANGUAGE sql STABLE SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
-  SELECT cliente_id FROM public.client_users WHERE user_id = auth.uid();
+  SELECT cu.cliente_id
+  FROM public.client_users cu
+  JOIN public.clientes c
+    ON c.id = cu.cliente_id
+   AND c.organization_id = cu.organization_id
+  WHERE cu.user_id = auth.uid();
 $$;
 CREATE FUNCTION public.cxc_aging_clientes(p_org uuid DEFAULT NULL::uuid, p_fecha date DEFAULT CURRENT_DATE) RETURNS TABLE(cliente_id uuid, cliente_nombre text, moneda text, saldo_total numeric, vigente numeric, d_1_30 numeric, d_31_60 numeric, d_61_90 numeric, mas_90 numeric, num_facturas integer)
     LANGUAGE plpgsql STABLE SECURITY DEFINER
@@ -19815,6 +20074,49 @@ BEGIN
   RETURN _base;
 END;
 $$;
+CREATE FUNCTION public.portal_factura_resumen_saldo(p_factura_id uuid) RETURNS TABLE(total numeric, pagado numeric, notas_credito numeric, saldo numeric, num_pagos integer, num_notas integer)
+    LANGUAGE plpgsql STABLE SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+DECLARE
+  v_cliente uuid; v_moneda text; v_tc numeric; v_total numeric;
+BEGIN
+  SELECT f.cliente_id, f.moneda::text, f.tipo_cambio, f.total
+    INTO v_cliente, v_moneda, v_tc, v_total
+  FROM public.facturas f
+  WHERE f.id = p_factura_id AND f.deleted_at IS NULL;
+  IF NOT FOUND THEN RETURN; END IF;
+  IF v_cliente IS NULL
+     OR v_cliente NOT IN (SELECT public.current_user_client_ids()) THEN
+    RETURN;
+  END IF;
+  RETURN QUERY
+  WITH p AS (
+    SELECT COALESCE(SUM(pf.monto_aplicado_factura), 0) AS monto, COUNT(*)::int AS n
+    FROM public.pagos_factura pf
+    WHERE pf.factura_id = p_factura_id AND pf.deleted_at IS NULL
+  ), nc AS (
+    SELECT COALESCE(SUM(
+      CASE
+        WHEN n.moneda::text = v_moneda THEN n.monto
+        WHEN v_moneda = 'MXN' AND n.moneda::text <> 'MXN' AND n.tipo_cambio > 1
+          THEN n.monto * n.tipo_cambio
+        WHEN v_moneda <> 'MXN' AND n.moneda::text = 'MXN' AND v_tc > 1
+          THEN n.monto / v_tc
+        WHEN v_moneda <> 'MXN' AND n.moneda::text <> 'MXN'
+             AND v_moneda <> n.moneda::text
+             AND n.tipo_cambio > 1 AND v_tc > 1
+          THEN (n.monto * n.tipo_cambio) / v_tc
+        ELSE 0
+      END), 0) AS monto, COUNT(*)::int AS n
+    FROM public.factura_notas_credito n
+    WHERE n.factura_id = p_factura_id AND n.deleted_at IS NULL AND n.estado = 'Aplicada'
+  )
+  SELECT COALESCE(v_total, 0), p.monto, nc.monto,
+         public.saldo_factura(p_factura_id), p.n, nc.n
+  FROM p, nc;
+END;
+$$;
 CREATE FUNCTION public.portal_obtener_proforma_por_token(p_token uuid) RETURNS jsonb
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
@@ -21651,9 +21953,10 @@ BEGIN
   IF v_org_id IS NULL THEN
     RAISE EXCEPTION 'Embarque no encontrado';
   END IF;
-  v_es_admin := public.has_role(auth.uid(), 'admin'::app_role)
-             OR public.has_role(auth.uid(), 'super_admin'::app_role)
-             OR public.has_role(auth.uid(), 'admin_org'::app_role);
+  -- DEFECTO 1 (consistencia): antes usaba has_role() GLOBAL; ahora se exige
+  -- membresía admin/admin_org en LA ORG DEL EMBARQUE (super_admin sigue
+  -- autorizado globalmente, semántica embebida en has_any_role_in_org_exact).
+  v_es_admin := public.has_any_role_in_org_exact(v_actor_id, ARRAY['admin','admin_org']::app_role[], v_org_id);
   IF NOT v_es_admin THEN
     RAISE EXCEPTION 'Solo administradores pueden reabrir embarques cerrados';
   END IF;
@@ -24565,6 +24868,38 @@ BEGIN
   RETURN v_liberadas;
 END;
 $$;
+CREATE FUNCTION public.revocar_usuario_portal_cliente(p_id uuid) RETURNS void
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+DECLARE
+  v_uid uuid := auth.uid();
+  v_cliente uuid;
+  v_org uuid;
+BEGIN
+  IF v_uid IS NULL THEN
+    RAISE EXCEPTION 'LC_NO_AUTENTICADO: inicia sesión para revocar accesos'
+      USING ERRCODE = '42501';
+  END IF;
+  SELECT cu.cliente_id, c.organization_id
+    INTO v_cliente, v_org
+  FROM public.client_users cu
+  JOIN public.clientes c ON c.id = cu.cliente_id
+  WHERE cu.id = p_id;
+  IF v_cliente IS NULL THEN
+    RAISE EXCEPTION 'LC_PORTAL_VINCULO_INEXISTENTE: el acceso ya no existe'
+      USING ERRCODE = '22023';
+  END IF;
+  -- El tenant válido es el del CLIENTE, no el declarado en el vínculo.
+  IF NOT public.has_role(v_uid, 'super_admin'::app_role)
+     AND NOT public.has_any_role_in_org_exact(
+       v_uid, ARRAY['admin','admin_org','operador']::app_role[], v_org) THEN
+    RAISE EXCEPTION 'LC_PORTAL_SIN_PERMISO: requiere un rol administrativo en la organización del cliente'
+      USING ERRCODE = '42501';
+  END IF;
+  DELETE FROM public.client_users WHERE id = p_id;
+END;
+$$;
 CREATE FUNCTION public.rls_tenant_scope_ok(_org uuid) RETURNS boolean
     LANGUAGE sql STABLE SECURITY DEFINER
     SET search_path TO 'public'
@@ -24683,10 +25018,10 @@ CREATE FUNCTION public.saldo_factura(p_factura_id uuid) RETURNS numeric
 DECLARE
   v_total numeric; v_estado estado_factura; v_org uuid;
   v_caller_org uuid; v_uid uuid; v_pagos numeric; v_ncs numeric;
-  v_moneda text; v_tc numeric;
+  v_moneda text; v_tc numeric; v_cliente uuid;
 BEGIN
-  SELECT total, estado, organization_id, moneda::text, tipo_cambio
-    INTO v_total, v_estado, v_org, v_moneda, v_tc
+  SELECT total, estado, organization_id, moneda::text, tipo_cambio, cliente_id
+    INTO v_total, v_estado, v_org, v_moneda, v_tc, v_cliente
   FROM public.facturas WHERE id = p_factura_id AND deleted_at IS NULL;
   IF NOT FOUND THEN RETURN 0; END IF;
   v_uid := auth.uid();
@@ -24695,7 +25030,11 @@ BEGIN
      AND auth.role() <> 'service_role'
      AND NOT public.has_role(v_uid, 'super_admin'::app_role) THEN
     IF v_caller_org IS NULL OR v_org IS DISTINCT FROM v_caller_org THEN
-      RETURN 0;
+      -- Portal: el usuario cliente sí puede consultar el saldo de SU factura.
+      IF v_cliente IS NULL
+         OR v_cliente NOT IN (SELECT public.current_user_client_ids()) THEN
+        RETURN 0;
+      END IF;
     END IF;
   END IF;
   -- BUG-2026-08-25: 'Pagada' también es terminal (facturas legacy sin pagos
@@ -24705,8 +25044,6 @@ BEGIN
   FROM public.pagos_factura
   WHERE factura_id = p_factura_id AND deleted_at IS NULL;
   -- BUG-04 (auditoría 2026-08-18): misma conversión que `cartera_pendiente`.
-  -- Si la NC no se puede convertir (falta TC) NO se resta: preferimos un saldo
-  -- mayor a marcar como Pagada una factura que no lo está.
   SELECT COALESCE(SUM(
       CASE
         WHEN nc.moneda::text = v_moneda THEN nc.monto
@@ -26205,7 +26542,8 @@ BEGIN
   IF v_emb_id IS NULL THEN
     RETURN COALESCE(NEW, OLD);
   END IF;
-  SELECT estado::text INTO v_estado FROM embarques WHERE id = v_emb_id;
+  -- DEFECTO 2: lectura bloqueada (FOR KEY SHARE), misma razón que arriba.
+  v_estado := public._assert_embarque_abierto_locked(v_emb_id);
   IF v_estado = 'Cerrado' THEN
     RAISE EXCEPTION 'Embarque cerrado: edición bloqueada (tabla %)', TG_TABLE_NAME
       USING ERRCODE = 'check_violation';
@@ -29972,7 +30310,7 @@ CREATE TRIGGER trg_eventos_embarque_cronologia BEFORE INSERT OR UPDATE OF fecha,
 CREATE TRIGGER trg_factura_cancelada_comisiones AFTER UPDATE OF estado ON public.facturas FOR EACH ROW EXECUTE FUNCTION public.tg_factura_cancelada_comisiones();
 CREATE TRIGGER trg_factura_soft_delete_guard BEFORE UPDATE OF deleted_at ON public.facturas FOR EACH ROW EXECUTE FUNCTION public._assert_soft_delete_factura_sin_hijos();
 CREATE TRIGGER trg_factura_tc_dof_obligatorio BEFORE INSERT ON public.facturas FOR EACH ROW EXECUTE FUNCTION public._factura_tc_dof_obligatorio();
-CREATE TRIGGER trg_factura_tc_dof_obligatorio_upd BEFORE UPDATE OF moneda ON public.facturas FOR EACH ROW EXECUTE FUNCTION public._factura_tc_dof_obligatorio();
+CREATE TRIGGER trg_factura_tc_dof_obligatorio_upd BEFORE UPDATE OF moneda, fecha_emision, tipo_cambio ON public.facturas FOR EACH ROW EXECUTE FUNCTION public._factura_tc_dof_obligatorio();
 CREATE TRIGGER trg_factura_tc_extranjera_obligatorio BEFORE INSERT ON public.facturas FOR EACH ROW EXECUTE FUNCTION public.trg_factura_tc_extranjera_obligatorio();
 CREATE TRIGGER trg_facturapi_credenciales_updated_at BEFORE UPDATE ON public.facturapi_credenciales FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 CREATE TRIGGER trg_facturas_estado_a_embarques AFTER UPDATE OF estado ON public.facturas FOR EACH ROW WHEN ((old.estado IS DISTINCT FROM new.estado)) EXECUTE FUNCTION public.trg_facturas_estado_a_embarques();
@@ -30039,6 +30377,7 @@ CREATE TRIGGER trg_nc_prov_tc_convertible BEFORE INSERT OR UPDATE OF monto, mone
 CREATE TRIGGER trg_nc_prov_tope_saldo BEFORE INSERT OR UPDATE ON public.proveedor_notas_credito FOR EACH ROW EXECUTE FUNCTION public._assert_nc_prov_no_excede_saldo();
 CREATE TRIGGER trg_notas_credito_prov_recalcular_estado AFTER INSERT OR DELETE OR UPDATE ON public.proveedor_notas_credito FOR EACH ROW EXECUTE FUNCTION public.tg_recalcular_estado_factura_proveedor();
 CREATE TRIGGER trg_notif_cli_embarque_estado AFTER UPDATE OF estado ON public.embarques FOR EACH ROW EXECUTE FUNCTION public.notif_cli_on_embarque_estado();
+CREATE TRIGGER trg_notif_cliente_validar BEFORE INSERT OR UPDATE OF cliente_id, organization_id, embarque_id, factura_id, url ON public.notificaciones_cliente FOR EACH ROW EXECUTE FUNCTION public._notif_cliente_validar();
 CREATE TRIGGER trg_notificar_asignacion_hallazgo AFTER INSERT OR UPDATE OF responsable_id ON public.auditoria_revisiones FOR EACH ROW EXECUTE FUNCTION public.notificar_asignacion_hallazgo();
 CREATE TRIGGER trg_org_anticipos_embarque_id BEFORE INSERT OR UPDATE OF embarque_id, organization_id ON public.anticipos_proveedor FOR EACH ROW EXECUTE FUNCTION public._assert_padre_misma_org('embarque_id', 'embarques');
 CREATE TRIGGER trg_org_anticipos_proveedor_id BEFORE INSERT OR UPDATE OF proveedor_id, organization_id ON public.anticipos_proveedor FOR EACH ROW EXECUTE FUNCTION public._assert_padre_misma_org('proveedor_id', 'proveedores');
@@ -30076,6 +30415,7 @@ CREATE TRIGGER trg_org_proveedor_facturas_embarque_id BEFORE INSERT OR UPDATE OF
 CREATE TRIGGER trg_org_proveedor_facturas_proveedor_id BEFORE INSERT OR UPDATE OF proveedor_id, organization_id ON public.proveedor_facturas FOR EACH ROW EXECUTE FUNCTION public._assert_padre_misma_org('proveedor_id', 'proveedores');
 CREATE TRIGGER trg_pago_factura_comision_ins AFTER INSERT OR UPDATE ON public.pagos_factura FOR EACH ROW EXECUTE FUNCTION public.trg_pago_factura_comision();
 CREATE TRIGGER trg_pago_factura_rep_viva BEFORE INSERT OR UPDATE OF uuid_rep, estado_rep, facturapi_rep_id ON public.pagos_factura FOR EACH ROW WHEN (((new.uuid_rep IS NOT NULL) OR (new.facturapi_rep_id IS NOT NULL))) EXECUTE FUNCTION public.assert_factura_viva_para_rep();
+CREATE TRIGGER trg_pago_no_altera_historia_rep BEFORE INSERT OR DELETE OR UPDATE ON public.pagos_factura FOR EACH ROW EXECUTE FUNCTION public.assert_pago_no_altera_historia_rep();
 CREATE TRIGGER trg_pago_proveedor_factura_viva BEFORE INSERT OR UPDATE ON public.pagos_proveedor FOR EACH ROW WHEN ((new.deleted_at IS NULL)) EXECUTE FUNCTION public.assert_proveedor_factura_viva_para_pago();
 CREATE TRIGGER trg_pago_pue_exhibicion_unica BEFORE INSERT OR UPDATE OF factura_id, monto, monto_aplicado_factura ON public.pagos_factura FOR EACH ROW EXECUTE FUNCTION public._assert_pago_pue_exhibicion_unica();
 CREATE TRIGGER trg_pago_sin_rep_vivo BEFORE UPDATE OF deleted_at ON public.pagos_factura FOR EACH ROW WHEN (((new.deleted_at IS NOT NULL) AND (old.deleted_at IS NULL))) EXECUTE FUNCTION public.assert_pago_sin_rep_vivo();
@@ -30224,6 +30564,8 @@ ALTER TABLE ONLY public.cierre_embarque_log
     ADD CONSTRAINT cierre_embarque_log_embarque_id_fkey FOREIGN KEY (embarque_id) REFERENCES public.embarques(id) ON DELETE CASCADE;
 ALTER TABLE ONLY public.client_users
     ADD CONSTRAINT client_users_cliente_id_fkey FOREIGN KEY (cliente_id) REFERENCES public.clientes(id) ON DELETE CASCADE;
+ALTER TABLE ONLY public.client_users
+    ADD CONSTRAINT client_users_cliente_org_fkey FOREIGN KEY (cliente_id, organization_id) REFERENCES public.clientes(id, organization_id) ON DELETE CASCADE;
 ALTER TABLE ONLY public.client_users
     ADD CONSTRAINT client_users_organization_id_fkey FOREIGN KEY (organization_id) REFERENCES public.organizations(id) ON DELETE CASCADE;
 ALTER TABLE ONLY public.cliente_documentos
@@ -30718,10 +31060,6 @@ CREATE POLICY "Operaciones registra conceptos entrante" ON public.embarque_factu
    FROM public.embarque_facturas_entrantes e
   WHERE ((e.id = embarque_facturas_entrantes_conceptos.entrante_id) AND (e.organization_id = embarque_facturas_entrantes_conceptos.organization_id) AND (e.estado = 'por_capturar'::text))))));
 CREATE POLICY "Operaciones sube facturas entrantes" ON public.embarque_facturas_entrantes FOR INSERT TO authenticated WITH CHECK ((((organization_id = public.current_user_org_id()) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) AND (subido_por = ( SELECT auth.uid() AS uid)) AND (estado = 'por_capturar'::text) AND (( SELECT public.has_role(( SELECT auth.uid() AS uid), 'admin'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'operador'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role))));
-CREATE POLICY "Operativos y admin actualizan navieras" ON public.navieras FOR UPDATE TO authenticated USING ((( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'admin'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'admin_org'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'gerente_operaciones'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'coordinador_logistico'::public.app_role) AS has_role))) WITH CHECK ((( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'admin'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'admin_org'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'gerente_operaciones'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'coordinador_logistico'::public.app_role) AS has_role)));
-CREATE POLICY "Operativos y admin actualizan puertos" ON public.puertos FOR UPDATE TO authenticated USING ((( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'admin'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'admin_org'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'gerente_operaciones'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'coordinador_logistico'::public.app_role) AS has_role))) WITH CHECK ((( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'admin'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'admin_org'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'gerente_operaciones'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'coordinador_logistico'::public.app_role) AS has_role)));
-CREATE POLICY "Operativos y admin agregan puertos" ON public.puertos FOR INSERT TO authenticated WITH CHECK ((( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'admin'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'admin_org'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'gerente_operaciones'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'coordinador_logistico'::public.app_role) AS has_role)));
-CREATE POLICY "Operativos y admin gestionan navieras" ON public.navieras FOR INSERT TO authenticated WITH CHECK ((( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'admin'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'admin_org'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'gerente_operaciones'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'coordinador_logistico'::public.app_role) AS has_role)));
 CREATE POLICY "Org admin bitacora" ON public.bitacora_actividad FOR SELECT TO authenticated USING ((( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role) OR ((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) AND (public.is_org_admin(( SELECT auth.uid() AS uid), organization_id) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'admin'::public.app_role) AS has_role)))));
 CREATE POLICY "Org admins manage own org members" ON public.organization_members TO authenticated USING (public.is_org_admin(( SELECT auth.uid() AS uid), organization_id)) WITH CHECK (public.is_org_admin(( SELECT auth.uid() AS uid), organization_id));
 CREATE POLICY "Org puede actualizar documentos de cliente" ON public.cliente_documentos FOR UPDATE TO authenticated USING (((organization_id = public.current_user_org_id()) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'admin_org'::public.app_role) OR public.has_role(auth.uid(), 'operador'::public.app_role) OR public.has_role(auth.uid(), 'contador'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role)))) WITH CHECK (((organization_id = public.current_user_org_id()) AND (public.has_role(auth.uid(), 'admin'::public.app_role) OR public.has_role(auth.uid(), 'admin_org'::public.app_role) OR public.has_role(auth.uid(), 'operador'::public.app_role) OR public.has_role(auth.uid(), 'contador'::public.app_role) OR public.has_role(auth.uid(), 'super_admin'::public.app_role))));
@@ -30737,8 +31075,8 @@ CREATE POLICY "Org staff manage agente_users" ON public.agente_users TO authenti
   WHERE ((om.user_id = ( SELECT auth.uid() AS uid)) AND (om.organization_id = agente_users.organization_id) AND (om.role = ANY (ARRAY['admin'::public.app_role, 'admin_org'::public.app_role, 'gerente_operaciones'::public.app_role, 'coordinador_logistico'::public.app_role, 'ejecutivo_pricing'::public.app_role, 'operador'::public.app_role]))))))) WITH CHECK ((( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role) OR (EXISTS ( SELECT 1
    FROM public.organization_members om
   WHERE ((om.user_id = ( SELECT auth.uid() AS uid)) AND (om.organization_id = agente_users.organization_id) AND (om.role = ANY (ARRAY['admin'::public.app_role, 'admin_org'::public.app_role, 'gerente_operaciones'::public.app_role, 'coordinador_logistico'::public.app_role, 'ejecutivo_pricing'::public.app_role])))))));
-CREATE POLICY "Org staff manage client_users" ON public.client_users TO authenticated USING ((((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) AND (( SELECT public.has_role(( SELECT auth.uid() AS uid), 'admin'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'operador'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)))) WITH CHECK ((((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) AND (( SELECT public.has_role(( SELECT auth.uid() AS uid), 'admin'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'operador'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role))));
 CREATE POLICY "Org staff manage tracking_links" ON public.tracking_links TO authenticated USING ((((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) AND (( SELECT public.has_role(( SELECT auth.uid() AS uid), 'admin'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'operador'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role) OR public.is_org_admin(( SELECT auth.uid() AS uid), organization_id)))) WITH CHECK ((((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) AND (( SELECT public.has_role(( SELECT auth.uid() AS uid), 'admin'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'operador'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role) OR public.is_org_admin(( SELECT auth.uid() AS uid), organization_id))));
+CREATE POLICY "Org staff read client_users" ON public.client_users FOR SELECT TO authenticated USING ((((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) AND (( SELECT public.has_role(( SELECT auth.uid() AS uid), 'admin'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'admin_org'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'operador'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role))));
 CREATE POLICY "Scope tenant activo super admin" ON public.anticipos_aplicaciones AS RESTRICTIVE TO authenticated USING (((NOT ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) OR public.rls_tenant_scope_ok(organization_id))) WITH CHECK (((NOT ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) OR public.rls_tenant_scope_ok(organization_id)));
 CREATE POLICY "Scope tenant activo super admin" ON public.anticipos_proveedor AS RESTRICTIVE TO authenticated USING (((NOT ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) OR public.rls_tenant_scope_ok(organization_id))) WITH CHECK (((NOT ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) OR public.rls_tenant_scope_ok(organization_id)));
 CREATE POLICY "Scope tenant activo super admin" ON public.auditoria_comentarios AS RESTRICTIVE TO authenticated USING (((NOT ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) OR public.rls_tenant_scope_ok(organization_id))) WITH CHECK (((NOT ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) OR public.rls_tenant_scope_ok(organization_id)));
@@ -30893,7 +31231,6 @@ CREATE POLICY "Tenant delete cotizacion_costos" ON public.cotizacion_costos FOR 
 CREATE POLICY "Tenant delete documentos_embarque" ON public.documentos_embarque FOR DELETE TO authenticated USING ((((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) AND ( SELECT public.has_any_role_efectivo(( SELECT auth.uid() AS uid), ARRAY['admin'::public.app_role, 'operador'::public.app_role, 'super_admin'::public.app_role]) AS has_any_role)));
 CREATE POLICY "Tenant delete embarques" ON public.embarques FOR DELETE TO authenticated USING ((((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) AND ( SELECT public.has_any_role_efectivo(( SELECT auth.uid() AS uid), ARRAY['admin'::public.app_role, 'operador'::public.app_role, 'super_admin'::public.app_role]) AS has_any_role)));
 CREATE POLICY "Tenant delete proformas" ON public.proformas FOR DELETE TO authenticated USING ((((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) AND ( SELECT public.has_any_role_efectivo(( SELECT auth.uid() AS uid), ARRAY['admin'::public.app_role, 'admin_org'::public.app_role, 'operador'::public.app_role, 'contador'::public.app_role, 'super_admin'::public.app_role]) AS has_any_role)));
-CREATE POLICY "Tenant insert bitacora" ON public.bitacora_actividad FOR INSERT TO authenticated WITH CHECK (((usuario_id = ( SELECT auth.uid() AS uid)) AND ((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role))));
 CREATE POLICY "Tenant insert cotizacion_costos" ON public.cotizacion_costos FOR INSERT TO authenticated WITH CHECK ((((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) AND ( SELECT public.puede_escribir_cotizaciones(( SELECT auth.uid() AS uid)) AS puede_escribir_cotizaciones)));
 CREATE POLICY "Tenant insert proforma_envios" ON public.proforma_envios FOR INSERT TO authenticated WITH CHECK ((organization_id IN ( SELECT om.organization_id
    FROM public.organization_members om
@@ -30939,9 +31276,11 @@ CREATE POLICY "Tenant read proveedores" ON public.proveedores FOR SELECT TO auth
 CREATE POLICY "Tenant read refacturaciones" ON public.refacturaciones FOR SELECT TO authenticated USING (((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)));
 CREATE POLICY "Tenant read scoped idempotency_keys" ON public.idempotency_keys FOR SELECT TO authenticated USING (((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) AND ((user_id = ( SELECT auth.uid() AS uid)) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role))));
 CREATE POLICY "Tenant read seguros" ON public.seguros_embarque FOR SELECT USING (((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)));
-CREATE POLICY "Tenant staff inserta notificaciones" ON public.notificaciones_cliente FOR INSERT TO authenticated WITH CHECK ((( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role) OR (organization_id IN ( SELECT m.organization_id
+CREATE POLICY "Tenant staff inserta notificaciones" ON public.notificaciones_cliente FOR INSERT TO authenticated WITH CHECK (((( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role) OR (organization_id IN ( SELECT m.organization_id
    FROM public.organization_members m
-  WHERE (m.user_id = ( SELECT auth.uid() AS uid))))));
+  WHERE (m.user_id = ( SELECT auth.uid() AS uid))))) AND (EXISTS ( SELECT 1
+   FROM public.clientes c
+  WHERE ((c.id = notificaciones_cliente.cliente_id) AND (c.organization_id = notificaciones_cliente.organization_id))))));
 CREATE POLICY "Tenant staff lee notificaciones" ON public.notificaciones_cliente FOR SELECT TO authenticated USING ((( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role) OR (organization_id IN ( SELECT m.organization_id
    FROM public.organization_members m
   WHERE (m.user_id = ( SELECT auth.uid() AS uid))))));
@@ -31239,6 +31578,9 @@ GRANT ALL ON FUNCTION public._assert_cotizacion_convertible(p_cotizacion_id uuid
 REVOKE ALL ON FUNCTION public._assert_email_unico_org() FROM PUBLIC;
 GRANT ALL ON FUNCTION public._assert_email_unico_org() TO authenticated;
 GRANT ALL ON FUNCTION public._assert_email_unico_org() TO service_role;
+REVOKE ALL ON FUNCTION public._assert_embarque_abierto_locked(p_embarque_id uuid) FROM PUBLIC;
+GRANT ALL ON FUNCTION public._assert_embarque_abierto_locked(p_embarque_id uuid) TO authenticated;
+GRANT ALL ON FUNCTION public._assert_embarque_abierto_locked(p_embarque_id uuid) TO service_role;
 REVOKE ALL ON FUNCTION public._assert_facturapi_admin(p_org_id uuid) FROM PUBLIC;
 GRANT ALL ON FUNCTION public._assert_facturapi_admin(p_org_id uuid) TO authenticated;
 GRANT ALL ON FUNCTION public._assert_facturapi_admin(p_org_id uuid) TO service_role;
@@ -31411,6 +31753,9 @@ GRANT ALL ON FUNCTION public._normalizar_razon_social() TO service_role;
 REVOKE ALL ON FUNCTION public._normalizar_uuid_fiscal() FROM PUBLIC;
 GRANT ALL ON FUNCTION public._normalizar_uuid_fiscal() TO authenticated;
 GRANT ALL ON FUNCTION public._normalizar_uuid_fiscal() TO service_role;
+REVOKE ALL ON FUNCTION public._notif_cliente_validar() FROM PUBLIC;
+GRANT ALL ON FUNCTION public._notif_cliente_validar() TO authenticated;
+GRANT ALL ON FUNCTION public._notif_cliente_validar() TO service_role;
 REVOKE ALL ON FUNCTION public._prohibir_delete_comisiones() FROM PUBLIC;
 GRANT ALL ON FUNCTION public._prohibir_delete_comisiones() TO service_role;
 GRANT ALL ON FUNCTION public._prohibir_delete_factura() TO authenticated;
@@ -31474,6 +31819,9 @@ GRANT ALL ON FUNCTION public.aceptar_proforma_sin_autorizacion(p_proforma_id uui
 REVOKE ALL ON FUNCTION public.actividad_embarque(p_embarque_id uuid) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.actividad_embarque(p_embarque_id uuid) TO authenticated;
 GRANT ALL ON FUNCTION public.actividad_embarque(p_embarque_id uuid) TO service_role;
+REVOKE ALL ON FUNCTION public.actualizar_cierre_periodo(p_org uuid, p_fecha date, p_motivo text) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.actualizar_cierre_periodo(p_org uuid, p_fecha date, p_motivo text) TO authenticated;
+GRANT ALL ON FUNCTION public.actualizar_cierre_periodo(p_org uuid, p_fecha date, p_motivo text) TO service_role;
 REVOKE ALL ON FUNCTION public.actualizar_cotizacion_costos(p_cotizacion_id uuid, p_costos jsonb, p_request_id uuid) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.actualizar_cotizacion_costos(p_cotizacion_id uuid, p_costos jsonb, p_request_id uuid) TO authenticated;
 GRANT ALL ON FUNCTION public.actualizar_cotizacion_costos(p_cotizacion_id uuid, p_costos jsonb, p_request_id uuid) TO service_role;
@@ -31547,6 +31895,9 @@ GRANT ALL ON FUNCTION public.assert_nc_fecha_valida() TO authenticated;
 GRANT ALL ON FUNCTION public.assert_nc_fecha_valida() TO service_role;
 GRANT ALL ON FUNCTION public.assert_nc_no_excede_saldo() TO authenticated;
 GRANT ALL ON FUNCTION public.assert_nc_no_excede_saldo() TO service_role;
+REVOKE ALL ON FUNCTION public.assert_pago_no_altera_historia_rep() FROM PUBLIC;
+GRANT ALL ON FUNCTION public.assert_pago_no_altera_historia_rep() TO authenticated;
+GRANT ALL ON FUNCTION public.assert_pago_no_altera_historia_rep() TO service_role;
 REVOKE ALL ON FUNCTION public.assert_pago_sin_rep_vivo() FROM PUBLIC;
 GRANT ALL ON FUNCTION public.assert_pago_sin_rep_vivo() TO authenticated;
 GRANT ALL ON FUNCTION public.assert_pago_sin_rep_vivo() TO service_role;
@@ -32285,6 +32636,9 @@ GRANT ALL ON FUNCTION public.pago_detalle(p_tipo text, p_id uuid) TO service_rol
 REVOKE ALL ON FUNCTION public.pnl_financiero_embarque(_embarque_id uuid) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.pnl_financiero_embarque(_embarque_id uuid) TO authenticated;
 GRANT ALL ON FUNCTION public.pnl_financiero_embarque(_embarque_id uuid) TO service_role;
+REVOKE ALL ON FUNCTION public.portal_factura_resumen_saldo(p_factura_id uuid) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.portal_factura_resumen_saldo(p_factura_id uuid) TO authenticated;
+GRANT ALL ON FUNCTION public.portal_factura_resumen_saldo(p_factura_id uuid) TO service_role;
 REVOKE ALL ON FUNCTION public.portal_obtener_proforma_por_token(p_token uuid) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.portal_obtener_proforma_por_token(p_token uuid) TO authenticated;
 GRANT ALL ON FUNCTION public.portal_obtener_proforma_por_token(p_token uuid) TO anon;
@@ -32513,6 +32867,9 @@ GRANT ALL ON FUNCTION public.revalidar_tarifa_cotizacion(p_cotizacion_id uuid) T
 REVOKE ALL ON FUNCTION public.revertir_proforma_al_cancelar_sustitucion(p_factura_id uuid) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.revertir_proforma_al_cancelar_sustitucion(p_factura_id uuid) TO authenticated;
 GRANT ALL ON FUNCTION public.revertir_proforma_al_cancelar_sustitucion(p_factura_id uuid) TO service_role;
+REVOKE ALL ON FUNCTION public.revocar_usuario_portal_cliente(p_id uuid) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.revocar_usuario_portal_cliente(p_id uuid) TO authenticated;
+GRANT ALL ON FUNCTION public.revocar_usuario_portal_cliente(p_id uuid) TO service_role;
 REVOKE ALL ON FUNCTION public.rls_tenant_scope_ok(_org uuid) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.rls_tenant_scope_ok(_org uuid) TO authenticated;
 GRANT ALL ON FUNCTION public.rls_tenant_scope_ok(_org uuid) TO service_role;
@@ -32781,7 +33138,7 @@ GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.auditoria_snapshots TO authent
 GRANT ALL ON TABLE public.auditoria_snapshots TO service_role;
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.bbva_movimientos TO authenticated;
 GRANT ALL ON TABLE public.bbva_movimientos TO service_role;
-GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.bitacora_actividad TO anon;
+GRANT SELECT,DELETE,UPDATE ON TABLE public.bitacora_actividad TO anon;
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.bitacora_actividad TO authenticated;
 GRANT ALL ON TABLE public.bitacora_actividad TO service_role;
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.catalogo_claves_sat TO authenticated;

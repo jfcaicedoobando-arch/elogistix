@@ -52,7 +52,9 @@ export async function inviteClientUser(
 }
 
 export async function revokeClientUser(id: string): Promise<void> {
-  const { error } = await supabase.from("client_users").delete().eq("id", id);
+  // Defecto 1: el DELETE directo está cerrado por RLS. La RPC valida el rol
+  // en la organización del CLIENTE (no la declarada en el vínculo).
+  const { error } = await supabase.rpc("revocar_usuario_portal_cliente", { p_id: id });
   if (error) throw error;
   await registrarActividad({
     modulo: "clientes",

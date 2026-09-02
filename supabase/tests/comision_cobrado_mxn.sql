@@ -47,6 +47,12 @@ BEGIN
   ON CONFLICT (id) DO NOTHING;
 
   -- Q1/Q2: facturas USD con TC del documento 18.0.
+  -- El T/C de las facturas lo impone el DOF de su fecha de emisión: el fixture
+  -- siembra 18 para hoy, el valor que asumen los cálculos de comisión.
+  INSERT INTO public.tipos_cambio_dof (fecha, usd_mxn, origen)
+  VALUES (CURRENT_DATE, 18, 'manual')
+  ON CONFLICT (fecha) DO UPDATE SET usd_mxn = 18;
+
   INSERT INTO public.facturas
     (id, organization_id, cliente_id, cliente_nombre, embarque_id, numero,
      fecha_emision, fecha_vencimiento, moneda, tipo_cambio, subtotal, iva, total, estado)

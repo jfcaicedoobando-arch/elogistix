@@ -791,6 +791,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "client_users_cliente_org_fkey"
+            columns: ["cliente_id", "organization_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id", "organization_id"]
+          },
+          {
             foreignKeyName: "client_users_organization_id_fkey"
             columns: ["organization_id"]
             isOneToOne: false
@@ -10647,6 +10654,17 @@ export type Database = {
       org_scope: { Args: never; Returns: string }
       pago_detalle: { Args: { p_id: string; p_tipo: string }; Returns: Json }
       pnl_financiero_embarque: { Args: { _embarque_id: string }; Returns: Json }
+      portal_factura_resumen_saldo: {
+        Args: { p_factura_id: string }
+        Returns: {
+          notas_credito: number
+          num_notas: number
+          num_pagos: number
+          pagado: number
+          saldo: number
+          total: number
+        }[]
+      }
       portal_obtener_proforma_por_token: {
         Args: { p_token: string }
         Returns: Json
@@ -11128,6 +11146,10 @@ export type Database = {
       revertir_proforma_al_cancelar_sustitucion: {
         Args: { p_factura_id: string }
         Returns: string[]
+      }
+      revocar_usuario_portal_cliente: {
+        Args: { p_id: string }
+        Returns: undefined
       }
       rls_tenant_scope_ok: { Args: { _org: string }; Returns: boolean }
       rol_efectivo: {

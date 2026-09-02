@@ -26,7 +26,7 @@ export async function fetchPortalPerfil(): Promise<PortalPerfilData> {
     supabase
       .from("client_users")
       .select(
-        "clientes(id, nombre, rfc, direccion, ciudad, estado, cp, contacto, email, telefono)",
+        "clientes!client_users_cliente_id_fkey(id, nombre, rfc, direccion, ciudad, estado, cp, contacto, email, telefono)",
       )
       .eq("user_id", user.id)
       .limit(1)

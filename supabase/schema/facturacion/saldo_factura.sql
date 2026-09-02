@@ -11,10 +11,10 @@ AS $function$
 DECLARE
   v_total numeric; v_estado estado_factura; v_org uuid;
   v_caller_org uuid; v_uid uuid; v_pagos numeric; v_ncs numeric;
-  v_moneda text; v_tc numeric;
+  v_moneda text; v_tc numeric; v_cliente uuid;
 BEGIN
-  SELECT total, estado, organization_id, moneda::text, tipo_cambio
-    INTO v_total, v_estado, v_org, v_moneda, v_tc
+  SELECT total, estado, organization_id, moneda::text, tipo_cambio, cliente_id
+    INTO v_total, v_estado, v_org, v_moneda, v_tc, v_cliente
   FROM public.facturas WHERE id = p_factura_id AND deleted_at IS NULL;
   IF NOT FOUND THEN RETURN 0; END IF;
 
@@ -25,7 +25,11 @@ BEGIN
      AND auth.role() <> 'service_role'
      AND NOT public.has_role(v_uid, 'super_admin'::app_role) THEN
     IF v_caller_org IS NULL OR v_org IS DISTINCT FROM v_caller_org THEN
-      RETURN 0;
+      -- Portal: el usuario cliente sí puede consultar el saldo de SU factura.
+      IF v_cliente IS NULL
+         OR v_cliente NOT IN (SELECT public.current_user_client_ids()) THEN
+        RETURN 0;
+      END IF;
     END IF;
   END IF;
 
@@ -38,8 +42,6 @@ BEGIN
   WHERE factura_id = p_factura_id AND deleted_at IS NULL;
 
   -- BUG-04 (auditoría 2026-08-18): misma conversión que `cartera_pendiente`.
-  -- Si la NC no se puede convertir (falta TC) NO se resta: preferimos un saldo
-  -- mayor a marcar como Pagada una factura que no lo está.
   SELECT COALESCE(SUM(
       CASE
         WHEN nc.moneda::text = v_moneda THEN nc.monto

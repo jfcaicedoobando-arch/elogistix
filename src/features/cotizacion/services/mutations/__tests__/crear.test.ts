@@ -61,8 +61,10 @@ describe("crearCotizacion", () => {
     const r = await crearCotizacion(baseInput);
     expect(r.id).toBe("cot-1");
     expect(r.folio).toBe("COT-2026-0001");
-    expect(mock.rpcCalls).toHaveLength(1);
-    expect(mock.rpcCalls[0].fn).toBe("siguiente_folio_cotizacion");
+    // La bitácora también es una RPC (DEFECTO 8): se excluye del conteo.
+    const negocio = mock.rpcCalls.filter((c) => c.fn !== "registrar_bitacora");
+    expect(negocio).toHaveLength(1);
+    expect(negocio[0].fn).toBe("siguiente_folio_cotizacion");
   });
 
   it("falla si la RPC devuelve error", async () => {

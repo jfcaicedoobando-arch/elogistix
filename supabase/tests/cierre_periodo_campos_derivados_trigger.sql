@@ -89,7 +89,7 @@ BEGIN
    WHERE n.nspname = 'public' AND p.proname = '_assert_periodo_abierto'
    LIMIT 1;
   IF v_src IS NULL OR v_src NOT LIKE '%deleted_at%' THEN
-    REGRESIÓN_IMPOSIBLE;
+    RAISE EXCEPTION 'REGRESIÓN: _assert_periodo_abierto perdió la rama de soft-delete';
   END IF;
   RAISE NOTICE '✓ _assert_periodo_abierto conserva la rama de soft-delete';
 END

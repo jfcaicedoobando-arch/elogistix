@@ -11,6 +11,7 @@ import {
   fetchPortalFactura,
   fetchPortalPagosFactura,
   fetchPortalNotasCreditoFactura,
+  fetchResumenSaldoFacturaPortal,
   fetchPortalClientUsers,
   fetchPortalClienteName,
   fetchPortalContactoNombre,
@@ -77,6 +78,16 @@ export function usePortalPagosFactura(facturaId?: string) {
   return useQuery({
     queryKey: queryKeys.portal.pagosFactura(facturaId ?? ""),
     queryFn: () => fetchPortalPagosFactura(facturaId!),
+    enabled: !!facturaId,
+  });
+}
+
+// Defecto 7: el saldo viene del agregado completo en BD, nunca de las listas
+// truncadas por `PORTAL_RELATED_MAX`.
+export function usePortalResumenSaldoFactura(facturaId?: string) {
+  return useQuery({
+    queryKey: queryKeys.portal.resumenSaldoFactura(facturaId ?? ""),
+    queryFn: () => fetchResumenSaldoFacturaPortal(facturaId!),
     enabled: !!facturaId,
   });
 }

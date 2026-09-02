@@ -258,6 +258,7 @@ Deno.serve(wrapEdgeHandler("facturapi-webhook", async (req) => {
   }
 
   const result = await despacharEvento(supabase, orgId, event);
+
   if (!result.ok) {
     // Liberar la reserva: el retry de FacturAPI debe poder reprocesar el evento.
     await supabase
@@ -267,5 +268,31 @@ Deno.serve(wrapEdgeHandler("facturapi-webhook", async (req) => {
       .eq("event_id", eventKey);
     return result;
   }
+
+  // Ronda YAGNI · defecto 5: un evento que llega ANTES de que exista el
+  // registro local (`*_not_found`) no está procesado. Antes se respondía 200 y
+  // la reserva de dedupe quedaba viva, así que el reintento devolvía
+  // `duplicate_event` para siempre y el evento se perdía. Ahora se libera la
+  // reserva y se responde 503 para que FacturAPI reintente. Los eventos ya
+  // completados conservan su reserva y siguen siendo idempotentes.
+  const cuerpoResultado = await result.clone().json().catch(() => null);
+  const ignored = (cuerpoResultado as { ignored?: string } | null)?.ignored;
+  if (ignored === "factura_not_found" || ignored === "pago_not_found") {
+    await supabase
+      .from("facturapi_webhook_eventos")
+      .delete()
+      .eq("organization_id", orgId)
+      .eq("event_id", eventKey);
+    await captureEdgeMessage("facturapi_webhook_target_not_found", "info", {
+      fn: "facturapi-webhook",
+      organization_id: orgId,
+      extra: { event_id: eventKey, event_type: event.type, ignored },
+    });
+    return jsonResponse(
+      { error: "target_not_found", retryable: true, event_id: eventKey },
+      503,
+    );
+  }
+
   return result;
 }));

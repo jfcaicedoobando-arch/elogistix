@@ -8,23 +8,29 @@ vi.mock("@/integrations/supabase/client", () => ({ supabase: mock.supabase }));
 
 import { insertLoginAudit } from "../loginAudit";
 
-beforeEach(() => { mock.tableCalls.length = 0; });
+beforeEach(() => {
+  mock.tableCalls.length = 0;
+  mock.supabase.rpc.mockClear();
+});
 
 describe("insertLoginAudit", () => {
-  it("inserta en bitacora_actividad con los campos correctos", async () => {
-    mock.setTableResult("bitacora_actividad", { data: {}, error: null });
+  // DEFECTO 8: la bitácora se escribe por RPC, no con un INSERT del navegador.
+  it("registra el login por la RPC registrar_bitacora", async () => {
     await insertLoginAudit("user-1", "a@test.com");
-    expect(mock.tableCalls[0]?.table).toBe("bitacora_actividad");
-    expect(mock.tableCalls[0]?.ops).toContain("insert");
+    expect(mock.supabase.rpc).toHaveBeenCalledWith("registrar_bitacora", {
+      p_modulo: "auth",
+      p_accion: "login",
+      p_entidad_nombre: "a@test.com",
+    });
   });
 
   it("no lanza aunque supabase devuelva error (silent audit)", async () => {
-    mock.setTableResult("bitacora_actividad", { data: null, error: { message: "db down" } });
+    mock.supabase.rpc.mockResolvedValueOnce({ data: null, error: { message: "db down" } });
     await expect(insertLoginAudit("user-2", "b@test.com")).resolves.toBeUndefined();
   });
 
   it("no lanza aunque supabase lance excepción", async () => {
-    mock.supabase.from.mockImplementationOnce(() => { throw new Error("network"); });
+    mock.supabase.rpc.mockImplementationOnce(() => { throw new Error("network"); });
     await expect(insertLoginAudit("user-3", "c@test.com")).resolves.toBeUndefined();
   });
 });
