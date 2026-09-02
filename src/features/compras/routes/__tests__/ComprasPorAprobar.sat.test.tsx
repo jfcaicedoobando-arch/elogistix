@@ -52,8 +52,8 @@ vi.mock("@/hooks/shared", () => ({
   usePermissions: () => ({ canEdit: true, canAprobarFacturaProveedor: true }),
   useFiltroUrl: <T,>(_c: string, _v: readonly T[], def: T) => [def, vi.fn()],
   useTextoUrl: (_c: string, def = "") => [def, vi.fn()],
+  useIsMobile: () => false,
 }));
-vi.mock("@/hooks/use-mobile", () => ({ useIsMobile: () => false }));
 
 import ComprasPorAprobar from "../ComprasPorAprobar";
 
