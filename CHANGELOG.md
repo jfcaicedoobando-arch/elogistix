@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.823.39] - 2026-09-02
+### Higiene posterior a la ronda de seguridad del portal
+- **Perfil del portal**: la nueva llave de integridad cliente/organización volvía ambigua la consulta del perfil y rompía la compilación; ahora la consulta indica explícitamente la relación correcta.
+- **Bitácora**: se actualizaron las pruebas al nuevo registro por función controlada (ya no se escribe desde el navegador).
+- **Cierre de periodo**: la lógica de guardado se movió a un hook, conforme a la regla de arquitectura del proyecto.
+
 ## [13.823.38] - 2026-09-02
 ### Seguridad del portal de cliente, catálogos y exactitud del tipo de cambio
 - **Acceso cruzado del portal (crítico)**: un vínculo de portal podía declarar una organización distinta a la del cliente real, abriendo datos de otra empresa. Ahora la base exige que la pareja cliente/organización coincida, la revocación pasa por una función controlada y el personal ya no puede escribir esos vínculos a mano.
