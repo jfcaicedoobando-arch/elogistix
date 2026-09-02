@@ -64,6 +64,46 @@ BEGIN
 END;
 $$;
 
+-- v13.823.59 · Réplica EXACTA de la sentencia de corrección de sello de la
+-- migración 20260902222850: alcance por auditoría de backfill
+-- (`fuente_monto = snapshot_mas_reciente`), protección `aceptada_por IS NULL`
+-- (nunca pisa aceptaciones reales/posteriores), snapshot elegido de forma
+-- determinista y corrección cuando difiere versión O fecha.
+CREATE OR REPLACE FUNCTION pg_temp.corregir_sello_backfill()
+RETURNS void LANGUAGE sql AS $$
+  WITH objetivo AS (
+    SELECT c.id AS cot_id, c.organization_id, s.version_num, s.created_at
+      FROM (
+        SELECT DISTINCT b.organization_id,
+               (b.detalles -> 'after' ->> 'cotizacion_ganadora_id')::uuid AS cot_id
+          FROM public.bitacora_actividad b
+         WHERE b.accion = 'oportunidad_ganada_backfill'
+           AND b.detalles ->> 'fuente_monto' = 'snapshot_mas_reciente'
+           AND (b.detalles -> 'after' ->> 'cotizacion_ganadora_id') IS NOT NULL
+      ) o
+      JOIN public.cotizaciones c
+        ON c.id = o.cot_id AND c.organization_id = o.organization_id
+      JOIN LATERAL (
+        SELECT v.version_num, v.created_at
+          FROM public.cotizacion_versiones v
+         WHERE v.cotizacion_id = c.id
+         ORDER BY v.version_num DESC, v.created_at DESC
+         LIMIT 1
+      ) s ON true
+     WHERE c.aceptada_por IS NULL
+       AND (c.version_aceptada IS DISTINCT FROM s.version_num
+            OR c.aceptada_en    IS DISTINCT FROM s.created_at)
+  )
+  UPDATE public.cotizaciones c
+     SET version_aceptada = o.version_num,
+         aceptada_en      = o.created_at,
+         updated_at       = now()
+    FROM objetivo o
+   WHERE c.id = o.cot_id AND c.organization_id = o.organization_id;
+$$;
+
+
+
 DO $$
 DECLARE
   v_org_a uuid := 'cc57cc57-0000-4000-8000-00000000000a';
