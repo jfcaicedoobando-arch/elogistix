@@ -73,7 +73,7 @@ export function makeLeadsColumns(
       cell: ({ row }) => toTitleCase(row.original.empresa),
     },
     { id: "contacto", header: "Contacto", meta: { width: COL_W.nombre, className: "text-body-sm" }, cell: ({ row }) => toTitleCase(row.original.contacto ?? "") },
-    { id: "email", header: "Correo", meta: { width: COL_W.texto, className: "text-body-sm truncate hidden xl:table-cell", headerClassName: "hidden xl:table-cell" }, cell: ({ row }) => row.original.email ?? "" },
+    { id: "email", header: "Correo", meta: { width: COL_W.texto, className: "text-body-sm truncate hidden 2xl:table-cell", headerClassName: "hidden 2xl:table-cell" }, cell: ({ row }) => row.original.email ?? "" },
     { id: "fuente", header: "Fuente", meta: { width: COL_W.folio, className: "text-body-sm hidden xl:table-cell", headerClassName: "hidden xl:table-cell" }, cell: ({ row }) => row.original.fuente },
     {
       id: "estado", header: "Estado", meta: { width: COL_W.nombre },

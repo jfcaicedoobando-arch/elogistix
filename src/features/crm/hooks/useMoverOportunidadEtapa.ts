@@ -7,7 +7,6 @@
  * Los helpers puros viven en `moverOportunidadEtapaHelpers.ts`.
  */
 import { useCallback, useState } from "react";
-import { notifyError } from "@/lib/ui/appFeedback";
 import {
   useMoverEtapaConAutomatizacion,
   type CrmEtapaRow,
@@ -94,13 +93,9 @@ export function useMoverOportunidadEtapa({ etapas, oportunidades }: Params) {
         if (etapaDestino?.tipo === "abierta" && op) {
           setProximoPaso({ id, nombre: op.nombre });
         }
-      } catch (e) {
-        notifyError(undefined, {
-          title: "No se pudo mover",
-          description: e instanceof Error ? e.message : undefined,
-          error: e,
-          method: "HANDLE_MOVER",
-        });
+      } catch {
+        // v13.823.49 — el error ya lo notifica `useMoverEtapaConAutomatizacion`;
+        // un segundo toast aquí duplicaba el aviso.
       }
     },
     [etapas, oportunidades, mover],

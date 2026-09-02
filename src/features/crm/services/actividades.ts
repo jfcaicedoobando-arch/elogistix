@@ -3,7 +3,7 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import { ilikePattern, quoteOrValue } from "@/lib/search/ilike";
-import { unwrap, unwrapOr, run } from "@/lib/supabase/response";
+import { unwrap, unwrapOr } from "@/lib/supabase/response";
 import { registrarActividad } from "@/services/bitacora/registrar";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -28,6 +28,12 @@ export interface ListActividadesParams {
   userId?: string;
   sortKey?: ActividadSortKey;
   sortDir?: "asc" | "desc";
+  /**
+   * v13.823.49 — `?filtro=vencidas` filtraba en cliente sobre la página ya
+   * paginada, así que el contador y la paginación no correspondían al conjunto
+   * vencido. Ahora el filtro (`fecha_programada < ahora`) va en la consulta.
+   */
+  vencidas?: boolean;
 }
 
 export async function listActividades(p: ListActividadesParams): Promise<{ data: CrmActividadRow[]; count: number }> {
@@ -51,6 +57,10 @@ export async function listActividades(p: ListActividadesParams): Promise<{ data:
   if (p.responsable === "mias" && p.userId) q = q.eq("responsable_id", p.userId);
   if (p.entidadTipo) q = q.eq("entidad_tipo", p.entidadTipo);
   if (p.entidadId) q = q.eq("entidad_id", p.entidadId);
+  if (p.vencidas) {
+    q = q.is("fecha_completada", null).lt("fecha_programada", new Date().toISOString());
+    if (p.userId) q = q.eq("responsable_id", p.userId);
+  }
   const from = p.page * p.pageSize;
   q = q.range(from, from + p.pageSize - 1);
   const { data, count, error } = await q;
@@ -100,12 +110,32 @@ export async function crearActividad(
   return creada;
 }
 
+/**
+ * v13.823.49 — un UPDATE filtrado por RLS o sobre una actividad eliminada NO
+ * da error: devuelve 0 filas. Antes reportábamos éxito y escribíamos bitácora
+ * de un cambio que nunca ocurrió.
+ */
+async function exigirFilaActividad(
+  builder: PromiseLike<{ data: { id: string } | null; error: unknown }>,
+): Promise<void> {
+  const { data, error } = await builder;
+  if (error) throw error;
+  if (!data) {
+    throw new Error(
+      "No se pudo guardar la actividad: no tienes permiso o la actividad ya no existe.",
+    );
+  }
+}
+
 export async function completarActividad(input: { id: string; resultado?: string }): Promise<void> {
-  await run(
+  await exigirFilaActividad(
     supabase
       .from("crm_actividades")
       .update({ fecha_completada: new Date().toISOString(), resultado: input.resultado ?? "" })
-      .eq("id", input.id),
+      .eq("id", input.id)
+      .is("deleted_at", null)
+      .select("id")
+      .maybeSingle(),
   );
   await registrarActividad({ modulo: "crm", accion: "Completó actividad", entidadId: input.id });
 }
@@ -117,22 +147,28 @@ export async function posponerActividad(input: {
 }): Promise<void> {
   const base = input.fechaProgramada ? new Date(input.fechaProgramada) : new Date();
   base.setDate(base.getDate() + input.dias);
-  await run(
+  await exigirFilaActividad(
     supabase
       .from("crm_actividades")
       .update({ fecha_programada: base.toISOString() })
-      .eq("id", input.id),
+      .eq("id", input.id)
+      .is("deleted_at", null)
+      .select("id")
+      .maybeSingle(),
   );
   await registrarActividad({ modulo: "crm", accion: "Pospuso actividad", entidadId: input.id, detalles: { dias: input.dias } });
 }
 
 
 export async function actualizarActividadNotas(input: { id: string; resultado: string }): Promise<void> {
-  await run(
+  await exigirFilaActividad(
     supabase
       .from("crm_actividades")
       .update({ resultado: input.resultado })
-      .eq("id", input.id),
+      .eq("id", input.id)
+      .is("deleted_at", null)
+      .select("id")
+      .maybeSingle(),
   );
   await registrarActividad({ modulo: "crm", accion: "Actualizó notas de actividad", entidadId: input.id });
 }

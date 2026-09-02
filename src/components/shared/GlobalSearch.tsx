@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback, useDeferredValue, useMemo, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Search } from "lucide-react";
+import { atajoBusquedaGlobal } from "@/lib/ui/atajoTeclado";
 import {
   CommandDialog,
   CommandEmpty,
@@ -119,7 +120,7 @@ export function GlobalSearch() {
         <Search className="h-4 w-4" />
         <span className="hidden md:inline">Buscar…</span>
         <kbd className="hidden md:inline-flex pointer-events-none h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-2xs font-medium text-muted-foreground">
-          ⌘K
+          {atajoBusquedaGlobal()}
         </kbd>
       </button>
 

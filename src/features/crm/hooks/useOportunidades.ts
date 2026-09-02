@@ -28,16 +28,25 @@ export interface OportunidadFiltros {
   search?: string;
   etapaId?: string | "todas";
   vendedorId?: string | "todos";
+  /** v13.823.49 — filtros de cierre/monto aplicados en el servidor. */
+  cierreDesde?: string;
+  cierreHasta?: string;
+  montoMin?: number | null;
   page?: number;
   pageSize?: number;
 }
 
 export function useOportunidades(f: OportunidadFiltros = {}) {
-  const { search = "", etapaId = "todas", vendedorId = "todos", page = 0, pageSize = 50 } = f;
+  const {
+    search = "", etapaId = "todas", vendedorId = "todos",
+    cierreDesde = "", cierreHasta = "", montoMin = null,
+    page = 0, pageSize = 50,
+  } = f;
+  const params = { search, etapaId, vendedorId, cierreDesde, cierreHasta, montoMin, page, pageSize };
   return useQuery({
-    queryKey: queryKeys.crm.oportunidades.list({ search, etapaId, vendedorId, page, pageSize }),
+    queryKey: queryKeys.crm.oportunidades.list(params),
     placeholderData: keepPreviousData,
-    queryFn: () => listOportunidades({ search, etapaId, vendedorId, page, pageSize }),
+    queryFn: () => listOportunidades(params),
   });
 }
 

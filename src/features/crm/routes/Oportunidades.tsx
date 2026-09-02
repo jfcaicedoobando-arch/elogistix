@@ -17,13 +17,16 @@ import OportunidadKanban from "@/features/crm/components/OportunidadKanban";
 import OportunidadesFiltersSection from "@/features/crm/components/OportunidadesFiltersSection";
 import ExportarCsvButton from "@/features/crm/components/ExportarCsvButton";
 import { exportarOportunidadesCsv } from "@/features/crm/services/crmCsvExport";
+import { listOportunidadesTodas } from "@/features/crm/services/oportunidades";
+import { notifyError } from "@/lib/ui/appFeedback";
+import { getErrorMessage } from "@/lib/errors";
 
 import OportunidadesDialogs from "@/features/crm/components/OportunidadesDialogs";
 import NuevaOportunidadDialog from "@/features/crm/components/NuevaOportunidadDialog";
 import { FILTROS_DEFAULT, type OportunidadesFiltros } from "@/features/crm/components/oportunidadesFiltersTypes";
 import { useOportunidades, useEtapasPipeline, type CrmEtapaRow } from "@/features/crm/hooks";
 import { useMoverOportunidadEtapa } from "@/features/crm/hooks/useMoverOportunidadEtapa";
-import { useOportunidadesFiltradas, useVendedoresDisponibles } from "@/features/crm/hooks/useOportunidadesFiltrado";
+import { useVendedoresDisponibles } from "@/features/crm/hooks/useOportunidadesFiltrado";
 
 import { useUsuarios } from "@/features/admin/hooks/usuario";
 import { oportunidadesColumns, siguienteActividadColumn, activosFiltros } from "./oportunidadesTable";
@@ -47,20 +50,32 @@ export default function Oportunidades() {
   const { data: usuarios = [] } = useUsuarios();
   const vendedores = useVendedoresDisponibles(usuarios);
   const PAGE_SIZE = 500;
-  const { data, isLoading, isError, refetch } = useOportunidades({ search: debounced, pageSize: PAGE_SIZE });
-  const opsRaw = useMemo(() => data?.data ?? [], [data]);
-  // EC-17: la página dura de 500 no avisaba cuando el servidor tenía más.
-  const totalServidor = data?.count ?? opsRaw.length;
-  const listaTruncada = totalServidor > opsRaw.length;
-
-  const ops = useOportunidadesFiltradas(opsRaw, filtros);
+  // v13.823.49 — todos los filtros (etapa, vendedor, rango de cierre y monto
+  // mínimo) viajan al servidor: antes se aplicaban en memoria sobre las
+  // primeras 500 filas y el listado omitía coincidencias posteriores.
+  const montoMin = filtros.montoMin ? Number(filtros.montoMin) : null;
+  const filtrosServidor = useMemo(
+    () => ({
+      search: debounced,
+      etapaId: filtros.etapaId,
+      vendedorId: filtros.vendedorId,
+      cierreDesde: filtros.cierreDesde,
+      cierreHasta: filtros.cierreHasta,
+      montoMin: montoMin !== null && Number.isFinite(montoMin) ? montoMin : null,
+    }),
+    [debounced, filtros.etapaId, filtros.vendedorId, filtros.cierreDesde, filtros.cierreHasta, montoMin],
+  );
+  const { data, isLoading, isError, refetch } = useOportunidades({ ...filtrosServidor, pageSize: PAGE_SIZE });
+  const ops = useMemo(() => data?.data ?? [], [data]);
+  const totalServidor = data?.count ?? ops.length;
+  const listaTruncada = totalServidor > ops.length;
 
   const {
     handleMover, proximoPaso, cerrarProximoPaso,
     perdidaPendiente, cerrarPerdida, confirmarPerdida, moviendo,
   } = useMoverOportunidadEtapa({
     etapas: etapas as CrmEtapaRow[],
-    oportunidades: opsRaw,
+    oportunidades: ops,
   });
 
 
@@ -72,6 +87,24 @@ export default function Oportunidades() {
     () => [...oportunidadesColumns, siguienteActividadColumn(proximas ?? new Map())],
     [proximas],
   );
+
+  const [exportando, setExportando] = useState(false);
+  const exportarTodo = async () => {
+    setExportando(true);
+    try {
+      const todas = await listOportunidadesTodas(filtrosServidor);
+      exportarOportunidadesCsv(todas);
+    } catch (e) {
+      notifyError(undefined, {
+        title: "No se pudo exportar",
+        description: getErrorMessage(e),
+        error: e,
+        method: "EXPORT_OPORTUNIDADES",
+      });
+    } finally {
+      setExportando(false);
+    }
+  };
 
   const activos = activosFiltros(filtros);
   // UI-15: el pipeline mezcla MXN/USD/EUR; se convierte a pesos antes de sumar.
@@ -86,14 +119,14 @@ export default function Oportunidades() {
         title="Oportunidades"
         description="Pipeline de ventas por etapa con vista Kanban y tabla"
         actions={
-          <ExportarCsvButton onExport={() => exportarOportunidadesCsv(ops)} disabled={isLoading} />
+          <ExportarCsvButton onExport={() => void exportarTodo()} disabled={isLoading || exportando} />
         }
       />
 
-      <CrmSubheader context={`${ops.length} de ${opsRaw.length} oportunidades · pipeline ${formatCurrencyCompact(pipelineMxn.mxn, "MXN")}${pipelineMxn.estimado ? " (T/C estimado)" : ""}`} />
+      <CrmSubheader context={`${ops.length} de ${totalServidor} oportunidades · pipeline ${formatCurrencyCompact(pipelineMxn.mxn, "MXN")}${pipelineMxn.estimado ? " (T/C estimado)" : ""}`} />
       {listaTruncada && (
-        <p className="text-label text-warning">
-          Mostrando las primeras {opsRaw.length} de {totalServidor} oportunidades; refina tu búsqueda o aplica filtros para ver el resto.
+        <p className="text-label text-muted-foreground">
+          Mostrando las primeras {ops.length} de {totalServidor} oportunidades que cumplen los filtros; la exportación CSV incluye todas.
         </p>
       )}
 
