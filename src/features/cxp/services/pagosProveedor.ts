@@ -77,29 +77,6 @@ async function resolverOrgFactura(facturaId: string): Promise<string> {
   return fact.organization_id;
 }
 
-function construirPayloadPago(
-  input: RegistrarPagoProveedorInput,
-  organizationId: string,
-  userId: string | null,
-): TablesInsert<"pagos_proveedor"> {
-  const tc = input.tipo_cambio_usd && input.tipo_cambio_usd > 0 ? input.tipo_cambio_usd : null;
-  return {
-    organization_id: organizationId,
-    proveedor_factura_id: input.proveedor_factura_id,
-    fecha_pago: input.fecha_pago,
-    monto: input.monto,
-    moneda: input.moneda,
-    // v13.308.8: nunca enviar `0` — el CHECK `pagos_proveedor_tc_pos` exige `IS NULL OR > 0`.
-    tipo_cambio_usd: tc,
-    metodo_pago: input.metodo_pago,
-    referencia: input.referencia ?? "",
-    cuenta_bancaria_id: input.cuenta_bancaria_id ?? null,
-    notas: input.notas ?? "",
-    diferencia_cambiaria_mxn: input.diferencia_cambiaria_mxn ?? null,
-    client_request_id: input.client_request_id ?? null,
-    created_by: userId,
-  };
-}
 
 /**
  * v13.823.32: el pago y su movimiento bancario se graban en UNA transacción
