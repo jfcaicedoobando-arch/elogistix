@@ -257,9 +257,11 @@ Deno.test("index.ts: los eventos invoice.* se intentan como factura antes que co
 // Si el objeto local todavía no existe, el evento NO está procesado: debe
 // liberarse la reserva de dedupe y responder 503 para que FacturAPI reintente.
 Deno.test("index.ts: *_not_found libera la reserva y responde 503 reintentable", () => {
-  assertStringIncludes(webhookIndexSource, 'ignored === "factura_not_found" || ignored === "pago_not_found"');
-  const idxGuard = webhookIndexSource.indexOf('ignored === "factura_not_found" || ignored === "pago_not_found"');
+  const guardNotFound = 'ignored !== "factura_not_found" && ignored !== "pago_not_found"';
+  assertStringIncludes(webhookIndexSource, guardNotFound);
+  const idxGuard = webhookIndexSource.indexOf(guardNotFound);
   const idxLiberar = webhookIndexSource.indexOf("await liberarReserva(", idxGuard);
+
   assert(idxLiberar > idxGuard, "debe liberar la reserva antes de pedir el reintento");
   const idx503 = webhookIndexSource.indexOf("503", idxLiberar);
   assert(idx503 > idxLiberar, "debe responder 503 (reintentable) tras liberar la reserva");
