@@ -157,7 +157,7 @@ jobs:
             -e 's/^CREATE EXTENSION[[:space:]]+(IF NOT EXISTS[[:space:]]+)?(pg_cron|pg_net|pgmq|supabase_vault)[^;]*;/SELECT 1; -- [ci] stubbed \2/I' \
             "$SQUASH_FILE" | $PSQL --single-transaction
 
-      - name: Apply migrations (posteriores al corte)
+      - name: Apply migrations (no consolidadas en el squash)
         if: steps.snapshot-cache.outputs.cache-hit != 'true'
         run: |
           set -uo pipefail
@@ -167,9 +167,11 @@ jobs:
           # parcial de objetos creados antes del error.
           for f in $(printf '%s\n' supabase/migrations/*.sql | LC_ALL=C sort); do
             base=$(basename "$f")
-            ts="${base%%_*}"
-            # Historial ya consolidado en el squash: no se re-ejecuta.
-            [[ "$ts" > "$SQUASH_CUTOFF" ]] || continue
+            # El corte por timestamp no basta: hay migraciones creadas DESPUÉS
+            # del squash con timestamp anterior al corte. La fuente de verdad
+            # es el inventario de archivos incluidos en el squash.
+            grep -qxF "$base" "$SQUASH_INCLUDED" && continue
+
             echo "▶ $base"
             if sed -E \
               -e 's/^[[:space:]]+CREATE EXTENSION[[:space:]]+(IF NOT EXISTS[[:space:]]+)?(pg_cron|pg_net|pgmq|supabase_vault)[^;]*;/    PERFORM 1; -- [ci] stubbed \2/I' \
