@@ -1,5 +1,13 @@
 # Changelog
 
+## [13.823.59] - 2026-09-02
+### Cierre de pendientes de la aceptación de cotizaciones
+- **Fecha y número de la misma fotografía**: en los registros antiguos enlazados por el respaldo histórico, si el número de versión ya era correcto pero la fecha venía de otro lado, quedaba una foto con la fecha de otra foto. Ahora se corrigen los dos datos juntos, tomados siempre de la misma fotografía guardada, y nunca se toca una aceptación hecha por una persona real. Revisión previa de sólo lectura: 0 registros afectados hoy.
+- **Prueba de "dos usuarios a la vez" que sí arranca**: la prueba de dos sesiones simultáneas usaba identificadores inválidos y esperaba "un segundo a ciegas". Ahora usa identificadores válidos y espera de forma verificable a que la primera sesión ya tenga el candado antes de lanzar la segunda; la segunda sólo aprueba si recibe el aviso de "ya hay una cotización ganadora". Corre únicamente en GitHub Actions.
+- **Pruebas sin falsos verdes**: las verificaciones del índice de respaldo ya no buscan palabras sueltas: comparan la regla completa, así que una regla distinta ya no puede pasar como buena.
+
+
+
 ## [13.823.58] - 2026-09-02
 ### Aceptar una cotización dos veces ya no falla
 - **Reintento seguro**: si al aceptar una cotización se pierde la respuesta (internet inestable) y vuelves a intentarlo, ahora recibes éxito en lugar de un error. Es como volver a preguntar "¿ya quedó?" en vez de intentar firmar otra vez: no se reescribe la fecha ni el usuario de aceptación, ni el monto, ni la auditoría, ni el aviso al vendedor.

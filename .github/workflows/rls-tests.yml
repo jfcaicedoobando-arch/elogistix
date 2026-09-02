@@ -16,6 +16,7 @@ on:
       - "supabase/tests/rls/**"
       - "supabase/tests/*.sql"
       - "supabase/schema/**"
+      - "scripts/ci/concurrencia-cotizacion-ganadora.sh"
       - ".github/workflows/rls-tests.yml"
   push:
     branches: [main]
@@ -24,6 +25,7 @@ on:
       - "supabase/tests/rls/**"
       - "supabase/tests/*.sql"
       - "supabase/schema/**"
+      - "scripts/ci/concurrencia-cotizacion-ganadora.sh"
       - ".github/workflows/rls-tests.yml"
   workflow_dispatch:
   schedule:
