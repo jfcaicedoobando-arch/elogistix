@@ -17,9 +17,10 @@ import type {
 /**
  * ResponsiveDataTable — wrapper sobre DataTable.
  *
- * En pantallas `<sm` (móvil 20:9 / iPhone) renderiza una lista de tarjetas
- * táctiles construidas con `mobileCard(row)`. En `≥sm` delega 100% en
- * `DataTable`.
+ * En pantallas `<md` (útil también en plegables de ~692px, ver `useIsMobile()`
+ * = max-width 767px) renderiza una lista de tarjetas táctiles construidas con
+ * `mobileCard(row)`. En `≥md` delega 100% en `DataTable`.
+
  *
  * v13.200.0: `getRowHref` es reconocido tanto en desktop (fila navegable)
  * como en mobile (tarjeta navegable con teclado + Ctrl+click).

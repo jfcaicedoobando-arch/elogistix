@@ -35,25 +35,27 @@ export function FloatingActionButton({
           renglón de la lista en móvil. */}
       <div aria-hidden className="md:hidden h-20" />
 
-    <button
-      type="button"
-      onClick={onClick}
-      aria-label={label}
-      className={cn(
-        "md:hidden fixed right-4 z-40",
-        // Respeta safe-area de iOS (home indicator) en 20:9 / iPhone con notch.
-        "bottom-[calc(env(safe-area-inset-bottom,0px)+1.5rem)]",
-        "inline-flex items-center justify-center gap-2",
-        "h-14 min-w-14 px-4",
-        "rounded-full bg-primary text-primary-foreground",
-        "shadow-overlay ring-1 ring-primary/30",
-        "transition-transform active:scale-95 hover:bg-primary/90",
-        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-        className,
-      )}
-    >
-      {icon}
-      {showLabel && <span className="text-body font-semibold pr-1">{label}</span>}
-    </button>
+      <button
+        type="button"
+        onClick={onClick}
+        aria-label={label}
+        className={cn(
+          "md:hidden fixed right-4 z-40",
+          // Respeta safe-area de iOS (home indicator) en 20:9 / iPhone con notch.
+          "bottom-[calc(env(safe-area-inset-bottom,0px)+1.5rem)]",
+          "inline-flex items-center justify-center gap-2",
+          "h-14 min-w-14 px-4",
+          "rounded-full bg-primary text-primary-foreground",
+          "shadow-overlay ring-1 ring-primary/30",
+          "transition-transform active:scale-95 hover:bg-primary/90",
+          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+          className,
+        )}
+      >
+        {icon}
+        {showLabel && <span className="text-body font-semibold pr-1">{label}</span>}
+      </button>
+    </>
   );
 }
+
