@@ -35,7 +35,7 @@ type Quick = "lead" | "oportunidad" | "actividad" | null;
 
 export default function QuickAddMenu({ openTrigger, dialogTrigger }: QuickAddMenuProps = {}) {
   const navigate = useNavigate();
-  const { canEditCrm, canCrearLead, canGestionarLeadsEnLote } = usePermissions();
+  const { canCrearLead, canGestionarLeadsEnLote } = usePermissions();
   const [menuOpen, setMenuOpen] = useState(false);
   const [quick, setQuick] = useState<Quick>(null);
   const [leadOpen, setLeadOpen] = useState(false);
