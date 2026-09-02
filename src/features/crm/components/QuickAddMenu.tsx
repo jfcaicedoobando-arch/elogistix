@@ -35,7 +35,7 @@ type Quick = "lead" | "oportunidad" | "actividad" | null;
 
 export default function QuickAddMenu({ openTrigger, dialogTrigger }: QuickAddMenuProps = {}) {
   const navigate = useNavigate();
-  const { canEditCrm, canCrearLead } = usePermissions();
+  const { canCrearLead, canGestionarLeadsEnLote } = usePermissions();
   const [menuOpen, setMenuOpen] = useState(false);
   const [quick, setQuick] = useState<Quick>(null);
   const [leadOpen, setLeadOpen] = useState(false);
@@ -93,7 +93,7 @@ export default function QuickAddMenu({ openTrigger, dialogTrigger }: QuickAddMen
           <DropdownMenuItem onSelect={() => abrirQuick("actividad")}>
             <Activity className="h-4 w-4 mr-2" /> Nueva actividad <span className="ml-auto text-label text-muted-foreground">A</span>
           </DropdownMenuItem>
-          {canEditCrm && (
+          {canGestionarLeadsEnLote && (
             <>
               <DropdownMenuSeparator />
               <DropdownMenuItem onSelect={() => { setMenuOpen(false); setImportOpen(true); }}>
