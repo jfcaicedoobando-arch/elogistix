@@ -352,8 +352,10 @@ DECLARE
   v_oper uuid := 'c1c1c1c1-0000-4000-8000-000000000102';   -- operador moderno
   v_viewer uuid := 'c1c1c1c1-0000-4000-8000-000000000103';  -- viewer moderno
   v_super uuid := 'c1c1c1c1-0000-4000-8000-000000000104';
+  v_vend uuid := 'c1c1c1c1-0000-4000-8000-000000000105';
   v_lead_a uuid := 'c1c1c1c1-0000-4000-8000-000000000201';
   v_lead_b uuid := 'c1c1c1c1-0000-4000-8000-000000000202';
+  v_lead_vend uuid := 'c1c1c1c1-0000-4000-8000-000000000204';
   v_lead_soft uuid := 'c1c1c1c1-0000-4000-8000-000000000203';
 BEGIN
   INSERT INTO auth.users(id, email) VALUES
