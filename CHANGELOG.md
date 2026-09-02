@@ -1,5 +1,13 @@
 # Changelog
 
+## [13.823.47] - 2026-09-02
+### Ronda de integridad: cuentas, notificaciones y correos
+- **Cuentas bancarias**: una cuenta con movimientos registrados ya no puede desactivarse ni eliminarse (candado en el servidor) y el borrado exige fila afectada; antes podía "eliminarse" sin efecto real.
+- **Notificaciones internas**: los usuarios sólo pueden marcarlas como leídas; ya no es posible alterar título, mensaje, enlace ni tipo, ni crear o borrar notificaciones desde el cliente.
+- **Estado de cuenta por correo**: la clave de envío se deriva de cliente + periodo + destinatario (sin reloj), así que reintentar no vuelve a enviar el mismo correo.
+- **Rebotes y quejas**: el evento actualiza el envío original correlacionando por identificador del mensaje; el identificador del evento se usa sólo como respaldo, sin filas contradictorias.
+- **Documentos de embarque**: si el archivo sube pero el registro no se confirma, el archivo nuevo se limpia y se reporta el error original; tras un reemplazo confirmado se limpia el archivo anterior.
+
 ## [13.823.46] - 2026-09-02
 ### Pruebas RLS: candado y fixture al día
 - Se registró `_factura_serie_folio_monotonico()` en la lista canónica de funciones sólo para el motor (`service_role`), que quedó desincronizada al agregar el trigger de folios.
