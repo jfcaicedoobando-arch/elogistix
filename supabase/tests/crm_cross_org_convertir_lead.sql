@@ -76,13 +76,13 @@ BEGIN
 
   INSERT INTO public.organization_members (organization_id, user_id, role) VALUES
     (v_org_a, v_vend_a, 'vendedor'), (v_org_a, v_vend_a2, 'vendedor'),
-    (v_org_a, v_viewer, 'viewer'),
+    (v_org_a, v_viewer, 'customer_service'),
     -- Rol global histórico alto, membership efectiva degradada a viewer.
-    (v_org_a, v_degradado, 'viewer'),
+    (v_org_a, v_degradado, 'customer_service'),
     (v_org_b, v_user_b, 'admin_org');
 
   INSERT INTO public.user_roles (user_id, role) VALUES
-    (v_vend_a, 'vendedor'), (v_vend_a2, 'vendedor'), (v_viewer, 'viewer'),
+    (v_vend_a, 'vendedor'), (v_vend_a2, 'vendedor'), (v_viewer, 'customer_service'),
     (v_degradado, 'admin_org'), (v_user_b, 'admin_org')
   ON CONFLICT (user_id) DO UPDATE SET role = EXCLUDED.role;
 
