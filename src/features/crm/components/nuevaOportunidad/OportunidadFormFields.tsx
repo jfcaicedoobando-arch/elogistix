@@ -95,14 +95,14 @@ export default function OportunidadFormFields({
         <Input id="op-nombre" value={form.nombre} onChange={(e) => set("nombre", e.target.value)} />
       </div>
       <div className="space-y-1">
-        <Label>Etapa *</Label>
+        <Label htmlFor="op-etapa">Etapa *</Label>
         {/*
           v13.823.51 — en edición la etapa es de sólo lectura: moverla debe pasar
           por la acción canónica del pipeline (Kanban/detalle), que exige motivo
           de pérdida y fuerza la probabilidad terminal.
         */}
         {isEdit ? (
-          <Input value={etapas.find((e) => e.id === form.etapa_id)?.nombre ?? "—"} readOnly disabled />
+          <Input id="op-etapa" value={etapas.find((e) => e.id === form.etapa_id)?.nombre ?? "—"} readOnly disabled />
         ) : (
           <Select
             value={form.etapa_id}
@@ -112,7 +112,7 @@ export default function OportunidadFormFields({
               if (et) set("probabilidad", et.probabilidad_default);
             }}
           >
-            <SelectTrigger><SelectValue placeholder="Etapa…" /></SelectTrigger>
+            <SelectTrigger id="op-etapa"><SelectValue placeholder="Etapa…" /></SelectTrigger>
             <SelectContent>
               {etapas.map((e) => <SelectItem key={e.id} value={e.id}>{e.nombre}</SelectItem>)}
             </SelectContent>

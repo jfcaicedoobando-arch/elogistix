@@ -80,14 +80,10 @@ export async function listActividades(p: ListActividadesParams): Promise<{ data:
   // v13.823.50 — "Mías" usa la misma llave que el badge de vencidas
   // (`responsable_id` O `responsable_email`): hay filas históricas con sólo
   // email y el contador las incluía mientras la tabla las ocultaba.
-  if (p.responsable === "mias" && p.userId) q = q.or(filtroResponsable(p.userId, p.userEmail));
 
   if (p.entidadTipo) q = q.eq("entidad_tipo", p.entidadTipo);
   if (p.entidadId) q = q.eq("entidad_id", p.entidadId);
-  if (p.vencidas) {
-    q = q.is("fecha_completada", null).lt("fecha_programada", new Date().toISOString());
-    if (p.responsable !== "mias" && p.userId) q = q.or(filtroResponsable(p.userId, p.userEmail));
-  }
+  q = aplicarResponsableYVencidas(q, p);
   const from = p.page * p.pageSize;
   q = q.range(from, from + p.pageSize - 1);
   const { data, count, error } = await q;

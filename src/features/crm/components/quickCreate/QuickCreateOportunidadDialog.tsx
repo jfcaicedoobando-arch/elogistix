@@ -72,6 +72,17 @@ export default function QuickCreateOportunidadDialog({ open, onOpenChange, onCre
     return null;
   };
 
+  /** Dueño de la oportunidad: el vendedor del prospecto, o el usuario actual. */
+  const resolverVendedor = () => {
+    if (origenTipo === "prospecto") {
+      return {
+        vendedor_id: leadVendedorId ?? user?.id ?? null,
+        vendedor_email: leadVendedorEmail || user?.email || "",
+      };
+    }
+    return { vendedor_id: user?.id ?? null, vendedor_email: user?.email ?? "" };
+  };
+
   const submit = async () => {
     const invalido = validar();
     if (invalido) {
@@ -89,9 +100,7 @@ export default function QuickCreateOportunidadDialog({ open, onOpenChange, onCre
         etapa_id: etapaInicial!.id,
         moneda: "MXN",
         probabilidad: etapaInicial!.probabilidad_default ?? 10,
-        vendedor_id: origenTipo === "prospecto" ? (leadVendedorId ?? user?.id ?? null) : (user?.id ?? null),
-        vendedor_email:
-          origenTipo === "prospecto" ? (leadVendedorEmail || user?.email || "") : (user?.email ?? ""),
+        ...resolverVendedor(),
       });
       notifySuccess(undefined, { title: "Oportunidad creada", duration: 2000 });
       setNombre("");
