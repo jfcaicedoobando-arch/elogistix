@@ -50,6 +50,9 @@ export function SubirFacturaEntranteDialog({ open, onOpenChange, embarqueId, org
   const [duplicado, setDuplicado] = useState<BuzonDuplicadoError | null>(null);
 
   const cerrar = () => {
+    // Defecto 2: mientras la subida está en curso no se limpia ni se cierra;
+    // el archivo y el estado se conservan hasta tener resultado.
+    if (subir.isPending) return;
     form.limpiar();
     setDuplicado(null);
     onOpenChange(false);
@@ -96,18 +99,25 @@ export function SubirFacturaEntranteDialog({ open, onOpenChange, embarqueId, org
     <FormDialogShell
       open={open}
       onOpenChange={(v) => { if (!v) cerrar(); }}
+      busy={subir.isPending}
       icon={Inbox}
       title="Subir factura de proveedor al buzón"
       description="Los proveedores mexicanos envían PDF y XML: adjunta ambos en un solo documento. Contabilidad lo capturará como factura de proveedor."
       footer={(
         <>
           <Button variant="outline" onClick={cerrar} disabled={subir.isPending}>Cancelar</Button>
-          <Button onClick={onSubmit} disabled={subir.isPending || !form.listo}>
+          <Button onClick={onSubmit} disabled={subir.isPending || !form.listo} aria-busy={subir.isPending}>
             {subir.isPending ? "Subiendo…" : "Enviar al buzón"}
           </Button>
         </>
       )}
     >
+      {subir.isPending && (
+        <p role="status" aria-live="polite" className="text-body text-muted-foreground">
+          Subiendo los archivos al buzón… no cierres esta ventana.
+        </p>
+      )}
+
       {duplicado && (
         <AvisoDuplicadoBuzon
           mensaje={duplicado.message}

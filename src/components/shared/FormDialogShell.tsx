@@ -58,6 +58,13 @@ interface Props {
    * fuera pide confirmación antes de descartar lo capturado.
    */
   isDirty?: boolean;
+  /**
+   * Defecto 2 (v13.823.43) — Cuando es `true` hay una operación en curso
+   * (p. ej. una subida de archivos): se ignora cualquier solicitud de cierre
+   * (ESC, clic fuera, botón X) y el contenido se marca `aria-busy`. Evita que
+   * el usuario crea que canceló algo que sigue ejecutándose.
+   */
+  busy?: boolean;
   children: ReactNode;
 }
 
@@ -79,6 +86,7 @@ export function FormDialogShell({
   stickyBottom,
   bodyClassName,
   isDirty = false,
+  busy = false,
   children,
 }: Props) {
   const enfocar = autoFocusFirstField ?? Boolean(formId);
@@ -88,13 +96,14 @@ export function FormDialogShell({
 
   const handleOpenChange = useCallback(
     (next: boolean) => {
+      if (!next && busy) return;
       if (!next && isDirty) {
         setConfirmarDescartar(true);
         return;
       }
       onOpenChange(next);
     },
-    [isDirty, onOpenChange],
+    [busy, isDirty, onOpenChange],
   );
 
   const cerrarGuardado = useCallback(() => handleOpenChange(false), [handleOpenChange]);
@@ -110,6 +119,7 @@ export function FormDialogShell({
           dialogSize[size],
           "max-h-[92vh] short:max-h-[calc(100dvh-1.5rem)] flex flex-col gap-0 p-0",
         )}
+        aria-busy={busy}
       >
 
         <FormDialogHeaderBlock
