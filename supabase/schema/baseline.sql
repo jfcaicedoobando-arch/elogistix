@@ -1885,6 +1885,25 @@ BEGIN
   END IF;
 END;
 $$;
+CREATE FUNCTION public._cotizacion_oportunidad_misma_org() RETURNS trigger
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+BEGIN
+  IF NEW.oportunidad_id IS NULL THEN
+    RETURN NEW;
+  END IF;
+  IF NOT EXISTS (
+    SELECT 1 FROM public.crm_oportunidades o
+     WHERE o.id = NEW.oportunidad_id
+       AND o.organization_id = NEW.organization_id
+       AND o.deleted_at IS NULL
+  ) THEN
+    RAISE EXCEPTION 'LC_OPORTUNIDAD_AJENA: la oportunidad no existe, está eliminada o pertenece a otra organización';
+  END IF;
+  RETURN NEW;
+END;
+$$;
 CREATE FUNCTION public._cotizaciones_bloquear_auto_aceptacion() RETURNS trigger
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
@@ -2089,6 +2108,36 @@ BEGIN
   END IF;
 END;
 $$;
+CREATE FUNCTION public._crm_actividad_entidad_misma_org() RETURNS trigger
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+BEGIN
+  IF NEW.entidad_id IS NULL THEN
+    RETURN NEW;
+  END IF;
+  IF NEW.entidad_tipo = 'oportunidad'::public.crm_entidad_tipo THEN
+    IF NOT EXISTS (
+      SELECT 1 FROM public.crm_oportunidades o
+       WHERE o.id = NEW.entidad_id
+         AND o.organization_id = NEW.organization_id
+         AND o.deleted_at IS NULL
+    ) THEN
+      RAISE EXCEPTION 'LC_ENTIDAD_AJENA: la oportunidad no existe, está eliminada o pertenece a otra organización';
+    END IF;
+  ELSIF NEW.entidad_tipo = 'lead'::public.crm_entidad_tipo THEN
+    IF NOT EXISTS (
+      SELECT 1 FROM public.crm_leads l
+       WHERE l.id = NEW.entidad_id
+         AND l.organization_id = NEW.organization_id
+         AND l.deleted_at IS NULL
+    ) THEN
+      RAISE EXCEPTION 'LC_ENTIDAD_AJENA: el prospecto no existe, está eliminado o pertenece a otra organización';
+    END IF;
+  END IF;
+  RETURN NEW;
+END;
+$$;
 CREATE FUNCTION public._crm_actividad_toca_oportunidad() RETURNS trigger
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
@@ -2097,7 +2146,66 @@ BEGIN
   IF NEW.entidad_tipo = 'oportunidad'::public.crm_entidad_tipo AND NEW.entidad_id IS NOT NULL THEN
     UPDATE public.crm_oportunidades
        SET ultimo_movimiento_at = now()
-     WHERE id = NEW.entidad_id;
+     WHERE id = NEW.entidad_id
+       AND organization_id = NEW.organization_id;
+  END IF;
+  RETURN NEW;
+END;
+$$;
+CREATE FUNCTION public._crm_comentario_oportunidad_misma_org() RETURNS trigger
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM public.crm_oportunidades o
+     WHERE o.id = NEW.oportunidad_id
+       AND o.organization_id = NEW.organization_id
+       AND o.deleted_at IS NULL
+  ) THEN
+    RAISE EXCEPTION 'LC_OPORTUNIDAD_AJENA: la oportunidad no existe, está eliminada o pertenece a otra organización';
+  END IF;
+  RETURN NEW;
+END;
+$$;
+CREATE FUNCTION public._crm_criterio_etapa_misma_org() RETURNS trigger
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM public.crm_etapas_pipeline e
+     WHERE e.id = NEW.etapa_id
+       AND e.organization_id = NEW.organization_id
+       AND e.deleted_at IS NULL
+       AND e.activa
+  ) THEN
+    RAISE EXCEPTION 'LC_ETAPA_AJENA: la etapa no existe, está inactiva o pertenece a otra organización';
+  END IF;
+  RETURN NEW;
+END;
+$$;
+CREATE FUNCTION public._crm_cumplimiento_misma_org() RETURNS trigger
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM public.crm_oportunidades o
+     WHERE o.id = NEW.oportunidad_id
+       AND o.organization_id = NEW.organization_id
+       AND o.deleted_at IS NULL
+  ) THEN
+    RAISE EXCEPTION 'LC_OPORTUNIDAD_AJENA: la oportunidad no existe, está eliminada o pertenece a otra organización';
+  END IF;
+  IF NOT EXISTS (
+    SELECT 1 FROM public.crm_etapa_criterios c
+     WHERE c.id = NEW.criterio_id
+       AND c.organization_id = NEW.organization_id
+       AND c.deleted_at IS NULL
+       AND c.activo
+  ) THEN
+    RAISE EXCEPTION 'LC_CRITERIO_AJENO: el criterio no existe, está inactivo o pertenece a otra organización';
   END IF;
   RETURN NEW;
 END;
@@ -2140,8 +2248,34 @@ BEGIN
   RETURN NEW;
 END;
 $$;
+CREATE FUNCTION public._crm_oportunidad_etapa_motivo_misma_org() RETURNS trigger
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM public.crm_etapas_pipeline e
+     WHERE e.id = NEW.etapa_id
+       AND e.organization_id = NEW.organization_id
+       AND e.deleted_at IS NULL
+       AND e.activa
+  ) THEN
+    RAISE EXCEPTION 'LC_ETAPA_AJENA: la etapa no existe, está inactiva o pertenece a otra organización';
+  END IF;
+  IF NEW.motivo_perdida_id IS NOT NULL AND NOT EXISTS (
+    SELECT 1 FROM public.crm_motivos_perdida m
+     WHERE m.id = NEW.motivo_perdida_id
+       AND m.organization_id = NEW.organization_id
+       AND m.deleted_at IS NULL
+       AND m.activa
+  ) THEN
+    RAISE EXCEPTION 'LC_MOTIVO_PERDIDA_AJENO: el motivo de pérdida no existe, está inactivo o pertenece a otra organización';
+  END IF;
+  RETURN NEW;
+END;
+$$;
 CREATE FUNCTION public._crm_oportunidad_requiere_origen() RETURNS trigger
-    LANGUAGE plpgsql
+    LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
 DECLARE
@@ -2155,7 +2289,9 @@ BEGIN
   IF NEW.lead_id IS NOT NULL THEN
     SELECT organization_id, estado INTO v_lead_org, v_lead_estado
       FROM public.crm_leads
-     WHERE id = NEW.lead_id AND deleted_at IS NULL;
+     WHERE id = NEW.lead_id
+       AND organization_id = NEW.organization_id
+       AND deleted_at IS NULL;
     IF v_lead_org IS NULL OR v_lead_org IS DISTINCT FROM NEW.organization_id THEN
       RAISE EXCEPTION 'LC_CRM_LEAD_AJENO';
     END IF;
@@ -2170,10 +2306,35 @@ BEGIN
   IF NEW.cliente_id IS NOT NULL THEN
     SELECT organization_id INTO v_cliente_org
       FROM public.clientes
-     WHERE id = NEW.cliente_id AND deleted_at IS NULL;
+     WHERE id = NEW.cliente_id
+       AND organization_id = NEW.organization_id
+       AND deleted_at IS NULL;
     IF v_cliente_org IS NULL OR v_cliente_org IS DISTINCT FROM NEW.organization_id THEN
       RAISE EXCEPTION 'LC_CRM_CLIENTE_AJENO';
     END IF;
+  END IF;
+  RETURN NEW;
+END;
+$$;
+CREATE FUNCTION public._crm_probabilidad_terminal() RETURNS trigger
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+DECLARE
+  v_tipo crm_etapa_tipo;
+BEGIN
+  IF NEW.etapa_id IS NULL THEN
+    RETURN NEW;
+  END IF;
+  SELECT tipo INTO v_tipo
+    FROM public.crm_etapas_pipeline
+   WHERE id = NEW.etapa_id
+     AND organization_id = NEW.organization_id
+     AND deleted_at IS NULL;
+  IF v_tipo = 'ganada'::crm_etapa_tipo THEN
+    NEW.probabilidad := 100;
+  ELSIF v_tipo = 'perdida'::crm_etapa_tipo THEN
+    NEW.probabilidad := 0;
   END IF;
   RETURN NEW;
 END;
@@ -2213,6 +2374,8 @@ BEGIN
          cliente_id     = COALESCE(o.cliente_id, NEW.cliente_id),
          updated_at     = now()
    WHERE o.id = NEW.oportunidad_id
+     AND o.organization_id = NEW.organization_id
+     AND o.deleted_at IS NULL
      AND (
        COALESCE(o.monto_estimado, 0) <> COALESCE(NULLIF(NEW.subtotal, 0), o.monto_estimado, 0)
        OR COALESCE(o.moneda, '') <> COALESCE(NEW.moneda::text, o.moneda, '')
@@ -2233,7 +2396,9 @@ BEGIN
   END IF;
   SELECT tipo INTO v_tipo
     FROM public.crm_etapas_pipeline
-   WHERE id = NEW.etapa_id;
+   WHERE id = NEW.etapa_id
+     AND organization_id = NEW.organization_id
+     AND deleted_at IS NULL;
   IF v_tipo = 'perdida' AND NEW.motivo_perdida_id IS NULL THEN
     RAISE EXCEPTION
       'LC_MOTIVO_PERDIDA_REQUERIDO: indica el motivo de pérdida para cerrar la oportunidad'
@@ -10127,15 +10292,38 @@ DECLARE
   v_prob integer;
   v_op_id uuid;
   v_email_actual text;
+  v_uid uuid := auth.uid();
+  v_rol public.app_role;
 BEGIN
+  IF v_uid IS NULL AND current_user IN ('anon', 'authenticated') THEN
+    RAISE EXCEPTION 'LC_SESION_REQUERIDA: inicia sesión para convertir prospectos';
+  END IF;
   SELECT * INTO v_lead FROM public.crm_leads
    WHERE id = p_lead_id AND deleted_at IS NULL
    FOR UPDATE;
   IF v_lead.id IS NULL THEN
     RAISE EXCEPTION 'LC_LEAD_NO_ENCONTRADO';
   END IF;
-  IF auth.uid() IS NOT NULL AND NOT public.is_org_member(v_lead.organization_id) THEN
-    RAISE EXCEPTION 'LC_ORG_AJENA';
+  IF v_uid IS NOT NULL THEN
+    IF NOT public.is_org_member(v_lead.organization_id) THEN
+      RAISE EXCEPTION 'LC_ORG_AJENA';
+    END IF;
+    v_rol := public.rol_efectivo(v_uid, v_lead.organization_id);
+    IF v_rol IN (
+      'admin'::public.app_role,
+      'admin_org'::public.app_role,
+      'super_admin'::public.app_role,
+      'gerente_comercial'::public.app_role,
+      'operador'::public.app_role
+    ) THEN
+      NULL;
+    ELSIF v_rol = 'vendedor'::public.app_role THEN
+      IF v_lead.vendedor_id IS DISTINCT FROM v_uid THEN
+        RAISE EXCEPTION 'LC_LEAD_AJENO: sólo puedes convertir prospectos asignados a ti';
+      END IF;
+    ELSE
+      RAISE EXCEPTION 'LC_ROL_SIN_PERMISO_CRM: tu rol no puede convertir prospectos';
+    END IF;
   END IF;
   IF v_lead.estado = 'Convertido'::crm_lead_estado AND v_lead.oportunidad_convertida_id IS NOT NULL THEN
     RETURN jsonb_build_object(
@@ -10147,7 +10335,6 @@ BEGIN
   IF NULLIF(btrim(COALESCE(p_nombre_oportunidad, '')), '') IS NULL THEN
     RAISE EXCEPTION 'LC_OPORTUNIDAD_SIN_NOMBRE';
   END IF;
-  -- Candado: el alta de clientes vive sólo en el módulo de Clientes.
   IF COALESCE(p_crear_cliente, false) AND p_cliente_id IS NULL THEN
     RAISE EXCEPTION 'LC_LEAD_ALTA_CLIENTE_PROHIBIDA';
   END IF;
@@ -10167,10 +10354,7 @@ BEGIN
   IF v_etapa_id IS NULL THEN
     RAISE EXCEPTION 'LC_PIPELINE_SIN_ETAPAS';
   END IF;
-  -- RG13: fallback al correo del usuario que convierte, en línea con
-  -- `vendedor_id = COALESCE(v_lead.vendedor_id, auth.uid())`.
-  SELECT email INTO v_email_actual FROM auth.users WHERE id = auth.uid();
-  -- O6.2: la oportunidad hereda sector/origen/destino del lead.
+  SELECT email INTO v_email_actual FROM auth.users WHERE id = v_uid;
   INSERT INTO public.crm_oportunidades (
     organization_id, nombre, lead_id, cliente_id, cliente_nombre, etapa_id, probabilidad,
     monto_estimado, moneda, fecha_estimada_cierre, vendedor_id, vendedor_email, modo,
@@ -10186,13 +10370,13 @@ BEGIN
     COALESCE(p_monto_estimado, 0),
     COALESCE(NULLIF(p_moneda, ''), 'MXN'),
     p_fecha_estimada_cierre,
-    COALESCE(v_lead.vendedor_id, auth.uid()),
+    COALESCE(v_lead.vendedor_id, v_uid),
     COALESCE(NULLIF(btrim(COALESCE(v_lead.vendedor_email, '')), ''), v_email_actual, ''),
     COALESCE(v_lead.interes_modo, ''),
     v_lead.sector,
     COALESCE(v_lead.origen, ''),
     COALESCE(v_lead.destino, ''),
-    auth.uid()
+    v_uid
   )
   RETURNING id INTO v_op_id;
   UPDATE public.crm_leads
@@ -11983,7 +12167,6 @@ DECLARE
   v_etapa_actual_tipo crm_etapa_tipo;
   v_etapa_ganada_id uuid;
 BEGIN
-  -- Sólo nos interesa cuando la cotización entra a Aceptada o En operación
   IF NEW.oportunidad_id IS NULL THEN
     RETURN NEW;
   END IF;
@@ -12000,15 +12183,14 @@ BEGIN
   FROM public.crm_oportunidades o
   JOIN public.crm_etapas_pipeline e ON e.id = o.etapa_id
   WHERE o.id = NEW.oportunidad_id
+    AND o.organization_id = NEW.organization_id
     AND o.deleted_at IS NULL;
   IF v_op_id IS NULL THEN
     RETURN NEW;
   END IF;
-  -- Sólo si la oportunidad sigue abierta
   IF v_etapa_actual_tipo <> 'abierta'::crm_etapa_tipo THEN
     RETURN NEW;
   END IF;
-  -- Etapa ganada de la misma org (la primera por orden)
   SELECT id INTO v_etapa_ganada_id
   FROM public.crm_etapas_pipeline
   WHERE organization_id = v_op_org
@@ -12018,7 +12200,6 @@ BEGIN
   ORDER BY orden ASC
   LIMIT 1;
   IF v_etapa_ganada_id IS NULL THEN
-    -- No hay etapa ganada configurada; no rompemos la operación
     RETURN NEW;
   END IF;
   UPDATE public.crm_oportunidades
@@ -12029,8 +12210,8 @@ BEGIN
          cotizacion_ganadora_id = NEW.id,
          embarque_ganador_id = COALESCE(embarque_ganador_id, NEW.embarque_id),
          updated_at = now()
-   WHERE id = v_op_id;
-  -- Bitácora (best-effort)
+   WHERE id = v_op_id
+     AND organization_id = v_op_org;
   BEGIN
     INSERT INTO public.bitacora_actividad (
       organization_id, modulo, accion, entidad_id, entidad_nombre,
@@ -12048,7 +12229,6 @@ BEGIN
     );
   EXCEPTION WHEN OTHERS THEN NULL;
   END;
-  -- Notificación al vendedor
   IF v_op_vendedor IS NOT NULL THEN
     BEGIN
       INSERT INTO public.crm_notificaciones (
@@ -12266,7 +12446,9 @@ BEGIN
   SELECT vendedor_id, nombre
     INTO v_vendedor_id, v_op_nombre
     FROM public.crm_oportunidades
-   WHERE id = NEW.oportunidad_id;
+   WHERE id = NEW.oportunidad_id
+     AND organization_id = NEW.organization_id
+     AND deleted_at IS NULL;
   IF v_vendedor_id IS NOT NULL AND v_vendedor_id <> NEW.autor_id THEN
     INSERT INTO public.crm_notificaciones (
       organization_id, user_id, tipo, titulo, mensaje, link
@@ -12367,12 +12549,18 @@ BEGIN
   IF NEW.oportunidad_id IS NOT NULL
      AND NEW.estado = 'Aceptada'::estado_cotizacion
      AND (OLD.estado IS DISTINCT FROM NEW.estado) THEN
-    SELECT valor_real INTO v_previo FROM public.crm_oportunidades WHERE id = NEW.oportunidad_id;
+    SELECT valor_real INTO v_previo
+      FROM public.crm_oportunidades
+     WHERE id = NEW.oportunidad_id
+       AND organization_id = NEW.organization_id
+       AND deleted_at IS NULL;
     UPDATE public.crm_oportunidades
        SET valor_real = NEW.subtotal,
            fecha_cierre_real = CURRENT_DATE,
            updated_at = now()
-     WHERE id = NEW.oportunidad_id;
+     WHERE id = NEW.oportunidad_id
+       AND organization_id = NEW.organization_id
+       AND deleted_at IS NULL;
     IF v_previo IS DISTINCT FROM NEW.subtotal THEN
       INSERT INTO public.bitacora_actividad (
         organization_id, usuario_id, usuario_email, accion, modulo, entidad_id, entidad_nombre, detalles
@@ -30309,6 +30497,7 @@ CREATE TRIGGER trg_costeo_tarifas_marcar_reemplazadas AFTER INSERT OR UPDATE OF 
 CREATE TRIGGER trg_costeo_tarifas_updated BEFORE UPDATE ON public.costeo_tarifas FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 CREATE TRIGGER trg_cotizacion_acepta_oportunidad AFTER INSERT OR UPDATE OF estado ON public.cotizaciones FOR EACH ROW EXECUTE FUNCTION public.crm_marcar_oportunidad_ganada();
 CREATE TRIGGER trg_cotizacion_cierra_oportunidad AFTER INSERT OR UPDATE OF estado, embarque_id ON public.cotizaciones FOR EACH ROW EXECUTE FUNCTION public.crm_cierra_oportunidad_desde_cotizacion();
+CREATE TRIGGER trg_cotizacion_oportunidad_misma_org BEFORE INSERT OR UPDATE OF oportunidad_id, organization_id ON public.cotizaciones FOR EACH ROW EXECUTE FUNCTION public._cotizacion_oportunidad_misma_org();
 CREATE TRIGGER trg_cotizacion_plantillas_updated_at BEFORE UPDATE ON public.cotizacion_plantillas FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 CREATE TRIGGER trg_cotizaciones_bloquear_envio_sin_importes BEFORE UPDATE ON public.cotizaciones FOR EACH ROW EXECUTE FUNCTION public._cotizaciones_bloquear_envio_sin_importes();
 CREATE TRIGGER trg_cotizaciones_envio_sin_oportunidad BEFORE UPDATE ON public.cotizaciones FOR EACH ROW EXECUTE FUNCTION public._cotizaciones_bloquear_envio_sin_oportunidad();
@@ -30319,16 +30508,22 @@ CREATE TRIGGER trg_cotizaciones_sync_vigencia BEFORE INSERT OR UPDATE OF validez
 CREATE TRIGGER trg_cotizaciones_validar_prospecto BEFORE INSERT OR UPDATE ON public.cotizaciones FOR EACH ROW EXECUTE FUNCTION public._cotizaciones_validar_prospecto();
 CREATE TRIGGER trg_crear_garantia_contenedor AFTER INSERT ON public.embarque_contenedores FOR EACH ROW EXECUTE FUNCTION public.crear_garantia_contenedor();
 CREATE TRIGGER trg_crm_act_updated_at BEFORE UPDATE ON public.crm_actividades FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+CREATE TRIGGER trg_crm_actividad_entidad_misma_org BEFORE INSERT OR UPDATE OF entidad_tipo, entidad_id, organization_id ON public.crm_actividades FOR EACH ROW EXECUTE FUNCTION public._crm_actividad_entidad_misma_org();
 CREATE TRIGGER trg_crm_actividad_toca_oportunidad AFTER INSERT ON public.crm_actividades FOR EACH ROW EXECUTE FUNCTION public._crm_actividad_toca_oportunidad();
+CREATE TRIGGER trg_crm_comentario_misma_org BEFORE INSERT OR UPDATE OF oportunidad_id, organization_id ON public.crm_comentarios_oportunidad FOR EACH ROW EXECUTE FUNCTION public._crm_comentario_oportunidad_misma_org();
+CREATE TRIGGER trg_crm_criterio_etapa_misma_org BEFORE INSERT OR UPDATE OF etapa_id, organization_id ON public.crm_etapa_criterios FOR EACH ROW EXECUTE FUNCTION public._crm_criterio_etapa_misma_org();
+CREATE TRIGGER trg_crm_cumplimiento_misma_org BEFORE INSERT OR UPDATE OF oportunidad_id, criterio_id, organization_id ON public.crm_oportunidad_criterios FOR EACH ROW EXECUTE FUNCTION public._crm_cumplimiento_misma_org();
 CREATE TRIGGER trg_crm_cuotas_updated_at BEFORE UPDATE ON public.crm_cuotas_vendedor FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 CREATE TRIGGER trg_crm_etapa_criterios_updated_at BEFORE UPDATE ON public.crm_etapa_criterios FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+CREATE TRIGGER trg_crm_etapa_motivo_misma_org BEFORE INSERT OR UPDATE OF etapa_id, motivo_perdida_id, organization_id ON public.crm_oportunidades FOR EACH ROW EXECUTE FUNCTION public._crm_oportunidad_etapa_motivo_misma_org();
 CREATE TRIGGER trg_crm_etapas_updated_at BEFORE UPDATE ON public.crm_etapas_pipeline FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 CREATE TRIGGER trg_crm_lead_avanzar_por_cotizacion AFTER UPDATE OF estado ON public.cotizaciones FOR EACH ROW WHEN ((old.estado IS DISTINCT FROM new.estado)) EXECUTE FUNCTION public._crm_lead_avanzar_por_cotizacion();
 CREATE TRIGGER trg_crm_leads_updated_at BEFORE UPDATE ON public.crm_leads FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 CREATE TRIGGER trg_crm_notify_comentario_oportunidad AFTER INSERT ON public.crm_comentarios_oportunidad FOR EACH ROW EXECUTE FUNCTION public.crm_notify_comentario_oportunidad();
 CREATE TRIGGER trg_crm_op_updated_at BEFORE UPDATE ON public.crm_oportunidades FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 CREATE TRIGGER trg_crm_oportunidad_criterios_updated_at BEFORE UPDATE ON public.crm_oportunidad_criterios FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
-CREATE TRIGGER trg_crm_oportunidad_requiere_origen BEFORE INSERT OR UPDATE OF lead_id, cliente_id ON public.crm_oportunidades FOR EACH ROW EXECUTE FUNCTION public._crm_oportunidad_requiere_origen();
+CREATE TRIGGER trg_crm_oportunidad_requiere_origen BEFORE INSERT OR UPDATE OF lead_id, cliente_id, organization_id ON public.crm_oportunidades FOR EACH ROW EXECUTE FUNCTION public._crm_oportunidad_requiere_origen();
+CREATE TRIGGER trg_crm_probabilidad_terminal BEFORE INSERT OR UPDATE OF etapa_id, probabilidad ON public.crm_oportunidades FOR EACH ROW EXECUTE FUNCTION public._crm_probabilidad_terminal();
 CREATE TRIGGER trg_crm_registrar_cambio_etapa BEFORE UPDATE ON public.crm_oportunidades FOR EACH ROW EXECUTE FUNCTION public._crm_registrar_cambio_etapa();
 CREATE TRIGGER trg_crm_set_valor_real_on_aceptada AFTER UPDATE ON public.cotizaciones FOR EACH ROW EXECUTE FUNCTION public.crm_set_valor_real_on_aceptada();
 CREATE TRIGGER trg_crm_sync_oportunidad_desde_cotizacion AFTER INSERT OR UPDATE OF subtotal, moneda, cliente_id, oportunidad_id ON public.cotizaciones FOR EACH ROW EXECUTE FUNCTION public._crm_sync_oportunidad_desde_cotizacion();
@@ -31708,6 +31903,8 @@ GRANT ALL ON FUNCTION public._ci_ensure_proformas_es_consolidada() TO service_ro
 REVOKE ALL ON FUNCTION public._convertir_proformas_insertar_conceptos(p_factura_id uuid, p_proforma_ids uuid[], p_org uuid, p_es_consolidada boolean, p_moneda public.moneda) FROM PUBLIC;
 GRANT ALL ON FUNCTION public._convertir_proformas_insertar_conceptos(p_factura_id uuid, p_proforma_ids uuid[], p_org uuid, p_es_consolidada boolean, p_moneda public.moneda) TO service_role;
 GRANT ALL ON FUNCTION public._convertir_proformas_insertar_conceptos(p_factura_id uuid, p_proforma_ids uuid[], p_org uuid, p_es_consolidada boolean, p_moneda public.moneda) TO authenticated;
+REVOKE ALL ON FUNCTION public._cotizacion_oportunidad_misma_org() FROM PUBLIC;
+GRANT ALL ON FUNCTION public._cotizacion_oportunidad_misma_org() TO service_role;
 REVOKE ALL ON FUNCTION public._cotizaciones_bloquear_auto_aceptacion() FROM PUBLIC;
 GRANT ALL ON FUNCTION public._cotizaciones_bloquear_auto_aceptacion() TO service_role;
 REVOKE ALL ON FUNCTION public._cotizaciones_bloquear_envio_sin_importes() FROM PUBLIC;
@@ -31721,15 +31918,26 @@ GRANT ALL ON FUNCTION public._cotizaciones_validar_prospecto() TO authenticated;
 GRANT ALL ON FUNCTION public._cotizaciones_validar_prospecto() TO service_role;
 REVOKE ALL ON FUNCTION public._crear_embarque_replicar_conceptos(p_cotizacion_id uuid, p_embarque_id uuid, p_org uuid, p_target_ids uuid[], p_conceptos_venta jsonb) FROM PUBLIC;
 GRANT ALL ON FUNCTION public._crear_embarque_replicar_conceptos(p_cotizacion_id uuid, p_embarque_id uuid, p_org uuid, p_target_ids uuid[], p_conceptos_venta jsonb) TO service_role;
+REVOKE ALL ON FUNCTION public._crm_actividad_entidad_misma_org() FROM PUBLIC;
+GRANT ALL ON FUNCTION public._crm_actividad_entidad_misma_org() TO service_role;
 REVOKE ALL ON FUNCTION public._crm_actividad_toca_oportunidad() FROM PUBLIC;
 GRANT ALL ON FUNCTION public._crm_actividad_toca_oportunidad() TO authenticated;
 GRANT ALL ON FUNCTION public._crm_actividad_toca_oportunidad() TO service_role;
+REVOKE ALL ON FUNCTION public._crm_comentario_oportunidad_misma_org() FROM PUBLIC;
+GRANT ALL ON FUNCTION public._crm_comentario_oportunidad_misma_org() TO service_role;
+REVOKE ALL ON FUNCTION public._crm_criterio_etapa_misma_org() FROM PUBLIC;
+GRANT ALL ON FUNCTION public._crm_criterio_etapa_misma_org() TO service_role;
+REVOKE ALL ON FUNCTION public._crm_cumplimiento_misma_org() FROM PUBLIC;
+GRANT ALL ON FUNCTION public._crm_cumplimiento_misma_org() TO service_role;
 REVOKE ALL ON FUNCTION public._crm_lead_avanzar_por_cotizacion() FROM PUBLIC;
 GRANT ALL ON FUNCTION public._crm_lead_avanzar_por_cotizacion() TO authenticated;
 GRANT ALL ON FUNCTION public._crm_lead_avanzar_por_cotizacion() TO service_role;
+REVOKE ALL ON FUNCTION public._crm_oportunidad_etapa_motivo_misma_org() FROM PUBLIC;
+GRANT ALL ON FUNCTION public._crm_oportunidad_etapa_motivo_misma_org() TO service_role;
 REVOKE ALL ON FUNCTION public._crm_oportunidad_requiere_origen() FROM PUBLIC;
-GRANT ALL ON FUNCTION public._crm_oportunidad_requiere_origen() TO authenticated;
 GRANT ALL ON FUNCTION public._crm_oportunidad_requiere_origen() TO service_role;
+REVOKE ALL ON FUNCTION public._crm_probabilidad_terminal() FROM PUBLIC;
+GRANT ALL ON FUNCTION public._crm_probabilidad_terminal() TO service_role;
 REVOKE ALL ON FUNCTION public._crm_registrar_cambio_etapa() FROM PUBLIC;
 GRANT ALL ON FUNCTION public._crm_registrar_cambio_etapa() TO authenticated;
 GRANT ALL ON FUNCTION public._crm_registrar_cambio_etapa() TO service_role;
@@ -32223,7 +32431,6 @@ REVOKE ALL ON FUNCTION public.crm_marcar_oportunidad_ganada() FROM PUBLIC;
 GRANT ALL ON FUNCTION public.crm_marcar_oportunidad_ganada() TO authenticated;
 GRANT ALL ON FUNCTION public.crm_marcar_oportunidad_ganada() TO service_role;
 REVOKE ALL ON FUNCTION public.crm_notify_comentario_oportunidad() FROM PUBLIC;
-GRANT ALL ON FUNCTION public.crm_notify_comentario_oportunidad() TO authenticated;
 GRANT ALL ON FUNCTION public.crm_notify_comentario_oportunidad() TO service_role;
 REVOKE ALL ON FUNCTION public.crm_propagar_conversion_cliente(p_oportunidad_id uuid, p_cliente_id uuid, p_cliente_nombre text) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.crm_propagar_conversion_cliente(p_oportunidad_id uuid, p_cliente_id uuid, p_cliente_nombre text) TO authenticated;

@@ -1,5 +1,17 @@
 # Changelog
 
+## [13.823.54] - 2026-09-02
+### Candados de conversión de prospectos y vínculos por empresa en CRM
+- **Convertir prospecto**: exige sesión activa, pertenencia a la empresa y rol autorizado; un vendedor sólo puede convertir los prospectos asignados a él. La autorización se evalúa antes de tocar datos y el prospecto queda bloqueado durante la conversión (sigue siendo atómica e idempotente).
+- **Rol por empresa**: si la membresía en la empresa tiene menos permisos que el rol histórico global, manda la membresía.
+- **Origen de la oportunidad**: el prospecto o cliente ligado debe existir, estar vivo y pertenecer a la misma empresa, incluso al cambiar la empresa de la oportunidad.
+- **Criterios de etapa y su cumplimiento**: sólo se pueden ligar criterios vivos y activos de la misma empresa que la etapa y la oportunidad.
+- **Comentarios de oportunidad**: sólo sobre oportunidades vivas de la misma empresa, y el aviso al vendedor se genera únicamente si la oportunidad sigue viva en esa empresa.
+- **Pruebas**: nueva suite SQL con 6 casos de autorización y 10 candados por empresa, registrada en los candados de CI.
+- **Datos legados reportados, no modificados**: 1 oportunidad borrada ligada a un prospecto borrado de su misma empresa; 0 vínculos cross-org en cliente, criterios, cumplimientos y comentarios.
+
+
+
 ## [13.823.53] - 2026-09-02
 ### Etapa inicial de una oportunidad nueva
 - **Siempre nace en la primera etapa abierta**: antes, si el embudo tenía "Ganada" o "Perdida" en la primera posición, la oportunidad nueva podía nacer cerrada (tanto en el alta rápida como en el formulario completo).
