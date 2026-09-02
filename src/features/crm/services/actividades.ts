@@ -55,6 +55,26 @@ export const filtroResponsable = (userId: string, email?: string | null) =>
 /** Resultado vacío: filtro personal sin sesión resuelta (falla cerrado). */
 const SIN_RESULTADOS = { data: [] as CrmActividadRow[], count: 0 };
 
+interface FiltrableQuery<T> {
+  or: (expr: string) => T;
+  is: (col: string, val: null) => T;
+  lt: (col: string, val: string) => T;
+}
+
+/**
+ * Filtro personal ("Mías") y atajo de vencidas. Extraído en v13.823.51 para
+ * mantener `listActividades` dentro del límite de complejidad.
+ */
+function aplicarResponsableYVencidas<T extends FiltrableQuery<T>>(q: T, p: ListActividadesParams): T {
+  let out = q;
+  if (p.responsable === "mias" && p.userId) out = out.or(filtroResponsable(p.userId, p.userEmail));
+  if (p.vencidas) {
+    out = out.is("fecha_completada", null).lt("fecha_programada", new Date().toISOString());
+    if (p.responsable !== "mias" && p.userId) out = out.or(filtroResponsable(p.userId, p.userEmail));
+  }
+  return out;
+}
+
 export async function listActividades(p: ListActividadesParams): Promise<{ data: CrmActividadRow[]; count: number }> {
   // Retiene el patrón manual: PostgREST devuelve `count` fuera de `data`,
   // así que `unwrap`/`unwrapOr` (que sólo mapean data) no aplica.
