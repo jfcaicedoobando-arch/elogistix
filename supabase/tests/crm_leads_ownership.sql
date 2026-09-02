@@ -230,9 +230,12 @@ BEGIN
     (SELECT vendedor_id FROM public.crm_leads WHERE id = v_lead_ajeno) = v_vend2,
     'C3: no se puede convertir una fila ajena en propia vía vendedor_id');
 
-  -- C4 · el vendedor no puede mover su lead a otra organización.
+  -- C4 · el vendedor no puede mover su lead a otra organización: WITH CHECK
+  -- lo rechaza con error explícito (no silenciosamente 0 filas).
   PERFORM pg_temp.as_user(v_vend);
-  UPDATE public.crm_leads SET organization_id = v_org_b WHERE id = v_lead_propio;
+  PERFORM pg_temp.espera_lc(
+    format('UPDATE public.crm_leads SET organization_id = %L WHERE id = %L', v_org_b, v_lead_propio),
+    'row-level security', 'C4 mover lead a otra organización');
   PERFORM pg_temp.as_postgres();
   PERFORM pg_temp.assert(
     (SELECT organization_id FROM public.crm_leads WHERE id = v_lead_propio) = v_org_a,
