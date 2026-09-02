@@ -6,6 +6,7 @@ import type { Tables } from "@/integrations/supabase/types";
 import { ymMx } from "@/lib/date/mx";
 import { fetchNombresUsuarios } from "@/features/admin/services/usuario/availableUsers";
 import { CAP_LISTA } from "@/constants/queryCaps";
+import { leerTodasLasPaginas } from "@/lib/supabase/paginado";
 
 export type ComisionDevengadaRow = Tables<"comisiones_devengadas">;
 export type EstadoComision = ComisionDevengadaRow["estado"];
