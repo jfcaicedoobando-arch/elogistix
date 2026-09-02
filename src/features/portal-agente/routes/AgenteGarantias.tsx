@@ -25,7 +25,7 @@ import { filtrarNavieras, type EstadoNavieraFiltro } from "@/features/costeo/lib
 import {
   useAgenteGarantiasColumns,
   AgenteGarantiaMobileCard,
-} from "@/features/portal-agente/components/useAgenteGarantiasColumns";
+} from "@/features/portal-agente/hooks/useAgenteGarantiasColumns";
 
 export default function AgenteGarantias() {
   useDocumentTitle('Carta Garantía y Demoras');
