@@ -18,11 +18,13 @@ export function TimelineEstadosCard({ conteoPorEstado, isLoading }: Props) {
       <CardContent className="p-4 sm:p-6">
         {/* v13.301.64 · Auditoría 698×572: máscara de fade en el borde
             derecho para señalar que la tira es desplazable cuando el
-            contenedor es más angosto que 600px (entre sm y md). */}
+            contenedor es más angosto que la tira (v13.823.24: el fade se
+            mantiene hasta lg, porque en tablet la tira sigue desbordando). */}
         <div
-          className="overflow-x-auto -mx-1 px-1 [scrollbar-width:thin] [mask-image:linear-gradient(to_right,black_0,black_calc(100%-24px),transparent_100%)] md:[mask-image:none]"
+          className="overflow-x-auto -mx-1 px-1 [scrollbar-width:thin] [mask-image:linear-gradient(to_right,black_0,black_calc(100%-24px),transparent_100%)] lg:[mask-image:none]"
         >
-          <div className="flex items-center justify-between gap-2 sm:gap-3 min-w-[480px] sm:min-w-[600px] relative">
+          <div className="flex items-start justify-between gap-2 sm:gap-3 min-w-[480px] sm:min-w-[600px] relative">
+
             {/* Armonización global: la línea arcoíris (info→warning→success) se
                 sustituye por un separador neutro; el color se reserva para
                 estados semánticos (alertas, vencidos). */}
@@ -64,14 +66,15 @@ export function TimelineEstadosCard({ conteoPorEstado, isLoading }: Props) {
                     )}
                   </div>
 
-                  {/* E-15: la etiqueta se trunca en pantallas angostas
-                      ("Confirm…"); Hint expone el nombre completo del
-                      estado como texto accesible (foco y hover/tap). */}
+                  {/* E-15 / v13.823.24: la etiqueta ya no se corta ("Por liqui…");
+                      envuelve en dos renglones y conserva el Hint con el nombre
+                      completo para foco y hover/tap. */}
                   <Hint label={estado}>
-                    <span className="text-label sm:text-label font-medium mt-0.5 text-muted-foreground text-center truncate max-w-full px-1 cursor-help">
+                    <span className="text-label font-medium mt-0.5 text-muted-foreground text-center leading-tight text-balance px-0.5 cursor-help">
                       {estado}
                     </span>
                   </Hint>
+
 
                   {idx < ESTADOS_FILTRO.length - 1 && (
                     <div className="absolute top-5 sm:top-6 left-full w-full flex items-center justify-center pointer-events-none">
