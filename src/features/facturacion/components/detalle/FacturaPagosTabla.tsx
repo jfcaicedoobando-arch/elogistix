@@ -2,16 +2,19 @@
  * FacturaPagosTabla — tabla presentacional del historial de pagos.
  * Extraída de `FacturaPagosSection` para respetar el límite de 200 líneas.
  * Migrada a `DataTable` (Ola F, punto 8) con `TABLE_DENSITY.embebida`.
+ * Migrada a `ResponsiveDataTable` para eliminar scroll horizontal en móvil.
  */
 import { Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Hint } from "@/components/shared/Hint";
-import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
+import { defineColumns, type ColumnDef } from "@/components/shared/DataTable";
+import { ResponsiveDataTable } from "@/components/shared/dataTable/ResponsiveDataTable";
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 import { COL_W } from "@/components/shared/dataTable/columnWidths";
 import { formatCurrency, formatDate } from "@/lib/formatters";
 import { FORMAS_PAGO_SAT, labelDeCatalogo } from "@/constants/catalogosSAT";
 import { PagoRepCell } from "./PagoRepCell";
+import { FacturaPagosMobileCard } from "./FacturaPagosMobileCard";
 
 interface PagoRow {
   id: string;
@@ -115,12 +118,21 @@ export function FacturaPagosTabla({
   ]);
 
   return (
-    <DataTable
+    <ResponsiveDataTable
       columns={columns}
       data={pagos}
       rowKey={(p) => p.id}
       density={TABLE_DENSITY.embebida}
       emptyMessage="Sin pagos registrados."
+      mobileCard={(row) => (
+        <FacturaPagosMobileCard
+          row={row}
+          facturaId={facturaId}
+          canEdit={canEdit}
+          onEliminar={onEliminar}
+          onPreviewRep={onPreviewRep}
+        />
+      )}
     />
   );
 }

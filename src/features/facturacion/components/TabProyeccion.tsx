@@ -5,7 +5,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { useNavigate } from "react-router-dom";
-import { DataTable } from "@/components/shared/DataTable";
+import { ResponsiveDataTable } from "@/components/shared/dataTable/ResponsiveDataTable";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 import { ErrorStateInline } from "@/components/empty/ErrorStateInline";
 import { toTitleCase } from "@/lib/formatters";
@@ -13,6 +13,7 @@ import { useTabProyeccionController } from "@/features/facturacion/hooks";
 import { ProyeccionCierreSection } from "./proyeccion/ProyeccionCierreSection";
 import { proyeccionColumns } from "./proyeccionColumns";
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
+import { ProyeccionMobileCard } from "./ProyeccionMobileCard";
 import { getErrorMessage } from "@/lib/errors";
 
 export function TabProyeccion() {
@@ -140,7 +141,7 @@ export function TabProyeccion() {
               hint="Selecciona otro mes o ajusta los filtros."
             />
           ) : (
-            <DataTable
+            <ResponsiveDataTable
               columns={proyeccionColumns}
               data={c.grupos}
               isLoading={c.isLoading}
@@ -150,6 +151,7 @@ export function TabProyeccion() {
               onRowClick={(g) => {
                 if (g.embarqueIds[0]) navigate(`/embarques/${g.embarqueIds[0]}`);
               }}
+              mobileCard={(g) => <ProyeccionMobileCard grupo={g} />}
             />
           )}
         </CardContent>

@@ -3,10 +3,12 @@ import { Plus, Ship, ClipboardList } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { TabsContent } from "@/components/ui/tabs";
 import { DetailTabSection } from "@/components/shared/DetailTabSection";
-import { DataTable } from "@/components/shared/DataTable";
+import { ResponsiveDataTable } from "@/components/shared/dataTable/ResponsiveDataTable";
 import EmptyState from "@/components/empty/EmptyState";
 import { embarqueColumns, cotizacionColumns } from "@/features/cliente/components/clienteColumns";
 import type { EmbarqueCliente, CotizacionCliente } from "@/features/cliente/components/clienteColumns";
+import { EmbarqueClienteMobileCard } from "@/features/cliente/components/EmbarqueClienteMobileCard";
+import { CotizacionClienteMobileCard } from "@/features/cliente/components/CotizacionClienteMobileCard";
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 
 interface Props {
@@ -29,7 +31,7 @@ export function ClienteDetalleTablasTabs({
     <>
       <TabsContent value="embarques" className="mt-4">
         <DetailTabSection title="Embarques del cliente" count={embarquesCliente.length}>
-          <DataTable
+          <ResponsiveDataTable
             columns={embarqueColumns}
             data={embarquesCliente}
             isLoading={loadingEmbarques}
@@ -45,6 +47,7 @@ export function ClienteDetalleTablasTabs({
             getRowHref={(e) => `/embarques/${e.id}`}
             rowKey={(e) => e.id}
             density={TABLE_DENSITY.embebida}
+            mobileCard={(e) => <EmbarqueClienteMobileCard e={e} />}
           />
         </DetailTabSection>
       </TabsContent>
@@ -63,7 +66,7 @@ export function ClienteDetalleTablasTabs({
             ) : undefined
           }
         >
-          <DataTable
+          <ResponsiveDataTable
             columns={cotizacionColumns}
             data={cotizacionesCliente}
             isLoading={loadingCotizaciones}
@@ -79,6 +82,7 @@ export function ClienteDetalleTablasTabs({
             getRowHref={(c) => `/cotizaciones/${c.id}`}
             rowKey={(c) => c.id}
             density={TABLE_DENSITY.embebida}
+            mobileCard={(c) => <CotizacionClienteMobileCard c={c} />}
           />
         </DetailTabSection>
       </TabsContent>
