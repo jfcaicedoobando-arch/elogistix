@@ -16,6 +16,7 @@ export function useActualizarActividadNotas() {
     mutationFn: actualizarActividadNotas,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.crm.actividades.all });
+      qc.invalidateQueries({ queryKey: queryKeys.crm.higiene.all });
     },
     onError: (error: Error) => {
       notifyError(undefined, { title: "No se pudo guardar notas", description: getErrorMessage(error), error, method: "UPDATE_ACTIVIDAD_NOTAS" });

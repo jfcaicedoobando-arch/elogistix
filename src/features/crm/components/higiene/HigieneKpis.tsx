@@ -25,32 +25,40 @@ function Kpi({ label, value, hint }: { label: string; value: string; hint?: stri
   );
 }
 
+/**
+ * Sin oportunidades abiertas no hay muestra: mostrar 0% haría leer "mal
+ * desempeño" cuando en realidad no hay nada que medir.
+ */
+function KpiPorcentaje({ label, pct, hint }: { label: string; pct: number | null; hint: string }) {
+  return (
+    <Card>
+      <CardContent className="pt-6">
+        <p className="text-body-sm text-muted-foreground">{label}</p>
+        <p className="text-kpi mt-1">{pct === null ? "—" : `${pct}%`}</p>
+        {pct !== null && <Progress value={pct} className="mt-2" />}
+        <p className="text-body-sm text-muted-foreground mt-1">{pct === null ? "Sin datos" : hint}</p>
+      </CardContent>
+    </Card>
+  );
+}
+
 export default function HigieneKpis({ resumen, cobertura, presupuestoMes }: Props) {
-  const higienePct = Math.round(resumen.higiene_pct * 100);
-  const seguimientoPct = Math.round(resumen.seguimiento_oportuno_pct * 100);
+  const sinMuestra = resumen.abiertas === 0;
+  const higienePct = sinMuestra ? null : Math.round(resumen.higiene_pct * 100);
+  const seguimientoPct = sinMuestra ? null : Math.round(resumen.seguimiento_oportuno_pct * 100);
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-      <Card>
-        <CardContent className="pt-6">
-          <p className="text-body-sm text-muted-foreground">Higiene del pipeline</p>
-          <p className="text-kpi mt-1">{higienePct}%</p>
-          <Progress value={higienePct} className="mt-2" />
-          <p className="text-body-sm text-muted-foreground mt-1">
-            {resumen.registros_completos} de {resumen.abiertas} oportunidades completas
-          </p>
-        </CardContent>
-      </Card>
-      <Card>
-        <CardContent className="pt-6">
-          <p className="text-body-sm text-muted-foreground">Seguimiento oportuno</p>
-          <p className="text-kpi mt-1">{seguimientoPct}%</p>
-          <Progress value={seguimientoPct} className="mt-2" />
-          <p className="text-body-sm text-muted-foreground mt-1">
-            {resumen.vencidas} fuera de SLA · {resumen.sin_actividad_programada} sin próxima actividad
-          </p>
-        </CardContent>
-      </Card>
+      <KpiPorcentaje
+        label="Higiene del pipeline"
+        pct={higienePct}
+        hint={`${resumen.registros_completos} de ${resumen.abiertas} oportunidades completas`}
+      />
+      <KpiPorcentaje
+        label="Seguimiento oportuno"
+        pct={seguimientoPct}
+        hint={`${resumen.vencidas} fuera de SLA · ${resumen.sin_actividad_programada} sin próxima actividad`}
+      />
       <Kpi
         label="Pipeline ponderado"
         value={formatCurrency(resumen.pipeline_ponderado, "MXN")}

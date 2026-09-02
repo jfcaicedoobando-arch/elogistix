@@ -38,6 +38,7 @@ export function useMoverEtapaConAutomatizacion() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.crm.oportunidades.all });
       qc.invalidateQueries({ queryKey: queryKeys.crm.actividades.all });
+      qc.invalidateQueries({ queryKey: queryKeys.crm.higiene.all });
       qc.invalidateQueries({ queryKey: queryKeys.crm.notificaciones.all });
       qc.invalidateQueries({ queryKey: queryKeys.crm.dashboardAll });
     },

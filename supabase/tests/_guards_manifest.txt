@@ -93,3 +93,4 @@ supabase/tests/ronda_yagni_portal_catalogos_tc.sql
 supabase/tests/crm_candados_multiempresa.sql
 supabase/tests/crm_cross_org_convertir_lead.sql
 supabase/tests/helpers_falso_verde_canario.sql
+supabase/tests/crm_actividad_entidad_tenant.sql

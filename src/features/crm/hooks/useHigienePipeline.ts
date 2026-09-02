@@ -22,6 +22,9 @@ export function useHigieneResumen() {
   return useQuery<HigieneResumen>({
     queryKey: queryKeys.crm.higiene.resumen,
     queryFn: fetchHigieneResumen,
+    // Los vencimientos dependen del reloj, no de una mutación: refrescamos cada
+    // minuto para que la pantalla abierta no muestre SLA vencidos como vigentes.
+    refetchInterval: 60_000,
   });
 }
 
@@ -29,6 +32,7 @@ export function useHigieneOportunidades() {
   return useQuery<HigieneOportunidad[]>({
     queryKey: queryKeys.crm.higiene.oportunidades,
     queryFn: fetchHigieneOportunidades,
+    refetchInterval: 60_000,
   });
 }
 

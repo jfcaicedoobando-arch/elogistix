@@ -71,6 +71,8 @@ export function useCrearActividad() {
     mutationFn: (input: ActividadInput) => crearActividad(input, user),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.crm.actividades.all });
+      // La agenda de actividades alimenta Higiene (próxima actividad y SLA).
+      qc.invalidateQueries({ queryKey: queryKeys.crm.higiene.all });
       qc.invalidateQueries({ queryKey: queryKeys.crm.kpis });
       notifySuccess(undefined, { title: "Actividad agregada" });
     },
@@ -86,6 +88,8 @@ export function useCompletarActividad() {
     mutationFn: completarActividad,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.crm.actividades.all });
+      // La agenda de actividades alimenta Higiene (próxima actividad y SLA).
+      qc.invalidateQueries({ queryKey: queryKeys.crm.higiene.all });
       qc.invalidateQueries({ queryKey: queryKeys.crm.dashboardAll });
       notifySuccess(undefined, { title: "Actividad completada" });
     },
@@ -102,6 +106,8 @@ export function usePosponerActividad() {
     mutationFn: posponerActividad,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.crm.actividades.all });
+      // La agenda de actividades alimenta Higiene (próxima actividad y SLA).
+      qc.invalidateQueries({ queryKey: queryKeys.crm.higiene.all });
       qc.invalidateQueries({ queryKey: queryKeys.crm.dashboardAll });
       notifySuccess(undefined, { title: "Actividad pospuesta" });
     },
