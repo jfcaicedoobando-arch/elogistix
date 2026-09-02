@@ -123,7 +123,9 @@ export async function fetchCrmDashboard(userId: string | undefined): Promise<Crm
     supabase.from("crm_etapas_pipeline").select("id, nombre, color, tipo, orden").is("deleted_at", null).eq("activa", true).order("orden", { ascending: true }),
   ]);
 
-  const opsAbiertas = (opsAbiertasQ.data ?? []) as OpRow[];
+  // Defecto 2: antes cualquier error (RLS, red) se leía como `?? 0` / lista
+  // vacía y el tablero mostraba ceros creíbles. Ahora se propaga.
+  assertSinErrores([leadsCountQ, actsPendQ, misActsQ, cerrandoQ, leadsViejosQ, etapasQ]);
   const etapas = (etapasQ.data ?? []) as EtapaRow[];
 
   return {
