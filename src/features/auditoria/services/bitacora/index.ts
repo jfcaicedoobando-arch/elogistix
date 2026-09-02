@@ -103,7 +103,7 @@ export async function insertBitacora(entrada: {
   const { error } = await supabase.rpc("registrar_bitacora", {
     p_modulo: entrada.modulo,
     p_accion: entrada.accion,
-    p_entidad_id: entrada.entidadId ?? null,
+    p_entidad_id: entrada.entidadId ?? undefined,
     p_entidad_nombre: entrada.entidadNombre ?? "",
     p_detalles: (entrada.detalles ?? {}) as Json,
   });

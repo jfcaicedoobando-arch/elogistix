@@ -67,7 +67,7 @@ export async function registrarActividad(input: RegistrarActividadInput): Promis
     const { error } = await supabase.rpc("registrar_bitacora", {
       p_modulo: input.modulo,
       p_accion: input.accion,
-      p_entidad_id: input.entidadId ?? null,
+      p_entidad_id: input.entidadId ?? undefined,
       p_entidad_nombre: input.entidadNombre ?? "",
       p_detalles: (input.detalles ?? {}) as Json,
     });
