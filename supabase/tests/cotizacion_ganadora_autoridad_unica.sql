@@ -137,17 +137,15 @@ BEGIN
     AND (SELECT aceptada_en FROM public.cotizaciones WHERE id = v_c1) IS NOT NULL,
     'A: la primera transición terminal sella versión y fecha de aceptación');
 
-  -- ===== B) Reintento y Aceptada → En operación =====
-  UPDATE public.cotizaciones SET estado = 'Aceptada' WHERE id = v_c1;  -- idempotente
-  UPDATE public.cotizaciones SET estado = 'En operación' WHERE id = v_c1;
-
+  -- ===== B1) Reintento idempotente con la misma ganadora =====
+  UPDATE public.cotizaciones SET estado = 'Aceptada' WHERE id = v_c1;
   PERFORM pg_temp.assert(
     (SELECT count(*) FROM public.bitacora_actividad
       WHERE entidad_id = v_op1 AND accion = 'oportunidad_ganada_auto') = 1,
-    'B: el reintento no debe duplicar la auditoría');
+    'B1: el reintento no debe duplicar la auditoría');
   PERFORM pg_temp.assert(
     (SELECT valor_real FROM public.crm_oportunidades WHERE id = v_op1) = 1000,
-    'B: el monto histórico no cambia al pasar a En operación');
+    'B1: el reintento no cambia el monto');
 
   -- ===== C) Segunda cotización de la misma oportunidad =====
   PERFORM pg_temp.espera_lc(
@@ -176,6 +174,16 @@ BEGIN
     (SELECT count(*) FROM public.crm_notificaciones
       WHERE organization_id = v_org_a AND tipo = 'oportunidad_ganada') <= 1,
     'D: no se duplica la notificación de oportunidad ganada');
+
+  -- ===== B2) Aceptada → En operación: sólo sincroniza el embarque ganador =====
+  UPDATE public.cotizaciones SET estado = 'En operación' WHERE id = v_c1;
+  PERFORM pg_temp.assert(
+    (SELECT count(*) FROM public.bitacora_actividad
+      WHERE entidad_id = v_op1 AND accion = 'oportunidad_ganada_auto') = 1,
+    'B2: pasar a En operación no duplica la auditoría');
+  PERFORM pg_temp.assert(
+    (SELECT valor_real FROM public.crm_oportunidades WHERE id = v_op1) = 1500,
+    'B2: el monto histórico no cambia al pasar a En operación');
 
   -- ===== E) Oportunidad perdida =====
   PERFORM pg_temp.espera_lc(
