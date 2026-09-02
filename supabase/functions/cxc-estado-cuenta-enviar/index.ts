@@ -124,14 +124,40 @@ async function loadOrgName(adminClient: SupabaseClient, organizationId: string) 
   return data?.nombre ?? null;
 }
 
+/**
+ * Ronda YAGNI · defecto 9 — la clave del envío se deriva de la petición
+ * (cliente + periodo + destinatario) y NO de `Date.now()`: reintentar el mismo
+ * estado de cuenta no vuelve a enviar el correo.
+ */
+export function messageIdEstadoCuenta(
+  clienteId: string,
+  desde: string | null | undefined,
+  hasta: string | null | undefined,
+  destinatario: string,
+): string {
+  const periodo = `${desde ?? 'inicio'}_${hasta ?? 'hoy'}`;
+  return `estado-cuenta-${clienteId}-${periodo}-${destinatario.toLowerCase()}`;
+}
+
+/** ¿Ya se envió este mismo estado de cuenta? (dedupe por message_id) */
+async function yaEnviado(admin: SupabaseClient, messageId: string): Promise<boolean> {
+  const { data } = await admin
+    .from('email_send_log')
+    .select('status')
+    .eq('message_id', messageId)
+    .maybeSingle();
+  return data?.status === 'sent';
+}
+
 async function sendEstadoCuenta(
   supabaseUrl: string,
   serviceRoleKey: string,
   destinatario: string,
   templateData: Record<string, unknown>,
+  messageId: string,
 ): Promise<void> {
-  const messageId = `estado-cuenta-${templateData.cliente}-${Date.now()}`;
   const admin = createClient(supabaseUrl, serviceRoleKey);
+  if (await yaEnviado(admin, messageId)) return;
   const envio = await enviarEmailPlantilla(admin, {
     templateName: 'estado-cuenta-cliente',
     recipientEmail: destinatario,
