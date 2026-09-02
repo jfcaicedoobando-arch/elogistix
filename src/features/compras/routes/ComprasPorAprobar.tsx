@@ -61,12 +61,11 @@ export default function ComprasPorAprobar() {
   const totalSelMxn = sumaMxn(seleccionadas);
   const totalSelUsd = sumaUsd(seleccionadas);
 
-  // Solo los CFDI nacionales con UUID se pueden consultar en el SAT.
+  // Sólo los CFDI (proveedor nacional, con UUID) se consultan en el SAT.
+  // Las facturas extranjeras o de captura manual no dependen del SAT y se
+  // aprueban normalmente: ver `requiereValidacionSat`.
   const validablesSat = useMemo(
-    () =>
-      seleccionadas
-        .filter((f) => f.proveedor_origen !== "Extranjero" && !!f.uuid_fiscal)
-        .map((f) => f.id),
+    () => seleccionadas.filter((f) => esValidableEnSat(f)).map((f) => f.id),
     [seleccionadas],
   );
 
