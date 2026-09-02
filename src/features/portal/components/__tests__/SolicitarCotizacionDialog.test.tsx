@@ -124,10 +124,14 @@ describe("SolicitarCotizacionDialog — empresa solicitante (multicliente)", () 
     expect(mocks.mutateAsync.mock.calls[0][0]).toMatchObject({ clienteId: "cli-1" });
   });
 
-  it("con dos empresas no preselecciona: el botón queda deshabilitado hasta elegir", () => {
+  // Defecto 3 (v13.823.43): el botón ya NO se deshabilita por validación; al
+  // enviar sin empresa elegida no se manda nada y se explica qué falta.
+  it("con dos empresas no preselecciona: enviar sin elegir no manda la solicitud", () => {
     renderDialog({ clientes: DOS });
     expect(screen.getByLabelText(/Empresa solicitante/i)).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /Enviar solicitud/i })).toBeDisabled();
+    fireEvent.click(screen.getByRole("button", { name: /Enviar solicitud/i }));
+    expect(mocks.mutateAsync).not.toHaveBeenCalled();
+    expect(screen.getByText(/Selecciona la empresa/i)).toBeInTheDocument();
   });
 
   it("las opciones muestran el nombre de la empresa, no el UUID", () => {
@@ -166,15 +170,16 @@ describe("SolicitarCotizacionDialog — empresa solicitante (multicliente)", () 
     rerender(vista(false));
     rerender(vista(true));
 
-    expect(screen.getByRole("button", { name: /Enviar solicitud/i })).toBeDisabled();
+    fireEvent.click(screen.getByRole("button", { name: /Enviar solicitud/i }));
+    expect(mocks.mutateAsync).not.toHaveBeenCalled();
     expect(screen.getByText(/Selecciona la empresa/i)).toBeInTheDocument();
   });
 
   it("sin empresas vinculadas no envía y explica por qué", () => {
     renderDialog({ clientes: [] });
     expect(screen.getByText(/no está vinculada a una empresa/i)).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /Enviar solicitud/i })).toBeDisabled();
     capturarRuta();
+    fireEvent.click(screen.getByRole("button", { name: /Enviar solicitud/i }));
     expect(mocks.mutateAsync).not.toHaveBeenCalled();
   });
 
