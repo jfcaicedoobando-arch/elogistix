@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.823.40] - 2026-09-02
+### Importaciones masivas y estado de cuenta BBVA sin pérdidas silenciosas
+- **Importación de clientes y proveedores**: antes de guardar se revisa qué registros ya existen (por RFC o razón social); las filas repetidas se omiten en lugar de duplicarse al reintentar un archivo que falló a la mitad.
+- **Conteo real**: el diálogo ya informa cuántos registros se crearon de verdad y cuántas filas se omitieron por duplicado.
+- **Estado de cuenta BBVA**: las filas ilegibles se reportan al usuario y bloquean la importación, en vez de descartarse en silencio.
+
 ## [13.823.39] - 2026-09-02
 ### Higiene posterior a la ronda de seguridad del portal
 - **Perfil del portal**: la nueva llave de integridad cliente/organización volvía ambigua la consulta del perfil y rompía la compilación; ahora la consulta indica explícitamente la relación correcta.
