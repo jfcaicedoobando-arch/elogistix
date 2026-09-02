@@ -1,7 +1,7 @@
 -- Espejo canónico de public._assert_embarque_abierto_locked,
 -- public.bloquear_conceptos_en_embarque_cerrado y
 -- public.tg_bloquear_si_embarque_cerrado.
--- Fuente vigente (mayor timestamp): 20260902183746_81af79ca-850f-4e4d-9aea-398ba2e77eec.sql
+-- Fuente vigente (mayor timestamp): 20260911000100_replay_cerrar_reabrir_org_scope_helper_service_role.sql
 -- Vigilado por `bun run audit:replay-mirror` y `audit:schema-functions`.
 -- DEFECTO 2 (P1, carrera cierre vs conceptos): lectura FOR KEY SHARE del
 -- embarque, mutuamente exclusiva con el FOR UPDATE de cerrar_embarque.
