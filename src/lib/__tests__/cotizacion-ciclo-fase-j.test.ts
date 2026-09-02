@@ -1,14 +1,16 @@
 /**
- * Guardrail Fase J (v13.301.81) — ciclo de cotización correcto.
+ * Guardrail Fase J (v13.301.81, actualizado en v13.823.57) — ciclo de
+ * cotización correcto.
  *
  * Blinda:
  *  - `aceptar_cotizacion_version` valida `estado IN ('Borrador','Enviada')` y levanta
  *    `LC_COTIZACION_ESTADO_INVALIDO` para cualquier otro estado.
- *  - `crm_set_valor_real_on_aceptada` fija `valor_real = NEW.subtotal` incondicional
- *    (sin `COALESCE` que preserve el valor viejo) e igual para `fecha_cierre_real`.
- *  - Se registra bitácora `crm.oportunidad.valor_real_actualizado` cuando cambia el valor.
+ *  - v13.823.57: la autoridad única `crm_cerrar_oportunidad_desde_cotizacion`
+ *    fija `valor_real = NEW.subtotal` en el primer cierre y registra auditoría
+ *    del cambio de valor al re-aceptar (sin `EXCEPTION WHEN OTHERS`).
  *  - UI: `CotizacionDetalleSecciones` oculta "Re-cotizar" cuando `tieneEmbarquesVinculados`.
  */
+
 import { describe, it, expect } from "vitest";
 import fs from "node:fs";
 import path from "node:path";
@@ -25,7 +27,9 @@ function readLatestMigrationWith(marker: string): string {
 
 describe("Fase J — ciclo de cotización", () => {
   const sqlAceptar = readLatestMigrationWith("CREATE OR REPLACE FUNCTION public.aceptar_cotizacion_version");
-  const sqlCrm = readLatestMigrationWith("CREATE OR REPLACE FUNCTION public.crm_set_valor_real_on_aceptada");
+  const sqlCrm = readLatestMigrationWith(
+    "CREATE OR REPLACE FUNCTION public.crm_cerrar_oportunidad_desde_cotizacion",
+  );
 
   it("aceptar_cotizacion_version valida estado y levanta LC_COTIZACION_ESTADO_INVALIDO", () => {
     expect(sqlAceptar).toMatch(/v_estado_actual\s+NOT IN\s*\(\s*'Borrador'\s*,\s*'Enviada'\s*\)/);
@@ -33,22 +37,26 @@ describe("Fase J — ciclo de cotización", () => {
     expect(sqlAceptar).toMatch(/estados_permitidos/);
   });
 
-  it("crm_set_valor_real_on_aceptada asigna valor_real y fecha_cierre_real incondicional", () => {
-    // Debe existir `SET valor_real = NEW.subtotal` sin COALESCE
-    expect(sqlCrm).toMatch(/SET\s+valor_real\s*=\s*NEW\.subtotal/);
-    expect(sqlCrm).toMatch(/fecha_cierre_real\s*=\s*CURRENT_DATE/);
-    // No debe seguir usando COALESCE para preservar el valor previo
-    const fnBody = sqlCrm
-      .split("CREATE OR REPLACE FUNCTION public.crm_set_valor_real_on_aceptada")[1]
-      ?.split("$$;")[0] ?? "";
-    expect(fnBody).not.toMatch(/COALESCE\(\s*valor_real\s*,\s*NEW\.subtotal\s*\)/);
+  it("aceptar_cotizacion_version bloquea la fila con FOR UPDATE antes de validar", () => {
+    expect(sqlAceptar).toMatch(/FOR UPDATE/);
   });
 
-  it("registra bitácora crm.oportunidad.valor_real_actualizado", () => {
-    expect(sqlCrm).toMatch(/crm\.oportunidad\.valor_real_actualizado/);
+  it("la autoridad única asigna valor_real y fecha de cierre en el primer cierre", () => {
+    expect(sqlCrm).toMatch(/valor_real\s*=\s*NEW\.subtotal/);
+    expect(sqlCrm).toMatch(/fecha_cierre_real\s*=\s*v_hoy/);
+    expect(sqlCrm).toMatch(/cotizacion_ganadora_id\s*=\s*NEW\.id/);
+  });
+
+  it("no traga errores con EXCEPTION WHEN OTHERS", () => {
+    expect(sqlCrm).not.toMatch(/WHEN\s+OTHERS/i);
+  });
+
+  it("registra auditoría del cambio de valor al re-aceptar", () => {
+    expect(sqlCrm).toMatch(/oportunidad_ganada_revalorada/);
     expect(sqlCrm).toMatch(/valor_previo/);
     expect(sqlCrm).toMatch(/valor_nuevo/);
   });
+
 
   it("UI: CotizacionDetalleSecciones gatea 'Re-cotizar' con tieneEmbarquesVinculados", () => {
     const tsxPath = path.resolve(

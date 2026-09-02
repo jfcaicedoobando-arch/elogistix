@@ -1,4 +1,4 @@
--- Fuente canónica. Espejo 1:1 de la migración v13.823.32 (ola de pulido CxP/cotización→embarque/CRM).
+-- Fuente canónica. Espejo 1:1 de la migración v13.823.57 (autoridad única cotización→oportunidad).
 -- Al modificar: edita ESTE archivo y genera la migración con el mismo cuerpo.
 
 CREATE OR REPLACE FUNCTION public.aceptar_cotizacion_version(p_cotizacion_id uuid)
@@ -17,7 +17,8 @@ DECLARE
 BEGIN
   SELECT version, organization_id, folio, estado::text, fecha_vigencia, cliente_id, created_by
     INTO v_version, v_org, v_folio, v_estado_actual, v_vigencia, v_cliente_id, v_creado_por
-    FROM cotizaciones WHERE id = p_cotizacion_id AND deleted_at IS NULL;
+    FROM cotizaciones WHERE id = p_cotizacion_id AND deleted_at IS NULL
+    FOR UPDATE;
   IF v_version IS NULL THEN RAISE EXCEPTION 'Cotización no encontrada' USING ERRCODE='P0002'; END IF;
 
   v_admin := public.has_role(v_uid, 'super_admin'::app_role)
