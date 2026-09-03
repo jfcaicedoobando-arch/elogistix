@@ -6,8 +6,12 @@
  * menú (clic fuera + devolución de foco en el mismo gesto), así que al usuario
  * "no le pasaba nada" al dar clic. Ahora es un modal estándar (FormDialogShell),
  * que sí se puede abrir desde un item de menú sin condiciones de carrera.
+ *
+ * Corrección de estado: guard anti doble submit, `busy` mientras guarda y
+ * limpieza del formulario sólo al cerrarse de verdad (open true -> false), para
+ * que al reabrir no reaparezcan datos descartados.
  */
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -34,7 +38,20 @@ export default function QuickCreateLeadDialog({ open, onOpenChange, onCreated, o
   const [empresa, setEmpresa] = useState("");
   const [contacto, setContacto] = useState("");
 
+  // Reset sólo en la transición real abierto -> cerrado: mientras el modal
+  // sigue abierto (o mientras se muestra la confirmación de descarte, que vive
+  // dentro del shell con `open` en true) el formulario queda intacto.
+  const abiertoAntes = useRef(open);
+  useEffect(() => {
+    if (abiertoAntes.current && !open) {
+      setEmpresa("");
+      setContacto("");
+    }
+    abiertoAntes.current = open;
+  }, [open]);
+
   const submit = async () => {
+    if (crear.isPending) return;
     const emp = empresa.trim();
     if (!emp) {
       notifyError(undefined, { title: "Empresa requerida", method: "FEATURES_CRM_COMPONENTS_QUICKCREATE_QUICKCREATELEADDIALOG_1" });
@@ -52,8 +69,7 @@ export default function QuickCreateLeadDialog({ open, onOpenChange, onCreated, o
         vendedor_email: user?.email ?? "",
       });
       notifySuccess(undefined, { title: "Lead creado", duration: 2000 });
-      setEmpresa("");
-      setContacto("");
+      // El cierre limpia el estado (efecto de transición): no hace falta resetear aquí.
       onOpenChange(false);
       onCreated(r.id);
     } catch (e) {
@@ -76,6 +92,7 @@ export default function QuickCreateLeadDialog({ open, onOpenChange, onCreated, o
       formId="qc-lead-form"
       onSubmit={(e) => { e.preventDefault(); void submit(); }}
       isDirty={empresa.trim().length > 0 || contacto.trim().length > 0}
+      busy={crear.isPending}
       footer={
         <FormDialogFooter
           formId="qc-lead-form"
@@ -83,7 +100,14 @@ export default function QuickCreateLeadDialog({ open, onOpenChange, onCreated, o
           confirmLabel="Crear"
           loading={crear.isPending}
           extra={
-            <Button type="button" variant="ghost" size="sm" onClick={onMore} className="text-body-sm">
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={onMore}
+              disabled={crear.isPending}
+              className="text-body-sm"
+            >
               Más campos →
             </Button>
           }
