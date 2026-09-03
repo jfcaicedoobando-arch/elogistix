@@ -116,8 +116,8 @@ export default function NuevaOportunidadDialog({ open, onOpenChange, oportunidad
 
   const footer = (
     <>
-      <Button variant="outline" onClick={() => onOpenChange(false)} disabled={pending}>Cancelar</Button>
-      <Button onClick={handleSubmit} loading={pending} disabled={!isEdit && !form.etapa_id}>
+      <Button variant="outline" onClick={() => onOpenChange(false)} disabled={pendingTotal}>Cancelar</Button>
+      <Button onClick={handleSubmit} loading={pendingTotal} disabled={!isEdit && !form.etapa_id}>
         {isEdit ? "Guardar cambios" : "Crear oportunidad"}
       </Button>
     </>
@@ -131,9 +131,10 @@ export default function NuevaOportunidadDialog({ open, onOpenChange, oportunidad
       title={isEdit ? "Editar oportunidad" : "Nueva oportunidad"}
       description="Captura los datos comerciales y la etapa del pipeline."
       size="2xl"
-      busy={pending}
+      busy={pendingTotal}
       footer={footer}
     >
+
       <OportunidadFormFields
         form={form}
         setForm={setForm}
