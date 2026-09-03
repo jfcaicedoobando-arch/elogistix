@@ -1,6 +1,8 @@
 # Changelog
 
 ## [Unreleased]
+
+## [13.823.65] - 2026-09-03
 ### Convertir prospecto a cliente: una sola operación segura
 - **La puerta y la cerradura ya coinciden**: el botón *Convertir a Cliente* (y el alta/importación de clientes) sólo aparece para quien de verdad puede dar de alta clientes: dirección, administración, operación y contabilidad. Antes lo veían roles que después recibían un error de permisos.
 - **Sólo se convierte la cotización que ganó**: debe estar Aceptada, ser de prospecto, estar ligada a una oportunidad, ser su cotización ganadora, con la oportunidad en etapa ganada y su prospecto vivo. Si falta la oportunidad, el botón no aparece y queda el aviso que guía a vincularla.
