@@ -2498,7 +2498,7 @@
       "20260911000120_replay_nc_saldo_lock_y_rep_historia.sql"
     ]
   },
-  "13.823.66": {
+  "13.823.67": {
     "migrations": [
       "20260228005947_e0895f16-62d9-45e4-99eb-6ecad9fe5892.sql",
       "20260228011257_0df15625-d074-4cfe-b273-7be04eb8f4c4.sql",

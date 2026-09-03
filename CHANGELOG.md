@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+
+
+## [13.823.67] - 2026-09-03
+
 ### Leads CRM: exportación completa, selección segura e importación confiable
 - **Exportar CSV baja TODOS los leads que cumplen los filtros**, no sólo la página en pantalla. El botón muestra "Exportando…" y se deshabilita mientras trabaja. Lo que cada usuario puede ver sigue limitado por sus permisos.
 - **La selección masiva ya no arrastra registros invisibles**: al cambiar búsqueda, estado, fuente, orden, página o tamaño de página, la selección se limpia; además se descarta cualquier registro que ya no esté en la página, y la barra masiva no opera mientras el listado se está recargando.
