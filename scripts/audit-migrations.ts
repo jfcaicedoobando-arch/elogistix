@@ -200,8 +200,14 @@ const MIG_DIR = path.resolve(process.cwd(), "supabase/migrations");
  *    funciones `SECURITY DEFINER` sin el bloque REVOKE/GRANT canónico.
  *    La migración correctiva re-aplica los permisos; los archivos originales
  *    quedan como legacy auditado.
+ * 6. FIX-H6-06 (2026-09-03): `20260911000200_replay_recompute_totales_embarque.sql`
+ *    re-emitió `_recompute_totales_embarque` (SECURITY DEFINER) sin REVOKE/GRANT
+ *    en el mismo archivo. Migración correctiva posterior re-aplica los permisos
+ *    (`REVOKE ... FROM PUBLIC, anon, authenticated` + `GRANT EXECUTE ... TO
+ *    service_role`); el archivo original queda como legacy auditado.
  */
-const BASELINE = "20260907000000";
+const BASELINE = "20260911000201";
+
 
 
 
