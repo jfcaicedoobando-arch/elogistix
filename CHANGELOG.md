@@ -12,6 +12,8 @@
 - Una proforma corta ahora cabe en **una sola página**: el título de *Conceptos*, la tabla y los totales viajan juntos y ya no se empuja el bloque completo a la página siguiente.
 - Se quitaron redundancias que gastaban espacio: la fila *Ruta* (ya está en Origen/Destino, y con ella el símbolo de flecha que salía mal), la *Vigencia* duplicada y el subtítulo *Conceptos en USD* cuando la proforma tiene una sola moneda.
 - Cuando no hay datos bancarios configurados, el aviso se muestra en una línea discreta en lugar de una tarjeta grande.
+- La caja de totales es un poco más compacta y las celdas de importe son más anchas, así los montos con divisa ("USD 2,115.00") no se parten en dos líneas.
+
 
 ## [13.823.69] - 2026-09-03
 
