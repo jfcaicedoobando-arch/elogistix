@@ -84,16 +84,7 @@ export function CotizacionDetalleContenido({
       )}
 
       {cotizacion.es_prospecto && !cotizacion.oportunidad_id && (
-        <CotizacionSinOportunidadBanner
-          cotizacionId={cotizacion.id}
-          folio={cotizacion.folio}
-          modoTransporte={(cotizacion as { modo?: string | null }).modo ?? null}
-          empresa={cotizacion.prospecto_empresa}
-          contacto={cotizacion.prospecto_contacto}
-          email={cotizacion.prospecto_email}
-          telefono={cotizacion.prospecto_telefono}
-          canEdit={canEdit}
-        />
+        <CotizacionSinOportunidadBanner cotizacionId={cotizacion.id} canEdit={canEdit} />
       )}
 
       {cotizacion.es_prospecto && (

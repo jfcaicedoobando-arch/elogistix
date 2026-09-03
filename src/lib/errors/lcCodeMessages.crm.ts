@@ -89,5 +89,17 @@ export const LC_CODE_MESSAGES_CRM: Record<string, string> = {
     "La oportunidad está marcada como perdida. Reábrela explícitamente antes de aceptar una cotización.",
   LC_CRM_SIN_ETAPA_GANADA:
     "Configura una etapa ganada activa en el pipeline antes de aceptar cotizaciones.",
+
+  // P0 · vínculo CRM obligatorio de las cotizaciones de prospecto.
+  LC_COT_VINCULO_SIN_ORIGEN:
+    "Selecciona un prospecto calificado o una oportunidad abierta del CRM: una cotización de prospecto no puede quedar sin origen comercial.",
+  LC_COT_VINCULO_CONFIRMADO:
+    "Esta cotización ya está ligada a otra oportunidad. Recarga la página: el vínculo confirmado no se puede sustituir desde el cotizador.",
+  LC_CRM_LEAD_NO_ELEGIBLE:
+    "Ese prospecto no es elegible: sólo se pueden cotizar leads calificados o en etapa de prospecto de tu organización. Califícalo en el CRM.",
+  LC_CRM_OPORTUNIDAD_NO_ELEGIBLE:
+    "Esa oportunidad no es elegible: debe estar viva, en una etapa abierta, sin cliente asignado y ligada a un prospecto calificado.",
+  LC_SIN_SESION:
+    "Tu sesión expiró. Vuelve a iniciar sesión e inténtalo de nuevo.",
 };
 
