@@ -96,6 +96,9 @@ export const contentStyles = {
   // bloquea que una descripción larga pueda comprimirlas o empujarlas.
   cellNum: { width: 65, textAlign: "right" as const, flexGrow: 0, flexShrink: 0 },
   cellNumWide: { width: 80, textAlign: "right" as const, flexGrow: 0, flexShrink: 0 },
+  // Importes con divisa explícita ("USD 2,115.00"): ancho suficiente para que
+  // el monto no se parta en dos líneas dentro de la celda.
+  cellMoney: { width: 78, textAlign: "right" as const, flexGrow: 0, flexShrink: 0 },
   cellQty: { width: 38, textAlign: "right" as const, flexGrow: 0, flexShrink: 0 },
   subtotalBlock: { marginTop: 6, alignItems: "flex-end" as const },
   subtotalLine: { fontSize: 10, marginVertical: 1, color: COLORS.muted },

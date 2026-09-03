@@ -18,19 +18,19 @@ export function columnasUSD(tasaIva: number, hayIva: boolean): PdfColumn<Concept
     { key: "descripcion", title: "Descripción", cellStyle: styles.cellDesc,
       render: (r) => formatearDescripcionConcepto(r.descripcion) },
     { key: "cantidad", title: "Cant.", cellStyle: styles.cellQty, render: (r) => String(r.cantidad) },
-    { key: "precio", title: "P. Unit.", cellStyle: styles.cellNum,
+    { key: "precio", title: "P. Unit.", cellStyle: styles.cellMoney,
       render: (r) => formatCurrency(Number(r.precio_unitario), "USD") },
-    { key: "importe", title: "Importe", cellStyle: styles.cellNum,
+    { key: "importe", title: "Importe", cellStyle: styles.cellMoney,
       render: (r) => formatCurrency(Number(r.cantidad) * Number(r.precio_unitario), "USD") },
   ];
   if (!hayIva) return base;
   return [
     ...base,
-    { key: "iva", title: "IVA", cellStyle: styles.cellNum,
+    { key: "iva", title: "IVA", cellStyle: styles.cellMoney,
       render: (r) => r.aplica_iva
         ? formatCurrency(calcularIVA(Number(r.cantidad) * Number(r.precio_unitario), resolverTasaConcepto(r, tasaIva)), "USD")
         : "—" },
-    { key: "total", title: "Total", cellStyle: styles.cellNum,
+    { key: "total", title: "Total", cellStyle: styles.cellMoney,
       render: (r) => {
         const importe = Number(r.cantidad) * Number(r.precio_unitario);
         const iva = r.aplica_iva ? calcularIVA(importe, resolverTasaConcepto(r, tasaIva)) : 0;
@@ -44,13 +44,13 @@ export function columnasMXN(tasaIva: number): PdfColumn<ConceptoVenta>[] {
     { key: "descripcion", title: "Descripción", cellStyle: styles.cellDesc,
       render: (r) => formatearDescripcionConcepto(r.descripcion) },
     { key: "cantidad", title: "Cant.", cellStyle: styles.cellQty, render: (r) => String(r.cantidad) },
-    { key: "precio", title: "P. Unit.", cellStyle: styles.cellNum,
+    { key: "precio", title: "P. Unit.", cellStyle: styles.cellMoney,
       render: (r) => formatCurrency(Number(r.precio_unitario), "MXN") },
-    { key: "importe", title: "Importe", cellStyle: styles.cellNum,
+    { key: "importe", title: "Importe", cellStyle: styles.cellMoney,
       render: (r) => formatCurrency(Number(r.cantidad) * Number(r.precio_unitario), "MXN") },
-    { key: "iva", title: "IVA", cellStyle: styles.cellNum,
+    { key: "iva", title: "IVA", cellStyle: styles.cellMoney,
       render: (r) => formatCurrency(calcularIVA(Number(r.cantidad) * Number(r.precio_unitario), resolverTasaConcepto(r, tasaIva)), "MXN") },
-    { key: "total", title: "Total", cellStyle: styles.cellNum,
+    { key: "total", title: "Total", cellStyle: styles.cellMoney,
       render: (r) => {
         const importe = Number(r.cantidad) * Number(r.precio_unitario);
         const iva = calcularIVA(importe, resolverTasaConcepto(r, tasaIva));

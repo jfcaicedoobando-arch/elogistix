@@ -22,6 +22,8 @@ export function ProformaDocument({ proforma, embarque, conceptos, cliente, tasaI
   const usd = conceptos.filter((c) => c.moneda === "USD");
   const mxn = conceptos.filter((c) => c.moneda === "MXN");
   const tasaPct = Math.round(tasaIva * 100);
+  // Subtítulo de moneda sólo cuando conviven USD y MXN.
+  const multiMoneda = usd.length > 0 && mxn.length > 0;
 
   // B-4: detectar si la proforma cubre N contenedores reales para activar el agrupamiento.
   const idsUnicos = new Set(
@@ -54,17 +56,37 @@ export function ProformaDocument({ proforma, embarque, conceptos, cliente, tasaI
     <Document title={`${proforma.numero} - Proforma`} author={emisor?.razonSocial ?? "Empresa"}>
       <Page size="LETTER" style={styles.page}>
         <ProformaHeader proforma={proforma} cliente={cliente ?? null} embarque={embarque} esConsolidada={false} emisor={emisor} />
-        <View minPresenceAhead={140}>
-          <Text style={styles.h3}>{multiContenedor ? "Conceptos por Contenedor" : "Conceptos"}</Text>
-          <SeccionMonedaPdf grupos={grupos} moneda="USD" tasaIva={tasaIva} multiContenedor={multiContenedor} />
-          <SeccionMonedaPdf grupos={grupos} moneda="MXN" tasaIva={tasaIva} multiContenedor={multiContenedor} />
-        </View>
+        {/*
+          El título nunca queda huérfano (minPresenceAhead propio) y los bloques
+          de conceptos fluyen libremente: no se envuelve todo en un contenedor
+          con minPresenceAhead grande, que provocaba saltos de página completos.
+        */}
+        <Text style={[styles.h3, { marginTop: 10, marginBottom: 6 }]} minPresenceAhead={70}>
+          {multiContenedor ? "Conceptos por Contenedor" : "Conceptos"}
+        </Text>
+        <SeccionMonedaPdf
+          grupos={grupos}
+          moneda="USD"
+          tasaIva={tasaIva}
+          multiContenedor={multiContenedor}
+          mostrarSubtituloMoneda={multiMoneda}
+        />
+        <SeccionMonedaPdf
+          grupos={grupos}
+          moneda="MXN"
+          tasaIva={tasaIva}
+          multiContenedor={multiContenedor}
+          mostrarSubtituloMoneda={multiMoneda}
+        />
 
+        {/* La caja de totales es indivisible (wrap=false) y sólo salta de
+            página si realmente no cabe completa. */}
         <TotalesBox bloques={bloquesTotales} />
-
         {proforma.notas ? (
           <>
-            <Text style={styles.h3}>Notas</Text>
+            <Text style={[styles.h3, { marginTop: 10, marginBottom: 6 }]} minPresenceAhead={50}>
+              Notas
+            </Text>
             <View style={styles.notesBox}>
               <Text>{proforma.notas}</Text>
             </View>

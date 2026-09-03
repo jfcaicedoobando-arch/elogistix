@@ -103,4 +103,62 @@ describe("ProformaDocument", () => {
     expect(text).not.toContain("Contenedores");
     expect(text).not.toContain("BL House");
   });
+
+  it("omite la fila 'Ruta' redundante y no imprime el separador de flecha", () => {
+    const { container } = render(
+      <ProformaDocument proforma={mockProforma} embarque={mockEmbarque} conceptos={[mockConcepto]} />,
+    );
+    const text = container.textContent ?? "";
+    expect(text).toContain("Origen");
+    expect(text).toContain("Destino");
+    expect(text).not.toContain("Ruta");
+    expect(text).not.toContain("→");
+  });
+
+  it("no muestra el subtítulo de moneda con una sola moneda, pero conserva el título de conceptos", () => {
+    const { container } = render(
+      <ProformaDocument proforma={mockProforma} embarque={mockEmbarque} conceptos={[mockConcepto]} />,
+    );
+    const text = container.textContent ?? "";
+    expect(text).toContain("Conceptos");
+    expect(text).not.toContain("Conceptos en USD");
+  });
+
+  it("muestra los subtítulos de moneda cuando conviven USD y MXN", () => {
+    const conceptoMxn = {
+      ...mockConcepto,
+      descripcion: "Maniobras en destino",
+      moneda: "MXN",
+    } as unknown as typeof mockConcepto;
+    const proforma = makeProforma({
+      numero: "PROF-002",
+      fecha_emision: "2023-01-15",
+      expediente: "EXP-2024-99",
+      cliente_nombre: "Acme Corp",
+      subtotal_usd: 100,
+      iva_usd: 16,
+      total_usd: 116,
+      subtotal_mxn: 100,
+      iva_mxn: 16,
+      total_mxn: 116,
+    });
+    const { container } = render(
+      <ProformaDocument
+        proforma={proforma}
+        embarque={mockEmbarque}
+        conceptos={[mockConcepto, conceptoMxn]}
+      />,
+    );
+    const text = container.textContent ?? "";
+    expect(text).toContain("Conceptos en USD");
+    expect(text).toContain("Conceptos en MXN");
+  });
+
+  it("muestra la vigencia una sola vez (en condiciones de pago)", () => {
+    const { container } = render(
+      <ProformaDocument proforma={mockProforma} embarque={mockEmbarque} conceptos={[mockConcepto]} />,
+    );
+    const text = container.textContent ?? "";
+    expect(text.match(/Vigencia/g)?.length ?? 0).toBe(1);
+  });
 });
