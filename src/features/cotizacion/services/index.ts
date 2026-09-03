@@ -15,6 +15,7 @@ export {
   fetchCotizacionById,
   fetchEmbarquesVinculados,
   fetchCotizacionFolio,
+  fetchCotizacionSello,
 } from "./queries";
 
 // Mutations (escrituras)
@@ -32,6 +33,7 @@ export {
   upsertCotizacionCostos,
   fetchCotizacionCostosForEmbarque,
 } from "./costos";
+export type { UpsertCostosResult } from "./costos";
 ;
 
 // Conversiones (prospecto→cliente / cotización→embarques / portal)

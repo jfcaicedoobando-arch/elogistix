@@ -29,7 +29,14 @@ interface ToastFn {
 interface Mutations {
   crearCotizacion: { mutateAsync: (d: CreateCotizacionInput) => Promise<CotizacionRow>; isPending: boolean };
   updateCotizacion: { mutateAsync: (d: { id: string; data: Partial<CreateCotizacionInput> & Record<string, unknown> }) => Promise<unknown>; isPending: boolean };
-  upsertCostos: { mutateAsync: (d: { cotizacionId: string; costos: CostoCotizacion[] }) => Promise<CostoCotizacion[]>; isPending: boolean };
+  upsertCostos: {
+    mutateAsync: (d: {
+      cotizacionId: string;
+      costos: CostoCotizacion[];
+      expectedUpdatedAt?: string | null;
+    }) => Promise<{ costos: CostoCotizacion[]; updatedAt: string | null }>;
+    isPending: boolean;
+  };
   registrarActividad: { mutate: (d: { accion: string; modulo: string; entidad_id?: string | null; entidad_nombre?: string; detalles?: Record<string, unknown> }) => void };
 }
 

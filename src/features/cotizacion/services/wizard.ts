@@ -18,7 +18,14 @@ interface Mutations {
   crearCotizacion: { mutateAsync: (d: CreateCotizacionInput) => Promise<{ id: string }> };
   // Devuelve el nuevo `updated_at` (N-06) o void; al wizard le basta con esperarlo.
   updateCotizacion: { mutateAsync: (d: { id: string; data: Record<string, unknown> }) => Promise<unknown> };
-  upsertCostos: { mutateAsync: (d: { cotizacionId: string; costos: CostoCotizacion[] }) => Promise<CostoCotizacion[]> };
+  upsertCostos: {
+    mutateAsync: (d: {
+      cotizacionId: string;
+      costos: CostoCotizacion[];
+      /** v13.823.69: sello esperado de la cotización (bloqueo optimista del paso 2). */
+      expectedUpdatedAt?: string | null;
+    }) => Promise<{ costos: CostoCotizacion[]; updatedAt: string | null }>;
+  };
 }
 
 export async function savePaso1(opts: {
@@ -75,13 +82,20 @@ async function subirMsds(file: File): Promise<string> {
   return path;
 }
 
+/**
+ * Guarda los costos internos del paso 2. Devuelve el nuevo sello
+ * (`cotizaciones.updated_at`) que la RPC entrega tras tocar la cotización, o
+ * `null` si no hubo nada que guardar (v13.823.69).
+ */
 export async function savePaso2(opts: {
   cotizacionId: string;
   costosInternos: FilaCostoLocal[];
+  /** Sello esperado: si la cotización cambió, la RPC no reemplaza nada. */
+  expectedUpdatedAt?: string | null;
   mutations: Pick<Mutations, "upsertCostos">;
-}): Promise<void> {
-  const { cotizacionId, costosInternos, mutations } = opts;
-  if (costosInternos.length === 0) return;
+}): Promise<string | null> {
+  const { cotizacionId, costosInternos, expectedUpdatedAt, mutations } = opts;
+  if (costosInternos.length === 0) return null;
 
   const costos: CostoCotizacion[] = costosInternos.map(f => ({
     id: "", cotizacion_id: cotizacionId, concepto: f.concepto, moneda: f.moneda,
@@ -92,7 +106,8 @@ export async function savePaso2(opts: {
     costeo_tarifa_id: f.costeo_tarifa_id ?? null,
     costeo_tarifa_recargo_id: f.costeo_tarifa_recargo_id ?? null,
   }));
-  await mutations.upsertCostos.mutateAsync({ cotizacionId, costos });
+  const res = await mutations.upsertCostos.mutateAsync({ cotizacionId, costos, expectedUpdatedAt });
+  return res?.updatedAt ?? null;
 }
 
 /**
