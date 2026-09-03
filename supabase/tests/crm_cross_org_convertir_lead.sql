@@ -142,7 +142,7 @@ BEGIN
 
   -- A0 · JWT con role=authenticated pero SIN sub: sesión rota ⇒ nada se toca.
   SELECT count(*) INTO v_n FROM public.crm_oportunidades WHERE organization_id = v_org_a;
-  PERFORM pg_temp.as_authenticated_sin_uid();
+  PERFORM pg_temp.as_authenticated_sin_uid_rpc_interna();
   PERFORM pg_temp.espera_lc(
     format('SELECT public.convertir_lead_rpc(%L, false, NULL, %L, 0, %L, NULL)', v_lead1, 'Op sin sesión', 'MXN'),
     'LC_SESION_REQUERIDA', 'A0 authenticated sin uid');
@@ -160,7 +160,7 @@ BEGIN
     'A0b: el proceso interno (service_role) debe poder convertir sin usuario firmado');
 
   -- A1 · vendedor propietario: camino feliz.
-  PERFORM pg_temp.as_user(v_vend_a);
+  PERFORM pg_temp.as_user_rpc_interna(v_vend_a);
 
   v_res := public.convertir_lead_rpc(v_lead1, false, NULL, 'Op del vendedor', 100, 'MXN', NULL);
   PERFORM pg_temp.assert((v_res->>'oportunidad_id') IS NOT NULL, 'A1: el vendedor propietario debe poder convertir su lead');
@@ -178,19 +178,19 @@ BEGIN
     'LC_LEAD_AJENO', 'A2 vendedor ajeno');
 
   -- A3 · miembro sin rol CRM (viewer).
-  PERFORM pg_temp.as_user(v_viewer);
+  PERFORM pg_temp.as_user_rpc_interna(v_viewer);
   PERFORM pg_temp.espera_lc(
     format('SELECT public.convertir_lead_rpc(%L, false, NULL, %L, 0, %L, NULL)', v_lead3, 'Op viewer', 'MXN'),
     'LC_ROL_SIN_PERMISO_CRM', 'A3 viewer sin permiso CRM');
 
   -- A4 · rol global admin_org degradado por la membership a viewer.
-  PERFORM pg_temp.as_user(v_degradado);
+  PERFORM pg_temp.as_user_rpc_interna(v_degradado);
   PERFORM pg_temp.espera_lc(
     format('SELECT public.convertir_lead_rpc(%L, false, NULL, %L, 0, %L, NULL)', v_lead4, 'Op degradada', 'MXN'),
     'LC_ROL_SIN_PERMISO_CRM', 'A4 membership degradada gana al rol global');
 
   -- A5 · usuario de otra organización.
-  PERFORM pg_temp.as_user(v_user_b);
+  PERFORM pg_temp.as_user_rpc_interna(v_user_b);
   PERFORM pg_temp.espera_lc(
     format('SELECT public.convertir_lead_rpc(%L, false, NULL, %L, 0, %L, NULL)', v_lead5, 'Op cross-org', 'MXN'),
     'LC_ORG_AJENA', 'A5 otra organización');
@@ -201,7 +201,7 @@ BEGIN
     'LC_LEAD_NO_ENCONTRADO', 'A6 lead inexistente');
 
   -- A7 · lead soft-deleted: se trata como inexistente.
-  PERFORM pg_temp.as_user(v_vend_a);
+  PERFORM pg_temp.as_user_rpc_interna(v_vend_a);
   PERFORM pg_temp.espera_lc(
     format('SELECT public.convertir_lead_rpc(%L, false, NULL, %L, 0, %L, NULL)', v_lead7, 'Op borrada', 'MXN'),
     'LC_LEAD_NO_ENCONTRADO', 'A7 lead soft-deleted');
@@ -212,7 +212,7 @@ BEGIN
   -- como borradas para probar que la RPC honra deleted_at.
   UPDATE public.crm_etapas_pipeline SET deleted_at = now()
    WHERE organization_id = v_org_b AND tipo = 'abierta' AND activa = true;
-  PERFORM pg_temp.as_user(v_user_b);
+  PERFORM pg_temp.as_user_rpc_interna(v_user_b);
   PERFORM pg_temp.espera_lc(
     format('SELECT public.convertir_lead_rpc(%L, false, NULL, %L, 0, %L, NULL)', v_lead_b2, 'Op etapa borrada', 'MXN'),
     'LC_PIPELINE_SIN_ETAPAS', 'A8 etapa inicial soft-deleted');
