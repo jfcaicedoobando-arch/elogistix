@@ -81,6 +81,29 @@ describe("services/cotizacion/costos", () => {
     ).rejects.toThrow();
   });
 
+  it("upsertCotizacionCostos devuelve el sello nuevo de la cotización", async () => {
+    mock.setRpcResult("actualizar_cotizacion_costos", {
+      data: { cotizacion_id: "cot-1", count: 1, updated_at: "2026-09-03T12:00:00Z" },
+      error: null,
+    });
+    mock.setTableResult("cotizacion_costos", { data: [], error: null });
+    const r = await upsertCotizacionCostos("cot-1", [], "req-1", "2026-09-03T11:00:00Z");
+    expect(mock.rpcCalls[0].args).toMatchObject({ p_expected_updated_at: "2026-09-03T11:00:00Z" });
+    expect(r.updatedAt).toBe("2026-09-03T12:00:00Z");
+    expect(r.costos).toEqual([]);
+  });
+
+  it("upsertCotizacionCostos lanza LC_CONFLICTO_CONCURRENCIA y no relee costos", async () => {
+    mock.setRpcResult("actualizar_cotizacion_costos", {
+      data: null,
+      error: { message: "LC_CONFLICTO_CONCURRENCIA: otro usuario modificó esta cotización." },
+    });
+    await expect(
+      upsertCotizacionCostos("cot-1", [], "req-1", "2026-09-03T11:00:00Z"),
+    ).rejects.toThrow(/LC_CONFLICTO_CONCURRENCIA/);
+    expect(mock.tableCalls.some((c) => c.table === "cotizacion_costos")).toBe(false);
+  });
+
   it("fetchCotizacionCostosForEmbarque devuelve filas tipadas", async () => {
     mock.setTableResult("cotizacion_costos", {
       data: [{ concepto: "F", costo_unitario: 100, moneda: "USD", proveedor: "P" }],
