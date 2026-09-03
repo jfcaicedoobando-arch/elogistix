@@ -23,7 +23,7 @@ export function useCotizacionWizardSteps({
 }: Deps) {
   const { updateCotizacion, upsertCostos, registrarActividad } = mutations;
 
-  const { handlePaso1, handleCotizarSinDesglose } = usePaso1Handlers({
+  const { handlePaso1, handleCotizarSinDesglose, vinculoCrmError } = usePaso1Handlers({
     form, cotizacionId, setCotizacionId, setCurrentStep,
     msdsFile, buildPaso1Data,
     mutations: {
@@ -184,5 +184,5 @@ export function useCotizacionWizardSteps({
     else navigate("/cotizaciones");
   }, [currentStep, navigate, setCurrentStep]);
 
-  return { handleSiguiente, handleGuardar, handleBack, handleCotizarSinDesglose };
+  return { handleSiguiente, handleGuardar, handleBack, handleCotizarSinDesglose, vinculoCrmError };
 }
