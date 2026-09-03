@@ -61,6 +61,20 @@ export default function NuevaActividadDialog({ open, onOpenChange, defaultEntida
     setContactoEfectivo(false); setReunionCalificada(false);
   }, [open, defTipo, defId]);
 
+  const isDirty = useMemo(
+    () =>
+      entidadTipo !== (defTipo ?? "oportunidad") ||
+      entidadId !== (defId ?? "") ||
+      tipo !== "tarea" ||
+      asunto !== "" ||
+      desc !== "" ||
+      fecha !== "" ||
+      contactoEfectivo !== false ||
+      reunionCalificada !== false,
+    [entidadTipo, defTipo, entidadId, defId, tipo, asunto, desc, fecha, contactoEfectivo, reunionCalificada],
+  );
+
+
   const handleSubmit = async () => {
     if (crear.isPending || enviandoRef.current) return;
     if (!entidadId) return notifyError(undefined, { title: "Selecciona la entidad", method: "HANDLE_SUBMIT", errorCode: ERROR_CODES.VALIDATION_FAILED });
