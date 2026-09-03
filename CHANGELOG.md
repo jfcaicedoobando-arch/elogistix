@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [13.823.68] - 2026-09-03
+
 ### Formularios del CRM: nada se pierde y nada se guarda dos veces
 - **Un segundo Enter o clic ya no crea dos registros**: las altas express y los formularios completos de lead, oportunidad y actividad ignoran envíos duplicados, deshabilitan *Cancelar* y *Más campos →*, y no permiten cerrar el modal (X, ESC o clic fuera) mientras se guarda.
 - **Cerrar un formulario con captura pide confirmación** en *Cancelar*, X, ESC y clic fuera; incluye la oportunidad (nombre, origen, cliente/prospecto, vendedor, montos, notas y la casilla de actividad automática). Tras guardar con éxito ya no aparece esa confirmación.
