@@ -3,7 +3,7 @@
  * Usado por QuickAddMenu y por cualquier flujo que necesite crear una tarea.
  * Migrado a `FormDialogShell` (v13.121.0).
  */
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ClipboardList } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -83,7 +83,7 @@ export default function NuevaActividadDialog({ open, onOpenChange, defaultEntida
 
   const footer = (
     <>
-      <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
+      <Button variant="outline" onClick={() => onOpenChange(false)} disabled={crear.isPending}>Cancelar</Button>
       <Button onClick={handleSubmit} loading={crear.isPending}>
         Crear
       </Button>
@@ -98,6 +98,7 @@ export default function NuevaActividadDialog({ open, onOpenChange, defaultEntida
       title="Nueva actividad"
       description="Registra una tarea, llamada, reunión o nota."
       size="md"
+      busy={crear.isPending}
       footer={footer}
     >
       {!defaultEntidad && (
