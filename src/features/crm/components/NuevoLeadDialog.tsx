@@ -103,8 +103,8 @@ export default function NuevoLeadDialog({ open, onOpenChange, onCreated }: Props
 
   const footer = (
     <>
-      <Button variant="outline" onClick={() => onOpenChange(false)} disabled={crear.isPending}>Cancelar</Button>
-      <Button onClick={handleSubmit} loading={crear.isPending}>
+      <Button variant="outline" onClick={() => onOpenChange(false)} disabled={pendingTotal}>Cancelar</Button>
+      <Button onClick={handleSubmit} loading={pendingTotal}>
         Crear lead
       </Button>
     </>
@@ -118,9 +118,10 @@ export default function NuevoLeadDialog({ open, onOpenChange, onCreated }: Props
       title="Nuevo lead"
       description="Captura los datos básicos del prospecto. Podrás convertirlo a cliente y oportunidad desde su ficha."
       size="2xl"
-      busy={crear.isPending}
+      busy={pendingTotal}
       footer={footer}
     >
+
       <AvisoLeadDuplicado
         empresa={form.empresa}
         email={form.email}
