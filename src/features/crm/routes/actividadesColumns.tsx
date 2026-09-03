@@ -34,7 +34,16 @@ export const baseActividadColumns: ColumnDef<CrmActividadRow, unknown>[] = defin
   },
 ]);
 
-export const actividadActionColumn: ColumnDef<CrmActividadRow, unknown> = {
+/**
+ * Columna de acciones (completar / posponer / notas). Recibe el predicado de
+ * permiso real: espejo de las policies de `crm_actividades` (staff sobre
+ * cualquiera, vendedor sólo las propias). Sin permiso la fila no muestra
+ * botones que la RLS rechazaría.
+ */
+export const actividadActionColumn = (
+  puedeGestionar: (a: CrmActividadRow) => boolean,
+): ColumnDef<CrmActividadRow, unknown> => ({
   id: "acciones", header: "", meta: { width: COL_W.fecha },
-  cell: ({ row }) => <ActividadRowActions actividad={row.original} />,
-};
+  cell: ({ row }) =>
+    puedeGestionar(row.original) ? <ActividadRowActions actividad={row.original} /> : null,
+});
