@@ -78,6 +78,7 @@ describe("reabrirEmbarqueRpc — mapeo de errores", () => {
 
   it("resuelve sin error en el happy path", async () => {
     rpcMock.mockResolvedValue({ data: { estado: "Entregado" }, error: null });
-    await expect(reabrirEmbarqueRpc(input)).resolves.toBeUndefined();
+    await expect(reabrirEmbarqueRpc(input)).resolves.toEqual({ replay: false, pendiente: false });
+  });
   });
 });
