@@ -3,8 +3,10 @@
 -- Reemplaza los costos internos del Paso 2 del wizard de cotización de forma
 -- atómica y participa del MISMO bloqueo optimista que la cotización:
 --   * toma el lock de la fila de `cotizaciones` ANTES de borrar/insertar,
---   * si `p_expected_updated_at` no coincide, no borra ni inserta nada y lanza
---     LC_CONFLICTO_CONCURRENCIA,
+--   * falla CERRADA: si `p_expected_updated_at` viene NULL o no coincide, no
+--     borra ni inserta nada y lanza LC_CONFLICTO_CONCURRENCIA,
+--   * valida autoridad/organización ANTES de resolver el replay de idempotencia
+--     (la clave está ligada a key+organization_id+user_id por PK),
 --   * al terminar toca la cotización y devuelve el nuevo `updated_at` para que
 --     el wizard resincronice su sello.
 -- La autoridad (organización + rol escritor) se valida siempre en servidor.
@@ -30,9 +32,9 @@ DECLARE
   c jsonb;
   v_resp jsonb;
 BEGIN
-  v_resp := public.idempotency_claim(p_request_id, 'actualizar_cotizacion_costos');
-  IF v_resp IS NOT NULL THEN RETURN v_resp; END IF;
-
+  -- 1) Bloquear/leer la cotización y validar autoridad ANTES de cualquier
+  --    replay de idempotencia: la respuesta almacenada de una solicitud previa
+  --    nunca puede devolverse sin pasar por _assert_writer_cotizacion.
   SELECT organization_id, updated_at
     INTO v_org_id, v_actual
     FROM cotizaciones
@@ -43,8 +45,17 @@ BEGIN
   IF v_org_id IS NULL THEN RAISE EXCEPTION 'Cotización no encontrada'; END IF;
   PERFORM public._assert_writer_cotizacion(v_org_id);
 
-  IF p_expected_updated_at IS NOT NULL
-     AND v_actual IS DISTINCT FROM p_expected_updated_at THEN
+  -- 2) Idempotencia: la clave está estrictamente ligada a (key, organization_id,
+  --    user_id) por PK de idempotency_keys, así que el replay jamás cruza
+  --    usuario ni tenant. Se resuelve después de la autoridad y antes del sello
+  --    para que un reintento legítimo (cuyo sello original ya avanzó por su
+  --    propia escritura) recupere su respuesta almacenada.
+  v_resp := public.idempotency_claim(p_request_id, 'actualizar_cotizacion_costos');
+  IF v_resp IS NOT NULL THEN RETURN v_resp; END IF;
+
+  -- 3) Falla cerrada: sin sello no hay candado optimista posible.
+  IF p_expected_updated_at IS NULL
+     OR v_actual IS DISTINCT FROM p_expected_updated_at THEN
     RAISE EXCEPTION 'LC_CONFLICTO_CONCURRENCIA: otro usuario modificó esta cotización. Recarga y vuelve a intentar.';
   END IF;
 
@@ -89,3 +100,6 @@ $function$;
 
 REVOKE ALL ON FUNCTION public.actualizar_cotizacion_costos(uuid, jsonb, uuid, timestamptz) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION public.actualizar_cotizacion_costos(uuid, jsonb, uuid, timestamptz) TO authenticated, service_role;
+
+COMMENT ON FUNCTION public.actualizar_cotizacion_costos(uuid, jsonb, uuid, timestamptz) IS
+  'Reemplaza los costos del paso 2 del wizard. Falla cerrada: exige p_expected_updated_at y lo compara contra cotizaciones.updated_at bajo FOR UPDATE; autoridad validada antes del replay de idempotencia (clave ligada a key+org+user).';
