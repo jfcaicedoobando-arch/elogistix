@@ -5,6 +5,9 @@
 ### Alta de proveedor: el RFC de la CSF ya no se pierde
 - Al elegir **Agente de Carga** y su país, el RFC/Tax ID cargado desde la CSF se conserva; el campo ahora está siempre visible en el paso 1.
 
+### Facturas: el correo ya no se sugiere al exportador del cliente
+- Al enviar/timbrar un CFDI, el destinatario sugerido es el contacto de **facturación/cobranza** y, si no existe, el **correo fiscal del cliente**; los contactos de otro tipo (exportador, shipper) ya no se autoseleccionan por ser los más recientes.
+
 ## [13.823.69] - 2026-09-03
 
 ### Cotizaciones: dos personas ya no se pisan los cambios
