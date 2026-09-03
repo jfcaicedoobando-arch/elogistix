@@ -69,6 +69,7 @@ export async function listLeadsTodos(
     aplicarFiltrosLeads(
       supabase.from("crm_leads").select(LEAD_COLUMNS).is("deleted_at", null),
       filtros,
+    // SAFE-CAST: el builder de Supabase es thenable con la forma { data, error }; el tipo generado no lo expresa.
     ).range(desde, hasta) as unknown as PromiseLike<{
       data: CrmLeadRow[] | null;
       error: { message: string } | null;

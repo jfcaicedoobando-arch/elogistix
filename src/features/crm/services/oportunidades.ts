@@ -86,6 +86,7 @@ export async function listOportunidadesTodas(
         .order("created_at", { ascending: false })
         .order("id", { ascending: false }),
       params,
+    // SAFE-CAST: el builder de Supabase es thenable con la forma { data, error }; el tipo generado no lo expresa.
     ).range(desde, hasta) as unknown as PromiseLike<{ data: CrmOportunidadRow[] | null; error: { message: string } | null }>,
   );
 }

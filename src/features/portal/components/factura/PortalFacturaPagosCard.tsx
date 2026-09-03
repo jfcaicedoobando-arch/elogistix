@@ -68,6 +68,7 @@ export default function PortalFacturaPagosCard({
           // SAFE-CAST: la consulta del portal ya devuelve estas columnas; el
           // tipo generado no incluye las URL del REP como opcionales.
           <PortalFacturaPagosLista
+            // SAFE-CAST: la consulta del portal ya devuelve estas columnas del REP.
             pagos={pagos as unknown as PortalPagoFila[]}
             moneda={moneda}
           />
@@ -77,6 +78,7 @@ export default function PortalFacturaPagosCard({
           // SAFE-CAST: la consulta del portal ya devuelve estas columnas; el
           // tipo generado no las expone en la relación anidada.
           <PortalFacturaNotasCreditoLista
+            // SAFE-CAST: la consulta del portal ya devuelve estas columnas anidadas.
             notasCredito={notasCredito as unknown as PortalNotaCreditoFila[]}
             moneda={moneda}
           />
