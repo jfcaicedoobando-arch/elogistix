@@ -56,7 +56,7 @@ describe("services/cotizacion/costos", () => {
         costo_unitario: 100,
         precio_venta: 120,
       } as never,
-    ], "req-1");
+    ], "req-1", "2026-09-03T11:00:00Z");
     expect(mock.rpcCalls[0].fn).toBe("actualizar_cotizacion_costos");
     expect(mock.rpcCalls[0].args).toMatchObject({
       p_cotizacion_id: "cot-1",
@@ -69,7 +69,7 @@ describe("services/cotizacion/costos", () => {
     mock.setTableResult("cotizacion_costos", { data: [], error: null });
     await upsertCotizacionCostos("cot-1", [
       { concepto: "X", moneda: "MXN", proveedor: "P", cantidad: 1, costo_unitario: 10 } as never,
-    ]);
+    ], "req-2", "2026-09-03T11:00:00Z");
     const args = mock.rpcCalls[0].args as { p_costos: Array<Record<string, unknown>> };
     expect(args.p_costos[0]).toMatchObject({ precio_venta: 0, unidad_medida: "", notas: "" });
   });
@@ -77,7 +77,7 @@ describe("services/cotizacion/costos", () => {
   it("upsertCotizacionCostos propaga error del RPC", async () => {
     mock.setRpcResult("actualizar_cotizacion_costos", { data: null, error: { message: "boom" } });
     await expect(
-      upsertCotizacionCostos("cot-1", []),
+      upsertCotizacionCostos("cot-1", [], "req-3", "2026-09-03T11:00:00Z"),
     ).rejects.toThrow();
   });
 
@@ -102,6 +102,13 @@ describe("services/cotizacion/costos", () => {
       upsertCotizacionCostos("cot-1", [], "req-1", "2026-09-03T11:00:00Z"),
     ).rejects.toThrow(/LC_CONFLICTO_CONCURRENCIA/);
     expect(mock.tableCalls.some((c) => c.table === "cotizacion_costos")).toBe(false);
+  });
+
+  it("upsertCotizacionCostos sin sello no llama la RPC (falla cerrada)", async () => {
+    await expect(upsertCotizacionCostos("cot-1", [], "req-4")).rejects.toThrow(
+      /LC_CONFLICTO_CONCURRENCIA/,
+    );
+    expect(mock.rpcCalls.length).toBe(0);
   });
 
   it("fetchCotizacionCostosForEmbarque devuelve filas tipadas", async () => {
