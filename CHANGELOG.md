@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+### Auditoría de migraciones en verde
+- La función interna de totales de embarque quedó con sus permisos declarados explícitamente (sólo el sistema puede ejecutarla; nadie público o anónimo), se documentó el ajuste de la línea base del auditor de migraciones y se sincronizó el listado de migraciones. `bash scripts/run-audits-conditional.sh` corre completo en verde.
+
+
+
 ### Pruebas de permisos (RLS) al día
 - Se actualizaron las pruebas de permisos que aún asumían contratos viejos: la conversión de prospecto a cliente se prueba con un usuario firmado con permiso de alta, las funciones internas del CRM se invocan con el rol interno que hoy las ejecuta y los candados de actividades esperan el mensaje real del guard. Suite completa en verde (89 guards y 34 suites).
 - Se registraron en la lista canónica las cinco funciones internas del CRM que quedaron cerradas a `service_role` (conversión de prospecto y sincronía con cotizaciones) y se volvió a cerrar el borrado físico de leads en la base efímera de pruebas, que sólo deben archivarse.

@@ -77,3 +77,13 @@ Nunca a la baja. Si una migración legacy imposible de corregir aparece post-bas
   `SECURITY DEFINER` sin `REVOKE ALL … FROM PUBLIC` / `GRANT EXECUTE …`. La
   migración correctiva `20260731224126` re-aplica los permisos; el archivo
   original queda como legacy auditado.
+
+- `20260907000000` → `20260911000201` (2026-09-03): FIX-H6-06. La migración
+  `20260911000200_replay_recompute_totales_embarque.sql` re-emitió
+  `public._recompute_totales_embarque(uuid)` como `SECURITY DEFINER` sin
+  `REVOKE ALL … FROM PUBLIC` ni `GRANT EXECUTE …` en el mismo archivo. La
+  migración correctiva posterior re-aplica los permisos canónicos
+  (`REVOKE … FROM PUBLIC, anon, authenticated` + `GRANT EXECUTE … TO
+  service_role`, que ya eran los vigentes en la base) y el espejo
+  `supabase/schema/embarques/_recompute_totales_embarque.sql` los incluye; el
+  archivo original queda como legacy auditado.

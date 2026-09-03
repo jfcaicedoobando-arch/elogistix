@@ -1,21 +1,21 @@
-# Cast Audit — generado 2026-09-02
+# Cast Audit — generado 2026-09-03
 
 Auditoría automática de los `as` casts en `src/`. Generado por
 `scripts/audit-casts.ts`. Para regenerar: `bun scripts/audit-casts.ts`.
 
 ## Resumen
 
-Total de `as` casts detectados: **3395**
+Total de `as` casts detectados: **3431**
 
 | Categoría | Peso | Cantidad | % |
 |-----------|------|----------|---|
-| SAFE      | 0 | 990     | 29.2% |
-| LOW       | 1 | 165      | 4.9% |
-| MEDIUM    | 2 | 2240   | 66.0% |
-| HIGH      | 3 | 0     | 0.0% |
+| SAFE      | 0 | 998     | 29.1% |
+| LOW       | 1 | 165      | 4.8% |
+| MEDIUM    | 2 | 2266   | 66.0% |
+| HIGH      | 3 | 2     | 0.1% |
 | CRITICAL  | 4 | 0 | 0.0% |
 
-**Lectura clave:** los casts a accionar son los **HIGH + CRITICAL** = 0 (~0.0%). El resto es seguro o aceptable bajo política.
+**Lectura clave:** los casts a accionar son los **HIGH + CRITICAL** = 2 (~0.1%). El resto es seguro o aceptable bajo política.
 
 ## Definición de categorías
 
@@ -40,14 +40,25 @@ Total de `as` casts detectados: **3395**
 | 9 | `src/lib/mappers/genericPayloadMapper.ts` | 11 | 19 | 1 | 1 | 9 | 0 | 0 |
 | 10 | `src/features/cotizacion/hooks/__tests__/usePaso1SectionStatus.test.tsx` | 9 | 18 | 0 | 0 | 9 | 0 | 0 |
 | 11 | `src/features/cotizacion/hooks/wizard/__tests__/useCotizacionWizardSteps.test.tsx` | 9 | 18 | 0 | 0 | 9 | 0 | 0 |
-| 12 | `src/features/embarques/domain/mappers/__tests__/embarqueCotizacionDesvincular.test.ts` | 9 | 18 | 0 | 0 | 9 | 0 | 0 |
-| 13 | `src/features/facturacion/services/pagos/__tests__/pagosFactura.test.ts` | 10 | 18 | 1 | 0 | 9 | 0 | 0 |
-| 14 | `src/test/setup.ts` | 9 | 18 | 0 | 0 | 9 | 0 | 0 |
-| 15 | `src/features/configuracion/index.ts` | 8 | 16 | 0 | 0 | 8 | 0 | 0 |
+| 12 | `src/features/cotizacion/services/__tests__/wizard.test.ts` | 9 | 18 | 0 | 0 | 9 | 0 | 0 |
+| 13 | `src/features/embarques/domain/mappers/__tests__/embarqueCotizacionDesvincular.test.ts` | 9 | 18 | 0 | 0 | 9 | 0 | 0 |
+| 14 | `src/features/facturacion/services/pagos/__tests__/pagosFactura.test.ts` | 10 | 18 | 1 | 0 | 9 | 0 | 0 |
+| 15 | `src/test/setup.ts` | 9 | 18 | 0 | 0 | 9 | 0 | 0 |
 
 ## Top-30 casts más riesgosos (HIGH + CRITICAL)
 
-_Ningún cast HIGH o CRITICAL detectado._
+### 1. [HIGH] `src/features/crm/services/leads/queries.ts:72`
+
+```ts
+).range(desde, hasta) as unknown as PromiseLike<{
+```
+
+### 2. [HIGH] `src/features/crm/services/oportunidades.ts:89`
+
+```ts
+).range(desde, hasta) as unknown as PromiseLike<{ data: CrmOportunidadRow[] | null; error: { message: string } | null }>,
+```
+
 
 ## Roadmap
 
