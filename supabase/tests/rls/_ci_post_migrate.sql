@@ -123,6 +123,20 @@ BEGIN
 END $$;
 
 -- ============================================================================
+-- CRM · re-cierre del DELETE físico de leads.
+-- En prod el ACL de `public.crm_leads` es `authenticated=arw` (sin DELETE): los
+-- leads sólo se archivan con soft-delete. El `GRANT ... DELETE ON ALL TABLES`
+-- de arriba reinstala el privilegio en el Postgres bare de CI y hacía fallar el
+-- caso E5 de `crm_leads_ownership.sql`.
+-- ============================================================================
+DO $$
+BEGIN
+  IF to_regclass('public.crm_leads') IS NOT NULL THEN
+    EXECUTE 'REVOKE DELETE ON public.crm_leads FROM authenticated, anon';
+  END IF;
+END $$;
+
+-- ============================================================================
 -- Triggers de comisiones.
 --
 -- Antes se dropeaba `trg_pago_factura_comision_ins` aquí para evitar un bug
