@@ -3,10 +3,10 @@
  * Formulario simple — los campos avanzados se editan en LeadDetalle.
  * Migrado a `FormDialogShell` (v13.121.0).
  */
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { Target } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
+import { FormDialogFooter } from "@/components/shared/FormDialogFooter";
 import { notifyError } from "@/lib/ui/appFeedback";
 import { crmToast } from "@/features/crm/lib/crmToast";
 import { useAuth } from "@/lib/contexts/AuthContext";
@@ -15,6 +15,7 @@ import { useCrearActividad } from "@/features/crm/hooks";
 import { NuevoLeadForm, type LeadFormState } from "./nuevoLead/NuevoLeadForm";
 import { AvisoLeadDuplicado } from "./AvisoLeadDuplicado";
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
+
 
 interface Props {
   open: boolean;
