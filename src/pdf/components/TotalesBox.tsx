@@ -25,14 +25,14 @@ function Bloque({ b }: { b: TotalesMoneda }) {
   const showIva = b.iva > 0;
   return (
     <View>
-      <View style={{ flexDirection: "row", justifyContent: "space-between", paddingVertical: 4, paddingHorizontal: 10 }}>
+      <View style={{ flexDirection: "row", justifyContent: "space-between", paddingVertical: 3, paddingHorizontal: 10 }}>
         <Text style={{ fontSize: 9, color: COLORS.muted }}>Subtotal {b.moneda}</Text>
         <Text style={{ fontSize: 10, fontFamily: FONTS.bold, color: COLORS.ink }}>
           {formatCurrency(b.subtotal, b.moneda)}
         </Text>
       </View>
       {showIva ? (
-        <View style={{ flexDirection: "row", justifyContent: "space-between", paddingVertical: 4, paddingHorizontal: 10, borderTopWidth: 0.5, borderTopColor: COLORS.border }}>
+        <View style={{ flexDirection: "row", justifyContent: "space-between", paddingVertical: 3, paddingHorizontal: 10, borderTopWidth: 0.5, borderTopColor: COLORS.border }}>
           <Text style={{ fontSize: 9, color: COLORS.muted }}>
             IVA{b.tasaIvaPct != null ? ` (${b.tasaIvaPct}%)` : ""} {b.moneda}
           </Text>
@@ -41,7 +41,7 @@ function Bloque({ b }: { b: TotalesMoneda }) {
           </Text>
         </View>
       ) : null}
-      <View style={{ flexDirection: "row", justifyContent: "space-between", paddingVertical: 7, paddingHorizontal: 10, backgroundColor: COLORS.primary }}>
+      <View style={{ flexDirection: "row", justifyContent: "space-between", paddingVertical: 6, paddingHorizontal: 10, backgroundColor: COLORS.primary }}>
         <Text style={{ fontSize: 10, fontFamily: FONTS.bold, color: COLORS.primaryFg, letterSpacing: 0.5 }}>
           TOTAL {b.moneda}
         </Text>
@@ -57,7 +57,7 @@ export function TotalesBox({ bloques, nota }: Props) {
   const validos = bloques.filter((b) => b.subtotal !== 0 || b.iva !== 0 || b.total !== 0);
   if (validos.length === 0) return null;
   return (
-    <View style={{ marginTop: 14, flexDirection: "row", justifyContent: "flex-end" }} wrap={false}>
+    <View style={{ marginTop: 10, flexDirection: "row", justifyContent: "flex-end" }} wrap={false}>
       <View style={{ width: "55%", borderWidth: 1, borderColor: COLORS.primary, borderRadius: 4, overflow: "hidden" }}>
         {validos.map((b, i) => (
           <View key={b.moneda} style={i > 0 ? { borderTopWidth: 1, borderTopColor: COLORS.primary } : undefined}>
