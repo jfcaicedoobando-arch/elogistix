@@ -56,7 +56,7 @@ describe("useUpsertCotizacionCostos", () => {
   });
 
   it("llama a upsertCotizacionCostos y resuelve", async () => {
-    upsertCotizacionCostos.mockResolvedValueOnce([]);
+    upsertCotizacionCostos.mockResolvedValueOnce({ costos: [], updatedAt: "2026-09-03T10:00:00Z" });
     const { result } = renderHook(() => useUpsertCotizacionCostos(), { wrapper: createWrapper() });
     result.current.mutate({ cotizacionId: "cot-1", costos: [] });
     await waitFor(() => expect(result.current.isSuccess).toBe(true));

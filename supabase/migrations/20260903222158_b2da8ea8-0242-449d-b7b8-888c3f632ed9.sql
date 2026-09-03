@@ -1,18 +1,3 @@
--- Espejo declarativo de public.actualizar_cotizacion_costos (v13.823.69).
---
--- Reemplaza los costos internos del Paso 2 del wizard de cotización de forma
--- atómica y participa del MISMO bloqueo optimista que la cotización:
---   * toma el lock de la fila de `cotizaciones` ANTES de borrar/insertar,
---   * falla CERRADA: si `p_expected_updated_at` viene NULL o no coincide, no
---     borra ni inserta nada y lanza LC_CONFLICTO_CONCURRENCIA,
---   * valida autoridad/organización ANTES de resolver el replay de idempotencia
---     (la clave está ligada a key+organization_id+user_id por PK),
---   * al terminar toca la cotización y devuelve el nuevo `updated_at` para que
---     el wizard resincronice su sello.
--- La autoridad (organización + rol escritor) se valida siempre en servidor.
-
-DROP FUNCTION IF EXISTS public.actualizar_cotizacion_costos(uuid, jsonb, uuid);
-
 CREATE OR REPLACE FUNCTION public.actualizar_cotizacion_costos(
   p_cotizacion_id uuid,
   p_costos jsonb,

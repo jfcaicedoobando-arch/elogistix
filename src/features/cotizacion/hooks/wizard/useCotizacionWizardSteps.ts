@@ -61,6 +61,17 @@ export function useCotizacionWizardSteps({
       return;
     }
 
+    // Falla cerrada: sin sello local no se intenta guardar ni se avanza.
+    const selloPaso2 = updateCotizacion.selloActual?.() ?? null;
+    if (cotizacionId && costosInternos.length > 0 && !selloPaso2) {
+      notifyError(undefined, {
+        title: "No se puede guardar sin la versión actual",
+        description:
+          "Tus costos capturados se conservan. Recarga los datos de la cotización y vuelve a intentar; nada se guardó encima.",
+      });
+      return;
+    }
+
     try {
       if (cotizacionId) {
         // v13.823.69: el paso 2 viaja con el mismo sello optimista que el resto
@@ -69,11 +80,12 @@ export function useCotizacionWizardSteps({
         const nuevoSello = await savePaso2({
           cotizacionId,
           costosInternos,
-          expectedUpdatedAt: updateCotizacion.selloActual?.() ?? null,
+          expectedUpdatedAt: selloPaso2,
           mutations: { upsertCostos },
         });
         if (nuevoSello) updateCotizacion.resincronizarSello?.(nuevoSello);
       }
+
       // Re-sincronización idempotente: si la firma cambió respecto al último snapshot
       // procesado (o si nunca hemos sincronizado), regeneramos conceptos.
       const hashActual = firmaCostos(costosInternos);

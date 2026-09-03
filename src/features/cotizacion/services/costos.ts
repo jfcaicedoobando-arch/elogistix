@@ -51,6 +51,9 @@ export async function upsertCotizacionCostos(
    */
   expectedUpdatedAt?: string | null,
 ): Promise<UpsertCostosResult> {
+  // Falla cerrada en cliente: sin sello no se llama la RPC (el servidor también
+  // la rechaza). Evita reemplazar costos sin candado optimista.
+  if (!expectedUpdatedAt) throw conflictoConcurrenciaError();
   const { data, error } = await supabase.rpc("actualizar_cotizacion_costos", {
     p_cotizacion_id: cotizacionId,
     p_costos: costos.map((c) => ({
@@ -67,7 +70,7 @@ export async function upsertCotizacionCostos(
       costeo_tarifa_recargo_id: c.costeo_tarifa_recargo_id ?? null,
     })),
     p_request_id: requestId,
-    ...(expectedUpdatedAt ? { p_expected_updated_at: expectedUpdatedAt } : {}),
+    p_expected_updated_at: expectedUpdatedAt,
   });
   if (error) {
     if (error.message?.includes(LC_CONFLICTO_CONCURRENCIA)) throw conflictoConcurrenciaError();
