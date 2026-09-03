@@ -3,10 +3,10 @@
  * Form fields en `nuevaOportunidad/OportunidadFormFields`; estado en `useOportunidadForm`.
  * Migrado a `FormDialogShell` (v13.121.0).
  */
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Briefcase } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
+import { FormDialogFooter } from "@/components/shared/FormDialogFooter";
 import { notifyError } from "@/lib/ui/appFeedback";
 import { crmToast } from "@/features/crm/lib/crmToast";
 import { useAuth } from "@/lib/contexts/AuthContext";
@@ -33,9 +33,18 @@ interface Props {
   onSaved?: (id: string) => void;
   /** Fase 2 rediseño CRM: prefija el origen (prospecto o cliente). */
   origenInicial?: OrigenInicial | null;
+  /** Nombre precapturado en el alta express al pulsar "Más campos". */
+  nombreInicial?: string | null;
 }
 
-export default function NuevaOportunidadDialog({ open, onOpenChange, oportunidad, onSaved, origenInicial }: Props) {
+export default function NuevaOportunidadDialog({
+  open,
+  onOpenChange,
+  oportunidad,
+  onSaved,
+  origenInicial,
+  nombreInicial,
+}: Props) {
   const isEdit = !!oportunidad;
   const { user } = useAuth();
   const { data: etapas = [] } = useEtapasPipeline();
@@ -45,9 +54,25 @@ export default function NuevaOportunidadDialog({ open, onOpenChange, oportunidad
   const crearActividad = useCrearActividad();
   const enviandoRef = useRef(false);
 
-  const { form, setForm, set } = useOportunidadForm(open, oportunidad, etapas, user, origenInicial);
+  const { form, setForm, set, isDirty, markClean } = useOportunidadForm(
+    open,
+    oportunidad,
+    etapas,
+    user,
+    origenInicial,
+    nombreInicial,
+  );
   const [autoActividad, setAutoActividad] = useState(true);
   const [guardando, setGuardando] = useState(false);
+
+  // Al cerrar de verdad una creación, la casilla de actividad automática
+  // vuelve a su valor por omisión para la siguiente apertura. En edición no
+  // aplica (la casilla no se muestra).
+  const abiertoAntes = useRef(open);
+  useEffect(() => {
+    if (abiertoAntes.current && !open && !isEdit) setAutoActividad(true);
+    abiertoAntes.current = open;
+  }, [open, isEdit]);
 
 
   const etapaSel = etapas.find((e) => e.id === form.etapa_id);
@@ -99,6 +124,7 @@ export default function NuevaOportunidadDialog({ open, onOpenChange, oportunidad
         crmToast.success("Oportunidad creada");
         onSaved?.(r.id);
       }
+      markClean();
       onOpenChange(false);
     } catch (e) {
       notifyError(undefined, {
@@ -114,13 +140,18 @@ export default function NuevaOportunidadDialog({ open, onOpenChange, oportunidad
   };
 
 
+  // Sucio total: el formulario más la casilla de actividad automática (sólo
+  // relevante al crear). Habilita la confirmación de descarte del shell.
+  const dirtyTotal = isDirty || (!isEdit && autoActividad !== true);
+
   const footer = (
-    <>
-      <Button variant="outline" onClick={() => onOpenChange(false)} disabled={pendingTotal}>Cancelar</Button>
-      <Button onClick={handleSubmit} loading={pendingTotal} disabled={!isEdit && !form.etapa_id}>
-        {isEdit ? "Guardar cambios" : "Crear oportunidad"}
-      </Button>
-    </>
+    <FormDialogFooter
+      onCancel={() => onOpenChange(false)}
+      onConfirm={handleSubmit}
+      confirmLabel={isEdit ? "Guardar cambios" : "Crear oportunidad"}
+      loading={pendingTotal}
+      disabled={!isEdit && !form.etapa_id}
+    />
   );
 
   return (
@@ -131,6 +162,7 @@ export default function NuevaOportunidadDialog({ open, onOpenChange, oportunidad
       title={isEdit ? "Editar oportunidad" : "Nueva oportunidad"}
       description="Captura los datos comerciales y la etapa del pipeline."
       size="2xl"
+      isDirty={dirtyTotal}
       busy={pendingTotal}
       footer={footer}
     >
