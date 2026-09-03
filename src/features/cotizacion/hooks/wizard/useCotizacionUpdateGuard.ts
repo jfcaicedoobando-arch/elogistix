@@ -72,9 +72,14 @@ export function useCotizacionUpdateGuard<TRow extends { id: string; updated_at?:
     [crearCotizacion],
   );
 
+  const resincronizarSello = useCallback((sello: string | null) => {
+    if (sello) expectedRef.current = sello;
+  }, []);
+
   return {
     mutateAsync,
     isPending: updateCotizacion.isPending,
+    resincronizarSello,
     ...(crearCotizacion
       ? { crearCotizacion: { mutateAsync: crearGuardado, isPending: crearCotizacion.isPending } }
       : {}),
