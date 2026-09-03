@@ -12,6 +12,7 @@
  */
 import type { ReactNode } from "react";
 import { Button } from "@/components/ui/button";
+import { useFormDialogCerrar } from "@/components/shared/formDialogCloseContext";
 
 interface Props {
   /** id del `<form>` del cuerpo. Si se omite, se usa `onConfirm`. */
@@ -41,10 +42,17 @@ export function FormDialogFooter({
   variant = "default",
   extra,
 }: Props) {
+  const cerrarGuardado = useFormDialogCerrar();
+
   return (
     <>
       {extra && <div className="mr-auto flex items-center gap-2">{extra}</div>}
-      <Button type="button" variant="outline" onClick={onCancel} disabled={loading}>
+      <Button
+        type="button"
+        variant="outline"
+        onClick={() => cerrarGuardado?.() ?? onCancel()}
+        disabled={loading}
+      >
         {cancelLabel}
       </Button>
       <Button
