@@ -8,6 +8,7 @@
 - **La confirmación "¿Descartar los cambios?" ya detecta toda la captura**: origen/cliente/prospecto en oportunidades y oportunidad ligada o fecha modificada en actividades.
 - **Al reabrir, el formulario aparece en blanco**: lo descartado ya no reaparece y la fecha de la actividad se recalcula al valor por omisión de ese momento.
 - **El botón *Cancelar* del footer también respeta la confirmación de descarte** cuando se usa dentro de `FormDialogShell`.
+- **Las altas completas también evitan doble guardado y cierre durante la operación**: *Nuevo lead*, *Nueva oportunidad* y *Nueva actividad* bloquean un segundo envío, deshabilitan *Cancelar* y usan `busy` para impedir cerrar el modal mientras se guarda.
 
 
 
