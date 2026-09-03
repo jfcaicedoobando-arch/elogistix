@@ -49,12 +49,15 @@ export default function NuevoLeadDialog({ open, onOpenChange, onCreated }: Props
   const [autoActividad, setAutoActividad] = useState(true);
   const crear = useCrearLead();
   const crearActividad = useCrearActividad();
+  const enviandoRef = useRef(false);
 
   const handleSubmit = async () => {
+    if (crear.isPending || enviandoRef.current) return;
     if (!form.empresa.trim()) {
       notifyError(undefined, { title: "Empresa es obligatoria", method: "HANDLE_SUBMIT", errorCode: ERROR_CODES.VALIDATION_FAILED });
       return;
     }
+    enviandoRef.current = true;
     try {
       const r = await crear.mutateAsync(form);
       if (autoActividad) {
@@ -81,6 +84,8 @@ export default function NuevoLeadDialog({ open, onOpenChange, onCreated }: Props
         error: e,
         method: "HANDLE_SUBMIT",
       });
+    } finally {
+      enviandoRef.current = false;
     }
   };
 
@@ -91,7 +96,7 @@ export default function NuevoLeadDialog({ open, onOpenChange, onCreated }: Props
 
   const footer = (
     <>
-      <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
+      <Button variant="outline" onClick={() => onOpenChange(false)} disabled={crear.isPending}>Cancelar</Button>
       <Button onClick={handleSubmit} loading={crear.isPending}>
         Crear lead
       </Button>
@@ -106,6 +111,7 @@ export default function NuevoLeadDialog({ open, onOpenChange, onCreated }: Props
       title="Nuevo lead"
       description="Captura los datos básicos del prospecto. Podrás convertirlo a cliente y oportunidad desde su ficha."
       size="2xl"
+      busy={crear.isPending}
       footer={footer}
     >
       <AvisoLeadDuplicado
