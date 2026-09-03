@@ -8,7 +8,7 @@
  *
  * Sin botón "Nuevo lead" propio (vive en QuickAddMenu del header global).
  */
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect, useRef } from "react";
 
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -21,8 +21,10 @@ import { useServerPagedList } from "@/hooks/shared/useServerPagedList";
 import { usePermissions, useDocumentTitle } from "@/hooks/shared";
 import { CrmSubheader } from "@/features/crm/components/CrmSubheader";
 import LeadsBulkBar from "@/features/crm/components/LeadsBulkBar";
-import { listLeads } from "@/features/crm/services/leads";
+import { listLeads, listLeadsTodos } from "@/features/crm/services/leads";
 import { exportarLeadsCsv } from "@/features/crm/services/crmCsvExport";
+import { notifyError } from "@/lib/ui/appFeedback";
+import { getErrorMessage } from "@/lib/errors";
 import ExportarCsvButton from "@/features/crm/components/ExportarCsvButton";
 
 import { LEAD_ESTADOS_ETAPA_LEAD } from "@/features/crm/domain/leads/etapas";
@@ -74,6 +76,60 @@ export default function Leads() {
 
   const leads = list.rows;
 
+  // La selección masiva vive SÓLO en el contexto visible: cualquier cambio de
+  // filtros, orden o paginación la limpia para no operar sobre filas invisibles.
+  const selKey = [
+    list.search, list.filters.estado, list.filters.fuente,
+    list.sortKey, list.sortDir, list.page, list.pageSize,
+  ].join("|");
+  const selKeyRef = useRef(selKey);
+  useEffect(() => {
+    if (selKeyRef.current !== selKey) {
+      selKeyRef.current = selKey;
+      setSelected(new Set());
+    }
+  }, [selKey]);
+
+  // Defensa adicional: al llegar nuevas filas se poda cualquier id ausente.
+  useEffect(() => {
+    setSelected((prev) => {
+      if (prev.size === 0) return prev;
+      const visibles = new Set(leads.map((l) => l.id));
+      const podado = new Set(Array.from(prev).filter((id) => visibles.has(id)));
+      return podado.size === prev.size ? prev : podado;
+    });
+  }, [leads]);
+
+  // Exportación: todas las coincidencias de los filtros actuales (no la página).
+  const [exportando, setExportando] = useState(false);
+  const filtrosExport = useMemo(
+    () => ({
+      search: list.search,
+      estado: (list.filters.estado as CrmLeadEstado | "todos") ?? "todos",
+      estadoIn: LEAD_ESTADOS_ETAPA_LEAD,
+      fuente: (list.filters.fuente as CrmLeadFuente | "todos") ?? "todos",
+      sortKey: (list.sortKey ?? "created_at") as LeadSortKey,
+      sortDir: list.sortDir ?? "desc",
+    }),
+    [list.search, list.filters.estado, list.filters.fuente, list.sortKey, list.sortDir],
+  );
+  const exportarTodo = async () => {
+    setExportando(true);
+    try {
+      const todos = await listLeadsTodos(filtrosExport);
+      exportarLeadsCsv(todos);
+    } catch (e) {
+      notifyError(undefined, {
+        title: "No se pudo exportar",
+        description: getErrorMessage(e),
+        error: e,
+        method: "EXPORT_LEADS",
+      });
+    } finally {
+      setExportando(false);
+    }
+  };
+
   const toggle = useCallback((id: string) => setSelected((s) => {
     const n = new Set(s); if (n.has(id)) n.delete(id); else n.add(id); return n;
   }), []);
@@ -102,8 +158,9 @@ export default function Leads() {
         description="Primer contacto: empresas por contactar y calificar"
         actions={
           <ExportarCsvButton
-            onExport={() => exportarLeadsCsv(leads)}
-            disabled={list.isLoading}
+            onExport={() => { void exportarTodo(); }}
+            disabled={list.isLoading || list.isFetching || exportando}
+            label={exportando ? "Exportando…" : undefined}
           />
         }
       />
@@ -119,7 +176,12 @@ export default function Leads() {
       />
 
       {canGestionarLeadsEnLote && selected.size > 0 && (
-        <LeadsBulkBar ids={Array.from(selected)} onClear={clearSel} onDone={clearSel} />
+        <LeadsBulkBar
+          ids={Array.from(selected)}
+          onClear={clearSel}
+          onDone={clearSel}
+          bloqueado={list.isFetching}
+        />
       )}
 
       <UnifiedFiltersBar
