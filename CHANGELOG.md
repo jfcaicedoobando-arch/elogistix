@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+### Pruebas de permisos (RLS) al día
+- Se registraron en la lista canónica las cinco funciones internas del CRM que quedaron cerradas a `service_role` (conversión de prospecto y sincronía con cotizaciones) y se volvió a cerrar el borrado físico de leads en la base efímera de pruebas, que sólo deben archivarse.
+
 ## [13.823.70] - 2026-09-03
 
 ### Calidad interna (CI verde)
