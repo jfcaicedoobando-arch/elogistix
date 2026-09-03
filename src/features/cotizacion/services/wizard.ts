@@ -110,12 +110,20 @@ export async function savePaso2(opts: {
   return res?.updatedAt ?? null;
 }
 
+/** Mensaje único del bloqueo por cotización mixta (P1-A, 13.823.70). */
+export const MSG_COTIZACION_MIXTA =
+  "La cotización tiene conceptos en USD y en MXN. No existe un tipo de cambio registrado en la cotización para convertirlos, " +
+  "por lo que el subtotal del encabezado quedaría incompleto. Captura los conceptos en una sola moneda (o registra el equivalente convertido) para continuar.";
+
 /**
  * W-01 (QA r2): `subtotal` y `moneda` se derivan de los conceptos de venta.
  * Antes se persistía sólo `totalUSD`: una cotización sólo en pesos quedaba con
- * `subtotal = 0` y el detalle bloqueaba el envío por "sin importe" (la BD sí la
- * dejaba enviar, porque su guard evalúa los conceptos). En cotizaciones mixtas
- * se usa la moneda dominante (mayor monto) y el subtotal de esa moneda.
+ * `subtotal = 0` y el detalle bloqueaba el envío por "sin importe".
+ *
+ * P1-A (13.823.70): en cotizaciones mixtas ya NO se elige la "bolsa mayor"
+ * comparando USD contra MXN nominalmente (4,000 USD vs 10,000 MXN persistía
+ * 10,000 MXN y descartaba los USD). No existe tipo de cambio canónico en
+ * `cotizaciones`, así que se falla cerrado en lugar de guardar un importe falso.
  */
 export function derivarSubtotalMoneda(
   conceptosVenta: Record<string, unknown>[],
@@ -127,7 +135,8 @@ export function derivarSubtotalMoneda(
     if (c?.moneda === "MXN") mxn += total;
     else usd += total;
   }
-  return mxn > usd ? { subtotal: mxn, moneda: "MXN" } : { subtotal: usd, moneda: "USD" };
+  if (usd > 0 && mxn > 0) throw new Error(MSG_COTIZACION_MIXTA);
+  return mxn > 0 ? { subtotal: mxn, moneda: "MXN" } : { subtotal: usd, moneda: "USD" };
 }
 
 export async function savePaso3(opts: {
@@ -136,12 +145,15 @@ export async function savePaso3(opts: {
   mutations: Pick<Mutations, "updateCotizacion">;
 }): Promise<void> {
   const { cotizacionId, conceptosVenta, mutations } = opts;
+  // Lanza MSG_COTIZACION_MIXTA antes de tocar la BD: nada se persiste y los
+  // conceptos capturados siguen en pantalla.
   const { subtotal, moneda } = derivarSubtotalMoneda(conceptosVenta);
   await mutations.updateCotizacion.mutateAsync({
     id: cotizacionId,
     data: { conceptos_venta: conceptosVenta, subtotal, moneda },
   });
 }
+
 
 export async function savePasoFinal(opts: {
   cotizacionId: string;

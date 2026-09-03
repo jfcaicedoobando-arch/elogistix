@@ -61,11 +61,30 @@ export async function sincronizarEtapaPorEstadoCotizacion(input: {
       : findByTipo(tipo);
   if (!etapa) return;
 
-  const patch: { etapa_id: string; probabilidad: number; fecha_cierre_real?: string } = {
+  // P1-B (13.823.70): al volver a "abierta" hay que limpiar los datos de cierre;
+  // antes quedaban `fecha_cierre_real`/`motivo_perdida_id` históricos y la
+  // oportunidad se veía perdida/ganada dentro de una etapa abierta. Se aplica en
+  // el MISMO update (atómico) siguiendo la regla de `resolverLimpiezaCierre`.
+  const patch: {
+    etapa_id: string;
+    probabilidad: number;
+    fecha_cierre_real?: string | null;
+    valor_real?: number | null;
+    motivo_perdida_id?: string | null;
+  } = {
     etapa_id: etapa.id,
     probabilidad: etapa.probabilidad_default ?? 0,
   };
-  if (tipo !== "abierta") patch.fecha_cierre_real = hoyMx();
+  if (tipo === "abierta") {
+    patch.fecha_cierre_real = null;
+    patch.valor_real = null;
+    patch.motivo_perdida_id = null;
+  } else {
+    patch.fecha_cierre_real = hoyMx();
+    // "ganada" no conserva motivo de pérdida; "perdida" mantiene el suyo.
+    if (tipo === "ganada") patch.motivo_perdida_id = null;
+  }
+
 
   const { data, error } = await supabase
     .from("crm_oportunidades")
