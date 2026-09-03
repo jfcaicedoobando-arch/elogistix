@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+### Leads CRM: exportación completa, selección segura e importación confiable
+- **Exportar CSV baja TODOS los leads que cumplen los filtros**, no sólo la página en pantalla. El botón muestra "Exportando…" y se deshabilita mientras trabaja. Lo que cada usuario puede ver sigue limitado por sus permisos.
+- **La selección masiva ya no arrastra registros invisibles**: al cambiar búsqueda, estado, fuente, orden, página o tamaño de página, la selección se limpia; además se descarta cualquier registro que ya no esté en la página, y la barra masiva no opera mientras el listado se está recargando.
+- **La importación CSV falla cerrada**: si la revisión de duplicados está en curso o falla, *Importar* queda bloqueado con un aviso y un botón para reintentar la revisión (antes podía importar tratando todo como nuevo). Elegir un archivo limpia el anterior, los errores de lectura se avisan una sola vez y se puede volver a seleccionar el mismo archivo.
+- **Las operaciones masivas reportan la cantidad real**: actualizar, reasignar, eliminar e importar cuentan las filas efectivamente afectadas (ya no el número de seleccionados) y ahora sale un solo mensaje por operación. Si la bitácora falla después de una escritura ya aplicada, se avisa como nota secundaria sin marcar la operación como fallida.
+
 
 
 ## [13.823.66] - 2026-09-03
