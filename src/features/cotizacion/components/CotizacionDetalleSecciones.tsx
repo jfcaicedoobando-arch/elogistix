@@ -26,6 +26,10 @@ interface AccionesProps {
   usuarioActual?: string | null;
   /** v13.624.0 — política del cliente: ¿requiere autorizar cotizaciones? */
   requiereAutorizacionCliente?: boolean;
+  /** P0 — ¿el rol puede dar de alta clientes? (espejo de la RPC de conversión). */
+  puedeAltaCliente?: boolean;
+  /** P0 — la conversión exige oportunidad ligada (cotización ganadora). */
+  tieneOportunidad?: boolean;
 }
 
 
