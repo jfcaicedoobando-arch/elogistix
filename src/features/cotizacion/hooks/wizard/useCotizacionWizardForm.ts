@@ -155,6 +155,10 @@ export function useCotizacionWizardForm({ navigate, toast, userEmail, clientes, 
     costosUSD: costosUSDFiltered,
     costosMXN: costosMXNFiltered,
     handleSiguiente, handleGuardar, handleBack, handleCotizarSinDesglose,
+    /** v13.823.69: sello optimista vigente (lo persiste el borrador). */
+    selloActual: updateGuardado.selloActual,
+    /** v13.823.69: siembra el sello canónico al restaurar un borrador. */
+    resincronizarSello: updateGuardado.resincronizarSello,
     vinculoCrmError, vinculoCrmConfirmado, limpiarVinculoCrmError,
   };
 }

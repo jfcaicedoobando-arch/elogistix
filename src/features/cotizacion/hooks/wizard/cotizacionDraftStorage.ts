@@ -28,6 +28,13 @@ export interface StoredDraft {
   /** B-003 (v13.320.32): sin esto, recargar el wizard tras paso 1 duplicaba
    *  la cotización — el `cotizacionId` vivía sólo en memoria React. */
   cotizacionId: string | null;
+  /**
+   * v13.823.69: sello (`cotizaciones.updated_at`) vigente cuando se autoguardó
+   * el borrador. Al restaurar se compara contra el sello canónico del servidor:
+   * si cambió, hay conflicto y no se guarda encima. Ausente en drafts legacy
+   * (entonces se consulta el canónico antes de permitir escrituras).
+   */
+  updatedAt?: string | null;
   values: CotizacionFormValues;
   /** Q-12: paso del wizard en el que estaba el usuario al autoguardar. */
   currentStep: number;
@@ -63,6 +70,7 @@ interface RawDraftShape {
   version?: unknown;
   values?: CotizacionFormValues;
   cotizacionId?: unknown;
+  updatedAt?: unknown;
   currentStep?: unknown;
   costosInternos?: unknown;
   tabId?: unknown;
@@ -118,6 +126,7 @@ export function loadDraft(userId: string, organizationId?: string | null): Store
       version: 3,
       savedAt: savedAtNum,
       cotizacionId: typeof bag.cotizacionId === "string" ? bag.cotizacionId : null,
+      updatedAt: typeof bag.updatedAt === "string" ? bag.updatedAt : null,
       values: bag.values as CotizacionFormValues,
       currentStep: typeof bag.currentStep === "number" && bag.currentStep >= 1 ? bag.currentStep : 1,
       costosInternos: Array.isArray(bag.costosInternos) ? (bag.costosInternos as FilaCostoLocal[]) : [],
