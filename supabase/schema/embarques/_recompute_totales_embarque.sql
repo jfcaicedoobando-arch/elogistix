@@ -40,3 +40,6 @@ BEGIN
    WHERE id = p_embarque_id;
 END;
 $function$;
+
+REVOKE ALL ON FUNCTION public._recompute_totales_embarque(uuid) FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public._recompute_totales_embarque(uuid) TO service_role;
