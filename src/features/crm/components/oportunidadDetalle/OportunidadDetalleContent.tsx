@@ -36,8 +36,11 @@ interface Props {
 export function OportunidadDetalleContent({ op, etapas }: Props) {
   // Espejo de las policies de `crm_oportunidades`: staff CRM sobre cualquiera,
   // vendedor sólo las propias. `canEdit` ofrecía editar a roles sin policy.
-  const { canGestionarOportunidad } = usePermissions();
+  const { canGestionarOportunidad, canEditSales } = usePermissions();
   const canEdit = canGestionarOportunidad(op.vendedor_id);
+  // "Nueva cotización" usa el permiso de escritura de cotizaciones (SALES),
+  // independiente de la gestión de la oportunidad (ej. gerente_operaciones).
+  const canCotizar = canEditSales;
   const volver = useVolver("/crm/oportunidades");
   const [editOpen, setEditOpen] = useState(false);
   const [delOpen, setDelOpen] = useState(false);
@@ -72,12 +75,14 @@ export function OportunidadDetalleContent({ op, etapas }: Props) {
 
         badge={etapa ? <Badge variant="outline">{etapa.nombre}</Badge> : undefined}
         subtitle={op.cliente_nombre || "Sin cliente"}
-        trailing={canEdit ? (
+        trailing={(canEdit || canCotizar) ? (
           <OportunidadDetalleAcciones
             crearCotizacion={actions.crearCotizacion}
             crearCotPending={actions.crearCotPending}
             onEditar={() => setEditOpen(true)}
             onEliminar={() => setDelOpen(true)}
+            canCotizar={canCotizar}
+            canGestionar={canEdit}
           />
         ) : undefined}
       />
