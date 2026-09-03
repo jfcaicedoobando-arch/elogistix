@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+### Oportunidades CRM: respetan al dueño del prospecto
+- **La oportunidad nace a nombre del vendedor correcto**: al crear una oportunidad desde la ficha de un prospecto, el vendedor inicial es el dueño del prospecto (no quien la captura). Antes, si un gerente la daba de alta desde la ficha de un agente, la oportunidad quedaba accidentalmente a nombre del gerente. La elección manual en el formulario sigue mandando.
+- **La tarea automática va al vendedor elegido**: la actividad "Preparar propuesta" que se crea junto con la oportunidad se asigna al vendedor final del formulario, no necesariamente a quien la captura. Las actividades manuales no cambian.
+
+
 ## [13.823.65] - 2026-09-03
 ### Convertir prospecto a cliente: una sola operación segura
 - **La puerta y la cerradura ya coinciden**: el botón *Convertir a Cliente* (y el alta/importación de clientes) sólo aparece para quien de verdad puede dar de alta clientes: dirección, administración, operación y contabilidad. Antes lo veían roles que después recibían un error de permisos.
