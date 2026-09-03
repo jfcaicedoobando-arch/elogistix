@@ -10,8 +10,8 @@ interface SelKeyParts {
   search: string;
   estado: string;
   fuente: string;
-  sortKey?: string;
-  sortDir?: string;
+  sortKey?: string | null;
+  sortDir?: string | null;
   page: number;
   pageSize: number;
 }

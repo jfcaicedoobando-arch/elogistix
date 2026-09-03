@@ -14,8 +14,8 @@ interface LeadsExportParams {
   search: string;
   estado: string;
   fuente: string;
-  sortKey?: string;
-  sortDir?: "asc" | "desc";
+  sortKey?: string | null;
+  sortDir?: "asc" | "desc" | null;
 }
 
 export function useLeadsExport(params: LeadsExportParams) {
