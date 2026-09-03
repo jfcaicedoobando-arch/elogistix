@@ -35,7 +35,8 @@ import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 
 export default function Clientes() {
   useDocumentTitle("Clientes");
-  const { canEdit } = usePermissions();
+  // P0 — alta de clientes: espejo del rol que exige la base de datos.
+  const { canAltaCliente } = usePermissions();
   const { organizationId } = useOrgFilter();
   const queryClient = useQueryClient();
   const registrarActividad = useRegistrarActividad();
@@ -79,7 +80,7 @@ export default function Clientes() {
         title="Clientes"
         description={`${pluralizar(totalCount, "cliente")} ${totalCount === 1 ? "registrado" : "registrados"}`}
         actions={
-          canEdit ? (
+          canAltaCliente ? (
             <div className="hidden md:flex gap-2">
               <Button variant="outline" onClick={() => setImportOpen(true)}>
                 <Upload className="h-4 w-4 mr-1" />Importar CSV
@@ -126,7 +127,7 @@ export default function Clientes() {
                   primaryAction={
                     search
                       ? { label: "Limpiar búsqueda", onClick: () => setSearch("") }
-                      : canEdit
+                      : canAltaCliente
                         ? { label: "Crear cliente", onClick: () => setDialogOpen(true) }
                         : undefined
                   }
@@ -184,7 +185,7 @@ export default function Clientes() {
         }}
       />
 
-      {canEdit && (
+      {canAltaCliente && (
         <FloatingActionButton
           icon={<Plus className="h-6 w-6" />}
           label="Nuevo cliente"
