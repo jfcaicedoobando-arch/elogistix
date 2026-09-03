@@ -79,10 +79,9 @@ export function ProformaDocument({ proforma, embarque, conceptos, cliente, tasaI
           mostrarSubtituloMoneda={multiMoneda}
         />
 
-        {/* Los totales viajan con el último bloque de conceptos. */}
-        <View minPresenceAhead={110}>
-          <TotalesBox bloques={bloquesTotales} />
-        </View>
+        {/* La caja de totales es indivisible (wrap=false) y sólo salta de
+            página si realmente no cabe completa. */}
+        <TotalesBox bloques={bloquesTotales} />
 
 
         {proforma.notas ? (
