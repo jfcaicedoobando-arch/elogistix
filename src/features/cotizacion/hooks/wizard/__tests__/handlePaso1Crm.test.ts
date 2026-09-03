@@ -79,71 +79,44 @@ describe("validateProspecto", () => {
     expect(validateProspecto(base({ esProspecto: false }))).toBeNull();
   });
 
-  it("error al vincular sin oportunidadId ni leadId", () => {
+  it("error cuando no hay origen CRM (ni lead ni oportunidad)", () => {
     expect(
       validateProspecto(
-        base({ esProspecto: true, prospectoModo: "vincular", oportunidadId: "", leadId: "" }),
+        base({ esProspecto: true, oportunidadId: "", leadId: "", prospectoEmpresa: "ACME" }),
       ),
     ).toMatch(/lead u oportunidad/i);
   });
 
-  it("null al vincular con oportunidadId capturado", () => {
+  it("null con oportunidadId del CRM", () => {
     expect(
       validateProspecto(
-        base({
-          esProspecto: true,
-          prospectoModo: "vincular",
-          oportunidadId: "op-1",
-          leadId: "",
-          prospectoEmpresa: "ACME",
-        }),
+        base({ esProspecto: true, oportunidadId: "op-1", leadId: "", prospectoEmpresa: "ACME" }),
       ),
     ).toBeNull();
   });
 
-  it("null al vincular con leadId capturado", () => {
+  it("null con leadId del CRM", () => {
     expect(
       validateProspecto(
-        base({
-          esProspecto: true,
-          prospectoModo: "vincular",
-          oportunidadId: "",
-          leadId: "lead-1",
-          prospectoEmpresa: "ACME",
-        }),
+        base({ esProspecto: true, oportunidadId: "", leadId: "lead-1", prospectoEmpresa: "ACME" }),
       ),
     ).toBeNull();
   });
 
-  it("error cuando falta la empresa del prospecto", () => {
+  it("error cuando falta la empresa del prospecto aunque haya origen", () => {
     expect(
-      validateProspecto(
-        base({ esProspecto: true, prospectoModo: "nuevo", prospectoEmpresa: "  " }),
-      ),
+      validateProspecto(base({ esProspecto: true, leadId: "lead-1", prospectoEmpresa: "  " })),
     ).toMatch(/empresa del prospecto/i);
   });
 
-  it("error cuando modo nuevo y falta el contacto", () => {
+  it("no exige contacto: el dato vive en el CRM", () => {
     expect(
       validateProspecto(
         base({
           esProspecto: true,
-          prospectoModo: "vincular",
+          leadId: "lead-1",
           prospectoEmpresa: "ACME",
           prospectoContacto: "  ",
-        }),
-      ),
-    ).toMatch(/contacto del prospecto/i);
-  });
-
-  it("null cuando modo nuevo con empresa y contacto capturados", () => {
-    expect(
-      validateProspecto(
-        base({
-          esProspecto: true,
-          prospectoModo: "vincular",
-          prospectoEmpresa: "ACME",
-          prospectoContacto: "Juan",
         }),
       ),
     ).toBeNull();
