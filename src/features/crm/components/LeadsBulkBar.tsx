@@ -12,7 +12,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import DoubleConfirmDeleteDialog from "@/components/shared/DoubleConfirmDeleteDialog";
-import { notifyError } from "@/lib/ui/appFeedback";
+import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { crmToast } from "@/features/crm/lib/crmToast";
 import VendedorSelect from "@/features/crm/components/VendedorSelect";
 import {
@@ -34,7 +34,8 @@ export default function LeadsBulkBar({ ids, onClear, onDone, bloqueado = false }
   const ocupado = bloqueado || actualizar.isPending || eliminar.isPending;
 
   const avisar = (titulo: string, aviso?: string) => {
-    if (aviso) crmToast.success(titulo, aviso);
+    // Un solo toast: si la bitácora falló, viaja como descripción secundaria.
+    if (aviso) notifySuccess(undefined, { title: titulo, description: aviso });
     else crmToast.success(titulo);
   };
 

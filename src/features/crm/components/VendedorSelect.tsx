@@ -42,6 +42,7 @@ export default function VendedorSelect({ value, onChange, label = "Vendedor asig
           const u = candidatos.find((x) => x.user_id === v);
           onChange(v, u?.email ?? "");
         }}
+        disabled={disabled}
       >
         <SelectTrigger><SelectValue placeholder="Sin asignar…" /></SelectTrigger>
         <SelectContent>
