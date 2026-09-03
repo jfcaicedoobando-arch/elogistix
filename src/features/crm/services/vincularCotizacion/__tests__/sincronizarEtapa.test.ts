@@ -87,7 +87,8 @@ describe("limpieza de cierre al reabrir (P1-B)", () => {
     const call = mock.tableCalls.find(
       (c) => c.table === "crm_oportunidades" && c.ops.includes("update"),
     );
-    return (call?.opArgs?.[0] ?? {}) as Record<string, unknown>;
+    const idx = call?.ops.indexOf("update") ?? -1;
+    return (idx >= 0 ? (call?.opArgs?.[idx]?.[0] ?? {}) : {}) as Record<string, unknown>;
   };
 
   it("perdida → abierta limpia fecha_cierre_real y motivo_perdida_id", async () => {
