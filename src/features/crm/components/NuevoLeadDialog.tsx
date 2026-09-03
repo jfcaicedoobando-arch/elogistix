@@ -47,9 +47,13 @@ export default function NuevoLeadDialog({ open, onOpenChange, onCreated }: Props
   );
   const [form, setForm] = useState<LeadFormState>(formVacio);
   const [autoActividad, setAutoActividad] = useState(true);
+  const [guardando, setGuardando] = useState(false);
   const crear = useCrearLead();
   const crearActividad = useCrearActividad();
   const enviandoRef = useRef(false);
+
+  const pendingTotal = guardando || crear.isPending || crearActividad.isPending;
+
 
   const handleSubmit = async () => {
     if (crear.isPending || enviandoRef.current) return;
