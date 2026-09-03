@@ -10,6 +10,8 @@
 - **Reasignar vendedor sólo para quien puede**: el selector de vendedor ya no se muestra a un vendedor, que conserva su asignación actual.
 - La configuración del CRM usa exclusivamente el permiso de configuración (mismo que el ícono de engrane).
 - Si un usuario no puede dar de alta nada en el CRM, el botón *Nuevo* ya no se muestra.
+- **Cotizar y editar usan permisos separados**: en el detalle de una oportunidad, *Nueva cotización* aparece para quien puede escribir cotizaciones (incluye operaciones, coordinación logística y pricing), aunque no pueda editar ni eliminar la oportunidad. *Editar* y *Eliminar* siguen reservados a quien gestiona la oportunidad.
+- **Administradores de empresa como responsables**: el selector de vendedor ya incluye a los administradores de la empresa (admin_org); antes quedaban fuera por un filtro a mano. La lista se deriva de la misma matriz de permisos, sin añadir a operaciones, finanzas ni pricing.
 
 
 
