@@ -48,7 +48,12 @@ function makeDeps(over: Partial<Parameters<typeof useCotizacionWizardSteps>[0]> 
     navigate: vi.fn(),
     mutations: {
       crearCotizacion: { mutateAsync: vi.fn().mockResolvedValue({ id: "cot-1" }), isPending: false },
-      updateCotizacion: { mutateAsync: vi.fn().mockResolvedValue(undefined), isPending: false },
+      updateCotizacion: {
+        mutateAsync: vi.fn().mockResolvedValue(undefined),
+        isPending: false,
+        selloActual: vi.fn(() => "2026-09-03T11:00:00Z"),
+        resincronizarSello: vi.fn(),
+      },
       upsertCostos: {
         // v13.823.69: el contrato devuelve { costos, updatedAt } (sello nuevo).
         mutateAsync: vi.fn().mockResolvedValue({ costos: [], updatedAt: "2026-09-03T12:00:00Z" }),
