@@ -80,5 +80,4 @@ describe("reabrirEmbarqueRpc — mapeo de errores", () => {
     rpcMock.mockResolvedValue({ data: { estado: "Entregado" }, error: null });
     await expect(reabrirEmbarqueRpc(input)).resolves.toEqual({ replay: false, pendiente: false });
   });
-  });
 });
