@@ -4,6 +4,9 @@
 
 ## [13.823.70] - 2026-09-03
 
+### Calidad interna (CI verde)
+- Se corrigieron los guardrails que frenaban la integración continua: espejos de permisos SQL en su propia carpeta, la función de totales de embarque re-emitida como migración para que un replay limpio no pise el arreglo de Aéreo/Terrestre, títulos de pruebas CRM sin duplicados y el KPI de higiene sin "Sin datos" pintado a mano.
+
 ### Cotizaciones mixtas: ya no se guarda un subtotal engañoso
 - Antes, una cotización con 4,000 USD y 10,000 MXN guardaba **10,000 MXN** en el encabezado y descartaba los dólares (comparaba montos de distinta moneda sin tipo de cambio). Ahora el paso 3 avisa que hace falta capturar en una sola moneda y **no guarda nada**: los conceptos en pantalla se conservan.
 

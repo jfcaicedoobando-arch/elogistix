@@ -36,7 +36,7 @@ function KpiPorcentaje({ label, pct, hint }: { label: string; pct: number | null
         <p className="text-body-sm text-muted-foreground">{label}</p>
         <p className="text-kpi mt-1">{pct === null ? "—" : `${pct}%`}</p>
         {pct !== null && <Progress value={pct} className="mt-2" />}
-        <p className="text-body-sm text-muted-foreground mt-1">{pct === null ? "Sin datos" : hint}</p>
+        <p className="text-body-sm text-muted-foreground mt-1">{pct === null ? "Requiere oportunidades abiertas para medirse" : hint}</p>
       </CardContent>
     </Card>
   );

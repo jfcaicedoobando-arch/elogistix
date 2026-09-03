@@ -33,7 +33,8 @@ const MIG_DIR = path.join(ROOT, "supabase", "migrations");
 /** `baseline.sql` es un dump completo del esquema, no una función canónica. */
 const EXENTOS = new Set<string>(["supabase/schema/baseline.sql"]);
 /** `schema/squash/*.sql` son dumps consolidados del esquema, no espejos. */
-const DIRS_EXENTOS = ["supabase/schema/squash/"];
+/** `schema/acl/*.sql` son espejos de ACL/RLS (REVOKE/GRANT/POLICY), no cuerpos de función. */
+const DIRS_EXENTOS = ["supabase/schema/squash/", "supabase/schema/acl/"];
 const BASELINE_FILE = path.join(ROOT, "scripts", "audit-replay-mirror-baseline.json");
 
 interface EntradaBaseline {

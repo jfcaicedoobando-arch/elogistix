@@ -15,7 +15,8 @@ const SCHEMA_DIR = path.join(ROOT, "supabase", "schema");
 /** `baseline.sql` es un dump completo del esquema, no una función canónica. */
 const EXENTOS = new Set<string>(["supabase/schema/baseline.sql"]);
 /** `schema/squash/*.sql` son dumps consolidados del esquema, no funciones. */
-const DIRS_EXENTOS = ["supabase/schema/squash/"];
+/** `schema/acl/*.sql` son espejos de ACL/RLS (REVOKE/GRANT/POLICY), no cuerpos de función. */
+const DIRS_EXENTOS = ["supabase/schema/squash/", "supabase/schema/acl/"];
 
 function listarSql(dir: string, acc: string[] = []): string[] {
   for (const entry of fs.readdirSync(dir)) {

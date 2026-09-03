@@ -25,7 +25,7 @@ function updates(): Record<string, unknown>[] {
   );
 }
 
-describe("completarActividad", () => {
+describe("completarActividad (no destructivo: preserva resultado)", () => {
   it("sin resultado sólo escribe fecha_completada", async () => {
     mock.setTableResult("crm_actividades", { data: { id: "act-1" }, error: null });
     await completarActividad({ id: "act-1" });
@@ -47,7 +47,7 @@ describe("completarActividad", () => {
   });
 });
 
-describe("cancelarActividadesPerdida", () => {
+describe("cancelarActividadesPerdida (no destructivo: un solo UPDATE)", () => {
   const ctx: AutomationCtx = {
     etapa: {
       id: "e8", nombre: "Perdida", tipo: "perdida", probabilidad_default: 0,
@@ -70,6 +70,6 @@ describe("cancelarActividadesPerdida", () => {
 
   it("propaga el error del UPDATE (no declara éxito silencioso)", async () => {
     mock.setTableResult("crm_actividades", { data: null, error: { message: "boom" } });
-    await expect(cancelarActividadesPerdida(ctx)).rejects.toBeTruthy();
+    await expect(cancelarActividadesPerdida(ctx)).rejects.toMatchObject({ message: "boom" });
   });
 });
