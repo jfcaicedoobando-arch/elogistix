@@ -47,6 +47,8 @@ export default function NuevaOportunidadDialog({ open, onOpenChange, oportunidad
 
   const { form, setForm, set } = useOportunidadForm(open, oportunidad, etapas, user, origenInicial);
   const [autoActividad, setAutoActividad] = useState(true);
+  const [guardando, setGuardando] = useState(false);
+
 
   const etapaSel = etapas.find((e) => e.id === form.etapa_id);
   const esGanada = (etapaSel as { tipo?: string } | undefined)?.tipo === "ganada";
