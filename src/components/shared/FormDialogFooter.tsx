@@ -12,6 +12,7 @@
  */
 import type { ReactNode } from "react";
 import { Button } from "@/components/ui/button";
+import { useFormDialogCerrar } from "@/components/shared/formDialogCloseContext";
 
 interface Props {
   /** id del `<form>` del cuerpo. Si se omite, se usa `onConfirm`. */

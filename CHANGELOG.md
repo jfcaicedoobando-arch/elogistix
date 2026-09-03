@@ -7,6 +7,7 @@
 - **No se puede cerrar el formulario mientras guarda** (X, ESC o clic fuera), y el botón *Más campos →* queda deshabilitado durante el guardado.
 - **La confirmación "¿Descartar los cambios?" ya detecta toda la captura**: origen/cliente/prospecto en oportunidades y oportunidad ligada o fecha modificada en actividades.
 - **Al reabrir, el formulario aparece en blanco**: lo descartado ya no reaparece y la fecha de la actividad se recalcula al valor por omisión de ese momento.
+- **El botón *Cancelar* del footer también respeta la confirmación de descarte** cuando se usa dentro de `FormDialogShell`.
 
 
 
