@@ -34,6 +34,7 @@ interface Props {
 
 export default function NuevaActividadDialog({ open, onOpenChange, defaultEntidad, onCreated }: Props) {
   const crear = useCrearActividad();
+  const enviandoRef = useRef(false);
   const [entidadTipo, setEntidadTipo] = useState<CrmEntidadTipo>(defaultEntidad?.tipo ?? "oportunidad");
   const [entidadId, setEntidadId] = useState<string>(defaultEntidad?.id ?? "");
   const [tipo, setTipo] = useState<CrmActividadTipo>("tarea");
@@ -60,8 +61,10 @@ export default function NuevaActividadDialog({ open, onOpenChange, defaultEntida
   }, [open, defTipo, defId]);
 
   const handleSubmit = async () => {
+    if (crear.isPending || enviandoRef.current) return;
     if (!entidadId) return notifyError(undefined, { title: "Selecciona la entidad", method: "HANDLE_SUBMIT", errorCode: ERROR_CODES.VALIDATION_FAILED });
     if (!asunto.trim()) return notifyError(undefined, { title: "Asunto requerido", method: "HANDLE_SUBMIT", errorCode: ERROR_CODES.VALIDATION_FAILED });
+    enviandoRef.current = true;
     try {
       const res = await crear.mutateAsync({
         tipo,
@@ -78,6 +81,8 @@ export default function NuevaActividadDialog({ open, onOpenChange, defaultEntida
       onCreated?.(res.id);
     } catch (e) {
       notifyError(undefined, { title: "No se pudo crear", description: getErrorMessage(e), error: e, method: "HANDLE_SUBMIT" });
+    } finally {
+      enviandoRef.current = false;
     }
   };
 
