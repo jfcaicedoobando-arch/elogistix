@@ -8,6 +8,11 @@
 ### Facturas: el correo ya no se sugiere al exportador del cliente
 - Al enviar/timbrar un CFDI, el destinatario sugerido es el contacto de **facturación/cobranza** y, si no existe, el **correo fiscal del cliente**; los contactos de otro tipo (exportador, shipper) ya no se autoseleccionan por ser los más recientes.
 
+### Proformas PDF: mejor acomodo, menos páginas
+- Una proforma corta ahora cabe en **una sola página**: el título de *Conceptos*, la tabla y los totales viajan juntos y ya no se empuja el bloque completo a la página siguiente.
+- Se quitaron redundancias que gastaban espacio: la fila *Ruta* (ya está en Origen/Destino, y con ella el símbolo de flecha que salía mal), la *Vigencia* duplicada y el subtítulo *Conceptos en USD* cuando la proforma tiene una sola moneda.
+- Cuando no hay datos bancarios configurados, el aviso se muestra en una línea discreta en lugar de una tarjeta grande.
+
 ## [13.823.69] - 2026-09-03
 
 ### Cotizaciones: dos personas ya no se pisan los cambios
