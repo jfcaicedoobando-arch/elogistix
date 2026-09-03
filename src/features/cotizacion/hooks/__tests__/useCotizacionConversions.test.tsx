@@ -24,6 +24,7 @@ vi.mock("@/lib/query", () => ({
     cotizaciones: { all: ["cotizaciones"], detail: (id: string) => ["cotizaciones", id] },
     clientes: { all: ["clientes"] },
     embarques: { all: ["embarques"] },
+    crm: { all: ["crm"] },
   },
 }));
 

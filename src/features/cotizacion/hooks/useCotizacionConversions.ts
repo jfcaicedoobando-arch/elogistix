@@ -1,5 +1,4 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useAuth } from '@/lib/contexts/AuthContext';
 import { queryKeys } from '@/lib/query';
 import {
   convertirProspectoACliente,
@@ -11,21 +10,31 @@ import { RevalidacionRequeridaError } from '@/features/cotizacion/domain/revalid
 import { getErrorMessage } from "@/lib/errors";
 
 
-/** Convierte un prospecto en cliente y actualiza la cotización */
+/**
+ * Convierte un prospecto en cliente (una sola RPC atómica).
+ *
+ * P0 — `onSuccess` es `async`: las invalidaciones se resuelven ANTES de que el
+ * handler cierre el diálogo, para que la pantalla ya muestre el cliente ligado.
+ */
 export function useConvertirProspectoACliente() {
   const queryClient = useQueryClient();
-  const { user } = useAuth();
 
   return useMutation({
-    mutationFn: ({
-      cotizacionId,
-      clienteData,
-    }: Omit<ProspectoAClienteInput, 'user'>) =>
-      convertirProspectoACliente({ cotizacionId, clienteData, user }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.cotizaciones.all });
-      queryClient.invalidateQueries({ queryKey: queryKeys.clientes.all });
-      notifySuccess(undefined, { title: "Prospecto convertido a cliente" });
+    mutationFn: ({ cotizacionId, clienteData }: ProspectoAClienteInput) =>
+      convertirProspectoACliente({ cotizacionId, clienteData }),
+    onSuccess: async (_result, variables) => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: queryKeys.cotizaciones.all }),
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.cotizaciones.detail(variables.cotizacionId),
+        }),
+        queryClient.invalidateQueries({ queryKey: queryKeys.clientes.all }),
+        queryClient.invalidateQueries({ queryKey: queryKeys.crm.all }),
+      ]);
+      notifySuccess(undefined, {
+        title: "Cliente listo",
+        description: "Ya puedes crear el embarque de esta cotización.",
+      });
     },
     onError: (error: Error) => {
       notifyError(undefined, { title: "No se pudo convertir prospecto", description: getErrorMessage(error), error, method: "CONVERT_PROSPECTO_CLIENTE" });

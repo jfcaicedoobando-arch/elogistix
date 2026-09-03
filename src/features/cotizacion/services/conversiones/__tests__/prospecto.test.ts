@@ -23,20 +23,25 @@ const baseInput = {
     contacto: "Juan Pérez",
     email: "juan@acme.mx",
     telefono: "5555555555",
+    rfc: "ACM010101AA1",
+    cp: "06600",
+    regimen_fiscal: "601",
+    uso_cfdi_default: "G03",
+    forma_pago_default: "99",
+    metodo_pago_default: "PPD",
   },
-  user: { id: "u-1", email: "ops@librecarga.com" },
 };
 
 describe("convertirProspectoACliente", () => {
-  it("Ola 6 · M3: usa la RPC atómica y devuelve el cliente resultante", async () => {
+  it("P0: una sola RPC atómica devuelve el cliente resultante", async () => {
     mock.setRpcResult("convertir_prospecto_a_cliente_rpc", {
-      data: { cliente_id: "cli-1", nombre: "Acme SA", creado: true },
+      data: { cliente_id: "cli-1", nombre: "Acme SA", creado: true, sin_cambios: false },
       error: null,
     });
 
     const cli = await convertirProspectoACliente(baseInput);
 
-    expect(cli).toEqual({ id: "cli-1", nombre: "Acme SA", creado: true });
+    expect(cli).toEqual({ id: "cli-1", nombre: "Acme SA", creado: true, sinCambios: false });
     expect(mock.rpcCalls).toHaveLength(1);
     expect(mock.rpcCalls[0].fn).toBe("convertir_prospecto_a_cliente_rpc");
     expect(mock.rpcCalls[0].args).toMatchObject({
@@ -45,37 +50,25 @@ describe("convertirProspectoACliente", () => {
     });
   });
 
-  it("es idempotente: si la conversión ya existía, `creado` es false", async () => {
+  it("es idempotente: en el reintento `creado` es false y `sinCambios` true", async () => {
     mock.setRpcResult("convertir_prospecto_a_cliente_rpc", {
-      data: { cliente_id: "cli-9", nombre: "Acme SA", creado: false },
+      data: { cliente_id: "cli-9", nombre: "Acme SA", creado: false, sin_cambios: true },
       error: null,
     });
     const cli = await convertirProspectoACliente(baseInput);
     expect(cli.creado).toBe(false);
+    expect(cli.sinCambios).toBe(true);
     expect(cli.id).toBe("cli-9");
   });
 
-  it("registra entrada en bitácora cuando se provee user", async () => {
+  it("P0: NO registra bitácora desde el cliente (la escribe la RPC)", async () => {
     mock.setRpcResult("convertir_prospecto_a_cliente_rpc", {
       data: { cliente_id: "cli-2", nombre: "Beta", creado: true },
       error: null,
     });
-    await convertirProspectoACliente({
-      ...baseInput,
-      clienteData: { ...baseInput.clienteData, nombre: "Beta" },
-    });
-    expect(registrarActividadMock).toHaveBeenCalledWith(
-      expect.objectContaining({ modulo: "cotizaciones", accion: "convertir_prospecto_a_cliente" }),
-    );
-  });
-
-  it("omite bitácora cuando user es null", async () => {
-    mock.setRpcResult("convertir_prospecto_a_cliente_rpc", {
-      data: { cliente_id: "cli-3", nombre: "Gamma", creado: true },
-      error: null,
-    });
-    await convertirProspectoACliente({ ...baseInput, user: null });
+    await convertirProspectoACliente(baseInput);
     expect(registrarActividadMock).not.toHaveBeenCalled();
+    expect(mock.rpcCalls).toHaveLength(1);
   });
 
   it("propaga error cuando convertir_prospecto_a_cliente_rpc falla", async () => {

@@ -2,6 +2,7 @@ import { useAuth } from "@/lib/contexts/AuthContext";
 import type { AppRole } from "@/types/appRole";
 import {
   ADMIN_CUENTAS_BANCARIAS,
+  ALTA_CLIENTES,
   APROBAR_FACTURA_PROVEEDOR,
   CAPTURAR_FACTURA_PROVEEDOR,
   CAPTURAR_MOVIMIENTO_BANCARIO,
@@ -116,8 +117,14 @@ export function usePermissions() {
     (has(CRM_TOMAR_LEAD, roleStr) && !!vendedorId && !!user?.id && vendedorId === user.id);
   const canCrearLead = has(CRM_CREAR_LEAD, roleStr);
   const canGestionarLeadsEnLote = canGestionarTodosLosLeads;
+  /**
+   * P0 — alta de clientes (manual, CSV y conversión de prospecto). Espejo del
+   * rol exigido por `convertir_prospecto_a_cliente_rpc`.
+   */
+  const canAltaCliente = has(ALTA_CLIENTES, roleStr);
 
   return {
+    canAltaCliente,
     canEdit,
     canEditExpediente,
     canEditCrm,

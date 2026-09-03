@@ -1,5 +1,14 @@
 # Changelog
 
+## [Unreleased]
+### Convertir prospecto a cliente: una sola operación segura
+- **La puerta y la cerradura ya coinciden**: el botón *Convertir a Cliente* (y el alta/importación de clientes) sólo aparece para quien de verdad puede dar de alta clientes: dirección, administración, operación y contabilidad. Antes lo veían roles que después recibían un error de permisos.
+- **Sólo se convierte la cotización que ganó**: debe estar Aceptada, ser de prospecto, estar ligada a una oportunidad, ser su cotización ganadora, con la oportunidad en etapa ganada y su prospecto vivo. Si falta la oportunidad, el botón no aparece y queda el aviso que guía a vincularla.
+- **Cliente completo desde el primer día**: el formulario pide contacto, correo, teléfono, RFC, código postal, régimen fiscal, uso de CFDI, forma y método de pago (y dirección cuando el RFC es real), con avisos campo por campo. Antes se creaban clientes sin datos fiscales y la primera factura se atoraba.
+- **Todo o nada**: cliente, cotización, cotizaciones hermanas del mismo prospecto, oportunidad, prospecto y bitácora quedan actualizados en una sola operación. Antes parte del trabajo ocurría después y podía quedar a medias.
+- **Sin duplicados y reintento seguro**: si ya existe un cliente con ese RFC se reutiliza; si la respuesta se pierde y se vuelve a intentar, devuelve el mismo cliente sin duplicar nada ni repetir el registro en bitácora.
+- Mientras la conversión está en curso no se puede cerrar el modal por error; si algo falla, el modal se queda abierto con todo lo capturado.
+
 ## [13.823.64] - 2026-09-03
 ### Los pesos de un embarque aéreo ya se guardan
 - **Bug corregido**: al editar un embarque aéreo (o terrestre) creado desde una cotización, el peso, el volumen y las piezas volvían a cero al guardar. El embarque arrastraba "contenedores" internos vacíos y el sistema recalculaba los totales sumándolos, borrando lo capturado.

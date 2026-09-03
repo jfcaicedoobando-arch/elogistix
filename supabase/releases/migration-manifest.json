@@ -3721,6 +3721,7 @@
       "20260903000200_ola_e1_cierre_reemision_cxp.sql",
       "20260903000300_ola_e2_n15_restaurar_candados_cancelacion.sql",
       "20260903000627_f44ce165-52da-4596-b4c6-35752d8c2290.sql",
+      "20260903002919_d12a49bf-ea56-481a-adb6-253382e9f4b3.sql",
       "20260904000100_ola1_v14_c1_doble_iva_c2_snapshots.sql",
       "20260904000200_ola2_v14_org_scope_kpis.sql",
       "20260904000300_ola3_v14_papelera_rpcs.sql",

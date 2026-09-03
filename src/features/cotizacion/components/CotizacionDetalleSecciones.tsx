@@ -26,6 +26,10 @@ interface AccionesProps {
   usuarioActual?: string | null;
   /** v13.624.0 — política del cliente: ¿requiere autorizar cotizaciones? */
   requiereAutorizacionCliente?: boolean;
+  /** P0 — ¿el rol puede dar de alta clientes? (espejo de la RPC de conversión). */
+  puedeAltaCliente?: boolean;
+  /** P0 — la conversión exige oportunidad ligada (cotización ganadora). */
+  tieneOportunidad?: boolean;
 }
 
 
@@ -98,8 +102,13 @@ function visibilidadAcciones(params: {
   tieneEmbarquesVinculados: boolean;
   puedeAceptar: boolean;
   puedeRechazar: boolean;
+  puedeAltaCliente: boolean;
+  tieneOportunidad: boolean;
 }) {
-  const { estado, esProspecto, tieneEmbarquesVinculados, puedeAceptar, puedeRechazar } = params;
+  const {
+    estado, esProspecto, tieneEmbarquesVinculados, puedeAceptar, puedeRechazar,
+    puedeAltaCliente, tieneOportunidad,
+  } = params;
   const esAceptada = estado === "Aceptada";
   const respuestaEnSolicitada = puedeAceptar || puedeRechazar;
   return {
@@ -108,7 +117,10 @@ function visibilidadAcciones(params: {
       estado === "Borrador" || estado === "Enviada" ||
       (estado === "Solicitada" && respuestaEnSolicitada),
     esAceptada,
-    mostrarConvertirCliente: esAceptada && esProspecto,
+    // P0 — la puerta visible coincide con la cerradura: rol con alta de
+    // clientes + prospecto aceptado + oportunidad ligada. Sin oportunidad queda
+    // sólo el banner que guía a vincularla.
+    mostrarConvertirCliente: esAceptada && esProspecto && puedeAltaCliente && tieneOportunidad,
     mostrarCrearEmbarque: esAceptada && !esProspecto && !tieneEmbarquesVinculados,
     mostrarRecotizar: esAceptada && !tieneEmbarquesVinculados,
   };
@@ -119,6 +131,8 @@ export function CotizacionDetalleAcciones({
   tieneEmbarquesVinculados = false,
   onCambiarEstado, onAbrirConvertir, total, rol, creadaPor, usuarioActual,
   requiereAutorizacionCliente = true,
+  puedeAltaCliente = false,
+  tieneOportunidad = false,
 }: AccionesProps) {
   const [recotizarOpen, setRecotizarOpen] = useState(false);
   const acciones = accionesCotizacionPermitidas(
@@ -137,6 +151,8 @@ export function CotizacionDetalleAcciones({
     tieneEmbarquesVinculados,
     puedeAceptar: acciones.aceptar,
     puedeRechazar: acciones.rechazar,
+    puedeAltaCliente,
+    tieneOportunidad,
   });
 
   return (

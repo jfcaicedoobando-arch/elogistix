@@ -21,6 +21,7 @@ import { SinDesgloseBanner } from "@/features/cotizacion/components/SinDesgloseB
 import { AvisoConceptosDescartados } from "@/features/cotizacion/components/AvisoConceptosDescartados";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { useClienteAutorizacion } from "@/features/cliente/hooks/useClienteAutorizacion";
+import { usePermissions } from "@/hooks/shared";
 import type { CotizacionDetalleContenidoProps as Props } from "./cotizacionDetalleContenido.types";
 
 /** Renderiza el cuerpo de la vista de detalle (todo lo que va bajo el header). */
@@ -39,6 +40,7 @@ export function CotizacionDetalleContenido({
     abrirDialogConvertir, handleConvertir, convertirProspecto, navigate,
   } = acciones;
   const { user } = useAuth();
+  const { canAltaCliente } = usePermissions();
   const { autorizacion } = useClienteAutorizacion(
     (cotizacion as { cliente_id?: string | null }).cliente_id ?? null,
   );
@@ -76,6 +78,8 @@ export function CotizacionDetalleContenido({
           creadaPor={(cotizacion as { created_by?: string | null }).created_by ?? null}
           usuarioActual={user?.id ?? null}
           requiereAutorizacionCliente={autorizacion.requiereAutorizacionCotizacion}
+          puedeAltaCliente={canAltaCliente}
+          tieneOportunidad={!!cotizacion.oportunidad_id}
         />
       )}
 

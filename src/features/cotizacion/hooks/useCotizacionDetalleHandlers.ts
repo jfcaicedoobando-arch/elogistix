@@ -11,8 +11,9 @@ import { useRegistrarActividad } from "@/hooks/shared";
 import { tieneCostosCargados } from "@/features/cotizacion/services/candadoCostos";
 import { fetchDatosFiscalesProspecto } from "@/features/cotizacion/services/datosFiscalesProspecto";
 import { notifyError, notifyWarning } from "@/lib/ui/appFeedback";
-import { sincronizarEtapaPorEstadoCotizacion, propagarConversionProspectoCRM } from "@/features/crm/services/vincularCotizacion";
-import type { ClienteFormData } from "@/features/cliente/types/clienteForm";
+import { sincronizarEtapaPorEstadoCotizacion } from "@/features/crm/services/vincularCotizacion";
+import { EMPTY_CLIENTE_FORM, type ClienteFormData } from "@/features/cliente/types/clienteForm";
+import { validarClienteConversion } from "@/features/cliente/domain/validarClienteConversion";
 import { RevalidacionRequeridaError } from "@/features/cotizacion/domain/revalidacionTarifa";
 
 
@@ -42,10 +43,7 @@ export function useCotizacionDetalleHandlers(cotizacion: CotizacionRow | undefin
   const [showConvertir, setShowConvertir] = useState(false);
   const [showConfirmarConvertir, setShowConfirmarConvertir] = useState(false);
   const [showBloqueoSinCostos, setShowBloqueoSinCostos] = useState(false);
-  const [clienteForm, setClienteForm] = useState<ClienteFormData>({
-    nombre: '', contacto: '', email: '', telefono: '',
-    rfc: '', direccion: '', ciudad: '', estado: '', cp: '',
-  });
+  const [clienteForm, setClienteForm] = useState<ClienteFormData>({ ...EMPTY_CLIENTE_FORM });
 
   const handleCambiarEstado = async (estado: string) => {
     if (!cotizacion) return;
@@ -77,6 +75,7 @@ export function useCotizacionDetalleHandlers(cotizacion: CotizacionRow | undefin
     if (!cotizacion) return;
     const fiscales = await fetchDatosFiscalesProspecto(cotizacion.oportunidad_id ?? null);
     setClienteForm({
+      ...EMPTY_CLIENTE_FORM,
       nombre: cotizacion.prospecto_empresa || '',
       contacto: cotizacion.prospecto_contacto || '',
       email: cotizacion.prospecto_email || '',
@@ -86,31 +85,34 @@ export function useCotizacionDetalleHandlers(cotizacion: CotizacionRow | undefin
     setShowConvertir(true);
   };
 
+  /**
+   * P0 — una sola llamada: la RPC hace cliente + cotización + historial +
+   * oportunidad + lead + bitácora en una transacción. Ya NO se propaga al CRM
+   * después (antes podía quedar el cliente creado y el CRM sin actualizar).
+   */
   const handleConvertir = async () => {
-    if (!cotizacion || !clienteForm.nombre.trim()) {
-      notifyError(undefined, { title: "El nombre es obligatorio", method: "HANDLE_CONVERTIR", errorCode: ERROR_CODES.VALIDATION_FAILED });
+    if (!cotizacion) return;
+    const errores = validarClienteConversion(clienteForm);
+    const faltantes = Object.values(errores);
+    if (faltantes.length > 0) {
+      notifyError(undefined, {
+        title: "Faltan datos del cliente",
+        description: faltantes[0],
+        method: "HANDLE_CONVERTIR",
+        errorCode: ERROR_CODES.VALIDATION_FAILED,
+      });
       return;
     }
     try {
-      const cliente = await convertirProspecto.mutateAsync({
+      await convertirProspecto.mutateAsync({
         cotizacionId: cotizacion.id,
         clienteData: clienteForm,
       });
-      // El toast lo emite `useConvertirProspectoACliente` (evita doble toast).
-      if (cotizacion.oportunidad_id) {
-        try {
-          await propagarConversionProspectoCRM({
-            oportunidadId: cotizacion.oportunidad_id,
-            clienteId: cliente.id,
-            clienteNombre: cliente.nombre,
-          });
-        } catch {
-          // No bloquear la conversión de prospecto por una falla CRM.
-        }
-      }
+      // El toast lo emite `useConvertirProspectoACliente` (evita doble toast) y
+      // sus invalidaciones ya terminaron cuando llegamos aquí.
       setShowConvertir(false);
     } catch {
-      // Notificado por el hook de mutación.
+      // Notificado por el hook de mutación; el diálogo NO se cierra.
     }
   };
 
