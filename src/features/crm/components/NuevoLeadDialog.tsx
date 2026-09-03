@@ -56,12 +56,13 @@ export default function NuevoLeadDialog({ open, onOpenChange, onCreated }: Props
 
 
   const handleSubmit = async () => {
-    if (crear.isPending || enviandoRef.current) return;
+    if (crear.isPending || crearActividad.isPending || enviandoRef.current || guardando) return;
     if (!form.empresa.trim()) {
       notifyError(undefined, { title: "Empresa es obligatoria", method: "HANDLE_SUBMIT", errorCode: ERROR_CODES.VALIDATION_FAILED });
       return;
     }
     enviandoRef.current = true;
+    setGuardando(true);
     try {
       const r = await crear.mutateAsync(form);
       if (autoActividad) {
@@ -90,8 +91,10 @@ export default function NuevoLeadDialog({ open, onOpenChange, onCreated }: Props
       });
     } finally {
       enviandoRef.current = false;
+      setGuardando(false);
     }
   };
+
 
   const handleOpenChange = (o: boolean) => {
     if (!o) setForm(formVacio());
