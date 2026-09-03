@@ -41,7 +41,7 @@ export default function Oportunidades() {
   const navigate = useNavigate();
   // Espejo de las policies de `crm_oportunidades`: sin capacidad no se ofrece
   // crear ni mover etapa (antes se mostraban y el guardado moría en RLS).
-  const { canCrearOportunidad, canGestionarTodasLasOportunidades } = usePermissions();
+  const { canCrearOportunidad, canGestionarOportunidad } = usePermissions();
   const [search, setSearch] = useState("");
   const [filtros, setFiltros] = useState<OportunidadesFiltros>(FILTROS_DEFAULT);
   const [filtersOpen, setFiltersOpen] = useState(false);
@@ -160,7 +160,7 @@ export default function Oportunidades() {
               etapas={etapas as CrmEtapaRow[]}
               oportunidades={ops}
               onMover={handleMover}
-              puedeMover={canGestionarTodasLasOportunidades}
+              puedeMover={(o) => canGestionarOportunidad(o.vendedor_id)}
               onClickCard={(id) => navigate(`/crm/oportunidades/${id}`)}
               onNuevo={canCrearOportunidad ? () => setNuevaOpen(true) : undefined}
             />

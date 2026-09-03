@@ -46,13 +46,15 @@ interface Props {
   /** CTA del estado vacío de cada columna (E-11). Omitir oculta la acción. */
   onNuevo?: () => void;
   /**
-   * Permiso real de mover oportunidades de etapa (espejo de las policies de
-   * `crm_oportunidades`). Con `false` no hay drag ni handler activo.
+   * Permiso real de mover UNA oportunidad de etapa (espejo de las policies de
+   * `crm_oportunidades`: staff sobre cualquiera, vendedor sólo las propias).
+   * Cuando devuelve `false` no hay drag ni handler activo para esa tarjeta.
    */
-  puedeMover?: boolean;
+  puedeMover?: (op: CrmOportunidadRow) => boolean;
 }
 
-export default function OportunidadKanban({ etapas, oportunidades, onMover, onClickCard, onNuevo, puedeMover = true }: Props) {
+export default function OportunidadKanban({ etapas, oportunidades, onMover, onClickCard, onNuevo, puedeMover }: Props) {
+  const puedeMoverOp = (op: CrmOportunidadRow) => (puedeMover ? puedeMover(op) : true);
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }));
   const ids = useMemo(() => oportunidades.map((o) => o.id), [oportunidades]);
   const { data: proximasMap } = useProximasActividades("oportunidad", ids);
@@ -71,13 +73,13 @@ export default function OportunidadKanban({ etapas, oportunidades, onMover, onCl
   }, [etapas, oportunidades]);
 
   const handleDragEnd = (e: DragEndEvent) => {
-    if (!puedeMover) return;
     const oportunidadId = String(e.active.id);
     const etapaId = e.over ? String(e.over.id) : null;
     if (!etapaId) return;
     const op = oportunidades.find((o) => o.id === oportunidadId);
     const etapa = etapas.find((x) => x.id === etapaId);
     if (!op || !etapa || op.etapa_id === etapaId) return;
+    if (!puedeMoverOp(op)) return;
     onMover(oportunidadId, etapaId, etapa.probabilidad_default);
   };
 
@@ -109,7 +111,7 @@ export default function OportunidadKanban({ etapas, oportunidades, onMover, onCl
                 onClickCard={onClickCard}
                 proximasMap={proximas}
                 avanceMap={avanceMap ?? new Map()}
-                arrastrable={puedeMover}
+                puedeArrastrar={puedeMoverOp}
               />
             )}
             {etapas.map((e) => (
@@ -121,7 +123,7 @@ export default function OportunidadKanban({ etapas, oportunidades, onMover, onCl
                 proximasMap={proximas}
                 avanceMap={avanceMap ?? new Map()}
                 onNuevo={onNuevo}
-                arrastrable={puedeMover}
+                puedeArrastrar={puedeMoverOp}
               />
             ))}
           </div>
