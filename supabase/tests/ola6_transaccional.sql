@@ -299,6 +299,10 @@ BEGIN
   DELETE FROM public.crm_etapas_pipeline WHERE organization_id = v_org;
   DELETE FROM public.cotizaciones WHERE organization_id = v_org;
   DELETE FROM public.clientes WHERE organization_id = v_org;
+  -- La conversión canónica deja huella en la bitácora y la membresía sembrada
+  -- también referencia la organización.
+  DELETE FROM public.bitacora_actividad WHERE organization_id = v_org;
+  DELETE FROM public.organization_members WHERE organization_id = v_org;
   DELETE FROM public.organizations WHERE id = v_org;
 
   RAISE NOTICE 'OK ola6_transaccional (A3, M3, M4, M7, M15)';
