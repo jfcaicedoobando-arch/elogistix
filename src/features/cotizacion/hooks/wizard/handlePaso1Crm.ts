@@ -8,6 +8,8 @@
  */
 import { registrarBloqueoSinTarifa } from "@/features/cotizacion/services/wizard/paso1Crm";
 import { vincularOCrearOportunidadParaCotizacion } from "@/features/crm/services/vincularCotizacion";
+import type { VincularResult } from "@/features/crm/services/vincularCotizacion/vincularOCrear";
+
 import { esIncotermSinFleteVenta } from "@/features/cotizacion/utils/incotermRules";
 import type { CotizacionFormValues } from "@/features/cotizacion/domain/mappers/cotizacionForm";
 import {
@@ -137,17 +139,17 @@ export function campoParaPathSchemaPaso1(path: string): string | null {
  *
  * P0: ya NO es "falla suave". Si el vínculo falla se propaga el error para que
  * el wizard se quede en el paso 1 (con toda la captura y el mismo
- * `cotizacionId`) y ofrezca reintentar. Devuelve el `updated_at` resultante
- * para resincronizar el bloqueo optimista.
+ * `cotizacionId`) y ofrezca reintentar. Devuelve los IDs canónicos y el
+ * `updated_at` resultante para resincronizar el bloqueo optimista.
  */
 export async function vincularCrmTrasCrear(
   cotizacionId: string,
   values: CotizacionFormValues,
-): Promise<string | null> {
-  const { updatedAt } = await vincularOCrearOportunidadParaCotizacion({
+): Promise<VincularResult> {
+  return await vincularOCrearOportunidadParaCotizacion({
     cotizacionId,
     oportunidadId: values.oportunidadId || null,
     leadId: values.leadId || null,
   });
-  return updatedAt;
 }
+

@@ -65,6 +65,13 @@ export function usePaso1Handlers({
   // P0: si el vínculo CRM falla, el wizard NO avanza; se conserva la captura y
   // el mismo `cotizacionId` para reintentar sin duplicar nada.
   const [vinculoCrmError, setVinculoCrmError] = useState<string | null>(null);
+  // Candado reactivo: al editar una cotización que ya trae oportunidad, y tras
+  // el primer vínculo exitoso, el origen/destinatario deja de ser sustituible.
+  const [vinculoCrmConfirmado, setVinculoCrmConfirmado] = useState<boolean>(
+    () => Boolean(form.getValues("oportunidadId")),
+  );
+
+  const limpiarVinculoCrmError = useCallback(() => setVinculoCrmError(null), []);
 
   /**
    * Vincula la cotización de prospecto a su origen CRM. Devuelve `false` si
@@ -74,9 +81,14 @@ export function usePaso1Handlers({
     async (id: string, v: CotizacionFormValues): Promise<boolean> => {
       if (!v.esProspecto) return true;
       try {
-        const sello = await vincularCrmTrasCrear(id, v);
-        updateCotizacion.resincronizarSello?.(sello);
+        const res = await vincularCrmTrasCrear(id, v);
+        // Los IDs canónicos son los que devuelve la RPC (no lo capturado).
+        const opts = { shouldDirty: false, shouldValidate: true } as const;
+        form.setValue("oportunidadId", res.oportunidadId ?? "", opts);
+        form.setValue("leadId", res.leadId ?? "", { shouldDirty: false });
+        updateCotizacion.resincronizarSello?.(res.updatedAt);
         setVinculoCrmError(null);
+        setVinculoCrmConfirmado(true);
         return true;
       } catch (e: unknown) {
         const msg = getErrorMessage(e);
@@ -91,8 +103,9 @@ export function usePaso1Handlers({
         return false;
       }
     },
-    [updateCotizacion],
+    [form, updateCotizacion],
   );
+
 
 
   /**
@@ -165,5 +178,5 @@ export function usePaso1Handlers({
     }
   }, [form, msdsFile, cotizacionId, buildPaso1Data, crearCotizacion, updateCotizacion, registrarActividad, setCotizacionId, setCurrentStep, marcarErrorPaso1, vincularCrm]);
 
-  return { handlePaso1, handleCotizarSinDesglose, vinculoCrmError };
+  return { handlePaso1, handleCotizarSinDesglose, vinculoCrmError, vinculoCrmConfirmado, limpiarVinculoCrmError };
 }

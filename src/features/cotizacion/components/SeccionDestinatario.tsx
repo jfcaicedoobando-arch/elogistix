@@ -7,7 +7,6 @@
  * oportunidad existente del CRM; el modo "crear nuevo prospecto" se retiró.
  * Un vínculo ya persistido (edición) no puede sustituirse aquí.
  */
-import { useRef } from "react";
 import { useFormContext } from "react-hook-form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -26,10 +25,17 @@ interface ClienteOption {
 interface Props {
   clientes: ClienteOption[];
   complete?: boolean;
+  /**
+   * Vínculo CRM ya confirmado (edición o primer vínculo exitoso): el
+   * destinatario/origen queda inmutable, aunque el resto del paso 1 sí se edita.
+   */
+  vinculoConfirmado?: boolean;
+  /** Limpia el aviso de vínculo pendiente al cambiar de prospecto a cliente. */
+  onLimpiarVinculoError?: () => void;
 }
 
-export default function SeccionDestinatario({ clientes, complete }: Props) {
-  const { watch, setValue, getValues, formState: { errors }, clearErrors } = useFormContext<CotizacionFormValues>();
+export default function SeccionDestinatario({ clientes, complete, vinculoConfirmado = false, onLimpiarVinculoError }: Props) {
+  const { watch, setValue, formState: { errors }, clearErrors } = useFormContext<CotizacionFormValues>();
   const esProspecto = watch("esProspecto");
   const clienteId = watch("clienteId");
   const oportunidadId = watch("oportunidadId");
@@ -37,8 +43,6 @@ export default function SeccionDestinatario({ clientes, complete }: Props) {
   const prospectoEmpresa = watch("prospectoEmpresa");
 
   const tieneVinculo = Boolean(oportunidadId || leadId);
-  // Un vínculo que ya venía guardado (edición) es inmutable en el cotizador.
-  const vinculoConfirmado = useRef(Boolean(getValues("oportunidadId"))).current;
 
   const handleSelectMatch = (m: ProspectoMatch) => {
     if (m.kind === "oportunidad") {
@@ -61,21 +65,31 @@ export default function SeccionDestinatario({ clientes, complete }: Props) {
     setValue("leadId", "", { shouldDirty: true });
   };
 
+  const handleCambioDestinatario = (v: string) => {
+    if (vinculoConfirmado) return;
+    setValue("esProspecto", v === "prospecto");
+    // Si aún no hay vínculo confirmado y el usuario vuelve a "cliente", el
+    // aviso de vínculo pendiente ya no aplica.
+    if (v !== "prospecto") onLimpiarVinculoError?.();
+  };
+
+
   return (
     <WizardSection title="Destinatario" complete={complete}>
       <RadioGroup
         value={esProspecto ? "prospecto" : "cliente"}
-        onValueChange={(v) => setValue("esProspecto", v === "prospecto")}
+        onValueChange={handleCambioDestinatario}
+        disabled={vinculoConfirmado}
         className="flex gap-6"
       >
         <div className="flex items-center gap-2">
-          <RadioGroupItem value="cliente" id="dest-cliente" />
+          <RadioGroupItem value="cliente" id="dest-cliente" disabled={vinculoConfirmado} />
           <Label htmlFor="dest-cliente" className="cursor-pointer text-body font-medium">
             Cliente existente
           </Label>
         </div>
         <div className="flex items-center gap-2">
-          <RadioGroupItem value="prospecto" id="dest-prospecto" />
+          <RadioGroupItem value="prospecto" id="dest-prospecto" disabled={vinculoConfirmado} />
           <Label htmlFor="dest-prospecto" className="cursor-pointer text-body font-medium">
             Prospecto
           </Label>
@@ -86,12 +100,14 @@ export default function SeccionDestinatario({ clientes, complete }: Props) {
         <FormField label="Cliente" required error={errors.clienteId?.message}>
           <Select
             value={clienteId}
+            disabled={vinculoConfirmado}
             onValueChange={(v) => {
               setValue("clienteId", v, { shouldValidate: true, shouldDirty: true });
               clearErrors("clienteId");
             }}
           >
             <SelectTrigger aria-invalid={!!errors.clienteId}>
+
               <SelectValue placeholder="Seleccionar cliente" />
             </SelectTrigger>
             <SelectContent>

@@ -20,6 +20,10 @@
 - **Al editar se conserva el vínculo** y ya no se puede sustituir por accidente; tampoco vuelve a aparecer el falso aviso de "otro usuario modificó este registro" después de vincular.
 - **Candado en la base**: la operación de vínculo exige siempre un origen real, valida empresa y permisos, y ya no puede crear ni modificar prospectos.
 - El aviso de las cotizaciones sin oportunidad ahora dice *Editar y vincular* y abre el wizard: no adivina ni inventa el prospecto. Las 17 cotizaciones históricas sin oportunidad se corrigen manualmente; no se tocó ningún dato.
+- **Reeditar una cotización ya vinculada nunca se atora**: si su oportunidad se cerró o el prospecto cambió de estado después, el sistema reconoce el vínculo existente y deja seguir editando. Apuntar a otro prospecto u oportunidad se sigue rechazando, y un vínculo roto avisa en lugar de reasignar en silencio.
+- **Candado visible**: una vez confirmado el vínculo, el selector Cliente/Prospecto, el selector de cliente y *Desvincular* quedan bloqueados; el resto del paso 1 (ruta, mercancía, etc.) se sigue editando normalmente.
+- En el buscador ya no aparecen oportunidades cuya etapa o prospecto fueron eliminados, para no ofrecer opciones que el servidor rechazaría.
+
 
 
 ## [13.823.64] - 2026-09-03
