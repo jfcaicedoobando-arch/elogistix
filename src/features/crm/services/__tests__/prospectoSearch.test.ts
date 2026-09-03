@@ -92,13 +92,13 @@ describe("services/crm/prospectoSearch", () => {
     expect(leadCall.opArgs[idx]).toEqual([8]);
   });
 
-  it("excluye leads convertidos", async () => {
+  it("sólo admite leads Calificado/Prospecto (excluye Nuevo, Descalificado y Convertido)", async () => {
     mock.setTableResult("crm_leads", { data: [], error: null });
     mock.setTableResult("crm_oportunidades", { data: [], error: null });
     await buscarProspectos("x");
     const leadCall = mock.tableCalls.find((c) => c.table === "crm_leads")!;
-    const neqIdx = leadCall.ops.indexOf("neq");
-    expect(leadCall.opArgs[neqIdx]).toEqual(["estado", "Convertido"]);
+    const inIdx = leadCall.ops.indexOf("in");
+    expect(leadCall.opArgs[inIdx]).toEqual(["estado", ["Calificado", "Prospecto"]]);
   });
 
   it("combina resultados de leads + oportunidades", async () => {
