@@ -14,7 +14,7 @@
  * (`LEAD_ESTADOS_ETAPA_PROSPECTO`), que excluye `Convertido` — un lead ya
  * convertido en cliente salió del embudo y no es origen válido.
  */
-import { useState, useMemo } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Target } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -57,6 +57,19 @@ export default function QuickCreateOportunidadDialog({ open, onOpenChange, onCre
   const [leadVendedorId, setLeadVendedorId] = useState<string | null>(null);
   const [leadVendedorEmail, setLeadVendedorEmail] = useState("");
 
+  // Reset sólo en la transición real abierto -> cerrado (la confirmación de
+  // descarte del shell mantiene `open` en true, así que no borra nada).
+  const abiertoAntes = useRef(open);
+  useEffect(() => {
+    if (abiertoAntes.current && !open) {
+      setNombre("");
+      setOrigenTipo("cliente");
+      setClienteId(""); setLeadId(""); setLeadNombre("");
+      setLeadVendedorId(null); setLeadVendedorEmail("");
+    }
+    abiertoAntes.current = open;
+  }, [open]);
+
   const limpiarOrigen = () => {
     setClienteId(""); setLeadId(""); setLeadNombre("");
     setLeadVendedorId(null); setLeadVendedorEmail("");
@@ -88,6 +101,7 @@ export default function QuickCreateOportunidadDialog({ open, onOpenChange, onCre
   };
 
   const submit = async () => {
+    if (crear.isPending) return;
     const invalido = validar();
     if (invalido) {
       notifyError(undefined, { title: invalido, method: "FEATURES_CRM_COMPONENTS_QUICKCREATE_QUICKCREATEOPORTUNIDADDIALOG_1" });
@@ -107,9 +121,7 @@ export default function QuickCreateOportunidadDialog({ open, onOpenChange, onCre
         ...resolverVendedor(),
       });
       notifySuccess(undefined, { title: "Oportunidad creada", duration: 2000 });
-      setNombre("");
-      setClienteId("");
-      limpiarOrigen();
+      // El cierre limpia el estado (efecto de transición): sin reset duplicado.
       onOpenChange(false);
       onCreated(r.id);
     } catch (e) {
@@ -131,7 +143,13 @@ export default function QuickCreateOportunidadDialog({ open, onOpenChange, onCre
       size="md"
       formId="qc-oportunidad-form"
       onSubmit={(e) => { e.preventDefault(); void submit(); }}
-      isDirty={nombre.trim().length > 0}
+      isDirty={
+        nombre.trim().length > 0 ||
+        clienteId.length > 0 ||
+        leadId.length > 0 ||
+        origenTipo !== "cliente"
+      }
+      busy={crear.isPending}
       footer={
         <FormDialogFooter
           formId="qc-oportunidad-form"
@@ -140,7 +158,14 @@ export default function QuickCreateOportunidadDialog({ open, onOpenChange, onCre
           loading={crear.isPending}
           disabled={!etapaInicial || !origenListo}
           extra={
-            <Button type="button" variant="ghost" size="sm" onClick={onMore} className="text-body-sm">
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={onMore}
+              disabled={crear.isPending}
+              className="text-body-sm"
+            >
               Más campos →
             </Button>
           }
