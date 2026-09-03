@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+### Alta de proveedor: el RFC de la CSF ya no se pierde
+- Al elegir **Agente de Carga** y su país, el RFC/Tax ID cargado desde la CSF se conserva; el campo ahora está siempre visible en el paso 1.
+
 ## [13.823.69] - 2026-09-03
 
 ### Cotizaciones: dos personas ya no se pisan los cambios
