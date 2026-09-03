@@ -3,9 +3,8 @@
  * Usado por QuickAddMenu y por cualquier flujo que necesite crear una tarea.
  * Migrado a `FormDialogShell` (v13.121.0).
  */
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ClipboardList } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -15,7 +14,9 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
+import { FormDialogFooter } from "@/components/shared/FormDialogFooter";
 import { notifyError } from "@/lib/ui/appFeedback";
+
 import { getErrorMessage } from "@/lib/errors";
 import { crmToast } from "@/features/crm/lib/crmToast";
 import {
@@ -60,6 +61,20 @@ export default function NuevaActividadDialog({ open, onOpenChange, defaultEntida
     setContactoEfectivo(false); setReunionCalificada(false);
   }, [open, defTipo, defId]);
 
+  const isDirty = useMemo(
+    () =>
+      entidadTipo !== (defTipo ?? "oportunidad") ||
+      entidadId !== (defId ?? "") ||
+      tipo !== "tarea" ||
+      asunto !== "" ||
+      desc !== "" ||
+      fecha !== "" ||
+      contactoEfectivo !== false ||
+      reunionCalificada !== false,
+    [entidadTipo, defTipo, entidadId, defId, tipo, asunto, desc, fecha, contactoEfectivo, reunionCalificada],
+  );
+
+
   const handleSubmit = async () => {
     if (crear.isPending || enviandoRef.current) return;
     if (!entidadId) return notifyError(undefined, { title: "Selecciona la entidad", method: "HANDLE_SUBMIT", errorCode: ERROR_CODES.VALIDATION_FAILED });
@@ -87,12 +102,12 @@ export default function NuevaActividadDialog({ open, onOpenChange, defaultEntida
   };
 
   const footer = (
-    <>
-      <Button variant="outline" onClick={() => onOpenChange(false)} disabled={crear.isPending}>Cancelar</Button>
-      <Button onClick={handleSubmit} loading={crear.isPending}>
-        Crear
-      </Button>
-    </>
+    <FormDialogFooter
+      onCancel={() => onOpenChange(false)}
+      onConfirm={handleSubmit}
+      confirmLabel="Crear"
+      loading={crear.isPending}
+    />
   );
 
   return (
@@ -104,8 +119,10 @@ export default function NuevaActividadDialog({ open, onOpenChange, defaultEntida
       description="Registra una tarea, llamada, reunión o nota."
       size="md"
       busy={crear.isPending}
+      isDirty={isDirty}
       footer={footer}
     >
+
       {!defaultEntidad && (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div className="space-y-1">

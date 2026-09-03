@@ -3,10 +3,10 @@
  * Formulario simple — los campos avanzados se editan en LeadDetalle.
  * Migrado a `FormDialogShell` (v13.121.0).
  */
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { Target } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
+import { FormDialogFooter } from "@/components/shared/FormDialogFooter";
 import { notifyError } from "@/lib/ui/appFeedback";
 import { crmToast } from "@/features/crm/lib/crmToast";
 import { useAuth } from "@/lib/contexts/AuthContext";
@@ -15,6 +15,7 @@ import { useCrearActividad } from "@/features/crm/hooks";
 import { NuevoLeadForm, type LeadFormState } from "./nuevoLead/NuevoLeadForm";
 import { AvisoLeadDuplicado } from "./AvisoLeadDuplicado";
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
+
 
 interface Props {
   open: boolean;
@@ -53,9 +54,14 @@ export default function NuevoLeadDialog({ open, onOpenChange, onCreated }: Props
   const enviandoRef = useRef(false);
 
   const pendingTotal = guardando || crear.isPending || crearActividad.isPending;
-
+  const defaults = useMemo(() => formVacio(), [formVacio]);
+  const isDirty = useMemo(
+    () => JSON.stringify(form) !== JSON.stringify(defaults) || autoActividad !== true,
+    [form, defaults, autoActividad],
+  );
 
   const handleSubmit = async () => {
+
     if (crear.isPending || crearActividad.isPending || enviandoRef.current || guardando) return;
     if (!form.empresa.trim()) {
       notifyError(undefined, { title: "Empresa es obligatoria", method: "HANDLE_SUBMIT", errorCode: ERROR_CODES.VALIDATION_FAILED });
@@ -97,17 +103,20 @@ export default function NuevoLeadDialog({ open, onOpenChange, onCreated }: Props
 
 
   const handleOpenChange = (o: boolean) => {
-    if (!o) setForm(formVacio());
+    if (!o) {
+      setForm(formVacio());
+      setAutoActividad(true);
+    }
     onOpenChange(o);
   };
 
   const footer = (
-    <>
-      <Button variant="outline" onClick={() => onOpenChange(false)} disabled={pendingTotal}>Cancelar</Button>
-      <Button onClick={handleSubmit} loading={pendingTotal}>
-        Crear lead
-      </Button>
-    </>
+    <FormDialogFooter
+      onCancel={() => onOpenChange(false)}
+      onConfirm={handleSubmit}
+      confirmLabel="Crear lead"
+      loading={pendingTotal}
+    />
   );
 
   return (
@@ -119,8 +128,10 @@ export default function NuevoLeadDialog({ open, onOpenChange, onCreated }: Props
       description="Captura los datos básicos del prospecto. Podrás convertirlo a cliente y oportunidad desde su ficha."
       size="2xl"
       busy={pendingTotal}
+      isDirty={isDirty}
       footer={footer}
     >
+
 
       <AvisoLeadDuplicado
         empresa={form.empresa}
