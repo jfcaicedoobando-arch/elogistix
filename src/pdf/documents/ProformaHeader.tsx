@@ -18,13 +18,16 @@ interface Props {
 
 
 
+/** Encabezado de sección compacto para proformas (menos aire vertical). */
+const H3_COMPACTO = { marginTop: 10, marginBottom: 6 } as const;
+
 function SeccionEmbarque({ embarque }: { embarque: EmbarqueLite }) {
   const origen = embarque.puerto_origen || embarque.aeropuerto_origen || embarque.ciudad_origen || "-";
   const destino = embarque.puerto_destino || embarque.aeropuerto_destino || embarque.ciudad_destino || "-";
   const contenedores = embarque.contenedores ?? [];
   return (
     <>
-      <Text style={styles.h3}>Datos del Embarque</Text>
+      <Text style={[styles.h3, H3_COMPACTO]}>Datos del Embarque</Text>
       <KeyValueGrid
         columns={3}
         items={[
@@ -33,17 +36,16 @@ function SeccionEmbarque({ embarque }: { embarque: EmbarqueLite }) {
           ["Incoterm", embarque.incoterm],
           ["Origen", origen],
           ["Destino", destino],
-          ["Ruta", `${origen} → ${destino}`],
         ]}
       />
       {contenedores.length > 0 ? (
-        <View style={{ marginTop: 4 }}>
+        <View style={{ marginTop: 2 }}>
           <Text style={styles.label}>Contenedores</Text>
           <Text style={styles.value}>{resumirContenedores(contenedores)}</Text>
         </View>
       ) : null}
       {embarque.descripcion_mercancia ? (
-        <View style={{ marginTop: 4 }}>
+        <View style={{ marginTop: 2 }}>
           <Text style={styles.label}>Descripción de la mercancía</Text>
           <Text style={styles.value}>{embarque.descripcion_mercancia}</Text>
         </View>
@@ -62,9 +64,9 @@ export function ProformaHeader({ proforma, cliente, embarque, esConsolidada, emi
       : Number(proforma.dias_credito) === 0
         ? "Contado"
         : `${proforma.dias_credito} días`;
+  // La vigencia se muestra una sola vez, en "Condiciones de pago".
   const meta = [
     { label: "Fecha emisión", value: formatDate(proforma.fecha_emision) },
-    { label: "Vigencia", value: vigenciaPlus30(proforma.fecha_emision) },
     { label: "Expediente", value: proforma.expediente },
   ];
   if (proforma.bl_master) meta.push({ label: "BL Master / MAWB", value: proforma.bl_master });
