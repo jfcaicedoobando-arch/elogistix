@@ -128,28 +128,50 @@ describe("useCotizacionDetalleHandlers", () => {
     });
   });
 
+  // P0 — el formulario exige los datos fiscales completos (espejo de la RPC).
+  const FISCALES_OK = {
+    nombre: "ACME", contacto: "Juan", email: "j@acme.mx", telefono: "5555555555",
+    rfc: "ACM010101AA1", direccion: "Av. Reforma 1", ciudad: "CDMX", estado: "CDMX",
+    cp: "06600", regimen_fiscal: "601", uso_cfdi_default: "G03",
+    forma_pago_default: "99", metodo_pago_default: "PPD",
+  };
+
   it("handleConvertir rechaza si el nombre está vacío", async () => {
     const { result } = renderHook(() => useCotizacionDetalleHandlers(cot()), { wrapper: createWrapper() });
-    act(() => result.current.setClienteForm({ ...result.current.clienteForm, nombre: "  " }));
+    act(() => result.current.setClienteForm({ ...FISCALES_OK, nombre: "  " }));
     await act(async () => { await result.current.handleConvertir(); });
     expect(convertirProspectoMutateAsync).not.toHaveBeenCalled();
     expect(notifyErrorMock).toHaveBeenCalled();
   });
 
-  it("handleConvertir crea cliente, propaga CRM y cierra diálogo", async () => {
-    convertirProspectoMutateAsync.mockResolvedValue({ id: "cli-1", nombre: "ACME SA" });
-    propagarConversionMock.mockResolvedValue(undefined);
+  it("handleConvertir rechaza si faltan datos fiscales (no llega a la RPC)", async () => {
     const { result } = renderHook(() => useCotizacionDetalleHandlers(cot()), { wrapper: createWrapper() });
-    await act(async () => { await result.current.abrirDialogConvertir(); });
+    act(() => result.current.setClienteForm({ ...FISCALES_OK, regimen_fiscal: "" }));
+    await act(async () => { await result.current.handleConvertir(); });
+    expect(convertirProspectoMutateAsync).not.toHaveBeenCalled();
+    expect(notifyErrorMock).toHaveBeenCalled();
+  });
+
+  it("handleConvertir hace UNA sola llamada (sin propagación CRM posterior) y cierra", async () => {
+    convertirProspectoMutateAsync.mockResolvedValue({ id: "cli-1", nombre: "ACME SA", creado: true, sinCambios: false });
+    const { result } = renderHook(() => useCotizacionDetalleHandlers(cot()), { wrapper: createWrapper() });
+    act(() => result.current.setClienteForm({ ...FISCALES_OK }));
     await act(async () => { await result.current.handleConvertir(); });
     expect(convertirProspectoMutateAsync).toHaveBeenCalledWith({
       cotizacionId: "cot-1",
-      clienteData: expect.objectContaining({ nombre: "ACME" }),
+      clienteData: expect.objectContaining({ nombre: "ACME", regimen_fiscal: "601" }),
     });
-    expect(propagarConversionMock).toHaveBeenCalledWith({
-      oportunidadId: "opp-1", clienteId: "cli-1", clienteNombre: "ACME SA",
-    });
+    expect(propagarConversionMock).not.toHaveBeenCalled();
     expect(result.current.showConvertir).toBe(false);
+  });
+
+  it("handleConvertir NO cierra el diálogo si la RPC falla", async () => {
+    convertirProspectoMutateAsync.mockRejectedValue(new Error("LC_CLIENTE_SIN_PERMISO"));
+    const { result } = renderHook(() => useCotizacionDetalleHandlers(cot()), { wrapper: createWrapper() });
+    await act(async () => { await result.current.abrirDialogConvertir(); });
+    act(() => result.current.setClienteForm({ ...FISCALES_OK }));
+    await act(async () => { await result.current.handleConvertir(); });
+    expect(result.current.showConvertir).toBe(true);
   });
 
   // FIX-07 (v13.303.12) — `handleGenerarEmbarques` (path legacy multi-await)
