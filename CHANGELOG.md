@@ -8,6 +8,10 @@
 - **Todo o nada**: cliente, cotización, cotizaciones hermanas del mismo prospecto, oportunidad, prospecto y bitácora quedan actualizados en una sola operación. Antes parte del trabajo ocurría después y podía quedar a medias.
 - **Sin duplicados y reintento seguro**: si ya existe un cliente con ese RFC se reutiliza; si la respuesta se pierde y se vuelve a intentar, devuelve el mismo cliente sin duplicar nada ni repetir el registro en bitácora.
 - Mientras la conversión está en curso no se puede cerrar el modal por error; si algo falla, el modal se queda abierto con todo lo capturado.
+- **Candado en la base**: ya no es posible "convertir" un prospecto editando la cotización por fuera; sólo la operación oficial puede hacerlo. Además, una cotización sólo puede ligarse a un cliente activo de la misma empresa.
+- **Historial por identidad, no por nombre**: las cotizaciones hermanas se revinculan por la misma oportunidad, así dos empresas con nombre parecido ya no se mezclan.
+- El aviso del CRM "Dar de alta como cliente" ahora obedece exactamente el mismo permiso que el módulo de Clientes.
+
 
 ## [13.823.64] - 2026-09-03
 ### Los pesos de un embarque aéreo ya se guardan
