@@ -65,11 +65,16 @@ export async function fetchContactosClienteEnvio(
     .sort((a, b) => Number(b.esFacturacion) - Number(a.esFacturacion));
 
   const emailCliente = (clienteRes.data?.email as string | null) ?? null;
+  // Orden de preferencia: contacto de facturación/cobranza > email fiscal del
+  // cliente > cualquier otro contacto. El email del cliente va ANTES de un
+  // contacto de otro tipo (exportador, shipper, operativo): antes se sugería el
+  // contacto más reciente y un CFDI podía dirigirse al exportador del cliente.
   const emailSugerido =
     contactos.find((c) => c.esFacturacion)?.email ??
-    contactos[0]?.email ??
     emailCliente ??
+    contactos[0]?.email ??
     null;
+
 
   return { contactos, emailCliente, emailSugerido };
 }
