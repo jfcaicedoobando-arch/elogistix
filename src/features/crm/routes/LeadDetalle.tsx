@@ -165,7 +165,15 @@ export default function LeadDetalle() {
       <NuevaOportunidadDialog
         open={nuevaOportunidadOpen}
         onOpenChange={setNuevaOportunidadOpen}
-        origenInicial={{ tipo: "prospecto", id: lead.id, nombre: lead.empresa }}
+        origenInicial={{
+          tipo: "prospecto",
+          id: lead.id,
+          nombre: lead.empresa,
+          // Ownership: la oportunidad nace a nombre del vendedor del
+          // prospecto, no del usuario que la captura desde la ficha.
+          vendedorId: lead.vendedor_id ?? null,
+          vendedorEmail: lead.vendedor_email ?? null,
+        }}
       />
 
       <DoubleConfirmDeleteDialog

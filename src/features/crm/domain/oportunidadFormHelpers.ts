@@ -24,6 +24,14 @@ export interface OrigenInicial {
   tipo: "prospecto" | "cliente";
   id: string;
   nombre: string;
+  /**
+   * v13.823.65+ — ownership: al crear desde la ficha de un prospecto, el
+   * vendedor del prospecto es el vendedor inicial de la oportunidad (si no,
+   * un gerente capturando desde la ficha se "robaba" la oportunidad).
+   * Retrocompatible: opcionales; sin ellos se conserva el usuario en sesión.
+   */
+  vendedorId?: string | null;
+  vendedorEmail?: string | null;
 }
 
 function bloqueIdentidad(o: CrmOportunidadRow) {
