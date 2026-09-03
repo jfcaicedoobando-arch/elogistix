@@ -11,6 +11,7 @@
 - **Candado en la base**: ya no es posible "convertir" un prospecto editando la cotización por fuera; sólo la operación oficial puede hacerlo. Además, una cotización sólo puede ligarse a un cliente activo de la misma empresa.
 - **Historial por identidad, no por nombre**: las cotizaciones hermanas se revinculan por la misma oportunidad, así dos empresas con nombre parecido ya no se mezclan.
 - El aviso del CRM "Dar de alta como cliente" ahora obedece exactamente el mismo permiso que el módulo de Clientes.
+- **Se cerró otra puerta lateral**: una función antigua del CRM permitía ligar cualquier cliente de la empresa a una oportunidad y marcar el prospecto como convertido sin cotización ganadora ni datos fiscales. Ya no puede ejecutarse desde la aplicación; la única ruta válida es la conversión oficial.
 
 
 ## [13.823.64] - 2026-09-03
