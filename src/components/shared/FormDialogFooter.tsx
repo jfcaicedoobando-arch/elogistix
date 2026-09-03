@@ -50,7 +50,10 @@ export function FormDialogFooter({
       <Button
         type="button"
         variant="outline"
-        onClick={() => cerrarGuardado?.() ?? onCancel()}
+        onClick={() => {
+          if (cerrarGuardado) cerrarGuardado();
+          else onCancel();
+        }}
         disabled={loading}
       >
         {cancelLabel}
