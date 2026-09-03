@@ -13,7 +13,10 @@ import {
   COTIZAR_SIN_DESGLOSE,
   CRM_CONFIG,
   CRM_CREAR_LEAD,
+  CRM_ESCRITURA_REGISTROS,
   CRM_GESTION_TODOS_LEADS,
+  CRM_REASIGNAR_VENDEDOR,
+  CRM_STAFF_REGISTROS,
   CRM_TOMAR_LEAD,
 
   ELIMINAR_EMBARQUE,
@@ -123,6 +126,24 @@ export function usePermissions() {
    */
   const canAltaCliente = has(ALTA_CLIENTES, roleStr);
 
+  /**
+   * Espejo de las policies de `crm_oportunidades` / `crm_actividades`.
+   * `canEditCrm` NO sirve aquí: incluye operaciones y finanzas, que no tienen
+   * policy de escritura y terminaban en RLS 42501 al guardar.
+   */
+  const esVendedorCrm = roleStr === "vendedor";
+  const canGestionarTodasLasOportunidades = has(CRM_STAFF_REGISTROS, roleStr);
+  const canCrearOportunidad = has(CRM_ESCRITURA_REGISTROS, roleStr);
+  const propio = (ownerId: string | null | undefined) =>
+    !!ownerId && !!user?.id && ownerId === user.id;
+  const canGestionarOportunidad = (vendedorId: string | null | undefined): boolean =>
+    canGestionarTodasLasOportunidades || (esVendedorCrm && propio(vendedorId));
+  const canGestionarTodasLasActividades = canGestionarTodasLasOportunidades;
+  const canCrearActividad = canCrearOportunidad;
+  const canGestionarActividad = (responsableId: string | null | undefined): boolean =>
+    canGestionarTodasLasActividades || (esVendedorCrm && propio(responsableId));
+  const canReasignarVendedorCrm = has(CRM_REASIGNAR_VENDEDOR, roleStr);
+
   return {
     canAltaCliente,
     canEdit,
@@ -134,6 +155,13 @@ export function usePermissions() {
     canGestionarLead,
     canCrearLead,
     canGestionarLeadsEnLote,
+    canCrearOportunidad,
+    canGestionarTodasLasOportunidades,
+    canGestionarOportunidad,
+    canCrearActividad,
+    canGestionarTodasLasActividades,
+    canGestionarActividad,
+    canReasignarVendedorCrm,
 
     isAdmin,
     isSuperAdmin,

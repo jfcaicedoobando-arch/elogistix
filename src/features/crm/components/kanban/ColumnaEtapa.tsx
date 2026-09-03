@@ -31,9 +31,11 @@ interface Props {
   avanceMap: Map<string, AvanceCriterios>;
   /** CTA del estado vacío (E-11). Sin esto, la columna vacía no muestra acción. */
   onNuevo?: () => void;
+  /** Permiso real de mover cada oportunidad entre etapas. */
+  puedeArrastrar?: (op: CrmOportunidadRow) => boolean;
 }
 
-export default function ColumnaEtapa({ etapa, ops, onClickCard, proximasMap, avanceMap, onNuevo }: Props) {
+export default function ColumnaEtapa({ etapa, ops, onClickCard, proximasMap, avanceMap, onNuevo, puedeArrastrar }: Props) {
   const { setNodeRef, isOver } = useDroppable({ id: etapa.id });
   const [visibles, setVisibles] = useState(LIMITE_ETAPA_INICIAL);
   const totales = totalesEtapa(ops);
@@ -73,6 +75,7 @@ export default function ColumnaEtapa({ etapa, ops, onClickCard, proximasMap, ava
             proxima={proximasMap.get(op.id)}
             avance={avanceMap.get(op.id)}
             esCerrada={esCerrada}
+            arrastrable={puedeArrastrar ? puedeArrastrar(op) : true}
           />
         ))}
         {ops.length === 0 && (

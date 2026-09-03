@@ -34,7 +34,10 @@ interface Props {
 }
 
 export function OportunidadDetalleContent({ op, etapas }: Props) {
-  const { canEdit } = usePermissions();
+  // Espejo de las policies de `crm_oportunidades`: staff CRM sobre cualquiera,
+  // vendedor sólo las propias. `canEdit` ofrecía editar a roles sin policy.
+  const { canGestionarOportunidad } = usePermissions();
+  const canEdit = canGestionarOportunidad(op.vendedor_id);
   const volver = useVolver("/crm/oportunidades");
   const [editOpen, setEditOpen] = useState(false);
   const [delOpen, setDelOpen] = useState(false);

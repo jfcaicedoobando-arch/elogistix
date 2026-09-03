@@ -44,7 +44,7 @@ const DEFAULTS: ActividadesFilters = { tipo: "todos", estado: "pendientes", resp
 
 export default function Actividades() {
   useDocumentTitle('Actividades CRM');
-  const { canEditCrm } = usePermissions();
+  const { canCrearActividad, canGestionarActividad } = usePermissions();
   const { user } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   const filtroParam = searchParams.get("filtro");
@@ -88,7 +88,9 @@ export default function Actividades() {
   }, [vencidasOnly]);
 
   const items = list.rows;
-  const columns = canEditCrm ? [...baseActividadColumns, actividadActionColumn] : baseActividadColumns;
+  const columns = canCrearActividad
+    ? [...baseActividadColumns, actividadActionColumn((a) => canGestionarActividad(a.responsable_id))]
+    : baseActividadColumns;
 
   const limpiarFiltro = () => {
     const next = new URLSearchParams(searchParams);

@@ -1,6 +1,9 @@
 /**
  * VendedorSelect — selector de usuario para asignar como vendedor/owner.
- * Visible sólo para admin/operador/super_admin (vendedor siempre se auto-asigna).
+ *
+ * Sólo se muestra a los roles que pueden gestionar CUALQUIER registro CRM
+ * (`canReasignarVendedorCrm`). Un vendedor conserva su asignación actual, pero
+ * no ve un selector que la RLS le rechazaría al guardar.
  */
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
@@ -17,10 +20,10 @@ interface Props {
 }
 
 export default function VendedorSelect({ value, onChange, label = "Vendedor asignado" }: Props) {
-  const { canEdit } = usePermissions();
+  const { canReasignarVendedorCrm } = usePermissions();
   const { data: users = [] } = useUsuarios();
 
-  if (!canEdit) return null;
+  if (!canReasignarVendedorCrm) return null;
 
   // Mostrar todos los usuarios staff + vendedores (no clientes ni viewers para CRM).
   const candidatos = users.filter((u) => ["admin", "operador", "vendedor", "gerente_comercial", "super_admin"].includes(u.role));

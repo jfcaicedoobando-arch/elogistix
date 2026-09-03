@@ -23,7 +23,13 @@ const TABS = [
 
 export default function CrmLayout() {
   const { data: vencidas = 0 } = useActividadesVencidasCount();
-  const { canConfigurarCrm, canEdit } = usePermissions();
+  const {
+    canConfigurarCrm, canCrearLead, canCrearOportunidad, canCrearActividad,
+    canGestionarLeadsEnLote,
+  } = usePermissions();
+  // El botón "Nuevo" sólo existe si al menos un alta es realmente posible.
+  const puedeAlgunaAlta =
+    canCrearLead || canCrearOportunidad || canCrearActividad || canGestionarLeadsEnLote;
   const [openTrigger, setOpenTrigger] = useState(0);
   const [dialogTrigger, setDialogTrigger] = useState<{ kind: "lead" | "oportunidad" | "actividad"; n: number } | undefined>(undefined);
   const [paletteOpen, setPaletteOpen] = useState(false);
@@ -31,13 +37,13 @@ export default function CrmLayout() {
   const noop = useCallback(() => {}, []);
   const handlers = useMemo(
     () => ({
-      onOpenQuick: canEdit ? () => setOpenTrigger((n) => n + 1) : noop,
-      onNewLead: canEdit ? () => setDialogTrigger((p) => ({ kind: "lead" as const, n: (p?.n ?? 0) + 1 })) : noop,
-      onNewOportunidad: canEdit ? () => setDialogTrigger((p) => ({ kind: "oportunidad" as const, n: (p?.n ?? 0) + 1 })) : noop,
-      onNewActividad: canEdit ? () => setDialogTrigger((p) => ({ kind: "actividad" as const, n: (p?.n ?? 0) + 1 })) : noop,
+      onOpenQuick: puedeAlgunaAlta ? () => setOpenTrigger((n) => n + 1) : noop,
+      onNewLead: canCrearLead ? () => setDialogTrigger((p) => ({ kind: "lead" as const, n: (p?.n ?? 0) + 1 })) : noop,
+      onNewOportunidad: canCrearOportunidad ? () => setDialogTrigger((p) => ({ kind: "oportunidad" as const, n: (p?.n ?? 0) + 1 })) : noop,
+      onNewActividad: canCrearActividad ? () => setDialogTrigger((p) => ({ kind: "actividad" as const, n: (p?.n ?? 0) + 1 })) : noop,
       onOpenPalette: () => setPaletteOpen(true),
     }),
-    [canEdit, noop],
+    [puedeAlgunaAlta, canCrearLead, canCrearOportunidad, canCrearActividad, noop],
   );
   useCrmHotkeys(handlers);
 
@@ -83,7 +89,7 @@ export default function CrmLayout() {
             })}
           </nav>
           <div className="flex items-center justify-end gap-2 shrink-0 py-1 sm:py-0 sm:pl-2 border-t sm:border-t-0 sm:border-l border-border/60">
-            {canEdit && <QuickAddMenu openTrigger={openTrigger} dialogTrigger={dialogTrigger} />}
+            {puedeAlgunaAlta && <QuickAddMenu openTrigger={openTrigger} dialogTrigger={dialogTrigger} />}
             {/* Ola 6 (O6.3): el ícono de configuración sigue el mismo permiso
                 que la ruta /crm/configuracion (admin del tenant + gerente
                 comercial), no el permiso amplio de edición del CRM. */}

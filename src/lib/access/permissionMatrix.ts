@@ -183,6 +183,36 @@ export const ALTA_CLIENTES: readonly AppRole[] = [
   "auxiliar_contable",
 ];
 
+/**
+ * Espejo EXACTO de las policies de escritura de `crm_oportunidades` y
+ * `crm_actividades`: el CRUD "staff" es de administración/dirección, gerencia
+ * comercial y operador. `vendedor` sólo escribe sus propios registros.
+ *
+ * NO reutilizar `canEdit`/`canEditCrm` para estas acciones: esos permisos son
+ * amplios (operaciones + finanzas) y ofrecían formularios que la RLS rechazaba
+ * (p. ej. `gerente_operaciones`). Al cambiar estas listas hay que cambiar
+ * también esas policies.
+ */
+export const CRM_STAFF_REGISTROS: readonly AppRole[] = [
+  ...TENANT_ADMINS,
+  "gerente_comercial",
+  "operador",
+];
+
+/** Roles que pueden crear oportunidades/actividades (staff + vendedor propio). */
+export const CRM_ESCRITURA_REGISTROS: readonly AppRole[] = [
+  ...CRM_STAFF_REGISTROS,
+  "vendedor",
+];
+
+/**
+ * Reasignar el vendedor/owner de un registro CRM: sólo quien puede gestionar
+ * CUALQUIER registro. Un vendedor conserva su asignación pero no la cambia.
+ */
+export const CRM_REASIGNAR_VENDEDOR: readonly AppRole[] = [...CRM_STAFF_REGISTROS];
+
+
+
 
 export {
   ADMIN_CUENTAS_BANCARIAS,

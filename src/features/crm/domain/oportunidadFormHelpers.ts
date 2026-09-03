@@ -126,8 +126,12 @@ export function buildEmptyForNueva(
   // Ownership: si el origen trae el vendedor del prospecto, ése manda; si no,
   // fallback al usuario en sesión. Cualquier cambio posterior en
   // VendedorSelect escribe directo al form y NO se sobreescribe al guardar.
+  // Nunca mezclar el id del dueño del prospecto con el correo del capturista:
+  // si el prospecto tiene dueño, id y correo salen SIEMPRE de ese dueño.
   const vendedorId = origen?.vendedorId ?? user?.id ?? null;
-  const vendedorEmail = origen?.vendedorEmail ?? user?.email ?? "";
+  const vendedorEmail = origen?.vendedorId
+    ? (origen.vendedorEmail ?? "")
+    : (user?.email ?? "");
   return {
     ...EMPTY_OPORTUNIDAD,
     etapa_id: primera?.id ?? "",

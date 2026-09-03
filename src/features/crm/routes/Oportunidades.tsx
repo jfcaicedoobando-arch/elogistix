@@ -8,7 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CrmSubheader } from "@/features/crm/components/CrmSubheader";
 import { DataTable } from "@/components/shared/DataTable";
-import { useDebounce, useDocumentTitle } from "@/hooks/shared";
+import { useDebounce, useDocumentTitle, usePermissions } from "@/hooks/shared";
 import { formatCurrencyCompact } from "@/lib/formatters";
 import { useExchangeRates } from "@/features/catalogos/hooks";
 import { sumarPipelineMxn } from "@/features/crm/domain/pipelineMoneda";
@@ -39,6 +39,9 @@ import { ErrorState } from "@/components/shared/states/ErrorState";
 export default function Oportunidades() {
   useDocumentTitle('Oportunidades');
   const navigate = useNavigate();
+  // Espejo de las policies de `crm_oportunidades`: sin capacidad no se ofrece
+  // crear ni mover etapa (antes se mostraban y el guardado moría en RLS).
+  const { canCrearOportunidad, canGestionarOportunidad } = usePermissions();
   const [search, setSearch] = useState("");
   const [filtros, setFiltros] = useState<OportunidadesFiltros>(FILTROS_DEFAULT);
   const [filtersOpen, setFiltersOpen] = useState(false);
@@ -157,8 +160,9 @@ export default function Oportunidades() {
               etapas={etapas as CrmEtapaRow[]}
               oportunidades={ops}
               onMover={handleMover}
+              puedeMover={(o) => canGestionarOportunidad(o.vendedor_id)}
               onClickCard={(id) => navigate(`/crm/oportunidades/${id}`)}
-              onNuevo={() => setNuevaOpen(true)}
+              onNuevo={canCrearOportunidad ? () => setNuevaOpen(true) : undefined}
             />
           )}
         </TabsContent>

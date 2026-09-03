@@ -26,14 +26,22 @@ interface Props {
   proxima?: ProximaActividad;
   avance?: AvanceCriterios;
   esCerrada: boolean;
+  /**
+   * Permiso real de mover la oportunidad de etapa. Con `false` el drag queda
+   * DESHABILITADO (no sólo oculto): la RLS rechazaría el guardado.
+   */
+  arrastrable?: boolean;
 }
 
-export default function OportunidadCard({ op, onClick, proxima, avance, esCerrada }: Props) {
-  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({ id: op.id });
+export default function OportunidadCard({ op, onClick, proxima, avance, esCerrada, arrastrable = true }: Props) {
+  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
+    id: op.id,
+    disabled: !arrastrable,
+  });
   const style: React.CSSProperties = {
     transform: transform ? `translate3d(${transform.x}px, ${transform.y}px, 0)` : undefined,
     opacity: isDragging ? 0.4 : 1,
-    cursor: "grab",
+    cursor: arrastrable ? "grab" : "pointer",
   };
   const vencida = Boolean(
     proxima?.fecha_programada && new Date(proxima.fecha_programada) < new Date(),
@@ -53,8 +61,8 @@ export default function OportunidadCard({ op, onClick, proxima, avance, esCerrad
     <Card
       ref={setNodeRef}
       style={style}
-      {...listeners}
-      {...attributes}
+      {...(arrastrable ? listeners : {})}
+      {...(arrastrable ? attributes : {})}
       onClick={(e) => {
         if (isDragging) return;
         e.stopPropagation();
