@@ -1,0 +1,86 @@
+DROP FUNCTION IF EXISTS public.actualizar_cotizacion_costos(uuid, jsonb, uuid);
+
+CREATE OR REPLACE FUNCTION public.actualizar_cotizacion_costos(
+  p_cotizacion_id uuid,
+  p_costos jsonb,
+  p_request_id uuid DEFAULT NULL::uuid,
+  p_expected_updated_at timestamptz DEFAULT NULL::timestamptz
+)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $function$
+DECLARE
+  v_org_id uuid;
+  v_actual timestamptz;
+  v_nuevo timestamptz;
+  v_count integer := 0;
+  c jsonb;
+  v_resp jsonb;
+BEGIN
+  v_resp := public.idempotency_claim(p_request_id, 'actualizar_cotizacion_costos');
+  IF v_resp IS NOT NULL THEN RETURN v_resp; END IF;
+
+  -- Bloqueo optimista atomico: se toma el lock de la cotizacion ANTES de
+  -- borrar/insertar costos, para que un conflicto nunca deje un reemplazo parcial.
+  SELECT organization_id, updated_at
+    INTO v_org_id, v_actual
+    FROM cotizaciones
+   WHERE id = p_cotizacion_id
+     AND deleted_at IS NULL
+   FOR UPDATE;
+
+  IF v_org_id IS NULL THEN RAISE EXCEPTION 'Cotización no encontrada'; END IF;
+  PERFORM public._assert_writer_cotizacion(v_org_id);
+
+  IF p_expected_updated_at IS NOT NULL
+     AND v_actual IS DISTINCT FROM p_expected_updated_at THEN
+    RAISE EXCEPTION 'LC_CONFLICTO_CONCURRENCIA: otro usuario modificó esta cotización. Recarga y vuelve a intentar.';
+  END IF;
+
+  DELETE FROM cotizacion_costos WHERE cotizacion_id = p_cotizacion_id;
+
+  FOR c IN SELECT * FROM jsonb_array_elements(p_costos) LOOP
+    INSERT INTO cotizacion_costos (
+      cotizacion_id, concepto, moneda, proveedor, cantidad,
+      costo_unitario, precio_venta, unidad_medida, notas, organization_id,
+      costeo_tarifa_id, costeo_tarifa_recargo_id
+    ) VALUES (
+      p_cotizacion_id,
+      c->>'concepto',
+      c->>'moneda',
+      COALESCE(c->>'proveedor', ''),
+      (c->>'cantidad')::numeric,
+      (c->>'costo_unitario')::numeric,
+      COALESCE((c->>'precio_venta')::numeric, 0),
+      COALESCE(c->>'unidad_medida', ''),
+      COALESCE(c->>'notas', ''),
+      v_org_id,
+      NULLIF(c->>'costeo_tarifa_id', '')::uuid,
+      NULLIF(c->>'costeo_tarifa_recargo_id', '')::uuid
+    );
+    v_count := v_count + 1;
+  END LOOP;
+
+  -- Se toca la cotizacion para que el sello devuelto cubra tambien el paso 2.
+  UPDATE cotizaciones
+     SET updated_at = now()
+   WHERE id = p_cotizacion_id
+  RETURNING updated_at INTO v_nuevo;
+
+  v_resp := jsonb_build_object(
+    'cotizacion_id', p_cotizacion_id,
+    'count', v_count,
+    'updated_at', v_nuevo
+  );
+  PERFORM public.idempotency_store(p_request_id, v_resp);
+  RETURN v_resp;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.actualizar_cotizacion_costos(uuid, jsonb, uuid, timestamptz) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.actualizar_cotizacion_costos(uuid, jsonb, uuid, timestamptz) TO authenticated, service_role;
+
+COMMENT ON FUNCTION public.actualizar_cotizacion_costos(uuid, jsonb, uuid, timestamptz) IS
+  'Reemplaza los costos internos de una cotización de forma atómica. Con p_expected_updated_at participa del bloqueo optimista del wizard: si el sello no coincide, no borra ni inserta y lanza LC_CONFLICTO_CONCURRENCIA. Devuelve el nuevo updated_at.';

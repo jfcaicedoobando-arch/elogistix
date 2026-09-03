@@ -47,11 +47,19 @@ describe("useCotizacionCostos", () => {
 });
 
 describe("useUpsertCotizacionCostos", () => {
+  it("propaga el sello esperado a la RPC (bloqueo optimista del paso 2)", async () => {
+    upsertCotizacionCostos.mockResolvedValueOnce({ costos: [], updatedAt: "2026-09-03T10:00:00Z" });
+    const { result } = renderHook(() => useUpsertCotizacionCostos(), { wrapper: createWrapper() });
+    result.current.mutate({ cotizacionId: "cot-1", costos: [], expectedUpdatedAt: "2026-09-03T09:00:00Z" });
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(upsertCotizacionCostos).toHaveBeenCalledWith("cot-1", [], "req-123", "2026-09-03T09:00:00Z");
+  });
+
   it("llama a upsertCotizacionCostos y resuelve", async () => {
     upsertCotizacionCostos.mockResolvedValueOnce([]);
     const { result } = renderHook(() => useUpsertCotizacionCostos(), { wrapper: createWrapper() });
     result.current.mutate({ cotizacionId: "cot-1", costos: [] });
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    expect(upsertCotizacionCostos).toHaveBeenCalledWith("cot-1", [], "req-123");
+    expect(upsertCotizacionCostos).toHaveBeenCalledWith("cot-1", [], "req-123", undefined);
   });
 });

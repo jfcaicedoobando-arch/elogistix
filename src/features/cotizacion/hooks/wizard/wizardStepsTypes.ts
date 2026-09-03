@@ -42,8 +42,17 @@ export interface StepMutations {
     isPending: boolean;
     /** P0: refresca el sello optimista tras el vínculo CRM. */
     resincronizarSello?: (sello: string | null) => void;
+    /** v13.823.69: sello vigente, para que el paso 2 viaje con el mismo candado. */
+    selloActual?: () => string | null;
   };
-  upsertCostos: { mutateAsync: (d: { cotizacionId: string; costos: CostoCotizacion[] }) => Promise<CostoCotizacion[]>; isPending: boolean };
+  upsertCostos: {
+    mutateAsync: (d: {
+      cotizacionId: string;
+      costos: CostoCotizacion[];
+      expectedUpdatedAt?: string | null;
+    }) => Promise<{ costos: CostoCotizacion[]; updatedAt: string | null }>;
+    isPending: boolean;
+  };
   registrarActividad: { mutate: (d: { accion: string; modulo: string; entidad_id?: string | null; entidad_nombre?: string; detalles?: Record<string, unknown> }) => void };
 }
 

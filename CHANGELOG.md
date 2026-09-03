@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+## [13.823.69] - 2026-09-03
+
+### Cotizaciones: dos personas ya no se pisan los cambios
+- **Al retomar un borrador se valida la versión real**: si la cotización guardada cambió en otra sesión, se conserva todo lo capturado, se avisa con opción de *Recargar datos* o *Revisar después*, y ningún guardado se aplica encima. Los borradores antiguos sin marca de versión consultan la versión actual antes de escribir.
+- **Los costos internos del Paso 2 respetan el mismo candado**: el reemplazo de costos ocurre en una sola operación en el servidor y, si otra persona actualizó la cotización, no se borra ni se inserta ningún costo (nunca queda a medias).
+- **Mensaje claro en conflicto**: se indica que otra persona actualizó la cotización y que los cambios locales no se guardaron, sin mezclar versiones automáticamente.
+
 ## [13.823.68] - 2026-09-03
 
 ### Formularios del CRM: nada se pierde y nada se guarda dos veces

@@ -55,6 +55,21 @@ describe("useCotizacionUpdateGuard", () => {
     });
   });
 
+  it("selloActual expone el sello vigente y resincronizarSello lo reemplaza", async () => {
+    const mutateAsync = vi.fn(async () => "2026-09-03T12:00:00Z");
+    const { result } = renderHook(() =>
+      useCotizacionUpdateGuard({ mutateAsync, isPending: false }, "2026-09-03T10:00:00Z"),
+    );
+    expect(result.current.selloActual()).toBe("2026-09-03T10:00:00Z");
+    // Tras guardar el paso 2 (RPC de costos) el wizard resincroniza el sello.
+    result.current.resincronizarSello("2026-09-03T13:00:00Z");
+    expect(result.current.selloActual()).toBe("2026-09-03T13:00:00Z");
+    await result.current.mutateAsync(VARS);
+    expect((mutateAsync.mock.calls as unknown as [{ expectedUpdatedAt: string | null }][])[0]?.[0]).toMatchObject({
+      expectedUpdatedAt: "2026-09-03T13:00:00Z",
+    });
+  });
+
   it("propaga isPending de la mutación subyacente", () => {
     const { result } = renderHook(() =>
       useCotizacionUpdateGuard({ mutateAsync: vi.fn(), isPending: true }, null),

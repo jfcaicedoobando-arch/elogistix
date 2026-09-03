@@ -164,3 +164,22 @@ export async function fetchCotizacionFolio(cotizacionId: string): Promise<string
   return (data as { folio: string } | null)?.folio ?? null;
 }
 
+/**
+ * v13.823.69: sello canónico (`updated_at`) de una cotización viva.
+ *
+ * Analogía: antes de volver a escribir en el expediente restaurado desde un
+ * borrador, vamos al archivo y leemos la hora de la última firma real. Devuelve
+ * `null` si la cotización no existe (o ya fue eliminada) para el usuario.
+ */
+export async function fetchCotizacionSello(cotizacionId: string): Promise<string | null> {
+  const data = await unwrap(
+    supabase
+      .from("cotizaciones")
+      .select("updated_at")
+      .eq("id", cotizacionId)
+      .is("deleted_at", null)
+      .maybeSingle(),
+  );
+  return (data as { updated_at: string | null } | null)?.updated_at ?? null;
+}
+

@@ -21,7 +21,7 @@ function makeForm(over: Record<string, unknown> = {}) {
 const muts = {
   crearCotizacion: { mutateAsync: vi.fn(async () => ({ id: "cot1" })) },
   updateCotizacion: { mutateAsync: vi.fn(async () => undefined) },
-  upsertCostos: { mutateAsync: vi.fn(async () => []) },
+  upsertCostos: { mutateAsync: vi.fn(async () => ({ costos: [], updatedAt: "2026-09-03T12:00:00Z" })) },
 };
 
 beforeEach(() => {
@@ -149,6 +149,22 @@ describe("savePaso2", () => {
     const arg = (muts.upsertCostos.mutateAsync.mock.calls[0] as unknown as [{ costos: Array<{ costo_total: number; notas: string }> }])[0];
     expect(arg.costos[0].costo_total).toBe(300);
     expect(arg.costos[0].notas).toBe("");
+  });
+
+  it("manda el sello esperado y devuelve el nuevo sello (resincronización)", async () => {
+    const nuevo = await savePaso2({
+      cotizacionId: "c1",
+      costosInternos: [{
+        concepto: "Flete", moneda: "USD", proveedor: "X",
+        cantidad: 1, costo_unitario: 100, precio_venta: 150,
+        unidad_medida: "unidad", notas: undefined,
+      }],
+      expectedUpdatedAt: "2026-09-03T11:00:00Z",
+      mutations: muts,
+    });
+    const arg = (muts.upsertCostos.mutateAsync.mock.calls[0] as unknown as [{ expectedUpdatedAt: string }])[0];
+    expect(arg.expectedUpdatedAt).toBe("2026-09-03T11:00:00Z");
+    expect(nuevo).toBe("2026-09-03T12:00:00Z");
   });
 });
 

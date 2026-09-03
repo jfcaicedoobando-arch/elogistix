@@ -43,6 +43,9 @@ interface Params {
    *  reabrir el `useEffect` de watch en cada cambio (se leen al vuelo). */
   currentStep: number;
   costosInternos: FilaCostoLocal[];
+  /** v13.823.69: lector del sello optimista vigente de la cotización; se
+   *  persiste en el borrador para que al restaurar no se guarde a ciegas. */
+  selloActual?: () => string | null;
   /** R-09: mientras se restaura un borrador, el autoguardado se congela para
    *  que el ciclo de autosave no reescriba el draft con los valores por defecto
    *  antes de que RHF termine de aplicar `form.reset`. */
@@ -77,7 +80,7 @@ export function draftTieneContenido(values: CotizacionFormValues, costos: FilaCo
   });
 }
 
-export function useCotizacionDraftAutosave({ form, userId, organizationId = null, enabled, cotizacionId, currentStep, costosInternos, paused = false }: Params): {
+export function useCotizacionDraftAutosave({ form, userId, organizationId = null, enabled, cotizacionId, currentStep, costosInternos, selloActual, paused = false }: Params): {
   clear: () => void;
   flush: () => void;
   /** M-12: true cuando OTRA pestaña sobrescribió el borrador de este wizard. */
@@ -92,6 +95,8 @@ export function useCotizacionDraftAutosave({ form, userId, organizationId = null
   stepRef.current = currentStep;
   const costosRef = useRef<FilaCostoLocal[]>(costosInternos);
   costosRef.current = costosInternos;
+  const selloRef = useRef<(() => string | null) | undefined>(selloActual);
+  selloRef.current = selloActual;
   const pausedRef = useRef<boolean>(paused);
   pausedRef.current = paused;
   // M-12 (v14-2): identidad estable de ESTA pestaña; se estampa en cada
@@ -108,6 +113,7 @@ export function useCotizacionDraftAutosave({ form, userId, organizationId = null
     version: 3,
     savedAt: Date.now(),
     cotizacionId: cotIdRef.current,
+    updatedAt: selloRef.current?.() ?? null,
     values,
     currentStep: stepRef.current,
     costosInternos: costosRef.current,

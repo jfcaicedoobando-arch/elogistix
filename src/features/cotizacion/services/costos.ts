@@ -6,6 +6,11 @@ import type { CostoCotizacion } from "@/features/cotizacion/types";
 import { fromDbChecked } from "@/lib/supabase/cast";
 import { costosCotizacionDbSchema } from "./readSchemas";
 import { registrarActividad } from "@/services/bitacora/registrar";
+import {
+  LC_CONFLICTO_CONCURRENCIA,
+  conflictoConcurrenciaError,
+} from "@/lib/errors/concurrencia";
+
 import { assertNotTruncated } from "@/lib/supabase/assertNotTruncated";
 import { CAP_LISTA } from "@/constants/queryCaps";
 
@@ -25,12 +30,28 @@ export async function fetchCotizacionCostos(
 }
 
 
+/**
+ * Resultado del reemplazo de costos: filas canónicas + nuevo sello de la
+ * cotización (v13.823.69). El sello permite que el paso 2 participe del mismo
+ * bloqueo optimista que los demás pasos del wizard.
+ */
+export interface UpsertCostosResult {
+  costos: CostoCotizacion[];
+  updatedAt: string | null;
+}
+
 export async function upsertCotizacionCostos(
   cotizacionId: string,
   costos: CostoCotizacion[],
   requestId?: string,
-): Promise<CostoCotizacion[]> {
-  const { error } = await supabase.rpc("actualizar_cotizacion_costos", {
+  /**
+   * v13.823.69: sello (`cotizaciones.updated_at`) esperado. La RPC bloquea la
+   * cotización, compara y sólo entonces reemplaza los costos; si no coincide no
+   * borra ni inserta nada y lanza LC_CONFLICTO_CONCURRENCIA.
+   */
+  expectedUpdatedAt?: string | null,
+): Promise<UpsertCostosResult> {
+  const { data, error } = await supabase.rpc("actualizar_cotizacion_costos", {
     p_cotizacion_id: cotizacionId,
     p_costos: costos.map((c) => ({
       concepto: c.concepto,
@@ -46,17 +67,29 @@ export async function upsertCotizacionCostos(
       costeo_tarifa_recargo_id: c.costeo_tarifa_recargo_id ?? null,
     })),
     p_request_id: requestId,
+    ...(expectedUpdatedAt ? { p_expected_updated_at: expectedUpdatedAt } : {}),
   });
-  if (error) throw error;
+  if (error) {
+    if (error.message?.includes(LC_CONFLICTO_CONCURRENCIA)) throw conflictoConcurrenciaError();
+    throw error;
+  }
   await registrarActividad({
     modulo: "cotizaciones",
     accion: "actualizar_costos",
     entidadId: cotizacionId,
     detalles: { total_conceptos: costos.length },
   });
+  const sello =
+    data && typeof data === "object" && !Array.isArray(data)
+      ? (data as Record<string, unknown>).updated_at
+      : null;
   // Re-leemos para devolver los registros canónicos (con id/timestamps/totales calculados).
-  return fetchCotizacionCostos(cotizacionId);
+  return {
+    costos: await fetchCotizacionCostos(cotizacionId),
+    updatedAt: typeof sello === "string" ? sello : null,
+  };
 }
+
 
 // ─── Lookups para hidratación de embarque vinculado ─────────────────────────
 export interface CotizacionCostoLookup {

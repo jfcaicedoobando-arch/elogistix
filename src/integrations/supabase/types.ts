@@ -8726,7 +8726,12 @@ export type Database = {
         Returns: undefined
       }
       actualizar_cotizacion_costos: {
-        Args: { p_costos: Json; p_cotizacion_id: string; p_request_id?: string }
+        Args: {
+          p_costos: Json
+          p_cotizacion_id: string
+          p_expected_updated_at?: string
+          p_request_id?: string
+        }
         Returns: Json
       }
       actualizar_datos_entrante: {
