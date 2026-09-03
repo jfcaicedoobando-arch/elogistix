@@ -1,9 +1,3 @@
--- P0 · Vínculo CRM de cotizaciones de prospecto (espejo de schema).
---
--- Wrapper público endurecido: exige un origen CRM real y elegible, nunca crea
--- ni deduplica leads (el helper histórico `_crm_vincular_cotizacion_core` queda
--- reservado a service_role/backfill interno) y devuelve `updated_at` para
--- resincronizar el bloqueo optimista del wizard.
 CREATE OR REPLACE FUNCTION public.crm_vincular_cotizacion(
   p_cotizacion_id uuid,
   p_prospecto jsonb DEFAULT '{}'::jsonb,
@@ -24,6 +18,7 @@ DECLARE
   v_op_existente uuid;
   v_op_id uuid;
   v_lead_id uuid;
+  v_lead_existente uuid;
   v_lead_empresa text;
   v_etapa_id uuid;
   v_etapa_prob integer;
@@ -59,7 +54,38 @@ BEGIN
     RAISE EXCEPTION 'LC_COT_PROSPECTO_CON_CLIENTE' USING ERRCODE = '22023';
   END IF;
 
-  -- ── Resolución del origen CRM ───────────────────────────────────────────
+  -- ── Idempotencia histórica ANTES de la elegibilidad nueva ────────────────
+  IF v_op_existente IS NOT NULL THEN
+    SELECT o.id, o.lead_id
+      INTO v_op_id, v_lead_existente
+    FROM public.crm_oportunidades o
+    WHERE o.id = v_op_existente
+      AND o.organization_id = v_org
+      AND o.deleted_at IS NULL
+    FOR UPDATE OF o;
+
+    IF v_op_id IS NULL THEN
+      RAISE EXCEPTION 'LC_COT_VINCULO_ROTO' USING ERRCODE = '22023';
+    END IF;
+
+    IF NOT (
+      (p_oportunidad_id = v_op_existente
+        AND (p_lead_id IS NULL OR p_lead_id = v_lead_existente))
+      OR (p_oportunidad_id IS NULL
+        AND p_lead_id IS NOT NULL AND p_lead_id = v_lead_existente)
+    ) THEN
+      RAISE EXCEPTION 'LC_COT_VINCULO_CONFIRMADO' USING ERRCODE = '22023';
+    END IF;
+
+    SELECT updated_at INTO v_updated_at FROM public.cotizaciones WHERE id = p_cotizacion_id;
+    RETURN jsonb_build_object(
+      'oportunidad_id', v_op_id, 'lead_id', v_lead_existente,
+      'creado_lead', false, 'creado_oportunidad', false, 'ya_ligada', true,
+      'updated_at', v_updated_at
+    );
+  END IF;
+
+  -- ── Vínculo NUEVO: elegibilidad estricta ────────────────────────────────
   IF p_oportunidad_id IS NOT NULL THEN
     SELECT o.id, o.lead_id
       INTO v_op_id, v_lead_id
@@ -69,6 +95,8 @@ BEGIN
       AND o.organization_id = v_org
       AND o.deleted_at IS NULL
       AND o.cliente_id IS NULL
+      AND e.organization_id = v_org
+      AND e.deleted_at IS NULL
       AND e.activa = true
       AND e.tipo = 'abierta'::crm_etapa_tipo
     FOR UPDATE OF o;
@@ -84,19 +112,18 @@ BEGIN
     v_lead_id := p_lead_id;
   END IF;
 
-  -- El lead de origen (propio o el de la oportunidad) debe ser elegible.
   SELECT l.empresa INTO v_lead_empresa
   FROM public.crm_leads l
   WHERE l.id = v_lead_id
     AND l.organization_id = v_org
     AND l.deleted_at IS NULL
-    AND l.estado IN ('Calificado'::crm_lead_estado, 'Prospecto'::crm_lead_estado);
+    AND l.estado IN ('Calificado'::crm_lead_estado, 'Prospecto'::crm_lead_estado)
+  FOR UPDATE;
 
   IF v_lead_empresa IS NULL THEN
     RAISE EXCEPTION 'LC_CRM_LEAD_NO_ELEGIBLE' USING ERRCODE = '22023';
   END IF;
 
-  -- Sólo lead: reutiliza su oportunidad abierta sin cliente o crea una (idempotente).
   IF v_op_id IS NULL THEN
     SELECT o.id INTO v_op_id
     FROM public.crm_oportunidades o
@@ -105,15 +132,21 @@ BEGIN
       AND o.lead_id = v_lead_id
       AND o.deleted_at IS NULL
       AND o.cliente_id IS NULL
+      AND e.organization_id = v_org
+      AND e.deleted_at IS NULL
       AND e.activa = true
       AND e.tipo = 'abierta'::crm_etapa_tipo
     ORDER BY o.created_at ASC
-    LIMIT 1;
+    LIMIT 1
+    FOR UPDATE OF o;
 
     IF v_op_id IS NULL THEN
       SELECT id, probabilidad_default INTO v_etapa_id, v_etapa_prob
       FROM public.crm_etapas_pipeline
-      WHERE organization_id = v_org AND activa = true AND tipo = 'abierta'::crm_etapa_tipo
+      WHERE organization_id = v_org
+        AND deleted_at IS NULL
+        AND activa = true
+        AND tipo = 'abierta'::crm_etapa_tipo
       ORDER BY (nombre ILIKE '%cotiz%') DESC, orden ASC
       LIMIT 1;
 
@@ -144,19 +177,6 @@ BEGIN
     END IF;
   END IF;
 
-  -- ── Vínculo confirmado inmutable / idempotencia ─────────────────────────
-  IF v_op_existente IS NOT NULL THEN
-    IF v_op_existente IS DISTINCT FROM v_op_id THEN
-      RAISE EXCEPTION 'LC_COT_VINCULO_CONFIRMADO' USING ERRCODE = '22023';
-    END IF;
-    SELECT updated_at INTO v_updated_at FROM public.cotizaciones WHERE id = p_cotizacion_id;
-    RETURN jsonb_build_object(
-      'oportunidad_id', v_op_id, 'lead_id', v_lead_id,
-      'creado_lead', false, 'creado_oportunidad', false, 'ya_ligada', true,
-      'updated_at', v_updated_at
-    );
-  END IF;
-
   UPDATE public.cotizaciones
      SET oportunidad_id = v_op_id, updated_at = now()
    WHERE id = p_cotizacion_id
@@ -178,4 +198,4 @@ GRANT EXECUTE ON FUNCTION public.crm_vincular_cotizacion(uuid, jsonb, uuid, uuid
 GRANT EXECUTE ON FUNCTION public.crm_vincular_cotizacion(uuid, jsonb, uuid, uuid) TO service_role;
 
 COMMENT ON FUNCTION public.crm_vincular_cotizacion(uuid, jsonb, uuid, uuid) IS
-  'Vincula una cotización de prospecto a una oportunidad CRM. Exige lead u oportunidad real y elegible (lead Calificado/Prospecto vivo same-org; oportunidad viva, etapa abierta activa, sin cliente). Nunca crea ni deduplica leads: p_prospecto se ignora. Idempotente; el vínculo confirmado es inmutable (LC_COT_VINCULO_CONFIRMADO). Devuelve updated_at para resincronizar el bloqueo optimista del wizard.';
+  'Vincula una cotización de prospecto a una oportunidad CRM. Idempotencia histórica primero: si la cotización ya está vinculada y el origen solicitado coincide, devuelve ya_ligada=true sin exigir etapa abierta ni estado del lead (vínculo roto = LC_COT_VINCULO_ROTO; origen distinto = LC_COT_VINCULO_CONFIRMADO). Sólo el vínculo NUEVO exige elegibilidad estricta (etapa same-org viva activa abierta, lead vivo same-org Calificado/Prospecto bloqueado). Nunca crea ni deduplica leads: p_prospecto se ignora. Devuelve updated_at para resincronizar el bloqueo optimista del wizard.';
