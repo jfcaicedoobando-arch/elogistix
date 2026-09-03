@@ -5,6 +5,12 @@
 ### Oportunidades CRM: respetan al dueño del prospecto
 - **La oportunidad nace a nombre del vendedor correcto**: al crear una oportunidad desde la ficha de un prospecto, el vendedor inicial es el dueño del prospecto (no quien la captura). Antes, si un gerente la daba de alta desde la ficha de un agente, la oportunidad quedaba accidentalmente a nombre del gerente. La elección manual en el formulario sigue mandando.
 - **La tarea automática va al vendedor elegido**: la actividad "Preparar propuesta" que se crea junto con la oportunidad se asigna al vendedor final del formulario, no necesariamente a quien la captura. Las actividades manuales no cambian.
+- **Ya no se ofrecen botones que el sistema iba a rechazar**: los controles de crear/editar oportunidades y actividades (menú *Nuevo*, atajos N/L/O/A, Kanban, columna de completar/posponer y el alta desde una ficha) sólo aparecen para quien realmente puede guardarlas: dirección, administración, gerencia comercial y operador; un vendedor sólo sobre sus propios registros. Antes roles de operaciones y finanzas veían formularios que terminaban en un error de permisos.
+- **Arrastrar en el Kanban queda deshabilitado** cuando no se puede cambiar la etapa, en lugar de mover la tarjeta y fallar al guardar.
+- **Reasignar vendedor sólo para quien puede**: el selector de vendedor ya no se muestra a un vendedor, que conserva su asignación actual.
+- La configuración del CRM usa exclusivamente el permiso de configuración (mismo que el ícono de engrane).
+- Si un usuario no puede dar de alta nada en el CRM, el botón *Nuevo* ya no se muestra.
+
 
 
 ## [13.823.65] - 2026-09-03
