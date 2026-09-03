@@ -36,6 +36,12 @@ export interface GuardedUpdateMutation {
    * sello el siguiente guardado del mismo usuario daba un conflicto falso.
    */
   resincronizarSello: (sello: string | null) => void;
+  /**
+   * v13.823.69: sello vigente. Lo consumen el paso 2 (que manda el candado a la
+   * RPC de costos) y el autoguardado del borrador (que lo persiste para que al
+   * restaurar no se guarde a ciegas).
+   */
+  selloActual: () => string | null;
 }
 
 export interface CotizacionUpdateGuard<TRow extends { id: string }> {
@@ -76,10 +82,13 @@ export function useCotizacionUpdateGuard<TRow extends { id: string; updated_at?:
     if (sello) expectedRef.current = sello;
   }, []);
 
+  const selloActual = useCallback(() => expectedRef.current, []);
+
   return {
     mutateAsync,
     isPending: updateCotizacion.isPending,
     resincronizarSello,
+    selloActual,
     ...(crearCotizacion
       ? { crearCotizacion: { mutateAsync: crearGuardado, isPending: crearCotizacion.isPending } }
       : {}),

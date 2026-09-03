@@ -1,6 +1,7 @@
 import { useCallback, useRef } from "react";
 import { savePaso2, savePaso3, savePasoFinal, buildConceptosFromCostos } from "@/features/cotizacion/services";
 import { getErrorMessage } from "@/lib/errors";
+import { esConflictoConcurrencia } from "@/lib/errors/concurrencia";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { fromDb } from "@/lib/supabase/cast";
 import { usePaso1Handlers } from "./usePaso1Handlers";
@@ -62,7 +63,16 @@ export function useCotizacionWizardSteps({
 
     try {
       if (cotizacionId) {
-        await savePaso2({ cotizacionId, costosInternos, mutations: { upsertCostos } });
+        // v13.823.69: el paso 2 viaja con el mismo sello optimista que el resto
+        // del wizard; la RPC reemplaza los costos sólo si nadie más tocó la
+        // cotización y devuelve el sello nuevo para resincronizar.
+        const nuevoSello = await savePaso2({
+          cotizacionId,
+          costosInternos,
+          expectedUpdatedAt: updateCotizacion.selloActual?.() ?? null,
+          mutations: { upsertCostos },
+        });
+        if (nuevoSello) updateCotizacion.resincronizarSello?.(nuevoSello);
       }
       // Re-sincronización idempotente: si la firma cambió respecto al último snapshot
       // procesado (o si nunca hemos sincronizado), regeneramos conceptos.
@@ -76,15 +86,21 @@ export function useCotizacionWizardSteps({
       }
       setCurrentStep(3);
     } catch (e: unknown) {
+      // Conflicto: no se borró ni insertó nada en servidor. Conservamos los
+      // costos capturados y dejamos al usuario en el paso 2.
       notifyError(undefined, {
-        title: "Error al guardar costos",
-        description: getErrorMessage(e),
+        title: esConflictoConcurrencia(e)
+          ? "Otra persona actualizó la cotización"
+          : "Error al guardar costos",
+        description: esConflictoConcurrencia(e)
+          ? "Tus cambios locales NO se guardaron. Recarga los datos para ver la versión actual o revisa y vuelve a intentar; nada se guardó encima."
+          : getErrorMessage(e),
         error: e,
         method: "SAVE_COSTOS_COTIZACION",
         context: { cotizacionId, paso: 2 },
       });
     }
-  }, [costosInternos, cotizacionId, costosPreLlenados, tasaIva, upsertCostos, setConceptosUSD, setConceptosMXN, setCostosPreLlenados, setCurrentStep]);
+  }, [costosInternos, cotizacionId, costosPreLlenados, tasaIva, upsertCostos, updateCotizacion, setConceptosUSD, setConceptosMXN, setCostosPreLlenados, setCurrentStep]);
 
 
   const handlePaso3 = useCallback(async () => {

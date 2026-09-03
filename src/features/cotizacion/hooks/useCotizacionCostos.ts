@@ -22,8 +22,14 @@ export function useCotizacionCostos(cotizacionId: string | undefined) {
 export function useUpsertCotizacionCostos() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ cotizacionId, costos, requestId }: { cotizacionId: string; costos: CostoCotizacion[]; requestId?: string }) =>
-      upsertCotizacionCostos(cotizacionId, costos, requestId ?? newRequestId()),
+    mutationFn: ({ cotizacionId, costos, requestId, expectedUpdatedAt }: {
+      cotizacionId: string;
+      costos: CostoCotizacion[];
+      requestId?: string;
+      /** v13.823.69: sello de la cotización; la RPC rechaza el reemplazo si cambió. */
+      expectedUpdatedAt?: string | null;
+    }) =>
+      upsertCotizacionCostos(cotizacionId, costos, requestId ?? newRequestId(), expectedUpdatedAt),
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.cotizaciones.costos(variables.cotizacionId) });
     },
