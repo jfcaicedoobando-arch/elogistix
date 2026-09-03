@@ -130,7 +130,12 @@ export default function PasoDatosGenerales({ w, clientes }: Props) {
     <>
       {/* 1. Cliente */}
       <div id="seccion-cliente" className="scroll-mt-4">
-        <SeccionDestinatario clientes={clientes} complete={status.cliente} />
+        <SeccionDestinatario
+          clientes={clientes}
+          complete={status.cliente}
+          vinculoConfirmado={w.vinculoCrmConfirmado}
+          onLimpiarVinculoError={w.limpiarVinculoCrmError}
+        />
       </div>
 
       {/* 2. Operación */}

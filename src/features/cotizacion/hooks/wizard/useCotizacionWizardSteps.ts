@@ -184,5 +184,5 @@ export function useCotizacionWizardSteps({
     else navigate("/cotizaciones");
   }, [currentStep, navigate, setCurrentStep]);
 
-  return { handleSiguiente, handleGuardar, handleBack, handleCotizarSinDesglose, vinculoCrmError };
+  return { handleSiguiente, handleGuardar, handleBack, handleCotizarSinDesglose, vinculoCrmError, vinculoCrmConfirmado, limpiarVinculoCrmError };
 }
