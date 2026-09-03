@@ -201,19 +201,20 @@ describe("savePaso3 (W-01: subtotal/moneda derivados de conceptos)", () => {
     expect(arg.data.moneda).toBe("MXN");
   });
 
-  it("mixta: gana la moneda con mayor monto", async () => {
-    await savePaso3({
-      cotizacionId: "c1",
-      conceptosVenta: [
-        { moneda: "USD", total: 100 },
-        { moneda: "MXN", total: 5000 },
-      ],
-      mutations: muts,
-    });
-    const arg = primerArgUpdate();
-    expect(arg.data).toEqual({ ...arg.data, subtotal: 5000, moneda: "MXN" });
+  it("mixta: se bloquea en lugar de persistir la bolsa mayor (P1-A)", async () => {
+    await expect(
+      savePaso3({
+        cotizacionId: "c1",
+        conceptosVenta: [
+          { moneda: "USD", total: 100 },
+          { moneda: "MXN", total: 5000 },
+        ],
+        mutations: muts,
+      }),
+    ).rejects.toThrow(MSG_COTIZACION_MIXTA);
   });
 });
+
 
 describe("savePasoFinal", () => {
   const registrar = vi.fn();
