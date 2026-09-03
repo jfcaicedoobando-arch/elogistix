@@ -78,17 +78,18 @@ export default function SeccionDestinatario({ clientes, complete, vinculoConfirm
     <WizardSection title="Destinatario" complete={complete}>
       <RadioGroup
         value={esProspecto ? "prospecto" : "cliente"}
-        onValueChange={(v) => setValue("esProspecto", v === "prospecto")}
+        onValueChange={handleCambioDestinatario}
+        disabled={vinculoConfirmado}
         className="flex gap-6"
       >
         <div className="flex items-center gap-2">
-          <RadioGroupItem value="cliente" id="dest-cliente" />
+          <RadioGroupItem value="cliente" id="dest-cliente" disabled={vinculoConfirmado} />
           <Label htmlFor="dest-cliente" className="cursor-pointer text-body font-medium">
             Cliente existente
           </Label>
         </div>
         <div className="flex items-center gap-2">
-          <RadioGroupItem value="prospecto" id="dest-prospecto" />
+          <RadioGroupItem value="prospecto" id="dest-prospecto" disabled={vinculoConfirmado} />
           <Label htmlFor="dest-prospecto" className="cursor-pointer text-body font-medium">
             Prospecto
           </Label>
@@ -99,12 +100,14 @@ export default function SeccionDestinatario({ clientes, complete, vinculoConfirm
         <FormField label="Cliente" required error={errors.clienteId?.message}>
           <Select
             value={clienteId}
+            disabled={vinculoConfirmado}
             onValueChange={(v) => {
               setValue("clienteId", v, { shouldValidate: true, shouldDirty: true });
               clearErrors("clienteId");
             }}
           >
             <SelectTrigger aria-invalid={!!errors.clienteId}>
+
               <SelectValue placeholder="Seleccionar cliente" />
             </SelectTrigger>
             <SelectContent>
