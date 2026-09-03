@@ -11,9 +11,6 @@
 import { useMemo } from "react";
 
 import { Card, CardContent } from "@/components/ui/card";
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from "@/components/ui/select";
 import { ResponsiveDataTable } from "@/components/shared/dataTable/ResponsiveDataTable";
 import { UnifiedFiltersBar } from "@/components/shared/filters/UnifiedFiltersBar";
 import { toTitleCase } from "@/lib/formatters";
@@ -24,14 +21,14 @@ import LeadsBulkBar from "@/features/crm/components/LeadsBulkBar";
 import { listLeads } from "@/features/crm/services/leads";
 import ExportarCsvButton from "@/features/crm/components/ExportarCsvButton";
 
-import { LEAD_ESTADOS_ETAPA_LEAD } from "@/features/crm/domain/leads/etapas";
 import {
-  LEAD_FUENTES, LEAD_SORTABLE_KEYS,
+  LEAD_SORTABLE_KEYS,
   type CrmLeadRow, type CrmLeadEstado, type CrmLeadFuente, type LeadSortKey,
 } from "@/features/crm/domain/leads/constants";
 import { makeLeadsColumns } from "./leadsColumns";
 import { useLeadsSelection } from "./useLeadsSelection";
 import { useLeadsExport } from "./useLeadsExport";
+import LeadsFiltrosPrimarios from "./LeadsFiltrosPrimarios";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { StatusBadge } from "@/components/shared/StatusBadge";
@@ -136,26 +133,11 @@ export default function Leads() {
         onClearAll={list.resetAll}
         primary={
           <>
-            <Select
-              value={list.filters.estado}
-              onValueChange={(v) => list.setFilter("estado", v)}
-            >
-              <SelectTrigger className="h-9 w-auto min-w-[150px]"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="todos">Todos los estados</SelectItem>
-                {LEAD_ESTADOS_ETAPA_LEAD.map((e) => <SelectItem key={e} value={e}>{e}</SelectItem>)}
-              </SelectContent>
-            </Select>
-            <Select
-              value={list.filters.fuente}
-              onValueChange={(v) => list.setFilter("fuente", v)}
-            >
-              <SelectTrigger className="h-9 w-auto min-w-[160px]"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="todos">Todas las fuentes</SelectItem>
-                {LEAD_FUENTES.map((f) => <SelectItem key={f} value={f}>{f}</SelectItem>)}
-              </SelectContent>
-            </Select>
+            <LeadsFiltrosPrimarios
+              estado={list.filters.estado}
+              fuente={list.filters.fuente}
+              onChange={(k, v) => list.setFilter(k, v)}
+            />
           </>
         }
       />
