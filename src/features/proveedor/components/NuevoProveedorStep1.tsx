@@ -25,7 +25,6 @@ import {
  */
 export function NuevoProveedorStep1({ c }: { c: Controller }) {
   const mostrarCsf = c.isGasto || (c.isLogistico && c.form.origen_proveedor === "Nacional");
-  const mostrarRfc = !c.isAgenteCarga || !!c.form.pais;
 
   return (
     <div className="space-y-5">
@@ -51,7 +50,8 @@ export function NuevoProveedorStep1({ c }: { c: Controller }) {
         {c.isLogistico && <TipoLogisticoSelect c={c} />}
         {c.isGasto && <SubtipoGastoSelect c={c} />}
         {c.isAgenteCarga && <PaisAgenteSelect c={c} />}
-        {mostrarRfc && <RfcField c={c} />}
+        {/* RFC/Tax ID siempre visible: ocultarlo al elegir Agente de Carga parecía un borrado. */}
+        <RfcField c={c} />
       </FormDialogSection>
 
       {c.isGasto && (
