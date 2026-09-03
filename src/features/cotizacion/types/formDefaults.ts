@@ -11,7 +11,7 @@ export const DEFAULT_LCL_FLETE_MANUAL: LclFleteManual = {
 export const COTIZACION_FORM_DEFAULTS: CotizacionFormValues = {
   esProspecto: false,
   clienteId: "",
-  prospectoModo: "nuevo",
+  prospectoModo: "vincular",
   oportunidadId: "",
   leadId: "",
   prospectoEmpresa: "",

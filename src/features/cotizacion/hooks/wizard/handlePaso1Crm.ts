@@ -6,14 +6,8 @@
  * Extraído de `useCotizacionWizardSteps` en 12.1.0 para cumplir Power of 10.
  * v12.14.3: la I/O de Supabase vive ahora en `services/cotizacion/wizard/paso1Crm`.
  */
-import {
-  obtenerUsuarioActual,
-  fetchCotizacionFolio,
-  registrarBloqueoSinTarifa,
-} from "@/features/cotizacion/services/wizard/paso1Crm";
+import { registrarBloqueoSinTarifa } from "@/features/cotizacion/services/wizard/paso1Crm";
 import { vincularOCrearOportunidadParaCotizacion } from "@/features/crm/services/vincularCotizacion";
-import { getErrorMessage } from "@/lib/errors";
-import { notifyError } from "@/lib/ui/appFeedback";
 import { esIncotermSinFleteVenta } from "@/features/cotizacion/utils/incotermRules";
 import type { CotizacionFormValues } from "@/features/cotizacion/domain/mappers/cotizacionForm";
 import {
@@ -47,7 +41,6 @@ export function validateProspecto(v: CotizacionFormValues): string | null {
   return primerError(destinatarioSchema, {
     esProspecto: true,
     clienteId: v.clienteId ?? null,
-    prospectoModo: v.prospectoModo,
     oportunidadId: v.oportunidadId ?? null,
     leadId: v.leadId ?? null,
     prospectoEmpresa: v.prospectoEmpresa ?? "",
@@ -140,42 +133,21 @@ export function campoParaPathSchemaPaso1(path: string): string | null {
 }
 
 /**
- * Intenta vincular/crear la oportunidad CRM para la cotización recién creada.
- * Falla suave: no rompe el flujo si CRM falla, sólo notifica.
+ * Vincula la cotización a su origen CRM (lead u oportunidad existente).
+ *
+ * P0: ya NO es "falla suave". Si el vínculo falla se propaga el error para que
+ * el wizard se quede en el paso 1 (con toda la captura y el mismo
+ * `cotizacionId`) y ofrezca reintentar. Devuelve el `updated_at` resultante
+ * para resincronizar el bloqueo optimista.
  */
 export async function vincularCrmTrasCrear(
   cotizacionId: string,
   values: CotizacionFormValues,
-): Promise<void> {
-  try {
-    const user = await obtenerUsuarioActual();
-    const folio = await fetchCotizacionFolio(cotizacionId);
-    await vincularOCrearOportunidadParaCotizacion({
-      cotizacionId,
-      cotizacionFolio: folio ?? undefined,
-      modoTransporte: values.modo,
-      oportunidadId: values.oportunidadId || null,
-      leadId: values.leadId || null,
-      prospecto: {
-        empresa: values.prospectoEmpresa,
-        contacto: values.prospectoContacto,
-        email: values.prospectoEmail,
-        telefono: values.prospectoTelefono,
-        rfc: values.prospectoRfc,
-        direccion: values.prospectoDireccion,
-        ciudad: values.prospectoCiudad,
-        entidadFederativa: values.prospectoEntidadFederativa,
-        cp: values.prospectoCp,
-      },
-      user,
-    });
-  } catch (vinculErr) {
-    notifyError(undefined, {
-      title: "Cotización guardada, pero falló el vínculo CRM",
-      description: getErrorMessage(vinculErr),
-      error: vinculErr,
-      method: "VINCULAR_OPORTUNIDAD_CRM",
-      context: { cotizacionId },
-    });
-  }
+): Promise<string | null> {
+  const { updatedAt } = await vincularOCrearOportunidadParaCotizacion({
+    cotizacionId,
+    oportunidadId: values.oportunidadId || null,
+    leadId: values.leadId || null,
+  });
+  return updatedAt;
 }

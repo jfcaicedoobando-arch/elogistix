@@ -44,8 +44,8 @@ export function BuscadorProspectos({ onSelect }: Props) {
       ) : items.length === 0 ? (
         <EmptyStateInline
           icon={Building2}
-          message="Sin resultados."
-          hint='Cambia el modo a "Crear nuevo prospecto" para registrarlo.'
+          message="Sin prospectos u oportunidades elegibles."
+          hint="Sólo aparecen prospectos calificados y oportunidades abiertas sin cliente. Da de alta o califica el prospecto en el CRM."
           density="compact"
         />
       ) : (

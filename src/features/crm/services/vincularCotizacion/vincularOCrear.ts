@@ -1,49 +1,43 @@
 /**
- * Vincula una cotización a una oportunidad/lead existente o crea ambos.
+ * Vincula una cotización de prospecto a una oportunidad/lead EXISTENTE del CRM.
  *
- * v13.664.0: una sola llamada transaccional a la RPC `crm_vincular_cotizacion`
- * (antes eran 3-4 llamadas sueltas "mejor esfuerzo" que dejaban cotizaciones
- * huérfanas si alguna fallaba a la mitad).
+ * v13.664.0: una sola llamada transaccional a la RPC `crm_vincular_cotizacion`.
+ * P0 (cotizaciones huérfanas): la RPC ya no crea ni deduplica leads. Aquí se
+ * exige un `leadId` u `oportunidadId` real y se devuelve el `updated_at` de la
+ * cotización para resincronizar el bloqueo optimista del wizard.
  */
 import { supabase } from "@/integrations/supabase/client";
 import { registrarActividad } from "@/services/bitacora/registrar";
-import type { AuthLite, ProspectoData } from "./helpers";
 
 export interface VincularInput {
   cotizacionId: string;
-  cotizacionFolio?: string;
-  modoTransporte: string;
   oportunidadId?: string | null;
   leadId?: string | null;
-  prospecto: ProspectoData;
-  user: AuthLite | null;
 }
 
 export interface VincularResult {
   oportunidadId: string | null;
   leadId: string | null;
+  /** Sello de la cotización tras el vínculo (evita conflictos falsos). */
+  updatedAt: string | null;
 }
 
 /**
- * Idempotente: si la cotización ya tiene `oportunidad_id` la RPC no recrea nada.
- * Atómica: lead + oportunidad + `cotizaciones.oportunidad_id` en una transacción.
+ * Idempotente: si la cotización ya está ligada a esa oportunidad, la RPC no
+ * recrea nada. Atómica: oportunidad + `cotizaciones.oportunidad_id` en una
+ * transacción.
  */
 export async function vincularOCrearOportunidadParaCotizacion(
   input: VincularInput,
 ): Promise<VincularResult> {
+  if (!input.leadId && !input.oportunidadId) {
+    throw new Error(
+      "Selecciona un prospecto u oportunidad del CRM antes de vincular la cotización.",
+    );
+  }
+
   const { data, error } = await supabase.rpc("crm_vincular_cotizacion", {
     p_cotizacion_id: input.cotizacionId,
-    p_prospecto: {
-      empresa: input.prospecto.empresa,
-      contacto: input.prospecto.contacto,
-      email: input.prospecto.email,
-      telefono: input.prospecto.telefono,
-      rfc: input.prospecto.rfc ?? "",
-      direccion: input.prospecto.direccion ?? "",
-      ciudad: input.prospecto.ciudad ?? "",
-      entidad_federativa: input.prospecto.entidadFederativa ?? "",
-      cp: input.prospecto.cp ?? "",
-    },
     p_lead_id: input.leadId || undefined,
     p_oportunidad_id: input.oportunidadId || undefined,
   });
@@ -53,6 +47,7 @@ export async function vincularOCrearOportunidadParaCotizacion(
     oportunidad_id?: string | null;
     lead_id?: string | null;
     ya_ligada?: boolean;
+    updated_at?: string | null;
   };
 
   if (payload.oportunidad_id && payload.ya_ligada !== true) {
@@ -67,5 +62,6 @@ export async function vincularOCrearOportunidadParaCotizacion(
   return {
     oportunidadId: payload.oportunidad_id ?? null,
     leadId: payload.lead_id ?? null,
+    updatedAt: payload.updated_at ?? null,
   };
 }

@@ -26,7 +26,7 @@ export function usePaso1SectionStatus(): Paso1SectionStatus {
   const v = useWatch({
     control,
     name: [
-      "clienteId", "esProspecto", "prospectoEmpresa",
+      "clienteId", "esProspecto", "prospectoEmpresa", "oportunidadId", "leadId",
       "modo", "tipo", "incoterm",
       "origen", "destino",
       "tipoCarga", "pesoKg", "piezas",
@@ -40,7 +40,7 @@ export function usePaso1SectionStatus(): Paso1SectionStatus {
   });
 
   const [
-    clienteId, esProspecto, prospectoEmpresa,
+    clienteId, esProspecto, prospectoEmpresa, oportunidadId, leadId,
     modo, tipo, incoterm,
     origen, destino,
     tipoCarga, pesoKg, piezas,
@@ -51,7 +51,7 @@ export function usePaso1SectionStatus(): Paso1SectionStatus {
     numContenedores,
     lclFleteManual,
   ] = v as [
-    string, boolean, string,
+    string, boolean, string, string, string,
     string, string, string,
     string, string,
     string, number, number,
@@ -72,7 +72,7 @@ export function usePaso1SectionStatus(): Paso1SectionStatus {
   const sinFleteVenta = esIncotermSinFleteVenta(incoterm, modo);
 
   return {
-    cliente: clienteOk(esProspecto, prospectoEmpresa, clienteId),
+    cliente: clienteOk(esProspecto, prospectoEmpresa, clienteId, oportunidadId, leadId),
     operacion: !!modo && !!tipo && !!incoterm,
     ruta: !!origen?.trim() && !!destino?.trim(),
     mercancia: mercanciaOk({
@@ -108,8 +108,19 @@ function tarifaOk(a: TarifaArgs): boolean {
   return false;
 }
 
-function clienteOk(esProspecto: boolean, prospectoEmpresa: string, clienteId: string): boolean {
-  return esProspecto ? !!prospectoEmpresa?.trim() : !!clienteId;
+/**
+ * P0: un prospecto sólo está completo con vínculo CRM real (lead u
+ * oportunidad). Antes el check verde se encendía con sólo el nombre.
+ */
+function clienteOk(
+  esProspecto: boolean,
+  prospectoEmpresa: string,
+  clienteId: string,
+  oportunidadId: string,
+  leadId: string,
+): boolean {
+  if (!esProspecto) return !!clienteId;
+  return !!prospectoEmpresa?.trim() && (!!oportunidadId || !!leadId);
 }
 
 interface MercanciaArgs {

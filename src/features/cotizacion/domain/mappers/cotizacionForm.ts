@@ -27,8 +27,10 @@ function partesCliente(d: CotizacionInitialData) {
   return {
     esProspecto: d.es_prospecto,
     clienteId: d.cliente_id ?? "",
-    prospectoModo: "nuevo" as const,
-    oportunidadId: "",
+    // P0: al editar se restaura el vínculo CRM real (antes se perdía y la
+    // cotización quedaba huérfana al volver a guardar).
+    prospectoModo: "vincular" as const,
+    oportunidadId: d.oportunidad_id ?? "",
     leadId: "",
     prospectoEmpresa: d.prospecto_empresa ?? "",
     prospectoContacto: d.prospecto_contacto ?? "",

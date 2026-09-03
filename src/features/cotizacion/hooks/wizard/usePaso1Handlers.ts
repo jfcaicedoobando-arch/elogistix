@@ -4,7 +4,7 @@
  * de 200 líneas). Ambos handlers comparten validación CRM, llamada a
  * `savePaso1` y vinculación CRM tras crear.
  */
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import type { Path, UseFormReturn } from "react-hook-form";
 import type { CotizacionFormValues } from "@/features/cotizacion/domain/mappers/cotizacionForm";
 import type { CreateCotizacionInput, CotizacionRow } from "@/features/cotizacion/hooks/useCotizaciones";
@@ -38,7 +38,12 @@ function marcarErroresGuardadoPaso1(
 
 interface Paso1Mutations {
   crearCotizacion: { mutateAsync: (d: CreateCotizacionInput) => Promise<CotizacionRow>; isPending: boolean };
-  updateCotizacion: { mutateAsync: (d: { id: string; data: Partial<CreateCotizacionInput> & Record<string, unknown> }) => Promise<unknown>; isPending: boolean };
+  updateCotizacion: {
+    mutateAsync: (d: { id: string; data: Partial<CreateCotizacionInput> & Record<string, unknown> }) => Promise<unknown>;
+    isPending: boolean;
+    /** P0: resincroniza el sello optimista tras el vínculo CRM (la RPC toca `updated_at`). */
+    resincronizarSello?: (sello: string | null) => void;
+  };
   registrarActividad: { mutate: (d: { accion: string; modulo: string; entidad_id?: string | null; entidad_nombre?: string; detalles?: Record<string, unknown> }) => void };
 }
 
@@ -57,6 +62,38 @@ export function usePaso1Handlers({
   msdsFile, buildPaso1Data, mutations,
 }: Paso1Deps) {
   const { crearCotizacion, updateCotizacion, registrarActividad } = mutations;
+  // P0: si el vínculo CRM falla, el wizard NO avanza; se conserva la captura y
+  // el mismo `cotizacionId` para reintentar sin duplicar nada.
+  const [vinculoCrmError, setVinculoCrmError] = useState<string | null>(null);
+
+  /**
+   * Vincula la cotización de prospecto a su origen CRM. Devuelve `false` si
+   * falló (el wizard debe quedarse en el paso 1).
+   */
+  const vincularCrm = useCallback(
+    async (id: string, v: CotizacionFormValues): Promise<boolean> => {
+      if (!v.esProspecto) return true;
+      try {
+        const sello = await vincularCrmTrasCrear(id, v);
+        updateCotizacion.resincronizarSello?.(sello);
+        setVinculoCrmError(null);
+        return true;
+      } catch (e: unknown) {
+        const msg = getErrorMessage(e);
+        setVinculoCrmError(msg);
+        notifyError(undefined, {
+          title: "Cotización guardada, pero falta el vínculo con el CRM",
+          description: msg,
+          error: e,
+          method: "VINCULAR_OPORTUNIDAD_CRM",
+          context: { cotizacionId: id, paso: 1 },
+        });
+        return false;
+      }
+    },
+    [updateCotizacion],
+  );
+
 
   /**
    * T-12: un solo toast resumen + error inline en el campo culpable, con
@@ -78,13 +115,11 @@ export function usePaso1Handlers({
     const err = validatePaso1(v);
     if (err) { marcarErrorPaso1(err); return; }
 
-    const esNueva = !cotizacionId;
     try {
       const id = await savePaso1({ form, msdsFile, cotizacionId, buildPaso1Data, mutations: { crearCotizacion, updateCotizacion } });
       if (!cotizacionId) setCotizacionId(id);
-      if (esNueva && v.esProspecto) {
-        await vincularCrmTrasCrear(id, v);
-      }
+      // Idempotente: se reintenta también en edición (no sólo al crear).
+      if (!(await vincularCrm(id, v))) return;
       setCurrentStep(2);
     } catch (e: unknown) {
       marcarErroresGuardadoPaso1(form, e);
@@ -96,7 +131,7 @@ export function usePaso1Handlers({
         context: { cotizacionId, paso: 1 },
       });
     }
-  }, [form, msdsFile, cotizacionId, buildPaso1Data, crearCotizacion, updateCotizacion, setCotizacionId, setCurrentStep, marcarErrorPaso1]);
+  }, [form, msdsFile, cotizacionId, buildPaso1Data, crearCotizacion, updateCotizacion, setCotizacionId, setCurrentStep, marcarErrorPaso1, vincularCrm]);
 
   /**
    * Atajo "Cotizar sin desglose": guarda Paso 1 con `sin_desglose_costos = true`
@@ -107,13 +142,10 @@ export function usePaso1Handlers({
     const err = validatePaso1(v);
     if (err) { marcarErrorPaso1(err); return; }
     form.setValue("sinDesgloseCostos", true, { shouldDirty: true });
-    const esNueva = !cotizacionId;
     try {
       const id = await savePaso1({ form, msdsFile, cotizacionId, buildPaso1Data, mutations: { crearCotizacion, updateCotizacion } });
       if (!cotizacionId) setCotizacionId(id);
-      if (esNueva && v.esProspecto) {
-        await vincularCrmTrasCrear(id, v);
-      }
+      if (!(await vincularCrm(id, v))) return;
       registrarActividad.mutate({
         accion: "cotizacion_sin_desglose_creada",
         modulo: "cotizaciones",
@@ -131,7 +163,7 @@ export function usePaso1Handlers({
         context: { cotizacionId, paso: 1 },
       });
     }
-  }, [form, msdsFile, cotizacionId, buildPaso1Data, crearCotizacion, updateCotizacion, registrarActividad, setCotizacionId, setCurrentStep, marcarErrorPaso1]);
+  }, [form, msdsFile, cotizacionId, buildPaso1Data, crearCotizacion, updateCotizacion, registrarActividad, setCotizacionId, setCurrentStep, marcarErrorPaso1, vincularCrm]);
 
-  return { handlePaso1, handleCotizarSinDesglose };
+  return { handlePaso1, handleCotizarSinDesglose, vinculoCrmError };
 }

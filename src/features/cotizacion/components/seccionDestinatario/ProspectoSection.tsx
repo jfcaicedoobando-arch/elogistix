@@ -1,19 +1,19 @@
 /**
  * Bloque "Prospecto" del paso 1 de cotización.
- * Permite vincular a lead/oportunidad existente o crear uno nuevo.
+ *
+ * P0 (cotizaciones huérfanas): el cotizador ya NO crea prospectos ni captura
+ * su ficha fiscal. Sólo se vincula un origen CRM existente y elegible; el alta
+ * de prospectos vive en el módulo CRM.
  */
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Label } from "@/components/ui/label";
+import { ExternalLink } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { VinculoChip } from "./VinculoChip";
 import { BuscadorProspectos } from "./BuscadorProspectos";
-import { FormularioNuevoProspecto } from "./FormularioNuevoProspecto";
-import { ProspectoDatosFiscales } from "./ProspectoDatosFiscales";
 import type { ProspectoMatch } from "@/features/crm/hooks";
 
 interface Props {
-  modo: "vincular" | "nuevo";
-  onChangeModo: (m: "vincular" | "nuevo") => void;
   tieneVinculo: boolean;
+  vinculoConfirmado: boolean;
   oportunidadId: string;
   leadId: string;
   prospectoEmpresa: string;
@@ -22,9 +22,8 @@ interface Props {
 }
 
 export function ProspectoSection({
-  modo,
-  onChangeModo,
   tieneVinculo,
+  vinculoConfirmado,
   oportunidadId,
   leadId,
   prospectoEmpresa,
@@ -33,41 +32,29 @@ export function ProspectoSection({
 }: Props) {
   return (
     <div className="space-y-4 rounded-md border border-border bg-muted/30 p-4">
-      <RadioGroup
-        value={modo}
-        onValueChange={(v) => onChangeModo(v as "vincular" | "nuevo")}
-        className="flex flex-col gap-2 sm:flex-row sm:gap-6"
-      >
-        <div className="flex items-center gap-2">
-          <RadioGroupItem value="vincular" id="modo-vincular" />
-          <Label htmlFor="modo-vincular" className="cursor-pointer text-body font-medium">
-            Vincular a lead u oportunidad existente
-          </Label>
-        </div>
-        <div className="flex items-center gap-2">
-          <RadioGroupItem value="nuevo" id="modo-nuevo" />
-          <Label htmlFor="modo-nuevo" className="cursor-pointer text-body font-medium">
-            Crear nuevo prospecto
-          </Label>
-        </div>
-      </RadioGroup>
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <p className="text-body-sm text-muted-foreground">
+          Vincula la cotización a un prospecto calificado o a una oportunidad abierta del CRM.
+        </p>
+        <Button type="button" variant="outline" size="sm" asChild>
+          <a href="/crm/leads" target="_blank" rel="noopener noreferrer">
+            <ExternalLink className="mr-2 h-4 w-4" />
+            Abrir CRM
+          </a>
+        </Button>
+      </div>
 
-      {modo === "vincular" ? (
-        tieneVinculo ? (
-          <VinculoChip
-            oportunidadId={oportunidadId}
-            leadId={leadId}
-            nombre={prospectoEmpresa}
-            onDesvincular={onDesvincular}
-          />
-        ) : (
-          <BuscadorProspectos onSelect={onSelectMatch} />
-        )
+      {tieneVinculo ? (
+        <VinculoChip
+          oportunidadId={oportunidadId}
+          leadId={leadId}
+          nombre={prospectoEmpresa}
+          onDesvincular={onDesvincular}
+          puedeDesvincular={!vinculoConfirmado}
+        />
       ) : (
-        <FormularioNuevoProspecto />
+        <BuscadorProspectos onSelect={onSelectMatch} />
       )}
-
-      <ProspectoDatosFiscales />
     </div>
   );
 }
