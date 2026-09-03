@@ -72,45 +72,35 @@ export async function bulkCreateLeads(
   if (inputs.length === 0) return { affected: 0 };
   const payloads = inputs.map((input) => buildLeadInsertPayload(input, user));
   let inserted = 0;
+  let importacionParcial = false;
 
   for (let i = 0; i < payloads.length; i += 100) {
     const chunk = payloads.slice(i, i + 100);
-    let result: { data: { id: string }[] | null; error: Error | null } | undefined;
-    let thrown: Error | undefined;
     try {
-      result = await supabase
+      const { data, error } = await supabase
         .from("crm_leads")
         .insert(chunk)
         .select("id");
+      if (error) throw error;
+      inserted += (data ?? []).length;
     } catch (e) {
-      thrown = e instanceof Error ? e : new Error(String(e));
+      if (inserted === 0) throw e;
+      importacionParcial = true;
+      break;
     }
-    const error = thrown ?? result?.error ?? null;
-    if (error) {
-      if (inserted === 0) throw error;
-      await registrarActividad({
-        modulo: "crm",
-        accion: "Importó leads en lote",
-        detalles: { cantidad: inserted, solicitados: inputs.length },
-      });
-      return { affected: inserted, aviso: avisoImportacionParcial(inserted, inputs.length) };
-    }
-    inserted += (result?.data ?? []).length;
   }
 
-  if (inserted < inputs.length) {
-    await registrarActividad({
-      modulo: "crm",
-      accion: "Importó leads en lote",
-      detalles: { cantidad: inserted, solicitados: inputs.length },
-    });
-    return { affected: inserted, aviso: avisoImportacionParcial(inserted, inputs.length) };
-  }
-
+  const parcial = importacionParcial || inserted < inputs.length;
   await registrarActividad({
     modulo: "crm",
     accion: "Importó leads en lote",
-    detalles: { cantidad: inserted },
+    detalles: parcial
+      ? { cantidad: inserted, solicitados: inputs.length }
+      : { cantidad: inserted },
   });
+
+  if (parcial) {
+    return { affected: inserted, aviso: avisoImportacionParcial(inserted, inputs.length) };
+  }
   return { affected: inserted };
 }
