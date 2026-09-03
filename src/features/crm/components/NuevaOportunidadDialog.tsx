@@ -47,6 +47,8 @@ export default function NuevaOportunidadDialog({ open, onOpenChange, oportunidad
 
   const { form, setForm, set } = useOportunidadForm(open, oportunidad, etapas, user, origenInicial);
   const [autoActividad, setAutoActividad] = useState(true);
+  const [guardando, setGuardando] = useState(false);
+
 
   const etapaSel = etapas.find((e) => e.id === form.etapa_id);
   const esGanada = (etapaSel as { tipo?: string } | undefined)?.tipo === "ganada";
@@ -71,10 +73,10 @@ export default function NuevaOportunidadDialog({ open, onOpenChange, oportunidad
       .catch(() => undefined);
   };
 
-  const pending = crear.isPending || actualizar.isPending;
+  const pendingTotal = guardando || crear.isPending || actualizar.isPending || crearActividad.isPending;
 
   const handleSubmit = async () => {
-    if (pending || enviandoRef.current) return;
+    if (pendingTotal || enviandoRef.current) return;
     const invalido = validarOportunidadForm(form, esGanada);
     if (invalido) {
       return notifyError(undefined, {
@@ -84,6 +86,7 @@ export default function NuevaOportunidadDialog({ open, onOpenChange, oportunidad
       });
     }
     enviandoRef.current = true;
+    setGuardando(true);
     try {
       const payload = buildOportunidadFormPayload(form, esGanada, isEdit);
       if (isEdit && oportunidad) {
@@ -106,13 +109,15 @@ export default function NuevaOportunidadDialog({ open, onOpenChange, oportunidad
       });
     } finally {
       enviandoRef.current = false;
+      setGuardando(false);
     }
   };
 
+
   const footer = (
     <>
-      <Button variant="outline" onClick={() => onOpenChange(false)} disabled={pending}>Cancelar</Button>
-      <Button onClick={handleSubmit} loading={pending} disabled={!isEdit && !form.etapa_id}>
+      <Button variant="outline" onClick={() => onOpenChange(false)} disabled={pendingTotal}>Cancelar</Button>
+      <Button onClick={handleSubmit} loading={pendingTotal} disabled={!isEdit && !form.etapa_id}>
         {isEdit ? "Guardar cambios" : "Crear oportunidad"}
       </Button>
     </>
@@ -126,9 +131,10 @@ export default function NuevaOportunidadDialog({ open, onOpenChange, oportunidad
       title={isEdit ? "Editar oportunidad" : "Nueva oportunidad"}
       description="Captura los datos comerciales y la etapa del pipeline."
       size="2xl"
-      busy={pending}
+      busy={pendingTotal}
       footer={footer}
     >
+
       <OportunidadFormFields
         form={form}
         setForm={setForm}

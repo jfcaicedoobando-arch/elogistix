@@ -47,17 +47,22 @@ export default function NuevoLeadDialog({ open, onOpenChange, onCreated }: Props
   );
   const [form, setForm] = useState<LeadFormState>(formVacio);
   const [autoActividad, setAutoActividad] = useState(true);
+  const [guardando, setGuardando] = useState(false);
   const crear = useCrearLead();
   const crearActividad = useCrearActividad();
   const enviandoRef = useRef(false);
 
+  const pendingTotal = guardando || crear.isPending || crearActividad.isPending;
+
+
   const handleSubmit = async () => {
-    if (crear.isPending || enviandoRef.current) return;
+    if (crear.isPending || crearActividad.isPending || enviandoRef.current || guardando) return;
     if (!form.empresa.trim()) {
       notifyError(undefined, { title: "Empresa es obligatoria", method: "HANDLE_SUBMIT", errorCode: ERROR_CODES.VALIDATION_FAILED });
       return;
     }
     enviandoRef.current = true;
+    setGuardando(true);
     try {
       const r = await crear.mutateAsync(form);
       if (autoActividad) {
@@ -86,8 +91,10 @@ export default function NuevoLeadDialog({ open, onOpenChange, onCreated }: Props
       });
     } finally {
       enviandoRef.current = false;
+      setGuardando(false);
     }
   };
+
 
   const handleOpenChange = (o: boolean) => {
     if (!o) setForm(formVacio());
@@ -96,8 +103,8 @@ export default function NuevoLeadDialog({ open, onOpenChange, onCreated }: Props
 
   const footer = (
     <>
-      <Button variant="outline" onClick={() => onOpenChange(false)} disabled={crear.isPending}>Cancelar</Button>
-      <Button onClick={handleSubmit} loading={crear.isPending}>
+      <Button variant="outline" onClick={() => onOpenChange(false)} disabled={pendingTotal}>Cancelar</Button>
+      <Button onClick={handleSubmit} loading={pendingTotal}>
         Crear lead
       </Button>
     </>
@@ -111,9 +118,10 @@ export default function NuevoLeadDialog({ open, onOpenChange, onCreated }: Props
       title="Nuevo lead"
       description="Captura los datos básicos del prospecto. Podrás convertirlo a cliente y oportunidad desde su ficha."
       size="2xl"
-      busy={crear.isPending}
+      busy={pendingTotal}
       footer={footer}
     >
+
       <AvisoLeadDuplicado
         empresa={form.empresa}
         email={form.email}
