@@ -73,10 +73,10 @@ export default function NuevaOportunidadDialog({ open, onOpenChange, oportunidad
       .catch(() => undefined);
   };
 
-  const pending = crear.isPending || actualizar.isPending;
+  const pendingTotal = guardando || crear.isPending || actualizar.isPending || crearActividad.isPending;
 
   const handleSubmit = async () => {
-    if (pending || enviandoRef.current) return;
+    if (pendingTotal || enviandoRef.current) return;
     const invalido = validarOportunidadForm(form, esGanada);
     if (invalido) {
       return notifyError(undefined, {
@@ -86,6 +86,7 @@ export default function NuevaOportunidadDialog({ open, onOpenChange, oportunidad
       });
     }
     enviandoRef.current = true;
+    setGuardando(true);
     try {
       const payload = buildOportunidadFormPayload(form, esGanada, isEdit);
       if (isEdit && oportunidad) {
@@ -108,8 +109,10 @@ export default function NuevaOportunidadDialog({ open, onOpenChange, oportunidad
       });
     } finally {
       enviandoRef.current = false;
+      setGuardando(false);
     }
   };
+
 
   const footer = (
     <>
