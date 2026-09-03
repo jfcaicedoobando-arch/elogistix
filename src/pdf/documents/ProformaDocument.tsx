@@ -54,13 +54,34 @@ export function ProformaDocument({ proforma, embarque, conceptos, cliente, tasaI
     <Document title={`${proforma.numero} - Proforma`} author={emisor?.razonSocial ?? "Empresa"}>
       <Page size="LETTER" style={styles.page}>
         <ProformaHeader proforma={proforma} cliente={cliente ?? null} embarque={embarque} esConsolidada={false} emisor={emisor} />
-        <View minPresenceAhead={140}>
-          <Text style={styles.h3}>{multiContenedor ? "Conceptos por Contenedor" : "Conceptos"}</Text>
-          <SeccionMonedaPdf grupos={grupos} moneda="USD" tasaIva={tasaIva} multiContenedor={multiContenedor} />
-          <SeccionMonedaPdf grupos={grupos} moneda="MXN" tasaIva={tasaIva} multiContenedor={multiContenedor} />
+        {/*
+          El título nunca queda huérfano (minPresenceAhead propio) y los bloques
+          de conceptos fluyen libremente: no se envuelve todo en un contenedor
+          con minPresenceAhead grande, que provocaba saltos de página completos.
+        */}
+        <Text style={[styles.h3, { marginTop: 10, marginBottom: 6 }]} minPresenceAhead={70}>
+          {multiContenedor ? "Conceptos por Contenedor" : "Conceptos"}
+        </Text>
+        <SeccionMonedaPdf
+          grupos={grupos}
+          moneda="USD"
+          tasaIva={tasaIva}
+          multiContenedor={multiContenedor}
+          mostrarSubtituloMoneda={multiMoneda}
+        />
+        <SeccionMonedaPdf
+          grupos={grupos}
+          moneda="MXN"
+          tasaIva={tasaIva}
+          multiContenedor={multiContenedor}
+          mostrarSubtituloMoneda={multiMoneda}
+        />
+
+        {/* Los totales viajan con el último bloque de conceptos. */}
+        <View minPresenceAhead={110}>
+          <TotalesBox bloques={bloquesTotales} />
         </View>
 
-        <TotalesBox bloques={bloquesTotales} />
 
         {proforma.notas ? (
           <>

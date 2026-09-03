@@ -47,7 +47,15 @@ export function SeccionMonedaPdf({
         );
         const cols = moneda === "USD" ? columnasUSD(tasaIva, hayIva) : columnasMXN(tasaIva);
         return (
-          <View key={`${g.contenedorId ?? "gen"}-${moneda}`} wrap={false}>
+          // Multi-contenedor: el chip + su tabla + subtotal se mantienen juntos.
+          // Caso simple: se permite que una tabla larga se parta por filas
+          // (el encabezado se repite) en vez de saltar completa de página.
+          <View
+            key={`${g.contenedorId ?? "gen"}-${moneda}`}
+            wrap={!multiContenedor}
+            minPresenceAhead={60}
+          >
+
             {multiContenedor ? (
               <Text style={styles.containerBlock}>
                 {g.contenedorId
