@@ -13,7 +13,8 @@ export function PaisAgenteSelect({ c }: { c: Controller }) {
   return (
     <div className="space-y-2">
       <Label>País *</Label>
-      <Select value={c.form.pais || ""} onValueChange={(v) => { c.setField("pais", v); c.setField("rfc", ""); }}>
+      {/* Elegir país NO borra el RFC/Tax ID: si vino de la CSF debe conservarse. */}
+      <Select value={c.form.pais || ""} onValueChange={(v) => c.setField("pais", v)}>
         <SelectTrigger><SelectValue placeholder="Selecciona un país" /></SelectTrigger>
         <SelectContent>
           {PAISES.map((p) => <SelectItem key={p} value={p}>{p}</SelectItem>)}
