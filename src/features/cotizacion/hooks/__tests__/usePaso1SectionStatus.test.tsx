@@ -34,11 +34,32 @@ describe("usePaso1SectionStatus — cliente", () => {
   });
 
   it("cliente: false cuando es prospecto sin empresa", () => {
-    expect(statusFor({ esProspecto: true, prospectoEmpresa: "  " }).cliente).toBe(false);
+    expect(
+      statusFor({ esProspecto: true, prospectoEmpresa: "  ", oportunidadId: "op-1" }).cliente,
+    ).toBe(false);
   });
 
-  it("cliente: true cuando es prospecto con empresa capturada", () => {
-    expect(statusFor({ esProspecto: true, prospectoEmpresa: "ACME" }).cliente).toBe(true);
+  it("cliente: false cuando es prospecto con empresa pero sin vínculo CRM", () => {
+    expect(
+      statusFor({
+        esProspecto: true,
+        prospectoEmpresa: "ACME",
+        oportunidadId: "",
+        leadId: "",
+      }).cliente,
+    ).toBe(false);
+  });
+
+  it("cliente: true cuando es prospecto con empresa y oportunidad vinculada", () => {
+    expect(
+      statusFor({ esProspecto: true, prospectoEmpresa: "ACME", oportunidadId: "op-1" }).cliente,
+    ).toBe(true);
+  });
+
+  it("cliente: true cuando es prospecto con empresa y lead vinculado", () => {
+    expect(
+      statusFor({ esProspecto: true, prospectoEmpresa: "ACME", leadId: "lead-1" }).cliente,
+    ).toBe(true);
   });
 });
 
