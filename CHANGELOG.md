@@ -1,5 +1,13 @@
 # Changelog
 
+## [13.823.64] - 2026-09-03
+### Los pesos de un embarque aéreo ya se guardan
+- **Bug corregido**: al editar un embarque aéreo (o terrestre) creado desde una cotización, el peso, el volumen y las piezas volvían a cero al guardar. El embarque arrastraba "contenedores" internos vacíos y el sistema recalculaba los totales sumándolos, borrando lo capturado.
+- **Ahora** ese recálculo automático sólo aplica a marítimo y multimodal, donde los contenedores sí son la fuente de la verdad; en aéreo y terrestre se respeta lo que se escribe en el formulario.
+- Sin cambios en datos existentes: no se borró ni reasignó ningún contenedor.
+
+
+
 ## [13.823.63] - 2026-09-02
 ### Se cierra la puerta lateral "Convertir lead"
 - **Una sola puerta**: el botón heredado *Convertir* desaparece de la ficha del lead para todos los roles. El camino válido es completar perfil → calificar → crear oportunidad → cotización aceptada → alta formal del cliente.

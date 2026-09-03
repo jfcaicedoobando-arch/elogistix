@@ -129,16 +129,23 @@ export function useEditarEmbarqueWizard(id: string | undefined) {
       const cambiosVenta = diffConceptos(conceptosVentaDb, nuevosVenta);
       const cambiosCosto = diffConceptos(conceptosCostoDb, nuevosCosto);
 
+      // v13.823.64: sólo Marítimo/Multimodal sincronizan contenedores hijos. En
+      // Aéreo/Terrestre el peso, volumen y piezas se capturan en el embarque; al
+      // sincronizar los "contenedores" vacíos que arrastra la conversión desde
+      // cotización, el recálculo automático los ponía en cero.
+      const sincronizaContenedores = modoActual === "Marítimo" || modoActual === "Multimodal";
+
       await updateEmbarque.mutateAsync({
         id,
         embarque: nuevoEmbarquePayload,
         conceptosVenta: nuevosVenta,
         conceptosCosto: nuevosCosto,
-        contenedores: contenedoresActuales,
+        contenedores: sincronizaContenedores ? contenedoresActuales : undefined,
         // FIX-15 · Enviamos el `updated_at` que leímos al hidratar el wizard
         // para que la RPC rechace el guardado si alguien más ya guardó.
         expectedUpdatedAt: embarque.updated_at ?? null,
       });
+
 
       const v = methods.getValues();
       registrarActividad.mutate({
