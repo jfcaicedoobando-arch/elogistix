@@ -35,7 +35,7 @@ import { formatFechaEs } from "@/lib/formatters/dates";
 
 export default function LeadDetalle() {
   const { id } = useParams<{ id: string }>();
-  const { canEdit, canTomarLead, canGestionarLead } = usePermissions();
+  const { canEdit, canTomarLead, canGestionarLead, canAltaCliente } = usePermissions();
   const volver = useVolver(ROUTES.CRM_LEADS);
   const navigate = useNavigate();
   const { data: lead, isLoading } = useLead(id);
@@ -125,7 +125,7 @@ export default function LeadDetalle() {
       />
 
 
-      <LeadEtapaProspectoAviso estado={lead.estado} canAltaCliente={canEdit} />
+      <LeadEtapaProspectoAviso estado={lead.estado} canAltaCliente={canAltaCliente} />
 
       <LeadDatosCard
         form={form}
