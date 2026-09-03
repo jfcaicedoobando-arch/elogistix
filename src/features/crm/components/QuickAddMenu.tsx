@@ -35,13 +35,23 @@ type Quick = "lead" | "oportunidad" | "actividad" | null;
 
 export default function QuickAddMenu({ openTrigger, dialogTrigger }: QuickAddMenuProps = {}) {
   const navigate = useNavigate();
-  const { canCrearLead, canGestionarLeadsEnLote } = usePermissions();
+  const { canCrearLead, canGestionarLeadsEnLote, canCrearOportunidad, canCrearActividad } = usePermissions();
   const [menuOpen, setMenuOpen] = useState(false);
   const [quick, setQuick] = useState<Quick>(null);
   const [leadOpen, setLeadOpen] = useState(false);
   const [opOpen, setOpOpen] = useState(false);
   const [actOpen, setActOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
+
+  /**
+   * Espejo de las policies RLS: oportunidades y actividades sólo se crean con
+   * la capacidad específica (staff CRM o vendedor sobre sus registros).
+   */
+  const puedeCrear = (kind: Exclude<Quick, null>): boolean => {
+    if (kind === "lead") return canCrearLead;
+    if (kind === "oportunidad") return canCrearOportunidad;
+    return canCrearActividad;
+  };
 
   // Ola 9 (v13.430.0): antes se usaba un ref booleano "primer render" para
   // ignorar el valor inicial de `openTrigger`. En StrictMode React monta,
@@ -60,13 +70,15 @@ export default function QuickAddMenu({ openTrigger, dialogTrigger }: QuickAddMen
   useEffect(() => {
     if (!dialogTrigger || dialogTrigger.n === lastDialogTrigger.current) return;
     lastDialogTrigger.current = dialogTrigger.n;
-    if (dialogTrigger.kind === "lead" && !canCrearLead) return;
+    if (!puedeCrear(dialogTrigger.kind)) return;
     setQuick(dialogTrigger.kind);
-  }, [dialogTrigger, canCrearLead]);
+    // `puedeCrear` es estable en cada render y depende sólo de las capacidades.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dialogTrigger, canCrearLead, canCrearOportunidad, canCrearActividad]);
 
   const abrirQuick = (kind: Exclude<Quick, null>) => {
-    // v13.823.60: el atajo "L" y el menú comparten el mismo candado de creación.
-    if (kind === "lead" && !canCrearLead) return;
+    // Los atajos L/O/A y el menú comparten exactamente el mismo candado.
+    if (!puedeCrear(kind)) return;
     setMenuOpen(false);
     setQuick(kind);
   };
@@ -87,12 +99,16 @@ export default function QuickAddMenu({ openTrigger, dialogTrigger }: QuickAddMen
               <Users className="h-4 w-4 mr-2" /> Nuevo lead <span className="ml-auto text-label text-muted-foreground">L</span>
             </DropdownMenuItem>
           )}
-          <DropdownMenuItem onSelect={() => abrirQuick("oportunidad")}>
-            <Target className="h-4 w-4 mr-2" /> Nueva oportunidad <span className="ml-auto text-label text-muted-foreground">O</span>
-          </DropdownMenuItem>
-          <DropdownMenuItem onSelect={() => abrirQuick("actividad")}>
-            <Activity className="h-4 w-4 mr-2" /> Nueva actividad <span className="ml-auto text-label text-muted-foreground">A</span>
-          </DropdownMenuItem>
+          {canCrearOportunidad && (
+            <DropdownMenuItem onSelect={() => abrirQuick("oportunidad")}>
+              <Target className="h-4 w-4 mr-2" /> Nueva oportunidad <span className="ml-auto text-label text-muted-foreground">O</span>
+            </DropdownMenuItem>
+          )}
+          {canCrearActividad && (
+            <DropdownMenuItem onSelect={() => abrirQuick("actividad")}>
+              <Activity className="h-4 w-4 mr-2" /> Nueva actividad <span className="ml-auto text-label text-muted-foreground">A</span>
+            </DropdownMenuItem>
+          )}
           {canGestionarLeadsEnLote && (
             <>
               <DropdownMenuSeparator />
