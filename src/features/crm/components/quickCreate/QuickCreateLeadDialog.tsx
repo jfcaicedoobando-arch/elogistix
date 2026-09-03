@@ -35,6 +35,7 @@ interface Props {
 export default function QuickCreateLeadDialog({ open, onOpenChange, onCreated, onMore }: Props) {
   const { user } = useAuth();
   const crear = useCrearLead();
+  const enviandoRef = useRef(false);
   const [empresa, setEmpresa] = useState("");
   const [contacto, setContacto] = useState("");
 
@@ -51,12 +52,13 @@ export default function QuickCreateLeadDialog({ open, onOpenChange, onCreated, o
   }, [open]);
 
   const submit = async () => {
-    if (crear.isPending) return;
+    if (crear.isPending || enviandoRef.current) return;
     const emp = empresa.trim();
     if (!emp) {
       notifyError(undefined, { title: "Empresa requerida", method: "FEATURES_CRM_COMPONENTS_QUICKCREATE_QUICKCREATELEADDIALOG_1" });
       return;
     }
+    enviandoRef.current = true;
     try {
       const r = await crear.mutateAsync({
         empresa: emp,
@@ -78,6 +80,8 @@ export default function QuickCreateLeadDialog({ open, onOpenChange, onCreated, o
         error: e,
         method: "FEATURES_CRM_COMPONENTS_QUICKCREATE_QUICKCREATELEADDIALOG_2",
       });
+    } finally {
+      enviandoRef.current = false;
     }
   };
 
