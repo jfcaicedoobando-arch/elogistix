@@ -84,7 +84,9 @@ describe("sincronizarEtapaPorEstadoCotizacion", () => {
 // P1-B (13.823.70): volver a etapa abierta limpia los datos de cierre.
 describe("limpieza de cierre al reabrir (P1-B)", () => {
   const patchDe = () => {
-    const call = mock.tableCalls.find((c) => c.table === "crm_oportunidades");
+    const call = mock.tableCalls.find(
+      (c) => c.table === "crm_oportunidades" && c.ops.includes("update"),
+    );
     return (call?.opArgs?.[0] ?? {}) as Record<string, unknown>;
   };
 
