@@ -8,24 +8,17 @@ import {
   useUpdateEmbarque,
 } from "@/features/embarques/hooks/useEmbarques";
 import { useContenedoresEmbarque } from "@/features/embarques/hooks/useContenedoresEmbarque";
-import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { useClientesForSelect, useContactosCliente } from "@/features/cliente/hooks/useClientes";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { useRegistrarActividad } from "@/hooks/shared";
-import { labelExpediente } from "@/lib/domain/labelExpediente";
 import {
   useConceptosForm,
   useCotizacion,
   useCotizacionesAceptadas,
 } from "@/features/cotizacion/hooks";
 import { useEmbarqueForm } from "@/features/embarques/hooks/useEmbarqueForm";
-import { getErrorMessage } from "@/lib/errors";
-import { diffFields, diffConceptos, SENSITIVE_FIELDS } from "@/features/auditoria/utils/diffFields";
 import { useHidratacionEditarEmbarque } from "./useHidratacionEditarEmbarque";
-import {
-  validarContenedoresMaritimo,
-  buildBitacoraDetallesEdit,
-} from "./useEditarEmbarqueWizard.helpers";
+import { ejecutarGuardarEmbarque } from "./useEditarEmbarqueWizard.save";
 
 /**
  * Controller hook para la página EditarEmbarque.
@@ -104,82 +97,26 @@ export function useEditarEmbarqueWizard(id: string | undefined) {
 
   const selectedCliente = clientes.find((c) => c.id === clienteId);
 
-  const handleSave = async () => {
-    if (!id || !embarque) return;
-    try {
-      const contenedoresActuales = methods.getValues('contenedores') ?? [];
-      const modoActual = methods.getValues('modo');
-      const errContenedores = validarContenedoresMaritimo(modoActual, contenedoresActuales);
-      if (errContenedores) {
-        notifyError(undefined, {
-          title: "Faltan datos de contenedores",
-          description: errContenedores.description,
-          method: "HANDLE_SAVE",
-        });
-        setCurrentStep(errContenedores.step);
-        return;
-      }
-
-      const nuevoEmbarquePayload = buildEmbarquePayload(contactos, selectedCliente?.nombre || '', user?.email || '');
-      const nuevosVenta = buildConceptosVentaPayload(conceptosVenta);
-      const nuevosCosto = buildConceptosCostoPayload(conceptosCosto, proveedoresDb);
-
-      // Diff de campos sensibles ANTES de mutar (Bloque 3.6 ext).
-      const cambiosEmbarque = diffFields(embarque, nuevoEmbarquePayload, SENSITIVE_FIELDS.embarque);
-      const cambiosVenta = diffConceptos(conceptosVentaDb, nuevosVenta);
-      const cambiosCosto = diffConceptos(conceptosCostoDb, nuevosCosto);
-
-      // v13.823.64: sólo Marítimo/Multimodal sincronizan contenedores hijos. En
-      // Aéreo/Terrestre el peso, volumen y piezas se capturan en el embarque; al
-      // sincronizar los "contenedores" vacíos que arrastra la conversión desde
-      // cotización, el recálculo automático los ponía en cero.
-      const sincronizaContenedores = modoActual === "Marítimo" || modoActual === "Multimodal";
-
-      await updateEmbarque.mutateAsync({
-        id,
-        embarque: nuevoEmbarquePayload,
-        conceptosVenta: nuevosVenta,
-        conceptosCosto: nuevosCosto,
-        contenedores: sincronizaContenedores ? contenedoresActuales : undefined,
-        // FIX-15 · Enviamos el `updated_at` que leímos al hidratar el wizard
-        // para que la RPC rechace el guardado si alguien más ya guardó.
-        expectedUpdatedAt: embarque.updated_at ?? null,
-      });
-
-
-      const v = methods.getValues();
-      registrarActividad.mutate({
-        accion: 'editar',
-        modulo: 'embarques',
-        entidad_id: id,
-        entidad_nombre: labelExpediente(embarque.expediente, embarque.id),
-        detalles: buildBitacoraDetallesEdit({
-          clienteNombre: selectedCliente?.nombre ?? '',
-          modo: v.modo,
-          tipo: v.tipo,
-          cambiosEmbarque,
-          cambiosVenta,
-          cambiosCosto,
-        }),
-      });
-
-      notifySuccess(undefined, { title: "Embarque actualizado", description: `${labelExpediente(embarque.expediente, embarque.id)} guardado correctamente.` });
-      navigate(`/embarques/${id}`);
-    } catch (err: unknown) {
-      const msg = getErrorMessage(err);
-      // FIX-15 · Conflicto de concurrencia: mensaje humano en vez del código crudo.
-      if (msg.includes("LC_CONFLICTO_CONCURRENCIA")) {
-        notifyError(undefined, {
-          title: "Otro usuario modificó este embarque",
-          description: "Recarga la página para ver los cambios más recientes y vuelve a guardar.",
-          error: err,
-          method: "HANDLE_SAVE",
-        });
-        return;
-      }
-      notifyError(undefined, { title: "Error al actualizar", description: msg, error: err, method: "HANDLE_SAVE" });
-    }
-  };
+  const handleSave = () => ejecutarGuardarEmbarque({
+    id,
+    embarque,
+    methods,
+    buildEmbarquePayload,
+    buildConceptosVentaPayload,
+    buildConceptosCostoPayload,
+    contactos,
+    selectedClienteNombre: selectedCliente?.nombre,
+    userEmail: user?.email,
+    conceptosVenta,
+    conceptosCosto,
+    conceptosVentaDb,
+    conceptosCostoDb,
+    proveedoresDb,
+    updateEmbarque,
+    registrarActividad,
+    setCurrentStep,
+    navigate,
+  });
 
   return {
     embarque,

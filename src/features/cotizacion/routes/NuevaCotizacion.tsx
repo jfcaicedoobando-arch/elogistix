@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/shared";
 import { useClientesForSelect } from "@/features/cliente/hooks";
@@ -10,16 +10,12 @@ import { useCotizacionWizardForm } from "@/features/cotizacion/hooks";
 import CotizacionWizardLayout from "@/features/cotizacion/components/CotizacionWizardLayout";
 import {
   useCotizacionDraftAutosave,
-  loadDraft,
   clearDraft,
-  draftTieneContenido,
 } from "@/features/cotizacion/hooks/wizard/useCotizacionDraftAutosave";
-import { notifyWarning } from "@/lib/ui/appFeedback";
 import { ConflictoPestanaAlert } from "@/features/cotizacion/components/wizard/ConflictoPestanaAlert";
 import { ConflictoSelloAlert } from "@/features/cotizacion/components/wizard/ConflictoSelloAlert";
-import { fetchCotizacionSello } from "@/features/cotizacion/services";
-import { resolverSelloBorrador } from "@/features/cotizacion/hooks/wizard/resolverSelloBorrador";
 import { DraftRestoreBanner } from "@/features/cotizacion/components/wizard/DraftRestoreBanner";
+import { useDraftRestore } from "./useDraftRestore";
 import { CotizacionSuccessDialog } from "@/features/cotizacion/components/wizard/CotizacionSuccessDialog";
 import { GuardarPlantillaDialog } from "@/features/cotizacion/components/wizard/GuardarPlantillaDialog";
 import { PlantillaSelectorPaso1 } from "@/features/cotizacion/components/wizard/PlantillaSelectorPaso1";
@@ -63,12 +59,23 @@ export default function NuevaCotizacion() {
     onFinalized: handleFinalized,
   });
 
+  const {
+    restaurando, draftDetectado, banderaBorrador, conflictoSello,
+    setConflictoSello, handleRestore, handleDiscard,
+  } = useDraftRestore({
+    form: w.form,
+    userId,
+    organizationId,
+    setCotizacionId: w.setCotizacionId,
+    setCurrentStep: w.setCurrentStep,
+    setCostosInternos: w.setCostosInternos,
+    resincronizarSello: w.resincronizarSello,
+  });
+
   // B-003 (v13.320.32) — Autoguardado ahora persiste `cotizacionId` en el draft
   // para que recargar el wizard NO duplique la cotización. Antes se apagaba con
   // `enabled: !w.cotizacionId` y el id se perdía al recargar. Sólo se apaga en
   // modo edición (initialData) — aquí siempre es alta, así que enabled=true.
-  const [restaurando, setRestaurando] = useState(false);
-
   const { flush: flushDraft, conflictoExterno, descartarConflicto } = useCotizacionDraftAutosave({
     form: w.form,
     userId,
@@ -81,61 +88,6 @@ export default function NuevaCotizacion() {
     selloActual: w.selloActual,
     paused: restaurando,
   });
-
-  // P0 — Detectar borrador existente (re-evalúa cuando el userId async llega).
-  // Sólo se ofrece restaurar si el borrador realmente tiene algo capturado:
-  // sin esto, un draft "vacío" (valores por defecto) disparaba el banner igual.
-  const draftDetectado = useMemo(() => {
-    const draft = userId ? loadDraft(userId, organizationId) : null;
-    if (!draft) return null;
-    return draftTieneContenido(draft.values, draft.costosInternos) ? draft : null;
-  }, [userId, organizationId]);
-  const [banderaBorrador, setBanderaBorrador] = useState(false);
-  useEffect(() => {
-    if (draftDetectado) setBanderaBorrador(true);
-  }, [draftDetectado]);
-
-  // v13.823.69: conflicto detectado al restaurar (otra sesión ya guardó).
-  const [conflictoSello, setConflictoSello] = useState(false);
-
-  const handleRestore = useCallback(async () => {
-    if (draftDetectado) {
-      // R-09: congelamos el autoguardado mientras RHF aplica el reset.
-      setRestaurando(true);
-      w.form.reset(draftDetectado.values);
-      // B-003: restaurar el id garantiza que el siguiente "Guardar" haga UPDATE
-      // en la cotización huérfana en vez de INSERTar una nueva.
-      if (draftDetectado.cotizacionId) {
-        w.setCotizacionId(draftDetectado.cotizacionId);
-        // Antes de permitir cualquier UPDATE se valida el sello canónico: sin
-        // esto el candado quedaba en null y el guardado pasaba en silencio.
-        const { sello, conflicto } = await resolverSelloBorrador({
-          cotizacionId: draftDetectado.cotizacionId,
-          selloDraft: draftDetectado.updatedAt,
-          fetchSello: fetchCotizacionSello,
-        });
-        w.resincronizarSello(sello);
-        setConflictoSello(conflicto);
-      }
-      // Q-12: restaurar paso y costos internos (viven fuera de RHF).
-      w.setCurrentStep(draftDetectado.currentStep);
-      w.setCostosInternos(draftDetectado.costosInternos);
-      if (draftDetectado.noRestaurado.length > 0) {
-        notifyWarning(undefined, {
-          title: "Borrador restaurado parcialmente",
-          description: `No se pudo recuperar: ${draftDetectado.noRestaurado.join("; ")}.`,
-        });
-      }
-    }
-    setBanderaBorrador(false);
-    // Se reanuda en el siguiente tick, ya con los valores restaurados aplicados.
-    setTimeout(() => setRestaurando(false), 0);
-  }, [draftDetectado, w]);
-
-  const handleDiscard = useCallback(() => {
-    clearDraft(userId, organizationId);
-    setBanderaBorrador(false);
-  }, [userId, organizationId]);
 
   const closeSuccessAndGoTo = useCallback((to: string) => {
     setSavedId(null);

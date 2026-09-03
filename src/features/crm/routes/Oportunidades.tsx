@@ -16,10 +16,6 @@ import { LoadingState } from "@/components/shared/states/LoadingState";
 import OportunidadKanban from "@/features/crm/components/OportunidadKanban";
 import OportunidadesFiltersSection from "@/features/crm/components/OportunidadesFiltersSection";
 import ExportarCsvButton from "@/features/crm/components/ExportarCsvButton";
-import { exportarOportunidadesCsv } from "@/features/crm/services/crmCsvExport";
-import { listOportunidadesTodas } from "@/features/crm/services/oportunidades";
-import { notifyError } from "@/lib/ui/appFeedback";
-import { getErrorMessage } from "@/lib/errors";
 
 import OportunidadesDialogs from "@/features/crm/components/OportunidadesDialogs";
 import NuevaOportunidadDialog from "@/features/crm/components/NuevaOportunidadDialog";
@@ -27,6 +23,7 @@ import { FILTROS_DEFAULT, type OportunidadesFiltros } from "@/features/crm/compo
 import { useOportunidades, useEtapasPipeline, type CrmEtapaRow } from "@/features/crm/hooks";
 import { useMoverOportunidadEtapa } from "@/features/crm/hooks/useMoverOportunidadEtapa";
 import { useVendedoresDisponibles } from "@/features/crm/hooks/useOportunidadesFiltrado";
+import { useOportunidadesFiltrosServidor, useExportarOportunidades } from "./useOportunidadesFiltrosServidor";
 
 import { useUsuarios } from "@/features/admin/hooks/usuario";
 import { oportunidadesColumns, siguienteActividadColumn, activosFiltros } from "./oportunidadesTable";
@@ -53,21 +50,7 @@ export default function Oportunidades() {
   const { data: usuarios = [] } = useUsuarios();
   const vendedores = useVendedoresDisponibles(usuarios);
   const PAGE_SIZE = 500;
-  // v13.823.49 — todos los filtros (etapa, vendedor, rango de cierre y monto
-  // mínimo) viajan al servidor: antes se aplicaban en memoria sobre las
-  // primeras 500 filas y el listado omitía coincidencias posteriores.
-  const montoMin = filtros.montoMin ? Number(filtros.montoMin) : null;
-  const filtrosServidor = useMemo(
-    () => ({
-      search: debounced,
-      etapaId: filtros.etapaId,
-      vendedorId: filtros.vendedorId,
-      cierreDesde: filtros.cierreDesde,
-      cierreHasta: filtros.cierreHasta,
-      montoMin: montoMin !== null && Number.isFinite(montoMin) ? montoMin : null,
-    }),
-    [debounced, filtros.etapaId, filtros.vendedorId, filtros.cierreDesde, filtros.cierreHasta, montoMin],
-  );
+  const filtrosServidor = useOportunidadesFiltrosServidor(debounced, filtros);
   const { data, isLoading, isError, refetch } = useOportunidades({ ...filtrosServidor, pageSize: PAGE_SIZE });
   const ops = useMemo(() => data?.data ?? [], [data]);
   const totalServidor = data?.count ?? ops.length;
@@ -91,23 +74,7 @@ export default function Oportunidades() {
     [proximas],
   );
 
-  const [exportando, setExportando] = useState(false);
-  const exportarTodo = async () => {
-    setExportando(true);
-    try {
-      const todas = await listOportunidadesTodas(filtrosServidor);
-      exportarOportunidadesCsv(todas);
-    } catch (e) {
-      notifyError(undefined, {
-        title: "No se pudo exportar",
-        description: getErrorMessage(e),
-        error: e,
-        method: "EXPORT_OPORTUNIDADES",
-      });
-    } finally {
-      setExportando(false);
-    }
-  };
+  const { exportando, exportarTodo } = useExportarOportunidades(filtrosServidor);
 
   const activos = activosFiltros(filtros);
   // UI-15: el pipeline mezcla MXN/USD/EUR; se convierte a pesos antes de sumar.

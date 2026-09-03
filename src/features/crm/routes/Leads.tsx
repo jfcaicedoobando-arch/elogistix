@@ -8,12 +8,9 @@
  *
  * Sin botón "Nuevo lead" propio (vive en QuickAddMenu del header global).
  */
-import { useState, useMemo, useCallback, useEffect, useRef } from "react";
+import { useMemo } from "react";
 
 import { Card, CardContent } from "@/components/ui/card";
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from "@/components/ui/select";
 import { ResponsiveDataTable } from "@/components/shared/dataTable/ResponsiveDataTable";
 import { UnifiedFiltersBar } from "@/components/shared/filters/UnifiedFiltersBar";
 import { toTitleCase } from "@/lib/formatters";
@@ -21,18 +18,18 @@ import { useServerPagedList } from "@/hooks/shared/useServerPagedList";
 import { usePermissions, useDocumentTitle } from "@/hooks/shared";
 import { CrmSubheader } from "@/features/crm/components/CrmSubheader";
 import LeadsBulkBar from "@/features/crm/components/LeadsBulkBar";
-import { listLeads, listLeadsTodos } from "@/features/crm/services/leads";
-import { exportarLeadsCsv } from "@/features/crm/services/crmCsvExport";
-import { notifyError } from "@/lib/ui/appFeedback";
-import { getErrorMessage } from "@/lib/errors";
+import { listLeads } from "@/features/crm/services/leads";
 import ExportarCsvButton from "@/features/crm/components/ExportarCsvButton";
 
-import { LEAD_ESTADOS_ETAPA_LEAD } from "@/features/crm/domain/leads/etapas";
 import {
-  LEAD_FUENTES, LEAD_SORTABLE_KEYS,
+  LEAD_SORTABLE_KEYS,
   type CrmLeadRow, type CrmLeadEstado, type CrmLeadFuente, type LeadSortKey,
 } from "@/features/crm/domain/leads/constants";
+import { LEAD_ESTADOS_ETAPA_LEAD } from "@/features/crm/domain/leads/etapas";
 import { makeLeadsColumns } from "./leadsColumns";
+import { useLeadsSelection } from "./useLeadsSelection";
+import { useLeadsExport } from "./useLeadsExport";
+import LeadsFiltrosPrimarios from "./LeadsFiltrosPrimarios";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { StatusBadge } from "@/components/shared/StatusBadge";
@@ -49,7 +46,6 @@ const DEFAULTS: LeadsFilters = { estado: "todos", fuente: "todos" };
 export default function Leads() {
   useDocumentTitle('Leads');
   const { canGestionarLead, canGestionarLeadsEnLote } = usePermissions();
-  const [selected, setSelected] = useState<Set<string>>(new Set());
 
   const list = useServerPagedList<CrmLeadRow, LeadsFilters>({
     queryKey: queryKeys.crm.leads.paged,
@@ -76,71 +72,16 @@ export default function Leads() {
 
   const leads = list.rows;
 
-  // La selección masiva vive SÓLO en el contexto visible: cualquier cambio de
-  // filtros, orden o paginación la limpia para no operar sobre filas invisibles.
-  const selKey = [
-    list.search, list.filters.estado, list.filters.fuente,
-    list.sortKey, list.sortDir, list.page, list.pageSize,
-  ].join("|");
-  const selKeyRef = useRef(selKey);
-  useEffect(() => {
-    if (selKeyRef.current !== selKey) {
-      selKeyRef.current = selKey;
-      setSelected(new Set());
-    }
-  }, [selKey]);
+  const { selected, toggle, toggleAll, clearSel } = useLeadsSelection(leads, {
+    search: list.search, estado: list.filters.estado, fuente: list.filters.fuente,
+    sortKey: list.sortKey, sortDir: list.sortDir, page: list.page, pageSize: list.pageSize,
+  });
 
-  // Defensa adicional: al llegar nuevas filas se poda cualquier id ausente.
-  useEffect(() => {
-    setSelected((prev) => {
-      if (prev.size === 0) return prev;
-      const visibles = new Set(leads.map((l) => l.id));
-      const podado = new Set(Array.from(prev).filter((id) => visibles.has(id)));
-      return podado.size === prev.size ? prev : podado;
-    });
-  }, [leads]);
+  const { exportando, exportarTodo } = useLeadsExport({
+    search: list.search, estado: list.filters.estado, fuente: list.filters.fuente,
+    sortKey: list.sortKey, sortDir: list.sortDir,
+  });
 
-  // Exportación: todas las coincidencias de los filtros actuales (no la página).
-  const [exportando, setExportando] = useState(false);
-  const filtrosExport = useMemo(
-    () => ({
-      search: list.search,
-      estado: (list.filters.estado as CrmLeadEstado | "todos") ?? "todos",
-      estadoIn: LEAD_ESTADOS_ETAPA_LEAD,
-      fuente: (list.filters.fuente as CrmLeadFuente | "todos") ?? "todos",
-      sortKey: (list.sortKey ?? "created_at") as LeadSortKey,
-      sortDir: list.sortDir ?? "desc",
-    }),
-    [list.search, list.filters.estado, list.filters.fuente, list.sortKey, list.sortDir],
-  );
-  const exportarTodo = async () => {
-    setExportando(true);
-    try {
-      const todos = await listLeadsTodos(filtrosExport);
-      exportarLeadsCsv(todos);
-    } catch (e) {
-      notifyError(undefined, {
-        title: "No se pudo exportar",
-        description: getErrorMessage(e),
-        error: e,
-        method: "EXPORT_LEADS",
-      });
-    } finally {
-      setExportando(false);
-    }
-  };
-
-  const toggle = useCallback((id: string) => setSelected((s) => {
-    const n = new Set(s); if (n.has(id)) n.delete(id); else n.add(id); return n;
-  }), []);
-  const toggleAll = useCallback((rows: CrmLeadRow[]) => setSelected((s) => {
-    const allHere = rows.every((r) => s.has(r.id));
-    const n = new Set(s);
-    if (allHere) rows.forEach((r) => n.delete(r.id));
-    else rows.forEach((r) => n.add(r.id));
-    return n;
-  }), []);
-  const clearSel = () => setSelected(new Set());
   const columns = useMemo(
     () =>
       makeLeadsColumns(selected, toggle, toggleAll, leads, {
@@ -193,26 +134,11 @@ export default function Leads() {
         onClearAll={list.resetAll}
         primary={
           <>
-            <Select
-              value={list.filters.estado}
-              onValueChange={(v) => list.setFilter("estado", v)}
-            >
-              <SelectTrigger className="h-9 w-auto min-w-[150px]"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="todos">Todos los estados</SelectItem>
-                {LEAD_ESTADOS_ETAPA_LEAD.map((e) => <SelectItem key={e} value={e}>{e}</SelectItem>)}
-              </SelectContent>
-            </Select>
-            <Select
-              value={list.filters.fuente}
-              onValueChange={(v) => list.setFilter("fuente", v)}
-            >
-              <SelectTrigger className="h-9 w-auto min-w-[160px]"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="todos">Todas las fuentes</SelectItem>
-                {LEAD_FUENTES.map((f) => <SelectItem key={f} value={f}>{f}</SelectItem>)}
-              </SelectContent>
-            </Select>
+            <LeadsFiltrosPrimarios
+              estado={list.filters.estado}
+              fuente={list.filters.fuente}
+              onChange={(k, v) => list.setFilter(k, v)}
+            />
           </>
         }
       />

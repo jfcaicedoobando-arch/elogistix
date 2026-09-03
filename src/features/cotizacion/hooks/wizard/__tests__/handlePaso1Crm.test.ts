@@ -187,7 +187,7 @@ describe("vincularCrmTrasCrear", () => {
       oportunidadId: "op-1",
       leadId: null,
     });
-    expect(sello).toBe("2026-09-03T00:00:00Z");
+    expect(sello).toEqual({ updatedAt: "2026-09-03T00:00:00Z" });
     expect(notifyErrorMock).not.toHaveBeenCalled();
   });
 
