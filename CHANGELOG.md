@@ -28,7 +28,6 @@
 
 
 
-
 ## [13.823.64] - 2026-09-03
 ### Los pesos de un embarque aéreo ya se guardan
 - **Bug corregido**: al editar un embarque aéreo (o terrestre) creado desde una cotización, el peso, el volumen y las piezas volvían a cero al guardar. El embarque arrastraba "contenedores" internos vacíos y el sistema recalculaba los totales sumándolos, borrando lo capturado.
