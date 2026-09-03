@@ -5000,5 +5000,10 @@
       "20260911000110_replay_actualizar_cierre_periodo.sql",
       "20260911000120_replay_nc_saldo_lock_y_rep_historia.sql"
     ]
+  },
+  "13.823.64": {
+    "migrations": [
+      "20260903000627_f44ce165-52da-4596-b4c6-35752d8c2290.sql"
+    ]
   }
 }
