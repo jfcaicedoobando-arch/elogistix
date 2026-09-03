@@ -8,6 +8,8 @@
  */
 import { registrarBloqueoSinTarifa } from "@/features/cotizacion/services/wizard/paso1Crm";
 import { vincularOCrearOportunidadParaCotizacion } from "@/features/crm/services/vincularCotizacion";
+import type { VincularResult } from "@/features/crm/services/vincularCotizacion/vincularOCrear";
+
 import { esIncotermSinFleteVenta } from "@/features/cotizacion/utils/incotermRules";
 import type { CotizacionFormValues } from "@/features/cotizacion/domain/mappers/cotizacionForm";
 import {
