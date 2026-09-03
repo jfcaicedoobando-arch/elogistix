@@ -3,7 +3,7 @@
  * Form fields en `nuevaOportunidad/OportunidadFormFields`; estado en `useOportunidadForm`.
  * Migrado a `FormDialogShell` (v13.121.0).
  */
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Briefcase } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
@@ -43,6 +43,7 @@ export default function NuevaOportunidadDialog({ open, onOpenChange, oportunidad
   const crear = useCrearOportunidad();
   const actualizar = useActualizarOportunidad();
   const crearActividad = useCrearActividad();
+  const enviandoRef = useRef(false);
 
   const { form, setForm, set } = useOportunidadForm(open, oportunidad, etapas, user, origenInicial);
   const [autoActividad, setAutoActividad] = useState(true);
@@ -70,7 +71,10 @@ export default function NuevaOportunidadDialog({ open, onOpenChange, oportunidad
       .catch(() => undefined);
   };
 
+  const pending = crear.isPending || actualizar.isPending;
+
   const handleSubmit = async () => {
+    if (pending || enviandoRef.current) return;
     const invalido = validarOportunidadForm(form, esGanada);
     if (invalido) {
       return notifyError(undefined, {
@@ -79,6 +83,7 @@ export default function NuevaOportunidadDialog({ open, onOpenChange, oportunidad
         errorCode: ERROR_CODES.VALIDATION_FAILED,
       });
     }
+    enviandoRef.current = true;
     try {
       const payload = buildOportunidadFormPayload(form, esGanada, isEdit);
       if (isEdit && oportunidad) {
@@ -99,14 +104,14 @@ export default function NuevaOportunidadDialog({ open, onOpenChange, oportunidad
         error: e,
         method: "HANDLE_SUBMIT",
       });
+    } finally {
+      enviandoRef.current = false;
     }
   };
 
-  const pending = crear.isPending || actualizar.isPending;
-
   const footer = (
     <>
-      <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
+      <Button variant="outline" onClick={() => onOpenChange(false)} disabled={pending}>Cancelar</Button>
       <Button onClick={handleSubmit} loading={pending} disabled={!isEdit && !form.etapa_id}>
         {isEdit ? "Guardar cambios" : "Crear oportunidad"}
       </Button>
@@ -121,6 +126,7 @@ export default function NuevaOportunidadDialog({ open, onOpenChange, oportunidad
       title={isEdit ? "Editar oportunidad" : "Nueva oportunidad"}
       description="Captura los datos comerciales y la etapa del pipeline."
       size="2xl"
+      busy={pending}
       footer={footer}
     >
       <OportunidadFormFields

@@ -3,7 +3,7 @@
  * Usado por QuickAddMenu y por cualquier flujo que necesite crear una tarea.
  * Migrado a `FormDialogShell` (v13.121.0).
  */
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ClipboardList } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -34,6 +34,7 @@ interface Props {
 
 export default function NuevaActividadDialog({ open, onOpenChange, defaultEntidad, onCreated }: Props) {
   const crear = useCrearActividad();
+  const enviandoRef = useRef(false);
   const [entidadTipo, setEntidadTipo] = useState<CrmEntidadTipo>(defaultEntidad?.tipo ?? "oportunidad");
   const [entidadId, setEntidadId] = useState<string>(defaultEntidad?.id ?? "");
   const [tipo, setTipo] = useState<CrmActividadTipo>("tarea");
@@ -60,8 +61,10 @@ export default function NuevaActividadDialog({ open, onOpenChange, defaultEntida
   }, [open, defTipo, defId]);
 
   const handleSubmit = async () => {
+    if (crear.isPending || enviandoRef.current) return;
     if (!entidadId) return notifyError(undefined, { title: "Selecciona la entidad", method: "HANDLE_SUBMIT", errorCode: ERROR_CODES.VALIDATION_FAILED });
     if (!asunto.trim()) return notifyError(undefined, { title: "Asunto requerido", method: "HANDLE_SUBMIT", errorCode: ERROR_CODES.VALIDATION_FAILED });
+    enviandoRef.current = true;
     try {
       const res = await crear.mutateAsync({
         tipo,
@@ -78,12 +81,14 @@ export default function NuevaActividadDialog({ open, onOpenChange, defaultEntida
       onCreated?.(res.id);
     } catch (e) {
       notifyError(undefined, { title: "No se pudo crear", description: getErrorMessage(e), error: e, method: "HANDLE_SUBMIT" });
+    } finally {
+      enviandoRef.current = false;
     }
   };
 
   const footer = (
     <>
-      <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
+      <Button variant="outline" onClick={() => onOpenChange(false)} disabled={crear.isPending}>Cancelar</Button>
       <Button onClick={handleSubmit} loading={crear.isPending}>
         Crear
       </Button>
@@ -98,6 +103,7 @@ export default function NuevaActividadDialog({ open, onOpenChange, defaultEntida
       title="Nueva actividad"
       description="Registra una tarea, llamada, reunión o nota."
       size="md"
+      busy={crear.isPending}
       footer={footer}
     >
       {!defaultEntidad && (
