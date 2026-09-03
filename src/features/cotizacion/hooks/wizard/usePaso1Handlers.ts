@@ -178,5 +178,5 @@ export function usePaso1Handlers({
     }
   }, [form, msdsFile, cotizacionId, buildPaso1Data, crearCotizacion, updateCotizacion, registrarActividad, setCotizacionId, setCurrentStep, marcarErrorPaso1, vincularCrm]);
 
-  return { handlePaso1, handleCotizarSinDesglose, vinculoCrmError };
+  return { handlePaso1, handleCotizarSinDesglose, vinculoCrmError, vinculoCrmConfirmado, limpiarVinculoCrmError };
 }
