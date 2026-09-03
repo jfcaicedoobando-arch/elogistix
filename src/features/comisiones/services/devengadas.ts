@@ -4,9 +4,9 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
 import { ymMx } from "@/lib/date/mx";
-import { fetchNombresUsuarios } from "@/features/admin/services/usuario/availableUsers";
 import { CAP_LISTA } from "@/constants/queryCaps";
 import { leerTodasLasPaginas } from "@/lib/supabase/paginado";
+import { buildNombreVendedoraMap, rangoMesMx, aplicarFiltros } from "./devengadas.helpers";
 
 export type ComisionDevengadaRow = Tables<"comisiones_devengadas">;
 export type EstadoComision = ComisionDevengadaRow["estado"];
@@ -41,59 +41,6 @@ export interface FetchComisionesFiltros {
 type Joined = ComisionDevengadaRow & {
   facturas: { numero: string; cliente_nombre: string; expediente: string | null } | null;
 };
-
-/**
- * B4 (Ola 7): los nombres de las vendedoras no viven en una tabla (se
- * resuelven vía edge function `user-management`, acción `list-nombres` —
- * defecto 10: sin email ni señales de sesión). Se resuelven en un solo viaje
- * y de forma best-effort: si falla, la columna muestra "—".
- */
-async function buildNombreVendedoraMap(ids: string[]): Promise<Record<string, string>> {
-  const unicos = [...new Set(ids)];
-  if (unicos.length === 0) return {};
-  try {
-    const users = await fetchNombresUsuarios();
-    const map: Record<string, string> = {};
-    for (const u of users) {
-      if (unicos.includes(u.id) && u.full_name) map[u.id] = u.full_name;
-    }
-    return map;
-  } catch {
-    return {};
-  }
-}
-
-/**
- * Convierte un periodo "YYYY-MM" al rango de instantes UTC que cubre ese mes en
- * zona CDMX (UTC-06:00 fijo, México ya no aplica horario de verano).
- */
-function rangoMesMx(periodo?: string): { desde: string; hasta: string } | null {
-  if (!periodo || !/^\d{4}-\d{2}$/.test(periodo)) return null;
-  const [anio, mes] = periodo.split("-").map(Number);
-  const desde = new Date(Date.UTC(anio, mes - 1, 1, 6, 0, 0));
-  const hasta = new Date(Date.UTC(anio, mes, 1, 6, 0, 0));
-  return { desde: desde.toISOString(), hasta: hasta.toISOString() };
-}
-
-/** Filtros compartidos entre el listado (con cap) y la lectura de KPIs (completa). */
-interface FiltrableQuery<Q> {
-  eq(col: string, val: string): Q;
-  gte(col: string, val: string): Q;
-  lt(col: string, val: string): Q;
-}
-
-function aplicarFiltros<Q extends FiltrableQuery<Q>>(q: Q, filtros: FetchComisionesFiltros): Q {
-  let out = q;
-  if (filtros.vendedora_id && filtros.vendedora_id !== "todas") {
-    out = out.eq("vendedora_id", filtros.vendedora_id);
-  }
-  if (filtros.estado && filtros.estado !== "todos") {
-    out = out.eq("estado", filtros.estado);
-  }
-  const rango = rangoMesMx(filtros.periodo);
-  if (rango) out = out.gte("created_at", rango.desde).lt("created_at", rango.hasta);
-  return out;
-}
 
 /** Fila mínima para KPIs: sólo lo que `calcularKPIsComisiones` necesita. */
 export type ComisionKpiRow = Pick<ComisionDevengada, "created_at" | "estado" | "comision_mxn">;
