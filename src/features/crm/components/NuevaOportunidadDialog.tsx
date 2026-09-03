@@ -62,6 +62,10 @@ export default function NuevaOportunidadDialog({ open, onOpenChange, oportunidad
         entidad_tipo: "oportunidad",
         entidad_id: oportunidadId,
         fecha_programada: manana.toISOString(),
+        // Ownership: la actividad automática queda a nombre del vendedor
+        // final elegido en el formulario, no del usuario que captura.
+        responsable_id: form.vendedor_id ?? null,
+        responsable_email: form.vendedor_email ?? "",
       })
       .catch(() => undefined);
   };

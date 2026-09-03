@@ -123,21 +123,30 @@ export type CrearActividadInput = {
   /** Calidad del contacto (hoja 04_Actividades del CRM Hunter). */
   contacto_efectivo?: boolean;
   reunion_calificada?: boolean;
+  /**
+   * Responsable explícito opcional (ownership): lo usa NuevaOportunidadDialog
+   * para asignar la actividad automática al vendedor final del formulario.
+   * Si no se proporciona, se conserva el comportamiento histórico: el
+   * responsable es el usuario en sesión. `created_by` siempre es la sesión.
+   */
+  responsable_id?: string | null;
+  responsable_email?: string;
 };
 
 export async function crearActividad(
   input: CrearActividadInput,
   user: { id?: string; email?: string } | null,
 ): Promise<{ id: string }> {
+  const { responsable_id, responsable_email, ...resto } = input;
   const creada = (await unwrap(
     supabase
       .from("crm_actividades")
       .insert({
-        ...input,
+        ...resto,
         descripcion: input.descripcion ?? "",
         resultado: input.resultado ?? "",
-        responsable_id: user?.id ?? null,
-        responsable_email: user?.email ?? "",
+        responsable_id: responsable_id !== undefined ? responsable_id : (user?.id ?? null),
+        responsable_email: responsable_email !== undefined ? responsable_email : (user?.email ?? ""),
         created_by: user?.id ?? null,
       })
       .select("id")
