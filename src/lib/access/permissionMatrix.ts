@@ -165,6 +165,24 @@ export const CRM_CREAR_LEAD: readonly AppRole[] = [
   "vendedor",
 ];
 
+/**
+ * P0 — Roles que pueden DAR DE ALTA clientes (alta manual, importación CSV y
+ * conversión Prospecto → Cliente). Espejo EXACTO del `has_any_role_in_org` de
+ * `public.convertir_prospecto_a_cliente_rpc`: administración/dirección,
+ * operación y contabilidad. Ventas, pricing, tesorería y cobranza NO dan de
+ * alta clientes. Al cambiar esta lista hay que cambiar también esa RPC.
+ */
+export const ALTA_CLIENTES: readonly AppRole[] = [
+  "super_admin",
+  "admin_org",
+  "admin",
+  "gerente_operaciones",
+  "coordinador_logistico",
+  "operador",
+  "contador",
+  "auxiliar_contable",
+];
+
 
 export {
   ADMIN_CUENTAS_BANCARIAS,
