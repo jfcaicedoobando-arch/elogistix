@@ -11,6 +11,8 @@ import {
 import { Label } from "@/components/ui/label";
 import { useUsuarios } from "@/features/admin/hooks/usuario";
 import { usePermissions } from "@/hooks/shared";
+import { CRM_ESCRITURA_REGISTROS, hasRole } from "@/lib/access/permissionMatrix";
+import type { AppRole } from "@/types/appRole";
 
 interface Props {
   value: string | null;
@@ -25,8 +27,9 @@ export default function VendedorSelect({ value, onChange, label = "Vendedor asig
 
   if (!canReasignarVendedorCrm) return null;
 
-  // Mostrar todos los usuarios staff + vendedores (no clientes ni viewers para CRM).
-  const candidatos = users.filter((u) => ["admin", "operador", "vendedor", "gerente_comercial", "super_admin"].includes(u.role));
+  // Candidatos = roles que pueden crear/ser dueños operativos de registros CRM
+  // (espejo de CRM_ESCRITURA_REGISTROS; sin lista literal divergente).
+  const candidatos = users.filter((u) => hasRole(CRM_ESCRITURA_REGISTROS, u.role as AppRole));
 
   return (
     <div className="space-y-1">
