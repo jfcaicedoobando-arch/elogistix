@@ -21,8 +21,8 @@ interface Props {
   form: ReturnType<typeof useSubirEntranteForm>;
   embarqueId: string;
   duplicado: BuzonDuplicadoError | null;
-  costos: { data: readonly ConceptoCostoEmbarque[] | undefined; isLoading: boolean };
-  conceptos: { data: Readonly<Record<string, number>> | null | undefined; isLoading: boolean };
+  costos: { data: Readonly<Record<string, number>> | undefined; isLoading: boolean };
+  conceptos: { data: readonly ConceptoCostoEmbarque[] | undefined; isLoading: boolean };
 }
 
 export function CuerpoSubirFacturaEntrante({ form, embarqueId, duplicado, costos, conceptos }: Props) {
