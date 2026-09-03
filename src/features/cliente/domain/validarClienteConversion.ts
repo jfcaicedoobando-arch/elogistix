@@ -16,16 +16,20 @@ const CP_RE = /^\d{5}$/;
 
 const vacio = (v: string | undefined) => !v || v.trim() === "";
 
-/** Devuelve un mapa campo → mensaje; vacío significa "listo para convertir". */
-export function validarClienteConversion(form: ClienteFormData): ErroresClienteConversion {
+/** Datos de contacto del cliente. */
+function validarContacto(form: ClienteFormData): ErroresClienteConversion {
   const e: ErroresClienteConversion = {};
-
   if (vacio(form.nombre)) e.nombre = "Captura el nombre o razón social.";
   if (vacio(form.contacto)) e.contacto = "Captura el nombre del contacto.";
   if (vacio(form.email)) e.email = "Captura el correo del cliente.";
   else if (!EMAIL_RE.test(form.email.trim())) e.email = "El correo no tiene un formato válido.";
   if (vacio(form.telefono)) e.telefono = "Captura el teléfono del cliente.";
+  return e;
+}
 
+/** Datos fiscales exigidos para poder facturar. */
+function validarFiscales(form: ClienteFormData): ErroresClienteConversion {
+  const e: ErroresClienteConversion = {};
   const rfc = normalizarRfc(form.rfc);
   if (rfc === "") e.rfc = "Captura el RFC (o el genérico XAXX010101000).";
   else if (!esRfcMxValido(rfc)) e.rfc = "El RFC no cumple el formato del SAT.";
@@ -42,8 +46,12 @@ export function validarClienteConversion(form: ClienteFormData): ErroresClienteC
   if (!e.rfc && !esRfcGenerico(rfc) && vacio(form.direccion)) {
     e.direccion = "Con RFC real la dirección fiscal es obligatoria.";
   }
-
   return e;
+}
+
+/** Devuelve un mapa campo → mensaje; vacío significa "listo para convertir". */
+export function validarClienteConversion(form: ClienteFormData): ErroresClienteConversion {
+  return { ...validarContacto(form), ...validarFiscales(form) };
 }
 
 /** `true` cuando no hay ningún error pendiente. */
