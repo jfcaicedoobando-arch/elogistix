@@ -16,6 +16,9 @@ import {
 } from "@/features/cotizacion/hooks/wizard/useCotizacionDraftAutosave";
 import { notifyWarning } from "@/lib/ui/appFeedback";
 import { ConflictoPestanaAlert } from "@/features/cotizacion/components/wizard/ConflictoPestanaAlert";
+import { ConflictoSelloAlert } from "@/features/cotizacion/components/wizard/ConflictoSelloAlert";
+import { fetchCotizacionSello } from "@/features/cotizacion/services";
+import { resolverSelloBorrador } from "@/features/cotizacion/hooks/wizard/resolverSelloBorrador";
 import { DraftRestoreBanner } from "@/features/cotizacion/components/wizard/DraftRestoreBanner";
 import { CotizacionSuccessDialog } from "@/features/cotizacion/components/wizard/CotizacionSuccessDialog";
 import { GuardarPlantillaDialog } from "@/features/cotizacion/components/wizard/GuardarPlantillaDialog";
@@ -74,6 +77,8 @@ export default function NuevaCotizacion() {
     cotizacionId: w.cotizacionId,
     currentStep: w.currentStep,
     costosInternos: w.costosInternos,
+    // v13.823.69: el borrador guarda el sello optimista vigente.
+    selloActual: w.selloActual,
     paused: restaurando,
   });
 
@@ -90,7 +95,10 @@ export default function NuevaCotizacion() {
     if (draftDetectado) setBanderaBorrador(true);
   }, [draftDetectado]);
 
-  const handleRestore = useCallback(() => {
+  // v13.823.69: conflicto detectado al restaurar (otra sesión ya guardó).
+  const [conflictoSello, setConflictoSello] = useState(false);
+
+  const handleRestore = useCallback(async () => {
     if (draftDetectado) {
       // R-09: congelamos el autoguardado mientras RHF aplica el reset.
       setRestaurando(true);
@@ -99,6 +107,15 @@ export default function NuevaCotizacion() {
       // en la cotización huérfana en vez de INSERTar una nueva.
       if (draftDetectado.cotizacionId) {
         w.setCotizacionId(draftDetectado.cotizacionId);
+        // Antes de permitir cualquier UPDATE se valida el sello canónico: sin
+        // esto el candado quedaba en null y el guardado pasaba en silencio.
+        const { sello, conflicto } = await resolverSelloBorrador({
+          cotizacionId: draftDetectado.cotizacionId,
+          selloDraft: draftDetectado.updatedAt,
+          fetchSello: fetchCotizacionSello,
+        });
+        w.resincronizarSello(sello);
+        setConflictoSello(conflicto);
       }
       // Q-12: restaurar paso y costos internos (viven fuera de RHF).
       w.setCurrentStep(draftDetectado.currentStep);
@@ -139,6 +156,15 @@ export default function NuevaCotizacion() {
       )}
 
       {conflictoExterno && <ConflictoPestanaAlert onDescartar={descartarConflicto} />}
+
+      {/* v13.823.69: el borrador se restauró pero la cotización ya cambió en
+          servidor. Se conserva todo lo capturado y NO se guarda encima. */}
+      {conflictoSello && (
+        <ConflictoSelloAlert
+          onRecargar={() => navigate(w.cotizacionId ? `/cotizaciones/${w.cotizacionId}/editar` : "/cotizaciones")}
+          onRevisarDespues={() => setConflictoSello(false)}
+        />
+      )}
 
       {/* P2 (v13.295.0) — Empezar desde plantilla (sólo paso 1, sin cotización guardada). */}
       {w.currentStep === 1 && !w.cotizacionId && (
