@@ -44,6 +44,7 @@ type OrigenTipo = "prospecto" | "cliente";
 export default function QuickCreateOportunidadDialog({ open, onOpenChange, onCreated, onMore }: Props) {
   const { user } = useAuth();
   const crear = useCrearOportunidad();
+  const enviandoRef = useRef(false);
   const { data: etapas = [] } = useEtapasPipeline();
   const { data: clientes = [] } = useClientesForSelect() as { data: { id: string; nombre: string }[] | undefined };
   const [nombre, setNombre] = useState("");
@@ -101,7 +102,7 @@ export default function QuickCreateOportunidadDialog({ open, onOpenChange, onCre
   };
 
   const submit = async () => {
-    if (crear.isPending) return;
+    if (crear.isPending || enviandoRef.current) return;
     const invalido = validar();
     if (invalido) {
       notifyError(undefined, { title: invalido, method: "FEATURES_CRM_COMPONENTS_QUICKCREATE_QUICKCREATEOPORTUNIDADDIALOG_1" });
@@ -109,6 +110,7 @@ export default function QuickCreateOportunidadDialog({ open, onOpenChange, onCre
     }
     const n = nombre.trim();
     const cliente = clientes.find((c) => c.id === clienteId);
+    enviandoRef.current = true;
     try {
       const r = await crear.mutateAsync({
         nombre: n,
@@ -130,6 +132,8 @@ export default function QuickCreateOportunidadDialog({ open, onOpenChange, onCre
         error: e,
         method: "FEATURES_CRM_COMPONENTS_QUICKCREATE_QUICKCREATEOPORTUNIDADDIALOG_3",
       });
+    } finally {
+      enviandoRef.current = false;
     }
   };
 

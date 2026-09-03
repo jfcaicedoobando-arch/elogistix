@@ -37,6 +37,7 @@ function defaultFecha(): string {
 
 export default function QuickCreateActividadDialog({ open, onOpenChange, onCreated, onMore }: Props) {
   const crear = useCrearActividad();
+  const enviandoRef = useRef(false);
   const { data: opsData } = useOportunidades({ pageSize: 100 });
   const [asunto, setAsunto] = useState("");
   const [fecha, setFecha] = useState(defaultFecha());
@@ -58,7 +59,7 @@ export default function QuickCreateActividadDialog({ open, onOpenChange, onCreat
   }, [open]);
 
   const submit = async () => {
-    if (crear.isPending) return;
+    if (crear.isPending || enviandoRef.current) return;
     const a = asunto.trim();
     if (!a) {
       notifyError(undefined, { title: "Asunto requerido", method: "FEATURES_CRM_COMPONENTS_QUICKCREATE_QUICKCREATEACTIVIDADDIALOG_1" });
@@ -75,6 +76,7 @@ export default function QuickCreateActividadDialog({ open, onOpenChange, onCreat
       notifyError(undefined, { title: "Selecciona una fecha válida", method: "FEATURES_CRM_COMPONENTS_QUICKCREATE_QUICKCREATEACTIVIDADDIALOG_4" });
       return;
     }
+    enviandoRef.current = true;
     try {
       await crear.mutateAsync({
         tipo: "tarea",
@@ -94,6 +96,8 @@ export default function QuickCreateActividadDialog({ open, onOpenChange, onCreat
         error: e,
         method: "FEATURES_CRM_COMPONENTS_QUICKCREATE_QUICKCREATEACTIVIDADDIALOG_3",
       });
+    } finally {
+      enviandoRef.current = false;
     }
   };
 
