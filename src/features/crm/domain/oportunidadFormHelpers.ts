@@ -24,6 +24,14 @@ export interface OrigenInicial {
   tipo: "prospecto" | "cliente";
   id: string;
   nombre: string;
+  /**
+   * v13.823.65+ — ownership: al crear desde la ficha de un prospecto, el
+   * vendedor del prospecto es el vendedor inicial de la oportunidad (si no,
+   * un gerente capturando desde la ficha se "robaba" la oportunidad).
+   * Retrocompatible: opcionales; sin ellos se conserva el usuario en sesión.
+   */
+  vendedorId?: string | null;
+  vendedorEmail?: string | null;
 }
 
 function bloqueIdentidad(o: CrmOportunidadRow) {
@@ -115,12 +123,17 @@ export function buildEmptyForNueva(
   origen?: OrigenInicial | null,
 ): OportunidadFormState {
   const primera = primeraEtapaAbierta(etapas);
+  // Ownership: si el origen trae el vendedor del prospecto, ése manda; si no,
+  // fallback al usuario en sesión. Cualquier cambio posterior en
+  // VendedorSelect escribe directo al form y NO se sobreescribe al guardar.
+  const vendedorId = origen?.vendedorId ?? user?.id ?? null;
+  const vendedorEmail = origen?.vendedorEmail ?? user?.email ?? "";
   return {
     ...EMPTY_OPORTUNIDAD,
     etapa_id: primera?.id ?? "",
     probabilidad: primera?.probabilidad_default ?? 0,
-    vendedor_id: user?.id ?? null,
-    vendedor_email: user?.email ?? "",
+    vendedor_id: vendedorId,
+    vendedor_email: vendedorEmail,
     ...bloqueOrigenInicial(origen),
   };
 }
