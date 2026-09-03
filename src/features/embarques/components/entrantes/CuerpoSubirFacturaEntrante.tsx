@@ -15,13 +15,14 @@ import { VerificacionMontoEntrante } from "@/features/embarques/components/entra
 import { totalCfdiDetectado } from "@/features/embarques/components/entrantes/totalCfdiDetectado";
 import { AvisoDuplicadoBuzon } from "@/features/embarques/components/entrantes/AvisoDuplicadoBuzon";
 import { BuzonDuplicadoError } from "@/features/cxp";
+import type { ConceptoCostoEmbarque } from "@/features/embarques/services";
 
 interface Props {
   form: ReturnType<typeof useSubirEntranteForm>;
   embarqueId: string;
   duplicado: BuzonDuplicadoError | null;
-  costos: { data: unknown; isLoading: boolean };
-  conceptos: { data: unknown; isLoading: boolean };
+  costos: { data: readonly ConceptoCostoEmbarque[] | undefined; isLoading: boolean };
+  conceptos: { data: Readonly<Record<string, number>> | null | undefined; isLoading: boolean };
 }
 
 export function CuerpoSubirFacturaEntrante({ form, embarqueId, duplicado, costos, conceptos }: Props) {

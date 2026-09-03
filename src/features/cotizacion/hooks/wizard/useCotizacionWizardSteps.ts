@@ -1,12 +1,11 @@
 import { useCallback, useRef } from "react";
-import { savePaso2, savePaso3, savePasoFinal, buildConceptosFromCostos } from "@/features/cotizacion/services";
+import { savePaso3, savePasoFinal, buildConceptosFromCostos } from "@/features/cotizacion/services";
 import { getErrorMessage } from "@/lib/errors";
-import { esConflictoConcurrencia } from "@/lib/errors/concurrencia";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { fromDb } from "@/lib/supabase/cast";
 import { usePaso1Handlers } from "./usePaso1Handlers";
 import { costosSinConcepto } from "@/features/cotizacion/domain/cotizacionVentaSync";
-import { costosPaso2Schema, conceptosPaso3Schema, primerError } from "@/features/cotizacion/domain/schemas/wizardPasos";
+import { conceptosPaso3Schema, primerError } from "@/features/cotizacion/domain/schemas/wizardPasos";
 import { firmaCostos, type WizardStepsDeps as Deps } from "./wizardStepsTypes";
 import { usePaso2Handler } from "./usePaso2Handler";
 

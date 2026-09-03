@@ -9,6 +9,7 @@ import { loadDraft, clearDraft, draftTieneContenido } from "@/features/cotizacio
 import { notifyWarning } from "@/lib/ui/appFeedback";
 import { fetchCotizacionSello } from "@/features/cotizacion/services";
 import { resolverSelloBorrador } from "@/features/cotizacion/hooks/wizard/resolverSelloBorrador";
+import type { FilaCostoLocal } from "@/features/cotizacion/types/pl";
 
 interface DraftRestoreDeps {
   form: UseFormReturn<any>;
@@ -16,7 +17,7 @@ interface DraftRestoreDeps {
   organizationId: string | null | undefined;
   setCotizacionId: (id: string) => void;
   setCurrentStep: (step: number) => void;
-  setCostosInternos: (c: unknown[]) => void;
+  setCostosInternos: (c: FilaCostoLocal[]) => void;
   resincronizarSello: (sello: string | null) => void;
 }
 

@@ -13,6 +13,10 @@ import type { useEmbarqueForm } from "@/features/embarques/hooks/useEmbarqueForm
 import type { useConceptosForm } from "@/features/cotizacion/hooks";
 import type { useUpdateEmbarque, useEmbarque } from "@/features/embarques/hooks/useEmbarques";
 import type { useRegistrarActividad } from "@/hooks/shared";
+import type { Tables } from "@/integrations/supabase/types";
+import type { ConceptoLike } from "@/features/auditoria/utils/diffFields";
+
+type ContactoRow = Pick<Tables<"contactos_cliente">, "id" | "nombre" | "tipo" | "pais">;
 
 interface Deps {
   id: string | undefined;
@@ -21,14 +25,14 @@ interface Deps {
   buildEmbarquePayload: ReturnType<typeof useEmbarqueForm>["buildEmbarquePayload"];
   buildConceptosVentaPayload: ReturnType<typeof useEmbarqueForm>["buildConceptosVentaPayload"];
   buildConceptosCostoPayload: ReturnType<typeof useEmbarqueForm>["buildConceptosCostoPayload"];
-  contactos: unknown[];
+  contactos: ContactoRow[];
   selectedClienteNombre: string | undefined;
   userEmail: string | undefined;
   conceptosVenta: ReturnType<typeof useConceptosForm>["conceptosVenta"];
   conceptosCosto: ReturnType<typeof useConceptosForm>["conceptosCosto"];
-  conceptosVentaDb: unknown[];
-  conceptosCostoDb: unknown[];
-  proveedoresDb: unknown[];
+  conceptosVentaDb: ConceptoLike[];
+  conceptosCostoDb: ConceptoLike[];
+  proveedoresDb: { id: string; nombre: string }[];
   updateEmbarque: ReturnType<typeof useUpdateEmbarque>;
   registrarActividad: ReturnType<typeof useRegistrarActividad>;
   setCurrentStep: (step: number) => void;
