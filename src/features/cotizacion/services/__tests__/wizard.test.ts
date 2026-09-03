@@ -11,7 +11,7 @@ vi.mock("@/integrations/supabase/client", () => ({
 }));
 
 
-import { savePaso1, savePaso2, savePaso3, savePasoFinal } from "../wizard";
+import { savePaso1, savePaso2, savePaso3, savePasoFinal, derivarSubtotalMoneda, MSG_COTIZACION_MIXTA } from "../wizard";
 
 function makeForm(over: Record<string, unknown> = {}) {
   return {
