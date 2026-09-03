@@ -19,8 +19,8 @@ import { usePermissions, useDocumentTitle } from "@/hooks/shared";
 
 export default function CrmConfiguracion() {
   useDocumentTitle('Configuración del CRM');
-  const { canEditCrm } = usePermissions();
-  if (!canEditCrm) {
+  const { canConfigurarCrm } = usePermissions();
+  if (!canConfigurarCrm) {
     return <div className="p-8 text-center text-body text-muted-foreground">No tienes permiso para configurar el CRM.</div>;
   }
   return (
