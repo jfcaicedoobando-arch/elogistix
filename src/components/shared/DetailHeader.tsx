@@ -119,10 +119,15 @@ export function DetailHeader({
       {/* v13.548.0: el corte horizontal vive en `xl` (1280) y no en `lg` (1024).
           Entre 1024 y 1279 la barra de acciones (≈640px fija) dejaba la columna
           del título en 0px de ancho, así que el folio quedaba invisible detrás
-          de los botones. Ahora las acciones bajan a su propio renglón. */}
-      <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
+          de los botones. Ahora las acciones bajan a su propio renglón.
+          v13.823.70: `meta` (ej. stepper de estados) salió de la columna del
+          título a su propio renglón full-width: dentro de la columna quedaba
+          comprimido contra la barra de acciones y la última píldora se cortaba
+          a media palabra. Las acciones además pueden encogerse (`min-w-0`) para
+          no ahogar el título. */}
+      <div className="flex flex-col gap-3 2xl:flex-row 2xl:items-start 2xl:justify-between">
 
-        <div className="flex min-w-0 flex-1 items-start gap-2 xl:min-w-[18rem]">
+        <div className="flex min-w-0 flex-1 items-start gap-2 2xl:min-w-[22rem]">
 
           {icon ? <span className="mt-0.5 shrink-0 leading-none">{icon}</span> : null}
           <div className="min-w-0 flex-1">
@@ -136,19 +141,21 @@ export function DetailHeader({
               {badge}
             </div>
             {subtitle ? (
-              <p className="mt-1 text-body text-muted-foreground line-clamp-2">{subtitle}</p>
+              <p className="mt-1 text-body text-muted-foreground">{subtitle}</p>
             ) : null}
-            {meta ? <div className="mt-2 flex flex-wrap items-center gap-2">{meta}</div> : null}
           </div>
         </div>
         {trailing ? (
-          <div className="flex w-full flex-wrap items-center gap-2 xl:w-auto xl:justify-end">
+          <div className="flex w-full min-w-0 flex-wrap items-center gap-2 2xl:w-auto 2xl:justify-end">
             {trailing}
           </div>
         ) : null}
       </div>
 
+      {meta ? <div className="flex w-full min-w-0 flex-wrap items-center gap-2">{meta}</div> : null}
+
       {tabs ? <div className="pt-1">{tabs}</div> : null}
+
     </div>
   );
 }
