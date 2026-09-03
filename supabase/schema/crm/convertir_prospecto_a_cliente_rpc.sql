@@ -1,6 +1,6 @@
 -- P0 · Conversión canónica y atómica Prospecto → Cliente (forward-only).
--- Misma firma y retorno; endurece autorización, validaciones de ganador/etapa,
--- datos fiscales, idempotencia coherente y bitácora única dentro de la RPC.
+-- Corrección: revinculación histórica por oportunidad (identidad), nunca por
+-- nombre de empresa; y rechazo de conversiones parciales/conflictivas del lead.
 CREATE OR REPLACE FUNCTION public.convertir_prospecto_a_cliente_rpc(p_cotizacion_id uuid, p_cliente jsonb)
  RETURNS jsonb
  LANGUAGE plpgsql
@@ -13,7 +13,6 @@ DECLARE
   v_cliente_id uuid;
   v_estado text;
   v_oportunidad_id uuid;
-  v_empresa text;
   v_nombre text;
   v_nombre_canonico text;
   v_rfc text;
@@ -39,9 +38,8 @@ BEGIN
     RAISE EXCEPTION 'LC_SESION_REQUERIDA' USING ERRCODE = '42501';
   END IF;
 
-  SELECT organization_id, es_prospecto, cliente_id, estado::text, oportunidad_id,
-         NULLIF(btrim(COALESCE(prospecto_empresa, '')), '')
-    INTO v_org, v_es_prospecto, v_cliente_id, v_estado, v_oportunidad_id, v_empresa
+  SELECT organization_id, es_prospecto, cliente_id, estado::text, oportunidad_id
+    INTO v_org, v_es_prospecto, v_cliente_id, v_estado, v_oportunidad_id
   FROM public.cotizaciones
   WHERE id = p_cotizacion_id AND deleted_at IS NULL
   FOR UPDATE;
@@ -151,8 +149,8 @@ BEGIN
   IF v_lead_id IS NULL THEN
     RAISE EXCEPTION 'LC_OPORTUNIDAD_SIN_PROSPECTO';
   END IF;
-  SELECT l.organization_id, l.cliente_convertido_id
-    INTO v_lead_org, v_lead_cliente
+  SELECT l.organization_id, l.cliente_convertido_id, l.oportunidad_convertida_id
+    INTO v_lead_org, v_lead_cliente, v_lead_op
   FROM public.crm_leads l
   WHERE l.id = v_lead_id AND l.deleted_at IS NULL
   FOR UPDATE;
@@ -164,6 +162,10 @@ BEGIN
   END IF;
   IF v_lead_cliente IS NOT NULL THEN
     RAISE EXCEPTION 'LC_OPORTUNIDAD_YA_CONVERTIDA';
+  END IF;
+  -- Conversión parcial/conflictiva: el lead ya apunta a otra oportunidad.
+  IF v_lead_op IS NOT NULL AND v_lead_op <> v_oportunidad_id THEN
+    RAISE EXCEPTION 'LC_CONVERSION_INCONSISTENTE';
   END IF;
 
   ------------------------------------------------------------------
@@ -251,20 +253,20 @@ BEGIN
          updated_at = now()
    WHERE id = p_cotizacion_id;
 
-  IF v_empresa IS NOT NULL THEN
-    UPDATE public.cotizaciones
-       SET cliente_id = v_cliente_id,
-           cliente_nombre = v_nombre_canonico,
-           es_prospecto = false,
-           updated_at = now()
-     WHERE organization_id = v_org
-       AND id <> p_cotizacion_id
-       AND deleted_at IS NULL
-       AND COALESCE(es_prospecto, false) = true
-       AND cliente_id IS NULL
-       AND lower(btrim(prospecto_empresa)) = lower(v_empresa);
-    GET DIAGNOSTICS v_revinculadas = ROW_COUNT;
-  END IF;
+  -- Revinculación histórica por IDENTIDAD (oportunidad), nunca por nombre de
+  -- empresa: dos "ACME" distintas no deben mezclarse.
+  UPDATE public.cotizaciones
+     SET cliente_id = v_cliente_id,
+         cliente_nombre = v_nombre_canonico,
+         es_prospecto = false,
+         updated_at = now()
+   WHERE organization_id = v_org
+     AND id <> p_cotizacion_id
+     AND deleted_at IS NULL
+     AND oportunidad_id = v_oportunidad_id
+     AND COALESCE(es_prospecto, false) = true
+     AND cliente_id IS NULL;
+  GET DIAGNOSTICS v_revinculadas = ROW_COUNT;
 
   UPDATE public.crm_oportunidades
      SET cliente_id = v_cliente_id,
@@ -309,4 +311,4 @@ GRANT EXECUTE ON FUNCTION public.convertir_prospecto_a_cliente_rpc(uuid, jsonb) 
 GRANT EXECUTE ON FUNCTION public.convertir_prospecto_a_cliente_rpc(uuid, jsonb) TO service_role;
 
 COMMENT ON FUNCTION public.convertir_prospecto_a_cliente_rpc(uuid, jsonb) IS
-  'Conversión canónica y atómica Prospecto → Cliente. Exige sesión, membresía, tenant activo y rol de alta de clientes en la organización; la cotización debe ser prospecto Aceptada, ganadora de su oportunidad, con etapa ganada y lead vivo. Crea/reutiliza cliente (RFC real), revincula historial, propaga a oportunidad y lead y registra una única actividad. Reintento idempotente sólo si la conversión previa es coherente.';
+  'Conversión canónica y atómica Prospecto → Cliente. Exige sesión, membresía, tenant activo y rol de alta de clientes; la cotización debe ser prospecto Aceptada, ganadora de su oportunidad, con etapa ganada y lead vivo sin conversión previa a otra oportunidad. Revincula historial sólo por oportunidad_id. Reintento idempotente sólo si la conversión previa es coherente.';
