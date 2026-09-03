@@ -45,9 +45,14 @@ interface Props {
   onClickCard: (id: string) => void;
   /** CTA del estado vacío de cada columna (E-11). Omitir oculta la acción. */
   onNuevo?: () => void;
+  /**
+   * Permiso real de mover oportunidades de etapa (espejo de las policies de
+   * `crm_oportunidades`). Con `false` no hay drag ni handler activo.
+   */
+  puedeMover?: boolean;
 }
 
-export default function OportunidadKanban({ etapas, oportunidades, onMover, onClickCard, onNuevo }: Props) {
+export default function OportunidadKanban({ etapas, oportunidades, onMover, onClickCard, onNuevo, puedeMover = true }: Props) {
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }));
   const ids = useMemo(() => oportunidades.map((o) => o.id), [oportunidades]);
   const { data: proximasMap } = useProximasActividades("oportunidad", ids);
@@ -66,6 +71,7 @@ export default function OportunidadKanban({ etapas, oportunidades, onMover, onCl
   }, [etapas, oportunidades]);
 
   const handleDragEnd = (e: DragEndEvent) => {
+    if (!puedeMover) return;
     const oportunidadId = String(e.active.id);
     const etapaId = e.over ? String(e.over.id) : null;
     if (!etapaId) return;
@@ -103,6 +109,7 @@ export default function OportunidadKanban({ etapas, oportunidades, onMover, onCl
                 onClickCard={onClickCard}
                 proximasMap={proximas}
                 avanceMap={avanceMap ?? new Map()}
+                arrastrable={puedeMover}
               />
             )}
             {etapas.map((e) => (
@@ -114,6 +121,7 @@ export default function OportunidadKanban({ etapas, oportunidades, onMover, onCl
                 proximasMap={proximas}
                 avanceMap={avanceMap ?? new Map()}
                 onNuevo={onNuevo}
+                arrastrable={puedeMover}
               />
             ))}
           </div>
