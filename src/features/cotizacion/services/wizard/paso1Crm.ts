@@ -1,34 +1,12 @@
 /**
- * I/O puro del paso 1 del wizard de cotización: obtiene el usuario auth
- * actual, el folio de una cotización recién creada y registra el bloqueo
- * tarifa-first en bitácora. Encapsula las llamadas a Supabase para que el
- * helper `handlePaso1Crm` no las haga directamente.
+ * I/O puro del paso 1 del wizard de cotización: registra en bitácora el
+ * bloqueo tarifa-first.
+ *
+ * P0 (cotizaciones huérfanas): el vínculo CRM ya no necesita usuario ni folio
+ * (la RPC `crm_vincular_cotizacion` los resuelve en la base), por lo que
+ * `obtenerUsuarioActual` y `fetchCotizacionFolio` se retiraron de aquí.
  */
-import { supabase } from "@/integrations/supabase/client";
 import { registrarActividad } from "@/services/bitacora/registrar";
-
-export interface AuthUserLite {
-  id: string;
-  email: string | undefined;
-}
-
-export async function obtenerUsuarioActual(): Promise<AuthUserLite | null> {
-  const { data: { user } } = await supabase.auth.getUser();
-  return user ? { id: user.id, email: user.email ?? undefined } : null;
-}
-
-export async function fetchCotizacionFolio(cotizacionId: string): Promise<string | null> {
-  // YG-07: mismo criterio que `services/queries.ts` — soft-deleted = inexistente.
-  const { data, error } = await supabase
-    .from("cotizaciones")
-    .select("folio")
-    .eq("id", cotizacionId)
-    .is("deleted_at", null)
-    .maybeSingle();
-  if (error) throw error;
-  return data?.folio ?? null;
-}
-
 
 export interface BloqueoSinTarifaPayload {
   entidadNombre: string;
@@ -53,4 +31,3 @@ export async function registrarBloqueoSinTarifa(payload: BloqueoSinTarifaPayload
     },
   });
 }
-
