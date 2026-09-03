@@ -43,10 +43,7 @@ export function useCotizacionDetalleHandlers(cotizacion: CotizacionRow | undefin
   const [showConvertir, setShowConvertir] = useState(false);
   const [showConfirmarConvertir, setShowConfirmarConvertir] = useState(false);
   const [showBloqueoSinCostos, setShowBloqueoSinCostos] = useState(false);
-  const [clienteForm, setClienteForm] = useState<ClienteFormData>({
-    nombre: '', contacto: '', email: '', telefono: '',
-    rfc: '', direccion: '', ciudad: '', estado: '', cp: '',
-  });
+  const [clienteForm, setClienteForm] = useState<ClienteFormData>({ ...EMPTY_CLIENTE_FORM });
 
   const handleCambiarEstado = async (estado: string) => {
     if (!cotizacion) return;
