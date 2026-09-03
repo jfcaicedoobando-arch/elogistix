@@ -5,7 +5,7 @@
  * v13.746.0: migrado de Popover a modal estándar (ver nota en
  * `QuickCreateLeadDialog.tsx`).
  */
-import { useState, useMemo } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { isValid } from "date-fns";
 import { Activity } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -42,8 +42,23 @@ export default function QuickCreateActividadDialog({ open, onOpenChange, onCreat
   const [fecha, setFecha] = useState(defaultFecha());
   const [entidadId, setEntidadId] = useState<string>("");
   const ops = useMemo(() => opsData?.data ?? [], [opsData]);
+  // Fecha inicial de ESTA apertura: sirve de referencia para saber si el
+  // usuario capturó algo (isDirty) sin considerar el default como captura.
+  const [fechaInicial, setFechaInicial] = useState(fecha);
+  const abiertoAntes = useRef(open);
+  useEffect(() => {
+    if (abiertoAntes.current && !open) {
+      setAsunto("");
+      setEntidadId("");
+      const nueva = defaultFecha();
+      setFecha(nueva);
+      setFechaInicial(nueva);
+    }
+    abiertoAntes.current = open;
+  }, [open]);
 
   const submit = async () => {
+    if (crear.isPending) return;
     const a = asunto.trim();
     if (!a) {
       notifyError(undefined, { title: "Asunto requerido", method: "FEATURES_CRM_COMPONENTS_QUICKCREATE_QUICKCREATEACTIVIDADDIALOG_1" });
@@ -70,7 +85,7 @@ export default function QuickCreateActividadDialog({ open, onOpenChange, onCreat
         fecha_programada: fechaDate ? fechaDate.toISOString() : null,
       });
       notifySuccess(undefined, { title: "Actividad creada", duration: 2000 });
-      setAsunto("");
+      // El cierre limpia el estado (efecto de transición): sin reset duplicado.
       onOpenChange(false);
       onCreated();
     } catch (e) {
@@ -92,7 +107,8 @@ export default function QuickCreateActividadDialog({ open, onOpenChange, onCreat
       size="md"
       formId="qc-actividad-form"
       onSubmit={(e) => { e.preventDefault(); void submit(); }}
-      isDirty={asunto.trim().length > 0}
+      isDirty={asunto.trim().length > 0 || entidadId.length > 0 || fecha !== fechaInicial}
+      busy={crear.isPending}
       footer={
         <FormDialogFooter
           formId="qc-actividad-form"
@@ -100,7 +116,14 @@ export default function QuickCreateActividadDialog({ open, onOpenChange, onCreat
           confirmLabel="Crear"
           loading={crear.isPending}
           extra={
-            <Button type="button" variant="ghost" size="sm" onClick={onMore} className="text-body-sm">
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={onMore}
+              disabled={crear.isPending}
+              className="text-body-sm"
+            >
               Más campos →
             </Button>
           }
