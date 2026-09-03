@@ -118,7 +118,7 @@ export default function LeadDetalle() {
             mostrarCalificar={!!lead.vendedor_id && puedeGestionar && puedeCalificarse(lead.estado)}
             onCalificar={handleCalificar}
             calificando={calificando}
-            mostrarNuevaOportunidad={puedeGestionar && esProspecto(lead.estado)}
+            mostrarNuevaOportunidad={puedeGestionar && canCrearOportunidad && esProspecto(lead.estado)}
             onNuevaOportunidad={() => setNuevaOportunidadOpen(true)}
           />
         }
@@ -153,7 +153,7 @@ export default function LeadDetalle() {
       {esProspecto(lead.estado) && (
         <OportunidadesDelProspecto
           leadId={lead.id}
-          canEdit={puedeGestionar}
+          canEdit={puedeGestionar && canCrearOportunidad}
           onNuevaOportunidad={() => setNuevaOportunidadOpen(true)}
         />
       )}
