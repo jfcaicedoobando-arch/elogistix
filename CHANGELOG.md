@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+### Detalle de documentos: encabezado sin recortes
+- En el detalle de **factura, proforma y factura de proveedor**, la fila de estados (Borrador → Por timbrar → Emitida → Pagada) pasó a su propio renglón: ya no se comprime contra los botones ni se corta la última píldora, y las etiquetas ya no se parten en dos líneas.
+- La línea de contexto (cliente • fecha • expediente • proforma) se muestra completa en una o dos líneas legibles, sin recorte.
+
+
+
 ### Alta de proveedor: el RFC de la CSF ya no se pierde
 - Al elegir **Agente de Carga** y su país, el RFC/Tax ID cargado desde la CSF se conserva; el campo ahora está siempre visible en el paso 1.
 
