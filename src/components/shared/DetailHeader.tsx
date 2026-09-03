@@ -125,9 +125,9 @@ export function DetailHeader({
           comprimido contra la barra de acciones y la última píldora se cortaba
           a media palabra. Las acciones además pueden encogerse (`min-w-0`) para
           no ahogar el título. */}
-      <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
+      <div className="flex flex-col gap-3 2xl:flex-row 2xl:items-start 2xl:justify-between">
 
-        <div className="flex min-w-0 flex-1 items-start gap-2 xl:min-w-[18rem]">
+        <div className="flex min-w-0 flex-1 items-start gap-2 2xl:min-w-[22rem]">
 
           {icon ? <span className="mt-0.5 shrink-0 leading-none">{icon}</span> : null}
           <div className="min-w-0 flex-1">
@@ -146,7 +146,7 @@ export function DetailHeader({
           </div>
         </div>
         {trailing ? (
-          <div className="flex w-full min-w-0 flex-wrap items-center gap-2 xl:w-auto xl:justify-end">
+          <div className="flex w-full min-w-0 flex-wrap items-center gap-2 2xl:w-auto 2xl:justify-end">
             {trailing}
           </div>
         ) : null}
