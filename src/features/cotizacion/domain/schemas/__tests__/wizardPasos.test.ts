@@ -42,29 +42,23 @@ describe("wizardPasos · Paso 1 destinatario", () => {
     ).toContain("Selecciona un lead u oportunidad");
   });
 
-  it("prospecto nuevo exige empresa y contacto", () => {
-    expect(
-      primerError(destinatarioSchema, {
-        esProspecto: true,
-        prospectoModo: "nuevo",
-        prospectoEmpresa: "  ",
-        prospectoContacto: "Juan",
-      }),
-    ).toBe("Ingresa el nombre de la empresa del prospecto.");
-    expect(
-      primerError(destinatarioSchema, {
-        esProspecto: true,
-        prospectoModo: "nuevo",
-        prospectoEmpresa: "ACME",
-        prospectoContacto: "",
-      }),
-    ).toBe("Ingresa el nombre del contacto del prospecto.");
+  it("el cotizador ya no crea prospectos: siempre exige vincular uno existente", () => {
+    // v13.823.x — se cerró la creación lateral de leads desde el cotizador.
     expect(
       primerError(destinatarioSchema, {
         esProspecto: true,
         prospectoModo: "nuevo",
         prospectoEmpresa: "ACME",
         prospectoContacto: "Juan",
+      }),
+    ).toContain("Selecciona un lead u oportunidad");
+    expect(
+      primerError(destinatarioSchema, {
+        esProspecto: true,
+        prospectoModo: "vincular",
+        prospectoEmpresa: "ACME",
+        prospectoContacto: "Juan",
+        oportunidadId: "op-1",
       }),
     ).toBeNull();
   });
