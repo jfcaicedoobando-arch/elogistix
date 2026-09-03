@@ -13,6 +13,9 @@
 --     (LC_OPORTUNIDAD_YA_CONVERTIDA).
 --   · CASO 4: un rol gerencial de la org SÍ puede (gerente_comercial).
 --
+-- v13.823.70: la RPC quedó cerrada a service_role (sólo la invoca el backend);
+-- el fixture simula al usuario en el JWT y ejecuta con ese rol de base.
+--
 -- Ejecución manual:
 --   psql "$SUPABASE_DB_URL" -f supabase/tests/fix3_crm_propagar_cross_vendedor.sql
 -- =============================================================
@@ -78,7 +81,7 @@ BEGIN
   -- ----------------------------------------------------------
   -- CASO 1: vendedor A intenta propagar la oportunidad de B → 42501.
   -- ----------------------------------------------------------
-  PERFORM pg_temp.as_user(v_vend_a);
+  PERFORM pg_temp.as_user_rpc_interna(v_vend_a);
   BEGIN
     PERFORM public.crm_propagar_conversion_cliente(v_op_b, v_cli_1, 'Cliente Uno FIX3');
     RAISE EXCEPTION 'CASO 1 FAIL: un vendedor propagó la conversión de una oportunidad AJENA';
@@ -97,7 +100,7 @@ BEGIN
   -- ----------------------------------------------------------
   -- CASO 2: el vendedor dueño propaga su propia oportunidad.
   -- ----------------------------------------------------------
-  PERFORM pg_temp.as_user(v_vend_b);
+  PERFORM pg_temp.as_user_rpc_interna(v_vend_b);
   v_res := public.crm_propagar_conversion_cliente(v_op_b, v_cli_1, 'Cliente Uno FIX3');
   PERFORM pg_temp.as_postgres();
 
@@ -112,7 +115,7 @@ BEGIN
   -- ----------------------------------------------------------
   -- CASO 3: ni el dueño puede pisar la conversión hacia OTRO cliente.
   -- ----------------------------------------------------------
-  PERFORM pg_temp.as_user(v_vend_b);
+  PERFORM pg_temp.as_user_rpc_interna(v_vend_b);
   BEGIN
     PERFORM public.crm_propagar_conversion_cliente(v_op_b, v_cli_2, 'Cliente Dos FIX3');
     RAISE EXCEPTION 'CASO 3 FAIL: se pisó una conversión previa hacia otro cliente';
@@ -131,7 +134,7 @@ BEGIN
   -- ----------------------------------------------------------
   -- CASO 4: rol gerencial de la org sí puede sobre oportunidad ajena.
   -- ----------------------------------------------------------
-  PERFORM pg_temp.as_user(v_gerente);
+  PERFORM pg_temp.as_user_rpc_interna(v_gerente);
   v_res := public.crm_propagar_conversion_cliente(v_op_b2, v_cli_2, 'Cliente Dos FIX3');
   PERFORM pg_temp.as_postgres();
 

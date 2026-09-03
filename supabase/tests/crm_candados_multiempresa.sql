@@ -4,8 +4,10 @@
 -- Congela los candados multiempresa del CRM:
 --   · CASO 1: cotización → oportunidad de OTRA organización → LC_OPORTUNIDAD_AJENA.
 --   · CASO 2: cotización → oportunidad viva de la MISMA organización (camino feliz).
---   · CASO 3: actividad → oportunidad de otra organización → LC_ENTIDAD_AJENA.
---   · CASO 4: actividad → entidad inexistente → LC_ENTIDAD_AJENA.
+--   · CASO 3: actividad → oportunidad de otra organización →
+--     LC_CRM_ACTIVIDAD_ENTIDAD_AJENA.
+--   · CASO 4: actividad → entidad inexistente →
+--     LC_CRM_ACTIVIDAD_ENTIDAD_AJENA.
 --   · CASO 5: actividad → lead vivo de la misma organización (camino feliz).
 --   · CASO 6: invariante de probabilidad terminal (ganada=100, perdida=0) en
 --     cualquier UPDATE, no sólo el del Kanban (perdida con motivo same-org).
@@ -80,7 +82,7 @@ BEGIN
     VALUES (v_org_a, 'tarea', 'Cross-org', 'oportunidad', v_op_b);
     RAISE EXCEPTION 'FALLO CASO 3: se permitió una actividad cross-org';
   EXCEPTION WHEN OTHERS THEN
-    IF SQLERRM NOT LIKE '%LC_ENTIDAD_AJENA%' THEN RAISE; END IF;
+    IF SQLERRM NOT LIKE '%LC_CRM_ACTIVIDAD_ENTIDAD_AJENA%' THEN RAISE; END IF;
   END;
 
   -- CASO 4: actividad huérfana.
@@ -89,7 +91,7 @@ BEGIN
     VALUES (v_org_a, 'tarea', 'Huérfana', 'oportunidad', gen_random_uuid());
     RAISE EXCEPTION 'FALLO CASO 4: se permitió una actividad sin entidad viva';
   EXCEPTION WHEN OTHERS THEN
-    IF SQLERRM NOT LIKE '%LC_ENTIDAD_AJENA%' THEN RAISE; END IF;
+    IF SQLERRM NOT LIKE '%LC_CRM_ACTIVIDAD_ENTIDAD_AJENA%' THEN RAISE; END IF;
   END;
 
   -- CASO 5: camino feliz same-org (lead).

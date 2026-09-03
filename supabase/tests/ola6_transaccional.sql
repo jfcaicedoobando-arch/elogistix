@@ -27,6 +27,8 @@ DECLARE
   v_p2 uuid;
   v_n integer;
   v_flete numeric;
+  v_admin uuid := 'a06a06a0-0000-4000-8000-000000000001';
+  v_etapa_gan uuid;
 BEGIN
   -- v13.823.55: convertir_lead_rpc exige sesión real. Esta suite corre como
   -- postgres (sin uid), así que declara el claim de proceso interno.
@@ -36,6 +38,17 @@ BEGIN
 
   VALUES ('TEST OLA6', 'TO6000000XX0', 'basico', true)
   RETURNING id INTO v_org;
+
+  -- v13.823.65: convertir_prospecto_a_cliente_rpc exige un usuario firmado con
+  -- rol de alta de clientes en la organización. Se siembra la membresía (en CI
+  -- sin GoTrue el INSERT en auth.users es best-effort).
+  BEGIN
+    INSERT INTO auth.users (id, email) VALUES (v_admin, 'ola6-admin@test.local')
+    ON CONFLICT (id) DO NOTHING;
+  EXCEPTION WHEN OTHERS THEN NULL;
+  END;
+  INSERT INTO public.organization_members (organization_id, user_id, role)
+  VALUES (v_org, v_admin, 'admin_org');
 
   ----------------------------------------------------------------------------
   -- A3: reactivar_cotizacion_rpc
@@ -82,11 +95,32 @@ BEGIN
   ----------------------------------------------------------------------------
   -- M3: convertir_prospecto_a_cliente_rpc (idempotente, sin duplicar clientes)
   ----------------------------------------------------------------------------
-  UPDATE public.cotizaciones SET es_prospecto = true, cliente_id = NULL WHERE id = v_cot;
+  -- v13.823.65: la conversión canónica exige cotización Aceptada, oportunidad
+  -- ganadora en etapa 'ganada', prospecto (lead) vivo y captura fiscal completa.
+  INSERT INTO public.crm_etapas_pipeline (organization_id, nombre, tipo, orden, activa)
+  VALUES (v_org, 'Ganada OLA6', 'ganada'::public.crm_etapa_tipo, 9, true)
+  RETURNING id INTO v_etapa_gan;
+
+  UPDATE public.crm_oportunidades
+     SET etapa_id = v_etapa_gan, cotizacion_ganadora_id = v_cot, cliente_id = NULL
+   WHERE id = v_op_a3;
+
+  UPDATE public.cotizaciones
+     SET es_prospecto = true, cliente_id = NULL,
+         estado = 'Aceptada'::public.estado_cotizacion
+   WHERE id = v_cot;
+
+  PERFORM set_config('request.jwt.claims',
+    json_build_object('sub', v_admin, 'role', 'authenticated')::text, true);
 
   v_res := public.convertir_prospecto_a_cliente_rpc(
     v_cot,
-    jsonb_build_object('nombre', 'PROSPECTO OLA6', 'rfc', 'XAXX010101000', 'email', 'p@ola6.local')
+    jsonb_build_object(
+      'nombre', 'PROSPECTO OLA6', 'contacto', 'Contacto OLA6',
+      'email', 'p@ola6.local', 'telefono', '5555555555',
+      'rfc', 'XAXX010101000', 'cp', '01000',
+      'regimen_fiscal', '601', 'uso_cfdi_default', 'G03',
+      'forma_pago_default', '03', 'metodo_pago_default', 'PUE')
   );
   IF (v_res->>'creado')::boolean IS NOT TRUE THEN
     RAISE EXCEPTION 'OLA6 M3 FAIL: la primera conversión debía crear el cliente';
@@ -95,7 +129,12 @@ BEGIN
 
   v_res := public.convertir_prospecto_a_cliente_rpc(
     v_cot,
-    jsonb_build_object('nombre', 'PROSPECTO OLA6', 'rfc', 'XAXX010101000')
+    jsonb_build_object(
+      'nombre', 'PROSPECTO OLA6', 'contacto', 'Contacto OLA6',
+      'email', 'p@ola6.local', 'telefono', '5555555555',
+      'rfc', 'XAXX010101000', 'cp', '01000',
+      'regimen_fiscal', '601', 'uso_cfdi_default', 'G03',
+      'forma_pago_default', '03', 'metodo_pago_default', 'PUE')
   );
   IF (v_res->>'creado')::boolean IS NOT FALSE OR (v_res->>'cliente_id')::uuid <> v_cli THEN
     RAISE EXCEPTION 'OLA6 M3 FAIL: la segunda conversión duplicó el cliente';
@@ -103,6 +142,10 @@ BEGIN
   IF (SELECT count(*) FROM public.clientes WHERE organization_id = v_org) <> 1 THEN
     RAISE EXCEPTION 'OLA6 M3 FAIL: se crearon clientes extra en la organización';
   END IF;
+
+  -- Se restaura el claim de proceso interno para el resto de la suite.
+  PERFORM set_config('request.jwt.claims',
+    json_build_object('role', 'service_role')::text, true);
 
   ----------------------------------------------------------------------------
   -- M4: convertir_lead_rpc (atómico e idempotente)
@@ -256,6 +299,10 @@ BEGIN
   DELETE FROM public.crm_etapas_pipeline WHERE organization_id = v_org;
   DELETE FROM public.cotizaciones WHERE organization_id = v_org;
   DELETE FROM public.clientes WHERE organization_id = v_org;
+  -- La conversión canónica deja huella en la bitácora y la membresía sembrada
+  -- también referencia la organización.
+  DELETE FROM public.bitacora_actividad WHERE organization_id = v_org;
+  DELETE FROM public.organization_members WHERE organization_id = v_org;
   DELETE FROM public.organizations WHERE id = v_org;
 
   RAISE NOTICE 'OK ola6_transaccional (A3, M3, M4, M7, M15)';

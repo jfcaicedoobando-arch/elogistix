@@ -25,6 +25,38 @@ BEGIN
 END;
 $$;
 
+-- v13.823.70: varias RPCs internas del CRM (convertir_lead_rpc,
+-- crm_propagar_conversion_cliente) ya sólo tienen EXECUTE para service_role:
+-- la app las invoca desde funciones/edge internas, nunca directo desde el
+-- cliente. Para seguir congelando su AUTORIZACIÓN interna (que depende de
+-- auth.uid(), membresía y rol efectivo) simulamos al usuario en el JWT pero
+-- ejecutamos con el rol de base service_role, que es quien puede llamarlas.
+CREATE OR REPLACE FUNCTION pg_temp.as_user_rpc_interna(_user_id uuid) RETURNS void
+LANGUAGE plpgsql AS $$
+BEGIN
+  PERFORM set_config(
+    'request.jwt.claims',
+    json_build_object('sub', _user_id, 'role', 'authenticated')::text,
+    true
+  );
+  PERFORM set_config('role', 'service_role', true);
+END;
+$$;
+
+-- Igual que el anterior, pero con JWT roto (role=authenticated sin sub) para
+-- probar el rechazo por sesión inexistente dentro de la RPC.
+CREATE OR REPLACE FUNCTION pg_temp.as_authenticated_sin_uid_rpc_interna() RETURNS void
+LANGUAGE plpgsql AS $$
+BEGIN
+  PERFORM set_config(
+    'request.jwt.claims',
+    json_build_object('role', 'authenticated')::text,
+    true
+  );
+  PERFORM set_config('role', 'service_role', true);
+END;
+$$;
+
 CREATE OR REPLACE FUNCTION pg_temp.as_postgres() RETURNS void
 LANGUAGE plpgsql AS $$
 BEGIN
