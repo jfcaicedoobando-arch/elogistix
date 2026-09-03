@@ -31,6 +31,11 @@ export interface CrearCotizacionMutation<TRow extends { id: string }> {
 export interface GuardedUpdateMutation {
   mutateAsync: (d: UpdateVars) => Promise<unknown>;
   isPending: boolean;
+  /**
+   * P0: la RPC de vínculo CRM toca `cotizaciones.updated_at`; sin refrescar el
+   * sello el siguiente guardado del mismo usuario daba un conflicto falso.
+   */
+  resincronizarSello: (sello: string | null) => void;
 }
 
 export interface CotizacionUpdateGuard<TRow extends { id: string }> {
@@ -67,9 +72,14 @@ export function useCotizacionUpdateGuard<TRow extends { id: string; updated_at?:
     [crearCotizacion],
   );
 
+  const resincronizarSello = useCallback((sello: string | null) => {
+    if (sello) expectedRef.current = sello;
+  }, []);
+
   return {
     mutateAsync,
     isPending: updateCotizacion.isPending,
+    resincronizarSello,
     ...(crearCotizacion
       ? { crearCotizacion: { mutateAsync: crearGuardado, isPending: crearCotizacion.isPending } }
       : {}),

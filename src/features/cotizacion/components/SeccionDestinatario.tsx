@@ -2,7 +2,12 @@
  * Paso 1 — destinatario de la cotización: cliente existente o prospecto.
  * v12.1.0: subcomponentes extraídos a `seccionDestinatario/` para
  * cumplir Power of 10 (≤200 líneas).
+ *
+ * P0 (cotizaciones huérfanas): el prospecto SIEMPRE se vincula a un lead u
+ * oportunidad existente del CRM; el modo "crear nuevo prospecto" se retiró.
+ * Un vínculo ya persistido (edición) no puede sustituirse aquí.
  */
+import { useRef } from "react";
 import { useFormContext } from "react-hook-form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -24,39 +29,34 @@ interface Props {
 }
 
 export default function SeccionDestinatario({ clientes, complete }: Props) {
-  const { watch, setValue, formState: { errors }, clearErrors } = useFormContext<CotizacionFormValues>();
+  const { watch, setValue, getValues, formState: { errors }, clearErrors } = useFormContext<CotizacionFormValues>();
   const esProspecto = watch("esProspecto");
   const clienteId = watch("clienteId");
-  const prospectoModo = watch("prospectoModo");
   const oportunidadId = watch("oportunidadId");
   const leadId = watch("leadId");
   const prospectoEmpresa = watch("prospectoEmpresa");
 
   const tieneVinculo = Boolean(oportunidadId || leadId);
-
-  const setProspectoMode = (modo: "vincular" | "nuevo") => {
-    setValue("prospectoModo", modo, { shouldDirty: true });
-    if (modo === "nuevo") {
-      setValue("oportunidadId", "", { shouldDirty: true });
-      setValue("leadId", "", { shouldDirty: true });
-    }
-  };
+  // Un vínculo que ya venía guardado (edición) es inmutable en el cotizador.
+  const vinculoConfirmado = useRef(Boolean(getValues("oportunidadId"))).current;
 
   const handleSelectMatch = (m: ProspectoMatch) => {
     if (m.kind === "oportunidad") {
-      setValue("oportunidadId", m.id, { shouldDirty: true });
+      setValue("oportunidadId", m.id, { shouldDirty: true, shouldValidate: true });
       setValue("leadId", m.leadId ?? "", { shouldDirty: true });
     } else {
-      setValue("leadId", m.id, { shouldDirty: true });
+      setValue("leadId", m.id, { shouldDirty: true, shouldValidate: true });
       setValue("oportunidadId", "", { shouldDirty: true });
     }
     setValue("prospectoEmpresa", m.empresa, { shouldDirty: true });
     setValue("prospectoContacto", m.contacto, { shouldDirty: true });
     setValue("prospectoEmail", m.email, { shouldDirty: true });
     setValue("prospectoTelefono", m.telefono, { shouldDirty: true });
+    clearErrors(["oportunidadId", "leadId", "prospectoEmpresa"]);
   };
 
   const handleDesvincular = () => {
+    if (vinculoConfirmado) return;
     setValue("oportunidadId", "", { shouldDirty: true });
     setValue("leadId", "", { shouldDirty: true });
   };
@@ -105,15 +105,19 @@ export default function SeccionDestinatario({ clientes, complete }: Props) {
         </FormField>
       ) : (
         <ProspectoSection
-          modo={prospectoModo}
-          onChangeModo={setProspectoMode}
           tieneVinculo={tieneVinculo}
+          vinculoConfirmado={vinculoConfirmado}
           oportunidadId={oportunidadId}
           leadId={leadId}
           prospectoEmpresa={prospectoEmpresa}
           onSelectMatch={handleSelectMatch}
           onDesvincular={handleDesvincular}
         />
+      )}
+      {esProspecto && (errors.oportunidadId?.message || errors.leadId?.message) && (
+        <p className="text-body-sm text-destructive">
+          {errors.oportunidadId?.message ?? errors.leadId?.message}
+        </p>
       )}
     </WizardSection>
   );

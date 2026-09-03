@@ -4,9 +4,19 @@
  *
  * Extraído del hook `useCrmProspectoSearch` para mantener los hooks libres
  * de imports directos a Supabase (regla de capas).
+ *
+ * P0 (cotizaciones huérfanas): sólo se ofrecen orígenes elegibles, los mismos
+ * que acepta la RPC `crm_vincular_cotizacion`:
+ * - Leads en estado `Calificado` o `Prospecto` (nunca Nuevo/Contactado/
+ *   Descalificado/Pendiente de alta/Convertido).
+ * - Oportunidades vivas, sin cliente, con etapa activa de tipo `abierta` y
+ *   ligadas a un lead elegible. La organización la acota RLS.
  */
 import { supabase } from "@/integrations/supabase/client";
 import { orIlike } from "@/lib/search/ilike";
+
+/** Estados de lead que pueden originar una cotización de prospecto. */
+export const LEAD_ESTADOS_ELEGIBLES = ["Calificado", "Prospecto"] as const;
 
 export interface ProspectoMatch {
   kind: "lead" | "oportunidad";
@@ -33,13 +43,18 @@ export async function buscarProspectos(term: string): Promise<ProspectoMatch[]> 
       .from("crm_leads")
       .select("id, empresa, contacto, email, telefono").is("deleted_at", null)
       .or(orIlike(["empresa", "contacto", "email"], term))
-      .neq("estado", "Convertido")
+      .in("estado", [...LEAD_ESTADOS_ELEGIBLES])
       .limit(8),
     supabase
       .from("crm_oportunidades")
-      .select("id, nombre, lead_id, cliente_nombre, etapa:crm_etapas_pipeline!etapa_id(nombre)").is("deleted_at", null)
+      .select(
+        "id, nombre, lead_id, cliente_nombre, etapa:crm_etapas_pipeline!etapa_id!inner(nombre, tipo, activa), lead:crm_leads!lead_id!inner(estado)",
+      ).is("deleted_at", null)
       .or(orIlike(["nombre", "cliente_nombre"], term))
       .is("cliente_id", null)
+      .eq("etapa.tipo", "abierta")
+      .eq("etapa.activa", true)
+      .in("lead.estado", [...LEAD_ESTADOS_ELEGIBLES])
       .limit(8),
   ]);
   if (leadsRes.error) throw leadsRes.error;

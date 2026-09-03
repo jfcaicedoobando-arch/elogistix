@@ -98,6 +98,8 @@ export interface CotizacionInitialData {
   folio: string;
   es_prospecto: boolean;
   cliente_id: string | null;
+  /** P0: vínculo CRM real; se restaura al editar para no dejarla huérfana. */
+  oportunidad_id?: string | null;
   prospecto_empresa: string;
   prospecto_contacto: string;
   prospecto_email: string;

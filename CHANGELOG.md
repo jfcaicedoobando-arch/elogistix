@@ -13,6 +13,14 @@
 - El aviso del CRM "Dar de alta como cliente" ahora obedece exactamente el mismo permiso que el módulo de Clientes.
 - **Se cerró otra puerta lateral**: una función antigua del CRM permitía ligar cualquier cliente de la empresa a una oportunidad y marcar el prospecto como convertido sin cotización ganadora ni datos fiscales. Ya no puede ejecutarse desde la aplicación; la única ruta válida es la conversión oficial.
 
+### Cotizaciones de prospecto: ya no nacen huérfanas
+- **El cotizador dejó de crear prospectos**: ahora sólo se elige un prospecto calificado o una oportunidad abierta que ya existan en el CRM, con un botón *Abrir CRM* para darlos de alta allá. Se retiró la ficha fiscal duplicada del wizard.
+- **Sólo aparecen orígenes válidos**: prospectos en estado Calificado o Prospecto, y oportunidades vivas, en etapa abierta, sin cliente asignado y de tu misma empresa.
+- **Si falla el vínculo, no se pierde nada**: la cotización queda guardada como borrador, el wizard se queda en el paso 1 con toda la captura y aparece el botón *Reintentar vínculo y continuar*, que reutiliza la misma cotización sin duplicar nada.
+- **Al editar se conserva el vínculo** y ya no se puede sustituir por accidente; tampoco vuelve a aparecer el falso aviso de "otro usuario modificó este registro" después de vincular.
+- **Candado en la base**: la operación de vínculo exige siempre un origen real, valida empresa y permisos, y ya no puede crear ni modificar prospectos.
+- El aviso de las cotizaciones sin oportunidad ahora dice *Editar y vincular* y abre el wizard: no adivina ni inventa el prospecto. Las 17 cotizaciones históricas sin oportunidad se corrigen manualmente; no se tocó ningún dato.
+
 
 ## [13.823.64] - 2026-09-03
 ### Los pesos de un embarque aéreo ya se guardan

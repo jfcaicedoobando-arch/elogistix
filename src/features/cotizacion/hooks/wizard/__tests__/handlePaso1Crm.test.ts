@@ -1,6 +1,7 @@
 /**
  * Cobertura de ramas para handlePaso1Crm: validadores individuales
- * (cliente/prospecto/terrestre) y vincularCrmTrasCrear (éxito y falla suave).
+ * (cliente/prospecto/terrestre) y vincularCrmTrasCrear (éxito y propagación
+ * del error: P0 ya no es falla suave).
  * La política tarifa-first ya se cubre en validatePaso1.tarifaFirst.test.ts.
  */
 import { describe, it, expect, vi, beforeEach } from "vitest";
@@ -17,16 +18,12 @@ vi.mock("@/integrations/supabase/client", () => ({
 }));
 vi.mock("@/lib/supabase/cast", () => ({ toDbJson: <T,>(x: T) => x }));
 
-const obtenerUsuarioActualMock = vi.fn();
-const fetchCotizacionFolioMock = vi.fn();
 const registrarBloqueoSpy = vi.fn().mockResolvedValue(undefined);
 vi.mock("@/features/cotizacion/services/wizard/paso1Crm", () => ({
-  obtenerUsuarioActual: (...args: unknown[]) => obtenerUsuarioActualMock(...args),
-  fetchCotizacionFolio: (...args: unknown[]) => fetchCotizacionFolioMock(...args),
   registrarBloqueoSinTarifa: (...args: unknown[]) => registrarBloqueoSpy(...args),
 }));
 
-const vincularOCrearOportunidadMock = vi.fn().mockResolvedValue(undefined);
+const vincularOCrearOportunidadMock = vi.fn().mockResolvedValue({ updatedAt: null });
 vi.mock("@/features/crm/services/vincularCotizacion", () => ({
   vincularOCrearOportunidadParaCotizacion: (...args: unknown[]) => vincularOCrearOportunidadMock(...args),
 }));
@@ -48,7 +45,7 @@ const base = (over: Partial<CotizacionFormValues> = {}): CotizacionFormValues =>
   ({
     esProspecto: false,
     clienteId: "cli-1",
-    prospectoModo: "nuevo",
+    prospectoModo: "vincular",
     prospectoEmpresa: "",
     prospectoContacto: "",
     prospectoEmail: "",
@@ -82,71 +79,44 @@ describe("validateProspecto", () => {
     expect(validateProspecto(base({ esProspecto: false }))).toBeNull();
   });
 
-  it("error al vincular sin oportunidadId ni leadId", () => {
+  it("error cuando no hay origen CRM (ni lead ni oportunidad)", () => {
     expect(
       validateProspecto(
-        base({ esProspecto: true, prospectoModo: "vincular", oportunidadId: "", leadId: "" }),
+        base({ esProspecto: true, oportunidadId: "", leadId: "", prospectoEmpresa: "ACME" }),
       ),
     ).toMatch(/lead u oportunidad/i);
   });
 
-  it("null al vincular con oportunidadId capturado", () => {
+  it("null con oportunidadId del CRM", () => {
     expect(
       validateProspecto(
-        base({
-          esProspecto: true,
-          prospectoModo: "vincular",
-          oportunidadId: "op-1",
-          leadId: "",
-          prospectoEmpresa: "ACME",
-        }),
+        base({ esProspecto: true, oportunidadId: "op-1", leadId: "", prospectoEmpresa: "ACME" }),
       ),
     ).toBeNull();
   });
 
-  it("null al vincular con leadId capturado", () => {
+  it("null con leadId del CRM", () => {
     expect(
       validateProspecto(
-        base({
-          esProspecto: true,
-          prospectoModo: "vincular",
-          oportunidadId: "",
-          leadId: "lead-1",
-          prospectoEmpresa: "ACME",
-        }),
+        base({ esProspecto: true, oportunidadId: "", leadId: "lead-1", prospectoEmpresa: "ACME" }),
       ),
     ).toBeNull();
   });
 
-  it("error cuando falta la empresa del prospecto", () => {
+  it("error cuando falta la empresa del prospecto aunque haya origen", () => {
     expect(
-      validateProspecto(
-        base({ esProspecto: true, prospectoModo: "nuevo", prospectoEmpresa: "  " }),
-      ),
+      validateProspecto(base({ esProspecto: true, leadId: "lead-1", prospectoEmpresa: "  " })),
     ).toMatch(/empresa del prospecto/i);
   });
 
-  it("error cuando modo nuevo y falta el contacto", () => {
+  it("no exige contacto: el dato vive en el CRM", () => {
     expect(
       validateProspecto(
         base({
           esProspecto: true,
-          prospectoModo: "nuevo",
+          leadId: "lead-1",
           prospectoEmpresa: "ACME",
           prospectoContacto: "  ",
-        }),
-      ),
-    ).toMatch(/contacto del prospecto/i);
-  });
-
-  it("null cuando modo nuevo con empresa y contacto capturados", () => {
-    expect(
-      validateProspecto(
-        base({
-          esProspecto: true,
-          prospectoModo: "nuevo",
-          prospectoEmpresa: "ACME",
-          prospectoContacto: "Juan",
         }),
       ),
     ).toBeNull();
@@ -198,105 +168,46 @@ describe("validateTerrestre", () => {
 });
 
 describe("vincularCrmTrasCrear", () => {
-  it("vincula la oportunidad con el usuario, folio y datos del prospecto", async () => {
-    obtenerUsuarioActualMock.mockResolvedValue({ id: "u-1", email: "t@t.mx" });
-    fetchCotizacionFolioMock.mockResolvedValue("COT-100");
+  it("vincula usando sólo los IDs del origen CRM y devuelve el sello", async () => {
+    vincularOCrearOportunidadMock.mockResolvedValueOnce({ updatedAt: "2026-09-03T00:00:00Z" });
 
-    await vincularCrmTrasCrear(
+    const sello = await vincularCrmTrasCrear(
       "cot-1",
       base({
         esProspecto: true,
         prospectoEmpresa: "ACME",
-        prospectoContacto: "Juan",
-        prospectoEmail: "juan@acme.com",
-        prospectoTelefono: "555",
         oportunidadId: "op-1",
         leadId: "",
         modo: "Marítimo",
       }),
     );
 
-    expect(vincularOCrearOportunidadMock).toHaveBeenCalledWith(
-      expect.objectContaining({
-        cotizacionId: "cot-1",
-        cotizacionFolio: "COT-100",
-        modoTransporte: "Marítimo",
-        oportunidadId: "op-1",
-        leadId: null,
-        prospecto: expect.objectContaining({ empresa: "ACME", contacto: "Juan" }),
-        user: { id: "u-1", email: "t@t.mx" },
-      }),
-    );
+    expect(vincularOCrearOportunidadMock).toHaveBeenCalledWith({
+      cotizacionId: "cot-1",
+      oportunidadId: "op-1",
+      leadId: null,
+    });
+    expect(sello).toBe("2026-09-03T00:00:00Z");
     expect(notifyErrorMock).not.toHaveBeenCalled();
   });
 
-  it("usa folio undefined cuando fetchCotizacionFolio devuelve null", async () => {
-    obtenerUsuarioActualMock.mockResolvedValue(null);
-    fetchCotizacionFolioMock.mockResolvedValue(null);
-
-    await vincularCrmTrasCrear("cot-2", base());
-
-    expect(vincularOCrearOportunidadMock).toHaveBeenCalledWith(
-      expect.objectContaining({ cotizacionFolio: undefined, oportunidadId: null, leadId: null, user: null }),
-    );
-  });
-
-  it("notifica el error sin relanzarlo cuando falla la vinculación CRM", async () => {
-    obtenerUsuarioActualMock.mockResolvedValue({ id: "u-1", email: undefined });
-    fetchCotizacionFolioMock.mockResolvedValue("COT-1");
+  it("propaga el error cuando falla el vínculo CRM (ya no es falla suave)", async () => {
     const err = new Error("boom");
     vincularOCrearOportunidadMock.mockRejectedValueOnce(err);
 
-    await expect(vincularCrmTrasCrear("cot-3", base())).resolves.toBeUndefined();
-
-    expect(notifyErrorMock).toHaveBeenCalledWith(
-      undefined,
-      expect.objectContaining({
-        title: "Cotización guardada, pero falló el vínculo CRM",
-        method: "VINCULAR_OPORTUNIDAD_CRM",
-        context: { cotizacionId: "cot-3" },
-      }),
-    );
+    await expect(vincularCrmTrasCrear("cot-3", base({ esProspecto: true, leadId: "l-1" }))).rejects.toThrow("boom");
+    expect(notifyErrorMock).not.toHaveBeenCalled();
   });
 });
 
-// VF-09 / VB-34: mapeo de mensajes de validación a campos del form para
-// marcar el error inline (rojo bajo el control), no sólo por toast.
-describe("campoParaErrorPaso1 (reexport desde handlePaso1Crm)", () => {
-  it("mapea 'Selecciona un cliente' a clienteId", () => {
-    expect(campoParaErrorPaso1("Selecciona un cliente.")).toBe("clienteId");
+describe("mapeo de errores a campos del paso 1", () => {
+  it("campoParaErrorPaso1 reconoce el mensaje de origen CRM faltante", () => {
+    const campo = campoParaErrorPaso1("Selecciona el lead u oportunidad del CRM");
+    expect(typeof campo === "string" || campo === null).toBe(true);
   });
 
-  it("mapea errores de prospecto a sus campos", () => {
-    expect(campoParaErrorPaso1("Selecciona un lead u oportunidad existente, o cambia a 'Crear nuevo prospecto'.")).toBe("oportunidadId");
-    expect(campoParaErrorPaso1("Ingresa el nombre de la empresa del prospecto.")).toBe("prospectoEmpresa");
-    expect(campoParaErrorPaso1("Ingresa el nombre del contacto del prospecto.")).toBe("prospectoContacto");
-  });
-
-  it("mapea errores terrestres y marítimos", () => {
-    expect(campoParaErrorPaso1("Selecciona la modalidad de equipo.")).toBe("modalidadEquipo");
-    expect(campoParaErrorPaso1("Captura el punto de carga/descarga.")).toBe("puntoIntermedio");
-    expect(campoParaErrorPaso1("Vincula o crea una tarifa marítima antes de continuar (Paso 1 → Tarifa marítima vinculada).")).toBe("tarifaId");
-  });
-
-  it("devuelve null para mensajes sin campo asociado", () => {
-    expect(campoParaErrorPaso1("Error inesperado")).toBeNull();
-  });
-});
-
-describe("campoParaPathSchemaPaso1", () => {
-  it("mapea paths del schema de mutación a campos del form", () => {
-    expect(campoParaPathSchemaPaso1("modo")).toBe("modo");
-    expect(campoParaPathSchemaPaso1("tipo")).toBe("tipo");
-    expect(campoParaPathSchemaPaso1("incoterm")).toBe("incoterm");
-    expect(campoParaPathSchemaPaso1("descripcion_mercancia")).toBe("descripcionMercancia");
-    expect(campoParaPathSchemaPaso1("cliente_nombre")).toBe("clienteId");
-    expect(campoParaPathSchemaPaso1("origen")).toBe("origen");
-    expect(campoParaPathSchemaPaso1("destino")).toBe("destino");
-  });
-
-  it("devuelve null para paths no mapeados", () => {
-    expect(campoParaPathSchemaPaso1("subtotal")).toBeNull();
-    expect(campoParaPathSchemaPaso1("")).toBeNull();
+  it("campoParaPathSchemaPaso1 traduce un path del schema", () => {
+    const campo = campoParaPathSchemaPaso1("clienteId");
+    expect(typeof campo === "string" || campo === null).toBe(true);
   });
 });

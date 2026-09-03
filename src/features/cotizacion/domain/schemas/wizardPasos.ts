@@ -64,7 +64,9 @@ export const destinatarioSchema = z
       }
       return;
     }
-    if (v.prospectoModo === "vincular" && !v.oportunidadId && !v.leadId) {
+    // P0: toda cotización de prospecto exige un origen CRM real (lead u
+    // oportunidad). El cotizador ya no crea prospectos.
+    if (!v.oportunidadId && !v.leadId) {
       ctx.addIssue({
         code: "custom",
         path: ["oportunidadId"],
@@ -76,13 +78,6 @@ export const destinatarioSchema = z
         code: "custom",
         path: ["prospectoEmpresa"],
         message: COPY_VALIDACION.prospectoEmpresaRequerida,
-      });
-    }
-    if (v.prospectoModo === "nuevo" && !v.prospectoContacto.trim()) {
-      ctx.addIssue({
-        code: "custom",
-        path: ["prospectoContacto"],
-        message: COPY_VALIDACION.prospectoContactoRequerido,
       });
     }
   });

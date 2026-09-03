@@ -3749,7 +3749,8 @@
       "20260910001000_guard_cuenta_bancaria_y_notificaciones.sql",
       "20260911000100_replay_cerrar_reabrir_org_scope_helper_service_role.sql",
       "20260911000110_replay_actualizar_cierre_periodo.sql",
-      "20260911000120_replay_nc_saldo_lock_y_rep_historia.sql"
+      "20260911000120_replay_nc_saldo_lock_y_rep_historia.sql",
+      "20260903011643_928469ba-3259-434f-ba81-d4f1e7f6a425.sql"
     ]
   }
 }

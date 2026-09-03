@@ -1,5 +1,6 @@
 /**
  * Chip de vínculo a oportunidad o lead existente en SeccionDestinatario.
+ * P0: un vínculo ya guardado no se puede sustituir desde el cotizador.
  */
 import { Briefcase, UserRound, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -10,9 +11,10 @@ interface Props {
   leadId: string;
   nombre: string;
   onDesvincular: () => void;
+  puedeDesvincular?: boolean;
 }
 
-export function VinculoChip({ oportunidadId, leadId, nombre, onDesvincular }: Props) {
+export function VinculoChip({ oportunidadId, leadId, nombre, onDesvincular, puedeDesvincular = true }: Props) {
   const tipoLabel = oportunidadId ? "Oportunidad" : "Lead";
   const Icon = oportunidadId ? Briefcase : UserRound;
   return (
@@ -25,13 +27,17 @@ export function VinculoChip({ oportunidadId, leadId, nombre, onDesvincular }: Pr
         <span className="truncate text-body font-medium">{nombre || "Sin nombre"}</span>
         {!oportunidadId && leadId && (
           <span className="text-body-sm text-muted-foreground">
-            (se creará la oportunidad al guardar)
+            (se usará o abrirá su oportunidad al guardar)
           </span>
         )}
       </div>
-      <Button type="button" variant="ghost" size="sm" onClick={onDesvincular}>
-        <X className="h-4 w-4 mr-1" /> Desvincular
-      </Button>
+      {puedeDesvincular ? (
+        <Button type="button" variant="ghost" size="sm" onClick={onDesvincular}>
+          <X className="h-4 w-4 mr-1" /> Desvincular
+        </Button>
+      ) : (
+        <span className="text-body-sm text-muted-foreground shrink-0">Vínculo confirmado</span>
+      )}
     </div>
   );
 }
