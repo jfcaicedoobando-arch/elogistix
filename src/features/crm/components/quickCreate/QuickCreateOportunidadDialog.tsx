@@ -39,7 +39,7 @@ export default function QuickCreateOportunidadDialog({ open, onOpenChange, onCre
     nombre, setNombre,
     origenTipo, setOrigenTipo,
     clienteId, setClienteId,
-    leadId, setLeadNombre,
+    leadId, setLeadId, setLeadNombre,
     setLeadVendedorId, setLeadVendedorEmail,
     limpiarOrigen,
     etapaInicial, origenListo,
@@ -110,12 +110,10 @@ export default function QuickCreateOportunidadDialog({ open, onOpenChange, onCre
             clientes={clientes}
             leadId={leadId}
             onLead={(id, label, meta) => {
-              setClienteId((prev) => prev); // no-op: mantiene tipo de firma estable
+              setLeadId(id);
               setLeadNombre(label);
               setLeadVendedorId(meta?.vendedor_id ?? null);
               setLeadVendedorEmail(meta?.vendedor_email ?? "");
-              // El id del lead se fija tras las asignaciones anteriores.
-              // (ver nota abajo)
             }}
           />
         </div>
