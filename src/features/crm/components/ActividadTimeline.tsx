@@ -18,6 +18,7 @@ import {
   ACTIVIDAD_TIPOS, type CrmActividadTipo, type CrmEntidadTipo,
 } from "@/features/crm/hooks";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
+import { usePermissions } from "@/hooks/shared";
 
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 interface Props {
@@ -26,6 +27,9 @@ interface Props {
 }
 
 export default function ActividadTimeline({ entidadTipo, entidadId }: Props) {
+  // Espejo de las policies de `crm_actividades`: sin capacidad no se muestra
+  // el alta ni el botón de completar (antes terminaban en RLS 42501).
+  const { canCrearActividad, canGestionarActividad } = usePermissions();
   const { data } = useActividades({ entidadTipo, entidadId, estado: "todas", pageSize: 100 });
   const crear = useCrearActividad();
   const completar = useCompletarActividad();
@@ -51,6 +55,7 @@ export default function ActividadTimeline({ entidadTipo, entidadId }: Props) {
     <Card>
       <CardHeader><CardTitle className="flex items-center gap-2"><Activity className="h-4 w-4" /> Actividades</CardTitle></CardHeader>
       <CardContent className="space-y-4">
+        {canCrearActividad && (
         <div className="grid grid-cols-1 md:grid-cols-[140px,1fr,auto] gap-2">
           <Select value={tipo} onValueChange={(v) => setTipo(v as CrmActividadTipo)}>
             <SelectTrigger><SelectValue /></SelectTrigger>
@@ -71,6 +76,7 @@ export default function ActividadTimeline({ entidadTipo, entidadId }: Props) {
             onChange={(e) => setDesc(e.target.value)}
           />
         </div>
+        )}
 
         {items.length === 0 ? (
           <EmptyStateInline icon={History} message="Sin actividades registradas" />
@@ -87,7 +93,7 @@ export default function ActividadTimeline({ entidadTipo, entidadId }: Props) {
                 <div className="text-label text-muted-foreground mt-1 flex items-center gap-2">
                   <span>{formatFechaHora(a.created_at)}</span>
                   <span>· {a.responsable_email}</span>
-                  {!a.fecha_completada && (
+                  {!a.fecha_completada && canGestionarActividad(a.responsable_id) && (
                     <Button
                       size="sm"
                       variant="ghost"
