@@ -22,6 +22,8 @@ export function ProformaDocument({ proforma, embarque, conceptos, cliente, tasaI
   const usd = conceptos.filter((c) => c.moneda === "USD");
   const mxn = conceptos.filter((c) => c.moneda === "MXN");
   const tasaPct = Math.round(tasaIva * 100);
+  // Subtítulo de moneda sólo cuando conviven USD y MXN.
+  const multiMoneda = usd.length > 0 && mxn.length > 0;
 
   // B-4: detectar si la proforma cubre N contenedores reales para activar el agrupamiento.
   const idsUnicos = new Set(
