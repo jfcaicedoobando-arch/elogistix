@@ -30,13 +30,26 @@ import { useCrearOportunidad, useEtapasPipeline } from "@/features/crm/hooks";
 import { useClientesForSelect } from "@/features/cliente/hooks";
 import { LeadComboboxCrm } from "@/features/crm/components/comboboxes/EntidadComboboxCrm";
 import { LEAD_ESTADOS_ETAPA_PROSPECTO } from "@/features/crm/domain/leads/etapas";
-import { primeraEtapaAbierta, MSG_SIN_ETAPA_ABIERTA } from "@/features/crm/domain/oportunidadFormHelpers";
+import {
+  primeraEtapaAbierta,
+  MSG_SIN_ETAPA_ABIERTA,
+  type OrigenInicial,
+} from "@/features/crm/domain/oportunidadFormHelpers";
+
+/**
+ * Borrador mínimo que viaja del alta express al formulario completo cuando el
+ * usuario pulsa "Más campos →": sólo nombre y origen/ownership ya elegidos.
+ */
+export interface OportunidadQuickDraft {
+  nombre: string;
+  origen: OrigenInicial | null;
+}
 
 interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onCreated: (id: string) => void;
-  onMore: () => void;
+  onMore: (draft: OportunidadQuickDraft) => void;
 }
 
 type OrigenTipo = "prospecto" | "cliente";
@@ -99,6 +112,28 @@ export default function QuickCreateOportunidadDialog({ open, onOpenChange, onCre
       };
     }
     return { vendedor_id: user?.id ?? null, vendedor_email: user?.email ?? "" };
+  };
+
+  /** Lo capturado hasta ahora, para no perderlo al pasar al formulario completo. */
+  const construirBorrador = (): OportunidadQuickDraft => {
+    const nombreLimpio = nombre.trim();
+    const cliente = clientes.find((c) => c.id === clienteId);
+    if (origenTipo === "cliente" && cliente) {
+      return { nombre: nombreLimpio, origen: { tipo: "cliente", id: cliente.id, nombre: cliente.nombre } };
+    }
+    if (origenTipo === "prospecto" && leadId) {
+      return {
+        nombre: nombreLimpio,
+        origen: {
+          tipo: "prospecto",
+          id: leadId,
+          nombre: leadNombre,
+          vendedorId: leadVendedorId,
+          vendedorEmail: leadVendedorEmail,
+        },
+      };
+    }
+    return { nombre: nombreLimpio, origen: null };
   };
 
   const submit = async () => {
@@ -166,7 +201,7 @@ export default function QuickCreateOportunidadDialog({ open, onOpenChange, onCre
               type="button"
               variant="ghost"
               size="sm"
-              onClick={onMore}
+              onClick={() => onMore(construirBorrador())}
               disabled={crear.isPending}
               className="text-body-sm"
             >

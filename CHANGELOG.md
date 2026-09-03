@@ -2,14 +2,13 @@
 
 ## [Unreleased]
 
-### Formularios rápidos del CRM: estado limpio y sin dobles guardados
-- **Dos Enter seguidos ya no crean dos registros**: los altas express de lead, oportunidad y actividad ignoran un segundo envío mientras el primero está guardando.
-- **No se puede cerrar el formulario mientras guarda** (X, ESC o clic fuera), y el botón *Más campos →* queda deshabilitado durante el guardado.
-- **La confirmación "¿Descartar los cambios?" ya detecta toda la captura**: origen/cliente/prospecto en oportunidades y oportunidad ligada o fecha modificada en actividades.
-- **Al reabrir, el formulario aparece en blanco**: lo descartado ya no reaparece y la fecha de la actividad se recalcula al valor por omisión de ese momento.
-- **El botón *Cancelar* del footer también respeta la confirmación de descarte** cuando se usa dentro de `FormDialogShell`.
-- **Las altas completas también evitan doble guardado y cierre durante la operación**: *Nuevo lead*, *Nueva oportunidad* y *Nueva actividad* bloquean un segundo envío, deshabilitan *Cancelar* y usan `busy` para impedir cerrar el modal mientras se guarda.
-- **Los diálogos completos de *Nuevo lead* y *Nueva actividad* ahora usan `FormDialogFooter`** para que *Cancelar*, la X, ESC y el clic fuera pasen por la confirmación de descarte; al cerrar de verdad se limpia el borrador para la siguiente apertura.
+### Formularios del CRM: nada se pierde y nada se guarda dos veces
+- **Un segundo Enter o clic ya no crea dos registros**: las altas express y los formularios completos de lead, oportunidad y actividad ignoran envíos duplicados, deshabilitan *Cancelar* y *Más campos →*, y no permiten cerrar el modal (X, ESC o clic fuera) mientras se guarda.
+- **Cerrar un formulario con captura pide confirmación** en *Cancelar*, X, ESC y clic fuera; incluye la oportunidad (nombre, origen, cliente/prospecto, vendedor, montos, notas y la casilla de actividad automática). Tras guardar con éxito ya no aparece esa confirmación.
+- **Al reabrir, el formulario aparece limpio**: lo descartado no reaparece, la fecha de la actividad se recalcula y la casilla de actividad automática vuelve a estar marcada.
+- **La etapa del embudo ya no borra lo capturado**: si el pipeline carga después de abrir *Nueva oportunidad*, sólo se rellena la etapa inicial abierta y su probabilidad; el resto de los datos se conserva y el formulario no queda marcado como modificado por eso.
+- **"Más campos →" conserva lo capturado**: al pasar del alta express al formulario completo de oportunidad se mantienen el nombre y el origen elegido (cliente o prospecto, con su vendedor dueño), sin pedir confirmación de descarte por ese cambio de vista.
+
 
 
 

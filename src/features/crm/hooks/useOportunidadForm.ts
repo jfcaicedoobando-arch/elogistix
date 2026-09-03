@@ -2,7 +2,7 @@
  * Estado del formulario de NuevaOportunidadDialog.
  * Extraído del componente para mantenerlo ≤200 LOC.
  */
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { CrmOportunidadRow } from "@/features/crm/hooks/useOportunidades";
 import type { User } from "@supabase/supabase-js";
 import {
@@ -12,6 +12,7 @@ import {
 import {
   buildFromOportunidad,
   buildEmptyForNueva,
+  primeraEtapaAbierta,
   type OrigenInicial,
 } from "@/features/crm/domain/oportunidadFormHelpers";
 
@@ -22,6 +23,12 @@ export { EMPTY_OPORTUNIDAD };
 interface Etapa {
   id: string;
   probabilidad_default: number;
+  tipo?: string;
+}
+
+/** Comparación estable de dos estados del formulario (objeto plano y pequeño). */
+function mismoForm(a: OportunidadFormState, b: OportunidadFormState): boolean {
+  return (Object.keys(a) as (keyof OportunidadFormState)[]).every((k) => a[k] === b[k]);
 }
 
 export function useOportunidadForm(
@@ -30,6 +37,8 @@ export function useOportunidadForm(
   etapas: Etapa[],
   user: User | null,
   origenInicial?: OrigenInicial | null,
+  /** Nombre precapturado (p. ej. viene del alta express al pulsar "Más campos"). */
+  nombreInicial?: string | null,
 ) {
   const [form, setForm] = useState<OportunidadFormState>(EMPTY_OPORTUNIDAD);
 
@@ -43,29 +52,70 @@ export function useOportunidadForm(
   const userRef = useRef(user);
   const oportunidadRef = useRef(oportunidad);
   const origenRef = useRef(origenInicial);
+  const nombreRef = useRef(nombreInicial);
+  const formRef = useRef(form);
   etapasRef.current = etapas;
   userRef.current = user;
   oportunidadRef.current = oportunidad;
   origenRef.current = origenInicial;
+  nombreRef.current = nombreInicial;
+  formRef.current = form;
+
+  /** Fotografía del estado inicial construido: base para `isDirty`. */
+  const inicialRef = useRef<OportunidadFormState>(EMPTY_OPORTUNIDAD);
 
   const oportunidadId = oportunidad?.id ?? null;
   // La identidad del origen prefijado también reinicia el formulario.
   const origenKey = origenInicial ? `${origenInicial.tipo}:${origenInicial.id}` : "";
+  const nombreKey = nombreInicial ?? "";
 
   useEffect(() => {
     const current = oportunidadRef.current;
+    let inicial: OportunidadFormState;
     if (current) {
-      setForm(buildFromOportunidad(current));
+      inicial = buildFromOportunidad(current);
     } else if (open) {
-      setForm(buildEmptyForNueva(etapasRef.current, userRef.current, origenRef.current));
+      inicial = buildEmptyForNueva(etapasRef.current, userRef.current, origenRef.current);
+      const nombrePrecapturado = (nombreRef.current ?? "").trim();
+      if (nombrePrecapturado) inicial = { ...inicial, nombre: nombrePrecapturado };
+    } else {
+      return;
     }
+    inicialRef.current = inicial;
+    setForm(inicial);
     // La dependencia real es la *identidad* del registro (oportunidadId), el
-    // origen prefijado y `open`; los objetos se leen vía ref para evitar loops
-    // cuando el backend devuelve una referencia nueva con el mismo id.
-  }, [oportunidadId, open, origenKey]);
+    // origen prefijado, el nombre precapturado y `open`; los objetos se leen
+    // vía ref para evitar loops cuando el backend devuelve una referencia
+    // nueva con el mismo id.
+  }, [oportunidadId, open, origenKey, nombreKey]);
+
+  // Etapas que llegan tarde (creación): si el pipeline aún no había cargado al
+  // abrir, hidratamos SÓLO etapa/probabilidad y sincronizamos la fotografía
+  // inicial para que el arribo de datos no marque el formulario como sucio.
+  const etapaAbierta = useMemo(() => primeraEtapaAbierta(etapas), [etapas]);
+  const etapaAbiertaId = etapaAbierta?.id ?? "";
+  const etapaAbiertaProb = etapaAbierta?.probabilidad_default ?? 0;
+
+  useEffect(() => {
+    if (!open || oportunidadRef.current || !etapaAbiertaId) return;
+    if (formRef.current.etapa_id) return;
+    setForm((f) => ({ ...f, etapa_id: etapaAbiertaId, probabilidad: etapaAbiertaProb }));
+    inicialRef.current = {
+      ...inicialRef.current,
+      etapa_id: etapaAbiertaId,
+      probabilidad: etapaAbiertaProb,
+    };
+  }, [open, etapaAbiertaId, etapaAbiertaProb]);
 
   const set = <K extends keyof OportunidadFormState>(k: K, v: OportunidadFormState[K]) =>
     setForm((f) => ({ ...f, [k]: v }));
 
-  return { form, setForm, set };
+  const isDirty = !mismoForm(form, inicialRef.current);
+
+  /** Marca el estado actual como "guardado" (evita confirmación de descarte). */
+  const markClean = useCallback(() => {
+    inicialRef.current = formRef.current;
+  }, []);
+
+  return { form, setForm, set, isDirty, markClean };
 }

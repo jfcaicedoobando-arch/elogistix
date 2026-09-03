@@ -22,7 +22,9 @@ import NuevaOportunidadDialog from "@/features/crm/components/NuevaOportunidadDi
 import NuevaActividadDialog from "@/features/crm/components/NuevaActividadDialog";
 import ImportarLeadsCsvDialog from "@/features/crm/components/ImportarLeadsCsvDialog";
 import QuickCreateLeadDialog from "@/features/crm/components/quickCreate/QuickCreateLeadDialog";
-import QuickCreateOportunidadDialog from "@/features/crm/components/quickCreate/QuickCreateOportunidadDialog";
+import QuickCreateOportunidadDialog, {
+  type OportunidadQuickDraft,
+} from "@/features/crm/components/quickCreate/QuickCreateOportunidadDialog";
 import QuickCreateActividadDialog from "@/features/crm/components/quickCreate/QuickCreateActividadDialog";
 import { usePermissions } from "@/hooks/shared";
 
@@ -42,6 +44,9 @@ export default function QuickAddMenu({ openTrigger, dialogTrigger }: QuickAddMen
   const [opOpen, setOpOpen] = useState(false);
   const [actOpen, setActOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
+  // Borrador mínimo del alta express de oportunidad: se conserva sólo mientras
+  // el formulario completo está abierto (transición "Más campos →").
+  const [opDraft, setOpDraft] = useState<OportunidadQuickDraft | null>(null);
 
   /**
    * Espejo de las policies RLS: oportunidades y actividades sólo se crean con
@@ -130,7 +135,11 @@ export default function QuickAddMenu({ openTrigger, dialogTrigger }: QuickAddMen
         open={quick === "oportunidad"}
         onOpenChange={cerrarQuick}
         onCreated={(id) => navigate(`/crm/oportunidades/${id}`)}
-        onMore={() => { setQuick(null); setOpOpen(true); }}
+        onMore={(draft) => {
+          setQuick(null);
+          setOpDraft(draft.nombre || draft.origen ? draft : null);
+          setOpOpen(true);
+        }}
       />
       <QuickCreateActividadDialog
         open={quick === "actividad"}
@@ -140,7 +149,13 @@ export default function QuickAddMenu({ openTrigger, dialogTrigger }: QuickAddMen
       />
 
       <NuevoLeadDialog open={leadOpen} onOpenChange={setLeadOpen} onCreated={(id) => navigate(`/crm/leads/${id}`)} />
-      <NuevaOportunidadDialog open={opOpen} onOpenChange={setOpOpen} onSaved={(id) => navigate(`/crm/oportunidades/${id}`)} />
+      <NuevaOportunidadDialog
+        open={opOpen}
+        onOpenChange={(next) => { setOpOpen(next); if (!next) setOpDraft(null); }}
+        origenInicial={opDraft?.origen ?? null}
+        nombreInicial={opDraft?.nombre ?? null}
+        onSaved={(id) => navigate(`/crm/oportunidades/${id}`)}
+      />
       <NuevaActividadDialog open={actOpen} onOpenChange={setActOpen} onCreated={() => navigate("/crm/actividades")} />
       <ImportarLeadsCsvDialog open={importOpen} onOpenChange={setImportOpen} />
     </>
