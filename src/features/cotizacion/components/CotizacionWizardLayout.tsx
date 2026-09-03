@@ -1,5 +1,8 @@
 import { useCallback, useState } from "react";
 import { FormProvider } from "react-hook-form";
+import { AlertTriangle } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 import { notifySuccess } from "@/lib/ui/appFeedback";
 import { WizardShell } from "@/components/shared/WizardShell";
 import { CotizacionWizardFooter } from "@/features/cotizacion/components/wizard/CotizacionWizardFooter";
@@ -140,6 +143,21 @@ export default function CotizacionWizardLayout({
           />
         }
       >
+        {w.currentStep === 1 && w.vinculoCrmError && (
+          <Alert variant="destructive" className="mb-4">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertTitle>Falta el vínculo con el CRM</AlertTitle>
+            <AlertDescription className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+              <span>
+                La cotización se guardó como borrador, pero no se pudo ligar al prospecto u
+                oportunidad del CRM: {w.vinculoCrmError}
+              </span>
+              <Button size="sm" variant="outline" onClick={handleNext} disabled={isBusy}>
+                Reintentar vínculo y continuar
+              </Button>
+            </AlertDescription>
+          </Alert>
+        )}
         <CotizacionWizardSteps
           w={w}
           clientes={clientes}
