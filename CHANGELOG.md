@@ -3,6 +3,7 @@
 ## [Unreleased]
 
 ### Pruebas de permisos (RLS) al día
+- Se actualizaron las pruebas de permisos que aún asumían contratos viejos: la conversión de prospecto a cliente se prueba con un usuario firmado con permiso de alta, las funciones internas del CRM se invocan con el rol interno que hoy las ejecuta y los candados de actividades esperan el mensaje real del guard. Suite completa en verde (89 guards y 34 suites).
 - Se registraron en la lista canónica las cinco funciones internas del CRM que quedaron cerradas a `service_role` (conversión de prospecto y sincronía con cotizaciones) y se volvió a cerrar el borrado físico de leads en la base efímera de pruebas, que sólo deben archivarse.
 
 ## [13.823.70] - 2026-09-03
