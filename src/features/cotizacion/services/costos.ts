@@ -6,6 +6,11 @@ import type { CostoCotizacion } from "@/features/cotizacion/types";
 import { fromDbChecked } from "@/lib/supabase/cast";
 import { costosCotizacionDbSchema } from "./readSchemas";
 import { registrarActividad } from "@/services/bitacora/registrar";
+import {
+  LC_CONFLICTO_CONCURRENCIA,
+  conflictoConcurrenciaError,
+} from "@/lib/errors/concurrencia";
+
 import { assertNotTruncated } from "@/lib/supabase/assertNotTruncated";
 import { CAP_LISTA } from "@/constants/queryCaps";
 
