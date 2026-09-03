@@ -1,32 +1,26 @@
 /**
  * Leads — operaciones en lote (bulk create/update/softDelete).
  *
- * Las tres devuelven la cantidad REAL de filas afectadas (`select("id")`) y un
- * `aviso` secundario no fatal: si la bitácora falla después de una escritura ya
- * confirmada, el resultado principal sigue siendo exitoso (no se debe reintentar).
+ * Las tres devuelven la cantidad REAL de filas afectadas (`select("id")`).
+ * `ResultadoLote.aviso` se reserva exclusivamente para importaciones parciales:
+ * cuando un chunk posterior al primero falla (o al final faltan filas), se
+ * devuelve el conteo real y se pide al usuario volver a cargar el archivo para
+ * que la deduplicación omita lo ya creado.
  */
 import { supabase } from "@/integrations/supabase/client";
 import { type LeadInput } from "@/features/crm/domain/leads/constants";
 import { buildLeadInsertPayload, type AuthLite } from "@/features/crm/domain/leads/leadPayload";
-import { registrarActividad, type RegistrarActividadInput } from "@/services/bitacora/registrar";
+import { registrarActividad } from "@/services/bitacora/registrar";
 
 export interface ResultadoLote {
   /** Filas realmente afectadas por la operación (puede ser menor a `ids.length`). */
   affected: number;
-  /** Aviso secundario no fatal (p. ej. la bitácora no se pudo registrar). */
+  /** Aviso secundario no fatal; reservado para importaciones parciales. */
   aviso?: string;
 }
 
-const AVISO_BITACORA = "La operación se aplicó, pero no se pudo registrar en bitácora.";
-
-/** Bitácora fire-and-forget: nunca convierte en error una escritura confirmada. */
-async function registrarSinRomper(input: RegistrarActividadInput): Promise<string | undefined> {
-  try {
-    await registrarActividad(input);
-    return undefined;
-  } catch {
-    return AVISO_BITACORA;
-  }
+function avisoImportacionParcial(creados: number, total: number): string {
+  return `Se importaron ${creados} de ${total} leads. Vuelve a cargar el archivo; la deduplicación omitirá los registros ya creados.`;
 }
 
 export async function bulkUpdateLeads(
@@ -42,12 +36,12 @@ export async function bulkUpdateLeads(
     .select("id");
   if (error) throw error;
   const affected = (data ?? []).length;
-  const aviso = await registrarSinRomper({
+  await registrarActividad({
     modulo: "crm",
     accion: "Actualizó leads en lote",
     detalles: { cantidad: affected, solicitados: ids.length, campos: Object.keys(patch) },
   });
-  return { affected, aviso };
+  return { affected };
 }
 
 export async function bulkSoftDeleteLeads(
@@ -63,12 +57,12 @@ export async function bulkSoftDeleteLeads(
     .select("id");
   if (error) throw error;
   const affected = (data ?? []).length;
-  const aviso = await registrarSinRomper({
+  await registrarActividad({
     modulo: "crm",
     accion: "Eliminó leads en lote",
     detalles: { cantidad: affected, solicitados: ids.length },
   });
-  return { affected, aviso };
+  return { affected };
 }
 
 export async function bulkCreateLeads(
@@ -78,19 +72,45 @@ export async function bulkCreateLeads(
   if (inputs.length === 0) return { affected: 0 };
   const payloads = inputs.map((input) => buildLeadInsertPayload(input, user));
   let inserted = 0;
+
   for (let i = 0; i < payloads.length; i += 100) {
     const chunk = payloads.slice(i, i + 100);
-    const { data, error } = await supabase
-      .from("crm_leads")
-      .insert(chunk)
-      .select("id");
-    if (error) throw error;
-    inserted += (data ?? []).length;
+    let result: { data: { id: string }[] | null; error: Error | null } | undefined;
+    let thrown: Error | undefined;
+    try {
+      result = await supabase
+        .from("crm_leads")
+        .insert(chunk)
+        .select("id");
+    } catch (e) {
+      thrown = e instanceof Error ? e : new Error(String(e));
+    }
+    const error = thrown ?? result?.error ?? null;
+    if (error) {
+      if (inserted === 0) throw error;
+      await registrarActividad({
+        modulo: "crm",
+        accion: "Importó leads en lote",
+        detalles: { cantidad: inserted, solicitados: inputs.length },
+      });
+      return { affected: inserted, aviso: avisoImportacionParcial(inserted, inputs.length) };
+    }
+    inserted += (result?.data ?? []).length;
   }
-  const aviso = await registrarSinRomper({
+
+  if (inserted < inputs.length) {
+    await registrarActividad({
+      modulo: "crm",
+      accion: "Importó leads en lote",
+      detalles: { cantidad: inserted, solicitados: inputs.length },
+    });
+    return { affected: inserted, aviso: avisoImportacionParcial(inserted, inputs.length) };
+  }
+
+  await registrarActividad({
     modulo: "crm",
     accion: "Importó leads en lote",
     detalles: { cantidad: inserted },
   });
-  return { affected: inserted, aviso };
+  return { affected: inserted };
 }
