@@ -103,17 +103,20 @@ export default function NuevoLeadDialog({ open, onOpenChange, onCreated }: Props
 
 
   const handleOpenChange = (o: boolean) => {
-    if (!o) setForm(formVacio());
+    if (!o) {
+      setForm(formVacio());
+      setAutoActividad(true);
+    }
     onOpenChange(o);
   };
 
   const footer = (
-    <>
-      <Button variant="outline" onClick={() => onOpenChange(false)} disabled={pendingTotal}>Cancelar</Button>
-      <Button onClick={handleSubmit} loading={pendingTotal}>
-        Crear lead
-      </Button>
-    </>
+    <FormDialogFooter
+      onCancel={() => onOpenChange(false)}
+      onConfirm={handleSubmit}
+      confirmLabel="Crear lead"
+      loading={pendingTotal}
+    />
   );
 
   return (
@@ -125,8 +128,10 @@ export default function NuevoLeadDialog({ open, onOpenChange, onCreated }: Props
       description="Captura los datos básicos del prospecto. Podrás convertirlo a cliente y oportunidad desde su ficha."
       size="2xl"
       busy={pendingTotal}
+      isDirty={isDirty}
       footer={footer}
     >
+
 
       <AvisoLeadDuplicado
         empresa={form.empresa}
