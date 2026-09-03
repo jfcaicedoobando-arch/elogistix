@@ -25,12 +25,14 @@ afterEach(() => { vi.useRealTimers(); });
 
 describe("crm/leads/bulk", () => {
   it("01 — bulkUpdateLeads: retorna 0 con arreglo vacío sin llamar a Supabase", async () => {
-    expect(await bulkUpdateLeads([], { empresa: "X" })).toBe(0);
+    expect(await bulkUpdateLeads([], { empresa: "X" })).toEqual({ affected: 0 });
     expect(mock.tableCalls).toHaveLength(0);
   });
 
-  it("02 — bulkUpdateLeads: retorna cantidad de ids", async () => {
-    expect(await bulkUpdateLeads(["a","b","c"], { estado: "Contactado" })).toBe(3);
+  it("02 — bulkUpdateLeads: retorna las filas realmente afectadas", async () => {
+    mock.setTableResult(TABLE, { data: [{ id: "a" }, { id: "b" }], error: null });
+    const r = await bulkUpdateLeads(["a","b","c"], { estado: "Contactado" });
+    expect(r.affected).toBe(2);
   });
 
   it("03 — bulkUpdateLeads: aplica .in con los ids correctos", async () => {
@@ -46,12 +48,14 @@ describe("crm/leads/bulk", () => {
   });
 
   it("05 — bulkSoftDeleteLeads: retorna 0 con arreglo vacío sin llamar a Supabase", async () => {
-    expect(await bulkSoftDeleteLeads([], "u-1")).toBe(0);
+    expect(await bulkSoftDeleteLeads([], "u-1")).toEqual({ affected: 0 });
     expect(mock.tableCalls).toHaveLength(0);
   });
 
-  it("06 — bulkSoftDeleteLeads: retorna cantidad de ids", async () => {
-    expect(await bulkSoftDeleteLeads(["a","b"], "u-1")).toBe(2);
+  it("06 — bulkSoftDeleteLeads: retorna las filas realmente eliminadas", async () => {
+    mock.setTableResult(TABLE, { data: [{ id: "a" }], error: null });
+    const r = await bulkSoftDeleteLeads(["a","b"], "u-1");
+    expect(r.affected).toBe(1);
   });
 
   it("07 — bulkSoftDeleteLeads: incluye deleted_at y deleted_by en payload", async () => {
@@ -67,7 +71,7 @@ describe("crm/leads/bulk", () => {
   });
 
   it("09 — bulkCreateLeads: retorna 0 con arreglo vacío sin llamar a Supabase", async () => {
-    expect(await bulkCreateLeads([], user)).toBe(0);
+    expect(await bulkCreateLeads([], user)).toEqual({ affected: 0 });
     expect(mock.tableCalls).toHaveLength(0);
   });
 

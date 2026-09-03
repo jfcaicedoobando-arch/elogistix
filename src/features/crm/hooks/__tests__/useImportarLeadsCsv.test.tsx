@@ -13,7 +13,16 @@ vi.mock("@/features/crm/hooks", () => ({
 }));
 
 vi.mock("@/features/crm/hooks/useLeadsDuplicados", () => ({
-  useDuplicadosLote: () => ({ coincidencias: [], isLoading: false, existentes: [] }),
+  useDuplicadosLote: () => ({
+    coincidencias: [],
+    isLoading: false,
+    isFetching: false,
+    isError: false,
+    error: null,
+    listo: true,
+    refetch: vi.fn(),
+    existentes: [],
+  }),
 }));
 
 vi.mock("@/lib/ui/appFeedback", () => ({

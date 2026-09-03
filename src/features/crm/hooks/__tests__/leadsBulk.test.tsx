@@ -33,7 +33,7 @@ describe("leads bulk hooks", () => {
 
 
   it("useActualizarLeadsBulk llama a bulkUpdateLeads con ids y patch", async () => {
-    bulkUpdateLeads.mockResolvedValueOnce([{ id: "l1" }]);
+    bulkUpdateLeads.mockResolvedValueOnce({ affected: 1 });
     const { result } = renderHook(() => useActualizarLeadsBulk(), { wrapper: createWrapper() });
     result.current.mutate({ ids: ["l1"], patch: { estado: "Calificado" } });
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
@@ -41,7 +41,7 @@ describe("leads bulk hooks", () => {
   });
 
   it("useEliminarLeadsBulk llama a bulkSoftDeleteLeads", async () => {
-    bulkSoftDeleteLeads.mockResolvedValueOnce(1);
+    bulkSoftDeleteLeads.mockResolvedValueOnce({ affected: 1 });
     const { result } = renderHook(() => useEliminarLeadsBulk(), { wrapper: createWrapper() });
     result.current.mutate(["l2"]);
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
