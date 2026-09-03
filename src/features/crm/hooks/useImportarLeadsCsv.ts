@@ -2,6 +2,9 @@
  * Hook que orquesta el flujo de importación CSV de leads.
  * Extraído de `ImportarLeadsCsvDialog` en 11.60.0 (Bloque B2).
  * v13.630.0 (Ola A): higiene — omite duplicados exactos y avisa de posibles.
+ *
+ * Falla cerrada: mientras la revisión de duplicados está en vuelo (o si falló)
+ * NO se puede importar; el usuario puede reintentar la revisión.
  */
 import { useState, useMemo, useCallback } from "react";
 import { notifySuccess, notifyError } from "@/lib/ui/appFeedback";
@@ -29,15 +32,31 @@ export function useImportarLeadsCsv({ onDone }: UseImportarLeadsCsvOptions) {
   }, []);
 
   const handleFile = useCallback(async (file: File) => {
+    // Limpiar primero: si la lectura/parseo falla, no debe quedar el preview
+    // del archivo anterior habilitando una importación equivocada.
+    setRows([]);
     setFileName(file.name);
-    // Ola 5 · N34: file.text() decodifica siempre UTF-8 → mojibake con CSV
-    // Windows-1252 de Excel en es-MX (acentos/ñ corruptos en empresas y
-    // contactos). El helper intenta UTF-8 fatal y cae a windows-1252.
-    const text = await leerArchivoTexto(file);
-    setRows(mapLeadCsvRows(parseLeadsCsv(text)));
+    try {
+      // Ola 5 · N34: file.text() decodifica siempre UTF-8 → mojibake con CSV
+      // Windows-1252 de Excel en es-MX (acentos/ñ corruptos en empresas y
+      // contactos). El helper intenta UTF-8 fatal y cae a windows-1252.
+      const text = await leerArchivoTexto(file);
+      setRows(mapLeadCsvRows(parseLeadsCsv(text)));
+    } catch (e) {
+      setRows([]);
+      setFileName("");
+      notifyError(undefined, {
+        title: "No se pudo leer el archivo",
+        description: e instanceof Error ? e.message : undefined,
+        error: e,
+        method: "USE_IMPORTAR_LEADS_CSV_FILE",
+      });
+    }
   }, []);
 
-  const { coincidencias, isLoading: duplicadosCargando } = useDuplicadosLote(rows);
+  const dup = useDuplicadosLote(rows);
+  const { coincidencias, isFetching: duplicadosCargando, isError: duplicadosError } = dup;
+  const duplicadosListo = rows.length === 0 || dup.listo;
 
   const validRows = useMemo(
     () =>
@@ -48,16 +67,33 @@ export function useImportarLeadsCsv({ onDone }: UseImportarLeadsCsvOptions) {
   );
   const errorCount = rows.filter((r) => Boolean(r.__error)).length;
   const duplicadosCount = coincidencias.filter((c) => c.nivel === "exacto").length;
+  const puedeImportar =
+    rows.length > 0 &&
+    validRows.length > 0 &&
+    duplicadosListo &&
+    !duplicadosCargando &&
+    !duplicadosError &&
+    !crearBulk.isPending;
+
+  const reintentarDuplicados = useCallback(() => {
+    void dup.refetch();
+  }, [dup]);
 
   const handleImport = useCallback(async () => {
+    // Guard interno: el `disabled` visual no basta (hotkeys, doble clic).
+    if (!puedeImportar) return;
     try {
-      const { inserted } = await crearBulk.mutateAsync(validRows);
+      const { affected, aviso } = await crearBulk.mutateAsync(validRows);
       const omitidas: string[] = [];
       if (errorCount > 0) omitidas.push(`${errorCount} con errores`);
       if (duplicadosCount > 0) omitidas.push(`${duplicadosCount} duplicadas`);
+      const partes = [
+        omitidas.length > 0 ? `Omitidas: ${omitidas.join(" y ")}` : null,
+        aviso ?? null,
+      ].filter(Boolean);
       notifySuccess(undefined, {
-        title: `${inserted} leads importados`,
-        description: omitidas.length > 0 ? `Omitidas: ${omitidas.join(" y ")}` : undefined,
+        title: `${affected} leads importados`,
+        description: partes.length > 0 ? partes.join(" · ") : undefined,
       });
       reset();
       onDone();
@@ -69,7 +105,7 @@ export function useImportarLeadsCsv({ onDone }: UseImportarLeadsCsvOptions) {
         method: "USE_IMPORTAR_LEADS_CSV",
       });
     }
-  }, [crearBulk, validRows, errorCount, duplicadosCount, reset, onDone]);
+  }, [puedeImportar, crearBulk, validRows, errorCount, duplicadosCount, reset, onDone]);
 
   return {
     rows,
@@ -78,7 +114,10 @@ export function useImportarLeadsCsv({ onDone }: UseImportarLeadsCsvOptions) {
     errorCount,
     duplicados: coincidencias,
     duplicadosCargando,
+    duplicadosError,
     duplicadosCount,
+    puedeImportar,
+    reintentarDuplicados,
     isPending: crearBulk.isPending,
     reset,
     handleFile,

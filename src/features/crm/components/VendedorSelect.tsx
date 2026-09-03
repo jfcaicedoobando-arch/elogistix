@@ -19,9 +19,10 @@ interface Props {
   email?: string;
   onChange: (userId: string | null, email: string) => void;
   label?: string;
+  disabled?: boolean;
 }
 
-export default function VendedorSelect({ value, onChange, label = "Vendedor asignado" }: Props) {
+export default function VendedorSelect({ value, onChange, label = "Vendedor asignado", disabled = false }: Props) {
   const { canReasignarVendedorCrm } = usePermissions();
   const { data: users = [] } = useUsuarios();
 
@@ -41,6 +42,7 @@ export default function VendedorSelect({ value, onChange, label = "Vendedor asig
           const u = candidatos.find((x) => x.user_id === v);
           onChange(v, u?.email ?? "");
         }}
+        disabled={disabled}
       >
         <SelectTrigger><SelectValue placeholder="Sin asignar…" /></SelectTrigger>
         <SelectContent>

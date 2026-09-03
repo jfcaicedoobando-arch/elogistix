@@ -1,5 +1,9 @@
 /**
  * Barra contextual de acciones bulk para leads seleccionados.
+ *
+ * Único punto de feedback: los hooks bulk sólo invalidan caché, así que aquí se
+ * emite un solo toast (con el aviso secundario de bitácora si existió) y se
+ * informa la cantidad REAL de filas afectadas.
  */
 import { useState } from "react";
 import { Trash2, X } from "lucide-react";
@@ -8,7 +12,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import DoubleConfirmDeleteDialog from "@/components/shared/DoubleConfirmDeleteDialog";
-import { notifyError } from "@/lib/ui/appFeedback";
+import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { crmToast } from "@/features/crm/lib/crmToast";
 import VendedorSelect from "@/features/crm/components/VendedorSelect";
 import {
@@ -19,17 +23,27 @@ interface Props {
   ids: string[];
   onClear: () => void;
   onDone: () => void;
+  /** El listado está refetcheando: la selección puede ser del resultado anterior. */
+  bloqueado?: boolean;
 }
 
-export default function LeadsBulkBar({ ids, onClear, onDone }: Props) {
+export default function LeadsBulkBar({ ids, onClear, onDone, bloqueado = false }: Props) {
   const actualizar = useActualizarLeadsBulk();
   const eliminar = useEliminarLeadsBulk();
   const [delOpen, setDelOpen] = useState(false);
+  const ocupado = bloqueado || actualizar.isPending || eliminar.isPending;
+
+  const avisar = (titulo: string, aviso?: string) => {
+    // Un solo toast: si la bitácora falló, viaja como descripción secundaria.
+    if (aviso) notifySuccess(undefined, { title: titulo, description: aviso });
+    else crmToast.success(titulo);
+  };
 
   const handleEstado = async (estado: CrmLeadEstado) => {
+    if (ocupado) return;
     try {
-      const { updated } = await actualizar.mutateAsync({ ids, patch: { estado } });
-      crmToast.success(`${updated} leads → ${estado}`);
+      const { affected, aviso } = await actualizar.mutateAsync({ ids, patch: { estado } });
+      avisar(`${affected} leads → ${estado}`, aviso);
       onDone();
     } catch (e) {
       notifyError(undefined, { title: "Error", description: e instanceof Error ? e.message : undefined, error: e, method: "HANDLE_ESTADO" });
@@ -37,12 +51,13 @@ export default function LeadsBulkBar({ ids, onClear, onDone }: Props) {
   };
 
   const handleVendedor = async (vendedor_id: string | null, vendedor_email: string) => {
+    if (ocupado) return;
     try {
-      const { updated } = await actualizar.mutateAsync({
+      const { affected, aviso } = await actualizar.mutateAsync({
         ids,
         patch: { vendedor_id, vendedor_email },
       });
-      crmToast.success(`${updated} leads reasignados`);
+      avisar(`${affected} leads reasignados`, aviso);
       onDone();
     } catch (e) {
       notifyError(undefined, { title: "Error", description: e instanceof Error ? e.message : undefined, error: e, method: "HANDLE_VENDEDOR" });
@@ -50,9 +65,10 @@ export default function LeadsBulkBar({ ids, onClear, onDone }: Props) {
   };
 
   const handleEliminar = async () => {
+    if (ocupado) return;
     try {
-      const { deleted } = await eliminar.mutateAsync(ids);
-      crmToast.success(`${deleted} leads eliminados`);
+      const { affected, aviso } = await eliminar.mutateAsync(ids);
+      avisar(`${affected} leads eliminados`, aviso);
       onDone();
     } catch (e) {
       notifyError(undefined, { title: "Error", description: e instanceof Error ? e.message : undefined, error: e, method: "HANDLE_ELIMINAR" });
@@ -65,7 +81,7 @@ export default function LeadsBulkBar({ ids, onClear, onDone }: Props) {
     <div className="sticky top-0 z-10 bg-primary text-primary-foreground rounded-lg shadow-raised p-3 flex flex-wrap items-center gap-3">
       <span className="font-medium text-body">{ids.length} seleccionado{ids.length === 1 ? "" : "s"}</span>
 
-      <Select onValueChange={(v) => handleEstado(v as CrmLeadEstado)}>
+      <Select onValueChange={(v) => handleEstado(v as CrmLeadEstado)} disabled={ocupado}>
         <SelectTrigger className="h-8 w-[170px] bg-background text-foreground">
           <SelectValue placeholder="Cambiar estado…" />
         </SelectTrigger>
@@ -76,10 +92,10 @@ export default function LeadsBulkBar({ ids, onClear, onDone }: Props) {
       </Select>
 
       <div className="bg-background text-foreground rounded px-2 py-1 min-w-[220px]">
-        <VendedorSelect value={null} onChange={handleVendedor} label="" />
+        <VendedorSelect value={null} onChange={handleVendedor} label="" disabled={ocupado} />
       </div>
 
-      <Button size="sm" variant="destructive" onClick={() => setDelOpen(true)} disabled={eliminar.isPending}>
+      <Button size="sm" variant="destructive" onClick={() => setDelOpen(true)} disabled={ocupado}>
         <Trash2 className="h-4 w-4 mr-1" /> Eliminar
       </Button>
       <Button size="sm" variant="secondary" onClick={onClear} className="ml-auto">

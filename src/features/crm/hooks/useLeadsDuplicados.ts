@@ -13,7 +13,13 @@ import {
 
 const STALE = 30_000;
 
-/** Duplicados de un lote (CSV). Devuelve una coincidencia por fila. */
+/**
+ * Duplicados de un lote (CSV). Devuelve una coincidencia por fila.
+ *
+ * Falla cerrada: expone `isFetching` (revisión en curso) y `isError`; si la
+ * consulta falla NO se puede clasificar todo como "nuevo" — el call-site debe
+ * bloquear la importación y ofrecer reintentar.
+ */
 export function useDuplicadosLote(filas: ReadonlyArray<LeadClave>) {
   const claves = filas.map((f) => ({
     empresa: f.empresa ?? "",
@@ -26,9 +32,19 @@ export function useDuplicadosLote(filas: ReadonlyArray<LeadClave>) {
     enabled: claves.length > 0,
     staleTime: STALE,
   });
+  const listo = claves.length > 0 && q.data !== undefined;
   const coincidencias: Coincidencia[] =
-    claves.length === 0 ? [] : clasificarLote(filas, q.data ?? []);
-  return { coincidencias, isLoading: q.isLoading, existentes: q.data ?? [] };
+    listo ? clasificarLote(filas, q.data ?? []) : [];
+  return {
+    coincidencias,
+    isLoading: q.isLoading,
+    isFetching: q.isFetching,
+    isError: q.isError,
+    error: q.error,
+    listo,
+    refetch: q.refetch,
+    existentes: q.data ?? [],
+  };
 }
 
 /** Duplicado de un solo lead (alta manual). */
