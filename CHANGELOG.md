@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+### Formularios rápidos del CRM: estado limpio y sin dobles guardados
+- **Dos Enter seguidos ya no crean dos registros**: los altas express de lead, oportunidad y actividad ignoran un segundo envío mientras el primero está guardando.
+- **No se puede cerrar el formulario mientras guarda** (X, ESC o clic fuera), y el botón *Más campos →* queda deshabilitado durante el guardado.
+- **La confirmación "¿Descartar los cambios?" ya detecta toda la captura**: origen/cliente/prospecto en oportunidades y oportunidad ligada o fecha modificada en actividades.
+- **Al reabrir, el formulario aparece en blanco**: lo descartado ya no reaparece y la fecha de la actividad se recalcula al valor por omisión de ese momento.
+
+
+
 
 
 ## [13.823.67] - 2026-09-03
