@@ -54,8 +54,11 @@ export async function buscarProspectos(term: string): Promise<ProspectoMatch[]> 
       .is("cliente_id", null)
       .eq("etapa.tipo", "abierta")
       .eq("etapa.activa", true)
+      .is("etapa.deleted_at", null)
+      .is("lead.deleted_at", null)
       .in("lead.estado", [...LEAD_ESTADOS_ELEGIBLES])
       .limit(8),
+
   ]);
   if (leadsRes.error) throw leadsRes.error;
   if (opsRes.error) throw opsRes.error;
