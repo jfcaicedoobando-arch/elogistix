@@ -3,7 +3,7 @@
  * Formulario simple — los campos avanzados se editan en LeadDetalle.
  * Migrado a `FormDialogShell` (v13.121.0).
  */
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { Target } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
