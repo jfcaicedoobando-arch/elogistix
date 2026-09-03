@@ -102,12 +102,12 @@ export default function NuevaActividadDialog({ open, onOpenChange, defaultEntida
   };
 
   const footer = (
-    <>
-      <Button variant="outline" onClick={() => onOpenChange(false)} disabled={crear.isPending}>Cancelar</Button>
-      <Button onClick={handleSubmit} loading={crear.isPending}>
-        Crear
-      </Button>
-    </>
+    <FormDialogFooter
+      onCancel={() => onOpenChange(false)}
+      onConfirm={handleSubmit}
+      confirmLabel="Crear"
+      loading={crear.isPending}
+    />
   );
 
   return (
@@ -119,8 +119,10 @@ export default function NuevaActividadDialog({ open, onOpenChange, defaultEntida
       description="Registra una tarea, llamada, reunión o nota."
       size="md"
       busy={crear.isPending}
+      isDirty={isDirty}
       footer={footer}
     >
+
       {!defaultEntidad && (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div className="space-y-1">
