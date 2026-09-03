@@ -239,3 +239,45 @@ describe("savePasoFinal", () => {
     expect(registrar).toHaveBeenCalledWith(expect.objectContaining({ accion: "editar" }));
   });
 });
+
+// P1-A (13.823.70): el subtotal/moneda del encabezado no puede mezclar bolsas.
+describe("derivarSubtotalMoneda (P1-A)", () => {
+  it("MXN-only conserva subtotal y moneda MXN", () => {
+    expect(
+      derivarSubtotalMoneda([{ moneda: "MXN", total: 10000 }, { moneda: "MXN", total: 500 }]),
+    ).toEqual({ subtotal: 10500, moneda: "MXN" });
+  });
+
+  it("USD-only conserva subtotal y moneda USD", () => {
+    expect(derivarSubtotalMoneda([{ moneda: "USD", total: 4000 }])).toEqual({
+      subtotal: 4000,
+      moneda: "USD",
+    });
+  });
+
+  it("mixto nominalmente engañoso (4,000 USD + 10,000 MXN) no persiste importe falso", () => {
+    expect(() =>
+      derivarSubtotalMoneda([{ moneda: "USD", total: 4000 }, { moneda: "MXN", total: 10000 }]),
+    ).toThrow(MSG_COTIZACION_MIXTA);
+  });
+
+  it("empate nominal también se bloquea", () => {
+    expect(() =>
+      derivarSubtotalMoneda([{ moneda: "USD", total: 5000 }, { moneda: "MXN", total: 5000 }]),
+    ).toThrow(MSG_COTIZACION_MIXTA);
+  });
+});
+
+describe("savePaso3 (P1-A)", () => {
+  it("no llama a la BD cuando la cotización es mixta", async () => {
+    const mutateAsync = vi.fn();
+    await expect(
+      savePaso3({
+        cotizacionId: "cot-1",
+        conceptosVenta: [{ moneda: "USD", total: 100 }, { moneda: "MXN", total: 100 }],
+        mutations: { updateCotizacion: { mutateAsync } } as never,
+      }),
+    ).rejects.toThrow(MSG_COTIZACION_MIXTA);
+    expect(mutateAsync).not.toHaveBeenCalled();
+  });
+});
