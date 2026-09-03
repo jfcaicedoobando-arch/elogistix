@@ -8,12 +8,23 @@ import {
 import { Label } from "@/components/ui/label";
 import { REGIMENES_FISCALES_SAT } from "@/constants/regimenFiscalSAT";
 import { USOS_CFDI_SAT, FORMAS_PAGO_SAT, METODOS_PAGO_SAT } from "@/constants/catalogosSAT";
-import type { ClienteForm } from "@/features/cliente/hooks";
 import { PrellenadoBadge } from "./NuevoClienteFormPieces";
 
+/**
+ * Forma mínima que necesita este bloque. Se define estructuralmente (y no con
+ * `ClienteForm`) para que también lo pueda reutilizar la conversión
+ * Prospecto → Cliente, que usa `ClienteFormData`.
+ */
+export interface ClienteFiscalCampos {
+  regimen_fiscal: string;
+  uso_cfdi_default: string;
+  forma_pago_default: string;
+  metodo_pago_default: string;
+}
+
 interface SelectsProps {
-  form: ClienteForm;
-  onChange: (field: keyof ClienteForm, value: string) => void;
+  form: ClienteFiscalCampos;
+  onChange: (field: keyof ClienteFiscalCampos, value: string) => void;
   prefilledRegimen?: boolean;
 }
 
