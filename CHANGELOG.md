@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+### Cotizaciones mixtas: ya no se guarda un subtotal engañoso
+- Antes, una cotización con 4,000 USD y 10,000 MXN guardaba **10,000 MXN** en el encabezado y descartaba los dólares (comparaba montos de distinta moneda sin tipo de cambio). Ahora el paso 3 avisa que hace falta capturar en una sola moneda y **no guarda nada**: los conceptos en pantalla se conservan.
+
+### CRM: reabrir una oportunidad limpia su cierre
+- Cuando una oportunidad ganada o perdida vuelve a una etapa abierta (por una nueva cotización enviada), se limpian en el mismo movimiento la **fecha de cierre real**, el **valor real** y el **motivo de pérdida**. Una oportunidad ganada también deja de arrastrar motivo de pérdida.
+
+## [13.823.70] - 2026-09-03
+
 ### Detalle de documentos: encabezado sin recortes
 - En el detalle de **factura, proforma y factura de proveedor**, la fila de estados (Borrador → Por timbrar → Emitida → Pagada) pasó a su propio renglón: ya no se comprime contra los botones ni se corta la última píldora, y las etiquetas ya no se parten en dos líneas.
 - La línea de contexto (cliente • fecha • expediente • proforma) se muestra completa en una o dos líneas legibles, sin recorte.
