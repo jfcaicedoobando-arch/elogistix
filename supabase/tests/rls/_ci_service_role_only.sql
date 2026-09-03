@@ -45,6 +45,13 @@ INSERT INTO _ci_service_role_only (fn) VALUES
   ('public._crm_criterio_etapa_misma_org()'),
   ('public._crm_cumplimiento_misma_org()'),
   ('public._crm_comentario_oportunidad_misma_org()'),
+  -- v13.823.6x · candados CRM de conversión y sincronía con cotizaciones:
+  -- son triggers/RPC internos DEFINER, nunca los llama el cliente.
+  ('public._crm_actividad_toca_oportunidad()'),
+  ('public._crm_sync_oportunidad_desde_cotizacion()'),
+  ('public.crm_cerrar_oportunidad_desde_cotizacion()'),
+  ('public.convertir_lead_rpc(uuid, boolean, uuid, text, numeric, text, date)'),
+  ('public.crm_propagar_conversion_cliente(uuid, uuid, text)'),
   ('public.crm_notify_comentario_oportunidad()'),
   ('public._assert_periodo_abierto()'),
   -- Lectura bloqueada (FOR KEY SHARE) del estado del embarque: sólo la usan
