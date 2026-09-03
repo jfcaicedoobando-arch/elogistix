@@ -2498,7 +2498,7 @@
       "20260911000120_replay_nc_saldo_lock_y_rep_historia.sql"
     ]
   },
-  "13.823.68": {
+  "13.823.69": {
     "migrations": [
       "20260228005947_e0895f16-62d9-45e4-99eb-6ecad9fe5892.sql",
       "20260228011257_0df15625-d074-4cfe-b273-7be04eb8f4c4.sql",
@@ -3724,6 +3724,9 @@
       "20260903002919_d12a49bf-ea56-481a-adb6-253382e9f4b3.sql",
       "20260903005450_a2b678dd-97ba-4295-a6dd-a839ee496fd5.sql",
       "20260903010140_0083e529-e38b-4f17-8616-54b50171c30c.sql",
+      "20260903011643_928469ba-3259-434f-ba81-d4f1e7f6a425.sql",
+      "20260903014044_9e87d5b8-baef-4e93-8677-738ecd2a36ac.sql",
+      "20260903215002_14c00d38-4235-49e8-bec8-a0935488041b.sql",
       "20260904000100_ola1_v14_c1_doble_iva_c2_snapshots.sql",
       "20260904000200_ola2_v14_org_scope_kpis.sql",
       "20260904000300_ola3_v14_papelera_rpcs.sql",
@@ -3749,9 +3752,7 @@
       "20260910001000_guard_cuenta_bancaria_y_notificaciones.sql",
       "20260911000100_replay_cerrar_reabrir_org_scope_helper_service_role.sql",
       "20260911000110_replay_actualizar_cierre_periodo.sql",
-      "20260911000120_replay_nc_saldo_lock_y_rep_historia.sql",
-      "20260903011643_928469ba-3259-434f-ba81-d4f1e7f6a425.sql",
-      "20260903014044_9e87d5b8-baef-4e93-8677-738ecd2a36ac.sql"
+      "20260911000120_replay_nc_saldo_lock_y_rep_historia.sql"
     ]
   }
 }
