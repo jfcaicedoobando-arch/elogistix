@@ -28,18 +28,21 @@ export function DocumentoStatusStepper({ resumen, className }: Props) {
   }
 
   return (
+    // v13.823.70: las píldoras no se encogen ni parten su etiqueta ("Por
+    // timbrar" quedaba en dos líneas); el riel se desplaza en horizontal sólo
+    // cuando de plano no cabe.
     <div className={cn("flex max-w-full items-center gap-2 overflow-x-auto", className)}>
-      <ol className="flex flex-nowrap items-center gap-1" aria-label="Ciclo de vida del documento">
+      <ol className="flex min-w-0 flex-nowrap items-center gap-1" aria-label="Ciclo de vida del documento">
 
       {resumen.pasos.map((paso, i) => {
         const completado = i < resumen.indiceActual;
         const actual = i === resumen.indiceActual;
         return (
-          <li key={paso.id} className="flex items-center gap-1">
+          <li key={paso.id} className="flex shrink-0 items-center gap-1">
             <span
               aria-current={actual ? "step" : undefined}
               className={cn(
-                "inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-body-sm font-medium transition-colors",
+                "inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full border px-2.5 py-1 text-body-sm font-medium transition-colors",
                 actual && "border-accent bg-accent/10 text-accent",
                 completado && "border-success/40 bg-success/10 text-success",
                 !actual && !completado && "border-border bg-muted/40 text-muted-foreground",
@@ -49,7 +52,7 @@ export function DocumentoStatusStepper({ resumen, className }: Props) {
               {paso.label}
             </span>
             {i < resumen.pasos.length - 1 ? (
-              <span className="h-px w-3 bg-border sm:w-5" aria-hidden />
+              <span className="h-px w-2 shrink-0 bg-border sm:w-4" aria-hidden />
             ) : null}
           </li>
         );
@@ -58,7 +61,7 @@ export function DocumentoStatusStepper({ resumen, className }: Props) {
       {resumen.subEtiqueta ? (
         <span
           className={cn(
-            "rounded-full border px-2.5 py-1 text-body-sm font-medium",
+            "shrink-0 whitespace-nowrap rounded-full border px-2.5 py-1 text-body-sm font-medium",
             resumen.subTono === "destructive"
               ? "border-destructive/40 bg-destructive/10 text-destructive"
               : "border-warning/40 bg-warning/10 text-warning",
