@@ -37,9 +37,9 @@ describe("cotizacionForm.extra — prospecto", () => {
     expect(out.prospectoTelefono).toBe("5559999");
   });
 
-  it("[CF-02] prospectoModo siempre es 'nuevo'", () => {
+  it("[CF-02] prospectoModo siempre es 'vincular' (no se crean leads desde el cotizador)", () => {
     const out = buildCotizacionDefaultValues(baseData({ es_prospecto: false }));
-    expect(out.prospectoModo).toBe("nuevo");
+    expect(out.prospectoModo).toBe("vincular");
   });
 });
 
