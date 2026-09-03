@@ -54,9 +54,14 @@ export default function NuevoLeadDialog({ open, onOpenChange, onCreated }: Props
   const enviandoRef = useRef(false);
 
   const pendingTotal = guardando || crear.isPending || crearActividad.isPending;
-
+  const defaults = useMemo(() => formVacio(), [formVacio]);
+  const isDirty = useMemo(
+    () => JSON.stringify(form) !== JSON.stringify(defaults) || autoActividad !== true,
+    [form, defaults, autoActividad],
+  );
 
   const handleSubmit = async () => {
+
     if (crear.isPending || crearActividad.isPending || enviandoRef.current || guardando) return;
     if (!form.empresa.trim()) {
       notifyError(undefined, { title: "Empresa es obligatoria", method: "HANDLE_SUBMIT", errorCode: ERROR_CODES.VALIDATION_FAILED });
