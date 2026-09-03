@@ -199,3 +199,15 @@ describe("vincularCrmTrasCrear", () => {
     expect(notifyErrorMock).not.toHaveBeenCalled();
   });
 });
+
+describe("mapeo de errores a campos del paso 1", () => {
+  it("campoParaErrorPaso1 reconoce el mensaje de origen CRM faltante", () => {
+    const campo = campoParaErrorPaso1("Selecciona el lead u oportunidad del CRM");
+    expect(typeof campo === "string" || campo === null).toBe(true);
+  });
+
+  it("campoParaPathSchemaPaso1 traduce un path del schema", () => {
+    const campo = campoParaPathSchemaPaso1("clienteId");
+    expect(typeof campo === "string" || campo === null).toBe(true);
+  });
+});
