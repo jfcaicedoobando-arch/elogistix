@@ -10,6 +10,9 @@ function Caja({ scrollHeight, clientHeight }: { scrollHeight: number; clientHeig
         if (!el) return;
         Object.defineProperty(el, "scrollHeight", { value: scrollHeight, configurable: true });
         Object.defineProperty(el, "clientHeight", { value: clientHeight, configurable: true });
+        // El test necesita inyectar el nodo con medidas simuladas; la regla del
+        // compilador no aplica a este ref de prueba.
+        // eslint-disable-next-line react-compiler/react-compiler
         ref.current = el;
       }}
       data-testid="caja"

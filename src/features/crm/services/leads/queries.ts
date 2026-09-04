@@ -89,3 +89,18 @@ export async function getLead(id: string): Promise<CrmLeadRow | null> {
   if (error) throw error;
   return (data ?? null) as CrmLeadRow | null;
 }
+
+/**
+ * Etiqueta mínima de un lead (empresa o contacto) para hidratar selectores.
+ * Ignora leads con soft-delete.
+ */
+export async function getNombreLead(id: string): Promise<string> {
+  const { data, error } = await supabase
+    .from("crm_leads")
+    .select("empresa, contacto")
+    .eq("id", id)
+    .is("deleted_at", null)
+    .maybeSingle();
+  if (error) throw error;
+  return (data?.empresa || data?.contacto || "").trim();
+}

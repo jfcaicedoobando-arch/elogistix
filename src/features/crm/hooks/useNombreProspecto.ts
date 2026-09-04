@@ -8,22 +8,13 @@
  * lo que guardar otros campos conserva `lead_id` intacto.
  */
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { getNombreLead } from "@/features/crm/services/leads";
 
 export function useNombreProspecto(leadId: string | null) {
   return useQuery({
     queryKey: ["crm", "lead-nombre", leadId],
     enabled: !!leadId,
     staleTime: 5 * 60 * 1000,
-    queryFn: async (): Promise<string> => {
-      const { data, error } = await supabase
-        .from("crm_leads")
-        .select("empresa, contacto")
-        .eq("id", leadId as string)
-        .is("deleted_at", null)
-        .maybeSingle();
-      if (error) throw error;
-      return (data?.empresa || data?.contacto || "").trim();
-    },
+    queryFn: () => getNombreLead(leadId as string),
   });
 }
