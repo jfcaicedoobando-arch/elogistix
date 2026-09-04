@@ -31,6 +31,9 @@ export function useActualizarEtapa() {
     mutationFn: actualizarEtapa,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.crm.etapas.all });
+      // Regresión: la configuración del pipeline lee `etapas.todas`, no solo
+      // las activas; sin esto, mover/editar etapas parecía no-op en el editor.
+      qc.invalidateQueries({ queryKey: queryKeys.crm.etapas.todas });
       notifySuccess(undefined, { title: "Etapa actualizada" });
     },
     onError: (error: Error) => {
