@@ -132,4 +132,23 @@ describe("useOportunidadDetalleActions — toast de cotización", () => {
       "/cotizaciones/cot-2/editar",
     );
   });
+
+  it("emite un único toast de éxito y navega al eliminar oportunidad", async () => {
+    eliminarMutateAsync.mockResolvedValue(undefined);
+
+    const { result } = renderHook(
+      () => useOportunidadDetalleActions(op, etapasConCotizando),
+      { wrapper: createWrapper() },
+    );
+
+    await result.current.handleEliminar();
+
+    expect(eliminarMutateAsync).toHaveBeenCalledExactlyOnceWith("op-1");
+    expect(crmToastSuccess).toHaveBeenCalledExactlyOnceWith(
+      "Oportunidad eliminada",
+    );
+    expect(notifyInfoFn).not.toHaveBeenCalled();
+    expect(notifyErrorFn).not.toHaveBeenCalled();
+    expect(mockNavigate).toHaveBeenCalledExactlyOnceWith("/crm/oportunidades");
+  });
 });
