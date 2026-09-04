@@ -178,7 +178,14 @@ export const fmtMargenMinimoPct = (d: unknown): string | null => {
   const pct = pick(d, "margen_pct");
   const min = pick(d, "minimo_pct");
   const utilidad = pick(d, "utilidad_mxn");
+  const venta = pick(d, "venta_mxn");
   if (pct == null && min == null) return null;
+  // Auditoría ELEXP00250: sin facturas de venta emitidas la venta real es 0 y el
+  // margen no existe. Antes se mostraba sólo «Margen actual —», que se leía como
+  // una falla del sistema en lugar de «todavía no hay qué medir».
+  if (pct == null && (venta == null || Number(venta) <= 0)) {
+    return `Aún no hay facturas de venta emitidas: la utilidad real no se puede calcular todavía (mínimo ${Number(min ?? 0).toFixed(2)}%)`;
+  }
   const partes: string[] = [];
   partes.push(`Margen actual ${pct == null ? "—" : `${Number(pct).toFixed(2)}%`} (mínimo ${Number(min ?? 0).toFixed(2)}%)`);
   if (utilidad != null) partes.push(`utilidad ${fmtMoney(utilidad)}`);
