@@ -10,6 +10,7 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import { registrarActividad } from "@/services/bitacora/registrar";
+import { orIlike } from "@/lib/search/ilike";
 import type { Moneda } from "@/types/db";
 
 /**
@@ -67,9 +68,10 @@ export async function buscarEmbarquesPorTexto(
     .select("id, expediente, cliente_nombre, estado, etd, eta, bl_master, bl_house")
     .eq("organization_id", organizationId)
     .not("estado", "in", FILTRO_ESTADOS_NO_VINCULABLES)
-    .or(
-      `expediente.ilike.%${term}%,bl_master.ilike.%${term}%,bl_house.ilike.%${term}%,cliente_nombre.ilike.%${term}%`,
-    )
+    // Tanda 2 · hallazgo 4: el texto es dato, no sintaxis PostgREST — `orIlike`
+    // escapa `%`/`_`/`\` y entrecomilla `,`/`(`/`)`/`"`.
+    .or(orIlike(["expediente", "bl_master", "bl_house", "cliente_nombre"], term))
+    .is("deleted_at", null)
     .limit(limit);
   if (error) throw error;
   return (data ?? []).map((r) => ({

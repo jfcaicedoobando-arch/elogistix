@@ -70,8 +70,18 @@ export async function subirArchivosCfdiFactura(params: SubirArchivosParams): Pro
 
     if (Object.keys(update).length === 0) return;
 
-    const { error } = await supabase.from("proveedor_facturas").update(update).eq("id", params.facturaId);
+    // Tanda 2 · hallazgo 3: exige factura viva y verifica que el UPDATE
+    // realmente afectó una fila (soft-delete o id inexistente → fallo, no
+    // éxito silencioso con archivos huérfanos en el bucket).
+    const { data: fila, error } = await supabase
+      .from("proveedor_facturas")
+      .update(update)
+      .eq("id", params.facturaId)
+      .is("deleted_at", null)
+      .select("id")
+      .maybeSingle();
     if (error) throw error;
+    if (!fila) throw new Error("La factura de proveedor no existe o fue eliminada: no se adjuntó el archivo.");
   } catch (e) {
     // N50 (Ola 4): cleanup — archivos subidos sin renglón que los referencie
     // quedaban huérfanos si fallaba el segundo upload o el UPDATE.
@@ -103,14 +113,18 @@ export async function adjuntarArchivoCfdiFactura(params: AdjuntarArchivoParams):
   const patch = params.tipo === "XML"
     ? { archivo_xml_url: path }
     : { archivo_pdf_url: path };
-  const { error } = await supabase
+  const { data: fila, error } = await supabase
     .from("proveedor_facturas")
     .update(patch)
-    .eq("id", params.facturaId);
-  if (error) {
-    // N50 (Ola 4): cleanup del objeto recién subido si el UPDATE falla.
+    .eq("id", params.facturaId)
+    .is("deleted_at", null)
+    .select("id")
+    .maybeSingle();
+  if (error || !fila) {
+    // N50 (Ola 4) + tanda 2 · hallazgo 3: cleanup del objeto recién subido si
+    // el UPDATE falla O no afectó fila (factura eliminada/ausente).
     await supabase.storage.from("facturas").remove([path]).catch(() => undefined);
-    throw error;
+    throw error ?? new Error("La factura de proveedor no existe o fue eliminada: no se adjuntó el archivo.");
   }
 
   return path;
@@ -123,16 +137,22 @@ export async function adjuntarArchivoCfdiFactura(params: AdjuntarArchivoParams):
  */
 export async function quitarArchivoCfdiFactura(params: QuitarArchivoParams): Promise<void> {
   const cleanPath = extractFacturaPath(params.path);
-  // No revertimos si el remove falla: el archivo puede estar ya borrado.
-  await supabase.storage.from("facturas").remove([cleanPath]).catch(() => undefined);
-
   const patch = params.tipo === "XML"
     ? { archivo_xml_url: null }
     : { archivo_pdf_url: null };
-  const { error } = await supabase
+  // Tanda 2 · hallazgo 3: primero se limpia la referencia en BD (exigiendo
+  // factura viva y fila afectada) y sólo después se borra el objeto. Así un
+  // fallo en BD no deja una referencia apuntando a un archivo ya borrado.
+  const { data: fila, error } = await supabase
     .from("proveedor_facturas")
     .update(patch)
-    .eq("id", params.facturaId);
+    .eq("id", params.facturaId)
+    .is("deleted_at", null)
+    .select("id")
+    .maybeSingle();
   if (error) throw error;
+  if (!fila) throw new Error("La factura de proveedor no existe o fue eliminada: no se quitó el archivo.");
 
+  // No revertimos si el remove falla: el archivo puede estar ya borrado.
+  await supabase.storage.from("facturas").remove([cleanPath]).catch(() => undefined);
 }
