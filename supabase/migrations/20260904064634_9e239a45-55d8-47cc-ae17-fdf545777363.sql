@@ -1,1 +1,0 @@
-REVOKE ALL ON FUNCTION public._assert_concepto_venta_moneda_soportada() FROM authenticated;

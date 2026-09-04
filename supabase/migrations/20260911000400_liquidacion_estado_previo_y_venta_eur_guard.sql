@@ -244,4 +244,4 @@ GRANT EXECUTE ON FUNCTION public.cancelar_liquidacion_comision(uuid, text) TO au
 REVOKE ALL ON FUNCTION public.generar_liquidacion_comision(uuid, text, uuid, uuid) FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.generar_liquidacion_comision(uuid, text, uuid, uuid) TO authenticated, service_role;
 REVOKE ALL ON FUNCTION public._assert_concepto_venta_moneda_soportada() FROM PUBLIC, anon;
-GRANT EXECUTE ON FUNCTION public._assert_concepto_venta_moneda_soportada() TO authenticated, service_role;
+GRANT EXECUTE ON FUNCTION public._assert_concepto_venta_moneda_soportada() TO authenticated, service_role;REVOKE ALL ON FUNCTION public._assert_concepto_venta_moneda_soportada() FROM authenticated;
