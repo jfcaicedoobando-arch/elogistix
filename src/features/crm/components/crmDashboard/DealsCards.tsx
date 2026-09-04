@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatCurrencyCompact } from "@/lib/formatters";
 import { formatFechaEs } from "@/lib/formatters/dates";
 import { DrilldownRow } from "@/components/shared/dataTable/DrilldownRow";
+import { ErrorStateInline } from "@/components/empty/ErrorStateInline";
 
 interface DealItem {
   id: string;
@@ -27,7 +28,12 @@ function ListEmpty({ msg }: { msg: string }) {
   return <p className="text-body text-muted-foreground text-center py-4">{msg}</p>;
 }
 
-export function CerrandoSemanaCard({ items }: { items: DealItem[] }) {
+interface EstadoProps {
+  isError?: boolean;
+  onRetry?: () => void;
+}
+
+export function CerrandoSemanaCard({ items, isError = false, onRetry }: { items: DealItem[] } & EstadoProps) {
   return (
     <Card>
       <CardHeader className="pb-2">
@@ -36,7 +42,12 @@ export function CerrandoSemanaCard({ items }: { items: DealItem[] }) {
         </CardTitle>
       </CardHeader>
       <CardContent>
-        {items.length === 0 ? <ListEmpty msg="Sin oportunidades por cerrar" /> : (
+        {isError ? (
+          <ErrorStateInline
+            message="No se pudieron cargar las oportunidades por cerrar."
+            onRetry={onRetry}
+          />
+        ) : items.length === 0 ? <ListEmpty msg="Sin oportunidades por cerrar" /> : (
           <ul className="space-y-1.5">
             {items.map((o) => (
               <DrilldownRow
@@ -63,7 +74,7 @@ export function CerrandoSemanaCard({ items }: { items: DealItem[] }) {
   );
 }
 
-export function LeadsSinContactarCard({ items }: { items: LeadItem[] }) {
+export function LeadsSinContactarCard({ items, isError = false, onRetry }: { items: LeadItem[] } & EstadoProps) {
   return (
     <Card>
       <CardHeader className="pb-2">
@@ -72,7 +83,12 @@ export function LeadsSinContactarCard({ items }: { items: LeadItem[] }) {
         </CardTitle>
       </CardHeader>
       <CardContent>
-        {items.length === 0 ? <ListEmpty msg="Todos los leads nuevos están atendidos" /> : (
+        {isError ? (
+          <ErrorStateInline
+            message="No se pudieron cargar los leads sin contactar."
+            onRetry={onRetry}
+          />
+        ) : items.length === 0 ? <ListEmpty msg="Todos los leads nuevos están atendidos" /> : (
           <ul className="space-y-1.5">
             {items.map((l) => (
               <DrilldownRow

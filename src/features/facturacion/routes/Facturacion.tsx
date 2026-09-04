@@ -111,7 +111,10 @@ export default function Facturacion() {
           />
           <div className="flex items-center gap-2 shrink-0">
             <PeriodoFiscalSelector
-              desdeIso={desdeIso} hastaIso={hastaIso} onChange={(r) => setRango(r)}
+              desdeIso={desdeIso} hastaIso={hastaIso}
+              // Igual que los inputs manuales: un preset cambia el universo,
+              // así que hay que volver a la página 0 o el usuario cae en vacío.
+              onChange={(r) => { setRango(r); setPage(0); }}
             />
             {canEmitirFactura && (
               <Button onClick={() => setOpenFacturaManual(true)}>
