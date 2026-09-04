@@ -26,6 +26,15 @@ interface Props {
   tiposContenedor?: ReadonlyArray<TipoContenedorCatalogo>;
 }
 
+/**
+ * v13.823.77: dentro de las tablas el código de moneda ya está en el título
+ * del bloque ("Conceptos en USD"). Repetirlo en cada celda partía el importe
+ * en dos renglones ("USD" / "1,200.00"). Aquí se imprime sólo el número.
+ */
+function montoTabla(valor: number, moneda: string): string {
+  return formatCurrency(valor, moneda).replace(/^([A-Z]{3})\s/, "");
+}
+
 function columnasUSD(tasaIva: number, hayIva: boolean): PdfColumn<ConceptoVentaCotizacion>[] {
   const base: PdfColumn<ConceptoVentaCotizacion>[] = [
     { key: "descripcion", title: "Descripción", cellStyle: styles.cellDesc,
@@ -36,8 +45,8 @@ function columnasUSD(tasaIva: number, hayIva: boolean): PdfColumn<ConceptoVentaC
     { key: "unidad", title: "Unidad", cellStyle: { width: 55, fontSize: 9 } as never,
       render: (r) => r.unidad_medida || "—" },
     { key: "cantidad", title: "Cant.", cellStyle: styles.cellQty, render: (r) => String(r.cantidad) },
-    { key: "precio", title: "P. Unit.", cellStyle: styles.cellNum, render: (r) => formatCurrency(r.precio_unitario, "USD") },
-    { key: "subtotal", title: "Subtotal", cellStyle: styles.cellNum, render: (r) => formatCurrency(r.cantidad * r.precio_unitario, "USD") },
+    { key: "precio", title: "P. Unit.", cellStyle: styles.cellNum, render: (r) => montoTabla(r.precio_unitario, "USD") },
+    { key: "subtotal", title: "Subtotal", cellStyle: styles.cellNum, render: (r) => montoTabla(r.cantidad * r.precio_unitario, "USD") },
   ];
   if (!hayIva) return base;
   return [
@@ -45,13 +54,13 @@ function columnasUSD(tasaIva: number, hayIva: boolean): PdfColumn<ConceptoVentaC
     { key: "iva", title: `IVA`, cellStyle: styles.cellNum,
       render: (r) => {
         const tasa = resolverTasaConcepto(r, tasaIva);
-        return tasa > 0 ? formatCurrency(calcularIVA(r.cantidad * r.precio_unitario, tasa), "USD") : "—";
+        return tasa > 0 ? montoTabla(calcularIVA(r.cantidad * r.precio_unitario, tasa), "USD") : "—";
       } },
     { key: "total", title: "Total", cellStyle: styles.cellNum,
       render: (r) => {
         const sub = r.cantidad * r.precio_unitario;
         const iva = calcularIVA(sub, resolverTasaConcepto(r, tasaIva));
-        return formatCurrency(sub + iva, "USD");
+        return montoTabla(sub + iva, "USD");
       } },
   ];
 }
@@ -62,17 +71,17 @@ function columnasMXN(tasaIva: number): PdfColumn<ConceptoVentaCotizacion>[] {
     { key: "unidad", title: "Unidad", cellStyle: { width: 55, fontSize: 9 } as never,
       render: (r) => r.unidad_medida || "—" },
     { key: "cantidad", title: "Cant.", cellStyle: styles.cellQty, render: (r) => String(r.cantidad) },
-    { key: "precio", title: "P. Unit.", cellStyle: styles.cellNum, render: (r) => formatCurrency(r.precio_unitario, "MXN") },
-    { key: "subtotal", title: "Subtotal", cellStyle: styles.cellNum, render: (r) => formatCurrency(r.cantidad * r.precio_unitario, "MXN") },
+    { key: "precio", title: "P. Unit.", cellStyle: styles.cellNum, render: (r) => montoTabla(r.precio_unitario, "MXN") },
+    { key: "subtotal", title: "Subtotal", cellStyle: styles.cellNum, render: (r) => montoTabla(r.cantidad * r.precio_unitario, "MXN") },
     { key: "iva", title: `IVA`, cellStyle: styles.cellNum,
       render: (r) => {
         const tasa = resolverTasaConcepto(r, tasaIva);
-        return formatCurrency(calcularIVA(r.cantidad * r.precio_unitario, tasa), "MXN");
+        return montoTabla(calcularIVA(r.cantidad * r.precio_unitario, tasa), "MXN");
       } },
     { key: "total", title: "Total", cellStyle: styles.cellNum,
       render: (r) => {
         const tasa = resolverTasaConcepto(r, tasaIva);
-        return formatCurrency(r.cantidad * r.precio_unitario * (1 + tasa), "MXN");
+        return montoTabla(r.cantidad * r.precio_unitario * (1 + tasa), "MXN");
       } },
   ];
 }
