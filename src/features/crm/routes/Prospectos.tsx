@@ -30,6 +30,8 @@ import { StatusBadge } from "@/components/shared/StatusBadge";
 import { queryKeys } from "@/lib/query";
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 import { ErrorState } from "@/components/shared/states/ErrorState";
+import { copiaContadorProspectos } from "./prospectosContadorCopy";
+
 
 interface ProspectosFilters extends Record<string, string> {
   estado: string;
@@ -107,12 +109,12 @@ export default function Prospectos() {
       />
 
       <CrmSubheader
-        context={
-          list.search || list.activeCount > 0
-            ? `${list.count} prospectos coinciden con los filtros`
-            : `${list.count} prospectos en el embudo`
-        }
+        context={copiaContadorProspectos(
+          list.count,
+          Boolean(list.search) || list.activeCount > 0,
+        )}
       />
+
 
       <UnifiedFiltersBar
         search={list.search}
