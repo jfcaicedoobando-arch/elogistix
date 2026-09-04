@@ -109,4 +109,6 @@ export const LC_CODE_MESSAGES_FINANCIERO: Record<string, string> = {
     "El folio de la serie no puede retroceder: ya se emitieron facturas con folios mayores.",
   LC_SERIE_INMUTABLE:
     "La serie ya tiene facturas emitidas: no se puede cambiar su prefijo ni su folio inicial.",
+  LC_BACKFILL_SIN_MONTO_CONFIABLE:
+    "No se puede completar el histórico porque el monto original no es confiable. Captura el importe manualmente.",
 };

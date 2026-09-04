@@ -101,5 +101,23 @@ export const LC_CODE_MESSAGES_CRM: Record<string, string> = {
     "Esa oportunidad no es elegible: debe estar viva, en una etapa abierta, sin cliente asignado y ligada a un prospecto calificado.",
   LC_SIN_SESION:
     "Tu sesión expiró. Vuelve a iniciar sesión e inténtalo de nuevo.",
+  // Candados multiempresa y de permisos del CRM (P0 conversión canónica).
+  LC_CONVERSION_SOLO_RPC:
+    "La conversión de prospecto a cliente sólo se puede hacer desde el botón oficial del CRM: no se permiten vínculos directos.",
+  LC_COTIZACION_CLIENTE_AJENO_INEXISTENTE:
+    "El cliente de la cotización no existe o pertenece a otra organización. Recarga la página y verifica el cliente.",
+  LC_COT_VINCULO_ROTO:
+    "El vínculo de esta cotización con el CRM quedó incompleto. Avisa a soporte: requiere revisión manual.",
+  LC_CRITERIO_AJENO:
+    "Ese criterio pertenece a otra organización. Recarga la página y elige uno de tu catálogo.",
+  LC_ENTIDAD_AJENA:
+    "El registro relacionado pertenece a otra organización. Recarga la página e inténtalo de nuevo.",
+  LC_ETAPA_AJENA:
+    "Esa etapa pertenece a otro pipeline u organización. Elige una etapa de tu pipeline.",
+  LC_LEAD_AJENO:
+    "Ese prospecto pertenece a otra organización. Recarga la página y elige un prospecto de tu cartera.",
+  LC_MOTIVO_PERDIDA_AJENO:
+    "Ese motivo de pérdida pertenece a otra organización. Elige uno de tu catálogo.",
+  LC_ROL_SIN_PERMISO_CRM:
+    "Tu rol no tiene permiso para esta acción del CRM. Solicítalo a un administrador.",
 };
-
