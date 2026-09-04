@@ -114,7 +114,7 @@ describe("fetchLeaderboardRaw (I/O)", () => {
     mock.setTableResult("crm_cuotas_vendedor", { data: [{ vendedor_email: "a", cuota_monto: 1 }], error: null });
     mock.setTableResult("crm_oportunidades", { data: [], error: null });
     mock.setTableResult("crm_etapas_pipeline", { data: [{ id: "e1", tipo: "ganada" }], error: null });
-    const r = await fetchLeaderboardRaw(2026, 6, "2026-06-01");
+    const r = await fetchLeaderboardRaw(2026, 6, "2026-06-01", "2026-07-01");
     expect(r.cuotas).toHaveLength(1);
     expect(r.etapas).toHaveLength(1);
   });
@@ -123,6 +123,21 @@ describe("fetchLeaderboardRaw (I/O)", () => {
     mock.setTableResult("crm_cuotas_vendedor", { data: null, error: { message: "x" } });
     mock.setTableResult("crm_oportunidades", { data: [], error: null });
     mock.setTableResult("crm_etapas_pipeline", { data: [], error: null });
-    await expect(fetchLeaderboardRaw(2026, 6, "2026-06-01")).rejects.toThrow();
+    await expect(fetchLeaderboardRaw(2026, 6, "2026-06-01", "2026-07-01")).rejects.toThrow();
+  });
+
+  it("FIX-3: acota fecha_cierre_real con límite superior EXCLUSIVO del mes (excluye cierres futuros)", async () => {
+    mock.setTableResult("crm_cuotas_vendedor", { data: [], error: null });
+    mock.setTableResult("crm_oportunidades", { data: [], error: null });
+    mock.setTableResult("crm_etapas_pipeline", { data: [], error: null });
+    await fetchLeaderboardRaw(2026, 6, "2026-06-01", "2026-07-01");
+    const call = mock.tableCalls.find((c) => c.table === "crm_oportunidades");
+    expect(call).toBeDefined();
+    const gteIdx = call!.ops.indexOf("gte");
+    const ltIdx = call!.ops.indexOf("lt");
+    expect(gteIdx).toBeGreaterThanOrEqual(0);
+    expect(ltIdx).toBeGreaterThanOrEqual(0);
+    expect(call!.opArgs[gteIdx]).toEqual(["fecha_cierre_real", "2026-06-01"]);
+    expect(call!.opArgs[ltIdx]).toEqual(["fecha_cierre_real", "2026-07-01"]);
   });
 });

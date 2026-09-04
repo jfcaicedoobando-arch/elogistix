@@ -79,3 +79,22 @@ describe("computeNextBestActions", () => {
     expect(items[0].regla).toBe("actividad_vencida");
   });
 });
+
+describe("FIX-9: cierre próximo compara como día calendario LOCAL (MX)", () => {
+  it("incluye una oportunidad que cierra HOY aunque 'now' ya sea tarde en UTC", () => {
+    // 2026-06-16T04:00:00Z == 2026-06-15 22:00 CDMX: calendario MX aún 15-jun.
+    const ahoraTardeUtc = new Date("2026-06-16T04:00:00Z");
+    const items = computeNextBestActions({
+      leadsSinContactar: [],
+      oportunidadesAbiertas: [
+        { id: "op1", nombre: "Cierra hoy", fecha_estimada_cierre: "2026-06-15", updated_at: ahoraTardeUtc.toISOString() },
+      ],
+      cotizacionesSinRespuesta: [],
+      actividadesVencidas: [],
+      now: ahoraTardeUtc,
+    });
+    const cierre = items.find((i) => i.id === "cierre:op1");
+    expect(cierre).toBeDefined();
+    expect(cierre?.subtitulo).toContain("0 día");
+  });
+});

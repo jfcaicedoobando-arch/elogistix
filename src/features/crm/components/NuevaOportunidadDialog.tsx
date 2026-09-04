@@ -114,7 +114,8 @@ export default function NuevaOportunidadDialog({
     try {
       const payload = buildOportunidadFormPayload(form, esGanada, isEdit);
       if (isEdit && oportunidad) {
-        await actualizar.mutateAsync({ id: oportunidad.id, patch: payload });
+        // Hallazgo 14: bloqueo optimista — el sello se leyó al abrir el diálogo.
+        await actualizar.mutateAsync({ id: oportunidad.id, patch: payload, expectedUpdatedAt: oportunidad.updated_at ?? null });
         crmToast.success("Oportunidad actualizada");
         onSaved?.(oportunidad.id);
       } else {
