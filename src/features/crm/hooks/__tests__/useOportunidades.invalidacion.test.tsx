@@ -42,6 +42,8 @@ vi.mock("@/lib/query", () => ({
 }));
 
 import { useActualizarOportunidad, useEliminarOportunidad } from "../useOportunidades";
+import { notifySuccess } from "@/lib/ui/appFeedback";
+
 
 function spyClient() {
   const client = (globalThis as unknown as {
