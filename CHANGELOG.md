@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+## [13.823.80] - 2026-09-05
+
+### CRM — Dashboard actualizado al editar, eliminar, tomar o calificar leads
+- `useActualizarLead`, `useEliminarLead`, `useTomarLead` y `useCalificarProspecto` ahora invalidan `crm.dashboardAll`, igual que `useCrearLead`. Antes el resumen ejecutivo (leads en cartera, embudo, sin contactar) quedaba stale hasta vencer el `staleTime` de 60s.
+- Nueva regresión `leadsMutaciones.invalidacion.test.tsx` con las cuatro mutaciones.
+
 ## [13.823.79] - 2026-09-05
 
 ### CRM — Dashboard actualizado al editar o eliminar oportunidades
