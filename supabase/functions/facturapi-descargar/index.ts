@@ -58,6 +58,33 @@ export function resolveFolioSerieNc(serie: string, folio: string): string {
   return folio || `${serie}${folio}`;
 }
 
+/**
+ * Datos heredados de la factura padre (cliente/fecha). Extraído para bajar la
+ * complejidad de los resolvers y compartir el chequeo de soft-delete.
+ */
+type PadreResuelto =
+  | { ok: true; cliente: string | null; clienteId: string | null; fecha: string | null }
+  | { ok: false; status: number; body: unknown };
+
+async function resolvePadre(
+  supabase: ReturnType<typeof createClient>, facturaIdPadre: string | null,
+): Promise<PadreResuelto> {
+  if (!facturaIdPadre) return { ok: true, cliente: null, clienteId: null, fecha: null };
+  const { data: padre } = await supabase
+    .from("facturas")
+    .select("cliente_id, cliente_nombre, fecha_emision, deleted_at")
+    .eq("id", facturaIdPadre).maybeSingle();
+  if (padre?.deleted_at) {
+    return { ok: false, status: 404, body: { error: "factura_eliminada", message: "La factura fue eliminada." } };
+  }
+  return {
+    ok: true,
+    cliente: (padre?.cliente_nombre as string | null) ?? null,
+    clienteId: (padre?.cliente_id as string | null) ?? null,
+    fecha: (padre?.fecha_emision as string | null) ?? null,
+  };
+}
+
 async function resolveFromNc(
   supabase: ReturnType<typeof createClient>, id: string,
 ): Promise<Resolved> {
@@ -71,22 +98,9 @@ async function resolveFromNc(
   const serie = (nc.serie as string | null) ?? "";
   const folio = (nc.folio as string | null) ?? "";
   // Cliente/fecha se heredan de la factura padre si no vienen en la NC.
-  let cliente: string | null = null;
-  let clienteId: string | null = null;
-  let fecha: string | null = (nc.fecha_emision as string | null) ?? null;
-  const facturaIdPadre = nc.factura_id as string | null;
-  if (facturaIdPadre) {
-    const { data: padre } = await supabase
-      .from("facturas")
-      .select("cliente_id, cliente_nombre, fecha_emision, deleted_at")
-      .eq("id", facturaIdPadre).maybeSingle();
-    if (padre?.deleted_at) {
-      return { ok: false, status: 404, body: { error: "factura_eliminada", message: "La factura fue eliminada." } };
-    }
-    cliente = (padre?.cliente_nombre as string | null) ?? null;
-    clienteId = (padre?.cliente_id as string | null) ?? null;
-    if (!fecha) fecha = (padre?.fecha_emision as string | null) ?? null;
-  }
+  const padre = await resolvePadre(supabase, nc.factura_id as string | null);
+  if (!padre.ok) return padre;
+  const fecha = (nc.fecha_emision as string | null) ?? padre.fecha;
   return {
     ok: true,
     data: {
@@ -97,8 +111,8 @@ async function resolveFromNc(
       // (v13.213.20), así que concatenar serie+folio duplicaba la serie
       // ("NCNC7.pdf"). Fallback defensivo para filas legacy sin folio.
       folioSerie: resolveFolioSerieNc(serie, folio),
-      clienteId,
-      cliente,
+      clienteId: padre.clienteId,
+      cliente: padre.cliente,
       fecha,
     },
   };
@@ -117,20 +131,10 @@ async function resolveFromPago(
   const folio = (pago.folio_rep as string | null) ?? "";
   const serie = (pago.serie_rep as string | null) ?? "";
   // Cliente se hereda de la factura padre; fecha usa fecha_pago del REP.
-  let cliente: string | null = null;
-  let clienteId: string | null = null;
-  const facturaIdPadre = pago.factura_id as string | null;
-  if (facturaIdPadre) {
-    const { data: padre } = await supabase
-      .from("facturas")
-      .select("cliente_id, cliente_nombre, deleted_at")
-      .eq("id", facturaIdPadre).maybeSingle();
-    if (padre?.deleted_at) {
-      return { ok: false, status: 404, body: { error: "factura_eliminada", message: "La factura fue eliminada." } };
-    }
-    cliente = (padre?.cliente_nombre as string | null) ?? null;
-    clienteId = (padre?.cliente_id as string | null) ?? null;
-  }
+  const padre = await resolvePadre(supabase, pago.factura_id as string | null);
+  if (!padre.ok) return padre;
+  const cliente = padre.cliente;
+  const clienteId = padre.clienteId;
   return {
     ok: true,
     data: {
