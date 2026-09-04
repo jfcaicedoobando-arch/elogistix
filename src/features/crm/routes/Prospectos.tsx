@@ -13,6 +13,7 @@ import { ResponsiveDataTable } from "@/components/shared/dataTable/ResponsiveDat
 import { UnifiedFiltersBar } from "@/components/shared/filters/UnifiedFiltersBar";
 import { useServerPagedList } from "@/hooks/shared/useServerPagedList";
 import { useDocumentTitle } from "@/hooks/shared";
+import { toTitleCase } from "@/lib/formatters";
 import { prospectosColumns } from "./prospectosColumns";
 import { CrmSubheader } from "@/features/crm/components/CrmSubheader";
 import { listLeads } from "@/features/crm/services/leads";
