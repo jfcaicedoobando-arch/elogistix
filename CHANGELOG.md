@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+### Dashboard /inicio: se repara crash de inicialización
+- Se eliminó el ciclo de importación entre `permissionMatrix.ts` y `permissionMatrix.crm.ts` al extraer `TENANT_ADMINS` a un módulo compartido, evitando que el dashboard fallara al leer la matriz de permisos antes de su inicialización.
+
 ### Auditoría de migraciones en verde
 - La función interna de totales de embarque quedó con sus permisos declarados explícitamente (sólo el sistema puede ejecutarla; nadie público o anónimo), se documentó el ajuste de la línea base del auditor de migraciones y se sincronizó el listado de migraciones. `bash scripts/run-audits-conditional.sh` corre completo en verde.
 

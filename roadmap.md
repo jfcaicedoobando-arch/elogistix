@@ -1,6 +1,7 @@
 # Roadmap · Ronda YAGNI posterior a v13.823.34
 
 ## En curso (ronda actual)
+- [x] 0. Crash TypeError en /inicio: Cannot read properties of undefined (reading 'default')
 - [ ] 1. P0 cerrar_embarque cross-tenant (rol exacto en org del embarque) + pruebas SQL
 - [ ] 2. P1 carrera cierre vs conceptos (lock compatible en triggers de hijos)
 - [ ] 3. P1 periodo cerrado protege importes/soft-delete, no sólo fechas
