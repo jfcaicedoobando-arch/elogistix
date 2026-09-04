@@ -112,7 +112,11 @@ function DialogNuevaFacturaProveedorForm({
       guardando={ctl.isPending}
       puedeGuardar={ctl.puedeGuardar}
       onCancelar={cerrarYLimpiar}
-      onGuardar={() => void ctl.submit()}
+      // Con una factura ya creada y pendiente de marcarse como capturada,
+      // "Guardar" reintenta sólo ese paso (nunca vuelve a insertar la factura).
+      onGuardar={() =>
+        wiring.facturaIdPendiente ? wiring.reintentar() : void ctl.submit()
+      }
     />
   );
 
