@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+## [13.823.76] - 2026-09-04
+
+### Correcciones de datos financieros del detalle de embarque
+- **Detalle de embarque**: la consulta única del detalle (`get_embarque_full`) excluye conceptos de venta/costo, documentos, notas y facturas enviados a la papelera. Antes el tab Costos sumaba renglones borrados y mostraba un margen inexistente (ELEXP00250: 22.2 % de utilidad con venta inflada de 8,805 a 13,930 USD; el real es pérdida de 2,040 USD).
+- **Checklist de cierre**: el punto de margen mínimo explica "Aún no hay facturas de venta emitidas: la utilidad real no se puede calcular todavía" en lugar de mostrar sólo "Margen actual —".
+
 ## [13.823.75] - 2026-09-04
 
 ### Correcciones de UI, permisos y validaciones
