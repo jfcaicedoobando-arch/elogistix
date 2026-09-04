@@ -22,9 +22,6 @@ export const montoAnalitica = (valor: number, moneda: string): MontoAnalitica =>
   const prefijo = `${moneda} `;
   return {
     texto: compacto.startsWith(prefijo) ? compacto.slice(prefijo.length) : compacto,
-    titulo: `${moneda} ${formatCurrency(valor, { currency: moneda })}`.replace(
-      new RegExp(`^${moneda} ${moneda} `),
-      `${moneda} `,
-    ),
+    titulo: formatCurrency(valor, moneda),
   };
 };
