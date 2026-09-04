@@ -2,6 +2,7 @@
  * Helpers presentacionales para el modal de Nuevo Cliente.
  * Aislado del Dialog para mantenerlo ≤200 líneas.
  */
+import { useState } from "react";
 import { Upload, FileText, CheckCircle2, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
@@ -120,12 +121,28 @@ interface FieldProps {
 }
 
 /** Input genérico con label, marca de requerido, badge de CSF y mensaje inline. */
+/** Mensaje de error del campo: obligatorio vacío (tras salir) o formato inválido. */
+function mensajeErrorCampo(
+  value: string,
+  tocado: boolean,
+  required?: boolean,
+  validate?: (v: string) => string | null,
+): string | null {
+  if (required && tocado && !value.trim()) return "Este dato es obligatorio.";
+  if (!validate || !value) return null;
+  return validate(value);
+}
+
 export function ClienteField({
   label, field, form, onChange, required, className, prefilledFromCsf, validate, placeholder,
 }: FieldProps) {
   const value = form[field] ?? "";
-  const errorMsg = value && validate ? validate(value) : null;
+  // v13.823.77 — el mensaje aparece cuando el usuario ya salió del campo (o si
+  // hay algo escrito): antes "Correo inválido." se pintaba a media captura.
+  const [tocado, setTocado] = useState(false);
+  const errorMsg = mensajeErrorCampo(value, tocado, required, validate);
   const inputId = `nuevo-cliente-${String(field)}`;
+  const errorId = `${inputId}-error`;
   return (
     <div className={className}>
       <Label size="sm" className="flex items-center" htmlFor={inputId}>
@@ -138,11 +155,15 @@ export function ClienteField({
         value={value}
         placeholder={placeholder}
         onChange={(e) => onChange(field, e.target.value)}
+        onBlur={() => setTocado(true)}
+        aria-invalid={errorMsg ? true : undefined}
+        aria-describedby={errorMsg ? errorId : undefined}
         className={cn("mt-1", errorMsg && "border-destructive focus-visible:ring-destructive")}
       />
-      {errorMsg && <p className="text-label text-destructive mt-1">{errorMsg}</p>}
+      {errorMsg && <p id={errorId} className="text-label text-destructive mt-1">{errorMsg}</p>}
     </div>
   );
 }
+
 
 export { ClienteFiscalSelects } from "./ClienteFiscalSelects";

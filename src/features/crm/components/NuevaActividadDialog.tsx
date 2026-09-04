@@ -57,6 +57,7 @@ export default function NuevaActividadDialog({ open, onOpenChange, defaultEntida
     setEntidadId(defId ?? "");
     setTipo("tarea"); setAsunto(""); setDesc(""); setFecha("");
     setContactoEfectivo(false); setReunionCalificada(false);
+    setIntentado(false);
   }, [open, defTipo, defId]);
 
   const isDirty = useMemo(
@@ -73,7 +74,18 @@ export default function NuevaActividadDialog({ open, onOpenChange, defaultEntida
   );
 
 
+  // v13.823.77 — el botón "Crear" ya no queda habilitado con Asunto u
+  // Oportunidad vacíos (el clic era un no-op silencioso). Además se marcan los
+  // campos con error accesible al primer intento.
+  const [intentado, setIntentado] = useState(false);
+  const faltaEntidad = !entidadId;
+  const faltaAsunto = !asunto.trim();
+  const incompleto = faltaEntidad || faltaAsunto;
+  const errorEntidad = intentado && faltaEntidad;
+  const errorAsunto = intentado && faltaAsunto;
+
   const handleSubmit = async () => {
+    setIntentado(true);
     if (crear.isPending || enviandoRef.current) return;
     if (!entidadId) return notifyError(undefined, { title: "Selecciona la entidad", method: "HANDLE_SUBMIT", errorCode: ERROR_CODES.VALIDATION_FAILED });
     if (!asunto.trim()) return notifyError(undefined, { title: "Asunto requerido", method: "HANDLE_SUBMIT", errorCode: ERROR_CODES.VALIDATION_FAILED });
@@ -104,6 +116,7 @@ export default function NuevaActividadDialog({ open, onOpenChange, defaultEntida
       onCancel={() => onOpenChange(false)}
       onConfirm={handleSubmit}
       confirmLabel="Crear"
+      disabled={incompleto}
       loading={crear.isPending}
     />
   );
@@ -134,11 +147,21 @@ export default function NuevaActividadDialog({ open, onOpenChange, defaultEntida
             </Select>
           </div>
           <div className="space-y-1">
-            <Label>{entidadTipo === "lead" ? "Lead" : "Oportunidad"}</Label>
-            {entidadTipo === "lead" ? (
-              <LeadComboboxCrm value={entidadId} onChange={(id) => setEntidadId(id)} />
-            ) : (
-              <OportunidadComboboxCrm value={entidadId} onChange={(id) => setEntidadId(id)} />
+            <Label className="flex items-center">
+              {entidadTipo === "lead" ? "Lead" : "Oportunidad"}
+              <span className="text-destructive ml-0.5">*</span>
+            </Label>
+            <div aria-describedby={errorEntidad ? "nueva-actividad-entidad-error" : undefined}>
+              {entidadTipo === "lead" ? (
+                <LeadComboboxCrm value={entidadId} onChange={(id) => setEntidadId(id)} />
+              ) : (
+                <OportunidadComboboxCrm value={entidadId} onChange={(id) => setEntidadId(id)} />
+              )}
+            </div>
+            {errorEntidad && (
+              <p id="nueva-actividad-entidad-error" className="text-label text-destructive">
+                Selecciona {entidadTipo === "lead" ? "el lead" : "la oportunidad"} a la que pertenece.
+              </p>
             )}
           </div>
         </div>
@@ -162,8 +185,22 @@ export default function NuevaActividadDialog({ open, onOpenChange, defaultEntida
         </div>
       </div>
       <div className="space-y-1">
-        <Label htmlFor="nueva-actividad-asunto">Asunto</Label>
-        <Input id="nueva-actividad-asunto" value={asunto} onChange={(e) => setAsunto(e.target.value)} placeholder="Llamar a cliente, enviar cotización…" />
+        <Label htmlFor="nueva-actividad-asunto" className="flex items-center">
+          Asunto<span className="text-destructive ml-0.5">*</span>
+        </Label>
+        <Input
+          id="nueva-actividad-asunto"
+          value={asunto}
+          onChange={(e) => setAsunto(e.target.value)}
+          placeholder="Llamar a cliente, enviar cotización…"
+          aria-invalid={errorAsunto ? true : undefined}
+          aria-describedby={errorAsunto ? "nueva-actividad-asunto-error" : undefined}
+        />
+        {errorAsunto && (
+          <p id="nueva-actividad-asunto-error" className="text-label text-destructive">
+            Escribe el asunto de la actividad.
+          </p>
+        )}
       </div>
       <div className="space-y-1">
         <Label>Descripción</Label>

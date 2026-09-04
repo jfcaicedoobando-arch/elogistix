@@ -130,7 +130,7 @@ export default function CrmDashboard() {
         errorDescription="Revisa tu conexión y vuelve a intentar."
       >
         <KpiStrip desktopCols={4} className="sm:border sm:rounded-md sm:bg-card sm:overflow-hidden sm:gap-0">
-          <StatStripItem icon={Users} label="Leads" value={v(isLoading, vm.kpis.leads)} />
+          <StatStripItem icon={Users} label="Leads en cartera" value={v(isLoading, vm.kpis.leads)} />
           <StatStripItem icon={Target} label="Oportunidades abiertas" value={v(isLoading, vm.kpis.oportunidadesAbiertas)} />
           <StatStripItem icon={Activity} label="Actividades pendientes" value={v(isLoading, vm.kpis.actividadesPendientes)} />
           {/* Hallazgo #5: nunca sumar monedas distintas ni etiquetarlas como MXN. */}

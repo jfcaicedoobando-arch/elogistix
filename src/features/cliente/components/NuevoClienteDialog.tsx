@@ -19,7 +19,7 @@ import {
   ClienteField,
   ClienteFiscalSelects,
 } from "./NuevoClienteFormPieces";
-import { rfcLooksValid, cpLooksValid } from "./nuevoClienteValidators";
+import { rfcLooksValid, cpLooksValid, emailLooksValid } from "./nuevoClienteValidators";
 import { ConfirmActionDialog } from "@/components/shared/dialogs/ConfirmActionDialog";
 
 
@@ -131,7 +131,7 @@ export default function NuevoClienteDialog({ open, onOpenChange }: Props) {
             <ClienteField label="Estado" field="estado" form={c.form} onChange={c.handleChange} prefilledFromCsf={prefilled} />
             <ClienteField label="Contacto" field="contacto" form={c.form} onChange={c.handleChange} required />
             <ClienteField label="Email" field="email" form={c.form} onChange={c.handleChange} required
-              validate={(v) => (v && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v) ? COPY_VALIDACION.correoInvalido : null)} />
+              validate={(v) => (v && !emailLooksValid(v) ? COPY_VALIDACION.correoInvalido : null)} />
             <ClienteField label="Teléfono" field="telefono" form={c.form} onChange={c.handleChange} required />
 
           </FormDialogSection>

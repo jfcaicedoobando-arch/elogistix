@@ -8,6 +8,7 @@ import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 import { normalizarRazonSocial } from "@/lib/text/razonSocial";
+import { emailLooksValid } from "@/features/cliente/components/nuevoClienteValidators";
 export const EMPTY_CLIENTE = {
   nombre: "", rfc: "", direccion: "", ciudad: "", estado: "", cp: "", contacto: "", email: "", telefono: "",
   // O4.6: pre-flight fiscal — capturamos los defaults de pago desde el alta
@@ -53,6 +54,8 @@ export function useNuevoClienteController(onClose: () => void) {
 
   // B-024 · email/teléfono/contacto son NOT NULL en BD (trigger NULLIF('')→NULL
   // provocaba 23502 crudo). Los exigimos aquí para bloquear el paso 1.
+  // v13.823.77 — el correo además debe tener forma válida: antes "Siguiente"
+  // avanzaba con "qa.cliente@" y el alta fallaba al final.
   const isStep1Valid = () =>
     Boolean(
       form.nombre.trim() &&
@@ -62,10 +65,11 @@ export function useNuevoClienteController(onClose: () => void) {
       form.uso_cfdi_default.trim() &&
       form.forma_pago_default.trim() &&
       form.metodo_pago_default.trim() &&
-      form.email.trim() &&
+      emailLooksValid(form.email) &&
       form.telefono.trim() &&
       form.contacto.trim()
     );
+
 
 
   const handleNext = () => {

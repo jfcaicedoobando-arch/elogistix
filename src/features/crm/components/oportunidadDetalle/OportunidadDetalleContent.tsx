@@ -83,6 +83,7 @@ export function OportunidadDetalleContent({ op, etapas }: Props) {
             onEliminar={() => setDelOpen(true)}
             canCotizar={canCotizar}
             canGestionar={canEdit}
+            tieneCliente={Boolean(op.cliente_id)}
           />
         ) : undefined}
       />
