@@ -4,6 +4,7 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import { registrarActividad } from "@/services/bitacora/registrar";
+import { getErrorMessage } from "@/lib/errors";
 import { crearNotificacionSilencioso } from "./notificaciones";
 
 function isoDaysFromNow(d: number): string {
@@ -181,7 +182,7 @@ export async function runAutomatizaciones(
     try {
       await paso();
     } catch (e) {
-      fallos.push(`${nombre}: ${e instanceof Error ? e.message : String(e)}`);
+      fallos.push(`${nombre}: ${getErrorMessage(e)}`);
     }
   }
   if (fallos.length > 0) {
