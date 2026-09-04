@@ -16,7 +16,6 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
-import { notifyError } from "@/lib/ui/appFeedback";
 import { useConvertirLead, type CrmLeadRow } from "@/features/crm/hooks";
 import type { Moneda } from "@/types/db";
 
