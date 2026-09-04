@@ -81,6 +81,9 @@ export function useCrearActividad() {
       // La agenda de actividades alimenta Higiene (próxima actividad y SLA).
       qc.invalidateQueries({ queryKey: queryKeys.crm.higiene.all });
       qc.invalidateQueries({ queryKey: queryKeys.crm.kpis });
+      // Regresión v13.823.78: al crear una actividad el resumen ejecutivo/Mi día
+      // quedaba stale hasta que venciera su staleTime de 60s.
+      qc.invalidateQueries({ queryKey: queryKeys.crm.dashboardAll });
       if (!variables.silencioso) notifySuccess(undefined, { title: "Actividad agregada" });
     },
     onError: (error: Error, variables) => {
