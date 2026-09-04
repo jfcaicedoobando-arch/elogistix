@@ -10,7 +10,7 @@ export const crm = {
   proximasActividades: (entidadTipo: string, ids: string[]) =>
     ['crm', 'proximas-actividades', entidadTipo, ids] as const,
   cotizacionesSinRespuesta: (diasUmbral: number, limit: number, uid?: string) =>
-    ['crm', 'cotizaciones-sin-respuesta', diasUmbral, limit] as const,
+    ['crm', 'cotizaciones-sin-respuesta', diasUmbral, limit, uid] as const,
   prospectoSearch: (term: string) => ['crm', 'prospecto-search', term] as const,
   search: (term: string) => ['crm', 'search', term] as const,
   nbaSignals: (uid?: string) => ['crm', 'nba-signals', uid] as const,
