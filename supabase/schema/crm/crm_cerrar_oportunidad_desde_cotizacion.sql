@@ -58,16 +58,27 @@ BEGIN
                     AND OLD.estado = ANY (v_terminales);
 
   -- (b) lock de la oportunidad: serializa aceptaciones concurrentes.
-  SELECT o.id, o.organization_id, o.vendedor_id, o.nombre, e.tipo,
-         o.cotizacion_ganadora_id, o.valor_real, o.embarque_ganador_id, o.moneda
-    INTO v_op_id, v_op_org, v_op_vendedor, v_op_nombre, v_etapa_tipo,
-         v_ganadora, v_valor_previo, v_emb_ganador, v_op_moneda
+  -- El lock se toma sobre la tabla SOLA: un `FOR UPDATE OF o` con JOIN, al
+  -- despertar tras esperar a otra transacción, re-evalúa el join completo
+  -- (EvalPlanQual) y puede devolver 0 filas aunque la oportunidad exista,
+  -- disparando un falso LC_OPORTUNIDAD_AJENA en aceptaciones concurrentes.
+  SELECT o.id INTO v_op_id
     FROM public.crm_oportunidades o
-    JOIN public.crm_etapas_pipeline e ON e.id = o.etapa_id
    WHERE o.id = NEW.oportunidad_id
      AND o.organization_id = NEW.organization_id
      AND o.deleted_at IS NULL
-   FOR UPDATE OF o;
+   FOR UPDATE;
+
+  IF v_op_id IS NOT NULL THEN
+    -- Lectura ya serializada: se re-lee la fila (y su etapa) sin lock.
+    SELECT o.organization_id, o.vendedor_id, o.nombre, e.tipo,
+           o.cotizacion_ganadora_id, o.valor_real, o.embarque_ganador_id, o.moneda
+      INTO v_op_org, v_op_vendedor, v_op_nombre, v_etapa_tipo,
+           v_ganadora, v_valor_previo, v_emb_ganador, v_op_moneda
+      FROM public.crm_oportunidades o
+      JOIN public.crm_etapas_pipeline e ON e.id = o.etapa_id
+     WHERE o.id = v_op_id;
+  END IF;
 
   -- (a) cross-org / inexistente / eliminada
   IF v_op_id IS NULL THEN
