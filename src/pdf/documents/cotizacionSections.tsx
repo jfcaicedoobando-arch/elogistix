@@ -5,6 +5,7 @@ import { buildDatosGenerales, buildMercancia } from "@/generators/cotizacion/dat
 import type { TipoContenedorCatalogo } from "@/features/cotizacion/utils/resolveTipoContenedorNombre";
 import { KeyValueGrid } from "../components/KeyValueGrid";
 import { DataTable, type PdfColumn } from "../components/DataTable";
+import { sanitizePdfText } from "../text/sanitizePdfText";
 
 interface Props {
   c: CotizacionRow;
@@ -34,7 +35,7 @@ function SeccionProspecto({ c }: Props) {
 /** Resumen ejecutivo de la ruta para lectura rápida del cliente. */
 export function SeccionResumenRuta({ c }: Props) {
   const partes: string[] = [];
-  if (c.origen || c.destino) partes.push(`${c.origen || '—'} → ${c.destino || '—'}`);
+  if (c.origen || c.destino) partes.push(`${c.origen || '—'}  \u2192  ${c.destino || '—'}`);
   if (c.modo) partes.push(c.modo);
   if (c.incoterm) partes.push(c.incoterm);
   if (c.tiempo_transito_dias != null) partes.push(`Tránsito ${c.tiempo_transito_dias} días`);
@@ -43,7 +44,7 @@ export function SeccionResumenRuta({ c }: Props) {
   if (partes.length === 0 && !sinFleteVenta) return null;
   return (
     <View style={{ marginTop: 4, marginBottom: 4 }} wrap={false}>
-      <Text style={{ ...styles.paragraph, fontSize: 10 }}>{partes.join("  ·  ")}</Text>
+      <Text style={{ ...styles.paragraph, fontSize: 10 }}>{sanitizePdfText(partes.join("  ·  "))}</Text>
       {sinFleteVenta && (
         <Text style={{ ...styles.paragraph, fontSize: 9, fontStyle: "italic", marginTop: 2 }}>
           Términos {c.incoterm} (Incoterms® 2020): el vendedor en origen cubre el flete

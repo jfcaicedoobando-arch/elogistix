@@ -1,8 +1,8 @@
 import { View, Text } from "@react-pdf/renderer";
 import type { Style } from "@react-pdf/types";
-import { Fragment } from "react";
 import { styles } from "../theme/styles";
 import { COLORS } from "@/pdf/theme/tokens";
+import { sanitizePdfText } from "../text/sanitizePdfText";
 
 export interface PdfColumn<T> {
   key: string;
@@ -47,7 +47,7 @@ export function DataTable<T>({ columns, rows, renderSubrow }: Props<T>) {
       <View style={styles.tableHeader} fixed>
         {columns.map((col) => (
           <Text key={col.key} style={[styles.th, ...flat(col.cellStyle)]}>
-            {col.title}
+            {sanitizePdfText(col.title)}
           </Text>
         ))}
       </View>
