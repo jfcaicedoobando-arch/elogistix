@@ -141,20 +141,13 @@ export function usePermissions() {
   const canGestionarTodasLasActividades = canGestionarTodasLasOportunidades;
   const canCrearActividad = canCrearOportunidad;
   /**
-   * Espejo de `filtroResponsable` (actividadesQueryHelpers): el correo sólo
-   * decide la propiedad cuando `responsable_id` es nulo (actividades legadas).
+   * Espejo EXACTO de la policy `Vendedor own crm_actividades`: el UPDATE sólo
+   * pasa con `responsable_id = auth.uid()`. El fallback por `responsable_email`
+   * vive únicamente en filtros/listados (`filtroResponsable`); usarlo aquí
+   * mostraba "Marcar completada" y la mutación terminaba rechazada por RLS.
    */
-  const canGestionarActividad = (
-    responsableId: string | null | undefined,
-    responsableEmail?: string | null,
-  ): boolean => {
-    if (canGestionarTodasLasActividades) return true;
-    if (!esVendedorCrm) return false;
-    if (responsableId) return propio(responsableId);
-    const email = responsableEmail?.trim().toLowerCase();
-    const propioEmail = user?.email?.trim().toLowerCase();
-    return !!email && !!propioEmail && email === propioEmail;
-  };
+  const canGestionarActividad = (responsableId: string | null | undefined): boolean =>
+    canGestionarTodasLasActividades || (esVendedorCrm && propio(responsableId));
 
   const canReasignarVendedorCrm = has(CRM_REASIGNAR_VENDEDOR, roleStr);
 

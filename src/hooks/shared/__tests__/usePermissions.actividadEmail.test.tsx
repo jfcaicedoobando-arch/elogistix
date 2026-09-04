@@ -1,9 +1,11 @@
 /**
- * Regresión — actividades legadas asignadas sólo por correo.
+ * Regresión — acciones de actividades (completar/posponer) espejan la policy
+ * `Vendedor own crm_actividades`, que sólo permite UPDATE con
+ * `responsable_id = auth.uid()`.
  *
- * Espeja `filtroResponsable`: el correo decide la propiedad únicamente cuando
- * `responsable_id` es nulo. Así el dueño ve "Marcar completada" en las mismas
- * actividades que aparecen en "Mis actividades".
+ * Una actividad legada asignada sólo por `responsable_email` puede aparecer en
+ * "Mis actividades" (filtro), pero NO debe habilitar la mutación: el UPDATE
+ * sería rechazado por RLS.
  */
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook } from "@testing-library/react";
@@ -34,21 +36,19 @@ function permisosVendedor() {
   return renderHook(() => usePermissions()).result.current;
 }
 
-describe("canGestionarActividad — responsable por correo", () => {
+describe("canGestionarActividad — espejo de RLS", () => {
   beforeEach(() => vi.clearAllMocks());
 
-  it("permite gestionar cuando el id coincide (aunque el correo sea de otro)", () => {
-    expect(permisosVendedor().canGestionarActividad(UID, "otro@librecarga.com")).toBe(true);
+  it("permite gestionar la actividad propia por responsable_id", () => {
+    expect(permisosVendedor().canGestionarActividad(UID)).toBe(true);
   });
 
-  it("permite gestionar cuando sólo hay correo y coincide", () => {
-    expect(permisosVendedor().canGestionarActividad(null, EMAIL.toUpperCase())).toBe(true);
+  it("NO habilita mutación cuando la actividad sólo tiene responsable_email propio", () => {
+    // El correo coincide con la sesión, pero la policy exige responsable_id.
+    expect(permisosVendedor().canGestionarActividad(null)).toBe(false);
   });
 
   it("no permite gestionar la actividad de otro usuario", () => {
-    const p = permisosVendedor();
-    expect(p.canGestionarActividad(OTRO_UID)).toBe(false);
-    expect(p.canGestionarActividad(null, "otro@librecarga.com")).toBe(false);
-    expect(p.canGestionarActividad(null, null)).toBe(false);
+    expect(permisosVendedor().canGestionarActividad(OTRO_UID)).toBe(false);
   });
 });
