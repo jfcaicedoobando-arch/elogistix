@@ -9,8 +9,9 @@
  * quedan los grupos de roles y el barrel de re-exports (API pública estable).
  */
 import type { AppRole } from "@/types/appRole";
+import { TENANT_ADMINS } from "./tenantAdmins";
 
-export const TENANT_ADMINS: readonly AppRole[] = ["super_admin", "admin_org", "admin"];
+export { TENANT_ADMINS };
 
 export const OPERATIONS: readonly AppRole[] = [
   "super_admin",

@@ -5,7 +5,7 @@
  * archivo (Power of 10). Re-exportado desde el archivo original.
  */
 import type { AppRole } from "@/types/appRole";
-import { TENANT_ADMINS } from "./permissionMatrix";
+import { TENANT_ADMINS } from "./tenantAdmins";
 
 /**
  * Ola 6 (O6.3) — Roles que configuran el CRM (`/crm/configuracion`:
