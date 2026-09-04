@@ -36,7 +36,7 @@ export default function MiDia() {
       <section className="space-y-3">
         <SectionHeading variant="overline">Hoy</SectionHeading>
         <NextBestActionsCard items={vm.nba} isLoading={vm.nbaLoading} isError={vm.nbaError} onRetry={vm.nbaRefetch} />
-        <ActividadesHoyCard items={vm.actividadesHoy} />
+        <ActividadesHoyCard items={vm.actividadesHoy} isError={vm.isError} onRetry={() => void vm.refetch()} />
       </section>
 
       <section className="space-y-3">

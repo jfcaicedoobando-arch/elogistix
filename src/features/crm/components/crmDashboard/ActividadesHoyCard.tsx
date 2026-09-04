@@ -1,5 +1,6 @@
 import { Clock } from "lucide-react";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
+import { ErrorStateInline } from "@/components/empty/ErrorStateInline";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { DrilldownRow } from "@/components/shared/dataTable/DrilldownRow";
@@ -25,7 +26,15 @@ function formatHora(iso: string | null): string {
   return new Date(iso).toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" });
 }
 
-export function ActividadesHoyCard({ items }: { items: Actividad[] }) {
+interface Props {
+  items: Actividad[];
+  /** Tercera tanda YAGNI · hallazgo 2: si la lectura falló no se muestra
+   *  "Sin actividades"; se comunica el error con reintento. */
+  isError?: boolean;
+  onRetry?: () => void;
+}
+
+export function ActividadesHoyCard({ items, isError = false, onRetry }: Props) {
   return (
     <Card>
       <CardHeader className="pb-2">
@@ -34,7 +43,12 @@ export function ActividadesHoyCard({ items }: { items: Actividad[] }) {
         </CardTitle>
       </CardHeader>
       <CardContent>
-        {items.length === 0 ? (
+        {isError ? (
+          <ErrorStateInline
+            message="No se pudieron cargar tus actividades de hoy."
+            onRetry={onRetry}
+          />
+        ) : items.length === 0 ? (
           <EmptyStateInline icon={Clock} message="Sin actividades programadas hoy" />
         ) : (
           <ul className="space-y-1.5">
