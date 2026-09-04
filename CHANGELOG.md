@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+## [13.823.79] - 2026-09-05
+
+### CRM — Dashboard actualizado al editar o eliminar oportunidades
+- `useActualizarOportunidad` y `useEliminarOportunidad` ahora invalidan `crm.dashboardAll`; eliminar también invalida `crm.kpis`. Antes el resumen ejecutivo (KPIs, forecast, embudo) quedaba con valores viejos hasta vencer el `staleTime` de 60s.
+- Nueva regresión `useOportunidades.invalidacion.test.tsx` para actualizar y eliminar.
+
 ## [13.823.78] - 2026-09-05
 
 ### CRM — Invalidación del dashboard tras crear actividad
