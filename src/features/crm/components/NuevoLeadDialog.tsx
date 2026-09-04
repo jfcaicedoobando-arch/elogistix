@@ -16,6 +16,7 @@ import { NuevoLeadForm, type LeadFormState } from "./nuevoLead/NuevoLeadForm";
 import { AvisoLeadDuplicado } from "./AvisoLeadDuplicado";
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 import { actividadDefaultFechaMx } from "@/features/crm/domain/actividadDefaultFecha";
+import { emailLooksValid } from "@/features/cliente/components/nuevoClienteValidators";
 
 
 interface Props {
@@ -61,11 +62,26 @@ export default function NuevoLeadDialog({ open, onOpenChange, onCreated }: Props
     [form, defaults, autoActividad],
   );
 
+  // Correo opcional: si viene capturado debe tener forma válida (regla central
+  // `emailLooksValid`). El flujo mínimo "correo o teléfono" se conserva: vacío es válido.
+  const emailInvalido = form.email.trim() !== "" && !emailLooksValid(form.email);
+  const [emailTocado, setEmailTocado] = useState(false);
+
   const handleSubmit = async () => {
 
     if (crear.isPending || crearActividad.isPending || enviandoRef.current || guardando) return;
     if (!form.empresa.trim()) {
       notifyError(undefined, { title: "Empresa es obligatoria", method: "HANDLE_SUBMIT", errorCode: ERROR_CODES.VALIDATION_FAILED });
+      return;
+    }
+    if (emailInvalido) {
+      setEmailTocado(true);
+      notifyError(undefined, {
+        title: "Correo inválido",
+        description: "Escribe un correo con la forma usuario@dominio.com o déjalo vacío.",
+        method: "HANDLE_SUBMIT",
+        errorCode: ERROR_CODES.VALIDATION_FAILED,
+      });
       return;
     }
     enviandoRef.current = true;
@@ -99,6 +115,7 @@ export default function NuevoLeadDialog({ open, onOpenChange, onCreated }: Props
 
       crmToast.success("Lead creado");
       setForm(formVacio());
+      setEmailTocado(false);
       onOpenChange(false);
       onCreated?.(r.id);
     } catch (e) {
@@ -118,6 +135,7 @@ export default function NuevoLeadDialog({ open, onOpenChange, onCreated }: Props
   const handleOpenChange = (o: boolean) => {
     if (!o) {
       setForm(formVacio());
+      setEmailTocado(false);
       setAutoActividad(true);
     }
     onOpenChange(o);
@@ -129,6 +147,7 @@ export default function NuevoLeadDialog({ open, onOpenChange, onCreated }: Props
       onConfirm={handleSubmit}
       confirmLabel="Crear lead"
       loading={pendingTotal}
+      disabled={emailInvalido}
     />
   );
 
@@ -156,6 +175,7 @@ export default function NuevoLeadDialog({ open, onOpenChange, onCreated }: Props
         setForm={setForm}
         autoActividad={autoActividad}
         setAutoActividad={setAutoActividad}
+        emailError={emailInvalido && emailTocado ? "Correo inválido: usa la forma usuario@dominio.com o deja el campo vacío." : undefined}
       />
     </FormDialogShell>
   );
