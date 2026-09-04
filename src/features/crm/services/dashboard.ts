@@ -16,6 +16,8 @@ import {
 } from "@/features/crm/domain/dashboardAggregates";
 import { todayLocalISO } from "@/lib/date/today";
 import { leerTodasLasPaginas } from "@/lib/supabase/paginado";
+import { computePipelinePonderadoPorMoneda } from "@/features/crm/domain/dashboardAggregates";
+import type { SubtotalMoneda } from "@/features/crm/domain/montosPorMoneda";
 
 export interface CrmDashboardData {
   kpis: {
@@ -23,6 +25,8 @@ export interface CrmDashboardData {
     oportunidadesAbiertas: number;
     actividadesPendientes: number;
     pipelinePonderado: number;
+    /** Hallazgo #5: desglose real por moneda (nunca sumar MXN/USD/EUR). */
+    pipelinePonderadoPorMoneda: SubtotalMoneda[];
   };
   misActividadesHoy: Array<{
     id: string;
@@ -144,6 +148,7 @@ export async function fetchCrmDashboard(
       oportunidadesAbiertas: opsAbiertas.length,
       actividadesPendientes: actsPendQ.count ?? 0,
       pipelinePonderado: computePipelinePonderado(opsAbiertas),
+      pipelinePonderadoPorMoneda: computePipelinePonderadoPorMoneda(opsAbiertas),
     },
     misActividadesHoy: (misActsQ.data ?? []) as CrmDashboardData["misActividadesHoy"],
     cerrandoEstaSemana: (cerrandoQ.data ?? []).map((o: { id: string; nombre: string; cliente_nombre: string; monto_estimado: number; moneda: string; fecha_estimada_cierre: string | null; probabilidad: number }) => ({

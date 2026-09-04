@@ -34,6 +34,7 @@ export function useCrmInicioVM() {
       oportunidadesAbiertas: data?.kpis.oportunidadesAbiertas,
       actividadesPendientes: data?.kpis.actividadesPendientes,
       pipelinePonderado: data?.kpis.pipelinePonderado ?? 0,
+      pipelinePonderadoPorMoneda: data?.kpis.pipelinePonderadoPorMoneda ?? [],
     },
   };
 }
