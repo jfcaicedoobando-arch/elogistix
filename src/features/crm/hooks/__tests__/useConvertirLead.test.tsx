@@ -16,6 +16,7 @@ vi.mock("@/lib/query", () => ({
   queryKeys: {
     crm: {
       leads: { all: ["crm", "leads"] },
+      prospectos: { all: ["crm", "prospectos"] },
       kpis: ["crm", "kpis"],
       oportunidades: { all: ["crm", "oportunidades"] },
       dashboardAll: ["crm", "dashboard"],
@@ -55,6 +56,7 @@ describe("useConvertirLead", () => {
       (args) => (args[0] as { queryKey: unknown }).queryKey,
     );
     expect(invalidated).toContainEqual(["crm", "leads"]);
+    expect(invalidated).toContainEqual(["crm", "prospectos"]);
     expect(invalidated).toContainEqual(["crm", "kpis"]);
     expect(invalidated).toContainEqual(["clientes"]);
     // Regresión: la conversión crea una oportunidad — antes no se invalidaba
