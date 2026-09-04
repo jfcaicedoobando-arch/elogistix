@@ -15,6 +15,7 @@ import { useCrearActividad } from "@/features/crm/hooks";
 import { NuevoLeadForm, type LeadFormState } from "./nuevoLead/NuevoLeadForm";
 import { AvisoLeadDuplicado } from "./AvisoLeadDuplicado";
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
+import { actividadDefaultFechaMx } from "@/features/crm/domain/actividadDefaultFecha";
 
 
 interface Props {
@@ -81,7 +82,7 @@ export default function NuevoLeadDialog({ open, onOpenChange, onCreated }: Props
             descripcion: "Actividad creada automáticamente al alta del lead.",
             entidad_tipo: "lead",
             entidad_id: r.id,
-            fecha_programada: fechaProgramadaDefault().toISOString(),
+            fecha_programada: new Date(actividadDefaultFechaMx()).toISOString(),
             responsable_id: form.vendedor_id ?? null,
             responsable_email: form.vendedor_email ?? "",
             silencioso: true,
