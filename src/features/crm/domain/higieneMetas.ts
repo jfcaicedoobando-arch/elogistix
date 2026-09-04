@@ -2,6 +2,7 @@
  * Cálculos puros de higiene y cobertura comercial (Etapas 2 y 3 CRM Hunter).
  */
 import type { HigieneOportunidad, EstadoHigiene } from "@/features/crm/services/higiene";
+import type { Moneda } from "@/types/common";
 import type { PresupuestoMes } from "@/features/crm/services/metasPresupuesto";
 
 export const ETIQUETA_HIGIENE: Record<EstadoHigiene, string> = {
@@ -16,24 +17,33 @@ export const VARIANTE_HIGIENE: Record<EstadoHigiene, "default" | "secondary" | "
   vencida: "destructive",
 };
 
-/** Presupuesto del mes indicado (1-12); 0 si no está capturado. */
+/** Presupuesto del mes indicado (1-12) conservando su moneda; 0 MXN si no está capturado. */
+export interface PresupuestoDelMes {
+  monto: number;
+  moneda: Moneda;
+}
+
 export function presupuestoDelMes(
   filas: PresupuestoMes[] | undefined,
   mes: number,
-): number {
-  return filas?.find((f) => f.mes === mes)?.monto ?? 0;
+): PresupuestoDelMes {
+  const fila = filas?.find((f) => f.mes === mes);
+  return { monto: fila?.monto ?? 0, moneda: fila?.moneda ?? "MXN" };
 }
 
 /**
- * Cobertura = pipeline ponderado / presupuesto del mes.
- * `null` cuando no hay presupuesto capturado (evita dividir entre cero).
+ * Cobertura = pipeline ponderado (siempre MXN) / presupuesto del mes.
+ * `null` cuando no hay presupuesto capturado (evita dividir entre cero) o
+ * cuando el presupuesto está en moneda extranjera: sin un tipo de cambio
+ * histórico válido, dividir MXN entre USD/EUR daría un porcentaje engañoso.
  */
 export function coberturaPonderada(
   pipelinePonderado: number,
-  presupuesto: number,
+  presupuesto: PresupuestoDelMes,
 ): number | null {
-  if (presupuesto <= 0) return null;
-  return pipelinePonderado / presupuesto;
+  if (presupuesto.moneda !== "MXN") return null;
+  if (presupuesto.monto <= 0) return null;
+  return pipelinePonderado / presupuesto.monto;
 }
 
 export interface ConteoHigiene {
