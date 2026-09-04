@@ -10,7 +10,7 @@
  *
  * Atajos: N abre el menú; L/O/A abren directo el formulario correspondiente.
  */
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Plus, Users, Target, Activity, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -52,11 +52,11 @@ export default function QuickAddMenu({ openTrigger, dialogTrigger }: QuickAddMen
    * Espejo de las policies RLS: oportunidades y actividades sólo se crean con
    * la capacidad específica (staff CRM o vendedor sobre sus registros).
    */
-  const puedeCrear = (kind: Exclude<Quick, null>): boolean => {
+  const puedeCrear = useCallback((kind: Exclude<Quick, null>): boolean => {
     if (kind === "lead") return canCrearLead;
     if (kind === "oportunidad") return canCrearOportunidad;
     return canCrearActividad;
-  };
+  }, [canCrearLead, canCrearOportunidad, canCrearActividad]);
 
   // Ola 9 (v13.430.0): antes se usaba un ref booleano "primer render" para
   // ignorar el valor inicial de `openTrigger`. En StrictMode React monta,
@@ -77,9 +77,7 @@ export default function QuickAddMenu({ openTrigger, dialogTrigger }: QuickAddMen
     lastDialogTrigger.current = dialogTrigger.n;
     if (!puedeCrear(dialogTrigger.kind)) return;
     setQuick(dialogTrigger.kind);
-    // `puedeCrear` es estable en cada render y depende sólo de las capacidades.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dialogTrigger, canCrearLead, canCrearOportunidad, canCrearActividad]);
+  }, [dialogTrigger, puedeCrear]);
 
   const abrirQuick = (kind: Exclude<Quick, null>) => {
     // Los atajos L/O/A y el menú comparten exactamente el mismo candado.
