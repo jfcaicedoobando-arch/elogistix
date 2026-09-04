@@ -29,7 +29,10 @@ interface Props {
   isSectionCollapsed?: boolean;
   /** Alterna la sección colapsada. */
   onToggleSection?: (label: string) => void;
+  /** Último grupo del menú: omite la línea divisoria final. */
+  esUltimoGrupo?: boolean;
 }
+
 
 /**
  * Bloque memoizado de un grupo del sidebar. Evita reconstruir cada `renderGroup`
