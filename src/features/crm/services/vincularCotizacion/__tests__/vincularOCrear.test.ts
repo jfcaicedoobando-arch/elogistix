@@ -18,6 +18,8 @@ import { vincularOCrearOportunidadParaCotizacion } from "../vincularOCrear";
 const base = {
   cotizacionId: "cot-1",
   modoTransporte: "Marítimo",
+  // P0: el cotizador ya no crea prospectos; siempre viaja un origen CRM.
+  leadId: "lead-1",
   prospecto: { empresa: "ACME", contacto: "Juan", email: "j@x.com", telefono: "81", rfc: "ABC010101AB1" },
   user: null,
 };
