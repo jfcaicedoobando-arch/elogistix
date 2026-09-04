@@ -13,6 +13,7 @@ import type { FacturaCxP } from "./proveedorFacturas";
 import { esFacturaPorPagar } from "./cxpPorPagarFiltro";
 import { esVencidoPorDias, estaPorVencer, DIAS_POR_VENCER_CXC } from "@/lib/domain/vencimiento";
 import { todayLocalISO, todayLocalISOPlus } from "@/lib/date/today";
+import { diasVencidos } from "@/lib/date/dateOnly";
 
 export interface ConteosTarjetasCxP {
   porPagarMxn: number;
@@ -39,8 +40,16 @@ export function resumirTarjetasCxP(
     const usd = f.moneda === "USD";
     const mxn = f.moneda === "MXN";
     if (usd) r.porPagarUsd++; else if (mxn) r.porPagarMxn++;
-    if (esVencidoPorDias(f.dias_vencido)) r.vencidasN++;
-    else if (f.fecha_vencimiento && estaPorVencer(f.dias_vencido)) r.porVencerN++;
+    // `f.dias_vencido` viene de `mapJoinedRow` como Math.max(0, dv): en
+    // producción NUNCA es negativo, así que "por vencer" salía siempre true y
+    // las vencidas dependían de un valor recortado. Derivamos los días del
+    // canon date-only contra `hoyIso`, igual que `calcularKPIsCxP`.
+    const venc = f.fecha_vencimiento?.slice(0, 10);
+    if (venc) {
+      const dv = diasVencidos(venc, hoyIso);
+      if (esVencidoPorDias(dv)) r.vencidasN++;
+      else if (estaPorVencer(dv)) r.porVencerN++;
+    }
     const prog = f.fecha_programada_pago?.slice(0, 10);
     if (prog && prog >= hoyIso && prog <= limite) {
       r.programadoN++;
