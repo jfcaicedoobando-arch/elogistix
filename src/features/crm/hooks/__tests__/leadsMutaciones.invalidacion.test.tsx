@@ -66,7 +66,7 @@ describe("invalidación del dashboard en mutaciones de leads", () => {
     calificarProspecto.mockReset().mockResolvedValue({ id: "lead-1" });
   });
 
-  it("actualizar lead invalida listas, detalle, kpis y dashboard", async () => {
+  it("actualizar lead invalida listas, detalle, prospectos, kpis y dashboard", async () => {
     const { result } = renderHook(() => useActualizarLead(), { wrapper: createWrapper() });
     const spy = spyClient();
     result.current.mutate({ id: "lead-1", patch: { estado: "contactado" } as never });
@@ -75,11 +75,12 @@ describe("invalidación del dashboard en mutaciones de leads", () => {
     const invalidated = keys(spy);
     expect(invalidated).toContainEqual(["crm", "leads"]);
     expect(invalidated).toContainEqual(["crm", "leads", "lead-1"]);
+    expect(invalidated).toContainEqual(["crm", "prospectos"]);
     expect(invalidated).toContainEqual(["crm", "kpis"]);
     expect(invalidated).toContainEqual(["crm", "dashboard"]);
   });
 
-  it("eliminar lead invalida listas, kpis y dashboard", async () => {
+  it("eliminar lead invalida listas, prospectos, kpis y dashboard", async () => {
     const { result } = renderHook(() => useEliminarLead(), { wrapper: createWrapper() });
     const spy = spyClient();
     result.current.mutate("lead-1");
@@ -87,6 +88,7 @@ describe("invalidación del dashboard en mutaciones de leads", () => {
 
     const invalidated = keys(spy);
     expect(invalidated).toContainEqual(["crm", "leads"]);
+    expect(invalidated).toContainEqual(["crm", "prospectos"]);
     expect(invalidated).toContainEqual(["crm", "kpis"]);
     expect(invalidated).toContainEqual(["crm", "dashboard"]);
   });
@@ -104,7 +106,7 @@ describe("invalidación del dashboard en mutaciones de leads", () => {
     expect(invalidated).toContainEqual(["crm", "dashboard"]);
   });
 
-  it("calificar prospecto invalida listas, detalle, kpis y dashboard", async () => {
+  it("calificar prospecto invalida listas, detalle, prospectos, kpis y dashboard", async () => {
     const { result } = renderHook(() => useCalificarProspecto(), { wrapper: createWrapper() });
     const spy = spyClient();
     result.current.mutate("lead-1");
@@ -113,6 +115,7 @@ describe("invalidación del dashboard en mutaciones de leads", () => {
     const invalidated = keys(spy);
     expect(invalidated).toContainEqual(["crm", "leads"]);
     expect(invalidated).toContainEqual(["crm", "leads", "lead-1"]);
+    expect(invalidated).toContainEqual(["crm", "prospectos"]);
     expect(invalidated).toContainEqual(["crm", "kpis"]);
     expect(invalidated).toContainEqual(["crm", "dashboard"]);
   });
