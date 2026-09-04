@@ -36,8 +36,8 @@
 set -euo pipefail
 
 APP_A='lc_conc_ganadora_a'
-ESPERA_MAX_S=30      # timeout de la barrera
-LOCK_HOLD_S=5        # cuánto retiene A el lock tras su UPDATE
+ESPERA_MAX_S=60      # timeout de la barrera (CI lento: runners compartidos)
+A_ESPERA_MAX_S=120   # techo de espera de A por el semáforo (evita cuelgue)
 
 PSQL_BASE=(psql -v ON_ERROR_STOP=1 -X -q -t -A)
 if [[ -n "${SUPABASE_DB_URL:-}" ]]; then
