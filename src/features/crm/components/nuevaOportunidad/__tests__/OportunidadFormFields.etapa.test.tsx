@@ -5,6 +5,7 @@
  */
 import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import OportunidadFormFields from "@/features/crm/components/nuevaOportunidad/OportunidadFormFields";
 import { buildEmptyForNueva } from "@/features/crm/domain/oportunidadFormHelpers";
 import type { OportunidadFormState } from "@/features/crm/hooks";
@@ -24,7 +25,9 @@ const ETAPAS = [
 const ETAPAS_SOLO_TERMINALES = [ETAPAS[0], ETAPAS[2]];
 
 function renderCampos(form: OportunidadFormState, etapas = ETAPAS) {
+  const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   render(
+    <QueryClientProvider client={qc}>
     <OportunidadFormFields
       form={form}
       setForm={vi.fn()}
@@ -34,7 +37,8 @@ function renderCampos(form: OportunidadFormState, etapas = ETAPAS) {
       isEdit={false}
       autoActividad={false}
       setAutoActividad={vi.fn()}
-    />,
+    />
+    </QueryClientProvider>,
   );
 }
 
