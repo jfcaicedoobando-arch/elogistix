@@ -17,8 +17,8 @@ export interface SubtotalMoneda {
   monto: number;
 }
 
-/** Orden de presentación estable: primero USD, luego MXN. */
-const ORDEN_MONEDAS = ["USD", "MXN"] as const;
+/** Orden de presentación estable: USD, luego EUR, luego MXN. */
+const ORDEN_MONEDAS = ["USD", "EUR", "MXN"] as const;
 
 const getter = (c: ConceptoVentaCotizacion) => ({
   cantidad: c.cantidad,
@@ -49,16 +49,21 @@ export function subtotalesPorMoneda(
 
 /**
  * Equivalente total en MXN para ordenar el listado sin mezclar monedas.
+ * Cada moneda usa SU PROPIO tipo de cambio (USD con `usdMxn`, EUR con
+ * `eurMxn`); antes se aplicaba `usdMxn` a cualquier moneda distinta de MXN,
+ * lo que convertía importes en EUR como si fueran USD.
  * @returns `null` si alguna moneda no es convertible con el TC disponible.
  */
 export function normalizarSubtotalesMxn(
   subtotales: SubtotalMoneda[],
   usdMxn: number | null | undefined,
+  eurMxn?: number | null | undefined,
 ): number | null {
   if (subtotales.length === 0) return null;
   let total = 0;
   for (const s of subtotales) {
-    const conversion = aMxn(s.monto, s.moneda, usdMxn);
+    const tc = s.moneda === "EUR" ? eurMxn : usdMxn;
+    const conversion = aMxn(s.monto, s.moneda, tc);
     if (!conversion.completo) return null;
     total += conversion.monto;
   }

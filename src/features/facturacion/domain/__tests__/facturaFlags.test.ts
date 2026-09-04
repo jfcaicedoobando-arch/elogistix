@@ -292,3 +292,18 @@ describe("puedeRefacturarReceptor", () => {
     expect(r.puedeRefacturarReceptor).toBe(false);
   });
 });
+
+describe("fail-closed del saldo (hallazgo P1)", () => {
+  const FACTURA = { estado: "Emitida", uuid_fiscal: "UUID-1", fecha_emision: POST };
+
+  it("con saldo confiable permite registrar pago", () => {
+    const r = deriveFacturaFlags(FACTURA, true, { saldo: 1000 }, true);
+    expect(r.puedeRegistrarPago).toBe(true);
+  });
+
+  it("si falló la lectura de pagos o NC, no permite registrar pago", () => {
+    const r = deriveFacturaFlags(FACTURA, true, { saldo: 1000, saldoError: true }, true);
+    expect(r.puedeRegistrarPago).toBe(false);
+  });
+});
+

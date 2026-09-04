@@ -32,6 +32,12 @@ export interface FacturaFlagsContext {
   saldo?: number;
   /** Cuántos pagos aún tienen REP pendiente o con error. */
   pagosRepPendientes?: number;
+  /**
+   * P1: la lectura de pagos y/o notas de crédito aplicadas falló. El saldo
+   * mostrado NO es confiable, así que las acciones que dependen de él
+   * (registrar pago) deben deshabilitarse en vez de asumir saldo cero.
+   */
+  saldoError?: boolean;
 }
 
 export interface FacturaFlags {
@@ -134,6 +140,8 @@ function puedeCobrarse(
   // assert_factura_viva_para_pago).
   // v13.592.0: una factura con cancelación en trámite ante el SAT (pending/
   // verifying) NO admite cobros — espejo del candado LC_FACTURA_EN_CANCELACION.
+  // P1: si la lectura de pagos/NC falló, el saldo no es confiable — fail-closed.
+  if (ctx.saldoError) return false;
   const vigenteCobrable =
     ESTADOS_COBRABLES.has(f.estado ?? "") && !estaCancelada && !enTramiteCancelacion(f);
   return vigenteCobrable && canRegistrarCobro && (ctx.saldo ?? 0) > 0.01;

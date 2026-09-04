@@ -31,6 +31,8 @@ interface FacturaDetalleBodyProps {
   estaCancelada?: boolean;
   canEnviarRecordatorio?: boolean;
   onEnviarRecordatorio?: () => void;
+  /** P1: falló la lectura de pagos o NC aplicadas (saldo no confiable). */
+  saldoError?: boolean;
 }
 
 export function FacturaDetalleBody(props: FacturaDetalleBodyProps) {
@@ -124,7 +126,8 @@ export function FacturaDetalleBody(props: FacturaDetalleBodyProps) {
           fechaFactura={factura.fecha_emision}
           monedaFactura={factura.moneda}
           tipoCambioFactura={Number(factura.tipo_cambio ?? 1)}
-          saldoFactura={Number(factura.total)}
+          saldoFactura={Number(props.saldo ?? factura.total)}
+          saldoError={props.saldoError}
           uuidFacturaOriginal={factura.uuid_fiscal ?? null}
           snapshotEmision={factura.snapshot_emision}
           canEdit={canEdit}

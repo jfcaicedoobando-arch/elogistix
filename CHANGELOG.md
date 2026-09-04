@@ -2,6 +2,20 @@
 
 ## [Unreleased]
 
+## [13.823.74] - 2026-09-04
+
+### Cotizaciones en euros comparadas con el tipo de cambio del dólar
+- El orden de la columna "Subtotal" del listado convertía importes en EUR usando el tipo de cambio de USD (comparación de "mayor cotización" corrupta) y el desglose por moneda descartaba el renglón en euros. Ahora cada moneda usa su propio tipo de cambio y, si falta, la fila no se compara numéricamente en vez de mostrar un equivalente inventado.
+
+### Detalle de factura: saldo fail-closed
+- Si falla la lectura de pagos o de notas de crédito aplicadas, el detalle ya no muestra "sin pagos"/saldo completo: aparece un aviso con "Reintentar" y se deshabilitan registrar pago y crear nota de crédito hasta que la lectura tenga éxito. El comportamiento con datos correctos no cambia.
+
+### Captura de factura de proveedor desde el buzón
+- Si la factura se crea pero falla "marcar como capturado", el diálogo ya no se cierra ni se limpia: conserva la captura y el id creado, explica el error y "Guardar" reintenta sólo ese paso, sin duplicar la factura.
+
+### Reapertura de oportunidades (verificación)
+- Se blindó con pruebas la reapertura Ganada→Abierta y Perdida→Abierta: limpieza de fecha de cierre, valor real y motivo de pérdida en un solo UPDATE, con guard de concurrencia y sin tocar el historial de etapas.
+
 ## [13.823.73] - 2026-09-04
 
 ### Concurrencia: dos personas aceptando cotizaciones de la misma oportunidad

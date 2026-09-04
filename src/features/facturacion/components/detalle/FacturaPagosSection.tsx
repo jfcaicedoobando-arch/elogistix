@@ -21,6 +21,7 @@ import { FacturaPagosHeader } from "./FacturaPagosHeader";
 import { FacturaEstadoInconsistenteAlert } from "./FacturaEstadoInconsistenteAlert";
 import { esEstadoInconsistente } from "./facturaEstadoInconsistente";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
+import { ErrorStateInline } from "@/components/empty/ErrorStateInline";
 import { Receipt } from "lucide-react";
 
 interface Props {
@@ -38,8 +39,17 @@ interface Props {
 export function FacturaPagosSection({
   facturaId, facturaNumero, totalFactura, moneda, canEdit, estadoFactura,
 }: Props) {
-  const { data: pagos = [], isLoading } = usePagosFactura(facturaId);
-  const { data: notasAplicadas = [] } = useNotasCreditoAplicadas(facturaId);
+  const pagosQuery = usePagosFactura(facturaId);
+  const notasQuery = useNotasCreditoAplicadas(facturaId);
+  const pagos = pagosQuery.data ?? [];
+  const notasAplicadas = notasQuery.data ?? [];
+  const isLoading = pagosQuery.isLoading;
+  // P1 fail-closed: un error de lectura NO se degrada a "sin pagos"/saldo total.
+  const lecturaFallida = pagosQuery.isError || notasQuery.isError;
+  const reintentar = () => {
+    void pagosQuery.refetch();
+    void notasQuery.refetch();
+  };
   const eliminar = useEliminarPagoFactura();
   const registrarActividad = useRegistrarActividad();
   const [pagoAEliminar, setPagoAEliminar] = useState<string | null>(null);
@@ -88,7 +98,14 @@ export function FacturaPagosSection({
         <FacturaPagosHeader hayPagos={pagos.length > 0} liquidada={liquidada} />
         <CardContent className="space-y-3">
           {inconsistente && <FacturaEstadoInconsistenteAlert estadoFactura={estadoFactura} />}
-          {isLoading ? (
+          {lecturaFallida ? (
+            <ErrorStateInline
+              title="No pudimos cargar pagos y notas de crédito"
+              message="El saldo no se puede calcular con certeza. Reintenta la lectura antes de registrar pagos."
+              onRetry={reintentar}
+              className="py-4"
+            />
+          ) : isLoading ? (
             <ListSkeleton rows={3} />
           ) : pagos.length === 0 ? (
             <EmptyStateInline
@@ -108,6 +125,7 @@ export function FacturaPagosSection({
 
           )}
 
+          {!lecturaFallida && (
           <div className="border-t pt-3 grid grid-cols-2 gap-2">
             <div>
               <p className="text-overline font-medium">Pagado</p>
@@ -120,6 +138,7 @@ export function FacturaPagosSection({
               </p>
             </div>
           </div>
+          )}
         </CardContent>
       </Card>
 

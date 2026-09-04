@@ -48,3 +48,29 @@ describe("subtotalesPorMoneda", () => {
     expect(normalizarSubtotalesMxn([], 18)).toBeNull();
   });
 });
+
+describe("multimoneda EUR (hallazgo P1)", () => {
+  it("conserva la moneda EUR en el desglose (columnas planas)", () => {
+    // Los conceptos tipados del ERP sólo son USD/MXN; una cotización cuya
+    // columna `moneda` es EUR sí debe mostrarse como EUR, no como MXN.
+    expect(subtotalesPorMoneda(null, 1000, "EUR")).toEqual([{ moneda: "EUR", monto: 1000 }]);
+  });
+
+  it("USD+EUR usan cada uno SU tipo de cambio", () => {
+    const subtotales = [
+      { moneda: "USD", monto: 100 },
+      { moneda: "EUR", monto: 100 },
+    ];
+    // 100*18 + 100*20 = 3800 (antes: 100*18 + 100*18 = 3600, EUR con TC de USD).
+    expect(normalizarSubtotalesMxn(subtotales, 18, 20)).toBe(3800);
+  });
+
+  it("sin TC de EUR no compara: devuelve null en vez de un total engañoso", () => {
+    const subtotales = [
+      { moneda: "MXN", monto: 500 },
+      { moneda: "EUR", monto: 100 },
+    ];
+    expect(normalizarSubtotalesMxn(subtotales, 18, null)).toBeNull();
+    expect(normalizarSubtotalesMxn(subtotales, 18)).toBeNull();
+  });
+});

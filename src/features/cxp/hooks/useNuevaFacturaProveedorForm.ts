@@ -24,7 +24,8 @@ import { crearSubmit } from "./useNuevaFacturaProveedorForm.buildSubmit";
 import { initialValues } from "./useNuevaFacturaProveedorForm.helpers";
 
 export function useNuevaFacturaProveedorForm(
-  onDone: (facturaId?: string | null) => void,
+  /** `false` = el ciclo posterior falló: el formulario NO se limpia (reintento). */
+  onDone: (facturaId?: string | null) => void | boolean | Promise<void | boolean>,
   initialEmbarqueAdHoc?: EmbarqueSeleccionado | null,
 ) {
   const { user } = useAuth();
@@ -135,7 +136,12 @@ export function useNuevaFacturaProveedorForm(
     cfdiDuplicado, topeVinculacion, cuadreManual, manuales,
     validate, crearMutateAsync: crear.mutateAsync,
     setFolioError: () => setErrors((e) => ({ ...e, folio: "Ya existe una factura viva con este folio y fecha para el proveedor. Si es un documento distinto, corrige el folio o la fecha de emisión." })),
-    onSuccess: (facturaId) => { reset(); onDone(facturaId); },
+    // P1: si el cierre posterior (marcar capturado en el buzón) falla, se
+    // conserva la captura para reintentar; sólo se limpia cuando cerró bien.
+    onSuccess: async (facturaId) => {
+      const cerrado = await onDone(facturaId);
+      if (cerrado !== false) reset();
+    },
   });
 
   return {

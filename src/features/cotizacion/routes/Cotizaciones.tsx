@@ -47,8 +47,18 @@ export default function Cotizaciones() {
             onSuccess: (newId) => navigate(`/cotizaciones/${newId}/editar`),
           }),
         usdMxn: tcInicial?.usdMxn,
+        // Sin el TC de EUR, las cotizaciones en euros no son comparables y
+        // se ordenan al final en vez de convertirse con el TC de USD.
+        eurMxn: tcInicial?.eurMxn,
       }),
-    [c.canEdit, c.setCotizacionAEliminar, duplicar, navigate, tcInicial?.usdMxn],
+    [
+      c.canEdit,
+      c.setCotizacionAEliminar,
+      duplicar,
+      navigate,
+      tcInicial?.usdMxn,
+      tcInicial?.eurMxn,
+    ],
   );
 
   const primaryFilters = (
