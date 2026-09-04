@@ -23,6 +23,7 @@ import { queryKeys } from '@/lib/query';
 import { staleTimes } from '@/lib/query/staleTimes';
 import { fetchSidebarAlertCounts } from '@/features/reportes/services';
 import { fetchAdminPendientesCount } from '@/features/embarques/services/cierre';
+import { useAuth } from '@/lib/contexts/AuthContext';
 
 const SIDEBAR_QUERY_TUNING = {
   staleTime: staleTimes.VERY_LONG,
