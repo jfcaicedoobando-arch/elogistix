@@ -15,6 +15,7 @@ import { useLeaderboardVendedores } from "@/features/crm/hooks";
 import type { LeaderboardRow } from "@/features/crm/services/leaderboard";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
+import { ErrorStateInline } from "@/components/empty/ErrorStateInline";
 
 interface VendedorGrupo {
   vendedor: string;
@@ -32,7 +33,7 @@ function agruparPorVendedor(data: LeaderboardRow[]): VendedorGrupo[] {
 }
 
 export default function LeaderboardVendedores() {
-  const { data = [], isLoading } = useLeaderboardVendedores();
+  const { data = [], isLoading, isError, refetch } = useLeaderboardVendedores();
   const { user } = useAuth();
   const grupos = useMemo(() => agruparPorVendedor(data), [data]);
   const soloYo =
@@ -49,7 +50,9 @@ export default function LeaderboardVendedores() {
       </CardHeader>
 
       <CardContent>
-        {isLoading ? (
+        {isError ? (
+          <ErrorStateInline message="No se pudo cargar el leaderboard." onRetry={refetch} />
+        ) : isLoading ? (
           <EmptyStateInline loading message="Cargando…" />
         ) : grupos.length === 0 ? (
           <EmptyStateInline icon={Trophy} message="Sin actividad de cierre este mes." />

@@ -17,8 +17,6 @@ import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { FormDialogFooter } from "@/components/shared/FormDialogFooter";
 import { notifyError } from "@/lib/ui/appFeedback";
 
-import { getErrorMessage } from "@/lib/errors";
-import { crmToast } from "@/features/crm/lib/crmToast";
 import {
   ACTIVIDAD_TIPOS, useCrearActividad,
   type CrmActividadTipo, type CrmEntidadTipo,
@@ -91,11 +89,11 @@ export default function NuevaActividadDialog({ open, onOpenChange, defaultEntida
         contacto_efectivo: contactoEfectivo,
         reunion_calificada: reunionCalificada,
       });
-      crmToast.success("Actividad creada");
+      // Hallazgo #13.1: el toast de éxito/error ya lo emite `useCrearActividad`.
       onOpenChange(false);
       onCreated?.(res.id);
-    } catch (e) {
-      notifyError(undefined, { title: "No se pudo crear", description: getErrorMessage(e), error: e, method: "HANDLE_SUBMIT" });
+    } catch {
+      // El toast de error ya lo emitió `useCrearActividad`.
     } finally {
       enviandoRef.current = false;
     }

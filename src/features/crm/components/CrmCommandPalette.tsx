@@ -8,6 +8,7 @@ import { UserPlus, Target, ClipboardList } from "lucide-react";
 import {
   CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList,
 } from "@/components/ui/command";
+import { Button } from "@/components/ui/button";
 import { useDebounce } from "@/hooks/shared";
 import { useCrmSearch } from "@/features/crm/hooks";
 
@@ -20,7 +21,7 @@ export default function CrmCommandPalette({ open, onOpenChange }: Props) {
   const navigate = useNavigate();
   const [term, setTerm] = useState("");
   const debounced = useDebounce(term, 200);
-  const { data: hits = [], isFetching } = useCrmSearch(debounced);
+  const { data: hits = [], isFetching, isError, refetch } = useCrmSearch(debounced);
 
   useEffect(() => { if (!open) setTerm(""); }, [open]);
 
@@ -34,7 +35,12 @@ export default function CrmCommandPalette({ open, onOpenChange }: Props) {
     <CommandDialog open={open} onOpenChange={onOpenChange}>
       <CommandInput value={term} onValueChange={setTerm} placeholder="Buscar leads, oportunidades, actividades…" />
       <CommandList>
-        {debounced.length < 2 ? (
+        {isError ? (
+          <div className="p-4 flex flex-col items-center gap-2 text-center">
+            <p className="text-body-sm text-destructive">No se pudo buscar. Intenta de nuevo.</p>
+            <Button variant="outline" size="sm" onClick={() => refetch()}>Reintentar</Button>
+          </div>
+        ) : debounced.length < 2 ? (
           <div className="p-4 text-body-sm text-muted-foreground">Escribe al menos 2 caracteres…</div>
         ) : isFetching ? (
           <div className="p-4 text-body-sm text-muted-foreground">Buscando…</div>

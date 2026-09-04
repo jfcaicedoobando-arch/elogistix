@@ -31,7 +31,7 @@ export interface Cliente360Resumen {
   /** Totales abierto/ganado por moneda, calculados sobre TODAS las
    * oportunidades del cliente (no limitados a las 50 mostradas en la lista). */
   totales: Cliente360TotalesMoneda[];
-  ultimaCotizacion: { id: string; folio: string; estado: string; subtotal: number; created_at: string } | null;
+  ultimaCotizacion: { id: string; folio: string; estado: string; subtotal: number; moneda: string; created_at: string } | null;
   ultimoEmbarque: { id: string; expediente: string; estado: string; created_at: string } | null;
 }
 
@@ -56,7 +56,7 @@ export async function fetchCliente360(clienteId: string): Promise<Cliente360Resu
       .limit(LIMITE_TOTALES),
     supabase
       .from("cotizaciones")
-      .select("id, folio, estado, subtotal, created_at")
+      .select("id, folio, estado, subtotal, moneda, created_at")
       .eq("cliente_id", clienteId)
       // v13.756.0: ignorar cotizaciones eliminadas en el resumen 360.
       .is("deleted_at", null)

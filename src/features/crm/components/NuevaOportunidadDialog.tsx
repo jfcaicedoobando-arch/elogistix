@@ -77,12 +77,15 @@ export default function NuevaOportunidadDialog({
   const etapaSel = etapas.find((e) => e.id === form.etapa_id);
   const esGanada = (etapaSel as { tipo?: string } | undefined)?.tipo === "ganada";
 
+  // Hallazgo #13.3: si la tarea automática falla, el registro principal ya
+  // se creó — el mensaje debe dejarlo claro (no un error genérico que
+  // sugiera que todo falló). `silencioso` evita el toast genérico del hook.
   const crearActividadSeguimiento = async (oportunidadId: string) => {
     const manana = new Date();
     manana.setDate(manana.getDate() + 1);
     manana.setHours(9, 0, 0, 0);
-    await crearActividad
-      .mutateAsync({
+    try {
+      await crearActividad.mutateAsync({
         tipo: "tarea",
         asunto: `Preparar propuesta: ${form.nombre}`,
         descripcion: "Actividad creada automáticamente al alta de la oportunidad.",
@@ -93,8 +96,16 @@ export default function NuevaOportunidadDialog({
         // final elegido en el formulario, no del usuario que captura.
         responsable_id: form.vendedor_id ?? null,
         responsable_email: form.vendedor_email ?? "",
-      })
-      .catch(() => undefined);
+        silencioso: true,
+      });
+    } catch (e) {
+      notifyError(undefined, {
+        title: "Registro creado, pero no se pudo crear la tarea automática de seguimiento",
+        description: e instanceof Error ? e.message : undefined,
+        error: e,
+        method: "CREAR_ACTIVIDAD_SEGUIMIENTO_OPORTUNIDAD",
+      });
+    }
   };
 
   const pendingTotal = guardando || crear.isPending || actualizar.isPending || crearActividad.isPending;

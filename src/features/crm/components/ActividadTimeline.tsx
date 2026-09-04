@@ -18,6 +18,7 @@ import {
   ACTIVIDAD_TIPOS, type CrmActividadTipo, type CrmEntidadTipo,
 } from "@/features/crm/hooks";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
+import { ErrorStateInline } from "@/components/empty/ErrorStateInline";
 import { usePermissions } from "@/hooks/shared";
 
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
@@ -30,7 +31,7 @@ export default function ActividadTimeline({ entidadTipo, entidadId }: Props) {
   // Espejo de las policies de `crm_actividades`: sin capacidad no se muestra
   // el alta ni el botón de completar (antes terminaban en RLS 42501).
   const { canCrearActividad, canGestionarActividad } = usePermissions();
-  const { data } = useActividades({ entidadTipo, entidadId, estado: "todas", pageSize: 100 });
+  const { data, isError, refetch } = useActividades({ entidadTipo, entidadId, estado: "todas", pageSize: 100 });
   const crear = useCrearActividad();
   const completar = useCompletarActividad();
   const [tipo, setTipo] = useState<CrmActividadTipo>("nota");
@@ -78,7 +79,9 @@ export default function ActividadTimeline({ entidadTipo, entidadId }: Props) {
         </div>
         )}
 
-        {items.length === 0 ? (
+        {isError ? (
+          <ErrorStateInline message="No se pudieron cargar las actividades." onRetry={refetch} />
+        ) : items.length === 0 ? (
           <EmptyStateInline icon={History} message="Sin actividades registradas" />
         ) : (
           <ul className="space-y-2">
