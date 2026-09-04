@@ -5,11 +5,11 @@
  */
 import { describe, it, expect } from "vitest";
 import { faltantesOportunidadForm } from "@/features/crm/domain/oportunidadFormPayload";
-import { EMPTY_OPORTUNIDAD_FORM } from "@/features/crm/domain/oportunidadFormState";
+import { EMPTY_OPORTUNIDAD } from "@/features/crm/domain/oportunidadFormState";
 import type { OportunidadFormState } from "@/features/crm/domain/oportunidadFormState";
 
 const base = (patch: Partial<OportunidadFormState>): OportunidadFormState => ({
-  ...EMPTY_OPORTUNIDAD_FORM,
+  ...EMPTY_OPORTUNIDAD,
   etapa_id: "e-ab",
   ...patch,
 });
