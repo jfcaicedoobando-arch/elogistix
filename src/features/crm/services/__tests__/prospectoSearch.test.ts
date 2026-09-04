@@ -115,3 +115,66 @@ describe("services/crm/prospectoSearch", () => {
     expect(r.map((x) => x.kind)).toEqual(["lead", "oportunidad"]);
   });
 });
+
+describe("prospectoSearch · oportunidades por datos del lead", () => {
+  const opConLead = {
+    id: "11e3c7cb",
+    nombre: "QA Smoke Oportunidad KAM",
+    lead_id: "703a2d27",
+    cliente_nombre: null,
+    etapa: { nombre: "Calificación" },
+    lead: { estado: "Calificado", empresa: "QA Smoke KAM", contacto: "Ana", email: "ana@qa.mx" },
+  };
+
+  it.each(["QA Smoke KAM", "Ana", "ana@qa.mx"])(
+    "encuentra la oportunidad buscando por %s del lead",
+    async (term) => {
+      mock.setTableResult("crm_leads", { data: [], error: null });
+      // 1ª consulta (nombre/cliente_nombre) sin match; 2ª (datos del lead) con match.
+      mock.setTableResultOnce("crm_oportunidades", { data: [], error: null });
+      mock.setTableResultOnce("crm_oportunidades", { data: [opConLead], error: null });
+      const r = await buscarProspectos(term);
+      expect(r).toHaveLength(1);
+      expect(r[0]).toMatchObject({
+        kind: "oportunidad",
+        id: "11e3c7cb",
+        empresa: "QA Smoke KAM",
+        contacto: "Ana",
+        email: "ana@qa.mx",
+        leadId: "703a2d27",
+      });
+    },
+  );
+
+  it("no duplica la oportunidad cuando ambas consultas la devuelven", async () => {
+    mock.setTableResult("crm_leads", { data: [], error: null });
+    mock.setTableResult("crm_oportunidades", { data: [opConLead], error: null });
+    const r = await buscarProspectos("QA");
+    expect(r.filter((h) => h.kind === "oportunidad")).toHaveLength(1);
+  });
+
+  it("una oportunidad sin datos de lead sigue buscándose por su nombre", async () => {
+    mock.setTableResult("crm_leads", { data: [], error: null });
+    mock.setTableResultOnce("crm_oportunidades", {
+      data: [{ id: "o2", nombre: "Proyecto Suelto", lead_id: null, cliente_nombre: null, etapa: null, lead: null }],
+      error: null,
+    });
+    mock.setTableResultOnce("crm_oportunidades", { data: [], error: null });
+    const r = await buscarProspectos("Proyecto");
+    expect(r).toHaveLength(1);
+    expect(r[0]).toMatchObject({ empresa: "Proyecto Suelto", contacto: "", email: "" });
+  });
+
+  it("filtra por los campos del lead sobre la tabla embebida", async () => {
+    mock.setTableResult("crm_leads", { data: [], error: null });
+    mock.setTableResult("crm_oportunidades", { data: [], error: null });
+    await buscarProspectos("acme");
+    const opCalls = mock.tableCalls.filter((c) => c.table === "crm_oportunidades");
+    expect(opCalls).toHaveLength(2);
+    const idx = opCalls[1].ops.lastIndexOf("or");
+    expect(opCalls[1].opArgs[idx][1]).toEqual({ referencedTable: "lead" });
+    expect(String(opCalls[1].opArgs[idx][0])).toContain("empresa.ilike");
+    expect(String(opCalls[1].opArgs[idx][0])).toContain("contacto.ilike");
+    expect(String(opCalls[1].opArgs[idx][0])).toContain("email.ilike");
+  });
+});
