@@ -2,6 +2,35 @@
 
 ## [Unreleased]
 
+## [13.823.71] - 2026-09-04
+
+### CRM: montos por moneda, sin sumas inventadas
+- El pipeline (tablero, resumen, columnas y tarjetas) y el KPI "Pipeline ponderado" ahora muestran subtotales separados por moneda; cuando hay más de una se indica "Varias monedas" con el desglose, en lugar de sumar pesos, dólares y euros y etiquetar el total como MXN.
+- Cliente 360 muestra la última cotización con su moneda real y avisa cuántas oportunidades quedan fuera de las primeras 10, con acceso a "Ver todas".
+
+### CRM: fechas, forecast y actividades correctas
+- "Leaderboard del mes" ya no incluye cierres de meses futuros: el rango se calcula con el calendario local de México y cierra en el primer día del mes siguiente.
+- "Forecast del mes" consulta sólo el mes en curso y "Forecast por mes" muestra el mes actual y los cinco siguientes, en vez de los seis meses más antiguos.
+- "Oportunidades que cierran hoy" compara la fecha de cierre como día calendario local, no como medianoche UTC.
+- "Mis actividades de hoy" vuelve a incluir las actividades históricas asignadas sólo por correo.
+- Las actividades rápidas ya no muestran avisos duplicados, su fecha sugerida nunca nace vencida después de las 17:00 y, si falla la tarea automática de seguimiento, se explica que el registro sí se creó.
+
+### CRM: moneda y responsable al vincular o cerrar
+- Al vincular una cotización de prospecto y crear una oportunidad nueva, se hereda la moneda de la cotización y el vendedor del prospecto (el usuario actual sólo como respaldo); si la oportunidad ya tiene otra moneda, el vínculo se rechaza con un mensaje que explica cómo corregirlo.
+- Al aceptar una cotización, ya no se guarda un monto en otra moneda dentro de la oportunidad: la operación se rechaza si las monedas no coinciden.
+- Las ediciones y movimientos de oportunidades usan control de concurrencia: si otra persona guardó antes, se avisa y se refresca en lugar de sobrescribir en silencio.
+
+### CRM: los errores dejan de disfrazarse de "todo al día"
+- Las tarjetas secundarias del dashboard, Next Best Actions, embudo, forecast, leaderboard, timeline, selector de prospectos, higiene, paleta de comandos y el detalle de lead/oportunidad ahora muestran "No se pudo cargar…" con botón "Reintentar" cuando la consulta falla.
+
+### Facturación
+- Al reintentar un timbrado tras un error temporal, ya no se afirma "CFDI cancelado" cuando la respuesta es incierta: se informa el estado y se recomienda "Verificar estatus" sin repetir la solicitud.
+- Cancelar, consultar y descargar acuse rechazan facturas archivadas, igual que las pantallas activas.
+
+### Cotizaciones
+- "Revisar después" ya no deja el asistente bloqueado con una versión obsoleta: ahora se puede resincronizar la versión antes de volver a guardar y el estado queda explicado.
+
+
 ### Dashboard /inicio: se repara crash de inicialización
 - Se eliminó el ciclo de importación entre `permissionMatrix.ts` y `permissionMatrix.crm.ts` al extraer `TENANT_ADMINS` a un módulo compartido, evitando que el dashboard fallara al leer la matriz de permisos antes de su inicialización.
 - Se eliminó el aviso de consola "Incorrect locale information provided": las herramientas de desarrollo de consultas ya no se cargan cuando el navegador expone un idioma no estándar.
