@@ -122,5 +122,6 @@ describe("invalidación de dashboard al crear cotización desde oportunidad", ()
       reutilizada: false,
       avisoEtapa: "timeout",
     });
+    expect(notifySuccess).not.toHaveBeenCalled();
   });
 });
