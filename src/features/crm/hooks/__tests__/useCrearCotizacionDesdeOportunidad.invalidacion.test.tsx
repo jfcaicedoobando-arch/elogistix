@@ -79,6 +79,7 @@ describe("invalidación de dashboard al crear cotización desde oportunidad", ()
       reutilizada: false,
     });
     actualizarEtapaOportunidad.mockReset().mockResolvedValue(undefined);
+    notifySuccess.mockReset();
   });
 
   it("invalida oportunidades, op-cotizaciones, dashboard y cotizaciones sin respuesta", async () => {
