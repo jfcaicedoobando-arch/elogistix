@@ -26,13 +26,15 @@ interface Props {
   monedaFactura: Moneda;
   tipoCambioFactura: number;
   saldoFactura: number;
+  /** P1: el saldo no es confiable (falló la lectura de pagos o NC aplicadas). */
+  saldoError?: boolean;
   uuidFacturaOriginal: string | null;
   snapshotEmision: unknown;
   canEdit: boolean;
 }
 
 export function FacturaNotasCreditoSeccion(props: Props) {
-  const { facturaId, facturaNumero, fechaFactura, monedaFactura, tipoCambioFactura, saldoFactura, uuidFacturaOriginal, snapshotEmision, canEdit } = props;
+  const { facturaId, facturaNumero, fechaFactura, monedaFactura, tipoCambioFactura, saldoFactura, saldoError, uuidFacturaOriginal, snapshotEmision, canEdit } = props;
   const [openCrear, setOpenCrear] = useState(false);
   const [emailNcId, setEmailNcId] = useState<string | null>(null);
   const [cancelarNcId, setCancelarNcId] = useState<string | null>(null);
@@ -47,7 +49,9 @@ export function FacturaNotasCreditoSeccion(props: Props) {
     [snapshotEmision],
   );
 
+  // Fail-closed: sin saldo confiable no se emiten NC (evita acreditar de más).
   const facturaLiquidada = saldoFactura <= 0.01;
+  const bloqueado = facturaLiquidada || Boolean(saldoError);
 
   return (
     <Card>
@@ -57,7 +61,7 @@ export function FacturaNotasCreditoSeccion(props: Props) {
           <span className="text-body-sm text-muted-foreground font-normal">({notas.length})</span>
         </CardTitle>
         {canEdit && (
-          facturaLiquidada ? (
+          bloqueado ? (
             <Tooltip>
               <TooltipTrigger asChild>
                 <span tabIndex={0}>
@@ -67,7 +71,9 @@ export function FacturaNotasCreditoSeccion(props: Props) {
                 </span>
               </TooltipTrigger>
               <TooltipContent side="left" className="max-w-xs">
-                La factura ya está liquidada. No se pueden emitir notas de crédito sobre facturas sin saldo pendiente.
+                {saldoError
+                  ? "No pudimos verificar el saldo de la factura (falló la lectura de pagos o notas de crédito). Reintenta desde el aviso superior antes de emitir una nota de crédito."
+                  : "La factura ya está liquidada. No se pueden emitir notas de crédito sobre facturas sin saldo pendiente."}
               </TooltipContent>
             </Tooltip>
           ) : (

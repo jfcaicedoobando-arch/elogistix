@@ -132,6 +132,7 @@ export function FacturaDetalleView(props: FacturaDetalleViewProps) {
           conceptosVivos={conceptosVivos}
           onRegistrarPago={() => setPagoOpen(true)}
           saldo={saldoFactura}
+          saldoError={props.saldoError}
           estaCancelada={flags.estaCancelada}
           canEnviarRecordatorio={canEdit}
           onEnviarRecordatorio={() => setRecordatorioOpen(true)}
