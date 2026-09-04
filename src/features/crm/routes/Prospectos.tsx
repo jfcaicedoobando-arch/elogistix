@@ -149,7 +149,7 @@ export default function Prospectos() {
             <ErrorState className="m-4" onRetry={() => void list.refetch()} />
           ) : (
             <ResponsiveDataTable
-              columns={columns}
+              columns={prospectosColumns}
               data={list.rows}
               isLoading={list.isLoading}
               emptyMessage={
