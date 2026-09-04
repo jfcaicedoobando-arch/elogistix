@@ -16,6 +16,7 @@ import { Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { FIELD_ERROR_CLASS } from "@/components/ui/field.tokens";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { FormDialogSection } from "@/components/shared/FormDialogSection";
 import { FormDialogFooter } from "@/components/shared/FormDialogFooter";
@@ -37,8 +38,10 @@ export default function QuickCreateLeadDialog({ open, onOpenChange, onCreated, o
   const { user } = useAuth();
   const crear = useCrearLead();
   const enviandoRef = useRef(false);
+  const empresaRef = useRef<HTMLInputElement>(null);
   const [empresa, setEmpresa] = useState("");
   const [contacto, setContacto] = useState("");
+  const [empresaTouched, setEmpresaTouched] = useState(false);
 
   // Reset sólo en la transición real abierto -> cerrado: mientras el modal
   // sigue abierto (o mientras se muestra la confirmación de descarte, que vive
@@ -56,6 +59,8 @@ export default function QuickCreateLeadDialog({ open, onOpenChange, onCreated, o
     if (crear.isPending || enviandoRef.current) return;
     const emp = empresa.trim();
     if (!emp) {
+      setEmpresaTouched(true);
+      empresaRef.current?.focus();
       notifyError(undefined, { title: "Empresa requerida", method: "FEATURES_CRM_COMPONENTS_QUICKCREATE_QUICKCREATELEADDIALOG_1" });
       return;
     }
@@ -96,6 +101,7 @@ export default function QuickCreateLeadDialog({ open, onOpenChange, onCreated, o
           onCancel={() => onOpenChange(false)}
           confirmLabel="Crear"
           loading={crear.isPending}
+          disabled={!empresa.trim() || crear.isPending}
           extra={
             <Button
               type="button"
@@ -117,10 +123,20 @@ export default function QuickCreateLeadDialog({ open, onOpenChange, onCreated, o
             <Label htmlFor="qc-lead-empresa">Empresa *</Label>
             <Input
               id="qc-lead-empresa"
+              ref={empresaRef}
               value={empresa}
               onChange={(e) => setEmpresa(e.target.value)}
+              onBlur={() => setEmpresaTouched(true)}
               placeholder="Acme Logistics"
+              aria-required="true"
+              aria-invalid={empresaTouched && empresa.trim() === ""}
+              aria-describedby={empresaTouched && empresa.trim() === "" ? "qc-lead-empresa-error" : undefined}
             />
+            {empresaTouched && empresa.trim() === "" && (
+              <p id="qc-lead-empresa-error" className={FIELD_ERROR_CLASS}>
+                Indica la empresa para continuar.
+              </p>
+            )}
           </div>
           <div className="space-y-1">
             <Label htmlFor="qc-lead-contacto">Correo o teléfono</Label>
