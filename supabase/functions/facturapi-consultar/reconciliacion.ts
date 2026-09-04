@@ -95,10 +95,13 @@ export async function loadFactura(supabase: SBClient, facturaId: string): Promis
 > {
   const { data, error } = await supabase
     .from("facturas")
-    .select("id, facturapi_id, organization_id, estado, cancellation_status, uuid_fiscal, sustituida_por, total, moneda, rfc_cliente")
+    .select("id, facturapi_id, organization_id, estado, cancellation_status, uuid_fiscal, sustituida_por, total, moneda, rfc_cliente, deleted_at")
     .eq("id", facturaId)
     .maybeSingle();
   if (error || !data) return { ok: false, res: jsonResponse({ error: "factura_not_found" }, 404) };
+  if (data.deleted_at) {
+    return { ok: false, res: jsonResponse({ error: "factura_eliminada", message: "La factura fue eliminada." }, 404) };
+  }
   if (!data.facturapi_id) return { ok: false, res: jsonResponse({ error: "no_timbrada" }, 409) };
   return { ok: true, factura: data as LocalFactura };
 }

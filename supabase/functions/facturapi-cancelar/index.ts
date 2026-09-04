@@ -102,10 +102,11 @@ Deno.serve(wrapEdgeHandler("facturapi-cancelar", async (req) => {
 
   const { data: factura, error: fErr } = await supabase
     .from("facturas")
-    .select("id, facturapi_id, organization_id, estado")
+    .select("id, facturapi_id, organization_id, estado, deleted_at")
     .eq("id", factura_id)
     .maybeSingle();
   if (fErr || !factura) return json({ error: "factura_not_found" }, 404);
+  if (factura.deleted_at) return json({ error: "factura_eliminada", message: "La factura fue eliminada." }, 404);
   if (!factura.facturapi_id) return json({ error: "no_timbrada" }, 409);
   // Ola 4 · N38: la sustituta debe pertenecer a la MISMA organización que la
   // factura a cancelar — sin este guard se grababa `sustituida_por`
