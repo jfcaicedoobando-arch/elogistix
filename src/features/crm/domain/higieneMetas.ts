@@ -2,7 +2,7 @@
  * Cálculos puros de higiene y cobertura comercial (Etapas 2 y 3 CRM Hunter).
  */
 import type { HigieneOportunidad, EstadoHigiene } from "@/features/crm/services/higiene";
-import type { Moneda } from "@/types/common";
+import type { Moneda } from "@/types/db";
 import type { PresupuestoMes } from "@/features/crm/services/metasPresupuesto";
 
 export const ETIQUETA_HIGIENE: Record<EstadoHigiene, string> = {
