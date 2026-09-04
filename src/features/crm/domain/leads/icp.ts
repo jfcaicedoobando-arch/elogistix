@@ -120,8 +120,10 @@ export function toLeadIcpForm(row: LeadIcpSource | null | undefined): LeadIcpFor
     const value = row[key];
     if (value !== null && value !== undefined && value !== "") out[key] = String(value);
   }
+  out.estatus_icp = normalizarEstatusIcp(out.estatus_icp);
   return out;
 }
+
 
 /** Convierte el formulario a patch de BD ("" → null, años → número). */
 export type LeadIcpPatch = {
