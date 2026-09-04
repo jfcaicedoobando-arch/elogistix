@@ -11,8 +11,8 @@ import { notifyError } from "@/lib/ui/appFeedback";
 import { costosSinConcepto } from "@/features/cotizacion/domain/cotizacionVentaSync";
 import { costosPaso2Schema, primerError } from "@/features/cotizacion/domain/schemas/wizardPasos";
 import { firmaCostos } from "./wizardStepsTypes";
-import type { FilaCostoLocal } from "@/features/cotizacion/types/pl";
-import type { ConceptoVenta } from "@/features/cotizacion/types/conceptos";
+import type { FilaCostoLocal } from "@/features/cotizacion/types";
+import type { ConceptoVentaCotizacion } from "@/features/cotizacion/hooks/useCotizaciones";
 
 /** true = el paso 2 es válido; false = ya se notificó el error al usuario. */
 export function validarPaso2(costosInternos: FilaCostoLocal[]): boolean {
@@ -37,8 +37,8 @@ interface SyncConceptosArgs {
   tasaIva: number;
   lastCostosHash: MutableRefObject<string | null>;
   costosPreLlenados: boolean;
-  setConceptosUSD: (c: ConceptoVenta[]) => void;
-  setConceptosMXN: (c: ConceptoVenta[]) => void;
+  setConceptosUSD: (c: ConceptoVentaCotizacion[]) => void;
+  setConceptosMXN: (c: ConceptoVentaCotizacion[]) => void;
   setCostosPreLlenados: (v: boolean) => void;
 }
 
