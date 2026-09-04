@@ -16,6 +16,8 @@ export interface FiltrosOportunidades {
   cierreDesde?: string;
   cierreHasta?: string;
   montoMin?: number | null;
+  /** Filtro directo por cliente, usado desde Cliente 360 ("Ver todas"). */
+  clienteId?: string | null;
 }
 
 /** Aplica los filtros de negocio a un builder de `crm_oportunidades`. */
@@ -26,6 +28,7 @@ export function aplicarFiltrosOportunidades<T extends {
 }>(q: T, p: FiltrosOportunidades): T {
   let out = q;
   if (p.search.trim()) out = out.or(orIlike(["nombre", "cliente_nombre"], p.search));
+  if (p.clienteId) out = out.eq("cliente_id", p.clienteId);
   if (p.etapaId !== "todas") out = out.eq("etapa_id", p.etapaId);
   if (p.vendedorId !== "todos") out = out.eq("vendedor_id", p.vendedorId);
   if (p.cierreDesde) {

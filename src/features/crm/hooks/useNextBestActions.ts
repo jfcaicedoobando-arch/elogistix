@@ -22,10 +22,15 @@ function useNbaSignals() {
   });
 }
 
-export function useNextBestActions(limit = 5): { items: NbaItem[]; isLoading: boolean } {
-  const { data: signals, isLoading: l1 } = useNbaSignals();
-  const { data: cots = [], isLoading: l2 } = useCotizacionesSinRespuesta(5, 10);
-  const { data: vencidas = [], isLoading: l3 } = useActividadesVencidasList(10);
+export function useNextBestActions(limit = 5): {
+  items: NbaItem[];
+  isLoading: boolean;
+  isError: boolean;
+  refetch: () => void;
+} {
+  const { data: signals, isLoading: l1, isError: e1, refetch: r1 } = useNbaSignals();
+  const { data: cots = [], isLoading: l2, isError: e2, refetch: r2 } = useCotizacionesSinRespuesta(5, 10);
+  const { data: vencidas = [], isLoading: l3, isError: e3, refetch: r3 } = useActividadesVencidasList(10);
 
   const items = useMemo(() => {
     if (!signals) return [];
@@ -40,5 +45,10 @@ export function useNextBestActions(limit = 5): { items: NbaItem[]; isLoading: bo
     );
   }, [signals, cots, vencidas, limit]);
 
-  return { items, isLoading: l1 || l2 || l3 };
+  return {
+    items,
+    isLoading: l1 || l2 || l3,
+    isError: e1 || e2 || e3,
+    refetch: () => { void r1(); void r2(); void r3(); },
+  };
 }

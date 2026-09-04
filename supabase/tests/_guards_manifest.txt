@@ -100,3 +100,4 @@ supabase/tests/crm_leads_ownership.sql
 supabase/tests/crm_lead_estado_canonico.sql
 supabase/tests/convertir_prospecto_a_cliente_canonico.sql
 supabase/tests/guard_cotizacion_vinculo_cliente.sql
+supabase/tests/crm_vincular_moneda_vendedor.sql

@@ -9,7 +9,7 @@ import { notifyError } from "@/lib/ui/appFeedback";
 import { getErrorMessage } from "@/lib/errors";
 import type { OportunidadesFiltros } from "@/features/crm/components/oportunidadesFiltersTypes";
 
-export function useOportunidadesFiltrosServidor(debounced: string, filtros: OportunidadesFiltros) {
+export function useOportunidadesFiltrosServidor(debounced: string, filtros: OportunidadesFiltros, clienteId?: string | null) {
   const montoMin = filtros.montoMin ? Number(filtros.montoMin) : null;
   // v13.823.49 — todos los filtros (etapa, vendedor, rango de cierre y monto
   // mínimo) viajan al servidor: antes se aplicaban en memoria sobre las
@@ -22,8 +22,9 @@ export function useOportunidadesFiltrosServidor(debounced: string, filtros: Opor
       cierreDesde: filtros.cierreDesde,
       cierreHasta: filtros.cierreHasta,
       montoMin: montoMin !== null && Number.isFinite(montoMin) ? montoMin : null,
+      clienteId: clienteId ?? null,
     }),
-    [debounced, filtros.etapaId, filtros.vendedorId, filtros.cierreDesde, filtros.cierreHasta, montoMin],
+    [debounced, filtros.etapaId, filtros.vendedorId, filtros.cierreDesde, filtros.cierreHasta, montoMin, clienteId],
   );
   return filtrosServidor;
 }

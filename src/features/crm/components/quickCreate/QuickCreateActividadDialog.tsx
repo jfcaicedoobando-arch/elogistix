@@ -16,9 +16,9 @@ import { DateTimePickerMx } from "@/components/ui/date-time-picker-mx";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { FormDialogSection } from "@/components/shared/FormDialogSection";
 import { FormDialogFooter } from "@/components/shared/FormDialogFooter";
-import { notifySuccess, notifyError } from "@/lib/ui/appFeedback";
-import { getErrorMessage } from "@/lib/errors";
+import { notifyError } from "@/lib/ui/appFeedback";
 import { useCrearActividad, useOportunidades, type CrmEntidadTipo } from "@/features/crm/hooks";
+import { actividadDefaultFechaMx } from "@/features/crm/domain/actividadDefaultFecha";
 
 interface Props {
   open: boolean;
@@ -27,12 +27,9 @@ interface Props {
   onMore: () => void;
 }
 
+// Hallazgo #13.2: default con calendario de negocio CDMX (no nace vencida).
 function defaultFecha(): string {
-  const d = new Date();
-  d.setHours(17, 0, 0, 0);
-  const off = d.getTimezoneOffset();
-  const local = new Date(d.getTime() - off * 60000);
-  return local.toISOString().slice(0, 16);
+  return actividadDefaultFechaMx();
 }
 
 export default function QuickCreateActividadDialog({ open, onOpenChange, onCreated, onMore }: Props) {
@@ -86,16 +83,12 @@ export default function QuickCreateActividadDialog({ open, onOpenChange, onCreat
         entidad_id: entidadId,
         fecha_programada: fechaDate ? fechaDate.toISOString() : null,
       });
-      notifySuccess(undefined, { title: "Actividad creada", duration: 2000 });
-      // El cierre limpia el estado (efecto de transición): sin reset duplicado.
+      // Hallazgo #13.1: el toast de éxito lo emite `useCrearActividad`; aquí
+      // sólo se cierra el diálogo (sin duplicar la notificación).
       onOpenChange(false);
       onCreated();
-    } catch (e) {
-      notifyError(undefined, {
-        title: "No se pudo crear la actividad", description: getErrorMessage(e),
-        error: e,
-        method: "FEATURES_CRM_COMPONENTS_QUICKCREATE_QUICKCREATEACTIVIDADDIALOG_3",
-      });
+    } catch {
+      // El toast de error ya lo emitió `useCrearActividad`.
     } finally {
       enviandoRef.current = false;
     }

@@ -12,16 +12,20 @@ import {
 
 export function useCrmInicioVM() {
   const { data, isLoading, isError, refetch } = useCrmDashboardData();
-  const { data: cotsSinResp = [] } = useCotizacionesSinRespuesta(5, 5);
-  const { items: nba, isLoading: nbaLoading } = useNextBestActions(5);
+  const { data: cotsSinResp = [], isError: cotsError, refetch: cotsRefetch } = useCotizacionesSinRespuesta(5, 5);
+  const { items: nba, isLoading: nbaLoading, isError: nbaError, refetch: nbaRefetch } = useNextBestActions(5);
 
   return {
     isLoading,
     isError,
     refetch,
     cotsSinResp,
+    cotsError,
+    cotsRefetch,
     nba,
     nbaLoading,
+    nbaError,
+    nbaRefetch,
     actividadesHoy: data?.misActividadesHoy ?? [],
     cerrandoSemana: data?.cerrandoEstaSemana ?? [],
     leadsSinContactar: data?.leadsSinContactar ?? [],

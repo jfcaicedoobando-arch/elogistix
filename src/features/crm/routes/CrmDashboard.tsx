@@ -19,13 +19,14 @@ import { CrmForecastMesKpis } from "@/features/crm/components/CrmForecastMesKpis
 import { CrmStatStripItem as StatStripItem } from "@/features/crm/components/CrmStatStripItem";
 import { useDocumentTitle } from "@/hooks/shared";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
+import { ErrorStateInline } from "@/components/empty/ErrorStateInline";
 
 import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/components/ui/table";
 import { DetailTableHead } from "@/components/shared/DetailTable";
 const v = (loading: boolean, n: number | undefined): string | number => (loading ? "…" : (n ?? 0));
 
 function EmbudoCard() {
-  const { data, isLoading } = useReportesCRM();
+  const { data, isLoading, isError, refetch } = useReportesCRM();
   const embudo = data?.embudo ?? [];
   const max = embudo.reduce((m, e) => Math.max(m, e.cantidad), 0) || 1;
 
@@ -35,7 +36,9 @@ function EmbudoCard() {
         <CardTitle>Embudo de oportunidades</CardTitle>
       </CardHeader>
       <CardContent>
-        {isLoading ? (
+        {isError ? (
+          <ErrorStateInline message="No se pudo cargar el embudo." onRetry={refetch} />
+        ) : isLoading ? (
           <EmptyStateInline loading message="Cargando…" />
         ) : embudo.length === 0 ? (
           <EmptyStateInline icon={Filter} message="Sin oportunidades aún." />
@@ -65,7 +68,7 @@ function EmbudoCard() {
 function ForecastMesCard() {
   // FIX-8 (auditoría): mes en curso + 5 siguientes (calendario MX), no los
   // 6 meses más antiguos que hubiera en la base.
-  const { data, isLoading } = useForecast(primerDiaMesMx(0), ultimoDiaMesMx(5));
+  const { data, isLoading, isError, refetch } = useForecast(primerDiaMesMx(0), ultimoDiaMesMx(5));
   const porMes = data?.porMes ?? [];
 
   return (
@@ -74,7 +77,9 @@ function ForecastMesCard() {
         <CardTitle>Forecast por mes</CardTitle>
       </CardHeader>
       <CardContent>
-        {isLoading ? (
+        {isError ? (
+          <ErrorStateInline message="No se pudo cargar el forecast." onRetry={refetch} />
+        ) : isLoading ? (
           <EmptyStateInline loading message="Cargando…" />
         ) : porMes.length === 0 ? (
           <EmptyStateInline icon={TrendingUp} message="Sin datos para los próximos meses." />

@@ -4,8 +4,15 @@ import { Badge } from "@/components/ui/badge";
 import { formatCurrencyCompact } from "@/lib/formatters";
 import { DrilldownRow } from "@/components/shared/dataTable/DrilldownRow";
 import type { CotizacionSinRespuestaRow } from "@/features/crm/hooks";
+import { ErrorStateInline } from "@/components/empty/ErrorStateInline";
 
-export function CotizacionesSinRespuestaCard({ items }: { items: CotizacionSinRespuestaRow[] }) {
+interface Props {
+  items: CotizacionSinRespuestaRow[];
+  isError?: boolean;
+  onRetry?: () => void;
+}
+
+export function CotizacionesSinRespuestaCard({ items, isError = false, onRetry }: Props) {
   return (
     <Card>
       <CardHeader className="pb-2">
@@ -14,7 +21,9 @@ export function CotizacionesSinRespuestaCard({ items }: { items: CotizacionSinRe
         </CardTitle>
       </CardHeader>
       <CardContent>
-        {items.length === 0 ? (
+        {isError ? (
+          <ErrorStateInline message="No se pudieron cargar las cotizaciones sin respuesta." onRetry={onRetry} />
+        ) : items.length === 0 ? (
           <p className="text-body text-muted-foreground text-center py-4">
             Todas las cotizaciones recientes han tenido respuesta
           </p>

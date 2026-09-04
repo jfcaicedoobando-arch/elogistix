@@ -3,7 +3,7 @@
  * Filtros avanzados colapsables para ganar espacio vertical.
  */
 import { useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CrmSubheader } from "@/features/crm/components/CrmSubheader";
@@ -36,6 +36,8 @@ import { ErrorState } from "@/components/shared/states/ErrorState";
 export default function Oportunidades() {
   useDocumentTitle('Oportunidades');
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const clienteIdFiltro = searchParams.get("clienteId");
   // Espejo de las policies de `crm_oportunidades`: sin capacidad no se ofrece
   // crear ni mover etapa (antes se mostraban y el guardado moría en RLS).
   const { canCrearOportunidad, canGestionarOportunidad } = usePermissions();
@@ -50,7 +52,7 @@ export default function Oportunidades() {
   const { data: usuarios = [] } = useUsuarios();
   const vendedores = useVendedoresDisponibles(usuarios);
   const PAGE_SIZE = 500;
-  const filtrosServidor = useOportunidadesFiltrosServidor(debounced, filtros);
+  const filtrosServidor = useOportunidadesFiltrosServidor(debounced, filtros, clienteIdFiltro);
   const { data, isLoading, isError, refetch } = useOportunidades({ ...filtrosServidor, pageSize: PAGE_SIZE });
   const ops = useMemo(() => data?.data ?? [], [data]);
   const totalServidor = data?.count ?? ops.length;
@@ -93,7 +95,7 @@ export default function Oportunidades() {
         }
       />
 
-      <CrmSubheader context={`${ops.length} de ${totalServidor} oportunidades · pipeline ${formatCurrencyCompact(pipelineMxn.mxn, "MXN")}${pipelineMxn.estimado ? " (T/C estimado)" : ""}`} />
+      <CrmSubheader context={`${ops.length} de ${totalServidor} oportunidades${clienteIdFiltro ? " (filtradas por cliente)" : ""} · pipeline ${formatCurrencyCompact(pipelineMxn.mxn, "MXN")}${pipelineMxn.estimado ? " (T/C estimado)" : ""}`} />
       {listaTruncada && (
         <p className="text-label text-muted-foreground">
           Mostrando las primeras {ops.length} de {totalServidor} oportunidades que cumplen los filtros; la exportación CSV incluye todas.

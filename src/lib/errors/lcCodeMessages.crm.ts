@@ -99,6 +99,8 @@ export const LC_CODE_MESSAGES_CRM: Record<string, string> = {
     "Ese prospecto no es elegible: sólo se pueden cotizar leads calificados o en etapa de prospecto de tu organización. Califícalo en el CRM.",
   LC_CRM_OPORTUNIDAD_NO_ELEGIBLE:
     "Esa oportunidad no es elegible: debe estar viva, en una etapa abierta, sin cliente asignado y ligada a un prospecto calificado.",
+  LC_CRM_MONEDA_INCOMPATIBLE:
+    "La cotización y la oportunidad tienen monedas distintas. Corrige la moneda de la cotización o vincúlala a una oportunidad en la misma moneda, o crea una oportunidad nueva.",
   LC_SIN_SESION:
     "Tu sesión expiró. Vuelve a iniciar sesión e inténtalo de nuevo.",
   // Candados multiempresa y de permisos del CRM (P0 conversión canónica).
