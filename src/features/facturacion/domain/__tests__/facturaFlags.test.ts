@@ -79,12 +79,24 @@ describe("deriveFacturaFlags", () => {
     expect(r.puedeSustituirCfdi).toBe(false);
   });
 
-  it("En trámite de cancelación (cancellation_status=pending) → NO puede cancelar de nuevo", () => {
+  it.each(["pending", "verifying"])(
+    "En trámite de cancelación (cancellation_status=%s) → NO puede cancelar ni sustituir CFDI",
+    (cancellation_status) => {
+      const r = deriveFacturaFlags(
+        { estado: "Emitida", uuid_fiscal: "UUID-1", fecha_emision: POST, cancellation_status },
+        true,
+      );
+      expect(r.puedeCancelarCfdi).toBe(false);
+      expect(r.puedeSustituirCfdi).toBe(false);
+    },
+  );
+
+  it("Timbrada vigente sin trámite de cancelación → puede sustituir CFDI", () => {
     const r = deriveFacturaFlags(
-      { estado: "Emitida", uuid_fiscal: "UUID-1", fecha_emision: POST, cancellation_status: "pending" },
+      { estado: "Emitida", uuid_fiscal: "UUID-1", fecha_emision: POST, cancellation_status: "none" },
       true,
     );
-    expect(r.puedeCancelarCfdi).toBe(false);
+    expect(r.puedeSustituirCfdi).toBe(true);
   });
 
   it("Sustituta previa Cancelada → la original vuelve a estar disponible", () => {
