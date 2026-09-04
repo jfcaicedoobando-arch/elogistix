@@ -7,7 +7,7 @@ import {
 import { generarFolioCotizacion } from "@/features/cotizacion/services/queries";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { queryKeys } from "@/lib/query";
-import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
+import { notifyError } from "@/lib/ui/appFeedback";
 import { getErrorMessage } from "@/lib/errors";
 
 interface UseCrearCotizacionDesdeOpInput {
@@ -68,14 +68,9 @@ export function useCrearCotizacionDesdeOportunidad() {
       qc.invalidateQueries({
         queryKey: queryKeys.crm.cotizacionesSinRespuesta(5, 10, user?.id),
       });
-      notifySuccess(undefined, {
-        title: data.reutilizada
-          ? `Continuamos con la cotización ${data.folio}`
-          : `Cotización ${data.folio} creada`,
-        description: data.avisoEtapa
-          ? `La etapa de la oportunidad no se pudo actualizar: ${data.avisoEtapa}. Muévela manualmente.`
-          : undefined,
-      });
+      // El éxito se notifica en el call-site (`useOportunidadDetalleActions`)
+      // con el folio y la navegación, para evitar un doble toast. El aviso de
+      // etapa fallida viaja en `data.avisoEtapa` y se muestra desde allí.
     },
 
     onError: (error: Error) => {
