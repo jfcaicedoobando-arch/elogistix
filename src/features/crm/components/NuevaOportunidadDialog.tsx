@@ -137,14 +137,11 @@ export default function NuevaOportunidadDialog({
       }
       markClean();
       onOpenChange(false);
-    } catch (e) {
-      notifyError(undefined, {
-        title: "No se pudo guardar",
-        description: e instanceof Error ? e.message : undefined,
-        error: e,
-        method: "HANDLE_SUBMIT",
-      });
+    } catch {
+      // Los hooks de crear/actualizar ya notificaron el error: un solo aviso.
+      void 0;
     } finally {
+
       enviandoRef.current = false;
       setGuardando(false);
     }

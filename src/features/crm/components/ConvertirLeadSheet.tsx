@@ -22,7 +22,6 @@ import {
 } from "@/components/ui/select";
 import { notifySuccess } from "@/lib/ui/appFeedback";
 import { useConvertirLead, type CrmLeadRow } from "@/features/crm/hooks";
-import { crmToast } from "@/features/crm/lib/crmToast";
 import { formSheet } from "@/components/shared/utils/dialogTokens";
 import type { Moneda } from "@/types/db";
 
@@ -53,6 +52,8 @@ export default function ConvertirLeadSheet({ open, onOpenChange, lead, onAbrirAv
         montoEstimado: Number(monto) || 0,
         moneda,
         fechaEstimadaCierre: null,
+        // El Sheet emite su propio aviso accionable ("Abrir oportunidad").
+        silencioso: true,
       });
       onOpenChange(false);
       notifySuccess(undefined, {
@@ -62,8 +63,8 @@ export default function ConvertirLeadSheet({ open, onOpenChange, lead, onAbrirAv
           ? { label: "Abrir oportunidad →", onClick: () => navigate(`/crm/oportunidades/${r.oportunidadId}`) }
           : undefined,
       });
-    } catch (err) {
-      crmToast.error("No se pudo convertir el lead", err);
+    } catch {
+      /* el hook `useConvertirLead` ya notificó el error */
     }
   };
 

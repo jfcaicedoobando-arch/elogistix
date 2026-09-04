@@ -12,7 +12,6 @@ import {
 import {
   useCompletarActividad, usePosponerActividad, type CrmActividadRow,
 } from "@/features/crm/hooks";
-import { crmToast } from "@/features/crm/lib/crmToast";
 import ActividadNotasSheet from "@/features/crm/components/actividades/ActividadNotasSheet";
 
 interface Props { actividad: CrmActividadRow }
@@ -25,20 +24,20 @@ export default function ActividadRowActions({ actividad }: Props) {
 
   const handleCompletar = async (e: React.MouseEvent) => {
     e.stopPropagation();
+    // El hook `useCompletarActividad` ya notifica éxito y error: un solo aviso.
     try {
       await completar.mutateAsync({ id: actividad.id });
-      crmToast.success("Actividad completada");
-    } catch (err) {
-      crmToast.error("No se pudo completar", err);
+    } catch {
+      /* notificado por el hook */
     }
   };
 
-  const handlePosponer = async (dias: number, label: string) => {
+  const handlePosponer = async (dias: number) => {
+    // El hook `usePosponerActividad` ya notifica éxito y error: un solo aviso.
     try {
       await posponer.mutateAsync({ id: actividad.id, dias, fechaProgramada: actividad.fecha_programada });
-      crmToast.success(`Pospuesto ${label}`);
-    } catch (err) {
-      crmToast.error("No se pudo posponer", err);
+    } catch {
+      /* notificado por el hook */
     }
   };
 
@@ -69,9 +68,9 @@ export default function ActividadRowActions({ actividad }: Props) {
                 </DropdownMenuTrigger>
               </Hint>
               <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
-                <DropdownMenuItem onClick={() => handlePosponer(1, "1 día")}>+1 día</DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handlePosponer(3, "3 días")}>+3 días</DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handlePosponer(7, "1 semana")}>+1 semana</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handlePosponer(1)}>+1 día</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handlePosponer(3)}>+3 días</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handlePosponer(7)}>+1 semana</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </>

@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+## [13.823.87] - 2026-09-04
+
+### CRM — Un solo aviso por acción (completar/posponer, convertir, eliminar lead, etapas)
+- `ActividadRowActions`, `ConvertirLeadDialog`, `EtapasPipelineEditor` y `useLeadDetalleAcciones` ya no repiten el toast que emiten sus hooks de mutación; `NuevaOportunidadDialog` deja el error de guardado al hook.
+- `ConvertirLeadSheet` conserva su aviso accionable ("Abrir oportunidad") y silencia el del hook vía `silencioso: true`.
+- Nueva regresión `feedbackUnicoAcciones.test.ts`.
+
 ## [13.823.86] - 2026-09-04
 
 ### CRM — Un solo aviso de éxito en altas de lead y oportunidad
