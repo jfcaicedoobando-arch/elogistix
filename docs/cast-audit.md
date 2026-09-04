@@ -1,21 +1,21 @@
-# Cast Audit — generado 2026-09-03
+# Cast Audit — generado 2026-09-04
 
 Auditoría automática de los `as` casts en `src/`. Generado por
 `scripts/audit-casts.ts`. Para regenerar: `bun scripts/audit-casts.ts`.
 
 ## Resumen
 
-Total de `as` casts detectados: **3431**
+Total de `as` casts detectados: **3458**
 
 | Categoría | Peso | Cantidad | % |
 |-----------|------|----------|---|
-| SAFE      | 0 | 998     | 29.1% |
-| LOW       | 1 | 165      | 4.8% |
-| MEDIUM    | 2 | 2266   | 66.0% |
-| HIGH      | 3 | 2     | 0.1% |
+| SAFE      | 0 | 1000     | 28.9% |
+| LOW       | 1 | 167      | 4.8% |
+| MEDIUM    | 2 | 2291   | 66.3% |
+| HIGH      | 3 | 0     | 0.0% |
 | CRITICAL  | 4 | 0 | 0.0% |
 
-**Lectura clave:** los casts a accionar son los **HIGH + CRITICAL** = 2 (~0.1%). El resto es seguro o aceptable bajo política.
+**Lectura clave:** los casts a accionar son los **HIGH + CRITICAL** = 0 (~0.0%). El resto es seguro o aceptable bajo política.
 
 ## Definición de categorías
 
@@ -47,18 +47,7 @@ Total de `as` casts detectados: **3431**
 
 ## Top-30 casts más riesgosos (HIGH + CRITICAL)
 
-### 1. [HIGH] `src/features/crm/services/leads/queries.ts:72`
-
-```ts
-).range(desde, hasta) as unknown as PromiseLike<{
-```
-
-### 2. [HIGH] `src/features/crm/services/oportunidades.ts:89`
-
-```ts
-).range(desde, hasta) as unknown as PromiseLike<{ data: CrmOportunidadRow[] | null; error: { message: string } | null }>,
-```
-
+_Ningún cast HIGH o CRITICAL detectado._
 
 ## Roadmap
 
