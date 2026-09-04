@@ -57,7 +57,11 @@ export function etiquetaEstatusIcp(raw: string | null | undefined): string {
 export function opcionesEstatusIcp(
   actual: string | null | undefined,
 ): { value: string; label: string }[] {
-  const base = ICP_ESTATUS_OPCIONES.map((o) => ({ value: o.value, label: o.label }));
+  const base: { value: string; label: string }[] = ICP_ESTATUS_OPCIONES.map((o) => ({
+    value: o.value as string,
+    label: o.label as string,
+  }));
+
   const valor = normalizarEstatusIcp(actual);
   if (!base.some((o) => o.value === valor)) base.push({ value: valor, label: valor });
   return base;
