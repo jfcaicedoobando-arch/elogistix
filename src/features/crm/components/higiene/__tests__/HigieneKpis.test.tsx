@@ -23,7 +23,7 @@ describe("HigieneKpis", () => {
   it("muestra Sin datos y guion cuando no hay oportunidades abiertas", () => {
     render(<HigieneKpis resumen={base} cobertura={null} presupuestoMes={0} />);
     expect(screen.getAllByText("—").length).toBe(2);
-    expect(screen.getAllByText("Sin datos").length).toBe(2);
+    expect(screen.getAllByText("Requiere oportunidades abiertas para medirse").length).toBe(2);
     expect(screen.queryByRole("progressbar")).toBeNull();
   });
 
