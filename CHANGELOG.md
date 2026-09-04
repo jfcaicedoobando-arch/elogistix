@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+## [13.823.86] - 2026-09-04
+
+### CRM — Un solo aviso de éxito en altas de lead y oportunidad
+- Los modales `NuevoLeadDialog`, `QuickCreateLeadDialog`, `NuevaOportunidadDialog` y el hook `useQuickCreateOportunidad` ya no emiten su propio toast de creación; la capa responsable es el hook de mutación (`useCrearLead` / `useCrearOportunidad`), que conserva el aviso de actividad automática y los mensajes de error.
+- Se mantiene el aviso "Oportunidad actualizada" en edición y el comportamiento de actividades sin cambios.
+- Nueva regresión `altasToastUnico.test.ts` que garantiza un único aviso por alta (modal completo y rápido).
+
+
+
 ## [13.823.85] - 2026-09-04
 
 ### CRM — Toast único al eliminar oportunidad y cobertura de regresión para acciones de detalle

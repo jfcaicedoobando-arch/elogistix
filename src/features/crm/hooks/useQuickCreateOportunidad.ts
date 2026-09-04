@@ -4,7 +4,7 @@
  * líneas por archivo).
  */
 import { useEffect, useMemo, useRef, useState } from "react";
-import { notifySuccess, notifyError } from "@/lib/ui/appFeedback";
+import { notifyError } from "@/lib/ui/appFeedback";
 import { getErrorMessage } from "@/lib/errors";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { useCrearOportunidad, useEtapasPipeline } from "@/features/crm/hooks";
@@ -135,7 +135,6 @@ export function useQuickCreateOportunidad({ open, onOpenChange, onCreated }: Par
         probabilidad: etapaInicial!.probabilidad_default ?? 10,
         ...resolverVendedor(),
       });
-      notifySuccess(undefined, { title: "Oportunidad creada", duration: 2000 });
       // El cierre limpia el estado (efecto de transición): sin reset duplicado.
       onOpenChange(false);
       onCreated(r.id);

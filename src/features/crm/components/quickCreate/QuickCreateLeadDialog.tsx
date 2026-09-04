@@ -20,7 +20,7 @@ import { FIELD_ERROR_CLASS } from "@/components/ui/field.tokens";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { FormDialogSection } from "@/components/shared/FormDialogSection";
 import { FormDialogFooter } from "@/components/shared/FormDialogFooter";
-import { notifySuccess, notifyError } from "@/lib/ui/appFeedback";
+import { notifyError } from "@/lib/ui/appFeedback";
 import { getErrorMessage } from "@/lib/errors";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { useCrearLead } from "@/features/crm/hooks";
@@ -68,7 +68,6 @@ export default function QuickCreateLeadDialog({ open, onOpenChange, onCreated, o
     try {
       // Mapeo canónico compartido: "Correo o teléfono" → `email` / `telefono`.
       const r = await crear.mutateAsync(leadQuickCreateInput(emp, contacto, user));
-      notifySuccess(undefined, { title: "Lead creado", duration: 2000 });
       // El cierre limpia el estado (efecto de transición): no hace falta resetear aquí.
       onOpenChange(false);
       onCreated(r.id);

@@ -133,7 +133,6 @@ export default function NuevaOportunidadDialog({
       } else {
         const r = await crear.mutateAsync(payload);
         if (autoActividad) await crearActividadSeguimiento(r.id);
-        crmToast.success("Oportunidad creada");
         onSaved?.(r.id);
       }
       markClean();
