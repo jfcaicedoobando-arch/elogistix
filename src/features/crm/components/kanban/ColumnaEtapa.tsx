@@ -11,13 +11,16 @@ import { Briefcase } from "lucide-react";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 import { Button } from "@/components/ui/button";
 import { formatCurrencyCompact } from "@/lib/formatters";
-import { totalesEtapa, type AvanceCriterios } from "@/features/crm/domain/criterios";
+import { totalesEtapa, type AvanceCriterios, type TotalesEtapaMoneda } from "@/features/crm/domain/criterios";
 import { colorAcentoEtapa } from "@/features/crm/lib/etapaColores";
 import OportunidadCard from "./OportunidadCard";
 import type { ProximaActividad } from "@/features/crm/hooks";
 import type { CrmOportunidadRow, CrmEtapaRow } from "@/features/crm/hooks";
 
-const fmtMxn = (n: number) => formatCurrencyCompact(n, "MXN");
+function textoPorMoneda(porMoneda: TotalesEtapaMoneda[], campo: "estimado" | "meta" | "ponderado"): string {
+  if (porMoneda.length === 0) return formatCurrencyCompact(0, "MXN");
+  return porMoneda.map((p) => formatCurrencyCompact(p[campo], p.moneda)).join(" · ");
+}
 
 /** Tarjetas renderizadas por etapa al abrir el tablero y por cada "Mostrar más". */
 export const LIMITE_ETAPA_INICIAL = 50;
@@ -51,13 +54,13 @@ export default function ColumnaEtapa({ etapa, ops, onClickCard, proximasMap, ava
       >
         <div className="font-semibold text-body">{etapa.nombre}</div>
         <div className="text-body-sm text-muted-foreground">
-          {totales.cantidad} · {fmtMxn(totales.estimado)}
+          {totales.cantidad} · {textoPorMoneda(totales.porMoneda, "estimado")}
         </div>
         {/* VF-22: en columna vacía "Meta MXN 0 · Ponderado MXN 0" era ruido
             repetido bajo cada etapa; sólo se muestra cuando hay algo que medir. */}
         {totales.cantidad > 0 && (
           <div className="text-label text-muted-foreground">
-            Meta {fmtMxn(totales.meta)} · Ponderado {fmtMxn(totales.ponderado)}
+            Meta {textoPorMoneda(totales.porMoneda, "meta")} · Ponderado {textoPorMoneda(totales.porMoneda, "ponderado")}
           </div>
         )}
       </div>
