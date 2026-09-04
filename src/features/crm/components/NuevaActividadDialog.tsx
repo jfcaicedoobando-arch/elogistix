@@ -22,7 +22,7 @@ import {
   type CrmActividadTipo, type CrmEntidadTipo,
 } from "@/features/crm/hooks";
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
-import { LeadComboboxCrm, OportunidadComboboxCrm } from "@/features/crm/components/comboboxes/EntidadComboboxCrm";
+import SelectorEntidadActividad from "@/features/crm/components/nuevaActividad/SelectorEntidadActividad";
 
 interface Props {
   open: boolean;
@@ -43,12 +43,8 @@ export default function NuevaActividadDialog({ open, onOpenChange, defaultEntida
   const [contactoEfectivo, setContactoEfectivo] = useState(false);
   const [reunionCalificada, setReunionCalificada] = useState(false);
 
-  // v13.823.50 — el estado se inicializaba sólo en el primer render: al reusar
-  // el diálogo con otra oportunidad (A → cerrar → B) mostraba el nombre de B
-  // pero conservaba el id de A (o vacío).
-  // v13.823.51 — además del vínculo se reinicia TODO el borrador (tipo, asunto,
-  // descripción, fecha y banderas de calidad): lo capturado para A no debe
-  // viajar a B.
+  // v13.823.50/51 — al reusar el diálogo con otra entidad (A → cerrar → B) se
+  // reinicia el vínculo y TODO el borrador: lo capturado para A no viaja a B.
   const defTipo = defaultEntidad?.tipo;
   const defId = defaultEntidad?.id;
   useEffect(() => {
@@ -62,21 +58,14 @@ export default function NuevaActividadDialog({ open, onOpenChange, defaultEntida
 
   const isDirty = useMemo(
     () =>
-      entidadTipo !== (defTipo ?? "oportunidad") ||
-      entidadId !== (defId ?? "") ||
-      tipo !== "tarea" ||
-      asunto !== "" ||
-      desc !== "" ||
-      fecha !== "" ||
-      contactoEfectivo !== false ||
-      reunionCalificada !== false,
+      entidadTipo !== (defTipo ?? "oportunidad") || entidadId !== (defId ?? "") ||
+      tipo !== "tarea" || asunto !== "" || desc !== "" || fecha !== "" ||
+      contactoEfectivo || reunionCalificada,
     [entidadTipo, defTipo, entidadId, defId, tipo, asunto, desc, fecha, contactoEfectivo, reunionCalificada],
   );
 
-
-  // v13.823.77 — el botón "Crear" ya no queda habilitado con Asunto u
-  // Oportunidad vacíos (el clic era un no-op silencioso). Además se marcan los
-  // campos con error accesible al primer intento.
+  // v13.823.77 — "Crear" no queda habilitado con Asunto u Oportunidad vacíos;
+  // los campos se marcan con error accesible al primer intento.
   const [intentado, setIntentado] = useState(false);
   const faltaEntidad = !entidadId;
   const faltaAsunto = !asunto.trim();
@@ -133,7 +122,6 @@ export default function NuevaActividadDialog({ open, onOpenChange, defaultEntida
       isDirty={isDirty}
       footer={footer}
     >
-
       {!defaultEntidad && (
         <SelectorEntidadActividad
           entidadTipo={entidadTipo}
@@ -206,53 +194,5 @@ export default function NuevaActividadDialog({ open, onOpenChange, defaultEntida
         </div>
       </div>
     </FormDialogShell>
-  );
-}
-
-interface SelectorEntidadProps {
-  entidadTipo: CrmEntidadTipo;
-  entidadId: string;
-  error: boolean;
-  onTipo: (t: CrmEntidadTipo) => void;
-  onId: (id: string) => void;
-}
-
-/**
- * Selector de entidad (lead u oportunidad) con error accesible.
- * Vive fuera del diálogo para mantener el componente principal simple.
- */
-function SelectorEntidadActividad({ entidadTipo, entidadId, error, onTipo, onId }: SelectorEntidadProps) {
-  const esLead = entidadTipo === "lead";
-  return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-      <div className="space-y-1">
-        <Label>Tipo de entidad</Label>
-        <Select value={entidadTipo} onValueChange={(v) => onTipo(v as CrmEntidadTipo)}>
-          <SelectTrigger><SelectValue /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="lead">Lead</SelectItem>
-            <SelectItem value="oportunidad">Oportunidad</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-      <div className="space-y-1">
-        <Label className="flex items-center">
-          {esLead ? "Lead" : "Oportunidad"}
-          <span className="text-destructive ml-0.5">*</span>
-        </Label>
-        <div aria-describedby={error ? "nueva-actividad-entidad-error" : undefined}>
-          {esLead ? (
-            <LeadComboboxCrm value={entidadId} onChange={onId} />
-          ) : (
-            <OportunidadComboboxCrm value={entidadId} onChange={onId} />
-          )}
-        </div>
-        {error && (
-          <p id="nueva-actividad-entidad-error" className="text-label text-destructive">
-            Selecciona {esLead ? "el lead" : "la oportunidad"} a la que pertenece.
-          </p>
-        )}
-      </div>
-    </div>
   );
 }

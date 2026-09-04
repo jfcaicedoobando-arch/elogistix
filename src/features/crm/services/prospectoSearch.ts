@@ -104,10 +104,10 @@ export async function buscarProspectos(term: string): Promise<ProspectoMatch[]> 
     email: l.email ?? "",
     telefono: l.telefono ?? "",
   }));
-  // SAFE-CAST: los joins `etapa`/`lead` pueden inferirse como objeto o array
-  // según la cardinalidad detectada por PostgREST; ambos shapes son válidos.
   const ops = [
+    // SAFE-CAST: el join `etapa`/`lead` se infiere como objeto o array según la cardinalidad de PostgREST.
     ...((opsPropiasRes.data ?? []) as unknown as OpHit[]),
+    // SAFE-CAST: mismo join que arriba; ambos shapes son válidos en runtime.
     ...((opsPorLeadRes.data ?? []) as unknown as OpHit[]),
   ];
   const vistos = new Set<string>();

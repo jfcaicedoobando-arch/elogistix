@@ -74,7 +74,6 @@ export default function NuevaOportunidadDialog({
     abiertoAntes.current = open;
   }, [open, isEdit]);
 
-
   const etapaSel = etapas.find((e) => e.id === form.etapa_id);
   const esGanada = (etapaSel as { tipo?: string } | undefined)?.tipo === "ganada";
 
@@ -141,13 +140,10 @@ export default function NuevaOportunidadDialog({
       // Los hooks de crear/actualizar ya notificaron el error: un solo aviso.
       void 0;
     } finally {
-
       enviandoRef.current = false;
       setGuardando(false);
     }
   };
-
-
   // Sucio total: el formulario más la casilla de actividad automática (sólo
   // relevante al crear). Habilita la confirmación de descarte del shell.
   const dirtyTotal = isDirty || (!isEdit && autoActividad !== true);
@@ -178,7 +174,6 @@ export default function NuevaOportunidadDialog({
       busy={pendingTotal}
       footer={footer}
     >
-
       {faltantes.length > 0 && (
         <p
           role="status"

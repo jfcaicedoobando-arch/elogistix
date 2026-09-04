@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+## [13.823.88] - 2026-09-04
+
+### Higiene Power of 10 — archivos productivos ≤ 200 líneas
+- `NuevaActividadDialog` extrae `nuevaActividad/SelectorEntidadActividad.tsx`; `usePermissions` y `NuevaOportunidadDialog` compactados sin cambio de comportamiento.
+- `architecture-baseline` vuelve a verde en CI Fast.
+
 ## [13.823.87] - 2026-09-04
 
 ### CRM — Un solo aviso por acción (completar/posponer, convertir, eliminar lead, etapas)

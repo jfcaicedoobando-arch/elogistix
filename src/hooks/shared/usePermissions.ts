@@ -6,7 +6,6 @@ import {
   APROBAR_FACTURA_PROVEEDOR,
   CAPTURAR_FACTURA_PROVEEDOR,
   CAPTURAR_MOVIMIENTO_BANCARIO,
-
   CERRAR_EMBARQUE,
   CONFIGURAR_AUTORIZACION_CLIENTE,
   COST_VIEWERS,
@@ -18,7 +17,6 @@ import {
   CRM_REASIGNAR_VENDEDOR,
   CRM_STAFF_REGISTROS,
   CRM_TOMAR_LEAD,
-
   ELIMINAR_EMBARQUE,
   EMITIR_FACTURA_CLIENTE,
   EXPEDIENTE_ESCRITURA,
@@ -140,12 +138,9 @@ export function usePermissions() {
     canGestionarTodasLasOportunidades || (esVendedorCrm && propio(vendedorId));
   const canGestionarTodasLasActividades = canGestionarTodasLasOportunidades;
   const canCrearActividad = canCrearOportunidad;
-  /**
-   * Espejo EXACTO de la policy `Vendedor own crm_actividades`: el UPDATE sólo
-   * pasa con `responsable_id = auth.uid()`. El fallback por `responsable_email`
-   * vive únicamente en filtros/listados (`filtroResponsable`); usarlo aquí
-   * mostraba "Marcar completada" y la mutación terminaba rechazada por RLS.
-   */
+  // Espejo EXACTO de la policy `Vendedor own crm_actividades`: el UPDATE sólo
+  // pasa con `responsable_id = auth.uid()`. El fallback por `responsable_email`
+  // vive sólo en filtros/listados (`filtroResponsable`).
   const canGestionarActividad = (responsableId: string | null | undefined): boolean =>
     canGestionarTodasLasActividades || (esVendedorCrm && propio(responsableId));
 
@@ -169,7 +164,6 @@ export function usePermissions() {
     canGestionarTodasLasActividades,
     canGestionarActividad,
     canReasignarVendedorCrm,
-
     isAdmin,
     isSuperAdmin,
     isOperador,
@@ -180,7 +174,6 @@ export function usePermissions() {
     canAdminTenant,
     canAdminCuentasBancarias,
     canCapturarMovimientoBancario,
-
     canEditOperations,
     canEditFinance,
     canEditSales,
