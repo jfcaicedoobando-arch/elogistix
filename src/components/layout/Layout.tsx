@@ -33,6 +33,11 @@ export function Layout() {
   const isMobile = useIsMobile();
   const { requiereSeleccionOrg, loading } = useOrganization();
 
+  // Al cambiar de módulo/ruta volvemos arriba; query params dentro de la
+  // misma ruta no mueven el scroll.
+  const mainRef = useRef<HTMLElement>(null);
+  useScrollRestoreOnPathname(mainRef);
+
 
   return (
     <SidebarProvider defaultOpen={defaultOpen}>
