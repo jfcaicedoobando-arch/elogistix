@@ -76,12 +76,15 @@ const AppSidebarBase = forwardRef<HTMLDivElement>(function AppSidebarBase(_props
         </div>
       </SidebarHeader>
 
-      <SidebarContent className="px-2 py-4 [scrollbar-width:thin] [scrollbar-color:hsl(var(--sidebar-foreground)/0.3)_transparent]">
+      <SidebarContent
+        ref={railRef}
+        className="relative px-2 py-4 group-data-[collapsible=icon]:py-2 [scrollbar-width:thin] [scrollbar-color:hsl(var(--sidebar-foreground)/0.3)_transparent]"
+      >
         <div className="px-2 mb-2 space-y-2 shrink-0">
           <OrgSwitcher collapsed={collapsed} />
           <OrgBadge collapsed={collapsed} />
         </div>
-        {sections.map((section) => (
+        {sections.map((section, i) => (
           <SidebarGroupBlock
             key={section.label}
             label={section.label}
@@ -91,9 +94,27 @@ const AppSidebarBase = forwardRef<HTMLDivElement>(function AppSidebarBase(_props
             role={effectiveRole}
             isSectionCollapsed={isSectionCollapsed(section.label)}
             onToggleSection={toggleSection}
+            esUltimoGrupo={i === sections.length - 1}
           />
         ))}
+        {/* VB-49: pista de desplazamiento cuando hay accesos fuera de la vista
+            (típico en 1280x720 con el menú colapsado). */}
+        {estadoRail.hayArriba && (
+          <div
+            data-testid="rail-scroll-arriba"
+            aria-hidden="true"
+            className="pointer-events-none sticky top-0 -mt-2 h-4 shrink-0 bg-gradient-to-b from-sidebar to-transparent"
+          />
+        )}
+        {estadoRail.hayAbajo && (
+          <div
+            data-testid="rail-scroll-abajo"
+            aria-hidden="true"
+            className="pointer-events-none sticky bottom-0 -mb-2 h-4 shrink-0 bg-gradient-to-t from-sidebar to-transparent"
+          />
+        )}
       </SidebarContent>
+
 
       <SidebarFooter className="shrink-0 border-t border-sidebar-border p-3 space-y-2 group-data-[collapsible=icon]:p-2">
         {user && (
