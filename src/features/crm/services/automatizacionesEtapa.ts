@@ -68,27 +68,58 @@ export async function notifyVendedorMovido(ctx: AutomationCtx): Promise<void> {
   });
 }
 
-export async function crearTareaGanada(ctx: AutomationCtx): Promise<void> {
-  if (ctx.etapa.tipo !== "ganada" || !ctx.responsableId) return;
+/**
+ * Tanda 2 · hallazgo 2: inserta la tarea automática siendo idempotente
+ * (si ya existe una tarea abierta con el mismo asunto para la oportunidad no
+ * se duplica al reintentar) y propagando el error del INSERT en vez de
+ * tragárselo como éxito silencioso.
+ */
+async function insertarTareaAutomatica(
+  ctx: AutomationCtx,
+  tarea: { asunto: string; descripcion: string; fechaProgramada: string; accionBitacora: string },
+): Promise<void> {
+  const yaExiste = await supabase
+    .from("crm_actividades")
+    .select("id")
+    .eq("entidad_tipo", "oportunidad")
+    .eq("entidad_id", ctx.op.id)
+    .eq("asunto", tarea.asunto)
+    .is("fecha_completada", null)
+    .is("deleted_at", null)
+    .limit(1)
+    .maybeSingle();
+  if (yaExiste.error) throw yaExiste.error;
+  if (yaExiste.data) return;
+
   const { error } = await supabase.from("crm_actividades").insert({
     tipo: "tarea",
-    asunto: "Generar cotización en firme",
-    descripcion: `Oportunidad ganada: ${ctx.op.nombre}`,
+    asunto: tarea.asunto,
+    descripcion: tarea.descripcion,
     entidad_tipo: "oportunidad",
     entidad_id: ctx.op.id,
-    fecha_programada: isoDaysFromNow(1),
+    fecha_programada: tarea.fechaProgramada,
     responsable_id: ctx.responsableId,
     responsable_email: ctx.responsableEmail,
     created_by: ctx.userId,
   });
-  if (!error) {
-    await registrarActividad({
-      modulo: "crm",
-      accion: "crear_tarea_cotizacion_en_firme",
-      entidadId: ctx.op.id,
-      entidadNombre: ctx.op.nombre,
-    });
-  }
+  if (error) throw error;
+
+  await registrarActividad({
+    modulo: "crm",
+    accion: tarea.accionBitacora,
+    entidadId: ctx.op.id,
+    entidadNombre: ctx.op.nombre,
+  });
+}
+
+export async function crearTareaGanada(ctx: AutomationCtx): Promise<void> {
+  if (ctx.etapa.tipo !== "ganada" || !ctx.responsableId) return;
+  await insertarTareaAutomatica(ctx, {
+    asunto: "Generar cotización en firme",
+    descripcion: `Oportunidad ganada: ${ctx.op.nombre}`,
+    fechaProgramada: isoDaysFromNow(1),
+    accionBitacora: "crear_tarea_cotizacion_en_firme",
+  });
 }
 
 export async function cancelarActividadesPerdida(ctx: AutomationCtx): Promise<void> {
@@ -114,27 +145,13 @@ export async function cancelarActividadesPerdida(ctx: AutomationCtx): Promise<vo
 
 export async function crearTareaSeguimiento(ctx: AutomationCtx): Promise<void> {
   if (ctx.etapa.tipo !== "abierta" || !ctx.etapa.crea_tarea_seguimiento || !ctx.responsableId) return;
-  const { error } = await supabase.from("crm_actividades").insert({
-    tipo: "tarea",
+  await insertarTareaAutomatica(ctx, {
     asunto: `Seguimiento: ${ctx.etapa.nombre}`,
     descripcion: `Seguimiento programado tras pasar a "${ctx.etapa.nombre}".`,
-    entidad_tipo: "oportunidad",
-    entidad_id: ctx.op.id,
-    fecha_programada: isoDaysFromNow(Math.max(1, ctx.etapa.dias_seguimiento)),
-    responsable_id: ctx.responsableId,
-    responsable_email: ctx.responsableEmail,
-    created_by: ctx.userId,
+    fechaProgramada: isoDaysFromNow(Math.max(1, ctx.etapa.dias_seguimiento)),
+    accionBitacora: "crear_tarea_seguimiento_etapa",
   });
-  if (!error) {
-    await registrarActividad({
-      modulo: "crm",
-      accion: "crear_tarea_seguimiento_etapa",
-      entidadId: ctx.op.id,
-      entidadNombre: ctx.op.nombre,
-    });
-  }
 }
-
 
 export async function runAutomatizaciones(
   etapaId: string,
@@ -151,8 +168,23 @@ export async function runAutomatizaciones(
     responsableEmail: op.vendedor_email || userEmail,
     userId,
   };
-  await notifyVendedorMovido(ctx);
-  await crearTareaGanada(ctx);
-  await cancelarActividadesPerdida(ctx);
-  await crearTareaSeguimiento(ctx);
+  // Tanda 2 · hallazgo 2: cada automatización corre aunque otra falle, y los
+  // fallos se agregan en un solo error accionable (la etapa NO se revierte).
+  const fallos: string[] = [];
+  const pasos: ReadonlyArray<[string, () => Promise<void>]> = [
+    ["notificar al vendedor", () => notifyVendedorMovido(ctx)],
+    ["crear la tarea de cotización en firme", () => crearTareaGanada(ctx)],
+    ["cerrar las actividades de la oportunidad perdida", () => cancelarActividadesPerdida(ctx)],
+    ["crear la tarea de seguimiento", () => crearTareaSeguimiento(ctx)],
+  ];
+  for (const [nombre, paso] of pasos) {
+    try {
+      await paso();
+    } catch (e) {
+      fallos.push(`${nombre}: ${e instanceof Error ? e.message : String(e)}`);
+    }
+  }
+  if (fallos.length > 0) {
+    throw new Error(`No se pudo ${fallos.join(" · No se pudo ")}. Puedes reintentar sin duplicar tareas.`);
+  }
 }
