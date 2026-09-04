@@ -31,16 +31,25 @@ function op(over: Partial<HigieneOportunidad>): HigieneOportunidad {
 }
 
 describe("higiene y cobertura", () => {
-  it("lee el presupuesto del mes o 0", () => {
-    const filas = [{ id: "a", anio: 2026, mes: 8, monto: 500000, moneda: "MXN" as const }];
-    expect(presupuestoDelMes(filas, 8)).toBe(500000);
-    expect(presupuestoDelMes(filas, 9)).toBe(0);
-    expect(presupuestoDelMes(undefined, 8)).toBe(0);
+  it("lee el presupuesto del mes con su moneda o 0 MXN", () => {
+    const filas = [
+      { id: "a", anio: 2026, mes: 8, monto: 500000, moneda: "MXN" as const },
+      { id: "b", anio: 2026, mes: 9, monto: 30000, moneda: "USD" as const },
+    ];
+    expect(presupuestoDelMes(filas, 8)).toEqual({ monto: 500000, moneda: "MXN" });
+    expect(presupuestoDelMes(filas, 9)).toEqual({ monto: 30000, moneda: "USD" });
+    expect(presupuestoDelMes(filas, 10)).toEqual({ monto: 0, moneda: "MXN" });
+    expect(presupuestoDelMes(undefined, 8)).toEqual({ monto: 0, moneda: "MXN" });
   });
 
   it("no divide entre cero al calcular cobertura", () => {
-    expect(coberturaPonderada(250000, 0)).toBeNull();
-    expect(coberturaPonderada(250000, 500000)).toBe(0.5);
+    expect(coberturaPonderada(250000, { monto: 0, moneda: "MXN" })).toBeNull();
+    expect(coberturaPonderada(250000, { monto: 500000, moneda: "MXN" })).toBe(0.5);
+  });
+
+  it("no calcula cobertura si el presupuesto no es MXN (pipeline viene en MXN)", () => {
+    expect(coberturaPonderada(250000, { monto: 30000, moneda: "USD" })).toBeNull();
+    expect(coberturaPonderada(250000, { monto: 30000, moneda: "EUR" })).toBeNull();
   });
 
   it("cuenta por semáforo", () => {

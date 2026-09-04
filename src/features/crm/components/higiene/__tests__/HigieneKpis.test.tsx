@@ -21,10 +21,35 @@ const base: HigieneResumen = {
 
 describe("HigieneKpis", () => {
   it("muestra guion y leyenda cuando no hay oportunidades abiertas", () => {
-    render(<HigieneKpis resumen={base} cobertura={null} presupuestoMes={0} />);
+    render(<HigieneKpis resumen={base} cobertura={null} presupuestoMes={{ monto: 0, moneda: "MXN" }} />);
     expect(screen.getAllByText("—").length).toBe(2);
     expect(screen.getAllByText("Requiere oportunidades abiertas para medirse").length).toBe(2);
     expect(screen.queryByRole("progressbar")).toBeNull();
+  });
+
+  it("muestra cobertura en MXN y etiqueta la meta con su moneda", () => {
+    render(
+      <HigieneKpis
+        resumen={{ ...base, abiertas: 4, pipeline_ponderado: 250000 }}
+        cobertura={0.5}
+        presupuestoMes={{ monto: 500000, moneda: "MXN" }}
+      />,
+    );
+    expect(screen.getByText("50%")).toBeTruthy();
+    expect(screen.getByText(/Meta del mes/)).toBeTruthy();
+  });
+
+  it("muestra 'Sin conversión' y la moneda real cuando el presupuesto es extranjero", () => {
+    render(
+      <HigieneKpis
+        resumen={{ ...base, abiertas: 4, pipeline_ponderado: 250000 }}
+        cobertura={null}
+        presupuestoMes={{ monto: 30000, moneda: "USD" }}
+      />,
+    );
+    expect(screen.getByText("Sin conversión")).toBeTruthy();
+    expect(screen.getByText(/USD/)).toBeTruthy();
+    expect(screen.queryByText("Sin presupuesto")).toBeNull();
   });
 
   it("muestra porcentajes cuando hay muestra", () => {
@@ -32,7 +57,7 @@ describe("HigieneKpis", () => {
       <HigieneKpis
         resumen={{ ...base, abiertas: 3, registros_completos: 2, higiene_pct: 0.6667, seguimiento_oportuno_pct: 0.3333, vencidas: 1, sin_actividad_programada: 1 }}
         cobertura={null}
-        presupuestoMes={0}
+        presupuestoMes={{ monto: 0, moneda: "MXN" }}
       />,
     );
     expect(screen.getByText("67%")).toBeTruthy();
