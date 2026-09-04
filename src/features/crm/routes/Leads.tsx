@@ -26,6 +26,7 @@ import {
   type CrmLeadRow, type CrmLeadEstado, type CrmLeadFuente, type LeadSortKey,
 } from "@/features/crm/domain/leads/constants";
 import { LEAD_ESTADOS_ETAPA_LEAD } from "@/features/crm/domain/leads/etapas";
+import { copiaContadorLeads } from "./leadsContadorCopy";
 import { makeLeadsColumns } from "./leadsColumns";
 import { useLeadsSelection } from "./useLeadsSelection";
 import { useLeadsExport } from "./useLeadsExport";
@@ -109,11 +110,8 @@ export default function Leads() {
       {/* Ola 3 · O3.7.2 — el contador sale de la misma query del listado
           (count exact de listLeads) y se etiqueta cuando hay filtros. */}
       <CrmSubheader
-        context={
-          list.search || list.activeCount > 0
-            ? `${list.count} leads coinciden con los filtros`
-            : `${list.count} leads en cartera`
-        }
+        context={copiaContadorLeads(list.count, Boolean(list.search) || list.activeCount > 0)}
+
       />
 
       {canGestionarLeadsEnLote && selected.size > 0 && (
