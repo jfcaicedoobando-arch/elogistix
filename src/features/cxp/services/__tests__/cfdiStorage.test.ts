@@ -18,12 +18,25 @@ vi.mock("@/integrations/supabase/client", () => ({
       from: () => ({ upload: uploadMock, remove: removeMock }),
     },
     from: () => ({
-      update: () => ({ eq: updateMock }),
+      // Tanda 2 · hallazgo 3: la cadena real es
+      // update().eq().is("deleted_at", null).select().maybeSingle().
+      update: () => ({
+        eq: (...args: unknown[]) => {
+          void args;
+          return {
+            is: () => ({ select: () => ({ maybeSingle: updateMock }) }),
+          };
+        },
+      }),
     }),
   },
 }));
 
-import { subirArchivosCfdiFactura } from "../cfdiStorage";
+import {
+  subirArchivosCfdiFactura,
+  adjuntarArchivoCfdiFactura,
+  quitarArchivoCfdiFactura,
+} from "../cfdiStorage";
 
 function archivo(contenido: string, nombre: string, type: string): File {
   const f = new File([contenido], nombre, { type });
@@ -40,7 +53,7 @@ function archivo(contenido: string, nombre: string, type: string): File {
 beforeEach(() => {
   uploadMock.mockReset().mockResolvedValue({ error: null });
   removeMock.mockReset().mockResolvedValue({ error: null });
-  updateMock.mockReset().mockResolvedValue({ error: null });
+  updateMock.mockReset().mockResolvedValue({ data: { id: "fac-123" }, error: null });
 });
 
 describe("subirArchivosCfdiFactura — prefijo de ruta para RLS", () => {
@@ -91,7 +104,7 @@ describe("subirArchivosCfdiFactura — prefijo de ruta para RLS", () => {
   });
 
   it("N50: si el UPDATE de BD falla, borra los objetos subidos (cleanup)", async () => {
-    updateMock.mockResolvedValue({ error: { message: "boom" } });
+    updateMock.mockResolvedValue({ data: null, error: { message: "boom" } });
 
     await expect(
       subirArchivosCfdiFactura({
@@ -105,5 +118,49 @@ describe("subirArchivosCfdiFactura — prefijo de ruta para RLS", () => {
     const [paths] = removeMock.mock.calls[0];
     expect(paths).toHaveLength(1);
     expect(paths[0]).toContain("xml-factura.xml");
+  });
+
+  it("tanda 2: factura eliminada/ausente (0 filas) → falla y limpia el objeto subido", async () => {
+    updateMock.mockResolvedValue({ data: null, error: null });
+
+    await expect(
+      subirArchivosCfdiFactura({
+        facturaId: "fac-borrada",
+        organizationId: "00000000-0000-0000-0000-000000000001",
+        xmlFile: archivo("<x/>", "factura.xml", "application/xml"),
+        pdfFile: null,
+      }),
+    ).rejects.toThrow(/no existe o fue eliminada/i);
+    expect(removeMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("tanda 2: adjuntar con factura eliminada → error y cleanup del objeto", async () => {
+    updateMock.mockResolvedValue({ data: null, error: null });
+
+    await expect(
+      adjuntarArchivoCfdiFactura({
+        facturaId: "fac-borrada",
+        organizationId: "00000000-0000-0000-0000-000000000001",
+        tipo: "XML",
+        file: archivo("<x/>", "factura.xml", "application/xml"),
+      }),
+    ).rejects.toThrow(/no existe o fue eliminada/i);
+    expect(removeMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("tanda 2: quitar con factura eliminada → error y NO borra el objeto (sin referencia rota)", async () => {
+    updateMock.mockResolvedValue({ data: null, error: null });
+
+    await expect(
+      quitarArchivoCfdiFactura({ facturaId: "fac-borrada", path: "org/cfdi/fac/xml-a.xml", tipo: "XML" }),
+    ).rejects.toThrow(/no existe o fue eliminada/i);
+    expect(removeMock).not.toHaveBeenCalled();
+  });
+
+  it("tanda 2: quitar exitoso limpia BD y luego el objeto", async () => {
+    updateMock.mockResolvedValue({ data: { id: "fac-123" }, error: null });
+
+    await quitarArchivoCfdiFactura({ facturaId: "fac-123", path: "org/cfdi/fac/xml-a.xml", tipo: "XML" });
+    expect(removeMock).toHaveBeenCalledTimes(1);
   });
 });

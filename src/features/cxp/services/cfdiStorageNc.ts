@@ -46,11 +46,17 @@ export async function subirArchivosNcProveedor(params: SubirArchivosNcParams): P
 
     if (Object.keys(update).length === 0) return;
 
-    const { error } = await supabase
+    // Tanda 2 · hallazgo 3: nota viva + fila afectada; si no, la operación
+    // falla y el `catch` limpia los objetos ya subidos.
+    const { data: fila, error } = await supabase
       .from("proveedor_notas_credito")
       .update(update)
-      .eq("id", params.ncId);
+      .eq("id", params.ncId)
+      .is("deleted_at", null)
+      .select("id")
+      .maybeSingle();
     if (error) throw error;
+    if (!fila) throw new Error("La nota de crédito no existe o fue eliminada: no se adjuntaron los archivos.");
   } catch (e) {
     // N50 (Ola 4): cleanup de objetos huérfanos (mismo patrón que facturas).
     if (subidos.length > 0) {

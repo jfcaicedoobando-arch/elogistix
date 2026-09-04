@@ -18,7 +18,7 @@ function useNbaSignals() {
     queryKey: queryKeys.crm.nbaSignals(user?.id),
     enabled: !!user?.id,
     staleTime: 60_000,
-    queryFn: () => fetchNbaSignals(),
+    queryFn: () => fetchNbaSignals(user?.id, user?.email),
   });
 }
 

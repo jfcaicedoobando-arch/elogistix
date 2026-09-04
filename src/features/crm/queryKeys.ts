@@ -9,8 +9,8 @@ export const crm = {
   cliente360: (clienteId: string) => ['crm', 'cliente-360', clienteId] as const,
   proximasActividades: (entidadTipo: string, ids: string[]) =>
     ['crm', 'proximas-actividades', entidadTipo, ids] as const,
-  cotizacionesSinRespuesta: (diasUmbral: number, limit: number) =>
-    ['crm', 'cotizaciones-sin-respuesta', diasUmbral, limit] as const,
+  cotizacionesSinRespuesta: (diasUmbral: number, limit: number, uid?: string) =>
+    ['crm', 'cotizaciones-sin-respuesta', diasUmbral, limit, uid] as const,
   prospectoSearch: (term: string) => ['crm', 'prospecto-search', term] as const,
   search: (term: string) => ['crm', 'search', term] as const,
   nbaSignals: (uid?: string) => ['crm', 'nba-signals', uid] as const,

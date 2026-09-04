@@ -24,6 +24,12 @@ export async function fetchCotizacionesSinRespuesta(
   diasUmbral = 5,
   limit = 10,
   segmento: SegmentoSinRespuesta = "todas",
+  /**
+   * Tanda 2 · hallazgo 1: cuando se pide desde una tarjeta personal ("mi
+   * seguimiento") se limita a las cotizaciones creadas por el usuario.
+   * `cotizaciones` no tiene vendedor: `created_by` es el dueño del seguimiento.
+   */
+  vendedorId?: string | null,
 ): Promise<CotizacionSinRespuestaRow[]> {
   const corte = new Date();
   corte.setDate(corte.getDate() - diasUmbral);
@@ -39,6 +45,7 @@ export async function fetchCotizacionesSinRespuesta(
   if (segmento !== "todas") {
     query = query.eq("es_prospecto", segmento === "prospectos");
   }
+  if (vendedorId) query = query.eq("created_by", vendedorId);
   const { data, error } = await query;
   if (error) throw error;
   const ahora = Date.now();
