@@ -2,6 +2,7 @@
  * Encabezado de la ficha de lead (extraído de `LeadDetalle.tsx` para mantener
  * la ruta bajo el límite de complejidad del lint). No cambia comportamiento.
  */
+import type React from "react";
 import { UserPlus } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { DetailHeader } from "@/components/shared/DetailHeader";
@@ -13,7 +14,7 @@ import type { CrmLeadRow } from "@/features/crm/domain/leads/constants";
 
 interface Props {
   lead: CrmLeadRow;
-  volver: string;
+  volver: NonNullable<React.ComponentProps<typeof DetailHeader>["backTo"]>;
   puedeGestionar: boolean;
   canTomarLead: boolean;
   canCrearOportunidad: boolean;
