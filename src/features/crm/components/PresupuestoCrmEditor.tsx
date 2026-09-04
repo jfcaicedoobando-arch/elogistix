@@ -22,7 +22,10 @@ export default function PresupuestoCrmEditor() {
   const [anio, setAnio] = useState(() => new Date().getFullYear());
   const { data = [], isLoading } = usePresupuestoCrm(anio);
   const guardar = useGuardarPresupuestoMes();
-  const [borrador, setBorrador] = useState<Record<number, string>>({});
+  // El borrador se indexa por "anio-mes" para que un valor capturado en un año
+  // no se persista en otro si el usuario cambia el año antes de guardar.
+  const [borrador, setBorrador] = useState<Record<string, string>>({});
+  const claveBorrador = (a: number, mes: number) => `${a}-${mes}`;
 
   // UI-15: la tabla admite MXN/USD/EUR; si hay monedas mezcladas se muestra un
   // total por moneda en vez de una sola cifra rotulada como pesos.
@@ -40,18 +43,20 @@ export default function PresupuestoCrmEditor() {
     : totalesPorMoneda.map(([moneda, monto]) => formatCurrency(monto, moneda)).join(" · ");
 
   const montoDe = (mes: number) => {
-    if (borrador[mes] !== undefined) return borrador[mes];
+    const valor = borrador[claveBorrador(anio, mes)];
+    if (valor !== undefined) return valor;
     const fila = data.find((f) => f.mes === mes);
     return fila ? String(fila.monto) : "";
   };
 
   const handleGuardar = async (mes: number) => {
     if (!organizationId) return;
-    const monto = Number(borrador[mes] ?? montoDe(mes)) || 0;
+    const clave = claveBorrador(anio, mes);
+    const monto = Number(borrador[clave] ?? montoDe(mes)) || 0;
     await guardar.mutateAsync({ organizationId, anio, mes, monto, moneda: "MXN" });
     setBorrador((b) => {
       const next = { ...b };
-      delete next[mes];
+      delete next[clave];
       return next;
     });
   };
@@ -97,14 +102,14 @@ export default function PresupuestoCrmEditor() {
                     aria-label={`Presupuesto de ${nombre}`}
                     disabled={isLoading}
                     value={montoDe(mes)}
-                    onChange={(e) => setBorrador((b) => ({ ...b, [mes]: e.target.value }))}
+                    onChange={(e) => setBorrador((b) => ({ ...b, [claveBorrador(anio, mes)]: e.target.value }))}
                   />
                 </TableCell>
                 <TableCell>
                   <Button
                     size="sm"
                     variant="outline"
-                    disabled={borrador[mes] === undefined}
+                    disabled={borrador[claveBorrador(anio, mes)] === undefined}
                     onClick={() => handleGuardar(mes)}
                   >
                     Guardar
