@@ -61,7 +61,7 @@ export default function NuevaCotizacion() {
 
   const {
     restaurando, draftDetectado, banderaBorrador, conflictoSello,
-    setConflictoSello, handleRestore, handleDiscard,
+    resincronizando, handleResincronizar, handleRestore, handleDiscard,
   } = useDraftRestore({
     form: w.form,
     userId,
@@ -114,7 +114,8 @@ export default function NuevaCotizacion() {
       {conflictoSello && (
         <ConflictoSelloAlert
           onRecargar={() => navigate(w.cotizacionId ? `/cotizaciones/${w.cotizacionId}/editar` : "/cotizaciones")}
-          onRevisarDespues={() => setConflictoSello(false)}
+          onResincronizar={handleResincronizar}
+          resincronizando={resincronizando}
         />
       )}
 

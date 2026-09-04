@@ -12,10 +12,11 @@ import { PageContainer } from "@/components/shared/PageContainer";
 
 interface Props {
   onRecargar: () => void;
-  onRevisarDespues: () => void;
+  onResincronizar: () => void;
+  resincronizando?: boolean;
 }
 
-export function ConflictoSelloAlert({ onRecargar, onRevisarDespues }: Props) {
+export function ConflictoSelloAlert({ onRecargar, onResincronizar, resincronizando }: Props) {
   return (
     <PageContainer noSpacing className="max-w-6xl pt-4">
       <Alert variant="destructive">
@@ -30,8 +31,8 @@ export function ConflictoSelloAlert({ onRecargar, onRevisarDespues }: Props) {
             <Button type="button" variant="outline" size="sm" onClick={onRecargar}>
               Recargar datos
             </Button>
-            <Button type="button" variant="ghost" size="sm" onClick={onRevisarDespues}>
-              Revisar después
+            <Button type="button" variant="ghost" size="sm" onClick={onResincronizar} disabled={resincronizando}>
+              {resincronizando ? "Resincronizando…" : "Resincronizar"}
             </Button>
           </span>
         </AlertDescription>
