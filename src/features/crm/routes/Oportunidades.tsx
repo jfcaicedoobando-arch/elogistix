@@ -6,6 +6,7 @@ import { useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { copiaContadorOportunidades } from "./oportunidadesContadorCopy";
 import { CrmSubheader } from "@/features/crm/components/CrmSubheader";
 import { DataTable } from "@/components/shared/DataTable";
 import { useDebounce, useDocumentTitle, usePermissions } from "@/hooks/shared";
@@ -95,10 +96,10 @@ export default function Oportunidades() {
         }
       />
 
-      <CrmSubheader context={`${ops.length} de ${totalServidor} oportunidades${clienteIdFiltro ? " (filtradas por cliente)" : ""} · pipeline ${formatCurrencyCompact(pipelineMxn.mxn, "MXN")}${pipelineMxn.estimado ? " (T/C estimado)" : ""}`} />
+      <CrmSubheader context={`${copiaContadorOportunidades(ops.length, totalServidor)}${clienteIdFiltro ? " (filtradas por cliente)" : ""} · pipeline ${formatCurrencyCompact(pipelineMxn.mxn, "MXN")}${pipelineMxn.estimado ? " (T/C estimado)" : ""}`} />
       {listaTruncada && (
         <p className="text-label text-muted-foreground">
-          Mostrando las primeras {ops.length} de {totalServidor} oportunidades que cumplen los filtros; la exportación CSV incluye todas.
+          Mostrando las primeras {copiaContadorOportunidades(ops.length, totalServidor)} que cumplen los filtros; la exportación CSV incluye todas.
         </p>
       )}
 

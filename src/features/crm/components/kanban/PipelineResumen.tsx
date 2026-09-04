@@ -4,6 +4,7 @@
  * monedas distintas ni se etiqueta el total como MXN — se muestran subtotales
  * separados por moneda (p. ej. "$1,000.00 MXN · $500.00 USD").
  */
+import { copiaOportunidadesAbiertas } from "@/features/crm/routes/oportunidadesContadorCopy";
 import { TrendingUp, Target, Scale } from "lucide-react";
 import { formatCurrency, porcentajeEntero } from "@/lib/formatters";
 import { totalesEtapa, type TotalesEtapaMoneda } from "@/features/crm/domain/criterios";
@@ -43,7 +44,7 @@ export default function PipelineResumen({ oportunidades }: Props) {
         </div>
       ))}
       <div className="ml-auto text-body-sm text-muted-foreground">
-        {t.cantidad} oportunidades abiertas
+        {copiaOportunidadesAbiertas(t.cantidad)}
         {cumplimiento != null ? ` · ${cumplimiento}% de la meta capturada` : ""}
       </div>
     </div>
