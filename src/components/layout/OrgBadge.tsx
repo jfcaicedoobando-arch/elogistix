@@ -16,17 +16,20 @@ function OrgBadgeBase({ collapsed }: { collapsed?: boolean }) {
   if (!organization) return null;
 
   if (collapsed) {
+    // VB-49: en el rail colapsado se distingue de los accesos navegables:
+    // más compacto, sin hover ni cursor de clic (es una etiqueta, no un botón).
     return (
       <Hint label={`Organización: ${organization.nombre}`}>
         <div
-          className="flex items-center justify-center h-8 w-full text-sidebar-foreground/60"
+          className="flex items-center justify-center h-6 w-full cursor-default select-none text-sidebar-foreground/50"
           aria-label={`Organización: ${organization.nombre}`}
         >
-          <Building2 className="h-4 w-4" aria-hidden="true" />
+          <Building2 className="h-3.5 w-3.5" aria-hidden="true" />
         </div>
       </Hint>
     );
   }
+
 
   return (
     <div
