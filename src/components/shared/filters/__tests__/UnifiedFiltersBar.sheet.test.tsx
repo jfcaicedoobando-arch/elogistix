@@ -4,7 +4,7 @@
  * En móvil sí se conserva, porque `primary` vive dentro del panel.
  */
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 
 const mockIsMobile = vi.fn(() => false);
 vi.mock("@/hooks/shared", () => ({ useIsMobile: () => mockIsMobile() }));
@@ -41,7 +41,7 @@ describe("UnifiedFiltersBar · panel de filtros", () => {
     render(<UnifiedFiltersBar {...base} primary={<button type="button">Estado</button>} />);
 
     const trigger = screen.getByRole("button", { name: /filtros/i });
-    trigger.click();
+    fireEvent.click(trigger);
     expect(await screen.findByRole("button", { name: "Estado" })).toBeInTheDocument();
   });
 });
