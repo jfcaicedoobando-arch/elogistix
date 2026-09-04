@@ -17,7 +17,7 @@ export function useCrmDashboardData() {
   const { user } = useAuth();
   return useQuery<CrmDashboardData>({
     queryKey: queryKeys.crm.dashboard(user?.id),
-    queryFn: () => fetchCrmDashboard(user?.id),
+    queryFn: () => fetchCrmDashboard(user?.id, user?.email),
     staleTime: 60_000,
   });
 }

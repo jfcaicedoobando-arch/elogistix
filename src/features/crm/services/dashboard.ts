@@ -3,6 +3,7 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import { CRM_ACTIVIDADES_COLUMNS_MIN } from "./crmActividadesColumns";
+import { filtroResponsable } from "./actividadesQueryHelpers";
 import {
   isoDaysFromNow,
   computePipelinePonderado,
@@ -81,7 +82,10 @@ function assertSinErrores(respuestas: ReadonlyArray<{ error: unknown }>): void {
   }
 }
 
-export async function fetchCrmDashboard(userId: string | undefined): Promise<CrmDashboardData> {
+export async function fetchCrmDashboard(
+  userId: string | undefined,
+  userEmail?: string | null,
+): Promise<CrmDashboardData> {
   const hoyInicio = new Date(); hoyInicio.setHours(0, 0, 0, 0);
   const hoyFin = new Date(); hoyFin.setHours(23, 59, 59, 999);
   const hace7 = new Date(); hace7.setDate(hace7.getDate() - 7);
@@ -94,16 +98,21 @@ export async function fetchCrmDashboard(userId: string | undefined): Promise<Crm
       .select("id", { count: "exact", head: true })
       .is("fecha_completada", null)
       .is("deleted_at", null),
-    supabase
-      .from("crm_actividades")
-      .select(CRM_ACTIVIDADES_COLUMNS_MIN)
-      .is("fecha_completada", null)
-      .is("deleted_at", null)
-      .eq("responsable_id", userId ?? "")
-      .gte("fecha_programada", hoyInicio.toISOString())
-      .lte("fecha_programada", hoyFin.toISOString())
-      .order("fecha_programada", { ascending: true })
-      .limit(10),
+    // FIX-4 (auditoría): mismo filtro de responsable que `listActividades`
+    // (id O correo cuando el id es null) — antes se perdían actividades
+    // legadas asignadas sólo por correo.
+    userId
+      ? supabase
+          .from("crm_actividades")
+          .select(CRM_ACTIVIDADES_COLUMNS_MIN)
+          .is("fecha_completada", null)
+          .is("deleted_at", null)
+          .or(filtroResponsable(userId, userEmail))
+          .gte("fecha_programada", hoyInicio.toISOString())
+          .lte("fecha_programada", hoyFin.toISOString())
+          .order("fecha_programada", { ascending: true })
+          .limit(10)
+      : Promise.resolve({ data: [] as CrmDashboardData["misActividadesHoy"], error: null }),
     supabase
       .from("crm_oportunidades")
       .select("id, nombre, cliente_nombre, monto_estimado, moneda, probabilidad, fecha_estimada_cierre, crm_etapas_pipeline!inner(tipo)")

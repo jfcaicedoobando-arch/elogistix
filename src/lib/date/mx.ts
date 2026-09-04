@@ -59,4 +59,22 @@ export function isoUtcDay(d: Date): string {
   return `${y}-${m}-${day}`;
 }
 
+/**
+ * Primer día del mes en zona CDMX, desplazado `offsetMeses` meses (puede ser
+ * negativo). Aritmética entera sobre año/mes — sin ambigüedad de TZ.
+ * Usado por leaderboard/forecast para acotar rangos de mes con calendario MX.
+ */
+export function primerDiaMesMx(offsetMeses = 0, base: Date = new Date()): string {
+  const [y, m] = ymMx(base).split("-").map(Number);
+  const totalMeses = y * 12 + (m - 1) + offsetMeses;
+  const yy = Math.floor(totalMeses / 12);
+  const mm = (totalMeses % 12) + 1;
+  return `${yy}-${String(mm).padStart(2, "0")}-01`;
+}
 
+/** Último día del mes en zona CDMX, desplazado `offsetMeses` meses. */
+export function ultimoDiaMesMx(offsetMeses = 0, base: Date = new Date()): string {
+  const primerDiaSiguiente = parseLocalMx(primerDiaMesMx(offsetMeses + 1, base));
+  primerDiaSiguiente.setUTCDate(primerDiaSiguiente.getUTCDate() - 1);
+  return isoUtcDay(primerDiaSiguiente);
+}

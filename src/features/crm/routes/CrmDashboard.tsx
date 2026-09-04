@@ -13,6 +13,7 @@ import { KpiStrip } from "@/components/shared/KpiStrip";
 import { CargaGuard } from "@/components/shared/states/CargaGuard";
 import { formatCurrencyCompact, porcentajeEntero } from "@/lib/formatters";
 import { useCrmInicioVM, useForecast, useReportesCRM } from "@/features/crm/hooks";
+import { primerDiaMesMx, ultimoDiaMesMx } from "@/lib/date/mx";
 import LeaderboardVendedores from "@/features/crm/components/LeaderboardVendedores";
 import { CrmForecastMesKpis } from "@/features/crm/components/CrmForecastMesKpis";
 import { CrmStatStripItem as StatStripItem } from "@/features/crm/components/CrmStatStripItem";
@@ -62,8 +63,10 @@ function EmbudoCard() {
 }
 
 function ForecastMesCard() {
-  const { data, isLoading } = useForecast();
-  const porMes = (data?.porMes ?? []).slice(0, 6);
+  // FIX-8 (auditoría): mes en curso + 5 siguientes (calendario MX), no los
+  // 6 meses más antiguos que hubiera en la base.
+  const { data, isLoading } = useForecast(primerDiaMesMx(0), ultimoDiaMesMx(5));
+  const porMes = data?.porMes ?? [];
 
   return (
     <Card>
