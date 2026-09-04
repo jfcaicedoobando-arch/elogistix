@@ -76,7 +76,7 @@ export default function CrmCommandPalette({ open, onOpenChange }: Props) {
         {acts.length > 0 && (
           <CommandGroup heading="Actividades pendientes">
             {acts.map((h) => (
-              <CommandItem key={`a-${h.id}`} value={`act-${h.id}-${h.title}`} onSelect={() => go(`/crm/actividades`)}>
+              <CommandItem key={`a-${h.id}`} value={`act-${h.id}-${h.title}`} onSelect={() => go(`/crm/actividades?q=${encodeURIComponent(h.title)}`)}>
                 <ClipboardList className="h-4 w-4 mr-2" />
                 <div className="flex-1 min-w-0">
                   <div className="text-body truncate">{h.title}</div>
