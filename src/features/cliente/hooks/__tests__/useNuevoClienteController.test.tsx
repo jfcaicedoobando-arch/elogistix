@@ -88,3 +88,39 @@ describe("useNuevoClienteController", () => {
     expect(result.current.form.rfc).toBe("PARS123");
   });
 });
+
+describe("useNuevoClienteController — correo del paso 1 (auditoría v13.823.75)", () => {
+  const llenarBase = (r: { handleChange: (k: never, v: never) => void }) => {
+    const set = r.handleChange as unknown as (k: string, v: string) => void;
+    set("nombre", "Cliente QA");
+    set("rfc", "TEST123456");
+    set("cp", "12345");
+    set("regimen_fiscal", "601");
+    set("telefono", "5555555555");
+    set("contacto", "Juan Pérez");
+  };
+
+  it("un correo válido conserva su valor y permite avanzar", () => {
+    const { result } = renderHook(() => useNuevoClienteController(vi.fn()), { wrapper: createWrapper() });
+    act(() => {
+      llenarBase(result.current as never);
+      (result.current.handleChange as unknown as (k: string, v: string) => void)(
+        "email",
+        "qa.cliente@gmail.com",
+      );
+    });
+    expect(result.current.form.email).toBe("qa.cliente@gmail.com");
+    act(() => { result.current.handleNext(); });
+    expect(result.current.step).toBe(2);
+  });
+
+  it("un correo con formato inválido bloquea 'Siguiente'", () => {
+    const { result } = renderHook(() => useNuevoClienteController(vi.fn()), { wrapper: createWrapper() });
+    act(() => {
+      llenarBase(result.current as never);
+      (result.current.handleChange as unknown as (k: string, v: string) => void)("email", "qa.cliente@");
+    });
+    act(() => { result.current.handleNext(); });
+    expect(result.current.step).toBe(1);
+  });
+});

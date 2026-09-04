@@ -16,6 +16,7 @@ import {
   type EmbudoRow,
 } from "@/features/crm/domain/dashboardAggregates";
 import { todayLocalISO } from "@/lib/date/today";
+import { LEAD_ESTADOS_ETAPA_LEAD } from "@/features/crm/domain/leads/etapas";
 import { leerTodasLasPaginas } from "@/lib/supabase/paginado";
 import { computePipelinePonderadoPorMoneda } from "@/features/crm/domain/dashboardAggregates";
 import type { SubtotalMoneda } from "@/features/crm/domain/montosPorMoneda";
@@ -96,7 +97,14 @@ export async function fetchCrmDashboard(
   const hace7 = new Date(); hace7.setDate(hace7.getDate() - 7);
 
   const [leadsCountQ, opsAbiertas, actsPendQ, misActsQ, cerrandoQ, leadsViejosQ, etapasQ] = await Promise.all([
-    supabase.from("crm_leads").select("id", { count: "exact", head: true }).is("deleted_at", null),
+    // v13.823.77 — mismo universo que /crm/leads (etapa Lead): antes el KPI
+    // contaba también prospectos y convertidos, así que decía "3" mientras la
+    // lista decía "2 leads en cartera".
+    supabase
+      .from("crm_leads")
+      .select("id", { count: "exact", head: true })
+      .is("deleted_at", null)
+      .in("estado", LEAD_ESTADOS_ETAPA_LEAD),
     fetchOportunidadesAbiertas(),
     supabase
       .from("crm_actividades")

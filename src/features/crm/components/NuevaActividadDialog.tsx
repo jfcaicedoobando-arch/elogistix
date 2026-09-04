@@ -57,6 +57,7 @@ export default function NuevaActividadDialog({ open, onOpenChange, defaultEntida
     setEntidadId(defId ?? "");
     setTipo("tarea"); setAsunto(""); setDesc(""); setFecha("");
     setContactoEfectivo(false); setReunionCalificada(false);
+    setIntentado(false);
   }, [open, defTipo, defId]);
 
   const isDirty = useMemo(
@@ -73,7 +74,18 @@ export default function NuevaActividadDialog({ open, onOpenChange, defaultEntida
   );
 
 
+  // v13.823.77 — el botón "Crear" ya no queda habilitado con Asunto u
+  // Oportunidad vacíos (el clic era un no-op silencioso). Además se marcan los
+  // campos con error accesible al primer intento.
+  const [intentado, setIntentado] = useState(false);
+  const faltaEntidad = !entidadId;
+  const faltaAsunto = !asunto.trim();
+  const incompleto = faltaEntidad || faltaAsunto;
+  const errorEntidad = intentado && faltaEntidad;
+  const errorAsunto = intentado && faltaAsunto;
+
   const handleSubmit = async () => {
+    setIntentado(true);
     if (crear.isPending || enviandoRef.current) return;
     if (!entidadId) return notifyError(undefined, { title: "Selecciona la entidad", method: "HANDLE_SUBMIT", errorCode: ERROR_CODES.VALIDATION_FAILED });
     if (!asunto.trim()) return notifyError(undefined, { title: "Asunto requerido", method: "HANDLE_SUBMIT", errorCode: ERROR_CODES.VALIDATION_FAILED });
@@ -104,6 +116,7 @@ export default function NuevaActividadDialog({ open, onOpenChange, defaultEntida
       onCancel={() => onOpenChange(false)}
       onConfirm={handleSubmit}
       confirmLabel="Crear"
+      disabled={incompleto}
       loading={crear.isPending}
     />
   );
@@ -122,26 +135,13 @@ export default function NuevaActividadDialog({ open, onOpenChange, defaultEntida
     >
 
       {!defaultEntidad && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div className="space-y-1">
-            <Label>Tipo de entidad</Label>
-            <Select value={entidadTipo} onValueChange={(v) => { setEntidadTipo(v as CrmEntidadTipo); setEntidadId(""); }}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="lead">Lead</SelectItem>
-                <SelectItem value="oportunidad">Oportunidad</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-1">
-            <Label>{entidadTipo === "lead" ? "Lead" : "Oportunidad"}</Label>
-            {entidadTipo === "lead" ? (
-              <LeadComboboxCrm value={entidadId} onChange={(id) => setEntidadId(id)} />
-            ) : (
-              <OportunidadComboboxCrm value={entidadId} onChange={(id) => setEntidadId(id)} />
-            )}
-          </div>
-        </div>
+        <SelectorEntidadActividad
+          entidadTipo={entidadTipo}
+          entidadId={entidadId}
+          error={errorEntidad}
+          onTipo={(t) => { setEntidadTipo(t); setEntidadId(""); }}
+          onId={setEntidadId}
+        />
       )}
       {defaultEntidad?.label && (
         <div className="text-body-sm text-muted-foreground">Para: <span className="font-medium text-foreground">{defaultEntidad.label}</span></div>
@@ -162,8 +162,22 @@ export default function NuevaActividadDialog({ open, onOpenChange, defaultEntida
         </div>
       </div>
       <div className="space-y-1">
-        <Label htmlFor="nueva-actividad-asunto">Asunto</Label>
-        <Input id="nueva-actividad-asunto" value={asunto} onChange={(e) => setAsunto(e.target.value)} placeholder="Llamar a cliente, enviar cotización…" />
+        <Label htmlFor="nueva-actividad-asunto" className="flex items-center">
+          Asunto<span className="text-destructive ml-0.5">*</span>
+        </Label>
+        <Input
+          id="nueva-actividad-asunto"
+          value={asunto}
+          onChange={(e) => setAsunto(e.target.value)}
+          placeholder="Llamar a cliente, enviar cotización…"
+          aria-invalid={errorAsunto ? true : undefined}
+          aria-describedby={errorAsunto ? "nueva-actividad-asunto-error" : undefined}
+        />
+        {errorAsunto && (
+          <p id="nueva-actividad-asunto-error" className="text-label text-destructive">
+            Escribe el asunto de la actividad.
+          </p>
+        )}
       </div>
       <div className="space-y-1">
         <Label>Descripción</Label>
@@ -192,5 +206,53 @@ export default function NuevaActividadDialog({ open, onOpenChange, defaultEntida
         </div>
       </div>
     </FormDialogShell>
+  );
+}
+
+interface SelectorEntidadProps {
+  entidadTipo: CrmEntidadTipo;
+  entidadId: string;
+  error: boolean;
+  onTipo: (t: CrmEntidadTipo) => void;
+  onId: (id: string) => void;
+}
+
+/**
+ * Selector de entidad (lead u oportunidad) con error accesible.
+ * Vive fuera del diálogo para mantener el componente principal simple.
+ */
+function SelectorEntidadActividad({ entidadTipo, entidadId, error, onTipo, onId }: SelectorEntidadProps) {
+  const esLead = entidadTipo === "lead";
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      <div className="space-y-1">
+        <Label>Tipo de entidad</Label>
+        <Select value={entidadTipo} onValueChange={(v) => onTipo(v as CrmEntidadTipo)}>
+          <SelectTrigger><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="lead">Lead</SelectItem>
+            <SelectItem value="oportunidad">Oportunidad</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      <div className="space-y-1">
+        <Label className="flex items-center">
+          {esLead ? "Lead" : "Oportunidad"}
+          <span className="text-destructive ml-0.5">*</span>
+        </Label>
+        <div aria-describedby={error ? "nueva-actividad-entidad-error" : undefined}>
+          {esLead ? (
+            <LeadComboboxCrm value={entidadId} onChange={onId} />
+          ) : (
+            <OportunidadComboboxCrm value={entidadId} onChange={onId} />
+          )}
+        </div>
+        {error && (
+          <p id="nueva-actividad-entidad-error" className="text-label text-destructive">
+            Selecciona {esLead ? "el lead" : "la oportunidad"} a la que pertenece.
+          </p>
+        )}
+      </div>
+    </div>
   );
 }

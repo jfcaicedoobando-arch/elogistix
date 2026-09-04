@@ -14,3 +14,14 @@ export function rfcLooksValid(rfc: string): boolean {
 export function cpLooksValid(cp: string): boolean {
   return /^\d{5}$/.test(cp.trim());
 }
+
+/**
+ * True cuando el correo tiene forma válida (usuario@dominio.tld).
+ *
+ * Canon único: la misma función valida el mensaje inline del campo y el
+ * candado del botón "Siguiente"; antes el paso 1 avanzaba con un correo
+ * inválido porque sólo se exigía que no estuviera vacío.
+ */
+export function emailLooksValid(email: string): boolean {
+  return /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email.trim());
+}
