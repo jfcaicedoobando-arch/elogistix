@@ -7,6 +7,7 @@ import { Progress } from "@/components/ui/progress";
 import { formatCurrency } from "@/lib/formatters/numbers";
 import type { HigieneResumen } from "@/features/crm/services/higiene";
 import type { PresupuestoDelMes } from "@/features/crm/domain/higieneMetas";
+import { copiaOportunidadesCompletas } from "./higieneKpisCopy";
 
 interface Props {
   resumen: HigieneResumen;
