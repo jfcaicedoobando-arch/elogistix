@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+## [13.823.72] - 2026-09-04
+
+### CI: pruebas de moneda del CRM en verde
+- Las dos pruebas SQL nuevas (`crm_moneda_incompatible`, `crm_vincular_moneda_vendedor`) fallaban por su propio armado, no por la base: la primera aceptaba una cotización sin cliente (bloqueada por otro candado) y no reproducía el escenario real en el que la oportunidad quedó en otra moneda; la segunda usaba un especificador de formato inválido y dejaba el correo del vendedor en NULL. Ambas verificadas contra una base local con todas las migraciones aplicadas.
+- Se regeneró `supabase/schema/baseline.sql` (snapshot de esquema) y se normalizó `src/integrations/supabase/types.ts` para que coincidan con el esquema de migraciones.
+
 ## [13.823.71] - 2026-09-04
 
 ### CRM: montos por moneda, sin sumas inventadas
