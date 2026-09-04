@@ -319,3 +319,24 @@
     appearance: textfield;
   }
 }
+
+/* =========================================================
+ * Kanban CRM (E-3 · tercera tanda YAGNI): scrollbar horizontal
+ * SIEMPRE visible para que en 1280×720 sea evidente que hay más
+ * etapas a la derecha. No afecta el drag & drop ni tapa tarjetas.
+ * ========================================================= */
+.kanban-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: hsl(var(--muted-foreground) / 0.45) hsl(var(--muted) / 0.6);
+}
+.kanban-scroll::-webkit-scrollbar {
+  height: 10px;
+}
+.kanban-scroll::-webkit-scrollbar-track {
+  background: hsl(var(--muted) / 0.6);
+  border-radius: 5px;
+}
+.kanban-scroll::-webkit-scrollbar-thumb {
+  background: hsl(var(--muted-foreground) / 0.45);
+  border-radius: 5px;
+}

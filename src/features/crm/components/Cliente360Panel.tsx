@@ -16,6 +16,7 @@ import type { Cliente360Oportunidad } from "@/features/crm/services/cliente360";
 import { formatCurrencyCompact } from "@/lib/formatters";
 import ActividadTimeline from "@/features/crm/components/ActividadTimeline";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
+import { ErrorStateInline } from "@/components/empty/ErrorStateInline";
 
 interface Props {
   clienteId: string;
@@ -25,9 +26,21 @@ const LIMITE_VISIBLE = 10;
 
 export default function Cliente360Panel({ clienteId }: Props) {
   const navigate = useNavigate();
-  const { data, isLoading } = useCliente360(clienteId);
+  const { data, isLoading, isError, error, refetch } = useCliente360(clienteId);
 
   if (isLoading) return <EmptyStateInline loading message="Cargando datos CRM…" />;
+
+  // Tercera tanda YAGNI · hallazgo 1: un fallo de lectura no puede verse como
+  // "sin datos" (KPIs en 0, listas vacías). Se muestra el error y reintento.
+  if (isError) {
+    return (
+      <ErrorStateInline
+        title="No se pudieron cargar los datos CRM del cliente"
+        message={error instanceof Error ? error.message : "Error desconocido al leer el resumen 360°."}
+        onRetry={() => void refetch()}
+      />
+    );
+  }
 
   const d = data ?? { oportunidades: [], totales: [], ultimaCotizacion: null, ultimoEmbarque: null };
 

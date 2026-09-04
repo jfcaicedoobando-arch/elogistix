@@ -102,8 +102,16 @@ export default function OportunidadKanban({ etapas, oportunidades, onMover, onCl
       {/* E-3: contenedor relativo con máscara de degradado a la derecha para
           señalar que hay más columnas fuera de la vista (p. ej. "Ganada"). */}
       <div className="relative">
+        <p className="mb-1 text-label text-muted-foreground" role="note">
+          Desliza horizontalmente para ver más etapas
+        </p>
         <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
-          <div className="flex gap-3 overflow-x-auto pb-3 items-start snap-x">
+          <div
+            className="kanban-scroll flex gap-3 overflow-x-auto overflow-y-visible pb-3 items-start snap-x"
+            role="group"
+            aria-label="Etapas del pipeline (desplazamiento horizontal)"
+            tabIndex={0}
+          >
             {huerfanas.length > 0 && (
               <ColumnaEtapa
                 etapa={ETAPA_SIN_ETAPA}
@@ -130,7 +138,7 @@ export default function OportunidadKanban({ etapas, oportunidades, onMover, onCl
         </DndContext>
         <div
           aria-hidden
-          className="pointer-events-none absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-background to-transparent"
+          className="pointer-events-none absolute right-0 top-6 bottom-3 w-8 bg-gradient-to-l from-background to-transparent"
         />
       </div>
     </div>

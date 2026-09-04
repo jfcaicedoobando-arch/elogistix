@@ -11,13 +11,14 @@ import { formatCurrencyCompact } from "@/lib/formatters";
 import { useLeadLineage, useOportunidadLineage } from "@/features/crm/hooks";
 import { DrilldownRow } from "@/components/shared/dataTable/DrilldownRow";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
+import { ErrorStateInline } from "@/components/empty/ErrorStateInline";
 
 function Empty({ text }: { text: string }) {
   return <p className="text-body-sm text-muted-foreground">{text}</p>;
 }
 
 export function LeadLineageCard({ leadId }: { leadId: string }) {
-  const { data = [], isLoading } = useLeadLineage(leadId);
+  const { data = [], isLoading, isError, error, refetch } = useLeadLineage(leadId);
 
   return (
     <Card>
@@ -29,7 +30,15 @@ export function LeadLineageCard({ leadId }: { leadId: string }) {
       </CardHeader>
       <CardContent className="space-y-2">
         {isLoading && <EmptyStateInline loading message="Cargando…" className="py-2" />}
-        {!isLoading && data.length === 0 && <Empty text="Este lead aún no tiene oportunidades." />}
+        {isError && (
+          <ErrorStateInline
+            message={error instanceof Error ? error.message : "No se pudieron cargar las oportunidades del lead."}
+            onRetry={() => void refetch()}
+          />
+        )}
+        {!isLoading && !isError && data.length === 0 && (
+          <Empty text="Este lead aún no tiene oportunidades." />
+        )}
         {data.map((o) => (
           <DrilldownRow
             key={o.id}
@@ -58,7 +67,10 @@ interface OpLineageProps {
 }
 
 export function OportunidadLineageCard({ oportunidadId, leadId }: OpLineageProps) {
-  const { cots, embs, lead, isLoadingCots } = useOportunidadLineage(oportunidadId, leadId);
+  const { cots, embs, lead, isLoadingCots, isError, refetch } = useOportunidadLineage(
+    oportunidadId,
+    leadId,
+  );
 
   return (
     <Card>
@@ -68,11 +80,17 @@ export function OportunidadLineageCard({ oportunidadId, leadId }: OpLineageProps
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
+        {isError && (
+          <ErrorStateInline
+            message="No se pudo cargar la trazabilidad de esta oportunidad."
+            onRetry={() => void refetch()}
+          />
+        )}
         <div>
           <div className="text-body-sm font-semibold text-muted-foreground mb-1 flex items-center gap-1">
             <UserPlus className="h-3 w-3" /> Lead de origen
           </div>
-          {leadId && lead ? (
+          {isError ? null : leadId && lead ? (
             <DrilldownRow
               href={`/crm/leads/${leadId}`}
               ariaLabel={`Ver lead ${lead.empresa}`}
@@ -91,7 +109,9 @@ export function OportunidadLineageCard({ oportunidadId, leadId }: OpLineageProps
             <ClipboardList className="h-3 w-3" /> Cotizaciones <Badge variant="outline" className="ml-1">{cots.length}</Badge>
           </div>
           {isLoadingCots && <EmptyStateInline loading message="Cargando…" className="py-2" />}
-          {!isLoadingCots && cots.length === 0 && <Empty text="Aún no hay cotizaciones vinculadas." />}
+          {!isLoadingCots && !isError && cots.length === 0 && (
+            <Empty text="Aún no hay cotizaciones vinculadas." />
+          )}
           <div className="space-y-1">
             {cots.map((c) => (
               <DrilldownRow
@@ -114,7 +134,7 @@ export function OportunidadLineageCard({ oportunidadId, leadId }: OpLineageProps
           <div className="text-body-sm font-semibold text-muted-foreground mb-1 flex items-center gap-1">
             <Ship className="h-3 w-3" /> Embarques <Badge variant="outline" className="ml-1">{embs.length}</Badge>
           </div>
-          {embs.length === 0 && <Empty text="Sin embarques generados todavía." />}
+          {!isError && embs.length === 0 && <Empty text="Sin embarques generados todavía." />}
           <div className="space-y-1">
             {embs.map((e) => (
               <DrilldownRow
