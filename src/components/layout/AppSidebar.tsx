@@ -52,6 +52,8 @@ const AppSidebarBase = forwardRef<HTMLDivElement>(function AppSidebarBase(_props
   const { theme, toggleTheme } = useTheme();
   const sections = useAppSidebarSections();
   const { isCollapsed: isSectionCollapsed, toggle: toggleSection } = useSidebarCollapse();
+  const { ref: railRef, estado: estadoRail } = useDesbordamientoVertical<HTMLDivElement>();
+
 
   const userInitials = computeUserInitials(user?.email ?? undefined);
   const roleLabel = computeRoleLabel(effectiveRole);
