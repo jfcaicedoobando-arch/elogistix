@@ -59,9 +59,14 @@ export function GlobalSearchCargando() {
   );
 }
 
-/** Estado vacío: distingue "sin resultados" de un fallo de red. */
+interface GlobalSearchVacioProps {
+  busquedaFallo: boolean;
+  enCrm?: boolean;
+  atajoCrm?: string;
+}
 
-export function GlobalSearchVacio({ busquedaFallo }: { busquedaFallo: boolean }) {
+/** Estado vacío: distingue "sin resultados" de un fallo de red. */
+export function GlobalSearchVacio({ busquedaFallo, enCrm, atajoCrm }: GlobalSearchVacioProps) {
   return (
     <div className="flex flex-col items-center gap-2 py-4">
       <SearchX className="h-6 w-6 text-muted-foreground" aria-hidden="true" />
@@ -75,9 +80,15 @@ export function GlobalSearchVacio({ busquedaFallo }: { busquedaFallo: boolean })
       ) : (
         <>
           <p className="text-body font-medium text-foreground">No se encontraron resultados</p>
-          <p className="text-body-sm text-muted-foreground">
-            Intenta con el expediente, el BL/Guía, el RFC o el folio de la factura.
+          <p className="text-body-sm text-muted-foreground text-center px-4">
+            Este buscador encuentra embarques, clientes, proveedores y facturas.
           </p>
+          {enCrm && atajoCrm && (
+            <p className="text-body-sm text-muted-foreground text-center px-4" data-testid="global-search-crm-hint">
+              Para leads, oportunidades y actividades usa{" "}
+              <CommandKey>{atajoCrm}</CommandKey>.
+            </p>
+          )}
         </>
       )}
     </div>

@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback, useDeferredValue, useMemo, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Search } from "lucide-react";
-import { atajoBusquedaGlobal } from "@/lib/ui/atajoTeclado";
+import { atajoBusquedaGlobal, atajoCrmPalette } from "@/lib/ui/atajoTeclado";
 import {
   CommandDialog,
   CommandEmpty,
@@ -33,9 +33,11 @@ export function GlobalSearch() {
   const [buscando, setBuscando] = useState(false);
 
   const navigate = useNavigate();
+  const location = useLocation();
   const search = useGlobalSearch();
   const { recents } = useRecentPages();
   const { effectiveRole } = useAuth();
+  const enCrm = location.pathname.startsWith("/crm");
 
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
@@ -130,14 +132,14 @@ export function GlobalSearch() {
       <CommandDialog open={open} onOpenChange={setOpen} shouldFilter={false} loop>
 
         <CommandInput
-          placeholder="Buscar por expediente, BL, cliente, factura…"
+          placeholder="Buscar embarques, clientes, proveedores y facturas…"
           value={query}
           onValueChange={setQuery}
         />
         <CommandList>
           {!cargando && (
             <CommandEmpty>
-              <GlobalSearchVacio busquedaFallo={busquedaFallo} />
+              <GlobalSearchVacio busquedaFallo={busquedaFallo} enCrm={enCrm} atajoCrm={atajoCrmPalette()} />
             </CommandEmpty>
           )}
 

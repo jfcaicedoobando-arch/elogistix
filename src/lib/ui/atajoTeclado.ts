@@ -17,3 +17,8 @@ export function esMac(nav?: { platform?: string; userAgent?: string }): boolean 
 export function atajoBusquedaGlobal(nav?: { platform?: string; userAgent?: string }): string {
   return esMac(nav) ? "⌘K" : "Ctrl+K";
 }
+
+/** "⌘P" en macOS, "Ctrl+P" en el resto (paleta del CRM). */
+export function atajoCrmPalette(nav?: { platform?: string; userAgent?: string }): string {
+  return esMac(nav) ? "⌘P" : "Ctrl+P";
+}
