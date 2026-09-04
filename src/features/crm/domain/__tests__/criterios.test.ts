@@ -99,7 +99,7 @@ describe("totalesEtapa", () => {
     ]);
   });
 
-  it("moneda ausente se asume MXN", () => {
+  it("totalesEtapa: moneda ausente se asume MXN", () => {
     const t = totalesEtapa([{ monto_estimado: 50, monto_meta: 0, probabilidad: 0 }]);
     expect(t.porMoneda).toEqual([{ moneda: "MXN", estimado: 50, meta: 0, ponderado: 0 }]);
   });
