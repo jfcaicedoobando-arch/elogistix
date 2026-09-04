@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { notifyError } from "@/lib/ui/appFeedback";
+import { notifyError, notifyInfo } from "@/lib/ui/appFeedback";
 import { crmToast } from "@/features/crm/lib/crmToast";
 import { useEliminarOportunidad, useCrearCotizacionDesdeOportunidad } from "@/features/crm/hooks";
 
@@ -55,7 +55,17 @@ export function useOportunidadDetalleActions(op: OpLite, etapas: EtapaLite[]) {
         etapaCotizandoId: cotizandoEtapa?.id,
         etapaCotizandoProbabilidad: cotizandoEtapa?.probabilidad_default ?? 0,
       });
-      crmToast.success(`Cotización creada · ${result.folio}`);
+      if (result.avisoEtapa) {
+        // v13.823.83: un único toast informativo con la advertencia de etapa;
+        // antes el hook también emitía un success, generando un aviso duplicado.
+        notifyInfo(undefined, {
+          title: `Cotización creada · ${result.folio}`,
+          description: `La etapa de la oportunidad no se pudo actualizar: ${result.avisoEtapa}. Muévela manualmente.`,
+          duration: 5000,
+        });
+      } else {
+        crmToast.success(`Cotización creada · ${result.folio}`);
+      }
       navigate(`/cotizaciones/${result.id}/editar`);
     } catch (e) {
       notifyError(undefined, { title: "No se pudo crear", description: e instanceof Error ? e.message : undefined, error: e, method: "CREAR_COTIZACION" });
