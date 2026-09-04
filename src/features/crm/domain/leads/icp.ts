@@ -14,9 +14,59 @@ export const ICP_FRECUENCIAS = [
   "Semanal", "Quincenal", "Mensual", "Bimestral", "Trimestral", "Esporádica",
 ] as const;
 
-export const ICP_ESTATUS = [
-  "Sin calificar", "Validado", "Nutrición", "Descartado",
+/**
+ * Catálogo canónico de estatus ICP. `value` es EXACTAMENTE lo que se persiste
+ * en `public.crm_leads.estatus_icp` (incluye `calificado`, que escribe la RPC
+ * `crm_calificar_prospecto`); `label` es lo que ve el usuario.
+ */
+export const ICP_ESTATUS_OPCIONES = [
+  { value: "Sin calificar", label: "Sin calificar" },
+  { value: "calificado", label: "Calificado" },
+  { value: "Validado", label: "Validado" },
+  { value: "Nutrición", label: "Nutrición" },
+  { value: "Descartado", label: "Descartado" },
 ] as const;
+
+export const ICP_ESTATUS = ICP_ESTATUS_OPCIONES.map((o) => o.value);
+
+/**
+ * Normaliza un estatus histórico al valor canónico sin perder información:
+ * compara sin acentos/mayúsculas contra valores y etiquetas conocidas y, si no
+ * hay coincidencia, conserva el valor tal como está en la base.
+ */
+function plano(texto: string): string {
+  return texto.trim().normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase();
+}
+
+export function normalizarEstatusIcp(raw: string | null | undefined): string {
+  const valor = (raw ?? "").trim();
+  if (valor === "") return "Sin calificar";
+  const clave = plano(valor);
+  const hit = ICP_ESTATUS_OPCIONES.find(
+    (o) => plano(o.value) === clave || plano(o.label) === clave,
+  );
+  return hit ? hit.value : valor;
+}
+
+export function etiquetaEstatusIcp(raw: string | null | undefined): string {
+  const valor = normalizarEstatusIcp(raw);
+  return ICP_ESTATUS_OPCIONES.find((o) => o.value === valor)?.label ?? valor;
+}
+
+/** Opciones a mostrar, incluyendo el valor actual si es desconocido. */
+export function opcionesEstatusIcp(
+  actual: string | null | undefined,
+): { value: string; label: string }[] {
+  const base: { value: string; label: string }[] = ICP_ESTATUS_OPCIONES.map((o) => ({
+    value: o.value as string,
+    label: o.label as string,
+  }));
+
+  const valor = normalizarEstatusIcp(actual);
+  if (!base.some((o) => o.value === valor)) base.push({ value: valor, label: valor });
+  return base;
+}
+
 
 /** Campos ICP editables (todos texto libre salvo la fecha de nutrición). */
 export interface LeadIcpForm {
@@ -74,8 +124,10 @@ export function toLeadIcpForm(row: LeadIcpSource | null | undefined): LeadIcpFor
     const value = row[key];
     if (value !== null && value !== undefined && value !== "") out[key] = String(value);
   }
+  out.estatus_icp = normalizarEstatusIcp(out.estatus_icp);
   return out;
 }
+
 
 /** Convierte el formulario a patch de BD ("" → null, años → número). */
 export type LeadIcpPatch = {

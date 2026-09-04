@@ -9,8 +9,10 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import {
-  ICP_ESTATUS, ICP_FRECUENCIAS, ICP_INCOTERMS, type LeadIcpForm,
+  ICP_FRECUENCIAS, ICP_INCOTERMS, normalizarEstatusIcp, opcionesEstatusIcp,
+  type LeadIcpForm,
 } from "@/features/crm/domain/leads/icp";
+
 
 interface Props {
   form: LeadIcpForm;
@@ -152,15 +154,18 @@ export default function LeadIcpFields({ form, set, canEdit }: Props) {
       <div className="space-y-1">
         <Label>Estatus ICP</Label>
         <Select
-          value={form.estatus_icp || "Sin calificar"}
+          value={normalizarEstatusIcp(form.estatus_icp)}
           onValueChange={(v) => set("estatus_icp", v)}
           disabled={!canEdit}
         >
           <SelectTrigger><SelectValue /></SelectTrigger>
           <SelectContent>
-            {ICP_ESTATUS.map((e) => <SelectItem key={e} value={e}>{e}</SelectItem>)}
+            {opcionesEstatusIcp(form.estatus_icp).map((e) => (
+              <SelectItem key={e.value} value={e.value}>{e.label}</SelectItem>
+            ))}
           </SelectContent>
         </Select>
+
       </div>
       <div className="space-y-1">
         <Label htmlFor="lead-icp-fecha-nutricion">Fecha de nutrición</Label>
