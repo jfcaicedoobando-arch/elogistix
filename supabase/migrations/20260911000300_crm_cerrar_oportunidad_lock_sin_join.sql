@@ -232,3 +232,7 @@ ON public.cotizaciones (organization_id, oportunidad_id)
 WHERE deleted_at IS NULL
   AND oportunidad_id IS NOT NULL
   AND estado IN ('Aceptada'::estado_cotizacion, 'En operación'::estado_cotizacion);
+
+-- H6: la función es SECURITY DEFINER; se re-declaran los GRANT EXECUTE.
+REVOKE ALL ON FUNCTION public.crm_cerrar_oportunidad_desde_cotizacion() FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.crm_cerrar_oportunidad_desde_cotizacion() TO authenticated, service_role;
