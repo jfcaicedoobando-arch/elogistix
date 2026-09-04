@@ -37,16 +37,35 @@ import { ErrorState } from "@/components/shared/states/ErrorState";
 export default function Oportunidades() {
   useDocumentTitle('Oportunidades');
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const clienteIdFiltro = searchParams.get("clienteId");
   // Espejo de las policies de `crm_oportunidades`: sin capacidad no se ofrece
   // crear ni mover etapa (antes se mostraban y el guardado moría en RLS).
   const { canCrearOportunidad, canGestionarOportunidad } = usePermissions();
-  const [search, setSearch] = useState("");
-  const [filtros, setFiltros] = useState<OportunidadesFiltros>(FILTROS_DEFAULT);
+  // v13.823.78 — búsqueda, filtros (vista guardada) y pestaña viven en la URL
+  // para que "Volver a Oportunidades" recupere el contexto del KAM.
+  const urlState = useMemo(() => parseOportunidadesUrl(searchParams), [searchParams]);
+  const search = urlState.search;
+  const filtros = urlState.filtros;
+  const vista = urlState.vista;
+  const aplicarUrlState = useCallback(
+    (parcial: Partial<OportunidadesUrlState>) => {
+      setSearchParams(
+        (prev) => serializeOportunidadesUrl({ ...parseOportunidadesUrl(prev), ...parcial }, prev),
+        { replace: true },
+      );
+    },
+    [setSearchParams],
+  );
+  const setSearch = useCallback((v: string) => aplicarUrlState({ search: v }), [aplicarUrlState]);
+  const setFiltros = useCallback(
+    (v: OportunidadesFiltros) => aplicarUrlState({ filtros: v }),
+    [aplicarUrlState],
+  );
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [nuevaOpen, setNuevaOpen] = useState(false);
   const debounced = useDebounce(search, 300);
+
 
   const { data: etapas = [] } = useEtapasPipeline();
   const { data: tc } = useExchangeRates();
