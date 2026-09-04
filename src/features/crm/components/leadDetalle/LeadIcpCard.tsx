@@ -24,7 +24,7 @@ interface Props {
 
 export default function LeadIcpCard({ leadId, lead, canEdit }: Props) {
   const actualizar = useActualizarLead();
-  const { form, set, dirty } = useLeadIcpForm(lead);
+  const { form, set, dirty } = useLeadIcpForm(lead, leadId);
   const completitud = Math.round(completitudIcp(form) * 100);
 
   const handleSave = async () => {
