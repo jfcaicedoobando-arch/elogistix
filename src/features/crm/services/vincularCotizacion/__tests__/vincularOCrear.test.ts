@@ -15,13 +15,10 @@ vi.mock("@/services/bitacora/registrar", () => ({
 
 import { vincularOCrearOportunidadParaCotizacion } from "../vincularOCrear";
 
+// P0: el cotizador ya no crea prospectos; siempre viaja un origen CRM existente.
 const base = {
   cotizacionId: "cot-1",
-  modoTransporte: "Marítimo",
-  // P0: el cotizador ya no crea prospectos; siempre viaja un origen CRM.
   leadId: "lead-1",
-  prospecto: { empresa: "ACME", contacto: "Juan", email: "j@x.com", telefono: "81", rfc: "ABC010101AB1" },
-  user: null,
 };
 
 describe("vincularOCrearOportunidadParaCotizacion", () => {
@@ -30,16 +27,23 @@ describe("vincularOCrearOportunidadParaCotizacion", () => {
     registrarActividad.mockReset();
   });
 
-  it("envía los datos fiscales a la RPC y devuelve los ids", async () => {
-    rpc.mockResolvedValue({ data: { oportunidad_id: "op-1", lead_id: "lead-1" }, error: null });
+  it("envía el origen CRM a la RPC y devuelve los ids", async () => {
+    rpc.mockResolvedValue({
+      data: { oportunidad_id: "op-1", lead_id: "lead-1", updated_at: "2026-09-03T12:00:00Z" },
+      error: null,
+    });
 
     const r = await vincularOCrearOportunidadParaCotizacion(base);
 
     expect(rpc).toHaveBeenCalledTimes(1);
     const [fn, args] = rpc.mock.calls[0] as [string, Record<string, unknown>];
     expect(fn).toBe("crm_vincular_cotizacion");
-    expect((args.p_prospecto as Record<string, string>).rfc).toBe("ABC010101AB1");
-    expect(r).toEqual({ oportunidadId: "op-1", leadId: "lead-1" });
+    expect(args.p_lead_id).toBe("lead-1");
+    expect(r).toEqual({
+      oportunidadId: "op-1",
+      leadId: "lead-1",
+      updatedAt: "2026-09-03T12:00:00Z",
+    });
     expect(registrarActividad).toHaveBeenCalledTimes(1);
   });
 
