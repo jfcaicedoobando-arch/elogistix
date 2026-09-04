@@ -1,4 +1,4 @@
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/layout/AppSidebar";
 import { Outlet, useLocation } from "react-router-dom";
@@ -15,6 +15,7 @@ import { useIsMobile } from "@/hooks/shared/useIsMobile";
 import { TenantContextBanner } from "@/components/layout/TenantContextBanner";
 import { SeleccionaOrganizacion } from "@/components/layout/SeleccionaOrganizacion";
 import { useOrganization } from "@/lib/contexts/OrganizationContext";
+import { useScrollRestoreOnPathname } from "@/components/layout/useScrollRestoreOnPathname";
 
 
 export function Layout() {
