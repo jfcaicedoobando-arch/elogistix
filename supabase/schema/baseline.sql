@@ -2112,28 +2112,46 @@ CREATE FUNCTION public._crm_actividad_entidad_misma_org() RETURNS trigger
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
+DECLARE
+  v_ok boolean := false;
 BEGIN
   IF NEW.entidad_id IS NULL THEN
-    RETURN NEW;
+    RAISE EXCEPTION 'LC_CRM_ACTIVIDAD_ENTIDAD_AJENA: la entidad ligada no existe, está eliminada o pertenece a otra organización';
   END IF;
-  IF NEW.entidad_tipo = 'oportunidad'::public.crm_entidad_tipo THEN
-    IF NOT EXISTS (
-      SELECT 1 FROM public.crm_oportunidades o
-       WHERE o.id = NEW.entidad_id
-         AND o.organization_id = NEW.organization_id
-         AND o.deleted_at IS NULL
-    ) THEN
-      RAISE EXCEPTION 'LC_ENTIDAD_AJENA: la oportunidad no existe, está eliminada o pertenece a otra organización';
-    END IF;
-  ELSIF NEW.entidad_tipo = 'lead'::public.crm_entidad_tipo THEN
-    IF NOT EXISTS (
-      SELECT 1 FROM public.crm_leads l
-       WHERE l.id = NEW.entidad_id
-         AND l.organization_id = NEW.organization_id
-         AND l.deleted_at IS NULL
-    ) THEN
-      RAISE EXCEPTION 'LC_ENTIDAD_AJENA: el prospecto no existe, está eliminado o pertenece a otra organización';
-    END IF;
+  CASE NEW.entidad_tipo
+    WHEN 'lead'::public.crm_entidad_tipo THEN
+      SELECT EXISTS (
+        SELECT 1 FROM public.crm_leads l
+         WHERE l.id = NEW.entidad_id
+           AND l.organization_id = NEW.organization_id
+           AND l.deleted_at IS NULL
+      ) INTO v_ok;
+    WHEN 'oportunidad'::public.crm_entidad_tipo THEN
+      SELECT EXISTS (
+        SELECT 1 FROM public.crm_oportunidades o
+         WHERE o.id = NEW.entidad_id
+           AND o.organization_id = NEW.organization_id
+           AND o.deleted_at IS NULL
+      ) INTO v_ok;
+    WHEN 'cliente'::public.crm_entidad_tipo THEN
+      SELECT EXISTS (
+        SELECT 1 FROM public.clientes c
+         WHERE c.id = NEW.entidad_id
+           AND c.organization_id = NEW.organization_id
+           AND c.deleted_at IS NULL
+      ) INTO v_ok;
+    WHEN 'contacto'::public.crm_entidad_tipo THEN
+      SELECT EXISTS (
+        SELECT 1 FROM public.contactos_cliente ct
+         WHERE ct.id = NEW.entidad_id
+           AND ct.organization_id = NEW.organization_id
+           AND ct.deleted_at IS NULL
+      ) INTO v_ok;
+    ELSE
+      v_ok := false;  -- Enum ampliado sin actualizar el guard: falla cerrado.
+  END CASE;
+  IF NOT v_ok THEN
+    RAISE EXCEPTION 'LC_CRM_ACTIVIDAD_ENTIDAD_AJENA: la entidad ligada no existe, está eliminada o pertenece a otra organización';
   END IF;
   RETURN NEW;
 END;
@@ -2143,12 +2161,20 @@ CREATE FUNCTION public._crm_actividad_toca_oportunidad() RETURNS trigger
     SET search_path TO 'public'
     AS $$
 BEGIN
-  IF NEW.entidad_tipo = 'oportunidad'::public.crm_entidad_tipo AND NEW.entidad_id IS NOT NULL THEN
-    UPDATE public.crm_oportunidades
-       SET ultimo_movimiento_at = now()
-     WHERE id = NEW.entidad_id
-       AND organization_id = NEW.organization_id;
+  IF NEW.entidad_tipo <> 'oportunidad'::public.crm_entidad_tipo
+     OR NEW.entidad_id IS NULL THEN
+    RETURN NEW;
   END IF;
+  IF TG_OP = 'UPDATE'
+     AND NOT (OLD.fecha_completada IS NULL AND NEW.fecha_completada IS NOT NULL) THEN
+    -- Reprogramar, editar notas o resultado no rejuvenece el SLA.
+    RETURN NEW;
+  END IF;
+  UPDATE public.crm_oportunidades
+     SET ultimo_movimiento_at = now()
+   WHERE id = NEW.entidad_id
+     AND organization_id = NEW.organization_id
+     AND deleted_at IS NULL;
   RETURN NEW;
 END;
 $$;
@@ -2368,6 +2394,8 @@ BEGIN
   IF NEW.oportunidad_id IS NULL THEN
     RETURN NEW;
   END IF;
+  -- Sólo oportunidades vivas, ABIERTAS y de la misma organización: una
+  -- cotización alternativa/Borrador no puede mover una ganada o perdida.
   UPDATE public.crm_oportunidades o
      SET monto_estimado = COALESCE(NULLIF(NEW.subtotal, 0), o.monto_estimado),
          moneda         = COALESCE(NEW.moneda::text, o.moneda),
@@ -2376,6 +2404,12 @@ BEGIN
    WHERE o.id = NEW.oportunidad_id
      AND o.organization_id = NEW.organization_id
      AND o.deleted_at IS NULL
+     AND EXISTS (
+       SELECT 1 FROM public.crm_etapas_pipeline e
+        WHERE e.id = o.etapa_id
+          AND e.tipo = 'abierta'::crm_etapa_tipo
+          AND e.deleted_at IS NULL
+     )
      AND (
        COALESCE(o.monto_estimado, 0) <> COALESCE(NULLIF(NEW.subtotal, 0), o.monto_estimado, 0)
        OR COALESCE(o.moneda, '') <> COALESCE(NEW.moneda::text, o.moneda, '')
@@ -3911,8 +3945,11 @@ DECLARE
   v_total_vol numeric;
   v_total_piezas integer;
   v_primer record;
+  v_modo text;
 BEGIN
   IF p_embarque_id IS NULL THEN RETURN; END IF;
+  SELECT modo::text INTO v_modo FROM public.embarques WHERE id = p_embarque_id;
+  IF v_modo IN ('Aéreo', 'Terrestre') THEN RETURN; END IF;
   SELECT COALESCE(SUM(peso_kg), 0), COALESCE(SUM(volumen_m3), 0), COALESCE(SUM(piezas), 0)
     INTO v_total_peso, v_total_vol, v_total_piezas
   FROM public.embarque_contenedores
@@ -4413,10 +4450,19 @@ DECLARE
   v_creado_por UUID;
   v_uid UUID := auth.uid();
   v_admin BOOLEAN;
+  v_oportunidad_id UUID;
+  v_version_aceptada INT;
+  v_op_existe BOOLEAN;
+  v_ganadora UUID;
 BEGIN
-  SELECT version, organization_id, folio, estado::text, fecha_vigencia, cliente_id, created_by
-    INTO v_version, v_org, v_folio, v_estado_actual, v_vigencia, v_cliente_id, v_creado_por
-    FROM cotizaciones WHERE id = p_cotizacion_id AND deleted_at IS NULL;
+  -- v13.823.57: lock de la fila ANTES de validar; dos aceptaciones simultáneas
+  -- se serializan y la segunda ve el estado ya terminal.
+  SELECT version, organization_id, folio, estado::text, fecha_vigencia, cliente_id,
+         created_by, oportunidad_id, version_aceptada
+    INTO v_version, v_org, v_folio, v_estado_actual, v_vigencia, v_cliente_id,
+         v_creado_por, v_oportunidad_id, v_version_aceptada
+    FROM cotizaciones WHERE id = p_cotizacion_id AND deleted_at IS NULL
+    FOR UPDATE;
   IF v_version IS NULL THEN RAISE EXCEPTION 'Cotización no encontrada' USING ERRCODE='P0002'; END IF;
   v_admin := public.has_role(v_uid, 'super_admin'::app_role)
     OR EXISTS (
@@ -4424,7 +4470,6 @@ BEGIN
        WHERE om.organization_id = v_org AND om.user_id = v_uid
          AND om.role::text = ANY (ARRAY['admin','admin_org'])
     );
-  -- Rol autorizado dentro de la organización (antes bastaba ser miembro).
   IF NOT (
     v_admin
     OR EXISTS (
@@ -4435,15 +4480,51 @@ BEGIN
   ) THEN
     RAISE EXCEPTION 'LC_NO_AUTORIZADO: tu rol no puede aceptar cotizaciones en esta organización' USING ERRCODE='42501';
   END IF;
-  -- Segregación de funciones: quien la creó no la acepta (salvo admin).
   IF v_creado_por IS NOT NULL AND v_uid IS NOT NULL AND v_creado_por = v_uid AND NOT v_admin THEN
     RAISE EXCEPTION 'LC_SOD_VIOLATION: quien creó la cotización no puede aceptarla' USING ERRCODE='42501';
+  END IF;
+  v_requiere := public.cliente_requiere_autorizacion(v_cliente_id, 'cotizacion');
+  v_origen := CASE WHEN v_requiere THEN 'autorizacion_cliente' ELSE 'interna_cliente_de_casa' END;
+  -- v13.823.58: reintento idempotente. El primer request pudo aceptar y la
+  -- respuesta perderse en la red; con la fila ya bloqueada y la identidad,
+  -- pertenencia y rol validados, devolvemos el mismo resultado sin reescribir
+  -- nada (ni sello, ni valor_real, ni auditoría, ni notificación).
+  IF v_estado_actual IN ('Aceptada','En operación') THEN
+    IF v_oportunidad_id IS NOT NULL THEN
+      SELECT true, o.cotizacion_ganadora_id
+        INTO v_op_existe, v_ganadora
+        FROM public.crm_oportunidades o
+       WHERE o.id = v_oportunidad_id
+         AND o.organization_id = v_org
+         AND o.deleted_at IS NULL
+       FOR UPDATE OF o;
+      IF NOT COALESCE(v_op_existe, false) THEN
+        RAISE EXCEPTION 'LC_COTIZACION_ACEPTACION_INCONSISTENTE: la cotización está aceptada pero su oportunidad no existe, está eliminada o es de otra organización (cotización %)', p_cotizacion_id
+          USING ERRCODE='P0001';
+      END IF;
+      IF v_ganadora IS NULL THEN
+        RAISE EXCEPTION 'LC_COTIZACION_ACEPTACION_INCONSISTENTE: la cotización está aceptada pero la oportunidad no registra cotización ganadora (cotización %); revisión manual requerida', p_cotizacion_id
+          USING ERRCODE='P0001';
+      END IF;
+      IF v_ganadora <> p_cotizacion_id THEN
+        RAISE EXCEPTION 'LC_COTIZACION_GANADORA_EXISTE: la oportunidad ya tiene una cotización ganadora'
+          USING ERRCODE='P0001',
+                HINT=format('ganadora_actual=%s; intentada=%s', v_ganadora, p_cotizacion_id);
+      END IF;
+    END IF;
+    IF v_version_aceptada IS NULL THEN
+      RAISE EXCEPTION 'LC_COTIZACION_ACEPTACION_INCONSISTENTE: la cotización está aceptada sin versión aceptada sellada (cotización %); revisión manual requerida', p_cotizacion_id
+        USING ERRCODE='P0001';
+    END IF;
+    RETURN jsonb_build_object(
+      'cotizacion_id', p_cotizacion_id,
+      'version_aceptada', v_version_aceptada,
+      'origen_aceptacion', v_origen,
+      'sin_cambios', true);
   END IF;
   IF v_vigencia IS NOT NULL AND v_vigencia < CURRENT_DATE THEN
     RAISE EXCEPTION 'LC_COT_VENCIDA: la cotización venció el %, extienda la vigencia antes de aceptar', v_vigencia USING ERRCODE='P0001';
   END IF;
-  v_requiere := public.cliente_requiere_autorizacion(v_cliente_id, 'cotizacion');
-  v_origen := CASE WHEN v_requiere THEN 'autorizacion_cliente' ELSE 'interna_cliente_de_casa' END;
   IF v_requiere THEN
     IF v_estado_actual NOT IN ('Borrador','Enviada') THEN
       RAISE EXCEPTION 'LC_COTIZACION_ESTADO_INVALIDO: sólo se puede aceptar en Borrador/Enviada (actual: %, estados_permitidos: [Borrador, Enviada])', v_estado_actual
@@ -4465,7 +4546,8 @@ BEGIN
     'cotizacion.aceptada_version_fijada','cotizaciones',
     p_cotizacion_id, COALESCE(v_folio,''),
     jsonb_build_object('version_aceptada',v_version,'estado_previo',v_estado_actual,'origen_aceptacion',v_origen));
-  RETURN jsonb_build_object('cotizacion_id',p_cotizacion_id,'version_aceptada',v_version,'origen_aceptacion',v_origen);
+  RETURN jsonb_build_object('cotizacion_id',p_cotizacion_id,'version_aceptada',v_version,
+                            'origen_aceptacion',v_origen,'sin_cambios',false);
 END;
 $$;
 CREATE FUNCTION public.aceptar_proforma_sin_autorizacion(p_proforma_id uuid) RETURNS jsonb
@@ -4824,21 +4906,41 @@ BEGIN
   );
 END;
 $$;
-CREATE FUNCTION public.actualizar_cotizacion_costos(p_cotizacion_id uuid, p_costos jsonb, p_request_id uuid DEFAULT NULL::uuid) RETURNS jsonb
+CREATE FUNCTION public.actualizar_cotizacion_costos(p_cotizacion_id uuid, p_costos jsonb, p_request_id uuid DEFAULT NULL::uuid, p_expected_updated_at timestamp with time zone DEFAULT NULL::timestamp with time zone) RETURNS jsonb
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
 DECLARE
   v_org_id uuid;
-  v_resp jsonb;
+  v_actual timestamptz;
+  v_nuevo timestamptz;
+  v_count integer := 0;
   c jsonb;
-  v_count int := 0;
+  v_resp jsonb;
 BEGIN
-  v_resp := public.idempotency_claim(p_request_id, 'actualizar_cotizacion_costos');
-  IF v_resp IS NOT NULL THEN RETURN v_resp; END IF;
-  SELECT organization_id INTO v_org_id FROM cotizaciones WHERE id = p_cotizacion_id;
+  -- 1) Bloquear/leer la cotización y validar autoridad ANTES de cualquier
+  --    replay de idempotencia: la respuesta almacenada de una solicitud previa
+  --    nunca puede devolverse sin pasar por _assert_writer_cotizacion.
+  SELECT organization_id, updated_at
+    INTO v_org_id, v_actual
+    FROM cotizaciones
+   WHERE id = p_cotizacion_id
+     AND deleted_at IS NULL
+   FOR UPDATE;
   IF v_org_id IS NULL THEN RAISE EXCEPTION 'Cotización no encontrada'; END IF;
   PERFORM public._assert_writer_cotizacion(v_org_id);
+  -- 2) Idempotencia: la clave está estrictamente ligada a (key, organization_id,
+  --    user_id) por PK de idempotency_keys, así que el replay jamás cruza
+  --    usuario ni tenant. Se resuelve después de la autoridad y antes del sello
+  --    para que un reintento legítimo (cuyo sello original ya avanzó por su
+  --    propia escritura) recupere su respuesta almacenada.
+  v_resp := public.idempotency_claim(p_request_id, 'actualizar_cotizacion_costos');
+  IF v_resp IS NOT NULL THEN RETURN v_resp; END IF;
+  -- 3) Falla cerrada: sin sello no hay candado optimista posible.
+  IF p_expected_updated_at IS NULL
+     OR v_actual IS DISTINCT FROM p_expected_updated_at THEN
+    RAISE EXCEPTION 'LC_CONFLICTO_CONCURRENCIA: otro usuario modificó esta cotización. Recarga y vuelve a intentar.';
+  END IF;
   DELETE FROM cotizacion_costos WHERE cotizacion_id = p_cotizacion_id;
   FOR c IN SELECT * FROM jsonb_array_elements(p_costos) LOOP
     INSERT INTO cotizacion_costos (
@@ -4861,7 +4963,15 @@ BEGIN
     );
     v_count := v_count + 1;
   END LOOP;
-  v_resp := jsonb_build_object('cotizacion_id', p_cotizacion_id, 'count', v_count);
+  UPDATE cotizaciones
+     SET updated_at = now()
+   WHERE id = p_cotizacion_id
+  RETURNING updated_at INTO v_nuevo;
+  v_resp := jsonb_build_object(
+    'cotizacion_id', p_cotizacion_id,
+    'count', v_count,
+    'updated_at', v_nuevo
+  );
   PERFORM public.idempotency_store(p_request_id, v_resp);
   RETURN v_resp;
 END;
@@ -10293,9 +10403,10 @@ DECLARE
   v_op_id uuid;
   v_email_actual text;
   v_uid uuid := auth.uid();
+  v_is_service boolean := (COALESCE(auth.role()::text, '') = 'service_role');
   v_rol public.app_role;
 BEGIN
-  IF v_uid IS NULL AND current_user IN ('anon', 'authenticated') THEN
+  IF v_uid IS NULL AND NOT v_is_service THEN
     RAISE EXCEPTION 'LC_SESION_REQUERIDA: inicia sesión para convertir prospectos';
   END IF;
   SELECT * INTO v_lead FROM public.crm_leads
@@ -10348,7 +10459,10 @@ BEGIN
   END IF;
   SELECT id, COALESCE(probabilidad_default, 0) INTO v_etapa_id, v_prob
   FROM public.crm_etapas_pipeline
-  WHERE tipo = 'abierta' AND activa = true AND organization_id = v_lead.organization_id
+  WHERE tipo = 'abierta'
+    AND activa = true
+    AND deleted_at IS NULL
+    AND organization_id = v_lead.organization_id
   ORDER BY orden ASC
   LIMIT 1;
   IF v_etapa_id IS NULL THEN
@@ -10760,109 +10874,271 @@ DECLARE
   v_org uuid;
   v_es_prospecto boolean;
   v_cliente_id uuid;
-  v_nombre text;
-  v_rfc text;
-  v_creado boolean := false;
+  v_estado text;
   v_oportunidad_id uuid;
+  v_nombre text;
+  v_nombre_canonico text;
+  v_rfc text;
+  v_rfc_real boolean;
+  v_creado boolean := false;
   v_lead_id uuid;
-  v_empresa text;
-  v_revinculadas int;
+  v_revinculadas int := 0;
+  v_op_org uuid;
+  v_op_cliente uuid;
+  v_op_ganadora uuid;
+  v_op_etapa uuid;
+  v_etapa_tipo text;
+  v_lead_org uuid;
+  v_lead_cliente uuid;
+  v_lead_op uuid;
+  v_faltantes text[] := ARRAY[]::text[];
+  v_contacto text; v_email text; v_telefono text; v_cp text; v_direccion text;
+  v_ciudad text; v_estado_dir text;
+  v_regimen text; v_uso text; v_forma text; v_metodo text;
+  v_coherente boolean;
 BEGIN
-  SELECT organization_id, es_prospecto, cliente_id, oportunidad_id,
-         NULLIF(btrim(COALESCE(prospecto_empresa, '')), '')
-    INTO v_org, v_es_prospecto, v_cliente_id, v_oportunidad_id, v_empresa
-  FROM public.cotizaciones WHERE id = p_cotizacion_id AND deleted_at IS NULL
+  IF auth.uid() IS NULL THEN
+    RAISE EXCEPTION 'LC_SESION_REQUERIDA' USING ERRCODE = '42501';
+  END IF;
+  SELECT organization_id, es_prospecto, cliente_id, estado::text, oportunidad_id
+    INTO v_org, v_es_prospecto, v_cliente_id, v_estado, v_oportunidad_id
+  FROM public.cotizaciones
+  WHERE id = p_cotizacion_id AND deleted_at IS NULL
   FOR UPDATE;
   IF v_org IS NULL THEN
     RAISE EXCEPTION 'LC_COTIZACION_NO_ENCONTRADA';
   END IF;
-  IF auth.uid() IS NOT NULL AND NOT public.is_org_member(v_org) THEN
-    RAISE EXCEPTION 'LC_ORG_AJENA';
+  -- Autorización ANTES de cualquier retorno (incluido el idempotente).
+  IF NOT public.is_org_member(v_org) OR NOT public.rls_tenant_scope_ok(v_org) THEN
+    RAISE EXCEPTION 'LC_ORG_AJENA' USING ERRCODE = '42501';
   END IF;
-  -- Idempotencia: si ya se convirtió, devolver el cliente existente.
+  IF NOT public.has_any_role_in_org(
+        auth.uid(),
+        ARRAY['admin','admin_org','operador','contador','super_admin']::app_role[],
+        v_org) THEN
+    RAISE EXCEPTION 'LC_CLIENTE_SIN_PERMISO' USING ERRCODE = '42501';
+  END IF;
+  ------------------------------------------------------------------
+  -- Idempotencia segura: sólo si la conversión previa es coherente.
+  ------------------------------------------------------------------
   IF v_cliente_id IS NOT NULL AND COALESCE(v_es_prospecto, false) = false THEN
-    SELECT nombre INTO v_nombre FROM public.clientes WHERE id = v_cliente_id;
-    RETURN jsonb_build_object('cliente_id', v_cliente_id, 'nombre', v_nombre, 'creado', false);
+    v_coherente := false;
+    IF v_oportunidad_id IS NOT NULL THEN
+      SELECT o.organization_id, o.cliente_id, o.cotizacion_ganadora_id, o.lead_id
+        INTO v_op_org, v_op_cliente, v_op_ganadora, v_lead_id
+      FROM public.crm_oportunidades o
+      WHERE o.id = v_oportunidad_id AND o.deleted_at IS NULL;
+      IF v_lead_id IS NOT NULL THEN
+        SELECT l.organization_id, l.cliente_convertido_id, l.oportunidad_convertida_id
+          INTO v_lead_org, v_lead_cliente, v_lead_op
+        FROM public.crm_leads l
+        WHERE l.id = v_lead_id AND l.deleted_at IS NULL;
+      END IF;
+      v_coherente :=
+        v_op_org = v_org
+        AND v_op_cliente = v_cliente_id
+        AND v_op_ganadora = p_cotizacion_id
+        AND v_lead_org = v_org
+        AND v_lead_cliente = v_cliente_id
+        AND v_lead_op = v_oportunidad_id
+        AND EXISTS (
+          SELECT 1 FROM public.clientes c
+          WHERE c.id = v_cliente_id AND c.organization_id = v_org AND c.deleted_at IS NULL
+        );
+    END IF;
+    IF v_coherente THEN
+      SELECT nombre INTO v_nombre FROM public.clientes WHERE id = v_cliente_id;
+      RETURN jsonb_build_object(
+        'cliente_id', v_cliente_id, 'nombre', v_nombre, 'creado', false,
+        'oportunidad_id', v_oportunidad_id, 'lead_id', v_lead_id,
+        'cotizaciones_revinculadas', 0, 'sin_cambios', true
+      );
+    END IF;
+    -- Ni conversión coherente ni prospecto: no puede disfrazarse de reintento.
+    IF v_oportunidad_id IS NULL OR v_op_ganadora IS DISTINCT FROM p_cotizacion_id THEN
+      RAISE EXCEPTION 'LC_COTIZACION_NO_ES_PROSPECTO';
+    END IF;
+    RAISE EXCEPTION 'LC_CONVERSION_INCONSISTENTE';
   END IF;
-  v_nombre := NULLIF(btrim(COALESCE(p_cliente->>'nombre', '')), '');
+  ------------------------------------------------------------------
+  -- Primera conversión: validar TODO antes de crear/escribir.
+  ------------------------------------------------------------------
+  IF COALESCE(v_es_prospecto, false) = false THEN
+    RAISE EXCEPTION 'LC_COTIZACION_NO_ES_PROSPECTO';
+  END IF;
+  IF v_cliente_id IS NOT NULL THEN
+    RAISE EXCEPTION 'LC_CONVERSION_INCONSISTENTE';
+  END IF;
+  IF v_estado IS DISTINCT FROM 'Aceptada' THEN
+    RAISE EXCEPTION 'LC_COTIZACION_ESTADO_INVALIDO';
+  END IF;
+  IF v_oportunidad_id IS NULL THEN
+    RAISE EXCEPTION 'LC_COTIZACION_SIN_OPORTUNIDAD';
+  END IF;
+  SELECT o.organization_id, o.cliente_id, o.cotizacion_ganadora_id, o.lead_id, o.etapa_id
+    INTO v_op_org, v_op_cliente, v_op_ganadora, v_lead_id, v_op_etapa
+  FROM public.crm_oportunidades o
+  WHERE o.id = v_oportunidad_id AND o.deleted_at IS NULL
+  FOR UPDATE;
+  IF v_op_org IS NULL THEN
+    RAISE EXCEPTION 'LC_OPORTUNIDAD_NO_ENCONTRADA';
+  END IF;
+  IF v_op_org <> v_org THEN
+    RAISE EXCEPTION 'LC_ORG_AJENA' USING ERRCODE = '42501';
+  END IF;
+  IF v_op_ganadora IS DISTINCT FROM p_cotizacion_id THEN
+    RAISE EXCEPTION 'LC_COTIZACION_ACEPTACION_INCONSISTENTE';
+  END IF;
+  IF v_op_cliente IS NOT NULL THEN
+    RAISE EXCEPTION 'LC_OPORTUNIDAD_YA_CONVERTIDA';
+  END IF;
+  SELECT e.tipo::text INTO v_etapa_tipo
+  FROM public.crm_etapas_pipeline e
+  WHERE e.id = v_op_etapa AND e.organization_id = v_org AND e.deleted_at IS NULL;
+  IF v_etapa_tipo IS DISTINCT FROM 'ganada' THEN
+    RAISE EXCEPTION 'LC_CRM_SIN_ETAPA_GANADA';
+  END IF;
+  IF v_lead_id IS NULL THEN
+    RAISE EXCEPTION 'LC_OPORTUNIDAD_SIN_PROSPECTO';
+  END IF;
+  SELECT l.organization_id, l.cliente_convertido_id, l.oportunidad_convertida_id
+    INTO v_lead_org, v_lead_cliente, v_lead_op
+  FROM public.crm_leads l
+  WHERE l.id = v_lead_id AND l.deleted_at IS NULL
+  FOR UPDATE;
+  IF v_lead_org IS NULL THEN
+    RAISE EXCEPTION 'LC_OPORTUNIDAD_SIN_PROSPECTO';
+  END IF;
+  IF v_lead_org <> v_org THEN
+    RAISE EXCEPTION 'LC_CRM_LEAD_AJENO' USING ERRCODE = '42501';
+  END IF;
+  IF v_lead_cliente IS NOT NULL THEN
+    RAISE EXCEPTION 'LC_OPORTUNIDAD_YA_CONVERTIDA';
+  END IF;
+  -- Conversión parcial/conflictiva: el lead ya apunta a otra oportunidad.
+  IF v_lead_op IS NOT NULL AND v_lead_op <> v_oportunidad_id THEN
+    RAISE EXCEPTION 'LC_CONVERSION_INCONSISTENTE';
+  END IF;
+  ------------------------------------------------------------------
+  -- Datos del cliente: normalización + captura fiscal completa.
+  ------------------------------------------------------------------
+  v_nombre    := NULLIF(btrim(COALESCE(p_cliente->>'nombre', '')), '');
+  v_contacto  := NULLIF(btrim(COALESCE(p_cliente->>'contacto', '')), '');
+  v_email     := NULLIF(lower(btrim(COALESCE(p_cliente->>'email', ''))), '');
+  v_telefono  := NULLIF(btrim(COALESCE(p_cliente->>'telefono', '')), '');
+  v_rfc       := NULLIF(upper(btrim(COALESCE(p_cliente->>'rfc', ''))), '');
+  v_direccion := NULLIF(btrim(COALESCE(p_cliente->>'direccion', '')), '');
+  v_ciudad    := NULLIF(btrim(COALESCE(p_cliente->>'ciudad', '')), '');
+  v_estado_dir:= NULLIF(btrim(COALESCE(p_cliente->>'estado', '')), '');
+  v_cp        := NULLIF(btrim(COALESCE(p_cliente->>'cp', '')), '');
+  v_regimen   := NULLIF(btrim(COALESCE(p_cliente->>'regimen_fiscal', '')), '');
+  v_uso       := NULLIF(btrim(COALESCE(p_cliente->>'uso_cfdi_default', '')), '');
+  v_forma     := NULLIF(btrim(COALESCE(p_cliente->>'forma_pago_default', '')), '');
+  v_metodo    := NULLIF(btrim(COALESCE(p_cliente->>'metodo_pago_default', '')), '');
   IF v_nombre IS NULL THEN
     RAISE EXCEPTION 'LC_CLIENTE_SIN_NOMBRE';
   END IF;
-  v_rfc := NULLIF(btrim(upper(COALESCE(p_cliente->>'rfc', ''))), '');
-  -- Reutiliza cliente existente con el mismo RFC dentro de la organización.
-  -- RG2: los RFC genéricos del SAT (XAXX010101000 público en general,
-  -- XEXX010101000 extranjeros) no identifican a nadie: nunca matchean.
-  IF v_rfc IS NOT NULL AND v_rfc NOT IN ('XAXX010101000', 'XEXX010101000') THEN
-    SELECT id INTO v_cliente_id
+  v_rfc_real := v_rfc IS NOT NULL AND v_rfc NOT IN ('XAXX010101000', 'XEXX010101000');
+  IF v_contacto IS NULL THEN v_faltantes := v_faltantes || 'contacto'::text; END IF;
+  IF v_email IS NULL THEN v_faltantes := v_faltantes || 'email'::text; END IF;
+  IF v_telefono IS NULL THEN v_faltantes := v_faltantes || 'telefono'::text; END IF;
+  IF v_rfc IS NULL THEN v_faltantes := v_faltantes || 'rfc'::text; END IF;
+  IF v_cp IS NULL THEN v_faltantes := v_faltantes || 'cp'::text; END IF;
+  IF v_regimen IS NULL THEN v_faltantes := v_faltantes || 'regimen_fiscal'::text; END IF;
+  IF v_uso IS NULL THEN v_faltantes := v_faltantes || 'uso_cfdi_default'::text; END IF;
+  IF v_forma IS NULL THEN v_faltantes := v_faltantes || 'forma_pago_default'::text; END IF;
+  IF v_metodo IS NULL THEN v_faltantes := v_faltantes || 'metodo_pago_default'::text; END IF;
+  IF v_rfc_real AND v_direccion IS NULL THEN v_faltantes := v_faltantes || 'direccion'::text; END IF;
+  IF array_length(v_faltantes, 1) IS NOT NULL THEN
+    RAISE EXCEPTION 'LC_CLIENTE_FISCAL_INCOMPLETO: %', array_to_string(v_faltantes, ', ');
+  END IF;
+  ------------------------------------------------------------------
+  -- Cliente: reutiliza por RFC real vivo, o crea (carrera tolerada).
+  ------------------------------------------------------------------
+  IF v_rfc_real THEN
+    SELECT id, nombre INTO v_cliente_id, v_nombre_canonico
     FROM public.clientes
     WHERE organization_id = v_org AND upper(btrim(rfc)) = v_rfc AND deleted_at IS NULL
-      AND upper(btrim(rfc)) NOT IN ('XAXX010101000', 'XEXX010101000')
     LIMIT 1;
-  ELSE
-    v_cliente_id := NULL;
   END IF;
   IF v_cliente_id IS NULL THEN
-    INSERT INTO public.clientes (
-      organization_id, nombre, contacto, email, telefono, rfc, direccion, ciudad, estado, cp
-    ) VALUES (
-      v_org,
-      v_nombre,
-      COALESCE(p_cliente->>'contacto', ''),
-      COALESCE(p_cliente->>'email', ''),
-      COALESCE(p_cliente->>'telefono', ''),
-      COALESCE(v_rfc, ''),
-      COALESCE(p_cliente->>'direccion', ''),
-      COALESCE(p_cliente->>'ciudad', ''),
-      COALESCE(p_cliente->>'estado', ''),
-      COALESCE(p_cliente->>'cp', '')
-    )
-    RETURNING id INTO v_cliente_id;
-    v_creado := true;
+    BEGIN
+      INSERT INTO public.clientes (
+        organization_id, nombre, contacto, email, telefono, rfc,
+        direccion, ciudad, estado, cp,
+        regimen_fiscal, uso_cfdi_default, forma_pago_default, metodo_pago_default
+      ) VALUES (
+        v_org, v_nombre, v_contacto, v_email, v_telefono, v_rfc,
+        COALESCE(v_direccion, ''), COALESCE(v_ciudad, ''), COALESCE(v_estado_dir, ''), v_cp,
+        v_regimen, v_uso, v_forma, v_metodo
+      )
+      RETURNING id, nombre INTO v_cliente_id, v_nombre_canonico;
+      v_creado := true;
+    EXCEPTION WHEN unique_violation THEN
+      IF SQLERRM NOT LIKE '%clientes_org_rfc_unique%' THEN
+        RAISE;
+      END IF;
+      SELECT id, nombre INTO v_cliente_id, v_nombre_canonico
+      FROM public.clientes
+      WHERE organization_id = v_org AND upper(btrim(rfc)) = v_rfc AND deleted_at IS NULL
+      LIMIT 1;
+      IF v_cliente_id IS NULL THEN RAISE; END IF;
+      v_creado := false;
+    END;
   END IF;
+  v_nombre_canonico := COALESCE(NULLIF(btrim(COALESCE(v_nombre_canonico, '')), ''), v_nombre);
+  ------------------------------------------------------------------
+  -- Escrituras atómicas: cotización → historial → oportunidad → lead.
+  ------------------------------------------------------------------
   UPDATE public.cotizaciones
      SET cliente_id = v_cliente_id,
-         cliente_nombre = v_nombre,
+         cliente_nombre = v_nombre_canonico,
          es_prospecto = false,
          updated_at = now()
    WHERE id = p_cotizacion_id;
-  -- Re-vincula el historial: otras cotizaciones del mismo prospecto (misma
-  -- empresa normalizada, misma org, aún sin cliente) pasan al cliente nuevo.
-  v_revinculadas := 0;
-  IF v_empresa IS NOT NULL THEN
-    UPDATE public.cotizaciones
-       SET cliente_id = v_cliente_id,
-           cliente_nombre = v_nombre,
-           es_prospecto = false,
-           updated_at = now()
-     WHERE organization_id = v_org
-       AND id <> p_cotizacion_id
-       AND deleted_at IS NULL
-       AND COALESCE(es_prospecto, false) = true
-       AND cliente_id IS NULL
-       AND lower(btrim(prospecto_empresa)) = lower(v_empresa);
-    GET DIAGNOSTICS v_revinculadas = ROW_COUNT;
-  END IF;
-  -- Propagación CRM atómica: oportunidad y lead quedan ligados al cliente.
-  IF v_oportunidad_id IS NOT NULL THEN
-    UPDATE public.crm_oportunidades
-       SET cliente_id = v_cliente_id,
-           cliente_nombre = v_nombre,
-           updated_at = now()
-     WHERE id = v_oportunidad_id AND organization_id = v_org
-    RETURNING lead_id INTO v_lead_id;
-    IF v_lead_id IS NOT NULL THEN
-      UPDATE public.crm_leads
-         SET estado = 'Convertido'::crm_lead_estado,
-             cliente_convertido_id = v_cliente_id,
-             oportunidad_convertida_id = v_oportunidad_id,
-             updated_at = now()
-       WHERE id = v_lead_id AND organization_id = v_org;
-    END IF;
-  END IF;
+  -- Revinculación histórica por IDENTIDAD (oportunidad), nunca por nombre de
+  -- empresa: dos "ACME" distintas no deben mezclarse.
+  UPDATE public.cotizaciones
+     SET cliente_id = v_cliente_id,
+         cliente_nombre = v_nombre_canonico,
+         es_prospecto = false,
+         updated_at = now()
+   WHERE organization_id = v_org
+     AND id <> p_cotizacion_id
+     AND deleted_at IS NULL
+     AND oportunidad_id = v_oportunidad_id
+     AND COALESCE(es_prospecto, false) = true
+     AND cliente_id IS NULL;
+  GET DIAGNOSTICS v_revinculadas = ROW_COUNT;
+  UPDATE public.crm_oportunidades
+     SET cliente_id = v_cliente_id,
+         cliente_nombre = v_nombre_canonico,
+         updated_at = now()
+   WHERE id = v_oportunidad_id AND organization_id = v_org;
+  UPDATE public.crm_leads
+     SET estado = 'Convertido'::crm_lead_estado,
+         cliente_convertido_id = v_cliente_id,
+         oportunidad_convertida_id = v_oportunidad_id,
+         updated_at = now()
+   WHERE id = v_lead_id AND organization_id = v_org;
+  -- Bitácora: exactamente una actividad, sólo en la primera conversión.
+  INSERT INTO public.bitacora_actividad (
+    organization_id, usuario_id, accion, modulo, entidad_id, entidad_nombre, detalles
+  ) VALUES (
+    v_org, auth.uid(), 'convertir_prospecto_a_cliente', 'cotizaciones',
+    p_cotizacion_id, v_nombre_canonico,
+    jsonb_build_object(
+      'cliente_id', v_cliente_id,
+      'cliente_creado', v_creado,
+      'oportunidad_id', v_oportunidad_id,
+      'lead_id', v_lead_id,
+      'cotizaciones_revinculadas', v_revinculadas
+    )
+  );
   RETURN jsonb_build_object(
-    'cliente_id', v_cliente_id, 'nombre', v_nombre, 'creado', v_creado,
+    'cliente_id', v_cliente_id, 'nombre', v_nombre_canonico, 'creado', v_creado,
     'oportunidad_id', v_oportunidad_id, 'lead_id', v_lead_id,
-    'cotizaciones_revinculadas', v_revinculadas
+    'cotizaciones_revinculadas', v_revinculadas, 'sin_cambios', false
   );
 END;
 $$;
@@ -12081,6 +12357,8 @@ DECLARE
   v_lead public.crm_leads;
   v_email text;
   v_faltantes text[] := ARRAY[]::text[];
+  v_gestion_total boolean;
+  v_vendedor boolean;
 BEGIN
   IF auth.uid() IS NULL THEN
     RAISE EXCEPTION 'LC_NO_AUTENTICADO';
@@ -12092,14 +12370,57 @@ BEGIN
   IF v_lead.id IS NULL THEN
     RAISE EXCEPTION 'LC_LEAD_NO_ENCONTRADO';
   END IF;
-  IF NOT public.is_org_member(v_lead.organization_id) THEN
+  -- Membresía real en la organización DEL LEAD + tenant activo del super admin.
+  IF NOT public.is_org_member(v_lead.organization_id)
+     OR NOT public.rls_tenant_scope_ok(v_lead.organization_id) THEN
     RAISE EXCEPTION 'LC_ORG_AJENA';
   END IF;
-  IF NOT public.has_role(auth.uid(), 'vendedor'::public.app_role) THEN
+  v_gestion_total := public.has_any_role_in_org(
+    auth.uid(),
+    ARRAY['admin', 'gerente_comercial']::public.app_role[],
+    v_lead.organization_id
+  );
+  v_vendedor := public.has_any_role_in_org(
+    auth.uid(),
+    ARRAY['vendedor']::public.app_role[],
+    v_lead.organization_id
+  );
+  -- Falla cerrado: sin responsable no hay ownership que validar.
+  IF v_lead.vendedor_id IS NULL THEN
+    RAISE EXCEPTION 'LC_LEAD_SIN_ASIGNAR';
+  END IF;
+  IF NOT v_gestion_total
+     AND NOT (v_vendedor AND v_lead.vendedor_id = auth.uid()) THEN
     RAISE EXCEPTION 'LC_LEAD_SIN_PERMISO_CALIFICAR';
   END IF;
   IF v_lead.estado::text IN ('Descalificado', 'Convertido') THEN
     RAISE EXCEPTION 'LC_LEAD_ESTADO_NO_CALIFICABLE';
+  END IF;
+  -- Perfil comercial mínimo (ICP) ANTES del retorno idempotente: un retry con
+  -- expediente incompleto debe avisar, no devolver éxito mudo.
+  IF NULLIF(TRIM(COALESCE(v_lead.sector, '')), '') IS NULL THEN
+    v_faltantes := v_faltantes || 'sector'::text;
+  END IF;
+  IF NULLIF(TRIM(COALESCE(v_lead.mercancia, '')), '') IS NULL THEN
+    v_faltantes := v_faltantes || 'mercancia'::text;
+  END IF;
+  IF NULLIF(TRIM(COALESCE(v_lead.rutas, '')), '') IS NULL THEN
+    v_faltantes := v_faltantes || 'rutas'::text;
+  END IF;
+  IF NULLIF(TRIM(COALESCE(v_lead.volumen, '')), '') IS NULL THEN
+    v_faltantes := v_faltantes || 'volumen'::text;
+  END IF;
+  IF NULLIF(TRIM(COALESCE(v_lead.frecuencia, '')), '') IS NULL THEN
+    v_faltantes := v_faltantes || 'frecuencia'::text;
+  END IF;
+  IF NULLIF(TRIM(COALESCE(v_lead.dolor_explicito, '')), '') IS NULL THEN
+    v_faltantes := v_faltantes || 'dolor_explicito'::text;
+  END IF;
+  IF NULLIF(TRIM(COALESCE(v_lead.proveedor_actual, '')), '') IS NULL THEN
+    v_faltantes := v_faltantes || 'proveedor_actual'::text;
+  END IF;
+  IF array_length(v_faltantes, 1) IS NOT NULL THEN
+    RAISE EXCEPTION 'LC_LEAD_PERFIL_INCOMPLETO: %', array_to_string(v_faltantes, ',');
   END IF;
   -- Idempotente: recalificar un prospecto no es error (doble click / retry).
   IF v_lead.estado::text IN ('Prospecto', 'Pendiente de alta') THEN
@@ -12108,31 +12429,6 @@ BEGIN
       'estado', v_lead.estado,
       'calificado', false
     );
-  END IF;
-  -- Perfil comercial mínimo (ICP) para poder cotizar.
-  IF COALESCE(NULLIF(TRIM(v_lead.sector), ''), NULL) IS NULL THEN
-    v_faltantes := v_faltantes || 'sector';
-  END IF;
-  IF COALESCE(NULLIF(TRIM(v_lead.mercancia), ''), NULL) IS NULL THEN
-    v_faltantes := v_faltantes || 'mercancia';
-  END IF;
-  IF COALESCE(NULLIF(TRIM(v_lead.rutas), ''), NULL) IS NULL THEN
-    v_faltantes := v_faltantes || 'rutas';
-  END IF;
-  IF COALESCE(NULLIF(TRIM(v_lead.volumen), ''), NULL) IS NULL THEN
-    v_faltantes := v_faltantes || 'volumen';
-  END IF;
-  IF COALESCE(NULLIF(TRIM(v_lead.frecuencia), ''), NULL) IS NULL THEN
-    v_faltantes := v_faltantes || 'frecuencia';
-  END IF;
-  IF COALESCE(NULLIF(TRIM(v_lead.dolor_explicito), ''), NULL) IS NULL THEN
-    v_faltantes := v_faltantes || 'dolor_explicito';
-  END IF;
-  IF COALESCE(NULLIF(TRIM(v_lead.proveedor_actual), ''), NULL) IS NULL THEN
-    v_faltantes := v_faltantes || 'proveedor_actual';
-  END IF;
-  IF array_length(v_faltantes, 1) IS NOT NULL THEN
-    RAISE EXCEPTION 'LC_LEAD_PERFIL_INCOMPLETO: %', array_to_string(v_faltantes, ',');
   END IF;
   SELECT email INTO v_email FROM auth.users WHERE id = auth.uid();
   UPDATE public.crm_leads
@@ -12155,92 +12451,181 @@ BEGIN
   );
 END;
 $$;
-CREATE FUNCTION public.crm_cierra_oportunidad_desde_cotizacion() RETURNS trigger
+CREATE FUNCTION public.crm_cerrar_oportunidad_desde_cotizacion() RETURNS trigger
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
 DECLARE
-  v_op_id uuid;
-  v_op_org uuid;
-  v_op_vendedor uuid;
-  v_op_nombre text;
-  v_etapa_actual_tipo crm_etapa_tipo;
-  v_etapa_ganada_id uuid;
+  v_terminales estado_cotizacion[] := ARRAY['Aceptada'::estado_cotizacion,
+                                            'En operación'::estado_cotizacion];
+  v_es_terminal  boolean;
+  v_era_terminal boolean;
+  v_op_id uuid; v_op_org uuid; v_op_vendedor uuid; v_op_nombre text;
+  v_etapa_tipo crm_etapa_tipo; v_etapa_ganada uuid;
+  v_ganadora uuid; v_valor_previo numeric; v_emb_ganador uuid; v_op_moneda text;
+  v_hoy date := (now() AT TIME ZONE 'America/Mexico_City')::date;
+  v_uid uuid := auth.uid();
 BEGIN
-  IF NEW.oportunidad_id IS NULL THEN
-    RETURN NEW;
-  END IF;
-  IF NEW.estado NOT IN ('Aceptada'::estado_cotizacion, 'En operación'::estado_cotizacion) THEN
-    RETURN NEW;
-  END IF;
+  -- (j) La cotización ganadora no migra de oportunidad ni de organización.
   IF TG_OP = 'UPDATE'
-     AND OLD.estado = NEW.estado
-     AND COALESCE(OLD.embarque_id::text, '') = COALESCE(NEW.embarque_id::text, '') THEN
+     AND (NEW.oportunidad_id IS DISTINCT FROM OLD.oportunidad_id
+          OR NEW.organization_id IS DISTINCT FROM OLD.organization_id)
+     AND EXISTS (
+       SELECT 1 FROM public.crm_oportunidades o
+        WHERE o.cotizacion_ganadora_id = OLD.id
+          AND o.deleted_at IS NULL
+     ) THEN
+    RAISE EXCEPTION 'LC_COTIZACION_GANADORA_INMUTABLE: la cotización ganadora no puede cambiar de oportunidad ni de organización'
+      USING ERRCODE = 'P0001';
+  END IF;
+  -- (i) Papelera: se conserva cotizacion_ganadora_id, valor_real y snapshot.
+  IF NEW.deleted_at IS NOT NULL THEN
+    IF TG_OP = 'UPDATE' AND OLD.deleted_at IS NULL THEN
+      UPDATE public.crm_oportunidades o
+         SET embarque_ganador_id = NULL, updated_at = now()
+       WHERE o.cotizacion_ganadora_id = NEW.id
+         AND o.organization_id = NEW.organization_id
+         AND o.deleted_at IS NULL
+         AND o.embarque_ganador_id IS NOT NULL
+         AND NOT EXISTS (
+           SELECT 1 FROM public.embarques e
+            WHERE e.id = o.embarque_ganador_id AND e.deleted_at IS NULL
+         );
+    END IF;
     RETURN NEW;
   END IF;
-  SELECT o.id, o.organization_id, o.vendedor_id, o.nombre, e.tipo
-    INTO v_op_id, v_op_org, v_op_vendedor, v_op_nombre, v_etapa_actual_tipo
-  FROM public.crm_oportunidades o
-  JOIN public.crm_etapas_pipeline e ON e.id = o.etapa_id
-  WHERE o.id = NEW.oportunidad_id
-    AND o.organization_id = NEW.organization_id
-    AND o.deleted_at IS NULL;
+  IF NEW.oportunidad_id IS NULL THEN RETURN NEW; END IF;
+  v_es_terminal := NEW.estado = ANY (v_terminales);
+  IF NOT v_es_terminal THEN RETURN NEW; END IF;
+  v_era_terminal := TG_OP = 'UPDATE'
+                    AND OLD.deleted_at IS NULL
+                    AND OLD.estado = ANY (v_terminales);
+  -- (b) lock de la oportunidad: serializa aceptaciones concurrentes.
+  SELECT o.id, o.organization_id, o.vendedor_id, o.nombre, e.tipo,
+         o.cotizacion_ganadora_id, o.valor_real, o.embarque_ganador_id, o.moneda
+    INTO v_op_id, v_op_org, v_op_vendedor, v_op_nombre, v_etapa_tipo,
+         v_ganadora, v_valor_previo, v_emb_ganador, v_op_moneda
+    FROM public.crm_oportunidades o
+    JOIN public.crm_etapas_pipeline e ON e.id = o.etapa_id
+   WHERE o.id = NEW.oportunidad_id
+     AND o.organization_id = NEW.organization_id
+     AND o.deleted_at IS NULL
+   FOR UPDATE OF o;
+  -- (a) cross-org / inexistente / eliminada
   IF v_op_id IS NULL THEN
-    RETURN NEW;
+    RAISE EXCEPTION 'LC_OPORTUNIDAD_AJENA: la oportunidad no existe, está eliminada o pertenece a otra organización'
+      USING ERRCODE = 'P0001';
   END IF;
-  IF v_etapa_actual_tipo <> 'abierta'::crm_etapa_tipo THEN
-    RETURN NEW;
+  -- (c) un único ganador por oportunidad
+  IF v_ganadora IS NOT NULL AND v_ganadora <> NEW.id THEN
+    RAISE EXCEPTION 'LC_COTIZACION_GANADORA_EXISTE: la oportunidad ya tiene una cotización ganadora'
+      USING ERRCODE = 'P0001',
+            HINT = format('ganadora_actual=%s; intentada=%s (%s)',
+                          v_ganadora, NEW.id, COALESCE(NEW.folio, 'sin folio'));
   END IF;
-  SELECT id INTO v_etapa_ganada_id
-  FROM public.crm_etapas_pipeline
-  WHERE organization_id = v_op_org
-    AND tipo = 'ganada'::crm_etapa_tipo
-    AND activa = true
-    AND deleted_at IS NULL
-  ORDER BY orden ASC
-  LIMIT 1;
-  IF v_etapa_ganada_id IS NULL THEN
-    RETURN NEW;
+  -- (k) no se escribe valor_real de una cotización en otra moneda distinta
+  -- a la de la oportunidad: evita mezclar, p. ej., subtotal USD dentro de
+  -- una oportunidad MXN.
+  IF v_op_moneda IS NOT NULL AND NEW.moneda::text IS DISTINCT FROM v_op_moneda THEN
+    RAISE EXCEPTION 'LC_MONEDA_INCOMPATIBLE: la cotización está en % y la oportunidad en %; actualiza la moneda de la oportunidad o cotiza en la misma moneda antes de aceptarla',
+      NEW.moneda, v_op_moneda
+      USING ERRCODE = 'P0001';
   END IF;
-  UPDATE public.crm_oportunidades
-     SET etapa_id = v_etapa_ganada_id,
-         probabilidad = 100,
-         fecha_cierre_real = COALESCE(fecha_cierre_real, CURRENT_DATE),
-         valor_real = COALESCE(valor_real, NEW.subtotal),
-         cotizacion_ganadora_id = NEW.id,
-         embarque_ganador_id = COALESCE(embarque_ganador_id, NEW.embarque_id),
-         updated_at = now()
-   WHERE id = v_op_id
-     AND organization_id = v_op_org;
-  BEGIN
+  -- (h) una oportunidad perdida exige reapertura explícita
+  IF v_etapa_tipo = 'perdida'::crm_etapa_tipo THEN
+    RAISE EXCEPTION 'LC_OPORTUNIDAD_PERDIDA_REQUIERE_REAPERTURA: reabre la oportunidad antes de aceptar una cotización'
+      USING ERRCODE = 'P0001';
+  END IF;
+  -- (d) sellado sólo en la primera transición no-terminal → terminal
+  IF NOT v_era_terminal THEN
+    NEW.version_aceptada := NEW.version;
+    NEW.aceptada_en := now();
+    NEW.aceptada_por := COALESCE(v_uid, NEW.aceptada_por);
+  END IF;
+  SELECT id INTO v_etapa_ganada
+    FROM public.crm_etapas_pipeline
+   WHERE organization_id = v_op_org
+     AND tipo = 'ganada'::crm_etapa_tipo
+     AND activa = true
+     AND deleted_at IS NULL
+   ORDER BY orden ASC
+   LIMIT 1;
+  IF v_etapa_ganada IS NULL THEN
+    RAISE EXCEPTION 'LC_CRM_SIN_ETAPA_GANADA: configura una etapa ganada activa en el pipeline antes de aceptar cotizaciones'
+      USING ERRCODE = 'P0001';
+  END IF;
+  IF v_etapa_tipo = 'abierta'::crm_etapa_tipo THEN
+    -- (e) primer cierre abierta → ganada
+    UPDATE public.crm_oportunidades
+       SET etapa_id = v_etapa_ganada,
+           probabilidad = 100,
+           fecha_cierre_real = v_hoy,
+           valor_real = NEW.subtotal,
+           cotizacion_ganadora_id = NEW.id,
+           embarque_ganador_id = COALESCE(NEW.embarque_id, embarque_ganador_id),
+           updated_at = now()
+     WHERE id = v_op_id AND organization_id = v_op_org AND deleted_at IS NULL;
     INSERT INTO public.bitacora_actividad (
       organization_id, modulo, accion, entidad_id, entidad_nombre,
       usuario_id, usuario_email, detalles
     ) VALUES (
-      v_op_org, 'crm', 'oportunidad_ganada_auto', v_op_id, v_op_nombre,
-      COALESCE(auth.uid(), v_op_vendedor),
-      COALESCE((auth.jwt() ->> 'email')::text, ''),
-      jsonb_build_object(
-        'cotizacion_id', NEW.id,
-        'cotizacion_folio', NEW.folio,
-        'embarque_id', NEW.embarque_id,
-        'monto', NEW.subtotal
-      )
+      v_op_org, 'crm', 'oportunidad_ganada_auto', v_op_id, COALESCE(v_op_nombre, ''),
+      COALESCE(v_uid, v_op_vendedor), COALESCE((auth.jwt() ->> 'email')::text, ''),
+      jsonb_build_object('cotizacion_id', NEW.id, 'cotizacion_folio', NEW.folio,
+                         'embarque_id', NEW.embarque_id, 'monto', NEW.subtotal,
+                         'version_aceptada', NEW.version)
     );
-  EXCEPTION WHEN OTHERS THEN NULL;
-  END;
-  IF v_op_vendedor IS NOT NULL THEN
-    BEGIN
+    IF v_op_vendedor IS NOT NULL THEN
       INSERT INTO public.crm_notificaciones (
         organization_id, user_id, tipo, titulo, mensaje, link
       ) VALUES (
-        v_op_org, v_op_vendedor, 'oportunidad_ganada',
-        '¡Oportunidad ganada!',
-        '“' || v_op_nombre || '” se cerró automáticamente con la cotización ' || COALESCE(NEW.folio, ''),
+        v_op_org, v_op_vendedor, 'oportunidad_ganada', '¡Oportunidad ganada!',
+        '“' || COALESCE(v_op_nombre, 'Oportunidad') || '” se cerró con la cotización '
+          || COALESCE(NEW.folio, ''),
         '/crm/oportunidades/' || v_op_id::text
       );
-    EXCEPTION WHEN OTHERS THEN NULL;
-    END;
+    END IF;
+  ELSIF v_ganadora IS NULL THEN
+    -- Etapa ya ganada sin ganador registrado: enlaza sin tocar el monto histórico.
+    UPDATE public.crm_oportunidades
+       SET cotizacion_ganadora_id = NEW.id,
+           valor_real = COALESCE(valor_real, NEW.subtotal),
+           embarque_ganador_id = COALESCE(embarque_ganador_id, NEW.embarque_id),
+           updated_at = now()
+     WHERE id = v_op_id AND organization_id = v_op_org AND deleted_at IS NULL;
+    INSERT INTO public.bitacora_actividad (
+      organization_id, modulo, accion, entidad_id, entidad_nombre,
+      usuario_id, usuario_email, detalles
+    ) VALUES (
+      v_op_org, 'crm', 'oportunidad_ganada_vinculada', v_op_id, COALESCE(v_op_nombre, ''),
+      COALESCE(v_uid, v_op_vendedor), COALESCE((auth.jwt() ->> 'email')::text, ''),
+      jsonb_build_object('cotizacion_id', NEW.id, 'cotizacion_folio', NEW.folio,
+                         'valor_real_conservado', v_valor_previo)
+    );
+  ELSIF NOT v_era_terminal THEN
+    -- (g) la misma ganadora se recotizó y se vuelve a aceptar.
+    UPDATE public.crm_oportunidades
+       SET valor_real = NEW.subtotal,
+           embarque_ganador_id = COALESCE(embarque_ganador_id, NEW.embarque_id),
+           updated_at = now()
+     WHERE id = v_op_id AND organization_id = v_op_org AND deleted_at IS NULL;
+    INSERT INTO public.bitacora_actividad (
+      organization_id, modulo, accion, entidad_id, entidad_nombre,
+      usuario_id, usuario_email, detalles
+    ) VALUES (
+      v_op_org, 'crm', 'oportunidad_ganada_revalorada', v_op_id, COALESCE(v_op_nombre, ''),
+      COALESCE(v_uid, v_op_vendedor), COALESCE((auth.jwt() ->> 'email')::text, ''),
+      jsonb_build_object('cotizacion_id', NEW.id, 'cotizacion_folio', NEW.folio,
+                         'valor_previo', v_valor_previo, 'valor_nuevo', NEW.subtotal,
+                         'version_aceptada', NEW.version)
+    );
+  ELSE
+    -- (f) reintento idempotente / Aceptada → En operación: sólo embarque.
+    IF NEW.embarque_id IS NOT NULL AND v_emb_ganador IS NULL THEN
+      UPDATE public.crm_oportunidades
+         SET embarque_ganador_id = NEW.embarque_id, updated_at = now()
+       WHERE id = v_op_id AND organization_id = v_op_org AND deleted_at IS NULL;
+    END IF;
   END IF;
   RETURN NEW;
 END;
@@ -12369,7 +12754,10 @@ CREATE FUNCTION public.crm_higiene_pipeline() RETURNS TABLE(abiertas integer, re
          CASE WHEN COUNT(*) = 0 THEN 0
               ELSE ROUND(COUNT(*) FILTER (WHERE registro_completo)::numeric / COUNT(*), 4) END,
          CASE WHEN COUNT(*) = 0 THEN 0
-              ELSE ROUND(COUNT(*) FILTER (WHERE NOT actividad_vencida)::numeric / COUNT(*), 4) END,
+              ELSE ROUND(
+                COUNT(*) FILTER (
+                  WHERE proxima_actividad_at IS NOT NULL AND NOT actividad_vencida
+                )::numeric / COUNT(*), 4) END,
          COUNT(*) FILTER (WHERE estado_higiene = 'vencida')::int,
          COUNT(*) FILTER (WHERE proxima_actividad_at IS NULL)::int,
          ROUND(COALESCE(SUM(monto_mxn), 0), 2),
@@ -12410,30 +12798,6 @@ CREATE FUNCTION public.crm_leads_buscar_duplicados(p_claves jsonb) RETURNS TABLE
   )
   WHERE l.deleted_at IS NULL
     AND public.rls_tenant_scope_ok(l.organization_id);
-$$;
-CREATE FUNCTION public.crm_marcar_oportunidad_ganada() RETURNS trigger
-    LANGUAGE plpgsql SECURITY DEFINER
-    SET search_path TO 'public'
-    AS $$
-DECLARE
-  v_etapa_ganada uuid;
-BEGIN
-  IF NEW.oportunidad_id IS NULL THEN RETURN NEW; END IF;
-  IF NEW.estado::text <> 'Aceptada' THEN RETURN NEW; END IF;
-  IF TG_OP = 'UPDATE' AND OLD.estado = NEW.estado THEN RETURN NEW; END IF;
-  SELECT id INTO v_etapa_ganada
-  FROM public.crm_etapas_pipeline
-  WHERE organization_id = NEW.organization_id
-    AND tipo = 'ganada'
-    AND deleted_at IS NULL
-  ORDER BY orden ASC LIMIT 1;
-  IF v_etapa_ganada IS NULL THEN RETURN NEW; END IF;
-  UPDATE public.crm_oportunidades
-  SET etapa_id = v_etapa_ganada, probabilidad = 100,
-      fecha_cierre_real = COALESCE(fecha_cierre_real, CURRENT_DATE)
-  WHERE id = NEW.oportunidad_id AND organization_id = NEW.organization_id;
-  RETURN NEW;
-END;
 $$;
 CREATE FUNCTION public.crm_notify_comentario_oportunidad() RETURNS trigger
     LANGUAGE plpgsql SECURITY DEFINER
@@ -12539,46 +12903,6 @@ BEGIN
   );
 END;
 $$;
-CREATE FUNCTION public.crm_set_valor_real_on_aceptada() RETURNS trigger
-    LANGUAGE plpgsql SECURITY DEFINER
-    SET search_path TO 'public'
-    AS $$
-DECLARE
-  v_previo numeric;
-BEGIN
-  IF NEW.oportunidad_id IS NOT NULL
-     AND NEW.estado = 'Aceptada'::estado_cotizacion
-     AND (OLD.estado IS DISTINCT FROM NEW.estado) THEN
-    SELECT valor_real INTO v_previo
-      FROM public.crm_oportunidades
-     WHERE id = NEW.oportunidad_id
-       AND organization_id = NEW.organization_id
-       AND deleted_at IS NULL;
-    UPDATE public.crm_oportunidades
-       SET valor_real = NEW.subtotal,
-           fecha_cierre_real = CURRENT_DATE,
-           updated_at = now()
-     WHERE id = NEW.oportunidad_id
-       AND organization_id = NEW.organization_id
-       AND deleted_at IS NULL;
-    IF v_previo IS DISTINCT FROM NEW.subtotal THEN
-      INSERT INTO public.bitacora_actividad (
-        organization_id, usuario_id, usuario_email, accion, modulo, entidad_id, entidad_nombre, detalles
-      ) VALUES (
-        NEW.organization_id, auth.uid(),
-        COALESCE((SELECT email FROM auth.users WHERE id = auth.uid()), ''),
-        'crm.oportunidad.valor_real_actualizado',
-        'crm_oportunidades',
-        NEW.oportunidad_id,
-        '',
-        jsonb_build_object('valor_previo', v_previo, 'valor_nuevo', NEW.subtotal,
-                          'cotizacion_id', NEW.id, 'version', NEW.version)
-      );
-    END IF;
-  END IF;
-  RETURN NEW;
-END;
-$$;
 CREATE FUNCTION public.crm_tomar_lead(p_lead_id uuid) RETURNS jsonb
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
@@ -12590,8 +12914,7 @@ BEGIN
   IF auth.uid() IS NULL THEN
     RAISE EXCEPTION 'LC_NO_AUTENTICADO';
   END IF;
-  -- FOR UPDATE: serializa tomas simultáneas del mismo lead; la segunda
-  -- transacción espera el lock y luego ve vendedor_id ya poblado.
+  -- FOR UPDATE: serializa tomas simultáneas del mismo lead.
   SELECT * INTO v_lead
   FROM public.crm_leads
   WHERE id = p_lead_id AND deleted_at IS NULL
@@ -12599,12 +12922,17 @@ BEGIN
   IF v_lead.id IS NULL THEN
     RAISE EXCEPTION 'LC_LEAD_NO_ENCONTRADO';
   END IF;
-  IF NOT public.is_org_member(v_lead.organization_id) THEN
+  IF NOT public.is_org_member(v_lead.organization_id)
+     OR NOT public.rls_tenant_scope_ok(v_lead.organization_id) THEN
     RAISE EXCEPTION 'LC_ORG_AJENA';
   END IF;
-  -- has_role('vendedor') incluye gerente_comercial/admin_org/super_admin por
-  -- la jerarquía (roles_jerarquia), igual que la policy "Vendedor own".
-  IF NOT public.has_role(auth.uid(), 'vendedor'::public.app_role) THEN
+  -- Rol EFECTIVO en la organización del lead (jerarquía de 'vendedor' incluye
+  -- gerente_comercial / admin_org / super_admin); ya no un has_role global.
+  IF NOT public.has_any_role_in_org(
+       auth.uid(),
+       ARRAY['vendedor', 'admin']::public.app_role[],
+       v_lead.organization_id
+     ) THEN
     RAISE EXCEPTION 'LC_LEAD_SIN_PERMISO_TOMA';
   END IF;
   -- Idempotente: re-tomar un lead ya propio no es error (doble click/retry).
@@ -12637,26 +12965,187 @@ CREATE FUNCTION public.crm_vincular_cotizacion(p_cotizacion_id uuid, p_prospecto
     AS $$
 DECLARE
   v_org uuid;
-  v_email text;
+  v_folio text;
+  v_modo text;
+  v_cliente_id uuid;
+  v_es_prospecto boolean;
+  v_op_existente uuid;
+  v_op_id uuid;
+  v_lead_id uuid;
+  v_lead_existente uuid;
+  v_lead_empresa text;
+  v_lead_vendedor_id uuid;
+  v_lead_vendedor_email text;
+  v_etapa_id uuid;
+  v_etapa_prob integer;
+  v_creada boolean := false;
+  v_updated_at timestamptz;
+  v_actor_email text;
+  v_cot_moneda public.moneda;
+  v_op_moneda text;
 BEGIN
-  SELECT organization_id INTO v_org
-  FROM public.cotizaciones WHERE id = p_cotizacion_id AND deleted_at IS NULL;
+  IF auth.uid() IS NULL THEN
+    RAISE EXCEPTION 'LC_SIN_SESION: se requiere sesión activa' USING ERRCODE = '42501';
+  END IF;
+  IF p_lead_id IS NULL AND p_oportunidad_id IS NULL THEN
+    RAISE EXCEPTION 'LC_COT_VINCULO_SIN_ORIGEN' USING ERRCODE = '22023';
+  END IF;
+  SELECT organization_id, folio, modo, cliente_id, COALESCE(es_prospecto, false), oportunidad_id, moneda
+    INTO v_org, v_folio, v_modo, v_cliente_id, v_es_prospecto, v_op_existente, v_cot_moneda
+  FROM public.cotizaciones
+  WHERE id = p_cotizacion_id AND deleted_at IS NULL
+  FOR UPDATE;
   IF v_org IS NULL THEN
     RAISE EXCEPTION 'LC_COTIZACION_NO_ENCONTRADA: la cotización no existe';
   END IF;
-  IF NOT public.is_org_member(v_org) THEN
-    RAISE EXCEPTION 'LC_ORG_AJENA: la cotización pertenece a otra organización';
+  IF NOT public.is_org_member(v_org)
+     OR NOT public.rls_tenant_scope_ok(v_org)
+     OR NOT public.puede_escribir_cotizaciones() THEN
+    RAISE EXCEPTION 'LC_COTIZACION_SIN_PERMISO_ESCRITURA' USING ERRCODE = '42501';
   END IF;
-  IF NOT public.rls_tenant_scope_ok(v_org) THEN
-    RAISE EXCEPTION 'LC_ORG_AJENA: la cotización pertenece a otra organización';
+  IF v_cliente_id IS NOT NULL OR v_es_prospecto = false THEN
+    RAISE EXCEPTION 'LC_COT_PROSPECTO_CON_CLIENTE' USING ERRCODE = '22023';
   END IF;
-  IF NOT public.puede_escribir_cotizaciones() THEN
-    RAISE EXCEPTION 'LC_COTIZACION_SIN_PERMISO_ESCRITURA: tu rol no puede modificar cotizaciones';
+  -- ── Idempotencia histórica ANTES de la elegibilidad nueva ────────────────
+  IF v_op_existente IS NOT NULL THEN
+    SELECT o.id, o.lead_id
+      INTO v_op_id, v_lead_existente
+    FROM public.crm_oportunidades o
+    WHERE o.id = v_op_existente
+      AND o.organization_id = v_org
+      AND o.deleted_at IS NULL
+    FOR UPDATE OF o;
+    IF v_op_id IS NULL THEN
+      RAISE EXCEPTION 'LC_COT_VINCULO_ROTO' USING ERRCODE = '22023';
+    END IF;
+    IF NOT (
+      (p_oportunidad_id = v_op_existente
+        AND (p_lead_id IS NULL OR p_lead_id = v_lead_existente))
+      OR (p_oportunidad_id IS NULL
+        AND p_lead_id IS NOT NULL AND p_lead_id = v_lead_existente)
+    ) THEN
+      RAISE EXCEPTION 'LC_COT_VINCULO_CONFIRMADO' USING ERRCODE = '22023';
+    END IF;
+    SELECT updated_at INTO v_updated_at FROM public.cotizaciones WHERE id = p_cotizacion_id;
+    RETURN jsonb_build_object(
+      'oportunidad_id', v_op_id, 'lead_id', v_lead_existente,
+      'creado_lead', false, 'creado_oportunidad', false, 'ya_ligada', true,
+      'updated_at', v_updated_at
+    );
   END IF;
-  SELECT email INTO v_email FROM auth.users WHERE id = auth.uid();
-  RETURN public._crm_vincular_cotizacion_core(
-    p_cotizacion_id, COALESCE(p_prospecto, '{}'::jsonb), p_lead_id, p_oportunidad_id,
-    v_email, auth.uid()
+  -- ── Vínculo NUEVO: elegibilidad estricta ────────────────────────────────
+  IF p_oportunidad_id IS NOT NULL THEN
+    SELECT o.id, o.lead_id, o.moneda
+      INTO v_op_id, v_lead_id, v_op_moneda
+    FROM public.crm_oportunidades o
+    JOIN public.crm_etapas_pipeline e ON e.id = o.etapa_id
+    WHERE o.id = p_oportunidad_id
+      AND o.organization_id = v_org
+      AND o.deleted_at IS NULL
+      AND o.cliente_id IS NULL
+      AND e.organization_id = v_org
+      AND e.deleted_at IS NULL
+      AND e.activa = true
+      AND e.tipo = 'abierta'::crm_etapa_tipo
+    FOR UPDATE OF o;
+    IF v_op_id IS NULL THEN
+      RAISE EXCEPTION 'LC_CRM_OPORTUNIDAD_NO_ELEGIBLE' USING ERRCODE = '22023';
+    END IF;
+    IF p_lead_id IS NOT NULL AND v_lead_id IS DISTINCT FROM p_lead_id THEN
+      RAISE EXCEPTION 'LC_CRM_OPORTUNIDAD_NO_ELEGIBLE' USING ERRCODE = '22023';
+    END IF;
+    -- Candado de moneda: la oportunidad objetivo ya existe con moneda propia,
+    -- si difiere de la cotización el vínculo dejaría valores cruzados.
+    IF v_op_moneda IS DISTINCT FROM v_cot_moneda::text THEN
+      RAISE EXCEPTION 'LC_CRM_MONEDA_INCOMPATIBLE: la cotización está en % y la oportunidad ya tiene registrada la moneda %. Corrige la moneda de la cotización o vincúlala a una oportunidad en %, o crea una oportunidad nueva.',
+        v_cot_moneda, v_op_moneda, v_cot_moneda
+        USING ERRCODE = '22023';
+    END IF;
+  ELSE
+    v_lead_id := p_lead_id;
+  END IF;
+  SELECT l.empresa, l.vendedor_id, l.vendedor_email
+    INTO v_lead_empresa, v_lead_vendedor_id, v_lead_vendedor_email
+  FROM public.crm_leads l
+  WHERE l.id = v_lead_id
+    AND l.organization_id = v_org
+    AND l.deleted_at IS NULL
+    AND l.estado IN ('Calificado'::crm_lead_estado, 'Prospecto'::crm_lead_estado)
+  FOR UPDATE;
+  IF v_lead_empresa IS NULL THEN
+    RAISE EXCEPTION 'LC_CRM_LEAD_NO_ELEGIBLE' USING ERRCODE = '22023';
+  END IF;
+  IF v_op_id IS NULL THEN
+    SELECT o.id, o.moneda INTO v_op_id, v_op_moneda
+    FROM public.crm_oportunidades o
+    JOIN public.crm_etapas_pipeline e ON e.id = o.etapa_id
+    WHERE o.organization_id = v_org
+      AND o.lead_id = v_lead_id
+      AND o.deleted_at IS NULL
+      AND o.cliente_id IS NULL
+      AND e.organization_id = v_org
+      AND e.deleted_at IS NULL
+      AND e.activa = true
+      AND e.tipo = 'abierta'::crm_etapa_tipo
+    ORDER BY o.created_at ASC
+    LIMIT 1
+    FOR UPDATE OF o;
+    IF v_op_id IS NOT NULL THEN
+      IF v_op_moneda IS DISTINCT FROM v_cot_moneda::text THEN
+        RAISE EXCEPTION 'LC_CRM_MONEDA_INCOMPATIBLE: la cotización está en % y la oportunidad abierta del prospecto ya tiene registrada la moneda %. Corrige la moneda de la cotización o vincúlala a una oportunidad en %, o crea una oportunidad nueva.',
+          v_cot_moneda, v_op_moneda, v_cot_moneda
+          USING ERRCODE = '22023';
+      END IF;
+    END IF;
+    IF v_op_id IS NULL THEN
+      SELECT id, probabilidad_default INTO v_etapa_id, v_etapa_prob
+      FROM public.crm_etapas_pipeline
+      WHERE organization_id = v_org
+        AND deleted_at IS NULL
+        AND activa = true
+        AND tipo = 'abierta'::crm_etapa_tipo
+      ORDER BY (nombre ILIKE '%cotiz%') DESC, orden ASC
+      LIMIT 1;
+      IF v_etapa_id IS NULL THEN
+        RAISE EXCEPTION 'LC_CRM_SIN_ETAPA_ABIERTA: configura al menos una etapa abierta en el pipeline';
+      END IF;
+      -- Vendedor: hereda del lead; si el lead no tiene vendedor asignado,
+      -- el usuario actual queda como responsable por fallback.
+      IF v_lead_vendedor_id IS NOT NULL THEN
+        v_actor_email := v_lead_vendedor_email;
+      ELSE
+        v_lead_vendedor_id := auth.uid();
+        SELECT email INTO v_actor_email FROM auth.users WHERE id = auth.uid();
+      END IF;
+      INSERT INTO public.crm_oportunidades (
+        organization_id, nombre, cliente_nombre, lead_id, etapa_id, probabilidad, modo,
+        vendedor_id, vendedor_email, moneda
+      ) VALUES (
+        v_org,
+        CASE WHEN v_folio IS NOT NULL AND btrim(v_folio) <> ''
+             THEN v_lead_empresa || ' — ' || v_folio
+             ELSE 'Cotización · ' || v_lead_empresa END,
+        v_lead_empresa,
+        v_lead_id,
+        v_etapa_id,
+        COALESCE(v_etapa_prob, 30),
+        COALESCE(v_modo, ''),
+        v_lead_vendedor_id,
+        COALESCE(v_actor_email, ''),
+        v_cot_moneda::text
+      )
+      RETURNING id INTO v_op_id;
+      v_creada := true;
+    END IF;
+  END IF;
+  UPDATE public.cotizaciones
+     SET oportunidad_id = v_op_id, updated_at = now()
+   WHERE id = p_cotizacion_id
+  RETURNING updated_at INTO v_updated_at;
+  RETURN jsonb_build_object(
+    'oportunidad_id', v_op_id, 'lead_id', v_lead_id,
+    'creado_lead', false, 'creado_oportunidad', v_creada, 'ya_ligada', false,
+    'updated_at', v_updated_at
   );
 END;
 $$;
@@ -17485,6 +17974,68 @@ BEGIN
   IF current_setting('app.aprobando_cxp', true) IS DISTINCT FROM '1' THEN
     RAISE EXCEPTION 'LC_CXP_APROBACION_DIRECTA: use aprobar_factura_proveedor()'
       USING ERRCODE = '42501';
+  END IF;
+  RETURN NEW;
+END;
+$$;
+CREATE FUNCTION public.guard_cotizacion_vinculo_cliente() RETURNS trigger
+    LANGUAGE plpgsql
+    SET search_path TO 'public'
+    AS $$
+BEGIN
+  -- 1) Bypass por UPDATE directo desde el cliente (PostgREST): prohibido.
+  IF TG_OP = 'UPDATE' AND current_user IN ('authenticated', 'anon') THEN
+    IF COALESCE(OLD.es_prospecto, false) = true
+       AND (
+         (NEW.cliente_id IS NOT NULL AND OLD.cliente_id IS NULL)
+         OR COALESCE(NEW.es_prospecto, false) IS DISTINCT FROM true
+       ) THEN
+      RAISE EXCEPTION 'LC_CONVERSION_SOLO_RPC' USING ERRCODE = '42501';
+    END IF;
+  END IF;
+  -- 2) Cualquier rol: el cliente ligado debe existir, estar vivo y ser de la
+  --    misma organización de la cotización.
+  IF NEW.cliente_id IS NOT NULL THEN
+    IF NOT EXISTS (
+      SELECT 1 FROM public.clientes c
+      WHERE c.id = NEW.cliente_id
+        AND c.organization_id = NEW.organization_id
+        AND c.deleted_at IS NULL
+    ) THEN
+      RAISE EXCEPTION 'LC_COTIZACION_CLIENTE_AJENO_INEXISTENTE' USING ERRCODE = '42501';
+    END IF;
+  END IF;
+  RETURN NEW;
+END;
+$$;
+CREATE FUNCTION public.guard_crm_lead_estado_canonico() RETURNS trigger
+    LANGUAGE plpgsql
+    SET search_path TO 'public'
+    AS $$
+DECLARE
+  -- Fuente única en base: espeja LEAD_ESTADOS_MANUALES del frontend.
+  c_manuales constant text[] := ARRAY['Nuevo', 'Contactado', 'Descalificado'];
+  v_mensaje constant text :=
+    'Ese estado lo administra el ERP: se asigna al calificar, cotizar o convertir el lead. A mano sólo puedes usar Nuevo, Contactado o Descalificado.';
+BEGIN
+  -- Sólo aplica a escritores directos por la Data API. Los escritores canónicos
+  -- son SECURITY DEFINER propiedad de postgres, así que current_user no es
+  -- anon/authenticated cuando corren y quedan fuera del candado.
+  IF current_user NOT IN ('anon', 'authenticated') THEN
+    RETURN NEW;
+  END IF;
+  IF TG_OP = 'INSERT' THEN
+    IF NOT (NEW.estado::text = ANY (c_manuales)) THEN
+      RAISE EXCEPTION 'LC_LEAD_ESTADO_DERIVADO: %', v_mensaje USING ERRCODE = '42501';
+    END IF;
+    RETURN NEW;
+  END IF;
+  -- UPDATE: conservar exactamente el mismo estado (incluido uno derivado) es
+  -- válido; sólo se vigila el CAMBIO de estado, y debe ser manual → manual.
+  IF NEW.estado IS DISTINCT FROM OLD.estado THEN
+    IF NOT (NEW.estado::text = ANY (c_manuales)) OR NOT (OLD.estado::text = ANY (c_manuales)) THEN
+      RAISE EXCEPTION 'LC_LEAD_ESTADO_DERIVADO: %', v_mensaje USING ERRCODE = '42501';
+    END IF;
   END IF;
   RETURN NEW;
 END;
@@ -30433,6 +30984,7 @@ CREATE UNIQUE INDEX uq_proveedor_contactos_principal ON public.proveedor_contact
 CREATE UNIQUE INDEX uq_refacturaciones_original_abierta ON public.refacturaciones USING btree (factura_original_id) WHERE (estado = 'abierto'::text);
 CREATE UNIQUE INDEX uq_traspasos_folio_org ON public.traspasos_bancarios USING btree (organization_id, folio) WHERE (deleted_at IS NULL);
 CREATE UNIQUE INDEX ux_clientes_email_org ON public.clientes USING btree (organization_id, lower(btrim(email))) WHERE ((deleted_at IS NULL) AND (email IS NOT NULL) AND (btrim(email) <> ''::text));
+CREATE UNIQUE INDEX ux_cotizaciones_ganadora_viva_por_oportunidad ON public.cotizaciones USING btree (organization_id, oportunidad_id) WHERE ((deleted_at IS NULL) AND (oportunidad_id IS NOT NULL) AND (estado = ANY (ARRAY['Aceptada'::public.estado_cotizacion, 'En operación'::public.estado_cotizacion])));
 CREATE UNIQUE INDEX ux_proveedor_facturas_uuid_fiscal_org ON public.proveedor_facturas USING btree (organization_id, upper(btrim(uuid_fiscal))) WHERE ((uuid_fiscal IS NOT NULL) AND (deleted_at IS NULL));
 CREATE TRIGGER costeo_tarifas_match_agente_org_trg BEFORE INSERT OR UPDATE OF organization_id, agente_id ON public.costeo_tarifas FOR EACH ROW EXECUTE FUNCTION public.costeo_tarifas_match_agente_org();
 CREATE TRIGGER embarques_set_fechas_originales BEFORE INSERT ON public.embarques FOR EACH ROW EXECUTE FUNCTION public.set_embarque_fechas_originales();
@@ -30495,8 +31047,6 @@ CREATE TRIGGER trg_costeo_tarifas_agente_force_borrador BEFORE INSERT OR UPDATE 
 CREATE TRIGGER trg_costeo_tarifas_estado_derivado BEFORE INSERT OR UPDATE OF estado, vigente_desde, vigente_hasta ON public.costeo_tarifas FOR EACH ROW EXECUTE FUNCTION public.trg_costeo_tarifas_estado_derivado();
 CREATE TRIGGER trg_costeo_tarifas_marcar_reemplazadas AFTER INSERT OR UPDATE OF estado, estado_aprobacion ON public.costeo_tarifas FOR EACH ROW EXECUTE FUNCTION public.costeo_tarifas_marcar_reemplazadas();
 CREATE TRIGGER trg_costeo_tarifas_updated BEFORE UPDATE ON public.costeo_tarifas FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
-CREATE TRIGGER trg_cotizacion_acepta_oportunidad AFTER INSERT OR UPDATE OF estado ON public.cotizaciones FOR EACH ROW EXECUTE FUNCTION public.crm_marcar_oportunidad_ganada();
-CREATE TRIGGER trg_cotizacion_cierra_oportunidad AFTER INSERT OR UPDATE OF estado, embarque_id ON public.cotizaciones FOR EACH ROW EXECUTE FUNCTION public.crm_cierra_oportunidad_desde_cotizacion();
 CREATE TRIGGER trg_cotizacion_oportunidad_misma_org BEFORE INSERT OR UPDATE OF oportunidad_id, organization_id ON public.cotizaciones FOR EACH ROW EXECUTE FUNCTION public._cotizacion_oportunidad_misma_org();
 CREATE TRIGGER trg_cotizacion_plantillas_updated_at BEFORE UPDATE ON public.cotizacion_plantillas FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 CREATE TRIGGER trg_cotizaciones_bloquear_envio_sin_importes BEFORE UPDATE ON public.cotizaciones FOR EACH ROW EXECUTE FUNCTION public._cotizaciones_bloquear_envio_sin_importes();
@@ -30508,8 +31058,8 @@ CREATE TRIGGER trg_cotizaciones_sync_vigencia BEFORE INSERT OR UPDATE OF validez
 CREATE TRIGGER trg_cotizaciones_validar_prospecto BEFORE INSERT OR UPDATE ON public.cotizaciones FOR EACH ROW EXECUTE FUNCTION public._cotizaciones_validar_prospecto();
 CREATE TRIGGER trg_crear_garantia_contenedor AFTER INSERT ON public.embarque_contenedores FOR EACH ROW EXECUTE FUNCTION public.crear_garantia_contenedor();
 CREATE TRIGGER trg_crm_act_updated_at BEFORE UPDATE ON public.crm_actividades FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
-CREATE TRIGGER trg_crm_actividad_entidad_misma_org BEFORE INSERT OR UPDATE OF entidad_tipo, entidad_id, organization_id ON public.crm_actividades FOR EACH ROW EXECUTE FUNCTION public._crm_actividad_entidad_misma_org();
-CREATE TRIGGER trg_crm_actividad_toca_oportunidad AFTER INSERT ON public.crm_actividades FOR EACH ROW EXECUTE FUNCTION public._crm_actividad_toca_oportunidad();
+CREATE TRIGGER trg_crm_actividad_entidad_misma_org BEFORE INSERT OR UPDATE OF organization_id, entidad_tipo, entidad_id ON public.crm_actividades FOR EACH ROW EXECUTE FUNCTION public._crm_actividad_entidad_misma_org();
+CREATE TRIGGER trg_crm_actividad_toca_oportunidad AFTER INSERT OR UPDATE OF fecha_completada ON public.crm_actividades FOR EACH ROW EXECUTE FUNCTION public._crm_actividad_toca_oportunidad();
 CREATE TRIGGER trg_crm_comentario_misma_org BEFORE INSERT OR UPDATE OF oportunidad_id, organization_id ON public.crm_comentarios_oportunidad FOR EACH ROW EXECUTE FUNCTION public._crm_comentario_oportunidad_misma_org();
 CREATE TRIGGER trg_crm_criterio_etapa_misma_org BEFORE INSERT OR UPDATE OF etapa_id, organization_id ON public.crm_etapa_criterios FOR EACH ROW EXECUTE FUNCTION public._crm_criterio_etapa_misma_org();
 CREATE TRIGGER trg_crm_cumplimiento_misma_org BEFORE INSERT OR UPDATE OF oportunidad_id, criterio_id, organization_id ON public.crm_oportunidad_criterios FOR EACH ROW EXECUTE FUNCTION public._crm_cumplimiento_misma_org();
@@ -30525,7 +31075,6 @@ CREATE TRIGGER trg_crm_oportunidad_criterios_updated_at BEFORE UPDATE ON public.
 CREATE TRIGGER trg_crm_oportunidad_requiere_origen BEFORE INSERT OR UPDATE OF lead_id, cliente_id, organization_id ON public.crm_oportunidades FOR EACH ROW EXECUTE FUNCTION public._crm_oportunidad_requiere_origen();
 CREATE TRIGGER trg_crm_probabilidad_terminal BEFORE INSERT OR UPDATE OF etapa_id, probabilidad ON public.crm_oportunidades FOR EACH ROW EXECUTE FUNCTION public._crm_probabilidad_terminal();
 CREATE TRIGGER trg_crm_registrar_cambio_etapa BEFORE UPDATE ON public.crm_oportunidades FOR EACH ROW EXECUTE FUNCTION public._crm_registrar_cambio_etapa();
-CREATE TRIGGER trg_crm_set_valor_real_on_aceptada AFTER UPDATE ON public.cotizaciones FOR EACH ROW EXECUTE FUNCTION public.crm_set_valor_real_on_aceptada();
 CREATE TRIGGER trg_crm_sync_oportunidad_desde_cotizacion AFTER INSERT OR UPDATE OF subtotal, moneda, cliente_id, oportunidad_id ON public.cotizaciones FOR EACH ROW EXECUTE FUNCTION public._crm_sync_oportunidad_desde_cotizacion();
 CREATE TRIGGER trg_crm_validar_motivo_perdida BEFORE INSERT OR UPDATE OF etapa_id, motivo_perdida_id ON public.crm_oportunidades FOR EACH ROW EXECUTE FUNCTION public._crm_validar_motivo_perdida();
 CREATE TRIGGER trg_cuenta_bancaria_guard_baja BEFORE UPDATE ON public.cuentas_bancarias FOR EACH ROW EXECUTE FUNCTION public._cuenta_bancaria_guard_baja();
@@ -30572,6 +31121,8 @@ CREATE TRIGGER trg_garantia_historial AFTER INSERT OR UPDATE OF estado, monto_de
 CREATE TRIGGER trg_garantia_transicion_valida BEFORE UPDATE OF estado ON public.embarque_garantias_contenedor FOR EACH ROW EXECUTE FUNCTION public._garantia_transicion_valida_trg();
 CREATE TRIGGER trg_garantias_updated_at BEFORE UPDATE ON public.embarque_garantias_contenedor FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 CREATE TRIGGER trg_guard_aprobacion_proveedor_factura BEFORE UPDATE OF estado_aprobacion ON public.proveedor_facturas FOR EACH ROW EXECUTE FUNCTION public.guard_aprobacion_proveedor_factura();
+CREATE TRIGGER trg_guard_cotizacion_vinculo_cliente BEFORE INSERT OR UPDATE OF cliente_id, es_prospecto, organization_id ON public.cotizaciones FOR EACH ROW EXECUTE FUNCTION public.guard_cotizacion_vinculo_cliente();
+CREATE TRIGGER trg_guard_crm_lead_estado_canonico BEFORE INSERT OR UPDATE OF estado ON public.crm_leads FOR EACH ROW EXECUTE FUNCTION public.guard_crm_lead_estado_canonico();
 CREATE TRIGGER trg_guard_estado_cotizacion BEFORE UPDATE OF estado ON public.cotizaciones FOR EACH ROW WHEN ((old.estado IS DISTINCT FROM new.estado)) EXECUTE FUNCTION public.guard_estado_cotizacion();
 CREATE TRIGGER trg_guard_estado_factura BEFORE UPDATE OF estado ON public.facturas FOR EACH ROW EXECUTE FUNCTION public.guard_estado_factura();
 CREATE TRIGGER trg_guard_estado_proveedor_factura BEFORE UPDATE OF estado ON public.proveedor_facturas FOR EACH ROW EXECUTE FUNCTION public.guard_estado_proveedor_factura();
@@ -30765,6 +31316,7 @@ CREATE TRIGGER update_proforma_conceptos_consolidados_updated_at BEFORE UPDATE O
 CREATE TRIGGER update_proveedor_facturas_conceptos_updated_at BEFORE UPDATE ON public.proveedor_facturas_conceptos FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 CREATE TRIGGER update_proveedores_updated_at BEFORE UPDATE ON public.proveedores FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 CREATE TRIGGER update_refacturaciones_updated_at BEFORE UPDATE ON public.refacturaciones FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+CREATE TRIGGER zz_crm_cerrar_oportunidad_desde_cotizacion BEFORE INSERT OR UPDATE OF estado, embarque_id, oportunidad_id, organization_id, deleted_at ON public.cotizaciones FOR EACH ROW EXECUTE FUNCTION public.crm_cerrar_oportunidad_desde_cotizacion();
 CREATE TRIGGER zz_pago_factura_viva BEFORE INSERT OR UPDATE ON public.pagos_factura FOR EACH ROW WHEN ((new.deleted_at IS NULL)) EXECUTE FUNCTION public.assert_factura_viva_para_pago();
 CREATE TRIGGER zz_pagos_factura_no_sobrepago BEFORE INSERT OR UPDATE ON public.pagos_factura FOR EACH ROW EXECUTE FUNCTION public.tg_pago_factura_no_sobrepago();
 CREATE TRIGGER zzz_pagos_factura_calc_ret BEFORE INSERT OR UPDATE OF monto_aplicado_factura, factura_id, ret_isr, ret_iva ON public.pagos_factura FOR EACH ROW EXECUTE FUNCTION public.calc_pago_retenciones();
@@ -31269,11 +31821,15 @@ CREATE POLICY "Fiscal write refacturaciones" ON public.refacturaciones FOR INSER
   WHERE ((om.user_id = ( SELECT auth.uid() AS uid)) AND (om.organization_id = refacturaciones.organization_id) AND (om.role = ANY (ARRAY['admin_org'::public.app_role, 'admin'::public.app_role, 'contador'::public.app_role, 'auxiliar_contable'::public.app_role]))))))));
 CREATE POLICY "Gerencia administra metas" ON public.crm_metas_actividad TO authenticated USING ((((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) AND (( SELECT public.has_role(( SELECT auth.uid() AS uid), 'admin'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'admin_org'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'gerente_comercial'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)))) WITH CHECK ((((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) AND (( SELECT public.has_role(( SELECT auth.uid() AS uid), 'admin'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'admin_org'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'gerente_comercial'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role))));
 CREATE POLICY "Gerencia administra presupuesto" ON public.crm_presupuesto_mensual TO authenticated USING ((((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) AND (( SELECT public.has_role(( SELECT auth.uid() AS uid), 'admin'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'admin_org'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'gerente_comercial'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)))) WITH CHECK ((((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) AND (( SELECT public.has_role(( SELECT auth.uid() AS uid), 'admin'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'admin_org'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'gerente_comercial'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role))));
+CREATE POLICY "Gestion leads in-org insert crm_leads" ON public.crm_leads FOR INSERT TO authenticated WITH CHECK ((public.is_org_member(organization_id) AND public.rls_tenant_scope_ok(organization_id) AND public.has_any_role_in_org(( SELECT auth.uid() AS uid), ARRAY['admin'::public.app_role, 'gerente_comercial'::public.app_role], organization_id)));
+CREATE POLICY "Gestion leads in-org select crm_leads" ON public.crm_leads FOR SELECT TO authenticated USING ((public.is_org_member(organization_id) AND public.rls_tenant_scope_ok(organization_id) AND public.has_any_role_in_org(( SELECT auth.uid() AS uid), ARRAY['admin'::public.app_role, 'gerente_comercial'::public.app_role], organization_id)));
+CREATE POLICY "Gestion leads in-org update crm_leads" ON public.crm_leads FOR UPDATE TO authenticated USING ((public.is_org_member(organization_id) AND public.rls_tenant_scope_ok(organization_id) AND public.has_any_role_in_org(( SELECT auth.uid() AS uid), ARRAY['admin'::public.app_role, 'gerente_comercial'::public.app_role], organization_id))) WITH CHECK ((public.is_org_member(organization_id) AND public.rls_tenant_scope_ok(organization_id) AND public.has_any_role_in_org(( SELECT auth.uid() AS uid), ARRAY['admin'::public.app_role, 'gerente_comercial'::public.app_role], organization_id)));
 CREATE POLICY "Insertar log de cierre" ON public.cierre_embarque_log FOR INSERT TO authenticated WITH CHECK (((EXISTS ( SELECT 1
    FROM public.organization_members om
   WHERE ((om.user_id = ( SELECT auth.uid() AS uid)) AND (om.organization_id = cierre_embarque_log.organization_id)))) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)));
 CREATE POLICY "Internal roles read configuracion_global" ON public.configuracion_global FOR SELECT TO authenticated USING ((( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'admin'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'operador'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'viewer'::public.app_role) AS has_role)));
 CREATE POLICY "Lectura historial etapas de la org" ON public.crm_historial_etapas FOR SELECT TO authenticated USING (((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)));
+CREATE POLICY "Lectura in-org crm_leads" ON public.crm_leads FOR SELECT TO authenticated USING ((public.is_org_member(organization_id) AND public.rls_tenant_scope_ok(organization_id) AND public.has_any_role_in_org(( SELECT auth.uid() AS uid), ARRAY['viewer'::public.app_role, 'operador'::public.app_role], organization_id)));
 CREATE POLICY "Lectura metas de la org" ON public.crm_metas_actividad FOR SELECT TO authenticated USING (((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)));
 CREATE POLICY "Lectura presupuesto de la org" ON public.crm_presupuesto_mensual FOR SELECT TO authenticated USING (((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)));
 CREATE POLICY "Members can delete own recordatorios" ON public.factura_recordatorios FOR DELETE TO authenticated USING ((enviado_por = ( SELECT auth.uid() AS uid)));
@@ -31427,7 +31983,6 @@ CREATE POLICY "Service role can update send log" ON public.email_send_log FOR UP
 CREATE POLICY "Service role historico cotizacion" ON public.cotizacion_costos_historico TO service_role USING (true) WITH CHECK (true);
 CREATE POLICY "Staff CRUD crm_actividades" ON public.crm_actividades TO authenticated USING ((((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) AND (( SELECT public.has_role(( SELECT auth.uid() AS uid), 'admin'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'admin_org'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'gerente_comercial'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'operador'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)))) WITH CHECK ((((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) AND (( SELECT public.has_role(( SELECT auth.uid() AS uid), 'admin'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'admin_org'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'gerente_comercial'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'operador'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role))));
 CREATE POLICY "Staff CRUD crm_etapa_criterios" ON public.crm_etapa_criterios TO authenticated USING ((((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) AND ( SELECT public.puede_escribir_cotizaciones(( SELECT auth.uid() AS uid)) AS puede_escribir_cotizaciones))) WITH CHECK ((((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) AND ( SELECT public.puede_escribir_cotizaciones(( SELECT auth.uid() AS uid)) AS puede_escribir_cotizaciones)));
-CREATE POLICY "Staff CRUD crm_leads" ON public.crm_leads TO authenticated USING ((((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) AND (( SELECT public.has_role(( SELECT auth.uid() AS uid), 'admin'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'admin_org'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'gerente_comercial'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'operador'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)))) WITH CHECK ((((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) AND (( SELECT public.has_role(( SELECT auth.uid() AS uid), 'admin'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'admin_org'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'gerente_comercial'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'operador'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role))));
 CREATE POLICY "Staff CRUD crm_oportunidad_criterios" ON public.crm_oportunidad_criterios TO authenticated USING ((((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) AND ( SELECT public.puede_escribir_cotizaciones(( SELECT auth.uid() AS uid)) AS puede_escribir_cotizaciones))) WITH CHECK ((((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) AND ( SELECT public.puede_escribir_cotizaciones(( SELECT auth.uid() AS uid)) AS puede_escribir_cotizaciones)));
 CREATE POLICY "Staff CRUD crm_oportunidades" ON public.crm_oportunidades TO authenticated USING ((((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) AND (( SELECT public.has_role(( SELECT auth.uid() AS uid), 'admin'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'admin_org'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'gerente_comercial'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'operador'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)))) WITH CHECK ((((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) AND (( SELECT public.has_role(( SELECT auth.uid() AS uid), 'admin'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'admin_org'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'gerente_comercial'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'operador'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role))));
 CREATE POLICY "Staff insert tracking_intentos" ON public.tracking_intentos FOR INSERT TO authenticated WITH CHECK ((( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role) OR ((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) AND (( SELECT public.has_role(( SELECT auth.uid() AS uid), 'admin'::public.app_role) AS has_role) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'operador'::public.app_role) AS has_role)))));
@@ -31548,7 +32103,6 @@ CREATE POLICY "Tenant viewer conceptos_factura" ON public.conceptos_factura FOR 
 CREATE POLICY "Tenant viewer contactos_cliente" ON public.contactos_cliente FOR SELECT TO authenticated USING ((((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) AND ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'viewer'::public.app_role) AS has_role)));
 CREATE POLICY "Tenant viewer cotizaciones" ON public.cotizaciones FOR SELECT TO authenticated USING ((((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) AND ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'viewer'::public.app_role) AS has_role)));
 CREATE POLICY "Tenant viewer crm_actividades" ON public.crm_actividades FOR SELECT TO authenticated USING ((((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) AND ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'viewer'::public.app_role) AS has_role)));
-CREATE POLICY "Tenant viewer crm_leads" ON public.crm_leads FOR SELECT TO authenticated USING ((((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) AND ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'viewer'::public.app_role) AS has_role)));
 CREATE POLICY "Tenant viewer crm_oportunidades" ON public.crm_oportunidades FOR SELECT TO authenticated USING ((((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) AND ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'viewer'::public.app_role) AS has_role)));
 CREATE POLICY "Tenant viewer embarque_contenedores" ON public.embarque_contenedores FOR SELECT TO authenticated USING ((((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) AND ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'viewer'::public.app_role) AS has_role)));
 CREATE POLICY "Tenant viewer eventos_embarque" ON public.eventos_embarque FOR SELECT TO authenticated USING ((((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) AND ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'viewer'::public.app_role) AS has_role)));
@@ -31583,10 +32137,12 @@ CREATE POLICY "Users read own notifications" ON public.notificaciones_internas F
 CREATE POLICY "Users update own notifications" ON public.notificaciones_internas FOR UPDATE TO authenticated USING (((usuario_id = ( SELECT auth.uid() AS uid)) AND (organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)))) WITH CHECK (((usuario_id = ( SELECT auth.uid() AS uid)) AND (organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id))));
 CREATE POLICY "Usuario lee sus notificaciones" ON public.crm_notificaciones FOR SELECT TO authenticated USING (((user_id = ( SELECT auth.uid() AS uid)) AND (organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id))));
 CREATE POLICY "Usuario marca leida su notificacion" ON public.crm_notificaciones FOR UPDATE TO authenticated USING (((user_id = ( SELECT auth.uid() AS uid)) AND (organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)))) WITH CHECK (((user_id = ( SELECT auth.uid() AS uid)) AND (organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id))));
-CREATE POLICY "Vendedor bolsa crm_leads" ON public.crm_leads FOR SELECT TO authenticated USING (((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) AND public.has_role(( SELECT auth.uid() AS uid), 'vendedor'::public.app_role) AND (vendedor_id IS NULL)));
+CREATE POLICY "Vendedor bolsa crm_leads" ON public.crm_leads FOR SELECT TO authenticated USING ((public.is_org_member(organization_id) AND public.rls_tenant_scope_ok(organization_id) AND (vendedor_id IS NULL) AND public.has_any_role_in_org(( SELECT auth.uid() AS uid), ARRAY['vendedor'::public.app_role], organization_id)));
 CREATE POLICY "Vendedor own crm_actividades" ON public.crm_actividades TO authenticated USING (((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) AND ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'vendedor'::public.app_role) AS has_role) AND (responsable_id = ( SELECT auth.uid() AS uid)))) WITH CHECK (((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) AND ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'vendedor'::public.app_role) AS has_role) AND (responsable_id = ( SELECT auth.uid() AS uid))));
-CREATE POLICY "Vendedor own crm_leads" ON public.crm_leads TO authenticated USING (((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) AND ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'vendedor'::public.app_role) AS has_role) AND (vendedor_id = ( SELECT auth.uid() AS uid)))) WITH CHECK (((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) AND ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'vendedor'::public.app_role) AS has_role) AND (vendedor_id = ( SELECT auth.uid() AS uid))));
 CREATE POLICY "Vendedor own crm_oportunidades" ON public.crm_oportunidades TO authenticated USING (((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) AND ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'vendedor'::public.app_role) AS has_role) AND (vendedor_id = ( SELECT auth.uid() AS uid)))) WITH CHECK (((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) AND ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'vendedor'::public.app_role) AS has_role) AND (vendedor_id = ( SELECT auth.uid() AS uid))));
+CREATE POLICY "Vendedor own insert crm_leads" ON public.crm_leads FOR INSERT TO authenticated WITH CHECK ((public.is_org_member(organization_id) AND public.rls_tenant_scope_ok(organization_id) AND (vendedor_id = ( SELECT auth.uid() AS uid)) AND public.has_any_role_in_org(( SELECT auth.uid() AS uid), ARRAY['vendedor'::public.app_role], organization_id)));
+CREATE POLICY "Vendedor own select crm_leads" ON public.crm_leads FOR SELECT TO authenticated USING ((public.is_org_member(organization_id) AND public.rls_tenant_scope_ok(organization_id) AND (vendedor_id = ( SELECT auth.uid() AS uid)) AND public.has_any_role_in_org(( SELECT auth.uid() AS uid), ARRAY['vendedor'::public.app_role], organization_id)));
+CREATE POLICY "Vendedor own update crm_leads" ON public.crm_leads FOR UPDATE TO authenticated USING ((public.is_org_member(organization_id) AND public.rls_tenant_scope_ok(organization_id) AND (vendedor_id = ( SELECT auth.uid() AS uid)) AND public.has_any_role_in_org(( SELECT auth.uid() AS uid), ARRAY['vendedor'::public.app_role], organization_id))) WITH CHECK ((public.is_org_member(organization_id) AND public.rls_tenant_scope_ok(organization_id) AND (vendedor_id = ( SELECT auth.uid() AS uid)) AND public.has_any_role_in_org(( SELECT auth.uid() AS uid), ARRAY['vendedor'::public.app_role], organization_id)));
 CREATE POLICY "Ver log de cierre por organización" ON public.cierre_embarque_log FOR SELECT TO authenticated USING (((EXISTS ( SELECT 1
    FROM public.organization_members om
   WHERE ((om.user_id = ( SELECT auth.uid() AS uid)) AND (om.organization_id = cierre_embarque_log.organization_id)))) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)));
@@ -31921,7 +32477,6 @@ GRANT ALL ON FUNCTION public._crear_embarque_replicar_conceptos(p_cotizacion_id 
 REVOKE ALL ON FUNCTION public._crm_actividad_entidad_misma_org() FROM PUBLIC;
 GRANT ALL ON FUNCTION public._crm_actividad_entidad_misma_org() TO service_role;
 REVOKE ALL ON FUNCTION public._crm_actividad_toca_oportunidad() FROM PUBLIC;
-GRANT ALL ON FUNCTION public._crm_actividad_toca_oportunidad() TO authenticated;
 GRANT ALL ON FUNCTION public._crm_actividad_toca_oportunidad() TO service_role;
 REVOKE ALL ON FUNCTION public._crm_comentario_oportunidad_misma_org() FROM PUBLIC;
 GRANT ALL ON FUNCTION public._crm_comentario_oportunidad_misma_org() TO service_role;
@@ -31942,7 +32497,6 @@ REVOKE ALL ON FUNCTION public._crm_registrar_cambio_etapa() FROM PUBLIC;
 GRANT ALL ON FUNCTION public._crm_registrar_cambio_etapa() TO authenticated;
 GRANT ALL ON FUNCTION public._crm_registrar_cambio_etapa() TO service_role;
 REVOKE ALL ON FUNCTION public._crm_sync_oportunidad_desde_cotizacion() FROM PUBLIC;
-GRANT ALL ON FUNCTION public._crm_sync_oportunidad_desde_cotizacion() TO authenticated;
 GRANT ALL ON FUNCTION public._crm_sync_oportunidad_desde_cotizacion() TO service_role;
 REVOKE ALL ON FUNCTION public._crm_validar_motivo_perdida() FROM PUBLIC;
 GRANT ALL ON FUNCTION public._crm_validar_motivo_perdida() TO authenticated;
@@ -32089,9 +32643,9 @@ GRANT ALL ON FUNCTION public.actividad_embarque(p_embarque_id uuid) TO service_r
 REVOKE ALL ON FUNCTION public.actualizar_cierre_periodo(p_org uuid, p_fecha date, p_motivo text) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.actualizar_cierre_periodo(p_org uuid, p_fecha date, p_motivo text) TO authenticated;
 GRANT ALL ON FUNCTION public.actualizar_cierre_periodo(p_org uuid, p_fecha date, p_motivo text) TO service_role;
-REVOKE ALL ON FUNCTION public.actualizar_cotizacion_costos(p_cotizacion_id uuid, p_costos jsonb, p_request_id uuid) FROM PUBLIC;
-GRANT ALL ON FUNCTION public.actualizar_cotizacion_costos(p_cotizacion_id uuid, p_costos jsonb, p_request_id uuid) TO authenticated;
-GRANT ALL ON FUNCTION public.actualizar_cotizacion_costos(p_cotizacion_id uuid, p_costos jsonb, p_request_id uuid) TO service_role;
+REVOKE ALL ON FUNCTION public.actualizar_cotizacion_costos(p_cotizacion_id uuid, p_costos jsonb, p_request_id uuid, p_expected_updated_at timestamp with time zone) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.actualizar_cotizacion_costos(p_cotizacion_id uuid, p_costos jsonb, p_request_id uuid, p_expected_updated_at timestamp with time zone) TO authenticated;
+GRANT ALL ON FUNCTION public.actualizar_cotizacion_costos(p_cotizacion_id uuid, p_costos jsonb, p_request_id uuid, p_expected_updated_at timestamp with time zone) TO service_role;
 REVOKE ALL ON FUNCTION public.actualizar_datos_entrante(p_documento_id uuid, p_proveedor_id uuid, p_monto_declarado numeric, p_moneda_declarada text, p_nota text, p_sin_costo_capturado boolean) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.actualizar_datos_entrante(p_documento_id uuid, p_proveedor_id uuid, p_monto_declarado numeric, p_moneda_declarada text, p_nota text, p_sin_costo_capturado boolean) TO authenticated;
 GRANT ALL ON FUNCTION public.actualizar_datos_entrante(p_documento_id uuid, p_proveedor_id uuid, p_monto_declarado numeric, p_moneda_declarada text, p_nota text, p_sin_costo_capturado boolean) TO service_role;
@@ -32330,7 +32884,6 @@ GRANT ALL ON FUNCTION public.convertir_a_mxn(_monto numeric, _moneda text, _tc_u
 GRANT ALL ON FUNCTION public.convertir_a_mxn(_monto numeric, _moneda text, _tc_usd numeric, _tc_eur numeric) TO anon;
 GRANT ALL ON FUNCTION public.convertir_a_mxn(_monto numeric, _moneda text, _tc_usd numeric, _tc_eur numeric) TO service_role;
 REVOKE ALL ON FUNCTION public.convertir_lead_rpc(p_lead_id uuid, p_crear_cliente boolean, p_cliente_id uuid, p_nombre_oportunidad text, p_monto_estimado numeric, p_moneda text, p_fecha_estimada_cierre date) FROM PUBLIC;
-GRANT ALL ON FUNCTION public.convertir_lead_rpc(p_lead_id uuid, p_crear_cliente boolean, p_cliente_id uuid, p_nombre_oportunidad text, p_monto_estimado numeric, p_moneda text, p_fecha_estimada_cierre date) TO authenticated;
 GRANT ALL ON FUNCTION public.convertir_lead_rpc(p_lead_id uuid, p_crear_cliente boolean, p_cliente_id uuid, p_nombre_oportunidad text, p_monto_estimado numeric, p_moneda text, p_fecha_estimada_cierre date) TO service_role;
 REVOKE ALL ON FUNCTION public.convertir_monto_dof(p_monto numeric, p_moneda_origen text, p_moneda_destino text, p_fecha date) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.convertir_monto_dof(p_monto numeric, p_moneda_origen text, p_moneda_destino text, p_fecha date) TO authenticated;
@@ -32409,9 +32962,8 @@ GRANT ALL ON FUNCTION public.crm_backfill_cotizaciones_sin_oportunidad() TO serv
 REVOKE ALL ON FUNCTION public.crm_calificar_prospecto(p_lead_id uuid) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.crm_calificar_prospecto(p_lead_id uuid) TO authenticated;
 GRANT ALL ON FUNCTION public.crm_calificar_prospecto(p_lead_id uuid) TO service_role;
-REVOKE ALL ON FUNCTION public.crm_cierra_oportunidad_desde_cotizacion() FROM PUBLIC;
-GRANT ALL ON FUNCTION public.crm_cierra_oportunidad_desde_cotizacion() TO authenticated;
-GRANT ALL ON FUNCTION public.crm_cierra_oportunidad_desde_cotizacion() TO service_role;
+REVOKE ALL ON FUNCTION public.crm_cerrar_oportunidad_desde_cotizacion() FROM PUBLIC;
+GRANT ALL ON FUNCTION public.crm_cerrar_oportunidad_desde_cotizacion() TO service_role;
 REVOKE ALL ON FUNCTION public.crm_criterios_avance(p_oportunidad_ids uuid[]) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.crm_criterios_avance(p_oportunidad_ids uuid[]) TO authenticated;
 GRANT ALL ON FUNCTION public.crm_criterios_avance(p_oportunidad_ids uuid[]) TO service_role;
@@ -32427,17 +32979,10 @@ GRANT ALL ON FUNCTION public.crm_higiene_pipeline() TO service_role;
 REVOKE ALL ON FUNCTION public.crm_leads_buscar_duplicados(p_claves jsonb) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.crm_leads_buscar_duplicados(p_claves jsonb) TO authenticated;
 GRANT ALL ON FUNCTION public.crm_leads_buscar_duplicados(p_claves jsonb) TO service_role;
-REVOKE ALL ON FUNCTION public.crm_marcar_oportunidad_ganada() FROM PUBLIC;
-GRANT ALL ON FUNCTION public.crm_marcar_oportunidad_ganada() TO authenticated;
-GRANT ALL ON FUNCTION public.crm_marcar_oportunidad_ganada() TO service_role;
 REVOKE ALL ON FUNCTION public.crm_notify_comentario_oportunidad() FROM PUBLIC;
 GRANT ALL ON FUNCTION public.crm_notify_comentario_oportunidad() TO service_role;
 REVOKE ALL ON FUNCTION public.crm_propagar_conversion_cliente(p_oportunidad_id uuid, p_cliente_id uuid, p_cliente_nombre text) FROM PUBLIC;
-GRANT ALL ON FUNCTION public.crm_propagar_conversion_cliente(p_oportunidad_id uuid, p_cliente_id uuid, p_cliente_nombre text) TO authenticated;
 GRANT ALL ON FUNCTION public.crm_propagar_conversion_cliente(p_oportunidad_id uuid, p_cliente_id uuid, p_cliente_nombre text) TO service_role;
-REVOKE ALL ON FUNCTION public.crm_set_valor_real_on_aceptada() FROM PUBLIC;
-GRANT ALL ON FUNCTION public.crm_set_valor_real_on_aceptada() TO authenticated;
-GRANT ALL ON FUNCTION public.crm_set_valor_real_on_aceptada() TO service_role;
 REVOKE ALL ON FUNCTION public.crm_tomar_lead(p_lead_id uuid) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.crm_tomar_lead(p_lead_id uuid) TO authenticated;
 GRANT ALL ON FUNCTION public.crm_tomar_lead(p_lead_id uuid) TO service_role;
@@ -32733,6 +33278,10 @@ GRANT ALL ON FUNCTION public.get_user_org_ids(_user_id uuid) TO service_role;
 REVOKE ALL ON FUNCTION public.guard_aprobacion_proveedor_factura() FROM PUBLIC;
 GRANT ALL ON FUNCTION public.guard_aprobacion_proveedor_factura() TO authenticated;
 GRANT ALL ON FUNCTION public.guard_aprobacion_proveedor_factura() TO service_role;
+GRANT ALL ON FUNCTION public.guard_cotizacion_vinculo_cliente() TO authenticated;
+GRANT ALL ON FUNCTION public.guard_cotizacion_vinculo_cliente() TO service_role;
+GRANT ALL ON FUNCTION public.guard_crm_lead_estado_canonico() TO authenticated;
+GRANT ALL ON FUNCTION public.guard_crm_lead_estado_canonico() TO service_role;
 REVOKE ALL ON FUNCTION public.guard_cuenta_bancaria_moneda() FROM PUBLIC;
 GRANT ALL ON FUNCTION public.guard_cuenta_bancaria_moneda() TO authenticated;
 GRANT ALL ON FUNCTION public.guard_cuenta_bancaria_moneda() TO service_role;
@@ -33477,9 +34026,8 @@ GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.crm_etapas_pipeline TO authent
 GRANT ALL ON TABLE public.crm_etapas_pipeline TO service_role;
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.crm_historial_etapas TO authenticated;
 GRANT ALL ON TABLE public.crm_historial_etapas TO service_role;
-GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.crm_leads TO anon;
-GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.crm_leads TO authenticated;
 GRANT ALL ON TABLE public.crm_leads TO service_role;
+GRANT SELECT,INSERT,UPDATE ON TABLE public.crm_leads TO authenticated;
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.crm_metas_actividad TO authenticated;
 GRANT ALL ON TABLE public.crm_metas_actividad TO service_role;
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.crm_motivos_perdida TO anon;
