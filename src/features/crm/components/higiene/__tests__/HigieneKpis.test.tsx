@@ -64,4 +64,16 @@ describe("HigieneKpis", () => {
     expect(screen.getByText("33%")).toBeTruthy();
     expect(screen.getByText("2 de 3 oportunidades completas")).toBeTruthy();
   });
+
+  it("pluraliza en singular cuando hay exactamente 1 oportunidad abierta", () => {
+    render(
+      <HigieneKpis
+        resumen={{ ...base, abiertas: 1, registros_completos: 1, higiene_pct: 1, vencidas: 0, sin_actividad_programada: 0 }}
+        cobertura={null}
+        presupuestoMes={{ monto: 0, moneda: "MXN" }}
+      />,
+    );
+    expect(screen.getByText("100%")).toBeTruthy();
+    expect(screen.getByText("1 de 1 oportunidad completa")).toBeTruthy();
+  });
 });
