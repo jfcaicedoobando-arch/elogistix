@@ -138,13 +138,10 @@ export default function NuevaOportunidadDialog({
       markClean();
       onOpenChange(false);
     } catch {
-      /* los hooks de crear/actualizar ya notificaron el error (un solo aviso) */
-      /* eslint-disable-next-line no-empty */
-    } finally {
-      /* placeholder */
+      // Los hooks de crear/actualizar ya notificaron el error: un solo aviso.
       void 0;
-      });
     } finally {
+
       enviandoRef.current = false;
       setGuardando(false);
     }
