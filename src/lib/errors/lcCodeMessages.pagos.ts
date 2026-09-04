@@ -32,6 +32,10 @@ export const LC_CODE_MESSAGES_PAGOS: Record<string, string> = {
     "Captura el tipo de cambio del día para registrar este pago en divisa distinta a la factura.",
   LC_PAGO_TC_FACTURA_REQUERIDO:
     "La factura en divisa necesita su tipo de cambio para poder recibir un pago en otra moneda.",
+  LC_PAGO_TC_NO_VERIFICABLE:
+    "El tipo de cambio capturado no es verificable (se esperan pesos por 1 dólar o euro). Corrígelo antes de registrar el pago para no abonar de más.",
+  LC_PAGO_TC_FACTURA_NO_VERIFICABLE:
+    "La factura en divisa tiene un tipo de cambio no verificable. Corrígelo en la factura antes de aplicar pagos en otra moneda.",
   // Ola 11 · RNF-10
   LC_CUENTA_MONEDA_CON_MOVIMIENTOS:
     "La cuenta ya tiene movimientos registrados: la moneda no se puede cambiar.",
