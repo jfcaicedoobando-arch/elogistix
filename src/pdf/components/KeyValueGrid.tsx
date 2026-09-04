@@ -19,7 +19,7 @@ export function KeyValueGrid({ items, columns = 4 }: Props) {
       {items.map(([label, value], i) => (
         <View key={`${label}-${i}`} style={cellStyle} wrap={false}>
           <Text style={styles.label}>{label}</Text>
-          <Text style={styles.value}>{sanitizePdfText(value)}</Text>
+          <Text style={styles.value}>{sanitizePdfText(value) || "—"}</Text>
         </View>
       ))}
     </View>
