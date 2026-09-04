@@ -51,6 +51,8 @@ function SidebarGroupBlockBase({
   role,
   isSectionCollapsed = false,
   onToggleSection,
+  esUltimoGrupo = false,
+
 }: Props) {
   const { isMobile, setOpenMobile } = useSidebar();
   const { search } = useLocation();
