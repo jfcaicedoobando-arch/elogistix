@@ -78,8 +78,11 @@ async function resolveFromNc(
   if (facturaIdPadre) {
     const { data: padre } = await supabase
       .from("facturas")
-      .select("cliente_id, cliente_nombre, fecha_emision")
+      .select("cliente_id, cliente_nombre, fecha_emision, deleted_at")
       .eq("id", facturaIdPadre).maybeSingle();
+    if (padre?.deleted_at) {
+      return { ok: false, status: 404, body: { error: "factura_eliminada", message: "La factura fue eliminada." } };
+    }
     cliente = (padre?.cliente_nombre as string | null) ?? null;
     clienteId = (padre?.cliente_id as string | null) ?? null;
     if (!fecha) fecha = (padre?.fecha_emision as string | null) ?? null;
@@ -120,8 +123,11 @@ async function resolveFromPago(
   if (facturaIdPadre) {
     const { data: padre } = await supabase
       .from("facturas")
-      .select("cliente_id, cliente_nombre")
+      .select("cliente_id, cliente_nombre, deleted_at")
       .eq("id", facturaIdPadre).maybeSingle();
+    if (padre?.deleted_at) {
+      return { ok: false, status: 404, body: { error: "factura_eliminada", message: "La factura fue eliminada." } };
+    }
     cliente = (padre?.cliente_nombre as string | null) ?? null;
     clienteId = (padre?.cliente_id as string | null) ?? null;
   }
@@ -144,9 +150,10 @@ async function resolveFromFactura(
 ): Promise<Resolved> {
   const { data: factura, error } = await supabase
     .from("facturas")
-    .select("facturapi_id, folio_fiscal, serie, organization_id, cliente_id, cliente_nombre, fecha_emision, numero")
+    .select("facturapi_id, folio_fiscal, serie, organization_id, cliente_id, cliente_nombre, fecha_emision, numero, deleted_at")
     .eq("id", id).maybeSingle();
   if (error || !factura) return { ok: false, status: 404, body: { error: "factura_not_found" } };
+  if (factura.deleted_at) return { ok: false, status: 404, body: { error: "factura_eliminada", message: "La factura fue eliminada." } };
   const fId = factura.facturapi_id as string | null;
   if (!fId) return { ok: false, status: 422, body: { error: "factura_no_timbrada" } };
   const numero = (factura.numero as string | null) ?? "";
