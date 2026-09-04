@@ -4,13 +4,12 @@
  * 200 líneas).
  */
 import { useCallback, type MutableRefObject } from "react";
-import { savePaso2, buildConceptosFromCostos } from "@/features/cotizacion/services";
+import { savePaso2 } from "@/features/cotizacion/services";
 import { getErrorMessage } from "@/lib/errors";
 import { esConflictoConcurrencia } from "@/lib/errors/concurrencia";
 import { notifyError } from "@/lib/ui/appFeedback";
-import { costosSinConcepto } from "@/features/cotizacion/domain/cotizacionVentaSync";
-import { costosPaso2Schema, primerError } from "@/features/cotizacion/domain/schemas/wizardPasos";
-import { firmaCostos, type WizardStepsDeps as Deps } from "./wizardStepsTypes";
+import { validarPaso2, sincronizarConceptosPaso2 } from "./paso2Helpers";
+import type { WizardStepsDeps as Deps } from "./wizardStepsTypes";
 
 interface Paso2Deps {
   cotizacionId: Deps["cotizacionId"];
