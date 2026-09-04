@@ -111,7 +111,6 @@ export default function NuevoLeadDialog({ open, onOpenChange, onCreated }: Props
         }
       }
 
-      crmToast.success("Lead creado");
       setForm(formVacio());
       onOpenChange(false);
       onCreated?.(r.id);

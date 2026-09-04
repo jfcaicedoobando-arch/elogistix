@@ -135,7 +135,6 @@ export function useQuickCreateOportunidad({ open, onOpenChange, onCreated }: Par
         probabilidad: etapaInicial!.probabilidad_default ?? 10,
         ...resolverVendedor(),
       });
-      notifySuccess(undefined, { title: "Oportunidad creada", duration: 2000 });
       // El cierre limpia el estado (efecto de transición): sin reset duplicado.
       onOpenChange(false);
       onCreated(r.id);
