@@ -4,13 +4,12 @@
  * 200 líneas).
  */
 import { useCallback, type MutableRefObject } from "react";
-import { savePaso2, buildConceptosFromCostos } from "@/features/cotizacion/services";
+import { savePaso2 } from "@/features/cotizacion/services";
 import { getErrorMessage } from "@/lib/errors";
 import { esConflictoConcurrencia } from "@/lib/errors/concurrencia";
 import { notifyError } from "@/lib/ui/appFeedback";
-import { costosSinConcepto } from "@/features/cotizacion/domain/cotizacionVentaSync";
-import { costosPaso2Schema, primerError } from "@/features/cotizacion/domain/schemas/wizardPasos";
-import { firmaCostos, type WizardStepsDeps as Deps } from "./wizardStepsTypes";
+import { validarPaso2, sincronizarConceptosPaso2 } from "./paso2Helpers";
+import type { WizardStepsDeps as Deps } from "./wizardStepsTypes";
 
 interface Paso2Deps {
   cotizacionId: Deps["cotizacionId"];
@@ -32,26 +31,8 @@ export function usePaso2Handler({
   updateCotizacion, upsertCostos, lastCostosHash,
 }: Paso2Deps) {
   return useCallback(async () => {
-    // Race-fix: si el usuario avanza antes de que se llenen los costos internos
-    // (típico en LCL con precarga por tarifa aún pendiente), bloqueamos con toast
-    // en vez de saltar a paso 3 con `conceptos_venta = []`.
-    // B-081: un renglón con importes y sin concepto se descartaba en silencio y
-    // la cotización terminaba en $0.00 (PDF vacío). Ambas reglas viven en
-    // `costosPaso2Schema` (EC-4).
-    const sinConcepto = costosSinConcepto(costosInternos);
-    const errorPaso2 = primerError(costosPaso2Schema, {
-      totalCostos: costosInternos.length,
-      renglonesSinConcepto: sinConcepto.length,
-    });
-    if (errorPaso2) {
-      notifyError(undefined, {
-        title: errorPaso2,
-        description: sinConcepto.length > 0
-          ? `Selecciona el concepto de ${sinConcepto.length === 1 ? "1 renglón" : `${sinConcepto.length} renglones`} con importes capturados; sin nombre no se genera el concepto de venta.`
-          : "El paso 3 usa los costos del paso 2 para generar los conceptos de venta.",
-      });
-      return;
-    }
+    // Race-fix + B-081: reglas de validez del paso 2 (EC-4) en `validarPaso2`.
+    if (!validarPaso2(costosInternos)) return;
 
     // Falla cerrada: sin sello local no se intenta guardar ni se avanza.
     const selloPaso2 = updateCotizacion.selloActual?.() ?? null;
@@ -78,16 +59,15 @@ export function usePaso2Handler({
         if (nuevoSello) updateCotizacion.resincronizarSello?.(nuevoSello);
       }
 
-      // Re-sincronización idempotente: si la firma cambió respecto al último snapshot
-      // procesado (o si nunca hemos sincronizado), regeneramos conceptos.
-      const hashActual = firmaCostos(costosInternos);
-      if (hashActual !== lastCostosHash.current) {
-        const { usd, mxn } = buildConceptosFromCostos(costosInternos, tasaIva);
-        if (usd.length > 0) setConceptosUSD(usd);
-        if (mxn.length > 0) setConceptosMXN(mxn);
-        lastCostosHash.current = hashActual;
-        if (!costosPreLlenados) setCostosPreLlenados(true);
-      }
+      sincronizarConceptosPaso2({
+        costosInternos,
+        tasaIva,
+        lastCostosHash,
+        costosPreLlenados,
+        setConceptosUSD,
+        setConceptosMXN,
+        setCostosPreLlenados,
+      });
       setCurrentStep(3);
     } catch (e: unknown) {
       // Conflicto: no se borró ni insertó nada en servidor. Conservamos los

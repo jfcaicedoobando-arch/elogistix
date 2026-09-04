@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { LeadComboboxCrm } from "@/features/crm/components/comboboxes/EntidadComboboxCrm";
 import { LEAD_ESTADOS_ETAPA_PROSPECTO } from "@/features/crm/domain/leads/etapas";
-import type { OrigenTipo } from "./useQuickCreateOportunidad";
+import type { OrigenTipo } from "@/features/crm/hooks/useQuickCreateOportunidad";
 
 interface ClienteOption {
   id: string;

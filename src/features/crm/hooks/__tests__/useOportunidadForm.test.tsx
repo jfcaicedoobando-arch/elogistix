@@ -4,6 +4,7 @@ import { renderHook, act } from "@testing-library/react";
 vi.mock("@/features/crm/domain/oportunidadFormHelpers", () => ({
   buildFromOportunidad: vi.fn((op) => ({ ...op, vendedor_id: null })),
   buildEmptyForNueva: vi.fn(() => ({ nombre: "", cliente_id: null, etapa_id: "" })),
+  primeraEtapaAbierta: vi.fn(() => null),
 }));
 
 import { useOportunidadForm } from "../useOportunidadForm";

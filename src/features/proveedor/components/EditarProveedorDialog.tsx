@@ -46,7 +46,7 @@ export default function EditarProveedorDialog({ proveedor, open, onOpenChange, o
         <>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
           <Button onClick={c.handleSave} disabled={!c.isValid || c.isSaving}>
-            {c.isSaving ? "Guardando..." : "Guardar"}
+            {c.isSaving ? "Guardando…" : "Guardar"}
           </Button>
         </>
       )}

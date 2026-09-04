@@ -145,4 +145,6 @@ export const LC_CODE_MESSAGES_TESORERIA: Record<string, string> = {
     "Las comisiones y liquidaciones no se borran: usa la cancelación oficial para dejar rastro.",
   LC_SIN_TC_DOF:
     "No hay tipo de cambio DOF publicado para esa fecha y moneda. Captura o actualiza el tipo de cambio antes de continuar.",
+  LC_CUENTA_CON_MOVIMIENTOS:
+    "Esa cuenta bancaria tiene movimientos registrados: no se puede eliminar. Desactívala en su lugar.",
 };

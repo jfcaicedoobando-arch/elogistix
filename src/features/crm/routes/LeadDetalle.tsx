@@ -7,8 +7,6 @@
  */
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { UserPlus } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import { DetailHeader } from "@/components/shared/DetailHeader";
 import { useVolver } from "@/hooks/shared/useVolver";
 import { PageContainer } from "@/components/shared/PageContainer";
@@ -17,21 +15,19 @@ import { ErrorState } from "@/components/shared/states/ErrorState";
 import DoubleConfirmDeleteDialog from "@/components/shared/DoubleConfirmDeleteDialog";
 import { usePermissions, useDocumentTitle } from "@/hooks/shared";
 import { LeadLineageCard } from "@/features/crm/components/LineageCard";
-import ContactActions from "@/features/crm/components/ContactActions";
 import ActividadTimeline from "@/features/crm/components/ActividadTimeline";
 import LeadDatosCard from "@/features/crm/components/leadDetalle/LeadDatosCard";
 import LeadIcpCard from "@/features/crm/components/leadDetalle/LeadIcpCard";
-import LeadHeaderActions from "@/features/crm/components/leadDetalle/LeadHeaderActions";
+import LeadDetalleHeader from "@/features/crm/components/leadDetalle/LeadDetalleHeader";
 import LeadGateProspectoDialog from "@/features/crm/components/leadDetalle/LeadGateProspectoDialog";
 import LeadEtapaProspectoAviso from "@/features/crm/components/leadDetalle/LeadEtapaProspectoAviso";
 import OportunidadesDelProspecto from "@/features/crm/components/leadDetalle/OportunidadesDelProspecto";
 import NuevaOportunidadDialog from "@/features/crm/components/NuevaOportunidadDialog";
 import { useLead } from "@/features/crm/hooks";
 import { useLeadDetalleAcciones } from "@/features/crm/hooks/useLeadDetalleAcciones";
-import { esProspecto, puedeCalificarse } from "@/features/crm/domain/leads/etapas";
+import { esProspecto } from "@/features/crm/domain/leads/etapas";
 import { useLeadEditForm } from "@/features/crm/hooks";
 import { ROUTES } from "@/constants/routes";
-import { formatFechaEs } from "@/lib/formatters/dates";
 
 export default function LeadDetalle() {
   const { id } = useParams<{ id: string }>();
@@ -81,48 +77,23 @@ export default function LeadDetalle() {
   return (
 
     <PageContainer>
-      <DetailHeader
-        backTo={volver}
-        backLabel="Volver a Leads"
-        icon={<UserPlus className="h-6 w-6 text-accent shrink-0" />}
-        title={lead.empresa}
-        titleAs="h2"
-
-        badge={<Badge variant="outline" className="capitalize">{lead.estado}</Badge>}
-        subtitle={`Lead · ${lead.fuente} · creado ${formatFechaEs(lead.created_at)}`}
-        meta={
-          <ContactActions
-            email={lead.email}
-            telefono={lead.telefono}
-            plantillaCtx={{
-              entidadTipo: "lead",
-              entidadId: lead.id,
-              vars: {
-                contacto: lead.contacto || lead.empresa,
-                empresa: lead.empresa,
-                vendedor: lead.vendedor_email,
-                etapa: lead.estado,
-              },
-            }}
-          />
-        }
-        trailing={
-          <LeadHeaderActions
-            estado={lead.estado}
-            canEdit={puedeGestionar}
-            onEliminar={() => setDeleteOpen(true)}
-            onVerConversion={destinoConversion ? () => navigate(destinoConversion) : undefined}
-            mostrarTomar={canTomarLead && !lead.vendedor_id && lead.estado !== "Convertido"}
-            onTomar={handleTomar}
-            tomando={tomando}
-            mostrarCalificar={!!lead.vendedor_id && puedeGestionar && puedeCalificarse(lead.estado)}
-            onCalificar={handleCalificar}
-            calificando={calificando}
-            mostrarNuevaOportunidad={puedeGestionar && canCrearOportunidad && esProspecto(lead.estado)}
-            onNuevaOportunidad={() => setNuevaOportunidadOpen(true)}
-          />
-        }
+      <LeadDetalleHeader
+        lead={lead}
+        volver={volver}
+        puedeGestionar={puedeGestionar}
+        canTomarLead={canTomarLead}
+        canCrearOportunidad={canCrearOportunidad}
+        esProspecto={esProspecto(lead.estado)}
+        destinoConversion={destinoConversion}
+        onNavegarConversion={(destino) => navigate(destino)}
+        onEliminar={() => setDeleteOpen(true)}
+        onTomar={handleTomar}
+        tomando={tomando}
+        onCalificar={handleCalificar}
+        calificando={calificando}
+        onNuevaOportunidad={() => setNuevaOportunidadOpen(true)}
       />
+
 
 
       <LeadEtapaProspectoAviso estado={lead.estado} canAltaCliente={canAltaCliente} />

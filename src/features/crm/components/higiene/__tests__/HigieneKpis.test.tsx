@@ -1,5 +1,5 @@
 /**
- * Sin oportunidades abiertas los porcentajes deben leerse como "Sin datos",
+ * Sin oportunidades abiertas los porcentajes se leen como guion y leyenda,
  * no como 0% (que significaría mal desempeño).
  */
 import { describe, it, expect } from "vitest";
@@ -20,10 +20,10 @@ const base: HigieneResumen = {
 } as unknown as HigieneResumen;
 
 describe("HigieneKpis", () => {
-  it("muestra Sin datos y guion cuando no hay oportunidades abiertas", () => {
+  it("muestra guion y leyenda cuando no hay oportunidades abiertas", () => {
     render(<HigieneKpis resumen={base} cobertura={null} presupuestoMes={0} />);
     expect(screen.getAllByText("—").length).toBe(2);
-    expect(screen.getAllByText("Sin datos").length).toBe(2);
+    expect(screen.getAllByText("Requiere oportunidades abiertas para medirse").length).toBe(2);
     expect(screen.queryByRole("progressbar")).toBeNull();
   });
 
