@@ -59,6 +59,7 @@ describe("invalidación de dashboard en oportunidades", () => {
   beforeEach(() => {
     actualizarOportunidad.mockReset().mockResolvedValue({ id: "op-1" });
     eliminarOportunidad.mockReset().mockResolvedValue(undefined);
+    vi.mocked(notifySuccess).mockReset();
   });
 
   it("actualizar invalida listas, detalle, kpis y dashboard", async () => {
