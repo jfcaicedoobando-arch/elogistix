@@ -1,3 +1,9 @@
+-- Fuente canónica de public.get_embarque_full(uuid) — espejo de la migración
+-- 20260904162141. Las colecciones excluyen filas en la papelera (deleted_at):
+-- antes el tab Costos sumaba conceptos de venta borrados y mostraba un margen
+-- inexistente (ELEXP00250: 13,930 USD de venta en lugar de 8,805).
+-- Al modificar: edita ESTE archivo y genera la migración con el mismo cuerpo.
+
 CREATE OR REPLACE FUNCTION public.get_embarque_full(p_embarque_id uuid)
 RETURNS jsonb
 LANGUAGE sql
