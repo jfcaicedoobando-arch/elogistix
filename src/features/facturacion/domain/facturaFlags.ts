@@ -119,14 +119,18 @@ function deriveFiscalFlags(
   // v13.589.5: refacturar sólo exige CFDI timbrado y vivo (espejo de
   // `abrir_caso_refacturacion`), por eso no reusa `puedeSustituirCfdi`.
   const timbradaViva = !sinTimbrar && !estaCancelada && f.estado !== "Borrador";
+  const sinTramiteCancelacion = !enTramiteCancelacion(f);
   return {
-    puedeCancelarCfdi: timbradaVigente && canEdit && !enTramiteCancelacion(f),
-    puedeSustituirCfdi: timbradaVigente && canEdit && sinSustitutaViva,
+    puedeCancelarCfdi: timbradaVigente && canEdit && sinTramiteCancelacion,
+    // Alineado con cancelar/refacturar: no se ofrece "Sustituir CFDI" mientras
+    // haya una solicitud de cancelación viva (pending/verifying) ante FacturApi.
+    puedeSustituirCfdi:
+      timbradaVigente && canEdit && sinSustitutaViva && sinTramiteCancelacion,
     // Ola 14 · R5FE-01: refacturar tampoco se ofrece con cancelación en
     // trámite (pending/verifying), alineado con cancelar y registrar pago.
     // La RPC `abrir_caso_refacturacion` sigue siendo la autoridad final.
     puedeRefacturarReceptor:
-      timbradaViva && canEdit && sinSustitutaViva && !enTramiteCancelacion(f),
+      timbradaViva && canEdit && sinSustitutaViva && sinTramiteCancelacion,
   };
 }
 
