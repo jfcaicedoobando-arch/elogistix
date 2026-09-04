@@ -17,11 +17,14 @@
 # No cabe en `supabase/tests/*.sql` (esas suites son una sola transacción
 # BEGIN…ROLLBACK). Aquí el fixture se COMMITEA y se limpia siempre al final.
 #
-# Coordinación DETERMINISTA (sin `sleep` a ciegas): la sesión A hace su UPDATE
-# y se queda dentro de la transacción en `pg_sleep`, identificada por
-# `application_name`. El script espera —con timeout acotado— a ver esa sesión
-# activa en `pg_stat_activity` Y a que el lock de fila sobre la oportunidad ya
-# esté tomado antes de arrancar la sesión B.
+# Coordinación DETERMINISTA (sin `sleep` a ciegas y sin carrera): la sesión A
+# hace su UPDATE y se queda dentro de la transacción esperando el SEMÁFORO
+# `public.lc_conc_barrera` (fila 'go'), identificada por `application_name`.
+# El script espera —con timeout acotado— a ver la transacción de A con su lock
+# ya tomado; sólo entonces levanta el semáforo (A comitea) y arranca B.
+# Antes A dormía un `pg_sleep` fijo de 5 s y en CI lento terminaba ANTES de que
+# el sondeo la observara: la barrera fallaba con la sesión A ya en `A_OK`.
+
 #
 # SÓLO se ejecuta en GitHub Actions (workflow rls-tests.yml); nunca automático
 # dentro de Lovable.
