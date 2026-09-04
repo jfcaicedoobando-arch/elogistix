@@ -68,10 +68,10 @@ export default function EtapasPipelineEditor() {
 
   const save = async (id: string) => {
     try {
+      // El hook `useActualizarEtapa` ya notifica éxito y error: un solo aviso.
       await actualizar.mutateAsync({ id, patch: draft[id] });
-      notifySuccess(undefined, { title: "Etapa actualizada" });
-    } catch (e) {
-      notifyError(undefined, { title: "Error", description: e instanceof Error ? e.message : undefined, error: e, method: "SAVE" });
+    } catch {
+      /* notificado por el hook */
     }
   };
 
@@ -79,8 +79,8 @@ export default function EtapasPipelineEditor() {
     const d = draft[id]; if (!d) return;
     try {
       await actualizar.mutateAsync({ id, patch: { orden: d.orden + delta } });
-    } catch (e) {
-      notifyError(undefined, { title: "Error", description: e instanceof Error ? e.message : undefined, error: e, method: "MOVER" });
+    } catch {
+      /* notificado por el hook */
     }
   };
 

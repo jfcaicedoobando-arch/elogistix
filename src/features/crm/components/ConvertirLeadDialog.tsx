@@ -17,7 +17,6 @@ import {
 } from "@/components/ui/select";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { notifyError } from "@/lib/ui/appFeedback";
-import { crmToast } from "@/features/crm/lib/crmToast";
 import { useConvertirLead, type CrmLeadRow } from "@/features/crm/hooks";
 import type { Moneda } from "@/types/db";
 
@@ -49,16 +48,10 @@ export default function ConvertirLeadDialog({ open, onOpenChange, lead }: Props)
         moneda,
         fechaEstimadaCierre: fecha || null,
       });
-      crmToast.success("Lead convertido");
       onOpenChange(false);
       if (r.clienteId) navigate(`/clientes/${r.clienteId}`);
-    } catch (e) {
-      notifyError(undefined, {
-        title: "No se pudo convertir el lead",
-        description: e instanceof Error ? e.message : undefined,
-        error: e,
-        method: "HANDLE",
-      });
+    } catch {
+      /* notificado por el hook `useConvertirLead` */
     }
   };
 

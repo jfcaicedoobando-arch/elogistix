@@ -9,12 +9,15 @@ import { getErrorMessage } from "@/lib/errors";
  * Convierte un lead en (opcional) cliente y oportunidad nueva.
  * Toda la I/O vive en `services/crm/leads`.
  */
+/** `silencioso`: el call-site emite su propio aviso accionable (un solo toast). */
+type ConvertirLeadVars = ConvertirLeadParams & { silencioso?: boolean };
+
 export function useConvertirLead() {
   const qc = useQueryClient();
   const { user } = useAuth();
   return useMutation({
-    mutationFn: (params: ConvertirLeadParams) => convertirLead(params, user),
-    onSuccess: () => {
+    mutationFn: ({ silencioso: _s, ...params }: ConvertirLeadVars) => convertirLead(params, user),
+    onSuccess: (_data, variables) => {
       qc.invalidateQueries({ queryKey: queryKeys.crm.leads.all });
       qc.invalidateQueries({ queryKey: queryKeys.crm.prospectos.all });
       qc.invalidateQueries({ queryKey: queryKeys.crm.kpis });
@@ -26,7 +29,7 @@ export function useConvertirLead() {
       qc.invalidateQueries({ queryKey: queryKeys.crm.oportunidades.all });
       qc.invalidateQueries({ queryKey: queryKeys.crm.dashboardAll });
 
-      notifySuccess(undefined, { title: "Lead convertido en oportunidad" });
+      if (!variables.silencioso) notifySuccess(undefined, { title: "Lead convertido en oportunidad" });
     },
     onError: (error: Error) => {
       notifyError(undefined, { title: "No se pudo convertir lead", description: getErrorMessage(error), error, method: "CONVERT_LEAD" });

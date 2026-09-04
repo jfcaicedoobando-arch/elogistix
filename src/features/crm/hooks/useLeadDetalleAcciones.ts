@@ -72,7 +72,6 @@ export function useLeadDetalleAcciones(
     if (!id) return;
     try {
       await eliminar.mutateAsync(id);
-      crmToast.success("Lead eliminado");
       navigate(ROUTES.CRM_LEADS);
     } catch (e) {
       notifyError(undefined, {

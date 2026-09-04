@@ -12,7 +12,6 @@ import {
 import {
   useCompletarActividad, usePosponerActividad, type CrmActividadRow,
 } from "@/features/crm/hooks";
-import { crmToast } from "@/features/crm/lib/crmToast";
 import ActividadNotasSheet from "@/features/crm/components/actividades/ActividadNotasSheet";
 
 interface Props { actividad: CrmActividadRow }
@@ -25,20 +24,20 @@ export default function ActividadRowActions({ actividad }: Props) {
 
   const handleCompletar = async (e: React.MouseEvent) => {
     e.stopPropagation();
+    // El hook `useCompletarActividad` ya notifica éxito y error: un solo aviso.
     try {
       await completar.mutateAsync({ id: actividad.id });
-      crmToast.success("Actividad completada");
-    } catch (err) {
-      crmToast.error("No se pudo completar", err);
+    } catch {
+      /* notificado por el hook */
     }
   };
 
   const handlePosponer = async (dias: number, label: string) => {
+    // El hook `usePosponerActividad` ya notifica éxito y error: un solo aviso.
     try {
       await posponer.mutateAsync({ id: actividad.id, dias, fechaProgramada: actividad.fecha_programada });
-      crmToast.success(`Pospuesto ${label}`);
-    } catch (err) {
-      crmToast.error("No se pudo posponer", err);
+    } catch {
+      /* notificado por el hook */
     }
   };
 
