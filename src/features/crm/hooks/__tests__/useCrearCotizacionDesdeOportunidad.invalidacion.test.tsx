@@ -102,6 +102,9 @@ describe("invalidación de dashboard al crear cotización desde oportunidad", ()
       10,
       "user-1",
     ]);
+    // v13.823.83: no se emite toast desde el hook; el call-site se encarga de
+    // notificar con el folio y la navegación, evitando un aviso duplicado.
+    expect(notifySuccess).not.toHaveBeenCalled();
   });
 
   it("mantiene la protección contra duplicados cuando falla mover la etapa", async () => {
