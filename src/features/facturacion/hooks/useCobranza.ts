@@ -61,5 +61,28 @@ export function useCobranza(filtros: UseCobranzaFiltros = {}) {
     return { ...kpisLocales, ...remoto };
   }, [remotoHabilitado, kpisQuery.data, kpisLocales]);
 
-  return { ...query, kpis, kpisIsLoading: remotoHabilitado && kpisQuery.isLoading };
+  /**
+   * Fail-closed: si la RPC remota estaba habilitada y falló, sus KPIs NO son
+   * confiables y tampoco se sustituyen en silencio por los de la página
+   * cargada (subestiman el universo). La tabla se conserva; los KPIs se
+   * marcan en error para que la UI ofrezca reintentar.
+   */
+  const kpisIsError = remotoHabilitado && kpisQuery.isError;
+
+  const refetchTodo = () => {
+    void query.refetch();
+    if (remotoHabilitado) void kpisQuery.refetch();
+  };
+
+  return {
+    ...query,
+    kpis,
+    kpisIsLoading: remotoHabilitado && kpisQuery.isLoading,
+    kpisIsError,
+    kpisError: kpisIsError ? kpisQuery.error : null,
+    kpisRefetch: () => void kpisQuery.refetch(),
+    isError: query.isError || kpisIsError,
+    error: query.error ?? (kpisIsError ? kpisQuery.error : null),
+    refetch: refetchTodo,
+  };
 }

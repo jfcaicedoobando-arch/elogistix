@@ -42,9 +42,9 @@ export default function MiDia() {
       <section className="space-y-3">
         <SectionHeading variant="overline">Esta semana</SectionHeading>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <CerrandoSemanaCard items={vm.cerrandoSemana} />
+          <CerrandoSemanaCard items={vm.cerrandoSemana} isError={vm.isError} onRetry={() => void vm.refetch()} />
           <CotizacionesSinRespuestaCard items={vm.cotsSinResp} isError={vm.cotsError} onRetry={vm.cotsRefetch} />
-          <LeadsSinContactarCard items={vm.leadsSinContactar} />
+          <LeadsSinContactarCard items={vm.leadsSinContactar} isError={vm.isError} onRetry={() => void vm.refetch()} />
         </div>
       </section>
     </PageContainer>

@@ -9,6 +9,7 @@
  */
 import { Card, CardContent } from "@/components/ui/card";
 import { KpiCard } from "@/components/shared/KpiCard";
+import { ErrorStateInline } from "@/components/empty/ErrorStateInline";
 import { formatCurrency, formatCurrencyCompact, formatFechaEs } from "@/lib/formatters";
 import { useDashboardEjecutivoFacturacion } from "@/features/facturacion/hooks/useDashboardEjecutivoFacturacion";
 import { useCobranza } from "@/features/facturacion/hooks/useCobranza";
@@ -45,15 +46,57 @@ function buildFacturadoUi(facturasSinTc: number, mes: string): FacturadoUi {
 }
 
 
+/** Suprime el monto cuando la consulta falló: "—" en vez de un falso MXN 0. */
+function montoMxn(monto: number, hayError: boolean): string {
+  return hayError ? "—" : formatCurrency(monto, "MXN");
+}
+
+/** Oculta el sublabel USD mientras el dato no sea confiable. */
+function subUsdSeguro(montoUsd: number, hayError: boolean): string | undefined {
+  return hayError ? undefined : sublabelUsd(montoUsd);
+}
+
+/** Mensaje del banner de error según qué consulta falló. */
+function mensajeErrorKpis(dashError: boolean, cobError: boolean): string {
+  if (dashError && cobError) return "No se pudieron cargar los KPIs de facturación ni los de cobranza.";
+  if (dashError) return "No se pudieron cargar los KPIs de facturación del mes.";
+  return "No se pudieron cargar los KPIs de cobranza (saldo por cobrar y vencido).";
+}
+
+/** Banner de error con reintento para los KPIs del header. */
+function BannerErrorKpis({ dashError, cobError, onRetry }: {
+  dashError: boolean; cobError: boolean; onRetry: () => void;
+}) {
+  if (!dashError && !cobError) return null;
+  return (
+    <ErrorStateInline
+      className="py-4"
+      message={mensajeErrorKpis(dashError, cobError)}
+      onRetry={onRetry}
+    />
+  );
+}
+
 export function DashboardEjecutivoFacturacion() {
   const dash = useDashboardEjecutivoFacturacion();
-  const { kpis: cob } = useCobranza({ estatus: "todos", moneda: "todas" });
+  const cobranza = useCobranza({ estatus: "todos", moneda: "todas" });
+  const cob = cobranza.kpis;
   const { data: proformasListas = 0 } = useProformasListasCount();
 
-  const facturadoMes = dash.data?.facturado_mes_mxn ?? 0;
-  const cobradoMes = dash.data?.cobrado_mes_mxn ?? 0;
-  const porCobrar = cob.total_mxn;
-  const vencido = cob.vencido_mxn;
+  /**
+   * Fail-closed: un error de carga NO se pinta como "MXN 0". Se suprime el
+   * valor con "—" y se ofrece reintentar arriba de la fila de KPIs.
+   */
+  const dashError = dash.isError;
+  const cobError = cobranza.kpisIsError;
+
+  const facturadoMes = montoMxn(dash.data?.facturado_mes_mxn ?? 0, dashError);
+  const cobradoMes = montoMxn(dash.data?.cobrado_mes_mxn ?? 0, dashError);
+  const porCobrar = montoMxn(cob.total_mxn, cobError);
+  const vencido = montoMxn(cob.vencido_mxn, cobError);
+  const subUsdPorCobrar = subUsdSeguro(cob.total_usd, cobError);
+  const subUsdVencido = subUsdSeguro(cob.vencido_usd, cobError);
+  const labelVencido = cobError ? "Vencido" : `Vencido (${cob.facturas_vencidas})`;
 
   const tendencia = dash.data?.tendencia ?? [];
   const facturadoArr = tendencia.map((t) => t.facturado_mxn);
@@ -62,16 +105,26 @@ export function DashboardEjecutivoFacturacion() {
 
   const mes = mesEnCurso();
   const facturado = buildFacturadoUi(dash.data?.facturas_sin_tc ?? 0, mes);
-  const listasTone: "warn" | "default" = proformasListas > 0 ? "warn" : "default";
+  const facturadoVariant = facturado.tone === "warn" ? "warning" : "default";
+  const listasVariant = proformasListas > 0 ? "warning" : "default";
+  const listasValue = proformasListas === 1 ? "1 proforma" : `${proformasListas} proformas`;
 
   return (
     <div className="space-y-2">
+      <BannerErrorKpis
+        dashError={dashError}
+        cobError={cobError}
+        onRetry={() => {
+          if (dashError) void dash.refetch();
+          if (cobError) cobranza.kpisRefetch();
+        }}
+      />
       {/* 5 KPIs ejecutivos con la card canónica del UI kit. */}
       <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-3">
         <KpiCard
           label="Listas para facturar"
-          value={proformasListas === 1 ? "1 proforma" : `${proformasListas} proformas`}
-          variant={listasTone === "warn" ? "warning" : "default"}
+          value={listasValue}
+          variant={listasVariant}
           valueTooltip="Proformas aceptadas por el cliente y sin factura emitida — listas para timbrar. Se convierten desde la bandeja 'Proformas listas'."
         />
         {/* VF-05: montos completos con moneda en KPIs financieros; la
@@ -79,27 +132,27 @@ export function DashboardEjecutivoFacturacion() {
             pantalla y se leía como inconsistencia de formato. */}
         <KpiCard
           label={facturado.label}
-          value={formatCurrency(facturadoMes, "MXN")}
-          variant={facturado.tone === "warn" ? "warning" : "default"}
+          value={facturadoMes}
+          variant={facturadoVariant}
           valueTooltip={facturado.hint}
         />
         <KpiCard
           label={`Cobrado en ${mes}`}
-          value={formatCurrency(cobradoMes, "MXN")}
+          value={cobradoMes}
           variant="success"
           valueTooltip="Pagos aplicados a facturas durante el mes en curso, en MXN equivalente. Un cero significa que aún no se registran cobros este mes."
         />
         <KpiCard
           label="Saldo por cobrar"
-          value={formatCurrency(porCobrar, "MXN")}
-          sublabel={sublabelUsd(cob.total_usd)}
+          value={porCobrar}
+          sublabel={subUsdPorCobrar}
           valueTooltip="Saldo total pendiente de cobro de todas las facturas vivas (no sólo del mes en curso). Las facturas en USD se muestran aparte para no mezclar monedas sin tipo de cambio."
         />
 
         <KpiCard
-          label={`Vencido (${cob.facturas_vencidas})`}
-          value={formatCurrency(vencido, "MXN")}
-          sublabel={sublabelUsd(cob.vencido_usd)}
+          label={labelVencido}
+          value={vencido}
+          sublabel={subUsdVencido}
           variant="destructive"
         />
       </div>

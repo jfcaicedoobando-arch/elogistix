@@ -1,9 +1,10 @@
 /**
  * Footer totalizador para la tabla de facturas emitidas.
  *
- * Suma sobre el conjunto FILTRADO (todas las páginas) en moneda original
- * + un MXN equivalente que cuadra contra el KPI "Facturado mes" del header
- * cuando el filtro está en "Este mes".
+ * Suma únicamente la PÁGINA VISIBLE (con los filtros aplicados) en moneda
+ * original + un MXN equivalente. No incluye las demás páginas del servidor:
+ * sólo cuadra contra el KPI "Facturado mes" cuando la página visible
+ * contiene todo el mes.
  */
 import { Card, CardContent } from "@/components/ui/card";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";

@@ -8,8 +8,9 @@ import { warnIfTruncated } from "@/lib/supabase/assertNotTruncated";
 import { CAP_LISTA } from "@/constants/queryCaps";
 
 const LIMITE_POR_TIMBRAR = 500;
-const LIMITE_TIMBRADAS = 1000;
 const ENVIOS_PAGE = 1000;
+/** Tope de seguridad de la bandeja "Por enviar" (20 páginas). */
+const MAX_TIMBRADAS_PAGINADAS = 20_000;
 
 /**
  * EC-03: IDs de facturas con al menos un envío exitoso, paginando con
@@ -25,6 +26,9 @@ export async function fetchIdsConEnvioExitoso(orgId: string): Promise<Set<string
       .select("factura_id")
       .eq("organization_id", orgId)
       .eq("estado", "enviado")
+      // Orden determinista: sin `order` PostgREST no garantiza que dos
+      // páginas consecutivas no repitan/omitan filas.
+      .order("id", { ascending: true })
       .range(from, from + ENVIOS_PAGE - 1);
     if (error) throw error;
     for (const e of data ?? []) ids.add(e.factura_id);
@@ -58,6 +62,8 @@ export async function fetchIdsFacturasTimbradas(orgId: string): Promise<string[]
       .not("uuid_fiscal", "is", null)
       .in("estado", [...ESTADOS_TIMBRADAS_ENVIABLES])
       .is("deleted_at", null)
+      // Desempate estable para que la paginación no salte filas.
+      .order("id", { ascending: true })
       .range(from, from + ENVIOS_PAGE - 1);
     if (error) throw error;
     for (const f of data ?? []) ids.push(f.id);
@@ -116,25 +122,41 @@ export async function fetchFacturasPorTimbrar(orgId: string): Promise<FilaPorTim
 /**
  * Facturas timbradas (con UUID) que NO tienen un envío exitoso registrado.
  * Se hace en 2 pasos (facturas timbradas + IDs con envío exitoso) y se
- * filtra en memoria: es más simple que un left-join anti-pattern y el N
- * esperado es bajo.
+ * filtra en memoria.
+ *
+ * Antes la lista se cortaba a 1000 filas mientras el conteo del badge usaba
+ * TODO el universo: la bandeja escondía filas sin avisar. Ahora se paginan
+ * todas las candidatas con el mismo filtro canónico y un tope de seguridad
+ * que sí avisa por consola cuando se alcanza.
  */
 export async function fetchFacturasPorEnviar(orgId: string): Promise<FilaPorEnviar[]> {
-  const [timbradasRes, enviadas] = await Promise.all([
-    supabase
-      .from("facturas")
-      .select("id, numero, cliente_id, cliente_nombre, total, moneda, fecha_emision, uuid_fiscal")
-      .eq("organization_id", orgId)
-      .not("uuid_fiscal", "is", null)
-      .in("estado", [...ESTADOS_TIMBRADAS_ENVIABLES])
-      .is("deleted_at", null)
-      .order("fecha_emision", { ascending: false })
-      .limit(LIMITE_TIMBRADAS),
+  const candidatas: FilaPorEnviar[] = [];
+  let truncado = false;
+  const [, enviadas] = await Promise.all([
+    (async () => {
+      for (let from = 0; ; from += ENVIOS_PAGE) {
+        const { data, error } = await supabase
+          .from("facturas")
+          .select("id, numero, cliente_id, cliente_nombre, total, moneda, fecha_emision, uuid_fiscal")
+          .eq("organization_id", orgId)
+          .not("uuid_fiscal", "is", null)
+          .in("estado", [...ESTADOS_TIMBRADAS_ENVIABLES])
+          .is("deleted_at", null)
+          .order("fecha_emision", { ascending: false })
+          .order("id", { ascending: true })
+          .range(from, from + ENVIOS_PAGE - 1);
+        if (error) throw error;
+        candidatas.push(...((data ?? []) as FilaPorEnviar[]));
+        if (!data || data.length < ENVIOS_PAGE) break;
+        if (candidatas.length >= MAX_TIMBRADAS_PAGINADAS) { truncado = true; break; }
+      }
+    })(),
     fetchIdsConEnvioExitoso(orgId),
   ]);
-  if (timbradasRes.error) throw timbradasRes.error;
-  warnIfTruncated(timbradasRes.data, LIMITE_TIMBRADAS, "facturacion.fetchFacturasPorEnviar");
-  return ((timbradasRes.data ?? []) as FilaPorEnviar[]).filter((f) => !enviadas.has(f.id));
+  if (truncado) {
+    warnIfTruncated(candidatas, candidatas.length, "facturacion.fetchFacturasPorEnviar");
+  }
+  return candidatas.filter((f) => !enviadas.has(f.id));
 }
 
 export async function fetchPagosRepPendientes(orgId: string): Promise<FilaRepPendiente[]> {
