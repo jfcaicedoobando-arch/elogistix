@@ -133,7 +133,29 @@ export default function CrmDashboard() {
           <StatStripItem icon={Users} label="Leads" value={v(isLoading, vm.kpis.leads)} />
           <StatStripItem icon={Target} label="Oportunidades abiertas" value={v(isLoading, vm.kpis.oportunidadesAbiertas)} />
           <StatStripItem icon={Activity} label="Actividades pendientes" value={v(isLoading, vm.kpis.actividadesPendientes)} />
-          <StatStripItem icon={TrendingUp} label="Pipeline ponderado" value={isLoading ? "…" : formatCurrencyCompact(vm.kpis.pipelinePonderado, "MXN")} />
+          {/* Hallazgo #5: nunca sumar monedas distintas ni etiquetarlas como MXN. */}
+          <StatStripItem
+            icon={TrendingUp}
+            label="Pipeline ponderado"
+            value={
+              isLoading
+                ? "…"
+                : vm.kpis.pipelinePonderadoPorMoneda.length > 1
+                  ? "Varias monedas"
+                  : formatCurrencyCompact(
+                      vm.kpis.pipelinePonderadoPorMoneda[0]?.total ?? 0,
+                      vm.kpis.pipelinePonderadoPorMoneda[0]?.moneda ?? "MXN",
+                    )
+            }
+            valueTooltip={
+              vm.kpis.pipelinePonderadoPorMoneda.length > 1
+                ? vm.kpis.pipelinePonderadoPorMoneda
+                    .map((s) => formatCurrencyCompact(s.total, s.moneda))
+                    .join(" · ")
+                : undefined
+            }
+          />
+
         </KpiStrip>
 
         <CrmForecastMesKpis />
