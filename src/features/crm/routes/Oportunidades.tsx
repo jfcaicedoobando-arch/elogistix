@@ -2,7 +2,7 @@
  * /crm/oportunidades — Pipeline con vista Kanban (DnD) y tabla.
  * Filtros avanzados colapsables para ganar espacio vertical.
  */
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -20,7 +20,8 @@ import ExportarCsvButton from "@/features/crm/components/ExportarCsvButton";
 
 import OportunidadesDialogs from "@/features/crm/components/OportunidadesDialogs";
 import NuevaOportunidadDialog from "@/features/crm/components/NuevaOportunidadDialog";
-import { FILTROS_DEFAULT, type OportunidadesFiltros } from "@/features/crm/components/oportunidadesFiltersTypes";
+import { type OportunidadesFiltros } from "@/features/crm/components/oportunidadesFiltersTypes";
+import { parseOportunidadesUrl, serializeOportunidadesUrl, type OportunidadesUrlState } from "./oportunidadesUrlState";
 import { useOportunidades, useEtapasPipeline, type CrmEtapaRow } from "@/features/crm/hooks";
 import { useMoverOportunidadEtapa } from "@/features/crm/hooks/useMoverOportunidadEtapa";
 import { useVendedoresDisponibles } from "@/features/crm/hooks/useOportunidadesFiltrado";
@@ -37,16 +38,35 @@ import { ErrorState } from "@/components/shared/states/ErrorState";
 export default function Oportunidades() {
   useDocumentTitle('Oportunidades');
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const clienteIdFiltro = searchParams.get("clienteId");
   // Espejo de las policies de `crm_oportunidades`: sin capacidad no se ofrece
   // crear ni mover etapa (antes se mostraban y el guardado moría en RLS).
   const { canCrearOportunidad, canGestionarOportunidad } = usePermissions();
-  const [search, setSearch] = useState("");
-  const [filtros, setFiltros] = useState<OportunidadesFiltros>(FILTROS_DEFAULT);
+  // v13.823.78 — búsqueda, filtros (vista guardada) y pestaña viven en la URL
+  // para que "Volver a Oportunidades" recupere el contexto del KAM.
+  const urlState = useMemo(() => parseOportunidadesUrl(searchParams), [searchParams]);
+  const search = urlState.search;
+  const filtros = urlState.filtros;
+  const vista = urlState.vista;
+  const aplicarUrlState = useCallback(
+    (parcial: Partial<OportunidadesUrlState>) => {
+      setSearchParams(
+        (prev) => serializeOportunidadesUrl({ ...parseOportunidadesUrl(prev), ...parcial }, prev),
+        { replace: true },
+      );
+    },
+    [setSearchParams],
+  );
+  const setSearch = useCallback((v: string) => aplicarUrlState({ search: v }), [aplicarUrlState]);
+  const setFiltros = useCallback(
+    (v: OportunidadesFiltros) => aplicarUrlState({ filtros: v }),
+    [aplicarUrlState],
+  );
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [nuevaOpen, setNuevaOpen] = useState(false);
   const debounced = useDebounce(search, 300);
+
 
   const { data: etapas = [] } = useEtapasPipeline();
   const { data: tc } = useExchangeRates();
@@ -115,7 +135,7 @@ export default function Oportunidades() {
         activos={activos}
       />
 
-      <Tabs defaultValue="kanban">
+      <Tabs value={vista} onValueChange={(v) => aplicarUrlState({ vista: v === "tabla" ? "tabla" : "kanban" })}>
         <TabsList variant="vista">
           <TabsTrigger variant="vista" value="kanban">Kanban</TabsTrigger>
           <TabsTrigger variant="vista" value="tabla">Tabla</TabsTrigger>
