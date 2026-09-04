@@ -89,5 +89,8 @@ describe("invalidación de dashboard en oportunidades", () => {
     expect(invalidated).toContainEqual(["crm", "higiene"]);
     expect(invalidated).toContainEqual(["crm", "kpis"]);
     expect(invalidated).toContainEqual(["crm", "dashboard"]);
+    // Regresión v13.823.84: el hook de eliminar no debe emitir su propio toast
+    // de éxito; el único feedback lo maneja el call-site.
+    expect(notifySuccess).not.toHaveBeenCalled();
   });
 });
