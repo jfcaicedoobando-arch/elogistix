@@ -11,10 +11,12 @@ import { formatFechaHora } from "@/lib/formatters/dates";
 import { COL_W } from "@/components/shared/dataTable/columnWidths";
 
 export const baseActividadColumns: ColumnDef<CrmActividadRow, unknown>[] = defineColumns<CrmActividadRow>([
-  { id: "tipo", header: "Tipo", meta: { width: COL_W.fecha }, cell: ({ row }) => <Badge variant="outline">{row.original.tipo}</Badge> },
-  { id: "asunto", header: "Asunto", meta: { className: "font-medium" }, cell: ({ row }) => row.original.asunto },
-  { id: "entidad", header: "Entidad", meta: { className: "text-body-sm" }, cell: ({ row }) => row.original.entidad_tipo },
-  { id: "responsable", header: "Responsable", meta: { className: "text-body-sm" }, cell: ({ row }) => row.original.responsable_email || "—" },
+  // v13.823.78 — anchos compactados para que la tabla quepa en 1280x720 sin
+  // scroll horizontal (antes ~996px de contenido en ~950px de ancho útil).
+  { id: "tipo", header: "Tipo", meta: { width: COL_W.short }, cell: ({ row }) => <Badge variant="outline">{row.original.tipo}</Badge> },
+  { id: "asunto", header: "Asunto", meta: { className: "font-medium truncate" }, cell: ({ row }) => row.original.asunto },
+  { id: "entidad", header: "Entidad", meta: { width: COL_W.short, className: "text-body-sm" }, cell: ({ row }) => row.original.entidad_tipo },
+  { id: "responsable", header: "Responsable", meta: { width: COL_W.nombre, className: "text-body-sm truncate" }, cell: ({ row }) => row.original.responsable_email || "—" },
   {
     ...statusColumn<CrmActividadRow>({
       domain: "actividad_crm",
@@ -29,7 +31,7 @@ export const baseActividadColumns: ColumnDef<CrmActividadRow, unknown>[] = defin
     meta: { width: COL_W.fecha },
   },
   {
-    id: "fecha_programada", header: "Programada", meta: { className: "text-body-sm" },
+    id: "fecha_programada", header: "Programada", meta: { width: COL_W.estado, className: "text-body-sm" },
     cell: ({ row }) => row.original.fecha_programada ? formatFechaHora(row.original.fecha_programada) : "—",
   },
 ]);
@@ -39,11 +41,15 @@ export const baseActividadColumns: ColumnDef<CrmActividadRow, unknown>[] = defin
  * permiso real: espejo de las policies de `crm_actividades` (staff sobre
  * cualquiera, vendedor sólo las propias). Sin permiso la fila no muestra
  * botones que la RLS rechazaría.
+ *
+ * `stickyRight`: si por resoluciones angostas la tabla llega a desplazarse,
+ * las acciones permanecen visibles sin ocultar datos.
  */
 export const actividadActionColumn = (
   puedeGestionar: (a: CrmActividadRow) => boolean,
 ): ColumnDef<CrmActividadRow, unknown> => ({
-  id: "acciones", header: "", meta: { width: COL_W.fecha },
+  id: "acciones", header: "", meta: { width: COL_W.fecha, stickyRight: true, align: "right" },
   cell: ({ row }) =>
     puedeGestionar(row.original) ? <ActividadRowActions actividad={row.original} /> : null,
 });
+
