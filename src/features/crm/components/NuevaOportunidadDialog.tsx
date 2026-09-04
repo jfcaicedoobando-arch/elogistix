@@ -24,6 +24,7 @@ import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 import {
   buildOportunidadFormPayload,
   validarOportunidadForm,
+  faltantesOportunidadForm,
 } from "@/features/crm/domain/oportunidadFormPayload";
 
 interface Props {
@@ -155,13 +156,17 @@ export default function NuevaOportunidadDialog({
   // relevante al crear). Habilita la confirmación de descarte del shell.
   const dirtyTotal = isDirty || (!isEdit && autoActividad !== true);
 
+  // Candado explícito al crear: sin origen, nombre o etapa el botón no debe
+  // parecer accionable (antes el clic era un no-op silencioso).
+  const faltantes = isEdit ? [] : faltantesOportunidadForm(form);
+
   const footer = (
     <FormDialogFooter
       onCancel={() => onOpenChange(false)}
       onConfirm={handleSubmit}
       confirmLabel={isEdit ? "Guardar cambios" : "Crear oportunidad"}
       loading={pendingTotal}
-      disabled={!isEdit && !form.etapa_id}
+      disabled={faltantes.length > 0}
     />
   );
 
@@ -178,6 +183,15 @@ export default function NuevaOportunidadDialog({
       footer={footer}
     >
 
+      {faltantes.length > 0 && (
+        <p
+          role="status"
+          aria-live="polite"
+          className="mb-3 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-body-sm text-destructive"
+        >
+          Para crear la oportunidad falta: {faltantes.join(", ")}.
+        </p>
+      )}
       <OportunidadFormFields
         form={form}
         setForm={setForm}
