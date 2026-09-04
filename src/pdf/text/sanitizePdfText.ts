@@ -18,6 +18,7 @@ const REEMPLAZOS: ReadonlyArray<[RegExp, string]> = [
 ];
 
 /** Devuelve el texto listo para imprimirse con fuentes WinAnsi. */
-export function sanitizePdfText(input: string): string {
-  return REEMPLAZOS.reduce((txt, [re, rep]) => txt.replace(re, rep), input);
+export function sanitizePdfText(input: string | null | undefined): string {
+  if (input == null) return "";
+  return REEMPLAZOS.reduce((txt, [re, rep]) => txt.replace(re, rep), String(input));
 }
