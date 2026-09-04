@@ -4,6 +4,7 @@
  */
 
 import { isoUtcDay } from "@/lib/date/mx";
+import { agruparMontosPorMonedaOrdenado, type SubtotalMoneda } from "@/features/crm/domain/montosPorMoneda";
 
 export interface OpRow {
   id: string;
@@ -52,6 +53,19 @@ export function computePipelinePonderado(ops: OpRow[]): number {
   return ops.reduce(
     (s, o) => s + Number(o.monto_estimado ?? 0) * (Number(o.probabilidad ?? 0) / 100),
     0,
+  );
+}
+
+/**
+ * Pipeline ponderado desglosado por moneda: NO suma monedas distintas entre
+ * sí (no hay TC histórico canónico). Ver `montosPorMoneda.ts`.
+ */
+export function computePipelinePonderadoPorMoneda(ops: OpRow[]): SubtotalMoneda[] {
+  return agruparMontosPorMonedaOrdenado(
+    ops.map((o) => ({
+      monto: Number(o.monto_estimado ?? 0) * (Number(o.probabilidad ?? 0) / 100),
+      moneda: o.moneda,
+    })),
   );
 }
 
