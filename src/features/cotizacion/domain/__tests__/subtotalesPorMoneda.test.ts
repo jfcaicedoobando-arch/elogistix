@@ -50,17 +50,10 @@ describe("subtotalesPorMoneda", () => {
 });
 
 describe("multimoneda EUR (hallazgo P1)", () => {
-  it("conserva el renglón en EUR en el desglose (antes se descartaba)", () => {
-    const r = subtotalesPorMoneda(
-      [concepto("EUR", 2, 100), concepto("MXN", 1, 500), concepto("USD", 1, 50)],
-      500,
-      "MXN",
-    );
-    expect(r).toEqual([
-      { moneda: "USD", monto: 50 },
-      { moneda: "EUR", monto: 200 },
-      { moneda: "MXN", monto: 500 },
-    ]);
+  it("conserva la moneda EUR en el desglose (columnas planas)", () => {
+    // Los conceptos tipados del ERP sólo son USD/MXN; una cotización cuya
+    // columna `moneda` es EUR sí debe mostrarse como EUR, no como MXN.
+    expect(subtotalesPorMoneda(null, 1000, "EUR")).toEqual([{ moneda: "EUR", monto: 1000 }]);
   });
 
   it("USD+EUR usan cada uno SU tipo de cambio", () => {
