@@ -4,6 +4,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { CRM_ACTIVIDADES_COLUMNS_MIN } from "./crmActividadesColumns";
 import { filtroResponsable } from "./actividadesQueryHelpers";
+import { filtroVendedor } from "./scopePersonal";
 import {
   isoDaysFromNow,
   computePipelinePonderado,
@@ -117,23 +118,32 @@ export async function fetchCrmDashboard(
           .order("fecha_programada", { ascending: true })
           .limit(10)
       : Promise.resolve({ data: [] as CrmDashboardData["misActividadesHoy"], error: null }),
-    supabase
-      .from("crm_oportunidades")
-      .select("id, nombre, cliente_nombre, monto_estimado, moneda, probabilidad, fecha_estimada_cierre, crm_etapas_pipeline!inner(tipo)")
-      .eq("crm_etapas_pipeline.tipo", "abierta")
-      .is("deleted_at", null)
-      .gte("fecha_estimada_cierre", todayLocalISO())
-      .lte("fecha_estimada_cierre", isoDaysFromNow(7))
-      .order("fecha_estimada_cierre", { ascending: true })
-      .limit(10),
-    supabase
-      .from("crm_leads")
-      .select("id, empresa, contacto, fuente, created_at")
-      .eq("estado", "Nuevo")
-      .is("deleted_at", null)
-      .lte("created_at", hace7.toISOString())
-      .order("created_at", { ascending: true })
-      .limit(10),
+    // Tanda 2 · hallazgo 1: tarjeta personal ("mi seguimiento") — filtra por
+    // vendedor del usuario (id, o correo legado cuando el id es null).
+    userId
+      ? supabase
+          .from("crm_oportunidades")
+          .select("id, nombre, cliente_nombre, monto_estimado, moneda, probabilidad, fecha_estimada_cierre, crm_etapas_pipeline!inner(tipo)")
+          .eq("crm_etapas_pipeline.tipo", "abierta")
+          .is("deleted_at", null)
+          .or(filtroVendedor(userId, userEmail))
+          .gte("fecha_estimada_cierre", todayLocalISO())
+          .lte("fecha_estimada_cierre", isoDaysFromNow(7))
+          .order("fecha_estimada_cierre", { ascending: true })
+          .limit(10)
+      : Promise.resolve({ data: [], error: null }),
+    // Tanda 2 · hallazgo 1: "Leads sin contactar" es tarjeta personal.
+    userId
+      ? supabase
+          .from("crm_leads")
+          .select("id, empresa, contacto, fuente, created_at")
+          .eq("estado", "Nuevo")
+          .is("deleted_at", null)
+          .or(filtroVendedor(userId, userEmail))
+          .lte("created_at", hace7.toISOString())
+          .order("created_at", { ascending: true })
+          .limit(10)
+      : Promise.resolve({ data: [], error: null }),
     supabase.from("crm_etapas_pipeline").select("id, nombre, color, tipo, orden").is("deleted_at", null).eq("activa", true).order("orden", { ascending: true }),
   ]);
 
