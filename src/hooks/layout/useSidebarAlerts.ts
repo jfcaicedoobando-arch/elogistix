@@ -45,9 +45,16 @@ export function invalidateSidebarAlerts(queryClient: QueryClient): void {
 }
 
 export function useSidebarAlerts() {
+  // Sentry JAVASCRIPT-REACT-5X: en /login (sesión anónima) estos contadores se
+  // ejecutaban igual y la RPC, que sólo tiene EXECUTE para `authenticated`,
+  // fallaba con "permission denied". Sin sesión no hay badges que pintar.
+  const { user } = useAuth();
+  const conSesion = Boolean(user);
+
   const { data } = useQuery({
     queryKey: queryKeys.sidebar.alertCounts,
     queryFn: fetchSidebarAlertCounts,
+    enabled: conSesion,
     ...SIDEBAR_QUERY_TUNING,
   });
 
@@ -56,6 +63,7 @@ export function useSidebarAlerts() {
   const { data: adminPendientes = 0 } = useQuery({
     queryKey: queryKeys.sidebar.adminPendientes,
     queryFn: fetchAdminPendientesCount,
+    enabled: conSesion,
     ...SIDEBAR_QUERY_TUNING,
   });
 
