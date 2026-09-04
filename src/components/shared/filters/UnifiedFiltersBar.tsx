@@ -62,7 +62,9 @@ export function UnifiedFiltersBar({
         {primary && !isMobile ? (
           <div className="flex flex-wrap items-center gap-2">{primary}</div>
         ) : null}
-        {primary || secondary ? (
+        {/* El panel sólo existe si tendrá contenido: en escritorio requiere
+            `secondary`; en móvil basta con `primary`, que vive dentro. */}
+        {secondary || (isMobile && primary) ? (
           <MobileFiltersSheet
             open={sheetOpen}
             onOpenChange={setSheetOpen}
