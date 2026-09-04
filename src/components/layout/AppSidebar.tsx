@@ -82,12 +82,13 @@ const AppSidebarBase = forwardRef<HTMLDivElement>(function AppSidebarBase(_props
 
       <SidebarContent
         ref={railRef}
-        className="relative px-2 py-4 group-data-[collapsible=icon]:py-2 [scrollbar-width:thin] [scrollbar-color:hsl(var(--sidebar-foreground)/0.3)_transparent]"
+        className="relative px-2 py-4 group-data-[collapsible=icon]:py-1 group-data-[collapsible=icon]:gap-1 [scrollbar-width:thin] [scrollbar-color:hsl(var(--sidebar-foreground)/0.3)_transparent]"
       >
-        <div className="px-2 mb-2 space-y-2 shrink-0">
+        <div className={cn("px-2 space-y-2 shrink-0", collapsed ? "mb-1" : "mb-2")}>
           <OrgSwitcher collapsed={collapsed} />
           <OrgBadge collapsed={collapsed} />
         </div>
+
         {sections.map((section, i) => (
           <SidebarGroupBlock
             key={section.label}
