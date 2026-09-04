@@ -23,6 +23,7 @@ import { notifySuccess, notifyError } from "@/lib/ui/appFeedback";
 import { getErrorMessage } from "@/lib/errors";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { useCrearLead } from "@/features/crm/hooks";
+import { leadQuickCreateInput } from "@/features/crm/domain/leads/quickCreateInput";
 
 interface Props {
   open: boolean;
@@ -60,16 +61,8 @@ export default function QuickCreateLeadDialog({ open, onOpenChange, onCreated, o
     }
     enviandoRef.current = true;
     try {
-      const r = await crear.mutateAsync({
-        empresa: emp,
-        contacto: "",
-        email: contacto.includes("@") ? contacto : "",
-        telefono: contacto.includes("@") ? "" : contacto,
-        fuente: "Otro",
-        estado: "Nuevo",
-        vendedor_id: user?.id ?? null,
-        vendedor_email: user?.email ?? "",
-      });
+      // Mapeo canónico compartido: "Correo o teléfono" → `email` / `telefono`.
+      const r = await crear.mutateAsync(leadQuickCreateInput(emp, contacto, user));
       notifySuccess(undefined, { title: "Lead creado", duration: 2000 });
       // El cierre limpia el estado (efecto de transición): no hace falta resetear aquí.
       onOpenChange(false);
