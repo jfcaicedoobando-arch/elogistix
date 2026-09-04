@@ -109,11 +109,8 @@ export default function Leads() {
       {/* Ola 3 · O3.7.2 — el contador sale de la misma query del listado
           (count exact de listLeads) y se etiqueta cuando hay filtros. */}
       <CrmSubheader
-        context={
-          list.search || list.activeCount > 0
-            ? `${list.count} leads coinciden con los filtros`
-            : `${list.count} leads en cartera`
-        }
+        context={copiaContadorLeads(list.count, Boolean(list.search) || list.activeCount > 0)}
+
       />
 
       {canGestionarLeadsEnLote && selected.size > 0 && (
