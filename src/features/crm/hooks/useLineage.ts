@@ -25,6 +25,12 @@ interface OpLineageResult {
   embs: LineageEmbRow[];
   lead: LineageLead | null;
   isLoadingCots: boolean;
+  /**
+   * Tercera tanda YAGNI · hallazgo 1: un error de lectura ya NO se muestra
+   * como "sin datos". La UI distingue vacío real de fallo y ofrece reintento.
+   */
+  isError: boolean;
+  refetch: () => void;
 }
 
 export function useOportunidadLineage(
@@ -63,5 +69,11 @@ export function useOportunidadLineage(
     embs: embsQ.data ?? [],
     lead: leadQ.data ?? null,
     isLoadingCots: cotsQ.isLoading,
+    isError: cotsQ.isError || embsQ.isError || leadQ.isError,
+    refetch: () => {
+      void cotsQ.refetch();
+      void embsQ.refetch();
+      void leadQ.refetch();
+    },
   };
 }
