@@ -135,36 +135,13 @@ export default function NuevaActividadDialog({ open, onOpenChange, defaultEntida
     >
 
       {!defaultEntidad && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div className="space-y-1">
-            <Label>Tipo de entidad</Label>
-            <Select value={entidadTipo} onValueChange={(v) => { setEntidadTipo(v as CrmEntidadTipo); setEntidadId(""); }}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="lead">Lead</SelectItem>
-                <SelectItem value="oportunidad">Oportunidad</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-1">
-            <Label className="flex items-center">
-              {entidadTipo === "lead" ? "Lead" : "Oportunidad"}
-              <span className="text-destructive ml-0.5">*</span>
-            </Label>
-            <div aria-describedby={errorEntidad ? "nueva-actividad-entidad-error" : undefined}>
-              {entidadTipo === "lead" ? (
-                <LeadComboboxCrm value={entidadId} onChange={(id) => setEntidadId(id)} />
-              ) : (
-                <OportunidadComboboxCrm value={entidadId} onChange={(id) => setEntidadId(id)} />
-              )}
-            </div>
-            {errorEntidad && (
-              <p id="nueva-actividad-entidad-error" className="text-label text-destructive">
-                Selecciona {entidadTipo === "lead" ? "el lead" : "la oportunidad"} a la que pertenece.
-              </p>
-            )}
-          </div>
-        </div>
+        <SelectorEntidadActividad
+          entidadTipo={entidadTipo}
+          entidadId={entidadId}
+          error={errorEntidad}
+          onTipo={(t) => { setEntidadTipo(t); setEntidadId(""); }}
+          onId={setEntidadId}
+        />
       )}
       {defaultEntidad?.label && (
         <div className="text-body-sm text-muted-foreground">Para: <span className="font-medium text-foreground">{defaultEntidad.label}</span></div>
@@ -229,5 +206,53 @@ export default function NuevaActividadDialog({ open, onOpenChange, defaultEntida
         </div>
       </div>
     </FormDialogShell>
+  );
+}
+
+interface SelectorEntidadProps {
+  entidadTipo: CrmEntidadTipo;
+  entidadId: string;
+  error: boolean;
+  onTipo: (t: CrmEntidadTipo) => void;
+  onId: (id: string) => void;
+}
+
+/**
+ * Selector de entidad (lead u oportunidad) con error accesible.
+ * Vive fuera del diálogo para mantener el componente principal simple.
+ */
+function SelectorEntidadActividad({ entidadTipo, entidadId, error, onTipo, onId }: SelectorEntidadProps) {
+  const esLead = entidadTipo === "lead";
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      <div className="space-y-1">
+        <Label>Tipo de entidad</Label>
+        <Select value={entidadTipo} onValueChange={(v) => onTipo(v as CrmEntidadTipo)}>
+          <SelectTrigger><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="lead">Lead</SelectItem>
+            <SelectItem value="oportunidad">Oportunidad</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      <div className="space-y-1">
+        <Label className="flex items-center">
+          {esLead ? "Lead" : "Oportunidad"}
+          <span className="text-destructive ml-0.5">*</span>
+        </Label>
+        <div aria-describedby={error ? "nueva-actividad-entidad-error" : undefined}>
+          {esLead ? (
+            <LeadComboboxCrm value={entidadId} onChange={onId} />
+          ) : (
+            <OportunidadComboboxCrm value={entidadId} onChange={onId} />
+          )}
+        </div>
+        {error && (
+          <p id="nueva-actividad-entidad-error" className="text-label text-destructive">
+            Selecciona {esLead ? "el lead" : "la oportunidad"} a la que pertenece.
+          </p>
+        )}
+      </div>
+    </div>
   );
 }
