@@ -14,7 +14,7 @@ DECLARE
   v_era_terminal boolean;
   v_op_id uuid; v_op_org uuid; v_op_vendedor uuid; v_op_nombre text;
   v_etapa_tipo crm_etapa_tipo; v_etapa_ganada uuid;
-  v_ganadora uuid; v_valor_previo numeric; v_emb_ganador uuid;
+  v_ganadora uuid; v_valor_previo numeric; v_emb_ganador uuid; v_op_moneda text;
   v_hoy date := (now() AT TIME ZONE 'America/Mexico_City')::date;
   v_uid uuid := auth.uid();
 BEGIN
@@ -59,9 +59,9 @@ BEGIN
 
   -- (b) lock de la oportunidad: serializa aceptaciones concurrentes.
   SELECT o.id, o.organization_id, o.vendedor_id, o.nombre, e.tipo,
-         o.cotizacion_ganadora_id, o.valor_real, o.embarque_ganador_id
+         o.cotizacion_ganadora_id, o.valor_real, o.embarque_ganador_id, o.moneda
     INTO v_op_id, v_op_org, v_op_vendedor, v_op_nombre, v_etapa_tipo,
-         v_ganadora, v_valor_previo, v_emb_ganador
+         v_ganadora, v_valor_previo, v_emb_ganador, v_op_moneda
     FROM public.crm_oportunidades o
     JOIN public.crm_etapas_pipeline e ON e.id = o.etapa_id
    WHERE o.id = NEW.oportunidad_id
@@ -81,6 +81,15 @@ BEGIN
       USING ERRCODE = 'P0001',
             HINT = format('ganadora_actual=%s; intentada=%s (%s)',
                           v_ganadora, NEW.id, COALESCE(NEW.folio, 'sin folio'));
+  END IF;
+
+  -- (k) no se escribe valor_real de una cotización en otra moneda distinta
+  -- a la de la oportunidad: evita mezclar, p. ej., subtotal USD dentro de
+  -- una oportunidad MXN.
+  IF v_op_moneda IS NOT NULL AND NEW.moneda::text IS DISTINCT FROM v_op_moneda THEN
+    RAISE EXCEPTION 'LC_MONEDA_INCOMPATIBLE: la cotización está en % y la oportunidad en %; actualiza la moneda de la oportunidad o cotiza en la misma moneda antes de aceptarla',
+      NEW.moneda, v_op_moneda
+      USING ERRCODE = 'P0001';
   END IF;
 
   -- (h) una oportunidad perdida exige reapertura explícita
