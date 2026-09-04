@@ -87,15 +87,18 @@ function SidebarGroupBlockBase({
     </SidebarGroupContent>
   );
 
-  // Modo icon-only: sin colapsable, comportamiento actual.
+  // Modo icon-only: sin colapsable y con cromo vertical mínimo (VB-49): los
+  // títulos de grupo no se ven, así que el relleno y los márgenes amplios sólo
+  // empujaban los últimos accesos fuera de la pantalla en 1280x720.
   if (collapsed) {
     return (
       <>
-        <SidebarGroup>{menu}</SidebarGroup>
-        <Separator className="my-2 mx-1" />
+        <SidebarGroup className="py-0">{menu}</SidebarGroup>
+        {!esUltimoGrupo && <Separator className="my-1 mx-1" />}
       </>
     );
   }
+
 
   return (
     <>
