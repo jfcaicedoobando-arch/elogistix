@@ -58,6 +58,6 @@ describe("bandeja Por enviar", () => {
     mock.setTableResult("facturas", { data: null, error: { message: "boom" } });
     mock.setTableResult("factura_envios", { data: [], error: null });
     mock.setTableResult("pagos_factura", { data: [], error: null, count: 0 } as never);
-    await expect(fetchBandejaConteos("org1")).rejects.toBeTruthy();
+    await expect(fetchBandejaConteos("org1")).rejects.toThrow(/boom/);
   });
 });
