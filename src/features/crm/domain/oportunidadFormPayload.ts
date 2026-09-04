@@ -96,3 +96,20 @@ export function validarOportunidadForm(
   }
   return null;
 }
+
+/**
+ * Campos mínimos faltantes para poder crear la oportunidad.
+ *
+ * Hallazgo CRM 1280x720: "Crear oportunidad" quedaba habilitado sin origen ni
+ * Nombre y el clic no producía nada visible. Esta lista alimenta el candado del
+ * botón y el resumen accesible (aria-live) del diálogo. No cambia las reglas:
+ * es la misma exigencia que `validarOportunidadForm`.
+ */
+export function faltantesOportunidadForm(form: OportunidadFormState): string[] {
+  const faltan: string[] = [];
+  if (form.origen_tipo === "prospecto" && !form.lead_id) faltan.push("prospecto de origen");
+  if (form.origen_tipo === "cliente" && !form.cliente_id) faltan.push("cliente de origen");
+  if (!form.nombre.trim()) faltan.push("nombre de la oportunidad");
+  if (!form.etapa_id) faltan.push("etapa abierta del pipeline");
+  return faltan;
+}
