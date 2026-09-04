@@ -134,6 +134,42 @@ describe("crearTareaSeguimiento", () => {
   });
 });
 
+describe("tanda 2 · hallazgo 2: los fallos de tarea automática no se ocultan", () => {
+  it("propaga el error del INSERT de la tarea ganada", async () => {
+    mock.setTableResultOnce("crm_actividades", { data: null, error: null }); // chequeo idempotencia
+    mock.setTableResult("crm_actividades", { data: null, error: { message: "insert down" } });
+    await expect(
+      crearTareaGanada(ctx({ etapa: { ...baseEtapa, tipo: "ganada" } })),
+    ).rejects.toMatchObject({ message: "insert down" });
+    mock.resetResults();
+  });
+
+  it("propaga el error del INSERT de la tarea de seguimiento", async () => {
+    mock.setTableResultOnce("crm_actividades", { data: null, error: null });
+    mock.setTableResult("crm_actividades", { data: null, error: { message: "insert down" } });
+    await expect(crearTareaSeguimiento(ctx())).rejects.toMatchObject({ message: "insert down" });
+    mock.resetResults();
+  });
+
+  it("no duplica la tarea si ya existe una abierta (reintento idempotente)", async () => {
+    mock.setTableResult("crm_actividades", { data: { id: "act-1" }, error: null });
+    await crearTareaSeguimiento(ctx());
+    expect(mock.tableCalls.some(c => c.table === "crm_actividades" && c.ops.includes("insert"))).toBe(false);
+    mock.resetResults();
+  });
+
+  it("runAutomatizaciones agrega el fallo en un mensaje accionable sin revertir la etapa", async () => {
+    mock.setTableResult("crm_etapas_pipeline", { data: baseEtapa, error: null });
+    mock.setTableResult("crm_oportunidades", { data: baseOp, error: null });
+    mock.setTableResultOnce("crm_actividades", { data: null, error: null });
+    mock.setTableResult("crm_actividades", { data: null, error: { message: "insert down" } });
+    await expect(runAutomatizaciones("e1", "o1", "u-actor", "actor@x.com")).rejects.toThrow(
+      /tarea de seguimiento.*insert down.*reintentar sin duplicar/is,
+    );
+    mock.resetResults();
+  });
+});
+
 describe("runAutomatizaciones", () => {
   it("retorna temprano si etapa no existe", async () => {
     mock.setTableResult("crm_etapas_pipeline", { data: null, error: null });
