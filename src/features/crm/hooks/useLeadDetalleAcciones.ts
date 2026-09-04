@@ -11,6 +11,7 @@ import { notifyError } from "@/lib/ui/appFeedback";
 import { crmToast } from "@/features/crm/lib/crmToast";
 import { ROUTES } from "@/constants/routes";
 import { faltantesGateProspecto } from "@/features/crm/domain/leads/etapas";
+import { emailLooksValid } from "@/features/cliente/components/nuevoClienteValidators";
 import {
   useActualizarLead,
   useCalificarProspecto,
@@ -36,6 +37,11 @@ export function useLeadDetalleAcciones(
   const tomar = useTomarLead();
   const calificar = useCalificarProspecto();
   const [faltantesGate, setFaltantesGate] = useState<string[]>([]);
+  /**
+   * v13.823.78: la edición no validaba el correo (el alta sí), así que
+   * "foo" se persistía. Correo vacío sigue permitido: puede haber teléfono.
+   */
+  const [errorEmail, setErrorEmail] = useState<string | null>(null);
 
   const handleSave = async () => {
     if (!id) return;
@@ -43,6 +49,12 @@ export function useLeadDetalleAcciones(
       crmToast.success("No hay cambios por guardar");
       return;
     }
+    const email = (patch.email ?? "").trim();
+    if (email !== "" && !emailLooksValid(email)) {
+      setErrorEmail("Escribe un correo válido, por ejemplo nombre@empresa.com");
+      return;
+    }
+    setErrorEmail(null);
     try {
       await actualizar.mutateAsync({ id, patch });
       crmToast.success("Cambios guardados");
@@ -100,6 +112,7 @@ export function useLeadDetalleAcciones(
     handleCalificar,
     handleTomar,
     faltantesGate,
+    errorEmail,
     cerrarGate: () => setFaltantesGate([]),
     guardando: actualizar.isPending,
     eliminando: eliminar.isPending,

@@ -32,9 +32,11 @@ interface Props {
   dirty: boolean;
   isSaving: boolean;
   onSave: () => void;
+  /** Mensaje inline cuando el correo capturado no es válido. */
+  errorEmail?: string | null;
 }
 
-export default function LeadDatosCard({ form, set, canEdit, dirty, isSaving, onSave }: Props) {
+export default function LeadDatosCard({ form, set, canEdit, dirty, isSaving, onSave, errorEmail = null }: Props) {
   return (
     <Card>
       <CardHeader>
@@ -52,7 +54,20 @@ export default function LeadDatosCard({ form, set, canEdit, dirty, isSaving, onS
           </div>
           <div className="space-y-1">
             <Label htmlFor="lead-datos-email">Correo</Label>
-            <Input id="lead-datos-email" type="email" value={form.email} onChange={(e) => set("email", e.target.value)} disabled={!canEdit} />
+            <Input
+              id="lead-datos-email"
+              type="email"
+              value={form.email}
+              onChange={(e) => set("email", e.target.value)}
+              disabled={!canEdit}
+              aria-invalid={errorEmail ? true : undefined}
+              aria-describedby={errorEmail ? "lead-datos-email-error" : undefined}
+            />
+            {errorEmail ? (
+              <p id="lead-datos-email-error" role="alert" className="text-body-sm text-destructive">
+                {errorEmail}
+              </p>
+            ) : null}
           </div>
           <div className="space-y-1">
             <Label htmlFor="lead-datos-telefono">Teléfono</Label>
