@@ -232,6 +232,3 @@ ON public.cotizaciones (organization_id, oportunidad_id)
 WHERE deleted_at IS NULL
   AND oportunidad_id IS NOT NULL
   AND estado IN ('Aceptada'::estado_cotizacion, 'En operación'::estado_cotizacion);
-
--- ── 4) Backfill histórico determinista e idempotente ───────────────────────
-DO $bf$
