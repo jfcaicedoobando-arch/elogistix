@@ -22,9 +22,13 @@ import { resolverLimpiezaCierre } from "@/features/crm/hooks/moverOportunidadEta
 
 beforeEach(() => { mock.tableCalls.length = 0; });
 
-const ETAPA_GANADA = { id: "e-ganada", tipo: "ganada" } as const;
-const ETAPA_PERDIDA = { id: "e-perdida", tipo: "perdida" } as const;
-const ETAPA_ABIERTA = { id: "e-abierta", tipo: "abierta" } as const;
+type EtapaArg = Parameters<typeof resolverLimpiezaCierre>[0];
+/** Sólo `id`/`tipo` participan en la limpieza de cierre; el resto de la fila es irrelevante. */
+const etapa = (id: string, tipo: string): EtapaArg => ({ id, tipo }) as unknown as EtapaArg;
+
+const ETAPA_GANADA = etapa("e-ganada", "ganada");
+const ETAPA_PERDIDA = etapa("e-perdida", "perdida");
+const ETAPA_ABIERTA = etapa("e-abierta", "abierta");
 
 describe("Reapertura de oportunidades — Ganada → Abierta", () => {
   it("limpia fecha_cierre_real y valor_real en el mismo UPDATE, conserva expectedUpdatedAt", async () => {
