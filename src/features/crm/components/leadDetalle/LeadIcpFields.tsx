@@ -9,8 +9,10 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import {
-  ICP_ESTATUS, ICP_FRECUENCIAS, ICP_INCOTERMS, type LeadIcpForm,
+  ICP_FRECUENCIAS, ICP_INCOTERMS, normalizarEstatusIcp, opcionesEstatusIcp,
+  type LeadIcpForm,
 } from "@/features/crm/domain/leads/icp";
+
 
 interface Props {
   form: LeadIcpForm;
