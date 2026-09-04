@@ -33,6 +33,38 @@ interface Props {
   arrastrable?: boolean;
 }
 
+/**
+ * Datos derivados de la tarjeta (montos, meta y semáforo). Se calculan aparte
+ * para mantener el componente bajo el límite de complejidad del lint.
+ */
+function derivarDatosTarjeta(
+  op: Props["op"],
+  proxima: Props["proxima"],
+  avance: Props["avance"],
+  esCerrada: Props["esCerrada"],
+) {
+  const vencida = Boolean(
+    proxima?.fecha_programada && new Date(proxima.fecha_programada) < new Date(),
+  );
+  const montoEstimado = Number(op.monto_estimado ?? 0);
+  const meta = estadoMeta(
+    {
+      montoEstimado,
+      montoMeta: op.monto_meta != null ? Number(op.monto_meta) : null,
+      fechaMetaCierre: op.fecha_meta_cierre ?? null,
+      cerrada: esCerrada,
+    },
+    todayLocalISO(),
+  );
+  return {
+    vencida,
+    montoEstimado,
+    montoMeta: Number(op.monto_meta ?? 0),
+    semaforo: semaforoCriterios(avance),
+    meta,
+  };
+}
+
 export default function OportunidadCard({ op, onClick, proxima, avance, esCerrada, arrastrable = true }: Props) {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: op.id,
@@ -43,18 +75,11 @@ export default function OportunidadCard({ op, onClick, proxima, avance, esCerrad
     opacity: isDragging ? 0.4 : 1,
     cursor: arrastrable ? "grab" : "pointer",
   };
-  const vencida = Boolean(
-    proxima?.fecha_programada && new Date(proxima.fecha_programada) < new Date(),
-  );
-  const semaforo = semaforoCriterios(avance);
-  const meta = estadoMeta(
-    {
-      montoEstimado: Number(op.monto_estimado ?? 0),
-      montoMeta: op.monto_meta != null ? Number(op.monto_meta) : null,
-      fechaMetaCierre: op.fecha_meta_cierre ?? null,
-      cerrada: esCerrada,
-    },
-    todayLocalISO(),
+  const { vencida, montoEstimado, montoMeta, semaforo, meta } = derivarDatosTarjeta(
+    op,
+    proxima,
+    avance,
+    esCerrada,
   );
 
   return (
