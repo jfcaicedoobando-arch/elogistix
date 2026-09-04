@@ -122,4 +122,8 @@ export const LC_CODE_MESSAGES_CRM: Record<string, string> = {
     "Ese motivo de pérdida pertenece a otra organización. Elige uno de tu catálogo.",
   LC_ROL_SIN_PERMISO_CRM:
     "Tu rol no tiene permiso para esta acción del CRM. Solicítalo a un administrador.",
+  LC_MONEDA_INCOMPATIBLE:
+    "La cotización y la oportunidad están en monedas distintas. Cotiza en la misma moneda o actualiza la moneda de la oportunidad antes de aceptarla.",
+  LC_MIG_NO_APLICADA:
+    "Una actualización de la base de datos quedó incompleta. Avisa a soporte para revisarla.",
 };
