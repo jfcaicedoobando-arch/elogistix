@@ -9,7 +9,8 @@ import {
   fmtSinFactura, 
   fmtContenedores, 
   fmtContenedoresFechas, 
-  fmtRepPendientes 
+  fmtRepPendientes,
+  fmtMargenMinimoPct 
 } from "../cierreCheckFormatters";
 
 describe("cierreCheckFormatters", () => {
