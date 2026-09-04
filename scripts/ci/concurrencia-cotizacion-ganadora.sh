@@ -154,24 +154,41 @@ if [[ $listo -ne 1 ]]; then
   exit 1
 fi
 
-# A está dentro de la transacción con el lock tomado: se levanta el semáforo
-# para que comitee mientras B queda encolada en ese mismo lock.
-psql_run <<SQL
-INSERT INTO public.lc_conc_barrera (id) VALUES ('go') ON CONFLICT DO NOTHING;
-SQL
-
-
 # ── Sesión B: intenta aceptar C2 de la misma oportunidad ─────────────────────
-# Se bloquea en el lock de A y, al liberarse, debe fallar por ganadora existente.
-rc_b=0
-set +e
-psql_run > "$log_b" 2>&1 <<SQL
+# Arranca con A todavía dentro de su transacción: B se encola en el lock y, al
+# liberarse, debe fallar por ganadora existente.
+( psql_run > "$log_b" 2>&1 <<SQL
+SET application_name = '${APP_B}';
 BEGIN;
 UPDATE public.cotizaciones SET estado = 'Aceptada' WHERE id = '${C2}';
 COMMIT;
 SQL
-rc_b=$?
-set -e
+) &
+pid_b=$!
+
+# Espera a que B esté efectivamente encolada en el lock de A (contención real).
+for _ in $(seq 1 $((ESPERA_MAX_S * 10))); do
+  bloqueada=$(psql_run <<SQL
+SELECT EXISTS (
+  SELECT 1 FROM pg_stat_activity
+   WHERE application_name = '${APP_B}' AND wait_event_type = 'Lock'
+)::text;
+SQL
+) || bloqueada='error'
+  [[ "$bloqueada" == "t" ]] && break
+  kill -0 "$pid_b" 2>/dev/null || break
+  sleep 0.1
+done
+
+# A está dentro de la transacción con el lock tomado y B encolada detrás: se
+# levanta el semáforo para que A comitee y B despierte contra la ganadora.
+psql_run <<SQL
+INSERT INTO public.lc_conc_barrera (id) VALUES ('go') ON CONFLICT DO NOTHING;
+SQL
+
+rc_b=0
+wait "$pid_b" || rc_b=$?
+
 
 # `wait` con set -e no debe ocultar la causa: se captura el rc de A.
 rc_a=0
