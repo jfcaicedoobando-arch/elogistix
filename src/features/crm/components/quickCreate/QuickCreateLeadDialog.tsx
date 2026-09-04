@@ -59,6 +59,8 @@ export default function QuickCreateLeadDialog({ open, onOpenChange, onCreated, o
     if (crear.isPending || enviandoRef.current) return;
     const emp = empresa.trim();
     if (!emp) {
+      setEmpresaTouched(true);
+      empresaRef.current?.focus();
       notifyError(undefined, { title: "Empresa requerida", method: "FEATURES_CRM_COMPONENTS_QUICKCREATE_QUICKCREATELEADDIALOG_1" });
       return;
     }
