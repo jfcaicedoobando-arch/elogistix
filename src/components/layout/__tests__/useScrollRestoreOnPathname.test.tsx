@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeAll } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach, beforeAll } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { MemoryRouter, useNavigate } from "react-router-dom";
 import { useRef } from "react";
@@ -28,16 +28,24 @@ function ScrollableHarness() {
 }
 
 describe("useScrollRestoreOnPathname", () => {
+  let mainScrollTo: ReturnType<typeof vi.spyOn>;
+  let windowScrollTo: ReturnType<typeof vi.spyOn>;
+
+  beforeEach(() => {
+    mainScrollTo = vi.spyOn(HTMLElement.prototype, "scrollTo").mockImplementation(() => {});
+    windowScrollTo = vi.spyOn(window, "scrollTo").mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   it("restaura scroll al inicio del contenedor y de la ventana al cambiar de ruta", () => {
     render(
       <MemoryRouter initialEntries={["/crm/leads"]}>
         <ScrollableHarness />
       </MemoryRouter>,
     );
-
-    const main = screen.getByTestId("main");
-    const mainScrollTo = vi.spyOn(main, "scrollTo").mockImplementation(() => {});
-    const windowScrollTo = vi.spyOn(window, "scrollTo").mockImplementation(() => {});
 
     // Efecto inicial al montar la ruta.
     expect(mainScrollTo).toHaveBeenCalledWith({ top: 0, left: 0, behavior: "instant" });
@@ -57,10 +65,6 @@ describe("useScrollRestoreOnPathname", () => {
         <ScrollableHarness />
       </MemoryRouter>,
     );
-
-    const main = screen.getByTestId("main");
-    const mainScrollTo = vi.spyOn(main, "scrollTo").mockImplementation(() => {});
-    const windowScrollTo = vi.spyOn(window, "scrollTo").mockImplementation(() => {});
 
     fireEvent.click(screen.getByRole("button", { name: /ir a facturación/i }));
     const callsAfterRouteChange = mainScrollTo.mock.calls.length;
