@@ -216,7 +216,7 @@ BEGIN
 END;
 $fn$;
 
-REVOKE ALL ON FUNCTION public.crm_cerrar_oportunidad_desde_cotizacion() FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.crm_cerrar_oportunidad_desde_cotizacion() FROM PUBLIC, anon, authenticated;
 
 -- Nombre `zz_` deliberado: corre al final de los triggers BEFORE, después del
 -- cálculo de subtotal y de los guards de estado/SoD/inmutabilidad.
@@ -234,5 +234,5 @@ WHERE deleted_at IS NULL
   AND estado IN ('Aceptada'::estado_cotizacion, 'En operación'::estado_cotizacion);
 
 -- H6: la función es SECURITY DEFINER; se re-declaran los GRANT EXECUTE.
-REVOKE ALL ON FUNCTION public.crm_cerrar_oportunidad_desde_cotizacion() FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION public.crm_cerrar_oportunidad_desde_cotizacion() TO authenticated, service_role;
+REVOKE ALL ON FUNCTION public.crm_cerrar_oportunidad_desde_cotizacion() FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.crm_cerrar_oportunidad_desde_cotizacion() TO service_role;

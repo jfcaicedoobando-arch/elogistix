@@ -69,8 +69,8 @@ export function DocumentoBuzonCard({ entrante, estado, mensaje, onVerArchivo, on
             </Button>
           )}
           {estado === "cargando" && (
-            <Button size="sm" variant="outline" disabled>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden /> Leyendo…
+            <Button size="sm" variant="outline" loading disabled>
+              Leyendo…
             </Button>
           )}
           {tienePdf && (

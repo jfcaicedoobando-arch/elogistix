@@ -93,7 +93,6 @@ function isSustitutaViva(f: FacturaFlagsInput): boolean {
  */
 const ESTADOS_COBRABLES = new Set(["Emitida", "Vencida", "Parcialmente pagada"]);
 
-
 function enTramiteCancelacion(f: FacturaFlagsInput): boolean {
   return f.cancellation_status === "pending" || f.cancellation_status === "verifying";
 }
@@ -175,7 +174,6 @@ function deriveActionFlags(
   };
 }
 
-
 export function deriveFacturaFlags(
   factura: FacturaFlagsInput | null | undefined,
   canEdit: boolean,
@@ -185,7 +183,6 @@ export function deriveFacturaFlags(
   if (!factura) return EMPTY_FLAGS;
   return deriveActionFlags(factura, canEdit, ctx, canRegistrarCobro);
 }
-
 
 /**
  * Helper reutilizable por listas/tablas donde no se necesita el resto de
