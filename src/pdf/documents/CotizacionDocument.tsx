@@ -133,13 +133,14 @@ export function CotizacionDocument({ cotizacion, tasaIva = TASA_IVA, emisor, tip
         <SeccionProspecto c={cotizacion} />
         <SeccionDatosYMercancia c={cotizacion} tiposContenedor={tiposContenedor} />
 
-        <View wrap={false} style={{ marginTop: 10 }}>
+        {/* v13.823.77: el título arrastra al menos el encabezado de la tabla. */}
+        <View wrap={false} style={{ marginTop: 10 }} minPresenceAhead={90}>
           <Text style={styles.h3}>Conceptos de Venta</Text>
         </View>
 
         {usd.length > 0 ? (
           <>
-            <Text style={styles.h4}>Conceptos en USD</Text>
+            <Text style={styles.h4} minPresenceAhead={70}>Conceptos en USD</Text>
             <DataTable
               columns={columnasUSD(tasaIva, hayIvaUsd)}
               rows={usd}
@@ -150,7 +151,7 @@ export function CotizacionDocument({ cotizacion, tasaIva = TASA_IVA, emisor, tip
 
         {mxn.length > 0 ? (
           <>
-            <Text style={styles.h4}>Conceptos en MXN + IVA</Text>
+            <Text style={styles.h4} minPresenceAhead={70}>Conceptos en MXN + IVA</Text>
             <DataTable
               columns={columnasMXN(tasaIva)}
               rows={mxn}
