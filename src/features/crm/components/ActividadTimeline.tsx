@@ -96,7 +96,7 @@ export default function ActividadTimeline({ entidadTipo, entidadId }: Props) {
                 <div className="text-label text-muted-foreground mt-1 flex items-center gap-2">
                   <span>{formatFechaHora(a.created_at)}</span>
                   <span>· {a.responsable_email}</span>
-                  {!a.fecha_completada && canGestionarActividad(a.responsable_id) && (
+                  {!a.fecha_completada && canGestionarActividad(a.responsable_id, a.responsable_email) && (
                     <Button
                       size="sm"
                       variant="ghost"

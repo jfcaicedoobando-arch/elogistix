@@ -140,8 +140,22 @@ export function usePermissions() {
     canGestionarTodasLasOportunidades || (esVendedorCrm && propio(vendedorId));
   const canGestionarTodasLasActividades = canGestionarTodasLasOportunidades;
   const canCrearActividad = canCrearOportunidad;
-  const canGestionarActividad = (responsableId: string | null | undefined): boolean =>
-    canGestionarTodasLasActividades || (esVendedorCrm && propio(responsableId));
+  /**
+   * Espejo de `filtroResponsable` (actividadesQueryHelpers): el correo sólo
+   * decide la propiedad cuando `responsable_id` es nulo (actividades legadas).
+   */
+  const canGestionarActividad = (
+    responsableId: string | null | undefined,
+    responsableEmail?: string | null,
+  ): boolean => {
+    if (canGestionarTodasLasActividades) return true;
+    if (!esVendedorCrm) return false;
+    if (responsableId) return propio(responsableId);
+    const email = responsableEmail?.trim().toLowerCase();
+    const propioEmail = user?.email?.trim().toLowerCase();
+    return !!email && !!propioEmail && email === propioEmail;
+  };
+
   const canReasignarVendedorCrm = has(CRM_REASIGNAR_VENDEDOR, roleStr);
 
   return {
