@@ -69,6 +69,7 @@ DELETE FROM public.organization_members WHERE organization_id = '${ORG}';
 DELETE FROM public.organizations WHERE id = '${ORG}';
 DELETE FROM public.user_roles WHERE user_id = '${VEND}';
 DELETE FROM auth.users WHERE id = '${VEND}';
+DROP TABLE IF EXISTS public.lc_conc_barrera;
 SQL
   rm -f "$log_a" "$log_b"
   return $rc
