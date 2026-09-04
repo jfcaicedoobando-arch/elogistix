@@ -62,7 +62,7 @@ export default function HigieneKpis({ resumen, cobertura, presupuestoMes }: Prop
       <KpiPorcentaje
         label="Higiene del pipeline"
         pct={higienePct}
-        hint={`${resumen.registros_completos} de ${resumen.abiertas} oportunidades completas`}
+        hint={copiaOportunidadesCompletas(resumen.registros_completos, resumen.abiertas)}
       />
       <KpiPorcentaje
         label="Seguimiento oportuno"
