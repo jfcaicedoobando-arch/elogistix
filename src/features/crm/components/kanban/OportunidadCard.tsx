@@ -107,7 +107,7 @@ export default function OportunidadCard({ op, onClick, proxima, avance, esCerrad
           </Hint>
         ) : null}
         <div className="flex items-center justify-between pt-1">
-          <span className="text-body-sm font-semibold">{fmtMxn(Number(op.monto_estimado ?? 0))}</span>
+          <span className="text-body-sm font-semibold">{fmtMxn(montoEstimado)}</span>
           <Badge variant="secondary" className="text-label h-5 px-1.5">{op.probabilidad}%</Badge>
         </div>
 
@@ -120,7 +120,7 @@ export default function OportunidadCard({ op, onClick, proxima, avance, esCerrad
             vencida={Boolean(meta.metaVencida)}
             fechaMeta={op.fecha_meta_cierre ?? null}
             avance={meta.avance ?? null}
-            montoMeta={Number(op.monto_meta ?? 0)}
+            montoMeta={montoMeta}
           />
         ) : null}
 
