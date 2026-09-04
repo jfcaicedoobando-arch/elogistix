@@ -1,4 +1,5 @@
 import { Input } from "@/components/ui/input";
+import { FIELD_ERROR_CLASS } from "@/components/ui/field.tokens";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -30,9 +31,11 @@ interface Props {
   setForm: React.Dispatch<React.SetStateAction<LeadFormState>>;
   autoActividad: boolean;
   setAutoActividad: (v: boolean) => void;
+  /** Mensaje inline cuando el correo capturado no tiene forma válida. */
+  emailError?: string;
 }
 
-export function NuevoLeadForm({ form, setForm, autoActividad, setAutoActividad }: Props) {
+export function NuevoLeadForm({ form, setForm, autoActividad, setAutoActividad, emailError }: Props) {
   const set = <K extends keyof LeadFormState>(k: K, v: LeadFormState[K]) =>
     setForm((f) => ({ ...f, [k]: v }));
 
@@ -48,7 +51,19 @@ export function NuevoLeadForm({ form, setForm, autoActividad, setAutoActividad }
       </div>
       <div className="space-y-1">
         <Label htmlFor="nuevo-lead-email">Correo</Label>
-        <Input id="nuevo-lead-email" type="email" value={form.email} onChange={(e) => set("email", e.target.value)} />
+        <Input
+          id="nuevo-lead-email"
+          type="email"
+          value={form.email}
+          onChange={(e) => set("email", e.target.value)}
+          aria-invalid={Boolean(emailError)}
+          aria-describedby={emailError ? "nuevo-lead-email-error" : undefined}
+        />
+        {emailError && (
+          <p id="nuevo-lead-email-error" role="alert" className={FIELD_ERROR_CLASS}>
+            {emailError}
+          </p>
+        )}
       </div>
       <div className="space-y-1">
         <Label htmlFor="nuevo-lead-telefono">Teléfono</Label>
