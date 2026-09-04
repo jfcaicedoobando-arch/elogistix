@@ -33,6 +33,39 @@ export async function fetchIdsConEnvioExitoso(orgId: string): Promise<Set<string
   return ids;
 }
 
+/**
+ * Estados de una factura TIMBRADA que sigue necesitando envío al cliente.
+ * "Vencida" también entra: una factura vencida no deja de necesitar su CFDI.
+ * Canon compartido con `fetchBandejaConteos` para que lista y badge cuadren.
+ */
+export const ESTADOS_TIMBRADAS_ENVIABLES = [
+  "Emitida", "Parcialmente pagada", "Pagada", "Vencida",
+] as const;
+
+/**
+ * IDs de las facturas timbradas vivas candidatas a "Por enviar".
+ * Se usa para el anti-join del conteo: restar todos los `factura_envios`
+ * históricos contra un `count` de facturas daba badges falsos (incluía
+ * envíos de facturas borradas o en estados fuera de la bandeja).
+ */
+export async function fetchIdsFacturasTimbradas(orgId: string): Promise<string[]> {
+  const ids: string[] = [];
+  for (let from = 0; ; from += ENVIOS_PAGE) {
+    const { data, error } = await supabase
+      .from("facturas")
+      .select("id")
+      .eq("organization_id", orgId)
+      .not("uuid_fiscal", "is", null)
+      .in("estado", [...ESTADOS_TIMBRADAS_ENVIABLES])
+      .is("deleted_at", null)
+      .range(from, from + ENVIOS_PAGE - 1);
+    if (error) throw error;
+    for (const f of data ?? []) ids.push(f.id);
+    if (!data || data.length < ENVIOS_PAGE) break;
+  }
+  return ids;
+}
+
 export interface FilaPorTimbrar {
   id: string;
   numero: string;
@@ -93,7 +126,7 @@ export async function fetchFacturasPorEnviar(orgId: string): Promise<FilaPorEnvi
       .select("id, numero, cliente_id, cliente_nombre, total, moneda, fecha_emision, uuid_fiscal")
       .eq("organization_id", orgId)
       .not("uuid_fiscal", "is", null)
-      .in("estado", ["Emitida", "Parcialmente pagada", "Pagada"])
+      .in("estado", [...ESTADOS_TIMBRADAS_ENVIABLES])
       .is("deleted_at", null)
       .order("fecha_emision", { ascending: false })
       .limit(LIMITE_TIMBRADAS),

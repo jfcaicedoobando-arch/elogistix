@@ -76,24 +76,25 @@ export default function Facturacion() {
     const d = new Date(`${iso}T00:00:00`);
     return Number.isNaN(d.getTime()) ? null : d;
   };
-  const setFechaDesde = (v: string) => setRango({ desde: v ? parseIso(v) : null });
-  const setFechaHasta = (v: string) => setRango({ hasta: v ? parseIso(v) : null });
+  // Los filtros de fecha son client-side sobre la página cargada: al cambiarlos
+  // hay que volver a la página 0 o el usuario queda en una página fuera de rango.
+  const setFechaDesde = (v: string) => { setRango({ desde: v ? parseIso(v) : null }); setPage(0); };
+  const setFechaHasta = (v: string) => { setRango({ hasta: v ? parseIso(v) : null }); setPage(0); };
 
   const {
     search, setSearch,
     filterEstado, filterCliente, setFilter,
     page, setPage, pageSize, setPageSize,
-    paginatedFacturas, facturasFiltradas, totalPages,
-    facturas,
+    paginatedFacturas, facturasFiltradas, totalPages, totalCount,
     loadingFacturas,
     errorFacturas,
     refetchFacturas,
     clientesDisponibles,
     exportarFacturasCsv, exportarLayoutContable,
-  } = useFacturacionPageController({ isInRange, activeTab: "facturas" });
+  } = useFacturacionPageController({ isInRange, activeTab: activeBandeja });
 
   const clearFiltros = () => {
-    setSearch(""); setFilter("estado", "todos"); setFilter("cliente", "todos"); limpiar();
+    setSearch(""); setFilter("estado", "todos"); setFilter("cliente", "todos"); limpiar(); setPage(0);
   };
 
   const facturaColumns = useMemo(() => buildFacturaColumns(), []);
@@ -141,7 +142,7 @@ export default function Facturacion() {
                 columns: facturaColumns,
                 data: paginatedFacturas,
                 facturasFiltradas,
-                totalFacturas: facturas.length,
+                totalFacturas: totalCount,
                 isLoading: loadingFacturas,
                 isError: errorFacturas,
                 onRetry: refetchFacturas,

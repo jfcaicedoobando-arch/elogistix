@@ -45,6 +45,7 @@ export function PasoDocumento({
           estado={autocarga.estado}
           mensaje={autocarga.mensaje}
           onVerArchivo={onVerArchivoBuzon}
+          onReintentar={autocarga.reintentar}
         />
       ) : (
         <EntranteCapturaBanner

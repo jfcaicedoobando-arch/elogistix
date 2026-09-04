@@ -4,7 +4,7 @@
  * Reemplaza al selector de origen y a la zona de carga cuando la captura nace
  * de un documento que operaciones ya subió: aquí no se sube nada, se verifica.
  */
-import { FileText, FileCode2, Loader2, CheckCircle2, AlertTriangle, Ship } from "lucide-react";
+import { FileText, FileCode2, Loader2, CheckCircle2, AlertTriangle, Ship, RefreshCw } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { formatDate } from "@/lib/formatters/dates";
@@ -16,6 +16,8 @@ interface Props {
   estado: EstadoAutocarga;
   mensaje: string | null;
   onVerArchivo: (path: string, nombre: string) => void;
+  /** Vuelve a leer el documento del buzón (visible sólo en estado error). */
+  onReintentar?: () => void;
 }
 
 const TEXTOS: Record<EstadoAutocarga, string> = {
@@ -36,7 +38,7 @@ function EstadoLectura({ estado, mensaje }: { estado: EstadoAutocarga; mensaje: 
   );
 }
 
-export function DocumentoBuzonCard({ entrante, estado, mensaje, onVerArchivo }: Props) {
+export function DocumentoBuzonCard({ entrante, estado, mensaje, onVerArchivo, onReintentar }: Props) {
   const tienePdf = entrante.archivoPath.toLowerCase().endsWith(".pdf");
 
   return (
@@ -61,6 +63,16 @@ export function DocumentoBuzonCard({ entrante, estado, mensaje, onVerArchivo }: 
         </div>
 
         <div className="flex shrink-0 flex-wrap gap-2">
+          {estado === "error" && onReintentar && (
+            <Button size="sm" variant="outline" onClick={onReintentar}>
+              <RefreshCw className="mr-2 h-4 w-4" aria-hidden /> Reintentar lectura
+            </Button>
+          )}
+          {estado === "cargando" && (
+            <Button size="sm" variant="outline" disabled>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden /> Leyendo…
+            </Button>
+          )}
           {tienePdf && (
             <Button
               size="sm"

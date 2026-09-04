@@ -10,7 +10,12 @@
  */
 import type { FacturaCxP } from "./proveedorFacturas";
 
+/** Estatus que NO representan deuda exigible (no entran a aging/tesorería). */
+const ESTATUS_NO_PAGABLES = new Set(["Rechazada", "Cancelada", "Borrador"]);
+
 export function esFacturaPorPagar(f: Pick<FacturaCxP, "saldo" | "estatus">): boolean {
   if (f.saldo <= 0) return false;
-  return f.estatus !== "Rechazada" && f.estatus !== "Cancelada";
+  // Borrador se excluye igual que Rechazada/Cancelada: aún no es un
+  // compromiso de pago (captura incompleta sin aprobación).
+  return !ESTATUS_NO_PAGABLES.has(f.estatus);
 }

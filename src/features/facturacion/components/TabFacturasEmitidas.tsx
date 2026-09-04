@@ -137,7 +137,10 @@ export function TabFacturasEmitidas({ filtros: f, tabla: t, acciones: a }: Props
             </DropdownMenu>
           </div>
           <div className="text-body-sm text-muted-foreground">
-            Mostrando <strong className="text-foreground">{t.facturasFiltradas.length}</strong> de {t.totalFacturas} facturas
+            {/* El listado es server-side: lo visible es la página (menos los
+                filtros cliente/fecha, que sólo aplican a esa página). */}
+            <strong className="text-foreground">{t.facturasFiltradas.length}</strong> resultados visibles
+            {" · "}{t.totalFacturas} facturas en total (servidor)
           </div>
         </CardContent>
       </Card>
