@@ -27,6 +27,17 @@ export default function SearchInput({
   inputClassName,
   "aria-label": ariaLabel,
 }: SearchInputProps) {
+  // v13.823.77 — el filtro se quedaba pegado cuando el input llegaba a vacío
+  // por una vía que React no traduce a `onChange` (botón nativo de limpiar de
+  // `type="search"`, borrado programático). Analogía: la cajita se veía vacía
+  // pero el pedido seguía en la cocina. Sincronizamos también con el evento
+  // nativo `input`, comparando contra el valor actual para no emitir cambios
+  // repetidos.
+
+  const sync = (next: string) => {
+    if (next !== value) onChange(next);
+  };
+
   return (
     <div className={cn("relative", className)}>
       <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -36,8 +47,10 @@ export default function SearchInput({
         aria-label={ariaLabel ?? placeholder}
         value={value}
         onChange={(e) => onChange(e.target.value)}
+        onInput={(e) => sync(e.currentTarget.value)}
         className={cn("pl-9", inputClassName)}
       />
     </div>
   );
 }
+
