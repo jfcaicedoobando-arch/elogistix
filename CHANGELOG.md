@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+## [13.823.82] - 2026-09-05
+
+### CRM — Pipeline: refresco del editor de etapas tras editar/mover
+- `useActualizarEtapa` ahora invalida `queryKeys.crm.etapas.todas` además de `queryKeys.crm.etapas.all`. `useEtapasPipelineAll` (usada por `EtapasPipelineEditor.tsx`) lee `etapas.todas`; antes, tras guardar o reordenar una etapa, el editor conservaba datos viejos hasta recargar y las flechas parecían no-op.
+- Nueva regresión `useEtapasPipeline.invalidacion.test.tsx` que verifica ambas invalidaciones.
+
 ## [13.823.81] - 2026-09-05
 
 ### CRM — Dashboard y "Cotizaciones sin respuesta" actualizados al crear cotización desde oportunidad
