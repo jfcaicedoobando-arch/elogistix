@@ -35,7 +35,7 @@ describe("HigieneKpis", () => {
         presupuestoMes={{ monto: 500000, moneda: "MXN" }}
       />,
     );
-    expect(screen.getByText("50%")).toBeTruthy();
+    expect(screen.getByText(/50\s*%/)).toBeTruthy();
     expect(screen.getByText(/Meta del mes/)).toBeTruthy();
   });
 
