@@ -7,7 +7,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
-import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 import {
   useMotivosPerdida, useActualizarMotivoPerdida, useCrearMotivoPerdida,
@@ -19,21 +18,16 @@ export default function MotivosPerdidaEditor() {
   const crear = useCrearMotivoPerdida();
   const [nuevo, setNuevo] = useState("");
 
-  const toggle = async (id: string, activa: boolean) => {
-    try { await actualizar.mutateAsync({ id, patch: { activa } }); }
-    catch (e) { notifyError(undefined, { title: "Error", description: e instanceof Error ? e.message : undefined, error: e, method: "TOGGLE" }); }
+  // El feedback (éxito/error) lo emiten los hooks de mutación; aquí sólo se
+  // limpia el campo cuando la creación fue exitosa para no duplicar toasts.
+  const toggle = (id: string, activa: boolean) => {
+    actualizar.mutate({ id, patch: { activa } });
   };
 
-  const handleCrear = async () => {
+  const handleCrear = () => {
     const n = nuevo.trim();
     if (!n) return;
-    try {
-      await crear.mutateAsync(n);
-      notifySuccess(undefined, { title: "Motivo agregado" });
-      setNuevo("");
-    } catch (e) {
-      notifyError(undefined, { title: "Error", description: e instanceof Error ? e.message : undefined, error: e, method: "HANDLE_CREAR" });
-    }
+    crear.mutate(n, { onSuccess: () => setNuevo("") });
   };
 
   return (
