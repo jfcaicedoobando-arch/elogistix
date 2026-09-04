@@ -32,6 +32,7 @@ export function useActualizarLead() {
       qc.invalidateQueries({ queryKey: queryKeys.crm.leads.all });
       qc.invalidateQueries({ queryKey: queryKeys.crm.leads.detail(vars.id) });
       qc.invalidateQueries({ queryKey: queryKeys.crm.kpis });
+      qc.invalidateQueries({ queryKey: queryKeys.crm.dashboardAll });
     },
     onError: (error: Error) => {
       notifyError(undefined, { title: "No se pudo actualizar lead", description: getErrorMessage(error), error, method: "UPDATE_LEAD" });
@@ -47,6 +48,7 @@ export function useEliminarLead() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.crm.leads.all });
       qc.invalidateQueries({ queryKey: queryKeys.crm.kpis });
+      qc.invalidateQueries({ queryKey: queryKeys.crm.dashboardAll });
       notifySuccess(undefined, { title: "Lead eliminado" });
     },
     onError: (error: Error) => {
@@ -64,6 +66,7 @@ export function useTomarLead() {
       qc.invalidateQueries({ queryKey: queryKeys.crm.leads.all });
       qc.invalidateQueries({ queryKey: queryKeys.crm.leads.detail(vars.id) });
       qc.invalidateQueries({ queryKey: queryKeys.crm.kpis });
+      qc.invalidateQueries({ queryKey: queryKeys.crm.dashboardAll });
       notifySuccess(undefined, { title: "Lead asignado a tu cartera" });
     },
     onError: (error: Error) => {
@@ -85,6 +88,7 @@ export function useCalificarProspecto() {
       qc.invalidateQueries({ queryKey: queryKeys.crm.leads.all });
       qc.invalidateQueries({ queryKey: queryKeys.crm.leads.detail(id) });
       qc.invalidateQueries({ queryKey: queryKeys.crm.kpis });
+      qc.invalidateQueries({ queryKey: queryKeys.crm.dashboardAll });
       notifySuccess(undefined, { title: "Lead calificado como prospecto" });
     },
     onError: (error: Error) => {
