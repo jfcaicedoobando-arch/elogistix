@@ -9,7 +9,8 @@ import {
   fmtSinFactura, 
   fmtContenedores, 
   fmtContenedoresFechas, 
-  fmtRepPendientes 
+  fmtRepPendientes,
+  fmtMargenMinimoPct 
 } from "../cierreCheckFormatters";
 
 describe("cierreCheckFormatters", () => {
@@ -74,6 +75,26 @@ describe("cierreCheckFormatters", () => {
     expect(res).toContain("500.00");
     
     expect(fmtMargen({ utilidad: 1000 })).toBeNull();
+  });
+
+  // Auditoría ELEXP00250: sin facturas de venta la venta real es 0 y el margen
+  // no existe; el texto debe explicarlo en lugar de mostrar sólo «—».
+  it("fmtMargenMinimoPct: sin venta real explica que no hay facturas emitidas", () => {
+    const res = fmtMargenMinimoPct({ margen_pct: null, minimo_pct: 10, venta_mxn: 0, utilidad_mxn: null });
+    expect(res).toContain("Aún no hay facturas de venta emitidas");
+    expect(res).toContain("10.00%");
+    expect(res).not.toContain("Margen actual");
+  });
+
+  it("fmtMargenMinimoPct: con margen numérico muestra porcentaje y utilidad", () => {
+    const res = fmtMargenMinimoPct({ margen_pct: -23.17, minimo_pct: 10, venta_mxn: 154180, utilidad_mxn: -35727 });
+    expect(res).toContain("Margen actual -23.17%");
+    expect(res).toContain("mínimo 10.00%");
+    expect(res).toContain("35,727");
+  });
+
+  it("fmtMargenMinimoPct: sin detalle devuelve null", () => {
+    expect(fmtMargenMinimoPct({})).toBeNull();
   });
 
   it("fmtVentaPendientes: muestra conceptos y proformas", () => {
