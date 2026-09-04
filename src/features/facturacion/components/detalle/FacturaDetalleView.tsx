@@ -45,6 +45,9 @@ interface FacturaDetalleViewProps {
   volverLabel: string;
   dialogs: DialogsBundle;
   saldo?: number;
+  /** P1: falló la lectura de pagos o notas de crédito (saldo no confiable). */
+  saldoError?: boolean;
+  onRetrySaldo?: () => void;
 }
 
 export function FacturaDetalleView(props: FacturaDetalleViewProps) {
@@ -113,7 +116,13 @@ export function FacturaDetalleView(props: FacturaDetalleViewProps) {
             }
           />
         }
-        banners={<FacturaDetalleBanners factura={factura} />}
+        banners={
+          <FacturaDetalleBanners
+            factura={factura}
+            saldoError={props.saldoError}
+            onRetrySaldo={props.onRetrySaldo}
+          />
+        }
         rail={<FacturaBitacoraCard facturaId={factura.id} />}
       >
         <FacturaDetalleBody

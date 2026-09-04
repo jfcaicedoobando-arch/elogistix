@@ -93,6 +93,8 @@ export default function FacturaDetalle() {
       volverLabel={volverLabel}
       dialogs={dialogs}
       saldo={controller.saldo}
+      saldoError={controller.saldoError}
+      onRetrySaldo={controller.refetchSaldo}
     />
   );
 }
