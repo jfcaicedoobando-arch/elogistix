@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+## [13.823.78] - 2026-09-05
+
+### CRM — Invalidación del dashboard tras crear actividad
+- `useCrearActividad` ahora invalida `crm.dashboardAll` tras una creación exitosa, alineándose con `useCompletarActividad` y `usePosponerActividad`. Antes el resumen ejecutivo/Mi día podía quedar stale hasta vencer el `staleTime` de 60s.
+- Agregada regresión en `useCrearActividad.test.tsx` para verificar que se invalidan actividades, higiene, KPIs y dashboard, y que las actividades silenciosas no disparan toast.
+
 ## [13.823.77] - 2026-09-05
 
 ### Pulido visual del PDF de cotización
