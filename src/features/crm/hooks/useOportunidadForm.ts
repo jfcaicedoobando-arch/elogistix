@@ -36,10 +36,14 @@ export function useOportunidadForm(
   oportunidad: CrmOportunidadRow | null | undefined,
   etapas: Etapa[],
   user: User | null,
-  origenInicial?: OrigenInicial | null,
-  /** Nombre precapturado (p. ej. viene del alta express al pulsar "Más campos"). */
-  nombreInicial?: string | null,
+  /**
+   * Datos precapturados que viajan del alta express al formulario completo
+   * (origen/ownership ya elegido y nombre escrito).
+   */
+  precapturado?: { origen?: OrigenInicial | null; nombre?: string | null },
 ) {
+  const origenInicial = precapturado?.origen ?? null;
+  const nombreInicial = precapturado?.nombre ?? null;
   const [form, setForm] = useState<OportunidadFormState>(EMPTY_OPORTUNIDAD);
 
   // Sólo recalculamos cuando cambia la *identidad* del registro o el estado

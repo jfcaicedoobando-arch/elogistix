@@ -59,8 +59,7 @@ export default function NuevaOportunidadDialog({
     oportunidad,
     etapas,
     user,
-    origenInicial,
-    nombreInicial,
+    { origen: origenInicial, nombre: nombreInicial },
   );
   const [autoActividad, setAutoActividad] = useState(true);
   const [guardando, setGuardando] = useState(false);
