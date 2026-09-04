@@ -33,9 +33,11 @@ export function GlobalSearch() {
   const [buscando, setBuscando] = useState(false);
 
   const navigate = useNavigate();
+  const location = useLocation();
   const search = useGlobalSearch();
   const { recents } = useRecentPages();
   const { effectiveRole } = useAuth();
+  const enCrm = location.pathname.startsWith("/crm");
 
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
