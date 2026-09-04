@@ -31,6 +31,7 @@ export function useActualizarLead() {
     onSuccess: (_d, vars) => {
       qc.invalidateQueries({ queryKey: queryKeys.crm.leads.all });
       qc.invalidateQueries({ queryKey: queryKeys.crm.leads.detail(vars.id) });
+      qc.invalidateQueries({ queryKey: queryKeys.crm.prospectos.all });
       qc.invalidateQueries({ queryKey: queryKeys.crm.kpis });
       qc.invalidateQueries({ queryKey: queryKeys.crm.dashboardAll });
     },
@@ -47,6 +48,7 @@ export function useEliminarLead() {
     mutationFn: (id: string) => softDeleteLead(id, user?.id ?? null),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.crm.leads.all });
+      qc.invalidateQueries({ queryKey: queryKeys.crm.prospectos.all });
       qc.invalidateQueries({ queryKey: queryKeys.crm.kpis });
       qc.invalidateQueries({ queryKey: queryKeys.crm.dashboardAll });
       notifySuccess(undefined, { title: "Lead eliminado" });
@@ -87,6 +89,7 @@ export function useCalificarProspecto() {
     onSuccess: (_d, id) => {
       qc.invalidateQueries({ queryKey: queryKeys.crm.leads.all });
       qc.invalidateQueries({ queryKey: queryKeys.crm.leads.detail(id) });
+      qc.invalidateQueries({ queryKey: queryKeys.crm.prospectos.all });
       qc.invalidateQueries({ queryKey: queryKeys.crm.kpis });
       qc.invalidateQueries({ queryKey: queryKeys.crm.dashboardAll });
       notifySuccess(undefined, { title: "Lead calificado como prospecto" });

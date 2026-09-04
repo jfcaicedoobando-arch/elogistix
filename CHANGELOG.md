@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+## [13.823.83] - 2026-09-05
+
+### CRM — Refresco de Prospectos tras mutaciones de leads
+- `useActualizarLead`, `useEliminarLead`, `useCalificarProspecto` y `useConvertirLead` ahora invalidan `queryKeys.crm.prospectos.all` tras éxito. Como `/crm/prospectos` consume `crm.prospectos.paged`, y la invalidación por prefijo cubre ese árbol, las filas de Prospectos dejan de quedar obsoletas tras cambiar estado, calificar, convertir o eliminar un lead.
+- Actualizadas las regresiones existentes (`leadsMutaciones.invalidacion.test.tsx` y `useConvertirLead.test.tsx`) para exigir la nueva invalidación.
+
 ## [13.823.82] - 2026-09-05
 
 ### CRM — Pipeline: refresco del editor de etapas tras editar/mover

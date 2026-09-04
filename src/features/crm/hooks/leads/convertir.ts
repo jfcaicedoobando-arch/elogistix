@@ -16,6 +16,7 @@ export function useConvertirLead() {
     mutationFn: (params: ConvertirLeadParams) => convertirLead(params, user),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.crm.leads.all });
+      qc.invalidateQueries({ queryKey: queryKeys.crm.prospectos.all });
       qc.invalidateQueries({ queryKey: queryKeys.crm.kpis });
       qc.invalidateQueries({ queryKey: queryKeys.clientes.all });
       // La conversión crea una oportunidad nueva: sin invalidar el árbol de
