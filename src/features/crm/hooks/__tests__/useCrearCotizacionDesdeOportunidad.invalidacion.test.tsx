@@ -43,6 +43,8 @@ vi.mock("@/lib/query", () => ({
 }));
 
 import { useCrearCotizacionDesdeOportunidad } from "../useCrearCotizacionDesdeOportunidad";
+import { notifySuccess } from "@/lib/ui/appFeedback";
+
 
 function spyClient() {
   const client = (globalThis as unknown as {
