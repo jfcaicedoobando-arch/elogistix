@@ -39,7 +39,7 @@ export default function LeadDetalle() {
   const { form, set, dirty, patch } = useLeadEditForm(lead);
   const {
     handleSave, handleDelete, handleCalificar, handleTomar,
-    guardando, eliminando, tomando, calificando,
+    guardando, eliminando, tomando, calificando, errorEmail,
     faltantesGate, cerrarGate,
   } = useLeadDetalleAcciones(id, lead ?? undefined, patch);
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -118,6 +118,7 @@ export default function LeadDetalle() {
         dirty={dirty}
         isSaving={guardando}
         onSave={handleSave}
+        errorEmail={errorEmail}
       />
 
       <div id="lead-perfil-icp">
