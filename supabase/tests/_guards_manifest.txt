@@ -101,3 +101,5 @@ supabase/tests/crm_lead_estado_canonico.sql
 supabase/tests/convertir_prospecto_a_cliente_canonico.sql
 supabase/tests/guard_cotizacion_vinculo_cliente.sql
 supabase/tests/crm_vincular_moneda_vendedor.sql
+supabase/tests/concepto_venta_eur_no_soportada.sql
+supabase/tests/liquidacion_comision_rol_org_scope.sql
