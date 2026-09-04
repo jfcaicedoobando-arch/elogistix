@@ -12,18 +12,11 @@ export function useScrollRestoreOnPathname(contentRef: RefObject<HTMLElement | n
 
   useEffect(() => {
     const el = contentRef.current;
-    if (el) {
-      if (typeof el.scrollTo === "function") {
-        el.scrollTo({ top: 0, left: 0, behavior: "instant" });
-      } else {
-        el.scrollTop = 0;
-        el.scrollLeft = 0;
-      }
+    if (el && typeof el.scrollTo === "function") {
+      el.scrollTo({ top: 0, left: 0, behavior: "instant" });
     }
     if (typeof window.scrollTo === "function") {
       window.scrollTo({ top: 0, left: 0, behavior: "instant" });
-    } else {
-      window.scrollTo(0, 0);
     }
   }, [contentRef, location.pathname]);
 }
