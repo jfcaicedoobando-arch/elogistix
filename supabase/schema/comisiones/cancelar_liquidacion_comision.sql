@@ -1,5 +1,5 @@
 -- Espejo canónico de public.cancelar_liquidacion_comision
--- Fuente vigente (mayor timestamp): 20260908000100_ola_p1_org_scope_credito_idempotencia.sql
+-- Fuente vigente (mayor timestamp): 20260911000400_liquidacion_estado_previo_y_venta_eur_guard.sql
 -- Vigilado por `bun run audit:replay-mirror` y `audit:schema-functions`.
 
 CREATE OR REPLACE FUNCTION public.cancelar_liquidacion_comision(p_liquidacion_id uuid, p_motivo text)
@@ -35,6 +35,7 @@ BEGIN
     RAISE EXCEPTION 'LC_LIQUIDACION_OTRA_ORG: La liquidación pertenece a otra organización.';
   END IF;
 
+  -- YG-02: rol financiero POR MEMBRESÍA en la org dueña de la liquidación.
   IF NOT public.has_any_role_in_org_exact(v_uid,
        ARRAY['admin','admin_org','super_admin','contador','tesorero']::public.app_role[],
        v_row.organization_id) THEN
@@ -51,15 +52,18 @@ BEGIN
       USING ERRCODE = '42501';
   END IF;
 
+  -- YG-03: cada comisión regresa a su estado previo. El fallback cubre filas
+  -- legacy sin `estado_previo_liquidacion` capturado.
   UPDATE public.comisiones_devengadas
-     SET estado = 'Devengada', liquidacion_id = NULL, updated_at = now()
+     SET estado = COALESCE(
+           estado_previo_liquidacion,
+           CASE WHEN estado = 'Cancelada' THEN 'Por recuperar'::public.estado_comision
+                ELSE 'Devengada'::public.estado_comision END),
+         estado_previo_liquidacion = NULL,
+         liquidacion_id = NULL,
+         updated_at = now()
    WHERE liquidacion_id = p_liquidacion_id
-     AND estado = 'Liquidada';
-
-  UPDATE public.comisiones_devengadas
-     SET estado = 'Por recuperar', liquidacion_id = NULL, updated_at = now()
-   WHERE liquidacion_id = p_liquidacion_id
-     AND estado = 'Cancelada';
+     AND estado IN ('Liquidada', 'Cancelada');
 
   UPDATE public.liquidaciones_comision
      SET estado = 'Cancelada',

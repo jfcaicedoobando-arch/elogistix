@@ -1,17 +1,12 @@
 -- Espejo canónico de public.generar_liquidacion_comision
--- Fuente vigente (mayor timestamp): 20260828031423_ffb3534d-3c78-4671-b094-d631f733c1eb.sql
+-- Fuente vigente (mayor timestamp): 20260911000400_liquidacion_estado_previo_y_venta_eur_guard.sql
 -- Vigilado por `bun run audit:replay-mirror` y `audit:schema-functions`.
 
-CREATE OR REPLACE FUNCTION public.generar_liquidacion_comision(
-  p_vendedora_id uuid,
-  p_periodo text,
-  p_organization_id uuid,
-  p_request_id uuid DEFAULT NULL::uuid
-)
-RETURNS uuid
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path TO 'public'
+CREATE OR REPLACE FUNCTION public.generar_liquidacion_comision(p_vendedora_id uuid, p_periodo text, p_organization_id uuid, p_request_id uuid DEFAULT NULL::uuid)
+ RETURNS uuid
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public'
 AS $function$
 DECLARE
   v_total numeric(14,2);
@@ -81,8 +76,14 @@ BEGIN
   VALUES (v_org, p_vendedora_id, p_periodo, ROUND(v_total - v_aplicado, 2), auth.uid())
   RETURNING id INTO v_liq_id;
 
+  -- YG-03: se conserva el estado previo para poder restaurarlo si la
+  -- liquidación se cancela (una comisión "Por recuperar" no debe volver a
+  -- "Devengada", porque se pagaría dos veces).
   UPDATE public.comisiones_devengadas
-     SET estado = 'Liquidada', liquidacion_id = v_liq_id, updated_at = now()
+     SET estado = 'Liquidada',
+         estado_previo_liquidacion = 'Devengada',
+         liquidacion_id = v_liq_id,
+         updated_at = now()
    WHERE organization_id = v_org
      AND vendedora_id = p_vendedora_id
      AND estado = 'Devengada'
@@ -103,6 +104,7 @@ BEGIN
       v_disponible := v_disponible - v_rec.comision_mxn;
       UPDATE public.comisiones_devengadas
          SET estado = 'Cancelada',
+             estado_previo_liquidacion = 'Por recuperar',
              liquidacion_id = v_liq_id,
              nota = COALESCE(nota || ' · ', '')
                     || 'Recuperada al descontarse de la liquidación del periodo ' || p_periodo,
@@ -119,3 +121,6 @@ BEGIN
   RETURN v_liq_id;
 END;
 $function$;
+
+REVOKE ALL ON FUNCTION public.generar_liquidacion_comision(uuid, text, uuid, uuid) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.generar_liquidacion_comision(uuid, text, uuid, uuid) TO authenticated, service_role;
