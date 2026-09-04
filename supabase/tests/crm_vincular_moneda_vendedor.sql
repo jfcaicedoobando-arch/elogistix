@@ -58,8 +58,8 @@ BEGIN
 
   INSERT INTO public.crm_leads (id, organization_id, empresa, estado, vendedor_id, vendedor_email) VALUES
     (v_lead_con_vend, v_org, 'Lead con vendedor', 'Calificado', v_vendedor, 'vend-mon@test.local'),
-    (v_lead_sin_vend, v_org, 'Lead sin vendedor', 'Calificado', NULL, NULL),
-    (v_lead_mon, v_org, 'Lead moneda', 'Calificado', NULL, NULL);
+    (v_lead_sin_vend, v_org, 'Lead sin vendedor', 'Calificado', NULL, ''),
+    (v_lead_mon, v_org, 'Lead moneda', 'Calificado', NULL, '');
 
   INSERT INTO public.cotizaciones (id, organization_id, folio, modo, tipo, es_prospecto, prospecto_empresa, moneda) VALUES
     (v_cot1, v_org, 'TEST-MV-1', 'Marítimo', 'Importación', true, 'Lead con vendedor', 'USD'::moneda),
