@@ -113,7 +113,8 @@ export function useEliminarOportunidad() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.crm.oportunidades.all });
       qc.invalidateQueries({ queryKey: queryKeys.crm.higiene.all });
-      notifySuccess(undefined, { title: "Oportunidad eliminada" });
+      qc.invalidateQueries({ queryKey: queryKeys.crm.kpis });
+      qc.invalidateQueries({ queryKey: queryKeys.crm.dashboardAll });
     },
     onError: (error: Error) => {
       notifyError(undefined, { title: "No se pudo eliminar oportunidad", description: getErrorMessage(error), error, method: "DELETE_OPORTUNIDAD" });
