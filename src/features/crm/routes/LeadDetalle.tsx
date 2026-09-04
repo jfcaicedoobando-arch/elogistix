@@ -81,48 +81,23 @@ export default function LeadDetalle() {
   return (
 
     <PageContainer>
-      <DetailHeader
-        backTo={volver}
-        backLabel="Volver a Leads"
-        icon={<UserPlus className="h-6 w-6 text-accent shrink-0" />}
-        title={lead.empresa}
-        titleAs="h2"
-
-        badge={<Badge variant="outline" className="capitalize">{lead.estado}</Badge>}
-        subtitle={`Lead · ${lead.fuente} · creado ${formatFechaEs(lead.created_at)}`}
-        meta={
-          <ContactActions
-            email={lead.email}
-            telefono={lead.telefono}
-            plantillaCtx={{
-              entidadTipo: "lead",
-              entidadId: lead.id,
-              vars: {
-                contacto: lead.contacto || lead.empresa,
-                empresa: lead.empresa,
-                vendedor: lead.vendedor_email,
-                etapa: lead.estado,
-              },
-            }}
-          />
-        }
-        trailing={
-          <LeadHeaderActions
-            estado={lead.estado}
-            canEdit={puedeGestionar}
-            onEliminar={() => setDeleteOpen(true)}
-            onVerConversion={destinoConversion ? () => navigate(destinoConversion) : undefined}
-            mostrarTomar={canTomarLead && !lead.vendedor_id && lead.estado !== "Convertido"}
-            onTomar={handleTomar}
-            tomando={tomando}
-            mostrarCalificar={!!lead.vendedor_id && puedeGestionar && puedeCalificarse(lead.estado)}
-            onCalificar={handleCalificar}
-            calificando={calificando}
-            mostrarNuevaOportunidad={puedeGestionar && canCrearOportunidad && esProspecto(lead.estado)}
-            onNuevaOportunidad={() => setNuevaOportunidadOpen(true)}
-          />
-        }
+      <LeadDetalleHeader
+        lead={lead}
+        volver={volver}
+        puedeGestionar={puedeGestionar}
+        canTomarLead={canTomarLead}
+        canCrearOportunidad={canCrearOportunidad}
+        esProspecto={esProspecto(lead.estado)}
+        destinoConversion={destinoConversion}
+        onNavegarConversion={(destino) => navigate(destino)}
+        onEliminar={() => setDeleteOpen(true)}
+        onTomar={handleTomar}
+        tomando={tomando}
+        onCalificar={handleCalificar}
+        calificando={calificando}
+        onNuevaOportunidad={() => setNuevaOportunidadOpen(true)}
       />
+
 
 
       <LeadEtapaProspectoAviso estado={lead.estado} canAltaCliente={canAltaCliente} />
