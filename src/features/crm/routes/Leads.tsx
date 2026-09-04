@@ -26,6 +26,7 @@ import {
   type CrmLeadRow, type CrmLeadEstado, type CrmLeadFuente, type LeadSortKey,
 } from "@/features/crm/domain/leads/constants";
 import { LEAD_ESTADOS_ETAPA_LEAD } from "@/features/crm/domain/leads/etapas";
+import { copiaContadorLeads } from "./leadsContadorCopy";
 import { makeLeadsColumns } from "./leadsColumns";
 import { useLeadsSelection } from "./useLeadsSelection";
 import { useLeadsExport } from "./useLeadsExport";
