@@ -70,7 +70,7 @@ export function Layout() {
             </div>
           </header>
           <TenantContextBanner />
-          <main className="flex-1 overflow-auto">
+          <main ref={mainRef} className="flex-1 overflow-auto">
             <PageContainer noSpacing>
               <ErrorBoundary resetKey={location.pathname}>
                 <Suspense fallback={<RouteLoadingFallback />}>
