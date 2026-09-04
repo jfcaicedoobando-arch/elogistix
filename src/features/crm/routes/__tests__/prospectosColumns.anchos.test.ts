@@ -4,7 +4,7 @@
  * "Alta" visible. Sector y Rutas se muestran sólo desde 2xl.
  */
 import { describe, it, expect } from "vitest";
-import { prospectosColumns } from "../Prospectos";
+import { prospectosColumns } from "../prospectosColumns";
 
 const ANCHO_UTIL_HD = 950;
 const EMPRESA_MIN = 200;
