@@ -6,11 +6,12 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { formatCurrency } from "@/lib/formatters/numbers";
 import type { HigieneResumen } from "@/features/crm/services/higiene";
+import type { PresupuestoDelMes } from "@/features/crm/domain/higieneMetas";
 
 interface Props {
   resumen: HigieneResumen;
   cobertura: number | null;
-  presupuestoMes: number;
+  presupuestoMes: PresupuestoDelMes;
 }
 
 function Kpi({ label, value, hint }: { label: string; value: string; hint?: string }) {
@@ -46,6 +47,14 @@ export default function HigieneKpis({ resumen, cobertura, presupuestoMes }: Prop
   const sinMuestra = resumen.abiertas === 0;
   const higienePct = sinMuestra ? null : Math.round(resumen.higiene_pct * 100);
   const seguimientoPct = sinMuestra ? null : Math.round(resumen.seguimiento_oportuno_pct * 100);
+  // El pipeline ponderado viene en MXN; con presupuesto en USD/EUR no hay
+  // conversión histórica válida, así que no se inventa un porcentaje.
+  const sinConversion = presupuestoMes.monto > 0 && presupuestoMes.moneda !== "MXN";
+  const valorCobertura = sinConversion
+    ? "Sin conversión"
+    : cobertura === null
+      ? "Sin presupuesto"
+      : formatPercent(cobertura * 100, 0);
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
@@ -70,10 +79,10 @@ export default function HigieneKpis({ resumen, cobertura, presupuestoMes }: Prop
       />
       <Kpi
         label="Cobertura vs presupuesto"
-        value={cobertura === null ? "Sin presupuesto" : formatPercent(cobertura * 100, 0)}
+        value={valorCobertura}
         hint={
-          presupuestoMes > 0
-            ? `Meta del mes ${formatCurrency(presupuestoMes, "MXN")}`
+          presupuestoMes.monto > 0
+            ? `Meta del mes ${formatCurrency(presupuestoMes.monto, presupuestoMes.moneda)}`
             : "Captura el presupuesto en Configuración del CRM"
         }
       />
