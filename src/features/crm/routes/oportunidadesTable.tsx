@@ -10,7 +10,7 @@ import type { ProximaActividad } from "@/features/crm/hooks/useProximasActividad
 import { formatFechaEs } from "@/lib/formatters/dates";
 
 /** Celda truncada con el texto completo accesible vía title/aria-label. */
-function TextoTruncado({ texto }: { texto: string }) {
+function celdaTruncada(texto: string) {
   return (
     <span className="block truncate" title={texto} aria-label={texto}>
       {texto}
@@ -27,13 +27,13 @@ export const oportunidadesColumns: ColumnDef<CrmOportunidadRow, unknown>[] = def
     id: "nombre",
     header: "Oportunidad",
     meta: { className: "font-medium", sticky: true },
-    cell: ({ row }) => <TextoTruncado texto={row.original.nombre} />,
+    cell: ({ row }) => celdaTruncada(row.original.nombre),
   },
   {
     id: "cliente",
     header: "Cliente",
     meta: { width: COL_W.nombre, className: "text-body-sm" },
-    cell: ({ row }) => <TextoTruncado texto={row.original.cliente_nombre || "—"} />,
+    cell: ({ row }) => celdaTruncada(row.original.cliente_nombre || "—"),
   },
   {
     ...moneyColumn<CrmOportunidadRow>({
@@ -62,7 +62,7 @@ export const oportunidadesColumns: ColumnDef<CrmOportunidadRow, unknown>[] = def
     id: "vendedor",
     header: "Vendedor",
     meta: { width: COL_W.nombre, className: "text-xs hidden 2xl:table-cell", headerClassName: "hidden 2xl:table-cell" },
-    cell: ({ row }) => <TextoTruncado texto={row.original.vendedor_email || "—"} />,
+    cell: ({ row }) => celdaTruncada(row.original.vendedor_email || "—"),
   },
 ]);
 
@@ -83,9 +83,9 @@ export function siguienteActividadColumn(
     },
     cell: ({ row }) => {
       const a = proximas.get(row.original.id);
-      if (!a) return <TextoTruncado texto="Sin actividad" />;
+      if (!a) return celdaTruncada("Sin actividad");
       const fecha = a.fecha_programada ? formatFechaEs(a.fecha_programada) : "sin fecha";
-      return <TextoTruncado texto={`${a.asunto} · ${fecha}`} />;
+      return celdaTruncada(`${a.asunto} · ${fecha}`);
     },
   } as ColumnDef<CrmOportunidadRow, unknown>;
 }
