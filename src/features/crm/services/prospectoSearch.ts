@@ -62,6 +62,20 @@ function primero<T>(v: T | T[] | null | undefined): T | undefined {
   return Array.isArray(v) ? v[0] : (v ?? undefined);
 }
 
+function mapOportunidad(o: OpHit): ProspectoMatch {
+  const lead = primero(o.lead);
+  return {
+    kind: "oportunidad",
+    id: o.id,
+    empresa: o.cliente_nombre || lead?.empresa || o.nombre,
+    contacto: lead?.contacto ?? "",
+    email: lead?.email ?? "",
+    telefono: "",
+    leadId: o.lead_id,
+    etapaNombre: primero(o.etapa)?.nombre,
+  };
+}
+
 export async function buscarProspectos(term: string): Promise<ProspectoMatch[]> {
   const [leadsRes, opsPropiasRes, opsPorLeadRes] = await Promise.all([
     supabase
@@ -82,17 +96,14 @@ export async function buscarProspectos(term: string): Promise<ProspectoMatch[]> 
   if (opsPropiasRes.error) throw opsPropiasRes.error;
   if (opsPorLeadRes.error) throw opsPorLeadRes.error;
 
-  const hits: ProspectoMatch[] = [];
-  for (const l of leadsRes.data ?? []) {
-    hits.push({
-      kind: "lead",
-      id: l.id,
-      empresa: l.empresa,
-      contacto: l.contacto ?? "",
-      email: l.email ?? "",
-      telefono: l.telefono ?? "",
-    });
-  }
+  const hits: ProspectoMatch[] = (leadsRes.data ?? []).map((l) => ({
+    kind: "lead" as const,
+    id: l.id,
+    empresa: l.empresa,
+    contacto: l.contacto ?? "",
+    email: l.email ?? "",
+    telefono: l.telefono ?? "",
+  }));
   // SAFE-CAST: los joins `etapa`/`lead` pueden inferirse como objeto o array
   // según la cardinalidad detectada por PostgREST; ambos shapes son válidos.
   const ops = [
@@ -103,17 +114,7 @@ export async function buscarProspectos(term: string): Promise<ProspectoMatch[]> 
   for (const o of ops) {
     if (vistos.has(o.id)) continue;
     vistos.add(o.id);
-    const lead = primero(o.lead);
-    hits.push({
-      kind: "oportunidad",
-      id: o.id,
-      empresa: o.cliente_nombre || lead?.empresa || o.nombre,
-      contacto: lead?.contacto ?? "",
-      email: lead?.email ?? "",
-      telefono: "",
-      leadId: o.lead_id,
-      etapaNombre: primero(o.etapa)?.nombre,
-    });
+    hits.push(mapOportunidad(o));
   }
   return hits;
 }
