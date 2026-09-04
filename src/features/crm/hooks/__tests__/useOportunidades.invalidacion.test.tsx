@@ -42,6 +42,8 @@ vi.mock("@/lib/query", () => ({
 }));
 
 import { useActualizarOportunidad, useEliminarOportunidad } from "../useOportunidades";
+import { notifySuccess } from "@/lib/ui/appFeedback";
+
 
 function spyClient() {
   const client = (globalThis as unknown as {
@@ -57,6 +59,7 @@ describe("invalidación de dashboard en oportunidades", () => {
   beforeEach(() => {
     actualizarOportunidad.mockReset().mockResolvedValue({ id: "op-1" });
     eliminarOportunidad.mockReset().mockResolvedValue(undefined);
+    vi.mocked(notifySuccess).mockReset();
   });
 
   it("actualizar invalida listas, detalle, kpis y dashboard", async () => {
@@ -86,5 +89,8 @@ describe("invalidación de dashboard en oportunidades", () => {
     expect(invalidated).toContainEqual(["crm", "higiene"]);
     expect(invalidated).toContainEqual(["crm", "kpis"]);
     expect(invalidated).toContainEqual(["crm", "dashboard"]);
+    // Regresión v13.823.84: el hook de eliminar no debe emitir su propio toast
+    // de éxito; el único feedback lo maneja el call-site.
+    expect(notifySuccess).not.toHaveBeenCalled();
   });
 });
