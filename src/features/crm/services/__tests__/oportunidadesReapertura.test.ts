@@ -22,7 +22,7 @@ import { resolverLimpiezaCierre } from "@/features/crm/hooks/moverOportunidadEta
 
 beforeEach(() => { mock.tableCalls.length = 0; });
 
-type EtapaArg = Parameters<typeof resolverLimpiezaCierre>[0];
+type EtapaArg = NonNullable<Parameters<typeof resolverLimpiezaCierre>[0]>;
 /** Sólo `id`/`tipo` participan en la limpieza de cierre; el resto de la fila es irrelevante. */
 const etapa = (id: string, tipo: string): EtapaArg => ({ id, tipo }) as unknown as EtapaArg;
 
