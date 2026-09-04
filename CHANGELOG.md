@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+## [13.823.77] - 2026-09-05
+
+### Pulido visual del PDF de cotización
+- **Glifos**: las flechas y comillas tipográficas se normalizan antes de imprimirse (`sanitizePdfText`). Antes Helvetica dibujaba un glifo equivocado (`'`, `³`) en la ruta y en las notas de cada concepto.
+- **Filas completas**: cada concepto y su nota viajan juntos y no se parten entre páginas; los títulos de bloque arrastran el encabezado de su tabla.
+- **Importes en un renglón**: dentro de las tablas se imprime sólo el número (el código de moneda ya está en el título del bloque), en lugar de partir "USD / 1,200.00" en dos líneas.
+- **Columnas y celdas vacías**: la columna Unidad ya no corta "contenedor" y los datos sin valor muestran "—".
+
 ## [13.823.76] - 2026-09-04
 
 ### Correcciones de datos financieros del detalle de embarque

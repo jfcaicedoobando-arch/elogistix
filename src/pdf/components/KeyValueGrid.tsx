@@ -1,5 +1,6 @@
 import { View, Text } from "@react-pdf/renderer";
 import { styles } from "../theme/styles";
+import { sanitizePdfText } from "../text/sanitizePdfText";
 
 interface Props {
   items: Array<[label: string, value: string]>;
@@ -18,7 +19,7 @@ export function KeyValueGrid({ items, columns = 4 }: Props) {
       {items.map(([label, value], i) => (
         <View key={`${label}-${i}`} style={cellStyle} wrap={false}>
           <Text style={styles.label}>{label}</Text>
-          <Text style={styles.value}>{value}</Text>
+          <Text style={styles.value}>{sanitizePdfText(value) || "—"}</Text>
         </View>
       ))}
     </View>

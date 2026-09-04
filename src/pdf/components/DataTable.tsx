@@ -1,8 +1,8 @@
 import { View, Text } from "@react-pdf/renderer";
 import type { Style } from "@react-pdf/types";
-import { Fragment } from "react";
 import { styles } from "../theme/styles";
 import { COLORS } from "@/pdf/theme/tokens";
+import { sanitizePdfText } from "../text/sanitizePdfText";
 
 export interface PdfColumn<T> {
   key: string;
@@ -47,7 +47,7 @@ export function DataTable<T>({ columns, rows, renderSubrow }: Props<T>) {
       <View style={styles.tableHeader} fixed>
         {columns.map((col) => (
           <Text key={col.key} style={[styles.th, ...flat(col.cellStyle)]}>
-            {col.title}
+            {sanitizePdfText(col.title)}
           </Text>
         ))}
       </View>
@@ -55,24 +55,29 @@ export function DataTable<T>({ columns, rows, renderSubrow }: Props<T>) {
         const subrow = renderSubrow?.(row);
         const rowStyle = i % 2 === 1 ? styles.tableRowZebra : styles.tableRow;
         return (
-          <Fragment key={i}>
-            <View style={rowStyle} wrap>
+          // v13.823.77: la fila (con su nota) no se parte entre páginas; antes
+          // la descripción quedaba en una hoja y los importes en la siguiente.
+          <View key={i} wrap={false}>
+            <View style={rowStyle}>
               {columns.map((col) => (
                 <Text key={col.key} style={[styles.td, ...flat(col.cellStyle)]} wrap>
-                  {col.render ? col.render(row) : String((row as Record<string, unknown>)[col.key] ?? "")}
+                  {sanitizePdfText(
+                    col.render ? col.render(row) : String((row as Record<string, unknown>)[col.key] ?? ""),
+                  )}
                 </Text>
               ))}
             </View>
             {subrow ? (
-              <View style={rowStyle} wrap>
+              <View style={rowStyle}>
                 <Text style={[styles.td, styles.cellDesc, { fontStyle: "italic", color: COLORS.subtle }]} wrap>
-                  ↳ {subrow}
+                  {`\u00B7 ${sanitizePdfText(subrow)}`}
                 </Text>
               </View>
             ) : null}
-          </Fragment>
+          </View>
         );
       })}
+
     </View>
   );
 }
