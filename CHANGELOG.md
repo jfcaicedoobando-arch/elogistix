@@ -2,6 +2,21 @@
 
 ## [Unreleased]
 
+## [13.823.75] - 2026-09-04
+
+### Correcciones de UI, permisos y validaciones
+- **CRM y dashboard**: estados de error y reintento visibles en tarjetas secundarias de Mi día, KPIs de higiene, forecast, leaderboard, timeline, selector de prospectos, Cliente 360 y detalle de lead/oportunidad.
+- **Facturación**: paginación de la bandeja "Por enviar" lista todo el universo candidato con orden estable, reset de página al cambiar filtros y totales aclarados como "de la página visible".
+- **Filtros desktop**: `UnifiedFiltersBar` ya no abre un panel vacío de "Filtros" cuando no hay filtros secundarios en escritorio.
+- **Navegación**: el layout restaura el scroll superior al cambiar de ruta, sin perder la posición entre cambios de query params.
+- **Higiene CRM**: la cobertura de presupuesto muestra la moneda real y "Sin conversión" cuando el pipeline MXN se compara con metas en USD/EUR; el borrador del presupuesto se ancla al año-mes visible.
+- **Motivos de pérdida**: se eliminaron los toasts duplicados; el feedback queda exclusivamente en los hooks de mutación.
+
+### Integridad financiera y fiscal
+- **Ventas**: EUR queda fuera del selector de moneda en conceptos de venta y el servidor rechaza cualquier intento de guardar un concepto de venta en EUR.
+- **Liquidaciones de comisión**: las RPC de cancelación y pago validan el rol financiero por membresía en la organización del usuario (no por rol global); al cancelar una liquidación, cada comisión regresa a su estado previo (`Por recuperar` o `Devengada`).
+- **Pagos y crédito**: se endureció `convertir_monto_pago_a_factura` para rechazar tipos de cambio no verificables (TC ≤ 1 en pata extranjera o factura destino); el límite de crédito y las notas de crédito con total ≤ 0 fallan cerrados con mensajes amigables.
+
 ## [13.823.74] - 2026-09-04
 
 ### Cotizaciones en euros comparadas con el tipo de cambio del dólar
