@@ -89,7 +89,7 @@ export default function Actividades() {
 
   const items = list.rows;
   const columns = canCrearActividad
-    ? [...baseActividadColumns, actividadActionColumn((a) => canGestionarActividad(a.responsable_id, a.responsable_email))]
+    ? [...baseActividadColumns, actividadActionColumn((a) => canGestionarActividad(a.responsable_id))]
     : baseActividadColumns;
 
   const limpiarFiltro = () => {
