@@ -34,6 +34,7 @@ vi.mock("@/lib/query", () => ({
   queryKeys: {
     crm: {
       leads: { all: ["crm", "leads"], detail: (id: string) => ["crm", "leads", id] },
+      prospectos: { all: ["crm", "prospectos"] },
       kpis: ["crm", "kpis"],
       dashboardAll: ["crm", "dashboard"],
     },
