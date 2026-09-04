@@ -42,7 +42,7 @@ function columnasUSD(tasaIva: number, hayIva: boolean): PdfColumn<ConceptoVentaC
         const tasa = resolverTasaConcepto(r, tasaIva);
         return tasa > 0 ? `${r.descripcion}  (+IVA ${(tasa * 100).toFixed(0)}%)` : r.descripcion;
       } },
-    { key: "unidad", title: "Unidad", cellStyle: { width: 55, fontSize: 9 } as never,
+    { key: "unidad", title: "Unidad", cellStyle: { width: 68, fontSize: 9 } as never,
       render: (r) => r.unidad_medida || "—" },
     { key: "cantidad", title: "Cant.", cellStyle: styles.cellQty, render: (r) => String(r.cantidad) },
     { key: "precio", title: "P. Unit.", cellStyle: styles.cellNum, render: (r) => montoTabla(r.precio_unitario, "USD") },
@@ -68,7 +68,7 @@ function columnasUSD(tasaIva: number, hayIva: boolean): PdfColumn<ConceptoVentaC
 function columnasMXN(tasaIva: number): PdfColumn<ConceptoVentaCotizacion>[] {
   return [
     { key: "descripcion", title: "Descripción", cellStyle: styles.cellDesc, render: (r) => r.descripcion },
-    { key: "unidad", title: "Unidad", cellStyle: { width: 55, fontSize: 9 } as never,
+    { key: "unidad", title: "Unidad", cellStyle: { width: 68, fontSize: 9 } as never,
       render: (r) => r.unidad_medida || "—" },
     { key: "cantidad", title: "Cant.", cellStyle: styles.cellQty, render: (r) => String(r.cantidad) },
     { key: "precio", title: "P. Unit.", cellStyle: styles.cellNum, render: (r) => montoTabla(r.precio_unitario, "MXN") },
