@@ -1,8 +1,16 @@
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, beforeAll } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { MemoryRouter, useNavigate } from "react-router-dom";
 import { useRef } from "react";
 import { useScrollRestoreOnPathname } from "../useScrollRestoreOnPathname";
+
+// jsdom no expone scrollTo en elementos; el hook ya tiene fallback, pero para
+// espiar el caso feliz lo añadimos como no-op.
+beforeAll(() => {
+  if (typeof HTMLElement !== "undefined" && !HTMLElement.prototype.scrollTo) {
+    HTMLElement.prototype.scrollTo = function scrollTo() { /* noop */ };
+  }
+});
 
 function ScrollableHarness() {
   const mainRef = useRef<HTMLDivElement>(null);
