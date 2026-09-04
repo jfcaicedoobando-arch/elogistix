@@ -12,6 +12,7 @@ import SelectorOrigenOportunidad from "./SelectorOrigenOportunidad";
 import OportunidadMetasFields from "./OportunidadMetasFields";
 import OportunidadMontosFields from "./OportunidadMontosFields";
 import OportunidadRutaFields from "./OportunidadRutaFields";
+import { useNombreProspecto } from "@/features/crm/hooks/useNombreProspecto";
 import type { OportunidadFormState } from "@/features/crm/hooks";
 
 interface Etapa {
@@ -42,6 +43,13 @@ export default function OportunidadFormFields({
 }: Props) {
   const etapaSel = etapas.find((e) => e.id === form.etapa_id);
   const esGanada = etapaSel?.tipo === "ganada";
+  // El nombre del lead no vive en `crm_oportunidades`: al editar se hidrata
+  // sólo la etiqueta para poder verificar el vínculo antes de guardar.
+  const faltaNombreLead = form.origen_tipo === "prospecto" && !form.lead_nombre;
+  const { data: nombreLeadHidratado } = useNombreProspecto(
+    faltaNombreLead ? form.lead_id : null,
+  );
+  const leadNombreVisible = form.lead_nombre || nombreLeadHidratado || "";
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
       {/* Fase 2 rediseño CRM: el origen (prospecto o cliente) es obligatorio. */}
@@ -58,7 +66,7 @@ export default function OportunidadFormFields({
           }))
         }
         leadId={form.lead_id}
-        leadNombre={form.lead_nombre}
+        leadNombre={leadNombreVisible}
         onProspecto={(p) =>
           setForm((f) => ({
             ...f,

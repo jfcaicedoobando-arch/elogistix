@@ -1,0 +1,29 @@
+/**
+ * Hidratación mínima del nombre del prospecto (lead) de una oportunidad.
+ *
+ * `crm_oportunidades` guarda `lead_id` pero NO el nombre del lead, así que al
+ * editar una oportunidad originada en prospecto el selector en modo lectura
+ * quedaba vacío ("Selecciona un prospecto…") y parecía que se había perdido
+ * el vínculo. Este hook resuelve sólo la etiqueta: no toca el formulario, por
+ * lo que guardar otros campos conserva `lead_id` intacto.
+ */
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+
+export function useNombreProspecto(leadId: string | null) {
+  return useQuery({
+    queryKey: ["crm", "lead-nombre", leadId],
+    enabled: !!leadId,
+    staleTime: 5 * 60 * 1000,
+    queryFn: async (): Promise<string> => {
+      const { data, error } = await supabase
+        .from("crm_leads")
+        .select("empresa, contacto")
+        .eq("id", leadId as string)
+        .is("deleted_at", null)
+        .maybeSingle();
+      if (error) throw error;
+      return (data?.empresa || data?.contacto || "").trim();
+    },
+  });
+}
