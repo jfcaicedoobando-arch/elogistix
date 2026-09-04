@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+## [13.823.73] - 2026-09-04
+
+### Concurrencia: dos personas aceptando cotizaciones de la misma oportunidad
+- El guard `scripts/ci/concurrencia-cotizacion-ganadora.sh` fallaba en CI porque comparaba el resultado booleano de psql con `t` cuando `boolean::text` imprime `true`: la barrera nunca se cumplía. Ahora acepta ambas formas y coordina las dos sesiones con un semáforo en vez de esperas fijas.
+- Al destaparse la carrera real apareció un bug de producto: `crm_cerrar_oportunidad_desde_cotizacion` tomaba el lock con `SELECT ... JOIN ... FOR UPDATE OF o`, y al despertar tras la otra transacción la re-evaluación del join (EvalPlanQual) devolvía 0 filas. La segunda aceptación mostraba "LC_OPORTUNIDAD_AJENA" en lugar de "LC_COTIZACION_GANADORA_EXISTE". Ahora el lock se toma sobre la tabla sola y la etapa se lee después.
+- Se completó el espejo `supabase/schema/crm/crm_cerrar_oportunidad_desde_cotizacion.sql`, que terminaba en un bloque `DO $bf$` truncado y rompía cualquier replay desde cero.
+
 ## [13.823.72] - 2026-09-04
 
 ### CI: pruebas de moneda del CRM en verde

@@ -1,5 +1,6 @@
--- Fuente canónica. Espejo 1:1 de la migración v13.823.57.
--- Al modificar: edita ESTE archivo y genera la migración con el mismo cuerpo.
+-- Fix de concurrencia: el lock de la oportunidad se toma sin JOIN para evitar
+-- un falso LC_OPORTUNIDAD_AJENA por EvalPlanQual al aceptar dos cotizaciones
+-- de la misma oportunidad en paralelo. Espejo: supabase/schema/crm/crm_cerrar_oportunidad_desde_cotizacion.sql
 
 CREATE OR REPLACE FUNCTION public.crm_cerrar_oportunidad_desde_cotizacion()
 RETURNS trigger
