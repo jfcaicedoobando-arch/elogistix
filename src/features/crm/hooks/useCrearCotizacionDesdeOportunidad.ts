@@ -59,7 +59,7 @@ export function useCrearCotizacionDesdeOportunidad() {
       }
       return { id: cot.id, folio: cot.folio, reutilizada: cot.reutilizada, avisoEtapa };
     },
-    onSuccess: (data) => {
+    onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.crm.oportunidades.all });
       qc.invalidateQueries({ queryKey: queryKeys.crm.opCotizaciones.all });
       // v13.823.79: el dashboard y "Cotizaciones sin respuesta" quedaban stale
