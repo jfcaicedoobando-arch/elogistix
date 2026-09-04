@@ -364,6 +364,21 @@ BEGIN
   RETURN NEW;
 END;
 $$;
+CREATE FUNCTION public._assert_concepto_venta_moneda_soportada() RETURNS trigger
+    LANGUAGE plpgsql
+    SET search_path TO 'public'
+    AS $$
+BEGIN
+  -- Sólo se valida cuando la moneda entra o cambia, para no bloquear
+  -- correcciones/soft-delete de filas legacy.
+  IF NEW.moneda = 'EUR'::public.moneda
+     AND (TG_OP = 'INSERT' OR OLD.moneda IS DISTINCT FROM NEW.moneda) THEN
+    RAISE EXCEPTION 'LC_VENTA_EUR_NO_SOPORTADA: La venta sólo se factura en MXN o USD; captura el concepto en pesos o dólares.'
+      USING ERRCODE = '22023';
+  END IF;
+  RETURN NEW;
+END;
+$$;
 CREATE FUNCTION public._assert_cotizacion_convertible(p_cotizacion_id uuid, p_org uuid) RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
@@ -8923,6 +8938,7 @@ BEGIN
      AND NOT public.has_role(v_uid,'super_admin'::app_role) THEN
     RAISE EXCEPTION 'LC_LIQUIDACION_OTRA_ORG: La liquidación pertenece a otra organización.';
   END IF;
+  -- YG-02: rol financiero POR MEMBRESÍA en la org dueña de la liquidación.
   IF NOT public.has_any_role_in_org_exact(v_uid,
        ARRAY['admin','admin_org','super_admin','contador','tesorero']::public.app_role[],
        v_row.organization_id) THEN
@@ -8936,14 +8952,18 @@ BEGIN
     RAISE EXCEPTION 'LC_LIQUIDACION_PAGADA_NO_CANCELABLE: La liquidación ya fue pagada; registra el ajuste en la siguiente liquidación.'
       USING ERRCODE = '42501';
   END IF;
+  -- YG-03: cada comisión regresa a su estado previo. El fallback cubre filas
+  -- legacy sin `estado_previo_liquidacion` capturado.
   UPDATE public.comisiones_devengadas
-     SET estado = 'Devengada', liquidacion_id = NULL, updated_at = now()
+     SET estado = COALESCE(
+           estado_previo_liquidacion,
+           CASE WHEN estado = 'Cancelada' THEN 'Por recuperar'::public.estado_comision
+                ELSE 'Devengada'::public.estado_comision END),
+         estado_previo_liquidacion = NULL,
+         liquidacion_id = NULL,
+         updated_at = now()
    WHERE liquidacion_id = p_liquidacion_id
-     AND estado = 'Liquidada';
-  UPDATE public.comisiones_devengadas
-     SET estado = 'Por recuperar', liquidacion_id = NULL, updated_at = now()
-   WHERE liquidacion_id = p_liquidacion_id
-     AND estado = 'Cancelada';
+     AND estado IN ('Liquidada', 'Cancelada');
   UPDATE public.liquidaciones_comision
      SET estado = 'Cancelada',
          cancelada_at = now(),
@@ -12491,6 +12511,7 @@ BEGIN
       USING ERRCODE = 'P0001';
   END IF;
   -- (i) Papelera: se conserva cotizacion_ganadora_id, valor_real y snapshot.
+  -- Sólo se libera embarque_ganador_id si ese embarque ya no está vivo.
   IF NEW.deleted_at IS NOT NULL THEN
     IF TG_OP = 'UPDATE' AND OLD.deleted_at IS NULL THEN
       UPDATE public.crm_oportunidades o
@@ -12513,16 +12534,26 @@ BEGIN
                     AND OLD.deleted_at IS NULL
                     AND OLD.estado = ANY (v_terminales);
   -- (b) lock de la oportunidad: serializa aceptaciones concurrentes.
-  SELECT o.id, o.organization_id, o.vendedor_id, o.nombre, e.tipo,
-         o.cotizacion_ganadora_id, o.valor_real, o.embarque_ganador_id, o.moneda
-    INTO v_op_id, v_op_org, v_op_vendedor, v_op_nombre, v_etapa_tipo,
-         v_ganadora, v_valor_previo, v_emb_ganador, v_op_moneda
+  -- El lock se toma sobre la tabla SOLA: un `FOR UPDATE OF o` con JOIN, al
+  -- despertar tras esperar a otra transacción, re-evalúa el join completo
+  -- (EvalPlanQual) y puede devolver 0 filas aunque la oportunidad exista,
+  -- disparando un falso LC_OPORTUNIDAD_AJENA en aceptaciones concurrentes.
+  SELECT o.id INTO v_op_id
     FROM public.crm_oportunidades o
-    JOIN public.crm_etapas_pipeline e ON e.id = o.etapa_id
    WHERE o.id = NEW.oportunidad_id
      AND o.organization_id = NEW.organization_id
      AND o.deleted_at IS NULL
-   FOR UPDATE OF o;
+   FOR UPDATE;
+  IF v_op_id IS NOT NULL THEN
+    -- Lectura ya serializada: se re-lee la fila (y su etapa) sin lock.
+    SELECT o.organization_id, o.vendedor_id, o.nombre, e.tipo,
+           o.cotizacion_ganadora_id, o.valor_real, o.embarque_ganador_id, o.moneda
+      INTO v_op_org, v_op_vendedor, v_op_nombre, v_etapa_tipo,
+           v_ganadora, v_valor_previo, v_emb_ganador, v_op_moneda
+      FROM public.crm_oportunidades o
+      JOIN public.crm_etapas_pipeline e ON e.id = o.etapa_id
+     WHERE o.id = v_op_id;
+  END IF;
   -- (a) cross-org / inexistente / eliminada
   IF v_op_id IS NULL THEN
     RAISE EXCEPTION 'LC_OPORTUNIDAD_AJENA: la oportunidad no existe, está eliminada o pertenece a otra organización'
@@ -12615,7 +12646,8 @@ BEGIN
                          'valor_real_conservado', v_valor_previo)
     );
   ELSIF NOT v_era_terminal THEN
-    -- (g) la misma ganadora se recotizó y se vuelve a aceptar.
+    -- (g) la misma ganadora se recotizó y se vuelve a aceptar: nuevo valor,
+    -- auditoría explícita del cambio, sin duplicar la notificación.
     UPDATE public.crm_oportunidades
        SET valor_real = NEW.subtotal,
            embarque_ganador_id = COALESCE(embarque_ganador_id, NEW.embarque_id),
@@ -17284,8 +17316,14 @@ BEGIN
   INSERT INTO public.liquidaciones_comision (organization_id, vendedora_id, periodo, total_mxn, creada_por)
   VALUES (v_org, p_vendedora_id, p_periodo, ROUND(v_total - v_aplicado, 2), auth.uid())
   RETURNING id INTO v_liq_id;
+  -- YG-03: se conserva el estado previo para poder restaurarlo si la
+  -- liquidación se cancela (una comisión "Por recuperar" no debe volver a
+  -- "Devengada", porque se pagaría dos veces).
   UPDATE public.comisiones_devengadas
-     SET estado = 'Liquidada', liquidacion_id = v_liq_id, updated_at = now()
+     SET estado = 'Liquidada',
+         estado_previo_liquidacion = 'Devengada',
+         liquidacion_id = v_liq_id,
+         updated_at = now()
    WHERE organization_id = v_org
      AND vendedora_id = p_vendedora_id
      AND estado = 'Devengada'
@@ -17305,6 +17343,7 @@ BEGIN
       v_disponible := v_disponible - v_rec.comision_mxn;
       UPDATE public.comisiones_devengadas
          SET estado = 'Cancelada',
+             estado_previo_liquidacion = 'Por recuperar',
              liquidacion_id = v_liq_id,
              nota = COALESCE(nota || ' · ', '')
                     || 'Recuperada al descontarse de la liquidación del periodo ' || p_periodo,
@@ -17460,26 +17499,31 @@ CREATE FUNCTION public.get_embarque_full(p_embarque_id uuid) RETURNS jsonb
         SELECT jsonb_agg(to_jsonb(cv.*) ORDER BY cv.created_at, cv.id)
         FROM conceptos_venta cv
         WHERE cv.embarque_id = p_embarque_id
+          AND cv.deleted_at IS NULL
       ), '[]'::jsonb),
       'conceptosCosto', COALESCE((
         SELECT jsonb_agg(to_jsonb(cc.*) ORDER BY cc.created_at, cc.id)
         FROM conceptos_costo cc
         WHERE cc.embarque_id = p_embarque_id
+          AND cc.deleted_at IS NULL
       ), '[]'::jsonb),
       'documentos', COALESCE((
         SELECT jsonb_agg(to_jsonb(d.*) ORDER BY d.created_at, d.id)
         FROM documentos_embarque d
         WHERE d.embarque_id = p_embarque_id
+          AND d.deleted_at IS NULL
       ), '[]'::jsonb),
       'notas', COALESCE((
         SELECT jsonb_agg(to_jsonb(n.*) ORDER BY n.fecha DESC)
         FROM notas_embarque n
         WHERE n.embarque_id = p_embarque_id
+          AND n.deleted_at IS NULL
       ), '[]'::jsonb),
       'facturas', COALESCE((
         SELECT jsonb_agg(to_jsonb(f.*) ORDER BY f.created_at, f.id)
         FROM facturas f
         WHERE f.embarque_id = p_embarque_id
+          AND f.deleted_at IS NULL
       ), '[]'::jsonb)
     )
   END;
@@ -28688,6 +28732,7 @@ CREATE TABLE public.comisiones_devengadas (
     calculo_snapshot jsonb,
     deleted_at timestamp with time zone,
     deleted_by uuid,
+    estado_previo_liquidacion public.estado_comision,
     CONSTRAINT comisiones_devengadas_montos_chk CHECK (((comision_mxn >= (0)::numeric) AND ((porcentaje_aplicado IS NULL) OR ((porcentaje_aplicado >= (0)::numeric) AND (porcentaje_aplicado <= (100)::numeric)))))
 );
 CREATE TABLE public.comisiones_excepciones (
@@ -31043,6 +31088,7 @@ CREATE TRIGGER trg_concepto_no_proformado BEFORE DELETE OR UPDATE ON public.conc
 CREATE TRIGGER trg_conceptos_factura_assert_borrador BEFORE INSERT OR DELETE OR UPDATE ON public.conceptos_factura FOR EACH ROW EXECUTE FUNCTION public.conceptos_factura_assert_borrador();
 CREATE TRIGGER trg_conceptos_factura_calc_ret BEFORE INSERT OR UPDATE ON public.conceptos_factura FOR EACH ROW EXECUTE FUNCTION public.calc_concepto_retenciones();
 CREATE TRIGGER trg_conceptos_factura_rollup AFTER INSERT OR DELETE OR UPDATE ON public.conceptos_factura FOR EACH ROW EXECUTE FUNCTION public.trg_conceptos_factura_rollup();
+CREATE TRIGGER trg_conceptos_venta_moneda_soportada BEFORE INSERT OR UPDATE OF moneda ON public.conceptos_venta FOR EACH ROW EXECUTE FUNCTION public._assert_concepto_venta_moneda_soportada();
 CREATE TRIGGER trg_congelar_factura BEFORE INSERT OR UPDATE ON public.facturas FOR EACH ROW EXECUTE FUNCTION public.congelar_factura_al_emitir();
 CREATE TRIGGER trg_congelar_proforma BEFORE INSERT OR UPDATE ON public.proformas FOR EACH ROW EXECUTE FUNCTION public.congelar_proforma_al_aprobar();
 CREATE TRIGGER trg_cont_promover_por_liquidar AFTER INSERT OR UPDATE ON public.embarque_contenedores FOR EACH ROW EXECUTE FUNCTION public._trg_promover_por_liquidar();
@@ -32388,6 +32434,9 @@ GRANT ALL ON FUNCTION public._asegurar_movimiento_pago_proveedor(p_pago_id uuid)
 GRANT ALL ON FUNCTION public._asegurar_movimiento_pago_proveedor(p_pago_id uuid) TO service_role;
 REVOKE ALL ON FUNCTION public._assert_concepto_no_proformado() FROM PUBLIC;
 GRANT ALL ON FUNCTION public._assert_concepto_no_proformado() TO service_role;
+REVOKE ALL ON FUNCTION public._assert_concepto_venta_moneda_soportada() FROM PUBLIC;
+GRANT ALL ON FUNCTION public._assert_concepto_venta_moneda_soportada() TO authenticated;
+GRANT ALL ON FUNCTION public._assert_concepto_venta_moneda_soportada() TO service_role;
 REVOKE ALL ON FUNCTION public._assert_cotizacion_convertible(p_cotizacion_id uuid, p_org uuid) FROM PUBLIC;
 GRANT ALL ON FUNCTION public._assert_cotizacion_convertible(p_cotizacion_id uuid, p_org uuid) TO authenticated;
 GRANT ALL ON FUNCTION public._assert_cotizacion_convertible(p_cotizacion_id uuid, p_org uuid) TO service_role;
