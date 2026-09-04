@@ -13,7 +13,14 @@ export type CrmSearchHit =
 export async function searchCrm(term: string): Promise<CrmSearchHit[]> {
   const like = ilikePattern(term);
   const [leadsRes, opsRes, actsRes] = await Promise.all([
-    supabase.from("crm_leads").select("id, empresa, contacto, email").ilike("empresa", like).is("deleted_at", null).limit(6),
+    // EC-15: la UX promete buscar leads por empresa, contacto o email
+    // (igual que el listado); antes sólo filtraba `empresa`.
+    supabase
+      .from("crm_leads")
+      .select("id, empresa, contacto, email")
+      .or(orIlike(["empresa", "contacto", "email"], term))
+      .is("deleted_at", null)
+      .limit(6),
     supabase
       .from("crm_oportunidades")
       .select("id, nombre, cliente_nombre")
