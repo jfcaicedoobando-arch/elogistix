@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+## [13.823.84] - 2026-09-04
+
+### CRM — Toast único al crear cotización desde oportunidad
+- `useCrearCotizacionDesdeOportunidad` ya no emite un toast de éxito propio en `onSuccess`; la notificación queda en `useOportunidadDetalleActions`, con el folio y la navegación, para evitar un aviso duplicado.
+- `useOportunidadDetalleActions` muestra un toast informativo cuando la cotización se creó pero la etapa de la oportunidad no pudo actualizarse, conservando el aviso especial sin generar un doble toast.
+- Nuevas regresiones: `useOportunidadDetalleActions.toast.test.tsx` garantiza un único toast en el flujo normal y en el caso de etapa no actualizada; `useCrearCotizacionDesdeOportunidad.invalidacion.test.tsx` ahora verifica que el hook no emita toast de éxito.
+
 ## [13.823.83] - 2026-09-05
 
 ### CRM — Refresco de Prospectos tras mutaciones de leads
