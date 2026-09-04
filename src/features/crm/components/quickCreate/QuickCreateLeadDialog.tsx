@@ -101,6 +101,7 @@ export default function QuickCreateLeadDialog({ open, onOpenChange, onCreated, o
           onCancel={() => onOpenChange(false)}
           confirmLabel="Crear"
           loading={crear.isPending}
+          disabled={!empresa.trim() || crear.isPending}
           extra={
             <Button
               type="button"
