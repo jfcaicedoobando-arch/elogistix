@@ -1,20 +1,33 @@
 /**
  * QuickCreateActividadDialog · v13.821.7 (P2-7): idem Lead/Oportunidad —
  * LC conocido vs desconocido en `getErrorMessage(e)`.
+ *
+ * Hallazgo #13.1 (auditoría CRM): el toast de error/éxito lo emite
+ * `useCrearActividad` (una sola notificación por acción) — por eso el test
+ * ya no mockea el hook completo, sino el servicio de I/O que usa, para
+ * ejercitar el `onError` real del hook.
  */
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { createWrapper } from "@/test/utils/queryWrapper";
 import QuickCreateActividadDialog from "../QuickCreateActividadDialog";
 
 const mocks = vi.hoisted(() => ({
-  mutateAsync: vi.fn(),
+  crearActividad: vi.fn(),
   notifyError: vi.fn(),
+}));
+
+vi.mock("@/features/crm/services/actividades", () => ({
+  crearActividad: mocks.crearActividad,
 }));
 
 vi.mock("@/features/crm/hooks", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/features/crm/hooks")>()),
-  useCrearActividad: () => ({ mutateAsync: mocks.mutateAsync, isPending: false }),
   useOportunidades: () => ({ data: { data: [{ id: "op-1", nombre: "Proyecto X" }] } }),
+}));
+
+vi.mock("@/lib/contexts/AuthContext", () => ({
+  useAuth: () => ({ user: { id: "user-1", email: "u@test.local" } }),
 }));
 
 vi.mock("@/lib/ui/appFeedback", () => ({
@@ -23,7 +36,9 @@ vi.mock("@/lib/ui/appFeedback", () => ({
 }));
 
 async function crearActividad() {
-  render(<QuickCreateActividadDialog open onOpenChange={vi.fn()} onCreated={vi.fn()} onMore={vi.fn()} />);
+  render(<QuickCreateActividadDialog open onOpenChange={vi.fn()} onCreated={vi.fn()} onMore={vi.fn()} />, {
+    wrapper: createWrapper(),
+  });
   fireEvent.change(screen.getByLabelText(/Asunto/), { target: { value: "Llamar a cliente" } });
   // Radix Select no responde a click en jsdom: se abre y elige con teclado.
   const trigger = screen.getByRole("combobox", { name: /Oportunidad/i });
@@ -36,12 +51,12 @@ async function crearActividad() {
 
 describe("QuickCreateActividadDialog · mensajes de error", () => {
   beforeEach(() => {
-    mocks.mutateAsync.mockReset();
+    mocks.crearActividad.mockReset();
     mocks.notifyError.mockReset();
   });
 
   it("traduce un código LC conocido a su mensaje amigable", async () => {
-    mocks.mutateAsync.mockRejectedValue(new Error("LC_OPORTUNIDAD_INEXISTENTE"));
+    mocks.crearActividad.mockRejectedValue(new Error("LC_OPORTUNIDAD_INEXISTENTE"));
     await crearActividad();
     expect(mocks.notifyError).toHaveBeenCalledWith(
       undefined,
@@ -52,7 +67,7 @@ describe("QuickCreateActividadDialog · mensajes de error", () => {
   });
 
   it("deja pasar el mensaje crudo cuando el código LC es desconocido", async () => {
-    mocks.mutateAsync.mockRejectedValue(new Error("LC_CODIGO_INVENTADO_XYZ: detalle raro"));
+    mocks.crearActividad.mockRejectedValue(new Error("LC_CODIGO_INVENTADO_XYZ: detalle raro"));
     await crearActividad();
     expect(mocks.notifyError).toHaveBeenCalledWith(
       undefined,

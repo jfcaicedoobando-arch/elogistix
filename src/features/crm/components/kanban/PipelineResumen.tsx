@@ -1,23 +1,34 @@
 /**
  * Franja de resumen del pipeline: total estimado, meta y ponderado por probabilidad.
+ * P1-CRM: las oportunidades pueden estar en MXN/USD/EUR; nunca se suman
+ * monedas distintas ni se etiqueta el total como MXN — se muestran subtotales
+ * separados por moneda (p. ej. "$1,000.00 MXN · $500.00 USD").
  */
 import { TrendingUp, Target, Scale } from "lucide-react";
 import { formatCurrency, porcentajeEntero } from "@/lib/formatters";
-import { totalesEtapa } from "@/features/crm/domain/criterios";
+import { totalesEtapa, type TotalesEtapaMoneda } from "@/features/crm/domain/criterios";
 import type { CrmOportunidadRow } from "@/features/crm/hooks";
 
 interface Props {
   oportunidades: CrmOportunidadRow[];
 }
 
+function textoPorMoneda(porMoneda: TotalesEtapaMoneda[], campo: "estimado" | "meta" | "ponderado"): string {
+  if (porMoneda.length === 0) return formatCurrency(0, "MXN");
+  return porMoneda.map((p) => formatCurrency(p[campo], p.moneda)).join(" · ");
+}
+
 export default function PipelineResumen({ oportunidades }: Props) {
   const t = totalesEtapa(oportunidades);
-  const cumplimiento = porcentajeEntero(t.estimado, t.meta);
+  // El % de meta capturada sólo tiene sentido comparando dentro de la misma
+  // moneda; con monedas mezcladas no hay una cifra única que no sea inventada.
+  const unicaMoneda = t.porMoneda.length === 1 ? t.porMoneda[0] : null;
+  const cumplimiento = unicaMoneda ? porcentajeEntero(unicaMoneda.estimado, unicaMoneda.meta) : null;
 
   const items = [
-    { icon: TrendingUp, label: "Estimado", valor: formatCurrency(t.estimado, "MXN") },
-    { icon: Target, label: "Meta", valor: formatCurrency(t.meta, "MXN") },
-    { icon: Scale, label: "Ponderado", valor: formatCurrency(t.ponderado, "MXN") },
+    { icon: TrendingUp, label: "Estimado", valor: textoPorMoneda(t.porMoneda, "estimado") },
+    { icon: Target, label: "Meta", valor: textoPorMoneda(t.porMoneda, "meta") },
+    { icon: Scale, label: "Ponderado", valor: textoPorMoneda(t.porMoneda, "ponderado") },
   ];
 
   return (

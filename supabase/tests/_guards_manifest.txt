@@ -91,6 +91,7 @@ supabase/tests/defecto5_lock_nc_saldo.sql
 supabase/tests/defecto6_rep_historia_inmutable.sql
 supabase/tests/ronda_yagni_portal_catalogos_tc.sql
 supabase/tests/crm_candados_multiempresa.sql
+supabase/tests/crm_moneda_incompatible.sql
 supabase/tests/crm_cross_org_convertir_lead.sql
 supabase/tests/helpers_falso_verde_canario.sql
 supabase/tests/crm_actividad_entidad_tenant.sql
@@ -99,3 +100,4 @@ supabase/tests/crm_leads_ownership.sql
 supabase/tests/crm_lead_estado_canonico.sql
 supabase/tests/convertir_prospecto_a_cliente_canonico.sql
 supabase/tests/guard_cotizacion_vinculo_cliente.sql
+supabase/tests/crm_vincular_moneda_vendedor.sql

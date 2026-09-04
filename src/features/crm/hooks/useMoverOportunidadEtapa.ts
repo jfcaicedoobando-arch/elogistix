@@ -61,7 +61,11 @@ export function useMoverOportunidadEtapa({ etapas, oportunidades }: Params) {
       await avisarCriteriosPendientes(id, etapaOrigen?.nombre);
 
       try {
-        await mover.mutateAsync({
+        // Hallazgo 14: bloqueo optimista con el sello leído del listado
+        // actual; capturamos el nuevo sello devuelto para que el Undo (que
+        // manda su propio UPDATE inmediatamente después) no choque consigo
+        // mismo.
+        const resultado = await mover.mutateAsync({
           id,
           etapa_id: etapaId,
           probabilidad,
@@ -69,7 +73,9 @@ export function useMoverOportunidadEtapa({ etapas, oportunidades }: Params) {
           // Ola 4 · N49: limpiar cierre real / motivo al salir de ganada/perdida.
           ...resolverLimpiezaCierre(etapaDestino, etapaOrigen),
           ...(motivoPerdidaId ? { motivo_perdida_id: motivoPerdidaId } : {}),
+          expectedUpdatedAt: op?.updated_at ?? null,
         });
+        const selloTrasMover = (resultado as { updated_at?: string } | undefined)?.updated_at ?? null;
         // El destino "perdida" cancela/completa actividades pendientes: el Undo
         // no puede revivirlas, así que no se ofrece (evita Undo falso que dejaría
         // una oportunidad abierta con sus tareas canceladas).
@@ -85,6 +91,7 @@ export function useMoverOportunidadEtapa({ etapas, oportunidades }: Params) {
               etapa_id: etapaPrev,
               probabilidad: probPrev,
               ...resolverLimpiezaCierre(etapaOrigen, etapaDestino),
+              expectedUpdatedAt: selloTrasMover,
             });
           });
         }

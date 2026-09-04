@@ -27,12 +27,13 @@ export default function CrmHigiene() {
     return <LoadingState label="Calculando higiene del pipeline…" />;
   }
 
-  if (resumenQ.isError || filasQ.isError) {
+  if (resumenQ.isError || filasQ.isError || presupuestoQ.isError) {
     return (
       <PageContainer>
         <ErrorState
           title="No se pudo calcular la higiene"
           description="Vuelve a intentarlo en unos momentos."
+          onRetry={() => { void resumenQ.refetch(); void filasQ.refetch(); void presupuestoQ.refetch(); }}
         />
       </PageContainer>
     );

@@ -45,3 +45,19 @@ export async function resolverSelloBorrador(opts: {
   }
   return { sello: canonico, conflicto: false };
 }
+
+/**
+ * v13.823.7X — "Resincronizar" tras un conflicto de sello (P0-12).
+ *
+ * Reintenta leer el sello canónico sin comparar contra el sello viejo del
+ * borrador (ya sabemos que diverge o no se pudo leer): si el canónico se
+ * puede leer ahora, se adopta como nuevo candado y se desbloquea el wizard;
+ * si sigue sin poder leerse, se conserva el bloqueo (mismo criterio "falla
+ * cerrado" de `resolverSelloBorrador`). No abre el candado a ciegas.
+ */
+export async function resincronizarSelloConflicto(opts: {
+  cotizacionId: string;
+  fetchSello: (id: string) => Promise<string | null>;
+}): Promise<SelloBorradorResultado> {
+  return resolverSelloBorrador({ ...opts, selloDraft: null });
+}

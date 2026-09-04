@@ -29,6 +29,7 @@ export async function fetchLeaderboardRaw(
   anio: number,
   mes: number,
   inicioMesISO: string,
+  finMesISO: string,
 ): Promise<LeaderboardRawData> {
   const [cuotasR, opsR, etapasR] = await Promise.all([
     supabase
@@ -41,6 +42,9 @@ export async function fetchLeaderboardRaw(
       .select("vendedor_email, valor_real, monto_estimado, moneda, etapa_id, fecha_cierre_real")
       .is("deleted_at", null)
       .gte("fecha_cierre_real", inicioMesISO)
+      // FIX-3 (auditoría): límite superior EXCLUSIVO — sin esto se colaban
+      // cierres con fecha futura en el leaderboard del mes en curso.
+      .lt("fecha_cierre_real", finMesISO)
       .limit(LIMITE_OPS_MES), // defensivo: oportunidades cerradas del mes por org
     supabase.from("crm_etapas_pipeline").select("id, tipo").is("deleted_at", null),
   ]);

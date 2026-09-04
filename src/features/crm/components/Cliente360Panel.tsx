@@ -21,6 +21,8 @@ interface Props {
   clienteId: string;
 }
 
+const LIMITE_VISIBLE = 10;
+
 export default function Cliente360Panel({ clienteId }: Props) {
   const navigate = useNavigate();
   const { data, isLoading } = useCliente360(clienteId);
@@ -69,18 +71,30 @@ export default function Cliente360Panel({ clienteId }: Props) {
             <Briefcase className="h-4 w-4" /> Oportunidades ({d.oportunidades.length})
           </CardTitle>
         </CardHeader>
-        <CardContent className="p-0">
+        <CardContent className="p-0 space-y-2">
           {d.oportunidades.length === 0 ? (
             <EmptyStateInline icon={Briefcase} message="Sin oportunidades registradas." />
           ) : (
-            <DataTable
-              columns={columns}
-              data={d.oportunidades.slice(0, 10)}
-              rowKey={(o) => o.id}
-              density={TABLE_DENSITY.embebida}
-              getRowHref={(o) => `/crm/oportunidades/${o.id}`}
-              getRowAriaLabel={(o) => `Abrir oportunidad ${o.nombre}`}
-            />
+            <>
+              <DataTable
+                columns={columns}
+                data={d.oportunidades.slice(0, LIMITE_VISIBLE)}
+                rowKey={(o) => o.id}
+                density={TABLE_DENSITY.embebida}
+                getRowHref={(o) => `/crm/oportunidades/${o.id}`}
+                getRowAriaLabel={(o) => `Abrir oportunidad ${o.nombre}`}
+              />
+              {d.oportunidades.length > LIMITE_VISIBLE && (
+                <div className="flex items-center justify-between px-4 pb-2">
+                  <span className="text-label text-muted-foreground">
+                    +{d.oportunidades.length - LIMITE_VISIBLE} más
+                  </span>
+                  <Button size="sm" variant="ghost" onClick={() => navigate(`/crm/oportunidades?clienteId=${clienteId}`)}>
+                    Ver todas
+                  </Button>
+                </div>
+              )}
+            </>
           )}
         </CardContent>
       </Card>
@@ -97,7 +111,7 @@ export default function Cliente360Panel({ clienteId }: Props) {
                   <span className="font-medium">{d.ultimaCotizacion.folio}</span>
                   <Badge variant="outline">{d.ultimaCotizacion.estado}</Badge>
                 </div>
-                <div className="text-muted-foreground">{formatCurrencyCompact(Number(d.ultimaCotizacion.subtotal ?? 0), "MXN")}</div>
+                <div className="text-muted-foreground">{formatCurrencyCompact(Number(d.ultimaCotizacion.subtotal ?? 0), d.ultimaCotizacion.moneda || "MXN")}</div>
                 <Button size="sm" variant="ghost" onClick={() => navigate(`/cotizaciones/${d.ultimaCotizacion!.id}`)}>Ver cotización</Button>
               </div>
             ) : <EmptyStateInline icon={FileText} message="Sin cotizaciones." />}

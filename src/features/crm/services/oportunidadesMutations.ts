@@ -8,6 +8,7 @@ import type { TablesUpdate } from "@/integrations/supabase/types";
 import { registrarActividad } from "@/services/bitacora/registrar";
 import { buildOportunidadInsertPayload } from "@/features/crm/domain/oportunidadPayload";
 import type { OportunidadInput } from "@/features/crm/types/oportunidades";
+import { conflictoConcurrenciaError } from "@/lib/errors/concurrencia";
 
 export async function crearOportunidad(
   input: OportunidadInput,
@@ -38,37 +39,48 @@ export async function crearOportunidad(
  * v13.823.32: un UPDATE filtrado por RLS o sobre una oportunidad ya eliminada
  * NO da error, devuelve 0 filas. Antes mostrábamos éxito y escribíamos bitácora
  * de un cambio que nunca ocurrió. Ahora se exige la fila afectada.
+ *
+ * Hallazgo 14 (auditoría): bloqueo optimista igual al patrón del wizard de
+ * cotizaciones (`useCotizacionUpdateGuard`). Si se manda `expectedUpdatedAt` y
+ * el UPDATE no afecta ninguna fila, otro usuario ya modificó la oportunidad:
+ * se lanza LC_CONFLICTO_CONCURRENCIA en vez de aplicar cambios parciales.
+ * Devuelve el `updated_at` resultante para resincronizar el sello del caller.
  */
 export async function actualizarOportunidadFilas(
   id: string,
   patch: TablesUpdate<"crm_oportunidades">,
-): Promise<void> {
-  const { data, error } = await supabase
+  expectedUpdatedAt?: string | null,
+): Promise<string | undefined> {
+  let query = supabase
     .from("crm_oportunidades")
     .update(patch)
     .eq("id", id)
-    .is("deleted_at", null)
-    .select("id")
-    .maybeSingle();
+    .is("deleted_at", null);
+  if (expectedUpdatedAt) query = query.eq("updated_at", expectedUpdatedAt);
+  const { data, error } = await query.select("id, updated_at").maybeSingle();
   if (error) throw error;
   if (!data) {
+    if (expectedUpdatedAt) throw conflictoConcurrenciaError();
     throw new Error(
       "No se pudo guardar la oportunidad: no tienes permiso o la oportunidad ya no existe.",
     );
   }
+  return (data as { updated_at?: string }).updated_at;
 }
 
 export async function actualizarOportunidad(input: {
   id: string;
   patch: Partial<OportunidadInput & { motivo_perdida_id?: string | null; fecha_cierre_real?: string | null }>;
-}): Promise<void> {
-  await actualizarOportunidadFilas(input.id, input.patch);
+  expectedUpdatedAt?: string | null;
+}): Promise<string | undefined> {
+  const updatedAt = await actualizarOportunidadFilas(input.id, input.patch, input.expectedUpdatedAt);
   await registrarActividad({
     modulo: "crm",
     accion: "editar_oportunidad",
     entidadId: input.id,
     detalles: { campos: Object.keys(input.patch) },
   });
+  return updatedAt;
 }
 
 export async function moverEtapaOportunidad(input: {
@@ -80,7 +92,8 @@ export async function moverEtapaOportunidad(input: {
   valor_real?: number | null;
   // Ola 4 · N49: limpieza al salir de "perdida".
   motivo_perdida_id?: string | null;
-}): Promise<void> {
+  expectedUpdatedAt?: string | null;
+}): Promise<string | undefined> {
   const patch: {
     etapa_id: string;
     probabilidad?: number;
@@ -95,13 +108,14 @@ export async function moverEtapaOportunidad(input: {
   if (input.fecha_cierre_real !== undefined) patch.fecha_cierre_real = input.fecha_cierre_real;
   if (input.valor_real !== undefined) patch.valor_real = input.valor_real;
   if (input.motivo_perdida_id !== undefined) patch.motivo_perdida_id = input.motivo_perdida_id;
-  await actualizarOportunidadFilas(input.id, patch);
+  const updatedAt = await actualizarOportunidadFilas(input.id, patch, input.expectedUpdatedAt);
   await registrarActividad({
     modulo: "crm",
     accion: "mover_etapa_oportunidad",
     entidadId: input.id,
     detalles: { etapa_id: input.etapa_id, valor_real: input.valor_real ?? null },
   });
+  return updatedAt;
 }
 
 export async function eliminarOportunidad(id: string, userId: string | null): Promise<void> {

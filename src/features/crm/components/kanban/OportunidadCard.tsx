@@ -18,8 +18,6 @@ import { formatProx } from "@/features/crm/domain/proximaActividadLabel";
 import type { ProximaActividad } from "@/features/crm/hooks";
 import type { CrmOportunidadRow } from "@/features/crm/hooks";
 
-const fmtMxn = (n: number) => formatCurrencyCompact(n, "MXN");
-
 interface Props {
   op: CrmOportunidadRow;
   onClick: () => void;
@@ -107,7 +105,7 @@ export default function OportunidadCard({ op, onClick, proxima, avance, esCerrad
           </Hint>
         ) : null}
         <div className="flex items-center justify-between pt-1">
-          <span className="text-body-sm font-semibold">{fmtMxn(montoEstimado)}</span>
+          <span className="text-body-sm font-semibold">{formatCurrencyCompact(montoEstimado, op.moneda)}</span>
           <Badge variant="secondary" className="text-label h-5 px-1.5">{op.probabilidad}%</Badge>
         </div>
 
@@ -121,6 +119,7 @@ export default function OportunidadCard({ op, onClick, proxima, avance, esCerrad
             fechaMeta={op.fecha_meta_cierre ?? null}
             avance={meta.avance ?? null}
             montoMeta={montoMeta}
+            moneda={op.moneda}
           />
         ) : null}
 

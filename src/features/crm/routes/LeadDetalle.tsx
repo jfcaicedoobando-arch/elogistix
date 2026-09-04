@@ -34,7 +34,7 @@ export default function LeadDetalle() {
   const { canTomarLead, canGestionarLead, canAltaCliente, canCrearOportunidad } = usePermissions();
   const volver = useVolver(ROUTES.CRM_LEADS);
   const navigate = useNavigate();
-  const { data: lead, isLoading } = useLead(id);
+  const { data: lead, isLoading, isError, refetch } = useLead(id);
   useDocumentTitle(lead ? `Lead · ${lead.empresa}` : "Lead");
   const { form, set, dirty, patch } = useLeadEditForm(lead);
   const {
@@ -47,6 +47,19 @@ export default function LeadDetalle() {
 
   if (isLoading) {
     return <LoadingState label="Cargando lead…" />;
+  }
+
+  if (isError) {
+    return (
+      <PageContainer>
+        <DetailHeader backTo={volver} backLabel="Volver a Leads" titleAs="h2" title="Lead" />
+        <ErrorState
+          title="No se pudo cargar el lead"
+          description="Revisa tu conexión e intenta de nuevo."
+          onRetry={() => void refetch()}
+        />
+      </PageContainer>
+    );
   }
 
   if (!lead) {

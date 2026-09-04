@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
   computePipelinePonderado,
+  computePipelinePonderadoPorMoneda,
   computeTopDeals,
   computeEmbudo,
   isoDaysFromNow,
@@ -21,6 +22,18 @@ const etapas: EtapaRow[] = [
 describe("dashboardAggregates", () => {
   it("computePipelinePonderado suma monto * probabilidad/100", () => {
     expect(computePipelinePonderado(ops)).toBe(500 + 2000 + 100);
+  });
+
+  it("computePipelinePonderadoPorMoneda desglosa por moneda sin sumarlas entre sí", () => {
+    const mixtas: OpRow[] = [
+      ...ops,
+      { id: "d", nombre: "D", cliente_nombre: "W", monto_estimado: 1000, moneda: "USD", probabilidad: 50, fecha_estimada_cierre: null, etapa_id: "e1" },
+    ];
+    const desglose = computePipelinePonderadoPorMoneda(mixtas);
+    expect(desglose).toEqual([
+      { moneda: "MXN", total: 500 + 2000 + 100 },
+      { moneda: "USD", total: 500 },
+    ]);
   });
 
   it("computeTopDeals ordena por ponderado desc y limita", () => {

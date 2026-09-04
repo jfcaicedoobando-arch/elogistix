@@ -1,6 +1,5 @@
--- Fuente canónica. Espejo 1:1 de la migración v13.823.57.
--- Al modificar: edita ESTE archivo y genera la migración con el mismo cuerpo.
-
+-- P1 #6/#7 · CRM: no escribir valor_real de una cotización en otra moneda
+-- distinta a la de la oportunidad (LC_MONEDA_INCOMPATIBLE).
 CREATE OR REPLACE FUNCTION public.crm_cerrar_oportunidad_desde_cotizacion()
 RETURNS trigger
 LANGUAGE plpgsql
@@ -32,7 +31,6 @@ BEGIN
   END IF;
 
   -- (i) Papelera: se conserva cotizacion_ganadora_id, valor_real y snapshot.
-  -- Sólo se libera embarque_ganador_id si ese embarque ya no está vivo.
   IF NEW.deleted_at IS NOT NULL THEN
     IF TG_OP = 'UPDATE' AND OLD.deleted_at IS NULL THEN
       UPDATE public.crm_oportunidades o
@@ -172,8 +170,7 @@ BEGIN
     );
 
   ELSIF NOT v_era_terminal THEN
-    -- (g) la misma ganadora se recotizó y se vuelve a aceptar: nuevo valor,
-    -- auditoría explícita del cambio, sin duplicar la notificación.
+    -- (g) la misma ganadora se recotizó y se vuelve a aceptar.
     UPDATE public.crm_oportunidades
        SET valor_real = NEW.subtotal,
            embarque_ganador_id = COALESCE(embarque_ganador_id, NEW.embarque_id),
@@ -204,22 +201,6 @@ BEGIN
 END;
 $fn$;
 
-REVOKE ALL ON FUNCTION public.crm_cerrar_oportunidad_desde_cotizacion() FROM PUBLIC;
-
--- Nombre `zz_` deliberado: corre al final de los triggers BEFORE, después del
--- cálculo de subtotal y de los guards de estado/SoD/inmutabilidad.
-DROP TRIGGER IF EXISTS zz_crm_cerrar_oportunidad_desde_cotizacion ON public.cotizaciones;
-CREATE TRIGGER zz_crm_cerrar_oportunidad_desde_cotizacion
-BEFORE INSERT OR UPDATE OF estado, embarque_id, oportunidad_id, organization_id, deleted_at
-ON public.cotizaciones
-FOR EACH ROW EXECUTE FUNCTION public.crm_cerrar_oportunidad_desde_cotizacion();
-
--- ── 3) Respaldo de concurrencia ────────────────────────────────────────────
-CREATE UNIQUE INDEX IF NOT EXISTS ux_cotizaciones_ganadora_viva_por_oportunidad
-ON public.cotizaciones (organization_id, oportunidad_id)
-WHERE deleted_at IS NULL
-  AND oportunidad_id IS NOT NULL
-  AND estado IN ('Aceptada'::estado_cotizacion, 'En operación'::estado_cotizacion);
-
--- ── 4) Backfill histórico determinista e idempotente ───────────────────────
-DO $bf$
+ALTER FUNCTION public.crm_cerrar_oportunidad_desde_cotizacion() OWNER TO postgres;
+REVOKE ALL ON FUNCTION public.crm_cerrar_oportunidad_desde_cotizacion() FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.crm_cerrar_oportunidad_desde_cotizacion() TO service_role;

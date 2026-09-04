@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { useDebounce } from "@/hooks/shared";
 import { useCrmProspectoSearch, type ProspectoMatch } from "@/features/crm/hooks";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
+import { ErrorStateInline } from "@/components/empty/ErrorStateInline";
 
 interface Props {
   onSelect: (m: ProspectoMatch) => void;
@@ -17,7 +18,7 @@ interface Props {
 export function BuscadorProspectos({ onSelect }: Props) {
   const [term, setTerm] = useState("");
   const debounced = useDebounce(term, 200);
-  const { data, isFetching } = useCrmProspectoSearch(debounced);
+  const { data, isFetching, isError, refetch } = useCrmProspectoSearch(debounced);
   const items = useMemo(() => data ?? [], [data]);
 
   return (
@@ -33,7 +34,13 @@ export function BuscadorProspectos({ onSelect }: Props) {
           aria-label="Buscar prospecto por empresa, contacto o email"
         />
       </div>
-      {debounced.length < 2 ? (
+      {isError ? (
+        <ErrorStateInline
+          message="No se pudo buscar prospectos."
+          onRetry={refetch}
+          className="py-3"
+        />
+      ) : debounced.length < 2 ? (
         <EmptyStateInline
           icon={Search}
           message="Escribe al menos 2 caracteres para buscar."

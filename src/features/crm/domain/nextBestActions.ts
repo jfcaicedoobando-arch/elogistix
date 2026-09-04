@@ -6,6 +6,7 @@
  * El score es estable: la prioridad la fija la regla, los desempates van por
  * antigüedad (más viejo, más urgente).
  */
+import { hoyMx, parseLocalMx } from "@/lib/date/mx";
 
 export interface NbaLead {
   id: string;
@@ -101,12 +102,18 @@ function nbaCotSinRespuesta(cots: NbaCotizacionSinRespuesta[]): NbaItem[] {
   }));
 }
 
-function nbaCierreProximo(ops: NbaOportunidad[], nowMs: number): NbaItem[] {
+function nbaCierreProximo(ops: NbaOportunidad[], ahora: Date): NbaItem[] {
   const out: NbaItem[] = [];
+  // FIX-9 (auditoría): `fecha_estimada_cierre` es `date` de Postgres (sin
+  // hora) — compararlo contra un timestamp arbitrario en UTC corría el
+  // resultado un día según la hora local. Se compara como día calendario
+  // MX: "hoy" y la fecha de cierre se anclan ambos a mediodía UTC del
+  // mismo día civil antes de restar.
+  const hoyMs = parseLocalMx(hoyMx(ahora)).getTime();
   for (const o of ops) {
     if (!o.fecha_estimada_cierre) continue;
-    const diasAlCierre = Math.floor(
-      (new Date(o.fecha_estimada_cierre).getTime() - nowMs) / DIA,
+    const diasAlCierre = Math.round(
+      (parseLocalMx(o.fecha_estimada_cierre).getTime() - hoyMs) / DIA,
     );
     if (diasAlCierre < 0 || diasAlCierre > 3) continue;
     out.push({
@@ -165,8 +172,9 @@ function nbaActividadesVencidas(actividades: NbaActividadVencida[], nowMs: numbe
 }
 
 export function computeNextBestActions(input: NbaInput, limit = 5): NbaItem[] {
-  const nowMs = (input.now ?? new Date()).getTime();
-  const cierre = nbaCierreProximo(input.oportunidadesAbiertas, nowMs);
+  const ahora = input.now ?? new Date();
+  const nowMs = ahora.getTime();
+  const cierre = nbaCierreProximo(input.oportunidadesAbiertas, ahora);
   const yaIncluidos = new Set(cierre.map((i) => i.id.split(":")[1]));
   return [
     ...nbaLeadsSinContactar(input.leadsSinContactar, nowMs),

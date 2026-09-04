@@ -76,15 +76,35 @@ describe("estadoMeta", () => {
 });
 
 describe("totalesEtapa", () => {
-  it("suma estimado, meta y ponderado", () => {
+  it("suma estimado, meta y ponderado dentro de la misma moneda", () => {
     const t = totalesEtapa([
-      { monto_estimado: 100, monto_meta: 200, probabilidad: 50 },
-      { monto_estimado: 300, monto_meta: null, probabilidad: 10 },
+      { monto_estimado: 100, monto_meta: 200, probabilidad: 50, moneda: "MXN" },
+      { monto_estimado: 300, monto_meta: null, probabilidad: 10, moneda: "MXN" },
     ]);
-    expect(t).toEqual({ cantidad: 2, estimado: 400, meta: 200, ponderado: 80 });
+    expect(t).toEqual({
+      cantidad: 2,
+      porMoneda: [{ moneda: "MXN", estimado: 400, meta: 200, ponderado: 80 }],
+    });
   });
 
-  it("lista vacía da ceros", () => {
-    expect(totalesEtapa([])).toEqual({ cantidad: 0, estimado: 0, meta: 0, ponderado: 0 });
+  it("NUNCA mezcla monedas distintas: reporta subtotales separados", () => {
+    const t = totalesEtapa([
+      { monto_estimado: 100, monto_meta: 0, probabilidad: 50, moneda: "MXN" },
+      { monto_estimado: 300, monto_meta: 0, probabilidad: 10, moneda: "USD" },
+    ]);
+    expect(t.cantidad).toBe(2);
+    expect(t.porMoneda).toEqual([
+      { moneda: "MXN", estimado: 100, meta: 0, ponderado: 50 },
+      { moneda: "USD", estimado: 300, meta: 0, ponderado: 30 },
+    ]);
+  });
+
+  it("moneda ausente se asume MXN", () => {
+    const t = totalesEtapa([{ monto_estimado: 50, monto_meta: 0, probabilidad: 0 }]);
+    expect(t.porMoneda).toEqual([{ moneda: "MXN", estimado: 50, meta: 0, ponderado: 0 }]);
+  });
+
+  it("lista vacía da cero oportunidades y sin monedas", () => {
+    expect(totalesEtapa([])).toEqual({ cantidad: 0, porMoneda: [] });
   });
 });

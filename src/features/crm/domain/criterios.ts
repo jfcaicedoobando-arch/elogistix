@@ -2,6 +2,7 @@
  * Dominio puro — criterios de salida por etapa y metas por oportunidad.
  * Sin I/O: sólo cálculo de avance, semáforo y comparación meta vs estimado.
  */
+import { agruparMontosPorMoneda } from "./montosPorMoneda";
 
 export interface AvanceCriterios {
   total: number;
@@ -64,27 +65,55 @@ export function estadoMeta(meta: MetaOportunidad, hoyISO: string): EstadoMeta {
   return { avance, metaVencida, tieneMeta };
 }
 
-export interface TotalesEtapa {
-  cantidad: number;
+export interface TotalesEtapaMoneda {
+  moneda: string;
   estimado: number;
   meta: number;
   ponderado: number;
 }
 
-/** Suma estimado, meta y ponderado por probabilidad de un grupo de oportunidades. */
-export function totalesEtapa(
-  ops: { monto_estimado?: number | null; monto_meta?: number | null; probabilidad?: number | null }[],
-): TotalesEtapa {
-  return ops.reduce<TotalesEtapa>(
-    (acc, o) => {
-      const estimado = Number(o.monto_estimado ?? 0);
-      return {
-        cantidad: acc.cantidad + 1,
-        estimado: acc.estimado + estimado,
-        meta: acc.meta + Number(o.monto_meta ?? 0),
-        ponderado: acc.ponderado + (estimado * Number(o.probabilidad ?? 0)) / 100,
-      };
-    },
-    { cantidad: 0, estimado: 0, meta: 0, ponderado: 0 },
+export interface TotalesEtapa {
+  cantidad: number;
+  /** Subtotales por moneda: nunca se suman MXN/USD/EUR entre sí (P1-CRM). */
+  porMoneda: TotalesEtapaMoneda[];
+}
+
+interface OportunidadParaTotales {
+  monto_estimado?: number | null;
+  monto_meta?: number | null;
+  probabilidad?: number | null;
+  moneda?: string | null;
+}
+
+/** Suma estimado, meta y ponderado por probabilidad, agrupado por moneda. */
+export function totalesEtapa(ops: OportunidadParaTotales[]): TotalesEtapa {
+  const estimadoPorMoneda = agruparMontosPorMoneda(
+    ops.map((o) => ({ monto: o.monto_estimado, moneda: o.moneda })),
   );
+  const metaPorMoneda = agruparMontosPorMoneda(
+    ops.map((o) => ({ monto: o.monto_meta, moneda: o.moneda })),
+  );
+  const ponderadoPorMoneda = agruparMontosPorMoneda(
+    ops.map((o) => ({
+      monto: (Number(o.monto_estimado ?? 0) * Number(o.probabilidad ?? 0)) / 100,
+      moneda: o.moneda,
+    })),
+  );
+
+  const monedas = new Set<string>([
+    ...estimadoPorMoneda.keys(),
+    ...metaPorMoneda.keys(),
+    ...ponderadoPorMoneda.keys(),
+  ]);
+
+  const porMoneda = [...monedas]
+    .sort((a, b) => a.localeCompare(b))
+    .map((moneda) => ({
+      moneda,
+      estimado: estimadoPorMoneda.get(moneda) ?? 0,
+      meta: metaPorMoneda.get(moneda) ?? 0,
+      ponderado: ponderadoPorMoneda.get(moneda) ?? 0,
+    }));
+
+  return { cantidad: ops.length, porMoneda };
 }

@@ -15,6 +15,7 @@ import { useCrearActividad } from "@/features/crm/hooks";
 import { NuevoLeadForm, type LeadFormState } from "./nuevoLead/NuevoLeadForm";
 import { AvisoLeadDuplicado } from "./AvisoLeadDuplicado";
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
+import { actividadDefaultFechaMx } from "@/features/crm/domain/actividadDefaultFecha";
 
 
 interface Props {
@@ -72,18 +73,30 @@ export default function NuevoLeadDialog({ open, onOpenChange, onCreated }: Props
     try {
       const r = await crear.mutateAsync(form);
       if (autoActividad) {
-        const manana = new Date();
-        manana.setDate(manana.getDate() + 1);
-        manana.setHours(9, 0, 0, 0);
-        await crearActividad.mutateAsync({
-          tipo: "llamada",
-          asunto: `Primer contacto: ${form.empresa}`,
-          descripcion: "Actividad creada automáticamente al alta del lead.",
-          entidad_tipo: "lead",
-          entidad_id: r.id,
-          fecha_programada: manana.toISOString(),
-        }).catch(() => undefined);
+        // Hallazgo #13.3: el lead ya se creó; si falla la tarea automática el
+        // aviso debe decirlo explícitamente. `silencioso` evita el toast doble.
+        try {
+          await crearActividad.mutateAsync({
+            tipo: "llamada",
+            asunto: `Primer contacto: ${form.empresa}`,
+            descripcion: "Actividad creada automáticamente al alta del lead.",
+            entidad_tipo: "lead",
+            entidad_id: r.id,
+            fecha_programada: new Date(actividadDefaultFechaMx()).toISOString(),
+            responsable_id: form.vendedor_id ?? null,
+            responsable_email: form.vendedor_email ?? "",
+            silencioso: true,
+          });
+        } catch (e) {
+          notifyError(undefined, {
+            title: "Registro creado, pero no se pudo crear la tarea automática de seguimiento",
+            description: e instanceof Error ? e.message : undefined,
+            error: e,
+            method: "CREAR_ACTIVIDAD_SEGUIMIENTO_LEAD",
+          });
+        }
       }
+
       crmToast.success("Lead creado");
       setForm(formVacio());
       onOpenChange(false);

@@ -20,6 +20,7 @@ import {
 } from "@/features/crm/services/oportunidades";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { getErrorMessage } from "@/lib/errors";
+import { esConflictoConcurrencia } from "@/lib/errors/concurrencia";
 
 export type { CrmOportunidadRow, Moneda } from "@/features/crm/services/oportunidades";
 export type OportunidadInput = ServiceOportunidadInput;
@@ -84,15 +85,20 @@ export function useCrearOportunidad() {
 
 export function useActualizarOportunidad() {
   const qc = useQueryClient();
+  const refrescar = (id: string) => {
+    qc.invalidateQueries({ queryKey: queryKeys.crm.oportunidades.all });
+    qc.invalidateQueries({ queryKey: queryKeys.crm.higiene.all });
+    qc.invalidateQueries({ queryKey: queryKeys.crm.oportunidades.detail(id) });
+    qc.invalidateQueries({ queryKey: queryKeys.crm.kpis });
+  };
   return useMutation({
     mutationFn: actualizarOportunidad,
-    onSuccess: (_d, vars) => {
-      qc.invalidateQueries({ queryKey: queryKeys.crm.oportunidades.all });
-      qc.invalidateQueries({ queryKey: queryKeys.crm.higiene.all });
-      qc.invalidateQueries({ queryKey: queryKeys.crm.oportunidades.detail(vars.id) });
-      qc.invalidateQueries({ queryKey: queryKeys.crm.kpis });
-    },
-    onError: (error: Error) => {
+    onSuccess: (_d, vars) => refrescar(vars.id),
+    onError: (error: Error, vars) => {
+      // Hallazgo 14: en conflicto de concurrencia (LC_CONFLICTO_CONCURRENCIA)
+      // refrescamos igual las queries para que la UI muestre la versión
+      // vigente en vez de la desactualizada que intentamos pisar.
+      if (esConflictoConcurrencia(error)) refrescar(vars.id);
       notifyError(undefined, { title: "No se pudo actualizar oportunidad", description: getErrorMessage(error), error, method: "UPDATE_OPORTUNIDAD" });
     },
   });

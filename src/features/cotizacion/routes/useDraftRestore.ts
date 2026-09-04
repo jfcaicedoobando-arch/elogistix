@@ -7,9 +7,9 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import type { UseFormReturn } from "react-hook-form";
 import type { CotizacionFormValues } from "@/features/cotizacion/types/form";
 import { loadDraft, clearDraft, draftTieneContenido } from "@/features/cotizacion/hooks/wizard/useCotizacionDraftAutosave";
-import { notifyWarning } from "@/lib/ui/appFeedback";
 import { fetchCotizacionSello } from "@/features/cotizacion/services";
-import { resolverSelloBorrador } from "@/features/cotizacion/hooks/wizard/resolverSelloBorrador";
+import { resolverSelloBorrador, resincronizarSelloConflicto } from "@/features/cotizacion/hooks/wizard/resolverSelloBorrador";
+import { notifyInfo, notifyWarning } from "@/lib/ui/appFeedback";
 import type { FilaCostoLocal } from "@/features/cotizacion/types/pl";
 
 interface DraftRestoreDeps {
@@ -43,6 +43,10 @@ export function useDraftRestore({
 
   // v13.823.69: conflicto detectado al restaurar (otra sesión ya guardó).
   const [conflictoSello, setConflictoSello] = useState(false);
+  // P0-12: id vigente para poder resincronizar sin depender de `draftDetectado`
+  // (que se limpia tras restaurar).
+  const [cotizacionIdConflicto, setCotizacionIdConflicto] = useState<string | null>(null);
+  const [resincronizando, setResincronizando] = useState(false);
 
   const handleRestore = useCallback(async () => {
     if (draftDetectado) {
@@ -62,6 +66,7 @@ export function useDraftRestore({
         });
         resincronizarSello(sello);
         setConflictoSello(conflicto);
+        setCotizacionIdConflicto(draftDetectado.cotizacionId);
       }
       // Q-12: restaurar paso y costos internos (viven fuera de RHF).
       setCurrentStep(draftDetectado.currentStep);
@@ -78,6 +83,35 @@ export function useDraftRestore({
     setTimeout(() => setRestaurando(false), 0);
   }, [draftDetectado, form, setCotizacionId, resincronizarSello, setCurrentStep, setCostosInternos]);
 
+  // P0-12: "Resincronizar" — vuelve a leer el sello canónico antes de
+  // levantar el bloqueo. Si sigue sin poder leerse (o la fila ya no existe),
+  // el candado permanece cerrado y se explica al usuario qué pasó.
+  const handleResincronizar = useCallback(async () => {
+    if (!cotizacionIdConflicto || resincronizando) return;
+    setResincronizando(true);
+    try {
+      const { sello, conflicto } = await resincronizarSelloConflicto({
+        cotizacionId: cotizacionIdConflicto,
+        fetchSello: fetchCotizacionSello,
+      });
+      resincronizarSello(sello);
+      setConflictoSello(conflicto);
+      if (conflicto) {
+        notifyWarning(undefined, {
+          title: "No se pudo confirmar la versión actual",
+          description: "La cotización no se pudo leer (permisos, red o fue eliminada). El guardado sigue bloqueado; intenta de nuevo en un momento.",
+        });
+      } else {
+        notifyInfo(undefined, {
+          title: "Versión actualizada",
+          description: "Se leyó la versión más reciente de la cotización. Ya puedes continuar guardando sobre ella.",
+        });
+      }
+    } finally {
+      setResincronizando(false);
+    }
+  }, [cotizacionIdConflicto, resincronizando, resincronizarSello]);
+
   const handleDiscard = useCallback(() => {
     clearDraft(userId, organizationId);
     setBanderaBorrador(false);
@@ -89,6 +123,8 @@ export function useDraftRestore({
     banderaBorrador,
     conflictoSello,
     setConflictoSello,
+    resincronizando,
+    handleResincronizar,
     handleRestore,
     handleDiscard,
   };

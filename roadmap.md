@@ -1,23 +1,25 @@
-# Roadmap · Ronda YAGNI posterior a v13.823.34
+# Roadmap — bloque auditoría YAGNI (sobre 13.823.70)
 
-## En curso (ronda actual)
-- [x] 0. Crash TypeError en /inicio: Cannot read properties of undefined (reading 'default')
-- [ ] 1. P0 cerrar_embarque cross-tenant (rol exacto en org del embarque) + pruebas SQL
-- [ ] 2. P1 carrera cierre vs conceptos (lock compatible en triggers de hijos)
-- [ ] 3. P1 periodo cerrado protege importes/soft-delete, no sólo fechas
-- [ ] 4. P1 RPC de cierre/reapertura de periodo con motivo y bitácora
-- [x] 5. P1 NC concurrentes: FOR UPDATE sobre facturas
-- [x] 6. P1 guard BD contra pagos retroactivos/borrados con REP vivo posterior
-- [ ] 7. P1 estado de resultados sin truncar y estados contables definidos
-- [ ] 8. P1 bitácora no falsificable (revocar INSERT directo + RPC allowlisted)
-- [x] 9. P1 cobranza externa por rol exacto en edge functions
-- [x] 10. P1 crons de auditoría devuelven 5xx ante fallos reales
+## P0
+- [x] 1. Migración org-scope cerrar/reabrir embarque verificada (única, rol validado en org del embarque, prueba negativa cross-tenant en `_guards_manifest.txt`).
 
-## Cierre de ronda (yo)
-- [ ] Replay local, baseline, manifiesto de migraciones y guards
-- [ ] Typecheck, lint, tests, bump de versión y CHANGELOG
+## P1
+- [ ] 2. Facturapi: reintento de cancelación no debe decir "CFDI cancelado" en pending/verifying/uncertain.
+- [ ] 3. Leaderboard: límite superior exclusivo del mes (calendario local MX) + test.
+- [ ] 4. "Mis actividades de hoy": mismo filtro de responsable que `listActividades`.
+- [ ] 5. CRM multi-moneda: subtotales por moneda en Kanban/PipelineResumen/ColumnaEtapa/tarjetas/KPIs.
+- [ ] 6. Vincular cotización: heredar moneda de la cotización y vendedor del lead; rechazar si la oportunidad tiene otra moneda.
+- [ ] 7. `crm_cerrar_oportunidad_desde_cotizacion`: rechazar moneda distinta antes de escribir `valor_real`.
 
-## Fuera de alcance (no implementar aún)
-Doble email de estado de cuenta, edición de notificaciones, tracking de bounce,
-badge 50, retry de reapertura, lista de REP truncada.
-- [x] Corregir errores de typecheck del preview (estadoResultados.ts)
+## P2
+- [ ] 8. Forecast del mes = mes actual; por mes = actual + 5 siguientes (fechas locales).
+- [ ] 9. NBA: comparar `fecha_estimada_cierre` como fecha calendario local.
+- [ ] 10. Estados de error + reintento en tarjetas CRM secundarias.
+- [ ] 11. Cliente 360: moneda en última cotización + "Ver todas" con conteo restante.
+- [ ] 12. Borrador cotización: "Revisar después" debe permitir resincronizar/recargar.
+- [ ] 13. Actividades rápidas: sin toasts duplicados, fecha default no vencida, aviso de tarea automática fallida.
+- [ ] 14. Oportunidades: control optimista con `updated_at`.
+- [ ] 15. Facturapi/archivados: rechazar facturas con `deleted_at` no nulo.
+
+## Entrega
+- [ ] CHANGELOG + APP_VERSION 13.823.71

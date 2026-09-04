@@ -7,6 +7,7 @@ import { KpiStrip } from "@/components/shared/KpiStrip";
 import { SectionHeading } from "@/components/shared/SectionHeading";
 import { formatCurrency, formatCurrencyCompact } from "@/lib/formatters";
 import { useForecast } from "@/features/crm/hooks";
+import { primerDiaMesMx, ultimoDiaMesMx } from "@/lib/date/mx";
 import { CrmStatStripItem } from "./CrmStatStripItem";
 
 const STRIP_CLASS =
@@ -23,7 +24,8 @@ function TiraPlaceholder({ valor }: { valor: string }) {
 }
 
 export function CrmForecastMesKpis() {
-  const { data: forecast, isLoading } = useForecast();
+  // FIX-8 (auditoría): "Forecast del mes" es SOLO el mes en curso, calendario MX.
+  const { data: forecast, isLoading } = useForecast(primerDiaMesMx(0), ultimoDiaMesMx(0));
   const totalesPorMoneda = forecast?.totalesPorMoneda ?? [];
 
   return (

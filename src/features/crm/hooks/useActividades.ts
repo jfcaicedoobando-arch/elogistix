@@ -23,7 +23,14 @@ import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { getErrorMessage } from "@/lib/errors";
 
 export type { CrmActividadRow, CrmActividadTipo, CrmEntidadTipo } from "@/features/crm/services/actividades";
-export type ActividadInput = CrearActividadInput;
+/**
+ * Hallazgo #13.1/#13.3 (auditoría CRM) — `silencioso` evita el toast de éxito
+ * del hook para actividades automáticas (seguimiento al crear lead/oportunidad):
+ * el componente ya notifica la creación del registro principal y, si la
+ * actividad automática falla, quiere su propio mensaje ("registro creado,
+ * pero...") en vez del genérico de este hook.
+ */
+export type ActividadInput = CrearActividadInput & { silencioso?: boolean };
 
 export const ACTIVIDAD_TIPOS: CrmActividadTipo[] = [
   "llamada",
@@ -68,15 +75,16 @@ export function useCrearActividad() {
   const qc = useQueryClient();
   const { user } = useAuth();
   return useMutation({
-    mutationFn: (input: ActividadInput) => crearActividad(input, user),
-    onSuccess: () => {
+    mutationFn: ({ silencioso, ...input }: ActividadInput) => crearActividad(input, user),
+    onSuccess: (_data, variables) => {
       qc.invalidateQueries({ queryKey: queryKeys.crm.actividades.all });
       // La agenda de actividades alimenta Higiene (próxima actividad y SLA).
       qc.invalidateQueries({ queryKey: queryKeys.crm.higiene.all });
       qc.invalidateQueries({ queryKey: queryKeys.crm.kpis });
-      notifySuccess(undefined, { title: "Actividad agregada" });
+      if (!variables.silencioso) notifySuccess(undefined, { title: "Actividad agregada" });
     },
-    onError: (error: Error) => {
+    onError: (error: Error, variables) => {
+      if (variables.silencioso) return;
       notifyError(undefined, { title: "No se pudo crear actividad", description: getErrorMessage(error), error, method: "CREATE_ACTIVIDAD" });
     },
   });

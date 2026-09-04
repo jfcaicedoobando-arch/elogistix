@@ -35,7 +35,7 @@ export default function MiDia() {
 
       <section className="space-y-3">
         <SectionHeading variant="overline">Hoy</SectionHeading>
-        <NextBestActionsCard items={vm.nba} isLoading={vm.nbaLoading} />
+        <NextBestActionsCard items={vm.nba} isLoading={vm.nbaLoading} isError={vm.nbaError} onRetry={vm.nbaRefetch} />
         <ActividadesHoyCard items={vm.actividadesHoy} />
       </section>
 
@@ -43,7 +43,7 @@ export default function MiDia() {
         <SectionHeading variant="overline">Esta semana</SectionHeading>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <CerrandoSemanaCard items={vm.cerrandoSemana} />
-          <CotizacionesSinRespuestaCard items={vm.cotsSinResp} />
+          <CotizacionesSinRespuestaCard items={vm.cotsSinResp} isError={vm.cotsError} onRetry={vm.cotsRefetch} />
           <LeadsSinContactarCard items={vm.leadsSinContactar} />
         </div>
       </section>

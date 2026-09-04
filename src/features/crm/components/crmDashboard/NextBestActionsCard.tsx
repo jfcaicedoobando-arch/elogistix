@@ -2,6 +2,7 @@ import { ArrowRight, Sparkles, UserPlus, Target, AlarmClock, ClipboardList, List
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DrilldownRow } from "@/components/shared/dataTable/DrilldownRow";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
+import { ErrorStateInline } from "@/components/empty/ErrorStateInline";
 import type { NbaIcono, NbaItem } from "@/features/crm/domain/nextBestActions";
 
 const ICONS: Record<NbaIcono, typeof UserPlus> = {
@@ -15,9 +16,11 @@ const ICONS: Record<NbaIcono, typeof UserPlus> = {
 interface Props {
   items: NbaItem[];
   isLoading: boolean;
+  isError?: boolean;
+  onRetry?: () => void;
 }
 
-export function NextBestActionsCard({ items, isLoading }: Props) {
+export function NextBestActionsCard({ items, isLoading, isError = false, onRetry }: Props) {
   return (
     <Card className="border-primary/30">
       <CardHeader className="pb-2">
@@ -26,7 +29,9 @@ export function NextBestActionsCard({ items, isLoading }: Props) {
         </CardTitle>
       </CardHeader>
       <CardContent>
-        {isLoading ? (
+        {isError ? (
+          <ErrorStateInline message="No se pudo cargar qué hacer ahora." onRetry={onRetry} />
+        ) : isLoading ? (
           <p className="text-body text-muted-foreground py-3">Calculando…</p>
         ) : items.length === 0 ? (
           <EmptyStateInline icon={Target} message="Todo al día. No hay acciones urgentes ahora." />

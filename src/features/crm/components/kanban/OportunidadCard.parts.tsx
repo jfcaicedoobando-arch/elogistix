@@ -9,8 +9,6 @@ import { formatCurrencyCompact, fraccionAPorcentaje } from "@/lib/formatters";
 import { formatFechaEs } from "@/lib/formatters/dates";
 import { porcentajeCriterios, type AvanceCriterios } from "@/features/crm/domain/criterios";
 
-const fmtMxn = (n: number) => formatCurrencyCompact(n, "MXN");
-
 export function CriteriosRow({
   avance,
   completo,
@@ -36,15 +34,17 @@ export function MetaRow({
   fechaMeta,
   avance,
   montoMeta,
+  moneda,
 }: {
   vencida: boolean;
   fechaMeta: string | null;
   avance: number | null;
   montoMeta: number;
+  moneda: string;
 }) {
   const etiquetaFecha = fechaMeta ? `Meta ${formatFechaEs(fechaMeta)}` : "Meta";
   const etiquetaAvance =
-    avance != null ? ` · ${fraccionAPorcentaje(avance)}% de ${fmtMxn(montoMeta)}` : "";
+    avance != null ? ` · ${fraccionAPorcentaje(avance)}% de ${formatCurrencyCompact(montoMeta, moneda)}` : "";
   const texto = `${etiquetaFecha}${etiquetaAvance}${vencida ? " · vencida" : ""}`;
   return (
     <div
