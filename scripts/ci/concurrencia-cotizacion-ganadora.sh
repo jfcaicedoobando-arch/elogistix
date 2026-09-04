@@ -144,7 +144,9 @@ SELECT EXISTS (
 )::text;
 SQL
 ) || estado='error'
-  if [[ "$estado" == "t" ]]; then listo=1; break; fi
+  # `boolean::text` en psql imprime 'true'/'false' (no 't'/'f'): se aceptan ambas
+  # formas. Comparar sólo con "t" era la causa real del fallo de la barrera en CI.
+  if [[ "$estado" == "t" || "$estado" == "true" ]]; then listo=1; break; fi
   if ! kill -0 "$pid_a" 2>/dev/null; then break; fi
   sleep 0.1
 done
@@ -176,7 +178,7 @@ SELECT EXISTS (
 )::text;
 SQL
 ) || bloqueada='error'
-  [[ "$bloqueada" == "t" ]] && break
+  [[ "$bloqueada" == "t" || "$bloqueada" == "true" ]] && break
   kill -0 "$pid_b" 2>/dev/null || break
   sleep 0.1
 done
