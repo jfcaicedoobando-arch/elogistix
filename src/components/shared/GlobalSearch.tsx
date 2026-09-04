@@ -132,14 +132,14 @@ export function GlobalSearch() {
       <CommandDialog open={open} onOpenChange={setOpen} shouldFilter={false} loop>
 
         <CommandInput
-          placeholder="Buscar por expediente, BL, cliente, factura…"
+          placeholder="Buscar embarques, clientes, proveedores y facturas…"
           value={query}
           onValueChange={setQuery}
         />
         <CommandList>
           {!cargando && (
             <CommandEmpty>
-              <GlobalSearchVacio busquedaFallo={busquedaFallo} />
+              <GlobalSearchVacio busquedaFallo={busquedaFallo} enCrm={enCrm} atajoCrm={atajoCrmPalette()} />
             </CommandEmpty>
           )}
 
