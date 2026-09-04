@@ -5,6 +5,7 @@
  */
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { UseFormReturn } from "react-hook-form";
+import type { CotizacionFormValues } from "@/features/cotizacion/domain/schemas";
 import { loadDraft, clearDraft, draftTieneContenido } from "@/features/cotizacion/hooks/wizard/useCotizacionDraftAutosave";
 import { notifyWarning } from "@/lib/ui/appFeedback";
 import { fetchCotizacionSello } from "@/features/cotizacion/services";
@@ -12,7 +13,7 @@ import { resolverSelloBorrador } from "@/features/cotizacion/hooks/wizard/resolv
 import type { FilaCostoLocal } from "@/features/cotizacion/types/pl";
 
 interface DraftRestoreDeps {
-  form: UseFormReturn<any>;
+  form: UseFormReturn<CotizacionFormValues>;
   userId: string;
   organizationId: string | null | undefined;
   setCotizacionId: (id: string) => void;
