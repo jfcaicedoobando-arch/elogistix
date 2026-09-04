@@ -4,6 +4,7 @@
 import { useMemo } from "react";
 import { KpiCard } from "@/components/shared/KpiCard";
 import { formatCurrency, formatCurrencyCompact } from "@/lib/formatters";
+import { resumirTarjetasCxP } from "@/features/cxp/services/cxpKpiConteos";
 import type { FacturaCxP, KPIsCxP } from "@/features/cxp/services";
 
 function countLabel(count: number): string {
@@ -16,29 +17,12 @@ function countLabelCorto(count: number): string {
 }
 
 export function CxpKpiCards({ kpis, data }: { kpis: KPIsCxP; data: FacturaCxP[] }) {
+  // Los conteos salen del MISMO canon que los importes (`resumirTarjetasCxP`
+  // usa `esFacturaPorPagar` + la ventana canónica de 7 días).
   const {
-    porPagarMxn, porPagarUsd, vencidasN, porVencer7d,
+    porPagarMxn, porPagarUsd, vencidasN, porVencerN,
     programadoMxn, programadoUsd, programadoN,
-  } = useMemo(() => {
-    let porPagarMxn = 0, porPagarUsd = 0, vencidasN = 0, porVencer7d = 0;
-    let programadoMxn = 0, programadoUsd = 0, programadoN = 0;
-    const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
-    const en7d = new Date(hoy); en7d.setDate(en7d.getDate() + 7);
-    for (const f of data) {
-      if (f.saldo <= 0) continue;
-      if (f.moneda === "USD") porPagarUsd++; else porPagarMxn++;
-      if (f.estatus === "Vencida") vencidasN++;
-      if (f.estatus === "Por vencer") porVencer7d++;
-      if (f.fecha_programada_pago) {
-        const fp = new Date(`${f.fecha_programada_pago}T00:00:00`);
-        if (fp >= hoy && fp <= en7d) {
-          programadoN++;
-          if (f.moneda === "USD") programadoUsd += f.saldo; else programadoMxn += f.saldo;
-        }
-      }
-    }
-    return { porPagarMxn, porPagarUsd, vencidasN, porVencer7d, programadoMxn, programadoUsd, programadoN };
-  }, [data]);
+  } = useMemo(() => resumirTarjetasCxP(data), [data]);
   return (
     // Ola 9: a 1280x720 las 5 tarjetas truncaban el importe ("MXN 80,234…") y
     // la etiqueta con el conteo. Ahora el valor va en notación compacta con
@@ -69,7 +53,7 @@ export function CxpKpiCards({ kpis, data }: { kpis: KPIsCxP; data: FacturaCxP[] 
         label="Por vencer 7d"
         value={formatCurrencyCompact(kpis.por_vencer_7d_mxn, "MXN")}
         valueTooltip={formatCurrency(kpis.por_vencer_7d_mxn, "MXN")}
-        sublabel={`${formatCurrency(kpis.por_vencer_7d_usd, "USD")} · ${countLabelCorto(porVencer7d)}`}
+        sublabel={`${formatCurrency(kpis.por_vencer_7d_usd, "USD")} · ${countLabelCorto(porVencerN)}`}
         variant="warning"
       />
       <KpiCard

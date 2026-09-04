@@ -5,7 +5,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { FECHA_INICIO_TIMBRADO_SISTEMA } from "@/features/facturacion/domain/facturaFlags";
 import { todayLocalISO } from "@/lib/date/today";
-import { fetchIdsConEnvioExitoso } from "./bandejasQueries";
+import { fetchIdsConEnvioExitoso, fetchIdsFacturasTimbradas } from "./bandejasQueries";
 
 export interface BandejaConteos {
   porTimbrar: number;
@@ -22,7 +22,7 @@ export interface BandejaConteos {
  */
 export async function fetchBandejaConteos(orgId: string): Promise<BandejaConteos> {
   const hoy = todayLocalISO();
-  const [porTimbrar, timbradas, enviadasIds, porCobrar, vencidas, reps] = await Promise.all([
+  const [porTimbrar, idsTimbradas, enviadasIds, porCobrar, vencidas, reps] = await Promise.all([
     supabase
       .from("facturas")
       .select("id", { count: "exact", head: true })
@@ -31,13 +31,7 @@ export async function fetchBandejaConteos(orgId: string): Promise<BandejaConteos
       .is("facturapi_id", null)
       .is("deleted_at", null)
       .gte("fecha_emision", FECHA_INICIO_TIMBRADO_SISTEMA.slice(0, 10)),
-    supabase
-      .from("facturas")
-      .select("id", { count: "exact", head: true })
-      .eq("organization_id", orgId)
-      .not("uuid_fiscal", "is", null)
-      .in("estado", ["Emitida", "Parcialmente pagada", "Pagada"])
-      .is("deleted_at", null),
+    fetchIdsFacturasTimbradas(orgId),
     fetchIdsConEnvioExitoso(orgId),
     supabase
       .from("facturas")
@@ -62,10 +56,15 @@ export async function fetchBandejaConteos(orgId: string): Promise<BandejaConteos
       .in("estado_rep", ["Pendiente", "Error"])
       .is("deleted_at", null),
   ]);
-  // EC-04: "Por enviar" = timbradas − DISTINCT factura_id con envío exitoso.
-  // Contar envíos crudos divergía de la lista cuando una factura se reenvía
-  // (existe historial en factura_envios): badge y bandeja se contradecían.
-  const porEnviar = Math.max(0, (timbradas.count ?? 0) - enviadasIds.size);
+  // Fail-closed: un error en cualquier cubeta debe pintar error/reintento en
+  // el cockpit, nunca un badge parcial (antes `count ?? 0` lo silenciaba).
+  for (const res of [porTimbrar, porCobrar, vencidas, reps]) {
+    if (res.error) throw res.error;
+  }
+  // EC-04: "Por enviar" = anti-join real (mismos IDs que la lista) contra el
+  // set de DISTINCT factura_id con envío exitoso. Restar counts divergía
+  // cuando había envíos de facturas borradas o fuera de la bandeja.
+  const porEnviar = idsTimbradas.filter((id) => !enviadasIds.has(id)).length;
   return {
     porTimbrar: porTimbrar.count ?? 0,
     porEnviar,

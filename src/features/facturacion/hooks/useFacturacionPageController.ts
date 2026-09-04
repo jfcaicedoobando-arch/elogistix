@@ -40,7 +40,9 @@ export function useFacturacionPageController(opts?: {
   // Lazy fetching por tab activo (J de la auditoría). Sólo se aplica al listado
   // pesado de facturas; el resto se mantiene siempre activo para alimentar
   // badges/contadores que se ven desde cualquier tab.
-  const facturasEnabled = activeTab === undefined || activeTab === "facturas";
+  // El id real de la bandeja de emitidas es "emitidas": con "facturas" el
+  // guard nunca coincidía y la query pesada quedaba habilitada en todos los tabs.
+  const facturasEnabled = activeTab === undefined || activeTab === "emitidas";
 
   const { data: listado, isLoading: loadingFacturas, isError: errorFacturas, refetch: refetchFacturas } = useFacturasListado({
     page,

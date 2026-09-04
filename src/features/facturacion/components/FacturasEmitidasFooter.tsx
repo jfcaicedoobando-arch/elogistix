@@ -27,7 +27,7 @@ export function FacturasEmitidasFooter({ facturas }: Props) {
       <Card>
         <CardContent className="p-3 flex flex-wrap items-center gap-x-6 gap-y-2 text-body">
           <div className="flex items-center gap-1 text-muted-foreground">
-            <span className="font-medium">Totales del filtro</span>
+            <span className="font-medium">Totales de la página</span>
             <Tooltip>
               <TooltipTrigger asChild>
                 <span role="button" tabIndex={0} className="inline-flex" aria-label="Detalle de totales">
@@ -35,9 +35,9 @@ export function FacturasEmitidasFooter({ facturas }: Props) {
                 </span>
               </TooltipTrigger>
               <TooltipContent side="top" className="max-w-[300px] text-body-sm">
-                Suma de TODAS las facturas que cumplen los filtros actuales
-                (no sólo la página visible), separadas por moneda y excluyendo
-                las canceladas. El <strong>MXN equivalente</strong> usa el tipo
+                Suma de los resultados VISIBLES (la página actual con los
+                filtros aplicados), separada por moneda y excluyendo las
+                canceladas. No incluye las demás páginas del servidor. El <strong>MXN equivalente</strong> usa el tipo
                 de cambio de cada factura o el TC del día como fallback — es el
                 número que cuadra contra "Facturado mes" del header.
               </TooltipContent>
@@ -45,7 +45,7 @@ export function FacturasEmitidasFooter({ facturas }: Props) {
           </div>
 
           <div className="flex flex-col">
-            <span className="text-overline">Facturas</span>
+            <span className="text-overline">Resultados visibles</span>
             <span className="font-semibold tabular-nums">{r.conteo}</span>
           </div>
 
