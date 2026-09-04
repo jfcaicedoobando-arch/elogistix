@@ -100,6 +100,8 @@ export const LC_CODE_MESSAGES_FINANCIERO: Record<string, string> = {
     "El embarque de la proforma no es válido o no pertenece a tu organización.",
   LC_MONEDA_VENTA_NO_SOPORTADA:
     "Los conceptos de venta sólo se pueden facturar en MXN o USD. Cambia la moneda de los conceptos antes de continuar.",
+  LC_VENTA_EUR_NO_SOPORTADA:
+    "La venta sólo se registra en MXN o USD. Captura el concepto en pesos o dólares.",
 
 
   LC_TC_FUERA_DE_BANDA:

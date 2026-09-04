@@ -3786,7 +3786,8 @@
       "20260911000110_replay_actualizar_cierre_periodo.sql",
       "20260911000120_replay_nc_saldo_lock_y_rep_historia.sql",
       "20260911000200_replay_recompute_totales_embarque.sql",
-      "20260911000300_crm_cerrar_oportunidad_lock_sin_join.sql"
+      "20260911000300_crm_cerrar_oportunidad_lock_sin_join.sql",
+      "20260911000400_liquidacion_estado_previo_y_venta_eur_guard.sql"
     ]
   }
 }

@@ -1043,6 +1043,9 @@ export type Database = {
           deleted_by: string | null
           embarque_id: string | null
           estado: Database["public"]["Enums"]["estado_comision"]
+          estado_previo_liquidacion:
+            | Database["public"]["Enums"]["estado_comision"]
+            | null
           factura_id: string
           id: string
           liquidacion_id: string | null
@@ -1065,6 +1068,9 @@ export type Database = {
           deleted_by?: string | null
           embarque_id?: string | null
           estado?: Database["public"]["Enums"]["estado_comision"]
+          estado_previo_liquidacion?:
+            | Database["public"]["Enums"]["estado_comision"]
+            | null
           factura_id: string
           id?: string
           liquidacion_id?: string | null
@@ -1087,6 +1093,9 @@ export type Database = {
           deleted_by?: string | null
           embarque_id?: string | null
           estado?: Database["public"]["Enums"]["estado_comision"]
+          estado_previo_liquidacion?:
+            | Database["public"]["Enums"]["estado_comision"]
+            | null
           factura_id?: string
           id?: string
           liquidacion_id?: string | null
