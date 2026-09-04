@@ -100,10 +100,18 @@ export function isLeadIcpDirty(row: LeadIcpSource | null | undefined, form: Lead
   return LEAD_ICP_KEYS.some((key) => base[key] !== form[key]);
 }
 
-/** Campos mínimos que el equipo comercial exige para declarar un ICP validado. */
-const CAMPOS_MINIMOS: (keyof LeadIcpForm)[] = [
+/**
+ * Campos mínimos que el equipo comercial exige para declarar un ICP validado.
+ * FUENTE ÚNICA: `etapas.ts` (gate Lead→Prospecto) y la RPC
+ * `crm_calificar_prospecto` usan esta misma lista, para que "100% completo"
+ * signifique exactamente "el gate ya pasa".
+ */
+export const CAMPOS_MINIMOS_ICP = [
   "sector", "mercancia", "rutas", "volumen", "frecuencia", "dolor_explicito",
-];
+  "proveedor_actual",
+] as const satisfies readonly (keyof LeadIcpForm)[];
+
+const CAMPOS_MINIMOS: readonly (keyof LeadIcpForm)[] = CAMPOS_MINIMOS_ICP;
 
 /** % de completitud del perfil ICP (0 a 1) sobre los campos mínimos. */
 export function completitudIcp(row: LeadIcpSource | null | undefined): number {

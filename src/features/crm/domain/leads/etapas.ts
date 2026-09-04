@@ -9,7 +9,7 @@
  *  - `Convertido`: ya existe como cliente oficial; sale del embudo.
  */
 import { LEAD_ESTADOS_MANUALES, type CrmLeadEstado } from "./constants";
-import { toLeadIcpForm, type LeadIcpSource } from "./icp";
+import { CAMPOS_MINIMOS_ICP, toLeadIcpForm, type LeadIcpSource } from "./icp";
 
 /**
  * v13.823.62: deriva de la lista de estados MANUALES (fuente única) en vez de
@@ -38,15 +38,7 @@ export function puedeCalificarse(estado: CrmLeadEstado): boolean {
  * Campos del perfil comercial que la RPC `crm_calificar_prospecto` exige.
  * Mantener alineado con la validación en base de datos.
  */
-export const CAMPOS_GATE_PROSPECTO = [
-  "sector",
-  "mercancia",
-  "rutas",
-  "volumen",
-  "frecuencia",
-  "dolor_explicito",
-  "proveedor_actual",
-] as const;
+export const CAMPOS_GATE_PROSPECTO = CAMPOS_MINIMOS_ICP;
 
 export const ETIQUETAS_GATE_PROSPECTO: Record<
   (typeof CAMPOS_GATE_PROSPECTO)[number],
