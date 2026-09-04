@@ -32,7 +32,7 @@ export default function ActividadRowActions({ actividad }: Props) {
     }
   };
 
-  const handlePosponer = async (dias: number, label: string) => {
+  const handlePosponer = async (dias: number) => {
     // El hook `usePosponerActividad` ya notifica éxito y error: un solo aviso.
     try {
       await posponer.mutateAsync({ id: actividad.id, dias, fechaProgramada: actividad.fecha_programada });
@@ -68,9 +68,9 @@ export default function ActividadRowActions({ actividad }: Props) {
                 </DropdownMenuTrigger>
               </Hint>
               <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
-                <DropdownMenuItem onClick={() => handlePosponer(1, "1 día")}>+1 día</DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handlePosponer(3, "3 días")}>+3 días</DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handlePosponer(7, "1 semana")}>+1 semana</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handlePosponer(1)}>+1 día</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handlePosponer(3)}>+3 días</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handlePosponer(7)}>+1 semana</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </>
