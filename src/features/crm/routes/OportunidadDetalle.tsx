@@ -12,12 +12,23 @@ import { PageContainer } from "@/components/shared/PageContainer";
 
 export default function OportunidadDetalle() {
   const { id } = useParams<{ id: string }>();
-  const { data: op, isLoading } = useOportunidad(id);
+  const { data: op, isLoading, isError, refetch } = useOportunidad(id);
   useDocumentTitle(op ? `Oportunidad · ${op.nombre}` : "Oportunidad");
   const { data: etapas = [] } = useEtapasPipeline();
 
   if (isLoading) {
     return <LoadingState label="Cargando oportunidad…" />;
+  }
+  if (isError) {
+    return (
+      <PageContainer>
+        <ErrorState
+          title="No se pudo cargar la oportunidad"
+          description="Revisa tu conexión e intenta de nuevo."
+          onRetry={() => void refetch()}
+        />
+      </PageContainer>
+    );
   }
   if (!op) {
     return (
