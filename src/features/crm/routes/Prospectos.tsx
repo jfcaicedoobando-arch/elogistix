@@ -41,7 +41,7 @@ const DEFAULTS: ProspectosFilters = { estado: "todos" };
 // v13.823.78 — anchos y breakpoints ajustados: en desktop HD (1280x720) la
 // tabla desbordaba (~1109px de contenido en ~950px útiles) y "Alta" quedaba
 // fuera de vista. Sector y Rutas ahora aparecen desde 2xl; Frecuencia desde xl.
-const columns = defineColumns<CrmLeadRow>([
+export const prospectosColumns = defineColumns<CrmLeadRow>([
   {
     id: "empresa", header: "Empresa", enableSorting: true,
     accessorFn: (l) => l.empresa,
