@@ -123,10 +123,20 @@ export default function QuickCreateLeadDialog({ open, onOpenChange, onCreated, o
             <Label htmlFor="qc-lead-empresa">Empresa *</Label>
             <Input
               id="qc-lead-empresa"
+              ref={empresaRef}
               value={empresa}
               onChange={(e) => setEmpresa(e.target.value)}
+              onBlur={() => setEmpresaTouched(true)}
               placeholder="Acme Logistics"
+              aria-required="true"
+              aria-invalid={empresaTouched && empresa.trim() === ""}
+              aria-describedby={empresaTouched && empresa.trim() === "" ? "qc-lead-empresa-error" : undefined}
             />
+            {empresaTouched && empresa.trim() === "" && (
+              <p id="qc-lead-empresa-error" className={FIELD_ERROR_CLASS}>
+                Indica la empresa para continuar.
+              </p>
+            )}
           </div>
           <div className="space-y-1">
             <Label htmlFor="qc-lead-contacto">Correo o teléfono</Label>
