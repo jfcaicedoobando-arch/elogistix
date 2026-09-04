@@ -38,8 +38,10 @@ export default function QuickCreateLeadDialog({ open, onOpenChange, onCreated, o
   const { user } = useAuth();
   const crear = useCrearLead();
   const enviandoRef = useRef(false);
+  const empresaRef = useRef<HTMLInputElement>(null);
   const [empresa, setEmpresa] = useState("");
   const [contacto, setContacto] = useState("");
+  const [empresaTouched, setEmpresaTouched] = useState(false);
 
   // Reset sólo en la transición real abierto -> cerrado: mientras el modal
   // sigue abierto (o mientras se muestra la confirmación de descarte, que vive
