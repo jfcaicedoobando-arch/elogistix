@@ -16,13 +16,27 @@ import { ErrorBoundary } from "@/components/shared/ErrorBoundary";
 import { useSyncSentryErrorContext } from "@/lib/observability/hooks/useSyncSentryErrorContext";
 
 // 13.275.0 — Devtools de TanStack Query sólo en dev (lazy → 0 KB en prod).
-const ReactQueryDevtools = import.meta.env.DEV
+// 13.823.71 — Los devtools leen `navigator.language` al evaluar su módulo y
+// lanzan RangeError "Incorrect locale information provided" cuando el entorno
+// expone un locale no estándar (p. ej. `en-US@posix`). Se omiten en ese caso:
+// son una herramienta de desarrollo, no deben ensuciar la consola.
+const localeValido = (): boolean => {
+  try {
+    new Intl.Locale(navigator.language || "en-US");
+    return true;
+  } catch {
+    return false;
+  }
+};
+
+const ReactQueryDevtools = import.meta.env.DEV && localeValido()
   ? lazy(() =>
       import("@tanstack/react-query-devtools").then((m) => ({
         default: m.ReactQueryDevtools,
       })),
     )
   : null;
+
 
 const SentryErrorContextSync = () => {
   useSyncSentryErrorContext();
