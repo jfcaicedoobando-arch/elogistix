@@ -19,6 +19,12 @@ vi.mock('@/features/embarques/services/cierre', () => ({
   fetchAdminPendientesCount: () => fetchAdminPendientesCount(),
 }));
 
+// Sentry JAVASCRIPT-REACT-5X: sin sesión los contadores no deben consultarse.
+let usuarioActual: { id: string } | null = { id: 'u-1' };
+vi.mock('@/lib/contexts/AuthContext', () => ({
+  useAuth: () => ({ user: usuarioActual }),
+}));
+
 import { useSidebarAlerts, invalidateSidebarAlerts } from '../useSidebarAlerts';
 
 function makeClient(): QueryClient {
@@ -40,6 +46,7 @@ describe('useSidebarAlerts', () => {
       garantiasAtoradas: 1,
     });
     fetchAdminPendientesCount.mockResolvedValue(4);
+    usuarioActual = { id: 'u-1' };
   });
 
   afterEach(() => {
@@ -94,6 +101,17 @@ describe('useSidebarAlerts', () => {
     await waitFor(() => expect(result.current.totalAlertas).toBe(0));
     expect(fetchSidebarAlertCounts).toHaveBeenCalledTimes(2);
     expect(fetchAdminPendientesCount).toHaveBeenCalledTimes(2);
+    client.clear();
+  });
+
+  it('sin sesión (p.ej. /login) no consulta las RPC: evita permission denied', async () => {
+    usuarioActual = null;
+    const client = makeClient();
+    const { result } = renderHook(() => useSidebarAlerts(), { wrapper: wrapperFor(client) });
+
+    await waitFor(() => expect(result.current.totalAlertas).toBe(0));
+    expect(fetchSidebarAlertCounts).not.toHaveBeenCalled();
+    expect(fetchAdminPendientesCount).not.toHaveBeenCalled();
     client.clear();
   });
 });
