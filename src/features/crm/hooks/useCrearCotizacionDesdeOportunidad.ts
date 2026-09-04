@@ -62,6 +62,12 @@ export function useCrearCotizacionDesdeOportunidad() {
     onSuccess: (data) => {
       qc.invalidateQueries({ queryKey: queryKeys.crm.oportunidades.all });
       qc.invalidateQueries({ queryKey: queryKeys.crm.opCotizaciones.all });
+      // v13.823.79: el dashboard y "Cotizaciones sin respuesta" quedaban stale
+      // porque el movimiento de etapa usa el servicio directo, no el hook.
+      qc.invalidateQueries({ queryKey: queryKeys.crm.dashboardAll });
+      qc.invalidateQueries({
+        queryKey: queryKeys.crm.cotizacionesSinRespuesta(5, 10, user?.id),
+      });
       notifySuccess(undefined, {
         title: data.reutilizada
           ? `Continuamos con la cotización ${data.folio}`

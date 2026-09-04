@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+## [13.823.81] - 2026-09-05
+
+### CRM — Dashboard y "Cotizaciones sin respuesta" actualizados al crear cotización desde oportunidad
+- `useCrearCotizacionDesdeOportunidad` ahora invalida `crm.dashboardAll` y `crm.cotizacionesSinRespuesta` tras crear la cotización y mover la oportunidad a la etapa Cotizando. Antes el resumen ejecutivo y la tarjeta "Cotizaciones sin respuesta" podían mostrar la etapa anterior u omitir la nueva cotización hasta vencer el `staleTime` de 60s.
+- Nueva regresión `useCrearCotizacionDesdeOportunidad.invalidacion.test.tsx` que verifica la invalidación de ambas query keys y conserva la protección contra duplicados cuando falla el movimiento de etapa.
+
 ## [13.823.80] - 2026-09-05
 
 ### CRM — Dashboard actualizado al editar, eliminar, tomar o calificar leads
