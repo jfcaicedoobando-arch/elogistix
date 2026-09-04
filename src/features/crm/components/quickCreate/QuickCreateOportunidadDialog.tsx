@@ -22,7 +22,7 @@ import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { FormDialogSection } from "@/components/shared/FormDialogSection";
 import { FormDialogFooter } from "@/components/shared/FormDialogFooter";
 import { MSG_SIN_ETAPA_ABIERTA } from "@/features/crm/domain/oportunidadFormHelpers";
-import { useQuickCreateOportunidad, type OportunidadQuickDraft } from "./useQuickCreateOportunidad";
+import { useQuickCreateOportunidad, type OportunidadQuickDraft } from "@/features/crm/hooks/useQuickCreateOportunidad";
 import QuickCreateOportunidadOrigenFields from "./QuickCreateOportunidadOrigenFields";
 
 export type { OportunidadQuickDraft };
