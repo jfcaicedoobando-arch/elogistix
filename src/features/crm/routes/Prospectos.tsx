@@ -30,6 +30,8 @@ import { StatusBadge } from "@/components/shared/StatusBadge";
 import { queryKeys } from "@/lib/query";
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 import { ErrorState } from "@/components/shared/states/ErrorState";
+import { copiaContadorProspectos } from "./prospectosContadorCopy";
+
 
 interface ProspectosFilters extends Record<string, string> {
   estado: string;
