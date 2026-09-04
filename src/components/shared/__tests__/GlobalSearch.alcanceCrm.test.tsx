@@ -5,7 +5,7 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { GlobalSearchVacio } from "../GlobalSearch.partes";
-import { atajoCrmPalette, esMac } from "@/lib/ui/atajoTeclado";
+import { atajoCrmPalette } from "@/lib/ui/atajoTeclado";
 
 describe("GlobalSearch · alcance y pista al CRM", () => {
   it("aclara que el buscador cubre embarques, clientes, proveedores y facturas", () => {
