@@ -43,8 +43,10 @@ describe("perfil ICP del lead", () => {
         volumen: "3x40HC",
         frecuencia: "Mensual",
         dolor_explicito: "Demoras",
+        proveedor_actual: "Otro forwarder",
       }),
     ).toBe(1);
-    expect(completitudIcp({ sector: "Agro", mercancia: "Granos", rutas: "SHA→MZO" })).toBeCloseTo(0.5);
+    expect(completitudIcp({ sector: "Agro", mercancia: "Granos", rutas: "SHA→MZO" })).toBeCloseTo(3 / 7);
+
   });
 });
