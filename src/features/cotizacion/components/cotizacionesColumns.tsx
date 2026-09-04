@@ -23,6 +23,8 @@ export interface BuildParams {
   onDuplicar?: (id: string) => void;
   /** TC USD→MXN vigente, usado sólo para ordenar el subtotal multimoneda. */
   usdMxn?: number | null;
+  /** TC EUR→MXN vigente; si falta, filas con EUR quedan al final del orden (no se comparan nominalmente). */
+  eurMxn?: number | null;
 }
 
 export function buildCotizacionesColumns(params: BuildParams): ColumnDef<CotizacionListItem, unknown>[] {
@@ -111,8 +113,8 @@ export function buildCotizacionesColumns(params: BuildParams): ColumnDef<Cotizac
       // FIX 10: ordenar por equivalente en MXN evita mezclar montos nominales
       // de MXN y USD; sin TC confiable el valor queda al final.
       sortingFn: (a, b) => {
-        const va = normalizarSubtotalesMxn(subtotalesDeFila(a.original), params.usdMxn);
-        const vb = normalizarSubtotalesMxn(subtotalesDeFila(b.original), params.usdMxn);
+        const va = normalizarSubtotalesMxn(subtotalesDeFila(a.original), params.usdMxn, params.eurMxn);
+        const vb = normalizarSubtotalesMxn(subtotalesDeFila(b.original), params.usdMxn, params.eurMxn);
         const fa = va == null || !Number.isFinite(va) ? Number.POSITIVE_INFINITY : va;
         const fb = vb == null || !Number.isFinite(vb) ? Number.POSITIVE_INFINITY : vb;
         return fa - fb;
