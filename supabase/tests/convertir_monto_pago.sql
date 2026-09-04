@@ -117,8 +117,60 @@ BEGIN
   RAISE NOTICE 'CASO 7 OK: monto NULL → NULL';
 END $$;
 
+-- CASO 8: divisa con TC <= 1 (factura legacy USD @1) → no verificable, falla
+-- cerrado en vez de abonar 1:1 (~18× el saldo real).
+DO $$
+DECLARE v_state text; v_msg text;
+BEGIN
+  BEGIN
+    PERFORM public.convertir_monto_pago_a_factura(18000, 'MXN', 1, 'USD', 18.0);
+    v_state := '00000';
+  EXCEPTION WHEN OTHERS THEN
+    GET STACKED DIAGNOSTICS v_state = RETURNED_SQLSTATE, v_msg = MESSAGE_TEXT;
+  END;
+  IF v_state <> '22023' OR v_msg NOT LIKE 'LC_PAGO_TC_NO_VERIFICABLE%' THEN
+    RAISE EXCEPTION 'CASO 8 FALLÓ: esperado 22023/LC_PAGO_TC_NO_VERIFICABLE, vino % / %', v_state, v_msg;
+  END IF;
+  -- Misma regla en la pata extranjera del pago (USD→MXN con TC 0.9).
+  BEGIN
+    PERFORM public.convertir_monto_pago_a_factura(1000, 'USD', 0.9, 'MXN', 18.0);
+    v_state := '00000';
+  EXCEPTION WHEN OTHERS THEN
+    GET STACKED DIAGNOSTICS v_state = RETURNED_SQLSTATE, v_msg = MESSAGE_TEXT;
+  END;
+  IF v_state <> '22023' OR v_msg NOT LIKE 'LC_PAGO_TC_NO_VERIFICABLE%' THEN
+    RAISE EXCEPTION 'CASO 8 FALLÓ (USD→MXN): vino % / %', v_state, v_msg;
+  END IF;
+  RAISE NOTICE 'CASO 8 OK: TC <= 1 en divisa → LC_PAGO_TC_NO_VERIFICABLE (22023)';
+END $$;
+
+-- CASO 9: TC de la factura destino <= 1 (EUR→USD con factura USD @1) → cerrado.
+DO $$
+DECLARE v_state text; v_msg text;
+BEGIN
+  BEGIN
+    PERFORM public.convertir_monto_pago_a_factura(1000, 'EUR', 21, 'USD', 1);
+    v_state := '00000';
+  EXCEPTION WHEN OTHERS THEN
+    GET STACKED DIAGNOSTICS v_state = RETURNED_SQLSTATE, v_msg = MESSAGE_TEXT;
+  END;
+  IF v_state <> '22023' OR v_msg NOT LIKE 'LC_PAGO_TC_FACTURA_NO_VERIFICABLE%' THEN
+    RAISE EXCEPTION 'CASO 9 FALLÓ: esperado 22023/LC_PAGO_TC_FACTURA_NO_VERIFICABLE, vino % / %', v_state, v_msg;
+  END IF;
+  RAISE NOTICE 'CASO 9 OK: TC de factura <= 1 → LC_PAGO_TC_FACTURA_NO_VERIFICABLE';
+END $$;
+
+-- CASO 10: TC válidos siguen convirtiendo igual (no hay regresión).
+DO $$
+BEGIN
+  IF public.convertir_monto_pago_a_factura(19500, 'MXN', 19.5, 'USD', 18.0) <> 1000.0000 THEN
+    RAISE EXCEPTION 'CASO 10 FALLÓ: TC válido dejó de convertir';
+  END IF;
+  RAISE NOTICE 'CASO 10 OK: TC válido intacto';
+END $$;
+
 ROLLBACK;
 
 -- =============================================================
--- Resultado esperado: 7 NOTICE "CASO n OK" y ROLLBACK.
+-- Resultado esperado: 10 NOTICE "CASO n OK" y ROLLBACK.
 -- =============================================================

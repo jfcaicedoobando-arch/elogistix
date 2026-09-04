@@ -10541,6 +10541,10 @@ BEGIN
       RAISE EXCEPTION 'LC_PAGO_TC_REQUERIDO: capture el tipo de cambio del pago (%->%)',
         p_moneda_pago, p_moneda_fact USING ERRCODE = '22023';
     END IF;
+    IF v_tc <= 1 THEN
+      RAISE EXCEPTION 'LC_PAGO_TC_NO_VERIFICABLE: el tipo de cambio del pago (%) no es verificable; se esperan pesos por 1 unidad de divisa (%->%).',
+        v_tc, p_moneda_pago, p_moneda_fact USING ERRCODE = '22023';
+    END IF;
     IF p_moneda_pago = 'MXN' THEN RETURN round(p_monto / v_tc, 4);
     ELSE                          RETURN round(p_monto * v_tc, 4);
     END IF;
@@ -10554,6 +10558,10 @@ BEGIN
       RAISE EXCEPTION 'LC_PAGO_TC_REQUERIDO: capture el tipo de cambio del pago (%->%)',
         p_moneda_pago, p_moneda_fact USING ERRCODE = '22023';
     END IF;
+    IF v_tc <= 1 THEN
+      RAISE EXCEPTION 'LC_PAGO_TC_NO_VERIFICABLE: el tipo de cambio del pago (%) no es verificable; se esperan pesos por 1 unidad de divisa (%->%).',
+        v_tc, p_moneda_pago, p_moneda_fact USING ERRCODE = '22023';
+    END IF;
     v_mxn := p_monto * v_tc;
   END IF;
   IF p_moneda_fact = 'MXN' THEN RETURN round(v_mxn, 4); END IF;
@@ -10561,6 +10569,10 @@ BEGIN
   IF v_tc_fact IS NULL OR v_tc_fact <= 0 THEN
     RAISE EXCEPTION 'LC_PAGO_TC_FACTURA_REQUERIDO: la factura en % necesita tipo de cambio para recibir un pago en %.',
       p_moneda_fact, p_moneda_pago USING ERRCODE = '22023';
+  END IF;
+  IF v_tc_fact <= 1 THEN
+    RAISE EXCEPTION 'LC_PAGO_TC_FACTURA_NO_VERIFICABLE: el tipo de cambio de la factura en % (%) no es verificable; se esperan pesos por 1 unidad de divisa.',
+      p_moneda_fact, v_tc_fact USING ERRCODE = '22023';
   END IF;
   RETURN round(v_mxn / v_tc_fact, 4);
 END;
