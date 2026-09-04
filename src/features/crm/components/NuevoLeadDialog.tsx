@@ -65,7 +65,6 @@ export default function NuevoLeadDialog({ open, onOpenChange, onCreated }: Props
   // Correo opcional: si viene capturado debe tener forma válida (regla central
   // `emailLooksValid`). El flujo mínimo "correo o teléfono" se conserva: vacío es válido.
   const emailInvalido = form.email.trim() !== "" && !emailLooksValid(form.email);
-  const [emailTocado, setEmailTocado] = useState(false);
 
   const handleSubmit = async () => {
 
@@ -75,7 +74,6 @@ export default function NuevoLeadDialog({ open, onOpenChange, onCreated }: Props
       return;
     }
     if (emailInvalido) {
-      setEmailTocado(true);
       notifyError(undefined, {
         title: "Correo inválido",
         description: "Escribe un correo con la forma usuario@dominio.com o déjalo vacío.",
@@ -115,7 +113,6 @@ export default function NuevoLeadDialog({ open, onOpenChange, onCreated }: Props
 
       crmToast.success("Lead creado");
       setForm(formVacio());
-      setEmailTocado(false);
       onOpenChange(false);
       onCreated?.(r.id);
     } catch (e) {
@@ -135,7 +132,6 @@ export default function NuevoLeadDialog({ open, onOpenChange, onCreated }: Props
   const handleOpenChange = (o: boolean) => {
     if (!o) {
       setForm(formVacio());
-      setEmailTocado(false);
       setAutoActividad(true);
     }
     onOpenChange(o);
@@ -175,7 +171,7 @@ export default function NuevoLeadDialog({ open, onOpenChange, onCreated }: Props
         setForm={setForm}
         autoActividad={autoActividad}
         setAutoActividad={setAutoActividad}
-        emailError={emailInvalido && emailTocado ? "Correo inválido: usa la forma usuario@dominio.com o deja el campo vacío." : undefined}
+        emailError={emailInvalido ? "Correo inválido: usa la forma usuario@dominio.com o deja el campo vacío." : undefined}
       />
     </FormDialogShell>
   );
