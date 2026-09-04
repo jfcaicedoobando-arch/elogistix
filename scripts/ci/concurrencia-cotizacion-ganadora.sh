@@ -36,6 +36,7 @@
 set -euo pipefail
 
 APP_A='lc_conc_ganadora_a'
+APP_B='lc_conc_ganadora_b'
 ESPERA_MAX_S=60      # timeout de la barrera (CI lento: runners compartidos)
 A_ESPERA_MAX_S=120   # techo de espera de A por el semáforo (evita cuelgue)
 
