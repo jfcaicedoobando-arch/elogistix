@@ -43,6 +43,8 @@ vi.mock("@/lib/query", () => ({
 }));
 
 import { useCrearCotizacionDesdeOportunidad } from "../useCrearCotizacionDesdeOportunidad";
+import { notifySuccess } from "@/lib/ui/appFeedback";
+
 
 function spyClient() {
   const client = (globalThis as unknown as {
@@ -77,6 +79,7 @@ describe("invalidación de dashboard al crear cotización desde oportunidad", ()
       reutilizada: false,
     });
     actualizarEtapaOportunidad.mockReset().mockResolvedValue(undefined);
+    vi.mocked(notifySuccess).mockReset();
   });
 
   it("invalida oportunidades, op-cotizaciones, dashboard y cotizaciones sin respuesta", async () => {
@@ -99,6 +102,9 @@ describe("invalidación de dashboard al crear cotización desde oportunidad", ()
       10,
       "user-1",
     ]);
+    // v13.823.83: no se emite toast desde el hook; el call-site se encarga de
+    // notificar con el folio y la navegación, evitando un aviso duplicado.
+    expect(vi.mocked(notifySuccess)).not.toHaveBeenCalled();
   });
 
   it("mantiene la protección contra duplicados cuando falla mover la etapa", async () => {
@@ -116,5 +122,6 @@ describe("invalidación de dashboard al crear cotización desde oportunidad", ()
       reutilizada: false,
       avisoEtapa: "timeout",
     });
+    expect(vi.mocked(notifySuccess)).not.toHaveBeenCalled();
   });
 });
