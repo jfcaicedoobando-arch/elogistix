@@ -1,4 +1,4 @@
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/layout/AppSidebar";
 import { Outlet, useLocation } from "react-router-dom";
@@ -15,6 +15,7 @@ import { useIsMobile } from "@/hooks/shared/useIsMobile";
 import { TenantContextBanner } from "@/components/layout/TenantContextBanner";
 import { SeleccionaOrganizacion } from "@/components/layout/SeleccionaOrganizacion";
 import { useOrganization } from "@/lib/contexts/OrganizationContext";
+import { useScrollRestoreOnPathname } from "@/components/layout/useScrollRestoreOnPathname";
 
 
 export function Layout() {
@@ -31,6 +32,11 @@ export function Layout() {
 
   const isMobile = useIsMobile();
   const { requiereSeleccionOrg, loading } = useOrganization();
+
+  // Al cambiar de módulo/ruta volvemos arriba; query params dentro de la
+  // misma ruta no mueven el scroll.
+  const mainRef = useRef<HTMLElement>(null);
+  useScrollRestoreOnPathname(mainRef);
 
 
   return (
@@ -64,7 +70,7 @@ export function Layout() {
             </div>
           </header>
           <TenantContextBanner />
-          <main className="flex-1 overflow-auto">
+          <main ref={mainRef} className="flex-1 overflow-auto">
             <PageContainer noSpacing>
               <ErrorBoundary resetKey={location.pathname}>
                 <Suspense fallback={<RouteLoadingFallback />}>
