@@ -107,12 +107,12 @@ export default function Prospectos() {
       />
 
       <CrmSubheader
-        context={
-          list.search || list.activeCount > 0
-            ? `${list.count} prospectos coinciden con los filtros`
-            : `${list.count} prospectos en el embudo`
-        }
+        context={copiaContadorProspectos(
+          list.count,
+          Boolean(list.search) || list.activeCount > 0,
+        )}
       />
+
 
       <UnifiedFiltersBar
         search={list.search}
