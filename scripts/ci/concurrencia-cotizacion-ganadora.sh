@@ -100,41 +100,51 @@ VALUES ('${C1}', '${ORG}', 'TEST-CONC-0001', 'Marítimo', 'Importación', '${CLI
        ('${C2}', '${ORG}', 'TEST-CONC-0002', 'Marítimo', 'Importación', '${CLI}', '${OP}', 'Enviada', 2000, 1);
 SQL
 
-# ── Sesión A: acepta C1, retiene el lock y se anuncia por application_name ───
+# Semáforo de coordinación (se limpia en `limpiar`).
+psql_run <<SQL
+DROP TABLE IF EXISTS public.lc_conc_barrera;
+CREATE UNLOGGED TABLE public.lc_conc_barrera (id text PRIMARY KEY);
+SQL
+
+# ── Sesión A: acepta C1 y retiene el lock hasta que se levante el semáforo ───
 ( psql_run > "$log_a" 2>&1 <<SQL
 SET application_name = '${APP_A}';
 BEGIN;
 UPDATE public.cotizaciones SET estado = 'Aceptada' WHERE id = '${C1}';
-SELECT pg_sleep(${LOCK_HOLD_S});
+DO \$\$
+DECLARE t0 timestamptz := clock_timestamp();
+BEGIN
+  LOOP
+    EXIT WHEN EXISTS (SELECT 1 FROM public.lc_conc_barrera WHERE id = 'go');
+    IF clock_timestamp() - t0 > interval '${A_ESPERA_MAX_S} seconds' THEN
+      RAISE EXCEPTION 'A_TIMEOUT_SEMAFORO';
+    END IF;
+    PERFORM pg_sleep(0.05);
+  END LOOP;
+END \$\$;
 COMMIT;
 SELECT 'A_OK';
 SQL
 ) &
 pid_a=$!
 
-# ── Barrera determinista: A ya escribió y tiene el lock de la oportunidad ────
+# ── Barrera determinista: A ya escribió y tiene su lock de transacción ───────
 listo=0
 for _ in $(seq 1 $((ESPERA_MAX_S * 10))); do
   estado=$(psql_run <<SQL
-SELECT (
-  EXISTS (
-    SELECT 1 FROM pg_stat_activity a
-     WHERE a.application_name = '${APP_A}'
-       AND a.query ILIKE '%pg_sleep%'
-       AND a.xact_start IS NOT NULL
-  )
-  AND EXISTS (
-    SELECT 1
-      FROM pg_locks l
-      JOIN pg_stat_activity a ON a.pid = l.pid
-     WHERE a.application_name = '${APP_A}'
-       AND l.locktype = 'transactionid'
-       AND l.granted
-  )
+SELECT EXISTS (
+  SELECT 1
+    FROM pg_locks l
+    JOIN pg_stat_activity a ON a.pid = l.pid
+   WHERE a.application_name = '${APP_A}'
+     AND a.xact_start IS NOT NULL
+     AND l.locktype = 'transactionid'
+     AND l.granted
 )::text;
 SQL
 ) || estado='error'
   if [[ "$estado" == "t" ]]; then listo=1; break; fi
+  if ! kill -0 "$pid_a" 2>/dev/null; then break; fi
   sleep 0.1
 done
 
@@ -143,6 +153,13 @@ if [[ $listo -ne 1 ]]; then
   echo "FALLO: la sesión A no alcanzó la barrera (UPDATE + lock) en ${ESPERA_MAX_S}s" >&2
   exit 1
 fi
+
+# A está dentro de la transacción con el lock tomado: se levanta el semáforo
+# para que comitee mientras B queda encolada en ese mismo lock.
+psql_run <<SQL
+INSERT INTO public.lc_conc_barrera (id) VALUES ('go') ON CONFLICT DO NOTHING;
+SQL
+
 
 # ── Sesión B: intenta aceptar C2 de la misma oportunidad ─────────────────────
 # Se bloquea en el lock de A y, al liberarse, debe fallar por ganadora existente.
