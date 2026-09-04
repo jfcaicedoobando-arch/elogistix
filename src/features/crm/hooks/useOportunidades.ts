@@ -90,6 +90,7 @@ export function useActualizarOportunidad() {
     qc.invalidateQueries({ queryKey: queryKeys.crm.higiene.all });
     qc.invalidateQueries({ queryKey: queryKeys.crm.oportunidades.detail(id) });
     qc.invalidateQueries({ queryKey: queryKeys.crm.kpis });
+    qc.invalidateQueries({ queryKey: queryKeys.crm.dashboardAll });
   };
   return useMutation({
     mutationFn: actualizarOportunidad,
