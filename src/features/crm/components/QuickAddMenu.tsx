@@ -51,6 +51,15 @@ function cerrarLimpiando(
   };
 }
 
+/** Props del borrador express hacia el formulario completo de actividad. */
+function propsActividad(draft: ActividadQuickDraft | null) {
+  return {
+    asuntoInicial: draft?.asunto ?? null,
+    fechaInicial: draft?.fecha ?? null,
+    entidadIdInicial: draft?.entidadId ?? null,
+  };
+}
+
 function conDatos<T extends object>(draft: T, campos: Array<keyof T>): T | null {
   return campos.some((c) => Boolean(draft[c])) ? draft : null;
 }
@@ -192,9 +201,7 @@ export default function QuickAddMenu({ openTrigger, dialogTrigger }: QuickAddMen
       <NuevaActividadDialog
         open={actOpen}
         onOpenChange={cerrarLimpiando(setActOpen, () => setActDraft(null))}
-        asuntoInicial={actDraft?.asunto ?? null}
-        fechaInicial={actDraft?.fecha ?? null}
-        entidadIdInicial={actDraft?.entidadId ?? null}
+        {...propsActividad(actDraft)}
         onCreated={() => navigate("/crm/actividades")}
       />
       <ImportarLeadsCsvDialog open={importOpen} onOpenChange={setImportOpen} />
