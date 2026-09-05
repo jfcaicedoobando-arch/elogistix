@@ -25,7 +25,7 @@ function nivel(porcentaje: number): { color: string; icon: typeof TrendingUp } {
   return { color: "text-destructive", icon: TrendingDown };
 }
 
-export function WizardTotalsBar({ plUSD, plMXN, totalVentaMXN }: Props) {
+export function WizardTotalsBar({ plUSD, plMXN }: Props) {
   // W-06 (QA r2): antes se mostraba un solo margen "consolidado" que
   // priorizaba USD e ignoraba por completo la utilidad en pesos. Ahora se
   // muestra un margen por moneda con venta; nunca se suman monedas distintas.
