@@ -24,11 +24,13 @@ import {
 
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
+import { ErrorStateInline } from "@/components/empty/ErrorStateInline";
+import { getErrorMessage } from "@/lib/domain/errorMessages";
 const VARIABLES = ["{{contacto}}", "{{empresa}}", "{{vendedor}}", "{{monto}}", "{{moneda}}", "{{etapa}}"];
 
 
 export default function PlantillasMensajeEditor() {
-  const { data = [], isLoading } = usePlantillasMensaje(undefined, false);
+  const { data = [], isLoading, isError, error, refetch, isFetching } = usePlantillasMensaje(undefined, false);
   const crear = useCrearPlantilla();
   const actualizar = useActualizarPlantilla();
   const eliminar = useEliminarPlantilla();
@@ -102,6 +104,13 @@ export default function PlantillasMensajeEditor() {
         {/* Lista */}
         {isLoading ? (
           <EmptyStateInline loading message="Cargando…" />
+        ) : isError ? (
+          <ErrorStateInline
+            title="No pudimos cargar las plantillas"
+            message={getErrorMessage(error)}
+            onRetry={() => void refetch()}
+            retrying={isFetching}
+          />
         ) : data.length === 0 ? (
           <EmptyStateInline icon={MessageSquare} message="Sin plantillas todavía" />
         ) : (

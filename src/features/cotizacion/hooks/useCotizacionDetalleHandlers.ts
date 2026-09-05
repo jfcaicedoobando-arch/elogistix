@@ -61,7 +61,14 @@ export function useCotizacionDetalleHandlers(cotizacion: CotizacionRow | undefin
             estadoCotizacion: estado,
           });
         } catch {
-          // No bloquear el cambio de estado de la cotización por una falla CRM.
+          // P2 (13.823.142): el cambio de cotización YA quedó guardado; sólo
+          // falló la sincronización CRM. Avisamos sin sugerir que todo falló y
+          // sin repetir la mutación exitosa.
+          notifyWarning(undefined, {
+            title: "Estado guardado; el CRM no se actualizó",
+            description:
+              "Revisa la oportunidad en CRM y vuelve a guardar el estado para reintentar la sincronización.",
+          });
         }
       }
     } catch {
