@@ -49,8 +49,11 @@ export function useSidebarAlerts() {
   // Sentry JAVASCRIPT-REACT-5X: en /login (sesión anónima) estos contadores se
   // ejecutaban igual y la RPC, que sólo tiene EXECUTE para `authenticated`,
   // fallaba con "permission denied". Sin sesión no hay badges que pintar.
-  const { user } = useAuth();
-  const conSesion = Boolean(user);
+  // 13.823.146 (regresión): bastaba `user` en memoria, pero si el token ya
+  // expiró PostgREST llama como `anon` y vuelve el "permission denied". Ahora
+  // exigimos además un access token vigente en la sesión.
+  const { user, session } = useAuth();
+  const conSesion = Boolean(user && session?.access_token);
 
   const { data } = useQuery({
     queryKey: queryKeys.sidebar.alertCounts,
