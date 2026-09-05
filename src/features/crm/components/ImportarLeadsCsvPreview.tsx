@@ -17,12 +17,21 @@ interface Props {
   /** Una coincidencia por fila, en el mismo orden que `rows`. */
   duplicados?: Coincidencia[];
   duplicadosCargando?: boolean;
+  /** La revisión de duplicados falló: ninguna fila es "Nuevo" comprobado. */
+  duplicadosError?: boolean;
 }
 
 const PREVIEW_LIMIT = 50;
 
-function DuplicadoCelda({ c }: { c?: Coincidencia }) {
-  if (!c || c.nivel === "nuevo") return <span className="text-muted-foreground">Nuevo</span>;
+function DuplicadoCelda({ c, revisionFallo }: { c?: Coincidencia; revisionFallo?: boolean }) {
+  if (!c) {
+    return revisionFallo ? (
+      <span className="text-destructive">Sin revisar</span>
+    ) : (
+      <span className="text-muted-foreground">Nuevo</span>
+    );
+  }
+  if (c.nivel === "nuevo") return <span className="text-muted-foreground">Nuevo</span>;
   return (
     <Badge variant={c.nivel === "exacto" ? "destructive" : "secondary"} className="gap-1">
       <Copy className="h-3 w-3" />
@@ -32,7 +41,7 @@ function DuplicadoCelda({ c }: { c?: Coincidencia }) {
 }
 
 export function ImportarLeadsCsvPreview({
-  rows, validCount, errorCount, duplicados, duplicadosCargando,
+  rows, validCount, errorCount, duplicados, duplicadosCargando, duplicadosError,
 }: Props) {
   if (rows.length === 0) return null;
   const exactos = (duplicados ?? []).filter((c) => c.nivel === "exacto").length;
@@ -72,7 +81,7 @@ export function ImportarLeadsCsvPreview({
                 <TableCell>{r.email || "—"}</TableCell>
                 <TableCell>{r.estado}</TableCell>
                 <TableCell>{r.fuente}</TableCell>
-                <TableCell><DuplicadoCelda c={duplicados?.[i]} /></TableCell>
+                <TableCell><DuplicadoCelda c={duplicados?.[i]} revisionFallo={duplicadosError} /></TableCell>
                 <TableCell className="text-destructive">{r.__error ?? ""}</TableCell>
               </TableRow>
             ))}
