@@ -13,6 +13,7 @@ import { LEAD_ESTADOS_ETAPA_PROSPECTO } from "@/features/crm/domain/leads/etapas
 
 const mutateAsync = vi.fn(async (_input: Record<string, unknown>) => ({ id: "op-1" }));
 const estadosRecibidos: (string[] | undefined)[] = [];
+const notifyError = vi.fn();
 
 vi.mock("@/lib/contexts/AuthContext", () => ({
   useAuth: () => ({ user: { id: "u-actual", email: "actual@x.com" } }),
