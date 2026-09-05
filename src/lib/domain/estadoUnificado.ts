@@ -27,10 +27,16 @@ export type EstadoUnificadoProforma =
 export interface ProformaEstadoInput {
   estado_proforma?: string | null;
   estado_cliente?: string | null;
+  /**
+   * P2 (auditoría v13.823.143 · bug 2): una proforma con factura vinculada ya
+   * está facturada aunque `estado_proforma` no se haya sincronizado; sin esto
+   * seguía contándose en "Por emitir".
+   */
+  factura_id?: string | null;
 }
 
 export function getEstadoUnificado(p: ProformaEstadoInput): EstadoUnificadoProforma {
-  if (p.estado_proforma === "facturada") return "facturada";
+  if (p.estado_proforma === "facturada" || p.factura_id) return "facturada";
   const ec = p.estado_cliente ?? "pendiente";
   if (ec === "rechazada") return "rechazada";
   if (ec === "aceptada") return "aceptada";
