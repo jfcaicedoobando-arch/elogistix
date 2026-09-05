@@ -25,6 +25,29 @@ export function derivarTipoEtapa(estados: string[]): TipoEtapaDerivada | null {
 }
 
 /**
+ * Lee la etapa y el cierre vigentes de la oportunidad. `null` = no existe o RLS
+ * la filtró (no inventamos éxito).
+ */
+async function fetchCierreActual(
+  oportunidadId: string,
+): Promise<{ tipo: string | null; fechaCierre: string | null } | null> {
+  const { data, error } = await supabase
+    .from("crm_oportunidades")
+    .select("id, fecha_cierre_real, crm_etapas_pipeline(tipo)")
+    .eq("id", oportunidadId)
+    .is("deleted_at", null)
+    .maybeSingle();
+  if (error) throw error;
+  if (!data) return null;
+  // SAFE-CAST: select explícito con join de etapa (una sola fila).
+  const row = data as unknown as {
+    fecha_cierre_real: string | null;
+    crm_etapas_pipeline?: { tipo?: string | null } | null;
+  };
+  return { tipo: row.crm_etapas_pipeline?.tipo ?? null, fechaCierre: row.fecha_cierre_real ?? null };
+}
+
+/**
  * Recalcula y aplica la etapa CRM de la oportunidad a partir de todas sus
  * cotizaciones vivas. No-op cuando no hay un tipo derivable.
  */
