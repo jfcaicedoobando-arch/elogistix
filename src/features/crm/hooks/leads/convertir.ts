@@ -28,6 +28,8 @@ export function useConvertirLead() {
       // (crm.dashboard) también cambia (kpis, leads sin contactar, deals).
       qc.invalidateQueries({ queryKey: queryKeys.crm.oportunidades.all });
       qc.invalidateQueries({ queryKey: queryKeys.crm.dashboardAll });
+      // v13.823.94: "Qué hacer ahora" (NBA) leía señales de hasta 60s.
+      qc.invalidateQueries({ queryKey: queryKeys.crm.nbaSignalsAll });
 
       if (!variables.silencioso) notifySuccess(undefined, { title: "Lead convertido en oportunidad" });
     },
