@@ -3,7 +3,7 @@
  * Señal de "necesita seguimiento ya".
  */
 import { supabase } from "@/integrations/supabase/client";
-import { diffDiasCalendario } from "@/lib/date/dateOnly";
+import { diffDiasMx, mxAddDaysIso } from "@/lib/date/mx";
 
 export interface CotizacionSinRespuestaRow {
   id: string;
@@ -31,13 +31,15 @@ export async function fetchCotizacionesSinRespuesta(
    */
   vendedorId?: string | null,
 ): Promise<CotizacionSinRespuestaRow[]> {
-  const corte = new Date();
-  corte.setDate(corte.getDate() - diasUmbral);
+  // El corte se calcula sobre el calendario CDMX para no depender del huso
+  // del navegador (antes `setDate()` movía el día para usuarios en UTC).
+  const ahora = new Date();
+  const corte = mxAddDaysIso(ahora.toISOString(), -diasUmbral, ahora);
   let query = supabase
     .from("cotizaciones")
     .select("id, folio, cliente_nombre, es_prospecto, prospecto_empresa, subtotal, moneda, created_at, oportunidad_id")
     .eq("estado", "Enviada")
-    .lte("created_at", corte.toISOString())
+    .lte("created_at", corte)
     // v13.756.0: una cotización eliminada ya no requiere seguimiento.
     .is("deleted_at", null)
     .order("created_at", { ascending: true })
@@ -48,7 +50,6 @@ export async function fetchCotizacionesSinRespuesta(
   if (vendedorId) query = query.eq("created_by", vendedorId);
   const { data, error } = await query;
   if (error) throw error;
-  const ahora = Date.now();
   return (data ?? []).map((c) => ({
     id: c.id,
     folio: c.folio,
@@ -58,6 +59,6 @@ export async function fetchCotizacionesSinRespuesta(
     created_at: c.created_at,
     oportunidad_id: c.oportunidad_id,
     es_prospecto: c.es_prospecto === true,
-    dias: diffDiasCalendario(c.created_at, new Date(ahora)),
+    dias: diffDiasMx(c.created_at, ahora) ?? 0,
   }));
 }

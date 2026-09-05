@@ -1,5 +1,13 @@
 # Changelog
 
+## [13.823.124] - 2026-09-05
+- CRM consistencia de calendario MX (sin cambios de reglas de negocio, sólo la zona de cálculo):
+  - `autoRegistroContacto.fechaSeguimientoContacto` suma los días con `mxAddDaysIso` (calendario CDMX, conservando la hora local) en vez de `setDate()` + `toISOString()`; `DIAS_SEGUIMIENTO_CONTACTO=2` intacto.
+  - `cotizacionesSinRespuesta`: el corte se calcula con `mxAddDaysIso` y el contador con `diffDiasMx`, por lo que `diasUmbral`, estado "Enviada", filtro soft-delete y límites se conservan pero ya no dependen del huso del navegador.
+  - `routes/Higiene.tsx` obtiene año y mes de negocio con `ymMx()`, así el presupuesto del mes no cambia cerca de medianoche.
+  - `domain/oportunidades/vistasGuardadas.ts` genera `cierreDesde`/`cierreHasta` de "Cierra este mes" con `primerDiaMesMx`/`ultimoDiaMesMx`, manteniendo la API y el formato `yyyy-MM-dd`.
+  - Regresiones nuevas en frontera de mes y husos UTC vs America/Mexico_City.
+
 ## [13.823.123] - 2026-09-05
 - CRM oportunidad (`OportunidadCotizacionesList`): la antigüedad de una cotización enviada se calcula ahora con `diffDiasMx` (calendario America/Mexico_City) en vez de `diffDiasCalendario` contra el reloj local, así la etiqueta "Sin respuesta · Nd" es estable cerca de medianoche para usuarios en otras zonas. Se conservan el umbral > 5 días y el formato existente. Regresión: conteo CDMX vs UTC y umbral respetado.
 
