@@ -57,13 +57,8 @@ export default function CriteriosEtapaEditor() {
       });
       setNombre("");
       crmToast.success("Criterio agregado");
-    } catch (e) {
-      notifyError(undefined, {
-        title: "No se pudo agregar el criterio",
-        description: e instanceof Error ? e.message : undefined,
-        error: e,
-        method: "HANDLE_AGREGAR",
-      });
+    } catch {
+      // useCrearCriterioEtapa ya notifica en onError; no duplicar el aviso.
     }
   };
 
