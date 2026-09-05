@@ -3,7 +3,7 @@
  * Todas las tarifas se capturan en USD (Fase 3).
  * Migrado a FormDialogShell (Ola 2 — Costeo).
  */
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { Tag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -23,6 +23,7 @@ import {
   computeValido, getTituloModal, esTarifaSucia,
 } from "./TarifaForm.helpers";
 import { BotonCancelarTarifa } from "./TarifaFormCancelar";
+import { useTarifaFormReset } from "./useTarifaFormReset";
 
 import { formatUSD } from "@/lib/formatters";
 import { useTarifaSubmit } from "@/features/costeo/hooks/useTarifaSubmit";
@@ -70,27 +71,16 @@ export function TarifaForm({ open, onOpenChange, initial, tarifaId, agenteIdFijo
   const esEdicion = Boolean(tarifaId);
   const multiple = !esEdicion;
 
-  // P2 (auditoría v13.823.143 · bug 3): el reset sólo debe correr al abrir el
-  // modal (o al cambiar la tarifa editada). Antes dependía de la identidad de
-  // `initial`, así que un refetch del padre reconstruía el objeto y borraba lo
-  // capturado (p. ej. la naviera seleccionada). Se usa una firma por contenido
-  // para seguir hidratando cuando `initial` llega después de abrir.
-  const resetKey = `${open ? "1" : "0"}|${tarifaId ?? ""}|${agenteIdFijo ?? ""}|${JSON.stringify(initial ?? null)}`;
-  const resetKeyRef = useRef<string | null>(null);
+  const aplicarInicial = useCallback((ini: Partial<TarifaInput> | undefined) => {
+    const inicial = buildInitialForm(ini);
+    const rutasIniciales = ini?.ruta_id ? [ini.ruta_id] : [];
+    setForm(inicial);
+    setRutaIds(rutasIniciales);
+    setBaseline({ form: inicial, rutaIds: rutasIniciales });
+    setIntentoEnvio(false);
+  }, []);
 
-  useEffect(() => {
-    if (resetKeyRef.current === resetKey) return;
-    resetKeyRef.current = resetKey;
-    if (open) {
-      const inicial = buildInitialForm(agenteIdFijo ? { ...initial, agente_id: agenteIdFijo } : initial);
-      const rutasIniciales = initial?.ruta_id ? [initial.ruta_id] : [];
-      setForm(inicial);
-      setRutaIds(rutasIniciales);
-      setBaseline({ form: inicial, rutaIds: rutasIniciales });
-      setIntentoEnvio(false);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [resetKey]);
+  useTarifaFormReset({ open, initial, agenteIdFijo, onReset: aplicarInicial });
 
   const total = useMemo(() => calcularTotal(form), [form]);
   const valido = computeValido(esFormValido(form, { skipRutaId: multiple }), multiple, rutaIds.length);

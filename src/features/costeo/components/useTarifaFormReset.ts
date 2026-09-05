@@ -15,6 +15,7 @@ interface Params {
   open: boolean;
   initial?: Partial<TarifaInput>;
   agenteIdFijo?: string;
+  /** Debe ser estable (`useCallback`) para no reiniciar en cada render. */
   onReset: (initial: Partial<TarifaInput> | undefined) => void;
 }
 
@@ -28,6 +29,5 @@ export function useTarifaFormReset({ open, initial, agenteIdFijo, onReset }: Par
   useEffect(() => {
     if (!open) return;
     onReset(agenteIdFijo ? { ...initialEstable, agente_id: agenteIdFijo } : initialEstable);
-    // `onReset` se mantiene fuera de deps a propósito: sólo el contenido reinicia.
-  }, [open, initialEstable, agenteIdFijo]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [open, initialEstable, agenteIdFijo, onReset]);
 }
