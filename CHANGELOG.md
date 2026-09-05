@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.823.94] - 2026-09-05
+- CRM/Mi día: las mutaciones de leads y oportunidades (crear, actualizar, eliminar, tomar, calificar, convertir, lotes), crear cotización desde oportunidad y mover etapa con automatizaciones ahora invalidan `crm.nba-signals`, para que "Qué hacer ahora" no conserve recomendaciones obsoletas hasta 60s. Sin cambios en el scoring ni polling.
+
 ## [Unreleased]
 
 ## [13.823.93] - 2026-09-05
