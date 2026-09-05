@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.823.100] - 2026-09-05
+- CRM Prospectos: cambiar el estado desde la tabla (`EstadoCell` en `leadsColumns.tsx`) ya no muestra dos errores para una sola acción; se eliminó el `notifyError` local porque `useActualizarLead` ya notifica en `onError`. Se conservan `stopPropagation` y el selector deshabilitado mientras procesa. Regresión: mutación fallida = un solo feedback.
+
 ## [13.823.99] - 2026-09-05
 - CRM/Mi día: `CerrandoSemanaCard` ya no muestra la fecha técnica ISO de `fecha_estimada_cierre`; ahora usa `formatFechaEs` y muestra "Sin fecha" cuando el valor es nulo, evitando el separador suelto. Regresiones: fecha formateada en español y fallback nulo.
 
