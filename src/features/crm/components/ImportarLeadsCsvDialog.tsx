@@ -32,7 +32,7 @@ export default function ImportarLeadsCsvDialog({ open, onOpenChange }: Props) {
 
   const footer = (
     <>
-      <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
+      <Button variant="outline" onClick={() => handleOpenChange(false)}>Cancelar</Button>
       <Button onClick={handleImport} disabled={!puedeImportar} loading={isPending}>
         {duplicadosCargando ? "Revisando duplicados…" : `Importar ${validRows.length} leads`}
       </Button>
