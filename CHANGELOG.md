@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.823.141] - 2026-09-05
+- Higiene de auditorías (sin cambios de producto): se pone en verde `scripts/run-audits-conditional.sh`. `audit:tests`: aserción explícita dentro de los dos `it` de `UnifiedFiltersBar.limpiarBusqueda.test.tsx` (las verificaciones vivían sólo en el helper), `rejects.toBeTruthy()` → `rejects.toMatchObject({ message: "rls" })` en `automatizacionesEtapa.test.ts`, y 7 títulos duplicados renombrados con su contexto (notas/comentarios/ICP, sheet/dialog de Convertir lead, criterio/lead completo/lead rápido/oportunidad rápida, lead/oportunidad al eliminar, contador de leads, orden de etapas) sin tocar el contenido de las pruebas ni la allowlist. `audit:manifest`: manifiesto de releases regenerado para la versión vigente. `audit:soft-delete`: baseline regenerada quitando `crm/services/etapas.ts` y `crm/services/lineage.ts`, ya corregidos.
+
 ## [13.823.140] - 2026-09-05
 - CRM automatizaciones de etapa (fallo visible, sin rollback): `fetchEtapa`/`fetchOportunidad` convertían el error del backend en `null` y hacían no-op silencioso de todas las automatizaciones; ahora propagan el error (y `null` sólo significa "no existe"), de modo que `runAutomatizaciones` agrega el fallo. `useMoverEtapaConAutomatizacion` distingue el resultado devolviendo `automatizacionesOk` y avisa "Etapa actualizada; no se pudo completar el seguimiento automático" con "Revisa actividades" en la descripción, conservando `logger.warn`, el movimiento aplicado y las reglas de creación/cancelación. Regresiones: `useAutomatizacionesEtapa.warning.test.tsx` (movimiento exitoso + automatización fallida → warning y `automatizacionesOk:false`; todo exitoso → sin warning) y propagación de error en `fetchEtapa`.
 
