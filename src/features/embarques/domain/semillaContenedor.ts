@@ -41,3 +41,55 @@ export function contenedorSembradoDesdeGenerales(
     piezas: num(generales.piezas),
   };
 }
+
+/** true cuando ninguna fila tiene cantidades capturadas (todas en cero). */
+export function contenedoresSinCantidades(filas: ContenedorBorrador[]): boolean {
+  return filas.every(
+    (f) => num(f.peso_kg) === 0 && num(f.volumen_m3) === 0 && num(f.piezas) === 0,
+  );
+}
+
+/** true cuando hay cantidades generales capturadas. */
+export function hayCantidadesGenerales(generales: CantidadesGenerales): boolean {
+  return (
+    num(generales.pesoKg) > 0 || num(generales.volumenM3) > 0 || num(generales.piezas) > 0
+  );
+}
+
+/**
+ * v13.823.152 (B4) — ¿Se perderían las cantidades generales al derivar los
+ * totales de los contenedores? Sólo cuando hay cantidades generales capturadas
+ * y NINGUNA fila tiene cantidades. Si el operador ya capturó cantidades por
+ * contenedor (incluida una corrección explícita a cero en una fila mientras
+ * otra tiene valores) no aplica: la verdad ya vive en los hijos.
+ */
+export function requiereConservarGenerales(
+  filas: ContenedorBorrador[],
+  generales: CantidadesGenerales,
+): boolean {
+  return hayCantidadesGenerales(generales) && contenedoresSinCantidades(filas);
+}
+
+/**
+ * Transfiere una sola vez las cantidades generales a la PRIMERA fila, sin
+ * acumular y sin tocar el resto de filas ni sus datos (número/tipo/BL).
+ * Si no hace falta conservar, devuelve la lista tal cual (misma referencia).
+ */
+export function conservarGeneralesEnContenedores(
+  filas: ContenedorBorrador[],
+  generales: CantidadesGenerales,
+): ContenedorBorrador[] {
+  if (!hayCantidadesGenerales(generales)) return filas;
+  if (filas.length === 0) return [contenedorSembradoDesdeGenerales(generales)];
+  if (!contenedoresSinCantidades(filas)) return filas;
+  return filas.map((f, i) =>
+    i === 0
+      ? {
+          ...f,
+          peso_kg: num(generales.pesoKg),
+          volumen_m3: num(generales.volumenM3),
+          piezas: num(generales.piezas),
+        }
+      : f,
+  );
+}
