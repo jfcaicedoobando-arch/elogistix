@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.823.129] - 2026-09-05
+- CRM cancelar en modales de alta (`NuevoLeadDialog` e `ImportarLeadsCsvDialog`): el botón Cancelar ahora usa el mismo handler de cierre que Escape/X, por lo que al descartar el diálogo también se ejecuta el `reset` del formulario/importador. En `NuevoLeadDialog` se conserva la confirmación de descarte cuando hay datos capturados; en `ImportarLeadsCsvDialog` se limpian archivo y preview. Regresión: escribir/cargar datos, cancelar, reabrir y verificar estado vacío.
+
 ## [13.823.128] - 2026-09-05
 - CRM ConvertirLeadDialog / ConvertirLeadSheet: el borrador se reinicializa mediante efecto cuando cambia `lead.id` (incluido al montar), evitando que al navegar entre fichas de lead queden el nombre, monto, moneda o cliente del lead anterior. Se conservan validaciones, guard anti doble envío y flujo de conversión. Regresión: cambiar de lead A a lead B no arrastra valores editados.
 
