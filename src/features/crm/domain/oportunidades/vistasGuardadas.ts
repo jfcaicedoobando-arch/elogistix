@@ -4,7 +4,7 @@
  * Módulo puro: cada vista devuelve un set de `OportunidadesFiltros` listo
  * para aplicar sobre el dataset ya cargado. Sin React ni Supabase.
  */
-import { format, startOfMonth, endOfMonth } from "date-fns";
+import { primerDiaMesMx, ultimoDiaMesMx } from "@/lib/date/mx";
 import { FILTROS_DEFAULT, type OportunidadesFiltros } from "./filtros";
 
 export type VistaGuardadaId = "todas" | "mis-deals" | "cierra-mes" | "alto-valor";
@@ -45,8 +45,9 @@ export function buildVistasGuardadas(ctx: VistaGuardadaCtx = {}): VistaGuardada[
       disponible: true,
       filtros: {
         ...FILTROS_DEFAULT,
-        cierreDesde: format(startOfMonth(hoy), "yyyy-MM-dd"),
-        cierreHasta: format(endOfMonth(hoy), "yyyy-MM-dd"),
+        // Mes de negocio CDMX (date-only): estable cerca de medianoche.
+        cierreDesde: primerDiaMesMx(0, hoy),
+        cierreHasta: ultimoDiaMesMx(0, hoy),
       },
     },
     {

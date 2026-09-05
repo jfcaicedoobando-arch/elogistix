@@ -8,6 +8,7 @@
  */
 import { crearActividad, type CrmEntidadTipo } from "@/features/crm/services/actividades";
 import { logger } from "@/lib/observability/logger";
+import { mxAddDaysIso } from "@/lib/date/mx";
 
 /** Días de gracia para dar seguimiento al contacto recién hecho. */
 export const DIAS_SEGUIMIENTO_CONTACTO = 2;
@@ -21,11 +22,13 @@ export interface AutoRegistroContactoInput {
   destino: string;
 }
 
-/** Fecha de seguimiento sugerida (hoy + DIAS_SEGUIMIENTO_CONTACTO). */
+/**
+ * Fecha de seguimiento sugerida (hoy + DIAS_SEGUIMIENTO_CONTACTO).
+ * La suma es de días de calendario CDMX (`mxAddDaysIso`), no del reloj del
+ * navegador: conserva la hora local MX del contacto y no se corre un día.
+ */
 export function fechaSeguimientoContacto(desde: Date = new Date()): string {
-  const d = new Date(desde.getTime());
-  d.setDate(d.getDate() + DIAS_SEGUIMIENTO_CONTACTO);
-  return d.toISOString();
+  return mxAddDaysIso(desde.toISOString(), DIAS_SEGUIMIENTO_CONTACTO, desde);
 }
 
 /**
