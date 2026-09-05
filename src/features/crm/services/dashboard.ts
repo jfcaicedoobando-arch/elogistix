@@ -74,6 +74,8 @@ async function fetchOportunidadesAbiertas(): Promise<OpRow[]> {
       .select(OPS_ABIERTAS_SELECT)
       .is("deleted_at", null)
       .eq("crm_etapas_pipeline.tipo", "abierta")
+      .is("crm_etapas_pipeline.deleted_at", null)
+
       .order("id", { ascending: true })
       .range(desde, hasta),
   );
