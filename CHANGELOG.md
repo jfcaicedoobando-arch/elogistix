@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.823.108] - 2026-09-05
+- CRM: eliminados dos avisos de error duplicados. En `ActividadNotasSheet.tsx` se removió el `crmToast.error` del `catch` porque `useActualizarActividadNotas` ya notifica en `onError`. En `LeadIcpCard.tsx` se removió el `notifyError` local del `catch` porque `useActualizarLead` ya notifica en `onError`. Se conservan los toasts de éxito, el cierre del Sheet, el reset derivado, el estado disabled/loading y el patch ICP. Regresiones: un solo feedback visible al fallar guardar notas de actividad y guardar perfil ICP.
+
 ## [13.823.107] - 2026-09-05
 - CRM: eliminados los avisos de error duplicados en `useOportunidadDetalleActions.ts`. Se removió el `notifyError` local de `handleEliminar` (useEliminarOportunidad ya notifica en `onError`) y de `crearCotizacion` (useCrearCotizacionDesdeOportunidad ya notifica en `onError` y conserva su reintento idempotente). Se mantienen la navegación tras eliminar/crear, el toast de éxito con folio y el `notifyInfo` cuando existe `avisoEtapa`. Regresiones: un solo feedback visible al fallar eliminar o crear cotización, más los caminos de éxito.
 
