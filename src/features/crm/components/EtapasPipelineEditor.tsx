@@ -8,7 +8,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
-import { COLOR_ETAPA_DEFAULT } from "@/lib/chartTokens";
 import { Hint } from "@/components/shared/Hint";
 import {
   mergeDrafts, sameState, serverSnapshot, toState, type RowState,
@@ -20,7 +19,7 @@ import {
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 import {
   useActualizarEtapa, useEtapasPipelineAll, useIntercambiarOrdenEtapas,
-  type CrmEtapaRow, type CrmEtapaTipo,
+  type CrmEtapaTipo,
 } from "@/features/crm/hooks";
 
 const TIPOS: CrmEtapaTipo[] = ["abierta", "ganada", "perdida"];
