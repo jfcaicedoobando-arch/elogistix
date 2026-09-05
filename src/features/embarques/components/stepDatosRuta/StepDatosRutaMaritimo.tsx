@@ -9,7 +9,10 @@ import {
   NavieraEmbarqueSelector,
 } from "@/features/embarques/components/stepDatosRuta/AgenteNavieraHeredados";
 import { ListaContenedoresEditable } from "@/features/embarques/components/contenedores/ListaContenedoresEditable";
-import { contenedorSembradoDesdeGenerales } from "@/features/embarques/domain/semillaContenedor";
+import {
+  conservarGeneralesEnContenedores,
+  requiereConservarGenerales,
+} from "@/features/embarques/domain/semillaContenedor";
 import type { StepValidationErrors } from "@/features/embarques/domain/embarqueWizardSchemas";
 import type { EmbarqueFormValues } from "@/features/embarques/hooks";
 
@@ -36,24 +39,37 @@ export function StepDatosRutaMaritimo({ errors, cotizacionAgenteId, cotizacionNa
   const { register, watch, setValue } = useFormContext<EmbarqueFormValues>();
   const tipoServicio = watch('tipoServicio');
   const contenedores = watch('contenedores') ?? [];
+  const generales = {
+    pesoKg: watch('pesoKg'),
+    volumenM3: watch('volumenM3'),
+    piezas: watch('piezas'),
+  };
+
+  const aplicarConservacion = (filas: typeof contenedores) => {
+    setValue('contenedores', conservarGeneralesEnContenedores(filas, generales), {
+      shouldValidate: true,
+      shouldDirty: true,
+    });
+  };
 
   const handleTipoServicioChange = (v: string) => {
     setValue('tipoServicio', v, { shouldValidate: true, shouldDirty: true });
     if (v === 'LCL') {
       setValue('tipoContenedor', 'LCL', { shouldValidate: true, shouldDirty: true });
       setValue('contenedores', [], { shouldValidate: true, shouldDirty: true });
-    } else if (v === 'FCL' && contenedores.length === 0) {
-      // B4: en FCL los totales se derivan de los contenedores, así que el
-      // primero se siembra con las cantidades ya capturadas en Datos generales
-      // (si no, el resumen quedaba en 0 y se perdía lo capturado).
-      const semilla = contenedorSembradoDesdeGenerales({
-        pesoKg: watch('pesoKg'),
-        volumenM3: watch('volumenM3'),
-        piezas: watch('piezas'),
-      });
-      setValue('contenedores', [semilla], { shouldValidate: true, shouldDirty: true });
+    } else if (v === 'FCL') {
+      // B4: en FCL los totales se derivan de los contenedores. Se conservan las
+      // cantidades ya capturadas en Datos generales pasándolas a la primera
+      // fila, tanto si aún no hay filas como si el operador agregó la fila
+      // antes de elegir FCL (sin acumular ni pisar cantidades reales).
+      aplicarConservacion(contenedores);
     }
   };
+
+  // Borradores reabiertos ya en FCL con filas en cero: se avisa y el operador
+  // decide (nunca se repone en automático, para respetar el cero explícito).
+  const mostrarAvisoConservar =
+    tipoServicio === 'FCL' && requiereConservarGenerales(contenedores, generales);
 
   return (
     <>
