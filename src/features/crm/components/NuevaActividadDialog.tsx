@@ -5,25 +5,20 @@
  */
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ClipboardList } from "lucide-react";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Checkbox } from "@/components/ui/checkbox";
-import { DateTimePickerMx } from "@/components/ui/date-time-picker-mx";
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from "@/components/ui/select";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { FormDialogFooter } from "@/components/shared/FormDialogFooter";
 import { notifyError } from "@/lib/ui/appFeedback";
 
 import {
-  ACTIVIDAD_TIPOS, useCrearActividad,
+  useCrearActividad,
   type CrmActividadTipo, type CrmEntidadTipo,
 } from "@/features/crm/hooks";
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 import { mxLocalToUtcIso } from "@/lib/date/mx";
 import SelectorEntidadActividad from "@/features/crm/components/nuevaActividad/SelectorEntidadActividad";
+import ActividadCamposFormulario from "@/features/crm/components/nuevaActividad/ActividadCamposFormulario";
+import ActividadFlagsCheckboxes from "@/features/crm/components/nuevaActividad/ActividadFlagsCheckboxes";
 
 interface Props {
   open: boolean;
@@ -152,65 +147,23 @@ export default function NuevaActividadDialog({ open, onOpenChange, defaultEntida
       {defaultEntidad?.label && (
         <div className="text-body-sm text-muted-foreground">Para: <span className="font-medium text-foreground">{defaultEntidad.label}</span></div>
       )}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <div className="space-y-1">
-          <Label>Tipo</Label>
-          <Select value={tipo} onValueChange={(v) => setTipo(v as CrmActividadTipo)}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
-            <SelectContent>
-              {ACTIVIDAD_TIPOS.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="space-y-1">
-          <Label>Fecha programada</Label>
-          <DateTimePickerMx value={fecha} onChange={setFecha} />
-        </div>
-      </div>
-      <div className="space-y-1">
-        <Label htmlFor="nueva-actividad-asunto" className="flex items-center">
-          Asunto<span className="text-destructive ml-0.5">*</span>
-        </Label>
-        <Input
-          id="nueva-actividad-asunto"
-          value={asunto}
-          onChange={(e) => setAsunto(e.target.value)}
-          placeholder="Llamar a cliente, enviar cotización…"
-          aria-invalid={errorAsunto ? true : undefined}
-          aria-describedby={errorAsunto ? "nueva-actividad-asunto-error" : undefined}
-        />
-        {errorAsunto && (
-          <p id="nueva-actividad-asunto-error" className="text-label text-destructive">
-            Escribe el asunto de la actividad.
-          </p>
-        )}
-      </div>
-      <div className="space-y-1">
-        <Label>Descripción</Label>
-        <Textarea rows={3} value={desc} onChange={(e) => setDesc(e.target.value)} />
-      </div>
-      <div className="flex flex-col gap-2 pt-1">
-        <div className="flex items-center gap-2">
-          <Checkbox
-            id="act-contacto-efectivo"
-            checked={contactoEfectivo}
-            onCheckedChange={(v) => setContactoEfectivo(v === true)}
-          />
-          <Label size="sm" htmlFor="act-contacto-efectivo" className="cursor-pointer">
-            Contacto efectivo (hablé con quien decide)
-          </Label>
-        </div>
-        <div className="flex items-center gap-2">
-          <Checkbox
-            id="act-reunion-calificada"
-            checked={reunionCalificada}
-            onCheckedChange={(v) => setReunionCalificada(v === true)}
-          />
-          <Label size="sm" htmlFor="act-reunion-calificada" className="cursor-pointer">
-            Reunión calificada (con necesidad y presupuesto)
-          </Label>
-        </div>
-      </div>
+      <ActividadCamposFormulario
+        tipo={tipo}
+        onTipo={setTipo}
+        fecha={fecha}
+        onFecha={setFecha}
+        asunto={asunto}
+        onAsunto={setAsunto}
+        errorAsunto={errorAsunto}
+        desc={desc}
+        onDesc={setDesc}
+      />
+      <ActividadFlagsCheckboxes
+        contactoEfectivo={contactoEfectivo}
+        onContactoEfectivo={setContactoEfectivo}
+        reunionCalificada={reunionCalificada}
+        onReunionCalificada={setReunionCalificada}
+      />
     </FormDialogShell>
   );
 }
