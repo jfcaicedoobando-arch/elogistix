@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.823.97] - 2026-09-05
+- CRM/configuración: `actualizarCriterioEtapa`, `eliminarCriterioEtapa`, `actualizarPlantilla` y `eliminarPlantilla` ahora exigen la fila afectada (`update(...).select("id").maybeSingle()`); si RLS, un soft-delete o un id inexistente dejan 0 filas, lanzan un error accionable y no registran bitácora ni muestran "Guardado" de un cambio que nunca ocurrió. Las eliminaciones siguen siendo soft-delete. Regresiones: 0 filas sin bitácora y éxito con bitácora única para cada servicio.
+
 ## [13.823.96] - 2026-09-05
 - CRM/configuración: `actualizarMotivoPerdida` ahora exige la fila afectada (`update(...).select("id").maybeSingle()`); si RLS, un soft-delete o un id inexistente dejan 0 filas, lanza un error accionable y no registra bitácora ni muestra "Motivo actualizado" de un cambio que nunca ocurrió (mismo patrón que `actualizarEtapa`). Regresiones: 0 filas sin bitácora y éxito con bitácora única.
 

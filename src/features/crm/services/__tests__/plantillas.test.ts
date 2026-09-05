@@ -5,6 +5,9 @@ const mock = await vi.hoisted(async () => {
   return createSupabaseMock();
 });
 vi.mock("@/integrations/supabase/client", () => ({ supabase: mock.supabase }));
+vi.mock("@/services/bitacora/registrar", () => ({ registrarActividad: vi.fn() }));
+
+import { registrarActividad } from "@/services/bitacora/registrar";
 
 import {
   fetchPlantillasMensaje,
@@ -80,20 +83,45 @@ describe("services/crm/plantillas", () => {
     await expect(crearPlantilla({ nombre: "X", canal: "email", cuerpo: "c" })).rejects.toThrow();
   });
 
-  it("actualizarPlantilla envía patch a id", async () => {
-    mock.setTableResult("crm_plantillas_mensaje", { data: null, error: null });
+  it("actualizarPlantilla actualiza cuando hay fila afectada", async () => {
+    vi.mocked(registrarActividad).mockClear();
+    mock.setTableResult("crm_plantillas_mensaje", { data: { id: "p1" }, error: null });
     await actualizarPlantilla({ id: "p1", patch: { nombre: "Y" } });
     const call = mock.tableCalls[0];
     const idx = call.ops.indexOf("update");
     expect(call.opArgs[idx][0]).toEqual({ nombre: "Y" });
+    expect(registrarActividad).toHaveBeenCalledTimes(1);
+  });
+
+  it("actualizarPlantilla exige fila afectada y no registra bitácora si RLS/id inexistente", async () => {
+    vi.mocked(registrarActividad).mockClear();
+    mock.setTableResult("crm_plantillas_mensaje", { data: null, error: null });
+    await expect(actualizarPlantilla({ id: "p1", patch: { nombre: "Y" } })).rejects.toThrow(
+      /no tienes permiso|ya no existe/i,
+    );
+    expect(registrarActividad).not.toHaveBeenCalled();
+  });
+
+  it("actualizarPlantilla propaga error", async () => {
+    mock.setTableResult("crm_plantillas_mensaje", { data: null, error: { message: "x" } });
+    await expect(actualizarPlantilla({ id: "p1", patch: {} })).rejects.toThrow();
   });
 
   it("eliminarPlantilla hace soft delete con deleted_at", async () => {
-    mock.setTableResult("crm_plantillas_mensaje", { data: null, error: null });
+    vi.mocked(registrarActividad).mockClear();
+    mock.setTableResult("crm_plantillas_mensaje", { data: { id: "p1" }, error: null });
     await eliminarPlantilla("p1");
     const p = mock.getMutationPayload("crm_plantillas_mensaje", "update") as Record<string, unknown>;
     expect(p.deleted_at).toEqual(expect.any(String));
     expect(new Date(p.deleted_at as string).toString()).not.toBe("Invalid Date");
+    expect(registrarActividad).toHaveBeenCalledTimes(1);
+  });
+
+  it("eliminarPlantilla exige fila afectada y no registra bitácora si no existe/RLS", async () => {
+    vi.mocked(registrarActividad).mockClear();
+    mock.setTableResult("crm_plantillas_mensaje", { data: null, error: null });
+    await expect(eliminarPlantilla("p1")).rejects.toThrow(/no tienes permiso|ya no existe/i);
+    expect(registrarActividad).not.toHaveBeenCalled();
   });
 
   it("eliminarPlantilla propaga error", async () => {
