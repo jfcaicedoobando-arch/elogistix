@@ -42,7 +42,7 @@ interface Props {
   icon: React.ReactNode;
   totales: TotalesPL;
   canEdit: boolean;
-  onUpdate: (globalIdx: number, field: "proveedor" | "costo_unitario" | "notas", value: string) => void;
+  onUpdate: (globalIdx: number, field: "proveedor" | "costo_unitario" | "venta" | "notas", value: string) => void;
 }
 
 export default function TablaCostosDetalle({ filas, filasMoneda, moneda, title, icon, totales, canEdit, onUpdate }: Props) {
@@ -87,8 +87,10 @@ export default function TablaCostosDetalle({ filas, filasMoneda, moneda, title, 
                           <Input type="number" value={fila.costo_unitario || ""} onChange={e => onUpdate(globalIdx, "costo_unitario", e.target.value)} className="h-8 text-body text-right tabular-nums w-28 ml-auto" min={0} max={MONTO_MAX} step={0.01} aria-label={`Costo unitario de ${fila.concepto}`} />
                         ) : <span className="text-body tabular-nums">{formatCurrency(fila.costo_unitario, moneda)}</span>}
                       </TableCell>
-                      <TableCell className="text-right text-body tabular-nums whitespace-nowrap">
-                        {formatCurrency(fila.venta, moneda)}
+                      <TableCell className="text-right whitespace-nowrap">
+                        {canEdit ? (
+                          <Input type="number" value={fila.venta || ""} onChange={e => onUpdate(globalIdx, "venta", e.target.value)} className="h-8 text-body text-right tabular-nums w-28 ml-auto" min={0} max={MONTO_MAX} step={0.01} aria-label={`Venta de ${fila.concepto}`} />
+                        ) : <span className="text-body tabular-nums">{formatCurrency(fila.venta, moneda)}</span>}
                       </TableCell>
                       <TableCell className={`text-right text-body tabular-nums font-medium ${profit >= 0 ? "text-success" : "text-destructive"}`}>
                         {formatCurrency(profit, moneda)}

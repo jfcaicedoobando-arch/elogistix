@@ -7,6 +7,7 @@
  * oportunidad existente del CRM; el modo "crear nuevo prospecto" se retiró.
  * Un vínculo ya persistido (edición) no puede sustituirse aquí.
  */
+import { useState } from "react";
 import { useFormContext } from "react-hook-form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -43,6 +44,9 @@ export default function SeccionDestinatario({ clientes, complete, vinculoConfirm
   const prospectoEmpresa = watch("prospectoEmpresa");
 
   const tieneVinculo = Boolean(oportunidadId || leadId);
+  // Bug 1: la moneda de la oportunidad se muestra en cuanto se vincula, para
+  // capturar los importes en la moneda que el CRM ya tiene registrada.
+  const [monedaOportunidad, setMonedaOportunidad] = useState<string | null>(null);
 
   const handleSelectMatch = (m: ProspectoMatch) => {
     if (m.kind === "oportunidad") {
@@ -57,12 +61,17 @@ export default function SeccionDestinatario({ clientes, complete, vinculoConfirm
     setValue("prospectoEmail", m.email, { shouldDirty: true });
     setValue("prospectoTelefono", m.telefono, { shouldDirty: true });
     clearErrors(["oportunidadId", "leadId", "prospectoEmpresa"]);
+    setMonedaOportunidad(m.kind === "oportunidad" ? (m.moneda ?? null) : null);
   };
 
   const handleDesvincular = () => {
     if (vinculoConfirmado) return;
     setValue("oportunidadId", "", { shouldDirty: true });
     setValue("leadId", "", { shouldDirty: true });
+    // Bug 2: al desvincular, el aviso de validación anterior ya no aplica.
+    clearErrors(["oportunidadId", "leadId", "prospectoEmpresa"]);
+    onLimpiarVinculoError?.();
+    setMonedaOportunidad(null);
   };
 
   const handleCambioDestinatario = (v: string) => {
@@ -128,6 +137,7 @@ export default function SeccionDestinatario({ clientes, complete, vinculoConfirm
           prospectoEmpresa={prospectoEmpresa}
           onSelectMatch={handleSelectMatch}
           onDesvincular={handleDesvincular}
+          monedaOportunidad={monedaOportunidad}
         />
       )}
       {esProspecto && (errors.oportunidadId?.message || errors.leadId?.message) && (

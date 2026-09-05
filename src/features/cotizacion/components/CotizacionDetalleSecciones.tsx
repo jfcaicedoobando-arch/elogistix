@@ -104,10 +104,12 @@ function visibilidadAcciones(params: {
   puedeRechazar: boolean;
   puedeAltaCliente: boolean;
   tieneOportunidad: boolean;
+  /** P0 — sin venta capturada no se puede generar el embarque. */
+  tieneVenta: boolean;
 }) {
   const {
     estado, esProspecto, tieneEmbarquesVinculados, puedeAceptar, puedeRechazar,
-    puedeAltaCliente, tieneOportunidad,
+    puedeAltaCliente, tieneOportunidad, tieneVenta,
   } = params;
   const esAceptada = estado === "Aceptada";
   const respuestaEnSolicitada = puedeAceptar || puedeRechazar;
@@ -121,7 +123,10 @@ function visibilidadAcciones(params: {
     // clientes + prospecto aceptado + oportunidad ligada. Sin oportunidad queda
     // sólo el banner que guía a vincularla.
     mostrarConvertirCliente: esAceptada && esProspecto && puedeAltaCliente && tieneOportunidad,
-    mostrarCrearEmbarque: esAceptada && !esProspecto && !tieneEmbarquesVinculados,
+    mostrarCrearEmbarque: esAceptada && !esProspecto && !tieneEmbarquesVinculados && tieneVenta,
+    // P0 (bug 10): cotización aceptada sin venta capturada — se explica en vez
+    // de ofrecer un botón que generaría un embarque en cero.
+    mostrarFaltaVenta: esAceptada && !esProspecto && !tieneEmbarquesVinculados && !tieneVenta,
     mostrarRecotizar: esAceptada && !tieneEmbarquesVinculados,
   };
 }
@@ -144,7 +149,7 @@ export function CotizacionDetalleAcciones({
   );
   const {
     esEnCaptura, mostrarAceptarRechazar, mostrarConvertirCliente,
-    mostrarCrearEmbarque, mostrarRecotizar,
+    mostrarCrearEmbarque, mostrarFaltaVenta, mostrarRecotizar,
   } = visibilidadAcciones({
     estado,
     esProspecto,
@@ -153,6 +158,7 @@ export function CotizacionDetalleAcciones({
     puedeRechazar: acciones.rechazar,
     puedeAltaCliente,
     tieneOportunidad,
+    tieneVenta: Number(total) > 0,
   });
 
   return (
@@ -172,6 +178,11 @@ export function CotizacionDetalleAcciones({
         <Button size="sm" onClick={onAbrirConvertir}>Convertir a Cliente</Button>
       )}
       {mostrarCrearEmbarque && <AccionCrearEmbarque cotizacionId={cotizacionId} numContenedores={numContenedores} />}
+      {mostrarFaltaVenta && (
+        <span className="self-center text-body-sm text-muted-foreground">
+          Para crear el embarque falta capturar los conceptos de venta con importe (total en $0.00).
+        </span>
+      )}
       {mostrarRecotizar && (
         <>
           <Button variant="outline" size="sm" onClick={() => setRecotizarOpen(true)}>

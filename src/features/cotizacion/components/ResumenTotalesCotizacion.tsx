@@ -46,7 +46,11 @@ export default function ResumenTotalesCotizacion({
   return (
     <div className="flex flex-col items-end gap-1 p-4 border rounded-md bg-muted/30">
       {mostrarUSD && (
-        <span className="text-base font-bold">Total USD: {formatCurrency(totalUSD, 'USD')}</span>
+        <span className="text-base font-bold">
+          {/* Bug 5: se etiqueta la base — este total sí incluye el IVA de los
+              conceptos en USD que lo llevan; el margen se calcula sin IVA. */}
+          {ivaUSD != null && ivaUSD > 0 ? "Total USD (c/IVA):" : "Total USD:"} {formatCurrency(totalUSD, 'USD')}
+        </span>
       )}
       {mostrarMXN && (
         <span className="text-base font-bold">

@@ -12,9 +12,11 @@ interface Props {
   nombre: string;
   onDesvincular: () => void;
   puedeDesvincular?: boolean;
+  /** Bug 1: moneda registrada en la oportunidad (los conceptos deben ir en ella). */
+  moneda?: string | null;
 }
 
-export function VinculoChip({ oportunidadId, leadId, nombre, onDesvincular, puedeDesvincular = true }: Props) {
+export function VinculoChip({ oportunidadId, leadId, nombre, onDesvincular, puedeDesvincular = true, moneda }: Props) {
   const tipoLabel = oportunidadId ? "Oportunidad" : "Lead";
   const Icon = oportunidadId ? Briefcase : UserRound;
   return (
@@ -25,6 +27,11 @@ export function VinculoChip({ oportunidadId, leadId, nombre, onDesvincular, pued
           {tipoLabel}
         </Badge>
         <span className="truncate text-body font-medium">{nombre || "Sin nombre"}</span>
+        {moneda && (
+          <Badge variant="outline" className="shrink-0">
+            Moneda {moneda}
+          </Badge>
+        )}
         {!oportunidadId && leadId && (
           <span className="text-body-sm text-muted-foreground">
             (se usará o abrirá su oportunidad al guardar)

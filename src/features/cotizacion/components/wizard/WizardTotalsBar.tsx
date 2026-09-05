@@ -17,7 +17,6 @@ import type { TotalesPL } from "@/lib/financial/profitUtils";
 interface Props {
   plUSD: TotalesPL;
   plMXN: TotalesPL;
-  totalVentaMXN: number;
 }
 
 function nivel(porcentaje: number): { color: string; icon: typeof TrendingUp } {
@@ -26,7 +25,7 @@ function nivel(porcentaje: number): { color: string; icon: typeof TrendingUp } {
   return { color: "text-destructive", icon: TrendingDown };
 }
 
-export function WizardTotalsBar({ plUSD, plMXN, totalVentaMXN }: Props) {
+export function WizardTotalsBar({ plUSD, plMXN }: Props) {
   // W-06 (QA r2): antes se mostraba un solo margen "consolidado" que
   // priorizaba USD e ignoraba por completo la utilidad en pesos. Ahora se
   // muestra un margen por moneda con venta; nunca se suman monedas distintas.
@@ -42,7 +41,10 @@ export function WizardTotalsBar({ plUSD, plMXN, totalVentaMXN }: Props) {
       <div className="max-w-6xl mx-auto px-4 py-2.5 flex flex-wrap items-center justify-between gap-x-6 gap-y-2 text-body">
         <div className="flex flex-wrap items-center gap-x-6 gap-y-1">
           <Metric label="Costo" mxn={plMXN.totalCosto} usd={plUSD.totalCosto} />
-          <Metric label="Venta" mxn={totalVentaMXN} usd={plUSD.totalVenta} />
+          {/* Bugs 4 y 5: costo, venta y margen salen de la MISMA fuente (los
+              costos capturados) y sin IVA; antes la venta MXN venía de los
+              conceptos ya generados (con IVA) y no coincidía con el margen. */}
+          <Metric label="Venta (sin IVA)" mxn={plMXN.totalVenta} usd={plUSD.totalVenta} />
         </div>
         <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
           {hayUSD && <Margen moneda="USD" pl={plUSD} />}

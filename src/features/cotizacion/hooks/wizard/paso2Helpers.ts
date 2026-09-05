@@ -51,8 +51,11 @@ export function sincronizarConceptosPaso2(args: SyncConceptosArgs): void {
   if (hashActual === args.lastCostosHash.current) return;
 
   const { usd, mxn } = buildConceptosFromCostos(args.costosInternos, args.tasaIva);
-  if (usd.length > 0) args.setConceptosUSD(usd);
-  if (mxn.length > 0) args.setConceptosMXN(mxn);
+  // Bug 6: la escritura es incondicional. Con el guard `length > 0` anterior, al
+  // borrar todos los costos de una moneda el concepto de venta de esa moneda
+  // quedaba huérfano y el paso 3 bloqueaba por "monedas mezcladas".
+  args.setConceptosUSD(usd);
+  args.setConceptosMXN(mxn);
   args.lastCostosHash.current = hashActual;
   if (!args.costosPreLlenados) args.setCostosPreLlenados(true);
 }
