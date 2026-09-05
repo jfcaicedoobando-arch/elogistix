@@ -45,8 +45,23 @@ export type EtapaPatch = Partial<
   >
 >;
 
+/**
+ * PostgREST devuelve 0 filas SIN error cuando RLS filtra la etapa, ya fue
+ * eliminada o el id no existe. Se exige la fila afectada antes de registrar
+ * bitácora para no reportar éxito de un cambio que nunca ocurrió (mismo
+ * patrón que `actualizarOportunidadFilas`).
+ */
 export async function actualizarEtapa(input: { id: string; patch: EtapaPatch }): Promise<void> {
-  await run(supabase.from("crm_etapas_pipeline").update(input.patch).eq("id", input.id));
+  const { data, error } = await supabase
+    .from("crm_etapas_pipeline")
+    .update(input.patch)
+    .eq("id", input.id)
+    .select("id")
+    .maybeSingle();
+  if (error) throw error;
+  if (!data) {
+    throw new Error("No se pudo actualizar la etapa: no tienes permiso o la etapa ya no existe.");
+  }
   await registrarActividad({
     modulo: "crm",
     accion: "Editó etapa de pipeline",
