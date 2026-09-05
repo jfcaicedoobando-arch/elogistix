@@ -19,6 +19,8 @@ interface Props {
   prospectoEmpresa: string;
   onSelectMatch: (m: ProspectoMatch) => void;
   onDesvincular: () => void;
+  /** Bug 1: moneda de la oportunidad vinculada, para capturar en la correcta. */
+  monedaOportunidad?: string | null;
 }
 
 export function ProspectoSection({
@@ -29,6 +31,7 @@ export function ProspectoSection({
   prospectoEmpresa,
   onSelectMatch,
   onDesvincular,
+  monedaOportunidad,
 }: Props) {
   return (
     <div className="space-y-4 rounded-md border border-border bg-muted/30 p-4">
@@ -45,13 +48,23 @@ export function ProspectoSection({
       </div>
 
       {tieneVinculo ? (
+        <>
         <VinculoChip
           oportunidadId={oportunidadId}
           leadId={leadId}
           nombre={prospectoEmpresa}
           onDesvincular={onDesvincular}
           puedeDesvincular={!vinculoConfirmado}
+          moneda={monedaOportunidad}
         />
+        {monedaOportunidad && (
+          <p className="text-body-sm text-muted-foreground">
+            Captura los costos y conceptos de venta en {monedaOportunidad}: la oportunidad
+            del CRM está registrada en esa moneda y no se puede vincular una cotización
+            en otra.
+          </p>
+        )}
+        </>
       ) : (
         <BuscadorProspectos onSelect={onSelectMatch} />
       )}
