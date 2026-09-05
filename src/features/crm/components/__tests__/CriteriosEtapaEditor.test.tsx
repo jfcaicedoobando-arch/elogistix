@@ -8,7 +8,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import CriteriosEtapaEditor from "@/features/crm/components/CriteriosEtapaEditor";
 
-const mutateAsync = vi.fn(async () => ({ id: "c1" }));
+const mutateAsync = vi.fn(async (_input: Record<string, unknown>) => ({ id: "c1" }));
 const notifyError = vi.fn();
 const successToast = vi.fn();
 
