@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.823.102] - 2026-09-05
+- CRM: eliminados dos avisos de error duplicados adicionales. En `useQuickCreateOportunidad.ts` se removió el `notifyError` del `catch` de `submit` porque `useCrearOportunidad` ya notifica en `onError`. En `CriteriosEtapaEditor.tsx` se removió el `notifyError` del `catch` de `handleAgregar` porque `useCrearCriterioEtapa` ya notifica en `onError`. Se conservan validaciones locales, guard anti doble submit, limpieza, éxito local "Criterio agregado" y el comportamiento exitoso. Regresiones: un solo feedback visible al fallar la creación en ambos flujos.
+
 ## [13.823.101] - 2026-09-05
 - CRM Leads: al crear un lead y fallar ya no aparecen dos avisos de error; se eliminó el `notifyError` duplicado en los `catch` de `QuickCreateLeadDialog` y `NuevoLeadDialog` porque `useCrearLead` ya notifica en `onError`. Se conservan el guard anti doble submit, el cierre/reset y el aviso específico cuando el lead sí se crea pero falla la tarea automática (mutación silenciosa). Regresiones: un solo feedback visible al fallar la creación en ambos diálogos, y aviso específico de actividad automática intacto.
 

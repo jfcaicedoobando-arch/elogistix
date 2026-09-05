@@ -5,7 +5,6 @@
  */
 import { useEffect, useMemo, useRef, useState } from "react";
 import { notifyError } from "@/lib/ui/appFeedback";
-import { getErrorMessage } from "@/lib/errors";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { useCrearOportunidad, useEtapasPipeline } from "@/features/crm/hooks";
 import { useClientesForSelect } from "@/features/cliente/hooks";
@@ -138,12 +137,8 @@ export function useQuickCreateOportunidad({ open, onOpenChange, onCreated }: Par
       // El cierre limpia el estado (efecto de transición): sin reset duplicado.
       onOpenChange(false);
       onCreated(r.id);
-    } catch (e) {
-      notifyError(undefined, {
-        title: "No se pudo crear la oportunidad", description: getErrorMessage(e),
-        error: e,
-        method: "FEATURES_CRM_COMPONENTS_QUICKCREATE_QUICKCREATEOPORTUNIDADDIALOG_3",
-      });
+    } catch {
+      // useCrearOportunidad ya notifica en onError; no duplicar el aviso.
     } finally {
       enviandoRef.current = false;
     }

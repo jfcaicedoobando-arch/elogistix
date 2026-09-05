@@ -13,6 +13,7 @@ import { LEAD_ESTADOS_ETAPA_PROSPECTO } from "@/features/crm/domain/leads/etapas
 
 const mutateAsync = vi.fn(async (_input: Record<string, unknown>) => ({ id: "op-1" }));
 const estadosRecibidos: (string[] | undefined)[] = [];
+const notifyError = vi.fn();
 
 vi.mock("@/lib/contexts/AuthContext", () => ({
   useAuth: () => ({ user: { id: "u-actual", email: "actual@x.com" } }),
@@ -23,6 +24,10 @@ const etapasMock: { id: string; orden: number; probabilidad_default: number; tip
 vi.mock("@/features/crm/hooks", () => ({
   useCrearOportunidad: () => ({ mutateAsync, isPending: false }),
   useEtapasPipeline: () => ({ data: etapasMock }),
+}));
+vi.mock("@/lib/ui/appFeedback", () => ({
+  notifyError: (...args: unknown[]) => notifyError(...args),
+  notifySuccess: vi.fn(),
 }));
 // Radix Select no es operable en jsdom: se sustituye por un <select> nativo.
 vi.mock("@/components/ui/select", () => ({
@@ -110,5 +115,25 @@ describe("QuickCreateOportunidadDialog", () => {
     expect(crear).toBeDisabled();
     fireEvent.click(crear);
     await waitFor(() => expect(mutateAsync).not.toHaveBeenCalled());
+  });
+
+  it("si la creación falla no repite el aviso de error (el hook ya notifica)", async () => {
+    notifyError.mockClear();
+    mutateAsync.mockRejectedValueOnce(new Error("RLS denegado"));
+    etapasMock.length = 0;
+    etapasMock.push({ id: "e-ab", orden: 1, probabilidad_default: 20, tipo: "abierta" });
+    render(
+      <QuickCreateOportunidadDialog open onOpenChange={vi.fn()} onCreated={vi.fn()} onMore={vi.fn()} />,
+    );
+
+    fireEvent.change(screen.getByLabelText(/Nombre/i), { target: { value: "Op nueva" } });
+    // Cambiar el origen a prospecto monta el combobox.
+    fireEvent.change(screen.getAllByTestId("origen")[0], { target: { value: "prospecto" } });
+    fireEvent.click(screen.getByRole("button", { name: "elegir-prospecto" }));
+    fireEvent.click(screen.getByRole("button", { name: "Crear" }));
+
+    await waitFor(() => expect(mutateAsync).toHaveBeenCalledTimes(1));
+    // El único feedback de error visible lo emite useCrearOportunidad.onError.
+    expect(notifyError).not.toHaveBeenCalled();
   });
 });
