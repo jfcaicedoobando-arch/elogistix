@@ -55,6 +55,29 @@ export async function actualizarEtapa(input: { id: string; patch: EtapaPatch }):
   });
 }
 
+/**
+ * Intercambia el `orden` entre dos etapas de la misma organización en una sola
+ * transacción (RPC con bloqueo de filas). Evita órdenes duplicados por doble
+ * clic o concurrencia: el UPDATE simple no basta porque no toca a la vecina.
+ */
+export async function intercambiarOrdenEtapas(input: {
+  etapaA: string;
+  etapaB: string;
+}): Promise<void> {
+  await run(
+    supabase.rpc("crm_intercambiar_orden_etapas", {
+      p_etapa_a: input.etapaA,
+      p_etapa_b: input.etapaB,
+    }),
+  );
+  await registrarActividad({
+    modulo: "crm",
+    accion: "Reordenó etapas de pipeline",
+    entidadId: input.etapaA,
+    detalles: { intercambio_con: input.etapaB },
+  });
+}
+
 export interface MotivoPerdidaRow {
   id: string;
   nombre: string;

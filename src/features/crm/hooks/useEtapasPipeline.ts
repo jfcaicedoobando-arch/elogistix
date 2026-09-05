@@ -7,6 +7,7 @@ import {
   fetchEtapasPipelineActivas,
   fetchEtapasPipelineTodas,
   actualizarEtapa,
+  intercambiarOrdenEtapas,
   fetchMotivosPerdida,
   actualizarMotivoPerdida,
   crearMotivoPerdida,
@@ -38,6 +39,25 @@ export function useActualizarEtapa() {
     },
     onError: (error: Error) => {
       notifyError(undefined, { title: "No se pudo actualizar etapa", description: getErrorMessage(error), error, method: "UPDATE_ETAPA" });
+    },
+  });
+}
+
+/**
+ * Sube/baja una etapa intercambiando el orden con su vecina (RPC atómica).
+ * Refresca tanto las etapas activas como el listado completo del editor.
+ */
+export function useIntercambiarOrdenEtapas() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: intercambiarOrdenEtapas,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.crm.etapas.all });
+      qc.invalidateQueries({ queryKey: queryKeys.crm.etapas.todas });
+      notifySuccess(undefined, { title: "Orden actualizado" });
+    },
+    onError: (error: Error) => {
+      notifyError(undefined, { title: "No se pudo cambiar el orden", description: getErrorMessage(error), error, method: "SWAP_ORDEN_ETAPA" });
     },
   });
 }
