@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.823.106] - 2026-09-05
+- CRM: eliminados dos avisos de error duplicados restantes. En `ComentariosOportunidad.tsx` se removió el `notifyError` local del `catch` porque `useCrearComentarioOportunidad` ya notifica en `onError`. En `useLeadDetalleAcciones.ts` se removieron los `notifyError` de `handleSave`/`handleDelete` porque `useActualizarLead` y `useEliminarLead` ya notifican en `onError`. Se conservan toasts de éxito, navegación tras eliminar, validación de correo, gate Lead→Prospecto y los catches vacíos que evitan promesas rechazadas sin capturar. Regresiones: un solo feedback visible al fallar publicar comentario, guardar lead y eliminar lead.
+
 ## [13.823.105] - 2026-09-05
 - CRM: la tarea automática de seguimiento al crear una oportunidad (`NuevaOportunidadDialog.crearActividadSeguimiento`) ya no calcula "mañana 9:00" con el reloj local del navegador; ahora usa la regla centralizada `actividadDefaultFechaMx` (calendario CDMX con salto al siguiente día hábil) y la convierte a ISO, igual que el alta de lead. Así la tarea nunca cae en sábado/domingo. Se conserva la mutación silenciosa, el aviso específico cuando la actividad falla y no se alteran fechas de oportunidades existentes. Regresiones: viernes por la tarde, sábado y independencia del reloj local.
 - CRM: la etiqueta de la casilla en `OportunidadFormFields.tsx` ahora dice "Crear actividad de seguimiento (tarea, próximo día hábil 9:00)" para no prometer "mañana". Sin cambios en la opción por defecto ni en la accesibilidad (`htmlFor`/`id`).
