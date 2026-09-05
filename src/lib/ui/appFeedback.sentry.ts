@@ -9,7 +9,33 @@ export function shouldReportToSentry(error: unknown): boolean {
   if (isWeakPasswordNotice(error)) return false;
   if (isExpectedFacturapiValidation(error)) return false;
   if (isTransientFacturapiNetwork(error)) return false;
+  if (isExpectedBusinessRule(error)) return false;
+  if (isTransientCfdiUploadNetwork(error)) return false;
   return true;
+}
+
+/**
+ * Reglas de negocio esperadas que ya se muestran al usuario en el toast
+ * (JAVASCRIPT-REACT-5Y, 5S): transición de estado inválida en cotizaciones
+ * y conflicto de concurrencia optimista. Son avisos correctos, no bugs.
+ */
+export function isExpectedBusinessRule(err: unknown): boolean {
+  const msg =
+    err instanceof Error ? err.message : typeof err === "string" ? err : "";
+  return /LC_COT_TRANSICION_INVALIDA|LC_CONFLICTO_CONCURRENCIA/.test(msg);
+}
+
+/**
+ * Fallo de red del dispositivo al subir CFDI (JAVASCRIPT-REACT-5V, 1D):
+ * fases `preflight`/`request` = CORS, DNS o conexión caída del cliente; ya
+ * se guía al usuario ("revisa tu conexión", captura manual). Sólo la fase
+ * `response` (el gateway respondió con error) sigue siendo reportable.
+ */
+export function isTransientCfdiUploadNetwork(err: unknown): boolean {
+  if (typeof err !== "object" || err === null) return false;
+  if ((err as { name?: unknown }).name !== "CfdiUploadError") return false;
+  const phase = (err as { context?: { phase?: unknown } }).context?.phase;
+  return phase === "preflight" || phase === "request";
 }
 
 /**
