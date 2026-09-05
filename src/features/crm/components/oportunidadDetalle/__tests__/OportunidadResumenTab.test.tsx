@@ -78,6 +78,7 @@ describe("OportunidadResumenTab", () => {
 
     expect(fieldsByLabel.get("Cierre estimado")).toBe("—");
     expect(fieldsByLabel.get("Fecha meta de cierre")).toBe("—");
-    expect(fieldsByLabel.get("Monto meta")).toBe("—");
+    // Monto meta nulo se deja para el fallback de DatosComercialesCard (—).
+    expect(fieldsByLabel.get("Monto meta")).toBeNull();
   });
 });
