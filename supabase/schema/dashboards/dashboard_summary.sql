@@ -130,7 +130,7 @@ BEGIN
           + COALESCE((SELECT val FROM gastos_op_comisiones), 0),
         'gastosOperativosSinTC', COALESCE((SELECT val FROM gastos_op_sin_tc), 0)
       ) AS val
-      FROM embarques_base eb
+      FROM activos eb
       LEFT JOIN profit p ON p.embarque_id = eb.id
       WHERE eb.eta IS NOT NULL AND eb.eta >= v_inicio_mes AND eb.eta <= v_fin_mes
     ),
