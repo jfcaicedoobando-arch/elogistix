@@ -30,6 +30,7 @@ vi.mock("@/lib/query", () => ({
       higiene: { all: ["crm", "higiene"] },
       kpis: ["crm", "kpis"],
       dashboardAll: ["crm", "dashboard"],
+      nbaSignalsAll: ["crm", "nba-signals"],
     },
   },
 }));
@@ -67,6 +68,8 @@ describe("useCrearActividad invalidación de queries", () => {
     expect(invalidated).toContainEqual(["crm", "higiene"]);
     expect(invalidated).toContainEqual(["crm", "kpis"]);
     expect(invalidated).toContainEqual(["crm", "dashboard"]);
+    // v13.823.94: "Qué hacer ahora" (NBA) tiene su propia key.
+    expect(invalidated).toContainEqual(["crm", "nba-signals"]);
   });
 
   it("muestra toast de éxito salvo cuando la actividad es silenciosa", async () => {

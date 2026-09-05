@@ -34,6 +34,7 @@ vi.mock("@/lib/query", () => ({
       },
       kpis: ["crm", "kpis"],
       dashboardAll: ["crm", "dashboard"],
+      nbaSignalsAll: ["crm", "nba-signals"],
       presupuesto: { all: ["crm", "presupuesto"], anio: (a: number) => ["crm", "presupuesto", a] },
       metas: { all: ["crm", "metas"] },
     },
