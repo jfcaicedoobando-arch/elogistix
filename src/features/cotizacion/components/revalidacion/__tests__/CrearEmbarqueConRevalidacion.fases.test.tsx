@@ -1,6 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
+import { render, screen, waitFor, fireEvent } from "@testing-library/react";
 
 const revalidarTarifa = vi.fn();
 const mutateAsync = vi.fn();
@@ -53,7 +52,7 @@ describe("CrearEmbarqueConRevalidacion · fases separadas", () => {
     mutateAsync.mockRejectedValue(new Error("no se pudo crear el embarque"));
 
     render(<CrearEmbarqueConRevalidacion cotizacionId="cot-1" numContenedores={1} />);
-    await userEvent.click(screen.getByRole("button", { name: /crear embarque/i }));
+    fireEvent.click(screen.getByRole("button", { name: /crear embarque/i }));
 
     await waitFor(() => expect(mutateAsync).toHaveBeenCalledTimes(1));
     // La mutation ya notifica su error: aquí no debe haber toast duplicado
@@ -65,7 +64,7 @@ describe("CrearEmbarqueConRevalidacion · fases separadas", () => {
     revalidarTarifa.mockRejectedValue(new Error("timeout"));
 
     render(<CrearEmbarqueConRevalidacion cotizacionId="cot-1" numContenedores={1} />);
-    await userEvent.click(screen.getByRole("button", { name: /crear embarque/i }));
+    fireEvent.click(screen.getByRole("button", { name: /crear embarque/i }));
 
     await waitFor(() => expect(notifyError).toHaveBeenCalledTimes(1));
     expect(notifyError.mock.calls[0][1].title).toMatch(/No se pudo revalidar la tarifa/i);
