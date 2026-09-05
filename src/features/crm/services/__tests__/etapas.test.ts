@@ -5,6 +5,9 @@ const mock = await vi.hoisted(async () => {
   return createSupabaseMock();
 });
 vi.mock("@/integrations/supabase/client", () => ({ supabase: mock.supabase }));
+vi.mock("@/services/bitacora/registrar", () => ({ registrarActividad: vi.fn() }));
+
+import { registrarActividad } from "@/services/bitacora/registrar";
 
 import {
   fetchEtapasPipelineActivas,
