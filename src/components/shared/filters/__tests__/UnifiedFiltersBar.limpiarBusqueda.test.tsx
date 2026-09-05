@@ -42,6 +42,7 @@ describe("UnifiedFiltersBar · limpiar búsqueda", () => {
   it("limpia el filtro cuando el texto se borra (change)", async () => {
     const input = renderConBusqueda();
     await act(async () => { fireEvent.change(input, { target: { value: "" } }); });
+    expect(input.value).toBe("");
     esperarSinBusqueda(input);
   });
 
@@ -51,6 +52,7 @@ describe("UnifiedFiltersBar · limpiar búsqueda", () => {
       input.value = "";
       fireEvent.input(input);
     });
+    expect(input.value).toBe("");
     esperarSinBusqueda(input);
   });
 

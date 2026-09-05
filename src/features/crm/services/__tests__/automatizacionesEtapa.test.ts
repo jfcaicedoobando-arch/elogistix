@@ -56,7 +56,7 @@ describe("fetchEtapa / fetchOportunidad", () => {
   });
   it("fetchEtapa propaga el error del backend en vez de silenciarlo", async () => {
     mock.setTableResult("crm_etapas_pipeline", { data: null, error: { message: "rls" } });
-    await expect(fetchEtapa("e1")).rejects.toThrow(/rls/);
+    await expect(fetchEtapa("e1")).rejects.toMatchObject({ message: "rls" });
   });
   it("fetchOportunidad retorna data", async () => {
     mock.setTableResult("crm_oportunidades", { data: baseOp, error: null });
