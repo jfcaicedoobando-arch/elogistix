@@ -21,11 +21,15 @@ import NuevoLeadDialog from "@/features/crm/components/NuevoLeadDialog";
 import NuevaOportunidadDialog from "@/features/crm/components/NuevaOportunidadDialog";
 import NuevaActividadDialog from "@/features/crm/components/NuevaActividadDialog";
 import ImportarLeadsCsvDialog from "@/features/crm/components/ImportarLeadsCsvDialog";
-import QuickCreateLeadDialog from "@/features/crm/components/quickCreate/QuickCreateLeadDialog";
+import QuickCreateLeadDialog, {
+  type LeadQuickDraft,
+} from "@/features/crm/components/quickCreate/QuickCreateLeadDialog";
 import QuickCreateOportunidadDialog, {
   type OportunidadQuickDraft,
 } from "@/features/crm/components/quickCreate/QuickCreateOportunidadDialog";
-import QuickCreateActividadDialog from "@/features/crm/components/quickCreate/QuickCreateActividadDialog";
+import QuickCreateActividadDialog, {
+  type ActividadQuickDraft,
+} from "@/features/crm/components/quickCreate/QuickCreateActividadDialog";
 import { usePermissions } from "@/hooks/shared";
 
 export interface QuickAddMenuProps {
@@ -47,6 +51,8 @@ export default function QuickAddMenu({ openTrigger, dialogTrigger }: QuickAddMen
   // Borrador mínimo del alta express de oportunidad: se conserva sólo mientras
   // el formulario completo está abierto (transición "Más campos →").
   const [opDraft, setOpDraft] = useState<OportunidadQuickDraft | null>(null);
+  const [leadDraft, setLeadDraft] = useState<LeadQuickDraft | null>(null);
+  const [actDraft, setActDraft] = useState<ActividadQuickDraft | null>(null);
 
   /**
    * Espejo de las policies RLS: oportunidades y actividades sólo se crean con
@@ -127,7 +133,11 @@ export default function QuickAddMenu({ openTrigger, dialogTrigger }: QuickAddMen
         open={quick === "lead"}
         onOpenChange={cerrarQuick}
         onCreated={(id) => navigate(`/crm/leads/${id}`)}
-        onMore={() => { setQuick(null); setLeadOpen(true); }}
+        onMore={(draft) => {
+          setQuick(null);
+          setLeadDraft(draft.empresa || draft.contacto ? draft : null);
+          setLeadOpen(true);
+        }}
       />
       <QuickCreateOportunidadDialog
         open={quick === "oportunidad"}
@@ -143,10 +153,19 @@ export default function QuickAddMenu({ openTrigger, dialogTrigger }: QuickAddMen
         open={quick === "actividad"}
         onOpenChange={cerrarQuick}
         onCreated={() => navigate("/crm/actividades")}
-        onMore={() => { setQuick(null); setActOpen(true); }}
+        onMore={(draft) => {
+          setQuick(null);
+          setActDraft(draft.asunto || draft.entidadId ? draft : null);
+          setActOpen(true);
+        }}
       />
 
-      <NuevoLeadDialog open={leadOpen} onOpenChange={setLeadOpen} onCreated={(id) => navigate(`/crm/leads/${id}`)} />
+      <NuevoLeadDialog
+        open={leadOpen}
+        onOpenChange={(next) => { setLeadOpen(next); if (!next) setLeadDraft(null); }}
+        draftInicial={leadDraft}
+        onCreated={(id) => navigate(`/crm/leads/${id}`)}
+      />
       <NuevaOportunidadDialog
         open={opOpen}
         onOpenChange={(next) => { setOpOpen(next); if (!next) setOpDraft(null); }}
@@ -154,7 +173,14 @@ export default function QuickAddMenu({ openTrigger, dialogTrigger }: QuickAddMen
         nombreInicial={opDraft?.nombre ?? null}
         onSaved={(id) => navigate(`/crm/oportunidades/${id}`)}
       />
-      <NuevaActividadDialog open={actOpen} onOpenChange={setActOpen} onCreated={() => navigate("/crm/actividades")} />
+      <NuevaActividadDialog
+        open={actOpen}
+        onOpenChange={(next) => { setActOpen(next); if (!next) setActDraft(null); }}
+        asuntoInicial={actDraft?.asunto ?? null}
+        fechaInicial={actDraft?.fecha ?? null}
+        entidadIdInicial={actDraft?.entidadId ?? null}
+        onCreated={() => navigate("/crm/actividades")}
+      />
       <ImportarLeadsCsvDialog open={importOpen} onOpenChange={setImportOpen} />
     </>
   );
