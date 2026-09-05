@@ -90,7 +90,7 @@ export default function SeccionCostosInternosPLDetalle({ cotizacionId, conceptos
       setFilas([...fromUSD, ...fromMXN]);
     }
     setInitialized(true);
-  }, [isLoading, costosGuardados, conceptosUSD, conceptosMXN, initialized]);
+  }, [isLoading, costosGuardados, conceptosUSD, conceptosMXN, initialized, editMode]);
 
   const filasUSD = useMemo(() => filas.filter(f => f.moneda === "USD"), [filas]);
   const filasMXN = useMemo(() => filas.filter(f => f.moneda === "MXN"), [filas]);
