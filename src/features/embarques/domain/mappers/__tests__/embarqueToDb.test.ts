@@ -72,6 +72,29 @@ describe("buildEmbarquePayload (toDb)", () => {
     expect(p.contenedor).toBe("C1");
   });
 
+  // v13.823.145 — Bug de auditoría: capturar peso/volumen/piezas en Datos
+  // generales y dejar la fila del contenedor en ceros dejaba el embarque en 0/0/0.
+  it("conserva los totales generales cuando las filas de contenedor están en ceros", () => {
+    const p = buildEmbarquePayload(
+      {
+        ...baseValues,
+        pesoKg: "12000",
+        volumenM3: "35.5",
+        piezas: "8",
+        contenedores: [
+          { numero_contenedor: "C1", tipo_contenedor: "40HC", peso_kg: 0, volumen_m3: 0, piezas: 0 },
+        ] as never,
+      },
+      contactos,
+      "X",
+      "op",
+    );
+    expect(p.peso_kg).toBe(12000);
+    expect(p.volumen_m3).toBe(35.5);
+    expect(p.piezas).toBe(8);
+  });
+
+
   it("rechaza modo inválido vía zod", () => {
     expect(() => buildEmbarquePayload({ ...baseValues, modo: "Espacial" }, contactos, "X", "op")).toThrow();
   });
