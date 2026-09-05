@@ -3,7 +3,7 @@
  * Extraído de `hooks/crm/useCrmDashboard.ts` (Power of 10: ≤200 LOC, testabilidad).
  */
 
-import { isoUtcDay } from "@/lib/date/mx";
+import { todayLocalISOPlus } from "@/lib/date/today";
 import { agruparMontosPorMonedaOrdenado, type SubtotalMoneda } from "@/features/crm/domain/montosPorMoneda";
 
 export interface OpRow {
@@ -43,10 +43,13 @@ export interface EmbudoRow {
   monto: number;
 }
 
-export function isoDaysFromNow(d: number): string {
-  const t = new Date();
-  t.setDate(t.getDate() + d);
-  return isoUtcDay(t);
+/**
+ * Día de negocio (`YYYY-MM-DD`, calendario CDMX) desplazado `d` días. Delega en
+ * el helper canónico: `new Date().setDate()` usaba el reloj del navegador, así
+ * que cerca de medianoche el límite de "Cerrando esta semana" se corría un día.
+ */
+export function isoDaysFromNow(d: number, base: Date = new Date()): string {
+  return todayLocalISOPlus(d, base);
 }
 
 export function computePipelinePonderado(ops: OpRow[]): number {
