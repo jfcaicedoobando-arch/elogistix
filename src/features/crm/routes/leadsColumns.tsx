@@ -6,11 +6,9 @@ import {
 import { defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { sortByString } from "@/components/shared/dataTable/sortingFns";
 import { toTitleCase } from "@/lib/formatters";
-import { notifyError } from "@/lib/ui/appFeedback";
 import { useActualizarLead, type CrmLeadEstado, type CrmLeadRow } from "@/features/crm/hooks";
 import { LEAD_ESTADOS_ETAPA_LEAD, esProspecto } from "@/features/crm/domain/leads/etapas";
 import { COL_W } from "@/components/shared/dataTable/columnWidths";
-import { getErrorMessage } from "@/lib/errors";
 
 function EstadoCell({ lead, puedeGestionar }: { lead: CrmLeadRow; puedeGestionar: boolean }) {
   const actualizar = useActualizarLead();
@@ -26,11 +24,8 @@ function EstadoCell({ lead, puedeGestionar }: { lead: CrmLeadRow; puedeGestionar
         value={lead.estado}
         onValueChange={async (v) => {
           if (v === lead.estado) return;
-          try {
-            await actualizar.mutateAsync({ id: lead.id, patch: { estado: v as CrmLeadEstado } });
-          } catch (err) {
-            notifyError(undefined, { title: "No se pudo actualizar", description: getErrorMessage(err), error: err, method: "ESTADO_CELL" });
-          }
+          // v13.823.100: useActualizarLead ya notifica el error; no duplicar feedback aqui.
+          await actualizar.mutateAsync({ id: lead.id, patch: { estado: v as CrmLeadEstado } }).catch(() => undefined);
         }}
         disabled={actualizar.isPending}
       >
