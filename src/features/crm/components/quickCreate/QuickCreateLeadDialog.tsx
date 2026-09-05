@@ -21,7 +21,6 @@ import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { FormDialogSection } from "@/components/shared/FormDialogSection";
 import { FormDialogFooter } from "@/components/shared/FormDialogFooter";
 import { notifyError } from "@/lib/ui/appFeedback";
-import { getErrorMessage } from "@/lib/errors";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { useCrearLead } from "@/features/crm/hooks";
 import { leadQuickCreateInput } from "@/features/crm/domain/leads/quickCreateInput";
@@ -71,12 +70,9 @@ export default function QuickCreateLeadDialog({ open, onOpenChange, onCreated, o
       // El cierre limpia el estado (efecto de transición): no hace falta resetear aquí.
       onOpenChange(false);
       onCreated(r.id);
-    } catch (e) {
-      notifyError(undefined, {
-        title: "No se pudo crear el lead", description: getErrorMessage(e),
-        error: e,
-        method: "FEATURES_CRM_COMPONENTS_QUICKCREATE_QUICKCREATELEADDIALOG_2",
-      });
+    } catch {
+      // El feedback de error ya lo muestra `useCrearLead` (onError): notificar
+      // aquí también duplicaba el toast para una sola acción.
     } finally {
       enviandoRef.current = false;
     }

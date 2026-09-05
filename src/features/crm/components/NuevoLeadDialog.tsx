@@ -113,13 +113,11 @@ export default function NuevoLeadDialog({ open, onOpenChange, onCreated }: Props
       setForm(formVacio());
       onOpenChange(false);
       onCreated?.(r.id);
-    } catch (e) {
-      notifyError(undefined, {
-        title: "No se pudo crear el lead",
-        description: e instanceof Error ? e.message : undefined,
-        error: e,
-        method: "HANDLE_SUBMIT",
-      });
+    } catch {
+      // El feedback de error ya lo muestra `useCrearLead` (onError): notificar
+      // aquí también duplicaba el toast para una sola acción. El aviso
+      // específico de la actividad automática (arriba) se conserva porque esa
+      // mutación va con `silencioso`.
     } finally {
       enviandoRef.current = false;
       setGuardando(false);
