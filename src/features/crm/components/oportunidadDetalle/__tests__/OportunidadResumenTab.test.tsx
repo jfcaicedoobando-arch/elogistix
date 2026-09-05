@@ -12,16 +12,16 @@ const fieldsByLabel = new Map<string, string | null>();
 vi.mock("@/features/crm/components/OportunidadCotizacionesList", () => ({
   default: () => <div data-testid="cotizaciones-list" />,
 }));
-vi.mock("./CriteriosSalidaCard", () => ({
+vi.mock("../CriteriosSalidaCard", () => ({
   CriteriosSalidaCard: () => <div data-testid="criterios-salida" />,
 }));
-vi.mock("./DatosComercialesCard", () => ({
+vi.mock("../DatosComercialesCard", () => ({
   DatosComercialesCard: ({ fields }: { fields: { label: string; value?: string | null }[] }) => {
     fields.forEach((f) => fieldsByLabel.set(f.label, f.value ?? null));
     return <div data-testid="datos-comerciales" />;
   },
 }));
-vi.mock("./MargenAutorizacionCard", () => ({
+vi.mock("../MargenAutorizacionCard", () => ({
   MargenAutorizacionCard: () => <div data-testid="margen-autorizacion" />,
 }));
 
