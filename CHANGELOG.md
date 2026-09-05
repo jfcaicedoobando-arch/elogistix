@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.823.130] - 2026-09-05
+- CRM ranking de vendedores (`leaderboard.ts` / `useLeaderboardVendedores`): el rango mensual ahora convierte el inicio/fin del mes a ISO UTC con `mxLocalToUtcIso` antes de consultar `crm_oportunidades`, y se añade explícito `.not("fecha_cierre_real", "is", null)`. El límite superior exclusivo (`lt`) evita que cierres de meses posteriores se sumen al leaderboard. Las etapas borradas ya se filtran (`is deleted_at null`) al clasificar oportunidades. Regresiones: mes en curso estable en frontera UTC/CDMX, filtro anti-nulo y exclusión de etapas archivadas.
+
 ## [13.823.129] - 2026-09-05
 - CRM cancelar en modales de alta (`NuevoLeadDialog` e `ImportarLeadsCsvDialog`): el botón Cancelar ahora usa el mismo handler de cierre que Escape/X, por lo que al descartar el diálogo también se ejecuta el `reset` del formulario/importador. En `NuevoLeadDialog` se conserva la confirmación de descarte cuando hay datos capturados; en `ImportarLeadsCsvDialog` se limpian archivo y preview. Regresión: escribir/cargar datos, cancelar, reabrir y verificar estado vacío.
 
