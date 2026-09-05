@@ -41,18 +41,20 @@ describe("useLeaderboardVendedores · mes de negocio MX", () => {
 
   it("conserva agosto la noche del 31 en CDMX", async () => {
     // 2026-09-01T04:00Z = 2026-08-31 22:00 en America/Mexico_City.
-    const [anio, mes, inicioMes, finMes] = await argumentosConReloj("2026-09-01T04:00:00Z");
+    const iso = "2026-09-01T04:00:00Z";
+    const [anio, mes, inicioMes, finMes] = await argumentosConReloj(iso);
     expect(anio).toBe(2026);
     expect(mes).toBe(8);
-    expect(inicioMes).toBe("2026-08-01");
-    expect(finMes).toBe("2026-09-01");
+    expect(inicioMes).toBe(mxLocalToUtcIso(`${primerDiaMesMx(0, new Date(iso))}T00:00:00`));
+    expect(finMes).toBe(mxLocalToUtcIso(`${primerDiaMesMx(1, new Date(iso))}T00:00:00`));
   });
 
   it("cambia a septiembre ya entrado el día 1 en CDMX", async () => {
-    const [anio, mes, inicioMes, finMes] = await argumentosConReloj("2026-09-01T12:00:00Z");
+    const iso = "2026-09-01T12:00:00Z";
+    const [anio, mes, inicioMes, finMes] = await argumentosConReloj(iso);
     expect(anio).toBe(2026);
     expect(mes).toBe(9);
-    expect(inicioMes).toBe("2026-09-01");
-    expect(finMes).toBe("2026-10-01");
+    expect(inicioMes).toBe(mxLocalToUtcIso(`${primerDiaMesMx(0, new Date(iso))}T00:00:00`));
+    expect(finMes).toBe(mxLocalToUtcIso(`${primerDiaMesMx(1, new Date(iso))}T00:00:00`));
   });
 });
