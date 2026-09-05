@@ -86,7 +86,7 @@ describe("esHoy / esVencida con calendario MX", () => {
 describe("formatProx", () => {
   it("devuelve el asunto cuando no hay fecha programada", () => {
     expect(
-      formatProx({ id: "1", asunto: "Llamar", tipo: "llamada", fecha_programada: null, entidad_id: "op", entidad_tipo: "oportunidad" }),
+      formatProx({ id: "1", asunto: "Llamar", tipo: "llamada" as const, fecha_programada: null, entidad_id: "op", entidad_tipo: "oportunidad" }),
     ).toBe("Llamar");
   });
 
@@ -94,7 +94,7 @@ describe("formatProx", () => {
     const act = (fecha: string) => ({
       id: "1",
       asunto: "Llamar",
-      tipo: "llamada",
+      tipo: "llamada" as const,
       fecha_programada: fecha,
       entidad_id: "op",
       entidad_tipo: "oportunidad" as const,
