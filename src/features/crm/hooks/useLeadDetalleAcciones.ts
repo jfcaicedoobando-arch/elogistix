@@ -7,7 +7,6 @@
  */
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { notifyError } from "@/lib/ui/appFeedback";
 import { crmToast } from "@/features/crm/lib/crmToast";
 import { ROUTES } from "@/constants/routes";
 import { faltantesGateProspecto } from "@/features/crm/domain/leads/etapas";
@@ -58,13 +57,8 @@ export function useLeadDetalleAcciones(
     try {
       await actualizar.mutateAsync({ id, patch });
       crmToast.success("Cambios guardados");
-    } catch (e) {
-      notifyError(undefined, {
-        title: "No se pudo guardar",
-        description: e instanceof Error ? e.message : undefined,
-        error: e,
-        method: "HANDLE_SAVE",
-      });
+    } catch {
+      // useActualizarLead ya notifica el error en onError.
     }
   };
 
@@ -73,13 +67,8 @@ export function useLeadDetalleAcciones(
     try {
       await eliminar.mutateAsync(id);
       navigate(ROUTES.CRM_LEADS);
-    } catch (e) {
-      notifyError(undefined, {
-        title: "No se pudo eliminar",
-        description: e instanceof Error ? e.message : undefined,
-        error: e,
-        method: "HANDLE_DELETE",
-      });
+    } catch {
+      // useEliminarLead ya notifica el error en onError.
     }
   };
 
