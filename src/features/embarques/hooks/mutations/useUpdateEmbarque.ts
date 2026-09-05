@@ -49,8 +49,13 @@ export function useUpdateEmbarque() {
       queryClient.invalidateQueries({ queryKey: queryKeys.embarques.contenedores(embarqueActualizado.id) });
       // B-1 (mismo mismatch del toggle de comisión): el P&L del embarque cambia
       // al editar conceptos/datos y su query vive en el árbol singular
-      // ['embarque', id, 'pnl-financiero'], no cubierto por ['embarques'].
+      // v13.823.145 — El resumen del embarque (y varias sub-queries de cierre,
+      // TC y seguros) viven en el árbol singular ['embarque', id, ...], que el
+      // prefijo plural ['embarques'] NO cubre: sin esto el resumen quedaba con
+      // los datos anteriores hasta recargar o volver a guardar.
+      queryClient.invalidateQueries({ queryKey: queryKeys.embarques.single(embarqueActualizado.id) });
       queryClient.invalidateQueries({ queryKey: queryKeys.embarques.pnlFinanciero(embarqueActualizado.id) });
+
       queryClient.invalidateQueries({ queryKey: queryKeys.auditoria.embarques });
       invalidateProfitDependencies(queryClient);
       // Nota: el toast de éxito lo dispara el caller (p. ej. useEditarEmbarqueWizard)
