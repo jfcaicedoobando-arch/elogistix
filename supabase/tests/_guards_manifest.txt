@@ -103,3 +103,4 @@ supabase/tests/guard_cotizacion_vinculo_cliente.sql
 supabase/tests/crm_vincular_moneda_vendedor.sql
 supabase/tests/concepto_venta_eur_no_soportada.sql
 supabase/tests/liquidacion_comision_rol_org_scope.sql
+supabase/tests/prorrateo_conceptos_costo_sin_negativos.sql
