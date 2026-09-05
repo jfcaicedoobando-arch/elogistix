@@ -71,19 +71,27 @@ function partesMaritimo(v: EmbarqueFormValues) {
 }
 
 function totalesDesdeContenedores(v: EmbarqueFormValues) {
+  const generales = {
+    peso_kg: Number(v.pesoKg) || 0,
+    volumen_m3: Number(v.volumenM3) || 0,
+    piezas: Number(v.piezas) || 0,
+  };
   // FCL con contenedores dinámicos → suma; caso contrario → usa campos legacy.
   if (v.modo === "Marítimo" && v.contenedores && v.contenedores.length > 0) {
     const peso = v.contenedores.reduce((s, c) => s + (Number(c.peso_kg) || 0), 0);
     const vol = v.contenedores.reduce((s, c) => s + (Number(c.volumen_m3) || 0), 0);
     const pzs = v.contenedores.reduce((s, c) => s + (Number(c.piezas) || 0), 0);
-    return { peso_kg: peso, volumen_m3: vol, piezas: pzs };
+    // v13.823.145 — Si las filas hijas están en ceros (aún sin capturar), NO
+    // borramos los totales generales capturados en Datos generales.
+    return {
+      peso_kg: peso > 0 ? peso : generales.peso_kg,
+      volumen_m3: vol > 0 ? vol : generales.volumen_m3,
+      piezas: pzs > 0 ? pzs : generales.piezas,
+    };
   }
-  return {
-    peso_kg: Number(v.pesoKg) || 0,
-    volumen_m3: Number(v.volumenM3) || 0,
-    piezas: Number(v.piezas) || 0,
-  };
+  return generales;
 }
+
 
 
 function partesAereo(v: EmbarqueFormValues) {
