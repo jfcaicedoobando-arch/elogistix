@@ -1,5 +1,9 @@
 import { useFormContext, Controller } from "react-hook-form";
+import { AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { formatNumber } from "@/lib/formatters/numbers";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -9,7 +13,10 @@ import {
   NavieraEmbarqueSelector,
 } from "@/features/embarques/components/stepDatosRuta/AgenteNavieraHeredados";
 import { ListaContenedoresEditable } from "@/features/embarques/components/contenedores/ListaContenedoresEditable";
-import { contenedorSembradoDesdeGenerales } from "@/features/embarques/domain/semillaContenedor";
+import {
+  conservarGeneralesEnContenedores,
+  requiereConservarGenerales,
+} from "@/features/embarques/domain/semillaContenedor";
 import type { StepValidationErrors } from "@/features/embarques/domain/embarqueWizardSchemas";
 import type { EmbarqueFormValues } from "@/features/embarques/hooks";
 
@@ -36,24 +43,37 @@ export function StepDatosRutaMaritimo({ errors, cotizacionAgenteId, cotizacionNa
   const { register, watch, setValue } = useFormContext<EmbarqueFormValues>();
   const tipoServicio = watch('tipoServicio');
   const contenedores = watch('contenedores') ?? [];
+  const generales = {
+    pesoKg: watch('pesoKg'),
+    volumenM3: watch('volumenM3'),
+    piezas: watch('piezas'),
+  };
+
+  const aplicarConservacion = (filas: typeof contenedores) => {
+    setValue('contenedores', conservarGeneralesEnContenedores(filas, generales), {
+      shouldValidate: true,
+      shouldDirty: true,
+    });
+  };
 
   const handleTipoServicioChange = (v: string) => {
     setValue('tipoServicio', v, { shouldValidate: true, shouldDirty: true });
     if (v === 'LCL') {
       setValue('tipoContenedor', 'LCL', { shouldValidate: true, shouldDirty: true });
       setValue('contenedores', [], { shouldValidate: true, shouldDirty: true });
-    } else if (v === 'FCL' && contenedores.length === 0) {
-      // B4: en FCL los totales se derivan de los contenedores, así que el
-      // primero se siembra con las cantidades ya capturadas en Datos generales
-      // (si no, el resumen quedaba en 0 y se perdía lo capturado).
-      const semilla = contenedorSembradoDesdeGenerales({
-        pesoKg: watch('pesoKg'),
-        volumenM3: watch('volumenM3'),
-        piezas: watch('piezas'),
-      });
-      setValue('contenedores', [semilla], { shouldValidate: true, shouldDirty: true });
+    } else if (v === 'FCL') {
+      // B4: en FCL los totales se derivan de los contenedores. Se conservan las
+      // cantidades ya capturadas en Datos generales pasándolas a la primera
+      // fila, tanto si aún no hay filas como si el operador agregó la fila
+      // antes de elegir FCL (sin acumular ni pisar cantidades reales).
+      aplicarConservacion(contenedores);
     }
   };
+
+  // Borradores reabiertos ya en FCL con filas en cero: se avisa y el operador
+  // decide (nunca se repone en automático, para respetar el cero explícito).
+  const mostrarAvisoConservar =
+    tipoServicio === 'FCL' && requiereConservarGenerales(contenedores, generales);
 
   return (
     <>
@@ -109,6 +129,29 @@ export function StepDatosRutaMaritimo({ errors, cotizacionAgenteId, cotizacionNa
           <Input aria-label="Contenedores" value="LCL (Carga Consolidada) — se asigna automáticamente" disabled />
         ) : (
           <>
+            {mostrarAvisoConservar && (
+              <Alert variant="warning">
+                <AlertTriangle className="h-4 w-4" />
+                <AlertTitle>Las cantidades quedarían en cero</AlertTitle>
+                <AlertDescription className="space-y-2">
+                  <p>
+                    En FCL el peso, volumen y piezas se toman de los contenedores, y ninguna
+                    fila tiene cantidades. Se capturaron{" "}
+                    {formatNumber(Number(generales.pesoKg) || 0)} kg,{" "}
+                    {formatNumber(Number(generales.volumenM3) || 0)} m³ y{" "}
+                    {formatNumber(Number(generales.piezas) || 0)} piezas en Datos generales.
+                  </p>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={() => aplicarConservacion(contenedores)}
+                  >
+                    Pasar las cantidades al primer contenedor
+                  </Button>
+                </AlertDescription>
+              </Alert>
+            )}
             <Controller
               name="contenedores"
               render={({ field }) => (

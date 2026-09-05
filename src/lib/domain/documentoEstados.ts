@@ -146,15 +146,34 @@ export interface EstadoProformaInput {
   estadoCliente: "pendiente" | "aceptada" | "rechazada";
   /** Fecha en que se envió al cliente, si existe. */
   enviadaAt?: string | null;
-  /** true cuando la proforma ya generó factura. */
+  /** true cuando la proforma ya generó factura (aunque siga en preparación). */
   facturada: boolean;
+  /**
+   * B9: true sólo cuando alguna factura de la proforma ya salió de Borrador /
+   * Por timbrar. Si se omite se asume el comportamiento previo (facturada =
+   * emitida), para no cambiar superficies que aún no conocen las facturas.
+   */
+  facturaEmitida?: boolean;
+  /** Matiz a mostrar cuando la conversión aún no se emite. */
+  etiquetaConversion?: string | null;
 }
 
 export function resumenProforma(input: EstadoProformaInput): EstadoDocumentoResumen {
   if (input.estadoCliente === "rechazada") {
     return resumen(PASOS_PROFORMA, -1, "Rechazada por el cliente");
   }
-  if (input.facturada) return resumen(PASOS_PROFORMA, 3, null);
+  if (input.facturada) {
+    const emitida = input.facturaEmitida ?? true;
+    if (emitida) return resumen(PASOS_PROFORMA, 3, null);
+    // Convertida pero sin emitir: el ciclo se queda en "Aceptada" con matiz.
+    return resumen(
+      PASOS_PROFORMA,
+      2,
+      null,
+      input.etiquetaConversion ?? "Convertida, sin emitir",
+      "warning",
+    );
+  }
   if (input.estadoCliente === "aceptada") return resumen(PASOS_PROFORMA, 2, null);
   if (input.enviadaAt) return resumen(PASOS_PROFORMA, 1, null, "Pendiente del cliente");
   return resumen(PASOS_PROFORMA, 0, null);

@@ -9,9 +9,12 @@ interface Props {
   conceptosCount: number;
   facturadosCount: number;
   proformasCount: number;
-  proformasFacturadasCount: number;
+  /** Proformas convertidas (estado comercial 'facturada'), emitidas o no. */
+  proformasConvertidasCount: number;
+  /** B9: proformas cuya factura ya salió de preparación (emitida de verdad). */
+  proformasEmitidasCount: number;
   facturasCount: number;
-  /** B9: sólo las que salieron de Borrador (CFDI/factura ya emitida). */
+  /** B9: sólo las que salieron de Borrador/Por timbrar (factura ya emitida). */
   facturasEmitidasCount: number;
 }
 
@@ -98,13 +101,28 @@ function Conector({ activo }: { activo: boolean }) {
   );
 }
 
+/**
+ * B9: el paso 2 sólo se considera "facturado" cuando la factura de la proforma
+ * ya se emitió. Una proforma convertida a borrador/por timbrar se reporta como
+ * "convertida", para no contradecir al paso 3.
+ */
+function detalleProformas(total: number, convertidas: number, emitidas: number): string {
+  if (total === 0) return "Sin proformas";
+  if (emitidas === total) return `${total} facturada${total === 1 ? "" : "s"}`;
+  const partes = [`${total} generada${total === 1 ? "" : "s"}`];
+  const enPreparacion = Math.max(convertidas - emitidas, 0);
+  if (emitidas > 0) partes.push(`${emitidas} facturada${emitidas === 1 ? "" : "s"}`);
+  if (enPreparacion > 0) partes.push(`${enPreparacion} sin emitir`);
+  return partes.join(" · ");
+}
+
 export function FlujoFacturacionStepper({
   conceptosCount, facturadosCount,
-  proformasCount, proformasFacturadasCount,
+  proformasCount, proformasConvertidasCount, proformasEmitidasCount,
   facturasCount, facturasEmitidasCount,
 }: Props) {
   const e1 = estadoConceptos(conceptosCount, facturadosCount);
-  const e2 = estadoProformas(proformasCount, proformasFacturadasCount);
+  const e2 = estadoProformas(proformasCount, proformasEmitidasCount);
   const e3 = estadoFacturas(facturasCount, facturasEmitidasCount);
 
   const det1 = conceptosCount === 0
@@ -113,11 +131,8 @@ export function FlujoFacturacionStepper({
       ? `${conceptosCount} facturado${conceptosCount === 1 ? "" : "s"}`
       : `${facturadosCount} / ${conceptosCount} facturados`;
 
-  const det2 = proformasCount === 0
-    ? "Sin proformas"
-    : proformasFacturadasCount === proformasCount
-      ? `${proformasCount} facturada${proformasCount === 1 ? "" : "s"}`
-      : `${proformasCount} generada${proformasCount === 1 ? "" : "s"} · ${proformasFacturadasCount} facturada${proformasFacturadasCount === 1 ? "" : "s"}`;
+  const det2 = detalleProformas(proformasCount, proformasConvertidasCount, proformasEmitidasCount);
+
 
   const det3 = detalleFacturas(facturasCount, facturasEmitidasCount);
 

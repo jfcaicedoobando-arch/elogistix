@@ -13,7 +13,11 @@ import { EstadoBadges } from "@/features/proformas/components/ProformaDetalleCar
 import { DocumentoStatusStepper } from "@/components/shared/documento/DocumentoStatusStepper";
 import { resumenProforma } from "@/lib/domain/documentoEstados";
 import type { EstadoClienteProforma } from "@/features/proformas/domain/proformaClienteEstado";
-import type { FacturaCicloLite } from "@/lib/domain/etiquetaCicloProforma";
+import {
+  contarFacturasEmitidas,
+  etiquetaProformaConvertida,
+  type FacturaCicloLite,
+} from "@/lib/domain/etiquetaCicloProforma";
 
 interface Props {
   numero: string;
@@ -49,7 +53,17 @@ export function ProformaDetalleHeader({
 }: Props) {
   const volver = useVolver("/proformas");
   const subtitulo = clienteNombre?.trim() || "";
-  const resumen = resumenProforma({ estadoCliente, enviadaAt, facturada });
+  // B9: el stepper del encabezado no puede decir "Facturada" cuando la factura
+  // generada sigue en Borrador / Por timbrar.
+  const facturasCiclo = facturas ?? [];
+  const emitida = contarFacturasEmitidas(facturasCiclo) > 0;
+  const resumen = resumenProforma({
+    estadoCliente,
+    enviadaAt,
+    facturada,
+    facturaEmitida: facturasCiclo.length === 0 ? true : emitida,
+    etiquetaConversion: facturasCiclo.length > 0 ? etiquetaProformaConvertida(facturasCiclo) : null,
+  });
   return (
     <DetailHeader
       backTo={volver}
