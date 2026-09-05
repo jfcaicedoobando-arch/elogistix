@@ -7,7 +7,7 @@ import { describe, it, expect } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { LandingAntesDespues } from "../LandingAntesDespues";
 import { LandingRecorrido } from "../LandingRecorrido";
-import { ANTES_DESPUES, RECORRIDO } from "@/features/marketing/routes/landingCopy";
+import { ANTES_DESPUES, RECORRIDO } from "@/features/marketing/routes/landingRecorridoCopy";
 
 describe("LandingAntesDespues", () => {
   it("muestra las dos columnas y todas las filas de la comparativa", () => {

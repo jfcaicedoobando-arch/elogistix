@@ -1,5 +1,5 @@
 import { Check, X } from "lucide-react";
-import { ANTES_DESPUES } from "../../routes/landingCopy";
+import { ANTES_DESPUES } from "../../routes/landingRecorridoCopy";
 
 /**
  * Comparativa honesta "antes / después". Sólo describe capacidades que ya

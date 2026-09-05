@@ -1,6 +1,6 @@
 import { Check } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { RECORRIDO } from "../../routes/landingCopy";
+import { RECORRIDO } from "../../routes/landingRecorridoCopy";
 
 type Paso = (typeof RECORRIDO.pasos)[number];
 
