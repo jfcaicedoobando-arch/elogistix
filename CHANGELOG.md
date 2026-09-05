@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+## [13.823.90] - 2026-09-05
+
+### CRM — Limpieza de feedback duplicado en editor de plantillas
+- `PlantillasMensajeEditor.handleCrear` ya no emite `notifySuccess`/`notifyError` tras llamar a `useCrearPlantilla.mutateAsync`; el hook conserva el único aviso de éxito/error. Se mantiene la validación local de campos obligatorios y el reset del formulario sólo tras éxito.
+
 ## [13.823.89] - 2026-09-05
 
 ### Sentry — triage y corrección de ruido (5Z, 5Y, 5S, 5V, 1D)
