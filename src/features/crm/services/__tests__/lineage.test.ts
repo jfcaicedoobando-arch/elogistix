@@ -95,3 +95,18 @@ describe("services/crm/lineage", () => {
     await expect(fetchLeadResumen("l1")).rejects.toThrow();
   });
 });
+
+describe("fetchLeadResumen · sólo registros vivos (v13.823.120)", () => {
+  it("filtra deleted_at nulo al consultar el lead de origen", async () => {
+    mock.setTableResult("crm_leads", { data: { id: "l1", empresa: "ACME", estado: "nuevo" }, error: null });
+    await fetchLeadResumen("l1");
+    const call = mock.tableCalls[0];
+    const isIdx = call.ops.indexOf("is");
+    expect(call.opArgs[isIdx]).toEqual(["deleted_at", null]);
+  });
+
+  it("un lead archivado no se muestra como origen (null)", async () => {
+    mock.setTableResult("crm_leads", { data: null, error: null });
+    expect(await fetchLeadResumen("l-archivado")).toBeNull();
+  });
+});

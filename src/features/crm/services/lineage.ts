@@ -77,11 +77,15 @@ export async function fetchEmbarquesByIds(ids: string[]): Promise<LineageEmbRow[
 }
 
 export async function fetchLeadResumen(leadId: string): Promise<LineageLead | null> {
+  // v13.823.120 — sólo registros vivos: un lead archivado ya no debe mostrarse
+  // como "Lead de origen" (getLead y los listados ya lo ocultan). El historial
+  // y el resto de relaciones no se tocan; simplemente no hay origen visible.
   const data = await unwrap(
     supabase
       .from("crm_leads")
       .select("id, empresa, estado")
       .eq("id", leadId)
+      .is("deleted_at", null)
       .maybeSingle(),
   );
   return (data ?? null) as LineageLead | null;
