@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.823.116] - 2026-09-05
+- CRM altas express: "Más campos →" ya no pierde lo capturado. `QuickCreateActividadDialog` entrega un borrador mínimo (`asunto`, `entidadId`, `tipo: "tarea"`, `fecha`) y `QuickCreateLeadDialog` entrega `empresa` + `contacto`; `QuickAddMenu` los conserva mientras el formulario completo está abierto y los limpia al cerrarlo (mismo patrón ya usado para oportunidad). `NuevaActividadDialog` acepta `asuntoInicial` / `fechaInicial` / `entidadIdInicial` y `NuevoLeadDialog` acepta `draftInicial`, mapeando el contacto al campo canónico (`email` o `telefono`) con `esCorreoCapturado`, sin inventar datos. Se conservan el reset al cerrar, el guard anti doble envío y el flujo de creación rápida. Regresiones: capturar valores, pulsar "Más campos" y verificar que se conservan (correo vs teléfono incluidos) y que sin borrador el formulario sigue abriendo vacío.
+
 ## [13.823.115] - 2026-09-05
 - CRM zona horaria (Mi día / dashboard): las lecturas y etiquetas de "hoy" ya no usan el reloj del navegador. `fetchCrmDashboard` (`src/features/crm/services/dashboard.ts`) acota "Mis actividades de hoy" y "Leads sin contactar" con `limitesDiaMx` y `mxAddDaysIso` en lugar de `setHours`/`setDate` locales; `esVencida`/`esHoy` (`proximasActividades.ts`) y `formatProx` (`proximaActividadLabel.ts`) comparan con `diffDiasMx` (calendario America/Mexico_City); `ActividadesHoyCard` formatea la hora con `timeZone: TZ_MX`. Nuevos helpers puros en `src/lib/date/mx.ts`: `diaMx`, `limitesDiaMx`, `diffDiasMx`. Sin cambios en reglas de negocio ni en nombres de tarjetas; el encabezado de `MiDia` ya usaba `formatFechaLarga` con TZ_MX. Regresiones cerca de medianoche con el navegador en UTC y en America/Mexico_City.
 
