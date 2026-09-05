@@ -4,7 +4,7 @@
  * debe pasar `emailLooksValid`; vacío + teléfono sigue siendo válido.
  */
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import NuevoLeadDialog from "@/features/crm/components/NuevoLeadDialog";
 
 const mutateAsync = vi.fn(async () => ({ id: "lead-1" }));
