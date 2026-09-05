@@ -67,13 +67,12 @@ export function totalesDesdeContenedores(v: EmbarqueFormValues) {
     const peso = v.contenedores.reduce((s, c) => s + (Number(c.peso_kg) || 0), 0);
     const vol = v.contenedores.reduce((s, c) => s + (Number(c.volumen_m3) || 0), 0);
     const pzs = v.contenedores.reduce((s, c) => s + (Number(c.piezas) || 0), 0);
-    // v13.823.145 — Si las filas hijas están en ceros (aún sin capturar), NO
-    // borramos los totales generales capturados en Datos generales.
-    return {
-      peso_kg: peso > 0 ? peso : generales.peso_kg,
-      volumen_m3: vol > 0 ? vol : generales.volumen_m3,
-      piezas: pzs > 0 ? pzs : generales.piezas,
-    };
+    // v13.823.151 (B4) — Los contenedores son la única verdad en FCL (igual que
+    // el trigger `_recompute_totales_embarque` en BD): la suma se respeta tal
+    // cual, incluso en cero, para que corregir a cero sea posible de forma
+    // explícita. La pérdida silenciosa se evita sembrando el primer contenedor
+    // con las cantidades generales al cambiar a FCL (ver `semillaContenedor.ts`).
+    return { peso_kg: peso, volumen_m3: vol, piezas: pzs };
   }
   return generales;
 }
