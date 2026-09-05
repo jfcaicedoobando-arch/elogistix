@@ -95,6 +95,15 @@ describe("invalidación de dashboard al crear cotización desde oportunidad", ()
     expect(invalidated).toContainEqual(["crm", "oportunidades"]);
     expect(invalidated).toContainEqual(["crm", "op-cotizaciones"]);
     expect(invalidated).toContainEqual(["crm", "dashboard"]);
+    // v13.823.93: el tablero consulta con límite 5 (`useCrmInicioVM`) y
+    // "Next best actions" con límite 10; ambas keys deben invalidarse.
+    expect(invalidated).toContainEqual([
+      "crm",
+      "cotizaciones-sin-respuesta",
+      5,
+      5,
+      "user-1",
+    ]);
     expect(invalidated).toContainEqual([
       "crm",
       "cotizaciones-sin-respuesta",
