@@ -25,11 +25,15 @@ describe("altas CRM: toast de éxito único", () => {
     }
   });
 
-  it("NuevaOportunidadDialog sólo avisa en edición", () => {
-    const src = leer("src/features/crm/components/NuevaOportunidadDialog.tsx");
-    expect(src).not.toContain("Oportunidad creada");
-    expect(src).toContain("Oportunidad actualizada");
+  it("el alta de oportunidad sólo avisa en edición", () => {
+    // El guardado vive en `useNuevaOportunidadSubmit` (división ≤200 líneas).
+    const dialog = leer("src/features/crm/components/NuevaOportunidadDialog.tsx");
+    const submit = leer("src/features/crm/hooks/useNuevaOportunidadSubmit.ts");
+    expect(dialog).not.toContain("Oportunidad creada");
+    expect(submit).not.toContain("Oportunidad creada");
+    expect(submit).toContain("Oportunidad actualizada");
   });
+
 
   it("los hooks conservan el único aviso de éxito", () => {
     const leads = leer("src/features/crm/hooks/leads/mutations.ts");
