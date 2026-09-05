@@ -7,7 +7,7 @@
 import { ExternalLink, ClipboardList, Ship, Target, UserPlus } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { formatCurrencyCompact } from "@/lib/formatters";
+import { formatCurrencyCompact, formatFechaDia } from "@/lib/formatters";
 import { useLeadLineage, useOportunidadLineage } from "@/features/crm/hooks";
 import { DrilldownRow } from "@/components/shared/dataTable/DrilldownRow";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
@@ -50,7 +50,7 @@ export function LeadLineageCard({ leadId }: { leadId: string }) {
               <div className="text-body font-medium truncate">{o.nombre}</div>
               <div className="text-body-sm text-muted-foreground">
                 {formatCurrencyCompact(Number(o.monto_estimado ?? 0), o.moneda)} ·{" "}
-                {Number(o.probabilidad ?? 0)}% · cierre {o.fecha_estimada_cierre ?? "—"}
+                {Number(o.probabilidad ?? 0)}% · cierre {formatFechaDia(o.fecha_estimada_cierre, "—")}
               </div>
             </div>
             <ExternalLink className="h-4 w-4 text-muted-foreground shrink-0" aria-hidden="true" />
