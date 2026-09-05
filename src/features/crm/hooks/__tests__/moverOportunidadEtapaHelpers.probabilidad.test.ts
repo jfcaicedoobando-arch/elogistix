@@ -32,3 +32,19 @@ describe("resolverProbabilidad", () => {
     expect(resolverProbabilidad(op(30), origen, 50, destino)).toBe(50);
   });
 });
+
+describe("puedeOfrecerUndo (v13.823.121)", () => {
+  const etapa = (over: Record<string, unknown>) => over as never;
+  it("no ofrece Undo en etapa perdida", () => {
+    expect(puedeOfrecerUndo(etapa({ tipo: "perdida" }))).toBe(false);
+  });
+  it("no ofrece Undo en etapa ganada (crea tarea automática)", () => {
+    expect(puedeOfrecerUndo(etapa({ tipo: "ganada" }))).toBe(false);
+  });
+  it("no ofrece Undo en etapa abierta con crea_tarea_seguimiento", () => {
+    expect(puedeOfrecerUndo(etapa({ tipo: "abierta", crea_tarea_seguimiento: true }))).toBe(false);
+  });
+  it("sí ofrece Undo en etapa abierta sin tarea automática", () => {
+    expect(puedeOfrecerUndo(etapa({ tipo: "abierta", crea_tarea_seguimiento: false }))).toBe(true);
+  });
+});
