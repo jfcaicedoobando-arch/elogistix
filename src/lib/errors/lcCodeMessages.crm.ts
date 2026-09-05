@@ -116,6 +116,12 @@ export const LC_CODE_MESSAGES_CRM: Record<string, string> = {
     "El registro relacionado pertenece a otra organización. Recarga la página e inténtalo de nuevo.",
   LC_ETAPA_AJENA:
     "Esa etapa pertenece a otro pipeline u organización. Elige una etapa de tu pipeline.",
+  LC_ETAPA_INTERCAMBIO_INVALIDO:
+    "Para reordenar el pipeline hay que elegir dos etapas distintas. Vuelve a intentarlo.",
+  LC_ETAPA_NO_ENCONTRADA:
+    "Esa etapa ya no existe o fue eliminada. Recarga la página para ver el pipeline actual.",
+  LC_ETAPA_ORG_DISTINTA:
+    "Las etapas seleccionadas pertenecen a organizaciones distintas. Recarga la página e inténtalo de nuevo.",
   LC_LEAD_AJENO:
     "Ese prospecto pertenece a otra organización. Recarga la página y elige un prospecto de tu cartera.",
   LC_MOTIVO_PERDIDA_AJENO:
