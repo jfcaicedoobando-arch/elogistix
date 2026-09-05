@@ -116,4 +116,24 @@ describe("QuickCreateOportunidadDialog", () => {
     fireEvent.click(crear);
     await waitFor(() => expect(mutateAsync).not.toHaveBeenCalled());
   });
+
+  it("si la creación falla no repite el aviso de error (el hook ya notifica)", async () => {
+    notifyError.mockClear();
+    mutateAsync.mockRejectedValueOnce(new Error("RLS denegado"));
+    etapasMock.length = 0;
+    etapasMock.push({ id: "e-ab", orden: 1, probabilidad_default: 20, tipo: "abierta" });
+    render(
+      <QuickCreateOportunidadDialog open onOpenChange={vi.fn()} onCreated={vi.fn()} onMore={vi.fn()} />,
+    );
+
+    fireEvent.change(screen.getByLabelText(/Nombre/i), { target: { value: "Op nueva" } });
+    // Cambiar el origen a prospecto monta el combobox.
+    fireEvent.change(screen.getAllByTestId("origen")[0], { target: { value: "prospecto" } });
+    fireEvent.click(screen.getByRole("button", { name: "elegir-prospecto" }));
+    fireEvent.click(screen.getByRole("button", { name: "Crear" }));
+
+    await waitFor(() => expect(mutateAsync).toHaveBeenCalledTimes(1));
+    // El único feedback de error visible lo emite useCrearOportunidad.onError.
+    expect(notifyError).not.toHaveBeenCalled();
+  });
 });
