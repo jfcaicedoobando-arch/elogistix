@@ -71,4 +71,30 @@ describe("QuickCreateLeadDialog", () => {
     // El único feedback de error visible lo emite useCrearLead.onError.
     expect(notifyError).not.toHaveBeenCalled();
   });
+
+  it("limpia el estado de validación al cerrarse y no muestra error al reabrir", async () => {
+    const { rerender } = render(
+      <QuickCreateLeadDialog open onOpenChange={vi.fn()} onCreated={vi.fn()} onMore={vi.fn()} />,
+    );
+
+    const empresaInput = screen.getByLabelText(/Empresa/i);
+    fireEvent.blur(empresaInput);
+    await waitFor(() => {
+      expect(screen.getByText("Indica la empresa para continuar.")).toBeInTheDocument();
+    });
+
+    // Cierra y reabre el modal.
+    rerender(<QuickCreateLeadDialog open={false} onOpenChange={vi.fn()} onCreated={vi.fn()} onMore={vi.fn()} />);
+    rerender(<QuickCreateLeadDialog open onOpenChange={vi.fn()} onCreated={vi.fn()} onMore={vi.fn()} />);
+
+    // Inmediatamente después de reabrir no debe aparecer el mensaje de error.
+    expect(screen.queryByText("Indica la empresa para continuar.")).not.toBeInTheDocument();
+    expect(screen.getByLabelText(/Empresa/i)).toHaveAttribute("aria-invalid", "false");
+
+    // El error vuelve a aparecer sólo tras nueva interacción (blur/submit).
+    fireEvent.blur(screen.getByLabelText(/Empresa/i));
+    await waitFor(() => {
+      expect(screen.getByText("Indica la empresa para continuar.")).toBeInTheDocument();
+    });
+  });
 });
