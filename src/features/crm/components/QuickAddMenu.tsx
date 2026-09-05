@@ -40,6 +40,17 @@ export interface QuickAddMenuProps {
 type Quick = "lead" | "oportunidad" | "actividad" | null;
 
 /** Sólo se transporta el borrador si el usuario alcanzó a capturar algo. */
+/** onOpenChange que limpia el borrador transportado al cerrar el formulario. */
+function cerrarLimpiando(
+  setOpen: (v: boolean) => void,
+  limpiar: () => void,
+): (next: boolean) => void {
+  return (next) => {
+    setOpen(next);
+    if (!next) limpiar();
+  };
+}
+
 function conDatos<T extends object>(draft: T, campos: Array<keyof T>): T | null {
   return campos.some((c) => Boolean(draft[c])) ? draft : null;
 }
@@ -167,20 +178,20 @@ export default function QuickAddMenu({ openTrigger, dialogTrigger }: QuickAddMen
 
       <NuevoLeadDialog
         open={leadOpen}
-        onOpenChange={(next) => { setLeadOpen(next); if (!next) setLeadDraft(null); }}
+        onOpenChange={cerrarLimpiando(setLeadOpen, () => setLeadDraft(null))}
         draftInicial={leadDraft}
         onCreated={(id) => navigate(`/crm/leads/${id}`)}
       />
       <NuevaOportunidadDialog
         open={opOpen}
-        onOpenChange={(next) => { setOpOpen(next); if (!next) setOpDraft(null); }}
+        onOpenChange={cerrarLimpiando(setOpOpen, () => setOpDraft(null))}
         origenInicial={opDraft?.origen ?? null}
         nombreInicial={opDraft?.nombre ?? null}
         onSaved={(id) => navigate(`/crm/oportunidades/${id}`)}
       />
       <NuevaActividadDialog
         open={actOpen}
-        onOpenChange={(next) => { setActOpen(next); if (!next) setActDraft(null); }}
+        onOpenChange={cerrarLimpiando(setActOpen, () => setActDraft(null))}
         asuntoInicial={actDraft?.asunto ?? null}
         fechaInicial={actDraft?.fecha ?? null}
         entidadIdInicial={actDraft?.entidadId ?? null}
