@@ -48,7 +48,10 @@ export async function fetchEtapa(id: string): Promise<EtapaInfo | null> {
     .select("id, nombre, tipo, probabilidad_default, crea_tarea_seguimiento, dias_seguimiento")
     .eq("id", id)
     .maybeSingle();
-  if (error || !data) return null;
+  // v13.823.140 — el error deja de convertirse en no-op silencioso: se propaga
+  // para que `runAutomatizaciones` avise. `null` sólo significa "no existe".
+  if (error) throw error;
+  if (!data) return null;
   return data as EtapaInfo;
 }
 
@@ -58,7 +61,8 @@ export async function fetchOportunidad(id: string): Promise<OportunidadMin | nul
     .select("id, nombre, vendedor_id, vendedor_email, cliente_nombre")
     .eq("id", id)
     .maybeSingle();
-  if (error || !data) return null;
+  if (error) throw error;
+  if (!data) return null;
   return data as OportunidadMin;
 }
 

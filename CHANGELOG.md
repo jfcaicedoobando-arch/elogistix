@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.823.140] - 2026-09-05
+- CRM automatizaciones de etapa (fallo visible, sin rollback): `fetchEtapa`/`fetchOportunidad` convertían el error del backend en `null` y hacían no-op silencioso de todas las automatizaciones; ahora propagan el error (y `null` sólo significa "no existe"), de modo que `runAutomatizaciones` agrega el fallo. `useMoverEtapaConAutomatizacion` distingue el resultado devolviendo `automatizacionesOk` y avisa "Etapa actualizada; no se pudo completar el seguimiento automático" con "Revisa actividades" en la descripción, conservando `logger.warn`, el movimiento aplicado y las reglas de creación/cancelación. Regresiones: `useAutomatizacionesEtapa.warning.test.tsx` (movimiento exitoso + automatización fallida → warning y `automatizacionesOk:false`; todo exitoso → sin warning) y propagación de error en `fetchEtapa`.
+
 ## [13.823.139] - 2026-09-05
 - CRM paneles secundarios (error vs vacío): `CrmForecastMesKpis` silenciaba errores de `useForecast` y pintaba la tira de KPIs en cero; ahora consume `isError`/`refetch` y muestra `ErrorStateInline` "No se pudo cargar el forecast del mes." con Reintentar, reservando los ceros para respuestas exitosas sin filas. `LeaderboardVendedores` y `Cliente360Panel` ya distinguían fallo de vacío; se blindan con regresión compartida `panelesSecundariosErrores.test.tsx` (los 3 paneles: error → reintento sin empty/ceros; éxito vacío → empty). Sin cambios de consultas, permisos ni cálculos.
 

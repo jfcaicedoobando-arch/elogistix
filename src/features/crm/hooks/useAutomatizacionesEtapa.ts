@@ -33,19 +33,21 @@ export function useMoverEtapaConAutomatizacion() {
       expectedUpdatedAt?: string | null;
     }) => {
       const updatedAt = await moverEtapaOportunidad(params);
+      let automatizacionesOk = true;
       try {
         await runAutomatizaciones(params.etapa_id, params.id, user?.id ?? null, user?.email ?? "");
       } catch (e) {
+        automatizacionesOk = false;
         // v13.823.51 — la etapa ya cambió (no se revierte), pero el fallo de
         // las automatizaciones deja de ser invisible: se reporta al usuario.
         logger.warn("[useMoverEtapaConAutomatizacion] automatizaciones fallaron:", e);
         notifyWarning(undefined, {
-          title: "La etapa se actualizó, pero las automatizaciones fallaron",
-          description: getErrorMessage(e),
+          title: "Etapa actualizada; no se pudo completar el seguimiento automático",
+          description: `Revisa actividades. ${getErrorMessage(e)}`,
           method: "MOVE_ETAPA_AUTOMATIZACIONES",
         });
       }
-      return { id: params.id, updated_at: updatedAt };
+      return { id: params.id, updated_at: updatedAt, automatizacionesOk };
     },
     onSuccess: refrescar,
     onError: (error: Error) => {
