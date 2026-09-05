@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.823.127] - 2026-09-05
+- CRM ranking de vendedores (`useLeaderboardVendedores`): el mes en curso ya se calculaba con los helpers centrales `ymMx()`/`primerDiaMesMx()` (calendario America/Mexico_City) y se conserva la firma del servicio; se agregó la regresión faltante de borde de mes (31/ago 22:00 CDMX sigue en agosto con inicio 2026-08-01; el día 1 real cambia a septiembre), verificada en TZ UTC y America/Mexico_City.
+
 ## [13.823.126] - 2026-09-05
 - CRM higiene (`HigieneTabla`): cada fila de oportunidad se volvió accesible reutilizando `useDrilldownRow` (`role="link"`, `tabIndex=0`, Enter/Espacio, anillo de foco y Ctrl/clic medio), conservando el click y el destino actuales sin cambiar columnas ni estilos. Regresión de teclado: Enter, Espacio y click navegan al detalle.
 
