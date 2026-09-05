@@ -19,6 +19,8 @@ import {
   LABEL_ESTADO_UNIFICADO,
 } from "@/lib/domain/estadoUnificado";
 import { COL_W } from "@/components/shared/dataTable/columnWidths";
+import { Link } from "react-router-dom";
+import { labelExpediente } from "@/lib/domain/labelExpediente";
 import { Hint } from "@/components/shared/Hint";
 
 
@@ -83,7 +85,24 @@ export function buildProformasColumns({
       sortingFn: sortByString<ProformaConFactura>((p) => p.expediente),
       // Oculto en tableta (<xl) — visible desde el # Proforma sticky y detalle.
       meta: { width: COL_W.folio, className: "whitespace-nowrap hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
-      cell: ({ row }) => row.original.expediente,
+      // P1 (auditoría v13.823.143 · bug 1): las proformas de embarques sin folio
+      // dejaban la celda vacía. Se muestra el fallback canónico y se enlaza al
+      // embarque vinculado cuando existe.
+      cell: ({ row }) => {
+        const p = row.original;
+        const label = labelExpediente(p.expediente, p.embarque_id);
+        return p.embarque_id ? (
+          <Link
+            to={`/embarques/${p.embarque_id}`}
+            className="underline decoration-dotted hover:text-primary"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {label}
+          </Link>
+        ) : (
+          label
+        );
+      },
     },
     {
       id: "cliente",

@@ -4,6 +4,8 @@
  * total destacado como acción trailing.
  */
 import { type ReactNode } from "react";
+import { Link } from "react-router-dom";
+import { labelExpediente } from "@/lib/domain/labelExpediente";
 import { FileText } from "lucide-react";
 import { DetailHeader } from "@/components/shared/DetailHeader";
 import { useVolver } from "@/hooks/shared/useVolver";
@@ -19,6 +21,8 @@ interface Props {
   aceptadaPor: string | null;
   clienteNombre: string | null | undefined;
   expediente: string;
+  /** Embarque vinculado: habilita el enlace y el fallback de folio. */
+  embarqueId?: string | null;
   /** Fecha de envío al cliente (para el paso "Enviada" del stepper). */
   enviadaAt?: string | null;
   /** true cuando la proforma ya está facturada. */
@@ -34,6 +38,7 @@ export function ProformaDetalleHeader({
   aceptadaPor,
   clienteNombre,
   expediente,
+  embarqueId,
   enviadaAt,
   facturada,
   actions,
@@ -58,7 +63,14 @@ export function ProformaDetalleHeader({
         <>
           {subtitulo}
           <span className="mx-1.5">•</span>
-          Exp: <span className="font-mono">{expediente}</span>
+          Exp:{" "}
+          {embarqueId ? (
+            <Link to={`/embarques/${embarqueId}`} className="font-mono underline decoration-dotted hover:text-primary">
+              {labelExpediente(expediente, embarqueId)}
+            </Link>
+          ) : (
+            <span className="font-mono">{labelExpediente(expediente)}</span>
+          )}
         </>
       }
       meta={<DocumentoStatusStepper resumen={resumen} />}
