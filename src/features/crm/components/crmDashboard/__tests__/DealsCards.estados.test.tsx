@@ -33,4 +33,41 @@ describe("DealsCards · estados de error", () => {
     renderConRouter(<LeadsSinContactarCard items={[]} />);
     expect(screen.getByText(/Todos los leads nuevos/)).toBeInTheDocument();
   });
+
+  it("formatea la fecha estimada de cierre en español", () => {
+    renderConRouter(
+      <CerrandoSemanaCard
+        items={[
+          {
+            id: "op-1",
+            nombre: "Oportunidad con fecha",
+            monto_estimado: 100000,
+            moneda: "MXN",
+            probabilidad: 75,
+            fecha_estimada_cierre: "2026-09-15",
+          },
+        ]}
+      />,
+    );
+    // toLocaleDateString("es-MX", { timeZone: "America/Mexico_City" })
+    expect(screen.getByText(/15\/09\/2026|15\/9\/2026|15 de septiembre de 2026/i)).toBeInTheDocument();
+  });
+
+  it("muestra 'Sin fecha' cuando no hay fecha estimada de cierre", () => {
+    renderConRouter(
+      <CerrandoSemanaCard
+        items={[
+          {
+            id: "op-2",
+            nombre: "Oportunidad sin fecha",
+            monto_estimado: 50000,
+            moneda: "MXN",
+            probabilidad: 50,
+            fecha_estimada_cierre: null,
+          },
+        ]}
+      />,
+    );
+    expect(screen.getByText("Sin fecha · 50%")).toBeInTheDocument();
+  });
 });
