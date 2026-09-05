@@ -38,7 +38,7 @@ export function TabFacturacionEmbarque({ facturas, canEdit: canEditProp, embarqu
   // ofrecer acciones que fallarían con un error técnico.
   const s = useTabFacturacionState(embarque, canEditProp);
   const {
-    embarqueCerrado, canEdit, tasaIva, conceptos, contenedores, proformas,
+    embarqueCerrado, embarqueBorrador, canEdit, tasaIva, conceptos, contenedores, proformas,
     estadosConceptos, conceptosPendientes, conceptosHuerfanos, borradorVacio,
     eliminarProforma, proformaAEliminar, setProformaAEliminar,
     dialogOpen, setDialogOpen, dialogInitialFiltro, abrirGenerarProforma,
@@ -71,6 +71,16 @@ export function TabFacturacionEmbarque({ facturas, canEdit: canEditProp, embarqu
 
   return (
     <div className="space-y-4">
+      {embarqueBorrador && (
+        <Alert>
+          <Lock className="h-4 w-4" />
+          <AlertTitle>Embarque en borrador</AlertTitle>
+          <AlertDescription>
+            Confirma el embarque (pestaña Resumen) para generar o aprobar proformas.
+            Mientras esté en borrador sus datos pueden cambiar y la proforma quedaría desalineada.
+          </AlertDescription>
+        </Alert>
+      )}
       {embarqueCerrado && (
         <Alert>
           <Lock className="h-4 w-4" />
