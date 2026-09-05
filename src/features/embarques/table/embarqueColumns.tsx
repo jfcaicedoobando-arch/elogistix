@@ -15,6 +15,7 @@ import { expedienteConsecutivo } from "@/features/embarques/domain/embarquesPage
 import { ContenedorCell, type ContenedorInfo } from "@/features/embarques/components/ContenedorCell";
 import { COL_W } from "@/components/shared/dataTable/columnWidths";
 import { Hint } from "@/components/shared/Hint";
+import { labelExpediente } from "@/lib/domain/labelExpediente";
 
 export type { ContenedorInfo };
 export interface DocsInfo { pendientes: number; total: number }
@@ -57,7 +58,7 @@ export function buildEmbarqueColumns({
         const hayPendientes = docInfo && docInfo.pendientes > 0;
         return (
           <span className="flex items-center gap-1">
-            {e.expediente}
+            {labelExpediente(e.expediente, e.id)}
             {hayPendientes && (
               <TooltipProvider delayDuration={200}>
                 <Tooltip>
