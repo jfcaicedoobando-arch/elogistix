@@ -73,8 +73,9 @@ export function TarifaForm({ open, onOpenChange, initial, tarifaId, agenteIdFijo
   // P2 (auditoría v13.823.143 · bug 3): el reset sólo debe correr al abrir el
   // modal (o al cambiar la tarifa editada). Antes dependía de la identidad de
   // `initial`, así que un refetch del padre reconstruía el objeto y borraba lo
-  // capturado (p. ej. la naviera seleccionada).
-  const resetKey = `${open ? "1" : "0"}|${tarifaId ?? ""}|${agenteIdFijo ?? ""}`;
+  // capturado (p. ej. la naviera seleccionada). Se usa una firma por contenido
+  // para seguir hidratando cuando `initial` llega después de abrir.
+  const resetKey = `${open ? "1" : "0"}|${tarifaId ?? ""}|${agenteIdFijo ?? ""}|${JSON.stringify(initial ?? null)}`;
   const resetKeyRef = useRef<string | null>(null);
 
   useEffect(() => {
