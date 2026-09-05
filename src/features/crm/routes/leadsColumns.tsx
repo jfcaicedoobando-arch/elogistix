@@ -24,7 +24,7 @@ function EstadoCell({ lead, puedeGestionar }: { lead: CrmLeadRow; puedeGestionar
         value={lead.estado}
         onValueChange={async (v) => {
           if (v === lead.estado) return;
-          // v13.823.99: useActualizarLead ya notifica el error; no duplicar feedback aqui.
+          // v13.823.100: useActualizarLead ya notifica el error; no duplicar feedback aqui.
           await actualizar.mutateAsync({ id: lead.id, patch: { estado: v as CrmLeadEstado } }).catch(() => undefined);
         }}
         disabled={actualizar.isPending}
