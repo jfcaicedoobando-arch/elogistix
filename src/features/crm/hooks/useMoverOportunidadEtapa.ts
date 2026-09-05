@@ -56,6 +56,11 @@ export function useMoverOportunidadEtapa({ etapas, oportunidades }: Params) {
         | (CrmEtapaRow & { tipo?: string })
         | undefined;
       const probabilidad = resolverProbabilidad(op, etapaOrigen, prob, etapaDestino);
+      // v13.823.121 — el destino "perdida" cancela actividades y los destinos
+      // con tarea automática crean una nueva: en ambos casos el Undo (que sólo
+      // revierte la etapa) dejaría el tablero inconsistente.
+      const puedeDeshacer =
+        etapaDestino?.tipo !== "perdida" && !destinoGeneraTareaAutomatica(etapaDestino);
 
       // Disciplina de pipeline: avisar (sin bloquear) si la etapa de origen
       // deja criterios de salida pendientes.
@@ -77,13 +82,7 @@ export function useMoverOportunidadEtapa({ etapas, oportunidades }: Params) {
           expectedUpdatedAt: op?.updated_at ?? null,
         });
         const selloTrasMover = (resultado as { updated_at?: string } | undefined)?.updated_at ?? null;
-        // El destino "perdida" cancela/completa actividades pendientes: el Undo
-        // no puede revivirlas, así que no se ofrece (evita Undo falso que dejaría
-        // una oportunidad abierta con sus tareas canceladas).
-        // v13.823.121 — tampoco se ofrece cuando el destino crea una tarea
-        // automática (ganada, o abierta con crea_tarea_seguimiento): el Undo
-        // sólo devuelve la etapa y la tarea quedaría contradiciéndola.
-        if (etapaDestino?.tipo !== "perdida" && !destinoGeneraTareaAutomatica(etapaDestino)) {
+        if (puedeDeshacer) {
           const { showUndoToast } = await import("@/features/crm/hooks/useUndoToast");
           showUndoToast("Etapa actualizada", async () => {
             if (!etapaPrev) return;
