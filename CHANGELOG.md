@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.823.96] - 2026-09-05
+- CRM/configuración: `actualizarMotivoPerdida` ahora exige la fila afectada (`update(...).select("id").maybeSingle()`); si RLS, un soft-delete o un id inexistente dejan 0 filas, lanza un error accionable y no registra bitácora ni muestra "Motivo actualizado" de un cambio que nunca ocurrió (mismo patrón que `actualizarEtapa`). Regresiones: 0 filas sin bitácora y éxito con bitácora única.
+
 ## [13.823.95] - 2026-09-05
 - CRM/configuración: `actualizarEtapa` exige la fila afectada (`update(...).select("id").maybeSingle()`); si RLS, un soft-delete o un id inexistente dejan 0 filas actualizadas, ahora lanza un error accionable y no registra bitácora ni muestra "Etapa actualizada" de un cambio que nunca ocurrió (mismo patrón que `actualizarOportunidadFilas`). La RPC de intercambio de orden no cambia. Regresiones: fila inexistente/RLS sin bitácora y éxito con bitácora única.
 
