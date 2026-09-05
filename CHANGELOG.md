@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.823.148] - 2026-09-05
+- CI (`types-drift`): el normalizador de `types.ts` ignora los paréntesis opcionales de los helpers finales (`Tables`, `TablesInsert`, `Enums`, `CompositeTypes`), que cambian según la versión del generador de Supabase y no son drift de esquema.
+- Base de datos: `supabase/schema/baseline.sql` regenerada desde migraciones (34 445 líneas, incluye prorrateo en centavos, `saldo_factura` con Borrador no terminal y `crm_intercambiar_orden_etapas`).
+- Verificación focalizada: `local-verify.sh --only-schema` en verde (squash + 78 migraciones, candado service_role-only, verify_rls, integridad) y normalizador sin diferencias. CI/RLS completos quedan a GitHub Actions.
+
+
+
 ## [13.823.147] - 2026-09-12
 - Auditoría física v13.823.143 (bloque YAGNI, 10 hallazgos): 1) y 9) el expediente usa el fallback canónico `labelExpediente` en la lista de embarques, en las columnas de proformas y en el detalle de proforma, con enlace a `/embarques/:id` cuando hay embarque vinculado (`PROFORMA_LISTA_SELECT` ahora trae `embarque_id`). 2) `getEstadoUnificado` considera facturada toda proforma con `factura_id`, así el contador "Por emitir" ya no incluye proformas ya facturadas; además los contadores de la bandeja se calculan sobre la misma base filtrada que la tabla. 3) `TarifaForm` reinicializa el formulario sólo al abrir el modal o cuando cambia el contenido real de `initial` (firma por contenido en lugar de identidad de objeto): un refetch del padre ya no borra la naviera seleccionada en el portal del agente. 4) `NavieraCondicionForm` deshabilita carta garantía, días libres, moneda y notas cuando no hay proveedor tipo "Naviera" vinculado, con nota explicativa (antes se podían capturar datos imposibles de guardar). 5) `arribos_mes` del dashboard se calcula sobre la CTE `activos`, que excluye Borrador (también en utilidad). 6) las tarifas con vigencia vencida ya no ofrecen "Aprobar" ni en los botones rápidos ni en el kebab; el menú indica actualizar la vigencia en Editar. 10) Mi día ya no afirma "Todos los leads nuevos están atendidos" cuando la siguiente mejor acción lista leads sin contactar.
 - Sin cambio: 7) y 8) naviera y tipo de servicio se envían en el payload y los actualiza `actualizar_embarque_completo`; no fue reproducible en código, y ahora la edición de ruta marítima exige ambos campos antes de guardar (`validarRutaMaritimaRequerida`, regresa al paso 2).
