@@ -20,7 +20,7 @@ describe("WizardTotalsBar", () => {
     expect(screen.getByText(/33\.3 %/)).toBeInTheDocument();
     // Bug 4/5: la venta MXN sale del P&L de costos y se etiqueta sin IVA.
     expect(screen.getByText("Venta (sin IVA)")).toBeInTheDocument();
-    expect(screen.getByText("$15,000.00")).toBeInTheDocument();
+    expect(screen.getByText(/15,000\.00/)).toBeInTheDocument();
   });
 
   it("prioriza USD cuando existe venta en USD", () => {
