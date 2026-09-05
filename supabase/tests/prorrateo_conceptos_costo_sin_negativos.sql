@@ -10,7 +10,7 @@
 -- Verifica:
 --   · CASO 1 — total 0.02 entre 4 contenedores: ninguna parte negativa,
 --     suma exacta 0.02 y sólo 2 contenedores reciben 0.01.
---   · CASO 2 — redondeo normal: 100.00 entre 3 → 33.34/33.33/33.33
+--   · CASO 2 — redondeo normal con resto: 100.01 entre 4 → 25.01/25.00/25.00/25.00
 --     (suma exacta, sin negativos).
 --   · CASO 3 — concepto con unidad_medida = 'BL': un solo renglón sin
 --     contenedor y con el total íntegro (no se prorratea).
@@ -72,7 +72,7 @@ BEGIN
     (cotizacion_id, organization_id, concepto, moneda, cantidad, costo_unitario, unidad_medida)
   VALUES
     (v_cot, v_org, 'Centavos', 'MXN', 1, 0.02, 'Contenedor'),
-    (v_cot, v_org, 'Flete', 'USD', 1, 100.00, 'Contenedor'),
+    (v_cot, v_org, 'Flete', 'USD', 1, 100.01, 'Contenedor'),
     (v_cot, v_org, 'Gastos BL', 'MXN', 1, 55.55, 'BL');
 
   PERFORM public._crear_embarque_replicar_conceptos(v_cot, v_emb, v_org, v_ids, '[]'::jsonb);
@@ -95,17 +95,17 @@ BEGIN
   END IF;
   RAISE NOTICE 'CASO 1 OK: 0.02 entre 4 → % (suma exacta, sin negativos)', v_partes;
 
-  -- CASO 2 · redondeo normal 100.00 entre 4 → 25.00 cada uno; verificamos
-  -- además el caso con resto: se usa el mismo reparto de centavos.
+  -- CASO 2 · redondeo normal con resto: 100.01 entre 4 → un contenedor
+  -- recibe el centavo extra y la suma queda exacta.
   SELECT min(monto), sum(monto), string_agg(monto::text, ',' ORDER BY monto)
     INTO v_min, v_sum, v_partes
     FROM public.conceptos_costo
    WHERE embarque_id = v_emb AND concepto = 'Flete' AND deleted_at IS NULL;
 
-  IF v_min < 0 OR v_sum <> 100.00 THEN
-    RAISE EXCEPTION 'CASO 2 FALLÓ: prorrateo de 100.00 entre 4 dio suma % (%)', v_sum, v_partes;
+  IF v_min < 0 OR v_sum <> 100.01 THEN
+    RAISE EXCEPTION 'CASO 2 FALLÓ: prorrateo de 100.01 entre 4 dio suma % (%)', v_sum, v_partes;
   END IF;
-  RAISE NOTICE 'CASO 2 OK: 100.00 entre 4 → % (suma exacta)', v_partes;
+  RAISE NOTICE 'CASO 2 OK: 100.01 entre 4 → % (suma exacta)', v_partes;
 
   -- CASO 3 · unidad_medida = 'BL' no se prorratea.
   SELECT count(*), max(monto) INTO v_bl_n, v_bl_monto

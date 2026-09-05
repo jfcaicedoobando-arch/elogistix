@@ -76,7 +76,7 @@ BEGIN
       v_i     := 0;
       FOREACH v_cid IN ARRAY p_target_ids LOOP
         v_i := v_i + 1;
-        v_parte := v_signo * (v_piso + CASE WHEN v_i <= v_resto THEN 1 ELSE 0 END)::numeric / 100;
+        v_parte := ROUND(v_signo * (v_piso + CASE WHEN v_i <= v_resto THEN 1 ELSE 0 END)::numeric / 100, 2);
         INSERT INTO public.conceptos_costo (embarque_id, contenedor_id, concepto, monto, moneda, proveedor_nombre, proveedor_id, organization_id)
         VALUES (p_embarque_id, v_cid, v_costo.concepto, v_parte,
                 CASE WHEN v_costo.moneda = 'USD' THEN 'USD'::moneda ELSE 'MXN'::moneda END,
