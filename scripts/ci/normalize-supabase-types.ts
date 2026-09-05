@@ -53,8 +53,21 @@ function stripBlockAt(lines: string[], start: number): number {
   return start;
 }
 
+/**
+ * Los helpers finales (`Tables`, `TablesInsert`, `Enums`, ...) cambian de
+ * parentesis segun la version del generador: `extends (X extends {...} ? A :
+ * never) = never` vs `extends X extends {...} ? A : never = never`. Es ruido
+ * cosmetico, no drift de esquema.
+ */
+function stripHelperParens(source: string): string {
+  return source
+    .replace(/extends \((\w+NameOrOptions extends \{)/g, "extends $1")
+    .replace(/: never\) = never,/g, ": never = never,");
+}
+
 export function normalizeTypes(source: string): string {
-  const lines = source.split("\n");
+  const lines = stripHelperParens(source).split("\n");
+
   const out: string[] = [];
   for (let i = 0; i < lines.length; i += 1) {
     const line = lines[i];
