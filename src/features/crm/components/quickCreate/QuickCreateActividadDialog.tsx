@@ -20,11 +20,19 @@ import { useCrearActividad, useOportunidades, type CrmEntidadTipo } from "@/feat
 import { actividadDefaultFechaMx } from "@/features/crm/domain/actividadDefaultFecha";
 import { mxLocalToUtcIso } from "@/lib/date/mx";
 
+/** Borrador mínimo que viaja de la alta express al formulario completo. */
+export interface ActividadQuickDraft {
+  asunto: string;
+  entidadId: string;
+  tipo: "tarea";
+  fecha: string;
+}
+
 interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onCreated: () => void;
-  onMore: () => void;
+  onMore: (draft: ActividadQuickDraft) => void;
 }
 
 // Hallazgo #13.2: default con calendario de negocio CDMX (no nace vencida).
@@ -117,7 +125,7 @@ export default function QuickCreateActividadDialog({ open, onOpenChange, onCreat
               type="button"
               variant="ghost"
               size="sm"
-              onClick={onMore}
+              onClick={() => onMore({ asunto: asunto.trim(), entidadId, tipo: "tarea", fecha })}
               disabled={crear.isPending}
               className="text-body-sm"
             >

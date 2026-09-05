@@ -29,40 +29,57 @@ interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   defaultEntidad?: { tipo: CrmEntidadTipo; id: string; label?: string };
+  /** Borrador que viene del alta express ("Más campos →"): no se pierde lo capturado. */
+  asuntoInicial?: string | null;
+  fechaInicial?: string | null;
+  entidadIdInicial?: string | null;
   onCreated?: (id: string) => void;
 }
 
-export default function NuevaActividadDialog({ open, onOpenChange, defaultEntidad, onCreated }: Props) {
+/** Valores iniciales del formulario (entidad fija o borrador del alta express). */
+function valoresIniciales(p: Props) {
+  return {
+    entidadTipo: p.defaultEntidad?.tipo ?? "oportunidad",
+    entidadId: p.defaultEntidad?.id ?? p.entidadIdInicial ?? "",
+    asunto: p.asuntoInicial ?? "",
+    fecha: p.fechaInicial ?? "",
+  };
+}
+
+export default function NuevaActividadDialog({ open, onOpenChange, defaultEntidad, asuntoInicial, fechaInicial, entidadIdInicial, onCreated }: Props) {
   const crear = useCrearActividad();
   const enviandoRef = useRef(false);
-  const [entidadTipo, setEntidadTipo] = useState<CrmEntidadTipo>(defaultEntidad?.tipo ?? "oportunidad");
-  const [entidadId, setEntidadId] = useState<string>(defaultEntidad?.id ?? "");
+  const ini = valoresIniciales({ open, onOpenChange, defaultEntidad, asuntoInicial, fechaInicial, entidadIdInicial });
+  const [entidadTipo, setEntidadTipo] = useState<CrmEntidadTipo>(ini.entidadTipo);
+  const [entidadId, setEntidadId] = useState<string>(ini.entidadId);
   const [tipo, setTipo] = useState<CrmActividadTipo>("tarea");
-  const [asunto, setAsunto] = useState("");
+  const [asunto, setAsunto] = useState(ini.asunto);
   const [desc, setDesc] = useState("");
-  const [fecha, setFecha] = useState("");
+  const [fecha, setFecha] = useState(ini.fecha);
   const [contactoEfectivo, setContactoEfectivo] = useState(false);
   const [reunionCalificada, setReunionCalificada] = useState(false);
 
   // v13.823.50/51 — al reusar el diálogo con otra entidad (A → cerrar → B) se
   // reinicia el vínculo y TODO el borrador: lo capturado para A no viaja a B.
-  const defTipo = defaultEntidad?.tipo;
-  const defId = defaultEntidad?.id;
+  const defTipo = ini.entidadTipo;
+  const defId = ini.entidadId;
+  const iniAsunto = ini.asunto;
+  const iniFecha = ini.fecha;
   useEffect(() => {
     if (!open) return;
-    setEntidadTipo(defTipo ?? "oportunidad");
-    setEntidadId(defId ?? "");
-    setTipo("tarea"); setAsunto(""); setDesc(""); setFecha("");
+    setEntidadTipo(defTipo);
+    setEntidadId(defId);
+    setTipo("tarea"); setAsunto(iniAsunto); setDesc(""); setFecha(iniFecha);
     setContactoEfectivo(false); setReunionCalificada(false);
     setIntentado(false);
-  }, [open, defTipo, defId]);
+  }, [open, defTipo, defId, iniAsunto, iniFecha]);
 
   const isDirty = useMemo(
     () =>
-      entidadTipo !== (defTipo ?? "oportunidad") || entidadId !== (defId ?? "") ||
-      tipo !== "tarea" || asunto !== "" || desc !== "" || fecha !== "" ||
+      entidadTipo !== defTipo || entidadId !== defId ||
+      tipo !== "tarea" || asunto !== iniAsunto || desc !== "" || fecha !== iniFecha ||
       contactoEfectivo || reunionCalificada,
-    [entidadTipo, defTipo, entidadId, defId, tipo, asunto, desc, fecha, contactoEfectivo, reunionCalificada],
+    [entidadTipo, defTipo, entidadId, defId, tipo, asunto, iniAsunto, desc, fecha, iniFecha, contactoEfectivo, reunionCalificada],
   );
 
   // v13.823.77 — "Crear" no queda habilitado con Asunto u Oportunidad vacíos;

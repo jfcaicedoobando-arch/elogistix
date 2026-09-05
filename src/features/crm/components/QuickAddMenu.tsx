@@ -21,11 +21,15 @@ import NuevoLeadDialog from "@/features/crm/components/NuevoLeadDialog";
 import NuevaOportunidadDialog from "@/features/crm/components/NuevaOportunidadDialog";
 import NuevaActividadDialog from "@/features/crm/components/NuevaActividadDialog";
 import ImportarLeadsCsvDialog from "@/features/crm/components/ImportarLeadsCsvDialog";
-import QuickCreateLeadDialog from "@/features/crm/components/quickCreate/QuickCreateLeadDialog";
+import QuickCreateLeadDialog, {
+  type LeadQuickDraft,
+} from "@/features/crm/components/quickCreate/QuickCreateLeadDialog";
 import QuickCreateOportunidadDialog, {
   type OportunidadQuickDraft,
 } from "@/features/crm/components/quickCreate/QuickCreateOportunidadDialog";
-import QuickCreateActividadDialog from "@/features/crm/components/quickCreate/QuickCreateActividadDialog";
+import QuickCreateActividadDialog, {
+  type ActividadQuickDraft,
+} from "@/features/crm/components/quickCreate/QuickCreateActividadDialog";
 import { usePermissions } from "@/hooks/shared";
 
 export interface QuickAddMenuProps {
@@ -34,6 +38,31 @@ export interface QuickAddMenuProps {
 }
 
 type Quick = "lead" | "oportunidad" | "actividad" | null;
+
+/** Sólo se transporta el borrador si el usuario alcanzó a capturar algo. */
+/** onOpenChange que limpia el borrador transportado al cerrar el formulario. */
+function cerrarLimpiando(
+  setOpen: (v: boolean) => void,
+  limpiar: () => void,
+): (next: boolean) => void {
+  return (next) => {
+    setOpen(next);
+    if (!next) limpiar();
+  };
+}
+
+/** Props del borrador express hacia el formulario completo de actividad. */
+function propsActividad(draft: ActividadQuickDraft | null) {
+  return {
+    asuntoInicial: draft?.asunto ?? null,
+    fechaInicial: draft?.fecha ?? null,
+    entidadIdInicial: draft?.entidadId ?? null,
+  };
+}
+
+function conDatos<T extends object>(draft: T, campos: Array<keyof T>): T | null {
+  return campos.some((c) => Boolean(draft[c])) ? draft : null;
+}
 
 export default function QuickAddMenu({ openTrigger, dialogTrigger }: QuickAddMenuProps = {}) {
   const navigate = useNavigate();
@@ -47,6 +76,8 @@ export default function QuickAddMenu({ openTrigger, dialogTrigger }: QuickAddMen
   // Borrador mínimo del alta express de oportunidad: se conserva sólo mientras
   // el formulario completo está abierto (transición "Más campos →").
   const [opDraft, setOpDraft] = useState<OportunidadQuickDraft | null>(null);
+  const [leadDraft, setLeadDraft] = useState<LeadQuickDraft | null>(null);
+  const [actDraft, setActDraft] = useState<ActividadQuickDraft | null>(null);
 
   /**
    * Espejo de las policies RLS: oportunidades y actividades sólo se crean con
@@ -127,7 +158,11 @@ export default function QuickAddMenu({ openTrigger, dialogTrigger }: QuickAddMen
         open={quick === "lead"}
         onOpenChange={cerrarQuick}
         onCreated={(id) => navigate(`/crm/leads/${id}`)}
-        onMore={() => { setQuick(null); setLeadOpen(true); }}
+        onMore={(draft) => {
+          setQuick(null);
+          setLeadDraft(conDatos(draft, ["empresa", "contacto"]));
+          setLeadOpen(true);
+        }}
       />
       <QuickCreateOportunidadDialog
         open={quick === "oportunidad"}
@@ -143,18 +178,32 @@ export default function QuickAddMenu({ openTrigger, dialogTrigger }: QuickAddMen
         open={quick === "actividad"}
         onOpenChange={cerrarQuick}
         onCreated={() => navigate("/crm/actividades")}
-        onMore={() => { setQuick(null); setActOpen(true); }}
+        onMore={(draft) => {
+          setQuick(null);
+          setActDraft(conDatos(draft, ["asunto", "entidadId"]));
+          setActOpen(true);
+        }}
       />
 
-      <NuevoLeadDialog open={leadOpen} onOpenChange={setLeadOpen} onCreated={(id) => navigate(`/crm/leads/${id}`)} />
+      <NuevoLeadDialog
+        open={leadOpen}
+        onOpenChange={cerrarLimpiando(setLeadOpen, () => setLeadDraft(null))}
+        draftInicial={leadDraft}
+        onCreated={(id) => navigate(`/crm/leads/${id}`)}
+      />
       <NuevaOportunidadDialog
         open={opOpen}
-        onOpenChange={(next) => { setOpOpen(next); if (!next) setOpDraft(null); }}
+        onOpenChange={cerrarLimpiando(setOpOpen, () => setOpDraft(null))}
         origenInicial={opDraft?.origen ?? null}
         nombreInicial={opDraft?.nombre ?? null}
         onSaved={(id) => navigate(`/crm/oportunidades/${id}`)}
       />
-      <NuevaActividadDialog open={actOpen} onOpenChange={setActOpen} onCreated={() => navigate("/crm/actividades")} />
+      <NuevaActividadDialog
+        open={actOpen}
+        onOpenChange={cerrarLimpiando(setActOpen, () => setActDraft(null))}
+        {...propsActividad(actDraft)}
+        onCreated={() => navigate("/crm/actividades")}
+      />
       <ImportarLeadsCsvDialog open={importOpen} onOpenChange={setImportOpen} />
     </>
   );
