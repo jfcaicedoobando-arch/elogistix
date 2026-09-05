@@ -3,8 +3,7 @@
  * vencida no ofrece "Aprobar"; el menú explica actualizar la vigencia.
  */
 import { describe, it, expect, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
+import { render, screen, fireEvent } from "@testing-library/react";
 import { TarifaRowActions } from "../TarifaRowActions";
 
 const noop = () => {};
@@ -21,7 +20,11 @@ describe("TarifaRowActions · tarifa vencida", () => {
         onAprobar={vi.fn()}
       />,
     );
-    await userEvent.click(screen.getByRole("button", { name: "Acciones de tarifa" }));
+    fireEvent.pointerDown(
+      screen.getByRole("button", { name: "Acciones de tarifa" }),
+      { ctrlKey: false, button: 0 },
+    );
+    await screen.findByText("Editar");
     expect(screen.queryByText("Aprobar")).not.toBeInTheDocument();
     expect(screen.getByText(/Vigencia vencida/i)).toBeInTheDocument();
   });
@@ -36,7 +39,11 @@ describe("TarifaRowActions · tarifa vencida", () => {
         onAprobar={vi.fn()}
       />,
     );
-    await userEvent.click(screen.getByRole("button", { name: "Acciones de tarifa" }));
+    fireEvent.pointerDown(
+      screen.getByRole("button", { name: "Acciones de tarifa" }),
+      { ctrlKey: false, button: 0 },
+    );
+    await screen.findByText("Editar");
     expect(screen.getByText("Aprobar")).toBeInTheDocument();
   });
 });
