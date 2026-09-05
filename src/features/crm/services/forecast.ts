@@ -18,12 +18,16 @@ export type { ForecastResumen, ReportesCRM };
 const LIMITE_CRM = 5000;
 
 export async function fetchEtapaTipos(): Promise<Map<string, EtapaTipo>> {
+  // Soft-delete: una etapa eliminada no debe clasificar oportunidades en
+  // forecast (quedaban contando como abiertas/ganadas fuera del embudo).
   const { data, error } = await supabase
     .from("crm_etapas_pipeline")
-    .select("id, tipo");
+    .select("id, tipo")
+    .is("deleted_at", null);
   if (error) throw error;
   return new Map((data ?? []).map((e) => [e.id, e.tipo as EtapaTipo]));
 }
+
 
 export async function fetchForecast(desde?: string, hasta?: string): Promise<ForecastResumen> {
   const etapaTipos = await fetchEtapaTipos();
