@@ -18,6 +18,8 @@ import {
 import { useEtapasPipeline } from "@/features/crm/hooks";
 import { useClientesForSelect } from "@/features/cliente/hooks";
 import { useCrearActividad } from "@/features/crm/hooks";
+import { actividadDefaultFechaMx } from "@/features/crm/domain/actividadDefaultFecha";
+
 import { useOportunidadForm, type OrigenInicial } from "@/features/crm/hooks";
 import OportunidadFormFields from "@/features/crm/components/nuevaOportunidad/OportunidadFormFields";
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
