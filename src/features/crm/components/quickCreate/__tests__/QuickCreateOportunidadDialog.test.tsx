@@ -25,6 +25,10 @@ vi.mock("@/features/crm/hooks", () => ({
   useCrearOportunidad: () => ({ mutateAsync, isPending: false }),
   useEtapasPipeline: () => ({ data: etapasMock }),
 }));
+vi.mock("@/lib/ui/appFeedback", () => ({
+  notifyError: (...args: unknown[]) => notifyError(...args),
+  notifySuccess: vi.fn(),
+}));
 // Radix Select no es operable en jsdom: se sustituye por un <select> nativo.
 vi.mock("@/components/ui/select", () => ({
   Select: ({ value, onValueChange, children }: { value: string; onValueChange: (v: string) => void; children: React.ReactNode }) => (
