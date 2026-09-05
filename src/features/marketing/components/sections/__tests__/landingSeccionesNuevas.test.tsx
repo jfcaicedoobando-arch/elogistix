@@ -30,7 +30,9 @@ describe("LandingRecorrido", () => {
     expect(screen.getByText(primero.folio)).toBeInTheDocument();
     expect(screen.queryByText(segundo.folio)).not.toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("tab", { name: segundo.tab }));
+    const trigger = screen.getByRole("tab", { name: segundo.tab });
+    fireEvent.mouseDown(trigger);
+    fireEvent.click(trigger);
     expect(screen.getByText(segundo.folio)).toBeInTheDocument();
     expect(screen.getByRole("heading", { level: 3, name: segundo.title })).toBeInTheDocument();
   });
