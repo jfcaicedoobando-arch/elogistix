@@ -25,7 +25,9 @@ function isTypingTarget(el: EventTarget | null): boolean {
 export function useCrmHotkeys(handlers: CrmHotkeyHandlers): void {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      const k = e.key.toLowerCase();
+      // JAVASCRIPT-REACT-5Z: ciertos eventos sintéticos (autocompletado del
+      // navegador, IME) llegan sin `key`; sin guarda truena el listener.
+      const k = e.key?.toLowerCase() ?? "";
       if ((e.metaKey || e.ctrlKey) && k === "p" && handlers.onOpenPalette) {
         e.preventDefault();
         handlers.onOpenPalette();
