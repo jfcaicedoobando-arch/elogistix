@@ -2040,7 +2040,10 @@ DECLARE
   v_base  numeric;
   v_n     integer;
   v_parte numeric;
-  v_acum  numeric;
+  v_cent  bigint;
+  v_piso  bigint;
+  v_resto bigint;
+  v_signo integer;
   v_i     integer;
   v_prov_nombre text;
   v_prov_id uuid;
@@ -2076,17 +2079,18 @@ BEGIN
               CASE WHEN v_costo.moneda = 'USD' THEN 'USD'::moneda ELSE 'MXN'::moneda END,
               v_prov_nombre, v_prov_id, p_org);
     ELSE
-      -- Prorrateo: el importe total se reparte entre contenedores; el ajuste
-      -- de centavos se aplica al último para que la suma cuadre exacto.
-      v_parte := ROUND(v_base / v_n::numeric, 2);
-      v_acum  := 0;
+      -- Prorrateo sin importes negativos (método del resto mayor en centavos):
+      -- el piso se reparte a todos y los primeros `v_resto` contenedores
+      -- reciben un centavo extra. La suma cuadra exacta y ninguna parte queda
+      -- con signo contrario al total (antes 0.02 entre 4 daba 0.01/0.01/0.01/-0.01).
+      v_signo := CASE WHEN v_base < 0 THEN -1 ELSE 1 END;
+      v_cent  := ROUND(ABS(v_base) * 100)::bigint;
+      v_piso  := v_cent / v_n::bigint;
+      v_resto := v_cent - v_piso * v_n::bigint;
       v_i     := 0;
       FOREACH v_cid IN ARRAY p_target_ids LOOP
         v_i := v_i + 1;
-        IF v_i = v_n THEN
-          v_parte := ROUND(v_base - v_acum, 2);
-        END IF;
-        v_acum := v_acum + v_parte;
+        v_parte := ROUND(v_signo * (v_piso + CASE WHEN v_i <= v_resto THEN 1 ELSE 0 END)::numeric / 100, 2);
         INSERT INTO public.conceptos_costo (embarque_id, contenedor_id, concepto, monto, moneda, proveedor_nombre, proveedor_id, organization_id)
         VALUES (p_embarque_id, v_cid, v_costo.concepto, v_parte,
                 CASE WHEN v_costo.moneda = 'USD' THEN 'USD'::moneda ELSE 'MXN'::moneda END,
@@ -12816,6 +12820,43 @@ CREATE FUNCTION public.crm_higiene_pipeline() RETURNS TABLE(abiertas integer, re
          )
     FROM m;
 $$;
+CREATE FUNCTION public.crm_intercambiar_orden_etapas(p_etapa_a uuid, p_etapa_b uuid) RETURNS void
+    LANGUAGE plpgsql
+    SET search_path TO 'public'
+    AS $$
+DECLARE
+  v_a_org uuid;
+  v_b_org uuid;
+  v_a_orden integer;
+  v_b_orden integer;
+BEGIN
+  IF p_etapa_a IS NULL OR p_etapa_b IS NULL OR p_etapa_a = p_etapa_b THEN
+    RAISE EXCEPTION 'LC_ETAPA_INTERCAMBIO_INVALIDO: se requieren dos etapas distintas';
+  END IF;
+  -- Bloqueo determinista por id para evitar deadlocks y órdenes duplicados
+  -- cuando se pulsa subir/bajar varias veces en paralelo.
+  PERFORM 1
+  FROM public.crm_etapas_pipeline
+  WHERE id IN (p_etapa_a, p_etapa_b) AND deleted_at IS NULL
+  ORDER BY id
+  FOR UPDATE;
+  SELECT organization_id, orden INTO v_a_org, v_a_orden
+  FROM public.crm_etapas_pipeline WHERE id = p_etapa_a AND deleted_at IS NULL;
+  SELECT organization_id, orden INTO v_b_org, v_b_orden
+  FROM public.crm_etapas_pipeline WHERE id = p_etapa_b AND deleted_at IS NULL;
+  IF v_a_org IS NULL OR v_b_org IS NULL THEN
+    RAISE EXCEPTION 'LC_ETAPA_NO_ENCONTRADA: etapa inexistente o eliminada';
+  END IF;
+  IF v_a_org <> v_b_org THEN
+    RAISE EXCEPTION 'LC_ETAPA_ORG_DISTINTA: las etapas no pertenecen a la misma organización';
+  END IF;
+  IF v_a_orden = v_b_orden THEN
+    RETURN;
+  END IF;
+  UPDATE public.crm_etapas_pipeline SET orden = v_b_orden, updated_at = now() WHERE id = p_etapa_a;
+  UPDATE public.crm_etapas_pipeline SET orden = v_a_orden, updated_at = now() WHERE id = p_etapa_b;
+END;
+$$;
 CREATE FUNCTION public.crm_leads_buscar_duplicados(p_claves jsonb) RETURNS TABLE(id uuid, empresa text, contacto text, email text, telefono text, estado public.crm_lead_estado, empresa_norm text, email_norm text, telefono_norm text)
     LANGUAGE sql STABLE SECURITY DEFINER
     SET search_path TO 'public'
@@ -14336,7 +14377,7 @@ BEGIN
           + COALESCE((SELECT val FROM gastos_op_comisiones), 0),
         'gastosOperativosSinTC', COALESCE((SELECT val FROM gastos_op_sin_tc), 0)
       ) AS val
-      FROM embarques_base eb
+      FROM activos eb
       LEFT JOIN profit p ON p.embarque_id = eb.id
       WHERE eb.eta IS NOT NULL AND eb.eta >= v_inicio_mes AND eb.eta <= v_fin_mes
     ),
@@ -25886,7 +25927,9 @@ BEGIN
   END IF;
   -- BUG-2026-08-25: 'Pagada' también es terminal (facturas legacy sin pagos
   -- capturados generaban adeudo fantasma en el estado de cuenta).
-  IF v_estado IN ('Cancelada', 'Sustituida', 'Borrador', 'Pagada') THEN RETURN 0; END IF;
+  -- v13.823.145: 'Borrador' NO es terminal — una factura sin timbrar debe
+  -- reportar saldo por cobrar (antes mostraba "cobrado = total" sin pagos).
+  IF v_estado IN ('Cancelada', 'Sustituida', 'Pagada') THEN RETURN 0; END IF;
   SELECT COALESCE(SUM(monto_aplicado_factura), 0) INTO v_pagos
   FROM public.pagos_factura
   WHERE factura_id = p_factura_id AND deleted_at IS NULL;
@@ -33037,6 +33080,9 @@ GRANT ALL ON FUNCTION public.crm_higiene_oportunidades() TO service_role;
 REVOKE ALL ON FUNCTION public.crm_higiene_pipeline() FROM PUBLIC;
 GRANT ALL ON FUNCTION public.crm_higiene_pipeline() TO authenticated;
 GRANT ALL ON FUNCTION public.crm_higiene_pipeline() TO service_role;
+REVOKE ALL ON FUNCTION public.crm_intercambiar_orden_etapas(p_etapa_a uuid, p_etapa_b uuid) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.crm_intercambiar_orden_etapas(p_etapa_a uuid, p_etapa_b uuid) TO authenticated;
+GRANT ALL ON FUNCTION public.crm_intercambiar_orden_etapas(p_etapa_a uuid, p_etapa_b uuid) TO service_role;
 REVOKE ALL ON FUNCTION public.crm_leads_buscar_duplicados(p_claves jsonb) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.crm_leads_buscar_duplicados(p_claves jsonb) TO authenticated;
 GRANT ALL ON FUNCTION public.crm_leads_buscar_duplicados(p_claves jsonb) TO service_role;
