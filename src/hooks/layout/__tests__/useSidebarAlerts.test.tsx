@@ -21,8 +21,9 @@ vi.mock('@/features/embarques/services/cierre', () => ({
 
 // Sentry JAVASCRIPT-REACT-5X: sin sesión los contadores no deben consultarse.
 let usuarioActual: { id: string } | null = { id: 'u-1' };
+let sesionActual: { access_token: string } | null = { access_token: 'tok' };
 vi.mock('@/lib/contexts/AuthContext', () => ({
-  useAuth: () => ({ user: usuarioActual }),
+  useAuth: () => ({ user: usuarioActual, session: sesionActual }),
 }));
 
 import { useSidebarAlerts, invalidateSidebarAlerts } from '../useSidebarAlerts';
@@ -47,6 +48,7 @@ describe('useSidebarAlerts', () => {
     });
     fetchAdminPendientesCount.mockResolvedValue(4);
     usuarioActual = { id: 'u-1' };
+    sesionActual = { access_token: 'tok' };
   });
 
   afterEach(() => {
@@ -106,6 +108,17 @@ describe('useSidebarAlerts', () => {
 
   it('sin sesión (p.ej. /login) no consulta las RPC: evita permission denied', async () => {
     usuarioActual = null;
+    const client = makeClient();
+    const { result } = renderHook(() => useSidebarAlerts(), { wrapper: wrapperFor(client) });
+
+    await waitFor(() => expect(result.current.totalAlertas).toBe(0));
+    expect(fetchSidebarAlertCounts).not.toHaveBeenCalled();
+    expect(fetchAdminPendientesCount).not.toHaveBeenCalled();
+    client.clear();
+  });
+
+  it('con usuario en memoria pero token expirado tampoco consulta (Sentry -5X)', async () => {
+    sesionActual = null;
     const client = makeClient();
     const { result } = renderHook(() => useSidebarAlerts(), { wrapper: wrapperFor(client) });
 
