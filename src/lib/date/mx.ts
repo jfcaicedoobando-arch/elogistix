@@ -123,3 +123,41 @@ export function mxLocalToUtcIso(valor: string | null | undefined): string | null
   instante = new Date(comoUtc - offsetMsMx(instante));
   return Number.isNaN(instante.getTime()) ? null : instante.toISOString();
 }
+
+/**
+ * Representación `datetime-local` (`YYYY-MM-DDTHH:mm:ss`) de un instante en
+ * hora CDMX. Inverso de `mxLocalToUtcIso`.
+ */
+export function utcIsoToMxLocal(instante: Date): string {
+  const partes = new Intl.DateTimeFormat("en-CA", {
+    timeZone: TZ,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false,
+  }).formatToParts(instante);
+  const get = (t: string) => partes.find((p) => p.type === t)?.value ?? "00";
+  const h = get("hour") === "24" ? "00" : get("hour");
+  return `${get("year")}-${get("month")}-${get("day")}T${h}:${get("minute")}:${get("second")}`;
+}
+
+/**
+ * Suma `dias` en el calendario CDMX a un instante ISO y devuelve el nuevo ISO
+ * UTC, conservando la hora local mexicana. Es la ÚNICA forma correcta de
+ * posponer: `new Date(iso).setDate(+n)` suma 24 h del reloj del navegador, lo
+ * que desplaza la hora vista por el usuario en equipos fuera de CDMX y en los
+ * cambios de horario.
+ */
+export function mxAddDaysIso(iso: string | null | undefined, dias: number, base: Date = new Date()): string {
+  const origen = iso ? new Date(iso) : base;
+  const instante = Number.isNaN(origen.getTime()) ? base : origen;
+  const local = utcIsoToMxLocal(instante);
+  const [fecha, hora] = local.split("T");
+  const [y, m, d] = fecha.split("-").map(Number);
+  const dia = new Date(Date.UTC(y, m - 1, d, 12, 0, 0, 0));
+  dia.setUTCDate(dia.getUTCDate() + dias);
+  return mxLocalToUtcIso(`${isoUtcDay(dia)}T${hora}`) ?? instante.toISOString();
+}

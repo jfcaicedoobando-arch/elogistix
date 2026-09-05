@@ -98,12 +98,12 @@ export async function posponerActividad(input: {
   dias: number;
   fechaProgramada: string | null;
 }): Promise<void> {
-  const base = input.fechaProgramada ? new Date(input.fechaProgramada) : new Date();
-  base.setDate(base.getDate() + input.dias);
+  // Suma en calendario CDMX conservando la hora local MX (ver `mxAddDaysIso`).
+  const nuevaFecha = mxAddDaysIso(input.fechaProgramada, input.dias);
   await exigirFilaActividad(
     supabase
       .from("crm_actividades")
-      .update({ fecha_programada: base.toISOString() })
+      .update({ fecha_programada: nuevaFecha })
       .eq("id", input.id)
       .is("deleted_at", null)
       .select("id")
