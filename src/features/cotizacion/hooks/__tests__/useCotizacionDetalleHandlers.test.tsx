@@ -13,7 +13,7 @@ const {
   actualizarEstadoMutateAsync, convertirProspectoMutateAsync,
   crearBorradorMutateAsync,
   sincronizarEtapaMock, propagarConversionMock,
-  notifyErrorMock, notifySuccessMock,
+  notifyErrorMock, notifySuccessMock, notifyWarningMock,
   registrarActividadMutate,
   fetchDatosFiscalesMock,
   tieneCostosCargadosMock,
@@ -28,6 +28,7 @@ const {
   propagarConversionMock: vi.fn(),
   notifyErrorMock: vi.fn(),
   notifySuccessMock: vi.fn(),
+  notifyWarningMock: vi.fn(),
   registrarActividadMutate: vi.fn(),
   fetchDatosFiscalesMock: vi.fn(),
   tieneCostosCargadosMock: vi.fn(),
@@ -68,7 +69,7 @@ vi.mock("@/features/cotizacion/services/candadoCostos", () => ({
 vi.mock("@/lib/ui/appFeedback", () => ({
   notifyError: notifyErrorMock,
   notifySuccess: notifySuccessMock,
-  notifyWarning: vi.fn(),
+  notifyWarning: notifyWarningMock,
 }));
 
 import { useCotizacionDetalleHandlers } from "../useCotizacionDetalleHandlers";
@@ -111,11 +112,25 @@ describe("useCotizacionDetalleHandlers", () => {
     },
   );
 
-  it("handleCambiarEstado swallow-ea fallas CRM pero NO bloquea el éxito", async () => {
+  it("falla CRM: conserva el estado guardado y advierte sincronización parcial", async () => {
     actualizarEstadoMutateAsync.mockResolvedValue(undefined);
     sincronizarEtapaMock.mockRejectedValue(new Error("crm down"));
     const { result } = renderHook(() => useCotizacionDetalleHandlers(cot()), { wrapper: createWrapper() });
     await act(async () => { await result.current.handleCambiarEstado("Enviada"); });
+    expect(actualizarEstadoMutateAsync).toHaveBeenCalledTimes(1);
+    expect(notifyErrorMock).not.toHaveBeenCalled();
+    expect(notifyWarningMock).toHaveBeenCalledWith(
+      undefined,
+      expect.objectContaining({ title: "Estado guardado; el CRM no se actualizó" }),
+    );
+  });
+
+  it("sincronización CRM exitosa no emite advertencias duplicadas", async () => {
+    actualizarEstadoMutateAsync.mockResolvedValue(undefined);
+    sincronizarEtapaMock.mockResolvedValue(undefined);
+    const { result } = renderHook(() => useCotizacionDetalleHandlers(cot()), { wrapper: createWrapper() });
+    await act(async () => { await result.current.handleCambiarEstado("Enviada"); });
+    expect(notifyWarningMock).not.toHaveBeenCalled();
     expect(notifyErrorMock).not.toHaveBeenCalled();
   });
 

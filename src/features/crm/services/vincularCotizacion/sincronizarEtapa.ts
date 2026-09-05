@@ -25,6 +25,29 @@ export function derivarTipoEtapa(estados: string[]): TipoEtapaDerivada | null {
 }
 
 /**
+ * Lee la etapa y el cierre vigentes de la oportunidad. `null` = no existe o RLS
+ * la filtró (no inventamos éxito).
+ */
+async function fetchCierreActual(
+  oportunidadId: string,
+): Promise<{ tipo: string | null; fechaCierre: string | null } | null> {
+  const { data, error } = await supabase
+    .from("crm_oportunidades")
+    .select("id, fecha_cierre_real, crm_etapas_pipeline(tipo)")
+    .eq("id", oportunidadId)
+    .is("deleted_at", null)
+    .maybeSingle();
+  if (error) throw error;
+  if (!data) return null;
+  // SAFE-CAST: select explícito con join de etapa (una sola fila).
+  const row = data as unknown as {
+    fecha_cierre_real: string | null;
+    crm_etapas_pipeline?: { tipo?: string | null } | null;
+  };
+  return { tipo: row.crm_etapas_pipeline?.tipo ?? null, fechaCierre: row.fecha_cierre_real ?? null };
+}
+
+/**
  * Recalcula y aplica la etapa CRM de la oportunidad a partir de todas sus
  * cotizaciones vivas. No-op cuando no hay un tipo derivable.
  */
@@ -61,6 +84,14 @@ export async function sincronizarEtapaPorEstadoCotizacion(input: {
       : findByTipo(tipo);
   if (!etapa) return;
 
+  // P1 (13.823.142): si la oportunidad YA está cerrada en el mismo tipo
+  // (p. ej. ganada el 31/08), enviar otra alternativa no debe mover la fecha de
+  // cierre a hoy. Sólo se fija `fecha_cierre_real` cuando hay transición real.
+  const actual = await fetchCierreActual(input.oportunidadId);
+  if (!actual) return;
+  const yaCerradaEnMismoTipo = actual.tipo === tipo && actual.fechaCierre != null;
+
+
   // P1-B (13.823.70): al volver a "abierta" hay que limpiar los datos de cierre;
   // antes quedaban `fecha_cierre_real`/`motivo_perdida_id` históricos y la
   // oportunidad se veía perdida/ganada dentro de una etapa abierta. Se aplica en
@@ -80,10 +111,12 @@ export async function sincronizarEtapaPorEstadoCotizacion(input: {
     patch.valor_real = null;
     patch.motivo_perdida_id = null;
   } else {
-    patch.fecha_cierre_real = hoyMx();
+    // Sin transición real conservamos fecha y valor de cierre originales.
+    if (!yaCerradaEnMismoTipo) patch.fecha_cierre_real = hoyMx();
     // "ganada" no conserva motivo de pérdida; "perdida" mantiene el suyo.
     if (tipo === "ganada") patch.motivo_perdida_id = null;
   }
+
 
 
   const { data, error } = await supabase

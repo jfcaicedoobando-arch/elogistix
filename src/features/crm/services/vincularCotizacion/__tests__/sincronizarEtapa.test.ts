@@ -53,7 +53,9 @@ describe("sincronizarEtapaPorEstadoCotizacion", () => {
     });
     mock.setTableResult("crm_oportunidades", { data: { id: "op-1" }, error: null });
     await sincronizarEtapaPorEstadoCotizacion({ oportunidadId: "op-1", estadoCotizacion: "Rechazada" });
-    const update = mock.tableCalls.find((c) => c.table === "crm_oportunidades");
+    const update = mock.tableCalls.find(
+      (c) => c.table === "crm_oportunidades" && c.ops.includes("update"),
+    );
     expect(update?.ops).toContain("update");
     expect(JSON.stringify(update?.opArgs ?? [])).toContain("e-ganada");
   });
@@ -62,7 +64,9 @@ describe("sincronizarEtapaPorEstadoCotizacion", () => {
     mock.setTableResult("cotizaciones", { data: [{ id: "c1", estado: "Rechazada" }], error: null });
     mock.setTableResult("crm_oportunidades", { data: { id: "op-1" }, error: null });
     await sincronizarEtapaPorEstadoCotizacion({ oportunidadId: "op-1", estadoCotizacion: "Rechazada" });
-    const update = mock.tableCalls.find((c) => c.table === "crm_oportunidades");
+    const update = mock.tableCalls.find(
+      (c) => c.table === "crm_oportunidades" && c.ops.includes("update"),
+    );
     expect(JSON.stringify(update?.opArgs ?? [])).toContain("e-perdida");
   });
 
@@ -142,5 +146,53 @@ describe("limpieza de cierre al reabrir (P1-B)", () => {
     const patch = patchDe();
     expect(patch.etapa_id).toBe("e-ganada");
     expect(typeof patch.fecha_cierre_real).toBe("string");
+  });
+});
+
+// P1 (13.823.142): sin transición real se conserva la fecha de cierre original.
+describe("preserva fecha de cierre cuando no hay transición real", () => {
+  const patchDe = () => {
+    const call = mock.tableCalls.find(
+      (c) => c.table === "crm_oportunidades" && c.ops.includes("update"),
+    );
+    const idx = call?.ops.indexOf("update") ?? -1;
+    return (idx >= 0 ? (call?.opArgs?.[idx]?.[0] ?? {}) : {}) as Record<string, unknown>;
+  };
+
+  it("ya ganada con fecha previa + otra cotización enviada NO mueve el cierre", async () => {
+    mock.setTableResult("cotizaciones", {
+      data: [{ id: "c1", estado: "Aceptada" }, { id: "c2", estado: "Enviada" }],
+      error: null,
+    });
+    mock.setTableResult("crm_oportunidades", {
+      data: { id: "op-9", fecha_cierre_real: "2026-08-31", crm_etapas_pipeline: { tipo: "ganada" } },
+      error: null,
+    });
+    await sincronizarEtapaPorEstadoCotizacion({ oportunidadId: "op-9", estadoCotizacion: "Enviada" });
+    const patch = patchDe();
+    expect(patch.etapa_id).toBe("e-ganada");
+    expect("fecha_cierre_real" in patch).toBe(false);
+    expect("valor_real" in patch).toBe(false);
+  });
+
+  it("transición real (abierta → ganada) sí fija la fecha de cierre", async () => {
+    mock.setTableResult("cotizaciones", { data: [{ id: "c1", estado: "Aceptada" }], error: null });
+    mock.setTableResult("crm_oportunidades", {
+      data: { id: "op-10", fecha_cierre_real: null, crm_etapas_pipeline: { tipo: "abierta" } },
+      error: null,
+    });
+    await sincronizarEtapaPorEstadoCotizacion({ oportunidadId: "op-10", estadoCotizacion: "Aceptada" });
+    const patch = patchDe();
+    expect(patch.etapa_id).toBe("e-ganada");
+    expect(typeof patch.fecha_cierre_real).toBe("string");
+  });
+
+  it("oportunidad inexistente/filtrada por RLS no actualiza", async () => {
+    mock.setTableResult("cotizaciones", { data: [{ id: "c1", estado: "Enviada" }], error: null });
+    mock.setTableResult("crm_oportunidades", { data: null, error: null });
+    await sincronizarEtapaPorEstadoCotizacion({ oportunidadId: "op-11", estadoCotizacion: "Enviada" });
+    expect(
+      mock.tableCalls.some((c) => c.table === "crm_oportunidades" && c.ops.includes("update")),
+    ).toBe(false);
   });
 });
