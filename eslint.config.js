@@ -849,6 +849,7 @@ export default tseslint.config(
       // Primitivas TZ-aware CDMX (`hoyMx`, `ymMx`): capa de bajo nivel que
       // implementa los formatters de dominio con `Intl.DateTimeFormat("en-CA", ...)`.
       "src/lib/date/mx.ts",
+      "src/lib/date/mxDatetimeLocal.ts",
     ],
     rules: {
       "no-restricted-syntax": ["error",
