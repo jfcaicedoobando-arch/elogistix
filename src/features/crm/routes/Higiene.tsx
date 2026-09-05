@@ -15,13 +15,16 @@ import {
   useHigieneResumen, useHigieneOportunidades, usePresupuestoCrm,
 } from "@/features/crm/hooks/useHigienePipeline";
 import { coberturaPonderada, presupuestoDelMes } from "@/features/crm/domain/higieneMetas";
+import { ymMx } from "@/lib/date/mx";
 
 export default function CrmHigiene() {
   useDocumentTitle("Higiene del pipeline");
-  const hoy = new Date();
+  // Año/mes de negocio CDMX: `getFullYear()/getMonth()` locales podían
+  // cambiar de mes cerca de medianoche para usuarios en otros husos.
+  const [anioMx, mesMx] = ymMx().split("-").map(Number);
   const resumenQ = useHigieneResumen();
   const filasQ = useHigieneOportunidades();
-  const presupuestoQ = usePresupuestoCrm(hoy.getFullYear());
+  const presupuestoQ = usePresupuestoCrm(anioMx);
 
   if (resumenQ.isLoading || filasQ.isLoading) {
     return <LoadingState label="Calculando higiene del pipeline…" />;
@@ -40,7 +43,7 @@ export default function CrmHigiene() {
   }
 
   const resumen = resumenQ.data!;
-  const presupuesto = presupuestoDelMes(presupuestoQ.data, hoy.getMonth() + 1);
+  const presupuesto = presupuestoDelMes(presupuestoQ.data, mesMx);
 
   return (
     <PageContainer>
