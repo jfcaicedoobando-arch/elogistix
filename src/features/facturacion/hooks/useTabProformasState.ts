@@ -41,10 +41,12 @@ export function useTabProformasState(
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
 
-  const filtered = useMemo(() => {
+  // P1 (auditoría v13.823.143 · bug 2): base con todos los filtros aplicados
+  // EXCEPTO el de estado. Los contadores se calculan sobre ella para que
+  // "Mostrando X de Y" nunca contradiga a los resultados visibles.
+  const base = useMemo(() => {
     const q = search.trim().toLowerCase();
     return proformas.filter((p) => {
-      if (filtroEstado !== "todas" && getEstadoUnificado(p) !== filtroEstado) return false;
       if (filtroCliente !== TODOS && p.cliente_id !== filtroCliente) return false;
       if (filtroOperador !== TODOS && (p.operador ?? "") !== filtroOperador) return false;
       if (!fechaEnRango(p.fecha_emision, fechaDesde, fechaHasta)) return false;
@@ -57,17 +59,22 @@ export function useTabProformasState(
         (p.folio_factura_externa ?? "").toLowerCase().includes(q)
       );
     });
-  }, [proformas, search, filtroEstado, filtroCliente, filtroOperador, fechaDesde, fechaHasta, isInRange]);
+  }, [proformas, search, filtroCliente, filtroOperador, fechaDesde, fechaHasta, isInRange]);
+
+  const filtered = useMemo(
+    () => (filtroEstado === "todas" ? base : base.filter((p) => getEstadoUnificado(p) === filtroEstado)),
+    [base, filtroEstado],
+  );
 
   const counts = useMemo(
     () => ({
-      todas: proformas.length,
-      pendiente: proformas.filter((p) => getEstadoUnificado(p) === "pendiente").length,
-      aceptada: proformas.filter((p) => getEstadoUnificado(p) === "aceptada").length,
-      rechazada: proformas.filter((p) => getEstadoUnificado(p) === "rechazada").length,
-      facturada: proformas.filter((p) => getEstadoUnificado(p) === "facturada").length,
+      todas: base.length,
+      pendiente: base.filter((p) => getEstadoUnificado(p) === "pendiente").length,
+      aceptada: base.filter((p) => getEstadoUnificado(p) === "aceptada").length,
+      rechazada: base.filter((p) => getEstadoUnificado(p) === "rechazada").length,
+      facturada: base.filter((p) => getEstadoUnificado(p) === "facturada").length,
     }),
-    [proformas],
+    [base],
   );
 
   // Listas para poblar los selects Cliente / Operador. Únicos, ordenados alfa.
