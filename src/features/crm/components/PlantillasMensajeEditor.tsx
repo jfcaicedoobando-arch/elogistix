@@ -13,7 +13,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { ConfirmActionDialog } from "@/components/shared/dialogs/ConfirmActionDialog";
-import { notifySuccess, notifyError } from "@/lib/ui/appFeedback";
+import { notifyError } from "@/lib/ui/appFeedback";
 import {
   usePlantillasMensaje,
   useCrearPlantilla,
@@ -42,13 +42,8 @@ export default function PlantillasMensajeEditor() {
       notifyError(undefined, { title: "Nombre y cuerpo son obligatorios", method: "HANDLE_CREAR", errorCode: ERROR_CODES.VALIDATION_FAILED });
       return;
     }
-    try {
-      await crear.mutateAsync(nuevo);
-      notifySuccess(undefined, { title: "Plantilla creada" });
-      setNuevo({ nombre: "", canal: nuevo.canal, asunto: "", cuerpo: "" });
-    } catch (e) {
-      notifyError(undefined, { title: "No se pudo crear", description: e instanceof Error ? e.message : undefined, error: e, method: "HANDLE_CREAR" });
-    }
+    await crear.mutateAsync(nuevo);
+    setNuevo({ nombre: "", canal: nuevo.canal, asunto: "", cuerpo: "" });
   };
 
   const toggleActiva = (id: string, activa: boolean) =>
