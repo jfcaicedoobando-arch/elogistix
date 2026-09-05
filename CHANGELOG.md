@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+## [13.823.92] - 2026-09-05
+
+### CRM — Borrador de conversión de lead reiniciado por lead
+- `ConvertirLeadDialog` y `ConvertirLeadSheet` reinician nombre, monto, moneda, fecha (Dialog) y cliente sólo cuando cambia `lead.id` (patrón de ajuste de estado durante el render), evitando convertir el lead B con datos capturados para el lead A; la edición se conserva mientras el mismo lead sigue abierto y se respeta `cliente_convertido_id`/`SIN_CLIENTE`.
+- Regresiones: reinicio al cambiar de lead, conservación con el mismo lead y lead ya convertido (10 pruebas en ambos componentes).
+
 ## [13.823.91] - 2026-09-05
 
 ### CRM — Orden de etapas del pipeline sin duplicados
