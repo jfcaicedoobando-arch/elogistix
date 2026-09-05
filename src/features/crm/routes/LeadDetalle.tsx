@@ -143,7 +143,7 @@ export default function LeadDetalle() {
         />
       )}
 
-      <LeadLineageCard leadId={lead.id} />
+      {!esProspecto(lead.estado) && <LeadLineageCard leadId={lead.id} />}
 
       <ActividadTimeline entidadTipo="lead" entidadId={lead.id} />
 
