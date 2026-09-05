@@ -104,10 +104,12 @@ function visibilidadAcciones(params: {
   puedeRechazar: boolean;
   puedeAltaCliente: boolean;
   tieneOportunidad: boolean;
+  /** P0 — sin venta capturada no se puede generar el embarque. */
+  tieneVenta: boolean;
 }) {
   const {
     estado, esProspecto, tieneEmbarquesVinculados, puedeAceptar, puedeRechazar,
-    puedeAltaCliente, tieneOportunidad,
+    puedeAltaCliente, tieneOportunidad, tieneVenta,
   } = params;
   const esAceptada = estado === "Aceptada";
   const respuestaEnSolicitada = puedeAceptar || puedeRechazar;
