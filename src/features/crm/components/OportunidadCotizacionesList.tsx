@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { formatCurrencyCompact } from "@/lib/formatters";
 import { useOportunidadCotizaciones } from "@/features/crm/hooks";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
-import { diffDiasCalendario } from "@/lib/date/dateOnly";
+import { diffDiasMx } from "@/lib/date/mx";
 
 import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/components/ui/table";
 import { DetailTableHead } from "@/components/shared/DetailTable";
@@ -53,7 +53,7 @@ export default function OportunidadCotizacionesList({ oportunidadId }: Props) {
               {data.map((c) => {
                 const diasEnviada =
                   c.estado === "Enviada"
-                    ? diffDiasCalendario(c.created_at, new Date())
+                    ? (diffDiasMx(c.created_at, new Date()) ?? 0)
                     : 0;
                 return (
                   <TableRow
