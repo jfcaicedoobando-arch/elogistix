@@ -1,7 +1,7 @@
 # Changelog
 
 ## [13.823.103] - 2026-09-05
-- CRM: en `OportunidadResumenTab.tsx` las fechas `fecha_estimada_cierre` y `fecha_meta_cierre` ahora se formatean con `formatFechaDia` antes de pasarse a `DatosComercialesCard`, evitando que el detalle muestre ISO crudo. Se conserva el fallback `—` para fechas nulas y no se modifican los valores enviados al backend. Regresión visual contra renderizado de ISO crudo.
+- CRM: en `OportunidadResumenTab.tsx` los campos `fecha_estimada_cierre`, `fecha_meta_cierre` y `monto_meta` ahora se formatean con los formateadores canónicos (`formatFechaDia` y `formatCurrencyCompact` con `op.moneda`) antes de pasarse a `DatosComercialesCard`, evitando que el detalle muestre ISO crudo o números sin moneda/separadores. Se conserva el fallback `—` para valores nulos y no se modifican los valores persistidos enviados al backend. Regresión visual contra renderizado de ISO/número crudo.
 
 ## [13.823.102] - 2026-09-05
 - CRM: eliminados dos avisos de error duplicados adicionales. En `useQuickCreateOportunidad.ts` se removió el `notifyError` del `catch` de `submit` porque `useCrearOportunidad` ya notifica en `onError`. En `CriteriosEtapaEditor.tsx` se removió el `notifyError` del `catch` de `handleAgregar` porque `useCrearCriterioEtapa` ya notifica en `onError`. Se conservan validaciones locales, guard anti doble submit, limpieza, éxito local "Criterio agregado" y el comportamiento exitoso. Regresiones: un solo feedback visible al fallar la creación en ambos flujos.

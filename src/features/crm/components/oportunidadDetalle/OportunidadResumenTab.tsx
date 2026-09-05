@@ -3,6 +3,7 @@
  * Extraída de `OportunidadDetalleContent` para bajar su complejidad.
  */
 import { formatFechaDia } from "@/lib/formatters/dates";
+import { formatCurrencyCompact } from "@/lib/formatters/numbers";
 import OportunidadCotizacionesList from "@/features/crm/components/OportunidadCotizacionesList";
 import { CriteriosSalidaCard } from "./CriteriosSalidaCard";
 import { DatosComercialesCard } from "./DatosComercialesCard";
@@ -22,7 +23,7 @@ export function OportunidadResumenTab({ op, etapaNombre, canEdit }: Props) {
     { label: "Cierre estimado", value: formatFechaDia(op.fecha_estimada_cierre) },
     { label: "Origen", value: op.origen },
     { label: "Destino", value: op.destino },
-    { label: "Monto meta", value: op.monto_meta != null ? String(op.monto_meta) : null },
+    { label: "Monto meta", value: op.monto_meta != null ? formatCurrencyCompact(Number(op.monto_meta), op.moneda) : null },
     { label: "Fecha meta de cierre", value: formatFechaDia(op.fecha_meta_cierre) },
     { label: "Compromiso", value: op.compromiso_nota, colSpan: true },
     { label: "Notas", value: op.notas, colSpan: true },
