@@ -5,9 +5,7 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { DatePickerMx } from "@/components/ui/date-picker-mx";
 import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
@@ -21,7 +19,6 @@ import type {
   CosteoNavieraCondicion,
   NavieraCondicionInput,
 } from "@/features/costeo/types/navieraCondicion";
-import { rangoLabel } from "@/lib/ui/rangoFechasCopy";
 import { NavieraProveedorAlerta } from "@/features/costeo/components/NavieraProveedorAlerta";
 import { NavieraCartaGarantiaFields } from "@/features/costeo/components/NavieraCartaGarantiaFields";
 

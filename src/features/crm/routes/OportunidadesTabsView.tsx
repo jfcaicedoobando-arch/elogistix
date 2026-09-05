@@ -20,7 +20,7 @@ interface Props {
   refetch: () => void;
   etapas: CrmEtapaRow[];
   ops: CrmOportunidadRow[];
-  onMover: (id: string, etapaId: string) => void;
+  onMover: (id: string, etapaId: string, probDefault: number) => void;
   puedeMover: (o: CrmOportunidadRow) => boolean;
   onClickCard: (id: string) => void;
   onNuevo?: (etapaId: string) => void;
