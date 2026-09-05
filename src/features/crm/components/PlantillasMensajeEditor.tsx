@@ -25,7 +25,7 @@ import {
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 import { ErrorStateInline } from "@/components/empty/ErrorStateInline";
-import { getErrorMessage } from "@/lib/domain/errorMessages";
+import { getErrorMessage } from "@/lib/errors";
 const VARIABLES = ["{{contacto}}", "{{empresa}}", "{{vendedor}}", "{{monto}}", "{{moneda}}", "{{etapa}}"];
 
 
