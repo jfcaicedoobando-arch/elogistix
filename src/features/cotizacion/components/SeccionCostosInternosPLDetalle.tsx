@@ -95,11 +95,13 @@ export default function SeccionCostosInternosPLDetalle({ cotizacionId, conceptos
   const filasUSD = useMemo(() => filas.filter(f => f.moneda === "USD"), [filas]);
   const filasMXN = useMemo(() => filas.filter(f => f.moneda === "MXN"), [filas]);
 
-  const updateFila = (index: number, field: "proveedor" | "costo_unitario" | "notas", value: string) => {
+  const updateFila = (index: number, field: "proveedor" | "costo_unitario" | "venta" | "notas", value: string) => {
     setFilas(prev => {
       const copy = [...prev];
-      if (field === "costo_unitario") copy[index] = { ...copy[index], costo_unitario: parseFloat(value) || 0 };
-      else copy[index] = { ...copy[index], [field]: value };
+      // Bug 9: la venta ya es editable; se guarda como `precio_venta` por unidad.
+      if (field === "costo_unitario" || field === "venta") {
+        copy[index] = { ...copy[index], [field]: parseFloat(value) || 0 };
+      } else copy[index] = { ...copy[index], [field]: value };
       return copy;
     });
   };
