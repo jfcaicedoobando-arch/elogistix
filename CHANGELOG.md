@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.823.138] - 2026-09-05
+- CRM rutas (error vs vacío): regresión que blinda la distinción entre fallo y "sin datos" en pantallas de detalle y del resumen ejecutivo. La corrección ya existía: `EmbudoCard`/`ForecastMesCard` consumen `isError`/`refetch` y muestran `ErrorStateInline` con Reintentar (el empty sólo con éxito), y `OportunidadDetalle`/`LeadDetalle` separan "No se pudo cargar…" (con Reintentar) de "no encontrada/o" (sólo cuando la consulta respondió sin registro). Se agregan `crmDashboardCardsErrores.test.tsx` (embudo/forecast: error → reintento sin empty; éxito vacío → empty) y `detalleErrores.test.tsx` (ambos detalles: error → reintento sin "no encontrada"; éxito sin registro → "no encontrada"). Sin cambios de rutas, permisos ni métricas.
+
 ## [13.823.137] - 2026-09-05
 - CRM Mi día (NBA/cotizaciones): regresión que blinda la distinción entre "Todo al día" y "no se pudo cargar". La corrección ya existía de punta a punta (`useNextBestActions` agrega `isError` de signals/cotizaciones/vencidas con reintento triple; `useCrmInicioVM` expone `nbaError`/`nbaRefetch` y `cotsError`/`cotsRefetch`; `NextBestActionsCard` y `CotizacionesSinRespuestaCard` muestran `ErrorStateInline` con Reintentar en lugar del empty). Se agrega `useNextBestActions.errores.test.tsx`: fallo de signals, de cotizaciones y de vencidas → `isError` sin items fingidos; refetch reintenta las tres; y ambas tarjetas muestran reintento sin empty cuando hay error (y sí el empty cuando la consulta fue exitosa). Sin cambios de lógica, reglas de prioridad ni umbrales.
 
