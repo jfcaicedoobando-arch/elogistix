@@ -150,6 +150,7 @@ export default function EtapasPipelineEditor() {
                   onClick={() => save(e.id)}
                   disabled={!isDirty(e.id) || actualizar.isPending}
                   loading={actualizar.isPending}
+                  aria-label={`Guardar cambios de ${d.nombre}`}
                 >
                   {!actualizar.isPending && <Save className="h-4 w-4" />}
                 </Button>

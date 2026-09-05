@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.823.109] - 2026-09-05
+- CRM Configuración: en `EtapasPipelineEditor.tsx` el botón de guardar por fila ahora tiene un `aria-label` dinámico (`Guardar cambios de ${d.nombre}`), ya que antes sólo mostraba el icono `Save` sin nombre accesible. Se conservan los estados `disabled` y `loading`.
+- Layout: en `SidebarMenuItemBlock.tsx` el `aria-label` del badge de alertas ahora pluraliza correctamente (`1 alerta`, `2 alertas`), igual que el tooltip, en lugar de usar siempre "alertas". Regresiones de accesibilidad para ambos casos.
+
 ## [13.823.108] - 2026-09-05
 - CRM: eliminados dos avisos de error duplicados. En `ActividadNotasSheet.tsx` se removió el `crmToast.error` del `catch` porque `useActualizarActividadNotas` ya notifica en `onError`. En `LeadIcpCard.tsx` se removió el `notifyError` local del `catch` porque `useActualizarLead` ya notifica en `onError`. Se conservan los toasts de éxito, el cierre del Sheet, el reset derivado, el estado disabled/loading y el patch ICP. Regresiones: un solo feedback visible al fallar guardar notas de actividad y guardar perfil ICP.
 

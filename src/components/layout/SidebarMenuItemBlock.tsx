@@ -84,7 +84,7 @@ export function SidebarMenuItemBlock({ item, items, pathname, search, collapsed,
               <TooltipTrigger asChild>
                 <Badge
                   variant="destructive"
-                  aria-label={`${badge} alertas`}
+                  aria-label={`${badge} alerta${pluralS(badge)}`}
                   className="ml-auto h-5 min-w-5 px-1 text-2xs font-bold rounded-full shrink-0"
                 >
                   {badge > 99 ? "99+" : badge}
