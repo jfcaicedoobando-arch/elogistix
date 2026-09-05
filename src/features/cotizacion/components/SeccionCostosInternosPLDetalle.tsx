@@ -51,20 +51,21 @@ export default function SeccionCostosInternosPLDetalle({ cotizacionId, conceptos
   const [editMode, setEditMode] = useState(false);
 
   useEffect(() => {
-    if (isLoading || initialized) return;
+    // v13.823.144 (bug 8/9): antes el mapeo corría UNA sola vez; tras
+    // "Sincronizar conceptos de venta" la tabla seguía mostrando Venta 0.
+    // Ahora se re-deriva cuando cambian los datos de BD, salvo mientras el
+    // usuario está editando (para no pisar su captura).
+    if (isLoading || (initialized && editMode)) return;
 
     if (costosGuardados && costosGuardados.length > 0) {
       const mapped: FilaCostoDetalle[] = costosGuardados.map((c) => {
-        let venta = 0;
-        let aplica_iva = false;
-        if (c.moneda === "USD") {
-          const cv = matchConceptoVenta(conceptosUSD, c.concepto);
-          venta = cv ? cv.cantidad * cv.precio_unitario : 0;
-          aplica_iva = cv?.aplica_iva ?? false;
-        } else {
-          const cv = matchConceptoVenta(conceptosMXN, c.concepto);
-          venta = cv ? cv.cantidad * cv.precio_unitario : 0;
-        }
+        // Fuente única de venta: el `precio_venta` persistido en el costo.
+        // El match por nombre contra `conceptos_venta` queda sólo como
+        // respaldo para filas legacy sin `precio_venta`.
+        const ventaCosto = (Number(c.precio_venta) || 0) * (Number(c.cantidad) || 0);
+        const cv = matchConceptoVenta(c.moneda === "USD" ? conceptosUSD : conceptosMXN, c.concepto);
+        const venta = ventaCosto > 0 ? ventaCosto : (cv ? cv.cantidad * cv.precio_unitario : 0);
+        const aplica_iva = c.moneda === "USD" ? (cv?.aplica_iva ?? false) : false;
         return {
           concepto: c.concepto,
           moneda: c.moneda as "USD" | "MXN",
