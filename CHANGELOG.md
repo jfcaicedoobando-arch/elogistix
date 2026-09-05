@@ -1,7 +1,7 @@
 # Changelog
 
 ## [13.823.121] - 2026-09-05
-- CRM Kanban (`useMoverOportunidadEtapa`): ya no se ofrece "Deshacer" cuando el destino ejecuta una tarea automática — etapa tipo ganada ("Generar cotización en firme") o etapa abierta con `crea_tarea_seguimiento` ("Seguimiento: …") — igual que ya ocurría con las etapas perdidas. Antes, al deshacer volvía la etapa pero la tarea automática quedaba viva contradiciendo la etapa anterior. Se conserva el Deshacer en transiciones sin tareas automáticas y no se borra ninguna actividad existente. Nuevo helper puro `destinoGeneraTareaAutomatica` + regresiones para ganada, abierta con seguimiento y transición ordinaria.
+- CRM Kanban (`useMoverOportunidadEtapa`): ya no se ofrece "Deshacer" cuando el destino ejecuta una tarea automática — etapa tipo ganada ("Generar cotización en firme") o etapa abierta con `crea_tarea_seguimiento` ("Seguimiento: …") — igual que ya ocurría con las etapas perdidas. Antes, al deshacer volvía la etapa pero la tarea automática quedaba viva contradiciendo la etapa anterior. Se conserva el Deshacer en transiciones sin tareas automáticas y no se borra ninguna actividad existente. Nuevos helpers puros `destinoGeneraTareaAutomatica` y `puedeOfrecerUndo` + regresiones para ganada, abierta con seguimiento y transición ordinaria.
 
 ## [13.823.120] - 2026-09-05
 - CRM trazabilidad (`src/features/crm/services/lineage.ts`): `fetchLeadResumen` ahora filtra `deleted_at IS NULL`, igual que `getLead` y los listados. Un lead archivado ya no aparece como "Lead de origen" en el detalle de oportunidad; la oportunidad se muestra con su estado actual y sin origen visible, sin borrar historial ni alterar otras relaciones. Regresiones: filtro de vivos aplicado y lead archivado devuelto como sin origen.
