@@ -50,7 +50,7 @@ export function LeadLineageCard({ leadId }: { leadId: string }) {
               <div className="text-body font-medium truncate">{o.nombre}</div>
               <div className="text-body-sm text-muted-foreground">
                 {formatCurrencyCompact(Number(o.monto_estimado ?? 0), o.moneda)} ·{" "}
-                {Number(o.probabilidad ?? 0)}% · cierre {o.fecha_estimada_cierre ?? "—"}
+                {Number(o.probabilidad ?? 0)}% · cierre {formatFechaDia(o.fecha_estimada_cierre, "—")}
               </div>
             </div>
             <ExternalLink className="h-4 w-4 text-muted-foreground shrink-0" aria-hidden="true" />
