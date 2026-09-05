@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import ConvertirLeadSheet from "@/features/crm/components/ConvertirLeadSheet";
 import type { CrmLeadRow } from "@/features/crm/hooks";
@@ -67,5 +67,38 @@ describe("ConvertirLeadSheet · regresión SIN_CLIENTE", () => {
   it("muestra la opción 'Sin cliente' por defecto", () => {
     renderSheet();
     expect(screen.getByText("Sin cliente (ligar después)")).toBeTruthy();
+  });
+});
+
+describe("ConvertirLeadSheet · reinicio de borrador al cambiar de lead", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("reinicia el borrador cuando cambia lead.id", () => {
+    const { rerender } = renderSheet();
+    const input = screen.getByLabelText("Nombre de la oportunidad");
+    fireEvent.change(input, { target: { value: "Editado A" } });
+    const leadB = { ...leadBase, id: "lead-2", empresa: "BETA SA" } as unknown as CrmLeadRow;
+    rerender(
+      <MemoryRouter>
+        <ConvertirLeadSheet open onOpenChange={vi.fn()} lead={leadB} onAbrirAvanzado={vi.fn()} />
+      </MemoryRouter>,
+    );
+    expect((screen.getByLabelText("Nombre de la oportunidad") as HTMLInputElement).value)
+      .toBe("Oportunidad — BETA SA");
+  });
+
+  it("conserva la edición mientras el mismo lead sigue abierto", () => {
+    const { rerender } = renderSheet();
+    const input = screen.getByLabelText("Nombre de la oportunidad");
+    fireEvent.change(input, { target: { value: "Editado A" } });
+    rerender(
+      <MemoryRouter>
+        <ConvertirLeadSheet open onOpenChange={vi.fn()} lead={{ ...leadBase }} onAbrirAvanzado={vi.fn()} />
+      </MemoryRouter>,
+    );
+    expect((screen.getByLabelText("Nombre de la oportunidad") as HTMLInputElement).value)
+      .toBe("Editado A");
   });
 });

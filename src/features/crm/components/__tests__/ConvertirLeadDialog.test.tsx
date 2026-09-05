@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import ConvertirLeadDialog from "@/features/crm/components/ConvertirLeadDialog";
 import type { CrmLeadRow } from "@/features/crm/hooks";
@@ -79,5 +79,55 @@ describe("ConvertirLeadDialog · regresión SIN_CLIENTE", () => {
     expect(screen.getByText("Este lead ya fue convertido.")).toBeTruthy();
     expect(screen.getByRole("button", { name: /Ver cliente/i })).toBeTruthy();
     expect(screen.getByRole("button", { name: /Ver oportunidad/i })).toBeTruthy();
+  });
+});
+
+describe("ConvertirLeadDialog · reinicio de borrador al cambiar de lead", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("reinicia el borrador cuando cambia lead.id (no envía datos del lead A al B)", () => {
+    const { rerender } = renderDialog();
+    const input = screen.getByLabelText("Nombre de la oportunidad");
+    fireEvent.change(input, { target: { value: "Editado A" } });
+    const leadB = { ...leadBase, id: "lead-2", empresa: "BETA SA" } as unknown as CrmLeadRow;
+    rerender(
+      <MemoryRouter>
+        <ConvertirLeadDialog open onOpenChange={vi.fn()} lead={leadB} />
+      </MemoryRouter>,
+    );
+    expect((screen.getByLabelText("Nombre de la oportunidad") as HTMLInputElement).value)
+      .toBe("Oportunidad — BETA SA");
+  });
+
+  it("conserva la edición mientras el mismo lead sigue abierto", () => {
+    const { rerender } = renderDialog();
+    const input = screen.getByLabelText("Nombre de la oportunidad");
+    fireEvent.change(input, { target: { value: "Editado A" } });
+    rerender(
+      <MemoryRouter>
+        <ConvertirLeadDialog open onOpenChange={vi.fn()} lead={{ ...leadBase }} />
+      </MemoryRouter>,
+    );
+    expect((screen.getByLabelText("Nombre de la oportunidad") as HTMLInputElement).value)
+      .toBe("Editado A");
+  });
+
+  it("al cambiar a un lead ya convertido respeta cliente_convertido_id", () => {
+    const { rerender } = renderDialog();
+    const leadConvertido = {
+      ...leadBase,
+      id: "lead-3",
+      estado: "Convertido",
+      cliente_convertido_id: "cli-1",
+      oportunidad_convertida_id: "op-1",
+    } as unknown as CrmLeadRow;
+    rerender(
+      <MemoryRouter>
+        <ConvertirLeadDialog open onOpenChange={vi.fn()} lead={leadConvertido} />
+      </MemoryRouter>,
+    );
+    expect(screen.getByText("Este lead ya fue convertido.")).toBeTruthy();
   });
 });
