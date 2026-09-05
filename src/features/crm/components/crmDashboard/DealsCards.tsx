@@ -63,7 +63,7 @@ export function CerrandoSemanaCard({ items, isError = false, onRetry }: { items:
                 </div>
                 <div className="text-right">
                   <div className="text-body-sm tabular-nums font-semibold">{formatCurrencyCompact(o.monto_estimado, o.moneda)}</div>
-                  <div className="text-label text-muted-foreground">{o.fecha_estimada_cierre} · {o.probabilidad}%</div>
+                  <div className="text-label text-muted-foreground">{o.fecha_estimada_cierre ? formatFechaEs(o.fecha_estimada_cierre) : "Sin fecha"} · {o.probabilidad}%</div>
                 </div>
               </DrilldownRow>
             ))}
