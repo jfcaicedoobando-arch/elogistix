@@ -97,7 +97,8 @@ export function TabFacturacionEmbarque({ facturas, canEdit: canEditProp, embarqu
         conceptosCount={conceptos.length}
         facturadosCount={Array.from(estadosConceptos.values()).filter(e => e === "facturado").length}
         proformasCount={proformas.length}
-        proformasFacturadasCount={proformas.filter(p => p.estado_proforma === "facturada").length}
+        proformasConvertidasCount={proformas.filter(p => p.estado_proforma === "facturada").length}
+        proformasEmitidasCount={proformasEmitidasCount}
         facturasCount={facturas.length}
         facturasEmitidasCount={contarFacturasEmitidas(facturas)}
       />
