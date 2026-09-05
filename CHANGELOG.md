@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+## [13.823.93] - 2026-09-05
+
+### CRM — Cotizaciones sin respuesta: invalidación del límite correcto
+- `useCrearCotizacionDesdeOportunidad` invalidaba sólo la key `(5, 10)` de "Cotizaciones sin respuesta", pero el tablero (`useCrmInicioVM`) consulta con `(5, 5)`; la tarjeta quedaba stale hasta 60s. Ahora se invalidan ambas keys `(5, 5)` y `(5, 10)`, que tienen consumidores reales (tablero y "Next best actions").
+- Regresión actualizada para verificar específicamente la key con límite 5, además de la de límite 10.
+
 ## [13.823.92] - 2026-09-05
 
 ### CRM — Borrador de conversión de lead reiniciado por lead
