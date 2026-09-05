@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.823.107] - 2026-09-05
+- CRM: eliminados los avisos de error duplicados en `useOportunidadDetalleActions.ts`. Se removió el `notifyError` local de `handleEliminar` (useEliminarOportunidad ya notifica en `onError`) y de `crearCotizacion` (useCrearCotizacionDesdeOportunidad ya notifica en `onError` y conserva su reintento idempotente). Se mantienen la navegación tras eliminar/crear, el toast de éxito con folio y el `notifyInfo` cuando existe `avisoEtapa`. Regresiones: un solo feedback visible al fallar eliminar o crear cotización, más los caminos de éxito.
+
 ## [13.823.106] - 2026-09-05
 - CRM: eliminados dos avisos de error duplicados restantes. En `ComentariosOportunidad.tsx` se removió el `notifyError` local del `catch` porque `useCrearComentarioOportunidad` ya notifica en `onError`. En `useLeadDetalleAcciones.ts` se removieron los `notifyError` de `handleSave`/`handleDelete` porque `useActualizarLead` y `useEliminarLead` ya notifican en `onError`. Se conservan toasts de éxito, navegación tras eliminar, validación de correo, gate Lead→Prospecto y los catches vacíos que evitan promesas rechazadas sin capturar. Regresiones: un solo feedback visible al fallar publicar comentario, guardar lead y eliminar lead.
 
