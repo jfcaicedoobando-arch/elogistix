@@ -34,6 +34,17 @@ export default function ConvertirLeadDialog({ open, onOpenChange, lead }: Props)
   const convertir = useConvertirLead();
   const navigate = useNavigate();
 
+  // Reinicia el borrador sólo cuando cambia el lead (evita convertir B con datos de A).
+  const [leadIdBorrador, setLeadIdBorrador] = useState(lead.id);
+  if (leadIdBorrador !== lead.id) {
+    setLeadIdBorrador(lead.id);
+    setClienteId(lead.cliente_convertido_id ?? SIN_CLIENTE);
+    setNombre(`Oportunidad — ${lead.empresa}`);
+    setMonto("0");
+    setMoneda("MXN");
+    setFecha("");
+  }
+
   const yaConvertido = lead.estado === "Convertido" && lead.oportunidad_convertida_id;
 
   const handle = async () => {

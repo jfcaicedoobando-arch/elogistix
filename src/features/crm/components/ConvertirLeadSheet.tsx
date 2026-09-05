@@ -40,6 +40,16 @@ export default function ConvertirLeadSheet({ open, onOpenChange, lead, onAbrirAv
   const [clienteId, setClienteId] = useState<string>(lead.cliente_convertido_id ?? SIN_CLIENTE);
   const convertir = useConvertirLead();
 
+  // Reinicia el borrador sólo cuando cambia el lead (evita convertir B con datos de A).
+  const [leadIdBorrador, setLeadIdBorrador] = useState(lead.id);
+  if (leadIdBorrador !== lead.id) {
+    setLeadIdBorrador(lead.id);
+    setClienteId(lead.cliente_convertido_id ?? SIN_CLIENTE);
+    setNombre(`Oportunidad — ${lead.empresa}`);
+    setMonto("0");
+    setMoneda("MXN");
+  }
+
   const yaConvertido = lead.estado === "Convertido" && lead.oportunidad_convertida_id;
 
   const handleConvertir = async () => {
