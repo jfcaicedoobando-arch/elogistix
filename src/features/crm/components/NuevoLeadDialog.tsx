@@ -163,7 +163,7 @@ export default function NuevoLeadDialog({ open, onOpenChange, draftInicial, onCr
 
   const footer = (
     <FormDialogFooter
-      onCancel={() => onOpenChange(false)}
+      onCancel={() => handleOpenChange(false)}
       onConfirm={handleSubmit}
       confirmLabel="Crear lead"
       loading={pendingTotal}
