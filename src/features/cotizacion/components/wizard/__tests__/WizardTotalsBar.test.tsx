@@ -13,12 +13,14 @@ describe("WizardTotalsBar", () => {
       <WizardTotalsBar
         plUSD={emptyPL}
         plMXN={{ totalCosto: 10000, totalVenta: 15000, profit: 5000, porcentaje: 33.3 }}
-        totalVentaMXN={15000}
       />,
     );
     expect(screen.getByRole("status", { name: /Totales/i })).toBeInTheDocument();
     // Verde: margen ≥15%.
     expect(screen.getByText(/33\.3 %/)).toBeInTheDocument();
+    // Bug 4/5: la venta MXN sale del P&L de costos y se etiqueta sin IVA.
+    expect(screen.getByText("Venta (sin IVA)")).toBeInTheDocument();
+    expect(screen.getByText("$15,000.00")).toBeInTheDocument();
   });
 
   it("prioriza USD cuando existe venta en USD", () => {
@@ -26,7 +28,6 @@ describe("WizardTotalsBar", () => {
       <WizardTotalsBar
         plUSD={{ totalCosto: 500, totalVenta: 800, profit: 300, porcentaje: 37.5 }}
         plMXN={emptyPL}
-        totalVentaMXN={0}
       />,
     );
     expect(screen.getByText(/Margen USD/)).toBeInTheDocument();
@@ -37,7 +38,6 @@ describe("WizardTotalsBar", () => {
       <WizardTotalsBar
         plUSD={emptyPL}
         plMXN={{ totalCosto: 1000, totalVenta: 1100, profit: 100, porcentaje: 9.1 }}
-        totalVentaMXN={1100}
       />,
     );
     expect(screen.getByText(/9\.1 %/)).toBeInTheDocument();
@@ -48,7 +48,6 @@ describe("WizardTotalsBar", () => {
       <WizardTotalsBar
         plUSD={emptyPL}
         plMXN={{ totalCosto: 1000, totalVenta: 1020, profit: 20, porcentaje: 2.0 }}
-        totalVentaMXN={1020}
       />,
     );
     expect(screen.getByText(/2\.0 %/)).toBeInTheDocument();
