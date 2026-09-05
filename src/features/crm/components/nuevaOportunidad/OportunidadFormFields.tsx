@@ -137,7 +137,7 @@ export default function OportunidadFormFields({
             onCheckedChange={(v) => setAutoActividad(v === true)}
           />
           <Label size="sm" htmlFor="auto-act-op" className="cursor-pointer">
-            Crear actividad de seguimiento (tarea, mañana 9:00)
+            Crear actividad de seguimiento (tarea, próximo día hábil 9:00)
           </Label>
         </div>
       )}
