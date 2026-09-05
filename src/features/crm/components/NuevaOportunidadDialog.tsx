@@ -19,6 +19,7 @@ import { useEtapasPipeline } from "@/features/crm/hooks";
 import { useClientesForSelect } from "@/features/cliente/hooks";
 import { useCrearActividad } from "@/features/crm/hooks";
 import { actividadDefaultFechaMx } from "@/features/crm/domain/actividadDefaultFecha";
+import { mxLocalToUtcIso } from "@/lib/date/mx";
 
 import { useOportunidadForm, type OrigenInicial } from "@/features/crm/hooks";
 import OportunidadFormFields from "@/features/crm/components/nuevaOportunidad/OportunidadFormFields";
@@ -88,7 +89,7 @@ export default function NuevaOportunidadDialog({
   const crearActividadSeguimiento = async (oportunidadId: string) => {
     // Regla centralizada (calendario CDMX + siguiente día hábil), igual que
     // el alta de lead: nunca cae en sábado/domingo ni depende del reloj local.
-    const fechaProgramada = new Date(actividadDefaultFechaMx()).toISOString();
+    const fechaProgramada = mxLocalToUtcIso(actividadDefaultFechaMx());
     try {
       await crearActividad.mutateAsync({
         tipo: "tarea",

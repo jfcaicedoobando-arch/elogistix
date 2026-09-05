@@ -15,6 +15,7 @@ import { NuevoLeadForm, type LeadFormState } from "./nuevoLead/NuevoLeadForm";
 import { AvisoLeadDuplicado } from "./AvisoLeadDuplicado";
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 import { actividadDefaultFechaMx } from "@/features/crm/domain/actividadDefaultFecha";
+import { mxLocalToUtcIso } from "@/lib/date/mx";
 import { emailLooksValid } from "@/features/cliente/components/nuevoClienteValidators";
 
 
@@ -95,7 +96,7 @@ export default function NuevoLeadDialog({ open, onOpenChange, onCreated }: Props
             descripcion: "Actividad creada automáticamente al alta del lead.",
             entidad_tipo: "lead",
             entidad_id: r.id,
-            fecha_programada: new Date(actividadDefaultFechaMx()).toISOString(),
+            fecha_programada: mxLocalToUtcIso(actividadDefaultFechaMx()),
             responsable_id: form.vendedor_id ?? null,
             responsable_email: form.vendedor_email ?? "",
             silencioso: true,
