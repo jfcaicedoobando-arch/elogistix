@@ -56,6 +56,9 @@ export async function savePaso1(opts: {
     // al paso 1 para un override de tarifa tras haber completado el paso 3.
     delete data.conceptos_venta;
     delete data.subtotal;
+    // A1/A7: con importes ya capturados el mapper no propone moneda; nunca se
+    // sobrescribe la moneda persistida desde el paso 1.
+    if (data.moneda === undefined) delete data.moneda;
     await mutations.updateCotizacion.mutateAsync({ id: cotizacionId, data });
     return cotizacionId;
   }

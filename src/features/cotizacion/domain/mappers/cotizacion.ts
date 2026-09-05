@@ -145,10 +145,28 @@ function partesLclManual(values: CotizacionFormValues) {
   };
 }
 
+/**
+ * A1/A7 (v13.823.151): la moneda del encabezado se derivaba siempre a 'USD' en
+ * el paso 1, incluso al editar. Si la oportunidad CRM vinculada estaba en MXN,
+ * el vínculo fallaba con "monedas distintas" y la pantalla mostraba MXN mientras
+ * la cotización persistía USD. Ahora:
+ *   - borrador sin importes → se adopta la moneda de la oportunidad;
+ *   - con importes capturados → NO se toca la moneda (no se reinterpreta dinero)
+ *     y el bloqueo/mensaje de la RPC guía la recuperación.
+ */
+export function monedaPaso1(
+  values: CotizacionFormValues,
+  sinImportes: boolean,
+): "USD" | "MXN" | undefined {
+  if (!sinImportes) return undefined;
+  return values.monedaCrm || "USD";
+}
+
 export function buildPaso1Data(
   values: CotizacionFormValues,
   clientes: { id: string; nombre: string }[],
   userEmail: string,
+  sinImportes = true,
 ): Record<string, unknown> {
   const { peso, volumen, piezas } = calcularPesoVolumenPiezas(values);
   return {
@@ -160,7 +178,7 @@ export function buildPaso1Data(
     piezas,
     conceptos_venta: [] as ConceptoVentaCotizacion[],
     subtotal: 0,
-    moneda: 'USD',
+    moneda: monedaPaso1(values, sinImportes),
     vigencia_dias: vigenciaDias(values.validezPropuesta),
     notas: values.notas,
     operador: userEmail,

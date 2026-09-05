@@ -28,6 +28,13 @@ export interface CotizacionFormValues {
   prospectoModo: ProspectoVinculacionModo;
   oportunidadId: string;
   leadId: string;
+  /**
+   * A1/A7 (v13.823.151): moneda registrada en la oportunidad CRM vinculada.
+   * La RPC de vínculo exige que coincida con la de la cotización; se guarda al
+   * seleccionar el vínculo para que un borrador sin importes nazca/quede en esa
+   * misma moneda.
+   */
+  monedaCrm: "USD" | "MXN" | "";
   prospectoEmpresa: string;
   prospectoContacto: string;
   prospectoEmail: string;

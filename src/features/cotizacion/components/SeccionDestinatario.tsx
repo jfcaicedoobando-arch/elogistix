@@ -46,7 +46,16 @@ export default function SeccionDestinatario({ clientes, complete, vinculoConfirm
   const tieneVinculo = Boolean(oportunidadId || leadId);
   // Bug 1: la moneda de la oportunidad se muestra en cuanto se vincula, para
   // capturar los importes en la moneda que el CRM ya tiene registrada.
-  const [monedaOportunidad, setMonedaOportunidad] = useState<string | null>(null);
+  const [monedaOportunidad, setMonedaOportunidad] = useState<string | null>(
+    () => watch("monedaCrm") || null,
+  );
+
+  /** A1/A7: la moneda del CRM viaja en el form para que el guardado la use. */
+  const aplicarMonedaCrm = (moneda: string | null) => {
+    setMonedaOportunidad(moneda);
+    const valida = moneda === "USD" || moneda === "MXN" ? moneda : "";
+    setValue("monedaCrm", valida, { shouldDirty: true });
+  };
 
   const handleSelectMatch = (m: ProspectoMatch) => {
     if (m.kind === "oportunidad") {
@@ -61,7 +70,7 @@ export default function SeccionDestinatario({ clientes, complete, vinculoConfirm
     setValue("prospectoEmail", m.email, { shouldDirty: true });
     setValue("prospectoTelefono", m.telefono, { shouldDirty: true });
     clearErrors(["oportunidadId", "leadId", "prospectoEmpresa"]);
-    setMonedaOportunidad(m.kind === "oportunidad" ? (m.moneda ?? null) : null);
+    aplicarMonedaCrm(m.kind === "oportunidad" ? (m.moneda ?? null) : null);
   };
 
   const handleDesvincular = () => {
@@ -71,7 +80,7 @@ export default function SeccionDestinatario({ clientes, complete, vinculoConfirm
     // Bug 2: al desvincular, el aviso de validación anterior ya no aplica.
     clearErrors(["oportunidadId", "leadId", "prospectoEmpresa"]);
     onLimpiarVinculoError?.();
-    setMonedaOportunidad(null);
+    aplicarMonedaCrm(null);
   };
 
   const handleCambioDestinatario = (v: string) => {
