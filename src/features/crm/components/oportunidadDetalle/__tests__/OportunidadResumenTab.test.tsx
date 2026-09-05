@@ -1,6 +1,6 @@
 /**
- * v13.823.103 — OportunidadResumenTab: las fechas de cierre se formatean
- * con el formateador canónico y no se muestra el ISO crudo.
+ * v13.823.103 — OportunidadResumenTab: fechas y monto meta se formatean
+ * con los formateadores canónicos y no se muestra ISO ni número crudo.
  */
 import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
@@ -32,6 +32,7 @@ const baseOp: Partial<CrmOportunidadRow> = {
   origen: "Shanghai",
   destino: "Manzanillo",
   monto_meta: 50000,
+  moneda: "MXN",
   compromiso_nota: "Compromiso firmado",
   notas: "Nota de prueba",
   etapa_id: "etapa-1",
@@ -41,7 +42,7 @@ const baseOp: Partial<CrmOportunidadRow> = {
 };
 
 describe("OportunidadResumenTab", () => {
-  it("formatea fecha_estimada_cierre y fecha_meta_cierre sin mostrar ISO crudo", () => {
+  it("formatea fechas y monto meta sin mostrar ISO ni número crudo", () => {
     fieldsByLabel.clear();
     const op = {
       ...baseOp,
@@ -54,24 +55,29 @@ describe("OportunidadResumenTab", () => {
 
     const estimada = fieldsByLabel.get("Cierre estimado");
     const meta = fieldsByLabel.get("Fecha meta de cierre");
+    const monto = fieldsByLabel.get("Monto meta");
 
     expect(estimada).toBe("15/09/2026");
     expect(estimada).not.toMatch(/^\d{4}-\d{2}-\d{2}/);
     expect(meta).toBe("20/09/2026");
     expect(meta).not.toMatch(/^\d{4}-\d{2}-\d{2}/);
+    expect(monto).toMatch(/^MXN/);
+    expect(monto).not.toContain("50000");
   });
 
-  it("muestra — cuando las fechas son nulas", () => {
+  it("muestra — cuando fechas y monto meta son nulos", () => {
     fieldsByLabel.clear();
     const op = {
       ...baseOp,
       fecha_estimada_cierre: null,
       fecha_meta_cierre: null,
+      monto_meta: null,
     } as CrmOportunidadRow;
 
     render(<OportunidadResumenTab op={op} etapaNombre="Calificado" canEdit={false} />);
 
     expect(fieldsByLabel.get("Cierre estimado")).toBe("—");
     expect(fieldsByLabel.get("Fecha meta de cierre")).toBe("—");
+    expect(fieldsByLabel.get("Monto meta")).toBe("—");
   });
 });
