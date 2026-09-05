@@ -6,11 +6,15 @@ import { supabase } from "@/integrations/supabase/client";
 import { registrarActividad } from "@/services/bitacora/registrar";
 import { getErrorMessage } from "@/lib/errors";
 import { crearNotificacionSilencioso } from "./notificaciones";
+import { mxAddDaysIso } from "@/lib/date/mx";
 
+/**
+ * Fecha programada de las tareas automáticas: misma hora, `d` días después en
+ * el calendario CDMX. Antes usaba `new Date().setDate()` + `toISOString()`,
+ * que suma 24 h del reloj del navegador y corría el día cerca de medianoche.
+ */
 function isoDaysFromNow(d: number): string {
-  const t = new Date();
-  t.setDate(t.getDate() + d);
-  return t.toISOString();
+  return mxAddDaysIso(null, d);
 }
 
 export interface EtapaInfo {
@@ -133,7 +137,8 @@ export async function cancelarActividadesPerdida(ctx: AutomationCtx): Promise<vo
     .update({ fecha_completada: new Date().toISOString() })
     .eq("entidad_tipo", "oportunidad")
     .eq("entidad_id", ctx.op.id)
-    .is("fecha_completada", null);
+    .is("fecha_completada", null)
+    .is("deleted_at", null);
   if (error) throw error;
   await registrarActividad({
     modulo: "crm",

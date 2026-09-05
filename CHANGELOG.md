@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.823.119] - 2026-09-05
+- CRM automatizaciones de etapa (`src/features/crm/services/automatizacionesEtapa.ts`): `cancelarActividadesPerdida` ahora filtra también `deleted_at IS NULL`, de modo que una actividad archivada ya no puede marcarse como completada al perder la oportunidad; las tareas activas se cierran igual que antes.
+- El helper local `isoDaysFromNow` dejó de usar `new Date().setDate()` + `toISOString()` y delega en el helper canónico `mxAddDaysIso` (calendario America/Mexico_City), conservando la misma regla de días y la hora local. Regresiones: actividad archivada intacta y fecha programada estable cerca de medianoche UTC vs CDMX.
+
 ## [13.823.118] - 2026-09-05
 - CRM zona horaria (cierre del hallazgo): `isoDaysFromNow` (`src/features/crm/domain/dashboardAggregates.ts`) ya no hace `new Date().setDate()` + `isoUtcDay`; delega en el helper canónico `todayLocalISOPlus` (calendario America/Mexico_City) y acepta una fecha base inyectable para pruebas. Así el límite de 7 días de "Cerrando esta semana" es estable cerca de medianoche sin duplicar helpers. Regresiones con el navegador en UTC y en America/Mexico_City, incluido el cruce de fin de mes.
 
