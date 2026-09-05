@@ -4,12 +4,15 @@
  */
 import { formatFechaEs } from "@/lib/formatters/dates";
 import type { ProximaActividad } from "@/features/crm/hooks";
-import { diffDiasCalendario } from "@/lib/date/dateOnly";
+import { diffDiasMx } from "@/lib/date/mx";
 
 export function formatProx(prox: ProximaActividad | undefined): string {
   if (!prox) return "Sin próxima acción";
   if (!prox.fecha_programada) return prox.asunto;
-  const diff = diffDiasCalendario(new Date(), prox.fecha_programada);
+  // Calendario de negocio CDMX: sin anclar, un usuario en UTC veía "Hoy"
+  // en una actividad de ayer/mañana.
+  const diff = diffDiasMx(new Date(), prox.fecha_programada);
+  if (diff === null) return prox.asunto;
   if (diff < 0) return `Vencida · ${prox.asunto}`;
   if (diff === 0) return `Hoy · ${prox.asunto}`;
   if (diff === 1) return `Mañana · ${prox.asunto}`;

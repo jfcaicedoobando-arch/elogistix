@@ -4,6 +4,7 @@ import { ErrorStateInline } from "@/components/empty/ErrorStateInline";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { DrilldownRow } from "@/components/shared/dataTable/DrilldownRow";
+import { TZ_MX } from "@/lib/formatters/dates";
 
 interface Actividad {
   id: string;
@@ -23,7 +24,10 @@ function entidadHref(tipo: string, id: string): string {
 
 function formatHora(iso: string | null): string {
   if (!iso) return "—";
-  return new Date(iso).toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" });
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "—";
+  // TZ explícita: sin ella la hora se mostraba en el reloj del navegador.
+  return d.toLocaleTimeString("es-MX", { timeZone: TZ_MX, hour: "2-digit", minute: "2-digit" });
 }
 
 interface Props {
