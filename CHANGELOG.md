@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.823.123] - 2026-09-05
+- CRM oportunidad (`OportunidadCotizacionesList`): la antigüedad de una cotización enviada se calcula ahora con `diffDiasMx` (calendario America/Mexico_City) en vez de `diffDiasCalendario` contra el reloj local, así la etiqueta "Sin respuesta · Nd" es estable cerca de medianoche para usuarios en otras zonas. Se conservan el umbral > 5 días y el formato existente. Regresión: conteo CDMX vs UTC y umbral respetado.
+
 ## [13.823.122] - 2026-09-05
 - CRM alta express de actividad (`QuickCreateActividadDialog`): la fecha default se recalcula en cada apertura del modal (transición cerrado → abierto) cuando el usuario no ha capturado fecha, evitando que un `QuickAddMenu` montado durante horas o tras un cambio de día muestre un default viejo. Si el usuario editó la fecha durante la apertura, se conserva. Se mantienen el reset al cerrar, el `isDirty` y la validación de fecha. Regresiones: cambio de día simulado antes de abrir y fecha capturada no sobrescrita.
 
