@@ -45,8 +45,8 @@ describe("diaMx", () => {
 describe("limitesDiaMx", () => {
   it("acota el día CDMX en instantes UTC (21:00 CDMX del día 15)", () => {
     const { inicio, fin } = limitesDiaMx(NOCHE_MX);
-    expect(inicio).toBe("2026-06-15T05:00:00.000Z");
-    expect(fin).toBe("2026-06-16T04:59:59.000Z");
+    expect(inicio).toBe("2026-06-15T06:00:00.000Z");
+    expect(fin).toBe("2026-06-16T05:59:59.000Z");
   });
 
   it("es idéntico con el navegador en UTC o en CDMX", () => {
