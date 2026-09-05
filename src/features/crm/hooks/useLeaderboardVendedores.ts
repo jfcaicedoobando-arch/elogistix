@@ -5,7 +5,7 @@ import {
   type LeaderboardRow,
 } from "@/features/crm/services";
 import { queryKeys } from "@/lib/query";
-import { ymMx, primerDiaMesMx } from "@/lib/date/mx";
+import { ymMx, primerDiaMesMx, mxLocalToUtcIso } from "@/lib/date/mx";
 
 export function useLeaderboardVendedores() {
   return useQuery<LeaderboardRow[]>({
