@@ -8,6 +8,7 @@ import { describe, it, expect, afterAll, vi } from "vitest";
 import { diaMx, diffDiasMx, limitesDiaMx } from "@/lib/date/mx";
 import { esHoy, esVencida } from "@/features/crm/domain/proximasActividades";
 import { formatProx } from "@/features/crm/domain/proximaActividadLabel";
+import { isoDaysFromNow } from "@/features/crm/domain/dashboardAggregates";
 
 const TZ_ORIGINAL = process.env.TZ;
 
@@ -109,5 +110,29 @@ describe("formatProx", () => {
     } finally {
       vi.useRealTimers();
     }
+  });
+});
+
+describe("isoDaysFromNow (límite de Cerrando esta semana)", () => {
+  const NOCHE = new Date("2026-06-16T03:00:00Z"); // 21:00 CDMX del 15.
+
+  it("usa el calendario MX aunque el navegador esté en UTC", () => {
+    conTz("UTC", () => {
+      expect(isoDaysFromNow(0, NOCHE)).toBe("2026-06-15");
+      expect(isoDaysFromNow(7, NOCHE)).toBe("2026-06-22");
+    });
+  });
+
+  it("da el mismo resultado con el navegador en America/Mexico_City", () => {
+    conTz("America/Mexico_City", () => {
+      expect(isoDaysFromNow(0, NOCHE)).toBe("2026-06-15");
+      expect(isoDaysFromNow(7, NOCHE)).toBe("2026-06-22");
+    });
+  });
+
+  it("cruza el fin de mes sin desfase", () => {
+    conTz("UTC", () => {
+      expect(isoDaysFromNow(7, new Date("2026-06-29T18:00:00Z"))).toBe("2026-07-06");
+    });
   });
 });
