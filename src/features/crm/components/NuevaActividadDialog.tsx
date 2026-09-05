@@ -22,6 +22,7 @@ import {
   type CrmActividadTipo, type CrmEntidadTipo,
 } from "@/features/crm/hooks";
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
+import { mxLocalToUtcIso } from "@/lib/date/mx";
 import SelectorEntidadActividad from "@/features/crm/components/nuevaActividad/SelectorEntidadActividad";
 
 interface Props {
@@ -86,7 +87,7 @@ export default function NuevaActividadDialog({ open, onOpenChange, defaultEntida
         descripcion: desc.trim(),
         entidad_tipo: entidadTipo,
         entidad_id: entidadId,
-        fecha_programada: fecha ? new Date(fecha).toISOString() : null,
+        fecha_programada: mxLocalToUtcIso(fecha),
         contacto_efectivo: contactoEfectivo,
         reunion_calificada: reunionCalificada,
       });

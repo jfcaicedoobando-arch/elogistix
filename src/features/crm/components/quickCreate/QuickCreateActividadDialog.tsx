@@ -6,7 +6,6 @@
  * `QuickCreateLeadDialog.tsx`).
  */
 import { useEffect, useMemo, useRef, useState } from "react";
-import { isValid } from "date-fns";
 import { Activity } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,6 +18,7 @@ import { FormDialogFooter } from "@/components/shared/FormDialogFooter";
 import { notifyError } from "@/lib/ui/appFeedback";
 import { useCrearActividad, useOportunidades, type CrmEntidadTipo } from "@/features/crm/hooks";
 import { actividadDefaultFechaMx } from "@/features/crm/domain/actividadDefaultFecha";
+import { mxLocalToUtcIso } from "@/lib/date/mx";
 
 interface Props {
   open: boolean;
@@ -66,10 +66,10 @@ export default function QuickCreateActividadDialog({ open, onOpenChange, onCreat
       notifyError(undefined, { title: "Selecciona una oportunidad", method: "FEATURES_CRM_COMPONENTS_QUICKCREATE_QUICKCREATEACTIVIDADDIALOG_2" });
       return;
     }
-    // Si el usuario limpia el DateTimePickerMx emite "" — `new Date("")` es
-    // Invalid Date y `toISOString()` lanza RangeError. La fecha es opcional.
-    const fechaDate = fecha ? new Date(fecha) : null;
-    if (fechaDate && !isValid(fechaDate)) {
+    // El picker emite hora CDMX; `mxLocalToUtcIso` la convierte a UTC y
+    // devuelve null si viene vacía o mal formada. La fecha es opcional.
+    const fechaUtc = mxLocalToUtcIso(fecha);
+    if (fecha.trim() && !fechaUtc) {
       notifyError(undefined, { title: "Selecciona una fecha válida", method: "FEATURES_CRM_COMPONENTS_QUICKCREATE_QUICKCREATEACTIVIDADDIALOG_4" });
       return;
     }
@@ -81,7 +81,7 @@ export default function QuickCreateActividadDialog({ open, onOpenChange, onCreat
         descripcion: "",
         entidad_tipo: "oportunidad" as CrmEntidadTipo,
         entidad_id: entidadId,
-        fecha_programada: fechaDate ? fechaDate.toISOString() : null,
+        fecha_programada: fechaUtc,
       });
       // Hallazgo #13.1: el toast de éxito lo emite `useCrearActividad`; aquí
       // sólo se cierra el diálogo (sin duplicar la notificación).
