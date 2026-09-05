@@ -59,9 +59,19 @@ export default function QuickCreateActividadDialog({ open, onOpenChange, onCreat
       const nueva = defaultFecha();
       setFecha(nueva);
       setFechaInicial(nueva);
+    } else if (!abiertoAntes.current && open) {
+      // Al abrir: si el usuario no capturó fecha (sigue en el default de la
+      // apertura anterior), refrescar el default por si cambió el día.
+      setFecha((actual) => {
+        if (actual !== fechaInicial) return actual;
+        const nueva = defaultFecha();
+        setFechaInicial(nueva);
+        return nueva;
+      });
     }
     abiertoAntes.current = open;
-  }, [open]);
+  }, [open, fechaInicial]);
+
 
   const submit = async () => {
     if (crear.isPending || enviandoRef.current) return;
