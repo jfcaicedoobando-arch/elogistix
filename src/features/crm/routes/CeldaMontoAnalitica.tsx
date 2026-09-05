@@ -10,7 +10,7 @@ import { Hint } from "@/components/shared/Hint";
 import { montoAnalitica } from "@/features/crm/routes/analiticaMonto";
 
 interface Props {
-  monto: number | null | undefined;
+  monto: number;
   moneda: string;
 }
 

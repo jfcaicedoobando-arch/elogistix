@@ -105,7 +105,7 @@ export function NavieraCondicionForm({ navieraId, existente, onSaved }: Props) {
 
       <fieldset disabled={sinProveedor} className="space-y-4 disabled:opacity-60">
       {sinProveedor && (
-        <p className="text-xs text-muted-foreground">
+        <p className="text-body-sm text-muted-foreground">
           Vincula primero un proveedor tipo &quot;Naviera&quot; para capturar carta garantía y demoras.
         </p>
       )}

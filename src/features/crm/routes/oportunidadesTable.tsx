@@ -8,13 +8,16 @@ import type { OportunidadesFiltros } from "@/features/crm/components/oportunidad
 import { COL_W } from "@/components/shared/dataTable/columnWidths";
 import type { ProximaActividad } from "@/features/crm/hooks/useProximasActividades";
 import { formatFechaEs } from "@/lib/formatters/dates";
+import { Hint } from "@/components/shared/Hint";
 
-/** Celda truncada con el texto completo accesible vía title/aria-label. */
+/** Celda truncada con el texto completo accesible vía Hint + aria-label. */
 function celdaTruncada(texto: string) {
   return (
-    <span className="block truncate" title={texto} aria-label={texto}>
-      {texto}
-    </span>
+    <Hint label={texto}>
+      <span className="block truncate" aria-label={texto}>
+        {texto}
+      </span>
+    </Hint>
   );
 }
 
@@ -42,12 +45,12 @@ export const oportunidadesColumns: ColumnDef<CrmOportunidadRow, unknown>[] = def
       accessor: (r) => Number(r.monto_estimado ?? 0),
       currencyAccessor: (r) => r.moneda,
     }),
-    meta: { width: COL_W.monto, align: "right", className: "tabular-nums whitespace-nowrap text-xs" },
+    meta: { width: COL_W.monto, align: "right", className: "tabular-nums whitespace-nowrap text-body-sm" },
   },
   {
     id: "prob",
     header: "Prob",
-    meta: { width: COL_W.tiny, align: "center", className: "text-center text-xs hidden 2xl:table-cell", headerClassName: "hidden 2xl:table-cell" },
+    meta: { width: COL_W.tiny, align: "center", className: "text-center text-body-sm hidden 2xl:table-cell", headerClassName: "hidden 2xl:table-cell" },
     cell: ({ row }) => `${row.original.probabilidad}%`,
   },
   {
@@ -56,12 +59,12 @@ export const oportunidadesColumns: ColumnDef<CrmOportunidadRow, unknown>[] = def
       header: "Cierre est.",
       accessor: (r) => r.fecha_estimada_cierre,
     }),
-    meta: { width: COL_W.fecha, className: "text-xs whitespace-nowrap" },
+    meta: { width: COL_W.fecha, className: "text-body-sm whitespace-nowrap" },
   },
   {
     id: "vendedor",
     header: "Vendedor",
-    meta: { width: COL_W.nombre, className: "text-xs hidden 2xl:table-cell", headerClassName: "hidden 2xl:table-cell" },
+    meta: { width: COL_W.nombre, className: "text-body-sm hidden 2xl:table-cell", headerClassName: "hidden 2xl:table-cell" },
     cell: ({ row }) => celdaTruncada(row.original.vendedor_email || "—"),
   },
 ]);
@@ -78,7 +81,7 @@ export function siguienteActividadColumn(
     header: "Siguiente actividad",
     meta: {
       width: COL_W.nombre,
-      className: "text-xs hidden lg:table-cell",
+      className: "text-body-sm hidden lg:table-cell",
       headerClassName: "hidden lg:table-cell",
     },
     cell: ({ row }) => {

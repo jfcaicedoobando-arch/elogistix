@@ -23,7 +23,7 @@ import CrmForecastMensualChart from "@/features/crm/components/analitica/CrmFore
 
 import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/components/ui/table";
 import { DetailTableHead } from "@/components/shared/DetailTable";
-import { montoAnalitica } from "@/features/crm/routes/analiticaMonto";
+import { CeldaMontoAnalitica } from "@/features/crm/routes/CeldaMontoAnalitica";
 function ForecastPanel() {
   const { data, isLoading, isError, refetch } = useForecast();
   const totales = data?.totalesPorMoneda ?? [];
@@ -65,9 +65,9 @@ function ForecastPanel() {
                   <TableRow key={b.key} className="border-b">
                     <TableCell>{b.label}</TableCell>
                     <TableCell>{b.moneda}</TableCell>
-                    <TableCell className="text-right tabular-nums whitespace-nowrap"><span title={montoAnalitica(b.pipeline, b.moneda).titulo} aria-label={montoAnalitica(b.pipeline, b.moneda).titulo}>{montoAnalitica(b.pipeline, b.moneda).texto}</span></TableCell>
-                    <TableCell className="text-right tabular-nums whitespace-nowrap"><span title={montoAnalitica(b.ponderado, b.moneda).titulo} aria-label={montoAnalitica(b.ponderado, b.moneda).titulo}>{montoAnalitica(b.ponderado, b.moneda).texto}</span></TableCell>
-                    <TableCell className="text-right tabular-nums whitespace-nowrap"><span title={montoAnalitica(b.ganado, b.moneda).titulo} aria-label={montoAnalitica(b.ganado, b.moneda).titulo}>{montoAnalitica(b.ganado, b.moneda).texto}</span></TableCell>
+                    <CeldaMontoAnalitica monto={b.pipeline} moneda={b.moneda} />
+                    <CeldaMontoAnalitica monto={b.ponderado} moneda={b.moneda} />
+                    <CeldaMontoAnalitica monto={b.ganado} moneda={b.moneda} />
                     <TableCell className="text-right">{b.count}</TableCell>
                   </TableRow>
                 ))}
@@ -90,9 +90,9 @@ function ForecastPanel() {
                   <TableRow key={b.key} className="border-b">
                     <TableCell>{b.label}</TableCell>
                     <TableCell>{b.moneda}</TableCell>
-                    <TableCell className="text-right tabular-nums whitespace-nowrap"><span title={montoAnalitica(b.pipeline, b.moneda).titulo} aria-label={montoAnalitica(b.pipeline, b.moneda).titulo}>{montoAnalitica(b.pipeline, b.moneda).texto}</span></TableCell>
-                    <TableCell className="text-right tabular-nums whitespace-nowrap"><span title={montoAnalitica(b.ponderado, b.moneda).titulo} aria-label={montoAnalitica(b.ponderado, b.moneda).titulo}>{montoAnalitica(b.ponderado, b.moneda).texto}</span></TableCell>
-                    <TableCell className="text-right tabular-nums whitespace-nowrap"><span title={montoAnalitica(b.ganado, b.moneda).titulo} aria-label={montoAnalitica(b.ganado, b.moneda).titulo}>{montoAnalitica(b.ganado, b.moneda).texto}</span></TableCell>
+                    <CeldaMontoAnalitica monto={b.pipeline} moneda={b.moneda} />
+                    <CeldaMontoAnalitica monto={b.ponderado} moneda={b.moneda} />
+                    <CeldaMontoAnalitica monto={b.ganado} moneda={b.moneda} />
                     <TableCell className="text-right">{b.count}</TableCell>
                   </TableRow>
                 ))}
