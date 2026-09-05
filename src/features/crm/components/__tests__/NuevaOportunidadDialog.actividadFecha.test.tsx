@@ -10,7 +10,7 @@ import { EMPTY_OPORTUNIDAD } from "@/features/crm/domain/oportunidadFormState";
 import { actividadDefaultFechaMx } from "@/features/crm/domain/actividadDefaultFecha";
 
 const crearOportunidad = vi.fn(async () => ({ id: "op-1" }));
-const crearActividad = vi.fn(async () => ({ id: "act-1" }));
+const crearActividad = vi.fn(async (_payload: { fecha_programada: string }) => ({ id: "act-1" }));
 
 vi.mock("@/features/crm/hooks", () => ({
   useCrearOportunidad: () => ({ mutateAsync: crearOportunidad, isPending: false }),
