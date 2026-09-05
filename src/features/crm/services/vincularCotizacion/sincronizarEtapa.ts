@@ -64,19 +64,10 @@ export async function sincronizarEtapaPorEstadoCotizacion(input: {
   // P1 (13.823.142): si la oportunidad YA está cerrada en el mismo tipo
   // (p. ej. ganada el 31/08), enviar otra alternativa no debe mover la fecha de
   // cierre a hoy. Sólo se fija `fecha_cierre_real` cuando hay transición real.
-  const { data: actual, error: errActual } = await supabase
-    .from("crm_oportunidades")
-    .select("id, fecha_cierre_real, crm_etapas_pipeline(tipo)")
-    .eq("id", input.oportunidadId)
-    .is("deleted_at", null)
-    .maybeSingle();
-  if (errActual) throw errActual;
+  const actual = await fetchCierreActual(input.oportunidadId);
   if (!actual) return;
-  const etapaActual = (actual as { crm_etapas_pipeline?: { tipo?: string } | null })
-    .crm_etapas_pipeline;
-  const tipoActual = etapaActual?.tipo ?? null;
-  const yaCerradaEnMismoTipo =
-    tipoActual === tipo && (actual as { fecha_cierre_real?: string | null }).fecha_cierre_real != null;
+  const yaCerradaEnMismoTipo = actual.tipo === tipo && actual.fechaCierre != null;
+
 
   // P1-B (13.823.70): al volver a "abierta" hay que limpiar los datos de cierre;
   // antes quedaban `fecha_cierre_real`/`motivo_perdida_id` históricos y la
