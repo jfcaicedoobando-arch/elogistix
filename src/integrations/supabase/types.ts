@@ -9808,6 +9808,10 @@ export type Database = {
           vencidas: number
         }[]
       }
+      crm_intercambiar_orden_etapas: {
+        Args: { p_etapa_a: string; p_etapa_b: string }
+        Returns: undefined
+      }
       crm_leads_buscar_duplicados: {
         Args: { p_claves: Json }
         Returns: {
