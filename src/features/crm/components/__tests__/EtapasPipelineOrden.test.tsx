@@ -25,8 +25,8 @@ vi.mock("@/features/crm/hooks", () => ({
 
 import EtapasPipelineEditor from "@/features/crm/components/EtapasPipelineEditor";
 
-const subir = () => screen.getAllByRole("button", { name: "Subir" });
-const bajar = () => screen.getAllByRole("button", { name: "Bajar" });
+const botonesSubir = () => screen.getAllByRole("button", { name: "Subir" });
+const botonesBajar = () => screen.getAllByRole("button", { name: "Bajar" });
 
 describe("EtapasPipelineEditor · orden", () => {
   beforeEach(() => {
@@ -37,10 +37,32 @@ describe("EtapasPipelineEditor · orden", () => {
 
   it("subir intercambia con la etapa anterior", () => {
     render(<EtapasPipelineEditor />);
-    fireEvent.click(subier());
+    fireEvent.click(botonesSubir()[1]);
+    expect(reordenarMutateAsync).toHaveBeenCalledTimes(1);
+    expect(reordenarMutateAsync).toHaveBeenCalledWith({ etapaA: "e2", etapaB: "e1" });
+    expect(actualizarMutateAsync).not.toHaveBeenCalled();
+  });
+
+  it("bajar intercambia con la etapa siguiente", () => {
+    render(<EtapasPipelineEditor />);
+    fireEvent.click(botonesBajar()[1]);
+    expect(reordenarMutateAsync).toHaveBeenCalledWith({ etapaA: "e2", etapaB: "e3" });
+  });
+
+  it("respeta límites: primera no sube y última no baja", () => {
+    render(<EtapasPipelineEditor />);
+    expect(botonesSubir()[0]).toBeDisabled();
+    expect(botonesBajar()[2]).toBeDisabled();
+    fireEvent.click(botonesSubir()[0]);
+    fireEvent.click(botonesBajar()[2]);
+    expect(reordenarMutateAsync).not.toHaveBeenCalled();
+  });
+
+  it("bloquea las flechas mientras el intercambio está en curso (doble clic)", () => {
+    reordenarPending = true;
+    render(<EtapasPipelineEditor />);
+    expect(botonesBajar()[0]).toBeDisabled();
+    fireEvent.click(botonesBajar()[0]);
+    expect(reordenarMutateAsync).not.toHaveBeenCalled();
   });
 });
-
-function subier() {
-  return subir()[1];
-}
