@@ -7,7 +7,11 @@
  * buckets del dashboard, cortes de recordatorios de CxC).
  */
 
-const TZ = "America/Mexico_City";
+import { diffDiasCalendario } from "./dateOnly";
+import { mxLocalToUtcIso, utcIsoToMxLocal } from "./mxDatetimeLocal";
+import { TZ_MX as TZ } from "./mxTz";
+
+export { mxLocalToUtcIso, utcIsoToMxLocal };
 
 /** YYYY-MM-DD en zona CDMX. */
 export function hoyMx(base: Date = new Date()): string {
