@@ -23,7 +23,7 @@ import {
   computeValido, getTituloModal, esTarifaSucia,
 } from "./TarifaForm.helpers";
 import { BotonCancelarTarifa } from "./TarifaFormCancelar";
-import { useTarifaFormReset } from "./useTarifaFormReset";
+import { useTarifaFormReset } from "../hooks/useTarifaFormReset";
 
 import { formatUSD } from "@/lib/formatters";
 import { useTarifaSubmit } from "@/features/costeo/hooks/useTarifaSubmit";

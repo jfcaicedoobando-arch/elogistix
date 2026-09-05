@@ -7,28 +7,17 @@ import { useEffect, useRef, useState } from "react";
 import { Briefcase } from "lucide-react";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { FormDialogFooter } from "@/components/shared/FormDialogFooter";
-import { notifyError } from "@/lib/ui/appFeedback";
-import { crmToast } from "@/features/crm/lib/crmToast";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import {
-  useCrearOportunidad,
-  useActualizarOportunidad,
   type CrmOportunidadRow,
+  useEtapasPipeline,
+  useOportunidadForm,
+  useNuevaOportunidadSubmit,
+  type OrigenInicial,
 } from "@/features/crm/hooks";
-import { useEtapasPipeline } from "@/features/crm/hooks";
 import { useClientesForSelect } from "@/features/cliente/hooks";
-import { useCrearActividad } from "@/features/crm/hooks";
-import { actividadDefaultFechaMx } from "@/features/crm/domain/actividadDefaultFecha";
-import { mxLocalToUtcIso } from "@/lib/date/mx";
-
-import { useOportunidadForm, type OrigenInicial } from "@/features/crm/hooks";
 import OportunidadFormFields from "@/features/crm/components/nuevaOportunidad/OportunidadFormFields";
-import { ERROR_CODES } from "@/lib/domain/errorCatalog";
-import {
-  buildOportunidadFormPayload,
-  validarOportunidadForm,
-  faltantesOportunidadForm,
-} from "@/features/crm/domain/oportunidadFormPayload";
+import { faltantesOportunidadForm } from "@/features/crm/domain/oportunidadFormPayload";
 
 interface Props {
   open: boolean;
@@ -56,10 +45,6 @@ export default function NuevaOportunidadDialog({
   const { user } = useAuth();
   const { data: etapas = [] } = useEtapasPipeline();
   const { data: clientes = [] } = useClientesForSelect() as { data: { id: string; nombre: string }[] | undefined };
-  const crear = useCrearOportunidad();
-  const actualizar = useActualizarOportunidad();
-  const crearActividad = useCrearActividad();
-  const enviandoRef = useRef(false);
 
   const { form, setForm, set, isDirty, markClean } = useOportunidadForm(
     open,
@@ -69,7 +54,6 @@ export default function NuevaOportunidadDialog({
     { origen: origenInicial, nombre: nombreInicial, etapaId: etapaInicialId },
   );
   const [autoActividad, setAutoActividad] = useState(true);
-  const [guardando, setGuardando] = useState(false);
 
   // Al cerrar de verdad una creación, la casilla de actividad automática
   // vuelve a su valor por omisión para la siguiente apertura. En edición no
@@ -83,74 +67,9 @@ export default function NuevaOportunidadDialog({
   const etapaSel = etapas.find((e) => e.id === form.etapa_id);
   const esGanada = (etapaSel as { tipo?: string } | undefined)?.tipo === "ganada";
 
-  // Hallazgo #13.3: si la tarea automática falla, el registro principal ya
-  // se creó — el mensaje debe dejarlo claro (no un error genérico que
-  // sugiera que todo falló). `silencioso` evita el toast genérico del hook.
-  const crearActividadSeguimiento = async (oportunidadId: string) => {
-    // Regla centralizada (calendario CDMX + siguiente día hábil), igual que
-    // el alta de lead: nunca cae en sábado/domingo ni depende del reloj local.
-    const fechaProgramada = mxLocalToUtcIso(actividadDefaultFechaMx());
-    try {
-      await crearActividad.mutateAsync({
-        tipo: "tarea",
-        asunto: `Preparar propuesta: ${form.nombre}`,
-        descripcion: "Actividad creada automáticamente al alta de la oportunidad.",
-        entidad_tipo: "oportunidad",
-        entidad_id: oportunidadId,
-        fecha_programada: fechaProgramada,
-
-        // Ownership: la actividad automática queda a nombre del vendedor
-        // final elegido en el formulario, no del usuario que captura.
-        responsable_id: form.vendedor_id ?? null,
-        responsable_email: form.vendedor_email ?? "",
-        silencioso: true,
-      });
-    } catch (e) {
-      notifyError(undefined, {
-        title: "Registro creado, pero no se pudo crear la tarea automática de seguimiento",
-        description: e instanceof Error ? e.message : undefined,
-        error: e,
-        method: "CREAR_ACTIVIDAD_SEGUIMIENTO_OPORTUNIDAD",
-      });
-    }
-  };
-
-  const pendingTotal = guardando || crear.isPending || actualizar.isPending || crearActividad.isPending;
-
-  const handleSubmit = async () => {
-    if (pendingTotal || enviandoRef.current) return;
-    const invalido = validarOportunidadForm(form, esGanada);
-    if (invalido) {
-      return notifyError(undefined, {
-        ...invalido,
-        method: "HANDLE_SUBMIT",
-        errorCode: ERROR_CODES.VALIDATION_FAILED,
-      });
-    }
-    enviandoRef.current = true;
-    setGuardando(true);
-    try {
-      const payload = buildOportunidadFormPayload(form, esGanada, isEdit);
-      if (isEdit && oportunidad) {
-        // Hallazgo 14: bloqueo optimista — el sello se leyó al abrir el diálogo.
-        await actualizar.mutateAsync({ id: oportunidad.id, patch: payload, expectedUpdatedAt: oportunidad.updated_at ?? null });
-        crmToast.success("Oportunidad actualizada");
-        onSaved?.(oportunidad.id);
-      } else {
-        const r = await crear.mutateAsync(payload);
-        if (autoActividad) await crearActividadSeguimiento(r.id);
-        onSaved?.(r.id);
-      }
-      markClean();
-      onOpenChange(false);
-    } catch {
-      // Los hooks de crear/actualizar ya notificaron el error: un solo aviso.
-      void 0;
-    } finally {
-      enviandoRef.current = false;
-      setGuardando(false);
-    }
-  };
+  const { handleSubmit, pendingTotal } = useNuevaOportunidadSubmit({
+    form, esGanada, isEdit, oportunidad, autoActividad, markClean, onOpenChange, onSaved,
+  });
   // Sucio total: el formulario más la casilla de actividad automática (sólo
   // relevante al crear). Habilita la confirmación de descarte del shell.
   const dirtyTotal = isDirty || (!isEdit && autoActividad !== true);
