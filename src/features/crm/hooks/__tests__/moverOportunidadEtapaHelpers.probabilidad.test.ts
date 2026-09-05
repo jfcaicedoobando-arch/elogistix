@@ -3,7 +3,7 @@
  * (ganada = 100, perdida = 0) aunque hubiera un valor manual previo.
  */
 import { describe, it, expect } from "vitest";
-import { resolverProbabilidad } from "../moverOportunidadEtapaHelpers";
+import { resolverProbabilidad, puedeOfrecerUndo } from "../moverOportunidadEtapaHelpers";
 import type { CrmEtapaRow, CrmOportunidadRow } from "@/features/crm/hooks";
 
 const etapa = (over: Record<string, unknown>) => over as unknown as CrmEtapaRow & { tipo?: string };
@@ -30,5 +30,20 @@ describe("resolverProbabilidad", () => {
   it("usa el default del destino cuando no había edición manual", () => {
     const destino = etapa({ id: "e2", probabilidad_default: 50, tipo: "abierta" });
     expect(resolverProbabilidad(op(30), origen, 50, destino)).toBe(50);
+  });
+});
+
+describe("puedeOfrecerUndo (v13.823.121)", () => {
+  it("no ofrece Undo en etapa perdida", () => {
+    expect(puedeOfrecerUndo(etapa({ tipo: "perdida" }))).toBe(false);
+  });
+  it("no ofrece Undo en etapa ganada (crea tarea automática)", () => {
+    expect(puedeOfrecerUndo(etapa({ tipo: "ganada" }))).toBe(false);
+  });
+  it("no ofrece Undo en etapa abierta con crea_tarea_seguimiento", () => {
+    expect(puedeOfrecerUndo(etapa({ tipo: "abierta", crea_tarea_seguimiento: true }))).toBe(false);
+  });
+  it("sí ofrece Undo en etapa abierta sin tarea automática", () => {
+    expect(puedeOfrecerUndo(etapa({ tipo: "abierta", crea_tarea_seguimiento: false }))).toBe(true);
   });
 });

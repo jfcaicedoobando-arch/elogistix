@@ -17,6 +17,7 @@ import {
   resolverCierreGanada,
   resolverLimpiezaCierre,
   avisarCriteriosPendientes,
+  puedeOfrecerUndo,
 } from "./moverOportunidadEtapaHelpers";
 
 export { resolverLimpiezaCierre };
@@ -55,6 +56,7 @@ export function useMoverOportunidadEtapa({ etapas, oportunidades }: Params) {
         | (CrmEtapaRow & { tipo?: string })
         | undefined;
       const probabilidad = resolverProbabilidad(op, etapaOrigen, prob, etapaDestino);
+      const puedeDeshacer = puedeOfrecerUndo(etapaDestino);
 
       // Disciplina de pipeline: avisar (sin bloquear) si la etapa de origen
       // deja criterios de salida pendientes.
@@ -76,10 +78,7 @@ export function useMoverOportunidadEtapa({ etapas, oportunidades }: Params) {
           expectedUpdatedAt: op?.updated_at ?? null,
         });
         const selloTrasMover = (resultado as { updated_at?: string } | undefined)?.updated_at ?? null;
-        // El destino "perdida" cancela/completa actividades pendientes: el Undo
-        // no puede revivirlas, así que no se ofrece (evita Undo falso que dejaría
-        // una oportunidad abierta con sus tareas canceladas).
-        if (etapaDestino?.tipo !== "perdida") {
+        if (puedeDeshacer) {
           const { showUndoToast } = await import("@/features/crm/hooks/useUndoToast");
           showUndoToast("Etapa actualizada", async () => {
             if (!etapaPrev) return;
