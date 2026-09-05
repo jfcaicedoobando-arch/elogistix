@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.823.139] - 2026-09-05
+- CRM paneles secundarios (error vs vacío): `CrmForecastMesKpis` silenciaba errores de `useForecast` y pintaba la tira de KPIs en cero; ahora consume `isError`/`refetch` y muestra `ErrorStateInline` "No se pudo cargar el forecast del mes." con Reintentar, reservando los ceros para respuestas exitosas sin filas. `LeaderboardVendedores` y `Cliente360Panel` ya distinguían fallo de vacío; se blindan con regresión compartida `panelesSecundariosErrores.test.tsx` (los 3 paneles: error → reintento sin empty/ceros; éxito vacío → empty). Sin cambios de consultas, permisos ni cálculos.
+
 ## [13.823.138] - 2026-09-05
 - CRM rutas (error vs vacío): regresión que blinda la distinción entre fallo y "sin datos" en pantallas de detalle y del resumen ejecutivo. La corrección ya existía: `EmbudoCard`/`ForecastMesCard` consumen `isError`/`refetch` y muestran `ErrorStateInline` con Reintentar (el empty sólo con éxito), y `OportunidadDetalle`/`LeadDetalle` separan "No se pudo cargar…" (con Reintentar) de "no encontrada/o" (sólo cuando la consulta respondió sin registro). Se agregan `crmDashboardCardsErrores.test.tsx` (embudo/forecast: error → reintento sin empty; éxito vacío → empty) y `detalleErrores.test.tsx` (ambos detalles: error → reintento sin "no encontrada"; éxito sin registro → "no encontrada"). Sin cambios de rutas, permisos ni métricas.
 
