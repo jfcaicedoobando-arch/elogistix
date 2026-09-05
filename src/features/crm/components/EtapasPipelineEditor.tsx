@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/select";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 import {
-  useActualizarEtapa, useEtapasPipelineAll,
+  useActualizarEtapa, useEtapasPipelineAll, useIntercambiarOrdenEtapas,
   type CrmEtapaRow, type CrmEtapaTipo,
 } from "@/features/crm/hooks";
 
@@ -42,6 +42,7 @@ function toState(e: CrmEtapaRow): RowState {
 export default function EtapasPipelineEditor() {
   const { data: etapas = [], isLoading } = useEtapasPipelineAll();
   const actualizar = useActualizarEtapa();
+  const reordenar = useIntercambiarOrdenEtapas();
   const [draft, setDraft] = useState<Record<string, RowState>>({});
 
   useEffect(() => {
@@ -74,10 +75,14 @@ export default function EtapasPipelineEditor() {
     }
   };
 
-  const mover = async (id: string, delta: number) => {
-    const d = draft[id]; if (!d) return;
+  // Subir/bajar intercambia el orden con la etapa vecina (RPC atómica).
+  // Antes sólo se sumaba ±1 al orden propio, lo que generaba órdenes duplicados.
+  const mover = async (index: number, delta: number) => {
+    const actual = etapas[index];
+    const vecina = etapas[index + delta];
+    if (!actual || !vecina || reordenar.isPending) return;
     try {
-      await actualizar.mutateAsync({ id, patch: { orden: d.orden + delta } });
+      await reordenar.mutateAsync({ etapaA: actual.id, etapaB: vecina.id });
     } catch {
       /* notificado por el hook */
     }
@@ -96,7 +101,7 @@ export default function EtapasPipelineEditor() {
       <CardContent>
         {isLoading && <EmptyStateInline loading message="Cargando…" className="py-2" />}
         <div className="space-y-2">
-          {etapas.map((e) => {
+          {etapas.map((e, index) => {
             const d = draft[e.id]; if (!d) return null;
             return (
               <div key={e.id} className="grid grid-cols-[repeat(13,minmax(0,1fr))] gap-2 items-center p-2 border rounded">
@@ -118,13 +123,13 @@ export default function EtapasPipelineEditor() {
                 <Input type="color" className="col-span-1 h-9 p-1" aria-label={`Color de la etapa ${d.nombre}`} value={d.color} onChange={(ev) => set(e.id, { color: ev.target.value })} />
                 <div className="col-span-2 flex items-center gap-1">
                   <Hint label="Subir">
-                    <Button size="icon" variant="ghost" className="min-h-11 min-w-11 md:h-7 md:w-7 md:min-h-0 md:min-w-0" onClick={() => mover(e.id, -1)} aria-label="Subir">
+                    <Button size="icon" variant="ghost" className="min-h-11 min-w-11 md:h-7 md:w-7 md:min-h-0 md:min-w-0" onClick={() => mover(index, -1)} aria-label="Subir" disabled={index === 0 || reordenar.isPending}>
                       <ArrowUp className="h-3 w-3" />
                     </Button>
                   </Hint>
                   <span className="text-body-sm text-muted-foreground w-6 text-center">{e.orden}</span>
                   <Hint label="Bajar">
-                    <Button size="icon" variant="ghost" className="min-h-11 min-w-11 md:h-7 md:w-7 md:min-h-0 md:min-w-0" onClick={() => mover(e.id, 1)} aria-label="Bajar">
+                    <Button size="icon" variant="ghost" className="min-h-11 min-w-11 md:h-7 md:w-7 md:min-h-0 md:min-w-0" onClick={() => mover(index, 1)} aria-label="Bajar" disabled={index === etapas.length - 1 || reordenar.isPending}>
                       <ArrowDown className="h-3 w-3" />
                     </Button>
                   </Hint>
