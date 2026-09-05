@@ -84,9 +84,9 @@ export default function NuevaOportunidadDialog({
   // se creó — el mensaje debe dejarlo claro (no un error genérico que
   // sugiera que todo falló). `silencioso` evita el toast genérico del hook.
   const crearActividadSeguimiento = async (oportunidadId: string) => {
-    const manana = new Date();
-    manana.setDate(manana.getDate() + 1);
-    manana.setHours(9, 0, 0, 0);
+    // Regla centralizada (calendario CDMX + siguiente día hábil), igual que
+    // el alta de lead: nunca cae en sábado/domingo ni depende del reloj local.
+    const fechaProgramada = new Date(actividadDefaultFechaMx()).toISOString();
     try {
       await crearActividad.mutateAsync({
         tipo: "tarea",
@@ -94,7 +94,8 @@ export default function NuevaOportunidadDialog({
         descripcion: "Actividad creada automáticamente al alta de la oportunidad.",
         entidad_tipo: "oportunidad",
         entidad_id: oportunidadId,
-        fecha_programada: manana.toISOString(),
+        fecha_programada: fechaProgramada,
+
         // Ownership: la actividad automática queda a nombre del vendedor
         // final elegido en el formulario, no del usuario que captura.
         responsable_id: form.vendedor_id ?? null,
