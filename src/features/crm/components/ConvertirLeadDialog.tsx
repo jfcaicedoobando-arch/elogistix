@@ -3,7 +3,7 @@
  * Si el lead ya está convertido, muestra los IDs resultantes en lugar del form.
  * Migrado a `FormDialogShell` (v13.121.0).
  */
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowRight, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
