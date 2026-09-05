@@ -6,7 +6,7 @@
  * "Abrir oportunidad →". Para campos avanzados, el caller puede abrir el
  * `ConvertirLeadDialog` clásico ("Más campos →").
  */
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
