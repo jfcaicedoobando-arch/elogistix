@@ -4,4 +4,4 @@
  * Convención: bump de patch en cada entrega, alineado con la entrada
  * correspondiente de `CHANGELOG.md` (raíz del repo).
  */
-export const APP_VERSION = "13.823.135";
+export const APP_VERSION = "13.823.136";
