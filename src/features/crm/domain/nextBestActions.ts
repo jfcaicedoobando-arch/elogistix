@@ -77,7 +77,7 @@ function nbaLeadsSinContactar(leads: NbaLead[], nowMs: number): NbaItem[] {
   const out: NbaItem[] = [];
   for (const l of leads) {
     const horas = Math.floor((nowMs - new Date(l.created_at).getTime()) / HORA);
-    if (horas < 24) continue;
+    if (horas < NBA_LEAD_SIN_CONTACTAR_HORAS) continue;
     out.push({
       id: `lead:${l.id}`,
       regla: "lead_sin_contactar",

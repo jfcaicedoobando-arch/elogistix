@@ -18,6 +18,7 @@ import {
 import { todayLocalISO } from "@/lib/date/today";
 import { limitesDiaMx, mxAddDaysIso } from "@/lib/date/mx";
 import { LEAD_ESTADOS_ETAPA_LEAD } from "@/features/crm/domain/leads/etapas";
+import { SEMANA_LEAD_SIN_CONTACTAR_DIAS } from "@/features/crm/domain/umbralesContacto";
 import { leerTodasLasPaginas } from "@/lib/supabase/paginado";
 import { computePipelinePonderadoPorMoneda } from "@/features/crm/domain/dashboardAggregates";
 import type { SubtotalMoneda } from "@/features/crm/domain/montosPorMoneda";
