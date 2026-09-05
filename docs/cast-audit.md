@@ -5,17 +5,17 @@ Auditoría automática de los `as` casts en `src/`. Generado por
 
 ## Resumen
 
-Total de `as` casts detectados: **3573**
+Total de `as` casts detectados: **3575**
 
 | Categoría | Peso | Cantidad | % |
 |-----------|------|----------|---|
 | SAFE      | 0 | 1022     | 28.6% |
 | LOW       | 1 | 170      | 4.8% |
-| MEDIUM    | 2 | 2380   | 66.6% |
+| MEDIUM    | 2 | 2383   | 66.7% |
 | HIGH      | 3 | 0     | 0.0% |
-| CRITICAL  | 4 | 1 | 0.0% |
+| CRITICAL  | 4 | 0 | 0.0% |
 
-**Lectura clave:** los casts a accionar son los **HIGH + CRITICAL** = 1 (~0.0%). El resto es seguro o aceptable bajo política.
+**Lectura clave:** los casts a accionar son los **HIGH + CRITICAL** = 0 (~0.0%). El resto es seguro o aceptable bajo política.
 
 ## Definición de categorías
 
@@ -47,12 +47,7 @@ Total de `as` casts detectados: **3573**
 
 ## Top-30 casts más riesgosos (HIGH + CRITICAL)
 
-### 1. [CRITICAL] `src/features/costeo/components/useTarifaFormReset.ts:25`
-
-```ts
-() => (JSON.parse(initialKey) as Partial<TarifaInput> | null) ?? undefined,
-```
-
+_Ningún cast HIGH o CRITICAL detectado._
 
 ## Roadmap
 
