@@ -8,8 +8,6 @@ import { StepDatosRutaMaritimo } from "./stepDatosRuta/StepDatosRutaMaritimo";
 import { StepDatosRutaAereo } from "./stepDatosRuta/StepDatosRutaAereo";
 import { StepDatosRutaTerrestre } from "./stepDatosRuta/StepDatosRutaTerrestre";
 import { StepDatosRutaFechas } from "./stepDatosRuta/StepDatosRutaFechas";
-import { ListaContenedoresEditable } from "./contenedores/ListaContenedoresEditable";
-import type { ContenedorBorrador } from "@/features/embarques/types/contenedor";
 
 interface Props {
   errors?: StepValidationErrors;
@@ -22,7 +20,6 @@ export function StepDatosRuta({ errors = {}, diasTransitoSugerencia }: Props) {
   const modo = watch('modo');
   const etd = watch('etd');
   const eta = watch('eta');
-  const contenedores = (watch('contenedores') ?? []) as ContenedorBorrador[];
 
   // Auto-aplicar ETA sugerida sólo cuando hay ETD nuevo y ETA vacía.
   // El badge "ETA sugerida aplicada" se renderiza dentro de StepDatosRutaFechas
@@ -37,10 +34,6 @@ export function StepDatosRuta({ errors = {}, diasTransitoSugerencia }: Props) {
 
   const hasErrors = Object.keys(errors).length > 0;
   const esMaritimo = modo === 'Marítimo' || !modo;
-
-  const handleContenedoresChange = (next: ContenedorBorrador[]) => {
-    setValue('contenedores', next, { shouldDirty: true });
-  };
 
   return (
     <div className="space-y-4">
