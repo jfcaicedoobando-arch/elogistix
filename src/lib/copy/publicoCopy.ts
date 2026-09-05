@@ -46,7 +46,7 @@ export const COPY_VALIDACION = {
   origenRequerido: "Captura el origen de la ruta.",
   destinoRequerido: "Captura el destino de la ruta.",
   prospectoOportunidadRequerida:
-    "Selecciona un lead u oportunidad existente, o cambia a 'Crear nuevo prospecto'.",
+    "Selecciona un lead u oportunidad existente del CRM, o cambia el destinatario a \"Cliente existente\".",
   prospectoEmpresaRequerida: "Ingresa el nombre de la empresa del prospecto.",
   prospectoContactoRequerido: "Ingresa el nombre del contacto del prospecto.",
   modalidadEquipoRequerida: "Selecciona la modalidad de equipo.",

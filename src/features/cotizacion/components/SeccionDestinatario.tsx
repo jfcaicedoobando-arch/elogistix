@@ -63,6 +63,9 @@ export default function SeccionDestinatario({ clientes, complete, vinculoConfirm
     if (vinculoConfirmado) return;
     setValue("oportunidadId", "", { shouldDirty: true });
     setValue("leadId", "", { shouldDirty: true });
+    // Bug 2: al desvincular, el aviso de validación anterior ya no aplica.
+    clearErrors(["oportunidadId", "leadId", "prospectoEmpresa"]);
+    onLimpiarVinculoError?.();
   };
 
   const handleCambioDestinatario = (v: string) => {

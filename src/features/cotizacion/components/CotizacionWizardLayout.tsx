@@ -169,7 +169,6 @@ export default function CotizacionWizardLayout({
           <WizardTotalsBar
             plUSD={w.plUSD}
             plMXN={w.plMXN}
-            totalVentaMXN={w.totalMXN}
           />
         )}
       </WizardShell>
