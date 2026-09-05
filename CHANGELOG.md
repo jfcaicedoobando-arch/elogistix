@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.823.137] - 2026-09-05
+- CRM Mi día (NBA/cotizaciones): regresión que blinda la distinción entre "Todo al día" y "no se pudo cargar". La corrección ya existía de punta a punta (`useNextBestActions` agrega `isError` de signals/cotizaciones/vencidas con reintento triple; `useCrmInicioVM` expone `nbaError`/`nbaRefetch` y `cotsError`/`cotsRefetch`; `NextBestActionsCard` y `CotizacionesSinRespuestaCard` muestran `ErrorStateInline` con Reintentar en lugar del empty). Se agrega `useNextBestActions.errores.test.tsx`: fallo de signals, de cotizaciones y de vencidas → `isError` sin items fingidos; refetch reintenta las tres; y ambas tarjetas muestran reintento sin empty cuando hay error (y sí el empty cuando la consulta fue exitosa). Sin cambios de lógica, reglas de prioridad ni umbrales.
+
 ## [13.823.136] - 2026-09-05
 - CRM detector de duplicados: un fallo de la revisión RPC (RLS/red/timeout) ya no se ve como "sin coincidencias". Alta manual (`AvisoLeadDuplicado`): `useDuplicadoLead` ahora expone `isError`/`error`/`refetch` y el aviso muestra alerta no bloqueante "No pudimos comprobar duplicados" con Reintentar. CSV: la importación ya quedaba bloqueada con alerta y reintento; además el preview marca las filas "Sin revisar" en lugar de "Nuevo" cuando la revisión falló. Se conserva la omisión de duplicados exactos cuando la consulta funciona; no se tocó la RPC ni las reglas de coincidencia. Regresión: `duplicadosErrores.test.tsx` cubre error y éxito en ambos flujos.
 
