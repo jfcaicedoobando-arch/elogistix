@@ -47,7 +47,7 @@ async function crearYObtenerFecha(): Promise<string> {
   render(<NuevaOportunidadDialog open onOpenChange={vi.fn()} />);
   fireEvent.click(screen.getByRole("button", { name: /Crear oportunidad/i }));
   await waitFor(() => expect(crearActividad).toHaveBeenCalled());
-  return crearActividad.mock.calls[0][0].fecha_programada as string;
+  return crearActividad.mock.calls[0]?.[0]?.fecha_programada ?? "";
 }
 
 describe("NuevaOportunidadDialog — fecha de la tarea automática", () => {
