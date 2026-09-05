@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.823.104] - 2026-09-05
+- CRM Configuración: en `EtapasPipelineEditor` un refetch (por ejemplo tras guardar otra fila) ya no borra los cambios sin guardar de las demás filas. El nuevo merge (`etapasPipelineDraft.ts`) conserva el borrador local de cada fila sucia, rehidrata sólo las filas limpias, permite que la fila guardada adopte el valor confirmado y descarta borradores de filas eliminadas. Sin cambios en el RPC ni en el ordenamiento. Regresiones: editar A + refetch de B conserva A; rehidratación de filas limpias y descarte de filas inexistentes.
+
 ## [13.823.103] - 2026-09-05
 - CRM: en `OportunidadResumenTab.tsx` los campos `fecha_estimada_cierre`, `fecha_meta_cierre` y `monto_meta` ahora se formatean con los formateadores canónicos (`formatFechaDia` y `formatCurrencyCompact` con `op.moneda`) antes de pasarse a `DatosComercialesCard`, evitando que el detalle muestre ISO crudo o números sin moneda/separadores. Se conserva el fallback `—` para valores nulos y no se modifican los valores persistidos enviados al backend. Regresión visual contra renderizado de ISO/número crudo.
 
