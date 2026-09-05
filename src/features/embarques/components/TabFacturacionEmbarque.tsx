@@ -10,7 +10,7 @@ import { ProformaInconsistenteAlert } from "./facturacion/ProformaInconsistenteA
 import { AvisoProformasRechazadas } from "./facturacion/AvisoProformasRechazadas";
 import { DialogEliminarProforma } from "./facturacion/DialogEliminarProforma";
 import { useTabFacturacionState } from "@/features/embarques/hooks/useTabFacturacionState";
-import { contarFacturasEmitidas } from "@/lib/domain/etiquetaCicloProforma";
+import { contarFacturasEmitidas, facturaEmitida } from "@/lib/domain/etiquetaCicloProforma";
 import type { Tables } from "@/types/db";
 
 type EmbarqueRow = Tables<'embarques'>;
@@ -45,6 +45,13 @@ export function TabFacturacionEmbarque({ facturas, canEdit: canEditProp, embarqu
     dialogOpen, setDialogOpen, dialogInitialFiltro, abrirGenerarProforma,
     handleDescargarProforma, registerRef,
   } = s;
+
+  // B9: una proforma cuenta como facturada sólo si su factura ya se emitió
+  // (Borrador / Por timbrar siguen siendo preparación).
+  const proformasEmitidasSet = new Set(
+    facturas.filter(f => facturaEmitida({ estado: f.estado }) && f.proforma_id).map(f => f.proforma_id as string),
+  );
+  const proformasEmitidasCount = proformas.filter(p => proformasEmitidasSet.has(p.id)).length;
 
   // Barra unificada arriba del tab. Reutiliza `useFocusSection` para saltar
   // a las secciones (Proformas / Facturas) sin duplicar handlers.
