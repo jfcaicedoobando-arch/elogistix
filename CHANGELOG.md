@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.823.150] - 2026-09-05
+- Power of 10 (candado de 200 líneas, sin cambios de comportamiento): tipos de columnas de tarifas extraídos a `_sections/tarifasColumns.types.ts`, sección "Carta Garantía" del formulario de naviera a `NavieraCartaGarantiaFields.tsx` y tipos de automatizaciones CRM a `services/automatizacionesEtapa.types.ts`. Los diálogos de alta CRM consumen `useNuevoLeadSubmit` / `useNuevaOportunidadSubmit` desde su módulo directo.
+- Higiene de candados: `CeldaMontoAnalitica` deja el `TableCell` en `Analitica.tsx` (regla de tablas sin `@/components/ui/table` fuera de allowlist) y `src/lib/date/mxDatetimeLocal.ts` queda declarado como primitiva de fechas en `eslint.config.js`.
+- Verificación focalizada: suites de arquitectura/baseline (67 archivos) y CRM (157 archivos, 757 pruebas) en verde, ESLint y `tsgo --noEmit` limpios. CI/RLS completos quedan a GitHub Actions.
+
+
+
 ## [13.823.149] - 2026-09-05
 - Landing pública (reestructura media): hero con un solo mensaje (se retiran la frase social duplicada y la franja de tres cifras que competían con los CTA); nueva sección "Antes y después" (Excel/WhatsApp vs. expediente único, sólo capacidades existentes); nuevo "Recorrido" con pestañas Cotización → Embarque → Cobro y maquetas con tokens del sistema; el bloque de precio sube justo después de "Cómo funciona"; seguridad se replantea como "Garantías" en lenguaje llano; Recursos incluye la guía de puertos de México (antes sólo enlazada desde el sitemap).
 - SEO: `<title>`/descripción y `og:*` orientados a "software para agencias de carga en México" / "freight forwarder"; `/ayuda` agregada al sitemap; logo del pie con `loading="lazy"`. Sin testimonios, logotipos de clientes ni cifras inventadas.
