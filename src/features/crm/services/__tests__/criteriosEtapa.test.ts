@@ -11,7 +11,6 @@ import { registrarActividad } from "@/services/bitacora/registrar";
 
 import {
   fetchCriteriosPorEtapa,
-  crearCriterioEtapa,
   actualizarCriterioEtapa,
   eliminarCriterioEtapa,
 } from "@/features/crm/services/criteriosEtapa";
