@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.823.112] - 2026-09-05
+- CRM Configuración: en `EtapasPipelineEditor` el merge de borradores ahora es por campo para `orden`. Una fila con cambios sin guardar conserva su borrador, pero adopta siempre el `orden` confirmado por el backend (sólo lo cambia la RPC de reordenar, nunca la edición inline). Antes, editar una fila y luego moverla hacía que al guardar se reenviara el orden anterior y se revirtiera el reordenamiento. Sin cambios en la RPC ni pérdida de ediciones. Regresión: editar + mover + refetch + guardar conserva el nombre editado y envía el orden nuevo.
+
 ## [13.823.111] - 2026-09-05
 - CRM zona horaria: centralizada la conversión hora CDMX → UTC en `mxLocalToUtcIso` (`src/lib/date/mx.ts`), helper puro basado en `Intl` con doble pasada para horario de verano. `NuevaOportunidadDialog`, `NuevoLeadDialog`, `QuickCreateActividadDialog` y `NuevaActividadDialog` ya no usan `new Date(valor).toISOString()`, que interpretaba el texto del `DateTimePickerMx` con la zona del navegador y desplazaba la hora persistida en equipos fuera de CDMX. Se conservan valores vacíos como `null`, el formato visible y la regla de días hábiles (`actividadDefaultFechaMx`). Regresiones con TZ distinta a CDMX (UTC, Asia/Tokyo, America/Los_Angeles, Europe/Madrid).
 

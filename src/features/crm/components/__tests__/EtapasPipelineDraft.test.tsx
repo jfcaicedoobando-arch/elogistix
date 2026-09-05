@@ -64,4 +64,37 @@ describe("EtapasPipelineEditor · borradores", () => {
     expect(screen.getByLabelText("Nombre de la etapa Prospección v2")).toBeInTheDocument();
     expect(screen.queryByLabelText("Nombre de la etapa Cotización")).not.toBeInTheDocument();
   });
+  it("editar + mover + refetch + guardar: conserva la edición y el orden nuevo", async () => {
+    actualizarMutateAsync.mockResolvedValue(undefined);
+    reordenarMutateAsync.mockResolvedValue(undefined);
+    const { rerender } = render(<EtapasPipelineEditor />);
+
+    // Edito A sin guardar.
+    fireEvent.change(screen.getByLabelText("Nombre de la etapa Prospección"), {
+      target: { value: "Prospección AAA" },
+    });
+
+    // Muevo A hacia abajo (RPC de reordenar).
+    fireEvent.click(screen.getAllByLabelText("Bajar")[0]);
+    expect(reordenarMutateAsync).toHaveBeenCalledWith({ etapaA: "e1", etapaB: "e2" });
+
+    // Refetch con el orden ya intercambiado.
+    etapas = [
+      { ...base, id: "e2", nombre: "Cotización", orden: 1 },
+      { ...base, id: "e1", nombre: "Prospección", orden: 2 },
+    ];
+    rerender(<EtapasPipelineEditor />);
+
+    // La edición sin guardar sobrevive.
+    expect(screen.getByLabelText("Nombre de la etapa Prospección AAA")).toBeInTheDocument();
+
+    // Al guardar A no se revierte el reordenamiento.
+    fireEvent.click(screen.getByLabelText("Guardar cambios de Prospección AAA"));
+    expect(actualizarMutateAsync).toHaveBeenCalledWith(
+      expect.objectContaining({
+        id: "e1",
+        patch: expect.objectContaining({ nombre: "Prospección AAA", orden: 2 }),
+      }),
+    );
+  });
 });

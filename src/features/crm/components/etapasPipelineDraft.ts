@@ -51,8 +51,14 @@ export function mergeDrafts(
     const local = prevDraft[e.id];
     const base = prevServer[e.id];
     const server = toState(e);
-    // Fila sucia: conserva el borrador. Fila limpia o guardada: adopta backend.
-    next[e.id] = local && base && !sameState(local, base) ? local : server;
+    // Fila sucia: conserva el borrador, pero adopta siempre el `orden`
+    // confirmado por el backend (sólo lo cambia la RPC de reordenar, nunca la
+    // edición inline). Así mover una fila con cambios sin guardar no revierte
+    // el reordenamiento al guardar. Fila limpia o guardada: adopta backend.
+    next[e.id] =
+      local && base && !sameState(local, base)
+        ? { ...local, orden: server.orden }
+        : server;
   }
   return next;
 }
