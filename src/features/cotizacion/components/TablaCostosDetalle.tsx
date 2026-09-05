@@ -42,7 +42,7 @@ interface Props {
   icon: React.ReactNode;
   totales: TotalesPL;
   canEdit: boolean;
-  onUpdate: (globalIdx: number, field: "proveedor" | "costo_unitario" | "notas", value: string) => void;
+  onUpdate: (globalIdx: number, field: "proveedor" | "costo_unitario" | "venta" | "notas", value: string) => void;
 }
 
 export default function TablaCostosDetalle({ filas, filasMoneda, moneda, title, icon, totales, canEdit, onUpdate }: Props) {
