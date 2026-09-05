@@ -33,6 +33,10 @@ const ALLOWLIST: readonly string[] = [
   // v13.491.0 — la celda de folio se movió a este archivo al dividir
   // carteraColumns.tsx (Power of 10: ≤ 200 líneas).
   "src/features/bandejas/routes/_sections/carteraColumns.selection.tsx",
+  // v13.823.150 — Proformas: el drilldown de la fila es la PROFORMA. El
+  // expediente enlaza al EMBARQUE vinculado (destino distinto), así que no
+  // puede resolverse con `getRowHref`; detiene la propagación del click.
+  "src/features/facturacion/components/proformasColumns.tsx",
 ];
 
 

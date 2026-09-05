@@ -17,30 +17,8 @@ function isoDaysFromNow(d: number): string {
   return mxAddDaysIso(null, d);
 }
 
-export interface EtapaInfo {
-  id: string;
-  nombre: string;
-  tipo: "abierta" | "ganada" | "perdida";
-  probabilidad_default: number;
-  crea_tarea_seguimiento: boolean;
-  dias_seguimiento: number;
-}
-
-export interface OportunidadMin {
-  id: string;
-  nombre: string;
-  vendedor_id: string | null;
-  vendedor_email: string;
-  cliente_nombre: string;
-}
-
-export interface AutomationCtx {
-  etapa: EtapaInfo;
-  op: OportunidadMin;
-  responsableId: string | null;
-  responsableEmail: string;
-  userId: string | null;
-}
+export type { EtapaInfo, OportunidadMin, AutomationCtx } from "./automatizacionesEtapa.types";
+import type { EtapaInfo, OportunidadMin, AutomationCtx } from "./automatizacionesEtapa.types";
 
 export async function fetchEtapa(id: string): Promise<EtapaInfo | null> {
   const { data, error } = await supabase

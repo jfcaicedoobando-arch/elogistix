@@ -37,7 +37,7 @@ export function TarifaRowActions(p: Props) {
       <DropdownMenuContent align="end" className="w-48" onClick={(e) => e.stopPropagation()}>
         {p.estadoAprobacion === "borrador" && p.vencida && (
           <>
-            <div className="px-2 py-1.5 text-xs text-muted-foreground">
+            <div className="px-2 py-1.5 text-body-sm text-muted-foreground">
               Vigencia vencida: actualízala en Editar para poder aprobarla.
             </div>
             <DropdownMenuSeparator />

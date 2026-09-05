@@ -12,15 +12,11 @@
  */
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, Users, Target, Activity, Upload } from "lucide-react";
+import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import NuevoLeadDialog from "@/features/crm/components/NuevoLeadDialog";
-import NuevaOportunidadDialog from "@/features/crm/components/NuevaOportunidadDialog";
-import NuevaActividadDialog from "@/features/crm/components/NuevaActividadDialog";
-import ImportarLeadsCsvDialog from "@/features/crm/components/ImportarLeadsCsvDialog";
+import { DropdownMenu, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import QuickAddDropdownContent from "@/features/crm/components/quickCreate/QuickAddDropdownContent";
+import QuickAddFullDialogs from "@/features/crm/components/quickCreate/QuickAddFullDialogs";
 import QuickCreateLeadDialog, {
   type LeadQuickDraft,
 } from "@/features/crm/components/quickCreate/QuickCreateLeadDialog";
@@ -48,15 +44,6 @@ function cerrarLimpiando(
   return (next) => {
     setOpen(next);
     if (!next) limpiar();
-  };
-}
-
-/** Props del borrador express hacia el formulario completo de actividad. */
-function propsActividad(draft: ActividadQuickDraft | null) {
-  return {
-    asuntoInicial: draft?.asunto ?? null,
-    fechaInicial: draft?.fecha ?? null,
-    entidadIdInicial: draft?.entidadId ?? null,
   };
 }
 
@@ -127,31 +114,16 @@ export default function QuickAddMenu({ openTrigger, dialogTrigger }: QuickAddMen
             <Plus className="h-4 w-4" /> Nuevo
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-56">
-          {canCrearLead && (
-            <DropdownMenuItem onSelect={() => abrirQuick("lead")}>
-              <Users className="h-4 w-4 mr-2" /> Nuevo lead <span className="ml-auto text-label text-muted-foreground">L</span>
-            </DropdownMenuItem>
-          )}
-          {canCrearOportunidad && (
-            <DropdownMenuItem onSelect={() => abrirQuick("oportunidad")}>
-              <Target className="h-4 w-4 mr-2" /> Nueva oportunidad <span className="ml-auto text-label text-muted-foreground">O</span>
-            </DropdownMenuItem>
-          )}
-          {canCrearActividad && (
-            <DropdownMenuItem onSelect={() => abrirQuick("actividad")}>
-              <Activity className="h-4 w-4 mr-2" /> Nueva actividad <span className="ml-auto text-label text-muted-foreground">A</span>
-            </DropdownMenuItem>
-          )}
-          {canGestionarLeadsEnLote && (
-            <>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onSelect={() => { setMenuOpen(false); setImportOpen(true); }}>
-                <Upload className="h-4 w-4 mr-2" /> Importar leads CSV
-              </DropdownMenuItem>
-            </>
-          )}
-        </DropdownMenuContent>
+        <QuickAddDropdownContent
+          canCrearLead={canCrearLead}
+          canCrearOportunidad={canCrearOportunidad}
+          canCrearActividad={canCrearActividad}
+          canGestionarLeadsEnLote={canGestionarLeadsEnLote}
+          onLead={() => abrirQuick("lead")}
+          onOportunidad={() => abrirQuick("oportunidad")}
+          onActividad={() => abrirQuick("actividad")}
+          onImportar={() => { setMenuOpen(false); setImportOpen(true); }}
+        />
       </DropdownMenu>
 
       <QuickCreateLeadDialog
@@ -185,26 +157,19 @@ export default function QuickAddMenu({ openTrigger, dialogTrigger }: QuickAddMen
         }}
       />
 
-      <NuevoLeadDialog
-        open={leadOpen}
-        onOpenChange={cerrarLimpiando(setLeadOpen, () => setLeadDraft(null))}
-        draftInicial={leadDraft}
-        onCreated={(id) => navigate(`/crm/leads/${id}`)}
+      <QuickAddFullDialogs
+        leadOpen={leadOpen}
+        onLeadOpenChange={cerrarLimpiando(setLeadOpen, () => setLeadDraft(null))}
+        leadDraft={leadDraft}
+        opOpen={opOpen}
+        onOpOpenChange={cerrarLimpiando(setOpOpen, () => setOpDraft(null))}
+        opDraft={opDraft}
+        actOpen={actOpen}
+        onActOpenChange={cerrarLimpiando(setActOpen, () => setActDraft(null))}
+        actDraft={actDraft}
+        importOpen={importOpen}
+        onImportOpenChange={setImportOpen}
       />
-      <NuevaOportunidadDialog
-        open={opOpen}
-        onOpenChange={cerrarLimpiando(setOpOpen, () => setOpDraft(null))}
-        origenInicial={opDraft?.origen ?? null}
-        nombreInicial={opDraft?.nombre ?? null}
-        onSaved={(id) => navigate(`/crm/oportunidades/${id}`)}
-      />
-      <NuevaActividadDialog
-        open={actOpen}
-        onOpenChange={cerrarLimpiando(setActOpen, () => setActDraft(null))}
-        {...propsActividad(actDraft)}
-        onCreated={() => navigate("/crm/actividades")}
-      />
-      <ImportarLeadsCsvDialog open={importOpen} onOpenChange={setImportOpen} />
     </>
   );
 }

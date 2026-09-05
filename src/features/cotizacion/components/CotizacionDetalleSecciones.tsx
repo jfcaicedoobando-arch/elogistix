@@ -1,9 +1,13 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { useNavigate } from "react-router-dom";
 import { RecotizarModal } from "@/features/cotizacion/components/versionado/RecotizarModal";
-import { CrearEmbarqueConRevalidacion } from "@/features/cotizacion/components/revalidacion/CrearEmbarqueConRevalidacion";
 import { accionesCotizacionPermitidas } from "@/features/cotizacion/domain/cotizacion";
+import { visibilidadAcciones } from "@/features/cotizacion/domain/cotizacionDetalleAccionesVisibilidad";
+import {
+  AccionesCaptura,
+  AccionesBorradorOEnviada,
+  AccionCrearEmbarque,
+} from "@/features/cotizacion/components/CotizacionDetalleAccionesBotones";
 import type { AppRole } from "@/types/appRole";
 import { BadgeClienteDeCasa } from "@/components/shared/BadgeClienteDeCasa";
 
@@ -30,105 +34,6 @@ interface AccionesProps {
   puedeAltaCliente?: boolean;
   /** P0 — la conversión exige oportunidad ligada (cotización ganadora). */
   tieneOportunidad?: boolean;
-}
-
-
-/**
- * R-02 — Una cotización "Solicitada" (creada por el cliente desde el portal)
- * también necesita entrar a captura: sin este botón quedaba en un callejón sin
- * salida. R-08 — cuando el total es $0 se explica por qué no se puede enviar.
- */
-function AccionesCaptura({
-  cotizacionId, onCambiarEstado, puedeEnviar, esSolicitada, total,
-}: {
-  cotizacionId: string;
-  onCambiarEstado: AccionesProps["onCambiarEstado"];
-  puedeEnviar: boolean;
-  esSolicitada: boolean;
-  total: number;
-}) {
-  const navigate = useNavigate();
-  return (
-    <>
-      <Button
-        variant={esSolicitada ? "default" : "outline"}
-        size="sm"
-        onClick={() => navigate(`/cotizaciones/${cotizacionId}/editar`)}
-      >
-        {esSolicitada ? "Completar cotización" : "Editar"}
-      </Button>
-      {puedeEnviar && (
-        <Button variant="outline" size="sm" onClick={() => onCambiarEstado("Enviada")}>Marcar como Enviada</Button>
-      )}
-      {!puedeEnviar && Number(total) <= 0 && (
-        <span className="self-center text-body-sm text-muted-foreground">
-          Agrega al menos un concepto con importe para poder enviarla.
-        </span>
-      )}
-    </>
-  );
-}
-
-function AccionesBorradorOEnviada({ onCambiarEstado, puedeAceptar, puedeRechazar }: { onCambiarEstado: AccionesProps["onCambiarEstado"]; puedeAceptar: boolean; puedeRechazar: boolean }) {
-  if (!puedeAceptar && !puedeRechazar) return null;
-  return (
-    <>
-      {puedeRechazar && (
-        <Button variant="outline" size="sm" onClick={() => onCambiarEstado("Rechazada")}>Rechazar</Button>
-      )}
-      {puedeAceptar && <Button size="sm" onClick={() => onCambiarEstado("Aceptada")}>Aceptar</Button>}
-    </>
-  );
-}
-
-function AccionCrearEmbarque({ cotizacionId, numContenedores }: { cotizacionId: string; numContenedores: number }) {
-  return (
-    <CrearEmbarqueConRevalidacion
-      cotizacionId={cotizacionId}
-      numContenedores={numContenedores}
-    />
-  );
-}
-
-/**
- * Visibilidad de los botones del encabezado de cotización. Función pura para
- * bajar la complejidad del componente (Power-of-10).
- * Nota: sólo se puede re-cotizar si aún no hay embarque generado; con embarque
- * vivo el flujo correcto es crear una nueva cotización.
- */
-function visibilidadAcciones(params: {
-  estado: string;
-  esProspecto: boolean;
-  tieneEmbarquesVinculados: boolean;
-  puedeAceptar: boolean;
-  puedeRechazar: boolean;
-  puedeAltaCliente: boolean;
-  tieneOportunidad: boolean;
-  /** P0 — sin venta capturada no se puede generar el embarque. */
-  tieneVenta: boolean;
-}) {
-  const {
-    estado, esProspecto, tieneEmbarquesVinculados, puedeAceptar, puedeRechazar,
-    puedeAltaCliente, tieneOportunidad, tieneVenta,
-  } = params;
-  const esAceptada = estado === "Aceptada";
-  const respuestaEnSolicitada = puedeAceptar || puedeRechazar;
-  return {
-    esEnCaptura: estado === "Borrador" || estado === "Solicitada",
-    mostrarAceptarRechazar:
-      estado === "Borrador" || estado === "Enviada" ||
-      (estado === "Solicitada" && respuestaEnSolicitada),
-    esAceptada,
-    // P0 — la puerta visible coincide con la cerradura: rol con alta de
-    // clientes + prospecto aceptado + oportunidad ligada. Sin oportunidad queda
-    // sólo el banner que guía a vincularla.
-    mostrarConvertirCliente: esAceptada && esProspecto && puedeAltaCliente && tieneOportunidad,
-    mostrarCrearEmbarque: esAceptada && !esProspecto && !tieneEmbarquesVinculados && tieneVenta,
-    // P0 (bug 10): cotización aceptada sin venta capturada — se explica en vez
-    // de ofrecer un botón que generaría un embarque en cero.
-    mostrarFaltaVenta: esAceptada && !esProspecto && !tieneEmbarquesVinculados && !tieneVenta,
-    mostrarRecotizar: esAceptada && !tieneEmbarquesVinculados,
-  };
 }
 
 export function CotizacionDetalleAcciones({
@@ -199,6 +104,3 @@ export function CotizacionDetalleAcciones({
     </div>
   );
 }
-
-
-

@@ -48,7 +48,7 @@ export default function MiDia() {
             items={vm.leadsSinContactar}
             isError={vm.isError}
             onRetry={() => void vm.refetch()}
-            // Misma fuente que genera las tareas "Contactar a..." en NBA: evita
+            // Misma fuente que genera las tareas "Contactar a…" en NBA: evita
             // mostrar "todos atendidos" mientras Hoy sugiere contactar un lead.
             hayPendientesHoy={!vm.nbaError && vm.nba.some((i) => i.regla === "lead_sin_contactar")}
           />

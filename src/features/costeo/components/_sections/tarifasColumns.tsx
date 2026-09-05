@@ -7,38 +7,11 @@ import { TarifaEstadoUnificado } from "../TarifaEstadoUnificado";
 import { TarifaRowActions } from "../TarifaRowActions";
 import { TarifaQuickApprovalButtons } from "../TarifaQuickApprovalButtons";
 import { usd, formatVigencia, vigenciaHint } from "../../routes/CosteoTarifas.helpers";
-import type { CosteoTarifaEstado } from "@/features/costeo/types";
 import { COL_W } from "@/components/shared/dataTable/columnWidths";
 import { todayLocalISO } from "@/lib/date/today";
 
-export interface TarifaRow {
-  id: string;
-  puerto_origen_nombre: string;
-  puerto_destino_nombre: string;
-  agente_nombre: string;
-  naviera_nombre: string;
-  tipo_contenedor_nombre: string;
-  flete_base: number | string;
-  recargos_total: number;
-  total_comparable: number;
-  vigente_desde: string;
-  vigente_hasta: string;
-  estado: CosteoTarifaEstado;
-  estado_aprobacion?: string;
-  motivo_rechazo?: string | null;
-}
-
-export interface TarifasColumnsDeps {
-  mejorPorGrupo: Map<string, number>;
-  aprobarPending: boolean;
-  reactivarPending: boolean;
-  onEditar: (id: string) => void;
-  onDuplicar: (id: string) => void;
-  onEliminar: (id: string) => void;
-  onAprobar: (id: string) => void;
-  onRechazar: (id: string) => void;
-  onReactivar: (id: string) => void;
-}
+export type { TarifaRow, TarifasColumnsDeps } from "./tarifasColumns.types";
+import type { TarifaRow, TarifasColumnsDeps } from "./tarifasColumns.types";
 
 export function buildTarifasColumns(deps: TarifasColumnsDeps): ColumnDef<TarifaRow, unknown>[] {
   const {

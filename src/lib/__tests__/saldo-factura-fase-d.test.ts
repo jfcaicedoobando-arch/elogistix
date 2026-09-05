@@ -53,7 +53,7 @@ describe("Fase D — saldo_factura + NCs en cierre y cobro", () => {
     // v13.743.6 (BUG-2026-08-25): 'Pagada' se sumó a la lista de estados sin saldo
     // porque las facturas legacy migradas sin pagos capturados inflaban el adeudo.
     expect(sql).toMatch(
-      /IF v_estado IN \('Cancelada', 'Sustituida', 'Borrador', 'Pagada'\) THEN RETURN 0;/,
+      /IF v_estado IN \('Cancelada', 'Sustituida', 'Pagada'\) THEN RETURN 0;/,
     );
   });
 

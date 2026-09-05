@@ -1,23 +1,8 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-
-import {
-  useUpdateEstadoCotizacion,
-  useConvertirProspectoACliente,
-  useCrearEmbarqueBorrador,
-  type CotizacionRow,
-} from "@/features/cotizacion/hooks/useCotizaciones";
-import { useRegistrarActividad } from "@/hooks/shared";
-import { tieneCostosCargados } from "@/features/cotizacion/services/candadoCostos";
-import { fetchDatosFiscalesProspecto } from "@/features/cotizacion/services/datosFiscalesProspecto";
-import { notifyError, notifyWarning } from "@/lib/ui/appFeedback";
+import { useUpdateEstadoCotizacion, type CotizacionRow } from "@/features/cotizacion/hooks/useCotizaciones";
+import { notifyWarning } from "@/lib/ui/appFeedback";
 import { sincronizarEtapaPorEstadoCotizacion } from "@/features/crm/services/vincularCotizacion";
-import { EMPTY_CLIENTE_FORM, type ClienteFormData } from "@/features/cliente/types/clienteForm";
-import { validarClienteConversion } from "@/features/cliente/domain/validarClienteConversion";
-import { RevalidacionRequeridaError } from "@/features/cotizacion/domain/revalidacionTarifa";
-
-
-import { ERROR_CODES } from "@/lib/domain/errorCatalog";
+import { useConvertirProspectoHandlers } from "@/features/cotizacion/hooks/useConvertirProspectoHandlers";
+import { useCrearEmbarqueBorradorHandlers } from "@/features/cotizacion/hooks/useCrearEmbarqueBorradorHandlers";
 
 /**
  * Estados cuya etapa CRM sigue sincronizándose desde el cliente. Los estados
@@ -26,24 +11,17 @@ import { ERROR_CODES } from "@/lib/domain/errorCatalog";
  */
 const ESTADOS_SYNC_CLIENTE = ["Enviada", "Solicitada"];
 
-
-
 /**
  * Hook focalizado en las acciones (mutations + handlers + diálogos) del detalle de cotización.
  * Separado del state de queries/totales para favorecer la testabilidad.
+ * Los handlers de conversión de prospecto y de creación de embarque borrador
+ * viven en hooks dedicados (`useConvertirProspectoHandlers`,
+ * `useCrearEmbarqueBorradorHandlers`) para mantener este archivo corto.
  */
 export function useCotizacionDetalleHandlers(cotizacion: CotizacionRow | undefined) {
-  const navigate = useNavigate();
   const actualizarEstado = useUpdateEstadoCotizacion();
-  const convertirProspecto = useConvertirProspectoACliente();
-  const crearBorrador = useCrearEmbarqueBorrador();
-  const registrarActividad = useRegistrarActividad();
-
-
-  const [showConvertir, setShowConvertir] = useState(false);
-  const [showConfirmarConvertir, setShowConfirmarConvertir] = useState(false);
-  const [showBloqueoSinCostos, setShowBloqueoSinCostos] = useState(false);
-  const [clienteForm, setClienteForm] = useState<ClienteFormData>({ ...EMPTY_CLIENTE_FORM });
+  const conversion = useConvertirProspectoHandlers(cotizacion);
+  const embarqueBorrador = useCrearEmbarqueBorradorHandlers(cotizacion);
 
   const handleCambiarEstado = async (estado: string) => {
     if (!cotizacion) return;
@@ -76,125 +54,21 @@ export function useCotizacionDetalleHandlers(cotizacion: CotizacionRow | undefin
     }
   };
 
-
-  /** Precarga contacto + datos fiscales del lead: el vendedor no recaptura nada. */
-  const abrirDialogConvertir = async () => {
-    if (!cotizacion) return;
-    const fiscales = await fetchDatosFiscalesProspecto(cotizacion.oportunidad_id ?? null);
-    setClienteForm({
-      ...EMPTY_CLIENTE_FORM,
-      nombre: cotizacion.prospecto_empresa || '',
-      contacto: cotizacion.prospecto_contacto || '',
-      email: cotizacion.prospecto_email || '',
-      telefono: cotizacion.prospecto_telefono || '',
-      ...fiscales,
-    });
-    setShowConvertir(true);
-  };
-
-  /**
-   * P0 — una sola llamada: la RPC hace cliente + cotización + historial +
-   * oportunidad + lead + bitácora en una transacción. Ya NO se propaga al CRM
-   * después (antes podía quedar el cliente creado y el CRM sin actualizar).
-   */
-  const handleConvertir = async () => {
-    if (!cotizacion) return;
-    const errores = validarClienteConversion(clienteForm);
-    const faltantes = Object.values(errores);
-    if (faltantes.length > 0) {
-      notifyError(undefined, {
-        title: "Faltan datos del cliente",
-        description: faltantes[0],
-        method: "HANDLE_CONVERTIR",
-        errorCode: ERROR_CODES.VALIDATION_FAILED,
-      });
-      return;
-    }
-    try {
-      await convertirProspecto.mutateAsync({
-        cotizacionId: cotizacion.id,
-        clienteData: clienteForm,
-      });
-      // El toast lo emite `useConvertirProspectoACliente` (evita doble toast) y
-      // sus invalidaciones ya terminaron cuando llegamos aquí.
-      setShowConvertir(false);
-    } catch {
-      // Notificado por el hook de mutación; el diálogo NO se cierra.
-    }
-  };
-
-  /**
-   * Candado: bloquea la creación de embarque(s) si la cotización no tiene costos cargados.
-   * Registra el bloqueo en bitácora para auditoría.
-   */
-  const validarCostosOBloquear = async (cotizacionId: string, accion: string): Promise<boolean> => {
-    const ok = await tieneCostosCargados(cotizacionId);
-    if (!ok) {
-      try {
-        registrarActividad.mutate({
-          accion: "embarque_bloqueado_sin_costos",
-          modulo: "cotizaciones",
-          entidad_id: cotizacionId,
-          entidad_nombre: "",
-          detalles: { accion_intentada: accion },
-        });
-      } catch {
-        // No bloquear UX por fallo de bitácora.
-      }
-      setShowConfirmarConvertir(false);
-      setShowBloqueoSinCostos(true);
-    }
-    return ok;
-  };
-
-  const manejarErrorRevalidacion = (err: unknown, _method: string): boolean => {
-    if (err instanceof RevalidacionRequeridaError) {
-      notifyWarning(undefined, {
-        title: "Tarifa desactualizada",
-        description:
-          "La tarifa de esta cotización cambió o venció. Usa el botón \"Crear embarque\" del detalle para revalidar (mantener, refrescar, sustituir o pedir reaprobación).",
-      });
-      return true;
-    }
-    return false;
-  };
-
-
-  // FIX-07 (v13.303.12) — `handleGenerarEmbarques` (multi-await sin
-  // transacción) se removió. La UI usa `handleCrearBorrador` que llama a la
-  // RPC transaccional `crear_embarque_borrador_desde_cotizacion`.
-
-  const handleCrearBorrador = async () => {
-    if (!cotizacion) return;
-    const ok = await validarCostosOBloquear(cotizacion.id, "crear_borrador");
-    if (!ok) return;
-    try {
-      const embarqueId = await crearBorrador.mutateAsync(cotizacion.id);
-      // El toast lo emite `useCrearEmbarqueBorrador` (evita doble toast).
-      navigate(`/embarques/${embarqueId}`);
-    } catch (err: unknown) {
-      manejarErrorRevalidacion(err, "HANDLE_CREAR_BORRADOR");
-    }
-  };
-
-
-  const irACargarCostos = () => {
-    if (!cotizacion) return;
-    setShowBloqueoSinCostos(false);
-    navigate(`/cotizaciones/${cotizacion.id}/editar`);
-  };
-
   return {
-    showConvertir, setShowConvertir,
-    showConfirmarConvertir, setShowConfirmarConvertir,
-    showBloqueoSinCostos, setShowBloqueoSinCostos,
-    clienteForm, setClienteForm,
+    showConvertir: conversion.showConvertir,
+    setShowConvertir: conversion.setShowConvertir,
+    showConfirmarConvertir: embarqueBorrador.showConfirmarConvertir,
+    setShowConfirmarConvertir: embarqueBorrador.setShowConfirmarConvertir,
+    showBloqueoSinCostos: embarqueBorrador.showBloqueoSinCostos,
+    setShowBloqueoSinCostos: embarqueBorrador.setShowBloqueoSinCostos,
+    clienteForm: conversion.clienteForm,
+    setClienteForm: conversion.setClienteForm,
     handleCambiarEstado,
-    abrirDialogConvertir,
-    handleConvertir,
-    handleCrearBorrador,
-    irACargarCostos,
-    convertirProspecto,
-    crearBorrador,
+    abrirDialogConvertir: conversion.abrirDialogConvertir,
+    handleConvertir: conversion.handleConvertir,
+    handleCrearBorrador: embarqueBorrador.handleCrearBorrador,
+    irACargarCostos: embarqueBorrador.irACargarCostos,
+    convertirProspecto: conversion.convertirProspecto,
+    crearBorrador: embarqueBorrador.crearBorrador,
   };
 }
