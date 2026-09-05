@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.823.113] - 2026-09-05
+- CRM Etapas: `fetchEtapasPipelineActivas` y `fetchEtapasPipelineTodas` (`src/features/crm/services/etapas.ts`) ahora aplican el filtro canónico `.is("deleted_at", null)`. Antes una etapa soft-deleted por migración/administración podía seguir apareciendo en selectores, Kanban y configuración, porque la lectura activa sólo miraba `activa = true`. Sin cambios en la RPC de reordenar ni en la visibilidad de etapas inactivas en configuración. Regresiones: ambas lecturas excluyen etapas eliminadas y las inactivas siguen listándose.
+
 ## [13.823.112] - 2026-09-05
 - CRM Configuración: en `EtapasPipelineEditor` el merge de borradores ahora es por campo para `orden`. Una fila con cambios sin guardar conserva su borrador, pero adopta siempre el `orden` confirmado por el backend (sólo lo cambia la RPC de reordenar, nunca la edición inline). Antes, editar una fila y luego moverla hacía que al guardar se reenviara el orden anterior y se revirtiera el reordenamiento. Sin cambios en la RPC ni pérdida de ediciones. Regresión: editar + mover + refetch + guardar conserva el nombre editado y envía el orden nuevo.
 
