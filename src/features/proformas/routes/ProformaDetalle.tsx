@@ -100,6 +100,7 @@ function ProformaDetalleContent({ data }: ContentProps) {
             estadoProforma={proforma.estado_proforma}
             estadoCliente={timeline.estadoCliente}
             aceptadaPor={timeline.aceptadaPor}
+            facturas={data.facturas_asociadas}
             clienteNombre={proforma.cliente_nombre}
             expediente={proforma.expediente}
             embarqueId={proforma.embarque_id}

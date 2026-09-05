@@ -39,6 +39,7 @@ export function ProformaDetalleHeader({
   estadoProforma,
   estadoCliente,
   aceptadaPor,
+  facturas,
   clienteNombre,
   expediente,
   embarqueId,
