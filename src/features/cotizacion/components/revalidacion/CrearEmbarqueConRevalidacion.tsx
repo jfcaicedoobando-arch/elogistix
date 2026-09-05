@@ -47,14 +47,45 @@ export function CrearEmbarqueConRevalidacion({ cotizacionId, numContenedores }: 
     tarifaIdAplicada: string | null,
     delta: unknown,
   ) => {
-    const embarqueId = await crearMut.mutateAsync({
-      cotizacionId,
-      decision,
-      tarifaIdAplicada,
-      delta,
-    });
-    setModalOpen(false);
-    navigate(`/embarques/${embarqueId}`);
+    // Fase 2 (creación del embarque): los errores los notifica la propia
+    // mutation con su mensaje real. Aquí sólo evitamos que el rechazo escale
+    // al catch de la revalidación (que mostraría un aviso equivocado) o quede
+    // como promesa no manejada.
+    try {
+      const embarqueId = await crearMut.mutateAsync({
+        cotizacionId,
+        decision,
+        tarifaIdAplicada,
+        delta,
+      });
+      setModalOpen(false);
+      navigate(`/embarques/${embarqueId}`);
+    } catch {
+      /* notificado por useCrearEmbarqueBorradorConDecision */
+    }
+  };
+
+  const notificarErrorRevalidacion = (err: unknown) => {
+    const error = err as Error;
+    const msg = error?.message ?? "";
+    if (esErrorDeEsquemaBD(msg)) {
+      // Bug de sistema: bloqueamos el botón para no producir reintentos
+      // duplicados (cada reintento genera un Sentry idéntico).
+      setBloqueadoPorEsquema(true);
+      notifyError(undefined, {
+        title: "No se pudo revalidar la tarifa — bug de sistema",
+        description:
+          "El backend hace referencia a una columna que ya no existe. Nuestro equipo ya recibió el reporte; por favor avisa a soporte con el ID de la cotización y evita reintentar.",
+        error,
+        method: "REVALIDAR_TARIFA",
+      });
+    } else {
+      notifyError(undefined, {
+        title: `No se pudo revalidar la tarifa: ${msg}`,
+        error,
+        method: "REVALIDAR_TARIFA",
+      });
+    }
   };
 
   const handleClick = async () => {
@@ -62,40 +93,25 @@ export function CrearEmbarqueConRevalidacion({ cotizacionId, numContenedores }: 
     if (enVueloRef.current || bloqueadoPorEsquema) return;
     enVueloRef.current = true;
     setRevalidando(true);
+    // Fase 1 — revalidación. Su catch NO debe abarcar la creación del embarque.
+    let r: ResultadoRevalidacion | null = null;
     try {
-      const r = await revalidarTarifa(cotizacionId);
+      r = await revalidarTarifa(cotizacionId);
       setResultado(r);
-      if (r.severidad === "sin_cambios") {
-        await ejecutarCreacion("sin_cambios", r.tarifa_id_vigente ?? null, { cambios: r.cambios });
-      } else {
-        setModalOpen(true);
-      }
     } catch (err) {
-      const error = err as Error;
-      const msg = error?.message ?? "";
-      if (esErrorDeEsquemaBD(msg)) {
-        // Bug de sistema: bloqueamos el botón para no producir reintentos
-        // duplicados (cada reintento genera un Sentry idéntico).
-        setBloqueadoPorEsquema(true);
-        notifyError(undefined, {
-          title: "No se pudo revalidar la tarifa — bug de sistema",
-          description:
-            "El backend hace referencia a una columna que ya no existe. Nuestro equipo ya recibió el reporte; por favor avisa a soporte con el ID de la cotización y evita reintentar.",
-          error,
-          method: "REVALIDAR_TARIFA",
-        });
-      } else {
-        notifyError(undefined, {
-          title: `No se pudo revalidar la tarifa: ${msg}`,
-          error,
-          method: "REVALIDAR_TARIFA",
-        });
-      }
+      notificarErrorRevalidacion(err);
     } finally {
       setRevalidando(false);
       enVueloRef.current = false;
     }
+    if (!r) return;
+    if (r.severidad === "sin_cambios") {
+      await ejecutarCreacion("sin_cambios", r.tarifa_id_vigente ?? null, { cambios: r.cambios });
+    } else {
+      setModalOpen(true);
+    }
   };
+
 
 
   const handleMantener = () =>

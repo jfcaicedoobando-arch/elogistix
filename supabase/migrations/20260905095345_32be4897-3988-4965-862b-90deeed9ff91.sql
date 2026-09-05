@@ -1,10 +1,12 @@
--- Fuente canónica de public._crear_embarque_replicar_conceptos
--- Helper privado (Bloque 3.2 · god-function split) usado por
--- crear_embarque_borrador_core para replicar cotizacion_costos y
--- conceptos_venta en el embarque recién creado.
--- Regenerada 1:1 desde la definición vigente (migración 20260912000100:
--- prorrateo por resto mayor, sin importes negativos).
--- Ver supabase/schema/README.md.
+-- Migración: prorrateo de conceptos de costo sin importes negativos.
+-- Original: 20260905000100_ola7_v15_m1_m8_m10_n1.sql (definición vigente de
+-- public._crear_embarque_replicar_conceptos). Motivo: cuando el total en
+-- centavos era menor que el número de contenedores, el ajuste final
+-- (v_base - v_acum) producía una parte NEGATIVA (ej. 0.02 entre 4 →
+-- 0.01, 0.01, 0.01, -0.01). Se reemplaza por reparto en centavos con método
+-- del resto mayor: suma exacta y sin partes de signo contrario al total.
+-- No altera conceptos ya creados. Espejo canónico:
+-- supabase/schema/embarques/_crear_embarque_replicar_conceptos.sql
 
 CREATE OR REPLACE FUNCTION public._crear_embarque_replicar_conceptos(p_cotizacion_id uuid, p_embarque_id uuid, p_org uuid, p_target_ids uuid[], p_conceptos_venta jsonb)
  RETURNS void
@@ -76,7 +78,7 @@ BEGIN
       v_i     := 0;
       FOREACH v_cid IN ARRAY p_target_ids LOOP
         v_i := v_i + 1;
-        v_parte := ROUND(v_signo * (v_piso + CASE WHEN v_i <= v_resto THEN 1 ELSE 0 END)::numeric / 100, 2);
+        v_parte := v_signo * (v_piso + CASE WHEN v_i <= v_resto THEN 1 ELSE 0 END)::numeric / 100;
         INSERT INTO public.conceptos_costo (embarque_id, contenedor_id, concepto, monto, moneda, proveedor_nombre, proveedor_id, organization_id)
         VALUES (p_embarque_id, v_cid, v_costo.concepto, v_parte,
                 CASE WHEN v_costo.moneda = 'USD' THEN 'USD'::moneda ELSE 'MXN'::moneda END,
