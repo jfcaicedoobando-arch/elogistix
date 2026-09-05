@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.823.128] - 2026-09-05
+- CRM ConvertirLeadDialog / ConvertirLeadSheet: el borrador se reinicializa mediante efecto cuando cambia `lead.id` (incluido al montar), evitando que al navegar entre fichas de lead queden el nombre, monto, moneda o cliente del lead anterior. Se conservan validaciones, guard anti doble envío y flujo de conversión. Regresión: cambiar de lead A a lead B no arrastra valores editados.
+
 ## [13.823.127] - 2026-09-05
 - CRM ranking de vendedores (`useLeaderboardVendedores`): el mes en curso ya se calculaba con los helpers centrales `ymMx()`/`primerDiaMesMx()` (calendario America/Mexico_City) y se conserva la firma del servicio; se agregó la regresión faltante de borde de mes (31/ago 22:00 CDMX sigue en agosto con inicio 2026-08-01; el día 1 real cambia a septiembre), verificada en TZ UTC y America/Mexico_City.
 
