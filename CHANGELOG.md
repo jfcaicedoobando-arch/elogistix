@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.823.120] - 2026-09-05
+- CRM trazabilidad (`src/features/crm/services/lineage.ts`): `fetchLeadResumen` ahora filtra `deleted_at IS NULL`, igual que `getLead` y los listados. Un lead archivado ya no aparece como "Lead de origen" en el detalle de oportunidad; la oportunidad se muestra con su estado actual y sin origen visible, sin borrar historial ni alterar otras relaciones. Regresiones: filtro de vivos aplicado y lead archivado devuelto como sin origen.
+
 ## [13.823.119] - 2026-09-05
 - CRM automatizaciones de etapa (`src/features/crm/services/automatizacionesEtapa.ts`): `cancelarActividadesPerdida` ahora filtra también `deleted_at IS NULL`, de modo que una actividad archivada ya no puede marcarse como completada al perder la oportunidad; las tareas activas se cierran igual que antes.
 - El helper local `isoDaysFromNow` dejó de usar `new Date().setDate()` + `toISOString()` y delega en el helper canónico `mxAddDaysIso` (calendario America/Mexico_City), conservando la misma regla de días y la hora local. Regresiones: actividad archivada intacta y fecha programada estable cerca de medianoche UTC vs CDMX.
