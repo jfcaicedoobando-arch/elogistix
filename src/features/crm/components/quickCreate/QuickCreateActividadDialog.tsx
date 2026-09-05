@@ -52,6 +52,10 @@ export default function QuickCreateActividadDialog({ open, onOpenChange, onCreat
   // usuario capturó algo (isDirty) sin considerar el default como captura.
   const [fechaInicial, setFechaInicial] = useState(fecha);
   const abiertoAntes = useRef(open);
+  const fechaRef = useRef(fecha);
+  fechaRef.current = fecha;
+  const fechaInicialRef = useRef(fechaInicial);
+  fechaInicialRef.current = fechaInicial;
   useEffect(() => {
     if (abiertoAntes.current && !open) {
       setAsunto("");
@@ -59,9 +63,19 @@ export default function QuickCreateActividadDialog({ open, onOpenChange, onCreat
       const nueva = defaultFecha();
       setFecha(nueva);
       setFechaInicial(nueva);
+    } else if (!abiertoAntes.current && open) {
+      // Al abrir: si el usuario no capturó fecha (sigue con el default de la
+      // apertura previa), refrescar el default por si ya cambió el día.
+      if (fechaRef.current === fechaInicialRef.current) {
+        const nueva = defaultFecha();
+        setFecha(nueva);
+        setFechaInicial(nueva);
+      }
     }
     abiertoAntes.current = open;
   }, [open]);
+
+
 
   const submit = async () => {
     if (crear.isPending || enviandoRef.current) return;

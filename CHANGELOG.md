@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.823.122] - 2026-09-05
+- CRM alta express de actividad (`QuickCreateActividadDialog`): la fecha default se recalcula en cada apertura del modal (transición cerrado → abierto) cuando el usuario no ha capturado fecha, evitando que un `QuickAddMenu` montado durante horas o tras un cambio de día muestre un default viejo. Si el usuario editó la fecha durante la apertura, se conserva. Se mantienen el reset al cerrar, el `isDirty` y la validación de fecha. Regresiones: cambio de día simulado antes de abrir y fecha capturada no sobrescrita.
+
 ## [13.823.121] - 2026-09-05
 - CRM Kanban (`useMoverOportunidadEtapa`): ya no se ofrece "Deshacer" cuando el destino ejecuta una tarea automática — etapa tipo ganada ("Generar cotización en firme") o etapa abierta con `crea_tarea_seguimiento` ("Seguimiento: …") — igual que ya ocurría con las etapas perdidas. Antes, al deshacer volvía la etapa pero la tarea automática quedaba viva contradiciendo la etapa anterior. Se conserva el Deshacer en transiciones sin tareas automáticas y no se borra ninguna actividad existente. Nuevos helpers puros `destinoGeneraTareaAutomatica` y `puedeOfrecerUndo` + regresiones para ganada, abierta con seguimiento y transición ordinaria.
 
