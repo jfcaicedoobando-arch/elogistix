@@ -4,8 +4,7 @@
  * recorrido cambien de panel.
  */
 import { describe, it, expect } from "vitest";
-import { render, screen } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
+import { render, screen, fireEvent } from "@testing-library/react";
 import { LandingAntesDespues } from "../LandingAntesDespues";
 import { LandingRecorrido } from "../LandingRecorrido";
 import { ANTES_DESPUES, RECORRIDO } from "@/features/marketing/routes/landingCopy";
@@ -24,15 +23,14 @@ describe("LandingAntesDespues", () => {
 });
 
 describe("LandingRecorrido", () => {
-  it("abre en el primer paso y permite cambiar de pestaña", async () => {
-    const user = userEvent.setup();
+  it("abre en el primer paso y permite cambiar de pestaña", () => {
     render(<LandingRecorrido />);
 
     const [primero, segundo] = RECORRIDO.pasos;
     expect(screen.getByText(primero.folio)).toBeInTheDocument();
     expect(screen.queryByText(segundo.folio)).not.toBeInTheDocument();
 
-    await user.click(screen.getByRole("tab", { name: segundo.tab }));
+    fireEvent.click(screen.getByRole("tab", { name: segundo.tab }));
     expect(screen.getByText(segundo.folio)).toBeInTheDocument();
     expect(screen.getByRole("heading", { level: 3, name: segundo.title })).toBeInTheDocument();
   });
