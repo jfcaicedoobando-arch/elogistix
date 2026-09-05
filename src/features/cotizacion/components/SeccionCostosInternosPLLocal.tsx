@@ -169,6 +169,7 @@ export default function SeccionCostosInternosPLLocal({ filas, setFilas }: Props)
         totalesUSD={totalesUSD} totalesMXN={totalesMXN}
         tieneUSD={filasUSD.length > 0} tieneMXN={filasMXN.length > 0}
         mostrarRentabilidadGlobal
+        notaPie="El IVA no forma parte del profit" 
       />
     </div>
   );
