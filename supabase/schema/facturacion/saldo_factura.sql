@@ -35,7 +35,9 @@ BEGIN
 
   -- BUG-2026-08-25: 'Pagada' también es terminal (facturas legacy sin pagos
   -- capturados generaban adeudo fantasma en el estado de cuenta).
-  IF v_estado IN ('Cancelada', 'Sustituida', 'Borrador', 'Pagada') THEN RETURN 0; END IF;
+  -- v13.823.145: 'Borrador' NO es terminal — una factura sin timbrar debe
+  -- reportar saldo por cobrar (antes mostraba "cobrado = total" sin pagos).
+  IF v_estado IN ('Cancelada', 'Sustituida', 'Pagada') THEN RETURN 0; END IF;
 
   SELECT COALESCE(SUM(monto_aplicado_factura), 0) INTO v_pagos
   FROM public.pagos_factura
