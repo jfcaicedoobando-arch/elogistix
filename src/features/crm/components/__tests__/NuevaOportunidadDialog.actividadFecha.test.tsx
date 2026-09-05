@@ -54,7 +54,7 @@ describe("NuevaOportunidadDialog — fecha de la tarea automática", () => {
   beforeEach(() => {
     crearOportunidad.mockClear();
     crearActividad.mockClear();
-    vi.useFakeTimers();
+    vi.useFakeTimers({ shouldAdvanceTime: true });
   });
   afterEach(() => vi.useRealTimers());
 
