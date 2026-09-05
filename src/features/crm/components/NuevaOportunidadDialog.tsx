@@ -16,6 +16,7 @@ import {
 } from "@/features/crm/hooks";
 import { useClientesForSelect } from "@/features/cliente/hooks";
 import OportunidadFormFields from "@/features/crm/components/nuevaOportunidad/OportunidadFormFields";
+import { useNuevaOportunidadSubmit } from "@/features/crm/hooks/useNuevaOportunidadSubmit";
 import { faltantesOportunidadForm } from "@/features/crm/domain/oportunidadFormPayload";
 
 interface Props {
