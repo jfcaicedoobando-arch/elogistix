@@ -50,9 +50,13 @@ describe("fetchEtapa / fetchOportunidad", () => {
     mock.setTableResult("crm_etapas_pipeline", { data: baseEtapa, error: null });
     expect(await fetchEtapa("e1")).toEqual(baseEtapa);
   });
-  it("fetchEtapa devuelve null en error o data nula", async () => {
-    mock.setTableResult("crm_etapas_pipeline", { data: null, error: { message: "x" } });
+  it("fetchEtapa devuelve null cuando no existe la etapa", async () => {
+    mock.setTableResult("crm_etapas_pipeline", { data: null, error: null });
     expect(await fetchEtapa("e1")).toBeNull();
+  });
+  it("fetchEtapa propaga el error del backend en vez de silenciarlo", async () => {
+    mock.setTableResult("crm_etapas_pipeline", { data: null, error: { message: "rls" } });
+    await expect(fetchEtapa("e1")).rejects.toBeTruthy();
   });
   it("fetchOportunidad retorna data", async () => {
     mock.setTableResult("crm_oportunidades", { data: baseOp, error: null });
