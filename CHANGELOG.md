@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.823.101] - 2026-09-05
+- CRM Leads: al crear un lead y fallar ya no aparecen dos avisos de error; se eliminó el `notifyError` duplicado en los `catch` de `QuickCreateLeadDialog` y `NuevoLeadDialog` porque `useCrearLead` ya notifica en `onError`. Se conservan el guard anti doble submit, el cierre/reset y el aviso específico cuando el lead sí se crea pero falla la tarea automática (mutación silenciosa). Regresiones: un solo feedback visible al fallar la creación en ambos diálogos, y aviso específico de actividad automática intacto.
+
 ## [13.823.100] - 2026-09-05
 - CRM Prospectos: cambiar el estado desde la tabla (`EstadoCell` en `leadsColumns.tsx`) ya no muestra dos errores para una sola acción; se eliminó el `notifyError` local porque `useActualizarLead` ya notifica en `onError`. Se conservan `stopPropagation` y el selector deshabilitado mientras procesa. Regresión: mutación fallida = un solo feedback.
 
