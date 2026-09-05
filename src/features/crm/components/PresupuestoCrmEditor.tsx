@@ -11,6 +11,7 @@ import {
 import { useOrganization } from "@/lib/contexts/OrganizationContext";
 import { formatCurrency } from "@/lib/formatters/numbers";
 import { usePresupuestoCrm, useGuardarPresupuestoMes } from "@/features/crm/hooks/useHigienePipeline";
+import { ymMx } from "@/lib/date/mx";
 
 const MESES = [
   "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
@@ -19,7 +20,10 @@ const MESES = [
 
 export default function PresupuestoCrmEditor() {
   const { organizationId } = useOrganization();
-  const [anio, setAnio] = useState(() => new Date().getFullYear());
+  // Año de negocio CDMX: el 31/dic por la noche `getFullYear()` local ya
+  // podía saltar al año siguiente. Sólo es el valor inicial: si el usuario
+  // cambia el selector, su elección se conserva.
+  const [anio, setAnio] = useState(() => Number(ymMx().slice(0, 4)));
   const { data = [], isLoading } = usePresupuestoCrm(anio);
   const guardar = useGuardarPresupuestoMes();
   // El borrador se indexa por "anio-mes" para que un valor capturado en un año
