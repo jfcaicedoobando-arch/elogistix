@@ -4,6 +4,7 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import { unwrap } from "@/lib/supabase/response";
+import { mxAddDaysIso } from "@/lib/date/mx";
 import { registrarActividad } from "@/services/bitacora/registrar";
 import type { CrmActividadTipo, CrmEntidadTipo } from "./actividades";
 
