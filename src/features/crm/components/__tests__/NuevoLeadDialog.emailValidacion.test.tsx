@@ -4,7 +4,7 @@
  * debe pasar `emailLooksValid`; vacío + teléfono sigue siendo válido.
  */
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import NuevoLeadDialog from "@/features/crm/components/NuevoLeadDialog";
 
 const mutateAsync = vi.fn(async () => ({ id: "lead-1" }));
@@ -21,6 +21,11 @@ vi.mock("@/lib/contexts/AuthContext", () => ({
 }));
 vi.mock("@/features/crm/components/VendedorSelect", () => ({ default: () => <div /> }));
 vi.mock("@/features/crm/components/AvisoLeadDuplicado", () => ({ AvisoLeadDuplicado: () => <div /> }));
+const notifyError = vi.fn();
+vi.mock("@/lib/ui/appFeedback", () => ({
+  notifyError: (...args: unknown[]) => notifyError(...args),
+  notifySuccess: vi.fn(),
+}));
 
 const llenar = (label: RegExp, valor: string) =>
   fireEvent.change(screen.getByLabelText(label), { target: { value: valor } });
@@ -69,6 +74,35 @@ describe("NuevoLeadDialog — validación de correo", () => {
     fireEvent.click(screen.getByRole("button", { name: /Crear lead/i }));
     expect(mutateAsync).toHaveBeenCalledWith(
       expect.objectContaining({ email: "qa.cliente@gmail.com" }),
+    );
+  });
+
+  it("si la creación falla no repite el aviso de error (el hook ya notifica)", async () => {
+    notifyError.mockClear();
+    mutateAsync.mockRejectedValueOnce(new Error("RLS denegado"));
+    render(<NuevoLeadDialog open onOpenChange={vi.fn()} />);
+    llenar(/Empresa/i, "Acme");
+
+    fireEvent.click(screen.getByRole("button", { name: /Crear lead/i }));
+
+    await waitFor(() => expect(mutateAsync).toHaveBeenCalledTimes(1));
+    // El único feedback de error visible lo emite useCrearLead.onError.
+    expect(notifyError).not.toHaveBeenCalled();
+  });
+
+  it("si el lead se crea pero falla la actividad automática sí avisa (mutación silenciosa)", async () => {
+    notifyError.mockClear();
+    mutateActividad.mockRejectedValueOnce(new Error("fallo actividad"));
+    render(<NuevoLeadDialog open onOpenChange={vi.fn()} />);
+    llenar(/Empresa/i, "Acme");
+
+    fireEvent.click(screen.getByRole("button", { name: /Crear lead/i }));
+
+    await waitFor(() =>
+      expect(notifyError).toHaveBeenCalledWith(
+        undefined,
+        expect.objectContaining({ title: expect.stringMatching(/no se pudo crear la tarea automática/i) }),
+      ),
     );
   });
 });

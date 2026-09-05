@@ -14,6 +14,11 @@ vi.mock("@/lib/contexts/AuthContext", () => ({
 vi.mock("@/features/crm/hooks", () => ({
   useCrearLead: () => ({ mutateAsync, isPending: false }),
 }));
+const notifyError = vi.fn();
+vi.mock("@/lib/ui/appFeedback", () => ({
+  notifyError: (...args: unknown[]) => notifyError(...args),
+  notifySuccess: vi.fn(),
+}));
 
 describe("QuickCreateLeadDialog", () => {
   beforeEach(() => {
@@ -52,5 +57,18 @@ describe("QuickCreateLeadDialog", () => {
     await waitFor(() => expect(mutateAsync).toHaveBeenCalledTimes(1));
     const payload = mutateAsync.mock.calls[0]![0];
     expect(payload.empresa).toBe("Acme Logistics");
+  });
+
+  it("si la creación falla no repite el aviso de error (el hook ya notifica)", async () => {
+    notifyError.mockClear();
+    mutateAsync.mockRejectedValueOnce(new Error("RLS denegado"));
+    render(<QuickCreateLeadDialog open onOpenChange={vi.fn()} onCreated={vi.fn()} onMore={vi.fn()} />);
+
+    fireEvent.change(screen.getByLabelText(/Empresa/i), { target: { value: "Acme" } });
+    fireEvent.click(screen.getByRole("button", { name: /Crear/i }));
+
+    await waitFor(() => expect(mutateAsync).toHaveBeenCalledTimes(1));
+    // El único feedback de error visible lo emite useCrearLead.onError.
+    expect(notifyError).not.toHaveBeenCalled();
   });
 });
