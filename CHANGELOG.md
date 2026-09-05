@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+## [13.823.89] - 2026-09-05
+
+### Sentry — triage y corrección de ruido (5Z, 5Y, 5S, 5V, 1D)
+- `useCrmHotkeys`: guarda ante keydown sin `key` (autocompletado/IME) — corrige `JAVASCRIPT-REACT-5Z`.
+- Filtros nuevos en `shouldReportToSentry`: reglas de negocio esperadas `LC_COT_TRANSICION_INVALIDA` y `LC_CONFLICTO_CONCURRENCIA` (5Y, 5S) y `CfdiUploadError` en fases de red del dispositivo `preflight`/`request` (5V, 1D); la fase `response` sigue reportándose.
+- Regresiones: `appFeedback.sentry.filtros.test.ts` y `useCrmHotkeys.test.tsx`.
+
 ## [13.823.88] - 2026-09-04
 
 ### Higiene Power of 10 — archivos productivos ≤ 200 líneas
