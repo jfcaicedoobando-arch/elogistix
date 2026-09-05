@@ -4,8 +4,8 @@
 -- centavos era menor que el número de contenedores, el ajuste final
 -- (v_base - v_acum) producía una parte NEGATIVA (ej. 0.02 entre 4 →
 -- 0.01, 0.01, 0.01, -0.01). Se reemplaza por reparto en centavos con método
--- del resto mayor: suma exacta y sin partes de signo contrario al total.
--- No altera conceptos ya creados. Espejo canónico:
+-- del resto mayor (ROUND a 2 decimales): suma exacta y sin partes de signo
+-- contrario al total. No altera conceptos ya creados. Espejo canónico:
 -- supabase/schema/embarques/_crear_embarque_replicar_conceptos.sql
 
 CREATE OR REPLACE FUNCTION public._crear_embarque_replicar_conceptos(p_cotizacion_id uuid, p_embarque_id uuid, p_org uuid, p_target_ids uuid[], p_conceptos_venta jsonb)
@@ -78,7 +78,7 @@ BEGIN
       v_i     := 0;
       FOREACH v_cid IN ARRAY p_target_ids LOOP
         v_i := v_i + 1;
-        v_parte := v_signo * (v_piso + CASE WHEN v_i <= v_resto THEN 1 ELSE 0 END)::numeric / 100;
+        v_parte := ROUND(v_signo * (v_piso + CASE WHEN v_i <= v_resto THEN 1 ELSE 0 END)::numeric / 100, 2);
         INSERT INTO public.conceptos_costo (embarque_id, contenedor_id, concepto, monto, moneda, proveedor_nombre, proveedor_id, organization_id)
         VALUES (p_embarque_id, v_cid, v_costo.concepto, v_parte,
                 CASE WHEN v_costo.moneda = 'USD' THEN 'USD'::moneda ELSE 'MXN'::moneda END,
