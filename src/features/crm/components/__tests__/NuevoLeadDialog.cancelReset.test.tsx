@@ -27,7 +27,7 @@ describe("NuevoLeadDialog — cancelar limpia el formulario", () => {
     mutateActividad.mockClear();
   });
 
-  it("al cancelar y reabrir el formulario vuelve a estar vacío", () => {
+  it("al cancelar y reabrir el formulario vuelve a estar vacío", async () => {
     const onOpenChange = vi.fn();
     const { rerender } = render(<NuevoLeadDialog open onOpenChange={onOpenChange} />);
 
@@ -36,6 +36,9 @@ describe("NuevoLeadDialog — cancelar limpia el formulario", () => {
     expect((screen.getByLabelText(/Empresa/i) as HTMLInputElement).value).toBe("Acme");
 
     fireEvent.click(screen.getByRole("button", { name: /Cancelar/i }));
+    // Como hay datos capturados, el diálogo pide confirmación antes de descartar
+    // (mismo comportamiento que Escape o clic fuera).
+    fireEvent.click(screen.getByRole("button", { name: /Descartar/i }));
     expect(onOpenChange).toHaveBeenCalledWith(false);
 
     // Simula que el padre cierra y vuelve a abrir el diálogo.
