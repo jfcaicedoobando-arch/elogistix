@@ -65,9 +65,9 @@ function ForecastPanel() {
                   <TableRow key={b.key} className="border-b">
                     <TableCell>{b.label}</TableCell>
                     <TableCell>{b.moneda}</TableCell>
-                    <CeldaMontoAnalitica monto={b.pipeline} moneda={b.moneda} />
-                    <CeldaMontoAnalitica monto={b.ponderado} moneda={b.moneda} />
-                    <CeldaMontoAnalitica monto={b.ganado} moneda={b.moneda} />
+                    <TableCell className="text-right tabular-nums whitespace-nowrap"><CeldaMontoAnalitica monto={b.pipeline} moneda={b.moneda} /></TableCell>
+                    <TableCell className="text-right tabular-nums whitespace-nowrap"><CeldaMontoAnalitica monto={b.ponderado} moneda={b.moneda} /></TableCell>
+                    <TableCell className="text-right tabular-nums whitespace-nowrap"><CeldaMontoAnalitica monto={b.ganado} moneda={b.moneda} /></TableCell>
                     <TableCell className="text-right">{b.count}</TableCell>
                   </TableRow>
                 ))}
@@ -90,9 +90,9 @@ function ForecastPanel() {
                   <TableRow key={b.key} className="border-b">
                     <TableCell>{b.label}</TableCell>
                     <TableCell>{b.moneda}</TableCell>
-                    <CeldaMontoAnalitica monto={b.pipeline} moneda={b.moneda} />
-                    <CeldaMontoAnalitica monto={b.ponderado} moneda={b.moneda} />
-                    <CeldaMontoAnalitica monto={b.ganado} moneda={b.moneda} />
+                    <TableCell className="text-right tabular-nums whitespace-nowrap"><CeldaMontoAnalitica monto={b.pipeline} moneda={b.moneda} /></TableCell>
+                    <TableCell className="text-right tabular-nums whitespace-nowrap"><CeldaMontoAnalitica monto={b.ponderado} moneda={b.moneda} /></TableCell>
+                    <TableCell className="text-right tabular-nums whitespace-nowrap"><CeldaMontoAnalitica monto={b.ganado} moneda={b.moneda} /></TableCell>
                     <TableCell className="text-right">{b.count}</TableCell>
                   </TableRow>
                 ))}
