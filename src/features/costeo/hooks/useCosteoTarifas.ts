@@ -16,6 +16,17 @@ import {
 } from "@/features/costeo/services/tarifas";
 
 
+/**
+ * v13.823.151 — el listado del Portal del Agente vive bajo su propia llave
+ * (`portalAgente.tarifas`). Sin invalidarla, crear/editar una tarifa desde el
+ * portal cerraba el modal pero la tabla y los contadores seguían viejos hasta
+ * recargar la página.
+ */
+const TARIFAS_INVALIDATE = [
+  queryKeys.costeo.tarifas.all,
+  queryKeys.portalAgente.tarifas(),
+];
+
 export function useCosteoTarifas(filters: FetchTarifasFilters = {}) {
   const { organizationId } = useOrganization();
   return useQuery({
@@ -33,7 +44,7 @@ export function useCosteoTarifaMutations() {
 
   const crear = useMutationWithFeedback({
     mutationFn: (input: TarifaInput) => insertTarifaConRecargos(organizationId!, input),
-    invalidate: queryKeys.costeo.tarifas.all,
+    invalidate: TARIFAS_INVALIDATE,
     successTitle: "Tarifa guardada",
     errorTitle: "Error al guardar",
     errorMethod: "FEATURES_COSTEO_HOOKS_USECOSTEOTARIFAS_1",
@@ -68,7 +79,7 @@ export function useCosteoTarifaMutations() {
       return { exitos, fallos };
     },
     onSuccess: ({ exitos, fallos }) => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.costeo.tarifas.all });
+      for (const key of TARIFAS_INVALIDATE) queryClient.invalidateQueries({ queryKey: key });
       if (fallos.length === 0) {
         toast({ title: `Se crearon ${exitos.length} tarifa${exitos.length === 1 ? "" : "s"}` });
       } else if (exitos.length === 0) {
@@ -92,7 +103,7 @@ export function useCosteoTarifaMutations() {
   const actualizar = useMutationWithFeedback({
     mutationFn: ({ id, input }: { id: string; input: TarifaInput }) =>
       updateTarifaConRecargos(id, input),
-    invalidate: queryKeys.costeo.tarifas.all,
+    invalidate: TARIFAS_INVALIDATE,
     successTitle: "Tarifa actualizada",
     errorTitle: "Error al actualizar",
     errorMethod: "FEATURES_COSTEO_HOOKS_USECOSTEOTARIFAS_2",
@@ -103,7 +114,7 @@ export function useCosteoTarifaMutations() {
 
   const reemplazar = useMutationWithFeedback({
     mutationFn: (id: string) => marcarTarifaReemplazada(id),
-    invalidate: queryKeys.costeo.tarifas.all,
+    invalidate: TARIFAS_INVALIDATE,
     successTitle: "Tarifa marcada como reemplazada",
     errorTitle: "Error al marcar tarifa",
     errorMethod: "FEATURES_COSTEO_HOOKS_USECOSTEOTARIFAS_3",
@@ -114,7 +125,7 @@ export function useCosteoTarifaMutations() {
 
   const eliminar = useMutationWithFeedback({
     mutationFn: (id: string) => deleteTarifa(id),
-    invalidate: queryKeys.costeo.tarifas.all,
+    invalidate: TARIFAS_INVALIDATE,
     successTitle: "Tarifa eliminada",
     errorTitle: "Error al eliminar",
     errorMethod: "FEATURES_COSTEO_HOOKS_USECOSTEOTARIFAS_4",
