@@ -12,6 +12,7 @@ import type { CostoCotizacion } from "@/features/cotizacion/types";
 import type { FilaCostoLocal } from "@/features/cotizacion/types";
 import { fromDb } from "@/lib/supabase/cast";
 import { requiereTransicionABorrador } from "@/features/cotizacion/domain/estadosEditables";
+import { ReglaNegocioError } from "@/lib/errors/reglaNegocio";
 
 
 interface Mutations {
@@ -135,7 +136,7 @@ export function derivarSubtotalMoneda(
     if (c?.moneda === "MXN") mxn += total;
     else usd += total;
   }
-  if (usd > 0 && mxn > 0) throw new Error(MSG_COTIZACION_MIXTA);
+  if (usd > 0 && mxn > 0) throw new ReglaNegocioError(MSG_COTIZACION_MIXTA);
   return mxn > 0 ? { subtotal: mxn, moneda: "MXN" } : { subtotal: usd, moneda: "USD" };
 }
 

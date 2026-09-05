@@ -15,6 +15,7 @@ const BUSINESS_ERROR_NAMES = new Set<string>([
   "CreditLimitError",
   "ValidationError",
   "ZodError",
+  "ReglaNegocioError",
 ]);
 
 const BUSINESS_ERROR_MESSAGE_HINTS = [
@@ -32,6 +33,8 @@ export function isExpectedBusinessError(err: unknown): boolean {
   if (typeof e.name === "string" && BUSINESS_ERROR_NAMES.has(e.name)) return true;
   if (e.status === 504) return true;
   if (typeof e.message === "string") {
+    // Códigos de dominio LC_* (RAISE EXCEPTION) con cualquier ERRCODE.
+    if (e.message.startsWith("LC_")) return true;
     const msg = e.message.toLowerCase();
     if (BUSINESS_ERROR_MESSAGE_HINTS.some((h) => msg.includes(h))) return true;
   }

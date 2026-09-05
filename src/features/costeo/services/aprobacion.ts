@@ -7,6 +7,7 @@ import { run, unwrap } from "@/lib/supabase/response";
 import { registrarActividad } from "@/services/bitacora/registrar";
 import { puedeAprobarTarifa, MENSAJE_VIGENCIA_VENCIDA } from "@/features/costeo/utils/vigenciaTarifa";
 import { todayLocalISO } from "@/lib/date/today";
+import { ReglaNegocioError } from "@/lib/errors/reglaNegocio";
 
 async function callAprobar(_tarifa_id: string, _estado: string, _motivo: string | null) {
   await run(
@@ -42,7 +43,7 @@ export async function leerVigenciaTarifa(tarifaId: string): Promise<string> {
 export async function aprobarTarifaVerificada(tarifaId: string): Promise<void> {
   const vigenteHasta = await leerVigenciaTarifa(tarifaId);
   if (!puedeAprobarTarifa({ vigenteHasta, hoy: todayLocalISO() })) {
-    throw new Error(MENSAJE_VIGENCIA_VENCIDA);
+    throw new ReglaNegocioError(MENSAJE_VIGENCIA_VENCIDA);
   }
   await aprobarTarifa(tarifaId);
 }

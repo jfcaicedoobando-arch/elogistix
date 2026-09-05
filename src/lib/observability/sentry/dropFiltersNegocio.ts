@@ -97,6 +97,7 @@ const NOMBRES_ERROR_NEGOCIO = new Set([
   "ValidationError",
   // JAVASCRIPT-REACT-55: archivo ya capturado en el buzón; la UI lo explica.
   "BuzonDuplicadoError",
+  "ReglaNegocioError",
 ]);
 
 
