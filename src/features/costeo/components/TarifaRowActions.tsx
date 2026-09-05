@@ -18,6 +18,12 @@ interface Props {
   onRechazar?: () => void;
   onReactivar?: () => void;
   disabled?: boolean;
+  /**
+   * P2 (auditoría v13.823.143 · bug 6): con vigencia vencida la aprobación
+   * siempre falla en backend. En vez de ofrecerla, se muestra la ruta útil
+   * (Editar para actualizar la vigencia).
+   */
+  vencida?: boolean;
 }
 
 export function TarifaRowActions(p: Props) {
@@ -29,7 +35,15 @@ export function TarifaRowActions(p: Props) {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-48" onClick={(e) => e.stopPropagation()}>
-        {p.estadoAprobacion === "borrador" && (
+        {p.estadoAprobacion === "borrador" && p.vencida && (
+          <>
+            <div className="px-2 py-1.5 text-xs text-muted-foreground">
+              Vigencia vencida: actualízala en Editar para poder aprobarla.
+            </div>
+            <DropdownMenuSeparator />
+          </>
+        )}
+        {p.estadoAprobacion === "borrador" && !p.vencida && (
           <>
             <DropdownMenuItem onClick={p.onAprobar} disabled={p.disabled} className="text-success focus:text-success">
               <Check className="size-4 mr-2" />Aprobar
