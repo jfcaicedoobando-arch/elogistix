@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.823.114] - 2026-09-05
+- CRM Actividades: `posponerActividad` (`src/features/crm/services/actividadesMutations.ts`) ya no usa `new Date(...).setDate()` + `toISOString()`, que sumaba 24 h del reloj del navegador y desplazaba la hora vista por el usuario fuera de CDMX. La suma se centralizó en `mxAddDaysIso` (`src/lib/date/mx.ts`), que suma días en el calendario America/Mexico_City y conserva la hora local mexicana (más `utcIsoToMxLocal`, inverso de `mxLocalToUtcIso`). No cambia la regla de días del botón de posponer. Regresiones con navegador en UTC, America/Mexico_City y Asia/Tokyo, incluyendo hora cercana a medianoche, sin fecha programada y días negativos.
+- Nota: el filtro de soft-delete en `fetchEtapasPipelineActivas` / `fetchEtapasPipelineTodas` ya quedó aplicado en 13.823.113.
+
 ## [13.823.113] - 2026-09-05
 - CRM Etapas: `fetchEtapasPipelineActivas` y `fetchEtapasPipelineTodas` (`src/features/crm/services/etapas.ts`) ahora aplican el filtro canónico `.is("deleted_at", null)`. Antes una etapa soft-deleted por migración/administración podía seguir apareciendo en selectores, Kanban y configuración, porque la lectura activa sólo miraba `activa = true`. Sin cambios en la RPC de reordenar ni en la visibilidad de etapas inactivas en configuración. Regresiones: ambas lecturas excluyen etapas eliminadas y las inactivas siguen listándose.
 
