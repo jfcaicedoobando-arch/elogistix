@@ -1,9 +1,11 @@
 /**
  * Servicio CRM — señales para Next Best Actions
  * (leads sin contactar > 24h y oportunidades abiertas).
+ * Umbrales canónicos en `@/features/crm/domain/umbralesContacto`.
  */
 import { supabase } from "@/integrations/supabase/client";
 import { filtroVendedor } from "./scopePersonal";
+import { NBA_LEAD_SIN_CONTACTAR_HORAS } from "@/features/crm/domain/umbralesContacto";
 
 export interface NbaSignals {
   leadsSinContactar: { id: string; empresa: string; created_at: string }[];
@@ -25,8 +27,7 @@ export async function fetchNbaSignals(
   userEmail?: string | null,
 ): Promise<NbaSignals> {
   if (!userId) return { leadsSinContactar: [], oportunidadesAbiertas: [] };
-  const hace24h = new Date();
-  hace24h.setDate(hace24h.getDate() - 1);
+  const hace24h = new Date(Date.now() - NBA_LEAD_SIN_CONTACTAR_HORAS * 3_600_000);
   const mio = filtroVendedor(userId, userEmail);
   const [leadsQ, opsQ] = await Promise.all([
     supabase

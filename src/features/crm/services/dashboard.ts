@@ -18,6 +18,7 @@ import {
 import { todayLocalISO } from "@/lib/date/today";
 import { limitesDiaMx, mxAddDaysIso } from "@/lib/date/mx";
 import { LEAD_ESTADOS_ETAPA_LEAD } from "@/features/crm/domain/leads/etapas";
+import { SEMANA_LEAD_SIN_CONTACTAR_DIAS } from "@/features/crm/domain/umbralesContacto";
 import { leerTodasLasPaginas } from "@/lib/supabase/paginado";
 import { computePipelinePonderadoPorMoneda } from "@/features/crm/domain/dashboardAggregates";
 import type { SubtotalMoneda } from "@/features/crm/domain/montosPorMoneda";
@@ -99,7 +100,7 @@ export async function fetchCrmDashboard(
   // navegador, así que un usuario en UTC veía otro día en estas tarjetas.
   const ahora = new Date();
   const { inicio: hoyInicio, fin: hoyFin } = limitesDiaMx(ahora);
-  const hace7 = mxAddDaysIso(ahora.toISOString(), -7, ahora);
+  const hace7 = mxAddDaysIso(ahora.toISOString(), -SEMANA_LEAD_SIN_CONTACTAR_DIAS, ahora);
 
   const [leadsCountQ, opsAbiertas, actsPendQ, misActsQ, cerrandoQ, leadsViejosQ, etapasQ] = await Promise.all([
     // v13.823.77 — mismo universo que /crm/leads (etapa Lead): antes el KPI
