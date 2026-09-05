@@ -10,6 +10,7 @@ import { ProformaInconsistenteAlert } from "./facturacion/ProformaInconsistenteA
 import { AvisoProformasRechazadas } from "./facturacion/AvisoProformasRechazadas";
 import { DialogEliminarProforma } from "./facturacion/DialogEliminarProforma";
 import { useTabFacturacionState } from "@/features/embarques/hooks/useTabFacturacionState";
+import { contarFacturasEmitidas } from "@/lib/domain/etiquetaCicloProforma";
 import type { Tables } from "@/types/db";
 
 type EmbarqueRow = Tables<'embarques'>;
