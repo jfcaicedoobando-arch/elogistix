@@ -111,9 +111,6 @@ export function buildTarifasColumns(deps: TarifasColumnsDeps): ColumnDef<TarifaR
       cell: ({ row }) => {
         const t = row.original;
         const ap = t.estado_aprobacion ?? "vigente";
-        // P2 (auditoría v13.823.143 · bug 6): aprobar una tarifa vencida
-        // siempre falla en backend; se oculta la acción.
-        const vencida = t.estado === "vencida" || (t.vigente_hasta ?? "") < todayLocalISO();
         const grupoKey = `${t.puerto_origen_nombre}→${t.puerto_destino_nombre}|${t.tipo_contenedor_nombre}`;
         const mejor = mejorPorGrupo.get(grupoKey);
         const esMejor = mejor != null && t.total_comparable === mejor && ap === "vigente";
@@ -174,6 +171,9 @@ export function buildTarifasColumns(deps: TarifasColumnsDeps): ColumnDef<TarifaR
       cell: ({ row }) => {
         const t = row.original;
         const ap = t.estado_aprobacion ?? "vigente";
+        // P2 (auditoría v13.823.143 · bug 6): aprobar una tarifa vencida
+        // siempre falla en backend; se oculta la acción.
+        const vencida = t.estado === "vencida" || (t.vigente_hasta ?? "") < todayLocalISO();
         return (
           <div className="flex items-center justify-end gap-1" onClick={(e) => e.stopPropagation()}>
             {ap === "borrador" && !vencida && (
