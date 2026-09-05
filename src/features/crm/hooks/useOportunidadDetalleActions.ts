@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { notifyError, notifyInfo } from "@/lib/ui/appFeedback";
+import { notifyInfo } from "@/lib/ui/appFeedback";
 import { crmToast } from "@/features/crm/lib/crmToast";
 import { useEliminarOportunidad, useCrearCotizacionDesdeOportunidad } from "@/features/crm/hooks";
 
@@ -34,8 +34,8 @@ export function useOportunidadDetalleActions(op: OpLite, etapas: EtapaLite[]) {
       await eliminar.mutateAsync(op.id);
       crmToast.success("Oportunidad eliminada");
       navigate("/crm/oportunidades");
-    } catch (e) {
-      notifyError(undefined, { title: "Error", description: e instanceof Error ? e.message : undefined, error: e, method: "HANDLE_ELIMINAR" });
+    } catch {
+      // useEliminarOportunidad ya notifica el error en onError.
     }
   };
 
@@ -67,8 +67,9 @@ export function useOportunidadDetalleActions(op: OpLite, etapas: EtapaLite[]) {
         crmToast.success(`Cotización creada · ${result.folio}`);
       }
       navigate(`/cotizaciones/${result.id}/editar`);
-    } catch (e) {
-      notifyError(undefined, { title: "No se pudo crear", description: e instanceof Error ? e.message : undefined, error: e, method: "CREAR_COTIZACION" });
+    } catch {
+      // useCrearCotizacionDesdeOportunidad ya notifica el error en onError;
+      // su reintento idempotente vive en el hook, no aquí.
     }
   };
 
