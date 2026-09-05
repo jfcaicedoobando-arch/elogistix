@@ -2,7 +2,7 @@
  * Editor de etapas del pipeline. Edición inline + guardar por fila.
  * Sprint C: incluye `crea_tarea_seguimiento` + `dias_seguimiento` para automatizaciones.
  */
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ArrowDown, ArrowUp, Save } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -10,6 +10,9 @@ import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { COLOR_ETAPA_DEFAULT } from "@/lib/chartTokens";
 import { Hint } from "@/components/shared/Hint";
+import {
+  mergeDrafts, sameState, serverSnapshot, toState, type RowState,
+} from "./etapasPipelineDraft";
 
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
@@ -22,45 +25,25 @@ import {
 
 const TIPOS: CrmEtapaTipo[] = ["abierta", "ganada", "perdida"];
 
-interface RowState {
-  nombre: string; tipo: CrmEtapaTipo; color: string;
-  probabilidad_default: number; orden: number; activa: boolean;
-  crea_tarea_seguimiento: boolean; dias_seguimiento: number; sla_dias: number;
-}
-
-function toState(e: CrmEtapaRow): RowState {
-  return {
-    nombre: e.nombre, tipo: e.tipo as CrmEtapaTipo, color: e.color ?? COLOR_ETAPA_DEFAULT,
-    probabilidad_default: e.probabilidad_default ?? 0,
-    orden: e.orden, activa: e.activa,
-    crea_tarea_seguimiento: e.crea_tarea_seguimiento ?? false,
-    dias_seguimiento: e.dias_seguimiento ?? 3,
-    sla_dias: e.sla_dias ?? 7,
-  };
-}
-
 export default function EtapasPipelineEditor() {
   const { data: etapas = [], isLoading } = useEtapasPipelineAll();
   const actualizar = useActualizarEtapa();
   const reordenar = useIntercambiarOrdenEtapas();
   const [draft, setDraft] = useState<Record<string, RowState>>({});
 
+  // Snapshot del backend con el que se hidrató el borrador actual.
+  const baseRef = useRef<Record<string, RowState>>({});
+
   useEffect(() => {
-    setDraft(Object.fromEntries(etapas.map((e) => [e.id, toState(e)])));
+    setDraft((prev) => mergeDrafts(prev, baseRef.current, etapas));
+    baseRef.current = serverSnapshot(etapas);
   }, [etapas]);
 
   const isDirty = (id: string) => {
     const orig = etapas.find((e) => e.id === id);
     const d = draft[id];
     if (!orig || !d) return false;
-    return (
-      orig.nombre !== d.nombre || orig.tipo !== d.tipo || orig.color !== d.color ||
-      (orig.probabilidad_default ?? 0) !== d.probabilidad_default ||
-      orig.orden !== d.orden || orig.activa !== d.activa ||
-      (orig.crea_tarea_seguimiento ?? false) !== d.crea_tarea_seguimiento ||
-      (orig.dias_seguimiento ?? 3) !== d.dias_seguimiento ||
-      (orig.sla_dias ?? 7) !== d.sla_dias
-    );
+    return !sameState(toState(orig), d);
   };
 
   const set = (id: string, patch: Partial<RowState>) =>
