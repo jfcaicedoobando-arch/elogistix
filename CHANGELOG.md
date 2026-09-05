@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.823.126] - 2026-09-05
+- CRM higiene (`HigieneTabla`): cada fila de oportunidad se volvió accesible reutilizando `useDrilldownRow` (`role="link"`, `tabIndex=0`, Enter/Espacio, anillo de foco y Ctrl/clic medio), conservando el click y el destino actuales sin cambiar columnas ni estilos. Regresión de teclado: Enter, Espacio y click navegan al detalle.
+
 ## [13.823.125] - 2026-09-05
 - CRM presupuesto (`PresupuestoCrmEditor`): el año inicial del selector se toma del calendario de negocio MX (`ymMx()`) en vez de `new Date().getFullYear()`, evitando que el 31 de diciembre por la noche en CDMX se abra ya el año siguiente. Los cambios manuales del usuario se conservan. Regresión en frontera 31 dic / 1 ene.
 
