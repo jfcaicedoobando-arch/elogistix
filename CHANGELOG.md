@@ -2,6 +2,7 @@
 
 ## [13.823.110] - 2026-09-05
 - CRM Lead Detalle: eliminada la redundancia visual en la ficha de prospecto. `LeadLineageCard` ahora se renderiza sólo cuando el lead NO es prospecto; para prospectos se mantiene `OportunidadesDelProspecto` (con su CTA de nueva oportunidad). Así no se duplican las mismas oportunidades en la pantalla. Se conservan la trazabilidad para leads no prospecto, permisos, queries y navegación. Regresión: una sola tarjeta para prospectos y `LeadLineageCard` para los demás estados.
+- CRM Lead Linaje: `LeadLineageCard` formatea la fecha estimada de cierre con `formatFechaDia` (canónico dd/MM/yyyy) en lugar de concatenar el ISO crudo; mantiene `—` cuando el valor es nulo. Sin cambios en la query ni en el enlace de la tarjeta. Regresión: rechazo de ISO crudo y fallback nulo.
 
 ## [13.823.109] - 2026-09-05
 - CRM Configuración: en `EtapasPipelineEditor.tsx` el botón de guardar por fila ahora tiene un `aria-label` dinámico (`Guardar cambios de ${d.nombre}`), ya que antes sólo mostraba el icono `Save` sin nombre accesible. Se conservan los estados `disabled` y `loading`.
