@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.823.133] - 2026-09-05
+- CRM Next Best Actions (`nextBestActions.ts`): las actividades vencidas dentro de las últimas 24h ya no muestran la etiqueta ambigua "Vencida hace 0 días"; ahora se lee "Vencida hoy". Se conservan "Vencida hace N día(s)" para N>0, la prioridad, el orden y el cálculo de antigüedad. Regresión: etiquetas para 0, 1, varios días y fecha nula.
+
 ## [13.823.132] - 2026-09-05
 - CRM umbrales "lead sin contactar": se centralizan en `domain/umbralesContacto.ts` (`NBA_LEAD_SIN_CONTACTAR_HORAS=24` para las sugerencias de Mi día y `SEMANA_LEAD_SIN_CONTACTAR_DIAS=7` para la tarjeta semanal). Sin cambio de reglas: la FAQ de ayuda y la tarjeta ahora explican ambos umbrales explícitamente (la FAQ decía incorrectamente "3 días"). Regresión: textos de ayuda verificados contra las constantes.
 

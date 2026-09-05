@@ -153,6 +153,11 @@ function nbaSinActividad(
   return out;
 }
 
+function etiquetaVencida(diasVencida: number): string {
+  if (diasVencida === 0) return "Vencida hoy";
+  return `Vencida hace ${diasVencida} día${diasVencida === 1 ? "" : "s"}`;
+}
+
 function nbaActividadesVencidas(actividades: NbaActividadVencida[], nowMs: number): NbaItem[] {
   return actividades.map((a) => {
     const diasVencida = a.fecha_programada
@@ -162,9 +167,7 @@ function nbaActividadesVencidas(actividades: NbaActividadVencida[], nowMs: numbe
       id: `act:${a.id}`,
       regla: "actividad_vencida",
       titulo: `Completar: ${a.asunto}`,
-      subtitulo: a.fecha_programada
-        ? `Vencida hace ${diasVencida} día${diasVencida === 1 ? "" : "s"}`
-        : "Vencida",
+      subtitulo: a.fecha_programada ? etiquetaVencida(diasVencida) : "Vencida",
       href: entidadHref(a.entidad_tipo, a.entidad_id),
       score: 110 + Math.min(20, diasVencida),
       icono: "actividad",
