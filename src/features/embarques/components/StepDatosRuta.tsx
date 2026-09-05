@@ -59,25 +59,11 @@ export function StepDatosRuta({ errors = {}, diasTransitoSugerencia }: Props) {
         </CardContent>
       </Card>
 
-      {modo === 'Marítimo' && (
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle>
-              Contenedores ({contenedores.length})
-            </CardTitle>
-            <p className="text-body-sm text-muted-foreground mt-1">
-              Un embarque marítimo puede tener uno o varios contenedores. Cada uno requiere número y tipo.
-            </p>
-          </CardHeader>
-          <CardContent>
-            <ListaContenedoresEditable
-              value={contenedores}
-              onChange={handleContenedoresChange}
-              minRows={0}
-            />
-          </CardContent>
-        </Card>
-      )}
+      {/* v13.823.145 — La captura de contenedores vive únicamente en
+          `StepDatosRutaMaritimo` (sección "Contenedores *"). Antes existía una
+          segunda tarjeta "Contenedores (n)" con el mismo editor, lo que permitía
+          capturar datos distintos para el mismo contenedor. */}
+
     </div>
   );
 }
