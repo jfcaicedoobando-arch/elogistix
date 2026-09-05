@@ -11,6 +11,8 @@ interface Props {
   proformasCount: number;
   proformasFacturadasCount: number;
   facturasCount: number;
+  /** B9: sólo las que salieron de Borrador (CFDI/factura ya emitida). */
+  facturasEmitidasCount: number;
 }
 
 type Estado = "vacio" | "activo" | "completo";
@@ -27,9 +29,18 @@ function estadoProformas(total: number, facturadas: number): Estado {
   return "activo";
 }
 
-function estadoFacturas(total: number): Estado {
+function estadoFacturas(total: number, emitidas: number): Estado {
   if (total === 0) return "vacio";
-  return "completo";
+  return emitidas > 0 ? "completo" : "activo";
+}
+
+/** B9: no llamar "emitida" a una factura que sigue en Borrador. */
+function detalleFacturas(total: number, emitidas: number): string {
+  if (total === 0) return "Sin facturas";
+  const borradores = total - emitidas;
+  if (emitidas === 0) return `${borradores} en borrador`;
+  const base = `${emitidas} emitida${emitidas === 1 ? "" : "s"}`;
+  return borradores > 0 ? `${base} · ${borradores} en borrador` : base;
 }
 
 interface PasoProps {
@@ -90,11 +101,11 @@ function Conector({ activo }: { activo: boolean }) {
 export function FlujoFacturacionStepper({
   conceptosCount, facturadosCount,
   proformasCount, proformasFacturadasCount,
-  facturasCount,
+  facturasCount, facturasEmitidasCount,
 }: Props) {
   const e1 = estadoConceptos(conceptosCount, facturadosCount);
   const e2 = estadoProformas(proformasCount, proformasFacturadasCount);
-  const e3 = estadoFacturas(facturasCount);
+  const e3 = estadoFacturas(facturasCount, facturasEmitidasCount);
 
   const det1 = conceptosCount === 0
     ? "Sin conceptos"
@@ -108,9 +119,7 @@ export function FlujoFacturacionStepper({
       ? `${proformasCount} facturada${proformasCount === 1 ? "" : "s"}`
       : `${proformasCount} generada${proformasCount === 1 ? "" : "s"} · ${proformasFacturadasCount} facturada${proformasFacturadasCount === 1 ? "" : "s"}`;
 
-  const det3 = facturasCount === 0
-    ? "Sin facturas emitidas"
-    : `${facturasCount} emitida${facturasCount === 1 ? "" : "s"}`;
+  const det3 = detalleFacturas(facturasCount, facturasEmitidasCount);
 
   return (
     <div className="flex items-center gap-2 md:gap-0 rounded-lg border bg-card px-4 py-3">

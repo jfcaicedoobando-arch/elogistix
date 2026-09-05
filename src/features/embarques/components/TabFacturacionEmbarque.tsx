@@ -98,6 +98,7 @@ export function TabFacturacionEmbarque({ facturas, canEdit: canEditProp, embarqu
         proformasCount={proformas.length}
         proformasFacturadasCount={proformas.filter(p => p.estado_proforma === "facturada").length}
         facturasCount={facturas.length}
+        facturasEmitidasCount={contarFacturasEmitidas(facturas)}
       />
       <div ref={registerRef("venta-pendientes")} data-focus="venta-pendientes">
         <ResumenConceptosVenta
