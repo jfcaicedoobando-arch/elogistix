@@ -8,7 +8,7 @@ import { Target } from "lucide-react";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { FormDialogFooter } from "@/components/shared/FormDialogFooter";
 import { useAuth } from "@/lib/contexts/AuthContext";
-import { useNuevoLeadSubmit } from "@/features/crm/hooks";
+import { useNuevoLeadSubmit } from "@/features/crm/hooks/useNuevoLeadSubmit";
 import { NuevoLeadForm, type LeadFormState } from "./nuevoLead/NuevoLeadForm";
 import { AvisoLeadDuplicado } from "./AvisoLeadDuplicado";
 import { esCorreoCapturado } from "@/features/crm/domain/leads/quickCreateInput";

@@ -12,7 +12,6 @@ import {
   type CrmOportunidadRow,
   useEtapasPipeline,
   useOportunidadForm,
-  useNuevaOportunidadSubmit,
   type OrigenInicial,
 } from "@/features/crm/hooks";
 import { useClientesForSelect } from "@/features/cliente/hooks";
