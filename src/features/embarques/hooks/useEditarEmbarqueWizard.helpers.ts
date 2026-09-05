@@ -69,3 +69,24 @@ export function buildBitacoraDetallesEdit(input: BitacoraEditInput): Record<stri
     }),
   };
 }
+
+/**
+ * P1 (auditoría física v13.823.143 · bugs 7 y 8): al editar un embarque el
+ * guardado sólo validaba contenedores, así que podía persistir `naviera` o
+ * `tipo_servicio` vacíos y el resumen mostraba "—". Se valida la ruta marítima
+ * antes de guardar y se regresa al paso 2 con el detalle faltante.
+ */
+export function validarRutaMaritimaRequerida(
+  modo: string,
+  valores: { naviera?: string | null; tipoServicio?: string | null },
+): { description: string; step: number } | null {
+  if (modo !== "Marítimo" && modo !== "Multimodal") return null;
+  const faltantes: string[] = [];
+  if (!(valores.naviera ?? "").trim()) faltantes.push("Naviera");
+  if (!(valores.tipoServicio ?? "").trim()) faltantes.push("Tipo de servicio (FCL/LCL)");
+  if (faltantes.length === 0) return null;
+  return {
+    description: `Captura ${faltantes.join(" y ")} en el paso 2 antes de guardar.`,
+    step: 2,
+  };
+}
