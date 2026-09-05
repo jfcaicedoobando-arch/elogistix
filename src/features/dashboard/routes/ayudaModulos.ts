@@ -3,6 +3,10 @@
  * ≤200 líneas (Power of 10). Re-exportado por `ayudaContent.ts`.
  */
 import type { AyudaModulo } from "./ayudaTypes";
+import {
+  NBA_LEAD_SIN_CONTACTAR_HORAS,
+  SEMANA_LEAD_SIN_CONTACTAR_DIAS,
+} from "@/features/crm/domain/umbralesContacto";
 
 export const MODULOS: AyudaModulo[] = [
   {
