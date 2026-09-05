@@ -7,6 +7,7 @@ import { render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { Home } from "lucide-react";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { SidebarProvider } from "@/components/ui/sidebar";
 import { SidebarMenuItemBlock } from "@/components/layout/SidebarMenuItemBlock";
 import type { SidebarItem } from "@/components/layout/sidebarActivo";
 
@@ -20,16 +21,18 @@ const ITEM = (badgeCount: number): SidebarItem => ({
 const renderItem = (badgeCount: number, collapsed = false) =>
   render(
     <MemoryRouter initialEntries={["/"]}>
-      <TooltipProvider>
-        <SidebarMenuItemBlock
-          item={ITEM(badgeCount)}
-          items={[ITEM(badgeCount)]}
-          pathname="/"
-          search=""
-          collapsed={collapsed}
-          onNavigate={vi.fn()}
-        />
-      </TooltipProvider>
+      <SidebarProvider>
+        <TooltipProvider>
+          <SidebarMenuItemBlock
+            item={ITEM(badgeCount)}
+            items={[ITEM(badgeCount)]}
+            pathname="/"
+            search=""
+            collapsed={collapsed}
+            onNavigate={vi.fn()}
+          />
+        </TooltipProvider>
+      </SidebarProvider>
     </MemoryRouter>,
   );
 
