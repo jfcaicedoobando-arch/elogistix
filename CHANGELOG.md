@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.823.125] - 2026-09-05
+- CRM presupuesto (`PresupuestoCrmEditor`): el año inicial del selector se toma del calendario de negocio MX (`ymMx()`) en vez de `new Date().getFullYear()`, evitando que el 31 de diciembre por la noche en CDMX se abra ya el año siguiente. Los cambios manuales del usuario se conservan. Regresión en frontera 31 dic / 1 ene.
+
 ## [13.823.124] - 2026-09-05
 - CRM consistencia de calendario MX (sin cambios de reglas de negocio, sólo la zona de cálculo):
   - `autoRegistroContacto.fechaSeguimientoContacto` suma los días con `mxAddDaysIso` (calendario CDMX, conservando la hora local) en vez de `setDate()` + `toISOString()`; `DIAS_SEGUIMIENTO_CONTACTO=2` intacto.
