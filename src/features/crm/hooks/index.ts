@@ -34,3 +34,4 @@ export * from './useLeadIcpForm';
 export * from './useAutorizarMargen';
 export * from './useNombreProspecto';
 export * from './useNuevaOportunidadSubmit';
+export * from './useNuevoLeadSubmit';
