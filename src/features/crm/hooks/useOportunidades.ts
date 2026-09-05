@@ -69,6 +69,8 @@ export function useCrearOportunidad() {
       qc.invalidateQueries({ queryKey: queryKeys.crm.higiene.all });
       qc.invalidateQueries({ queryKey: queryKeys.crm.kpis });
       qc.invalidateQueries({ queryKey: queryKeys.crm.dashboardAll });
+      // v13.823.94: "Qué hacer ahora" (NBA) leía señales de hasta 60s.
+      qc.invalidateQueries({ queryKey: queryKeys.crm.nbaSignalsAll });
       notifySuccess(undefined, {
         title: "Oportunidad creada",
         description: data.avisoActividad
@@ -91,6 +93,8 @@ export function useActualizarOportunidad() {
     qc.invalidateQueries({ queryKey: queryKeys.crm.oportunidades.detail(id) });
     qc.invalidateQueries({ queryKey: queryKeys.crm.kpis });
     qc.invalidateQueries({ queryKey: queryKeys.crm.dashboardAll });
+    // v13.823.94: "Qué hacer ahora" (NBA) leía señales de hasta 60s.
+    qc.invalidateQueries({ queryKey: queryKeys.crm.nbaSignalsAll });
   };
   return useMutation({
     mutationFn: actualizarOportunidad,
@@ -115,6 +119,8 @@ export function useEliminarOportunidad() {
       qc.invalidateQueries({ queryKey: queryKeys.crm.higiene.all });
       qc.invalidateQueries({ queryKey: queryKeys.crm.kpis });
       qc.invalidateQueries({ queryKey: queryKeys.crm.dashboardAll });
+      // v13.823.94: "Qué hacer ahora" (NBA) leía señales de hasta 60s.
+      qc.invalidateQueries({ queryKey: queryKeys.crm.nbaSignalsAll });
       // v13.823.84: el éxito se notifica en el call-site
       // (`useOportunidadDetalleActions`) para evitar un doble toast.
     },

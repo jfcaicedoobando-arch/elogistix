@@ -37,6 +37,7 @@ vi.mock("@/lib/query", () => ({
       higiene: { all: ["crm", "higiene"] },
       kpis: ["crm", "kpis"],
       dashboardAll: ["crm", "dashboard"],
+      nbaSignalsAll: ["crm", "nba-signals"],
     },
   },
 }));
@@ -75,6 +76,8 @@ describe("invalidación de dashboard en oportunidades", () => {
     expect(invalidated).toContainEqual(["crm", "higiene"]);
     expect(invalidated).toContainEqual(["crm", "kpis"]);
     expect(invalidated).toContainEqual(["crm", "dashboard"]);
+    // v13.823.94: "Qué hacer ahora" (NBA) tiene su propia key.
+    expect(invalidated).toContainEqual(["crm", "nba-signals"]);
   });
 
   it("eliminar invalida listas, higiene, kpis y dashboard", async () => {
@@ -89,6 +92,8 @@ describe("invalidación de dashboard en oportunidades", () => {
     expect(invalidated).toContainEqual(["crm", "higiene"]);
     expect(invalidated).toContainEqual(["crm", "kpis"]);
     expect(invalidated).toContainEqual(["crm", "dashboard"]);
+    // v13.823.94: "Qué hacer ahora" (NBA) tiene su propia key.
+    expect(invalidated).toContainEqual(["crm", "nba-signals"]);
     // Regresión v13.823.84: el hook de eliminar no debe emitir su propio toast
     // de éxito; el único feedback lo maneja el call-site.
     expect(notifySuccess).not.toHaveBeenCalled();

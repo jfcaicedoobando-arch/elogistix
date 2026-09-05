@@ -20,6 +20,7 @@ vi.mock("@/lib/query", () => ({
       kpis: ["crm", "kpis"],
       oportunidades: { all: ["crm", "oportunidades"] },
       dashboardAll: ["crm", "dashboard"],
+      nbaSignalsAll: ["crm", "nba-signals"],
     },
     clientes: { all: ["clientes"] },
   },
@@ -63,6 +64,8 @@ describe("useConvertirLead", () => {
     // y el kanban no la mostraba hasta vencer el staleTime.
     expect(invalidated).toContainEqual(["crm", "oportunidades"]);
     expect(invalidated).toContainEqual(["crm", "dashboard"]);
+    // v13.823.94: "Qué hacer ahora" (NBA) tiene su propia key.
+    expect(invalidated).toContainEqual(["crm", "nba-signals"]);
   });
 
   it("propaga el error del servicio", async () => {

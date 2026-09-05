@@ -14,6 +14,8 @@ export const crm = {
   prospectoSearch: (term: string) => ['crm', 'prospecto-search', term] as const,
   search: (term: string) => ['crm', 'search', term] as const,
   nbaSignals: (uid?: string) => ['crm', 'nba-signals', uid] as const,
+  /** Prefijo para invalidar las señales NBA de cualquier usuario. */
+  nbaSignalsAll: ['crm', 'nba-signals'] as const,
   actividades: {
     all: ['crm', 'actividades'] as const,
     list: (filters: Record<string, unknown>) => ['crm', 'actividades', filters] as const,

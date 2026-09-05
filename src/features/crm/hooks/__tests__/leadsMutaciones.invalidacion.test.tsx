@@ -37,6 +37,7 @@ vi.mock("@/lib/query", () => ({
       prospectos: { all: ["crm", "prospectos"] },
       kpis: ["crm", "kpis"],
       dashboardAll: ["crm", "dashboard"],
+      nbaSignalsAll: ["crm", "nba-signals"],
     },
   },
 }));
@@ -78,6 +79,8 @@ describe("invalidación del dashboard en mutaciones de leads", () => {
     expect(invalidated).toContainEqual(["crm", "prospectos"]);
     expect(invalidated).toContainEqual(["crm", "kpis"]);
     expect(invalidated).toContainEqual(["crm", "dashboard"]);
+    // v13.823.94: "Qué hacer ahora" (NBA) tiene su propia key.
+    expect(invalidated).toContainEqual(["crm", "nba-signals"]);
   });
 
   it("eliminar lead invalida listas, prospectos, kpis y dashboard", async () => {
@@ -91,6 +94,8 @@ describe("invalidación del dashboard en mutaciones de leads", () => {
     expect(invalidated).toContainEqual(["crm", "prospectos"]);
     expect(invalidated).toContainEqual(["crm", "kpis"]);
     expect(invalidated).toContainEqual(["crm", "dashboard"]);
+    // v13.823.94: "Qué hacer ahora" (NBA) tiene su propia key.
+    expect(invalidated).toContainEqual(["crm", "nba-signals"]);
   });
 
   it("tomar lead invalida listas, detalle, kpis y dashboard", async () => {
@@ -104,6 +109,8 @@ describe("invalidación del dashboard en mutaciones de leads", () => {
     expect(invalidated).toContainEqual(["crm", "leads", "lead-1"]);
     expect(invalidated).toContainEqual(["crm", "kpis"]);
     expect(invalidated).toContainEqual(["crm", "dashboard"]);
+    // v13.823.94: "Qué hacer ahora" (NBA) tiene su propia key.
+    expect(invalidated).toContainEqual(["crm", "nba-signals"]);
   });
 
   it("calificar prospecto invalida listas, detalle, prospectos, kpis y dashboard", async () => {
@@ -118,5 +125,7 @@ describe("invalidación del dashboard en mutaciones de leads", () => {
     expect(invalidated).toContainEqual(["crm", "prospectos"]);
     expect(invalidated).toContainEqual(["crm", "kpis"]);
     expect(invalidated).toContainEqual(["crm", "dashboard"]);
+    // v13.823.94: "Qué hacer ahora" (NBA) tiene su propia key.
+    expect(invalidated).toContainEqual(["crm", "nba-signals"]);
   });
 });

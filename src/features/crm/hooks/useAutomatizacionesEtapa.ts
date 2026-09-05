@@ -21,6 +21,8 @@ export function useMoverEtapaConAutomatizacion() {
     qc.invalidateQueries({ queryKey: queryKeys.crm.higiene.all });
     qc.invalidateQueries({ queryKey: queryKeys.crm.notificaciones.all });
     qc.invalidateQueries({ queryKey: queryKeys.crm.dashboardAll });
+    // v13.823.94: "Qué hacer ahora" (NBA) leía señales de hasta 60s.
+    qc.invalidateQueries({ queryKey: queryKeys.crm.nbaSignalsAll });
   };
   return useMutation({
     mutationFn: async (params: {

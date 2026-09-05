@@ -65,6 +65,8 @@ export function useCrearCotizacionDesdeOportunidad() {
       // v13.823.79: el dashboard y "Cotizaciones sin respuesta" quedaban stale
       // porque el movimiento de etapa usa el servicio directo, no el hook.
       qc.invalidateQueries({ queryKey: queryKeys.crm.dashboardAll });
+      // v13.823.94: "Qué hacer ahora" (NBA) leía señales de hasta 60s.
+      qc.invalidateQueries({ queryKey: queryKeys.crm.nbaSignalsAll });
       // Ambos límites tienen consumidores reales: el tablero (5, 5) vía
       // `useCrmInicioVM` y "Next best actions" (5, 10) vía `useNextBestActions`.
       qc.invalidateQueries({

@@ -36,6 +36,7 @@ vi.mock("@/lib/query", () => ({
       oportunidades: { all: ["crm", "oportunidades"] },
       opCotizaciones: { all: ["crm", "op-cotizaciones"] },
       dashboardAll: ["crm", "dashboard"],
+      nbaSignalsAll: ["crm", "nba-signals"],
       cotizacionesSinRespuesta: (dias: number, limit: number, uid?: string) =>
         ["crm", "cotizaciones-sin-respuesta", dias, limit, uid],
     },
@@ -95,6 +96,8 @@ describe("invalidación de dashboard al crear cotización desde oportunidad", ()
     expect(invalidated).toContainEqual(["crm", "oportunidades"]);
     expect(invalidated).toContainEqual(["crm", "op-cotizaciones"]);
     expect(invalidated).toContainEqual(["crm", "dashboard"]);
+    // v13.823.94: "Qué hacer ahora" (NBA) tiene su propia key.
+    expect(invalidated).toContainEqual(["crm", "nba-signals"]);
     // v13.823.93: el tablero consulta con límite 5 (`useCrmInicioVM`) y
     // "Next best actions" con límite 10; ambas keys deben invalidarse.
     expect(invalidated).toContainEqual([

@@ -15,6 +15,8 @@ function useInvalidarLeads() {
   return () => {
     qc.invalidateQueries({ queryKey: queryKeys.crm.leads.all });
     qc.invalidateQueries({ queryKey: queryKeys.crm.dashboardAll });
+    // v13.823.94: "Qué hacer ahora" (NBA) leía señales de hasta 60s.
+    qc.invalidateQueries({ queryKey: queryKeys.crm.nbaSignalsAll });
   };
 }
 
