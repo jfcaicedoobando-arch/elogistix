@@ -126,6 +126,7 @@ export function TabFacturacionEmbarque({ facturas, canEdit: canEditProp, embarqu
 
       <div ref={registerRef("proformas")} data-focus="proformas">
         <HistorialProformas
+          facturas={facturas}
           proformas={proformas}
           canEdit={canEdit}
           isDeleting={eliminarProforma.isPending}

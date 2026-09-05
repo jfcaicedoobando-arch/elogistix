@@ -15,6 +15,7 @@ import { formatCurrency, formatDate, formatDiasCredito } from "@/lib/formatters"
 import { nombreDesdeEmail } from "@/lib/formatters/text";
 import type { ProformaConFactura } from "@/features/proformas/services";
 import { esBorradorVacio } from "./esBorradorVacio";
+import { facturaEmitida } from "@/lib/domain/etiquetaCicloProforma";
 import { getEstadoUnificado } from "@/lib/domain/estadoUnificado";
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 import { Hint } from "@/components/shared/Hint";
@@ -127,7 +128,7 @@ export function HistorialProformas({
       meta: { align: "right", className: "tabular-nums" },
       cell: ({ row }) => totalUnico(row.original),
     },
-    { id: "estado", header: "Estado", cell: ({ row }) => renderEstado(row.original, proformas) },
+    { id: "estado", header: "Estado", cell: ({ row }) => renderEstado(row.original, proformas, emitidas) },
     {
       id: "acciones",
       header: "",
