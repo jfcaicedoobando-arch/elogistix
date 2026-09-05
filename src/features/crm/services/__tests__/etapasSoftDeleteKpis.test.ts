@@ -98,7 +98,6 @@ describe("soft-delete de etapas en KPIs y forecast", () => {
     const r = computeForecast(
       [
         {
-          id: "o-1",
           monto_estimado: 900,
           probabilidad: 100,
           fecha_estimada_cierre: "2026-01-05",
