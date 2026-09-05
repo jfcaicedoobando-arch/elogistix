@@ -78,7 +78,12 @@ export function CerrandoSemanaCard({ items, isError = false, onRetry }: { items:
   );
 }
 
-export function LeadsSinContactarCard({ items, isError = false, onRetry }: { items: LeadItem[] } & EstadoProps) {
+export function LeadsSinContactarCard({
+  items,
+  isError = false,
+  onRetry,
+  hayPendientesHoy = false,
+}: { items: LeadItem[]; hayPendientesHoy?: boolean } & EstadoProps) {
   return (
     <Card>
       <CardHeader className="pb-2">
@@ -98,7 +103,15 @@ export function LeadsSinContactarCard({ items, isError = false, onRetry }: { ite
             message="No se pudieron cargar los leads sin contactar."
             onRetry={onRetry}
           />
-        ) : items.length === 0 ? <ListEmpty msg="Todos los leads nuevos están atendidos" /> : (
+        ) : items.length === 0 ? (
+          <ListEmpty
+            msg={
+              hayPendientesHoy
+                ? "Sin leads de más de 7 días sin contactar · revisa las sugerencias de hoy"
+                : "Todos los leads nuevos están atendidos"
+            }
+          />
+        ) : (
           <ul className="space-y-1.5">
             {items.map((l) => (
               <DrilldownRow

@@ -8,7 +8,7 @@ import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { labelExpediente } from "@/lib/domain/labelExpediente";
 import { getErrorMessage } from "@/lib/errors";
 import { diffFields, diffConceptos, SENSITIVE_FIELDS } from "@/features/auditoria/utils/diffFields";
-import { validarContenedoresMaritimo, buildBitacoraDetallesEdit } from "./useEditarEmbarqueWizard.helpers";
+import { validarContenedoresMaritimo, validarRutaMaritimaRequerida, buildBitacoraDetallesEdit } from "./useEditarEmbarqueWizard.helpers";
 import type { useEmbarqueForm } from "@/features/embarques/hooks/useEmbarqueForm";
 import type { useConceptosForm } from "@/features/cotizacion/hooks";
 import type { useUpdateEmbarque, useEmbarque } from "@/features/embarques/hooks/useEmbarques";
@@ -59,6 +59,20 @@ export async function ejecutarGuardarEmbarque(deps: Deps): Promise<void> {
         method: "HANDLE_SAVE",
       });
       setCurrentStep(errContenedores.step);
+      return;
+    }
+
+    const errRuta = validarRutaMaritimaRequerida(modoActual, {
+      naviera: methods.getValues('naviera'),
+      tipoServicio: methods.getValues('tipoServicio'),
+    });
+    if (errRuta) {
+      notifyError(undefined, {
+        title: "Faltan datos de la ruta",
+        description: errRuta.description,
+        method: "HANDLE_SAVE",
+      });
+      setCurrentStep(errRuta.step);
       return;
     }
 

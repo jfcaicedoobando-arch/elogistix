@@ -72,7 +72,10 @@ function derivarEstadoFila(
     atenuar,
     delta,
     nueva: !esVencida && esReciente(t.created_at),
-    puedeAprobar: ap === "borrador",
+    // P2 (auditoría v13.823.143 · bug 6): sin vigencia vigente la aprobación
+    // siempre es rechazada por el backend; no se ofrece el botón.
+    puedeAprobar: ap === "borrador" && !esVencida && t.vigente_hasta >= hoy,
+    vencida: esVencida || t.vigente_hasta < hoy,
   };
 }
 
@@ -80,7 +83,7 @@ export function TarifaFila({
   t, esMejor, mejorTotal,
   onEditar, onDuplicar, onEliminar, onAprobar, onRechazar, onReactivar, pending,
 }: Props) {
-  const { ap, atenuar, delta, nueva, puedeAprobar } = derivarEstadoFila(t, esMejor, mejorTotal);
+  const { ap, atenuar, delta, nueva, puedeAprobar, vencida } = derivarEstadoFila(t, esMejor, mejorTotal);
 
   return (
     <div
@@ -128,6 +131,7 @@ export function TarifaFila({
         )}
         <TarifaRowActions
           estadoAprobacion={ap}
+          vencida={vencida}
           onEditar={onEditar}
           onDuplicar={onDuplicar}
           onEliminar={onEliminar}

@@ -44,7 +44,14 @@ export default function MiDia() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <CerrandoSemanaCard items={vm.cerrandoSemana} isError={vm.isError} onRetry={() => void vm.refetch()} />
           <CotizacionesSinRespuestaCard items={vm.cotsSinResp} isError={vm.cotsError} onRetry={vm.cotsRefetch} />
-          <LeadsSinContactarCard items={vm.leadsSinContactar} isError={vm.isError} onRetry={() => void vm.refetch()} />
+          <LeadsSinContactarCard
+            items={vm.leadsSinContactar}
+            isError={vm.isError}
+            onRetry={() => void vm.refetch()}
+            // Misma fuente que genera las tareas "Contactar a..." en NBA: evita
+            // mostrar "todos atendidos" mientras Hoy sugiere contactar un lead.
+            hayPendientesHoy={!vm.nbaError && vm.nba.some((i) => i.regla === "lead_sin_contactar")}
+          />
         </div>
       </section>
     </PageContainer>

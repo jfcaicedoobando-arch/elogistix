@@ -9,6 +9,7 @@ import { TarifaQuickApprovalButtons } from "../TarifaQuickApprovalButtons";
 import { usd, formatVigencia, vigenciaHint } from "../../routes/CosteoTarifas.helpers";
 import type { CosteoTarifaEstado } from "@/features/costeo/types";
 import { COL_W } from "@/components/shared/dataTable/columnWidths";
+import { todayLocalISO } from "@/lib/date/today";
 
 export interface TarifaRow {
   id: string;
@@ -170,9 +171,12 @@ export function buildTarifasColumns(deps: TarifasColumnsDeps): ColumnDef<TarifaR
       cell: ({ row }) => {
         const t = row.original;
         const ap = t.estado_aprobacion ?? "vigente";
+        // P2 (auditoría v13.823.143 · bug 6): aprobar una tarifa vencida
+        // siempre falla en backend; se oculta la acción.
+        const vencida = t.estado === "vencida" || (t.vigente_hasta ?? "") < todayLocalISO();
         return (
           <div className="flex items-center justify-end gap-1" onClick={(e) => e.stopPropagation()}>
-            {ap === "borrador" && (
+            {ap === "borrador" && !vencida && (
               <TarifaQuickApprovalButtons
                 variant="table"
                 onAprobar={() => onAprobar(t.id)}
@@ -182,6 +186,7 @@ export function buildTarifasColumns(deps: TarifasColumnsDeps): ColumnDef<TarifaR
             )}
             <TarifaRowActions
               estadoAprobacion={ap}
+              vencida={vencida}
               onEditar={() => onEditar(t.id)}
               onDuplicar={() => onDuplicar(t.id)}
               onEliminar={() => onEliminar(t.id)}

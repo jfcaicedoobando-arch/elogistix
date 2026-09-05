@@ -20,7 +20,7 @@ import type {
  * añadirla aquí con su consumidor en el comentario — no volver a `*`.
  */
 const PROFORMA_LISTA_SELECT = [
-  "id", "numero", "expediente", "cliente_id", "cliente_nombre", "operador",
+  "id", "numero", "expediente", "embarque_id", "cliente_id", "cliente_nombre", "operador",
   "dias_credito", "organization_id",
   "subtotal_usd", "iva_usd", "total_usd", "subtotal_mxn", "iva_mxn", "total_mxn",
   "fecha_emision", "estado_proforma", "estado_cliente", "folio_factura_externa",

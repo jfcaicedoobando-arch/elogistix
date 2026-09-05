@@ -1,9 +1,7 @@
--- Fuente canónica de public.dashboard_summary() (Ola 6 · O6-SCHEMA).
--- v13.820.7: la BD había quedado con un wrapper que bloqueaba a roles operativos
--- con LC_DASHBOARD_SIN_PERMISO; este archivo es el cuerpo real (el enmascarado de
--- costos vive en dashboard_rpc_costos.sql).
--- FIX BL-11: fallback EUR → tipos_cambio_dof cuando no hay TC de embarque.
--- Al modificar: edita ESTE archivo y genera la migración con el mismo cuerpo.
+-- P1: "Arribos este mes" y su utilidad contaban embarques en Borrador porque
+-- `arribos_mes` leía de `embarques_base` (todos los estados) en vez de
+-- `activos` (mismo CTE que ya excluye Borrador/EIR/Por liquidar/Cerrado/
+-- Cancelado para `totalActivos`). Se unifica la regla de actividad.
 
 CREATE OR REPLACE FUNCTION public.dashboard_summary_datos()
  RETURNS jsonb

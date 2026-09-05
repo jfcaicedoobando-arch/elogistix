@@ -34,6 +34,13 @@ describe("DealsCards · estados de error", () => {
     expect(screen.getByText(/Todos los leads nuevos/)).toBeInTheDocument();
   });
 
+
+  it("con hayPendientesHoy=true no dice que todo está atendido", () => {
+    renderConRouter(<LeadsSinContactarCard items={[]} hayPendientesHoy />);
+    expect(screen.queryByText(/Todos los leads nuevos/)).toBeNull();
+    expect(screen.getByText(/revisa las sugerencias de hoy/i)).toBeInTheDocument();
+  });
+
   it("formatea la fecha estimada de cierre en español", () => {
     renderConRouter(
       <CerrandoSemanaCard
