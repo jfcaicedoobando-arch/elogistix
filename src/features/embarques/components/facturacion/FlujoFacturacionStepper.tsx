@@ -9,9 +9,12 @@ interface Props {
   conceptosCount: number;
   facturadosCount: number;
   proformasCount: number;
-  proformasFacturadasCount: number;
+  /** Proformas convertidas (estado comercial 'facturada'), emitidas o no. */
+  proformasConvertidasCount: number;
+  /** B9: proformas cuya factura ya salió de preparación (emitida de verdad). */
+  proformasEmitidasCount: number;
   facturasCount: number;
-  /** B9: sólo las que salieron de Borrador (CFDI/factura ya emitida). */
+  /** B9: sólo las que salieron de Borrador/Por timbrar (factura ya emitida). */
   facturasEmitidasCount: number;
 }
 
