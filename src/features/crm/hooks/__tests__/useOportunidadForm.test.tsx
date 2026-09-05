@@ -47,4 +47,27 @@ describe("useOportunidadForm", () => {
     });
     expect(result.current.form.nombre).toBe("Nuevo Proyecto");
   });
+
+  it("prefija la etapa de la columna del Kanban cuando es abierta", () => {
+    const etapas = [
+      { id: "e1", probabilidad_default: 20, tipo: "abierta" },
+      { id: "e2", probabilidad_default: 60, tipo: "abierta" },
+    ];
+    const { result } = renderHook(() =>
+      useOportunidadForm(true, null, etapas, STABLE_USER, { etapaId: "e2" }),
+    );
+    expect(result.current.form).toMatchObject({ etapa_id: "e2", probabilidad: 60 });
+  });
+
+  it("ignora la etapa prefijada si es terminal (ganada/perdida)", () => {
+    const etapas = [
+      { id: "e-gan", probabilidad_default: 100, tipo: "ganada" },
+      { id: "e1", probabilidad_default: 20, tipo: "abierta" },
+    ];
+    const { result } = renderHook(() =>
+      useOportunidadForm(true, null, etapas, STABLE_USER, { etapaId: "e-gan" }),
+    );
+    // No se prefija la terminal; el mock de buildEmptyForNueva deja etapa "".
+    expect(result.current.form.etapa_id).toBe("");
+  });
 });

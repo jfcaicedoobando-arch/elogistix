@@ -3,7 +3,7 @@
  * máximo LIMITE_ETAPA_INICIAL tarjetas, muestra el aviso de truncamiento y
  * "Mostrar más" amplía la ventana por INCREMENTO_ETAPA.
  */
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { DndContext } from "@dnd-kit/core";
 import ColumnaEtapa, {
@@ -71,5 +71,35 @@ describe("ColumnaEtapa · límite por etapa (Ola 8)", () => {
     } else {
       expect(screen.getByText(`Mostrando ${esperado} de ${total} en esta etapa`)).toBeTruthy();
     }
+  });
+});
+
+describe("ColumnaEtapa · CTA 'Nueva oportunidad' por etapa", () => {
+  function renderVacia(tipo: string, onNuevo?: (etapaId: string) => void) {
+    return render(
+      <DndContext>
+        <ColumnaEtapa
+          etapa={{ ...ETAPA, tipo } as unknown as CrmEtapaRow}
+          ops={[]}
+          onClickCard={() => {}}
+          proximasMap={new Map()}
+          avanceMap={new Map()}
+          onNuevo={onNuevo}
+        />
+      </DndContext>,
+    );
+  }
+
+  it("columna abierta vacía: el CTA pasa el id de SU etapa", () => {
+    const onNuevo = vi.fn();
+    renderVacia("abierta", onNuevo);
+    fireEvent.click(screen.getByText("Nueva oportunidad"));
+    expect(onNuevo).toHaveBeenCalledTimes(1);
+    expect(onNuevo).toHaveBeenCalledWith(ETAPA.id);
+  });
+
+  it.each(["ganada", "perdida"])("etapa %s no muestra CTA aunque exista onNuevo", (tipo) => {
+    renderVacia(tipo, vi.fn());
+    expect(screen.queryByText("Nueva oportunidad")).toBeNull();
   });
 });
