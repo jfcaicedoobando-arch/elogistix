@@ -10,7 +10,7 @@ export function LandingFooter() {
           <div>
             <div className="flex items-center gap-2.5">
               <span className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-brand-surface p-1 ring-1 ring-border/40 shadow-sm">
-                <img src="/librecarga-logo.webp" alt="" className="h-full w-full object-contain" />
+                <img src="/librecarga-logo.webp" alt="" loading="lazy" decoding="async" className="h-full w-full object-contain" />
               </span>
               <span className="text-base font-semibold tracking-tight text-foreground">
                 Libre Carga

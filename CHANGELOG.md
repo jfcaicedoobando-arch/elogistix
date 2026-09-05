@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.823.149] - 2026-09-05
+- Landing pública (reestructura media): hero con un solo mensaje (se retiran la frase social duplicada y la franja de tres cifras que competían con los CTA); nueva sección "Antes y después" (Excel/WhatsApp vs. expediente único, sólo capacidades existentes); nuevo "Recorrido" con pestañas Cotización → Embarque → Cobro y maquetas con tokens del sistema; el bloque de precio sube justo después de "Cómo funciona"; seguridad se replantea como "Garantías" en lenguaje llano; Recursos incluye la guía de puertos de México (antes sólo enlazada desde el sitemap).
+- SEO: `<title>`/descripción y `og:*` orientados a "software para agencias de carga en México" / "freight forwarder"; `/ayuda` agregada al sitemap; logo del pie con `loading="lazy"`. Sin testimonios, logotipos de clientes ni cifras inventadas.
+- Verificación focalizada: pruebas nuevas de las secciones (`landingSeccionesNuevas.test.tsx`), suite de marketing, ESLint, `tsgo --noEmit` y build. CI/RLS completos quedan a GitHub Actions.
+
+
+
 ## [13.823.148] - 2026-09-05
 - CI (`types-drift`): el normalizador de `types.ts` ignora los paréntesis opcionales de los helpers finales (`Tables`, `TablesInsert`, `Enums`, `CompositeTypes`), que cambian según la versión del generador de Supabase y no son drift de esquema.
 - Base de datos: `supabase/schema/baseline.sql` regenerada desde migraciones (34 445 líneas, incluye prorrateo en centavos, `saldo_factura` con Borrador no terminal y `crm_intercambiar_orden_etapas`).

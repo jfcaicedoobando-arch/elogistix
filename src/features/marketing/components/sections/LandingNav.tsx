@@ -6,13 +6,14 @@ import { ProbarDemoButton } from "@/features/marketing/components/ProbarDemoButt
 import { ROUTES } from "@/constants/routes";
 
 const links = [
-  { href: "#demo", label: "Demo" },
+  { href: "#recorrido", label: "Recorrido" },
   { href: "#modulos", label: "Módulos" },
   { href: "#como-funciona", label: "Cómo funciona" },
-  { href: "#recursos", label: "Recursos" },
   { href: "#precio", label: "Precio" },
-  { href: "#faq", label: "FAQ" },
+  { href: "#recursos", label: "Recursos" },
+  { href: "#faq", label: "Preguntas" },
 ];
+
 
 export function LandingNav() {
   const [open, setOpen] = useState(false);

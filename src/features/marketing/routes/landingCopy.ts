@@ -4,12 +4,12 @@
  */
 export const HERO = {
   eyebrow: "Hecho en México · Gratis para siempre",
-  socialBullet: "Construido por forwarders mexicanos, para forwarders mexicanos.",
   h1: "El sistema operativo de tu agencia de carga",
   sub: "Cotiza, embarca, factura y cobra desde un solo lugar. Libre Carga reemplaza tus hojas de Excel, tus carpetas compartidas y tu pizarrón de embarques.",
   primaryCta: "Crear cuenta gratis",
   secondaryCta: "Ver demo en 60 segundos",
 } as const;
+
 
 // Prueba social honesta: reencuadramos "logos" como navieras que rastreamos
 // (no partners) y estándares regulatorios/técnicos que sí cumplimos.
@@ -21,15 +21,6 @@ export const PROOF_ESTANDARES = [
   "SAT · CFDI 4.0", "UN/LOCODE", "Banxico DOF", "Facturapi",
 ] as const;
 export const PROOF_DISCLAIMER = "Libre Carga no es partner oficial de ninguna naviera. Sólo rastreamos sus embarques.";
-
-export const KPIS = [
-  // VT-04: valor numérico hardcodeado (sin count-up dependiente de observers).
-  { value: "3", label: "minutos para armar una cotización profesional" },
-  // VT-06: cifra alineada con las cards de la sección "Seis módulos".
-  { value: "6", label: "módulos integrados en una sola plataforma" },
-  { value: "CFDI 4.0", label: "con IVA dinámico y complementos SAT" },
-] as const;
-
 
 export const MODULOS = [
   {
@@ -104,11 +95,12 @@ export const PORTAL = {
 } as const;
 
 export const SEGURIDAD = [
-  { title: "Aislamiento por tenant", desc: "Row Level Security en cada tabla. Una agencia jamás ve los datos de otra." },
-  { title: "Roles granulares", desc: "Admin, operador, vendedora, viewer y cliente. Cada quien ve solo lo que le toca." },
-  { title: "Bitácora de actividad", desc: "Quién hizo qué y cuándo. Auditoría completa de todas las operaciones." },
-  { title: "Respaldos automáticos", desc: "Tu información vive en infraestructura cloud con respaldos diarios." },
+  { title: "Cada agencia, aislada", desc: "Tus datos viven separados a nivel base de datos. Otra agencia jamás puede verlos." },
+  { title: "Cada quien ve lo suyo", desc: "Permisos por perfil: dirección, operaciones, ventas, consulta y cliente." },
+  { title: "Bitácora de todo", desc: "Queda registrado quién hizo qué y cuándo, para aclarar cualquier duda después." },
+  { title: "Respaldos diarios", desc: "Tu información se respalda todos los días en infraestructura en la nube." },
 ] as const;
+
 
 export const PRECIO = {
   badge: "Lanzamiento",

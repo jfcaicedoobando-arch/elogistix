@@ -17,7 +17,15 @@ const RECURSOS = [
     to: "/recursos/guia-incoterms-2020",
     tag: "Comercio exterior",
   },
+  {
+    id: "puertos",
+    title: "Guía de puertos de México",
+    desc: "Los principales puertos mexicanos con su código UN/LOCODE, conexiones y usos típicos por tipo de carga.",
+    to: "/recursos/guia-puertos-mexico",
+    tag: "Operación",
+  },
 ] as const;
+
 
 export function LandingRecursos() {
   return (
@@ -42,7 +50,7 @@ export function LandingRecursos() {
           </p>
         </div>
 
-        <div className="mt-14 grid gap-6 sm:grid-cols-2">
+        <div className="mt-14 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {RECURSOS.map((r) => (
             <Card
               key={r.id}

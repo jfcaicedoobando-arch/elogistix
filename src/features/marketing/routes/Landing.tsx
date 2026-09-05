@@ -5,14 +5,16 @@
 import { Seo } from "@/components/shared/Seo";
 import { LandingNav } from "../components/sections/LandingNav";
 import { LandingHero } from "../components/sections/LandingHero";
+import { LandingAntesDespues } from "../components/sections/LandingAntesDespues";
+import { LandingRecorrido } from "../components/sections/LandingRecorrido";
 import { LandingDemo } from "../components/sections/LandingDemo";
 import { LandingModulos } from "../components/sections/LandingModulos";
 import { LandingComoFunciona } from "../components/sections/LandingComoFunciona";
+import { LandingPrecio } from "../components/sections/LandingPrecio";
 import { LandingMexico } from "../components/sections/LandingMexico";
 import { LandingPortal } from "../components/sections/LandingPortal";
 import { LandingSeguridad } from "../components/sections/LandingSeguridad";
 import { LandingRecursos } from "../components/sections/LandingRecursos";
-import { LandingPrecio } from "../components/sections/LandingPrecio";
 import { LandingFaq } from "../components/sections/LandingFaq";
 import { LandingCtaFinal } from "../components/sections/LandingCtaFinal";
 import { LandingFooter } from "../components/sections/LandingFooter";
@@ -38,14 +40,16 @@ export default function Landing() {
       <LandingNav />
       <main>
         <LandingHero />
-        <LandingDemo />
+        <LandingAntesDespues />
+        <LandingRecorrido />
         <LandingModulos />
         <LandingComoFunciona />
+        <LandingPrecio />
+        <LandingDemo />
         <LandingMexico />
         <LandingPortal />
         <LandingSeguridad />
         <LandingRecursos />
-        <LandingPrecio />
         <LandingFaq />
         <LandingCtaFinal />
       </main>
@@ -54,3 +58,4 @@ export default function Landing() {
     </div>
   );
 }
+

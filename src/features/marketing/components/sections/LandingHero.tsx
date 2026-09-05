@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, CheckCircle2, Ship, Container, FileText, Clock } from "lucide-react";
-import { HERO, PROOF_TITLE, PROOF_NAVIERAS, PROOF_ESTANDARES, PROOF_DISCLAIMER, KPIS } from "../../routes/landingCopy";
+import { HERO, PROOF_TITLE, PROOF_NAVIERAS, PROOF_ESTANDARES, PROOF_DISCLAIMER } from "../../routes/landingCopy";
 import { ProbarDemoButton } from "@/features/marketing/components/ProbarDemoButton";
 
 export function LandingHero() {
@@ -31,13 +31,10 @@ export function LandingHero() {
           >
             {HERO.h1}
           </h1>
-          <p className="mt-5 flex items-start gap-2 text-sm font-medium text-primary-foreground/90">
-            <span className="mt-2 h-1.5 w-1.5 flex-none rounded-full bg-primary-foreground" />
-            {HERO.socialBullet}
-          </p>
-          <p className="mt-4 max-w-xl text-lg leading-relaxed text-primary-foreground/85">
+          <p className="mt-5 max-w-xl text-lg leading-relaxed text-primary-foreground/85">
             {HERO.sub}
           </p>
+
 
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
             <Button asChild size="lg" className="bg-accent text-accent-foreground hover:bg-accent/90">
@@ -162,20 +159,6 @@ export function LandingHero() {
           <p className="mt-5 text-center text-2xs text-primary-foreground/50">
             {PROOF_DISCLAIMER}
           </p>
-        </div>
-      </div>
-
-      {/* KPIs strip */}
-      <div className="relative border-t border-primary-foreground/10 bg-primary">
-        <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
-          <div className="grid grid-cols-3 gap-4 text-center">
-            {KPIS.map((k) => (
-              <div key={k.label}>
-                <p className="text-2xl font-bold text-primary-foreground sm:text-3xl">{k.value}</p>
-                <p className="mt-1 text-xs leading-snug text-primary-foreground/75 sm:text-sm">{k.label}</p>
-              </div>
-            ))}
-          </div>
         </div>
       </div>
     </section>
