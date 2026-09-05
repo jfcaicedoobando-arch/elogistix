@@ -36,6 +36,8 @@ interface Props {
   origenInicial?: OrigenInicial | null;
   /** Nombre precapturado en el alta express al pulsar "Más campos". */
   nombreInicial?: string | null;
+  /** Etapa prefijada por el CTA de una columna del Kanban (sólo si abierta). */
+  etapaInicialId?: string | null;
 }
 
 export default function NuevaOportunidadDialog({
@@ -45,6 +47,7 @@ export default function NuevaOportunidadDialog({
   onSaved,
   origenInicial,
   nombreInicial,
+  etapaInicialId,
 }: Props) {
   const isEdit = !!oportunidad;
   const { user } = useAuth();
@@ -60,7 +63,7 @@ export default function NuevaOportunidadDialog({
     oportunidad,
     etapas,
     user,
-    { origen: origenInicial, nombre: nombreInicial },
+    { origen: origenInicial, nombre: nombreInicial, etapaId: etapaInicialId },
   );
   const [autoActividad, setAutoActividad] = useState(true);
   const [guardando, setGuardando] = useState(false);

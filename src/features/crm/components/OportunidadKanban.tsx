@@ -43,8 +43,9 @@ interface Props {
   oportunidades: CrmOportunidadRow[];
   onMover: (oportunidadId: string, etapaId: string, probDefault: number) => void;
   onClickCard: (id: string) => void;
-  /** CTA del estado vacío de cada columna (E-11). Omitir oculta la acción. */
-  onNuevo?: () => void;
+  /** CTA del estado vacío de cada columna (E-11). Recibe el id de la etapa
+      de la columna para prefijarla en el alta. Omitir oculta la acción. */
+  onNuevo?: (etapaId: string) => void;
   /**
    * Permiso real de mover UNA oportunidad de etapa (espejo de las policies de
    * `crm_oportunidades`: staff sobre cualquiera, vendedor sólo las propias).

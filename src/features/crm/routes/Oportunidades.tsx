@@ -65,6 +65,9 @@ export default function Oportunidades() {
   );
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [nuevaOpen, setNuevaOpen] = useState(false);
+  // Etapa de la columna del Kanban desde la que se pulsó "Nueva oportunidad"
+  // (null = alta global, sin etapa prefijada).
+  const [nuevaEtapaId, setNuevaEtapaId] = useState<string | null>(null);
   const debounced = useDebounce(search, 300);
 
 
@@ -152,7 +155,7 @@ export default function Oportunidades() {
               onMover={handleMover}
               puedeMover={(o) => canGestionarOportunidad(o.vendedor_id)}
               onClickCard={(id) => navigate(`/crm/oportunidades/${id}`)}
-              onNuevo={canCrearOportunidad ? () => setNuevaOpen(true) : undefined}
+              onNuevo={canCrearOportunidad ? (etapaId) => { setNuevaEtapaId(etapaId); setNuevaOpen(true); } : undefined}
             />
           )}
         </TabsContent>
@@ -188,8 +191,12 @@ export default function Oportunidades() {
       {/* E-11: CTA del estado vacío de las columnas del Kanban. */}
       <NuevaOportunidadDialog
         open={nuevaOpen}
-        onOpenChange={setNuevaOpen}
-        onSaved={() => { setNuevaOpen(false); void refetch(); }}
+        onOpenChange={(o) => {
+          setNuevaOpen(o);
+          if (!o) setNuevaEtapaId(null);
+        }}
+        etapaInicialId={nuevaEtapaId}
+        onSaved={() => { setNuevaOpen(false); setNuevaEtapaId(null); void refetch(); }}
       />
     </PageContainer>
   );
