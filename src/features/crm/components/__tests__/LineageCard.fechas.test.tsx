@@ -72,7 +72,7 @@ describe("LeadLineageCard — formato de fechas", () => {
 
     render(<LeadLineageCard leadId="l-1" />);
 
-    const row = screen.getByText(/Oportunidad dos/).closest("div");
-    expect(row?.textContent).toMatch(/cierre\s+—/);
+    expect(screen.getByText(/cierre —/)).toBeInTheDocument();
+    expect(screen.queryByText(/\d{4}-\d{2}-\d{2}/)).toBeNull();
   });
 });
