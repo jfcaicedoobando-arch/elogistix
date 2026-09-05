@@ -17,7 +17,6 @@ import type { TotalesPL } from "@/lib/financial/profitUtils";
 interface Props {
   plUSD: TotalesPL;
   plMXN: TotalesPL;
-  totalVentaMXN: number;
 }
 
 function nivel(porcentaje: number): { color: string; icon: typeof TrendingUp } {
