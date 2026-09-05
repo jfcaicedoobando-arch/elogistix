@@ -94,6 +94,7 @@ export default function ImportarLeadsCsvDialog({ open, onOpenChange }: Props) {
         errorCount={errorCount}
         duplicados={duplicados}
         duplicadosCargando={duplicadosCargando}
+        duplicadosError={duplicadosError}
       />
     </FormDialogShell>
   );

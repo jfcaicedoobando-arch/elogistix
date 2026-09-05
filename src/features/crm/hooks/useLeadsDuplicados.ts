@@ -47,7 +47,12 @@ export function useDuplicadosLote(filas: ReadonlyArray<LeadClave>) {
   };
 }
 
-/** Duplicado de un solo lead (alta manual). */
+/**
+ * Duplicado de un solo lead (alta manual).
+ *
+ * Falla cerrada: expone `isError`/`error`/`refetch` para que la UI avise
+ * "no pudimos comprobar duplicados" en vez de fingir que no hay coincidencias.
+ */
 export function useDuplicadoLead(clave: LeadClave, habilitado = true) {
   const tiene = Boolean(clave.empresa || clave.email || clave.telefono);
   const q = useQuery({
@@ -57,5 +62,11 @@ export function useDuplicadoLead(clave: LeadClave, habilitado = true) {
     staleTime: STALE,
   });
   const coincidencia = tiene ? clasificarDuplicado(clave, q.data ?? []) : null;
-  return { coincidencia, isLoading: q.isLoading };
+  return {
+    coincidencia,
+    isLoading: q.isLoading,
+    isError: tiene && q.isError,
+    error: q.error,
+    refetch: q.refetch,
+  };
 }

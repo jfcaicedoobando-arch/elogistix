@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.823.136] - 2026-09-05
+- CRM detector de duplicados: un fallo de la revisión RPC (RLS/red/timeout) ya no se ve como "sin coincidencias". Alta manual (`AvisoLeadDuplicado`): `useDuplicadoLead` ahora expone `isError`/`error`/`refetch` y el aviso muestra alerta no bloqueante "No pudimos comprobar duplicados" con Reintentar. CSV: la importación ya quedaba bloqueada con alerta y reintento; además el preview marca las filas "Sin revisar" en lugar de "Nuevo" cuando la revisión falló. Se conserva la omisión de duplicados exactos cuando la consulta funciona; no se tocó la RPC ni las reglas de coincidencia. Regresión: `duplicadosErrores.test.tsx` cubre error y éxito en ambos flujos.
+
+## [13.823.135] - 2026-09-05
+- CRM linaje (`useLineage` / `LineageCard`): regresión que blinda la distinción entre "sin datos" y "no se pudieron cargar". La corrección ya existía (`useOportunidadLineage` agrega `isError` de cotizaciones/embarques/lead y expone `refetch` de las tres; ambas tarjetas muestran `ErrorStateInline` con Reintentar y el empty sólo con éxito); se agrega prueba del hook que verifica agregación de error desde cualquiera de las 3 consultas y reintento triple, junto a las pruebas existentes de error vs lista vacía. Sin cambios de lógica ni del modelo de linaje.
+
 ## [13.823.134] - 2026-09-05
 - CRM dashboard: regresión que blinda la propagación de errores en `fetchCrmDashboard`. La corrección ya existía (6 consultas pasan por `assertSinErrores` y la paginada de oportunidades abiertas lanza desde el paginador); se agregan pruebas que verifican que un fallo en una consulta de conteo o en la paginada rechaza la promesa (el tablero puede mostrar estado de error/reintento) y que sin error las métricas se conservan. Sin cambios de lógica.
 
