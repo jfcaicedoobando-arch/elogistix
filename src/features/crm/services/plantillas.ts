@@ -58,9 +58,18 @@ export async function actualizarPlantilla(input: {
   id: string;
   patch: Partial<PlantillaInput>;
 }): Promise<void> {
-  await run(
-    supabase.from("crm_plantillas_mensaje").update(input.patch).eq("id", input.id),
-  );
+  const { data, error } = await supabase
+    .from("crm_plantillas_mensaje")
+    .update(input.patch)
+    .eq("id", input.id)
+    .select("id")
+    .maybeSingle();
+  if (error) throw error;
+  if (!data) {
+    throw new Error(
+      "No se pudo actualizar la plantilla: no tienes permiso o la plantilla ya no existe.",
+    );
+  }
   await registrarActividad({
     modulo: "crm",
     accion: "Editó plantilla de mensaje",
@@ -70,11 +79,17 @@ export async function actualizarPlantilla(input: {
 }
 
 export async function eliminarPlantilla(id: string): Promise<void> {
-  await run(
-    supabase
-      .from("crm_plantillas_mensaje")
-      .update({ deleted_at: new Date().toISOString() })
-      .eq("id", id),
-  );
+  const { data, error } = await supabase
+    .from("crm_plantillas_mensaje")
+    .update({ deleted_at: new Date().toISOString() })
+    .eq("id", id)
+    .select("id")
+    .maybeSingle();
+  if (error) throw error;
+  if (!data) {
+    throw new Error(
+      "No se pudo eliminar la plantilla: no tienes permiso o la plantilla ya no existe.",
+    );
+  }
   await registrarActividad({ modulo: "crm", accion: "Eliminó plantilla de mensaje", entidadId: id });
 }

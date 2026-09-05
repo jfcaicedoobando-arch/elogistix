@@ -53,7 +53,18 @@ export async function actualizarCriterioEtapa(input: {
   id: string;
   patch: Partial<Pick<CriterioEtapaRow, "nombre" | "orden" | "obligatorio" | "activo">>;
 }): Promise<void> {
-  await run(supabase.from("crm_etapa_criterios").update(input.patch).eq("id", input.id));
+  const { data, error } = await supabase
+    .from("crm_etapa_criterios")
+    .update(input.patch)
+    .eq("id", input.id)
+    .select("id")
+    .maybeSingle();
+  if (error) throw error;
+  if (!data) {
+    throw new Error(
+      "No se pudo actualizar el criterio de salida: no tienes permiso o el criterio ya no existe.",
+    );
+  }
   await registrarActividad({
     modulo: "crm",
     accion: "Editó criterio de salida",
@@ -63,12 +74,18 @@ export async function actualizarCriterioEtapa(input: {
 }
 
 export async function eliminarCriterioEtapa(id: string, userId: string | null): Promise<void> {
-  await run(
-    supabase
-      .from("crm_etapa_criterios")
-      .update({ deleted_at: new Date().toISOString(), deleted_by: userId, activo: false })
-      .eq("id", id),
-  );
+  const { data, error } = await supabase
+    .from("crm_etapa_criterios")
+    .update({ deleted_at: new Date().toISOString(), deleted_by: userId, activo: false })
+    .eq("id", id)
+    .select("id")
+    .maybeSingle();
+  if (error) throw error;
+  if (!data) {
+    throw new Error(
+      "No se pudo eliminar el criterio de salida: no tienes permiso o el criterio ya no existe.",
+    );
+  }
   await registrarActividad({ modulo: "crm", accion: "Eliminó criterio de salida", entidadId: id });
 }
 
