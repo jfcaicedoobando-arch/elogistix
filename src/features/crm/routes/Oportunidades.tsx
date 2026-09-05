@@ -4,22 +4,18 @@
  */
 import { useCallback, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { Card, CardContent } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { copiaContadorOportunidades } from "./oportunidadesContadorCopy";
 import { CrmSubheader } from "@/features/crm/components/CrmSubheader";
-import { DataTable } from "@/components/shared/DataTable";
 import { useDebounce, useDocumentTitle, usePermissions } from "@/hooks/shared";
 import { formatCurrencyCompact } from "@/lib/formatters";
 import { useExchangeRates } from "@/features/catalogos/hooks";
 import { sumarPipelineMxn } from "@/features/crm/domain/pipelineMoneda";
-import { LoadingState } from "@/components/shared/states/LoadingState";
-import OportunidadKanban from "@/features/crm/components/OportunidadKanban";
 import OportunidadesFiltersSection from "@/features/crm/components/OportunidadesFiltersSection";
 import ExportarCsvButton from "@/features/crm/components/ExportarCsvButton";
 
 import OportunidadesDialogs from "@/features/crm/components/OportunidadesDialogs";
 import NuevaOportunidadDialog from "@/features/crm/components/NuevaOportunidadDialog";
+import OportunidadesTabsView from "./OportunidadesTabsView";
 import { type OportunidadesFiltros } from "@/features/crm/components/oportunidadesFiltersTypes";
 import { parseOportunidadesUrl, serializeOportunidadesUrl, type OportunidadesUrlState } from "./oportunidadesUrlState";
 import { useOportunidades, useEtapasPipeline, type CrmEtapaRow } from "@/features/crm/hooks";
@@ -32,8 +28,6 @@ import { oportunidadesColumns, siguienteActividadColumn, activosFiltros } from "
 import { useProximasActividades } from "@/features/crm/hooks/useProximasActividades";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { PageContainer } from "@/components/shared/PageContainer";
-import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
-import { ErrorState } from "@/components/shared/states/ErrorState";
 
 export default function Oportunidades() {
   useDocumentTitle('Oportunidades');
@@ -138,47 +132,20 @@ export default function Oportunidades() {
         activos={activos}
       />
 
-      <Tabs value={vista} onValueChange={(v) => aplicarUrlState({ vista: v === "tabla" ? "tabla" : "kanban" })}>
-        <TabsList variant="vista">
-          <TabsTrigger variant="vista" value="kanban">Kanban</TabsTrigger>
-          <TabsTrigger variant="vista" value="tabla">Tabla</TabsTrigger>
-        </TabsList>
-        <TabsContent value="kanban" className="mt-4">
-          {isError ? (
-            <ErrorState onRetry={() => void refetch()} />
-          ) : isLoading ? (
-            <LoadingState label="Cargando oportunidades…" />
-          ) : (
-            <OportunidadKanban
-              etapas={etapas as CrmEtapaRow[]}
-              oportunidades={ops}
-              onMover={handleMover}
-              puedeMover={(o) => canGestionarOportunidad(o.vendedor_id)}
-              onClickCard={(id) => navigate(`/crm/oportunidades/${id}`)}
-              onNuevo={canCrearOportunidad ? (etapaId) => { setNuevaEtapaId(etapaId); setNuevaOpen(true); } : undefined}
-            />
-          )}
-        </TabsContent>
-        <TabsContent value="tabla" className="mt-4">
-          <Card>
-            <CardContent className="p-0">
-              {isError ? (
-                <ErrorState className="m-4" onRetry={() => void refetch()} />
-              ) : (
-              <DataTable
-                columns={columnas}
-                data={ops}
-                isLoading={isLoading}
-                emptyMessage="No hay oportunidades"
-                getRowHref={(o) => `/crm/oportunidades/${o.id}`}
-                rowKey={(o) => o.id}
-                density={TABLE_DENSITY.listado}
-              />
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+      <OportunidadesTabsView
+        vista={vista}
+        onVistaChange={(v) => aplicarUrlState({ vista: v })}
+        isError={isError}
+        isLoading={isLoading}
+        refetch={refetch}
+        etapas={etapas as CrmEtapaRow[]}
+        ops={ops}
+        onMover={handleMover}
+        puedeMover={(o) => canGestionarOportunidad(o.vendedor_id)}
+        onClickCard={(id) => navigate(`/crm/oportunidades/${id}`)}
+        onNuevo={canCrearOportunidad ? (etapaId) => { setNuevaEtapaId(etapaId); setNuevaOpen(true); } : undefined}
+        columnas={columnas}
+      />
 
       <OportunidadesDialogs
         proximoPaso={proximoPaso}
