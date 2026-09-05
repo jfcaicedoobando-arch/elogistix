@@ -4,6 +4,10 @@ import { formatCurrencyCompact } from "@/lib/formatters";
 import { formatFechaEs } from "@/lib/formatters/dates";
 import { DrilldownRow } from "@/components/shared/dataTable/DrilldownRow";
 import { ErrorStateInline } from "@/components/empty/ErrorStateInline";
+import {
+  NBA_LEAD_SIN_CONTACTAR_HORAS,
+  SEMANA_LEAD_SIN_CONTACTAR_DIAS,
+} from "@/features/crm/domain/umbralesContacto";
 
 interface DealItem {
   id: string;
