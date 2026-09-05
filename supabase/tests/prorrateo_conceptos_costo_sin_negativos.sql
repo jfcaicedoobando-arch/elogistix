@@ -51,7 +51,7 @@ BEGIN
   ON CONFLICT (id) DO NOTHING;
 
   INSERT INTO public.embarques (id, organization_id, cliente_id, cotizacion_id, expediente, estado, modo, tipo)
-  VALUES (v_emb, v_org, v_cli, v_cot, 'ELPRORR001', 'Borrador',
+  VALUES (v_emb, v_org, v_cli, v_cot, 'ELPRR0001', 'Borrador',
           'Marítimo'::public.modo_transporte, 'Importación'::public.tipo_operacion)
   ON CONFLICT (id) DO NOTHING;
 
