@@ -41,6 +41,7 @@ export async function fetchLeaderboardRaw(
       .from("crm_oportunidades")
       .select("vendedor_email, valor_real, monto_estimado, moneda, etapa_id, fecha_cierre_real")
       .is("deleted_at", null)
+      .not("fecha_cierre_real", "is", null)
       .gte("fecha_cierre_real", inicioMesISO)
       // FIX-3 (auditoría): límite superior EXCLUSIVO — sin esto se colaban
       // cierres con fecha futura en el leaderboard del mes en curso.

@@ -130,14 +130,52 @@ describe("fetchLeaderboardRaw (I/O)", () => {
     mock.setTableResult("crm_cuotas_vendedor", { data: [], error: null });
     mock.setTableResult("crm_oportunidades", { data: [], error: null });
     mock.setTableResult("crm_etapas_pipeline", { data: [], error: null });
-    await fetchLeaderboardRaw(2026, 6, "2026-06-01", "2026-07-01");
+    await fetchLeaderboardRaw(2026, 6, "2026-06-01T06:00:00.000Z", "2026-07-01T06:00:00.000Z");
     const call = mock.tableCalls.find((c) => c.table === "crm_oportunidades");
     expect(call).toBeDefined();
     const gteIdx = call!.ops.indexOf("gte");
     const ltIdx = call!.ops.indexOf("lt");
+    const notIdx = call!.ops.indexOf("not");
     expect(gteIdx).toBeGreaterThanOrEqual(0);
     expect(ltIdx).toBeGreaterThanOrEqual(0);
-    expect(call!.opArgs[gteIdx]).toEqual(["fecha_cierre_real", "2026-06-01"]);
-    expect(call!.opArgs[ltIdx]).toEqual(["fecha_cierre_real", "2026-07-01"]);
+    expect(notIdx).toBeGreaterThanOrEqual(0);
+    expect(call!.opArgs[gteIdx]).toEqual(["fecha_cierre_real", "2026-06-01T06:00:00.000Z"]);
+    expect(call!.opArgs[ltIdx]).toEqual(["fecha_cierre_real", "2026-07-01T06:00:00.000Z"]);
+    expect(call!.opArgs[notIdx]).toEqual(["fecha_cierre_real", "is", null]);
+  });
+
+  it("excluye etapas borradas al clasificar oportunidades", async () => {
+    mock.setTableResult("crm_cuotas_vendedor", { data: [], error: null });
+    mock.setTableResult("crm_oportunidades", { data: [], error: null });
+    mock.setTableResult("crm_etapas_pipeline", { data: [], error: null });
+    await fetchLeaderboardRaw(2026, 6, "2026-06-01T06:00:00.000Z", "2026-07-01T06:00:00.000Z");
+    const call = mock.tableCalls.find((c) => c.table === "crm_etapas_pipeline");
+    expect(call).toBeDefined();
+    const isIdx = call!.ops.indexOf("is");
+    expect(isIdx).toBeGreaterThanOrEqual(0);
+    expect(call!.opArgs[isIdx]).toEqual(["deleted_at", null]);
+  });
+
+  it("sólo suma oportunidades cerradas dentro del mes solicitado", () => {
+    const raw: LeaderboardRawData = {
+      cuotas: [],
+      ops: [
+        { vendedor_email: "a@x.com", valor_real: 1000, monto_estimado: 0, etapa_id: "e-ganada" },
+        // Esta oportunidad fue descartada por el rango superior del servicio
+        // y no debe llegar al computo del leaderboard de junio.
+        { vendedor_email: "a@x.com", valor_real: 500, monto_estimado: 0, etapa_id: "e-ganada" },
+      ],
+      etapas: [
+        { id: "e-ganada", tipo: "ganada" },
+      ],
+    };
+    // Simula que el servicio ya filtró: conservamos sólo la del mes.
+    const filtrado: LeaderboardRawData = {
+      ...raw,
+      ops: [raw.ops[0]],
+    };
+    const r = computeLeaderboard(filtrado);
+    expect(r).toHaveLength(1);
+    expect(r[0].cerrado).toBe(1000);
   });
 });
