@@ -74,6 +74,8 @@ async function fetchOportunidadesAbiertas(): Promise<OpRow[]> {
       .select(OPS_ABIERTAS_SELECT)
       .is("deleted_at", null)
       .eq("crm_etapas_pipeline.tipo", "abierta")
+      .is("crm_etapas_pipeline.deleted_at", null)
+
       .order("id", { ascending: true })
       .range(desde, hasta),
   );
@@ -136,7 +138,9 @@ export async function fetchCrmDashboard(
           .from("crm_oportunidades")
           .select("id, nombre, cliente_nombre, monto_estimado, moneda, probabilidad, fecha_estimada_cierre, crm_etapas_pipeline!inner(tipo)")
           .eq("crm_etapas_pipeline.tipo", "abierta")
+          .is("crm_etapas_pipeline.deleted_at", null)
           .is("deleted_at", null)
+
           .or(filtroVendedor(userId, userEmail))
           .gte("fecha_estimada_cierre", todayLocalISO())
           .lte("fecha_estimada_cierre", isoDaysFromNow(7))

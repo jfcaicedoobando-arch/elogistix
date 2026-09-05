@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.823.131] - 2026-09-05
+- CRM soft-delete de etapas en KPIs/forecast: `dashboard.ts` filtra `crm_etapas_pipeline.deleted_at IS NULL` en los joins de oportunidades abiertas (pipeline/KPI y tarjeta "Cerrando esta semana") y `fetchEtapaTipos` (`forecast.ts`) ignora etapas eliminadas. Una oportunidad ligada a una etapa borrada ya no suma como abierta ni ganada, y las etapas activas conservan su comportamiento. Regresión: filtros de join, `fetchEtapaTipos` y forecast con etapa archivada.
+
 ## [13.823.130] - 2026-09-05
 - CRM ranking de vendedores (`leaderboard.ts` / `useLeaderboardVendedores`): el rango mensual ahora convierte el inicio/fin del mes a ISO UTC con `mxLocalToUtcIso` antes de consultar `crm_oportunidades`, y se añade explícito `.not("fecha_cierre_real", "is", null)`. El límite superior exclusivo (`lt`) evita que cierres de meses posteriores se sumen al leaderboard. Las etapas borradas ya se filtran (`is deleted_at null`) al clasificar oportunidades. Regresiones: mes en curso estable en frontera UTC/CDMX, filtro anti-nulo y exclusión de etapas archivadas.
 
