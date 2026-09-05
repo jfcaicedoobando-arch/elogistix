@@ -1,13 +1,21 @@
 import { describe, it, expect, vi } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
+import { useState } from "react";
 import { EntidadesFields } from "@/features/costeo/components/TarifaFormFields";
 import { buildInitialForm } from "@/features/costeo/components/TarifaForm.helpers";
-import { useState } from "react";
 
 vi.mock("@/features/catalogos/hooks", () => ({
   useAdminNavieras: () => ({ agregarNaviera: { mutate: vi.fn(), isPending: false } }),
 }));
+
+if (!Element.prototype.hasPointerCapture) {
+  // @ts-expect-error polyfill jsdom
+  Element.prototype.hasPointerCapture = () => false;
+}
+if (!Element.prototype.releasePointerCapture) {
+  // @ts-expect-error polyfill jsdom
+  Element.prototype.releasePointerCapture = () => {};
+}
 
 function Wrapper() {
   const [form, setForm] = useState(buildInitialForm());
@@ -24,9 +32,11 @@ function Wrapper() {
 describe("repro naviera select", () => {
   it("mantiene la selección", async () => {
     render(<Wrapper />);
-    const user = userEvent.setup();
-    await user.click(screen.getByLabelText("Naviera *"));
-    await user.click(await screen.findByText("Maersk Line"));
-    expect(screen.getByText("Maersk Line")).toBeInTheDocument();
+    fireEvent.pointerDown(screen.getByLabelText("Naviera *"), { button: 0, ctrlKey: false });
+    fireEvent.click(screen.getByLabelText("Naviera *"));
+    const item = await screen.findByText("Maersk Line");
+    fireEvent.pointerDown(item);
+    fireEvent.click(item);
+    expect(await screen.findByText("Maersk Line")).toBeInTheDocument();
   });
 });
