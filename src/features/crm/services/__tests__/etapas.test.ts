@@ -49,6 +49,29 @@ describe("services/crm/etapas", () => {
     expect(mock.tableCalls[0].ops).not.toContain("eq");
   });
 
+  // v13.823.113 — soft-delete: ninguna lectura debe traer etapas eliminadas.
+  it("fetchEtapasPipelineActivas excluye etapas con deleted_at", async () => {
+    mock.setTableResult("crm_etapas_pipeline", { data: [{ id: "e1" }], error: null });
+    await fetchEtapasPipelineActivas();
+    const call = mock.tableCalls[0];
+    const isIdx = call.ops.indexOf("is");
+    expect(call.opArgs[isIdx]).toEqual(["deleted_at", null]);
+  });
+
+  it("fetchEtapasPipelineTodas excluye etapas con deleted_at pero conserva inactivas", async () => {
+    mock.setTableResult("crm_etapas_pipeline", {
+      data: [{ id: "e1", activa: false }],
+      error: null,
+    });
+    const r = await fetchEtapasPipelineTodas();
+    // Las etapas históricas/inactivas siguen visibles en configuración.
+    expect(r).toHaveLength(1);
+    const call = mock.tableCalls[0];
+    const isIdx = call.ops.indexOf("is");
+    expect(call.opArgs[isIdx]).toEqual(["deleted_at", null]);
+    expect(call.ops).not.toContain("eq");
+  });
+
   it("fetchEtapasPipelineTodas propaga error", async () => {
     mock.setTableResult("crm_etapas_pipeline", { data: null, error: { message: "x" } });
     await expect(fetchEtapasPipelineTodas()).rejects.toThrow();

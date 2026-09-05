@@ -18,6 +18,7 @@ export async function fetchEtapasPipelineActivas(): Promise<CrmEtapaRow[]> {
       .from("crm_etapas_pipeline")
       .select(COLS)
       .eq("activa", true)
+      .is("deleted_at", null)
       .order("orden", { ascending: true }),
     [],
   ) as Promise<CrmEtapaRow[]>;
@@ -25,7 +26,11 @@ export async function fetchEtapasPipelineActivas(): Promise<CrmEtapaRow[]> {
 
 export async function fetchEtapasPipelineTodas(): Promise<CrmEtapaRow[]> {
   return unwrapOr(
-    supabase.from("crm_etapas_pipeline").select(COLS).order("orden", { ascending: true }),
+    supabase
+      .from("crm_etapas_pipeline")
+      .select(COLS)
+      .is("deleted_at", null)
+      .order("orden", { ascending: true }),
     [],
   ) as Promise<CrmEtapaRow[]>;
 }
