@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+## [13.823.91] - 2026-09-05
+
+### CRM — Orden de etapas del pipeline sin duplicados
+- Nueva RPC `crm_intercambiar_orden_etapas` (SECURITY INVOKER, `FOR UPDATE` por id) que intercambia el `orden` entre dos etapas de la misma organización en una sola transacción.
+- `EtapasPipelineEditor` ahora intercambia con la etapa vecina en lugar de sumar ±1 al orden propio (lo que creaba órdenes duplicados); las flechas se deshabilitan en el primer/último elemento y durante la mutación (doble clic).
+- `useIntercambiarOrdenEtapas` invalida `crm.etapas.all` y `crm.etapas.todas`.
+- Regresiones: subir, bajar, límites, bloqueo por concurrencia y RPC única en el servicio.
+
 ## [13.823.90] - 2026-09-05
 
 ### CRM — Limpieza de feedback duplicado en editor de plantillas
