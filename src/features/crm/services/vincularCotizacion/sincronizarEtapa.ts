@@ -61,6 +61,23 @@ export async function sincronizarEtapaPorEstadoCotizacion(input: {
       : findByTipo(tipo);
   if (!etapa) return;
 
+  // P1 (13.823.142): si la oportunidad YA está cerrada en el mismo tipo
+  // (p. ej. ganada el 31/08), enviar otra alternativa no debe mover la fecha de
+  // cierre a hoy. Sólo se fija `fecha_cierre_real` cuando hay transición real.
+  const { data: actual, error: errActual } = await supabase
+    .from("crm_oportunidades")
+    .select("id, fecha_cierre_real, crm_etapas_pipeline(tipo)")
+    .eq("id", input.oportunidadId)
+    .is("deleted_at", null)
+    .maybeSingle();
+  if (errActual) throw errActual;
+  if (!actual) return;
+  const etapaActual = (actual as { crm_etapas_pipeline?: { tipo?: string } | null })
+    .crm_etapas_pipeline;
+  const tipoActual = etapaActual?.tipo ?? null;
+  const yaCerradaEnMismoTipo =
+    tipoActual === tipo && (actual as { fecha_cierre_real?: string | null }).fecha_cierre_real != null;
+
   // P1-B (13.823.70): al volver a "abierta" hay que limpiar los datos de cierre;
   // antes quedaban `fecha_cierre_real`/`motivo_perdida_id` históricos y la
   // oportunidad se veía perdida/ganada dentro de una etapa abierta. Se aplica en
@@ -80,10 +97,12 @@ export async function sincronizarEtapaPorEstadoCotizacion(input: {
     patch.valor_real = null;
     patch.motivo_perdida_id = null;
   } else {
-    patch.fecha_cierre_real = hoyMx();
+    // Sin transición real conservamos fecha y valor de cierre originales.
+    if (!yaCerradaEnMismoTipo) patch.fecha_cierre_real = hoyMx();
     // "ganada" no conserva motivo de pérdida; "perdida" mantiene el suyo.
     if (tipo === "ganada") patch.motivo_perdida_id = null;
   }
+
 
 
   const { data, error } = await supabase
