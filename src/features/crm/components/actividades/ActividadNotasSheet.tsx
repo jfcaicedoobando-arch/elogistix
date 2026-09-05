@@ -34,8 +34,8 @@ export default function ActividadNotasSheet({ actividad, open, onOpenChange }: P
       await mutate.mutateAsync({ id: actividad.id, resultado });
       crmToast.success("Notas guardadas");
       onOpenChange(false);
-    } catch (err) {
-      crmToast.error("No se pudieron guardar las notas", err);
+    } catch {
+      // useActualizarActividadNotas ya notifica el error en onError.
     }
   };
 

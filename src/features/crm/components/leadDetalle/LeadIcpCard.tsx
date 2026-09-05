@@ -6,7 +6,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { notifyError } from "@/lib/ui/appFeedback";
 import { crmToast } from "@/features/crm/lib/crmToast";
 import { useActualizarLead } from "@/features/crm/hooks";
 import { useLeadIcpForm } from "@/features/crm/hooks/useLeadIcpForm";
@@ -34,13 +33,8 @@ export default function LeadIcpCard({ leadId, lead, canEdit }: Props) {
         patch: toLeadIcpPatch(form),
       });
       crmToast.success("Perfil ICP guardado");
-    } catch (e) {
-      notifyError(undefined, {
-        title: "No se pudo guardar el perfil ICP",
-        description: e instanceof Error ? e.message : undefined,
-        error: e,
-        method: "HANDLE_SAVE_ICP",
-      });
+    } catch {
+      // useActualizarLead ya notifica el error en onError.
     }
   };
 
