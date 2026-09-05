@@ -25,12 +25,18 @@ import { useAuth } from "@/lib/contexts/AuthContext";
 import { useCrearLead } from "@/features/crm/hooks";
 import { leadQuickCreateInput } from "@/features/crm/domain/leads/quickCreateInput";
 
+/** Borrador mínimo que viaja de la alta express al formulario completo. */
+export interface LeadQuickDraft {
+  empresa: string;
+  contacto: string;
+}
+
 interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onCreated: (id: string) => void;
-  /** Abre el diálogo completo con todos los campos. */
-  onMore: () => void;
+  /** Abre el diálogo completo con todos los campos, conservando lo capturado. */
+  onMore: (draft: LeadQuickDraft) => void;
 }
 
 export default function QuickCreateLeadDialog({ open, onOpenChange, onCreated, onMore }: Props) {
@@ -102,7 +108,7 @@ export default function QuickCreateLeadDialog({ open, onOpenChange, onCreated, o
               type="button"
               variant="ghost"
               size="sm"
-              onClick={onMore}
+              onClick={() => onMore({ empresa: empresa.trim(), contacto: contacto.trim() })}
               disabled={crear.isPending}
               className="text-body-sm"
             >
