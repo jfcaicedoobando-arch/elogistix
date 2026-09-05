@@ -110,6 +110,8 @@ export function isValidacionNegocioPorMensaje(
   const tipo = event.exception?.values?.[0]?.type;
   if (typeof tipo === "string" && NOMBRES_ERROR_NEGOCIO.has(tipo)) return true;
   const msg = mensajeDe(event, exc);
+  // Sentry -60: mensajes con código de dominio LC_* son validaciones de negocio.
+  if (msg.startsWith("lc_")) return true;
   return PATRONES_VALIDACION_NEGOCIO.some((p) => msg.includes(p));
 }
 
