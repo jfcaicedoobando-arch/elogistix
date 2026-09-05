@@ -27,7 +27,7 @@ async function argumentosConReloj(iso: string) {
   fetchLeaderboardRaw.mockReset();
   fetchLeaderboardRaw.mockResolvedValue([]);
 
-  const { result } = renderHook(() => useLeaderboardVendedores(), { wrapper });
+  renderHook(() => useLeaderboardVendedores(), { wrapper });
   vi.useRealTimers();
   await waitFor(() => expect(fetchLeaderboardRaw).toHaveBeenCalled());
   return fetchLeaderboardRaw.mock.calls[0];

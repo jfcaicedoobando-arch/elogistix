@@ -6,7 +6,7 @@
  * "Abrir oportunidad →". Para campos avanzados, el caller puede abrir el
  * `ConvertirLeadDialog` clásico ("Más campos →").
  */
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -41,14 +41,12 @@ export default function ConvertirLeadSheet({ open, onOpenChange, lead, onAbrirAv
   const convertir = useConvertirLead();
 
   // Reinicia el borrador sólo cuando cambia el lead (evita convertir B con datos de A).
-  const [leadIdBorrador, setLeadIdBorrador] = useState(lead.id);
-  if (leadIdBorrador !== lead.id) {
-    setLeadIdBorrador(lead.id);
+  useEffect(() => {
     setClienteId(lead.cliente_convertido_id ?? SIN_CLIENTE);
     setNombre(`Oportunidad — ${lead.empresa}`);
     setMonto("0");
     setMoneda("MXN");
-  }
+  }, [lead.id, lead.empresa, lead.cliente_convertido_id]);
 
   const yaConvertido = lead.estado === "Convertido" && lead.oportunidad_convertida_id;
 

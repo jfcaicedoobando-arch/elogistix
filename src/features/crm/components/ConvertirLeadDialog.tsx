@@ -3,7 +3,7 @@
  * Si el lead ya está convertido, muestra los IDs resultantes en lugar del form.
  * Migrado a `FormDialogShell` (v13.121.0).
  */
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowRight, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -35,15 +35,13 @@ export default function ConvertirLeadDialog({ open, onOpenChange, lead }: Props)
   const navigate = useNavigate();
 
   // Reinicia el borrador sólo cuando cambia el lead (evita convertir B con datos de A).
-  const [leadIdBorrador, setLeadIdBorrador] = useState(lead.id);
-  if (leadIdBorrador !== lead.id) {
-    setLeadIdBorrador(lead.id);
+  useEffect(() => {
     setClienteId(lead.cliente_convertido_id ?? SIN_CLIENTE);
     setNombre(`Oportunidad — ${lead.empresa}`);
     setMonto("0");
     setMoneda("MXN");
     setFecha("");
-  }
+  }, [lead.id, lead.empresa, lead.cliente_convertido_id]);
 
   const yaConvertido = lead.estado === "Convertido" && lead.oportunidad_convertida_id;
 
