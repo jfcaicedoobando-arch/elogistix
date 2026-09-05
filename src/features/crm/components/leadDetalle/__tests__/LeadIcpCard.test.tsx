@@ -49,7 +49,7 @@ describe("LeadIcpCard", () => {
     expect(notifyError).not.toHaveBeenCalled();
   });
 
-  it("si falla no repite el aviso de error (el hook ya notifica)", async () => {
+  it("ICP: si falla no repite el aviso de error (el hook ya notifica)", async () => {
     mutateAsync.mockRejectedValueOnce(new Error("RLS denegado"));
     setup();
     fireEvent.change(screen.getByPlaceholderText(/Automotriz, agroindustria/i), {

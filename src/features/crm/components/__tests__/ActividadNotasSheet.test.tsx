@@ -57,7 +57,7 @@ describe("ActividadNotasSheet", () => {
     expect(errorToast).not.toHaveBeenCalled();
   });
 
-  it("si falla no repite el aviso de error (el hook ya notifica)", async () => {
+  it("notas: si falla no repite el aviso de error (el hook ya notifica)", async () => {
     mutateAsync.mockRejectedValueOnce(new Error("RLS denegado"));
     const onOpenChange = guardar();
     await waitFor(() => expect(mutateAsync).toHaveBeenCalledTimes(1));

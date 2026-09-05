@@ -55,7 +55,7 @@ describe("CriteriosEtapaEditor", () => {
     expect(successToast).toHaveBeenCalledWith("Criterio agregado");
   });
 
-  it("si la creación falla no repite el aviso de error (el hook ya notifica)", async () => {
+  it("criterio: si la creación falla no repite el aviso de error (el hook ya notifica)", async () => {
     mutateAsync.mockRejectedValueOnce(new Error("RLS denegado"));
     render(<CriteriosEtapaEditor />);
 

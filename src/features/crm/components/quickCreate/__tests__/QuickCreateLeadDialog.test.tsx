@@ -59,7 +59,7 @@ describe("QuickCreateLeadDialog", () => {
     expect(payload.empresa).toBe("Acme Logistics");
   });
 
-  it("si la creación falla no repite el aviso de error (el hook ya notifica)", async () => {
+  it("lead rápido: si la creación falla no repite el aviso de error (el hook ya notifica)", async () => {
     notifyError.mockClear();
     mutateAsync.mockRejectedValueOnce(new Error("RLS denegado"));
     render(<QuickCreateLeadDialog open onOpenChange={vi.fn()} onCreated={vi.fn()} onMore={vi.fn()} />);
