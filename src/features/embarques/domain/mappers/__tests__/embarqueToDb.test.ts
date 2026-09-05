@@ -72,9 +72,11 @@ describe("buildEmbarquePayload (toDb)", () => {
     expect(p.contenedor).toBe("C1");
   });
 
-  // v13.823.145 — Bug de auditoría: capturar peso/volumen/piezas en Datos
-  // generales y dejar la fila del contenedor en ceros dejaba el embarque en 0/0/0.
-  it("conserva los totales generales cuando las filas de contenedor están en ceros", () => {
+  // v13.823.151 (B4) — En FCL los contenedores son la única verdad (igual que el
+  // trigger de BD): una fila en ceros deja el total en cero de forma explícita.
+  // La pérdida silenciosa se evita sembrando el primer contenedor al cambiar a
+  // FCL (ver `domain/semillaContenedor.ts`).
+  it("respeta la suma de contenedores en cero (corrección explícita)", () => {
     const p = buildEmbarquePayload(
       {
         ...baseValues,
@@ -89,9 +91,9 @@ describe("buildEmbarquePayload (toDb)", () => {
       "X",
       "op",
     );
-    expect(p.peso_kg).toBe(12000);
-    expect(p.volumen_m3).toBe(35.5);
-    expect(p.piezas).toBe(8);
+    expect(p.peso_kg).toBe(0);
+    expect(p.volumen_m3).toBe(0);
+    expect(p.piezas).toBe(0);
   });
 
 
