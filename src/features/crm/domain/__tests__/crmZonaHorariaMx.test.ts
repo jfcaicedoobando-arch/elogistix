@@ -4,7 +4,7 @@
  * no el reloj del navegador. Antes un usuario en UTC veía otro día en
  * "Mis actividades de hoy", "Cerrando esta semana" y las próximas actividades.
  */
-import { describe, it, expect, afterAll } from "vitest";
+import { describe, it, expect, afterAll, vi } from "vitest";
 import { diaMx, diffDiasMx, limitesDiaMx } from "@/lib/date/mx";
 import { esHoy, esVencida } from "@/features/crm/domain/proximasActividades";
 import { formatProx } from "@/features/crm/domain/proximaActividadLabel";
@@ -85,11 +85,13 @@ describe("esHoy / esVencida con calendario MX", () => {
 
 describe("formatProx", () => {
   it("devuelve el asunto cuando no hay fecha programada", () => {
-    expect(formatProx({ id: "1", asunto: "Llamar", tipo: "llamada", fecha_programada: null, entidad_id: "op", entidad_tipo: "oportunidad" })).toBe("Llamar");
+    expect(
+      formatProx({ id: "1", asunto: "Llamar", tipo: "llamada", fecha_programada: null, entidad_id: "op", entidad_tipo: "oportunidad" }),
+    ).toBe("Llamar");
   });
 
-  it("etiqueta Hoy/Mañana/Vencida según el calendario MX", () => {
-    const base = (fecha: string) => ({
+  it("etiqueta Hoy/Mañana/Vencida según el calendario MX cerca de medianoche", () => {
+    const act = (fecha: string) => ({
       id: "1",
       asunto: "Llamar",
       tipo: "llamada",
@@ -97,10 +99,15 @@ describe("formatProx", () => {
       entidad_id: "op",
       entidad_tipo: "oportunidad" as const,
     });
-    const hoyMxIso = "2026-06-15T16:00:00Z";
-    // 2026-06-15 21:00 CDMX: "hoy" debe ser el 15, no el 16 (UTC).
-    conTz("UTC", () => {
-      expect(formatProx(base(hoyMxIso))).toContain("Hoy");
-    });
+    vi.useFakeTimers();
+    try {
+      // 21:00 CDMX del 15 (en UTC ya es el 16).
+      vi.setSystemTime(NOCHE_MX);
+      expect(formatProx(act("2026-06-15T16:00:00Z"))).toBe("Hoy · Llamar");
+      expect(formatProx(act("2026-06-16"))).toBe("Mañana · Llamar");
+      expect(formatProx(act("2026-06-14"))).toBe("Vencida · Llamar");
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });
