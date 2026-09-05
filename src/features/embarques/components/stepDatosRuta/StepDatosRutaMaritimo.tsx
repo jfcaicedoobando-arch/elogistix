@@ -125,6 +125,29 @@ export function StepDatosRutaMaritimo({ errors, cotizacionAgenteId, cotizacionNa
           <Input aria-label="Contenedores" value="LCL (Carga Consolidada) — se asigna automáticamente" disabled />
         ) : (
           <>
+            {mostrarAvisoConservar && (
+              <Alert variant="warning">
+                <AlertTriangle className="h-4 w-4" />
+                <AlertTitle>Las cantidades quedarían en cero</AlertTitle>
+                <AlertDescription className="space-y-2">
+                  <p>
+                    En FCL el peso, volumen y piezas se toman de los contenedores, y ninguna
+                    fila tiene cantidades. Se capturaron{" "}
+                    {formatNumber(Number(generales.pesoKg) || 0)} kg,{" "}
+                    {formatNumber(Number(generales.volumenM3) || 0)} m³ y{" "}
+                    {formatNumber(Number(generales.piezas) || 0)} piezas en Datos generales.
+                  </p>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={() => aplicarConservacion(contenedores)}
+                  >
+                    Pasar las cantidades al primer contenedor
+                  </Button>
+                </AlertDescription>
+              </Alert>
+            )}
             <Controller
               name="contenedores"
               render={({ field }) => (
