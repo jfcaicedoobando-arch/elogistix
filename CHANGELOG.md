@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.823.95] - 2026-09-05
+- CRM/configuración: `actualizarEtapa` exige la fila afectada (`update(...).select("id").maybeSingle()`); si RLS, un soft-delete o un id inexistente dejan 0 filas actualizadas, ahora lanza un error accionable y no registra bitácora ni muestra "Etapa actualizada" de un cambio que nunca ocurrió (mismo patrón que `actualizarOportunidadFilas`). La RPC de intercambio de orden no cambia. Regresiones: fila inexistente/RLS sin bitácora y éxito con bitácora única.
+
 ## [13.823.94] - 2026-09-05
 - CRM/Mi día: las mutaciones de leads y oportunidades (crear, actualizar, eliminar, tomar, calificar, convertir, lotes), crear cotización desde oportunidad y mover etapa con automatizaciones ahora invalidan `crm.nba-signals`, para que "Qué hacer ahora" no conserve recomendaciones obsoletas hasta 60s. Sin cambios en el scoring ni polling.
 

@@ -5,6 +5,9 @@ const mock = await vi.hoisted(async () => {
   return createSupabaseMock();
 });
 vi.mock("@/integrations/supabase/client", () => ({ supabase: mock.supabase }));
+vi.mock("@/services/bitacora/registrar", () => ({ registrarActividad: vi.fn() }));
+
+import { registrarActividad } from "@/services/bitacora/registrar";
 
 import {
   fetchEtapasPipelineActivas,
@@ -52,10 +55,26 @@ describe("services/crm/etapas", () => {
   });
 
   it("actualizarEtapa hace update con patch", async () => {
-    mock.setTableResult("crm_etapas_pipeline", { data: null, error: null });
+    mock.setTableResult("crm_etapas_pipeline", { data: { id: "e1" }, error: null });
     await actualizarEtapa({ id: "e1", patch: { nombre: "Nueva" } });
     const upd = mock.tableCalls[0].opArgs[mock.tableCalls[0].ops.indexOf("update")]?.[0];
     expect(upd).toEqual({ nombre: "Nueva" });
+  });
+
+  it("actualizarEtapa falla cuando el UPDATE no afecta filas (RLS/id inexistente) y no registra bitácora", async () => {
+    vi.mocked(registrarActividad).mockClear();
+    mock.setTableResult("crm_etapas_pipeline", { data: null, error: null });
+    await expect(actualizarEtapa({ id: "e1", patch: { nombre: "Nueva" } })).rejects.toThrow(
+      /no tienes permiso|ya no existe/i,
+    );
+    expect(registrarActividad).not.toHaveBeenCalled();
+  });
+
+  it("actualizarEtapa registra bitácora sólo cuando hubo fila afectada", async () => {
+    vi.mocked(registrarActividad).mockClear();
+    mock.setTableResult("crm_etapas_pipeline", { data: { id: "e1" }, error: null });
+    await expect(actualizarEtapa({ id: "e1", patch: { nombre: "Nueva" } })).resolves.toBeUndefined();
+    expect(registrarActividad).toHaveBeenCalledTimes(1);
   });
 
   it("actualizarEtapa propaga error", async () => {
