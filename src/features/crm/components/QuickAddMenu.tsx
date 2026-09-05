@@ -39,6 +39,11 @@ export interface QuickAddMenuProps {
 
 type Quick = "lead" | "oportunidad" | "actividad" | null;
 
+/** Sólo se transporta el borrador si el usuario alcanzó a capturar algo. */
+function conDatos<T extends object>(draft: T, campos: Array<keyof T>): T | null {
+  return campos.some((c) => Boolean(draft[c])) ? draft : null;
+}
+
 export default function QuickAddMenu({ openTrigger, dialogTrigger }: QuickAddMenuProps = {}) {
   const navigate = useNavigate();
   const { canCrearLead, canGestionarLeadsEnLote, canCrearOportunidad, canCrearActividad } = usePermissions();
@@ -135,7 +140,7 @@ export default function QuickAddMenu({ openTrigger, dialogTrigger }: QuickAddMen
         onCreated={(id) => navigate(`/crm/leads/${id}`)}
         onMore={(draft) => {
           setQuick(null);
-          setLeadDraft(draft.empresa || draft.contacto ? draft : null);
+          setLeadDraft(conDatos(draft, ["empresa", "contacto"]));
           setLeadOpen(true);
         }}
       />
@@ -155,7 +160,7 @@ export default function QuickAddMenu({ openTrigger, dialogTrigger }: QuickAddMen
         onCreated={() => navigate("/crm/actividades")}
         onMore={(draft) => {
           setQuick(null);
-          setActDraft(draft.asunto || draft.entidadId ? draft : null);
+          setActDraft(conDatos(draft, ["asunto", "entidadId"]));
           setActOpen(true);
         }}
       />
