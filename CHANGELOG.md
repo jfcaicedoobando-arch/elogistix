@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.823.111] - 2026-09-05
+- CRM zona horaria: centralizada la conversión hora CDMX → UTC en `mxLocalToUtcIso` (`src/lib/date/mx.ts`), helper puro basado en `Intl` con doble pasada para horario de verano. `NuevaOportunidadDialog`, `NuevoLeadDialog`, `QuickCreateActividadDialog` y `NuevaActividadDialog` ya no usan `new Date(valor).toISOString()`, que interpretaba el texto del `DateTimePickerMx` con la zona del navegador y desplazaba la hora persistida en equipos fuera de CDMX. Se conservan valores vacíos como `null`, el formato visible y la regla de días hábiles (`actividadDefaultFechaMx`). Regresiones con TZ distinta a CDMX (UTC, Asia/Tokyo, America/Los_Angeles, Europe/Madrid).
+
 ## [13.823.110] - 2026-09-05
 - CRM Lead Detalle: eliminada la redundancia visual en la ficha de prospecto. `LeadLineageCard` ahora se renderiza sólo cuando el lead NO es prospecto; para prospectos se mantiene `OportunidadesDelProspecto` (con su CTA de nueva oportunidad). Así no se duplican las mismas oportunidades en la pantalla. Se conservan la trazabilidad para leads no prospecto, permisos, queries y navegación. Regresión: una sola tarjeta para prospectos y `LeadLineageCard` para los demás estados.
 - CRM Lead Linaje: `LeadLineageCard` formatea la fecha estimada de cierre con `formatFechaDia` (canónico dd/MM/yyyy) en lugar de concatenar el ISO crudo; mantiene `—` cuando el valor es nulo. Sin cambios en la query ni en el enlace de la tarjeta. Regresión: rechazo de ISO crudo y fallback nulo.
