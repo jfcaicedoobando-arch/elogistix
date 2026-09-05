@@ -57,10 +57,10 @@ BEGIN
 
   -- 4 contenedores destino.
   INSERT INTO public.embarque_contenedores (embarque_id, organization_id, numero_contenedor, tipo_contenedor, orden)
-  VALUES (v_emb, v_org, 'PRORR0000001', '40HC', 1),
-         (v_emb, v_org, 'PRORR0000002', '40HC', 2),
-         (v_emb, v_org, 'PRORR0000003', '40HC', 3),
-         (v_emb, v_org, 'PRORR0000004', '40HC', 4);
+  VALUES (v_emb, v_org, 'ABCU1234561', '40HC', 1),
+         (v_emb, v_org, 'ABCU1234562', '40HC', 2),
+         (v_emb, v_org, 'ABCU1234563', '40HC', 3),
+         (v_emb, v_org, 'ABCU1234564', '40HC', 4);
 
   SELECT array_agg(id ORDER BY orden) INTO v_ids
     FROM public.embarque_contenedores
