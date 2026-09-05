@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.823.132] - 2026-09-05
+- CRM umbrales "lead sin contactar": se centralizan en `domain/umbralesContacto.ts` (`NBA_LEAD_SIN_CONTACTAR_HORAS=24` para las sugerencias de Mi día y `SEMANA_LEAD_SIN_CONTACTAR_DIAS=7` para la tarjeta semanal). Sin cambio de reglas: la FAQ de ayuda y la tarjeta ahora explican ambos umbrales explícitamente (la FAQ decía incorrectamente "3 días"). Regresión: textos de ayuda verificados contra las constantes.
+
 ## [13.823.131] - 2026-09-05
 - CRM soft-delete de etapas en KPIs/forecast: `dashboard.ts` filtra `crm_etapas_pipeline.deleted_at IS NULL` en los joins de oportunidades abiertas (pipeline/KPI y tarjeta "Cerrando esta semana") y `fetchEtapaTipos` (`forecast.ts`) ignora etapas eliminadas. Una oportunidad ligada a una etapa borrada ya no suma como abierta ni ganada, y las etapas activas conservan su comportamiento. Regresión: filtros de join, `fetchEtapaTipos` y forecast con etapa archivada.
 
