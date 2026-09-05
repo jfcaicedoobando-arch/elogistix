@@ -61,6 +61,9 @@ export function RevalidarTarifaModal({
       title={title}
       description={description}
       size="2xl"
+      // Mientras se crea el embarque o se solicita la re-aprobación no se
+      // permite cerrar con ESC / clic fuera / botón X (el shell marca aria-busy).
+      busy={loading}
       footer={
         <>
           <Button variant="ghost" onClick={() => onOpenChange(false)} disabled={loading}>
