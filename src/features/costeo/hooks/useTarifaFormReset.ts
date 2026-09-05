@@ -21,10 +21,10 @@ interface Params {
 
 export function useTarifaFormReset({ open, initial, agenteIdFijo, onReset }: Params) {
   const initialKey = JSON.stringify(initial ?? null);
-  const initialEstable = useMemo(
-    () => (JSON.parse(initialKey) as Partial<TarifaInput> | null) ?? undefined,
-    [initialKey],
-  );
+  // Se estabiliza por CONTENIDO: el objeto sólo cambia de identidad cuando su
+  // JSON cambia, así un refetch del padre no vuelve a disparar el reset.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const initialEstable = useMemo(() => initial, [initialKey]);
 
   useEffect(() => {
     if (!open) return;
