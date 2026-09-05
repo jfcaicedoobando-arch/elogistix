@@ -102,3 +102,41 @@ describe("RevalidarTarifaModal", () => {
     expect(screen.getByText(/Eliminado/i)).toBeInTheDocument();
   });
 });
+
+describe("RevalidarTarifaModal · operación en curso (busy)", () => {
+  it("con loading marca aria-busy y no cierra con Escape", () => {
+    const onOpenChange = vi.fn();
+    render(
+      <RevalidarTarifaModal
+        open
+        onOpenChange={onOpenChange}
+        resultado={baseRes()}
+        onMantener={() => {}}
+        onRefrescar={() => {}}
+        onSolicitarReaprobacion={() => {}}
+        loading
+      />,
+    );
+    const dialog = screen.getByRole("dialog");
+    expect(dialog).toHaveAttribute("aria-busy", "true");
+    fireEvent.keyDown(dialog, { key: "Escape" });
+    expect(onOpenChange).not.toHaveBeenCalled();
+  });
+
+  it("sin loading cierra normalmente con Cancelar", () => {
+    const onOpenChange = vi.fn();
+    render(
+      <RevalidarTarifaModal
+        open
+        onOpenChange={onOpenChange}
+        resultado={baseRes()}
+        onMantener={() => {}}
+        onRefrescar={() => {}}
+        onSolicitarReaprobacion={() => {}}
+      />,
+    );
+    expect(screen.getByRole("dialog")).toHaveAttribute("aria-busy", "false");
+    fireEvent.click(screen.getByRole("button", { name: /cancelar/i }));
+    expect(onOpenChange).toHaveBeenCalledWith(false);
+  });
+});
