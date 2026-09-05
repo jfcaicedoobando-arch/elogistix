@@ -29,18 +29,22 @@ interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   defaultEntidad?: { tipo: CrmEntidadTipo; id: string; label?: string };
+  /** Borrador que viene del alta express ("Más campos →"): no se pierde lo capturado. */
+  asuntoInicial?: string | null;
+  fechaInicial?: string | null;
+  entidadIdInicial?: string | null;
   onCreated?: (id: string) => void;
 }
 
-export default function NuevaActividadDialog({ open, onOpenChange, defaultEntidad, onCreated }: Props) {
+export default function NuevaActividadDialog({ open, onOpenChange, defaultEntidad, asuntoInicial, fechaInicial, entidadIdInicial, onCreated }: Props) {
   const crear = useCrearActividad();
   const enviandoRef = useRef(false);
   const [entidadTipo, setEntidadTipo] = useState<CrmEntidadTipo>(defaultEntidad?.tipo ?? "oportunidad");
-  const [entidadId, setEntidadId] = useState<string>(defaultEntidad?.id ?? "");
+  const [entidadId, setEntidadId] = useState<string>(defaultEntidad?.id ?? entidadIdInicial ?? "");
   const [tipo, setTipo] = useState<CrmActividadTipo>("tarea");
-  const [asunto, setAsunto] = useState("");
+  const [asunto, setAsunto] = useState(asuntoInicial ?? "");
   const [desc, setDesc] = useState("");
-  const [fecha, setFecha] = useState("");
+  const [fecha, setFecha] = useState(fechaInicial ?? "");
   const [contactoEfectivo, setContactoEfectivo] = useState(false);
   const [reunionCalificada, setReunionCalificada] = useState(false);
 
@@ -51,18 +55,18 @@ export default function NuevaActividadDialog({ open, onOpenChange, defaultEntida
   useEffect(() => {
     if (!open) return;
     setEntidadTipo(defTipo ?? "oportunidad");
-    setEntidadId(defId ?? "");
-    setTipo("tarea"); setAsunto(""); setDesc(""); setFecha("");
+    setEntidadId(defId ?? entidadIdInicial ?? "");
+    setTipo("tarea"); setAsunto(asuntoInicial ?? ""); setDesc(""); setFecha(fechaInicial ?? "");
     setContactoEfectivo(false); setReunionCalificada(false);
     setIntentado(false);
-  }, [open, defTipo, defId]);
+  }, [open, defTipo, defId, asuntoInicial, fechaInicial, entidadIdInicial]);
 
   const isDirty = useMemo(
     () =>
-      entidadTipo !== (defTipo ?? "oportunidad") || entidadId !== (defId ?? "") ||
-      tipo !== "tarea" || asunto !== "" || desc !== "" || fecha !== "" ||
+      entidadTipo !== (defTipo ?? "oportunidad") || entidadId !== (defId ?? entidadIdInicial ?? "") ||
+      tipo !== "tarea" || asunto !== (asuntoInicial ?? "") || desc !== "" || fecha !== (fechaInicial ?? "") ||
       contactoEfectivo || reunionCalificada,
-    [entidadTipo, defTipo, entidadId, defId, tipo, asunto, desc, fecha, contactoEfectivo, reunionCalificada],
+    [entidadTipo, defTipo, entidadId, defId, entidadIdInicial, tipo, asunto, asuntoInicial, desc, fecha, fechaInicial, contactoEfectivo, reunionCalificada],
   );
 
   // v13.823.77 — "Crear" no queda habilitado con Asunto u Oportunidad vacíos;
