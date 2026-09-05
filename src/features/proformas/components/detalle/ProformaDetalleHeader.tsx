@@ -13,12 +13,15 @@ import { EstadoBadges } from "@/features/proformas/components/ProformaDetalleCar
 import { DocumentoStatusStepper } from "@/components/shared/documento/DocumentoStatusStepper";
 import { resumenProforma } from "@/lib/domain/documentoEstados";
 import type { EstadoClienteProforma } from "@/features/proformas/domain/proformaClienteEstado";
+import type { FacturaCicloLite } from "@/lib/domain/etiquetaCicloProforma";
 
 interface Props {
   numero: string;
   estadoProforma: string;
   estadoCliente: EstadoClienteProforma;
   aceptadaPor: string | null;
+  /** B9: facturas generadas desde la proforma (borrador vs emitida). */
+  facturas?: FacturaCicloLite[];
   clienteNombre: string | null | undefined;
   expediente: string;
   /** Embarque vinculado: habilita el enlace y el fallback de folio. */
@@ -57,6 +60,7 @@ export function ProformaDetalleHeader({
           estadoProforma={estadoProforma}
           estadoCliente={estadoCliente}
           aceptadaPor={aceptadaPor}
+          facturas={facturas}
         />
       }
       subtitle={
