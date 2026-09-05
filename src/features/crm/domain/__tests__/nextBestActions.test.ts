@@ -98,3 +98,57 @@ describe("FIX-9: cierre próximo compara como día calendario LOCAL (MX)", () =>
     expect(cierre?.subtitulo).toContain("0 día");
   });
 });
+
+describe("etiquetas de actividad vencida", () => {
+  it("muestra 'Vencida hoy' cuando la actividad se venció hace menos de 1 día", () => {
+    const items = computeNextBestActions({
+      leadsSinContactar: [],
+      oportunidadesAbiertas: [],
+      cotizacionesSinRespuesta: [],
+      actividadesVencidas: [
+        { id: "a0", asunto: "Hoy", fecha_programada: isoHoursAgo(4), entidad_tipo: "lead", entidad_id: "l1" },
+      ],
+      now: NOW,
+    });
+    expect(items[0].subtitulo).toBe("Vencida hoy");
+  });
+
+  it("muestra 'Vencida hace 1 día' para exactamente 1 día de retraso", () => {
+    const items = computeNextBestActions({
+      leadsSinContactar: [],
+      oportunidadesAbiertas: [],
+      cotizacionesSinRespuesta: [],
+      actividadesVencidas: [
+        { id: "a1", asunto: "Ayer", fecha_programada: isoDaysAgo(1), entidad_tipo: "lead", entidad_id: "l1" },
+      ],
+      now: NOW,
+    });
+    expect(items[0].subtitulo).toBe("Vencida hace 1 día");
+  });
+
+  it("muestra 'Vencida hace N días' para varios días de retraso", () => {
+    const items = computeNextBestActions({
+      leadsSinContactar: [],
+      oportunidadesAbiertas: [],
+      cotizacionesSinRespuesta: [],
+      actividadesVencidas: [
+        { id: "a5", asunto: "Hace 5", fecha_programada: isoDaysAgo(5), entidad_tipo: "lead", entidad_id: "l1" },
+      ],
+      now: NOW,
+    });
+    expect(items[0].subtitulo).toBe("Vencida hace 5 días");
+  });
+
+  it("conserva la etiqueta genérica 'Vencida' cuando no hay fecha programada", () => {
+    const items = computeNextBestActions({
+      leadsSinContactar: [],
+      oportunidadesAbiertas: [],
+      cotizacionesSinRespuesta: [],
+      actividadesVencidas: [
+        { id: "aNull", asunto: "Sin fecha", fecha_programada: null, entidad_tipo: "lead", entidad_id: "l1" },
+      ],
+      now: NOW,
+    });
+    expect(items[0].subtitulo).toBe("Vencida");
+  });
+});
