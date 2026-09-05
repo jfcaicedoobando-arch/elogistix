@@ -8,6 +8,7 @@ import { SectionHeading } from "@/components/shared/SectionHeading";
 import { formatCurrency, formatCurrencyCompact } from "@/lib/formatters";
 import { useForecast } from "@/features/crm/hooks";
 import { primerDiaMesMx, ultimoDiaMesMx } from "@/lib/date/mx";
+import { ErrorStateInline } from "@/components/empty/ErrorStateInline";
 import { CrmStatStripItem } from "./CrmStatStripItem";
 
 const STRIP_CLASS =
@@ -25,7 +26,7 @@ function TiraPlaceholder({ valor }: { valor: string }) {
 
 export function CrmForecastMesKpis() {
   // FIX-8 (auditoría): "Forecast del mes" es SOLO el mes en curso, calendario MX.
-  const { data: forecast, isLoading } = useForecast(primerDiaMesMx(0), ultimoDiaMesMx(0));
+  const { data: forecast, isLoading, isError, refetch } = useForecast(primerDiaMesMx(0), ultimoDiaMesMx(0));
   const totalesPorMoneda = forecast?.totalesPorMoneda ?? [];
 
   return (
@@ -33,7 +34,9 @@ export function CrmForecastMesKpis() {
       <SectionHeading as="h2" variant="overline">
         Forecast del mes
       </SectionHeading>
-      {isLoading ? (
+      {isError ? (
+        <ErrorStateInline message="No se pudo cargar el forecast del mes." onRetry={() => void refetch()} />
+      ) : isLoading ? (
         <TiraPlaceholder valor="…" />
       ) : totalesPorMoneda.length === 0 ? (
         <TiraPlaceholder valor={formatCurrencyCompact(0, "MXN")} />
