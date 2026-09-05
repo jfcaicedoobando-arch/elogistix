@@ -56,6 +56,7 @@ export default function QuickCreateLeadDialog({ open, onOpenChange, onCreated, o
     if (abiertoAntes.current && !open) {
       setEmpresa("");
       setContacto("");
+      setEmpresaTouched(false);
     }
     abiertoAntes.current = open;
   }, [open]);

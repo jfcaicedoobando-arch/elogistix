@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.823.117] - 2026-09-05
+- CRM QuickCreateLeadDialog: `empresaTouched` ahora se resetea junto con los campos cuando el modal se cierra de verdad (transición `open` true → false). Antes, al volver a abrir el diálogo seguía mostrándose inmediatamente "Indica la empresa para continuar.", aunque el usuario no hubiera interactuado. Se conservan la validación al blur/submit y el guard anti doble envío. Regresión: blur vacío, cerrar, reabrir y verificar que el error no aparece hasta una nueva interacción.
+
 ## [13.823.116] - 2026-09-05
 - CRM altas express: "Más campos →" ya no pierde lo capturado. `QuickCreateActividadDialog` entrega un borrador mínimo (`asunto`, `entidadId`, `tipo: "tarea"`, `fecha`) y `QuickCreateLeadDialog` entrega `empresa` + `contacto`; `QuickAddMenu` los conserva mientras el formulario completo está abierto y los limpia al cerrarlo (mismo patrón ya usado para oportunidad). `NuevaActividadDialog` acepta `asuntoInicial` / `fechaInicial` / `entidadIdInicial` y `NuevoLeadDialog` acepta `draftInicial`, mapeando el contacto al campo canónico (`email` o `telefono`) con `esCorreoCapturado`, sin inventar datos. Se conservan el reset al cerrar, el guard anti doble envío y el flujo de creación rápida. Regresiones: capturar valores, pulsar "Más campos" y verificar que se conservan (correo vs teléfono incluidos) y que sin borrador el formulario sigue abriendo vacío.
 
