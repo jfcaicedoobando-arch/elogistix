@@ -200,5 +200,6 @@ export function diffDiasMx(
   const a = diaMx(desde);
   const b = diaMx(hasta);
   if (!a || !b) return null;
-  return Math.round((parseLocalMx(b).getTime() - parseLocalMx(a).getTime()) / 86_400_000);
+  // El conteo de días vive en un solo lugar (`dateOnly.diffDiasCalendario`).
+  return diffDiasCalendario(parseLocalMx(a), parseLocalMx(b));
 }

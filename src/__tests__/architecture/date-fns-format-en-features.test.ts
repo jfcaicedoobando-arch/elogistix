@@ -16,7 +16,7 @@ import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import { sync as globSync } from "fast-glob";
 
-const DEUDA_CONGELADA = 11; // v13.823.7: `calcularPulso` pasó a `diaNegocio` (hoyMx).
+const DEUDA_CONGELADA = 9; // v13.823.150: quedan 9 usos reales tras migrar CRM a helpers MX.
 const HOLGURA = 4;
 const MAX_USOS = DEUDA_CONGELADA + HOLGURA;
 

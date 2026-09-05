@@ -11,7 +11,7 @@ import {
   isTransientCfdiUploadNetwork,
   shouldReportToSentry,
 } from "../appFeedback.sentry";
-import { CfdiUploadError } from "@/features/cxp/services/parseCfdi.types";
+import { CfdiUploadError } from "@/features/cxp/services";
 
 function cfdiError(phase: "preflight" | "request" | "response"): CfdiUploadError {
   return new CfdiUploadError(
