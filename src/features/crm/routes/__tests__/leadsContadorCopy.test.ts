@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import { copiaContadorLeads } from "@/features/crm/routes/leadsContadorCopy";
 
 describe("copiaContadorLeads", () => {
-  it("usa singular con 1", () => {
+  it("contador de leads: usa singular con 1", () => {
     expect(copiaContadorLeads(1, false)).toBe("1 lead en cartera");
     expect(copiaContadorLeads(1, true)).toBe("1 lead coincide con los filtros");
   });

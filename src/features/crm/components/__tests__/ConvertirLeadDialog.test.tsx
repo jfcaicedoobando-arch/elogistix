@@ -101,7 +101,7 @@ describe("ConvertirLeadDialog · reinicio de borrador al cambiar de lead", () =>
       .toBe("Oportunidad — BETA SA");
   });
 
-  it("no arrastra valores editados de lead A al cambiar a lead B", () => {
+  it("dialog: no arrastra valores editados de lead A al cambiar a lead B", () => {
     const { rerender } = renderDialog();
     fireEvent.change(screen.getByLabelText("Nombre de la oportunidad"), { target: { value: "Editado A" } });
     fireEvent.change(screen.getByLabelText("Monto estimado"), { target: { value: "12345" } });
@@ -116,7 +116,7 @@ describe("ConvertirLeadDialog · reinicio de borrador al cambiar de lead", () =>
     expect((screen.getByLabelText("Monto estimado") as HTMLInputElement).value).toBe("0");
   });
 
-  it("conserva la edición mientras el mismo lead sigue abierto", () => {
+  it("dialog: conserva la edición mientras el mismo lead sigue abierto", () => {
     const { rerender } = renderDialog();
     const input = screen.getByLabelText("Nombre de la oportunidad");
     fireEvent.change(input, { target: { value: "Editado A" } });

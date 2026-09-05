@@ -32,7 +32,7 @@ describe("intercambiarOrdenEtapas", () => {
     expect(mock.tableCalls.some((c) => c.table === "crm_etapas_pipeline")).toBe(false);
   });
 
-  it("propaga el error de la RPC", async () => {
+  it("orden de etapas: propaga el error de la RPC", async () => {
     mock.setRpcResult("crm_intercambiar_orden_etapas", { data: null, error: { message: "boom" } });
     await expect(intercambiarOrdenEtapas({ etapaA: "e1", etapaB: "e2" })).rejects.toThrow();
   });

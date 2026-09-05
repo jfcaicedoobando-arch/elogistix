@@ -44,7 +44,7 @@ describe("ComentariosOportunidad", () => {
     expect(notifyError).not.toHaveBeenCalled();
   });
 
-  it("si falla no repite el aviso de error (el hook ya notifica)", async () => {
+  it("comentarios: si falla no repite el aviso de error (el hook ya notifica)", async () => {
     mutateAsync.mockRejectedValueOnce(new Error("RLS denegado"));
     render(<ComentariosOportunidad oportunidadId="op1" canEdit />);
     publicar();

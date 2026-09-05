@@ -66,7 +66,7 @@ describe("useLeadDetalleAcciones", () => {
     expect(notifyError).not.toHaveBeenCalled();
   });
 
-  it("si eliminar falla no repite el aviso ni navega", async () => {
+  it("lead: si eliminar falla no repite el aviso ni navega", async () => {
     eliminarMutateAsync.mockRejectedValueOnce(new Error("tiene cotizaciones"));
     const { result } = renderHook(() =>
       useLeadDetalleAcciones("l1", { id: "l1", empresa: "ACME" }, {}),

@@ -77,7 +77,7 @@ describe("NuevoLeadDialog — validación de correo", () => {
     );
   });
 
-  it("si la creación falla no repite el aviso de error (el hook ya notifica)", async () => {
+  it("lead completo: si la creación falla no repite el aviso de error (el hook ya notifica)", async () => {
     notifyError.mockClear();
     mutateAsync.mockRejectedValueOnce(new Error("RLS denegado"));
     render(<NuevoLeadDialog open onOpenChange={vi.fn()} />);

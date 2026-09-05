@@ -51,7 +51,7 @@ describe("useOportunidadDetalleActions", () => {
     expect(notifyError).not.toHaveBeenCalled();
   });
 
-  it("si eliminar falla no repite el aviso ni navega", async () => {
+  it("oportunidad: si eliminar falla no repite el aviso ni navega", async () => {
     eliminarMutateAsync.mockRejectedValueOnce(new Error("tiene cotizaciones"));
     const { result } = renderHook(() => useOportunidadDetalleActions(op, []));
     await result.current.handleEliminar();

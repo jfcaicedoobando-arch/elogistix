@@ -117,7 +117,7 @@ describe("QuickCreateOportunidadDialog", () => {
     await waitFor(() => expect(mutateAsync).not.toHaveBeenCalled());
   });
 
-  it("si la creación falla no repite el aviso de error (el hook ya notifica)", async () => {
+  it("oportunidad rápida: si la creación falla no repite el aviso de error (el hook ya notifica)", async () => {
     notifyError.mockClear();
     mutateAsync.mockRejectedValueOnce(new Error("RLS denegado"));
     etapasMock.length = 0;
