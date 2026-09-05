@@ -32,8 +32,9 @@ interface Props {
   onClickCard: (id: string) => void;
   proximasMap: Map<string, ProximaActividad>;
   avanceMap: Map<string, AvanceCriterios>;
-  /** CTA del estado vacío (E-11). Sin esto, la columna vacía no muestra acción. */
-  onNuevo?: () => void;
+  /** CTA del estado vacío (E-11). Recibe el id de ESTA etapa para prefijarla
+      en el formulario; sin esto la oportunidad nacía en otra columna. */
+  onNuevo?: (etapaId: string) => void;
   /** Permiso real de mover cada oportunidad entre etapas. */
   puedeArrastrar?: (op: CrmOportunidadRow) => boolean;
 }
@@ -88,7 +89,7 @@ export default function ColumnaEtapa({ etapa, ops, onClickCard, proximasMap, ava
             icon={Briefcase}
             message="Sin oportunidades"
             density="compact"
-            action={!esCerrada && onNuevo ? { label: "Nueva oportunidad", onClick: onNuevo } : undefined}
+            action={!esCerrada && onNuevo ? { label: "Nueva oportunidad", onClick: () => onNuevo(etapa.id) } : undefined}
           />
         )}
         {ocultas > 0 && (
