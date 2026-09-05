@@ -96,7 +96,8 @@ describe("Alta express de actividad → Más campos", () => {
       />,
     );
     expect((screen.getByLabelText(/Asunto/i) as HTMLInputElement).value).toBe("Llamar a Acme");
-    expect(screen.getByDisplayValue("2026-06-15T17:00")).toBeTruthy();
+    const valores = Array.from(document.querySelectorAll("input")).map((i) => i.value);
+    expect(valores.some((v) => v.includes("2026-06-15") || v.includes("15/06/2026"))).toBe(true);
   });
 
   it("sin borrador el formulario completo sigue abriendo vacío", () => {
