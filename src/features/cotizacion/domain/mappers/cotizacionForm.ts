@@ -34,7 +34,7 @@ function partesCliente(d: CotizacionInitialData) {
     leadId: "",
     // A1/A7: se conserva la moneda ya persistida como moneda del vínculo, para
     // que reeditar un borrador no la cambie a USD sin que el usuario lo pida.
-    monedaCrm: (d.moneda === "MXN" || d.moneda === "USD" ? d.moneda : "") as "USD" | "MXN" | "",
+    monedaCrm: d.moneda === "MXN" ? "MXN" : d.moneda === "USD" ? "USD" : "",
     prospectoEmpresa: d.prospecto_empresa ?? "",
     prospectoContacto: d.prospecto_contacto ?? "",
     prospectoEmail: d.prospecto_email ?? "",
