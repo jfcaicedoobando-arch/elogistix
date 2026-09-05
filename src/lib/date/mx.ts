@@ -161,3 +161,44 @@ export function mxAddDaysIso(iso: string | null | undefined, dias: number, base:
   dia.setUTCDate(dia.getUTCDate() + dias);
   return mxLocalToUtcIso(`${isoUtcDay(dia)}T${hora}`) ?? instante.toISOString();
 }
+
+/**
+ * Día de negocio (`YYYY-MM-DD`, calendario CDMX) de un valor date-only o ISO
+ * con hora. Los date-only ya SON días de negocio: se devuelven tal cual (no
+ * se reinterpretan como UTC). Devuelve `null` si el valor no es parseable.
+ */
+export function diaMx(valor: string | Date | null | undefined): string | null {
+  if (!valor) return null;
+  if (typeof valor === "string" && /^\d{4}-\d{2}-\d{2}$/.test(valor.trim())) {
+    return valor.trim();
+  }
+  const d = typeof valor === "string" ? new Date(valor) : valor;
+  return Number.isNaN(d.getTime()) ? null : hoyMx(d);
+}
+
+/**
+ * Límites (ISO UTC) del día de negocio CDMX que contiene `base`. Es la ÚNICA
+ * forma correcta de acotar "hoy" en consultas: `setHours(0,0,0,0)` usa el reloj
+ * del navegador, así que un usuario en UTC veía el día equivocado.
+ */
+export function limitesDiaMx(base: Date = new Date()): { inicio: string; fin: string } {
+  const dia = hoyMx(base);
+  return {
+    inicio: mxLocalToUtcIso(`${dia}T00:00:00`) ?? base.toISOString(),
+    fin: mxLocalToUtcIso(`${dia}T23:59:59`) ?? base.toISOString(),
+  };
+}
+
+/**
+ * Días de calendario CDMX entre dos valores (positivo si `hasta` es posterior).
+ * Inmune a la zona del navegador y al horario de verano.
+ */
+export function diffDiasMx(
+  desde: string | Date | null | undefined,
+  hasta: string | Date | null | undefined,
+): number | null {
+  const a = diaMx(desde);
+  const b = diaMx(hasta);
+  if (!a || !b) return null;
+  return Math.round((parseLocalMx(b).getTime() - parseLocalMx(a).getTime()) / 86_400_000);
+}
