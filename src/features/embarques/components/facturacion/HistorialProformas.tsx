@@ -26,15 +26,29 @@ interface Props {
   /** Mantengo la firma para no romper TabFacturacion; ya no se usa inline. */
   onDescargar: (proformaId: string) => void;
   onEliminar: (id: string, numero: string) => void;
+  /**
+   * B9: facturas del embarque. Sirve para distinguir una proforma convertida a
+   * factura BORRADOR de una realmente emitida (el estado de la proforma pasa a
+   * `facturada` en cuanto se convierte).
+   */
+  facturas?: { estado: string; proforma_id?: string | null }[];
 }
 
-function renderEstado(p: ProformaConFactura, proformas: ProformaConFactura[]) {
+function renderEstado(
+  p: ProformaConFactura,
+  proformas: ProformaConFactura[],
+  emitidas: Set<string>,
+) {
   const rev = p.estado_revision ?? "aprobada";
   const vacio = esBorradorVacio(p);
   const unificado = getEstadoUnificado(p);
 
   // 1. Cerrados / especiales — mantienen su badge propio.
-  if (unificado === "facturada") return <Badge variant="success" className="w-fit">Facturada</Badge>;
+  if (unificado === "facturada") {
+    return emitidas.has(p.id)
+      ? <Badge variant="success" className="w-fit">Facturada</Badge>
+      : <Badge variant="info" className="w-fit">Convertida a borrador</Badge>;
+  }
   if (vacio) return (
     <Badge variant="outline" className="w-fit bg-warning/10 text-warning border-warning/30">
       Borrador vacío
@@ -72,9 +86,15 @@ function totalUnico(p: ProformaConFactura) {
 }
 
 export function HistorialProformas({
-  proformas, canEdit, isDeleting, onEliminar,
+  proformas, canEdit, isDeleting, onEliminar, facturas = [],
 }: Props) {
-  const facturadasCount = proformas.filter(p => p.estado_proforma === "facturada").length;
+  const emitidas = new Set(
+    facturas
+      .filter(f => facturaEmitida({ estado: f.estado }) && f.proforma_id)
+      .map(f => f.proforma_id as string),
+  );
+  const convertidasCount = proformas.filter(p => p.estado_proforma === "facturada").length;
+  const facturadasCount = proformas.filter(p => emitidas.has(p.id)).length;
 
   const columns: ColumnDef<ProformaConFactura, unknown>[] = defineColumns<ProformaConFactura>([
     { id: "numero", header: "Número", meta: { className: "font-medium" }, cell: ({ row }) => row.original.numero },
@@ -156,6 +176,9 @@ export function HistorialProformas({
           <span className="text-body-sm text-muted-foreground">
             {proformas.length} proforma{proformas.length === 1 ? "" : "s"}
             {facturadasCount > 0 && <> · {facturadasCount} facturada{facturadasCount === 1 ? "" : "s"}</>}
+            {convertidasCount - facturadasCount > 0 && (
+              <> · {convertidasCount - facturadasCount} en borrador</>
+            )}
           </span>
         )}
       </CardHeader>
