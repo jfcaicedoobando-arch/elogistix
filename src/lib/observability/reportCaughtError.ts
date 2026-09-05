@@ -61,6 +61,8 @@ const BUSINESS_ERROR_NAMES = new Set<string>([
   "CreditLimitError",
   "ValidationError",
   "ZodError",
+  // Sentry -61/-62: guardas de negocio del cliente (vigencia, monedas).
+  "ReglaNegocioError",
 ]);
 
 /**
@@ -76,9 +78,9 @@ function isExpectedBusinessError(
 ): boolean {
   if (errName && BUSINESS_ERROR_NAMES.has(errName)) return true;
   if (pgCode && EXPECTED_PG_CODES.has(pgCode)) return true;
-  if (pgCode === "P0001" && typeof message === "string" && message.startsWith("LC_")) {
-    return true;
-  }
+  // Sentry -60: los códigos LC_* son contrato de dominio con cualquier
+  // ERRCODE (P0001, 22023, …); el prefijo del mensaje es la señal confiable.
+  if (typeof message === "string" && message.startsWith("LC_")) return true;
   return false;
 }
 
