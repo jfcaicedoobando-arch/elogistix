@@ -47,3 +47,21 @@ describe("etiquetaProformaConvertida", () => {
     expect(etiquetaProformaConvertida([])).toBe("Facturada");
   });
 });
+
+/** Remate B9 (v13.823.152): "Por timbrar" es preparación, no emisión. */
+describe("estados de preparación", () => {
+  it("no cuenta 'Por timbrar' como emitida", () => {
+    expect(facturaEmitida({ estado: "Por timbrar" })).toBe(false);
+    expect(contarFacturasEmitidas([{ estado: "Borrador" }, { estado: "Por timbrar" }])).toBe(0);
+    expect(etiquetaProformaConvertida([{ estado: "Por timbrar" }])).toBe("Convertida, por timbrar");
+  });
+
+  it("no asume emisión ante estados desconocidos", () => {
+    expect(facturaEmitida({ estado: "Otro estado" })).toBe(false);
+  });
+
+  it("reconoce los estados posteriores a la emisión", () => {
+    expect(facturaEmitida({ estado: "Parcialmente pagada" })).toBe(true);
+    expect(facturaEmitida({ estado: "Sustituida" })).toBe(true);
+  });
+});

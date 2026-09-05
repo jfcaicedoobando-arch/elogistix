@@ -3,6 +3,7 @@ import {
   resumenDocumento,
   resumenFacturaEmitida,
   resumenFacturaRecibida,
+  resumenProforma,
 } from "@/lib/domain/documentoEstados";
 
 describe("documentoEstados — factura emitida", () => {
@@ -49,5 +50,26 @@ describe("resumenDocumento", () => {
   it("enruta al dominio correcto", () => {
     expect(resumenDocumento("factura_emitida", { estado: "Pagada" }).pasos[2].label).toBe("Emitida");
     expect(resumenDocumento("factura_recibida", { estado: "Pagada" }).pasos[2].label).toBe("Aprobada");
+  });
+});
+
+describe("resumenProforma — conversión vs emisión (B9)", () => {
+  it("se queda en Aceptada con matiz cuando la factura no se emitió", () => {
+    const r = resumenProforma({
+      estadoCliente: "aceptada",
+      facturada: true,
+      facturaEmitida: false,
+      etiquetaConversion: "Convertida a borrador",
+    });
+    expect(r.indiceActual).toBe(2);
+    expect(r.subEtiqueta).toBe("Convertida a borrador");
+  });
+
+  it("llega a Facturada cuando la factura ya se emitió", () => {
+    expect(resumenProforma({ estadoCliente: "aceptada", facturada: true, facturaEmitida: true }).indiceActual).toBe(3);
+  });
+
+  it("mantiene el comportamiento previo si no se conocen las facturas", () => {
+    expect(resumenProforma({ estadoCliente: "aceptada", facturada: true }).indiceActual).toBe(3);
   });
 });
