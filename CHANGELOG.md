@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.823.105] - 2026-09-05
+- CRM: la tarea automática de seguimiento al crear una oportunidad (`NuevaOportunidadDialog.crearActividadSeguimiento`) ya no calcula "mañana 9:00" con el reloj local del navegador; ahora usa la regla centralizada `actividadDefaultFechaMx` (calendario CDMX con salto al siguiente día hábil) y la convierte a ISO, igual que el alta de lead. Así la tarea nunca cae en sábado/domingo. Se conserva la mutación silenciosa, el aviso específico cuando la actividad falla y no se alteran fechas de oportunidades existentes. Regresiones: viernes por la tarde, sábado y independencia del reloj local.
+
 ## [13.823.104] - 2026-09-05
 - CRM Configuración: en `EtapasPipelineEditor` un refetch (por ejemplo tras guardar otra fila) ya no borra los cambios sin guardar de las demás filas. El nuevo merge (`etapasPipelineDraft.ts`) conserva el borrador local de cada fila sucia, rehidrata sólo las filas limpias, permite que la fila guardada adopte el valor confirmado y descarta borradores de filas eliminadas. Sin cambios en el RPC ni en el ordenamiento. Regresiones: editar A + refetch de B conserva A; rehidratación de filas limpias y descarte de filas inexistentes.
 
