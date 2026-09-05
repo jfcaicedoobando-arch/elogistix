@@ -161,20 +161,6 @@ export function LandingHero() {
           </p>
         </div>
       </div>
-
-      {/* KPIs strip */}
-      <div className="relative border-t border-primary-foreground/10 bg-primary">
-        <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
-          <div className="grid grid-cols-3 gap-4 text-center">
-            {KPIS.map((k) => (
-              <div key={k.label}>
-                <p className="text-2xl font-bold text-primary-foreground sm:text-3xl">{k.value}</p>
-                <p className="mt-1 text-xs leading-snug text-primary-foreground/75 sm:text-sm">{k.label}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
     </section>
   );
 }
