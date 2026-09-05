@@ -1,9 +1,11 @@
 /**
  * Servicio CRM — señales para Next Best Actions
  * (leads sin contactar > 24h y oportunidades abiertas).
+ * Umbrales canónicos en `@/features/crm/domain/umbralesContacto`.
  */
 import { supabase } from "@/integrations/supabase/client";
 import { filtroVendedor } from "./scopePersonal";
+import { NBA_LEAD_SIN_CONTACTAR_HORAS } from "@/features/crm/domain/umbralesContacto";
 
 export interface NbaSignals {
   leadsSinContactar: { id: string; empresa: string; created_at: string }[];
