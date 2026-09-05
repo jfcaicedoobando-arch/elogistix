@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.823.134] - 2026-09-05
+- CRM dashboard: regresión que blinda la propagación de errores en `fetchCrmDashboard`. La corrección ya existía (6 consultas pasan por `assertSinErrores` y la paginada de oportunidades abiertas lanza desde el paginador); se agregan pruebas que verifican que un fallo en una consulta de conteo o en la paginada rechaza la promesa (el tablero puede mostrar estado de error/reintento) y que sin error las métricas se conservan. Sin cambios de lógica.
+
 ## [13.823.133] - 2026-09-05
 - CRM Next Best Actions (`nextBestActions.ts`): las actividades vencidas dentro de las últimas 24h ya no muestran la etiqueta ambigua "Vencida hace 0 días"; ahora se lee "Vencida hoy". Se conservan "Vencida hace N día(s)" para N>0, la prioridad, el orden y el cálculo de antigüedad. Regresión: etiquetas para 0, 1, varios días y fecha nula.
 
