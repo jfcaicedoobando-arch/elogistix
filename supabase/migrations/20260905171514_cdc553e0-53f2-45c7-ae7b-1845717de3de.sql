@@ -1,7 +1,3 @@
--- Fuente canónica de public.saldo_factura.
--- v13.646.0 (BUG-04): las notas de crédito se convierten a la moneda de la
--- factura con la cascada CFDI > DOF > TC del embarque, igual que cartera_pendiente.
-
 CREATE OR REPLACE FUNCTION public.saldo_factura(p_factura_id uuid)
  RETURNS numeric
  LANGUAGE plpgsql
@@ -66,33 +62,3 @@ $function$;
 
 REVOKE ALL ON FUNCTION public.saldo_factura(uuid) FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.saldo_factura(uuid) TO authenticated, service_role;
-
--- Guard: impide registrar NC en moneda no convertible.
-CREATE OR REPLACE FUNCTION public.guard_nc_cliente_moneda_convertible()
-RETURNS TRIGGER
-LANGUAGE plpgsql
-SET search_path = public
-AS $$
-DECLARE
-  v_moneda text; v_tc numeric;
-BEGIN
-  IF NEW.estado <> 'Aplicada'::public.estado_nota_credito THEN RETURN NEW; END IF;
-
-  SELECT f.moneda::text, f.tipo_cambio INTO v_moneda, v_tc
-  FROM public.facturas f WHERE f.id = NEW.factura_id;
-  IF v_moneda IS NULL OR NEW.moneda::text = v_moneda THEN RETURN NEW; END IF;
-
-  IF NEW.moneda::text <> 'MXN' AND COALESCE(NEW.tipo_cambio, 0) <= 1 THEN
-    RAISE EXCEPTION 'LC_NC_MONEDA_SIN_TC: captura el tipo de cambio de la nota de crédito en % antes de aplicarla', NEW.moneda
-      USING ERRCODE = '22023';
-  END IF;
-  IF v_moneda <> 'MXN' AND COALESCE(v_tc, 0) <= 1 THEN
-    RAISE EXCEPTION 'LC_NC_MONEDA_SIN_TC: la factura en % no tiene tipo de cambio para convertir la nota de crédito', v_moneda
-      USING ERRCODE = '22023';
-  END IF;
-  RETURN NEW;
-END;
-$$;
-
-REVOKE ALL ON FUNCTION public.guard_nc_cliente_moneda_convertible() FROM PUBLIC, anon;
-GRANT EXECUTE ON FUNCTION public.guard_nc_cliente_moneda_convertible() TO authenticated, service_role;

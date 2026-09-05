@@ -37,13 +37,18 @@ const num = (v: unknown): number => {
   return Number.isFinite(n) ? n : 0;
 };
 
-/** Estados en los que la factura NO puede tener saldo por cobrar. */
+/**
+ * Estados en los que la factura NO puede tener saldo por cobrar.
+ * v13.823.145 — `Borrador` SÍ genera saldo: un CFDI aún sin timbrar debe verse
+ * como pendiente por cobrar (antes el encabezado mostraba "Cobrado = total" y
+ * "pendiente 0" sin un solo pago capturado).
+ */
 export const ESTADOS_SIN_SALDO = [
   "Pagada",
   "Cancelada",
   "Sustituida",
-  "Borrador",
 ] as const;
+
 
 export function esEstadoSinSaldo(estado?: string | null): boolean {
   return !!estado && (ESTADOS_SIN_SALDO as readonly string[]).includes(estado);

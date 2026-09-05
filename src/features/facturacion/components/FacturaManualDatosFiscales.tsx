@@ -151,9 +151,14 @@ export function FacturaManualDatosFiscales({ value, onChange, diasReadonly, dias
             </Hint>
           )}
         </div>
-        {requiereTc && ayudaTcContraMxn(value.moneda) && (
-          <p className="text-label text-muted-foreground">{ayudaTcContraMxn(value.moneda)}</p>
+        {requiereTc && (
+          <p className="text-label text-muted-foreground">
+            {ayudaTcContraMxn(value.moneda) ? `${ayudaTcContraMxn(value.moneda)} ` : ""}
+            Al guardar, el sistema fija el tipo de cambio DOF de la fecha de emisión:
+            el valor capturado puede ser reemplazado.
+          </p>
         )}
+
       </div>
     </div>
   );

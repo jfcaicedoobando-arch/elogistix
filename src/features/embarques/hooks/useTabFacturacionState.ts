@@ -23,7 +23,10 @@ type EmbarqueRow = Tables<"embarques">;
 
 export function useTabFacturacionState(embarque: EmbarqueRow, canEditProp: boolean) {
   const embarqueCerrado = embarque.estado === "Cerrado";
-  const canEdit = canEditProp && !embarqueCerrado;
+  // v13.823.145 — Un embarque en Borrador todavía no está confirmado: no debe
+  // poder generar ni aprobar proformas (antes la UI advertía pero lo permitía).
+  const embarqueBorrador = embarque.estado === "Borrador";
+  const canEdit = canEditProp && !embarqueCerrado && !embarqueBorrador;
   const tasaIva = useTasaIVA();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dialogInitialFiltro, setDialogInitialFiltro] = useState<FiltroContenedor>("todos");
@@ -67,6 +70,7 @@ export function useTabFacturacionState(embarque: EmbarqueRow, canEditProp: boole
 
   return {
     embarqueCerrado,
+    embarqueBorrador,
     canEdit,
     tasaIva,
     conceptos,

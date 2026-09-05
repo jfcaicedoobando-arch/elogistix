@@ -26,7 +26,7 @@ describe("calcularSaldoFactura (canon A1)", () => {
   });
 
   // BUG-2026-08-25: facturas legacy marcadas Pagada sin pagos capturados.
-  it.each(["Pagada", "Cancelada", "Sustituida", "Borrador"])(
+  it.each(["Pagada", "Cancelada", "Sustituida"])(
     "devuelve saldo 0 en estado terminal %s aunque no haya pagos",
     (estado) => {
       const r = calcularSaldoFactura(1000, [], [], estado);
@@ -35,6 +35,13 @@ describe("calcularSaldoFactura (canon A1)", () => {
       expect(r.total).toBe(1000);
     },
   );
+
+  // v13.823.145: un CFDI sin timbrar sigue pendiente por cobrar.
+  it("conserva el saldo en Borrador (sin timbrar)", () => {
+    const r = calcularSaldoFactura(1000, [], [], "Borrador");
+    expect(r.saldo).toBe(1000);
+    expect(r.liquidada).toBe(false);
+  });
 
   it("conserva el saldo en estados vivos", () => {
     expect(calcularSaldoFactura(1000, [], [], "Emitida").saldo).toBe(1000);

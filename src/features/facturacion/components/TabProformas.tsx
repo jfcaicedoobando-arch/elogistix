@@ -85,8 +85,11 @@ export function TabProformas({ isInRange, estadoInicial }: {
             </Button>
           </div>
           <div className="mt-3 text-body-sm text-muted-foreground">
-            Mostrando <strong className="text-foreground">{c.filtered.length}</strong> de {c.counts.todas} proformas
+            Mostrando <strong className="text-foreground">{c.filtered.length}</strong> de{" "}
+            {c.filtroEstado === "todas" ? c.counts.todas : c.counts[c.filtroEstado]} proformas
+            {c.filtroEstado !== "todas" && <> con estado {c.filtroEstado}</>}
           </div>
+
         </CardContent>
       </Card>
 
