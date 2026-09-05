@@ -14,6 +14,7 @@ export const COTIZACION_FORM_DEFAULTS: CotizacionFormValues = {
   prospectoModo: "vincular",
   oportunidadId: "",
   leadId: "",
+  monedaCrm: "",
   prospectoEmpresa: "",
   prospectoContacto: "",
   prospectoEmail: "",

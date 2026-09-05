@@ -10,6 +10,7 @@ import { ProformaInconsistenteAlert } from "./facturacion/ProformaInconsistenteA
 import { AvisoProformasRechazadas } from "./facturacion/AvisoProformasRechazadas";
 import { DialogEliminarProforma } from "./facturacion/DialogEliminarProforma";
 import { useTabFacturacionState } from "@/features/embarques/hooks/useTabFacturacionState";
+import { contarFacturasEmitidas } from "@/lib/domain/etiquetaCicloProforma";
 import type { Tables } from "@/types/db";
 
 type EmbarqueRow = Tables<'embarques'>;
@@ -98,6 +99,7 @@ export function TabFacturacionEmbarque({ facturas, canEdit: canEditProp, embarqu
         proformasCount={proformas.length}
         proformasFacturadasCount={proformas.filter(p => p.estado_proforma === "facturada").length}
         facturasCount={facturas.length}
+        facturasEmitidasCount={contarFacturasEmitidas(facturas)}
       />
       <div ref={registerRef("venta-pendientes")} data-focus="venta-pendientes">
         <ResumenConceptosVenta
@@ -124,6 +126,7 @@ export function TabFacturacionEmbarque({ facturas, canEdit: canEditProp, embarqu
 
       <div ref={registerRef("proformas")} data-focus="proformas">
         <HistorialProformas
+          facturas={facturas}
           proformas={proformas}
           canEdit={canEdit}
           isDeleting={eliminarProforma.isPending}

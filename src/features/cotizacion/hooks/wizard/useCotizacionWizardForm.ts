@@ -125,8 +125,10 @@ export function useCotizacionWizardForm({ navigate, toast, userEmail, clientes, 
   }, [form]);
 
   const buildPaso1Data = useCallback(() => {
-    return buildPaso1Mapper(form.getValues(), clientes, userEmail);
-  }, [form, clientes, userEmail]);
+    // A1/A7: sólo un borrador sin importes puede adoptar la moneda del CRM.
+    const sinImportes = conceptosUSD.length === 0 && conceptosMXN.length === 0;
+    return buildPaso1Mapper(form.getValues(), clientes, userEmail, sinImportes);
+  }, [form, clientes, userEmail, conceptosUSD, conceptosMXN]);
 
   // ── Handlers de navegación del wizard (hook dedicado) ──
   const { handleSiguiente, handleGuardar, handleBack, handleCotizarSinDesglose, vinculoCrmError, vinculoCrmConfirmado, limpiarVinculoCrmError } = useCotizacionWizardSteps({

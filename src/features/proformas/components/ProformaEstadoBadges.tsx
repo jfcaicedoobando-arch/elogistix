@@ -4,6 +4,10 @@
  */
 import { Globe, UserCheck, Archive } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import {
+  etiquetaProformaConvertida,
+  type FacturaCicloLite,
+} from "@/lib/domain/etiquetaCicloProforma";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 export type EstadoCliente = "pendiente" | "aceptada" | "rechazada";
@@ -49,11 +53,17 @@ function BadgeOrigenAceptacion({ origen }: { origen: OrigenAceptacion }) {
 function BadgeCiclo({
   estadoProforma,
   estadoCliente,
+  facturas,
 }: {
   estadoProforma: string | null | undefined;
   estadoCliente: EstadoCliente;
+  facturas: FacturaCicloLite[];
 }) {
-  if (estadoProforma === "facturada") return <Badge variant="success">Facturada</Badge>;
+  if (estadoProforma === "facturada") {
+    // B9: distinguir "convertida a borrador" de una factura fiscal emitida.
+    const label = etiquetaProformaConvertida(facturas);
+    return <Badge variant={label === "Facturada" ? "success" : "info"}>{label}</Badge>;
+  }
   if (estadoCliente === "rechazada") return <Badge variant="destructive">Rechazada por cliente</Badge>;
   if (estadoCliente === "aceptada") return <Badge variant="info">Aceptada</Badge>;
   return <Badge variant="warning">Pendiente cliente</Badge>;
@@ -63,18 +73,21 @@ export function EstadoBadges({
   estadoProforma,
   estadoCliente,
   aceptadaPor,
+  facturas = [],
 }: {
   estadoProforma?: string | null;
   estadoCliente?: EstadoCliente;
   /** Valor crudo de `proformas.aceptada_por`, se usa para derivar el origen. */
   aceptadaPor?: string | null;
+  /** Facturas generadas desde esta proforma (para distinguir borrador vs emitida). */
+  facturas?: FacturaCicloLite[];
 }) {
   const ec = estadoCliente ?? "pendiente";
   const mostrarOrigen = ec === "aceptada";
   const origen = derivarOrigenAceptacion(aceptadaPor);
   return (
     <div className="flex items-center gap-1.5 flex-wrap">
-      <BadgeCiclo estadoProforma={estadoProforma} estadoCliente={ec} />
+      <BadgeCiclo estadoProforma={estadoProforma} estadoCliente={ec} facturas={facturas} />
       {mostrarOrigen && <BadgeOrigenAceptacion origen={origen} />}
     </div>
   );

@@ -1,5 +1,15 @@
 # Changelog
 
+## [13.823.151] - 2026-09-05
+- Embarques (B4): al cambiar un embarque Marítimo a FCL, el primer contenedor se siembra con el peso/volumen/piezas ya capturados en Datos generales (`domain/semillaContenedor.ts`), en vez de nacer en 0/0/0 y dejar el resumen en cero. Con eso, el mapeo vuelve a respetar la suma de contenedores tal cual (incluido cero), de modo que corregir cantidades a cero sigue siendo posible de forma explícita.
+- Cotizaciones (A1/A7): el paso 1 ya no fija siempre USD. Un borrador **sin importes** adopta la moneda de la oportunidad CRM vinculada (`monedaCrm` en el formulario + `monedaPaso1`); si ya hay conceptos capturados, la moneda persistida no se toca y el vínculo sigue guiando la recuperación. Reeditar conserva la moneda guardada y "Desvincular" limpia la moneda del CRM.
+- Proformas y embarques (B9): se distingue "Convertida a borrador" de una factura fiscal emitida en el detalle de la proforma, en el historial de proformas del embarque y en el paso 3 del flujo de facturación (`lib/domain/etiquetaCicloProforma.ts`). No cambian estados en base de datos ni el candado anti-doble conversión.
+- Portal del agente: crear/editar una tarifa invalida también el listado del portal (`portalAgente.tarifas`), así que la tabla y los contadores se actualizan sin recargar la página.
+- Facturación: el encabezado del detalle usa `labelExpediente`, así el enlace "Exp.:" de una factura sin expediente muestra "Borrador xxxxxxxx" en vez de un enlace vacío.
+- Verificación focalizada: pruebas nuevas (`semillaContenedor`, `etiquetaCicloProforma`, `monedaPaso1`) más suites de embarques/cotización/proformas/costeo (166 archivos, 1 222 pruebas), ESLint y `tsgo --noEmit` limpios. CI/RLS completos quedan a GitHub Actions.
+
+
+
 ## [13.823.150] - 2026-09-05
 - Power of 10 (candado de 200 líneas, sin cambios de comportamiento): tipos de columnas de tarifas extraídos a `_sections/tarifasColumns.types.ts`, sección "Carta Garantía" del formulario de naviera a `NavieraCartaGarantiaFields.tsx` y tipos de automatizaciones CRM a `services/automatizacionesEtapa.types.ts`. Los diálogos de alta CRM consumen `useNuevoLeadSubmit` / `useNuevaOportunidadSubmit` desde su módulo directo.
 - Higiene de candados: `CeldaMontoAnalitica` deja el `TableCell` en `Analitica.tsx` (regla de tablas sin `@/components/ui/table` fuera de allowlist) y `src/lib/date/mxDatetimeLocal.ts` queda declarado como primitiva de fechas en `eslint.config.js`.

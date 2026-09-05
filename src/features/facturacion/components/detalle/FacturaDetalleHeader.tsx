@@ -19,6 +19,7 @@ import { resumenFacturaEmitida } from "@/lib/domain/documentoEstados";
 import { formatDate } from "@/lib/formatters";
 import { AmbienteBadge } from "@/features/facturacion/components/AmbienteBadge";
 import { deriveFacturaBadgeEstado } from "@/features/facturacion/domain/facturaBadgeEstado";
+import { labelExpediente } from "@/lib/domain/labelExpediente";
 
 
 interface Props {
@@ -51,6 +52,9 @@ export function FacturaDetalleHeader(props: Props) {
   const vencida = estado === "Vencida";
   const esBorradorSinFolio = (numero ?? "").startsWith("BORRADOR-");
   const estadoVisual = deriveFacturaBadgeEstado(estado, acuseCancelacionStatus, cancellationStatus);
+  // v13.823.151 — los embarques en borrador aún no tienen expediente; sin la
+  // etiqueta de respaldo el enlace quedaba vacío (no se veía nada tras "Exp.:").
+  const expedienteLabel = labelExpediente(expediente, embarqueId);
 
   return (
     <DetailHeader
@@ -90,10 +94,10 @@ export function FacturaDetalleHeader(props: Props) {
             Exp.:{" "}
             {embarqueId ? (
               <Link to={`/embarques/${embarqueId}`} className="font-mono text-accent hover:underline">
-                {expediente}
+                {expedienteLabel}
               </Link>
             ) : (
-              <span className="font-mono">{expediente}</span>
+              <span className="font-mono">{expedienteLabel}</span>
             )}
           </span>
           {proformaNumero && (
