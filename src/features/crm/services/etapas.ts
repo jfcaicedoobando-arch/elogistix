@@ -109,7 +109,18 @@ export async function actualizarMotivoPerdida(input: {
   id: string;
   patch: { nombre?: string; activa?: boolean };
 }): Promise<void> {
-  await run(supabase.from("crm_motivos_perdida").update(input.patch).eq("id", input.id));
+  const { data, error } = await supabase
+    .from("crm_motivos_perdida")
+    .update(input.patch)
+    .eq("id", input.id)
+    .select("id")
+    .maybeSingle();
+  if (error) throw error;
+  if (!data) {
+    throw new Error(
+      "No se pudo actualizar el motivo de pérdida: no tienes permiso o el motivo ya no existe.",
+    );
+  }
   await registrarActividad({
     modulo: "crm",
     accion: "Editó motivo de pérdida",

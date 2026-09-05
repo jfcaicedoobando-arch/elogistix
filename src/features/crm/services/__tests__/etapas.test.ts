@@ -100,9 +100,27 @@ describe("services/crm/etapas", () => {
   });
 
   it("actualizarMotivoPerdida update", async () => {
-    mock.setTableResult("crm_motivos_perdida", { data: null, error: null });
+    mock.setTableResult("crm_motivos_perdida", { data: { id: "m1" }, error: null });
     await actualizarMotivoPerdida({ id: "m1", patch: { activa: false } });
     expect(mock.tableCalls[0].ops).toContain("update");
+  });
+
+  it("actualizarMotivoPerdida exige fila afectada y no registra bitácora cuando RLS/id inexistente dejan 0 filas", async () => {
+    vi.mocked(registrarActividad).mockClear();
+    mock.setTableResult("crm_motivos_perdida", { data: null, error: null });
+    await expect(actualizarMotivoPerdida({ id: "m1", patch: { activa: false } })).rejects.toThrow(
+      /no tienes permiso|ya no existe/i,
+    );
+    expect(registrarActividad).not.toHaveBeenCalled();
+  });
+
+  it("actualizarMotivoPerdida registra bitácora únicamente cuando el UPDATE afectó una fila", async () => {
+    vi.mocked(registrarActividad).mockClear();
+    mock.setTableResult("crm_motivos_perdida", { data: { id: "m1" }, error: null });
+    await expect(
+      actualizarMotivoPerdida({ id: "m1", patch: { activa: false } }),
+    ).resolves.toBeUndefined();
+    expect(registrarActividad).toHaveBeenCalledTimes(1);
   });
 
   it("actualizarMotivoPerdida propaga error", async () => {
