@@ -68,8 +68,9 @@ describe("useCrearActividad invalidación de queries", () => {
     expect(invalidated).toContainEqual(["crm", "higiene"]);
     expect(invalidated).toContainEqual(["crm", "kpis"]);
     expect(invalidated).toContainEqual(["crm", "dashboard"]);
-    // v13.823.94: "Qué hacer ahora" (NBA) tiene su propia key.
-    expect(invalidated).toContainEqual(["crm", "nba-signals"]);
+    // v13.823.94: NBA no requiere invalidarse aquí — sus señales de
+    // actividades vencidas viven bajo `crm.actividades.*`.
+    expect(invalidated).not.toContainEqual(["crm", "nba-signals"]);
   });
 
   it("muestra toast de éxito salvo cuando la actividad es silenciosa", async () => {
