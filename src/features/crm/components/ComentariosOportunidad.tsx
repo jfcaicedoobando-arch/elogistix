@@ -6,9 +6,7 @@ import { MessageSquare, Send } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { notifyError } from "@/lib/ui/appFeedback";
 import { crmToast } from "@/features/crm/lib/crmToast";
-import { getErrorMessage } from "@/lib/errors";
 import { formatRelativo } from "@/lib/date/relativo";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 import {
@@ -31,8 +29,9 @@ export default function ComentariosOportunidad({ oportunidadId, canEdit }: Props
       await crear.mutateAsync({ oportunidadId, texto });
       setTexto("");
       crmToast.success("Comentario publicado");
-    } catch (e) {
-      notifyError(undefined, { title: "No se pudo publicar", description: getErrorMessage(e), error: e, method: "ENVIAR" });
+    } catch {
+      // El hook useCrearComentarioOportunidad ya notifica el error en onError;
+      // aquí sólo evitamos que la promesa rechazada quede sin capturar.
     }
   };
 
