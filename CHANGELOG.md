@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.823.152] - 2026-09-05
+- Embarques (remate B4): la conservación de cantidades al pasar a FCL ya no depende de que la lista de contenedores esté vacía. `domain/semillaContenedor.ts` agrega `conservarGeneralesEnContenedores` / `requiereConservarGenerales`, y `StepDatosRutaMaritimo` las usa al elegir FCL en cualquier orden (con o sin fila agregada antes), pasando peso/volumen/piezas a la primera fila sin acumular ni pisar cantidades reales. Para borradores reabiertos ya en FCL con filas en cero se muestra un aviso con acción explícita ("Pasar las cantidades al primer contenedor"): no hay efecto automático que reponga un cero puesto a propósito.
+- Proformas/Facturación (remate B9): "Por timbrar" cuenta como preparación, no como emisión (`etiquetaCicloProforma.ts` con listas explícitas; un estado desconocido no se asume emitido). El paso 2 del flujo de facturación reporta generadas / facturadas / sin emitir a partir de las facturas reales, en lugar del estado comercial `facturada`, y el stepper del encabezado de la proforma se queda en "Aceptada" con matiz "Convertida a borrador / Convertida, por timbrar" hasta que exista factura emitida. Sin cambios en base de datos, enlaces, cobrado/pendiente ni en el candado anti-doble conversión.
+- Pruebas: se agregaron regresiones mínimas de ambos recorridos (`semillaContenedor`, `etiquetaCicloProforma`, `documentoEstados`). Pruebas no ejecutadas aquí; pendientes en GitHub Actions.
+
+
+
 ## [13.823.151] - 2026-09-05
 - Embarques (B4): al cambiar un embarque Marítimo a FCL, el primer contenedor se siembra con el peso/volumen/piezas ya capturados en Datos generales (`domain/semillaContenedor.ts`), en vez de nacer en 0/0/0 y dejar el resumen en cero. Con eso, el mapeo vuelve a respetar la suma de contenedores tal cual (incluido cero), de modo que corregir cantidades a cero sigue siendo posible de forma explícita.
 - Cotizaciones (A1/A7): el paso 1 ya no fija siempre USD. Un borrador **sin importes** adopta la moneda de la oportunidad CRM vinculada (`monedaCrm` en el formulario + `monedaPaso1`); si ya hay conceptos capturados, la moneda persistida no se toca y el vínculo sigue guiando la recuperación. Reeditar conserva la moneda guardada y "Desvincular" limpia la moneda del CRM.
