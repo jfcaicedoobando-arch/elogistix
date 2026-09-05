@@ -149,7 +149,7 @@ export function CotizacionDetalleAcciones({
   );
   const {
     esEnCaptura, mostrarAceptarRechazar, mostrarConvertirCliente,
-    mostrarCrearEmbarque, mostrarRecotizar,
+    mostrarCrearEmbarque, mostrarFaltaVenta, mostrarRecotizar,
   } = visibilidadAcciones({
     estado,
     esProspecto,
@@ -158,6 +158,7 @@ export function CotizacionDetalleAcciones({
     puedeRechazar: acciones.rechazar,
     puedeAltaCliente,
     tieneOportunidad,
+    tieneVenta: Number(total) > 0,
   });
 
   return (
