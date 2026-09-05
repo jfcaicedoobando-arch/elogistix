@@ -66,7 +66,13 @@ export function NavieraCondicionForm({ navieraId, existente, onSaved }: Props) {
     }
   }, [existente, navieraId]);
 
+  // P2 (auditoría v13.823.143 · bug 4): sin proveedor tipo "Naviera" vinculado
+  // no se puede guardar nada; los campos quedan deshabilitados para no invitar
+  // a capturar datos que se perderían.
+  const sinProveedor = proveedores.length === 0;
+
   const valido =
+    !sinProveedor &&
     !!form.proveedor_id &&
     (!form.tiene_carta_garantia || !!form.carta_garantia_vigente_hasta);
 
@@ -97,6 +103,12 @@ export function NavieraCondicionForm({ navieraId, existente, onSaved }: Props) {
         </div>
       )}
 
+      <fieldset disabled={sinProveedor} className="space-y-4 disabled:opacity-60">
+      {sinProveedor && (
+        <p className="text-xs text-muted-foreground">
+          Vincula primero un proveedor tipo &quot;Naviera&quot; para capturar carta garantía y demoras.
+        </p>
+      )}
       <fieldset className="rounded-md border p-3 space-y-3">
         <legend className="text-body font-medium px-1">Carta Garantía</legend>
         <div className="flex items-center gap-2">
@@ -178,6 +190,8 @@ export function NavieraCondicionForm({ navieraId, existente, onSaved }: Props) {
           onChange={(e) => setForm({ ...form, notas: e.target.value || null })}
         />
       </div>
+
+      </fieldset>
 
       <div className="flex justify-end">
         <Button type="submit" disabled={!valido || guardar.isPending}>
