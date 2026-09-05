@@ -43,6 +43,12 @@ describe("CotizacionDetalleAcciones", () => {
     expect(screen.getByRole("button", { name: /completar cotización/i })).toBeInTheDocument();
   });
 
+  it("Aceptada con total en cero no ofrece Crear embarque y explica qué falta", () => {
+    renderAcciones({ estado: "Aceptada", total: 0, rol: "admin" });
+    expect(screen.queryByRole("button", { name: /crear embarque/i })).not.toBeInTheDocument();
+    expect(screen.getByText(/falta capturar los conceptos de venta/i)).toBeInTheDocument();
+  });
+
   it("R-08 — con total en cero explica por qué no se puede enviar", () => {
     renderAcciones({ estado: "Borrador", total: 0, rol: "admin" });
     expect(screen.queryByRole("button", { name: /marcar como enviada/i })).not.toBeInTheDocument();
