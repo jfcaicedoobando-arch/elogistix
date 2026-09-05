@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.823.115] - 2026-09-05
+- CRM zona horaria (Mi día / dashboard): las lecturas y etiquetas de "hoy" ya no usan el reloj del navegador. `fetchCrmDashboard` (`src/features/crm/services/dashboard.ts`) acota "Mis actividades de hoy" y "Leads sin contactar" con `limitesDiaMx` y `mxAddDaysIso` en lugar de `setHours`/`setDate` locales; `esVencida`/`esHoy` (`proximasActividades.ts`) y `formatProx` (`proximaActividadLabel.ts`) comparan con `diffDiasMx` (calendario America/Mexico_City); `ActividadesHoyCard` formatea la hora con `timeZone: TZ_MX`. Nuevos helpers puros en `src/lib/date/mx.ts`: `diaMx`, `limitesDiaMx`, `diffDiasMx`. Sin cambios en reglas de negocio ni en nombres de tarjetas; el encabezado de `MiDia` ya usaba `formatFechaLarga` con TZ_MX. Regresiones cerca de medianoche con el navegador en UTC y en America/Mexico_City.
+
 ## [13.823.114] - 2026-09-05
 - CRM Actividades: `posponerActividad` (`src/features/crm/services/actividadesMutations.ts`) ya no usa `new Date(...).setDate()` + `toISOString()`, que sumaba 24 h del reloj del navegador y desplazaba la hora vista por el usuario fuera de CDMX. La suma se centralizó en `mxAddDaysIso` (`src/lib/date/mx.ts`), que suma días en el calendario America/Mexico_City y conserva la hora local mexicana (más `utcIsoToMxLocal`, inverso de `mxLocalToUtcIso`). No cambia la regla de días del botón de posponer. Regresiones con navegador en UTC, America/Mexico_City y Asia/Tokyo, incluyendo hora cercana a medianoche, sin fecha programada y días negativos.
 - Nota: el filtro de soft-delete en `fetchEtapasPipelineActivas` / `fetchEtapasPipelineTodas` ya quedó aplicado en 13.823.113.
