@@ -7,7 +7,7 @@
 import { ExternalLink, ClipboardList, Ship, Target, UserPlus } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { formatCurrencyCompact } from "@/lib/formatters";
+import { formatCurrencyCompact, formatFechaDia } from "@/lib/formatters";
 import { useLeadLineage, useOportunidadLineage } from "@/features/crm/hooks";
 import { DrilldownRow } from "@/components/shared/dataTable/DrilldownRow";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
