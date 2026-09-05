@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.823.118] - 2026-09-05
+- CRM zona horaria (cierre del hallazgo): `isoDaysFromNow` (`src/features/crm/domain/dashboardAggregates.ts`) ya no hace `new Date().setDate()` + `isoUtcDay`; delega en el helper canónico `todayLocalISOPlus` (calendario America/Mexico_City) y acepta una fecha base inyectable para pruebas. Así el límite de 7 días de "Cerrando esta semana" es estable cerca de medianoche sin duplicar helpers. Regresiones con el navegador en UTC y en America/Mexico_City, incluido el cruce de fin de mes.
+
 ## [13.823.117] - 2026-09-05
 - CRM QuickCreateLeadDialog: `empresaTouched` ahora se resetea junto con los campos cuando el modal se cierra de verdad (transición `open` true → false). Antes, al volver a abrir el diálogo seguía mostrándose inmediatamente "Indica la empresa para continuar.", aunque el usuario no hubiera interactuado. Se conservan la validación al blur/submit y el guard anti doble envío. Regresión: blur vacío, cerrar, reabrir y verificar que el error no aparece hasta una nueva interacción.
 
