@@ -7,6 +7,7 @@
  * antigüedad (más viejo, más urgente).
  */
 import { hoyMx, parseLocalMx } from "@/lib/date/mx";
+import { NBA_LEAD_SIN_CONTACTAR_HORAS } from "./umbralesContacto";
 
 export interface NbaLead {
   id: string;
