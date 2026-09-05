@@ -17,6 +17,7 @@ import {
   resolverCierreGanada,
   resolverLimpiezaCierre,
   avisarCriteriosPendientes,
+  destinoGeneraTareaAutomatica,
 } from "./moverOportunidadEtapaHelpers";
 
 export { resolverLimpiezaCierre };
@@ -79,7 +80,10 @@ export function useMoverOportunidadEtapa({ etapas, oportunidades }: Params) {
         // El destino "perdida" cancela/completa actividades pendientes: el Undo
         // no puede revivirlas, así que no se ofrece (evita Undo falso que dejaría
         // una oportunidad abierta con sus tareas canceladas).
-        if (etapaDestino?.tipo !== "perdida") {
+        // v13.823.121 — tampoco se ofrece cuando el destino crea una tarea
+        // automática (ganada, o abierta con crea_tarea_seguimiento): el Undo
+        // sólo devuelve la etapa y la tarea quedaría contradiciéndola.
+        if (etapaDestino?.tipo !== "perdida" && !destinoGeneraTareaAutomatica(etapaDestino)) {
           const { showUndoToast } = await import("@/features/crm/hooks/useUndoToast");
           showUndoToast("Etapa actualizada", async () => {
             if (!etapaPrev) return;

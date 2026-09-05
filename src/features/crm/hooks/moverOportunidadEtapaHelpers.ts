@@ -87,3 +87,18 @@ export async function avisarCriteriosPendientes(
     // El aviso es informativo: nunca debe impedir mover la oportunidad.
   }
 }
+
+/**
+ * v13.823.121 — ¿el destino ejecutará una tarea automática visible?
+ * `runAutomatizaciones` crea "Generar cotización en firme" al ganar y
+ * "Seguimiento: …" en etapas abiertas con `crea_tarea_seguimiento`. El Undo
+ * sólo revierte la etapa, así que en esos casos no se ofrece (la tarea ya
+ * creada contradiría la etapa anterior). No se borra ninguna actividad.
+ */
+export function destinoGeneraTareaAutomatica(
+  etapaDestino: (CrmEtapaRow & { tipo?: string; crea_tarea_seguimiento?: boolean | null }) | undefined,
+): boolean {
+  if (!etapaDestino) return false;
+  if (etapaDestino.tipo === "ganada") return true;
+  return etapaDestino.tipo === "abierta" && etapaDestino.crea_tarea_seguimiento === true;
+}
