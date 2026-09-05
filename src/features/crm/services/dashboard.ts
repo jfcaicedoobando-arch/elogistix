@@ -16,6 +16,7 @@ import {
   type EmbudoRow,
 } from "@/features/crm/domain/dashboardAggregates";
 import { todayLocalISO } from "@/lib/date/today";
+import { limitesDiaMx, mxAddDaysIso } from "@/lib/date/mx";
 import { LEAD_ESTADOS_ETAPA_LEAD } from "@/features/crm/domain/leads/etapas";
 import { leerTodasLasPaginas } from "@/lib/supabase/paginado";
 import { computePipelinePonderadoPorMoneda } from "@/features/crm/domain/dashboardAggregates";
@@ -92,9 +93,11 @@ export async function fetchCrmDashboard(
   userId: string | undefined,
   userEmail?: string | null,
 ): Promise<CrmDashboardData> {
-  const hoyInicio = new Date(); hoyInicio.setHours(0, 0, 0, 0);
-  const hoyFin = new Date(); hoyFin.setHours(23, 59, 59, 999);
-  const hace7 = new Date(); hace7.setDate(hace7.getDate() - 7);
+  // Calendario de negocio CDMX: `setHours`/`setDate` usaban el reloj del
+  // navegador, así que un usuario en UTC veía otro día en estas tarjetas.
+  const ahora = new Date();
+  const { inicio: hoyInicio, fin: hoyFin } = limitesDiaMx(ahora);
+  const hace7 = mxAddDaysIso(ahora.toISOString(), -7, ahora);
 
   const [leadsCountQ, opsAbiertas, actsPendQ, misActsQ, cerrandoQ, leadsViejosQ, etapasQ] = await Promise.all([
     // v13.823.77 — mismo universo que /crm/leads (etapa Lead): antes el KPI
@@ -121,8 +124,8 @@ export async function fetchCrmDashboard(
           .is("fecha_completada", null)
           .is("deleted_at", null)
           .or(filtroResponsable(userId, userEmail))
-          .gte("fecha_programada", hoyInicio.toISOString())
-          .lte("fecha_programada", hoyFin.toISOString())
+          .gte("fecha_programada", hoyInicio)
+          .lte("fecha_programada", hoyFin)
           .order("fecha_programada", { ascending: true })
           .limit(10)
       : Promise.resolve({ data: [] as CrmDashboardData["misActividadesHoy"], error: null }),
@@ -148,7 +151,7 @@ export async function fetchCrmDashboard(
           .eq("estado", "Nuevo")
           .is("deleted_at", null)
           .or(filtroVendedor(userId, userEmail))
-          .lte("created_at", hace7.toISOString())
+          .lte("created_at", hace7)
           .order("created_at", { ascending: true })
           .limit(10)
       : Promise.resolve({ data: [], error: null }),
