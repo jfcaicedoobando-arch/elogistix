@@ -17,7 +17,7 @@ import {
   resolverCierreGanada,
   resolverLimpiezaCierre,
   avisarCriteriosPendientes,
-  destinoGeneraTareaAutomatica,
+  puedeOfrecerUndo,
 } from "./moverOportunidadEtapaHelpers";
 
 export { resolverLimpiezaCierre };
@@ -56,11 +56,7 @@ export function useMoverOportunidadEtapa({ etapas, oportunidades }: Params) {
         | (CrmEtapaRow & { tipo?: string })
         | undefined;
       const probabilidad = resolverProbabilidad(op, etapaOrigen, prob, etapaDestino);
-      // v13.823.121 — el destino "perdida" cancela actividades y los destinos
-      // con tarea automática crean una nueva: en ambos casos el Undo (que sólo
-      // revierte la etapa) dejaría el tablero inconsistente.
-      const puedeDeshacer =
-        etapaDestino?.tipo !== "perdida" && !destinoGeneraTareaAutomatica(etapaDestino);
+      const puedeDeshacer = puedeOfrecerUndo(etapaDestino);
 
       // Disciplina de pipeline: avisar (sin bloquear) si la etapa de origen
       // deja criterios de salida pendientes.

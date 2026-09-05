@@ -102,3 +102,15 @@ export function destinoGeneraTareaAutomatica(
   if (etapaDestino.tipo === "ganada") return true;
   return etapaDestino.tipo === "abierta" && etapaDestino.crea_tarea_seguimiento === true;
 }
+
+/**
+ * v13.823.121 — ¿se puede ofrecer "Deshacer" al mover a este destino?
+ * No, si el destino cancela actividades (perdida) o crea una tarea automática:
+ * el Undo sólo revierte la etapa y dejaría el tablero inconsistente.
+ */
+export function puedeOfrecerUndo(
+  etapaDestino: (CrmEtapaRow & { tipo?: string; crea_tarea_seguimiento?: boolean | null }) | undefined,
+): boolean {
+  if (etapaDestino?.tipo === "perdida") return false;
+  return !destinoGeneraTareaAutomatica(etapaDestino);
+}

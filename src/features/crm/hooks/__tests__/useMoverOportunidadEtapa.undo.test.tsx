@@ -19,9 +19,10 @@ vi.mock("../moverOportunidadEtapaHelpers", () => ({
   resolverCierreGanada: () => ({}),
   resolverLimpiezaCierre: () => ({}),
   avisarCriteriosPendientes: vi.fn(async () => undefined),
-  // v13.823.121: el hook consulta si el destino creará una tarea automática.
-  destinoGeneraTareaAutomatica: (e?: { tipo?: string; crea_tarea_seguimiento?: boolean | null }) =>
-    e?.tipo === "ganada" || (e?.tipo === "abierta" && e?.crea_tarea_seguimiento === true),
+  // v13.823.121: el hook delega en el helper puro la decisión de ofrecer Undo.
+  puedeOfrecerUndo: (e?: { tipo?: string; crea_tarea_seguimiento?: boolean | null }) =>
+    e?.tipo !== "perdida" &&
+    !(e?.tipo === "ganada" || (e?.tipo === "abierta" && e?.crea_tarea_seguimiento === true)),
 }));
 
 import { useMoverOportunidadEtapa } from "../useMoverOportunidadEtapa";
