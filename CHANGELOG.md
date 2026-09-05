@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.823.99] - 2026-09-05
+- CRM/Mi día: `CerrandoSemanaCard` ya no muestra la fecha técnica ISO de `fecha_estimada_cierre`; ahora usa `formatFechaEs` y muestra "Sin fecha" cuando el valor es nulo, evitando el separador suelto. Regresiones: fecha formateada en español y fallback nulo.
+
 ## [13.823.98] - 2026-09-05
 - CRM Kanban: el CTA "Nueva oportunidad" de una columna vacía ahora pasa el id de SU etapa (`onNuevo(etapaId)`) y `NuevaOportunidadDialog`/`useOportunidadForm` la prefijan como etapa inicial — antes la oportunidad nacía siempre en la primera etapa abierta, no en la columna pulsada. La prefijada sólo se respeta si la etapa existe y es abierta: Ganada/Perdida siguen sin CTA y nunca se prefijan; si las etapas llegan tarde, la hidratación tardía usa la etapa de la columna. Sin cambios en drag & drop. Regresiones: CTA pasa el id de su etapa, etapas terminales sin CTA, y prefijado/ignorado en el formulario.
 
