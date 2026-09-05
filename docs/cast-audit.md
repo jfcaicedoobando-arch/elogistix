@@ -1,21 +1,21 @@
-# Cast Audit — generado 2026-09-04
+# Cast Audit — generado 2026-09-05
 
 Auditoría automática de los `as` casts en `src/`. Generado por
 `scripts/audit-casts.ts`. Para regenerar: `bun scripts/audit-casts.ts`.
 
 ## Resumen
 
-Total de `as` casts detectados: **3458**
+Total de `as` casts detectados: **3573**
 
 | Categoría | Peso | Cantidad | % |
 |-----------|------|----------|---|
-| SAFE      | 0 | 1000     | 28.9% |
-| LOW       | 1 | 167      | 4.8% |
-| MEDIUM    | 2 | 2291   | 66.3% |
+| SAFE      | 0 | 1022     | 28.6% |
+| LOW       | 1 | 170      | 4.8% |
+| MEDIUM    | 2 | 2380   | 66.6% |
 | HIGH      | 3 | 0     | 0.0% |
-| CRITICAL  | 4 | 0 | 0.0% |
+| CRITICAL  | 4 | 1 | 0.0% |
 
-**Lectura clave:** los casts a accionar son los **HIGH + CRITICAL** = 0 (~0.0%). El resto es seguro o aceptable bajo política.
+**Lectura clave:** los casts a accionar son los **HIGH + CRITICAL** = 1 (~0.0%). El resto es seguro o aceptable bajo política.
 
 ## Definición de categorías
 
@@ -32,8 +32,8 @@ Total de `as` casts detectados: **3458**
 | 1 | `src/features/embarques/services/cierre.ts` | 18 | 32 | 1 | 2 | 15 | 0 | 0 |
 | 2 | `src/features/cotizacion/services/paginados.ts` | 17 | 29 | 2 | 1 | 14 | 0 | 0 |
 | 3 | `src/features/cxp/services/__tests__/proveedorFacturas.helpers.test.ts` | 14 | 28 | 0 | 0 | 14 | 0 | 0 |
-| 4 | `src/features/cotizacion/components/seccionRuta/__tests__/aplicarTarifa.test.ts` | 13 | 26 | 0 | 0 | 13 | 0 | 0 |
-| 5 | `src/features/embarques/domain/mappers/__tests__/embarqueToDb.test.ts` | 14 | 26 | 1 | 0 | 13 | 0 | 0 |
+| 4 | `src/features/embarques/domain/mappers/__tests__/embarqueToDb.test.ts` | 15 | 28 | 1 | 0 | 14 | 0 | 0 |
+| 5 | `src/features/cotizacion/components/seccionRuta/__tests__/aplicarTarifa.test.ts` | 13 | 26 | 0 | 0 | 13 | 0 | 0 |
 | 6 | `src/features/dashboard/direccion/services/loaders.ts` | 14 | 25 | 1 | 1 | 12 | 0 | 0 |
 | 7 | `src/features/cotizacion/services/__tests__/informativa.test.ts` | 10 | 20 | 0 | 0 | 10 | 0 | 0 |
 | 8 | `src/features/portal/services/__tests__/queries.test.ts` | 11 | 20 | 1 | 0 | 10 | 0 | 0 |
@@ -41,13 +41,18 @@ Total de `as` casts detectados: **3458**
 | 10 | `src/features/cotizacion/hooks/__tests__/usePaso1SectionStatus.test.tsx` | 9 | 18 | 0 | 0 | 9 | 0 | 0 |
 | 11 | `src/features/cotizacion/hooks/wizard/__tests__/useCotizacionWizardSteps.test.tsx` | 9 | 18 | 0 | 0 | 9 | 0 | 0 |
 | 12 | `src/features/cotizacion/services/__tests__/wizard.test.ts` | 9 | 18 | 0 | 0 | 9 | 0 | 0 |
-| 13 | `src/features/embarques/domain/mappers/__tests__/embarqueCotizacionDesvincular.test.ts` | 9 | 18 | 0 | 0 | 9 | 0 | 0 |
-| 14 | `src/features/facturacion/services/pagos/__tests__/pagosFactura.test.ts` | 10 | 18 | 1 | 0 | 9 | 0 | 0 |
-| 15 | `src/test/setup.ts` | 9 | 18 | 0 | 0 | 9 | 0 | 0 |
+| 13 | `src/features/crm/components/__tests__/ConvertirLeadDialog.test.tsx` | 9 | 18 | 0 | 0 | 9 | 0 | 0 |
+| 14 | `src/features/embarques/domain/mappers/__tests__/embarqueCotizacionDesvincular.test.ts` | 9 | 18 | 0 | 0 | 9 | 0 | 0 |
+| 15 | `src/features/facturacion/services/pagos/__tests__/pagosFactura.test.ts` | 10 | 18 | 1 | 0 | 9 | 0 | 0 |
 
 ## Top-30 casts más riesgosos (HIGH + CRITICAL)
 
-_Ningún cast HIGH o CRITICAL detectado._
+### 1. [CRITICAL] `src/features/costeo/components/useTarifaFormReset.ts:25`
+
+```ts
+() => (JSON.parse(initialKey) as Partial<TarifaInput> | null) ?? undefined,
+```
+
 
 ## Roadmap
 
