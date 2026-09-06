@@ -43,7 +43,6 @@ function renderEstado(
   const rev = p.estado_revision ?? "aprobada";
   const vacio = esBorradorVacio(p);
   const unificado = getEstadoUnificado(p);
-  // 1. Cerrados / especiales — mantienen su badge propio.
   if (unificado === "facturada") {
     // B9 (v13.823.153): distingue borrador, "por timbrar" y emisión real.
     const propias = facturas.filter(f => f.proforma_id === p.id);
