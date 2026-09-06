@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.823.157] - 2026-09-06
+
+- Lint (`--max-warnings 0`): `useTarifaFormReset` ya no desactiva `react-hooks/exhaustive-deps` (lo que hacía que React Compiler omitiera la optimización del formulario de tarifas). El objeto `initial` se sigue estabilizando por contenido, ahora reconstruyéndolo desde su JSON dentro del `useMemo`; mismo comportamiento: hidrata cuando llegan datos y no se pierde la captura con un refetch del padre.
+- Auditoría `audit:replay-mirror`: el espejo `dashboard_summary.sql` divergía porque la corrección de `arribos_mes` (excluir Borrador) se aplicó con un `DO`/`replace(pg_get_functiondef(...))` y no como cuerpo explícito. Nueva migración `20260913000300_dashboard_summary_espejo_replay.sql` re-emite el cuerpo completo del espejo (misma lógica ya vigente en la base, sin cambios de datos, permisos ni reglas).
+
 ## [13.823.156] - 2026-09-06
 
 - Cotizaciones (remate A1/A7): un borrador con costo capturado y venta aún en cero ya no se considera vacío. `costoTieneContenido` sólo miraba `precio_venta` y `monto`, pero las filas reales del wizard (`FilaCostoLocal`, hidratadas por `buildCotizacionInitialCostos`) traen `cantidad` y `costo_unitario`, no `monto`; con los dos placeholders USD/MXN el criterio devolvía "sin importes" y el paso 1 podía proponer otra moneda al vincular otra oportunidad. Ahora también cuenta `cantidad × costo_unitario` (y `costo_total` en filas persistidas). Se conservan el borrador realmente vacío que adopta la moneda del CRM, la protección de conceptos reales/compensados y de costos con venta; no se convierten ni modifican importes al relinkear.
