@@ -17,6 +17,7 @@ import { FormField } from "@/components/shared/FormField";
 import { ProspectoSection } from "./seccionDestinatario/ProspectoSection";
 import type { ProspectoMatch } from "@/features/crm/hooks";
 import type { CotizacionFormValues } from "@/features/cotizacion/hooks";
+import { useOportunidad } from "@/features/crm/hooks";
 
 interface ClienteOption {
   id: string;
@@ -155,7 +156,9 @@ export default function SeccionDestinatario({ clientes, complete, vinculoConfirm
           prospectoEmpresa={prospectoEmpresa}
           onSelectMatch={handleSelectMatch}
           onDesvincular={handleDesvincular}
-          monedaOportunidad={monedaOportunidad}
+          monedaOportunidad={monedaMostrada}
+          monedaCotizacion={monedaOportunidad}
+          monedaDiscrepante={monedaDiscrepante}
         />
       )}
       {esProspecto && (errors.oportunidadId?.message || errors.leadId?.message) && (
