@@ -21,7 +21,7 @@
  *   - info      → sonner ("Ver detalles" si hay debug)
  */
 import { toast as sonnerToast } from "sonner";
-import { STEP_LABELS } from "@/features/embarques/domain/embarqueWizardSchemas";
+import { STEP_LABELS } from "@/features/embarques/domain/embarqueWizardConstants";
 import { buildErrorReport } from "./errorReport";
 import { openErrorReport } from "@/lib/diagnostics/errorDetailsStore";
 import { reportCaughtError } from "@/lib/observability/reportCaughtError";

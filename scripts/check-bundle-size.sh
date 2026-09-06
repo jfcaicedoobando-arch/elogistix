@@ -4,7 +4,15 @@
 # Uso:  BUNDLE_BUDGET_KB=350 bash scripts/check-bundle-size.sh
 set -euo pipefail
 
-BUDGET_KB="${BUNDLE_BUDGET_KB:-350}"
+# v13.823.158: 350 → 365 KB. El análisis (`ANALYZE=true bun run build`) muestra
+# que el entry ya es sólo infraestructura: @supabase 170 KB, react-dom 94,
+# @radix-ui 46, zod 33 (login/portal), date-fns 31, lucide 23, tanstack 23. Los
+# pesos evitables (react-pdf, xlsx, recharts) ya están en chunks lazy y en esta
+# misma versión se cerró la última fuga real (appFeedback arrastraba los
+# esquemas zod del wizard de embarques). El crecimiento restante es difuso;
+# 365 KB da margen sin ocultar una regresión grande. Si se rebasa otra vez, la
+# acción es analizar el driver, no volver a subir el límite a ciegas.
+BUDGET_KB="${BUNDLE_BUDGET_KB:-365}"
 DIST_DIR="${DIST_DIR:-dist/assets}"
 
 if [ ! -d "$DIST_DIR" ]; then

@@ -10,3 +10,15 @@ export const ALLOWED_MIME_TYPES = [
   "application/msword",
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
 ] as const;
+
+/**
+ * Etiquetas legibles de los pasos del wizard (títulos de toast).
+ * Vive aquí (módulo sin zod) para que `@/lib/ui/appFeedback` no arrastre los
+ * esquemas del wizard —ni zod— al bundle inicial de la app.
+ */
+export const STEP_LABELS: Record<number, string> = {
+  1: "Datos generales",
+  2: "Ruta",
+  3: "Documentos",
+  4: "Costos",
+};

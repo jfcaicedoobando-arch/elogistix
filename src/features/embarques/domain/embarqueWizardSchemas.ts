@@ -16,7 +16,7 @@ import { msg } from "@/lib/domain/errorCatalog";
 
 // Re-export del helper neutro para compatibilidad con imports existentes
 ;
-export { MAX_FILE_SIZE_MB,   } from "./embarqueWizardConstants";
+export { MAX_FILE_SIZE_MB, STEP_LABELS } from "./embarqueWizardConstants";
 export { validateArchivo, validateStepDocumentos,  } from "./embarqueWizardDocumentos";
 export {
   validateStepCostos,
@@ -40,13 +40,10 @@ function flattenZodErrors(error: z.ZodError): StepValidationErrors {
   return out;
 }
 
-// ── Etiquetas legibles de pasos (para títulos de toast) ───────────────
-export const STEP_LABELS: Record<number, string> = {
-  1: "Datos generales",
-  2: "Ruta",
-  3: "Documentos",
-  4: "Costos",
-};
+// `STEP_LABELS` vive en `embarqueWizardConstants.ts` (sin zod) y se re-exporta
+// arriba para no romper imports existentes.
+
+
 
 // ── Paso 1: Datos Generales ───────────────────────────────────────────
 export const stepDatosGeneralesSchema = z.object({
