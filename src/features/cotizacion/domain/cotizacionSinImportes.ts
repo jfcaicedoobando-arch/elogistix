@@ -23,6 +23,11 @@ export interface ConceptoImporteLike {
 
 export interface CostoImporteLike {
   precio_venta?: number | null;
+  /** Filas reales del wizard (`FilaCostoLocal`): costo capturado sin venta aún. */
+  cantidad?: number | null;
+  costo_unitario?: number | null;
+  costo_total?: number | null;
+  /** Variante persistida/legacy que sí trae un monto plano. */
   monto?: number | null;
 }
 
