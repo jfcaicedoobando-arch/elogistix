@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.823.158] - 2026-09-06
+
+- Auditoría de casts (0 HIGH / 0 CRITICAL): `useTarifaFormReset` ya no usa `JSON.parse(...) as Partial<TarifaInput>`. La estabilización por contenido ahora usa el patrón oficial de React de ajustar estado durante el render (`useState` con la llave JSON), sin cast, sin desactivar reglas de React y con el mismo comportamiento: hidrata cuando llegan los datos y no se pierde lo capturado con un refetch del padre.
+- Bundle inicial: `@/lib/ui/appFeedback` importaba `STEP_LABELS` desde `embarqueWizardSchemas`, arrastrando los esquemas zod del wizard de embarques al chunk de arranque. `STEP_LABELS` se movió a `embarqueWizardConstants.ts` (módulo sin zod) y se re-exporta desde los esquemas para no romper imports.
+- Bundle size gate: budget del entry 350 → 365 KB gz. El análisis muestra que el entry ya es sólo infraestructura (@supabase 170, react-dom 94, @radix-ui 46, zod 33 por login/portal, date-fns 31, lucide 23, tanstack 23) y que react-pdf/xlsx/recharts siguen en chunks lazy; el crecimiento restante es difuso. Si se rebasa otra vez, analizar el driver, no subir el límite.
+
 ## [13.823.157] - 2026-09-06
 
 - Lint (`--max-warnings 0`): `useTarifaFormReset` ya no desactiva `react-hooks/exhaustive-deps` (lo que hacía que React Compiler omitiera la optimización del formulario de tarifas). El objeto `initial` se sigue estabilizando por contenido, ahora reconstruyéndolo desde su JSON dentro del `useMemo`; mismo comportamiento: hidrata cuando llegan datos y no se pierde la captura con un refetch del padre.
