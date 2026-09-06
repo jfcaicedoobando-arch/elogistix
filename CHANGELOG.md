@@ -3,6 +3,7 @@
 ## [13.823.157] - 2026-09-06
 
 - Lint (`--max-warnings 0`): `useTarifaFormReset` ya no desactiva `react-hooks/exhaustive-deps` (lo que hacía que React Compiler omitiera la optimización del formulario de tarifas). El objeto `initial` se sigue estabilizando por contenido, ahora reconstruyéndolo desde su JSON dentro del `useMemo`; mismo comportamiento: hidrata cuando llegan datos y no se pierde la captura con un refetch del padre.
+- Baseline de esquema: `supabase/schema/baseline.sql` regenerada con `db:baseline:update` para volver a coincidir con el replay (comentarios de `dashboard_summary_datos` y de la RPC de tarifas).
 - Auditoría `audit:replay-mirror`: el espejo `dashboard_summary.sql` divergía porque la corrección de `arribos_mes` (excluir Borrador) se aplicó con un `DO`/`replace(pg_get_functiondef(...))` y no como cuerpo explícito. Nueva migración `20260913000300_dashboard_summary_espejo_replay.sql` re-emite el cuerpo completo del espejo (misma lógica ya vigente en la base, sin cambios de datos, permisos ni reglas).
 
 ## [13.823.156] - 2026-09-06
