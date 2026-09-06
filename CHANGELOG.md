@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.823.162] - 2026-09-06
+
+- Cotizaciones (calidad de código): `services/wizard.ts` superaba el límite de 200 líneas (Power-of-10 #4). Se extrajo `derivarSubtotalMoneda` y `MSG_COTIZACION_MIXTA` a `services/derivarSubtotalMoneda.ts`, reexportados desde `wizard.ts`. Sin cambios de comportamiento.
+
 ## [13.823.161] - 2026-09-06
 
 - CRM/Cotizaciones (A1/A7, causa de backend confirmada): la sincronización `_crm_sync_oportunidad_desde_cotizacion` conservaba `monto_estimado` cuando la cotización tenía subtotal 0, pero sí sobrescribía `moneda`. Es decir, una oportunidad con 125,000 MXN podía quedar como 125,000 USD sin conversión sólo por vincular una cotización en dólares todavía sin ventas. La definición efectiva se leyó de la base publicada (`pg_get_functiondef`). Ahora la moneda sólo se alinea junto con un importe real; con subtotal 0 la divisa de la oportunidad queda intacta.
