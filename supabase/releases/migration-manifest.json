@@ -3792,6 +3792,7 @@
       "20260906000000_ola1_reabrir_y_cancelar_liquidacion.sql",
       "20260906023045_1e31d5c7-4208-4afa-a6fb-343498ed70a0.sql",
       "20260906034406_1db8b9c7-39b4-43cf-bbf7-c818116553f4.sql",
+      "20260906034615_de299a32-e02c-49cd-b02d-771157e2146d.sql",
       "20260907000000_ola_v16_cobranza_pagos_canon.sql",
       "20260908000100_ola_p1_org_scope_credito_idempotencia.sql",
       "20260908000200_fix_cierre_evidencia_factura_directa.sql",
