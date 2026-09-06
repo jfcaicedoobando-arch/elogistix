@@ -14,6 +14,7 @@ vi.mock("@/features/catalogos/hooks/useTasaIVA", () => ({ useTasaIVA: () => 0.16
 import { useConceptosVentaCotizacion } from "../useConceptosVentaCotizacion";
 import { esBorradorSinImportes } from "@/features/cotizacion/domain/cotizacionSinImportes";
 import { monedaPaso1 } from "@/features/cotizacion/domain/mappers/cotizacion";
+import { buildCotizacionInitialCostos } from "@/features/cotizacion/domain/mappers/cotizacionForm";
 import type { CotizacionFormValues } from "@/features/cotizacion/types";
 
 const values = { monedaCrm: "MXN" } as unknown as CotizacionFormValues;
