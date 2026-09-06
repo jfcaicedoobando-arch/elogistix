@@ -170,4 +170,7 @@ export interface CotizacionInitialCosto {
   costo_unitario: number;
   precio_venta?: number;
   unidad_medida?: string;
+  /** Nota capturada en el paso 2; se rehidrata al editar (P2 13.823.159). */
+  notas?: string | null;
 }
+

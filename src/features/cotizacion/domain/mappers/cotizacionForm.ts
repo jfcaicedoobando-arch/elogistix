@@ -164,5 +164,9 @@ export function buildCotizacionInitialCostos(initialCostos?: CotizacionInitialCo
     costo_unitario: c.costo_unitario,
     precio_venta: c.precio_venta ?? 0,
     unidad_medida: c.unidad_medida ?? "Contenedor",
+    // P2 (13.823.159): la nota guardada se restaura al editar. Antes se omitía
+    // y `savePaso2` la reescribía como "" en el siguiente guardado.
+    notas: c.notas ?? "",
   }));
 }
+
