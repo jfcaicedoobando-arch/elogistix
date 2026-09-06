@@ -84,16 +84,15 @@ export async function fetchClientesPaginados({
     deuda_pendiente: Number(r.deuda_pendiente),
   }));
 
-  // Deduplicar por RFC (compat histórica con duplicados en BD).
-  return { data: dedupeByRfc(mapped), count };
+  // Deduplicar por id (los RFC genéricos XAXX/XEXX se repiten legítimamente).
+  return { data: dedupePorId(mapped), count };
 }
 
-function dedupeByRfc<T extends Pick<Cliente, "id" | "rfc">>(rows: T[]): T[] {
+function dedupePorId<T extends Pick<Cliente, "id">>(rows: T[]): T[] {
   const seen = new Set<string>();
   return rows.filter((c) => {
-    const key = (c.rfc ?? "").trim().toUpperCase() || `__id:${c.id}`;
-    if (seen.has(key)) return false;
-    seen.add(key);
+    if (seen.has(c.id)) return false;
+    seen.add(c.id);
     return true;
   });
 }
