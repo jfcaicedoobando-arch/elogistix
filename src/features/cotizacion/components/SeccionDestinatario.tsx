@@ -49,6 +49,15 @@ export default function SeccionDestinatario({ clientes, complete, vinculoConfirm
   const [monedaOportunidad, setMonedaOportunidad] = useState<string | null>(
     () => watch("monedaCrm") || null,
   );
+  // A1/A7: al reabrir se lee la divisa REAL de la oportunidad (otra entidad),
+  // no la persistida en la cotización. Si difieren se muestra la discrepancia
+  // y se preservan los datos: aquí no se convierte ni se corrige nada.
+  const { data: oportunidad } = useOportunidad(oportunidadId || undefined);
+  const monedaReal = oportunidad?.moneda ?? null;
+  const monedaMostrada = monedaReal ?? monedaOportunidad;
+  const monedaDiscrepante = Boolean(
+    monedaReal && monedaOportunidad && monedaReal !== monedaOportunidad,
+  );
 
   /** A1/A7: la moneda del CRM viaja en el form para que el guardado la use. */
   const aplicarMonedaCrm = (moneda: string | null) => {
