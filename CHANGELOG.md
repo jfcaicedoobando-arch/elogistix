@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.823.159] - 2026-09-06
+
+- Cotizaciones (A1/A7): una cotización capturada en pesos con venta en cero ya no se cambia a dólares al guardar el paso 3. `derivarSubtotalMoneda` sólo asumía USD cuando el total en MXN no era > 0; ahora, si ningún importe es mayor a cero, la moneda se toma de los propios renglones y, si tampoco hay renglones, de la moneda canónica del vínculo CRM (`monedaFallback`). No se convierte ningún importe y se conserva el rechazo de cotizaciones con conceptos mixtos USD/MXN.
+- Portal del agente: «Duplicar como nueva» fallaba sin explicación. Causa confirmada en base: `costeo_tarifas` tiene UNIQUE (organización, agente, naviera, ruta, tipo de contenedor, vigente_desde), así que duplicar con la misma fecha de inicio devolvía 23505 con texto de base de datos. Ahora el guardado (alta y edición) traduce ese choque a un mensaje accionable: cambiar «Vigente desde», la ruta o el tipo de contenedor. No se relajó la restricción, RLS ni los privilegios del agente.
+- Cotizaciones (P2): la nota del costo se restaura al editar. `buildCotizacionInitialCostos` omitía `notas`, así que el campo aparecía vacío y el siguiente guardado del paso 2 la dejaba en blanco.
+
+
 ## [13.823.158] - 2026-09-06
 
 - Auditoría de casts (0 HIGH / 0 CRITICAL): `useTarifaFormReset` ya no usa `JSON.parse(...) as Partial<TarifaInput>`. La estabilización por contenido ahora usa el patrón oficial de React de ajustar estado durante el render (`useState` con la llave JSON), sin cast, sin desactivar reglas de React y con el mismo comportamiento: hidrata cuando llegan los datos y no se pierde lo capturado con un refetch del padre.

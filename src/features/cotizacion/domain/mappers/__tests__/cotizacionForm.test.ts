@@ -80,6 +80,7 @@ describe("buildCotizacionInitialCostos", () => {
     expect(out[0]).toEqual({
       concepto: "Flete", moneda: "USD", proveedor: "X",
       cantidad: 1, costo_unitario: 100, precio_venta: 0, unidad_medida: "Contenedor",
+      notas: "",
     });
   });
 
@@ -89,5 +90,14 @@ describe("buildCotizacionInitialCostos", () => {
     ]);
     expect(out[0].precio_venta).toBe(70);
     expect(out[0].unidad_medida).toBe("Kg");
+  });
+
+  // P2 (13.823.159): la nota guardada debe rehidratarse al editar; antes se
+  // omitía y el siguiente guardado la dejaba vacía.
+  it("restaura la nota persistida del costo", () => {
+    const out = buildCotizacionInitialCostos([
+      { concepto: "Despacho", moneda: "MXN", proveedor: "P", cantidad: 1, costo_unitario: 500, notas: "costo sin venta" },
+    ]);
+    expect(out[0].notas).toBe("costo sin venta");
   });
 });

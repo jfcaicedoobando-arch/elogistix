@@ -60,7 +60,9 @@ export function useCotizacionWizardSteps({
     try {
       if (cotizacionId) {
         // W-01: `subtotal`/`moneda` se derivan de los conceptos dentro de savePaso3.
-        await savePaso3({ cotizacionId, conceptosVenta: fromDb<Record<string, unknown>[]>([...conceptosUSDValidos, ...conceptosMXNValidos]), mutations: { updateCotizacion } });
+        // A1/A7 (13.823.159): la moneda del vínculo CRM (o la ya persistida)
+        // es el respaldo cuando la venta queda en cero; antes se guardaba USD.
+        await savePaso3({ cotizacionId, conceptosVenta: fromDb<Record<string, unknown>[]>([...conceptosUSDValidos, ...conceptosMXNValidos]), monedaFallback: form.getValues("monedaCrm"), mutations: { updateCotizacion } });
       }
       setCurrentStep(4);
     } catch (e: unknown) {
@@ -72,7 +74,7 @@ export function useCotizacionWizardSteps({
         context: { cotizacionId, paso: 3 },
       });
     }
-  }, [conceptosUSD, conceptosMXN, cotizacionId, updateCotizacion, setCurrentStep]);
+  }, [conceptosUSD, conceptosMXN, cotizacionId, updateCotizacion, setCurrentStep, form]);
 
   const handleSiguiente = useCallback(async () => {
     if (currentStep === 1) return handlePaso1();
@@ -96,7 +98,7 @@ export function useCotizacionWizardSteps({
           setConceptosUSD(usd);
           setConceptosMXN(mxn);
           lastCostosHash.current = firmaCostos(costosInternos);
-          await savePaso3({ cotizacionId, conceptosVenta: fromDb<Record<string, unknown>[]>(conceptosValidos), mutations: { updateCotizacion } });
+          await savePaso3({ cotizacionId, conceptosVenta: fromDb<Record<string, unknown>[]>(conceptosValidos), monedaFallback: form.getValues("monedaCrm"), mutations: { updateCotizacion } });
         }
       }
       if (conceptosValidos.length === 0 && hayVentasEnCostos) {
@@ -137,7 +139,7 @@ export function useCotizacionWizardSteps({
         context: { cotizacionId, isEditMode },
       });
     }
-  }, [cotizacionId, updateCotizacion, registrarActividad, navigate, isEditMode, estadoInicial, onFinalized, conceptosUSD, conceptosMXN, costosInternos, tasaIva, setConceptosUSD, setConceptosMXN]);
+  }, [cotizacionId, updateCotizacion, registrarActividad, navigate, isEditMode, estadoInicial, onFinalized, conceptosUSD, conceptosMXN, costosInternos, tasaIva, setConceptosUSD, setConceptosMXN, form]);
 
   const handleBack = useCallback(() => {
     if (currentStep > 1) setCurrentStep(p => p - 1);

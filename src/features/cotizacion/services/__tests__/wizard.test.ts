@@ -201,6 +201,39 @@ describe("savePaso3 (W-01: subtotal/moneda derivados de conceptos)", () => {
     expect(arg.data.moneda).toBe("MXN");
   });
 
+  // A1/A7 (13.823.159): venta en cero no debe redenominar la cotización a USD.
+  it("MXN con venta 0: conserva MXN (antes guardaba USD)", async () => {
+    await savePaso3({
+      cotizacionId: "c1",
+      conceptosVenta: [{ concepto: "QA Despacho aduanal", moneda: "MXN", total: 0 }],
+      monedaFallback: "MXN",
+      mutations: muts,
+    });
+    const arg = primerArgUpdate();
+    expect(arg.data.subtotal).toBe(0);
+    expect(arg.data.moneda).toBe("MXN");
+  });
+
+  it("USD con venta 0: conserva USD", async () => {
+    await savePaso3({
+      cotizacionId: "c1",
+      conceptosVenta: [{ concepto: "QA", moneda: "USD", total: 0 }],
+      monedaFallback: "USD",
+      mutations: muts,
+    });
+    expect(primerArgUpdate().data.moneda).toBe("USD");
+  });
+
+  it("sin renglones: usa la moneda canónica del vínculo CRM", async () => {
+    await savePaso3({
+      cotizacionId: "c1",
+      conceptosVenta: [],
+      monedaFallback: "MXN",
+      mutations: muts,
+    });
+    expect(primerArgUpdate().data.moneda).toBe("MXN");
+  });
+
   it("mixta: se bloquea en lugar de persistir la bolsa mayor (P1-A)", async () => {
     await expect(
       savePaso3({

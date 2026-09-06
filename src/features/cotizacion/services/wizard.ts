@@ -128,35 +128,55 @@ export const MSG_COTIZACION_MIXTA =
  * comparando USD contra MXN nominalmente (4,000 USD vs 10,000 MXN persistía
  * 10,000 MXN y descartaba los USD). No existe tipo de cambio canónico en
  * `cotizaciones`, así que se falla cerrado en lugar de guardar un importe falso.
+ *
+ * A1/A7 (13.823.159): con venta en cero la función devolvía USD siempre, así que
+ * una cotización capturada en MXN (costo MXN 500, venta 0) se redenominaba a USD
+ * al guardar el paso 3. Ahora, cuando ningún importe es > 0, la moneda se toma
+ * de los propios renglones (o del `monedaFallback` canónico) en vez de asumir
+ * USD. No se convierte ningún importe ni se relaja el rechazo de mezclas.
  */
 export function derivarSubtotalMoneda(
   conceptosVenta: Record<string, unknown>[],
+  monedaFallback?: string | null,
 ): { subtotal: number; moneda: "USD" | "MXN" } {
   let usd = 0;
   let mxn = 0;
+  let filasUsd = 0;
+  let filasMxn = 0;
   for (const c of conceptosVenta) {
     const total = Number(c?.total) || 0;
-    if (c?.moneda === "MXN") mxn += total;
-    else usd += total;
+    if (c?.moneda === "MXN") { mxn += total; filasMxn += 1; }
+    else { usd += total; filasUsd += 1; }
   }
   if (usd > 0 && mxn > 0) throw new ReglaNegocioError(MSG_COTIZACION_MIXTA);
-  return mxn > 0 ? { subtotal: mxn, moneda: "MXN" } : { subtotal: usd, moneda: "USD" };
+  if (mxn > 0) return { subtotal: mxn, moneda: "MXN" };
+  if (usd > 0) return { subtotal: usd, moneda: "USD" };
+  // Todo en cero: preservar la divisa capturada (renglones) o la canónica.
+  if (filasMxn > 0 && filasUsd === 0) return { subtotal: 0, moneda: "MXN" };
+  if (filasUsd > 0 && filasMxn === 0) return { subtotal: 0, moneda: "USD" };
+  return { subtotal: 0, moneda: monedaFallback === "MXN" ? "MXN" : "USD" };
 }
 
 export async function savePaso3(opts: {
   cotizacionId: string;
   conceptosVenta: Record<string, unknown>[];
+  /**
+   * Moneda canónica de la cotización (vínculo CRM o la ya persistida). Sólo se
+   * usa cuando no hay ningún importe ni renglón que indique la divisa.
+   */
+  monedaFallback?: string | null;
   mutations: Pick<Mutations, "updateCotizacion">;
 }): Promise<void> {
-  const { cotizacionId, conceptosVenta, mutations } = opts;
+  const { cotizacionId, conceptosVenta, monedaFallback, mutations } = opts;
   // Lanza MSG_COTIZACION_MIXTA antes de tocar la BD: nada se persiste y los
   // conceptos capturados siguen en pantalla.
-  const { subtotal, moneda } = derivarSubtotalMoneda(conceptosVenta);
+  const { subtotal, moneda } = derivarSubtotalMoneda(conceptosVenta, monedaFallback);
   await mutations.updateCotizacion.mutateAsync({
     id: cotizacionId,
     data: { conceptos_venta: conceptosVenta, subtotal, moneda },
   });
 }
+
 
 
 export async function savePasoFinal(opts: {

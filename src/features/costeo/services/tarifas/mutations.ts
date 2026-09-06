@@ -66,24 +66,49 @@ function nombreTarifa(input: Pick<TarifaInput, "ruta_id" | "vigente_desde" | "vi
   return `Ruta ${input.ruta_id} (${input.vigente_desde} → ${input.vigente_hasta})`;
 }
 
+/**
+ * v13.823.159 — «Duplicar como nueva» fallaba en silencio: `costeo_tarifas` tiene
+ * UNIQUE (organization_id, agente_id, naviera_id, ruta_id, tipo_contenedor_id,
+ * vigente_desde), así que duplicar con la MISMA fecha de inicio de vigencia
+ * devolvía 23505 con un texto de base de datos que no explicaba nada. No se
+ * relaja la restricción (evita dos tarifas activas idénticas): se traduce.
+ */
+export const MSG_TARIFA_DUPLICADA =
+  "Ya existe una tarifa para esa misma ruta, naviera y tipo de contenedor con la misma fecha de inicio de vigencia. " +
+  "Cambia «Vigente desde» (o el tipo de contenedor / la ruta) para registrar una nueva versión.";
+
+function traducirErrorTarifa(e: unknown): unknown {
+  const code = (e as { code?: string } | null)?.code;
+  const msg = (e as { message?: string } | null)?.message ?? "";
+  if (code === "23505" || msg.includes("costeo_tarifas_organization_id_agente_id")) {
+    return new Error(MSG_TARIFA_DUPLICADA);
+  }
+  return e;
+}
+
 export async function insertTarifaConRecargos(
   organizationId: string,
   input: TarifaInput,
 ): Promise<CosteoTarifa> {
   const { recargos, ...rest } = input;
   const tarifa = sanitizeTarifaDates(rest);
-  const data = await unwrap(
-    supabase
-      .from("costeo_tarifas")
-      .insert({
-        ...tarifa,
-        moneda: "USD",
-        estado: "vigente",
-        organization_id: organizationId,
-      })
-      .select("*")
-      .single(),
-  );
+  let data: CosteoTarifa;
+  try {
+    data = (await unwrap(
+      supabase
+        .from("costeo_tarifas")
+        .insert({
+          ...tarifa,
+          moneda: "USD",
+          estado: "vigente",
+          organization_id: organizationId,
+        })
+        .select("*")
+        .single(),
+    )) as CosteoTarifa;
+  } catch (e) {
+    throw traducirErrorTarifa(e);
+  }
 
   const rows = buildRecargoRows(data.id, organizationId, recargos);
   if (rows.length > 0) {
@@ -95,8 +120,9 @@ export async function insertTarifaConRecargos(
     entidadId: data.id,
     entidadNombre: nombreTarifa(input),
   });
-  return data as CosteoTarifa;
+  return data;
 }
+
 
 export async function updateTarifaConRecargos(
   id: string,
@@ -118,7 +144,7 @@ export async function updateTarifaConRecargos(
         incluido_en_total: r.incluido_en_total ?? true,
       })),
   });
-  if (error) throw error;
+  if (error) throw traducirErrorTarifa(error);
   await registrarActividad({
     modulo: "costeo",
     accion: "editar_tarifa",
