@@ -139,7 +139,7 @@ export function useCotizacionWizardSteps({
         context: { cotizacionId, isEditMode },
       });
     }
-  }, [cotizacionId, updateCotizacion, registrarActividad, navigate, isEditMode, estadoInicial, onFinalized, conceptosUSD, conceptosMXN, costosInternos, tasaIva, setConceptosUSD, setConceptosMXN]);
+  }, [cotizacionId, updateCotizacion, registrarActividad, navigate, isEditMode, estadoInicial, onFinalized, conceptosUSD, conceptosMXN, costosInternos, tasaIva, setConceptosUSD, setConceptosMXN, form]);
 
   const handleBack = useCallback(() => {
     if (currentStep > 1) setCurrentStep(p => p - 1);
