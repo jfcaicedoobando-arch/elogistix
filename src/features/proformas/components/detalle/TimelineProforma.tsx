@@ -85,7 +85,7 @@ export function TimelineProforma({ fechaEmision, operador, timeline, envios, fac
   const resumen = resumirEnvios(envios);
   const notaEnvios =
     resumen.total > 1 ? `${resumen.total} envíos · último ${formatDate(resumen.ultimoAt ?? "")}` : null;
-  const hitos = buildHitos(fechaEmision, operador, timeline, notaEnvios);
+  const hitos = buildHitos(fechaEmision, operador, timeline, notaEnvios, facturas);
   const activos = hitos.filter((h) => h.fecha).length;
   if (activos === 0) return null;
 
