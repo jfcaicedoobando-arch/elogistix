@@ -14,6 +14,7 @@ vi.mock("@/integrations/supabase/client", () => ({ supabase: mock.supabase }));
 import {
   fetchCosteoTarifas,
   insertTarifaConRecargos,
+  MSG_TARIFA_DUPLICADA,
   updateTarifaConRecargos,
   marcarTarifaReemplazada,
   deleteTarifa,
@@ -161,6 +162,17 @@ describe("costeo/services/tarifas", () => {
     it("propaga el error del insert padre", async () => {
       mock.setTableResult("costeo_tarifas", { data: null, error: { message: "fk" } });
       await expect(insertTarifaConRecargos(ORG, baseInput)).rejects.toThrow();
+    });
+
+    // v13.823.159: «Duplicar como nueva» con la misma vigencia choca con el
+    // UNIQUE (org, agente, naviera, ruta, contenedor, vigente_desde). El mensaje
+    // crudo de Postgres no explicaba nada al agente.
+    it("traduce el choque de unicidad a un mensaje accionable", async () => {
+      mock.setTableResult("costeo_tarifas", {
+        data: null,
+        error: { code: "23505", message: 'duplicate key value violates unique constraint "costeo_tarifas_organization_id_agente_id_naviera_id_ruta_id_key"' },
+      });
+      await expect(insertTarifaConRecargos(ORG, baseInput)).rejects.toThrow(MSG_TARIFA_DUPLICADA);
     });
   });
 
