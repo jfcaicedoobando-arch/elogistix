@@ -5325,8 +5325,6 @@ BEGIN
     );
   END IF;
   UPDATE public.costeo_tarifas SET
-    -- Campos opcionales: solo se tocan si la llave viene en el payload;
-    -- null/'' limpia el valor (RG16).
     agente_id = CASE WHEN p_tarifa ? 'agente_id'
       THEN NULLIF(p_tarifa->>'agente_id', '')::uuid ELSE agente_id END,
     naviera_id = CASE WHEN p_tarifa ? 'naviera_id'
@@ -5339,10 +5337,8 @@ BEGIN
       THEN NULLIF(p_tarifa->>'flete_base', '')::numeric ELSE flete_base END,
     dias_libres_demoras = CASE WHEN p_tarifa ? 'dias_libres_demoras'
       THEN NULLIF(p_tarifa->>'dias_libres_demoras', '')::integer ELSE dias_libres_demoras END,
-    -- Campos NOT NULL: nunca se anulan en una actualización parcial.
     vigente_desde = COALESCE(NULLIF(p_tarifa->>'vigente_desde', '')::date, vigente_desde),
     vigente_hasta = COALESCE(NULLIF(p_tarifa->>'vigente_hasta', '')::date, vigente_hasta),
-    -- Campos opcionales (patrón original).
     transit_time_dias = CASE WHEN p_tarifa ? 'transit_time_dias'
       THEN NULLIF(p_tarifa->>'transit_time_dias', '')::integer ELSE transit_time_dias END,
     notas = CASE WHEN p_tarifa ? 'notas'
@@ -14375,6 +14371,10 @@ BEGIN
       WHERE periodo = to_char(v_inicio_mes, 'YYYY-MM')
         AND (organization_id = public.org_scope())
     ),
+    -- FIX P1: 'arribos_mes' usaba embarques_base (incluye Borrador), lo que
+    -- inflaba 'Arribos este mes' y la utilidad con embarques aun no confirmados.
+    -- Ahora reutiliza el mismo CTE 'activos' que ya excluye Borrador/EIR/
+    -- Por liquidar/Cerrado/Cancelado, unificando la regla de actividad.
     arribos_mes AS (
       SELECT jsonb_build_object(
         'total', count(*),
