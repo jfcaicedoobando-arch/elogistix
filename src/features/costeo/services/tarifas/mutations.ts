@@ -4,6 +4,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { CosteoTarifa } from "@/features/costeo/types";
 import { run, unwrap } from "@/lib/supabase/response";
+import { ReglaNegocioError } from "@/lib/errors/reglaNegocio";
 import { registrarActividad } from "@/services/bitacora/registrar";
 
 export interface TarifaRecargoInput {
@@ -81,7 +82,10 @@ function traducirErrorTarifa(e: unknown): unknown {
   const code = (e as { code?: string } | null)?.code;
   const msg = (e as { message?: string } | null)?.message ?? "";
   if (code === "23505" || msg.includes("costeo_tarifas_organization_id_agente_id")) {
-    return new Error(MSG_TARIFA_DUPLICADA);
+    // Sentry JAVASCRIPT-REACT-64: es una validación esperada que la UI ya
+    // explica en un toast accionable, no un bug. `ReglaNegocioError` evita que
+    // se abra un issue (ver `dropFiltersNegocio.ts`).
+    return new ReglaNegocioError(MSG_TARIFA_DUPLICADA);
   }
   return e;
 }
