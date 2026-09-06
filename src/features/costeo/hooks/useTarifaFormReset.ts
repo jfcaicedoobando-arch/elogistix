@@ -8,7 +8,7 @@
  * hidratando cuando los datos llegan después de abrir, pero no se pierde la
  * captura si el contenido no cambió.
  */
-import { useEffect, useMemo } from "react";
+import { useEffect, useState } from "react";
 import type { TarifaInput } from "@/features/costeo/services/tarifas";
 
 interface Params {
@@ -21,13 +21,18 @@ interface Params {
 
 export function useTarifaFormReset({ open, initial, agenteIdFijo, onReset }: Params) {
   const initialKey = JSON.stringify(initial ?? null);
-  // Se estabiliza por CONTENIDO: se reconstruye desde el JSON, así el objeto
-  // sólo cambia de identidad cuando su contenido cambia y un refetch del padre
-  // no vuelve a disparar el reset (sin desactivar reglas de React).
-  const initialEstable = useMemo<Partial<TarifaInput> | undefined>(
-    () => (initialKey === "null" ? undefined : (JSON.parse(initialKey) as Partial<TarifaInput>)),
-    [initialKey],
-  );
+  // Se estabiliza por CONTENIDO usando el patrón oficial de React de ajustar
+  // estado durante el render: el valor sólo cambia de identidad cuando su
+  // contenido cambia, así un refetch del padre no vuelve a disparar el reset
+  // (sin desactivar reglas de React y sin castear un JSON.parse).
+  const [estable, setEstable] = useState<{ key: string; valor?: Partial<TarifaInput> }>({
+    key: initialKey,
+    valor: initial,
+  });
+  if (estable.key !== initialKey) {
+    setEstable({ key: initialKey, valor: initial });
+  }
+  const initialEstable = estable.key === initialKey ? estable.valor : initial;
 
   useEffect(() => {
     if (!open) return;
