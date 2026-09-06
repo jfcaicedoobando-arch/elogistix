@@ -37,13 +37,30 @@ export function useCosteoTarifas(filters: FetchTarifasFilters = {}) {
   });
 }
 
-export function useCosteoTarifaMutations() {
+/**
+ * v13.823.153 — `organizationIdOverride` para el Portal del Agente: el usuario
+ * `agente_carga` NO es miembro del tenant, así que `OrganizationContext` viene
+ * vacío y el insert salía con `organization_id` nulo (RLS lo rechazaba y el
+ * modal quedaba habilitado sin guardar). Ahora la org llega explícita y, si
+ * falta, el error es accionable en vez de un fallo opaco de permisos.
+ */
+export function useCosteoTarifaMutations(organizationIdOverride?: string | null) {
   const queryClient = useQueryClient();
-  const { organizationId } = useOrganization();
+  const { organizationId: organizationIdCtx } = useOrganization();
+  const organizationId = organizationIdOverride ?? organizationIdCtx;
   const { toast } = useToast();
 
+  const orgRequerida = (): string => {
+    if (!organizationId) {
+      throw new Error(
+        "No se pudo identificar la empresa de la tarifa. Vuelve a entrar al portal e inténtalo de nuevo.",
+      );
+    }
+    return organizationId;
+  };
+
   const crear = useMutationWithFeedback({
-    mutationFn: (input: TarifaInput) => insertTarifaConRecargos(organizationId!, input),
+    mutationFn: (input: TarifaInput) => insertTarifaConRecargos(orgRequerida(), input),
     invalidate: TARIFAS_INVALIDATE,
     successTitle: "Tarifa guardada",
     errorTitle: "Error al guardar",
