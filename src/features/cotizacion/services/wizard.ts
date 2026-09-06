@@ -151,10 +151,14 @@ export function derivarSubtotalMoneda(
   if (usd > 0 && mxn > 0) throw new ReglaNegocioError(MSG_COTIZACION_MIXTA);
   if (mxn > 0) return { subtotal: mxn, moneda: "MXN" };
   if (usd > 0) return { subtotal: usd, moneda: "USD" };
-  // Todo en cero: preservar la divisa capturada (renglones) o la canónica.
+  // A1/A7: todo en cero. Sin ventas capturadas la divisa comercial es la
+  // canónica del vínculo (`monedaFallback`); un renglón prellenado en cero
+  // desde un costo interno en otra moneda NO redenomina la cotización.
+  if (monedaFallback === "MXN") return { subtotal: 0, moneda: "MXN" };
+  if (monedaFallback === "USD") return { subtotal: 0, moneda: "USD" };
+  // Sin vínculo/moneda canónica: preservar la divisa capturada en renglones.
   if (filasMxn > 0 && filasUsd === 0) return { subtotal: 0, moneda: "MXN" };
-  if (filasUsd > 0 && filasMxn === 0) return { subtotal: 0, moneda: "USD" };
-  return { subtotal: 0, moneda: monedaFallback === "MXN" ? "MXN" : "USD" };
+  return { subtotal: 0, moneda: "USD" };
 }
 
 export async function savePaso3(opts: {
