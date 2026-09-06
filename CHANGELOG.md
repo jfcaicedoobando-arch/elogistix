@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.823.160] - 2026-09-06
+
+- Clientes (A3): el listado ya no oculta clientes que comparten RFC. `fetchClientesPaginados` deduplicaba por RFC, así que los clientes con RFC genérico (XAXX/XEXX010101000) — legítimamente repetidos — desaparecían de la lista y un alta nueva parecía no haberse guardado. Ahora la deduplicación es por `id`. Sin cambios en la RPC `clientes_listado`, filtros, paginación ni RLS.
+
 ## [13.823.159] - 2026-09-06
 
 - Cotizaciones (A1/A7): una cotización capturada en pesos con venta en cero ya no se cambia a dólares al guardar el paso 3. `derivarSubtotalMoneda` sólo asumía USD cuando el total en MXN no era > 0; ahora, si ningún importe es mayor a cero, la moneda se toma de los propios renglones y, si tampoco hay renglones, de la moneda canónica del vínculo CRM (`monedaFallback`). No se convierte ningún importe y se conserva el rechazo de cotizaciones con conceptos mixtos USD/MXN.
