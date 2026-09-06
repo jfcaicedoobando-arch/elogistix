@@ -15,7 +15,7 @@ import { formatCurrency, formatDate, formatDiasCredito } from "@/lib/formatters"
 import { nombreDesdeEmail } from "@/lib/formatters/text";
 import type { ProformaConFactura } from "@/features/proformas/services";
 import { esBorradorVacio } from "./esBorradorVacio";
-import { facturaEmitida } from "@/lib/domain/etiquetaCicloProforma";
+import { facturaEmitida, etiquetaProformaConvertida } from "@/lib/domain/etiquetaCicloProforma";
 import { getEstadoUnificado } from "@/lib/domain/estadoUnificado";
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 import { Hint } from "@/components/shared/Hint";
@@ -38,17 +38,17 @@ interface Props {
 function renderEstado(
   p: ProformaConFactura,
   proformas: ProformaConFactura[],
-  emitidas: Set<string>,
+  facturas: { estado: string; proforma_id?: string | null }[],
 ) {
   const rev = p.estado_revision ?? "aprobada";
   const vacio = esBorradorVacio(p);
   const unificado = getEstadoUnificado(p);
-
-  // 1. Cerrados / especiales — mantienen su badge propio.
   if (unificado === "facturada") {
-    return emitidas.has(p.id)
-      ? <Badge variant="success" className="w-fit">Facturada</Badge>
-      : <Badge variant="info" className="w-fit">Convertida a borrador</Badge>;
+    // B9 (v13.823.153): distingue borrador, "por timbrar" y emisión real.
+    const propias = facturas.filter(f => f.proforma_id === p.id);
+    const etiqueta = propias.length > 0 ? etiquetaProformaConvertida(propias) : "Convertida";
+    const emitida = etiqueta === "Facturada";
+    return <Badge variant={emitida ? "success" : "info"} className="w-fit">{etiqueta}</Badge>;
   }
   if (vacio) return (
     <Badge variant="outline" className="w-fit bg-warning/10 text-warning border-warning/30">
@@ -128,7 +128,7 @@ export function HistorialProformas({
       meta: { align: "right", className: "tabular-nums" },
       cell: ({ row }) => totalUnico(row.original),
     },
-    { id: "estado", header: "Estado", cell: ({ row }) => renderEstado(row.original, proformas, emitidas) },
+    { id: "estado", header: "Estado", cell: ({ row }) => renderEstado(row.original, proformas, facturas) },
     {
       id: "acciones",
       header: "",
@@ -178,7 +178,7 @@ export function HistorialProformas({
             {proformas.length} proforma{proformas.length === 1 ? "" : "s"}
             {facturadasCount > 0 && <> · {facturadasCount} facturada{facturadasCount === 1 ? "" : "s"}</>}
             {convertidasCount - facturadasCount > 0 && (
-              <> · {convertidasCount - facturadasCount} en borrador</>
+              <> · {convertidasCount - facturadasCount} sin emitir</>
             )}
           </span>
         )}

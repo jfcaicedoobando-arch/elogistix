@@ -42,17 +42,22 @@ interface Props {
   tituloOverride?: string;
   /** Rutas a usar en lugar de useCosteoRutas() (útil cuando no hay OrganizationContext). */
   rutasOverride?: Array<{ id: string; activa: boolean; puerto_origen_nombre?: string; puerto_destino_nombre?: string }>;
+  /**
+   * Organización dueña de la tarifa cuando no hay OrganizationContext (portal del
+   * agente). Sin ella el insert salía con `organization_id` nulo y RLS lo rechazaba.
+   */
+  organizationIdOverride?: string | null;
 }
 
 
 
 
-export function TarifaForm({ open, onOpenChange, initial, tarifaId, agenteIdFijo, agenteNombreFijo, tituloOverride, rutasOverride }: Props) {
+export function TarifaForm({ open, onOpenChange, initial, tarifaId, agenteIdFijo, agenteNombreFijo, tituloOverride, rutasOverride, organizationIdOverride }: Props) {
   const { data: agentesData = [] } = useCosteoAgentes();
   const { data: rutasData = [] } = useCosteoRutas();
   const { data: navieras = [] } = useNavieras();
   const { data: tipos = [] } = useTiposContenedor();
-  const mutations = useCosteoTarifaMutations();
+  const mutations = useCosteoTarifaMutations(organizationIdOverride);
   const { crear, crearMultiples, actualizar } = mutations;
   const agentes = agentesData;
   const rutas = rutasOverride ?? rutasData;

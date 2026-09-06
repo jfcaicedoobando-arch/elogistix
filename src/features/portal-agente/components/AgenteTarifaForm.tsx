@@ -41,6 +41,7 @@ export function AgenteTarifaForm({ open, onOpenChange, initial, tarifaId, modo }
       agenteNombreFijo={ctx.agenteNombre}
       tituloOverride={TITULOS[modo]}
       rutasOverride={rutas}
+      organizationIdOverride={ctx.organizationId}
     />
   );
 }

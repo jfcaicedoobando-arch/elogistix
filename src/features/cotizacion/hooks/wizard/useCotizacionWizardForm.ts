@@ -13,6 +13,7 @@ import {
   type CotizacionInitialCosto,
 } from "@/features/cotizacion/domain/mappers/cotizacionForm";
 import { useConceptosVentaCotizacion } from "@/features/cotizacion/hooks/useConceptosVentaCotizacion";
+import { esBorradorSinImportes } from "@/features/cotizacion/domain/cotizacionSinImportes";
 import { useCotizacionPL } from "@/features/cotizacion/hooks/useCotizacionPL";
 import { useCotizacionWizardSteps } from "@/features/cotizacion/hooks/wizard/useCotizacionWizardSteps";
 import { useCotizacionUpdateGuard } from "@/features/cotizacion/hooks/wizard/useCotizacionUpdateGuard";
@@ -125,10 +126,13 @@ export function useCotizacionWizardForm({ navigate, toast, userEmail, clientes, 
   }, [form]);
 
   const buildPaso1Data = useCallback(() => {
-    // A1/A7: sólo un borrador sin importes puede adoptar la moneda del CRM.
-    const sinImportes = conceptosUSD.length === 0 && conceptosMXN.length === 0;
+    // A1/A7 (v13.823.153): sólo un borrador sin importes REALES puede adoptar la
+    // moneda del CRM. Antes se usaba `length === 0`, pero el formulario siembra
+    // una fila vacía USD y otra MXN, así que un borrador vacío nunca adoptaba la
+    // moneda y el vínculo con una oportunidad en MXN fallaba siempre.
+    const sinImportes = esBorradorSinImportes(conceptosUSD, conceptosMXN, costosInternos);
     return buildPaso1Mapper(form.getValues(), clientes, userEmail, sinImportes);
-  }, [form, clientes, userEmail, conceptosUSD, conceptosMXN]);
+  }, [form, clientes, userEmail, conceptosUSD, conceptosMXN, costosInternos]);
 
   // ── Handlers de navegación del wizard (hook dedicado) ──
   const { handleSiguiente, handleGuardar, handleBack, handleCotizarSinDesglose, vinculoCrmError, vinculoCrmConfirmado, limpiarVinculoCrmError } = useCotizacionWizardSteps({

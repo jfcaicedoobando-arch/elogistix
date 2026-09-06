@@ -5296,6 +5296,7 @@ CREATE FUNCTION public.actualizar_tarifa_con_recargos_rpc(p_id uuid, p_tarifa js
     AS $$
 DECLARE
   v_org uuid;
+  v_es_agente_dueno boolean := false;
 BEGIN
   SELECT organization_id INTO v_org
   FROM public.costeo_tarifas WHERE id = p_id
@@ -5303,8 +5304,25 @@ BEGIN
   IF v_org IS NULL THEN
     RAISE EXCEPTION 'LC_TARIFA_NO_ENCONTRADA';
   END IF;
-  IF auth.uid() IS NOT NULL AND NOT public.is_org_member(v_org) THEN
+  SELECT EXISTS (
+    SELECT 1 FROM public.costeo_tarifas t
+    WHERE t.id = p_id
+      AND public.has_role(auth.uid(), 'agente_carga'::app_role)
+      AND t.agente_id = public.current_agente_id()
+      AND t.organization_id = public.current_agente_org()
+      AND t.estado_aprobacion = ANY (ARRAY['borrador'::text, 'rechazada'::text])
+  ) INTO v_es_agente_dueno;
+  IF auth.uid() IS NOT NULL
+     AND NOT public.is_org_member(v_org)
+     AND NOT v_es_agente_dueno THEN
     RAISE EXCEPTION 'LC_ORG_AJENA';
+  END IF;
+  IF v_es_agente_dueno AND NOT public.is_org_member(v_org) THEN
+    p_tarifa := jsonb_set(
+      COALESCE(p_tarifa, '{}'::jsonb),
+      '{agente_id}',
+      to_jsonb(public.current_agente_id()::text)
+    );
   END IF;
   UPDATE public.costeo_tarifas SET
     -- Campos opcionales: solo se tocan si la llave viene en el payload;

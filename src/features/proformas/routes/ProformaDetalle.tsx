@@ -122,6 +122,7 @@ function ProformaDetalleContent({ data }: ContentProps) {
             operador={proforma.operador}
             timeline={timeline}
             envios={proforma.envios}
+            facturas={proforma.facturas_asociadas}
           />
         }
       >
