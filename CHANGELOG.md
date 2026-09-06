@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.823.154] - 2026-09-06
+
+- Corrección de guardarraíles CI: `HistorialProformas` vuelve bajo 200 líneas y la prueba Fase J lee la regla `mostrarRecotizar` desde el módulo de dominio.
+
 ## [13.823.153] - 2026-09-05
 - Cotizaciones (A1/A7): un borrador realmente vacío vuelve a poder adoptar la moneda de la oportunidad CRM. El wizard calculaba "sin importes" con `conceptosUSD.length === 0 && conceptosMXN.length === 0`, pero el formulario siembra siempre una fila vacía USD y otra MXN, así que nunca se cumplía y el vínculo fallaba con "monedas distintas". Nuevo `domain/cotizacionSinImportes.ts` (`esBorradorSinImportes`): una fila cuenta como contenido real si tiene descripción o algún importe distinto de cero, y los costos internos con precio de venta también protegen la moneda (conceptos compensados a total cero siguen protegiéndola). Sin redenominación silenciosa de cotizaciones con dinero capturado.
 - Portal del agente (tarifas): el guardado no persistía. Causa comprobada en dos frentes: al crear, `useCosteoTarifaMutations` tomaba la organización sólo de `OrganizationContext`, vacío para el rol `agente_carga`, y la política `Agente escribe own tarifas` exige `organization_id = current_agente_org()`; al editar, `actualizar_tarifa_con_recargos_rpc` exigía `is_org_member(org)`, falso para un agente externo. Ahora `TarifaForm` recibe `organizationIdOverride` (lo pasa `AgenteTarifaForm` desde el contexto del agente) con error accionable si falta, y la función de base de datos acepta además al agente dueño de la tarifa mientras siga en borrador/rechazada, fijando su propio `agente_id` (no puede reasignarla). Se conserva la invalidación de `portalAgente.tarifas`.

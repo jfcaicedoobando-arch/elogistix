@@ -75,10 +75,15 @@ describe("Fase J — ciclo de cotización", () => {
       __dirname,
       "../../../src/features/cotizacion/components/CotizacionDetalleSecciones.tsx",
     );
+    const domainPath = path.resolve(
+      __dirname,
+      "../../../src/features/cotizacion/domain/cotizacionDetalleAccionesVisibilidad.ts",
+    );
     const src = fs.readFileSync(tsxPath, "utf8");
-    // v13.624.5 — la bandera puede declararse como `const` o como propiedad del
-    // objeto que devuelve `visibilidadAcciones` (refactor Power-of-10).
-    expect(src).toMatch(/mostrarRecotizar\s*[:=]\s*esAceptada\s*&&\s*!tieneEmbarquesVinculados/);
+    // v13.823.153 — la regla vive en el módulo de dominio (refactor Power-of-10);
+    // el componente sólo consume la bandera.
+    const dominio = fs.readFileSync(domainPath, "utf8");
+    expect(dominio).toMatch(/mostrarRecotizar\s*[:=]\s*esAceptada\s*&&\s*!tieneEmbarquesVinculados/);
     expect(src).toMatch(/\{mostrarRecotizar\s*&&/);
   });
 });
