@@ -12,7 +12,7 @@ import type { CostoCotizacion } from "@/features/cotizacion/types";
 import type { FilaCostoLocal } from "@/features/cotizacion/types";
 import { fromDb } from "@/lib/supabase/cast";
 import { requiereTransicionABorrador } from "@/features/cotizacion/domain/estadosEditables";
-import { ReglaNegocioError } from "@/lib/errors/reglaNegocio";
+import { derivarSubtotalMoneda } from "@/features/cotizacion/services/derivarSubtotalMoneda";
 
 
 interface Mutations {
