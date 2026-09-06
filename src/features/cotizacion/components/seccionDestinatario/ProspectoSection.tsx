@@ -21,6 +21,10 @@ interface Props {
   onDesvincular: () => void;
   /** Bug 1: moneda de la oportunidad vinculada, para capturar en la correcta. */
   monedaOportunidad?: string | null;
+  /** A1/A7: moneda persistida en la cotización (puede diferir de la del CRM). */
+  monedaCotizacion?: string | null;
+  /** A1/A7: la divisa real de la oportunidad no coincide con la cotización. */
+  monedaDiscrepante?: boolean;
 }
 
 export function ProspectoSection({
@@ -32,6 +36,8 @@ export function ProspectoSection({
   onSelectMatch,
   onDesvincular,
   monedaOportunidad,
+  monedaCotizacion,
+  monedaDiscrepante = false,
 }: Props) {
   return (
     <div className="space-y-4 rounded-md border border-border bg-muted/30 p-4">
@@ -57,7 +63,14 @@ export function ProspectoSection({
           puedeDesvincular={!vinculoConfirmado}
           moneda={monedaOportunidad}
         />
-        {monedaOportunidad && (
+        {monedaDiscrepante && (
+          <p className="text-body-sm text-destructive">
+            La oportunidad del CRM está registrada en {monedaOportunidad} y esta cotización
+            en {monedaCotizacion}. No se convierte ningún importe: revisa en el CRM cuál es
+            la divisa correcta antes de capturar más conceptos.
+          </p>
+        )}
+        {monedaOportunidad && !monedaDiscrepante && (
           <p className="text-body-sm text-muted-foreground">
             Captura los costos y conceptos de venta en {monedaOportunidad}: la oportunidad
             del CRM está registrada en esa moneda y no se puede vincular una cotización

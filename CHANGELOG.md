@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.823.161] - 2026-09-06
+
+- CRM/Cotizaciones (A1/A7, causa de backend confirmada): la sincronización `_crm_sync_oportunidad_desde_cotizacion` conservaba `monto_estimado` cuando la cotización tenía subtotal 0, pero sí sobrescribía `moneda`. Es decir, una oportunidad con 125,000 MXN podía quedar como 125,000 USD sin conversión sólo por vincular una cotización en dólares todavía sin ventas. La definición efectiva se leyó de la base publicada (`pg_get_functiondef`). Ahora la moneda sólo se alinea junto con un importe real; con subtotal 0 la divisa de la oportunidad queda intacta.
+- Cotizaciones (A1/A7, wizard): con la venta todavía en cero, `derivarSubtotalMoneda` daba prioridad a la divisa de los renglones prellenados desde costos internos por encima de la moneda canónica del vínculo (`monedaFallback`), así que un costo interno en USD podía redenominar una cotización de una oportunidad MXN. Ahora, sin importes > 0, manda `monedaFallback`; sin vínculo se sigue preservando la divisa de los renglones. No se restringen los costos internos en otra moneda (costo y venta son cosas distintas).
+- Cotizaciones (paso 1): al reabrir una cotización vinculada se lee la divisa REAL de la oportunidad (`useOportunidad`), no la persistida en la cotización. Si no coinciden se muestra la discrepancia y se preservan los importes: no hay conversión ni reparación silenciosa.
+- Regresiones preparadas para GitHub Actions (no ejecutadas aquí): `supabase/tests/crm_sync_moneda_venta_cero.sql` (MXN con monto previo + cotización USD en cero, caso inverso y caso con importe real) y casos de `derivarSubtotalMoneda` en `wizard.test.ts`.
+
 ## [13.823.160] - 2026-09-06
 
 - Clientes (A3): el listado ya no oculta clientes que comparten RFC. `fetchClientesPaginados` deduplicaba por RFC, así que los clientes con RFC genérico (XAXX/XEXX010101000) — legítimamente repetidos — desaparecían de la lista y un alta nueva parecía no haberse guardado. Ahora la deduplicación es por `id`. Sin cambios en la RPC `clientes_listado`, filtros, paginación ni RLS.

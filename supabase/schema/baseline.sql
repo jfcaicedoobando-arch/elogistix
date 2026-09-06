@@ -2409,15 +2409,22 @@ CREATE FUNCTION public._crm_sync_oportunidad_desde_cotizacion() RETURNS trigger
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
+DECLARE
+  v_subtotal numeric := NULLIF(NEW.subtotal, 0);
 BEGIN
   IF NEW.oportunidad_id IS NULL THEN
     RETURN NEW;
   END IF;
   -- Sólo oportunidades vivas, ABIERTAS y de la misma organización: una
   -- cotización alternativa/Borrador no puede mover una ganada o perdida.
+  -- La moneda sólo se alinea junto con un importe real (v_subtotal NOT NULL).
   UPDATE public.crm_oportunidades o
-     SET monto_estimado = COALESCE(NULLIF(NEW.subtotal, 0), o.monto_estimado),
-         moneda         = COALESCE(NEW.moneda::text, o.moneda),
+     SET monto_estimado = COALESCE(v_subtotal, o.monto_estimado),
+         moneda         = CASE
+                            WHEN v_subtotal IS NOT NULL
+                              THEN COALESCE(NEW.moneda::text, o.moneda)
+                            ELSE o.moneda
+                          END,
          cliente_id     = COALESCE(o.cliente_id, NEW.cliente_id),
          updated_at     = now()
    WHERE o.id = NEW.oportunidad_id
@@ -2430,8 +2437,9 @@ BEGIN
           AND e.deleted_at IS NULL
      )
      AND (
-       COALESCE(o.monto_estimado, 0) <> COALESCE(NULLIF(NEW.subtotal, 0), o.monto_estimado, 0)
-       OR COALESCE(o.moneda, '') <> COALESCE(NEW.moneda::text, o.moneda, '')
+       COALESCE(o.monto_estimado, 0) <> COALESCE(v_subtotal, o.monto_estimado, 0)
+       OR (v_subtotal IS NOT NULL
+           AND COALESCE(o.moneda, '') <> COALESCE(NEW.moneda::text, o.moneda, ''))
        OR (o.cliente_id IS NULL AND NEW.cliente_id IS NOT NULL)
      );
   RETURN NEW;

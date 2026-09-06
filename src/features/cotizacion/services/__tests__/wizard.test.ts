@@ -300,6 +300,27 @@ describe("derivarSubtotalMoneda (P1-A)", () => {
       derivarSubtotalMoneda([{ moneda: "USD", total: 5000 }, { moneda: "MXN", total: 5000 }]),
     ).toThrow(MSG_COTIZACION_MIXTA);
   });
+
+  // A1/A7 (13.823.161): con venta todavía en cero, un renglón prellenado desde
+  // un costo interno en otra moneda NO cambia la divisa comercial del vínculo.
+  it("venta 0 con renglón USD y vínculo MXN: conserva MXN", () => {
+    expect(
+      derivarSubtotalMoneda([{ descripcion: "Flete", moneda: "USD", total: 0 }], "MXN"),
+    ).toEqual({ subtotal: 0, moneda: "MXN" });
+  });
+
+  it("caso inverso: venta 0 con renglón MXN y vínculo USD conserva USD", () => {
+    expect(
+      derivarSubtotalMoneda([{ descripcion: "Flete", moneda: "MXN", total: 0 }], "USD"),
+    ).toEqual({ subtotal: 0, moneda: "USD" });
+  });
+
+  it("sin vínculo (sin monedaFallback) sigue preservando la divisa del renglón", () => {
+    expect(derivarSubtotalMoneda([{ moneda: "MXN", total: 0 }])).toEqual({
+      subtotal: 0,
+      moneda: "MXN",
+    });
+  });
 });
 
 describe("savePaso3 (P1-A)", () => {

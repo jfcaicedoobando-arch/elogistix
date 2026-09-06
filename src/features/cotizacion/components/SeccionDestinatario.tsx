@@ -17,6 +17,7 @@ import { FormField } from "@/components/shared/FormField";
 import { ProspectoSection } from "./seccionDestinatario/ProspectoSection";
 import type { ProspectoMatch } from "@/features/crm/hooks";
 import type { CotizacionFormValues } from "@/features/cotizacion/hooks";
+import { useMonedaVinculoCrm } from "@/features/cotizacion/hooks/useMonedaVinculoCrm";
 
 interface ClienteOption {
   id: string;
@@ -48,6 +49,11 @@ export default function SeccionDestinatario({ clientes, complete, vinculoConfirm
   // capturar los importes en la moneda que el CRM ya tiene registrada.
   const [monedaOportunidad, setMonedaOportunidad] = useState<string | null>(
     () => watch("monedaCrm") || null,
+  );
+  // A1/A7: al reabrir se lee la divisa REAL de la oportunidad (otra entidad).
+  const { monedaMostrada, monedaDiscrepante } = useMonedaVinculoCrm(
+    oportunidadId,
+    monedaOportunidad,
   );
 
   /** A1/A7: la moneda del CRM viaja en el form para que el guardado la use. */
@@ -146,7 +152,9 @@ export default function SeccionDestinatario({ clientes, complete, vinculoConfirm
           prospectoEmpresa={prospectoEmpresa}
           onSelectMatch={handleSelectMatch}
           onDesvincular={handleDesvincular}
-          monedaOportunidad={monedaOportunidad}
+          monedaOportunidad={monedaMostrada}
+          monedaCotizacion={monedaOportunidad}
+          monedaDiscrepante={monedaDiscrepante}
         />
       )}
       {esProspecto && (errors.oportunidadId?.message || errors.leadId?.message) && (
