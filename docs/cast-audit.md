@@ -1,21 +1,21 @@
-# Cast Audit — generado 2026-09-05
+# Cast Audit — generado 2026-09-06
 
 Auditoría automática de los `as` casts en `src/`. Generado por
 `scripts/audit-casts.ts`. Para regenerar: `bun scripts/audit-casts.ts`.
 
 ## Resumen
 
-Total de `as` casts detectados: **3575**
+Total de `as` casts detectados: **3577**
 
 | Categoría | Peso | Cantidad | % |
 |-----------|------|----------|---|
 | SAFE      | 0 | 1022     | 28.6% |
 | LOW       | 1 | 170      | 4.8% |
-| MEDIUM    | 2 | 2383   | 66.7% |
+| MEDIUM    | 2 | 2384   | 66.6% |
 | HIGH      | 3 | 0     | 0.0% |
-| CRITICAL  | 4 | 0 | 0.0% |
+| CRITICAL  | 4 | 1 | 0.0% |
 
-**Lectura clave:** los casts a accionar son los **HIGH + CRITICAL** = 0 (~0.0%). El resto es seguro o aceptable bajo política.
+**Lectura clave:** los casts a accionar son los **HIGH + CRITICAL** = 1 (~0.0%). El resto es seguro o aceptable bajo política.
 
 ## Definición de categorías
 
@@ -47,7 +47,12 @@ Total de `as` casts detectados: **3575**
 
 ## Top-30 casts más riesgosos (HIGH + CRITICAL)
 
-_Ningún cast HIGH o CRITICAL detectado._
+### 1. [CRITICAL] `src/features/costeo/hooks/useTarifaFormReset.ts:28`
+
+```ts
+() => (initialKey === "null" ? undefined : (JSON.parse(initialKey) as Partial<TarifaInput>)),
+```
+
 
 ## Roadmap
 
