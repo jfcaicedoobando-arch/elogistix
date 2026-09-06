@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.823.156] - 2026-09-06
+
+- Cotizaciones (remate A1/A7): un borrador con costo capturado y venta aún en cero ya no se considera vacío. `costoTieneContenido` sólo miraba `precio_venta` y `monto`, pero las filas reales del wizard (`FilaCostoLocal`, hidratadas por `buildCotizacionInitialCostos`) traen `cantidad` y `costo_unitario`, no `monto`; con los dos placeholders USD/MXN el criterio devolvía "sin importes" y el paso 1 podía proponer otra moneda al vincular otra oportunidad. Ahora también cuenta `cantidad × costo_unitario` (y `costo_total` en filas persistidas). Se conservan el borrador realmente vacío que adopta la moneda del CRM, la protección de conceptos reales/compensados y de costos con venta; no se convierten ni modifican importes al relinkear.
+- Pruebas: sólo se agregó la regresión mínima con una `FilaCostoLocal` real (costo 1 × 500 USD, `precio_venta: 0`) y su hidratación; se mantiene la de placeholders. Sin ejecutar pruebas aquí — pendientes en GitHub Actions.
+
 ## [13.823.155] - 2026-09-06
 
 - Clientes (Sentry JAVASCRIPT-REACT-63, Postgres 23502): el alta fallaba con "null value in column \"direccion\"" cuando el cliente se capturaba sin dirección/ciudad/estado. `crear_clientes` convertía todo texto vacío a NULL con `NULLIF(...,'')`, pero esas columnas son `NOT NULL DEFAULT ''`. Ahora las columnas no nulas (rfc, direccion, ciudad, estado, cp, contacto, telefono, email) guardan cadena vacía y sólo `regimen_fiscal`/`uso_cfdi_default` siguen aceptando NULL. Se conserva la validación fiscal completa para clientes con RFC propio.
