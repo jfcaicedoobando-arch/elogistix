@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.823.163] - 2026-09-06
+
+- Costeo/tarifas (Sentry JAVASCRIPT-REACT-64): el aviso «Ya existe una tarifa para esa misma ruta, naviera y tipo de contenedor…» se reportaba como error de aplicación porque la traducción del `23505` devolvía un `Error` genérico. Ahora se lanza como `ReglaNegocioError`, así que la UI sigue mostrando el mismo toast accionable pero deja de abrir issues en Sentry. Sin cambios de validación ni de base de datos.
+
 ## [13.823.162] - 2026-09-06
 
 - Cotizaciones (calidad de código): `services/wizard.ts` superaba el límite de 200 líneas (Power-of-10 #4). Se extrajo `derivarSubtotalMoneda` y `MSG_COTIZACION_MIXTA` a `services/derivarSubtotalMoneda.ts`, reexportados desde `wizard.ts`. Sin cambios de comportamiento.
