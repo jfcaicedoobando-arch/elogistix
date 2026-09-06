@@ -105,3 +105,4 @@ supabase/tests/concepto_venta_eur_no_soportada.sql
 supabase/tests/liquidacion_comision_rol_org_scope.sql
 supabase/tests/prorrateo_conceptos_costo_sin_negativos.sql
 supabase/tests/get_embarque_full_excluye_papelera.sql
+supabase/tests/crm_sync_moneda_venta_cero.sql
