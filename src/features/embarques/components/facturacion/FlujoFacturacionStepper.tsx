@@ -37,13 +37,16 @@ function estadoFacturas(total: number, emitidas: number): Estado {
   return emitidas > 0 ? "completo" : "activo";
 }
 
-/** B9: no llamar "emitida" a una factura que sigue en Borrador. */
+/**
+ * B9: no llamar "emitida" a una factura que sigue en preparación, ni "borrador"
+ * a una que ya está "Por timbrar" (v13.823.153: se usa "sin emitir").
+ */
 function detalleFacturas(total: number, emitidas: number): string {
   if (total === 0) return "Sin facturas";
-  const borradores = total - emitidas;
-  if (emitidas === 0) return `${borradores} en borrador`;
+  const sinEmitir = total - emitidas;
+  if (emitidas === 0) return `${sinEmitir} sin emitir`;
   const base = `${emitidas} emitida${emitidas === 1 ? "" : "s"}`;
-  return borradores > 0 ? `${base} · ${borradores} en borrador` : base;
+  return sinEmitir > 0 ? `${base} · ${sinEmitir} sin emitir` : base;
 }
 
 interface PasoProps {

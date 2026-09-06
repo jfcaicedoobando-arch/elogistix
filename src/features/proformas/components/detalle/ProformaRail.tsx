@@ -8,6 +8,7 @@ import { TimelineProforma } from "@/features/proformas/components/detalle/Timeli
 import { ProformaBitacoraCard } from "@/features/proformas/components/detalle/ProformaBitacoraCard";
 import type { ProformaTimelineFields } from "@/features/proformas/domain/proformaClienteEstado";
 import type { ProformaEnvioLite } from "@/features/proformas/services";
+import type { FacturaCicloLite } from "@/lib/domain/etiquetaCicloProforma";
 
 interface Props {
   proformaId: string;
@@ -15,9 +16,11 @@ interface Props {
   operador: string | null | undefined;
   timeline: ProformaTimelineFields;
   envios?: ProformaEnvioLite[];
+  /** B9: para no llamar "Facturada" a una conversión a borrador. */
+  facturas?: FacturaCicloLite[];
 }
 
-export function ProformaRail({ proformaId, fechaEmision, operador, timeline, envios }: Props) {
+export function ProformaRail({ proformaId, fechaEmision, operador, timeline, envios, facturas }: Props) {
   return (
     <DocumentoRailCard>
       <TimelineProforma
@@ -26,6 +29,7 @@ export function ProformaRail({ proformaId, fechaEmision, operador, timeline, env
         operador={operador}
         timeline={timeline}
         envios={envios}
+        facturas={facturas}
       />
       <div className="mt-4 border-t pt-3">
         <p className="mb-1 text-overline font-medium">

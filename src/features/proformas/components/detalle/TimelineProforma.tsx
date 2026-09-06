@@ -11,12 +11,21 @@ import { formatDate, nombreDesdeEmail } from "@/lib/formatters";
 import { resumirEnvios } from "@/features/proformas/domain/proformaDetalleHelpers";
 import type { ProformaTimelineFields } from "@/features/proformas/domain/proformaClienteEstado";
 import type { ProformaEnvioLite } from "@/features/proformas/services";
+import {
+  etiquetaProformaConvertida,
+  type FacturaCicloLite,
+} from "@/lib/domain/etiquetaCicloProforma";
 
 interface Props {
   fechaEmision: string;
   operador: string | null | undefined;
   timeline: ProformaTimelineFields;
   envios?: ProformaEnvioLite[];
+  /**
+   * B9 (v13.823.153): facturas asociadas. Sin ellas el hito final decía
+   * "Facturada" aunque la única factura siguiera en Borrador o Por timbrar.
+   */
+  facturas?: FacturaCicloLite[];
   /** Rendere sólo la lista, sin la tarjeta contenedora (uso dentro del riel). */
   bare?: boolean;
 
@@ -37,6 +46,7 @@ function buildHitos(
   operador: string | null | undefined,
   t: ProformaTimelineFields,
   notaEnvios: string | null,
+  facturas: FacturaCicloLite[],
 ): Hito[] {
   const rechazada = !!t.rechazadaAt;
   const hitoFinal: Hito = rechazada
@@ -54,7 +64,13 @@ function buildHitos(
       tone: "default",
     },
     hitoFinal,
-    { key: "facturada", label: "Facturada", icon: FileCheck2, fecha: t.fechaFacturacion, tone: "success" },
+    {
+      key: "facturada",
+      label: etiquetaProformaConvertida(facturas),
+      icon: FileCheck2,
+      fecha: t.fechaFacturacion,
+      tone: "success",
+    },
   ];
 }
 
@@ -65,7 +81,7 @@ function toneClass(done: boolean, tone: Hito["tone"]): string {
   return "bg-primary/15 text-primary";
 }
 
-export function TimelineProforma({ fechaEmision, operador, timeline, envios, bare }: Props) {
+export function TimelineProforma({ fechaEmision, operador, timeline, envios, facturas = [], bare }: Props) {
   const resumen = resumirEnvios(envios);
   const notaEnvios =
     resumen.total > 1 ? `${resumen.total} envíos · último ${formatDate(resumen.ultimoAt ?? "")}` : null;

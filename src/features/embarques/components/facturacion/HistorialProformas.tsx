@@ -178,7 +178,7 @@ export function HistorialProformas({
             {proformas.length} proforma{proformas.length === 1 ? "" : "s"}
             {facturadasCount > 0 && <> · {facturadasCount} facturada{facturadasCount === 1 ? "" : "s"}</>}
             {convertidasCount - facturadasCount > 0 && (
-              <> · {convertidasCount - facturadasCount} en borrador</>
+              <> · {convertidasCount - facturadasCount} sin emitir</>
             )}
           </span>
         )}
