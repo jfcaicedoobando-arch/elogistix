@@ -14,6 +14,7 @@ vi.mock("@/features/catalogos/hooks/useTasaIVA", () => ({ useTasaIVA: () => 0.16
 import { useConceptosVentaCotizacion } from "../useConceptosVentaCotizacion";
 import { esBorradorSinImportes } from "@/features/cotizacion/domain/cotizacionSinImportes";
 import { monedaPaso1 } from "@/features/cotizacion/domain/mappers/cotizacion";
+import { buildCotizacionInitialCostos } from "@/features/cotizacion/domain/mappers/cotizacionForm";
 import type { CotizacionFormValues } from "@/features/cotizacion/types";
 
 const values = { monedaCrm: "MXN" } as unknown as CotizacionFormValues;
@@ -44,6 +45,26 @@ describe("borrador vacío + moneda del CRM (paso 1)", () => {
       { descripcion: "Descuento", cantidad: 1, precio_unitario: -500, total: -500 },
     ];
     expect(esBorradorSinImportes(compensados, [], [])).toBe(false);
+  });
+
+  it("un costo capturado sin venta (FilaCostoLocal real) protege la moneda", () => {
+    const { result } = renderHook(() => useConceptosVentaCotizacion());
+    const { conceptosUSD, conceptosMXN } = result.current;
+    // Fila tal como la hidrata `buildCotizacionInitialCostos`: sin `monto`.
+    const costos = buildCotizacionInitialCostos([
+      {
+        concepto: "Flete",
+        moneda: "USD",
+        proveedor: "QA",
+        cantidad: 1,
+        costo_unitario: 500,
+        precio_venta: 0,
+        unidad_medida: "Servicio",
+      },
+    ]);
+    expect(costos[0].precio_venta).toBe(0);
+    expect(esBorradorSinImportes(conceptosUSD, conceptosMXN, costos)).toBe(false);
+    expect(monedaPaso1(values, false)).toBeUndefined();
   });
 
   it("un costo interno con precio de venta también protege la moneda", () => {

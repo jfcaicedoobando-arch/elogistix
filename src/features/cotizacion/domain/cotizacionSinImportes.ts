@@ -23,6 +23,11 @@ export interface ConceptoImporteLike {
 
 export interface CostoImporteLike {
   precio_venta?: number | null;
+  /** Filas reales del wizard (`FilaCostoLocal`): costo capturado sin venta aún. */
+  cantidad?: number | null;
+  costo_unitario?: number | null;
+  costo_total?: number | null;
+  /** Variante persistida/legacy que sí trae un monto plano. */
   monto?: number | null;
 }
 
@@ -35,7 +40,10 @@ export function conceptoTieneContenido(c: ConceptoImporteLike): boolean {
 }
 
 export function costoTieneContenido(c: CostoImporteLike): boolean {
-  return num(c.precio_venta) !== 0 || num(c.monto) !== 0;
+  if (num(c.precio_venta) !== 0 || num(c.monto) !== 0) return true;
+  // A1/A7 (v13.823.156): un costo capturado sin venta todavía es contenido
+  // económico; `FilaCostoLocal` no tiene `monto`, trae cantidad × costo_unitario.
+  return num(c.cantidad) * num(c.costo_unitario) !== 0 || num(c.costo_total) !== 0;
 }
 
 /**
