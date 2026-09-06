@@ -11,7 +11,7 @@ import type { TarifaInput } from "@/features/costeo/services/tarifas";
 describe("useTarifaFormReset", () => {
   it("no vuelve a resetear si el contenido de initial no cambió", () => {
     const onReset = vi.fn();
-    const initial: Partial<TarifaInput> = { naviera_proveedor_id: "prov-1" };
+    const initial: Partial<TarifaInput> = { naviera_id: "prov-1" };
     const { rerender } = renderHook(
       ({ ini }: { ini: Partial<TarifaInput> }) =>
         useTarifaFormReset({ open: true, initial: ini, onReset }),
@@ -20,7 +20,7 @@ describe("useTarifaFormReset", () => {
 
     expect(onReset).toHaveBeenCalledTimes(1);
     // Mismo contenido, nueva identidad (simula refetch del padre).
-    rerender({ ini: { naviera_proveedor_id: "prov-1" } });
+    rerender({ ini: { naviera_id: "prov-1" } });
     expect(onReset).toHaveBeenCalledTimes(1);
   });
 
@@ -33,9 +33,9 @@ describe("useTarifaFormReset", () => {
     );
 
     expect(onReset).toHaveBeenLastCalledWith({ agente_id: "ag-9" });
-    rerender({ ini: { naviera_proveedor_id: "prov-2" } });
+    rerender({ ini: { naviera_id: "prov-2" } });
     expect(onReset).toHaveBeenLastCalledWith({
-      naviera_proveedor_id: "prov-2",
+      naviera_id: "prov-2",
       agente_id: "ag-9",
     });
   });
