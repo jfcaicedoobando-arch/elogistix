@@ -144,7 +144,7 @@ export async function updateTarifaConRecargos(
         incluido_en_total: r.incluido_en_total ?? true,
       })),
   });
-  if (error) throw error;
+  if (error) throw traducirErrorTarifa(error);
   await registrarActividad({
     modulo: "costeo",
     accion: "editar_tarifa",
