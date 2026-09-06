@@ -1,14 +1,7 @@
--- Fuente canónica de public.crear_clientes(jsonb) (Ola 9 · M4).
--- Alta canónica de clientes: valida rol, organización y completitud fiscal
--- cuando el cliente lleva RFC. El INSERT directo a public.clientes está
--- revocado para authenticated.
-
-CREATE OR REPLACE FUNCTION public.crear_clientes(p_clientes jsonb)
-RETURNS SETOF public.clientes
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path TO 'public'
-AS $function$
+CREATE OR REPLACE FUNCTION public.crear_clientes(p_clientes jsonb) RETURNS SETOF public.clientes
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
 DECLARE
   v_uid uuid := auth.uid();
   v_org uuid;
@@ -27,7 +20,6 @@ BEGIN
     RAISE EXCEPTION 'LC_CLIENTE_LOTE_EXCEDIDO: máximo 1000 clientes por llamada'
       USING ERRCODE = '22023';
   END IF;
-
   IF NOT (
     public.has_any_role(v_uid, ARRAY['admin'::public.app_role, 'admin_org'::public.app_role,
                                      'operador'::public.app_role, 'contador'::public.app_role,
@@ -36,24 +28,18 @@ BEGIN
     RAISE EXCEPTION 'LC_CLIENTE_SIN_PERMISO: tu rol no puede dar de alta clientes'
       USING ERRCODE = '42501';
   END IF;
-
   v_org := public.current_user_org_id();
   IF v_org IS NULL THEN
     RAISE EXCEPTION 'LC_CLIENTE_SIN_ORG: no hay organización activa'
       USING ERRCODE = '22023';
   END IF;
-
   FOR v_row IN SELECT * FROM jsonb_array_elements(p_clientes) LOOP
     v_nombre := btrim(COALESCE(v_row->>'nombre', ''));
     IF v_nombre = '' THEN
       RAISE EXCEPTION 'LC_CLIENTE_SIN_NOMBRE: la razón social es obligatoria'
         USING ERRCODE = '22023';
     END IF;
-
     v_rfc := upper(btrim(COALESCE(v_row->>'rfc', '')));
-
-    -- Cliente facturable = trae RFC propio. Entonces el CFDI necesita datos
-    -- fiscales completos desde el alta, no al momento de timbrar.
     IF v_rfc <> '' AND v_rfc NOT IN ('XEXX010101000', 'XAXX010101000') THEN
       IF btrim(COALESCE(v_row->>'regimen_fiscal', '')) = ''
          OR btrim(COALESCE(v_row->>'uso_cfdi_default', '')) = ''
@@ -63,7 +49,6 @@ BEGIN
           USING ERRCODE = '22023';
       END IF;
     END IF;
-
     INSERT INTO public.clientes (
       organization_id, nombre, rfc, direccion, ciudad, estado, cp, contacto,
       telefono, email, regimen_fiscal, uso_cfdi_default, dias_credito,
@@ -88,10 +73,8 @@ BEGIN
       COALESCE((v_row->>'requiere_autorizacion_cotizacion')::boolean, false),
       COALESCE((v_row->>'requiere_autorizacion_proforma')::boolean, false)
     ) RETURNING id INTO v_id;
-
     v_ids := array_append(v_ids, v_id);
   END LOOP;
-
   INSERT INTO public.bitacora_actividad (
     organization_id, usuario_id, usuario_email, accion, modulo,
     entidad_id, entidad_nombre, detalles
@@ -101,12 +84,6 @@ BEGIN
     (SELECT nombre FROM public.clientes WHERE id = v_ids[1]),
     jsonb_build_object('cantidad', array_length(v_ids, 1))
   );
-
   RETURN QUERY SELECT * FROM public.clientes WHERE id = ANY(v_ids);
 END;
-$function$;
-
-REVOKE ALL ON FUNCTION public.crear_clientes(jsonb) FROM PUBLIC;
-REVOKE ALL ON FUNCTION public.crear_clientes(jsonb) FROM anon;
-GRANT EXECUTE ON FUNCTION public.crear_clientes(jsonb) TO authenticated, service_role;
-REVOKE INSERT ON TABLE public.clientes FROM authenticated;
+$$;

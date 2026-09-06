@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.823.155] - 2026-09-06
+
+- Clientes (Sentry JAVASCRIPT-REACT-63, Postgres 23502): el alta fallaba con "null value in column \"direccion\"" cuando el cliente se capturaba sin dirección/ciudad/estado. `crear_clientes` convertía todo texto vacío a NULL con `NULLIF(...,'')`, pero esas columnas son `NOT NULL DEFAULT ''`. Ahora las columnas no nulas (rfc, direccion, ciudad, estado, cp, contacto, telefono, email) guardan cadena vacía y sólo `regimen_fiscal`/`uso_cfdi_default` siguen aceptando NULL. Se conserva la validación fiscal completa para clientes con RFC propio.
+
 ## [13.823.154] - 2026-09-06
 
 - Corrección de guardarraíles CI: `HistorialProformas` vuelve bajo 200 líneas y la prueba Fase J lee la regla `mostrarRecotizar` desde el módulo de dominio.
