@@ -1,5 +1,13 @@
 # Changelog
 
+## [13.823.189] - 2026-09-07
+
+Captura de facturas PDF con IA: 401 "Token inválido" con sesión válida (R188-AUTH-01).
+
+- `_shared/auth.ts`: `authenticate()` sólo declara el token inválido (401) cuando el servicio de auth responde 401/403. Un fallo de infraestructura de `/auth/v1/user` (429 por ráfaga de invocaciones, 5xx o red) se reintenta una vez y, si persiste, devuelve 503 con mensaje reintentable y la razón real en el log (`auth_getuser_no_disponible`), en lugar de traducirse a "Token inválido" y empujar al usuario a la pantalla de sesión expirada.
+- Se retira el respaldo `getClaims`, inexistente en el SDK que usan las funciones (2.45), que hacía que cualquier fallo remoto cayera directo en 401.
+- Verificación: con una sesión real, `/auth/v1/user` responde 200 y la función pasa la autenticación (falla después por `organization_id` de prueba, como se espera). Sin cambios de SQL, RLS, permisos ni datos. Tests/CI/RLS en GitHub Actions.
+
 ## [13.823.188] - 2026-09-07
 
 PDF de proformas: pie de página y numeración visibles; rótulo de contenedores honesto; etiqueta de regreso neutra (R184-PDF-UX-186-20260907).
