@@ -96,5 +96,6 @@ export function useCotizacionDetalleHandlers(cotizacion: CotizacionRow | undefin
     irACargarCostos: embarqueBorrador.irACargarCostos,
     convertirProspecto: conversion.convertirProspecto,
     crearBorrador: embarqueBorrador.crearBorrador,
+    aceptar,
   };
 }
