@@ -5,6 +5,7 @@
  */
 import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
+import { TooltipProvider } from "@/components/ui/tooltip";
 
 const conceptos = [
   { id: "c1", descripcion: "Flete", cantidad: 2, clave_unidad: "E48", monto: 1000, iva: 0, ieps: 0 },
@@ -24,14 +25,16 @@ const { DialogEditarConceptosFactura } = await import(
 
 function renderDialog(subtotal: number) {
   return render(
-    <DialogEditarConceptosFactura
+    <TooltipProvider>
+      <DialogEditarConceptosFactura
       open
       onOpenChange={() => {}}
       facturaId="f1"
       folio="FP-000224"
       moneda="MXN"
-      subtotal={subtotal}
-    />,
+        subtotal={subtotal}
+      />
+    </TooltipProvider>,
   );
 }
 
