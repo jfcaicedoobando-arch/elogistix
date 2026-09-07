@@ -2,7 +2,7 @@
  * Badges de estado del ciclo de la proforma y del origen de aceptación.
  * Extraído de `ProformaDetalleCards` para respetar Power-of-10 #4 (≤200 líneas).
  */
-import { Globe, UserCheck, Archive } from "lucide-react";
+import { Globe, UserCheck, Archive, ShieldCheck } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import {
   etiquetaProformaConvertida,
@@ -11,7 +11,7 @@ import {
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 export type EstadoCliente = "pendiente" | "aceptada" | "rechazada";
-export type OrigenAceptacion = "portal" | "manual" | "migracion" | "desconocido";
+export type OrigenAceptacion = "portal" | "manual" | "migracion" | "interna" | "desconocido";
 
 /**
  * Deriva el origen de la aceptación a partir del campo `aceptada_por` que
@@ -21,6 +21,9 @@ export type OrigenAceptacion = "portal" | "manual" | "migracion" | "desconocido"
 function derivarOrigenAceptacion(aceptadaPor: string | null | undefined): OrigenAceptacion {
   if (!aceptadaPor) return "desconocido";
   if (aceptadaPor === "cliente_portal_token") return "portal";
+  // El cliente no requiere autorización de crédito: un miembro autorizado
+  // aprobó la proforma internamente (RPC de aprobación interna).
+  if (aceptadaPor === "auto:sin_autorizacion_requerida") return "interna";
   if (aceptadaPor.startsWith("manual:")) return "manual";
   const lower = aceptadaPor.toLowerCase();
   if (lower.includes("migración") || lower.includes("migracion")) return "migracion";
@@ -32,7 +35,12 @@ function BadgeOrigenAceptacion({ origen }: { origen: OrigenAceptacion }) {
     portal: { icon: Globe, label: "Cliente aceptó por portal", tip: "El cliente aceptó la proforma desde el enlace del portal público." },
     manual: { icon: UserCheck, label: "Aceptación manual", tip: "Un miembro del equipo marcó la aceptación en nombre del cliente (llamada, WhatsApp, email fuera del sistema)." },
     migracion: { icon: Archive, label: "Aceptación histórica", tip: "Aceptación registrada durante la migración de datos anteriores a julio 2026." },
-    desconocido: { icon: UserCheck, label: "Aceptada", tip: "Origen de la aceptación no registrado." },
+    interna: {
+      icon: ShieldCheck,
+      label: "Aprobación interna",
+      tip: "El cliente no requiere autorización de crédito para esta proforma; un miembro autorizado del equipo la aprobó internamente.",
+    },
+    desconocido: { icon: UserCheck, label: "Origen no registrado", tip: "Origen de la aceptación no registrado." },
   }[origen];
   const Icon = config.icon;
   return (
