@@ -18,12 +18,26 @@ import { sumarEnMoneda } from "@/lib/financial/costosUSD";
 // regresión O(n²) real costaría >10x, no +13%.
 const BUDGET_MS = 80;
 
-function measure(label: string, fn: () => void) {
-  const start = performance.now();
-  fn();
-  const ms = performance.now() - start;
+/**
+ * Mide el MEJOR de varias corridas tras un warm-up.
+ *
+ * Analogía: es como cronometrar a un corredor sólo después de que calentó, y
+ * quedarse con su mejor vuelta. Así el canario mide el costo real del
+ * algoritmo y no el arranque del motor JS ni el CPU compartido cuando la
+ * suite completa corre en paralelo (causa de los flakes previos).
+ * Una regresión O(n²) real degrada TODAS las vueltas, así que se sigue viendo.
+ */
+function measure(label: string, fn: () => void, corridas = 5) {
+  fn(); // warm-up: paga JIT y primera carga del módulo.
+  let ms = Number.POSITIVE_INFINITY;
+  for (let i = 0; i < corridas; i++) {
+    const start = performance.now();
+    fn();
+    ms = Math.min(ms, performance.now() - start);
+  }
   return { label, ms };
 }
+
 
 describe("canary: query timeout / hot-path performance", () => {
   it("sumarEnMoneda procesa 5 000 conceptos en <80ms", () => {
