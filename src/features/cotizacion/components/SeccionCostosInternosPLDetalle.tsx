@@ -60,6 +60,11 @@ export default function SeccionCostosInternosPLDetalle({
     // La captura abierta queda congelada. Fuera de edición se adopta únicamente
     // una fotografía completa (costos + sello de la misma consulta).
     if (isLoading || editMode || !snapshot) return;
+    const selloAnterior = selloConfirmado ? Date.parse(selloConfirmado) : Number.NaN;
+    const selloEntrante = snapshot.updatedAt ? Date.parse(snapshot.updatedAt) : Number.NaN;
+    if (Number.isFinite(selloAnterior) && (!Number.isFinite(selloEntrante) || selloEntrante < selloAnterior)) {
+      return;
+    }
     const filasSnapshot = snapshot.costos.length > 0
       ? mapearCostosAFilas(snapshot.costos, conceptosUSD, conceptosMXN)
       : mapearConceptosAFilas(conceptosUSD, conceptosMXN);
@@ -67,7 +72,7 @@ export default function SeccionCostosInternosPLDetalle({
     setFilas(filasSnapshot);
     setSelloConfirmado(snapshot.updatedAt);
   }, [
-    isLoading, snapshot, conceptosUSD, conceptosMXN, editMode,
+    isLoading, snapshot, conceptosUSD, conceptosMXN, editMode, selloConfirmado,
   ]);
 
   const filasUSD = useMemo(() => filas.filter(f => f.moneda === "USD"), [filas]);

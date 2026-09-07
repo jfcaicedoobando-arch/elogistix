@@ -67,13 +67,13 @@ function renderSeccion() {
   );
 }
 
-function vista() {
+function vista(selloDetalle: string = S0) {
   return (
     <SeccionCostosInternosPLDetalle
       cotizacionId="cot-1"
       conceptosUSD={[]}
       conceptosMXN={[]}
-      cotizacionUpdatedAt={S0}
+      cotizacionUpdatedAt={selloDetalle}
     />
   );
 }
@@ -156,6 +156,26 @@ describe("guardado rápido de costos con sello optimista", () => {
     });
   });
 
+  it("no mezcla filas y sello cuando detalle y costos responden en distinto orden", async () => {
+    mutateAsync.mockResolvedValue({ costos: COSTOS_700, updatedAt: S2 });
+    const { rerender } = renderSeccion();
+
+    // Llega primero el detalle S1, pero la fotografía de costos sigue completa en K0/S0.
+    rerender(vista(S1));
+    abrirEdicionYGuardar();
+    await waitFor(() => expect(mutateAsync).toHaveBeenCalledTimes(1));
+    expect(mutateAsync.mock.calls[0][0]).toMatchObject({ expectedUpdatedAt: S0 });
+    expect(mutateAsync.mock.calls[0][0].costos[0].costo_unitario).toBe(500);
+
+    // Después llega la fotografía completa K1/S1 aunque el detalle vuelva retrasado a S0.
+    snapshot = { costos: COSTOS_600, updatedAt: S1 };
+    rerender(vista(S0));
+    abrirEdicionYGuardar();
+    await waitFor(() => expect(mutateAsync).toHaveBeenCalledTimes(2));
+    expect(mutateAsync.mock.calls[1][0]).toMatchObject({ expectedUpdatedAt: S2 });
+    expect(mutateAsync.mock.calls[1][0].costos[0].costo_unitario).toBe(700);
+  });
+
   it("adopta una fotografía externa completa sólo fuera de edición", async () => {
     const { rerender } = renderSeccion();
     abrirEdicion();
@@ -180,11 +200,13 @@ describe("guardado rápido de costos con sello optimista", () => {
 
   it("un conflicto real deja un solo aviso y conserva la captura modificada", async () => {
     mutateAsync.mockRejectedValue(new Error("LC_CONFLICTO_CONCURRENCIA"));
-    renderSeccion();
+    const { rerender } = renderSeccion();
     abrirEdicion();
     fireEvent.change(screen.getByLabelText(/proveedor de flete/i), {
       target: { value: "PROVEEDOR EDITADO" },
     });
+    snapshot = { costos: COSTOS_600, updatedAt: S1 };
+    rerender(vista(S1));
     guardar();
 
     await waitFor(() => expect(notifyError).toHaveBeenCalledTimes(1));

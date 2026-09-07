@@ -43,7 +43,6 @@ export function useUpsertCotizacionCostos() {
         data,
       );
       void queryClient.invalidateQueries({ queryKey: queryKeys.cotizaciones.costos(variables.cotizacionId) });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.cotizaciones.costosSnapshot(variables.cotizacionId) });
       // v13.823.164: el reemplazo mueve `cotizaciones.updated_at`; el detalle
       // debe releerse para que el siguiente sello venga fresco de la BD.
       void queryClient.invalidateQueries({ queryKey: queryKeys.cotizaciones.detail(variables.cotizacionId) });
