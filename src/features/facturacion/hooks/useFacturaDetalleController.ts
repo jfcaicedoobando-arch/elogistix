@@ -15,7 +15,7 @@ import { deriveFacturaFlags } from "@/features/facturacion/domain/facturaFlags";
 import { usePermissions } from "@/hooks/shared";
 
 export function useFacturaDetalleController(id: string | undefined) {
-  const { canEdit, canRegistrarCobro } = usePermissions();
+  const { canEdit, canRegistrarCobro, canEmitirFactura } = usePermissions();
   const { data: factura, isLoading, error, refetch } = useFactura(id);
   const acuse = useAcuseCancelacion(factura);
   const pagosQuery = usePagosFactura(id);
@@ -49,7 +49,7 @@ export function useFacturaDetalleController(id: string | undefined) {
   const timbrarRep = useTimbrarRep(factura?.id);
 
   return {
-    canEdit, factura, isLoading, error, refetch, acuse, flags,
+    canEdit, puedeEmitir: canEmitirFactura, factura, isLoading, error, refetch, acuse, flags,
     pagoRepPendiente, handleDownload, eliminar, eliminando,
     conceptosVivos, timbrarRep, saldo, totalPagado,
     saldoError, refetchSaldo,

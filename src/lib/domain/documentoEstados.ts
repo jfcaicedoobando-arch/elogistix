@@ -23,6 +23,8 @@ export interface EstadoDocumentoResumen {
   subEtiqueta?: string | null;
   /** Tono del matiz: `warning` por defecto, `destructive` cuando hay atraso. */
   subTono?: "warning" | "destructive";
+  /** IDs de pasos que se omitieron (nunca ocurrieron) y no deben verse como completados. */
+  pasosOmitidos: string[];
 }
 
 const PASOS_EMITIDA: PasoDocumento[] = [
@@ -73,13 +75,19 @@ function subEtiquetaDe(estado: string): string | null {
   return SUB_ETIQUETAS[estado] ?? null;
 }
 
+interface ResumenOpciones {
+  subEtiqueta?: string | null;
+  subTono?: "warning" | "destructive";
+  pasosOmitidos?: string[];
+}
+
 function resumen(
   pasos: PasoDocumento[],
   indiceActual: number,
   etiquetaTerminal: string | null,
-  subEtiqueta: string | null = null,
-  subTono: "warning" | "destructive" = "warning",
+  opciones: ResumenOpciones = {},
 ): EstadoDocumentoResumen {
+  const { subEtiqueta = null, subTono = "warning", pasosOmitidos = [] } = opciones;
   return {
     pasos,
     indiceActual: etiquetaTerminal ? -1 : indiceActual,
@@ -87,6 +95,7 @@ function resumen(
     etiquetaTerminal,
     subEtiqueta: etiquetaTerminal ? null : subEtiqueta,
     subTono,
+    pasosOmitidos: etiquetaTerminal ? [] : pasosOmitidos,
   };
 }
 
@@ -94,7 +103,7 @@ export function resumenFacturaEmitida(estado: string | null | undefined): Estado
   const key = estado ?? "";
   const terminal = TERMINALES_EMITIDA[key] ?? null;
   const indice = INDICE_EMITIDA[key];
-  return resumen(PASOS_EMITIDA, indice ?? 0, terminal, subEtiquetaDe(key));
+  return resumen(PASOS_EMITIDA, indice ?? 0, terminal, { subEtiqueta: subEtiquetaDe(key) });
 }
 
 /** Matiz del paso actual de una factura recibida, priorizando el atraso real. */
@@ -120,9 +129,9 @@ export function resumenFacturaRecibida(input: EstadoRecibidaInput): EstadoDocume
   if (estado === "Cancelada") return resumen(PASOS_RECIBIDA, -1, "Cancelada");
   if (estado === "Pagada") return resumen(PASOS_RECIBIDA, 3, null);
   if (input.estadoAprobacion === "rechazada") return resumen(PASOS_RECIBIDA, -1, "Rechazada");
-  if (input.estadoAprobacion === "aprobada") return resumen(PASOS_RECIBIDA, 2, null, sub, tono);
+  if (input.estadoAprobacion === "aprobada") return resumen(PASOS_RECIBIDA, 2, null, { subEtiqueta: sub, subTono: tono });
   if (estado === "Borrador") return resumen(PASOS_RECIBIDA, 0, null);
-  return resumen(PASOS_RECIBIDA, 1, null, sub, tono);
+  return resumen(PASOS_RECIBIDA, 1, null, { subEtiqueta: sub, subTono: tono });
 }
 
 export function resumenDocumento(
@@ -162,19 +171,23 @@ export function resumenProforma(input: EstadoProformaInput): EstadoDocumentoResu
   if (input.estadoCliente === "rechazada") {
     return resumen(PASOS_PROFORMA, -1, "Rechazada por el cliente");
   }
+  // Cuando el cliente ya avanzó (aceptó o se facturó) sin que exista
+  // `enviadaAt`, el paso "Enviada" nunca ocurrió: no puede verse como
+  // completado (ej. proformas aprobadas internamente sin envío al cliente).
+  const enviadaOmitida = !input.enviadaAt;
+  const pasosOmitidos = enviadaOmitida ? ["enviada"] : [];
   if (input.facturada) {
     const emitida = input.facturaEmitida ?? true;
-    if (emitida) return resumen(PASOS_PROFORMA, 3, null);
+    if (emitida) return resumen(PASOS_PROFORMA, 3, null, { pasosOmitidos });
     // Convertida pero sin emitir: el ciclo se queda en "Aceptada" con matiz.
-    return resumen(
-      PASOS_PROFORMA,
-      2,
-      null,
-      input.etiquetaConversion ?? "Convertida, sin emitir",
-      "warning",
-    );
+    return resumen(PASOS_PROFORMA, 2, null, {
+      subEtiqueta: input.etiquetaConversion ?? "Convertida, sin emitir",
+      pasosOmitidos,
+    });
   }
-  if (input.estadoCliente === "aceptada") return resumen(PASOS_PROFORMA, 2, null);
-  if (input.enviadaAt) return resumen(PASOS_PROFORMA, 1, null, "Pendiente del cliente");
+  if (input.estadoCliente === "aceptada") {
+    return resumen(PASOS_PROFORMA, 2, null, { pasosOmitidos });
+  }
+  if (input.enviadaAt) return resumen(PASOS_PROFORMA, 1, null, { subEtiqueta: "Pendiente del cliente" });
   return resumen(PASOS_PROFORMA, 0, null);
 }

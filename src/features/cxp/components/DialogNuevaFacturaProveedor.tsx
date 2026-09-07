@@ -151,6 +151,8 @@ function DialogNuevaFacturaProveedorForm({
               subtotal={sub}
               moneda={moneda}
               renglones={conceptosParaCuadre.length}
+              ivaGlobal={iva}
+              totalDocumento={ctl.total}
             />
           ) : undefined
         }

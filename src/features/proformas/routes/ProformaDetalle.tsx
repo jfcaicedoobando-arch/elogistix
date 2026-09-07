@@ -23,12 +23,14 @@ import { ProformaTabs } from "@/features/proformas/components/detalle/ProformaTa
 import { ProformaRail } from "@/features/proformas/components/detalle/ProformaRail";
 import { ProformaDetalleHeader } from "@/features/proformas/components/detalle/ProformaDetalleHeader";
 import { ErrorState } from "@/components/shared/states/ErrorState";
+import { useDocumentTitle } from "@/hooks/shared";
 
 
 export default function ProformaDetalle() {
   const { id } = useParams<{ id: string }>();
   const { data, isLoading, isError, refetch } = useProformaDetalle(id);
   useRegisterBreadcrumbLabel(id, data?.proforma.numero);
+  useDocumentTitle(data?.proforma.numero ?? "Proforma");
 
   if (isLoading) {
     return (

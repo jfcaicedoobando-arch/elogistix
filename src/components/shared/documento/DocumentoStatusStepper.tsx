@@ -35,21 +35,24 @@ export function DocumentoStatusStepper({ resumen, className }: Props) {
       <ol className="flex min-w-0 flex-nowrap items-center gap-1" aria-label="Ciclo de vida del documento">
 
       {resumen.pasos.map((paso, i) => {
-        const completado = i < resumen.indiceActual;
+        const omitido = resumen.pasosOmitidos?.includes(paso.id) ?? false;
+        const completado = i < resumen.indiceActual && !omitido;
         const actual = i === resumen.indiceActual;
         return (
           <li key={paso.id} className="flex shrink-0 items-center gap-1">
             <span
               aria-current={actual ? "step" : undefined}
+              aria-label={omitido ? `${paso.label}: omitido` : undefined}
               className={cn(
                 "inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full border px-2.5 py-1 text-body-sm font-medium transition-colors",
                 actual && "border-accent bg-accent/10 text-accent",
                 completado && "border-success/40 bg-success/10 text-success",
-                !actual && !completado && "border-border bg-muted/40 text-muted-foreground",
+                omitido && "border-border bg-muted/30 text-muted-foreground italic",
+                !actual && !completado && !omitido && "border-border bg-muted/40 text-muted-foreground",
               )}
             >
               {completado ? <Check className="h-3 w-3" aria-hidden /> : null}
-              {paso.label}
+              {omitido ? "Omitido" : paso.label}
             </span>
             {i < resumen.pasos.length - 1 ? (
               <span className="h-px w-2 shrink-0 bg-border sm:w-4" aria-hidden />

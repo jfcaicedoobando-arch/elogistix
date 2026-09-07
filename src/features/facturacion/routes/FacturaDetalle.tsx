@@ -40,14 +40,14 @@ export default function FacturaDetalle() {
   const { id } = useParams<{ id: string }>();
   const idValido = esUuid(id);
   const controller = useFacturaDetalleController(idValido ? id : undefined);
-  const { canEdit, factura, isLoading, error, refetch, flags } = controller;
+  const { canEdit, puedeEmitir, factura, isLoading, error, refetch, flags } = controller;
   useRegisterBreadcrumbLabel(id, factura?.numero);
   // UIA-12: título de pestaña por folio de factura.
   useDocumentTitle(factura?.numero ? `Factura ${factura.numero}` : "Factura");
 
   const dialogs = useFacturaDetalleDialogs();
   const { puedeTimbrarDesdeSistema } = flags;
-  useAutoAbrirTimbrar(puedeTimbrarDesdeSistema, canEdit, () => dialogs.setTimbrarOpen(true));
+  useAutoAbrirTimbrar(puedeTimbrarDesdeSistema, puedeEmitir, () => dialogs.setTimbrarOpen(true));
   const sustituyeA = (factura as { sustituye_a?: string | null } | null | undefined)?.sustituye_a ?? null;
   const { href: volverHref, label: volverLabel } = useVolverAFacturaOriginal(id, sustituyeA);
 
@@ -81,6 +81,7 @@ export default function FacturaDetalle() {
     <FacturaDetalleView
       factura={factura}
       canEdit={canEdit}
+      puedeEmitir={puedeEmitir}
       flags={flags}
       acuse={controller.acuse}
       eliminando={controller.eliminando}

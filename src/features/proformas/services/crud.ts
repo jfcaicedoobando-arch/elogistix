@@ -5,6 +5,7 @@ import { calcularTotalesProforma } from "@/features/proformas/domain/proforma";
 import { logger } from "@/lib/observability/logger";
 import type { ProformaRow } from "./types";
 import { registrarActividad } from "@/services/bitacora/registrar";
+import { hoyMx } from "@/lib/date/mx";
 
 export interface CrearProformaParams {
   organizationId: string;
@@ -67,6 +68,19 @@ export async function crearProforma(params: CrearProformaParams): Promise<Profor
     logger.warn("[crearProforma] Sentry.metrics falló:", err);
   }
   const proforma = fromDb<ProformaRow>(data);
+  // R170-02: la RPC inserta `fecha_emision` con CURRENT_DATE (UTC). Entre las
+  // 18:00 y 23:59 hora CDMX eso cae en el día siguiente en México. Se corrige
+  // aquí mismo, como parte de la misma operación de creación (no es backfill
+  // de proformas históricas). Ver reporte para el SQL propuesto que resuelve
+  // esto directamente en la RPC.
+  const fechaNegocio = hoyMx();
+  if (proforma.fecha_emision !== fechaNegocio) {
+    const { error: errFecha } = await supabase
+      .from("proformas")
+      .update({ fecha_emision: fechaNegocio })
+      .eq("id", proforma.id);
+    if (!errFecha) proforma.fecha_emision = fechaNegocio;
+  }
   await registrarActividad({
     modulo: "facturacion",
     accion: "Creó proforma",

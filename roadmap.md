@@ -23,3 +23,4 @@
 
 ## Entrega
 - [ ] CHANGELOG + APP_VERSION 13.823.71
+

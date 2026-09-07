@@ -26,12 +26,21 @@ const PROFORMA_LISTA_SELECT = [
   "fecha_emision", "estado_proforma", "estado_cliente", "folio_factura_externa",
   "fecha_facturacion", "factura_id", "created_at",
   "facturas:factura_id(factura_pdf_url, factura_xml_url)",
+  // R170-01: facturas reales (FK inversa), sólo para distinguir en la lista
+  // una conversión a factura BORRADOR de una emisión fiscal real (ver
+  // `etiquetaCicloProforma.ts`). Se filtran las borradas (`deleted_at`) en
+  // cliente, igual que hace `fetchProformaPorId`.
+  "facturas_asociadas:facturas!proforma_id(id, estado, uuid_fiscal, deleted_at)",
 ].join(", ");
 
 const PROFORMA_EMBARQUE_SELECT = [
   "id", "numero", "embarque_id", "factura_id",
   "estado_proforma", "estado_revision", "estado_aprobacion", "estado_cliente",
   "motivo_rechazo", "rechazada_at", "consolidada_en",
+  // R170-03: HistorialProformas (tab facturación del embarque) muestra fecha,
+  // operador y días de crédito por fila; sin estas columnas el select nunca
+  // las trae y la tabla las pinta como '-'/'—'.
+  "fecha_emision", "operador", "dias_credito",
   "total_mxn", "total_usd", "created_at",
   "facturas:factura_id(factura_pdf_url, factura_xml_url)",
 ].join(", ");
@@ -87,7 +96,7 @@ export async function fetchProformaPorId(id: string): Promise<ProformaDetalleFul
  * filtra por estado en la UI. No filtra por `estado_revision`.
  */
 export async function fetchProformasTodas(organizationId: string): Promise<ProformaConFactura[]> {
-  return fromDb<ProformaConFactura[]>(
+  const rows = fromDb<ProformaConFactura[]>(
     await unwrapOr(
       supabase
         .from("proformas")
@@ -98,6 +107,12 @@ export async function fetchProformasTodas(organizationId: string): Promise<Profo
       [],
     ),
   );
+  // R170-01: descartar facturas asociadas en papelera; no deben contar para
+  // decidir si la conversión ya tiene una factura viva.
+  return rows.map((p) => ({
+    ...p,
+    facturas_asociadas: (p.facturas_asociadas ?? []).filter((f) => !f.deleted_at),
+  }));
 }
 
 

@@ -73,3 +73,16 @@ describe("resumenProforma — conversión vs emisión (B9)", () => {
     expect(resumenProforma({ estadoCliente: "aceptada", facturada: true }).indiceActual).toBe(3);
   });
 });
+
+describe("resumenProforma — pasos omitidos (R170-06)", () => {
+  it("marca 'Enviada' como omitida (no completada) cuando se aprobó internamente sin enviadaAt", () => {
+    const r = resumenProforma({ estadoCliente: "aceptada", facturada: false, enviadaAt: null });
+    expect(r.indiceActual).toBe(2);
+    expect(r.pasosOmitidos).toContain("enviada");
+  });
+
+  it("no marca 'Enviada' como omitida cuando sí se envió al cliente antes de aceptar", () => {
+    const r = resumenProforma({ estadoCliente: "aceptada", facturada: false, enviadaAt: "2026-01-01" });
+    expect(r.pasosOmitidos).toEqual([]);
+  });
+});

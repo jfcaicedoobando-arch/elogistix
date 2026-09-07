@@ -33,6 +33,7 @@ type DialogsBundle = ReturnType<typeof useFacturaDetalleDialogs>;
 interface FacturaDetalleViewProps {
   factura: FacturaDetalle;
   canEdit: boolean;
+  puedeEmitir: boolean;
   flags: FacturaFlags;
   acuse: AcuseState;
   eliminando: boolean;
@@ -52,7 +53,7 @@ interface FacturaDetalleViewProps {
 
 export function FacturaDetalleView(props: FacturaDetalleViewProps) {
   const {
-    factura, canEdit, flags, acuse, eliminando, conceptosVivos,
+    factura, canEdit, puedeEmitir, flags, acuse, eliminando, conceptosVivos,
     pagoRepPendiente, timbrarRep, handleDownload, onEliminar,
     volverHref, volverLabel, dialogs,
   } = props;
@@ -97,6 +98,7 @@ export function FacturaDetalleView(props: FacturaDetalleViewProps) {
               <FacturaDetalleActionsBar
                 factura={factura}
                 canEdit={canEdit}
+                puedeEmitir={puedeEmitir}
                 flags={flags}
                 acuse={acuse}
                 eliminando={eliminando}

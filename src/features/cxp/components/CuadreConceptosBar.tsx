@@ -23,6 +23,10 @@ interface Props {
   moneda: string;
   /** Número de renglones considerados en la suma. */
   renglones?: number;
+  /** IVA global del documento (cabecera), cuando no viene desglosado por partida. */
+  ivaGlobal?: number;
+  /** Total del documento (subtotal + impuestos), para contrastar con "Conceptos". */
+  totalDocumento?: number;
 }
 
 interface EstadoVisual {
@@ -78,7 +82,7 @@ function visualPorEstado(estado: EstadoCuadre, diferencia: number, moneda: strin
   };
 }
 
-export function CuadreConceptosBar({ resultado, subtotal, moneda, renglones }: Props) {
+export function CuadreConceptosBar({ resultado, subtotal, moneda, renglones, ivaGlobal, totalDocumento }: Props) {
   const v = visualPorEstado(resultado.estado, resultado.diferencia, moneda);
   const abs = Math.abs(resultado.diferencia);
   const signo = resultado.diferencia > 0 ? "faltan" : "sobran";
@@ -102,6 +106,13 @@ export function CuadreConceptosBar({ resultado, subtotal, moneda, renglones }: P
           </span>
         </div>
       </div>
+      {resultado.estado === "cuadrado" && (ivaGlobal ?? 0) > 0 && (
+        <p className="text-muted-foreground mt-1 pl-6 text-label">
+          {`Total de partidas: ${formatCurrency(subtotal, moneda)} (sin impuestos). `}
+          {`Total del documento: ${formatCurrency(totalDocumento ?? subtotal + (ivaGlobal ?? 0), moneda)}, `}
+          {`incluye ${formatCurrency(ivaGlobal ?? 0, moneda)} de IVA capturado a nivel documento (no desglosado por partida).`}
+        </p>
+      )}
       {resultado.estado !== "cuadrado" && resultado.estado !== "sin_conceptos" && (
         <Collapsible open={abierto} onOpenChange={setAbierto}>
           <CollapsibleTrigger className="mt-1 ml-6 flex items-center gap-1 text-label font-medium text-muted-foreground underline-offset-2 hover:underline">

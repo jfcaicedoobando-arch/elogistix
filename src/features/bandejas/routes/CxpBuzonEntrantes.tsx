@@ -34,8 +34,10 @@ import { FacturasEntrantesLista } from "@/features/bandejas/components/FacturasE
 import { useBuzonEntrantesFiltros } from "@/features/bandejas/hooks/useBuzonEntrantesFiltros";
 import { BuzonEntrantesModales } from "@/features/bandejas/components/BuzonEntrantesModales";
 import { useCapturaDesdeBuzon } from "@/features/bandejas/hooks/useCapturaDesdeBuzon";
+import { useDocumentTitle } from "@/hooks/shared";
 
 export default function CxpBuzonEntrantes() {
+  useDocumentTitle("Buzón de compras");
   const { canCapturarFacturaProveedor } = usePermissions();
   const { data: pendientes = [], isLoading, isError, refetch } = useFacturasEntrantesPendientes();
   const rechazar = useRechazarFacturaEntrante();
