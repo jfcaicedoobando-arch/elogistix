@@ -50,7 +50,7 @@ interface Props {
 }
 
 
-function buildPrimary(props: Props): DetalleActionItem | null {
+export function buildPrimary(props: Props): DetalleActionItem | null {
   const { flags, canEdit, puedeEmitir } = props;
   if (puedeEmitir && flags.puedeTimbrarDesdeSistema) {
     return { id: "timbrar", label: "Timbrar factura", icon: Stamp, onClick: props.onTimbrar };
