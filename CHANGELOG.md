@@ -1,5 +1,14 @@
 # Changelog
 
+## [13.823.174] - 2026-09-07
+
+Completa el empaquetado de la migración R170-02, que sigue **preparada y no aplicada**. Sin cambios de lógica ni de permisos efectivos.
+
+- Higiene de migraciones (H6): `20260913000400_r170_02_fecha_negocio_mx.sql` re-emite dos funciones `SECURITY DEFINER` y no declaraba sus privilegios en el mismo archivo. Se agregaron al final las sentencias `REVOKE`/`GRANT` que **reafirman exactamente** la matriz canónica vigente (`REVOKE ALL ... FROM PUBLIC, anon` y `GRANT EXECUTE ... TO authenticated, service_role`), tomada de `20260818005136` (`crear_proforma_atomica`) y `20260826000700` (`convertir_proformas_a_factura`). No se otorga ningún permiso nuevo, no se toca RLS ni la matriz de roles, no se movió el BASELINE ni se agregaron excepciones.
+- El espejo en `supabase/schema/` no cambia: la comparación de espejos ignora `REVOKE`/`GRANT` y los cuerpos ya estaban sincronizados.
+
+Pendiente: la migración requiere una autorización de aplicación aparte contra la base de la app. La suite de RLS de GitHub Actions corre sobre un PostgreSQL efímero (`PGHOST=localhost`) y no despliega nada a Libre Carga. Pruebas, CI, SQL y RLS quedan pendientes de GitHub Actions.
+
 ## [13.823.173] - 2026-09-07
 
 Arreglo de los fallos de CI de la entrega anterior. Sin cambios funcionales.
