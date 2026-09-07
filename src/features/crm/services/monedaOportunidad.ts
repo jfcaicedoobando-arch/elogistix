@@ -8,10 +8,15 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 
-/** Moneda vigente de la oportunidad. `null` = no existe o RLS la filtró. */
+/**
+ * Moneda vigente de la oportunidad. `null` = sin id, no existe o RLS la filtró.
+ * La guardia de id vacío evita mandar `"null"` a un `uuid` (22P02), que la app
+ * mostraba como falso error de conexión (JAVASCRIPT-REACT-6A/6B).
+ */
 export async function fetchMonedaOportunidad(
-  oportunidadId: string,
+  oportunidadId: string | null | undefined,
 ): Promise<string | null> {
+  if (!oportunidadId) return null;
   const { data, error } = await supabase
     .from("crm_oportunidades")
     .select("id, moneda")
