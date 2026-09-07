@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.823.190] - 2026-09-07
+
+Captura de facturas PDF con IA: no reenviar una sesión revocada después de un 401.
+
+- `ensureFreshSession.ts`: cuando `parse-invoice-pdf` ya rechazó el JWT y la renovación forzada falla con `Refresh Token Not Found`, ya no se reutiliza el mismo token por tener una fecha local todavía vigente. La carga termina con el mensaje de sesión requerido en vez de repetir el 401 técnico y provocar una pantalla en blanco.
+- Se conserva el respaldo anterior únicamente para renovaciones preventivas que pueden competir con la rotación automática del SDK; se preparó una regresión focalizada para ambos casos. Sin cambios en funciones, SQL, RLS, permisos ni datos. CI y RLS completos quedan para GitHub Actions.
+
 ## [13.823.189] - 2026-09-07
 
 Captura de facturas PDF con IA: 401 "Token inválido" con sesión válida (R188-AUTH-01).
