@@ -1,22 +1,7 @@
--- R179-01 (PREPARADA, NO APLICADA) — Persistir el tratamiento fiscal de los
--- conceptos de venta capturados en el wizard de embarques.
---
--- Motivo: `crear_embarque_completo` y `actualizar_embarque_completo` insertan
--- `conceptos_venta` SIN `aplica_iva` / `tasa_iva_aplicada`, por lo que el IVA
--- elegido en el catálogo se descarta y la fila queda con los DEFAULT de tabla
--- (`aplica_iva=false`, `tasa_iva_aplicada=0.16`). El frontend ya envía ambos
--- campos (opcionales) desde v13.823.181.
---
--- Alcance estricto:
---   * Sólo se agregan las dos columnas al INSERT/UPDATE de `conceptos_venta`.
---   * Si el payload NO trae la clave, se conserva el valor guardado (UPDATE) o
---     el DEFAULT de tabla (INSERT): no se resuelven históricos por nombre ni se
---     hace backfill.
---   * No cambia firma, SECURITY DEFINER, ACL, RLS, triggers, candados de
---     conceptos proformados/facturados, ni la rama de `conceptos_costo`.
---   * No hay soporte EUR nuevo.
---
--- Requiere autorización explícita para aplicarse.
+-- R179-01 — Persistir el tratamiento fiscal (aplica_iva / tasa_iva_aplicada) de los
+-- conceptos de venta en `crear_embarque_completo` y `actualizar_embarque_completo`.
+-- Aplicada el 2026-09-07 con autorización explícita del usuario (registro del
+-- backend: 20260907082738). Sin backfill, sin cambios de firma, ACL, RLS ni triggers.
 CREATE OR REPLACE FUNCTION public.actualizar_embarque_completo(p_embarque_id uuid, p_embarque jsonb, p_conceptos_venta jsonb DEFAULT '[]'::jsonb, p_conceptos_costo jsonb DEFAULT '[]'::jsonb, p_request_id uuid DEFAULT NULL::uuid, p_expected_updated_at timestamp with time zone DEFAULT NULL::timestamp with time zone)
 RETURNS jsonb
 LANGUAGE plpgsql

@@ -3848,7 +3848,8 @@
       "20260912000100_prorrateo_conceptos_costo_sin_negativos.sql",
       "20260912000200_dashboard_arribos_excluye_borrador.sql",
       "20260913000300_dashboard_summary_espejo_replay.sql",
-      "20260913000400_r170_02_fecha_negocio_mx.sql"
+      "20260913000400_r170_02_fecha_negocio_mx.sql",
+      "20260913000600_r179_01_conceptos_venta_iva_rpc.sql"
     ]
   }
 }
