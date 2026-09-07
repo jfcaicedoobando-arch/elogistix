@@ -28876,7 +28876,7 @@ CREATE TABLE public.conceptos_factura (
     id uuid DEFAULT gen_random_uuid() NOT NULL,
     factura_id uuid NOT NULL,
     descripcion text NOT NULL,
-    cantidad integer DEFAULT 1 NOT NULL,
+    cantidad numeric(18,6) DEFAULT 1 NOT NULL,
     precio_unitario numeric DEFAULT 0 NOT NULL,
     moneda public.moneda DEFAULT 'MXN'::public.moneda NOT NULL,
     total numeric DEFAULT 0 NOT NULL,
