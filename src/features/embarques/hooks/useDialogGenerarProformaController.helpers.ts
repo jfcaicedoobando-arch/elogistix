@@ -3,7 +3,7 @@
  * Sin React. Aíslan cálculo de totales y estado inicial al abrir el diálogo.
  *
  * R179-01: el cálculo propio del modal se retiró. Ahora delega en el dominio
- * (`@/features/proformas/domain/proforma`), única fuente de verdad fiscal
+ * (`@/features/proformas/domain`), única fuente de verdad fiscal
  * (regla B-09: NO se fuerza IVA por moneda; `aplica_iva=false` manda y las
  * tasas explícitas de la fila se conservan). Antes el modal mostraba IVA 0 y
  * el RPC guardaba 16% porque el cliente enviaba un override `true` para MXN.
@@ -11,7 +11,7 @@
 import {
   calcularTotalesProforma as calcularTotalesDominio,
   type TotalesProforma,
-} from "@/features/proformas/domain/proforma";
+} from "@/features/proformas/domain";
 import {
   filtrarPorContenedor,
   type FiltroContenedor,

@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.823.183] - 2026-09-07
+
+Arreglo de CI: la prueba de arquitectura O4 fallaba por dos importaciones profundas.
+
+- `useDialogGenerarProformaController.helpers.ts` y la regresión `conceptoVentaIvaOrigen.test.ts` ahora importan `calcularTotalesProforma` desde el barrel permitido `@/features/proformas/domain` en lugar de `@/features/proformas/domain/proforma`. Sin cambios de lógica fiscal, cálculo ni baseline de arquitectura.
+
 ## [13.823.182] - 2026-09-07
 
 R179-01 aplicado de punta a punta: el IVA elegido en el catálogo ya se guarda.
