@@ -10,7 +10,7 @@
  *      paso en lugar de mandar al usuario a CRM.
  */
 import { useCallback, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, skipToken } from "@tanstack/react-query";
 import {
   fetchMonedaOportunidad,
   alinearMonedaOportunidad,
@@ -32,10 +32,15 @@ export function useAceptarCotizacion({
   const [open, setOpen] = useState(false);
   const [enviando, setEnviando] = useState(false);
 
+  // JAVASCRIPT-REACT-6A/6B: con `as string` un `oportunidadId` nulo llegaba a
+  // la base y ésta respondía 22P02 (`uuid: "null"`), mostrando un aviso falso
+  // de conexión. `skipToken` hace imposible ejecutar la consulta sin id.
   const monedaQuery = useQuery({
     queryKey: ["crm", "oportunidad-moneda", oportunidadId],
-    queryFn: () => fetchMonedaOportunidad(oportunidadId as string),
-    enabled: open && !!oportunidadId,
+    queryFn:
+      open && oportunidadId
+        ? () => fetchMonedaOportunidad(oportunidadId)
+        : skipToken,
     staleTime: 0,
   });
 

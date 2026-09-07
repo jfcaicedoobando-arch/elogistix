@@ -1,5 +1,15 @@
 # Changelog
 
+## [13.823.201] - 2026-09-07
+
+Aceptar cotización: sin oportunidad ligada ya no se consulta una oportunidad inexistente (JAVASCRIPT-REACT-6A, JAVASCRIPT-REACT-6B).
+
+- `useAceptarCotizacion` usa `skipToken` en lugar de `as string`: la consulta de moneda sólo corre con id real.
+- `fetchMonedaOportunidad` devuelve `null` ante id vacío; antes enviaba `"null"` a un `uuid` (22P02) y la app mostraba un falso "revisa tu conexión".
+- Regresión focalizada nueva. Sin SQL, migraciones, permisos, RLS ni publicación.
+
+
+
 ## [13.823.200] - 2026-09-07
 
 Observabilidad: los errores del backend ya llegan legibles a Sentry (JAVASCRIPT-REACT-69).
