@@ -7,7 +7,7 @@
  */
 import { describe, it, expect } from "vitest";
 import { buildConceptosVentaPayload } from "@/features/embarques/domain/mappers/embarqueToDbConceptos";
-import { calcularTotalesProforma } from "@/features/proformas/domain/proforma";
+import { calcularTotalesProforma } from "@/features/proformas/domain";
 import type { ConceptoVentaLocal } from "@/types/concepto";
 
 const TASA_GLOBAL = 0.16;

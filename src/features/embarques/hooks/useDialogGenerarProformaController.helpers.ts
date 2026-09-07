@@ -11,7 +11,7 @@
 import {
   calcularTotalesProforma as calcularTotalesDominio,
   type TotalesProforma,
-} from "@/features/proformas/domain/proforma";
+} from "@/features/proformas/domain";
 import {
   filtrarPorContenedor,
   type FiltroContenedor,
