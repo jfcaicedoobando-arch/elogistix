@@ -35,7 +35,7 @@ export default function CotizacionDetalle() {
     showConvertir, setShowConvertir,
     clienteForm, setClienteForm,
     handleCambiarEstado, abrirDialogConvertir, handleConvertir,
-    convertirProspecto, navigate,
+    convertirProspecto, navigate, aceptar,
   } = useCotizacionDetalleState(id);
 
   // M14 (Ola 7): sin este guard, dos clics rápidos generaban dos PDF y
@@ -111,6 +111,7 @@ export default function CotizacionDetalle() {
               acciones={{
                 clienteForm, setClienteForm, handleCambiarEstado,
                 abrirDialogConvertir, handleConvertir, convertirProspecto, navigate,
+                aceptar,
               }}
             />
           </>
