@@ -1,3 +1,4 @@
+import { useCallback } from "react";
 import { useUpdateEstadoCotizacion, type CotizacionRow } from "@/features/cotizacion/hooks/useCotizaciones";
 import { notifyWarning } from "@/lib/ui/appFeedback";
 import { sincronizarEtapaPorEstadoCotizacion } from "@/features/crm/services/vincularCotizacion";
