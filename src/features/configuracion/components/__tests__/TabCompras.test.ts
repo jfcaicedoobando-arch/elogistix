@@ -6,7 +6,7 @@ import { describe, it, expect } from "vitest";
 import {
   esUmbralValido,
   UMBRAL_APROBACION_SIN_VINCULO_DEFAULT,
-} from "@/features/configuracion/components/TabCompras";
+} from "@/features/configuracion/domain/comprasUmbral";
 
 describe("TabCompras (dominio)", () => {
   it("usa el mismo valor por defecto que la base (50,000 MXN)", () => {

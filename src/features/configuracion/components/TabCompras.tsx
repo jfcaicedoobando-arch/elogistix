@@ -15,13 +15,10 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { FormField } from "@/components/shared/FormField";
 import { useConfigValue, useUpdateConfiguracion } from "@/features/configuracion/hooks/useConfiguracion";
-
-/** Mismo valor por defecto que la función de base `cxp_umbral_sin_vinculo`. */
-export const UMBRAL_APROBACION_SIN_VINCULO_DEFAULT = 50000;
-
-export function esUmbralValido(valor: number): boolean {
-  return Number.isFinite(valor) && valor >= 0;
-}
+import {
+  esUmbralValido,
+  UMBRAL_APROBACION_SIN_VINCULO_DEFAULT,
+} from "@/features/configuracion/domain/comprasUmbral";
 
 export default function TabCompras() {
   const umbralActual = useConfigValue<number>(
