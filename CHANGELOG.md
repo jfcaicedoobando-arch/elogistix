@@ -1,5 +1,14 @@
 # Changelog
 
+## [13.823.177] - 2026-09-07
+
+Sincronización de la línea base del esquema con R170-02 (fechas en hora México).
+
+- `supabase/schema/baseline.sql` incorpora las definiciones vigentes de `convertir_proformas_a_factura` y `crear_proforma_atomica` con `v_hoy_mx := (now() AT TIME ZONE 'America/Mexico_City')::date`, incluyendo `fecha_emision` en la inserción de proformas y `fecha_facturacion` derivada de la fecha MX.
+- Sólo espejo/baseline: no cambia lógica, permisos, RLS ni datos.
+
+Validaciones: comparación de baseline aplicada sin conflictos y `audit:manifest`. CI, SQL y RLS completos quedan pendientes de GitHub Actions.
+
 ## [13.823.176] - 2026-09-07
 
 Ajuste de higiene: lecturas PDF de proformas respetan borrado lógico.
