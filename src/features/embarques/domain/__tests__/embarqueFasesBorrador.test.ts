@@ -4,7 +4,11 @@
  * vencido se veía como confirmado y en tránsito.
  */
 import { describe, it, expect } from "vitest";
-import { calcularFasesEmbarque, type EmbarqueFasesInput } from "../embarqueFases";
+import {
+  calcularFasesEmbarque,
+  etiquetaSiguientePaso,
+  type EmbarqueFasesInput,
+} from "../embarqueFases";
 
 const base: EmbarqueFasesInput = {
   modo: "Marítimo",
@@ -48,5 +52,23 @@ describe("fases de un embarque en Borrador", () => {
     expect(f.confirmado.estado).toBe("completada");
     expect(f.confirmado.label).toBe("Confirmado");
     expect(f.en_transito.estado).toBe("actual");
+  });
+});
+
+/**
+ * v13.823.164 (smoke 162): la barra del tab Resumen anunciaba "Siguiente: En
+ * Tránsito" en un Borrador, contradiciendo el botón "Avanzar a Confirmado".
+ */
+describe("siguiente paso anunciado en la barra compacta", () => {
+  it("en Borrador el siguiente paso es Confirmar, no En Tránsito", () => {
+    const fases = calcularFasesEmbarque(base);
+    const idx = fases.findIndex((f) => f.estado === "actual");
+    expect(etiquetaSiguientePaso(fases, idx)).toBe("Confirmar el embarque");
+  });
+
+  it("ya confirmado sí anuncia la fase siguiente de la línea de tiempo", () => {
+    const fases = calcularFasesEmbarque({ ...base, estado: "Confirmado" });
+    const idx = fases.findIndex((f) => f.estado === "actual");
+    expect(etiquetaSiguientePaso(fases, idx)).toBe("Arribo");
   });
 });

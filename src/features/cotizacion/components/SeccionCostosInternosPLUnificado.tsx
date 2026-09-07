@@ -17,6 +17,8 @@ interface PropsDetalle {
   cotizacionId: string;
   conceptosUSD: ConceptoVentaCotizacion[];
   conceptosMXN: ConceptoVentaCotizacion[];
+  /** Sello optimista de la cotización abierta (ver componente de detalle). */
+  cotizacionUpdatedAt?: string | null;
 }
 
 type Props = PropsLocal | PropsDetalle;
@@ -35,6 +37,7 @@ export default function SeccionCostosInternosPLUnificado(props: Props) {
       cotizacionId={props.cotizacionId}
       conceptosUSD={props.conceptosUSD}
       conceptosMXN={props.conceptosMXN}
+      cotizacionUpdatedAt={props.cotizacionUpdatedAt}
     />
   );
 }

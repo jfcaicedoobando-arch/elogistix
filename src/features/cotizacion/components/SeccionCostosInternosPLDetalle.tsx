@@ -23,13 +23,20 @@ interface Props {
   cotizacionId: string;
   conceptosUSD: ConceptoVentaCotizacion[];
   conceptosMXN: ConceptoVentaCotizacion[];
+  /**
+   * v13.823.164 — Sello (`cotizaciones.updated_at`) de los datos abiertos para
+   * editar. Sin él el servicio falla cerrado con LC_CONFLICTO_CONCURRENCIA.
+   */
+  cotizacionUpdatedAt?: string | null;
 }
 
 /**
  * Modo "detalle": carga/persiste costos desde la BD para una cotización existente.
  * Usado en CotizacionDetalle.
  */
-export default function SeccionCostosInternosPLDetalle({ cotizacionId, conceptosUSD, conceptosMXN }: Props) {
+export default function SeccionCostosInternosPLDetalle({
+  cotizacionId, conceptosUSD, conceptosMXN, cotizacionUpdatedAt = null,
+}: Props) {
   const { canEdit } = usePermissions();
   const { data: costosGuardados, isLoading } = useCotizacionCostos(cotizacionId);
   const upsert = useUpsertCotizacionCostos();
@@ -49,12 +56,12 @@ export default function SeccionCostosInternosPLDetalle({ cotizacionId, conceptos
   const [filas, setFilas] = useState<FilaCostoDetalle[]>([]);
   const [initialized, setInitialized] = useState(false);
   const [editMode, setEditMode] = useState(false);
+  // Sello congelado al abrir la edición; tras guardar se renueva con el de la RPC.
+  const [selloEdicion, setSelloEdicion] = useState<string | null>(null);
 
   useEffect(() => {
-    // v13.823.144 (bug 8/9): antes el mapeo corría UNA sola vez; tras
-    // "Sincronizar conceptos de venta" la tabla seguía mostrando Venta 0.
-    // Ahora se re-deriva cuando cambian los datos de BD, salvo mientras el
-    // usuario está editando (para no pisar su captura).
+    // v13.823.144 (bug 8/9): se re-deriva cuando cambian los datos de BD,
+    // salvo mientras el usuario edita (para no pisar su captura).
     if (isLoading || (initialized && editMode)) return;
 
     if (costosGuardados && costosGuardados.length > 0) {
@@ -119,13 +126,15 @@ export default function SeccionCostosInternosPLDetalle({ cotizacionId, conceptos
       id: "", cotizacion_id: cotizacionId, concepto: f.concepto, moneda: f.moneda,
       proveedor: f.proveedor, cantidad: f.cantidad, costo_unitario: f.costo_unitario,
       costo_total: f.cantidad * f.costo_unitario,
-      // B-081: el upsert borra y reinserta; sin esto se perdía el precio de venta
-      // y la cotización quedaba sin importes de venta en la BD.
+      // B-081: el upsert borra y reinserta; sin esto se perdía el precio de venta.
       precio_venta: f.cantidad > 0 ? f.venta / f.cantidad : f.venta,
       notas: f.notas ?? "", created_at: "", updated_at: "",
     }));
     try {
-      await upsert.mutateAsync({ cotizacionId, costos });
+      const res = await upsert.mutateAsync({
+        cotizacionId, costos, expectedUpdatedAt: selloEdicion ?? cotizacionUpdatedAt,
+      });
+      setSelloEdicion(res.updatedAt ?? null);
       notifySuccess(undefined, { title: "Costos guardados correctamente" });
       setEditMode(false);
     } catch (err: unknown) {
@@ -147,11 +156,17 @@ export default function SeccionCostosInternosPLDetalle({ cotizacionId, conceptos
       {canEdit && filas.length > 0 && (
         <div className="flex justify-end">
           {editMode ? (
-            <Button variant="outline" size="sm" onClick={() => setEditMode(false)} disabled={upsert.isPending}>
+            <Button
+              variant="outline" size="sm" disabled={upsert.isPending}
+              onClick={() => { setEditMode(false); setSelloEdicion(null); }}
+            >
               <X className="h-4 w-4 mr-1" /> Cancelar edición
             </Button>
           ) : (
-            <Button variant="outline" size="sm" onClick={() => setEditMode(true)}>
+            <Button
+              variant="outline" size="sm"
+              onClick={() => { setSelloEdicion(cotizacionUpdatedAt); setEditMode(true); }}
+            >
               <Pencil className="h-4 w-4 mr-1" /> Editar costos
             </Button>
           )}

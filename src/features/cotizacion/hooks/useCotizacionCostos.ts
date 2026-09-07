@@ -5,11 +5,9 @@ import {
   upsertCotizacionCostos,
 } from '@/features/cotizacion/services';
 import { newRequestId } from '@/lib/idempotency';
-import { notifyError } from '@/lib/ui/appFeedback';
 
 export type { CostoCotizacion } from '@/features/cotizacion/types';
 import type { CostoCotizacion } from '@/features/cotizacion/types';
-import { getErrorMessage } from "@/lib/errors";
 
 export function useCotizacionCostos(cotizacionId: string | undefined) {
   return useQuery({
@@ -32,10 +30,13 @@ export function useUpsertCotizacionCostos() {
       upsertCotizacionCostos(cotizacionId, costos, requestId ?? newRequestId(), expectedUpdatedAt),
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.cotizaciones.costos(variables.cotizacionId) });
+      // v13.823.164: el reemplazo mueve `cotizaciones.updated_at`; el detalle
+      // debe releerse para que el siguiente sello venga fresco de la BD.
+      queryClient.invalidateQueries({ queryKey: queryKeys.cotizaciones.detail(variables.cotizacionId) });
     },
-    onError: (error: Error) => {
-      notifyError(undefined, { title: "No se pudo guardar costos", description: getErrorMessage(error), error, method: "UPSERT_COTIZACION_COSTOS" });
-    },
+    // v13.823.164: sin `onError` aquí. El call site ya muestra un único aviso
+    // ("Error al guardar" con detalle); antes salían DOS toasts por el mismo
+    // fallo (este + el catch del componente).
   });
 }
 

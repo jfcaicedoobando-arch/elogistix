@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.823.164] - 2026-09-07
+
+- Cotizaciones (smoke 162, P1): el guardado rápido de costos («Editar costos» → «Guardar Costos») fallaba SIEMPRE con «Otro usuario modificó este registro mientras lo editabas», incluso sin cambiar nada. Causa: `SeccionCostosInternosPLDetalle` llamaba la mutación sin `expectedUpdatedAt` y `upsertCotizacionCostos` falla cerrado sin sello. Ahora el sello (`cotizaciones.updated_at`) viaja desde `CotizacionDetalleContenido` → `SeccionCostosInternosPLUnificado` → sección de detalle, se congela al abrir la edición (ningún refetch de fondo lo sustituye mientras hay captura) y se renueva con el sello que devuelve la RPC para permitir un segundo guardado. Se conserva íntegra la protección optimista: un conflicto real sigue rechazando sin sobrescribir ni perder la captura.
+- Cotizaciones (smoke 162, P1): un solo aviso por fallo. `useUpsertCotizacionCostos` ya no emite `notifyError` propio (duplicaba «Error al guardar» + «No se pudo guardar costos»); el aviso queda en el call site, que además incluye el detalle técnico. En éxito se invalida también el detalle de la cotización para que el próximo sello venga fresco de la base.
+- Embarques (smoke 162, P2 · UX): en un embarque en Borrador la barra del tab Resumen decía «Siguiente: En Tránsito» mientras el encabezado ofrecía «Avanzar a Confirmado». Nuevo helper puro `etiquetaSiguientePaso` anuncia «Confirmar el embarque» mientras el embarque no está confirmado. Sin cambios en máquina de estados, permisos, fases completadas ni fechas.
+- Regresiones preparadas (NO ejecutadas aquí; corren en GitHub Actions): `components/__tests__/SeccionCostosInternosPLDetalle.sello.test.tsx` (sello del snapshot, segundo guardado con sello nuevo, conflicto real con un solo aviso), caso de error sin aviso propio en `hooks/__tests__/useCotizacionCostos.test.tsx` y siguiente paso Borrador vs Confirmado en `domain/__tests__/embarqueFasesBorrador.test.ts`.
+
 ## [13.823.163] - 2026-09-06
 
 - Costeo/tarifas (Sentry JAVASCRIPT-REACT-64): el aviso «Ya existe una tarifa para esa misma ruta, naviera y tipo de contenedor…» se reportaba como error de aplicación porque la traducción del `23505` devolvía un `Error` genérico. Ahora se lanza como `ReglaNegocioError`, así que la UI sigue mostrando el mismo toast accionable pero deja de abrir issues en Sentry. Sin cambios de validación ni de base de datos.

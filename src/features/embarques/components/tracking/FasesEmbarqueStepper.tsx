@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import {
   calcularFasesEmbarque,
   esEtaVencida,
+  etiquetaSiguientePaso,
   hayFechasFueraDeOrden,
   type EmbarqueFasesInput,
   type FaseEmbarque,
@@ -64,7 +65,7 @@ function useFases(embarque: EmbarqueFasesInput, cotizacionCreatedAt?: string | n
 function StepperCompacto({ fases, enRiesgo }: { fases: FaseEmbarque[]; enRiesgo: boolean }) {
   const idxActual = Math.max(fases.findIndex((f) => f.estado === "actual"), 0);
   const actual = fases[idxActual];
-  const siguiente = fases[idxActual + 1];
+  const siguiente = etiquetaSiguientePaso(fases, idxActual);
   const progreso = fases.length > 1 ? (idxActual / (fases.length - 1)) * 100 : 0;
 
   return (
@@ -78,7 +79,7 @@ function StepperCompacto({ fases, enRiesgo }: { fases: FaseEmbarque[]; enRiesgo:
         </div>
         {siguiente && (
           <span className="text-body-sm text-muted-foreground hidden sm:inline">
-            Siguiente: <span className="text-foreground/80">{siguiente.label}</span>
+            Siguiente: <span className="text-foreground/80">{siguiente}</span>
           </span>
         )}
       </div>
