@@ -5,7 +5,7 @@
  * poder timbrar.
  */
 import { describe, it, expect, vi } from "vitest";
-import { buildPrimary } from "../FacturaDetalleActionsBar";
+import { buildPrimary } from "../facturaActionsBarPrimary";
 import type { FacturaDetalle } from "@/features/facturacion/services/detail";
 import type { deriveFacturaFlags } from "@/features/facturacion/domain/facturaFlags";
 
