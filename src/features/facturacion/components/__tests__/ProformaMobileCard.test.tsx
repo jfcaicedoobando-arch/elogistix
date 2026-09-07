@@ -25,4 +25,20 @@ describe("ProformaMobileCard", () => {
     expect(screen.getByText("Cliente Dos")).toBeInTheDocument();
     expect(screen.getByText(/Pendiente/i)).toBeInTheDocument();
   });
+
+  // R170-01: una proforma convertida cuya única factura sigue en Borrador
+  // (sin UUID fiscal) no debe leerse como "Facturada".
+  it("no muestra 'Facturada' cuando la única factura asociada está en Borrador", () => {
+    render(
+      <ProformaMobileCard
+        proforma={proforma({
+          estado_proforma: "facturada",
+          factura_id: "f1",
+          facturas_asociadas: [{ id: "f1", estado: "borrador", uuid_fiscal: null, deleted_at: null }],
+        })}
+      />,
+    );
+    expect(screen.getByText("Convertida a borrador")).toBeInTheDocument();
+    expect(screen.queryByText("Facturada")).not.toBeInTheDocument();
+  });
 });
