@@ -43,7 +43,7 @@ describe("parsePdfInvoice", () => {
     expect((opciones.body as FormData).get("organization_id")).toBeNull();
     expect((opciones.body as FormData).get("file")).toBeInstanceOf(File);
     // R192-01: el primer envío usa la credencial vigente, sin forzar renovación.
-    expect(ensureFreshSessionMock).toHaveBeenCalledWith(false);
+    expect(ensureFreshSessionMock).toHaveBeenCalledWith(false, undefined);
   });
 
   it("no invoca la función si no hay sesión alguna", async () => {
@@ -66,7 +66,10 @@ describe("parsePdfInvoice", () => {
       .mockResolvedValueOnce({ data: payload, error: null });
 
     await expect(parsePdfInvoice(pdf(), [], ORG_PRINCIPAL)).resolves.toEqual(payload);
-    expect(ensureFreshSessionMock.mock.calls).toEqual([[false], [true]]);
+    expect(ensureFreshSessionMock.mock.calls).toEqual([
+      [false, undefined],
+      [true, "token-1"],
+    ]);
     expect(invokeMock.mock.calls[1][1].headers.Authorization).toBe("Bearer token-2");
   }, 15000);
 
@@ -81,6 +84,22 @@ describe("parsePdfInvoice", () => {
       /No pudimos validar tu sesión en este momento/,
     );
     expect(invokeMock).toHaveBeenCalledTimes(1);
+  }, 15000);
+
+  it("no fuerza renovación al reintentar un error transitorio distinto de 401", async () => {
+    const payload = { cfdi: { uuid: "" }, ai: { categoria_id: null, notas: "" } };
+    invokeMock
+      .mockResolvedValueOnce({
+        data: null,
+        error: new FunctionsHttpError(new Response("", { status: 503 })),
+      })
+      .mockResolvedValueOnce({ data: payload, error: null });
+
+    await expect(parsePdfInvoice(pdf(), [], ORG_PRINCIPAL)).resolves.toEqual(payload);
+    expect(ensureFreshSessionMock.mock.calls).toEqual([
+      [false, undefined],
+      [false, undefined],
+    ]);
   }, 15000);
 });
 

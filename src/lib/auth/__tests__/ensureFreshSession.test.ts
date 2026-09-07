@@ -66,6 +66,20 @@ describe("ensureFreshSession", () => {
     await expect(ensureFreshSession(true)).resolves.toBeNull();
   });
 
+  it("usa el token que otra pestaña ya rotó sin forzar una segunda renovación", async () => {
+    getSession.mockResolvedValue({
+      data: {
+        session: {
+          access_token: "token-rotado",
+          expires_at: Math.floor(Date.now() / 1000) + 600,
+        },
+      },
+    });
+
+    await expect(ensureFreshSession(true, "token-rechazado")).resolves.toBe("token-rotado");
+    expect(refreshSession).not.toHaveBeenCalled();
+  });
+
   it("no reutiliza el respaldo preventivo si vence dentro del margen", async () => {
     const sesionPorVencer = {
       access_token: "token-por-vencer",

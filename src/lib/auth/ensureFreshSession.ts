@@ -33,12 +33,21 @@ async function recuperarSesionConcurrente(
   return !forzar && !esColision ? actual.access_token : null;
 }
 
-export async function ensureFreshSession(forzar = false): Promise<string | null> {
+export async function ensureFreshSession(
+  forzar = false,
+  tokenRechazado?: string,
+): Promise<string | null> {
   const { data: { session } } = await supabase.auth.getSession();
   if (!session) return null;
 
   const ahora = Math.floor(Date.now() / 1000);
   const vigente = (session.expires_at ?? 0) - MARGEN_SEGUNDOS > ahora;
+  // Si otra pestaña o el auto-refresh ya rotaron la sesión después del 401,
+  // esa credencial nueva es la recuperación correcta. Forzar otro refresh aquí
+  // puede consumir de nuevo el refresh token y terminar en session_not_found.
+  if (forzar && tokenRechazado && vigente && session.access_token !== tokenRechazado) {
+    return session.access_token;
+  }
   if (vigente && !forzar) return session.access_token;
 
   const { data, error } = await supabase.auth.refreshSession();

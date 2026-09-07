@@ -151,13 +151,15 @@ async function invokeWithRetry(
 ): Promise<{ data: CfdiParsedResponse; latencyMs: number; attempts: number }> {
   const t0 = performance.now();
   let last: Attempt | null = null;
+  let tokenAnterior: string | undefined;
   for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
     // R192-01: el primer envío usa la credencial vigente que ya tiene la app.
     // Forzar una renovación aquí hacía fallar el envío de usuarios con sesión
     // válida (rotación concurrente, 429 o lentitud del servidor de sesiones).
-    // Sólo el reintento renueva a la fuerza, que es el caso real de un 401.
-    const forzar = attempt > 1;
-    const token = await ensureFreshSession(forzar);
+    // Sólo un 401 exige renovar. Una falla de red, 429 o 5xx conserva la
+    // credencial vigente para no provocar una rotación adicional innecesaria.
+    const forzar = attempt > 1 && last?.status === 401;
+    const token = await ensureFreshSession(forzar, forzar ? tokenAnterior : undefined);
     if (!token) {
       throw new Error(
         forzar
@@ -165,6 +167,7 @@ async function invokeWithRetry(
           : AUTH_ERROR_MESSAGES.sessionRequired("procesar la factura PDF"),
       );
     }
+    tokenAnterior = token;
     const r = await invokeOnce(file, categorias, token, organizationId);
     if (r.ok && r.data) {
       return { data: r.data, latencyMs: Math.round(performance.now() - t0), attempts: attempt };
