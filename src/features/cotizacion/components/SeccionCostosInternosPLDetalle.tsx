@@ -61,10 +61,8 @@ export default function SeccionCostosInternosPLDetalle({
   const [selloEdicion, setSelloEdicion] = useState<string | null>(null);
 
   useEffect(() => {
-    // v13.823.144 (bug 8/9): antes el mapeo corría UNA sola vez; tras
-    // "Sincronizar conceptos de venta" la tabla seguía mostrando Venta 0.
-    // Ahora se re-deriva cuando cambian los datos de BD, salvo mientras el
-    // usuario está editando (para no pisar su captura).
+    // v13.823.144 (bug 8/9): se re-deriva cuando cambian los datos de BD,
+    // salvo mientras el usuario edita (para no pisar su captura).
     if (isLoading || (initialized && editMode)) return;
 
     if (costosGuardados && costosGuardados.length > 0) {
