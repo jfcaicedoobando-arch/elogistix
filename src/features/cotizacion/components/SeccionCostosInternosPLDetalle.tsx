@@ -113,19 +113,21 @@ export default function SeccionCostosInternosPLDetalle({
   ), [filasMXN]);
 
   const handleGuardar = async () => {
-    const costos: CostoCotizacion[] = filas.map((f) => ({
-      id: "", cotizacion_id: cotizacionId, concepto: f.concepto, moneda: f.moneda,
-      proveedor: f.proveedor, cantidad: f.cantidad, costo_unitario: f.costo_unitario,
-      costo_total: f.cantidad * f.costo_unitario,
-      // B-081: el upsert borra y reinserta; sin esto se perdía el precio de venta.
-      precio_venta: f.cantidad > 0 ? f.venta / f.cantidad : f.venta,
-      notas: f.notas ?? "", created_at: "", updated_at: "",
-    }));
+    const costos = mapearFilasACostos(cotizacionId, filas);
+    const selloEnviado = sello;
     try {
+      // Sin sello se falla cerrado en el servicio (no se sustituye por la prop).
       const res = await upsert.mutateAsync({
-        cotizacionId, costos, expectedUpdatedAt: selloEdicion ?? cotizacionUpdatedAt,
+        cotizacionId, costos, expectedUpdatedAt: selloEnviado,
       });
-      setSelloEdicion(res.updatedAt ?? null);
+      // v13.823.165: filas y sello se renuevan JUNTOS con lo que devuelve la RPC
+      // (lectura canónica), y el sello gastado queda marcado como obsoleto para
+      // que un refetch tardío no lo reinstale.
+      if (res.costos.length > 0) {
+        setFilas(mapearCostosAFilas(res.costos, conceptosUSD, conceptosMXN));
+      }
+      setSello(res.updatedAt ?? null);
+      setSelloConsumido(selloEnviado);
       notifySuccess(undefined, { title: "Costos guardados correctamente" });
       setEditMode(false);
     } catch (err: unknown) {
