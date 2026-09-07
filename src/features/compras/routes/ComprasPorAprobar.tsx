@@ -34,6 +34,8 @@ export default function ComprasPorAprobar() {
   const [search, setSearch] = useTextoUrl("q");
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [confirmOpen, setConfirmOpen] = useState(false);
+  // FP-000221: justificación única para las seleccionadas sin embarque.
+  const [justificacionLote, setJustificacionLote] = useState("");
   const { aprobar, isRunning, progreso } = useAprobarFacturasLote();
   const {
     verificar: verificarSat,
@@ -71,9 +73,19 @@ export default function ComprasPorAprobar() {
   );
 
 
+  // FP-000221: sin embarque ligado la base exige justificación escrita.
+  const idsSinEmbarque = useMemo(
+    () => new Set(seleccionadas.filter((f) => !f.embarque_id).map((f) => f.id)),
+    [seleccionadas],
+  );
+
   const handleAprobarLote = async () => {
-    await aprobar(Array.from(selected));
+    await aprobar(Array.from(selected), {
+      justificacion: justificacionLote,
+      requierenJustificacion: idsSinEmbarque,
+    });
     setSelected(new Set());
+    setJustificacionLote("");
     setConfirmOpen(false);
   };
 
@@ -180,6 +192,9 @@ export default function ComprasPorAprobar() {
         totalMxn={totalSelMxn}
         totalUsd={totalSelUsd}
         isRunning={isRunning}
+        requierenJustificacion={idsSinEmbarque.size}
+        justificacion={justificacionLote}
+        onJustificacionChange={setJustificacionLote}
         onConfirm={() => void handleAprobarLote()}
       />
       </CargaGuard>
