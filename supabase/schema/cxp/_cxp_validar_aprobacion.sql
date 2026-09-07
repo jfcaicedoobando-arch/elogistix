@@ -1,8 +1,11 @@
 -- Espejo canónico de public._cxp_validar_aprobacion
--- Fuente vigente (mayor timestamp): 20260828054459_a8edb387-150d-427d-8c54-636240a89f81.sql
+-- Fuente vigente (mayor timestamp): 20260907171529_d9496508-7bf2-4cc5-be73-7329c243f562.sql
 -- Vigilado por `bun run audit:replay-mirror` y `audit:schema-functions`.
 -- Ola E1 · N-F3: sin T/C válido la factura extranjera sin vínculo NO se valúa
 -- 1:1 contra el umbral; se bloquea con LC_CXP_TC_REQUERIDO.
+-- FP-000221: los gastos cuya categoría no es CostoDirectoEmbarque (Administracion /
+-- Venta) quedan exentos del umbral y del vínculo a embarque; sólo se les exige
+-- justificación del gasto.
 
 CREATE OR REPLACE FUNCTION public._cxp_validar_aprobacion(p_factura_id uuid, p_justificacion text DEFAULT NULL::text)
  RETURNS void
@@ -23,6 +26,7 @@ DECLARE
   v_tiene_xml_lineas boolean;
   v_total_mxn numeric(18,4);
   v_umbral numeric;
+  v_tipo_contable text;
   v_c record;
 BEGIN
   SELECT * INTO v_row FROM public.proveedor_facturas WHERE id = p_factura_id;
@@ -121,24 +125,34 @@ BEGIN
           AND concepto_costo_id IS NOT NULL
      )
   THEN
-    -- Ola E1 · N-F3: antes `COALESCE(NULLIF(tipo_cambio_usd,0), 1)` valuaba una
-    -- factura en USD como si fuera MXN y saltaba el umbral sin justificación.
-    IF v_row.moneda = 'MXN'::public.moneda THEN
-      v_total_mxn := COALESCE(v_row.total,0);
-    ELSE
-      IF COALESCE(NULLIF(v_row.tipo_cambio_usd,0), 0) <= 0 THEN
-        RAISE EXCEPTION 'LC_CXP_TC_REQUERIDO: la factura está en % y no tiene tipo de cambio capturado; registra el T/C del DOF de la fecha de la factura antes de aprobar.',
-          v_row.moneda;
+    -- FP-000221: un gasto que por naturaleza no pertenece a un embarque
+    -- (Administracion / Venta) no puede exigir vínculo operativo. Sólo los
+    -- costos directos de embarque (o la ausencia de categoría) se comparan
+    -- contra el umbral autorizado.
+    SELECT pc.tipo_contable::text INTO v_tipo_contable
+      FROM public.presupuesto_categorias pc
+     WHERE pc.id = v_row.categoria_presupuesto_id;
+
+    IF COALESCE(v_tipo_contable, 'CostoDirectoEmbarque') = 'CostoDirectoEmbarque' THEN
+      -- Ola E1 · N-F3: antes `COALESCE(NULLIF(tipo_cambio_usd,0), 1)` valuaba una
+      -- factura en USD como si fuera MXN y saltaba el umbral sin justificación.
+      IF v_row.moneda = 'MXN'::public.moneda THEN
+        v_total_mxn := COALESCE(v_row.total,0);
+      ELSE
+        IF COALESCE(NULLIF(v_row.tipo_cambio_usd,0), 0) <= 0 THEN
+          RAISE EXCEPTION 'LC_CXP_TC_REQUERIDO: la factura está en % y no tiene tipo de cambio capturado; registra el T/C del DOF de la fecha de la factura antes de aprobar.',
+            v_row.moneda;
+        END IF;
+        v_total_mxn := COALESCE(v_row.total,0) * v_row.tipo_cambio_usd;
       END IF;
-      v_total_mxn := COALESCE(v_row.total,0) * v_row.tipo_cambio_usd;
-    END IF;
 
-    v_umbral := public.cxp_umbral_sin_vinculo(v_row.organization_id);
+      v_umbral := public.cxp_umbral_sin_vinculo(v_row.organization_id);
 
-    IF v_total_mxn > v_umbral THEN
-      RAISE EXCEPTION 'LC_CXP_SIN_RESPALDO_MONTO: La factura por % MXN no está ligada a un embarque ni a costos acordados y excede el umbral autorizado (%). Vincúlala al embarque o a sus conceptos de costo antes de aprobar.',
-        to_char(v_total_mxn, 'FM999,999,999,990.00'),
-        to_char(v_umbral,    'FM999,999,999,990.00');
+      IF v_total_mxn > v_umbral THEN
+        RAISE EXCEPTION 'LC_CXP_SIN_RESPALDO_MONTO: La factura por % MXN no está ligada a un embarque ni a costos acordados y excede el umbral autorizado (%). Vincúlala al embarque o a sus conceptos de costo antes de aprobar.',
+          to_char(v_total_mxn, 'FM999,999,999,990.00'),
+          to_char(v_umbral,    'FM999,999,999,990.00');
+      END IF;
     END IF;
 
     IF length(COALESCE(btrim(p_justificacion), '')) < 10 THEN
