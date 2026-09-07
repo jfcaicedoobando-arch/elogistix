@@ -64,9 +64,14 @@ export const layoutStyles = {
     textAlign: "right" as const,
   },
   // Footer
+  // R184-PDF-01: se ancla con `top` porcentual en lugar de `bottom`.
+  // Con `bottom` (y sin altura explícita) el motor resuelve la posición del
+  // nodo absoluto fuera de la hoja (top negativo) y el pie no se dibuja; al
+  // fijar una altura, el texto dinámico de paginación (`render`) desaparece.
+  // Un `top` porcentual funciona en retrato y horizontal sin cambiar de motor.
   footer: {
     position: "absolute" as const,
-    bottom: 18,
+    top: "94.5%",
     left: 36,
     right: 36,
     borderTopWidth: 0.5,
@@ -74,9 +79,14 @@ export const layoutStyles = {
     paddingTop: 6,
     flexDirection: "row" as const,
     justifyContent: "space-between" as const,
-    alignItems: "center" as const,
     fontSize: 7.5,
     color: COLORS.mutedLight,
   },
+  // Columnas del pie con ancho explícito: dentro de un contenedor absoluto
+  // el ancho automático colapsa y el contenido no se dibuja.
+  footerColLeft: { width: "50%" as const, paddingRight: 6 },
+  footerColCenter: { width: "26%" as const, textAlign: "center" as const },
+  footerColRight: { width: "24%" as const, textAlign: "right" as const },
   pageNumber: { fontSize: 8, color: COLORS.mutedLight, marginTop: 2 },
+
 };

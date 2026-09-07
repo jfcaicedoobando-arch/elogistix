@@ -12,9 +12,11 @@ interface Props {
  * Línea superior en color corporativo. Se repite en cada página vía `fixed`.
  */
 export function Footer({ empresaNombre }: Props) {
+  // Fecha compacta (DD/MM/AAAA): la columna central del pie es estrecha y el
+  // formato largo se partía en dos líneas.
   const fecha = formatFechaEs(new Date().toISOString(), {
     day: "2-digit",
-    month: "long",
+    month: "2-digit",
     year: "numeric",
   });
 
@@ -22,14 +24,25 @@ export function Footer({ empresaNombre }: Props) {
   return (
     <View style={styles.footer} fixed>
       {marca ? (
-        <Text style={{ fontFamily: FONTS.bold, color: COLORS.primary, letterSpacing: 1 }}>
+        <Text
+          style={[
+            styles.footerColLeft,
+            { fontFamily: FONTS.bold, color: COLORS.primary, letterSpacing: 0.5 },
+          ]}
+        >
           {marca.toUpperCase()}
         </Text>
       ) : (
-        <Text>Documento generado electrónicamente</Text>
+        <Text style={styles.footerColLeft}>
+          Documento generado electrónicamente
+        </Text>
       )}
-      <Text>Documento generado el {fecha}</Text>
-      <Text render={({ pageNumber, totalPages }) => `Página ${pageNumber} de ${totalPages}`} />
+      <Text style={styles.footerColCenter}>Generado el {fecha}</Text>
+      <Text
+        style={styles.footerColRight}
+        render={({ pageNumber, totalPages }) => `Página ${pageNumber} de ${totalPages}`}
+      />
     </View>
   );
+
 }

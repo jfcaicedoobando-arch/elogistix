@@ -1,5 +1,15 @@
 # Changelog
 
+## [13.823.188] - 2026-09-07
+
+PDF de proformas: pie de página y numeración visibles; rótulo de contenedores honesto; etiqueta de regreso neutra (R184-PDF-UX-186-20260907).
+
+- `stylesLayout.ts` / `Footer.tsx` (R184-PDF-01): causa real del pie invisible. Con `position: absolute` + `bottom` y altura automática, el motor resolvía el nodo del pie fuera de la hoja (top negativo, de ahí que el texto existiera pero no se dibujara); al fijarle `height` el pie aparecía pero el texto dinámico de paginación (`Text render`) desaparecía. Se ancla ahora con `top: "94.5%"` (válido en retrato y horizontal) sin `height`, y las tres columnas llevan ancho explícito (50/26/24 %), porque dentro de un contenedor absoluto el ancho automático colapsa y el contenido no se dibuja. La fecha del pie pasa a formato compacto DD/MM/AAAA para no partirse en dos líneas. Nombres de emisor largos envuelven sin invadir columnas ni salir de la hoja.
+- `ProformaHeader.tsx` (R184-PDF-02): el bloque "Contenedores" se muestra sólo con datos realmente presentables (número o tipo no vacíos) en lugar de por longitud del arreglo; se conservan los contenedores reales, incluso en transporte terrestre, y no se modifica el helper compartido `resumirContenedores`.
+- `ProformaDetalleHeader.tsx` (R184-UX-01): la etiqueta pasa a "Volver" porque el regreso es contextual (historial); se conservan `useVolver`, fallback, filtros/pestaña de origen y apertura en otra pestaña.
+- Regresiones preparadas: `src/pdf/theme/__tests__/footerLayout.test.ts`, `src/pdf/documents/__tests__/ProformaHeaderContenedores.test.tsx`.
+- Sin cambios fiscales (se preservan `aplica_iva=false`, tasas 0/8/16, etiquetas neutras y total por contenedor), sin SQL/migraciones/backfills ni consultas de BD. Verificación: typecheck + ESLint focalizado + build, más inspección de PDFs generados con datos sintéticos en memoria (pie completo dentro de márgenes en 2 páginas, retrato y horizontal). Tests/CI/RLS en GitHub Actions.
+
 ## [13.823.187] - 2026-09-07
 
 Carga de facturas PDF con IA: 401 "Token inválido" al subir el archivo.
