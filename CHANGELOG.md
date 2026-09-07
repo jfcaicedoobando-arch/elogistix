@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.823.169] - 2026-09-07
+
+- Cotizaciones · Guardado de costos (remate del P1 de 13.823.166): al guardar se devolvían las filas releídas junto con el sello de esa relectura, y el wizard usaba ese sello como si fuera el de su propia escritura. Si alguien más modificaba la cotización entre el reemplazo y la relectura, el wizard avanzaba su candado a una versión que nunca rehidrató y podía pisar el cambio ajeno al guardar el paso 3 o al volver al paso 1. Ahora el resultado trae dos datos separados: `updatedAt` (sello de la escritura propia, único que autoriza continuar el wizard) y `snapshot` (fotografía coherente de filas + su propio sello, la que ve y edita el detalle). No se revirtió la lectura conjunta del detalle; no hubo cambios de SQL, RPC ni RLS.
+- Pruebas (fallos de CI del bloque anterior, run 34071596626): 1) la prueba «adopta una fotografía externa completa sólo fuera de edición» buscaba el texto `600`, que aparece en la fila y en los totales; ahora reabre la captura y verifica el campo «costo unitario de Flete». 2) `useCotizacionCostos.test.tsx` mockeaba `@/lib/query` sin `costosSnapshot`; ahora usa las claves reales y además comprueba que la caché del detalle recibe filas y sello de la MISMA fotografía. 3) `useCotizacionCostos.ts` se registró en la lista de excepciones de la regla «useMutation requiere onError», con la justificación verificada: sus dos consumidores (`SeccionCostosInternosPLDetalle` y `usePaso2Handler`, que cubre Nueva y Editar) ya notifican el fallo; un `onError` aquí duplicaría el aviso.
+- Regresiones preparadas para GitHub Actions (NO ejecutadas aquí): RPC S1 + fotografía S2 con `savePaso2` devolviendo S1, caso normal S1/S1, y separación de sello en el servicio de costos.
+- Validado localmente: typecheck y ESLint focalizado. CI, pruebas, RLS y SQL corren exclusivamente en GitHub Actions.
+
 ## [13.823.168] - 2026-09-07
 
 - Cotizaciones · Cerrar la venta más rápido: "Aceptar" ahora abre una confirmación que explica que la oportunidad se cerrará como Ganada con el monto de la cotización y la fecha de hoy. Se descartó agregar un campo de pago (moneda/monto/fecha) en la cotización: el dinero vive en facturas, pagos y anticipos, y duplicarlo crearía dos verdades sobre el mismo importe.
