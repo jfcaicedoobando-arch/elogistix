@@ -28,6 +28,13 @@ const WHITELIST = new Set<string>([
   // (`DialogRegistrarPagoProveedor`) emite los toasts de éxito/error con
   // mensajes traducidos. Un onError aquí produciría doble toast (v13.218.2).
   "src/features/cxp/hooks/usePagosProveedor.ts",
+  // `useUpsertCotizacionCostos` es silencioso por diseño (v13.823.164): sus dos
+  // únicos consumidores notifican el fallo en su propio `catch`
+  // —`SeccionCostosInternosPLDetalle` ("Error al guardar") y
+  // `usePaso2Handler` (conflicto / "Error al guardar costos", que cubre
+  // Nueva y Editar cotización)—. Un onError aquí produciría doble toast.
+  "src/features/cotizacion/hooks/useCotizacionCostos.ts",
+
 ]);
 
 function findUseMutationsWithoutOnError(filePath: string): number[] {
