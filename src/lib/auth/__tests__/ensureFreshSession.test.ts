@@ -48,4 +48,18 @@ describe("ensureFreshSession", () => {
 
     await expect(ensureFreshSession()).resolves.toBe("token-rechazado");
   });
+
+  it("no reutiliza el respaldo preventivo si vence dentro del margen", async () => {
+    const sesionPorVencer = {
+      access_token: "token-por-vencer",
+      expires_at: Math.floor(Date.now() / 1000) + 30,
+    };
+    getSession.mockResolvedValue({ data: { session: sesionPorVencer } });
+    refreshSession.mockResolvedValue({
+      data: { session: null },
+      error: new Error("Already Used"),
+    });
+
+    await expect(ensureFreshSession()).resolves.toBeNull();
+  });
 });
