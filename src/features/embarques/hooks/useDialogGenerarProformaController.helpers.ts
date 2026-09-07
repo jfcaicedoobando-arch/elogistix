@@ -16,19 +16,14 @@ import {
   filtrarPorContenedor,
   type FiltroContenedor,
 } from "@/features/embarques/domain/conceptosPorContenedor";
+import { ivaDeFila } from "@/features/embarques/domain/ivaConceptoVenta";
 import type { Tables } from "@/integrations/supabase/types";
 
 type ConceptoVenta = Tables<"conceptos_venta">;
 
 export type { TotalesProforma };
 
-/** true = la fila causa IVA según su propio tratamiento fiscal guardado. */
-export function ivaDeFila(c: Pick<ConceptoVenta, "aplica_iva" | "tasa_iva_aplicada">): boolean {
-  if (c.aplica_iva === false) return false;
-  const tasa = c.tasa_iva_aplicada;
-  if (tasa != null && Number.isFinite(Number(tasa))) return Number(tasa) > 0;
-  return !!c.aplica_iva;
-}
+export { ivaDeFila };
 
 /**
  * Calcula subtotales/IVA/totales por moneda para una proforma.
