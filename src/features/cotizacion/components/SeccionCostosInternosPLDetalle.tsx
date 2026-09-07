@@ -4,17 +4,15 @@ import { DollarSign, Banknote, Save, Pencil, X } from "lucide-react";
 import { getErrorMessage } from "@/lib/errors";
 import { sumarSubtotales } from "@/lib/financial/financialUtils";
 import { usePermissions } from "@/hooks/shared";
-import {
-  useCotizacionCostos, useUpsertCotizacionCostos, type CostoCotizacion,
-} from "@/features/cotizacion/hooks";
+import { useCotizacionCostos, useUpsertCotizacionCostos } from "@/features/cotizacion/hooks";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import type { ConceptoVentaCotizacion } from "@/features/cotizacion/hooks";
 import ResumenPL from "./ResumenPL";
 import TablaCostosDetalle from "./TablaCostosDetalle";
 import { calcTotalsPL, type FilaCostoDetalle } from "./costosPLTypes";
-// O3: match costos↔conceptos centralizado, sólo por nombre normalizado
-// (A-5: sin fallback posicional — ver matchConceptoVenta.ts).
-import { matchConceptoVenta } from "@/features/cotizacion/utils/matchConceptoVenta";
+import {
+  mapearCostosAFilas, mapearConceptosAFilas, mapearFilasACostos,
+} from "@/features/cotizacion/domain/mapearCostosDetalle";
 import { useTasaIVA } from "@/features/catalogos/hooks";
 import { requiereSincronizarVenta } from "@/features/cotizacion/domain/cotizacionVentaSync";
 import { AvisoSincronizarConceptosVenta } from "./AvisoSincronizarConceptosVenta";
@@ -151,14 +149,16 @@ export default function SeccionCostosInternosPLDetalle({
           {editMode ? (
             <Button
               variant="outline" size="sm" disabled={upsert.isPending}
-              onClick={() => { setEditMode(false); setSelloEdicion(null); }}
+              onClick={() => setEditMode(false)}
             >
               <X className="h-4 w-4 mr-1" /> Cancelar edición
             </Button>
           ) : (
             <Button
               variant="outline" size="sm"
-              onClick={() => { setSelloEdicion(cotizacionUpdatedAt); setEditMode(true); }}
+              // v13.823.165: NO se reinstala la prop aquí; el sello vigente ya
+              // es el de la lectura coherente mostrada (o el que devolvió la RPC).
+              onClick={() => setEditMode(true)}
             >
               <Pencil className="h-4 w-4 mr-1" /> Editar costos
             </Button>
