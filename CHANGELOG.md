@@ -1,5 +1,14 @@
 # Changelog
 
+## [13.823.197] - 2026-09-07
+
+Captura de factura de proveedor por PDF: la recuperación de un 401 ya no provoca una segunda rotación de sesión innecesaria.
+
+- Si otra pestaña o la renovación automática ya sustituyeron la credencial rechazada, se reutiliza esa credencial nueva sin volver a consumir el refresh token.
+- Sólo un 401 fuerza la renovación; reintentos por red, límite temporal o fallas 5xx conservan la sesión vigente.
+- Si no puede recuperarse la sesión, el PDF permanece seleccionado y el mensaje pide reintentar en vez de expulsar al usuario.
+- Regresiones focalizadas cubren rotación concurrente y reintentos 503 sin renovación forzada. Sin cambios en funciones, SQL, base de datos, permisos ni RLS.
+
 ## [13.823.196] - 2026-09-07
 
 Proformas PDF: el bloque de Notas ya no se desborda cuando la nota tiene muchos renglones cortos (R188-NOTAS-191-20260907).
