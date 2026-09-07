@@ -6,6 +6,23 @@ export type ProformaConceptoConsolidadoRow = Tables<"proforma_conceptos_consolid
 
 export type ProformaConFactura = ProformaRow & {
   facturas: { factura_pdf_url: string | null; factura_xml_url: string | null } | null;
+  /**
+   * R170-01: facturas reales asociadas (FK inversa `facturas.proforma_id`),
+   * usadas SÓLO para distinguir en la lista una conversión a factura
+   * BORRADOR (sin UUID fiscal) de una emisión real, vía
+   * `etiquetaCicloProforma.ts`. Ya viene filtrada de `deleted_at` en el
+   * cliente. Opcional porque no todos los selects la traen (p.ej. el select
+   * del embarque no la necesita).
+   */
+  facturas_asociadas?: ProformaFacturaAsociadaLite[];
+};
+
+/** Forma mínima de una factura asociada para la etiqueta de la lista (ver arriba). */
+export type ProformaFacturaAsociadaLite = {
+  id: string;
+  estado: string | null;
+  uuid_fiscal: string | null;
+  deleted_at: string | null;
 };
 
 /**

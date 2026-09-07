@@ -154,7 +154,9 @@ export function AccionesProforma({ proforma, downloadingId, onDescargar }: Props
         <p className="text-body-sm text-muted-foreground">
           {autorizacion.requiereAutorizacionProforma
             ? "Para facturar, el cliente debe aceptar la proforma."
-            : "Este cliente no requiere autorización: aprueba la proforma internamente para facturarla."}
+            : canResponderProformaManual
+              ? "Este cliente no requiere autorización: aprueba la proforma internamente para facturarla."
+              : "Este cliente no requiere autorización. Pide a un administrador o gerente que la apruebe internamente para poder facturarla."}
         </p>
       )}
       <EnviarProformaDialog open={enviarOpen} onOpenChange={setEnviarOpen} proforma={proforma} />

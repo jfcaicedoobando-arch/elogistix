@@ -23,6 +23,8 @@ export interface EstadoDocumentoResumen {
   subEtiqueta?: string | null;
   /** Tono del matiz: `warning` por defecto, `destructive` cuando hay atraso. */
   subTono?: "warning" | "destructive";
+  /** IDs de pasos que se omitieron (nunca ocurrieron) y no deben verse como completados. */
+  pasosOmitidos: string[];
 }
 
 const PASOS_EMITIDA: PasoDocumento[] = [
@@ -79,6 +81,7 @@ function resumen(
   etiquetaTerminal: string | null,
   subEtiqueta: string | null = null,
   subTono: "warning" | "destructive" = "warning",
+  pasosOmitidos: string[] = [],
 ): EstadoDocumentoResumen {
   return {
     pasos,
@@ -87,6 +90,7 @@ function resumen(
     etiquetaTerminal,
     subEtiqueta: etiquetaTerminal ? null : subEtiqueta,
     subTono,
+    pasosOmitidos: etiquetaTerminal ? [] : pasosOmitidos,
   };
 }
 
@@ -162,9 +166,13 @@ export function resumenProforma(input: EstadoProformaInput): EstadoDocumentoResu
   if (input.estadoCliente === "rechazada") {
     return resumen(PASOS_PROFORMA, -1, "Rechazada por el cliente");
   }
+  // Cuando el cliente ya avanzó (aceptó o se facturó) sin que exista
+  // `enviadaAt`, el paso "Enviada" nunca ocurrió: no puede verse como
+  // completado (ej. proformas aprobadas internamente sin envío al cliente).
+  const enviadaOmitida = !input.enviadaAt;
   if (input.facturada) {
     const emitida = input.facturaEmitida ?? true;
-    if (emitida) return resumen(PASOS_PROFORMA, 3, null);
+    if (emitida) return resumen(PASOS_PROFORMA, 3, null, null, "warning", enviadaOmitida ? ["enviada"] : []);
     // Convertida pero sin emitir: el ciclo se queda en "Aceptada" con matiz.
     return resumen(
       PASOS_PROFORMA,
@@ -172,9 +180,12 @@ export function resumenProforma(input: EstadoProformaInput): EstadoDocumentoResu
       null,
       input.etiquetaConversion ?? "Convertida, sin emitir",
       "warning",
+      enviadaOmitida ? ["enviada"] : [],
     );
   }
-  if (input.estadoCliente === "aceptada") return resumen(PASOS_PROFORMA, 2, null);
+  if (input.estadoCliente === "aceptada") {
+    return resumen(PASOS_PROFORMA, 2, null, null, "warning", enviadaOmitida ? ["enviada"] : []);
+  }
   if (input.enviadaAt) return resumen(PASOS_PROFORMA, 1, null, "Pendiente del cliente");
   return resumen(PASOS_PROFORMA, 0, null);
 }
