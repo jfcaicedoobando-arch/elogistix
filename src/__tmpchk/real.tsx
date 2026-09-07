@@ -2,7 +2,7 @@ import React from 'react';
 import { Document, Page, Text, renderToFile } from '@react-pdf/renderer';
 import { styles } from '../pdf/theme/styles';
 import { Footer } from '../pdf/components/Footer';
-const long='COMERCIALIZADORA Y AGENCIA ADUANAL INTERNACIONAL DEL PACIFICO SA DE CV';
+const long=process.env.NOMBRE ?? 'Libre Carga SA de CV';
 const mk=(orient:'portrait'|'landscape')=>(
   <Document>
     <Page size="LETTER" orientation={orient} style={styles.page}>
