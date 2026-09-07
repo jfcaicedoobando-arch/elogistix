@@ -7,6 +7,12 @@
 import { supabase } from "@/integrations/supabase/client";
 
 const MARGEN_SEGUNDOS = 60;
+const ESPERA_ROTACION_MS = 250;
+
+function esColisionDeRotacion(error: unknown): boolean {
+  const mensaje = error instanceof Error ? error.message : String(error ?? "");
+  return /already used|refresh token.*used|refresh.*in progress/i.test(mensaje);
+}
 
 export async function ensureFreshSession(forzar = false): Promise<string | null> {
   const { data: { session } } = await supabase.auth.getSession();
@@ -23,9 +29,20 @@ export async function ensureFreshSession(forzar = false): Promise<string | null>
     // lugar de tirar al usuario a la pantalla de sesión expirada. Sin embargo,
     // si el servidor ya rechazó ese token (`forzar=true`), nunca se reutiliza:
     // su fecha local puede seguir vigente aunque la sesión haya sido revocada.
+    // Cuando otra pestaña/auto-refresh ya usó el refresh token, esperar a que
+    // el SDK publique la sesión rotada antes de releerla. Sólo se acepta si el
+    // access token cambió; así nunca se reenvía el mismo JWT que pudo quedar
+    // invalidado en el servidor aunque su `expires_at` local siga en futuro.
+    if (esColisionDeRotacion(error)) {
+      await new Promise<void>((resolve) => setTimeout(resolve, ESPERA_ROTACION_MS));
+    }
     const { data: { session: actual } } = await supabase.auth.getSession();
     const actualVigente = (actual?.expires_at ?? 0) - MARGEN_SEGUNDOS > ahora;
-    if (!forzar && actual && actualVigente) return actual.access_token;
+    const tokenFueRotado = actual?.access_token !== session.access_token;
+    if (actual && actualVigente && tokenFueRotado) return actual.access_token;
+    if (!forzar && actual && actualVigente && !esColisionDeRotacion(error)) {
+      return actual.access_token;
+    }
     return null;
   }
   return data.session.access_token;

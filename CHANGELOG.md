@@ -5,7 +5,8 @@
 Captura de facturas PDF con IA: validar la sesión antes de enviar el archivo.
 
 - `parsePdfInvoice.ts`: renueva obligatoriamente la sesión antes del primer intento. Un JWT revocado puede conservar una fecha local futura; antes se enviaba y provocaba el 401 técnico antes de intentar renovarlo. Si la renovación no es posible, la función no se invoca y se pide iniciar sesión de nuevo con un mensaje específico para la factura PDF.
-- Regresión focalizada para comprobar la renovación preventiva y que no se llame a `parse-invoice-pdf` sin una sesión renovada. Sin cambios de SQL, RLS, permisos ni datos. CI y RLS completos quedan para GitHub Actions.
+- `ensureFreshSession.ts`: si otra pestaña o la renovación automática ya usó el refresh token, espera brevemente la sesión rotada y sólo acepta el nuevo JWT; nunca reenvía el token anterior por conservar una fecha local futura.
+- Regresiones focalizadas para comprobar la renovación preventiva, la carrera entre pestañas y que no se llame a `parse-invoice-pdf` sin una sesión renovada. Sin cambios de SQL, RLS, permisos ni datos. CI y RLS completos quedan para GitHub Actions.
 
 ## [13.823.191] - 2026-09-07
 

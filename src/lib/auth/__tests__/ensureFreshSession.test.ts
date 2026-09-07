@@ -40,13 +40,30 @@ describe("ensureFreshSession", () => {
     };
     getSession
       .mockResolvedValueOnce({ data: { session: sesionPorVencer } })
-      .mockResolvedValueOnce({ data: { session: sesionVigente } });
+      .mockResolvedValueOnce({
+        data: {
+          session: {
+            access_token: "token-rotado",
+            expires_at: Math.floor(Date.now() / 1000) + 600,
+          },
+        },
+      });
     refreshSession.mockResolvedValue({
       data: { session: null },
       error: new Error("Already Used"),
     });
 
-    await expect(ensureFreshSession()).resolves.toBe("token-rechazado");
+    await expect(ensureFreshSession()).resolves.toBe("token-rotado");
+  });
+
+  it("no reutiliza el mismo token durante una colisión de rotación", async () => {
+    getSession.mockResolvedValue({ data: { session: sesionVigente } });
+    refreshSession.mockResolvedValue({
+      data: { session: null },
+      error: new Error("Already Used"),
+    });
+
+    await expect(ensureFreshSession(true)).resolves.toBeNull();
   });
 
   it("no reutiliza el respaldo preventivo si vence dentro del margen", async () => {
