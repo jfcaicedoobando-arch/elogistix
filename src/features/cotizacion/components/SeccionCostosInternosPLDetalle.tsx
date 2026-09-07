@@ -4,7 +4,7 @@ import { DollarSign, Banknote, Save, Pencil, X } from "lucide-react";
 import { getErrorMessage } from "@/lib/errors";
 import { sumarSubtotales } from "@/lib/financial/financialUtils";
 import { usePermissions } from "@/hooks/shared";
-import { useCotizacionCostos, useUpsertCotizacionCostos } from "@/features/cotizacion/hooks";
+import { useCotizacionCostosSnapshot, useUpsertCotizacionCostos } from "@/features/cotizacion/hooks";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import type { ConceptoVentaCotizacion } from "@/features/cotizacion/hooks";
 import ResumenPL from "./ResumenPL";
@@ -33,10 +33,10 @@ interface Props {
  * Usado en CotizacionDetalle.
  */
 export default function SeccionCostosInternosPLDetalle({
-  cotizacionId, conceptosUSD, conceptosMXN, cotizacionUpdatedAt = null,
+  cotizacionId, conceptosUSD, conceptosMXN,
 }: Props) {
   const { canEdit } = usePermissions();
-  const { data: costosGuardados, isLoading } = useCotizacionCostos(cotizacionId);
+  const { data: snapshot, isLoading } = useCotizacionCostosSnapshot(cotizacionId);
   const upsert = useUpsertCotizacionCostos();
   const tasaIva = useTasaIVA();
   // B-081: venta ya persistida en `conceptos_venta`; si suma 0 y los costos sí
@@ -51,41 +51,28 @@ export default function SeccionCostosInternosPLDetalle({
     [conceptosUSD, conceptosMXN],
   );
 
+  const [filasConfirmadas, setFilasConfirmadas] = useState<FilaCostoDetalle[]>([]);
   const [filas, setFilas] = useState<FilaCostoDetalle[]>([]);
-  const [initialized, setInitialized] = useState(false);
+  const [selloConfirmado, setSelloConfirmado] = useState<string | null>(null);
   const [editMode, setEditMode] = useState(false);
-  /**
-   * v13.823.165 — `sello` es el sello de la lectura COHERENTE que se está
-   * mostrando (nunca se toma de la prop al momento de guardar). `selloConsumido`
-   * es el que ya se gastó en un guardado exitoso: si un refetch tardío devuelve
-   * ese valor viejo, se ignora en lugar de degradar el sello vigente. Cualquier
-   * OTRO valor de la prop (p. ej. cambio de otro usuario mientras no se editaba)
-   * sí se adopta junto con sus filas, para no conservar S1 indefinidamente.
-   */
-  const [sello, setSello] = useState<string | null>(cotizacionUpdatedAt);
-  const [selloConsumido, setSelloConsumido] = useState<string | null>(null);
-
-  const lecturaObsoleta =
-    !!selloConsumido && !!cotizacionUpdatedAt && cotizacionUpdatedAt === selloConsumido;
 
   useEffect(() => {
-    // v13.823.144 (bug 8/9): se re-deriva cuando cambian los datos de BD,
-    // salvo mientras el usuario edita (para no pisar su captura).
-    if (isLoading || (initialized && editMode)) return;
-    // v13.823.165: no se rehidrata desde una lectura ya superada por el
-    // guardado propio (abriría una ventana editable con datos/sello viejos).
-    if (lecturaObsoleta) return;
-
-    setFilas(
-      costosGuardados && costosGuardados.length > 0
-        ? mapearCostosAFilas(costosGuardados, conceptosUSD, conceptosMXN)
-        : mapearConceptosAFilas(conceptosUSD, conceptosMXN),
-    );
-    if (cotizacionUpdatedAt) setSello(cotizacionUpdatedAt);
-    setInitialized(true);
+    // La captura abierta queda congelada. Fuera de edición se adopta únicamente
+    // una fotografía completa (costos + sello de la misma consulta).
+    if (isLoading || editMode || !snapshot) return;
+    const selloAnterior = selloConfirmado ? Date.parse(selloConfirmado) : Number.NaN;
+    const selloEntrante = snapshot.updatedAt ? Date.parse(snapshot.updatedAt) : Number.NaN;
+    if (Number.isFinite(selloAnterior) && (!Number.isFinite(selloEntrante) || selloEntrante < selloAnterior)) {
+      return;
+    }
+    const filasSnapshot = snapshot.costos.length > 0
+      ? mapearCostosAFilas(snapshot.costos, conceptosUSD, conceptosMXN)
+      : mapearConceptosAFilas(conceptosUSD, conceptosMXN);
+    setFilasConfirmadas(filasSnapshot);
+    setFilas(filasSnapshot);
+    setSelloConfirmado(snapshot.updatedAt);
   }, [
-    isLoading, costosGuardados, conceptosUSD, conceptosMXN, initialized, editMode,
-    lecturaObsoleta, cotizacionUpdatedAt,
+    isLoading, snapshot, conceptosUSD, conceptosMXN, editMode, selloConfirmado,
   ]);
 
   const filasUSD = useMemo(() => filas.filter(f => f.moneda === "USD"), [filas]);
@@ -112,20 +99,18 @@ export default function SeccionCostosInternosPLDetalle({
 
   const handleGuardar = async () => {
     const costos = mapearFilasACostos(cotizacionId, filas);
-    const selloEnviado = sello;
+    const selloEnviado = selloConfirmado;
     try {
       // Sin sello se falla cerrado en el servicio (no se sustituye por la prop).
       const res = await upsert.mutateAsync({
         cotizacionId, costos, expectedUpdatedAt: selloEnviado,
       });
-      // v13.823.165: filas y sello se renuevan JUNTOS con lo que devuelve la RPC
-      // (lectura canónica), y el sello gastado queda marcado como obsoleto para
-      // que un refetch tardío no lo reinstale.
-      if (res.costos.length > 0) {
-        setFilas(mapearCostosAFilas(res.costos, conceptosUSD, conceptosMXN));
-      }
-      setSello(res.updatedAt ?? null);
-      setSelloConsumido(selloEnviado);
+      const filasGuardadas = res.costos.length > 0
+        ? mapearCostosAFilas(res.costos, conceptosUSD, conceptosMXN)
+        : mapearConceptosAFilas(conceptosUSD, conceptosMXN);
+      setFilasConfirmadas(filasGuardadas);
+      setFilas(filasGuardadas);
+      setSelloConfirmado(res.updatedAt);
       notifySuccess(undefined, { title: "Costos guardados correctamente" });
       setEditMode(false);
     } catch (err: unknown) {
@@ -139,9 +124,9 @@ export default function SeccionCostosInternosPLDetalle({
     <div className="space-y-4">
       <AvisoSincronizarConceptosVenta
         cotizacionId={cotizacionId}
-        costos={costosGuardados ?? []}
+        costos={snapshot?.costos ?? []}
         tasaIva={tasaIva}
-        visible={requiereSincronizarVenta(costosGuardados ?? [], totalVentaGuardada)}
+        visible={requiereSincronizarVenta(snapshot?.costos ?? [], totalVentaGuardada)}
       />
 
       {canEdit && filas.length > 0 && (
@@ -149,16 +134,21 @@ export default function SeccionCostosInternosPLDetalle({
           {editMode ? (
             <Button
               variant="outline" size="sm" disabled={upsert.isPending}
-              onClick={() => setEditMode(false)}
+              onClick={() => {
+                setFilas(filasConfirmadas);
+                setEditMode(false);
+              }}
             >
               <X className="h-4 w-4 mr-1" /> Cancelar edición
             </Button>
           ) : (
             <Button
               variant="outline" size="sm"
-              // v13.823.165: NO se reinstala la prop aquí; el sello vigente ya
-              // es el de la lectura coherente mostrada (o el que devolvió la RPC).
-              onClick={() => setEditMode(true)}
+              disabled={!selloConfirmado}
+              onClick={() => {
+                setFilas(filasConfirmadas);
+                setEditMode(true);
+              }}
             >
               <Pencil className="h-4 w-4 mr-1" /> Editar costos
             </Button>

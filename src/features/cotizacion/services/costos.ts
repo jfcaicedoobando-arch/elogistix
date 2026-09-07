@@ -4,7 +4,10 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { CostoCotizacion } from "@/features/cotizacion/types";
 import { fromDbChecked } from "@/lib/supabase/cast";
-import { costosCotizacionDbSchema } from "./readSchemas";
+import {
+  costosCotizacionDbSchema,
+  cotizacionCostosSnapshotDbSchema,
+} from "./readSchemas";
 import { registrarActividad } from "@/services/bitacora/registrar";
 import {
   LC_CONFLICTO_CONCURRENCIA,
@@ -27,6 +30,31 @@ export async function fetchCotizacionCostos(
   assertNotTruncated(data, 500, "cotizacion.costos");
   // M2: valida montos/identidad en el boundary de dinero antes del dominio.
   return fromDbChecked<CostoCotizacion[]>(data ?? [], costosCotizacionDbSchema);
+}
+
+/** Filas y sello leídos por Postgres dentro del mismo snapshot. */
+export interface CotizacionCostosSnapshot {
+  costos: CostoCotizacion[];
+  updatedAt: string | null;
+}
+
+export async function fetchCotizacionCostosSnapshot(
+  cotizacionId: string,
+): Promise<CotizacionCostosSnapshot> {
+  const { data, error } = await supabase
+    .from("cotizaciones")
+    .select("updated_at, cotizacion_costos(*)")
+    .eq("id", cotizacionId)
+    .is("deleted_at", null)
+    .is("cotizacion_costos.deleted_at", null)
+    .single();
+  if (error) throw error;
+  const snapshot = fromDbChecked<{
+    updated_at: string | null;
+    cotizacion_costos: CostoCotizacion[];
+  }>(data, cotizacionCostosSnapshotDbSchema);
+  assertNotTruncated(snapshot.cotizacion_costos, 500, "cotizacion.costos.snapshot");
+  return { costos: snapshot.cotizacion_costos, updatedAt: snapshot.updated_at };
 }
 
 
@@ -54,7 +82,7 @@ export async function upsertCotizacionCostos(
   // Falla cerrada en cliente: sin sello no se llama la RPC (el servidor también
   // la rechaza). Evita reemplazar costos sin candado optimista.
   if (!expectedUpdatedAt) throw conflictoConcurrenciaError();
-  const { data, error } = await supabase.rpc("actualizar_cotizacion_costos", {
+  const { error } = await supabase.rpc("actualizar_cotizacion_costos", {
     p_cotizacion_id: cotizacionId,
     p_costos: costos.map((c) => ({
       concepto: c.concepto,
@@ -82,15 +110,9 @@ export async function upsertCotizacionCostos(
     entidadId: cotizacionId,
     detalles: { total_conceptos: costos.length },
   });
-  const sello =
-    data && typeof data === "object" && !Array.isArray(data)
-      ? (data as Record<string, unknown>).updated_at
-      : null;
-  // Re-leemos para devolver los registros canónicos (con id/timestamps/totales calculados).
-  return {
-    costos: await fetchCotizacionCostos(cotizacionId),
-    updatedAt: typeof sello === "string" ? sello : null,
-  };
+  // La RPC confirma el reemplazo; después leemos filas y sello juntos para no
+  // mezclar costos de una versión con el `updated_at` de otra.
+  return fetchCotizacionCostosSnapshot(cotizacionId);
 }
 
 

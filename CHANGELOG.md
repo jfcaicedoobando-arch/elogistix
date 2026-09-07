@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.823.166] - 2026-09-07
+
+- Cotizaciones (smoke 162, P1 · cierre de coherencia): el guardado rápido ya no combina costos de una lectura con el sello de otra. La pantalla consume una sola fotografía `costos + updated_at` obtenida desde `cotizaciones` con sus costos relacionados, y la mutación relee esa misma fotografía tras el reemplazo. Se conserva el candado optimista y el contrato de costos usado por el wizard.
+- Cotizaciones (smoke 162, P1 · captura separada): la última fotografía confirmada y la captura editable ahora viven separadas. Abrir edición congela ambas; un refresco externo sólo se adopta fuera de captura; guardar renueva filas y sello juntos; cancelar restaura inmediatamente el último dato confirmado, incluso antes de que termine un refresco. Se eliminó el parche de un solo `selloConsumido`, que fallaba en el tercer guardado.
+- Regresiones preparadas para GitHub Actions (NO ejecutadas aquí): fotografía inicial 500/guardada 600 con prop del detalle retrasada, tres guardados consecutivos sin retroceso, actualización externa completa sólo fuera de edición, cancelación antes del refetch, conflicto con captura preservada y metadatos de tarifa conservados.
+
 ## [13.823.165] - 2026-09-07
 
 - Cotizaciones (smoke 162, P1 · remate): el SEGUNDO guardado de costos podía recuperar el sello viejo. `SeccionCostosInternosPLDetalle` ya no reinstala la prop `cotizacionUpdatedAt` al pulsar «Editar costos»: mantiene el sello de la lectura coherente mostrada, tras un guardado exitoso renueva JUNTOS filas y sello con lo que devuelve la RPC (`res.costos` / `res.updatedAt`) y marca como consumido el sello gastado, de modo que un refetch tardío con ese valor viejo ni rehidrata filas ni degrada el sello. Un sello distinto (cambio real de otra persona mientras no se editaba) sí se adopta con sus filas; durante la captura se conserva el snapshot y el conflicto real sigue rechazándose. Sin sello se falla cerrado (no se sustituye por la prop al guardar).
