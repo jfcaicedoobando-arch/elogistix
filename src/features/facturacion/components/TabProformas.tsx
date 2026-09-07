@@ -17,6 +17,8 @@ import { mensajeVacioProformas } from "./proformasEmptyCopy";
 import { ProformasEmptyState } from "./proformasEmpty";
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 import { ProformaMobileCard } from "./ProformaMobileCard";
+import { LABEL_ESTADO_UNIFICADO } from "@/lib/domain/estadoUnificado";
+
 
 
 export function TabProformas({ isInRange, estadoInicial }: {
