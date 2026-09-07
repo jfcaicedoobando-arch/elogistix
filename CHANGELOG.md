@@ -1,5 +1,13 @@
 # Changelog
 
+## [13.823.199] - 2026-09-07
+
+Proformas PDF: ajuste de expectativa en prueba de `splitNotas` para CRLF (R188-NOTAS-191-20260907).
+
+- El encabezado acotado a 3 renglones contiene `Linea 0`, `Linea 1` y `Linea 2`; por tanto el resto comienza en `Linea 3`, no en `Linea 2`.
+- Se añade comprobación de conservación `head + "\r\n" + rest === texto`.
+- No hay cambio en el algoritmo, sólo corrección de la expectativa del caso. Sin SQL, migraciones, datos, permisos ni publicación.
+
 ## [13.823.198] - 2026-09-07
 
 Cotizaciones: guardar el Paso 1 de una cotización nueva ya no falla con "Moneda: requerido".
