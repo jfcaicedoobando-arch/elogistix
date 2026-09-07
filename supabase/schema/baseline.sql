@@ -2735,6 +2735,7 @@ DECLARE
   v_tiene_xml_lineas boolean;
   v_total_mxn numeric(18,4);
   v_umbral numeric;
+  v_tipo_contable text;
   v_c record;
 BEGIN
   SELECT * INTO v_row FROM public.proveedor_facturas WHERE id = p_factura_id;
@@ -2825,22 +2826,31 @@ BEGIN
           AND concepto_costo_id IS NOT NULL
      )
   THEN
-    -- Ola E1 · N-F3: antes `COALESCE(NULLIF(tipo_cambio_usd,0), 1)` valuaba una
-    -- factura en USD como si fuera MXN y saltaba el umbral sin justificación.
-    IF v_row.moneda = 'MXN'::public.moneda THEN
-      v_total_mxn := COALESCE(v_row.total,0);
-    ELSE
-      IF COALESCE(NULLIF(v_row.tipo_cambio_usd,0), 0) <= 0 THEN
-        RAISE EXCEPTION 'LC_CXP_TC_REQUERIDO: la factura está en % y no tiene tipo de cambio capturado; registra el T/C del DOF de la fecha de la factura antes de aprobar.',
-          v_row.moneda;
+    -- FP-000221: un gasto que por naturaleza no pertenece a un embarque
+    -- (Administracion / Venta) no puede exigir vínculo operativo. Sólo los
+    -- costos directos de embarque (o la ausencia de categoría) se comparan
+    -- contra el umbral autorizado.
+    SELECT pc.tipo_contable::text INTO v_tipo_contable
+      FROM public.presupuesto_categorias pc
+     WHERE pc.id = v_row.categoria_presupuesto_id;
+    IF COALESCE(v_tipo_contable, 'CostoDirectoEmbarque') = 'CostoDirectoEmbarque' THEN
+      -- Ola E1 · N-F3: antes `COALESCE(NULLIF(tipo_cambio_usd,0), 1)` valuaba una
+      -- factura en USD como si fuera MXN y saltaba el umbral sin justificación.
+      IF v_row.moneda = 'MXN'::public.moneda THEN
+        v_total_mxn := COALESCE(v_row.total,0);
+      ELSE
+        IF COALESCE(NULLIF(v_row.tipo_cambio_usd,0), 0) <= 0 THEN
+          RAISE EXCEPTION 'LC_CXP_TC_REQUERIDO: la factura está en % y no tiene tipo de cambio capturado; registra el T/C del DOF de la fecha de la factura antes de aprobar.',
+            v_row.moneda;
+        END IF;
+        v_total_mxn := COALESCE(v_row.total,0) * v_row.tipo_cambio_usd;
       END IF;
-      v_total_mxn := COALESCE(v_row.total,0) * v_row.tipo_cambio_usd;
-    END IF;
-    v_umbral := public.cxp_umbral_sin_vinculo(v_row.organization_id);
-    IF v_total_mxn > v_umbral THEN
-      RAISE EXCEPTION 'LC_CXP_SIN_RESPALDO_MONTO: La factura por % MXN no está ligada a un embarque ni a costos acordados y excede el umbral autorizado (%). Vincúlala al embarque o a sus conceptos de costo antes de aprobar.',
-        to_char(v_total_mxn, 'FM999,999,999,990.00'),
-        to_char(v_umbral,    'FM999,999,999,990.00');
+      v_umbral := public.cxp_umbral_sin_vinculo(v_row.organization_id);
+      IF v_total_mxn > v_umbral THEN
+        RAISE EXCEPTION 'LC_CXP_SIN_RESPALDO_MONTO: La factura por % MXN no está ligada a un embarque ni a costos acordados y excede el umbral autorizado (%). Vincúlala al embarque o a sus conceptos de costo antes de aprobar.',
+          to_char(v_total_mxn, 'FM999,999,999,990.00'),
+          to_char(v_umbral,    'FM999,999,999,990.00');
+      END IF;
     END IF;
     IF length(COALESCE(btrim(p_justificacion), '')) < 10 THEN
       RAISE EXCEPTION 'LC_CXP_SIN_RESPALDO: Esta factura no está ligada a un embarque ni a costos acordados. Escribe la justificación del gasto (mínimo 10 caracteres) para aprobarla.';
@@ -5141,13 +5151,16 @@ BEGIN
         cantidad = COALESCE((cv->>'cantidad')::numeric, cantidad),
         precio_unitario = COALESCE((cv->>'precio_unitario')::numeric, precio_unitario),
         moneda = COALESCE((cv->>'moneda')::moneda, moneda),
-        total = COALESCE((cv->>'total')::numeric, total)
+        total = COALESCE((cv->>'total')::numeric, total),
+        aplica_iva = COALESCE((cv->>'aplica_iva')::boolean, aplica_iva),
+        tasa_iva_aplicada = COALESCE((cv->>'tasa_iva_aplicada')::numeric, tasa_iva_aplicada)
       WHERE id = (cv->>'id')::uuid
         AND embarque_id = p_embarque_id
         AND estado_facturacion IN ('pendiente', 'en_proforma');
     ELSE
       INSERT INTO conceptos_venta (
-        embarque_id, descripcion, cantidad, precio_unitario, moneda, total, contenedor_id, organization_id
+        embarque_id, descripcion, cantidad, precio_unitario, moneda, total, contenedor_id,
+        aplica_iva, tasa_iva_aplicada, organization_id
       ) VALUES (
         p_embarque_id,
         cv->>'descripcion',
@@ -5156,6 +5169,8 @@ BEGIN
         COALESCE((cv->>'moneda')::moneda, 'MXN'::moneda),
         COALESCE((cv->>'total')::numeric, 0),
         NULLIF(cv->>'contenedor_id','')::uuid,
+        COALESCE((cv->>'aplica_iva')::boolean, false),
+        COALESCE((cv->>'tasa_iva_aplicada')::numeric, 0.16),
         v_org_id
       )
       RETURNING id INTO v_new_id;
@@ -12044,9 +12059,13 @@ BEGIN
     v_cot_id
   );
   FOR cv IN SELECT * FROM jsonb_array_elements(p_conceptos_venta) LOOP
-    INSERT INTO conceptos_venta (embarque_id, descripcion, cantidad, precio_unitario, moneda, total, organization_id)
+    INSERT INTO conceptos_venta (embarque_id, descripcion, cantidad, precio_unitario, moneda, total,
+                                 aplica_iva, tasa_iva_aplicada, organization_id)
     VALUES (nuevo_id, cv->>'descripcion', (cv->>'cantidad')::numeric, (cv->>'precio_unitario')::numeric,
-            (cv->>'moneda')::moneda, (cv->>'total')::numeric, v_org_id);
+            (cv->>'moneda')::moneda, (cv->>'total')::numeric,
+            COALESCE((cv->>'aplica_iva')::boolean, false),
+            COALESCE((cv->>'tasa_iva_aplicada')::numeric, 0.16),
+            v_org_id);
   END LOOP;
   FOR cc IN SELECT * FROM jsonb_array_elements(p_conceptos_costo) LOOP
     INSERT INTO conceptos_costo (embarque_id, concepto, proveedor_nombre, proveedor_id, moneda, monto, organization_id)
@@ -23702,8 +23721,11 @@ BEGIN
     FROM jsonb_array_elements(COALESCE(p_conceptos, '[]'::jsonb)) AS x;
   GET DIAGNOSTICS v_insertados = ROW_COUNT;
   -- BUG-02 (auditoría 2026-08-18): la cabecera debe cuadrar con sus renglones.
-  -- `guard_proveedor_factura_total` recalcula `total` a partir de estos campos.
-  SELECT COALESCE(SUM(monto), 0), COALESCE(SUM(iva), 0), COALESCE(SUM(ieps), 0)
+  -- v13.823.191: el importe es UNITARIO, así que el subtotal es Σ monto × cantidad,
+  -- igual que `_cxp_validar_aprobacion` y las tablas de conceptos de la app.
+  SELECT COALESCE(SUM(monto * COALESCE(NULLIF(cantidad, 0), 1)), 0),
+         COALESCE(SUM(iva), 0),
+         COALESCE(SUM(ieps), 0)
     INTO v_subtotal, v_iva, v_ieps
     FROM public.proveedor_facturas_conceptos
    WHERE proveedor_factura_id = p_factura_id;
