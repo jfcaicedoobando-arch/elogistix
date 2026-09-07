@@ -14,8 +14,8 @@
 --
 -- Idempotencia intacta: la rama `idempotency_claim` devuelve las facturas ya
 -- creadas SIN redatarlas. No hay backfill ni UPDATE masivo: los documentos
--- históricos y las facturas emitidas no se tocan. Grants y SECURITY DEFINER se
--- conservan (CREATE OR REPLACE no los altera).
+-- históricos y las facturas emitidas no se tocan. SECURITY DEFINER se conserva y
+-- los privilegios se REAFIRMAN al final del archivo (H6), sin ampliarlos.
 
 CREATE OR REPLACE FUNCTION public.crear_proforma_atomica(p_organization_id uuid, p_embarque_id uuid, p_cliente_id uuid, p_cliente_nombre text, p_expediente text, p_bl_master text, p_concepto_ids uuid[], p_subtotal_usd numeric, p_iva_usd numeric, p_total_usd numeric, p_subtotal_mxn numeric, p_iva_mxn numeric, p_total_mxn numeric, p_notas text, p_operador text, p_dias_credito integer, p_tasa_iva numeric, p_iva_overrides jsonb DEFAULT '{}'::jsonb)
  RETURNS proformas
@@ -438,3 +438,18 @@ BEGIN
   RETURN QUERY SELECT * FROM public.facturas WHERE id = ANY(v_factura_ids);
 END;
 $function$;
+
+-- ── H6 · Privilegios explícitos (reafirmación, sin ampliar acceso) ──────────
+-- `CREATE OR REPLACE` conserva los privilegios existentes, pero el contrato de
+-- docs/migrations-hygiene.md (H6) exige declararlos en el MISMO archivo para
+-- toda función pública SECURITY DEFINER re-emitida después del BASELINE.
+-- Se reafirma exactamente la matriz canónica vigente:
+--   crear_proforma_atomica       → 20260818005136 (REVOKE PUBLIC, anon / GRANT authenticated, service_role)
+--   convertir_proformas_a_factura→ 20260826000700 (REVOKE PUBLIC, anon / GRANT authenticated, service_role)
+-- No se otorgan permisos nuevos, no se toca RLS ni la matriz de roles.
+
+REVOKE ALL ON FUNCTION public.crear_proforma_atomica(uuid, uuid, uuid, text, text, text, uuid[], numeric, numeric, numeric, numeric, numeric, numeric, text, text, integer, numeric, jsonb) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.crear_proforma_atomica(uuid, uuid, uuid, text, text, text, uuid[], numeric, numeric, numeric, numeric, numeric, numeric, text, text, integer, numeric, jsonb) TO authenticated, service_role;
+
+REVOKE ALL ON FUNCTION public.convertir_proformas_a_factura(uuid[], uuid, text, text, text, integer, text, uuid) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.convertir_proformas_a_factura(uuid[], uuid, text, text, text, integer, text, uuid) TO authenticated, service_role;
