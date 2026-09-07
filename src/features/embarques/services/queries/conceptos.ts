@@ -14,7 +14,7 @@ export async function fetchEmbarqueConceptosVenta(embarqueId: string): Promise<C
       // R179-01: `tasa_iva_aplicada` se omitía y el cálculo del modal caía al
       // flag global; el RPC sí usaba la tasa real de la fila y el total
       // confirmado cambiaba al guardar.
-      "id, embarque_id, descripcion, cantidad, precio_unitario, total, moneda, organization_id, created_at, estado_facturacion, proforma_id, aplica_iva, tasa_iva_aplicada",
+      "id, embarque_id, descripcion, cantidad, precio_unitario, total, moneda, organization_id, created_at, estado_facturacion, proforma_id, aplica_iva, tasa_iva_aplicada, contenedor_id",
     )
     .eq("embarque_id", embarqueId)
     // `actualizar_embarque_completo` borra en lógico (deleted_at) los conceptos
