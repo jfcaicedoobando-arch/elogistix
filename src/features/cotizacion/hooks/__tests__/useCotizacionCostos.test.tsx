@@ -23,6 +23,7 @@ vi.mock("@/lib/query", () => ({
   queryKeys: {
     cotizaciones: {
       costos: (id: string) => ["cotizaciones", "costos", id],
+      detail: (id: string) => ["cotizaciones", id],
       all: ["cotizaciones"],
     },
   },
@@ -61,5 +62,15 @@ describe("useUpsertCotizacionCostos", () => {
     result.current.mutate({ cotizacionId: "cot-1", costos: [] });
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(upsertCotizacionCostos).toHaveBeenCalledWith("cot-1", [], "req-123", undefined);
+  });
+
+  // v13.823.163: el hook ya NO notifica; el aviso lo emite el call site (antes
+  // salían dos toasts por el mismo fallo).
+  it("propaga el error sin emitir aviso propio", async () => {
+    upsertCotizacionCostos.mockRejectedValueOnce(new Error("LC_CONFLICTO_CONCURRENCIA"));
+    const { result } = renderHook(() => useUpsertCotizacionCostos(), { wrapper: createWrapper() });
+    await expect(
+      result.current.mutateAsync({ cotizacionId: "cot-1", costos: [], expectedUpdatedAt: "x" }),
+    ).rejects.toThrow("LC_CONFLICTO_CONCURRENCIA");
   });
 });
