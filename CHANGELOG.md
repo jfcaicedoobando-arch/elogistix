@@ -1,5 +1,17 @@
 # Changelog
 
+## [13.823.186] - 2026-09-07
+
+FP-000221 — aprobar en lote los gastos que no están ligados a un embarque.
+
+- `ComprasPorAprobar.confirmDialog.tsx`: si alguna de las facturas seleccionadas no tiene `embarque_id`, el diálogo pide la justificación del gasto (mínimo `JUSTIFICACION_SIN_VINCULO_MIN` = 10, máximo `MOTIVO_RECHAZO_MAX` = 500) y deshabilita el botón hasta cumplirlo. Sin justificación requerida, el diálogo se comporta igual que antes.
+- `useAprobarFacturasLote.ts`: `aprobar(ids, { justificacion, requierenJustificacion })` envía `p_motivo` sólo a los ids sin embarque; sigue secuencial con una única invalidación al final.
+- Aviso honesto: se propaga el `code` de `AprobacionFacturaError` a `notifyError` (`errorCode`) y se clasifican como validación de negocio los textos "escribe la justificación" y "monto que puede aprobarse" (antes se reportaban como `UNKNOWN`).
+- Regresión focalizada `src/features/compras/routes/__tests__/ComprasPorAprobarJustificacionLote.test.tsx` (4 pruebas, en verde).
+
+Validaciones: prueba focalizada, typecheck y ESLint focalizado. Tests completos, RLS y CI quedan para GitHub Actions. Sin SQL, migraciones ni cambios de datos; no se aprobó ninguna factura.
+
+
 ## [13.823.185] - 2026-09-07
 
 FP-000221 — los gastos que no son de embarque ya no exigen liga a embarque, y el monto máximo se puede ajustar.
