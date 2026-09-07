@@ -4,6 +4,7 @@ export const cotizaciones = {
   aceptadas: (organizationId?: string | null) => ['cotizaciones', 'aceptadas', organizationId] as const,
   detail: (id: string) => ['cotizaciones', id] as const,
   costos: (id: string) => ['cotizacion_costos', id] as const,
+  costosSnapshot: (id: string) => ['cotizacion_costos', id, 'snapshot'] as const,
   embarquesVinculados: (id: string) => ['embarques', 'cotizacion', id] as const,
   folio: (id: string) => ['cotizaciones', 'folio', id] as const,
   envios: (cotizacionId?: string) => ['cotizacion-envios', cotizacionId] as const,

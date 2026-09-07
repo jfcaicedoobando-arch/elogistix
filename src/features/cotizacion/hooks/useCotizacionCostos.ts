@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { queryKeys } from '@/lib/query';
 import {
   fetchCotizacionCostos,
+  fetchCotizacionCostosSnapshot,
   upsertCotizacionCostos,
 } from '@/features/cotizacion/services';
 import { newRequestId } from '@/lib/idempotency';
@@ -17,6 +18,14 @@ export function useCotizacionCostos(cotizacionId: string | undefined) {
   });
 }
 
+export function useCotizacionCostosSnapshot(cotizacionId: string | undefined) {
+  return useQuery({
+    queryKey: queryKeys.cotizaciones.costosSnapshot(cotizacionId ?? ''),
+    queryFn: () => fetchCotizacionCostosSnapshot(cotizacionId ?? ''),
+    enabled: !!cotizacionId,
+  });
+}
+
 export function useUpsertCotizacionCostos() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -28,11 +37,16 @@ export function useUpsertCotizacionCostos() {
       expectedUpdatedAt?: string | null;
     }) =>
       upsertCotizacionCostos(cotizacionId, costos, requestId ?? newRequestId(), expectedUpdatedAt),
-    onSuccess: (_data, variables) => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.cotizaciones.costos(variables.cotizacionId) });
+    onSuccess: (data, variables) => {
+      queryClient.setQueryData(
+        queryKeys.cotizaciones.costosSnapshot(variables.cotizacionId),
+        data,
+      );
+      void queryClient.invalidateQueries({ queryKey: queryKeys.cotizaciones.costos(variables.cotizacionId) });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.cotizaciones.costosSnapshot(variables.cotizacionId) });
       // v13.823.164: el reemplazo mueve `cotizaciones.updated_at`; el detalle
       // debe releerse para que el siguiente sello venga fresco de la BD.
-      queryClient.invalidateQueries({ queryKey: queryKeys.cotizaciones.detail(variables.cotizacionId) });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.cotizaciones.detail(variables.cotizacionId) });
     },
     // v13.823.164: sin `onError` aquí. El call site ya muestra un único aviso
     // ("Error al guardar" con detalle); antes salían DOS toasts por el mismo

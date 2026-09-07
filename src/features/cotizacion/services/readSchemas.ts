@@ -38,6 +38,12 @@ export const costoCotizacionDbSchema = z
 
 export const costosCotizacionDbSchema = z.array(costoCotizacionDbSchema);
 
+/** Lectura coherente del sello padre y sus costos en un solo snapshot SQL. */
+export const cotizacionCostosSnapshotDbSchema = z.object({
+  updated_at: z.string().nullable(),
+  cotizacion_costos: costosCotizacionDbSchema,
+});
+
 /** Concepto de venta persistido en `jsonb` (cotizaciones y proformas). */
 export const conceptoVentaDbSchema = z
   .object({

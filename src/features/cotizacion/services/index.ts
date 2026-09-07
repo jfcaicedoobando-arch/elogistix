@@ -30,10 +30,11 @@ export {
 // Costos (subdominio)
 export {
   fetchCotizacionCostos,
+  fetchCotizacionCostosSnapshot,
   upsertCotizacionCostos,
   fetchCotizacionCostosForEmbarque,
 } from "./costos";
-export type { UpsertCostosResult } from "./costos";
+export type { CotizacionCostosSnapshot, UpsertCostosResult } from "./costos";
 ;
 
 // Conversiones (prospecto→cliente / cotización→embarques / portal)
