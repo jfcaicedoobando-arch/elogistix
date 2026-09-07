@@ -14,7 +14,7 @@
  *   0 rechazada   → cliente rechazó, hay que actuar
  *   1 pendiente   → esperando al cliente
  *   2 aceptada    → cliente ya aceptó, lista para convertir a factura
- *   3 facturada   → ya se convirtió a factura, cerrada
+ *   3 facturada   → ya se convirtió a factura (borrador o emitida), cerrada
  */
 
 export type EstadoUnificadoProforma =
@@ -65,5 +65,10 @@ export const LABEL_ESTADO_UNIFICADO: Record<EstadoUnificadoProforma, string> = {
   pendiente: "Pendiente cliente",
   aceptada: "Aceptada",
   rechazada: "Rechazada",
-  facturada: "Facturada",
+  // R170-01: el grupo "facturada" incluye proformas cuya factura sigue en
+  // Borrador (sin timbrar). Llamarlo "Facturada" en filtro, chip y contador
+  // prometía emisión fiscal inexistente; la etiqueta honesta del grupo es
+  // "Convertida". Las filas siguen distinguiendo borrador / por timbrar /
+  // emitida vía `etiquetaProformaConvertida`.
+  facturada: "Convertida",
 };
