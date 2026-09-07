@@ -3,6 +3,7 @@ import { notifyWarning } from "@/lib/ui/appFeedback";
 import { sincronizarEtapaPorEstadoCotizacion } from "@/features/crm/services/vincularCotizacion";
 import { useConvertirProspectoHandlers } from "@/features/cotizacion/hooks/useConvertirProspectoHandlers";
 import { useCrearEmbarqueBorradorHandlers } from "@/features/cotizacion/hooks/useCrearEmbarqueBorradorHandlers";
+import { useAceptarCotizacion } from "@/features/cotizacion/hooks/useAceptarCotizacion";
 
 /**
  * Estados cuya etapa CRM sigue sincronizándose desde el cliente. Los estados
