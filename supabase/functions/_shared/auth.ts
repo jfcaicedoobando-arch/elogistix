@@ -33,25 +33,45 @@ export async function authenticate(req: Request, log?: Logger): Promise<AuthCont
   // RTC-02: la verificación remota (`getUser`) es la fuente de verdad. Cuando el
   // proyecto firma con el secreto legacy (HS256), `getClaims` no puede validar la
   // firma en local y devolvía "Token inválido" con tokens perfectamente válidos.
-  // `getClaims` queda sólo como respaldo si la llamada remota falla.
-  const authApi = anonClient.auth as unknown as {
-    getClaims?: (t: string) => Promise<{
-      data: { claims?: { sub?: string } } | null;
-      error: unknown;
-    }>;
+  //
+  // R188-AUTH-01: además, un fallo de INFRAESTRUCTURA de /auth/v1/user (429 por
+  // ráfaga de invocaciones, 5xx o red) se traducía también a "401:Token
+  // inválido"; el frontend lo interpretaba como sesión vencida y el usuario veía
+  // un error sin salida con un token perfectamente válido. Ahora sólo un veredicto
+  // explícito del servicio de auth (401/403) es token inválido; lo demás se
+  // reintenta una vez y, si persiste, se responde 503 (reintentable) con la razón
+  // real en el log.
+  const statusDe = (e: unknown): number | null => {
+    const s = (e as { status?: unknown } | null)?.status;
+    return typeof s === "number" ? s : null;
   };
 
   let userId: string | undefined;
-  const { data: userData, error: userErr } = await anonClient.auth.getUser(token);
-  if (!userErr && userData?.user?.id) {
-    userId = userData.user.id;
-  } else if (typeof authApi.getClaims === "function") {
-    const { data, error } = await authApi.getClaims(token);
-    if (error || !data?.claims?.sub) throw new Error("401:Token inválido");
-    userId = data.claims.sub;
-  } else {
-    throw new Error("401:Token inválido");
+  let ultimoError: unknown = null;
+  for (let intento = 1; intento <= 2; intento++) {
+    const { data, error } = await anonClient.auth.getUser(token);
+    if (!error && data?.user?.id) {
+      userId = data.user.id;
+      break;
+    }
+    ultimoError = error;
+    const status = statusDe(error);
+    if (status === 401 || status === 403) {
+      throw new Error("401:Token inválido");
+    }
+    if (intento === 1) await new Promise((r) => setTimeout(r, 250));
   }
+
+  if (!userId) {
+    log?.warn?.("auth_getuser_no_disponible", {
+      status: statusDe(ultimoError),
+      motivo: (ultimoError as { message?: string } | null)?.message ?? "sin detalle",
+    });
+    throw new Error(
+      "503:No pudimos validar tu sesión en este momento. Intenta de nuevo en unos segundos.",
+    );
+  }
+
 
 
   log?.setUserId(userId);
