@@ -152,8 +152,14 @@ async function invokeWithRetry(
   const t0 = performance.now();
   let last: Attempt | null = null;
   for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
-    const token = await ensureFreshSession(attempt > 1);
-    if (!token) throw new Error(AUTH_ERROR_MESSAGES.csfSessionRequired);
+    // La fecha local del JWT no demuestra que el servidor aún lo acepte: una
+    // sesión revocada puede conservar `expires_at` futuro. Renovar antes del
+    // primer envío evita provocar un 401 técnico; el segundo intento vuelve a
+    // renovar por si el token fue invalidado durante la carga del archivo.
+    const token = await ensureFreshSession(true);
+    if (!token) {
+      throw new Error(AUTH_ERROR_MESSAGES.sessionRequired("procesar la factura PDF"));
+    }
     const r = await invokeOnce(file, categorias, token, organizationId);
     if (r.ok && r.data) {
       return { data: r.data, latencyMs: Math.round(performance.now() - t0), attempts: attempt };
