@@ -1,5 +1,15 @@
 # Changelog
 
+## [13.823.200] - 2026-09-07
+
+Observabilidad: los errores del backend ya llegan legibles a Sentry (JAVASCRIPT-REACT-69).
+
+- `logger.error` extrae `message` de errores planos (PostgrestError) y adjunta `code`/`details`/`hint` como contexto; antes se reportaban como `[object Object]`.
+- La búsqueda global usa `busqueda_global` como ámbito y pasa el error como dato. Comportamiento visible sin cambios (lista vacía si falla).
+- Sin SQL, migraciones, permisos, RLS ni publicación.
+
+
+
 ## [13.823.199] - 2026-09-07
 
 Proformas PDF: ajuste de expectativa en prueba de `splitNotas` para CRLF (R188-NOTAS-191-20260907).
