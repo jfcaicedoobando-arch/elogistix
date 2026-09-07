@@ -33,7 +33,8 @@ describe("splitNotas (R188-PDF-01)", () => {
     const texto = Array.from({ length: 50 }, (_, i) => `Linea ${i}`).join("\r\n");
     const { head, rest } = splitNotas(texto);
     expect(head.split(/\r\n|\r|\n/).length).toBeLessThanOrEqual(3);
-    expect(rest.startsWith("Linea 2")).toBe(true);
+    expect(rest.startsWith("Linea 3")).toBe(true);
+    expect(`${head}\r\n${rest}`).toBe(texto);
   });
 
   it("no parte un par surrogate", () => {
