@@ -186,6 +186,54 @@ describe("useNuevaFacturaProveedorForm", () => {
     expect(result.current.pendingCfdi?.uuid).toBe("U-1");
     expect(result.current.values.folio).toBe("A-100");
   });
+
+  it("sincroniza el subtotal al editar conceptos detectados desde PDF con IA", async () => {
+    findProveedor.mockResolvedValueOnce({ id: "p1", nombre: "Proveedor IA" });
+    const { result } = renderHook(() => useNuevaFacturaProveedorForm(vi.fn()), { wrapper: createWrapper() });
+    const pdf = new File(["pdf"], "factura.pdf", { type: "application/pdf" });
+
+    await act(async () => {
+      await result.current.handlePdfIaParsed({
+        cfdi: {
+          uuid: "", moneda: "MXN", serie: null, folio: "IA-1", fecha: "2026-09-07",
+          tipo_cambio: 1, subtotal: 250, iva_trasladado: 40, retenciones: 0,
+          emisor: { rfc: "XAXX010101000", nombre: "Proveedor IA" },
+          conceptos: [
+            { descripcion: "Flete", cantidad: 2, importe: 100, iva: 32, ieps: 0 },
+            { descripcion: "Maniobras", cantidad: 1, importe: 50, iva: 8, ieps: 0 },
+          ],
+        },
+        ai: { categoria_id: null, notas: null },
+      } as never, { pdf });
+    });
+
+    act(() => result.current.editarConceptoIa(0, { importe: 125, cantidad: 3 }));
+    expect(result.current.values.subtotal).toBe("425");
+  });
+
+  it("sincroniza el subtotal al eliminar un concepto detectado desde PDF con IA", async () => {
+    findProveedor.mockResolvedValueOnce({ id: "p1", nombre: "Proveedor IA" });
+    const { result } = renderHook(() => useNuevaFacturaProveedorForm(vi.fn()), { wrapper: createWrapper() });
+    const pdf = new File(["pdf"], "factura.pdf", { type: "application/pdf" });
+
+    await act(async () => {
+      await result.current.handlePdfIaParsed({
+        cfdi: {
+          uuid: "", moneda: "MXN", serie: null, folio: "IA-2", fecha: "2026-09-07",
+          tipo_cambio: 1, subtotal: 250, iva_trasladado: 40, retenciones: 0,
+          emisor: { rfc: "XAXX010101000", nombre: "Proveedor IA" },
+          conceptos: [
+            { descripcion: "Flete", cantidad: 2, importe: 100, iva: 32, ieps: 0 },
+            { descripcion: "Maniobras", cantidad: 1, importe: 50, iva: 8, ieps: 0 },
+          ],
+        },
+        ai: { categoria_id: null, notas: null },
+      } as never, { pdf });
+    });
+
+    act(() => result.current.eliminarConceptoIa(1));
+    expect(result.current.values.subtotal).toBe("200");
+  });
 });
 
 describe("useNuevaFacturaProveedorForm · conceptos manuales (Q-02)", () => {
