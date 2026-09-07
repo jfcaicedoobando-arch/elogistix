@@ -27,12 +27,11 @@ export function Footer({ empresaNombre }: Props) {
             styles.footerColLeft,
             { fontFamily: FONTS.bold, color: COLORS.primary, letterSpacing: 1 },
           ]}
-          maxLines={1}
         >
           {marca.toUpperCase()}
         </Text>
       ) : (
-        <Text style={styles.footerColLeft} maxLines={1}>
+        <Text style={styles.footerColLeft}>
           Documento generado electrónicamente
         </Text>
       )}
