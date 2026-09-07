@@ -1,5 +1,16 @@
 # Changelog
 
+## [13.823.179] - 2026-09-07
+
+R170-08 · Aplicada la migración de cantidad decimal en conceptos de factura (autorización expresa, sólo este archivo).
+
+- `public.conceptos_factura.cantidad` pasa de `integer` a `numeric(18,6)`; conserva `DEFAULT 1` y `NOT NULL`.
+- El constraint `conceptos_factura_cantidad_pos` pasa de `CHECK (cantidad >= 1)` a `CHECK (cantidad > 0)`: siguen válidos los enteros y ahora también fracciones legítimas (0.5, 1.5).
+- Verificado por lectura tras aplicar: tipo `numeric(18,6)`, default `1`, `NOT NULL`, CHECK `> 0`, 198 filas y suma de cantidad 198 antes y después (sin backfill ni cambios de datos).
+- Sin cambios en RLS, permisos, funciones, triggers ni en R170-02.
+
+Validaciones: comprobaciones de lectura del esquema. Tests, CI y RLS quedan para GitHub Actions. No se publicó.
+
 ## [13.823.178] - 2026-09-07
 
 Remates R170: cantidad decimal en conceptos de factura (migración PREPARADA) y etiquetas honestas del listado de proformas.
