@@ -3,6 +3,8 @@ import { TASA_IVA } from "@/lib/financial/financialUtils";
 import { styles } from "../theme/styles";
 import { Footer } from "../components/Footer";
 import { TotalesBox } from "../components/TotalesBox";
+import { NotasSection } from "../components/NotasSection";
+
 import { ProformaHeader } from "./ProformaHeader";
 import type { EmisorInfo } from "../components/BrandHeader";
 import type { ClienteLite, EmbarqueLite, ProformaRow } from "./proformaShared";
@@ -82,16 +84,8 @@ export function ProformaDocument({ proforma, embarque, conceptos, cliente, tasaI
         {/* La caja de totales es indivisible (wrap=false) y sólo salta de
             página si realmente no cabe completa. */}
         <TotalesBox bloques={bloquesTotales} />
-        {proforma.notas ? (
-          <>
-            <Text style={[styles.h3, { marginTop: 10, marginBottom: 6 }]} minPresenceAhead={50}>
-              Notas
-            </Text>
-            <View style={styles.notesBox}>
-              <Text>{proforma.notas}</Text>
-            </View>
-          </>
-        ) : null}
+        <NotasSection notas={proforma.notas} />
+
 
         <Footer empresaNombre={emisor?.razonSocial} />
       </Page>
