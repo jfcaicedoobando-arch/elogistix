@@ -69,9 +69,13 @@ BEGIN
     v_cot_id
   );
   FOR cv IN SELECT * FROM jsonb_array_elements(p_conceptos_venta) LOOP
-    INSERT INTO conceptos_venta (embarque_id, descripcion, cantidad, precio_unitario, moneda, total, organization_id)
+    INSERT INTO conceptos_venta (embarque_id, descripcion, cantidad, precio_unitario, moneda, total,
+                                 aplica_iva, tasa_iva_aplicada, organization_id)
     VALUES (nuevo_id, cv->>'descripcion', (cv->>'cantidad')::numeric, (cv->>'precio_unitario')::numeric,
-            (cv->>'moneda')::moneda, (cv->>'total')::numeric, v_org_id);
+            (cv->>'moneda')::moneda, (cv->>'total')::numeric,
+            COALESCE((cv->>'aplica_iva')::boolean, false),
+            COALESCE((cv->>'tasa_iva_aplicada')::numeric, 0.16),
+            v_org_id);
   END LOOP;
   FOR cc IN SELECT * FROM jsonb_array_elements(p_conceptos_costo) LOOP
     INSERT INTO conceptos_costo (embarque_id, concepto, proveedor_nombre, proveedor_id, moneda, monto, organization_id)

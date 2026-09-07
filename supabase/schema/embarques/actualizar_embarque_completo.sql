@@ -96,13 +96,16 @@ BEGIN
         cantidad = COALESCE((cv->>'cantidad')::numeric, cantidad),
         precio_unitario = COALESCE((cv->>'precio_unitario')::numeric, precio_unitario),
         moneda = COALESCE((cv->>'moneda')::moneda, moneda),
-        total = COALESCE((cv->>'total')::numeric, total)
+        total = COALESCE((cv->>'total')::numeric, total),
+        aplica_iva = COALESCE((cv->>'aplica_iva')::boolean, aplica_iva),
+        tasa_iva_aplicada = COALESCE((cv->>'tasa_iva_aplicada')::numeric, tasa_iva_aplicada)
       WHERE id = (cv->>'id')::uuid
         AND embarque_id = p_embarque_id
         AND estado_facturacion IN ('pendiente', 'en_proforma');
     ELSE
       INSERT INTO conceptos_venta (
-        embarque_id, descripcion, cantidad, precio_unitario, moneda, total, contenedor_id, organization_id
+        embarque_id, descripcion, cantidad, precio_unitario, moneda, total, contenedor_id,
+        aplica_iva, tasa_iva_aplicada, organization_id
       ) VALUES (
         p_embarque_id,
         cv->>'descripcion',
@@ -111,6 +114,8 @@ BEGIN
         COALESCE((cv->>'moneda')::moneda, 'MXN'::moneda),
         COALESCE((cv->>'total')::numeric, 0),
         NULLIF(cv->>'contenedor_id','')::uuid,
+        COALESCE((cv->>'aplica_iva')::boolean, false),
+        COALESCE((cv->>'tasa_iva_aplicada')::numeric, 0.16),
         v_org_id
       )
       RETURNING id INTO v_new_id;
