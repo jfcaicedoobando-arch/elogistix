@@ -7,6 +7,7 @@
  */
 import { describe, it, expect } from "vitest";
 import { buildPaso1Data } from "@/features/cotizacion/domain/mappers/cotizacion";
+import { monedaDeImportes } from "@/features/cotizacion/domain/cotizacionSinImportes";
 import { COTIZACION_FORM_DEFAULTS } from "@/features/cotizacion/types";
 import type { CotizacionFormValues } from "@/features/cotizacion/types";
 
@@ -110,5 +111,56 @@ describe("buildPaso1Data", () => {
   it("seguro=false fuerza valor_seguro_usd=0", () => {
     const out = buildPaso1Data(build({ seguro: false, valorSeguroUsd: 9999 }), baseClientes, "u@x.com");
     expect(out.valor_seguro_usd).toBe(0);
+  });
+});
+
+describe("buildPaso1Data — moneda del encabezado (VF 13.823.198)", () => {
+  const conMXN = [{ descripcion: "Flete", cantidad: 1, precio_unitario: 100, total: 100 }];
+  const conUSD = [{ descripcion: "THC", cantidad: 1, precio_unitario: 50, total: 50 }];
+
+  it("borrador sin importes: adopta la moneda del CRM", () => {
+    const out = buildPaso1Data(build({ monedaCrm: "MXN" }), baseClientes, "u@x.com", true);
+    expect(out.moneda).toBe("MXN");
+  });
+
+  it("nueva con importes sólo en MXN: queda MXN", () => {
+    const out = buildPaso1Data(build(), baseClientes, "u@x.com", false, {
+      esNuevo: true,
+      monedaImportes: "MXN",
+    });
+    expect(out.moneda).toBe("MXN");
+  });
+
+  it("nueva con importes sólo en USD: queda USD", () => {
+    const out = buildPaso1Data(build({ monedaCrm: "MXN" }), baseClientes, "u@x.com", false, {
+      esNuevo: true,
+      monedaImportes: "USD",
+    });
+    expect(out.moneda).toBe("USD");
+  });
+
+  it("nueva con importes mixtos: usa la moneda del CRM (o USD)", () => {
+    expect(
+      buildPaso1Data(build({ monedaCrm: "MXN" }), baseClientes, "u@x.com", false, { esNuevo: true }).moneda,
+    ).toBe("MXN");
+    expect(buildPaso1Data(build(), baseClientes, "u@x.com", false, { esNuevo: true }).moneda).toBe("USD");
+  });
+
+  it("edición con importes: NO envía moneda (respeta la persistida)", () => {
+    const out = buildPaso1Data(build({ monedaCrm: "MXN" }), baseClientes, "u@x.com", false, {
+      esNuevo: false,
+      monedaImportes: "USD",
+    });
+    expect(out.moneda).toBeUndefined();
+  });
+
+  it("monedaDeImportes: una sola moneda con contenido", () => {
+    expect(monedaDeImportes([], conMXN)).toBe("MXN");
+    expect(monedaDeImportes(conUSD, [])).toBe("USD");
+    expect(monedaDeImportes(conUSD, conMXN)).toBeUndefined();
+    expect(monedaDeImportes([], [])).toBeUndefined();
+    expect(
+      monedaDeImportes([], [], [{ moneda: "MXN", cantidad: 1, costo_unitario: 10 }]),
+    ).toBe("MXN");
   });
 });

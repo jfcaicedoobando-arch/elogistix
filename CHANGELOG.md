@@ -1,5 +1,13 @@
 # Changelog
 
+## [13.823.198] - 2026-09-07
+
+Cotizaciones: guardar el Paso 1 de una cotización nueva ya no falla con "Moneda: requerido".
+
+- Al crear, el encabezado toma la moneda de los importes ya capturados (sólo MXN → MXN, sólo USD → USD) y, si están mezclados o no hay importes, la moneda de la oportunidad vinculada o USD.
+- Al editar una cotización con importes se conserva el comportamiento actual: la moneda persistida no se toca.
+- Regresiones focalizadas para creación (MXN, USD, mixto, sin importes) y edición. Sin cambios en importes, IVA, permisos, base de datos ni RLS.
+
 ## [13.823.197] - 2026-09-07
 
 Captura de factura de proveedor por PDF: la recuperación de un 401 ya no provoca una segunda rotación de sesión innecesaria.
