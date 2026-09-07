@@ -105,7 +105,7 @@ const ERROR_RULES: readonly RuleMatch[] = [
   {
     code: "LC_CXP_SIN_RESPALDO_MONTO",
     message:
-      "La factura excede el monto que puede aprobarse sin respaldo. Vincúlala al embarque o a sus conceptos de costo antes de aprobar (el límite se ajusta en Configuración → Compras).",
+      "Esta factura es un costo de embarque y excede el monto que puede aprobarse sin liga. Vincúlala al embarque o a sus conceptos de costo. Si en realidad es un gasto de administración o de ventas, cámbiale la categoría; el monto máximo se ajusta en Configuración → Compras.",
     matches: (raw) => raw.includes("lc_cxp_sin_respaldo_monto"),
   },
   {
