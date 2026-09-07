@@ -14,8 +14,8 @@
 --
 -- Idempotencia intacta: la rama `idempotency_claim` devuelve las facturas ya
 -- creadas SIN redatarlas. No hay backfill ni UPDATE masivo: los documentos
--- históricos y las facturas emitidas no se tocan. Grants y SECURITY DEFINER se
--- conservan (CREATE OR REPLACE no los altera).
+-- históricos y las facturas emitidas no se tocan. SECURITY DEFINER se conserva y
+-- los privilegios se REAFIRMAN al final del archivo (H6), sin ampliarlos.
 
 CREATE OR REPLACE FUNCTION public.crear_proforma_atomica(p_organization_id uuid, p_embarque_id uuid, p_cliente_id uuid, p_cliente_nombre text, p_expediente text, p_bl_master text, p_concepto_ids uuid[], p_subtotal_usd numeric, p_iva_usd numeric, p_total_usd numeric, p_subtotal_mxn numeric, p_iva_mxn numeric, p_total_mxn numeric, p_notas text, p_operador text, p_dias_credito integer, p_tasa_iva numeric, p_iva_overrides jsonb DEFAULT '{}'::jsonb)
  RETURNS proformas
