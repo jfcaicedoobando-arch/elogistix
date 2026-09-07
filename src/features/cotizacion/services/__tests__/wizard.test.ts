@@ -21,7 +21,7 @@ function makeForm(over: Record<string, unknown> = {}) {
 const muts = {
   crearCotizacion: { mutateAsync: vi.fn(async () => ({ id: "cot1" })) },
   updateCotizacion: { mutateAsync: vi.fn(async () => undefined) },
-  upsertCostos: { mutateAsync: vi.fn(async () => ({ costos: [], updatedAt: "2026-09-03T12:00:00Z" })) },
+  upsertCostos: { mutateAsync: vi.fn(async () => ({ updatedAt: "2026-09-03T12:00:00Z" })) },
 };
 
 beforeEach(() => {
@@ -164,6 +164,27 @@ describe("savePaso2", () => {
     });
     const arg = (muts.upsertCostos.mutateAsync.mock.calls[0] as unknown as [{ expectedUpdatedAt: string }])[0];
     expect(arg.expectedUpdatedAt).toBe("2026-09-03T11:00:00Z");
+    expect(nuevo).toBe("2026-09-03T12:00:00Z");
+  });
+
+  // v13.823.169: si la relectura posterior trae un sello ajeno más nuevo (S2),
+  // savePaso2 sigue devolviendo el de su propia escritura (S1): el wizard no
+  // autoriza su captura vieja con una versión que no rehidrató.
+  it("devuelve el sello de la escritura propia, no el de una fotografía posterior", async () => {
+    muts.upsertCostos.mutateAsync.mockResolvedValueOnce({
+      updatedAt: "2026-09-03T12:00:00Z",
+      snapshot: { costos: [], updatedAt: "2026-09-03T12:30:00Z" },
+    } as never);
+    const nuevo = await savePaso2({
+      cotizacionId: "c1",
+      costosInternos: [{
+        concepto: "Flete", moneda: "USD", proveedor: "X",
+        cantidad: 1, costo_unitario: 100, precio_venta: 150,
+        unidad_medida: "unidad", notas: undefined,
+      }],
+      expectedUpdatedAt: "2026-09-03T11:00:00Z",
+      mutations: muts,
+    });
     expect(nuevo).toBe("2026-09-03T12:00:00Z");
   });
 });
