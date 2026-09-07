@@ -105,12 +105,14 @@ export default function SeccionCostosInternosPLDetalle({
       const res = await upsert.mutateAsync({
         cotizacionId, costos, expectedUpdatedAt: selloEnviado,
       });
-      const filasGuardadas = res.costos.length > 0
-        ? mapearCostosAFilas(res.costos, conceptosUSD, conceptosMXN)
+      const { snapshot: guardado } = res;
+      const filasGuardadas = guardado.costos.length > 0
+        ? mapearCostosAFilas(guardado.costos, conceptosUSD, conceptosMXN)
         : mapearConceptosAFilas(conceptosUSD, conceptosMXN);
       setFilasConfirmadas(filasGuardadas);
       setFilas(filasGuardadas);
-      setSelloConfirmado(res.updatedAt);
+      setSelloConfirmado(guardado.updatedAt);
+
       notifySuccess(undefined, { title: "Costos guardados correctamente" });
       setEditMode(false);
     } catch (err: unknown) {
