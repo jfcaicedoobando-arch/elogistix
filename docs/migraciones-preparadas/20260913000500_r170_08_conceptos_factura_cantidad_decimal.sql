@@ -1,9 +1,8 @@
 -- R170-08 · Persistencia decimal de cantidad en conceptos de factura.
 --
--- ESTADO: PREPARADA, NO APLICADA. Requiere autorización explícita del usuario
--- para aplicarse (la autorización previa cubría sólo R170-02). Al autorizarse,
--- este SQL debe aplicarse por el mecanismo de migraciones del backend, que
--- crea el archivo real en `supabase/migrations/`.
+-- ESTADO: APLICADA el 2026-09-07 en la base del proyecto por el mecanismo de
+-- migraciones del backend, con autorización expresa del usuario para este
+-- archivo únicamente. Se conserva aquí como registro del SQL aprobado.
 --
 -- Hallazgo físico: el editor de conceptos de una factura Borrador ya conserva
 -- el punto decimal y bloquea cantidad cero, pero guardar `1.5` falla con
