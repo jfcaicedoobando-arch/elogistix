@@ -17,6 +17,7 @@ import { useFocusSection } from "@/features/embarques/hooks/useFocusSection";
 import { esBorradorVacio, esBorradorSinConceptos } from "@/features/embarques/components/facturacion/esBorradorVacio";
 import { calcularEstadosConceptos } from "@/features/embarques/components/facturacion/estadoConceptoBadge";
 import type { FiltroContenedor } from "@/features/embarques/domain/conceptosPorContenedor";
+import { esConceptoElegibleProforma } from "@/features/embarques/domain/conceptoElegibleProforma";
 import type { Tables } from "@/types/db";
 
 type EmbarqueRow = Tables<"embarques">;
@@ -41,16 +42,18 @@ export function useTabFacturacionState(embarque: EmbarqueRow, canEditProp: boole
   // Mapa concepto.id → estado tri-valor (pendiente | en_proforma | facturado).
   const estadosConceptos = useMemo(() => calcularEstadosConceptos(conceptos), [conceptos]);
 
-  const conceptosPendientes = useMemo(
-    () => conceptos.filter((c) => c.estado_facturacion !== "en_proforma"),
+  // R179-02: criterio único de elegibilidad (espejo del candado del RPC):
+  // sólo pendientes sin vínculo a proforma. Antes se usaba
+  // `estado_facturacion !== "en_proforma"`, que dejaba pasar los facturados y
+  // el modal los preseleccionaba.
+  const conceptosElegibles = useMemo(
+    () => conceptos.filter(esConceptoElegibleProforma),
     [conceptos],
   );
-
-  // Conceptos verdaderamente huérfanos (sin proforma asignada).
-  const conceptosHuerfanos = useMemo(
-    () => conceptos.filter((c) => c.estado_facturacion === "pendiente" && !c.proforma_id),
-    [conceptos],
-  );
+  /** @deprecated Alias de `conceptosElegibles` (mismo conjunto). */
+  const conceptosPendientes = conceptosElegibles;
+  /** Conceptos verdaderamente huérfanos (sin proforma asignada). */
+  const conceptosHuerfanos = conceptosElegibles;
 
   const borradorVacio = useMemo(
     () => proformas.find((p) => esBorradorVacio(p) || esBorradorSinConceptos(p, conceptos)) ?? null,
@@ -64,6 +67,9 @@ export function useTabFacturacionState(embarque: EmbarqueRow, canEditProp: boole
   };
 
   const abrirGenerarProforma = (filtro: FiltroContenedor = "todos") => {
+    // Con 0 elegibles no abrimos un modal que sólo podría preseleccionar
+    // conceptos ya ocupados (R179-02).
+    if (conceptosElegibles.length === 0) return;
     setDialogInitialFiltro(filtro);
     setDialogOpen(true);
   };
@@ -77,6 +83,7 @@ export function useTabFacturacionState(embarque: EmbarqueRow, canEditProp: boole
     contenedores,
     proformas,
     estadosConceptos,
+    conceptosElegibles,
     conceptosPendientes,
     conceptosHuerfanos,
     borradorVacio,

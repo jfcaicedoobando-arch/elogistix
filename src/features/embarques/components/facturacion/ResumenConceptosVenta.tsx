@@ -15,6 +15,8 @@ import type { EmbarqueContenedor } from "@/features/embarques/types/contenedor";
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 
+import { esConceptoElegibleProforma } from "@/features/embarques/domain/conceptoElegibleProforma";
+
 type ConceptoVenta = Tables<"conceptos_venta">;
 
 interface Props {
@@ -39,7 +41,8 @@ export function ResumenConceptosVenta({
     [estadosConceptos],
   );
   const conceptosPendientes = useMemo(
-    () => conceptos.filter(c => estadoDe(c.id) === "pendiente"),
+    // R179-02: mismo criterio elegible que el modal (pendiente y sin vínculo).
+    () => conceptos.filter(c => estadoDe(c.id) === "pendiente" && esConceptoElegibleProforma(c)),
     [conceptos, estadoDe]
   );
   const conceptosEnProforma = useMemo(
@@ -121,7 +124,7 @@ export function ResumenConceptosVenta({
                 {contenedoresActivos.map((cont) => {
                   const items = agrupacion.porContenedor[cont.id] ?? [];
                   if (items.length === 0) return null;
-                  const pendientes = items.filter((c) => estadoDe(c.id) === "pendiente").length;
+                  const pendientes = items.filter((c) => estadoDe(c.id) === "pendiente" && esConceptoElegibleProforma(c)).length;
                   const numero = cont.numero_contenedor?.trim() || `#${cont.orden}`;
                   return (
                     <GrupoConceptosContenedor
@@ -142,7 +145,7 @@ export function ResumenConceptosVenta({
                     subtitulo="Aplican a todo el embarque"
                     conceptos={agrupacion.generales}
                     canEdit={canEdit}
-                    pendientesCount={agrupacion.generales.filter((c) => estadoDe(c.id) === "pendiente").length}
+                    pendientesCount={agrupacion.generales.filter((c) => estadoDe(c.id) === "pendiente" && esConceptoElegibleProforma(c)).length}
                     estadosConceptos={estadosConceptos}
                     onGenerar={onGenerarProformaContenedor ? () => onGenerarProformaContenedor("generales") : null}
                   />
