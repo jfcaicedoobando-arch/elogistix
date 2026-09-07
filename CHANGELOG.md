@@ -1,5 +1,14 @@
 # Changelog
 
+## [13.823.195] - 2026-09-07
+
+Captura de factura de proveedor por PDF: el subtotal se actualiza al corregir los conceptos detectados por IA.
+
+- Al editar importe o cantidad, o eliminar un renglón propuesto por IA, el formulario recalcula inmediatamente el subtotal como suma de `importe unitario × cantidad`.
+- El subtotal actualizado alimenta el encabezado, total, cuadre, vinculación y guardado; XML CFDI, captura manual, IVA, IEPS y retenciones permanecen sin cambios.
+- Regresiones focalizadas preparadas para edición y eliminación de conceptos PDF-IA. Sin SQL, migraciones, datos ni permisos.
+
+
 ## [13.823.194] - 2026-09-07
 
 Captura de factura de proveedor por PDF: se elimina el aviso falso "Debes iniciar sesión para procesar la factura PDF".

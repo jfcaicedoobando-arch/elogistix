@@ -67,10 +67,18 @@ export function useNuevaFacturaProveedorForm(
 
   // v13.823.21 — Corrección de los conceptos que propuso la IA sobre un PDF
   // (sólo origen `pdf_ia`; el desglose del XML CFDI no se toca).
+  const sincronizarConceptosIa = (conceptos: CfdiConceptoParsed[]) => {
+    setCfdiConceptos(conceptos);
+    const subtotal = calcularCuadreConceptos(
+      0,
+      conceptos.map((c) => ({ monto: Number(c.importe) || 0, cantidad: c.cantidad })),
+    ).suma;
+    setValues((prev) => ({ ...prev, subtotal: subtotal === 0 ? "" : String(subtotal) }));
+  };
   const editarConceptoIaLinea = (idx: number, patch: Partial<CfdiConceptoParsed>) =>
-    setCfdiConceptos((prev) => editarConceptoIa(prev, idx, patch));
+    sincronizarConceptosIa(editarConceptoIa(cfdiConceptos, idx, patch));
   const eliminarConceptoIaLinea = (idx: number) =>
-    setCfdiConceptos((prev) => eliminarConceptoIa(prev, idx));
+    sincronizarConceptosIa(eliminarConceptoIa(cfdiConceptos, idx));
 
   const obtenerDofManual = () => {
     if (values.moneda === "MXN") return;
