@@ -1,5 +1,14 @@
 # Changelog
 
+## [13.823.176] - 2026-09-07
+
+Ajuste de higiene: lecturas PDF de proformas respetan borrado lógico.
+
+- `src/features/proformas/services/queries.pdf.ts` filtra explícitamente `deleted_at IS NULL` en las consultas de `clientes` y `embarques` usadas para armar el PDF. Esto cierra el aviso de `audit:soft-delete` y evita que un registro en papelera se muestre en un documento de proforma.
+- Sin cambios de lógica de negocio, permisos, RLS ni datos históricos.
+
+Validaciones: `audit:soft-delete` y `audit:manifest` en verde; typecheck y ESLint focalizado. CI, SQL y RLS completos quedan pendientes de GitHub Actions.
+
 ## [13.823.175] - 2026-09-07
 
 Aplicación de la migración R170-02 a la base de datos de la app (autorizada por el usuario).

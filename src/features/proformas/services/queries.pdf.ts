@@ -13,6 +13,7 @@ export async function fetchClienteParaPdf(clienteId: string) {
       .from("clientes")
       .select("nombre, rfc, direccion, ciudad, estado, cp")
       .eq("id", clienteId)
+      .is("deleted_at", null)
       .maybeSingle(),
   );
 }
@@ -25,6 +26,7 @@ export async function fetchEmbarqueParaPdf(embarqueId: string) {
         "expediente, bl_master, bl_house, modo, tipo, incoterm, puerto_origen, puerto_destino, aeropuerto_origen, aeropuerto_destino, ciudad_origen, ciudad_destino, naviera, aerolinea, descripcion_mercancia, contenedores:embarque_contenedores(id, numero_contenedor, tipo_contenedor)",
       )
       .eq("id", embarqueId)
+      .is("deleted_at", null)
       .single(),
   );
 }
