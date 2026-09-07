@@ -8,18 +8,18 @@ import { useSearchParams } from "react-router-dom";
 
 export function useAutoAbrirTimbrar(
   puedeTimbrarDesdeSistema: boolean,
-  canEdit: boolean,
+  puedeEmitir: boolean,
   abrir: () => void,
 ) {
   const [searchParams, setSearchParams] = useSearchParams();
   useEffect(() => {
     if (searchParams.get("accion") === "timbrar") {
-      if (puedeTimbrarDesdeSistema && canEdit) {
+      if (puedeTimbrarDesdeSistema && puedeEmitir) {
         abrir();
       }
       const next = new URLSearchParams(searchParams);
       next.delete("accion");
       setSearchParams(next, { replace: true });
     }
-  }, [searchParams, puedeTimbrarDesdeSistema, canEdit, setSearchParams, abrir]);
+  }, [searchParams, puedeTimbrarDesdeSistema, puedeEmitir, setSearchParams, abrir]);
 }

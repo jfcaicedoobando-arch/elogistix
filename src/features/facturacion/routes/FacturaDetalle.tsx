@@ -47,7 +47,7 @@ export default function FacturaDetalle() {
 
   const dialogs = useFacturaDetalleDialogs();
   const { puedeTimbrarDesdeSistema } = flags;
-  useAutoAbrirTimbrar(puedeTimbrarDesdeSistema, canEdit, () => dialogs.setTimbrarOpen(true));
+  useAutoAbrirTimbrar(puedeTimbrarDesdeSistema, puedeEmitir, () => dialogs.setTimbrarOpen(true));
   const sustituyeA = (factura as { sustituye_a?: string | null } | null | undefined)?.sustituye_a ?? null;
   const { href: volverHref, label: volverLabel } = useVolverAFacturaOriginal(id, sustituyeA);
 

@@ -95,7 +95,7 @@ export type ProformaEnvioLite = {
   destinatarios: unknown;
 };
 
-export type ProformaDetalleFull = ProformaConFactura & {
+export type ProformaDetalleFull = Omit<ProformaConFactura, "facturas_asociadas"> & {
   /**
    * Factura(s) generadas a partir de esta proforma. Se resuelve vía la FK
    * inversa `facturas.proforma_id → proformas.id` porque el flujo de
