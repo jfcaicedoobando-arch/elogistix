@@ -56,48 +56,39 @@ export default function SeccionCostosInternosPLDetalle({
   const [filas, setFilas] = useState<FilaCostoDetalle[]>([]);
   const [initialized, setInitialized] = useState(false);
   const [editMode, setEditMode] = useState(false);
-  // Sello congelado al abrir la edición; tras guardar se renueva con el de la RPC.
-  const [selloEdicion, setSelloEdicion] = useState<string | null>(null);
+  /**
+   * v13.823.165 — `sello` es el sello de la lectura COHERENTE que se está
+   * mostrando (nunca se toma de la prop al momento de guardar). `selloConsumido`
+   * es el que ya se gastó en un guardado exitoso: si un refetch tardío devuelve
+   * ese valor viejo, se ignora en lugar de degradar el sello vigente. Cualquier
+   * OTRO valor de la prop (p. ej. cambio de otro usuario mientras no se editaba)
+   * sí se adopta junto con sus filas, para no conservar S1 indefinidamente.
+   */
+  const [sello, setSello] = useState<string | null>(cotizacionUpdatedAt);
+  const [selloConsumido, setSelloConsumido] = useState<string | null>(null);
+
+  const lecturaObsoleta =
+    !!selloConsumido && !!cotizacionUpdatedAt && cotizacionUpdatedAt === selloConsumido;
 
   useEffect(() => {
     // v13.823.144 (bug 8/9): se re-deriva cuando cambian los datos de BD,
     // salvo mientras el usuario edita (para no pisar su captura).
     if (isLoading || (initialized && editMode)) return;
+    // v13.823.165: no se rehidrata desde una lectura ya superada por el
+    // guardado propio (abriría una ventana editable con datos/sello viejos).
+    if (lecturaObsoleta) return;
 
-    if (costosGuardados && costosGuardados.length > 0) {
-      const mapped: FilaCostoDetalle[] = costosGuardados.map((c) => {
-        // Fuente única de venta: el `precio_venta` persistido en el costo.
-        // El match por nombre contra `conceptos_venta` queda sólo como
-        // respaldo para filas legacy sin `precio_venta`.
-        const ventaCosto = (Number(c.precio_venta) || 0) * (Number(c.cantidad) || 0);
-        const cv = matchConceptoVenta(c.moneda === "USD" ? conceptosUSD : conceptosMXN, c.concepto);
-        const venta = ventaCosto > 0 ? ventaCosto : (cv ? cv.cantidad * cv.precio_unitario : 0);
-        const aplica_iva = c.moneda === "USD" ? (cv?.aplica_iva ?? false) : false;
-        return {
-          concepto: c.concepto,
-          moneda: c.moneda as "USD" | "MXN",
-          proveedor: c.proveedor,
-          cantidad: c.cantidad,
-          costo_unitario: c.costo_unitario,
-          venta,
-          aplica_iva,
-          notas: (c as { notas?: string }).notas ?? "",
-        };
-      });
-      setFilas(mapped);
-    } else {
-      const fromUSD: FilaCostoDetalle[] = conceptosUSD.map((c) => ({
-        concepto: c.descripcion, moneda: "USD" as const, proveedor: "", cantidad: c.cantidad, costo_unitario: 0,
-        venta: c.cantidad * c.precio_unitario, aplica_iva: c.aplica_iva ?? false, notas: "",
-      }));
-      const fromMXN: FilaCostoDetalle[] = conceptosMXN.map((c) => ({
-        concepto: c.descripcion, moneda: "MXN" as const, proveedor: "", cantidad: c.cantidad, costo_unitario: 0,
-        venta: c.cantidad * c.precio_unitario, notas: "",
-      }));
-      setFilas([...fromUSD, ...fromMXN]);
-    }
+    setFilas(
+      costosGuardados && costosGuardados.length > 0
+        ? mapearCostosAFilas(costosGuardados, conceptosUSD, conceptosMXN)
+        : mapearConceptosAFilas(conceptosUSD, conceptosMXN),
+    );
+    if (cotizacionUpdatedAt) setSello(cotizacionUpdatedAt);
     setInitialized(true);
-  }, [isLoading, costosGuardados, conceptosUSD, conceptosMXN, initialized, editMode]);
+  }, [
+    isLoading, costosGuardados, conceptosUSD, conceptosMXN, initialized, editMode,
+    lecturaObsoleta, cotizacionUpdatedAt,
+  ]);
 
   const filasUSD = useMemo(() => filas.filter(f => f.moneda === "USD"), [filas]);
   const filasMXN = useMemo(() => filas.filter(f => f.moneda === "MXN"), [filas]);
