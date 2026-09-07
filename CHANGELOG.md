@@ -1,5 +1,16 @@
 # Changelog
 
+## [13.823.181] - 2026-09-07
+
+Remate R179-01: el IVA elegido en el catálogo ya no se descarta al capturar líneas de venta en embarques.
+
+- El selector de concepto emite también el tratamiento fiscal del producto (`ConceptoCatalogoSelect.onSelectFiscal`), `ConceptoVentaLocal` lo guarda (`aplicaIva`, `tasaIva`), el payload lo envía (`aplica_iva`, `tasa_iva_aplicada`) y la hidratación de edición preserva los valores guardados (flags `false` y tasas explícitas 0/0.08/0.16). No se infiere IVA por moneda ni por nombre, no se re-resuelven históricos, no se toca el default global y no se amplía EUR. El selector compartido con costos sigue igual (fiscal opcional).
+- El texto del modal «Generar Proforma» ya no afirma «MXN siempre lleva IVA»: explica que cada concepto usa su configuración fiscal guardada y que el ajuste manual existe para USD.
+- BLOQUEO DE BASE identificado (no aplicado en esta pasada): `public.crear_embarque_completo` y `public.actualizar_embarque_completo` insertan `conceptos_venta` sin `aplica_iva` / `tasa_iva_aplicada`, así que hoy la fila queda con los DEFAULT de tabla (`false` / `0.16`) aunque el frontend ya los envíe. Migración PREPARADA y pendiente de autorización: `docs/migraciones-preparadas/20260913000600_r179_01_conceptos_venta_iva_rpc.sql` (sólo agrega esas dos columnas al INSERT/UPDATE de conceptos de venta; sin backfill, sin cambios de firma, ACL, RLS, triggers ni candados).
+- Regresiones focalizadas preparadas para GitHub Actions: `src/features/embarques/domain/mappers/__tests__/conceptoVentaIvaOrigen.test.ts` (100 con 16% ⇒ 116, con 0% ⇒ 100, 8% explícito se respeta, overrides USD intactos).
+
+Validaciones: typecheck y ESLint focalizado. Tests, CI, SQL y RLS quedan para GitHub Actions. No se publicó ni se aplicó ninguna migración.
+
 ## [13.823.180] - 2026-09-07
 
 Remates R179 en Embarque > Facturación > Generar proforma (independientes del recuento R170).

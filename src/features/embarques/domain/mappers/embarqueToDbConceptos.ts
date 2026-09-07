@@ -22,6 +22,11 @@ export function buildConceptosVentaPayload(conceptosVenta: ConceptoVentaLocal[])
       moneda: monedaVentaSchema.parse(v.moneda),
       total: subtotalLinea(v.cantidad, v.precioUnitario),
       contenedor_id: v.contenedorId ?? null,
+      // R179-01 — El tratamiento fiscal de la línea viaja al RPC. Sólo se
+      // envían las claves cuando la fila las tiene definidas: `undefined`
+      // significa "conserva el valor guardado" (no se resuelven históricos).
+      ...(v.aplicaIva == null ? {} : { aplica_iva: v.aplicaIva }),
+      ...(v.tasaIva == null ? {} : { tasa_iva_aplicada: v.tasaIva }),
     }));
 }
 

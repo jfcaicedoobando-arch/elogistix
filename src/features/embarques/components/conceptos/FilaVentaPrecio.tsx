@@ -42,6 +42,12 @@ export function FilaVentaPrecio({
         value={venta.concepto}
         disabled={bloqueado}
         onChange={v => update(venta.id, 'concepto', v)}
+        onSelectFiscal={f => {
+          // R179-01: el IVA elegido en el catálogo ya no se descarta; viaja al
+          // estado local y de ahí al payload/persistencia.
+          update(venta.id, 'aplicaIva', f.aplicaIva);
+          update(venta.id, 'tasaIva', f.tasaIva);
+        }}
       />
       <NumericInput value={venta.cantidad} disabled={bloqueado} onChange={n => update(venta.id, 'cantidad', n)} className="text-body h-10" aria-label="Cantidad venta" />
       <NumericInput decimals value={venta.precioUnitario} disabled={bloqueado} onChange={n => update(venta.id, 'precioUnitario', n)} className="text-body h-10" aria-label="Subtotal venta" />

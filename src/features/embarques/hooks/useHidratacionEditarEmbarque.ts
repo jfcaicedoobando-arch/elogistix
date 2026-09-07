@@ -16,6 +16,8 @@ interface ConceptoVentaDb {
   moneda: string;
   contenedor_id: string | null;
   estado_facturacion?: string | null;
+  aplica_iva?: boolean | null;
+  tasa_iva_aplicada?: number | string | null;
 }
 interface ConceptoCostoDb {
   id: string;
@@ -47,7 +49,7 @@ interface Params<TForm extends FieldValues> {
   conceptosCostoDb: ConceptoCostoDb[];
   /** Catálogo de proveedores para resolver el nombre heredado → id. */
   proveedoresDb?: ReadonlyArray<ProveedorCatalogo>;
-  inicializarVenta: (rows: Array<{ id: number; dbId?: string | null; concepto: string; cantidad: number; precioUnitario: number; moneda: string; contenedorId: string | null; estadoFacturacion?: string | null }>) => void;
+  inicializarVenta: (rows: Array<{ id: number; dbId?: string | null; concepto: string; cantidad: number; precioUnitario: number; moneda: string; contenedorId: string | null; estadoFacturacion?: string | null; aplicaIva?: boolean | null; tasaIva?: number | null }>) => void;
   inicializarCosto: (rows: Array<{ id: number; dbId?: string | null; proveedorId: string; proveedorNombre?: string | null; concepto: string; monto: number; moneda: string; contenedorId: string | null; estadoLiquidacion?: string | null }>) => void;
   methods: UseFormReturn<TForm>;
 }
@@ -78,6 +80,11 @@ export function useHidratacionEditarEmbarque<TForm extends FieldValues>(p: Param
       // Ola 5 — el estado viaja a la fila para bloquear la edición fantasma
       // de conceptos ya facturados (la RPC los descarta en silencio).
       estadoFacturacion: v.estado_facturacion ?? null,
+      // R179-01 — Se preservan los valores fiscales guardados (flags `false`
+      // y tasas explícitas 0/0.08/0.16). Nunca se re-resuelven por nombre ni
+      // se sobrescriben al cambiar moneda o recargar.
+      aplicaIva: v.aplica_iva ?? null,
+      tasaIva: v.tasa_iva_aplicada == null ? null : Number(v.tasa_iva_aplicada),
     })));
     setHidratoVentaRef.current(true);
   }, [p.initialized, p.hidratoVenta, p.conceptosVentaDb]);
