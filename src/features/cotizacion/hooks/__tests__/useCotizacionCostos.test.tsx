@@ -64,7 +64,7 @@ describe("useUpsertCotizacionCostos", () => {
     expect(upsertCotizacionCostos).toHaveBeenCalledWith("cot-1", [], "req-123", undefined);
   });
 
-  // v13.823.163: el hook ya NO notifica; el aviso lo emite el call site (antes
+  // v13.823.164: el hook ya NO notifica; el aviso lo emite el call site (antes
   // salían dos toasts por el mismo fallo).
   it("propaga el error sin emitir aviso propio", async () => {
     upsertCotizacionCostos.mockRejectedValueOnce(new Error("LC_CONFLICTO_CONCURRENCIA"));

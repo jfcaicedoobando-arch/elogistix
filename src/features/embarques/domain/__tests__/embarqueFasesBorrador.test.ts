@@ -56,7 +56,7 @@ describe("fases de un embarque en Borrador", () => {
 });
 
 /**
- * v13.823.163 (smoke 162): la barra del tab Resumen anunciaba "Siguiente: En
+ * v13.823.164 (smoke 162): la barra del tab Resumen anunciaba "Siguiente: En
  * Tránsito" en un Borrador, contradiciendo el botón "Avanzar a Confirmado".
  */
 describe("siguiente paso anunciado en la barra compacta", () => {

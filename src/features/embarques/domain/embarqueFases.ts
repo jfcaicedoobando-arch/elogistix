@@ -136,7 +136,7 @@ export function calcularFasesEmbarque(
 /**
  * Etiqueta del "siguiente paso" para la variante compacta (tab Resumen).
  *
- * v13.823.163 (smoke 162): en Borrador la fase actual es "Por confirmar", así
+ * v13.823.164 (smoke 162): en Borrador la fase actual es "Por confirmar", así
  * que anunciar "Siguiente: En Tránsito" contradecía el botón "Avanzar a
  * Confirmado". Ahora, mientras el embarque no está confirmado, el siguiente
  * paso que se anuncia es Confirmar. No cambia fases, fechas ni transiciones.

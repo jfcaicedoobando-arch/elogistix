@@ -30,11 +30,11 @@ export function useUpsertCotizacionCostos() {
       upsertCotizacionCostos(cotizacionId, costos, requestId ?? newRequestId(), expectedUpdatedAt),
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.cotizaciones.costos(variables.cotizacionId) });
-      // v13.823.163: el reemplazo mueve `cotizaciones.updated_at`; el detalle
+      // v13.823.164: el reemplazo mueve `cotizaciones.updated_at`; el detalle
       // debe releerse para que el siguiente sello venga fresco de la BD.
       queryClient.invalidateQueries({ queryKey: queryKeys.cotizaciones.detail(variables.cotizacionId) });
     },
-    // v13.823.163: sin `onError` aquí. El call site ya muestra un único aviso
+    // v13.823.164: sin `onError` aquí. El call site ya muestra un único aviso
     // ("Error al guardar" con detalle); antes salían DOS toasts por el mismo
     // fallo (este + el catch del componente).
   });
