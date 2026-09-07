@@ -21,10 +21,22 @@ interface Props {
 /** Encabezado de sección compacto para proformas (menos aire vertical). */
 const H3_COMPACTO = { marginTop: 10, marginBottom: 6 } as const;
 
+/**
+ * R184-PDF-02: la visibilidad del bloque se decide con datos presentables,
+ * no con la longitud del arreglo: un contenedor sin número ni tipo produce
+ * texto vacío y dejaba el rótulo "Contenedores" huérfano.
+ */
+function contenedoresPresentables(contenedores: EmbarqueLite["contenedores"]) {
+  return (contenedores ?? []).filter(
+    (c) => (c.numero_contenedor ?? "").trim() !== "" || (c.tipo_contenedor ?? "").trim() !== "",
+  );
+}
+
 function SeccionEmbarque({ embarque }: { embarque: EmbarqueLite }) {
   const origen = embarque.puerto_origen || embarque.aeropuerto_origen || embarque.ciudad_origen || "-";
   const destino = embarque.puerto_destino || embarque.aeropuerto_destino || embarque.ciudad_destino || "-";
-  const contenedores = embarque.contenedores ?? [];
+  const contenedores = contenedoresPresentables(embarque.contenedores);
+  const resumenContenedores = resumirContenedores(contenedores).trim();
   return (
     <>
       <Text style={[styles.h3, H3_COMPACTO]}>Datos del Embarque</Text>
@@ -38,12 +50,13 @@ function SeccionEmbarque({ embarque }: { embarque: EmbarqueLite }) {
           ["Destino", destino],
         ]}
       />
-      {contenedores.length > 0 ? (
+      {resumenContenedores ? (
         <View style={{ marginTop: 2 }}>
           <Text style={styles.label}>Contenedores</Text>
-          <Text style={styles.value}>{resumirContenedores(contenedores)}</Text>
+          <Text style={styles.value}>{resumenContenedores}</Text>
         </View>
       ) : null}
+
       {embarque.descripcion_mercancia ? (
         <View style={{ marginTop: 2 }}>
           <Text style={styles.label}>Descripción de la mercancía</Text>
