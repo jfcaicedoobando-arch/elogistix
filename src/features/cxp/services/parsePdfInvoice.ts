@@ -105,6 +105,11 @@ function mensajeAmigable(last: Attempt | null, fallaDeRed: boolean, serviceUnava
   if (serviceUnavailable) {
     return "El servicio de captura por IA no está disponible en este momento. Puedes usar el tab de \"Captura manual\" o intentar de nuevo en unos segundos.";
   }
+  // Un 401 tras reintentar con sesión refrescada sólo puede ser sesión vencida:
+  // mostrar "Token inválido" no le dice nada al usuario.
+  if (last?.status === 401) {
+    return "Tu sesión expiró. Vuelve a iniciar sesión y sube el PDF de nuevo.";
+  }
   return last?.message ?? "No se pudo procesar el PDF con IA";
 }
 
