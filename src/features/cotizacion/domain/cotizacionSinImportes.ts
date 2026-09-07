@@ -59,3 +59,27 @@ export function esBorradorSinImportes(
   if (hayConceptos) return false;
   return !costosInternos.some(costoTieneContenido);
 }
+
+/**
+ * Moneda dominante de los importes capturados: devuelve "USD" o "MXN" sólo si
+ * TODO el contenido económico vive en una sola moneda. Con ambas monedas (o sin
+ * contenido) devuelve `undefined` para que el llamador decida el respaldo.
+ *
+ * VF (13.823.198): al CREAR una cotización no hay moneda persistida que
+ * proteger; el encabezado se resuelve con esta moneda antes que con el respaldo.
+ */
+export function monedaDeImportes(
+  conceptosUSD: ConceptoImporteLike[],
+  conceptosMXN: ConceptoImporteLike[],
+  costosInternos: (CostoImporteLike & { moneda?: string | null })[] = [],
+): "USD" | "MXN" | undefined {
+  const hayUSD =
+    conceptosUSD.some(conceptoTieneContenido) ||
+    costosInternos.some((c) => c.moneda === "USD" && costoTieneContenido(c));
+  const hayMXN =
+    conceptosMXN.some(conceptoTieneContenido) ||
+    costosInternos.some((c) => c.moneda === "MXN" && costoTieneContenido(c));
+  if (hayUSD && !hayMXN) return "USD";
+  if (hayMXN && !hayUSD) return "MXN";
+  return undefined;
+}

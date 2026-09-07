@@ -13,7 +13,7 @@ import {
   type CotizacionInitialCosto,
 } from "@/features/cotizacion/domain/mappers/cotizacionForm";
 import { useConceptosVentaCotizacion } from "@/features/cotizacion/hooks/useConceptosVentaCotizacion";
-import { esBorradorSinImportes } from "@/features/cotizacion/domain/cotizacionSinImportes";
+import { esBorradorSinImportes, monedaDeImportes } from "@/features/cotizacion/domain/cotizacionSinImportes";
 import { useCotizacionPL } from "@/features/cotizacion/hooks/useCotizacionPL";
 import { useCotizacionWizardSteps } from "@/features/cotizacion/hooks/wizard/useCotizacionWizardSteps";
 import { useCotizacionUpdateGuard } from "@/features/cotizacion/hooks/wizard/useCotizacionUpdateGuard";
@@ -133,8 +133,13 @@ export function useCotizacionWizardForm({ navigate, toast, userEmail, clientes, 
     // una fila vacía USD y otra MXN, así que un borrador vacío nunca adoptaba la
     // moneda y el vínculo con una oportunidad en MXN fallaba siempre.
     const sinImportes = esBorradorSinImportes(conceptosUSD, conceptosMXN, costosInternos);
-    return buildPaso1Mapper(form.getValues(), clientes, userEmail, sinImportes);
-  }, [form, clientes, userEmail, conceptosUSD, conceptosMXN, costosInternos]);
+    // VF (13.823.198): al crear, el encabezado nunca puede quedarse sin moneda
+    // (el schema la exige); se toma la moneda de los importes ya capturados.
+    return buildPaso1Mapper(form.getValues(), clientes, userEmail, sinImportes, {
+      esNuevo: !cotizacionId,
+      monedaImportes: monedaDeImportes(conceptosUSD, conceptosMXN, costosInternos),
+    });
+  }, [form, clientes, userEmail, conceptosUSD, conceptosMXN, costosInternos, cotizacionId]);
 
   // ── Handlers de navegación del wizard (hook dedicado) ──
   const { handleSiguiente, handleGuardar, handleBack, handleCotizarSinDesglose, vinculoCrmError, vinculoCrmConfirmado, limpiarVinculoCrmError } = useCotizacionWizardSteps({
