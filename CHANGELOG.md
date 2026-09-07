@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.823.170] - 2026-09-07
+
+- Auditorías (`scripts/run-audits-conditional.sh`): 1) `audit:manifest` fallaba porque `migration-manifest.json` no tenía entrada para la versión 13.823.169; se regeneró el manifest (1277 migraciones). 2) `audit:replay-mirror` fallaba porque el espejo canónico `supabase/schema/cxp/_asegurar_movimiento_pago_proveedor.sql` había quedado atrás del fix Sentry JAVASCRIPT-REACT-65/66: conservaba `ON CONFLICT (hash_dedupe)` y `SET search_path = public`. Se sincronizó 1:1 con la migración vigente 20260907013703 (índice parcial `(cuenta_bancaria_id, hash_dedupe) WHERE deleted_at IS NULL`). Sólo archivos de repositorio: no se emitió SQL nuevo ni se tocaron datos, permisos ni RLS.
+
 ## [13.823.169] - 2026-09-07
 
 - Cotizaciones · Guardado de costos (remate del P1 de 13.823.166): al guardar se devolvían las filas releídas junto con el sello de esa relectura, y el wizard usaba ese sello como si fuera el de su propia escritura. Si alguien más modificaba la cotización entre el reemplazo y la relectura, el wizard avanzaba su candado a una versión que nunca rehidrató y podía pisar el cambio ajeno al guardar el paso 3 o al volver al paso 1. Ahora el resultado trae dos datos separados: `updatedAt` (sello de la escritura propia, único que autoriza continuar el wizard) y `snapshot` (fotografía coherente de filas + su propio sello, la que ve y edita el detalle). No se revirtió la lectura conjunta del detalle; no hubo cambios de SQL, RPC ni RLS.
