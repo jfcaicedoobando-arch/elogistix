@@ -82,7 +82,7 @@ export async function upsertCotizacionCostos(
   // Falla cerrada en cliente: sin sello no se llama la RPC (el servidor también
   // la rechaza). Evita reemplazar costos sin candado optimista.
   if (!expectedUpdatedAt) throw conflictoConcurrenciaError();
-  const { data, error } = await supabase.rpc("actualizar_cotizacion_costos", {
+  const { error } = await supabase.rpc("actualizar_cotizacion_costos", {
     p_cotizacion_id: cotizacionId,
     p_costos: costos.map((c) => ({
       concepto: c.concepto,
