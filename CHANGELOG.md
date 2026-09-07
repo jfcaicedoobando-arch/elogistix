@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.823.167] - 2026-09-07
+
+- CxP · Registrar pago a proveedor (Sentry JAVASCRIPT-REACT-65 / JAVASCRIPT-REACT-66, `42P10`): el pago fallaba con «there is no unique or exclusion constraint matching the ON CONFLICT specification». `_asegurar_movimiento_pago_proveedor` usaba `ON CONFLICT (hash_dedupe)`, pero el único índice único vivo de `bbva_movimientos` es `(cuenta_bancaria_id, hash_dedupe) WHERE deleted_at IS NULL`. Se alineó el target del conflicto (y el fallback de lectura, ahora acotado a cuenta y filas vivas), sin cambiar reglas de negocio, montos ni RLS.
+
 ## [13.823.166] - 2026-09-07
 
 - Cotizaciones (smoke 162, P1 · cierre de coherencia): el guardado rápido ya no combina costos de una lectura con el sello de otra. La pantalla consume una sola fotografía `costos + updated_at` obtenida desde `cotizaciones` con sus costos relacionados, y la mutación relee esa misma fotografía tras el reemplazo. Se conserva el candado optimista y el contrato de costos usado por el wizard.

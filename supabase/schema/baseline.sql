@@ -325,11 +325,18 @@ BEGIN
     ROUND(v_cargo, 2), 0, 'pago-' || p_pago_id::text, 'Conciliado', p_pago_id,
     auth.uid(), now(), auth.uid()
   )
-  ON CONFLICT (hash_dedupe) DO NOTHING
+  -- Sentry JAVASCRIPT-REACT-65/66 (42P10): el índice único vivo es
+  -- (cuenta_bancaria_id, hash_dedupe) WHERE deleted_at IS NULL; el target
+  -- anterior `(hash_dedupe)` no coincidía con ningún constraint y abortaba
+  -- todo el registro del pago.
+  ON CONFLICT (cuenta_bancaria_id, hash_dedupe) WHERE deleted_at IS NULL DO NOTHING
   RETURNING id INTO v_mov_id;
   IF v_mov_id IS NULL THEN
     SELECT id INTO v_mov_id FROM public.bbva_movimientos
-     WHERE hash_dedupe = 'pago-' || p_pago_id::text LIMIT 1;
+     WHERE cuenta_bancaria_id = v_pago.cuenta_bancaria_id
+       AND hash_dedupe = 'pago-' || p_pago_id::text
+       AND deleted_at IS NULL
+     LIMIT 1;
   END IF;
   RETURN v_mov_id;
 END;
