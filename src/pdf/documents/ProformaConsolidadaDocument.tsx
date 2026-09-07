@@ -1,6 +1,6 @@
 import { Document, Page, Text, View } from "@react-pdf/renderer";
 import type { Tables } from "@/integrations/supabase/types";
-import { TASA_IVA } from "@/lib/financial/financialUtils";
+
 import { formatCurrency } from "@/lib/formatters";
 import { styles } from "../theme/styles";
 import { Footer } from "../components/Footer";
@@ -76,7 +76,9 @@ function SeccionMoneda({
         const items = g.items.filter((i) => i.moneda === moneda);
         if (items.length === 0) return null;
         const hayIva = items.some((i) => i.aplica_iva);
-        const sub = items.reduce((s, i) => s + Number(i.total), 0);
+        // R183-PDF-01: `items.total` ya incluye IVA, así que este renglón es el
+        // total del grupo, no un subtotal. Se rotula acorde sin re-gravar nada.
+        const totalGrupo = items.reduce((s, i) => s + Number(i.total), 0);
         return (
           // wrap (default) permite que tablas largas (20+ conceptos) salten de
           // página manteniendo el `tableHeader fixed` de DataTable repetido y
@@ -87,8 +89,9 @@ function SeccionMoneda({
             </Text>
             <DataTable columns={columnas(moneda, hayIva)} rows={items} />
             <Text style={[styles.subtotalLine, { textAlign: "right", marginTop: 2 }]}>
-              Subtotal {moneda}: {formatCurrency(sub, moneda)}
+              Total del contenedor {moneda}: {formatCurrency(totalGrupo, moneda)}
             </Text>
+
           </View>
         );
       })}
@@ -111,14 +114,14 @@ export function ProformaConsolidadaDocument({
   embarque,
   cliente,
   conceptosConsolidados,
-  tasaIva = TASA_IVA,
   emisor,
 }: Props) {
   const grupos = agrupar(conceptosConsolidados);
-  const tasaPct = Math.round(tasaIva * 100);
   const hayUSD = conceptosConsolidados.some((c) => c.moneda === "USD");
   const hayMXN = conceptosConsolidados.some((c) => c.moneda === "MXN");
 
+  // R179-01/PDF-B: etiqueta neutra "IVA <moneda>"; las filas pueden tributar a
+  // 0/8/16% y la tasa global no describe la mezcla.
   const bloquesTotales = [];
   if (hayUSD) {
     bloquesTotales.push({
@@ -126,7 +129,6 @@ export function ProformaConsolidadaDocument({
       subtotal: Number(proforma.subtotal_usd),
       iva: Number(proforma.iva_usd),
       total: Number(proforma.total_usd),
-      tasaIvaPct: Number(proforma.iva_usd) > 0 ? tasaPct : undefined,
     });
   }
   if (hayMXN) {
@@ -135,9 +137,9 @@ export function ProformaConsolidadaDocument({
       subtotal: Number(proforma.subtotal_mxn),
       iva: Number(proforma.iva_mxn),
       total: Number(proforma.total_mxn),
-      tasaIvaPct: tasaPct,
     });
   }
+
 
   return (
     <Document title={`${proforma.numero} - Proforma Consolidada`} author={emisor?.razonSocial ?? "Empresa"}>

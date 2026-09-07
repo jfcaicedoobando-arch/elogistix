@@ -13,6 +13,23 @@ export type ConceptoVenta = Tables<"conceptos_venta"> & {
   } | null;
 };
 
+/**
+ * R179-01/PDF-A — Tasa efectiva de una fila, con la misma semántica del dominio
+ * de proformas (regla B-09): `aplica_iva=false` manda (exento) aunque la fila
+ * traiga `tasa_iva_aplicada` heredada del default de la columna. No se toca el
+ * resolver global para no afectar a sus otros consumidores.
+ */
+function tasaEfectivaFila(r: ConceptoVenta, tasaIva: number): number {
+  if (r.aplica_iva === false) return 0;
+  return resolverTasaConcepto(r, tasaIva);
+}
+
+/** IVA de la fila según su tratamiento fiscal guardado. */
+function ivaFila(r: ConceptoVenta, tasaIva: number): number {
+  const importe = Number(r.cantidad) * Number(r.precio_unitario);
+  return calcularIVA(importe, tasaEfectivaFila(r, tasaIva));
+}
+
 export function columnasUSD(tasaIva: number, hayIva: boolean): PdfColumn<ConceptoVenta>[] {
   const base: PdfColumn<ConceptoVenta>[] = [
     { key: "descripcion", title: "Descripción", cellStyle: styles.cellDesc,
@@ -28,12 +45,12 @@ export function columnasUSD(tasaIva: number, hayIva: boolean): PdfColumn<Concept
     ...base,
     { key: "iva", title: "IVA", cellStyle: styles.cellMoney,
       render: (r) => r.aplica_iva
-        ? formatCurrency(calcularIVA(Number(r.cantidad) * Number(r.precio_unitario), resolverTasaConcepto(r, tasaIva)), "USD")
+        ? formatCurrency(ivaFila(r, tasaIva), "USD")
         : "—" },
     { key: "total", title: "Total", cellStyle: styles.cellMoney,
       render: (r) => {
         const importe = Number(r.cantidad) * Number(r.precio_unitario);
-        const iva = r.aplica_iva ? calcularIVA(importe, resolverTasaConcepto(r, tasaIva)) : 0;
+        const iva = r.aplica_iva ? ivaFila(r, tasaIva) : 0;
         return formatCurrency(importe + iva, "USD");
       } },
   ];
@@ -49,15 +66,15 @@ export function columnasMXN(tasaIva: number): PdfColumn<ConceptoVenta>[] {
     { key: "importe", title: "Importe", cellStyle: styles.cellMoney,
       render: (r) => formatCurrency(Number(r.cantidad) * Number(r.precio_unitario), "MXN") },
     { key: "iva", title: "IVA", cellStyle: styles.cellMoney,
-      render: (r) => formatCurrency(calcularIVA(Number(r.cantidad) * Number(r.precio_unitario), resolverTasaConcepto(r, tasaIva)), "MXN") },
+      render: (r) => formatCurrency(ivaFila(r, tasaIva), "MXN") },
     { key: "total", title: "Total", cellStyle: styles.cellMoney,
       render: (r) => {
         const importe = Number(r.cantidad) * Number(r.precio_unitario);
-        const iva = calcularIVA(importe, resolverTasaConcepto(r, tasaIva));
-        return formatCurrency(importe + iva, "MXN");
+        return formatCurrency(importe + ivaFila(r, tasaIva), "MXN");
       } },
   ];
 }
+
 
 export interface GrupoContenedor {
   contenedorId: string | null; // null = cargo general
