@@ -1,8 +1,3 @@
--- v13.628.0 — Edición de conceptos en facturas de proveedor capturadas a mano.
--- v13.646.0 (BUG-02, auditoría 2026-08-18): recalcula la cabecera (subtotal,
--- IVA, retenciones, total) a partir de los conceptos reemplazados.
--- Espejo canónico; actualizar en el mismo PR que la migración.
-
 CREATE OR REPLACE FUNCTION public.reemplazar_conceptos_factura_proveedor(
   p_factura_id uuid,
   p_conceptos jsonb

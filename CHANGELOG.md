@@ -1,5 +1,14 @@
 # Changelog
 
+## [13.823.191] - 2026-09-07
+
+CxP: al editar los conceptos de una factura de proveedor el subtotal ya se actualiza.
+
+- `DialogEditarConceptosFactura.tsx`: el subtotal de referencia se deriva de los renglones (Σ importe × cantidad) en vez del subtotal viejo de la cabecera, que nunca cambiaba y marcaba un descuadre artificial. Se retiran el aviso de descuadre y "Ajustar última línea"; se muestra el subtotal anterior vs. el nuevo y una advertencia si algún renglón queda en cero.
+- `reemplazar_conceptos_factura_proveedor`: el subtotal recalculado pasa de `SUM(monto)` a `SUM(monto × COALESCE(NULLIF(cantidad,0),1))`, alineado con `_cxp_validar_aprobacion` y las tablas de conceptos. Sin cambios de firma, `SECURITY DEFINER`, `search_path`, GRANT/REVOKE, candados (XML/UUID, cancelada, pagos, organización) ni backfill de facturas existentes. Espejo SQL sincronizado.
+- Regresión focalizada del cuadre derivado con cantidades 1 y >1. CI, RLS y suites completas quedan para GitHub Actions.
+
+
 ## [13.823.190] - 2026-09-07
 
 Captura de facturas PDF con IA: no reenviar una sesión revocada después de un 401.
