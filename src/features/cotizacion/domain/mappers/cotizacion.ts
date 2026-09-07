@@ -154,12 +154,25 @@ function partesLclManual(values: CotizacionFormValues) {
  *   - con importes capturados → NO se toca la moneda (no se reinterpreta dinero)
  *     y el bloqueo/mensaje de la RPC guía la recuperación.
  */
+export interface MonedaPaso1Opts {
+  /** true cuando la cotización aún no existe (no hay moneda persistida). */
+  esNuevo?: boolean;
+  /** Moneda dominante de los importes ya capturados, si es una sola. */
+  monedaImportes?: "USD" | "MXN";
+}
+
 export function monedaPaso1(
   values: CotizacionFormValues,
   sinImportes: boolean,
+  opts: MonedaPaso1Opts = {},
 ): "USD" | "MXN" | undefined {
-  if (!sinImportes) return undefined;
-  return values.monedaCrm || "USD";
+  const respaldo = values.monedaCrm || "USD";
+  if (sinImportes) return respaldo;
+  // VF (13.823.198): al CREAR no hay nada que proteger y el schema exige
+  // `moneda`; se usa la moneda de los importes capturados y, si están mezclados
+  // (o no hay una sola), el respaldo del vínculo CRM.
+  if (opts.esNuevo) return opts.monedaImportes ?? respaldo;
+  return undefined;
 }
 
 export function buildPaso1Data(
@@ -167,6 +180,7 @@ export function buildPaso1Data(
   clientes: { id: string; nombre: string }[],
   userEmail: string,
   sinImportes = true,
+  monedaOpts: MonedaPaso1Opts = {},
 ): Record<string, unknown> {
   const { peso, volumen, piezas } = calcularPesoVolumenPiezas(values);
   return {
