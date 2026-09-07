@@ -17,6 +17,8 @@ const {
   registrarActividadMutate,
   fetchDatosFiscalesMock,
   tieneCostosCargadosMock,
+  fetchMonedaOportunidadMock,
+  alinearMonedaOportunidadMock,
   supabaseCountRef,
 } = vi.hoisted(() => ({
   navigateMock: vi.fn(),
@@ -32,6 +34,8 @@ const {
   registrarActividadMutate: vi.fn(),
   fetchDatosFiscalesMock: vi.fn(),
   tieneCostosCargadosMock: vi.fn(),
+  fetchMonedaOportunidadMock: vi.fn(),
+  alinearMonedaOportunidadMock: vi.fn(),
   supabaseCountRef: { value: 1 } as { value: number },
 }));
 
@@ -66,6 +70,10 @@ vi.mock("@/features/cotizacion/services/datosFiscalesProspecto", () => ({
 vi.mock("@/features/cotizacion/services/candadoCostos", () => ({
   tieneCostosCargados: (...a: unknown[]) => tieneCostosCargadosMock(...a),
 }));
+vi.mock("@/features/crm/services/monedaOportunidad", () => ({
+  fetchMonedaOportunidad: (...a: unknown[]) => fetchMonedaOportunidadMock(...a),
+  alinearMonedaOportunidad: (...a: unknown[]) => alinearMonedaOportunidadMock(...a),
+}));
 vi.mock("@/lib/ui/appFeedback", () => ({
   notifyError: notifyErrorMock,
   notifySuccess: notifySuccessMock,
@@ -87,6 +95,8 @@ beforeEach(() => {
   supabaseCountRef.value = 1;
   fetchDatosFiscalesMock.mockResolvedValue({});
   tieneCostosCargadosMock.mockResolvedValue(true);
+  fetchMonedaOportunidadMock.mockResolvedValue("USD");
+  alinearMonedaOportunidadMock.mockResolvedValue(true);
 });
 
 describe("useCotizacionDetalleHandlers", () => {
@@ -101,7 +111,7 @@ describe("useCotizacionDetalleHandlers", () => {
     expect(notifySuccessMock).not.toHaveBeenCalled();
   });
 
-  it.each(["Aceptada", "En operación", "Rechazada"])(
+  it.each(["En operación", "Rechazada"])(
     "handleCambiarEstado NO sincroniza desde el cliente en %s (autoridad de la BD)",
     async (estado) => {
       actualizarEstadoMutateAsync.mockResolvedValue(undefined);
