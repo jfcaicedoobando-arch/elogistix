@@ -122,6 +122,55 @@ describe("useCotizacionDetalleHandlers", () => {
     },
   );
 
+  it("Aceptada NO cambia el estado de inmediato: abre la confirmación", async () => {
+    const { result } = renderHook(() => useCotizacionDetalleHandlers(cot()), { wrapper: createWrapper() });
+    await act(async () => { await result.current.handleCambiarEstado("Aceptada"); });
+    expect(actualizarEstadoMutateAsync).not.toHaveBeenCalled();
+    expect(result.current.aceptar.open).toBe(true);
+  });
+
+  it("confirmar con la MISMA moneda acepta sin tocar la oportunidad", async () => {
+    actualizarEstadoMutateAsync.mockResolvedValue(undefined);
+    const { result } = renderHook(
+      () => useCotizacionDetalleHandlers(cot({ moneda: "USD" })),
+      { wrapper: createWrapper() },
+    );
+    await act(async () => { await result.current.handleCambiarEstado("Aceptada"); });
+    await act(async () => { await result.current.aceptar.confirmar(); });
+    expect(alinearMonedaOportunidadMock).not.toHaveBeenCalled();
+    expect(actualizarEstadoMutateAsync).toHaveBeenCalledWith({ id: "cot-1", estado: "Aceptada" });
+    expect(sincronizarEtapaMock).not.toHaveBeenCalled();
+  });
+
+  it("confirmar con moneda distinta alinea la oportunidad antes de aceptar", async () => {
+    actualizarEstadoMutateAsync.mockResolvedValue(undefined);
+    fetchMonedaOportunidadMock.mockResolvedValue("MXN");
+    const { result } = renderHook(
+      () => useCotizacionDetalleHandlers(cot({ moneda: "USD" })),
+      { wrapper: createWrapper() },
+    );
+    await act(async () => { await result.current.handleCambiarEstado("Aceptada"); });
+    await vi.waitFor(() => expect(result.current.aceptar.hayChoqueMoneda).toBe(true));
+    await act(async () => { await result.current.aceptar.confirmar(); });
+    expect(alinearMonedaOportunidadMock).toHaveBeenCalledWith("opp-1", "USD");
+    expect(actualizarEstadoMutateAsync).toHaveBeenCalledWith({ id: "cot-1", estado: "Aceptada" });
+  });
+
+  it("si no se puede alinear la moneda, NO cambia el estado", async () => {
+    fetchMonedaOportunidadMock.mockResolvedValue("MXN");
+    alinearMonedaOportunidadMock.mockResolvedValue(false);
+    const { result } = renderHook(
+      () => useCotizacionDetalleHandlers(cot({ moneda: "USD" })),
+      { wrapper: createWrapper() },
+    );
+    await act(async () => { await result.current.handleCambiarEstado("Aceptada"); });
+    await vi.waitFor(() => expect(result.current.aceptar.hayChoqueMoneda).toBe(true));
+    await act(async () => { await result.current.aceptar.confirmar(); });
+    expect(actualizarEstadoMutateAsync).not.toHaveBeenCalled();
+    expect(notifyErrorMock).toHaveBeenCalled();
+    expect(result.current.aceptar.open).toBe(true);
+  });
+
   it("falla CRM: conserva el estado guardado y advierte sincronización parcial", async () => {
     actualizarEstadoMutateAsync.mockResolvedValue(undefined);
     sincronizarEtapaMock.mockRejectedValue(new Error("crm down"));
