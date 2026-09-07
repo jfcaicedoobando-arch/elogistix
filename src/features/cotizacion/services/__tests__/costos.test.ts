@@ -9,6 +9,7 @@ vi.mock("@/integrations/supabase/client", () => ({ supabase: mock.supabase }));
 
 import {
   fetchCotizacionCostos,
+  fetchCotizacionCostosSnapshot,
   upsertCotizacionCostos,
   fetchCotizacionCostosForEmbarque,
 } from "@/features/cotizacion/services/costos";
@@ -44,9 +45,24 @@ describe("services/cotizacion/costos", () => {
     expect(call!.opArgs[eqIdx]).toEqual(["cotizacion_id", "cot-123"]);
   });
 
+  it("fetchCotizacionCostosSnapshot devuelve filas y sello de una sola lectura", async () => {
+    mock.setTableResult("cotizaciones", {
+      data: { updated_at: "2026-09-03T12:00:00Z", cotizacion_costos: [] },
+      error: null,
+    });
+    const r = await fetchCotizacionCostosSnapshot("cot-1");
+    expect(r).toEqual({ costos: [], updatedAt: "2026-09-03T12:00:00Z" });
+    const call = mock.tableCalls.find((c) => c.table === "cotizaciones");
+    expect(call?.opArgs[call.ops.indexOf("select")]).toEqual([
+      "updated_at, cotizacion_costos(*)",
+    ]);
+  });
+
   it("upsertCotizacionCostos invoca RPC con payload mapeado", async () => {
     mock.setRpcResult("actualizar_cotizacion_costos", { data: null, error: null });
-    mock.setTableResult("cotizacion_costos", { data: [], error: null });
+    mock.setTableResult("cotizaciones", {
+      data: { updated_at: "2026-09-03T12:00:00Z", cotizacion_costos: [] }, error: null,
+    });
     await upsertCotizacionCostos("cot-1", [
       {
         concepto: "Flete",
@@ -66,7 +82,9 @@ describe("services/cotizacion/costos", () => {
 
   it("upsertCotizacionCostos defaults para campos opcionales", async () => {
     mock.setRpcResult("actualizar_cotizacion_costos", { data: null, error: null });
-    mock.setTableResult("cotizacion_costos", { data: [], error: null });
+    mock.setTableResult("cotizaciones", {
+      data: { updated_at: "2026-09-03T12:00:00Z", cotizacion_costos: [] }, error: null,
+    });
     await upsertCotizacionCostos("cot-1", [
       { concepto: "X", moneda: "MXN", proveedor: "P", cantidad: 1, costo_unitario: 10 } as never,
     ], "req-2", "2026-09-03T11:00:00Z");
@@ -86,7 +104,9 @@ describe("services/cotizacion/costos", () => {
       data: { cotizacion_id: "cot-1", count: 1, updated_at: "2026-09-03T12:00:00Z" },
       error: null,
     });
-    mock.setTableResult("cotizacion_costos", { data: [], error: null });
+    mock.setTableResult("cotizaciones", {
+      data: { updated_at: "2026-09-03T12:00:00Z", cotizacion_costos: [] }, error: null,
+    });
     const r = await upsertCotizacionCostos("cot-1", [], "req-1", "2026-09-03T11:00:00Z");
     expect(mock.rpcCalls[0].args).toMatchObject({ p_expected_updated_at: "2026-09-03T11:00:00Z" });
     expect(r.updatedAt).toBe("2026-09-03T12:00:00Z");

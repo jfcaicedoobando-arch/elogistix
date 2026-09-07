@@ -27,21 +27,11 @@ const costo = (importe: number, notas: string) => ({
 
 const COSTOS_500 = vi.hoisted(() => [
   {
-    id: "c1",
-    cotizacion_id: "cot-1",
-    concepto: "Flete",
-    moneda: "MXN",
-    proveedor: "ACME",
-    cantidad: 1,
-    costo_unitario: 500,
-    costo_total: 500,
-    precio_venta: 700,
-    unidad_medida: "contenedor",
-    notas: "nota previa",
-    costeo_tarifa_id: "tar-1",
-    costeo_tarifa_recargo_id: "rec-1",
-    created_at: "",
-    updated_at: "",
+    id: "c1", cotizacion_id: "cot-1", concepto: "Flete", moneda: "MXN",
+    proveedor: "ACME", cantidad: 1, costo_unitario: 500, costo_total: 500,
+    precio_venta: 700, unidad_medida: "contenedor", notas: "nota previa",
+    costeo_tarifa_id: "tar-1", costeo_tarifa_recargo_id: "rec-1",
+    created_at: "", updated_at: "",
   },
 ]);
 
