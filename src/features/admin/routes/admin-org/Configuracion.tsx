@@ -1,8 +1,8 @@
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useState } from "react";
-import { Save, Building2, Receipt, Anchor, Wrench, Scale } from "lucide-react";
-import { useConfiguracionState, TabEmpresa, OrgInfoCard, TabFacturacion, TabPuertos, TabOperaciones } from "@/features/configuracion";
+import { Save, Building2, Receipt, Anchor, Wrench, Scale, ShoppingCart } from "lucide-react";
+import { useConfiguracionState, TabEmpresa, OrgInfoCard, TabFacturacion, TabPuertos, TabOperaciones, TabCompras } from "@/features/configuracion";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import TabExportar from "@/features/admin/components/TabExportar";
 import { PageHeader } from "@/components/shared/PageHeader";
@@ -71,6 +71,7 @@ export default function Configuracion() {
             <>
               <TabsTrigger variant="seccion" value="catalogos" className="gap-1.5"><Anchor className="h-3.5 w-3.5" /> Catálogos</TabsTrigger>
               <TabsTrigger variant="seccion" value="operaciones" className="gap-1.5"><Scale className="h-3.5 w-3.5" /> Operaciones</TabsTrigger>
+              <TabsTrigger variant="seccion" value="compras" className="gap-1.5"><ShoppingCart className="h-3.5 w-3.5" /> Compras</TabsTrigger>
               <TabsTrigger variant="seccion" value="herramientas" className="gap-1.5"><Wrench className="h-3.5 w-3.5" /> Herramientas</TabsTrigger>
             </>
           )}
@@ -96,6 +97,7 @@ export default function Configuracion() {
           <>
             <TabsContent value="catalogos"><TabPuertos /></TabsContent>
             <TabsContent value="operaciones"><TabOperaciones /></TabsContent>
+            <TabsContent value="compras"><TabCompras /></TabsContent>
             <TabsContent value="herramientas"><TabExportar /></TabsContent>
           </>
         )}
