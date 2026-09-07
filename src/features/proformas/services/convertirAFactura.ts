@@ -55,11 +55,39 @@ export async function convertirProformaAFactura(
   // SAFE-CAST: el RPC devuelve SETOF facturas; extraemos id, numero y moneda.
   const rows = (data ?? []) as unknown as Array<{ id: string; numero: string; moneda: Moneda }>;
   if (!rows.length) throw new Error("No se pudo generar la factura");
+  await corregirFechaNegocioBorradores(rows.map((r) => r.id));
   return rows.map((r) => ({
     facturaId: r.id,
     facturaNumero: r.numero,
     moneda: r.moneda,
   }));
+}
+
+/**
+ * R170-02: la RPC fecha los borradores con `CURRENT_DATE` (UTC), que entre las
+ * 18:00 y 23:59 hora CDMX ya es el día siguiente en México. Se corrige aquí
+ * mismo, como parte de la misma conversión (no es backfill de históricos),
+ * desplazando también el vencimiento para no alterar los días de crédito.
+ */
+async function corregirFechaNegocioBorradores(ids: string[]): Promise<void> {
+  const fechaNegocio = hoyMx();
+  const { data, error } = await supabase
+    .from("facturas")
+    .select("id, fecha_emision, fecha_vencimiento")
+    .in("id", ids)
+    .eq("estado", "borrador");
+  if (error || !data) return;
+  for (const f of data) {
+    if (!f.fecha_emision || f.fecha_emision === fechaNegocio) continue;
+    const delta = diffDiasCalendario(f.fecha_emision, fechaNegocio);
+    await supabase
+      .from("facturas")
+      .update({
+        fecha_emision: fechaNegocio,
+        fecha_vencimiento: addDaysIso(f.fecha_vencimiento, delta),
+      })
+      .eq("id", f.id);
+  }
 }
 
 /**
