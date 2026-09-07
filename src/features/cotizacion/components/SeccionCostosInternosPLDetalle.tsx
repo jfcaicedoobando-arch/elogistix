@@ -127,8 +127,7 @@ export default function SeccionCostosInternosPLDetalle({
       id: "", cotizacion_id: cotizacionId, concepto: f.concepto, moneda: f.moneda,
       proveedor: f.proveedor, cantidad: f.cantidad, costo_unitario: f.costo_unitario,
       costo_total: f.cantidad * f.costo_unitario,
-      // B-081: el upsert borra y reinserta; sin esto se perdía el precio de venta
-      // y la cotización quedaba sin importes de venta en la BD.
+      // B-081: el upsert borra y reinserta; sin esto se perdía el precio de venta.
       precio_venta: f.cantidad > 0 ? f.venta / f.cantidad : f.venta,
       notas: f.notas ?? "", created_at: "", updated_at: "",
     }));
