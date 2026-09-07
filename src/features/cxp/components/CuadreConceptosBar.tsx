@@ -9,6 +9,11 @@
  * v13.399.0 — Se explica de dónde sale la suma (fórmula + renglones) y el
  * consejo del estado "sobrante" apunta primero al error real de captura
  * (importe unitario capturado como total de línea / mezcla de moneda).
+ *
+ * R170-10 — El aviso "no desglosado por partida" sólo aparece cuando de verdad
+ * las partidas no traen IVA. Si el CFDI ya lo desglosa por renglón, se dice
+ * eso; y si el IVA de las partidas no coincide con el de la cabecera, se
+ * muestran ambos números en vez de afirmar algo falso.
  */
 import { useState } from "react";
 import { CheckCircle2, AlertTriangle, Info, ChevronDown } from "lucide-react";
@@ -27,6 +32,8 @@ interface Props {
   ivaGlobal?: number;
   /** Total del documento (subtotal + impuestos), para contrastar con "Conceptos". */
   totalDocumento?: number;
+  /** R170-10: IVA sumado de las partidas (0 cuando ninguna lo desglosa). */
+  ivaPartidas?: number;
 }
 
 interface EstadoVisual {
@@ -82,7 +89,23 @@ function visualPorEstado(estado: EstadoCuadre, diferencia: number, moneda: strin
   };
 }
 
-export function CuadreConceptosBar({ resultado, subtotal, moneda, renglones, ivaGlobal, totalDocumento }: Props) {
+/**
+ * R170-10 · Explicación honesta del IVA según lo que traen las partidas.
+ */
+function explicacionIva(ivaGlobal: number, ivaPartidas: number, moneda: string): string {
+  if (ivaPartidas <= 0) {
+    return `incluye ${formatCurrency(ivaGlobal, moneda)} de IVA capturado a nivel documento (no desglosado por partida).`;
+  }
+  if (Math.abs(ivaPartidas - ivaGlobal) <= 0.01) {
+    return `incluye ${formatCurrency(ivaGlobal, moneda)} de IVA, ya desglosado en las partidas.`;
+  }
+  return (
+    `incluye ${formatCurrency(ivaGlobal, moneda)} de IVA en la cabecera, mientras que las partidas desglosan `
+    + `${formatCurrency(ivaPartidas, moneda)}: revisa la diferencia antes de aprobar.`
+  );
+}
+
+export function CuadreConceptosBar({ resultado, subtotal, moneda, renglones, ivaGlobal, totalDocumento, ivaPartidas }: Props) {
   const v = visualPorEstado(resultado.estado, resultado.diferencia, moneda);
   const abs = Math.abs(resultado.diferencia);
   const signo = resultado.diferencia > 0 ? "faltan" : "sobran";
@@ -110,7 +133,7 @@ export function CuadreConceptosBar({ resultado, subtotal, moneda, renglones, iva
         <p className="text-muted-foreground mt-1 pl-6 text-label">
           {`Total de partidas: ${formatCurrency(subtotal, moneda)} (sin impuestos). `}
           {`Total del documento: ${formatCurrency(totalDocumento ?? subtotal + (ivaGlobal ?? 0), moneda)}, `}
-          {`incluye ${formatCurrency(ivaGlobal ?? 0, moneda)} de IVA capturado a nivel documento (no desglosado por partida).`}
+          {explicacionIva(ivaGlobal ?? 0, ivaPartidas ?? 0, moneda)}
         </p>
       )}
       {resultado.estado !== "cuadrado" && resultado.estado !== "sin_conceptos" && (

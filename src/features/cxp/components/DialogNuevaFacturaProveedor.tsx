@@ -86,6 +86,13 @@ function DialogNuevaFacturaProveedorForm({
   });
   const { guardDialog } = useDirtyGuard(open && hayCaptura && !ctl.isPending);
 
+  // R170-10: el CFDI puede traer IVA por renglón; si lo trae, el aviso no debe
+  // decir "no desglosado por partida".
+  const ivaDesglosadoPartidas = ctl.cfdiConceptos.reduce(
+    (acc, c) => acc + (Number(c.iva) || 0),
+    0,
+  );
+
   const { conceptosParaCuadre, cuadre, keyRenglonSospechoso } = useCuadreCaptura({
     subtotal: sub,
     cfdiConceptos: ctl.cfdiConceptos,
@@ -152,6 +159,7 @@ function DialogNuevaFacturaProveedorForm({
               moneda={moneda}
               renglones={conceptosParaCuadre.length}
               ivaGlobal={iva}
+              ivaPartidas={ivaDesglosadoPartidas}
               totalDocumento={ctl.total}
             />
           ) : undefined
