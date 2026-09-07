@@ -24,7 +24,8 @@ export async function ensureFreshSession(forzar = false): Promise<string | null>
     // si el servidor ya rechazó ese token (`forzar=true`), nunca se reutiliza:
     // su fecha local puede seguir vigente aunque la sesión haya sido revocada.
     const { data: { session: actual } } = await supabase.auth.getSession();
-    if (!forzar && actual && (actual.expires_at ?? 0) > ahora) return actual.access_token;
+    const actualVigente = (actual?.expires_at ?? 0) - MARGEN_SEGUNDOS > ahora;
+    if (!forzar && actual && actualVigente) return actual.access_token;
     return null;
   }
   return data.session.access_token;
