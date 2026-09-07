@@ -9,6 +9,7 @@ import type { calcularTotalesProforma } from "@/features/proformas/domain/profor
 import type { FiltroContenedor } from "@/features/embarques/domain/conceptosPorContenedor";
 import type { EmbarqueContenedor } from "@/features/embarques/types/contenedor";
 import { validarContenedoresFCL } from "@/features/embarques/services/validarContenedoresFCL";
+import { ivaDeFila } from "@/features/embarques/hooks/useDialogGenerarProformaController.helpers";
 
 /**
  * Error de pre-validación esperada (ej. FCL sin peso/volumen).
