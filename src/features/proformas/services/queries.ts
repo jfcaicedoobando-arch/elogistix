@@ -161,27 +161,8 @@ export async function fetchProformasPendientes(
   return fromDb<ProformaPendienteConEmbarque[]>(enriched);
 }
 
-export async function fetchClienteParaPdf(clienteId: string) {
-  return unwrap(
-    supabase
-      .from("clientes")
-      .select("nombre, rfc, direccion, ciudad, estado, cp")
-      .eq("id", clienteId)
-      .maybeSingle(),
-  );
-}
+export { fetchClienteParaPdf, fetchEmbarqueParaPdf } from "./queries.pdf";
 
-export async function fetchEmbarqueParaPdf(embarqueId: string) {
-  return unwrap(
-    supabase
-      .from("embarques")
-      .select(
-        "expediente, bl_master, bl_house, modo, tipo, incoterm, puerto_origen, puerto_destino, aeropuerto_origen, aeropuerto_destino, ciudad_origen, ciudad_destino, naviera, aerolinea, descripcion_mercancia, contenedores:embarque_contenedores(id, numero_contenedor, tipo_contenedor)",
-      )
-      .eq("id", embarqueId)
-      .single(),
-  );
-}
 
 export async function fetchConceptosProforma(proformaId: string): Promise<ConceptoVentaRow[]> {
   // B-4: incluir info del contenedor real (vía FK conceptos_venta.contenedor_id → embarque_contenedores)
