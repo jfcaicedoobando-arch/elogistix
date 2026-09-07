@@ -1,5 +1,15 @@
 # Changelog
 
+## [13.823.178] - 2026-09-07
+
+Remates R170: cantidad decimal en conceptos de factura (migración PREPARADA) y etiquetas honestas del listado de proformas.
+
+- R170-08 · La causa del error 22P02 al guardar `1.5` es que `public.conceptos_factura.cantidad` es `integer`, mientras el parser fiscal canónico (`parseCantidadFiscal`) y las tablas hermanas ya usan decimales. Se preparó `docs/migraciones-preparadas/20260913000500_r170_08_conceptos_factura_cantidad_decimal.sql` (columna a `numeric(18,6)`, CHECK de positividad `> 0`, sin redondear ni truncar datos). NO APLICADA: requiere autorización separada. Sin cambios en el camino de guardado del cliente (ya era correcto).
+- R170-01 (remate) · El resumen de resultados usa la etiqueta visible del grupo (`LABEL_ESTADO_UNIFICADO`), ya no la clave interna «facturada»; el subtítulo del listado dice «convierte a factura» en lugar de «marca como facturadas». Claves internas, filtros y lógica intactos.
+- Regresiones focalizadas preparadas para GitHub Actions: `proformasCopyEstado.test.ts` y `facturaConceptos.cantidadDecimal.test.ts`.
+
+Validaciones: `tsgo --noEmit`. Tests, CI, SQL y RLS se ejecutan exclusivamente en GitHub Actions; no se aplicó ninguna migración ni se publicó.
+
 ## [13.823.177] - 2026-09-07
 
 Sincronización de la línea base del esquema con R170-02 (fechas en hora México).

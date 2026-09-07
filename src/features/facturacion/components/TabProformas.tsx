@@ -17,6 +17,8 @@ import { mensajeVacioProformas } from "./proformasEmptyCopy";
 import { ProformasEmptyState } from "./proformasEmpty";
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 import { ProformaMobileCard } from "./ProformaMobileCard";
+import { LABEL_ESTADO_UNIFICADO } from "@/lib/domain/estadoUnificado";
+
 
 
 export function TabProformas({ isInRange, estadoInicial }: {
@@ -87,8 +89,14 @@ export function TabProformas({ isInRange, estadoInicial }: {
           <div className="mt-3 text-body-sm text-muted-foreground">
             Mostrando <strong className="text-foreground">{c.filtered.length}</strong> de{" "}
             {c.filtroEstado === "todas" ? c.counts.todas : c.counts[c.filtroEstado]} proformas
-            {c.filtroEstado !== "todas" && <> con estado {c.filtroEstado}</>}
+            {/* R170-01: el resumen usa la etiqueta visible del grupo (p. ej.
+                "Convertida"), no la clave interna ("facturada"), que prometía
+                emisión fiscal inexistente. Claves y filtros no cambian. */}
+            {c.filtroEstado !== "todas" && (
+              <> con estado {LABEL_ESTADO_UNIFICADO[c.filtroEstado]}</>
+            )}
           </div>
+
 
         </CardContent>
       </Card>

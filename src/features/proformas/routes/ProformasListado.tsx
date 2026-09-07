@@ -41,7 +41,7 @@ export default function ProformasListado() {
         description={
           porEmitir
             ? "Proformas aceptadas por el cliente que aún no se han convertido en factura."
-            : "Listado completo de proformas generadas. Filtra por estado, busca por número/expediente/cliente y marca como facturadas."
+            : "Listado completo de proformas generadas. Filtra por estado, busca por número/expediente/cliente y convierte a factura."
         }
       />
       <TabProformas key={estadoInicial} estadoInicial={estadoInicial} />
