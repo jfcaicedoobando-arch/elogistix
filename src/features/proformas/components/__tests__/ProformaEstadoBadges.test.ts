@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { derivarOrigenAceptacion } from "@/features/proformas/components/ProformaEstadoBadges";
+import { derivarOrigenAceptacion } from "@/features/proformas/domain/origenAceptacion";
 
 describe("derivarOrigenAceptacion", () => {
   it("reconoce la aprobación interna cuando el cliente no requiere autorización (R170-07)", () => {
