@@ -53,4 +53,12 @@ export interface FilaCostoDetalle {
   venta: number;
   aplica_iva?: boolean;
   notas?: string;
+  /**
+   * v13.823.165: metadatos del costo persistido que la fila debe conservar
+   * intactos (el guardado borra y reinserta). `costeo_tarifa_*` es el vínculo
+   * que usa la revalidación de precios: nunca se inventa ni se recalcula aquí.
+   */
+  unidad_medida?: string;
+  costeo_tarifa_id?: string | null;
+  costeo_tarifa_recargo_id?: string | null;
 }
