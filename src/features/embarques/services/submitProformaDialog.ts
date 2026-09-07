@@ -83,9 +83,13 @@ export async function submitProformaDialog(params: SubmitProformaParams): Promis
     );
   }
 
+  // R179-01: ya NO se fuerza `true` para MXN. El RPC escribe `aplica_iva` con
+  // estos overrides antes de recalcular desde BD; forzarlo convertía un
+  // concepto exento en gravado y el total guardado dejaba de coincidir con el
+  // revisado en pantalla. MXN toma su propio tratamiento fiscal guardado.
   const ivaOverrides: Record<string, boolean> = {};
   conceptosSeleccionados.forEach((c) => {
-    ivaOverrides[c.id] = c.moneda === "MXN" ? true : !!ivaPorConcepto[c.id];
+    ivaOverrides[c.id] = c.moneda === "MXN" ? ivaDeFila(c) : !!ivaPorConcepto[c.id];
   });
 
   const notasFinal = construirNotasFinales(notas, filtroContenedor, contenedores);
