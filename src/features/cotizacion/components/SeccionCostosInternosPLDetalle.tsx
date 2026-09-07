@@ -24,10 +24,8 @@ interface Props {
   conceptosUSD: ConceptoVentaCotizacion[];
   conceptosMXN: ConceptoVentaCotizacion[];
   /**
-   * v13.823.164 — Sello (`cotizaciones.updated_at`) de los datos que se
-   * abrieron para editar. El guardado rápido lo envía a la RPC; sin él el
-   * servicio falla cerrado con LC_CONFLICTO_CONCURRENCIA (Sentry/smoke 162:
-   * "Otro usuario modificó este registro" en cada intento).
+   * v13.823.164 — Sello (`cotizaciones.updated_at`) de los datos abiertos para
+   * editar. Sin él el servicio falla cerrado con LC_CONFLICTO_CONCURRENCIA.
    */
   cotizacionUpdatedAt?: string | null;
 }
