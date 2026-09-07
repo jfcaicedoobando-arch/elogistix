@@ -10714,6 +10714,8 @@ DECLARE
   v_factura_mxn_id uuid; v_factura_usd_id uuid;
   v_numero_tmp text; v_embarque_ids uuid[];
   v_dias int;
+  -- R170-02: fecha de negocio en hora México, no CURRENT_DATE (UTC).
+  v_hoy_mx date := (now() AT TIME ZONE 'America/Mexico_City')::date;
 BEGIN
   v_cached := public.idempotency_claim(p_request_id, 'convertir_proformas_a_factura');
   IF v_cached IS NOT NULL AND (v_cached ? 'factura_ids') THEN
@@ -10803,8 +10805,8 @@ BEGIN
     ) VALUES (
       v_numero_tmp, v_first.embarque_id, v_first.expediente, v_first.cliente_id, v_first.cliente_nombre,
       0, 0, 0, 'MXN'::public.moneda, 1,
-      CURRENT_DATE,
-      CURRENT_DATE + make_interval(days => v_dias),
+      v_hoy_mx,
+      v_hoy_mx + make_interval(days => v_dias),
       'Borrador'::estado_factura, v_org,
       CASE WHEN array_length(p_proforma_ids, 1) = 1 THEN p_proforma_ids[1] ELSE NULL END,
       p_serie_id, NULL, NULL,
@@ -10858,8 +10860,8 @@ BEGIN
     ) VALUES (
       v_numero_tmp, v_first.embarque_id, v_first.expediente, v_first.cliente_id, v_first.cliente_nombre,
       0, 0, 0, 'USD'::public.moneda, 1,
-      CURRENT_DATE,
-      CURRENT_DATE + make_interval(days => v_dias),
+      v_hoy_mx,
+      v_hoy_mx + make_interval(days => v_dias),
       'Borrador'::estado_factura, v_org,
       CASE WHEN array_length(p_proforma_ids, 1) = 1 THEN p_proforma_ids[1] ELSE NULL END,
       p_serie_id, NULL, NULL,
@@ -10902,7 +10904,7 @@ BEGIN
   END IF;
   IF array_length(v_factura_ids, 1) > 0 THEN
     UPDATE public.proformas
-    SET estado_proforma = 'facturada', fecha_facturacion = CURRENT_DATE
+    SET estado_proforma = 'facturada', fecha_facturacion = v_hoy_mx
     WHERE id = ANY(p_proforma_ids) AND estado_proforma <> 'facturada';
   END IF;
   IF p_request_id IS NOT NULL THEN
@@ -12154,6 +12156,8 @@ DECLARE
   v_actualizados int;
   v_ajenos int;
   v_no_soportados int;
+  -- R170-02: fecha de negocio en hora México, no CURRENT_DATE (UTC).
+  v_hoy_mx date := (now() AT TIME ZONE 'America/Mexico_City')::date;
 BEGIN
   IF p_concepto_ids IS NULL OR array_length(p_concepto_ids, 1) IS NULL THEN
     RAISE EXCEPTION 'Debe seleccionar al menos un concepto';
@@ -12257,12 +12261,14 @@ BEGIN
   INSERT INTO public.proformas (
     numero, embarque_id, cliente_id, cliente_nombre, expediente, bl_master,
     subtotal_usd, iva_usd, total_usd, subtotal_mxn, iva_mxn, total_mxn,
-    notas, operador, dias_credito, organization_id, tasa_iva_aplicada
+    notas, operador, dias_credito, organization_id, tasa_iva_aplicada,
+    fecha_emision
   ) VALUES (
     v_numero, p_embarque_id, p_cliente_id, p_cliente_nombre, p_expediente, p_bl_master,
     v_sub_usd, v_iva_usd, v_sub_usd + v_iva_usd,
     v_sub_mxn, v_iva_mxn, v_sub_mxn + v_iva_mxn,
-    p_notas, p_operador, p_dias_credito, v_org, p_tasa_iva
+    p_notas, p_operador, p_dias_credito, v_org, p_tasa_iva,
+    v_hoy_mx
   )
   RETURNING * INTO v_proforma;
   UPDATE public.conceptos_venta
