@@ -20,9 +20,12 @@ export async function buscarGlobal(
   if (!termino.trim()) return [];
   const { data, error } = await supabase.rpc("busqueda_global", { termino, limite });
   if (error) {
-    logger.error("Error en búsqueda global:", error);
+    // El ámbito es el módulo; el error va como dato para que Sentry reciba su
+    // mensaje y código reales (antes llegaba como `[object Object]`).
+    logger.error("busqueda_global", error);
     return [];
   }
+
   return (data ?? []) as GlobalSearchRpcRow[];
 }
 
