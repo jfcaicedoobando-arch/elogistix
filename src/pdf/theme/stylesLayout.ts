@@ -71,7 +71,7 @@ export const layoutStyles = {
   // Un `top` porcentual funciona en retrato y horizontal sin cambiar de motor.
   footer: {
     position: "absolute" as const,
-    top: "93.8%",
+    top: "94.5%",
     left: 36,
     right: 36,
     borderTopWidth: 0.5,
