@@ -12,8 +12,8 @@ import type { CostoCotizacion } from '@/features/cotizacion/types';
 
 export function useCotizacionCostos(cotizacionId: string | undefined) {
   return useQuery({
-    queryKey: queryKeys.cotizaciones.costos(cotizacionId!),
-    queryFn: () => fetchCotizacionCostos(cotizacionId!),
+    queryKey: queryKeys.cotizaciones.costos(cotizacionId ?? ''),
+    queryFn: () => cotizacionId ? fetchCotizacionCostos(cotizacionId) : Promise.resolve([]),
     enabled: !!cotizacionId,
   });
 }
