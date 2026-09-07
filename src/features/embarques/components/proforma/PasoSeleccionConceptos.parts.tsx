@@ -16,6 +16,8 @@ interface ConceptoRowProps {
   isSelected: boolean;
   ivaActivo: boolean;
   ivaBloqueado: boolean;
+  /** Etiqueta de la tasa real de la fila (ej. "16%", "0%"). */
+  etiquetaIvaFila: string;
   contLabel: string | null;
   showGeneralBadge: boolean;
   onToggle: (id: string) => void;
@@ -23,7 +25,7 @@ interface ConceptoRowProps {
 }
 
 export function ConceptoRow({
-  c, isSelected, ivaActivo, ivaBloqueado, contLabel, showGeneralBadge,
+  c, isSelected, ivaActivo, ivaBloqueado, etiquetaIvaFila, contLabel, showGeneralBadge,
   onToggle, onToggleIva,
 }: ConceptoRowProps) {
   const sub = Number(c.cantidad) * Number(c.precio_unitario);
@@ -51,11 +53,14 @@ export function ConceptoRow({
       </div>
       <div className="flex flex-col items-end gap-1 shrink-0">
         {ivaBloqueado ? (
-          // B-051 (v13.320.48): en conceptos MXN el IVA es obligatorio por ley.
-          // Antes se mostraba un Switch deshabilitado que parecía "apagado" pero
-          // el sistema sí cobraba IVA — confundía al operador. Ahora se muestra
-          // un badge informativo "IVA incluido" y desaparece el toggle.
-          <Badge variant="secondary" className="text-body-sm">IVA 16% incluido</Badge>
+          // R179-01: el badge muestra el tratamiento fiscal REAL de la fila.
+          // Antes decía siempre "IVA 16% incluido" aunque el concepto estuviera
+          // guardado sin IVA, y el total confirmado cambiaba al guardar.
+          ivaActivo ? (
+            <Badge variant="secondary" className="text-body-sm">IVA {etiquetaIvaFila} incluido</Badge>
+          ) : (
+            <Badge variant="outline" className="text-body-sm text-muted-foreground">Sin IVA</Badge>
+          )
         ) : (
           <div className="flex items-center gap-2">
             <Label size="sm" htmlFor={`iva-${c.id}`} className="text-muted-foreground cursor-pointer">
@@ -78,9 +83,11 @@ interface TotalesProps {
   totales: TotalesProforma;
   tasaIva: number;
   seleccionadosVisibles: number;
+  /** Etiqueta de la(s) tasa(s) reales de las filas MXN seleccionadas. */
+  etiquetaIvaMxn?: string;
 }
 
-export function TotalesProformaBox({ totales, tasaIva, seleccionadosVisibles }: TotalesProps) {
+export function TotalesProformaBox({ totales, tasaIva, seleccionadosVisibles, etiquetaIvaMxn }: TotalesProps) {
   return (
     <div className="rounded-md border-2 border-primary/30 bg-primary/5 p-4 space-y-2">
       <SectionHeading as="h3" variant="subsection" className="mb-2">Totales de la proforma</SectionHeading>
@@ -96,7 +103,7 @@ export function TotalesProformaBox({ totales, tasaIva, seleccionadosVisibles }: 
       {totales.subtotal_mxn > 0 && (
         <div className={`space-y-1 text-body ${totales.subtotal_usd > 0 ? "mt-3 pt-3 border-t" : ""}`}>
           <div className="flex justify-between"><span>Subtotal MXN:</span><span>{formatCurrency(totales.subtotal_mxn, "MXN")}</span></div>
-          <div className="flex justify-between text-muted-foreground"><span>IVA ({(tasaIva * 100).toFixed(0)}%) MXN:</span><span>{formatCurrency(totales.iva_mxn, "MXN")}</span></div>
+          <div className="flex justify-between text-muted-foreground"><span>IVA ({etiquetaIvaMxn ?? `${(tasaIva * 100).toFixed(0)}%`}) MXN:</span><span>{formatCurrency(totales.iva_mxn, "MXN")}</span></div>
           <div className="flex justify-between font-bold text-base pt-1 border-t"><span>Total MXN:</span><span>{formatCurrency(totales.total_mxn, "MXN")}</span></div>
         </div>
       )}
