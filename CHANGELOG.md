@@ -1,5 +1,15 @@
 # Changelog
 
+## [13.823.182] - 2026-09-07
+
+R179-01 aplicado de punta a punta: el IVA elegido en el catálogo ya se guarda.
+
+- Migración APLICADA (autorizada por el usuario) a las funciones `crear_embarque_completo` y `actualizar_embarque_completo`: los conceptos de venta ahora persisten `aplica_iva` y `tasa_iva_aplicada`. En el alta se usa el valor enviado (o el DEFAULT de tabla si no viene) y en la edición `COALESCE` conserva lo guardado cuando la clave no viaja: sin backfill, sin tocar históricos.
+- Se conservan firma, `SECURITY DEFINER`, ACL (`authenticated`, `service_role`; revocado a `PUBLIC`/`anon`), RLS, triggers, idempotencia, candado de concurrencia, candados de conceptos en proforma/facturados y toda la rama de costos. Sin soporte EUR nuevo.
+- Espejos sincronizados: `supabase/schema/embarques/crear_embarque_completo.sql` y `actualizar_embarque_completo.sql`.
+
+Validaciones: verificación de lectura de que ambas funciones consumen los campos y mantienen sus privilegios. Tests, CI y RLS quedan para GitHub Actions. No se publicó.
+
 ## [13.823.181] - 2026-09-07
 
 Remate R179-01: el IVA elegido en el catálogo ya no se descarta al capturar líneas de venta en embarques.
