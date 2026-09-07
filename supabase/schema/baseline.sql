@@ -28876,7 +28876,7 @@ CREATE TABLE public.conceptos_factura (
     id uuid DEFAULT gen_random_uuid() NOT NULL,
     factura_id uuid NOT NULL,
     descripcion text NOT NULL,
-    cantidad integer DEFAULT 1 NOT NULL,
+    cantidad numeric(18,6) DEFAULT 1 NOT NULL,
     precio_unitario numeric DEFAULT 0 NOT NULL,
     moneda public.moneda DEFAULT 'MXN'::public.moneda NOT NULL,
     total numeric DEFAULT 0 NOT NULL,
@@ -28895,7 +28895,7 @@ CREATE TABLE public.conceptos_factura (
     embarque_id uuid,
     proforma_id_origen uuid,
     updated_at timestamp with time zone DEFAULT now(),
-    CONSTRAINT conceptos_factura_cantidad_pos CHECK ((cantidad >= 1)),
+    CONSTRAINT conceptos_factura_cantidad_pos CHECK ((cantidad > (0)::numeric)),
     CONSTRAINT conceptos_factura_precio_nonneg CHECK ((precio_unitario >= (0)::numeric)),
     CONSTRAINT conceptos_factura_tipo_iva_check CHECK ((tipo_iva = ANY (ARRAY['gravado_16'::text, 'gravado_8'::text, 'tasa_0'::text, 'exento'::text]))),
     CONSTRAINT conceptos_factura_total_nonneg CHECK ((total >= (0)::numeric))
