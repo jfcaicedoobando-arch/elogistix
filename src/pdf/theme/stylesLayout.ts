@@ -84,8 +84,8 @@ export const layoutStyles = {
   },
   // Columnas del pie con ancho explícito: dentro de un contenedor absoluto
   // el ancho automático colapsa y el contenido no se dibuja.
-  footerColLeft: { width: "44%" as const, paddingRight: 6 },
-  footerColCenter: { width: "32%" as const, textAlign: "center" as const },
+  footerColLeft: { width: "50%" as const, paddingRight: 6 },
+  footerColCenter: { width: "26%" as const, textAlign: "center" as const },
   footerColRight: { width: "24%" as const, textAlign: "right" as const },
   pageNumber: { fontSize: 8, color: COLORS.mutedLight, marginTop: 2 },
 

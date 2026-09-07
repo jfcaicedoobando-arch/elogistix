@@ -12,11 +12,9 @@ interface Props {
  * Línea superior en color corporativo. Se repite en cada página vía `fixed`.
  */
 export function Footer({ empresaNombre }: Props) {
-  const fecha = formatFechaEs(new Date().toISOString(), {
-    day: "2-digit",
-    month: "long",
-    year: "numeric",
-  });
+  // Fecha compacta (DD/MM/AAAA): la columna central del pie es estrecha y el
+  // formato largo se partía en dos líneas.
+  const fecha = formatFechaEs(new Date().toISOString());
 
   const marca = (empresaNombre ?? "").trim();
   return (
@@ -35,7 +33,7 @@ export function Footer({ empresaNombre }: Props) {
           Documento generado electrónicamente
         </Text>
       )}
-      <Text style={styles.footerColCenter}>Documento generado el {fecha}</Text>
+      <Text style={styles.footerColCenter}>Generado el {fecha}</Text>
       <Text
         style={styles.footerColRight}
         render={({ pageNumber, totalPages }) => `Página ${pageNumber} de ${totalPages}`}
