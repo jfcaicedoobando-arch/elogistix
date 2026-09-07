@@ -77,7 +77,7 @@ async function corregirFechaNegocioBorradores(ids: string[]): Promise<void> {
     .from("facturas")
     .select("id, fecha_emision, fecha_vencimiento")
     .in("id", ids)
-    .eq("estado", "borrador");
+    .eq("estado", "Borrador");
   if (error || !data) return;
   for (const f of data) {
     if (!f.fecha_emision || f.fecha_emision === fechaNegocio) continue;
@@ -86,7 +86,7 @@ async function corregirFechaNegocioBorradores(ids: string[]): Promise<void> {
       .from("facturas")
       .update({
         fecha_emision: fechaNegocio,
-        fecha_vencimiento: addDaysIso(f.fecha_vencimiento, delta),
+        fecha_vencimiento: addDaysIso(f.fecha_vencimiento, delta) ?? undefined,
       })
       .eq("id", f.id);
   }
