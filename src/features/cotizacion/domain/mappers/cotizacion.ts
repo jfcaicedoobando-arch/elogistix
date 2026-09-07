@@ -192,7 +192,7 @@ export function buildPaso1Data(
     piezas,
     conceptos_venta: [] as ConceptoVentaCotizacion[],
     subtotal: 0,
-    moneda: monedaPaso1(values, sinImportes),
+    moneda: monedaPaso1(values, sinImportes, monedaOpts),
     vigencia_dias: vigenciaDias(values.validezPropuesta),
     notas: values.notas,
     operador: userEmail,
