@@ -108,15 +108,18 @@ export const logger = {
     console.error(...fmt(scope, args));
     try {
       const firstError = args.find((a) => a instanceof Error) as Error | undefined;
-      const message = firstError?.message ?? String(args[0] ?? "unknown error");
+      const plano = firstError ? null : args.map(describirErrorPlano).find(Boolean) ?? null;
+      const message =
+        firstError?.message ?? plano?.message ?? String(args[0] ?? "unknown error");
       // Conservar stack: si no vino Error, sintetizar uno para Sentry.
       const errForSentry = firstError ?? new Error(message);
       logClientError({
         message: `[${scope}] ${message}`,
         stack: errForSentry.stack,
       });
-      reportToSentry(scope, errForSentry);
+      reportToSentry(scope, errForSentry, plano?.extra);
     } catch {
+
       // nunca propagar desde el logger
     }
   },
