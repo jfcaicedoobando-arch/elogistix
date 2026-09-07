@@ -8,6 +8,11 @@ describe("mx date helpers", () => {
     expect(hoyMx(at)).toBe("2026-03-15");
   });
 
+  it("R170-02: 2026-09-07T04:32:07Z (22:32 CDMX del 6-sep) es fecha de negocio 2026-09-06", () => {
+    const at = new Date("2026-09-07T04:32:07Z");
+    expect(hoyMx(at)).toBe("2026-09-06");
+  });
+
   it("ymMx respeta el mes local", () => {
     // 1 de abril UTC 03:00 == 31 de marzo 21:00 CDMX
     const at = new Date(Date.UTC(2026, 3, 1, 3, 0, 0));
