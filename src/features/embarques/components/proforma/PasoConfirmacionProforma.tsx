@@ -3,8 +3,7 @@ import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/Da
 import { CheckCircle2 } from "lucide-react";
 import { SectionHeading } from "@/components/shared/SectionHeading";
 import { formatCurrency } from "@/lib/formatters";
-import { ivaDeFila } from "@/features/embarques/domain/ivaConceptoVenta";
-import { etiquetaTasaIva } from "@/lib/financial/etiquetaTasaIva";
+import { ivaDeFila, etiquetaIvaFilas } from "@/features/embarques/domain/ivaConceptoVenta";
 import type { Tables } from "@/types/db";
 import type { TotalesProforma } from "./PasoSeleccionConceptos";
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
@@ -22,7 +21,7 @@ interface Props {
 export function PasoConfirmacionProforma({
   conceptosSeleccionados, ivaPorConcepto, totales, tasaIva, notas,
 }: Props) {
-  const etiquetaIvaMxn = etiquetaTasaIva(
+  const etiquetaIvaMxn = etiquetaIvaFilas(
     conceptosSeleccionados.filter((c) => c.moneda === "MXN"),
     tasaIva,
   );

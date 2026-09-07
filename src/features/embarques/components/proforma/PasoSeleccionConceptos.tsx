@@ -6,8 +6,7 @@ import {
 } from "./PasoSeleccionConceptos.parts";
 import { buildContenedorLabelMap } from "./PasoSeleccionConceptos.helpers";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
-import { ivaDeFila } from "@/features/embarques/domain/ivaConceptoVenta";
-import { etiquetaTasaIva } from "@/lib/financial/etiquetaTasaIva";
+import { ivaDeFila, etiquetaIvaFilas } from "@/features/embarques/domain/ivaConceptoVenta";
 import { ListFilter } from "lucide-react";
 import type { FiltroContenedor } from "@/features/embarques/domain/conceptosPorContenedor";
 import type { Tables } from "@/types/db";
@@ -94,7 +93,7 @@ export function PasoSeleccionConceptos({
                 isSelected={isSelected}
                 ivaActivo={ivaActivo}
                 ivaBloqueado={ivaBloqueado}
-                etiquetaIvaFila={etiquetaTasaIva([c], tasaIva)}
+                etiquetaIvaFila={etiquetaIvaFilas([c], tasaIva)}
                 contLabel={contLabel}
                 showGeneralBadge={!c.contenedor_id && contenedores.length >= 2}
                 onToggle={onToggle}
@@ -111,7 +110,7 @@ export function PasoSeleccionConceptos({
       <TotalesProformaBox
         totales={totales}
         tasaIva={tasaIva}
-        etiquetaIvaMxn={etiquetaTasaIva(
+        etiquetaIvaMxn={etiquetaIvaFilas(
           conceptosVisibles.filter((c) => c.moneda === "MXN" && seleccionados.has(c.id)),
           tasaIva,
         )}
