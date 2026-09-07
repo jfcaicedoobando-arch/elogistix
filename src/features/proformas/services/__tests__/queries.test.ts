@@ -20,6 +20,7 @@ import {
   fetchConceptosProforma,
   fetchConceptosConsolidados,
 } from "../queries";
+import type { ProformaFacturaAsociadaLite } from "../types";
 
 describe("proformas queries", () => {
   beforeEach(() => {
@@ -136,6 +137,35 @@ describe("proformas queries", () => {
 });
 
 
+describe("R170-01: facturas_asociadas en la lista distingue borrador de emitida", () => {
+  it("fetchProformasTodas trae facturas_asociadas y descarta las borradas", async () => {
+    mock.setTableResult("proformas", {
+      data: [
+        {
+          id: "p1",
+          facturas_asociadas: [
+            { id: "f1", estado: "borrador", uuid_fiscal: null, deleted_at: null } as ProformaFacturaAsociadaLite,
+            { id: "f2", estado: "emitida", uuid_fiscal: "u1", deleted_at: "2024-01-01" } as ProformaFacturaAsociadaLite,
+          ],
+        },
+      ],
+      error: null,
+    });
+    const res = await fetchProformasTodas("org");
+    expect(res[0].facturas_asociadas).toEqual([
+      { id: "f1", estado: "borrador", uuid_fiscal: null, deleted_at: null },
+    ]);
+  });
+
+  it("fetchProformasTodas selecciona la relación real facturas!proforma_id", async () => {
+    mock.setTableResult("proformas", { data: [], error: null });
+    await fetchProformasTodas("org");
+    const call = mock.tableCalls[0];
+    const selectArgs = call.ops.map((op, i) => [op, call.opArgs[i]]).filter(([op]) => op === "select");
+    expect(selectArgs[0][1][0]).toContain("facturas_asociadas:facturas!proforma_id");
+  });
+});
+
 describe("O8: selects explícitos (sin comodín) en listados de proformas", () => {
   it("fetchProformasEmbarque no incluye `*` en las columnas seleccionadas", async () => {
     mock.setTableResult("proformas", { data: [], error: null });
@@ -144,6 +174,18 @@ describe("O8: selects explícitos (sin comodín) en listados de proformas", () =
     const selectArgs = call.ops.map((op, i) => [op, call.opArgs[i]]).filter(([op]) => op === "select");
     expect(selectArgs[0][1][0]).not.toMatch(/^\*|,\s*\*/);
     expect(selectArgs[0][1][0]).toContain("numero");
+  });
+
+  // R170-03: HistorialProformas (tab facturación del embarque) necesita estas
+  // columnas para no mostrar fecha/operador/crédito vacíos.
+  it("fetchProformasEmbarque incluye fecha_emision, operador y dias_credito", async () => {
+    mock.setTableResult("proformas", { data: [], error: null });
+    await fetchProformasEmbarque("emb-1");
+    const call = mock.tableCalls[0];
+    const selectArgs = call.ops.map((op, i) => [op, call.opArgs[i]]).filter(([op]) => op === "select");
+    expect(selectArgs[0][1][0]).toContain("fecha_emision");
+    expect(selectArgs[0][1][0]).toContain("operador");
+    expect(selectArgs[0][1][0]).toContain("dias_credito");
   });
 
   it("fetchProformasTodas no incluye `*` en las columnas seleccionadas", async () => {

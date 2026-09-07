@@ -28,6 +28,10 @@ type Flags = ReturnType<typeof deriveFacturaFlags>;
 interface Props {
   factura: FacturaDetalle;
   canEdit: boolean;
+  /** R170-09: visibilidad/acción de "Timbrar factura" ligada al permiso
+   * específico EMITIR_FACTURA_CLIENTE, no al `canEdit` genérico (evita que
+   * roles operativos como coordinador logístico vean el botón). */
+  puedeEmitir: boolean;
   flags: Flags;
   acuse: AcuseHandle;
   eliminando: boolean;
@@ -47,8 +51,8 @@ interface Props {
 
 
 function buildPrimary(props: Props): DetalleActionItem | null {
-  const { flags, canEdit } = props;
-  if (canEdit && flags.puedeTimbrarDesdeSistema) {
+  const { flags, canEdit, puedeEmitir } = props;
+  if (puedeEmitir && flags.puedeTimbrarDesdeSistema) {
     return { id: "timbrar", label: "Timbrar factura", icon: Stamp, onClick: props.onTimbrar };
   }
   // B-002 (v13.320.32): Cobrar tiene prioridad sobre "Timbrar REP" cuando hay saldo.
