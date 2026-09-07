@@ -22,14 +22,26 @@ export function Footer({ empresaNombre }: Props) {
   return (
     <View style={styles.footer} fixed>
       {marca ? (
-        <Text style={{ fontFamily: FONTS.bold, color: COLORS.primary, letterSpacing: 1 }}>
+        <Text
+          style={[
+            styles.footerColLeft,
+            { fontFamily: FONTS.bold, color: COLORS.primary, letterSpacing: 1 },
+          ]}
+          maxLines={1}
+        >
           {marca.toUpperCase()}
         </Text>
       ) : (
-        <Text>Documento generado electrónicamente</Text>
+        <Text style={styles.footerColLeft} maxLines={1}>
+          Documento generado electrónicamente
+        </Text>
       )}
-      <Text>Documento generado el {fecha}</Text>
-      <Text render={({ pageNumber, totalPages }) => `Página ${pageNumber} de ${totalPages}`} />
+      <Text style={styles.footerColCenter}>Documento generado el {fecha}</Text>
+      <Text
+        style={styles.footerColRight}
+        render={({ pageNumber, totalPages }) => `Página ${pageNumber} de ${totalPages}`}
+      />
     </View>
   );
+
 }
