@@ -71,7 +71,7 @@ export const layoutStyles = {
   // Un `top` porcentual funciona en retrato y horizontal sin cambiar de motor.
   footer: {
     position: "absolute" as const,
-    top: "94.5%",
+    top: "93.8%",
     left: 36,
     right: 36,
     borderTopWidth: 0.5,
@@ -84,8 +84,8 @@ export const layoutStyles = {
   },
   // Columnas del pie con ancho explícito: dentro de un contenedor absoluto
   // el ancho automático colapsa y el contenido no se dibuja.
-  footerColLeft: { width: "42%" as const, paddingRight: 6 },
-  footerColCenter: { width: "34%" as const, textAlign: "center" as const },
+  footerColLeft: { width: "44%" as const, paddingRight: 6 },
+  footerColCenter: { width: "32%" as const, textAlign: "center" as const },
   footerColRight: { width: "24%" as const, textAlign: "right" as const },
   pageNumber: { fontSize: 8, color: COLORS.mutedLight, marginTop: 2 },
 

@@ -25,7 +25,7 @@ export function Footer({ empresaNombre }: Props) {
         <Text
           style={[
             styles.footerColLeft,
-            { fontFamily: FONTS.bold, color: COLORS.primary, letterSpacing: 1 },
+            { fontFamily: FONTS.bold, color: COLORS.primary, letterSpacing: 0.5 },
           ]}
         >
           {marca.toUpperCase()}
