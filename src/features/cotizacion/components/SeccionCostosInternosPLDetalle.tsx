@@ -23,13 +23,22 @@ interface Props {
   cotizacionId: string;
   conceptosUSD: ConceptoVentaCotizacion[];
   conceptosMXN: ConceptoVentaCotizacion[];
+  /**
+   * v13.823.163 — Sello (`cotizaciones.updated_at`) de los datos que se
+   * abrieron para editar. El guardado rápido lo envía a la RPC; sin él el
+   * servicio falla cerrado con LC_CONFLICTO_CONCURRENCIA (Sentry/smoke 162:
+   * "Otro usuario modificó este registro" en cada intento).
+   */
+  cotizacionUpdatedAt?: string | null;
 }
 
 /**
  * Modo "detalle": carga/persiste costos desde la BD para una cotización existente.
  * Usado en CotizacionDetalle.
  */
-export default function SeccionCostosInternosPLDetalle({ cotizacionId, conceptosUSD, conceptosMXN }: Props) {
+export default function SeccionCostosInternosPLDetalle({
+  cotizacionId, conceptosUSD, conceptosMXN, cotizacionUpdatedAt = null,
+}: Props) {
   const { canEdit } = usePermissions();
   const { data: costosGuardados, isLoading } = useCotizacionCostos(cotizacionId);
   const upsert = useUpsertCotizacionCostos();
@@ -49,6 +58,13 @@ export default function SeccionCostosInternosPLDetalle({ cotizacionId, conceptos
   const [filas, setFilas] = useState<FilaCostoDetalle[]>([]);
   const [initialized, setInitialized] = useState(false);
   const [editMode, setEditMode] = useState(false);
+  /**
+   * Sello congelado al abrir la edición: mientras hay captura sin guardar NO se
+   * sustituye por refetches de fondo (eso encubriría datos obsoletos). Tras un
+   * guardado exitoso se renueva con el sello que devuelve la RPC para permitir
+   * un segundo guardado sin recargar.
+   */
+  const [selloEdicion, setSelloEdicion] = useState<string | null>(null);
 
   useEffect(() => {
     // v13.823.144 (bug 8/9): antes el mapeo corría UNA sola vez; tras
@@ -125,7 +141,10 @@ export default function SeccionCostosInternosPLDetalle({ cotizacionId, conceptos
       notas: f.notas ?? "", created_at: "", updated_at: "",
     }));
     try {
-      await upsert.mutateAsync({ cotizacionId, costos });
+      const res = await upsert.mutateAsync({
+        cotizacionId, costos, expectedUpdatedAt: selloEdicion ?? cotizacionUpdatedAt,
+      });
+      setSelloEdicion(res.updatedAt ?? null);
       notifySuccess(undefined, { title: "Costos guardados correctamente" });
       setEditMode(false);
     } catch (err: unknown) {
@@ -147,11 +166,17 @@ export default function SeccionCostosInternosPLDetalle({ cotizacionId, conceptos
       {canEdit && filas.length > 0 && (
         <div className="flex justify-end">
           {editMode ? (
-            <Button variant="outline" size="sm" onClick={() => setEditMode(false)} disabled={upsert.isPending}>
+            <Button
+              variant="outline" size="sm" disabled={upsert.isPending}
+              onClick={() => { setEditMode(false); setSelloEdicion(null); }}
+            >
               <X className="h-4 w-4 mr-1" /> Cancelar edición
             </Button>
           ) : (
-            <Button variant="outline" size="sm" onClick={() => setEditMode(true)}>
+            <Button
+              variant="outline" size="sm"
+              onClick={() => { setSelloEdicion(cotizacionUpdatedAt); setEditMode(true); }}
+            >
               <Pencil className="h-4 w-4 mr-1" /> Editar costos
             </Button>
           )}
