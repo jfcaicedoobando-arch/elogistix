@@ -1,5 +1,22 @@
 # Changelog
 
+## [13.823.171] - 2026-09-07
+
+Bloque R170 (10 hallazgos reproducidos en v13.823.170). Sin migraciones, sin cambios de permisos/RLS ni de datos.
+
+- R170-01 (P1) · Bandeja de proformas: decía "Facturada" aunque la proforma sólo se había convertido a una factura BORRADOR (sin UUID fiscal). La lista y la tarjeta móvil ahora usan la misma etiqueta del detalle (`etiquetaCicloProforma`): "Convertida a borrador" / "Convertida, por timbrar" / "Facturada". El select de la lista trae `facturas_asociadas` (FK inversa `facturas.proforma_id`, filtrando borradas).
+- R170-08 (P1) · Conceptos de factura Borrador: la cantidad cambiaba en silencio (0 → 1, 1.5 → 15). El campo ahora acepta decimales y respeta vacío/0; guardar queda bloqueado con mensaje claro si alguna cantidad es ≤ 0.
+- R170-02 (P2) · Fecha de negocio: proformas creadas después de las 18:00 CDMX quedaban fechadas al día siguiente (la RPC usa `CURRENT_DATE` en UTC). Al crear la proforma y al convertirla a factura Borrador se corrige a la fecha de negocio de México en la misma operación, desplazando el vencimiento para no alterar los días de crédito. No hay backfill de históricos.
+- R170-03 (P2) · Historial de proformas del embarque: el select omitía `fecha_emision`, `operador` y `dias_credito`; ya se incluyen y "0 días" se muestra como "Contado".
+- R170-04 (P2) · Cliente de casa: el aviso pedía una acción imposible a quien no tiene permiso; ahora distingue si el usuario puede responder la proforma y, si no, orienta a pedir aprobación a un administrador o gerente.
+- R170-06 (P2) · Aprobación interna: el paso "Enviada" se pintaba como completado sin que hubiera envío. El resumen de estados marca ese paso como omitido y el stepper lo muestra neutro con etiqueta "Omitido".
+- R170-07 (P3) · Origen de aceptación: `auto:sin_autorizacion_requerida` caía como "desconocido" y duplicaba la palabra "Aceptada"; ahora se reconoce como "Aprobación interna" con tooltip, y el respaldo sin dato dice "Origen no registrado".
+- R170-09 (P2) · Timbrado: el botón "Timbrar factura" se mostraba por permiso de edición; ahora exige `EMITIR_FACTURA_CLIENTE` (también en la apertura automática del diálogo). No se modificó la matriz de permisos.
+- R170-05 (P3) · Títulos de pestaña: detalle de proforma y buzón de compras ahora fijan su propio título.
+- R170-10 (P2) · Captura PDF-IA de factura de proveedor: cuando el IVA se captura global a nivel documento, la barra de cuadre explica la diferencia entre "total de partidas" y "total del documento" en lugar de mostrar dos cifras sin explicación. No fuerza tasas ni bloquea el guardado.
+- Regresiones preparadas para GitHub Actions (no ejecutadas aquí): etiqueta de proforma convertida, select del embarque, pasos omitidos, origen interno, cantidad decimal y permiso de timbrado.
+- Validado localmente: typecheck (`tsgo`) y ESLint focalizado. CI, pruebas completas, RLS y SQL corren exclusivamente en GitHub Actions.
+
 ## [13.823.170] - 2026-09-07
 
 - Auditorías (`scripts/run-audits-conditional.sh`): 1) `audit:manifest` fallaba porque `migration-manifest.json` no tenía entrada para la versión 13.823.169; se regeneró el manifest (1277 migraciones). 2) `audit:replay-mirror` fallaba porque el espejo canónico `supabase/schema/cxp/_asegurar_movimiento_pago_proveedor.sql` había quedado atrás del fix Sentry JAVASCRIPT-REACT-65/66: conservaba `ON CONFLICT (hash_dedupe)` y `SET search_path = public`. Se sincronizó 1:1 con la migración vigente 20260907013703 (índice parcial `(cuenta_bancaria_id, hash_dedupe) WHERE deleted_at IS NULL`). Sólo archivos de repositorio: no se emitió SQL nuevo ni se tocaron datos, permisos ni RLS.

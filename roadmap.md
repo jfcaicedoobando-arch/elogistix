@@ -24,4 +24,3 @@
 ## Entrega
 - [ ] CHANGELOG + APP_VERSION 13.823.71
 
-- [ ] R170: corregir errores de typecheck del preview (build-errors.log) antes de cerrar el bloque
