@@ -15,7 +15,8 @@ Bloque R170 (10 hallazgos reproducidos en v13.823.170). Sin migraciones, sin cam
 - R170-05 (P3) · Títulos de pestaña: detalle de proforma y buzón de compras ahora fijan su propio título.
 - R170-10 (P2) · Captura PDF-IA de factura de proveedor: cuando el IVA se captura global a nivel documento, la barra de cuadre explica la diferencia entre "total de partidas" y "total del documento" en lugar de mostrar dos cifras sin explicación. No fuerza tasas ni bloquea el guardado.
 - Regresiones preparadas para GitHub Actions (no ejecutadas aquí): etiqueta de proforma convertida, select del embarque, pasos omitidos, origen interno, cantidad decimal y permiso de timbrado.
-- Validado localmente: typecheck (`tsgo`) y ESLint focalizado. CI, pruebas completas, RLS y SQL corren exclusivamente en GitHub Actions.
+- Remates de CI: se movieron `buildPrimary` (barra de acciones de factura) y `derivarOrigenAceptacion` a módulos propios para que los archivos de UI sólo exporten componentes (react-refresh), se agregó el filtro `deleted_at` a la lectura de facturas Borrador en la corrección de fecha, y se regeneró `migration-manifest.json` para 13.823.171.
+- Validado localmente: typecheck (`tsgo`), ESLint focalizado con `--max-warnings 0`, `audit:soft-delete` y `audit:manifest`. CI, pruebas completas, RLS y SQL corren exclusivamente en GitHub Actions.
 
 ## [13.823.170] - 2026-09-07
 
