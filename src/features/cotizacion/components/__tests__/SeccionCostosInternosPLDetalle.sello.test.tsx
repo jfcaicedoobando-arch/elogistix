@@ -133,7 +133,10 @@ describe("guardado rápido de costos con sello optimista", () => {
     mutateAsync
       .mockResolvedValueOnce({ updatedAt: S1, snapshot: { costos: COSTOS_600, updatedAt: S1 } })
       .mockResolvedValueOnce({ updatedAt: S2, snapshot: { costos: COSTOS_700, updatedAt: S2 } })
-      .mockResolvedValueOnce({ costos: COSTOS_800, updatedAt: "2026-09-06T13:00:00Z" });
+      .mockResolvedValueOnce({
+        updatedAt: "2026-09-06T13:00:00Z",
+        snapshot: { costos: COSTOS_800, updatedAt: "2026-09-06T13:00:00Z" },
+      });
     const { rerender } = renderSeccion();
     abrirEdicionYGuardar();
     await waitFor(() => expect(mutateAsync).toHaveBeenCalledTimes(1));
