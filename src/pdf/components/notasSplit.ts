@@ -12,6 +12,8 @@
 
 /** Largo máximo del trozo que se mantiene junto al título (≈2-3 líneas). */
 const MAX_HEAD = 180;
+/** Máximo de renglones del trozo que viaja junto al título. */
+const MAX_HEAD_LINEAS = 3;
 
 export interface NotasPartes {
   /** Primer trozo, indivisible junto al título. */
@@ -20,17 +22,43 @@ export interface NotasPartes {
   rest: string;
 }
 
+/**
+ * Índice donde empieza el salto de línea número `MAX_HEAD_LINEAS` (LF, CRLF o
+ * CR sueltos). Si el texto tiene menos renglones, devuelve su longitud.
+ */
+function limitePorLineas(texto: string): number {
+  let saltos = 0;
+  for (let i = 0; i < texto.length; i += 1) {
+    const c = texto[i];
+    if (c !== "\n" && c !== "\r") continue;
+    saltos += 1;
+    if (saltos >= MAX_HEAD_LINEAS) return i;
+    if (c === "\r" && texto[i + 1] === "\n") i += 1;
+  }
+  return texto.length;
+}
+
+/** Evita cortar en medio de un par surrogate (emoji, etc.). */
+function ajustarUnicode(texto: string, corte: number): number {
+  if (corte <= 0 || corte >= texto.length) return corte;
+  const anterior = texto.charCodeAt(corte - 1);
+  const esAltoSurrogate = anterior >= 0xd800 && anterior <= 0xdbff;
+  return esAltoSurrogate ? corte - 1 : corte;
+}
+
 export function splitNotas(notas: string): NotasPartes {
   const texto = notas.trim();
-  if (texto.length <= MAX_HEAD) return { head: texto, rest: "" };
+  const limite = Math.min(MAX_HEAD, limitePorLineas(texto));
+  if (texto.length <= limite) return { head: texto, rest: "" };
 
-  const ventana = texto.slice(0, MAX_HEAD);
+  const ventana = texto.slice(0, limite);
   const salto = ventana.lastIndexOf("\n");
   const espacio = ventana.lastIndexOf(" ");
-  const corte = salto > 40 ? salto : espacio > 40 ? espacio : MAX_HEAD;
+  const corte = ajustarUnicode(texto, salto > 40 ? salto : espacio > 40 ? espacio : limite);
 
   return {
     head: texto.slice(0, corte).trimEnd(),
     rest: texto.slice(corte).trimStart(),
   };
 }
+
