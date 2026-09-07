@@ -9,8 +9,7 @@
  * NO ejecutado en Lovable; corre en GitHub Actions con el resto de la suite.
  */
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
+import { render, screen, waitFor, fireEvent } from "@testing-library/react";
 
 const mutateAsync = vi.hoisted(() => vi.fn());
 const notifyError = vi.hoisted(() => vi.fn());
@@ -57,11 +56,17 @@ function renderSeccion() {
   );
 }
 
-async function abrirEdicionYGuardar() {
-  const user = userEvent.setup();
-  await user.click(screen.getByRole("button", { name: /editar costos/i }));
-  await user.click(screen.getByRole("button", { name: /guardar costos/i }));
-  return user;
+function abrirEdicion() {
+  fireEvent.click(screen.getByRole("button", { name: /editar costos/i }));
+}
+
+function guardar() {
+  fireEvent.click(screen.getByRole("button", { name: /guardar costos/i }));
+}
+
+function abrirEdicionYGuardar() {
+  abrirEdicion();
+  guardar();
 }
 
 beforeEach(() => {
@@ -74,7 +79,7 @@ describe("guardado rápido de costos con sello optimista", () => {
   it("envía el sello de la cotización abierta", async () => {
     mutateAsync.mockResolvedValue({ costos: [], updatedAt: "2026-09-06T11:00:00Z" });
     renderSeccion();
-    await abrirEdicionYGuardar();
+    abrirEdicionYGuardar();
 
     await waitFor(() => expect(mutateAsync).toHaveBeenCalledTimes(1));
     expect(mutateAsync.mock.calls[0][0]).toMatchObject({
@@ -90,11 +95,12 @@ describe("guardado rápido de costos con sello optimista", () => {
       .mockResolvedValueOnce({ costos: [], updatedAt: "2026-09-06T11:00:00Z" })
       .mockResolvedValueOnce({ costos: [], updatedAt: "2026-09-06T12:00:00Z" });
     renderSeccion();
-    const user = await abrirEdicionYGuardar();
+    abrirEdicionYGuardar();
     await waitFor(() => expect(mutateAsync).toHaveBeenCalledTimes(1));
 
-    await user.click(screen.getByRole("button", { name: /editar costos/i }));
-    await user.click(screen.getByRole("button", { name: /guardar costos/i }));
+    await waitFor(() => screen.getByRole("button", { name: /editar costos/i }));
+    abrirEdicion();
+    guardar();
 
     await waitFor(() => expect(mutateAsync).toHaveBeenCalledTimes(2));
     expect(mutateAsync.mock.calls[1][0].expectedUpdatedAt).toBe("2026-09-06T11:00:00Z");
@@ -103,7 +109,7 @@ describe("guardado rápido de costos con sello optimista", () => {
   it("un conflicto real deja un solo aviso y conserva la captura", async () => {
     mutateAsync.mockRejectedValue(new Error("LC_CONFLICTO_CONCURRENCIA"));
     renderSeccion();
-    await abrirEdicionYGuardar();
+    abrirEdicionYGuardar();
 
     await waitFor(() => expect(notifyError).toHaveBeenCalledTimes(1));
     expect(notifySuccess).not.toHaveBeenCalled();
