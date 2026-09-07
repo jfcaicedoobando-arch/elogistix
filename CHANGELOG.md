@@ -1,5 +1,16 @@
 # Changelog
 
+## [13.823.193] - 2026-09-07
+
+Proformas (PDF): el título "Notas" ya no se queda solo al final de una hoja.
+
+- `NotasSection` + `notasSplit`: el título y las primeras líneas de la nota forman un bloque indivisible (`wrap={false}`) y el resto del texto fluye libremente, de modo que una nota larga puede continuar en varias páginas. Causa: el motor de paginación evalúa la presencia del título como `min(título + minPresenceAhead, fin del bloque siguiente)`, y el propio título (con su línea separadora inferior) es partible, así que podía quedar arriba mientras su separador y su texto pasaban a la hoja siguiente; subir la constante no lo evitaba.
+- `ProformaDocument.tsx` y `ProformaConsolidadaDocument.tsx` usan el mismo bloque; la consolidada no tenía resguardo alguno (prevención por código, sin muestra reproducida). Sin notas no se renderiza título ni página extra.
+- Evidencia visual: PDFs sintéticos en memoria (sin base de datos) renderizados e inspeccionados página por página: nota corta cerca del salto (título + nota juntos en la hoja 2) y nota larga (título + primeras líneas juntos, continuación en la hoja siguiente). Pie fijo y numeración intactos.
+- Regresión focalizada de la división de notas. Sin SQL, migraciones ni cambios de cálculo, columnas, IVA por línea o cabecera. Tests, CI y RLS quedan para GitHub Actions.
+
+
+
 ## [13.823.192] - 2026-09-07
 
 Captura de facturas PDF con IA: validar la sesión antes de enviar el archivo.

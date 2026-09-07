@@ -6,6 +6,7 @@ import { styles } from "../theme/styles";
 import { Footer } from "../components/Footer";
 import { DataTable, type PdfColumn } from "../components/DataTable";
 import { TotalesBox } from "../components/TotalesBox";
+import { NotasSection } from "../components/NotasSection";
 import { ProformaHeader } from "./ProformaHeader";
 import type { EmisorInfo } from "../components/BrandHeader";
 import {
@@ -153,14 +154,7 @@ export function ProformaConsolidadaDocument({
 
         <TotalesBox bloques={bloquesTotales} />
 
-        {proforma.notas ? (
-          <>
-            <Text style={styles.h3}>Notas</Text>
-            <View style={styles.notesBox}>
-              <Text>{proforma.notas}</Text>
-            </View>
-          </>
-        ) : null}
+        <NotasSection notas={proforma.notas} />
 
         <Footer empresaNombre={emisor?.razonSocial} />
       </Page>
