@@ -61,8 +61,8 @@ export default function SeccionCostosInternosPLDetalle({
     // una fotografía completa (costos + sello de la misma consulta).
     if (isLoading || editMode || !snapshot) return;
     const filasSnapshot = snapshot.costos.length > 0
-        ? mapearCostosAFilas(snapshot.costos, conceptosUSD, conceptosMXN)
-        : mapearConceptosAFilas(conceptosUSD, conceptosMXN),
+      ? mapearCostosAFilas(snapshot.costos, conceptosUSD, conceptosMXN)
+      : mapearConceptosAFilas(conceptosUSD, conceptosMXN);
     setFilasConfirmadas(filasSnapshot);
     setFilas(filasSnapshot);
     setSelloConfirmado(snapshot.updatedAt);
