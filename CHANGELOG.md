@@ -7,6 +7,7 @@ Carga de facturas PDF con IA: 401 "Token inválido" al subir el archivo.
 - `ensureFreshSession.ts`: si `refreshSession()` falla (p. ej. "Already Used" por un refresh en paralelo del SDK) pero la sesión en memoria sigue vigente, se reutiliza ese `access_token` en vez de tratar la sesión como perdida.
 - `parsePdfInvoice.ts`: un 401 tras reintentar con sesión refrescada se traduce a "Tu sesión expiró. Vuelve a iniciar sesión y sube el PDF de nuevo." en lugar de mostrar el mensaje técnico del servidor.
 - Sin cambios en edge functions, SQL, RLS, permisos ni datos. Validación focalizada: typecheck + ESLint; suites completas y RLS en GitHub Actions.
+
 ## [13.823.186] - 2026-09-07
 
 FP-000221 — aprobar en lote los gastos que no están ligados a un embarque.
