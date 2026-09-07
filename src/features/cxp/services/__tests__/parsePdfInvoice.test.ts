@@ -42,10 +42,11 @@ describe("parsePdfInvoice", () => {
     expect(opciones.headers.Authorization).toBe("Bearer token-1");
     expect((opciones.body as FormData).get("organization_id")).toBeNull();
     expect((opciones.body as FormData).get("file")).toBeInstanceOf(File);
-    expect(ensureFreshSessionMock).toHaveBeenCalledWith(true);
+    // R192-01: el primer envío usa la credencial vigente, sin forzar renovación.
+    expect(ensureFreshSessionMock).toHaveBeenCalledWith(false);
   });
 
-  it("no invoca la función si no puede renovar la sesión antes del envío", async () => {
+  it("no invoca la función si no hay sesión alguna", async () => {
     ensureFreshSessionMock.mockResolvedValue(null);
 
     await expect(parsePdfInvoice(pdf(), [], ORG_PRINCIPAL)).rejects.toThrow(
@@ -53,6 +54,34 @@ describe("parsePdfInvoice", () => {
     );
     expect(invokeMock).not.toHaveBeenCalled();
   });
+
+  it("renueva a la fuerza sólo en el reintento tras un 401", async () => {
+    const payload = { cfdi: { uuid: "" }, ai: { categoria_id: null, notas: "" } };
+    ensureFreshSessionMock.mockResolvedValueOnce("token-1").mockResolvedValueOnce("token-2");
+    invokeMock
+      .mockResolvedValueOnce({
+        data: null,
+        error: new FunctionsHttpError(new Response(JSON.stringify({ error: "Token inválido" }), { status: 401 })),
+      })
+      .mockResolvedValueOnce({ data: payload, error: null });
+
+    await expect(parsePdfInvoice(pdf(), [], ORG_PRINCIPAL)).resolves.toEqual(payload);
+    expect(ensureFreshSessionMock.mock.calls).toEqual([[false], [true]]);
+    expect(invokeMock.mock.calls[1][1].headers.Authorization).toBe("Bearer token-2");
+  }, 15000);
+
+  it("pide reintentar, no relogin, si la renovación del reintento no es posible", async () => {
+    ensureFreshSessionMock.mockResolvedValueOnce("token-1").mockResolvedValueOnce(null);
+    invokeMock.mockResolvedValueOnce({
+      data: null,
+      error: new FunctionsHttpError(new Response(JSON.stringify({ error: "Token inválido" }), { status: 401 })),
+    });
+
+    await expect(parsePdfInvoice(pdf(), [], ORG_PRINCIPAL)).rejects.toThrow(
+      /No pudimos validar tu sesión en este momento/,
+    );
+    expect(invokeMock).toHaveBeenCalledTimes(1);
+  }, 15000);
 });
 
 /**

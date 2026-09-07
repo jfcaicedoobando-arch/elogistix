@@ -9,6 +9,10 @@ export const AUTH_ERROR_MESSAGES = {
   /** Falta sesión activa para una operación específica (parametrizable). */
   sessionRequired: (accion: string) =>
     `Debes iniciar sesión para ${accion}`,
+  /** No se pudo revalidar la sesión en ese momento (rotación/red), pero el
+   *  usuario sí está dentro de la aplicación: pedir reintento, no relogin. */
+  sessionRefreshFailed:
+    "No pudimos validar tu sesión en este momento. Intenta de nuevo en unos segundos.",
   /** Sesión genérica no válida / expirada. */
   invalidSession: "Sesión no válida",
   /** Usuario no autenticado en endpoints del portal. */

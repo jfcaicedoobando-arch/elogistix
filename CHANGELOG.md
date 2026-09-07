@@ -1,5 +1,16 @@
 # Changelog
 
+## [13.823.194] - 2026-09-07
+
+Captura de factura de proveedor por PDF: se elimina el aviso falso "Debes iniciar sesión para procesar la factura PDF".
+
+- `parsePdfInvoice.ts`: el primer envío usa la credencial vigente que ya tiene la aplicación (`ensureFreshSession(false)`). Forzar una renovación antes de cada envío (13.823.192) hacía fallar a usuarios con sesión válida cuando la renovación no era posible en ese instante (rotación concurrente en otra pestaña, 429 o lentitud del servidor de sesiones).
+- El reintento sí renueva a la fuerza (`ensureFreshSession(true)`), que es el caso real de un 401 por credencial caducada: se conserva la corrección de 189/190/192.
+- `authMessages.ts`: nuevo `sessionRefreshFailed` — si la renovación del reintento no es posible, el mensaje pide reintentar en unos segundos en lugar de afirmar que hay que iniciar sesión.
+- Regresiones focalizadas: primer intento sin forzar, reintento forzado tras 401 con la credencial nueva, ausencia total de sesión y renovación imposible en el reintento. Sin Edge Functions, SQL, base de datos, permisos ni RLS. Tests, CI y RLS quedan para GitHub Actions.
+
+
+
 ## [13.823.193] - 2026-09-07
 
 Proformas (PDF): el título "Notas" ya no se queda solo al final de una hoja.

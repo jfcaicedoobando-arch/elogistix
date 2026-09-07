@@ -152,13 +152,18 @@ async function invokeWithRetry(
   const t0 = performance.now();
   let last: Attempt | null = null;
   for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
-    // La fecha local del JWT no demuestra que el servidor aún lo acepte: una
-    // sesión revocada puede conservar `expires_at` futuro. Renovar antes del
-    // primer envío evita provocar un 401 técnico; el segundo intento vuelve a
-    // renovar por si el token fue invalidado durante la carga del archivo.
-    const token = await ensureFreshSession(true);
+    // R192-01: el primer envío usa la credencial vigente que ya tiene la app.
+    // Forzar una renovación aquí hacía fallar el envío de usuarios con sesión
+    // válida (rotación concurrente, 429 o lentitud del servidor de sesiones).
+    // Sólo el reintento renueva a la fuerza, que es el caso real de un 401.
+    const forzar = attempt > 1;
+    const token = await ensureFreshSession(forzar);
     if (!token) {
-      throw new Error(AUTH_ERROR_MESSAGES.sessionRequired("procesar la factura PDF"));
+      throw new Error(
+        forzar
+          ? AUTH_ERROR_MESSAGES.sessionRefreshFailed
+          : AUTH_ERROR_MESSAGES.sessionRequired("procesar la factura PDF"),
+      );
     }
     const r = await invokeOnce(file, categorias, token, organizationId);
     if (r.ok && r.data) {
