@@ -42,6 +42,16 @@ describe("parsePdfInvoice", () => {
     expect(opciones.headers.Authorization).toBe("Bearer token-1");
     expect((opciones.body as FormData).get("organization_id")).toBeNull();
     expect((opciones.body as FormData).get("file")).toBeInstanceOf(File);
+    expect(ensureFreshSessionMock).toHaveBeenCalledWith(true);
+  });
+
+  it("no invoca la función si no puede renovar la sesión antes del envío", async () => {
+    ensureFreshSessionMock.mockResolvedValue(null);
+
+    await expect(parsePdfInvoice(pdf(), [], ORG_PRINCIPAL)).rejects.toThrow(
+      /Debes iniciar sesión para procesar la factura PDF/,
+    );
+    expect(invokeMock).not.toHaveBeenCalled();
   });
 });
 
