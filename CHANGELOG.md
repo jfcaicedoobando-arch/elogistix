@@ -1,5 +1,14 @@
 # Changelog
 
+## [13.823.173] - 2026-09-07
+
+Arreglo de los fallos de CI de la entrega anterior. Sin cambios funcionales.
+
+- Límite de tamaño de archivo (Power of 10): `src/features/proformas/services/queries.ts` había llegado a 209 líneas. Las dos consultas usadas sólo para el PDF se movieron a `queries.pdf.ts` y se reexportan, así que ningún import cambia.
+- Canario de rendimiento `sumarEnMoneda`: fallaba de forma intermitente (142 ms) por el arranque del motor JS y el CPU compartido al correr la suite completa, no por una regresión real (aislado corre en ~5 ms). Ahora mide la mejor de varias corridas tras un calentamiento, conservando los mismos umbrales.
+
+Validaciones: pruebas focalizadas (45 archivos, 385 pruebas) en verde, typecheck y ESLint focalizado. CI completo, SQL y RLS siguen pendientes de GitHub Actions.
+
 ## [13.823.172] - 2026-09-13
 
 Remate acotado de R170 (tres hallazgos). Incluye una migración **preparada, no aplicada**; sin cambios de permisos/RLS ni de datos.
