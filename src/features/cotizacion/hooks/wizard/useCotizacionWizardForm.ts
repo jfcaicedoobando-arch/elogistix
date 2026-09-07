@@ -35,7 +35,9 @@ interface Mutations {
       cotizacionId: string;
       costos: CostoCotizacion[];
       expectedUpdatedAt?: string | null;
-    }) => Promise<{ costos: CostoCotizacion[]; updatedAt: string | null }>;
+      // v13.823.169: sello de la escritura propia; la fotografía posterior va
+      // aparte (`snapshot`) y no autoriza capturas viejas.
+    }) => Promise<{ updatedAt: string | null }>;
     isPending: boolean;
   };
   registrarActividad: { mutate: (d: { accion: string; modulo: string; entidad_id?: string | null; entidad_nombre?: string; detalles?: Record<string, unknown> }) => void };
