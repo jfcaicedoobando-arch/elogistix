@@ -24,9 +24,9 @@ export function useCotizacionDetalleHandlers(cotizacion: CotizacionRow | undefin
   const conversion = useConvertirProspectoHandlers(cotizacion);
   const embarqueBorrador = useCrearEmbarqueBorradorHandlers(cotizacion);
 
-  const handleCambiarEstado = async (estado: string) => {
+  const aplicarEstado = useCallback(async (estado: string) => {
     if (!cotizacion) return;
-    try {
+    {
       await actualizarEstado.mutateAsync({ id: cotizacion.id, estado });
       // El toast de éxito/error lo emite `useUpdateEstadoCotizacion` (evita doble toast).
       // v13.823.57 — la BD es dueña de los estados terminales: el trigger
