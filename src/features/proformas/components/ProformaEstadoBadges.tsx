@@ -18,7 +18,7 @@ export type OrigenAceptacion = "portal" | "manual" | "migracion" | "interna" | "
  * escriben las RPCs (`manual:<email>`, `cliente_portal_token`, o el string
  * histórico de la migración de julio 2026).
  */
-function derivarOrigenAceptacion(aceptadaPor: string | null | undefined): OrigenAceptacion {
+export function derivarOrigenAceptacion(aceptadaPor: string | null | undefined): OrigenAceptacion {
   if (!aceptadaPor) return "desconocido";
   if (aceptadaPor === "cliente_portal_token") return "portal";
   // El cliente no requiere autorización de crédito: un miembro autorizado
