@@ -54,10 +54,32 @@ describe("lib/observability/logger", () => {
     expect(typeof payload.stack).toBe("string");
   });
 
+  it("error extrae el mensaje de un error plano del backend (JAVASCRIPT-REACT-69)", () => {
+    const pgError = {
+      message: "permission denied for function busqueda_global",
+      code: "42501",
+      details: "detalle",
+      hint: "pista",
+    };
+    logger.error("busqueda_global", pgError);
+    const payload = logClientErrorMock.mock.calls[0][0];
+    expect(payload.message).toBe(
+      "[busqueda_global] permission denied for function busqueda_global",
+    );
+    expect(payload.message).not.toContain("[object Object]");
+  });
+
+  it("error usa el código cuando el error plano no trae mensaje", () => {
+    logger.error("busqueda_global", { code: "42P10", message: "" });
+    const payload = logClientErrorMock.mock.calls[0][0];
+    expect(payload.message).toBe("[busqueda_global] error sin mensaje (código 42P10)");
+  });
+
   it("error nunca propaga si logClientError lanza", () => {
     logClientErrorMock.mockImplementationOnce(() => {
       throw new Error("reporte caído");
     });
     expect(() => logger.error("scopeF", "x")).not.toThrow();
   });
+
 });
