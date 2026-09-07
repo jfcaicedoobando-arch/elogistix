@@ -56,12 +56,8 @@ export default function SeccionCostosInternosPLDetalle({
   const [filas, setFilas] = useState<FilaCostoDetalle[]>([]);
   const [initialized, setInitialized] = useState(false);
   const [editMode, setEditMode] = useState(false);
-  /**
-   * Sello congelado al abrir la edición: mientras hay captura sin guardar NO se
-   * sustituye por refetches de fondo (eso encubriría datos obsoletos). Tras un
-   * guardado exitoso se renueva con el sello que devuelve la RPC para permitir
-   * un segundo guardado sin recargar.
-   */
+  // Sello congelado al abrir la edición: ningún refetch de fondo lo sustituye
+  // mientras hay captura; tras guardar se renueva con el que devuelve la RPC.
   const [selloEdicion, setSelloEdicion] = useState<string | null>(null);
 
   useEffect(() => {
