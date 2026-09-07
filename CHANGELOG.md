@@ -1,5 +1,16 @@
 # Changelog
 
+## [13.823.185] - 2026-09-07
+
+FP-000221 — los gastos que no son de embarque ya no exigen liga a embarque, y el monto máximo se puede ajustar.
+
+- Base (`public._cxp_validar_aprobacion`, migración `20260907171529_...`): cuando la factura no está ligada a embarque ni a conceptos de costo, se lee `tipo_contable` de su categoría de presupuesto. Si es `Administracion` o `Venta`, se omite la valuación a MXN y la comparación contra `cxp_umbral_sin_vinculo`; sólo persiste la justificación del gasto (mínimo 10 caracteres). Con `CostoDirectoEmbarque` o sin categoría, el comportamiento es idéntico al anterior, incluido `LC_CXP_TC_REQUERIDO`. Sin cambios de tablas, permisos, RLS, triggers ni datos históricos; espejo canónico sincronizado 1:1.
+- Configuración → Compras (nuevo `TabCompras`): campo para `compras.umbral_aprobacion_sin_vinculo` (por defecto 50,000 MXN, igual que la base). Oculto para el rol `contador`, como Operaciones. El aviso de bloqueo ya no promete una pantalla inexistente y explica la alternativa de corregir la categoría.
+- Regresión focalizada `src/features/configuracion/components/__tests__/TabCompras.test.ts` preparada.
+
+Validaciones: typecheck y ESLint focalizados. Tests completos, RLS y CI quedan para GitHub Actions. No se aprobó ni modificó ninguna factura.
+
+
 ## [13.823.184] - 2026-09-07
 
 R179-PDF-183-20260907 — el PDF de proforma ya refleja el IVA real de cada concepto.
