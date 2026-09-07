@@ -1,5 +1,15 @@
 # Changelog
 
+## [13.823.172] - 2026-09-13
+
+Remate acotado de R170 (tres hallazgos). Incluye una migración **preparada, no aplicada**; sin cambios de permisos/RLS ni de datos.
+
+- R170-02 (P2) · Fecha de negocio MX atómica: el parche de fecha vivía en el cliente ("best-effort" después de crear) y podía fallar en silencio. La migración `20260913000400_r170_02_fecha_negocio_mx.sql` mueve la fecha al servidor: `crear_proforma_atomica` y `convertir_proformas_a_factura` fechan con `(now() AT TIME ZONE 'America/Mexico_City')::date` dentro de su propia transacción y derivan el vencimiento de esa misma fecha (crédito 0 vence el mismo día). La rama idempotente devuelve el documento existente sin redatarlo. Se retiró el parche del cliente en `crud.ts` y `convertirAFactura.ts` y se sincronizó el espejo canónico. Sin backfill de históricos.
+- R170-01 (P2) · Filtro y contador honestos: el grupo del filtro/chip de proformas se llamaba "Facturada" aunque incluye proformas cuya única factura sigue en Borrador (sin timbrar). La etiqueta del grupo es ahora "Convertida"; la clave interna y el filtrado no cambian, y las filas siguen distinguiendo borrador / por timbrar / emitida.
+- R170-10 (P2) · Aviso de IVA: la barra de cuadre afirmaba siempre "IVA no desglosado por partida". Ahora sólo lo dice cuando las partidas no traen IVA; si el CFDI lo desglosa y coincide con la cabecera dice "ya desglosado en las partidas", y si no coincide muestra ambos montos pidiendo revisión.
+
+Validaciones: typecheck y ESLint focalizado. Pruebas, CI, SQL y RLS quedan pendientes de GitHub Actions; la migración no fue ejecutada.
+
 ## [13.823.171] - 2026-09-07
 
 Bloque R170 (10 hallazgos reproducidos en v13.823.170). Sin migraciones, sin cambios de permisos/RLS ni de datos.
