@@ -40,7 +40,7 @@ export function TabFacturacionEmbarque({ facturas, canEdit: canEditProp, embarqu
   const s = useTabFacturacionState(embarque, canEditProp);
   const {
     embarqueCerrado, embarqueBorrador, canEdit, tasaIva, conceptos, contenedores, proformas,
-    estadosConceptos, conceptosPendientes, conceptosHuerfanos, borradorVacio,
+    estadosConceptos, conceptosElegibles, conceptosHuerfanos, borradorVacio,
     eliminarProforma, proformaAEliminar, setProformaAEliminar,
     dialogOpen, setDialogOpen, dialogInitialFiltro, abrirGenerarProforma,
     handleDescargarProforma, registerRef,
@@ -55,7 +55,8 @@ export function TabFacturacionEmbarque({ facturas, canEdit: canEditProp, embarqu
 
   // Barra unificada arriba del tab. Reutiliza `useFocusSection` para saltar
   // a las secciones (Proformas / Facturas) sin duplicar handlers.
-  const hayConceptosPendientes = conceptos.some(c => c.estado_facturacion !== 'en_proforma');
+  // R179-02: la acción superior usa el mismo criterio elegible que el modal.
+  const hayConceptosPendientes = conceptosElegibles.length > 0;
   const scrollTo = (id: string) => {
     const el = document.querySelector<HTMLElement>(`[data-focus="${id}"]`);
     el?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -151,7 +152,7 @@ export function TabFacturacionEmbarque({ facturas, canEdit: canEditProp, embarqu
         open={dialogOpen}
         onOpenChange={setDialogOpen}
         embarque={embarque}
-        conceptosPendientes={conceptosPendientes}
+        conceptosPendientes={conceptosElegibles}
         initialFiltroContenedor={dialogInitialFiltro}
       />
 

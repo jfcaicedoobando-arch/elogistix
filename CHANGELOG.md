@@ -1,5 +1,16 @@
 # Changelog
 
+## [13.823.180] - 2026-09-07
+
+Remates R179 en Embarque > Facturación > Generar proforma (independientes del recuento R170).
+
+- R179-01 · El IVA revisado en el modal ya coincide con el guardado y con el PDF. La lectura de conceptos de venta incluye `tasa_iva_aplicada` (y `contenedor_id`), el cálculo del modal delega en el dominio de proformas (regla B-09: `aplica_iva=false` manda, tasa explícita se conserva, no se infiere IVA por moneda) y el submit ya no envía el override `aplica_iva=true` para MXN. Las etiquetas muestran la tasa real de las filas («IVA 8% incluido», «Sin IVA», «0%») en lugar de un fijo 16%. Se preservan exento/0/8/16 y el toggle de USD; sin EUR, sin datos históricos tocados.
+- R179-02 · Contador, botones, filas e inicialización de la selección usan un criterio único de elegibilidad (`esConceptoElegibleProforma`: pendiente y sin vínculo a proforma), espejo del candado del RPC `LC_CONCEPTOS_YA_ASIGNADOS`. Con 0 elegibles no se abre el modal y la acción superior desaparece; la defensa de servidor sigue intacta.
+- Pendiente de decisión fiscal (reportado, no inventado): el paso Costos/Precios del embarque no expone tratamiento de IVA para conceptos de venta, por lo que una línea nueva se guarda con el default de base `aplica_iva = false`. Con este arreglo esa línea sale exenta de forma coherente en modal, guardado y PDF; si el negocio requiere que nazca gravada al 16%, hay que decidirlo y capturarlo en el alta.
+- Regresiones focalizadas preparadas para GitHub Actions: `src/features/embarques/domain/__tests__/proformaElegibilidadIva.test.ts`.
+
+Validaciones: typecheck y ESLint focalizado. Tests, CI, SQL y RLS quedan para GitHub Actions. No se publicó.
+
 ## [13.823.179] - 2026-09-07
 
 R170-08 · Aplicada la migración de cantidad decimal en conceptos de factura (autorización expresa, sólo este archivo).

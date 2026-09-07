@@ -3,6 +3,7 @@ import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/Da
 import { CheckCircle2 } from "lucide-react";
 import { SectionHeading } from "@/components/shared/SectionHeading";
 import { formatCurrency } from "@/lib/formatters";
+import { ivaDeFila, etiquetaIvaFilas } from "@/features/embarques/domain/ivaConceptoVenta";
 import type { Tables } from "@/types/db";
 import type { TotalesProforma } from "./PasoSeleccionConceptos";
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
@@ -20,6 +21,10 @@ interface Props {
 export function PasoConfirmacionProforma({
   conceptosSeleccionados, ivaPorConcepto, totales, tasaIva, notas,
 }: Props) {
+  const etiquetaIvaMxn = etiquetaIvaFilas(
+    conceptosSeleccionados.filter((c) => c.moneda === "MXN"),
+    tasaIva,
+  );
   return (
     <div className="space-y-4">
       <div className="rounded-md border bg-warning/10 border-warning/30 p-3 text-body">
@@ -43,7 +48,9 @@ export function PasoConfirmacionProforma({
             { id: "iva", header: "IVA", meta: { className: "text-center", headerClassName: "text-center" },
               cell: ({ row }) => {
                 const c = row.original;
-                const aplica = c.moneda === "MXN" ? true : !!ivaPorConcepto[c.id];
+                // R179-01: MXN ya no se marca "Sí" por moneda; se lee su
+                // tratamiento fiscal guardado, el mismo que persiste el RPC.
+                const aplica = c.moneda === "MXN" ? ivaDeFila(c) : !!ivaPorConcepto[c.id];
                 return aplica
                   ? <Badge variant="success" className="text-body-sm"><CheckCircle2 className="h-3 w-3 mr-0.5" /> Sí</Badge>
                   : <Badge variant="secondary" className="text-body-sm">No</Badge>;
@@ -70,7 +77,7 @@ export function PasoConfirmacionProforma({
         {totales.subtotal_mxn > 0 && (
           <div className={`space-y-1 text-body ${totales.subtotal_usd > 0 ? "mt-3 pt-3 border-t" : ""}`}>
             <div className="flex justify-between"><span>Subtotal MXN:</span><span>{formatCurrency(totales.subtotal_mxn, "MXN")}</span></div>
-            <div className="flex justify-between text-muted-foreground"><span>IVA ({(tasaIva * 100).toFixed(0)}%) MXN:</span><span>{formatCurrency(totales.iva_mxn, "MXN")}</span></div>
+            <div className="flex justify-between text-muted-foreground"><span>IVA ({etiquetaIvaMxn}) MXN:</span><span>{formatCurrency(totales.iva_mxn, "MXN")}</span></div>
             <div className="flex justify-between font-bold text-base pt-1 border-t"><span>Total MXN:</span><span>{formatCurrency(totales.total_mxn, "MXN")}</span></div>
           </div>
         )}

@@ -6,6 +6,7 @@ import {
 } from "./PasoSeleccionConceptos.parts";
 import { buildContenedorLabelMap } from "./PasoSeleccionConceptos.helpers";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
+import { ivaDeFila, etiquetaIvaFilas } from "@/features/embarques/domain/ivaConceptoVenta";
 import { ListFilter } from "lucide-react";
 import type { FiltroContenedor } from "@/features/embarques/domain/conceptosPorContenedor";
 import type { Tables } from "@/types/db";
@@ -80,7 +81,9 @@ export function PasoSeleccionConceptos({
             // Fix v12.94.2: caer al `aplica_iva` real del concepto si el state aún no
             // se inicializó, para evitar ventana donde el switch muestra OFF pese a
             // que el concepto sí lleva IVA.
-            const ivaActivo = ivaPorConcepto[c.id] ?? (c.moneda === "MXN" ? true : !!c.aplica_iva);
+            // R179-01: el fallback ya NO fuerza IVA por moneda; refleja el
+            // tratamiento fiscal guardado de la fila (igual que el RPC/PDF).
+            const ivaActivo = ivaPorConcepto[c.id] ?? ivaDeFila(c);
             const ivaBloqueado = c.moneda === "MXN";
             const contLabel = c.contenedor_id ? contenedorNumeroById.get(c.contenedor_id) ?? null : null;
             return (
@@ -90,6 +93,7 @@ export function PasoSeleccionConceptos({
                 isSelected={isSelected}
                 ivaActivo={ivaActivo}
                 ivaBloqueado={ivaBloqueado}
+                etiquetaIvaFila={etiquetaIvaFilas([c], tasaIva)}
                 contLabel={contLabel}
                 showGeneralBadge={!c.contenedor_id && contenedores.length >= 2}
                 onToggle={onToggle}
@@ -106,6 +110,10 @@ export function PasoSeleccionConceptos({
       <TotalesProformaBox
         totales={totales}
         tasaIva={tasaIva}
+        etiquetaIvaMxn={etiquetaIvaFilas(
+          conceptosVisibles.filter((c) => c.moneda === "MXN" && seleccionados.has(c.id)),
+          tasaIva,
+        )}
         seleccionadosVisibles={seleccionadosVisibles}
       />
 
