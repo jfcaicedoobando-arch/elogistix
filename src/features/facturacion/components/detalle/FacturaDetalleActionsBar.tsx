@@ -18,61 +18,10 @@ import {
 
 import { DetalleActionBar, type DetalleActionItem } from "@/components/shared/DetalleActionBar";
 import { usePermissions } from "@/hooks/shared/usePermissions";
-import type { useAcuseCancelacion } from "@/features/facturacion/hooks/useAcuseCancelacion";
-import type { deriveFacturaFlags } from "@/features/facturacion/domain/facturaFlags";
-import type { FacturaDetalle } from "@/features/facturacion/services/detail";
-
-type AcuseHandle = ReturnType<typeof useAcuseCancelacion>;
-type Flags = ReturnType<typeof deriveFacturaFlags>;
-
-interface Props {
-  factura: FacturaDetalle;
-  canEdit: boolean;
-  /** R170-09: visibilidad/acción de "Timbrar factura" ligada al permiso
-   * específico EMITIR_FACTURA_CLIENTE, no al `canEdit` genérico (evita que
-   * roles operativos como coordinador logístico vean el botón). */
-  puedeEmitir: boolean;
-  flags: Flags;
-  acuse: AcuseHandle;
-  eliminando: boolean;
-  puedeEliminarBorrador: boolean;
-  timbrarRepPending?: boolean;
-  onTimbrar: () => void;
-  onEnviarEmail: () => void;
-  onRegistrarPago: () => void;
-  onTimbrarRep: () => void;
-  onSustituir: () => void;
-  onRefacturar: () => void;
-  onCancelar: () => void;
-  onEliminar: () => void;
-  onConsultar: () => void;
-  onDownload: (stored: string | null, tipo: "pdf" | "xml") => void;
-}
-
-
-export function buildPrimary(props: Props): DetalleActionItem | null {
-  const { flags, canEdit, puedeEmitir } = props;
-  if (puedeEmitir && flags.puedeTimbrarDesdeSistema) {
-    return { id: "timbrar", label: "Timbrar factura", icon: Stamp, onClick: props.onTimbrar };
-  }
-  // B-002 (v13.320.32): Cobrar tiene prioridad sobre "Timbrar REP" cuando hay saldo.
-  // Antes, un REP pendiente/fallido escondía "Registrar pago" y bloqueaba la cobranza
-  // indefinidamente. Ahora si hay saldo por cobrar, ese es el primary; el REP queda
-  // accesible como acción secundaria.
-  if (canEdit && flags.puedeRegistrarPago) {
-    return { id: "cobrar", label: "Registrar pago", icon: HandCoins, onClick: props.onRegistrarPago };
-  }
-  if (canEdit && flags.repPendiente && !flags.estaCancelada) {
-    return {
-      id: "rep", label: "Timbrar REP", icon: Stamp,
-      onClick: props.onTimbrarRep, loading: props.timbrarRepPending,
-    };
-  }
-  if (!flags.sinTimbrar && !flags.estaCancelada) {
-    return { id: "enviar", label: "Enviar por email", icon: Mail, onClick: props.onEnviarEmail };
-  }
-  return null;
-}
+import {
+  buildPrimary,
+  type FacturaActionsBarProps as Props,
+} from "@/features/facturacion/components/detalle/facturaActionsBarPrimary";
 
 function buildSecondary(props: Props, primaryId: string | null): DetalleActionItem[] {
   const { factura, flags, acuse } = props;
