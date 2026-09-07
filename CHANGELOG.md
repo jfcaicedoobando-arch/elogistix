@@ -1,5 +1,16 @@
 # Changelog
 
+## [13.823.196] - 2026-09-07
+
+Proformas PDF: el bloque de Notas ya no se desborda cuando la nota tiene muchos renglones cortos (R188-NOTAS-191-20260907).
+
+- `notasSplit.ts`: el trozo que viaja pegado al título se acota ahora también por número de renglones (máximo 3), reconociendo saltos LF, CRLF y CR sueltos, además del límite previo de 180 caracteres.
+- El corte evita partir un carácter Unicode compuesto (pares surrogate) y conserva íntegro el contenido y el orden del resto.
+- Notas largas siguen continuando en las páginas siguientes; sin notas no se dibuja nada.
+- Regresiones focalizadas preparadas (renglones de un carácter, CRLF, surrogate). Sin SQL, migraciones, base de datos ni cambios de cálculo o fiscalidad.
+
+
+
 ## [13.823.195] - 2026-09-07
 
 Captura de factura de proveedor por PDF: el subtotal se actualiza al corregir los conceptos detectados por IA.
