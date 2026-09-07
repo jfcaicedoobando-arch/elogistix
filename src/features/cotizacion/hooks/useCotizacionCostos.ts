@@ -38,10 +38,14 @@ export function useUpsertCotizacionCostos() {
     }) =>
       upsertCotizacionCostos(cotizacionId, costos, requestId ?? newRequestId(), expectedUpdatedAt),
     onSuccess: (data, variables) => {
+      // Sólo la fotografía coherente (filas + su propio sello) entra a la caché
+      // del detalle. El sello de la escritura propia (`data.updatedAt`) viaja
+      // aparte al wizard y nunca se empareja con estas filas.
       queryClient.setQueryData(
         queryKeys.cotizaciones.costosSnapshot(variables.cotizacionId),
-        data,
+        data.snapshot,
       );
+
       void queryClient.invalidateQueries({ queryKey: queryKeys.cotizaciones.costos(variables.cotizacionId) });
       // v13.823.164: el reemplazo mueve `cotizaciones.updated_at`; el detalle
       // debe releerse para que el siguiente sello venga fresco de la BD.

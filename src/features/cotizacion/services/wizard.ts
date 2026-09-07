@@ -25,7 +25,9 @@ interface Mutations {
       costos: CostoCotizacion[];
       /** v13.823.69: sello esperado de la cotización (bloqueo optimista del paso 2). */
       expectedUpdatedAt?: string | null;
-    }) => Promise<{ costos: CostoCotizacion[]; updatedAt: string | null }>;
+      // v13.823.169: `updatedAt` es el sello de la escritura PROPIA (el que
+      // devuelve la RPC). El wizard sólo puede avanzar su candado con ése.
+    }) => Promise<{ updatedAt: string | null }>;
   };
 }
 

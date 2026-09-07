@@ -59,13 +59,19 @@ export async function fetchCotizacionCostosSnapshot(
 
 
 /**
- * Resultado del reemplazo de costos: filas canónicas + nuevo sello de la
- * cotización (v13.823.69). El sello permite que el paso 2 participe del mismo
- * bloqueo optimista que los demás pasos del wizard.
+ * Resultado del reemplazo de costos.
+ *
+ * v13.823.169 — dos versiones DISTINTAS, deliberadamente separadas:
+ * - `updatedAt`: sello que devolvió la RPC, es decir el de NUESTRA escritura.
+ *   Es el único que puede autorizar que el wizard siga con su captura local.
+ * - `snapshot`: fotografía coherente posterior (filas + su propio sello) para
+ *   mostrar/editar el detalle. Su sello puede ser MÁS NUEVO si alguien más tocó
+ *   la cotización entre el reemplazo y la relectura; por eso no se emparejan
+ *   nunca las filas de esa fotografía con el sello de la escritura propia.
  */
 export interface UpsertCostosResult {
-  costos: CostoCotizacion[];
   updatedAt: string | null;
+  snapshot: CotizacionCostosSnapshot;
 }
 
 export async function upsertCotizacionCostos(
@@ -82,7 +88,7 @@ export async function upsertCotizacionCostos(
   // Falla cerrada en cliente: sin sello no se llama la RPC (el servidor también
   // la rechaza). Evita reemplazar costos sin candado optimista.
   if (!expectedUpdatedAt) throw conflictoConcurrenciaError();
-  const { error } = await supabase.rpc("actualizar_cotizacion_costos", {
+  const { data, error } = await supabase.rpc("actualizar_cotizacion_costos", {
     p_cotizacion_id: cotizacionId,
     p_costos: costos.map((c) => ({
       concepto: c.concepto,
@@ -104,6 +110,7 @@ export async function upsertCotizacionCostos(
     if (error.message?.includes(LC_CONFLICTO_CONCURRENCIA)) throw conflictoConcurrenciaError();
     throw error;
   }
+  const selloEscritura = leerSelloEscritura(data);
   await registrarActividad({
     modulo: "cotizaciones",
     accion: "actualizar_costos",
@@ -112,8 +119,17 @@ export async function upsertCotizacionCostos(
   });
   // La RPC confirma el reemplazo; después leemos filas y sello juntos para no
   // mezclar costos de una versión con el `updated_at` de otra.
-  return fetchCotizacionCostosSnapshot(cotizacionId);
+  const snapshot = await fetchCotizacionCostosSnapshot(cotizacionId);
+  return { updatedAt: selloEscritura, snapshot };
 }
+
+/** Extrae `updated_at` del jsonb que devuelve la RPC (sello de la escritura). */
+function leerSelloEscritura(data: unknown): string | null {
+  if (!data || typeof data !== "object") return null;
+  const sello = (data as { updated_at?: unknown }).updated_at;
+  return typeof sello === "string" ? sello : null;
+}
+
 
 
 // ─── Lookups para hidratación de embarque vinculado ─────────────────────────

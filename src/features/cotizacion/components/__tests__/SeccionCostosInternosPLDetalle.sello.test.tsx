@@ -97,7 +97,7 @@ beforeEach(() => {
 
 describe("guardado rápido de costos con sello optimista", () => {
   it("envía el sello de la cotización abierta", async () => {
-    mutateAsync.mockResolvedValue({ costos: COSTOS_600, updatedAt: S1 });
+    mutateAsync.mockResolvedValue({ updatedAt: S1, snapshot: { costos: COSTOS_600, updatedAt: S1 } });
     renderSeccion();
     abrirEdicionYGuardar();
 
@@ -111,7 +111,7 @@ describe("guardado rápido de costos con sello optimista", () => {
   });
 
   it("preserva unidad_medida y el vínculo de tarifa al guardar sólo la nota", async () => {
-    mutateAsync.mockResolvedValue({ costos: COSTOS_600, updatedAt: S1 });
+    mutateAsync.mockResolvedValue({ updatedAt: S1, snapshot: { costos: COSTOS_600, updatedAt: S1 } });
     renderSeccion();
     abrirEdicion();
     fireEvent.change(screen.getByPlaceholderText(/notas/i), { target: { value: "nota nueva" } });
@@ -131,9 +131,12 @@ describe("guardado rápido de costos con sello optimista", () => {
 
   it("tres guardados mantienen filas y sello aunque la prop siga retrasada", async () => {
     mutateAsync
-      .mockResolvedValueOnce({ costos: COSTOS_600, updatedAt: S1 })
-      .mockResolvedValueOnce({ costos: COSTOS_700, updatedAt: S2 })
-      .mockResolvedValueOnce({ costos: COSTOS_800, updatedAt: "2026-09-06T13:00:00Z" });
+      .mockResolvedValueOnce({ updatedAt: S1, snapshot: { costos: COSTOS_600, updatedAt: S1 } })
+      .mockResolvedValueOnce({ updatedAt: S2, snapshot: { costos: COSTOS_700, updatedAt: S2 } })
+      .mockResolvedValueOnce({
+        updatedAt: "2026-09-06T13:00:00Z",
+        snapshot: { costos: COSTOS_800, updatedAt: "2026-09-06T13:00:00Z" },
+      });
     const { rerender } = renderSeccion();
     abrirEdicionYGuardar();
     await waitFor(() => expect(mutateAsync).toHaveBeenCalledTimes(1));
@@ -157,7 +160,7 @@ describe("guardado rápido de costos con sello optimista", () => {
   });
 
   it("no mezcla filas y sello cuando detalle y costos responden en distinto orden", async () => {
-    mutateAsync.mockResolvedValue({ costos: COSTOS_700, updatedAt: S2 });
+    mutateAsync.mockResolvedValue({ updatedAt: S2, snapshot: { costos: COSTOS_700, updatedAt: S2 } });
     const { rerender } = renderSeccion();
 
     // Llega primero el detalle S1, pero la fotografía de costos sigue completa en K0/S0.
@@ -183,11 +186,16 @@ describe("guardado rápido de costos con sello optimista", () => {
     rerender(vista());
     expect(screen.getByLabelText(/costo unitario de flete/i)).toHaveValue(500);
     fireEvent.click(screen.getByRole("button", { name: /cancelar edición/i }));
-    await waitFor(() => expect(screen.getByText(/600/)).toBeInTheDocument());
+    // Fuera de edición hay varios "600" (fila y totales): se comprueba el campo
+    // concreto reabriendo la captura.
+    await waitFor(() => {
+      abrirEdicion();
+      expect(screen.getByLabelText(/costo unitario de flete/i)).toHaveValue(600);
+    });
   });
 
   it("cancelar restaura el último guardado antes de que llegue el refetch", async () => {
-    mutateAsync.mockResolvedValue({ costos: COSTOS_600, updatedAt: S1 });
+    mutateAsync.mockResolvedValue({ updatedAt: S1, snapshot: { costos: COSTOS_600, updatedAt: S1 } });
     renderSeccion();
     abrirEdicionYGuardar();
     await waitFor(() => expect(mutateAsync).toHaveBeenCalledTimes(1));

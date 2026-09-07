@@ -110,7 +110,24 @@ describe("services/cotizacion/costos", () => {
     const r = await upsertCotizacionCostos("cot-1", [], "req-1", "2026-09-03T11:00:00Z");
     expect(mock.rpcCalls[0].args).toMatchObject({ p_expected_updated_at: "2026-09-03T11:00:00Z" });
     expect(r.updatedAt).toBe("2026-09-03T12:00:00Z");
-    expect(r.costos).toEqual([]);
+    expect(r.snapshot).toEqual({ costos: [], updatedAt: "2026-09-03T12:00:00Z" });
+  });
+
+  // v13.823.169: la RPC confirma S1 (escritura propia) y la relectura devuelve
+  // S2 porque alguien más tocó la cotización en medio. El sello de escritura NO
+  // se contamina con S2 (si lo hiciera, el wizard avanzaría su candado a ciegas
+  // y podría pisar el cambio ajeno), y la fotografía queda coherente en S2.
+  it("upsertCotizacionCostos separa el sello de escritura (S1) de la fotografía (S2)", async () => {
+    mock.setRpcResult("actualizar_cotizacion_costos", {
+      data: { cotizacion_id: "cot-1", count: 1, updated_at: "2026-09-03T12:00:00Z" },
+      error: null,
+    });
+    mock.setTableResult("cotizaciones", {
+      data: { updated_at: "2026-09-03T12:30:00Z", cotizacion_costos: [] }, error: null,
+    });
+    const r = await upsertCotizacionCostos("cot-1", [], "req-1", "2026-09-03T11:00:00Z");
+    expect(r.updatedAt).toBe("2026-09-03T12:00:00Z");
+    expect(r.snapshot.updatedAt).toBe("2026-09-03T12:30:00Z");
   });
 
   it("upsertCotizacionCostos lanza LC_CONFLICTO_CONCURRENCIA y no relee costos", async () => {
