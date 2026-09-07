@@ -17,6 +17,13 @@ export async function ensureFreshSession(forzar = false): Promise<string | null>
   if (vigente && !forzar) return session.access_token;
 
   const { data, error } = await supabase.auth.refreshSession();
-  if (error || !data.session) return null;
+  if (error || !data.session) {
+    // El refresh puede fallar por "Already Used" cuando el SDK ya lo rotó en
+    // paralelo. Si la sesión en memoria quedó vigente, se usa ese token en
+    // lugar de tirar al usuario a la pantalla de sesión expirada.
+    const { data: { session: actual } } = await supabase.auth.getSession();
+    if (actual && (actual.expires_at ?? 0) > ahora) return actual.access_token;
+    return null;
+  }
   return data.session.access_token;
 }
