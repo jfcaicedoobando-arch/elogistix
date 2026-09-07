@@ -14,6 +14,25 @@ function esColisionDeRotacion(error: unknown): boolean {
   return /already used|refresh token.*used|refresh.*in progress/i.test(mensaje);
 }
 
+async function recuperarSesionConcurrente(
+  tokenAnterior: string,
+  ahora: number,
+  error: unknown,
+  forzar: boolean,
+): Promise<string | null> {
+  const esColision = esColisionDeRotacion(error);
+  if (esColision) {
+    await new Promise<void>((resolve) => setTimeout(resolve, ESPERA_ROTACION_MS));
+  }
+  const { data: { session: actual } } = await supabase.auth.getSession();
+  if (!actual) return null;
+
+  const actualVigente = (actual.expires_at ?? 0) - MARGEN_SEGUNDOS > ahora;
+  if (!actualVigente) return null;
+  if (actual.access_token !== tokenAnterior) return actual.access_token;
+  return !forzar && !esColision ? actual.access_token : null;
+}
+
 export async function ensureFreshSession(forzar = false): Promise<string | null> {
   const { data: { session } } = await supabase.auth.getSession();
   if (!session) return null;
@@ -33,17 +52,7 @@ export async function ensureFreshSession(forzar = false): Promise<string | null>
     // el SDK publique la sesión rotada antes de releerla. Sólo se acepta si el
     // access token cambió; así nunca se reenvía el mismo JWT que pudo quedar
     // invalidado en el servidor aunque su `expires_at` local siga en futuro.
-    if (esColisionDeRotacion(error)) {
-      await new Promise<void>((resolve) => setTimeout(resolve, ESPERA_ROTACION_MS));
-    }
-    const { data: { session: actual } } = await supabase.auth.getSession();
-    const actualVigente = (actual?.expires_at ?? 0) - MARGEN_SEGUNDOS > ahora;
-    const tokenFueRotado = actual?.access_token !== session.access_token;
-    if (actual && actualVigente && tokenFueRotado) return actual.access_token;
-    if (!forzar && actual && actualVigente && !esColisionDeRotacion(error)) {
-      return actual.access_token;
-    }
-    return null;
+    return recuperarSesionConcurrente(session.access_token, ahora, error, forzar);
   }
   return data.session.access_token;
 }
