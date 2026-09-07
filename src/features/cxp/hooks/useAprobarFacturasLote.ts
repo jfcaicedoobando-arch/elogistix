@@ -49,6 +49,44 @@ function esValidacionNegocio(msg: string): boolean {
 }
 
 
+/** Avisa el resultado del lote (éxito total, fallo total o mixto). */
+function avisarResultado(
+  exitos: readonly string[],
+  fallos: ReadonlyArray<{ id: string; error: string }>,
+  primerCodigo?: string,
+): void {
+  if (fallos.length === 0) {
+    notifySuccess(undefined, {
+      title: exitos.length === 1 ? "Factura aprobada" : `${exitos.length} facturas aprobadas`,
+      description: "Todas las solicitudes de la selección se aprobaron correctamente.",
+    });
+    return;
+  }
+  if (exitos.length > 0) {
+    notifySuccess(undefined, {
+      title: `${exitos.length} aprobada(s), ${fallos.length} con error`,
+      description: "Revisa las facturas que fallaron para reintentar manualmente.",
+    });
+    return;
+  }
+  const primero = fallos[0].error;
+  // Sentry JAVASCRIPT-REACT-3V: las validaciones de negocio (p. ej. "captura los
+  // conceptos antes de aprobar") no son fallas técnicas: se muestran al usuario
+  // pero no se reportan como excepción.
+  notifyError(undefined, {
+    // v13.339.0 (Q-02): pluralización correcta y causa real del servidor.
+    title:
+      fallos.length === 1
+        ? "No se pudo aprobar la factura"
+        : `No se pudieron aprobar ${fallos.length} facturas`,
+    description: primero,
+    error: esValidacionNegocio(primero) ? undefined : new Error(primero),
+    errorCode: primerCodigo,
+    method: "USE_APROBAR_FACTURAS_LOTE",
+  });
+}
+
+
 export function useAprobarFacturasLote() {
   const qc = useQueryClient();
   const [isRunning, setIsRunning] = useState(false);
