@@ -1,5 +1,15 @@
 # Changelog
 
+## [13.823.175] - 2026-09-07
+
+Aplicación de la migración R170-02 a la base de datos de la app (autorizada por el usuario).
+
+- `crear_proforma_atomica` y `convertir_proformas_a_factura` ya fechan en hora de la Ciudad de México dentro de la misma transacción; el vencimiento se deriva de esa fecha respetando los días de crédito. Verificado en la base: ambas funciones contienen `America/Mexico_City`, siguen siendo `SECURITY DEFINER` y sus privilegios quedaron exactamente en `authenticated` y `service_role` (sin PUBLIC ni anon).
+- Ya no existe ningún parche de fecha posterior en el cliente (`crud.ts`, `convertirAFactura.ts`).
+- Sin backfill: documentos históricos y facturas emitidas quedaron intactos.
+
+Nota: el linter de base reporta advertencias preexistentes a nivel proyecto sobre funciones `SECURITY DEFINER` ejecutables por usuarios autenticados; es el patrón de acceso vigente (validación de rol/organización dentro de cada RPC) y no se modificó en este cambio. Pruebas, CI y RLS siguen pendientes de GitHub Actions; no se publicó.
+
 ## [13.823.174] - 2026-09-07
 
 Completa el empaquetado de la migración R170-02, que sigue **preparada y no aplicada**. Sin cambios de lógica ni de permisos efectivos.
