@@ -116,7 +116,16 @@ export function FormRow({ draft, setDraft, onCancel, onSave, busy }: FormProps) 
       </div>
       <div className="col-span-1">
         <Label size="sm">Cant.</Label>
-        <NumericInput aria-label="Cantidad" value={draft.cantidad || 0} onChange={(n) => patch({ cantidad: n || 1 })} className="h-10" />
+        <NumericInput
+          aria-label="Cantidad"
+          decimals
+          value={draft.cantidad}
+          onChange={(n) => patch({ cantidad: n })}
+          className="h-10"
+        />
+        {draft.cantidad <= 0 && (
+          <p className="text-body-sm text-destructive">La cantidad debe ser mayor a cero</p>
+        )}
       </div>
       <div className="col-span-3">
         <Label size="sm">P. unitario</Label>
@@ -143,7 +152,7 @@ export function FormRow({ draft, setDraft, onCancel, onSave, busy }: FormProps) 
         <Button size="sm" variant="ghost" onClick={onCancel} disabled={busy} aria-label="Cancelar">
           <X className="h-4 w-4 mr-1" /> Cancelar
         </Button>
-        <Button size="sm" onClick={onSave} disabled={busy || !draft.descripcion.trim()} aria-label="Guardar">
+        <Button size="sm" onClick={onSave} disabled={busy || !draft.descripcion.trim() || draft.cantidad <= 0} aria-label="Guardar">
           <Check className="h-4 w-4 mr-1" /> Guardar
         </Button>
       </div>
