@@ -36,7 +36,7 @@ export function DialogGenerarProforma({ open, onOpenChange, embarque, conceptosP
       title={isSeleccion ? "Generar Proforma" : "Confirmar Proforma"}
       description={
         isSeleccion
-          ? "Selecciona los conceptos y decide si aplica IVA en cada uno (MXN siempre lleva IVA)."
+          ? "Selecciona los conceptos. Cada uno usa el IVA guardado en su configuración fiscal; en los conceptos en USD puedes ajustarlo aquí."
           : "Revisa el resumen final antes de confirmar. Aún no se ha generado nada."
       }
       size="3xl"

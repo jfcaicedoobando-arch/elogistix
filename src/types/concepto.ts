@@ -14,6 +14,15 @@ export interface ConceptoVentaLocal {
   /** Contenedor del embarque al que aplica el concepto (null = General). */
   contenedorId?: string | null;
   /**
+   * R179-01 — Tratamiento fiscal de la línea. Se toma del catálogo al
+   * seleccionar el producto (igual que en cotizaciones) y se preserva tal cual
+   * al hidratar filas existentes: NO se infiere por moneda ni por nombre, y
+   * `undefined` significa "no lo toques en BD".
+   */
+  aplicaIva?: boolean | null;
+  /** Tasa explícita de la línea (0 / 0.08 / 0.16). Ver `aplicaIva`. */
+  tasaIva?: number | null;
+  /**
    * `conceptos_venta.estado_facturacion` tal como viene de BD. La RPC de
    * guardado ignora los renglones ya facturados, así que la UI lo usa para
    * bloquear la fila en vez de fingir un guardado exitoso.
