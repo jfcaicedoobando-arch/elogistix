@@ -81,8 +81,11 @@ BEGIN
   GET DIAGNOSTICS v_insertados = ROW_COUNT;
 
   -- BUG-02 (auditoría 2026-08-18): la cabecera debe cuadrar con sus renglones.
-  -- `guard_proveedor_factura_total` recalcula `total` a partir de estos campos.
-  SELECT COALESCE(SUM(monto), 0), COALESCE(SUM(iva), 0), COALESCE(SUM(ieps), 0)
+  -- v13.823.191: el importe es UNITARIO, así que el subtotal es Σ monto × cantidad,
+  -- igual que `_cxp_validar_aprobacion` y las tablas de conceptos de la app.
+  SELECT COALESCE(SUM(monto * COALESCE(NULLIF(cantidad, 0), 1)), 0),
+         COALESCE(SUM(iva), 0),
+         COALESCE(SUM(ieps), 0)
     INTO v_subtotal, v_iva, v_ieps
     FROM public.proveedor_facturas_conceptos
    WHERE proveedor_factura_id = p_factura_id;
