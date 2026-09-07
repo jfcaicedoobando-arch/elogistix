@@ -14,7 +14,11 @@ interface Props {
 export function Footer({ empresaNombre }: Props) {
   // Fecha compacta (DD/MM/AAAA): la columna central del pie es estrecha y el
   // formato largo se partía en dos líneas.
-  const fecha = formatFechaEs(new Date().toISOString());
+  const fecha = formatFechaEs(new Date().toISOString(), {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
 
   const marca = (empresaNombre ?? "").trim();
   return (
