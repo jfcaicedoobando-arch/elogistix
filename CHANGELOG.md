@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.823.168] - 2026-09-07
+
+- Cotizaciones · Cerrar la venta más rápido: "Aceptar" ahora abre una confirmación que explica que la oportunidad se cerrará como Ganada con el monto de la cotización y la fecha de hoy. Se descartó agregar un campo de pago (moneda/monto/fecha) en la cotización: el dinero vive en facturas, pagos y anticipos, y duplicarlo crearía dos verdades sobre el mismo importe.
+- Cotizaciones · Choque de monedas al aceptar (`LC_MONEDA_INCOMPATIBLE`): antes el cierre se rechazaba con un error y había que ir a CRM a cambiar la moneda de la oportunidad a mano. Ahora la confirmación lo explica y ofrece alinear la moneda de la oportunidad a la de la cotización en el mismo paso. El trigger `crm_cerrar_oportunidad_desde_cotizacion` sigue siendo la única autoridad del cierre; no hay migraciones ni RPCs nuevos.
+- Observabilidad: `LC_MONEDA_INCOMPATIBLE` se clasifica como regla de negocio esperada y deja de reportarse a Sentry como bug.
+- Validado localmente: typecheck, ESLint focalizado y las 16 pruebas de `useCotizacionDetalleHandlers` (incluye confirmación, misma moneda, alineación de moneda y fallo al alinear). CI/RLS completos quedan para GitHub Actions.
+
 ## [13.823.167] - 2026-09-07
 
 - CxP · Registrar pago a proveedor (Sentry JAVASCRIPT-REACT-65 / JAVASCRIPT-REACT-66, `42P10`): el pago fallaba con «there is no unique or exclusion constraint matching the ON CONFLICT specification». `_asegurar_movimiento_pago_proveedor` usaba `ON CONFLICT (hash_dedupe)`, pero el único índice único vivo de `bbva_movimientos` es `(cuenta_bancaria_id, hash_dedupe) WHERE deleted_at IS NULL`. Se alineó el target del conflicto (y el fallback de lectura, ahora acotado a cuenta y filas vivas), sin cambiar reglas de negocio, montos ni RLS.

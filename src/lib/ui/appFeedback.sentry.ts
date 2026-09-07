@@ -16,13 +16,14 @@ export function shouldReportToSentry(error: unknown): boolean {
 
 /**
  * Reglas de negocio esperadas que ya se muestran al usuario en el toast
- * (JAVASCRIPT-REACT-5Y, 5S): transición de estado inválida en cotizaciones
- * y conflicto de concurrencia optimista. Son avisos correctos, no bugs.
+ * (JAVASCRIPT-REACT-5Y, 5S): transición de estado inválida en cotizaciones,
+ * conflicto de concurrencia optimista y choque de monedas cotización/
+ * oportunidad al aceptar. Son avisos correctos, no bugs.
  */
 export function isExpectedBusinessRule(err: unknown): boolean {
   const msg =
     err instanceof Error ? err.message : typeof err === "string" ? err : "";
-  return /LC_COT_TRANSICION_INVALIDA|LC_CONFLICTO_CONCURRENCIA/.test(msg);
+  return /LC_COT_TRANSICION_INVALIDA|LC_CONFLICTO_CONCURRENCIA|LC_MONEDA_INCOMPATIBLE/.test(msg);
 }
 
 /**
