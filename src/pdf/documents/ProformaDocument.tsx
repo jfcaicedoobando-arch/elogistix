@@ -21,7 +21,6 @@ interface Props {
 export function ProformaDocument({ proforma, embarque, conceptos, cliente, tasaIva = TASA_IVA, emisor }: Props) {
   const usd = conceptos.filter((c) => c.moneda === "USD");
   const mxn = conceptos.filter((c) => c.moneda === "MXN");
-  const tasaPct = Math.round(tasaIva * 100);
   // Subtítulo de moneda sólo cuando conviven USD y MXN.
   const multiMoneda = usd.length > 0 && mxn.length > 0;
 
@@ -32,6 +31,8 @@ export function ProformaDocument({ proforma, embarque, conceptos, cliente, tasaI
   const multiContenedor = idsUnicos.size >= 2;
   const grupos = agruparPorContenedor(conceptos);
 
+  // R179-01/PDF-B: etiqueta neutra "IVA <moneda>". No se rotula la tasa global
+  // porque las filas pueden tributar a 0/8/16% y mezclarse en una misma moneda.
   const bloquesTotales = [];
   if (usd.length > 0) {
     bloquesTotales.push({
@@ -39,7 +40,6 @@ export function ProformaDocument({ proforma, embarque, conceptos, cliente, tasaI
       subtotal: Number(proforma.subtotal_usd),
       iva: Number(proforma.iva_usd),
       total: Number(proforma.total_usd),
-      tasaIvaPct: Number(proforma.iva_usd) > 0 ? tasaPct : undefined,
     });
   }
   if (mxn.length > 0) {
@@ -48,9 +48,9 @@ export function ProformaDocument({ proforma, embarque, conceptos, cliente, tasaI
       subtotal: Number(proforma.subtotal_mxn),
       iva: Number(proforma.iva_mxn),
       total: Number(proforma.total_mxn),
-      tasaIvaPct: tasaPct,
     });
   }
+
 
   return (
     <Document title={`${proforma.numero} - Proforma`} author={emisor?.razonSocial ?? "Empresa"}>

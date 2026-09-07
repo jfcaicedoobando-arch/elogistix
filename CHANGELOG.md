@@ -1,5 +1,16 @@
 # Changelog
 
+## [13.823.184] - 2026-09-07
+
+R179-PDF-183-20260907 — el PDF de proforma ya refleja el IVA real de cada concepto.
+
+- R179-01/PDF-A: `proformaConceptosColumns.ts` calcula el IVA por fila con la semántica del dominio (B-09): `aplica_iva=false` manda aunque la fila traiga `tasa_iva_aplicada=0.16` heredada del DEFAULT. Caso MXN 1×100 exento: IVA 0 y total 100 (antes 16/116). Se respetan 0/8/16% y los overrides USD ya aplicados; no se modificó el resolver global ni sus otros consumidores.
+- R179-01/PDF-B: `ProformaDocument.tsx` y `ProformaConsolidadaDocument.tsx` ya no rotulan la tasa global en la caja de totales; la etiqueta es neutra "IVA <moneda>". Los importes numéricos no cambian y `TotalesBox` sigue igual para los demás documentos.
+- R183-PDF-01: en la consolidada el renglón por contenedor suma `total` (ya con IVA) y ahora se rotula "Total del contenedor <moneda>" en lugar de "Subtotal". Sin re-gravar ni tocar la cabecera.
+
+Validaciones: revisión de código (no de PDF renderizado; la descarga del archivo sigue sin poder abrirse por el timeout de la herramienta, que no es bug del ERP). Regresión focalizada `src/pdf/documents/__tests__/proformaIvaPdf.test.tsx` preparada, NO ejecutada: tests, CI y RLS corren en GitHub Actions. Sin SQL, migraciones ni publicación.
+
+
 ## [13.823.183] - 2026-09-07
 
 Arreglo de CI: la prueba de arquitectura O4 fallaba por dos importaciones profundas.
