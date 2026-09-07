@@ -37,6 +37,8 @@ export interface CotizacionDetalleAccionesProps {
   handleConvertir: DetalleState["handleConvertir"];
   convertirProspecto: DetalleState["convertirProspecto"];
   navigate: DetalleState["navigate"];
+  /** Flujo de confirmación al aceptar (cierra la oportunidad como Ganada). */
+  aceptar: DetalleState["aceptar"];
 }
 
 export interface CotizacionDetalleContenidoProps {

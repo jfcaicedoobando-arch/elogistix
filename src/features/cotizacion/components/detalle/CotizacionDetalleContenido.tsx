@@ -14,6 +14,7 @@ import { CotizacionDetalleEmbarques, CotizacionDetalleAcciones } from "@/feature
 import { CotizacionDatosGeneralesCard } from "@/features/cotizacion/components/detalle/CotizacionDatosGeneralesCard";
 import { VersionesCotizacionCard } from "@/features/cotizacion/components/detalle/VersionesCotizacionCard";
 import { CotizacionInactivaBanner } from "@/features/cotizacion/components/detalle/CotizacionInactivaBanner";
+import { DialogAceptarCotizacion } from "@/features/cotizacion/components/detalle/DialogAceptarCotizacion";
 import { CotizacionSinOportunidadBanner } from "@/features/cotizacion/components/detalle/CotizacionSinOportunidadBanner";
 import { ProspectoBanner, ComentarioClienteCard, NotasCard } from "@/features/cotizacion/routes/detalle/CotizacionDetalleCards";
 import { ReaprobacionTarifaBanner } from "@/features/cotizacion/components/revalidacion/ReaprobacionTarifaBanner";
@@ -37,7 +38,7 @@ export function CotizacionDetalleContenido({
   const { showConvertir, setShowConvertir, enviarOpen, setEnviarOpen } = dialogos;
   const {
     clienteForm, setClienteForm, handleCambiarEstado,
-    abrirDialogConvertir, handleConvertir, convertirProspecto, navigate,
+    abrirDialogConvertir, handleConvertir, convertirProspecto, navigate, aceptar,
   } = acciones;
   const { user } = useAuth();
   const { canAltaCliente } = usePermissions();
@@ -137,6 +138,18 @@ export function CotizacionDetalleContenido({
         setClienteForm={setClienteForm}
         onConvertir={handleConvertir}
         isPending={convertirProspecto.isPending}
+      />
+
+      <DialogAceptarCotizacion
+        open={aceptar.open}
+        onOpenChange={aceptar.setOpen}
+        onConfirmar={() => void aceptar.confirmar()}
+        enviando={aceptar.enviando}
+        cargandoMoneda={aceptar.cargandoMoneda}
+        tieneOportunidad={!!cotizacion.oportunidad_id}
+        hayChoqueMoneda={aceptar.hayChoqueMoneda}
+        monedaCotizacion={(cotizacion as { moneda?: string | null }).moneda ?? null}
+        monedaOportunidad={aceptar.monedaOportunidad}
       />
 
       <EnviarCotizacionDialog
