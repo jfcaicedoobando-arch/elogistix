@@ -32,10 +32,15 @@ import { ROUTES } from "@/constants/routes";
 export default function LeadDetalle() {
   const { id } = useParams<{ id: string }>();
   const { canTomarLead, canGestionarLead, canAltaCliente, canCrearOportunidad } = usePermissions();
-  const volver = useVolver(ROUTES.CRM_LEADS);
   const navigate = useNavigate();
   const { data: lead, isLoading, isError, refetch } = useLead(id);
-  useDocumentTitle(lead ? `Lead · ${lead.empresa}` : "Lead");
+  // VIS-20260908-06: un prospecto se lista en /crm/prospectos; el letrero y el
+  // destino de respaldo deben nombrar ese contexto (el regreso contextual por
+  // historial ya funcionaba y se conserva).
+  const contextoProspecto = !!lead && esProspecto(lead.estado);
+  const etiquetaContexto = contextoProspecto ? "Prospectos" : "Leads";
+  const volver = useVolver(contextoProspecto ? ROUTES.CRM_PROSPECTOS : ROUTES.CRM_LEADS);
+  useDocumentTitle(lead ? `${contextoProspecto ? "Prospecto" : "Lead"} · ${lead.empresa}` : "Lead");
   const { form, set, dirty, patch } = useLeadEditForm(lead);
   const {
     handleSave, handleDelete, handleCalificar, handleTomar,
@@ -52,7 +57,7 @@ export default function LeadDetalle() {
   if (isError) {
     return (
       <PageContainer>
-        <DetailHeader backTo={volver} backLabel="Volver a Leads" titleAs="h2" title="Lead" />
+        <DetailHeader backTo={volver} backLabel={`Volver a ${etiquetaContexto}`} titleAs="h2" title="Lead" />
         <ErrorState
           title="No se pudo cargar el lead"
           description="Revisa tu conexión e intenta de nuevo."
@@ -65,7 +70,7 @@ export default function LeadDetalle() {
   if (!lead) {
     return (
       <PageContainer>
-        <DetailHeader backTo={volver} backLabel="Volver a Leads" titleAs="h2" title="Lead no encontrado" />
+        <DetailHeader backTo={volver} backLabel={`Volver a ${etiquetaContexto}`} titleAs="h2" title="Lead no encontrado" />
         <ErrorState
           title="Lead no encontrado"
           description="El lead que buscas no existe o fue eliminado."
@@ -93,10 +98,11 @@ export default function LeadDetalle() {
       <LeadDetalleHeader
         lead={lead}
         volver={volver}
+        volverLabel={`Volver a ${etiquetaContexto}`}
         puedeGestionar={puedeGestionar}
         canTomarLead={canTomarLead}
         canCrearOportunidad={canCrearOportunidad}
-        esProspecto={esProspecto(lead.estado)}
+        esProspecto={contextoProspecto}
         destinoConversion={destinoConversion}
         onNavegarConversion={(destino) => navigate(destino)}
         onEliminar={() => setDeleteOpen(true)}
