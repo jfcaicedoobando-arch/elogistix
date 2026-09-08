@@ -20,6 +20,7 @@ import { notifyError } from "@/lib/ui/appFeedback";
 import { useNuevoEmbarqueExpediente } from "./useNuevoEmbarqueExpediente";
 import { useNuevoEmbarqueCotVinculada } from "./useNuevoEmbarqueCotVinculada";
 import { useNuevoEmbarqueCatalogos } from "./useNuevoEmbarqueCatalogos";
+import { buildConceptosCostoBloqueados } from "./conceptosCostoBloqueo";
 
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 
