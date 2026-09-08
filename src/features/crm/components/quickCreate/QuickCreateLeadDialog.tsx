@@ -23,7 +23,6 @@ import {
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { FormDialogSection } from "@/components/shared/FormDialogSection";
 import { FormDialogFooter } from "@/components/shared/FormDialogFooter";
-import { notifyError } from "@/lib/ui/appFeedback";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { useCrearLead } from "@/features/crm/hooks";
 import { LEAD_FUENTES, type CrmLeadFuente } from "@/features/crm/domain/leads/constants";
