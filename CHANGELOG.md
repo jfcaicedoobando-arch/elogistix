@@ -1,5 +1,13 @@
 # Changelog
 
+## [13.823.203] - 2026-09-08
+
+Corrección del fallo O4 (feature-barrel-surface) en CI: dos imports profundos al feature `cxp` desde `compras`.
+
+- `cxp/services/index.ts`: se añade `aprobacionFactura` al barrel de servicios (sin colisiones de nombres).
+- `ComprasPorAprobar.confirmDialog.tsx`: constantes de justificación ahora se importan desde `@/features/cxp/services`.
+- `ComprasPorAprobarJustificacionLote.test.tsx`: el hook se importa desde `@/features/cxp/hooks`. Sin cambios de lógica.
+
 ## [13.823.202] - 2026-09-08
 
 Corrección de los 2 fallos de CI local: prueba de aprobación en lote y complejidad de `authenticate`.
