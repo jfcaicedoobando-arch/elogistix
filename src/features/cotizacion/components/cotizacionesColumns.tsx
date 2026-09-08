@@ -17,6 +17,25 @@ import { SubtotalCotizacionCell } from "./columnsParts/subtotalCell";
 import { subtotalesDeFila } from "./columnsParts/subtotalesDeFila";
 import { COL_W } from "@/components/shared/dataTable/columnWidths";
 
+/** Folio con los datos secundarios (Tipo, Modo, Ruta, Fecha) a la mano. */
+function FolioCotizacionCell({ cotizacion }: { cotizacion: CotizacionListItem }) {
+  const esInfo = cotizacion.tipo_documento === "informativa";
+  const detalle = [
+    `Tipo: ${esInfo ? "Tarifario" : "Transaccional"}`,
+    `Modo: ${cotizacion.modo || "—"}`,
+    `Ruta: ${cotizacion.origen || "-"} → ${cotizacion.destino || "-"}`,
+    `Fecha: ${cotizacion.created_at ? formatFechaHora(cotizacion.created_at) : "—"}`,
+  ].join(" · ");
+  return (
+    <Tooltip delayDuration={300}>
+      <TooltipTrigger asChild>
+        <span className="block truncate">{cotizacion.folio}</span>
+      </TooltipTrigger>
+      <TooltipContent side="right" className="text-body-sm max-w-[320px] break-words">{detalle}</TooltipContent>
+    </Tooltip>
+  );
+}
+
 export interface BuildParams {
   canEdit: boolean;
   onEliminar: (id: string) => void;
@@ -35,7 +54,10 @@ export function buildCotizacionesColumns(params: BuildParams): ColumnDef<Cotizac
       accessorFn: (r) => r.folio,
       enableSorting: true,
       meta: { width: COL_W.folio, className: "font-medium whitespace-nowrap", sticky: true },
-      cell: ({ row }) => row.original.folio,
+      // MEJ-20260908-01: en 1280x720 Tipo/Modo/Ruta/Fecha quedan fuera de la
+      // tabla (se muestran desde 2xl). El folio conserva el acceso a esos datos
+      // en un tooltip, sin agregar un selector de columnas.
+      cell: ({ row }) => <FolioCotizacionCell cotizacion={row.original} />,
     },
     {
       id: "cliente",
@@ -63,7 +85,7 @@ export function buildCotizacionesColumns(params: BuildParams): ColumnDef<Cotizac
       id: "tipo_doc",
       header: "Tipo",
       // Oculto en tableta (<xl) — información secundaria (Tarifario vs Transaccional).
-      meta: { width: COL_W.fecha, className: "text-body-sm hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
+      meta: { width: COL_W.fecha, className: "text-body-sm hidden 2xl:table-cell", headerClassName: "hidden 2xl:table-cell" },
       cell: ({ row }) => {
         const esInfo = row.original.tipo_documento === "informativa";
         return (
@@ -77,7 +99,7 @@ export function buildCotizacionesColumns(params: BuildParams): ColumnDef<Cotizac
       id: "modo",
       header: "Modo",
       // Oculto en tableta (<xl).
-      meta: { width: COL_W.short, className: "text-body-sm whitespace-nowrap hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
+      meta: { width: COL_W.short, className: "text-body-sm whitespace-nowrap hidden 2xl:table-cell", headerClassName: "hidden 2xl:table-cell" },
       cell: ({ row }) => row.original.modo,
     },
     {
@@ -86,7 +108,7 @@ export function buildCotizacionesColumns(params: BuildParams): ColumnDef<Cotizac
       // Oculto en tableta (<xl) — la ruta se ve en el detalle.
       // VF-15: el tope de 200px truncaba "Shanghái → Manzanillo" habiendo
       // ancho disponible; se amplía al peldaño canónico de ruta.
-      meta: { width: COL_W.ruta, className: "text-body-sm max-w-[320px] hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
+      meta: { width: COL_W.ruta, className: "text-body-sm max-w-[320px] hidden 2xl:table-cell", headerClassName: "hidden 2xl:table-cell" },
       cell: ({ row }) => {
         const r = row.original;
         const ruta = `${r.origen || "-"} → ${r.destino || "-"}`;
@@ -126,7 +148,7 @@ export function buildCotizacionesColumns(params: BuildParams): ColumnDef<Cotizac
       header: "Estado",
       accessorFn: (r) => r.estado,
       enableSorting: true,
-      meta: { width: COL_W.ruta },
+      meta: { width: COL_W.estado },
       // renderEstadoVigencia usa StatusBadge internamente (Oleada 1 migrado)
       cell: ({ row }) => renderEstadoVigencia(row.original),
     },
@@ -144,7 +166,7 @@ export function buildCotizacionesColumns(params: BuildParams): ColumnDef<Cotizac
         </span>
       ),
       // Fecha oculta en tableta (<xl).
-      meta: { width: COL_W.monto, className: "hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
+      meta: { width: COL_W.monto, className: "hidden 2xl:table-cell", headerClassName: "hidden 2xl:table-cell" },
     },
   ];
 
