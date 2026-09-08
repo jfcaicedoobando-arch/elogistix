@@ -29,6 +29,32 @@ interface ProfitRow {
 
 const FACTURA_COLS = "total, moneda, estado, tipo_cambio, embarque_id" as const;
 
+interface FacturaFila {
+  total: number | null;
+  moneda: string;
+  tipo_cambio: number | null;
+  estado: string;
+}
+
+/** Suma facturado/pendiente en MXN y cuenta las facturas sin TC confiable. */
+function totalizarFacturas(filas: readonly FacturaFila[]) {
+  let facturadoMXN = 0;
+  let pendienteMXN = 0;
+  let facturasSinTc = 0;
+  for (const f of filas) {
+    const conv = aMxn(f.total ?? 0, f.moneda, f.tipo_cambio);
+    if (!conv.completo) {
+      facturasSinTc += 1;
+      continue;
+    }
+    facturadoMXN += conv.monto;
+    if (f.estado === "Emitida" || f.estado === "Vencida") {
+      pendienteMXN += conv.monto;
+    }
+  }
+  return { facturadoMXN, pendienteMXN, facturasSinTc };
+}
+
 export async function fetchClienteFinancials(clienteId: string): Promise<ClienteFinancials> {
   // Filtra Cancelada y Sustituida server-side: no forman parte del facturado
   // vigente al cliente. Ref: FACTURA_ESTADOS_VIVOS.
@@ -40,20 +66,10 @@ export async function fetchClienteFinancials(clienteId: string): Promise<Cliente
     .is("deleted_at", null);
   if (errF) throw errF;
 
-  let facturadoMXN = 0;
-  let pendienteMXN = 0;
-  let facturasSinTc = 0;
-  for (const f of facturas ?? []) {
-    const conv = aMxn(f.total ?? 0, f.moneda, f.tipo_cambio);
-    if (!conv.completo) {
-      facturasSinTc += 1;
-      continue;
-    }
-    facturadoMXN += conv.monto;
-    if (f.estado === "Emitida" || f.estado === "Vencida") {
-      pendienteMXN += conv.monto;
-    }
-  }
+  const { facturadoMXN, pendienteMXN, facturasSinTc } = totalizarFacturas(
+    (facturas ?? []) as FacturaFila[],
+  );
+
 
   // Perf: la RPC se filtra por cliente para no recalcular toda la organización
   // (antes provocaba statement timeout 57014 en la ficha del cliente).
