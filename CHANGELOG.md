@@ -1,7 +1,9 @@
 # Changelog
 
 ## [13.823.224] - 2026-09-08
-- **fix(catalogos)**: el interruptor "Visible en mi empresa" que aparece bloqueado (elemento desactivado globalmente por la plataforma, p. ej. el puerto de Busan) ahora explica el motivo con un tooltip en Puertos, Navieras y Tipos de Contenedor.
+- **fix(catalogos)**: la pestaña Catálogos de Configuración ya incluye sub-pestañas de Puertos, Navieras y Tipos de Contenedor (antes sólo se veían los puertos, sin forma de prender/apagar navieras ni contenedores).
+- **data(catalogos)**: todo el catálogo global queda activo en la plataforma (96 puertos, 1 naviera y 19 tipos de contenedor estaban apagados); la elección de qué usar es por empresa.
+- **fix(catalogos)**: el interruptor "Visible en mi empresa" que aparece bloqueado (elemento desactivado globalmente por la plataforma) ahora explica el motivo con un tooltip.
 
 
 ## [13.823.223] - 2026-09-08
