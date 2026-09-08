@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.823.217] - 2026-09-08
+
+- **fix(embarques)**: SMOKE-02 / R216-COT-01 — la conversión directa desde una cotización aceptada (`crear_embarque_borrador_core`) ahora siembra `embarques.tipo_servicio` con FCL/LCL desde `cotizaciones.tipo_embarque` (respaldo `tipo_carga`), la misma fuente de verdad que la hidratación del wizard. Antes el resumen del borrador mostraba "Servicio —". Se preservan intactas la replicación de conceptos (costo/origen), naviera, contenedor, bitácora, notificación interna y privilegios (core privado, sólo `service_role`). Sin backfill histórico.
+- **test(db)**: nuevo contrato `supabase/tests/r216_cot_tipo_servicio_contract.sql` (registrado en `_guards_manifest.txt`) con regresión para FCL y LCL y verificación de que lo ya existente no se toca.
+
 ## [13.823.216] - 2026-09-08
 
 - **fix(cotizaciones)**: R215-COT-01 — el diálogo "Cotización guardada" ya no ofrece "Crear embarque" para una cotización recién creada (no aceptada); muestra "Ver cotización y aceptar". Además, la hidratación del asistente de embarque valida el estado del vínculo (`Aceptada` / `En operación`) antes de capturar los 4 pasos y regresa al detalle con explicación. El guard del backend se conserva.
