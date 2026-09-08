@@ -8,7 +8,7 @@ const lead: LeadEditSource = {
   telefono: null,
   ciudad: null,
   pais: null,
-  fuente: "Otro",
+  fuente: "Prospección",
   estado: "Nuevo",
   score: null,
   interes_modo: null,

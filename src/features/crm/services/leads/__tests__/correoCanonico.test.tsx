@@ -31,7 +31,7 @@ function filaPersistida(payload: Record<string, unknown>): CrmLeadRow {
     telefono: payload.telefono ?? "",
     ciudad: "",
     pais: "",
-    fuente: "Otro",
+    fuente: "Prospección",
     estado: "Nuevo",
     score: 3,
     interes_modo: null,

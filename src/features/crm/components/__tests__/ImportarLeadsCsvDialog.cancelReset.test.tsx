@@ -37,7 +37,7 @@ const filaEjemplo: ParsedLeadRow = {
   telefono: "",
   ciudad: "CDMX",
   pais: "México",
-  fuente: "Otro" as const,
+  fuente: "Prospección" as const,
   estado: "Nuevo" as const,
   score: 3,
   notas: "",

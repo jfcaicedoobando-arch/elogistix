@@ -66,9 +66,9 @@ describe("listLeads — contrato server-side", () => {
   });
 
   it("aplica filtros de estado y fuente cuando no son 'todos'", async () => {
-    await listLeads({ estado: "Calificado", fuente: "Web" });
+    await listLeads({ estado: "Calificado", fuente: "Prospección" });
     expect(state.eqs).toContainEqual(["estado", "Calificado"]);
-    expect(state.eqs).toContainEqual(["fuente", "Web"]);
+    expect(state.eqs).toContainEqual(["fuente", "Prospección"]);
   });
 
   it("omite eq() cuando estado/fuente son 'todos'", async () => {

@@ -36,7 +36,7 @@ describe("crm/leads/bulk", () => {
   });
 
   it("03 — bulkUpdateLeads: aplica .in con los ids correctos", async () => {
-    await bulkUpdateLeads(["id-1","id-2"], { fuente: "Web" });
+    await bulkUpdateLeads(["id-1","id-2"], { fuente: "Prospección" });
     const ops = mock.tableCalls[0].ops;
     const inIdx = ops.indexOf("in");
     expect(mock.tableCalls[0].opArgs[inIdx]).toEqual(["id", ["id-1","id-2"]]);

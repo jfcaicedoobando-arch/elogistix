@@ -9,7 +9,7 @@ const baseLead = {
   telefono: "555",
   ciudad: "CDMX",
   pais: "MX",
-  fuente: "Web" as LeadEditForm["fuente"],
+  fuente: "Prospección" as LeadEditForm["fuente"],
   estado: "Nuevo" as LeadEditForm["estado"],
   score: 3,
   interes_modo: "Marítimo",
@@ -17,7 +17,7 @@ const baseLead = {
 };
 const baseForm: LeadEditForm = {
   empresa: "ACME", contacto: "Juan", email: "j@a.com", telefono: "555",
-  ciudad: "CDMX", pais: "MX", fuente: "Web", estado: "Nuevo", score: 3,
+  ciudad: "CDMX", pais: "MX", fuente: "Prospección", estado: "Nuevo", score: 3,
   interes_modo: "Marítimo", notas: "n",
 };
 
@@ -41,7 +41,7 @@ describe("isLeadDirty", () => {
   });
 
   it("detecta cambios en fuente/estado/notas", () => {
-    expect(isLeadDirty(baseLead, { ...baseForm, fuente: "Otro" })).toBe(true);
+    expect(isLeadDirty(baseLead, { ...baseForm, fuente: "Referido" })).toBe(true);
     expect(isLeadDirty(baseLead, { ...baseForm, estado: "Calificado" as LeadEditForm["estado"] })).toBe(true);
     expect(isLeadDirty(baseLead, { ...baseForm, notas: "x" })).toBe(true);
   });
@@ -49,7 +49,7 @@ describe("isLeadDirty", () => {
   it("EMPTY_LEAD_EDIT_FORM contra lead vacío no es dirty", () => {
     const empty = {
       empresa: "", contacto: null, email: null, telefono: null, ciudad: null,
-      pais: null, fuente: "Otro" as LeadEditForm["fuente"], estado: "Nuevo" as LeadEditForm["estado"],
+      pais: null, fuente: "Prospección" as LeadEditForm["fuente"], estado: "Nuevo" as LeadEditForm["estado"],
       score: null, interes_modo: null, notas: null,
     };
     expect(isLeadDirty(empty, EMPTY_LEAD_EDIT_FORM)).toBe(false);

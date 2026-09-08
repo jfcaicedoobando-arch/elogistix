@@ -9,7 +9,7 @@ vi.mock("@/features/crm/hooks", () => ({
   useCrearLead: () => ({ mutateAsync, isPending: false }),
   useCrearActividad: () => ({ mutateAsync: mutateActividad, isPending: false }),
   LEAD_ESTADOS_MANUALES: ["Nuevo"] as const,
-  LEAD_FUENTES: ["Otro"] as const,
+  LEAD_FUENTES: ["Prospección"] as const,
 }));
 vi.mock("@/lib/contexts/AuthContext", () => ({
   useAuth: () => ({ user: { id: "u-1", email: "kam@acme.com" } }),

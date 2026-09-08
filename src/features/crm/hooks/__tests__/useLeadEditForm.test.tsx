@@ -4,7 +4,7 @@ import { useLeadEditForm } from "../useLeadEditForm";
 
 const lead = () => ({
   empresa: "ACME S.A.", contacto: "Juan", email: "juan@acme.com", telefono: "555-1234",
-  ciudad: "CDMX", pais: "México", fuente: "Web" as const, estado: "Nuevo" as const,
+  ciudad: "CDMX", pais: "México", fuente: "Prospección" as const, estado: "Nuevo" as const,
   score: 4, interes_modo: "MAR", notas: "Interesado",
 });
 

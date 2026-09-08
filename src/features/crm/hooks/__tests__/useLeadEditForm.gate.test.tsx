@@ -29,7 +29,7 @@ const leadBase = {
   telefono: null,
   ciudad: null,
   pais: null,
-  fuente: "Otro" as const,
+  fuente: "Prospección" as const,
   estado: "Nuevo" as const,
   score: null,
   interes_modo: null,
