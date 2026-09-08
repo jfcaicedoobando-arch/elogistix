@@ -35,6 +35,12 @@ vi.mock("@/lib/ui/appFeedback", () => ({
   notifyError: notifyErrorFn,
 }));
 
+// La elegibilidad de prospecto no aplica a este contrato (hay cliente); se
+// aísla para no tocar Supabase desde el hook.
+vi.mock("@/features/crm/hooks/useCrmProspectoOportunidad", () => ({
+  useCrmProspectoOportunidad: () => ({ data: null, isLoading: false }),
+}));
+
 vi.mock("@/features/crm/hooks", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@/features/crm/hooks")>();
   return {
@@ -54,8 +60,9 @@ import { useOportunidadDetalleActions } from "../useOportunidadDetalleActions";
 
 const op = {
   id: "op-1",
-  cliente_id: null,
-  cliente_nombre: null,
+  // Contrato de CLIENTE existente (creación directa de cotización + toast único).
+  cliente_id: "cli-1",
+  cliente_nombre: "Acme SA de CV",
   origen: "Shanghai",
   destino: "Manzanillo",
   etapa_id: "etapa-1",

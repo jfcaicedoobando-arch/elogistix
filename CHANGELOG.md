@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.823.230] - 2026-09-08
+- **fix(crm/cotizaciones)**: al cotizar desde una oportunidad de prospecto, el cotizador abre con los datos reales que sí existen en el CRM: empresa, contacto, correo, teléfono, modo de transporte, origen/destino y moneda. Lo que el CRM no tiene se queda como estaba (no se inventa) y no se convierten importes.
+- **fix(cotizaciones)**: si había un borrador anterior y eliges "Descartar", ya se precarga la oportunidad con la que entraste. Si eliges "Restaurar", tu borrador se conserva completo y no se mezcla con el prospecto de la liga.
+- **fix(accesibilidad)**: el aviso "desactivado globalmente" del interruptor de catálogos ahora se lee con teclado y lector de pantalla (antes usaba la etiqueta nativa del navegador).
+
+
+
 ## [13.823.229] - 2026-09-08
 - **fix(cotizaciones)**: al abrir el diálogo de aceptar cotización ya no se dispara el error "Missing queryFn" cuando la cotización no tiene oportunidad ligada (Sentry JAVASCRIPT-REACT-6C).
 - **fix(sidebar)**: si la sesión expira, los contadores de alertas se quedan en cero en silencio en vez de reportar "permission denied" (Sentry JAVASCRIPT-REACT-6E).

@@ -27,11 +27,21 @@ export interface ProspectoMatch {
   telefono: string;
   leadId?: string | null;
   etapaNombre?: string;
+  /** CRM-COT-01: datos de ruta/modo tal como los registró el CRM. */
+  modo?: string | null;
+  origen?: string | null;
+  destino?: string | null;
   /** Bug 1: moneda registrada en la oportunidad (la RPC exige que coincida). */
   moneda?: string | null;
 }
 
-type LeadEmbed = { estado: string; empresa: string | null; contacto: string | null; email: string | null };
+type LeadEmbed = {
+  estado: string;
+  empresa: string | null;
+  contacto: string | null;
+  email: string | null;
+  telefono: string | null;
+};
 
 type OpHit = {
   id: string;
@@ -39,12 +49,15 @@ type OpHit = {
   lead_id: string | null;
   cliente_nombre: string | null;
   moneda: string | null;
+  modo: string | null;
+  origen: string | null;
+  destino: string | null;
   etapa: { nombre: string } | { nombre: string }[] | null;
   lead: LeadEmbed | LeadEmbed[] | null;
 };
 
 const OP_SELECT =
-  "id, nombre, lead_id, cliente_nombre, moneda, etapa:crm_etapas_pipeline!etapa_id!inner(nombre, tipo, activa), lead:crm_leads!lead_id!inner(estado, empresa, contacto, email)";
+  "id, nombre, lead_id, cliente_nombre, moneda, modo, origen, destino, etapa:crm_etapas_pipeline!etapa_id!inner(nombre, tipo, activa), lead:crm_leads!lead_id!inner(estado, empresa, contacto, email, telefono)";
 
 /** Consulta base de oportunidades elegibles (sin el filtro de texto). */
 function opsQueryBase() {
@@ -73,10 +86,13 @@ function mapOportunidad(o: OpHit): ProspectoMatch {
     empresa: o.cliente_nombre || lead?.empresa || o.nombre,
     contacto: lead?.contacto ?? "",
     email: lead?.email ?? "",
-    telefono: "",
+    telefono: lead?.telefono ?? "",
     leadId: o.lead_id,
     etapaNombre: primero(o.etapa)?.nombre,
     moneda: o.moneda,
+    modo: o.modo,
+    origen: o.origen,
+    destino: o.destino,
   };
 }
 

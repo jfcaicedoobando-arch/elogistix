@@ -11,6 +11,7 @@ import { useEffect, useRef } from "react";
 import type { UseFormReturn } from "react-hook-form";
 import type { CotizacionFormValues } from "@/features/cotizacion/types/form";
 import { useCrmProspectoOportunidad } from "@/features/crm/hooks/useCrmProspectoOportunidad";
+import { mapModoCrmACotizacion } from "@/features/crm/domain/modoCotizacion";
 
 interface Deps {
   form: UseFormReturn<CotizacionFormValues>;
@@ -43,7 +44,15 @@ export function usePrefillProspectoOportunidad({ form, oportunidadId, enabled }:
     // La moneda del vínculo viaja en `monedaCrm` (el guardado la usa tal cual,
     // sin convertir importes).
     form.setValue("monedaCrm", moneda, { shouldDirty: true });
+    // Modo y ruta: sólo si el CRM los tiene. El modo pasa por el mapeo canónico
+    // (el CRM puede guardar valores que no son modos, p. ej. "FCL"); si no hay
+    // equivalencia se deja el default del formulario en vez de inventar uno.
+    const modo = mapModoCrmACotizacion(match.modo);
+    if (modo) form.setValue("modo", modo, opts);
+    if (match.origen) form.setValue("origen", match.origen, { shouldDirty: true });
+    if (match.destino) form.setValue("destino", match.destino, { shouldDirty: true });
     form.trigger(["oportunidadId", "prospectoEmpresa"]);
     aplicado.current = true;
   }, [enabled, match, form]);
 }
+
