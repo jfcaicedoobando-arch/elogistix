@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.823.213] - 2026-09-08
+
+- **fix(embarques)**: el hook del wizard superaba 200 líneas y rompía el guard de arquitectura; se extrajo el bloqueo de costos a `conceptosCostoBloqueo.ts` y el submit final a `useNuevoEmbarqueFinish.ts` sin cambiar comportamiento.
+- **chore(tests)**: la suite `supabase/tests/r201_cot_remate_contract.sql` quedó registrada en el manifiesto bloqueante de guards SQL.
+
 ## [13.823.212] - 2026-09-08
 
 Sincronización de esquema y tipos para las migraciones R201 pendientes.

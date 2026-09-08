@@ -7,33 +7,23 @@
  * Orquestación del submit → `useEmbarqueSubmitOrchestrator`.
  * Expediente (modo nuevo/existente) → `useNuevoEmbarqueExpediente`.
  * Vinculación con cotización + hidratación → `useNuevoEmbarqueCotVinculada`.
+ * Submit final → `useNuevoEmbarqueFinish`.
  */
 import { useCallback, useRef, useState } from "react";
-import * as Sentry from "@sentry/react";
 import { useContactosCliente } from "@/features/cliente/hooks/useClientes";
 import { useConceptosForm } from "@/features/cotizacion/hooks";
 import { useEmbarqueForm } from "@/features/embarques/hooks/useEmbarqueForm";
-import { useEmbarqueSubmitOrchestrator } from "@/features/embarques/hooks/useEmbarqueSubmitOrchestrator";
 import type { StepValidationErrors } from "@/features/embarques/domain/embarqueWizardSchemas";
 import { validateWizardStep } from "@/features/embarques/domain/embarqueWizardStepValidator";
 import { notifyError } from "@/lib/ui/appFeedback";
 import { useNuevoEmbarqueExpediente } from "./useNuevoEmbarqueExpediente";
 import { useNuevoEmbarqueCotVinculada } from "./useNuevoEmbarqueCotVinculada";
 import { useNuevoEmbarqueCatalogos } from "./useNuevoEmbarqueCatalogos";
+import { useNuevoEmbarqueFinish } from "./useNuevoEmbarqueFinish";
+import { buildConceptosCostoBloqueados } from "./conceptosCostoBloqueo";
 
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 
-function avisarHidratacionPendiente(cargando: boolean) {
-  notifyError(undefined, {
-    step: 4,
-    title: cargando ? "Los costos de la cotización siguen cargando" : "Falta completar la importación de costos",
-    description: cargando
-      ? "Espera a que termine la importación antes de crear el embarque."
-      : "Reintenta la importación antes de crear el embarque.",
-    method: "USE_NUEVO_EMBARQUE_WIZARD",
-    errorCode: ERROR_CODES.VALIDATION_FAILED,
-  });
-}
 export function useNuevoEmbarqueWizard() {
   // v13.303.26 — sin excepciones de rol: cotización siempre obligatoria.
   const {
@@ -97,72 +87,22 @@ export function useNuevoEmbarqueWizard() {
   // Compatibilidad con consumidores antiguos
   const validateStep1 = useCallback(() => validateStep(1), [validateStep]);
 
-  // ── Submit final (delegado al orquestador) ─────────────────
-  const orchestrator = useEmbarqueSubmitOrchestrator();
-
   // P3: marca de tiempo de inicio del wizard para medir duración end-to-end.
   const wizardStartedAt = useRef<number>(Date.now());
 
-  // Devuelve true sólo si el embarque se creó (M-13: para limpiar el borrador).
-  const handleFinish = async (): Promise<boolean> => {
-    // v13.303.26 — guard defense-in-depth: sin cotización vinculada abortamos
-    // antes del orquestador para evitar bypasses por errores parcheados/saltados.
-    if (!cotVinc.cotizacionVinculada?.id) {
-      setCurrentStep(1);
-      notifyError(undefined, {
-        step: 1,
-        errors: { cotizacion: "Debes iniciar el embarque desde una cotización Aceptada." },
-        method: "USE_NUEVO_EMBARQUE_WIZARD",
-        errorCode: ERROR_CODES.VALIDATION_FAILED,
-      });
-      return false;
-    }
-
-    if (cotVinc.cargandoCostosVinculados || cotVinc.errorCostosVinculados) {
-      setCurrentStep(4);
-      avisarHidratacionPendiente(cotVinc.cargandoCostosVinculados);
-      return false;
-    }
-
-
-    for (const step of [1, 2, 3, 4]) {
-      if (!validateStep(step)) {
-        setCurrentStep(step);
-        return false;
-      }
-    }
-
-    const values = methods.getValues();
-    const ok = await orchestrator.submit({
-      values,
-      modoExpediente: expediente.modoExpediente,
-      expedienteSeleccionado: expediente.expedienteSeleccionado,
-      cotizacionVinculada: cotVinc.cotizacionVinculada,
-      contactos,
-      selectedClienteNombre: selectedCliente?.nombre || "",
-      proveedoresDb,
-      documentosArchivos: form.documentosArchivos,
-      buildEmbarquePayload: form.buildEmbarquePayload,
-      buildConceptosVentaPayload: form.buildConceptosVentaPayload,
-      buildConceptosCostoPayload: form.buildConceptosCostoPayload,
-      getDocumentosChecklist: form.getDocumentosChecklist,
-      conceptosVenta: conceptos.conceptosVenta,
-      conceptosCosto: conceptos.conceptosCosto,
-    });
-
-    // P3: métricas de negocio. `modo` es enum low-cardinality (maritimo/terrestre/aereo).
-    try {
-      Sentry.metrics?.distribution?.(
-        "embarque.wizard_duration_ms",
-        Date.now() - wizardStartedAt.current,
-        { unit: "millisecond" },
-      );
-      Sentry.metrics?.count?.("embarque.created", 1, {
-        attributes: { modo: String(values.modo ?? "desconocido") },
-      });
-    } catch { /* best-effort */ }
-    return ok === true;
-  };
+  // ── Submit final (delegado) ────────────────────────────────
+  const { handleFinish, isPending: finishPending } = useNuevoEmbarqueFinish({
+    form,
+    conceptos,
+    expediente,
+    cotVinc,
+    contactos,
+    selectedClienteNombre: selectedCliente?.nombre || "",
+    proveedoresDb,
+    validateStep,
+    setCurrentStep,
+    wizardStartedAt: wizardStartedAt.current,
+  });
 
   return {
     methods,
@@ -199,21 +139,7 @@ export function useNuevoEmbarqueWizard() {
     removeConceptoVenta: conceptos.removeConceptoVenta,
     // R201-COT-06: mientras la importación de costos está en vuelo el paso queda
     // en sólo lectura; así ninguna edición se descarta al resolver el fetch.
-    updateConceptoCosto: (id: number, field: Parameters<typeof conceptos.updateConceptoCosto>[1], value: Parameters<typeof conceptos.updateConceptoCosto>[2]) => {
-      if (cotVinc.costosBloqueados) return;
-      cotVinc.marcarCostosEditados();
-      conceptos.updateConceptoCosto(id, field, value);
-    },
-    addConceptoCosto: () => {
-      if (cotVinc.costosBloqueados) return;
-      cotVinc.marcarCostosEditados();
-      conceptos.addConceptoCosto();
-    },
-    removeConceptoCosto: (id: number) => {
-      if (cotVinc.costosBloqueados) return;
-      cotVinc.marcarCostosEditados();
-      conceptos.removeConceptoCosto(id);
-    },
+    ...buildConceptosCostoBloqueados(conceptos, cotVinc),
     subtotalVenta: conceptos.subtotalVenta,
     totalCosto: conceptos.totalCosto,
     utilidadEstimada: conceptos.utilidadEstimada,
@@ -225,6 +151,6 @@ export function useNuevoEmbarqueWizard() {
     errorCostosVinculados: cotVinc.errorCostosVinculados,
     reintentarCostosVinculados: cotVinc.reintentarCostosVinculados,
     costosBloqueados: cotVinc.costosBloqueados,
-    isPending: orchestrator.isPending || cotVinc.cargandoCostosVinculados,
+    isPending: finishPending || cotVinc.cargandoCostosVinculados,
   };
 }

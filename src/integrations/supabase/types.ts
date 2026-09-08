@@ -1265,7 +1265,6 @@ export type Database = {
           client_request_id: string | null
           concepto: string
           contenedor_id: string | null
-          cotizacion_costo_origen_id: string | null
           created_at: string
           deleted_at: string | null
           deleted_by: string | null
@@ -1288,7 +1287,6 @@ export type Database = {
           client_request_id?: string | null
           concepto: string
           contenedor_id?: string | null
-          cotizacion_costo_origen_id?: string | null
           created_at?: string
           deleted_at?: string | null
           deleted_by?: string | null
@@ -1311,7 +1309,6 @@ export type Database = {
           client_request_id?: string | null
           concepto?: string
           contenedor_id?: string | null
-          cotizacion_costo_origen_id?: string | null
           created_at?: string
           deleted_at?: string | null
           deleted_by?: string | null
@@ -1336,13 +1333,6 @@ export type Database = {
             columns: ["contenedor_id"]
             isOneToOne: false
             referencedRelation: "embarque_contenedores"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "conceptos_costo_cotizacion_costo_origen_id_fkey"
-            columns: ["cotizacion_costo_origen_id"]
-            isOneToOne: false
-            referencedRelation: "cotizacion_costos"
             referencedColumns: ["id"]
           },
           {
@@ -8629,14 +8619,6 @@ export type Database = {
       _docs_requeridos_por_estado: {
         Args: { p_estado: string; p_modo: string }
         Returns: string[]
-      }
-      _embarque_aplicar_tarifa_decidida: {
-        Args: {
-          p_cotizacion_id: string
-          p_embarque_id: string
-          p_tarifa_id_aplicada: string
-        }
-        Returns: number
       }
       _es_rol_interno: { Args: never; Returns: boolean }
       _log_provisioning_step: {
