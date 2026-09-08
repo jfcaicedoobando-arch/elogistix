@@ -26,11 +26,12 @@ import NuevaOportunidadDialog from "@/features/crm/components/NuevaOportunidadDi
 import { useLead } from "@/features/crm/hooks";
 import { useLeadDetalleAcciones } from "@/features/crm/hooks/useLeadDetalleAcciones";
 import { esProspecto } from "@/features/crm/domain/leads/etapas";
+import type { CrmLeadEstado } from "@/features/crm/domain/leads/constants";
 import { useLeadEditForm } from "@/features/crm/hooks";
 import { ROUTES } from "@/constants/routes";
 
 /** VIS-20260908-06: contexto de listado (Leads vs Prospectos) de la ficha. */
-function contextoLead(estado: string | undefined) {
+function contextoLead(estado: CrmLeadEstado | undefined) {
   const p = !!estado && esProspecto(estado);
   return {
     esProspecto: p,
