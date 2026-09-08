@@ -91,29 +91,45 @@ export function FacturaPagosTabla({
           id: "acciones", header: "", meta: { width: COL_W.acciones },
           cell: ({ row }: { row: { original: PagoRow } }) => {
             const p = row.original;
-            const repVivo = !!p.uuid_rep && !p.rep_cancelado_en;
+            const cs = (p.rep_cancellation_status ?? "").toLowerCase();
+            const repVivo = !!p.uuid_rep && !p.rep_cancelado_en && cs !== "accepted";
+            const repEnVerificacion = repVivo && ["pending", "verifying"].includes(cs);
+            const repCancelable = repVivo && !repEnVerificacion;
             return (
-              <Hint
-                label={
-                  repVivo
-                    ? "Cancela el REP (complemento de pago) antes de eliminar este pago"
-                    : "Eliminar pago"
-                }
-              >
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  disabled={repVivo}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (repVivo) return;
-                    onEliminar(p.id);
-                  }}
-                  aria-label="Eliminar pago"
+              <div className="flex items-center justify-end gap-1" data-no-row-nav onClick={(e) => e.stopPropagation()}>
+                {repCancelable && (
+                  <Hint label="Cancelar REP ante el SAT">
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() => onCancelarRep(p)}
+                      aria-label="Cancelar REP"
+                    >
+                      <Ban className="h-4 w-4 text-destructive" />
+                    </Button>
+                  </Hint>
+                )}
+                <Hint
+                  label={
+                    repVivo
+                      ? "Cancela el REP (complemento de pago) antes de eliminar este pago"
+                      : "Eliminar pago"
+                  }
                 >
-                  <Trash2 className="h-4 w-4 text-destructive" />
-                </Button>
-              </Hint>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    disabled={repVivo}
+                    onClick={() => {
+                      if (repVivo) return;
+                      onEliminar(p.id);
+                    }}
+                    aria-label="Eliminar pago"
+                  >
+                    <Trash2 className="h-4 w-4 text-destructive" />
+                  </Button>
+                </Hint>
+              </div>
             );
           },
         }]
