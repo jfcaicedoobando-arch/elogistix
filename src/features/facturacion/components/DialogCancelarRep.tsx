@@ -137,11 +137,18 @@ export function DialogCancelarRep({
   resultado,
 }: Props) {
   const labelRep = pago ? folioRep(pago) : "";
-  const mostrarFormulario = resultado !== "accepted";
-  const titulo = resultado === "accepted" ? "REP cancelado" : `Cancelar REP ${labelRep}`;
-  const descripcion = resultado === "accepted"
-    ? "El complemento de pago fue cancelado ante el SAT y el pago asociado se eliminó. La factura volvió a estado pendiente."
-    : "La cancelación se enviará al SAT a través de Facturapi. Si el SAT la acepta, el pago se eliminará y la factura quedará pendiente de cobro.";
+  const terminado = resultado === "accepted" || resultado === "accepted_sync_failed";
+  const mostrarFormulario = !terminado;
+  const titulo =
+    resultado === "accepted" ? "REP cancelado" :
+    resultado === "accepted_sync_failed" ? "REP cancelado · sincronización pendiente" :
+    `Cancelar REP ${labelRep}`;
+  const descripcion =
+    resultado === "accepted"
+      ? "El complemento de pago fue cancelado ante el SAT y el pago asociado se eliminó. La factura volvió a estado pendiente."
+      : resultado === "accepted_sync_failed"
+      ? "El SAT aceptó la cancelación, pero no se pudo eliminar el pago local. Revisa el mensaje de error; si el pago ya no existe, actualiza la página. De lo contrario, elimina el pago manualmente para reflejar el saldo pendiente."
+      : "La cancelación se enviará al SAT a través de Facturapi. Si el SAT la acepta, el pago se eliminará y la factura quedará pendiente de cobro.";
 
   const footer = (
     <>
@@ -151,7 +158,7 @@ export function DialogCancelarRep({
         onClick={() => onOpenChange(false)}
         disabled={isPending}
       >
-        {resultado === "accepted" ? "Cerrar" : "Cancelar"}
+        {terminado ? "Cerrar" : "Cancelar"}
       </Button>
       {mostrarFormulario && (
         <Button
