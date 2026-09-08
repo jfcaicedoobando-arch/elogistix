@@ -21,6 +21,7 @@ describe("FacturaPagosMobileCard", () => {
         facturaId="f1"
         canEdit={true}
         onEliminar={vi.fn()}
+        onCancelarRep={vi.fn()}
         onPreviewRep={vi.fn()}
       />
       </QueryClientProvider>,

@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.823.242] - 2026-09-08
+- **fix(build)**: corrige prop `onCancelarRep` faltante en el test de `FacturaPagosMobileCard` tras el cableado de la cancelación de REP; typecheck, ESLint y build de preview vuelven a pasar.
+
+## [13.823.241] - 2026-09-08
+- **feat(facturación)**: cancelación de REP disponible únicamente desde el detalle de factura (pestaña Cobros). El diálogo envía la solicitud al SAT y, si es aceptada, elimina el pago para que la factura vuelva a estado pendiente. Si el SAT acepta pero no se puede eliminar el pago local, se distingue como "sincronización pendiente" para evitar mensajes contradictorios y se deja trazabilidad en la bitácora.
+- **test(facturación)**: regresión focalizada del controlador de cancelación de REP cubriendo aceptación total, fallo de sincronización local, verificación pendiente, resultado incierto y error del SAT.
+
 ## [13.823.240] - 2026-09-08
 - **feat(facturación)**: nueva bandeja "REPs" dentro del grupo Histórico con los complementos de pago ya timbrados ante el SAT: folio, UUID, factura, cliente, fecha y monto, con buscador, descarga de PDF/XML y aviso si el REP fue cancelado después. Sólo lectura; los REPs pendientes siguen en Cobrar → REP pendientes.
 

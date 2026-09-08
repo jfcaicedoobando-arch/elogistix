@@ -3,8 +3,9 @@
  * Extraída de `FacturaPagosSection` para respetar el límite de 200 líneas.
  * Migrada a `DataTable` (Ola F, punto 8) con `TABLE_DENSITY.embebida`.
  * Migrada a `ResponsiveDataTable` para eliminar scroll horizontal en móvil.
+ * v13.823.240 — Agrega acción "Cancelar REP" para pagos con complemento vigente.
  */
-import { Trash2 } from "lucide-react";
+import { Trash2, Ban } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Hint } from "@/components/shared/Hint";
 import { defineColumns, type ColumnDef } from "@/components/shared/DataTable";
@@ -16,7 +17,7 @@ import { FORMAS_PAGO_SAT, labelDeCatalogo } from "@/constants/catalogosSAT";
 import { PagoRepCell } from "./PagoRepCell";
 import { FacturaPagosMobileCard } from "./FacturaPagosMobileCard";
 
-interface PagoRow {
+export interface PagoRow {
   id: string;
   fecha_pago: string;
   monto: number | string;
@@ -29,6 +30,7 @@ interface PagoRow {
   folio_rep?: number | string | null;
   uuid_rep?: string | null;
   rep_cancelado_en?: string | null;
+  rep_cancellation_status?: string | null;
 }
 
 interface Props {
@@ -37,11 +39,12 @@ interface Props {
   moneda: string;
   canEdit: boolean;
   onEliminar: (pagoId: string) => void;
+  onCancelarRep: (pago: PagoRow) => void;
   onPreviewRep: (id: string, label: string) => void;
 }
 
 export function FacturaPagosTabla({
-  pagos, facturaId, moneda, canEdit, onEliminar, onPreviewRep,
+  pagos, facturaId, moneda, canEdit, onEliminar, onCancelarRep, onPreviewRep,
 }: Props) {
   const columns: ColumnDef<PagoRow, unknown>[] = defineColumns<PagoRow>([
     { id: "fecha", header: "Fecha", meta: { width: COL_W.fecha }, cell: ({ row }) => formatDate(row.original.fecha_pago) },
@@ -88,29 +91,45 @@ export function FacturaPagosTabla({
           id: "acciones", header: "", meta: { width: COL_W.acciones },
           cell: ({ row }: { row: { original: PagoRow } }) => {
             const p = row.original;
-            const repVivo = !!p.uuid_rep && !p.rep_cancelado_en;
+            const cs = (p.rep_cancellation_status ?? "").toLowerCase();
+            const repVivo = !!p.uuid_rep && !p.rep_cancelado_en && cs !== "accepted";
+            const repEnVerificacion = repVivo && ["pending", "verifying"].includes(cs);
+            const repCancelable = repVivo && !repEnVerificacion;
             return (
-              <Hint
-                label={
-                  repVivo
-                    ? "Cancela el REP (complemento de pago) antes de eliminar este pago"
-                    : "Eliminar pago"
-                }
-              >
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  disabled={repVivo}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (repVivo) return;
-                    onEliminar(p.id);
-                  }}
-                  aria-label="Eliminar pago"
+              <div className="flex items-center justify-end gap-1" data-no-row-nav onClick={(e) => e.stopPropagation()}>
+                {repCancelable && (
+                  <Hint label="Cancelar REP ante el SAT">
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() => onCancelarRep(p)}
+                      aria-label="Cancelar REP"
+                    >
+                      <Ban className="h-4 w-4 text-destructive" />
+                    </Button>
+                  </Hint>
+                )}
+                <Hint
+                  label={
+                    repVivo
+                      ? "Cancela el REP (complemento de pago) antes de eliminar este pago"
+                      : "Eliminar pago"
+                  }
                 >
-                  <Trash2 className="h-4 w-4 text-destructive" />
-                </Button>
-              </Hint>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    disabled={repVivo}
+                    onClick={() => {
+                      if (repVivo) return;
+                      onEliminar(p.id);
+                    }}
+                    aria-label="Eliminar pago"
+                  >
+                    <Trash2 className="h-4 w-4 text-destructive" />
+                  </Button>
+                </Hint>
+              </div>
             );
           },
         }]
@@ -130,6 +149,7 @@ export function FacturaPagosTabla({
           facturaId={facturaId}
           canEdit={canEdit}
           onEliminar={onEliminar}
+          onCancelarRep={onCancelarRep}
           onPreviewRep={onPreviewRep}
         />
       )}

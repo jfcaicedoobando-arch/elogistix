@@ -5,6 +5,7 @@
  * de registrar pago: `total − Σ monto_aplicado_factura`.
  *
  * v13.232.0 · Confirmación de eliminar pago migrada a `ConfirmActionDialog` (Lote 7d.2).
+ * v13.823.240 · Agrega cancelación de REP desde el detalle de factura.
  */
 import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
@@ -16,7 +17,9 @@ import { useNotasCreditoAplicadas } from "@/features/facturacion/hooks/useSaldoF
 import { calcularSaldoFactura } from "@/lib/financial/saldoFactura";
 import { useRegistrarActividad } from "@/hooks/shared";
 import { DialogPreviewCfdiPdf } from "@/features/facturacion/components/DialogPreviewCfdiPdf";
-import { FacturaPagosTabla } from "./FacturaPagosTabla";
+import { DialogCancelarRep } from "@/features/facturacion/components/DialogCancelarRep";
+import { useCancelarRepController } from "./useCancelarRepController";
+import { FacturaPagosTabla, type PagoRow } from "./FacturaPagosTabla";
 import { FacturaPagosHeader } from "./FacturaPagosHeader";
 import { FacturaEstadoInconsistenteAlert } from "./FacturaEstadoInconsistenteAlert";
 import { esEstadoInconsistente } from "./facturaEstadoInconsistente";
@@ -53,7 +56,14 @@ export function FacturaPagosSection({
   const eliminar = useEliminarPagoFactura();
   const registrarActividad = useRegistrarActividad();
   const [pagoAEliminar, setPagoAEliminar] = useState<string | null>(null);
+  const [pagoACancelar, setPagoACancelar] = useState<PagoRow | null>(null);
   const [previewRep, setPreviewRep] = useState<{ id: string; label: string } | null>(null);
+
+  const repController = useCancelarRepController(
+    pagoACancelar,
+    facturaId,
+    facturaNumero,
+  );
 
   // A1: canon único `@/lib/financial/saldoFactura` (descuenta pagos y NC aplicadas).
   // Auditoría 2026-08-28 · Hallazgo 4: el estado entra al cálculo (facturas
@@ -120,6 +130,7 @@ export function FacturaPagosSection({
               moneda={moneda}
               canEdit={canEdit}
               onEliminar={setPagoAEliminar}
+              onCancelarRep={setPagoACancelar}
               onPreviewRep={(id, label) => setPreviewRep({ id, label })}
             />
 
@@ -158,6 +169,24 @@ export function FacturaPagosSection({
         onOpenChange={(o) => !o && setPreviewRep(null)}
         pagoId={previewRep?.id}
         title={previewRep ? `Complemento de pago ${previewRep.label}` : "Complemento de pago"}
+      />
+
+      <DialogCancelarRep
+        open={!!pagoACancelar}
+        onOpenChange={(o) => {
+          if (!o) setPagoACancelar(null);
+        }}
+        pago={pagoACancelar}
+        motivo={repController.motivo}
+        onMotivoChange={repController.setMotivo}
+        onConfirm={async () => {
+          const res = await repController.confirmar();
+          if (res === "accepted") {
+            setPagoACancelar(null);
+          }
+        }}
+        isPending={repController.isPending}
+        resultado={repController.resultado}
       />
     </>
   );

@@ -62,39 +62,48 @@ export function useTimbrarRep(facturaId?: string) {
   });
 }
 
-export function useCancelarRep(facturaId?: string) {
+export function useCancelarRep(
+  facturaId?: string,
+  options?: { silenciarToasts?: boolean },
+) {
   const qc = useQueryClient();
   return useMutation({
     mutationKey: queryKeys.facturacion.cancelarRep,
     mutationFn: (vars: { pagoId: string; motivo: MotivoCancelacionSat; sustituyeUuid?: string }) =>
       cancelarRep(vars.pagoId, vars.motivo, vars.sustituyeUuid),
     onSuccess: (resultado) => {
-      if (resultado.uncertain) {
-        // v13.821.6 (P1-2) — timeout con `verifying` persistido: éxito
-        // informativo, NO se ofrece reintentar (reenviar la cancelación con
-        // resultado incierto es inseguro); "Actualizar estado" resuelve.
-        notifyInfo(undefined, {
-          title: "Cancelación del REP enviada · verificando",
-          description: resultado.message
-            ?? "La solicitud fue enviada, pero FacturApi tardó en confirmar. Estamos verificando el estado; no vuelvas a cancelarlo.",
-          duration: 15000,
-        });
-      } else if (resultado.pending || ["pending", "verifying"].includes(resultado.cancellation_status)) {
-        notifyInfo(undefined, {
-          title: "Solicitud de cancelación enviada",
-          description: resultado.message ?? "El SAT está verificando la cancelación del REP.",
-        });
-      } else {
-        notifySuccess(undefined, { title: "REP cancelado" });
+      if (!options?.silenciarToasts) {
+        if (resultado.uncertain) {
+          // v13.821.6 (P1-2) — timeout con `verifying` persistido: éxito
+          // informativo, NO se ofrece reintentar (reenviar la cancelación con
+          // resultado incierto es inseguro); "Actualizar estado" resuelve.
+          notifyInfo(undefined, {
+            title: "Cancelación del REP enviada · verificando",
+            description: resultado.message
+              ?? "La solicitud fue enviada, pero FacturApi tardó en confirmar. Estamos verificando el estado; no vuelvas a cancelarlo.",
+            duration: 15000,
+          });
+        } else if (resultado.pending || ["pending", "verifying"].includes(resultado.cancellation_status)) {
+          notifyInfo(undefined, {
+            title: "Solicitud de cancelación enviada",
+            description: resultado.message ?? "El SAT está verificando la cancelación del REP.",
+          });
+        } else {
+          notifySuccess(undefined, { title: "REP cancelado" });
+        }
       }
       invalidarTrasRep(qc, facturaId);
     },
-    onError: (err: Error) => notifyError(undefined, {
-      title: "No se pudo cancelar el REP",
-      description: getErrorMessage(err),
-      error: err,
-      method: "FEATURES_FACTURACION_HOOKS_USETIMBRARREP_2",
-    }),
+    onError: (err: Error) => {
+      if (!options?.silenciarToasts) {
+        notifyError(undefined, {
+          title: "No se pudo cancelar el REP",
+          description: getErrorMessage(err),
+          error: err,
+          method: "FEATURES_FACTURACION_HOOKS_USETIMBRARREP_2",
+        });
+      }
+    },
 
   });
 }
