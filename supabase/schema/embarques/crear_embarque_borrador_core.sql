@@ -40,6 +40,7 @@ DECLARE
   v_naviera_id    uuid;
   v_agente_nombre text;
   v_naviera_nombre text;
+  v_tipo_servicio text;
 BEGIN
   SELECT * INTO v_cot FROM public.cotizaciones WHERE id = p_cotizacion_id FOR UPDATE;
   IF NOT FOUND THEN
@@ -126,6 +127,19 @@ BEGIN
     v_tipo_cont_code := COALESCE(v_tipo_cont_code, v_cot.tipo_contenedor);
   END IF;
 
+  -- SMOKE-02 (R216-COT-01): sembrar el servicio marítimo (FCL/LCL) desde
+  -- `tipo_embarque` (con respaldo en `tipo_carga`), exactamente la misma fuente
+  -- de verdad que usa la hidratación del wizard. Antes el resumen del borrador
+  -- creado por conversión directa mostraba "Servicio —".
+  IF v_cot.modo = 'Marítimo'::modo_transporte THEN
+    v_tipo_servicio := upper(btrim(COALESCE(NULLIF(btrim(v_cot.tipo_embarque), ''), v_cot.tipo_carga, '')));
+    IF v_tipo_servicio NOT IN ('FCL', 'LCL') THEN
+      v_tipo_servicio := NULL;
+    END IF;
+  ELSE
+    v_tipo_servicio := NULL;
+  END IF;
+
   v_agente_id  := v_cot.agente_id;
   v_naviera_id := v_cot.naviera_id;
   IF (v_agente_id IS NULL OR v_naviera_id IS NULL) AND v_cot.tarifa_id IS NOT NULL THEN
@@ -149,7 +163,8 @@ BEGIN
     tarifa_id, tarifa_id_original, tarifa_id_aplicada,
     carta_garantia, dias_libres_destino,
     seguro, valor_seguro_usd,
-    agente_id, naviera_id, agente, naviera
+    agente_id, naviera_id, agente, naviera,
+    tipo_servicio
   )
   VALUES (
     v_cot.id, NULL, v_cot.cliente_id, v_cot.cliente_nombre,
@@ -166,7 +181,8 @@ BEGIN
     v_cot.tarifa_id, v_cot.tarifa_id, v_cot.tarifa_id,
     v_cot.carta_garantia, v_cot.dias_libres_destino,
     v_cot.seguro, v_cot.valor_seguro_usd,
-    v_agente_id, v_naviera_id, v_agente_nombre, v_naviera_nombre
+    v_agente_id, v_naviera_id, v_agente_nombre, v_naviera_nombre,
+    v_tipo_servicio::tipo_servicio_maritimo
   )
   RETURNING id INTO v_embarque_id;
 
