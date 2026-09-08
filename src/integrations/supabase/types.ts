@@ -10792,7 +10792,12 @@ export type Database = {
         Returns: undefined
       }
       profit_por_cliente: {
-        Args: { _fecha_desde?: string; _fecha_hasta?: string; _modo?: string }
+        Args: {
+          _cliente_id?: string
+          _fecha_desde?: string
+          _fecha_hasta?: string
+          _modo?: string
+        }
         Returns: {
           cliente_id: string
           cliente_nombre: string

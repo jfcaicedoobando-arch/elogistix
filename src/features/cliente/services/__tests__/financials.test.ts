@@ -79,4 +79,28 @@ describe("fetchClienteFinancials", () => {
     mock.setRpcResult("profit_por_cliente", { data: null, error: new Error("rpc") });
     await expect(fetchClienteFinancials("x")).rejects.toThrow("rpc");
   });
+
+  // Perf 13.823.234: la RPC debe filtrarse por cliente (statement timeout 57014).
+  it("pide la utilidad filtrada por cliente y usa la fila devuelta", async () => {
+    mock.setTableResult("facturas", { data: [], error: null });
+    mock.setRpcResult("profit_por_cliente", {
+      data: [{ cliente_id: "cli-9", venta_mxn: 700, costo_mxn: 200, embarques_sin_tc: 1 }],
+      error: null,
+    });
+    const r = await fetchClienteFinancials("cli-9");
+    expect(mock.rpcCalls).toEqual([
+      {
+        fn: "profit_por_cliente",
+        args: {
+          _fecha_desde: undefined,
+          _fecha_hasta: undefined,
+          _modo: undefined,
+          _cliente_id: "cli-9",
+        },
+      },
+    ]);
+    expect(r.profitMXN).toBe(500);
+    expect(r.embarquesSinTc).toBe(1);
+  });
 });
+
