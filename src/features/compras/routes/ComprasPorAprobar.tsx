@@ -2,7 +2,7 @@
 import { useMemo, useState } from "react";
 import { useFiltroUrl, useTextoUrl } from "@/hooks/shared";
 import { useNavigate } from "react-router-dom";
-import { ShieldCheck, ClipboardCheck, CheckCircle2, XCircle } from "lucide-react";
+import { ShieldCheck } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { PageContainer } from "@/components/shared/PageContainer";
@@ -10,18 +10,18 @@ import { CargaGuard } from "@/components/shared/states/CargaGuard";
 import { ResponsiveDataTable } from "@/components/shared/dataTable/ResponsiveDataTable";
 import SearchInput from "@/components/shared/SearchInput";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { formatCurrency } from "@/lib/formatters";
 import { usePermissions } from "@/hooks/shared";
 import { useFacturasCxP, useAprobarFacturasLote, useVerificarSatLote } from "@/features/cxp/hooks";
 import { esValidableEnSat } from "@/features/cxp";
-import { KpiCard } from "@/components/shared/KpiCard";
 import { sumaMxn, sumaUsd } from "./ComprasPorAprobar.helpers";
+import { ComprasPorAprobarKpis } from "./ComprasPorAprobar.kpis";
 import { useColumnasPorAprobar } from "./ComprasPorAprobar.useColumnas";
 import { ConfirmarAprobacionLoteDialog } from "./ComprasPorAprobar.confirmDialog";
 import { ComprasPorAprobarEmptyState } from "./ComprasPorAprobar.emptyState";
 import { ComprasPorAprobarBulkBar } from "./ComprasPorAprobar.bulkBar";
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 import { ComprasPorAprobarMobileCard } from "@/features/compras/components/ComprasPorAprobarMobileCard";
+
 
 const APROBACION_FILTROS = ["pendiente", "aprobada", "rechazada"] as const;
 type AprobacionFiltro = (typeof APROBACION_FILTROS)[number];
