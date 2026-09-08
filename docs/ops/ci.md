@@ -17,31 +17,42 @@ seguridad bloqueantes se conservan íntegras.
 | `e2e`                | **sólo manual** (sin schedule)                        | —                          |
 | `post-deploy-smoke`  | **sólo manual**                                       | —                          |
 
-## CI (`ci.yml`) — ensayo de 3 shards
+## CI (`ci.yml`) — ensayo de 3 shards + lint/checks en paralelo
 
 Estructura actual (experimento de medición, no un cambio de política):
 
-Son **4 definiciones de job en YAML** que se expanden a **6 jobs reales** (1
-`detector` + 1 `checks` + 3 shards de `tests` + 1 `ci-success`):
+Son **5 definiciones de job en YAML** que se expanden a **7 jobs reales** (1
+`detector` + 1 `lint` + 1 `checks` + 3 shards de `tests` + 1 `ci-success`):
 
 1. `detector` — job ligero: sólo checkout y el paso de diff. Expone
    `frontend` / `edge` / `database`.
-2. `checks` — ESLint (`--max-warnings 0`), `typecheck`, guard estático de BD
-   (condicional), `build` sin `ANALYZE` y tests Deno condicionales. Depende sólo
-   del detector y corre **en paralelo** con los shards.
-3. `tests` — matrix Vitest `shard: [1,2,3]`, `max-parallel: 3`,
+2. `lint` — ESLint (`--max-warnings 0`) con checkout + `setup-bun`. Corre sólo
+   si `frontend=true`, depende sólo del detector y corre **en paralelo** con
+   `checks` y los shards.
+3. `checks` — `typecheck`, guard estático de BD (condicional), `build` sin
+   `ANALYZE` y tests Deno condicionales. Corre **en paralelo** con `lint` y los
+   shards.
+4. `tests` — matrix Vitest `shard: [1,2,3]`, `max-parallel: 3`,
    `fail-fast: false`, `bun run test -- --shard=N/3`. Sin coverage, sin blobs ni
    merge de artifacts, sin retries.
-4. `CI Success (aggregator)` — job final con `if: always()`; falla si el
-   detector no termina en `success` o entrega flags inválidas, si `checks` no es
-   `success` habiendo áreas activas, o si la matrix no es `success` cuando
-   `frontend=true`. Un `skipped` sólo se acepta cuando el área correspondiente
-   es `false`. Sin `continue-on-error`.
+5. `CI Success (aggregator)` — job final con `if: always()`; falla si el
+   detector no termina en `success` o entrega flags inválidas, si `lint` no es
+   `success` con `frontend=true`, si `checks` no es `success` habiendo áreas
+   activas, o si la matrix no es `success` cuando `frontend=true`. Un `skipped`
+   sólo se acepta cuando el área correspondiente es `false`. Sin
+   `continue-on-error` ni retries.
 
-Benchmark de referencia (corrida de 1 job unificado previa): `run 34196983386`,
-15m44s de espera total y 922s de ejecución acumulada. Las métricas del ensayo
-con 3 shards aún están pendientes de validación final; la primera corrida
-(`unhandled error` asíncrono en shard 2) **no** se registra como éxito.
+Benchmarks:
+
+- Referencia de 1 job unificado: `run 34196983386`, 15m44s de espera total y
+  922s de ejecución acumulada.
+- Configuración previa **ya validada** (3 shards, lint dentro de `checks`):
+  `run 34200102375`, espera 347s (5m47s), ejecución acumulada 947s (15m47s).
+  Vitest 1426 archivos / 8949 tests; Deno 639. ESLint 134s dentro del job
+  conjunto `checks` de 296s (resto 143s + setup Deno 2s).
+- La nueva división `lint`/`checks` en 2 jobs **aún debe medirse**; no registrar
+  la primera corrida del ensayo de 3 shards (`unhandled error` asíncrono en
+  shard 2) como éxito.
 
 Los guardrails de arquitectura/auditoría (`architecture.test.ts`,
 `architecture-baseline.test.ts`, `audit-report`, `audit-casts-classifier`) ya
