@@ -87,6 +87,18 @@ function ResultadoAlerts({ resultado }: { resultado: ResultadoCancelacionRep }) 
       </Alert>
     );
   }
+  if (resultado === "accepted_sync_failed") {
+    return (
+      <Alert variant="destructive">
+        <CircleAlert className="h-4 w-4" />
+        <AlertDescription>
+          El SAT aceptó la cancelación del REP, pero no se pudo eliminar el pago local.
+          Revisa el mensaje de error. Si el pago aún existe, elimínalo manualmente para que
+          la factura vuelva a reflejar saldo pendiente.
+        </AlertDescription>
+      </Alert>
+    );
+  }
   if (resultado === "pending" || resultado === "uncertain") {
     return (
       <Alert variant="warning">
