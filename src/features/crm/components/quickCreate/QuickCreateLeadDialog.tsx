@@ -80,8 +80,9 @@ export default function QuickCreateLeadDialog({ open, onOpenChange, onCreated, o
     }
     enviandoRef.current = true;
     try {
-      // Mapeo canónico compartido: "Correo o teléfono" → `email` / `telefono`.
-      const r = await crear.mutateAsync(leadQuickCreateInput(emp, contacto, user));
+      // Mapeo canónico compartido: "Correo o teléfono" → `email` / `telefono`;
+      // el origen lo eligió el usuario en el select (default Prospección).
+      const r = await crear.mutateAsync(leadQuickCreateInput(emp, contacto, user, fuente));
       // El cierre limpia el estado (efecto de transición): no hace falta resetear aquí.
       onOpenChange(false);
       onCreated(r.id);

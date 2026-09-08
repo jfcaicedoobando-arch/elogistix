@@ -59,8 +59,9 @@ export default function NuevoLeadDialog({ open, onOpenChange, draftInicial, onCr
       empresa: empresaDraft.trim(),
       email: dato && esCorreo ? dato.toLowerCase() : "",
       telefono: dato && !esCorreo ? dato : "",
+      fuente: draftInicial?.fuente ?? base.fuente,
     };
-  }, [formVacio, empresaDraft, contactoDraft]);
+  }, [formVacio, empresaDraft, contactoDraft, draftInicial?.fuente]);
   const [form, setForm] = useState<LeadFormState>(formConDraft);
 
   // Al abrirse (cerrado -> abierto) se siembra el borrador express; el reset al
