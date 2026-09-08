@@ -16,9 +16,15 @@ function ResumenContenedores({
   const { data: contenedores = [] } = useContenedoresEmbarque(embarqueId);
   const { data: tipos = [] } = useTiposContenedor();
   // R219-UI-02: cada contenedor puede guardar el UUID del catálogo; se resuelve
-  // por hijo para no mostrar identificadores crudos al operador.
-  const nombreTipo = (raw: string | null | undefined) =>
-    resolveTipoContenedorNombre(raw, tipos, "") || fallbackTipo || PLACEHOLDER;
+  // por hijo para no mostrar identificadores crudos al operador. El tipo del
+  // embarque sólo se usa cuando el hijo NO tiene tipo propio: nunca se le
+  // atribuye a un hijo con tipo no resuelto el tipo de otro.
+  const nombreTipo = (raw: string | null | undefined) => {
+    const propio = (raw ?? "").trim();
+    if (!propio) return fallbackTipo || PLACEHOLDER;
+    return resolveTipoContenedorNombre(propio, tipos, "") || PLACEHOLDER;
+  };
+
   if (contenedores.length === 0) return <span>{PLACEHOLDER}</span>;
   if (contenedores.length === 1) {
     const c = contenedores[0];

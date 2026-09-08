@@ -36,9 +36,13 @@ export function opcionTipoGuardada(
   const valores = valoresOpciones ?? catalogo.map((t) => t.code ?? "");
   if (valores.some((o) => o === v)) return null;
 
+  // `resolveTipoContenedorNombre` devuelve el texto tal cual para valores
+  // legacy ("20' GP") y "" sólo cuando es un UUID que no está en el catálogo
+  // cargado (o quedó inactivo). Sólo en ese caso ocultamos el identificador.
   const nombre = resolveTipoContenedorNombre(v, catalogo, "");
   return {
     value: v,
-    label: nombre && nombre !== v ? nombre : "Valor guardado (cargando catálogo…)",
+    label: nombre || "Tipo guardado (no disponible en el catálogo)",
   };
 }
+

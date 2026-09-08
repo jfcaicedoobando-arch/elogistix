@@ -22,17 +22,18 @@ describe("opcionTipoGuardada", () => {
     expect(opcionTipoGuardada(null, catalogo, ["20DRY"])).toBeNull();
   });
 
-  it("catálogo tardío/inactivo preserva el valor sin exponer el UUID", () => {
+  it("UUID sin catálogo cargado/inactivo: etiqueta neutral, nunca el UUID", () => {
     const opcion = opcionTipoGuardada(UUID, [], ["20DRY"]);
     expect(opcion?.value).toBe(UUID);
     expect(opcion?.label).not.toContain(UUID);
-    expect(opcion?.label).toBe("Valor guardado (cargando catálogo…)");
+    expect(opcion?.label).toBe("Tipo guardado (no disponible en el catálogo)");
   });
 
-  it("valor legacy no listado se conserva mostrando su texto", () => {
+  it("valor legacy no listado se conserva mostrando su propio texto", () => {
     expect(opcionTipoGuardada("20' GP", catalogo, ["20DRY"])).toEqual({
       value: "20' GP",
-      label: "Valor guardado (cargando catálogo…)",
+      label: "20' GP",
     });
   });
 });
+
