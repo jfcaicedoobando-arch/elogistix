@@ -115,7 +115,11 @@ export default function Paso1ProgressSidebar({ esMaritimo }: Props) {
 
   const handleClick = (id: string) => {
     const el = document.getElementById(id);
-    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+    if (!el) return;
+    // Feedback inmediato: el cálculo por scroll lo confirma al terminar la
+    // animación, pero el botón pulsado no debe esperar para marcarse.
+    setActiveId(id);
+    el.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
   return (
