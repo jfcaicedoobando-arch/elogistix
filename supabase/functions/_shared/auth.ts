@@ -10,42 +10,29 @@ export interface AuthContext {
   adminClient: SupabaseClient;
 }
 
+const statusDe = (e: unknown): number | null => {
+  const s = (e as { status?: unknown } | null)?.status;
+  return typeof s === "number" ? s : null;
+};
+
 /**
- * Valida el JWT del request y retorna clientes pre-configurados.
- * Si se pasa `log`, asigna el `user_id` verificado al logger (12.32.0).
- * Lanza Error con mensaje "401:..." o "500:..." para manejo en el caller.
+ * RTC-02: la verificación remota (`getUser`) es la fuente de verdad. Cuando el
+ * proyecto firma con el secreto legacy (HS256), `getClaims` no puede validar la
+ * firma en local y devolvía "Token inválido" con tokens perfectamente válidos.
+ *
+ * R188-AUTH-01: además, un fallo de INFRAESTRUCTURA de /auth/v1/user (429 por
+ * ráfaga de invocaciones, 5xx o red) se traducía también a "401:Token
+ * inválido"; el frontend lo interpretaba como sesión vencida y el usuario veía
+ * un error sin salida con un token perfectamente válido. Ahora sólo un veredicto
+ * explícito del servicio de auth (401/403) es token inválido; lo demás se
+ * reintenta una vez y, si persiste, se responde 503 (reintentable) con la razón
+ * real en el log.
  */
-export async function authenticate(req: Request, log?: Logger): Promise<AuthContext> {
-  const authHeader = req.headers.get("Authorization");
-  if (!authHeader?.startsWith("Bearer ")) {
-    throw new Error("401:No autorizado");
-  }
-
-  const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-  const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
-  const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-
-  const anonClient = createClient(supabaseUrl, anonKey, {
-    global: { headers: { Authorization: authHeader } },
-  });
-
-  const token = authHeader.replace("Bearer ", "");
-  // RTC-02: la verificación remota (`getUser`) es la fuente de verdad. Cuando el
-  // proyecto firma con el secreto legacy (HS256), `getClaims` no puede validar la
-  // firma en local y devolvía "Token inválido" con tokens perfectamente válidos.
-  //
-  // R188-AUTH-01: además, un fallo de INFRAESTRUCTURA de /auth/v1/user (429 por
-  // ráfaga de invocaciones, 5xx o red) se traducía también a "401:Token
-  // inválido"; el frontend lo interpretaba como sesión vencida y el usuario veía
-  // un error sin salida con un token perfectamente válido. Ahora sólo un veredicto
-  // explícito del servicio de auth (401/403) es token inválido; lo demás se
-  // reintenta una vez y, si persiste, se responde 503 (reintentable) con la razón
-  // real en el log.
-  const statusDe = (e: unknown): number | null => {
-    const s = (e as { status?: unknown } | null)?.status;
-    return typeof s === "number" ? s : null;
-  };
-
+async function verificarUsuario(
+  anonClient: SupabaseClient,
+  token: string,
+  log?: Logger,
+): Promise<string> {
   let userId: string | undefined;
   let ultimoError: unknown = null;
   for (let intento = 1; intento <= 2; intento++) {
@@ -71,11 +58,32 @@ export async function authenticate(req: Request, log?: Logger): Promise<AuthCont
       "503:No pudimos validar tu sesión en este momento. Intenta de nuevo en unos segundos.",
     );
   }
+  return userId;
+}
 
+/**
+ * Valida el JWT del request y retorna clientes pre-configurados.
+ * Si se pasa `log`, asigna el `user_id` verificado al logger (12.32.0).
+ * Lanza Error con mensaje "401:..." o "500:..." para manejo en el caller.
+ */
+export async function authenticate(req: Request, log?: Logger): Promise<AuthContext> {
+  const authHeader = req.headers.get("Authorization");
+  if (!authHeader?.startsWith("Bearer ")) {
+    throw new Error("401:No autorizado");
+  }
 
+  const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+  const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+  const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+
+  const anonClient = createClient(supabaseUrl, anonKey, {
+    global: { headers: { Authorization: authHeader } },
+  });
+
+  const token = authHeader.replace("Bearer ", "");
+  const userId = await verificarUsuario(anonClient, token, log);
 
   log?.setUserId(userId);
-
 
   const adminClient = createClient(supabaseUrl, serviceRoleKey);
   return { userId, authHeader, anonClient, adminClient };

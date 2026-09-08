@@ -17,9 +17,13 @@ vi.mock("@/lib/ui/appFeedback", () => ({
   notifySuccess: (...a: unknown[]) => notifySuccess(...a),
   notifyError: (...a: unknown[]) => notifyError(...a),
 }));
-vi.mock("@/features/cxp/services/aprobacionFactura", () => ({
-  aprobarFacturaProveedor: (...a: unknown[]) => aprobarSvc(...a),
-}));
+vi.mock("@/features/cxp/services/aprobacionFactura", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/features/cxp/services/aprobacionFactura")>();
+  return {
+    ...actual,
+    aprobarFacturaProveedor: (...a: unknown[]) => aprobarSvc(...a),
+  };
+});
 
 import { useAprobarFacturasLote } from "../useAprobarFacturasLote";
 
@@ -38,9 +42,9 @@ describe("useAprobarFacturasLote", () => {
     });
 
     expect(aprobarSvc).toHaveBeenCalledTimes(3);
-    expect(aprobarSvc).toHaveBeenNthCalledWith(1, "a", true);
-    expect(aprobarSvc).toHaveBeenNthCalledWith(2, "b", true);
-    expect(aprobarSvc).toHaveBeenNthCalledWith(3, "c", true);
+    expect(aprobarSvc).toHaveBeenNthCalledWith(1, "a", true, undefined);
+    expect(aprobarSvc).toHaveBeenNthCalledWith(2, "b", true, undefined);
+    expect(aprobarSvc).toHaveBeenNthCalledWith(3, "c", true, undefined);
     expect(resumen.exitos).toEqual(["a", "b", "c"]);
     expect(resumen.fallos).toEqual([]);
     expect(notifySuccess).toHaveBeenCalled();
