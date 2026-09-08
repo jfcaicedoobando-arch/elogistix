@@ -26,6 +26,7 @@ const DESVINCULAR_DEFAULTS: Array<FieldUpdate> = [
   ["ciudadOrigen", ""],
   ["ciudadDestino", ""],
   ["msdsArchivo", ""],
+  ["tipoServicio", ""],
   ["contenedores", []],
   // Pack B+ defaults
   ["tarifaId", ""],

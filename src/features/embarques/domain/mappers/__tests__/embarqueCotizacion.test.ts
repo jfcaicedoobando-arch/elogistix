@@ -84,6 +84,10 @@ describe("embarqueCotizacion mapper", () => {
     const vincular = new Set(buildVincularCotizacionUpdates(base).map(([k]) => k));
     const desvincular = new Set(buildDesvincularCotizacionUpdates().map(([k]) => k));
     for (const f of vincular) expect(desvincular.has(f)).toBe(true);
+
+    // R215-COT-02 reset: al romper el vínculo se borra el servicio FCL/LCL heredado.
+    const desvincularMap = asMap(buildDesvincularCotizacionUpdates());
+    expect(desvincularMap.tipoServicio).toBe("");
   });
 
   it("modos alternos (aéreo / terrestre) mapean al campo de ruta correcto", () => {
