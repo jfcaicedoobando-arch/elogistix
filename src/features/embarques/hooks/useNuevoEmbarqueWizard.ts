@@ -22,6 +22,18 @@ import { useNuevoEmbarqueCotVinculada } from "./useNuevoEmbarqueCotVinculada";
 import { useNuevoEmbarqueCatalogos } from "./useNuevoEmbarqueCatalogos";
 
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
+
+function avisarHidratacionPendiente(cargando: boolean) {
+  notifyError(undefined, {
+    step: 4,
+    title: cargando ? "Los costos de la cotización siguen cargando" : "Falta completar la importación de costos",
+    description: cargando
+      ? "Espera a que termine la importación antes de crear el embarque."
+      : "Reintenta la importación antes de crear el embarque.",
+    method: "USE_NUEVO_EMBARQUE_WIZARD",
+    errorCode: ERROR_CODES.VALIDATION_FAILED,
+  });
+}
 export function useNuevoEmbarqueWizard() {
   // v13.303.26 — sin excepciones de rol: cotización siempre obligatoria.
   const {
@@ -108,17 +120,7 @@ export function useNuevoEmbarqueWizard() {
 
     if (cotVinc.cargandoCostosVinculados || cotVinc.errorCostosVinculados) {
       setCurrentStep(4);
-      notifyError(undefined, {
-        step: 4,
-        title: cotVinc.cargandoCostosVinculados
-          ? "Los costos de la cotización siguen cargando"
-          : "Falta completar la importación de costos",
-        description: cotVinc.cargandoCostosVinculados
-          ? "Espera a que termine la importación antes de crear el embarque."
-          : "Reintenta la importación antes de crear el embarque.",
-        method: "USE_NUEVO_EMBARQUE_WIZARD",
-        errorCode: ERROR_CODES.VALIDATION_FAILED,
-      });
+      avisarHidratacionPendiente(cotVinc.cargandoCostosVinculados);
       return false;
     }
 
