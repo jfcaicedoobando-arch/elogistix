@@ -37,7 +37,7 @@ export default function OportunidadesTabsView({
         <TabsTrigger variant="vista" value="kanban">Kanban</TabsTrigger>
         <TabsTrigger variant="vista" value="tabla">Tabla</TabsTrigger>
       </TabsList>
-      <TabsContent value="kanban" className="mt-4">
+      <TabsContent value="kanban" className="mt-2">
         {isError ? (
           <ErrorState onRetry={() => void refetch()} />
         ) : isLoading ? (

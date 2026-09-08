@@ -33,7 +33,7 @@ export default function PipelineResumen({ oportunidades }: Props) {
   ];
 
   return (
-    <div className="flex flex-wrap items-center gap-4 rounded-lg border border-border bg-card px-4 py-3">
+    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 rounded-lg border border-border bg-card px-3 py-2">
       {items.map(({ icon: Icon, label, valor }) => (
         <div key={label} className="flex items-center gap-2">
           <Icon className="h-4 w-4 text-muted-foreground" />

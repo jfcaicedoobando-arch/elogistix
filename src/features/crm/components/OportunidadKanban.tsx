@@ -87,7 +87,9 @@ export default function OportunidadKanban({ etapas, oportunidades, onMover, onCl
   const proximas: Map<string, ProximaActividad> = proximasMap ?? new Map();
 
   return (
-    <div className="space-y-3">
+    // MEJ-20260908-02: en 1280x720 las columnas arrancaban ~y=530 y no se leía
+    // ni la primera tarjeta completa; se compactan las separaciones de arriba.
+    <div className="space-y-2">
       <PipelineResumen oportunidades={oportunidades} />
       {huerfanas.length > 0 && (
         <Alert variant="warning">
@@ -103,7 +105,9 @@ export default function OportunidadKanban({ etapas, oportunidades, onMover, onCl
       {/* E-3: contenedor relativo con máscara de degradado a la derecha para
           señalar que hay más columnas fuera de la vista (p. ej. "Ganada"). */}
       <div className="relative">
-        <p className="mb-1 text-label text-muted-foreground" role="note">
+        {/* La pista de scroll horizontal ya la da la máscara de degradado y el
+            `aria-label` del contenedor; el texto suelto costaba altura útil. */}
+        <p className="sr-only" role="note">
           Desliza horizontalmente para ver más etapas
         </p>
         <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
@@ -139,7 +143,7 @@ export default function OportunidadKanban({ etapas, oportunidades, onMover, onCl
         </DndContext>
         <div
           aria-hidden
-          className="pointer-events-none absolute right-0 top-6 bottom-3 w-8 bg-gradient-to-l from-background to-transparent"
+          className="pointer-events-none absolute right-0 top-0 bottom-3 w-8 bg-gradient-to-l from-background to-transparent"
         />
       </div>
     </div>
