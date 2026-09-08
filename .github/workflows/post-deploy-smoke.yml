@@ -1,18 +1,17 @@
 name: post-deploy-smoke
 
-# Smoke test semanal que verifica que los edge functions críticos en producción
-# (https://elogistix.lovable.app + https://librecarga.com) respondan con el
-# contrato esperado. Cubre:
+# Smoke manual que verifica que los endpoints críticos del backend desplegado
+# respondan con el contrato esperado. Cubre lo mismo que antes:
 #   - user-management (smoke_test.ts con login real)
 #   - exchange-rates (HTTP smoke vía curl)
 #   - tracking-public (HTTP smoke vía curl)
+#   - RPC smoke de dinero como `authenticated`
 #
-# CI simplificado: sólo schedule semanal (lunes) + dispatch manual.
+# CI simplificado (YAGNI): SÓLO workflow_dispatch, UN job y sin automatización
+# de issues. Todo en un job porque GitHub enmascara los secrets al pasarlos como
+# outputs entre jobs y el ANON_KEY llegaba corrupto, rompiendo el login.
 
 on:
-  schedule:
-    # Lunes 13:00 UTC = 07:00 CDMX (UTC-6)
-    - cron: "0 13 * * 1"
   workflow_dispatch:
 
 permissions:
@@ -23,24 +22,24 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  # v13.480.3 — Los 4 jobs fallaban con exit code 3 (curl: "URL malformada")
-  # porque los secrets SUPABASE_URL / SUPABASE_ANON_KEY no están configurados en
-  # el repo. Ambos valores son PUBLICABLES (anon), así que este job los resuelve
-  # desde los secrets y, si faltan, cae al `.env` versionado. Si tampoco existen,
-  # falla con un mensaje claro en vez de un críptico exit 3.
-  config:
-    name: Resolver credenciales públicas
+  smoke:
+    name: Smoke post-deploy (manual)
     runs-on: ubuntu-24.04
-    timeout-minutes: 3
-    outputs:
-      supabase_url: ${{ steps.resolve.outputs.supabase_url }}
-      anon_key: ${{ steps.resolve.outputs.anon_key }}
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - name: Resolver SUPABASE_URL y ANON_KEY
-        id: resolve
+
+      - uses: denoland/setup-deno@22d081ff2d3a40755e97629de92e3bcbfa7cf2ed # v2.0.5
+        with:
+          # Paridad con el runtime real de las Edge Functions (Deno 2).
+          deno-version: v2.6.x
+
+      # Los dos valores son PUBLICABLES (url + anon). Se resuelven DENTRO del
+      # job (nunca se imprimen ni se transportan entre jobs) y si faltan se
+      # falla con un mensaje claro en vez de un críptico exit 3 de curl.
+      - name: Resolver SUPABASE_URL y ANON_KEY (sin imprimirlos)
         env:
           SECRET_URL: ${{ secrets.SUPABASE_URL }}
           SECRET_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
@@ -59,30 +58,9 @@ jobs:
             echo "::error::No hay SUPABASE_URL/ANON_KEY disponibles (ni secrets ni .env). Configura los secrets del repositorio."
             exit 1
           fi
-          echo "supabase_url=$URL" >> "$GITHUB_OUTPUT"
-          echo "anon_key=$KEY" >> "$GITHUB_OUTPUT"
-
-  user-management-smoke:
-    runs-on: ubuntu-24.04
-    needs: config
-    timeout-minutes: 5
-    env:
-      SUPABASE_URL: ${{ needs.config.outputs.supabase_url }}
-      ANON_KEY: ${{ needs.config.outputs.anon_key }}
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          # v13.322.1 (GHA-audit H4) — no se hace push/fetch autenticado.
-          persist-credentials: false
-
-
-      - uses: denoland/setup-deno@22d081ff2d3a40755e97629de92e3bcbfa7cf2ed # v2.0.5
-        with:
-          # v13.785.0 — Deno 2.x: el runtime de las Edge Functions en el backend
-          # ya es Deno 2. Mantener 1.46 en CI validaba contra un runtime distinto
-          # al de producción (mismo problema que teníamos con Postgres 15 vs 17).
-          deno-version: v2.6.x
-
+          echo "::add-mask::$KEY"
+          echo "SUPABASE_URL=$URL" >> "$GITHUB_ENV"
+          echo "ANON_KEY=$KEY" >> "$GITHUB_ENV"
 
       - name: Fetch demo credentials
         run: |
@@ -97,11 +75,9 @@ jobs:
           PASSWORD=$(jq -r '.password' /tmp/demo.json)
           if [ -z "$EMAIL" ] || [ "$EMAIL" = "null" ] || [ -z "$PASSWORD" ] || [ "$PASSWORD" = "null" ]; then
             echo "::error::demo-access no devolvió credenciales válidas"
-            cat /tmp/demo.json
             exit 1
           fi
-          # 13.162.0 — Enmascarar también el email. Aunque es una cuenta demo,
-          # evita que aparezca en logs públicos de Actions.
+          # Enmascarar también el email: evita que aparezca en logs de Actions.
           echo "::add-mask::$EMAIL"
           echo "DEMO_USER_EMAIL=$EMAIL" >> "$GITHUB_ENV"
           echo "::add-mask::$PASSWORD"
@@ -119,15 +95,6 @@ jobs:
             --allow-read \
             supabase/functions/user-management/smoke_test.ts
 
-
-  exchange-rates-smoke:
-    runs-on: ubuntu-24.04
-    needs: config
-    timeout-minutes: 3
-    env:
-      SUPABASE_URL: ${{ needs.config.outputs.supabase_url }}
-      ANON_KEY: ${{ needs.config.outputs.anon_key }}
-    steps:
       - name: Ping exchange-rates
         run: |
           set -euo pipefail
@@ -140,15 +107,6 @@ jobs:
           test "$STATUS" = "200"
           # Contrato mínimo: payload con claves usdMxn/eurMxn (o rates/USD/MXN como fallback)
           grep -E '"(usdMxn|eurMxn|rates|USD|MXN)"' /tmp/resp.json > /dev/null
-
-  tracking-public-smoke:
-    runs-on: ubuntu-24.04
-    needs: config
-    timeout-minutes: 3
-    env:
-      SUPABASE_URL: ${{ needs.config.outputs.supabase_url }}
-      ANON_KEY: ${{ needs.config.outputs.anon_key }}
-    steps:
 
       - name: Ping tracking-public (token inexistente debe responder 404/410)
         run: |
@@ -165,36 +123,13 @@ jobs:
             exit 1
           fi
 
-  rpc-smoke:
-    name: RPC smoke (dinero, como authenticated)
-    runs-on: ubuntu-24.04
-    needs: config
-    timeout-minutes: 5
-    env:
-      SUPABASE_URL: ${{ needs.config.outputs.supabase_url }}
-      ANON_KEY: ${{ needs.config.outputs.anon_key }}
-    steps:
-
-      - name: Login demo (reutiliza demo-access)
+      - name: Login demo (token para los RPC smoke)
         run: |
           set -euo pipefail
-          curl -sS -X POST \
-            -H "apikey: ${ANON_KEY}" \
-            -H "Authorization: Bearer ${ANON_KEY}" \
-            -H "Content-Type: application/json" \
-            -d '{}' \
-            "${SUPABASE_URL}/functions/v1/demo-access" > /tmp/demo.json
-          EMAIL=$(jq -r '.email' /tmp/demo.json)
-          PASSWORD=$(jq -r '.password' /tmp/demo.json)
-          if [ -z "$EMAIL" ] || [ "$EMAIL" = "null" ] || [ -z "$PASSWORD" ] || [ "$PASSWORD" = "null" ]; then
-            echo "::error::demo-access no devolvio credenciales validas"
-            cat /tmp/demo.json
-            exit 1
-          fi
           TOKEN=$(curl -sS -X POST \
             -H "apikey: ${ANON_KEY}" \
             -H "Content-Type: application/json" \
-            -d "{\"email\":\"$EMAIL\",\"password\":\"$PASSWORD\"}" \
+            -d "{\"email\":\"$DEMO_USER_EMAIL\",\"password\":\"$DEMO_USER_PASSWORD\"}" \
             "${SUPABASE_URL}/auth/v1/token?grant_type=password" | jq -r '.access_token')
           if [ -z "$TOKEN" ] || [ "$TOKEN" = "null" ]; then
             echo "::error::login demo fallo - no se obtuvo access_token"
@@ -265,56 +200,3 @@ jobs:
             exit 1
           fi
           test "$STATUS" = "204"
-
-  notify-failure:
-    name: Notificar fallo de smoke (issue)
-    needs: [config, user-management-smoke, exchange-rates-smoke, tracking-public-smoke, rpc-smoke]
-    if: failure()
-    runs-on: ubuntu-24.04
-    timeout-minutes: 5
-    permissions:
-      contents: read
-      issues: write
-    steps:
-      - name: Crear o actualizar issue de fallo
-        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
-        with:
-          script: |
-            const label = 'smoke-failure';
-            const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
-            const title = `🚨 post-deploy-smoke falló (${new Date().toISOString().slice(0,10)})`;
-            const body = [
-              `El workflow **post-deploy-smoke** falló.`,
-              ``,
-              `- Run: ${runUrl}`,
-              `- Trigger: \`${context.eventName}\``,
-              `- SHA: \`${context.sha}\``,
-              ``,
-              `Revisar logs de los jobs: user-management-smoke / exchange-rates-smoke / tracking-public-smoke / rpc-smoke.`,
-            ].join('\n');
-
-            const { data: existing } = await github.rest.issues.listForRepo({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              state: 'open',
-              labels: label,
-              per_page: 1,
-            });
-
-            if (existing.length > 0) {
-              await github.rest.issues.createComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: existing[0].number,
-                body,
-              });
-            } else {
-              await github.rest.issues.create({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                title,
-                body,
-                labels: [label],
-              });
-            }
-

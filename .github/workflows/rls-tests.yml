@@ -1,37 +1,47 @@
 name: rls-tests
 
-# Ejecuta las suites SQL de RLS contra un Postgres efímero, validando el
-# aislamiento multi-tenant en cada PR que toque la base de datos.
+# Suites SQL de RLS + guardas de base de datos contra un Postgres efímero.
 #
-# Estrategia:
-#   1) Job `rls` prepara la BD (bootstrap + drift + migrations + verify) y
-#      sube un pg_dump como artifact.
-#   2) Job `rls-suites` (matrix) descarga el dump y lo restaura en su propio
-#      Postgres efímero, evitando re-ejecutar todo el bootstrap N veces.
+# CI simplificado (YAGNI): UN job, UNA instancia Postgres, sin matrix, sin
+# snapshot cacheado ni transporte de dumps entre jobs, sin radar de types.ts ni
+# guards RADAR no bloqueantes, sin cron.
+#
+# Orden intencional:
+#   bootstrap → squash + replay ordenado → candado service_role-only →
+#   post-migrate → verify RLS → integrity guard → baseline de esquema
+#   (ANTES de cualquier fixture) → guards del manifiesto → suites RLS →
+#   concurrencia de cotización ganadora.
+#
+# Fail-closed: si el bootstrap o la preparación falla, el job falla y el
+# required check "RLS tests result" queda rojo.
 
 on:
   pull_request:
     paths:
       - "supabase/migrations/**"
-      - "supabase/tests/rls/**"
-      - "supabase/tests/*.sql"
+      - "supabase/tests/**"
       - "supabase/schema/**"
+      - "scripts/ci/rls-prepare-db.sh"
+      - "scripts/ci/run-rls-suites.sh"
+      - "scripts/ci/run-guards.sh"
       - "scripts/ci/concurrencia-cotizacion-ganadora.sh"
+      - "scripts/db/**"
+      - ".github/actions/setup-pg-client/**"
       - ".github/workflows/rls-tests.yml"
   push:
     branches: [main]
     paths:
       - "supabase/migrations/**"
-      - "supabase/tests/rls/**"
-      - "supabase/tests/*.sql"
+      - "supabase/tests/**"
       - "supabase/schema/**"
+      - "scripts/ci/rls-prepare-db.sh"
+      - "scripts/ci/run-rls-suites.sh"
+      - "scripts/ci/run-guards.sh"
       - "scripts/ci/concurrencia-cotizacion-ganadora.sh"
+      - "scripts/db/**"
+      - ".github/actions/setup-pg-client/**"
       - ".github/workflows/rls-tests.yml"
   workflow_dispatch:
-  schedule:
-    # Lunes 06:00 UTC — corre la suite contra `main` aunque no haya PRs
-    # para detectar drift de la imagen Postgres o de catálogos seed.
-    - cron: "0 6 * * 1"
 
 permissions:
   contents: read
@@ -41,547 +51,17 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  # Pinneado por digest para evitar drift entre runs.
-  # Equivale a postgres:17.9 (linux/amd64).
+  # Pinneado por digest para evitar drift entre runs. Equivale a postgres:17.9.
   # IMPORTANTE: al subir esta imagen hay que subir también la mayor del cliente
-  # en .github/actions/setup-pg-client (input `version`, hoy 17). El runner
-  # ubuntu-24.04 trae pg_dump 16, que aborta contra un servidor 17.
+  # en .github/actions/setup-pg-client (input `version`, hoy 17).
   POSTGRES_IMAGE: postgres@sha256:66b6a97eac1771fc78bd201b918b4253859f436c6913aeede97bd5366cce89ae
 
 jobs:
-  rls:
-    name: Prepare RLS database snapshot
+  rls-tests-result:
+    # Nombre visible estable: es el required check en branch protection.
+    name: RLS tests result
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
-
-    services:
-      postgres:
-        image: postgres@sha256:66b6a97eac1771fc78bd201b918b4253859f436c6913aeede97bd5366cce89ae
-        env:
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: postgres
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd="pg_isready -U postgres"
-          --health-interval=5s
-          --health-timeout=5s
-          --health-retries=10
-          --shm-size=256m
-
-    env:
-      PGHOST: localhost
-      PGPORT: 5432
-      PGUSER: postgres
-      PGPASSWORD: postgres
-      PGDATABASE: postgres
-      PSQL: psql -v ON_ERROR_STOP=1 -X -q
-
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          # v13.322.1 (GHA-audit H4) — no se hace push/fetch autenticado.
-          persist-credentials: false
-
-      - name: Cliente de Postgres 17 (paridad con la imagen pinneada)
-        uses: ./.github/actions/setup-pg-client
-
-      - name: Validate matrix covers every test_rls_*.sql
-        # Si alguien añade supabase/tests/rls/test_rls_<nuevo>.sql y olvida
-        # registrarlo en la matriz, la suite no se ejecuta y CI pasa en verde.
-        # Aquí fallamos explícitamente si hay drift entre archivos y los grupos
-        # declarados en este workflow.
-        #
-        # v13.514.0 — Los 25 jobs por suite se agruparon en 5 jobs; la lista
-        # ahora vive en las líneas `suites: a b c` de `matrix.include`, así que
-        # el parser lee esas líneas y las parte por espacios. También detecta
-        # suites declaradas dos veces en distintos grupos (correrían doble y
-        # gastarían tiempo sin cubrir nada nuevo).
-        run: |
-          set -euo pipefail
-          expected=$(find supabase/tests/rls -maxdepth 1 -name 'test_rls_*.sql' -printf '%f\n' \
-            | sed -E 's|^test_rls_||; s|\.sql$||' \
-            | LC_ALL=C sort)
-          # La lista se extrae del propio bloque `matrix.include` de este
-          # workflow para que no exista una copia manual que se desincronice.
-          crudo=$(sed -nE 's|^[[:space:]]*suites:[[:space:]]*(.+)$|\1|p' \
-            .github/workflows/rls-tests.yml | tr ' ' '\n' | grep -E '^[A-Za-z0-9_]+$' || true)
-          declared=$(printf '%s\n' "$crudo" | LC_ALL=C sort -u)
-          if [ -z "$declared" ]; then
-            echo "::error::No se pudo extraer matrix.include[].suites del workflow (¿cambió el formato YAML?)"
-            exit 1
-          fi
-          duplicadas=$(printf '%s\n' "$crudo" | LC_ALL=C sort | uniq -d)
-          if [ -n "$duplicadas" ]; then
-            echo "::error::Suites declaradas en más de un grupo:"
-            echo "$duplicadas"
-            exit 1
-          fi
-          if ! diff <(echo "$expected") <(echo "$declared") >/dev/null; then
-            echo "::error::La matriz de grupos está desincronizada con los archivos test_rls_*.sql"
-            echo "--- esperados (archivos en disco) ---"
-            echo "$expected"
-            echo "--- declarados (matrix.include[].suites) ---"
-            echo "$declared"
-            exit 1
-          fi
-          echo "✓ La matriz cubre $(echo "$expected" | wc -l) suites"
-
-
-
-      - name: Restore cached snapshot (if any)
-        id: snapshot-cache
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          path: .rls-snapshot/db.dump
-          # Invalidamos cache cuando cambian migraciones, helpers CI o el
-          # propio workflow (pinneo de imagen Postgres incluido).
-          # v13.x (GHA-audit A3) — incluye supabase/schema/**: es trigger del
-          # workflow y debe invalidar el snapshot igual que las migraciones.
-          key: rls-snapshot-pg17.9-${{ hashFiles('supabase/migrations/**', 'supabase/tests/rls/_ci_*.sql', 'supabase/tests/*.sql', 'supabase/schema/**', '.github/workflows/rls-tests.yml') }}
-
-      - name: Bootstrap (stubs auth/storage/cron/net/pgmq)
-        if: steps.snapshot-cache.outputs.cache-hit != 'true'
-        run: $PSQL -f supabase/tests/rls/_ci_bootstrap.sql
-
-      - name: Cargar corte del squash (fuente única)
-        if: steps.snapshot-cache.outputs.cache-hit != 'true'
-        run: grep -E '^[A-Za-z_][A-Za-z0-9_]*=' supabase/schema/squash/cutoff.env >> "$GITHUB_ENV"
-
-      - name: Apply baseline squash
-        if: steps.snapshot-cache.outputs.cache-hit != 'true'
-        # El historial hasta SQUASH_CUTOFF está consolidado en un solo archivo
-        # (idéntico, byte a byte, al esquema que producían las 1193 migraciones).
-        run: |
-          set -uo pipefail
-          sed -E \
-            -e 's/^[[:space:]]+CREATE EXTENSION[[:space:]]+(IF NOT EXISTS[[:space:]]+)?(pg_cron|pg_net|pgmq|supabase_vault)[^;]*;/    PERFORM 1; -- [ci] stubbed \2/I' \
-            -e 's/^CREATE EXTENSION[[:space:]]+(IF NOT EXISTS[[:space:]]+)?(pg_cron|pg_net|pgmq|supabase_vault)[^;]*;/SELECT 1; -- [ci] stubbed \2/I' \
-            "$SQUASH_FILE" | $PSQL --single-transaction
-
-      - name: Apply migrations (no consolidadas en el squash)
-        if: steps.snapshot-cache.outputs.cache-hit != 'true'
-        run: |
-          set -uo pipefail
-          shopt -s nullglob
-          # --single-transaction: si una migración falla a la mitad, hace
-          # rollback completo del archivo (ON_ERROR_STOP=1). Evita estado
-          # parcial de objetos creados antes del error.
-          for f in $(printf '%s\n' supabase/migrations/*.sql | LC_ALL=C sort); do
-            base=$(basename "$f")
-            # El corte por timestamp no basta: hay migraciones creadas DESPUÉS
-            # del squash con timestamp anterior al corte. La fuente de verdad
-            # es el inventario de archivos incluidos en el squash.
-            grep -qxF "$base" "$SQUASH_INCLUDED" && continue
-
-            echo "▶ $base"
-            if sed -E \
-              -e 's/^[[:space:]]+CREATE EXTENSION[[:space:]]+(IF NOT EXISTS[[:space:]]+)?(pg_cron|pg_net|pgmq|supabase_vault)[^;]*;/    PERFORM 1; -- [ci] stubbed \2/I' \
-              -e 's/^CREATE EXTENSION[[:space:]]+(IF NOT EXISTS[[:space:]]+)?(pg_cron|pg_net|pgmq|supabase_vault)[^;]*;/SELECT 1; -- [ci] stubbed \2/I' \
-              "$f" | $PSQL --single-transaction; then
-              continue
-            fi
-            echo "::error file=$f::la migración no aplica sobre el baseline squash"
-            exit 1
-          done
-
-
-
-
-
-
-      - name: "Candado service_role-only en migraciones (bidireccional)"
-        # FIX4 (P3): corre DESPUÉS de aplicar migraciones y ANTES del
-        # GRANT masivo + re-cierre de _ci_post_migrate.sql. Falla si una
-        # función de la lista canónica _ci_service_role_only.sql quedó sin
-        # REVOKE en su migración, si hay funciones service_role-only fuera
-        # de la lista, o si la lista tiene entradas obsoletas.
-        if: steps.snapshot-cache.outputs.cache-hit != 'true'
-        run: $PSQL -f supabase/tests/rls/_ci_check_service_role_only.sql
-
-      - name: Post-migrate (drop auth.users FKs para CI)
-        if: steps.snapshot-cache.outputs.cache-hit != 'true'
-        run: $PSQL -f supabase/tests/rls/_ci_post_migrate.sql
-
-      - name: Verify RLS coverage
-        if: steps.snapshot-cache.outputs.cache-hit != 'true'
-        run: $PSQL -f supabase/tests/rls/_ci_verify_rls.sql
-
-      # Q-14b — La guardia de integridad deja de ser exclusiva del deploy gate:
-      # bloquea también en cada PR que toque migraciones (la cache se invalida
-      # con cualquier cambio en supabase/migrations/**).
-      - name: Guardia de integridad de esquema (bloqueante)
-        if: steps.snapshot-cache.outputs.cache-hit != 'true'
-        run: |
-          set -euo pipefail
-          $PSQL -A -t -f scripts/db/integrity-guard.sql > /tmp/integrity.txt
-          filas=$(grep -c . /tmp/integrity.txt || true)
-          if [ "$filas" != "0" ]; then
-            {
-              echo "## ❌ Guardia de integridad de esquema"
-              echo ""
-              echo '```'
-              cat /tmp/integrity.txt
-              echo '```'
-            } >> "$GITHUB_STEP_SUMMARY"
-            cat /tmp/integrity.txt
-            exit 1
-          fi
-          echo "## ✅ Guardia de integridad de esquema" >> "$GITHUB_STEP_SUMMARY"
-
-
-
-      - name: Dump prepared database
-        if: steps.snapshot-cache.outputs.cache-hit != 'true'
-        run: |
-          mkdir -p .rls-snapshot
-          # Mantenemos GRANTs (sin --no-privileges) porque las suites RLS
-          # ejecutan SELECT/INSERT con `SET ROLE authenticated`; sin grants
-          # PostgREST-style en el destino el primer SELECT lanza
-          # "permission denied for table …" antes de evaluar las policies.
-          # -Z 9: máxima compresión del custom format (~40% menos peso).
-          pg_dump --format=custom --no-owner -Z 9 \
-            --file=.rls-snapshot/db.dump postgres
-          ls -lh .rls-snapshot/
-
-      - name: Upload database snapshot
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        with:
-          name: rls-db-snapshot
-          path: .rls-snapshot/db.dump
-          if-no-files-found: error
-          retention-days: 1
-          compression-level: 9
-
-  # v13.514.0 (auditoría CI · Fase 2) — Antes había 1 job por suite (25 jobs).
-  # Cada job levantaba su propio Postgres y hacía `pg_restore` del snapshot
-  # (~40 s de arranque) para correr un archivo SQL de ~10 s: el 80 % del tiempo
-  # era montar y desmontar la base. Ahora son 5 grupos que restauran UNA vez y
-  # corren sus suites en serie. Los grupos siguen en paralelo entre sí, así que
-  # el reloj de pared casi no cambia y el consumo de runners baja ~5x.
-  rls-suites:
-    name: RLS suites — ${{ matrix.grupo }}
-    runs-on: ubuntu-24.04
-    needs: rls
-    timeout-minutes: 20
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - grupo: aislamiento
-            suites: isolation org_scope anon_deny_all cross_tenant_mutations policy_linter rpc_org_scope_linter super_admin_planos restrictive_perf01_permissive_backup
-          - grupo: financiero
-            suites: financiero financiero_critico rpc_financieras tablas_dinero_extra reportes_multi_tenant refacturaciones_matriz soft_delete_reportes
-          - grupo: operaciones
-            suites: operaciones crm_operacional ola6_ventas_arranca soft_delete_rpcs storage_objects expediente_cliente saldo_factura_proveedor proveedor_estado_cuenta_offset
-          - grupo: roles
-            suites: roles_no_admin roles_negocio rpc_por_rol rpc_smoke_roles rpc_provision_organization portal_intra_org
-          - grupo: costeo
-            suites: tarifas_y_costeo reg_costeo reg_portales reg_r4_cotizacion_guard reg_r4_pricing
-
-    services:
-      postgres:
-        image: postgres@sha256:66b6a97eac1771fc78bd201b918b4253859f436c6913aeede97bd5366cce89ae
-        env:
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: postgres
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd="pg_isready -U postgres"
-          --health-interval=5s
-          --health-timeout=5s
-          --health-retries=10
-          --shm-size=256m
-
-    env:
-      PGHOST: localhost
-      PGPORT: 5432
-      PGUSER: postgres
-      PGPASSWORD: postgres
-      PGDATABASE: postgres
-      PSQL: psql -v ON_ERROR_STOP=1 -X -q
-
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          # v13.322.1 (GHA-audit H4) — no se hace push/fetch autenticado.
-          persist-credentials: false
-
-
-      # v13.709.1 — El artifact de logs avisaba "No files were found" cuando la
-      # step de suites no llegaba a correr (p. ej. falla el restore del dump):
-      # `.rls-logs/` nunca se creaba. Ahora la carpeta y un manifiesto se
-      # siembran antes de tocar la BD, así el artifact siempre trae contexto.
-      - name: Preparar carpeta de logs
-        env:
-          SUITES: ${{ matrix.suites }}
-        run: |
-          set -euo pipefail
-          mkdir -p .rls-logs
-          {
-            echo "grupo: ${{ matrix.grupo }}"
-            echo "suites: $SUITES"
-            echo "run: ${{ github.run_id }} · sha ${{ github.sha }}"
-            echo "nota: si no hay archivos suite-*.log, la step de suites no llegó a correr."
-          } > .rls-logs/00-manifiesto.txt
-
-      - name: Cliente de Postgres 17 + restore del snapshot
-        uses: ./.github/actions/restore-rls-snapshot
-
-
-
-
-
-      - name: Run RLS suites — ${{ matrix.grupo }}
-        env:
-          SUITES: ${{ matrix.suites }}
-        run: |
-          set -uo pipefail
-          mkdir -p .rls-logs
-
-          fallidas=""
-          for suite in $SUITES; do
-            archivo="supabase/tests/rls/test_rls_${suite}.sql"
-            if [ ! -f "$archivo" ]; then
-              echo "::error::$archivo no existe (matriz desincronizada)"
-              fallidas="$fallidas $suite"
-              continue
-            fi
-            echo "::group::suite $suite"
-            # Cada suite corre aunque la anterior falle: así un PR ve TODOS los
-            # fallos del grupo en una sola vuelta y no uno por push.
-            if $PSQL -f "$archivo" 2>&1 | tee ".rls-logs/suite-${suite}.log"; then
-              echo "✓ $suite"
-            else
-              echo "::error::RLS suite fallida: $suite"
-              fallidas="$fallidas $suite"
-            fi
-            echo "::endgroup::"
-          done
-          {
-            echo "### RLS — grupo \`${{ matrix.grupo }}\`"
-            echo ""
-            if [ -n "$fallidas" ]; then
-              echo "❌ Suites fallidas:"
-              for s in $fallidas; do echo "- \`$s\`"; done
-            else
-              echo "✅ Todas las suites del grupo pasaron."
-            fi
-          } >> "$GITHUB_STEP_SUMMARY"
-          [ -z "$fallidas" ]
-
-      - name: Upload suite logs
-        if: always()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        with:
-          name: rls-suite-logs-${{ matrix.grupo }}
-          path: .rls-logs/
-          # upload-artifact v4+ excluye archivos/directorios ocultos por
-          # defecto; `.rls-logs` sí existe, pero sin esta opción parece vacío.
-          include-hidden-files: true
-          if-no-files-found: error
-          retention-days: 7
-
-
-  rls-guards:
-    name: Guards conductuales + schema invariants (siempre)
-    runs-on: ubuntu-24.04
-    needs: rls
-    timeout-minutes: 10
-    # v13.x (GHA-audit A3) — estos guards estaban condicionados a
-    # `cache-hit != 'true'` en el job `rls`: con snapshot cacheado el PR quedaba
-    # verde sin ejecutarlos. Aqui corren SIEMPRE sobre el dump restaurado
-    # (sus fixtures son BEGIN...ROLLBACK, asi que no contaminan nada).
-
-    services:
-      postgres:
-        image: postgres@sha256:66b6a97eac1771fc78bd201b918b4253859f436c6913aeede97bd5366cce89ae
-        env:
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: postgres
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd="pg_isready -U postgres"
-          --health-interval=5s
-          --health-timeout=5s
-          --health-retries=10
-          --shm-size=256m
-
-    env:
-      PGHOST: localhost
-      PGPORT: 5432
-      PGUSER: postgres
-      PGPASSWORD: postgres
-      PGDATABASE: postgres
-      PSQL: psql -v ON_ERROR_STOP=1 -X -q
-
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-
-      - name: Cliente de Postgres 17 + restore del snapshot
-        uses: ./.github/actions/restore-rls-snapshot
-
-      - name: Guards conductuales + schema invariants (manifiesto, en paralelo)
-        # v13.743.0 — antes: ~50 pasos `run: $PSQL -f ...` en serie (mantener el
-        # YAML a mano + tiempo lineal). Ahora la lista vive en
-        # `supabase/tests/_guards_manifest.txt` y el runner los corre en
-        # paralelo; cada suite es BEGIN…ROLLBACK, así que no se contaminan.
-        env:
-          JOBS: 4
-          LOG_DIR: /tmp/guards-logs
-        run: bash scripts/ci/run-guards.sh
-
-      - name: Guards RADAR (suites que nunca corrían — modo aviso)
-        # v13.743.0 — 12 suites SQL existían sin estar referenciadas en ningún
-        # workflow (cobertura ficticia). Corren aquí en modo aviso hasta
-        # estabilizarse; luego se mueven al manifiesto bloqueante.
-        continue-on-error: true
-        env:
-          MANIFEST: supabase/tests/_guards_manifest_radar.txt
-          JOBS: 4
-          LOG_DIR: /tmp/guards-logs-radar
-        run: bash scripts/ci/run-guards.sh
-
-      - name: Concurrencia de dos sesiones — cotización ganadora única
-        # v13.823.58 — no cabe en las suites SQL (una sola transacción
-        # BEGIN…ROLLBACK): necesita dos conexiones compitiendo por la misma
-        # oportunidad. El script commitea su fixture y lo limpia siempre.
-        run: bash scripts/ci/concurrencia-cotizacion-ganadora.sh
-
-      - name: Subir logs de guards
-        if: always()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        with:
-          name: rls-guards-logs
-          path: /tmp/guards-logs
-          if-no-files-found: ignore
-          retention-days: 7
-
-
-
-
-
-
-
-
-  types-drift:
-    name: Drift types.ts (esquema <-> tipos TS)
-    runs-on: ubuntu-24.04
-    needs: rls
-    timeout-minutes: 10
-    # v13.x (GHA-audit C6) — radar: el esquema fuente de verdad son las
-    # migraciones. Arranca en modo aviso (continue-on-error) porque la baseline
-    # committeada se genero contra la BD de produccion; una vez regenerada con
-    # `bun run gen:types` se puede volver bloqueante quitando continue-on-error.
-    continue-on-error: true
-
-    services:
-      postgres:
-        image: postgres@sha256:66b6a97eac1771fc78bd201b918b4253859f436c6913aeede97bd5366cce89ae
-        env:
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: postgres
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd="pg_isready -U postgres"
-          --health-interval=5s
-          --health-timeout=5s
-          --health-retries=10
-          --shm-size=256m
-
-    env:
-      PGHOST: localhost
-      PGPORT: 5432
-      PGUSER: postgres
-      PGPASSWORD: postgres
-      PGDATABASE: postgres
-      PSQL: psql -v ON_ERROR_STOP=1 -X -q
-
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-
-      - uses: ./.github/actions/setup-bun
-
-      - name: Cliente de Postgres 17 + restore del snapshot
-        uses: ./.github/actions/restore-rls-snapshot
-
-      - name: Regenerate types from migration schema
-        id: gentypes
-        run: |
-          # `supabase gen types` corre postgres-meta en Docker: public.ecr.aws
-          # devuelve `toomanyrequests: Rate exceeded` de forma intermitente.
-          # Reintentamos con backoff y, si sigue fallando, marcamos el paso como
-          # no concluyente (infra) en vez de reportar drift falso.
-          IMG="public.ecr.aws/supabase/postgres-meta:v0.96.6"
-          for i in 1 2 3 4; do
-            if docker pull "$IMG"; then
-              echo "imagen postgres-meta lista (intento $i)"
-              break
-            fi
-            if [ "$i" = "4" ]; then
-              echo "::warning::No se pudo descargar $IMG (rate limit del registry). Se omite la verificación de drift de types.ts."
-              echo "skipped=true" >> "$GITHUB_OUTPUT"
-              exit 0
-            fi
-            sleep $((i * 20))
-          done
-
-          for i in 1 2 3; do
-            if bunx supabase gen types typescript \
-                 --db-url postgresql://postgres:postgres@localhost:5432/postgres \
-                 --schema public > /tmp/types.generated.ts; then
-              wc -l /tmp/types.generated.ts
-              echo "skipped=false" >> "$GITHUB_OUTPUT"
-              exit 0
-            fi
-            sleep $((i * 15))
-          done
-
-          echo "::warning::supabase gen types falló tras 3 intentos (infra). Se omite la verificación de drift de types.ts."
-          echo "skipped=true" >> "$GITHUB_OUTPUT"
-
-      - name: Diff against committed types.ts
-        if: steps.gentypes.outputs.skipped != 'true'
-        run: |
-          # `__InternalSupabase` (PostgrestVersion) y las funciones de
-          # extensiones (pgcrypto/uuid-ossp/pg_trgm, que en CI caen en `public`)
-          # no son drift de esquema: se filtran en ambos lados.
-          bun scripts/ci/normalize-supabase-types.ts src/integrations/supabase/types.ts > /tmp/types.committed.norm.ts
-          bun scripts/ci/normalize-supabase-types.ts /tmp/types.generated.ts > /tmp/types.generated.norm.ts
-
-          if ! diff -u /tmp/types.committed.norm.ts /tmp/types.generated.norm.ts > /tmp/types.diff; then
-            echo "::warning::src/integrations/supabase/types.ts esta STALE respecto al esquema de migraciones."
-            echo "::warning::Regenera con: DATABASE_URL=<bd-local-con-migraciones> bun run gen:types"
-            head -120 /tmp/types.diff
-            {
-              echo "## Drift de types.ts"
-              echo ""
-              echo '```diff'
-              head -200 /tmp/types.diff
-              echo '```'
-            } >> "$GITHUB_STEP_SUMMARY"
-            exit 1
-          fi
-          echo "types.ts sincronizado con el esquema de migraciones"
-
-
-  schema-baseline:
-    name: Baseline de esquema (estado final esperado)
-    runs-on: ubuntu-24.04
-    needs: rls
-    timeout-minutes: 10
-    # El drift radar prueba que las migraciones APLIQUEN; este job prueba que el
-    # estado final sea EXACTAMENTE el esperado. Cubre lo que ninguna otra suite
-    # ve: un índice borrado, un CHECK relajado, un GRANT abierto de más, un
-    # trigger eliminado o el cuerpo de una RPC cambiado sin querer.
-    # Se actualiza a propósito con: bun run db:baseline:update
+    timeout-minutes: 30
 
     services:
       postgres:
@@ -610,58 +90,63 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          # No se hace push/fetch autenticado.
           persist-credentials: false
 
-      - name: Cliente de Postgres 17 + restore del snapshot
-        uses: ./.github/actions/restore-rls-snapshot
+      - name: Cliente de Postgres 17 (paridad con la imagen pinneada)
+        uses: ./.github/actions/setup-pg-client
 
-      - name: Generate normalized schema snapshot
+      # Bootstrap + squash (con su inventario) + replay ordenado de TODAS las
+      # migraciones posteriores.
+      - name: Preparar BD (bootstrap + squash + replay de migraciones)
+        run: bash scripts/ci/rls-prepare-db.sh
+
+      - name: Candado service_role-only en migraciones (bidireccional)
+        # Corre DESPUÉS de aplicar migraciones y ANTES del GRANT masivo +
+        # re-cierre de _ci_post_migrate.sql.
+        run: $PSQL -f supabase/tests/rls/_ci_check_service_role_only.sql
+
+      - name: Post-migrate (drop auth.users FKs para CI)
+        run: $PSQL -f supabase/tests/rls/_ci_post_migrate.sql
+
+      - name: Verify RLS coverage
+        run: $PSQL -f supabase/tests/rls/_ci_verify_rls.sql
+
+      - name: Guardia de integridad de esquema (bloqueante)
         run: |
           set -euo pipefail
-          # pg_dump se ejecuta DENTRO del contenedor de la imagen pinneada:
-          # el pg_dump del runner formatea distinto al del servidor (17.9)
-          # y produciría diffs falsos contra la baseline generada en local.
+          $PSQL -A -t -f scripts/db/integrity-guard.sql > /tmp/integrity.txt
+          filas=$(grep -c . /tmp/integrity.txt || true)
+          if [ "$filas" != "0" ]; then
+            {
+              echo "## ❌ Guardia de integridad de esquema"
+              echo ""
+              echo '```'
+              cat /tmp/integrity.txt
+              echo '```'
+            } >> "$GITHUB_STEP_SUMMARY"
+            cat /tmp/integrity.txt
+            exit 1
+          fi
+          echo "## ✅ Guardia de integridad de esquema" >> "$GITHUB_STEP_SUMMARY"
+
+      # La baseline se compara con la BD recién preparada, ANTES de ejecutar
+      # guards y suites: aunque sus fixtures son BEGIN…ROLLBACK, el snapshot no
+      # debe depender de ellos.
+      - name: Baseline de esquema (estado final esperado)
+        run: |
+          set -uo pipefail
+          # pg_dump se ejecuta DENTRO del contenedor de la imagen pinneada: el
+          # pg_dump del runner formatea distinto y produciría diffs falsos.
           container=$(docker ps --filter "ancestor=${POSTGRES_IMAGE}" --format '{{.Names}}' | head -1)
           if [ -z "$container" ]; then
             echo "::error::No se encontró el contenedor Postgres (imagen pinneada)."
             exit 1
           fi
-          bash scripts/db/schema-snapshot.sh /tmp/schema.actual.sql "$container"
+          bash scripts/db/schema-snapshot.sh /tmp/schema.actual.sql "$container" || exit 1
           wc -l /tmp/schema.actual.sql
-
-      - name: Upload generated snapshot
-        if: always()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        with:
-          name: schema-snapshot-actual
-          path: /tmp/schema.actual.sql
-          if-no-files-found: error
-          retention-days: 7
-
-      - name: Compare against committed baseline
-        run: |
-          set -uo pipefail
-          # Bootstrap: la baseline sólo puede generarse con el pg_dump de la
-          # imagen Postgres pinneada (17.9). Mientras no exista el archivo
-          # committeado, este job avisa y publica el snapshot como artifact en
-          # vez de reprobar el pipeline: no hay nada contra qué comparar todavía.
           if [ ! -f "$BASELINE" ]; then
-            echo "::error::Falta $BASELINE — genera y confirma la baseline antes de continuar."
-            {
-              echo "## ⚠️ Baseline de esquema ausente (bootstrap)"
-              echo ""
-              echo "Este repo aún no tiene \`$BASELINE\`, así que no hay comparación posible."
-              echo "Para activar el guard, sembrala una vez:"
-              echo ""
-              echo "1. Descargá el artifact \`schema-snapshot-actual\` de este run."
-              echo "2. Committealo como \`$BASELINE\`."
-              echo ""
-              echo "Con Docker local el equivalente es:"
-              echo ""
-              echo '```sh'
-              echo 'bun run db:baseline:update'
-              echo '```'
-            } >> "$GITHUB_STEP_SUMMARY"
+            echo "::error::Falta $BASELINE — genera y confirma la baseline (bun run db:baseline:update)."
             exit 1
           fi
           if diff -u "$BASELINE" /tmp/schema.actual.sql > /tmp/schema.diff; then
@@ -682,74 +167,34 @@ jobs:
           } >> "$GITHUB_STEP_SUMMARY"
           exit 1
 
-      - name: Upload schema diff
+      - name: Guards conductuales + schema invariants (manifiesto bloqueante)
+        env:
+          JOBS: 4
+          LOG_DIR: /tmp/guards-logs
+        run: bash scripts/ci/run-guards.sh
+
+      # Descubre por patrón TODAS las suites test_rls_*.sql (34 hoy) y verifica
+      # su aislamiento BEGIN…ROLLBACK antes de ejecutarlas.
+      - name: Suites RLS (descubrimiento por patrón)
+        env:
+          LOG_DIR: .rls-logs
+        run: bash scripts/ci/run-rls-suites.sh
+
+      - name: Concurrencia de dos sesiones — cotización ganadora única
+        # No cabe en una suite BEGIN…ROLLBACK: necesita dos conexiones
+        # compitiendo por la misma oportunidad. El script limpia su fixture.
+        run: bash scripts/ci/concurrencia-cotizacion-ganadora.sh
+
+      - name: Subir logs y diff (sólo al fallar)
         if: failure()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: schema-baseline-diff
-          path: /tmp/schema.diff
+          name: rls-logs
+          path: |
+            .rls-logs/
+            /tmp/guards-logs/
+            /tmp/schema.diff
+            /tmp/integrity.txt
+          include-hidden-files: true
           if-no-files-found: ignore
-          retention-days: 7
-
-
-
-  rls-tests-result:
-    name: RLS tests result
-    runs-on: ubuntu-24.04
-    needs: [rls-suites, rls-guards, schema-baseline]
-    if: always()
-    permissions:
-      contents: read
-      actions: read
-    steps:
-
-      - name: Detallar grupos fallidos
-        # El resultado agregado sólo dice "failure": sin esto hay que abrir a
-        # mano los grupos para saber cuál rompió. Aquí listamos los grupos
-        # fallidos con su enlace directo, en el log y en el summary. El log de
-        # cada suite individual queda en el artifact `rls-suite-logs-<grupo>`.
-        if: needs.rls-suites.result != 'success' && needs.rls-suites.result != 'skipped'
-        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
-        with:
-          script: |
-            const PREFIJO = 'RLS suites — ';
-            const jobs = await github.paginate(
-              github.rest.actions.listJobsForWorkflowRun,
-              { owner: context.repo.owner, repo: context.repo.repo, run_id: context.runId, per_page: 100 },
-            );
-            const fallidas = jobs.filter(
-              (j) => j.name.startsWith(PREFIJO) && j.conclusion !== 'success' && j.conclusion !== 'skipped',
-            );
-            const lineas = fallidas.length
-              ? fallidas.map((j) => `- **${j.name.replace(PREFIJO, '')}** (${j.conclusion}) → ${j.html_url}`)
-              : ['- (no se pudo identificar el grupo; revisa los artifacts `rls-suite-logs-*`)'];
-            for (const l of lineas) core.error(l);
-            core.summary.addRaw(`## ❌ Grupos de suites RLS fallidos\n${lineas.join('\n')}\n`);
-            await core.summary.write();
-
-
-      - name: Aggregate matrix result
-        # Job único para usar como required check en branch protection,
-        # evitando tener que listar los grupos individualmente.
-        # `skipped` es válido: ocurre cuando el commit no toca la base de datos
-        # y los filtros de ruta omiten las suites; sólo `failure`/`cancelled`
-        # deben romper el check.
-        run: |
-          suites="${{ needs.rls-suites.result }}"
-          guards="${{ needs.rls-guards.result }}"
-          baseline="${{ needs.schema-baseline.result }}"
-          echo "rls-suites result: $suites"
-          echo "rls-guards result: $guards"
-          echo "schema-baseline result: $baseline"
-          fail=0
-          for r in "$suites" "$guards" "$baseline"; do
-            case "$r" in
-              success|skipped) ;;
-              *) fail=1 ;;
-            esac
-          done
-          if [ "$fail" = "1" ]; then
-            echo "::error::Una o más suites RLS, guards conductuales o la baseline de esquema fallaron"
-            exit 1
-          fi
-          echo "✓ Suites RLS, guards conductuales y baseline de esquema en verde (o omitidas)"
+          retention-days: 3

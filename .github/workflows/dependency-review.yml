@@ -6,6 +6,11 @@ name: Dependency Review
 on:
   pull_request:
     branches: [main]
+    # Sólo cuando el diff toca dependencias (Dependabot sí abre PRs aquí).
+    paths:
+      - "package.json"
+      - "bun.lock"
+      - ".github/workflows/dependency-review.yml"
 
 permissions:
   contents: read
