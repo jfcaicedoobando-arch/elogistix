@@ -12,40 +12,37 @@ import { Calendar } from "@/components/ui/calendar";
 
 /** Guard aplicado por `classNames.today` en calendar.tsx. */
 const GUARD_NO_SELECCIONADO = ":not([aria-selected='true']):not([data-selected='true'])";
+const SELECCIONADO = "[aria-selected='true'], [data-selected='true']";
 
-function celdaDe(boton: HTMLElement): HTMLElement {
+/** Celda del día cuyo botón muestra ese número. */
+function celdaDelDia(container: HTMLElement, dia: number): HTMLElement {
+  const boton = Array.from(container.querySelectorAll("button")).find(
+    (b) => b.textContent?.trim() === String(dia),
+  );
+  if (!boton) throw new Error(`No se encontró el día ${dia}`);
   const celda = boton.closest("td, [role='gridcell']");
   if (!(celda instanceof HTMLElement)) throw new Error("El día no está dentro de una celda");
   return celda;
 }
 
 describe("Calendar — hoy vs seleccionado", () => {
-  it("marca la selección en la celda, no en el botón (el guard mira la celda)", () => {
-    const hoy = new Date();
+  const hoy = new Date();
+
+  it("con hoy seleccionado, la celda queda marcada y el guard la excluye del énfasis", () => {
     const { container } = render(<Calendar mode="single" selected={hoy} month={hoy} />);
-    const botonHoy = container.querySelector<HTMLElement>("button[data-day]") ?? undefined;
-    expect(botonHoy).toBeTruthy();
+    const celda = celdaDelDia(container, hoy.getDate());
 
-    const seleccionada = container.querySelector<HTMLElement>(
-      "[aria-selected='true'], [data-selected='true']",
-    );
-    expect(seleccionada, "react-day-picker debe marcar la celda seleccionada").toBeTruthy();
-    // El botón no lleva el estado: por eso el guard anterior nunca aplicaba.
-    expect(seleccionada?.tagName.toLowerCase()).not.toBe("button");
-
-    // Hoy seleccionado: la celda SÍ está seleccionada, así que el guard la excluye.
-    const celdaHoy = celdaDe(seleccionada!.querySelector("button") ?? seleccionada!);
-    expect(celdaHoy.matches(GUARD_NO_SELECCIONADO)).toBe(false);
+    // El estado de selección vive en la celda, no en el botón: por eso el guard
+    // anterior (`[&>button:not([aria-selected='true'])]`) nunca aplicaba.
+    expect(celda.matches(SELECCIONADO)).toBe(true);
+    expect(celda.querySelector("button")?.matches(SELECCIONADO)).toBe(false);
+    expect(celda.matches(GUARD_NO_SELECCIONADO)).toBe(false);
   });
 
   it("hoy NO seleccionado sí recibe el énfasis (la celda no está seleccionada)", () => {
-    const hoy = new Date();
     const { container } = render(<Calendar mode="single" month={hoy} />);
-    const seleccionada = container.querySelector("[aria-selected='true'], [data-selected='true']");
-    expect(seleccionada).toBeNull();
-
-    const primerBoton = container.querySelector<HTMLElement>("button[data-day]");
-    expect(primerBoton).toBeTruthy();
-    expect(celdaDe(primerBoton!).matches(GUARD_NO_SELECCIONADO)).toBe(true);
+    const celda = celdaDelDia(container, hoy.getDate());
+    expect(celda.matches(SELECCIONADO)).toBe(false);
+    expect(celda.matches(GUARD_NO_SELECCIONADO)).toBe(true);
   });
 });
