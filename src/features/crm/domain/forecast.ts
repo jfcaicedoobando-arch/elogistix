@@ -138,7 +138,7 @@ export function computeReportesCRM(
 
   const fuenteMap = new Map<string, { total: number; convertidos: number }>();
   for (const l of leads) {
-    const f = l.fuente ?? "Otro";
+    const f = l.fuente ?? "Prospección";
     const c = fuenteMap.get(f) ?? { total: 0, convertidos: 0 };
     c.total += 1;
     if (l.estado === "Convertido") c.convertidos += 1;

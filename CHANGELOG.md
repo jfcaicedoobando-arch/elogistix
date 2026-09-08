@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.823.221] - 2026-09-08
+- **feat(crm)**: renombre de "Fuente" a "Origen" en todo el módulo CRM (alta de lead, ficha, filtros, tabla, exportación CSV y analytics).
+- **feat(crm)**: catálogo de orígenes de lead reducido a 3 opciones: Prospección, Finkargo y Referido.
+- **fix(db)**: migración de datos históricos en `crm_leads.fuente` — Web, Campaña, Llamada en frío y Otro → Prospección; Evento → Referido. Se agregaron los valores Prospección y Finkargo al enum sin eliminar los anteriores para no romper seeds ni datos legacy.
+- **fix(csv)**: importación de leads mapea fuentes legacy al nuevo catálogo y usa Prospección como default.
+
 ## [13.823.220] - 2026-09-08
 - R219-UI-01: la vista previa del Paso 4 (Costos y Pricing) ya multiplica cantidad × precio unitario en total por fila, total de venta y utilidad, con la misma regla monetaria que la persistencia; el campo se etiqueta "Precio unitario (sin IVA)".
 - R219-UI-01 (remate): `cantidadVentaValida` respeta el contrato del validador (`cantidad >= 1`): sólo la cantidad AUSENTE (filas legacy sin columna) se lee como 1; `0`, negativos y `NaN` quedan inválidos y aportan 0 a la vista previa, sin inventar una venta de 1 ni propagar NaN. Sin cambios en payload ni en base.
