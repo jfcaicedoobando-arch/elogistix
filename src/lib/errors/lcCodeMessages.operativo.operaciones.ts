@@ -42,6 +42,10 @@ export const LC_CODE_MESSAGES_OPERATIVO_OPERACIONES: Record<string, string> = {
     "La cotización incluye una moneda que aún no está soportada. Usa MXN o USD.",
   LC_TARIFA_REQUIERE_REVALIDACION:
     "La tarifa cambió o venció. Revalida la cotización antes de continuar.",
+  LC_TARIFA_APLICADA_INVALIDA:
+    "La tarifa seleccionada no es válida para esta operación. Vuelve a seleccionar una tarifa compatible de tu organización.",
+  LC_REAPROBACION_NO_VIGENTE:
+    "La aprobación de ventas ya no corresponde a la tarifa actual. Vuelve a revisar los cambios y solicita una nueva aprobación.",
   LC_RESPUESTA_INVALIDA: "La respuesta del cliente no es válida.",
 
   // ── Ola 7 · cronología de eventos de embarque ──────────────────────────
