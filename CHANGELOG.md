@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.823.219] - 2026-09-08
+
+- **fix(db)**: R217 — en `crear_embarque_completo` el claim de idempotencia (`idempotency_claim`) ahora ocurre ANTES de `_assert_cotizacion_convertible`. Un reintento con el mismo `requestId` tras un alta ya insertada devolvía `LC_COT_YA_TIENE_EMBARQUE` en lugar de la respuesta cacheada. Las validaciones puras (medidas, organización/escritor, relaciones) siguen antes del claim; sin cambios de firma, ACL, RLS, triggers ni datos. Migración `20260913001300_r217_crear_embarque_completo_idempotencia.sql`.
+- **test(db)**: nuevo contrato estático `supabase/tests/r217_crear_embarque_completo_idempotencia_contract.sql` (registrado en `_guards_manifest.txt`) que fija el orden claim → convertibilidad.
+
 ## [13.823.218] - 2026-09-08
 
 - **fix(db)**: el guard `r216_cot_tipo_servicio_contract` fallaba en GitHub Actions (`rls-tests`) porque la migración posterior `20260913001100_r201_cot_remate_identidad_snapshot_hidratacion.sql` volvía a definir `crear_embarque_borrador_core` y, en una reconstrucción limpia por orden de archivo, borraba la siembra FCL/LCL. Se agrega la migración `20260913001200_r216_core_tipo_servicio_post_r201.sql` que redeclara la definición canónica final (R201 completo: MSDS, conceptos/costos, bitácora, notificaciones y permisos + `v_tipo_servicio` FCL/LCL). Sin backfill ni cambios de datos.
