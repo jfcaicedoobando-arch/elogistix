@@ -152,6 +152,11 @@ export default function Cotizaciones() {
             onRowMouseEnter={(r) => c.prefetchCotizacion(r.id)}
             rowKey={(r) => r.id}
             density={TABLE_DENSITY.listado}
+            // MEJ-20260908-01: con `min-w-max` la tabla medía ~1.4k px y las
+            // acciones quedaban fuera de la vista en 1280x720. Ajustada al ancho
+            // disponible, las columnas clave (Folio, Cliente, Estado, importe,
+            // acciones) caben sin scroll horizontal.
+            tableClassName="w-full table-fixed"
             className="pb-24 sm:pb-0"
             mobileCard={(r) => (
               <CotizacionMobileCard
