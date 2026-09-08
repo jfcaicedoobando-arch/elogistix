@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.823.227] - 2026-09-08
+- **refactor(crm)**: el Estado del lead ya no se cambia desde el listado (era un desplegable dentro de la fila); ahora se ve como etiqueta de lectura y se edita únicamente en el detalle del lead, junto con el Score. Las acciones masivas por selección se mantienen sin cambios.
+
+
+
 ## [13.823.226] - 2026-09-08
 - **feat(crm)**: el modal inicial de alta de lead (alta express) ahora incluye el campo Origen (Prospección / Finkargo / Referido, default Prospección); antes lo guardaba siempre como Prospección sin preguntar.
 - **fix(crm)**: si eliges el origen y luego usas "Más campos →", el formulario completo conserva ese origen en lugar de volver al default.
