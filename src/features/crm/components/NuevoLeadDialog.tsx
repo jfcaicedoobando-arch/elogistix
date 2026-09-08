@@ -75,7 +75,7 @@ export default function NuevoLeadDialog({ open, onOpenChange, draftInicial, onCr
   const [autoActividad, setAutoActividad] = useState(true);
 
   const resetForm = useCallback(() => setForm(formVacio()), [formVacio]);
-  const { handleSubmit, pendingTotal, emailInvalido } = useNuevoLeadSubmit({
+  const { handleSubmit, pendingTotal, emailInvalido, empresaError } = useNuevoLeadSubmit({
     form,
     autoActividad,
     onSaved: (id) => {
@@ -134,6 +134,7 @@ export default function NuevoLeadDialog({ open, onOpenChange, draftInicial, onCr
         autoActividad={autoActividad}
         setAutoActividad={setAutoActividad}
         emailError={emailInvalido ? "Correo inválido: usa la forma usuario@dominio.com o deja el campo vacío." : undefined}
+        empresaError={empresaError}
       />
     </FormDialogShell>
   );
