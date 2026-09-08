@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.823.229] - 2026-09-08
+- **fix(cotizaciones)**: al abrir el diálogo de aceptar cotización ya no se dispara el error "Missing queryFn" cuando la cotización no tiene oportunidad ligada (Sentry JAVASCRIPT-REACT-6C).
+- **fix(sidebar)**: si la sesión expira, los contadores de alertas se quedan en cero en silencio en vez de reportar "permission denied" (Sentry JAVASCRIPT-REACT-6E).
+
+
 ## [13.823.228] - 2026-09-08
 - **fix(crm)**: la tarjeta "Oportunidades generadas" ya no aparece vacía en el detalle de un lead (las oportunidades nacen del prospecto, no del lead); sólo se muestra si existe histórico ligado, para no perder trazabilidad.
 

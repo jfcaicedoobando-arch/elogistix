@@ -10,7 +10,7 @@
  *      paso en lugar de mandar al usuario a CRM.
  */
 import { useCallback, useState } from "react";
-import { useQuery, skipToken } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import {
   fetchMonedaOportunidad,
   alinearMonedaOportunidad,
@@ -33,14 +33,14 @@ export function useAceptarCotizacion({
   const [enviando, setEnviando] = useState(false);
 
   // JAVASCRIPT-REACT-6A/6B: con `as string` un `oportunidadId` nulo llegaba a
-  // la base y ésta respondía 22P02 (`uuid: "null"`), mostrando un aviso falso
-  // de conexión. `skipToken` hace imposible ejecutar la consulta sin id.
+  // la base y ésta respondía 22P02 (`uuid: "null"`).
+  // JAVASCRIPT-REACT-6C: `skipToken` dejaba la consulta SIN queryFn, así que un
+  // refetch externo (invalidación / cambio de foco) reventaba con
+  // "Missing queryFn". Ahora la función siempre existe y se guarda sola.
   const monedaQuery = useQuery({
     queryKey: ["crm", "oportunidad-moneda", oportunidadId],
-    queryFn:
-      open && oportunidadId
-        ? () => fetchMonedaOportunidad(oportunidadId)
-        : skipToken,
+    queryFn: () => (oportunidadId ? fetchMonedaOportunidad(oportunidadId) : null),
+    enabled: open && !!oportunidadId,
     staleTime: 0,
   });
 
