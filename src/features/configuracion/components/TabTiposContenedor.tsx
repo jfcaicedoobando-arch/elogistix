@@ -49,11 +49,11 @@ export default function TabTiposContenedor() {
       id: "activo", header: "Visible en mi empresa",
       meta: { className: "text-center", headerClassName: "text-center" },
       cell: ({ row }) => (
-        <Switch
-          checked={visibleOrg(row.original)}
-          disabled={!row.original.activo}
-          onCheckedChange={(checked) => toggleActivo.mutate({ id: row.original.id, activo: checked })}
-          aria-label={visibleOrg(row.original) ? `Ocultar tipo de contenedor ${row.original.name} en mi empresa` : `Mostrar tipo de contenedor ${row.original.name} en mi empresa`}
+        <SwitchVisibilidadOrg
+          visible={visibleOrg(row.original)}
+          activoGlobal={row.original.activo}
+          onChange={(checked) => toggleActivo.mutate({ id: row.original.id, activo: checked })}
+          ariaLabel={visibleOrg(row.original) ? `Ocultar tipo de contenedor ${row.original.name} en mi empresa` : `Mostrar tipo de contenedor ${row.original.name} en mi empresa`}
         />
       ),
     },
