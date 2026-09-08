@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.823.214] - 2026-09-08
+
+- **fix(errores)**: los bloqueos `LC_REAPROBACION_NO_VIGENTE` y `LC_TARIFA_APLICADA_INVALIDA` (emitidos por la RPC de conversión cotización→embarque) no tenían mensaje amigable y rompían el guard de cobertura de códigos; se agregaron ambas traducciones al catálogo operativo. Sin cambios de regla de negocio, permisos ni datos.
+
 ## [13.823.213] - 2026-09-08
 
 - **fix(embarques)**: el hook del wizard superaba 200 líneas y rompía el guard de arquitectura; se extrajo el bloqueo de costos a `conceptosCostoBloqueo.ts` y el submit final a `useNuevoEmbarqueFinish.ts` sin cambiar comportamiento.
