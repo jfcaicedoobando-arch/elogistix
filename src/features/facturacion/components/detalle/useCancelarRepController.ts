@@ -26,7 +26,7 @@ export interface PagoRepInfo {
   uuid_rep?: string | null;
 }
 
-export type ResultadoCancelacionRep = "accepted" | "pending" | "uncertain" | "error" | null;
+export type ResultadoCancelacionRep = "accepted" | "accepted_sync_failed" | "pending" | "uncertain" | "error" | null;
 
 interface UseCancelarRepControllerReturn {
   motivo: MotivoCancelacionSat;
