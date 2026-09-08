@@ -87,8 +87,8 @@ export function DialogCancelarRep({
       busy={isPending}
     >
       {resultadoAceptado && (
-        <Alert variant="default" className="border-success/30 bg-success/5 text-success-foreground">
-          <CheckCircle2 className="h-4 w-4 text-success" />
+        <Alert variant="success">
+          <CheckCircle2 className="h-4 w-4" />
           <AlertDescription>
             Cancelación aceptada. El pago fue eliminado y el saldo de la factura se recalculó.
           </AlertDescription>
@@ -96,8 +96,8 @@ export function DialogCancelarRep({
       )}
 
       {resultadoPendiente && (
-        <Alert variant="default" className="border-warning/30 bg-warning/5 text-warning-foreground">
-          <Clock3 className="h-4 w-4 text-warning" />
+        <Alert variant="warning">
+          <Clock3 className="h-4 w-4" />
           <AlertDescription>
             El SAT está verificando la cancelación. El pago no se eliminó todavía porque la
             respuesta fiscal aún no es definitiva. Cuando el estado cambie a "Cancelado",
