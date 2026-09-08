@@ -25,26 +25,17 @@ const ALIAS = {
   "@react-pdf/renderer": path.resolve(ROOT, "./src/test/mocks/reactPdfStub.tsx"),
 };
 
-const SHARDED = process.argv.some((a) => a.startsWith("--shard"));
-
 const COMMON_EXCLUDE = [
   "node_modules/**",
   "dist/**",
   "src/**/*.perf.test.tsx",
   "src/**/*.perf.ts",
-  // v13.322.1 (GHA-audit A4) · Los architecture gating tests corren en un
-  // step dedicado del job `audits` de CI. Cuando la suite se ejecuta con
-  // `--shard` (matrix de CI) los excluimos para no ejecutarlos dos veces
-  // y para que su fallo no se diluya entre 10 shards.
-  ...(SHARDED
-    ? [
-        "src/lib/__tests__/architecture.test.ts",
-        "src/lib/__tests__/architecture-baseline.test.ts",
-        "src/__tests__/audit-report.test.ts",
-        "src/__tests__/audit-casts-classifier.test.ts",
-      ]
-    : []),
+  // 13.823.x (ensayo 3 shards) — Ya NO se excluyen los guardrails de
+  // arquitectura/auditoría con `--shard`: no existe job `audits` dedicado, así
+  // que estos archivos se reparten normalmente entre los shards y corren
+  // exactamente una vez entre todos.
 ];
+
 
 // Config común a ambos proyectos. `environment`, `setupFiles` e `include` los
 // define cada proyecto.
