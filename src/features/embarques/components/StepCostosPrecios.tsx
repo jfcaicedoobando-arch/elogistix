@@ -92,7 +92,6 @@ export function StepCostosPrecios(props: Props) {
   const totalVentaUSD = ventaCalc.total;
   const tcFaltante = costoCalc.tcMissing || ventaCalc.tcMissing;
   const filasMixtasTotales = costoCalc.filasMixtas.length + ventaCalc.filasMixtas.length;
-  const hasErrors = Object.keys(errors).length > 0;
   const showTcWarning = tcFaltante && filasMixtasTotales > 0;
   const utilidadCalculada = totalVentaUSD - totalCostoUSD;
 
@@ -109,33 +108,14 @@ export function StepCostosPrecios(props: Props) {
   return (
     <TooltipProvider delayDuration={150}>
       <div className="space-y-6">
-        {hasErrors && <ValidationAlert severity="error" errors={errors} />}
-        {cargandoCostosVinculados && (
-          <Alert>
-            <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
-            <AlertTitle>Importando costos de la cotización</AlertTitle>
-            <AlertDescription>Espera a que termine antes de crear el embarque.</AlertDescription>
-          </Alert>
-        )}
-        {errorCostosVinculados && (
-          <Alert variant="destructive">
-            <AlertCircle className="h-4 w-4" aria-hidden />
-            <AlertTitle>No se pudieron importar los costos</AlertTitle>
-            <AlertDescription className="flex items-center justify-between gap-3">
-              <span>Reintenta para completar la información antes de guardar.</span>
-              <Button type="button" variant="outline" size="sm" onClick={onReintentarCostos}>
-                <RefreshCw className="mr-2 h-4 w-4" aria-hidden />
-                Reintentar
-              </Button>
-            </AlertDescription>
-          </Alert>
-        )}
-        {showTcWarning && (
-          <ValidationAlert
-            severity="warning"
-            errors={{ tipoCambio: `Falta tipo de cambio para convertir ${filasMixtasTotales} fila(s) en moneda extranjera. Captura el TC USD/EUR antes de continuar.` }}
-          />
-        )}
+        <StepCostosPreciosAlerts
+          errors={errors}
+          cargandoCostosVinculados={cargandoCostosVinculados}
+          errorCostosVinculados={errorCostosVinculados}
+          onReintentarCostos={onReintentarCostos}
+          showTcWarning={showTcWarning}
+          filasMixtasTotales={filasMixtasTotales}
+        />
         <CostosCard
           cols={costoCols}
           showContenedorCol={showContenedorCol}
