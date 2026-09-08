@@ -47,7 +47,7 @@ export function useCancelarRepController(
 ): UseCancelarRepControllerReturn {
   const [motivo, setMotivo] = useState<MotivoCancelacionSat>(motivoDefault());
   const [resultado, setResultado] = useState<ResultadoCancelacionRep>(null);
-  const cancelar = useCancelarRep(facturaId);
+  const cancelar = useCancelarRep(facturaId, { silenciarToasts: true });
   const eliminar = useEliminarPagoFactura();
   const qc = useQueryClient();
   const registrarActividad = useRegistrarActividad();
