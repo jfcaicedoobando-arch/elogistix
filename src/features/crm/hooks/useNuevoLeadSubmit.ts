@@ -5,11 +5,11 @@
  */
 import { useRef, useState } from "react";
 import { notifyError } from "@/lib/ui/appFeedback";
+import { enfocarPrimerInvalido } from "@/lib/ui/enfocarPrimerInvalido";
 import { useCrearLead, useCrearActividad } from "@/features/crm/hooks";
 import { actividadDefaultFechaMx } from "@/features/crm/domain/actividadDefaultFecha";
 import { mxLocalToUtcIso } from "@/lib/date/mx";
 import { emailLooksValid } from "@/features/cliente/components/nuevoClienteValidators";
-import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 import type { LeadFormState } from "@/features/crm/components/nuevoLead/NuevoLeadForm";
 
 interface Args {
@@ -21,6 +21,10 @@ interface Args {
 
 export function useNuevoLeadSubmit({ form, autoActividad, onSaved, resetForm }: Args) {
   const [guardando, setGuardando] = useState(false);
+  // VIS-20260908-04: la omisión de "Empresa" sólo salía como toast temporal con
+  // "Ver detalles" (diálogo técnico) mientras el campo quedaba fuera de vista.
+  // Ahora se marca el intento y el error se muestra junto al campo.
+  const [intentado, setIntentado] = useState(false);
   const crear = useCrearLead();
   const crearActividad = useCrearActividad();
   const enviandoRef = useRef(false);
@@ -30,17 +34,13 @@ export function useNuevoLeadSubmit({ form, autoActividad, onSaved, resetForm }: 
 
   const handleSubmit = async () => {
     if (crear.isPending || crearActividad.isPending || enviandoRef.current || guardando) return;
+    setIntentado(true);
     if (!form.empresa.trim()) {
-      notifyError(undefined, { title: "Empresa es obligatoria", method: "HANDLE_SUBMIT", errorCode: ERROR_CODES.VALIDATION_FAILED });
+      enfocarPrimerInvalido("nuevo-lead-empresa");
       return;
     }
     if (emailInvalido) {
-      notifyError(undefined, {
-        title: "Correo inválido",
-        description: "Escribe un correo con la forma usuario@dominio.com o déjalo vacío.",
-        method: "HANDLE_SUBMIT",
-        errorCode: ERROR_CODES.VALIDATION_FAILED,
-      });
+      enfocarPrimerInvalido("nuevo-lead-email");
       return;
     }
     enviandoRef.current = true;
@@ -84,5 +84,9 @@ export function useNuevoLeadSubmit({ form, autoActividad, onSaved, resetForm }: 
     }
   };
 
-  return { handleSubmit, pendingTotal, emailInvalido };
+  const empresaError = intentado && !form.empresa.trim()
+    ? "Indica la empresa para continuar."
+    : undefined;
+
+  return { handleSubmit, pendingTotal, emailInvalido, empresaError };
 }
