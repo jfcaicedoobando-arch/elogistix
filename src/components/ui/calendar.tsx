@@ -56,7 +56,13 @@ function Calendar({
         range_end: "day-range-end",
         selected:
           "[&>button]:bg-primary [&>button]:text-primary-foreground [&>button]:hover:bg-primary [&>button]:hover:text-primary-foreground [&>button]:focus:bg-primary [&>button]:focus:text-primary-foreground",
-        today: "[&>button]:bg-accent [&>button]:text-accent-foreground",
+        // VIS-20260908-02: `bg-accent` es el mismo azul que `bg-primary` en el
+        // tema oscuro, así que "hoy" y el día seleccionado se veían idénticos
+        // (parecían dos selecciones). El relleno principal queda reservado a
+        // la selección; hoy se distingue con un aro y texto en énfasis, y sólo
+        // mientras NO esté seleccionado (si hoy = seleccionado, gana selección).
+        today:
+          "[&>button:not([aria-selected='true'])]:ring-1 [&>button:not([aria-selected='true'])]:ring-inset [&>button:not([aria-selected='true'])]:ring-primary [&>button:not([aria-selected='true'])]:text-primary [&>button:not([aria-selected='true'])]:font-semibold",
         outside:
           "day-outside text-muted-foreground opacity-50 aria-selected:bg-accent/50 aria-selected:text-muted-foreground aria-selected:opacity-30",
         disabled: "text-muted-foreground opacity-50",
