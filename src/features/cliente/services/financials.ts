@@ -55,14 +55,19 @@ export async function fetchClienteFinancials(clienteId: string): Promise<Cliente
     }
   }
 
+  // Perf: la RPC se filtra por cliente para no recalcular toda la organización
+  // (antes provocaba statement timeout 57014 en la ficha del cliente).
   const { data: profitData, error: errP } = await supabase.rpc("profit_por_cliente", {
     _fecha_desde: undefined,
     _fecha_hasta: undefined,
     _modo: undefined,
+    _cliente_id: clienteId,
   });
   if (errP) throw errP;
 
-  const fila = (profitData as ProfitRow[] | null ?? []).find((r) => r.cliente_id === clienteId);
+  const filas = (profitData as ProfitRow[] | null) ?? [];
+  const fila = filas.find((r) => r.cliente_id === clienteId) ?? filas[0];
+
   const ventaMXN = Number(fila?.venta_mxn ?? 0);
   const costoMXN = Number(fila?.costo_mxn ?? 0);
 
