@@ -86,7 +86,7 @@ export default function LeadDatosCard({ form, set, canEdit, dirty, isSaving, onS
             <Input id="lead-datos-interes-modo" value={form.interes_modo} onChange={(e) => set("interes_modo", e.target.value)} disabled={!canEdit} />
           </div>
           <div className="space-y-1">
-            <Label>Fuente</Label>
+            <Label>Origen</Label>
             <Select value={form.fuente} onValueChange={(v) => set("fuente", v as CrmLeadFuente)} disabled={!canEdit}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>

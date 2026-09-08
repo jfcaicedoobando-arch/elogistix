@@ -13,7 +13,7 @@ import type { CrmOportunidadRow } from "@/features/crm/types/oportunidades";
 
 const LEAD_HEADERS = [
   "Empresa", "Contacto", "Email", "Teléfono", "Ciudad", "País",
-  "Fuente", "Estado", "Score", "Vendedor", "Creado",
+  "Origen", "Estado", "Score", "Vendedor", "Creado",
 ];
 
 const OPORTUNIDAD_HEADERS = [

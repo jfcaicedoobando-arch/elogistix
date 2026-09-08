@@ -87,7 +87,7 @@ export function NuevoLeadForm({ form, setForm, autoActividad, setAutoActividad, 
         />
       </div>
       <div className="space-y-1">
-        <Label>Fuente</Label>
+        <Label>Origen</Label>
         <Select value={form.fuente} onValueChange={(v) => set("fuente", v as CrmLeadFuente)}>
           <SelectTrigger><SelectValue /></SelectTrigger>
           <SelectContent>

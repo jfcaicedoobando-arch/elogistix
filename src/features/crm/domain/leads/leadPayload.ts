@@ -29,7 +29,7 @@ export function buildLeadInsertPayload(input: LeadInput, user: AuthLite | null) 
     telefono: "",
     ciudad: "",
     pais: "",
-    fuente: "Otro" as const,
+    fuente: "Prospección" as const,
     estado: "Nuevo" as const,
     score: 3,
     interes_modo: "",

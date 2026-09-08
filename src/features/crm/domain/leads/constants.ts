@@ -47,12 +47,9 @@ export const LEAD_ESTADO_DERIVADO_AYUDA = "Este estado lo actualiza el ERP";
 
 
 export const LEAD_FUENTES: CrmLeadFuente[] = [
-  "Web",
+  "Prospección",
+  "Finkargo",
   "Referido",
-  "Campaña",
-  "Llamada en frío",
-  "Evento",
-  "Otro",
 ];
 
 export type LeadSortKey = "created_at" | "empresa" | "estado" | "fuente" | "score";

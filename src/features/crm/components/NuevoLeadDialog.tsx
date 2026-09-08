@@ -29,7 +29,7 @@ const EMPTY: LeadFormState = {
   telefono: "",
   ciudad: "",
   pais: "México",
-  fuente: "Otro",
+  fuente: "Prospección",
   estado: "Nuevo",
   interes_modo: "",
   notas: "",

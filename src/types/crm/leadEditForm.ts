@@ -26,7 +26,7 @@ export const EMPTY_LEAD_EDIT_FORM: LeadEditForm = {
   telefono: "",
   ciudad: "",
   pais: "",
-  fuente: "Otro",
+  fuente: "Prospección",
   estado: "Nuevo",
   score: 3,
   interes_modo: "",

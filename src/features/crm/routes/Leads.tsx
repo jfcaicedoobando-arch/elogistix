@@ -51,7 +51,7 @@ export default function Leads() {
   const list = useServerPagedList<CrmLeadRow, LeadsFilters>({
     queryKey: queryKeys.crm.leads.paged,
     defaultFilters: DEFAULTS,
-    filterLabels: { estado: "Estado", fuente: "Fuente" },
+    filterLabels: { estado: "Estado", fuente: "Origen" },
     defaultPageSize: 50,
     defaultSort: { key: "created_at", dir: "desc" },
     sortableKeys: LEAD_SORTABLE_KEYS,
