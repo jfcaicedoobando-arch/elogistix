@@ -104,23 +104,16 @@ export default function ComprasPorAprobar() {
         errorTitle="No se pudo cargar la bandeja de aprobación"
         errorDescription="Revisa tu conexión y vuelve a intentar."
       >
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-        <KpiCard
-          icon={ClipboardCheck}
-          label="Pendientes"
-          value={`${pendientes.length} ${pendientes.length === 1 ? "factura" : "facturas"}`}
-          sublabel={`${formatCurrency(sumaMxn(pendientes), "MXN")} · ${formatCurrency(sumaUsd(pendientes), "USD")}`}
-          variant="warning"
-        />
-        <KpiCard icon={CheckCircle2} label="Aprobadas" value={`${aprobadas.length} ${aprobadas.length === 1 ? "factura" : "facturas"}`} variant="success" />
-        <KpiCard icon={XCircle} label="Rechazadas" value={`${rechazadas.length} ${rechazadas.length === 1 ? "factura" : "facturas"}`} variant="destructive" />
-        <KpiCard
-          icon={ClipboardCheck}
-          label={`Total en vista (${aprobacion})`}
-          value={`${rows.length} ${rows.length === 1 ? "factura" : "facturas"}`}
-          sublabel={`${formatCurrency(currentTotalMxn, "MXN")} · ${formatCurrency(currentTotalUsd, "USD")}`}
-        />
-      </div>
+      <ComprasPorAprobarKpis
+        pendientes={pendientes}
+        aprobadas={aprobadas}
+        rechazadas={rechazadas}
+        rows={rows}
+        aprobacion={aprobacion}
+        currentTotalMxn={currentTotalMxn}
+        currentTotalUsd={currentTotalUsd}
+      />
+
 
       <Card>
         <CardContent className="p-4 space-y-3">
