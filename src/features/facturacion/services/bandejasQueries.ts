@@ -1,6 +1,10 @@
 /**
  * Queries de detalle de las bandejas de trabajo del cockpit de Facturación.
  * Extraído de bandejas.ts para respetar el límite de líneas.
+ *
+ * v13.823.232: se retiró la bandeja "Por enviar" (y sus helpers de
+ * anti-join contra `factura_envios`); el envío por correo sigue
+ * disponible desde el detalle de la factura.
  */
 import { supabase } from "@/integrations/supabase/client";
 import { FECHA_INICIO_TIMBRADO_SISTEMA } from "@/features/facturacion/domain/facturaFlags";
@@ -8,69 +12,6 @@ import { warnIfTruncated } from "@/lib/supabase/assertNotTruncated";
 import { CAP_LISTA } from "@/constants/queryCaps";
 
 const LIMITE_POR_TIMBRAR = 500;
-const ENVIOS_PAGE = 1000;
-/** Tope de seguridad de la bandeja "Por enviar" (20 páginas). */
-const MAX_TIMBRADAS_PAGINADAS = 20_000;
-
-/**
- * EC-03: IDs de facturas con al menos un envío exitoso, paginando con
- * `.range()` porque PostgREST corta a `max-rows` SIN error y un Set
- * incompleto hacía reaparecer facturas ya enviadas en la bandeja.
- * Devuelve un Set de DISTINCT factura_id (sirve también al conteo EC-04).
- */
-export async function fetchIdsConEnvioExitoso(orgId: string): Promise<Set<string>> {
-  const ids = new Set<string>();
-  for (let from = 0; ; from += ENVIOS_PAGE) {
-    const { data, error } = await supabase
-      .from("factura_envios")
-      .select("factura_id")
-      .eq("organization_id", orgId)
-      .eq("estado", "enviado")
-      // Orden determinista: sin `order` PostgREST no garantiza que dos
-      // páginas consecutivas no repitan/omitan filas.
-      .order("id", { ascending: true })
-      .range(from, from + ENVIOS_PAGE - 1);
-    if (error) throw error;
-    for (const e of data ?? []) ids.add(e.factura_id);
-    if (!data || data.length < ENVIOS_PAGE) break;
-  }
-  return ids;
-}
-
-/**
- * Estados de una factura TIMBRADA que sigue necesitando envío al cliente.
- * "Vencida" también entra: una factura vencida no deja de necesitar su CFDI.
- * Canon compartido con `fetchBandejaConteos` para que lista y badge cuadren.
- */
-export const ESTADOS_TIMBRADAS_ENVIABLES = [
-  "Emitida", "Parcialmente pagada", "Pagada", "Vencida",
-] as const;
-
-/**
- * IDs de las facturas timbradas vivas candidatas a "Por enviar".
- * Se usa para el anti-join del conteo: restar todos los `factura_envios`
- * históricos contra un `count` de facturas daba badges falsos (incluía
- * envíos de facturas borradas o en estados fuera de la bandeja).
- */
-export async function fetchIdsFacturasTimbradas(orgId: string): Promise<string[]> {
-  const ids: string[] = [];
-  for (let from = 0; ; from += ENVIOS_PAGE) {
-    const { data, error } = await supabase
-      .from("facturas")
-      .select("id")
-      .eq("organization_id", orgId)
-      .not("uuid_fiscal", "is", null)
-      .in("estado", [...ESTADOS_TIMBRADAS_ENVIABLES])
-      .is("deleted_at", null)
-      // Desempate estable para que la paginación no salte filas.
-      .order("id", { ascending: true })
-      .range(from, from + ENVIOS_PAGE - 1);
-    if (error) throw error;
-    for (const f of data ?? []) ids.push(f.id);
-    if (!data || data.length < ENVIOS_PAGE) break;
-  }
-  return ids;
-}
 
 export interface FilaPorTimbrar {
   id: string;
@@ -81,16 +22,6 @@ export interface FilaPorTimbrar {
   fecha_emision: string;
 }
 
-export interface FilaPorEnviar {
-  id: string;
-  numero: string;
-  cliente_id: string;
-  cliente_nombre: string;
-  total: number;
-  moneda: string;
-  fecha_emision: string;
-  uuid_fiscal: string;
-}
 
 export interface FilaRepPendiente {
   id: string;
@@ -119,45 +50,6 @@ export async function fetchFacturasPorTimbrar(orgId: string): Promise<FilaPorTim
   return (data ?? []) as FilaPorTimbrar[];
 }
 
-/**
- * Facturas timbradas (con UUID) que NO tienen un envío exitoso registrado.
- * Se hace en 2 pasos (facturas timbradas + IDs con envío exitoso) y se
- * filtra en memoria.
- *
- * Antes la lista se cortaba a 1000 filas mientras el conteo del badge usaba
- * TODO el universo: la bandeja escondía filas sin avisar. Ahora se paginan
- * todas las candidatas con el mismo filtro canónico y un tope de seguridad
- * que sí avisa por consola cuando se alcanza.
- */
-export async function fetchFacturasPorEnviar(orgId: string): Promise<FilaPorEnviar[]> {
-  const candidatas: FilaPorEnviar[] = [];
-  let truncado = false;
-  const [, enviadas] = await Promise.all([
-    (async () => {
-      for (let from = 0; ; from += ENVIOS_PAGE) {
-        const { data, error } = await supabase
-          .from("facturas")
-          .select("id, numero, cliente_id, cliente_nombre, total, moneda, fecha_emision, uuid_fiscal")
-          .eq("organization_id", orgId)
-          .not("uuid_fiscal", "is", null)
-          .in("estado", [...ESTADOS_TIMBRADAS_ENVIABLES])
-          .is("deleted_at", null)
-          .order("fecha_emision", { ascending: false })
-          .order("id", { ascending: true })
-          .range(from, from + ENVIOS_PAGE - 1);
-        if (error) throw error;
-        candidatas.push(...((data ?? []) as FilaPorEnviar[]));
-        if (!data || data.length < ENVIOS_PAGE) break;
-        if (candidatas.length >= MAX_TIMBRADAS_PAGINADAS) { truncado = true; break; }
-      }
-    })(),
-    fetchIdsConEnvioExitoso(orgId),
-  ]);
-  if (truncado) {
-    warnIfTruncated(candidatas, candidatas.length, "facturacion.fetchFacturasPorEnviar");
-  }
-  return candidatas.filter((f) => !enviadas.has(f.id));
-}
 
 export async function fetchPagosRepPendientes(orgId: string): Promise<FilaRepPendiente[]> {
   const { data, error } = await supabase
