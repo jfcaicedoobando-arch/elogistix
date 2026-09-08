@@ -2,9 +2,8 @@ name: E2E (Playwright)
 
 # Corridas automáticas de la suite Playwright contra staging.
 #
-# Triggers (CI simplificado):
-#   - workflow_dispatch  → manual (con opción de override de E2E_BASE_URL).
-#   - schedule diario    → 12:30 UTC (06:30 CDMX).
+# Trigger (CI simplificado): SÓLO workflow_dispatch (manual, con opción de
+# override de E2E_BASE_URL). Sin schedule diario y sin automatización de issues.
 #
 # Estrategia:
 #   - `internal-shard` (matrix 1..3): specs read-only del project `chromium-internal`
@@ -12,10 +11,9 @@ name: E2E (Playwright)
 #   - `mutators`: specs 09-12 en `chromium-mutators` con workers: 1 (single job).
 #   - `portal`: specs del project `chromium-portal`.
 #   - `merge-reports`: junta los blob reports y publica el HTML unificado.
-#   - `notify-failure`: abre/actualiza issue si algún shard reporta regresión.
 #
 # Fail on regression: cada bunx playwright test devuelve exit != 0 → job falla →
-# `merge-reports.needs` marca el workflow como failed y `notify-failure` corre.
+# `merge-reports.needs` marca el workflow como failed.
 
 on:
   workflow_dispatch:
@@ -29,8 +27,6 @@ on:
         required: false
         default: ""
         type: string
-  schedule:
-    - cron: "30 12 * * *"
 
 permissions:
   contents: read
@@ -91,11 +87,8 @@ jobs:
       mt_ok: ${{ steps.check.outputs.mt_ok }}
     steps:
       - id: check
-        # v13.x (GHA-audit M8/A1) — antes sólo validaba 3 secretos y el resto
-        # skipeaba en silencio. Ahora valida todos los grupos requeridos y
-        # FALLA en corridas agendadas/encadenadas (verde vacío prohibido).
-        env:
-          EVENT_NAME: ${{ github.event_name }}
+        # El workflow es 100% manual: si faltan credenciales, FALLA con mensaje
+        # claro en vez de dejar un verde vacío.
         run: |
           set -u
           core_missing=""
@@ -111,28 +104,16 @@ jobs:
             eval "val=\${$v:-}"
             [ -z "$val" ] && mt_missing="$mt_missing $v"
           done
-          scheduled=0
-          [ "$EVENT_NAME" = "schedule" ] && scheduled=1
           if [ -n "$core_missing" ]; then
-            if [ "$scheduled" = "1" ]; then
-              echo "::error::E2E secrets ausentes en corrida agendada:$core_missing — la suite NO corrió (verde vacío prohibido)."
-              exit 1
-            fi
-            echo "::warning::E2E secrets missing:$core_missing — skipping run."
-            echo "ok=false" >> "$GITHUB_OUTPUT"
-          else
-            echo "ok=true" >> "$GITHUB_OUTPUT"
+            echo "::error::E2E secrets ausentes:$core_missing — la suite NO puede correr (verde vacío prohibido)."
+            exit 1
           fi
+          echo "ok=true" >> "$GITHUB_OUTPUT"
           if [ -n "$mt_missing" ]; then
-            if [ "$scheduled" = "1" ]; then
-              echo "::error::E2E_MT_* secrets ausentes en corrida agendada:$mt_missing — el job multi-tenant NO corrió."
-              exit 1
-            fi
-            echo "::warning::E2E_MT_* missing:$mt_missing — se omite multi-tenant."
-            echo "mt_ok=false" >> "$GITHUB_OUTPUT"
-          else
-            echo "mt_ok=true" >> "$GITHUB_OUTPUT"
+            echo "::error::E2E_MT_* secrets ausentes:$mt_missing — el job multi-tenant NO puede correr."
+            exit 1
           fi
+          echo "mt_ok=true" >> "$GITHUB_OUTPUT"
 
   provision-users:
     name: Provisionar usuarios E2E
@@ -153,11 +134,10 @@ jobs:
         id: check
         run: |
           if [ -z "${E2E_PROVISION_SECRET}" ] || [ -z "${VITE_SUPABASE_URL}" ]; then
-            echo "::warning::E2E_PROVISION_SECRET o VITE_SUPABASE_URL ausente — se omite provisión."
-            echo "skip=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "skip=false" >> "$GITHUB_OUTPUT"
+            echo "::error::E2E_PROVISION_SECRET o VITE_SUPABASE_URL ausente — no se puede provisionar."
+            exit 1
           fi
+          echo "skip=false" >> "$GITHUB_OUTPUT"
       - name: Provisionar admin + portal
         if: steps.check.outputs.skip == 'false'
         run: bun run e2e:provision
@@ -417,22 +397,15 @@ jobs:
 
       - name: Guard (multi-tenant secrets)
         id: mt_check
-        # v13.x (GHA-audit M8) — en corridas agendadas/encadenadas falla en vez
-        # de skipear: un multi-tenant que no corre no puede reportarse verde.
-        env:
-          EVENT_NAME: ${{ github.event_name }}
+        # Falla en vez de skipear: un multi-tenant que no corre no puede
+        # reportarse verde.
         run: |
           if [ -z "${E2E_MT_A_EMAIL}" ] || [ -z "${E2E_MT_A_PASSWORD}" ] || \
              [ -z "${E2E_MT_B_EMAIL}" ] || [ -z "${E2E_MT_B_PASSWORD}" ]; then
-            if [ "$EVENT_NAME" = "schedule" ]; then
-              echo "::error::E2E_MT_* secrets ausentes en corrida agendada — el job multi-tenant NO corrió."
-              exit 1
-            fi
-            echo "::warning::E2E_MT_* secrets missing — se omite el job multi-tenant."
-            echo "skip=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "skip=false" >> "$GITHUB_OUTPUT"
+            echo "::error::E2E_MT_* secrets ausentes — el job multi-tenant NO puede correr."
+            exit 1
           fi
+          echo "skip=false" >> "$GITHUB_OUTPUT"
 
       - name: Cache Playwright browsers
         if: steps.mt_check.outputs.skip == 'false'
@@ -489,10 +462,9 @@ jobs:
           persist-credentials: false
       - uses: ./.github/actions/setup-bun
 
-      - name: Gate global anti-skip (corridas agendadas)
-        # v13.x (GHA-audit A1/M8) — en corridas agendadas ningún job de tests
-        # puede quedar `skipped`: sería un verde sin cobertura real.
-        if: github.event_name == 'schedule'
+      - name: Gate global anti-skip
+        # Ningún job de tests puede quedar `skipped`: sería un verde sin
+        # cobertura real.
         env:
           R_INTERNAL: ${{ needs.internal-shard.result }}
           R_MUTATORS: ${{ needs.mutators.result }}
@@ -504,7 +476,7 @@ jobs:
             job="${pair%%:*}"; res="${pair#*:}"
             echo "$job: $res"
             if [ "$res" = "skipped" ]; then
-              echo "::error::$job quedó SKIPPED en una corrida agendada — verde vacío prohibido."
+              echo "::error::$job quedó SKIPPED — verde vacío prohibido."
               fail=1
             fi
           done
@@ -540,60 +512,3 @@ jobs:
           echo "portal=${{ needs.portal.result }}"
           echo "multi-tenant=${{ needs.multi-tenant.result }}"
           exit 1
-
-  notify-failure:
-    name: Notificar regresión E2E (issue)
-    needs: [merge-reports]
-    # Solo en runs agendados (no en dispatch manual).
-    if: ${{ failure() && github.event_name == 'schedule' }}
-    runs-on: ubuntu-24.04
-    timeout-minutes: 5
-    permissions:
-      contents: read
-      issues: write
-    steps:
-      - name: Crear o actualizar issue de regresión
-        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
-        with:
-          script: |
-            const label = 'e2e-regression';
-            const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
-            const title = `🧪 E2E Playwright falló en staging (${new Date().toISOString().slice(0,10)})`;
-            const body = [
-              `El workflow **E2E (Playwright)** detectó una regresión contra staging.`,
-              ``,
-              `- Run: ${runUrl}`,
-              `- Trigger: \`${context.eventName}\``,
-              `- SHA: \`${context.sha}\``,
-              ``,
-              `Artefactos disponibles:`,
-              `- \`playwright-report\` — reporte HTML unificado (mergeado de todos los shards)`,
-              `- \`traces-*\` — trazas y videos por shard fallido`,
-              ``,
-              `Revisar en orden: internal-shard-1..3, mutators, portal.`,
-            ].join('\n');
-
-            const { data: existing } = await github.rest.issues.listForRepo({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              state: 'open',
-              labels: label,
-              per_page: 1,
-            });
-
-            if (existing.length > 0) {
-              await github.rest.issues.createComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: existing[0].number,
-                body,
-              });
-            } else {
-              await github.rest.issues.create({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                title,
-                body,
-                labels: [label],
-              });
-            }
