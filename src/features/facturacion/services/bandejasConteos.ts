@@ -1,15 +1,16 @@
 /**
  * Conteos livianos de las bandejas de trabajo del cockpit de Facturación.
  * Extraído de bandejas.ts para respetar el límite de líneas.
+ *
+ * v13.823.232: se retiró el conteo "Por enviar" junto con su bandeja;
+ * esto elimina 2 queries paginadas que se disparaban en cada visita.
  */
 import { supabase } from "@/integrations/supabase/client";
 import { FECHA_INICIO_TIMBRADO_SISTEMA } from "@/features/facturacion/domain/facturaFlags";
 import { todayLocalISO } from "@/lib/date/today";
-import { fetchIdsConEnvioExitoso, fetchIdsFacturasTimbradas } from "./bandejasQueries";
 
 export interface BandejaConteos {
   porTimbrar: number;
-  porEnviar: number;
   porCobrar: number;
   vencidas: number;
   repPendientes: number;
@@ -22,7 +23,7 @@ export interface BandejaConteos {
  */
 export async function fetchBandejaConteos(orgId: string): Promise<BandejaConteos> {
   const hoy = todayLocalISO();
-  const [porTimbrar, idsTimbradas, enviadasIds, porCobrar, vencidas, reps] = await Promise.all([
+  const [porTimbrar, porCobrar, vencidas, reps] = await Promise.all([
     supabase
       .from("facturas")
       .select("id", { count: "exact", head: true })
@@ -31,8 +32,6 @@ export async function fetchBandejaConteos(orgId: string): Promise<BandejaConteos
       .is("facturapi_id", null)
       .is("deleted_at", null)
       .gte("fecha_emision", FECHA_INICIO_TIMBRADO_SISTEMA.slice(0, 10)),
-    fetchIdsFacturasTimbradas(orgId),
-    fetchIdsConEnvioExitoso(orgId),
     supabase
       .from("facturas")
       .select("id", { count: "exact", head: true })
@@ -61,13 +60,8 @@ export async function fetchBandejaConteos(orgId: string): Promise<BandejaConteos
   for (const res of [porTimbrar, porCobrar, vencidas, reps]) {
     if (res.error) throw res.error;
   }
-  // EC-04: "Por enviar" = anti-join real (mismos IDs que la lista) contra el
-  // set de DISTINCT factura_id con envío exitoso. Restar counts divergía
-  // cuando había envíos de facturas borradas o fuera de la bandeja.
-  const porEnviar = idsTimbradas.filter((id) => !enviadasIds.has(id)).length;
   return {
     porTimbrar: porTimbrar.count ?? 0,
-    porEnviar,
     porCobrar: porCobrar.count ?? 0,
     vencidas: vencidas.count ?? 0,
     repPendientes: reps.count ?? 0,

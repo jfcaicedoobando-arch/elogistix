@@ -19,7 +19,7 @@ export function invalidarTrasTimbrado(qc: QueryClient, facturaId?: string): void
     qc.invalidateQueries({ queryKey: queryKeys.facturas.detail(facturaId) });
   }
   qc.invalidateQueries({ queryKey: queryKeys.facturas.all });
-  // Bandejas del módulo: "Por timbrar", "Por enviar", conteos y proformas.
+  // Bandejas del módulo: "Por timbrar", conteos y proformas.
   qc.invalidateQueries({ queryKey: queryKeys.facturacion.bandejaPrefix() });
   qc.invalidateQueries({ queryKey: queryKeys.facturacion.repPendientes });
   // Aging CxC y cartera: el CFDI cancelado o con NC ya no es cobrable igual.

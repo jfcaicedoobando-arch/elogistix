@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.823.232] - 2026-09-08
+- **refactor(facturación)**: se retiró la bandeja "Por enviar" del cockpit (no todas las facturas se envían por correo; muchos clientes descargan su CFDI y consultan su estado de cuenta en el portal). El envío por correo sigue disponible desde el detalle de cada factura. Una URL vieja `?bandeja=por-enviar` cae en "Por timbrar". También se eliminaron las 2 consultas paginadas que alimentaban su contador en cada visita.
+
 ## [13.823.231] - 2026-09-08
 - **fix(cotizaciones)**: si el CRM tarda en responder al entrar desde una oportunidad de prospecto, ya no se sobrescribe lo que el usuario haya empezado a capturar (modo, origen/destino, destinatario). En ese caso no se liga la oportunidad, para no mezclar dos capturas distintas; con formulario limpio la precarga sigue llegando completa aunque la respuesta sea lenta.
 
