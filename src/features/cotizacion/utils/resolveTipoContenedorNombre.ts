@@ -33,5 +33,10 @@ export function resolveTipoContenedorNombre(
     return match?.name ?? match?.code ?? fallback;
   }
 
-  return v;
+  // R219-UI-02: los contenedores guardan el `code` del catálogo ("20DRY"); si
+  // existe, se muestra el nombre legible. Si no, se respeta el valor legacy.
+  const porCode = catalogo.find(
+    (t) => (t.code ?? "").trim().toLowerCase() === v.toLowerCase(),
+  );
+  return porCode?.name ?? v;
 }
