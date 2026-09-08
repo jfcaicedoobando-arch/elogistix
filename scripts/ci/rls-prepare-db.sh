@@ -29,8 +29,10 @@ if [ ! -f "$CUTOFF_ENV" ]; then
   echo "::error::No existe $CUTOFF_ENV (corte del squash)"
   exit 1
 fi
-# shellcheck disable=SC1090
-set -a; . "$CUTOFF_ENV"; set +a
+# Sólo asignaciones simples del archivo de corte (SQUASH_FILE, SQUASH_INCLUDED…).
+set -a
+eval "$(grep -E '^[A-Za-z_][A-Za-z0-9_]*=' "$CUTOFF_ENV")"
+set +a
 
 echo "▶ Baseline squash: $SQUASH_FILE"
 stub_extensiones "$SQUASH_FILE" | "${PSQL[@]}" --single-transaction || exit 1
