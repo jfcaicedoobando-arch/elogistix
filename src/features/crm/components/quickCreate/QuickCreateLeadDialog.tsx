@@ -17,18 +17,24 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { FIELD_ERROR_CLASS } from "@/components/ui/field.tokens";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { FormDialogSection } from "@/components/shared/FormDialogSection";
 import { FormDialogFooter } from "@/components/shared/FormDialogFooter";
 import { notifyError } from "@/lib/ui/appFeedback";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { useCrearLead } from "@/features/crm/hooks";
+import { LEAD_FUENTES, type CrmLeadFuente } from "@/features/crm/domain/leads/constants";
 import { leadQuickCreateInput } from "@/features/crm/domain/leads/quickCreateInput";
 
 /** Borrador mínimo que viaja de la alta express al formulario completo. */
 export interface LeadQuickDraft {
   empresa: string;
   contacto: string;
+  /** Origen elegido en la alta express; se conserva al saltar a "Más campos →". */
+  fuente?: CrmLeadFuente;
 }
 
 interface Props {
