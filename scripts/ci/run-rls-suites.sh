@@ -10,7 +10,7 @@
 #
 # Variables:
 #   LOG_DIR   carpeta de logs (default: .rls-logs)
-#   MIN_SUITES  mínimo esperado de suites (default: 30)
+set -uo pipefail
 set -uo pipefail
 
 DIR="supabase/tests/rls"
