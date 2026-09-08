@@ -9,7 +9,7 @@ name: CI
 # (architecture.test.ts, architecture-baseline.test.ts, audit-report,
 # audit-casts-classifier), así que se ejecutan exactamente una vez.
 #
-# El workflow SIEMPRE arranca (sin paths-ignore) para que el required check
+# El workflow SIEMPRE arranca (sin paths-ignore) para que el check
 # "CI Success (aggregator)" nunca quede pending; los pasos irrelevantes se
 # omiten explícitamente según el área tocada por el diff.
 
