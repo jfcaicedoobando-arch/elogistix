@@ -27,7 +27,12 @@ BEGIN
   ELSIF p_decision IN ('refrescada','sustituida') THEN
     IF p_tarifa_id_aplicada IS NULL OR NOT EXISTS (
       SELECT 1 FROM public.costeo_tarifas t
-       WHERE t.id=p_tarifa_id_aplicada AND t.organization_id=v_cot.organization_id
+       WHERE t.id=p_tarifa_id_aplicada
+         AND t.organization_id=v_cot.organization_id
+         AND (
+           p_decision='refrescada' AND t.id=v_cot.tarifa_id
+           OR p_decision='sustituida' AND t.id IS DISTINCT FROM v_cot.tarifa_id
+         )
     ) THEN
       RAISE EXCEPTION 'LC_TARIFA_APLICADA_INVALIDA: selecciona una tarifa válida de la organización' USING ERRCODE='P0001';
     END IF;
