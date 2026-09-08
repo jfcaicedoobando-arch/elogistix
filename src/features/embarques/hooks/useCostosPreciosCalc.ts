@@ -7,7 +7,7 @@
 import { useMemo } from "react";
 import { sumarEnMoneda } from "@/lib/financial/costosUSD";
 // R219-UI-01: misma regla monetaria que la persistencia (`cantidad × precio`).
-import { subtotalLinea } from "@/lib/financial/financialUtils";
+import { subtotalVentaLinea } from "@/features/embarques/domain/subtotalVentaLinea";
 
 interface Item { monto: number; moneda: string }
 
