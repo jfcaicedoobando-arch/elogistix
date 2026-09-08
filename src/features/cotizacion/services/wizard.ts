@@ -70,11 +70,23 @@ export async function savePaso1(opts: {
   data.msds_archivo = null;
   const cotizacion = await mutations.crearCotizacion.mutateAsync(fromDb<CreateCotizacionInput>(data));
   if (hayMsds) {
-    const msdsArchivo = await subirMsds(msdsFile as File);
-    await mutations.updateCotizacion.mutateAsync({
-      id: cotizacion.id,
-      data: { msds_archivo: msdsArchivo },
-    });
+    // R201-COT-03: la cotización YA existe. Si falla la subida del MSDS no se
+    // puede propagar el error, porque el wizard perdería el id recién creado y
+    // el siguiente intento crearía una cotización duplicada. Se avisa y el
+    // usuario vuelve a adjuntar el documento desde el paso 1.
+    try {
+      const msdsArchivo = await subirMsds(msdsFile as File);
+      await mutations.updateCotizacion.mutateAsync({
+        id: cotizacion.id,
+        data: { msds_archivo: msdsArchivo },
+      });
+    } catch {
+      notifyWarning(undefined, {
+        title: "La cotización se guardó, pero el documento de seguridad no se adjuntó",
+        description:
+          "Vuelve a cargar la hoja de seguridad (MSDS) en el paso 1 y guarda otra vez. No vuelvas a crear la cotización.",
+      });
+    }
   }
   return cotizacion.id;
 }
