@@ -60,22 +60,48 @@ export default function Paso1ProgressSidebar({ esMaritimo }: Props) {
 
   const [activeId, setActiveId] = useState<string | null>(null);
 
+  // VIS-20260908-01: antes se usaba un IntersectionObserver con
+  // `rootMargin: -20% 0px -60%`. Al hacer clic en una sección ésta queda
+  // alineada justo debajo del header fijo del wizard (fuera de esa banda), así
+  // que la sección ANTERIOR seguía marcada como activa. Ahora la sección
+  // activa se calcula con la posición real: es la última cuyo borde superior
+  // ya pasó el header fijo, consultando el contenedor scrollable real.
   useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        // Toma la entrada más arriba que esté intersecting.
-        const visible = entries
-          .filter((e) => e.isIntersecting)
-          .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
-        if (visible[0]) setActiveId(visible[0].target.id);
-      },
-      { rootMargin: "-20% 0px -60% 0px", threshold: 0 },
-    );
-    sections.forEach((s) => {
-      const el = document.getElementById(s.id);
-      if (el) observer.observe(el);
-    });
-    return () => observer.disconnect();
+    let raf = 0;
+    const calcular = () => {
+      raf = 0;
+      const elementos = sections
+        .map((s) => ({ id: s.id, el: document.getElementById(s.id) }))
+        .filter((x): x is { id: string; el: HTMLElement } => x.el !== null);
+      if (elementos.length === 0) return;
+      const scroller = scrollParent(elementos[0].el);
+      // Al final del scroll gana la última sección: ya no puede subir más allá
+      // del header, y si no se marcara quedaría activa una intermedia.
+      if (scroller && scroller.scrollTop + scroller.clientHeight >= scroller.scrollHeight - 4) {
+        setActiveId(elementos[elementos.length - 1].id);
+        return;
+      }
+      const limite = (scroller?.getBoundingClientRect().top ?? 0) + HEADER_OFFSET_PX;
+      let actual = elementos[0].id;
+      for (const { id, el } of elementos) {
+        if (el.getBoundingClientRect().top <= limite) actual = id;
+        else break;
+      }
+      setActiveId(actual);
+    };
+    const programar = () => {
+      if (raf === 0) raf = window.requestAnimationFrame(calcular);
+    };
+    calcular();
+    // `capture: true` para escuchar también el scroll de contenedores internos
+    // (el cuerpo del wizard es el que hace scroll, no el documento).
+    window.addEventListener("scroll", programar, true);
+    window.addEventListener("resize", programar);
+    return () => {
+      if (raf !== 0) window.cancelAnimationFrame(raf);
+      window.removeEventListener("scroll", programar, true);
+      window.removeEventListener("resize", programar);
+    };
   }, [sections]);
 
   const completas = sections.filter((s) => s.done).length;
