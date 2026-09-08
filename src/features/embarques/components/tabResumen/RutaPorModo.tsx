@@ -14,16 +14,19 @@ function ResumenContenedores({
   fallbackTipo: string;
 }) {
   const { data: contenedores = [] } = useContenedoresEmbarque(embarqueId);
+  const { data: tipos = [] } = useTiposContenedor();
+  // R219-UI-02: cada contenedor puede guardar el UUID del catálogo; se resuelve
+  // por hijo para no mostrar identificadores crudos al operador.
+  const nombreTipo = (raw: string | null | undefined) =>
+    resolveTipoContenedorNombre(raw, tipos, "") || fallbackTipo || PLACEHOLDER;
   if (contenedores.length === 0) return <span>{PLACEHOLDER}</span>;
   if (contenedores.length === 1) {
     const c = contenedores[0];
-    const tipo = c.tipo_contenedor || fallbackTipo || PLACEHOLDER;
-    return <span>{c.numero_contenedor || PLACEHOLDER} ({tipo})</span>;
+    return <span>{c.numero_contenedor || PLACEHOLDER} ({nombreTipo(c.tipo_contenedor)})</span>;
   }
   const conteos = new Map<string, number>();
   for (const c of contenedores) {
-    const tipo = c.tipo_contenedor || fallbackTipo || PLACEHOLDER;
-    conteos.set(tipo, (conteos.get(tipo) ?? 0) + 1);
+    conteos.set(nombreTipo(c.tipo_contenedor), (conteos.get(nombreTipo(c.tipo_contenedor)) ?? 0) + 1);
   }
   const resumen = Array.from(conteos.entries())
     .map(([tipo, n]) => `${n} × ${tipo}`)
