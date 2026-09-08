@@ -86,7 +86,7 @@ export function useSidebarAlerts() {
   // v13.380.1 — incluye Entregado / EIR / Por liquidar (ver embarques_admin_pendientes_count).
   const { data: adminPendientes = 0 } = useQuery({
     queryKey: queryKeys.sidebar.adminPendientes,
-    queryFn: fetchAdminPendientesCount,
+    queryFn: () => sinRuidoDeSesion(fetchAdminPendientesCount, 0),
     enabled: conSesion,
     ...SIDEBAR_QUERY_TUNING,
   });
