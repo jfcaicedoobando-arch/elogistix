@@ -1,5 +1,16 @@
 # Changelog
 
+## [13.823.233] - 2026-09-08
+- **fix(cotizaciones)**: el "Progreso del Paso 1" ya marca la sección que realmente estás viendo, tanto al hacer clic como al desplazarte, y el lector de pantalla anuncia cuál es la actual.
+- **fix(cotizaciones)**: se quitó la barra de desplazamiento horizontal que aparecía de más en el cotizador nuevo a 1280 px.
+- **fix(crm)**: en el calendario de "Fecha meta de cierre", el día de hoy y el día seleccionado ya no se ven idénticos: el relleno azul queda para tu selección y hoy se resalta con un aro.
+- **fix(crm)**: el alta rápida de lead ya no muestra "Indica la empresa para continuar." al abrir el modal, sólo después de que capturas algo o intentas guardar.
+- **fix(crm)**: al guardar un lead sin empresa, el aviso aparece junto al campo y la vista salta a él, en lugar de un mensaje pasajero con detalles técnicos.
+- **mejora(cotizaciones)**: en pantallas de 1280 px la tabla de cotizaciones prioriza Folio, Cliente, Estado, importe y acciones; Tipo, Modo, Ruta y Fecha siguen consultables desde el folio.
+- **mejora(crm)**: el tablero de oportunidades gana altura útil: ahora la primera tarjeta de cada etapa se lee completa sin desplazarse.
+- **mejora(crm)**: en la ficha de oportunidad "Nueva cotización" es la acción principal y "Eliminar" pasó a peligro secundario.
+- **mejora(crm)**: en "Editar oportunidad" el vínculo con el prospecto/cliente ahora se llama "Origen comercial", para no confundirlo con el origen de la ruta.
+
 ## [13.823.232] - 2026-09-08
 - **refactor(facturación)**: se retiró la bandeja "Por enviar" del cockpit (no todas las facturas se envían por correo; muchos clientes descargan su CFDI y consultan su estado de cuenta en el portal). El envío por correo sigue disponible desde el detalle de cada factura. Una URL vieja `?bandeja=por-enviar` cae en "Por timbrar". También se eliminaron las 2 consultas paginadas que alimentaban su contador en cada visita.
 
