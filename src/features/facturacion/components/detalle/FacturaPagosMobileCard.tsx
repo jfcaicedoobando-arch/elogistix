@@ -1,8 +1,9 @@
 /**
  * Tarjeta móvil del historial de pagos de una factura.
  * Extraída al migrar `FacturaPagosTabla` a `ResponsiveDataTable`.
+ * v13.823.240 — Agrega acción "Cancelar REP" para pagos con complemento vigente.
  */
-import { Trash2 } from "lucide-react";
+import { Trash2, Ban } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Hint } from "@/components/shared/Hint";
 import { MoneyCell } from "@/components/shared/MoneyCell";
@@ -23,6 +24,7 @@ interface PagoRow {
   folio_rep?: number | string | null;
   uuid_rep?: string | null;
   rep_cancelado_en?: string | null;
+  rep_cancellation_status?: string | null;
 }
 
 interface Props {
@@ -30,11 +32,15 @@ interface Props {
   facturaId: string;
   canEdit: boolean;
   onEliminar: (pagoId: string) => void;
+  onCancelarRep: (pago: PagoRow) => void;
   onPreviewRep: (id: string, label: string) => void;
 }
 
-export function FacturaPagosMobileCard({ row, facturaId, canEdit, onEliminar, onPreviewRep }: Props) {
-  const repVivo = !!row.uuid_rep && !row.rep_cancelado_en;
+export function FacturaPagosMobileCard({ row, facturaId, canEdit, onEliminar, onCancelarRep, onPreviewRep }: Props) {
+  const cs = (row.rep_cancellation_status ?? "").toLowerCase();
+  const repVivo = !!row.uuid_rep && !row.rep_cancelado_en && cs !== "accepted";
+  const repEnVerificacion = repVivo && ["pending", "verifying"].includes(cs);
+  const repCancelable = repVivo && !repEnVerificacion;
   return (
     <div className="space-y-1.5">
       <div className="flex items-start justify-between gap-2">
