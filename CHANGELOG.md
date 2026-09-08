@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.823.235] - 2026-09-08
+- **datos(embarques)**: fusión puntual del expediente duplicado ELIMP00293 en ELIMP00319 (mismo BL house NSZEC260687701). Se pasaron al 319 las dos facturas de proveedor (FP-000147 pagada y FP-000148 vigente), sus archivos recibidos y los tres costos reales; se dieron de baja los costos capturados a mano del 319 y la venta duplicada del 293, y el 293 quedó eliminado de forma lógica. Sin cambios de esquema ni de facturación al cliente.
+
 ## [13.823.234] - 2026-09-08
 - **fix(clientes)**: la ficha del cliente ya no falla con "No pudimos cargar la información": los números de facturado, pendiente y utilidad se calculan sólo para ese cliente en vez de recalcular toda la empresa (tiempo de espera agotado 57014).
 
