@@ -48,12 +48,8 @@ export function FilaContenedor({
   const tipoNombre = value.tipo_contenedor
     ? resolveTipoContenedorNombre(value.tipo_contenedor, tiposContenedor, "")
     : "";
-  const tiposSeleccionables = tiposContenedor.filter((ct) => ct.code !== "LCL");
-  const opcionGuardada = opcionTipoGuardada(
-    value.tipo_contenedor,
-    tiposContenedor,
-    tiposSeleccionables.map((ct) => ct.code),
-  );
+
+
 
   const handleTrashClick = () => {
     if (filaVacia) {
