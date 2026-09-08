@@ -54,7 +54,12 @@ export function FilaContenedor({
   const tipoNombre = value.tipo_contenedor
     ? resolveTipoContenedorNombre(value.tipo_contenedor, tiposContenedor, "")
     : "";
-  const opcionGuardada = opcionTipoGuardada(value.tipo_contenedor, tiposContenedor);
+  const tiposSeleccionables = tiposContenedor.filter((ct) => ct.code !== "LCL");
+  const opcionGuardada = opcionTipoGuardada(
+    value.tipo_contenedor,
+    tiposContenedor,
+    tiposSeleccionables.map((ct) => ct.code),
+  );
 
   const handleTrashClick = () => {
     if (filaVacia) {
@@ -146,8 +151,7 @@ export function FilaContenedor({
               {opcionGuardada && (
                 <SelectItem value={opcionGuardada.value}>{opcionGuardada.label}</SelectItem>
               )}
-              {tiposContenedor
-                .filter((ct) => ct.code !== "LCL")
+              {tiposSeleccionables
                 .map((ct) => (
                   <SelectItem key={ct.code} value={ct.code}>
                     {ct.name}
