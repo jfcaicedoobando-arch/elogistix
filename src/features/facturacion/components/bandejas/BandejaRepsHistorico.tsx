@@ -5,7 +5,8 @@
  */
 import { useCallback, useMemo, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { FileCheck2 } from "lucide-react";
+import { FileCheck2, FileDown, FileCode } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { ResponsiveDataTable } from "@/components/shared/dataTable/ResponsiveDataTable";
 import { useClientPagedList } from "@/hooks/shared/useClientPagedList";
 import { useRepsHistorico, type FilaRepHistorico } from "@/features/facturacion/hooks/useBandejas";
@@ -107,6 +108,24 @@ export function BandejaRepsHistorico() {
                   >
                     {estadoRepHistorico(r)}
                   </Badge>
+                </div>
+                <div data-no-row-nav onClick={(e) => e.stopPropagation()} className="flex flex-col gap-1">
+                  <Button
+                    size="icon" variant="outline" className="min-h-11 min-w-11"
+                    loading={descargando === `${r.id}:pdf`}
+                    onClick={() => void descargar(r.id, "pdf")}
+                    aria-label={`Descargar PDF del REP ${r.folio_rep}`}
+                  >
+                    <FileDown className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    size="icon" variant="outline" className="min-h-11 min-w-11"
+                    loading={descargando === `${r.id}:xml`}
+                    onClick={() => void descargar(r.id, "xml")}
+                    aria-label={`Descargar XML del REP ${r.folio_rep}`}
+                  >
+                    <FileCode className="h-4 w-4" />
+                  </Button>
                 </div>
               </div>
             )}

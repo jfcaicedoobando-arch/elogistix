@@ -14,7 +14,7 @@ export type BandejaId =
   | "embarques-sin-factura" | "proformas-listas"
   | "por-timbrar"
   | "por-cobrar" | "vencidas" | "rep-pendientes"
-  | "emitidas" | "notas";
+  | "emitidas" | "notas" | "reps";
 
 type GroupId = "preparar" | "cobrar" | "historico";
 
@@ -44,6 +44,7 @@ const DEFS: Def[] = [
   { id: "rep-pendientes", label: "REP pendientes", hint: "Complementos de Pago (REP) para facturas PPD que faltan por timbrar.", tone: "danger", group: "cobrar" },
   { id: "emitidas", label: "Emitidas", tone: "default", group: "historico" },
   { id: "notas", label: "Notas de crédito", tone: "default", group: "historico" },
+  { id: "reps", label: "REPs", hint: "Complementos de Pago (REP) ya timbrados ante el SAT. Consulta y descarga de PDF/XML; los pendientes por timbrar están en Cobrar → REP pendientes.", tone: "default", group: "historico" },
 ];
 
 function badgeClass(tone: Def["tone"]): string {
@@ -52,7 +53,7 @@ function badgeClass(tone: Def["tone"]): string {
   return "bg-muted text-muted-foreground";
 }
 
-type BadgeConteosMap = Record<Exclude<BandejaId, "emitidas" | "notas">, number>;
+type BadgeConteosMap = Record<Exclude<BandejaId, "emitidas" | "notas" | "reps">, number>;
 
 export function BandejaTabs() {
   const { data: conteos } = useBandejaConteos();
@@ -89,7 +90,7 @@ export function BandejaTabs() {
               </span>
               <div className="flex flex-wrap gap-1">
                 {defs.map((d) => {
-                  const count = d.id === "emitidas" || d.id === "notas" ? 0 : counts[d.id];
+                  const count = d.id === "emitidas" || d.id === "notas" || d.id === "reps" ? 0 : counts[d.id];
                   return (
                     <TabsTrigger
                       key={d.id}
