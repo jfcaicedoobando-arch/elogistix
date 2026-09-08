@@ -56,7 +56,14 @@ export function FacturaPagosSection({
   const eliminar = useEliminarPagoFactura();
   const registrarActividad = useRegistrarActividad();
   const [pagoAEliminar, setPagoAEliminar] = useState<string | null>(null);
+  const [pagoACancelar, setPagoACancelar] = useState<PagoRow | null>(null);
   const [previewRep, setPreviewRep] = useState<{ id: string; label: string } | null>(null);
+
+  const repController = useCancelarRepController(
+    pagoACancelar,
+    facturaId,
+    facturaNumero,
+  );
 
   // A1: canon único `@/lib/financial/saldoFactura` (descuenta pagos y NC aplicadas).
   // Auditoría 2026-08-28 · Hallazgo 4: el estado entra al cálculo (facturas
