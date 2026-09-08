@@ -1,6 +1,10 @@
 # Changelog
 
+## [13.823.234] - 2026-09-08
+- **fix(clientes)**: la ficha del cliente ya no falla con "No pudimos cargar la información": los números de facturado, pendiente y utilidad se calculan sólo para ese cliente en vez de recalcular toda la empresa (tiempo de espera agotado 57014).
+
 ## [13.823.233] - 2026-09-08
+
 - **fix(cotizaciones)**: el "Progreso del Paso 1" ya marca la sección que realmente estás viendo, tanto al hacer clic como al desplazarte, y el lector de pantalla anuncia cuál es la actual.
 - **fix(cotizaciones)**: se quitó la barra de desplazamiento horizontal que aparecía de más en el cotizador nuevo a 1280 px.
 - **fix(crm)**: en el calendario de "Fecha meta de cierre", el día de hoy y el día seleccionado ya no se ven idénticos: el relleno azul queda para tu selección y hoy se resalta con un aro.
