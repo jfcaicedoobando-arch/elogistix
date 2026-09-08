@@ -17,7 +17,11 @@ const SELECCIONADO = "[aria-selected='true'], [data-selected='true']";
 /** Celda del día cuyo botón muestra ese número. */
 function celdaDelDia(container: HTMLElement, dia: number): HTMLElement {
   const boton = Array.from(container.querySelectorAll("button")).find(
-    (b) => b.textContent?.trim() === String(dia),
+    (b) =>
+      b.textContent?.trim() === String(dia) &&
+      // Los días de relleno del mes anterior/siguiente repiten números.
+      !b.closest(".day-outside") &&
+      !b.matches("[data-outside='true']"),
   );
   if (!boton) throw new Error(`No se encontró el día ${dia}`);
   const celda = boton.closest("td, [role='gridcell']");
