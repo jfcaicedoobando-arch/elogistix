@@ -17,7 +17,7 @@ import { FORMAS_PAGO_SAT, labelDeCatalogo } from "@/constants/catalogosSAT";
 import { PagoRepCell } from "./PagoRepCell";
 import { FacturaPagosMobileCard } from "./FacturaPagosMobileCard";
 
-interface PagoRow {
+export interface PagoRow {
   id: string;
   fecha_pago: string;
   monto: number | string;
