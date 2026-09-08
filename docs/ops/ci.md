@@ -6,7 +6,7 @@ seguridad bloqueantes se conservan íntegras.
 
 ## Workflows
 
-| Workflow             | Disparo                                              | Check requerido            |
+| Workflow             | Disparo                                              | Nombre del check           |
 | -------------------- | ---------------------------------------------------- | -------------------------- |
 | `ci.yml`             | PR, push a `main`, manual                            | `CI Success (aggregator)`  |
 | `rls-tests.yml`      | PR/push que toca BD, manual                          | `RLS tests result`         |
@@ -14,14 +14,14 @@ seguridad bloqueantes se conservan íntegras.
 | `gitleaks`           | según su workflow                                     | —                          |
 | `actionlint`         | según su workflow                                     | —                          |
 | `codeql`             | semanal + manual                                      | —                          |
-| `e2e`                | **sólo manual**                                       | —                          |
+| `e2e`                | **sólo manual** (sin schedule)                        | —                          |
 | `post-deploy-smoke`  | **sólo manual**                                       | —                          |
 
 ## CI (`ci.yml`)
 
 Un job, un checkout, una instalación. Secuencia: ESLint (`--max-warnings 0`) →
 `typecheck` → **suite Vitest completa** (sin coverage, sin shards, sin retries) →
-`build` sin `ANALYZE`. Sin `--shard`, Vitest incluye los guardrails de
+guard estático de BD (condicional) → `build` sin `ANALYZE`. Sin `--shard`, Vitest incluye los guardrails de
 arquitectura (`architecture.test.ts`, `architecture-baseline.test.ts`,
 `audit-report`, `audit-casts-classifier`) exactamente una vez, así que Power of
 10 (≤200 líneas productivas, capas, casts) sigue bloqueando.
@@ -30,13 +30,29 @@ Filtro por áreas dentro del mismo job:
 
 - PR: `base.sha` vs `HEAD`.
 - push a `main`: `github.event.before` vs `github.sha` (todos los commits).
-- dispatch manual o diff no disponible: se ejecuta **todo**.
+- dispatch manual, diff no disponible o `git diff` fallido: se ejecuta **todo**.
 
 Los tests Deno de Edge Functions (con typecheck, sin `--no-check`) corren sólo
-si el diff toca `supabase/functions/**` o el propio `ci.yml`.
+si el diff toca `supabase/functions/**`, un `deno.json`/`deno.jsonc`/`deno.lock`
+de la raíz (si existen), el propio `ci.yml` o la acción `setup-bun`.
 
-El workflow siempre arranca (sin `paths-ignore`), así el check requerido nunca
-queda *pending*; los pasos irrelevantes se omiten explícitamente.
+### Guard estático de BD (condicional, bloqueante)
+
+En el mismo job, con Bun ya instalado, corre `audit:manifest`, `audit:schema`,
+`audit:schema-functions`, `audit:migrations`, `audit:replay-mirror` y
+`audit:rpc-sync` **sólo si el diff toca** `supabase/migrations|schema|tests|releases`,
+`scripts/audit-*`, `scripts/lib/`, `src/constants/appVersion.ts` (el manifiesto
+depende de ella), `package.json`/`bun.lock`, `ci.yml` o la acción compuesta
+`setup-bun`. Dispatch manual o diff ausente activa también este área. No se
+reintrodujo `audit:all`, ni reports, ni un job de audits, ni audits de frontend
+duplicados (ésos ya viven en Vitest).
+
+El workflow siempre arranca (sin `paths-ignore`), así el check nunca queda
+*pending*; los pasos irrelevantes se omiten explícitamente.
+
+Los nombres `CI Success (aggregator)` y `RLS tests result` se conservan por
+compatibilidad con los checks previos. Hoy el repositorio **no** tiene branch
+protection ni rulesets configurados; esta tarea no cambia esos ajustes.
 
 ## RLS (`rls-tests.yml`)
 
@@ -51,7 +67,7 @@ snapshots. Orden:
 5. Guards bloqueantes del manifiesto (`scripts/ci/run-guards.sh`).
 6. Todas las suites `supabase/tests/rls/test_rls_*.sql` descubiertas por patrón
    (`scripts/ci/run-rls-suites.sh`): verifica el aislamiento `BEGIN…ROLLBACK`,
-   nunca omite una suite en silencio y falla si descubre menos de 30.
+   nunca omite una suite en silencio y falla si la lista queda vacía.
 7. Prueba real de concurrencia de cotización ganadora.
 
 Los logs y el diff se suben **sólo al fallar**, con retención corta.
@@ -68,14 +84,9 @@ gh workflow run e2e.yml --ref main
 gh workflow run post-deploy-smoke.yml --ref main
 ```
 
-Comandos locales equivalentes (opcionales, fuera del camino de CI):
-
-```sh
-bun run lint -- --max-warnings 0
-bun run typecheck
-bun run test
-bun run build
-```
+**Las suites (Vitest, RLS, E2E) se ejecutan únicamente en GitHub Actions.** No
+las corras en Lovable ni como parte del trabajo local de un cambio: ahí sólo
+tienen sentido validaciones focalizadas al archivo o módulo tocado.
 
 ## Publicación
 
