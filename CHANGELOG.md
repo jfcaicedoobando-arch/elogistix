@@ -1,5 +1,13 @@
 # Changelog
 
+## [13.823.211] - 2026-09-08
+
+Remate R201 — tarifa sin fallback silencioso e importación de costos honesta.
+
+- R201-COT-01: refrescar la misma tarifa resuelve cada cargo por su identidad exacta (ya no por texto, así que los nombres repetidos no se confunden). Sustituir por otra tarifa se RECHAZA con mensaje claro cuando no hay cargo equivalente, la equivalencia es ambigua, o cambian proveedor/agente o moneda: nunca se etiqueta "Sustituida" conservando el importe anterior.
+- R201-COT-06: el reintento de importación vuelve a traer sólo los COSTOS; las ventas capturadas ya no se reponen desde la cotización. Mientras la importación está en vuelo, los costos quedan en sólo lectura, y si una captura local obliga a descartar la respuesta, el estado queda en error (el guard final sigue impidiendo guardar una importación incompleta).
+- Entrega: bloques REVOKE/GRANT EXECUTE con firma por tipos en las migraciones R201 pendientes (010/011) y espejos canónicos, para el guard H6 de Actions. Sin cambios de datos, RLS, permisos efectivos ni históricos; ambas migraciones siguen preparadas y NO aplicadas.
+
 ## [13.823.210] - 2026-09-08
 
 Fix de lint post-remate R201.
