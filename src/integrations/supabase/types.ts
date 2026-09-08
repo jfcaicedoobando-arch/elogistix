@@ -8620,6 +8620,14 @@ export type Database = {
         Args: { p_estado: string; p_modo: string }
         Returns: string[]
       }
+      _embarque_aplicar_tarifa_decidida: {
+        Args: {
+          p_cotizacion_id: string
+          p_embarque_id: string
+          p_tarifa_id_aplicada: string
+        }
+        Returns: number
+      }
       _es_rol_interno: { Args: never; Returns: boolean }
       _log_provisioning_step: {
         Args: {
