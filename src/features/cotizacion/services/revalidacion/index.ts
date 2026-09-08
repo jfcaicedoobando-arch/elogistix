@@ -42,6 +42,9 @@ function parseResultado(raw: unknown): ResultadoRevalidacion {
     max_delta_pct: Number(r.max_delta_pct ?? 0),
     tarifa_id_vigente: (r.tarifa_id_vigente as string | null) ?? null,
     motivo: r.motivo as string | undefined,
+    // R201-COT-02: estado de re-aprobación de ventas.
+    estado_revalidacion: (r.estado_revalidacion as string | null) ?? null,
+    reaprobacion_vigente: r.reaprobacion_vigente === true,
   };
 }
 
