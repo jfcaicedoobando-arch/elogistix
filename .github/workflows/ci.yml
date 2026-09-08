@@ -28,7 +28,8 @@ concurrency:
 
 jobs:
   ci-success:
-    # Nombre visible estable: es el required check en branch protection.
+    # Nombre visible conservado por compatibilidad con los checks previos
+    # (este repo no tiene branch protection ni rulesets configurados).
     name: CI Success (aggregator)
     runs-on: ubuntu-24.04
     # Suite completa en un solo runner. 30 min es el margen inicial; se ajusta
