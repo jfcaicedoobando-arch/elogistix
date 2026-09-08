@@ -14,9 +14,9 @@ name: CI
 
 on:
   pull_request:
- Nombre visible estable: es el required check en branch protection.branches: ["**"]
+    branches: ["**"]
   push:
- Nombre visible estable: es el required check en branch protection.branches: [main]
+    branches: [main]
   workflow_dispatch:
 
 permissions:
@@ -28,141 +28,141 @@ concurrency:
 
 jobs:
   ci-success:
- Nombre visible estable: es el required check en branch protection.# Nombre visible estable: es el required check en branch protection.
- Nombre visible estable: es el required check en branch protection.name: CI Success (aggregator)
- Nombre visible estable: es el required check en branch protection.runs-on: ubuntu-24.04
- Nombre visible estable: es el required check en branch protection.# Suite completa en un solo runner. 30 min es el margen inicial; se ajusta
- Nombre visible estable: es el required check en branch protection.# con la medición real de GitHub.
- Nombre visible estable: es el required check en branch protection.timeout-minutes: 30
+    # Nombre visible estable: es el required check en branch protection.
+    name: CI Success (aggregator)
+    runs-on: ubuntu-24.04
+    # Suite completa en un solo runner. 30 min es el margen inicial; se ajusta
+    # con la medición real de GitHub.
+    timeout-minutes: 30
 
- Nombre visible estable: es el required check en branch protection.steps:
- Nombre visible estable: es el required check en branch protection.  - name: Checkout
- Nombre visible estable: es el required check en branch protection.    uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
- Nombre visible estable: es el required check en branch protection.    with:
- Nombre visible estable: es el required check en branch protection.      # Historial completo: el filtro por áreas diffea contra el base del PR
- Nombre visible estable: es el required check en branch protection.      # o contra el commit previo del push.
- Nombre visible estable: es el required check en branch protection.      fetch-depth: 0
- Nombre visible estable: es el required check en branch protection.      # No se hace push/fetch autenticado.
- Nombre visible estable: es el required check en branch protection.      persist-credentials: false
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # Historial completo: el filtro por áreas diffea contra el base del PR
+          # o contra el commit previo del push.
+          fetch-depth: 0
+          # No se hace push/fetch autenticado.
+          persist-credentials: false
 
- Nombre visible estable: es el required check en branch protection.  - name: Setup Bun + install
- Nombre visible estable: es el required check en branch protection.    uses: ./.github/actions/setup-bun
+      - name: Setup Bun + install
+        uses: ./.github/actions/setup-bun
 
- Nombre visible estable: es el required check en branch protection.  # Filtro por áreas DENTRO del mismo job (sin detector externo, sin cron).
- Nombre visible estable: es el required check en branch protection.  # - pull_request: base.sha vs HEAD.
- Nombre visible estable: es el required check en branch protection.  # - push a main:  github.event.before vs github.sha (todos los commits).
- Nombre visible estable: es el required check en branch protection.  # - dispatch / diff ausente o `git diff` fallido: se corre TODO.
- Nombre visible estable: es el required check en branch protection.  - name: Detectar áreas cambiadas
- Nombre visible estable: es el required check en branch protection.    id: areas
- Nombre visible estable: es el required check en branch protection.    env:
- Nombre visible estable: es el required check en branch protection.      EVENT_NAME: ${{ github.event_name }}
- Nombre visible estable: es el required check en branch protection.      BASE_SHA: ${{ github.event.pull_request.base.sha }}
- Nombre visible estable: es el required check en branch protection.      BEFORE_SHA: ${{ github.event.before }}
- Nombre visible estable: es el required check en branch protection.      HEAD_SHA: ${{ github.sha }}
- Nombre visible estable: es el required check en branch protection.    run: |
- Nombre visible estable: es el required check en branch protection.      set -uo pipefail
- Nombre visible estable: es el required check en branch protection.      base=""
- Nombre visible estable: es el required check en branch protection.      case "$EVENT_NAME" in
- Nombre visible estable: es el required check en branch protection.        pull_request) base="$BASE_SHA" ;;
- Nombre visible estable: es el required check en branch protection.        push) base="$BEFORE_SHA" ;;
- Nombre visible estable: es el required check en branch protection.      esac
- Nombre visible estable: es el required check en branch protection.      diff=""
- Nombre visible estable: es el required check en branch protection.      if [ -n "$base" ] && [ "$base" != "0000000000000000000000000000000000000000" ] \
- Nombre visible estable: es el required check en branch protection.        && git cat-file -e "$base^{commit}" 2>/dev/null; then
- Nombre visible estable: es el required check en branch protection.        # El estado de `git diff` se captura explícitamente: con `set -e` del
- Nombre visible estable: es el required check en branch protection.        # shell de Actions una asignación fallida abortaría antes del fallback.
- Nombre visible estable: es el required check en branch protection.        if salida="$(git diff --name-only "$base" "$HEAD_SHA")"; then
- Nombre visible estable: es el required check en branch protection.          diff="$salida"
- Nombre visible estable: es el required check en branch protection.        else
- Nombre visible estable: es el required check en branch protection.          echo "git diff falló: se ejecuta TODO."
- Nombre visible estable: es el required check en branch protection.        fi
- Nombre visible estable: es el required check en branch protection.      fi
- Nombre visible estable: es el required check en branch protection.      if [ -z "$diff" ]; then
- Nombre visible estable: es el required check en branch protection.        echo "Sin diff utilizable ($EVENT_NAME): se ejecuta TODO."
- Nombre visible estable: es el required check en branch protection.        {
- Nombre visible estable: es el required check en branch protection.          echo "frontend=true"
- Nombre visible estable: es el required check en branch protection.          echo "edge=true"
- Nombre visible estable: es el required check en branch protection.          echo "database=true"
- Nombre visible estable: es el required check en branch protection.        } >> "$GITHUB_OUTPUT"
- Nombre visible estable: es el required check en branch protection.        exit 0
- Nombre visible estable: es el required check en branch protection.      fi
- Nombre visible estable: es el required check en branch protection.      echo "$diff"
- Nombre visible estable: es el required check en branch protection.      frontend=false
- Nombre visible estable: es el required check en branch protection.      edge=false
- Nombre visible estable: es el required check en branch protection.      database=false
- Nombre visible estable: es el required check en branch protection.      # here-string en vez de `printf | grep -q`: sin SIGPIPE con diffs grandes.
- Nombre visible estable: es el required check en branch protection.      # Cualquier cambio fuera de docs/markdown toca el camino de app.
- Nombre visible estable: es el required check en branch protection.      if grep -qvE '^(docs/|\.github/ISSUE_TEMPLATE/)|\.md$' <<<"$diff"; then
- Nombre visible estable: es el required check en branch protection.        frontend=true
- Nombre visible estable: es el required check en branch protection.      fi
- Nombre visible estable: es el required check en branch protection.      if grep -qE '^supabase/functions/|^deno\.(json|jsonc|lock)$|^\.github/workflows/ci\.yml$|^\.github/actions/setup-bun/' <<<"$diff"; then
- Nombre visible estable: es el required check en branch protection.        edge=true
- Nombre visible estable: es el required check en branch protection.      fi
- Nombre visible estable: es el required check en branch protection.      if grep -qE '^supabase/(migrations|schema|tests|releases)/|^scripts/audit-|^scripts/lib/|^src/constants/appVersion\.ts$|^package\.json$|^bun\.lock$|^\.github/workflows/ci\.yml$|^\.github/actions/setup-bun/' <<<"$diff"; then
- Nombre visible estable: es el required check en branch protection.        database=true
- Nombre visible estable: es el required check en branch protection.      fi
- Nombre visible estable: es el required check en branch protection.      {
- Nombre visible estable: es el required check en branch protection.        echo "frontend=$frontend"
- Nombre visible estable: es el required check en branch protection.        echo "edge=$edge"
- Nombre visible estable: es el required check en branch protection.        echo "database=$database"
- Nombre visible estable: es el required check en branch protection.      } >> "$GITHUB_OUTPUT"
+      # Filtro por áreas DENTRO del mismo job (sin detector externo, sin cron).
+      # - pull_request: base.sha vs HEAD.
+      # - push a main:  github.event.before vs github.sha (todos los commits).
+      # - dispatch / diff ausente o `git diff` fallido: se corre TODO.
+      - name: Detectar áreas cambiadas
+        id: areas
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          BEFORE_SHA: ${{ github.event.before }}
+          HEAD_SHA: ${{ github.sha }}
+        run: |
+          set -uo pipefail
+          base=""
+          case "$EVENT_NAME" in
+            pull_request) base="$BASE_SHA" ;;
+            push) base="$BEFORE_SHA" ;;
+          esac
+          diff=""
+          if [ -n "$base" ] && [ "$base" != "0000000000000000000000000000000000000000" ] \
+            && git cat-file -e "$base^{commit}" 2>/dev/null; then
+            # El estado de `git diff` se captura explícitamente: con `set -e` del
+            # shell de Actions una asignación fallida abortaría antes del fallback.
+            if salida="$(git diff --name-only "$base" "$HEAD_SHA")"; then
+              diff="$salida"
+            else
+              echo "git diff falló: se ejecuta TODO."
+            fi
+          fi
+          if [ -z "$diff" ]; then
+            echo "Sin diff utilizable ($EVENT_NAME): se ejecuta TODO."
+            {
+              echo "frontend=true"
+              echo "edge=true"
+              echo "database=true"
+            } >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "$diff"
+          frontend=false
+          edge=false
+          database=false
+          # here-string en vez de `printf | grep -q`: sin SIGPIPE con diffs grandes.
+          # Cualquier cambio fuera de docs/markdown toca el camino de app.
+          if grep -qvE '^(docs/|\.github/ISSUE_TEMPLATE/)|\.md$' <<<"$diff"; then
+            frontend=true
+          fi
+          if grep -qE '^supabase/functions/|^deno\.(json|jsonc|lock)$|^\.github/workflows/ci\.yml$|^\.github/actions/setup-bun/' <<<"$diff"; then
+            edge=true
+          fi
+          if grep -qE '^supabase/(migrations|schema|tests|releases)/|^scripts/audit-|^scripts/lib/|^src/constants/appVersion\.ts$|^package\.json$|^bun\.lock$|^\.github/workflows/ci\.yml$|^\.github/actions/setup-bun/' <<<"$diff"; then
+            database=true
+          fi
+          {
+            echo "frontend=$frontend"
+            echo "edge=$edge"
+            echo "database=$database"
+          } >> "$GITHUB_OUTPUT"
 
- Nombre visible estable: es el required check en branch protection.  # `react-compiler` cuenta warnings como errores: fail-fast real.
- Nombre visible estable: es el required check en branch protection.  - name: ESLint (max-warnings 0)
- Nombre visible estable: es el required check en branch protection.    if: steps.areas.outputs.frontend == 'true'
- Nombre visible estable: es el required check en branch protection.    run: bun run lint -- --max-warnings 0
+      # `react-compiler` cuenta warnings como errores: fail-fast real.
+      - name: ESLint (max-warnings 0)
+        if: steps.areas.outputs.frontend == 'true'
+        run: bun run lint -- --max-warnings 0
 
- Nombre visible estable: es el required check en branch protection.  - name: TypeScript typecheck
- Nombre visible estable: es el required check en branch protection.    if: steps.areas.outputs.frontend == 'true'
- Nombre visible estable: es el required check en branch protection.    run: bun run typecheck
+      - name: TypeScript typecheck
+        if: steps.areas.outputs.frontend == 'true'
+        run: bun run typecheck
 
- Nombre visible estable: es el required check en branch protection.  # Suite completa: sin coverage, sin shards, sin retries.
- Nombre visible estable: es el required check en branch protection.  - name: Vitest (suite completa, incluye guardrails de arquitectura)
- Nombre visible estable: es el required check en branch protection.    if: steps.areas.outputs.frontend == 'true'
- Nombre visible estable: es el required check en branch protection.    run: bun run test
+      # Suite completa: sin coverage, sin shards, sin retries.
+      - name: Vitest (suite completa, incluye guardrails de arquitectura)
+        if: steps.areas.outputs.frontend == 'true'
+        run: bun run test
 
- Nombre visible estable: es el required check en branch protection.  # Guard estático de BD: sólo cuando el diff toca migraciones/schema/tests/
- Nombre visible estable: es el required check en branch protection.  # releases, los scripts de auditoría, appVersion, dependencias o este CI.
- Nombre visible estable: es el required check en branch protection.  # Bloqueante; sin audit:all, sin reports, sin duplicar audits de frontend
- Nombre visible estable: es el required check en branch protection.  # (ésos ya corren dentro de Vitest).
- Nombre visible estable: es el required check en branch protection.  - name: Auditorías estáticas de BD (bloqueantes)
- Nombre visible estable: es el required check en branch protection.    if: steps.areas.outputs.database == 'true'
- Nombre visible estable: es el required check en branch protection.    run: |
- Nombre visible estable: es el required check en branch protection.      bun run audit:manifest
- Nombre visible estable: es el required check en branch protection.      bun run audit:schema
- Nombre visible estable: es el required check en branch protection.      bun run audit:schema-functions
- Nombre visible estable: es el required check en branch protection.      bun run audit:migrations
- Nombre visible estable: es el required check en branch protection.      bun run audit:replay-mirror
- Nombre visible estable: es el required check en branch protection.      bun run audit:rpc-sync
+      # Guard estático de BD: sólo cuando el diff toca migraciones/schema/tests/
+      # releases, los scripts de auditoría, appVersion, dependencias o este CI.
+      # Bloqueante; sin audit:all, sin reports, sin duplicar audits de frontend
+      # (ésos ya corren dentro de Vitest).
+      - name: Auditorías estáticas de BD (bloqueantes)
+        if: steps.areas.outputs.database == 'true'
+        run: |
+          bun run audit:manifest
+          bun run audit:schema
+          bun run audit:schema-functions
+          bun run audit:migrations
+          bun run audit:replay-mirror
+          bun run audit:rpc-sync
 
- Nombre visible estable: es el required check en branch protection.  - name: Build (sin ANALYZE)
- Nombre visible estable: es el required check en branch protection.    if: steps.areas.outputs.frontend == 'true'
- Nombre visible estable: es el required check en branch protection.    env:
- Nombre visible estable: es el required check en branch protection.      ANALYZE: "false"
- Nombre visible estable: es el required check en branch protection.    run: bun run build
+      - name: Build (sin ANALYZE)
+        if: steps.areas.outputs.frontend == 'true'
+        env:
+          ANALYZE: "false"
+        run: bun run build
 
 
- Nombre visible estable: es el required check en branch protection.  # Edge Functions: sólo si cambia supabase/functions o este workflow.
- Nombre visible estable: es el required check en branch protection.  - name: Setup Deno
- Nombre visible estable: es el required check en branch protection.    if: steps.areas.outputs.edge == 'true'
- Nombre visible estable: es el required check en branch protection.    uses: denoland/setup-deno@22d081ff2d3a40755e97629de92e3bcbfa7cf2ed # v2.0.5
- Nombre visible estable: es el required check en branch protection.    with:
- Nombre visible estable: es el required check en branch protection.      # Paridad con el runtime real de las Edge Functions (Deno 2).
- Nombre visible estable: es el required check en branch protection.      deno-version: v2.6.x
+      # Edge Functions: sólo si cambia supabase/functions o este workflow.
+      - name: Setup Deno
+        if: steps.areas.outputs.edge == 'true'
+        uses: denoland/setup-deno@22d081ff2d3a40755e97629de92e3bcbfa7cf2ed # v2.0.5
+        with:
+          # Paridad con el runtime real de las Edge Functions (Deno 2).
+          deno-version: v2.6.x
 
- Nombre visible estable: es el required check en branch protection.  - name: Deno tests (con typecheck, excluye smoke)
- Nombre visible estable: es el required check en branch protection.    if: steps.areas.outputs.edge == 'true'
- Nombre visible estable: es el required check en branch protection.    # SIN `--no-check`: `deno test` valida también los tipos de las edges.
- Nombre visible estable: es el required check en branch protection.    run: |
- Nombre visible estable: es el required check en branch protection.      set -uo pipefail
- Nombre visible estable: es el required check en branch protection.      readarray -t tests < <(find supabase/functions -name '*_test.ts' ! -name 'smoke_test.ts')
- Nombre visible estable: es el required check en branch protection.      if [ "${#tests[@]}" -eq 0 ]; then
- Nombre visible estable: es el required check en branch protection.        echo "::error::No se encontró ningún test Deno (patrón *_test.ts)."
- Nombre visible estable: es el required check en branch protection.        exit 1
- Nombre visible estable: es el required check en branch protection.      fi
- Nombre visible estable: es el required check en branch protection.      deno test \
- Nombre visible estable: es el required check en branch protection.        --node-modules-dir=none \
- Nombre visible estable: es el required check en branch protection.        --allow-env \
- Nombre visible estable: es el required check en branch protection.        --allow-net \
- Nombre visible estable: es el required check en branch protection.        --allow-read \
- Nombre visible estable: es el required check en branch protection.        "${tests[@]}"
+      - name: Deno tests (con typecheck, excluye smoke)
+        if: steps.areas.outputs.edge == 'true'
+        # SIN `--no-check`: `deno test` valida también los tipos de las edges.
+        run: |
+          set -uo pipefail
+          readarray -t tests < <(find supabase/functions -name '*_test.ts' ! -name 'smoke_test.ts')
+          if [ "${#tests[@]}" -eq 0 ]; then
+            echo "::error::No se encontró ningún test Deno (patrón *_test.ts)."
+            exit 1
+          fi
+          deno test \
+            --node-modules-dir=none \
+            --allow-env \
+            --allow-net \
+            --allow-read \
+            "${tests[@]}"
