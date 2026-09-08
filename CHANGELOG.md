@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.823.204] - 2026-09-08
+
+Corrección del fallo de type-check en CI (Deno) en `supabase/functions/_shared/auth.ts`.
+
+- El aviso `auth_getuser_no_disponible` usaba campos inexistentes en `LogContext` (`status`, `motivo`); ahora usa `status_code` y `payload.motivo`. Sin cambios de comportamiento.
+
+
 ## [13.823.203] - 2026-09-08
 
 Corrección del fallo O4 (feature-barrel-surface) en CI: dos imports profundos al feature `cxp` desde `compras`.
