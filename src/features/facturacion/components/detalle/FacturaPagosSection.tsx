@@ -130,6 +130,7 @@ export function FacturaPagosSection({
               moneda={moneda}
               canEdit={canEdit}
               onEliminar={setPagoAEliminar}
+              onCancelarRep={setPagoACancelar}
               onPreviewRep={(id, label) => setPreviewRep({ id, label })}
             />
 
