@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Input } from "@/components/ui/input";
 import { FormField } from "@/components/shared/FormField";
 import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
+import { SwitchVisibilidadOrg } from "./SwitchVisibilidadOrg";
 import { Plus, Trash2 } from "lucide-react";
 import { useAllPuertos, useAdminPuertos } from "@/features/catalogos/hooks";
 import SearchInput from "@/components/shared/SearchInput";
@@ -51,11 +51,11 @@ export default function TabPuertos() {
       id: "activo", header: "Visible en mi empresa",
       meta: { className: "text-center", headerClassName: "text-center" },
       cell: ({ row }) => (
-        <Switch
-          checked={visibleOrg(row.original)}
-          disabled={!row.original.activo}
-          onCheckedChange={(checked) => toggleActivo.mutate({ id: row.original.id, activo: checked })}
-          aria-label={visibleOrg(row.original) ? `Ocultar puerto ${row.original.name} en mi empresa` : `Mostrar puerto ${row.original.name} en mi empresa`}
+        <SwitchVisibilidadOrg
+          visible={visibleOrg(row.original)}
+          activoGlobal={row.original.activo}
+          onChange={(checked) => toggleActivo.mutate({ id: row.original.id, activo: checked })}
+          ariaLabel={visibleOrg(row.original) ? `Ocultar puerto ${row.original.name} en mi empresa` : `Mostrar puerto ${row.original.name} en mi empresa`}
         />
       ),
     },

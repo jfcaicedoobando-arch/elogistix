@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.823.224] - 2026-09-08
+- **fix(catalogos)**: el interruptor "Visible en mi empresa" que aparece bloqueado (elemento desactivado globalmente por la plataforma, p. ej. el puerto de Busan) ahora explica el motivo con un tooltip en Puertos, Navieras y Tipos de Contenedor.
+
+
 ## [13.823.223] - 2026-09-08
 - **fix(catalogos)**: el botón de editar naviera (catálogo global) también queda oculto para administradores de empresa; alta, edición y eliminación de catálogos globales son exclusivas de la plataforma, las empresas sólo prenden/apagan para sí mismas.
 
