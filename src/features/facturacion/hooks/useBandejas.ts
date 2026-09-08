@@ -11,12 +11,14 @@ import { queryKeys } from "@/lib/query";
 import {
   fetchFacturasPorTimbrar,
   fetchPagosRepPendientes,
+  fetchRepsHistorico,
   fetchBandejaConteos,
   type FilaPorTimbrar,
   type FilaRepPendiente,
+  type FilaRepHistorico,
 } from "@/features/facturacion/services/bandejas";
 
-export type { FilaPorTimbrar, FilaRepPendiente };
+export type { FilaPorTimbrar, FilaRepPendiente, FilaRepHistorico };
 
 const STALE = 60_000;
 
@@ -36,6 +38,16 @@ export function usePagosRepPendientes() {
   return useQuery({
     queryKey: queryKeys.facturacion.bandejaRepPendientes(organizationId),
     queryFn: () => fetchPagosRepPendientes(organizationId!),
+    enabled: !!organizationId,
+    staleTime: STALE,
+  });
+}
+
+export function useRepsHistorico() {
+  const { organizationId } = useOrgFilter();
+  return useQuery({
+    queryKey: queryKeys.facturacion.bandejaRepsHistorico(organizationId),
+    queryFn: () => fetchRepsHistorico(organizationId!),
     enabled: !!organizationId,
     staleTime: STALE,
   });

@@ -13,6 +13,7 @@ import { BandejaVencidas } from "@/features/facturacion/components/bandejas/Band
 import { BandejaRepPendientes } from "@/features/facturacion/components/bandejas/BandejaRepPendientes";
 import { TabFacturasEmitidas } from "@/features/facturacion/components/TabFacturasEmitidas";
 import { NotasCreditoRecientes } from "@/features/facturacion/components/NotasCreditoRecientes";
+import { BandejaRepsHistorico } from "@/features/facturacion/components/bandejas/BandejaRepsHistorico";
 
 import type {
   FacturasEmitidasAcciones, FacturasEmitidasFiltros, FacturasEmitidasTabla,
@@ -59,6 +60,9 @@ export function FacturacionBandejasTabs(p: Props) {
       </TabsContent>
       <TabsContent value="notas" className="space-y-4">
         <NotasCreditoRecientes />
+      </TabsContent>
+      <TabsContent value="reps" className="space-y-4">
+        <BandejaRepsHistorico />
       </TabsContent>
     </Tabs>
   );

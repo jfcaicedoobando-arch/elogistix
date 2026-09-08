@@ -14,8 +14,10 @@
 export {
   fetchFacturasPorTimbrar,
   fetchPagosRepPendientes,
+  fetchRepsHistorico,
   type FilaPorTimbrar,
   type FilaRepPendiente,
+  type FilaRepHistorico,
 } from "./bandejasQueries";
 
 export { fetchBandejaConteos } from "./bandejasConteos";

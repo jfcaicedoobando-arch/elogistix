@@ -80,3 +80,57 @@ export async function fetchPagosRepPendientes(orgId: string): Promise<FilaRepPen
     estado_rep: r.estado_rep,
   }));
 }
+
+export interface FilaRepHistorico {
+  id: string;
+  factura_id: string;
+  factura_numero: string;
+  cliente_nombre: string;
+  fecha_pago: string;
+  monto: number;
+  moneda: string;
+  folio_rep: string;
+  uuid_rep: string | null;
+  timbrado_rep_en: string | null;
+  rep_cancellation_status: string | null;
+}
+
+/**
+ * Histórico de REPs (Complemento de Pago) ya timbrados ante el SAT.
+ * Espejo de `fetchPagosRepPendientes`, pero de sólo lectura: consulta y
+ * descarga de PDF/XML, sin acciones de timbrado/cancelación.
+ */
+export async function fetchRepsHistorico(orgId: string): Promise<FilaRepHistorico[]> {
+  const { data, error } = await supabase
+    .from("pagos_factura")
+    .select(
+      "id, factura_id, fecha_pago, monto, moneda, serie_rep, folio_rep, uuid_rep, timbrado_rep_en, rep_cancellation_status, facturas!inner(numero, cliente_nombre)",
+    )
+    .eq("organization_id", orgId)
+    .eq("estado_rep", "Timbrado")
+    .is("deleted_at", null)
+    .order("timbrado_rep_en", { ascending: false, nullsFirst: false })
+    .limit(CAP_LISTA);
+  if (error) throw error;
+  warnIfTruncated(data, CAP_LISTA, "facturacion.fetchRepsHistorico");
+  type Row = {
+    id: string; factura_id: string; fecha_pago: string;
+    monto: number; moneda: string;
+    serie_rep: string | null; folio_rep: number | null; uuid_rep: string | null;
+    timbrado_rep_en: string | null; rep_cancellation_status: string | null;
+    facturas: { numero: string; cliente_nombre: string } | null;
+  };
+  return ((data ?? []) as Row[]).map((r) => ({
+    id: r.id,
+    factura_id: r.factura_id,
+    factura_numero: r.facturas?.numero ?? "—",
+    cliente_nombre: r.facturas?.cliente_nombre ?? "—",
+    fecha_pago: r.fecha_pago,
+    monto: r.monto,
+    moneda: r.moneda,
+    folio_rep: [r.serie_rep, r.folio_rep].filter((v) => v != null && v !== "").join("-") || "—",
+    uuid_rep: r.uuid_rep,
+    timbrado_rep_en: r.timbrado_rep_en,
+    rep_cancellation_status: r.rep_cancellation_status,
+  }));
+}
