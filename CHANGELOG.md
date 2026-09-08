@@ -2,7 +2,11 @@
 
 ## [13.823.220] - 2026-09-08
 - R219-UI-01: la vista previa del Paso 4 (Costos y Pricing) ya multiplica cantidad × precio unitario en total por fila, total de venta y utilidad, con la misma regla monetaria que la persistencia; el campo se etiqueta "Precio unitario (sin IVA)".
+- R219-UI-01 (remate): `cantidadVentaValida` respeta el contrato del validador (`cantidad >= 1`): sólo la cantidad AUSENTE (filas legacy sin columna) se lee como 1; `0`, negativos y `NaN` quedan inválidos y aportan 0 a la vista previa, sin inventar una venta de 1 ni propagar NaN. Sin cambios en payload ni en base.
 - R219-UI-02: los selectores de tipo de contenedor (cotización tras aplicar tarifa y contenedores del embarque) conservan el valor heredado en UUID mostrando su nombre de catálogo; el Resumen del embarque resuelve el tipo de cada contenedor y ya no muestra UUID crudo.
+- R219-UI-02 (remate): `opcionTipoGuardada` muestra el texto legacy legible tal cual ("20' GP") y reserva la etiqueta neutral "Tipo guardado (no disponible en el catálogo)" sólo para UUID no resuelto. En el Resumen, el tipo del embarque se usa como respaldo únicamente cuando el contenedor no tiene tipo propio.
+- chore: `FilaContenedor.tsx` vuelve a cumplir el límite Power of 10 (≤200 líneas) extrayendo el campo "Tipo" a `CampoTipoContenedor.tsx`, sin cambios de comportamiento; manifiesto de releases regenerado con la entrada de 13.823.220.
+
 
 ## [13.823.219] - 2026-09-08
 
