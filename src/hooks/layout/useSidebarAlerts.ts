@@ -39,6 +39,26 @@ const SIDEBAR_QUERY_TUNING = {
   refetchIntervalInBackground: false,
 } as const;
 
+/**
+ * Sentry JAVASCRIPT-REACT-6E: si el token expira entre dos refetches, PostgREST
+ * responde `permission denied for function ...`. Es una sesión vencida, no un
+ * error de la app: los badges simplemente se quedan en cero hasta el próximo
+ * login, sin ruido en Sentry.
+ */
+function esSesionVencida(e: unknown): boolean {
+  const msg = e instanceof Error ? e.message : String(e ?? "");
+  return /permission denied/i.test(msg);
+}
+
+async function sinRuidoDeSesion<T>(cargar: () => Promise<T>, fallback: T): Promise<T> {
+  try {
+    return await cargar();
+  } catch (e) {
+    if (esSesionVencida(e)) return fallback;
+    throw e;
+  }
+}
+
 /** Invalida los badges del sidebar para que se recalculen en el próximo render. */
 export function invalidateSidebarAlerts(queryClient: QueryClient): void {
   void queryClient.invalidateQueries({ queryKey: queryKeys.sidebar.alertCounts });
