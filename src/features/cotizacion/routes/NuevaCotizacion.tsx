@@ -143,6 +143,9 @@ export default function NuevaCotizacion() {
         open={!!savedId}
         onOpenChange={(o) => { if (!o) setSavedId(null); }}
         folio={null}
+        /* R215-COT-01: una cotización recién creada nunca está Aceptada, así que
+           el diálogo ofrece "Ver cotización y aceptar" en vez de "Crear embarque". */
+        estado={null}
         onEnviarProforma={() => savedId && closeSuccessAndGoTo(`/cotizaciones/${savedId}?enviarProforma=1`)}
         onCrearEmbarque={() => savedId && closeSuccessAndGoTo(`/embarques/nuevo?fromCotizacion=${savedId}`)}
         onDuplicar={() => savedId && closeSuccessAndGoTo(`/cotizaciones/nueva?duplicar=${savedId}`)}

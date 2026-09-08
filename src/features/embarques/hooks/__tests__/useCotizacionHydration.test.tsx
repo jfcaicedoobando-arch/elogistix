@@ -4,11 +4,18 @@ import { createWrapper } from "@/test/utils/queryWrapper";
 import { useCotizacionHydration } from "../useCotizacionHydration";
 import { MemoryRouter } from "react-router-dom";
 
-const mockCot = { id: "cot-1", folio: "COT-001" };
+const mockCot = { id: "cot-1", folio: "COT-001", estado: "Aceptada" };
+const mockBorrador = { id: "cot-2", folio: "COT-002", estado: "Borrador" };
+
+const navigateSpy = vi.fn();
+vi.mock("react-router-dom", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("react-router-dom")>()),
+  useNavigate: () => navigateSpy,
+}));
 
 vi.mock("@/features/cotizacion/hooks", () => ({
   useCotizacion: (id: string) => ({
-    data: id === "cot-1" ? mockCot : null,
+    data: id === "cot-1" ? mockCot : id === "cot-2" ? mockBorrador : null,
   }),
 }));
 
@@ -41,6 +48,20 @@ describe("useCotizacionHydration", () => {
     const onPrevincular = vi.fn();
     renderHook(() => useCotizacionHydration({ onPrevincular }), {
       wrapper: makeWrapper({}),
+    });
+    expect(onPrevincular).not.toHaveBeenCalled();
+  });
+});
+
+describe("useCotizacionHydration — estado no convertible (R215-COT-01)", () => {
+  it("no vincula un Borrador y regresa al detalle", async () => {
+    navigateSpy.mockClear();
+    const onPrevincular = vi.fn();
+    renderHook(() => useCotizacionHydration({ onPrevincular }), {
+      wrapper: makeWrapper({ cotizacionPrevinculadaId: "cot-2" }),
+    });
+    await waitFor(() => {
+      expect(navigateSpy).toHaveBeenCalledWith("/cotizaciones/cot-2", { replace: true });
     });
     expect(onPrevincular).not.toHaveBeenCalled();
   });

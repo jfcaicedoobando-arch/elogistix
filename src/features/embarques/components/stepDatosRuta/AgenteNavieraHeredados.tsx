@@ -5,7 +5,7 @@
  * Muestran badge "Cotización" cuando el valor coincide con el heredado y
  * permiten un override manual (con opción de restaurar).
  */
-import { useMemo } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 import { Controller, useFormContext } from "react-hook-form";
 import { Undo2 } from "lucide-react";
 import { Label } from "@/components/ui/label";
@@ -24,6 +24,27 @@ import { opcionesConValorGuardado } from "@/features/embarques/domain/opcionesCa
 import type { EmbarqueFormValues } from "@/features/embarques/hooks";
 
 const NONE = "__none__";
+
+/**
+ * R215-COT-02: la cotización guarda `naviera_id` / `agente_id` pero no siempre
+ * el nombre. El validador y el payload usan el TEXTO, así que el paso 2 pedía
+ * "selecciona una opción" con la naviera ya dibujada. Al resolver el catálogo
+ * se copia el nombre sin marcar override manual (`shouldDirty: false`).
+ */
+function useSyncNombreDesdeCatalogo(
+  campo: "naviera" | "agente",
+  currentId: string | null | undefined,
+  nombreGuardado: string | null | undefined,
+  buscarNombre: (id: string) => string | undefined,
+  setValue: (campo: "naviera" | "agente", nombre: string) => void,
+) {
+  useEffect(() => {
+    if (!currentId) return;
+    if ((nombreGuardado ?? "").trim()) return;
+    const nombre = buscarNombre(currentId);
+    if (nombre) setValue(campo, nombre);
+  }, [campo, currentId, nombreGuardado, buscarNombre, setValue]);
+}
 
 function BadgeHerencia({ heredado }: { heredado: boolean }) {
   if (!heredado) return null;
@@ -44,6 +65,17 @@ export function AgenteEmbarqueSelector({ cotizacionAgenteId }: { cotizacionAgent
 
   // P1-5: si el catálogo aún no trae el agente guardado (o está inactivo), se
   // inyecta una opción sintética para no pintar el select vacío.
+  useSyncNombreDesdeCatalogo(
+    "agente",
+    currentId,
+    nombreGuardado,
+    useCallback((id: string) => agentes.find((a) => a.id === id)?.nombre, [agentes]),
+    useCallback(
+      (campo, nombre) => setValue(campo, nombre, { shouldValidate: true, shouldDirty: false }),
+      [setValue],
+    ),
+  );
+
   const opciones = useMemo(
     () =>
       opcionesConValorGuardado(
@@ -124,6 +156,17 @@ export function NavieraEmbarqueSelector({
   const overriden = !!cotizacionNavieraId && currentId !== cotizacionNavieraId;
 
   // P1-5: misma tolerancia que en el selector de agente.
+  useSyncNombreDesdeCatalogo(
+    "naviera",
+    currentId,
+    nombreGuardado,
+    useCallback((id: string) => navieras.find((n) => n.id === id)?.name, [navieras]),
+    useCallback(
+      (campo, nombre) => setValue(campo, nombre, { shouldValidate: true, shouldDirty: false }),
+      [setValue],
+    ),
+  );
+
   const opciones = useMemo(
     () =>
       opcionesConValorGuardado(
