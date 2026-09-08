@@ -1,20 +1,25 @@
 name: CI
 
-# ENSAYO DE 3 SHARDS (medición pedida por el usuario).
+# ENSAYO DE 3 SHARDS + LINT/CHECKS EN PARALELO (medición pedida por el usuario).
 #
-# Son 4 definiciones de job en YAML que se expanden a 6 jobs reales:
+# Son 5 definiciones de job en YAML que se expanden a 7 jobs reales:
 #   1. detector        → sólo checkout + diff robusto; expone frontend/edge/database.
-#   2. checks          → lint (0 warnings), typecheck, guards DB condicionales, build,
-#                        Deno condicional. Corre EN PARALELO con los shards.
-#   3. tests (matrix)  → Vitest shard 1, 2 y 3 (sin coverage, sin retries, sin blobs).
-#   4. ci-success      → agregador "CI Success (aggregator)", nombre conservado por
+#   2. lint            → ESLint (0 warnings). Corre EN PARALELO con checks y shards.
+#   3. checks          → typecheck, guards DB condicionales, build, Deno condicional.
+#   4. tests (matrix)  → Vitest shard 1, 2 y 3 (sin coverage, sin retries, sin blobs).
+#   5. ci-success      → agregador "CI Success (aggregator)", nombre conservado por
 #                        compatibilidad con los checks previos (este repo no tiene
 #                        branch protection ni rulesets configurados).
 #
 # Benchmark de referencia (1 job unificado):
 #   run 34196983386: 15m44s de espera total, 922s de ejecución acumulada.
-#   Métricas del ensayo de 3 shards aún están pendientes de validación final;
-#   la primera corrida (unhandled error en shard 2) no se registra como éxito.
+# Medición YA VALIDADA de la configuración previa (3 shards, lint dentro de checks):
+#   run 34200102375: espera 347s (5m47s), ejecución acumulada 947s (15m47s);
+#   Vitest 1426 archivos/8949 tests, Deno 639; lint 134s dentro del job conjunto
+#   de 296s (resto 143s + setup Deno 2s).
+# La nueva división lint/checks en 2 jobs aún está pendiente de medición; la
+# primera corrida del ensayo de 3 shards (unhandled error en shard 2) no se
+# registra como éxito.
 #
 # El workflow SIEMPRE arranca (sin paths-ignore) para que el check agregador
 # nunca quede pending; los pasos irrelevantes se omiten explícitamente.
@@ -107,8 +112,28 @@ jobs:
             echo "database=$database"
           } >> "$GITHUB_OUTPUT"
 
+  lint:
+    name: ESLint
+    needs: detector
+    if: needs.detector.outputs.frontend == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Setup Bun + install
+        uses: ./.github/actions/setup-bun
+
+      # `react-compiler` cuenta warnings como errores: fail-fast real.
+      - name: ESLint (max-warnings 0)
+        run: bun run lint -- --max-warnings 0
+
   checks:
-    name: Lint · typecheck · guards DB · build · Deno
+    name: Typecheck · guards DB · build · Deno
     needs: detector
     if: >-
       needs.detector.outputs.frontend == 'true' ||
@@ -125,11 +150,6 @@ jobs:
 
       - name: Setup Bun + install
         uses: ./.github/actions/setup-bun
-
-      # `react-compiler` cuenta warnings como errores: fail-fast real.
-      - name: ESLint (max-warnings 0)
-        if: needs.detector.outputs.frontend == 'true'
-        run: bun run lint -- --max-warnings 0
 
       - name: TypeScript typecheck
         if: needs.detector.outputs.frontend == 'true'
@@ -209,7 +229,7 @@ jobs:
     # Nombre visible conservado por compatibilidad con los checks previos
     # (este repo no tiene branch protection ni rulesets configurados).
     name: CI Success (aggregator)
-    needs: [detector, checks, tests]
+    needs: [detector, lint, checks, tests]
     if: always()
     runs-on: ubuntu-24.04
     timeout-minutes: 5
@@ -217,6 +237,7 @@ jobs:
       - name: Verificar resultados
         env:
           DETECTOR_RESULT: ${{ needs.detector.result }}
+          LINT_RESULT: ${{ needs.lint.result }}
           CHECKS_RESULT: ${{ needs.checks.result }}
           TESTS_RESULT: ${{ needs.tests.result }}
           FRONTEND: ${{ needs.detector.outputs.frontend }}
@@ -224,7 +245,7 @@ jobs:
           DATABASE: ${{ needs.detector.outputs.database }}
         run: |
           set -uo pipefail
-          echo "detector=$DETECTOR_RESULT checks=$CHECKS_RESULT tests=$TESTS_RESULT"
+          echo "detector=$DETECTOR_RESULT lint=$LINT_RESULT checks=$CHECKS_RESULT tests=$TESTS_RESULT"
           echo "frontend=$FRONTEND edge=$EDGE database=$DATABASE"
           fail=0
 
@@ -238,6 +259,16 @@ jobs:
               *) echo "::error::Flag de área inválida: '$v'."; exit 1 ;;
             esac
           done
+
+          if [ "$FRONTEND" = "true" ]; then
+            if [ "$LINT_RESULT" != "success" ]; then
+              echo "::error::lint debía terminar en success con frontend=true ($LINT_RESULT)."
+              fail=1
+            fi
+          elif [ "$LINT_RESULT" != "skipped" ]; then
+            echo "::error::lint debía omitirse sin frontend ($LINT_RESULT)."
+            fail=1
+          fi
 
           if [ "$FRONTEND" = "true" ] || [ "$EDGE" = "true" ] || [ "$DATABASE" = "true" ]; then
             if [ "$CHECKS_RESULT" != "success" ]; then
