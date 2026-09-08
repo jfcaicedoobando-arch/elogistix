@@ -29,6 +29,17 @@ import { esProspecto } from "@/features/crm/domain/leads/etapas";
 import { useLeadEditForm } from "@/features/crm/hooks";
 import { ROUTES } from "@/constants/routes";
 
+/** VIS-20260908-06: contexto de listado (Leads vs Prospectos) de la ficha. */
+function contextoLead(estado: string | undefined) {
+  const p = !!estado && esProspecto(estado);
+  return {
+    esProspecto: p,
+    singular: p ? "Prospecto" : "Lead",
+    plural: p ? "Prospectos" : "Leads",
+    fallback: p ? ROUTES.CRM_PROSPECTOS : ROUTES.CRM_LEADS,
+  };
+}
+
 export default function LeadDetalle() {
   const { id } = useParams<{ id: string }>();
   const { canTomarLead, canGestionarLead, canAltaCliente, canCrearOportunidad } = usePermissions();
@@ -37,10 +48,11 @@ export default function LeadDetalle() {
   // VIS-20260908-06: un prospecto se lista en /crm/prospectos; el letrero y el
   // destino de respaldo deben nombrar ese contexto (el regreso contextual por
   // historial ya funcionaba y se conserva).
-  const contextoProspecto = !!lead && esProspecto(lead.estado);
-  const etiquetaContexto = contextoProspecto ? "Prospectos" : "Leads";
-  const volver = useVolver(contextoProspecto ? ROUTES.CRM_PROSPECTOS : ROUTES.CRM_LEADS);
-  useDocumentTitle(lead ? `${contextoProspecto ? "Prospecto" : "Lead"} · ${lead.empresa}` : "Lead");
+  const ctx = contextoLead(lead?.estado);
+  const contextoProspecto = ctx.esProspecto;
+  const etiquetaContexto = ctx.plural;
+  const volver = useVolver(ctx.fallback);
+  useDocumentTitle(lead ? `${ctx.singular} · ${lead.empresa}` : "Lead");
   const { form, set, dirty, patch } = useLeadEditForm(lead);
   const {
     handleSave, handleDelete, handleCalificar, handleTomar,
