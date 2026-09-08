@@ -20,6 +20,10 @@ function Empty({ text }: { text: string }) {
 export function LeadLineageCard({ leadId }: { leadId: string }) {
   const { data = [], isLoading, isError, error, refetch } = useLeadLineage(leadId);
 
+  // v13.823.228: el flujo canónico es Lead → Prospecto → Oportunidad, así que un
+  // lead sin oportunidades no necesita esta tarjeta (sólo existe por histórico).
+  if (!isLoading && !isError && data.length === 0) return null;
+
   return (
     <Card>
       <CardHeader className="pb-2">
@@ -36,9 +40,7 @@ export function LeadLineageCard({ leadId }: { leadId: string }) {
             onRetry={() => void refetch()}
           />
         )}
-        {!isLoading && !isError && data.length === 0 && (
-          <Empty text="Este lead aún no tiene oportunidades." />
-        )}
+
         {data.map((o) => (
           <DrilldownRow
             key={o.id}

@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.823.228] - 2026-09-08
+- **fix(crm)**: la tarjeta "Oportunidades generadas" ya no aparece vacía en el detalle de un lead (las oportunidades nacen del prospecto, no del lead); sólo se muestra si existe histórico ligado, para no perder trazabilidad.
+
+
+
 ## [13.823.227] - 2026-09-08
 - **refactor(crm)**: el Estado del lead ya no se cambia desde el listado (era un desplegable dentro de la fila); ahora se ve como etiqueta de lectura y se edita únicamente en el detalle del lead, junto con el Score. Las acciones masivas por selección se mantienen sin cambios.
 
