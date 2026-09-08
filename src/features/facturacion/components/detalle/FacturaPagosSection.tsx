@@ -170,6 +170,27 @@ export function FacturaPagosSection({
         pagoId={previewRep?.id}
         title={previewRep ? `Complemento de pago ${previewRep.label}` : "Complemento de pago"}
       />
+
+      <DialogCancelarRep
+        open={!!pagoACancelar}
+        onOpenChange={(o) => {
+          if (!o) {
+            setPagoACancelar(null);
+            repController.setMotivo && repController.setMotivo("" as never);
+          }
+        }}
+        pago={pagoACancelar}
+        motivo={repController.motivo}
+        onMotivoChange={repController.setMotivo}
+        onConfirm={async () => {
+          const res = await repController.confirmar();
+          if (res === "accepted") {
+            setPagoACancelar(null);
+          }
+        }}
+        isPending={repController.isPending}
+        resultado={repController.resultado}
+      />
     </>
   );
 }
