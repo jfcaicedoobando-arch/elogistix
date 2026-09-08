@@ -10,7 +10,7 @@ export const facturacion = {
   /** Prefijo de todas las bandejas (invalidación por dominio). */
   bandejaPrefix: () => ['facturacion', 'bandeja'] as const,
   bandejaPorTimbrar: (organizationId?: string | null) => ['facturacion', 'bandeja', 'por-timbrar', organizationId] as const,
-  bandejaPorEnviar: (organizationId?: string | null) => ['facturacion', 'bandeja', 'por-enviar', organizationId] as const,
+  
   bandejaRepPendientes: (organizationId?: string | null) => ['facturacion', 'bandeja', 'rep-pendientes', organizationId] as const,
   bandejaConteos: (organizationId?: string | null) => ['facturacion', 'bandeja', 'conteos', organizationId] as const,
   bandejaProformasListas: (organizationId?: string | null) => ['facturacion', 'bandeja', 'proformas-listas', organizationId] as const,

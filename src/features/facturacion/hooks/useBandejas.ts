@@ -10,15 +10,13 @@ import { useOrgFilter } from "@/hooks/shared";
 import { queryKeys } from "@/lib/query";
 import {
   fetchFacturasPorTimbrar,
-  fetchFacturasPorEnviar,
   fetchPagosRepPendientes,
   fetchBandejaConteos,
   type FilaPorTimbrar,
-  type FilaPorEnviar,
   type FilaRepPendiente,
 } from "@/features/facturacion/services/bandejas";
 
-export type {  FilaPorTimbrar, FilaPorEnviar, FilaRepPendiente };
+export type { FilaPorTimbrar, FilaRepPendiente };
 
 const STALE = 60_000;
 
@@ -32,15 +30,6 @@ export function useFacturasPorTimbrar() {
   });
 }
 
-export function useFacturasPorEnviar() {
-  const { organizationId } = useOrgFilter();
-  return useQuery({
-    queryKey: queryKeys.facturacion.bandejaPorEnviar(organizationId),
-    queryFn: () => fetchFacturasPorEnviar(organizationId!),
-    enabled: !!organizationId,
-    staleTime: STALE,
-  });
-}
 
 export function usePagosRepPendientes() {
   const { organizationId } = useOrgFilter();

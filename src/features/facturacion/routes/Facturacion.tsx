@@ -1,10 +1,14 @@
 /**
  * Cockpit de Facturación (Fase 2 — bandejas de trabajo estilo ERP).
  *
- * En vez de 2 tabs planos, el módulo se organiza en 8 bandejas por acción
- * pendiente (Por facturar, Por timbrar, Por enviar, Por cobrar, Vencidas,
- * REP pendientes, Emitidas, Notas de crédito). Cada bandeja tiene su
- * conteo en un badge y una acción rápida por fila.
+ * En vez de 2 tabs planos, el módulo se organiza en 7 bandejas por acción
+ * pendiente (Embarques sin factura, Proformas listas, Por timbrar, Por
+ * cobrar, Vencidas, REP pendientes, Emitidas, Notas de crédito). Cada
+ * bandeja tiene su conteo en un badge y una acción rápida por fila.
+ *
+ * v13.823.232: se retiró la bandeja "Por enviar" (no todas las facturas
+ * se envían por correo; muchos clientes descargan del portal). El envío
+ * por correo sigue disponible desde el detalle de cada factura.
  *
  * La bandeja activa se sincroniza con la URL (`?bandeja=por-timbrar`)
  * para permitir enlaces profundos y refresh sin perder contexto.
@@ -42,7 +46,7 @@ const BANDEJA_ALIASES: Record<string, BandejaId> = {
 
 const BANDEJAS_VALIDAS: BandejaId[] = [
   "embarques-sin-factura", "proformas-listas",
-  "por-timbrar", "por-enviar",
+  "por-timbrar",
   "por-cobrar", "vencidas", "rep-pendientes",
   "emitidas", "notas",
 ];

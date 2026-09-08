@@ -7,7 +7,7 @@ import { BandejaTabs, type BandejaId } from "@/features/facturacion/components/b
 import { BandejaPorFacturar } from "@/features/facturacion/components/bandejas/BandejaPorFacturar";
 import { BandejaProformasListas } from "@/features/facturacion/components/bandejas/BandejaProformasListas";
 import { BandejaPorTimbrar } from "@/features/facturacion/components/bandejas/BandejaPorTimbrar";
-import { BandejaPorEnviar } from "@/features/facturacion/components/bandejas/BandejaPorEnviar";
+
 import { BandejaPorCobrar } from "@/features/facturacion/components/bandejas/BandejaPorCobrar";
 import { BandejaVencidas } from "@/features/facturacion/components/bandejas/BandejaVencidas";
 import { BandejaRepPendientes } from "@/features/facturacion/components/bandejas/BandejaRepPendientes";
@@ -44,9 +44,6 @@ export function FacturacionBandejasTabs(p: Props) {
       </TabsContent>
       <TabsContent value="por-timbrar" className="space-y-4">
         <BandejaPorTimbrar />
-      </TabsContent>
-      <TabsContent value="por-enviar" className="space-y-4">
-        <BandejaPorEnviar />
       </TabsContent>
       <TabsContent value="por-cobrar" className="space-y-4">
         <BandejaPorCobrar />

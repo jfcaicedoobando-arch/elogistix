@@ -13,10 +13,8 @@
  */
 export {
   fetchFacturasPorTimbrar,
-  fetchFacturasPorEnviar,
   fetchPagosRepPendientes,
   type FilaPorTimbrar,
-  type FilaPorEnviar,
   type FilaRepPendiente,
 } from "./bandejasQueries";
 
