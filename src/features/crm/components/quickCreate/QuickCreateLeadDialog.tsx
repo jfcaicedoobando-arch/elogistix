@@ -104,7 +104,7 @@ export default function QuickCreateLeadDialog({ open, onOpenChange, onCreated, o
       size="md"
       formId="qc-lead-form"
       onSubmit={(e) => { e.preventDefault(); void submit(); }}
-      isDirty={empresa.trim().length > 0 || contacto.trim().length > 0}
+      isDirty={empresa.trim().length > 0 || contacto.trim().length > 0 || fuente !== "Prospección"}
       busy={crear.isPending}
       footer={
         <FormDialogFooter

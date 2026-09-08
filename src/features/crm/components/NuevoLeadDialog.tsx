@@ -12,6 +12,7 @@ import { useNuevoLeadSubmit } from "@/features/crm/hooks/useNuevoLeadSubmit";
 import { NuevoLeadForm, type LeadFormState } from "./nuevoLead/NuevoLeadForm";
 import { AvisoLeadDuplicado } from "./AvisoLeadDuplicado";
 import { esCorreoCapturado } from "@/features/crm/domain/leads/quickCreateInput";
+import type { CrmLeadFuente } from "@/features/crm/domain/leads/constants";
 
 
 interface Props {
