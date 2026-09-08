@@ -161,26 +161,64 @@ CREATE OR REPLACE FUNCTION public._embarque_aplicar_tarifa_decidida(
  SET search_path TO 'public'
 AS $function$
 DECLARE
-  v_costo        RECORD;
-  v_fila         RECORD;
-  v_unit         numeric;
-  v_base         numeric;
-  v_n            integer;
-  v_cent         bigint;
-  v_piso         bigint;
-  v_resto        bigint;
-  v_equivalentes integer;
-  v_actualizados integer := 0;
+  v_costo          RECORD;
+  v_fila           RECORD;
+  v_unit           numeric;
+  v_base           numeric;
+  v_n              integer;
+  v_cent           bigint;
+  v_piso           bigint;
+  v_resto          bigint;
+  v_equivalentes   integer;
+  v_moneda_match   text;
+  v_tarifa_origen  uuid;
+  v_es_sustitucion boolean;
+  v_ag_origen      uuid;
+  v_ag_nueva       uuid;
+  v_mon_origen     text;
+  v_mon_nueva      text;
+  v_actualizados   integer := 0;
 BEGIN
   IF p_embarque_id IS NULL OR p_cotizacion_id IS NULL THEN
     RETURN 0;
+  END IF;
+
+  SELECT c.tarifa_id INTO v_tarifa_origen
+    FROM public.cotizaciones c
+   WHERE c.id = p_cotizacion_id;
+
+  v_es_sustitucion := p_tarifa_id_aplicada IS NOT NULL
+                  AND p_tarifa_id_aplicada IS DISTINCT FROM v_tarifa_origen;
+
+  -- Coherencia global de la sustituta: mezclar precios de una tarifa con el
+  -- proveedor/moneda sembrados de otra produciría un costo inauditable.
+  IF v_es_sustitucion THEN
+    SELECT t.agente_id, t.moneda INTO v_ag_nueva, v_mon_nueva
+      FROM public.costeo_tarifas t WHERE t.id = p_tarifa_id_aplicada;
+    SELECT t.agente_id, t.moneda INTO v_ag_origen, v_mon_origen
+      FROM public.costeo_tarifas t WHERE t.id = v_tarifa_origen;
+
+    IF v_ag_nueva IS NULL THEN
+      RAISE EXCEPTION 'La tarifa sustituta no existe o no tiene agente asignado. Revisa y selecciona otra tarifa.'
+        USING ERRCODE = 'P0001';
+    END IF;
+    IF v_tarifa_origen IS NOT NULL AND v_ag_nueva IS DISTINCT FROM v_ag_origen THEN
+      RAISE EXCEPTION 'La tarifa sustituta pertenece a otro proveedor/agente: no se puede aplicar sin recotizar. Revisa y selecciona una tarifa del mismo proveedor.'
+        USING ERRCODE = 'P0001';
+    END IF;
+    IF v_tarifa_origen IS NOT NULL AND upper(btrim(COALESCE(v_mon_nueva, ''))) IS DISTINCT FROM upper(btrim(COALESCE(v_mon_origen, ''))) THEN
+      RAISE EXCEPTION 'La tarifa sustituta está en otra moneda (% vs %): no se puede aplicar sin recotizar. Revisa y selecciona una tarifa en la misma moneda.',
+        v_mon_nueva, v_mon_origen USING ERRCODE = 'P0001';
+    END IF;
   END IF;
 
   FOR v_costo IN
     SELECT cc.id, cc.concepto, cc.moneda,
            COALESCE(NULLIF(cc.cantidad, 0), 1) AS cantidad,
            cc.costo_unitario, cc.costeo_tarifa_id, cc.costeo_tarifa_recargo_id,
-           r.concepto AS recargo_concepto, r.lado AS recargo_lado
+           r.concepto AS recargo_concepto, r.lado AS recargo_lado,
+           r.monto AS recargo_monto_vigente, r.moneda AS recargo_moneda_vigente,
+           r.id AS recargo_vigente_id
       FROM public.cotizacion_costos cc
       LEFT JOIN public.costeo_tarifa_recargos r ON r.id = cc.costeo_tarifa_recargo_id
      WHERE cc.cotizacion_id = p_cotizacion_id
@@ -190,25 +228,52 @@ BEGIN
     v_unit := NULL;
 
     IF v_costo.costeo_tarifa_recargo_id IS NOT NULL THEN
-      -- Una sustitución sólo usa un recargo equivalente cuando concepto + lado
-      -- identifican exactamente una fila. Si falta o es ambiguo, conserva el
-      -- costo aceptado: nunca elige una coincidencia arbitraria con LIMIT 1.
-      IF p_tarifa_id_aplicada IS NOT NULL AND v_costo.recargo_concepto IS NOT NULL THEN
-        SELECT count(*), min(r.monto) INTO v_equivalentes, v_unit
+      IF v_es_sustitucion THEN
+        -- Sustitución: sólo una equivalencia inequívoca es aceptable.
+        SELECT count(*), min(r.monto), min(r.moneda)
+          INTO v_equivalentes, v_unit, v_moneda_match
           FROM public.costeo_tarifa_recargos r
          WHERE r.tarifa_id = p_tarifa_id_aplicada
-            AND lower(btrim(r.concepto)) = lower(btrim(v_costo.recargo_concepto))
-            AND r.lado = v_costo.recargo_lado
-            AND r.moneda = v_costo.moneda;
-        IF v_equivalentes <> 1 THEN v_unit := NULL; END IF;
-      END IF;
-      IF v_unit IS NULL THEN
-        v_unit := v_costo.costo_unitario;
+           AND lower(btrim(r.concepto)) = lower(btrim(COALESCE(v_costo.recargo_concepto, v_costo.concepto)))
+           AND r.lado IS NOT DISTINCT FROM v_costo.recargo_lado
+           AND upper(btrim(r.moneda)) = upper(btrim(v_costo.moneda));
+
+        IF COALESCE(v_equivalentes, 0) = 0 THEN
+          RAISE EXCEPTION 'La tarifa sustituta no tiene un cargo equivalente a "%" (%). Revisa y selecciona otra tarifa: no se aplicará conservando el cargo anterior.',
+            COALESCE(v_costo.recargo_concepto, v_costo.concepto), v_costo.moneda
+            USING ERRCODE = 'P0001';
+        END IF;
+        IF v_equivalentes > 1 THEN
+          RAISE EXCEPTION 'La tarifa sustituta tiene % cargos llamados "%" (%): la equivalencia es ambigua. Revisa y selecciona otra tarifa.',
+            v_equivalentes, COALESCE(v_costo.recargo_concepto, v_costo.concepto), v_costo.moneda
+            USING ERRCODE = 'P0001';
+        END IF;
+        IF upper(btrim(COALESCE(v_moneda_match, ''))) IS DISTINCT FROM upper(btrim(v_costo.moneda)) THEN
+          RAISE EXCEPTION 'El cargo equivalente a "%" está en otra moneda. Revisa y selecciona otra tarifa.',
+            COALESCE(v_costo.recargo_concepto, v_costo.concepto) USING ERRCODE = 'P0001';
+        END IF;
+      ELSE
+        -- Refrescar la misma tarifa: identidad exacta del recargo fuente.
+        IF v_costo.recargo_vigente_id IS NULL THEN
+          RAISE EXCEPTION 'El cargo "%" de la tarifa ya no existe: no se puede refrescar. Revisa y selecciona una tarifa vigente.',
+            v_costo.concepto USING ERRCODE = 'P0001';
+        END IF;
+        IF upper(btrim(COALESCE(v_costo.recargo_moneda_vigente, ''))) IS DISTINCT FROM upper(btrim(v_costo.moneda)) THEN
+          RAISE EXCEPTION 'El cargo "%" cambió de moneda en la tarifa: no se puede refrescar sin recotizar.',
+            COALESCE(v_costo.recargo_concepto, v_costo.concepto) USING ERRCODE = 'P0001';
+        END IF;
+        v_unit := v_costo.recargo_monto_vigente;
       END IF;
     ELSE
-      SELECT t.flete_base INTO v_unit
+      SELECT t.flete_base, t.moneda INTO v_unit, v_moneda_match
         FROM public.costeo_tarifas t
        WHERE t.id = COALESCE(p_tarifa_id_aplicada, v_costo.costeo_tarifa_id);
+
+      IF v_unit IS NOT NULL
+         AND upper(btrim(COALESCE(v_moneda_match, ''))) IS DISTINCT FROM upper(btrim(v_costo.moneda)) THEN
+        RAISE EXCEPTION 'El flete de la tarifa aplicada está en % y el costo aceptado en %: no se puede aplicar sin recotizar.',
+          v_moneda_match, v_costo.moneda USING ERRCODE = 'P0001';
+      END IF;
     END IF;
 
     CONTINUE WHEN v_unit IS NULL;
@@ -256,10 +321,8 @@ BEGIN
 END;
 $function$;
 
-REVOKE ALL ON FUNCTION public._embarque_aplicar_tarifa_decidida(uuid, uuid, uuid) FROM PUBLIC;
-REVOKE ALL ON FUNCTION public._embarque_aplicar_tarifa_decidida(uuid, uuid, uuid) FROM anon;
-REVOKE ALL ON FUNCTION public._embarque_aplicar_tarifa_decidida(uuid, uuid, uuid) FROM authenticated;
-GRANT ALL ON FUNCTION public._embarque_aplicar_tarifa_decidida(uuid, uuid, uuid) TO service_role;
+REVOKE ALL ON FUNCTION public._embarque_aplicar_tarifa_decidida(uuid, uuid, uuid) FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public._embarque_aplicar_tarifa_decidida(uuid, uuid, uuid) TO service_role;
 
 -- Fuente canónica de public.revalidar_tarifa_cotizacion (R201-COT-02).
 -- Al modificar: edita ESTE archivo y genera la migración con el mismo cuerpo.
@@ -395,9 +458,8 @@ BEGIN
 END;
 $function$;
 
-REVOKE ALL ON FUNCTION public.revalidar_tarifa_cotizacion(p_cotizacion_id uuid) FROM PUBLIC;
-GRANT ALL ON FUNCTION public.revalidar_tarifa_cotizacion(p_cotizacion_id uuid) TO authenticated;
-GRANT ALL ON FUNCTION public.revalidar_tarifa_cotizacion(p_cotizacion_id uuid) TO service_role;
+REVOKE ALL ON FUNCTION public.revalidar_tarifa_cotizacion(uuid) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.revalidar_tarifa_cotizacion(uuid) TO authenticated, service_role;
 
 -- Fuente canónica de public.solicitar_reaprobacion_tarifa (R201-COT-02).
 -- El snapshot aprobado se calcula en servidor; p_delta_jsonb sólo aporta el

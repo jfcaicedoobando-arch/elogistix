@@ -36,6 +36,8 @@ interface Props {
   cargandoCostosVinculados?: boolean;
   errorCostosVinculados?: boolean;
   onReintentarCostos?: () => void;
+  /** R201-COT-06: costos en sólo lectura mientras su importación no se resuelve. */
+  costosBloqueados?: boolean;
 }
 
 const COSTO_COLS_BASE = "grid-cols-[1fr_1fr_120px_90px_110px_40px]";
@@ -76,6 +78,7 @@ export function StepCostosPrecios(props: Props) {
     cargandoCostosVinculados = false,
     errorCostosVinculados = false,
     onReintentarCostos,
+    costosBloqueados = false,
   } = props;
 
   const { watch, register } = useFormContext<EmbarqueFormValues>();
@@ -116,6 +119,10 @@ export function StepCostosPrecios(props: Props) {
           showTcWarning={showTcWarning}
           filasMixtasTotales={filasMixtasTotales}
         />
+        <div
+          aria-busy={costosBloqueados}
+          className={costosBloqueados ? "pointer-events-none opacity-60" : undefined}
+        >
         <CostosCard
           cols={costoCols}
           showContenedorCol={showContenedorCol}
@@ -132,6 +139,7 @@ export function StepCostosPrecios(props: Props) {
           totalUSD={totalCostoUSD}
           filasMixtasCount={costoCalc.filasMixtas.length}
         />
+        </div>
         <VentasCard
           cols={ventaCols}
           showContenedorCol={showContenedorCol}

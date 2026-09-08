@@ -44,19 +44,23 @@ export function useNuevoEmbarqueCotVinculada({
   const vinculacionRef = useRef(0);
   const costosEditadosRef = useRef(false);
 
-  const hidratarConceptosDesdeCotizacion = useCallback(
+  // R201-COT-06: cargar SOLO los costos. Las ventas se siembran una única vez
+  // al vincular; el reintento nunca las repone (perdía las ediciones del
+  // usuario capturadas mientras el fetch de costos fallaba).
+  const cargarCostosVinculados = useCallback(
     async (cot: CotizacionRow, token: number) => {
-      const ventas = mapConceptosVentaFromCotizacion(cot);
-      if (vinculacionRef.current !== token) return;
-      setConceptosVenta(ventas);
       setCargandoCostosVinculados(true);
       setErrorCostosVinculados(false);
       try {
         const costos = await fetchCotizacionCostosForEmbarque(cot.id);
         if (vinculacionRef.current !== token) return;
-        if (!costosEditadosRef.current) {
-          setConceptosCosto(mapConceptosCostoFromCotizacion(costos, proveedoresDb));
+        if (costosEditadosRef.current) {
+          // No pisamos captura local, pero tampoco declaramos la importación
+          // completa: queda en error para que el guard final la bloquee.
+          setErrorCostosVinculados(true);
+          return;
         }
+        setConceptosCosto(mapConceptosCostoFromCotizacion(costos, proveedoresDb));
       } catch (error) {
         if (vinculacionRef.current !== token) return;
         setErrorCostosVinculados(true);
@@ -71,7 +75,7 @@ export function useNuevoEmbarqueCotVinculada({
         if (vinculacionRef.current === token) setCargandoCostosVinculados(false);
       }
     },
-    [setConceptosVenta, setConceptosCosto, proveedoresDb],
+    [setConceptosCosto, proveedoresDb],
   );
 
   const handleVincularCotizacion = useCallback(
@@ -81,9 +85,10 @@ export function useNuevoEmbarqueCotVinculada({
       costosEditadosRef.current = false;
       setConceptosCosto([]);
       const token = ++vinculacionRef.current;
-      void hidratarConceptosDesdeCotizacion(cot, token);
+      setConceptosVenta(mapConceptosVentaFromCotizacion(cot));
+      void cargarCostosVinculados(cot, token);
     },
-    [form, hidratarConceptosDesdeCotizacion, setConceptosCosto],
+    [form, cargarCostosVinculados, setConceptosCosto, setConceptosVenta],
   );
 
   const handleDesvincularCotizacion = useCallback(
@@ -111,8 +116,11 @@ export function useNuevoEmbarqueCotVinculada({
   const reintentarCostosVinculados = useCallback(() => {
     if (!cotizacionVinculada) return;
     const token = ++vinculacionRef.current;
-    void hidratarConceptosDesdeCotizacion(cotizacionVinculada, token);
-  }, [cotizacionVinculada, hidratarConceptosDesdeCotizacion]);
+    // El reintento vuelve a intentar la importación de costos desde cero; las
+    // ventas capturadas se conservan tal cual.
+    costosEditadosRef.current = false;
+    void cargarCostosVinculados(cotizacionVinculada, token);
+  }, [cotizacionVinculada, cargarCostosVinculados]);
 
   const marcarCostosEditados = useCallback(() => {
     costosEditadosRef.current = true;
@@ -143,5 +151,8 @@ export function useNuevoEmbarqueCotVinculada({
     errorCostosVinculados,
     reintentarCostosVinculados,
     marcarCostosEditados,
+    // R201-COT-06: mientras la importación de costos no se resuelve, el paso de
+    // costos queda en sólo lectura (evita ediciones que luego se descartarían).
+    costosBloqueados: cargandoCostosVinculados,
   };
 }
