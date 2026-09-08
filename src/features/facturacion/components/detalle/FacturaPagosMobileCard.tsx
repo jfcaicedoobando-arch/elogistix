@@ -70,27 +70,44 @@ export function FacturaPagosMobileCard({ row, facturaId, canEdit, onEliminar, on
           onPreview={onPreviewRep}
         />
         {canEdit && (
-          <Hint
-            label={
-              repVivo
-                ? "Cancela el REP (complemento de pago) antes de eliminar este pago"
-                : "Eliminar pago"
-            }
-          >
-            <Button
-              variant="ghost"
-              size="icon"
-              disabled={repVivo}
-              onClick={(e) => {
-                e.stopPropagation();
-                if (repVivo) return;
-                onEliminar(row.id);
-              }}
-              aria-label="Eliminar pago"
+          <div className="flex items-center gap-1">
+            {repCancelable && (
+              <Hint label="Cancelar REP ante el SAT">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onCancelarRep(row);
+                  }}
+                  aria-label="Cancelar REP"
+                >
+                  <Ban className="h-4 w-4 text-destructive" />
+                </Button>
+              </Hint>
+            )}
+            <Hint
+              label={
+                repVivo
+                  ? "Cancela el REP (complemento de pago) antes de eliminar este pago"
+                  : "Eliminar pago"
+              }
             >
-              <Trash2 className="h-4 w-4 text-destructive" />
-            </Button>
-          </Hint>
+              <Button
+                variant="ghost"
+                size="icon"
+                disabled={repVivo}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (repVivo) return;
+                  onEliminar(row.id);
+                }}
+                aria-label="Eliminar pago"
+              >
+                <Trash2 className="h-4 w-4 text-destructive" />
+              </Button>
+            </Hint>
+          </div>
         )}
       </div>
     </div>
