@@ -64,7 +64,7 @@ export default function NuevaCotizacion() {
   });
 
   const {
-    restaurando, draftDetectado, banderaBorrador, conflictoSello,
+    restaurando, draftDetectado, banderaBorrador, conflictoSello, permitePrefillProspecto,
     resincronizando, handleResincronizar, handleRestore, handleDiscard,
   } = useDraftRestore({
     form: w.form,
@@ -81,7 +81,7 @@ export default function NuevaCotizacion() {
   usePrefillProspectoOportunidad({
     form: w.form,
     oportunidadId: oportunidadPrefill,
-    enabled: Boolean(oportunidadPrefill) && !restaurando && !draftDetectado && !w.cotizacionId,
+    enabled: Boolean(oportunidadPrefill) && permitePrefillProspecto && !w.cotizacionId,
   });
 
   // B-003 (v13.320.32) — Autoguardado ahora persiste `cotizacionId` en el draft

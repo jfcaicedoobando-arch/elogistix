@@ -50,7 +50,11 @@ describe("setActivoOrg", () => {
 
   it("propaga errores reales al apagar", async () => {
     mocks.insert.mockResolvedValue({ data: null, error: { code: "42501", message: "denied" } });
-    await expect(setActivoOrg("navieras", "n1", false)).rejects.toBeTruthy();
+    // El servicio propaga tal cual el error de Postgres (no lo envuelve).
+    await expect(setActivoOrg("navieras", "n1", false)).rejects.toMatchObject({
+      code: "42501",
+      message: "denied",
+    });
   });
 
   it("encender borra la fila de apagado", async () => {

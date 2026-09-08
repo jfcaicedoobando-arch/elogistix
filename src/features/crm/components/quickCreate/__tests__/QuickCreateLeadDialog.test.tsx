@@ -62,9 +62,19 @@ describe("QuickCreateLeadDialog", () => {
   it("guarda con origen Prospección por defecto y el select muestra las 3 opciones", async () => {
     render(<QuickCreateLeadDialog open onOpenChange={vi.fn()} onCreated={vi.fn()} onMore={vi.fn()} />);
 
-    // El campo Origen existe con el default visible.
-    expect(screen.getByText("Origen")).toBeInTheDocument();
-    expect(screen.getByText("Prospección")).toBeInTheDocument();
+    // El control visible de Origen (SelectTrigger etiquetado) muestra el default.
+    // `getByText("Prospección")` era ambiguo: Radix también renderiza un <select>
+    // nativo oculto con las 3 opciones para la integración con el <form>.
+    const origen = screen.getByLabelText("Origen");
+    expect(origen).toHaveTextContent("Prospección");
+
+    // Las 3 opciones del catálogo viajan en el select nativo oculto de Radix,
+    // sin abrir el popover (portal) para no depender de eventos de puntero.
+    const nativo = document.querySelector("select");
+    const opciones = Array.from(nativo?.querySelectorAll("option") ?? [])
+      .map((o) => o.value)
+      .filter((v) => v !== "");
+    expect(opciones).toEqual(["Prospección", "Finkargo", "Referido"]);
 
     fireEvent.change(screen.getByLabelText(/Empresa/i), { target: { value: "Acme" } });
     fireEvent.click(screen.getByRole("button", { name: /Crear/i }));

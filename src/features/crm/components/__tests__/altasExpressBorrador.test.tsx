@@ -44,7 +44,13 @@ describe("Alta express de lead → Más campos", () => {
     fireEvent.change(screen.getByLabelText(/Empresa/i), { target: { value: " Acme Logistics " } });
     fireEvent.change(screen.getByLabelText(/Correo o teléfono/i), { target: { value: "ana@acme.com" } });
     fireEvent.click(screen.getByRole("button", { name: /Más campos/i }));
-    expect(onMore).toHaveBeenCalledWith({ empresa: "Acme Logistics", contacto: "ana@acme.com" });
+    // El borrador también conserva el Origen elegido (default Prospección),
+    // para no perderlo al saltar al formulario completo.
+    expect(onMore).toHaveBeenCalledWith({
+      empresa: "Acme Logistics",
+      contacto: "ana@acme.com",
+      fuente: "Prospección",
+    });
   });
 
   it("el formulario completo abre con el correo en su campo canónico", () => {

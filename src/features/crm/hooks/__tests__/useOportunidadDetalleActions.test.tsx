@@ -34,7 +34,17 @@ vi.mock("@/features/crm/lib/crmToast", () => ({
   crmToast: { success: (...args: unknown[]) => successToast(...args) },
 }));
 
-const op = { id: "op1", etapa_id: "e1", modo: "FCL" };
+// Contrato de CLIENTE existente: la creación directa de cotización sólo aplica
+// cuando la oportunidad ya tiene cliente. Sin `cliente_id` el hook toma el
+// camino de prospecto (navega al wizard, sin INSERT), que se cubre en
+// `useOportunidadDetalleActions.prospecto.test.tsx`.
+const op = {
+  id: "op1",
+  cliente_id: "cli-1",
+  cliente_nombre: "Acme SA de CV",
+  etapa_id: "e1",
+  modo: "Marítimo",
+};
 
 describe("useOportunidadDetalleActions", () => {
   beforeEach(() => {
@@ -84,6 +94,9 @@ describe("useOportunidadDetalleActions", () => {
     crearCotMutateAsync.mockRejectedValueOnce(new Error("RPC denegada"));
     const { result } = renderHook(() => useOportunidadDetalleActions(op, []));
     await result.current.crearCotizacion();
+    // El caso negativo debe ejercer de verdad la mutación: si el hook saliera
+    // antes (p. ej. por fixture sin cliente) la prueba pasaría vacía.
+    expect(crearCotMutateAsync).toHaveBeenCalledTimes(1);
     expect(notifyError).not.toHaveBeenCalled();
     expect(successToast).not.toHaveBeenCalled();
     expect(navigate).not.toHaveBeenCalled();

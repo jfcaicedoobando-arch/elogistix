@@ -2,9 +2,12 @@
  * Interruptor de visibilidad por empresa para catálogos globales.
  * Si la plataforma desactivó el elemento a nivel global, el interruptor queda
  * bloqueado y se explica el motivo (antes no había pista alguna).
+ *
+ * La explicación usa la primitiva accesible `Hint` (Tooltip visible con hover y
+ * con foco de teclado): el `title` nativo no es accesible y está prohibido.
  */
 import { Switch } from "@/components/ui/switch";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Hint } from "@/components/shared/Hint";
 
 type Props = {
   /** Visible para la empresa activa. */
@@ -23,15 +26,17 @@ export function SwitchVisibilidadOrg({ visible, activoGlobal, onChange, ariaLabe
   );
   if (activoGlobal) return control;
   return (
-    <TooltipProvider>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <span className="inline-flex cursor-not-allowed" tabIndex={0} aria-describedby={undefined} title={MOTIVO_BLOQUEO}>
-            {control}
-          </span>
-        </TooltipTrigger>
-        <TooltipContent>{MOTIVO_BLOQUEO}</TooltipContent>
-      </Tooltip>
-    </TooltipProvider>
+    <Hint label={MOTIVO_BLOQUEO}>
+      {/* El Switch deshabilitado no recibe foco: el envoltorio enfocable permite
+          leer el motivo también con teclado. */}
+      <span
+        className="inline-flex cursor-not-allowed"
+        tabIndex={0}
+        role="note"
+        aria-label={`${ariaLabel}: ${MOTIVO_BLOQUEO}`}
+      >
+        {control}
+      </span>
+    </Hint>
   );
 }

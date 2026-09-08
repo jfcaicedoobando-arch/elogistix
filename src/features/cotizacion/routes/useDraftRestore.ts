@@ -37,8 +37,19 @@ export function useDraftRestore({
     return draftTieneContenido(draft.values, draft.costosInternos) ? draft : null;
   }, [userId, organizationId]);
   const [banderaBorrador, setBanderaBorrador] = useState(false);
+  // CRM-COT-01: la decisión sobre el borrador se resuelve explícitamente.
+  // Antes se derivaba de `draftDetectado`, que sigue siendo truthy después de
+  // descartar (es un memo del storage leído al montar), así que "Descartar"
+  // dejaba la precarga desde una oportunidad bloqueada para siempre.
+  const [decisionBorrador, setDecisionBorrador] =
+    useState<"pendiente" | "restaurado" | "descartado">("pendiente");
   useEffect(() => {
-    if (draftDetectado) setBanderaBorrador(true);
+    if (draftDetectado) {
+      setBanderaBorrador(true);
+      // Un borrador recién detectado (el userId asíncrono llega después) vuelve
+      // a dejar la decisión en manos del usuario.
+      setDecisionBorrador("pendiente");
+    }
   }, [draftDetectado]);
 
   // v13.823.69: conflicto detectado al restaurar (otra sesión ya guardó).
@@ -79,6 +90,7 @@ export function useDraftRestore({
       }
     }
     setBanderaBorrador(false);
+    setDecisionBorrador("restaurado");
     // Se reanuda en el siguiente tick, ya con los valores restaurados aplicados.
     setTimeout(() => setRestaurando(false), 0);
   }, [draftDetectado, form, setCotizacionId, resincronizarSello, setCurrentStep, setCostosInternos]);
@@ -115,11 +127,23 @@ export function useDraftRestore({
   const handleDiscard = useCallback(() => {
     clearDraft(userId, organizationId);
     setBanderaBorrador(false);
+    setDecisionBorrador("descartado");
   }, [userId, organizationId]);
+
+  // Sólo se puede precargar una oportunidad del CRM cuando la identidad ya está
+  // disponible (si no, aún podría aparecer un borrador) y no hay una decisión
+  // pendiente. Al restaurar NUNCA se precarga: el borrador anterior se conserva
+  // íntegro aunque todavía no tenga cotizacionId/clienteId/leadId.
+  const permitePrefillProspecto =
+    Boolean(userId) &&
+    (draftDetectado === null ? true : decisionBorrador === "descartado") &&
+    !restaurando;
 
   return {
     restaurando,
     draftDetectado,
+    decisionBorrador,
+    permitePrefillProspecto,
     banderaBorrador,
     conflictoSello,
     setConflictoSello,

@@ -9,6 +9,7 @@ import { useAuth } from "@/lib/contexts/AuthContext";
 import { queryKeys } from "@/lib/query";
 import { notifyError } from "@/lib/ui/appFeedback";
 import { getErrorMessage } from "@/lib/errors";
+import { mapModoCrmACotizacion } from "@/features/crm/domain/modoCotizacion";
 
 interface UseCrearCotizacionDesdeOpInput {
   oportunidad: CrearCotizacionDesdeOpInput["oportunidad"] & {
@@ -19,20 +20,13 @@ interface UseCrearCotizacionDesdeOpInput {
   etapaCotizandoProbabilidad?: number;
 }
 
-const MODO_MAP: Record<string, "Marítimo" | "Aéreo" | "Terrestre" | "Multimodal"> = {
-  "Marítimo": "Marítimo",
-  "Aéreo": "Aéreo",
-  "Terrestre": "Terrestre",
-  "Multimodal": "Multimodal",
-};
-
 export function useCrearCotizacionDesdeOportunidad() {
   const qc = useQueryClient();
   const { user } = useAuth();
   return useMutation({
     mutationFn: async (input: UseCrearCotizacionDesdeOpInput) => {
       const folio = await generarFolioCotizacion();
-      const modo = MODO_MAP[input.oportunidad.modo] ?? "Marítimo";
+      const modo = mapModoCrmACotizacion(input.oportunidad.modo) ?? "Marítimo";
       const cot = await insertCotizacionDesdeOportunidad({
         folio,
         modo,
