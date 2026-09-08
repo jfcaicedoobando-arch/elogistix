@@ -13,6 +13,7 @@ const { validateWizardStepMock, orchestratorSubmit, notifyErrorMock, clearExpedi
   notifyErrorMock: vi.fn(),
   clearExpediente: vi.fn(),
 }));
+const cotVincState = vi.hoisted(() => ({ cargando: false, error: false }));
 
 vi.mock("@/features/embarques/hooks/useEmbarques", () => ({
   useProveedoresForSelect: () => ({ data: [{ id: "pv-1", nombre: "Prov" }] }),
@@ -74,6 +75,11 @@ vi.mock("../useNuevoEmbarqueCotVinculada", () => ({
     cotizacionVinculada: { id: "cot-1", folio: "COT-1" },
     handleVincularCotizacion: vi.fn(),
     handleDesvincularCotizacion: vi.fn(),
+    restaurarVinculacion: vi.fn(),
+    cargandoCostosVinculados: cotVincState.cargando,
+    errorCostosVinculados: cotVincState.error,
+    reintentarCostosVinculados: vi.fn(),
+    marcarCostosEditados: vi.fn(),
   }),
 }));
 
@@ -83,6 +89,8 @@ import { useNuevoEmbarqueWizard } from "../useNuevoEmbarqueWizard";
 beforeEach(() => {
   vi.clearAllMocks();
   orchestratorSubmit.mockResolvedValue(undefined);
+  cotVincState.cargando = false;
+  cotVincState.error = false;
 });
 
 describe("useNuevoEmbarqueWizard", () => {
@@ -134,5 +142,23 @@ describe("useNuevoEmbarqueWizard", () => {
     await act(async () => { await result.current.handleFinish(); });
     expect(orchestratorSubmit).not.toHaveBeenCalled();
     expect(result.current.currentStep).toBe(3);
+  });
+
+  it("no crea mientras los costos vinculados siguen cargando", async () => {
+    cotVincState.cargando = true;
+    validateWizardStepMock.mockReturnValue({});
+    const { result } = renderHook(() => useNuevoEmbarqueWizard(), { wrapper: createWrapper() });
+    await act(async () => { await result.current.handleFinish(); });
+    expect(orchestratorSubmit).not.toHaveBeenCalled();
+    expect(result.current.currentStep).toBe(4);
+  });
+
+  it("no crea después de una importación fallida hasta reintentar", async () => {
+    cotVincState.error = true;
+    validateWizardStepMock.mockReturnValue({});
+    const { result } = renderHook(() => useNuevoEmbarqueWizard(), { wrapper: createWrapper() });
+    await act(async () => { await result.current.handleFinish(); });
+    expect(orchestratorSubmit).not.toHaveBeenCalled();
+    expect(result.current.currentStep).toBe(4);
   });
 });

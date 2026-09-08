@@ -63,6 +63,9 @@ export function NuevoEmbarquePasos({ w }: { w: Wizard }) {
         updateConceptoCosto={w.updateConceptoCosto}
         addConceptoCosto={w.addConceptoCosto}
         removeConceptoCosto={w.removeConceptoCosto}
+        cargandoCostosVinculados={w.cargandoCostosVinculados}
+        errorCostosVinculados={w.errorCostosVinculados}
+        onReintentarCostos={w.reintentarCostosVinculados}
         errors={w.validationErrors[4] || {}}
       />
     );

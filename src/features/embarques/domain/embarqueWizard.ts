@@ -90,19 +90,16 @@ export function mapConceptosVentaFromCotizacion(
   cotizacion: CotizacionRow,
 ): ConceptoVentaWizard[] {
   const ventas = parseConceptos(cotizacion.conceptos_venta);
-  return ventas.map((v, idx) => {
-    const fila = v as unknown as { aplica_iva?: unknown; tasa_iva_aplicada?: unknown };
-    return {
+  return ventas.map((v, idx) => ({
       id: idx + 1,
       concepto: v.descripcion ?? "",
       cantidad: Number(v.cantidad) || 1,
       precioUnitario: Number(v.precio_unitario) || 0,
       moneda: v.moneda || "MXN",
       // R201-COT-08: el tratamiento fiscal viaja tal cual; `null` = no definido.
-      aplicaIva: typeof fila.aplica_iva === "boolean" ? fila.aplica_iva : null,
-      tasaIva: numeroONull(fila.tasa_iva_aplicada),
-    };
-  });
+      aplicaIva: typeof v.aplica_iva === "boolean" ? v.aplica_iva : null,
+      tasaIva: numeroONull(v.tasa_iva_aplicada),
+    }));
 }
 
 /**
