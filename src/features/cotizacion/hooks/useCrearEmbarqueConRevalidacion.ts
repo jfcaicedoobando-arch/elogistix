@@ -11,7 +11,7 @@ import {
   useSolicitarReaprobacion,
 } from "@/features/cotizacion/hooks/useRevalidacionTarifa";
 import { revalidarTarifa } from "@/features/cotizacion/services/revalidacion";
-import type { ResultadoRevalidacion } from "@/features/cotizacion/domain/revalidacionTarifa";
+import type { ResultadoRevalidacion, DecisionTarifa } from "@/features/cotizacion/domain/revalidacionTarifa";
 import { notifyError } from "@/lib/ui/appFeedback";
 import { esErrorDeEsquemaBD } from "@/features/cotizacion/domain/erroresEsquemaBD";
 
@@ -29,7 +29,7 @@ export function useCrearEmbarqueConRevalidacion(cotizacionId: string) {
   const reaprobarMut = useSolicitarReaprobacion();
 
   const ejecutarCreacion = async (
-    decision: "sin_cambios" | "mantenida_por_operaciones" | "refrescada" | "sustituida",
+    decision: DecisionTarifa,
     tarifaIdAplicada: string | null,
     delta: unknown,
   ) => {
@@ -108,6 +108,15 @@ export function useCrearEmbarqueConRevalidacion(cotizacionId: string) {
       cambios: resultado?.cambios ?? [],
     });
 
+  // R201-COT-02: ventas ya re-aprobó este delta; operaciones crea el embarque
+  // con la decisión `reaprobada_ventas` en vez de volver a pedir aprobación.
+  const handleCrearConReaprobacion = () =>
+    ejecutarCreacion("reaprobada_ventas", resultado?.tarifa_id_vigente ?? null, {
+      cambios: resultado?.cambios ?? [],
+      max_delta_pct: resultado?.max_delta_pct ?? 0,
+      reaprobacion_vigente: true,
+    });
+
   const handleSustituir = () => {
     setModalOpen(false);
     setBuscarOpen(true);
@@ -155,5 +164,6 @@ export function useCrearEmbarqueConRevalidacion(cotizacionId: string) {
     handleSustituir,
     handleTarifaElegida,
     handleSolicitarReaprobacion,
+    handleCrearConReaprobacion,
   };
 }
