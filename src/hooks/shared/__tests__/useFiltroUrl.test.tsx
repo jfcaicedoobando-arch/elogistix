@@ -1,59 +1,88 @@
 /**
  * Ola 8 (M8): los filtros de listados deben vivir en el query string.
+ *
+ * Se usa `withNuqsTestingAdapter` (docs oficiales nuqs) en lugar de un router
+ * real: deshabilita el rate limiting y expone `onUrlUpdate`, así cada test
+ * espera a que la URL termine de escribirse antes del teardown.
  */
-import { describe, it, expect } from "vitest";
-import { renderHook, act } from "@testing-library/react";
-import { MemoryRouter } from "react-router-dom";
-import { NuqsAdapter } from "nuqs/adapters/react-router/v6";
-import React from "react";
+import { describe, it, expect, vi } from "vitest";
+import { renderHook, act, waitFor } from "@testing-library/react";
+import { withNuqsTestingAdapter, type OnUrlUpdateFunction } from "nuqs/adapters/testing";
 import { useFiltroUrl, useTextoUrl } from "../useFiltroUrl";
 
 const MONEDAS = ["todas", "MXN", "USD"] as const;
 type Moneda = (typeof MONEDAS)[number];
 
-function wrapper({ children }: { children: React.ReactNode }) {
-  return (
-    <MemoryRouter initialEntries={["/compras/pagos"]}>
-      <NuqsAdapter>{children}</NuqsAdapter>
-    </MemoryRouter>
-  );
+function makeWrapper(onUrlUpdate: OnUrlUpdateFunction) {
+  return withNuqsTestingAdapter({ onUrlUpdate, hasMemory: true });
 }
 
 describe("useFiltroUrl / useTextoUrl", () => {
   it("arranca en el valor por defecto", () => {
+    const onUrlUpdate = vi.fn();
     const { result } = renderHook(
       () => useFiltroUrl<Moneda>("moneda", MONEDAS, "todas"),
-      { wrapper },
+      { wrapper: makeWrapper(onUrlUpdate) },
     );
     expect(result.current[0]).toBe("todas");
+    expect(onUrlUpdate).not.toHaveBeenCalled();
   });
 
   it("actualiza el valor del filtro", async () => {
+    const onUrlUpdate = vi.fn();
     const { result } = renderHook(
       () => useFiltroUrl<Moneda>("moneda2", MONEDAS, "todas"),
-      { wrapper },
+      { wrapper: makeWrapper(onUrlUpdate) },
     );
     await act(async () => { result.current[1]("MXN"); });
     expect(result.current[0]).toBe("MXN");
+    await waitFor(() => {
+      expect(onUrlUpdate).toHaveBeenCalled();
+      const last = onUrlUpdate.mock.calls.at(-1)?.[0];
+      expect(last.searchParams.get("moneda2")).toBe("MXN");
+    });
   });
 
   it("regresar al valor por defecto limpia el parámetro", async () => {
+    const onUrlUpdate = vi.fn();
     const { result } = renderHook(
       () => useFiltroUrl<Moneda>("moneda3", MONEDAS, "todas"),
-      { wrapper },
+      { wrapper: makeWrapper(onUrlUpdate) },
     );
     await act(async () => { result.current[1]("USD"); });
     expect(result.current[0]).toBe("USD");
+    await waitFor(() => {
+      const last = onUrlUpdate.mock.calls.at(-1)?.[0];
+      expect(last?.searchParams.get("moneda3")).toBe("USD");
+    });
+
     await act(async () => { result.current[1]("todas"); });
     expect(result.current[0]).toBe("todas");
+    await waitFor(() => {
+      const last = onUrlUpdate.mock.calls.at(-1)?.[0];
+      expect(last?.searchParams.get("moneda3")).toBeNull();
+    });
   });
 
   it("maneja texto libre y lo limpia al vaciarlo", async () => {
-    const { result } = renderHook(() => useTextoUrl("q"), { wrapper });
+    const onUrlUpdate = vi.fn();
+    const { result } = renderHook(() => useTextoUrl("q"), {
+      wrapper: makeWrapper(onUrlUpdate),
+    });
     expect(result.current[0]).toBe("");
+
     await act(async () => { result.current[1]("ACME"); });
     expect(result.current[0]).toBe("ACME");
+    await waitFor(() => {
+      const last = onUrlUpdate.mock.calls.at(-1)?.[0];
+      expect(last?.searchParams.get("q")).toBe("ACME");
+    });
+
     await act(async () => { result.current[1](""); });
     expect(result.current[0]).toBe("");
+    await waitFor(() => {
+      const last = onUrlUpdate.mock.calls.at(-1)?.[0];
+      expect(last?.searchParams.get("q")).toBeNull();
+    });
   });
 });
