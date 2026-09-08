@@ -12209,10 +12209,13 @@ BEGIN
     v_cot_id,
     p_conceptos_costo
   );
-  -- Una cotización sólo puede producir un embarque vivo (bloqueo FOR UPDATE).
-  PERFORM public._assert_cotizacion_convertible(v_cot_id, v_org_id);
+  -- R217: el claim de idempotencia va ANTES de la convertibilidad. En un
+  -- reintento del mismo p_request_id la respuesta cacheada/pending se devuelve
+  -- sin volver a evaluar la cotización (que ya tiene el embarque del 1er intento).
   v_resp := public.idempotency_claim(p_request_id, 'crear_embarque_completo');
   IF v_resp IS NOT NULL THEN RETURN v_resp; END IF;
+  -- Una cotización sólo puede producir un embarque vivo (bloqueo FOR UPDATE).
+  PERFORM public._assert_cotizacion_convertible(v_cot_id, v_org_id);
   INSERT INTO embarques (
     id, expediente, cliente_id, cliente_nombre, modo, tipo,
     shipper, consignatario, incoterm, descripcion_mercancia,
