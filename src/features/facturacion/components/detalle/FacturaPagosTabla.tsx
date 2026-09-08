@@ -3,8 +3,9 @@
  * Extraída de `FacturaPagosSection` para respetar el límite de 200 líneas.
  * Migrada a `DataTable` (Ola F, punto 8) con `TABLE_DENSITY.embebida`.
  * Migrada a `ResponsiveDataTable` para eliminar scroll horizontal en móvil.
+ * v13.823.240 — Agrega acción "Cancelar REP" para pagos con complemento vigente.
  */
-import { Trash2 } from "lucide-react";
+import { Trash2, Ban } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Hint } from "@/components/shared/Hint";
 import { defineColumns, type ColumnDef } from "@/components/shared/DataTable";
@@ -29,6 +30,7 @@ interface PagoRow {
   folio_rep?: number | string | null;
   uuid_rep?: string | null;
   rep_cancelado_en?: string | null;
+  rep_cancellation_status?: string | null;
 }
 
 interface Props {
@@ -37,6 +39,7 @@ interface Props {
   moneda: string;
   canEdit: boolean;
   onEliminar: (pagoId: string) => void;
+  onCancelarRep: (pago: PagoRow) => void;
   onPreviewRep: (id: string, label: string) => void;
 }
 
