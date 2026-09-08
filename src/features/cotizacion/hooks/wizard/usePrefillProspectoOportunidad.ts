@@ -40,8 +40,9 @@ export function usePrefillProspectoOportunidad({ form, oportunidadId, enabled }:
     form.setValue("prospectoEmail", match.email, { shouldDirty: true });
     form.setValue("prospectoTelefono", match.telefono, { shouldDirty: true });
     const moneda = match.moneda === "USD" || match.moneda === "MXN" ? match.moneda : "";
+    // La moneda del vínculo viaja en `monedaCrm` (el guardado la usa tal cual,
+    // sin convertir importes).
     form.setValue("monedaCrm", moneda, { shouldDirty: true });
-    if (moneda) form.setValue("moneda", moneda, { shouldDirty: true });
     form.trigger(["oportunidadId", "prospectoEmpresa"]);
     aplicado.current = true;
   }, [enabled, match, form]);
