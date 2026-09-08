@@ -34,13 +34,18 @@ export function useNuevoEmbarqueCotVinculada({
   onClearExpediente,
 }: Params) {
   const [cotizacionVinculada, setCotizacionVinculada] = useState<CotizacionRow | null>(null);
+  // R201-COT-06: sello de la última vinculación pedida. Una hidratación en
+  // vuelo que ya no corresponde a la cotización vigente (o se desvinculó)
+  // no debe escribir conceptos.
+  const vinculacionRef = useRef(0);
 
   const hidratarConceptosDesdeCotizacion = useCallback(
-    async (cot: CotizacionRow) => {
+    async (cot: CotizacionRow, token: number) => {
       const ventas = mapConceptosVentaFromCotizacion(cot);
-      if (ventas.length > 0) setConceptosVenta(ventas);
+      if (ventas.length > 0 && vinculacionRef.current === token) setConceptosVenta(ventas);
 
       const costos = await fetchCotizacionCostosForEmbarque(cot.id);
+      if (vinculacionRef.current !== token) return;
       if (costos.length > 0) {
         setConceptosCosto(mapConceptosCostoFromCotizacion(costos, proveedoresDb));
       }
@@ -52,13 +57,16 @@ export function useNuevoEmbarqueCotVinculada({
     (cot: CotizacionRow) => {
       setCotizacionVinculada(cot);
       form.vincularCotizacion(cot);
-      void hidratarConceptosDesdeCotizacion(cot);
+      const token = ++vinculacionRef.current;
+      void hidratarConceptosDesdeCotizacion(cot, token);
     },
     [form, hidratarConceptosDesdeCotizacion],
   );
 
   const handleDesvincularCotizacion = useCallback(
     (opcion: DesvincularOpcion = "limpiar") => {
+      // Invalida cualquier hidratación en vuelo antes de limpiar.
+      vinculacionRef.current += 1;
       setCotizacionVinculada(null);
       form.desvincularCotizacion(opcion);
       if (opcion === "limpiar" || opcion === "solo-conceptos") {
@@ -79,6 +87,8 @@ export function useNuevoEmbarqueCotVinculada({
   // hidratación la pisaría (race con el fetch de costos).
   const restaurarVinculacion = useCallback(
     (cot: CotizacionRow) => {
+      // R201-COT-06/09: invalidar hidrataciones en vuelo; el borrador manda.
+      vinculacionRef.current += 1;
       setCotizacionVinculada(cot);
       form.vincularCotizacion(cot);
     },
