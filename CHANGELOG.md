@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.823.237] - 2026-09-08
+- **fix(embarques)**: los expedientes cancelados (y los borradores) ya no aparecen en las alertas de demora ni en el contador lateral: antes se recalculaban como "Arribo" por sus fechas y se colaban (caso ELIMP00353). También quedan fuera de los conteos de activos del tablero y de operaciones.
+
+
+
 ## [13.823.236] - 2026-09-08
 - **datos(embarques)**: los tres conceptos de venta del expediente ELIMP00205 (165 + 3,610 + 125 USD) quedaron marcados como facturados porque la factura se emitió en el sistema anterior. Sin cambios de importes, esquema ni facturas nuevas.
 
