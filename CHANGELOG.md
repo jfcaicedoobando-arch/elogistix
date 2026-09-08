@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.823.223] - 2026-09-08
+- **fix(catalogos)**: el botón de editar naviera (catálogo global) también queda oculto para administradores de empresa; alta, edición y eliminación de catálogos globales son exclusivas de la plataforma, las empresas sólo prenden/apagan para sí mismas.
+
 ## [13.823.222] - 2026-09-08
 - **fix(catalogos)**: Puertos, Navieras y Tipos de Contenedor siguen siendo catálogos globales, pero cada admin de empresa ya puede encenderlos/apagarlos para su empresa (antes el interruptor fallaba con "No tienes permisos"; sólo super_admin podía moverlo).
 - **feat(db)**: nueva tabla `catalogo_org_desactivado` (lista de apagados por organización) con RLS: lectura por miembros de la organización y alta/baja sólo para administradores de catálogo (`es_admin_catalogo`). No se modifica el `activo` global.
