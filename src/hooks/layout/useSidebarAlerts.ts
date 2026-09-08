@@ -77,7 +77,7 @@ export function useSidebarAlerts() {
 
   const { data } = useQuery({
     queryKey: queryKeys.sidebar.alertCounts,
-    queryFn: fetchSidebarAlertCounts,
+    queryFn: () => sinRuidoDeSesion(fetchSidebarAlertCounts, null),
     enabled: conSesion,
     ...SIDEBAR_QUERY_TUNING,
   });
