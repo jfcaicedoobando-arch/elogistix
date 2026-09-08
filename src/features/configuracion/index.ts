@@ -16,5 +16,6 @@ export { default as TabCompras } from "./components/TabCompras";
 export { esUmbralValido, UMBRAL_APROBACION_SIN_VINCULO_DEFAULT } from "./domain/comprasUmbral";
 export { default as TabNavieras } from "./components/TabNavieras";
 export { default as TabTiposContenedor } from "./components/TabTiposContenedor";
+export { default as TabCatalogos } from "./components/TabCatalogos";
 export { default as TabTipoCambioDof } from "./components/TabTipoCambioDof";
 export { OrgInfoCard } from "./components/OrgInfoCard";

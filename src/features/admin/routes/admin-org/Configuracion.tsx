@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useState } from "react";
 import { Save, Building2, Receipt, Anchor, Wrench, Scale, ShoppingCart } from "lucide-react";
-import { useConfiguracionState, TabEmpresa, OrgInfoCard, TabFacturacion, TabPuertos, TabOperaciones, TabCompras } from "@/features/configuracion";
+import { useConfiguracionState, TabEmpresa, OrgInfoCard, TabFacturacion, TabCatalogos, TabOperaciones, TabCompras } from "@/features/configuracion";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import TabExportar from "@/features/admin/components/TabExportar";
 import { PageHeader } from "@/components/shared/PageHeader";
@@ -95,7 +95,7 @@ export default function Configuracion() {
         </TabsContent>
         {!esContador && (
           <>
-            <TabsContent value="catalogos"><TabPuertos /></TabsContent>
+            <TabsContent value="catalogos"><TabCatalogos /></TabsContent>
             <TabsContent value="operaciones"><TabOperaciones /></TabsContent>
             <TabsContent value="compras"><TabCompras /></TabsContent>
             <TabsContent value="herramientas"><TabExportar /></TabsContent>
