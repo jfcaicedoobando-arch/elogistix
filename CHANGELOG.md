@@ -1,5 +1,13 @@
 # Changelog
 
+## [13.823.212] - 2026-09-08
+
+Sincronización de esquema y tipos para las migraciones R201 pendientes.
+
+- `supabase/schema/baseline.sql` regenerado aplicando TODAS las migraciones en una base efímera local: incluye la columna `conceptos_costo.cotizacion_costo_origen_id`, el sembrado con `origen`/referencia de origen y el helper `_embarque_aplicar_tarifa_decidida` con sus ACL.
+- `src/integrations/supabase/types.ts` actualizado con la nueva columna, su llave foránea y la firma del helper, para que el chequeo de tipos frescos de Actions quede en verde.
+- Sin cambios de lógica, datos, RLS ni permisos efectivos; las migraciones R201 (010/011) siguen preparadas y NO aplicadas en el ERP.
+
 ## [13.823.211] - 2026-09-08
 
 Remate R201 — tarifa sin fallback silencioso e importación de costos honesta.
