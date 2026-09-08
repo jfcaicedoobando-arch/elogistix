@@ -79,6 +79,6 @@ export function usePrefillProspectoOportunidad({ form, oportunidadId, enabled }:
     if (match.destino) form.setValue("destino", match.destino, { shouldDirty: true });
     form.trigger(["oportunidadId", "prospectoEmpresa"]);
     aplicado.current = true;
-  }, [enabled, match, form]);
+  }, [enabled, match, form, isDirty]);
 }
 
