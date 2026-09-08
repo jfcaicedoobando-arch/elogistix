@@ -140,7 +140,7 @@ export default function Paso1ProgressSidebar({ esMaritimo }: Props) {
             El total de secciones varía según el modo de transporte.
           </p>
         </div>
-        <nav className="space-y-1">
+        <nav className="space-y-1" aria-label="Secciones del Paso 1">
           {sections.map((s) => {
             const isActive = s.id === activeId;
             return (
@@ -148,6 +148,8 @@ export default function Paso1ProgressSidebar({ esMaritimo }: Props) {
                 key={s.id}
                 type="button"
                 onClick={() => handleClick(s.id)}
+                // Estado accesible de "sección actual" (antes sólo era color).
+                aria-current={isActive ? "true" : undefined}
                 className={cn(
                   "w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-left text-body transition-colors",
                   "hover:bg-muted/60",
