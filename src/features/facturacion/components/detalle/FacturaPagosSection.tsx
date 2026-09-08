@@ -174,10 +174,7 @@ export function FacturaPagosSection({
       <DialogCancelarRep
         open={!!pagoACancelar}
         onOpenChange={(o) => {
-          if (!o) {
-            setPagoACancelar(null);
-            repController.setMotivo && repController.setMotivo("" as never);
-          }
+          if (!o) setPagoACancelar(null);
         }}
         pago={pagoACancelar}
         motivo={repController.motivo}
