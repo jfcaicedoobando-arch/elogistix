@@ -22,6 +22,18 @@ import { useNuevoEmbarqueCotVinculada } from "./useNuevoEmbarqueCotVinculada";
 import { useNuevoEmbarqueCatalogos } from "./useNuevoEmbarqueCatalogos";
 
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
+
+function avisarHidratacionPendiente(cargando: boolean) {
+  notifyError(undefined, {
+    step: 4,
+    title: cargando ? "Los costos de la cotización siguen cargando" : "Falta completar la importación de costos",
+    description: cargando
+      ? "Espera a que termine la importación antes de crear el embarque."
+      : "Reintenta la importación antes de crear el embarque.",
+    method: "USE_NUEVO_EMBARQUE_WIZARD",
+    errorCode: ERROR_CODES.VALIDATION_FAILED,
+  });
+}
 export function useNuevoEmbarqueWizard() {
   // v13.303.26 — sin excepciones de rol: cotización siempre obligatoria.
   const {
@@ -106,6 +118,12 @@ export function useNuevoEmbarqueWizard() {
       return false;
     }
 
+    if (cotVinc.cargandoCostosVinculados || cotVinc.errorCostosVinculados) {
+      setCurrentStep(4);
+      avisarHidratacionPendiente(cotVinc.cargandoCostosVinculados);
+      return false;
+    }
+
 
     for (const step of [1, 2, 3, 4]) {
       if (!validateStep(step)) {
@@ -179,9 +197,18 @@ export function useNuevoEmbarqueWizard() {
     updateConceptoVenta: conceptos.updateConceptoVenta,
     addConceptoVenta: conceptos.addConceptoVenta,
     removeConceptoVenta: conceptos.removeConceptoVenta,
-    updateConceptoCosto: conceptos.updateConceptoCosto,
-    addConceptoCosto: conceptos.addConceptoCosto,
-    removeConceptoCosto: conceptos.removeConceptoCosto,
+    updateConceptoCosto: (id: number, field: Parameters<typeof conceptos.updateConceptoCosto>[1], value: Parameters<typeof conceptos.updateConceptoCosto>[2]) => {
+      cotVinc.marcarCostosEditados();
+      conceptos.updateConceptoCosto(id, field, value);
+    },
+    addConceptoCosto: () => {
+      cotVinc.marcarCostosEditados();
+      conceptos.addConceptoCosto();
+    },
+    removeConceptoCosto: (id: number) => {
+      cotVinc.marcarCostosEditados();
+      conceptos.removeConceptoCosto(id);
+    },
     subtotalVenta: conceptos.subtotalVenta,
     totalCosto: conceptos.totalCosto,
     utilidadEstimada: conceptos.utilidadEstimada,
@@ -189,6 +216,9 @@ export function useNuevoEmbarqueWizard() {
     catalogosCargando,
     catalogosError,
     recargarCatalogos,
-    isPending: orchestrator.isPending,
+    cargandoCostosVinculados: cotVinc.cargandoCostosVinculados,
+    errorCostosVinculados: cotVinc.errorCostosVinculados,
+    reintentarCostosVinculados: cotVinc.reintentarCostosVinculados,
+    isPending: orchestrator.isPending || cotVinc.cargandoCostosVinculados,
   };
 }

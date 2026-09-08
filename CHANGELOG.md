@@ -1,5 +1,15 @@
 # Changelog
 
+## [13.823.208] - 2026-09-08
+
+Remate acotado R201 — cotizaciones → embarques.
+
+- R201-COT-01: los costos derivados de cotización conservan una referencia estable a su renglón fuente; refrescar/sustituir actualiza sólo esas filas, distingue homónimos y proveedor implícito, y reparte centavos sin tocar costos manuales.
+- R201-COT-02: la re-aprobación se ata a un snapshot económico calculado en servidor y se revalida también al crear el embarque; cualquier cambio posterior vuelve a bloquear.
+- R201-COT-06: la importación de costos muestra carga/error/reintento, una respuesta vacía limpia el estado anterior y la creación queda bloqueada hasta completar la importación sin pisar ediciones locales ni borradores restaurados.
+- Guardrails: helper privado catalogado como `service_role`-only, permisos explícitos en las funciones `SECURITY DEFINER`, excepción replay obsoleta retirada y cast fiscal HIGH eliminado.
+- Migración aditiva preparada; no aplicada. Sin publicación ni cambios históricos, RLS o datos QA.
+
 ## [13.823.207] - 2026-09-08
 
 Bloque R201 — cotizaciones → embarques (9 hallazgos).

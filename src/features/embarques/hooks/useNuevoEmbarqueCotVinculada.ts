@@ -7,6 +7,8 @@ import {
   mapConceptosCostoFromCotizacion,
 } from "@/features/embarques/domain/embarqueWizard";
 import type { DesvincularOpcion } from "@/features/embarques/components/DesvincularCotizacionDialog";
+import { notifyError } from "@/lib/ui/appFeedback";
+import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 
 interface Params {
   form: {
@@ -34,20 +36,39 @@ export function useNuevoEmbarqueCotVinculada({
   onClearExpediente,
 }: Params) {
   const [cotizacionVinculada, setCotizacionVinculada] = useState<CotizacionRow | null>(null);
+  const [cargandoCostosVinculados, setCargandoCostosVinculados] = useState(false);
+  const [errorCostosVinculados, setErrorCostosVinculados] = useState(false);
   // R201-COT-06: sello de la última vinculación pedida. Una hidratación en
   // vuelo que ya no corresponde a la cotización vigente (o se desvinculó)
   // no debe escribir conceptos.
   const vinculacionRef = useRef(0);
+  const costosEditadosRef = useRef(false);
 
   const hidratarConceptosDesdeCotizacion = useCallback(
     async (cot: CotizacionRow, token: number) => {
       const ventas = mapConceptosVentaFromCotizacion(cot);
-      if (ventas.length > 0 && vinculacionRef.current === token) setConceptosVenta(ventas);
-
-      const costos = await fetchCotizacionCostosForEmbarque(cot.id);
       if (vinculacionRef.current !== token) return;
-      if (costos.length > 0) {
-        setConceptosCosto(mapConceptosCostoFromCotizacion(costos, proveedoresDb));
+      setConceptosVenta(ventas);
+      setCargandoCostosVinculados(true);
+      setErrorCostosVinculados(false);
+      try {
+        const costos = await fetchCotizacionCostosForEmbarque(cot.id);
+        if (vinculacionRef.current !== token) return;
+        if (!costosEditadosRef.current) {
+          setConceptosCosto(mapConceptosCostoFromCotizacion(costos, proveedoresDb));
+        }
+      } catch (error) {
+        if (vinculacionRef.current !== token) return;
+        setErrorCostosVinculados(true);
+        notifyError(undefined, {
+          title: "No se pudieron importar los costos de la cotización",
+          description: "Reintenta antes de crear el embarque para no guardar una importación incompleta.",
+          error: error instanceof Error ? error : new Error(String(error)),
+          method: "HIDRATAR_COSTOS_COTIZACION",
+          errorCode: ERROR_CODES.DB_ERROR,
+        });
+      } finally {
+        if (vinculacionRef.current === token) setCargandoCostosVinculados(false);
       }
     },
     [setConceptosVenta, setConceptosCosto, proveedoresDb],
@@ -57,6 +78,8 @@ export function useNuevoEmbarqueCotVinculada({
     (cot: CotizacionRow) => {
       setCotizacionVinculada(cot);
       form.vincularCotizacion(cot);
+      costosEditadosRef.current = false;
+      setConceptosCosto([]);
       const token = ++vinculacionRef.current;
       void hidratarConceptosDesdeCotizacion(cot, token);
     },
@@ -67,6 +90,9 @@ export function useNuevoEmbarqueCotVinculada({
     (opcion: DesvincularOpcion = "limpiar") => {
       // Invalida cualquier hidratación en vuelo antes de limpiar.
       vinculacionRef.current += 1;
+      costosEditadosRef.current = false;
+      setCargandoCostosVinculados(false);
+      setErrorCostosVinculados(false);
       setCotizacionVinculada(null);
       form.desvincularCotizacion(opcion);
       if (opcion === "limpiar" || opcion === "solo-conceptos") {
@@ -82,6 +108,16 @@ export function useNuevoEmbarqueCotVinculada({
 
   useCotizacionHydration({ onPrevincular: handleVincularCotizacion });
 
+  const reintentarCostosVinculados = useCallback(() => {
+    if (!cotizacionVinculada) return;
+    const token = ++vinculacionRef.current;
+    void hidratarConceptosDesdeCotizacion(cotizacionVinculada, token);
+  }, [cotizacionVinculada, hidratarConceptosDesdeCotizacion]);
+
+  const marcarCostosEditados = useCallback(() => {
+    costosEditadosRef.current = true;
+  }, []);
+
   // M-13 (v14-2): restauración de borrador. Vincula la cotización SIN
   // hidratar conceptos — el draft ya trae la captura del usuario y la
   // hidratación la pisaría (race con el fetch de costos).
@@ -89,6 +125,9 @@ export function useNuevoEmbarqueCotVinculada({
     (cot: CotizacionRow) => {
       // R201-COT-06/09: invalidar hidrataciones en vuelo; el borrador manda.
       vinculacionRef.current += 1;
+      costosEditadosRef.current = true;
+      setCargandoCostosVinculados(false);
+      setErrorCostosVinculados(false);
       setCotizacionVinculada(cot);
       form.vincularCotizacion(cot);
     },
@@ -100,5 +139,9 @@ export function useNuevoEmbarqueCotVinculada({
     handleVincularCotizacion,
     handleDesvincularCotizacion,
     restaurarVinculacion,
+    cargandoCostosVinculados,
+    errorCostosVinculados,
+    reintentarCostosVinculados,
+    marcarCostosEditados,
   };
 }

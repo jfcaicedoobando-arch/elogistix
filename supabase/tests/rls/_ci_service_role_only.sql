@@ -70,6 +70,7 @@ INSERT INTO _ci_service_role_only (fn) VALUES
   ('public._cotizaciones_bloquear_auto_aceptacion()'),
   ('public._cotizaciones_bloquear_envio_sin_oportunidad()'),
   ('public._crear_embarque_replicar_conceptos(uuid, uuid, uuid, uuid[], jsonb)'),
+  ('public._embarque_aplicar_tarifa_decidida(uuid, uuid, uuid)'),
   ('public._crm_vincular_cotizacion_core(uuid, jsonb, uuid, uuid, text, uuid)'),
   -- Helper interno del flujo de aprobación CxP (SECURITY DEFINER, corre como
   -- dueño); no debe ser ejecutable directo por authenticated (Ola A 2026-08-28).

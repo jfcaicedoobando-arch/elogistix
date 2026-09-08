@@ -6,6 +6,9 @@ import { Hint } from "@/components/shared/Hint";
 import { Input } from "@/components/ui/input";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ValidationAlert } from "@/components/feedback/ValidationAlert";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { AlertCircle, Loader2, RefreshCw } from "lucide-react";
 import { useContenedoresEmbarque } from "@/features/embarques/hooks";
 import { useTcInicial, type TcInicial } from "@/features/catalogos/hooks/useTcInicial";
 import { useCostosPreciosCalc } from "@/features/embarques/hooks/useCostosPreciosCalc";
@@ -33,6 +36,9 @@ interface Props {
   errors?: StepValidationErrors;
   /** Sólo presente al editar un embarque existente. Habilita la columna "Contenedor". */
   embarqueId?: string;
+  cargandoCostosVinculados?: boolean;
+  errorCostosVinculados?: boolean;
+  onReintentarCostos?: () => void;
 }
 
 const COSTO_COLS_BASE = "grid-cols-[1fr_1fr_120px_90px_110px_40px]";
@@ -70,6 +76,9 @@ export function StepCostosPrecios(props: Props) {
     updateConceptoCosto, addConceptoCosto, removeConceptoCosto,
     errors = {},
     embarqueId,
+    cargandoCostosVinculados = false,
+    errorCostosVinculados = false,
+    onReintentarCostos,
   } = props;
 
   const { watch, register } = useFormContext<EmbarqueFormValues>();
@@ -104,6 +113,26 @@ export function StepCostosPrecios(props: Props) {
     <TooltipProvider delayDuration={150}>
       <div className="space-y-6">
         {hasErrors && <ValidationAlert severity="error" errors={errors} />}
+        {cargandoCostosVinculados && (
+          <Alert>
+            <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
+            <AlertTitle>Importando costos de la cotización</AlertTitle>
+            <AlertDescription>Espera a que termine antes de crear el embarque.</AlertDescription>
+          </Alert>
+        )}
+        {errorCostosVinculados && (
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" aria-hidden />
+            <AlertTitle>No se pudieron importar los costos</AlertTitle>
+            <AlertDescription className="flex items-center justify-between gap-3">
+              <span>Reintenta para completar la información antes de guardar.</span>
+              <Button type="button" variant="outline" size="sm" onClick={onReintentarCostos}>
+                <RefreshCw className="mr-2 h-4 w-4" aria-hidden />
+                Reintentar
+              </Button>
+            </AlertDescription>
+          </Alert>
+        )}
         {showTcWarning && (
           <ValidationAlert
             severity="warning"

@@ -60,10 +60,10 @@ BEGIN
     END IF;
 
     IF COALESCE(v_costo.unidad_medida, 'Contenedor') = 'BL' OR v_n = 0 THEN
-      INSERT INTO public.conceptos_costo (embarque_id, contenedor_id, concepto, monto, moneda, proveedor_nombre, proveedor_id, organization_id)
+      INSERT INTO public.conceptos_costo (embarque_id, contenedor_id, concepto, monto, moneda, proveedor_nombre, proveedor_id, organization_id, origen, cotizacion_costo_origen_id)
       VALUES (p_embarque_id, NULL, v_costo.concepto, v_base,
               CASE WHEN v_costo.moneda = 'USD' THEN 'USD'::moneda ELSE 'MXN'::moneda END,
-              v_prov_nombre, v_prov_id, p_org);
+              v_prov_nombre, v_prov_id, p_org, 'cotizacion', v_costo.id);
     ELSE
       -- Prorrateo sin importes negativos (método del resto mayor en centavos):
       -- el piso se reparte a todos y los primeros `v_resto` contenedores
@@ -77,10 +77,10 @@ BEGIN
       FOREACH v_cid IN ARRAY p_target_ids LOOP
         v_i := v_i + 1;
         v_parte := ROUND(v_signo * (v_piso + CASE WHEN v_i <= v_resto THEN 1 ELSE 0 END)::numeric / 100, 2);
-        INSERT INTO public.conceptos_costo (embarque_id, contenedor_id, concepto, monto, moneda, proveedor_nombre, proveedor_id, organization_id)
+        INSERT INTO public.conceptos_costo (embarque_id, contenedor_id, concepto, monto, moneda, proveedor_nombre, proveedor_id, organization_id, origen, cotizacion_costo_origen_id)
         VALUES (p_embarque_id, v_cid, v_costo.concepto, v_parte,
                 CASE WHEN v_costo.moneda = 'USD' THEN 'USD'::moneda ELSE 'MXN'::moneda END,
-                v_prov_nombre, v_prov_id, p_org);
+                v_prov_nombre, v_prov_id, p_org, 'cotizacion', v_costo.id);
       END LOOP;
     END IF;
   END LOOP;
