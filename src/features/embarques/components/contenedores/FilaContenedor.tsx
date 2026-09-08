@@ -23,6 +23,8 @@ import {
   ISO6346_MENSAJE,
   normalizarNumeroContenedor,
 } from "@/features/embarques/domain/contenedorIso6346";
+import { resolveTipoContenedorNombre } from "@/features/cotizacion/utils/resolveTipoContenedorNombre";
+import { opcionTipoGuardada } from "@/features/embarques/domain/opcionTipoContenedor";
 import { cn } from "@/lib/utils";
 
 interface Props {
