@@ -81,9 +81,10 @@ export default function QuickCreateLeadDialog({ open, onOpenChange, onCreated, o
     if (crear.isPending || enviandoRef.current) return;
     const emp = empresa.trim();
     if (!emp) {
+      // Omisión normal de captura: error junto al campo + foco, sin toast de
+      // error técnico (VIS-20260908-03/04).
       setEmpresaTouched(true);
       empresaRef.current?.focus();
-      notifyError(undefined, { title: "Empresa requerida", method: "FEATURES_CRM_COMPONENTS_QUICKCREATE_QUICKCREATELEADDIALOG_1" });
       return;
     }
     enviandoRef.current = true;
