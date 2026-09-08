@@ -65,10 +65,11 @@ export function useAceptarCotizacion({
         try {
           ok = await alinearMonedaOportunidad(oportunidadId, monedaCotizacion);
         } catch (error) {
-          notifyError(error, {
+          notifyError(undefined, {
             title: "No pudimos actualizar la moneda de la oportunidad",
             description:
               "No se guardó ningún cambio. Vuelve a intentar; si sigue igual, revisa la oportunidad en CRM.",
+            error: error as Error,
             method: "ACEPTAR_COTIZACION_ALINEAR_MONEDA",
           });
           return;
