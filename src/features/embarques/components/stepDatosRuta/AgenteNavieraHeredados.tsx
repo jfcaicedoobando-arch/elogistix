@@ -42,8 +42,6 @@ export function AgenteEmbarqueSelector({ cotizacionAgenteId }: { cotizacionAgent
   const heredado = !!cotizacionAgenteId && currentId === cotizacionAgenteId;
   const overriden = !!cotizacionAgenteId && currentId !== cotizacionAgenteId;
 
-  // P1-5: si el catálogo aún no trae el agente guardado (o está inactivo), se
-  // inyecta una opción sintética para no pintar el select vacío.
   useSyncNombreDesdeCatalogo(
     "agente",
     currentId,
@@ -134,7 +132,6 @@ export function NavieraEmbarqueSelector({
   const heredado = !!cotizacionNavieraId && currentId === cotizacionNavieraId;
   const overriden = !!cotizacionNavieraId && currentId !== cotizacionNavieraId;
 
-  // P1-5: misma tolerancia que en el selector de agente.
   useSyncNombreDesdeCatalogo(
     "naviera",
     currentId,
