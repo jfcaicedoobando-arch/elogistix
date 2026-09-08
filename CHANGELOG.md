@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.823.218] - 2026-09-08
+
+- **fix(db)**: el guard `r216_cot_tipo_servicio_contract` fallaba en GitHub Actions (`rls-tests`) porque la migración posterior `20260913001100_r201_cot_remate_identidad_snapshot_hidratacion.sql` volvía a definir `crear_embarque_borrador_core` y, en una reconstrucción limpia por orden de archivo, borraba la siembra FCL/LCL. Se agrega la migración `20260913001200_r216_core_tipo_servicio_post_r201.sql` que redeclara la definición canónica final (R201 completo: MSDS, conceptos/costos, bitácora, notificaciones y permisos + `v_tipo_servicio` FCL/LCL). Sin backfill ni cambios de datos.
+
 ## [13.823.217] - 2026-09-08
 
 - **fix(embarques)**: SMOKE-02 / R216-COT-01 — la conversión directa desde una cotización aceptada (`crear_embarque_borrador_core`) ahora siembra `embarques.tipo_servicio` con FCL/LCL desde `cotizaciones.tipo_embarque` (respaldo `tipo_carga`), la misma fuente de verdad que la hidratación del wizard. Antes el resumen del borrador mostraba "Servicio —". Se preservan intactas la replicación de conceptos (costo/origen), naviera, contenedor, bitácora, notificación interna y privilegios (core privado, sólo `service_role`). Sin backfill histórico.
