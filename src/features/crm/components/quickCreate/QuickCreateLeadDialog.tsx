@@ -52,6 +52,7 @@ export default function QuickCreateLeadDialog({ open, onOpenChange, onCreated, o
   const empresaRef = useRef<HTMLInputElement>(null);
   const [empresa, setEmpresa] = useState("");
   const [contacto, setContacto] = useState("");
+  const [fuente, setFuente] = useState<CrmLeadFuente>("Prospección");
   const [empresaTouched, setEmpresaTouched] = useState(false);
 
   // Reset sólo en la transición real abierto -> cerrado: mientras el modal
@@ -62,6 +63,7 @@ export default function QuickCreateLeadDialog({ open, onOpenChange, onCreated, o
     if (abiertoAntes.current && !open) {
       setEmpresa("");
       setContacto("");
+      setFuente("Prospección");
       setEmpresaTouched(false);
     }
     abiertoAntes.current = open;

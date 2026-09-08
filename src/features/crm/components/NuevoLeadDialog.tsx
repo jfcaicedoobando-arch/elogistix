@@ -17,8 +17,8 @@ import { esCorreoCapturado } from "@/features/crm/domain/leads/quickCreateInput"
 interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  /** Borrador del alta express ("Más campos →"): empresa y contacto capturados. */
-  draftInicial?: { empresa: string; contacto: string } | null;
+  /** Borrador del alta express ("Más campos →"): empresa, contacto y origen capturados. */
+  draftInicial?: { empresa: string; contacto: string; fuente?: CrmLeadFuente } | null;
   onCreated?: (id: string) => void;
 }
 
