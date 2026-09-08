@@ -1,6 +1,6 @@
 name: E2E (Playwright)
 
-# Corridas automáticas de la suite Playwright contra staging.
+# Suite Playwright contra staging, de ejecución MANUAL (no automática).
 #
 # Trigger (CI simplificado): SÓLO workflow_dispatch (manual, con opción de
 # override de E2E_BASE_URL). Sin schedule diario y sin automatización de issues.

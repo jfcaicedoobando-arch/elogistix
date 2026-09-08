@@ -13,7 +13,7 @@ name: rls-tests
 #   concurrencia de cotización ganadora.
 #
 # Fail-closed: si el bootstrap o la preparación falla, el job falla y el
-# required check "RLS tests result" queda rojo.
+# check "RLS tests result" queda rojo.
 
 on:
   pull_request:
@@ -58,7 +58,8 @@ env:
 
 jobs:
   rls-tests-result:
-    # Nombre visible estable: es el required check en branch protection.
+    # Nombre visible conservado por compatibilidad con los checks previos
+    # (este repo no tiene branch protection ni rulesets configurados).
     name: RLS tests result
     runs-on: ubuntu-24.04
     timeout-minutes: 30

@@ -1,14 +1,15 @@
 name: CI
 
 # CI simplificado (YAGNI): UN job, UN checkout, UNA instalación.
-# Secuencia: lint (0 warnings) → typecheck → suite Vitest completa → build.
+# Secuencia: lint (0 warnings) → typecheck → suite Vitest completa →
+# guard estático de BD (condicional) → build.
 #
 # La suite corre SIN coverage, SIN shards y SIN retries globales: sin `--shard`
 # `vitest.config.ts` incluye también los guardrails de arquitectura
 # (architecture.test.ts, architecture-baseline.test.ts, audit-report,
 # audit-casts-classifier), así que se ejecutan exactamente una vez.
 #
-# El workflow SIEMPRE arranca (sin paths-ignore) para que el required check
+# El workflow SIEMPRE arranca (sin paths-ignore) para que el check
 # "CI Success (aggregator)" nunca quede pending; los pasos irrelevantes se
 # omiten explícitamente según el área tocada por el diff.
 
@@ -28,7 +29,8 @@ concurrency:
 
 jobs:
   ci-success:
-    # Nombre visible estable: es el required check en branch protection.
+    # Nombre visible conservado por compatibilidad con los checks previos
+    # (este repo no tiene branch protection ni rulesets configurados).
     name: CI Success (aggregator)
     runs-on: ubuntu-24.04
     # Suite completa en un solo runner. 30 min es el margen inicial; se ajusta
@@ -51,7 +53,7 @@ jobs:
       # Filtro por áreas DENTRO del mismo job (sin detector externo, sin cron).
       # - pull_request: base.sha vs HEAD.
       # - push a main:  github.event.before vs github.sha (todos los commits).
-      # - dispatch / diff ausente: se corre TODO (fallback seguro).
+      # - dispatch / diff ausente o `git diff` fallido: se corre TODO.
       - name: Detectar áreas cambiadas
         id: areas
         env:
@@ -69,26 +71,43 @@ jobs:
           diff=""
           if [ -n "$base" ] && [ "$base" != "0000000000000000000000000000000000000000" ] \
             && git cat-file -e "$base^{commit}" 2>/dev/null; then
-            diff="$(git diff --name-only "$base" "$HEAD_SHA")"
+            # El estado de `git diff` se captura explícitamente: con `set -e` del
+            # shell de Actions una asignación fallida abortaría antes del fallback.
+            if salida="$(git diff --name-only "$base" "$HEAD_SHA")"; then
+              diff="$salida"
+            else
+              echo "git diff falló: se ejecuta TODO."
+            fi
           fi
           if [ -z "$diff" ]; then
             echo "Sin diff utilizable ($EVENT_NAME): se ejecuta TODO."
-            echo "frontend=true" >> "$GITHUB_OUTPUT"
-            echo "edge=true" >> "$GITHUB_OUTPUT"
+            {
+              echo "frontend=true"
+              echo "edge=true"
+              echo "database=true"
+            } >> "$GITHUB_OUTPUT"
             exit 0
           fi
           echo "$diff"
           frontend=false
           edge=false
+          database=false
+          # here-string en vez de `printf | grep -q`: sin SIGPIPE con diffs grandes.
           # Cualquier cambio fuera de docs/markdown toca el camino de app.
-          if printf '%s\n' "$diff" | grep -qvE '^(docs/|\.github/ISSUE_TEMPLATE/)|\.md$'; then
+          if grep -qvE '^(docs/|\.github/ISSUE_TEMPLATE/)|\.md$' <<<"$diff"; then
             frontend=true
           fi
-          if printf '%s\n' "$diff" | grep -qE '^supabase/functions/|^\.github/workflows/ci\.yml$'; then
+          if grep -qE '^supabase/functions/|^deno\.(json|jsonc|lock)$|^\.github/workflows/ci\.yml$|^\.github/actions/setup-bun/' <<<"$diff"; then
             edge=true
           fi
-          echo "frontend=$frontend" >> "$GITHUB_OUTPUT"
-          echo "edge=$edge" >> "$GITHUB_OUTPUT"
+          if grep -qE '^supabase/(migrations|schema|tests|releases)/|^scripts/audit-|^scripts/lib/|^src/constants/appVersion\.ts$|^package\.json$|^bun\.lock$|^\.github/workflows/ci\.yml$|^\.github/actions/setup-bun/' <<<"$diff"; then
+            database=true
+          fi
+          {
+            echo "frontend=$frontend"
+            echo "edge=$edge"
+            echo "database=$database"
+          } >> "$GITHUB_OUTPUT"
 
       # `react-compiler` cuenta warnings como errores: fail-fast real.
       - name: ESLint (max-warnings 0)
@@ -104,11 +123,26 @@ jobs:
         if: steps.areas.outputs.frontend == 'true'
         run: bun run test
 
+      # Guard estático de BD: sólo cuando el diff toca migraciones/schema/tests/
+      # releases, los scripts de auditoría, appVersion, dependencias o este CI.
+      # Bloqueante; sin audit:all, sin reports, sin duplicar audits de frontend
+      # (ésos ya corren dentro de Vitest).
+      - name: Auditorías estáticas de BD (bloqueantes)
+        if: steps.areas.outputs.database == 'true'
+        run: |
+          bun run audit:manifest
+          bun run audit:schema
+          bun run audit:schema-functions
+          bun run audit:migrations
+          bun run audit:replay-mirror
+          bun run audit:rpc-sync
+
       - name: Build (sin ANALYZE)
         if: steps.areas.outputs.frontend == 'true'
         env:
           ANALYZE: "false"
         run: bun run build
+
 
       # Edge Functions: sólo si cambia supabase/functions o este workflow.
       - name: Setup Deno

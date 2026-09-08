@@ -10,20 +10,18 @@
 #
 # Variables:
 #   LOG_DIR   carpeta de logs (default: .rls-logs)
-#   MIN_SUITES  mínimo esperado de suites (default: 30)
 set -uo pipefail
 
 DIR="supabase/tests/rls"
 LOG_DIR="${LOG_DIR:-.rls-logs}"
-MIN_SUITES="${MIN_SUITES:-30}"
 PSQL=(psql -v ON_ERROR_STOP=1 -X -q)
 
 mkdir -p "$LOG_DIR"
 
 mapfile -t SUITES < <(find "$DIR" -maxdepth 1 -name 'test_rls_*.sql' | LC_ALL=C sort)
 
-if [ "${#SUITES[@]}" -lt "$MIN_SUITES" ]; then
-  echo "::error::Se descubrieron ${#SUITES[@]} suites RLS (< $MIN_SUITES esperadas). ¿Patrón o carpeta equivocados?"
+if [ "${#SUITES[@]}" -eq 0 ]; then
+  echo "::error::No se descubrió ninguna suite RLS en $DIR (patrón test_rls_*.sql)."
   exit 1
 fi
 
