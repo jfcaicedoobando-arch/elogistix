@@ -19,7 +19,7 @@ describe("useCostosPreciosCalc", () => {
           { monto: 100, moneda: "USD" },
           { monto: 50.5, moneda: "USD" },
         ],
-        [{ precioUnitario: 200, moneda: "USD" }],
+        [{ cantidad: 1, precioUnitario: 200, moneda: "USD" }],
         18.5,
         20.1,
       ),
@@ -70,5 +70,27 @@ describe("useCostosPreciosCalc", () => {
     const { result } = renderHook(() => useCostosPreciosCalc([], [], 18.5, 20));
     expect(result.current.costoCalc.total).toBe(0);
     expect(result.current.ventaCalc.total).toBe(0);
+  });
+
+  it("R219-UI-01: la venta multiplica cantidad × precio unitario", () => {
+    const { result } = renderHook(() =>
+      useCostosPreciosCalc(
+        [{ monto: 1030, moneda: "USD" }, { monto: 1030, moneda: "USD" }],
+        [{ cantidad: 2, precioUnitario: 1184.5, moneda: "USD" }],
+        16.9237,
+        20,
+      ),
+    );
+    expect(result.current.ventaCalc.total).toBeCloseTo(2369, 2);
+    expect(result.current.costoCalc.total).toBeCloseTo(2060, 2);
+    // Utilidad visible = venta − costo (antes salía negativa por ignorar cantidad).
+    expect(result.current.ventaCalc.total - result.current.costoCalc.total).toBeCloseTo(309, 2);
+  });
+
+  it("cantidad ausente equivale a 1", () => {
+    const { result } = renderHook(() =>
+      useCostosPreciosCalc([], [{ precioUnitario: 1184.5, moneda: "USD" }], 18.5, 20),
+    );
+    expect(result.current.ventaCalc.total).toBeCloseTo(1184.5, 2);
   });
 });
