@@ -2906,6 +2906,7 @@ BEGIN
         CASE
           -- Ola 4 · N10 (guard B-033): preservar Borrador.
           WHEN e.estado = 'Borrador' THEN 'Borrador'
+          WHEN e.estado::text = 'Cancelado' THEN 'Cancelado'
           WHEN e.estado IN ('Arribo','En Aduana','Entregado','EIR','Por liquidar','Cerrado') THEN e.estado::text
           WHEN e.modo = 'Marítimo' AND e.tipo = 'Importación' AND e.etd IS NOT NULL AND e.eta IS NOT NULL THEN
             CASE
@@ -3137,6 +3138,7 @@ BEGIN
         e.tipo_cambio_eur,
         CASE
           WHEN e.estado = 'Borrador' THEN 'Borrador'
+          WHEN e.estado::text = 'Cancelado' THEN 'Cancelado'
           WHEN e.estado IN ('Arribo','En Aduana','Entregado','EIR','Por liquidar','Cerrado') THEN e.estado::text
           WHEN e.modo = 'Marítimo' AND e.tipo = 'Importación' AND e.etd IS NOT NULL AND e.eta IS NOT NULL THEN
             CASE
@@ -14306,7 +14308,8 @@ BEGIN
       CASE
         -- B-033 (v13.320.42): preservar Borrador para que no se cuente como Confirmado.
         WHEN e.estado = 'Borrador' THEN 'Borrador'
-        WHEN e.estado IN ('Arribo','En Aduana','Entregado','EIR','Por liquidar','Cerrado') THEN e.estado::text
+        WHEN e.estado::text = 'Cancelado' THEN 'Cancelado'
+          WHEN e.estado IN ('Arribo','En Aduana','Entregado','EIR','Por liquidar','Cerrado') THEN e.estado::text
         WHEN e.modo = 'Marítimo' AND e.tipo = 'Importación' AND e.etd IS NOT NULL AND e.eta IS NOT NULL THEN
           CASE
             WHEN v_hoy < e.etd THEN 'Confirmado'
@@ -16479,6 +16482,8 @@ CREATE FUNCTION public.embarques_alertas_ids() RETURNS TABLE(embarque_id uuid, t
   SELECT e.id, 'demora'::text AS tipo
   FROM embarques e
   WHERE e.deleted_at IS NULL
+    -- R220: Cancelado/Borrador nunca son demora.
+    AND e.estado::text NOT IN ('Cancelado','Borrador')
     AND e.eta IS NOT NULL
     AND (current_date - e.eta) >= 7
     AND CASE
@@ -20447,7 +20452,8 @@ BEGIN
         -- Ola 4 · N10 (guard B-033): preservar Borrador para que no se
         -- cuente como Confirmado por derivación ETD/ETA.
         WHEN e.estado = 'Borrador' THEN 'Borrador'
-        WHEN e.estado IN ('Arribo','En Aduana','Entregado','EIR','Por liquidar','Cerrado') THEN e.estado::text
+        WHEN e.estado::text = 'Cancelado' THEN 'Cancelado'
+          WHEN e.estado IN ('Arribo','En Aduana','Entregado','EIR','Por liquidar','Cerrado') THEN e.estado::text
         WHEN e.modo = 'Marítimo' AND e.tipo = 'Importación'
              AND e.etd IS NOT NULL AND e.eta IS NOT NULL THEN
           CASE
@@ -26842,6 +26848,8 @@ CREATE FUNCTION public.sidebar_alert_counts() RETURNS TABLE(embarques_demora big
     (SELECT count(*) FROM embarques e
      WHERE e.eta IS NOT NULL
        AND e.deleted_at IS NULL
+       -- R220: Cancelado/Borrador nunca son demora.
+       AND e.estado::text NOT IN ('Cancelado','Borrador')
        AND (current_date - e.eta) >= 7
        AND CASE
          WHEN e.estado IN ('Arribo','En Aduana','Entregado','EIR','Por liquidar','Cerrado') THEN e.estado::text
