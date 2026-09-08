@@ -113,7 +113,7 @@ export const EMPTY_LEAD_ICP_FORM: LeadIcpForm = {
 
 export const LEAD_ICP_KEYS = Object.keys(EMPTY_LEAD_ICP_FORM) as (keyof LeadIcpForm)[];
 
-/** Fuente persistida: cualquier objeto con las llaves ICP en versión nullable. */
+/** Origen persistido: cualquier objeto con las llaves ICP en versión nullable. */
 export type LeadIcpSource = Partial<Record<keyof LeadIcpForm, string | number | null>>;
 
 /** Normaliza la fila de BD al formulario (nulls → ""). */

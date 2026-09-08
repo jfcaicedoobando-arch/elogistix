@@ -21,7 +21,7 @@ interface FiltrableBuilder<T> {
 /**
  * Aplica búsqueda, etapa (`estadoIn`), estado, fuente y orden.
  *
- * Fuente ÚNICA para el listado paginado y la exportación completa: si la
+ * Origen único para el listado paginado y la exportación completa: si la
  * exportación repitiera los filtros a mano acabaría divergiendo del listado.
  */
 function aplicarFiltrosLeads<T extends FiltrableBuilder<T>>(builder: T, filtros: LeadFiltros): T {

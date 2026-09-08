@@ -1,7 +1,7 @@
 /**
  * Alta rápida de lead: el usuario captura un solo campo "Correo o teléfono".
  *
- * Fuente única de la clasificación hacia las columnas canónicas de
+ * Origen único de la clasificación hacia las columnas canónicas de
  * `public.crm_leads` (`email` / `telefono`), para que la ficha (`LeadDatosCard`)
  * y el encabezado muestren siempre el mismo dato que se persistió.
  */

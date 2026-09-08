@@ -1,5 +1,5 @@
 /**
- * Fuente canónica del formulario de edición de un lead.
+ * Origen canónico del formulario de edición de un lead.
  *
  * `toLeadEditForm` es la ÚNICA traducción fila de BD → formulario, para que el
  * encabezado (mailto/tel) y los inputs muestren siempre el mismo dato. El patch
