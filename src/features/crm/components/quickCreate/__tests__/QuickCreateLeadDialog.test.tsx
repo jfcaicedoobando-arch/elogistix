@@ -147,8 +147,11 @@ describe("QuickCreateLeadDialog", () => {
     expect(screen.queryByText("Indica la empresa para continuar.")).not.toBeInTheDocument();
     expect(screen.getByLabelText(/Empresa/i)).toHaveAttribute("aria-invalid", "false");
 
-    // El error vuelve a aparecer sólo tras nueva interacción (blur/submit).
-    fireEvent.blur(screen.getByLabelText(/Empresa/i));
+    // El error vuelve a aparecer sólo tras nueva interacción real del usuario.
+    const reabierto = screen.getByLabelText(/Empresa/i);
+    fireEvent.change(reabierto, { target: { value: "N" } });
+    fireEvent.change(reabierto, { target: { value: "" } });
+    fireEvent.blur(reabierto);
     await waitFor(() => {
       expect(screen.getByText("Indica la empresa para continuar.")).toBeInTheDocument();
     });
