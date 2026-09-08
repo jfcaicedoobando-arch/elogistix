@@ -21696,7 +21696,7 @@ BEGIN
      AND deleted_at IS NULL;
 END;
 $$;
-CREATE FUNCTION public.profit_por_cliente(_fecha_desde date DEFAULT NULL::date, _fecha_hasta date DEFAULT NULL::date, _modo text DEFAULT NULL::text) RETURNS TABLE(cliente_id uuid, cliente_nombre text, total_embarques bigint, venta_usd numeric, costo_usd numeric, venta_mxn numeric, costo_mxn numeric, embarques_sin_tc bigint)
+CREATE FUNCTION public.profit_por_cliente(_fecha_desde date DEFAULT NULL::date, _fecha_hasta date DEFAULT NULL::date, _modo text DEFAULT NULL::text, _cliente_id uuid DEFAULT NULL::uuid) RETURNS TABLE(cliente_id uuid, cliente_nombre text, total_embarques bigint, venta_usd numeric, costo_usd numeric, venta_mxn numeric, costo_mxn numeric, embarques_sin_tc bigint)
     LANGUAGE sql STABLE SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -21718,6 +21718,7 @@ CREATE FUNCTION public.profit_por_cliente(_fecha_desde date DEFAULT NULL::date, 
       AND (_fecha_desde IS NULL OR e.eta >= _fecha_desde)
       AND (_fecha_hasta IS NULL OR e.eta <= _fecha_hasta)
       AND (_modo IS NULL OR e.modo::text = _modo)
+      AND (_cliente_id IS NULL OR e.cliente_id = _cliente_id)
       AND (e.organization_id = public.org_scope())
   ),
   ventas AS (
@@ -33896,9 +33897,9 @@ GRANT ALL ON FUNCTION public.portal_solicitar_cotizacion(p_cliente_id uuid, p_mo
 REVOKE ALL ON FUNCTION public.portal_update_contacto(_nombre text, _telefono text) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.portal_update_contacto(_nombre text, _telefono text) TO authenticated;
 GRANT ALL ON FUNCTION public.portal_update_contacto(_nombre text, _telefono text) TO service_role;
-REVOKE ALL ON FUNCTION public.profit_por_cliente(_fecha_desde date, _fecha_hasta date, _modo text) FROM PUBLIC;
-GRANT ALL ON FUNCTION public.profit_por_cliente(_fecha_desde date, _fecha_hasta date, _modo text) TO authenticated;
-GRANT ALL ON FUNCTION public.profit_por_cliente(_fecha_desde date, _fecha_hasta date, _modo text) TO service_role;
+REVOKE ALL ON FUNCTION public.profit_por_cliente(_fecha_desde date, _fecha_hasta date, _modo text, _cliente_id uuid) FROM PUBLIC;
+GRANT ALL ON FUNCTION public.profit_por_cliente(_fecha_desde date, _fecha_hasta date, _modo text, _cliente_id uuid) TO authenticated;
+GRANT ALL ON FUNCTION public.profit_por_cliente(_fecha_desde date, _fecha_hasta date, _modo text, _cliente_id uuid) TO service_role;
 REVOKE ALL ON FUNCTION public.profit_por_embarque() FROM PUBLIC;
 GRANT ALL ON FUNCTION public.profit_por_embarque() TO authenticated;
 GRANT ALL ON FUNCTION public.profit_por_embarque() TO service_role;
