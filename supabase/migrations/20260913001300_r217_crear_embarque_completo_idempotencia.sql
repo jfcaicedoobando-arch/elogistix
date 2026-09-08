@@ -1,6 +1,7 @@
--- Fuente canónica. Espejo 1:1 de la migración v13.823.32 (ola de pulido CxP/cotización→embarque/CRM).
--- Al modificar: edita ESTE archivo y genera la migración con el mismo cuerpo.
-
+-- R217 — Idempotencia de negocio en `crear_embarque_completo`: el claim de
+-- idempotencia se evalúa ANTES de `_assert_cotizacion_convertible`, para que un
+-- reintento con el mismo p_request_id devuelva la respuesta cacheada en lugar de
+-- LC_COT_YA_TIENE_EMBARQUE. Sin cambios de firma, ACL, RLS, triggers ni datos.
 CREATE OR REPLACE FUNCTION public.crear_embarque_completo(p_embarque jsonb, p_conceptos_venta jsonb DEFAULT '[]'::jsonb, p_conceptos_costo jsonb DEFAULT '[]'::jsonb, p_documentos jsonb DEFAULT '[]'::jsonb, p_request_id uuid DEFAULT NULL::uuid, p_contenedores jsonb DEFAULT '[]'::jsonb)
 RETURNS jsonb
 LANGUAGE plpgsql
@@ -115,3 +116,6 @@ BEGIN
   RETURN v_resp;
 END;
 $$;
+
+REVOKE ALL ON FUNCTION public.crear_embarque_completo(jsonb, jsonb, jsonb, jsonb, uuid, jsonb) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.crear_embarque_completo(jsonb, jsonb, jsonb, jsonb, uuid, jsonb) TO authenticated, service_role;
