@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.823.210] - 2026-09-08
+
+Fix de lint post-remate R201.
+
+- Extraídos avisos de `StepCostosPrecios` a `StepCostosPreciosAlerts` para bajar la complejidad ciclomática por debajo del límite.
+- Agregada dependencia faltante `setConceptosCosto` en `useNuevoEmbarqueCotVinculada`. Sin cambios de comportamiento.
+
 ## [13.823.209] - 2026-09-08
 
 Candado CI service_role-only sincronizado.
