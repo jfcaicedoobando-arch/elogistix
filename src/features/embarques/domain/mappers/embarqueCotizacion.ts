@@ -128,6 +128,13 @@ export function buildRutaUpdates(cot: CotizacionParaVincular): FieldUpdate[] {
 export function buildOpcionalUpdates(cot: CotizacionParaVincular): FieldUpdate[] {
   const updates: FieldUpdate[] = [];
   if (cot.msds_archivo) updates.push(["msdsArchivo", cot.msds_archivo]);
+  // R215-COT-02: el servicio marítimo (FCL/LCL) ya viene decidido en la
+  // cotización (`tipo_embarque`). Sin sembrarlo, el paso 2 quedaba en el
+  // placeholder "FCL / LCL" y bloqueaba la validación.
+  if (esModoMaritimo(cot.modo)) {
+    if (esFCL(cot)) updates.push(["tipoServicio", "FCL"]);
+    else if (esLCL(cot)) updates.push(["tipoServicio", "LCL"]);
+  }
   const contenedores = buildContenedoresPlaceholder(cot);
   if (contenedores.length > 0) updates.push(["contenedores", contenedores]);
   return updates;

@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.823.216] - 2026-09-08
+
+- **fix(cotizaciones)**: R215-COT-01 — el diálogo "Cotización guardada" ya no ofrece "Crear embarque" para una cotización recién creada (no aceptada); muestra "Ver cotización y aceptar". Además, la hidratación del asistente de embarque valida el estado del vínculo (`Aceptada` / `En operación`) antes de capturar los 4 pasos y regresa al detalle con explicación. El guard del backend se conserva.
+- **fix(embarques)**: R215-COT-02 — el paso 2 hereda el servicio marítimo (FCL/LCL) desde `tipo_embarque` de la cotización y sincroniza el nombre de naviera/agente desde el catálogo cuando sólo se guardó el id, sin marcar edición manual. Ya no pide re-seleccionar naviera ni servicio.
+
 ## [13.823.215] - 2026-09-08
 
 - **chore(db)**: sincronizado `supabase/releases/migration-manifest.json` con los dos archivos realmente generados al aplicar el bloque R201 en el ERP. Mapeo de origen → archivo aplicado y registrado en `supabase_migrations.schema_migrations`:

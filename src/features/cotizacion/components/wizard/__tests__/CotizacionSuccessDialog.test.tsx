@@ -15,6 +15,8 @@ function setup(overrides: Partial<React.ComponentProps<typeof CotizacionSuccessD
     onDuplicar: vi.fn(),
     onIrAlListado: vi.fn(),
     onVerDetalle: vi.fn(),
+    // R215-COT-01: los casos base asumen una cotización ya Aceptada.
+    estado: "Aceptada" as string | null,
     ...overrides,
   };
   render(<CotizacionSuccessDialog {...props} />);
@@ -50,5 +52,21 @@ describe("CotizacionSuccessDialog", () => {
   it("no renderiza el contenido cuando open=false", () => {
     setup({ open: false });
     expect(screen.queryByText(/¿Qué sigue\?/)).not.toBeInTheDocument();
+  });
+});
+
+describe("CotizacionSuccessDialog — estado (R215-COT-01)", () => {
+  it("en Borrador no ofrece 'Crear embarque' sino 'Ver cotización y aceptar'", () => {
+    const props = setup({ estado: "Borrador" });
+    expect(screen.queryByRole("button", { name: /Crear embarque/i })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /Ver cotización y aceptar/i }));
+    expect(props.onVerDetalle).toHaveBeenCalledTimes(1);
+    expect(props.onCrearEmbarque).not.toHaveBeenCalled();
+  });
+
+  it("en Aceptada ofrece 'Crear embarque'", () => {
+    const props = setup({ estado: "Aceptada" });
+    fireEvent.click(screen.getByRole("button", { name: /Crear embarque/i }));
+    expect(props.onCrearEmbarque).toHaveBeenCalledTimes(1);
   });
 });

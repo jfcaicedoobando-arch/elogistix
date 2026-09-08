@@ -25,14 +25,22 @@ interface Props {
   onVerDetalle: () => void;
   /** P2 (v13.295.0) — opcional; si se pasa, muestra "Guardar como plantilla". */
   onGuardarComoPlantilla?: () => void;
+  /**
+   * R215-COT-01: estado real de la cotización guardada. Sólo `Aceptada` (o
+   * `En operación`) puede iniciar la conversión a embarque; en Borrador el
+   * backend la rechaza al final del asistente, así que ni se ofrece.
+   */
+  estado?: string | null;
 }
 
+const ESTADOS_CONVERTIBLES = ["Aceptada", "En operación"];
 
 export function CotizacionSuccessDialog({
   open, onOpenChange, folio,
   onEnviarProforma, onDuplicar, onCrearEmbarque, onIrAlListado, onVerDetalle,
-  onGuardarComoPlantilla,
+  onGuardarComoPlantilla, estado,
 }: Props) {
+  const puedeCrearEmbarque = ESTADOS_CONVERTIBLES.includes(String(estado ?? ""));
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className={dialogSize.md}>
@@ -50,9 +58,15 @@ export function CotizacionSuccessDialog({
           <Button variant="default" onClick={onEnviarProforma} className="justify-start">
             <Send className="h-4 w-4 mr-2" /> Enviar proforma
           </Button>
-          <Button variant="outline" onClick={onCrearEmbarque} className="justify-start">
-            <Truck className="h-4 w-4 mr-2" /> Crear embarque
-          </Button>
+          {puedeCrearEmbarque ? (
+            <Button variant="outline" onClick={onCrearEmbarque} className="justify-start">
+              <Truck className="h-4 w-4 mr-2" /> Crear embarque
+            </Button>
+          ) : (
+            <Button variant="outline" onClick={onVerDetalle} className="justify-start">
+              <Truck className="h-4 w-4 mr-2" /> Ver cotización y aceptar
+            </Button>
+          )}
           <Button variant="outline" onClick={onDuplicar} className="justify-start">
             <Copy className="h-4 w-4 mr-2" /> Duplicar
           </Button>
@@ -60,6 +74,12 @@ export function CotizacionSuccessDialog({
             <List className="h-4 w-4 mr-2" /> Ver listado
           </Button>
         </div>
+
+        {!puedeCrearEmbarque && (
+          <p className="pt-1 text-center text-label text-muted-foreground">
+            El embarque se genera cuando el cliente acepta la cotización.
+          </p>
+        )}
 
         {onGuardarComoPlantilla && (
           <div className="pt-1">
