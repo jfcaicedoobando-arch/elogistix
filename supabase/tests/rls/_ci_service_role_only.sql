@@ -116,6 +116,9 @@ INSERT INTO _ci_service_role_only (fn) VALUES
   ('public.crm_backfill_cotizaciones_sin_oportunidad()'),
   ('public.cron_try_lock(text, integer, text)'),
   ('public.cron_unlock(text)'),
+  -- Core interno del borrador de embarque (R201): sólo lo llaman los wrappers
+  -- DEFINER (crear_embarque_borrador / ..._desde_cotizacion).
+  ('public.crear_embarque_borrador_core(uuid)'),
   ('public.dashboard_details_datos()'),
   ('public.dashboard_summary_datos()'),
   ('public.email_send_log_touch(text, text, text, text, text)'),
