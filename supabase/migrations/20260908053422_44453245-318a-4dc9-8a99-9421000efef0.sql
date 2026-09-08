@@ -1,7 +1,3 @@
--- Fuente canónica de public.crear_embarque_borrador_core
--- Regenerada desde DB. Cada cambio DEBE actualizarse aquí en el mismo PR que la migración correspondiente.
--- Ver supabase/schema/README.md.
-
 CREATE OR REPLACE FUNCTION public.crear_embarque_borrador_core(p_cotizacion_id uuid)
  RETURNS uuid
  LANGUAGE plpgsql
@@ -79,24 +75,18 @@ BEGIN
   END IF;
 
   SELECT id INTO v_orphan_id
-  FROM public.embarques
-  WHERE cotizacion_id = v_cot.id AND deleted_at IS NULL
-  ORDER BY created_at ASC
-  LIMIT 1;
+    FROM public.embarques
+   WHERE cotizacion_id = v_cot.id
+     AND deleted_at IS NULL
+   ORDER BY created_at
+   LIMIT 1;
   IF v_orphan_id IS NOT NULL THEN
+    UPDATE public.cotizaciones SET embarque_id = v_orphan_id, updated_at = now() WHERE id = v_cot.id;
     RETURN v_orphan_id;
   END IF;
 
-  v_origen_code := COALESCE(
-    NULLIF(substring(v_cot.origen  FROM '\(([^)]+)\)'), ''),
-    NULLIF(trim(v_cot.origen),  ''),
-    NULL
-  );
-  v_destino_code := COALESCE(
-    NULLIF(substring(v_cot.destino FROM '\(([^)]+)\)'), ''),
-    NULLIF(trim(v_cot.destino), ''),
-    NULL
-  );
+  v_origen_code  := NULLIF(btrim(v_cot.origen), '');
+  v_destino_code := NULLIF(btrim(v_cot.destino), '');
 
   IF v_origen_code IS NOT NULL THEN
     SELECT p.name INTO v_puerto_o FROM public.puertos p WHERE p.code = v_origen_code LIMIT 1;
@@ -119,8 +109,6 @@ BEGIN
   END IF;
 
   -- v13.320.4: usar columna real cotizaciones.tipo_contenedor (text).
-  -- La versión viva anterior referenciaba una columna fantasma con sufijo _id que
-  -- nunca existió en la tabla y hacía fallar toda la revalidación de tarifa.
   v_tipo_cont_code := v_cot.tipo_contenedor;
   IF v_tipo_cont_code IS NOT NULL AND v_tipo_cont_code ~ '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$' THEN
     SELECT code INTO v_tipo_cont_code FROM public.tipos_contenedor WHERE id = v_cot.tipo_contenedor::uuid;
@@ -216,25 +204,26 @@ BEGIN
     v_cot.id, v_embarque_id, v_cot.organization_id, v_target_ids, v_cot.conceptos_venta
   );
 
+  PERFORM public._recompute_totales_embarque(v_embarque_id);
+
   UPDATE public.cotizaciones
-  SET embarque_id = v_embarque_id, estado = 'En operación'::estado_cotizacion, updated_at = now()
-  WHERE id = v_cot.id;
+     SET embarque_id = v_embarque_id,
+         estado = 'En operación'::estado_cotizacion,
+         updated_at = now()
+   WHERE id = v_cot.id;
 
   SELECT email INTO v_user_email FROM auth.users WHERE id = auth.uid();
-  INSERT INTO public.bitacora_actividad (organization_id, usuario_id, usuario_email, modulo, accion, entidad_id, entidad_nombre, detalles)
-  VALUES (v_cot.organization_id, auth.uid(), COALESCE(v_user_email, ''),
-          'Cotizaciones', 'Borrador de embarque creado', v_cot.id, v_cot.folio,
-          jsonb_build_object('embarque_id', v_embarque_id, 'expediente', NULL));
 
-  INSERT INTO public.notificaciones_internas (organization_id, usuario_id, tipo, titulo, mensaje, enlace)
-  SELECT v_cot.organization_id, om.user_id, 'cotizacion_borrador_embarque',
-         'Borrador de embarque creado',
-         'Se generó un borrador de embarque desde la cotización ' || v_cot.folio,
-         '/embarques/' || v_embarque_id::text
-  FROM public.organization_members om
-  WHERE om.organization_id = v_cot.organization_id
-    AND om.role IN ('admin'::app_role, 'operador'::app_role)
-    AND om.user_id <> auth.uid();
+  INSERT INTO public.bitacora_actividad (
+    organization_id, usuario_id, usuario_email, modulo, accion,
+    entidad_id, entidad_nombre, detalles
+  ) VALUES (
+    v_cot.organization_id, auth.uid(), COALESCE(v_user_email, ''),
+    'Embarques', 'borrador_desde_cotizacion', v_embarque_id, v_cot.folio,
+    jsonb_build_object('cotizacion_id', v_cot.id, 'contenedores', v_num,
+                       'primer_contenedor', v_first_hijo_id,
+                       'tipo_servicio', v_tipo_servicio)
+  );
 
   RETURN v_embarque_id;
 END;
