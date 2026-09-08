@@ -5,11 +5,11 @@
 #   3) replay ORDENADO de todas las migraciones NO incluidas en el squash
 #
 # Extraído del YAML para no repetir el `sed` de stubbing de extensiones tres
-# veces. No cambia el comportamiento: mismos archivos, mismo orden, mismos
+# veces. No cambia el SQL: mismos archivos, mismo orden, mismos
 # --single-transaction y ON_ERROR_STOP.
 #
 # Requiere las variables PG* del entorno (PGHOST/PGUSER/…).
-set -uo pipefail
+set -euo pipefail
 
 PSQL=(psql -v ON_ERROR_STOP=1 -X -q)
 CUTOFF_ENV="supabase/schema/squash/cutoff.env"
@@ -22,20 +22,29 @@ stub_extensiones() {
     "$1"
 }
 
-echo "▶ Bootstrap (stubs auth/storage/cron/net/pgmq)"
-"${PSQL[@]}" -f supabase/tests/rls/_ci_bootstrap.sql || exit 1
+# Falla claro si un archivo requerido falta, no es legible o quedó vacío.
+requerir_archivo() {
+  if [ ! -r "$1" ] || [ ! -s "$1" ]; then
+    echo "::error::$1 no existe, no es legible o está vacío ($2)"
+    exit 1
+  fi
+}
 
-if [ ! -f "$CUTOFF_ENV" ]; then
-  echo "::error::No existe $CUTOFF_ENV (corte del squash)"
-  exit 1
-fi
-# Sólo asignaciones simples del archivo de corte (SQUASH_FILE, SQUASH_INCLUDED…).
+echo "▶ Bootstrap (stubs auth/storage/cron/net/pgmq)"
+"${PSQL[@]}" -f supabase/tests/rls/_ci_bootstrap.sql
+
+requerir_archivo "$CUTOFF_ENV" "corte del squash"
+# Archivo del repo con asignaciones conocidas: SQUASH_FILE y SQUASH_INCLUDED.
+# shellcheck source=supabase/schema/squash/cutoff.env
 set -a
-eval "$(grep -E '^[A-Za-z_][A-Za-z0-9_]*=' "$CUTOFF_ENV")"
+. "$CUTOFF_ENV"
 set +a
 
+requerir_archivo "${SQUASH_FILE:-}" "baseline squash"
+requerir_archivo "${SQUASH_INCLUDED:-}" "inventario incluido en el squash"
+
 echo "▶ Baseline squash: $SQUASH_FILE"
-stub_extensiones "$SQUASH_FILE" | "${PSQL[@]}" --single-transaction || exit 1
+stub_extensiones "$SQUASH_FILE" | "${PSQL[@]}" --single-transaction
 
 echo "▶ Replay de migraciones posteriores al squash"
 shopt -s nullglob
