@@ -12,6 +12,7 @@ export const facturacion = {
   bandejaPorTimbrar: (organizationId?: string | null) => ['facturacion', 'bandeja', 'por-timbrar', organizationId] as const,
   
   bandejaRepPendientes: (organizationId?: string | null) => ['facturacion', 'bandeja', 'rep-pendientes', organizationId] as const,
+  bandejaRepsHistorico: (organizationId?: string | null) => ['facturacion', 'bandeja', 'reps-historico', organizationId] as const,
   bandejaConteos: (organizationId?: string | null) => ['facturacion', 'bandeja', 'conteos', organizationId] as const,
   bandejaProformasListas: (organizationId?: string | null) => ['facturacion', 'bandeja', 'proformas-listas', organizationId] as const,
   bandejaProformasListasCount: (organizationId?: string | null) =>
