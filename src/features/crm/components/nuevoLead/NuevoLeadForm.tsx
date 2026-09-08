@@ -33,9 +33,11 @@ interface Props {
   setAutoActividad: (v: boolean) => void;
   /** Mensaje inline cuando el correo capturado no tiene forma válida. */
   emailError?: string;
+  /** Mensaje inline cuando se intentó guardar sin empresa (VIS-20260908-04). */
+  empresaError?: string;
 }
 
-export function NuevoLeadForm({ form, setForm, autoActividad, setAutoActividad, emailError }: Props) {
+export function NuevoLeadForm({ form, setForm, autoActividad, setAutoActividad, emailError, empresaError }: Props) {
   const set = <K extends keyof LeadFormState>(k: K, v: LeadFormState[K]) =>
     setForm((f) => ({ ...f, [k]: v }));
 
@@ -43,7 +45,19 @@ export function NuevoLeadForm({ form, setForm, autoActividad, setAutoActividad, 
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
       <div className="sm:col-span-2 space-y-1">
         <Label htmlFor="nuevo-lead-empresa">Empresa *</Label>
-        <Input id="nuevo-lead-empresa" value={form.empresa} onChange={(e) => set("empresa", e.target.value)} />
+        <Input
+          id="nuevo-lead-empresa"
+          value={form.empresa}
+          onChange={(e) => set("empresa", e.target.value)}
+          aria-required="true"
+          aria-invalid={Boolean(empresaError)}
+          aria-describedby={empresaError ? "nuevo-lead-empresa-error" : undefined}
+        />
+        {empresaError && (
+          <p id="nuevo-lead-empresa-error" role="alert" className={FIELD_ERROR_CLASS}>
+            {empresaError}
+          </p>
+        )}
       </div>
       <div className="space-y-1">
         <Label htmlFor="nuevo-lead-contacto">Contacto</Label>
