@@ -48,7 +48,7 @@ const BANDEJAS_VALIDAS: BandejaId[] = [
   "embarques-sin-factura", "proformas-listas",
   "por-timbrar",
   "por-cobrar", "vencidas", "rep-pendientes",
-  "emitidas", "notas",
+  "emitidas", "notas", "reps",
 ];
 
 export default function Facturacion() {
