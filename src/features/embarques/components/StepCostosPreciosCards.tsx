@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { FilaCostoPrecio } from "@/features/embarques/components/conceptos/FilaCostoPrecio";
 import { FilaVentaPrecio } from "@/features/embarques/components/conceptos/FilaVentaPrecio";
+import { subtotalVentaLinea } from "@/features/embarques/domain/subtotalVentaLinea";
 import type { ConceptoVentaLocal as ConceptoVentaRow, ConceptoCostoLocal as ConceptoCostoRow } from "@/types/concepto";
 
 interface Proveedor { id: string; nombre: string }
@@ -93,7 +94,7 @@ export function VentasCard(p: VentasCardProps) {
       <CardContent>
         <div className="space-y-3">
           <div className={`grid ${p.cols} gap-2 text-body-sm font-medium text-muted-foreground`}>
-            <span>Concepto</span><span>Cantidad</span><span>Subtotal (sin IVA)</span><span>Moneda</span>
+            <span>Concepto</span><span>Cantidad</span><span>Precio unitario (sin IVA)</span><span>Moneda</span>
             {p.showContenedorCol && <span>Contenedor</span>}
             <span>Total USD</span><span></span>
           </div>
@@ -101,7 +102,7 @@ export function VentasCard(p: VentasCardProps) {
             <FilaVentaPrecio
               key={venta.id}
               venta={venta}
-              totalUSD={p.toUSD(venta.precioUnitario, venta.moneda)}
+              totalUSD={p.toUSD(subtotalVentaLinea(venta.cantidad, venta.precioUnitario), venta.moneda)}
               esMixta={p.mixtoIdx.has(idx)}
               cols={p.cols}
               showContenedorCol={p.showContenedorCol}
