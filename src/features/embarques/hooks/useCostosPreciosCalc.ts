@@ -37,7 +37,7 @@ function calcular(items: Item[], tcUSD: number, tcEUR: number): CalcMoneda {
 
 export function useCostosPreciosCalc(
   conceptosCosto: Array<{ monto: number; moneda: string }>,
-  conceptosVenta: Array<{ precioUnitario: number; moneda: string }>,
+  conceptosVenta: Array<{ cantidad?: number; precioUnitario: number; moneda: string }>,
   tcUSD: number,
   tcEUR: number,
 ) {
@@ -47,7 +47,10 @@ export function useCostosPreciosCalc(
   }, [conceptosCosto, tcUSD, tcEUR]);
 
   const ventaCalc = useMemo<CalcMoneda>(() => {
-    const items: Item[] = conceptosVenta.map((v) => ({ monto: v.precioUnitario, moneda: v.moneda }));
+    const items: Item[] = conceptosVenta.map((v) => ({
+      monto: subtotalVentaLinea(v.cantidad, v.precioUnitario),
+      moneda: v.moneda,
+    }));
     return calcular(items, tcUSD, tcEUR);
   }, [conceptosVenta, tcUSD, tcEUR]);
 
