@@ -20,18 +20,44 @@ interface Deps {
   enabled: boolean;
 }
 
+/**
+ * Campos que la precarga escribe. Si el usuario ya tocó cualquiera de ellos
+ * (respuesta lenta del CRM), se abandona la precarga completa para no mezclar
+ * en silencio datos de la oportunidad con una captura distinta.
+ */
+const CAMPOS_PRECARGA = [
+  "clienteId",
+  "esProspecto",
+  "oportunidadId",
+  "leadId",
+  "prospectoEmpresa",
+  "prospectoContacto",
+  "prospectoEmail",
+  "prospectoTelefono",
+  "monedaCrm",
+  "modo",
+  "origen",
+  "destino",
+] as const;
+
 export function usePrefillProspectoOportunidad({ form, oportunidadId, enabled }: Deps) {
   const aplicado = useRef(false);
   const { data: match } = useCrmProspectoOportunidad(oportunidadId, enabled);
+  // Suscripción explícita al estado sucio: garantiza re-render (y por tanto
+  // reevaluación) cuando el usuario captura algo mientras el CRM responde.
+  const { isDirty } = form.formState;
 
   useEffect(() => {
     if (!enabled || aplicado.current || !match) return;
-    // Nunca reemplazamos un vínculo o destinatario ya capturado por el usuario.
+    // Nunca reemplazamos un vínculo o captura ya hecha por el usuario. Se
+    // consulta el estado vivo del formulario en el momento de aplicar.
     const v = form.getValues();
-    if (v.oportunidadId || v.leadId || v.clienteId) {
+    const tocado = CAMPOS_PRECARGA.some((c) => form.getFieldState(c).isDirty);
+    if (tocado || v.oportunidadId || v.leadId || v.clienteId) {
       aplicado.current = true;
       return;
     }
+
     const opts = { shouldDirty: true, shouldValidate: true } as const;
     form.setValue("esProspecto", true, opts);
     form.setValue("oportunidadId", match.id, opts);
@@ -53,6 +79,6 @@ export function usePrefillProspectoOportunidad({ form, oportunidadId, enabled }:
     if (match.destino) form.setValue("destino", match.destino, { shouldDirty: true });
     form.trigger(["oportunidadId", "prospectoEmpresa"]);
     aplicado.current = true;
-  }, [enabled, match, form]);
+  }, [enabled, match, form, isDirty]);
 }
 

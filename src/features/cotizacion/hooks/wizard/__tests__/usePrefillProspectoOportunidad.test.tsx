@@ -93,10 +93,41 @@ describe("usePrefillProspectoOportunidad", () => {
     expect(result.current.getValues("prospectoEmpresa")).toBe("");
   });
 
+  it("respuesta tardía del CRM no pisa captura manual de modo/ruta ni mezcla el vínculo", async () => {
+    // match aún pendiente (null): el usuario captura modo y ruta sin vínculo.
+    const { result, rerender } = renderPrefill();
+    result.current.setValue("modo", "Aéreo", { shouldDirty: true });
+    result.current.setValue("origen", "Veracruz", { shouldDirty: true });
+    result.current.setValue("destino", "Houston", { shouldDirty: true });
+    // Ahora llega la respuesta del CRM.
+    match.data = MATCH_COMPLETO;
+    rerender();
+    await waitFor(() => expect(result.current.getValues("modo")).toBe("Aéreo"));
+    const v = result.current.getValues();
+    expect(v.origen).toBe("Veracruz");
+    expect(v.destino).toBe("Houston");
+    // Sin mezcla silenciosa: no se escribe el vínculo ni el destinatario.
+    expect(v.oportunidadId).toBe("");
+    expect(v.leadId).toBe("");
+    expect(v.esProspecto).toBe(COTIZACION_FORM_DEFAULTS.esProspecto);
+    expect(v.prospectoEmpresa).toBe("");
+    expect(v.monedaCrm).toBe("");
+  });
+
+  it("entrada limpia con respuesta tardía: sí precarga todo", async () => {
+    const { result, rerender } = renderPrefill();
+    match.data = MATCH_COMPLETO;
+    rerender();
+    await waitFor(() => expect(result.current.getValues("oportunidadId")).toBe("op-1"));
+    expect(result.current.getValues("origen")).toBe("Shanghai");
+    expect(result.current.getValues("prospectoEmpresa")).toBe("Acme Logistics");
+  });
+
   it("sin oportunidad elegible (no elegible / sin permisos) no precarga nada", async () => {
     match.data = null;
     const { result } = renderPrefill();
     await waitFor(() => expect(result.current.getValues("oportunidadId")).toBe(""));
     expect(result.current.getValues("esProspecto")).toBe(COTIZACION_FORM_DEFAULTS.esProspecto);
   });
+
 });

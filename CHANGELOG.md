@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.823.231] - 2026-09-08
+- **fix(cotizaciones)**: si el CRM tarda en responder al entrar desde una oportunidad de prospecto, ya no se sobrescribe lo que el usuario haya empezado a capturar (modo, origen/destino, destinatario). En ese caso no se liga la oportunidad, para no mezclar dos capturas distintas; con formulario limpio la precarga sigue llegando completa aunque la respuesta sea lenta.
+
 ## [13.823.230] - 2026-09-08
 - **fix(crm/cotizaciones)**: al cotizar desde una oportunidad de prospecto, el cotizador abre con los datos reales que sí existen en el CRM: empresa, contacto, correo, teléfono, modo de transporte, origen/destino y moneda. Lo que el CRM no tiene se queda como estaba (no se inventa) y no se convierten importes.
 - **fix(cotizaciones)**: si había un borrador anterior y eliges "Descartar", ya se precarga la oportunidad con la que entraste. Si eliges "Restaurar", tu borrador se conserva completo y no se mezcla con el prospecto de la liga.
