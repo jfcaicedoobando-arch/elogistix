@@ -1,5 +1,14 @@
 # Changelog
 
+## [13.823.215] - 2026-09-08
+
+- **chore(db)**: sincronizado `supabase/releases/migration-manifest.json` con los dos archivos realmente generados al aplicar el bloque R201 en el ERP. Mapeo de origen → archivo aplicado y registrado en `supabase_migrations.schema_migrations`:
+  - `20260913001000_r201_cot_tarifa_msds_reaprobacion.sql` → `20260908042127_6f675da9-3c9e-4731-ba83-068f0e89420e.sql` (versión `20260908042127`).
+  - `20260913001100_r201_cot_remate_identidad_snapshot_hidratacion.sql` → `20260908042508_d9bb8ab1-b460-4bf4-af1e-ccb59ba9c7ff.sql` (versión `20260908042508`).
+  - Las versiones `20260913001000`/`20260913001100` NO aparecen en el historial: la plataforma asienta las migraciones con su propio identificador. No se reaplicó SQL ni se editó historial.
+- **fix(tests)**: `supabase/tests/r201_cot_remate_contract.sql` usaba pgTAP (`plan(integer)`), que el runner de guards no tiene; se reescribió con `DO $$` + `pg_temp.assert` (convención del runner) conservando íntegras las comprobaciones de columna, nulabilidad, llave foránea, firmas y privilegios (helper/core privados, RPC públicas).
+
+
 ## [13.823.214] - 2026-09-08
 
 - **fix(errores)**: los bloqueos `LC_REAPROBACION_NO_VIGENTE` y `LC_TARIFA_APLICADA_INVALIDA` (emitidos por la RPC de conversión cotización→embarque) no tenían mensaje amigable y rompían el guard de cobertura de códigos; se agregaron ambas traducciones al catálogo operativo. Sin cambios de regla de negocio, permisos ni datos.
