@@ -31,7 +31,7 @@ interface FinishDeps {
   cotVinc: ReturnType<typeof useNuevoEmbarqueCotVinculada>;
   contactos: ReturnType<typeof useContactosCliente>["data"];
   selectedClienteNombre: string;
-  proveedoresDb: unknown[];
+  proveedoresDb: { id: string; nombre: string }[];
   validateStep: (step: number) => boolean;
   setCurrentStep: (step: number) => void;
   wizardStartedAt: number;
@@ -79,7 +79,7 @@ export function useNuevoEmbarqueFinish(deps: FinishDeps) {
       cotizacionVinculada: cotVinc.cotizacionVinculada,
       contactos: deps.contactos ?? [],
       selectedClienteNombre: deps.selectedClienteNombre,
-      proveedoresDb: deps.proveedoresDb as never,
+      proveedoresDb: deps.proveedoresDb,
       documentosArchivos: form.documentosArchivos,
       buildEmbarquePayload: form.buildEmbarquePayload,
       buildConceptosVentaPayload: form.buildConceptosVentaPayload,
