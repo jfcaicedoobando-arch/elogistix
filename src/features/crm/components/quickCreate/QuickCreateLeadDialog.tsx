@@ -54,6 +54,13 @@ export default function QuickCreateLeadDialog({ open, onOpenChange, onCreated, o
   const [contacto, setContacto] = useState("");
   const [fuente, setFuente] = useState<CrmLeadFuente>("Prospección");
   const [empresaTouched, setEmpresaTouched] = useState(false);
+  // VIS-20260908-03: al abrir el modal desde el menú "Nuevo", el foco del
+  // autofocus y la devolución de foco del menú disparaban un `blur` sin que el
+  // usuario hubiera escrito nada, así que el error aparecía de entrada. Sólo
+  // se considera "tocado" por blur si hubo interacción real en el campo.
+  const [empresaInteractuada, setEmpresaInteractuada] = useState(false);
+  const empresaVacia = empresa.trim() === "";
+  const mostrarErrorEmpresa = empresaTouched && empresaVacia;
 
   // Reset sólo en la transición real abierto -> cerrado: mientras el modal
   // sigue abierto (o mientras se muestra la confirmación de descarte, que vive
@@ -65,6 +72,7 @@ export default function QuickCreateLeadDialog({ open, onOpenChange, onCreated, o
       setContacto("");
       setFuente("Prospección");
       setEmpresaTouched(false);
+      setEmpresaInteractuada(false);
     }
     abiertoAntes.current = open;
   }, [open]);
