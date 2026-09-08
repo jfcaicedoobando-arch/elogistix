@@ -12,7 +12,7 @@ import { useProformasListasCount } from "@/features/facturacion/hooks/useProform
 
 export type BandejaId =
   | "embarques-sin-factura" | "proformas-listas"
-  | "por-timbrar" | "por-enviar"
+  | "por-timbrar"
   | "por-cobrar" | "vencidas" | "rep-pendientes"
   | "emitidas" | "notas";
 
@@ -38,7 +38,7 @@ const DEFS: Def[] = [
   { id: "embarques-sin-factura", label: "Embarques sin factura", hint: "Embarques cuyo contenedor ya llegó (ETA ≤ hoy) y aún no tienen CFDI. Necesitan factura para tener la papelería completa al cruzar aduana. Puede que falte generar la proforma o convertirla a factura.", tone: "warn", group: "preparar" },
   { id: "proformas-listas", label: "Proformas listas", tone: "warn", group: "preparar" },
   { id: "por-timbrar", label: "Por timbrar", hint: "Facturas en Borrador creadas en el sistema, pendientes de enviar a FacturApi (timbrado CFDI).", tone: "warn", group: "preparar" },
-  { id: "por-enviar", label: "Por enviar", tone: "warn", group: "preparar" },
+  
   { id: "por-cobrar", label: "Por cobrar", tone: "default", group: "cobrar" },
   { id: "vencidas", label: "Vencidas", tone: "danger", group: "cobrar" },
   { id: "rep-pendientes", label: "REP pendientes", hint: "Complementos de Pago (REP) para facturas PPD que faltan por timbrar.", tone: "danger", group: "cobrar" },
@@ -63,7 +63,7 @@ export function BandejaTabs() {
     "embarques-sin-factura": totalEmbarques,
     "proformas-listas": proformasListasCount,
     "por-timbrar": conteos?.porTimbrar ?? 0,
-    "por-enviar": conteos?.porEnviar ?? 0,
+    
     "por-cobrar": conteos?.porCobrar ?? 0,
     "vencidas": conteos?.vencidas ?? 0,
     "rep-pendientes": conteos?.repPendientes ?? 0,
