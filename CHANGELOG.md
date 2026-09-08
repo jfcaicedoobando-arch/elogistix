@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.823.226] - 2026-09-08
+- **feat(crm)**: el modal inicial de alta de lead (alta express) ahora incluye el campo Origen (Prospección / Finkargo / Referido, default Prospección); antes lo guardaba siempre como Prospección sin preguntar.
+- **fix(crm)**: si eliges el origen y luego usas "Más campos →", el formulario completo conserva ese origen en lugar de volver al default.
+
+
+
 ## [13.823.225] - 2026-09-08
 - **fix(crm)**: en una oportunidad abierta de un prospecto calificado, "Nueva cotización" ya abre el cotizador con el prospecto/oportunidad precargados (antes quedaba deshabilitado pidiendo convertirlo en cliente). No se da de alta al cliente ni se inserta ningún borrador al abrir; el vínculo canónico se sigue registrando al guardar.
 - **fix(crm)**: si la oportunidad no es elegible (sin cliente y sin prospecto vivo) el botón sigue bloqueado, ahora con el motivo real.

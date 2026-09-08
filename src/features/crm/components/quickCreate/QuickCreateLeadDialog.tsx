@@ -17,18 +17,24 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { FIELD_ERROR_CLASS } from "@/components/ui/field.tokens";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { FormDialogSection } from "@/components/shared/FormDialogSection";
 import { FormDialogFooter } from "@/components/shared/FormDialogFooter";
 import { notifyError } from "@/lib/ui/appFeedback";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { useCrearLead } from "@/features/crm/hooks";
+import { LEAD_FUENTES, type CrmLeadFuente } from "@/features/crm/domain/leads/constants";
 import { leadQuickCreateInput } from "@/features/crm/domain/leads/quickCreateInput";
 
 /** Borrador mínimo que viaja de la alta express al formulario completo. */
 export interface LeadQuickDraft {
   empresa: string;
   contacto: string;
+  /** Origen elegido en la alta express; se conserva al saltar a "Más campos →". */
+  fuente?: CrmLeadFuente;
 }
 
 interface Props {
@@ -46,6 +52,7 @@ export default function QuickCreateLeadDialog({ open, onOpenChange, onCreated, o
   const empresaRef = useRef<HTMLInputElement>(null);
   const [empresa, setEmpresa] = useState("");
   const [contacto, setContacto] = useState("");
+  const [fuente, setFuente] = useState<CrmLeadFuente>("Prospección");
   const [empresaTouched, setEmpresaTouched] = useState(false);
 
   // Reset sólo en la transición real abierto -> cerrado: mientras el modal
@@ -56,6 +63,7 @@ export default function QuickCreateLeadDialog({ open, onOpenChange, onCreated, o
     if (abiertoAntes.current && !open) {
       setEmpresa("");
       setContacto("");
+      setFuente("Prospección");
       setEmpresaTouched(false);
     }
     abiertoAntes.current = open;
@@ -72,8 +80,9 @@ export default function QuickCreateLeadDialog({ open, onOpenChange, onCreated, o
     }
     enviandoRef.current = true;
     try {
-      // Mapeo canónico compartido: "Correo o teléfono" → `email` / `telefono`.
-      const r = await crear.mutateAsync(leadQuickCreateInput(emp, contacto, user));
+      // Mapeo canónico compartido: "Correo o teléfono" → `email` / `telefono`;
+      // el origen lo eligió el usuario en el select (default Prospección).
+      const r = await crear.mutateAsync(leadQuickCreateInput(emp, contacto, user, fuente));
       // El cierre limpia el estado (efecto de transición): no hace falta resetear aquí.
       onOpenChange(false);
       onCreated(r.id);
@@ -95,7 +104,7 @@ export default function QuickCreateLeadDialog({ open, onOpenChange, onCreated, o
       size="md"
       formId="qc-lead-form"
       onSubmit={(e) => { e.preventDefault(); void submit(); }}
-      isDirty={empresa.trim().length > 0 || contacto.trim().length > 0}
+      isDirty={empresa.trim().length > 0 || contacto.trim().length > 0 || fuente !== "Prospección"}
       busy={crear.isPending}
       footer={
         <FormDialogFooter
@@ -109,7 +118,7 @@ export default function QuickCreateLeadDialog({ open, onOpenChange, onCreated, o
               type="button"
               variant="ghost"
               size="sm"
-              onClick={() => onMore({ empresa: empresa.trim(), contacto: contacto.trim() })}
+              onClick={() => onMore({ empresa: empresa.trim(), contacto: contacto.trim(), fuente })}
               disabled={crear.isPending}
               className="text-body-sm"
             >
@@ -148,6 +157,15 @@ export default function QuickCreateLeadDialog({ open, onOpenChange, onCreated, o
               onChange={(e) => setContacto(e.target.value)}
               placeholder="ana@acme.com o 555…"
             />
+          </div>
+          <div className="space-y-1">
+            <Label htmlFor="qc-lead-origen">Origen</Label>
+            <Select value={fuente} onValueChange={(v) => setFuente(v as CrmLeadFuente)}>
+              <SelectTrigger id="qc-lead-origen"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {LEAD_FUENTES.map((f) => <SelectItem key={f} value={f}>{f}</SelectItem>)}
+              </SelectContent>
+            </Select>
           </div>
         </div>
       </FormDialogSection>

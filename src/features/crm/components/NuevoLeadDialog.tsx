@@ -12,13 +12,14 @@ import { useNuevoLeadSubmit } from "@/features/crm/hooks/useNuevoLeadSubmit";
 import { NuevoLeadForm, type LeadFormState } from "./nuevoLead/NuevoLeadForm";
 import { AvisoLeadDuplicado } from "./AvisoLeadDuplicado";
 import { esCorreoCapturado } from "@/features/crm/domain/leads/quickCreateInput";
+import type { CrmLeadFuente } from "@/features/crm/domain/leads/constants";
 
 
 interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  /** Borrador del alta express ("Más campos →"): empresa y contacto capturados. */
-  draftInicial?: { empresa: string; contacto: string } | null;
+  /** Borrador del alta express ("Más campos →"): empresa, contacto y origen capturados. */
+  draftInicial?: { empresa: string; contacto: string; fuente?: CrmLeadFuente } | null;
   onCreated?: (id: string) => void;
 }
 
@@ -59,8 +60,9 @@ export default function NuevoLeadDialog({ open, onOpenChange, draftInicial, onCr
       empresa: empresaDraft.trim(),
       email: dato && esCorreo ? dato.toLowerCase() : "",
       telefono: dato && !esCorreo ? dato : "",
+      fuente: draftInicial?.fuente ?? base.fuente,
     };
-  }, [formVacio, empresaDraft, contactoDraft]);
+  }, [formVacio, empresaDraft, contactoDraft, draftInicial?.fuente]);
   const [form, setForm] = useState<LeadFormState>(formConDraft);
 
   // Al abrirse (cerrado -> abierto) se siembra el borrador express; el reset al

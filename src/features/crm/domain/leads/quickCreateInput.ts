@@ -21,6 +21,7 @@ export function leadQuickCreateInput(
   empresa: string,
   contacto: string,
   user: QuickCreateAuthLite | null,
+  fuente: LeadInput["fuente"] = "Prospección",
 ): LeadInput {
   const dato = contacto.trim();
   const esCorreo = esCorreoCapturado(dato);
@@ -29,7 +30,7 @@ export function leadQuickCreateInput(
     contacto: "",
     email: esCorreo ? dato.toLowerCase() : "",
     telefono: esCorreo ? "" : dato,
-    fuente: "Prospección",
+    fuente,
     estado: "Nuevo",
     vendedor_id: user?.id ?? null,
     vendedor_email: user?.email ?? "",
