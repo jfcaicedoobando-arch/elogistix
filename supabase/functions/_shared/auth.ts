@@ -51,8 +51,10 @@ async function verificarUsuario(
 
   if (!userId) {
     log?.warn?.("auth_getuser_no_disponible", {
-      status: statusDe(ultimoError),
-      motivo: (ultimoError as { message?: string } | null)?.message ?? "sin detalle",
+      status_code: statusDe(ultimoError),
+      payload: {
+        motivo: (ultimoError as { message?: string } | null)?.message ?? "sin detalle",
+      },
     });
     throw new Error(
       "503:No pudimos validar tu sesión en este momento. Intenta de nuevo en unos segundos.",
