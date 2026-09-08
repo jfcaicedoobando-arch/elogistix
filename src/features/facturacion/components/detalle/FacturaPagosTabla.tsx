@@ -44,7 +44,7 @@ interface Props {
 }
 
 export function FacturaPagosTabla({
-  pagos, facturaId, moneda, canEdit, onEliminar, onPreviewRep,
+  pagos, facturaId, moneda, canEdit, onEliminar, onCancelarRep, onPreviewRep,
 }: Props) {
   const columns: ColumnDef<PagoRow, unknown>[] = defineColumns<PagoRow>([
     { id: "fecha", header: "Fecha", meta: { width: COL_W.fecha }, cell: ({ row }) => formatDate(row.original.fecha_pago) },
