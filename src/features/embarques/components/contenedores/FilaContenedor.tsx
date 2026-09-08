@@ -48,6 +48,11 @@ export function FilaContenedor({
   const uid = useId();
   const filaVacia =
     !value.numero_contenedor.trim() && !value.tipo_contenedor.trim();
+  // R219-UI-02: nunca mostramos el UUID crudo al operador.
+  const tipoNombre = value.tipo_contenedor
+    ? resolveTipoContenedorNombre(value.tipo_contenedor, tiposContenedor, "")
+    : "";
+  const opcionGuardada = opcionTipoGuardada(value.tipo_contenedor, tiposContenedor);
 
   const handleTrashClick = () => {
     if (filaVacia) {
@@ -90,7 +95,7 @@ export function FilaContenedor({
         description={
           <>
             Se quitará el contenedor «{value.numero_contenedor || "sin número"}»
-            {value.tipo_contenedor ? ` (${value.tipo_contenedor})` : ""} de la lista.
+            {tipoNombre ? ` (${tipoNombre})` : ""} de la lista.
             El cambio se aplica al presionar <strong>Guardar cambios</strong>.
           </>
         }
@@ -133,6 +138,12 @@ export function FilaContenedor({
               <SelectValue placeholder="Seleccionar tipo" />
             </SelectTrigger>
             <SelectContent>
+              {/* R219-UI-02: el valor heredado de la cotización es el UUID del
+                  catálogo; sin esta opción el selector se pintaba VACÍO. Se
+                  conserva el valor guardado y se muestra su nombre legible. */}
+              {opcionGuardada && (
+                <SelectItem value={opcionGuardada.value}>{opcionGuardada.label}</SelectItem>
+              )}
               {tiposContenedor
                 .filter((ct) => ct.code !== "LCL")
                 .map((ct) => (
