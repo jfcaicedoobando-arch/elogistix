@@ -75,7 +75,14 @@ export function buildCotizacionesColumns(params: BuildParams): ColumnDef<Cotizac
           : r.cliente_nombre;
         return (
           <span className="flex items-center gap-2 min-w-0">
-            <span className="truncate">{nombre}</span>
+            {/* MEJ-20260908-01: el nombre puede truncarse al ajustar la tabla al
+                ancho disponible; el tooltip conserva el texto completo. */}
+            <Tooltip delayDuration={300}>
+              <TooltipTrigger asChild>
+                <span className="truncate">{nombre}</span>
+              </TooltipTrigger>
+              <TooltipContent side="right" className="text-body-sm max-w-[320px] break-words">{nombre || "—"}</TooltipContent>
+            </Tooltip>
             {r.es_prospecto === true && (
               <Badge variant="info" size="sm" className="shrink-0">Prospecto</Badge>
             )}
