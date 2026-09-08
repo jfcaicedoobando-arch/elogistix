@@ -136,6 +136,10 @@ function leerSelloEscritura(data: unknown): string | null {
 export interface CotizacionCostoLookup {
   concepto: string;
   costo_unitario: number | string | null;
+  /** R201-COT-05: sin la cantidad el asistente replicaba el costo unitario como total. */
+  cantidad: number | string | null;
+  /** Columna generada `cantidad * costo_unitario`; es el total canónico. */
+  costo_total: number | string | null;
   moneda: string | null;
   proveedor: string | null;
 }
@@ -146,7 +150,8 @@ export async function fetchCotizacionCostosForEmbarque(
 ): Promise<CotizacionCostoLookup[]> {
   const { data, error } = await supabase
     .from("cotizacion_costos")
-    .select("concepto, costo_unitario, moneda, proveedor").is("deleted_at", null)
+    .select("concepto, costo_unitario, cantidad, costo_total, moneda, proveedor")
+    .is("deleted_at", null)
     .eq("cotizacion_id", cotizacionId);
   if (error) throw new Error(error.message);
   return (data ?? []) as CotizacionCostoLookup[];
