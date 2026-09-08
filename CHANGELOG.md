@@ -1,5 +1,15 @@
 # Changelog
 
+## [13.823.205] - 2026-09-08
+
+Corrección del fallo de CI por límite Power-of-10 (archivos > 200 líneas).
+
+- `cotizacion.ts`: partes del payload del paso 1 movidas a `cotizacionPartes.ts`.
+- `ComprasPorAprobar.tsx`: bloque de KPIs extraído a `ComprasPorAprobar.kpis.tsx`.
+- `parsePdfInvoice.ts`: clasificación/mensajería de errores movida a `parsePdfInvoice.errors.ts`.
+- Sin cambios de lógica, datos, permisos ni RLS.
+
+
 ## [13.823.204] - 2026-09-08
 
 Corrección del fallo de type-check en CI (Deno) en `supabase/functions/_shared/auth.ts`.
