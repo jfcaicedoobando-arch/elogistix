@@ -118,7 +118,7 @@ export default function QuickCreateLeadDialog({ open, onOpenChange, onCreated, o
               type="button"
               variant="ghost"
               size="sm"
-              onClick={() => onMore({ empresa: empresa.trim(), contacto: contacto.trim() })}
+              onClick={() => onMore({ empresa: empresa.trim(), contacto: contacto.trim(), fuente })}
               disabled={crear.isPending}
               className="text-body-sm"
             >
@@ -157,6 +157,15 @@ export default function QuickCreateLeadDialog({ open, onOpenChange, onCreated, o
               onChange={(e) => setContacto(e.target.value)}
               placeholder="ana@acme.com o 555…"
             />
+          </div>
+          <div className="space-y-1">
+            <Label htmlFor="qc-lead-origen">Origen</Label>
+            <Select value={fuente} onValueChange={(v) => setFuente(v as CrmLeadFuente)}>
+              <SelectTrigger id="qc-lead-origen"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {LEAD_FUENTES.map((f) => <SelectItem key={f} value={f}>{f}</SelectItem>)}
+              </SelectContent>
+            </Select>
           </div>
         </div>
       </FormDialogSection>
