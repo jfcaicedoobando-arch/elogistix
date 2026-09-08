@@ -59,6 +59,34 @@ describe("QuickCreateLeadDialog", () => {
     expect(payload.empresa).toBe("Acme Logistics");
   });
 
+  it("guarda con origen Prospección por defecto y el select muestra las 3 opciones", async () => {
+    render(<QuickCreateLeadDialog open onOpenChange={vi.fn()} onCreated={vi.fn()} onMore={vi.fn()} />);
+
+    // El campo Origen existe con el default visible.
+    expect(screen.getByText("Origen")).toBeInTheDocument();
+    expect(screen.getByText("Prospección")).toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText(/Empresa/i), { target: { value: "Acme" } });
+    fireEvent.click(screen.getByRole("button", { name: /Crear/i }));
+
+    await waitFor(() => expect(mutateAsync).toHaveBeenCalledTimes(1));
+    expect(mutateAsync.mock.calls[0]![0].fuente).toBe("Prospección");
+  });
+
+  it("'Más campos →' conserva el origen elegido en el borrador", () => {
+    const onMore = vi.fn();
+    render(<QuickCreateLeadDialog open onOpenChange={vi.fn()} onCreated={vi.fn()} onMore={onMore} />);
+
+    fireEvent.change(screen.getByLabelText(/Empresa/i), { target: { value: "Acme" } });
+    fireEvent.click(screen.getByRole("button", { name: /Más campos/i }));
+
+    expect(onMore).toHaveBeenCalledWith({
+      empresa: "Acme",
+      contacto: "",
+      fuente: "Prospección",
+    });
+  });
+
   it("lead rápido: si la creación falla no repite el aviso de error (el hook ya notifica)", async () => {
     notifyError.mockClear();
     mutateAsync.mockRejectedValueOnce(new Error("RLS denegado"));
