@@ -53,7 +53,9 @@ export function buildCotizacionesColumns(params: BuildParams): ColumnDef<Cotizac
       header: "Folio",
       accessorFn: (r) => r.folio,
       enableSorting: true,
-      meta: { width: COL_W.folio, className: "font-medium whitespace-nowrap", sticky: true },
+      // Con la tabla ajustada al ancho disponible (`table-fixed`), el peldaño de
+      // folio (112px) truncaba "COT-2026-0239"; se usa el peldaño de nombre.
+      meta: { width: COL_W.nombre, className: "font-medium whitespace-nowrap", sticky: true },
       // MEJ-20260908-01: en 1280x720 Tipo/Modo/Ruta/Fecha quedan fuera de la
       // tabla (se muestran desde 2xl). El folio conserva el acceso a esos datos
       // en un tooltip, sin agregar un selector de columnas.

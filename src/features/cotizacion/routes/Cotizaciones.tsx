@@ -156,7 +156,7 @@ export default function Cotizaciones() {
             // acciones quedaban fuera de la vista en 1280x720. Ajustada al ancho
             // disponible, las columnas clave (Folio, Cliente, Estado, importe,
             // acciones) caben sin scroll horizontal.
-            tableClassName="w-full"
+            tableClassName="w-full table-fixed"
             className="pb-24 sm:pb-0"
             mobileCard={(r) => (
               <CotizacionMobileCard
