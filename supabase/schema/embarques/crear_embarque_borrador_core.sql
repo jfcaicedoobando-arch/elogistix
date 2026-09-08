@@ -141,6 +141,7 @@ BEGIN
     cotizacion_id, expediente, cliente_id, cliente_nombre,
     estado, modo, tipo, incoterm, descripcion_mercancia,
     peso_kg, volumen_m3, piezas, operador, tipo_carga, tipo_contenedor,
+    msds_archivo,
     organization_id,
     puerto_origen, puerto_destino,
     aeropuerto_origen, aeropuerto_destino,
@@ -155,6 +156,9 @@ BEGIN
     'Borrador'::estado_embarque, v_cot.modo, v_cot.tipo, v_cot.incoterm, v_cot.descripcion_mercancia,
     COALESCE(v_cot.peso_kg, 0), COALESCE(v_cot.volumen_m3, 0), COALESCE(v_cot.piezas, 0),
     v_cot.operador, v_cot.tipo_carga, v_tipo_cont_code,
+    -- R201-COT-07: la hoja de seguridad (MSDS) capturada en la cotización se
+    -- hereda al embarque; antes el borrador nacía sin el documento.
+    v_cot.msds_archivo,
     v_cot.organization_id,
     v_puerto_o, v_puerto_d,
     v_aero_o, v_aero_d,
