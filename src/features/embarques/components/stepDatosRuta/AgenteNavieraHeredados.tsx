@@ -47,10 +47,7 @@ export function AgenteEmbarqueSelector({ cotizacionAgenteId }: { cotizacionAgent
     currentId,
     nombreGuardado,
     useCallback((id: string) => agentes.find((a) => a.id === id)?.nombre, [agentes]),
-    useCallback(
-      (campo, nombre) => setValue(campo, nombre, { shouldValidate: true, shouldDirty: false }),
-      [setValue],
-    ),
+    useCallback((campo, nombre) => setValue(campo, nombre, { shouldValidate: true, shouldDirty: false }), [setValue]),
   );
 
   const opciones = useMemo(
@@ -133,10 +130,7 @@ export function NavieraEmbarqueSelector({ cotizacionNavieraId, className }: Navi
     currentId,
     nombreGuardado,
     useCallback((id: string) => navieras.find((n) => n.id === id)?.name, [navieras]),
-    useCallback(
-      (campo, nombre) => setValue(campo, nombre, { shouldValidate: true, shouldDirty: false }),
-      [setValue],
-    ),
+    useCallback((campo, nombre) => setValue(campo, nombre, { shouldValidate: true, shouldDirty: false }), [setValue]),
   );
 
   const opciones = useMemo(
