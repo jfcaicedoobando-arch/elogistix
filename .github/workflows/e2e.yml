@@ -76,8 +76,8 @@ jobs:
   guard-secrets:
     name: Guard (E2E secrets)
     runs-on: ubuntu-24.04
-    # El workflow sólo corre por schedule o dispatch manual (ramas internas),
-    # así que los secrets del environment e2e-staging nunca se exponen a forks.
+    # El workflow sólo corre por dispatch manual (ramas internas), así que los
+    # secrets del environment e2e-staging nunca se exponen a forks.
     # v13.x (GHA-audit A6) — los secrets E2E viven en el environment
     # e2e-staging: sólo los jobs que ejecutan tests/guards los reciben.
     environment: e2e-staging
@@ -503,7 +503,7 @@ jobs:
 
       - name: Fail if any test job failed
         # Explicit gate: si algún shard falló, este job también falla para que
-        # notify-failure dispare y el workflow quede rojo (regresión).
+        # el workflow quede rojo (regresión).
         if: ${{ needs.internal-shard.result == 'failure' || needs.mutators.result == 'failure' || needs.portal.result == 'failure' || needs.multi-tenant.result == 'failure' }}
         run: |
           echo "::error::Se detectaron regresiones en E2E."
