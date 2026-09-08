@@ -61,7 +61,9 @@ CREATE TYPE public.crm_lead_fuente AS ENUM (
     'Campaña',
     'Llamada en frío',
     'Evento',
-    'Otro'
+    'Otro',
+    'Prospección',
+    'Finkargo'
 );
 CREATE TYPE public.estado_aprobacion_factura_proveedor AS ENUM (
     'pendiente',
@@ -28990,6 +28992,14 @@ CREATE TABLE public.catalogo_claves_sat (
     CONSTRAINT catalogo_claves_sat_patron_len CHECK ((length(TRIM(BOTH FROM patron)) > 0)),
     CONSTRAINT catalogo_claves_sat_tipo_iva_chk CHECK ((tipo_iva = ANY (ARRAY['gravado_16'::text, 'gravado_8'::text, 'tasa_0'::text, 'exento'::text])))
 );
+CREATE TABLE public.catalogo_org_desactivado (
+    organization_id uuid DEFAULT public.current_user_org_id() NOT NULL,
+    catalogo text NOT NULL,
+    item_id uuid NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    created_by uuid DEFAULT auth.uid(),
+    CONSTRAINT catalogo_org_desactivado_catalogo_check CHECK ((catalogo = ANY (ARRAY['puertos'::text, 'navieras'::text, 'tipos_contenedor'::text])))
+);
 CREATE TABLE public.cierre_embarque_log (
     id uuid DEFAULT gen_random_uuid() NOT NULL,
     embarque_id uuid NOT NULL,
@@ -30678,6 +30688,8 @@ ALTER TABLE ONLY public.bitacora_actividad
     ADD CONSTRAINT bitacora_actividad_pkey PRIMARY KEY (id);
 ALTER TABLE ONLY public.catalogo_claves_sat
     ADD CONSTRAINT catalogo_claves_sat_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.catalogo_org_desactivado
+    ADD CONSTRAINT catalogo_org_desactivado_pkey PRIMARY KEY (organization_id, catalogo, item_id);
 ALTER TABLE ONLY public.cierre_embarque_log
     ADD CONSTRAINT cierre_embarque_log_pkey PRIMARY KEY (id);
 ALTER TABLE ONLY public.client_users
@@ -31063,6 +31075,7 @@ CREATE INDEX idx_bitacora_modulo ON public.bitacora_actividad USING btree (modul
 CREATE INDEX idx_bitacora_org_created ON public.bitacora_actividad USING btree (organization_id, created_at DESC);
 CREATE INDEX idx_bitacora_usuario ON public.bitacora_actividad USING btree (usuario_id);
 CREATE INDEX idx_catalogo_claves_sat_org_activo ON public.catalogo_claves_sat USING btree (organization_id, activo, prioridad);
+CREATE INDEX idx_catalogo_org_desactivado_lookup ON public.catalogo_org_desactivado USING btree (organization_id, catalogo);
 CREATE INDEX idx_ccch_cotizacion_version ON public.cotizacion_costos_historico USING btree (cotizacion_id, version);
 CREATE INDEX idx_cierre_log_embarque ON public.cierre_embarque_log USING btree (embarque_id);
 CREATE INDEX idx_cierre_log_org ON public.cierre_embarque_log USING btree (organization_id);
@@ -31750,6 +31763,8 @@ ALTER TABLE ONLY public.bitacora_actividad
     ADD CONSTRAINT bitacora_actividad_organization_id_fkey FOREIGN KEY (organization_id) REFERENCES public.organizations(id);
 ALTER TABLE ONLY public.catalogo_claves_sat
     ADD CONSTRAINT catalogo_claves_sat_organization_id_fkey FOREIGN KEY (organization_id) REFERENCES public.organizations(id) ON DELETE CASCADE;
+ALTER TABLE ONLY public.catalogo_org_desactivado
+    ADD CONSTRAINT catalogo_org_desactivado_organization_id_fkey FOREIGN KEY (organization_id) REFERENCES public.organizations(id) ON DELETE CASCADE;
 ALTER TABLE ONLY public.cierre_embarque_log
     ADD CONSTRAINT cierre_embarque_log_embarque_id_fkey FOREIGN KEY (embarque_id) REFERENCES public.embarques(id) ON DELETE CASCADE;
 ALTER TABLE ONLY public.client_users
@@ -32090,6 +32105,8 @@ ALTER TABLE ONLY public.traspasos_bancarios
     ADD CONSTRAINT traspasos_bancarios_cuenta_origen_id_fkey FOREIGN KEY (cuenta_origen_id) REFERENCES public.cuentas_bancarias(id) ON DELETE RESTRICT;
 CREATE POLICY "Admin catalog delete clientes" ON public.clientes FOR DELETE TO authenticated USING ((((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) AND public.es_admin_catalogo(( SELECT auth.uid() AS uid))));
 CREATE POLICY "Admin catalog delete proveedores" ON public.proveedores FOR DELETE TO authenticated USING ((((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) AND public.es_admin_catalogo(( SELECT auth.uid() AS uid))));
+CREATE POLICY "Admin catalogo apaga por org" ON public.catalogo_org_desactivado FOR INSERT TO authenticated WITH CHECK (((organization_id = ( SELECT public.org_scope() AS org_scope)) AND ( SELECT public.es_admin_catalogo(auth.uid()) AS es_admin_catalogo)));
+CREATE POLICY "Admin catalogo enciende por org" ON public.catalogo_org_desactivado FOR DELETE TO authenticated USING (((organization_id = ( SELECT public.org_scope() AS org_scope)) AND ( SELECT public.es_admin_catalogo(auth.uid()) AS es_admin_catalogo)));
 CREATE POLICY "Admin delete proveedor_alias" ON public.proveedor_alias FOR DELETE TO authenticated USING ((((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) AND public.es_admin_catalogo(( SELECT auth.uid() AS uid))));
 CREATE POLICY "Agente CRUD own demoras tabulador" ON public.costeo_naviera_demoras_tarifa TO authenticated USING ((( SELECT public.has_role(( SELECT auth.uid() AS uid), 'agente_carga'::public.app_role) AS has_role) AND (EXISTS ( SELECT 1
    FROM public.costeo_navieras_condiciones nc
@@ -32281,6 +32298,7 @@ CREATE POLICY "Scope tenant activo super admin" ON public.auditoria_snapshots AS
 CREATE POLICY "Scope tenant activo super admin" ON public.bbva_movimientos AS RESTRICTIVE TO authenticated USING (((NOT ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) OR public.rls_tenant_scope_ok(organization_id))) WITH CHECK (((NOT ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) OR public.rls_tenant_scope_ok(organization_id)));
 CREATE POLICY "Scope tenant activo super admin" ON public.bitacora_actividad AS RESTRICTIVE TO authenticated USING (((NOT ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) OR public.rls_tenant_scope_ok(organization_id))) WITH CHECK (((NOT ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) OR public.rls_tenant_scope_ok(organization_id)));
 CREATE POLICY "Scope tenant activo super admin" ON public.catalogo_claves_sat AS RESTRICTIVE TO authenticated USING (((NOT ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) OR public.rls_tenant_scope_ok(organization_id))) WITH CHECK (((NOT ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) OR public.rls_tenant_scope_ok(organization_id)));
+CREATE POLICY "Scope tenant activo super admin" ON public.catalogo_org_desactivado AS RESTRICTIVE USING (((NOT ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) OR public.rls_tenant_scope_ok(organization_id))) WITH CHECK (((NOT ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) OR public.rls_tenant_scope_ok(organization_id)));
 CREATE POLICY "Scope tenant activo super admin" ON public.cierre_embarque_log AS RESTRICTIVE TO authenticated USING (((NOT ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) OR public.rls_tenant_scope_ok(organization_id))) WITH CHECK (((NOT ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) OR public.rls_tenant_scope_ok(organization_id)));
 CREATE POLICY "Scope tenant activo super admin" ON public.cliente_documentos AS RESTRICTIVE TO authenticated USING (((NOT ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) OR public.rls_tenant_scope_ok(organization_id))) WITH CHECK (((NOT ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) OR public.rls_tenant_scope_ok(organization_id)));
 CREATE POLICY "Scope tenant activo super admin" ON public.clientes AS RESTRICTIVE TO authenticated USING (((NOT ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) OR public.rls_tenant_scope_ok(organization_id))) WITH CHECK (((NOT ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) OR public.rls_tenant_scope_ok(organization_id)));
@@ -32437,6 +32455,7 @@ CREATE POLICY "Tenant manage factura_series" ON public.factura_series TO authent
 CREATE POLICY "Tenant members read bitacora" ON public.bitacora_actividad FOR SELECT TO authenticated USING ((organization_id IN ( SELECT m.organization_id
    FROM public.organization_members m
   WHERE (m.user_id = ( SELECT auth.uid() AS uid)))));
+CREATE POLICY "Tenant read catalogo_org_desactivado" ON public.catalogo_org_desactivado FOR SELECT TO authenticated USING ((organization_id = ( SELECT public.org_scope() AS org_scope)));
 CREATE POLICY "Tenant read clientes" ON public.clientes FOR SELECT TO authenticated USING ((((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) AND (NOT ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'cliente'::public.app_role) AS has_role))));
 CREATE POLICY "Tenant read conceptos_costo" ON public.conceptos_costo FOR SELECT TO authenticated USING ((((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) AND ( SELECT public.has_any_role(( SELECT auth.uid() AS uid), ARRAY['viewer'::public.app_role]) AS has_any_role)));
 CREATE POLICY "Tenant read conceptos_venta" ON public.conceptos_venta FOR SELECT TO authenticated USING ((((organization_id = ( SELECT public.current_user_org_id() AS current_user_org_id)) OR ( SELECT public.has_role(( SELECT auth.uid() AS uid), 'super_admin'::public.app_role) AS has_role)) AND ( SELECT public.has_any_role(( SELECT auth.uid() AS uid), ARRAY['viewer'::public.app_role]) AS has_any_role)));
@@ -32555,6 +32574,7 @@ ALTER TABLE public.auditoria_snapshots ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.bbva_movimientos ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.bitacora_actividad ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.catalogo_claves_sat ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.catalogo_org_desactivado ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.cierre_embarque_log ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.client_users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.cliente_documentos ENABLE ROW LEVEL SECURITY;
@@ -34360,6 +34380,8 @@ GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.bitacora_actividad TO authenti
 GRANT ALL ON TABLE public.bitacora_actividad TO service_role;
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.catalogo_claves_sat TO authenticated;
 GRANT ALL ON TABLE public.catalogo_claves_sat TO service_role;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.catalogo_org_desactivado TO authenticated;
+GRANT ALL ON TABLE public.catalogo_org_desactivado TO service_role;
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.cierre_embarque_log TO authenticated;
 GRANT ALL ON TABLE public.cierre_embarque_log TO service_role;
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.client_users TO anon;
