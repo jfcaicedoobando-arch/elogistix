@@ -36,7 +36,7 @@ echo "▶ Bootstrap (stubs auth/storage/cron/net/pgmq)"
 requerir_archivo "$CUTOFF_ENV" "corte del squash"
 # Archivo del repo con asignaciones conocidas: SQUASH_FILE y SQUASH_INCLUDED.
 set -a
-# shellcheck source=supabase/schema/squash/cutoff.env
+# shellcheck source=supabase/schema/squash/cutoff.env disable=SC1091
 . "$CUTOFF_ENV"
 set +a
 
