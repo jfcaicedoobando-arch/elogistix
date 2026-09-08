@@ -256,10 +256,8 @@ BEGIN
 END;
 $function$;
 
-REVOKE ALL ON FUNCTION public._embarque_aplicar_tarifa_decidida(uuid, uuid, uuid) FROM PUBLIC;
-REVOKE ALL ON FUNCTION public._embarque_aplicar_tarifa_decidida(uuid, uuid, uuid) FROM anon;
-REVOKE ALL ON FUNCTION public._embarque_aplicar_tarifa_decidida(uuid, uuid, uuid) FROM authenticated;
-GRANT ALL ON FUNCTION public._embarque_aplicar_tarifa_decidida(uuid, uuid, uuid) TO service_role;
+REVOKE ALL ON FUNCTION public._embarque_aplicar_tarifa_decidida(uuid, uuid, uuid) FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public._embarque_aplicar_tarifa_decidida(uuid, uuid, uuid) TO service_role;
 
 -- Fuente canónica de public.revalidar_tarifa_cotizacion (R201-COT-02).
 -- Al modificar: edita ESTE archivo y genera la migración con el mismo cuerpo.
@@ -395,9 +393,8 @@ BEGIN
 END;
 $function$;
 
-REVOKE ALL ON FUNCTION public.revalidar_tarifa_cotizacion(p_cotizacion_id uuid) FROM PUBLIC;
-GRANT ALL ON FUNCTION public.revalidar_tarifa_cotizacion(p_cotizacion_id uuid) TO authenticated;
-GRANT ALL ON FUNCTION public.revalidar_tarifa_cotizacion(p_cotizacion_id uuid) TO service_role;
+REVOKE ALL ON FUNCTION public.revalidar_tarifa_cotizacion(uuid) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.revalidar_tarifa_cotizacion(uuid) TO authenticated, service_role;
 
 -- Fuente canónica de public.solicitar_reaprobacion_tarifa (R201-COT-02).
 -- El snapshot aprobado se calcula en servidor; p_delta_jsonb sólo aporta el

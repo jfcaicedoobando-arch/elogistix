@@ -132,6 +132,5 @@ BEGIN
 END;
 $function$;
 
-REVOKE ALL ON FUNCTION public.revalidar_tarifa_cotizacion(p_cotizacion_id uuid) FROM PUBLIC;
-GRANT ALL ON FUNCTION public.revalidar_tarifa_cotizacion(p_cotizacion_id uuid) TO authenticated;
-GRANT ALL ON FUNCTION public.revalidar_tarifa_cotizacion(p_cotizacion_id uuid) TO service_role;
+REVOKE ALL ON FUNCTION public.revalidar_tarifa_cotizacion(uuid) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.revalidar_tarifa_cotizacion(uuid) TO authenticated, service_role;

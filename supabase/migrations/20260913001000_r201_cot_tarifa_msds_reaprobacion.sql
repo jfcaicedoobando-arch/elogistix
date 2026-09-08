@@ -118,10 +118,8 @@ BEGIN
 END;
 $function$;
 
-REVOKE ALL ON FUNCTION public._embarque_aplicar_tarifa_decidida(uuid, uuid, uuid) FROM PUBLIC;
-REVOKE ALL ON FUNCTION public._embarque_aplicar_tarifa_decidida(uuid, uuid, uuid) FROM anon;
-REVOKE ALL ON FUNCTION public._embarque_aplicar_tarifa_decidida(uuid, uuid, uuid) FROM authenticated;
-GRANT ALL ON FUNCTION public._embarque_aplicar_tarifa_decidida(uuid, uuid, uuid) TO service_role;
+REVOKE ALL ON FUNCTION public._embarque_aplicar_tarifa_decidida(uuid, uuid, uuid) FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public._embarque_aplicar_tarifa_decidida(uuid, uuid, uuid) TO service_role;
 
 -- Fuente canónica de public.crear_embarque_borrador_core
 -- Regenerada desde DB. Cada cambio DEBE actualizarse aquí en el mismo PR que la migración correspondiente.
@@ -349,6 +347,9 @@ BEGIN
 END;
 $function$;
 
+REVOKE ALL ON FUNCTION public.crear_embarque_borrador_core(uuid) FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.crear_embarque_borrador_core(uuid) TO service_role;
+
 -- Fuente canónica. Espejo 1:1 de la migración R201-COT-01/02 (cotización→embarque).
 -- Al modificar: edita ESTE archivo y genera la migración con el mismo cuerpo.
 
@@ -417,6 +418,9 @@ $function$;
 -- Fuente canónica de public.revalidar_tarifa_cotizacion (R201-COT-02).
 -- Al modificar: edita ESTE archivo y genera la migración con el mismo cuerpo.
 --
+REVOKE ALL ON FUNCTION public.crear_embarque_borrador_desde_cotizacion(uuid, text, uuid, jsonb) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.crear_embarque_borrador_desde_cotizacion(uuid, text, uuid, jsonb) TO authenticated, service_role;
+
 -- R201-COT-02: cuando ventas ya re-aprobó la tarifa, la revalidación deja de
 -- devolver `bloqueante` (que dejaba a operaciones en un bucle pidiendo la misma
 -- re-aprobación) y expone `estado_revalidacion` + `reaprobacion_vigente`. La
@@ -534,6 +538,5 @@ BEGIN
 END;
 $function$;
 
-REVOKE ALL ON FUNCTION public.revalidar_tarifa_cotizacion(p_cotizacion_id uuid) FROM PUBLIC;
-GRANT ALL ON FUNCTION public.revalidar_tarifa_cotizacion(p_cotizacion_id uuid) TO authenticated;
-GRANT ALL ON FUNCTION public.revalidar_tarifa_cotizacion(p_cotizacion_id uuid) TO service_role;
+REVOKE ALL ON FUNCTION public.revalidar_tarifa_cotizacion(uuid) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.revalidar_tarifa_cotizacion(uuid) TO authenticated, service_role;
