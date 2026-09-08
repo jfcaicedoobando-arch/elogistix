@@ -1,7 +1,8 @@
 name: CI
 
 # CI simplificado (YAGNI): UN job, UN checkout, UNA instalación.
-# Secuencia: lint (0 warnings) → typecheck → suite Vitest completa → build.
+# Secuencia: lint (0 warnings) → typecheck → suite Vitest completa →
+# guard estático de BD (condicional) → build.
 #
 # La suite corre SIN coverage, SIN shards y SIN retries globales: sin `--shard`
 # `vitest.config.ts` incluye también los guardrails de arquitectura
