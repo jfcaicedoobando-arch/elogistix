@@ -149,6 +149,7 @@ export function FacturaPagosTabla({
           facturaId={facturaId}
           canEdit={canEdit}
           onEliminar={onEliminar}
+          onCancelarRep={onCancelarRep}
           onPreviewRep={onPreviewRep}
         />
       )}
