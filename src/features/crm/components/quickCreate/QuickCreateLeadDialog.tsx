@@ -144,15 +144,16 @@ export default function QuickCreateLeadDialog({ open, onOpenChange, onCreated, o
               id="qc-lead-empresa"
               ref={empresaRef}
               value={empresa}
-              onChange={(e) => setEmpresa(e.target.value)}
-              onBlur={() => setEmpresaTouched(true)}
+              onChange={(e) => { setEmpresaInteractuada(true); setEmpresa(e.target.value); }}
+              onKeyDown={() => setEmpresaInteractuada(true)}
+              onBlur={() => { if (empresaInteractuada) setEmpresaTouched(true); }}
               placeholder="Acme Logistics"
               aria-required="true"
-              aria-invalid={empresaTouched && empresa.trim() === ""}
-              aria-describedby={empresaTouched && empresa.trim() === "" ? "qc-lead-empresa-error" : undefined}
+              aria-invalid={mostrarErrorEmpresa}
+              aria-describedby={mostrarErrorEmpresa ? "qc-lead-empresa-error" : undefined}
             />
-            {empresaTouched && empresa.trim() === "" && (
-              <p id="qc-lead-empresa-error" className={FIELD_ERROR_CLASS}>
+            {mostrarErrorEmpresa && (
+              <p id="qc-lead-empresa-error" role="alert" className={FIELD_ERROR_CLASS}>
                 Indica la empresa para continuar.
               </p>
             )}
