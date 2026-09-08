@@ -12,12 +12,15 @@ import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 import DoubleConfirmDeleteDialog from "@/components/shared/DoubleConfirmDeleteDialog";
 import { usePermissions } from "@/hooks/shared";
 
-type Puerto = { id: string; code: string; name: string; country: string; activo: boolean };
+type Puerto = { id: string; code: string; name: string; country: string; activo: boolean; activoOrg?: boolean };
+
+/** Lo que ve la empresa: global encendido y sin apagado propio. */
+const visibleOrg = (p: Puerto) => p.activoOrg ?? p.activo;
 
 export default function TabPuertos() {
   const { data: puertos = [], isLoading: puertosLoading } = useAllPuertos();
   const { agregarPuerto, toggleActivo, eliminarPuerto } = useAdminPuertos();
-  const { canAdminTenant } = usePermissions();
+  const { isSuperAdmin } = usePermissions();
   const [puertoBusqueda, setPuertoBusqueda] = useState("");
   const [nuevoCode, setNuevoCode] = useState("");
   const [nuevoName, setNuevoName] = useState("");
@@ -45,17 +48,24 @@ export default function TabPuertos() {
     { id: "name", header: "Nombre", cell: ({ row }) => row.original.name },
     { id: "country", header: "País", cell: ({ row }) => row.original.country },
     {
-      id: "activo", header: "Activo",
+      id: "activo", header: "Visible en mi empresa",
       meta: { className: "text-center", headerClassName: "text-center" },
-      cell: ({ row }) => <Switch checked={row.original.activo} onCheckedChange={(checked) => toggleActivo.mutate({ id: row.original.id, activo: checked })} aria-label={row.original.activo ? `Desactivar puerto ${row.original.name}` : `Activar puerto ${row.original.name}`} />,
+      cell: ({ row }) => (
+        <Switch
+          checked={visibleOrg(row.original)}
+          disabled={!row.original.activo}
+          onCheckedChange={(checked) => toggleActivo.mutate({ id: row.original.id, activo: checked })}
+          aria-label={visibleOrg(row.original) ? `Ocultar puerto ${row.original.name} en mi empresa` : `Mostrar puerto ${row.original.name} en mi empresa`}
+        />
+      ),
     },
     {
       id: "eliminar", header: "",
       meta: { headerClassName: "w-12" },
-      // UIA-05: el botón sólo se ofrece a quien sí tiene permiso de borrado
-      // (antes el usuario lo descubría con un toast de error tras el clic).
+      // El catálogo es global: sólo la plataforma puede borrar filas. Las
+      // empresas lo ocultan con el interruptor de arriba.
       cell: ({ row }) =>
-        canAdminTenant ? (
+        isSuperAdmin ? (
           <Button variant="ghost" size="icon" className="min-h-11 min-w-11 md:h-8 md:w-8 md:min-h-0 md:min-w-0 text-destructive hover:text-destructive" disabled={eliminarPuerto.isPending} onClick={() => setPuertoAEliminar(row.original)} aria-label={`Eliminar puerto ${row.original.name}`}>
             <Trash2 className="h-4 w-4" />
           </Button>
@@ -67,9 +77,10 @@ export default function TabPuertos() {
     <Card>
       <CardHeader>
         <CardTitle>Catálogo de Puertos</CardTitle>
-        <CardDescription>Administra los puertos disponibles en cotizaciones y embarques. Desactiva los que no uses.</CardDescription>
+        <CardDescription>Catálogo compartido. Enciende o apaga los puertos que quieres ver en tu empresa; no afecta a otras empresas.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
+        {isSuperAdmin && (
         <div className="flex flex-wrap gap-2 items-end">
           <FormField label="Código" className="space-y-1">
             <Input className="w-28" placeholder="MXZLO" value={nuevoCode} onChange={(e) => setNuevoCode(e.target.value)} />
@@ -84,6 +95,7 @@ export default function TabPuertos() {
             <Plus className="h-4 w-4 mr-1" /> Agregar
           </Button>
         </div>
+        )}
 
         <SearchInput value={puertoBusqueda} onChange={setPuertoBusqueda} placeholder="Buscar por código, nombre o país…" />
 
@@ -94,11 +106,11 @@ export default function TabPuertos() {
             isLoading={puertosLoading}
             emptyMessage="No se encontraron puertos"
             rowKey={(p) => p.id}
-            rowClassName={(p) => !p.activo ? "opacity-50" : ""}
+            rowClassName={(p) => !visibleOrg(p) ? "opacity-50" : ""}
             density={TABLE_DENSITY.embebida}
           />
         </div>
-        <p className="text-xs text-muted-foreground">{puertos.length} puertos en total · {puertos.filter(p => p.activo).length} activos</p>
+        <p className="text-xs text-muted-foreground">{puertos.length} puertos en total · {puertos.filter(visibleOrg).length} visibles en mi empresa</p>
       </CardContent>
       <DoubleConfirmDeleteDialog
         open={!!puertoAEliminar}

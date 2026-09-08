@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.823.222] - 2026-09-08
+- **fix(catalogos)**: Puertos, Navieras y Tipos de Contenedor siguen siendo catálogos globales, pero cada admin de empresa ya puede encenderlos/apagarlos para su empresa (antes el interruptor fallaba con "No tienes permisos"; sólo super_admin podía moverlo).
+- **feat(db)**: nueva tabla `catalogo_org_desactivado` (lista de apagados por organización) con RLS: lectura por miembros de la organización y alta/baja sólo para administradores de catálogo (`es_admin_catalogo`). No se modifica el `activo` global.
+- **fix(ui)**: los selectores excluyen lo apagado por la empresa; las pestañas de configuración muestran "Visible en mi empresa" y los controles de alta/eliminación globales sólo se ofrecen a super_admin.
+
+
 ## [13.823.221] - 2026-09-08
 - **feat(crm)**: renombre de "Fuente" a "Origen" en todo el módulo CRM (alta de lead, ficha, filtros, tabla, exportación CSV y analytics).
 - **feat(crm)**: catálogo de orígenes de lead reducido a 3 opciones: Prospección, Finkargo y Referido.

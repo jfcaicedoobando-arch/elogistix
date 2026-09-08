@@ -719,6 +719,38 @@ export type Database = {
           },
         ]
       }
+      catalogo_org_desactivado: {
+        Row: {
+          catalogo: string
+          created_at: string
+          created_by: string | null
+          item_id: string
+          organization_id: string
+        }
+        Insert: {
+          catalogo: string
+          created_at?: string
+          created_by?: string | null
+          item_id: string
+          organization_id?: string
+        }
+        Update: {
+          catalogo?: string
+          created_at?: string
+          created_by?: string | null
+          item_id?: string
+          organization_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "catalogo_org_desactivado_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cierre_embarque_log: {
         Row: {
           accion: string

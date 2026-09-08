@@ -7,6 +7,7 @@ import { unwrapOr, run } from "@/lib/supabase/response";
 import { warnIfTruncated } from "@/lib/supabase/assertNotTruncated";
 import { registrarActividad } from "@/services/bitacora/registrar";
 import { LIMITE_CATALOGOS, type Naviera } from "./catalogosTypes";
+import { fetchDesactivadosOrg, setActivoOrg } from "./catalogoOrgVisibilidad";
 
 export async function fetchNavieras(includeInactive = false): Promise<Naviera[]> {
   // 12.34.0: .limit(CAP_LISTA) defensivo (evita el cap silencioso de 1000 de PostgREST).
@@ -14,15 +15,18 @@ export async function fetchNavieras(includeInactive = false): Promise<Naviera[]>
   if (!includeInactive) query = query.eq("activo", true);
   const rows = fromDb<Naviera[]>(await unwrapOr(query, []));
   warnIfTruncated(rows, LIMITE_CATALOGOS, "catalogos.fetchNavieras");
-  return rows;
+  const apagados = await fetchDesactivadosOrg("navieras");
+  if (!includeInactive) return rows.filter((r) => !apagados.has(r.id));
+  return rows.map((r) => ({ ...r, activoOrg: r.activo && !apagados.has(r.id) }));
 }
 
 export async function insertNaviera(input: { code: string; name: string }): Promise<void> {
   await run(supabase.from("navieras").insert(input));
 }
 
+/** Enciende/apaga la naviera SÓLO para la empresa activa (el catálogo es global). */
 export async function setNavieraActivo(id: string, activo: boolean): Promise<void> {
-  await run(supabase.from("navieras").update({ activo }).eq("id", id));
+  await setActivoOrg("navieras", id, activo);
 }
 
 export async function deleteNaviera(id: string): Promise<void> {

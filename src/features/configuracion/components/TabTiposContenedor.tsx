@@ -12,12 +12,15 @@ import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 import DoubleConfirmDeleteDialog from "@/components/shared/DoubleConfirmDeleteDialog";
 import { usePermissions } from "@/hooks/shared";
 
-type TipoContenedor = { id: string; code: string; name: string; activo: boolean };
+type TipoContenedor = { id: string; code: string; name: string; activo: boolean; activoOrg?: boolean };
+
+/** Lo que ve la empresa: global encendido y sin apagado propio. */
+const visibleOrg = (t: TipoContenedor) => t.activoOrg ?? t.activo;
 
 export default function TabTiposContenedor() {
   const { data: tipos = [], isLoading } = useAllTiposContenedor();
   const { agregarTipo, toggleActivo, eliminarTipo } = useAdminTiposContenedor();
-  const { canAdminTenant } = usePermissions();
+  const { isSuperAdmin } = usePermissions();
   const [busqueda, setBusqueda] = useState("");
   const [nuevoCode, setNuevoCode] = useState("");
   const [nuevoName, setNuevoName] = useState("");
@@ -43,15 +46,22 @@ export default function TabTiposContenedor() {
     { id: "code", header: "Código", meta: { className: "font-mono text-xs" }, cell: ({ row }) => row.original.code },
     { id: "name", header: "Nombre", cell: ({ row }) => row.original.name },
     {
-      id: "activo", header: "Activo",
+      id: "activo", header: "Visible en mi empresa",
       meta: { className: "text-center", headerClassName: "text-center" },
-      cell: ({ row }) => <Switch checked={row.original.activo} onCheckedChange={(checked) => toggleActivo.mutate({ id: row.original.id, activo: checked })} aria-label={row.original.activo ? `Desactivar tipo de contenedor ${row.original.name}` : `Activar tipo de contenedor ${row.original.name}`} />,
+      cell: ({ row }) => (
+        <Switch
+          checked={visibleOrg(row.original)}
+          disabled={!row.original.activo}
+          onCheckedChange={(checked) => toggleActivo.mutate({ id: row.original.id, activo: checked })}
+          aria-label={visibleOrg(row.original) ? `Ocultar tipo de contenedor ${row.original.name} en mi empresa` : `Mostrar tipo de contenedor ${row.original.name} en mi empresa`}
+        />
+      ),
     },
     {
       id: "eliminar", header: "",
       meta: { headerClassName: "w-12" },
       cell: ({ row }) =>
-        canAdminTenant ? (
+        isSuperAdmin ? (
           <Button variant="ghost" size="icon" className="min-h-11 min-w-11 md:h-8 md:w-8 md:min-h-0 md:min-w-0 text-destructive hover:text-destructive" disabled={eliminarTipo.isPending} onClick={() => setTipoAEliminar(row.original)} aria-label={`Eliminar tipo ${row.original.name}`}>
             <Trash2 className="h-4 w-4" />
           </Button>
@@ -63,9 +73,10 @@ export default function TabTiposContenedor() {
     <Card>
       <CardHeader>
         <CardTitle>Tipos de Contenedor</CardTitle>
-        <CardDescription>Administra los tipos de contenedor disponibles en el sistema.</CardDescription>
+        <CardDescription>Catálogo compartido. Enciende o apaga los tipos que quieres ver en tu empresa; no afecta a otras empresas.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
+        {isSuperAdmin && (
         <div className="flex flex-wrap gap-2 items-end">
           <FormField label="Código" className="space-y-1">
             <Input className="w-28" placeholder="40HC" value={nuevoCode} onChange={(e) => setNuevoCode(e.target.value)} />
@@ -77,6 +88,7 @@ export default function TabTiposContenedor() {
             <Plus className="h-4 w-4 mr-1" /> Agregar
           </Button>
         </div>
+        )}
 
         <SearchInput value={busqueda} onChange={setBusqueda} placeholder="Buscar por código o nombre…" />
 
@@ -87,11 +99,11 @@ export default function TabTiposContenedor() {
             isLoading={isLoading}
             emptyMessage="No se encontraron tipos de contenedor"
             rowKey={(t) => t.id}
-            rowClassName={(t) => !t.activo ? "opacity-50" : ""}
+            rowClassName={(t) => !visibleOrg(t) ? "opacity-50" : ""}
             density={TABLE_DENSITY.embebida}
           />
         </div>
-        <p className="text-xs text-muted-foreground">{tipos.length} tipos en total · {tipos.filter(t => t.activo).length} activos</p>
+        <p className="text-xs text-muted-foreground">{tipos.length} tipos en total · {tipos.filter(visibleOrg).length} visibles en mi empresa</p>
       </CardContent>
       <DoubleConfirmDeleteDialog
         open={!!tipoAEliminar}
