@@ -66,6 +66,7 @@ export function NuevoEmbarquePasos({ w }: { w: Wizard }) {
         cargandoCostosVinculados={w.cargandoCostosVinculados}
         errorCostosVinculados={w.errorCostosVinculados}
         onReintentarCostos={w.reintentarCostosVinculados}
+        costosBloqueados={w.costosBloqueados}
         errors={w.validationErrors[4] || {}}
       />
     );
