@@ -13,6 +13,8 @@ BEGIN
     RAISE EXCEPTION 'Decisión de tarifa inválida: %', p_decision USING ERRCODE='P0001';
   END IF;
   PERFORM public.enforce_cotizacion_vigente(p_cotizacion_id);
+  SELECT * INTO v_cot FROM public.cotizaciones WHERE id=p_cotizacion_id;
+  IF NOT FOUND THEN RAISE EXCEPTION 'Cotización no encontrada' USING ERRCODE='P0002'; END IF;
   v_rev := public.revalidar_tarifa_cotizacion(p_cotizacion_id);
   IF p_decision='sin_cambios' THEN
     IF v_rev->>'severidad' = 'bloqueante' THEN
@@ -31,7 +33,6 @@ BEGIN
     END IF;
   END IF;
   v_embarque_id := public.crear_embarque_borrador_core(p_cotizacion_id);
-  SELECT * INTO v_cot FROM public.cotizaciones WHERE id=p_cotizacion_id;
 
   -- v13.823.32: repetir la conversión (el core devuelve el embarque ya
   -- existente) NO debe pisar el snapshot/decisión histórica de tarifa.

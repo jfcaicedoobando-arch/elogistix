@@ -29,8 +29,8 @@ DECLARE
   v_delta_abs       NUMERIC;
   v_delta_pct       NUMERIC;
   v_reaprob_vigente BOOLEAN := FALSE;
-  v_delta_aprobado  NUMERIC;
-  v_vig_aprobada    BOOLEAN;
+  v_snapshot        JSONB;
+  v_snapshot_aprob  JSONB;
 BEGIN
   SELECT * INTO v_cot FROM public.cotizaciones WHERE id=p_cotizacion_id;
   IF NOT FOUND THEN RAISE EXCEPTION 'Cotización no encontrada' USING ERRCODE='P0002'; END IF;
@@ -85,6 +85,26 @@ BEGIN
       IF v_delta_pct > v_max_delta_pct THEN v_max_delta_pct := v_delta_pct; END IF;
     END IF;
   END LOOP;
+
+  -- Huella económica canónica: identifica cada costo fuente y su importe
+  -- vigente. A diferencia del máximo porcentual, detecta cualquier cambio de
+  -- composición o importe aunque el porcentaje agregado coincida.
+  SELECT jsonb_build_object(
+    'tarifa_vigente', v_tarifa_vigente,
+    'filas', COALESCE(jsonb_agg(jsonb_build_object(
+      'cotizacion_costo_id', cc.id,
+      'tarifa_id', cc.costeo_tarifa_id,
+      'recargo_id', cc.costeo_tarifa_recargo_id,
+      'cantidad', cc.cantidad,
+      'moneda', cc.moneda,
+      'monto_actual', CASE WHEN cc.costeo_tarifa_recargo_id IS NOT NULL THEN r.monto ELSE t.flete_base END
+    ) ORDER BY cc.id), '[]'::jsonb)
+  ) INTO v_snapshot
+  FROM public.cotizacion_costos cc
+  LEFT JOIN public.costeo_tarifa_recargos r ON r.id=cc.costeo_tarifa_recargo_id
+  LEFT JOIN public.costeo_tarifas t ON t.id=cc.costeo_tarifa_id
+  WHERE cc.cotizacion_id=v_cot.id AND cc.deleted_at IS NULL
+    AND (cc.costeo_tarifa_recargo_id IS NOT NULL OR cc.costeo_tarifa_id IS NOT NULL);
   IF NOT v_tarifa_vigente AND v_bloquea_vencida THEN v_severidad := 'bloqueante';
   ELSIF jsonb_array_length(v_cambios)=0 AND v_tarifa_vigente THEN v_severidad := 'sin_cambios';
   ELSIF v_max_delta_pct > v_umbral_pct THEN v_severidad := 'bloqueante';
@@ -94,15 +114,8 @@ BEGIN
   -- R201-COT-02: la re-aprobación de ventas consume el bloqueo, pero SÓLO si
   -- corresponde al mismo delta que ventas autorizó.
   IF v_severidad = 'bloqueante' AND v_cot.estado_revalidacion = 'reaprobada' THEN
-    BEGIN
-      v_delta_aprobado := (v_cot.revalidacion_delta_jsonb->>'max_delta_pct')::numeric;
-    EXCEPTION WHEN others THEN v_delta_aprobado := NULL; END;
-    BEGIN
-      v_vig_aprobada := (v_cot.revalidacion_delta_jsonb->>'tarifa_vigente')::boolean;
-    EXCEPTION WHEN others THEN v_vig_aprobada := NULL; END;
-    IF v_delta_aprobado IS NOT NULL
-       AND ABS(ROUND(v_delta_aprobado,2) - ROUND(v_max_delta_pct,2)) <= 0.01
-       AND COALESCE(v_vig_aprobada, v_tarifa_vigente) IS NOT DISTINCT FROM v_tarifa_vigente THEN
+    v_snapshot_aprob := v_cot.revalidacion_delta_jsonb->'snapshot_economico';
+    IF v_snapshot_aprob IS NOT NULL AND v_snapshot_aprob = v_snapshot THEN
       v_severidad := 'informativa';
       v_reaprob_vigente := TRUE;
     END IF;
@@ -113,6 +126,7 @@ BEGIN
     'cambios',v_cambios,'umbral_pct',v_umbral_pct,'max_delta_pct',v_max_delta_pct,
     'estado_revalidacion',v_cot.estado_revalidacion,
     'reaprobacion_vigente',v_reaprob_vigente,
+    'snapshot_economico',v_snapshot,
     'motivo',CASE WHEN v_reaprob_vigente THEN 'reaprobada_por_ventas' ELSE NULL END,
     'tarifa_id_vigente',CASE WHEN v_tarifa_vigente THEN v_cot.tarifa_id ELSE NULL END);
 END;
