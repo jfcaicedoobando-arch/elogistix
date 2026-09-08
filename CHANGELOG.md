@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.823.240] - 2026-09-08
+- **feat(facturación)**: nueva bandeja "REPs" dentro del grupo Histórico con los complementos de pago ya timbrados ante el SAT: folio, UUID, factura, cliente, fecha y monto, con buscador, descarga de PDF/XML y aviso si el REP fue cancelado después. Sólo lectura; los REPs pendientes siguen en Cobrar → REP pendientes.
+
 ## [13.823.239] - 2026-09-08
 - **fix(calendario)**: el día de hoy ya no pierde contraste cuando además es el día seleccionado; el énfasis (aro y texto azul) sólo se aplica cuando hoy NO está seleccionado.
 - **fix(crm)**: al cerrar el alta de lead y volver a abrirla ya no reaparece el aviso de "Empresa" del intento anterior; el borrador y la asignación se conservan.
