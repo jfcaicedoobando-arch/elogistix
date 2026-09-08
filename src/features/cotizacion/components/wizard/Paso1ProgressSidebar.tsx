@@ -7,6 +7,22 @@ import { SectionHeading } from "@/components/shared/SectionHeading";
 import { usePaso1SectionStatus } from "@/features/cotizacion/hooks/usePaso1SectionStatus";
 import type { CotizacionFormValues } from "@/features/cotizacion/types";
 
+/** Alto aproximado del header fijo del wizard + holgura de lectura. */
+const HEADER_OFFSET_PX = 88;
+
+/** Contenedor scrollable real más cercano (el cuerpo del wizard). */
+function scrollParent(el: HTMLElement): HTMLElement | null {
+  let actual: HTMLElement | null = el.parentElement;
+  while (actual) {
+    const overflowY = window.getComputedStyle(actual).overflowY;
+    if ((overflowY === "auto" || overflowY === "scroll") && actual.scrollHeight > actual.clientHeight) {
+      return actual;
+    }
+    actual = actual.parentElement;
+  }
+  return null;
+}
+
 interface SectionDef {
   id: string;
   label: string;
