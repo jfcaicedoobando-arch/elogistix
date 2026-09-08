@@ -5,6 +5,7 @@
  * de registrar pago: `total − Σ monto_aplicado_factura`.
  *
  * v13.232.0 · Confirmación de eliminar pago migrada a `ConfirmActionDialog` (Lote 7d.2).
+ * v13.823.240 · Agrega cancelación de REP desde el detalle de factura.
  */
 import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
@@ -16,7 +17,9 @@ import { useNotasCreditoAplicadas } from "@/features/facturacion/hooks/useSaldoF
 import { calcularSaldoFactura } from "@/lib/financial/saldoFactura";
 import { useRegistrarActividad } from "@/hooks/shared";
 import { DialogPreviewCfdiPdf } from "@/features/facturacion/components/DialogPreviewCfdiPdf";
-import { FacturaPagosTabla } from "./FacturaPagosTabla";
+import { DialogCancelarRep } from "@/features/facturacion/components/DialogCancelarRep";
+import { useCancelarRepController } from "./useCancelarRepController";
+import { FacturaPagosTabla, type PagoRow } from "./FacturaPagosTabla";
 import { FacturaPagosHeader } from "./FacturaPagosHeader";
 import { FacturaEstadoInconsistenteAlert } from "./FacturaEstadoInconsistenteAlert";
 import { esEstadoInconsistente } from "./facturaEstadoInconsistente";
