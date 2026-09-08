@@ -5,15 +5,12 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Hint } from "@/components/shared/Hint";
 import { Input } from "@/components/ui/input";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { ValidationAlert } from "@/components/feedback/ValidationAlert";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
-import { AlertCircle, Loader2, RefreshCw } from "lucide-react";
 import { useContenedoresEmbarque } from "@/features/embarques/hooks";
 import { useTcInicial, type TcInicial } from "@/features/catalogos/hooks/useTcInicial";
 import { useCostosPreciosCalc } from "@/features/embarques/hooks/useCostosPreciosCalc";
 import { CostosCard, VentasCard } from "./StepCostosPreciosCards";
 import { StepCostosTcAviso } from "./StepCostosTcAviso";
+import { StepCostosPreciosAlerts } from "./StepCostosPreciosAlerts";
 import type { StepValidationErrors } from "@/features/embarques/domain/embarqueWizardSchemas";
 import type { EmbarqueFormValues } from "@/features/embarques/hooks";
 import type { ConceptoVentaLocal as ConceptoVentaRow, ConceptoCostoLocal as ConceptoCostoRow } from "@/types/concepto";
@@ -95,7 +92,6 @@ export function StepCostosPrecios(props: Props) {
   const totalVentaUSD = ventaCalc.total;
   const tcFaltante = costoCalc.tcMissing || ventaCalc.tcMissing;
   const filasMixtasTotales = costoCalc.filasMixtas.length + ventaCalc.filasMixtas.length;
-  const hasErrors = Object.keys(errors).length > 0;
   const showTcWarning = tcFaltante && filasMixtasTotales > 0;
   const utilidadCalculada = totalVentaUSD - totalCostoUSD;
 
@@ -112,33 +108,14 @@ export function StepCostosPrecios(props: Props) {
   return (
     <TooltipProvider delayDuration={150}>
       <div className="space-y-6">
-        {hasErrors && <ValidationAlert severity="error" errors={errors} />}
-        {cargandoCostosVinculados && (
-          <Alert>
-            <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
-            <AlertTitle>Importando costos de la cotización</AlertTitle>
-            <AlertDescription>Espera a que termine antes de crear el embarque.</AlertDescription>
-          </Alert>
-        )}
-        {errorCostosVinculados && (
-          <Alert variant="destructive">
-            <AlertCircle className="h-4 w-4" aria-hidden />
-            <AlertTitle>No se pudieron importar los costos</AlertTitle>
-            <AlertDescription className="flex items-center justify-between gap-3">
-              <span>Reintenta para completar la información antes de guardar.</span>
-              <Button type="button" variant="outline" size="sm" onClick={onReintentarCostos}>
-                <RefreshCw className="mr-2 h-4 w-4" aria-hidden />
-                Reintentar
-              </Button>
-            </AlertDescription>
-          </Alert>
-        )}
-        {showTcWarning && (
-          <ValidationAlert
-            severity="warning"
-            errors={{ tipoCambio: `Falta tipo de cambio para convertir ${filasMixtasTotales} fila(s) en moneda extranjera. Captura el TC USD/EUR antes de continuar.` }}
-          />
-        )}
+        <StepCostosPreciosAlerts
+          errors={errors}
+          cargandoCostosVinculados={cargandoCostosVinculados}
+          errorCostosVinculados={errorCostosVinculados}
+          onReintentarCostos={onReintentarCostos}
+          showTcWarning={showTcWarning}
+          filasMixtasTotales={filasMixtasTotales}
+        />
         <CostosCard
           cols={costoCols}
           showContenedorCol={showContenedorCol}

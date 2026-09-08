@@ -83,7 +83,7 @@ export function useNuevoEmbarqueCotVinculada({
       const token = ++vinculacionRef.current;
       void hidratarConceptosDesdeCotizacion(cot, token);
     },
-    [form, hidratarConceptosDesdeCotizacion],
+    [form, hidratarConceptosDesdeCotizacion, setConceptosCosto],
   );
 
   const handleDesvincularCotizacion = useCallback(
