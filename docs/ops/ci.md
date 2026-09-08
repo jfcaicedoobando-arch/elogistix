@@ -21,6 +21,9 @@ seguridad bloqueantes se conservan íntegras.
 
 Estructura actual (experimento de medición, no un cambio de política):
 
+Son **4 definiciones de job en YAML** que se expanden a **6 jobs reales** (1
+`detector` + 1 `checks` + 3 shards de `tests` + 1 `ci-success`):
+
 1. `detector` — job ligero: sólo checkout y el paso de diff. Expone
    `frontend` / `edge` / `database`.
 2. `checks` — ESLint (`--max-warnings 0`), `typecheck`, guard estático de BD
@@ -34,6 +37,11 @@ Estructura actual (experimento de medición, no un cambio de política):
    `success` habiendo áreas activas, o si la matrix no es `success` cuando
    `frontend=true`. Un `skipped` sólo se acepta cuando el área correspondiente
    es `false`. Sin `continue-on-error`.
+
+Benchmark de referencia (corrida de 1 job unificado previa): `run 34196983386`,
+15m44s de espera total y 922s de ejecución acumulada. Las métricas del ensayo
+con 3 shards aún están pendientes de validación final; la primera corrida
+(`unhandled error` asíncrono en shard 2) **no** se registra como éxito.
 
 Los guardrails de arquitectura/auditoría (`architecture.test.ts`,
 `architecture-baseline.test.ts`, `audit-report`, `audit-casts-classifier`) ya
