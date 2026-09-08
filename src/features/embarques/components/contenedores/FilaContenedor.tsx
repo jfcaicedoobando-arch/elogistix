@@ -7,13 +7,6 @@ import { Trash2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { ConfirmActionDialog } from "@/components/shared/dialogs/ConfirmActionDialog";
 import { NumericInput } from "@/components/shared/NumericInput";
 import type { ContenedorBorrador } from "@/features/embarques/types/contenedor";
@@ -24,8 +17,9 @@ import {
   normalizarNumeroContenedor,
 } from "@/features/embarques/domain/contenedorIso6346";
 import { resolveTipoContenedorNombre } from "@/features/cotizacion/utils/resolveTipoContenedorNombre";
-import { opcionTipoGuardada } from "@/features/embarques/domain/opcionTipoContenedor";
+import { CampoTipoContenedor } from "./CampoTipoContenedor";
 import { cn } from "@/lib/utils";
+
 
 interface Props {
   index: number;
@@ -54,12 +48,8 @@ export function FilaContenedor({
   const tipoNombre = value.tipo_contenedor
     ? resolveTipoContenedorNombre(value.tipo_contenedor, tiposContenedor, "")
     : "";
-  const tiposSeleccionables = tiposContenedor.filter((ct) => ct.code !== "LCL");
-  const opcionGuardada = opcionTipoGuardada(
-    value.tipo_contenedor,
-    tiposContenedor,
-    tiposSeleccionables.map((ct) => ct.code),
-  );
+
+
 
   const handleTrashClick = () => {
     if (filaVacia) {
@@ -134,32 +124,14 @@ export function FilaContenedor({
           )}
         </div>
 
-        <div className="space-y-1">
-          <Label size="sm" htmlFor={`${uid}-tipo`}>Tipo *</Label>
-          <Select
-            value={value.tipo_contenedor || undefined}
-            onValueChange={(v) => onChange({ tipo_contenedor: v })}
-            disabled={disabled}
-          >
-            <SelectTrigger id={`${uid}-tipo`}>
-              <SelectValue placeholder="Seleccionar tipo" />
-            </SelectTrigger>
-            <SelectContent>
-              {/* R219-UI-02: el valor heredado de la cotización es el UUID del
-                  catálogo; sin esta opción el selector se pintaba VACÍO. Se
-                  conserva el valor guardado y se muestra su nombre legible. */}
-              {opcionGuardada && (
-                <SelectItem value={opcionGuardada.value}>{opcionGuardada.label}</SelectItem>
-              )}
-              {tiposSeleccionables
-                .map((ct) => (
-                  <SelectItem key={ct.code} value={ct.code}>
-                    {ct.name}
-                  </SelectItem>
-                ))}
-            </SelectContent>
-          </Select>
-        </div>
+        <CampoTipoContenedor
+          id={`${uid}-tipo`}
+          value={value.tipo_contenedor}
+          tiposContenedor={tiposContenedor}
+          onChange={(tipo) => onChange({ tipo_contenedor: tipo })}
+          disabled={disabled}
+        />
+
 
         <div className="space-y-1 md:col-span-2">
           <Label size="sm" htmlFor={`${uid}-blhouse`}>BL House (opcional)</Label>
