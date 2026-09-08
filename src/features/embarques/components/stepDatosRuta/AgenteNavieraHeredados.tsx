@@ -118,13 +118,9 @@ export function AgenteEmbarqueSelector({ cotizacionAgenteId }: { cotizacionAgent
   );
 }
 
-export function NavieraEmbarqueSelector({
-  cotizacionNavieraId,
-  className,
-}: {
-  cotizacionNavieraId?: string | null;
-  className?: string;
-}) {
+type NavieraEmbarqueSelectorProps = { cotizacionNavieraId?: string | null; className?: string };
+
+export function NavieraEmbarqueSelector({ cotizacionNavieraId, className }: NavieraEmbarqueSelectorProps) {
   const { setValue, watch } = useFormContext<EmbarqueFormValues>();
   const { data: navieras = [] } = useNavieras();
   const currentId = watch("navieraId");
