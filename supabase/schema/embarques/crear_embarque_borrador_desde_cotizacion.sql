@@ -7,14 +7,28 @@ CREATE OR REPLACE FUNCTION public.crear_embarque_borrador_desde_cotizacion(p_cot
  SECURITY DEFINER
  SET search_path TO 'public'
 AS $function$
-DECLARE v_embarque_id UUID; v_cot public.cotizaciones%ROWTYPE; v_ya_decidido BOOLEAN;
+DECLARE v_embarque_id UUID; v_cot public.cotizaciones%ROWTYPE; v_ya_decidido BOOLEAN; v_rev jsonb;
 BEGIN
   IF p_decision NOT IN ('sin_cambios','mantenida_por_operaciones','refrescada','sustituida','reaprobada_ventas') THEN
     RAISE EXCEPTION 'Decisión de tarifa inválida: %', p_decision USING ERRCODE='P0001';
   END IF;
   PERFORM public.enforce_cotizacion_vigente(p_cotizacion_id);
+  v_rev := public.revalidar_tarifa_cotizacion(p_cotizacion_id);
   IF p_decision='sin_cambios' THEN
-    PERFORM public.enforce_revalidacion_sin_cambios(p_cotizacion_id);
+    IF v_rev->>'severidad' = 'bloqueante' THEN
+      RAISE EXCEPTION 'LC_TARIFA_REQUIERE_REVALIDACION: la tarifa cambió antes de crear el embarque' USING ERRCODE='P0001';
+    END IF;
+  ELSIF p_decision='reaprobada_ventas' THEN
+    IF COALESCE((v_rev->>'reaprobacion_vigente')::boolean, false) IS NOT TRUE THEN
+      RAISE EXCEPTION 'LC_REAPROBACION_NO_VIGENTE: la aprobación de ventas no corresponde al estado económico actual' USING ERRCODE='P0001';
+    END IF;
+  ELSIF p_decision IN ('refrescada','sustituida') THEN
+    IF p_tarifa_id_aplicada IS NULL OR NOT EXISTS (
+      SELECT 1 FROM public.costeo_tarifas t
+       WHERE t.id=p_tarifa_id_aplicada AND t.organization_id=v_cot.organization_id
+    ) THEN
+      RAISE EXCEPTION 'LC_TARIFA_APLICADA_INVALIDA: selecciona una tarifa válida de la organización' USING ERRCODE='P0001';
+    END IF;
   END IF;
   v_embarque_id := public.crear_embarque_borrador_core(p_cotizacion_id);
   SELECT * INTO v_cot FROM public.cotizaciones WHERE id=p_cotizacion_id;
@@ -62,3 +76,6 @@ BEGIN
   RETURN v_embarque_id;
 END;
 $function$;
+
+REVOKE ALL ON FUNCTION public.crear_embarque_borrador_desde_cotizacion(uuid, text, uuid, jsonb) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.crear_embarque_borrador_desde_cotizacion(uuid, text, uuid, jsonb) TO authenticated, service_role;

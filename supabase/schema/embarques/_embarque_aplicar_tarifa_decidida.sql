@@ -24,8 +24,10 @@ DECLARE
   v_unit         numeric;
   v_base         numeric;
   v_n            integer;
-  v_por_fila     numeric;
-  v_resto        numeric;
+  v_cent         bigint;
+  v_piso         bigint;
+  v_resto        bigint;
+  v_equivalentes integer;
   v_actualizados integer := 0;
 BEGIN
   IF p_embarque_id IS NULL OR p_cotizacion_id IS NULL THEN
@@ -33,10 +35,12 @@ BEGIN
   END IF;
 
   FOR v_costo IN
-    SELECT cc.concepto, cc.moneda,
+    SELECT cc.id, cc.concepto, cc.moneda,
            COALESCE(NULLIF(cc.cantidad, 0), 1) AS cantidad,
-           cc.costeo_tarifa_id, cc.costeo_tarifa_recargo_id
+           cc.costo_unitario, cc.costeo_tarifa_id, cc.costeo_tarifa_recargo_id,
+           r.concepto AS recargo_concepto, r.lado AS recargo_lado
       FROM public.cotizacion_costos cc
+      LEFT JOIN public.costeo_tarifa_recargos r ON r.id = cc.costeo_tarifa_recargo_id
      WHERE cc.cotizacion_id = p_cotizacion_id
        AND cc.deleted_at IS NULL
        AND (cc.costeo_tarifa_recargo_id IS NOT NULL OR cc.costeo_tarifa_id IS NOT NULL)
@@ -44,19 +48,20 @@ BEGIN
     v_unit := NULL;
 
     IF v_costo.costeo_tarifa_recargo_id IS NOT NULL THEN
-      -- Tarifa sustituida: el recargo equivalente se busca por concepto en la
-      -- tarifa elegida; si no existe, se conserva el importe cotizado.
-      IF p_tarifa_id_aplicada IS NOT NULL THEN
-        SELECT r.monto INTO v_unit
+      -- Una sustitución sólo usa un recargo equivalente cuando concepto + lado
+      -- identifican exactamente una fila. Si falta o es ambiguo, conserva el
+      -- costo aceptado: nunca elige una coincidencia arbitraria con LIMIT 1.
+      IF p_tarifa_id_aplicada IS NOT NULL AND v_costo.recargo_concepto IS NOT NULL THEN
+        SELECT count(*), min(r.monto) INTO v_equivalentes, v_unit
           FROM public.costeo_tarifa_recargos r
          WHERE r.tarifa_id = p_tarifa_id_aplicada
-           AND lower(btrim(r.concepto)) = lower(btrim(v_costo.concepto))
-         LIMIT 1;
+            AND lower(btrim(r.concepto)) = lower(btrim(v_costo.recargo_concepto))
+            AND r.lado = v_costo.recargo_lado
+            AND r.moneda = v_costo.moneda;
+        IF v_equivalentes <> 1 THEN v_unit := NULL; END IF;
       END IF;
       IF v_unit IS NULL THEN
-        SELECT r.monto INTO v_unit
-          FROM public.costeo_tarifa_recargos r
-         WHERE r.id = v_costo.costeo_tarifa_recargo_id;
+        v_unit := v_costo.costo_unitario;
       END IF;
     ELSE
       SELECT t.flete_base INTO v_unit
@@ -74,15 +79,14 @@ BEGIN
        AND c.deleted_at IS NULL
        AND c.estado_liquidacion = 'Pendiente'::estado_liquidacion
        AND c.origen IN ('cotizacion','costeo_tarifa')
-       AND lower(btrim(c.concepto)) = lower(btrim(v_costo.concepto))
-       AND c.moneda::text = v_costo.moneda;
+       AND c.cotizacion_costo_origen_id = v_costo.id;
 
     CONTINUE WHEN COALESCE(v_n, 0) = 0;
 
-    -- Reparto en centavos: el residuo se carga al primer renglón para que la
-    -- suma de los contenedores sea exactamente el total de la tarifa.
-    v_por_fila := FLOOR(v_base / v_n * 100) / 100;
-    v_resto := ROUND(v_base - (v_por_fila * v_n), 2);
+    -- Reparto de centavos por resto mayor, sin crear montos negativos.
+    v_cent := ROUND(GREATEST(v_base, 0) * 100)::bigint;
+    v_piso := v_cent / v_n::bigint;
+    v_resto := v_cent - (v_piso * v_n::bigint);
 
     FOR v_fila IN
       SELECT c.id, row_number() OVER (ORDER BY c.contenedor_id NULLS FIRST, c.created_at, c.id) AS rn
@@ -91,11 +95,10 @@ BEGIN
          AND c.deleted_at IS NULL
          AND c.estado_liquidacion = 'Pendiente'::estado_liquidacion
          AND c.origen IN ('cotizacion','costeo_tarifa')
-         AND lower(btrim(c.concepto)) = lower(btrim(v_costo.concepto))
-         AND c.moneda::text = v_costo.moneda
+         AND c.cotizacion_costo_origen_id = v_costo.id
     LOOP
       UPDATE public.conceptos_costo
-         SET monto = v_por_fila + CASE WHEN v_fila.rn = 1 THEN v_resto ELSE 0 END,
+         SET monto = (v_piso + CASE WHEN v_fila.rn <= v_resto THEN 1 ELSE 0 END)::numeric / 100,
              origen = 'costeo_tarifa',
              updated_at = now()
        WHERE id = v_fila.id;

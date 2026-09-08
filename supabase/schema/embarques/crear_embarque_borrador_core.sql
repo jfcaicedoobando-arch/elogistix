@@ -223,3 +223,6 @@ BEGIN
   RETURN v_embarque_id;
 END;
 $function$;
+
+REVOKE ALL ON FUNCTION public.crear_embarque_borrador_core(uuid) FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.crear_embarque_borrador_core(uuid) TO service_role;
