@@ -122,3 +122,18 @@ export async function buscarProspectos(term: string): Promise<ProspectoMatch[]> 
   }
   return hits;
 }
+
+/**
+ * CRM-COT-01: resuelve UNA oportunidad como prospecto elegible (misma
+ * elegibilidad que `buscarProspectos` y que la RPC `crm_vincular_cotizacion`).
+ * Devuelve `null` si no es elegible o RLS no la expone.
+ */
+export async function buscarProspectoOportunidad(
+  oportunidadId: string,
+): Promise<ProspectoMatch | null> {
+  const { data, error } = await opsQueryBase().eq("id", oportunidadId).limit(1);
+  if (error) throw error;
+  // SAFE-CAST: el join `etapa`/`lead` se infiere como objeto o array según la cardinalidad de PostgREST.
+  const hit = ((data ?? []) as unknown as OpHit[])[0];
+  return hit ? mapOportunidad(hit) : null;
+}

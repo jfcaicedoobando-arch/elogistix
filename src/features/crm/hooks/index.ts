@@ -8,6 +8,7 @@ export * from './useCrmDashboard';
 export * from './useCrmHotkeys';
 
 export * from './useCrmProspectoSearch';
+export * from './useCrmProspectoOportunidad';
 export * from './useEtapasPipeline';
 export * from './useForecastReportes';
 export * from './useImportarLeadsCsv';
