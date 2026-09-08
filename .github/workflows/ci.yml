@@ -2,14 +2,19 @@ name: CI
 
 # ENSAYO DE 3 SHARDS (medición pedida por el usuario).
 #
-# Estructura: 4 jobs pequeños.
-#   1. detector  → sólo checkout + diff robusto; expone frontend/edge/database.
-#   2. checks    → lint (0 warnings), typecheck, guards DB condicionales, build,
-#                  Deno condicional. Corre EN PARALELO con los shards.
-#   3. tests     → matrix Vitest shard 1..3 (sin coverage, sin retries, sin blobs).
-#   4. ci-success→ agregador "CI Success (aggregator)", nombre conservado por
-#                  compatibilidad con los checks previos (este repo no tiene
-#                  branch protection ni rulesets configurados).
+# Son 4 definiciones de job en YAML que se expanden a 6 jobs reales:
+#   1. detector        → sólo checkout + diff robusto; expone frontend/edge/database.
+#   2. checks          → lint (0 warnings), typecheck, guards DB condicionales, build,
+#                        Deno condicional. Corre EN PARALELO con los shards.
+#   3. tests (matrix)  → Vitest shard 1, 2 y 3 (sin coverage, sin retries, sin blobs).
+#   4. ci-success      → agregador "CI Success (aggregator)", nombre conservado por
+#                        compatibilidad con los checks previos (este repo no tiene
+#                        branch protection ni rulesets configurados).
+#
+# Benchmark de referencia (1 job unificado):
+#   run 34196983386: 15m44s de espera total, 922s de ejecución acumulada.
+#   Métricas del ensayo de 3 shards aún están pendientes de validación final;
+#   la primera corrida (unhandled error en shard 2) no se registra como éxito.
 #
 # El workflow SIEMPRE arranca (sin paths-ignore) para que el check agregador
 # nunca quede pending; los pasos irrelevantes se omiten explícitamente.
