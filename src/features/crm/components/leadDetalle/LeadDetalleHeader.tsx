@@ -15,6 +15,8 @@ import type { CrmLeadRow } from "@/features/crm/domain/leads/constants";
 interface Props {
   lead: CrmLeadRow;
   volver: NonNullable<React.ComponentProps<typeof DetailHeader>["backTo"]>;
+  /** VIS-20260908-06: letrero del regreso según el contexto real (Leads/Prospectos). */
+  volverLabel: string;
   puedeGestionar: boolean;
   canTomarLead: boolean;
   canCrearOportunidad: boolean;
@@ -30,19 +32,19 @@ interface Props {
 }
 
 export default function LeadDetalleHeader({
-  lead, volver, puedeGestionar, canTomarLead, canCrearOportunidad, esProspecto,
+  lead, volver, volverLabel, puedeGestionar, canTomarLead, canCrearOportunidad, esProspecto,
   destinoConversion, onNavegarConversion, onEliminar, onTomar, tomando,
   onCalificar, calificando, onNuevaOportunidad,
 }: Props) {
   return (
     <DetailHeader
       backTo={volver}
-      backLabel="Volver a Leads"
+      backLabel={volverLabel}
       icon={<UserPlus className="h-6 w-6 text-accent shrink-0" />}
       title={lead.empresa}
       titleAs="h2"
       badge={<Badge variant="outline" className="capitalize">{lead.estado}</Badge>}
-      subtitle={`Lead · ${lead.fuente} · creado ${formatFechaEs(lead.created_at)}`}
+      subtitle={`${esProspecto ? "Prospecto" : "Lead"} · ${lead.fuente} · creado ${formatFechaEs(lead.created_at)}`}
       meta={
         <ContactActions
           email={lead.email}

@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.823.239] - 2026-09-08
+- **fix(calendario)**: el día de hoy ya no pierde contraste cuando además es el día seleccionado; el énfasis (aro y texto azul) sólo se aplica cuando hoy NO está seleccionado.
+- **fix(crm)**: al cerrar el alta de lead y volver a abrirla ya no reaparece el aviso de "Empresa" del intento anterior; el borrador y la asignación se conservan.
+- **fix(crm)**: la ficha de un prospecto dice "Volver a Prospectos" (y regresa ahí desde un enlace directo) en lugar de nombrar Leads.
+- **chore(calidad)**: se separó la celda de folio del listado de cotizaciones para respetar el límite de 200 líneas y el botón Eliminar de oportunidad usa borde neutro (dejó de contar como banner artesanal en los candados de CI).
+
+
 ## [13.823.238] - 2026-09-08
 - **datos(ELIMP00259)**: se ligó el concepto de la factura de proveedor FP-000037 (Heregar Logistics, 60,500 MXN) con el costo "Servicios Profesionales de Logistica" del expediente; el costo quedó como Pagado por la factura ya liquidada. Sin cambios de importes ni de esquema.
 

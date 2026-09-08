@@ -56,12 +56,12 @@ export function OportunidadDetalleAcciones({
             <Edit className="h-4 w-4 mr-1" /> Editar
           </Button>
           {/* MEJ-20260908-03: "Nueva cotización" es la acción principal; eliminar
-              queda como peligro secundario (outline) para no invitar al clic. */}
+              queda como peligro secundario (outline, borde neutro) para no invitar al clic. */}
           <Button
             size="sm"
             variant="outline"
             onClick={onEliminar}
-            className="text-destructive border-destructive/40 hover:bg-destructive/10 hover:text-destructive"
+            className="text-destructive hover:bg-destructive/10 hover:text-destructive"
           >
             <Trash2 className="h-4 w-4 mr-1" /> Eliminar
           </Button>

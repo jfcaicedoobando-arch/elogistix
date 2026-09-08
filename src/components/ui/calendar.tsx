@@ -61,8 +61,18 @@ function Calendar({
         // (parecían dos selecciones). El relleno principal queda reservado a
         // la selección; hoy se distingue con un aro y texto en énfasis, y sólo
         // mientras NO esté seleccionado (si hoy = seleccionado, gana selección).
-        today:
-          "[&>button:not([aria-selected='true'])]:ring-1 [&>button:not([aria-selected='true'])]:ring-inset [&>button:not([aria-selected='true'])]:ring-primary [&>button:not([aria-selected='true'])]:text-primary [&>button:not([aria-selected='true'])]:font-semibold",
+        // REM-VIS-02: `aria-selected`/`data-selected` los pone react-day-picker en
+        // la CELDA (gridcell), no en el botón; el guard anterior consultaba el
+        // botón (siempre sin aria) y por eso "hoy seleccionado" recibía también
+        // `text-primary` sobre el relleno primary (texto casi invisible al
+        // perder foco). Ahora el guard se evalúa en la celda.
+        today: [
+          "[&:not([aria-selected='true']):not([data-selected='true'])>button]:ring-1",
+          "[&:not([aria-selected='true']):not([data-selected='true'])>button]:ring-inset",
+          "[&:not([aria-selected='true']):not([data-selected='true'])>button]:ring-primary",
+          "[&:not([aria-selected='true']):not([data-selected='true'])>button]:text-primary",
+          "[&:not([aria-selected='true']):not([data-selected='true'])>button]:font-semibold",
+        ].join(" "),
         outside:
           "day-outside text-muted-foreground opacity-50 aria-selected:bg-accent/50 aria-selected:text-muted-foreground aria-selected:opacity-30",
         disabled: "text-muted-foreground opacity-50",
