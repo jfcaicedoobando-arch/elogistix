@@ -1265,6 +1265,7 @@ export type Database = {
           client_request_id: string | null
           concepto: string
           contenedor_id: string | null
+          cotizacion_costo_origen_id: string | null
           created_at: string
           deleted_at: string | null
           deleted_by: string | null
@@ -1287,6 +1288,7 @@ export type Database = {
           client_request_id?: string | null
           concepto: string
           contenedor_id?: string | null
+          cotizacion_costo_origen_id?: string | null
           created_at?: string
           deleted_at?: string | null
           deleted_by?: string | null
@@ -1309,6 +1311,7 @@ export type Database = {
           client_request_id?: string | null
           concepto?: string
           contenedor_id?: string | null
+          cotizacion_costo_origen_id?: string | null
           created_at?: string
           deleted_at?: string | null
           deleted_by?: string | null
@@ -1333,6 +1336,13 @@ export type Database = {
             columns: ["contenedor_id"]
             isOneToOne: false
             referencedRelation: "embarque_contenedores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conceptos_costo_cotizacion_costo_origen_id_fkey"
+            columns: ["cotizacion_costo_origen_id"]
+            isOneToOne: false
+            referencedRelation: "cotizacion_costos"
             referencedColumns: ["id"]
           },
           {
