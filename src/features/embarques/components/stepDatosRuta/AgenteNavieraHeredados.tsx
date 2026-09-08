@@ -5,7 +5,7 @@
  * Muestran badge "Cotización" cuando el valor coincide con el heredado y
  * permiten un override manual (con opción de restaurar).
  */
-import { useCallback, useEffect, useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import { Controller, useFormContext } from "react-hook-form";
 import { Undo2 } from "lucide-react";
 import { Label } from "@/components/ui/label";
@@ -22,38 +22,17 @@ import { useNavieras } from "@/features/catalogos/hooks/useNavieras";
 import { useCosteoAgentes } from "@/features/costeo/hooks/useCosteoAgentes";
 import { opcionesConValorGuardado } from "@/features/embarques/domain/opcionesCatalogo";
 import type { EmbarqueFormValues } from "@/features/embarques/hooks";
+import { useSyncNombreDesdeCatalogo } from "./agenteNavieraHeredados.helpers";
 
 const NONE = "__none__";
 
-/**
- * R215-COT-02: la cotización guarda `naviera_id` / `agente_id` pero no siempre
- * el nombre. El validador y el payload usan el TEXTO, así que el paso 2 pedía
- * "selecciona una opción" con la naviera ya dibujada. Al resolver el catálogo
- * se copia el nombre sin marcar override manual (`shouldDirty: false`).
- */
-function useSyncNombreDesdeCatalogo(
-  campo: "naviera" | "agente",
-  currentId: string | null | undefined,
-  nombreGuardado: string | null | undefined,
-  buscarNombre: (id: string) => string | undefined,
-  setValue: (campo: "naviera" | "agente", nombre: string) => void,
-) {
-  useEffect(() => {
-    if (!currentId) return;
-    if ((nombreGuardado ?? "").trim()) return;
-    const nombre = buscarNombre(currentId);
-    if (nombre) setValue(campo, nombre);
-  }, [campo, currentId, nombreGuardado, buscarNombre, setValue]);
-}
-
-function BadgeHerencia({ heredado }: { heredado: boolean }) {
-  if (!heredado) return null;
-  return (
+const BadgeHerencia = ({ heredado }: { heredado: boolean }) =>
+  heredado ? (
     <Badge variant="secondary" className="text-2xs font-normal">
       Cotización
     </Badge>
-  );
-}
+  ) : null;
+
 
 export function AgenteEmbarqueSelector({ cotizacionAgenteId }: { cotizacionAgenteId?: string | null }) {
   const { setValue, watch } = useFormContext<EmbarqueFormValues>();
@@ -63,17 +42,12 @@ export function AgenteEmbarqueSelector({ cotizacionAgenteId }: { cotizacionAgent
   const heredado = !!cotizacionAgenteId && currentId === cotizacionAgenteId;
   const overriden = !!cotizacionAgenteId && currentId !== cotizacionAgenteId;
 
-  // P1-5: si el catálogo aún no trae el agente guardado (o está inactivo), se
-  // inyecta una opción sintética para no pintar el select vacío.
   useSyncNombreDesdeCatalogo(
     "agente",
     currentId,
     nombreGuardado,
     useCallback((id: string) => agentes.find((a) => a.id === id)?.nombre, [agentes]),
-    useCallback(
-      (campo, nombre) => setValue(campo, nombre, { shouldValidate: true, shouldDirty: false }),
-      [setValue],
-    ),
+    useCallback((campo, nombre) => setValue(campo, nombre, { shouldValidate: true, shouldDirty: false }), [setValue]),
   );
 
   const opciones = useMemo(
@@ -141,13 +115,9 @@ export function AgenteEmbarqueSelector({ cotizacionAgenteId }: { cotizacionAgent
   );
 }
 
-export function NavieraEmbarqueSelector({
-  cotizacionNavieraId,
-  className,
-}: {
-  cotizacionNavieraId?: string | null;
-  className?: string;
-}) {
+type NavieraEmbarqueSelectorProps = { cotizacionNavieraId?: string | null; className?: string };
+
+export function NavieraEmbarqueSelector({ cotizacionNavieraId, className }: NavieraEmbarqueSelectorProps) {
   const { setValue, watch } = useFormContext<EmbarqueFormValues>();
   const { data: navieras = [] } = useNavieras();
   const currentId = watch("navieraId");
@@ -155,16 +125,12 @@ export function NavieraEmbarqueSelector({
   const heredado = !!cotizacionNavieraId && currentId === cotizacionNavieraId;
   const overriden = !!cotizacionNavieraId && currentId !== cotizacionNavieraId;
 
-  // P1-5: misma tolerancia que en el selector de agente.
   useSyncNombreDesdeCatalogo(
     "naviera",
     currentId,
     nombreGuardado,
     useCallback((id: string) => navieras.find((n) => n.id === id)?.name, [navieras]),
-    useCallback(
-      (campo, nombre) => setValue(campo, nombre, { shouldValidate: true, shouldDirty: false }),
-      [setValue],
-    ),
+    useCallback((campo, nombre) => setValue(campo, nombre, { shouldValidate: true, shouldDirty: false }), [setValue]),
   );
 
   const opciones = useMemo(
