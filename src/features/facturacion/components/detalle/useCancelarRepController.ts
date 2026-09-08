@@ -79,16 +79,33 @@ export function useCancelarRepController(
         return "uncertain";
       }
 
-      const aceptada = res.ok || res.cancellation_status === "accepted";
-      const enVerificacion = res.pending || ["pending", "verifying"].includes(res.cancellation_status);
+      const status = (res.cancellation_status ?? "").toLowerCase();
+      const enVerificacion = res.pending || status === "pending" || status === "verifying";
+      const aceptada = status === "accepted" && !enVerificacion;
 
       if (aceptada) {
-        await eliminar.mutateAsync({ id: pago.id, facturaId });
         registrarActividad.mutate({
           accion: "cancelar_rep",
           modulo: "facturas",
           entidad_id: facturaId,
-          entidad_nombre: `REP cancelado y pago eliminado factura ${facturaNumero}`,
+          entidad_nombre: `REP ${pago.serie_rep ?? ""}${pago.folio_rep ?? pago.id.slice(0, 8)} cancelado ante SAT - factura ${facturaNumero}`,
+          detalles: { pago_id: pago.id, uuid_rep: pago.uuid_rep },
+        });
+
+        try {
+          await eliminar.mutateAsync({ id: pago.id, facturaId });
+        } catch {
+          invalidarQueries();
+          setResultado("accepted_sync_failed");
+          return "accepted_sync_failed";
+        }
+
+        registrarActividad.mutate({
+          accion: "eliminar_pago",
+          modulo: "facturas",
+          entidad_id: facturaId,
+          entidad_nombre: `Pago eliminado tras cancelación REP - factura ${facturaNumero}`,
+          detalles: { pago_id: pago.id },
         });
         invalidarQueries();
         setResultado("accepted");
