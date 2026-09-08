@@ -93,4 +93,39 @@ describe("useCostosPreciosCalc", () => {
     );
     expect(result.current.ventaCalc.total).toBeCloseTo(1184.5, 2);
   });
+
+  it("cambiar la cantidad 2 → 3 recalcula el total de venta", () => {
+    const { result, rerender } = renderHook(
+      ({ cantidad }: { cantidad: number }) =>
+        useCostosPreciosCalc([], [{ cantidad, precioUnitario: 1184.5, moneda: "USD" }], 18.5, 20),
+      { initialProps: { cantidad: 2 } },
+    );
+    expect(result.current.ventaCalc.total).toBeCloseTo(2369, 2);
+    rerender({ cantidad: 3 });
+    expect(result.current.ventaCalc.total).toBeCloseTo(3553.5, 2);
+  });
+
+  it("convierte a USD una venta MXN con cantidad > 1", () => {
+    const { result } = renderHook(() =>
+      useCostosPreciosCalc([], [{ cantidad: 2, precioUnitario: 1850, moneda: "MXN" }], 18.5, 20),
+    );
+    // 2 × 1850 MXN = 3700 MXN ÷ 18.5 = 200 USD
+    expect(result.current.ventaCalc.total).toBeCloseTo(200, 2);
+  });
+
+  it("cantidad 0 o negativa no se cuenta como 1: aporta 0", () => {
+    const { result } = renderHook(() =>
+      useCostosPreciosCalc(
+        [],
+        [
+          { cantidad: 0, precioUnitario: 1184.5, moneda: "USD" },
+          { cantidad: -2, precioUnitario: 1184.5, moneda: "USD" },
+        ],
+        18.5,
+        20,
+      ),
+    );
+    expect(result.current.ventaCalc.total).toBe(0);
+  });
 });
+
