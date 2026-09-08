@@ -50,7 +50,9 @@ export function FilaVentaPrecio({
         }}
       />
       <NumericInput value={venta.cantidad} disabled={bloqueado} onChange={n => update(venta.id, 'cantidad', n)} className="text-body h-10" aria-label="Cantidad venta" />
-      <NumericInput decimals value={venta.precioUnitario} disabled={bloqueado} onChange={n => update(venta.id, 'precioUnitario', n)} className="text-body h-10" aria-label="Subtotal venta" />
+      {/* R219-UI-01: el campo es el precio UNITARIO; el subtotal de la fila se
+          muestra en la columna "Total USD" ya multiplicado por la cantidad. */}
+      <NumericInput decimals value={venta.precioUnitario} disabled={bloqueado} onChange={n => update(venta.id, 'precioUnitario', n)} className="text-body h-10" aria-label="Precio unitario venta (sin IVA)" />
       <Select value={venta.moneda} disabled={bloqueado} onValueChange={v => update(venta.id, 'moneda', v)}>
         <SelectTrigger className="text-body"><SelectValue /></SelectTrigger>
         {/* Ola 2 · A (YAGNI): la venta sólo se factura en MXN o USD. EUR sigue
@@ -69,7 +71,7 @@ export function FilaVentaPrecio({
       <div className="flex items-center gap-1">
         <Input
           readOnly
-          aria-label="Total en USD de la venta"
+          aria-label="Total en USD de la venta (cantidad × precio unitario)"
           value={formatCurrency(totalUSD, 'USD')}
           className={`text-body bg-muted font-semibold ${esMixta ? 'text-warning border-warning/60' : ''}`}
           data-testid={esMixta ? 'fila-mixta-venta' : undefined}

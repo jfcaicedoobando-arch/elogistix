@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.823.220] - 2026-09-08
+- R219-UI-01: la vista previa del Paso 4 (Costos y Pricing) ya multiplica cantidad × precio unitario en total por fila, total de venta y utilidad, con la misma regla monetaria que la persistencia; el campo se etiqueta "Precio unitario (sin IVA)".
+- R219-UI-02: los selectores de tipo de contenedor (cotización tras aplicar tarifa y contenedores del embarque) conservan el valor heredado en UUID mostrando su nombre de catálogo; el Resumen del embarque resuelve el tipo de cada contenedor y ya no muestra UUID crudo.
+
 ## [13.823.219] - 2026-09-08
 
 - **fix(db)**: R217 — en `crear_embarque_completo` el claim de idempotencia (`idempotency_claim`) ahora ocurre ANTES de `_assert_cotizacion_convertible`. Un reintento con el mismo `requestId` tras un alta ya insertada devolvía `LC_COT_YA_TIENE_EMBARQUE` en lugar de la respuesta cacheada. Las validaciones puras (medidas, organización/escritor, relaciones) siguen antes del claim; sin cambios de firma, ACL, RLS, triggers ni datos. Migración `20260913001300_r217_crear_embarque_completo_idempotencia.sql`.
