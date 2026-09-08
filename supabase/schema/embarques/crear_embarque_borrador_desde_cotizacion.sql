@@ -1,4 +1,4 @@
--- Fuente canónica. Espejo 1:1 de la migración v13.823.32 (ola de pulido CxP/cotización→embarque/CRM).
+-- Fuente canónica. Espejo 1:1 de la migración R201-COT-01/02 (cotización→embarque).
 -- Al modificar: edita ESTE archivo y genera la migración con el mismo cuerpo.
 
 CREATE OR REPLACE FUNCTION public.crear_embarque_borrador_desde_cotizacion(p_cotizacion_id uuid, p_decision text DEFAULT 'sin_cambios'::text, p_tarifa_id_aplicada uuid DEFAULT NULL::uuid, p_delta_jsonb jsonb DEFAULT NULL::jsonb)
@@ -33,6 +33,15 @@ BEGIN
            tarifa_revalidada_en=now(),
            tarifa_revalidada_por=auth.uid()
      WHERE id=v_embarque_id;
+
+    -- R201-COT-01: refrescar o sustituir la tarifa debe reflejarse en el COSTO
+    -- del embarque; antes sólo se guardaba la etiqueta de la decisión y el
+    -- embarque nacía con los importes viejos. El histórico de la cotización y
+    -- el precio de venta aceptado no se tocan.
+    IF p_decision IN ('refrescada','sustituida') THEN
+      PERFORM public._embarque_aplicar_tarifa_decidida(
+        v_embarque_id, p_cotizacion_id, COALESCE(p_tarifa_id_aplicada, v_cot.tarifa_id));
+    END IF;
 
     IF p_decision <> 'sin_cambios' AND v_cot.estado_revalidacion='pendiente_reaprobacion' THEN
       UPDATE public.cotizaciones
