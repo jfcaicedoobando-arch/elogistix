@@ -1,5 +1,5 @@
 import { useCallback, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useToast } from "@/hooks/shared";
 import { useClientesForSelect } from "@/features/cliente/hooks";
 import { useCreateCotizacion, useUpdateCotizacion } from "@/features/cotizacion/hooks";
@@ -16,6 +16,7 @@ import { ConflictoPestanaAlert } from "@/features/cotizacion/components/wizard/C
 import { ConflictoSelloAlert } from "@/features/cotizacion/components/wizard/ConflictoSelloAlert";
 import { DraftRestoreBanner } from "@/features/cotizacion/components/wizard/DraftRestoreBanner";
 import { useDraftRestore } from "./useDraftRestore";
+import { usePrefillProspectoOportunidad } from "@/features/cotizacion/hooks/wizard/usePrefillProspectoOportunidad";
 import { CotizacionSuccessDialog } from "@/features/cotizacion/components/wizard/CotizacionSuccessDialog";
 import { GuardarPlantillaDialog } from "@/features/cotizacion/components/wizard/GuardarPlantillaDialog";
 import { PlantillaSelectorPaso1 } from "@/features/cotizacion/components/wizard/PlantillaSelectorPaso1";
@@ -28,6 +29,9 @@ import { useDocumentTitle } from "@/hooks/shared";
 export default function NuevaCotizacion() {
   useDocumentTitle("Nueva cotización");
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  // CRM-COT-01: llegada desde una oportunidad de prospecto del CRM.
+  const oportunidadPrefill = searchParams.get("oportunidad");
   const { toast } = useToast();
   const { user } = useAuth();
   const { organizationId } = useOrgActiva();
@@ -70,6 +74,14 @@ export default function NuevaCotizacion() {
     setCurrentStep: w.setCurrentStep,
     setCostosInternos: w.setCostosInternos,
     resincronizarSello: w.resincronizarSello,
+  });
+
+  // CRM-COT-01: sólo se precarga si no hay borrador vivo ni cotización creada,
+  // para no reemplazar en silencio lo que el usuario ya tenía capturado.
+  usePrefillProspectoOportunidad({
+    form: w.form,
+    oportunidadId: oportunidadPrefill,
+    enabled: Boolean(oportunidadPrefill) && !restaurando && !draftDetectado && !w.cotizacionId,
   });
 
   // B-003 (v13.320.32) — Autoguardado ahora persiste `cotizacionId` en el draft

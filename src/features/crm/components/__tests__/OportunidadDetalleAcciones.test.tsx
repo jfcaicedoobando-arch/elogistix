@@ -17,17 +17,17 @@ const base = {
 describe("OportunidadDetalleAcciones", () => {
   it("sin cliente el botón queda deshabilitado y explica el motivo", () => {
     const crearCotizacion = vi.fn();
-    render(<OportunidadDetalleAcciones {...base} crearCotizacion={crearCotizacion} tieneCliente={false} />);
+    render(<OportunidadDetalleAcciones {...base} crearCotizacion={crearCotizacion} puedeCotizar={false} motivoNoCotizar="Sólo se puede cotizar una oportunidad abierta con cliente o con un prospecto calificado del CRM." />);
     const btn = screen.getByRole("button", { name: /Nueva cotización/i }) as HTMLButtonElement;
     expect(btn.disabled).toBe(true);
     fireEvent.click(btn);
     expect(crearCotizacion).not.toHaveBeenCalled();
-    expect(screen.getByText(/Convierte el prospecto en cliente/i)).toBeTruthy();
+    expect(screen.getByText(/prospecto calificado del CRM/i)).toBeTruthy();
   });
 
   it("con cliente el botón cotiza normalmente", () => {
     const crearCotizacion = vi.fn();
-    render(<OportunidadDetalleAcciones {...base} crearCotizacion={crearCotizacion} tieneCliente />);
+    render(<OportunidadDetalleAcciones {...base} crearCotizacion={crearCotizacion} puedeCotizar />);
     const btn = screen.getByRole("button", { name: /Nueva cotización/i }) as HTMLButtonElement;
     expect(btn.disabled).toBe(false);
     fireEvent.click(btn);

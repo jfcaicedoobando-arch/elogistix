@@ -14,36 +14,42 @@ interface Props {
   onEliminar: () => void;
   canCotizar: boolean;
   canGestionar: boolean;
-  /** La oportunidad ya tiene cliente asociado. Sin cliente no se puede cotizar. */
-  tieneCliente: boolean;
+  /**
+   * CRM-COT-01: la oportunidad puede cotizarse (tiene cliente, o es un
+   * prospecto elegible del CRM y el cotizador se abre precargado).
+   */
+  puedeCotizar: boolean;
+  /** Razón visible cuando no puede cotizarse. */
+  motivoNoCotizar?: string;
 }
 
 export function OportunidadDetalleAcciones({
-  crearCotizacion, crearCotPending, onEditar, onEliminar, canCotizar, canGestionar, tieneCliente,
+  crearCotizacion, crearCotPending, onEditar, onEliminar, canCotizar, canGestionar,
+  puedeCotizar, motivoNoCotizar,
 }: Props) {
   if (!canCotizar && !canGestionar) return null;
-  // v13.823.77 — sin cliente la cotización no puede crearse: el botón queda
-  // deshabilitado con la razón visible en lugar de no hacer nada al pulsarlo.
-  const motivoSinCliente = "Convierte el prospecto en cliente para poder cotizar.";
+  // v13.823.77 — cuando no se puede cotizar el botón queda deshabilitado con la
+  // razón visible en lugar de no hacer nada al pulsarlo.
+  const motivo = motivoNoCotizar ?? "Esta oportunidad no puede cotizarse.";
   return (
     <div className="flex flex-wrap gap-2">
       {canCotizar && (
-        <Hint label={tieneCliente ? undefined : motivoSinCliente}>
+        <Hint label={puedeCotizar ? undefined : motivo}>
           <Button
             size="sm"
             variant="outline"
             onClick={crearCotizacion}
-            disabled={crearCotPending || !tieneCliente}
+            disabled={crearCotPending || !puedeCotizar}
             loading={crearCotPending}
-            aria-describedby={tieneCliente ? undefined : "oportunidad-cotizar-motivo"}
+            aria-describedby={puedeCotizar ? undefined : "oportunidad-cotizar-motivo"}
           >
             {!crearCotPending && <ClipboardList className="h-4 w-4 mr-1" />}
             Nueva cotización
           </Button>
         </Hint>
       )}
-      {canCotizar && !tieneCliente && (
-        <span id="oportunidad-cotizar-motivo" className="sr-only">{motivoSinCliente}</span>
+      {canCotizar && !puedeCotizar && (
+        <span id="oportunidad-cotizar-motivo" className="sr-only">{motivo}</span>
       )}
       {canGestionar && (
         <>

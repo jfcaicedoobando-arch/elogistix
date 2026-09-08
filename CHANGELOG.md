@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.823.225] - 2026-09-08
+- **fix(crm)**: en una oportunidad abierta de un prospecto calificado, "Nueva cotización" ya abre el cotizador con el prospecto/oportunidad precargados (antes quedaba deshabilitado pidiendo convertirlo en cliente). No se da de alta al cliente ni se inserta ningún borrador al abrir; el vínculo canónico se sigue registrando al guardar.
+- **fix(crm)**: si la oportunidad no es elegible (sin cliente y sin prospecto vivo) el botón sigue bloqueado, ahora con el motivo real.
+- **fix(crm)**: la importación de leads reconoce el encabezado "Origen" del CSV exportado (se conservan los alias antiguos "fuente"/"source") y la ayuda del importador indica los 3 orígenes válidos.
+
 ## [13.823.224] - 2026-09-08
 - **fix(catalogos)**: la pestaña Catálogos de Configuración ya incluye sub-pestañas de Puertos, Navieras y Tipos de Contenedor (antes sólo se veían los puertos, sin forma de prender/apagar navieras ni contenedores).
 - **data(catalogos)**: todo el catálogo global queda activo en la plataforma (96 puertos, 1 naviera y 19 tipos de contenedor estaban apagados); la elección de qué usar es por empresa.

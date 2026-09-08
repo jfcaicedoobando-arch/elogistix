@@ -19,6 +19,9 @@ const successToast = vi.fn();
 vi.mock("react-router-dom", () => ({
   useNavigate: () => navigate,
 }));
+vi.mock("@/features/crm/hooks/useCrmProspectoOportunidad", () => ({
+  useCrmProspectoOportunidad: () => ({ data: null, isLoading: false }),
+}));
 vi.mock("@/features/crm/hooks", () => ({
   useEliminarOportunidad: () => ({ mutateAsync: eliminarMutateAsync, isPending: false }),
   useCrearCotizacionDesdeOportunidad: () => ({ mutateAsync: crearCotMutateAsync, isPending: false }),

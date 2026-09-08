@@ -51,7 +51,9 @@ export default function ImportarLeadsCsvDialog({ open, onOpenChange }: Props) {
       footer={footer}
     >
       <p className="text-body-sm text-muted-foreground">
-        Columnas reconocidas: <code>empresa, contacto, email, telefono, ciudad, pais, fuente, estado, score, notas</code>.
+        Columnas reconocidas: <code>empresa, contacto, email, telefono, ciudad, pais, origen, estado, score, notas</code>{" "}
+        (<code>fuente</code> se sigue aceptando como encabezado antiguo). <code>origen</code> acepta{" "}
+        <code>Prospección</code>, <code>Finkargo</code> o <code>Referido</code>.
         La fila 1 debe contener los encabezados. Empresa es obligatoria. El campo{" "}
         <code>estado</code> sólo acepta <code>Nuevo</code>, <code>Contactado</code> o{" "}
         <code>Descalificado</code> (si va vacío se usa <code>Nuevo</code>); los estados

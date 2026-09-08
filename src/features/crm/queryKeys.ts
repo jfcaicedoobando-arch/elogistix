@@ -12,6 +12,7 @@ export const crm = {
   cotizacionesSinRespuesta: (diasUmbral: number, limit: number, uid?: string) =>
     ['crm', 'cotizaciones-sin-respuesta', diasUmbral, limit, uid] as const,
   prospectoSearch: (term: string) => ['crm', 'prospecto-search', term] as const,
+  prospectoOportunidad: (id: string) => ['crm', 'prospecto-oportunidad', id] as const,
   search: (term: string) => ['crm', 'search', term] as const,
   nbaSignals: (uid?: string) => ['crm', 'nba-signals', uid] as const,
   /** Prefijo para invalidar las señales NBA de cualquier usuario. */

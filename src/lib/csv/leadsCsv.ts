@@ -32,7 +32,8 @@ export const LEAD_CSV_HEADER_ALIASES: Record<string, keyof ParsedLeadRow> = {
   telefono: "telefono", phone: "telefono", "teléfono": "telefono", tel: "telefono",
   ciudad: "ciudad", city: "ciudad",
   pais: "pais", "país": "pais", country: "pais",
-  fuente: "fuente", source: "fuente",
+  // CRM-CSV-01: el exportador emite "Origen"; los alias legacy siguen válidos.
+  origen: "fuente", origin: "fuente", fuente: "fuente", source: "fuente",
   estado: "estado", status: "estado",
   score: "score",
   notas: "notas", notes: "notas",
