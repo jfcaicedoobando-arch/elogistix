@@ -1,5 +1,13 @@
 # Changelog
 
+## [13.823.202] - 2026-09-08
+
+Corrección de los 2 fallos de CI local: prueba de aprobación en lote y complejidad de `authenticate`.
+
+- `useAprobarFacturasLote.test.tsx`: expectativas actualizadas al tercer argumento `motivo` (FP-000221) y mock con `importOriginal` para conservar `AprobacionFacturaError`.
+- `_shared/auth.ts`: el reintento de verificación del token se extrajo a `verificarUsuario`, bajando la complejidad de `authenticate` al límite permitido. Comportamiento idéntico.
+- Sin cambios de lógica, SQL, permisos ni RLS.
+
 ## [13.823.201] - 2026-09-07
 
 Aceptar cotización: sin oportunidad ligada ya no se consulta una oportunidad inexistente (JAVASCRIPT-REACT-6A, JAVASCRIPT-REACT-6B).
