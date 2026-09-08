@@ -6,6 +6,7 @@
  * deliberada para reutilizar el wizard tanto en NuevaCotizacion como en EditarCotizacion.
  */
 import { uploadFile } from "@/services/storage/index";
+import { notifyWarning } from "@/lib/ui/appFeedback";
 import type { CotizacionFormValues } from "@/features/cotizacion/types";
 import type { CreateCotizacionInput } from "@/features/cotizacion/types";
 import type { CostoCotizacion } from "@/features/cotizacion/types";
