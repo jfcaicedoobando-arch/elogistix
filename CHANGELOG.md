@@ -1,5 +1,21 @@
 # Changelog
 
+## [13.823.207] - 2026-09-08
+
+Bloque R201 — cotizaciones → embarques (9 hallazgos).
+
+- R201-COT-01: refrescar o sustituir la tarifa ahora sí aplica los importes de la tarifa decidida a los costos del embarque (`_embarque_aplicar_tarifa_decidida`, reparto en centavos, sin tocar renglones liquidados ni el histórico/venta de la cotización).
+- R201-COT-02: `revalidar_tarifa_cotizacion` expone `estado_revalidacion`/`reaprobacion_vigente` y consume el bloqueo cuando ventas ya re-aprobó ESE delta; el modal ofrece "Crear con la re-aprobación de ventas" en lugar de volver a pedirla. Si la tarifa cambia otra vez, vuelve a bloquear.
+- R201-COT-03: si falla la subida del MSDS después de crear la cotización, ya no se pierde el id (se avisa y no se duplica la cotización al reintentar).
+- R201-COT-04: al aceptar una cotización, un fallo al alinear la moneda de la oportunidad se reporta con su causa real y no continúa al cambio de estado.
+- R201-COT-05: la hidratación de costos del asistente lee `cantidad`/`costo_total` y replica el total del renglón (antes copiaba el costo unitario).
+- R201-COT-06: la hidratación de conceptos en vuelo se invalida al cambiar o quitar la cotización vinculada.
+- R201-COT-07: el borrador de embarque hereda `msds_archivo` de la cotización.
+- R201-COT-08: `aplica_iva`/`tasa_iva_aplicada` de la cotización viajan al embarque sin inferir por moneda.
+- R201-COT-09: al restaurar un borrador, el vínculo de cotización se aplica antes del `reset` para no pisar la captura del usuario.
+- Migración aditiva `20260913001000_r201_cot_tarifa_msds_reaprobacion.sql` (funciones únicamente; sin cambios de tablas, permisos ni RLS). No aplicada.
+
+
 ## [13.823.206] - 2026-09-08
 
 Corrección del guardrail Fase O de aprobación CxP.
