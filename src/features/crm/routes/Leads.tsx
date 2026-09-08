@@ -46,7 +46,7 @@ const DEFAULTS: LeadsFilters = { estado: "todos", fuente: "todos" };
 
 export default function Leads() {
   useDocumentTitle('Leads');
-  const { canGestionarLead, canGestionarLeadsEnLote } = usePermissions();
+  const { canGestionarLeadsEnLote } = usePermissions();
 
   const list = useServerPagedList<CrmLeadRow, LeadsFilters>({
     queryKey: queryKeys.crm.leads.paged,
@@ -86,11 +86,11 @@ export default function Leads() {
   const columns = useMemo(
     () =>
       makeLeadsColumns(selected, toggle, toggleAll, leads, {
-        puedeGestionarLead: canGestionarLead,
         puedeSeleccionar: canGestionarLeadsEnLote,
       }),
-    [selected, leads, toggle, toggleAll, canGestionarLead, canGestionarLeadsEnLote],
+    [selected, leads, toggle, toggleAll, canGestionarLeadsEnLote],
   );
+
 
 
   return (
