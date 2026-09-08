@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.823.238] - 2026-09-08
+- **datos(ELIMP00259)**: se ligó el concepto de la factura de proveedor FP-000037 (Heregar Logistics, 60,500 MXN) con el costo "Servicios Profesionales de Logistica" del expediente; el costo quedó como Pagado por la factura ya liquidada. Sin cambios de importes ni de esquema.
+
+
+
 ## [13.823.237] - 2026-09-08
 - **fix(embarques)**: los expedientes cancelados (y los borradores) ya no aparecen en las alertas de demora ni en el contador lateral: antes se recalculaban como "Arribo" por sus fechas y se colaban (caso ELIMP00353). También quedan fuera de los conteos de activos del tablero y de operaciones.
 
