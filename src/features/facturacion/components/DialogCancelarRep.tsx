@@ -30,6 +30,90 @@ function folioRep(pago: PagoRepInfo): string {
   return partes.length ? partes.join("") : "REP";
 }
 
+function RepInfoSummary({ pago, labelRep }: { pago: PagoRepInfo; labelRep: string }) {
+  const uuidCorto = pago.uuid_rep ? `${pago.uuid_rep.slice(0, 8)}…${pago.uuid_rep.slice(-8)}` : "";
+  return (
+    <div className="rounded-md border p-3 space-y-2 text-body bg-muted/30">
+      <div className="flex justify-between gap-2">
+        <span className="text-muted-foreground">Folio REP</span>
+        <span className="font-medium font-mono">{labelRep || "—"}</span>
+      </div>
+      {uuidCorto && (
+        <div className="flex justify-between gap-2">
+          <span className="text-muted-foreground">UUID</span>
+          <span className="font-mono text-body-sm">{uuidCorto}</span>
+        </div>
+      )}
+      <div className="flex justify-between gap-2">
+        <span className="text-muted-foreground">Fecha de pago</span>
+        <span>{formatDate(pago.fecha_pago)}</span>
+      </div>
+      <div className="flex justify-between gap-2">
+        <span className="text-muted-foreground">Monto</span>
+        <span className="font-medium">{formatCurrency(Number(pago.monto), pago.moneda)}</span>
+      </div>
+    </div>
+  );
+}
+
+function MotivoSelector({ motivo, onMotivoChange }: { motivo: MotivoCancelacionSat; onMotivoChange: (m: MotivoCancelacionSat) => void }) {
+  return (
+    <div className="space-y-2">
+      <Label>Motivo SAT</Label>
+      <Select value={motivo} onValueChange={(v) => onMotivoChange(v as MotivoCancelacionSat)}>
+        <SelectTrigger aria-label="Motivo de cancelación SAT">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          {MOTIVOS_CANCELACION_SAT.map((m) => (
+            <SelectItem key={m.value} value={m.value}>
+              {m.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
+  );
+}
+
+function ResultadoAlerts({ resultado }: { resultado: ResultadoCancelacionRep }) {
+  if (resultado === "accepted") {
+    return (
+      <Alert variant="success">
+        <CheckCircle2 className="h-4 w-4" />
+        <AlertDescription>
+          Cancelación aceptada. El pago fue eliminado y el saldo de la factura se recalculó.
+        </AlertDescription>
+      </Alert>
+    );
+  }
+  if (resultado === "pending" || resultado === "uncertain") {
+    return (
+      <Alert variant="warning">
+        <Clock3 className="h-4 w-4" />
+        <AlertDescription>
+          El SAT está verificando la cancelación. El pago no se eliminó todavía porque la
+          respuesta fiscal aún no es definitiva. Cuando el estado cambie a "Cancelado",
+          vuelve a intentar la cancelación o elimina el pago manualmente si ya tienes
+          constancia del SAT.
+        </AlertDescription>
+      </Alert>
+    );
+  }
+  if (resultado === "error") {
+    return (
+      <Alert variant="destructive">
+        <CircleAlert className="h-4 w-4" />
+        <AlertDescription>
+          No se pudo completar la cancelación. Revisa el mensaje de error; si el REP ya fue
+          cancelado previamente, usa "Actualizar estado" desde el detalle.
+        </AlertDescription>
+      </Alert>
+    );
+  }
+  return null;
+}
+
 export function DialogCancelarRep({
   open,
   onOpenChange,
@@ -41,11 +125,11 @@ export function DialogCancelarRep({
   resultado,
 }: Props) {
   const labelRep = pago ? folioRep(pago) : "";
-  const uuidCorto = pago?.uuid_rep ? `${pago.uuid_rep.slice(0, 8)}…${pago.uuid_rep.slice(-8)}` : "";
-  const resultadoAceptado = resultado === "accepted";
-  const resultadoPendiente = resultado === "pending" || resultado === "uncertain";
-  const resultadoError = resultado === "error";
   const mostrarFormulario = resultado !== "accepted";
+  const titulo = resultado === "accepted" ? "REP cancelado" : `Cancelar REP ${labelRep}`;
+  const descripcion = resultado === "accepted"
+    ? "El complemento de pago fue cancelado ante el SAT y el pago asociado se eliminó. La factura volvió a estado pendiente."
+    : "La cancelación se enviará al SAT a través de Facturapi. Si el SAT la acepta, el pago se eliminará y la factura quedará pendiente de cobro.";
 
   const footer = (
     <>
@@ -55,7 +139,7 @@ export function DialogCancelarRep({
         onClick={() => onOpenChange(false)}
         disabled={isPending}
       >
-        {resultadoAceptado ? "Cerrar" : "Cancelar"}
+        {resultado === "accepted" ? "Cerrar" : "Cancelar"}
       </Button>
       {mostrarFormulario && (
         <Button
@@ -76,86 +160,18 @@ export function DialogCancelarRep({
       open={open}
       onOpenChange={onOpenChange}
       icon={Ban}
-      title={resultadoAceptado ? "REP cancelado" : `Cancelar REP ${labelRep}`}
-      description={
-        resultadoAceptado
-          ? "El complemento de pago fue cancelado ante el SAT y el pago asociado se eliminó. La factura volvió a estado pendiente."
-          : "La cancelación se enviará al SAT a través de Facturapi. Si el SAT la acepta, el pago se eliminará y la factura quedará pendiente de cobro."
-      }
+      title={titulo}
+      description={descripcion}
       size="md"
       footer={footer}
       busy={isPending}
     >
-      {resultadoAceptado && (
-        <Alert variant="success">
-          <CheckCircle2 className="h-4 w-4" />
-          <AlertDescription>
-            Cancelación aceptada. El pago fue eliminado y el saldo de la factura se recalculó.
-          </AlertDescription>
-        </Alert>
-      )}
-
-      {resultadoPendiente && (
-        <Alert variant="warning">
-          <Clock3 className="h-4 w-4" />
-          <AlertDescription>
-            El SAT está verificando la cancelación. El pago no se eliminó todavía porque la
-            respuesta fiscal aún no es definitiva. Cuando el estado cambie a "Cancelado",
-            vuelve a intentar la cancelación o elimina el pago manualmente si ya tienes
-            constancia del SAT.
-          </AlertDescription>
-        </Alert>
-      )}
-
-      {resultadoError && (
-        <Alert variant="destructive">
-          <CircleAlert className="h-4 w-4" />
-          <AlertDescription>
-            No se pudo completar la cancelación. Revisa el mensaje de error; si el REP ya fue
-            cancelado previamente, usa "Actualizar estado" desde el detalle.
-          </AlertDescription>
-        </Alert>
-      )}
+      <ResultadoAlerts resultado={resultado} />
 
       {mostrarFormulario && pago && (
         <div className="space-y-5">
-          <div className="rounded-md border p-3 space-y-2 text-body bg-muted/30">
-            <div className="flex justify-between gap-2">
-              <span className="text-muted-foreground">Folio REP</span>
-              <span className="font-medium font-mono">{labelRep || "—"}</span>
-            </div>
-            {uuidCorto && (
-              <div className="flex justify-between gap-2">
-                <span className="text-muted-foreground">UUID</span>
-                <span className="font-mono text-body-sm">{uuidCorto}</span>
-              </div>
-            )}
-            <div className="flex justify-between gap-2">
-              <span className="text-muted-foreground">Fecha de pago</span>
-              <span>{formatDate(pago.fecha_pago)}</span>
-            </div>
-            <div className="flex justify-between gap-2">
-              <span className="text-muted-foreground">Monto</span>
-              <span className="font-medium">{formatCurrency(Number(pago.monto), pago.moneda)}</span>
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label>Motivo SAT</Label>
-            <Select value={motivo} onValueChange={(v) => onMotivoChange(v as MotivoCancelacionSat)}>
-              <SelectTrigger aria-label="Motivo de cancelación SAT">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {MOTIVOS_CANCELACION_SAT.map((m) => (
-                  <SelectItem key={m.value} value={m.value}>
-                    {m.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
+          <RepInfoSummary pago={pago} labelRep={labelRep} />
+          <MotivoSelector motivo={motivo} onMotivoChange={onMotivoChange} />
           <div className="flex items-start gap-2 text-body-sm text-muted-foreground">
             <TriangleAlert className="h-4 w-4 shrink-0 mt-0.5" />
             <span>
