@@ -58,7 +58,22 @@ export function useAceptarCotizacion({
     setEnviando(true);
     try {
       if (hayChoqueMoneda && oportunidadId && monedaCotizacion) {
-        const ok = await alinearMonedaOportunidad(oportunidadId, monedaCotizacion);
+        // R201-COT-04: si la alineación de moneda falla (red o permisos) hay
+        // que decirlo con su causa real y NO seguir al cambio de estado: la
+        // base rechazaría con LC_MONEDA_INCOMPATIBLE y el aviso sería confuso.
+        let ok = false;
+        try {
+          ok = await alinearMonedaOportunidad(oportunidadId, monedaCotizacion);
+        } catch (error) {
+          notifyError(undefined, {
+            title: "No pudimos actualizar la moneda de la oportunidad",
+            description:
+              "No se guardó ningún cambio. Vuelve a intentar; si sigue igual, revisa la oportunidad en CRM.",
+            error: error as Error,
+            method: "ACEPTAR_COTIZACION_ALINEAR_MONEDA",
+          });
+          return;
+        }
         if (!ok) {
           notifyError(undefined, {
             title: "No pudimos actualizar la moneda de la oportunidad",

@@ -22,6 +22,8 @@ interface Props {
   onRefrescar: () => void;
   onSustituir?: () => void;
   onSolicitarReaprobacion: () => void;
+  /** R201-COT-02: sólo se usa cuando ventas ya re-aprobó este mismo delta. */
+  onCrearConReaprobacion?: () => void;
   loading?: boolean;
 }
 
@@ -30,11 +32,13 @@ const fmtMoney = (n: number | null, moneda: "USD" | "MXN"): string =>
 
 export function RevalidarTarifaModal({
   open, onOpenChange, resultado,
-  onMantener, onRefrescar, onSustituir, onSolicitarReaprobacion, loading,
+  onMantener, onRefrescar, onSustituir, onSolicitarReaprobacion,
+  onCrearConReaprobacion, loading,
 }: Props) {
   if (!resultado) return null;
   const { severidad, cambios, tarifa_vigente, umbral_pct, max_delta_pct } = resultado;
   const esBloqueante = severidad === "bloqueante";
+  const reaprobada = resultado.reaprobacion_vigente === true;
 
   const title = (
     <span className="flex items-center gap-2">
@@ -45,13 +49,17 @@ export function RevalidarTarifaModal({
       )}
       {esBloqueante
         ? "Tarifa requiere re-aprobación de ventas"
-        : "Cambios menores en la tarifa vigente"}
+        : reaprobada
+          ? "Ventas ya re-aprobó esta tarifa"
+          : "Cambios menores en la tarifa vigente"}
     </span>
   );
 
-  const description = !tarifa_vigente
-    ? "La tarifa asociada a esta cotización ya no está vigente."
-    : `Se detectaron cambios respecto a la tarifa cotizada (umbral configurado: ${umbral_pct}%, máximo observado: ${max_delta_pct}%).`;
+  const description = reaprobada
+    ? `Ventas autorizó estos cambios (máximo observado: ${max_delta_pct}%). Elige cómo quedan los costos del embarque.`
+    : !tarifa_vigente
+      ? "La tarifa asociada a esta cotización ya no está vigente."
+      : `Se detectaron cambios respecto a la tarifa cotizada (umbral configurado: ${umbral_pct}%, máximo observado: ${max_delta_pct}%).`;
 
   return (
     <FormDialogShell
@@ -80,6 +88,11 @@ export function RevalidarTarifaModal({
             </Button>
           ) : (
             <>
+              {reaprobada && onCrearConReaprobacion && (
+                <Button variant="outline" onClick={onCrearConReaprobacion} disabled={loading}>
+                  Crear con la re-aprobación de ventas
+                </Button>
+              )}
               <Button variant="outline" onClick={onMantener} disabled={loading}>
                 Mantener costos cotizados
               </Button>

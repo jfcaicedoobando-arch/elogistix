@@ -38,6 +38,7 @@ export function CrearEmbarqueConRevalidacion({ cotizacionId, numContenedores }: 
     handleSustituir,
     handleTarifaElegida,
     handleSolicitarReaprobacion,
+    handleCrearConReaprobacion,
   } = useCrearEmbarqueConRevalidacion(cotizacionId);
 
   return (
@@ -72,6 +73,7 @@ export function CrearEmbarqueConRevalidacion({ cotizacionId, numContenedores }: 
         onRefrescar={handleRefrescar}
         onSustituir={handleSustituir}
         onSolicitarReaprobacion={handleSolicitarReaprobacion}
+        onCrearConReaprobacion={handleCrearConReaprobacion}
         loading={loading}
       />
 

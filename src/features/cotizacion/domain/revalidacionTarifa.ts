@@ -34,6 +34,13 @@ export interface ResultadoRevalidacion {
   max_delta_pct: number;
   tarifa_id_vigente?: string | null;
   motivo?: string;
+  /** R201-COT-02 — Estado de re-aprobación de la cotización tal como está en BD. */
+  estado_revalidacion?: string | null;
+  /**
+   * R201-COT-02 — `true` cuando ventas ya re-aprobó ESTE mismo delta: el
+   * bloqueo queda consumido y operaciones puede crear el embarque.
+   */
+  reaprobacion_vigente?: boolean;
 }
 
 export class RevalidacionRequeridaError extends Error {

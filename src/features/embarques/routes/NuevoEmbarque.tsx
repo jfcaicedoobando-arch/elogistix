@@ -88,14 +88,17 @@ export default function NuevoEmbarque() {
     if (!draftDetectado) return;
     // Congelamos el autosave mientras RHF aplica el reset (mismo patrón R-09).
     setRestaurando(true);
-    w.methods.reset(draftDetectado.values);
-    w.setCurrentStep(draftDetectado.currentStep);
-    if (draftDetectado.conceptosVenta.length > 0) w.setConceptosVenta(draftDetectado.conceptosVenta);
-    if (draftDetectado.conceptosCosto.length > 0) w.setConceptosCosto(draftDetectado.conceptosCosto);
+    // R201-COT-09: la vinculación se aplica ANTES del reset. Al vincular se
+    // siembran los campos heredados de la cotización; si eso corriera después
+    // pisaría lo capturado por el usuario y guardado en el borrador.
     if (draftDetectado.cotizacionVinculadaId) {
       const cot = w.cotizacionesAceptadas.find((c) => c.id === draftDetectado.cotizacionVinculadaId);
       if (cot) w.restaurarVinculacion(cot);
     }
+    w.methods.reset(draftDetectado.values);
+    w.setCurrentStep(draftDetectado.currentStep);
+    if (draftDetectado.conceptosVenta.length > 0) w.setConceptosVenta(draftDetectado.conceptosVenta);
+    if (draftDetectado.conceptosCosto.length > 0) w.setConceptosCosto(draftDetectado.conceptosCosto);
     notifyWarning(undefined, {
       title: "Borrador restaurado parcialmente",
       description: `No se pudo recuperar: ${EMBARQUE_DRAFT_NO_RESTAURADO.join("; ")}.`,

@@ -16,6 +16,12 @@ export interface ConceptoVentaWizard {
   cantidad: number;
   precioUnitario: number;
   moneda: string;
+  /**
+   * R201-COT-08 — Tratamiento fiscal capturado en la cotización. `null`
+   * significa "la cotización no lo definió": no se infiere por moneda.
+   */
+  aplicaIva?: boolean | null;
+  tasaIva?: number | null;
 }
 
 export interface ConceptoCostoWizard {
@@ -30,6 +36,9 @@ export interface CostoCotizacion {
   proveedor: string | null;
   concepto: string;
   costo_unitario: number | string | null;
+  /** R201-COT-05: cantidad y total generado de `cotizacion_costos`. */
+  cantidad?: number | string | null;
+  costo_total?: number | string | null;
   moneda: string | null;
 }
 
@@ -66,6 +75,13 @@ export function isDatosGeneralesValid(input: DatosGeneralesInput): boolean {
   return Object.keys(validateDatosGenerales(input)).length === 0;
 }
 
+/** Número finito o `null` (no confundir 0 con "sin dato"). */
+function numeroONull(v: unknown): number | null {
+  if (v == null || v === "") return null;
+  const n = Number(v);
+  return Number.isFinite(n) ? n : null;
+}
+
 /**
  * Convierte los conceptos de venta de una cotización al formato del wizard
  * de embarques (numera las filas y aplica fallbacks).
@@ -74,13 +90,19 @@ export function mapConceptosVentaFromCotizacion(
   cotizacion: CotizacionRow,
 ): ConceptoVentaWizard[] {
   const ventas = parseConceptos(cotizacion.conceptos_venta);
-  return ventas.map((v, idx) => ({
-    id: idx + 1,
-    concepto: v.descripcion ?? "",
-    cantidad: Number(v.cantidad) || 1,
-    precioUnitario: Number(v.precio_unitario) || 0,
-    moneda: v.moneda || "MXN",
-  }));
+  return ventas.map((v, idx) => {
+    const fila = v as unknown as { aplica_iva?: unknown; tasa_iva_aplicada?: unknown };
+    return {
+      id: idx + 1,
+      concepto: v.descripcion ?? "",
+      cantidad: Number(v.cantidad) || 1,
+      precioUnitario: Number(v.precio_unitario) || 0,
+      moneda: v.moneda || "MXN",
+      // R201-COT-08: el tratamiento fiscal viaja tal cual; `null` = no definido.
+      aplicaIva: typeof fila.aplica_iva === "boolean" ? fila.aplica_iva : null,
+      tasaIva: numeroONull(fila.tasa_iva_aplicada),
+    };
+  });
 }
 
 /**
@@ -93,11 +115,18 @@ export function mapConceptosCostoFromCotizacion(
 ): ConceptoCostoWizard[] {
   return costos.map((c, idx) => {
     const provMatch = proveedores.find((p) => p.nombre === c.proveedor);
+    // R201-COT-05: el monto del embarque es el TOTAL del renglón cotizado.
+    // Se respeta un 0 explícito y sólo se cae a cantidad × unitario si la BD
+    // no entregó la columna generada.
+    const total = numeroONull(c.costo_total);
+    const unitario = numeroONull(c.costo_unitario) ?? 0;
+    const cantidad = numeroONull(c.cantidad);
+    const monto = total ?? unitario * (cantidad == null || cantidad === 0 ? 1 : cantidad);
     return {
       id: idx + 1,
       proveedorId: provMatch?.id ?? "",
       concepto: c.concepto,
-      monto: Number(c.costo_unitario) || 0,
+      monto,
       moneda: c.moneda || "MXN",
     };
   });
