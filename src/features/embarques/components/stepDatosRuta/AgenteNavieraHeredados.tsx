@@ -5,7 +5,7 @@
  * Muestran badge "Cotización" cuando el valor coincide con el heredado y
  * permiten un override manual (con opción de restaurar).
  */
-import { useCallback, useEffect, useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import { Controller, useFormContext } from "react-hook-form";
 import { Undo2 } from "lucide-react";
 import { Label } from "@/components/ui/label";
@@ -22,29 +22,10 @@ import { useNavieras } from "@/features/catalogos/hooks/useNavieras";
 import { useCosteoAgentes } from "@/features/costeo/hooks/useCosteoAgentes";
 import { opcionesConValorGuardado } from "@/features/embarques/domain/opcionesCatalogo";
 import type { EmbarqueFormValues } from "@/features/embarques/hooks";
+import { useSyncNombreDesdeCatalogo } from "./agenteNavieraHeredados.helpers";
 
 const NONE = "__none__";
 
-/**
- * R215-COT-02: la cotización guarda `naviera_id` / `agente_id` pero no siempre
- * el nombre. El validador y el payload usan el TEXTO, así que el paso 2 pedía
- * "selecciona una opción" con la naviera ya dibujada. Al resolver el catálogo
- * se copia el nombre sin marcar override manual (`shouldDirty: false`).
- */
-function useSyncNombreDesdeCatalogo(
-  campo: "naviera" | "agente",
-  currentId: string | null | undefined,
-  nombreGuardado: string | null | undefined,
-  buscarNombre: (id: string) => string | undefined,
-  setValue: (campo: "naviera" | "agente", nombre: string) => void,
-) {
-  useEffect(() => {
-    if (!currentId) return;
-    if ((nombreGuardado ?? "").trim()) return;
-    const nombre = buscarNombre(currentId);
-    if (nombre) setValue(campo, nombre);
-  }, [campo, currentId, nombreGuardado, buscarNombre, setValue]);
-}
 
 function BadgeHerencia({ heredado }: { heredado: boolean }) {
   if (!heredado) return null;
