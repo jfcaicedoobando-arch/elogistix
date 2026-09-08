@@ -11491,6 +11491,8 @@ export type Database = {
         | "Llamada en frío"
         | "Evento"
         | "Otro"
+        | "Prospección"
+        | "Finkargo"
       estado_aprobacion_factura_proveedor:
         | "pendiente"
         | "aprobada"
@@ -11793,6 +11795,8 @@ export const Constants = {
         "Llamada en frío",
         "Evento",
         "Otro",
+        "Prospección",
+        "Finkargo",
       ],
       estado_aprobacion_factura_proveedor: [
         "pendiente",

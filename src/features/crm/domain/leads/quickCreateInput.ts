@@ -29,7 +29,7 @@ export function leadQuickCreateInput(
     contacto: "",
     email: esCorreo ? dato.toLowerCase() : "",
     telefono: esCorreo ? "" : dato,
-    fuente: "Otro",
+    fuente: "Prospección",
     estado: "Nuevo",
     vendedor_id: user?.id ?? null,
     vendedor_email: user?.email ?? "",

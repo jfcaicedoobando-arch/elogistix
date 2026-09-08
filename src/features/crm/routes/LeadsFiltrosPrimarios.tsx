@@ -27,7 +27,7 @@ export default function LeadsFiltrosPrimarios({ estado, fuente, onChange }: Prop
       <Select value={fuente} onValueChange={(v) => onChange("fuente", v)}>
         <SelectTrigger className="h-9 w-auto min-w-[160px]"><SelectValue /></SelectTrigger>
         <SelectContent>
-          <SelectItem value="todos">Todas las fuentes</SelectItem>
+          <SelectItem value="todos">Todos los orígenes</SelectItem>
           {LEAD_FUENTES.map((f) => <SelectItem key={f} value={f}>{f}</SelectItem>)}
         </SelectContent>
       </Select>

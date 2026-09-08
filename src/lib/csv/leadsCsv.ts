@@ -68,7 +68,19 @@ function parseScore(val: string): number {
 }
 
 function parseFuente(val: string): CrmLeadFuente {
-  return (LEAD_FUENTES as readonly string[]).includes(val) ? (val as CrmLeadFuente) : "Otro";
+  if ((LEAD_FUENTES as readonly string[]).includes(val)) return val as CrmLeadFuente;
+  // Mapeo legacy: valores anteriores al rediseño de orígenes del CRM.
+  switch (val) {
+    case "Web":
+    case "Campaña":
+    case "Llamada en frío":
+    case "Otro":
+      return "Prospección";
+    case "Evento":
+      return "Referido";
+    default:
+      return "Prospección";
+  }
 }
 
 /**
@@ -121,7 +133,7 @@ export function mapLeadCsvRows(matrix: string[][]): ParsedLeadRow[] {
   return matrix.slice(1).map((cols) => {
     const r: ParsedLeadRow = {
       empresa: "", contacto: "", email: "", telefono: "",
-      ciudad: "", pais: "", fuente: "Otro", estado: "Nuevo", score: 3, notas: "",
+      ciudad: "", pais: "", fuente: "Prospección", estado: "Nuevo", score: 3, notas: "",
     };
     colMap.forEach((field, i) => {
       if (!field) return;

@@ -16,7 +16,7 @@ const crearActividad = vi.fn(async () => ({ id: "act-1" }));
 vi.mock("@/features/crm/hooks", () => ({
   ACTIVIDAD_TIPOS: ["tarea", "llamada"] as const,
   LEAD_ESTADOS_MANUALES: ["Nuevo"] as const,
-  LEAD_FUENTES: ["Otro"] as const,
+  LEAD_FUENTES: ["Prospección"] as const,
   useCrearLead: () => ({ mutateAsync: crearLead, isPending: false }),
   useCrearActividad: () => ({ mutateAsync: crearActividad, isPending: false }),
   useOportunidades: () => ({ data: { data: [{ id: "op-1", nombre: "Op Acme" }] } }),

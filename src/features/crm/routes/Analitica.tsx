@@ -121,12 +121,12 @@ function EmbudoYPerdidas() {
         </CardContent>
       </Card>
       <Card>
-        <CardHeader className="pb-2"><CardTitle>Conversión por fuente</CardTitle></CardHeader>
+        <CardHeader className="pb-2"><CardTitle>Conversión por origen</CardTitle></CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
           <Table className="w-full text-body">
             <TableHeader><TableRow className="text-body-sm text-muted-foreground border-b">
-              <DetailTableHead>Fuente</DetailTableHead><DetailTableHead className="text-right">Total</DetailTableHead><DetailTableHead className="text-right">Conv.</DetailTableHead><DetailTableHead className="text-right">Tasa</DetailTableHead>
+              <DetailTableHead>Origen</DetailTableHead><DetailTableHead className="text-right">Total</DetailTableHead><DetailTableHead className="text-right">Conv.</DetailTableHead><DetailTableHead className="text-right">Tasa</DetailTableHead>
             </TableRow></TableHeader>
             <TableBody>
               {r.porFuente.map((f) => (

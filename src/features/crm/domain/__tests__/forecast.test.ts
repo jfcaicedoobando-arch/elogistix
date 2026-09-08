@@ -191,24 +191,22 @@ describe("computeReportesCRM", () => {
     expect(map).toEqual({ "Prospección": 2, "Cotizando": 1, "Sin etapa": 1 });
   });
 
-  it("computa tasa de conversión por fuente", () => {
+  it("computa tasa de conversión por origen", () => {
     const r = computeReportesCRM(
       [
-        { fuente: "Web", estado: "Convertido" },
-        { fuente: "Web", estado: "Nuevo" },
-        { fuente: "Web", estado: "Nuevo" },
+        { fuente: "Prospección", estado: "Convertido" },
+        { fuente: "Prospección", estado: "Nuevo" },
+        { fuente: "Prospección", estado: "Nuevo" },
         { fuente: null, estado: "Convertido" },
       ],
       [],
       etapaInfo,
       motivos,
     );
-    const web = r.porFuente.find((f) => f.fuente === "Web")!;
-    expect(web.total).toBe(3);
-    expect(web.convertidos).toBe(1);
-    expect(web.tasa).toBeCloseTo((1 / 3) * 100, 4);
-    const otro = r.porFuente.find((f) => f.fuente === "Otro")!;
-    expect(otro.tasa).toBe(100);
+    const prospeccion = r.porFuente.find((f) => f.fuente === "Prospección")!;
+    expect(prospeccion.total).toBe(4);
+    expect(prospeccion.convertidos).toBe(2);
+    expect(prospeccion.tasa).toBeCloseTo((2 / 4) * 100, 4);
   });
 
   it("rankea motivos de pérdida y limita a 5", () => {

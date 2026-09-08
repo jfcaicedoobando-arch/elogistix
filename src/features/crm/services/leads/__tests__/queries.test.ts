@@ -13,7 +13,7 @@ const TABLE = "crm_leads";
 
 function makeRow(o: Partial<CrmLeadRow> = {}): CrmLeadRow {
   return { id:"lead-1", empresa:"Empresa A", contacto:"Juan", email:"j@a.com", telefono:"555",
-    ciudad:"CDMX", pais:"Mexico", fuente:"Web", estado:"Nuevo", score:3, interes_modo:null,
+    ciudad:"CDMX", pais:"Mexico", fuente:"Prospección", estado:"Nuevo", score:3, interes_modo:null,
     vendedor_id:null, vendedor_email:null, notas:null, oportunidad_convertida_id:null,
     cliente_convertido_id:null, created_at:"2026-01-01T00:00:00Z", updated_at:"2026-01-01T00:00:00Z",
     deleted_at:null, deleted_by:null, created_by:null, ...o } as CrmLeadRow;
@@ -50,7 +50,7 @@ describe("crm/leads/queries", () => {
 
   it("05 — listLeads: aplica filtro de fuente", async () => {
     mock.setTableResult(TABLE, { data: [], error: null });
-    await listLeads({ fuente: "Web" });
+    await listLeads({ fuente: "Prospección" });
     const ops = mock.tableCalls[0].ops;
     const eqIdx = ops.indexOf("eq");
     expect(mock.tableCalls[0].opArgs[eqIdx]).toContain("fuente");

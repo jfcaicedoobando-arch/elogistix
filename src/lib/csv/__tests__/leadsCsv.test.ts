@@ -38,7 +38,7 @@ describe("mapLeadCsvRows", () => {
       ["empresa","fuente","score"],
       ["Acme","invent","99"],
     ]);
-    expect(r[0].fuente).toBe("Otro");
+    expect(r[0].fuente).toBe("Prospección");
     expect(r[0].estado).toBe("Nuevo");
     expect(r[0].score).toBe(3);
     expect(r[0].__error).toBeUndefined();

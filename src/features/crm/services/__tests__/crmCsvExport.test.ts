@@ -15,7 +15,7 @@ const lead = {
   telefono: "5555555555",
   ciudad: "CDMX",
   pais: "México",
-  fuente: "Web",
+  fuente: "Prospección",
   estado: "Nuevo",
   score: 80,
   vendedor_email: "v@lc.mx",

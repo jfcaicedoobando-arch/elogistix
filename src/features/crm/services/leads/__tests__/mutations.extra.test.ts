@@ -47,7 +47,7 @@ describe("crm/leads/mutations (extra)", () => {
     await createLead(minInput, user);
     const p = mock.getMutationPayload(TABLE, "insert") as Record<string, unknown>;
     expect(p.estado).toBe("Nuevo");
-    expect(p.fuente).toBe("Otro");
+    expect(p.fuente).toBe("Prospección");
     expect(p.score).toBe(3);
   });
 
