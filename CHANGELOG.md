@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.823.206] - 2026-09-08
+
+Corrección del guardrail Fase O de aprobación CxP.
+
+- La migración que redefine `_cxp_validar_aprobacion` (exención de gastos administrativos) ahora incluye los REVOKE/GRANT explícitos ya vigentes en producción (sólo `service_role`).
+- Sin cambios de lógica, datos ni RLS.
+
 ## [13.823.205] - 2026-09-08
 
 Corrección del fallo de CI por límite Power-of-10 (archivos > 200 líneas).
