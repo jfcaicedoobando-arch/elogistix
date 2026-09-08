@@ -107,7 +107,11 @@ export function WizardShell({
   const widthClass = MAX_W[contentMaxWidth];
 
   return (
-    <div className="flex flex-col h-[calc(100dvh-4rem)] -m-6">
+    // VIS-20260908-05: el margen negativo debe espejar el padding real de
+    // `PageContainer` (p-4 / sm:p-6 / short:sm:p-4). Con -m-6 fijo, en
+    // 1280x720 (padding 16px) el shell sobresalía 8px y aparecía scroll
+    // horizontal en el contenedor principal.
+    <div className="flex flex-col h-[calc(100dvh-4rem)] -m-4 sm:-m-6 short:sm:-m-4">
       <div className="flex-none border-b bg-background p-4 space-y-3">
         <div className="flex items-center gap-3">
           <Button

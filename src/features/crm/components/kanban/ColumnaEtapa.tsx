@@ -50,7 +50,7 @@ export default function ColumnaEtapa({ etapa, ops, onClickCard, proximasMap, ava
   return (
     <div className="flex-shrink-0 w-72 flex flex-col bg-muted/40 rounded-lg snap-start">
       <div
-        className="p-3 border-b border-border rounded-t-lg border-t-[3px]"
+        className="px-3 py-2 border-b border-border rounded-t-lg border-t-[3px]"
         style={{ borderTopColor: colorAcentoEtapa(etapa) }}
       >
         <div className="font-semibold text-body">{etapa.nombre}</div>

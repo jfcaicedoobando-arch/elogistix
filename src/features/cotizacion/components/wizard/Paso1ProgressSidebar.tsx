@@ -7,6 +7,22 @@ import { SectionHeading } from "@/components/shared/SectionHeading";
 import { usePaso1SectionStatus } from "@/features/cotizacion/hooks/usePaso1SectionStatus";
 import type { CotizacionFormValues } from "@/features/cotizacion/types";
 
+/** Alto aproximado del header fijo del wizard + holgura de lectura. */
+const HEADER_OFFSET_PX = 88;
+
+/** Contenedor scrollable real más cercano (el cuerpo del wizard). */
+function scrollParent(el: HTMLElement): HTMLElement | null {
+  let actual: HTMLElement | null = el.parentElement;
+  while (actual) {
+    const overflowY = window.getComputedStyle(actual).overflowY;
+    if ((overflowY === "auto" || overflowY === "scroll") && actual.scrollHeight > actual.clientHeight) {
+      return actual;
+    }
+    actual = actual.parentElement;
+  }
+  return null;
+}
+
 interface SectionDef {
   id: string;
   label: string;
@@ -60,22 +76,48 @@ export default function Paso1ProgressSidebar({ esMaritimo }: Props) {
 
   const [activeId, setActiveId] = useState<string | null>(null);
 
+  // VIS-20260908-01: antes se usaba un IntersectionObserver con
+  // `rootMargin: -20% 0px -60%`. Al hacer clic en una sección ésta queda
+  // alineada justo debajo del header fijo del wizard (fuera de esa banda), así
+  // que la sección ANTERIOR seguía marcada como activa. Ahora la sección
+  // activa se calcula con la posición real: es la última cuyo borde superior
+  // ya pasó el header fijo, consultando el contenedor scrollable real.
   useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        // Toma la entrada más arriba que esté intersecting.
-        const visible = entries
-          .filter((e) => e.isIntersecting)
-          .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
-        if (visible[0]) setActiveId(visible[0].target.id);
-      },
-      { rootMargin: "-20% 0px -60% 0px", threshold: 0 },
-    );
-    sections.forEach((s) => {
-      const el = document.getElementById(s.id);
-      if (el) observer.observe(el);
-    });
-    return () => observer.disconnect();
+    let raf = 0;
+    const calcular = () => {
+      raf = 0;
+      const elementos = sections
+        .map((s) => ({ id: s.id, el: document.getElementById(s.id) }))
+        .filter((x): x is { id: string; el: HTMLElement } => x.el !== null);
+      if (elementos.length === 0) return;
+      const scroller = scrollParent(elementos[0].el);
+      // Al final del scroll gana la última sección: ya no puede subir más allá
+      // del header, y si no se marcara quedaría activa una intermedia.
+      if (scroller && scroller.scrollTop + scroller.clientHeight >= scroller.scrollHeight - 4) {
+        setActiveId(elementos[elementos.length - 1].id);
+        return;
+      }
+      const limite = (scroller?.getBoundingClientRect().top ?? 0) + HEADER_OFFSET_PX;
+      let actual = elementos[0].id;
+      for (const { id, el } of elementos) {
+        if (el.getBoundingClientRect().top <= limite) actual = id;
+        else break;
+      }
+      setActiveId(actual);
+    };
+    const programar = () => {
+      if (raf === 0) raf = window.requestAnimationFrame(calcular);
+    };
+    calcular();
+    // `capture: true` para escuchar también el scroll de contenedores internos
+    // (el cuerpo del wizard es el que hace scroll, no el documento).
+    window.addEventListener("scroll", programar, true);
+    window.addEventListener("resize", programar);
+    return () => {
+      if (raf !== 0) window.cancelAnimationFrame(raf);
+      window.removeEventListener("scroll", programar, true);
+      window.removeEventListener("resize", programar);
+    };
   }, [sections]);
 
   const completas = sections.filter((s) => s.done).length;
@@ -89,7 +131,11 @@ export default function Paso1ProgressSidebar({ esMaritimo }: Props) {
 
   const handleClick = (id: string) => {
     const el = document.getElementById(id);
-    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+    if (!el) return;
+    // Feedback inmediato: el cálculo por scroll lo confirma al terminar la
+    // animación, pero el botón pulsado no debe esperar para marcarse.
+    setActiveId(id);
+    el.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
   return (
@@ -110,7 +156,7 @@ export default function Paso1ProgressSidebar({ esMaritimo }: Props) {
             El total de secciones varía según el modo de transporte.
           </p>
         </div>
-        <nav className="space-y-1">
+        <nav className="space-y-1" aria-label="Secciones del Paso 1">
           {sections.map((s) => {
             const isActive = s.id === activeId;
             return (
@@ -118,6 +164,8 @@ export default function Paso1ProgressSidebar({ esMaritimo }: Props) {
                 key={s.id}
                 type="button"
                 onClick={() => handleClick(s.id)}
+                // Estado accesible de "sección actual" (antes sólo era color).
+                aria-current={isActive ? "true" : undefined}
                 className={cn(
                   "w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-left text-body transition-colors",
                   "hover:bg-muted/60",

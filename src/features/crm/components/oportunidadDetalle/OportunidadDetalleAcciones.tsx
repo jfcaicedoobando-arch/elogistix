@@ -37,7 +37,6 @@ export function OportunidadDetalleAcciones({
         <Hint label={puedeCotizar ? undefined : motivo}>
           <Button
             size="sm"
-            variant="outline"
             onClick={crearCotizacion}
             disabled={crearCotPending || !puedeCotizar}
             loading={crearCotPending}
@@ -56,7 +55,14 @@ export function OportunidadDetalleAcciones({
           <Button size="sm" variant="outline" onClick={onEditar}>
             <Edit className="h-4 w-4 mr-1" /> Editar
           </Button>
-          <Button size="sm" variant="destructive" onClick={onEliminar}>
+          {/* MEJ-20260908-03: "Nueva cotización" es la acción principal; eliminar
+              queda como peligro secundario (outline) para no invitar al clic. */}
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={onEliminar}
+            className="text-destructive border-destructive/40 hover:bg-destructive/10 hover:text-destructive"
+          >
             <Trash2 className="h-4 w-4 mr-1" /> Eliminar
           </Button>
         </>

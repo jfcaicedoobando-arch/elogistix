@@ -61,7 +61,9 @@ export default function SelectorOrigenOportunidad({
   if (readOnly) {
     return (
       <div className="sm:col-span-2 space-y-1">
-        <Label>Origen</Label>
+        {/* MEJ-20260908-04: se llamaba "Origen" igual que el puerto/ciudad de
+            salida de la ruta; aquí se refiere al prospecto o cliente de origen. */}
+        <Label>Origen comercial</Label>
         <div className="flex items-center gap-2">
           <Badge variant="outline">{esProspecto ? "Prospecto" : "Cliente"}</Badge>
           <span className="text-body-sm">{etiqueta}</span>

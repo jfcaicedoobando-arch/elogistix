@@ -34,6 +34,15 @@ describe("QuickCreateLeadDialog", () => {
     expect(empresaInput).toHaveValue("");
     expect(crearBtn).toBeDisabled();
 
+    // VIS-20260908-03: un blur sin interacción real (autofocus / devolución de
+    // foco del menú) NO debe pintar el error de entrada.
+    fireEvent.blur(empresaInput);
+    expect(screen.queryByText("Indica la empresa para continuar.")).not.toBeInTheDocument();
+    expect(empresaInput).toHaveAttribute("aria-invalid", "false");
+
+    // Con captura real y luego vaciado, el error sí aparece al salir del campo.
+    fireEvent.change(empresaInput, { target: { value: "N" } });
+    fireEvent.change(empresaInput, { target: { value: "" } });
     fireEvent.blur(empresaInput);
     await waitFor(() => {
       expect(screen.getByText("Indica la empresa para continuar.")).toBeInTheDocument();
@@ -116,6 +125,15 @@ describe("QuickCreateLeadDialog", () => {
     );
 
     const empresaInput = screen.getByLabelText(/Empresa/i);
+    // VIS-20260908-03: un blur sin interacción real (autofocus / devolución de
+    // foco del menú) NO debe pintar el error de entrada.
+    fireEvent.blur(empresaInput);
+    expect(screen.queryByText("Indica la empresa para continuar.")).not.toBeInTheDocument();
+    expect(empresaInput).toHaveAttribute("aria-invalid", "false");
+
+    // Con captura real y luego vaciado, el error sí aparece al salir del campo.
+    fireEvent.change(empresaInput, { target: { value: "N" } });
+    fireEvent.change(empresaInput, { target: { value: "" } });
     fireEvent.blur(empresaInput);
     await waitFor(() => {
       expect(screen.getByText("Indica la empresa para continuar.")).toBeInTheDocument();
@@ -129,8 +147,11 @@ describe("QuickCreateLeadDialog", () => {
     expect(screen.queryByText("Indica la empresa para continuar.")).not.toBeInTheDocument();
     expect(screen.getByLabelText(/Empresa/i)).toHaveAttribute("aria-invalid", "false");
 
-    // El error vuelve a aparecer sólo tras nueva interacción (blur/submit).
-    fireEvent.blur(screen.getByLabelText(/Empresa/i));
+    // El error vuelve a aparecer sólo tras nueva interacción real del usuario.
+    const reabierto = screen.getByLabelText(/Empresa/i);
+    fireEvent.change(reabierto, { target: { value: "N" } });
+    fireEvent.change(reabierto, { target: { value: "" } });
+    fireEvent.blur(reabierto);
     await waitFor(() => {
       expect(screen.getByText("Indica la empresa para continuar.")).toBeInTheDocument();
     });

@@ -23,7 +23,6 @@ import {
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { FormDialogSection } from "@/components/shared/FormDialogSection";
 import { FormDialogFooter } from "@/components/shared/FormDialogFooter";
-import { notifyError } from "@/lib/ui/appFeedback";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { useCrearLead } from "@/features/crm/hooks";
 import { LEAD_FUENTES, type CrmLeadFuente } from "@/features/crm/domain/leads/constants";
@@ -54,6 +53,13 @@ export default function QuickCreateLeadDialog({ open, onOpenChange, onCreated, o
   const [contacto, setContacto] = useState("");
   const [fuente, setFuente] = useState<CrmLeadFuente>("Prospección");
   const [empresaTouched, setEmpresaTouched] = useState(false);
+  // VIS-20260908-03: al abrir el modal desde el menú "Nuevo", el foco del
+  // autofocus y la devolución de foco del menú disparaban un `blur` sin que el
+  // usuario hubiera escrito nada, así que el error aparecía de entrada. Sólo
+  // se considera "tocado" por blur si hubo interacción real en el campo.
+  const [empresaInteractuada, setEmpresaInteractuada] = useState(false);
+  const empresaVacia = empresa.trim() === "";
+  const mostrarErrorEmpresa = empresaTouched && empresaVacia;
 
   // Reset sólo en la transición real abierto -> cerrado: mientras el modal
   // sigue abierto (o mientras se muestra la confirmación de descarte, que vive
@@ -65,6 +71,7 @@ export default function QuickCreateLeadDialog({ open, onOpenChange, onCreated, o
       setContacto("");
       setFuente("Prospección");
       setEmpresaTouched(false);
+      setEmpresaInteractuada(false);
     }
     abiertoAntes.current = open;
   }, [open]);
@@ -73,9 +80,10 @@ export default function QuickCreateLeadDialog({ open, onOpenChange, onCreated, o
     if (crear.isPending || enviandoRef.current) return;
     const emp = empresa.trim();
     if (!emp) {
+      // Omisión normal de captura: error junto al campo + foco, sin toast de
+      // error técnico (VIS-20260908-03/04).
       setEmpresaTouched(true);
       empresaRef.current?.focus();
-      notifyError(undefined, { title: "Empresa requerida", method: "FEATURES_CRM_COMPONENTS_QUICKCREATE_QUICKCREATELEADDIALOG_1" });
       return;
     }
     enviandoRef.current = true;
@@ -136,15 +144,16 @@ export default function QuickCreateLeadDialog({ open, onOpenChange, onCreated, o
               id="qc-lead-empresa"
               ref={empresaRef}
               value={empresa}
-              onChange={(e) => setEmpresa(e.target.value)}
-              onBlur={() => setEmpresaTouched(true)}
+              onChange={(e) => { setEmpresaInteractuada(true); setEmpresa(e.target.value); }}
+              onKeyDown={() => setEmpresaInteractuada(true)}
+              onBlur={() => { if (empresaInteractuada) setEmpresaTouched(true); }}
               placeholder="Acme Logistics"
               aria-required="true"
-              aria-invalid={empresaTouched && empresa.trim() === ""}
-              aria-describedby={empresaTouched && empresa.trim() === "" ? "qc-lead-empresa-error" : undefined}
+              aria-invalid={mostrarErrorEmpresa}
+              aria-describedby={mostrarErrorEmpresa ? "qc-lead-empresa-error" : undefined}
             />
-            {empresaTouched && empresa.trim() === "" && (
-              <p id="qc-lead-empresa-error" className={FIELD_ERROR_CLASS}>
+            {mostrarErrorEmpresa && (
+              <p id="qc-lead-empresa-error" role="alert" className={FIELD_ERROR_CLASS}>
                 Indica la empresa para continuar.
               </p>
             )}
