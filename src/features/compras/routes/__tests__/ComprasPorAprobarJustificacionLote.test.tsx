@@ -21,7 +21,7 @@ vi.mock("@/lib/ui/appFeedback", () => ({
 }));
 
 import { ConfirmarAprobacionLoteDialog } from "../ComprasPorAprobar.confirmDialog";
-import { useAprobarFacturasLote } from "@/features/cxp/hooks/useAprobarFacturasLote";
+import { useAprobarFacturasLote } from "@/features/cxp/hooks";
 import { renderHook, waitFor } from "@testing-library/react";
 
 const A = "11111111-1111-1111-1111-111111111111";

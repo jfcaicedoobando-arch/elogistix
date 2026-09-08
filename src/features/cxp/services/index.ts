@@ -1,3 +1,4 @@
+export * from "./aprobacionFactura";
 export * from "./proveedorFacturas";
 export * from "./proveedorFacturas.update";
 export * from "./pagosProveedor";

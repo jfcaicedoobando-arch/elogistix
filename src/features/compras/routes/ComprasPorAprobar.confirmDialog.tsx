@@ -14,7 +14,7 @@ import { formatCurrency } from "@/lib/formatters";
 import {
   JUSTIFICACION_SIN_VINCULO_MIN,
   MOTIVO_RECHAZO_MAX,
-} from "@/features/cxp/services/aprobacionFactura";
+} from "@/features/cxp/services";
 
 interface Props {
   open: boolean;
