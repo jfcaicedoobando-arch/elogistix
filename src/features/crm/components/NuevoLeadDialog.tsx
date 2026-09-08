@@ -64,18 +64,25 @@ export default function NuevoLeadDialog({ open, onOpenChange, draftInicial, onCr
     };
   }, [formVacio, empresaDraft, contactoDraft, draftInicial?.fuente]);
   const [form, setForm] = useState<LeadFormState>(formConDraft);
+  const resetValidacionRef = useRef<() => void>(() => {});
 
   // Al abrirse (cerrado -> abierto) se siembra el borrador express; el reset al
   // cerrar se conserva intacto.
   const abiertoAntes = useRef(open);
   useEffect(() => {
-    if (open && !abiertoAntes.current) setForm(formConDraft());
+    if (open === abiertoAntes.current) return;
+    if (open) setForm(formConDraft());
+    // REM-VIS-04: el componente permanece montado con `open=false`, así que el
+    // "intento" de validación sobrevivía al cierre y al reabrir "Más campos" el
+    // error de Empresa aparecía de inmediato. Se limpia en cada transición
+    // (apertura y cierre, incluido el cierre externo), sin borrar el borrador.
+    resetValidacionRef.current();
     abiertoAntes.current = open;
   }, [open, formConDraft]);
   const [autoActividad, setAutoActividad] = useState(true);
 
   const resetForm = useCallback(() => setForm(formVacio()), [formVacio]);
-  const { handleSubmit, pendingTotal, emailInvalido, empresaError } = useNuevoLeadSubmit({
+  const { handleSubmit, pendingTotal, emailInvalido, empresaError, resetValidacion } = useNuevoLeadSubmit({
     form,
     autoActividad,
     onSaved: (id) => {
@@ -84,6 +91,10 @@ export default function NuevoLeadDialog({ open, onOpenChange, draftInicial, onCr
     },
     resetForm,
   });
+
+  // El efecto de sesión corre antes de que exista `resetValidacion`; el ref
+  // mantiene la referencia viva sin reejecutar el efecto.
+  resetValidacionRef.current = resetValidacion;
 
   const defaults = useMemo(() => formConDraft(), [formConDraft]);
   const isDirty = useMemo(

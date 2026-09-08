@@ -3,7 +3,7 @@
  * actividad automática de primer contacto. Extraído del componente para
  * mantenerlo ≤200 LOC.
  */
-import { useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { notifyError } from "@/lib/ui/appFeedback";
 import { enfocarPrimerInvalido } from "@/lib/ui/enfocarPrimerInvalido";
 import { useCrearLead, useCrearActividad } from "@/features/crm/hooks";
@@ -84,9 +84,13 @@ export function useNuevoLeadSubmit({ form, autoActividad, onSaved, resetForm }: 
     }
   };
 
+  // REM-VIS-04: la validación pertenece a la sesión del diálogo; al abrirlo o
+  // cerrarlo (incluido cierre externo) se limpia el intento sin tocar campos.
+  const resetValidacion = useCallback(() => setIntentado(false), []);
+
   const empresaError = intentado && !form.empresa.trim()
     ? "Indica la empresa para continuar."
     : undefined;
 
-  return { handleSubmit, pendingTotal, emailInvalido, empresaError };
+  return { handleSubmit, pendingTotal, emailInvalido, empresaError, resetValidacion };
 }
