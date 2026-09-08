@@ -1,17 +1,18 @@
 name: CI
 
-# CI simplificado (YAGNI): UN job, UN checkout, UNA instalación.
-# Secuencia: lint (0 warnings) → typecheck → suite Vitest completa →
-# guard estático de BD (condicional) → build.
+# ENSAYO DE 3 SHARDS (medición pedida por el usuario).
 #
-# La suite corre SIN coverage, SIN shards y SIN retries globales: sin `--shard`
-# `vitest.config.ts` incluye también los guardrails de arquitectura
-# (architecture.test.ts, architecture-baseline.test.ts, audit-report,
-# audit-casts-classifier), así que se ejecutan exactamente una vez.
+# Estructura: 4 jobs pequeños.
+#   1. detector  → sólo checkout + diff robusto; expone frontend/edge/database.
+#   2. checks    → lint (0 warnings), typecheck, guards DB condicionales, build,
+#                  Deno condicional. Corre EN PARALELO con los shards.
+#   3. tests     → matrix Vitest shard 1..3 (sin coverage, sin retries, sin blobs).
+#   4. ci-success→ agregador "CI Success (aggregator)", nombre conservado por
+#                  compatibilidad con los checks previos (este repo no tiene
+#                  branch protection ni rulesets configurados).
 #
-# El workflow SIEMPRE arranca (sin paths-ignore) para que el check
-# "CI Success (aggregator)" nunca quede pending; los pasos irrelevantes se
-# omiten explícitamente según el área tocada por el diff.
+# El workflow SIEMPRE arranca (sin paths-ignore) para que el check agregador
+# nunca quede pending; los pasos irrelevantes se omiten explícitamente.
 
 on:
   pull_request:
@@ -28,31 +29,23 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  ci-success:
-    # Nombre visible conservado por compatibilidad con los checks previos
-    # (este repo no tiene branch protection ni rulesets configurados).
-    name: CI Success (aggregator)
+  detector:
+    name: Detectar áreas
     runs-on: ubuntu-24.04
-    # Suite completa en un solo runner. 30 min es el margen inicial; se ajusta
-    # con la medición real de GitHub.
-    timeout-minutes: 30
-
+    timeout-minutes: 5
+    outputs:
+      frontend: ${{ steps.areas.outputs.frontend }}
+      edge: ${{ steps.areas.outputs.edge }}
+      database: ${{ steps.areas.outputs.database }}
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          # Historial completo: el filtro por áreas diffea contra el base del PR
-          # o contra el commit previo del push.
           fetch-depth: 0
-          # No se hace push/fetch autenticado.
           persist-credentials: false
 
-      - name: Setup Bun + install
-        uses: ./.github/actions/setup-bun
-
-      # Filtro por áreas DENTRO del mismo job (sin detector externo, sin cron).
       # - pull_request: base.sha vs HEAD.
-      # - push a main:  github.event.before vs github.sha (todos los commits).
+      # - push a main:  github.event.before vs github.sha.
       # - dispatch / diff ausente o `git diff` fallido: se corre TODO.
       - name: Detectar áreas cambiadas
         id: areas
@@ -109,26 +102,40 @@ jobs:
             echo "database=$database"
           } >> "$GITHUB_OUTPUT"
 
+  checks:
+    name: Lint · typecheck · guards DB · build · Deno
+    needs: detector
+    if: >-
+      needs.detector.outputs.frontend == 'true' ||
+      needs.detector.outputs.edge == 'true' ||
+      needs.detector.outputs.database == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Setup Bun + install
+        uses: ./.github/actions/setup-bun
+
       # `react-compiler` cuenta warnings como errores: fail-fast real.
       - name: ESLint (max-warnings 0)
-        if: steps.areas.outputs.frontend == 'true'
+        if: needs.detector.outputs.frontend == 'true'
         run: bun run lint -- --max-warnings 0
 
       - name: TypeScript typecheck
-        if: steps.areas.outputs.frontend == 'true'
+        if: needs.detector.outputs.frontend == 'true'
         run: bun run typecheck
-
-      # Suite completa: sin coverage, sin shards, sin retries.
-      - name: Vitest (suite completa, incluye guardrails de arquitectura)
-        if: steps.areas.outputs.frontend == 'true'
-        run: bun run test
 
       # Guard estático de BD: sólo cuando el diff toca migraciones/schema/tests/
       # releases, los scripts de auditoría, appVersion, dependencias o este CI.
       # Bloqueante; sin audit:all, sin reports, sin duplicar audits de frontend
       # (ésos ya corren dentro de Vitest).
       - name: Auditorías estáticas de BD (bloqueantes)
-        if: steps.areas.outputs.database == 'true'
+        if: needs.detector.outputs.database == 'true'
         run: |
           bun run audit:manifest
           bun run audit:schema
@@ -138,22 +145,21 @@ jobs:
           bun run audit:rpc-sync
 
       - name: Build (sin ANALYZE)
-        if: steps.areas.outputs.frontend == 'true'
+        if: needs.detector.outputs.frontend == 'true'
         env:
           ANALYZE: "false"
         run: bun run build
 
-
-      # Edge Functions: sólo si cambia supabase/functions o este workflow.
+      # Edge Functions: sólo si cambia supabase/functions, deno.* o este workflow.
       - name: Setup Deno
-        if: steps.areas.outputs.edge == 'true'
+        if: needs.detector.outputs.edge == 'true'
         uses: denoland/setup-deno@22d081ff2d3a40755e97629de92e3bcbfa7cf2ed # v2.0.5
         with:
           # Paridad con el runtime real de las Edge Functions (Deno 2).
           deno-version: v2.6.x
 
       - name: Deno tests (con typecheck, excluye smoke)
-        if: steps.areas.outputs.edge == 'true'
+        if: needs.detector.outputs.edge == 'true'
         # SIN `--no-check`: `deno test` valida también los tipos de las edges.
         run: |
           set -uo pipefail
@@ -168,3 +174,87 @@ jobs:
             --allow-net \
             --allow-read \
             "${tests[@]}"
+
+  tests:
+    name: Vitest shard ${{ matrix.shard }}/3
+    needs: detector
+    if: needs.detector.outputs.frontend == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      max-parallel: 3
+      matrix:
+        shard: [1, 2, 3]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Setup Bun + install
+        uses: ./.github/actions/setup-bun
+
+      # Sin coverage, sin blobs/merge/artifacts, sin retries globales.
+      - name: Vitest (shard ${{ matrix.shard }}/3)
+        run: bun run test -- --shard=${{ matrix.shard }}/3
+
+  ci-success:
+    # Nombre visible conservado por compatibilidad con los checks previos
+    # (este repo no tiene branch protection ni rulesets configurados).
+    name: CI Success (aggregator)
+    needs: [detector, checks, tests]
+    if: always()
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Verificar resultados
+        env:
+          DETECTOR_RESULT: ${{ needs.detector.result }}
+          CHECKS_RESULT: ${{ needs.checks.result }}
+          TESTS_RESULT: ${{ needs.tests.result }}
+          FRONTEND: ${{ needs.detector.outputs.frontend }}
+          EDGE: ${{ needs.detector.outputs.edge }}
+          DATABASE: ${{ needs.detector.outputs.database }}
+        run: |
+          set -uo pipefail
+          echo "detector=$DETECTOR_RESULT checks=$CHECKS_RESULT tests=$TESTS_RESULT"
+          echo "frontend=$FRONTEND edge=$EDGE database=$DATABASE"
+          fail=0
+
+          if [ "$DETECTOR_RESULT" != "success" ]; then
+            echo "::error::El detector de áreas no terminó en success ($DETECTOR_RESULT)."
+            exit 1
+          fi
+          for v in "$FRONTEND" "$EDGE" "$DATABASE"; do
+            case "$v" in
+              true|false) ;;
+              *) echo "::error::Flag de área inválida: '$v'."; exit 1 ;;
+            esac
+          done
+
+          if [ "$FRONTEND" = "true" ] || [ "$EDGE" = "true" ] || [ "$DATABASE" = "true" ]; then
+            if [ "$CHECKS_RESULT" != "success" ]; then
+              echo "::error::checks debía terminar en success ($CHECKS_RESULT)."
+              fail=1
+            fi
+          elif [ "$CHECKS_RESULT" != "skipped" ]; then
+            echo "::error::checks debía omitirse sin áreas activas ($CHECKS_RESULT)."
+            fail=1
+          fi
+
+          if [ "$FRONTEND" = "true" ]; then
+            if [ "$TESTS_RESULT" != "success" ]; then
+              echo "::error::los 3 shards de Vitest debían terminar en success ($TESTS_RESULT)."
+              fail=1
+            fi
+          elif [ "$TESTS_RESULT" != "skipped" ]; then
+            echo "::error::tests debía omitirse sin frontend ($TESTS_RESULT)."
+            fail=1
+          fi
+
+          if [ "$fail" -ne 0 ]; then
+            exit 1
+          fi
+          echo "CI OK."

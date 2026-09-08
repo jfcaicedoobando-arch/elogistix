@@ -17,16 +17,30 @@ seguridad bloqueantes se conservan íntegras.
 | `e2e`                | **sólo manual** (sin schedule)                        | —                          |
 | `post-deploy-smoke`  | **sólo manual**                                       | —                          |
 
-## CI (`ci.yml`)
+## CI (`ci.yml`) — ensayo de 3 shards
 
-Un job, un checkout, una instalación. Secuencia: ESLint (`--max-warnings 0`) →
-`typecheck` → **suite Vitest completa** (sin coverage, sin shards, sin retries) →
-guard estático de BD (condicional) → `build` sin `ANALYZE`. Sin `--shard`, Vitest incluye los guardrails de
-arquitectura (`architecture.test.ts`, `architecture-baseline.test.ts`,
-`audit-report`, `audit-casts-classifier`) exactamente una vez, así que Power of
-10 (≤200 líneas productivas, capas, casts) sigue bloqueando.
+Estructura actual (experimento de medición, no un cambio de política):
 
-Filtro por áreas dentro del mismo job:
+1. `detector` — job ligero: sólo checkout y el paso de diff. Expone
+   `frontend` / `edge` / `database`.
+2. `checks` — ESLint (`--max-warnings 0`), `typecheck`, guard estático de BD
+   (condicional), `build` sin `ANALYZE` y tests Deno condicionales. Depende sólo
+   del detector y corre **en paralelo** con los shards.
+3. `tests` — matrix Vitest `shard: [1,2,3]`, `max-parallel: 3`,
+   `fail-fast: false`, `bun run test -- --shard=N/3`. Sin coverage, sin blobs ni
+   merge de artifacts, sin retries.
+4. `CI Success (aggregator)` — job final con `if: always()`; falla si el
+   detector no termina en `success` o entrega flags inválidas, si `checks` no es
+   `success` habiendo áreas activas, o si la matrix no es `success` cuando
+   `frontend=true`. Un `skipped` sólo se acepta cuando el área correspondiente
+   es `false`. Sin `continue-on-error`.
+
+Los guardrails de arquitectura/auditoría (`architecture.test.ts`,
+`architecture-baseline.test.ts`, `audit-report`, `audit-casts-classifier`) ya
+**no** se excluyen bajo `--shard`: se reparten entre los tres shards y corren
+exactamente una vez entre todos, así que Power of 10 sigue bloqueando.
+
+Filtro por áreas (en el job `detector`):
 
 - PR: `base.sha` vs `HEAD`.
 - push a `main`: `github.event.before` vs `github.sha` (todos los commits).
@@ -38,7 +52,7 @@ de la raíz (si existen), el propio `ci.yml` o la acción `setup-bun`.
 
 ### Guard estático de BD (condicional, bloqueante)
 
-En el mismo job, con Bun ya instalado, corre `audit:manifest`, `audit:schema`,
+En el job `checks`, con Bun ya instalado, corre `audit:manifest`, `audit:schema`,
 `audit:schema-functions`, `audit:migrations`, `audit:replay-mirror` y
 `audit:rpc-sync` **sólo si el diff toca** `supabase/migrations|schema|tests|releases`,
 `scripts/audit-*`, `scripts/lib/`, `src/constants/appVersion.ts` (el manifiesto
@@ -48,7 +62,9 @@ reintrodujo `audit:all`, ni reports, ni un job de audits, ni audits de frontend
 duplicados (ésos ya viven en Vitest).
 
 El workflow siempre arranca (sin `paths-ignore`), así el check nunca queda
-*pending*; los pasos irrelevantes se omiten explícitamente.
+*pending*; los jobs/pasos irrelevantes se omiten explícitamente.
+
+
 
 Los nombres `CI Success (aggregator)` y `RLS tests result` se conservan por
 compatibilidad con los checks previos. Hoy el repositorio **no** tiene branch
