@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.823.236] - 2026-09-08
+- **datos(embarques)**: los tres conceptos de venta del expediente ELIMP00205 (165 + 3,610 + 125 USD) quedaron marcados como facturados porque la factura se emitió en el sistema anterior. Sin cambios de importes, esquema ni facturas nuevas.
+
+
+
 ## [13.823.235] - 2026-09-08
 - **datos(embarques)**: fusión puntual del expediente duplicado ELIMP00293 en ELIMP00319 (mismo BL house NSZEC260687701). Se pasaron al 319 las dos facturas de proveedor (FP-000147 pagada y FP-000148 vigente), sus archivos recibidos y los tres costos reales; se dieron de baja los costos capturados a mano del 319 y la venta duplicada del 293, y el 293 quedó eliminado de forma lógica. Sin cambios de esquema ni de facturación al cliente.
 
