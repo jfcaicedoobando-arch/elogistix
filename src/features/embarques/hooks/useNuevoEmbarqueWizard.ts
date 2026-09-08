@@ -199,21 +199,7 @@ export function useNuevoEmbarqueWizard() {
     removeConceptoVenta: conceptos.removeConceptoVenta,
     // R201-COT-06: mientras la importación de costos está en vuelo el paso queda
     // en sólo lectura; así ninguna edición se descarta al resolver el fetch.
-    updateConceptoCosto: (id: number, field: Parameters<typeof conceptos.updateConceptoCosto>[1], value: Parameters<typeof conceptos.updateConceptoCosto>[2]) => {
-      if (cotVinc.costosBloqueados) return;
-      cotVinc.marcarCostosEditados();
-      conceptos.updateConceptoCosto(id, field, value);
-    },
-    addConceptoCosto: () => {
-      if (cotVinc.costosBloqueados) return;
-      cotVinc.marcarCostosEditados();
-      conceptos.addConceptoCosto();
-    },
-    removeConceptoCosto: (id: number) => {
-      if (cotVinc.costosBloqueados) return;
-      cotVinc.marcarCostosEditados();
-      conceptos.removeConceptoCosto(id);
-    },
+    ...buildConceptosCostoBloqueados(conceptos, cotVinc),
     subtotalVenta: conceptos.subtotalVenta,
     totalCosto: conceptos.totalCosto,
     utilidadEstimada: conceptos.utilidadEstimada,
