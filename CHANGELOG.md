@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.823.209] - 2026-09-08
+
+Candado CI service_role-only sincronizado.
+
+- Se registró `crear_embarque_borrador_core(uuid)` en la lista canónica de funciones `service_role`-only, que ya traía su REVOKE en el espejo. Sin cambios de datos, permisos efectivos ni RLS.
+
 ## [13.823.208] - 2026-09-08
 
 Remate acotado R201 — cotizaciones → embarques.
