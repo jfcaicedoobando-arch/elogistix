@@ -10,7 +10,7 @@
  *      paso en lugar de mandar al usuario a CRM.
  */
 import { useCallback, useState } from "react";
-import { useQuery, skipToken } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import {
   fetchMonedaOportunidad,
   alinearMonedaOportunidad,
