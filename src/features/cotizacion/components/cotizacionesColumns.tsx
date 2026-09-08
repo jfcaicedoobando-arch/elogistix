@@ -14,27 +14,9 @@ import { Trash2, Copy } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { normalizarSubtotalesMxn } from "@/features/cotizacion/domain/subtotalesPorMoneda";
 import { SubtotalCotizacionCell } from "./columnsParts/subtotalCell";
+import { FolioCotizacionCell } from "./columnsParts/folioCell";
 import { subtotalesDeFila } from "./columnsParts/subtotalesDeFila";
 import { COL_W } from "@/components/shared/dataTable/columnWidths";
-
-/** Folio con los datos secundarios (Tipo, Modo, Ruta, Fecha) a la mano. */
-function FolioCotizacionCell({ cotizacion }: { cotizacion: CotizacionListItem }) {
-  const esInfo = cotizacion.tipo_documento === "informativa";
-  const detalle = [
-    `Tipo: ${esInfo ? "Tarifario" : "Transaccional"}`,
-    `Modo: ${cotizacion.modo || "—"}`,
-    `Ruta: ${cotizacion.origen || "-"} → ${cotizacion.destino || "-"}`,
-    `Fecha: ${cotizacion.created_at ? formatFechaHora(cotizacion.created_at) : "—"}`,
-  ].join(" · ");
-  return (
-    <Tooltip delayDuration={300}>
-      <TooltipTrigger asChild>
-        <span className="block truncate">{cotizacion.folio}</span>
-      </TooltipTrigger>
-      <TooltipContent side="right" className="text-body-sm max-w-[320px] break-words">{detalle}</TooltipContent>
-    </Tooltip>
-  );
-}
 
 export interface BuildParams {
   canEdit: boolean;
