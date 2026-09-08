@@ -26,15 +26,13 @@ import { useSyncNombreDesdeCatalogo } from "./agenteNavieraHeredados.helpers";
 
 const NONE = "__none__";
 
-
-function BadgeHerencia({ heredado }: { heredado: boolean }) {
-  if (!heredado) return null;
-  return (
+const BadgeHerencia = ({ heredado }: { heredado: boolean }) =>
+  heredado ? (
     <Badge variant="secondary" className="text-2xs font-normal">
       Cotización
     </Badge>
-  );
-}
+  ) : null;
+
 
 export function AgenteEmbarqueSelector({ cotizacionAgenteId }: { cotizacionAgenteId?: string | null }) {
   const { setValue, watch } = useFormContext<EmbarqueFormValues>();
