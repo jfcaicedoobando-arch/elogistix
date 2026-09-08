@@ -7,6 +7,8 @@
  * cliente de base de datos.
  */
 export type { Naviera, Puerto, TipoContenedor } from "./catalogosTypes";
+export type { CatalogoOrg } from "./catalogoOrgVisibilidad";
+export { fetchDesactivadosOrg, setActivoOrg } from "./catalogoOrgVisibilidad";
 export { fetchNavieras, insertNaviera, setNavieraActivo, deleteNaviera, updateNaviera } from "./navieras";
 export { fetchPuertos, insertPuerto, setPuertoActivo, deletePuerto } from "./puertos";
 export {

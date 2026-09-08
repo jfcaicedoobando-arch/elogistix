@@ -6,11 +6,18 @@
  * arrastre el cliente de base de datos.
  */
 
+/**
+ * `activo` es el estado GLOBAL del catálogo (lo mueve la plataforma).
+ * `activoOrg` es lo que ve la empresa activa: global encendido y sin apagado
+ * propio en `catalogo_org_desactivado`. Sólo lo traen las listas de
+ * administración (`includeInactive`).
+ */
 export interface Naviera {
   id: string;
   code: string;
   name: string;
   activo: boolean;
+  activoOrg?: boolean;
   created_at: string;
   tracking_url_template: string | null;
 }
@@ -21,6 +28,7 @@ export interface Puerto {
   name: string;
   country: string;
   activo: boolean;
+  activoOrg?: boolean;
   created_at: string;
 }
 
@@ -29,6 +37,7 @@ export interface TipoContenedor {
   code: string;
   name: string;
   activo: boolean;
+  activoOrg?: boolean;
   created_at: string;
 }
 

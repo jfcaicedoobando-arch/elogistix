@@ -10,6 +10,7 @@ import { fromDb } from "@/lib/supabase/cast";
 import { unwrapOr, run } from "@/lib/supabase/response";
 import { warnIfTruncated } from "@/lib/supabase/assertNotTruncated";
 import { LIMITE_CATALOGOS, type TipoContenedor } from "./catalogosTypes";
+import { fetchDesactivadosOrg, setActivoOrg } from "./catalogoOrgVisibilidad";
 import {
   dedupeTiposContenedor,
   type TipoContenedorCanonico,
@@ -22,18 +23,26 @@ export async function fetchTiposContenedor(
   if (!includeInactive) query = query.eq("activo", true);
   const rows = fromDb<TipoContenedor[]>(await unwrapOr(query, []));
   warnIfTruncated(rows, LIMITE_CATALOGOS, "catalogos.fetchTiposContenedor");
+  const apagados = await fetchDesactivadosOrg("tipos_contenedor");
   // La vista de administración debe seguir viendo TODOS los registros (para
   // poder desactivar el duplicado); sólo la lista de selección se colapsa.
-  if (includeInactive) return rows.map((r) => ({ ...r, idsEquivalentes: [r.id] }));
-  return dedupeTiposContenedor(rows);
+  if (includeInactive) {
+    return rows.map((r) => ({
+      ...r,
+      idsEquivalentes: [r.id],
+      activoOrg: r.activo && !apagados.has(r.id),
+    }));
+  }
+  return dedupeTiposContenedor(rows.filter((r) => !apagados.has(r.id)));
 }
 
 export async function insertTipoContenedor(input: { code: string; name: string }): Promise<void> {
   await run(supabase.from("tipos_contenedor").insert(input));
 }
 
+/** Enciende/apaga el tipo SÓLO para la empresa activa (el catálogo es global). */
 export async function setTipoContenedorActivo(id: string, activo: boolean): Promise<void> {
-  await run(supabase.from("tipos_contenedor").update({ activo }).eq("id", id));
+  await setActivoOrg("tipos_contenedor", id, activo);
 }
 
 export async function deleteTipoContenedor(id: string): Promise<void> {

@@ -14,10 +14,13 @@ import type { Naviera } from "@/features/catalogos/services";
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 import { usePermissions } from "@/hooks/shared";
 
+/** Lo que ve la empresa: global encendido y sin apagado propio. */
+const visibleOrg = (n: Naviera) => n.activoOrg ?? n.activo;
+
 export default function TabNavieras() {
   const { data: navieras = [], isLoading } = useAllNavieras();
   const { agregarNaviera, toggleActivo, eliminarNaviera } = useAdminNavieras();
-  const { canAdminTenant } = usePermissions();
+  const { isSuperAdmin } = usePermissions();
   const [busqueda, setBusqueda] = useState("");
   const [nuevoCode, setNuevoCode] = useState("");
   const [nuevoName, setNuevoName] = useState("");
@@ -46,9 +49,16 @@ export default function TabNavieras() {
     { id: "code", header: "Código", meta: { className: "font-mono text-xs" }, cell: ({ row }) => row.original.code },
     { id: "name", header: "Nombre", cell: ({ row }) => row.original.name },
     {
-      id: "activo", header: "Activo",
+      id: "activo", header: "Visible en mi empresa",
       meta: { className: "text-center", headerClassName: "text-center" },
-      cell: ({ row }) => <Switch checked={row.original.activo} onCheckedChange={(checked) => toggleActivo.mutate({ id: row.original.id, activo: checked })} aria-label={row.original.activo ? `Desactivar naviera ${row.original.name}` : `Activar naviera ${row.original.name}`} />,
+      cell: ({ row }) => (
+        <Switch
+          checked={visibleOrg(row.original)}
+          disabled={!row.original.activo}
+          onCheckedChange={(checked) => toggleActivo.mutate({ id: row.original.id, activo: checked })}
+          aria-label={visibleOrg(row.original) ? `Ocultar naviera ${row.original.name} en mi empresa` : `Mostrar naviera ${row.original.name} en mi empresa`}
+        />
+      ),
     },
     {
       id: "acciones", header: "",
@@ -58,7 +68,7 @@ export default function TabNavieras() {
           <Button variant="ghost" size="icon" className="min-h-11 min-w-11 md:h-8 md:w-8 md:min-h-0 md:min-w-0" onClick={() => setNavieraEnEdicion(row.original)} aria-label={`Editar naviera ${row.original.name}`}>
             <Pencil className="h-4 w-4" />
           </Button>
-          {canAdminTenant && (
+          {isSuperAdmin && (
             <Button variant="ghost" size="icon" className="min-h-11 min-w-11 md:h-8 md:w-8 md:min-h-0 md:min-w-0 text-destructive hover:text-destructive" disabled={eliminarNaviera.isPending} onClick={() => setNavieraAEliminar(row.original)} aria-label={`Eliminar naviera ${row.original.name}`}>
               <Trash2 className="h-4 w-4" />
             </Button>
@@ -72,9 +82,10 @@ export default function TabNavieras() {
     <Card>
       <CardHeader>
         <CardTitle>Catálogo de Navieras</CardTitle>
-        <CardDescription>Administra las líneas navieras disponibles en cotizaciones y embarques.</CardDescription>
+        <CardDescription>Catálogo compartido. Enciende o apaga las navieras que quieres ver en tu empresa; no afecta a otras empresas.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
+        {isSuperAdmin && (
         <div className="flex flex-wrap gap-2 items-end">
           <FormField label="Código" className="space-y-1">
             <Input className="w-28" placeholder="MAERSK" value={nuevoCode} onChange={(e) => setNuevoCode(e.target.value)} />
@@ -92,6 +103,7 @@ export default function TabNavieras() {
             <Plus className="h-4 w-4 mr-1" /> Agregar
           </Button>
         </div>
+        )}
 
         <SearchInput value={busqueda} onChange={setBusqueda} placeholder="Buscar por código o nombre…" />
 
@@ -102,11 +114,11 @@ export default function TabNavieras() {
             isLoading={isLoading}
             emptyMessage="No se encontraron navieras"
             rowKey={(n) => n.id}
-            rowClassName={(n) => !n.activo ? "opacity-50" : ""}
+            rowClassName={(n) => !visibleOrg(n) ? "opacity-50" : ""}
             density={TABLE_DENSITY.embebida}
           />
         </div>
-        <p className="text-xs text-muted-foreground">{navieras.length} navieras en total · {navieras.filter(n => n.activo).length} activas</p>
+        <p className="text-xs text-muted-foreground">{navieras.length} navieras en total · {navieras.filter(visibleOrg).length} visibles en mi empresa</p>
       </CardContent>
       <NavieraFormDialog
         open={!!navieraEnEdicion}
