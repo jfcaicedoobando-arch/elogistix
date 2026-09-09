@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.823.250] - 2026-09-09
+- **ux(arranque)**: cuando una pestaña vieja pide un módulo que ya no existe tras publicar una versión nueva, la app ahora muestra un aviso breve "Hay una versión nueva disponible. Actualizando…" antes de recargar, en lugar de un parpadeo silencioso.
+- **fix(arranque)**: la guarda anti-bucle de recargas por chunk caducado pasa de una bandera única por sesión a una ventana deslizante: máximo 2 recargas automáticas en 2 minutos; al tercer fallo se muestra la pantalla de recuperación con botón "Recargar" manual.
+- **test(errors)**: regresiones del overlay previo al reload, la ventana de 2 minutos y el fallback al tercer fallo.
+
 ## [13.823.249] - 2026-09-09
 - **ui(estado de cuenta PDF)**: pulido profesional del documento descargable — encabezado corporativo unificado (`BrandHeader` con razón social, RFC, dirección y contacto del emisor), tarjetas KPI por moneda (pendiente / vencido / por vencer, con el vencido en color de alerta), días y antigüedad de facturas vencidas resaltados, fila de total del aging en negrita y nota de contacto para aclaraciones. Sin cambios en datos, consultas ni cálculo de aging.
 - **refactor(pdf)**: `DataTable` acepta `cellStyleForRow` opcional para acentos por fila (sin efecto en los demás documentos).
