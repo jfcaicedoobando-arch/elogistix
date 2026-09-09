@@ -35,15 +35,16 @@ function sublabelUsd(montoUsd: number): string | undefined {
 
 function buildFacturadoUi(facturasSinTc: number, mes: string): FacturadoUi {
   const sinTc = facturasSinTc > 0;
-  const base = `Facturado en ${mes}`;
+  const base = `Facturado en ${mes} (con IVA)`;
   return {
     label: base,
     tone: sinTc ? "warn" : "default",
     hint: sinTc
-      ? `Facturas timbradas del mes en curso, convertidas a MXN con el tipo de cambio de cada factura (o TC del día como fallback). Excluye canceladas y borradores. Atención: ${facturasSinTc} factura(s) USD con TC inválido (vacío o ≤1) y sin TC del día disponible están excluidas — corrige el TC en cada factura para que cuadre.`
-      : "Facturas timbradas del mes en curso, convertidas a MXN con el tipo de cambio de cada factura (TC inválido como ≤1 se reemplaza con el TC del día). Excluye canceladas y borradores. En la tabla de Emitidas usa el preset 'Este mes' para cuadrar.",
+      ? `Total facturado CON IVA del mes en curso, convertido a MXN con el tipo de cambio de cada factura (o TC del día como fallback). Excluye canceladas y borradores. No cuadra contra el Estado de resultados, que va sin IVA. Atención: ${facturasSinTc} factura(s) USD con TC inválido (vacío o ≤1) y sin TC del día disponible están excluidas — corrige el TC en cada factura para que cuadre.`
+      : "Total facturado CON IVA del mes en curso, convertido a MXN con el tipo de cambio de cada factura (TC inválido como ≤1 se reemplaza con el TC del día). Excluye canceladas y borradores. No cuadra contra el Estado de resultados, que va sin IVA. En la tabla de Emitidas usa el preset 'Este mes' para cuadrar.",
   };
 }
+
 
 
 /** Suprime el monto cuando la consulta falló: "—" en vez de un falso MXN 0. */
