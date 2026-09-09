@@ -40,10 +40,13 @@ interface Props {
   costosBloqueados?: boolean;
 }
 
-const COSTO_COLS_BASE = "grid-cols-[1fr_1fr_120px_90px_110px_40px]";
-const COSTO_COLS_CONT = "grid-cols-[1fr_1fr_120px_90px_140px_110px_40px]";
-const VENTA_COLS_BASE = "grid-cols-[1fr_80px_120px_90px_110px_40px]";
-const VENTA_COLS_CONT = "grid-cols-[1fr_80px_120px_90px_140px_110px_40px]";
+// VIS-CE-251-01: `minmax(0,1fr)` permite que la rejilla se ajuste al ancho
+// del card (los `1fr` forzaban mínimos intrínsecos y los importes se
+// recortaban); la columna de total se amplía para mostrar el importe completo.
+const COSTO_COLS_BASE = "grid-cols-[minmax(0,1fr)_minmax(0,1fr)_120px_88px_132px_36px]";
+const COSTO_COLS_CONT = "grid-cols-[minmax(0,1fr)_minmax(0,1fr)_120px_88px_132px_110px_36px]";
+const VENTA_COLS_BASE = "grid-cols-[minmax(0,1fr)_72px_120px_88px_132px_36px]";
+const VENTA_COLS_CONT = "grid-cols-[minmax(0,1fr)_72px_120px_88px_132px_110px_36px]";
 
 /** Texto de trazabilidad del T/C precargado (helper puro: baja la complejidad del componente). */
 function describirOrigenTc(tc: TcInicial | null | undefined): string | null {

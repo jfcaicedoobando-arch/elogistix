@@ -66,7 +66,9 @@ export function FilaCostoPrecio({
   // Un costo ya pagado no es actualizable por la RPC de guardado.
   const bloqueado = costoBloqueado(costo.estadoLiquidacion);
   return (
-    <div className={`grid ${cols} gap-2 items-center`}>
+    // `[&>*]:min-w-0` (VIS-CE-251-01): deja que cada celda se encoja con la
+    // rejilla `minmax(0,1fr)` del padre en lugar de desbordar el card.
+    <div className={`grid ${cols} gap-2 items-center [&>*]:min-w-0`}>
       {bloqueado && <span className="sr-only">{MOTIVO_COSTO_BLOQUEADO}</span>}
       <SelectProveedorCosto
         costo={costo}
