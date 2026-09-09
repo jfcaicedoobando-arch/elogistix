@@ -1,26 +1,20 @@
-# Roadmap — bloque auditoría YAGNI (sobre 13.823.70)
+# Roadmap
 
-## P0
-- [x] 1. Migración org-scope cerrar/reabrir embarque verificada (única, rol validado en org del embarque, prueba negativa cross-tenant en `_guards_manifest.txt`).
+## Bloque toasts (aprobado)
+- [ ] Pulir sonner.tsx: X centrada verticalmente, quitar hueco ícono-texto, X con área de toque cómoda
 
-## P1
-- [ ] 2. Facturapi: reintento de cancelación no debe decir "CFDI cancelado" en pending/verifying/uncertain.
-- [ ] 3. Leaderboard: límite superior exclusivo del mes (calendario local MX) + test.
-- [ ] 4. "Mis actividades de hoy": mismo filtro de responsable que `listActividades`.
-- [ ] 5. CRM multi-moneda: subtotales por moneda en Kanban/PipelineResumen/ColumnaEtapa/tarjetas/KPIs.
-- [ ] 6. Vincular cotización: heredar moneda de la cotización y vendedor del lead; rechazar si la oportunidad tiene otra moneda.
-- [ ] 7. `crm_cerrar_oportunidad_desde_cotizacion`: rechazar moneda distinta antes de escribir `valor_real`.
-
-## P2
-- [ ] 8. Forecast del mes = mes actual; por mes = actual + 5 siguientes (fechas locales).
-- [ ] 9. NBA: comparar `fecha_estimada_cierre` como fecha calendario local.
-- [ ] 10. Estados de error + reintento en tarjetas CRM secundarias.
-- [ ] 11. Cliente 360: moneda en última cotización + "Ver todas" con conteo restante.
-- [ ] 12. Borrador cotización: "Revisar después" debe permitir resincronizar/recargar.
-- [ ] 13. Actividades rápidas: sin toasts duplicados, fecha default no vencida, aviso de tarea automática fallida.
-- [ ] 14. Oportunidades: control optimista con `updated_at`.
-- [ ] 15. Facturapi/archivados: rechazar facturas con `deleted_at` no nulo.
-
-## Entrega
-- [ ] CHANGELOG + APP_VERSION 13.823.71
-
+## Bloque auditoría Cotizaciones/Embarques/Sidebar (13.823.251)
+- [ ] VIS-CE-251-07 P1 — Cantidad decimal 1.5→15 en ConceptoRowMXN/ConceptoRowUSD
+- [ ] VIS-CE-251-01 P2 — Alineación/importes recortados: StepCostosPrecios + ConceptoRowMXN
+- [ ] VIS-CE-251-08 P2 — Unidad E48 invisible al editar (UnidadMedidaSelect)
+- [ ] VIS-NAV-251-01 P2 — Scrollbar recorta iconos sidebar colapsado
+- [ ] VIS-CE-251-02 P2 — Advertencia casi invisible en oscuro (ProductoServicioSelect)
+- [ ] VIS-CE-251-03 P2 — Menú progreso esconde Cierre (Paso1ProgressSidebar)
+- [ ] VIS-CE-251-05 P2 — UUID tipo contenedor en Demoras/Garantías
+- [ ] VIS-CE-251-06 P2 — Cotización USD no explica IVA (CotizacionDetalleContenido)
+- [ ] VIS-CE-251-04 P3 — Copy contradictorio proveedor en Subir factura
+- [ ] VIS-CE-251-09 P3 — Conciliación muestra "dentro_rango"
+- [ ] VIS-CE-251-10 P3 — EIR copy incorrecto en TabCierre
+- [ ] MEJ-CE-251-01 P2 — Distribución listado embarques
+- [ ] Observaciones: título navegador editor embarque; isDirty al avanzar a Paso3
+- [ ] Cierre: versión/changelog/manifest consolidado, typecheck/lint/build focalizados
