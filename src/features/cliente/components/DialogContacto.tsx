@@ -13,6 +13,9 @@ type TipoContacto = Enums<'tipo_contacto'>;
 
 const TIPOS_CONTACTO: TipoContacto[] = ['Exportador', 'Importador'];
 
+/** Normaliza a cadena: filas legacy o entradas sin valor no deben viajar como null. */
+const texto = (v: string | null | undefined): string => (typeof v === 'string' ? v : '');
+
 const emptyForm = {
   nombre: '', rfc: '', tipo: 'Exportador' as TipoContacto, pais: '', ciudad: '', direccion: '', contacto: '', email: '', telefono: '',
 };
