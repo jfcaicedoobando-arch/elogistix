@@ -41,13 +41,30 @@ export function MonedaDetectadaIaCard({
 
   return (
     <div className="rounded-md border border-primary/20 bg-primary/5 p-3 space-y-3">
-      <div className="flex items-center gap-2 text-body font-medium">
-        <Coins className="size-4 text-primary" />
-        Moneda detectada por la IA
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex items-center gap-2 text-body font-medium">
+          <Coins className="size-4 text-primary" />
+          Moneda detectada por la IA
+        </div>
+        {showTc && onObtenerDof && (
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="h-7 px-2 text-label"
+            onClick={onObtenerDof}
+            disabled={dofLoading}
+          >
+            {dofLoading
+              ? <Loader2 className="size-4 mr-1 animate-spin" />
+              : <RefreshCw className="size-3 mr-1" />}
+            Obtener DOF
+          </Button>
+        )}
       </div>
 
-      <div className={`grid grid-cols-1 gap-3 ${showTc ? "sm:grid-cols-2" : ""}`}>
-        <div className="space-y-1">
+      <div className="flex flex-wrap items-start gap-3">
+        <div className="space-y-1 w-36 shrink-0">
           <Label htmlFor="moneda-ia">Moneda de la factura</Label>
           <Select value={moneda} onValueChange={(v) => onMoneda(v as Moneda)}>
             <SelectTrigger id="moneda-ia" aria-label="Moneda de la factura detectada por la IA">
@@ -62,25 +79,8 @@ export function MonedaDetectadaIaCard({
         </div>
 
         {showTc && (
-          <div className="space-y-1">
-            <div className="flex items-center justify-between gap-2">
-              <Label htmlFor="tc-ia">Tipo de cambio a MXN</Label>
-              {onObtenerDof && (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="h-6 px-2 text-label"
-                  onClick={onObtenerDof}
-                  disabled={dofLoading}
-                >
-                  {dofLoading
-                    ? <Loader2 className="size-4 mr-1 animate-spin" />
-                    : <RefreshCw className="size-3 mr-1" />}
-                  Obtener DOF
-                </Button>
-              )}
-            </div>
+          <div className="space-y-1 flex-1 min-w-48">
+            <Label htmlFor="tc-ia">Tipo de cambio a MXN</Label>
             <NumericInput
               id="tc-ia"
               value={toNum(tc)}
