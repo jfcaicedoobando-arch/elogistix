@@ -65,38 +65,18 @@ export function SugerenciasOperacionesBanda({
         </ul>
       )}
 
-      {descartados.length > 0 && (
-        <div className="space-y-0.5 text-body-sm text-warning">
-          <p>
-            {descartados.length} sugerencia{descartados.length === 1 ? "" : "s"} no se marcó porque
-            el concepto ya tiene otra factura vigente:
-          </p>
-          <ul className="space-y-0.5">
-            {descartados.map((c) => (
-              <li key={c.conceptoCostoId}>
-                {c.concepto} · {formatCurrency(c.monto, c.moneda)}
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
+      <SugerenciasListaAviso
+        items={descartados}
+        motivo="el concepto ya tiene otra factura vigente:"
+      />
 
-      {sinTipoCambio.length > 0 && (
-        <div className="space-y-0.5 text-body-sm text-warning">
-          <p>
-            {sinTipoCambio.length} sugerencia{sinTipoCambio.length === 1 ? "" : "s"} no se marcó
-            porque el costo está en otra moneda y no hay tipo de cambio del día para convertirlo.
-            Márcalo a mano cuando el tipo de cambio esté disponible:
-          </p>
-          <ul className="space-y-0.5">
-            {sinTipoCambio.map((c) => (
-              <li key={c.conceptoCostoId}>
-                {c.concepto} · {formatCurrency(c.monto, c.moneda)}
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
+      <SugerenciasListaAviso
+        items={sinTipoCambio}
+        motivo={
+          "el costo está en otra moneda y no hay tipo de cambio del día para convertirlo. " +
+          "Márcalo a mano cuando el tipo de cambio esté disponible:"
+        }
+      />
     </section>
   );
 }
