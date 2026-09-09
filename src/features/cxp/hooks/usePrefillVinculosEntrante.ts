@@ -85,14 +85,8 @@ export function usePrefillVinculosEntrante({
   const [descartados, setDescartados] = useState<ConceptoSugeridoEntrante[]>([]);
   const [sinTipoCambio, setSinTipoCambio] = useState<ConceptoSugeridoEntrante[]>([]);
 
-  // El T/C se referencia por objeto: memorizarlo por valor evita reejecuciones.
-  const tcClave = tc ? `${tc.usdMxn}|${tc.eurMxn ?? ""}` : "";
-  const tcEstable = useMemo<TcPivote | null>(
-    () => tc,
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [tcClave],
-  );
-
+  // Se usa `tc` directo: si su identidad cambia, el efecto sólo se reevalúa y
+  // `aplicadoPara` evita volver a pre-marcar el mismo documento.
   const aRegistro = useCallback(
     (lista: readonly ConceptoSugeridoEntrante[], embarqueId: string): Sugerencia[] =>
       lista.flatMap((s) => {
