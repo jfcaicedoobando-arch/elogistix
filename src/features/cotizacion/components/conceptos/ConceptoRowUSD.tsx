@@ -55,7 +55,7 @@ export const ConceptoRowUSD = memo(function ConceptoRowUSD({
           <Input
             type="text"
             inputMode="decimal"
-            {...cantidad.inputProps}
+            {...cantidad}
             placeholder="1"
             aria-label="Cantidad"
           />
@@ -65,7 +65,7 @@ export const ConceptoRowUSD = memo(function ConceptoRowUSD({
           <Input
             type="text"
             inputMode="decimal"
-            {...precio.inputProps}
+            {...precio}
             placeholder="0.00"
             aria-label="Precio unitario"
           />
