@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.823.256] - 2026-09-09
+- **fix(cxp/buzón)**: al corregir la moneda de la factura en el asistente se limpian los montos vinculados y la precarga de conceptos sugeridos vuelve a aplicarse convertida a la nueva moneda (antes quedaban montos en pesos tratados como dólares, produciendo excedentes fantasma sobre el subtotal en el paso 3).
+- **fix(cxp/vinculación)**: el aviso de "asignaste más de lo que vale la factura" ahora sugiere revisar la moneda del paso 1 cuando la diferencia es grande; la banda de sugerencias aclara que los montos van en la moneda de la factura.
+- **test(cxp)**: regresión de re-aplicación de la precarga al cambiar MXN→USD y de no pre-marcar sin tipo de cambio.
+
+
 ## [13.823.255] - 2026-09-09
 - **fix(cxp/buzón)**: reacomodo visual de la tarjeta "Moneda detectada por la IA": el botón "Obtener DOF" pasa al encabezado, los campos Moneda y Tipo de cambio usan `flex-wrap` alineados a la misma altura y se apilan sin cortes en anchos angostos. Sólo presentación; sin cambios de estado ni lógica.
 
