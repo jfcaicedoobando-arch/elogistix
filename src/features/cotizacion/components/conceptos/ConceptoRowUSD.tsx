@@ -9,7 +9,8 @@ import { formatCurrency } from "@/lib/formatters";
 import { ProductoServicioSelect } from "./ProductoServicioSelect";
 import { UnidadMedidaSelect } from "./UnidadMedidaSelect";
 import { useNumericField } from "@/features/cotizacion/hooks/useNumericField";
-import { parseCantidad, parsePrecio } from "@/features/cotizacion/utils/parseInputNumero";
+import { parseCantidad } from "@/features/cotizacion/utils/parseInputNumero";
+import { tasaDesdeTipoIva } from "@/features/cotizacion/hooks/useProductosCatalogo";
 
 interface ConceptoRowUSDProps {
   concepto: ConceptoVentaCotizacion;
