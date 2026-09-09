@@ -53,8 +53,8 @@ export function ingresosDeFacturas(
     const id = `fact-${f.id}`;
     out.embarques.push({
       id,
-      modo: emb?.modo ?? "Marítimo",
-      tipo_cambio_usd: emb?.tipo_cambio_usd ?? fallbackTC(Number(f.tipo_cambio), tc.usd),
+      modo: emb?.modo ?? MODO_DESCONOCIDO,
+      tipo_cambio_usd: fallbackTC(Number(f.tipo_cambio), emb?.tipo_cambio_usd ?? tc.usd),
       tipo_cambio_eur: emb?.tipo_cambio_eur ?? tc.eur,
     });
     out.ventas.push({
@@ -85,7 +85,7 @@ export function ingresosDeNotas(
     // TC del mes si la NC no lo tiene capturado.
     out.embarques.push({
       id,
-      modo: modoPorFactura.get(nc.factura_id) ?? "Marítimo",
+      modo: modoPorFactura.get(nc.factura_id) ?? MODO_DESCONOCIDO,
       tipo_cambio_usd: fallbackTC(Number(nc.tipo_cambio ?? 0), tc.usd),
       tipo_cambio_eur: tc.eur,
     });
@@ -109,8 +109,8 @@ export function costosDeProveedorFacturas(
     const id = `pf-${pf.id}`;
     out.embarques.push({
       id,
-      modo: emb?.modo ?? "Marítimo",
-      tipo_cambio_usd: emb?.tipo_cambio_usd ?? fallbackTC(Number(pf.tipo_cambio_usd), tc.usd),
+      modo: emb?.modo ?? MODO_DESCONOCIDO,
+      tipo_cambio_usd: fallbackTC(Number(pf.tipo_cambio_usd), emb?.tipo_cambio_usd ?? tc.usd),
       tipo_cambio_eur: emb?.tipo_cambio_eur ?? tc.eur,
     });
     out.costos.push({
