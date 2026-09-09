@@ -136,7 +136,11 @@ export default function EditarEmbarque() {
         saveLabel="Guardar Cambios"
         onBack={() => navigate(`/embarques/${id}`)}
         onFinish={handleSave}
-        isDirty={currentStep > 1 && methods.formState.isDirty}
+        // R257-05: los conceptos de costo/venta viven en `useConceptosForm`
+        // (useState fuera de RHF), así que `formState.isDirty` no los detecta.
+        // Se conserva la protección conservadora por paso para no perder
+        // ediciones; afinar el detector queda como pendiente declarado.
+        isDirty={currentStep > 1}
       >
         {currentStep === 1 && (
           <StepDatosGenerales
