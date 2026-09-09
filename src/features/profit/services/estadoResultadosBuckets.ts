@@ -4,8 +4,16 @@
  * límite de 200 líneas del Power-of-10 #4).
  *
  * Convierten filas de facturas, notas de crédito y facturas de proveedor en
- * "embarques sintéticos" + conceptos de venta/costo, resolviendo el tipo de
- * cambio con la precedencia: TC del embarque → TC del documento → TC del DOF.
+ * "embarques sintéticos" + conceptos de venta/costo.
+ *
+ * EERR-TC (v13.823.246): la precedencia del tipo de cambio es
+ * TC del documento fiscal → TC del embarque → TC del DOF. El CFDI es el que se
+ * timbró ante el SAT, así que su TC manda sobre el TC operativo del booking;
+ * con el orden anterior el EERR no cuadraba contra Facturación ni CxC.
+ *
+ * EERR-MODO (v13.823.246): una fila sin embarque vinculado ya no se asume
+ * "Marítimo" — cae en "Otros" para no inflar una columna de modo con importes
+ * cuyo modo real es desconocido.
  */
 import { fallbackTC, type TcFallback } from "./estadoResultadosTc";
 import type {
@@ -17,7 +25,11 @@ import type {
   FacturaRow,
   NotaCreditoRow,
   ProveedorFacturaRow,
+  ProveedorNotaCreditoRow,
 } from "@/lib/mappers/estadoResultadosRows";
+
+/** Modo usado cuando la fila no tiene embarque vinculado (modo desconocido). */
+const MODO_DESCONOCIDO = "Otros";
 
 export interface VentasBucket {
   embarques: EmbarqueER[];
@@ -28,6 +40,7 @@ export interface CostosBucket {
   embarques: EmbarqueER[];
   costos: ConceptoCostoER[];
 }
+
 
 export function ingresosDeFacturas(
   facturas: FacturaRow[],
