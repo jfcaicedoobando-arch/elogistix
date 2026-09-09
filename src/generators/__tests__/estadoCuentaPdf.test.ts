@@ -106,7 +106,7 @@ describe("generarEstadoCuentaPdf", () => {
     expect(usd?.buckets.find((b) => b.label === "31-60 días")?.total).toBe(500);
   });
 
-  it("propaga el error si descargarPdf lanza", async () => {
+  it("propaga el error si descargarPdf lanza al generar el estado de cuenta", async () => {
     mockFetch.mockResolvedValue([]);
     mockDescargar.mockRejectedValue(new Error("PDF error"));
     await expect(generarEstadoCuentaPdf(CLIENTE)).rejects.toThrow("PDF error");
