@@ -12,11 +12,13 @@ import {
   mapFacturaRows,
   mapNotaCreditoRows,
   mapProveedorFacturaRows,
+  mapProveedorNotaCreditoRows,
   mapEmbarqueERRows,
   mapEmbarqueERConExpediente,
   type FacturaRow,
   type NotaCreditoRow,
   type ProveedorFacturaRow,
+  type ProveedorNotaCreditoRow,
 } from "@/lib/mappers/estadoResultadosRows";
 
 export async function loadEmbarquesPorIds(ids: string[]): Promise<EmbarqueER[]> {
@@ -45,11 +47,20 @@ export async function loadEmbarquesPorExpedientes(
   if (organizationId) q = q.eq("organization_id", organizationId);
   const data = await unwrapOr(q, []);
   const map = new Map<string, EmbarqueER>();
+  const duplicados = new Set<string>();
   for (const e of mapEmbarqueERConExpediente(data)) {
-    if (e.expediente) map.set(e.expediente, e);
+    if (!e.expediente) continue;
+    // EERR-DUP (v13.823.246): si dos embarques vivos comparten expediente no se
+    // puede saber a cuál pertenece la factura. Antes ganaba el último de la
+    // consulta y el importe se cargaba a un modo posiblemente equivocado; ahora
+    // se deja sin vínculo y cae en "Otros".
+    if (map.has(e.expediente)) duplicados.add(e.expediente);
+    map.set(e.expediente, e);
   }
+  for (const exp of duplicados) map.delete(exp);
   return map;
 }
+
 
 export async function fetchFacturasMes(orgId: string | null, desde: string, hasta: string): Promise<FacturaRow[]> {
   let q = supabase
