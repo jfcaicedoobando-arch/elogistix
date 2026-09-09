@@ -56,8 +56,8 @@ interface Props {
 const cols: PdfColumn<EstadoCuentaRow>[] = [
   { key: "numero", title: "Factura", cellStyle: { width: 62, flexGrow: 0, flexShrink: 0 }, render: (r) => r.numero },
   { key: "expediente", title: "Expediente", cellStyle: styles.cellDesc, render: (r) => r.expediente },
-  { key: "emision", title: "Emisión", cellStyle: { width: 72, textAlign: "right", flexGrow: 0, flexShrink: 0 }, render: (r) => formatDate(r.fecha_emision) },
-  { key: "vencimiento", title: "Vencimiento", cellStyle: { width: 72, textAlign: "right", flexGrow: 0, flexShrink: 0 }, render: (r) => formatDate(r.fecha_vencimiento) },
+  { key: "emision", title: "Emisión", cellStyle: { width: 66, textAlign: "right", flexGrow: 0, flexShrink: 0 }, render: (r) => formatDate(r.fecha_emision) },
+  { key: "vencimiento", title: "Vencimiento", cellStyle: { width: 84, textAlign: "right", flexGrow: 0, flexShrink: 0 }, render: (r) => formatDate(r.fecha_vencimiento) },
   { key: "dias", title: "Días", cellStyle: styles.cellQty, render: (r) => (r.diasVencido > 0 ? `+${r.diasVencido}` : String(r.diasVencido)) },
   { key: "bucket", title: "Antigüedad", cellStyle: { width: 74, flexGrow: 0, flexShrink: 0 }, render: (r) => r.bucket },
   { key: "estado", title: "Estado", cellStyle: { width: 52, flexGrow: 0, flexShrink: 0 }, render: (r) => r.estado },
