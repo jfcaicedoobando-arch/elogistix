@@ -28,7 +28,7 @@ function scrollParent(el: HTMLElement): HTMLElement | null {
  * desde su propio borde superior hasta el pie de acciones del wizard (o el
  * borde inferior de la ventana si ese pie no está montado).
  */
-function useAlturaUtil(ref: React.RefObject<HTMLElement>): number | null {
+function useAlturaUtil(ref: React.RefObject<HTMLElement | null>): number | null {
   const [alto, setAlto] = useState<number | null>(null);
   useEffect(() => {
     let raf = 0;
