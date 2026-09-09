@@ -10,7 +10,7 @@
  */
 import { Document, Page, Text, View } from "@react-pdf/renderer";
 import { formatCurrency, formatDate } from "@/lib/formatters";
-import { styles } from "../theme/styles";
+import { styles, FONTS } from "../theme/styles";
 import { COLORS } from "../theme/tokens";
 import { Footer } from "../components/Footer";
 import { DataTable, type PdfColumn } from "../components/DataTable";
@@ -84,7 +84,7 @@ export function EstadoCuentaDocument({ cliente, rows, totalesPorMoneda, emisor }
         <View style={styles.header}>
           <View>
             <Text style={styles.h1}>Estado de cuenta</Text>
-            <Text style={{ marginTop: 4, fontSize: 10, fontFamily: "Helvetica-Bold", color: COLORS.ink }}>
+            <Text style={{ marginTop: 4, fontSize: 10, fontFamily: FONTS.bold, color: COLORS.ink }}>
               {cliente.nombre}
               {cliente.rfc ? ` — RFC ${cliente.rfc}` : ""}
             </Text>
