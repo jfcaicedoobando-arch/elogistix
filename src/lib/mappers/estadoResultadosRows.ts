@@ -69,6 +69,8 @@ export function mapFacturaRows(data: unknown): FacturaRow[] {
     subtotal: num(r.subtotal),
     moneda: str(r.moneda),
     fecha_emision: str(r.fecha_emision),
+    timbrado_en: nullableStr(r.timbrado_en),
+
     tipo_cambio: nullableNum(r.tipo_cambio),
   }));
 }
