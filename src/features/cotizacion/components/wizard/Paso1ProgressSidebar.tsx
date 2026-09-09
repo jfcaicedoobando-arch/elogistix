@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useRef, useState, useMemo } from "react";
 import { useFormContext, useWatch } from "react-hook-form";
 import { Check, Circle } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
@@ -21,6 +21,42 @@ function scrollParent(el: HTMLElement): HTMLElement | null {
     actual = actual.parentElement;
   }
   return null;
+}
+
+/**
+ * VIS-CE-251-03 · R257 — altura útil medida, no un valor mágico: el panel va
+ * desde su propio borde superior hasta el pie de acciones del wizard (o el
+ * borde inferior de la ventana si ese pie no está montado).
+ */
+function useAlturaUtil(ref: React.RefObject<HTMLElement>): number | null {
+  const [alto, setAlto] = useState<number | null>(null);
+  useEffect(() => {
+    let raf = 0;
+    const medir = () => {
+      raf = 0;
+      const el = ref.current;
+      if (!el) return;
+      const top = el.getBoundingClientRect().top;
+      const footer = document.querySelector<HTMLElement>("[data-wizard-footer]");
+      const limiteInferior = footer
+        ? footer.getBoundingClientRect().top
+        : window.innerHeight;
+      const disponible = Math.round(limiteInferior - top - 8);
+      setAlto(disponible > 160 ? disponible : 160);
+    };
+    const programar = () => {
+      if (raf === 0) raf = window.requestAnimationFrame(medir);
+    };
+    medir();
+    window.addEventListener("scroll", programar, true);
+    window.addEventListener("resize", programar);
+    return () => {
+      if (raf !== 0) window.cancelAnimationFrame(raf);
+      window.removeEventListener("scroll", programar, true);
+      window.removeEventListener("resize", programar);
+    };
+  }, [ref]);
+  return alto;
 }
 
 interface SectionDef {
@@ -46,6 +82,8 @@ interface Props {
  * ya cubren el feedback.
  */
 export default function Paso1ProgressSidebar({ esMaritimo }: Props) {
+  const asideRef = useRef<HTMLElement>(null);
+  const alturaUtil = useAlturaUtil(asideRef);
   const status = usePaso1SectionStatus();
   const { control } = useFormContext<CotizacionFormValues>();
   const tipoEmbarque = useWatch({ control, name: "tipoEmbarque" });
@@ -142,8 +180,15 @@ export default function Paso1ProgressSidebar({ esMaritimo }: Props) {
     // VIS-CE-251-03: la tarjeta se limita a la altura útil de la ventana con
     // scroll propio, para que la sección «Cierre» sea alcanzable sin
     // desplazar la página completa ni superponer la barra de acciones.
-    <aside className="hidden lg:block sticky top-4 self-start w-56 shrink-0 max-h-[calc(100vh-2rem)]">
-      <div className="rounded-lg border bg-card p-4 space-y-3 max-h-[calc(100vh-2rem)] overflow-y-auto">
+    <aside
+      ref={asideRef}
+      className="hidden lg:block sticky top-4 self-start w-56 shrink-0"
+      style={alturaUtil ? { maxHeight: `${alturaUtil}px` } : undefined}
+    >
+      <div
+        className="rounded-lg border bg-card p-4 space-y-3 overflow-y-auto"
+        style={alturaUtil ? { maxHeight: `${alturaUtil}px` } : undefined}
+      >
         <div className="space-y-1">
           <SectionHeading as="h2">Progreso del Paso 1</SectionHeading>
           <p className="text-body-sm text-muted-foreground">
