@@ -13,6 +13,7 @@ import { CargaCfdiSection } from "../CargaCfdiSection";
 import { CfdiDuplicadoAlert } from "../CfdiDuplicadoAlert";
 import { ProveedorNoEncontradoAlert } from "../ProveedorNoEncontradoAlert";
 import { CfdiConceptosPreview } from "../CfdiConceptosPreview";
+import { MonedaDetectadaIaCard } from "../MonedaDetectadaIaCard";
 import { ConceptosManualesSection } from "../ConceptosManualesSection";
 
 type Ctl = ReturnType<typeof useNuevaFacturaProveedorForm>;
