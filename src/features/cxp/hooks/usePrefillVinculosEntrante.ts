@@ -14,7 +14,7 @@
  * convierte con el T/C DOF de la fecha de emisión, igual que la marca manual, y
  * si no hay T/C no se pre-marca: se avisa en pantalla.
  */
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { fetchCostosConFactura } from "@/features/embarques/services/costosConFactura";
 import { convertirMonto, type TcPivote } from "@/features/cxp/utils/vinculoMoneda";
 import type { ConceptoSugeridoEntrante } from "@/features/cxp/services/facturasEntrantesConceptos";
@@ -90,7 +90,7 @@ export function usePrefillVinculosEntrante({
   const aRegistro = useCallback(
     (lista: readonly ConceptoSugeridoEntrante[], embarqueId: string): Sugerencia[] =>
       lista.flatMap((s) => {
-        const monto = convertirMonto(s.monto, s.moneda, facturaMoneda, tcEstable);
+        const monto = convertirMonto(s.monto, s.moneda, facturaMoneda, tc);
         if (monto === null) return [];
         return [{
           conceptoId: s.conceptoCostoId,
@@ -99,7 +99,7 @@ export function usePrefillVinculosEntrante({
           embarque_id: embarqueId,
         }];
       }),
-    [facturaMoneda, tcEstable],
+    [facturaMoneda, tc],
   );
 
   useEffect(() => {
@@ -107,7 +107,7 @@ export function usePrefillVinculosEntrante({
     const sugeridos = entrante.conceptosSugeridos ?? [];
     if (sugeridos.length === 0 || aplicadoPara.current === entrante.id) return;
     // Sin T/C no se pre-marca nada convertible: se espera a que llegue el DOF.
-    if (requiereConversion(sugeridos, facturaMoneda) && !tcEstable) return;
+    if (requiereConversion(sugeridos, facturaMoneda) && !tc) return;
 
     let vivo = true;
     aplicadoPara.current = entrante.id;
@@ -121,7 +121,7 @@ export function usePrefillVinculosEntrante({
       if (!vivo) return;
       const libres = sugeridos.filter((s) => !cubiertos.has(s.conceptoCostoId));
       const { convertibles, sinTipoCambio: sinTc } =
-        dividirPorTipoCambio(libres, facturaMoneda, tcEstable);
+        dividirPorTipoCambio(libres, facturaMoneda, tc);
       setAplicados(convertibles);
       setSinTipoCambio(sinTc);
       setDescartados(sugeridos.filter((s) => cubiertos.has(s.conceptoCostoId)));
@@ -131,7 +131,7 @@ export function usePrefillVinculosEntrante({
     })();
 
     return () => { vivo = false; };
-  }, [abierto, entrante, habilitado, aplicarSugerencias, aRegistro, facturaMoneda, tcEstable]);
+  }, [abierto, entrante, habilitado, aplicarSugerencias, aRegistro, facturaMoneda, tc]);
 
   useEffect(() => {
     if (!abierto) {
