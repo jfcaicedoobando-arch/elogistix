@@ -2,13 +2,15 @@
  * Fuente devengada del Estado de Resultados (post-Sprint 2):
  *   Ingresos = facturas con fecha_emision en el mes (no canceladas)
  *              menos notas de crédito aplicadas en el mes.
- *   Costos  = proveedor_facturas con fecha_emision en el mes (no canceladas)
- *              menos notas de crédito proveedor aplicadas.
+ *   Costos  = proveedor_facturas con fecha_emision en el mes (no canceladas
+ *              ni rechazadas) menos notas de crédito de proveedor aplicadas
+ *              en el mes.
  *
  * Pivot por modo del embarque vinculado (facturas.expediente → embarques /
- * proveedor_facturas.embarque_id → embarques). Filas sin embarque caen a
- * "Marítimo" como fallback (la mayoría del negocio); el conteo de Aéreo /
- * Terrestre depende del vínculo correcto al embarque.
+ * proveedor_facturas.embarque_id → embarques). Las filas sin embarque (o con
+ * expediente duplicado) caen en "Otros": no se asume Marítimo.
+ *
+ * Tipo de cambio: TC del documento fiscal → TC del embarque → TC del DOF.
  */
 import { supabase } from "@/integrations/supabase/client";
 import { unwrapOr } from "@/lib/supabase/response";
@@ -17,6 +19,7 @@ import {
   ingresosDeFacturas,
   ingresosDeNotas,
   costosDeProveedorFacturas,
+  costosDeNotasProveedor,
 } from "./estadoResultadosBuckets";
 import { rangoMes } from "@/features/facturacion/domain/proyeccionFacturacion";
 import {
@@ -32,9 +35,12 @@ import {
   fetchFacturasMes,
   fetchNotasCreditoMes,
   fetchProveedorFacturasMes,
+  fetchProveedorNotasCreditoMes,
+  loadEmbarqueIdsPorFacturaProveedor,
   loadEmbarquesPorExpedientes,
   loadEmbarquesPorIds,
 } from "@/features/profit/services/estadoResultadosFetch";
+
 
 interface Params {
   organizationId: string | null;
@@ -98,15 +104,27 @@ async function modoPorFacturaDeNotas(
 export async function fetchEstadoResultadosDevengado(p: Params): Promise<EstadoResultados> {
   const { desde, hasta } = rangoMes(p.year, p.month);
 
-  const [facturas, ncs, pfacts, tc] = await Promise.all([
+  const [facturas, ncs, pfacts, pncs, tc] = await Promise.all([
     fetchFacturasMes(p.organizationId, desde, hasta),
     fetchNotasCreditoMes(p.organizationId, desde, hasta),
     fetchProveedorFacturasMes(p.organizationId, desde, hasta),
+    fetchProveedorNotasCreditoMes(p.organizationId, desde, hasta),
     tcFallbackDof(),
   ]);
 
+  // Las NC de proveedor pueden colgar de facturas de otros meses: se resuelve
+  // su embarque para no perder el modo.
+  const embPorFacturaProv = await loadEmbarqueIdsPorFacturaProveedor(
+    Array.from(new Set(pncs.map((n) => n.proveedor_factura_id).filter(Boolean))),
+  );
+
   const exps = Array.from(new Set(facturas.map((f) => f.expediente).filter(Boolean) as string[]));
-  const embIds = Array.from(new Set(pfacts.map((f) => f.embarque_id).filter(Boolean) as string[]));
+  const embIds = Array.from(
+    new Set([
+      ...(pfacts.map((f) => f.embarque_id).filter(Boolean) as string[]),
+      ...embPorFacturaProv.values(),
+    ]),
+  );
   const [embPorExp, embPorId] = await Promise.all([
     loadEmbarquesPorExpedientes(exps, p.organizationId),
     loadEmbarquesPorIds(embIds),
@@ -120,6 +138,8 @@ export async function fetchEstadoResultadosDevengado(p: Params): Promise<EstadoR
 
   const costosBucket = { embarques: [] as EmbarqueER[], costos: [] as ConceptoCostoER[] };
   costosDeProveedorFacturas(pfacts, embPorId, costosBucket, tc);
+  costosDeNotasProveedor(pncs, embPorId, embPorFacturaProv, costosBucket, tc);
+
 
   return buildEstadoResultados(
     [...ventasBucket.embarques, ...costosBucket.embarques],

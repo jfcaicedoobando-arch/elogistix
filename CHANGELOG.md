@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.823.246] - 2026-09-09
+- **fix(estado de resultados)**: la fuente devengada (Facturas) valuaba las facturas con el tipo de cambio del embarque; ahora manda el tipo de cambio del propio CFDI (documento → embarque → DOF), que es el criterio de Facturación y CxC.
+- **fix(estado de resultados)**: las notas de crédito de proveedor aplicadas del mes ya se restan del costo (el encabezado lo prometía y nunca se restaban) y las facturas de proveedor con aprobación `rechazada` dejan de contar como costo.
+- **fix(estado de resultados)**: las facturas sin embarque vinculado —o con expediente duplicado entre dos embarques vivos— caen en la columna "Otros" en lugar de asumirse Marítimo, y la consulta espera a que resuelva la empresa activa para no agregar importes de otras empresas por un instante.
+- **ui(estado de resultados / facturación)**: se aclara que el EERR va en MXN sin IVA y por fecha de emisión, y que el KPI "Facturado en <mes>" es con IVA, para que nadie espere que ambos números coincidan.
+- **test(profit)**: regresiones de precedencia de tipo de cambio, expediente duplicado, NC de proveedor restada y exclusión de facturas de proveedor rechazadas.
+
 ## [13.823.245] - 2026-09-09
 - **fix(ci)**: corrige el CI rojo del bloque de cancelación de REP: `DialogCancelarRep` se dividió en `CancelarRepInfoSummary` y `CancelarRepResultadoAlerts` (límite de 200 líneas), el controlador `useCancelarRepController` se movió a `hooks/` del feature, los iconos nuevos usan `size-4`, el UUID truncado de la bandeja histórica usa `Hint` accesible (adiós `title` nativo) y el test de inconsistencia de pagos monta su propio `QueryClient`. Sin cambios de comportamiento fiscal ni de datos.
 

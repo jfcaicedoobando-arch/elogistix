@@ -71,8 +71,9 @@ describe("estadoResultadosDevengado service", () => {
     
     const res: any = await fetchEstadoResultadosDevengado({ organizationId: null, year: 2024, month: 1 });
     
-    expect(res.emb.length).toBe(4); 
-    expect(res.emb.every((e: any) => e.modo === "Marítimo")).toBe(true);
+    expect(res.emb.length).toBe(4);
+    // EERR-MODO: sin embarque vinculado el importe cae en "Otros", no en Marítimo.
+    expect(res.emb.every((e: any) => e.modo === "Otros")).toBe(true);
     // Sin TC propio → respaldo DOF (18), nunca 1.
     expect(res.emb[0].tipo_cambio_usd).toBe(18);
     expect(res.emb[1].tipo_cambio_usd).toBe(20);
@@ -130,6 +131,83 @@ describe("estadoResultadosDevengado service", () => {
     expect(gteIdx).toBeGreaterThanOrEqual(0);
     expect((ncCall!.opArgs[gteIdx] as [string, string])[0]).toBe("fecha_emision");
     expect((ncCall!.opArgs[lteIdx] as [string, string])[0]).toBe("fecha_emision");
+  });
+
+  it("EERR-TC: el TC de la factura manda sobre el TC del embarque", async () => {
+    mock.setTableResult("facturas", {
+      data: [{ id: "f1", expediente: "EXP1", subtotal: 100, moneda: "USD", fecha_emision: "2024-01-10", tipo_cambio: 19 }],
+      error: null,
+    });
+    mock.setTableResult("factura_notas_credito", { data: [], error: null });
+    mock.setTableResult("proveedor_facturas", { data: [], error: null });
+    mock.setTableResult("proveedor_notas_credito", { data: [], error: null });
+    mock.setTableResult("embarques", {
+      data: [{ id: "e1", modo: "Aéreo", tipo_cambio_usd: 15, tipo_cambio_eur: 20, expediente: "EXP1" }],
+      error: null,
+    });
+
+    const res: any = await fetchEstadoResultadosDevengado({ organizationId: "o1", year: 2024, month: 1 });
+
+    expect(res.emb[0].tipo_cambio_usd).toBe(19);
+    expect(res.emb[0].modo).toBe("Aéreo");
+  });
+
+  it("EERR-DUP: expediente duplicado no asigna embarque (modo Otros)", async () => {
+    mock.setTableResult("facturas", {
+      data: [{ id: "f1", expediente: "EXP1", subtotal: 100, moneda: "MXN", fecha_emision: "2024-01-10", tipo_cambio: 1 }],
+      error: null,
+    });
+    mock.setTableResult("factura_notas_credito", { data: [], error: null });
+    mock.setTableResult("proveedor_facturas", { data: [], error: null });
+    mock.setTableResult("proveedor_notas_credito", { data: [], error: null });
+    mock.setTableResult("embarques", {
+      data: [
+        { id: "e1", modo: "Aéreo", tipo_cambio_usd: 18, tipo_cambio_eur: 20, expediente: "EXP1" },
+        { id: "e2", modo: "Marítimo", tipo_cambio_usd: 18, tipo_cambio_eur: 20, expediente: "EXP1" },
+      ],
+      error: null,
+    });
+
+    const res: any = await fetchEstadoResultadosDevengado({ organizationId: "o1", year: 2024, month: 1 });
+
+    expect(res.emb[0].modo).toBe("Otros");
+  });
+
+  it("EERR-NCP: resta las notas de crédito de proveedor aplicadas del mes", async () => {
+    mock.setTableResult("facturas", { data: [], error: null });
+    mock.setTableResult("factura_notas_credito", { data: [], error: null });
+    mock.setTableResult("proveedor_facturas", {
+      data: [{ id: "pf1", embarque_id: null, subtotal: 500, moneda: "MXN", fecha_emision: "2024-01-10", tipo_cambio_usd: null }],
+      error: null,
+    });
+    mock.setTableResult("proveedor_notas_credito", {
+      data: [{ id: "n1", proveedor_factura_id: "pf1", monto: 120, moneda: "MXN", fecha: "2024-01-20", tipo_cambio: 1 }],
+      error: null,
+    });
+    mock.setTableResult("embarques", { data: [], error: null });
+
+    const res: any = await fetchEstadoResultadosDevengado({ organizationId: "o1", year: 2024, month: 1 });
+
+    expect(res.c).toHaveLength(2);
+    expect(res.c[1].monto).toBe(-120);
+  });
+
+  it("EERR-APROB: excluye facturas de proveedor rechazadas", async () => {
+    mock.setTableResult("facturas", { data: [], error: null });
+    mock.setTableResult("factura_notas_credito", { data: [], error: null });
+    mock.setTableResult("proveedor_facturas", { data: [], error: null });
+    mock.setTableResult("proveedor_notas_credito", { data: [], error: null });
+
+    await fetchEstadoResultadosDevengado({ organizationId: "o1", year: 2024, month: 1 });
+
+    const call = mock.tableCalls.find((c) => c.table === "proveedor_facturas");
+    const neqArgs = call!.ops
+      .map((op, i) => [op, call!.opArgs[i]] as const)
+      .filter(([op]) => op === "neq")
+      .map(([, args]) => args as [string, string]);
+    expect(neqArgs).toEqual(
+      expect.arrayContaining([["estado", "Cancelada"], ["estado_aprobacion", "rechazada"]]),
+    );
   });
 
   it("maneja errores de supabase", async () => {

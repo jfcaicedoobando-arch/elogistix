@@ -4,8 +4,16 @@
  * límite de 200 líneas del Power-of-10 #4).
  *
  * Convierten filas de facturas, notas de crédito y facturas de proveedor en
- * "embarques sintéticos" + conceptos de venta/costo, resolviendo el tipo de
- * cambio con la precedencia: TC del embarque → TC del documento → TC del DOF.
+ * "embarques sintéticos" + conceptos de venta/costo.
+ *
+ * EERR-TC (v13.823.246): la precedencia del tipo de cambio es
+ * TC del documento fiscal → TC del embarque → TC del DOF. El CFDI es el que se
+ * timbró ante el SAT, así que su TC manda sobre el TC operativo del booking;
+ * con el orden anterior el EERR no cuadraba contra Facturación ni CxC.
+ *
+ * EERR-MODO (v13.823.246): una fila sin embarque vinculado ya no se asume
+ * "Marítimo" — cae en "Otros" para no inflar una columna de modo con importes
+ * cuyo modo real es desconocido.
  */
 import { fallbackTC, type TcFallback } from "./estadoResultadosTc";
 import type {
@@ -17,7 +25,11 @@ import type {
   FacturaRow,
   NotaCreditoRow,
   ProveedorFacturaRow,
+  ProveedorNotaCreditoRow,
 } from "@/lib/mappers/estadoResultadosRows";
+
+/** Modo usado cuando la fila no tiene embarque vinculado (modo desconocido). */
+const MODO_DESCONOCIDO = "Otros";
 
 export interface VentasBucket {
   embarques: EmbarqueER[];
@@ -28,6 +40,7 @@ export interface CostosBucket {
   embarques: EmbarqueER[];
   costos: ConceptoCostoER[];
 }
+
 
 export function ingresosDeFacturas(
   facturas: FacturaRow[],
@@ -40,8 +53,8 @@ export function ingresosDeFacturas(
     const id = `fact-${f.id}`;
     out.embarques.push({
       id,
-      modo: emb?.modo ?? "Marítimo",
-      tipo_cambio_usd: emb?.tipo_cambio_usd ?? fallbackTC(Number(f.tipo_cambio), tc.usd),
+      modo: emb?.modo ?? MODO_DESCONOCIDO,
+      tipo_cambio_usd: fallbackTC(Number(f.tipo_cambio), emb?.tipo_cambio_usd ?? tc.usd),
       tipo_cambio_eur: emb?.tipo_cambio_eur ?? tc.eur,
     });
     out.ventas.push({
@@ -72,7 +85,7 @@ export function ingresosDeNotas(
     // TC del mes si la NC no lo tiene capturado.
     out.embarques.push({
       id,
-      modo: modoPorFactura.get(nc.factura_id) ?? "Marítimo",
+      modo: modoPorFactura.get(nc.factura_id) ?? MODO_DESCONOCIDO,
       tipo_cambio_usd: fallbackTC(Number(nc.tipo_cambio ?? 0), tc.usd),
       tipo_cambio_eur: tc.eur,
     });
@@ -96,8 +109,8 @@ export function costosDeProveedorFacturas(
     const id = `pf-${pf.id}`;
     out.embarques.push({
       id,
-      modo: emb?.modo ?? "Marítimo",
-      tipo_cambio_usd: emb?.tipo_cambio_usd ?? fallbackTC(Number(pf.tipo_cambio_usd), tc.usd),
+      modo: emb?.modo ?? MODO_DESCONOCIDO,
+      tipo_cambio_usd: fallbackTC(Number(pf.tipo_cambio_usd), emb?.tipo_cambio_usd ?? tc.usd),
       tipo_cambio_eur: emb?.tipo_cambio_eur ?? tc.eur,
     });
     out.costos.push({
@@ -106,6 +119,39 @@ export function costosDeProveedorFacturas(
       // BL-06: base SIN IVA (el IVA acreditable no es costo operativo).
       monto: Number(pf.subtotal),
       moneda: String(pf.moneda),
+    });
+  }
+}
+
+/**
+ * EERR-NCP (v13.823.246): las notas de crédito de proveedor aplicadas del mes
+ * se restan del costo. El encabezado del servicio devengado ya prometía
+ * "menos notas de crédito proveedor aplicadas", pero nunca se restaban y el
+ * costo quedaba inflado.
+ */
+export function costosDeNotasProveedor(
+  ncs: ProveedorNotaCreditoRow[],
+  embPorId: EmbarqueER[],
+  /** `proveedor_factura_id` → `embarque_id` de la factura padre. */
+  embPorFacturaProv: ReadonlyMap<string, string>,
+  out: CostosBucket,
+  tc: TcFallback,
+): void {
+  for (const nc of ncs) {
+    const embId = embPorFacturaProv.get(nc.proveedor_factura_id);
+    const emb = embId ? embPorId.find((e) => e.id === embId) : undefined;
+    const id = `pnc-${nc.id}`;
+    out.embarques.push({
+      id,
+      modo: emb?.modo ?? MODO_DESCONOCIDO,
+      tipo_cambio_usd: fallbackTC(Number(nc.tipo_cambio), emb?.tipo_cambio_usd ?? tc.usd),
+      tipo_cambio_eur: emb?.tipo_cambio_eur ?? tc.eur,
+    });
+    out.costos.push({
+      embarque_id: id,
+      concepto: "Notas de crédito de proveedor",
+      monto: -Math.abs(Number(nc.monto)),
+      moneda: String(nc.moneda),
     });
   }
 }

@@ -39,6 +39,18 @@ export interface ProveedorFacturaRow {
   tipo_cambio_usd: number | null;
 }
 
+/** EERR-NCP: nota de crédito de proveedor aplicada (resta costo del mes). */
+export interface ProveedorNotaCreditoRow {
+  id: string;
+  proveedor_factura_id: string;
+  monto: number;
+  moneda: string;
+  /** `proveedor_notas_credito.fecha` (DATE de negocio). */
+  fecha: string;
+  tipo_cambio: number | null;
+}
+
+
 type RawRow = Record<string, unknown>;
 
 const nullableNum = (v: unknown): number | null =>
@@ -97,5 +109,16 @@ export function mapEmbarqueERConExpediente(
     tipo_cambio_usd: nullableNum(r.tipo_cambio_usd),
     tipo_cambio_eur: nullableNum(r.tipo_cambio_eur),
     expediente: nullableStr(r.expediente),
+  }));
+}
+
+export function mapProveedorNotaCreditoRows(data: unknown): ProveedorNotaCreditoRow[] {
+  return ((data ?? []) as RawRow[]).map((r) => ({
+    id: str(r.id),
+    proveedor_factura_id: str(r.proveedor_factura_id),
+    monto: num(r.monto),
+    moneda: str(r.moneda),
+    fecha: str(r.fecha),
+    tipo_cambio: nullableNum(r.tipo_cambio),
   }));
 }
