@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.823.258] - 2026-09-09
+- **fix(build)**: se corrigieron errores de compilación de tipos introducidos en 13.823.257 (selector de concepto en filas MXN/USD, tasa de IVA por concepto, totales USD del detalle de cotización y ruta en el tooltip del listado de embarques).
+
 ## [13.823.257] - 2026-09-09
 - **fix(cotizaciones)**: la cantidad de un concepto acepta decimales (`1.5` ya no se convierte en `15`); la captura conserva el texto y confirma al salir del campo (VIS-CE-251-07, con regresión).
 - **fix(cotizaciones/embarques)**: los importes de conceptos y de costos/precios ya no se recortan en pantallas de 1280 px; las filas se redistribuyen o bajan a segunda línea y los totales muestran el importe completo (VIS-CE-251-01).
