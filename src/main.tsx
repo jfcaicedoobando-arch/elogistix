@@ -8,7 +8,6 @@ import { OrganizationProvider } from "./lib/contexts/OrganizationContext";
 import { ThemeProvider } from "./lib/contexts/ThemeContext";
 import { APP_VERSION } from "./constants/appVersion";
 import {
-  clearChunkReloadFlag,
   clearPersistedQueryCache,
   getStoredAppVersion,
   setStoredAppVersion,
@@ -52,13 +51,9 @@ window.addEventListener("error", (event) => {
   tryReloadForChunkError();
 });
 
-// No liberar la guarda apenas termina `load`: las rutas React.lazy y los
-// módulos diferidos suelen resolverse después. Si uno falla a los 1–3 s,
-// limpiar aquí provocaba un bucle de recargas (la app aparecía y desaparecía).
-// Ocho segundos sin fallos indican que el grafo de módulos ya quedó estable.
-window.addEventListener("load", () => {
-  window.setTimeout(clearChunkReloadFlag, 8_000);
-});
+// La guarda anti-bucle de recargas vive en `tryReloadForChunkError` como
+// ventana deslizante (máx. 2 recargas en 2 min; después, fallback manual),
+// por lo que ya no hace falta limpiar bandera tras `load`.
 
 /**
  * Sentry + React Query persister se cargan de forma DIFERIDA fuera del
