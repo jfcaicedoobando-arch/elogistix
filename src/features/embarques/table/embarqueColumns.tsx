@@ -70,7 +70,11 @@ export function buildEmbarqueColumns({
             <TooltipProvider delayDuration={300}>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <span className="block truncate">{labelExpediente(e.expediente, e.id)}</span>
+                  {/* R257-04: `tabIndex`/`aria-label` para que el detalle de la
+                      ruta también sea alcanzable por teclado y lector. */}
+                  <span tabIndex={0} aria-label={detalle} className="block truncate rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                    {labelExpediente(e.expediente, e.id)}
+                  </span>
                 </TooltipTrigger>
                 <TooltipContent side="right" className="text-body-sm max-w-[320px] break-words">
                   {detalle}

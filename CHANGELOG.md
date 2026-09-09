@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.823.259] - 2026-09-09
+- **fix(CI)**: se restauraron los contratos reales de las filas de conceptos (selector de catálogo, unidad y tasa de IVA por línea) y el cálculo canónico de IVA, conservando la captura decimal.
+- **fix(cotizaciones)**: los avisos "sin desglose de costos" y "wizard abierto en otra pestaña" usan el aviso estándar de la app (menos deuda visual).
+- **chore(reportes)**: la utilidad de fecha fiscal de facturas vive dentro del módulo de resultados (único consumidor); se actualizaron los datos de prueba del estado de resultados a la fecha fiscal, sin cambiar cálculos financieros.
+- **fix(compras)**: el botón "Obtener DOF" usa el indicador de carga estándar del botón.
+
 ## [13.823.258] - 2026-09-09
 - **fix(build)**: se corrigieron errores de compilación de tipos introducidos en 13.823.257 (selector de concepto en filas MXN/USD, tasa de IVA por concepto, totales USD del detalle de cotización y ruta en el tooltip del listado de embarques).
 

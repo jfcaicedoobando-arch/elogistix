@@ -16,7 +16,7 @@ interface Props {
 export function ConflictoPestanaAlert({ onDescartar }: Props) {
   return (
     <PageContainer noSpacing className="max-w-6xl pt-4">
-      <Alert className="border-warning/40 bg-warning/5">
+      <Alert variant="warning">
         <AlertTriangle className="h-4 w-4" />
         <AlertDescription className="text-body-sm flex items-center justify-between gap-2">
           <span>
