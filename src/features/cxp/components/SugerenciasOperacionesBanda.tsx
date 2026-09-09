@@ -20,7 +20,8 @@ interface Props {
 }
 
 export function SugerenciasOperacionesBanda({
-  aplicados, descartados, sinCostoCapturado, marcadosAhora, onQuitarTodos, onReaplicar,
+  aplicados, descartados, sinTipoCambio = [], sinCostoCapturado, marcadosAhora,
+  onQuitarTodos, onReaplicar,
 }: Props) {
   if (sinCostoCapturado && aplicados.length === 0 && descartados.length === 0) {
     return (
