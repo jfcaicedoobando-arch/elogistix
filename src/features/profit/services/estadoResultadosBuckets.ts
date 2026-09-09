@@ -122,3 +122,36 @@ export function costosDeProveedorFacturas(
     });
   }
 }
+
+/**
+ * EERR-NCP (v13.823.246): las notas de crédito de proveedor aplicadas del mes
+ * se restan del costo. El encabezado del servicio devengado ya prometía
+ * "menos notas de crédito proveedor aplicadas", pero nunca se restaban y el
+ * costo quedaba inflado.
+ */
+export function costosDeNotasProveedor(
+  ncs: ProveedorNotaCreditoRow[],
+  embPorId: EmbarqueER[],
+  /** `proveedor_factura_id` → `embarque_id` de la factura padre. */
+  embPorFacturaProv: ReadonlyMap<string, string>,
+  out: CostosBucket,
+  tc: TcFallback,
+): void {
+  for (const nc of ncs) {
+    const embId = embPorFacturaProv.get(nc.proveedor_factura_id);
+    const emb = embId ? embPorId.find((e) => e.id === embId) : undefined;
+    const id = `pnc-${nc.id}`;
+    out.embarques.push({
+      id,
+      modo: emb?.modo ?? MODO_DESCONOCIDO,
+      tipo_cambio_usd: fallbackTC(Number(nc.tipo_cambio), emb?.tipo_cambio_usd ?? tc.usd),
+      tipo_cambio_eur: emb?.tipo_cambio_eur ?? tc.eur,
+    });
+    out.costos.push({
+      embarque_id: id,
+      concepto: "Notas de crédito de proveedor",
+      monto: -Math.abs(Number(nc.monto)),
+      moneda: String(nc.moneda),
+    });
+  }
+}
