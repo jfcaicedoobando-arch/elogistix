@@ -18,3 +18,8 @@
 - [ ] MEJ-CE-251-01 P2 — Distribución listado embarques
 - [ ] Observaciones: título navegador editor embarque; isDirty al avanzar a Paso3
 - [ ] Cierre: versión/changelog/manifest consolidado, typecheck/lint/build focalizados
+
+## Remate 13.823.259
+- [x] Extraer medición/navegación de Paso1ProgressSidebar sin exceder 200 líneas
+- [x] Dar una segunda fila legible a Subtotal, IVA y Total MXN
+- [x] Cierre: patch, changelog y manifiesto; validación completa sólo en GitHub Actions
