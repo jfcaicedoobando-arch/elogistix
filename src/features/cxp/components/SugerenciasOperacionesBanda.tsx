@@ -6,10 +6,13 @@ import { Sparkles, RotateCcw, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { formatCurrency } from "@/lib/formatters/numbers";
 import type { ConceptoSugeridoEntrante } from "@/features/cxp/services/facturasEntrantesConceptos";
+import { SugerenciasListaAviso } from "./SugerenciasListaAviso";
 
 interface Props {
   aplicados: readonly ConceptoSugeridoEntrante[];
   descartados: readonly ConceptoSugeridoEntrante[];
+  /** Sugerencias en otra moneda sin T/C DOF disponible: no se pre-marcaron. */
+  sinTipoCambio?: readonly ConceptoSugeridoEntrante[];
   sinCostoCapturado: boolean;
   /** Cuántos conceptos están marcados ahora mismo en el formulario. */
   marcadosAhora: number;
@@ -18,7 +21,8 @@ interface Props {
 }
 
 export function SugerenciasOperacionesBanda({
-  aplicados, descartados, sinCostoCapturado, marcadosAhora, onQuitarTodos, onReaplicar,
+  aplicados, descartados, sinTipoCambio = [], sinCostoCapturado, marcadosAhora,
+  onQuitarTodos, onReaplicar,
 }: Props) {
   if (sinCostoCapturado && aplicados.length === 0 && descartados.length === 0) {
     return (
@@ -28,7 +32,7 @@ export function SugerenciasOperacionesBanda({
       </p>
     );
   }
-  if (aplicados.length === 0 && descartados.length === 0) return null;
+  if (aplicados.length === 0 && descartados.length === 0 && sinTipoCambio.length === 0) return null;
 
   return (
     <section className="space-y-2 rounded-md border border-info/40 bg-info/5 p-3">
@@ -62,21 +66,18 @@ export function SugerenciasOperacionesBanda({
         </ul>
       )}
 
-      {descartados.length > 0 && (
-        <div className="space-y-0.5 text-body-sm text-warning">
-          <p>
-            {descartados.length} sugerencia{descartados.length === 1 ? "" : "s"} no se marcó porque
-            el concepto ya tiene otra factura vigente:
-          </p>
-          <ul className="space-y-0.5">
-            {descartados.map((c) => (
-              <li key={c.conceptoCostoId}>
-                {c.concepto} · {formatCurrency(c.monto, c.moneda)}
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
+      <SugerenciasListaAviso
+        items={descartados}
+        motivo="el concepto ya tiene otra factura vigente:"
+      />
+
+      <SugerenciasListaAviso
+        items={sinTipoCambio}
+        motivo={
+          "el costo está en otra moneda y no hay tipo de cambio del día para convertirlo. " +
+          "Márcalo a mano cuando el tipo de cambio esté disponible:"
+        }
+      />
     </section>
   );
 }
