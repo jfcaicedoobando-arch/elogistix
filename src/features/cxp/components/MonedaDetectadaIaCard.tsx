@@ -9,7 +9,7 @@
  * Sólo se muestra para documentos leídos por IA: el desglose de un XML CFDI es
  * fiscal y su moneda no se corrige aquí.
  */
-import { Coins, Loader2, RefreshCw, AlertTriangle } from "lucide-react";
+import { Coins, RefreshCw, AlertTriangle } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import {
@@ -53,11 +53,9 @@ export function MonedaDetectadaIaCard({
             size="sm"
             className="h-7 px-2 text-label"
             onClick={onObtenerDof}
-            disabled={dofLoading}
+            loading={dofLoading}
           >
-            {dofLoading
-              ? <Loader2 className="size-4 mr-1 animate-spin" />
-              : <RefreshCw className="size-3 mr-1" />}
+            <RefreshCw className="size-3 mr-1" />
             Obtener DOF
           </Button>
         )}
