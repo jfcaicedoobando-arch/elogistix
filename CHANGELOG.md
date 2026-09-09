@@ -1,5 +1,16 @@
 # Changelog
 
+## [13.823.257] - 2026-09-09
+- **fix(cotizaciones)**: la cantidad de un concepto acepta decimales (`1.5` ya no se convierte en `15`); la captura conserva el texto y confirma al salir del campo (VIS-CE-251-07, con regresión).
+- **fix(cotizaciones/embarques)**: los importes de conceptos y de costos/precios ya no se recortan en pantallas de 1280 px; las filas se redistribuyen o bajan a segunda línea y los totales muestran el importe completo (VIS-CE-251-01).
+- **fix(cotizaciones)**: unidades guardadas fuera del catálogo vigente (p. ej. `E48`) vuelven a ser visibles al editar (VIS-CE-251-08); el aviso de concepto legacy se lee en tema oscuro (VIS-CE-251-02).
+- **fix(cotizaciones)**: el detalle de cotización explica subtotal/IVA/total también en USD, respetando tasas y monedas mixtas (VIS-CE-251-06); el menú de progreso del asistente tiene altura útil con scroll propio (VIS-CE-251-03).
+- **fix(embarques)**: Demoras y Garantías muestran el nombre del tipo de contenedor aunque el valor guardado sea un UUID (VIS-CE-251-05); copy de EIR corregido a "recibo de intercambio de equipo" (VIS-CE-251-10); el aviso de proveedor obligatorio en Subir factura ya no se contradice (VIS-CE-251-04); Conciliación muestra "Dentro del rango" en lugar del enum (VIS-CE-251-09).
+- **fix(embarques)**: el editor de embarque actualiza el título del navegador y ya no avisa de "cambios sin guardar" sólo por avanzar de paso.
+- **mejora(embarques)**: el listado prioriza Expediente, Cliente, Estado y ETA en Desktop HD; las columnas secundarias se muestran desde 2xl y quedan accesibles en el tooltip del expediente (MEJ-CE-251-01).
+- **fix(layout)**: en el menú lateral colapsado los iconos ya no quedan recortados por la barra de desplazamiento (VIS-NAV-251-01).
+- **mejora(ui)**: avisos (toasts): la X queda centrada verticalmente, con área de toque de 32 px y sin el hueco extra entre ícono y texto.
+
 ## [13.823.256] - 2026-09-09
 - **fix(cxp/buzón)**: al corregir la moneda de la factura en el asistente se limpian los montos vinculados y la precarga de conceptos sugeridos vuelve a aplicarse convertida a la nueva moneda (antes quedaban montos en pesos tratados como dólares, produciendo excedentes fantasma sobre el subtotal en el paso 3).
 - **fix(cxp/vinculación)**: el aviso de "asignaste más de lo que vale la factura" ahora sugiere revisar la moneda del paso 1 cuando la diferencia es grande; la banda de sugerencias aclara que los montos van en la moneda de la factura.

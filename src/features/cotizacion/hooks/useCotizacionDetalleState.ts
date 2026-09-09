@@ -83,6 +83,8 @@ export function useCotizacionDetalleState(id: string | undefined) {
     conceptosVentaUSD: totales.conceptosVentaUSD,
     conceptosVentaMXN: totales.conceptosVentaMXN,
     totalUSD: totales.totalUSD,
+    subtotalUSD: totales.subtotalUSD,
+    ivaUSD: totales.ivaUSD,
     subtotalMXN: totales.subtotalMXN,
     ivaMXN: totales.ivaMXN,
     totalMXN: totales.totalMXN,

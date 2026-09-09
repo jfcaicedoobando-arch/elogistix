@@ -98,7 +98,9 @@ function SidebarGroupBlockBase({
   if (collapsed) {
     return (
       <>
-        <SidebarGroup className="py-0">{menu}</SidebarGroup>
+        {/* VIS-NAV-251-01: sin padding horizontal y con botones centrados, el
+            scrollbar del riel (3rem) ya no recorta los iconos de 36px. */}
+        <SidebarGroup className="py-0 px-0 [&_ul]:items-center">{menu}</SidebarGroup>
         {!esUltimoGrupo && <Separator className="my-1 mx-1" />}
       </>
     );

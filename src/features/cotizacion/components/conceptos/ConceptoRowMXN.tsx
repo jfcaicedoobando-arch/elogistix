@@ -1,111 +1,126 @@
+import { memo } from "react";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Trash2 } from "lucide-react";
+import { Label } from "@/components/ui/label";
+import { X } from "lucide-react";
+import type { ConceptoVentaCotizacion } from "@/features/cotizacion/hooks";
 import { formatCurrency } from "@/lib/formatters";
-import { calcularIVA, resolverTasaConcepto, TASAS_IVA_MX } from "@/lib/financial/financialUtils";
-import { UnidadMedidaSelect } from "./UnidadMedidaSelect";
+import { calcularIVA, type TasaIVA } from "@/lib/financial/financialUtils";
 import { ProductoServicioSelect } from "./ProductoServicioSelect";
-import { tasaDesdeTipoIva } from "@/features/cotizacion/hooks/useProductosCatalogo";
-import type { ConceptoRowProps } from "./ConceptoRowUSD";
+import { UnidadMedidaSelect } from "./UnidadMedidaSelect";
+import { useNumericField } from "@/features/cotizacion/hooks/useNumericField";
+import { parseCantidad, parsePrecio } from "@/features/cotizacion/utils/parseInputNumero";
 
-export function ConceptoRowMXN({ concepto: c, index: i, total, actualizar, eliminar, tasaIva }: ConceptoRowProps & { tasaIva: number }) {
+interface ConceptoRowMXNProps {
+  concepto: ConceptoVentaCotizacion;
+  index: number;
+  total: number;
+  actualizar: (index: number, campo: string, valor: string | number | boolean) => void;
+  eliminar: (index: number) => void;
+  tasaIva: TasaIVA;
+}
+
+/**
+ * VIS-CE-251-07: cantidad/precio se capturan con texto crudo
+ * (`useNumericField`) y se confirman al salir del campo — `1.5` ya no se
+ * convierte en `15` por el parseInt anterior.
+ * VIS-CE-251-01: la fila usa flex-wrap con anchos mínimos para que Subtotal,
+ * IVA y Total quepan completos en 1280x720; si el ancho no alcanza, los
+ * importes bajan a una segunda línea en lugar de truncarse.
+ */
+export const ConceptoRowMXN = memo(function ConceptoRowMXN({
+  concepto: c, index: i, total, actualizar, eliminar, tasaIva,
+}: ConceptoRowMXNProps) {
+  const cantidad = useNumericField(c.cantidad, (n) => actualizar(i, "cantidad", n), { parse: parseCantidad, fallback: 1 });
+  const precio = useNumericField(c.precio_unitario, (n) => actualizar(i, "precio_unitario", n), { parse: parsePrecio });
   const subtotal = c.cantidad * c.precio_unitario;
-  const tasaFila = resolverTasaConcepto(c, tasaIva);
-  const iva = calcularIVA(subtotal, tasaFila);
+  const iva = c.aplica_iva ? calcularIVA(subtotal, tasaIva) : 0;
+  const totalFila = subtotal + iva;
+
   return (
-    <div className="grid grid-cols-12 gap-2 items-end">
-      <div className="col-span-2">
-        {i === 0 && <Label size="sm">Concepto</Label>}
-        <ProductoServicioSelect
-          value={c.descripcion}
-          onSelect={(p) => {
-            const tasa = tasaDesdeTipoIva(p.tipo_iva);
-            actualizar(i, 'descripcion', p.nombre);
-            actualizar(i, 'aplica_iva', p.tipo_iva === 'gravado_16');
-            actualizar(i, 'tasa_iva_aplicada', tasa);
-            if (p.clave_unidad_sat) actualizar(i, 'unidad_medida', p.clave_unidad_sat);
-          }}
-        />
+    <div className="p-3 bg-muted/30 rounded-md border space-y-2">
+      <div className="flex flex-wrap items-end gap-2">
+        <div className="flex-1 min-w-[200px] space-y-1">
+          {i === 0 && <Label className="text-caption">Concepto</Label>}
+          <ProductoServicioSelect
+            value={c.concepto}
+            onChange={(v) => actualizar(i, "concepto", v)}
+            onPickConcepto={(picked) => {
+              if (picked.unidad_medida) actualizar(i, "unidad_medida", picked.unidad_medida);
+              if (typeof picked.aplica_iva === "boolean") actualizar(i, "aplica_iva", picked.aplica_iva);
+              if (typeof picked.tasa_iva_aplicada === "number") actualizar(i, "tasa_iva_aplicada", picked.tasa_iva_aplicada);
+            }}
+          />
+        </div>
+        <div className="w-[110px] space-y-1">
+          {i === 0 && <Label className="text-caption">Unidad</Label>}
+          <UnidadMedidaSelect value={c.unidad_medida ?? ''} onChange={(v) => actualizar(i, 'unidad_medida', v)} />
+        </div>
+        <div className="w-[76px] space-y-1">
+          {i === 0 && <Label className="text-caption">Cantidad</Label>}
+          <Input
+            type="text"
+            inputMode="decimal"
+            {...cantidad}
+            placeholder="1"
+            aria-label="Cantidad"
+          />
+        </div>
+        <div className="w-[120px] space-y-1">
+          {i === 0 && <Label className="text-caption">P. Unit</Label>}
+          <Input
+            type="text"
+            inputMode="decimal"
+            {...precio}
+            placeholder="0.00"
+            aria-label="Precio unitario"
+          />
+        </div>
+        <div className="w-[128px] space-y-1">
+          {i === 0 && <Label className="text-caption">Subtotal</Label>}
+          <div className="text-body-sm font-medium py-2 tabular-nums whitespace-nowrap">{formatCurrency(subtotal, 'MXN')}</div>
+        </div>
+        <div className="w-[110px] space-y-1">
+          {i === 0 && <Label className="text-caption">Tasa IVA</Label>}
+          <Select
+            value={(c.tasa_iva_aplicada ?? (c.aplica_iva ? tasaIva : 0)).toString()}
+            onValueChange={(v) => {
+              const tasa = parseFloat(v);
+              actualizar(i, "tasa_iva_aplicada", tasa);
+              actualizar(i, "aplica_iva", tasa > 0);
+            }}
+          >
+            <SelectTrigger className="h-9" aria-label="Tasa de IVA"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value={tasaIva.toString()}>{(tasaIva * 100).toFixed(0)}%</SelectItem>
+              <SelectItem value="0.08">8%</SelectItem>
+              <SelectItem value="0">0% / Exento</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="w-[128px] space-y-1">
+          {i === 0 && <Label className="text-caption">IVA</Label>}
+          <div className="text-body-sm font-medium py-2 tabular-nums whitespace-nowrap">{formatCurrency(iva, 'MXN')}</div>
+        </div>
+        <div className="w-[132px] space-y-1">
+          {i === 0 && <Label className="text-caption">Total</Label>}
+          <div className="text-body-sm font-semibold py-2 tabular-nums whitespace-nowrap">{formatCurrency(totalFila, 'MXN')}</div>
+        </div>
+        <div className="shrink-0 space-y-1">
+          {i === 0 && <div className="h-4" aria-hidden="true" />}
+          <Button variant="ghost" size="sm" onClick={() => eliminar(i)} disabled={total === 1} aria-label="Eliminar concepto">
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
-      <div className="col-span-1">
-        {i === 0 && <Label size="sm">Unidad</Label>}
-        <UnidadMedidaSelect value={c.unidad_medida} onChange={v => actualizar(i, 'unidad_medida', v)} />
-      </div>
-      <div className="col-span-1">
-        {i === 0 && <Label size="sm">Cant.</Label>}
-        <Input
-          type="text" inputMode="numeric"
-          value={c.cantidad === 0 ? '' : c.cantidad}
-          onFocus={e => { if (e.target.value === '0') e.target.value = ''; }}
-          onChange={e => {
-            const raw = e.target.value.replace(/[^0-9]/g, '');
-            actualizar(i, 'cantidad', raw === '' ? 0 : parseInt(raw, 10));
-          }}
-          onBlur={e => { if (e.target.value === '') actualizar(i, 'cantidad', 1); }}
-          placeholder="1"
-          aria-label="Cantidad"
-        />
-      </div>
-      <div className="col-span-2">
-        {i === 0 && <Label size="sm">P. Unitario</Label>}
-        <Input
-          type="text" inputMode="decimal"
-          value={c.precio_unitario === 0 ? '' : c.precio_unitario}
-          onFocus={e => { if (e.target.value === '0') e.target.value = ''; }}
-          onChange={e => {
-            const raw = e.target.value.replace(/[^0-9.]/g, '');
-            actualizar(i, 'precio_unitario', raw === '' ? 0 : parseFloat(raw));
-          }}
-          onBlur={e => { if (e.target.value === '') actualizar(i, 'precio_unitario', 0); }}
-          placeholder="0.00"
-          aria-label="Precio unitario"
-        />
-      </div>
-      <div className="col-span-1">
-        {i === 0 && <Label size="sm">Subtotal</Label>}
-        <Input value={formatCurrency(subtotal, 'MXN')} readOnly aria-label="Subtotal" className="bg-muted" />
-      </div>
-      <div className="col-span-2">
-        {i === 0 && <Label size="sm">Tasa IVA</Label>}
-        <Select
-          value={String(tasaFila)}
-          onValueChange={(v) => actualizar(i, 'tasa_iva_aplicada', Number(v))}
-        >
-          <SelectTrigger className="h-10">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {TASAS_IVA_MX.map(opt => (
-              <SelectItem key={opt.value} value={String(opt.value)}>{opt.label}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-      <div className="col-span-1">
-        {i === 0 && <Label size="sm">IVA</Label>}
-        <Input value={formatCurrency(iva, 'MXN')} readOnly aria-label="IVA" className="bg-muted" />
-      </div>
-      <div className="col-span-1">
-        {i === 0 && <Label size="sm">Total</Label>}
-        <Input value={formatCurrency(c.total, 'MXN')} readOnly aria-label="Total" className="bg-muted" />
-      </div>
-      <div className="col-span-1">
-        <Button variant="ghost" size="icon" onClick={() => eliminar(i)} disabled={total <= 1} aria-label="Eliminar concepto">
-          <Trash2 className="h-4 w-4 text-destructive" />
-        </Button>
-      </div>
-      <div className="col-span-12 -mt-1 mb-1">
-        <Textarea
-          value={c.notas || ''}
-          onChange={e => actualizar(i, 'notas', e.target.value)}
-          placeholder="Notas (opcional)"
-          className="h-8 text-body-sm text-muted-foreground resize-none focus:h-16 transition-[height]"
-          rows={1}
-        />
-      </div>
+      <Input
+        value={c.notas ?? ''}
+        onChange={(e) => actualizar(i, "notas", e.target.value)}
+        placeholder="Notas (opcional)"
+        className="text-body-sm"
+        aria-label="Notas del concepto"
+      />
     </div>
   );
-}
+});

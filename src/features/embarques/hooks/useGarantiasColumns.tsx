@@ -14,6 +14,8 @@ import {
 import { VenceBadge } from "@/features/embarques/components/garantias/VenceBadge";
 import { useUpdateGarantia } from "@/features/embarques/hooks/useGarantiasContenedor";
 import { todayLocalISO } from "@/lib/date/today";
+import { useTiposContenedor } from "@/features/catalogos/hooks";
+import { resolveTipoContenedorNombre } from "@/features/cotizacion/utils/resolveTipoContenedorNombre";
 
 interface Row extends GarantiaContenedor {
   numero_contenedor: string;
@@ -30,6 +32,8 @@ interface Params {
 
 export function useGarantiasColumns({ embarqueId, canEdit, fechaLlegadaReal }: Params) {
   const updateMut = useUpdateGarantia(embarqueId);
+  // VIS-CE-251-05: resuelve UUIDs de tipo de contenedor al nombre legible.
+  const { data: tiposContenedor = [] } = useTiposContenedor();
   const [editing, setEditing] = useState<Record<string, { monto?: string; referencia?: string }>>({});
 
   const handleChangeEstado = useCallback((id: string, estado: EstadoGarantia) => {
@@ -64,7 +68,7 @@ export function useGarantiasColumns({ embarqueId, canEdit, fechaLlegadaReal }: P
     { id: 'cont', header: 'Contenedor', cell: ({ row }) => (
       <span className="font-mono">{row.original.numero_contenedor}</span>
     )},
-    { id: 'tipo', header: 'Tipo', cell: ({ row }) => row.original.tipo_contenedor },
+    { id: 'tipo', header: 'Tipo', cell: ({ row }) => resolveTipoContenedorNombre(row.original.tipo_contenedor, tiposContenedor) },
     { id: 'carta', header: 'Carta Garantía', cell: ({ row }) => row.original.tiene_carta_garantia
       ? <Badge className="bg-success/15 text-success border-success/30"><ShieldCheck className="size-3.5 mr-1" />Sí</Badge>
       : <Badge variant="outline" className="text-muted-foreground"><ShieldOff className="size-3.5 mr-1" />No</Badge>
@@ -128,7 +132,7 @@ export function useGarantiasColumns({ embarqueId, canEdit, fechaLlegadaReal }: P
       : <VenceBadge fechaLimite={row.original.fecha_limite_devolucion} />
     },
     { id: 'fLib', header: 'F. Liberación', cell: ({ row }) => row.original.fecha_liberacion ? formatDate(row.original.fecha_liberacion) : '—' },
-  ]), [canEdit, editing, handleChangeEstado, handleSaveMonto, handleSaveReferencia]);
+  ]), [canEdit, editing, handleChangeEstado, handleSaveMonto, handleSaveReferencia, tiposContenedor]);
 
   return { columns };
 }

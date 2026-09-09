@@ -139,8 +139,11 @@ export default function Paso1ProgressSidebar({ esMaritimo }: Props) {
   };
 
   return (
-    <aside className="hidden lg:block sticky top-4 self-start w-56 shrink-0">
-      <div className="rounded-lg border bg-card p-4 space-y-3">
+    // VIS-CE-251-03: la tarjeta se limita a la altura útil de la ventana con
+    // scroll propio, para que la sección «Cierre» sea alcanzable sin
+    // desplazar la página completa ni superponer la barra de acciones.
+    <aside className="hidden lg:block sticky top-4 self-start w-56 shrink-0 max-h-[calc(100vh-2rem)]">
+      <div className="rounded-lg border bg-card p-4 space-y-3 max-h-[calc(100vh-2rem)] overflow-y-auto">
         <div className="space-y-1">
           <SectionHeading as="h2">Progreso del Paso 1</SectionHeading>
           <p className="text-body-sm text-muted-foreground">

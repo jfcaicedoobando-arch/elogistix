@@ -13,6 +13,7 @@ import { DataTable } from "@/components/shared/DataTable";
 import EmptyState from "@/components/empty/EmptyState";
 import { Clock } from "lucide-react";
 import { useTabDemorasController } from "@/features/embarques/hooks/useTabDemorasController";
+import { useTiposContenedor } from "@/features/catalogos/hooks";
 import { buildDemorasColumns } from "./_sections/tabDemorasColumns";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
@@ -26,9 +27,13 @@ export function TabDemoras({ embarqueId, canEdit }: Props) {
   const { rows, isLoading, drafts, isPending, setDraft, valorActual, guardar } =
     useTabDemorasController(embarqueId);
 
+  // VIS-CE-251-05: catálogo para mostrar el nombre del tipo aunque el valor
+  // guardado sea un UUID.
+  const { data: tiposContenedor = [] } = useTiposContenedor();
+
   const columns = useMemo(
-    () => buildDemorasColumns({ canEdit, drafts, isPending, valorActual, setDraft, guardar }),
-    [canEdit, drafts, isPending, valorActual, setDraft, guardar],
+    () => buildDemorasColumns({ canEdit, drafts, isPending, valorActual, setDraft, guardar, tiposContenedor }),
+    [canEdit, drafts, isPending, valorActual, setDraft, guardar, tiposContenedor],
   );
 
 

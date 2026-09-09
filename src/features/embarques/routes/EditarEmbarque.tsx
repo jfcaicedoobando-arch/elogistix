@@ -14,6 +14,7 @@ import { StepCostosPrecios } from "@/features/embarques/components/StepCostosPre
 import { labelExpediente } from "@/lib/domain/labelExpediente";
 import { usePermissions } from "@/hooks/shared/usePermissions";
 import { useVolver } from "@/hooks/shared/useVolver";
+import { useDocumentTitle } from "@/hooks/shared";
 
 const steps = [
   { title: 'Datos Generales', num: 1 },
@@ -38,6 +39,10 @@ export default function EditarEmbarque() {
     cotizacionVinculada, cotizacionesAceptadas,
   } = useEditarEmbarqueWizard(id);
   useRegisterBreadcrumbLabel(id, embarque?.expediente);
+  // Antes el título del navegador quedaba con el de la pantalla anterior
+  // (p. ej. "Cotizaciones") porque esta ruta no lo actualizaba. Estático para
+  // no elevar la complejidad del componente; el expediente va en el breadcrumb.
+  useDocumentTitle("Editar embarque");
 
   useEffect(() => {
     const raw = searchParams.get("step");
@@ -131,7 +136,7 @@ export default function EditarEmbarque() {
         saveLabel="Guardar Cambios"
         onBack={() => navigate(`/embarques/${id}`)}
         onFinish={handleSave}
-        isDirty={currentStep > 1}
+        isDirty={currentStep > 1 && methods.formState.isDirty}
       >
         {currentStep === 1 && (
           <StepDatosGenerales

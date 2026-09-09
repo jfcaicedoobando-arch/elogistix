@@ -14,6 +14,8 @@ export interface CotizacionDetalleTotales {
   conceptosVentaUSD: DetalleState["conceptosVentaUSD"];
   conceptosVentaMXN: DetalleState["conceptosVentaMXN"];
   totalUSD: number;
+  subtotalUSD: number;
+  ivaUSD: number;
   subtotalMXN: number;
   ivaMXN: number;
   totalMXN: number;

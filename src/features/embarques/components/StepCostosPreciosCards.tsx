@@ -59,7 +59,7 @@ export function CostosCard(p: CostosCardProps) {
           ))}
           <Button variant="outline" size="sm" onClick={p.onAdd}>+ Agregar costo</Button>
           <div className="border-t pt-3 mt-3 text-body text-right">
-            <div className="flex justify-end gap-4"><span className="font-semibold">Total USD:</span><span className="font-bold w-28 text-right">{formatCurrency(p.totalUSD, 'USD')}</span></div>
+            <div className="flex justify-end gap-4"><span className="font-semibold">Total USD:</span><span className="font-bold min-w-[132px] text-right tabular-nums whitespace-nowrap">{formatCurrency(p.totalUSD, 'USD')}</span></div>
             {p.filasMixtasCount > 0 && (
               <p className="text-body-sm text-warning mt-1">
                 {p.filasMixtasCount} fila(s) convertida(s) a USD con TC vigente.
@@ -115,7 +115,7 @@ export function VentasCard(p: VentasCardProps) {
           ))}
           <Button variant="outline" size="sm" onClick={p.onAdd}>+ Agregar concepto</Button>
           <div className="border-t pt-3 mt-3 text-body text-right">
-            <div className="flex justify-end gap-4"><span className="font-semibold">Total USD:</span><span className="font-bold w-28 text-right">{formatCurrency(p.totalUSD, 'USD')}</span></div>
+            <div className="flex justify-end gap-4"><span className="font-semibold">Total USD:</span><span className="font-bold min-w-[132px] text-right tabular-nums whitespace-nowrap">{formatCurrency(p.totalUSD, 'USD')}</span></div>
             {p.filasMixtasCount > 0 && (
               <p className="text-body-sm text-warning mt-1">
                 {p.filasMixtasCount} fila(s) convertida(s) a USD con TC vigente.

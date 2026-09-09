@@ -3,7 +3,7 @@
  */
 import { Badge } from "@/components/ui/badge";
 import type { ResumenReconciliacion3C } from "@/lib/domain/versionadoCotizacion";
-import { fmt, pct, colorPorClasificacion } from "./reconciliacionFormat";
+import { fmt, pct, colorPorClasificacion, etiquetaClasificacion } from "./reconciliacionFormat";
 
 interface Props {
   resumen: ResumenReconciliacion3C;
@@ -30,7 +30,7 @@ export function ResumenReconciliacion({ resumen, versionAceptada }: Props) {
         <span>
           {pct(resumen.delta_cot_vs_real.pct)}{" "}
           <Badge className={colorPorClasificacion(resumen.clasificacion)}>
-            {resumen.clasificacion}
+            {etiquetaClasificacion(resumen.clasificacion)}
           </Badge>
         </span>
       </div>

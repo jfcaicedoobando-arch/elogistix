@@ -43,7 +43,7 @@ export function Toaster() {
             "group toast rounded-lg px-4 py-3 gap-3 backdrop-blur-sm shadow-xl",
             "bg-card text-card-foreground border border-border",
             // Ancho mínimo consistente + rejilla icono | contenido | acciones.
-            "!min-w-[360px] !grid !grid-cols-[auto_1fr] !items-start !gap-x-3",
+            "!min-w-[360px] !grid !grid-cols-[auto_1fr] !items-start !gap-x-2",
             // Borde izquierdo semántico por severidad (Sonner emite data-type).
             "data-[type=error]:border-l-4 data-[type=error]:border-l-destructive",
             "data-[type=success]:border-l-4 data-[type=success]:border-l-[hsl(var(--success))]",
@@ -65,7 +65,7 @@ export function Toaster() {
           cancelButton:
             "!min-h-11 !min-w-[44px] !px-3 !py-2 !bg-muted !text-muted-foreground !rounded-md",
           closeButton:
-            "!opacity-100 !h-6 !w-6 !left-auto !right-2 !top-2 !bg-card !border !border-border !text-muted-foreground hover:!text-foreground hover:!bg-muted !transition-colors",
+            "!opacity-100 !h-8 !w-8 !left-auto !right-2 !top-1/2 !-translate-y-1/2 !bg-card !border !border-border !text-muted-foreground hover:!text-foreground hover:!bg-muted !transition-colors",
         },
       }}
     />

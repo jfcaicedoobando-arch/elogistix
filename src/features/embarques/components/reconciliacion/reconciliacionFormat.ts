@@ -10,6 +10,18 @@ export const fmt = (n: number, moneda: string): string =>
 
 export const pct = (n: number): string => `${n >= 0 ? "+" : ""}${n.toFixed(1)}%`;
 
+/** VIS-CE-251-09: etiqueta legible del enum `ClasificacionVarianza` (el enum no cambia). */
+export function etiquetaClasificacion(c: ClasificacionVarianza): string {
+  switch (c) {
+    case "critica":
+      return "Crítica";
+    case "alerta":
+      return "Alerta";
+    default:
+      return "Dentro del rango";
+  }
+}
+
 export function colorPorClasificacion(c: ClasificacionVarianza): string {
   switch (c) {
     case "critica":

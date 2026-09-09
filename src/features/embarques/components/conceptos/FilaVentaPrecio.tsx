@@ -36,7 +36,9 @@ export function FilaVentaPrecio({
   // perderían en silencio.
   const bloqueado = ventaBloqueada(venta.estadoFacturacion);
   return (
-    <div className={`grid ${cols} gap-2 items-center`}>
+    // `[&>*]:min-w-0` (VIS-CE-251-01): deja que cada celda se encoja con la
+    // rejilla `minmax(0,1fr)` del padre en lugar de desbordar el card.
+    <div className={`grid ${cols} gap-2 items-center [&>*]:min-w-0`}>
       {bloqueado && <span className="sr-only">{MOTIVO_VENTA_BLOQUEADA}</span>}
       <ConceptoCatalogoSelect
         value={venta.concepto}
