@@ -56,9 +56,27 @@ export function buildEmbarqueColumns({
         const e = row.original;
         const docInfo = docsMap[e.id];
         const hayPendientes = docInfo && docInfo.pendientes > 0;
+        // MEJ-CE-251-01: en Desktop HD las columnas secundarias (BL, modo,
+        // ruta, ETD, contenedores) se muestran desde 2xl; el tooltip del
+        // expediente conserva el acceso a esos datos (patrón de Cotizaciones).
+        const detalle = [
+          `BL Master: ${e.bl_master || "—"}`,
+          `Modo: ${e.modo || "—"}`,
+          `Ruta: ${e.origen || "-"} → ${e.destino || "-"}`,
+          `ETD: ${e.etd || "—"}`,
+        ].join(" · ");
         return (
           <span className="flex items-center gap-1">
-            {labelExpediente(e.expediente, e.id)}
+            <TooltipProvider delayDuration={300}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span className="block truncate">{labelExpediente(e.expediente, e.id)}</span>
+                </TooltipTrigger>
+                <TooltipContent side="right" className="text-body-sm max-w-[320px] break-words">
+                  {detalle}
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
             {hayPendientes && (
               <TooltipProvider delayDuration={200}>
                 <Tooltip>
