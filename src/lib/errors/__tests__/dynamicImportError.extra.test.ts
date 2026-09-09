@@ -1,9 +1,9 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
 
 vi.mock("@/lib/browserStorage", () => ({
-  hasChunkReloadBeenAttempted: vi.fn(() => false),
-  markChunkReloadAttempted: vi.fn(),
+  getChunkReloadHistory: vi.fn(() => null),
+  saveChunkReloadHistory: vi.fn(),
 }));
 
 import {
@@ -11,7 +11,7 @@ import {
   isDynamicImportError,
   tryReloadForChunkError,
 } from "@/lib/errors/dynamicImportError";
-import { hasChunkReloadBeenAttempted, markChunkReloadAttempted } from "@/lib/browserStorage";
+import { getChunkReloadHistory, saveChunkReloadHistory } from "@/lib/browserStorage";
 
 describe("dynamicImportError · isDynamicImportErrorMessage · entradas falsy", () => {
   it("devuelve false para undefined", () => {
@@ -92,28 +92,62 @@ describe("dynamicImportError · isDynamicImportError", () => {
 });
 
 describe("dynamicImportError · tryReloadForChunkError", () => {
-  let reloadSpy: () => void;
+  let reloadSpy: ReturnType<typeof vi.fn>;
+  let overlaySpy: ReturnType<typeof vi.fn>;
+  let fallbackSpy: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
-    vi.mocked(hasChunkReloadBeenAttempted).mockReturnValue(false);
-    vi.mocked(markChunkReloadAttempted).mockReset();
+    vi.useFakeTimers();
+    vi.mocked(getChunkReloadHistory).mockReturnValue(null);
+    vi.mocked(saveChunkReloadHistory).mockReset();
     // No mutamos `window.location.reload`: en jsdom `Location.reload` no es
     // configurable y redefinirlo falla antes de escribir el reporte blob.
     reloadSpy = vi.fn();
+    overlaySpy = vi.fn();
+    fallbackSpy = vi.fn();
   });
 
-  it("devuelve true y marca el intento cuando no se ha intentado antes", () => {
-    const result = tryReloadForChunkError(reloadSpy);
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  const opts = () => ({ showOverlay: overlaySpy, showFallback: fallbackSpy });
+
+  it("primer fallo: muestra overlay y programa el reload tras el delay", () => {
+    const result = tryReloadForChunkError(reloadSpy, { ...opts(), delayMs: 1000, now: () => 1_000 });
     expect(result).toBe(true);
-    expect(markChunkReloadAttempted).toHaveBeenCalledOnce();
+    expect(overlaySpy).toHaveBeenCalledOnce();
+    expect(saveChunkReloadHistory).toHaveBeenCalledWith({ count: 1, first: 1_000 });
+    expect(reloadSpy).not.toHaveBeenCalled();
+    vi.advanceTimersByTime(1_000);
     expect(reloadSpy).toHaveBeenCalledOnce();
   });
 
-  it("devuelve false y NO marca si ya se intentó", () => {
-    vi.mocked(hasChunkReloadBeenAttempted).mockReturnValue(true);
-    const result = tryReloadForChunkError(reloadSpy);
+  it("segundo fallo dentro de la ventana: vuelve a recargar", () => {
+    vi.mocked(getChunkReloadHistory).mockReturnValue({ count: 1, first: 1_000 });
+    const result = tryReloadForChunkError(reloadSpy, { ...opts(), now: () => 60_000 });
+    expect(result).toBe(true);
+    expect(saveChunkReloadHistory).toHaveBeenCalledWith({ count: 2, first: 1_000 });
+    vi.runAllTimers();
+    expect(reloadSpy).toHaveBeenCalledOnce();
+  });
+
+  it("tercer fallo dentro de la ventana: NO recarga, muestra fallback manual", () => {
+    vi.mocked(getChunkReloadHistory).mockReturnValue({ count: 2, first: 1_000 });
+    const result = tryReloadForChunkError(reloadSpy, { ...opts(), now: () => 90_000 });
     expect(result).toBe(false);
-    expect(markChunkReloadAttempted).not.toHaveBeenCalled();
+    expect(fallbackSpy).toHaveBeenCalledOnce();
+    expect(overlaySpy).not.toHaveBeenCalled();
+    vi.runAllTimers();
     expect(reloadSpy).not.toHaveBeenCalled();
+  });
+
+  it("fallo fuera de la ventana (más de 2 min): reinicia el contador y recarga", () => {
+    vi.mocked(getChunkReloadHistory).mockReturnValue({ count: 2, first: 1_000 });
+    const result = tryReloadForChunkError(reloadSpy, { ...opts(), now: () => 500_000 });
+    expect(result).toBe(true);
+    expect(saveChunkReloadHistory).toHaveBeenCalledWith({ count: 1, first: 500_000 });
+    vi.runAllTimers();
+    expect(reloadSpy).toHaveBeenCalledOnce();
   });
 });
