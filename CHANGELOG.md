@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.823.249] - 2026-09-09
+- **ui(estado de cuenta PDF)**: pulido profesional del documento descargable — encabezado corporativo unificado (`BrandHeader` con razón social, RFC, dirección y contacto del emisor), tarjetas KPI por moneda (pendiente / vencido / por vencer, con el vencido en color de alerta), días y antigüedad de facturas vencidas resaltados, fila de total del aging en negrita y nota de contacto para aclaraciones. Sin cambios en datos, consultas ni cálculo de aging.
+- **refactor(pdf)**: `DataTable` acepta `cellStyleForRow` opcional para acentos por fila (sin efecto en los demás documentos).
+
 ## [13.823.248] - 2026-09-09
 - **fix(estado de cuenta)**: el botón "Descargar PDF" del estado de cuenta del cliente ya descarga el archivo `.pdf` directamente (con nombre `{Org}_estado-de-cuenta-{cliente}.pdf`) en lugar de abrir una pestaña con el diálogo de imprimir del navegador. El generador migra de `window.open + print` a `@react-pdf/renderer` con el tema visual compartido, mismo contenido: tabla de facturas, aging por antigüedad y totales por moneda.
 - **test(generators)**: regresión del nuevo flujo de descarga (nombre de archivo, filas, bucket 31-60 días y lista vacía).
