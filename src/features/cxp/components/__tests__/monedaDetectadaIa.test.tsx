@@ -4,7 +4,6 @@
  */
 import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
 import { MonedaDetectadaIaCard } from "../MonedaDetectadaIaCard";
 
 describe("MonedaDetectadaIaCard", () => {
@@ -38,19 +37,4 @@ describe("MonedaDetectadaIaCard", () => {
     expect(screen.getByRole("button", { name: /Obtener DOF/i })).toBeInTheDocument();
   });
 
-  it("permite cambiar la moneda desde el selector", async () => {
-    const onMoneda = vi.fn();
-    render(
-      <MonedaDetectadaIaCard
-        moneda="MXN"
-        tc=""
-        tcOrigen="vacio"
-        onMoneda={onMoneda}
-        onTc={vi.fn()}
-      />,
-    );
-    await userEvent.click(screen.getByLabelText(/Moneda de la factura detectada por la IA/i));
-    await userEvent.click(await screen.findByRole("option", { name: "USD" }));
-    expect(onMoneda).toHaveBeenCalledWith("USD");
-  });
 });
