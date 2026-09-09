@@ -114,7 +114,7 @@ export function usePrefillVinculosEntrante({
     if (requiereConversion(sugeridos, facturaMoneda) && !tc) return;
 
     let vivo = true;
-    aplicadoPara.current = entrante.id;
+    aplicadoPara.current = clave;
     void (async () => {
       let cubiertos = new Set<string>();
       try {
