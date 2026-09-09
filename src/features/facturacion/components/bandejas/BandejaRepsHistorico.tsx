@@ -116,7 +116,7 @@ export function BandejaRepsHistorico() {
                     onClick={() => void descargar(r.id, "pdf")}
                     aria-label={`Descargar PDF del REP ${r.folio_rep}`}
                   >
-                    <FileDown className="h-4 w-4" />
+                    <FileDown className="size-4" />
                   </Button>
                   <Button
                     size="icon" variant="outline" className="min-h-11 min-w-11"
@@ -124,7 +124,7 @@ export function BandejaRepsHistorico() {
                     onClick={() => void descargar(r.id, "xml")}
                     aria-label={`Descargar XML del REP ${r.folio_rep}`}
                   >
-                    <FileCode className="h-4 w-4" />
+                    <FileCode className="size-4" />
                   </Button>
                 </div>
               </div>

@@ -99,7 +99,7 @@ export function buildRepsHistoricoColumns(o: Opts) {
               onClick={() => o.onDescargar(id, "pdf")}
               aria-label={`Descargar PDF del REP ${row.original.folio_rep}`}
             >
-              <FileDown className="h-4 w-4" />
+              <FileDown className="size-4" />
             </Button>
             <Button
               size="icon" variant="outline" className="h-8 w-8"
@@ -107,7 +107,7 @@ export function buildRepsHistoricoColumns(o: Opts) {
               onClick={() => o.onDescargar(id, "xml")}
               aria-label={`Descargar XML del REP ${row.original.folio_rep}`}
             >
-              <FileCode className="h-4 w-4" />
+              <FileCode className="size-4" />
             </Button>
           </div>
         );

@@ -105,7 +105,7 @@ export function FacturaPagosTabla({
                       onClick={() => onCancelarRep(p)}
                       aria-label="Cancelar REP"
                     >
-                      <Ban className="h-4 w-4 text-destructive" />
+                      <Ban className="size-4 text-destructive" />
                     </Button>
                   </Hint>
                 )}
@@ -126,7 +126,7 @@ export function FacturaPagosTabla({
                     }}
                     aria-label="Eliminar pago"
                   >
-                    <Trash2 className="h-4 w-4 text-destructive" />
+                    <Trash2 className="size-4 text-destructive" />
                   </Button>
                 </Hint>
               </div>
