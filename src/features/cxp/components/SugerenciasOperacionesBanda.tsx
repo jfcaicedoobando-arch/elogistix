@@ -10,6 +10,8 @@ import type { ConceptoSugeridoEntrante } from "@/features/cxp/services/facturasE
 interface Props {
   aplicados: readonly ConceptoSugeridoEntrante[];
   descartados: readonly ConceptoSugeridoEntrante[];
+  /** Sugerencias en otra moneda sin T/C DOF disponible: no se pre-marcaron. */
+  sinTipoCambio?: readonly ConceptoSugeridoEntrante[];
   sinCostoCapturado: boolean;
   /** Cuántos conceptos están marcados ahora mismo en el formulario. */
   marcadosAhora: number;
