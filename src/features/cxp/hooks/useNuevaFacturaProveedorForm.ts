@@ -61,6 +61,11 @@ export function useNuevaFacturaProveedorForm(
       manualTcRef.current = false;
       setTcOrigen(v === "MXN" ? "vacio" : "vacio");
       setTcFechaAplicada(undefined);
+      // Los montos vinculados están SIEMPRE en la moneda de la factura: si la
+      // moneda cambia, lo pre-marcado antes ya no significa lo mismo (bug de
+      // los "montos que sobran"). Se limpia y la precarga del buzón vuelve a
+      // aplicarse convertida a la nueva moneda.
+      setVinculos({});
     }
     if (errors[k]) setErrors((e) => ({ ...e, [k]: undefined }));
   };
