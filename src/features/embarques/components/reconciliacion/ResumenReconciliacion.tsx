@@ -30,7 +30,7 @@ export function ResumenReconciliacion({ resumen, versionAceptada }: Props) {
         <span>
           {pct(resumen.delta_cot_vs_real.pct)}{" "}
           <Badge className={colorPorClasificacion(resumen.clasificacion)}>
-            {resumen.clasificacion}
+            {etiquetaClasificacion(resumen.clasificacion)}
           </Badge>
         </span>
       </div>

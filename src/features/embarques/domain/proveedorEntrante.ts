@@ -23,7 +23,9 @@ export function avisoProveedorEntrante(args: AvisoProveedorArgs): string | null 
   const { detectadoId, detectadoNombre, seleccionadoId, rfcEmisor, tieneXml } = args;
 
   if (!seleccionadoId) {
-    return "Sin proveedor asignado: contabilidad tendrá que identificarlo al capturar la factura.";
+    // VIS-CE-251-04: el proveedor es obligatorio; el aviso ya no sugiere que
+    // contabilidad lo resolverá después.
+    return "Selecciona el proveedor para poder enviar el documento al buzón.";
   }
   if (detectadoId && detectadoId !== seleccionadoId) {
     const nombre = detectadoNombre ?? "otro proveedor";

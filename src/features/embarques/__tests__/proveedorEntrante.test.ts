@@ -12,7 +12,7 @@ describe("avisoProveedorEntrante", () => {
   };
 
   it("avisa cuando no hay proveedor elegido", () => {
-    expect(avisoProveedorEntrante(base)).toMatch(/Sin proveedor asignado/);
+    expect(avisoProveedorEntrante(base)).toMatch(/Selecciona el proveedor/);
   });
 
   it("no avisa cuando el elegido coincide con el detectado", () => {

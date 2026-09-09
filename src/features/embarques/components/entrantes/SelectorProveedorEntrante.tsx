@@ -87,7 +87,8 @@ export function SelectorProveedorEntrante({
             className="w-full justify-between font-normal"
           >
             <span className={cn("truncate", !seleccionado && "text-muted-foreground")}>
-              {seleccionado ? seleccionado.nombre : "Aún no lo sé / sin proveedor"}
+              {/* VIS-CE-251-04: el proveedor es obligatorio; el placeholder ya no sugiere lo contrario. */}
+              {seleccionado ? seleccionado.nombre : "Selecciona el proveedor…"}
             </span>
             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
           </Button>

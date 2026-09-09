@@ -88,7 +88,7 @@ export function ReconciliacionTresColumnas({ embarqueId }: Props) {
         accessorFn: (f) => f.clasificacion,
         cell: ({ row }) => (
           <Badge className={colorPorClasificacion(row.original.clasificacion)}>
-            {row.original.clasificacion}
+            {etiquetaClasificacion(row.original.clasificacion)}
           </Badge>
         ),
       },
