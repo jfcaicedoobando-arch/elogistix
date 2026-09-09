@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { fechaFiscalFactura, fechaMx } from "./fechaFiscalFactura";
+import { fechaFiscalFactura, fechaMx } from "../fechaFiscalFactura";
 
 describe("fechaFiscalFactura", () => {
   it("usa la fecha de certificación en hora de México cuando existe", () => {
