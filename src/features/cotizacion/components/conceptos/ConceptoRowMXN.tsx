@@ -6,11 +6,12 @@ import { Label } from "@/components/ui/label";
 import { X } from "lucide-react";
 import type { ConceptoVentaCotizacion } from "@/features/cotizacion/hooks";
 import { formatCurrency } from "@/lib/formatters";
-import { calcularIVA, type TasaIVA } from "@/lib/financial/financialUtils";
+import { calcularIVA, resolverTasaConcepto } from "@/lib/financial/financialUtils";
 import { ProductoServicioSelect } from "./ProductoServicioSelect";
 import { UnidadMedidaSelect } from "./UnidadMedidaSelect";
+import { tasaDesdeTipoIva } from "@/features/cotizacion/hooks/useProductosCatalogo";
 import { useNumericField } from "@/features/cotizacion/hooks/useNumericField";
-import { parseCantidad, parsePrecio } from "@/features/cotizacion/utils/parseInputNumero";
+import { parseCantidad } from "@/features/cotizacion/utils/parseInputNumero";
 
 interface ConceptoRowMXNProps {
   concepto: ConceptoVentaCotizacion;
