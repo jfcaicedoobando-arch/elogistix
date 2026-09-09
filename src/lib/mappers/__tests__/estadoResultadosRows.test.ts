@@ -22,7 +22,9 @@ describe("mapFacturaRows", () => {
       { id: "f1", expediente: null, subtotal: "150.5", moneda: "MXN", fecha_emision: "2026-06-01", tipo_cambio: null },
     ]);
     expect(out[0]).toEqual({
-      id: "f1", expediente: null, subtotal: 150.5, moneda: "MXN", fecha_emision: "2026-06-01", tipo_cambio: null,
+      // EERR-FISCAL: el mapper expone `timbrado_en` (fecha de certificación SAT).
+      id: "f1", expediente: null, subtotal: 150.5, moneda: "MXN", fecha_emision: "2026-06-01",
+      timbrado_en: null, tipo_cambio: null,
     });
   });
   it("convierte subtotal inválido a 0 (no NaN)", () => {
