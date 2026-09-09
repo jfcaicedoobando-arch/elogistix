@@ -78,6 +78,20 @@ export function PasoDocumento({
         />
       )}
 
+      {/* Moneda leída por IA corregible aquí mismo (no aplica a XML CFDI). */}
+      {ctl.pendingCfdi?.origen === "pdf_ia" && (
+        <MonedaDetectadaIaCard
+          moneda={ctl.values.moneda}
+          tc={ctl.values.tc}
+          tcOrigen={ctl.tcOrigen}
+          tcFechaAplicada={ctl.tcFechaAplicada}
+          onMoneda={(m) => ctl.handleChange("moneda", m)}
+          onTc={(v) => ctl.handleChange("tc", v)}
+          onObtenerDof={ctl.obtenerDofManual}
+          dofLoading={ctl.dofLoading}
+        />
+      )}
+
       {/* v13.823.21 — el desglose propuesto por IA sí se corrige aquí; el del XML CFDI no. */}
       <CfdiConceptosPreview
         conceptos={ctl.cfdiConceptos}
