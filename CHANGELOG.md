@@ -1,5 +1,13 @@
 # Changelog
 
+## [13.823.252] - 2026-09-09
+- **fix(crm/actividades)**: VIS-249-01 — cerrar el panel de Notas / resultado con Escape, la X, clic fuera o "Cancelar" con texto modificado ahora pide confirmación ("Seguir editando" / "Descartar"); sin cambios cierra directo y un guardado fallido conserva el texto. Sin autosave ni borradores.
+- **ui(crm/configuración)**: VIS-249-04 — las etapas del pipeline pasan de una rejilla de 13 fracciones a dos líneas con rótulos visibles (Tipo, Prob. %, Seguimiento: días, SLA: días), tipos completos ("Abierta"/"Ganada"/"Perdida") y nombre accesible del selector por etapa. Fila extraída a `EtapasPipelineFila`.
+- **ui(crm/analítica)**: VIS-249-03 — "Por mes"/"Por vendedor" pasan a dos columnas sólo en `2xl`, y "Embudo/Conversión por origen/Motivos" en `xl`→2 y `2xl`→3, para leer las tablas completas a 1280×720 con el menú abierto (se conserva el scroll de seguridad).
+- **ui(crm/analítica)**: VIS-249-02 — "Ponderado" usa el token `warning` en lugar de `info`, que en el tema oscuro se veía idéntico a "Pipeline".
+- **test(crm)**: regresión mínima de confirmación/descarte del panel de notas.
+
+
 ## [13.823.251] - 2026-09-09
 - **fix(cxp)**: al capturar una factura del buzón, los costos pre-marcados ahora se convierten a la moneda de la factura con el T/C DOF de la emisión (antes se copiaba el monto tal cual: un costo de USD 51 contra una factura de MXN 872.57 generaba un ajuste fantasma de MXN 821.57, como en ELIMP00329).
 - **ux(cxp)**: si el costo está en otra moneda y no hay T/C del día, la sugerencia no se pre-marca y la banda de sugerencias lo explica.

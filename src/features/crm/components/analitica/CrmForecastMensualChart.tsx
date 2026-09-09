@@ -86,7 +86,7 @@ export default function CrmForecastMensualChart({ porMes, isLoading }: Props) {
                   />
                   <Legend wrapperStyle={CHART_LEGEND_STYLE} />
                   <Bar dataKey="Pipeline" fill={CHART.primary} radius={CHART_BAR_RADIUS} />
-                  <Bar dataKey="Ponderado" fill={CHART.info} radius={CHART_BAR_RADIUS} />
+                  <Bar dataKey="Ponderado" fill={CHART.warning} radius={CHART_BAR_RADIUS} />
                   <Bar dataKey="Ganado" fill={CHART.success} radius={CHART_BAR_RADIUS} />
                 </BarChart>
               </ResponsiveContainer>
