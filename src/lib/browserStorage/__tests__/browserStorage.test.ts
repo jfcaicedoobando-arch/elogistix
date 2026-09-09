@@ -4,9 +4,8 @@ import {
   safeSessionStorage,
   STORAGE_KEYS,
   loginLoggedKey,
-  hasChunkReloadBeenAttempted,
-  markChunkReloadAttempted,
-  clearChunkReloadFlag,
+  getChunkReloadHistory,
+  saveChunkReloadHistory,
   getStoredAppVersion,
   setStoredAppVersion,
   getStorageRef,
@@ -47,12 +46,15 @@ describe("browserStorage wrapper", () => {
     expect(loginLoggedKey("abc")).toBe(`${STORAGE_KEYS.loginLoggedPrefix}abc`);
   });
 
-  it("chunk reload helpers (set→has→clear)", () => {
-    expect(hasChunkReloadBeenAttempted()).toBe(false);
-    markChunkReloadAttempted();
-    expect(hasChunkReloadBeenAttempted()).toBe(true);
-    clearChunkReloadFlag();
-    expect(hasChunkReloadBeenAttempted()).toBe(false);
+  it("chunk reload history: round-trip y formatos inválidos", () => {
+    expect(getChunkReloadHistory()).toBeNull();
+    saveChunkReloadHistory({ count: 2, first: 1234 });
+    expect(getChunkReloadHistory()).toEqual({ count: 2, first: 1234 });
+    // Formato legacy ("1") o corrupto → se ignora y devuelve null.
+    safeSessionStorage.setItem(STORAGE_KEYS.chunkErrorReload, "1");
+    expect(getChunkReloadHistory()).toBeNull();
+    safeSessionStorage.setItem(STORAGE_KEYS.chunkErrorReload, "{bad json");
+    expect(getChunkReloadHistory()).toBeNull();
   });
 
   it("app version helpers guardan la versión actual", () => {
