@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.823.253] - 2026-09-09
+- **fix(cxp/buzón)**: la moneda leída por IA ahora se corrige en el paso 1 del asistente, junto a la lectura del PDF ("Moneda detectada por la IA"), con tipo de cambio y botón "Obtener DOF". Es el mismo campo del paso 2 (sin estado duplicado) y avisa que los importes no se convierten solos. No aplica a facturas con XML CFDI.
+- **fix(parse-invoice-pdf)**: regla de moneda dual en la lectura por IA — cuando el documento imprime el cargo en moneda extranjera con su tipo de cambio y el equivalente en pesos (notas de débito de navieras tipo AGUNSA/TSL), la moneda de la factura es la extranjera y el T/C impreso se devuelve como tipo de cambio.
+- **test(cxp)**: regresión del bloque de moneda detectada (T/C sólo en moneda extranjera + aviso de no conversión).
+
+
 ## [13.823.252] - 2026-09-09
 - **fix(crm/actividades)**: VIS-249-01 — cerrar el panel de Notas / resultado con Escape, la X, clic fuera o "Cancelar" con texto modificado ahora pide confirmación ("Seguir editando" / "Descartar"); sin cambios cierra directo y un guardado fallido conserva el texto. Sin autosave ni borradores.
 - **ui(crm/configuración)**: VIS-249-04 — las etapas del pipeline pasan de una rejilla de 13 fracciones a dos líneas con rótulos visibles (Tipo, Prob. %, Seguimiento: días, SLA: días), tipos completos ("Abierta"/"Ganada"/"Perdida") y nombre accesible del selector por etapa. Fila extraída a `EtapasPipelineFila`.
