@@ -3,7 +3,7 @@
  */
 import { Badge } from "@/components/ui/badge";
 import type { ResumenReconciliacion3C } from "@/lib/domain/versionadoCotizacion";
-import { fmt, pct, colorPorClasificacion } from "./reconciliacionFormat";
+import { fmt, pct, colorPorClasificacion, etiquetaClasificacion } from "./reconciliacionFormat";
 
 interface Props {
   resumen: ResumenReconciliacion3C;

@@ -17,7 +17,7 @@ import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/Da
 import { useReconciliacion3Columnas } from "@/features/embarques/hooks/useReconciliacion3Columnas";
 import { useUmbralesReconciliacion } from "@/features/embarques/hooks/useUmbralesReconciliacion";
 import type { FilaReconciliacion3C } from "@/lib/domain/versionadoCotizacion";
-import { fmt, pct, colorPorClasificacion } from "./reconciliacionFormat";
+import { fmt, pct, colorPorClasificacion, etiquetaClasificacion } from "./reconciliacionFormat";
 import { ResumenReconciliacion } from "./ResumenReconciliacion";
 import { downloadCsvWithFeedback } from "@/lib/ui/notifyCsvExport";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
