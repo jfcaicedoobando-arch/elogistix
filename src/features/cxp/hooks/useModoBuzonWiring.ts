@@ -9,6 +9,7 @@ import { useAutocargaEntrante } from "./useAutocargaEntrante";
 import { useHerenciaEntrante } from "./useHerenciaEntrante";
 import { useCategoriaCogsBuzon } from "./useCategoriaCogsBuzon";
 import { usePrefillVinculosEntrante } from "./usePrefillVinculosEntrante";
+import { useTcDofPorFecha } from "@/features/catalogos/hooks/useTcDofPorFecha";
 import type { useNuevaFacturaProveedorForm } from "./useNuevaFacturaProveedorForm";
 import type { CategoriaPresupuestoLite, EntranteParaCaptura } from "@/features/cxp/types";
 
