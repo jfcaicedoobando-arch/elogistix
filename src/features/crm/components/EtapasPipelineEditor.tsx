@@ -3,46 +3,16 @@
  * Sprint C: incluye `crea_tarea_seguimiento` + `dias_seguimiento` para automatizaciones.
  */
 import { useEffect, useRef, useState } from "react";
-import { ArrowDown, ArrowUp, Save } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Switch } from "@/components/ui/switch";
-import { Button } from "@/components/ui/button";
-import { Hint } from "@/components/shared/Hint";
 import {
   mergeDrafts, sameState, serverSnapshot, toState, type RowState,
 } from "./etapasPipelineDraft";
-
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from "@/components/ui/select";
+import { EtapasPipelineFila } from "./EtapasPipelineFila";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 import {
   useActualizarEtapa, useEtapasPipelineAll, useIntercambiarOrdenEtapas,
-  type CrmEtapaTipo,
 } from "@/features/crm/hooks";
 
-const TIPOS: CrmEtapaTipo[] = ["abierta", "ganada", "perdida"];
-const TIPO_LABEL: Record<CrmEtapaTipo, string> = {
-  abierta: "Abierta", ganada: "Ganada", perdida: "Perdida",
-};
-
-/**
- * VIS-249-04 — Campo con rótulo visible breve. Antes la fila era una rejilla de
- * 13 fracciones: el selector de tipo quedaba en ~58 px (truncaba "abierta"/
- * "ganada") y los numéricos sólo tenían aria-label/Hint. Ahora cada etapa usa
- * dos líneas que caben a 1280 px con el menú lateral abierto.
- */
-function Campo({ label, className, children }: {
-  label: string; className?: string; children: React.ReactNode;
-}) {
-  return (
-    <div className={className}>
-      <span className="block text-3xs text-muted-foreground mb-0.5">{label}</span>
-      {children}
-    </div>
-  );
-}
 
 export default function EtapasPipelineEditor() {
   const { data: etapas = [], isLoading } = useEtapasPipelineAll();
