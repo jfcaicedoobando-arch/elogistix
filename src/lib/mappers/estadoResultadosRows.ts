@@ -15,8 +15,11 @@ export interface FacturaRow {
   subtotal: number;
   moneda: string;
   fecha_emision: string;
+  /** EERR-FISCAL: fecha real de certificación ante el SAT (puede caer en otro mes). */
+  timbrado_en: string | null;
   tipo_cambio: number | null;
 }
+
 
 export interface NotaCreditoRow {
   monto: number;
