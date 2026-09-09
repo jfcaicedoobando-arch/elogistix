@@ -90,16 +90,30 @@ export const safeSessionStorage: SafeStorage = makeSafe("session");
 
 // -------- Helpers de alto nivel --------
 
-export function hasChunkReloadBeenAttempted(): boolean {
-  return safeSessionStorage.getItem(STORAGE_KEYS.chunkErrorReload) === "1";
+// Historial de recargas por chunk caducado: ventana deslizante que permite
+// recuperarse de un deploy nuevo pero corta bucles de recarga (ver
+// `src/lib/errors/dynamicImportError.ts`).
+export interface ChunkReloadHistory {
+  count: number;
+  first: number;
 }
 
-export function markChunkReloadAttempted(): void {
-  safeSessionStorage.setItem(STORAGE_KEYS.chunkErrorReload, "1");
+export function getChunkReloadHistory(): ChunkReloadHistory | null {
+  const raw = safeSessionStorage.getItem(STORAGE_KEYS.chunkErrorReload);
+  if (!raw) return null;
+  try {
+    const parsed = JSON.parse(raw) as Partial<ChunkReloadHistory>;
+    if (typeof parsed.count === "number" && typeof parsed.first === "number") {
+      return { count: parsed.count, first: parsed.first };
+    }
+    return null; // formato legacy ("1") o corrupto → se ignora
+  } catch {
+    return null;
+  }
 }
 
-export function clearChunkReloadFlag(): void {
-  safeSessionStorage.removeItem(STORAGE_KEYS.chunkErrorReload);
+export function saveChunkReloadHistory(history: ChunkReloadHistory): void {
+  safeSessionStorage.setItem(STORAGE_KEYS.chunkErrorReload, JSON.stringify(history));
 }
 
 export function clearPersistedQueryCache(): void {
