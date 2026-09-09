@@ -1,5 +1,13 @@
 # Changelog
 
+## [13.823.248] - 2026-09-09
+- **fix(estado de cuenta)**: el botón "Descargar PDF" del estado de cuenta del cliente ya descarga el archivo `.pdf` directamente (con nombre `{Org}_estado-de-cuenta-{cliente}.pdf`) en lugar de abrir una pestaña con el diálogo de imprimir del navegador. El generador migra de `window.open + print` a `@react-pdf/renderer` con el tema visual compartido, mismo contenido: tabla de facturas, aging por antigüedad y totales por moneda.
+- **test(generators)**: regresión del nuevo flujo de descarga (nombre de archivo, filas, bucket 31-60 días y lista vacía).
+
+## [13.823.247] - 2026-09-09
+- **fix(estado de resultados)**: la fuente devengada (Facturas) ahora reconoce cada factura en el mes de su **fecha de certificación SAT** (`timbrado_en`, hora de México) en lugar de la fecha capturada antes de enviar al PAC; corrige el caso de facturas capturadas el último día del mes y timbradas al día siguiente (p. ej. F1051). Además, el timbrado se bloquea (HTTP 422) si la fecha de emisión capturada ya no es la fecha actual en México, para que el CFDI no quede certificado en otro mes con tipo de cambio desfasado.
+- **test(domain)**: regresiones de `fechaFiscalFactura` (conversión a hora de México, fallback a `fecha_emision` y timestamp inválido).
+
 ## [13.823.246] - 2026-09-09
 - **fix(estado de resultados)**: la fuente devengada (Facturas) valuaba las facturas con el tipo de cambio del embarque; ahora manda el tipo de cambio del propio CFDI (documento → embarque → DOF), que es el criterio de Facturación y CxC.
 - **fix(estado de resultados)**: las notas de crédito de proveedor aplicadas del mes ya se restan del costo (el encabezado lo prometía y nunca se restaban) y las facturas de proveedor con aprobación `rechazada` dejan de contar como costo.
