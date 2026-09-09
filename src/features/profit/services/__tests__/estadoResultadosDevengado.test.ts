@@ -36,7 +36,8 @@ describe("estadoResultadosDevengado service", () => {
   });
 
   it("resuelve embarques por expediente y por id", async () => {
-    mock.setTableResult("facturas", { data: [{ id: "f1", expediente: "EXP1" }], error: null });
+    // EERR-FISCAL: el fetcher filtra por fecha fiscal, así que el fixture debe traer `fecha_emision` del mes.
+    mock.setTableResult("facturas", { data: [{ id: "f1", expediente: "EXP1", fecha_emision: "2024-01-10" }], error: null });
     mock.setTableResult("factura_notas_credito", { data: [], error: null });
     mock.setTableResult("proveedor_facturas", { data: [{ id: "pf1", embarque_id: "e1" }], error: null });
     mock.setTableResult("embarques", { data: [], error: null }); // para las 2 llamadas internas
@@ -51,8 +52,8 @@ describe("estadoResultadosDevengado service", () => {
     // f2: con expediente pero embarque no encontrado -> fallback, tc=20
     mock.setTableResult("facturas", { 
       data: [
-        { id: "f1", expediente: null, total: 1000, moneda: "USD", tipo_cambio: 0 },
-        { id: "f2", expediente: "EXP-MISSING", total: 200, moneda: "USD", tipo_cambio: 20 }
+        { id: "f1", expediente: null, subtotal: 1000, total: 1000, moneda: "USD", fecha_emision: "2024-01-10", tipo_cambio: 0 },
+        { id: "f2", expediente: "EXP-MISSING", subtotal: 200, total: 200, moneda: "USD", fecha_emision: "2024-01-10", tipo_cambio: 20 }
       ], 
       error: null 
     });
@@ -63,7 +64,7 @@ describe("estadoResultadosDevengado service", () => {
     });
     // pf1: sin embarque_id -> fallback Marítimo, tc=1 (porque tipo_cambio_usd=null)
     mock.setTableResult("proveedor_facturas", { 
-      data: [{ id: "pf1", embarque_id: null, total: 500, moneda: "USD", tipo_cambio_usd: null }], 
+      data: [{ id: "pf1", embarque_id: null, subtotal: 500, total: 500, moneda: "USD", fecha_emision: "2024-01-10", tipo_cambio_usd: null }], 
       error: null 
     });
     
@@ -81,7 +82,7 @@ describe("estadoResultadosDevengado service", () => {
 
   it("Ola 5 · A22: usa el TC EUR del DOF como respaldo (no 1) en filas sin embarque", async () => {
     mock.setTableResult("facturas", {
-      data: [{ id: "f1", expediente: null, total: 1000, moneda: "EUR", tipo_cambio: null }],
+      data: [{ id: "f1", expediente: null, subtotal: 1000, total: 1000, moneda: "EUR", fecha_emision: "2024-01-10", tipo_cambio: null }],
       error: null,
     });
     mock.setTableResult("factura_notas_credito", {
@@ -89,7 +90,7 @@ describe("estadoResultadosDevengado service", () => {
       error: null,
     });
     mock.setTableResult("proveedor_facturas", {
-      data: [{ id: "pf1", embarque_id: null, total: 500, moneda: "EUR", tipo_cambio_usd: null }],
+      data: [{ id: "pf1", embarque_id: null, subtotal: 500, total: 500, moneda: "EUR", fecha_emision: "2024-01-10", tipo_cambio_usd: null }],
       error: null,
     });
     mock.setTableResult("embarques", { data: [], error: null });
