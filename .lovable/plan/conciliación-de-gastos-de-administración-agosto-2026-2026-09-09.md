@@ -12,17 +12,21 @@ De esos 20: 4 son complementos de pago (no son gasto, no se capturan), 2 son not
 
 **Desconciliado — falta capturar (1 gasto real):**
 
-| Proveedor | Fecha | Importe sin IVA | Situación |
-|---|---|---|---|
+
+| Proveedor           | Fecha      | Importe sin IVA                 | Situación                                                       |
+| ------------------- | ---------- | ------------------------------- | --------------------------------------------------------------- |
 | Google Cloud México | 01/08/2026 | 4,687.74 MXN (5,437.78 con IVA) | No existe en el sistema; el proveedor tampoco está dado de alta |
+
 
 **Desconciliado — pero sin efecto en el resultado (Regus, se anula solo):**
 
-| Documento | Importe | Situación |
-|---|---|---|
-| Regus 4498/9277 (sustitución) | +92.17 USD | Falta en el sistema |
-| Regus 4498/9313 (17/08) | +294.81 USD | Falta en el sistema |
-| 2 notas de crédito de Regus | −92.17 y −294.81 USD | Faltan en el sistema |
+
+| Documento                     | Importe              | Situación            |
+| ----------------------------- | -------------------- | -------------------- |
+| Regus 4498/9277 (sustitución) | +92.17 USD           | Falta en el sistema  |
+| Regus 4498/9313 (17/08)       | +294.81 USD          | Falta en el sistema  |
+| 2 notas de crédito de Regus   | −92.17 y −294.81 USD | Faltan en el sistema |
+
 
 Las dos facturas y las dos notas de crédito se cancelan entre sí: el neto es cero, así que el costo de agosto no cambia. Sólo falta el rastro documental.
 
@@ -38,16 +42,26 @@ Dos causas, ambas de captura, no de cálculo:
 ## Qué propongo hacer
 
 ### 1. Reclasificar los cuatro proveedores administrativos
+
 Cambiar su categoría a "Gasto operativo" con su subtipo correspondiente (renta/servicios para Regus, honorarios para GONG, MTY Consultores y Sicont Mex, según me confirmes). Es un cambio de catálogo, no toca importes, facturas ni pagos.
 
+Adelante
+
 ### 2. Alta del proveedor y la factura de Google Cloud México
+
 Dar de alta el proveedor (RFC GCM221031837, gasto operativo, subtipo Software/SaaS) y capturar su factura de agosto por 4,687.74 más IVA, con su UUID. Con esto el gasto de agosto cuadra contra tu Excel.
 
+Las facturas de google no las pagamos, por lo que no son validas y se quedan fuera del ER.
+
 ### 3. Regus: decidir juntos
-Opción A: capturar las 2 facturas faltantes y sus 2 notas de crédito, para tener el rastro completo. Opción B: dejarlo así, porque el neto es cero. Recomiendo A para que el sistema refleje lo mismo que el SAT.
+
+Opción A: capturar las 2 facturas faltantes y sus 2 notas de crédito, para tener el rastro completo. Opción B: dejarlo así, porque el neto es cero. Recomiendo A para que el sistema refleje lo mismo que el SAT. Nos vamos con la opcion B
 
 ### 4. AVLA Seguros
+
 Necesito que me confirmes si esas dos pólizas son gasto de la empresa o costo de un embarque; según eso, se capturan.
+
+Es un seguro  de cuentas por cobrar o de credito. Son gasto. 
 
 ## Detalles técnicos
 
