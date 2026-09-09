@@ -42,9 +42,18 @@ export function useModoBuzonWiring({ ctl, categorias, entrante, abierto }: Args)
     onCategoria: (id) => ctl.handleChange("categoriaId", id),
   });
 
+  // Fix ELIMP00329: el importe pre-marcado debe ir en la moneda de la factura,
+  // convertido con el T/C DOF de la emisión (igual que la marca manual).
+  const { data: tcDof } = useTcDofPorFecha(
+    ctl.values.emision || null,
+    Boolean(abierto && ctl.values.emision),
+  );
+
   const herencia = usePrefillVinculosEntrante({
     entrante, abierto, habilitado: Boolean(ctl.values.provId),
     aplicarSugerencias: ctl.aplicarSugerencias,
+    facturaMoneda: ctl.values.moneda,
+    tc: tcDof ? { usdMxn: tcDof.usdMxn, eurMxn: tcDof.eurMxn } : null,
   });
 
   return { autocarga, categoriaCogs, herencia };
