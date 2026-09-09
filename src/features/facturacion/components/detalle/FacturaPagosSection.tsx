@@ -18,7 +18,7 @@ import { calcularSaldoFactura } from "@/lib/financial/saldoFactura";
 import { useRegistrarActividad } from "@/hooks/shared";
 import { DialogPreviewCfdiPdf } from "@/features/facturacion/components/DialogPreviewCfdiPdf";
 import { DialogCancelarRep } from "@/features/facturacion/components/DialogCancelarRep";
-import { useCancelarRepController } from "./useCancelarRepController";
+import { useCancelarRepController } from "@/features/facturacion/hooks/useCancelarRepController";
 import { FacturaPagosTabla, type PagoRow } from "./FacturaPagosTabla";
 import { FacturaPagosHeader } from "./FacturaPagosHeader";
 import { FacturaEstadoInconsistenteAlert } from "./FacturaEstadoInconsistenteAlert";

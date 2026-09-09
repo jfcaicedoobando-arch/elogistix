@@ -12,7 +12,7 @@ import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { MOTIVOS_CANCELACION_SAT } from "@/constants/catalogosSAT";
 import { formatCurrency, formatDate } from "@/lib/formatters";
 import type { MotivoCancelacionSat } from "@/features/facturacion/services/facturapi";
-import type { PagoRepInfo, ResultadoCancelacionRep } from "./detalle/useCancelarRepController";
+import type { PagoRepInfo, ResultadoCancelacionRep } from "@/features/facturacion/hooks/useCancelarRepController";
 
 interface Props {
   open: boolean;
