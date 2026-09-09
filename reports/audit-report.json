@@ -1,34 +1,29 @@
 {
-  "version": "13.823.17",
-  "generatedAt": "2026-09-01T21:55:11.367Z",
+  "version": "13.823.253",
+  "generatedAt": "2026-09-09T03:38:43.052Z",
   "arch": {
     "hooksContextsDirectImports": [],
     "componentsPagesDirectImports": [],
     "oversized": []
   },
   "casts": {
-    "total": 3329,
+    "total": 3640,
     "bySeverity": {
-      "SAFE": 975,
-      "LOW": 160,
-      "MEDIUM": 2194,
+      "SAFE": 1042,
+      "LOW": 174,
+      "MEDIUM": 2423,
       "HIGH": 0,
-      "CRITICAL": 0
+      "CRITICAL": 1
     },
     "topFiles": [
       {
         "file": "src/features/embarques/services/cierre.ts",
-        "total": 17,
-        "weight": 30
+        "total": 18,
+        "weight": 32
       },
       {
         "file": "src/features/cotizacion/services/paginados.ts",
         "total": 17,
-        "weight": 29
-      },
-      {
-        "file": "src/features/dashboard/direccion/services/loaders.ts",
-        "total": 16,
         "weight": 29
       },
       {
@@ -37,14 +32,29 @@
         "weight": 28
       },
       {
+        "file": "src/features/embarques/domain/mappers/__tests__/embarqueToDb.test.ts",
+        "total": 15,
+        "weight": 28
+      },
+      {
         "file": "src/features/cotizacion/components/seccionRuta/__tests__/aplicarTarifa.test.ts",
         "total": 13,
         "weight": 26
       },
       {
-        "file": "src/features/embarques/domain/mappers/__tests__/embarqueToDb.test.ts",
+        "file": "src/features/dashboard/direccion/services/loaders.ts",
         "total": 14,
-        "weight": 26
+        "weight": 25
+      },
+      {
+        "file": "src/features/embarques/hooks/__tests__/useNuevoEmbarqueCotVinculada.test.tsx",
+        "total": 11,
+        "weight": 22
+      },
+      {
+        "file": "src/features/configuracion/index.ts",
+        "total": 10,
+        "weight": 20
       },
       {
         "file": "src/features/cotizacion/services/__tests__/informativa.test.ts",
@@ -52,19 +62,9 @@
         "weight": 20
       },
       {
-        "file": "src/features/portal/services/__tests__/queries.test.ts",
-        "total": 11,
+        "file": "src/features/cotizacion/services/__tests__/wizard.test.ts",
+        "total": 10,
         "weight": 20
-      },
-      {
-        "file": "src/lib/mappers/genericPayloadMapper.ts",
-        "total": 11,
-        "weight": 19
-      },
-      {
-        "file": "src/features/cotizacion/hooks/__tests__/usePaso1SectionStatus.test.tsx",
-        "total": 9,
-        "weight": 18
       }
     ]
   },
@@ -72,10 +72,10 @@
     "violations": []
   },
   "fromDb": {
-    "total": 50,
-    "conSchema": 13,
+    "total": 51,
+    "conSchema": 14,
     "sinSchema": 37,
-    "ratio": 0.26,
+    "ratio": 0.275,
     "porFeature": {
       "admin": 6,
       "auditoria": 1,
