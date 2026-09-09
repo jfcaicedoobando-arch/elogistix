@@ -2,13 +2,15 @@
  * Fuente devengada del Estado de Resultados (post-Sprint 2):
  *   Ingresos = facturas con fecha_emision en el mes (no canceladas)
  *              menos notas de crédito aplicadas en el mes.
- *   Costos  = proveedor_facturas con fecha_emision en el mes (no canceladas)
- *              menos notas de crédito proveedor aplicadas.
+ *   Costos  = proveedor_facturas con fecha_emision en el mes (no canceladas
+ *              ni rechazadas) menos notas de crédito de proveedor aplicadas
+ *              en el mes.
  *
  * Pivot por modo del embarque vinculado (facturas.expediente → embarques /
- * proveedor_facturas.embarque_id → embarques). Filas sin embarque caen a
- * "Marítimo" como fallback (la mayoría del negocio); el conteo de Aéreo /
- * Terrestre depende del vínculo correcto al embarque.
+ * proveedor_facturas.embarque_id → embarques). Las filas sin embarque (o con
+ * expediente duplicado) caen en "Otros": no se asume Marítimo.
+ *
+ * Tipo de cambio: TC del documento fiscal → TC del embarque → TC del DOF.
  */
 import { supabase } from "@/integrations/supabase/client";
 import { unwrapOr } from "@/lib/supabase/response";
@@ -17,6 +19,7 @@ import {
   ingresosDeFacturas,
   ingresosDeNotas,
   costosDeProveedorFacturas,
+  costosDeNotasProveedor,
 } from "./estadoResultadosBuckets";
 import { rangoMes } from "@/features/facturacion/domain/proyeccionFacturacion";
 import {
@@ -32,9 +35,12 @@ import {
   fetchFacturasMes,
   fetchNotasCreditoMes,
   fetchProveedorFacturasMes,
+  fetchProveedorNotasCreditoMes,
+  loadEmbarqueIdsPorFacturaProveedor,
   loadEmbarquesPorExpedientes,
   loadEmbarquesPorIds,
 } from "@/features/profit/services/estadoResultadosFetch";
+
 
 interface Params {
   organizationId: string | null;
