@@ -68,7 +68,11 @@ export const ConceptoRowMXN = memo(function ConceptoRowMXN({
           aria-label="Precio unitario"
         />
       </div>
-      <div className="col-span-2 min-w-0">
+      <div className="col-span-1 min-w-0">
+        {i === 0 && <Label size="sm">Subtotal</Label>}
+        <Input value={formatCurrency(subtotal, 'MXN')} readOnly aria-label="Subtotal" className="bg-muted tabular-nums" />
+      </div>
+      <div className="col-span-1 min-w-0">
         {i === 0 && <Label size="sm">Tasa IVA</Label>}
         <Select
           value={String(tasaFila)}
@@ -105,11 +109,6 @@ export const ConceptoRowMXN = memo(function ConceptoRowMXN({
           rows={1}
         />
       </div>
-      {i === 0 && (
-        <p className="col-span-12 text-caption text-muted-foreground -mt-2">
-          Subtotal de la línea: {formatCurrency(subtotal, 'MXN')}
-        </p>
-      )}
     </div>
   );
 });
