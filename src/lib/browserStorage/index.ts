@@ -102,10 +102,12 @@ export function getChunkReloadHistory(): ChunkReloadHistory | null {
   const raw = safeSessionStorage.getItem(STORAGE_KEYS.chunkErrorReload);
   if (!raw) return null;
   try {
-    const parsed = JSON.parse(raw) as Partial<ChunkReloadHistory>;
-    if (typeof parsed.count === "number" && typeof parsed.first === "number") {
-      return { count: parsed.count, first: parsed.first };
+    const parsed: unknown = JSON.parse(raw);
+    if (parsed && typeof parsed === "object" && "count" in parsed && "first" in parsed) {
+      const { count, first } = parsed as Record<"count" | "first", unknown>;
+      if (typeof count === "number" && typeof first === "number") return { count, first };
     }
+
     return null; // formato legacy ("1") o corrupto → se ignora
   } catch {
     return null;
