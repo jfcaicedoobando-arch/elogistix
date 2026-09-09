@@ -57,13 +57,19 @@ export function SugerenciasOperacionesBanda({
       </div>
 
       {aplicados.length > 0 && (
-        <ul className="space-y-0.5 text-body-sm text-muted-foreground">
-          {aplicados.map((c) => (
-            <li key={c.conceptoCostoId}>
-              {c.concepto} · {formatCurrency(c.monto, c.moneda)}
-            </li>
-          ))}
-        </ul>
+        <>
+          <ul className="space-y-0.5 text-body-sm text-muted-foreground">
+            {aplicados.map((c) => (
+              <li key={c.conceptoCostoId}>
+                {c.concepto} · {formatCurrency(c.monto, c.moneda)}
+              </li>
+            ))}
+          </ul>
+          <p className="text-body-sm text-muted-foreground">
+            Los montos marcados van en la moneda de la factura: si cambias la moneda en el paso 1,
+            se vuelven a calcular con el tipo de cambio del día.
+          </p>
+        </>
       )}
 
       <SugerenciasListaAviso

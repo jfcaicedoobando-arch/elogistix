@@ -105,12 +105,16 @@ export function usePrefillVinculosEntrante({
   useEffect(() => {
     if (!abierto || !entrante || !habilitado) return;
     const sugeridos = entrante.conceptosSugeridos ?? [];
-    if (sugeridos.length === 0 || aplicadoPara.current === entrante.id) return;
+    // El candado incluye la moneda: corregir la moneda de la factura (p. ej.
+    // MXN mal leído por la IA → USD) debe volver a pre-marcar los costos ya
+    // convertidos, no dejar los montos de la moneda anterior.
+    const clave = `${entrante.id}#${facturaMoneda}`;
+    if (sugeridos.length === 0 || aplicadoPara.current === clave) return;
     // Sin T/C no se pre-marca nada convertible: se espera a que llegue el DOF.
     if (requiereConversion(sugeridos, facturaMoneda) && !tc) return;
 
     let vivo = true;
-    aplicadoPara.current = entrante.id;
+    aplicadoPara.current = clave;
     void (async () => {
       let cubiertos = new Set<string>();
       try {

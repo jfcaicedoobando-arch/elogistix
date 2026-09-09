@@ -63,7 +63,9 @@ export function TopeVinculacionBar({ resultado, subtotal, moneda }: Props) {
       {excede && (
         <p className="text-muted-foreground mt-1 pl-6">
           Baja el monto de algún concepto o desmarca los que no cubre esta factura. Una factura no
-          puede liquidar costos por un importe mayor a su subtotal.
+          puede liquidar costos por un importe mayor a su subtotal. Si la diferencia es enorme,
+          revisa en el paso 1 que la moneda de la factura ({moneda}) sea la correcta: con la moneda
+          equivocada los montos no son comparables.
         </p>
       )}
     </div>
