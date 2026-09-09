@@ -108,12 +108,18 @@ export function calcularTotalesConceptos(
   const conceptosVentaUSD = conceptos.filter(c => c.moneda === "USD");
   const conceptosVentaMXN = conceptos.filter(c => c.moneda === "MXN");
   const totalUSD = sumarMontos(conceptosVentaUSD.map((c) => c.total));
+  // VIS-CE-251-06: el desglose USD se calcula por línea igual que el MXN; el
+  // total mostrado sigue siendo la suma de los `total` guardados.
+  const subtotalUSD = sumarSubtotales(conceptosVentaUSD, (c) => ({ cantidad: c.cantidad, precioUnitario: c.precio_unitario }));
+  const ivaUSD = sumarMontos(
+    conceptosVentaUSD.map((c) => calcularIVA(subtotalLinea(c.cantidad, c.precio_unitario), resolverTasaConcepto(c, tasaIva))),
+  );
   const subtotalMXN = sumarSubtotales(conceptosVentaMXN, (c) => ({ cantidad: c.cantidad, precioUnitario: c.precio_unitario }));
   const ivaMXN = sumarMontos(
     conceptosVentaMXN.map((c) => calcularIVA(subtotalLinea(c.cantidad, c.precio_unitario), resolverTasaConcepto(c, tasaIva))),
   );
   const totalMXN = subtotalMXN + ivaMXN;
-  return { conceptosVentaUSD, conceptosVentaMXN, totalUSD, subtotalMXN, ivaMXN, totalMXN };
+  return { conceptosVentaUSD, conceptosVentaMXN, totalUSD, subtotalUSD, ivaUSD, subtotalMXN, ivaMXN, totalMXN };
 }
 
 /**
