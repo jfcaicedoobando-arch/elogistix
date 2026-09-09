@@ -22,4 +22,4 @@
 ## Remate 13.823.259
 - [x] Extraer medición/navegación de Paso1ProgressSidebar sin exceder 200 líneas
 - [x] Dar una segunda fila legible a Subtotal, IVA y Total MXN
-- [ ] Cierre: patch, changelog y manifiesto; validación completa sólo en GitHub Actions
+- [x] Cierre: patch, changelog y manifiesto; validación completa sólo en GitHub Actions
