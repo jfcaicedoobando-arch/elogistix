@@ -80,6 +80,23 @@ export function SugerenciasOperacionesBanda({
           </ul>
         </div>
       )}
+
+      {sinTipoCambio.length > 0 && (
+        <div className="space-y-0.5 text-body-sm text-warning">
+          <p>
+            {sinTipoCambio.length} sugerencia{sinTipoCambio.length === 1 ? "" : "s"} no se marcó
+            porque el costo está en otra moneda y no hay tipo de cambio del día para convertirlo.
+            Márcalo a mano cuando el tipo de cambio esté disponible:
+          </p>
+          <ul className="space-y-0.5">
+            {sinTipoCambio.map((c) => (
+              <li key={c.conceptoCostoId}>
+                {c.concepto} · {formatCurrency(c.monto, c.moneda)}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
     </section>
   );
 }

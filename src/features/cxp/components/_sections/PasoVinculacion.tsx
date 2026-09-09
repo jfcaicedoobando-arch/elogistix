@@ -60,6 +60,7 @@ export function PasoVinculacion({
         <SugerenciasOperacionesBanda
           aplicados={herencia.aplicados}
           descartados={herencia.descartados}
+          sinTipoCambio={herencia.sinTipoCambio}
           sinCostoCapturado={Boolean(sinCostoCapturado)}
           marcadosAhora={Object.keys(ctl.vinculos).length}
           onQuitarTodos={ctl.limpiarVinculos}
