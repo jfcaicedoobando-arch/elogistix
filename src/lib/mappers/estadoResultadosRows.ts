@@ -39,6 +39,18 @@ export interface ProveedorFacturaRow {
   tipo_cambio_usd: number | null;
 }
 
+/** EERR-NCP: nota de crédito de proveedor aplicada (resta costo del mes). */
+export interface ProveedorNotaCreditoRow {
+  id: string;
+  proveedor_factura_id: string;
+  monto: number;
+  moneda: string;
+  /** `proveedor_notas_credito.fecha` (DATE de negocio). */
+  fecha: string;
+  tipo_cambio: number | null;
+}
+
+
 type RawRow = Record<string, unknown>;
 
 const nullableNum = (v: unknown): number | null =>
