@@ -71,6 +71,7 @@ const SYSTEM = `Eres un asistente contable que extrae datos de facturas de prove
 - supplier_tax_id sólo si aparece impreso (Tax ID, VAT, EIN, RFC, 税号). Muchas facturas de Asia no lo traen: en ese caso devuelve cadena vacía y nunca uses el número de cuenta bancaria.
 - Fechas siempre YYYY-MM-DD. Si sólo hay mes/año, usa día 01.
 - Moneda: código ISO 4217 (USD, EUR, MXN, CNY, JPY, etc.).
+- MONEDA DUAL: si el documento muestra el cargo en moneda extranjera (columnas "Curr.", "For.Amt", "Foreign Amount") junto con su tipo de cambio y el equivalente en moneda local ("Loc. Amt", "Total Amt (MXN)"), la moneda de la factura es LA EXTRANJERA (p. ej. USD), NUNCA la local. En ese caso subtotal, tax_total, total y los importes de las líneas van en la moneda extranjera, y exchange_rate_usd es el tipo de cambio impreso ("Ex.rate", "Voy Ex.rate"). Las leyendas tipo "Solo considerar USD" confirman la moneda extranjera.
 - Sólo devuelve exchange_rate_usd si aparece en el PDF; si no, 0.
 - Los importes son números, no strings, sin comas de miles.
 - No inventes conceptos: extrae exactamente las líneas de la factura.

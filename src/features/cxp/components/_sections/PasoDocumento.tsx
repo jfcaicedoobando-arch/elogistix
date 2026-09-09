@@ -13,6 +13,7 @@ import { CargaCfdiSection } from "../CargaCfdiSection";
 import { CfdiDuplicadoAlert } from "../CfdiDuplicadoAlert";
 import { ProveedorNoEncontradoAlert } from "../ProveedorNoEncontradoAlert";
 import { CfdiConceptosPreview } from "../CfdiConceptosPreview";
+import { MonedaDetectadaIaCard } from "../MonedaDetectadaIaCard";
 import { ConceptosManualesSection } from "../ConceptosManualesSection";
 
 type Ctl = ReturnType<typeof useNuevaFacturaProveedorForm>;
@@ -34,6 +35,7 @@ export function PasoDocumento({
   onVerArchivoBuzon, onVerFacturaDuplicada,
 }: Props) {
   const enBuzon = Boolean(modoBuzon && entrante);
+  const esIa = ctl.pendingCfdi?.origen === "pdf_ia";
   const sinPartidas =
     ctl.cfdiConceptos.length === 0 && ctl.conceptosManuales.conceptos.length === 0;
 
@@ -78,12 +80,26 @@ export function PasoDocumento({
         />
       )}
 
+      {/* Moneda leída por IA corregible aquí mismo (no aplica a XML CFDI). */}
+      {esIa && (
+        <MonedaDetectadaIaCard
+          moneda={ctl.values.moneda}
+          tc={ctl.values.tc}
+          tcOrigen={ctl.tcOrigen}
+          tcFechaAplicada={ctl.tcFechaAplicada}
+          onMoneda={(m) => ctl.handleChange("moneda", m)}
+          onTc={(v) => ctl.handleChange("tc", v)}
+          onObtenerDof={ctl.obtenerDofManual}
+          dofLoading={ctl.dofLoading}
+        />
+      )}
+
       {/* v13.823.21 — el desglose propuesto por IA sí se corrige aquí; el del XML CFDI no. */}
       <CfdiConceptosPreview
         conceptos={ctl.cfdiConceptos}
         moneda={ctl.values.moneda}
-        onEditar={ctl.pendingCfdi?.origen === "pdf_ia" ? ctl.editarConceptoIa : undefined}
-        onEliminar={ctl.pendingCfdi?.origen === "pdf_ia" ? ctl.eliminarConceptoIa : undefined}
+        onEditar={esIa ? ctl.editarConceptoIa : undefined}
+        onEliminar={esIa ? ctl.eliminarConceptoIa : undefined}
       />
 
       <ConceptosManualesSection
