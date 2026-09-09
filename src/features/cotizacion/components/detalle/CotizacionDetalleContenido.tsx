@@ -33,7 +33,7 @@ export function CotizacionDetalleContenido({
 
   const {
     tasaIva, conceptosVentaUSD, conceptosVentaMXN,
-    totalUSD, subtotalMXN, ivaMXN, totalMXN, conceptosDescartados,
+    totalUSD, subtotalUSD, ivaUSD, subtotalMXN, ivaMXN, totalMXN, conceptosDescartados,
   } = totales;
   const { showConvertir, setShowConvertir, enviarOpen, setEnviarOpen } = dialogos;
   const {
@@ -105,9 +105,17 @@ export function CotizacionDetalleContenido({
         conceptosValidos={conceptosVentaUSD.length + conceptosVentaMXN.length}
       />
 
-      <TablaConceptosGenerico moneda="USD" conceptos={conceptosVentaUSD} total={totalUSD} />
+      {/* VIS-CE-251-06: el detalle USD ahora explica subtotal/IVA igual que MXN. */}
+      <TablaConceptosGenerico moneda="USD" conceptos={conceptosVentaUSD} subtotal={subtotalUSD} iva={ivaUSD} total={totalUSD} />
       <TablaConceptosGenerico moneda="MXN" conceptos={conceptosVentaMXN} subtotal={subtotalMXN} iva={ivaMXN} total={totalMXN} />
-      <ResumenTotalesCotizacion totalUSD={totalUSD} totalMXN={totalMXN} />
+      <ResumenTotalesCotizacion
+        totalUSD={totalUSD}
+        totalMXN={totalMXN}
+        ivaUSD={ivaUSD}
+        ivaMXN={ivaMXN}
+        mostrarUSD={conceptosVentaUSD.length > 0}
+        mostrarMXN={conceptosVentaMXN.length > 0}
+      />
 
       {canEdit && (
         <SeccionCostosInternosPLUnificado
