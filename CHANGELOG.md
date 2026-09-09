@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.823.244] - 2026-09-09
+- **fix(clientes)**: el alta/edición de contactos ya no envía valores nulos a columnas NOT NULL (`email`, `teléfono`, etc.); se normalizan a cadena vacía y se recorta el nombre. Cierra `JAVASCRIPT-REACT-6J` (pg 23502).
+- **test(clientes)**: regresión de `DialogContacto` para captura mínima y filas legacy con campos nulos.
+
+
 ## [13.823.243] - 2026-09-08
 - **data(proformas)**: eliminada (borrado lógico) la proforma PRO-2026-1014 del embarque cerrado ELIMP00262, que aún no se iba a facturar. Se usó el bypass oficial `app.bypass_cierre` para replicar la RPC `eliminar_proforma_rpc`: sus 3 conceptos de venta quedaron liberados en estado pendiente y `tiene_proforma` volvió a `false`. La factura cancelada F1021 queda como histórico y el movimiento quedó en bitácora.
 
