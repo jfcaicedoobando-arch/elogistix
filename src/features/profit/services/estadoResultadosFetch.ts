@@ -62,20 +62,38 @@ export async function loadEmbarquesPorExpedientes(
 }
 
 
+/** Días de holgura al consultar: el timbre puede caer el día antes/después. */
+const HOLGURA_DIAS = 2;
+
+function corre(fecha: string, dias: number): string {
+  const d = new Date(`${fecha}T12:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + dias);
+  return d.toISOString().slice(0, 10);
+}
+
 export async function fetchFacturasMes(orgId: string | null, desde: string, hasta: string): Promise<FacturaRow[]> {
   let q = supabase
     .from("facturas")
     // BL-06: `subtotal` (sin IVA) en lugar de `total` (con IVA).
-    .select("id, expediente, subtotal, moneda, fecha_emision, tipo_cambio")
-    .gte("fecha_emision", desde)
-    .lte("fecha_emision", hasta)
+    .select("id, expediente, subtotal, moneda, fecha_emision, timbrado_en, tipo_cambio")
+    // EERR-FISCAL (v13.823.247): el mes se decide por la fecha de certificación
+    // ante el SAT (`timbrado_en`, hora MX) cuando existe; `fecha_emision` es la
+    // fecha capturada antes de enviar al PAC y puede quedar en otro día. Se
+    // consulta con holgura y se filtra por la fecha fiscal.
+    .gte("fecha_emision", corre(desde, -HOLGURA_DIAS))
+    .lte("fecha_emision", corre(hasta, HOLGURA_DIAS))
     // Excluye Cancelada y Sustituida: ambas dejan de ser CFDI vigentes y no
     // deben sumar en el EERR devengado. Ref: FACTURA_ESTADOS_VIVOS.
     .in("estado", [...FACTURA_ESTADOS_VIVOS])
     .is("deleted_at", null);
   if (orgId) q = q.eq("organization_id", orgId);
-  return mapFacturaRows(await unwrapOr(q, []));
+  const filas = mapFacturaRows(await unwrapOr(q, []));
+  return filas.filter((f) => {
+    const fecha = fechaFiscalFactura(f);
+    return fecha >= desde && fecha <= hasta;
+  });
 }
+
 
 export async function fetchNotasCreditoMes(orgId: string | null, desde: string, hasta: string): Promise<NotaCreditoRow[]> {
   let q = supabase
