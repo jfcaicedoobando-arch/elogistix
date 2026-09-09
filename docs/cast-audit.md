@@ -11,11 +11,11 @@ Total de `as` casts detectados: **3640**
 |-----------|------|----------|---|
 | SAFE      | 0 | 1042     | 28.6% |
 | LOW       | 1 | 174      | 4.8% |
-| MEDIUM    | 2 | 2423   | 66.6% |
+| MEDIUM    | 2 | 2424   | 66.6% |
 | HIGH      | 3 | 0     | 0.0% |
-| CRITICAL  | 4 | 1 | 0.0% |
+| CRITICAL  | 4 | 0 | 0.0% |
 
-**Lectura clave:** los casts a accionar son los **HIGH + CRITICAL** = 1 (~0.0%). El resto es seguro o aceptable bajo política.
+**Lectura clave:** los casts a accionar son los **HIGH + CRITICAL** = 0 (~0.0%). El resto es seguro o aceptable bajo política.
 
 ## Definición de categorías
 
@@ -47,12 +47,7 @@ Total de `as` casts detectados: **3640**
 
 ## Top-30 casts más riesgosos (HIGH + CRITICAL)
 
-### 1. [CRITICAL] `src/lib/browserStorage/index.ts:105`
-
-```ts
-const parsed = JSON.parse(raw) as Partial<ChunkReloadHistory>;
-```
-
+_Ningún cast HIGH o CRITICAL detectado._
 
 ## Roadmap
 

@@ -1,6 +1,6 @@
 {
   "version": "13.823.253",
-  "generatedAt": "2026-09-09T03:38:43.052Z",
+  "generatedAt": "2026-09-09T03:39:58.696Z",
   "arch": {
     "hooksContextsDirectImports": [],
     "componentsPagesDirectImports": [],
@@ -11,9 +11,9 @@
     "bySeverity": {
       "SAFE": 1042,
       "LOW": 174,
-      "MEDIUM": 2423,
+      "MEDIUM": 2424,
       "HIGH": 0,
-      "CRITICAL": 1
+      "CRITICAL": 0
     },
     "topFiles": [
       {

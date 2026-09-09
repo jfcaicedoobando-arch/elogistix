@@ -1,6 +1,6 @@
 # Audit Report — 13.823.253
 
-Generado: 2026-09-09T03:38:43.052Z
+Generado: 2026-09-09T03:39:58.696Z
 
 ## Resumen
 
@@ -9,7 +9,7 @@ Generado: 2026-09-09T03:38:43.052Z
 | Capa (Supabase directo en hooks/contexts) | ✅ | 0 archivos |
 | Capa (Supabase directo en components/pages) | ✅ | 0 archivos |
 | Power-of-10 (>200 líneas) | ✅ | 0 archivos |
-| Casts HIGH + CRITICAL | ⚠️ | 1 / 3640 |
+| Casts HIGH + CRITICAL | ✅ | 0 / 3640 |
 | Higiene de tests | ✅ | 0 violaciones |
 | Adopción zod en `fromDb` | ⚠️ | 14/51 validados (28%) |
 
@@ -26,15 +26,15 @@ Generado: 2026-09-09T03:38:43.052Z
 
 ## Casts
 
-Total: **3640** — HIGH: **0**, CRITICAL: **1**
+Total: **3640** — HIGH: **0**, CRITICAL: **0**
 
 | Severidad | Cantidad |
 |---|---:|
 | SAFE | 1042 |
 | LOW | 174 |
-| MEDIUM | 2423 |
+| MEDIUM | 2424 |
 | HIGH | 0 |
-| CRITICAL | 1 |
+| CRITICAL | 0 |
 
 ### Top-10 archivos por peso de riesgo
 
