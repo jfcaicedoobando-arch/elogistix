@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.823.254] - 2026-09-09
+- **fix(ci)**: `fechaFiscalFactura` usa `diaMx` de `@/lib/date/mx` en vez de `new Intl.DateTimeFormat` inline (guardrail de formatters).
+- **fix(ci)**: se elimina el último cast CRÍTICO (`JSON.parse(...) as X`) en `browserStorage` con validación por narrowing.
+- **test(ci)**: título duplicado renombrado en `estadoCuentaPdf.test.ts` (higiene de tests).
+
+
+
 ## [13.823.253] - 2026-09-09
 - **fix(cxp/buzón)**: la moneda leída por IA ahora se corrige en el paso 1 del asistente, junto a la lectura del PDF ("Moneda detectada por la IA"), con tipo de cambio y botón "Obtener DOF". Es el mismo campo del paso 2 (sin estado duplicado) y avisa que los importes no se convierten solos. No aplica a facturas con XML CFDI.
 - **fix(parse-invoice-pdf)**: regla de moneda dual en la lectura por IA — cuando el documento imprime el cargo en moneda extranjera con su tipo de cambio y el equivalente en pesos (notas de débito de navieras tipo AGUNSA/TSL), la moneda de la factura es la extranjera y el T/C impreso se devuelve como tipo de cambio.
