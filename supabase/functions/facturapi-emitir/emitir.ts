@@ -32,7 +32,7 @@ export const ESTADOS_FACTURA_TIMBRABLES: readonly string[] = ["Borrador", "Por t
 export async function loadFactura(supabase: SupabaseClient, facturaId: string): Promise<FacturaRow | Response> {
   const { data: factura, error: fErr } = await supabase
     .from("facturas")
-    .select("id, numero, serie, estado, moneda, tipo_cambio, uso_cfdi, forma_pago, metodo_pago, cliente_id, rfc_cliente, organization_id, facturapi_id, sustituye_a, embarque_id, expediente, referencia_bl, subtotal, total")
+    .select("id, numero, serie, estado, moneda, fecha_emision, tipo_cambio, uso_cfdi, forma_pago, metodo_pago, cliente_id, rfc_cliente, organization_id, facturapi_id, sustituye_a, embarque_id, expediente, referencia_bl, subtotal, total")
     .eq("id", facturaId)
     // Ola 3 · B: una factura en papelera no es timbrable ni por llamada directa.
     .is("deleted_at", null)
