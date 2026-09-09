@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.823.255] - 2026-09-09
+- **fix(cxp/buzón)**: reacomodo visual de la tarjeta "Moneda detectada por la IA": el botón "Obtener DOF" pasa al encabezado, los campos Moneda y Tipo de cambio usan `flex-wrap` alineados a la misma altura y se apilan sin cortes en anchos angostos. Sólo presentación; sin cambios de estado ni lógica.
+
 ## [13.823.254] - 2026-09-09
 - **fix(ci)**: `fechaFiscalFactura` usa `diaMx` de `@/lib/date/mx` en vez de `new Intl.DateTimeFormat` inline (guardrail de formatters).
 - **fix(ci)**: se elimina el último cast CRÍTICO (`JSON.parse(...) as X`) en `browserStorage` con validación por narrowing.
