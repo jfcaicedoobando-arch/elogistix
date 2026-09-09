@@ -108,6 +108,7 @@ export async function validarFacturaTimbrable(
 ): Promise<Response | null> {
   return validarEstadoTimbrable(factura)
     ?? validarTipoCambio(factura)
+    ?? validarFechaEmisionVigente(factura)
     ?? validarTotalPositivo(factura)
     ?? (await validarLimiteCredito(supabase, factura, userId));
 }
