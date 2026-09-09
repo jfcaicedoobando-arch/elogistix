@@ -19,7 +19,7 @@ interface ConceptoRowMXNProps {
   total: number;
   actualizar: (index: number, campo: string, valor: string | number | boolean) => void;
   eliminar: (index: number) => void;
-  tasaIva: TasaIVA;
+  tasaIva: number;
 }
 
 /**
