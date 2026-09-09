@@ -131,6 +131,16 @@ const FACTURAPI_CODIGOS: Record<string, Omit<SatErrorInfo, "codigo">> = {
     titulo: "Demasiadas solicitudes de facturación seguidas",
     accion: "Espera un minuto e intenta de nuevo.",
   },
+  // JAVASCRIPT-REACT-5E: el SAT deja fuera de servicio su módulo de
+  // cancelación (502 desde FacturApi). No es un fallo del ERP ni del dato.
+  invoice_cancellation_service_unavailable: {
+    titulo: "El servicio de cancelación del SAT no está disponible",
+    accion: "Es una falla temporal del SAT. Intenta cancelar de nuevo en unos minutos.",
+  },
+  service_unavailable: {
+    titulo: "El servicio de facturación no está disponible",
+    accion: "Es una falla temporal del proveedor. Intenta de nuevo en unos minutos.",
+  },
 };
 
 /**
