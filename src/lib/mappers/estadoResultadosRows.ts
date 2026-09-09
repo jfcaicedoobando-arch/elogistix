@@ -111,3 +111,14 @@ export function mapEmbarqueERConExpediente(
     expediente: nullableStr(r.expediente),
   }));
 }
+
+export function mapProveedorNotaCreditoRows(data: unknown): ProveedorNotaCreditoRow[] {
+  return ((data ?? []) as RawRow[]).map((r) => ({
+    id: str(r.id),
+    proveedor_factura_id: str(r.proveedor_factura_id),
+    monto: num(r.monto),
+    moneda: str(r.moneda),
+    fecha: str(r.fecha),
+    tipo_cambio: nullableNum(r.tipo_cambio),
+  }));
+}
