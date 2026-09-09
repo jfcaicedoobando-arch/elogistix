@@ -32,9 +32,9 @@ export default function DialogContacto({ open, onOpenChange, contacto, onSave, i
   useEffect(() => {
     if (contacto) {
       setForm({
-        nombre: contacto.nombre, rfc: contacto.rfc, tipo: contacto.tipo,
-        pais: contacto.pais, ciudad: contacto.ciudad, direccion: contacto.direccion,
-        contacto: contacto.contacto, email: contacto.email, telefono: contacto.telefono,
+        nombre: texto(contacto.nombre), rfc: texto(contacto.rfc), tipo: contacto.tipo ?? 'Exportador',
+        pais: texto(contacto.pais), ciudad: texto(contacto.ciudad), direccion: texto(contacto.direccion),
+        contacto: texto(contacto.contacto), email: texto(contacto.email), telefono: texto(contacto.telefono),
       });
     } else {
       setForm(emptyForm);
@@ -44,8 +44,23 @@ export default function DialogContacto({ open, onOpenChange, contacto, onSave, i
   const handleChange = (field: string, value: string) => setForm(prev => ({ ...prev, [field]: value }));
 
   const handleSubmit = async () => {
-    if (!form.nombre.trim()) return;
-    await onSave(form, contacto?.id ?? null);
+    const nombre = texto(form.nombre).trim();
+    if (!nombre) return;
+    // Las columnas de texto son NOT NULL en la base: nunca enviamos null/undefined.
+    await onSave(
+      {
+        nombre,
+        rfc: texto(form.rfc).trim(),
+        tipo: form.tipo ?? 'Exportador',
+        pais: texto(form.pais).trim(),
+        ciudad: texto(form.ciudad).trim(),
+        direccion: texto(form.direccion).trim(),
+        contacto: texto(form.contacto).trim(),
+        email: texto(form.email).trim(),
+        telefono: texto(form.telefono).trim(),
+      },
+      contacto?.id ?? null,
+    );
   };
 
   return (
