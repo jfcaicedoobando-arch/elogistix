@@ -31,7 +31,7 @@ export function SugerenciasOperacionesBanda({
       </p>
     );
   }
-  if (aplicados.length === 0 && descartados.length === 0) return null;
+  if (aplicados.length === 0 && descartados.length === 0 && sinTipoCambio.length === 0) return null;
 
   return (
     <section className="space-y-2 rounded-md border border-info/40 bg-info/5 p-3">
