@@ -44,7 +44,9 @@ export function CotizacionWizardFooter({
   // Se relega a un menú "Más acciones" para bajar riesgo de click accidental.
   const mostrarMenuMas = currentStep === 1 && !!onCotizarSinDesglose && canSkipCostos;
   return (
-    <div className="flex flex-wrap gap-2 justify-between items-center">
+    // VIS-CE-251-03: marcador para que el panel de progreso calcule su
+    // altura útil real (el pie se superponía a la sección «Cierre»).
+    <div data-wizard-footer className="flex flex-wrap gap-2 justify-between items-center">
       <Button variant="outline" onClick={onBack} disabled={busy}>
         {currentStep === 1
           ? "Cancelar"
