@@ -112,11 +112,14 @@ export function ProductoServicioSelect({ value, onSelect, placeholder = "Selecci
           role="combobox"
           aria-expanded={open}
           disabled={disabled || isLoading}
-          className={cn(
-            "w-full justify-between font-normal",
-            esLegacy && "border-warning text-warning-foreground",
-            !value && "text-muted-foreground",
-          )}
+            className={cn(
+              "w-full justify-between font-normal",
+              // VIS-CE-251-02: `text-warning-foreground` era casi invisible en
+              // tema oscuro sobre fondo normal; `text-warning` (ámbar) se lee
+              // en claro y oscuro y mantiene la señal de "valor legacy".
+              esLegacy && "border-warning text-warning",
+              !value && "text-muted-foreground",
+            )}
         >
           <span className="truncate flex items-center gap-1">
             {esLegacy && <AlertTriangle className="h-3.5 w-3.5 shrink-0 text-warning" />}
