@@ -18,6 +18,11 @@ interface Props<T> {
   rows: T[];
   /** Renderiza una fila adicional (nota) debajo de cada row. */
   renderSubrow?: (row: T) => string | null;
+  /**
+   * Estilo extra por celda según la fila (p. ej. bold en fila de totales o
+   * color de alerta en filas vencidas). Opcional; sin efecto si se omite.
+   */
+  cellStyleForRow?: (row: T, colKey: string) => Style | undefined;
 }
 
 /**
@@ -35,7 +40,7 @@ interface Props<T> {
  *   serán empujadas ni comprimidas por una celda `cellDesc` con texto largo.
  * - `cellDesc` usa `minWidth: 0` para garantizar wrap real en flex.
  */
-export function DataTable<T>({ columns, rows, renderSubrow }: Props<T>) {
+export function DataTable<T>({ columns, rows, renderSubrow, cellStyleForRow }: Props<T>) {
   return (
     <View style={styles.table}>
       {/*
@@ -60,7 +65,7 @@ export function DataTable<T>({ columns, rows, renderSubrow }: Props<T>) {
           <View key={i} wrap={false}>
             <View style={rowStyle}>
               {columns.map((col) => (
-                <Text key={col.key} style={[styles.td, ...flat(col.cellStyle)]} wrap>
+                <Text key={col.key} style={[styles.td, ...flat(col.cellStyle), ...flat(cellStyleForRow?.(row, col.key))]} wrap>
                   {sanitizePdfText(
                     col.render ? col.render(row) : String((row as Record<string, unknown>)[col.key] ?? ""),
                   )}
