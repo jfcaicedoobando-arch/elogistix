@@ -30,7 +30,7 @@ export default function CotizacionDetalle() {
   const {
     cotizacion, isLoading, error, refetch, canEdit, tasaIva, embarquesVinculados,
     conceptosVentaUSD, conceptosVentaMXN,
-    totalUSD, subtotalMXN, ivaMXN, totalMXN, conceptosDescartados,
+    totalUSD, subtotalUSD, ivaUSD, subtotalMXN, ivaMXN, totalMXN, conceptosDescartados,
     nombreDestinatario,
     showConvertir, setShowConvertir,
     clienteForm, setClienteForm,
@@ -105,7 +105,7 @@ export default function CotizacionDetalle() {
               envios={envios}
               totales={{
                 tasaIva, conceptosVentaUSD, conceptosVentaMXN,
-                totalUSD, subtotalMXN, ivaMXN, totalMXN, conceptosDescartados,
+                totalUSD, subtotalUSD, ivaUSD, subtotalMXN, ivaMXN, totalMXN, conceptosDescartados,
               }}
               dialogos={{ showConvertir, setShowConvertir, enviarOpen, setEnviarOpen }}
               acciones={{

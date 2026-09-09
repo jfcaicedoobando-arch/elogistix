@@ -6,11 +6,12 @@ import { Label } from "@/components/ui/label";
 import { X } from "lucide-react";
 import type { ConceptoVentaCotizacion } from "@/features/cotizacion/hooks";
 import { formatCurrency } from "@/lib/formatters";
-import { calcularIVA, type TasaIVA } from "@/lib/financial/financialUtils";
+import { calcularIVA, resolverTasaConcepto } from "@/lib/financial/financialUtils";
 import { ProductoServicioSelect } from "./ProductoServicioSelect";
 import { UnidadMedidaSelect } from "./UnidadMedidaSelect";
+import { tasaDesdeTipoIva } from "@/features/cotizacion/hooks/useProductosCatalogo";
 import { useNumericField } from "@/features/cotizacion/hooks/useNumericField";
-import { parseCantidad, parsePrecio } from "@/features/cotizacion/utils/parseInputNumero";
+import { parseCantidad } from "@/features/cotizacion/utils/parseInputNumero";
 
 interface ConceptoRowMXNProps {
   concepto: ConceptoVentaCotizacion;
@@ -18,7 +19,7 @@ interface ConceptoRowMXNProps {
   total: number;
   actualizar: (index: number, campo: string, valor: string | number | boolean) => void;
   eliminar: (index: number) => void;
-  tasaIva: TasaIVA;
+  tasaIva: number;
 }
 
 /**
@@ -33,9 +34,9 @@ export const ConceptoRowMXN = memo(function ConceptoRowMXN({
   concepto: c, index: i, total, actualizar, eliminar, tasaIva,
 }: ConceptoRowMXNProps) {
   const cantidad = useNumericField(c.cantidad, (n) => actualizar(i, "cantidad", n), { parse: parseCantidad, fallback: 1 });
-  const precio = useNumericField(c.precio_unitario, (n) => actualizar(i, "precio_unitario", n), { parse: parsePrecio });
+  const precio = useNumericField(c.precio_unitario, (n) => actualizar(i, "precio_unitario", n));
   const subtotal = c.cantidad * c.precio_unitario;
-  const iva = c.aplica_iva ? calcularIVA(subtotal, tasaIva) : 0;
+  const iva = calcularIVA(subtotal, resolverTasaConcepto(c, tasaIva));
   const totalFila = subtotal + iva;
 
   return (
@@ -44,12 +45,12 @@ export const ConceptoRowMXN = memo(function ConceptoRowMXN({
         <div className="flex-1 min-w-[200px] space-y-1">
           {i === 0 && <Label className="text-caption">Concepto</Label>}
           <ProductoServicioSelect
-            value={c.concepto}
-            onChange={(v) => actualizar(i, "concepto", v)}
-            onPickConcepto={(picked) => {
-              if (picked.unidad_medida) actualizar(i, "unidad_medida", picked.unidad_medida);
-              if (typeof picked.aplica_iva === "boolean") actualizar(i, "aplica_iva", picked.aplica_iva);
-              if (typeof picked.tasa_iva_aplicada === "number") actualizar(i, "tasa_iva_aplicada", picked.tasa_iva_aplicada);
+            value={c.descripcion}
+            onSelect={(p) => {
+              actualizar(i, "descripcion", p.nombre);
+              actualizar(i, "aplica_iva", p.tipo_iva === "gravado_16");
+              actualizar(i, "tasa_iva_aplicada", tasaDesdeTipoIva(p.tipo_iva));
+              if (p.clave_unidad_sat) actualizar(i, "unidad_medida", p.clave_unidad_sat);
             }}
           />
         </div>
