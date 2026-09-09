@@ -7,6 +7,8 @@
 import { supabase } from "@/integrations/supabase/client";
 import { unwrapOr } from "@/lib/supabase/response";
 import { FACTURA_ESTADOS_VIVOS } from "@/lib/domain/estadosFactura";
+import { fechaFiscalFactura } from "@/lib/domain/fechaFiscalFactura";
+
 import type { EmbarqueER } from "@/features/profit/domain/estadoResultados";
 import {
   mapFacturaRows,
