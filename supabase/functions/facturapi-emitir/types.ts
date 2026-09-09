@@ -8,6 +8,8 @@ export interface FacturaRow {
   serie?: string | null;
   estado?: string | null;
   moneda?: string | null;
+  fecha_emision?: string | null;
+
   tipo_cambio?: number | string | null;
   uso_cfdi?: string | null;
   forma_pago?: string | null;
