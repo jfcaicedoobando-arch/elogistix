@@ -62,7 +62,7 @@ export function buildEmbarqueColumns({
         const detalle = [
           `BL Master: ${e.bl_master || "—"}`,
           `Modo: ${e.modo || "—"}`,
-          `Ruta: ${e.origen || "-"} → ${e.destino || "-"}`,
+          `Ruta: ${getOrigen(e) || "-"} → ${getDestino(e) || "-"}`,
           `ETD: ${e.etd || "—"}`,
         ].join(" · ");
         return (
