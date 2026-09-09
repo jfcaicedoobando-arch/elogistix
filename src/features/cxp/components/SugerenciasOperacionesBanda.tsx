@@ -6,6 +6,7 @@ import { Sparkles, RotateCcw, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { formatCurrency } from "@/lib/formatters/numbers";
 import type { ConceptoSugeridoEntrante } from "@/features/cxp/services/facturasEntrantesConceptos";
+import { SugerenciasListaAviso } from "./SugerenciasListaAviso";
 
 interface Props {
   aplicados: readonly ConceptoSugeridoEntrante[];
