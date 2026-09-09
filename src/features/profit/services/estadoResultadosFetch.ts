@@ -91,8 +91,52 @@ export async function fetchProveedorFacturasMes(orgId: string | null, desde: str
     .gte("fecha_emision", desde)
     .lte("fecha_emision", hasta)
     .neq("estado", "Cancelada")
+    // EERR-APROB (v13.823.246): una factura de proveedor rechazada no es costo;
+    // antes sólo se excluían las canceladas y el costo del mes quedaba inflado.
+    .neq("estado_aprobacion", "rechazada")
     .is("deleted_at", null);
   if (orgId) q = q.eq("organization_id", orgId);
   return mapProveedorFacturaRows(await unwrapOr(q, []));
 }
+
+/**
+ * EERR-NCP: notas de crédito de proveedor aplicadas en el mes (restan costo).
+ * `proveedor_notas_credito` usa `fecha` como fecha de negocio (DATE).
+ */
+export async function fetchProveedorNotasCreditoMes(
+  orgId: string | null,
+  desde: string,
+  hasta: string,
+): Promise<ProveedorNotaCreditoRow[]> {
+  let q = supabase
+    .from("proveedor_notas_credito")
+    .select("id, proveedor_factura_id, monto, moneda, fecha, tipo_cambio")
+    .eq("estado", "Aplicada")
+    .gte("fecha", desde)
+    .lte("fecha", hasta)
+    .is("deleted_at", null);
+  if (orgId) q = q.eq("organization_id", orgId);
+  return mapProveedorNotaCreditoRows(await unwrapOr(q, []));
+}
+
+/** `proveedor_factura_id` → `embarque_id` para ubicar el modo de cada NC. */
+export async function loadEmbarqueIdsPorFacturaProveedor(
+  ids: string[],
+): Promise<Map<string, string>> {
+  const out = new Map<string, string>();
+  if (ids.length === 0) return out;
+  const data = await unwrapOr(
+    supabase
+      .from("proveedor_facturas")
+      .select("id, embarque_id")
+      .in("id", ids)
+      .is("deleted_at", null),
+    [],
+  );
+  for (const row of (data ?? []) as { id: string; embarque_id: string | null }[]) {
+    if (row.embarque_id) out.set(row.id, row.embarque_id);
+  }
+  return out;
+}
+
 
