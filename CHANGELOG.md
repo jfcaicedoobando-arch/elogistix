@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.823.261] - 2026-09-09
+- **fix(facturación)**: cuando el módulo de cancelación del SAT está caído (JAVASCRIPT-REACT-5E), el aviso explica que es una falla temporal del SAT y pide reintentar en unos minutos, en vez de mostrar "rechazó la solicitud"; deja de reportarse como error de la app.
+
+
 ## [13.823.260] - 2026-09-09
 - **fix(CI/cotizaciones)**: el panel de progreso conserva su medición, navegación y limpieza en un hook local, dejando cada archivo bajo el límite Power of 10; en conceptos MXN, Subtotal, IVA y Total pasan a una segunda fila amplia para mostrar completos moneda y decimales en Desktop HD.
 
