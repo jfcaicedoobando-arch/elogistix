@@ -14,22 +14,29 @@ En LibreCarga una proforma no regresa a un estado anterior: se **elimina** (borr
 ## Opciones
 
 ### Opción A — Lo haces tú desde la app (recomendada)
+
 1. Abrir el embarque **ELIMP00262**.
 2. Pestaña **Facturación**.
 3. En **Historial de proformas**, acción **Eliminar** (bote de basura) sobre `PRO-2026-1014`.
 4. Confirmar el diálogo.
 
 ### Opción B — Lo hago yo como operación de datos
+
 Ejecuto `eliminar_proforma_rpc` con el id `bd6e860b-c6a0-47df-8507-cdb6469c5284` y verifico que:
+
 - La proforma quede en papelera (`deleted_at` no nulo).
 - Los conceptos de venta de ELIMP00262 queden liberados (sin proforma ligada).
 - `embarques.tiene_proforma` quede en `false` (lo ajusta el trigger).
 - Quede registro en la bitácora.
 
 ## Qué NO se toca
+
 - La factura cancelada F1021 (queda como histórico).
 - El embarque ELIMP00262 (sigue Cerrado), ni importes, ni ninguna otra proforma o factura.
 
 ## Notas técnicas
+
 - Sin migraciones, sin cambios de código, sin publicación.
 - Si se elige la Opción B: una sola llamada RPC + consultas de verificación de sólo lectura.
+
+Haz lo tu
