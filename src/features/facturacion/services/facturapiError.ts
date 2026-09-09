@@ -50,6 +50,11 @@ const EXPECTED_FACTURAPI_PATTERNS: RegExp[] = [
   // JAVASCRIPT-REACT-5A: el CFDI ya tiene un trámite de cancelación abierto en
   // el SAT. La UI lo explica y ofrece "Actualizar estado": no es un bug.
   /solicitud de cancelaci[oó]n pendiente/i,
+  // JAVASCRIPT-REACT-5E: el módulo de cancelación del SAT se cae de forma
+  // intermitente (502 de FacturApi). Es indisponibilidad externa, no un bug:
+  // la UI pide reintentar más tarde y no se reporta a Sentry.
+  /servicio de cancelaci[oó]n del sat no est[aá] disponible/i,
+  /servicio de cancelacionsat no esta disponible/i,
 ];
 
 function isExpectedFacturapiMessage(message: string): boolean {
