@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { Save } from "lucide-react";
 import type { EmbarqueContenedor } from "@/features/embarques/types/contenedor";
+import { resolveTipoContenedorNombre, type TipoContenedorCatalogo } from "@/features/cotizacion/utils/resolveTipoContenedorNombre";
 
 export interface DraftPatch {
   fecha_descarga?: string | null;
@@ -29,10 +30,12 @@ export interface DemorasColumnsDeps {
   valorActual: <K extends keyof DraftPatch>(row: EditableRow, field: K) => DraftPatch[K];
   setDraft: (id: string, patch: DraftPatch) => void;
   guardar: (id: string) => void;
+  /** VIS-CE-251-05: catálogo para resolver UUIDs de tipo de contenedor. */
+  tiposContenedor: TipoContenedorCatalogo[];
 }
 
 export function buildDemorasColumns(deps: DemorasColumnsDeps): ColumnDef<EditableRow, unknown>[] {
-  const { canEdit, drafts, isPending, valorActual, setDraft, guardar } = deps;
+  const { canEdit, drafts, isPending, valorActual, setDraft, guardar, tiposContenedor } = deps;
   return defineColumns<EditableRow>([
     {
       id: "cont",
@@ -42,7 +45,8 @@ export function buildDemorasColumns(deps: DemorasColumnsDeps): ColumnDef<Editabl
           <span className="font-mono text-body">
             {row.original.numero_contenedor || `#${row.original.orden}`}
           </span>
-          <span className="text-body-sm text-muted-foreground">{row.original.tipo_contenedor}</span>
+          {/* VIS-CE-251-05: el valor puede ser un UUID del catálogo; se resuelve igual que en Resumen. */}
+          <span className="text-body-sm text-muted-foreground">{resolveTipoContenedorNombre(row.original.tipo_contenedor, tiposContenedor)}</span>
         </div>
       ),
     },
