@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.823.260] - 2026-09-09
+- **fix(CI/cotizaciones)**: el panel de progreso conserva su medición, navegación y limpieza en un hook local, dejando cada archivo bajo el límite Power of 10; en conceptos MXN, Subtotal, IVA y Total pasan a una segunda fila amplia para mostrar completos moneda y decimales en Desktop HD.
+
 ## [13.823.259] - 2026-09-09
 - **fix(CI)**: se restauraron los contratos reales de las filas de conceptos (selector de catálogo, unidad y tasa de IVA por línea) y el cálculo canónico de IVA, conservando la captura decimal.
 - **fix(cotizaciones)**: los avisos "sin desglose de costos" y "wizard abierto en otra pestaña" usan el aviso estándar de la app (menos deuda visual).

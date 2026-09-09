@@ -1,63 +1,12 @@
-import { useEffect, useRef, useState, useMemo } from "react";
+import { useMemo } from "react";
 import { useFormContext, useWatch } from "react-hook-form";
 import { Check, Circle } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
 import { SectionHeading } from "@/components/shared/SectionHeading";
 import { usePaso1SectionStatus } from "@/features/cotizacion/hooks/usePaso1SectionStatus";
+import { usePaso1ProgressNavigation } from "@/features/cotizacion/hooks/usePaso1ProgressNavigation";
 import type { CotizacionFormValues } from "@/features/cotizacion/types";
-
-/** Alto aproximado del header fijo del wizard + holgura de lectura. */
-const HEADER_OFFSET_PX = 88;
-
-/** Contenedor scrollable real más cercano (el cuerpo del wizard). */
-function scrollParent(el: HTMLElement): HTMLElement | null {
-  let actual: HTMLElement | null = el.parentElement;
-  while (actual) {
-    const overflowY = window.getComputedStyle(actual).overflowY;
-    if ((overflowY === "auto" || overflowY === "scroll") && actual.scrollHeight > actual.clientHeight) {
-      return actual;
-    }
-    actual = actual.parentElement;
-  }
-  return null;
-}
-
-/**
- * VIS-CE-251-03 · R257 — altura útil medida, no un valor mágico: el panel va
- * desde su propio borde superior hasta el pie de acciones del wizard (o el
- * borde inferior de la ventana si ese pie no está montado).
- */
-function useAlturaUtil(ref: React.RefObject<HTMLElement | null>): number | null {
-  const [alto, setAlto] = useState<number | null>(null);
-  useEffect(() => {
-    let raf = 0;
-    const medir = () => {
-      raf = 0;
-      const el = ref.current;
-      if (!el) return;
-      const top = el.getBoundingClientRect().top;
-      const footer = document.querySelector<HTMLElement>("[data-wizard-footer]");
-      const limiteInferior = footer
-        ? footer.getBoundingClientRect().top
-        : window.innerHeight;
-      const disponible = Math.round(limiteInferior - top - 8);
-      setAlto(disponible > 160 ? disponible : 160);
-    };
-    const programar = () => {
-      if (raf === 0) raf = window.requestAnimationFrame(medir);
-    };
-    medir();
-    window.addEventListener("scroll", programar, true);
-    window.addEventListener("resize", programar);
-    return () => {
-      if (raf !== 0) window.cancelAnimationFrame(raf);
-      window.removeEventListener("scroll", programar, true);
-      window.removeEventListener("resize", programar);
-    };
-  }, [ref]);
-  return alto;
-}
 
 interface SectionDef {
   id: string;
@@ -82,8 +31,6 @@ interface Props {
  * ya cubren el feedback.
  */
 export default function Paso1ProgressSidebar({ esMaritimo }: Props) {
-  const asideRef = useRef<HTMLElement>(null);
-  const alturaUtil = useAlturaUtil(asideRef);
   const status = usePaso1SectionStatus();
   const { control } = useFormContext<CotizacionFormValues>();
   const tipoEmbarque = useWatch({ control, name: "tipoEmbarque" });
@@ -111,52 +58,8 @@ export default function Paso1ProgressSidebar({ esMaritimo }: Props) {
       { id: "seccion-cierre",    label: "Cierre",    done: status.cierre },
     ];
   }, [status, esMaritimo, esLcl]);
-
-  const [activeId, setActiveId] = useState<string | null>(null);
-
-  // VIS-20260908-01: antes se usaba un IntersectionObserver con
-  // `rootMargin: -20% 0px -60%`. Al hacer clic en una sección ésta queda
-  // alineada justo debajo del header fijo del wizard (fuera de esa banda), así
-  // que la sección ANTERIOR seguía marcada como activa. Ahora la sección
-  // activa se calcula con la posición real: es la última cuyo borde superior
-  // ya pasó el header fijo, consultando el contenedor scrollable real.
-  useEffect(() => {
-    let raf = 0;
-    const calcular = () => {
-      raf = 0;
-      const elementos = sections
-        .map((s) => ({ id: s.id, el: document.getElementById(s.id) }))
-        .filter((x): x is { id: string; el: HTMLElement } => x.el !== null);
-      if (elementos.length === 0) return;
-      const scroller = scrollParent(elementos[0].el);
-      // Al final del scroll gana la última sección: ya no puede subir más allá
-      // del header, y si no se marcara quedaría activa una intermedia.
-      if (scroller && scroller.scrollTop + scroller.clientHeight >= scroller.scrollHeight - 4) {
-        setActiveId(elementos[elementos.length - 1].id);
-        return;
-      }
-      const limite = (scroller?.getBoundingClientRect().top ?? 0) + HEADER_OFFSET_PX;
-      let actual = elementos[0].id;
-      for (const { id, el } of elementos) {
-        if (el.getBoundingClientRect().top <= limite) actual = id;
-        else break;
-      }
-      setActiveId(actual);
-    };
-    const programar = () => {
-      if (raf === 0) raf = window.requestAnimationFrame(calcular);
-    };
-    calcular();
-    // `capture: true` para escuchar también el scroll de contenedores internos
-    // (el cuerpo del wizard es el que hace scroll, no el documento).
-    window.addEventListener("scroll", programar, true);
-    window.addEventListener("resize", programar);
-    return () => {
-      if (raf !== 0) window.cancelAnimationFrame(raf);
-      window.removeEventListener("scroll", programar, true);
-      window.removeEventListener("resize", programar);
-    };
-  }, [sections]);
+  const sectionIds = useMemo(() => sections.map(({ id }) => id), [sections]);
+  const { activeId, asideRef, availableHeight, navigateTo } = usePaso1ProgressNavigation(sectionIds);
 
   const completas = sections.filter((s) => s.done).length;
   const total = sections.length;
@@ -167,15 +70,6 @@ export default function Paso1ProgressSidebar({ esMaritimo }: Props) {
   // VF-09/VF-19: el checklist dice qué falta y por qué cambia el denominador.
   const faltantes = sections.filter((s) => !s.done).map((s) => s.label);
 
-  const handleClick = (id: string) => {
-    const el = document.getElementById(id);
-    if (!el) return;
-    // Feedback inmediato: el cálculo por scroll lo confirma al terminar la
-    // animación, pero el botón pulsado no debe esperar para marcarse.
-    setActiveId(id);
-    el.scrollIntoView({ behavior: "smooth", block: "start" });
-  };
-
   return (
     // VIS-CE-251-03: la tarjeta se limita a la altura útil de la ventana con
     // scroll propio, para que la sección «Cierre» sea alcanzable sin
@@ -183,11 +77,11 @@ export default function Paso1ProgressSidebar({ esMaritimo }: Props) {
     <aside
       ref={asideRef}
       className="hidden lg:block sticky top-4 self-start w-56 shrink-0"
-      style={alturaUtil ? { maxHeight: `${alturaUtil}px` } : undefined}
+      style={availableHeight ? { maxHeight: `${availableHeight}px` } : undefined}
     >
       <div
         className="rounded-lg border bg-card p-4 space-y-3 overflow-y-auto"
-        style={alturaUtil ? { maxHeight: `${alturaUtil}px` } : undefined}
+        style={availableHeight ? { maxHeight: `${availableHeight}px` } : undefined}
       >
         <div className="space-y-1">
           <SectionHeading as="h2">Progreso del Paso 1</SectionHeading>
@@ -211,7 +105,7 @@ export default function Paso1ProgressSidebar({ esMaritimo }: Props) {
               <button
                 key={s.id}
                 type="button"
-                onClick={() => handleClick(s.id)}
+                onClick={() => navigateTo(s.id)}
                 // Estado accesible de "sección actual" (antes sólo era color).
                 aria-current={isActive ? "true" : undefined}
                 className={cn(

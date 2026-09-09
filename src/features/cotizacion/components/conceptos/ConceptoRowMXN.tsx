@@ -40,11 +40,11 @@ export const ConceptoRowMXN = memo(function ConceptoRowMXN({
 
   return (
     <div className={`grid grid-cols-12 gap-2 items-end rounded-md px-1 py-1 ${tasaFila > 0 ? 'bg-warning/5' : ''}`}>
-      <div className="col-span-3 min-w-0">
+      <div className="col-span-4 min-w-0">
         {i === 0 && <Label size="sm">Concepto</Label>}
         <ConceptoDescripcionSelector descripcion={c.descripcion} index={i} actualizar={actualizar} />
       </div>
-      <div className="col-span-1 min-w-0">
+      <div className="col-span-2 min-w-0">
         {i === 0 && <Label size="sm">Unidad</Label>}
         <UnidadMedidaSelect value={c.unidad_medida} onChange={(v) => actualizar(i, 'unidad_medida', v)} />
       </div>
@@ -68,11 +68,7 @@ export const ConceptoRowMXN = memo(function ConceptoRowMXN({
           aria-label="Precio unitario"
         />
       </div>
-      <div className="col-span-1 min-w-0">
-        {i === 0 && <Label size="sm">Subtotal</Label>}
-        <Input value={formatCurrency(subtotal, 'MXN')} readOnly aria-label="Subtotal" className="bg-muted tabular-nums" />
-      </div>
-      <div className="col-span-1 min-w-0">
+      <div className="col-span-2 min-w-0">
         {i === 0 && <Label size="sm">Tasa IVA</Label>}
         <Select
           value={String(tasaFila)}
@@ -86,19 +82,25 @@ export const ConceptoRowMXN = memo(function ConceptoRowMXN({
           </SelectContent>
         </Select>
       </div>
-      <div className="col-span-1 min-w-0">
-        {i === 0 && <Label size="sm">IVA</Label>}
-        <Input value={formatCurrency(iva, 'MXN')} readOnly aria-label="IVA" className="bg-muted tabular-nums" />
-      </div>
-      <div className="col-span-1 min-w-0">
-        {i === 0 && <Label size="sm">Total</Label>}
-        <Input value={formatCurrency(c.total, 'MXN')} readOnly aria-label="Total" className="bg-muted tabular-nums" />
-      </div>
       <div className="col-span-1">
         {i === 0 && <Label size="sm">&nbsp;</Label>}
         <Button variant="ghost" size="icon" onClick={() => eliminar(i)} disabled={total <= 1} aria-label="Eliminar concepto">
           <Trash2 className="size-4 text-destructive" />
         </Button>
+      </div>
+      <div className="col-span-12 grid grid-cols-1 gap-2 sm:grid-cols-3">
+        <div className="min-w-0">
+          <Label size="sm">Subtotal</Label>
+          <Input value={formatCurrency(subtotal, 'MXN')} readOnly aria-label="Subtotal" className="bg-muted tabular-nums" />
+        </div>
+        <div className="min-w-0">
+          <Label size="sm">IVA</Label>
+          <Input value={formatCurrency(iva, 'MXN')} readOnly aria-label="IVA" className="bg-muted tabular-nums" />
+        </div>
+        <div className="min-w-0">
+          <Label size="sm">Total</Label>
+          <Input value={formatCurrency(c.total, 'MXN')} readOnly aria-label="Total" className="bg-muted tabular-nums" />
+        </div>
       </div>
       <div className="col-span-12 -mt-1 mb-1">
         <Textarea
