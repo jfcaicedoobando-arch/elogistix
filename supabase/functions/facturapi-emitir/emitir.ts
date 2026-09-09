@@ -68,6 +68,34 @@ export function validarTipoCambio(factura: FacturaRow): Response | null {
   return null;
 }
 
+/** `YYYY-MM-DD` de hoy en hora de México (zona fiscal del CFDI). */
+export function hoyMx(now: Date = new Date()): string {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/Mexico_City",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(now);
+}
+
+/**
+ * EERR-FISCAL (v13.823.247): FacturAPI certifica el CFDI con la fecha/hora del
+ * timbre. Si `fecha_emision` quedó en otro día (típico: se captura el último
+ * día del mes y el timbre sale al día siguiente), la factura y su TC DOF
+ * quedarían en un mes distinto al que reconoce el SAT. Se bloquea antes del PAC
+ * para que se actualice la fecha (y con ella el TC) en vez de timbrar desfasado.
+ */
+export function validarFechaEmisionVigente(factura: FacturaRow, now: Date = new Date()): Response | null {
+  const fecha = (factura.fecha_emision ?? "").slice(0, 10);
+  const hoy = hoyMx(now);
+  if (!fecha || fecha === hoy) return null;
+  return jsonResponse({
+    error: "fecha_emision_desfasada",
+    message: `La factura tiene fecha ${fecha} y hoy es ${hoy}. Actualiza la fecha de la factura (se recalcula el tipo de cambio del DOF) antes de timbrar: el SAT la certificará con la fecha de hoy.`,
+  }, 422);
+}
+
+
 /**
  * Ola 3 · B — todas las validaciones previas al PAC en un solo boundary
  * (estado timbrable → tipo de cambio → total > 0 → límite de crédito).
