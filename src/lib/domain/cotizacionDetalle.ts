@@ -11,6 +11,9 @@ export interface ConceptosTotales {
   conceptosVentaUSD: ConceptoVentaCotizacion[];
   conceptosVentaMXN: ConceptoVentaCotizacion[];
   totalUSD: number;
+  /** VIS-CE-251-06: desglose USD (antes sólo se calculaba para MXN). */
+  subtotalUSD: number;
+  ivaUSD: number;
   subtotalMXN: number;
   ivaMXN: number;
   totalMXN: number;
@@ -26,6 +29,8 @@ export const EMPTY_TOTALES: ConceptosTotales = Object.freeze({
   conceptosVentaUSD: EMPTY_CONCEPTOS,
   conceptosVentaMXN: EMPTY_CONCEPTOS,
   totalUSD: 0,
+  subtotalUSD: 0,
+  ivaUSD: 0,
   subtotalMXN: 0,
   ivaMXN: 0,
   totalMXN: 0,
