@@ -14,7 +14,7 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle,
 } from "@/components/ui/sheet";
-import { ConfirmActionDialog } from "@/components/shared/ConfirmActionDialog";
+import { ConfirmActionDialog } from "@/components/shared/dialogs/ConfirmActionDialog";
 import { useActualizarActividadNotas } from "@/features/crm/hooks";
 import type { CrmActividadRow } from "@/features/crm/hooks";
 import { crmToast } from "@/features/crm/lib/crmToast";
