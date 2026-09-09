@@ -118,7 +118,7 @@ function KpisMoneda({ tot }: { tot: EstadoCuentaMonedaTotal }) {
         <View key={k.label} style={styles.kpiCard}>
           <View style={styles.kpiInner}>
             <Text style={styles.kpiLabel}>{k.label}</Text>
-            <Text style={[styles.kpiValue, k.alerta ? { color: COLORS.warningFg } : null]}>
+            <Text style={[styles.kpiValue, k.alerta ? { color: COLORS.warningFg } : undefined]}>
               {k.value}
             </Text>
           </View>
