@@ -1,5 +1,13 @@
 # Changelog
 
+## [13.823.251] - 2026-09-09
+- **fix(cxp)**: al capturar una factura del buzón, los costos pre-marcados ahora se convierten a la moneda de la factura con el T/C DOF de la emisión (antes se copiaba el monto tal cual: un costo de USD 51 contra una factura de MXN 872.57 generaba un ajuste fantasma de MXN 821.57, como en ELIMP00329).
+- **ux(cxp)**: si el costo está en otra moneda y no hay T/C del día, la sugerencia no se pre-marca y la banda de sugerencias lo explica.
+- **refactor(cxp)**: `SugerenciasListaAviso` extraído de `SugerenciasOperacionesBanda`.
+- **datos(ELIMP00329)**: el ajuste de MXN 821.57 se corrigió a MXN 2.37 (diferencia real de T/C), con registro en bitácora.
+- **test(cxp)**: regresión de conversión/exclusión de sugerencias del buzón por moneda.
+
+
 ## [13.823.250] - 2026-09-09
 - **ux(arranque)**: cuando una pestaña vieja pide un módulo que ya no existe tras publicar una versión nueva, la app ahora muestra un aviso breve "Hay una versión nueva disponible. Actualizando…" antes de recargar, en lugar de un parpadeo silencioso.
 - **fix(arranque)**: la guarda anti-bucle de recargas por chunk caducado pasa de una bandera única por sesión a una ventana deslizante: máximo 2 recargas automáticas en 2 minutos; al tercer fallo se muestra la pantalla de recuperación con botón "Recargar" manual.
