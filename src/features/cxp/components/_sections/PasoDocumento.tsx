@@ -35,6 +35,7 @@ export function PasoDocumento({
   onVerArchivoBuzon, onVerFacturaDuplicada,
 }: Props) {
   const enBuzon = Boolean(modoBuzon && entrante);
+  const esIa = ctl.pendingCfdi?.origen === "pdf_ia";
   const sinPartidas =
     ctl.cfdiConceptos.length === 0 && ctl.conceptosManuales.conceptos.length === 0;
 
@@ -80,7 +81,7 @@ export function PasoDocumento({
       )}
 
       {/* Moneda leída por IA corregible aquí mismo (no aplica a XML CFDI). */}
-      {ctl.pendingCfdi?.origen === "pdf_ia" && (
+      {esIa && (
         <MonedaDetectadaIaCard
           moneda={ctl.values.moneda}
           tc={ctl.values.tc}
@@ -97,8 +98,8 @@ export function PasoDocumento({
       <CfdiConceptosPreview
         conceptos={ctl.cfdiConceptos}
         moneda={ctl.values.moneda}
-        onEditar={ctl.pendingCfdi?.origen === "pdf_ia" ? ctl.editarConceptoIa : undefined}
-        onEliminar={ctl.pendingCfdi?.origen === "pdf_ia" ? ctl.eliminarConceptoIa : undefined}
+        onEditar={esIa ? ctl.editarConceptoIa : undefined}
+        onEliminar={esIa ? ctl.eliminarConceptoIa : undefined}
       />
 
       <ConceptosManualesSection
