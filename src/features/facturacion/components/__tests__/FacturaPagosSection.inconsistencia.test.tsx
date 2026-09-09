@@ -5,11 +5,23 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render as rtlRender, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ReactElement } from "react";
 
 // v13.823.26: `ResponsiveDataTable` usa `useNavigate`, así que el render de
 // prueba necesita un Router.
-const render = (ui: ReactElement) => rtlRender(<MemoryRouter>{ui}</MemoryRouter>);
+// v13.823.245: la sección monta el controlador de cancelación de REP, que usa
+// `useQueryClient`; cada prueba recibe su propio QueryClient aislado.
+const render = (ui: ReactElement) => {
+  const client = new QueryClient({
+    defaultOptions: { queries: { retry: false, gcTime: 0 }, mutations: { retry: false } },
+  });
+  return rtlRender(
+    <QueryClientProvider client={client}>
+      <MemoryRouter>{ui}</MemoryRouter>
+    </QueryClientProvider>,
+  );
+};
 import { FacturaPagosSection } from "../detalle/FacturaPagosSection";
 
 const pagosMock = vi.fn();
@@ -19,6 +31,9 @@ vi.mock("@/features/facturacion/hooks", () => ({
   usePagosFactura: () => pagosMock(),
   useEliminarPagoFactura: () => ({ mutateAsync: vi.fn(), isPending: false }),
   useTimbrarRep: () => ({ mutate: vi.fn(), isPending: false }),
+}));
+vi.mock("@/features/facturacion/hooks/useTimbrarRep", () => ({
+  useCancelarRep: () => ({ mutateAsync: vi.fn(), isPending: false }),
 }));
 vi.mock("@/features/facturacion/hooks/useSaldoFactura", () => ({
   useNotasCreditoAplicadas: () => ncMock(),

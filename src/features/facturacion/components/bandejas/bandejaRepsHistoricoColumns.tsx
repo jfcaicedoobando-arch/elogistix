@@ -7,6 +7,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { FileDown, FileCode } from "lucide-react";
 import { defineColumns } from "@/components/shared/DataTable";
+import { Hint } from "@/components/shared/Hint";
+
 import { clientColumn, moneyColumn, dateColumn } from "@/components/shared/dataTable/columnBuilders";
 import { COL_W } from "@/components/shared/dataTable/columnWidths";
 import { formatDate } from "@/lib/formatters";
@@ -37,10 +39,17 @@ export function buildRepsHistoricoColumns(o: Opts) {
         <div>
           <div className="font-medium">{row.original.folio_rep}</div>
           {row.original.uuid_rep && (
-            <div className="font-mono text-label text-muted-foreground truncate max-w-[180px]" title={row.original.uuid_rep}>
-              {row.original.uuid_rep}
-            </div>
+            <Hint label={row.original.uuid_rep}>
+              <span
+                tabIndex={0}
+                aria-label={`UUID ${row.original.uuid_rep}`}
+                className="block font-mono text-label text-muted-foreground truncate max-w-[180px]"
+              >
+                {row.original.uuid_rep}
+              </span>
+            </Hint>
           )}
+
         </div>
       ),
     },
@@ -99,7 +108,7 @@ export function buildRepsHistoricoColumns(o: Opts) {
               onClick={() => o.onDescargar(id, "pdf")}
               aria-label={`Descargar PDF del REP ${row.original.folio_rep}`}
             >
-              <FileDown className="h-4 w-4" />
+              <FileDown className="size-4" />
             </Button>
             <Button
               size="icon" variant="outline" className="h-8 w-8"
@@ -107,7 +116,7 @@ export function buildRepsHistoricoColumns(o: Opts) {
               onClick={() => o.onDescargar(id, "xml")}
               aria-label={`Descargar XML del REP ${row.original.folio_rep}`}
             >
-              <FileCode className="h-4 w-4" />
+              <FileCode className="size-4" />
             </Button>
           </div>
         );

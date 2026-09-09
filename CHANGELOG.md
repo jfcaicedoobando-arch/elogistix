@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.823.245] - 2026-09-09
+- **fix(ci)**: corrige el CI rojo del bloque de cancelación de REP: `DialogCancelarRep` se dividió en `CancelarRepInfoSummary` y `CancelarRepResultadoAlerts` (límite de 200 líneas), el controlador `useCancelarRepController` se movió a `hooks/` del feature, los iconos nuevos usan `size-4`, el UUID truncado de la bandeja histórica usa `Hint` accesible (adiós `title` nativo) y el test de inconsistencia de pagos monta su propio `QueryClient`. Sin cambios de comportamiento fiscal ni de datos.
+
 ## [13.823.244] - 2026-09-09
 - **fix(clientes)**: el alta/edición de contactos ya no envía valores nulos a columnas NOT NULL (`email`, `teléfono`, etc.); se normalizan a cadena vacía y se recorta el nombre. Cierra `JAVASCRIPT-REACT-6J` (pg 23502).
 - **test(clientes)**: regresión de `DialogContacto` para captura mínima y filas legacy con campos nulos.
