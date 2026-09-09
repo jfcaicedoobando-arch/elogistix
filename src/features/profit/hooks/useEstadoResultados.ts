@@ -13,7 +13,7 @@ import { useFuenteEerr } from "@/features/profit/hooks/useFuenteEerr";
 const MES_MINIMO = "2026-04";
 
 export function useEstadoResultados() {
-  const { organizationId } = useOrgFilter();
+  const { organizationId, orgListo } = useOrgFilter();
   const [searchParams, setSearchParams] = useSearchParams();
 
   const mesesDisponibles = useMemo(
@@ -59,6 +59,10 @@ export function useEstadoResultados() {
         ? fetchEstadoResultadosDevengado(p)
         : fetchEstadoResultadosMes(p);
     },
+    // EERR-ORG (v13.823.246): sin esta puerta la consulta se disparaba con
+    // `organizationId = null` mientras el contexto resolvía y sumaba facturas
+    // de todas las empresas por un instante.
+    enabled: orgListo,
     staleTime: 60_000,
   });
 
