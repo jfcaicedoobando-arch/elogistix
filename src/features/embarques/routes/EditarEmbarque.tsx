@@ -40,8 +40,9 @@ export default function EditarEmbarque() {
   } = useEditarEmbarqueWizard(id);
   useRegisterBreadcrumbLabel(id, embarque?.expediente);
   // Antes el título del navegador quedaba con el de la pantalla anterior
-  // (p. ej. "Cotizaciones") porque esta ruta no lo actualizaba.
-  useDocumentTitle(embarque?.expediente ? `Editar ${labelExpediente(embarque.expediente, embarque.id)}` : "Editar embarque");
+  // (p. ej. "Cotizaciones") porque esta ruta no lo actualizaba. Estático para
+  // no elevar la complejidad del componente; el expediente va en el breadcrumb.
+  useDocumentTitle("Editar embarque");
 
   useEffect(() => {
     const raw = searchParams.get("step");
