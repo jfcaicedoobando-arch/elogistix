@@ -45,3 +45,9 @@
 - [x] Extraer medición/navegación de Paso1ProgressSidebar sin exceder 200 líneas
 - [x] Dar una segunda fila legible a Subtotal, IVA y Total MXN
 - [x] Cierre: patch, changelog y manifiesto; validación completa sólo en GitHub Actions
+
+## 13.823.274 — P&L presupuesto con T/C congelado
+- [x] `pnl_financiero_embarque`: presupuesto (venta/costo/seguro) usa `embarques.tipo_cambio_usd/eur`
+- [x] Facturas reales conservan T/C documental con fallback del embarque
+- [x] Prueba SQL `pnl_presupuesto_tc_congelado.sql` (mover ETA no cambia presupuesto)
+- [x] Cierre: versión, changelog y manifiesto; suites completas sólo en GitHub Actions
