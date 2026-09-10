@@ -70,4 +70,5 @@ export const pickerAvisoClass = "text-body-sm text-warning";
 
 /** Ayuda de teclado que se muestra como `title` de los pickers con captura. */
 export const PICKER_AYUDA_TECLADO =
-  "T = hoy · + / - ajusta el segmento · ← → cambia de segmento · F4 abre el calendario";
+  "Teclea la fecha (13/03/2026 o 13032026) o pégala · T = hoy · ↑ ↓ ajusta · ← → cambia de segmento · F4 abre el calendario";
+
