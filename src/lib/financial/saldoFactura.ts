@@ -18,6 +18,13 @@ import { sumarMontos } from "./financialUtils";
 
 export interface PagoAplicadoLike {
   monto_aplicado_factura?: number | string | null;
+  /**
+   * v13.823.295 — un pago cuyo REP quedó cancelado ante el SAT está ANULADO:
+   * se conserva como antecedente fiscal pero NO cuenta para cobrado ni saldo
+   * (mismo criterio que `public.saldo_factura_bruto`). Si la lectura no trae
+   * la columna, el pago se considera vigente (compatibilidad).
+   */
+  estado_rep?: string | null;
 }
 
 export interface NotaCreditoAplicadaLike {
