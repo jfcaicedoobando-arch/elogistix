@@ -110,3 +110,4 @@ supabase/tests/crm_sync_moneda_venta_cero.sql
 supabase/tests/r201_cot_remate_contract.sql
 supabase/tests/r216_cot_tipo_servicio_contract.sql
 supabase/tests/r217_crear_embarque_completo_idempotencia_contract.sql
+supabase/tests/proforma_iva_overrides_seleccion.sql

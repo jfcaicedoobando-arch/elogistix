@@ -1,6 +1,8 @@
 # Changelog
 
-## [13.823.275] - 2026-09-10
+## [13.823.276] - 2026-09-10
+- **fix(proformas, integridad)**: los ajustes de IVA al crear una proforma ya sólo pueden tocar los conceptos seleccionados; un ajuste apuntando a otro concepto del mismo embarque se rechaza con `LC_OVERRIDE_FUERA_DE_SELECCION` sin persistir nada (antes quedaba guardado y contaminaba proformas posteriores). Nueva prueba SQL `proforma_iva_overrides_seleccion.sql`.
+
 - **fix(proformas)**: abrir `/proformas/<folio>` (p. ej. `PRO-2026-0008`) ahora resuelve la proforma por número de folio en vez de fallar con un falso error de conexión (Postgres 22P02); si el folio no existe se muestra la pantalla "Proforma no encontrada". Sentry `JAVASCRIPT-REACT-6K`.
 
 
