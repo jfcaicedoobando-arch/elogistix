@@ -17,15 +17,21 @@ export type SugerenciaAplicable = {
 
 export function crearAccionesVinculos(
   setVinculos: Dispatch<SetStateAction<VinculosState>>,
+  /**
+   * Moneda de la factura en el momento de marcar. Se congela en el vínculo para
+   * que un cambio posterior de moneda no produzca ajustes de costo fantasma.
+   */
+  monedaFactura?: () => string,
 ) {
+  const moneda = () => monedaFactura?.();
   return {
     toggleVinculo: (c: ConceptoCostoAbierto, checked: boolean, montoBase?: number) =>
-      setVinculos((prev) => toggleVinculoReducer(prev, c, checked, montoBase)),
+      setVinculos((prev) => toggleVinculoReducer(prev, c, checked, montoBase, moneda())),
 
     setVinculoMonto: (conceptoId: string, monto: number) =>
       setVinculos((prev) => setVinculoMontoReducer(prev, conceptoId, monto)),
     aplicarSugerencias: (sugs: ReadonlyArray<SugerenciaAplicable>) =>
-      setVinculos(() => aplicarSugerenciasReducer(sugs)),
+      setVinculos(() => aplicarSugerenciasReducer(sugs, moneda())),
     /** v13.507.0 — Quita todos los vínculos (botón "Quitar todos"). */
     limpiarVinculos: () => setVinculos({}),
   };

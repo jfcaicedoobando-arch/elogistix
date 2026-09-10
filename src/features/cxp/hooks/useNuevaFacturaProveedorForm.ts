@@ -100,7 +100,7 @@ export function useNuevaFacturaProveedorForm(
   };
 
   const { toggleVinculo, setVinculoMonto, aplicarSugerencias, limpiarVinculos } =
-    crearAccionesVinculos(setVinculos);
+    crearAccionesVinculos(setVinculos, () => values.moneda);
 
   const reset = () => {
     setValues(initialValues());
