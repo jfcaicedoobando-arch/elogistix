@@ -26,7 +26,11 @@ export function estadoRepHistorico(r: Pick<FilaRepHistorico, "rep_cancellation_s
 interface Opts {
   onDescargar: (pagoId: string, tipo: "pdf" | "xml") => void;
   descargando: string | null;
+  /** v13.823.287 — refresco manual del estatus ante el SAT (cancelaciones en trámite). */
+  onActualizarSat?: (pagoId: string) => void;
+  actualizando?: string | null;
 }
+
 
 export function buildRepsHistoricoColumns(o: Opts) {
   return defineColumns<FilaRepHistorico>([
