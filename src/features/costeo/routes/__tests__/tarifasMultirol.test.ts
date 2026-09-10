@@ -46,7 +46,7 @@ describe("MR-UI-02: tabla usable en 1280x720", () => {
   });
   it("sólo Acciones queda fija para no cubrir Estado ni columnas anteriores", () => {
     expect(columnas).toContain("stickyRight: true");
-    expect(columnas).toContain('meta: { width: COL_W.nombre },');
+    expect(columnas).toContain('meta: { width: COL_W.estado },');
     expect(columnas).not.toContain('className: "sticky right-40');
     expect(columnas).not.toContain('headerClassName: "sticky right-40');
   });
