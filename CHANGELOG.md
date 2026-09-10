@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.823.281] - 2026-09-10
+- **feat(cotizaciones)**: cotización híbrida USD + MXN. Nueva columna `cotizaciones.tipo_cambio_usd` (positiva o nula) y captura del T/C en el paso 3, con botón «Traer TC DOF de hoy». El T/C se congela en la cotización y sólo se usa para expresar el subtotal del encabezado en una moneda; cada concepto conserva su moneda e importe originales y el IVA no cambia. Sin T/C se sigue bloqueando el guardado, ahora con un mensaje que explica cómo capturarlo.
+- **feat(PDF cotización)**: cuando existe T/C congelado se imprime «Tipo de cambio USD/MXN» aclarando que aplica sólo al total del encabezado.
+- Validación local: typecheck, ESLint focalizado y 5 pruebas focalizadas. CI/RLS/E2E completos quedan a GitHub Actions.
+
+
 ## [13.823.280] - 2026-09-10
 - **fix(base, replay)**: los candados `LC_PROFORMA_REQUIERE_ACEPTACION` y `LC_OVERRIDE_FUERA_DE_SELECCION` se perdían al reconstruir la base desde cero: sus migraciones (2026-09-10) tienen timestamp anterior a `20260913000400_r170_02_fecha_negocio_mx.sql`, que redefine ambas funciones sin los candados. Nueva migración `20260913001400_r279_reaplica_guards_proformas_post_r170_02.sql` que reaplica las definiciones vivas (mismo cuerpo R170-02 + candados) después del corte. Sin cambios de datos, permisos ni fórmulas fiscales.
 - **fix(pruebas SQL)**: `proforma_iva_overrides_seleccion.sql` siembra el rol financiero en `user_roles` (lo exige `_assert_writer`) y `proforma_conversion_requiere_aceptacion.sql` crea el embarque requerido por `conceptos_venta.embarque_id NOT NULL`. Antes fallaban por fixture, no por producto.
