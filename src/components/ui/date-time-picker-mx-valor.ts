@@ -6,7 +6,7 @@
  * separadores se insertan solos (`14/08/2026 09:30`).
  */
 import { useCallback, useEffect, useRef, useState } from "react";
-import { parseDisplay } from "./date-picker-mx-helpers";
+import { parseDisplay, parseFlexible } from "./date-picker-mx-helpers";
 
 export const HORA_DEFAULT = "09:00";
 
