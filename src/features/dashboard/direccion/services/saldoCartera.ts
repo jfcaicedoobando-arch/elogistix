@@ -11,6 +11,7 @@
  *    una conversión cruzada, la NC aporta 0 (no se inventa fallback).
  * Sólo el saldo NETO resultante se convierte a MXN con el TC de la factura.
  */
+import { esPagoAnulado } from "@/lib/financial/saldoFactura";
 import { mxnFactura, type TcFallbacks } from "./mxn";
 import type { FacturaRow, NotaCreditoRow, PagoRow } from "./loaders";
 
@@ -41,14 +42,22 @@ export function ncEnMonedaFactura(
   return 0;
 }
 
-/** Saldo de la factura EN SU PROPIA MONEDA: total − pagos aplicados − NC aplicadas. */
+/**
+ * Saldo de la factura EN SU PROPIA MONEDA: total − pagos VIGENTES − NC aplicadas.
+ * Ola v17: los pagos con REP cancelado están ANULADOS (canon `esPagoAnulado` /
+ * `public.pago_rep_anulado`); antes se sumaban y la cartera de Dirección
+ * mostraba menos adeudo que Portal, Cobranza y Estado de Cuenta.
+ */
 export function saldoEnMonedaFactura(
   factura: Pick<FacturaRow, "total" | "moneda" | "tipo_cambio">,
-  pagos: readonly Pick<PagoRow, "monto_aplicado_factura">[],
+  pagos: readonly Pick<PagoRow, "monto_aplicado_factura" | "estado_rep">[],
   ncs: readonly Pick<NotaCreditoRow, "monto" | "moneda" | "tipo_cambio">[],
 ): number {
   let saldo = Number(factura.total ?? 0);
-  for (const p of pagos) saldo -= Number(p.monto_aplicado_factura ?? 0);
+  for (const p of pagos) {
+    if (esPagoAnulado(p)) continue;
+    saldo -= Number(p.monto_aplicado_factura ?? 0);
+  }
   for (const nc of ncs) saldo -= ncEnMonedaFactura(nc, factura.moneda, factura.tipo_cambio);
   return saldo;
 }
