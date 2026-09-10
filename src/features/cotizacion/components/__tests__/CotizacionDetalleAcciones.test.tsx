@@ -60,3 +60,48 @@ describe("CotizacionDetalleAcciones", () => {
   });
 });
 
+/**
+ * v13.823.277 — la UI no debe ofrecer acciones que la base de datos rechaza
+ * con 42501. Espejo de `aceptar_cotizacion_version` y
+ * `crear_embarque_borrador_core`.
+ */
+describe("CotizacionDetalleAcciones — permisos espejo de las RPC", () => {
+  const puedenAceptar = ["gerente_comercial", "vendedor", "gerente_operaciones"] as const;
+  const noPuedenAceptar = ["contador", "ejecutivo_pricing", "coordinador_logistico"] as const;
+
+  for (const rol of puedenAceptar) {
+    it(`${rol} ve Aceptar en Enviada (la RPC lo autoriza)`, () => {
+      renderAcciones({ estado: "Enviada", total: 1500, rol });
+      expect(screen.getByRole("button", { name: /aceptar/i })).toBeInTheDocument();
+    });
+  }
+
+  for (const rol of noPuedenAceptar) {
+    it(`${rol} NO ve Aceptar en Enviada (la RPC lo rechazaría)`, () => {
+      renderAcciones({ estado: "Enviada", total: 1500, rol });
+      expect(screen.queryByRole("button", { name: /aceptar/i })).not.toBeInTheDocument();
+    });
+  }
+
+  const sinCrearEmbarque = [
+    "contador",
+    "gerente_comercial",
+    "vendedor",
+    "ejecutivo_pricing",
+    "coordinador_logistico",
+    "gerente_operaciones",
+  ] as const;
+
+  for (const rol of sinCrearEmbarque) {
+    it(`${rol} NO ve Crear embarque en Aceptada (sólo admin/operador/super_admin)`, () => {
+      renderAcciones({ estado: "Aceptada", total: 1500, rol });
+      expect(screen.queryByRole("button", { name: /crear embarque/i })).not.toBeInTheDocument();
+    });
+  }
+
+  it("operador sí ve Crear embarque en Aceptada", () => {
+    renderAcciones({ estado: "Aceptada", total: 1500, rol: "operador" });
+    expect(screen.getByRole("button", { name: /crear embarque/i })).toBeInTheDocument();
+  });
+});
+

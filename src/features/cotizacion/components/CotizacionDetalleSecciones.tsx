@@ -64,6 +64,7 @@ export function CotizacionDetalleAcciones({
     puedeAltaCliente,
     tieneOportunidad,
     tieneVenta: Number(total) > 0,
+    puedeCrearEmbarque: acciones.crearEmbarque,
   });
 
   return (

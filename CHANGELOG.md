@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.823.277] - 2026-09-10
+- **fix(cotizaciones, permisos)**: el detalle sólo muestra las acciones que la base de datos autoriza. "Aceptar" queda para dirección, comercial y operación (espejo de `aceptar_cotizacion_version`); "Crear embarque" sólo para admin, operador y super admin (espejo de `crear_embarque_borrador_core`); "Marcar enviada"/"Rechazar" siguen la lista de escritura de cotizaciones. Antes contabilidad, pricing y comercial veían botones que terminaban en error 42501. Se conservan la segregación de funciones y la regla de cliente de casa; no se ampliaron permisos de backend.
+
 ## [13.823.276] - 2026-09-10
 - **fix(proformas, integridad)**: los ajustes de IVA al crear una proforma ya sólo pueden tocar los conceptos seleccionados; un ajuste apuntando a otro concepto del mismo embarque se rechaza con `LC_OVERRIDE_FUERA_DE_SELECCION` sin persistir nada (antes quedaba guardado y contaminaba proformas posteriores). Nueva prueba SQL `proforma_iva_overrides_seleccion.sql`.
 

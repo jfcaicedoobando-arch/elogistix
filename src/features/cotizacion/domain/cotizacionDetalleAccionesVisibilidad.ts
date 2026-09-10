@@ -15,27 +15,40 @@ export function visibilidadAcciones(params: {
   tieneOportunidad: boolean;
   /** P0 — sin venta capturada no se puede generar el embarque. */
   tieneVenta: boolean;
+  /**
+   * v13.823.277 — ¿el rol puede generar el embarque borrador? Espejo de
+   * `crear_embarque_borrador_core` (admin/operador/super_admin): sin esto,
+   * comercial y finanzas veían un botón que terminaba en 42501.
+   */
+  puedeCrearEmbarque: boolean;
 }) {
   const {
     estado, esProspecto, tieneEmbarquesVinculados, puedeAceptar, puedeRechazar,
-    puedeAltaCliente, tieneOportunidad, tieneVenta,
+    puedeAltaCliente, tieneOportunidad, tieneVenta, puedeCrearEmbarque,
   } = params;
   const esAceptada = estado === "Aceptada";
   const respuestaEnSolicitada = puedeAceptar || puedeRechazar;
+  const sinEmbarqueAun = esAceptada && !tieneEmbarquesVinculados;
+  // v13.823.277 — puerta común de "generar el embarque": cotización aceptada de
+  // un cliente real, sin embarque previo y con un rol que la RPC autoriza.
+  const puertaEmbarque = sinEmbarqueAun && !esProspecto && puedeCrearEmbarque;
   return {
     esEnCaptura: estado === "Borrador" || estado === "Solicitada",
+    // v13.823.277 — el bloque sólo aparece si el rol tiene al menos una de las
+    // dos acciones permitidas (antes se mostraba vacío para finanzas).
     mostrarAceptarRechazar:
-      estado === "Borrador" || estado === "Enviada" ||
-      (estado === "Solicitada" && respuestaEnSolicitada),
+      respuestaEnSolicitada &&
+      (estado === "Borrador" || estado === "Enviada" || estado === "Solicitada"),
     esAceptada,
     // P0 — la puerta visible coincide con la cerradura: rol con alta de
     // clientes + prospecto aceptado + oportunidad ligada. Sin oportunidad queda
     // sólo el banner que guía a vincularla.
     mostrarConvertirCliente: esAceptada && esProspecto && puedeAltaCliente && tieneOportunidad,
-    mostrarCrearEmbarque: esAceptada && !esProspecto && !tieneEmbarquesVinculados && tieneVenta,
+    mostrarCrearEmbarque: puertaEmbarque && tieneVenta,
     // P0 (bug 10): cotización aceptada sin venta capturada — se explica en vez
-    // de ofrecer un botón que generaría un embarque en cero.
-    mostrarFaltaVenta: esAceptada && !esProspecto && !tieneEmbarquesVinculados && !tieneVenta,
-    mostrarRecotizar: esAceptada && !tieneEmbarquesVinculados,
+    // de ofrecer un botón que generaría un embarque en cero. Sólo a quien
+    // podría crear el embarque le sirve ese aviso.
+    mostrarFaltaVenta: puertaEmbarque && !tieneVenta,
+    mostrarRecotizar: sinEmbarqueAun,
   };
 }

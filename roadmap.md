@@ -57,3 +57,10 @@
 - [x] Facturas reales conservan T/C documental con fallback del embarque
 - [x] Prueba SQL `pnl_presupuesto_tc_congelado.sql` (mover ETA no cambia presupuesto)
 - [x] Cierre: versión, changelog y manifiesto; suites completas sólo en GitHub Actions
+
+## 13.823.277 — Permisos Cotizaciones → Embarques alineados con las RPC
+- [x] `ACEPTAR_COTIZACION` y `CREAR_EMBARQUE_BORRADOR` en la matriz de permisos (espejo de las RPC)
+- [x] `accionesCotizacionPermitidas`: aceptar/rechazar/enviar según la regla real; nuevo `crearEmbarque`
+- [x] `visibilidadAcciones`: oculta Crear embarque y el aviso de venta faltante sin permiso
+- [x] Pruebas por rol (contador, gerente_comercial, vendedor, ejecutivo_pricing, coordinador_logistico, gerente_operaciones)
+- [x] Cierre: versión, changelog y manifiesto; suites completas sólo en GitHub Actions
