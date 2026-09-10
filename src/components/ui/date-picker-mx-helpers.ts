@@ -125,25 +125,55 @@ function buildIso(y: number, m: number, d: number): string | null {
   return dateToIso(date);
 }
 
+/** Quita hora/zona y el texto sobrante alrededor de la fecha pegada. */
+function limpiarRuido(s: string): string {
+  return s
+    .replace(/[t\s]\d{1,2}:\d{2}(:\d{2})?(\.\d+)?\s*(z|[ap]\.?\s?m\.?|[+-]\d{2}:?\d{2})?$/i, "")
+    .replace(/^\D+/, "")
+    .replace(/\D+$/, "")
+    .trim();
+}
+
+/** Año de dos dígitos → siglo con pivote 70 (`26` → 2026, `98` → 1998). */
+function anioPleno(n: number): number {
+  if (n >= 100) return n;
+  return n < 70 ? 2000 + n : 1900 + n;
+}
+
+/** Fallback: sólo dígitos (`13032026` = DDMMYYYY, `20260313` = YYYYMMDD, `130326`). */
+function porDigitos(s: string): string | null {
+  const d = s.replace(/\D/g, "");
+  if (d.length === 8) {
+    return buildIso(Number(d.slice(4)), Number(d.slice(2, 4)), Number(d.slice(0, 2)))
+      ?? buildIso(Number(d.slice(0, 4)), Number(d.slice(4, 6)), Number(d.slice(6, 8)));
+  }
+  if (d.length === 6) {
+    return buildIso(anioPleno(Number(d.slice(4))), Number(d.slice(2, 4)), Number(d.slice(0, 2)));
+  }
+  return null;
+}
+
 /**
  * Parseo tolerante para valores pegados desde otras fuentes. Acepta:
- *  - `DD/MM/YYYY`, `D/M/YYYY` con separadores `/`, `-` o `.`
- *  - `YYYY-MM-DD` / `YYYY/MM/DD` (ISO)
+ *  - `DD/MM/YYYY`, `D/M/YYYY`, `D/M/YY` con separadores `/`, `-` o `.`
+ *  - `YYYY-MM-DD` / `YYYY/MM/DD` (ISO), con o sin hora (`2026-03-13T10:00`)
  *  - `DD [de] MMM[M...] [de] YYYY` en español (enero…diciembre / ene…dic)
+ *  - Texto con ruido alrededor (`Vence: 13/03/2026 (viernes)`)
+ *  - Sólo dígitos (`13032026`, `20260313`, `130326`)
  * Devuelve ISO `YYYY-MM-DD` o `null` si no logra reconocer un valor válido.
  */
 export function parseFlexible(raw: string): string | null {
   if (!raw) return null;
-  const s = raw.trim().toLowerCase();
+  const s = limpiarRuido(raw.trim().toLowerCase());
   if (!s) return null;
 
   // ISO YYYY-MM-DD o YYYY/MM/DD
-  const iso = s.match(/^(\d{4})[/-](\d{1,2})[/-](\d{1,2})$/);
+  const iso = s.match(/^(\d{4})[/.-](\d{1,2})[/.-](\d{1,2})$/);
   if (iso) return buildIso(Number(iso[1]), Number(iso[2]), Number(iso[3]));
 
-  // DD[/-.]MM[/-.]YYYY
-  const dmy = s.match(/^(\d{1,2})[/.-](\d{1,2})[/.-](\d{4})$/);
-  if (dmy) return buildIso(Number(dmy[3]), Number(dmy[2]), Number(dmy[1]));
+  // DD[/-.]MM[/-.]YY(YY)
+  const dmy = s.match(/^(\d{1,2})[/.-](\d{1,2})[/.-](\d{2,4})$/);
+  if (dmy) return buildIso(anioPleno(Number(dmy[3])), Number(dmy[2]), Number(dmy[1]));
 
   // DD [de] MES [de] YYYY (español)
   const es = s.match(/^(\d{1,2})\s+(?:de\s+)?([a-záéíóú]+)\.?\s+(?:de\s+)?(\d{4})$/i);
@@ -155,5 +185,6 @@ export function parseFlexible(raw: string): string | null {
     if (idx >= 0) return buildIso(Number(es[3]), idx + 1, Number(es[1]));
   }
 
-  return null;
+  return porDigitos(s);
 }
+
