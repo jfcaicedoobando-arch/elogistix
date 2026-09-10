@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.823.264] - 2026-09-10
+- **fix(costeo)**: residual MR-UI-02 — Flete y Recargos ahora se ocultan bajo 2xl (anteriormente bajo xl), para que Ruta, Total USD, Vigencia, Estado y Acciones quepan en 1280×720 sin scroll horizontal inicial; se mantiene sticky derecho de Acciones y el affordance de desplazamiento de `DataTable`.
+
 ## [13.823.263] - 2026-09-10
 - **fix(reportes)**: en el Estado de Resultados por facturas ya no se pierden facturas capturadas días antes y timbradas ya dentro del mes (p. ej. captura 25-ago, timbre 3-sep); la consulta cubre ambos orígenes y el filtro por fecha fiscal decide el mes.
 
