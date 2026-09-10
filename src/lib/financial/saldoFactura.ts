@@ -68,7 +68,9 @@ export function calcularSaldoFactura(
   estadoFactura?: string | null,
 ): SaldoFactura {
   const totalFactura = num(total);
-  const pagado = sumarMontos(pagos.map((p) => num(p.monto_aplicado_factura)));
+  const pagado = sumarMontos(
+    pagos.filter((p) => !esPagoAnulado(p)).map((p) => num(p.monto_aplicado_factura)),
+  );
   const nc = sumarMontos(notasCredito.map((n) => num(n.monto)));
   const bruto = sumarMontos([totalFactura, -pagado, -nc]);
   const saldo = esEstadoSinSaldo(estadoFactura) || bruto <= 0 ? 0 : bruto;
