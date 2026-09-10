@@ -17,6 +17,7 @@ import { TarifasKpis } from "@/features/costeo/components/TarifasKpis";
 import { TarifasFilterChips } from "@/features/costeo/components/TarifasFilterChips";
 import { TarifasEmptyState } from "@/features/costeo/components/TarifasEmptyState";
 import { TarifasGroupedView } from "@/features/costeo/components/TarifasGroupedView";
+import { useDocumentTitle } from "@/hooks/shared";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { PageHeader } from "@/components/shared/PageHeader";
 import {
@@ -27,6 +28,8 @@ import {
 import { ErrorState } from "@/components/shared/states/ErrorState";
 
 export default function CosteoTarifas() {
+  // MR-UI-01: la pestaña del navegador debe reflejar la página activa.
+  useDocumentTitle("Tarifas marítimas");
   const s = useCosteoTarifasPageState();
   const { data: agentes = [] } = useCosteoAgentes();
   const { data: tipos = [] } = useTiposContenedor();

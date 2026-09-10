@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.823.262] - 2026-09-10
+- **fix(costeo)**: auditoría multirol — la pestaña del navegador en /costeo/tarifas ya muestra "Tarifas marítimas · Libre Carga" (antes quedaba "Iniciar sesión"); la tabla de tarifas oculta Flete y Recargos bajo 1536 px y fija la columna Acciones a la derecha, para que Estado y Aprobar/Rechazar queden visibles a 1280x720.
+
 ## [13.823.261] - 2026-09-09
 - **fix(facturación)**: cuando el módulo de cancelación del SAT está caído (JAVASCRIPT-REACT-5E), el aviso explica que es una falla temporal del SAT y pide reintentar en unos minutos, en vez de mostrar "rechazó la solicitud"; deja de reportarse como error de la app.
 
