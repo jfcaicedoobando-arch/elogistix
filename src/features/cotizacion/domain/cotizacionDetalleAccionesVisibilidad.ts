@@ -44,13 +44,11 @@ export function visibilidadAcciones(params: {
     // clientes + prospecto aceptado + oportunidad ligada. Sin oportunidad queda
     // sólo el banner que guía a vincularla.
     mostrarConvertirCliente: esAceptada && esProspecto && puedeAltaCliente && tieneOportunidad,
-    mostrarCrearEmbarque:
-      esAceptada && !esProspecto && !tieneEmbarquesVinculados && tieneVenta && puedeCrearEmbarque,
+    mostrarCrearEmbarque: puertaEmbarque && tieneVenta,
     // P0 (bug 10): cotización aceptada sin venta capturada — se explica en vez
     // de ofrecer un botón que generaría un embarque en cero. Sólo a quien
     // podría crear el embarque le sirve ese aviso.
-    mostrarFaltaVenta:
-      esAceptada && !esProspecto && !tieneEmbarquesVinculados && !tieneVenta && puedeCrearEmbarque,
-    mostrarRecotizar: esAceptada && !tieneEmbarquesVinculados,
+    mostrarFaltaVenta: puertaEmbarque && !tieneVenta,
+    mostrarRecotizar: sinEmbarqueAun,
   };
 }
