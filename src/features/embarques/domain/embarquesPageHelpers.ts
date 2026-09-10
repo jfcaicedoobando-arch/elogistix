@@ -69,6 +69,20 @@ export function computeCounts(i: CountsInput) {
   };
 }
 
+/**
+ * 13.823.270: el resumen del encabezado sólo puede afirmar lo que realmente
+ * conoce. El listado carga un registro por EXPEDIENTE; el número real de
+ * contenedores vive en la tabla hija y sólo se resuelve para las filas visibles
+ * (badge `+N`), por lo que llamar "contenedores" al conteo de expedientes
+ * mentía (1 expediente con 2 contenedores se anunciaba como "1 contenedor").
+ */
+export function buildEmbarquesDescription(expedientesCount: number, estadoActivo: boolean): string {
+  if (!estadoActivo) {
+    return `${expedientesCount} ${expedientesCount === 1 ? "embarque" : "embarques"}`;
+  }
+  return `${expedientesCount} ${expedientesCount === 1 ? "expediente" : "expedientes"}`;
+}
+
 export function resolveExtras(
   estadoActivo: boolean,
   branchB: EmbarqueListExtras | undefined,
