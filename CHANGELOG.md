@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.823.267] - 2026-09-10
+- **fix(tablas)**: las columnas fijas de Ruta y Acciones usan fondos opacos en filas pares, hover y selección; al desplazar horizontalmente ya no transparentan ni superponen el texto de otras columnas en tema claro u oscuro.
+
 ## [13.823.266] - 2026-09-10
 - **fix(costeo)**: regresión MR-UI-02 — Estado vuelve al flujo horizontal y sólo Acciones permanece fija; así los chips de aprobación ya no cubren Contenedor, Total USD ni Vigencia en 1280×720, conservando la pista visible de desplazamiento.
 

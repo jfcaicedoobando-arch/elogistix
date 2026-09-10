@@ -17,6 +17,10 @@ const tabla = readFileSync(
   join(ROOT, "src/features/costeo/components/CosteoTarifasTable.tsx"),
   "utf8",
 );
+const filaDataTable = readFileSync(
+  join(ROOT, "src/components/shared/dataTable/DataTableRow.tsx"),
+  "utf8",
+);
 
 describe("MR-UI-01: título del documento", () => {
   it("CosteoTarifas fija el título de la pestaña", () => {
@@ -40,5 +44,10 @@ describe("MR-UI-02: tabla usable en 1280x720", () => {
   it("muestra un affordance visible para el desplazamiento horizontal en HD", () => {
     expect(tabla).toContain("Desplaza horizontalmente para consultar columnas secundarias");
     expect(tabla).toContain("2xl:hidden");
+  });
+  it("usa fondos opacos en las celdas fijas para impedir texto superpuesto", () => {
+    expect(filaDataTable).toContain("[tr:nth-child(even)_&]:bg-muted");
+    expect(filaDataTable).toContain("[tr:hover_&]:bg-muted");
+    expect(filaDataTable).not.toMatch(/STICKY_(?:LEFT|RIGHT)[\s\S]*?bg-(?:muted|primary)\/[0-9]+/);
   });
 });
