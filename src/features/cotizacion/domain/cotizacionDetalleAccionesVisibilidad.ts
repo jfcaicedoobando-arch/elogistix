@@ -30,9 +30,11 @@ export function visibilidadAcciones(params: {
   const respuestaEnSolicitada = puedeAceptar || puedeRechazar;
   return {
     esEnCaptura: estado === "Borrador" || estado === "Solicitada",
+    // v13.823.277 — el bloque sólo aparece si el rol tiene al menos una de las
+    // dos acciones permitidas (antes se mostraba vacío para finanzas).
     mostrarAceptarRechazar:
-      estado === "Borrador" || estado === "Enviada" ||
-      (estado === "Solicitada" && respuestaEnSolicitada),
+      respuestaEnSolicitada &&
+      (estado === "Borrador" || estado === "Enviada" || estado === "Solicitada"),
     esAceptada,
     // P0 — la puerta visible coincide con la cerradura: rol con alta de
     // clientes + prospecto aceptado + oportunidad ligada. Sin oportunidad queda
