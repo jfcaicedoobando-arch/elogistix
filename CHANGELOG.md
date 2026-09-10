@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.823.263] - 2026-09-10
+- **fix(reportes)**: en el Estado de Resultados por facturas ya no se pierden facturas capturadas días antes y timbradas ya dentro del mes (p. ej. captura 25-ago, timbre 3-sep); la consulta cubre ambos orígenes y el filtro por fecha fiscal decide el mes.
+
 ## [13.823.262] - 2026-09-10
 - **fix(costeo)**: auditoría multirol — la pestaña del navegador en /costeo/tarifas ya muestra "Tarifas marítimas · Libre Carga" (antes quedaba "Iniciar sesión"); la tabla de tarifas oculta Flete y Recargos bajo 1536 px y fija la columna Acciones a la derecha, para que Estado y Aprobar/Rechazar queden visibles a 1280x720.
 
