@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.823.268] - 2026-09-10
+- **mejora(costeo)**: Tarifas marítimas aprovecha mejor el escritorio HD con indicadores compactos, filtros y selector de vista en una sola franja, contenedor integrado bajo Ruta, columnas prioritarias estables y grupos más densos; conserva cálculos, aprobaciones y datos.
+
 ## [13.823.267] - 2026-09-10
 - **fix(tablas)**: las columnas fijas de Ruta y Acciones usan fondos opacos en filas pares, hover y selección; al desplazar horizontalmente ya no transparentan ni superponen el texto de otras columnas en tema claro u oscuro.
 

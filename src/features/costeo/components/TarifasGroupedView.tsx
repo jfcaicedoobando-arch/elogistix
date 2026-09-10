@@ -46,7 +46,7 @@ export function TarifasGroupedView({ tarifas, onEditar, onDuplicar, onEliminar }
   };
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-2">
       <div className="sticky top-0 z-10 bg-background rounded-md border overflow-hidden">
         <TarifaColumnHeader />
       </div>
@@ -57,11 +57,11 @@ export function TarifasGroupedView({ tarifas, onEditar, onDuplicar, onEliminar }
             <button
               type="button"
               onClick={() => toggle(g.key)}
-              className="w-full flex items-center gap-3 px-4 py-2 bg-muted/15 hover:bg-muted/30 transition-colors text-left"
+              className="w-full flex items-center gap-3 bg-muted/15 px-4 py-1.5 text-left transition-colors hover:bg-muted/30"
             >
               {isCollapsed ? <ChevronRight className="size-4" /> : <ChevronDown className="size-4" />}
               <div className="flex-1 min-w-0">
-                <div className="font-semibold">{g.rutaLabel}</div>
+                <div className="text-subsection">{g.rutaLabel}</div>
                 <div className="text-body-sm text-muted-foreground">
                   {g.contenedor} · {g.rows.length} tarifa{g.rows.length === 1 ? "" : "s"} · {g.agentes} agente{g.agentes === 1 ? "" : "s"}
                   {g.porVencer > 0 && (

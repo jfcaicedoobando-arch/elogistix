@@ -7,8 +7,10 @@ import { Button } from "@/components/ui/button";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { Search, X } from "lucide-react";
+import { LayoutList, Rows3, Search, X } from "lucide-react";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import type { EstadoFiltro, AprobacionFiltro } from "../routes/CosteoTarifas.helpers";
+import type { ViewMode } from "../routes/useCosteoTarifasPageState";
 
 interface OpcionId { id: string; nombre?: string; name?: string }
 
@@ -28,6 +30,9 @@ interface Props {
   pendientesCount: number;
   onClearAll: () => void;
   hasActiveFilters: boolean;
+  total: number;
+  viewMode: ViewMode;
+  onViewModeChange: (view: ViewMode) => void;
 }
 
 export function CosteoTarifasFiltros({
@@ -36,9 +41,10 @@ export function CosteoTarifasFiltros({
   agenteId, onAgenteChange, tipoId, onTipoChange,
   busqueda, onBusquedaChange,
   agentes, tipos, pendientesCount, onClearAll, hasActiveFilters,
+  total, viewMode, onViewModeChange,
 }: Props) {
   return (
-    <div className="flex flex-wrap items-center gap-2">
+    <div className="flex flex-wrap items-center gap-2 border-y py-3 short:py-2">
       <div className="relative flex-1 min-w-[260px] max-w-md">
         <Search className="size-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
         <Input
@@ -114,10 +120,29 @@ export function CosteoTarifasFiltros({
       </Select>
 
       {hasActiveFilters && (
-        <Button variant="ghost" size="sm" onClick={onClearAll} className="ml-auto h-9 text-body-sm">
+        <Button variant="ghost" size="sm" onClick={onClearAll} className="h-9 text-body-sm">
           <X className="size-4 mr-1" />Limpiar filtros
         </Button>
       )}
+
+      <div className="ml-auto flex items-center gap-3">
+        <span className="whitespace-nowrap text-body-sm text-muted-foreground tabular-nums">
+          {total} {total === 1 ? "tarifa" : "tarifas"}
+        </span>
+        <ToggleGroup
+          type="single"
+          value={viewMode}
+          onValueChange={(value) => value && onViewModeChange(value as ViewMode)}
+          aria-label="Modo de vista"
+        >
+          <ToggleGroupItem value="agrupada" aria-label="Vista agrupada por ruta" className="h-8 px-3 text-body-sm">
+            <Rows3 className="mr-1 size-4" />Agrupada
+          </ToggleGroupItem>
+          <ToggleGroupItem value="tabla" aria-label="Vista tabla plana" className="h-8 px-3 text-body-sm">
+            <LayoutList className="mr-1 size-4" />Tabla
+          </ToggleGroupItem>
+        </ToggleGroup>
+      </div>
     </div>
   );
 }

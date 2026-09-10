@@ -52,7 +52,7 @@ export function TarifasKpis({ tarifas, onFilterPendientes, onFilterPorVencer, ac
   }
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+    <div className="grid grid-cols-2 gap-3 md:grid-cols-4 short:gap-2 [&>div>div]:short:py-2.5">
       <KpiCard
         label="Vigentes hoy"
         value={vigentes}

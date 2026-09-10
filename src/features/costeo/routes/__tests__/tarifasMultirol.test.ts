@@ -17,6 +17,10 @@ const tabla = readFileSync(
   join(ROOT, "src/features/costeo/components/CosteoTarifasTable.tsx"),
   "utf8",
 );
+const filtros = readFileSync(
+  join(ROOT, "src/features/costeo/components/CosteoTarifasFiltros.tsx"),
+  "utf8",
+);
 const filaDataTable = readFileSync(
   join(ROOT, "src/components/shared/dataTable/DataTableRow.tsx"),
   "utf8",
@@ -31,9 +35,14 @@ describe("MR-UI-01: título del documento", () => {
 describe("MR-UI-02: tabla usable en 1280x720", () => {
   it("Flete y Recargos se retiran bajo 2xl para liberar ancho en HD", () => {
     const matches = columnas.match(/hidden 2xl:table-cell/g) ?? [];
-    expect(matches.length).toBeGreaterThanOrEqual(2);
+    expect(matches.length).toBeGreaterThanOrEqual(3);
     expect(columnas).not.toContain("hidden xl:table-cell");
     expect(columnas).not.toContain("hidden lg:table-cell");
+  });
+  it("integra el contenedor bajo Ruta en HD y unifica filtros con el selector de vista", () => {
+    expect(columnas).toContain('text-muted-foreground 2xl:hidden');
+    expect(filtros).toContain('aria-label="Modo de vista"');
+    expect(filtros).toContain('{total} {total === 1 ? "tarifa" : "tarifas"}');
   });
   it("sólo Acciones queda fija para no cubrir Estado ni columnas anteriores", () => {
     expect(columnas).toContain("stickyRight: true");
