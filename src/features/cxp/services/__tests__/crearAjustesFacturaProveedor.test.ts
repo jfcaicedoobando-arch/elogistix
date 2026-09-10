@@ -72,6 +72,26 @@ describe("crearAjustesFacturaProveedor", () => {
     expect(Number(args.p_ajustes[0].monto)).toBeCloseTo(1000, 2);
   });
 
+  it("descarta el vínculo congelado en otra moneda (ELIMP00358: 60 USD vs 1,013.68 MXN)", async () => {
+    const r = await crearAjustesFacturaProveedor({
+      ...baseInput,
+      vinculos: { c1: { ...v("e1", "Cargos Destino", 60, 1013.68), monedaBase: "MXN" } },
+    });
+    expect(r.ajustesCreados).toBe(0);
+    expect(mock.rpcCalls.find((c) => c.fn === "crear_ajustes_factura_proveedor_rpc")).toBeUndefined();
+  });
+
+  it("sí crea el ajuste cuando la moneda congelada coincide con la factura", async () => {
+    mock.setRpcResult("crear_ajustes_factura_proveedor_rpc", {
+      data: { ajustes_creados: 1, folio: "FP-000039" }, error: null,
+    });
+    const r = await crearAjustesFacturaProveedor({
+      ...baseInput,
+      vinculos: { c1: { ...v("e1", "Cargos Destino", 60, 100), monedaBase: "USD" } },
+    });
+    expect(r.ajustesCreados).toBe(1);
+  });
+
   it("crea múltiples ajustes agrupados por vínculo", async () => {
     mock.setRpcResult("crear_ajustes_factura_proveedor_rpc", {
       data: { ajustes_creados: 2, folio: "FP-000039" }, error: null,

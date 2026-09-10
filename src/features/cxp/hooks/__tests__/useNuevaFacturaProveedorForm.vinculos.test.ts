@@ -26,6 +26,11 @@ describe("toggleVinculoReducer", () => {
     expect(next.c1.montoOriginal).toBe(51);
   });
 
+  it("congela la moneda de la factura en el vínculo", () => {
+    const next = toggleVinculoReducer({}, concepto, true, 1013.68, "MXN");
+    expect(next.c1.monedaBase).toBe("MXN");
+  });
+
   it("quita el vínculo al desmarcar", () => {
     const conVinculo = toggleVinculoReducer({}, concepto, true, 872.57);
     expect(toggleVinculoReducer(conVinculo, concepto, false)).toEqual({});
