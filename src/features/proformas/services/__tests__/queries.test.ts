@@ -61,6 +61,30 @@ describe("proformas queries", () => {
     });
   });
 
+  // Sentry JAVASCRIPT-REACT-6K: /proformas/PRO-2026-0008 filtraba por `id`
+  // (uuid) y Postgres respondía 22P02 → falso error de conexión en la UI.
+  it("fetchProformaPorId filtra por id cuando recibe un UUID", async () => {
+    mock.setTableResult("proformas", { data: { id: "p1" }, error: null });
+    await fetchProformaPorId("11111111-1111-4111-8111-111111111111");
+    const call = mock.tableCalls[0];
+    const eqArgs = call.ops.map((op, i) => [op, call.opArgs[i]]).filter(([op]) => op === "eq");
+    expect(eqArgs).toContainEqual(["eq", ["id", "11111111-1111-4111-8111-111111111111"]]);
+  });
+
+  it("fetchProformaPorId filtra por numero cuando recibe un folio", async () => {
+    mock.setTableResult("proformas", { data: { id: "p1", numero: "PRO-2026-0008" }, error: null });
+    await fetchProformaPorId("PRO-2026-0008");
+    const call = mock.tableCalls[0];
+    const eqArgs = call.ops.map((op, i) => [op, call.opArgs[i]]).filter(([op]) => op === "eq");
+    expect(eqArgs).toContainEqual(["eq", ["numero", "PRO-2026-0008"]]);
+  });
+
+  it("fetchProformaPorId devuelve null con folio inexistente (pantalla no encontrada)", async () => {
+    mock.setTableResult("proformas", { data: null, error: null });
+    await expect(fetchProformaPorId("PRO-2026-9999")).resolves.toBeNull();
+  });
+
+
   it("fetchProformasPendientes deriva contenedores_lista únicos", async () => {
     mock.setTableResult("proformas", {
       data: [

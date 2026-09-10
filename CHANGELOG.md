@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.823.275] - 2026-09-10
+- **fix(proformas)**: abrir `/proformas/<folio>` (p. ej. `PRO-2026-0008`) ahora resuelve la proforma por número de folio en vez de fallar con un falso error de conexión (Postgres 22P02); si el folio no existe se muestra la pantalla "Proforma no encontrada". Sentry `JAVASCRIPT-REACT-6K`.
+
+
 ## [13.823.274] - 2026-09-10
 - **fix(embarques)**: el presupuesto de la pestaña Utilidad (conceptos de venta, costo y seguro) usa el tipo de cambio congelado del embarque, igual que Costos; antes se derivaba del DOF de la ETA y cambiaba al mover fechas. Facturas reales de cliente/proveedor conservan su T/C documental con el del embarque como respaldo. Nueva prueba SQL `pnl_presupuesto_tc_congelado.sql`.
 

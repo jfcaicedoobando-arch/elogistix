@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { esUuid } from "@/lib/esUuid";
 import { fromDb, fromDbChecked } from "@/lib/supabase/cast";
 import { proformaRowsDbSchema } from "@/features/cotizacion/services/readSchemas";
 
@@ -65,7 +66,15 @@ export async function fetchProformasEmbarque(embarqueId: string): Promise<Profor
 
 }
 
+/**
+ * Detalle de una proforma por identificador interno (UUID) o por folio
+ * (`PRO-2026-0008`). v13.823.275 · Sentry JAVASCRIPT-REACT-6K: al abrir la
+ * dirección con folio, Postgres rechazaba el filtro `id = 'PRO-…'` (22P02) y
+ * la UI mostraba un falso error de conexión. El filtro por folio es
+ * multi-tenant seguro: RLS restringe las filas a la organización activa.
+ */
 export async function fetchProformaPorId(id: string): Promise<ProformaDetalleFull | null> {
+  const columna = esUuid(id) ? "id" : "numero";
   const data = await unwrap(
     supabase
       .from("proformas")
@@ -79,7 +88,7 @@ export async function fetchProformaPorId(id: string): Promise<ProformaDetalleFul
           "embarque_full:embarque_id(modo, tipo, incoterm, bl_house, puerto_origen, puerto_destino, aeropuerto_origen, aeropuerto_destino, ciudad_origen, ciudad_destino, descripcion_mercancia, contenedores:embarque_contenedores(numero_contenedor, tipo_contenedor))",
         ].join(", "),
       )
-      .eq("id", id)
+      .eq(columna, id)
       // Una proforma en papelera se trata como inexistente en el detalle; la
       // recuperación vive en `/admin/papelera`.
       .is("deleted_at", null)
