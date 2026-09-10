@@ -11,9 +11,9 @@ import { render, screen } from "@testing-library/react";
 const permisos = { canEmitirFactura: true };
 vi.mock("@/hooks/shared", () => ({ usePermissions: () => permisos }));
 
-const buildColumnsSpy = vi.fn(() => []);
+const buildColumnsSpy = vi.fn((_args: Record<string, unknown>) => []);
 vi.mock("../proformasColumns", () => ({
-  buildProformasColumns: (args: unknown) => buildColumnsSpy(args as never),
+  buildProformasColumns: (args: Record<string, unknown>) => buildColumnsSpy(args),
 }));
 
 vi.mock("@/components/shared/dataTable/ResponsiveDataTable", () => ({
