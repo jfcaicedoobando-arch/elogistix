@@ -111,5 +111,8 @@ export function useDateTimePickerMxValor(value: string, onChange: (v: string) =>
   const iso = /^\d{4}-\d{2}-\d{2}/.test(value) ? value.slice(0, 10) : "";
   const hora = value.slice(11, 16) || HORA_DEFAULT;
 
-  return { text, invalid, inputRef, iso, hora, commit, handleChange, emitir, limpiar };
+  return {
+    text, invalid, inputRef, iso, hora, commit, handleChange, handlePaste, emitir, limpiar,
+  };
+
 }
