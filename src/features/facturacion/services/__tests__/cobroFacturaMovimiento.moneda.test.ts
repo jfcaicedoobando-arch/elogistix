@@ -1,65 +1,48 @@
 /**
- * C4 — el abono bancario del cobro no debe usar el ratio pago→factura como TC
- * MXN/USD ni abonar en una cuenta de otra moneda.
+ * Ola v17 — el abono bancario del cobro se crea SÓLO por la RPC
+ * `asegurar_movimiento_cobro_factura` (punto único de escritura, idempotente y
+ * con la conversión de moneda del lado del servidor).
+ * Antes esta prueba cubría la conversión en el cliente; ahora cubre el contrato
+ * de la RPC y que el error deje de tragarse.
  */
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-const insert = vi.fn(() => Promise.resolve({ error: null }));
-const facturaRow = { organization_id: "org-1", numero: "F1", clientes: { nombre: "ACME" } };
+const rpc = vi.fn();
 
-vi.mock("@/integrations/supabase/client", () => ({
-  supabase: {
-    from: (tabla: string) => {
-      if (tabla === "bbva_movimientos") {
-        return {
-          select: () => ({ eq: () => ({ is: () => ({ limit: () => Promise.resolve({ data: [] }) }) }) }),
-          insert,
-        };
-      }
-      if (tabla === "cuentas_bancarias") {
-        return { select: () => ({ eq: () => ({ maybeSingle: () => Promise.resolve({ data: { moneda: "MXN" } }) }) }) };
-      }
-      return { select: () => ({ eq: () => ({ maybeSingle: () => Promise.resolve({ data: facturaRow }) }) }) };
-    },
-  },
+vi.mock("@/integrations/supabase/client", () => ({ supabase: { rpc } }));
+vi.mock("@/lib/observability/logger", () => ({
+  logger: { warn: vi.fn(), error: vi.fn(), info: vi.fn() },
 }));
-vi.mock("@/services/bitacora/registrar", () => ({ registrarActividad: vi.fn() }));
-vi.mock("@/lib/observability/logger", () => ({ logger: { warn: vi.fn(), error: vi.fn(), info: vi.fn() } }));
 
 const { crearMovimientoBancarioCobro } = await import("../cobroFacturaMovimiento");
 
-const base = {
-  pagoId: "pago-1",
-  facturaId: "fac-1",
-  cuentaBancariaId: "cta-mxn",
-  fechaPago: "2026-08-10",
-  referencia: "SPEI",
-  userId: "user-1",
-};
+describe("crearMovimientoBancarioCobro · punto único de escritura", () => {
+  beforeEach(() => rpc.mockReset());
 
-describe("crearMovimientoBancarioCobro · moneda (C4)", () => {
-  beforeEach(() => insert.mockClear());
-
-  it("abona el importe tal cual cuando cobro y cuenta son MXN", async () => {
-    const ok = await crearMovimientoBancarioCobro({
-      ...base, monto: 5000, moneda: "MXN", tipoCambioUsd: null,
-    });
-    expect(ok).toBe(true);
-    expect(insert).toHaveBeenCalledWith(expect.objectContaining({ abono: 5000 }));
+  it("llama a la RPC con el id del cobro y reporta el abono creado", async () => {
+    rpc.mockResolvedValue({ data: { creado: true, movimiento_id: "mov-1", abono: 5000 }, error: null });
+    const res = await crearMovimientoBancarioCobro("pago-1");
+    expect(rpc).toHaveBeenCalledWith("asegurar_movimiento_cobro_factura", { p_pago_id: "pago-1" });
+    expect(res).toEqual({ ok: true, motivo: undefined, movimientoId: "mov-1" });
   });
 
-  it("no abona un cobro USD en una cuenta MXN sin TC oficial", async () => {
-    const ok = await crearMovimientoBancarioCobro({
-      ...base, monto: 1000, moneda: "USD", tipoCambioUsd: null,
-    });
-    expect(ok).toBe(false);
-    expect(insert).not.toHaveBeenCalled();
+  it("es idempotente: si ya existe no reporta creación", async () => {
+    rpc.mockResolvedValue({ data: { creado: false, motivo: "ya_existe", movimiento_id: "mov-1" }, error: null });
+    const res = await crearMovimientoBancarioCobro("pago-1");
+    expect(res.ok).toBe(false);
+    expect(res.motivo).toBe("ya_existe");
   });
 
-  it("con TC oficial convierte USD → MXN", async () => {
-    await crearMovimientoBancarioCobro({
-      ...base, monto: 1000, moneda: "USD", tipoCambioUsd: 17,
-    });
-    expect(insert).toHaveBeenCalledWith(expect.objectContaining({ abono: 17000 }));
+  it("propaga el motivo cuando la cuenta y el cobro difieren de moneda sin TC", async () => {
+    rpc.mockResolvedValue({ data: null, error: { message: "LC_PAGO_TC_REQUERIDO: captura el tipo de cambio" } });
+    const res = await crearMovimientoBancarioCobro("pago-1");
+    expect(res.ok).toBe(false);
+    expect(res.motivo).toContain("LC_PAGO_TC_REQUERIDO");
+  });
+
+  it("no reporta creación cuando el cobro no trae cuenta bancaria", async () => {
+    rpc.mockResolvedValue({ data: { creado: false, motivo: "sin_cuenta_bancaria" }, error: null });
+    const res = await crearMovimientoBancarioCobro("pago-1");
+    expect(res).toEqual({ ok: false, motivo: "sin_cuenta_bancaria", movimientoId: undefined });
   });
 });
