@@ -5,10 +5,12 @@
 -- facturas con cancelación en trámite ante el SAT (LC_FACTURA_EN_CANCELACION).
 -- Al modificar: edita ESTE archivo y genera la migración con el mismo cuerpo.
 
--- v13.777.9 (FIX3/M1): las notas de crédito se calculan EN LÍNEA con la misma
--- cascada de conversión del canon, para que la función corra bajo RLS nativo y
--- el helper public.nc_aplicadas_en_moneda_factura quede cerrado a service_role
--- (era un oráculo cross-tenant al estar expuesto a authenticated).
+-- v13.777.9 (FIX3/M1): corre bajo RLS nativo (no SECURITY DEFINER), por eso
+-- agrega en línea en vez de llamar a public.nc_aplicadas_en_moneda_factura
+-- (oráculo cross-tenant si se expone a authenticated).
+-- Ola v17: la cascada de conversión ya NO se copia — usa el helper PURO
+-- public.nc_convertida_a_moneda_factura, y el filtro de pagos anulados usa
+-- public.pago_rep_anulado (canon único).
 
 CREATE OR REPLACE FUNCTION public.cartera_pendiente()
 RETURNS TABLE(factura_id uuid, numero text, cliente_id uuid, cliente_nombre text,
@@ -24,21 +26,10 @@ LANGUAGE sql STABLE SET search_path TO 'public' AS $function$
       COALESCE(f.cancellation_status, 'none') AS cancellation_status,
       COALESCE((SELECT SUM(pf.monto_aplicado_factura) FROM public.pagos_factura pf
                  WHERE pf.factura_id=f.id AND pf.deleted_at IS NULL
-                   AND COALESCE(pf.estado_rep, '') <> 'Cancelado'),0) AS pagado,
+                   AND NOT public.pago_rep_anulado(pf.estado_rep)),0) AS pagado,
       COALESCE((
-        SELECT SUM(
-          CASE
-            WHEN nc.moneda::text = f.moneda::text THEN nc.monto
-            WHEN f.moneda::text = 'MXN' AND nc.moneda::text <> 'MXN' AND nc.tipo_cambio > 1
-              THEN nc.monto * nc.tipo_cambio
-            WHEN f.moneda::text <> 'MXN' AND nc.moneda::text = 'MXN' AND f.tipo_cambio > 1
-              THEN nc.monto / f.tipo_cambio
-            WHEN f.moneda::text <> 'MXN' AND nc.moneda::text <> 'MXN'
-                 AND f.moneda::text <> nc.moneda::text
-                 AND nc.tipo_cambio > 1 AND f.tipo_cambio > 1
-              THEN (nc.monto * nc.tipo_cambio) / f.tipo_cambio
-            ELSE 0
-          END)
+        SELECT SUM(public.nc_convertida_a_moneda_factura(
+                 nc.monto, nc.moneda::text, nc.tipo_cambio, f.moneda::text, f.tipo_cambio))
         FROM public.factura_notas_credito nc
         WHERE nc.factura_id = f.id
           AND nc.deleted_at IS NULL
