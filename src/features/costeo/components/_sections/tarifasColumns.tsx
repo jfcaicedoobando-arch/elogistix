@@ -54,14 +54,14 @@ export function buildTarifasColumns(deps: TarifasColumnsDeps): ColumnDef<TarifaR
       accessorFn: (t) => Number(t.flete_base),
       sortingFn: sortByNumber((t) => Number(t.flete_base)),
       enableSorting: true,
-      // MR-UI-02: Flete y Recargos se ocultan bajo xl (1280–1535 px) para que
-      // Estado y Acciones entren al primer viewport en HD; el desglose sigue
+      // MR-UI-02: Flete y Recargos se ocultan bajo 2xl (<1536 px) para que
+      // Ruta, Estado y Acciones quepan en 1280×720; el desglose sigue
       // disponible en pantallas amplias y el Total ya incluye ambos montos.
       meta: {
         align: "right",
-        className: "tabular-nums hidden xl:table-cell",
-        headerClassName: "hidden xl:table-cell",
-      },
+        className: "tabular-nums hidden 2xl:table-cell",
+        headerClassName: "hidden 2xl:table-cell",
+      }
       cell: ({ row }) => usd(Number(row.original.flete_base)),
     },
     {
@@ -72,8 +72,8 @@ export function buildTarifasColumns(deps: TarifasColumnsDeps): ColumnDef<TarifaR
       enableSorting: true,
       meta: {
         align: "right",
-        className: "tabular-nums hidden xl:table-cell",
-        headerClassName: "hidden xl:table-cell",
+        className: "tabular-nums hidden 2xl:table-cell",
+        headerClassName: "hidden 2xl:table-cell",
       },
       cell: ({ row }) => usd(row.original.recargos_total),
     },
