@@ -1,5 +1,18 @@
 # Changelog
 
+## [13.823.296] - 2026-09-10
+- **refactor(facturacion)**: fuente ÚNICA de verdad del saldo de factura. Nuevo `public._saldo_factura_calc` (total − cobros vigentes − NC aplicadas en moneda de la factura); `saldo_factura` y `saldo_factura_bruto` quedan como envolturas de ACL sin fórmula propia. Se eliminó el atajo legacy "si estado = `Pagada` entonces saldo 0", que hacía depender el saldo del estado y el estado del saldo (circularidad, bug F1015). Terminal = `Cancelada` / `Sustituida`.
+- **fix(cobranza)**: `cobranza_listado` y `cobranza_agregados` excluyen los cobros ANULADOS por REP cancelado (única divergencia que quedaba contra `saldo_factura`, `cartera_pendiente`, `cxc_aging_clientes` y el portal): Cobranza ya no muestra menos adeudo que el resto.
+- **fix(dashboard)**: la cartera de Dirección lee `estado_rep` y descuenta sólo cobros vigentes (`saldoCartera.ts` + `loaders.ts`).
+- **fix(cxc)**: `cxc_aging_clientes` convierte las notas de crédito a la moneda de la factura (antes restaba NC en USD contra facturas MXN).
+- **refactor(facturacion)**: la cascada de conversión de NC dejó de estar copiada en 4 funciones — vive en el helper PURO `nc_convertida_a_moneda_factura`; el criterio de pago anulado vive en `pago_rep_anulado`. `portal_factura_resumen_saldo` calcula desglose y saldo en la misma lectura.
+- **refactor(tesoreria)**: punto ÚNICO de escritura del movimiento bancario de cobro: nueva RPC `asegurar_movimiento_cobro_factura` (idempotente por `ON CONFLICT`, fail-closed en moneda). El cliente ya no inserta en `bbva_movimientos` ni se traga el error.
+- **fix(tesoreria)**: `reversar_movimiento_cobro_rep_cancelado` atiende los cobros en LOTE (antes no reversaba nada porque el espejo cuelga de `pago_factura_lote_id`); si el lote conserva cobros vigentes se marca para revisión y se registra en bitácora en vez de borrarse.
+- **feat(tesoreria)**: `bbva_movimientos.origen` (`sistema` / `estado_cuenta`) con trigger `trg_bbva_set_origen` y backfill: el origen deja de adivinarse por el prefijo del `hash_dedupe`.
+- **feat(auditoria)**: `auditar_consistencia_cobranza` + cron diario (06:35 MX) que avisa en `alertas_sistema` de facturas con estado incoherente con su saldo y de cobros vigentes sin movimiento bancario. Sólo avisa, no corrige.
+
+
+
 ## [13.823.295] - 2026-09-10
 - **fix(facturacion)**: el encabezado de la factura ya no cuenta como cobrado un pago cuyo REP fue cancelado. `calcularSaldoFactura` (canon único) ignora los pagos con `estado_rep = 'Cancelado'` (espejo de `public.saldo_factura_bruto`); con eso la factura 1015 muestra cobrado 0 / saldo 17,910 USD y se desbloquea la emisión de notas de crédito. El pago sigue visible como "Anulado".
 - **fix(facturacion)**: el estado de cuenta del cliente ahora lee `estado_rep` y excluye los pagos anulados de lo cobrado y de la cartera.
