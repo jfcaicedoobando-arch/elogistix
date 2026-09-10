@@ -30,6 +30,7 @@ function fila(overrides: Partial<FilaReconciliacion>): FilaReconciliacion {
 function factura(overrides: Partial<FacturaVinculada>): FacturaVinculada {
   return {
     proveedor_factura_id: "f1",
+    folio_interno: "FP-000001",
     folio_proveedor: "F-1",
     fecha_emision: null,
     fecha_vencimiento: null,
