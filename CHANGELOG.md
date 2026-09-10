@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.823.271] - 2026-09-10
+- **fix(cotizaciones)**: pluralización de vigencia en detalle — `1 día` en lugar de `1 días`; se mantiene `N días` para N ≠ 1.
+
 ## [13.823.270] - 2026-09-10
 - **fix(embarques)**: el resumen del listado ya no llama "contenedores" al número de expedientes; con filtro por Estado muestra "N expedientes" (el número real de contenedores sigue visible por fila con el badge +N).
 
