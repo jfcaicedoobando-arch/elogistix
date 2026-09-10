@@ -20,17 +20,7 @@ import { TABLE_DENSITY } from "@/components/shared/dataTable/tableTokens";
 import { FloatingActionButton } from "@/components/shared/FloatingActionButton";
 
 
-function buildDescription(contenedoresCount: number, expedientesCount: number, estadoActivo: boolean): string {
-  if (!estadoActivo) {
-    // UIA-09: sin filtro de estado el contador viene del total server-side de
-    // EMBARQUES (computeCounts → totalCountServer), no de contenedores; llamarlo
-    // "contenedores" descuadraba contra el detalle del expediente.
-    return `${contenedoresCount} ${contenedoresCount === 1 ? "embarque" : "embarques"}`;
-  }
-  const cont = `${contenedoresCount} ${contenedoresCount === 1 ? "contenedor" : "contenedores"}`;
-  const exp = `${expedientesCount} ${expedientesCount === 1 ? "expediente" : "expedientes"}`;
-  return `${cont} en ${exp}`;
-}
+import { buildEmbarquesDescription } from "@/features/embarques/domain/embarquesPageHelpers";
 
 
 export default function Embarques() {
