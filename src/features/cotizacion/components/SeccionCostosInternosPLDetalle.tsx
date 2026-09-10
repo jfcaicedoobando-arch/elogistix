@@ -170,7 +170,7 @@ export default function SeccionCostosInternosPLDetalle({
       <ResumenPL
         totalesUSD={totalesUSD} totalesMXN={totalesMXN}
         tieneUSD={filasUSD.length > 0} tieneMXN={filasMXN.length > 0}
-        notaPie="El IVA no forma parte del profit"
+        notaPie="El IVA no forma parte de la utilidad"
       />
       {canEdit && editMode && filas.length > 0 && (
         <div className="flex justify-end">
