@@ -74,6 +74,8 @@ export const COPY_VALIDACION = {
   vencimientoDemasiadoLejano: "La fecha de vencimiento está demasiado lejos de la emisión.",
   tipoCambioRequerido: "Captura el tipo de cambio.",
   tipoCambioMaximo: "El tipo de cambio no puede ser mayor a 1000.",
+  ivaMayorATasaMaxima:
+    "El IVA no puede ser mayor al 16% del subtotal. Revisa el importe: un IVA más alto infla el total de la factura.",
 } as const;
 
 /** Textos de marca y pie de página de vistas públicas. */
