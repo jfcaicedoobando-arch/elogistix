@@ -3,7 +3,7 @@ import { unwrap, unwrapOr } from "@/lib/supabase/response";
 import type { Tables } from "@/integrations/supabase/types";
 import { registrarActividad } from "@/services/bitacora/registrar";
 import { crearMovimientoBancarioCobro } from "@/features/facturacion/services/cobroFacturaMovimiento";
-import type { Moneda } from "@/types/db";
+
 import { CAP_LISTA } from "@/constants/queryCaps";
 
 
