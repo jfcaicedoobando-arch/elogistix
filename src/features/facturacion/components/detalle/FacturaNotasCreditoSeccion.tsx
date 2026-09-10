@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useNotasCreditoDeFactura } from "@/features/facturacion/hooks/useNotasCreditoDeFactura";
+import { usePagosFactura } from "@/features/facturacion/hooks";
 import { DialogCrearNotaCredito } from "@/features/facturacion/components/DialogCrearNotaCredito";
 import { DialogEnviarCfdi } from "@/features/facturacion/components/DialogEnviarCfdi";
 import { DialogCancelarNotaCredito } from "@/features/facturacion/components/DialogCancelarNotaCredito";
