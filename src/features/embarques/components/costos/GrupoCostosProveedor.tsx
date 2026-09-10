@@ -4,6 +4,7 @@
  * factura(s) ligadas y estado de pago.
  */
 import { useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import { ChevronDown, ChevronRight, FileText } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
