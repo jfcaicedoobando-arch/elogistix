@@ -141,16 +141,23 @@ export async function savePaso3(opts: {
    * usa cuando no hay ningún importe ni renglón que indique la divisa.
    */
   monedaFallback?: string | null;
+  /**
+   * 13.823.281: TC USD/MXN congelado en la cotización. Sólo se usa para
+   * expresar el subtotal del encabezado cuando hay conceptos en ambas monedas.
+   */
+  tipoCambioUsd?: number | null;
   mutations: Pick<Mutations, "updateCotizacion">;
 }): Promise<void> {
-  const { cotizacionId, conceptosVenta, monedaFallback, mutations } = opts;
+  const { cotizacionId, conceptosVenta, monedaFallback, tipoCambioUsd, mutations } = opts;
   // Lanza MSG_COTIZACION_MIXTA antes de tocar la BD: nada se persiste y los
   // conceptos capturados siguen en pantalla.
-  const { subtotal, moneda } = derivarSubtotalMoneda(conceptosVenta, monedaFallback);
-  await mutations.updateCotizacion.mutateAsync({
-    id: cotizacionId,
-    data: { conceptos_venta: conceptosVenta, subtotal, moneda },
-  });
+  const { subtotal, moneda } = derivarSubtotalMoneda(conceptosVenta, monedaFallback, tipoCambioUsd);
+  const data: Record<string, unknown> = { conceptos_venta: conceptosVenta, subtotal, moneda };
+  // `undefined` = la pantalla no capturó TC (no se toca la columna).
+  if (tipoCambioUsd !== undefined) {
+    data.tipo_cambio_usd = Number(tipoCambioUsd) > 0 ? Number(tipoCambioUsd) : null;
+  }
+  await mutations.updateCotizacion.mutateAsync({ id: cotizacionId, data });
 }
 
 

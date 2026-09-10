@@ -79,6 +79,8 @@ export interface WizardStepsDeps {
   setConceptosMXN: (c: ConceptoVentaCotizacion[]) => void;
   totalUSD: number;
   tasaIva: number;
+  /** 13.823.281: TC USD/MXN de la cotización (mezcla USD+MXN en el paso 3). */
+  tipoCambioUsd?: number | null;
   buildPaso1Data: () => Record<string, unknown>;
   mutations: StepMutations;
   /** v13.293.0 (P0): si se pasa, se llama en lugar de navegar tras guardar. */

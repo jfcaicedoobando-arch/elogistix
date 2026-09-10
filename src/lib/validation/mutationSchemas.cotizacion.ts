@@ -91,5 +91,11 @@ export const cotizacionUpdateSchema = cotizacionBaseSchema
     total: montoSchema("Total").optional(),
     iva: montoSchema("IVA").optional(),
     tipo_cambio: z.number().positive("Tipo de cambio: debe ser mayor a cero.").optional().nullable(),
+    // 13.823.281: TC congelado de la cotización mixta (USD/MXN).
+    tipo_cambio_usd: z
+      .number()
+      .positive("Tipo de cambio USD/MXN: debe ser mayor a cero.")
+      .optional()
+      .nullable(),
   })
   .passthrough();
