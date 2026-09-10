@@ -84,6 +84,23 @@ export function useDateTimePickerMxValor(value: string, onChange: (v: string) =>
     }
   };
 
+  /**
+   * Pegado tolerante (v13.823.290): el picker siempre toma el control para
+   * aceptar fecha con o sin hora, ISO, texto con ruido o sólo dígitos.
+   */
+  const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    e.preventDefault();
+    const pegado = e.clipboardData.getData("text");
+    if (!pegado.trim()) return;
+    const isoFecha = parseFlexible(pegado);
+    if (!isoFecha) { setInvalid(true); if (value) onChange(""); return; }
+    const h = pegado.match(/(\d{1,2}):(\d{2})/);
+    const hh = h ? Math.min(Number(h[1]), 23) : Number(HORA_DEFAULT.slice(0, 2));
+    const mi = h ? Math.min(Number(h[2]), 59) : 0;
+    emitir(`${isoFecha}T${String(hh).padStart(2, "0")}:${String(mi).padStart(2, "0")}`);
+  };
+
+
   const limpiar = () => {
     setText("");
     setInvalid(false);
