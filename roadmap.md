@@ -71,3 +71,5 @@
 - [x] /proformas oculta casilla de selección y acción de fusionar sin permiso de emisión
 - [x] Pruebas UI: sin permiso (vendedor/gerente comercial) vs con permiso (contador/operador)
 - [x] Cierre: versión, changelog, manifiesto; suites completas en GitHub Actions
+
+- [x] 13.823.279 — guard LC_PROFORMA_REQUIERE_ACEPTACION en convertir_proformas_a_factura + regresión SQL
