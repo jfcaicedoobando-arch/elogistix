@@ -1,5 +1,14 @@
 # Changelog
 
+## [13.823.286] - 2026-09-10
+- **ui(cotizaciones)**: los totales dejan de flotar sobre el contenido — `WizardTotalsBar` vive ahora dentro del pie del wizard, junto a Anterior/Siguiente, y se retiró el `pb-16` que reservaba aire.
+- **ui(cotizaciones, paso 2)**: en pantallas menores a `xl` (p. ej. 1108 px con barra lateral) se ocultan las columnas calculadas (Costo total, Venta total, Utilidad, Margen) y el pie de la tabla muestra un resumen compacto con las mismas cifras: la tabla cabe sin arrastrarse de lado.
+- **ui(cotizaciones)**: los campos de dinero se leen con formato al salir del campo (`6100` → `6,100.00`) vía `useNumericField({ formatDisplay })`; al enfocar vuelven a número plano. Sin cambios de parseo ni de momento de commit.
+- **ui(cotizaciones, paso 3)**: los renglones USD y MXN comparten cuadrícula (`columnasConcepto.ts`) con anchos explícitos — Unidad e IVA dejan de truncarse, el selector de IVA muestra el porcentaje (16%) y Subtotal/IVA sólo aparecen desde `xl`.
+- **ui(cotizaciones)**: las notas quedan cerradas por defecto en pasos 2 y 3 (el icono resaltado indica que hay nota) y el proveedor largo se lee al pasar el cursor.
+- Sin cambios en cálculos, IVA, tipo de cambio, guardado, RPCs, permisos ni base de datos.
+
+
 ## [13.823.285] - 2026-09-10
 - **fix(dashboard/cxp)**: la tarjeta "Utilidad MXN proyectada" mostraba utilidad de más (~17.9 M MXN) por 12 renglones de costo "Ajuste factura …" fantasma en 8 facturas de proveedor: el monto base del vínculo se congeló convertido a MXN y la factura quedó en USD, produciendo deltas imposibles (ELIMP00368: −546,777.68 USD sobre una factura de 34,400 USD). Se anularon con soft-delete y se retiró su puente; la utilidad proyectada del mes pasó a 618,128.02 MXN.
 - **fix(cxp)**: candado de magnitud en `crear_ajustes_factura_proveedor_rpc` — se rechaza (`LC_AJUSTE_DESPROPORCIONADO`) cualquier ajuste cuyo importe supere el total de la propia factura, aunque siga desplegada una versión vieja del front. Espejo en `supabase/schema/cxp/crear_ajustes_factura_proveedor_rpc.sql`.
