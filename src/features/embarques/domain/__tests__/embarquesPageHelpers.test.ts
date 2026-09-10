@@ -6,6 +6,7 @@ import {
   buildFullSetFilters,
   dedupePorExpediente,
   contenedoresPorExpediente,
+  buildEmbarquesDescription,
 } from "../embarquesPageHelpers";
 import type { EmbarqueRow } from "@/features/embarques/types/embarque";
 
@@ -102,5 +103,20 @@ describe("embarquesPageHelpers", () => {
     expect(out.organizationId).toBeNull();
     expect(out.search).toBe("");
     expect(out.fechaDesde).toBeUndefined();
+  });
+});
+
+describe("buildEmbarquesDescription", () => {
+  // Hallazgo P2 (13.823.270): "En Tránsito" con 1 expediente que tiene 2
+  // contenedores se anunciaba como "1 contenedor en 1 expediente".
+  it("con filtro de estado sólo cuenta expedientes", () => {
+    expect(buildEmbarquesDescription(1, true)).toBe("1 expediente");
+    expect(buildEmbarquesDescription(4, true)).toBe("4 expedientes");
+    expect(buildEmbarquesDescription(1, true)).not.toContain("contenedor");
+  });
+
+  it("sin filtro de estado conserva el conteo de embarques", () => {
+    expect(buildEmbarquesDescription(1, false)).toBe("1 embarque");
+    expect(buildEmbarquesDescription(7, false)).toBe("7 embarques");
   });
 });

@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.823.270] - 2026-09-10
+- **fix(embarques)**: el resumen del listado ya no llama "contenedores" al número de expedientes; con filtro por Estado muestra "N expedientes" (el número real de contenedores sigue visible por fila con el badge +N).
+
 ## [13.823.269] - 2026-09-10
 - **fix(embarques)**: con filtro por Estado (p. ej. Borrador) el pie de paginación ya usa el total filtrado — 4 expedientes muestran "Página 1 de 1 · 1–4 de 4" en lugar del total global; la tabla y la paginación dejan de contradecirse.
 
