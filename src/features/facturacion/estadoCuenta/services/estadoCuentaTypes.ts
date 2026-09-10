@@ -88,6 +88,8 @@ export type RawPago = {
   monto_aplicado_factura: number;
   forma_pago: string | null;
   referencia: string | null;
+  /** v13.823.295 — un pago con REP 'Cancelado' está anulado y no suma. */
+  estado_rep?: string | null;
   deleted_at: string | null;
 };
 
