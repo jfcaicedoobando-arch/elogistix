@@ -1,142 +1,51 @@
 /**
- * Movimiento bancario derivado de un cobro de factura de venta (v13.451.0).
+ * Movimiento bancario derivado de un cobro de factura de venta.
  *
- * Simétrico a `cxp/services/pagoProveedorMovimiento.ts`: cuando el usuario
- * indica en qué cuenta entró el dinero, se registra el **abono** conciliado en
- * `bbva_movimientos` para que el saldo del banco suba.
+ * Ola v17 — PUNTO ÚNICO DE ESCRITURA: el abono lo crea la RPC
+ * `asegurar_movimiento_cobro_factura`, idempotente (`ON CONFLICT`) y
+ * fail-closed en moneda (sin tipo de cambio no abona). Antes se insertaba
+ * directo desde el navegador con un "consulta y luego inserta" no atómico, y
+ * cualquier fallo se descartaba en silencio: el cobro quedaba guardado y el
+ * saldo del banco nunca subía.
  *
- * Nunca lanza: el cobro ya quedó guardado y no queremos revertirlo por un
- * fallo al registrar el movimiento.
+ * Ya NO se traga el error: el llamador recibe el motivo para avisar al usuario.
  */
 import { supabase } from "@/integrations/supabase/client";
-import type { TablesInsert } from "@/integrations/supabase/types";
-import { cargoEnMonedaCuenta } from "@/features/cxp/services";
-import { registrarActividad } from "@/services/bitacora/registrar";
 import { logger } from "@/lib/observability/logger";
-import type { Moneda } from "@/types/db";
 
-export interface MovimientoCobroInput {
-  pagoId: string;
-  facturaId: string;
-  cuentaBancariaId: string;
-  fechaPago: string;
-  monto: number;
-  moneda: Moneda;
-  /** TC MXN por 1 USD, para convertir cuando la cuenta usa otra moneda. */
-  tipoCambioUsd: number | null;
-  referencia?: string;
-  userId: string | null;
+export interface ResultadoMovimientoCobro {
+  /** `true` si el abono quedó registrado en el banco. */
+  ok: boolean;
+  /** Motivo cuando no se creó (`ya_existe`, `sin_cuenta_bancaria`, error de BD…). */
+  motivo?: string;
+  movimientoId?: string;
 }
 
-async function contextoFactura(
-  facturaId: string,
-): Promise<{ organizationId: string | null; concepto: string }> {
-  const { data } = await supabase
-    .from("facturas")
-    .select("organization_id, numero, cliente_nombre")
-    .eq("id", facturaId)
-    .maybeSingle();
-  const folio = data?.numero ?? "s/folio";
-  const nombre = data?.cliente_nombre || "cliente";
-  return {
-    organizationId: data?.organization_id ?? null,
-    concepto: `Cobro factura ${folio} — ${nombre}`,
-  };
+interface RespuestaRpc {
+  creado?: boolean;
+  motivo?: string;
+  movimiento_id?: string;
 }
 
 /**
- * EC-02 — Fail-closed: si la consulta falla no asumimos "MXN". Devolver una
- * moneda equivocada abonaría un cobro en USD como si fueran pesos.
- */
-async function monedaDeCuenta(cuentaId: string): Promise<string | null> {
-  const { data, error } = await supabase
-    .from("cuentas_bancarias")
-    .select("moneda")
-    .eq("id", cuentaId)
-    .maybeSingle();
-  if (error) throw error;
-  return data?.moneda ?? null;
-}
-
-/**
- * `true` si ya existe un movimiento vivo ligado a este cobro (evita duplicar).
- * EC-02 — un fallo de red/RLS ya NO se interpreta como "no existe": se propaga
- * para que el llamador no inserte un segundo movimiento por el mismo cobro.
- */
-async function yaExiste(pagoId: string): Promise<boolean> {
-  const { data, error } = await supabase
-    .from("bbva_movimientos")
-    .select("id")
-    .eq("pago_factura_id", pagoId)
-    .is("deleted_at", null)
-    .limit(1);
-  if (error) throw error;
-  return (data?.length ?? 0) > 0;
-}
-
-/**
- * Inserta el abono bancario del cobro. Devuelve `true` si se creó.
- * Nunca lanza hacia afuera: ante cualquier fallo se registra y se omite el
- * movimiento (mejor faltar un movimiento que duplicar dinero en el banco).
+ * Registra el abono bancario del cobro. Idempotente: si ya existe devuelve
+ * `ok: false` con motivo `ya_existe` (no duplica dinero en el banco).
  */
 export async function crearMovimientoBancarioCobro(
-  input: MovimientoCobroInput,
-): Promise<boolean> {
-  try {
-    return await insertarMovimientoCobro(input);
-  } catch (e) {
-    logger.warn("Cobro no abonado al banco: fallo al verificar el movimiento", {
-      pagoId: input.pagoId,
-      error: e instanceof Error ? e.message : String(e),
-    });
-    return false;
+  pagoId: string,
+): Promise<ResultadoMovimientoCobro> {
+  const { data, error } = await supabase.rpc("asegurar_movimiento_cobro_factura", {
+    p_pago_id: pagoId,
+  });
+  if (error) {
+    logger.warn("Cobro no abonado al banco", { pagoId, error: error.message });
+    return { ok: false, motivo: error.message };
   }
-}
-
-async function insertarMovimientoCobro(input: MovimientoCobroInput): Promise<boolean> {
-  if (await yaExiste(input.pagoId)) return false;
-  const [ctx, monedaCuenta] = await Promise.all([
-    contextoFactura(input.facturaId),
-    monedaDeCuenta(input.cuentaBancariaId),
-  ]);
-  if (!ctx.organizationId) return false;
-  // C4: sin TC oficial no inventamos conversión. Si la cuenta es de otra
-  // moneda, no se abona nada (mejor un movimiento faltante que un saldo falso).
-  if (monedaCuenta && monedaCuenta !== input.moneda && !(input.tipoCambioUsd && input.tipoCambioUsd > 0)) {
-    logger.warn("Cobro no abonado al banco: moneda de la cuenta distinta y sin TC oficial", {
-      pagoId: input.pagoId, monedaPago: input.moneda, monedaCuenta,
-    });
-    return false;
-  }
-
-  const payload: TablesInsert<"bbva_movimientos"> = {
-    organization_id: ctx.organizationId,
-    cuenta_bancaria_id: input.cuentaBancariaId,
-    fecha: input.fechaPago,
-    concepto: ctx.concepto,
-    referencia: input.referencia ?? "",
-    cargo: 0,
-    abono: cargoEnMonedaCuenta(input.monto, input.moneda, monedaCuenta, input.tipoCambioUsd),
-    hash_dedupe: `cobro-${input.pagoId}`,
-    estado_conciliacion: "Conciliado",
-    pago_factura_id: input.pagoId,
-    conciliado_por: input.userId,
-    conciliado_at: new Date().toISOString(),
-    importado_por: input.userId,
+  // SAFE-CAST: contrato jsonb de la RPC (creado / motivo / movimiento_id).
+  const res = (data ?? {}) as RespuestaRpc;
+  return {
+    ok: res.creado === true,
+    motivo: res.motivo,
+    movimientoId: res.movimiento_id,
   };
-  const { error } = await supabase.from("bbva_movimientos").insert(payload);
-  if (!error) {
-    await registrarActividad({
-      modulo: "facturacion",
-      accion: "Registró movimiento bancario de cobro",
-      entidadId: input.facturaId,
-      detalles: {
-        pago_id: input.pagoId,
-        monto: input.monto,
-        moneda: input.moneda,
-        cuenta_bancaria_id: input.cuentaBancariaId,
-      },
-    });
-  }
-  return !error;
 }
