@@ -43,10 +43,18 @@ export function FacturaNotasCreditoSeccion(props: Props) {
   const cancelar = useCancelarNotaCredito(facturaId);
 
   const { data: notas = [], isLoading } = useNotasCreditoDeFactura(facturaId);
+  const { data: pagos = [] } = usePagosFactura(facturaId);
 
   const conceptosSugeridos = useMemo(
     () => parseConceptosSugeridos(snapshotEmision),
     [snapshotEmision],
+  );
+
+  // Los cobros con REP cancelado no cuentan: el dinero se reversó, así que la
+  // NC se emite como si la factura siguiera sin cobrar (SAT: 15 Condonación).
+  const cobroVigente = useMemo(
+    () => pagos.find((p) => p.estado_rep !== "Cancelado"),
+    [pagos],
   );
 
   // Fail-closed: sin saldo confiable no se emiten NC (evita acreditar de más).
