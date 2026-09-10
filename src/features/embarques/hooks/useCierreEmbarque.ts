@@ -23,7 +23,10 @@ export function useValidacionCierre(embarqueId: string | undefined) {
     queryKey: KEYS.validacion(embarqueId),
     queryFn: () => validarCierre(embarqueId as string),
     enabled: Boolean(embarqueId),
-    staleTime: 15_000,
+    // v13.823.292 — el cierre automático puede cambiar el estado en segundos:
+    // la pestaña revalida al entrar para no ofrecer un botón obsoleto.
+    staleTime: 5_000,
+    refetchOnMount: "always",
   });
 }
 
