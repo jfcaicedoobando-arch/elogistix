@@ -96,7 +96,7 @@ export function useCotizacionWizardForm({ navigate, toast, userEmail, clientes, 
   // afecta el subtotal del encabezado en cotizaciones mixtas (no es un dato de
   // los datos generales ni participa en el autosave del paso 1).
   const [tipoCambioUsd, setTipoCambioUsd] = useState<number | null>(
-    Number(initialData?.tipo_cambio_usd ?? 0) > 0 ? Number(initialData?.tipo_cambio_usd) : null,
+    tcInicial(initialData?.tipo_cambio_usd),
   );
 
   const conceptos = useConceptosVentaCotizacion({ initialUSD, initialMXN });
