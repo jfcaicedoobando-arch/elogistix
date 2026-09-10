@@ -26,6 +26,8 @@ function makeMov(partial: Partial<MovimientoBBVA>): MovimientoBBVA {
     abono: 0,
     saldo: 0,
     hash_dedupe: "h",
+    // Ola v17: origen del movimiento (sistema vs. línea real del estado de cuenta).
+    origen: "estado_cuenta",
     estado_conciliacion: "Pendiente",
     pago_proveedor_id: null,
     pago_factura_id: null,
