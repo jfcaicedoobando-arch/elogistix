@@ -81,8 +81,9 @@ export function DateTimePickerMx({
           autoComplete="off"
           value={text}
           onChange={handleChange}
-          onFocus={() => seleccionarSegmentoEnCursor(inputRef.current, PATRON_FECHA_HORA)}
-          onClick={() => seleccionarSegmentoEnCursor(inputRef.current, PATRON_FECHA_HORA)}
+          onFocus={(e) => e.currentTarget.select()}
+          onPaste={handlePaste}
+
           onKeyDown={(e) => {
             if (e.key === "Escape" && open) {
               e.preventDefault();
