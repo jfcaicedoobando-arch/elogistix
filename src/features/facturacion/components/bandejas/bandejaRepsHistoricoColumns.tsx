@@ -102,17 +102,31 @@ export function buildRepsHistoricoColumns(o: Opts) {
       id: "acciones",
       header: "",
       enableSorting: false,
-      meta: { width: "w-[110px]", align: "right" },
+      meta: { width: "w-[150px]", align: "right" },
       cell: ({ row }) => {
         const id = row.original.id;
+        const enTramite = estadoRepHistorico(row.original) === "En cancelación";
         return (
           <div data-no-row-nav onClick={(e) => e.stopPropagation()} className="flex justify-end gap-1">
+            {enTramite && o.onActualizarSat && (
+              <Hint label="Actualizar estado ante el SAT">
+                <Button
+                  size="icon" variant="outline" className="h-8 w-8"
+                  loading={o.actualizando === id}
+                  onClick={() => o.onActualizarSat?.(id)}
+                  aria-label={`Actualizar estado ante el SAT del REP ${row.original.folio_rep}`}
+                >
+                  <RefreshCw className="size-4" />
+                </Button>
+              </Hint>
+            )}
             <Button
               size="icon" variant="outline" className="h-8 w-8"
               loading={o.descargando === `${id}:pdf`}
               onClick={() => o.onDescargar(id, "pdf")}
               aria-label={`Descargar PDF del REP ${row.original.folio_rep}`}
             >
+
               <FileDown className="size-4" />
             </Button>
             <Button
