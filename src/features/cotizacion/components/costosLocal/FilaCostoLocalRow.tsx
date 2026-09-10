@@ -1,7 +1,8 @@
+import { useState } from "react";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Trash2, PenLine } from "lucide-react";
+import { Trash2, PenLine, StickyNote } from "lucide-react";
 import { formatCurrency, formatNumber } from "@/lib/formatters";
 import { calcularUtilidad, calcularMargen } from "@/lib/financial/financialUtils";
 import { ProfitBadge } from "@/features/cotizacion/components/ProfitBadge";
@@ -12,6 +13,8 @@ import type { FilaCostoLocal } from "../SeccionCostosInternosPLUnificado";
 import { parseCantidad, cantidadFueraDeRango, CANTIDAD_LIMITE_SANIDAD } from "../../utils/parseInputNumero";
 import { useNumericField } from "@/features/cotizacion/hooks/useNumericField";
 import { filaCostoInvalida } from "@/features/cotizacion/domain/cotizacionVentaSync";
+import { COL_COSTO, COSTO_GRID_MIN_W } from "./columnasCosto";
+import { cn } from "@/lib/utils";
 
 interface Props {
   fila: FilaCostoLocal;
@@ -40,11 +43,20 @@ export function FilaCostoLocalRow({ fila, gi, moneda, onUpdate, onRemove }: Prop
   // venta y la cotización saldría en $0.00. Se marca y bloquea el avance.
   const conceptoFaltante = filaCostoInvalida(fila);
 
-  return (
-    <div className={`border-b border-border last:border-b-0 py-3 px-3 space-y-1 ${conceptoFaltante ? "bg-destructive/5" : ""}`}>
-      <div className="flex items-center gap-2">
-        <div className="min-w-[220px] flex-1">
+  // El campo de notas ya no vive abierto en cada renglón (hacía la tabla
+  // altísima): se abre a demanda y queda abierto si la fila ya trae notas.
+  const [notasAbiertas, setNotasAbiertas] = useState(false);
+  const mostrarNotas = notasAbiertas || !!fila.notas;
 
+  return (
+    <div
+      className={cn(
+        "border-b border-border last:border-b-0 py-2 px-3",
+        conceptoFaltante && "bg-destructive/5",
+      )}
+    >
+      <div className={cn("flex items-center gap-2", COSTO_GRID_MIN_W)}>
+        <div className={COL_COSTO.concepto}>
           {/* Combobox estricto contra `catalogo_claves_sat` — mismo origen que el paso 3. */}
           <ProductoServicioSelect
             value={fila.concepto}
@@ -69,84 +81,118 @@ export function FilaCostoLocalRow({ fila, gi, moneda, onUpdate, onRemove }: Prop
             }}
             placeholder="Selecciona concepto"
           />
+        </div>
+
+        <Input
+          value={fila.proveedor}
+          onChange={(e) => onUpdate(gi, "proveedor", e.target.value)}
+          className={cn("h-9 text-body", COL_COSTO.proveedor)}
+          placeholder="Proveedor"
+          aria-label="Proveedor"
+        />
+
+        <div className={COL_COSTO.unidad}>
+          <UnidadMedidaSelect
+            value={fila.unidad_medida}
+            onChange={(v) => onUpdate(gi, "unidad_medida", v)}
+          />
+        </div>
+
+        <Input
+          type="text" inputMode="decimal"
+          {...cantidadField}
+          aria-label="Cantidad"
+          aria-invalid={cantidadExcedida}
+          className={cn("h-9 text-body text-right", COL_COSTO.cantidad)}
+        />
+        <Input
+          type="text" inputMode="decimal"
+          {...costoField}
+          aria-label="Costo unitario"
+          className={cn("h-9 text-body text-right", COL_COSTO.costoUnitario)}
+        />
+        <Input
+          type="text" inputMode="decimal"
+          {...ventaField}
+          aria-label="Precio de venta"
+          className={cn("h-9 text-body text-right", COL_COSTO.ventaUnitaria)}
+        />
+
+        {/* Q-15.9 — importes por partida, ahora bajo su propio encabezado. */}
+        <span className={cn("text-body text-right tabular-nums", COL_COSTO.costoTotal)}>
+          {formatCurrency(costoTotal, moneda)}
+        </span>
+        <span className={cn("text-body text-right tabular-nums", COL_COSTO.ventaTotal)}>
+          {formatCurrency(ventaTotal, moneda)}
+        </span>
+        <span
+          className={cn(
+            "text-body font-medium text-right tabular-nums",
+            COL_COSTO.utilidad,
+            profit >= 0 ? "text-success" : "text-destructive",
+          )}
+        >
+          {formatCurrency(profit, moneda)}
+        </span>
+        <div className={cn("flex justify-center", COL_COSTO.margen)}>
+          <ProfitBadge porcentaje={pct} />
+        </div>
+
+        <div className={cn("flex items-center justify-end gap-1", COL_COSTO.acciones)}>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8"
+            aria-label={mostrarNotas ? "Ocultar notas" : "Agregar notas"}
+            aria-expanded={mostrarNotas}
+            onClick={() => setNotasAbiertas((v) => !v)}
+          >
+            <StickyNote className={cn("h-4 w-4", fila.notas ? "text-primary" : "text-muted-foreground")} />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8"
+            onClick={() => onRemove(gi)}
+            aria-label="Eliminar concepto"
+          >
+            <Trash2 className="h-4 w-4 text-destructive" />
+          </Button>
+        </div>
+      </div>
+
+      {(fila.concepto_libre || conceptoFaltante || cantidadExcedida) && (
+        <div className="mt-1 space-y-0.5">
           {fila.concepto_libre && (
             <p
-              className="mt-0.5 flex items-center gap-1 text-label text-warning"
+              className="flex items-center gap-1 text-label text-warning"
               data-testid={`concepto-libre-aviso-${gi}`}
             >
               <PenLine className="h-3 w-3" /> Concepto libre: se pedirá la clave SAT al facturar.
             </p>
           )}
           {conceptoFaltante && (
-            <p
-              className="mt-0.5 text-label text-destructive"
-              data-testid={`concepto-faltante-aviso-${gi}`}
-            >
+            <p className="text-label text-destructive" data-testid={`concepto-faltante-aviso-${gi}`}>
               Selecciona el concepto de este renglón; sin nombre no se genera el concepto de venta.
             </p>
           )}
+          {cantidadExcedida && (
+            <p className="text-label text-destructive">
+              Cantidad mayor a {formatNumber(CANTIDAD_LIMITE_SANIDAD)} — verifica el dato.
+            </p>
+          )}
         </div>
-        <Input value={fila.proveedor} onChange={e => onUpdate(gi, "proveedor", e.target.value)} className="h-9 text-body w-[120px]" placeholder="Proveedor" aria-label="Proveedor" />
-        <div className="w-[130px]">
-          <UnidadMedidaSelect
-            value={fila.unidad_medida}
-            onChange={(v) => onUpdate(gi, "unidad_medida", v)}
-          />
-        </div>
-      </div>
+      )}
 
-      <div className="flex items-center gap-2">
-        <div className="flex items-center gap-1">
-          <span className="text-body-sm text-muted-foreground">Cant.</span>
-          <Input
-            type="text" inputMode="decimal"
-            {...cantidadField}
-            aria-label="Cantidad"
-            aria-invalid={cantidadExcedida}
-            className="h-8 text-body text-right w-[80px]"
-          />
-        </div>
-        <div className="flex items-center gap-1">
-          <span className="text-body-sm text-muted-foreground">Costo</span>
-          <Input
-            type="text" inputMode="decimal"
-            {...costoField}
-            aria-label="Costo unitario"
-            className="h-8 text-body text-right w-[110px]"
-          />
-        </div>
-        <div className="flex items-center gap-1">
-          <span className="text-body-sm text-muted-foreground">Venta</span>
-          <Input
-            type="text" inputMode="decimal"
-            {...ventaField}
-            aria-label="Precio de venta"
-            className="h-8 text-body text-right w-[110px]"
-          />
-        </div>
-        {/* Q-15.9 — totales visibles por partida: el multiplicador queda explícito. */}
-        <span className="text-body-sm text-muted-foreground whitespace-nowrap">
-          {fila.cantidad} × costo = {formatCurrency(costoTotal, moneda)} · venta {formatCurrency(ventaTotal, moneda)}
-        </span>
-        {cantidadExcedida && (
-          <span className="text-label text-destructive whitespace-nowrap">
-            Cantidad mayor a {formatNumber(CANTIDAD_LIMITE_SANIDAD)} — verifica el dato.
-          </span>
-        )}
-        <span className={`text-body font-medium w-[100px] text-right ${profit >= 0 ? "text-success" : "text-destructive"}`}>
-          {formatCurrency(profit, moneda)}
-        </span>
-        <div className="w-[70px] flex justify-center"><ProfitBadge porcentaje={pct} /></div>
-        <Button variant="ghost" size="icon" className="min-h-11 min-w-11 md:h-8 md:w-8 md:min-h-0 md:min-w-0" onClick={() => onRemove(gi)} aria-label="Eliminar grupo">
-          <Trash2 className="h-4 w-4 text-destructive" />
-        </Button>
-      </div>
-      <Textarea
-        placeholder="Notas (opcional)"
-        value={fila.notas || ""}
-        onChange={e => onUpdate(gi, "notas", e.target.value)}
-        className="mt-1 text-body-sm h-8 resize-none focus:min-h-16 transition-[min-height]"
-      />
+      {mostrarNotas && (
+        <Textarea
+          placeholder="Notas (opcional)"
+          value={fila.notas || ""}
+          onChange={(e) => onUpdate(gi, "notas", e.target.value)}
+          aria-label="Notas del concepto"
+          className="mt-2 text-body-sm h-8 resize-none focus:min-h-16 transition-[min-height]"
+        />
+      )}
     </div>
   );
 }

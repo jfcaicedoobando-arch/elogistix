@@ -33,12 +33,13 @@ export default function ResumenPL({
       <CardContent className="p-4 space-y-2">
         <p className="text-body font-semibold text-primary">{moneda}</p>
         <div className="flex justify-between text-body">
-          <span className="text-muted-foreground">Total Costo</span>
-          <span>{formatCurrency(totales.totalCosto, moneda)}</span>
+          <span className="text-muted-foreground">Costo total</span>
+          <span className="tabular-nums">{formatCurrency(totales.totalCosto, moneda)}</span>
         </div>
         <div className="flex justify-between text-body">
-          <span className="text-muted-foreground">Total Venta</span>
-          <span>{formatCurrency(totales.totalVenta, moneda)}</span>
+          <span className="text-muted-foreground">Venta total</span>
+          <span className="tabular-nums">{formatCurrency(totales.totalVenta, moneda)}</span>
+
         </div>
         <div className="flex justify-between text-body font-semibold">
           <span>Utilidad</span>
@@ -60,7 +61,7 @@ export default function ResumenPL({
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2">
               <TrendingUp className="h-4 w-4 text-primary" />
-              Resumen P&L
+              Resumen de utilidad
               <div className="ml-auto flex items-center gap-2">
                 {mostrarRentabilidadGlobal && (
                   <RentabilidadGlobalBadge

@@ -6,7 +6,9 @@
  * `useWatch` por campo para evitar re-renders del wizard completo al teclear.
  */
 import { Info } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useWatch } from "react-hook-form";
+
 import SeccionConceptosVentaCotizacion from "@/features/cotizacion/components/SeccionConceptosVentaCotizacion";
 import SeccionCostosInternosPLUnificado from "@/features/cotizacion/components/SeccionCostosInternosPLUnificado";
 import PasoResumenCotizacion from "@/features/cotizacion/components/PasoResumenCotizacion";
@@ -53,8 +55,10 @@ export function CotizacionWizardSteps({ w, clientes, esMaritimo, sinDesgloseFlag
     );
   }
 
+  // Un solo marco: los pasos 2-4 ya no se encajonan en un contenedor más
+  // angosto que el paso 1; el ancho lo fija `WizardShell` (max-w-6xl).
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
+    <div className="space-y-6">
       {w.currentStep === 2 && (
         <SeccionCostosInternosPLUnificado
           tipo="local"
@@ -67,11 +71,14 @@ export function CotizacionWizardSteps({ w, clientes, esMaritimo, sinDesgloseFlag
         <>
           {sinDesgloseFlag && <SinDesgloseBanner onCargarCostos={irACargarCostos} />}
           {w.costosPreLlenados && !sinDesgloseFlag && (
-            <div className="flex items-center gap-2 p-3 rounded-md bg-info/10 border border-info/30 [color:hsl(var(--info))] text-body">
-              <Info className="h-4 w-4 flex-shrink-0" />
-              Pre-llenado desde Costos y utilidad. Puedes ajustar si es necesario.
-            </div>
+            <Alert variant="info">
+              <Info className="h-4 w-4" />
+              <AlertDescription>
+                Pre-llenado desde Costos y utilidad. Puedes ajustar si es necesario.
+              </AlertDescription>
+            </Alert>
           )}
+
           {hayMezclaMonedas && (
             <TipoCambioCotizacionCard value={w.tipoCambioUsd} onChange={w.setTipoCambioUsd} />
           )}
