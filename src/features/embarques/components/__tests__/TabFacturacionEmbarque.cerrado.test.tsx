@@ -34,10 +34,17 @@ vi.mock("../facturacion/HistorialFacturas", () => ({ HistorialFacturas: () => nu
 vi.mock("../DialogGenerarProforma", () => ({ DialogGenerarProforma: () => null }));
 vi.mock("../facturacion/DialogEliminarProforma", () => ({ DialogEliminarProforma: () => null }));
 
+// v13.823.278 — el permiso específico de proformas se controla en la prueba.
+const permisos = { canEditarProforma: true };
+vi.mock("@/hooks/shared", () => ({ usePermissions: () => permisos }));
+
 const embarqueBase = { id: "e1", estado: "En Tránsito" } as unknown as Tables<"embarques">;
 
 describe("TabFacturacionEmbarque — embarque cerrado", () => {
-  beforeEach(() => vi.clearAllMocks());
+  beforeEach(() => {
+    vi.clearAllMocks();
+    permisos.canEditarProforma = true;
+  });
 
   it("permite editar cuando el embarque no está cerrado", () => {
     render(<TabFacturacionEmbarque facturas={[]} canEdit embarque={embarqueBase} />);
@@ -59,5 +66,23 @@ describe("TabFacturacionEmbarque — embarque cerrado", () => {
     expect(screen.getByTestId("historial")).toHaveTextContent("false");
     expect(screen.getByText("Embarque cerrado")).toBeInTheDocument();
     expect(screen.queryByText("Generar proforma")).toBeNull();
+  });
+
+  /**
+   * v13.823.278 — vendedor y gerente comercial pueden ver el embarque
+   * (OPERATIONS) pero son sólo lectura en proformas (PROFORMAS_ESCRITURA).
+   */
+  it("sin permiso de proformas no ofrece generar ni eliminar", () => {
+    permisos.canEditarProforma = false;
+    render(<TabFacturacionEmbarque facturas={[]} canEdit embarque={embarqueBase} />);
+    expect(screen.getByTestId("resumen")).toHaveTextContent("false");
+    expect(screen.getByTestId("historial")).toHaveTextContent("false");
+    expect(screen.queryByText("Generar proforma")).toBeNull();
+  });
+
+  it("con permiso de proformas (contador/operador) sí ofrece generar", () => {
+    permisos.canEditarProforma = true;
+    render(<TabFacturacionEmbarque facturas={[]} canEdit embarque={embarqueBase} />);
+    expect(screen.getByText("Generar proforma")).toBeInTheDocument();
   });
 });
