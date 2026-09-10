@@ -52,8 +52,11 @@ export function applyMask(raw: string): string {
  *  - `1/`        → `01/`
  *  - `01/1`      → `01/1` (aún puede volverse `01/12`)
  *  - `01032026`  → `01/03/2026` (captura corrida, delega en `applyMask`)
+ *
+ * `pad = false` desactiva el cero a la izquierda: se usa cuando el cursor está
+ * a media captura y agregar dígitos desplazaría el caret (v13.823.290).
  */
-export function applyMaskTyping(raw: string): string {
+export function applyMaskTyping(raw: string, pad = true): string {
   const limpio = raw.replace(/[^\d/.-]/g, "");
   if (!/[/.-]/.test(limpio)) return applyMask(limpio);
   const trailing = /[/.-]$/.test(limpio);
@@ -63,11 +66,28 @@ export function applyMaskTyping(raw: string): string {
 
   const out = partes.map((p, i) => {
     const v = p.slice(0, i === 2 ? 4 : 2);
-    return i < 2 && i < cerradas ? v.padStart(2, "0") : v;
+    return pad && i < 2 && i < cerradas ? v.padStart(2, "0") : v;
   });
   const res = out.join("/") + (trailing && out.length < 3 ? "/" : "");
   return res.slice(0, 10);
 }
+
+/**
+ * Posición del caret dentro del texto enmascarado para conservar el mismo
+ * número de dígitos a la izquierda del cursor.
+ */
+export function caretTrasMascara(masked: string, digitosAntes: number): number {
+  if (digitosAntes <= 0) return 0;
+  let vistos = 0;
+  for (let i = 0; i < masked.length; i += 1) {
+    if (masked[i] >= "0" && masked[i] <= "9") {
+      vistos += 1;
+      if (vistos === digitosAntes) return i + 1;
+    }
+  }
+  return masked.length;
+}
+
 
 
 /** Parsea DD/MM/YYYY → ISO YYYY-MM-DD, o `null` si es inválido. */
