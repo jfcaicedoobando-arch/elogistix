@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.823.285] - 2026-09-10
+- **fix(dashboard/cxp)**: la tarjeta "Utilidad MXN proyectada" mostraba utilidad de más (~17.9 M MXN) por 12 renglones de costo "Ajuste factura …" fantasma en 8 facturas de proveedor: el monto base del vínculo se congeló convertido a MXN y la factura quedó en USD, produciendo deltas imposibles (ELIMP00368: −546,777.68 USD sobre una factura de 34,400 USD). Se anularon con soft-delete y se retiró su puente; la utilidad proyectada del mes pasó a 618,128.02 MXN.
+- **fix(cxp)**: candado de magnitud en `crear_ajustes_factura_proveedor_rpc` — se rechaza (`LC_AJUSTE_DESPROPORCIONADO`) cualquier ajuste cuyo importe supere el total de la propia factura, aunque siga desplegada una versión vieja del front. Espejo en `supabase/schema/cxp/crear_ajustes_factura_proveedor_rpc.sql`.
+- **fix(cxp)**: `crearAjustesFacturaProveedor` recibe `totalFactura` y descarta deltas desproporcionados, cerrando el hueco de los vínculos legacy sin `monedaBase`.
+- Sin cambios en el dashboard, costos originales, facturas, pagos, IVA ni estados.
+
+
 ## [13.823.284] - 2026-09-10
 - **ui(cotizaciones, paso 2)**: la tabla de costos ya cabe en pantalla. Anchos de columna recortados (`COSTO_GRID_MIN_W` 1240px → 1040px) para que Utilidad, Margen y las acciones no queden fuera de vista en 1440px con barra lateral; los importes se muestran sin prefijo de moneda repetido (la moneda vive en el título de la sección) y en una sola línea.
 - **ui(cotizaciones)**: el icono de moneda pasa al lado del título de la sección (`WizardSection` acepta `icon`) en lugar de flotar junto al botón "Agregar".
