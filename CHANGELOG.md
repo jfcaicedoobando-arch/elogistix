@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.823.293] - 2026-09-10
+- **fix(tesoreria)**: al cancelarse un REP ahora se reversa la entrada de dinero del cobro. Nueva `reversar_movimiento_cobro_rep_cancelado(uuid)` (SECURITY DEFINER, `search_path=public`, sólo `service_role`): si el movimiento lo generó el sistema (`hash_dedupe LIKE 'cobro-%'`) se hace soft-delete con motivo "REP cancelado: el cobro se anuló"; si es una línea real del estado de cuenta se desvincula el pago y vuelve a `Pendiente`. Todo queda en `bitacora_actividad`; no se tocan importes, fecha, saldo, cuenta ni organización.
+- **fix(tesoreria)**: trigger `trg_reversar_movimiento_rep_cancelado` (`AFTER UPDATE OF estado_rep ON pagos_factura`) aplica la reversa automáticamente al pasar a `Cancelado`.
+- **data(tesoreria)**: se reversaron las 21 entradas espejo de BBVA USD por 257,480.20 USD ligadas a REPs cancelados (INDIMEX TRADING, 31/08/2026). Facturas, pagos, IVA, comisiones y otras cuentas quedaron intactos.
+
+
 ## [13.823.292] - 2026-09-10
 - **fix(embarques)**: si el embarque ya se cerró (por ejemplo, con el cierre automático al liquidarse el último saldo) el botón "Cerrar embarque" ya no muestra un error rojo: `cerrarEmbarque` devuelve `{ yaCerrado: true }` y la UI avisa "Este embarque ya se cerró" y refresca candado, checklist e historial. Caso ELIMP00245 (cierre automático 31 s antes del clic).
 - **ui(embarques)**: `useValidacionCierre` revalida al entrar a la pestaña (`refetchOnMount: "always"`, `staleTime` 5 s) para no ofrecer un botón obsoleto.
