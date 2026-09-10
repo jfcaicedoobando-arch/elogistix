@@ -1,6 +1,9 @@
 /**
  * Estado y submit del `DialogCrearNotaCredito` — extraído del dialog
  * para respetar Power of 10 (archivos productivos ≤ 200 líneas).
+ *
+ * v13.823.297 — el uso del CFDI queda fijo en G02 (única clave SAT válida en
+ * un egreso) y la forma de pago se sugiere según el estado de cobro.
  */
 import { useEffect, useMemo, useState } from "react";
 import { format } from "date-fns";
@@ -16,12 +19,15 @@ import { notifyError } from "@/lib/ui/appFeedback";
 import { getErrorMessage } from "@/lib/errors/index";
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 import type { Tables } from "@/integrations/supabase/types";
+import { TASA_IVA } from "@/lib/financial/financialUtils";
 import {
-  TASA_IVA,
-  sumarMontos,
-  subtotalLinea,
-  calcularTotalConIVA,
-} from "@/lib/financial/financialUtils";
+  USO_CFDI_NC,
+  sugerirFormaPagoNC,
+  conceptoPorSaldo,
+  aplicarPorcentaje,
+  conceptosSeleccionados,
+} from "@/features/facturacion/utils/notaCreditoSugerencias";
+import { calcularTotalesNC } from "@/features/facturacion/utils/notaCreditoTotales";
 import { logger } from "@/lib/observability/logger";
 
 type Moneda = Tables<"factura_notas_credito">["moneda"];
@@ -51,6 +57,10 @@ interface Params {
   saldoFactura: number;
   uuidFacturaOriginal: string | null;
   conceptosSugeridos?: ConceptoNotaCredito[];
+  /** Hay al menos un cobro vigente (REP no cancelado) en la factura. */
+  facturaCobrada?: boolean;
+  /** Forma de pago SAT del cobro vigente más reciente. */
+  formaPagoCobro?: string | null;
 }
 
 export function useNotaCreditoDraft(p: Params) {
@@ -58,11 +68,15 @@ export function useNotaCreditoDraft(p: Params) {
   const qc = useQueryClient();
   const timbrar = useTimbrarNotaCredito(p.facturaId);
 
+  const sugerenciaPago = useMemo(
+    () => sugerirFormaPagoNC({ facturaCobrada: !!p.facturaCobrada, formaPagoCobro: p.formaPagoCobro }),
+    [p.facturaCobrada, p.formaPagoCobro],
+  );
+
   const [fecha, setFecha] = useState(format(new Date(), "yyyy-MM-dd"));
   const [motivo, setMotivo] = useState<Motivo>("Descuento");
   const [descripcion, setDescripcion] = useState("");
-  const [usoCfdi, setUsoCfdi] = useState("G02");
-  const [formaPago, setFormaPago] = useState("03");
+  const [formaPago, setFormaPago] = useState(sugerenciaPago.formaPago);
   const [conceptos, setConceptos] = useState<ConceptoNotaCredito[]>(() =>
     p.conceptosSugeridos?.length ? p.conceptosSugeridos.map((c) => ({ ...c })) : [makeConcepto()],
   );
@@ -71,31 +85,19 @@ export function useNotaCreditoDraft(p: Params) {
   useEffect(() => {
     if (p.open) {
       setConceptos(p.conceptosSugeridos?.length ? p.conceptosSugeridos.map((c) => ({ ...c })) : [makeConcepto()]);
+      setFormaPago(sugerenciaPago.formaPago);
     }
-  }, [p.open, p.conceptosSugeridos]);
+  }, [p.open, p.conceptosSugeridos, sugerenciaPago.formaPago]);
 
   // B-007 (v13.320.34): la NC debe reflejar el total con IVA para que iguale
-  // el saldo de la factura original. Antes: `Σ cantidad*precio` (sin IVA) — una
-  // NC "total" de $1,160 pedía teclear $1,000 y dejaba $160 fantasma en saldo.
-  // `tasa_iva` es fracción (0.16 por defecto en makeConcepto).
-  const monto = useMemo(
-    () =>
-      // M3: redondear por línea con el motor canónico antes de sumar; el
-      // flotante crudo podía rechazar NCs legítimas por epsilon o dejar
-      // centavos fantasma en el saldo (cf. B-007).
-      sumarMontos(
-        conceptos.map((c) => {
-          const base = subtotalLinea(Number(c.cantidad), Number(c.precio_unitario));
-          const tasa = Number.isFinite(Number(c.tasa_iva)) ? Number(c.tasa_iva) : 0;
-          return calcularTotalConIVA(base, tasa);
-        }),
-      ),
-    [conceptos],
-  );
+  // el saldo de la factura original.
+  const totales = useMemo(() => calcularTotalesNC(conceptos), [conceptos]);
+  const monto = totales.total;
 
   const excedeSaldo = monto > p.saldoFactura + 0.01;
   const facturaLiquidada = p.saldoFactura <= 0.01;
   const sinUuid = !p.uuidFacturaOriginal;
+  const saldoRestante = p.saldoFactura - monto;
   const conceptosValidos =
     conceptos.length > 0 &&
     conceptos.every((c) => c.descripcion.trim() && c.cantidad > 0 && c.precio_unitario >= 0);
@@ -120,6 +122,15 @@ export function useNotaCreditoDraft(p: Params) {
     !!descripcion.trim() ||
     conceptos.some((c) => c.descripcion.trim() !== "" || c.cantidad !== 1 || c.precio_unitario !== 0);
 
+  const aplicarSaldoCompleto = () =>
+    setConceptos([conceptoPorSaldo(p.saldoFactura, conceptos[0] ?? makeConcepto())]);
+  const aplicarDescuento = (porcentaje: number) =>
+    setConceptos((prev) => aplicarPorcentaje(prev, porcentaje));
+  const aplicarSeleccion = (indices: number[]) => {
+    const elegidos = conceptosSeleccionados(p.conceptosSugeridos ?? [], indices);
+    setConceptos(elegidos.length ? elegidos : [makeConcepto()]);
+  };
+
   const crearMut = useMutation({
     mutationFn: () => {
       // FIX-11: nunca sustituir TC ausente por 1 en monedas ≠ MXN — provoca cálculos MXN silenciosamente erróneos.
@@ -135,7 +146,7 @@ export function useNotaCreditoDraft(p: Params) {
         moneda: p.monedaFactura,
         tipo_cambio: tcNormalizado,
         fecha_emision: fecha,
-        uso_cfdi: usoCfdi,
+        uso_cfdi: USO_CFDI_NC,
         forma_pago: formaPago,
         conceptos,
       });
@@ -145,8 +156,6 @@ export function useNotaCreditoDraft(p: Params) {
       qc.invalidateQueries({ queryKey: facturasKeys.notasCreditoRecientes() });
     },
     onError: (err) => {
-      // `handleSubmit` ya notifica al usuario; el onError sólo satisface la
-      // regla de arquitectura y deja huella en consola para diagnóstico.
       logger.warn("useNotaCreditoDraft", "crearNotaCredito failed", getErrorMessage(err));
     },
   });
@@ -165,9 +174,7 @@ export function useNotaCreditoDraft(p: Params) {
       if (timbrarAhora && !sinUuid) await timbrar.mutateAsync(nueva.id);
       p.onOpenChange(false);
     } catch (err) {
-      // YG-05: el usuario nunca ve el código crudo `LC_*` (jerga interna); el
-      // catálogo de `getErrorMessage` lo traduce a español. El texto crudo
-      // queda sólo en observabilidad para diagnóstico.
+      // YG-05: el usuario nunca ve el código crudo `LC_*` (jerga interna).
       const rawMsg = err instanceof Error ? err.message : String(err ?? "");
       logger.warn("useNotaCreditoDraft", "handleSubmit failed", rawMsg);
       notifyError(undefined, {
@@ -176,8 +183,6 @@ export function useNotaCreditoDraft(p: Params) {
         method: "ON_ERROR",
         errorCode: ERROR_CODES.VALIDATION_FAILED,
       });
-
-
     } finally {
       setGuardando(false);
     }
@@ -185,9 +190,12 @@ export function useNotaCreditoDraft(p: Params) {
 
   return {
     fecha, setFecha, motivo, setMotivo, descripcion, setDescripcion,
-    usoCfdi, setUsoCfdi, formaPago, setFormaPago,
+    usoCfdi: USO_CFDI_NC,
+    formaPago, setFormaPago, explicacionFormaPago: sugerenciaPago.explicacion,
     conceptos, setConceptos,
-    monto, excedeSaldo, facturaLiquidada, sinUuid,
+    monto, totales, saldoRestante,
+    excedeSaldo, facturaLiquidada, sinUuid,
+    aplicarSaldoCompleto, aplicarDescuento, aplicarSeleccion,
     puedeGuardar, puedeTimbrar, guardando, handleSubmit,
     faltantesGuardar, faltantesTimbrar, isDirty,
   };

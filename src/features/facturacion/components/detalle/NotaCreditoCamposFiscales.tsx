@@ -1,17 +1,17 @@
 /**
- * Bloque de campos fiscales (fecha, motivo, uso CFDI, forma de pago,
- * descripción) para DialogCrearNotaCredito.
+ * Bloque de campos fiscales (fecha, motivo, forma de pago, descripción) para
+ * DialogCrearNotaCredito.
  *
- * v13.213.20 — se quitó el campo "Folio interno": el borrador arranca con
- * `BORRADOR-<ts>` y al timbrar FacturAPI es la fuente de verdad
- * (`<serie><folio>`), igual que en facturas.
+ * v13.823.297 — el uso del CFDI dejó de ser un desplegable: el SAT sólo acepta
+ * G02 en un egreso, así que se muestra como dato fijo. La forma de pago llega
+ * sugerida según si la factura ya se cobró, con su explicación.
  */
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { DatePickerMx } from "@/components/ui/date-picker-mx";
 import { todayLocalISO } from "@/lib/date/today";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { USOS_CFDI_SAT, FORMAS_PAGO_SAT } from "@/constants/catalogosSAT";
+import { FORMAS_PAGO_SAT } from "@/constants/catalogosSAT";
 import type { MotivoNotaCredito as Motivo } from "@/features/facturacion/types";
 
 const MOTIVOS: { value: Motivo; label: string }[] = [
@@ -29,19 +29,24 @@ interface Props {
   setFecha: (v: string) => void;
   motivo: Motivo;
   setMotivo: (m: Motivo) => void;
-  usoCfdi: string;
-  setUsoCfdi: (v: string) => void;
   formaPago: string;
   setFormaPago: (v: string) => void;
+  explicacionFormaPago: string;
   descripcion: string;
   setDescripcion: (v: string) => void;
+  /** Factura original relacionada (folio + UUID) para confirmar el vínculo. */
+  facturaNumero: string;
+  uuidFacturaOriginal: string | null;
 }
 
 export function NotaCreditoCamposFiscales(props: Props) {
-  const { fechaMinima, fecha, setFecha, motivo, setMotivo, usoCfdi, setUsoCfdi, formaPago, setFormaPago, descripcion, setDescripcion } = props;
+  const {
+    fechaMinima, fecha, setFecha, motivo, setMotivo, formaPago, setFormaPago,
+    explicacionFormaPago, descripcion, setDescripcion, facturaNumero, uuidFacturaOriginal,
+  } = props;
   return (
     <>
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <div className="space-y-1.5">
           <Label htmlFor="nc-fecha">Fecha *</Label>
           <DatePickerMx
@@ -56,31 +61,35 @@ export function NotaCreditoCamposFiscales(props: Props) {
           </p>
         </div>
         <div className="space-y-1.5">
-          <Label>Motivo SAT *</Label>
+          <Label>Motivo *</Label>
           <Select value={motivo} onValueChange={(v) => setMotivo(v as Motivo)}>
             <SelectTrigger><SelectValue /></SelectTrigger>
             <SelectContent>
               {MOTIVOS.map((m) => <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>)}
             </SelectContent>
           </Select>
+          <p className="text-label text-muted-foreground">Uso interno; no viaja al CFDI.</p>
         </div>
         <div className="space-y-1.5">
-          <Label>Uso CFDI *</Label>
-          <Select value={usoCfdi} onValueChange={setUsoCfdi}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
-            <SelectContent>
-              {USOS_CFDI_SAT.map((u) => <SelectItem key={u.value} value={u.value}>{u.label}</SelectItem>)}
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="space-y-1.5">
-          <Label>Forma de pago *</Label>
+          <Label htmlFor="nc-forma-pago">Forma de pago *</Label>
           <Select value={formaPago} onValueChange={setFormaPago}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectTrigger id="nc-forma-pago"><SelectValue /></SelectTrigger>
             <SelectContent>
               {FORMAS_PAGO_SAT.map((f) => <SelectItem key={f.value} value={f.value}>{f.label}</SelectItem>)}
             </SelectContent>
           </Select>
+          <p className="text-label text-muted-foreground">{explicacionFormaPago}</p>
+        </div>
+        <div className="space-y-1.5">
+          <Label>Datos fiscales fijos</Label>
+          <div className="rounded-md border bg-muted/40 px-3 py-2 text-label text-muted-foreground space-y-0.5">
+            <p>Uso del CFDI: <strong className="text-foreground">G02</strong> · Devoluciones, descuentos o bonificaciones</p>
+            <p>Método de pago: <strong className="text-foreground">PUE</strong> (los egresos no admiten parcialidades)</p>
+            <p className="truncate">
+              Relacionada con: <strong className="text-foreground">{facturaNumero}</strong>
+              {uuidFacturaOriginal ? ` · ${uuidFacturaOriginal}` : " · sin folio fiscal aún"}
+            </p>
+          </div>
         </div>
       </div>
 

@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useNotasCreditoDeFactura } from "@/features/facturacion/hooks/useNotasCreditoDeFactura";
+import { usePagosFactura } from "@/features/facturacion/hooks";
 import { DialogCrearNotaCredito } from "@/features/facturacion/components/DialogCrearNotaCredito";
 import { DialogEnviarCfdi } from "@/features/facturacion/components/DialogEnviarCfdi";
 import { DialogCancelarNotaCredito } from "@/features/facturacion/components/DialogCancelarNotaCredito";
@@ -43,10 +44,18 @@ export function FacturaNotasCreditoSeccion(props: Props) {
   const cancelar = useCancelarNotaCredito(facturaId);
 
   const { data: notas = [], isLoading } = useNotasCreditoDeFactura(facturaId);
+  const { data: pagos = [] } = usePagosFactura(facturaId);
 
   const conceptosSugeridos = useMemo(
     () => parseConceptosSugeridos(snapshotEmision),
     [snapshotEmision],
+  );
+
+  // Los cobros con REP cancelado no cuentan: el dinero se reversó, así que la
+  // NC se emite como si la factura siguiera sin cobrar (SAT: 15 Condonación).
+  const cobroVigente = useMemo(
+    () => pagos.find((p) => p.estado_rep !== "Cancelado"),
+    [pagos],
   );
 
   // Fail-closed: sin saldo confiable no se emiten NC (evita acreditar de más).
@@ -127,6 +136,8 @@ export function FacturaNotasCreditoSeccion(props: Props) {
         saldoFactura={saldoFactura}
         uuidFacturaOriginal={uuidFacturaOriginal}
         conceptosSugeridos={conceptosSugeridos}
+        facturaCobrada={!!cobroVigente}
+        formaPagoCobro={cobroVigente?.forma_pago ?? null}
       />
 
       <DialogEnviarCfdi

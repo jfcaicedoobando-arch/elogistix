@@ -9,9 +9,12 @@ import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { FormDialogCancelarBoton } from "@/components/shared/FormDialogCancelarBoton";
+import { formatCurrency } from "@/lib/formatters/numbers";
 import type { ConceptoNotaCredito } from "@/features/facturacion/services/notasCredito";
 import { NotaCreditoCamposFiscales } from "./detalle/NotaCreditoCamposFiscales";
 import { NotaCreditoConceptosEditor } from "./detalle/NotaCreditoConceptosEditor";
+import { NotaCreditoAtajos } from "./detalle/NotaCreditoAtajos";
+import { NotaCreditoResumen } from "./detalle/NotaCreditoResumen";
 import { FaltantesHint } from "./FaltantesHint";
 import { useNotaCreditoDraft, makeConcepto } from "../hooks/useNotaCreditoDraft";
 import type { MonedaNotaCredito as Moneda } from "@/features/facturacion/types";
@@ -29,12 +32,17 @@ interface Props {
   fechaFactura?: string | null;
   /** Conceptos sugeridos desde la factura original (snapshot). */
   conceptosSugeridos?: ConceptoNotaCredito[];
+  /** Hay cobros vigentes (REP no cancelado) en la factura. */
+  facturaCobrada?: boolean;
+  /** Forma de pago SAT del cobro vigente más reciente. */
+  formaPagoCobro?: string | null;
 }
 
 export function DialogCrearNotaCredito(props: Props) {
   const s = useNotaCreditoDraft(props);
   const {
     open, onOpenChange, facturaNumero, monedaFactura, saldoFactura, fechaFactura,
+    uuidFacturaOriginal, conceptosSugeridos = [],
   } = props;
 
   const footer = (
@@ -63,7 +71,7 @@ export function DialogCrearNotaCredito(props: Props) {
       description={
         <>
           Saldo de la factura:{" "}
-          <strong className="tabular-nums">{saldoFactura.toFixed(2)} {monedaFactura}</strong>
+          <strong className="tabular-nums">{formatCurrency(saldoFactura, monedaFactura)}</strong>
         </>
       }
       size="lg"
@@ -88,20 +96,18 @@ export function DialogCrearNotaCredito(props: Props) {
         </Alert>
       )}
 
-      <NotaCreditoCamposFiscales
-        fechaMinima={fechaFactura}
-        fecha={s.fecha} setFecha={s.setFecha}
-        motivo={s.motivo} setMotivo={s.setMotivo}
-        usoCfdi={s.usoCfdi} setUsoCfdi={s.setUsoCfdi}
-        formaPago={s.formaPago} setFormaPago={s.setFormaPago}
-        descripcion={s.descripcion} setDescripcion={s.setDescripcion}
+      <NotaCreditoAtajos
+        saldoFactura={saldoFactura}
+        monedaFactura={monedaFactura}
+        conceptosSugeridos={conceptosSugeridos}
+        onSaldoCompleto={s.aplicarSaldoCompleto}
+        onDescuento={s.aplicarDescuento}
+        onSeleccion={s.aplicarSeleccion}
       />
 
       <NotaCreditoConceptosEditor
         conceptos={s.conceptos}
-        monto={s.monto}
         monedaFactura={monedaFactura}
-        excedeSaldo={s.excedeSaldo}
         onAdd={() => s.setConceptos((p) => [...p, makeConcepto()])}
         onUpdate={(i, patch) =>
           s.setConceptos((prev) => prev.map((c, idx) => (idx === i ? { ...c, ...patch } : c)))
@@ -109,6 +115,25 @@ export function DialogCrearNotaCredito(props: Props) {
         onRemove={(i) =>
           s.setConceptos((prev) => (prev.length > 1 ? prev.filter((_, idx) => idx !== i) : prev))
         }
+      />
+
+      <NotaCreditoResumen
+        totales={s.totales}
+        saldoFactura={saldoFactura}
+        saldoRestante={s.saldoRestante}
+        monedaFactura={monedaFactura}
+        excedeSaldo={s.excedeSaldo}
+      />
+
+      <NotaCreditoCamposFiscales
+        fechaMinima={fechaFactura}
+        fecha={s.fecha} setFecha={s.setFecha}
+        motivo={s.motivo} setMotivo={s.setMotivo}
+        formaPago={s.formaPago} setFormaPago={s.setFormaPago}
+        explicacionFormaPago={s.explicacionFormaPago}
+        descripcion={s.descripcion} setDescripcion={s.setDescripcion}
+        facturaNumero={facturaNumero}
+        uuidFacturaOriginal={uuidFacturaOriginal}
       />
     </FormDialogShell>
   );

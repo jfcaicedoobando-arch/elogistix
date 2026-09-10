@@ -54,6 +54,8 @@ export interface FacturapiNcPayload {
   serie?: string;
   use: string;
   payment_form: string;
+  /** Los CFDI de egreso no admiten parcialidades: siempre PUE. */
+  payment_method: "PUE";
   currency: string;
   exchange?: number;
   /** Ola 4 · N1 — tag de correlación PENDING:<uuid>. */
@@ -151,6 +153,8 @@ export function buildNcPayload(ctx: NotaCreditoContext): FacturapiNcPayload {
     type: "E",
     use: ctx.uso_cfdi,
     payment_form: ctx.forma_pago,
+    // Guía de llenado del SAT: un egreso no admite parcialidades ni REP.
+    payment_method: "PUE",
     currency: ctx.moneda,
     related: [ctx.uuid_factura_relacionada],
     relationship: "01",
