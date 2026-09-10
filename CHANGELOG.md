@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.823.291] - 2026-09-10
+- **fix(embarques)**: `validar_cierre_embarque` respeta `resolver_sin_comision`: si el embarque está excluido de comisión (override propio o cliente marcado `sin_comision`), el check `comisiones_definitivas` ya no bloquea y reporta `detalle.sin_comision`. Antes el checklist se veía completo (la UI pinta esos puntos en gris y los excluye del conteo) mientras el candado contaba una comisión huérfana — ELIMP00298 no podía cerrarse.
+- **fix(embarques)**: la comisión atorada de ELIMP00298 (`7e510f4f…`, nota "Sin vendedora asignada al embarque") se recalculó con `calcular_comision_pago` y quedó `Cancelada` / 0 MXN con nota "Embarque excluido de comisión"; no se borró el registro ni se tocó el pago, la factura ni los importes.
+- **ui(embarques)**: `calcularReglasNoAplica` también toma `detalle.sin_comision` de la validación, para que el gris "No aplica" sea consistente aunque el hook de exclusión no haya cargado.
+
+
+
 ## [13.823.290] - 2026-09-10
 - **fix(ui)**: `DatePickerMx` ya permite teclear la fecha corrida sobre una fecha existente — al enfocar se selecciona todo el texto, la máscara pasa los dígitos excedentes al siguiente segmento (`13/032` → `13/03/2`) y se conserva la posición del cursor a media captura (`caretTrasMascara`); se quitó `maxLength` que descartaba dígitos.
 - **fix(ui)**: `-`, `_`, `+` y `=` dejaron de ser atajos de ±1 día en los pickers MX: son separadores válidos (`13-03-2026`). Subir/bajar queda en `↑`/`↓`, `Re Pág`/`Av Pág` y `T` = hoy.
