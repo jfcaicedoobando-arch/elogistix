@@ -136,6 +136,8 @@ export function FacturaNotasCreditoSeccion(props: Props) {
         saldoFactura={saldoFactura}
         uuidFacturaOriginal={uuidFacturaOriginal}
         conceptosSugeridos={conceptosSugeridos}
+        facturaCobrada={!!cobroVigente}
+        formaPagoCobro={cobroVigente?.forma_pago ?? null}
       />
 
       <DialogEnviarCfdi
