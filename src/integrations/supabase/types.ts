@@ -9064,6 +9064,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      auditar_consistencia_cobranza: { Args: never; Returns: Json }
       auditoria_capturar_snapshot: {
         Args: { p_organization_id: string }
         Returns: string
