@@ -35,6 +35,14 @@ export interface CrearAjustesInput {
   proveedorId: string;
   proveedorNombre: string;
   vinculos: Record<string, VinculoLinea>;
+  /**
+   * Total de la factura en su propia moneda. Un ajuste nace de la diferencia
+   * contra ESTA factura, así que jamás puede excederla: si lo hace, la base
+   * congelada estaba en otra moneda (ELIMP00368: −546,777.68 USD sobre una
+   * factura de 34,400 USD). Sirve de candado para vínculos legacy que no
+   * declaran `monedaBase`. La RPC valida lo mismo en el servidor.
+   */
+  totalFactura?: number;
 }
 
 export interface CrearAjustesResult {
