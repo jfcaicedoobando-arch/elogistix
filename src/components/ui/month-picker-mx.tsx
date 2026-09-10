@@ -65,8 +65,9 @@ export function MonthPickerMx({
           autoComplete="off"
           value={text}
           onChange={handleChange}
-          onFocus={() => seleccionarSegmentoEnCursor(inputRef.current, PATRON_PERIODO)}
-          onClick={() => seleccionarSegmentoEnCursor(inputRef.current, PATRON_PERIODO)}
+          onFocus={(e) => e.currentTarget.select()}
+          onPaste={handlePaste}
+
           onKeyDown={(e) => {
             if (e.key === "Escape" && open) {
               e.preventDefault();
