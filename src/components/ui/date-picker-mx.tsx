@@ -94,7 +94,6 @@ export function DatePickerMx({
           // v13.823.290 — al enfocar se selecciona TODO: el primer dígito
           // reinicia la captura y se puede teclear la fecha corrida encima.
           onFocus={() => inputRef.current?.select()}
-          onClick={() => seleccionarSegmentoEnCursor(inputRef.current, PATRON_FECHA)}
 
           onKeyDown={(e) => {
             const consumida = manejarTeclaFecha(e, {
