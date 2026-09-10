@@ -11,6 +11,8 @@ import { ResponsiveDataTable } from "@/components/shared/dataTable/ResponsiveDat
 import { useClientPagedList } from "@/hooks/shared/useClientPagedList";
 import { useRepsHistorico, type FilaRepHistorico } from "@/features/facturacion/hooks/useBandejas";
 import { descargarCfdiFacturapi } from "@/features/facturacion/services/descargarCfdiFacturapi";
+import { useConsultarRep } from "@/features/facturacion/hooks/useConsultarRep";
+
 import { notifyError } from "@/lib/ui/appFeedback";
 import { BandejaShell } from "./BandejaShell";
 import { buildRepsHistoricoColumns, estadoRepHistorico } from "./bandejaRepsHistoricoColumns";
@@ -19,7 +21,9 @@ import { formatCurrency, formatDate, toTitleCase } from "@/lib/formatters";
 
 export function BandejaRepsHistorico() {
   const { data, isLoading, isError, refetch } = useRepsHistorico();
+  const consultar = useConsultarRep();
   const [descargando, setDescargando] = useState<string | null>(null);
+
 
   const descargar = useCallback(async (pagoId: string, tipo: "pdf" | "xml") => {
     setDescargando(`${pagoId}:${tipo}`);
@@ -39,9 +43,15 @@ export function BandejaRepsHistorico() {
   }, []);
 
   const columns = useMemo(
-    () => buildRepsHistoricoColumns({ onDescargar: (id, tipo) => void descargar(id, tipo), descargando }),
-    [descargar, descargando],
+    () => buildRepsHistoricoColumns({
+      onDescargar: (id, tipo) => void descargar(id, tipo),
+      descargando,
+      onActualizarSat: (id) => consultar.mutate(id),
+      actualizando: consultar.isPending ? consultar.variables ?? null : null,
+    }),
+    [descargar, descargando, consultar],
   );
+
 
   const paged = useClientPagedList<FilaRepHistorico>({
     data,

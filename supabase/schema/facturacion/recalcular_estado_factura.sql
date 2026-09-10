@@ -24,9 +24,11 @@ BEGIN
 
   v_saldo := public.saldo_factura(v_factura_id);
 
+  -- v13.823.287: los pagos con REP cancelado estan anulados y no cuentan.
   SELECT COALESCE(SUM(monto_aplicado_factura), 0) INTO v_pagado
   FROM pagos_factura
-  WHERE factura_id = v_factura_id AND deleted_at IS NULL;
+  WHERE factura_id = v_factura_id AND deleted_at IS NULL
+    AND COALESCE(estado_rep, '') <> 'Cancelado';
 
   IF v_saldo <= 0.01 THEN
     v_nuevo_estado := 'Pagada';

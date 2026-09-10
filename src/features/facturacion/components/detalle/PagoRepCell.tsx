@@ -2,12 +2,15 @@
  * PagoRepCell — celda de estado/acciones del REP para el historial de pagos.
  * Extraído de `FacturaPagosSection` (Power of 10: ≤200 líneas).
  * v13.308.13 · Añade reintentar timbrado cuando el REP quedó en "Error".
+ * v13.823.287 · Muestra "Cancelación en trámite" y permite actualizar el
+ * estado ante el SAT sin esperar el cron de reconciliación.
  */
-import { Eye, RotateCw } from "lucide-react";
+import { Eye, RotateCw, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FacturaDownloadButton } from "@/features/facturacion/components/FacturaDownloadButton";
 import { CfdiEstadoBadge } from "@/features/facturacion/components/CfdiEstadoBadge";
 import { useTimbrarRep } from "@/features/facturacion/hooks";
+import { useConsultarRep } from "@/features/facturacion/hooks/useConsultarRep";
 import { Hint } from "@/components/shared/Hint";
 
 interface Props {
@@ -16,14 +19,38 @@ interface Props {
   estadoRep: string | null;
   serieRep: string | null;
   folioRep: number | string | null;
+  cancellationStatus?: string | null;
   onPreview: (pagoId: string, label: string) => void;
 }
 
-export function PagoRepCell({ pagoId, facturaId, estadoRep, serieRep, folioRep, onPreview }: Props) {
+export function PagoRepCell({
+  pagoId, facturaId, estadoRep, serieRep, folioRep, cancellationStatus, onPreview,
+}: Props) {
   const repTimbrado = estadoRep === "Timbrado" && folioRep != null;
   const repCancelado = estadoRep === "Cancelado";
   const repError = estadoRep === "Error";
+  const enTramite = ["pending", "verifying"].includes((cancellationStatus ?? "").toLowerCase());
   const timbrar = useTimbrarRep(facturaId);
+  const consultar = useConsultarRep(facturaId);
+
+  if (enTramite && !repCancelado) {
+    return (
+      <div className="flex items-center gap-1.5">
+        <CfdiEstadoBadge tono="borrador">Cancelación en trámite</CfdiEstadoBadge>
+        <Hint label="Actualizar estado ante el SAT">
+          <Button
+            variant="outline" size="icon" className="min-h-11 min-w-11 md:h-6 md:w-6 md:min-h-0 md:min-w-0"
+            aria-label="Actualizar estado ante el SAT"
+            disabled={consultar.isPending}
+            onClick={(e) => { e.stopPropagation(); consultar.mutate(pagoId); }}
+          >
+            <RefreshCw className={`h-3 w-3 ${consultar.isPending ? "animate-spin" : ""}`} />
+          </Button>
+        </Hint>
+      </div>
+    );
+  }
+
 
   if (repTimbrado) {
     const label = `${serieRep ?? ""}${folioRep}`;

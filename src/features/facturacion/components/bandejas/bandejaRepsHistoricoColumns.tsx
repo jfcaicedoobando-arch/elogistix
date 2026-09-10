@@ -5,7 +5,8 @@
  */
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { FileDown, FileCode } from "lucide-react";
+import { FileDown, FileCode, RefreshCw } from "lucide-react";
+
 import { defineColumns } from "@/components/shared/DataTable";
 import { Hint } from "@/components/shared/Hint";
 
@@ -25,7 +26,11 @@ export function estadoRepHistorico(r: Pick<FilaRepHistorico, "rep_cancellation_s
 interface Opts {
   onDescargar: (pagoId: string, tipo: "pdf" | "xml") => void;
   descargando: string | null;
+  /** v13.823.287 — refresco manual del estatus ante el SAT (cancelaciones en trámite). */
+  onActualizarSat?: (pagoId: string) => void;
+  actualizando?: string | null;
 }
+
 
 export function buildRepsHistoricoColumns(o: Opts) {
   return defineColumns<FilaRepHistorico>([
@@ -97,17 +102,31 @@ export function buildRepsHistoricoColumns(o: Opts) {
       id: "acciones",
       header: "",
       enableSorting: false,
-      meta: { width: "w-[110px]", align: "right" },
+      meta: { width: "w-[150px]", align: "right" },
       cell: ({ row }) => {
         const id = row.original.id;
+        const enTramite = estadoRepHistorico(row.original) === "En cancelación";
         return (
           <div data-no-row-nav onClick={(e) => e.stopPropagation()} className="flex justify-end gap-1">
+            {enTramite && o.onActualizarSat && (
+              <Hint label="Actualizar estado ante el SAT">
+                <Button
+                  size="icon" variant="outline" className="h-8 w-8"
+                  loading={o.actualizando === id}
+                  onClick={() => o.onActualizarSat?.(id)}
+                  aria-label={`Actualizar estado ante el SAT del REP ${row.original.folio_rep}`}
+                >
+                  <RefreshCw className="size-4" />
+                </Button>
+              </Hint>
+            )}
             <Button
               size="icon" variant="outline" className="h-8 w-8"
               loading={o.descargando === `${id}:pdf`}
               onClick={() => o.onDescargar(id, "pdf")}
               aria-label={`Descargar PDF del REP ${row.original.folio_rep}`}
             >
+
               <FileDown className="size-4" />
             </Button>
             <Button

@@ -23,7 +23,8 @@ LANGUAGE sql STABLE SET search_path TO 'public' AS $function$
       f.estado::text AS estado, f.cliente_nombre, f.tipo_cambio AS factura_tc,
       COALESCE(f.cancellation_status, 'none') AS cancellation_status,
       COALESCE((SELECT SUM(pf.monto_aplicado_factura) FROM public.pagos_factura pf
-                 WHERE pf.factura_id=f.id AND pf.deleted_at IS NULL),0) AS pagado,
+                 WHERE pf.factura_id=f.id AND pf.deleted_at IS NULL
+                   AND COALESCE(pf.estado_rep, '') <> 'Cancelado'),0) AS pagado,
       COALESCE((
         SELECT SUM(
           CASE

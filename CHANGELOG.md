@@ -1,5 +1,14 @@
 # Changelog
 
+## [13.823.287] - 2026-09-10
+- **fix(facturación)**: un pago cuyo REP fue cancelado ante el SAT queda **anulado**: deja de contar en `saldo_factura`, `saldo_factura_bruto`, `recalcular_estado_factura`, `cartera_pendiente`, `cxc_aging_clientes`, `direccion_totales` y `portal_factura_resumen_saldo`. Las facturas dejan de mostrarse "Pagada" con el único cobro cancelado (21 facturas históricas recalculadas sin tocar importes ni comprobantes).
+- **fix(comisiones)**: `calcular_comision_pago` trata el pago con REP cancelado igual que un pago eliminado — comisión `Cancelada`, o `Por recuperar` si ya se había liquidado.
+- **fix(facturación)**: el candado de sobrepago y la regla PUE de una sola exhibición ignoran los pagos anulados, para poder registrar el cobro de reemplazo con REP nuevo.
+- **ui(facturación)**: el historial de pagos marca "Anulado" (importe atenuado, aplicado en 0) y muestra "Cancelación en trámite" con botón **Actualizar estado ante el SAT**; la bandeja histórica de REPs gana el mismo botón sin esperar el cron de 30 min.
+- Sin borrar pagos, facturas ni complementos: el antecedente fiscal (UUID, folio, fecha y motivo de cancelación) se conserva.
+
+
+
 ## [13.823.286] - 2026-09-10
 - **ui(cotizaciones)**: los totales dejan de flotar sobre el contenido — `WizardTotalsBar` vive ahora dentro del pie del wizard, junto a Anterior/Siguiente, y se retiró el `pb-16` que reservaba aire.
 - **ui(cotizaciones, paso 2)**: en pantallas menores a `xl` (p. ej. 1108 px con barra lateral) se ocultan las columnas calculadas (Costo total, Venta total, Utilidad, Margen) y el pie de la tabla muestra un resumen compacto con las mismas cifras: la tabla cabe sin arrastrarse de lado.
