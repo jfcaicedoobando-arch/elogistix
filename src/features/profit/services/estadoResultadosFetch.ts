@@ -80,10 +80,16 @@ export async function fetchFacturasMes(orgId: string | null, desde: string, hast
     .select("id, expediente, subtotal, moneda, fecha_emision, timbrado_en, tipo_cambio")
     // EERR-FISCAL (v13.823.247): el mes se decide por la fecha de certificación
     // ante el SAT (`timbrado_en`, hora MX) cuando existe; `fecha_emision` es la
-    // fecha capturada antes de enviar al PAC y puede quedar en otro día. Se
-    // consulta con holgura y se filtra por la fecha fiscal.
-    .gte("fecha_emision", corre(desde, -HOLGURA_DIAS))
-    .lte("fecha_emision", corre(hasta, HOLGURA_DIAS))
+    // fecha capturada antes de enviar al PAC y puede quedar en otro día.
+    // EERR-HUECO (v13.823.263): una factura capturada días antes y timbrada ya
+    // dentro del mes (p. ej. captura 25-ago, timbre 3-sep) quedaba huérfana:
+    // fuera de la holgura de emisión de septiembre y fuera de agosto por su
+    // fecha fiscal. La consulta cubre AMBOS orígenes: emisión con holgura o
+    // timbrado dentro del mes; el filtro en memoria por fecha fiscal decide.
+    .or(
+      `and(fecha_emision.gte.${corre(desde, -HOLGURA_DIAS)},fecha_emision.lte.${corre(hasta, HOLGURA_DIAS)}),` +
+        `and(timbrado_en.gte.${desde}T00:00:00Z,timbrado_en.lte.${hasta}T23:59:59.999Z)`,
+    )
     // Excluye Cancelada y Sustituida: ambas dejan de ser CFDI vigentes y no
     // deben sumar en el EERR devengado. Ref: FACTURA_ESTADOS_VIVOS.
     .in("estado", [...FACTURA_ESTADOS_VIVOS])
