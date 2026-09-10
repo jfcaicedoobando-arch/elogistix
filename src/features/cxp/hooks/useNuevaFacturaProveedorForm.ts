@@ -100,7 +100,7 @@ export function useNuevaFacturaProveedorForm(
   };
 
   const { toggleVinculo, setVinculoMonto, aplicarSugerencias, limpiarVinculos } =
-    crearAccionesVinculos(setVinculos);
+    crearAccionesVinculos(setVinculos, () => values.moneda);
 
   const reset = () => {
     setValues(initialValues());
@@ -121,6 +121,9 @@ export function useNuevaFacturaProveedorForm(
     organizationId,
     setValues, setErrors, setPendingCfdi, setCfdiConceptos,
     setAskCrearProv, setTcOrigen, setTcFechaAplicada, manualTcRef,
+    // Si el documento (XML o PDF con IA) trae otra moneda, lo ya marcado quedó
+    // congelado en la moneda anterior: se limpia para que no genere ajustes.
+    monedaActual: values.moneda, setVinculos,
   };
   const handleCfdiParsed = async (data: CfdiParsedResponse, files: { xml: File; pdf: File | null }) => {
     setCfdiDuplicado(null);
