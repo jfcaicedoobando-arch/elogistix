@@ -25,15 +25,19 @@ interface Props {
   tipo: string;
   totalUSD: number;
   totalMXN: number;
+  /** Sólo cambia el texto del aviso final (crear borrador vs. guardar cambios). */
+  esEdicion?: boolean;
 }
+
 
 const DATO = (label: string, valor: string) => ({ label, valor });
 
 export default function PasoResumenCotizacion({
   plUSD, plMXN, tieneCostosUSD, tieneCostosMXN,
   nombreCliente, origen, destino, numContenedores,
-  modo, incoterm, tipo, totalUSD, totalMXN,
+  modo, incoterm, tipo, totalUSD, totalMXN, esEdicion = false,
 }: Props) {
+
   const datos = [
     DATO("Cliente", nombreCliente || "—"),
     DATO("Ruta", `${origen || "—"} → ${destino || "—"}`),
@@ -76,10 +80,16 @@ export default function PasoResumenCotizacion({
         </div>
       </WizardSection>
 
-      <Alert variant="warning">
+      {/* Aviso informativo, no una advertencia: sólo dice qué pasará al guardar. */}
+      <Alert variant="info">
         <Info className="h-4 w-4" />
-        <AlertDescription>La cotización se guardará en estado Borrador.</AlertDescription>
+        <AlertDescription>
+          {esEdicion
+            ? "Se guardarán los cambios de esta cotización."
+            : "La cotización se guardará en estado Borrador."}
+        </AlertDescription>
       </Alert>
+
     </div>
   );
 }

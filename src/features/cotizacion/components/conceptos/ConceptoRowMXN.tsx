@@ -1,10 +1,11 @@
-import { memo } from "react";
+import { memo, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { Trash2 } from "lucide-react";
+import { Trash2, StickyNote } from "lucide-react";
+
 import type { ConceptoVentaCotizacion } from "@/features/cotizacion/hooks";
 import { formatCurrency } from "@/lib/formatters";
 import { calcularIVA, resolverTasaConcepto, TASAS_IVA_MX } from "@/lib/financial/financialUtils";
@@ -37,6 +38,11 @@ export const ConceptoRowMXN = memo(function ConceptoRowMXN({
   const subtotal = c.cantidad * c.precio_unitario;
   const tasaFila = resolverTasaConcepto(c, tasaIva);
   const iva = calcularIVA(subtotal, tasaFila);
+  // Notas a demanda (mismo patrón que el paso 2): la lista deja de ser altísima.
+  const [notasAbiertas, setNotasAbiertas] = useState(false);
+  const mostrarNotas = notasAbiertas || !!c.notas;
+
+
 
   return (
     <div className={`grid grid-cols-12 gap-2 items-end rounded-md px-1 py-1 ${tasaFila > 0 ? 'bg-warning/5' : ''}`}>
@@ -59,7 +65,7 @@ export const ConceptoRowMXN = memo(function ConceptoRowMXN({
         />
       </div>
       <div className="col-span-2 min-w-0">
-        {i === 0 && <Label size="sm">P. Unitario (MXN)</Label>}
+        {i === 0 && <Label size="sm">Venta unit. (MXN)</Label>}
         <Input
           type="text"
           inputMode="decimal"
@@ -82,9 +88,19 @@ export const ConceptoRowMXN = memo(function ConceptoRowMXN({
           </SelectContent>
         </Select>
       </div>
-      <div className="col-span-1">
+      <div className="col-span-1 flex items-center justify-end gap-1">
         {i === 0 && <Label size="sm">&nbsp;</Label>}
-        <Button variant="ghost" size="icon" onClick={() => eliminar(i)} disabled={total <= 1} aria-label="Eliminar concepto">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-9 w-9"
+          aria-label={mostrarNotas ? "Ocultar notas" : "Agregar notas"}
+          aria-expanded={mostrarNotas}
+          onClick={() => setNotasAbiertas((v) => !v)}
+        >
+          <StickyNote className={`size-4 ${c.notas ? "text-primary" : "text-muted-foreground"}`} />
+        </Button>
+        <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => eliminar(i)} disabled={total <= 1} aria-label="Eliminar concepto">
           <Trash2 className="size-4 text-destructive" />
         </Button>
       </div>
@@ -98,19 +114,23 @@ export const ConceptoRowMXN = memo(function ConceptoRowMXN({
           <Input value={formatCurrency(iva, 'MXN')} readOnly aria-label="IVA" className="bg-muted tabular-nums" />
         </div>
         <div className="min-w-0">
-          <Label size="sm">Total</Label>
+          <Label size="sm">Venta total</Label>
           <Input value={formatCurrency(c.total, 'MXN')} readOnly aria-label="Total" className="bg-muted tabular-nums" />
         </div>
       </div>
-      <div className="col-span-12 -mt-1 mb-1">
-        <Textarea
-          value={c.notas ?? ''}
-          onChange={(e) => actualizar(i, "notas", e.target.value)}
-          placeholder="Notas (opcional)"
-          className="h-8 text-body-sm text-muted-foreground resize-none focus:h-16 transition-[height]"
-          rows={1}
-        />
-      </div>
+      {mostrarNotas && (
+        <div className="col-span-12 mb-1">
+          <Textarea
+            value={c.notas ?? ''}
+            onChange={(e) => actualizar(i, "notas", e.target.value)}
+            placeholder="Notas (opcional)"
+            aria-label="Notas del concepto"
+            className="min-h-9 h-9 py-2 text-body-sm resize-y"
+            rows={1}
+          />
+        </div>
+      )}
+
     </div>
   );
 });

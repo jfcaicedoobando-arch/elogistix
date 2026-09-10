@@ -169,7 +169,10 @@ export function useCotizacionWizardForm({ navigate, toast, userEmail, clientes, 
 
   return {
     form,
+    /** Sólo para textos de UI (crear vs. editar); no altera el guardado. */
+    isEditMode,
     currentStep, setCurrentStep, cotizacionId, setCotizacionId,
+
     costosInternos, setCostosInternos, costosPreLlenados, isPending,
     msdsFile, setMsdsFile,
     esMaritimo, esAereo, clienteSeleccionado,

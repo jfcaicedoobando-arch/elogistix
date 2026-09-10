@@ -3,7 +3,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Trash2, PenLine, StickyNote } from "lucide-react";
-import { formatCurrency, formatNumber } from "@/lib/formatters";
+import { formatNumber } from "@/lib/formatters";
 import { calcularUtilidad, calcularMargen } from "@/lib/financial/financialUtils";
 import { ProfitBadge } from "@/features/cotizacion/components/ProfitBadge";
 import { ProductoServicioSelect } from "@/features/cotizacion/components/conceptos/ProductoServicioSelect";
@@ -19,12 +19,14 @@ import { cn } from "@/lib/utils";
 interface Props {
   fila: FilaCostoLocal;
   gi: number;
+  /** Moneda del bloque; se muestra en el título de la sección, no por celda. */
   moneda: "USD" | "MXN";
   onUpdate: (globalIdx: number, field: keyof FilaCostoLocal, value: string | number | boolean) => void;
   onRemove: (globalIdx: number) => void;
 }
 
-export function FilaCostoLocalRow({ fila, gi, moneda, onUpdate, onRemove }: Props) {
+
+export function FilaCostoLocalRow({ fila, gi, onUpdate, onRemove }: Props) {
   // R-01: los tres campos comparten el mismo patrón de edición local
   // (string crudo mientras hay foco, commit al salir del campo).
   const cantidadField = useNumericField(fila.cantidad, (n) => onUpdate(gi, "cantidad", n), {
@@ -118,12 +120,14 @@ export function FilaCostoLocalRow({ fila, gi, moneda, onUpdate, onRemove }: Prop
           className={cn("h-9 text-body text-right", COL_COSTO.ventaUnitaria)}
         />
 
-        {/* Q-15.9 — importes por partida, ahora bajo su propio encabezado. */}
+        {/* Q-15.9 — importes por partida, bajo su propio encabezado. Sin
+            prefijo de moneda: ya está en el título de la sección, y repetirlo
+            partía las cifras en dos líneas. */}
         <span className={cn("text-body text-right tabular-nums", COL_COSTO.costoTotal)}>
-          {formatCurrency(costoTotal, moneda)}
+          {formatNumber(costoTotal, { decimals: 2 })}
         </span>
         <span className={cn("text-body text-right tabular-nums", COL_COSTO.ventaTotal)}>
-          {formatCurrency(ventaTotal, moneda)}
+          {formatNumber(ventaTotal, { decimals: 2 })}
         </span>
         <span
           className={cn(
@@ -132,8 +136,9 @@ export function FilaCostoLocalRow({ fila, gi, moneda, onUpdate, onRemove }: Prop
             profit >= 0 ? "text-success" : "text-destructive",
           )}
         >
-          {formatCurrency(profit, moneda)}
+          {formatNumber(profit, { decimals: 2 })}
         </span>
+
         <div className={cn("flex justify-center", COL_COSTO.margen)}>
           <ProfitBadge porcentaje={pct} />
         </div>
@@ -186,13 +191,15 @@ export function FilaCostoLocalRow({ fila, gi, moneda, onUpdate, onRemove }: Prop
 
       {mostrarNotas && (
         <Textarea
+          rows={1}
           placeholder="Notas (opcional)"
           value={fila.notas || ""}
           onChange={(e) => onUpdate(gi, "notas", e.target.value)}
           aria-label="Notas del concepto"
-          className="mt-2 text-body-sm h-8 resize-none focus:min-h-16 transition-[min-height]"
+          className="mt-2 min-h-9 h-9 py-2 text-body-sm resize-y"
         />
       )}
     </div>
   );
 }
+

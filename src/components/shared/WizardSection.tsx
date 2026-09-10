@@ -15,6 +15,8 @@ import { cn } from "@/lib/utils";
 interface WizardSectionProps {
   title: string;
   description?: string;
+  /** Icono decorativo a la izquierda del título (no reemplaza al texto). */
+  icon?: ReactNode;
   /** Acciones opcionales en el header (botones, badges) */
   actions?: ReactNode;
   /** Aplica grid responsive 1/2/3 columnas con gap consistente */
@@ -26,9 +28,11 @@ interface WizardSectionProps {
   children: ReactNode;
 }
 
+
 export function WizardSection({
   title,
   description,
+  icon,
   actions,
   columns,
   complete,
@@ -46,12 +50,14 @@ export function WizardSection({
       <CardHeader className="flex flex-row items-start justify-between gap-3 space-y-0 pb-3">
         <div className="space-y-1">
           <CardTitle className="flex items-center gap-2">
+            {icon && <span className="text-accent [&_svg]:h-4 [&_svg]:w-4">{icon}</span>}
             {title}
             {complete && (
               <span
                 className="inline-flex items-center justify-center h-5 w-5 rounded-full bg-success/15 text-success"
                 aria-label="Sección completa"
               >
+
                 <Check className="h-3.5 w-3.5" />
               </span>
             )}
