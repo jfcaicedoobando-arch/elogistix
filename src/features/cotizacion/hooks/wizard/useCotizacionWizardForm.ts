@@ -55,6 +55,13 @@ interface HookDeps {
   onFinalized?: (cotizacionId: string) => void;
 }
 
+/** 13.823.281: TC persistido → estado inicial (sólo valores positivos válidos). */
+function tcInicial(valor: number | null | undefined): number | null {
+  const n = Number(valor ?? 0);
+  return Number.isFinite(n) && n > 0 ? n : null;
+}
+
+
 /**
  * Orquestador del wizard de cotización.
  * Combina form-state + cálculos + handlers de pasos (delegados a useCotizacionWizardSteps).
