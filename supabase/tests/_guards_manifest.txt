@@ -16,6 +16,7 @@ supabase/tests/yg02_comisiones_auth.sql
 supabase/tests/fix3_portal_rls_eventos_notas.sql
 supabase/tests/fix3_portal_rpcs.sql
 supabase/tests/aging_nc_deleted_at.sql
+supabase/tests/pnl_presupuesto_tc_congelado.sql
 supabase/tests/cxc_guard_sobrepago.sql
 supabase/tests/cxc_guard_pagada_sin_saldo.sql
 supabase/tests/cxc_guard_nc_multimoneda.sql
