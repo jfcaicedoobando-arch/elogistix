@@ -61,6 +61,14 @@ export function esEstadoSinSaldo(estado?: string | null): boolean {
   return !!estado && (ESTADOS_SIN_SALDO as readonly string[]).includes(estado);
 }
 
+/**
+ * v13.823.295 — Pago ANULADO: su REP fue cancelado ante el SAT. No suma a
+ * cobrado ni reduce el saldo (espejo de `public.saldo_factura_bruto`).
+ */
+export function esPagoAnulado(pago: PagoAplicadoLike): boolean {
+  return (pago.estado_rep ?? "").trim().toLowerCase() === "cancelado";
+}
+
 export function calcularSaldoFactura(
   total: number,
   pagos: readonly PagoAplicadoLike[] = [],
