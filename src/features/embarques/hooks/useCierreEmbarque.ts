@@ -52,8 +52,15 @@ export function useCerrarEmbarque(embarqueId: string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: () => cerrarEmbarque(embarqueId),
-    onSuccess: () => {
+    onSuccess: (resultado) => {
       invalidarTodo(qc, embarqueId);
+      if (resultado.yaCerrado) {
+        notifyWarning(undefined, {
+          title: "Este embarque ya se cerró",
+          description: "El cierre ocurrió antes de tu clic (puede haber sido automático al liquidarse el último saldo).",
+        });
+        return;
+      }
       notifySuccess(undefined, { title: "Embarque cerrado" });
     },
     onError: (e: Error) => notifyError(undefined, { title: e.message ?? "No se pudo cerrar el embarque", error: e, method: "FEATURES_EMBARQUES_HOOKS_USECIERREEMBARQUE_1" }),
