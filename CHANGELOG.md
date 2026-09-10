@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.823.295] - 2026-09-10
+- **fix(facturacion)**: el encabezado de la factura ya no cuenta como cobrado un pago cuyo REP fue cancelado. `calcularSaldoFactura` (canon único) ignora los pagos con `estado_rep = 'Cancelado'` (espejo de `public.saldo_factura_bruto`); con eso la factura 1015 muestra cobrado 0 / saldo 17,910 USD y se desbloquea la emisión de notas de crédito. El pago sigue visible como "Anulado".
+- **fix(facturacion)**: el estado de cuenta del cliente ahora lee `estado_rep` y excluye los pagos anulados de lo cobrado y de la cartera.
+
+
 ## [13.823.294] - 2026-09-10
 - **fix(facturacion)**: una factura ya no se queda atorada en `Pagada` cuando su único pago se anula por cancelación del REP. `recalcular_estado_factura` calcula el saldo con `saldo_factura_bruto` en lugar de `saldo_factura`, que devuelve 0 en cuanto el estado es `Pagada` (atajo legacy) y creaba un círculo vicioso. Se conserva el early-return de `Cancelada / Borrador / Sustituida` y el flag `app.recalc_estado_factura`.
 - **data(facturacion)**: se recalcularon las 21 facturas afectadas (1015–1048, INDIMEX TRADING): 18 quedaron `Emitida` y 3 `Vencida`, y vuelven a aparecer en cartera y antigüedad de saldos. No se tocaron importes, IVA, comprobantes, REPs, pagos (siguen visibles como "Anulado") ni comisiones.
