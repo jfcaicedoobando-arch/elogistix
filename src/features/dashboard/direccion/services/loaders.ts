@@ -50,6 +50,8 @@ export type FacturaRow = {
 export type PagoRow = {
   factura_id: string; monto_aplicado_factura: number | null; moneda: string;
   tipo_cambio: number | null; fecha_pago: string;
+  /** Ola v17: un pago con REP cancelado está ANULADO y no cuenta como cobrado. */
+  estado_rep?: string | null;
 };
 /** NC de cliente APLICADAS (canon de Cobranza): restan del saldo de la factura. */
 export type NotaCreditoRow = {

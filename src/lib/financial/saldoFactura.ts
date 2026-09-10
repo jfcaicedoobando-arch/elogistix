@@ -1,15 +1,18 @@
 /**
- * A1 (auditoría 2026-07-29) — Canon ÚNICO del saldo de factura.
+ * A1 (auditoría 2026-07-29) — Canon ÚNICO del saldo de factura en el cliente.
  *
- * saldo = max(0, total − Σ pagos aplicados − Σ NC aplicadas).
+ * saldo = max(0, total − Σ pagos vigentes − Σ NC aplicadas).
  * Las NC deben llegar pre-filtradas (estado "Aplicada" y sin `deleted_at`).
  * Función pura (sin I/O) para poder testearse aislada.
  *
- * BUG-2026-08-25 (facturas legacy): si el estado de la factura ya es terminal
- * (`Pagada`, `Cancelada`, `Sustituida`, `Borrador`) el saldo SIEMPRE es 0,
- * aunque falten los pagos históricos en la tabla. Sin esta regla, las
- * facturas migradas marcadas "Pagada" sin pagos capturados inflaban el
- * adeudo del estado de cuenta. Misma regla que `public.saldo_factura`.
+ * Espejo EXACTO de `public._saldo_factura_calc` (Ola v17):
+ *  - los pagos con REP cancelado están ANULADOS y no cuentan;
+ *  - sólo `Cancelada` y `Sustituida` fuerzan saldo 0.
+ *
+ * Ola v17: se ELIMINÓ el atajo "si estado = Pagada entonces saldo 0". Ese
+ * atajo hacía que el saldo dependiera del estado y el estado del saldo
+ * (circularidad): una factura marcada "Pagada" cuyo único pago quedó anulado
+ * por cancelación del REP seguía reportando saldo 0 (bug F1015).
  *
  * NO reimplementar esta fórmula en componentes ni services.
  */
@@ -21,8 +24,8 @@ export interface PagoAplicadoLike {
   /**
    * v13.823.295 — un pago cuyo REP quedó cancelado ante el SAT está ANULADO:
    * se conserva como antecedente fiscal pero NO cuenta para cobrado ni saldo
-   * (mismo criterio que `public.saldo_factura_bruto`). Si la lectura no trae
-   * la columna, el pago se considera vigente (compatibilidad).
+   * (mismo criterio que `public.pago_rep_anulado`). Si la lectura no trae la
+   * columna, el pago se considera vigente (compatibilidad).
    */
   estado_rep?: string | null;
 }
@@ -46,12 +49,10 @@ const num = (v: unknown): number => {
 
 /**
  * Estados en los que la factura NO puede tener saldo por cobrar.
- * v13.823.145 — `Borrador` SÍ genera saldo: un CFDI aún sin timbrar debe verse
- * como pendiente por cobrar (antes el encabezado mostraba "Cobrado = total" y
- * "pendiente 0" sin un solo pago capturado).
+ * Espejo de `public._saldo_factura_calc`: 'Pagada' NO está aquí (sería
+ * circular) y 'Borrador' tampoco (un CFDI sin timbrar sí se debe cobrar).
  */
 export const ESTADOS_SIN_SALDO = [
-  "Pagada",
   "Cancelada",
   "Sustituida",
 ] as const;
@@ -63,7 +64,7 @@ export function esEstadoSinSaldo(estado?: string | null): boolean {
 
 /**
  * v13.823.295 — Pago ANULADO: su REP fue cancelado ante el SAT. No suma a
- * cobrado ni reduce el saldo (espejo de `public.saldo_factura_bruto`).
+ * cobrado ni reduce el saldo (espejo de `public.pago_rep_anulado`).
  */
 export function esPagoAnulado(pago: PagoAplicadoLike): boolean {
   return (pago.estado_rep ?? "").trim().toLowerCase() === "cancelado";
