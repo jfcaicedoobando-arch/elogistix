@@ -65,6 +65,17 @@ describe("cierre service", () => {
       mockedRpc.mockResolvedValue({ data: null, error: { message: "validaciones no satisfechas" } });
       await expect(cerrarEmbarque("emb-2")).rejects.toThrow("validaciones no satisfechas");
     });
+
+    // v13.823.292 — el cierre automático puede ganar la carrera: no es un error.
+    it("reporta yaCerrado cuando la BD dice que el embarque ya está cerrado", async () => {
+      mockedRpc.mockResolvedValue({ data: null, error: { message: "El embarque ya está cerrado" } });
+      await expect(cerrarEmbarque("emb-2")).resolves.toEqual({ yaCerrado: true });
+    });
+
+    it("reporta yaCerrado=false en un cierre normal", async () => {
+      mockedRpc.mockResolvedValue({ data: { ok: true }, error: null });
+      await expect(cerrarEmbarque("emb-2")).resolves.toEqual({ yaCerrado: false });
+    });
   });
 
   describe("reabrirEmbarque", () => {

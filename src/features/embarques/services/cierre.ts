@@ -48,11 +48,18 @@ export async function validarCierre(embarqueId: string): Promise<CierreValidacio
   return (data as unknown) as CierreValidacion;
 }
 
-export async function cerrarEmbarque(embarqueId: string): Promise<void> {
+/** v13.823.292 — el cierre automático puede haber cerrado el embarque segundos antes. */
+const MSG_YA_CERRADO = "El embarque ya está cerrado";
+
+export async function cerrarEmbarque(embarqueId: string): Promise<{ yaCerrado: boolean }> {
   const { error } = await supabase.rpc("cerrar_embarque" as never, {
     p_embarque_id: embarqueId,
   } as never);
-  if (error) throw new Error(error.message);
+  if (error) {
+    if ((error.message ?? "").includes(MSG_YA_CERRADO)) return { yaCerrado: true };
+    throw new Error(error.message);
+  }
+  return { yaCerrado: false };
 }
 
 /**

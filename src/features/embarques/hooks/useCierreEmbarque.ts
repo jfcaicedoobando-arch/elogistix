@@ -23,7 +23,10 @@ export function useValidacionCierre(embarqueId: string | undefined) {
     queryKey: KEYS.validacion(embarqueId),
     queryFn: () => validarCierre(embarqueId as string),
     enabled: Boolean(embarqueId),
-    staleTime: 15_000,
+    // v13.823.292 — el cierre automático puede cambiar el estado en segundos:
+    // la pestaña revalida al entrar para no ofrecer un botón obsoleto.
+    staleTime: 5_000,
+    refetchOnMount: "always",
   });
 }
 
@@ -49,8 +52,15 @@ export function useCerrarEmbarque(embarqueId: string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: () => cerrarEmbarque(embarqueId),
-    onSuccess: () => {
+    onSuccess: (resultado) => {
       invalidarTodo(qc, embarqueId);
+      if (resultado.yaCerrado) {
+        notifyWarning(undefined, {
+          title: "Este embarque ya se cerró",
+          description: "El cierre ocurrió antes de tu clic (puede haber sido automático al liquidarse el último saldo).",
+        });
+        return;
+      }
       notifySuccess(undefined, { title: "Embarque cerrado" });
     },
     onError: (e: Error) => notifyError(undefined, { title: e.message ?? "No se pudo cerrar el embarque", error: e, method: "FEATURES_EMBARQUES_HOOKS_USECIERREEMBARQUE_1" }),
