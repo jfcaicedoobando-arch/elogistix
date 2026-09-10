@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.823.266] - 2026-09-10
+- **fix(costeo)**: regresión MR-UI-02 — Estado vuelve al flujo horizontal y sólo Acciones permanece fija; así los chips de aprobación ya no cubren Contenedor, Total USD ni Vigencia en 1280×720, conservando la pista visible de desplazamiento.
+
 ## [13.823.265] - 2026-09-10
 - **fix(costeo)**: remate MR-UI-02 — Estado queda fijo inmediatamente a la izquierda de Acciones con 160 px reservados, evitando que chips y botones se superpongan en 1280×720; una pista visible señala el desplazamiento horizontal de columnas secundarias.
 

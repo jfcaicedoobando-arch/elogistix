@@ -31,10 +31,11 @@ describe("MR-UI-02: tabla usable en 1280x720", () => {
     expect(columnas).not.toContain("hidden xl:table-cell");
     expect(columnas).not.toContain("hidden lg:table-cell");
   });
-  it("Estado reserva el ancho de Acciones y ambas quedan fijas sin superponerse", () => {
+  it("sólo Acciones queda fija para no cubrir Estado ni columnas anteriores", () => {
     expect(columnas).toContain("stickyRight: true");
-    expect(columnas).toContain('width: COL_W.nombre,\n        className: "sticky right-40');
-    expect(columnas).toContain('headerClassName: "sticky right-40');
+    expect(columnas).toContain('meta: { width: COL_W.nombre },');
+    expect(columnas).not.toContain('className: "sticky right-40');
+    expect(columnas).not.toContain('headerClassName: "sticky right-40');
   });
   it("muestra un affordance visible para el desplazamiento horizontal en HD", () => {
     expect(tabla).toContain("Desplaza horizontalmente para consultar columnas secundarias");
