@@ -11,6 +11,8 @@ import { ResponsiveDataTable } from "@/components/shared/dataTable/ResponsiveDat
 import { useClientPagedList } from "@/hooks/shared/useClientPagedList";
 import { useRepsHistorico, type FilaRepHistorico } from "@/features/facturacion/hooks/useBandejas";
 import { descargarCfdiFacturapi } from "@/features/facturacion/services/descargarCfdiFacturapi";
+import { useConsultarRep } from "@/features/facturacion/hooks/useConsultarRep";
+
 import { notifyError } from "@/lib/ui/appFeedback";
 import { BandejaShell } from "./BandejaShell";
 import { buildRepsHistoricoColumns, estadoRepHistorico } from "./bandejaRepsHistoricoColumns";
